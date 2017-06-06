@@ -1,0 +1,4 @@
+#Ignore files that were created by the Makefile
+*.byte
+*.cmi
+*.cmo
