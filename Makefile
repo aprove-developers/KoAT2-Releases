@@ -13,7 +13,7 @@ Poly.mli :  Poly.ml Tools.ml
 	$(FindComp) -i $(ZThree) Poly.ml>Poly.mli
 Poly.cmi : Poly.mli 
 	$(FindComp) -c $(ZThree) Poly.mli
-Poly.cmo : Poly.mli Poly.ml
+Poly.cmo : Poly.cmi Poly.ml
 	$(FindComp) -c $(ZThree) Poly.ml
 PolyTest.cmo : PolyTest.ml Poly.cmo Poly.cmi
 	$(FindComp) -c $(ZThree) PolyTest.ml
