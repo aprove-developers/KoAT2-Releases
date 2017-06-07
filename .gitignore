@@ -1,5 +1,7 @@
-#Ignore files that were created by the Makefile
+#Ignore files created by make commands
 *.byte
 *.cmi
 *.cmo
 *.mli
+#Ignore files created by editors
+*.swp
