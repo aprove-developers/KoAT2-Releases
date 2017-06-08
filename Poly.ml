@@ -33,7 +33,9 @@ module Powers =
         
             let to_string ( power : pow ) =
                 match power with
-                    |Pow (var, n ) -> String.concat "^" [(Variables.to_string var); (string_of_int n)]
+                    |Pow (var, n ) -> 
+                        if n<=0 then "1" 
+                        else String.concat "^" [(Variables.to_string var); (string_of_int n)]
             
             let to_z3 (ctx : Z3. context)  ( power : pow ) =
                 match power with
@@ -55,7 +57,7 @@ module Powers =
                     |(Pow (var1,n1), Pow (var2, n2)) -> (Variables.equal var1 var2) && ( n1 == n2)
     end;;
 
-(*A monomial is a product of powers of variables*)
+(*A monomial is a product of powers of variables, the empty product is interpreted as the integer 1*)
 module Monomials =
     struct
 
@@ -90,7 +92,9 @@ module Monomials =
                                         new_pow :: simplify (delete_var curr_var tail)
                                 else simplify (delete_var curr_var tail)
 
-            let to_string_simplified (mon : monomial) = String.concat "*" (List.map Powers.to_string mon)
+            let to_string_simplified (mon : monomial) =
+                if mon == [] then "1"
+                else  String.concat "*" (List.map Powers.to_string mon)
 
             let to_string (mon : monomial) = to_string_simplified (simplify mon)
 
@@ -111,33 +115,35 @@ module Monomials =
 
 module ScaledMonomials =
     struct
-        type scaledMon = Scaled of (Big_int.big_int * Monomials.monomial)
+        type scaled_mon = Scaled of (Big_int.big_int * Monomials.monomial)
             
-            let mk_scaledMon_from_mon (coeff : Big_int.big_int) (mon:Monomials.monomial) = Scaled (coeff,mon)
+            let mk_scaled_mon_from_mon (coeff : Big_int.big_int) (mon:Monomials.monomial) = Scaled (coeff,mon)
 
-            let to_z3 (ctx:Z3.context) (scaled : scaledMon) =
+            let to_z3 (ctx:Z3.context) (scaled : scaled_mon) =
                 match scaled with
                     | Scaled (coeff, mon) -> Z3.Arithmetic.mk_mul ctx [(Z3.Arithmetic.Integer.mk_numeral_s ctx (Big_int.string_of_big_int coeff)) ; (Monomials.to_z3 ctx mon)]
 
-            let get_coeff (scaled : scaledMon) =
+            let get_coeff (scaled : scaled_mon) =
                 match scaled with
                     | Scaled (coeff, mon) -> coeff
 
-            let get_monom (scaled : scaledMon) =
+            let get_monom (scaled : scaled_mon) =
                 match scaled with
                     | Scaled (coeff, mon) -> mon
 
-            let simplify (scaled : scaledMon) =
+            let simplify (scaled : scaled_mon) =
                 match scaled with
                     | Scaled (coeff, mon)-> Scaled (coeff, (Monomials.simplify mon))
 
-            let to_string_simplified (scaled : scaledMon) =
+            let to_string_simplified (scaled : scaled_mon) =
                 match scaled with
-                    | Scaled (coeff, mon)-> String.concat "" ["(" ; (Big_int.string_of_big_int coeff) ; ")" ; "*" ; (Monomials.to_string mon)]
+                    | Scaled (coeff, mon)-> 
+                        if mon == [] then String.concat "" ["(" ; (Big_int.string_of_big_int coeff) ; ")"] 
+                        else String.concat "" ["(" ; (Big_int.string_of_big_int coeff) ; ")" ; "*" ; (Monomials.to_string mon)]
 
-            let to_string (scaled : scaledMon) = to_string_simplified (simplify scaled)
+            let to_string (scaled : scaled_mon) = to_string_simplified (simplify scaled)
 
-            let equal (scaled1 : scaledMon) (scaled2 : scaledMon) =
+            let equal (scaled1 : scaled_mon) (scaled2 : scaled_mon) =
                 match (scaled1, scaled2) with
                     |(Scaled (coeff1, mon1), Scaled (coeff2, mon2)) -> (Big_int.eq_big_int coeff1 coeff2) && (Monomials.equal mon1 mon2)
  
@@ -147,9 +153,11 @@ module Polynomials =
     struct
         (*A polynomial is a scaled sum of monomials, the coefficients are integers*)
         
-        type polynomial = ScaledMonomials.scaledMon list 
+        type polynomial = ScaledMonomials.scaled_mon list 
 
-            let to_z3 (ctx : Z3.context) (poly : polynomial) = Z3.Arithmetic.mk_add ctx  (List.map (ScaledMonomials.to_z3 ctx) poly)
+            let to_z3 (ctx : Z3.context) (poly : polynomial) = 
+                if poly == [] then (Z3.Arithmetic.Integer.mk_numeral_i ctx 0)
+                else    Z3.Arithmetic.mk_add ctx  (List.map (ScaledMonomials.to_z3 ctx) poly)
 
             let get_coeff (mon : Monomials.monomial) (poly : polynomial) = 
                 let mon_reduced_poly =(List.filter (fun scaled-> Monomials.equal (ScaledMonomials.get_monom scaled) mon) poly ) in
@@ -167,7 +175,7 @@ module Polynomials =
                     |scaled::tail ->
                         let curr_monom = ScaledMonomials.get_monom scaled in
                             let curr_coeff = get_coeff curr_monom poly in
-                                (ScaledMonomials.mk_scaledMon_from_mon curr_coeff curr_monom) :: (simplify_partial_simplified (delete_monomial curr_monom tail) )
+                                (ScaledMonomials.mk_scaled_mon_from_mon curr_coeff curr_monom) :: (simplify_partial_simplified (delete_monomial curr_monom tail) )
 
             let simplify (poly : polynomial) =
                 simplify_partial_simplified (List.map (ScaledMonomials.simplify) poly)
@@ -191,4 +199,16 @@ module Polynomials =
 
             let equal (poly1 : polynomial) (poly2 : polynomial) = 
                 equal_simplified (simplify poly1) (simplify poly2)
+
+            (* Return "zero" as a polynomial *)
+           
+            let zero = []
+
+            (* Return "one" as a polynomial *)
+           
+            let one = 
+                let const = [] in
+                    [ ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1) const ]
+
+
      end;;
