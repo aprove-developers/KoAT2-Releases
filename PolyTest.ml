@@ -21,7 +21,7 @@ let _ =
             Printf.printf "Monomial mon2 = %s \n" (Monomials.to_string mon2);
             Printf.printf "Simplified Monomial mon2 = %s \n"  (Monomials.to_string (Monomials.simplify mon2));
 
-            Printf.printf "EqualityTest = %B \n" (Monomials.equals mon mon2);
+            Printf.printf "EqualityTest = %B \n" (Monomials.equal mon mon2);
             Printf.printf "Degree of mon is %d\n" (Monomials.get_degree mon);
 
             Printf.printf "Variables of mon are %s\n" (String.concat "," (List.map Variables.to_string (Monomials.get_variables mon)));
@@ -31,9 +31,14 @@ let _ =
                 let scaled2 = ScaledMonomials.mk_scaledMon_from_mon (Big_int.big_int_of_int 1) [pow1] in
                 let scaled3 = ScaledMonomials.mk_scaledMon_from_mon (Big_int.big_int_of_int(-1)) [pow2] in
                 let scaled4 = ScaledMonomials.mk_scaledMon_from_mon (Big_int.big_int_of_int (-3)) mon2 in
-                    let poly = [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4;] in
-                    Printf.printf "Polynomial = %s\n" (Polynomials.to_string poly);
-                    Printf.printf "Polynomial coefficient of mon = %s \n" (Big_int.string_of_big_int (Polynomials.get_coeff mon poly));
-                    Printf.printf "Scaled z3 = %s \n" (Z3.Expr.to_string (Polynomials.to_z3 ctx poly))
+                let scaled5 = ScaledMonomials.mk_scaledMon_from_mon (Big_int.big_int_of_int 0) mon2 in
+                    let poly1 = [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4 ; scaled5 ; scaled5 ; scaled5 ; scaled5 ; scaled5] in
+                    let poly2 = [scaled2 ; scaled3 ; scaled4 ; scaled1 ; scaled4 ; scaled5 ; scaled5] in
+                    Printf.printf "poly1 = %s\n" (Polynomials.to_string poly1);
+                    Printf.printf "Coefficient of mon in poly1 = %s \n" (Big_int.string_of_big_int (Polynomials.get_coeff mon poly1));
+                    Printf.printf "Simplified Polynomial poly1  is = %s\n" (Polynomials.to_string (Polynomials.simplify poly1));
+                    Printf.printf "Scaled z3 = %s \n" (Z3.Expr.to_string (Polynomials.to_z3 ctx poly1));
+                    Printf.printf "Simplified Polynomial poly2  is = %s\n" (Polynomials.to_string (Polynomials.simplify poly2));
+                    Printf.printf "poly1 == poly2 ? %B \n" (Polynomials.equal poly1 poly2)
 
 ;;
