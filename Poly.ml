@@ -16,10 +16,13 @@ module Variables =
 
         let to_z3 (ctx : Z3.context) (var : variable) =
             Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx var)
-        
+      
     end;;
 
-module VarMap = Map.Make(String)
+(*The module "String" contains all information needed for the functor "Make"*)
+(*Due to readability we use it instead of the module "Variables"*)
+
+module VarMap = Map.Make ( String )
 
 module Powers =
     struct
@@ -36,8 +39,6 @@ module Powers =
                 match power with
                     |Pow (var, n ) -> Z3.Arithmetic.mk_power ctx ( Variables.to_z3 ctx var ) (Z3.Arithmetic.Integer.mk_numeral_i ctx n)
             let mk_pow_from_var (var : Variables.variable) (n : int) = Pow (var,n)
-
-            let mk_pow_from_string (name : string) (n : int) = Pow ((Variables.mk_var name), n)
 
             let get_variable (power : pow) =
                 match power with 
@@ -60,10 +61,10 @@ module Monomials =
 
             let to_z3  (ctx : Z3.context) ( mon : monomial ) = if mon !=[] then Z3.Arithmetic.mk_mul ctx (List.map (Powers.to_z3 ctx) mon) else Z3.Arithmetic.Integer.mk_numeral_i ctx 1
               
-            let rec mk_mon (input : (string*int) list) =
+            let rec mk_mon (input : (Variables.variable*int) list) =
                 match input with
                     |[] -> []
-                    |(name, n)::rest -> (Powers.mk_pow_from_string name n) :: (mk_mon rest)
+                    |(var, n)::rest -> (Powers.mk_pow_from_var var n) :: (mk_mon rest)
 
             let get_variables (mon : monomial) = Tools.remove_dup (List.map Powers.get_variable mon) 
 
@@ -205,5 +206,11 @@ module Polynomials =
                 let const = [] in
                     [ ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1) const ]
 
+            (* Returns a variable as a polynomial *)
+
+            let from_var (var : Variables.variable) =
+            	let pow = (Powers.mk_pow_from_var var 1) in
+                    let scaled_with_one = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1)  [pow] in
+                        [scaled_with_one]
 
      end;;
