@@ -2,6 +2,8 @@ module Variables =
     struct 
         type variable = string
         
+        type mapping = variable*variable
+        
         let mk_var (name : string) =
             name
 
@@ -10,12 +12,14 @@ module Variables =
         let varlist_to_string (vars : variable list) =
             (String.concat ", " (List.map to_string  vars))
 
-        let equal (var1 : variable)  (var2 : variable) = (==)
+        let equal (var1 : variable)  (var2 : variable) = (var1 == var2)
 
         let to_z3 (ctx : Z3.context) (var : variable) =
             Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx var)
         
     end;;
+
+module VarMap = Map.Make(String)
 
 module Powers =
     struct
