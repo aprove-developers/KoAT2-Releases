@@ -155,6 +155,7 @@ module Polynomials =
                 if poly == [] then (Z3.Arithmetic.Integer.mk_numeral_i ctx 0)
                 else    Z3.Arithmetic.mk_add ctx  (List.map (ScaledMonomials.to_z3 ctx) poly)
 
+            (* Returns the coefficient of a monomial *)
             let get_coeff (mon : Monomials.monomial) (poly : polynomial) = 
                 let mon_reduced_poly =(List.filter (fun scaled-> Monomials.equal (ScaledMonomials.get_monom scaled) mon) poly ) in
                    let coeff_list = List.map (ScaledMonomials.get_coeff) mon_reduced_poly in
@@ -196,6 +197,14 @@ module Polynomials =
             let equal (poly1 : polynomial) (poly2 : polynomial) = 
                 equal_simplified (simplify poly1) (simplify poly2)
 
+
+            (* Returns a variable as a polynomial *)
+
+            let from_var (var : Variables.variable) =
+            	let pow = (Powers.mk_pow_from_var var 1) in
+                    let scaled_with_one = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1)  [pow] in
+                        [scaled_with_one]
+
             (* Return "zero" as a polynomial *)
            
             let zero = []
@@ -206,11 +215,8 @@ module Polynomials =
                 let const = [] in
                     [ ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1) const ]
 
-            (* Returns a variable as a polynomial *)
-
-            let from_var (var : Variables.variable) =
-            	let pow = (Powers.mk_pow_from_var var 1) in
-                    let scaled_with_one = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1)  [pow] in
-                        [scaled_with_one]
+            (* Gets the constant *)
+            let get_constant (poly : polynomial ) = get_coeff [] poly
+            
 
      end;;
