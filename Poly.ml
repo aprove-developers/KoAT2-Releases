@@ -1,29 +1,20 @@
 module Variables =
     struct 
-        type variable = Var of string
+        type variable = string
         
         let mk_var (name : string) =
-            Var name
+            name
 
-        let to_string ( var : variable ) =
-            match var with
-                |Var str -> str
+        let to_string ( var : variable ) = var
+
         let varlist_to_string (vars : variable list) =
             (String.concat ", " (List.map to_string  vars))
 
-        let equal (var1 : variable)  (var2 : variable) =
-            match (var1, var2) with
-                | (Var name1, Var name2) -> name1 == name2
+        let equal (var1 : variable)  (var2 : variable) = (==)
 
         let to_z3 (ctx : Z3.context) (var : variable) =
-            match var with
-                | Var name -> Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx name)
+            Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx var)
         
-        let equal (var1 : variable) (var2 : variable) =
-            match (var1, var2) with
-                |(Var name1, Var name2)-> (name1==name2)
-
-            
     end;;
 
 module Powers =
