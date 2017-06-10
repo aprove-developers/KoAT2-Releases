@@ -53,5 +53,13 @@ let _ =
 
                     Printf.printf "zero polynomial in Z3 = %s \n" (Z3.Expr.to_string (Polynomials.to_z3 ctx (Polynomials.zero)));
 
-                    Printf.printf "Scaled z3 = %s \n" (Z3.Expr.to_string (Polynomials.to_z3 ctx (Polynomials.one)))
+                    Printf.printf "unit polynomial in Z3 = %s \n" (Z3.Expr.to_string (Polynomials.to_z3 ctx (Polynomials.one)));
+
+                    Printf.printf "get_constant unit polynomial = %s\n" (Big_int.string_of_big_int (Polynomials.get_constant (Polynomials.one)));
+
+                    Printf.printf "get_constant of poly1 = %s\n" (Big_int.string_of_big_int (Polynomials.get_constant poly1));
+                    
+                    Printf.printf "get_variables of poly = %s\n" (Variables.varlist_to_string (Polynomials.get_variables poly1));
+                    
+                    Printf.printf "get_monomials of poly = %s\n" (String.concat "," (List.map (Monomials.to_string) (Polynomials.get_monomials poly1))) 
 ;;
