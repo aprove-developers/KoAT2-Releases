@@ -106,6 +106,14 @@ module Monomials =
                     else false
     
            let equal (mon1 : monomial) (mon2 : monomial) = equal_simplified (simplify mon1)(simplify mon2)
+
+
+        let is_univariate_linear_monomial (mon : monomial) =
+            let variables_of_mon = (get_variables mon) in
+                if (List.length variables_of_mon == 1) then
+                    ((get_degree_variable (List.nth variables_of_mon 0) mon) == 1)
+                else false
+
     end;;      
 
 
@@ -220,6 +228,7 @@ module Polynomials =
             
             let from_constant (c : Big_int.big_int) =
                 [(ScaledMonomials.mk_scaled_mon_from_mon c [])]
+
 
 
      end;;
