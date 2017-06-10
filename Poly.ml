@@ -218,5 +218,8 @@ module Polynomials =
             (* Gets the constant *)
             let get_constant (poly : polynomial ) = get_coeff [] poly
             
+            let from_constant (c : Big_int.big_int) =
+                [(ScaledMonomials.mk_scaled_mon_from_mon c [])]
+
 
      end;;
