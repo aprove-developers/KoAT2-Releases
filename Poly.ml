@@ -228,7 +228,19 @@ module Polynomials =
             
             let from_constant (c : Big_int.big_int) =
                 [(ScaledMonomials.mk_scaled_mon_from_mon c [])]
-
-
-
+            
+      
+            (* Returns the variables of a polynomial *)          
+            let get_variables (poly:polynomial) =
+                let monomials_of_poly = get_monomials (simplify poly) in
+                    Tools.remove_dup (List.concat (List.map Monomials.get_variables monomials_of_poly))
+                    
+            (* Checks whether a polynomial is a single variable *)
+            let is_var (poly : polynomial) = 
+                let monomials_of_poly = get_monomials (simplify poly) in
+                    if (List.length monomials_of_poly) == 1 then
+                        Monomials.is_univariate_linear_monomial (List.nth monomials_of_poly 0)
+                    else false  
+                         
+                
      end;;
