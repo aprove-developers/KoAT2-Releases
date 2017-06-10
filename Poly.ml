@@ -172,8 +172,6 @@ module Polynomials =
             let delete_monomial (mon : Monomials.monomial) (poly : polynomial) =
                List.filter (fun x -> not (Monomials.equal (ScaledMonomials.get_monom x) mon)) poly
 
-            let get_monomials (poly : polynomial) = List.map (ScaledMonomials.get_monom) poly
-
             let rec simplify_partial_simplified (poly : polynomial) =
                 match poly with 
                     |[] -> []
@@ -205,6 +203,9 @@ module Polynomials =
             let equal (poly1 : polynomial) (poly2 : polynomial) = 
                 equal_simplified (simplify poly1) (simplify poly2)
 
+            
+            (* Returns the monomials of a polynomial without the empty monomial *)
+            let get_monomials (poly : polynomial) = List.filter (fun x -> x <>[]) (List.map (ScaledMonomials.get_monom) (simplify poly))
 
             (* Returns a variable as a polynomial *)
 
