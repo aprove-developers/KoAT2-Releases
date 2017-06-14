@@ -41,7 +41,9 @@ let _ =
                     Printf.printf "Constant Scaled Monomial = %s \n " (ScaledMonomials.to_string scaled_const);
                     let poly1 = [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4 ; scaled5 ; scaled5 ; scaled_const ; scaled5 ; scaled5 ; scaled5] in
                     let poly2 = [scaled2 ; scaled3 ; scaled4 ; scaled1 ; scaled4 ; scaled5 ; scaled5 ; scaled_const] in
+
                     Printf.printf "poly1 = %s\n" (Polynomials.to_string poly1);
+                    
                     Printf.printf "Coefficient of mon in poly1 = %s \n" (Big_int.string_of_big_int (Polynomials.get_coeff mon poly1));
                     Printf.printf "Simplified Polynomial poly1  is = %s\n" (Polynomials.to_string (Polynomials.simplify poly1));
                     Printf.printf "Scaled z3 = %s \n" (Z3.Expr.to_string (Polynomials.to_z3 ctx poly1));
@@ -61,5 +63,15 @@ let _ =
                     
                     Printf.printf "get_variables of poly = %s\n" (Variables.varlist_to_string (Polynomials.get_variables poly1));
                     
-                    Printf.printf "get_monomials of poly = %s\n" (String.concat "," (List.map (Monomials.to_string) (Polynomials.get_monomials poly1))) 
+                    Printf.printf "get_monomials of poly = %s\n" (String.concat "," (List.map (Monomials.to_string) (Polynomials.get_monomials poly1))) ;
+
+                    Printf.printf "get_degree of poly = %d\n" (Polynomials.get_degree poly1); 
+                    let poly3 = Polynomials.from_var "z" in 
+                    
+                    Printf.printf "poly3 = %s\n" (Polynomials.to_string poly3);
+
+                    Printf.printf "get_degree of poly3 = %d \n"  (Polynomials.get_degree poly3); 
+
+                    Printf.printf "is_univariate_and_linear poly3 = %B \n"  (Polynomials.is_univariate_and_linear poly3) 
+
 ;;
