@@ -241,7 +241,17 @@ module Polynomials =
                 let monomials_of_poly = get_monomials (simplify poly) in
                     if (List.length monomials_of_poly) == 1 then
                         Monomials.is_univariate_linear_monomial (List.nth monomials_of_poly 0)
-                    else false  
+                    else false 
+            (* Checks wheather a polynomial is a single variable plus a constant*)
+            let is_var_plus_constant (poly : polynomial) =
+                let const_part = get_constant poly in
+                    let const_annihil = List.append poly (from_constant (Big_int.minus_big_int const_part)) in
+                        (is_var const_annihil)
+
+            (* Checks whether a polynomial is a sum of variables plus a constant *)
+           let is_sum_of_vars_plus_constant (poly : polynomial) =
+               List.for_all (fun scaled -> (Big_int.eq_big_int (ScaledMonomials.get_coeff scaled ) Big_int.unit_big_int) && (Monomials.is_univariate_linear_monomial (ScaledMonomials.get_monom scaled))) poly
+
                          
                 
      end;;
