@@ -270,5 +270,9 @@ module Polynomials =
                    if deg == 1 then
                        let variables = get_variables poly in
                            (List.length variables == 1)
-                   else false       
+                   else false     
+           let is_const (poly : polynomial) =
+               (get_degree poly <= 0) 
+
+           let is_linear = is_sum_of_vars_plus_constant 
      end;;
