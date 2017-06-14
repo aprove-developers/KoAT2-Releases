@@ -262,5 +262,13 @@ module Polynomials =
            (* Checks whether a polynomial is a sum of variables plus a constant *)
            let is_sum_of_vars_plus_constant (poly : polynomial) =
                let deg = get_degree poly in
-                   if deg == 1 then true else false              
+                   if deg == 1 then true else false       
+
+           (* Checks whether a polyomial is linear and contains just one active variable*)
+           let is_univariate_and_linear (poly : polynomial) =
+               let deg = get_degree poly in
+                   if deg == 1 then
+                       let variables = get_variables poly in
+                           (List.length variables == 1)
+                   else false       
      end;;
