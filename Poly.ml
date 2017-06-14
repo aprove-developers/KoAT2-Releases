@@ -244,13 +244,13 @@ module Polynomials =
                     else false 
             (* Checks wheather a polynomial is a single variable plus a constant*)
             let is_var_plus_constant (poly : polynomial) =
-                let const_part = get_constant poly in
-                    let const_annihil = List.append poly (from_constant (Big_int.minus_big_int const_part)) in
-                        (is_var const_annihil)
+                let const_rem = delete_monomial [] poly in
+                   is_var const_rem
 
             (* Checks whether a polynomial is a sum of variables plus a constant *)
            let is_sum_of_vars_plus_constant (poly : polynomial) =
-               List.for_all (fun scaled -> (Big_int.eq_big_int (ScaledMonomials.get_coeff scaled ) Big_int.unit_big_int) && (Monomials.is_univariate_linear_monomial (ScaledMonomials.get_monom scaled))) poly
+               let const_rem = delete_monomial [] poly in
+               List.for_all (fun scaled -> (Big_int.eq_big_int (ScaledMonomials.get_coeff scaled ) Big_int.unit_big_int) && (Monomials.is_univariate_linear_monomial (ScaledMonomials.get_monom scaled))) const_rem
 
                          
                 
