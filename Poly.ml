@@ -32,8 +32,9 @@ module Powers =
             let to_string ( power : pow ) =
                 match power with
                     |Pow (var, n ) -> 
-                        if n<=0 then "1" 
-                        else String.concat "^" [(Variables.to_string var); (string_of_int n)]
+                        if n<=0 then "1"
+                        else if n == 1 then (Variables.to_string var) 
+                            else String.concat "^" [(Variables.to_string var); (string_of_int n)]
             
             let to_z3 (ctx : Z3. context)  ( power : pow ) =
                 match power with
@@ -145,7 +146,8 @@ module ScaledMonomials =
             let to_string_simplified (scaled : scaled_mon) =
                 match scaled with
                     | Scaled (coeff, mon)-> 
-                        if mon == [] then String.concat "" ["(" ; (Big_int.string_of_big_int coeff) ; ")"] 
+                        if (Big_int.eq_big_int coeff Big_int.unit_big_int) then (Monomials.to_string mon)
+                        else if mon == [] then String.concat "" ["(" ; (Big_int.string_of_big_int coeff) ; ")"] 
                         else String.concat "" ["(" ; (Big_int.string_of_big_int coeff) ; ")" ; "*" ; (Monomials.to_string mon)]
 
             let to_string (scaled : scaled_mon) = to_string_simplified (simplify scaled)
