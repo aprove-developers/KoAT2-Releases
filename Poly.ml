@@ -135,6 +135,9 @@ module ScaledMonomials =
                 match scaled with
                     | Scaled (coeff, mon) -> mon
 
+            let get_degree (scaled : scaled_mon) =
+                Monomials.get_degree (get_monom scaled)
+
             let simplify (scaled : scaled_mon) =
                 match scaled with
                     | Scaled (coeff, mon)-> Scaled (coeff, (Monomials.simplify mon))
@@ -158,6 +161,10 @@ module Polynomials =
         (*A polynomial is a scaled sum of monomials, the coefficients are integers*)
         
         type polynomial = ScaledMonomials.scaled_mon list 
+           
+            let get_degree (poly : polynomial) =
+                Tools.max_of_int_list (List.map (ScaledMonomials.get_degree) poly )
+
 
             let to_z3 (ctx : Z3.context) (poly : polynomial) = 
                 if poly == [] then (Z3.Arithmetic.Integer.mk_numeral_i ctx 0)
