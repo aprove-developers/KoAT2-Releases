@@ -259,6 +259,8 @@ module Polynomials =
                let const_rem = delete_monomial [] poly in
                List.for_all (fun scaled -> (Big_int.eq_big_int (ScaledMonomials.get_coeff scaled ) Big_int.unit_big_int) && (Monomials.is_univariate_linear_monomial (ScaledMonomials.get_monom scaled))) const_rem
 
-                         
-                
+           (* Checks whether a polynomial is a sum of variables plus a constant *)
+           let is_sum_of_vars_plus_constant (poly : polynomial) =
+               let deg = get_degree poly in
+                   if deg == 1 then true else false              
      end;;
