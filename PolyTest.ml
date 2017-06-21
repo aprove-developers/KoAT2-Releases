@@ -81,6 +81,17 @@ let _ =
                    let varmapping = VarMap.add "z" "c" varmapping in  
                        Printf.printf "renaming the variables in mon1 yields %s\n" (Monomials.to_string (Monomials.rename_monomial varmapping mon1));
 
-                       Printf.printf "renaming the variables in poly1 yields %s\n" (Polynomials.to_string (Polynomials.rename_vars varmapping poly1))
+                       Printf.printf "renaming the variables in poly1 yields %s\n" (Polynomials.to_string (Polynomials.rename_vars varmapping poly1));
+                       Printf.printf "Adding poly1 and poly2 = %s\n" (Polynomials.to_string (Polynomials.add poly1 poly2));
 
+                       Printf.printf "Subtracting poly1 and poly 2 = %s\n" (Polynomials.to_string (Polynomials.subtract poly1 poly2));
+                       Printf.printf "Multiplying poly 1 and poly 3 = %s\n" (Polynomials.to_string (Polynomials.mult poly1 poly3));
+
+                       Printf.printf "Binomial formular = %s\n" (Polynomials.to_string (Polynomials.pow_poly (Polynomials.add (Polynomials.from_var x) (Polynomials.from_var y)) 10));
+
+
+                       Printf.printf "Multinomial formular = %s\n" (Polynomials.to_string (Polynomials.pow_poly (Polynomials.add_list [(Polynomials.from_var x); (Polynomials.from_var y) ;(Polynomials.from_var z)]) 3  ))
+
+
+                      
 ;;
