@@ -1,8 +1,11 @@
+
+(*The module "String" contains all information needed for the functor "Make"*)
+(*Due to readability we use it instead of the module "Variables"*)
+module VarMap = Map.Make ( String )
+
 module Variables =
     struct 
         type variable = string
-        
-        type mapping = variable*variable
         
         let mk_var (name : string) =
             name
@@ -16,13 +19,12 @@ module Variables =
 
         let to_z3 (ctx : Z3.context) (var : variable) =
             Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx var)
-      
+
+        let rec get_new_var_name (varmapping : string VarMap.t) (var : variable) =
+            if VarMap.mem var varmapping then
+                VarMap.find var varmapping
+            else var
     end;;
-
-(*The module "String" contains all information needed for the functor "Make"*)
-(*Due to readability we use it instead of the module "Variables"*)
-
-module VarMap = Map.Make ( String )
 
 module Powers =
     struct
@@ -52,6 +54,11 @@ module Powers =
             let equal (power1 : pow) (power2 : pow) =
                 match (power1, power2) with
                     |(Pow (var1,n1), Pow (var2, n2)) -> (Variables.equal var1 var2) && ( n1 == n2)
+
+
+            let rec rename_power (varmapping : string VarMap.t) (power : pow) =
+                match power with
+                    |(Pow (var, n)) ->  Pow ((Variables.get_new_var_name varmapping var) , n)
     end;;
 
 (*A monomial is a product of powers of variables, the empty product is interpreted as the integer 1*)
@@ -277,4 +284,8 @@ module Polynomials =
                (get_degree poly <= 0) 
 
            let is_linear = is_sum_of_vars_plus_constant 
+
+           
+
+           
      end;;
