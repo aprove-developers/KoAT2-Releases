@@ -304,8 +304,19 @@ module Polynomials =
 
           (*multiply a monomial by a constant*)
 
-           let mult_with_constant (const : Big_int.big_int) (poly : polynomial) =
+           let mult_with_const (const : Big_int.big_int) (poly : polynomial) =
                List.map (ScaledMonomials.mult_with_const const) poly
 
-           
+           let negate (poly : polynomial) =
+               mult_with_const (Big_int.minus_big_int Big_int.unit_big_int) poly
+
+          (*addition of two polynomials is just concatenation*)
+
+           let add (poly1 : polynomial) (poly2 : polynomial) =
+               simplify (List.append poly1 poly2) 
+          
+           let subtract (poly1 : polynomial) (poly2 : polynomial) =
+               add poly1 (negate poly2)
+
+          (*multiplication of two polynomials*)
      end;;
