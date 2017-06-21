@@ -123,7 +123,12 @@ module Monomials =
                 else false
 
         let rename_monomial (varmapping : string VarMap.t) (mon : monomial) = 
-            List.map (Powers.rename_power varmapping) mon  
+            List.map (Powers.rename_power varmapping) mon
+
+        (*Multiplication of monomials*)
+
+        let mult (mon1 : monomial) (mon2 : monomial) =
+            simplify (List.append mon1 mon2)  
 
     end;;      
 
@@ -174,6 +179,9 @@ module ScaledMonomials =
                 match scaled with
                     |Scaled(coeff, mon) -> Scaled((Big_int.mult_big_int coeff const), mon)
 
+            let mult (scaled1 : scaled_mon) (scaled2 : scaled_mon) =
+                match (scaled1, scaled2) with
+                    |(Scaled(coeff1, mon1), Scaled(coeff2, mon2)) -> Scaled((Big_int.mult_big_int coeff1 coeff2), (Monomials.mult mon1 mon2))
  
     end;;
 
@@ -302,7 +310,7 @@ module Polynomials =
            let rename_vars (varmapping : string VarMap.t) (poly : polynomial) =
                List.map (ScaledMonomials.rename_scaled_mon varmapping) poly
 
-          (*multiply a monomial by a constant*)
+          (*multiply a polynomial by a constant*)
 
            let mult_with_const (const : Big_int.big_int) (poly : polynomial) =
                List.map (ScaledMonomials.mult_with_const const) poly
@@ -319,4 +327,13 @@ module Polynomials =
                add poly1 (negate poly2)
 
           (*multiplication of two polynomials*)
+
+           let rec mult (poly1 : polynomial) (poly2 : polynomial) =
+               match poly1 with
+                   |[] -> []
+                   |scaled :: tail ->  add (List.map(ScaledMonomials.mult scaled) poly2) (mult tail poly2)
+
+          let rec pow_poly (poly1 : polynomial)  (d : int) =
+               if (d <= 0) then one
+               else mult (pow_poly poly1 (d-1)) poly1
      end;;
