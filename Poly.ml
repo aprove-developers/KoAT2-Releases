@@ -214,7 +214,9 @@ module Polynomials =
                     |scaled::tail ->
                         let curr_monom = ScaledMonomials.get_monom scaled in
                             let curr_coeff = get_coeff curr_monom poly in
-                                (ScaledMonomials.mk_scaled_mon_from_mon curr_coeff curr_monom) :: (simplify_partial_simplified (delete_monomial curr_monom tail) )
+                                if (Big_int.eq_big_int curr_coeff Big_int.zero_big_int) then (simplify_partial_simplified (delete_monomial curr_monom tail))
+
+                                else (ScaledMonomials.mk_scaled_mon_from_mon curr_coeff curr_monom) :: (simplify_partial_simplified (delete_monomial curr_monom tail) )
 
             let simplify (poly : polynomial) =
                 simplify_partial_simplified (List.map (ScaledMonomials.simplify) poly)
@@ -321,7 +323,10 @@ module Polynomials =
           (*addition of two polynomials is just concatenation*)
 
            let add (poly1 : polynomial) (poly2 : polynomial) =
-               simplify (List.append poly1 poly2) 
+               simplify (List.append poly1 poly2)
+
+           let add_list (pollist : polynomial list) =
+               simplify (List.concat pollist) 
           
            let subtract (poly1 : polynomial) (poly2 : polynomial) =
                add poly1 (negate poly2)
