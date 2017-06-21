@@ -122,6 +122,9 @@ module Monomials =
                     ((get_degree_variable (List.nth variables_of_mon 0) mon) == 1)
                 else false
 
+        let rename_monomial (varmapping : string VarMap.t) (mon : monomial) = 
+            List.map (Powers.rename_power varmapping) mon  
+
     end;;      
 
 
@@ -162,7 +165,10 @@ module ScaledMonomials =
             let equal (scaled1 : scaled_mon) (scaled2 : scaled_mon) =
                 match (scaled1, scaled2) with
                     |(Scaled (coeff1, mon1), Scaled (coeff2, mon2)) -> (Big_int.eq_big_int coeff1 coeff2) && (Monomials.equal mon1 mon2)
- 
+            
+            let rename_scaled_mon (varmapping : string VarMap.t) (scaled : scaled_mon) =
+                match scaled with
+                    |Scaled(coeff, mon) ->  Scaled(coeff, (Monomials.rename_monomial varmapping mon))
     end;;
 
 module Polynomials =
@@ -285,7 +291,12 @@ module Polynomials =
 
            let is_linear = is_sum_of_vars_plus_constant 
 
-           
+          (*renames the variables occuring inside a polynomial*) 
+
+           let rename_vars (varmapping : string VarMap.t) (poly : polynomial) =
+               List.map (ScaledMonomials.rename_scaled_mon varmapping) poly
+
+
 
            
      end;;
