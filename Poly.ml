@@ -20,10 +20,15 @@ module Variables =
         let to_z3 (ctx : Z3.context) (var : variable) =
             Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx var)
 
-        let rec get_new_var_name (varmapping : string VarMap.t) (var : variable) =
+        let get_new_var_name (varmapping : string VarMap.t) (var : variable) =
             if VarMap.mem var varmapping then
                 VarMap.find var varmapping
             else var
+
+        let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (var : variable) =
+            if VarMap.mem var varmapping then
+                VarMap.find var varmapping
+            else Big_int.zero_big_int 
     end;;
 
 module Powers =
@@ -56,9 +61,16 @@ module Powers =
                     |(Pow (var1,n1), Pow (var2, n2)) -> (Variables.equal var1 var2) && ( n1 == n2)
 
 
-            let rec rename_power (varmapping : string VarMap.t) (power : pow) =
+            let rename_power (varmapping : string VarMap.t) (power : pow) =
                 match power with
                     |(Pow (var, n)) ->  Pow ((Variables.get_new_var_name varmapping var) , n)
+
+
+            let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (power : pow) =
+                match power with
+                    |(Pow (var, n)) -> 
+                        if n < 0 then Big_int.zero_big_int
+                        else Big_int.power_big_int_positive_int (Variables.instantiate_with_big_int varmapping var) n
     end;;
 
 (*A monomial is a product of powers of variables, the empty product is interpreted as the integer 1*)
@@ -130,6 +142,8 @@ module Monomials =
         let mult (mon1 : monomial) (mon2 : monomial) =
             simplify (List.append mon1 mon2)  
 
+        let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (mon : monomial) = 
+            List.fold_left (Big_int.mult_big_int) (Big_int.unit_big_int) (List.map (Powers.instantiate_with_big_int varmapping) mon)
     end;;      
 
 
@@ -174,6 +188,10 @@ module ScaledMonomials =
             let rename_scaled_mon (varmapping : string VarMap.t) (scaled : scaled_mon) =
                 match scaled with
                     |Scaled(coeff, mon) ->  Scaled(coeff, (Monomials.rename_monomial varmapping mon))
+
+            let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (scaled : scaled_mon) =
+                match scaled with
+                    |Scaled(coeff, mon) ->  Big_int.mult_big_int coeff (Monomials.instantiate_with_big_int varmapping mon)
 
             let mult_with_const (const : Big_int.big_int) (scaled : scaled_mon) =
                 match scaled with
@@ -341,4 +359,9 @@ module Polynomials =
           let rec pow_poly (poly1 : polynomial)  (d : int) =
                if (d <= 0) then one
                else mult (pow_poly poly1 (d-1)) poly1
+
+          (*instantiates the variables in a polynomial with big ints*)
+
+          let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (poly : polynomial) = 
+            List.fold_left (Big_int.add_big_int) (Big_int.zero_big_int) (List.map (ScaledMonomials.instantiate_with_big_int varmapping) poly)
      end;;
