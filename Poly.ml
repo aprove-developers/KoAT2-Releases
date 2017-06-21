@@ -169,6 +169,12 @@ module ScaledMonomials =
             let rename_scaled_mon (varmapping : string VarMap.t) (scaled : scaled_mon) =
                 match scaled with
                     |Scaled(coeff, mon) ->  Scaled(coeff, (Monomials.rename_monomial varmapping mon))
+
+            let mult_with_const (const : Big_int.big_int) (scaled : scaled_mon) =
+                match scaled with
+                    |Scaled(coeff, mon) -> Scaled((Big_int.mult_big_int coeff const), mon)
+
+ 
     end;;
 
 module Polynomials =
@@ -296,7 +302,10 @@ module Polynomials =
            let rename_vars (varmapping : string VarMap.t) (poly : polynomial) =
                List.map (ScaledMonomials.rename_scaled_mon varmapping) poly
 
+          (*multiply a monomial by a constant*)
 
+           let mult_with_constant (const : Big_int.big_int) (poly : polynomial) =
+               List.map (ScaledMonomials.mult_with_const const) poly
 
            
      end;;
