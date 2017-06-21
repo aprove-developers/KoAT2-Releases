@@ -8,7 +8,7 @@ let _ =
         let pow1 = Powers.mk_pow_from_var x 2 in
         let pow2 = Powers.mk_pow_from_var y 3 in
         let pow3 = Powers.mk_pow_from_var z 0 in
-            let mon = [pow1;pow2;pow1;pow2] in
+            let mon1 = [pow1;pow2;pow1;pow2] in
             let mon2 = [pow2;pow2;pow1;pow1;pow3;pow3;pow3] in
             let const = [] in
             Printf.printf "Running Z3 version %s\n" Version.to_string ;
@@ -16,23 +16,23 @@ let _ =
             let cfg = [("model", "true"); ("proof", "false")] in
             let ctx = (mk_context cfg) in
 
-            Printf.printf "Monomial mon = %s \n" (Monomials.to_string mon);
-            Printf.printf "Simplified Monomial = %s \n" (Monomials.to_string (Monomials.simplify mon));
+            Printf.printf "Monomial mon1 = %s \n" (Monomials.to_string mon1);
+            Printf.printf "Simplified Monomial = %s \n" (Monomials.to_string (Monomials.simplify mon1));
             
             Printf.printf "Monomial mon2 = %s \n" (Monomials.to_string mon2);
             Printf.printf "Simplified Monomial mon2 = %s \n"  (Monomials.to_string (Monomials.simplify mon2));
 
-            Printf.printf "EqualityTest = %B \n" (Monomials.equal mon mon2);
-            Printf.printf "Degree of mon is %d\n" (Monomials.get_degree mon);
+            Printf.printf "EqualityTest = %B \n" (Monomials.equal mon1 mon2);
+            Printf.printf "Degree of mon1 is %d\n" (Monomials.get_degree mon1);
 
-            Printf.printf "Variables of mon are %s\n" (String.concat "," (List.map Variables.to_string (Monomials.get_variables mon)));
-            Printf.printf "Degree of x in mon is %d \n" (Monomials.get_degree_variable x mon);
-            Printf.printf "Monomial mon in Z3 = %s \n" (Z3.Expr.to_string (Monomials.to_z3 ctx mon));
+            Printf.printf "Variables of mon1 are %s\n" (String.concat "," (List.map Variables.to_string (Monomials.get_variables mon1)));
+            Printf.printf "Degree of x in mon1 is %d \n" (Monomials.get_degree_variable x mon1);
+            Printf.printf "Monomial mon1 in Z3 = %s \n" (Z3.Expr.to_string (Monomials.to_z3 ctx mon1));
             
             Printf.printf "Constant Monomial = %s\n" (Monomials.to_string const);
             Printf.printf "Constant Monomial in Z3 = %s \n" (Z3.Expr.to_string (Monomials.to_z3 ctx const));
 
-                let scaled1 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 2) mon in
+                let scaled1 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 2) mon1 in
                 let scaled2 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1) [pow1] in
                 let scaled3 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int(-1)) [pow2] in
                 let scaled4 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int (-3)) mon2 in
@@ -44,7 +44,7 @@ let _ =
 
                     Printf.printf "poly1 = %s\n" (Polynomials.to_string poly1);
                     
-                    Printf.printf "Coefficient of mon in poly1 = %s \n" (Big_int.string_of_big_int (Polynomials.get_coeff mon poly1));
+                    Printf.printf "Coefficient of mon1 in poly1 = %s \n" (Big_int.string_of_big_int (Polynomials.get_coeff mon1 poly1));
                     Printf.printf "Simplified Polynomial poly1  is = %s\n" (Polynomials.to_string (Polynomials.simplify poly1));
                     Printf.printf "Scaled z3 = %s \n" (Z3.Expr.to_string (Polynomials.to_z3 ctx poly1));
                     Printf.printf "Simplified Polynomial poly2  is = %s\n" (Polynomials.to_string (Polynomials.simplify poly2));
@@ -65,13 +65,22 @@ let _ =
                     
                     Printf.printf "get_monomials of poly = %s\n" (String.concat "," (List.map (Monomials.to_string) (Polynomials.get_monomials poly1))) ;
 
-                    Printf.printf "get_degree of poly = %d\n" (Polynomials.get_degree poly1); 
+                    Printf.printf "get_degree of poly = %d\n" (Polynomials.get_degree poly1);
+ 
                     let poly3 = Polynomials.from_var "z" in 
                     
                     Printf.printf "poly3 = %s\n" (Polynomials.to_string poly3);
 
                     Printf.printf "get_degree of poly3 = %d \n"  (Polynomials.get_degree poly3); 
 
-                    Printf.printf "is_univariate_and_linear poly3 = %B \n"  (Polynomials.is_univariate_and_linear poly3) 
+                    Printf.printf "is_univariate_and_linear poly3 = %B \n"  (Polynomials.is_univariate_and_linear poly3); 
+
+                   let varmapping = VarMap.empty in
+                   let varmapping = VarMap.add "x" "a" varmapping in
+                   let varmapping = VarMap.add "y" "b" varmapping in
+                   let varmapping = VarMap.add "z" "c" varmapping in  
+                       Printf.printf "renaming the variables in mon1 yields %s\n" (Monomials.to_string (Monomials.rename_monomial varmapping mon1));
+
+                       Printf.printf "renaming the variables in poly1 yields %s\n" (Polynomials.to_string (Polynomials.rename_vars varmapping poly1))
 
 ;;
