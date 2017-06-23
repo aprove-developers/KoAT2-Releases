@@ -4,11 +4,11 @@ ZThree = -package Z3 -linkpkg
 Default : PolyTest
 
 Tools.mli : Tools.ml
-	ocamlc -i Tools.ml>Tools.mli
+	$(FindComp) -i Tools.ml>Tools.mli
 Tools.cmi : Tools.mli
-	ocamlc -c Tools.mli
+	$(FindComp) -c Tools.mli
 Tools.cmo : Tools.ml
-	ocamlc -c Tools.ml
+	$(FindComp) -c Tools.ml
 Poly.mli :  Poly.ml Tools.ml
 	$(FindComp) -i $(ZThree) Poly.ml>Poly.mli
 Poly.cmi : Poly.mli 
