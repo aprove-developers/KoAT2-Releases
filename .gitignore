@@ -7,3 +7,9 @@
 *.swp
 #Ignore emacs autosave
 *~
+*.o
+*.omc
+*.cmx
+*.run
+/.omakedb
+/.omakedb.lock
