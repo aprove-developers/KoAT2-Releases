@@ -5,3 +5,5 @@
 *.mli
 #Ignore files created by editors
 *.swp
+#Ignore emacs autosave
+*~
