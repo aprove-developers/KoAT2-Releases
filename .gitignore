@@ -3,5 +3,9 @@
 *.cmi
 *.cmo
 *.mli
+#Ignore Poly.ml
+Poly.m
+#Ignore Poly.ml
+Poly.ml
 #Ignore files created by editors
 *.swp

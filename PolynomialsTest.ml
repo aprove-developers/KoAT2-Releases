@@ -1,4 +1,4 @@
-open Poly
+open Mapping
 open Z3
 let _ =	
     let x = (Variables.mk_var "x") in

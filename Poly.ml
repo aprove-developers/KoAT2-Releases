@@ -48,6 +48,8 @@ module Powers =
                     |Pow (var, n ) -> Z3.Arithmetic.mk_power ctx ( Variables.to_z3 ctx var ) (Z3.Arithmetic.Integer.mk_numeral_i ctx n)
             let mk_pow_from_var (var : Variables.variable) (n : int) = Pow (var,n)
 
+            let mk_var (name : string) (n : int) = Pow ((Variables.mk_var name), n)
+
             let get_variable (power : pow) =
                 match power with 
                     |Pow (var,n) -> var
