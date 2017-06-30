@@ -6,12 +6,7 @@ type polynomial = ScaledMonomials.scaled_mon list
 
 let get_degree (poly : polynomial) =
     Tools.max_of_int_list (List.map (ScaledMonomials.get_degree) poly )
-
-
-let to_z3 (ctx : Z3.context) (poly : polynomial) = 
-    if poly == [] then (Z3.Arithmetic.Integer.mk_numeral_i ctx 0)
-    else    Z3.Arithmetic.mk_add ctx  (List.map (ScaledMonomials.to_z3 ctx) poly)
-
+    
 (* Returns the coefficient of a monomial *)
 let get_coeff (mon : Monomials.monomial) (poly : polynomial) = 
     let mon_reduced_poly =(List.filter (fun scaled-> Monomials.equal (ScaledMonomials.get_monom scaled) mon) poly ) in
@@ -40,6 +35,13 @@ let to_string_simplified (poly : polynomial) =
         String.concat "+" (List.map ScaledMonomials.to_string poly)
 
 let to_string (poly : polynomial) = to_string_simplified (simplify poly)
+
+let to_z3_simplified (ctx : Z3.context) (poly : polynomial) = 
+    if poly == [] then (Z3.Arithmetic.Integer.mk_numeral_i ctx 0)
+    else    Z3.Arithmetic.mk_add ctx  (List.map (ScaledMonomials.to_z3 ctx) poly)
+    
+let to_z3 (ctx : Z3.context) (poly : polynomial) = 
+    to_z3_simplified ctx (simplify poly)
 
 let rec equal_simplified (poly1 : polynomial) (poly2 : polynomial) =
     if(List.length poly1 == List.length poly2) then

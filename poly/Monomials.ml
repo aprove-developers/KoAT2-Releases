@@ -1,8 +1,6 @@
 open Mapping
 type monomial = Powers.pow list
-
-let to_z3  (ctx : Z3.context) ( mon : monomial ) = if mon !=[] then Z3.Arithmetic.mk_mul ctx (List.map (Powers.to_z3 ctx) mon) else Z3.Arithmetic.Integer.mk_numeral_i ctx 1
-    
+  
 let rec mk_mon (input : (Variables.variable*int) list) =
     match input with
         |[] -> []
@@ -29,12 +27,19 @@ let rec simplify (mon : monomial) =
                         let new_pow = (Powers.mk_pow_from_var curr_var curr_deg) in
                             new_pow :: simplify (delete_var curr_var tail)
                     else simplify (delete_var curr_var tail)
-
+                
 let to_string_simplified (mon : monomial) =
     if mon == [] then "1"
     else  String.concat "*" (List.map Powers.to_string mon)
 
 let to_string (mon : monomial) = to_string_simplified (simplify mon)
+
+let to_z3_simplified (ctx : Z3.context) ( mon : monomial ) = 
+    if mon !=[] then Z3.Arithmetic.mk_mul ctx (List.map (Powers.to_z3 ctx) mon) 
+    else Z3.Arithmetic.Integer.mk_numeral_i ctx 1
+    
+let to_z3 (ctx : Z3.context) ( mon : monomial ) = 
+    to_z3_simplified ctx (simplify mon)
 
 (*compares two monomials under the assumption that both have already been simplified*)
 let rec equal_simplified (mon1 : monomial) (mon2 : monomial) =

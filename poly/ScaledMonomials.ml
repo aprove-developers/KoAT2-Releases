@@ -6,9 +6,6 @@ type scaled_mon =
     
 let mk_scaled_mon_from_mon (coefficient : Big_int.big_int) (monomial : Monomials.monomial) = { coeff = coefficient; mon = monomial }
 
-let to_z3 (ctx:Z3.context) (scaled : scaled_mon) =
-   Z3.Arithmetic.mk_mul ctx [(Z3.Arithmetic.Integer.mk_numeral_s ctx (Big_int.string_of_big_int scaled.coeff)) ; (Monomials.to_z3 ctx scaled.mon)]
-
 let get_coeff (scaled : scaled_mon) =
     scaled.coeff
 
@@ -29,6 +26,12 @@ let to_string_simplified (scaled : scaled_mon) =
     else String.concat "" ["(" ; (Big_int.string_of_big_int scaled.coeff) ; ")" ; "*" ; (Monomials.to_string scaled.mon)]
 
 let to_string (scaled : scaled_mon) = to_string_simplified (simplify scaled)
+
+let to_z3_simplified (ctx:Z3.context) (scaled : scaled_mon) =
+   Z3.Arithmetic.mk_mul ctx [(Z3.Arithmetic.Integer.mk_numeral_s ctx (Big_int.string_of_big_int scaled.coeff)) ; (Monomials.to_z3 ctx scaled.mon)]
+   
+let to_z3 (ctx:Z3.context) (scaled : scaled_mon) =
+    to_z3_simplified ctx (simplify scaled)
 
 let equal (scaled1 : scaled_mon) (scaled2 : scaled_mon) =
     (Big_int.eq_big_int scaled1.coeff scaled2.coeff) && (Monomials.equal scaled1.mon scaled2.mon)
