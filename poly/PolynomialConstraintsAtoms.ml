@@ -1,4 +1,6 @@
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
+open Mapping
+
 type constraint_atom = 
     |GreaterThan of Polynomials.polynomial * Polynomials.polynomial
     |GreaterEqual of Polynomials.polynomial * Polynomials.polynomial
@@ -39,7 +41,7 @@ let to_string (comp : constraint_atom) =
     |GreaterEqual (p1, p2)-> String.concat " >= " [Polynomials.to_string p1; Polynomials.to_string p2]
     |LessThan (p1, p2)-> String.concat " < " [Polynomials.to_string p1; Polynomials.to_string p2]
     |LessEqual (p1, p2)-> String.concat " <= " [Polynomials.to_string p1; Polynomials.to_string p2]
-    |Neq (p1, p2)-> String.concat " <> " [Polynomials.to_string p1; Polynomials.to_string p2]
+    |Neq (p1, p2)-> String.concat " != " [Polynomials.to_string p1; Polynomials.to_string p2]
     |Equal (p1, p2)-> String.concat " = " [Polynomials.to_string p1; Polynomials.to_string p2]
     
 let to_z3 (ctx : Z3.context) (comp : constraint_atom) =
@@ -53,3 +55,21 @@ let to_z3 (ctx : Z3.context) (comp : constraint_atom) =
     
 let get_variables (comp : constraint_atom) =
     Tools.remove_dup (List.append (Polynomials.get_variables (get_first_arg comp)) (Polynomials.get_variables (get_second_arg comp)))
+    
+let rename_vars (varmapping : string VarMap.t) (comp : constraint_atom) =
+    match comp with
+    |GreaterThan (p1, p2)-> GreaterThan ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
+    |GreaterEqual (p1, p2)-> GreaterEqual ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
+    |LessThan (p1, p2)-> LessThan ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
+    |LessEqual (p1, p2)-> LessEqual ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
+    |Neq (p1, p2)-> Neq ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
+    |Equal (p1, p2)-> Equal ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
+
+let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (comp : constraint_atom) =
+    match comp with
+    |GreaterThan (p1, p2)-> (Big_int.gt_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
+    |GreaterEqual (p1, p2)-> (Big_int.ge_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
+    |LessThan (p1, p2)-> (Big_int.lt_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
+    |LessEqual (p1, p2)-> (Big_int.le_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
+    |Neq (p1, p2)-> not(Big_int.eq_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
+    |Equal (p1, p2)-> (Big_int.eq_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))

@@ -22,3 +22,7 @@ val mk_neq :
 val to_string : constraint_atom -> string
 val to_z3 : Z3.context -> constraint_atom -> Z3.Expr.expr
 val get_variables : constraint_atom -> Variables.variable list
+val rename_vars :
+  string Mapping.VarMap.t -> constraint_atom -> constraint_atom
+val instantiate_with_big_int :
+  Big_int.big_int Mapping.VarMap.t -> constraint_atom -> bool
