@@ -1,4 +1,3 @@
-(*basic constraints for polynomials*)
 type constraint_atom =
     GreaterThan of Polynomials.polynomial * Polynomials.polynomial
   | GreaterEqual of Polynomials.polynomial * Polynomials.polynomial
@@ -6,17 +5,20 @@ type constraint_atom =
   | LessEqual of Polynomials.polynomial * Polynomials.polynomial
   | Neq of Polynomials.polynomial * Polynomials.polynomial
   | Equal of Polynomials.polynomial * Polynomials.polynomial
-val mk_greater_than :
+val get_first_arg : constraint_atom -> Polynomials.polynomial
+val get_second_arg : constraint_atom -> Polynomials.polynomial
+val mk_gt :
   Polynomials.polynomial -> Polynomials.polynomial -> constraint_atom
-val mk_greater_equal :
+val mk_ge :
   Polynomials.polynomial -> Polynomials.polynomial -> constraint_atom
-val mk_less_than :
+val mk_lt :
   Polynomials.polynomial -> Polynomials.polynomial -> constraint_atom
-val mk_less_equal :
+val mk_le :
   Polynomials.polynomial -> Polynomials.polynomial -> constraint_atom
-val mk_equal :
+val mk_eq :
   Polynomials.polynomial -> Polynomials.polynomial -> constraint_atom
 val mk_neq :
   Polynomials.polynomial -> Polynomials.polynomial -> constraint_atom
 val to_string : constraint_atom -> string
 val to_z3 : Z3.context -> constraint_atom -> Z3.Expr.expr
+val get_variables : constraint_atom -> Variables.variable list

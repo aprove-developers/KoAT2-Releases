@@ -7,19 +7,27 @@ type constraint_atom =
     |Neq of Polynomials.polynomial * Polynomials.polynomial
     |Equal of Polynomials.polynomial * Polynomials.polynomial
     
-let mk_greater_than (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let get_first_arg (comp : constraint_atom) =
+    match comp with
+    |GreaterThan(p1, p2) | GreaterEqual (p1, p2) | LessThan (p1, p2) | LessEqual (p1, p2) | Neq (p1, p2) | Equal (p1, p2)-> p1
+
+let get_second_arg (comp : constraint_atom) =
+    match comp with
+    |GreaterThan(p1, p2) | GreaterEqual (p1, p2) | LessThan (p1, p2) | LessEqual (p1, p2) | Neq (p1, p2) | Equal (p1, p2)-> p2
+    
+let mk_gt (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
     GreaterThan(poly1, poly2)
 
-let mk_greater_equal (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let mk_ge (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
     GreaterEqual(poly1, poly2)
 
-let mk_less_than (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let mk_lt (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
     LessThan(poly1, poly2)
 
-let mk_less_equal (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let mk_le (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
     LessEqual(poly1, poly2)
 
-let mk_equal (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let mk_eq (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
     Equal(poly1, poly2)
     
 let mk_neq (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
@@ -27,12 +35,12 @@ let mk_neq (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
     
 let to_string (comp : constraint_atom) =
     match comp with
-    |GreaterThan (p1, p2)-> String.concat ">" [Polynomials.to_string p1; Polynomials.to_string p2]
-    |GreaterEqual (p1, p2)-> String.concat ">=" [Polynomials.to_string p1; Polynomials.to_string p2]
-    |LessThan (p1, p2)-> String.concat "<" [Polynomials.to_string p1; Polynomials.to_string p2]
-    |LessEqual (p1, p2)-> String.concat "<=" [Polynomials.to_string p1; Polynomials.to_string p2]
-    |Neq (p1, p2)-> String.concat "<>" [Polynomials.to_string p1; Polynomials.to_string p2]
-    |Equal (p1, p2)-> String.concat "<>" [Polynomials.to_string p1; Polynomials.to_string p2]
+    |GreaterThan (p1, p2)-> String.concat " > " [Polynomials.to_string p1; Polynomials.to_string p2]
+    |GreaterEqual (p1, p2)-> String.concat " >= " [Polynomials.to_string p1; Polynomials.to_string p2]
+    |LessThan (p1, p2)-> String.concat " < " [Polynomials.to_string p1; Polynomials.to_string p2]
+    |LessEqual (p1, p2)-> String.concat " <= " [Polynomials.to_string p1; Polynomials.to_string p2]
+    |Neq (p1, p2)-> String.concat " <> " [Polynomials.to_string p1; Polynomials.to_string p2]
+    |Equal (p1, p2)-> String.concat " = " [Polynomials.to_string p1; Polynomials.to_string p2]
     
 let to_z3 (ctx : Z3.context) (comp : constraint_atom) =
     match comp with
@@ -40,5 +48,8 @@ let to_z3 (ctx : Z3.context) (comp : constraint_atom) =
     |GreaterEqual (p1, p2)-> Z3.Arithmetic.mk_ge ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
     |LessThan (p1, p2)-> Z3.Arithmetic.mk_lt ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
     |LessEqual (p1, p2)-> Z3.Arithmetic.mk_le ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
-    |Neq (p1, p2)-> Z3.Boolean.mk_eq ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
-    |Equal (p1, p2)-> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2))
+    |Equal (p1, p2)-> Z3.Boolean.mk_eq ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
+    |Neq (p1, p2)-> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2))
+    
+let get_variables (comp : constraint_atom) =
+    Tools.remove_dup (List.append (Polynomials.get_variables (get_first_arg comp)) (Polynomials.get_variables (get_second_arg comp)))
