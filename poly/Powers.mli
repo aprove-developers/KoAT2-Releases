@@ -1,8 +1,8 @@
-type pow = Pow of Variables.variable * int
+type pow = { var : Variables.variable; n : int; }
 val to_string : pow -> Variables.variable
 val to_z3 : Z3.context -> pow -> Z3.Expr.expr
 val mk_pow_from_var : Variables.variable -> int -> pow
-val mk_var : string -> int -> pow
+val mk_var : string -> pow
 val get_variable : pow -> Variables.variable
 val get_degree : pow -> int
 val equal : pow -> pow -> bool
