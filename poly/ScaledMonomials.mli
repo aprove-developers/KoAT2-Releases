@@ -1,4 +1,4 @@
-type scaled_mon = Scaled of (Big_int.big_int * Monomials.monomial)
+type scaled_mon = { coeff : Big_int.big_int; mon : Monomials.monomial; }
 val mk_scaled_mon_from_mon :
   Big_int.big_int -> Monomials.monomial -> scaled_mon
 val to_z3 : Z3.context -> scaled_mon -> Z3.Expr.expr
