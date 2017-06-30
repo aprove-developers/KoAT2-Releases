@@ -2,6 +2,9 @@
 *.byte
 *.cmi
 *.cmo
+*.cmx
+*.native
+*.o
 
 #Ignore Poly.ml
 Poly.m

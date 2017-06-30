@@ -78,4 +78,4 @@ PolynomialConstraintsTest : PolynomialConstraintsTest.cmx Tools.cmx Mapping.cmx 
 	$(FindComp) -o PolynomialConstraintsTest.native $(ZThree) Tools.cmx Mapping.cmx Variables.cmx Powers.cmx Monomials.cmx ScaledMonomials.cmx Polynomials.cmx PolynomialConstraintsAtoms.cmx PolynomialConstraintsTest.cmx
 	
 clean :
-	rm -f *.cmx *.cmi *.byte *.native
+	rm -f *.cmx *.cmi *.native
