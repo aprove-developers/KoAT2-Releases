@@ -11,3 +11,4 @@ Poly.ml
 
 #Ignore files created by editors
 *.swp
+*.kate-swp
