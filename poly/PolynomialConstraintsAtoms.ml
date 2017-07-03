@@ -2,12 +2,12 @@
 open Mapping
 
 type constraint_atom = 
-    |GreaterThan of Polynomials.polynomial * Polynomials.polynomial
-    |GreaterEqual of Polynomials.polynomial * Polynomials.polynomial
-    |LessThan of Polynomials.polynomial * Polynomials.polynomial
-    |LessEqual of Polynomials.polynomial * Polynomials.polynomial
-    |Neq of Polynomials.polynomial * Polynomials.polynomial
-    |Equal of Polynomials.polynomial * Polynomials.polynomial
+    |GreaterThan of Polynomials.t * Polynomials.t
+    |GreaterEqual of Polynomials.t * Polynomials.t
+    |LessThan of Polynomials.t * Polynomials.t
+    |LessEqual of Polynomials.t * Polynomials.t
+    |Neq of Polynomials.t * Polynomials.t
+    |Equal of Polynomials.t * Polynomials.t
     
 let get_first_arg (comp : constraint_atom) =
     match comp with
@@ -17,22 +17,22 @@ let get_second_arg (comp : constraint_atom) =
     match comp with
     |GreaterThan(p1, p2) | GreaterEqual (p1, p2) | LessThan (p1, p2) | LessEqual (p1, p2) | Neq (p1, p2) | Equal (p1, p2)-> p2
     
-let mk_gt (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let mk_gt (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
     GreaterThan(poly1, poly2)
 
-let mk_ge (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let mk_ge (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
     GreaterEqual(poly1, poly2)
 
-let mk_lt (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let mk_lt (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
     LessThan(poly1, poly2)
 
-let mk_le (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let mk_le (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
     LessEqual(poly1, poly2)
 
-let mk_eq (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let mk_eq (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
     Equal(poly1, poly2)
     
-let mk_neq (poly1 : Polynomials.polynomial) (poly2 : Polynomials.polynomial) =
+let mk_neq (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
     Neq(poly1, poly2)
     
 let to_string (comp : constraint_atom) =
