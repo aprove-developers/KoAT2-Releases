@@ -11,12 +11,12 @@ val to_string : polynomial -> string
 val equal_simplified : polynomial -> polynomial -> bool
 val equal : polynomial -> polynomial -> bool
 val get_monomials : polynomial -> Monomials.monomial list
-val from_var : Variables.variable -> polynomial
+val from_var : Variables.t -> polynomial
 val zero : polynomial
 val one : polynomial
 val get_constant : polynomial -> value
 val from_constant : value -> polynomial
-val get_variables : polynomial -> Variables.variable list
+val get_variables : polynomial -> Variables.t list
 val is_var : polynomial -> bool
 val is_var_plus_constant : polynomial -> bool
 val is_sum_of_vars_plus_constant : polynomial -> bool

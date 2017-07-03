@@ -1,28 +1,27 @@
 open Mapping
 
-type variable = string
+type t = string
 
 type value = Big_int.big_int
 
-let mk_var (name : string) =
-    name
+let mk_var name = name
 
-let to_string ( var : variable ) = var
+let to_string var = var
 
-let varlist_to_string (vars : variable list) =
-    (String.concat ", " (List.map to_string  vars))
+let varlist_to_string vars =
+    String.concat ", " (List.map to_string vars)
 
-let equal (var1 : variable)  (var2 : variable) = (var1 == var2)
+let equal = (==)
 
-let to_z3 (ctx : Z3.context) (var : variable) =
+let to_z3 ctx var =
     Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx var)
 
-let get_new_var_name (varmapping : string VarMap.t) (var : variable) =
+let get_new_var_name varmapping var =
     if VarMap.mem var varmapping then
         VarMap.find var varmapping
     else var
 
-let eval (varmapping : value VarMap.t) (var : variable) =
+let eval varmapping var =
     if VarMap.mem var varmapping then
         VarMap.find var varmapping
     else Big_int.zero_big_int 

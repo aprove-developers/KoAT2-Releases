@@ -2,7 +2,7 @@ open Mapping
 
 type pow = 
     {
-        var : Variables.variable; 
+        var : Variables.t; 
         n : int
     }
 
@@ -16,7 +16,7 @@ let to_string ( power : pow ) =
 let to_z3 (ctx : Z3. context)  ( power : pow ) =
     Z3.Arithmetic.mk_power ctx ( Variables.to_z3 ctx power.var ) (Z3.Arithmetic.Integer.mk_numeral_i ctx power.n)
     
-let mk_pow_from_var (base : Variables.variable) (exponent : int) = 
+let mk_pow_from_var (base : Variables.t) (exponent : int) = 
     {
         var = base;
         n = exponent

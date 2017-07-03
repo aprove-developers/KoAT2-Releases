@@ -4,7 +4,7 @@ type monomial = Powers.pow list
 
 type value = Big_int.big_int
 
-let rec mk_mon (input : (Variables.variable*int) list) =
+let rec mk_mon (input : (Variables.t*int) list) =
     match input with
         |[] -> []
         |(var, n)::rest -> (Powers.mk_pow_from_var var n) :: (mk_mon rest)
@@ -13,11 +13,11 @@ let get_variables (mon : monomial) = Tools.remove_dup (List.map Powers.get_varia
 
 let get_degree (mon : monomial) = List.fold_left (+) 0 (List.map Powers.get_degree mon)
 
-let get_degree_variable (var : Variables.variable) (mon : monomial) =
+let get_degree_variable (var : Variables.t) (mon : monomial) =
     let var_list = List.filter (fun x-> Variables.equal (Powers.get_variable x) var ) mon  in 
         get_degree var_list  
 
-let delete_var (var: Variables.variable) (mon : monomial) =
+let delete_var (var: Variables.t) (mon : monomial) =
     List.filter(fun x -> let var_x = Powers.get_variable x in not (Variables.equal var var_x)) mon
 
 let rec simplify (mon : monomial) =

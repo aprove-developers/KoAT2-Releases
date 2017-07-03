@@ -64,7 +64,7 @@ let get_monomials (poly : polynomial) = List.filter (fun x -> x <> []) (List.map
 
 (* Returns a variable as a polynomial *)
 
-let from_var (var : Variables.variable) =
+let from_var (var : Variables.t) =
     let pow = (Powers.mk_pow_from_var var 1) in
         let scaled_with_one = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1)  [pow] in
             [scaled_with_one]
