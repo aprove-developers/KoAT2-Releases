@@ -1,1 +1,6 @@
 .SUBDIRS: poly test
+
+.PHONY: clean
+
+clean:
+    rm -f **/*.cmi **/*.cmo **/*.cmx **/*.o **/*.a **/*.cmxa **/*.omc 
