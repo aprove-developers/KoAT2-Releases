@@ -96,8 +96,8 @@ let () =
                    let intmapping = VarMap.add "x" (Big_int.big_int_of_int 2) intmapping in
                    let intmapping = VarMap.add "y" (Big_int.big_int_of_int 5) intmapping in
                    let intmapping = VarMap.add "z" (Big_int.big_int_of_int 3) intmapping in  
-                       Printf.printf "instantiating the variables in mon1 yields %s\n" (Big_int.string_of_big_int (Monomials.instantiate_with_big_int intmapping mon1));
+                       Printf.printf "instantiating the variables in mon1 yields %s\n" (Big_int.string_of_big_int (Monomials.eval intmapping mon1));
 
-                       Printf.printf "instantiating the variables in poly1 yields %s\n" (Big_int.string_of_big_int (Polynomials.instantiate_with_big_int intmapping poly1))
+                       Printf.printf "instantiating the variables in poly1 yields %s\n" (Big_int.string_of_big_int (Polynomials.eval intmapping poly1))
                       
 ;;

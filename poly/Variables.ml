@@ -2,6 +2,8 @@ open Mapping
 
 type variable = string
 
+type value = Big_int.big_int
+
 let mk_var (name : string) =
     name
 
@@ -20,7 +22,7 @@ let get_new_var_name (varmapping : string VarMap.t) (var : variable) =
         VarMap.find var varmapping
     else var
 
-let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (var : variable) =
+let eval (varmapping : value VarMap.t) (var : variable) =
     if VarMap.mem var varmapping then
         VarMap.find var varmapping
     else Big_int.zero_big_int 

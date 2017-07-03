@@ -6,6 +6,8 @@ type pow =
         n : int
     }
 
+type value = Big_int.big_int
+  
 let to_string ( power : pow ) =
     if power.n<=0 then "1"
     else if power.n == 1 then (Variables.to_string power.var) 
@@ -40,6 +42,6 @@ let rename_power (varmapping : string VarMap.t) (power : pow) =
         n = power.n
     }
     
-let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (power : pow) =
+let eval (varmapping : value VarMap.t) (power : pow) =
     if power.n < 0 then Big_int.zero_big_int
-    else Big_int.power_big_int_positive_int (Variables.instantiate_with_big_int varmapping power.var) power.n
+    else Big_int.power_big_int_positive_int (Variables.eval varmapping power.var) power.n

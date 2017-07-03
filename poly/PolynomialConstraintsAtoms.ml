@@ -67,9 +67,9 @@ let rename_vars (varmapping : string VarMap.t) (comp : constraint_atom) =
 
 let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (comp : constraint_atom) =
     match comp with
-    |GreaterThan (p1, p2)-> (Big_int.gt_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
-    |GreaterEqual (p1, p2)-> (Big_int.ge_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
-    |LessThan (p1, p2)-> (Big_int.lt_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
-    |LessEqual (p1, p2)-> (Big_int.le_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
-    |Neq (p1, p2)-> not(Big_int.eq_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
-    |Equal (p1, p2)-> (Big_int.eq_big_int (Polynomials.instantiate_with_big_int varmapping p1) (Polynomials.instantiate_with_big_int varmapping p2))
+    |GreaterThan (p1, p2)-> (Big_int.gt_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
+    |GreaterEqual (p1, p2)-> (Big_int.ge_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
+    |LessThan (p1, p2)-> (Big_int.lt_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
+    |LessEqual (p1, p2)-> (Big_int.le_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
+    |Neq (p1, p2)-> not(Big_int.eq_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
+    |Equal (p1, p2)-> (Big_int.eq_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))

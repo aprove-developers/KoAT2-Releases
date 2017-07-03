@@ -3,6 +3,8 @@ type scaled_mon =
     {   coeff : Big_int.big_int; 
         mon :   Monomials.monomial;
     }
+
+type value = Big_int.big_int
     
 let mk_scaled_mon_from_mon (coefficient : Big_int.big_int) (monomial : Monomials.monomial) = { coeff = coefficient; mon = monomial }
 
@@ -22,7 +24,7 @@ let simplify (scaled : scaled_mon) =
 
 let to_string_simplified (scaled : scaled_mon) =
     if (Big_int.eq_big_int scaled.coeff Big_int.unit_big_int) then (Monomials.to_string scaled.mon)
-    else if scaled.mon == [] then String.concat "" ["(" ; (Big_int.string_of_big_int scaled.coeff) ; ")"] 
+    else if scaled.mon == Monomials.mk_mon [] then String.concat "" ["(" ; (Big_int.string_of_big_int scaled.coeff) ; ")"] 
     else String.concat "" ["(" ; (Big_int.string_of_big_int scaled.coeff) ; ")" ; "*" ; (Monomials.to_string scaled.mon)]
 
 let to_string (scaled : scaled_mon) = to_string_simplified (simplify scaled)
@@ -41,10 +43,10 @@ let rename_scaled_mon (varmapping : string VarMap.t) (scaled : scaled_mon) =
         mon = Monomials.rename_monomial varmapping scaled.mon
     }
 
-let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (scaled : scaled_mon) =
-    Big_int.mult_big_int scaled.coeff (Monomials.instantiate_with_big_int varmapping scaled.mon)
+let eval (varmapping : value VarMap.t) (scaled : scaled_mon) =
+    Big_int.mult_big_int scaled.coeff (Monomials.eval varmapping scaled.mon)
 
-let mult_with_const (const : Big_int.big_int) (scaled : scaled_mon) =
+let mult_with_const (const : value) (scaled : scaled_mon) =
     {   coeff = Big_int.mult_big_int scaled.coeff const; 
         mon = scaled.mon
     }

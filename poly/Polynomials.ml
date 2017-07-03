@@ -4,6 +4,8 @@ open Mapping
 (*A polynomial is a scaled sum of monomials, the coefficients are integers*)
 type polynomial = ScaledMonomials.scaled_mon list 
 
+type value = Big_int.big_int
+
 let get_degree (poly : polynomial) =
     Tools.max_of_int_list (List.map (ScaledMonomials.get_degree) poly )
     
@@ -58,7 +60,7 @@ let equal (poly1 : polynomial) (poly2 : polynomial) =
 
 
 (* Returns the monomials of a polynomial without the empty monomial *)
-let get_monomials (poly : polynomial) = List.filter (fun x -> x <>[]) (List.map (ScaledMonomials.get_monom) (simplify poly))
+let get_monomials (poly : polynomial) = List.filter (fun x -> x <> []) (List.map (ScaledMonomials.get_monom) (simplify poly))
 
 (* Returns a variable as a polynomial *)
 
@@ -159,5 +161,5 @@ let rec pow_poly (poly1 : polynomial)  (d : int) =
 
 (*instantiates the variables in a polynomial with big ints*)
 
-let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (poly : polynomial) = 
-List.fold_left (Big_int.add_big_int) (Big_int.zero_big_int) (List.map (ScaledMonomials.instantiate_with_big_int varmapping) poly)
+let eval (varmapping : value VarMap.t) (poly : polynomial) = 
+List.fold_left (Big_int.add_big_int) (Big_int.zero_big_int) (List.map (ScaledMonomials.eval varmapping) poly)

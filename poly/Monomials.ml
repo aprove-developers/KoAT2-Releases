@@ -1,6 +1,9 @@
 open Mapping
+
 type monomial = Powers.pow list
-  
+
+type value = Big_int.big_int
+
 let rec mk_mon (input : (Variables.variable*int) list) =
     match input with
         |[] -> []
@@ -69,5 +72,5 @@ List.map (Powers.rename_power varmapping) mon
 let mult (mon1 : monomial) (mon2 : monomial) =
 simplify (List.append mon1 mon2)  
 
-let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (mon : monomial) = 
-List.fold_left (Big_int.mult_big_int) (Big_int.unit_big_int) (List.map (Powers.instantiate_with_big_int varmapping) mon)
+let eval (varmapping : value VarMap.t) (mon : monomial) = 
+List.fold_left (Big_int.mult_big_int) (Big_int.unit_big_int) (List.map (Powers.eval varmapping) mon)
