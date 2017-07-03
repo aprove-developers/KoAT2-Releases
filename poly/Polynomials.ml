@@ -2,7 +2,7 @@
 open Mapping
 
 (*A polynomial is a scaled sum of monomials, the coefficients are integers*)
-type polynomial = ScaledMonomials.scaled_mon list 
+type polynomial = ScaledMonomials.t list 
 
 type value = Big_int.big_int
 

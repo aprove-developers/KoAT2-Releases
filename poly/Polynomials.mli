@@ -1,4 +1,4 @@
-type polynomial = ScaledMonomials.scaled_mon list
+type polynomial = ScaledMonomials.t list
 type value = Big_int.big_int
 val get_degree : polynomial -> int
 val to_z3 : Z3.context -> polynomial -> Z3.Expr.expr
