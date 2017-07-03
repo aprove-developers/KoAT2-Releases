@@ -2,15 +2,15 @@ type polynomial = ScaledMonomials.scaled_mon list
 type value = Big_int.big_int
 val get_degree : polynomial -> int
 val to_z3 : Z3.context -> polynomial -> Z3.Expr.expr
-val get_coeff : Monomials.monomial -> polynomial -> value
-val delete_monomial : Monomials.monomial -> polynomial -> polynomial
+val get_coeff : Monomials.t -> polynomial -> value
+val delete_monomial : Monomials.t -> polynomial -> polynomial
 val simplify_partial_simplified : polynomial -> polynomial
 val simplify : polynomial -> polynomial
 val to_string_simplified : polynomial -> string
 val to_string : polynomial -> string
 val equal_simplified : polynomial -> polynomial -> bool
 val equal : polynomial -> polynomial -> bool
-val get_monomials : polynomial -> Monomials.monomial list
+val get_monomials : polynomial -> Monomials.t list
 val from_var : Variables.t -> polynomial
 val zero : polynomial
 val one : polynomial

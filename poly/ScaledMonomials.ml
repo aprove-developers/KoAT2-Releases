@@ -1,12 +1,12 @@
 open Mapping
 type scaled_mon = 
     {   coeff : Big_int.big_int; 
-        mon :   Monomials.monomial;
+        mon :   Monomials.t;
     }
 
 type value = Big_int.big_int
     
-let mk_scaled_mon_from_mon (coefficient : Big_int.big_int) (monomial : Monomials.monomial) = { coeff = coefficient; mon = monomial }
+let mk_scaled_mon_from_mon (coefficient : Big_int.big_int) (monomial : Monomials.t) = { coeff = coefficient; mon = monomial }
 
 let get_coeff (scaled : scaled_mon) =
     scaled.coeff

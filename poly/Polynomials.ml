@@ -10,12 +10,12 @@ let get_degree (poly : polynomial) =
     Tools.max_of_int_list (List.map (ScaledMonomials.get_degree) poly )
     
 (* Returns the coefficient of a monomial *)
-let get_coeff (mon : Monomials.monomial) (poly : polynomial) = 
+let get_coeff (mon : Monomials.t) (poly : polynomial) = 
     let mon_reduced_poly =(List.filter (fun scaled-> Monomials.equal (ScaledMonomials.get_monom scaled) mon) poly ) in
         let coeff_list = List.map (ScaledMonomials.get_coeff) mon_reduced_poly in
             List.fold_left (Big_int.add_big_int) Big_int.zero_big_int coeff_list
 
-let delete_monomial (mon : Monomials.monomial) (poly : polynomial) =
+let delete_monomial (mon : Monomials.t) (poly : polynomial) =
     List.filter (fun x -> not (Monomials.equal (ScaledMonomials.get_monom x) mon)) poly
 
 let rec simplify_partial_simplified (poly : polynomial) =

@@ -1,9 +1,9 @@
 type scaled_mon
 type value = Big_int.big_int
-val mk_scaled_mon_from_mon : value -> Monomials.monomial -> scaled_mon
+val mk_scaled_mon_from_mon : value -> Monomials.t -> scaled_mon
 val to_z3 : Z3.context -> scaled_mon -> Z3.Expr.expr
 val get_coeff : scaled_mon -> value
-val get_monom : scaled_mon -> Monomials.monomial
+val get_monom : scaled_mon -> Monomials.t
 val get_degree : scaled_mon -> int
 val simplify : scaled_mon -> scaled_mon
 val to_string_simplified : scaled_mon -> string
