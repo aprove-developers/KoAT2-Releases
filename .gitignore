@@ -2,14 +2,20 @@
 *.byte
 *.cmi
 *.cmo
-*.mli
+*.cmx
+*.native
+*.o
+*.a
+*.cmxa
+
 #Ignore files created by editors
 *.swp
+
 #Ignore emacs autosave
 *~
-*.o
+
 *.omc
-*.cmx
 *.run
 /.omakedb
 /.omakedb.lock
+*.kate-swp

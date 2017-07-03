@@ -1,6 +1,6 @@
-open Poly
+open Mapping
 open Z3
-let _ =	
+let () =	
     let x = (Variables.mk_var "x") in
     let y = (Variables.mk_var "y") in
     let z = (Variables.mk_var "z") in
