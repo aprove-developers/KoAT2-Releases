@@ -1,6 +1,6 @@
 open Mapping
 
-type monomial = Powers.pow list
+type monomial = Powers.t list
 
 type value = Big_int.big_int
 
