@@ -1,4 +1,3 @@
-
 open Mapping
 
 (*A polynomial is a scaled sum of monomials, the coefficients are integers*)
