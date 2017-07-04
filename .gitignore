@@ -5,13 +5,18 @@
 *.cmx
 *.native
 *.o
-
-#Ignore Poly.ml
-Poly.m
-
-#Ignore Poly.ml
-Poly.ml
+*.a
+*.cmxa
+*.opt
 
 #Ignore files created by editors
 *.swp
+
+#Ignore emacs autosave
+*~
+
+*.omc
+*.run
+/.omakedb
+/.omakedb.lock
 *.kate-swp

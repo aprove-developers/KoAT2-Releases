@@ -1,0 +1,26 @@
+USE_OCAMLFIND = true
+
+OCAMLPACKS[] =
+    Z3
+
+# OCAMLINCLUDES +=
+
+NATIVE_ENABLED = true
+BYTE_ENABLED = true
+
+OCamlGeneratedFiles(parser.ml lexer.ml)
+
+FILES[] =
+    Variables
+    Mapping
+    Monomials
+    PolynomialConstraintsAtoms
+    Polynomials
+    Powers
+    ScaledMonomials
+    Tools
+    VarMap
+
+LIB = poly
+
+OCamlLibrary($(LIB), $(FILES))

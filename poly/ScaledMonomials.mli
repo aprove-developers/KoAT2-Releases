@@ -1,16 +1,15 @@
-type scaled_mon = { coeff : Big_int.big_int; mon : Monomials.monomial; }
-val mk_scaled_mon_from_mon :
-  Big_int.big_int -> Monomials.monomial -> scaled_mon
-val to_z3 : Z3.context -> scaled_mon -> Z3.Expr.expr
-val get_coeff : scaled_mon -> Big_int.big_int
-val get_monom : scaled_mon -> Monomials.monomial
-val get_degree : scaled_mon -> int
-val simplify : scaled_mon -> scaled_mon
-val to_string_simplified : scaled_mon -> string
-val to_string : scaled_mon -> string
-val equal : scaled_mon -> scaled_mon -> bool
-val rename_scaled_mon : string Mapping.VarMap.t -> scaled_mon -> scaled_mon
-val instantiate_with_big_int :
-  Big_int.big_int Mapping.VarMap.t -> scaled_mon -> Big_int.big_int
-val mult_with_const : Big_int.big_int -> scaled_mon -> scaled_mon
-val mult : scaled_mon -> scaled_mon -> scaled_mon
+type t
+type value = Big_int.big_int
+val mk_scaled_mon_from_mon : value -> Monomials.t -> t
+val to_z3 : Z3.context -> t -> Z3.Expr.expr
+val get_coeff : t -> value
+val get_monom : t -> Monomials.t
+val get_degree : t -> int
+val simplify : t -> t
+val to_string_simplified : t -> string
+val to_string : t -> string
+val equal : t -> t -> bool
+val rename_scaled_mon : string Mapping.VarMap.t -> t -> t
+val eval : value Mapping.VarMap.t -> t -> value
+val mult_with_const : value -> t -> t
+val mult : t -> t -> t

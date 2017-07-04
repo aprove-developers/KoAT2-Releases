@@ -1,17 +1,17 @@
-type monomial = Powers.pow list
-val to_z3 : Z3.context -> monomial -> Z3.Expr.expr
-val mk_mon : (Variables.variable * int) list -> Powers.pow list
-val get_variables : monomial -> Variables.variable list
-val get_degree : monomial -> int
-val get_degree_variable : Variables.variable -> monomial -> int
-val delete_var : Variables.variable -> monomial -> Powers.pow list
-val simplify : monomial -> Powers.pow list
-val to_string_simplified : monomial -> string
-val to_string : monomial -> string
-val equal_simplified : monomial -> monomial -> bool
-val equal : monomial -> monomial -> bool
-val is_univariate_linear_monomial : monomial -> bool
-val rename_monomial : string Mapping.VarMap.t -> monomial -> Powers.pow list
-val mult : monomial -> monomial -> Powers.pow list
-val instantiate_with_big_int :
-  Big_int.big_int Mapping.VarMap.t -> monomial -> Big_int.big_int
+type t = Powers.t list
+type value = Big_int.big_int
+val to_z3 : Z3.context -> t -> Z3.Expr.expr
+val mk_mon : (Variables.t * int) list -> t
+val get_variables : t -> Variables.t list
+val get_degree : t -> int
+val get_degree_variable : Variables.t -> t -> int
+val delete_var : Variables.t -> t -> Powers.t list
+val simplify : t -> t
+val to_string_simplified : t -> string
+val to_string : t -> string
+val equal_simplified : t -> t -> bool
+val equal : t -> t -> bool
+val is_univariate_linear_monomial : t -> bool
+val rename_monomial : string Mapping.VarMap.t -> t -> t
+val mult : t -> t -> t
+val eval : value Mapping.VarMap.t -> t -> value
