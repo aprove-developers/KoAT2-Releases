@@ -1,4 +1,4 @@
-.SUBDIRS: poly test
+.SUBDIRS: poly constraints test
 
 .PHONY: clean
 

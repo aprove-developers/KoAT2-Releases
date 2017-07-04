@@ -2,7 +2,7 @@ FindComp = ocamlfind ocamlopt -I ../poly
 ZThree = -package Z3 -linkpkg
 PolyDir = ../poly
 
-.PHONY : Default clean
+.PHONY : Default clean PolynomialConstraintsAtom
 Default : PolynomialConstraintsTest
 
 Polynomials.cmx : 

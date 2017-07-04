@@ -3,23 +3,17 @@ USE_OCAMLFIND = true
 OCAMLPACKS[] =
     Z3
 
-# OCAMLINCLUDES +=
+OCAMLINCLUDES += ../poly
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
 OCamlGeneratedFiles(parser.ml lexer.ml)
+OCAML_LIBS += ../poly/poly
 
 FILES[] =
-    Variables
-    Mapping
-    Monomials
-    Polynomials
-    Powers
-    ScaledMonomials
-    Tools
-    VarMap
+    PolynomialConstraintsAtoms
 
-LIB = poly
+LIB = constraints
 
 OCamlLibrary($(LIB), $(FILES))
