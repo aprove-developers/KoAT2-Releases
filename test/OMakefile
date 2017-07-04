@@ -11,8 +11,9 @@ BYTE_ENABLED = true
 
 OCamlGeneratedFiles(parser.ml lexer.ml)
 
-OCAML_LIBS += ../poly/poly
+
 OCAML_LIBS += ../constraints/constraints
+
 # OCAML_CLIBS +=
 # OCAML_OTHER_LIBS +=
 # OCAML_LIB_FLAGS +=
