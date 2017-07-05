@@ -25,3 +25,10 @@ let eval varmapping var =
     if VarMap.mem var varmapping then
         VarMap.find var varmapping
     else Big_int.zero_big_int 
+
+let rec equal_varlist (list1 : t list) (list2 : t list) =  
+    match (list1, list2) with
+        | ([],[]) -> true
+        | (x1::tail1, x2::tail2) -> (equal x1 x2) && (equal_varlist tail1 tail2)
+        | ([],_) -> false
+        | (_,[]) -> false

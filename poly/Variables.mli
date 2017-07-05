@@ -7,3 +7,4 @@ val equal : t -> t -> bool
 val to_z3 : Z3.context -> t -> Z3.Expr.expr
 val get_new_var_name : string Mapping.VarMap.t -> t -> t
 val eval : value Mapping.VarMap.t -> t -> value
+val equal_varlist : t list -> t list -> bool
