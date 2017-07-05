@@ -13,12 +13,19 @@ val mk_lt : Polynomials.t -> Polynomials.t -> t
 val mk_le : Polynomials.t -> Polynomials.t -> t
 val mk_eq : Polynomials.t -> Polynomials.t -> t
 val mk_neq : Polynomials.t -> Polynomials.t -> t
+val is_gt : t -> bool
+val is_ge : t -> bool
+val is_lt : t -> bool
+val is_le : t -> bool
+val is_eq : t -> bool
+val is_neq : t -> bool
+val is_same_constr : t -> t -> bool
+val simplify : t -> t
+val equal : t -> t -> bool
 val one : Polynomials.t
 val remove_strictness : t -> t
 val to_string : t -> string
 val to_z3 : Z3.context -> t -> Z3.Expr.expr
 val get_variables : t -> Variables.t list
-val rename_vars :
-  string Mapping.VarMap.t -> t -> t
-val instantiate_with_big_int :
-  Big_int.big_int Mapping.VarMap.t -> t -> bool
+val rename_vars : string Mapping.VarMap.t -> t -> t
+val instantiate_with_big_int : Big_int.big_int Mapping.VarMap.t -> t -> bool

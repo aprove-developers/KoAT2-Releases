@@ -34,6 +34,60 @@ let mk_eq (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
     
 let mk_neq (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
     Neq(poly1, poly2)
+
+let is_gt (atom : t) =
+    match atom with
+        |GreaterThan(_, _) -> true
+        |_ ->false
+
+let is_ge (atom : t) =
+    match atom with
+        |GreaterEqual(_, _) -> true
+        |_ ->false
+
+let is_lt (atom : t) =
+    match atom with
+        |LessThan(_, _) -> true
+        |_ ->false
+
+let is_le (atom : t) =
+    match atom with
+        |LessEqual(_, _) -> true
+        |_ ->false
+
+let is_eq (atom : t) =
+    match atom with
+        |Equal(_, _) -> true
+        |_ ->false
+    
+let is_neq (atom : t) =
+    match atom with
+        |Neq(_, _) -> true
+        |_ ->false
+        
+let is_same_constr (atom1 : t) (atom2 : t) =
+    match (atom1, atom2) with
+     |(GreaterThan (_,_), GreaterThan(_,_)) -> true
+     |(GreaterEqual (_,_), GreaterEqual(_,_)) -> true
+     |(LessThan (_,_), LessThan(_,_)) -> true
+     |(LessEqual (_,_), LessEqual(_,_)) -> true
+     |(Equal (_,_), Equal (_,_)) -> true
+     |(Neq (_,_), Neq (_,_)) -> true
+     |(_,_) -> false
+    
+let simplify (atom : t) =
+    let poly_simplify = Polynomials.simplify in
+        match atom with
+            |GreaterThan (p1, p2)-> mk_gt (poly_simplify p1) (poly_simplify p2)
+            |GreaterEqual (p1, p2)-> mk_ge (poly_simplify p1) (poly_simplify p2)
+            |LessThan (p1, p2)-> mk_lt (poly_simplify p1) (poly_simplify p2)
+            |LessEqual (p1, p2)-> mk_le (poly_simplify p1) (poly_simplify p2)
+            |Neq (p1, p2)-> mk_neq (poly_simplify p1) (poly_simplify p2)
+            |Equal (p1, p2)-> mk_eq (poly_simplify p1) (poly_simplify p2)
+            
+let equal (atom1 : t) (atom2 : t) =
+    let poly_equal = Polynomials.equal in
+        (is_same_constr atom1 atom2) && (poly_equal (get_first_arg atom1) (get_first_arg atom2)) && (poly_equal (get_second_arg atom1) (get_second_arg atom2))
     
 let one = Polynomials.one
 
