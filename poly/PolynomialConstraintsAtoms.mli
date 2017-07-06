@@ -1,3 +1,4 @@
+type var = Variables.StringVariableTerm.t
 type constraint_atom =
     GreaterThan of Polynomials.t * Polynomials.t
   | GreaterEqual of Polynomials.t * Polynomials.t
@@ -15,6 +16,6 @@ val mk_eq : Polynomials.t -> Polynomials.t -> constraint_atom
 val mk_neq : Polynomials.t -> Polynomials.t -> constraint_atom
 val to_string : constraint_atom -> string
 val to_z3 : Z3.context -> constraint_atom -> Z3.Expr.expr
-val get_variables : constraint_atom -> Variables.t list
-val rename_vars : string Mapping.VarMap.t -> constraint_atom -> constraint_atom
-val instantiate_with_big_int : Big_int.big_int Mapping.VarMap.t -> constraint_atom -> bool
+val get_variables : constraint_atom -> var list
+val rename_vars : Variables.StringVariableTerm.rename_map -> constraint_atom -> constraint_atom
+val instantiate_with_big_int : Variables.StringVariableTerm.valuation -> constraint_atom -> bool

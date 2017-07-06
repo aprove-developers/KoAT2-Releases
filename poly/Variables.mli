@@ -1,9 +1,11 @@
-type t = string
-type value = Big_int.big_int
-val mk_var : string -> t
-val to_string : t -> string
-val varlist_to_string : t list -> string
-val equal : t -> t -> bool
-val to_z3 : Z3.context -> t -> Z3.Expr.expr
-val get_new_var_name : string Mapping.VarMap.t -> t -> t
-val eval : value Mapping.VarMap.t -> t -> value
+open ID
+open Evaluable
+   
+module MakeVariableTerm(Var : ID) : Evaluable with type var = Var.t
+                                               and type t = Var.t
+                                               and type rename_map = Var.t Map.Make(Var).t
+
+module StringVariableTerm : Evaluable with type var = StringID.t
+                                       and type value = Big_int.big_int
+                                       and type rename_map = StringID.t Map.Make(StringID).t
+                                       and type valuation = Valuation.MakeValuation(StringID).t

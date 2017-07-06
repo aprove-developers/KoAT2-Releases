@@ -1,5 +1,7 @@
+type var = Variables.StringVariableTerm.t
 type t = ScaledMonomials.t list
-type value = Big_int.big_int
+type valuation = Variables.StringVariableTerm.valuation
+type value = Variables.StringVariableTerm.value
 val get_degree : t -> int
 val to_z3 : Z3.context -> t -> Z3.Expr.expr
 val get_coeff : Monomials.t -> t -> value
@@ -11,19 +13,19 @@ val to_string : t -> string
 val equal_simplified : t -> t -> bool
 val equal : t -> t -> bool
 val get_monomials : t -> Monomials.t list
-val from_var : Variables.t -> t
+val from_var : var -> t
 val zero : t
 val one : t
 val get_constant : t -> value
 val from_constant : value -> t
-val get_variables : t -> Variables.t list
+val get_variables : t -> var list
 val is_var : t -> bool
 val is_var_plus_constant : t -> bool
 val is_sum_of_vars_plus_constant : t -> bool
 val is_univariate_and_linear : t -> bool
 val is_const : t -> bool
 val is_linear : t -> bool
-val rename_vars : string Mapping.VarMap.t -> t -> t
+val rename_vars : Variables.StringVariableTerm.rename_map -> t -> t
 val mult_with_const : value -> t -> t
 val negate : t -> t
 val add : t -> t -> t
@@ -31,4 +33,4 @@ val add_list : t list -> t
 val subtract : t -> t -> t
 val mult : t -> t -> t
 val pow_poly : t -> int -> t
-val eval : value Mapping.VarMap.t -> t -> value
+val eval : valuation -> t -> value

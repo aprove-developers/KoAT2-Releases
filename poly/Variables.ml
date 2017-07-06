@@ -1,27 +1,34 @@
-open Mapping
+open ID
+open Evaluable
 
-type t = string
+module MakeVariableTerm(Var : ID) =
+  struct
+    module Valuation = Valuation.MakeValuation(Var)
+    module RenameMap = Map.Make(Var)
 
-type value = Big_int.big_int
+    type t = Var.t
+    type value = Valuation.value
+    type valuation = Valuation.t
+    type var = Var.t
+    type rename_map = var RenameMap.t
+             
+    let of_string = Var.of_string
+    let to_string = Var.to_string
+    let (==) = Var.(==)
+    let compare = Var.compare
 
-let mk_var name = name
+    let vars var = [var]
+                      
+    let eval = Valuation.eval
 
-let to_string var = var
+    let to_z3 ctx var =
+      Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx (to_string var))
+      
+    let rename rename_map var =
+      if RenameMap.mem var rename_map then
+        RenameMap.find var rename_map
+      else var
+  end
 
-let varlist_to_string vars =
-    String.concat ", " (List.map to_string vars)
-
-let equal = (==)
-
-let to_z3 ctx var =
-    Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx var)
-
-let get_new_var_name varmapping var =
-    if VarMap.mem var varmapping then
-        VarMap.find var varmapping
-    else var
-
-let eval varmapping var =
-    if VarMap.mem var varmapping then
-        VarMap.find var varmapping
-    else Big_int.zero_big_int 
+module StringVariableTerm = MakeVariableTerm(StringID)
+  
