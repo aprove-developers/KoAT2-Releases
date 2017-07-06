@@ -1,9 +1,7 @@
-module VariableTerm = Variables.StringVariableTerm
-
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
-type var = VariableTerm.t
+type var = Variables.StringVariableTerm.t
 
-type constraint_atom = 
+type t = 
     |GreaterThan of Polynomials.t * Polynomials.t
     |GreaterEqual of Polynomials.t * Polynomials.t
     |LessThan of Polynomials.t * Polynomials.t
@@ -11,11 +9,11 @@ type constraint_atom =
     |Neq of Polynomials.t * Polynomials.t
     |Equal of Polynomials.t * Polynomials.t
     
-let get_first_arg (comp : constraint_atom) =
+let get_first_arg (comp : t) =
     match comp with
     |GreaterThan(p1, p2) | GreaterEqual (p1, p2) | LessThan (p1, p2) | LessEqual (p1, p2) | Neq (p1, p2) | Equal (p1, p2)-> p1
 
-let get_second_arg (comp : constraint_atom) =
+let get_second_arg (comp : t) =
     match comp with
     |GreaterThan(p1, p2) | GreaterEqual (p1, p2) | LessThan (p1, p2) | LessEqual (p1, p2) | Neq (p1, p2) | Equal (p1, p2)-> p2
     
@@ -36,8 +34,72 @@ let mk_eq (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
     
 let mk_neq (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
     Neq(poly1, poly2)
+
+let is_gt (atom : t) =
+    match atom with
+        |GreaterThan(_, _) -> true
+        |_ ->false
+
+let is_ge (atom : t) =
+    match atom with
+        |GreaterEqual(_, _) -> true
+        |_ ->false
+
+let is_lt (atom : t) =
+    match atom with
+        |LessThan(_, _) -> true
+        |_ ->false
+
+let is_le (atom : t) =
+    match atom with
+        |LessEqual(_, _) -> true
+        |_ ->false
+
+let is_eq (atom : t) =
+    match atom with
+        |Equal(_, _) -> true
+        |_ ->false
     
-let to_string (comp : constraint_atom) =
+let is_neq (atom : t) =
+    match atom with
+        |Neq(_, _) -> true
+        |_ ->false
+        
+let is_same_constr (atom1 : t) (atom2 : t) =
+    match (atom1, atom2) with
+     |(GreaterThan (_,_), GreaterThan(_,_)) -> true
+     |(GreaterEqual (_,_), GreaterEqual(_,_)) -> true
+     |(LessThan (_,_), LessThan(_,_)) -> true
+     |(LessEqual (_,_), LessEqual(_,_)) -> true
+     |(Equal (_,_), Equal (_,_)) -> true
+     |(Neq (_,_), Neq (_,_)) -> true
+     |(_,_) -> false
+    
+let simplify (atom : t) =
+    let poly_simplify = Polynomials.simplify in
+        match atom with
+            |GreaterThan (p1, p2)-> mk_gt (poly_simplify p1) (poly_simplify p2)
+            |GreaterEqual (p1, p2)-> mk_ge (poly_simplify p1) (poly_simplify p2)
+            |LessThan (p1, p2)-> mk_lt (poly_simplify p1) (poly_simplify p2)
+            |LessEqual (p1, p2)-> mk_le (poly_simplify p1) (poly_simplify p2)
+            |Neq (p1, p2)-> mk_neq (poly_simplify p1) (poly_simplify p2)
+            |Equal (p1, p2)-> mk_eq (poly_simplify p1) (poly_simplify p2)
+            
+let equal (atom1 : t) (atom2 : t) =
+    let poly_equal = Polynomials.equal in
+        (is_same_constr atom1 atom2) && (poly_equal (get_first_arg atom1) (get_first_arg atom2)) && (poly_equal (get_second_arg atom1) (get_second_arg atom2))
+    
+let one = Polynomials.one
+
+(* In this setting everything represents integer values. Hence strictness can be removed by adding/subtracting one*)
+
+let remove_strictness (comp : t) =
+    match comp with
+    | GreaterThan (p1, p2)-> GreaterEqual (p1, (Polynomials.add p2 one))
+    | LessThan (p1, p2)-> LessEqual( p1, (Polynomials.subtract p2 one))
+    | _ -> comp
+    
+let to_string (comp : t) =
     match comp with
     |GreaterThan (p1, p2)-> String.concat " > " [Polynomials.to_string p1; Polynomials.to_string p2]
     |GreaterEqual (p1, p2)-> String.concat " >= " [Polynomials.to_string p1; Polynomials.to_string p2]
@@ -46,7 +108,7 @@ let to_string (comp : constraint_atom) =
     |Neq (p1, p2)-> String.concat " != " [Polynomials.to_string p1; Polynomials.to_string p2]
     |Equal (p1, p2)-> String.concat " = " [Polynomials.to_string p1; Polynomials.to_string p2]
     
-let to_z3 (ctx : Z3.context) (comp : constraint_atom) =
+let to_z3 (ctx : Z3.context) (comp : t) =
     match comp with
     |GreaterThan (p1, p2)-> Z3.Arithmetic.mk_gt ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
     |GreaterEqual (p1, p2)-> Z3.Arithmetic.mk_ge ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
@@ -55,10 +117,10 @@ let to_z3 (ctx : Z3.context) (comp : constraint_atom) =
     |Equal (p1, p2)-> Z3.Boolean.mk_eq ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
     |Neq (p1, p2)-> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2))
     
-let get_variables (comp : constraint_atom) =
+let get_variables (comp : t) =
     Tools.remove_dup (List.append (Polynomials.get_variables (get_first_arg comp)) (Polynomials.get_variables (get_second_arg comp)))
     
-let rename_vars (varmapping : VariableTerm.rename_map) (comp : constraint_atom) =
+let rename_vars (varmapping : Variables.StringVariableTerm.rename_map) (comp : t) =
     match comp with
     |GreaterThan (p1, p2)-> GreaterThan ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
     |GreaterEqual (p1, p2)-> GreaterEqual ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
@@ -67,7 +129,7 @@ let rename_vars (varmapping : VariableTerm.rename_map) (comp : constraint_atom) 
     |Neq (p1, p2)-> Neq ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
     |Equal (p1, p2)-> Equal ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
 
-let instantiate_with_big_int (varmapping : VariableTerm.valuation) (comp : constraint_atom) =
+let instantiate_with_big_int (varmapping : Variables.StringVariableTerm.valuation) (comp : t) =
     match comp with
     |GreaterThan (p1, p2)-> (Big_int.gt_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
     |GreaterEqual (p1, p2)-> (Big_int.ge_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))

@@ -1,0 +1,19 @@
+USE_OCAMLFIND = true
+
+OCAMLPACKS[] =
+    Z3
+
+OCAMLINCLUDES += ../poly
+
+NATIVE_ENABLED = true
+BYTE_ENABLED = true
+
+OCamlGeneratedFiles(parser.ml lexer.ml)
+OCAML_LIBS += ../poly/poly
+
+FILES[] =
+    PolynomialConstraintsAtoms
+
+LIB = constraints
+
+OCamlLibrary($(LIB), $(FILES))

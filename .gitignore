@@ -20,3 +20,6 @@
 /.omakedb
 /.omakedb.lock
 *.kate-swp
+
+#Ignore Makefile
+Makefile

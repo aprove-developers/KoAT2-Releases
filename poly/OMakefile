@@ -18,9 +18,7 @@ FILES[] =
     Valuation
     Evaluable
     Variables
-    Mapping
     Monomials
-    PolynomialConstraintsAtoms
     Polynomials
     Powers
     ScaledMonomials

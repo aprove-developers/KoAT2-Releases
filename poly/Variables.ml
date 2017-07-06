@@ -28,7 +28,7 @@ module MakeVariableTerm(Var : ID) =
       if RenameMap.mem var rename_map then
         RenameMap.find var rename_map
       else var
+
   end
 
 module StringVariableTerm = MakeVariableTerm(StringID)
-  

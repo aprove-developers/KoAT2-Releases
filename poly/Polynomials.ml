@@ -2,6 +2,7 @@ module VariableTerm = Variables.StringVariableTerm
 
 type var = VariableTerm.t
 type valuation = VariableTerm.valuation
+
 (*A polynomial is a scaled sum of monomials, the coefficients are integers*)
 type t = ScaledMonomials.t list 
 type value = VariableTerm.value

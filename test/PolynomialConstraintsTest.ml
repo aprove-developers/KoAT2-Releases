@@ -56,5 +56,6 @@ let () =
                             Printf.printf "poly2 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval intmapping poly2)); 
                             Printf.printf "poly3 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval intmapping poly3)); 
                             Printf.printf "poly 1 >= poly 2 : %B \n" (greater_equal_in);
-                            Printf.printf "poly 2 = poly 3 : %B \n" (equal_in)
+                            Printf.printf "poly 2 = poly 3 : %B \n" (equal_in);
+                            Printf.printf "comparison of constraints : %B \n" (PolynomialConstraintsAtoms.equal greater_equal equal)
 ;;
