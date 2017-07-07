@@ -1,7 +1,9 @@
-type var = Variables.StringVariableTerm.t
+open ID
+
+type var = Variables.MakeVariableTerm(StringID).t
 type t = ScaledMonomials.t list
-type valuation = Variables.StringVariableTerm.valuation
-type value = Variables.StringVariableTerm.value
+type valuation = Variables.MakeVariableTerm(StringID).valuation
+type value = Variables.MakeVariableTerm(StringID).value
 val get_degree : t -> int
 val to_z3 : Z3.context -> t -> Z3.Expr.expr
 val get_coeff : Monomials.t -> t -> value

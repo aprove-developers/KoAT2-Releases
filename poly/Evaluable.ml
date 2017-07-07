@@ -12,9 +12,10 @@ module type Evaluable =
     val to_string : t -> string
     val compare : t -> t -> int
     val vars : t -> var list
-    val eval : t -> valuation ->  value
+    val eval : t -> valuation -> value
     val to_z3 : Z3.context -> t -> Z3.Expr.expr
     val rename : rename_map -> t -> t
+    val degree : t -> int
   end
 
 module type EvaluableFunctor =

@@ -1,16 +1,18 @@
-type var = Variables.StringVariableTerm.t
-type valuation = Variables.StringVariableTerm.valuation
-type t = {
-    var : var; 
-    n : int
-  }
-type value = Variables.StringVariableTerm.value
-val to_string : t -> string
-val to_z3 : Z3.context -> t -> Z3.Expr.expr
-val mk_pow_from_var : var -> int -> t
-val mk_var : string -> t
-val get_variable : t -> var
-val get_degree : t -> int
-val equal : t -> t -> bool
-val rename_power : Variables.StringVariableTerm.rename_map -> t -> t
-val eval : valuation -> t -> value
+open ID
+open Evaluable
+
+module type Power =
+  sig
+    type t
+    include Evaluable with type t := t
+    val make : var -> int -> t
+    val var : t -> var
+    val n : t -> int
+  end
+   
+module MakePower(Var : ID) : Power with type var = Var.t
+                                    and type rename_map = Var.t Map.Make(Var).t
+                                    and type value = Big_int.big_int
+                                    and type valuation = Valuation.MakeValuation(Var).t
+
+module StringPower : Power

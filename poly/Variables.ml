@@ -29,6 +29,8 @@ module MakeVariableTerm(Var : ID) =
         RenameMap.find var rename_map
       else var
 
+    let degree var = 1
+      
   end
 
 module StringVariableTerm = MakeVariableTerm(StringID)

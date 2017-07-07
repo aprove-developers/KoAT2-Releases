@@ -15,6 +15,7 @@ module type Evaluable =
     val eval : t -> valuation -> value
     val to_z3 : Z3.context -> t -> Z3.Expr.expr
     val rename : rename_map -> t -> t
+    val degree : t -> int
   end
 
 module type EvaluableFunctor =

@@ -1,4 +1,6 @@
-type var = Variables.StringVariableTerm.t
+open ID
+
+type var = Variables.MakeVariableTerm(StringID).t
 type t =
     GreaterThan of Polynomials.t * Polynomials.t
   | GreaterEqual of Polynomials.t * Polynomials.t

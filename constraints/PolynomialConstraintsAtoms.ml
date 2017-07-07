@@ -1,5 +1,7 @@
+open ID
+
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
-type var = Variables.StringVariableTerm.t
+type var = Variables.MakeVariableTerm(StringID).t
 
 type t = 
     |GreaterThan of Polynomials.t * Polynomials.t

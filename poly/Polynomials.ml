@@ -1,4 +1,7 @@
-module VariableTerm = Variables.StringVariableTerm
+open ID
+
+module VariableTerm = Variables.MakeVariableTerm(StringID)
+module Power = Powers.MakePower(StringID)
 
 type var = VariableTerm.t
 type valuation = VariableTerm.valuation
@@ -66,7 +69,7 @@ let get_monomials poly = List.filter (fun x -> x <> []) (List.map (ScaledMonomia
 (* Returns a variable as a polynomial *)
 
 let from_var var =
-    let pow = (Powers.mk_pow_from_var var 1) in
+    let pow = (Power.make var 1) in
         let scaled_with_one = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1)  [pow] in
             [scaled_with_one]
 

@@ -1,6 +1,7 @@
 open ID
 module VarMap = Map.Make(StringID)
-module VariableTerm = Variables.StringVariableTerm
+module VariableTerm = Variables.MakeVariableTerm(StringID)
+module Power = Powers.MakePower(StringID)
 module Valuation = Valuation.MakeValuation(StringID)
 open Z3
 let () =	
@@ -8,9 +9,9 @@ let () =
     let y = (VariableTerm.of_string "y") in
     let z = (VariableTerm.of_string "z") in
     Printf.printf "x is %s\n" (VariableTerm.to_string x);
-        let pow1 = Powers.mk_pow_from_var x 2 in
-        let pow2 = Powers.mk_pow_from_var y 3 in
-        let pow3 = Powers.mk_pow_from_var z 0 in
+        let pow1 = Power.make x 2 in
+        let pow2 = Power.make y 3 in
+        let pow3 = Power.make z 0 in
             let mon1 = [pow1;pow2;pow1;pow2] in
             let mon2 = [pow2;pow2;pow1;pow1;pow3;pow3;pow3] in
             let const = [] in
