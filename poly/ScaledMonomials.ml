@@ -1,11 +1,12 @@
-open Mapping
+module VariableTerm = Variables.StringVariableTerm
+
+type valuation = VariableTerm.valuation
 type t = 
     {
         coeff : Big_int.big_int; 
         mon :   Monomials.t;
     }
-
-type value = Big_int.big_int
+type value = VariableTerm.value
     
 let mk_scaled_mon_from_mon coefficient monomial = { coeff = coefficient; mon = monomial }
 

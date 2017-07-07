@@ -1,9 +1,11 @@
-open Mapping
+module VariableTerm = Variables.StringVariableTerm
+
+type var = VariableTerm.t
+type valuation = VariableTerm.valuation
 
 (*A polynomial is a scaled sum of monomials, the coefficients are integers*)
 type t = ScaledMonomials.t list 
-
-type value = Big_int.big_int
+type value = VariableTerm.value
 
 let get_degree poly =
     Tools.max_of_int_list (List.map (ScaledMonomials.get_degree) poly )

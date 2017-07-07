@@ -1,8 +1,9 @@
-open Mapping
+module VariableTerm = Variables.StringVariableTerm
 
+type var = VariableTerm.t
+type valuation = VariableTerm.valuation
 type t = Powers.t list
-
-type value = Big_int.big_int
+type value = VariableTerm.value
 
 let rec mk_mon input =
     match input with
@@ -14,11 +15,11 @@ let get_variables mon = Tools.remove_dup (List.map Powers.get_variable mon)
 let get_degree mon = List.fold_left (+) 0 (List.map Powers.get_degree mon)
 
 let get_degree_variable var mon =
-    let var_list = List.filter (fun x-> Variables.equal (Powers.get_variable x) var ) mon  in 
+    let var_list = List.filter (fun x-> VariableTerm.(==) (Powers.get_variable x) var ) mon  in 
         get_degree var_list  
 
 let delete_var var mon =
-    List.filter(fun x -> let var_x = Powers.get_variable x in not (Variables.equal var var_x)) mon
+    List.filter(fun x -> let var_x = Powers.get_variable x in not (VariableTerm.(==) var var_x)) mon
 
 let rec simplify mon =
     match mon with

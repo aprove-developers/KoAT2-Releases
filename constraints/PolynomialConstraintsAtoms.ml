@@ -1,5 +1,5 @@
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
-open Mapping
+type var = Variables.StringVariableTerm.t
 
 type t = 
     |GreaterThan of Polynomials.t * Polynomials.t
@@ -120,7 +120,7 @@ let to_z3 (ctx : Z3.context) (comp : t) =
 let get_variables (comp : t) =
     Tools.remove_dup (List.append (Polynomials.get_variables (get_first_arg comp)) (Polynomials.get_variables (get_second_arg comp)))
     
-let rename_vars (varmapping : string VarMap.t) (comp : t) =
+let rename_vars (varmapping : Variables.StringVariableTerm.rename_map) (comp : t) =
     match comp with
     |GreaterThan (p1, p2)-> GreaterThan ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
     |GreaterEqual (p1, p2)-> GreaterEqual ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
@@ -129,7 +129,7 @@ let rename_vars (varmapping : string VarMap.t) (comp : t) =
     |Neq (p1, p2)-> Neq ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
     |Equal (p1, p2)-> Equal ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
 
-let instantiate_with_big_int (varmapping : Big_int.big_int VarMap.t) (comp : t) =
+let instantiate_with_big_int (varmapping : Variables.StringVariableTerm.valuation) (comp : t) =
     match comp with
     |GreaterThan (p1, p2)-> (Big_int.gt_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
     |GreaterEqual (p1, p2)-> (Big_int.ge_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))

@@ -1,3 +1,4 @@
+type var = Variables.StringVariableTerm.t
 type t =
     GreaterThan of Polynomials.t * Polynomials.t
   | GreaterEqual of Polynomials.t * Polynomials.t
@@ -26,6 +27,6 @@ val one : Polynomials.t
 val remove_strictness : t -> t
 val to_string : t -> string
 val to_z3 : Z3.context -> t -> Z3.Expr.expr
-val get_variables : t -> Variables.t list
-val rename_vars : string Mapping.VarMap.t -> t -> t
-val instantiate_with_big_int : Big_int.big_int Mapping.VarMap.t -> t -> bool
+val get_variables : t -> var list
+val rename_vars : Variables.StringVariableTerm.rename_map -> t -> t
+val instantiate_with_big_int : Variables.StringVariableTerm.valuation -> t -> bool
