@@ -11,8 +11,10 @@ type value = VariableTerm.value
 
 let make = List.map (fun (var, n) -> Power.make var n)
 
+let lift power = [power]
+         
 let vars mon = Tools.remove_dup (List.map Power.var mon)
-
+             
 let degree mon =
   mon
   |> List.map Power.degree

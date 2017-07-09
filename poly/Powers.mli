@@ -6,6 +6,7 @@ module type Power =
     type t
     include Evaluable with type t := t
     val make : var -> int -> t
+    val lift : var -> t
     val var : t -> var
     val n : t -> int
   end

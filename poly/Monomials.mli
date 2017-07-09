@@ -6,6 +6,7 @@ type t = Powers.MakePower(StringID).t list
 type value = Variables.MakeVariableTerm(StringID).value
 val to_z3 : Z3.context -> t -> Z3.Expr.expr
 val make : (var * int) list -> t
+val lift : Powers.MakePower(StringID).t -> t
 val vars : t -> var list
 val degree : t -> int
 val degree_variable : var -> t -> int
