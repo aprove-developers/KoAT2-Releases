@@ -121,7 +121,7 @@ let to_z3 (ctx : Z3.context) (comp : t) =
     |Neq (p1, p2)-> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2))
     
 let get_variables (comp : t) =
-    Tools.remove_dup (List.append (Polynomials.get_variables (get_first_arg comp)) (Polynomials.get_variables (get_second_arg comp)))
+    List.unique (List.append (Polynomials.get_variables (get_first_arg comp)) (Polynomials.get_variables (get_second_arg comp)))
     
 let rename_vars (varmapping : Variables.StringVariableTerm.rename_map) (comp : t) =
     match comp with

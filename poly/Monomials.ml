@@ -39,7 +39,7 @@ module MakeMonomial(Var : ID) =
 
     let lift power = [power]
          
-    let vars mon = Tools.remove_dup (List.map Power.var mon)
+    let vars mon = List.unique (List.map Power.var mon)
              
     let degree mon =
          mon

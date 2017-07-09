@@ -22,7 +22,6 @@ FILES[] =
     Polynomials
     Powers
     ScaledMonomials
-    Tools
 
 LIB = poly
 

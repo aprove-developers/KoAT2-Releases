@@ -13,26 +13,26 @@ type t = ScaledMonomials.t list
 type value = VariableTerm.value
 
 let get_degree poly =
-    Tools.max_of_int_list (List.map (ScaledMonomials.get_degree) poly )
+    List.max (List.map (ScaledMonomials.degree) poly )
     
 (* Returns the coefficient of a monomial *)
 let get_coeff mon poly = 
-    let mon_reduced_poly =(List.filter (fun scaled-> Monomial.(==) (ScaledMonomials.get_monom scaled) mon) poly ) in
-        let coeff_list = List.map (ScaledMonomials.get_coeff) mon_reduced_poly in
+    let mon_reduced_poly =(List.filter (fun scaled-> Monomial.(==) (ScaledMonomials.monomial scaled) mon) poly ) in
+        let coeff_list = List.map (ScaledMonomials.coeff) mon_reduced_poly in
             List.fold_left (Big_int.add_big_int) Big_int.zero_big_int coeff_list
 
 let delete_monomial mon poly =
-    List.filter (fun x -> not (Monomial.(==) (ScaledMonomials.get_monom x) mon)) poly
+    List.filter (fun x -> not (Monomial.(==) (ScaledMonomials.monomial x) mon)) poly
 
 let rec simplify_partial_simplified poly =
     match poly with 
         |[] -> []
         |scaled::tail ->
-            let curr_monom = ScaledMonomials.get_monom scaled in
+            let curr_monom = ScaledMonomials.monomial scaled in
                 let curr_coeff = get_coeff curr_monom poly in
                     if (Big_int.eq_big_int curr_coeff Big_int.zero_big_int) then (simplify_partial_simplified (delete_monomial curr_monom tail))
 
-                    else (ScaledMonomials.mk_scaled_mon_from_mon curr_coeff curr_monom) :: (simplify_partial_simplified (delete_monomial curr_monom tail) )
+                    else (ScaledMonomials.make curr_coeff curr_monom) :: (simplify_partial_simplified (delete_monomial curr_monom tail) )
 
 let simplify poly =
     simplify_partial_simplified (List.map (ScaledMonomials.simplify) poly)
@@ -56,8 +56,8 @@ let rec equal_simplified poly1 poly2 =
         match poly1 with
             |[] -> true
             | scaled :: tail ->
-                let curr_mon = ScaledMonomials.get_monom scaled in
-                    let curr_coeff = ScaledMonomials.get_coeff scaled in
+                let curr_mon = ScaledMonomials.monomial scaled in
+                    let curr_coeff = ScaledMonomials.coeff scaled in
                         (Big_int.eq_big_int curr_coeff (get_coeff curr_mon poly2)) && equal_simplified tail (delete_monomial curr_mon poly2)
     else false
 
@@ -69,14 +69,14 @@ let equal poly1 poly2 =
 let get_monomials poly =
      poly
   |> simplify
-  |> List.map ScaledMonomials.get_monom
+  |> List.map ScaledMonomials.monomial
   |> List.filter ((<>) Monomial.one)
 
 (* Returns a variable as a polynomial *)
 
 let from_var var =
     let pow = (Power.make var 1) in
-        let scaled_with_one = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1) (Monomial.lift pow) in
+        let scaled_with_one = ScaledMonomials.make (Big_int.big_int_of_int 1) (Monomial.lift pow) in
             [scaled_with_one]
 
 (* Return "zero" as a polynomial *)
@@ -86,19 +86,19 @@ let zero = []
 (* Return "one" as a polynomial *)
 
 let one = 
-  [ ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1) Monomial.one ]
+  [ ScaledMonomials.make (Big_int.big_int_of_int 1) Monomial.one ]
 
 (* Gets the constant *)
 let get_constant poly = get_coeff Monomial.one poly
 
 let from_constant c =
-    [(ScaledMonomials.mk_scaled_mon_from_mon c Monomial.one)]
+    [(ScaledMonomials.make c Monomial.one)]
 
 
 (* Returns the variables of a polynomial *)          
 let get_variables poly =
     let monomials_of_poly = get_monomials (simplify poly) in
-        Tools.remove_dup (List.concat (List.map Monomial.vars monomials_of_poly))
+        List.unique (List.concat (List.map Monomial.vars monomials_of_poly))
         
 (* Checks whether a polynomial is a single variable *)
 let is_var poly = 
@@ -114,7 +114,7 @@ let is_var_plus_constant poly =
 (* Checks whether a polynomial is a sum of variables plus a constant *)
 let is_sum_of_vars_plus_constant poly =
     let const_rem = delete_monomial Monomial.one poly in
-    List.for_all (fun scaled -> (Big_int.eq_big_int (ScaledMonomials.get_coeff scaled ) Big_int.unit_big_int) && (Monomial.is_univariate_linear_monomial (ScaledMonomials.get_monom scaled))) const_rem
+    List.for_all (fun scaled -> (Big_int.eq_big_int (ScaledMonomials.coeff scaled ) Big_int.unit_big_int) && (Monomial.is_univariate_linear_monomial (ScaledMonomials.monomial scaled))) const_rem
 
 (* Checks whether a polynomial is a sum of variables plus a constant *)
 let is_sum_of_vars_plus_constant poly =
@@ -136,7 +136,7 @@ let is_linear = is_sum_of_vars_plus_constant
 (*renames the variables occuring inside a polynomial*) 
 
 let rename_vars varmapping poly =
-    List.map (ScaledMonomials.rename_scaled_mon varmapping) poly
+    List.map (ScaledMonomials.rename varmapping) poly
 
 (*multiply a polynomial by a constant*)
 
@@ -171,4 +171,4 @@ let rec pow_poly poly1 d =
 (*instantiates the variables in a polynomial with big ints*)
 
 let eval varmapping poly = 
-    List.fold_left (Big_int.add_big_int) (Big_int.zero_big_int) (List.map (ScaledMonomials.eval varmapping) poly)
+    List.fold_left (Big_int.add_big_int) (Big_int.zero_big_int) (List.map (fun scaled -> ScaledMonomials.eval scaled varmapping) poly)
