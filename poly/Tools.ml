@@ -1,3 +1,5 @@
+open Batteries
+
 let rec remove_dup (inputList : 'a list) =
     match inputList with
         |[] -> []

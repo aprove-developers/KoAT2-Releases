@@ -1,3 +1,4 @@
+open Batteries
 open ID
 
 type var = Variables.MakeVariableTerm(StringID).t

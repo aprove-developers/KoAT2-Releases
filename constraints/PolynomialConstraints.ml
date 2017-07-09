@@ -1,3 +1,5 @@
+open Batteries
+
 (*Polynomial Constraints are conjunctions of PolynomialConstraintsAtoms*)
 type t = PolynomialConstraintsAtoms.constraint_atom list
 

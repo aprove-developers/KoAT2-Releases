@@ -1,7 +1,9 @@
+open Batteries
 open ID
 module VarMap = Map.Make(StringID)
 module VariableTerm = Variables.MakeVariableTerm(StringID)
 module Power = Powers.MakePower(StringID)
+module Monomial = Monomials.MakeMonomial(StringID)
 module Valuation = Valuation.MakeValuation(StringID)
 open Z3
 let () =	
@@ -10,16 +12,16 @@ let () =
     Printf.printf "x is %s\n" (VariableTerm.to_string x);
         let pow1 = Power.make x 2 in
         let pow2 = Power.make y 3 in
-            let mon1 = [pow1] in
-            let mon2 = [pow2] in
-            let const = [] in
+            let mon1 = Monomial.lift pow1 in
+            let mon2 = Monomial.lift pow2 in
+            let const = Monomial.one in
             Printf.printf "Running Z3 version %s\n" Version.to_string ;
             Printf.printf "Z3 full version string: %s\n" Version.full_version ;
             let cfg = [("model", "true"); ("proof", "false")] in
             let ctx = (mk_context cfg) in
                 let scaled1 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 2) mon1 in
-                let scaled2 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1) [pow1] in
-                let scaled3 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int(-1)) [pow2] in
+                let scaled2 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 1) (Monomial.lift pow1) in
+                let scaled3 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int(-1)) (Monomial.lift pow2) in
                 let scaled4 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int (-3)) mon2 in
                 let scaled5 = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 0) mon2 in
                 let scaled_const = ScaledMonomials.mk_scaled_mon_from_mon (Big_int.big_int_of_int 123) const in

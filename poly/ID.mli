@@ -1,3 +1,5 @@
+open Batteries
+
 module type ID =
   sig
     type t

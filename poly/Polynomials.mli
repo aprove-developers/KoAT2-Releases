@@ -1,20 +1,21 @@
+open Batteries
 open ID
-
+   
 type var = Variables.MakeVariableTerm(StringID).t
 type t = ScaledMonomials.t list
 type valuation = Variables.MakeVariableTerm(StringID).valuation
 type value = Variables.MakeVariableTerm(StringID).value
 val get_degree : t -> int
 val to_z3 : Z3.context -> t -> Z3.Expr.expr
-val get_coeff : Monomials.t -> t -> value
-val delete_monomial : Monomials.t -> t -> t
+val get_coeff : Monomials.MakeMonomial(StringID).t -> t -> value
+val delete_monomial : Monomials.MakeMonomial(StringID).t -> t -> t
 val simplify_partial_simplified : t -> t
 val simplify : t -> t
 val to_string_simplified : t -> string
 val to_string : t -> string
 val equal_simplified : t -> t -> bool
 val equal : t -> t -> bool
-val get_monomials : t -> Monomials.t list
+val get_monomials : t -> Monomials.MakeMonomial(StringID).t list
 val from_var : var -> t
 val zero : t
 val one : t
