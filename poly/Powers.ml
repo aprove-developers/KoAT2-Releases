@@ -17,7 +17,7 @@ module MakePower(Var : ID) =
     module RenameMap = Map.Make(Var)
 
     type t = {
-        var : VariableTerm.t; 
+        var : VariableTerm.t;
         n : int
       }
     type value = Valuation.value

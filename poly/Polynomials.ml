@@ -15,12 +15,12 @@ let get_degree poly =
     
 (* Returns the coefficient of a monomial *)
 let get_coeff mon poly = 
-    let mon_reduced_poly =(List.filter (fun scaled-> Monomials.equal (ScaledMonomials.get_monom scaled) mon) poly ) in
+    let mon_reduced_poly =(List.filter (fun scaled-> Monomials.(==) (ScaledMonomials.get_monom scaled) mon) poly ) in
         let coeff_list = List.map (ScaledMonomials.get_coeff) mon_reduced_poly in
             List.fold_left (Big_int.add_big_int) Big_int.zero_big_int coeff_list
 
 let delete_monomial mon poly =
-    List.filter (fun x -> not (Monomials.equal (ScaledMonomials.get_monom x) mon)) poly
+    List.filter (fun x -> not (Monomials.(==) (ScaledMonomials.get_monom x) mon)) poly
 
 let rec simplify_partial_simplified poly =
     match poly with 
@@ -93,7 +93,7 @@ let from_constant c =
 (* Returns the variables of a polynomial *)          
 let get_variables poly =
     let monomials_of_poly = get_monomials (simplify poly) in
-        Tools.remove_dup (List.concat (List.map Monomials.get_variables monomials_of_poly))
+        Tools.remove_dup (List.concat (List.map Monomials.vars monomials_of_poly))
         
 (* Checks whether a polynomial is a single variable *)
 let is_var poly = 

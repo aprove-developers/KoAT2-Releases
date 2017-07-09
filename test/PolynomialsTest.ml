@@ -26,11 +26,11 @@ let () =
             Printf.printf "Monomial mon2 = %s \n" (Monomials.to_string mon2);
             Printf.printf "Simplified Monomial mon2 = %s \n"  (Monomials.to_string (Monomials.simplify mon2));
 
-            Printf.printf "EqualityTest = %B \n" (Monomials.equal mon1 mon2);
-            Printf.printf "Degree of mon1 is %d\n" (Monomials.get_degree mon1);
+            Printf.printf "EqualityTest = %B \n" (Monomials.(==) mon1 mon2);
+            Printf.printf "Degree of mon1 is %d\n" (Monomials.degree mon1);
 
-            Printf.printf "Variables of mon1 are %s\n" (String.concat "," (List.map VariableTerm.to_string (Monomials.get_variables mon1)));
-            Printf.printf "Degree of x in mon1 is %d \n" (Monomials.get_degree_variable x mon1);
+            Printf.printf "Variables of mon1 are %s\n" (String.concat "," (List.map VariableTerm.to_string (Monomials.vars mon1)));
+            Printf.printf "Degree of x in mon1 is %d \n" (Monomials.degree_variable x mon1);
             Printf.printf "Monomial mon1 in Z3 = %s \n" (Z3.Expr.to_string (Monomials.to_z3 ctx mon1));
             
             Printf.printf "Constant Monomial = %s\n" (Monomials.to_string const);
@@ -83,7 +83,7 @@ let () =
                     let varmapping = VarMap.add (StringID.of_string "x") (StringID.of_string "a") varmapping in
                     let varmapping = VarMap.add (StringID.of_string "y") (StringID.of_string "b") varmapping in
                     let varmapping = VarMap.add (StringID.of_string "z") (StringID.of_string "c") varmapping in  
-                       Printf.printf "renaming the variables in mon1 yields %s\n" (Monomials.to_string (Monomials.rename_monomial varmapping mon1));
+                       Printf.printf "renaming the variables in mon1 yields %s\n" (Monomials.to_string (Monomials.rename varmapping mon1));
 
                        Printf.printf "renaming the variables in poly1 yields %s\n" (Polynomials.to_string (Polynomials.rename_vars varmapping poly1));
                        Printf.printf "Adding poly1 and poly2 = %s\n" (Polynomials.to_string (Polynomials.add poly1 poly2));

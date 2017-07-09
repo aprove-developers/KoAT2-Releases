@@ -14,7 +14,7 @@ let get_coeff scaled = scaled.coeff
 
 let get_monom scaled = scaled.mon
 
-let get_degree scaled = Monomials.get_degree (scaled.mon)
+let get_degree scaled = Monomials.degree scaled.mon
 
 let simplify scaled =
     {
@@ -24,7 +24,7 @@ let simplify scaled =
 
 let to_string_simplified scaled =
     if (Big_int.eq_big_int scaled.coeff Big_int.unit_big_int) then (Monomials.to_string scaled.mon)
-    else if scaled.mon == Monomials.mk_mon [] then String.concat "" ["(" ; (Big_int.string_of_big_int scaled.coeff) ; ")"] 
+    else if scaled.mon == Monomials.make [] then String.concat "" ["(" ; (Big_int.string_of_big_int scaled.coeff) ; ")"] 
     else String.concat "" ["(" ; (Big_int.string_of_big_int scaled.coeff) ; ")" ; "*" ; (Monomials.to_string scaled.mon)]
 
 let to_string scaled = to_string_simplified (simplify scaled)
@@ -36,12 +36,12 @@ let to_z3 ctx scaled =
     to_z3_simplified ctx (simplify scaled)
 
 let equal scaled1 scaled2 =
-    (Big_int.eq_big_int scaled1.coeff scaled2.coeff) && (Monomials.equal scaled1.mon scaled2.mon)
+    (Big_int.eq_big_int scaled1.coeff scaled2.coeff) && (Monomials.(==) scaled1.mon scaled2.mon)
 
 let rename_scaled_mon varmapping scaled =
     {
         coeff = scaled.coeff;
-        mon = Monomials.rename_monomial varmapping scaled.mon
+        mon = Monomials.rename varmapping scaled.mon
     }
 
 let eval varmapping scaled =

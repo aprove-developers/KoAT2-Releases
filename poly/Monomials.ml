@@ -1,5 +1,6 @@
+open Batteries
 open ID
-
+   
 module VariableTerm = Variables.MakeVariableTerm(StringID)
 module Power = Powers.MakePower(StringID)
 
@@ -8,36 +9,31 @@ type valuation = VariableTerm.valuation
 type t = Power.t list
 type value = VariableTerm.value
 
-let rec mk_mon input =
-    match input with
-        |[] -> []
-        |(var, n)::rest -> Power.make var n :: (mk_mon rest)
+let make = List.map (fun (var, n) -> Power.make var n)
 
-let get_variables mon = Tools.remove_dup (List.map Power.var mon) 
+let vars mon = Tools.remove_dup (List.map Power.var mon)
 
-let get_degree mon = List.fold_left (+) 0 (List.map Power.degree mon)
+let degree mon =
+  mon
+  |> List.map Power.degree
+  |> List.fold_left (+) 0
 
-let get_degree_variable var mon =
-    let var_list = List.filter (fun x-> VariableTerm.(==) (Power.var x) var ) mon  in 
-        get_degree var_list  
+let degree_variable var mon =
+    let var_list = List.filter (fun power -> VariableTerm.(==) (Power.var power) var ) mon  in 
+        degree var_list  
 
 let delete_var var mon =
     List.filter(fun x -> let var_x = Power.var x in not (VariableTerm.(==) var var_x)) mon
 
-let rec simplify mon =
-    match mon with
-        |[] -> []
-        |power :: tail -> 
-            let curr_var = (Power.var power) in
-                let curr_deg = get_degree_variable curr_var mon in
-                    if (curr_deg > 0) then 
-                        let new_pow = (Power.make curr_var curr_deg) in
-                            new_pow :: simplify (delete_var curr_var tail)
-                    else simplify (delete_var curr_var tail)
-                
-let to_string_simplified mon =
-    if mon == [] then "1"
-    else  String.concat "*" (List.map Power.to_string mon)
+let simplify mon =
+  mon
+  |> List.group (fun p1 p2 -> VariableTerm.compare (Power.var p1) (Power.var p2))
+  |> List.map (fun (powers : Power.t list) -> Power.make (Power.var (List.hd powers)) (degree powers))
+  
+                  
+let to_string_simplified = function 
+    [] -> "1"
+  | mon -> String.concat "*" (List.map Power.to_string mon)
 
 let to_string mon = to_string_simplified (simplify mon)
 
@@ -50,25 +46,22 @@ let to_z3 ctx mon =
 
 (*compares two monomials under the assumption that both have already been simplified*)
 let rec equal_simplified mon1 mon2 =
-        if (List.length mon1 == List.length mon2) then
-            match mon1 with
-            |[] -> true (*same length, hence mon2 == []*)
-            |pow1::tail1 -> 
-                let var1 = Power.var pow1 in
-                    ((get_degree_variable var1 mon2) == (Power.degree pow1)) && (equal_simplified tail1 (delete_var var1 mon2))
-            
-        else false
-
-let equal mon1 mon2 = equal_simplified (simplify mon1)(simplify mon2)
-
+  if (List.length mon1 == List.length mon2) then
+    match mon1 with
+    | [] -> true (*same length, hence mon2 == []*)
+    | pow1::tail1 -> 
+       let var1 = Power.var pow1 in
+       ((degree_variable var1 mon2) == (Power.degree pow1)) && (equal_simplified tail1 (delete_var var1 mon2))     
+  else false
 
 let is_univariate_linear_monomial mon =
-let variables_of_mon = (get_variables mon) in
-    if (List.length variables_of_mon == 1) then
-        ((get_degree_variable (List.nth variables_of_mon 0) mon) == 1)
-    else false
+  match vars mon with
+    [x] -> degree_variable x mon == 1
+  | _ -> false
 
-let rename_monomial varmapping mon = 
+let (==) mon1 mon2 = equal_simplified (simplify mon1)(simplify mon2)
+
+let rename varmapping mon = 
     List.map (Power.rename varmapping) mon
 
 (*Multiplication of monomials*)
