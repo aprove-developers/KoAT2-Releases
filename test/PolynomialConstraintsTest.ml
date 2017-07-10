@@ -5,6 +5,7 @@ module VariableTerm = Variables.MakeVariableTerm(StringID)
 module Power = Powers.MakePower(StringID)
 module Monomial = Monomials.MakeMonomial(StringID)
 module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(StringID)
+module Polynomial = Polynomials.MakePolynomial(StringID)
 module Valuation = Valuation.MakeValuation(StringID)
 open Z3
 let () =	
@@ -26,9 +27,9 @@ let () =
                 let scaled4 = ScaledMonomial.make (Big_int.big_int_of_int (-3)) mon2 in
                 let scaled5 = ScaledMonomial.make (Big_int.big_int_of_int 0) mon2 in
                 let scaled_const = ScaledMonomial.make (Big_int.big_int_of_int 123) const in
-                    let poly1 = [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4 ; scaled5 ; scaled5 ; scaled_const ; scaled5 ; scaled5 ; scaled5] in
-                    let poly2 = [scaled2 ; scaled3 ; scaled4 ; scaled1 ; scaled4 ; scaled5 ; scaled5 ; scaled_const] in
-                    let poly3 = Polynomials.from_var (VariableTerm.of_string "z") in 
+                    let poly1 = Polynomial.make [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4 ; scaled5 ; scaled5 ; scaled_const ; scaled5 ; scaled5 ; scaled5] in
+                    let poly2 = Polynomial.make [scaled2 ; scaled3 ; scaled4 ; scaled1 ; scaled4 ; scaled5 ; scaled5 ; scaled_const] in
+                    let poly3 = Polynomial.from_var (VariableTerm.of_string "z") in 
                     
                     let greater_equal = PolynomialConstraintsAtoms.mk_ge poly1 poly2 in
                     let equal = PolynomialConstraintsAtoms.mk_eq poly2 poly3 in
@@ -56,9 +57,9 @@ let () =
                                                         (StringID.of_string "z", Big_int.big_int_of_int 3)] in        
                             let greater_equal_in = PolynomialConstraintsAtoms.instantiate_with_big_int intmapping greater_equal in
                             let equal_in = PolynomialConstraintsAtoms.instantiate_with_big_int intmapping equal in
-                            Printf.printf "poly1 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval poly1 intmapping)); 
-                            Printf.printf "poly2 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval poly2 intmapping)); 
-                            Printf.printf "poly3 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval poly3 intmapping)); 
+                            Printf.printf "poly1 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomial.eval poly1 intmapping)); 
+                            Printf.printf "poly2 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomial.eval poly2 intmapping)); 
+                            Printf.printf "poly3 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomial.eval poly3 intmapping)); 
                             Printf.printf "poly 1 >= poly 2 : %B \n" (greater_equal_in);
                             Printf.printf "poly 2 = poly 3 : %B \n" (equal_in);
                             Printf.printf "comparison of constraints : %B \n" (PolynomialConstraintsAtoms.equal greater_equal equal)

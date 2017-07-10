@@ -5,6 +5,7 @@ module VariableTerm = Variables.MakeVariableTerm(StringID)
 module Power = Powers.MakePower(StringID)
 module Monomial = Monomials.MakeMonomial(StringID)
 module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(StringID)
+module Polynomial = Polynomials.MakePolynomial(StringID)
 module Valuation = Valuation.MakeValuation(StringID)
 open Z3
 let () =	
@@ -46,41 +47,41 @@ let () =
                 let scaled5 = ScaledMonomial.make (Big_int.big_int_of_int 0) mon2 in
                 let scaled_const = ScaledMonomial.make (Big_int.big_int_of_int 123) const in
                     Printf.printf "Constant Scaled Monomial = %s \n " (ScaledMonomial.to_string scaled_const);
-                    let poly1 = [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4 ; scaled5 ; scaled5 ; scaled_const ; scaled5 ; scaled5 ; scaled5] in
-                    let poly2 = [scaled2 ; scaled3 ; scaled4 ; scaled1 ; scaled4 ; scaled5 ; scaled5 ; scaled_const] in
+                    let poly1 = Polynomial.make [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4 ; scaled5 ; scaled5 ; scaled_const ; scaled5 ; scaled5 ; scaled5] in
+                    let poly2 = Polynomial.make [scaled2 ; scaled3 ; scaled4 ; scaled1 ; scaled4 ; scaled5 ; scaled5 ; scaled_const] in
 
-                    Printf.printf "poly1 = %s\n" (Polynomials.to_string poly1);
+                    Printf.printf "poly1 = %s\n" (Polynomial.to_string poly1);
                     
-                    Printf.printf "Coefficient of mon1 in poly1 = %s \n" (Big_int.string_of_big_int (Polynomials.coeff mon1 poly1));
-                    Printf.printf "Simplified Polynomial poly1  is = %s\n" (Polynomials.to_string (Polynomials.simplify poly1));
-                    Printf.printf "Scaled z3 = %s \n" (Z3.Expr.to_string (Polynomials.to_z3 ctx poly1));
-                    Printf.printf "Simplified Polynomial poly2  is = %s\n" (Polynomials.to_string (Polynomials.simplify poly2));
-                    Printf.printf "poly1 == poly2 ? %B \n" (Polynomials.equal poly1 poly2);
-                    Printf.printf "zero polynomial = %s \n" (Polynomials.to_string (Polynomials.zero));
-                    Printf.printf "constant polynomial 1 = %s \n" (Polynomials.to_string (Polynomials.one));
-                    Printf.printf "1 = 0 ? %B \n" (Polynomials.equal (Polynomials.zero) (Polynomials.one)); 
+                    Printf.printf "Coefficient of mon1 in poly1 = %s \n" (Big_int.string_of_big_int (Polynomial.coeff mon1 poly1));
+                    Printf.printf "Simplified Polynomial poly1  is = %s\n" (Polynomial.to_string (Polynomial.simplify poly1));
+                    Printf.printf "Scaled z3 = %s \n" (Z3.Expr.to_string (Polynomial.to_z3 ctx poly1));
+                    Printf.printf "Simplified Polynomial poly2  is = %s\n" (Polynomial.to_string (Polynomial.simplify poly2));
+                    Printf.printf "poly1 == poly2 ? %B \n" (Polynomial.(==) poly1 poly2);
+                    Printf.printf "zero polynomial = %s \n" (Polynomial.to_string (Polynomial.zero));
+                    Printf.printf "constant polynomial 1 = %s \n" (Polynomial.to_string (Polynomial.one));
+                    Printf.printf "1 = 0 ? %B \n" (Polynomial.(==) (Polynomial.zero) (Polynomial.one)); 
 
-                    Printf.printf "zero polynomial in Z3 = %s \n" (Z3.Expr.to_string (Polynomials.to_z3 ctx (Polynomials.zero)));
+                    Printf.printf "zero polynomial in Z3 = %s \n" (Z3.Expr.to_string (Polynomial.to_z3 ctx (Polynomial.zero)));
 
-                    Printf.printf "unit polynomial in Z3 = %s \n" (Z3.Expr.to_string (Polynomials.to_z3 ctx (Polynomials.one)));
+                    Printf.printf "unit polynomial in Z3 = %s \n" (Z3.Expr.to_string (Polynomial.to_z3 ctx (Polynomial.one)));
 
-                    Printf.printf "get_constant unit polynomial = %s\n" (Big_int.string_of_big_int (Polynomials.constant (Polynomials.one)));
+                    Printf.printf "get_constant unit polynomial = %s\n" (Big_int.string_of_big_int (Polynomial.constant (Polynomial.one)));
 
-                    Printf.printf "get_constant of poly1 = %s\n" (Big_int.string_of_big_int (Polynomials.constant poly1));
+                    Printf.printf "get_constant of poly1 = %s\n" (Big_int.string_of_big_int (Polynomial.constant poly1));
                     
-                    Printf.printf "get_variables of poly = %s\n" (String.concat ", " (List.map VariableTerm.to_string (Polynomials.vars poly1)));
+                    Printf.printf "get_variables of poly = %s\n" (String.concat ", " (List.map VariableTerm.to_string (Polynomial.vars poly1)));
                     
-                    Printf.printf "get_monomials of poly = %s\n" (String.concat "," (List.map (Monomial.to_string) (Polynomials.monomials poly1))) ;
+                    Printf.printf "get_monomials of poly = %s\n" (String.concat "," (List.map (Monomial.to_string) (Polynomial.monomials poly1))) ;
 
-                    Printf.printf "get_degree of poly = %d\n" (Polynomials.degree poly1);
+                    Printf.printf "get_degree of poly = %d\n" (Polynomial.degree poly1);
  
-                    let poly3 = Polynomials.from_var (VariableTerm.of_string "z") in 
+                    let poly3 = Polynomial.from_var (VariableTerm.of_string "z") in 
                     
-                    Printf.printf "poly3 = %s\n" (Polynomials.to_string poly3);
+                    Printf.printf "poly3 = %s\n" (Polynomial.to_string poly3);
 
-                    Printf.printf "get_degree of poly3 = %d \n"  (Polynomials.degree poly3); 
+                    Printf.printf "get_degree of poly3 = %d \n"  (Polynomial.degree poly3); 
 
-                    Printf.printf "is_univariate_and_linear poly3 = %B \n"  (Polynomials.is_univariate_linear poly3);
+                    Printf.printf "is_univariate_and_linear poly3 = %B \n"  (Polynomial.is_univariate_linear poly3);
 
                     let varmapping = VarMap.empty in
                     let varmapping = VarMap.add (StringID.of_string "x") (StringID.of_string "a") varmapping in
@@ -88,22 +89,22 @@ let () =
                     let varmapping = VarMap.add (StringID.of_string "z") (StringID.of_string "c") varmapping in  
                        Printf.printf "renaming the variables in mon1 yields %s\n" (Monomial.to_string (Monomial.rename varmapping mon1));
 
-                       Printf.printf "renaming the variables in poly1 yields %s\n" (Polynomials.to_string (Polynomials.rename varmapping poly1));
-                       Printf.printf "Adding poly1 and poly2 = %s\n" (Polynomials.to_string (Polynomials.add poly1 poly2));
+                       Printf.printf "renaming the variables in poly1 yields %s\n" (Polynomial.to_string (Polynomial.rename varmapping poly1));
+                       Printf.printf "Adding poly1 and poly2 = %s\n" (Polynomial.to_string (Polynomial.add poly1 poly2));
 
-                       Printf.printf "Subtracting poly1 and poly 2 = %s\n" (Polynomials.to_string (Polynomials.subtract poly1 poly2));
-                       Printf.printf "Multiplying poly 1 and poly 3 = %s\n" (Polynomials.to_string (Polynomials.mult poly1 poly3));
+                       Printf.printf "Subtracting poly1 and poly 2 = %s\n" (Polynomial.to_string (Polynomial.subtract poly1 poly2));
+                       Printf.printf "Multiplying poly 1 and poly 3 = %s\n" (Polynomial.to_string (Polynomial.mult poly1 poly3));
 
-                       Printf.printf "Binomial formular = %s\n" (Polynomials.to_string (Polynomials.pow (Polynomials.add (Polynomials.from_var x) (Polynomials.from_var y)) 10));
+                       Printf.printf "Binomial formular = %s\n" (Polynomial.to_string (Polynomial.pow (Polynomial.add (Polynomial.from_var x) (Polynomial.from_var y)) 10));
 
 
-                       Printf.printf "Multinomial formular = %s\n" (Polynomials.to_string (Polynomials.pow (Polynomials.sum [(Polynomials.from_var x); (Polynomials.from_var y) ;(Polynomials.from_var z)]) 3  ));
+                       Printf.printf "Multinomial formular = %s\n" (Polynomial.to_string (Polynomial.pow (Polynomial.sum [(Polynomial.from_var x); (Polynomial.from_var y) ;(Polynomial.from_var z)]) 3  ));
 
                        let intmapping = Valuation.from [(StringID.of_string "x", Big_int.big_int_of_int 2);
                                                         (StringID.of_string "y", Big_int.big_int_of_int 5);
                                                         (StringID.of_string "z", Big_int.big_int_of_int 3)] in
                        Printf.printf "instantiating the variables in mon1 yields %s\n" (Big_int.string_of_big_int (Monomial.eval mon1 intmapping));
 
-                       Printf.printf "instantiating the variables in poly1 yields %s\n" (Big_int.string_of_big_int (Polynomials.eval poly1 intmapping))
+                       Printf.printf "instantiating the variables in poly1 yields %s\n" (Big_int.string_of_big_int (Polynomial.eval poly1 intmapping))
                       
 ;;
