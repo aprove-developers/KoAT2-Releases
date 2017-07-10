@@ -56,9 +56,9 @@ let () =
                                                         (StringID.of_string "z", Big_int.big_int_of_int 3)] in        
                             let greater_equal_in = PolynomialConstraintsAtoms.instantiate_with_big_int intmapping greater_equal in
                             let equal_in = PolynomialConstraintsAtoms.instantiate_with_big_int intmapping equal in
-                            Printf.printf "poly1 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval intmapping poly1)); 
-                            Printf.printf "poly2 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval intmapping poly2)); 
-                            Printf.printf "poly3 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval intmapping poly3)); 
+                            Printf.printf "poly1 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval poly1 intmapping)); 
+                            Printf.printf "poly2 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval poly2 intmapping)); 
+                            Printf.printf "poly3 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomials.eval poly3 intmapping)); 
                             Printf.printf "poly 1 >= poly 2 : %B \n" (greater_equal_in);
                             Printf.printf "poly 2 = poly 3 : %B \n" (equal_in);
                             Printf.printf "comparison of constraints : %B \n" (PolynomialConstraintsAtoms.equal greater_equal equal)

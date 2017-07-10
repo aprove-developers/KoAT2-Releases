@@ -121,22 +121,22 @@ let to_z3 (ctx : Z3.context) (comp : t) =
     |Neq (p1, p2)-> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2))
     
 let get_variables (comp : t) =
-    List.unique (List.append (Polynomials.get_variables (get_first_arg comp)) (Polynomials.get_variables (get_second_arg comp)))
+    List.unique (List.append (Polynomials.vars (get_first_arg comp)) (Polynomials.vars (get_second_arg comp)))
     
 let rename_vars (varmapping : Variables.StringVariableTerm.rename_map) (comp : t) =
     match comp with
-    |GreaterThan (p1, p2)-> GreaterThan ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
-    |GreaterEqual (p1, p2)-> GreaterEqual ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
-    |LessThan (p1, p2)-> LessThan ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
-    |LessEqual (p1, p2)-> LessEqual ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
-    |Neq (p1, p2)-> Neq ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
-    |Equal (p1, p2)-> Equal ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
+    |GreaterThan (p1, p2)-> GreaterThan ((Polynomials.rename varmapping p1), (Polynomials.rename varmapping p2))
+    |GreaterEqual (p1, p2)-> GreaterEqual ((Polynomials.rename varmapping p1), (Polynomials.rename varmapping p2))
+    |LessThan (p1, p2)-> LessThan ((Polynomials.rename varmapping p1), (Polynomials.rename varmapping p2))
+    |LessEqual (p1, p2)-> LessEqual ((Polynomials.rename varmapping p1), (Polynomials.rename varmapping p2))
+    |Neq (p1, p2)-> Neq ((Polynomials.rename varmapping p1), (Polynomials.rename varmapping p2))
+    |Equal (p1, p2)-> Equal ((Polynomials.rename varmapping p1), (Polynomials.rename varmapping p2))
 
 let instantiate_with_big_int (varmapping : Variables.StringVariableTerm.valuation) (comp : t) =
     match comp with
-    |GreaterThan (p1, p2)-> (Big_int.gt_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
-    |GreaterEqual (p1, p2)-> (Big_int.ge_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
-    |LessThan (p1, p2)-> (Big_int.lt_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
-    |LessEqual (p1, p2)-> (Big_int.le_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
-    |Neq (p1, p2)-> not(Big_int.eq_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
-    |Equal (p1, p2)-> (Big_int.eq_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
+    |GreaterThan (p1, p2)-> (Big_int.gt_big_int (Polynomials.eval p1 varmapping) (Polynomials.eval p2 varmapping))
+    |GreaterEqual (p1, p2)-> (Big_int.ge_big_int (Polynomials.eval p1 varmapping) (Polynomials.eval p2 varmapping))
+    |LessThan (p1, p2)-> (Big_int.lt_big_int (Polynomials.eval p1 varmapping) (Polynomials.eval p2 varmapping))
+    |LessEqual (p1, p2)-> (Big_int.le_big_int (Polynomials.eval p1 varmapping) (Polynomials.eval p2 varmapping))
+    |Neq (p1, p2)-> not(Big_int.eq_big_int (Polynomials.eval p1 varmapping) (Polynomials.eval p2 varmapping))
+    |Equal (p1, p2)-> (Big_int.eq_big_int (Polynomials.eval p1 varmapping) (Polynomials.eval p2 varmapping))
