@@ -2,7 +2,7 @@ open Batteries
 open ID
    
 type var = Variables.MakeVariableTerm(StringID).t
-type t = ScaledMonomials.t list
+type t = ScaledMonomials.MakeScaledMonomial(StringID).t list
 type valuation = Variables.MakeVariableTerm(StringID).valuation
 type value = Variables.MakeVariableTerm(StringID).value
 val get_degree : t -> int

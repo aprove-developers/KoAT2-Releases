@@ -4,6 +4,7 @@ module VarMap = Map.Make(StringID)
 module VariableTerm = Variables.MakeVariableTerm(StringID)
 module Power = Powers.MakePower(StringID)
 module Monomial = Monomials.MakeMonomial(StringID)
+module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(StringID)
 module Valuation = Valuation.MakeValuation(StringID)
 open Z3
 let () =	
@@ -19,12 +20,12 @@ let () =
             Printf.printf "Z3 full version string: %s\n" Version.full_version ;
             let cfg = [("model", "true"); ("proof", "false")] in
             let ctx = (mk_context cfg) in
-                let scaled1 = ScaledMonomials.make (Big_int.big_int_of_int 2) mon1 in
-                let scaled2 = ScaledMonomials.make (Big_int.big_int_of_int 1) (Monomial.lift pow1) in
-                let scaled3 = ScaledMonomials.make (Big_int.big_int_of_int(-1)) (Monomial.lift pow2) in
-                let scaled4 = ScaledMonomials.make (Big_int.big_int_of_int (-3)) mon2 in
-                let scaled5 = ScaledMonomials.make (Big_int.big_int_of_int 0) mon2 in
-                let scaled_const = ScaledMonomials.make (Big_int.big_int_of_int 123) const in
+                let scaled1 = ScaledMonomial.make (Big_int.big_int_of_int 2) mon1 in
+                let scaled2 = ScaledMonomial.make (Big_int.big_int_of_int 1) (Monomial.lift pow1) in
+                let scaled3 = ScaledMonomial.make (Big_int.big_int_of_int(-1)) (Monomial.lift pow2) in
+                let scaled4 = ScaledMonomial.make (Big_int.big_int_of_int (-3)) mon2 in
+                let scaled5 = ScaledMonomial.make (Big_int.big_int_of_int 0) mon2 in
+                let scaled_const = ScaledMonomial.make (Big_int.big_int_of_int 123) const in
                     let poly1 = [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4 ; scaled5 ; scaled5 ; scaled_const ; scaled5 ; scaled5 ; scaled5] in
                     let poly2 = [scaled2 ; scaled3 ; scaled4 ; scaled1 ; scaled4 ; scaled5 ; scaled5 ; scaled_const] in
                     let poly3 = Polynomials.from_var (VariableTerm.of_string "z") in 

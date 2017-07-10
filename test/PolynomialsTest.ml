@@ -4,6 +4,7 @@ module VarMap = Map.Make(StringID)
 module VariableTerm = Variables.MakeVariableTerm(StringID)
 module Power = Powers.MakePower(StringID)
 module Monomial = Monomials.MakeMonomial(StringID)
+module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(StringID)
 module Valuation = Valuation.MakeValuation(StringID)
 open Z3
 let () =	
@@ -38,13 +39,13 @@ let () =
             Printf.printf "Constant Monomial = %s\n" (Monomial.to_string const);
             Printf.printf "Constant Monomial in Z3 = %s \n" (Z3.Expr.to_string (Monomial.to_z3 ctx const));
 
-                let scaled1 = ScaledMonomials.make (Big_int.big_int_of_int 2) mon1 in
-                let scaled2 = ScaledMonomials.make (Big_int.big_int_of_int 1) (Monomial.lift pow1) in
-                let scaled3 = ScaledMonomials.make (Big_int.big_int_of_int(-1)) (Monomial.lift pow2) in
-                let scaled4 = ScaledMonomials.make (Big_int.big_int_of_int (-3)) mon2 in
-                let scaled5 = ScaledMonomials.make (Big_int.big_int_of_int 0) mon2 in
-                let scaled_const = ScaledMonomials.make (Big_int.big_int_of_int 123) const in
-                    Printf.printf "Constant Scaled Monomial = %s \n " (ScaledMonomials.to_string scaled_const);
+                let scaled1 = ScaledMonomial.make (Big_int.big_int_of_int 2) mon1 in
+                let scaled2 = ScaledMonomial.make (Big_int.big_int_of_int 1) (Monomial.lift pow1) in
+                let scaled3 = ScaledMonomial.make (Big_int.big_int_of_int(-1)) (Monomial.lift pow2) in
+                let scaled4 = ScaledMonomial.make (Big_int.big_int_of_int (-3)) mon2 in
+                let scaled5 = ScaledMonomial.make (Big_int.big_int_of_int 0) mon2 in
+                let scaled_const = ScaledMonomial.make (Big_int.big_int_of_int 123) const in
+                    Printf.printf "Constant Scaled Monomial = %s \n " (ScaledMonomial.to_string scaled_const);
                     let poly1 = [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4 ; scaled5 ; scaled5 ; scaled_const ; scaled5 ; scaled5 ; scaled5] in
                     let poly2 = [scaled2 ; scaled3 ; scaled4 ; scaled1 ; scaled4 ; scaled5 ; scaled5 ; scaled_const] in
 
