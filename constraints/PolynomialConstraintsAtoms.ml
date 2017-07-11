@@ -7,12 +7,12 @@ module Polynomial = Polynomials.MakePolynomial(StringID)
 type polynomial = Polynomial.t
 
 type t = 
-    |GreaterThan of Polynomial.t * Polynomial.t
-    |GreaterEqual of Polynomial.t * Polynomial.t
-    |LessThan of Polynomial.t * Polynomial.t
-    |LessEqual of Polynomial.t * Polynomial.t
-    |Neq of Polynomial.t * Polynomial.t
-    |Equal of Polynomial.t * Polynomial.t
+    |GreaterThan of polynomial * polynomial
+    |GreaterEqual of polynomial * polynomial
+    |LessThan of polynomial * polynomial
+    |LessEqual of polynomial * polynomial
+    |Neq of polynomial * polynomial
+    |Equal of polynomial * polynomial
     
 let get_first_arg (comp : t) =
     match comp with
@@ -22,22 +22,22 @@ let get_second_arg (comp : t) =
     match comp with
     |GreaterThan(p1, p2) | GreaterEqual (p1, p2) | LessThan (p1, p2) | LessEqual (p1, p2) | Neq (p1, p2) | Equal (p1, p2)-> p2
     
-let mk_gt (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
+let mk_gt (poly1 : polynomial) (poly2 : polynomial) =
     GreaterThan(poly1, poly2)
 
-let mk_ge (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
+let mk_ge (poly1 : polynomial) (poly2 : polynomial) =
     GreaterEqual(poly1, poly2)
 
-let mk_lt (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
+let mk_lt (poly1 : polynomial) (poly2 : polynomial) =
     LessThan(poly1, poly2)
 
-let mk_le (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
+let mk_le (poly1 : polynomial) (poly2 : polynomial) =
     LessEqual(poly1, poly2)
 
-let mk_eq (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
+let mk_eq (poly1 : polynomial) (poly2 : polynomial) =
     Equal(poly1, poly2)
     
-let mk_neq (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
+let mk_neq (poly1 : polynomial) (poly2 : polynomial) =
     Neq(poly1, poly2)
 
 let is_gt (atom : t) =
