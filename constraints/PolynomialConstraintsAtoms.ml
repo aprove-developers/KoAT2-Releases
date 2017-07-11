@@ -3,14 +3,16 @@ open ID
 
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
 type var = Variables.MakeVariableTerm(StringID).t
+module Polynomial = Polynomials.MakePolynomial(StringID)
+type polynomial = Polynomial.t
 
 type t = 
-    |GreaterThan of Polynomials.t * Polynomials.t
-    |GreaterEqual of Polynomials.t * Polynomials.t
-    |LessThan of Polynomials.t * Polynomials.t
-    |LessEqual of Polynomials.t * Polynomials.t
-    |Neq of Polynomials.t * Polynomials.t
-    |Equal of Polynomials.t * Polynomials.t
+    |GreaterThan of Polynomial.t * Polynomial.t
+    |GreaterEqual of Polynomial.t * Polynomial.t
+    |LessThan of Polynomial.t * Polynomial.t
+    |LessEqual of Polynomial.t * Polynomial.t
+    |Neq of Polynomial.t * Polynomial.t
+    |Equal of Polynomial.t * Polynomial.t
     
 let get_first_arg (comp : t) =
     match comp with
@@ -20,22 +22,22 @@ let get_second_arg (comp : t) =
     match comp with
     |GreaterThan(p1, p2) | GreaterEqual (p1, p2) | LessThan (p1, p2) | LessEqual (p1, p2) | Neq (p1, p2) | Equal (p1, p2)-> p2
     
-let mk_gt (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
+let mk_gt (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
     GreaterThan(poly1, poly2)
 
-let mk_ge (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
+let mk_ge (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
     GreaterEqual(poly1, poly2)
 
-let mk_lt (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
+let mk_lt (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
     LessThan(poly1, poly2)
 
-let mk_le (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
+let mk_le (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
     LessEqual(poly1, poly2)
 
-let mk_eq (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
+let mk_eq (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
     Equal(poly1, poly2)
     
-let mk_neq (poly1 : Polynomials.t) (poly2 : Polynomials.t) =
+let mk_neq (poly1 : Polynomial.t) (poly2 : Polynomial.t) =
     Neq(poly1, poly2)
 
 let is_gt (atom : t) =
@@ -79,7 +81,7 @@ let is_same_constr (atom1 : t) (atom2 : t) =
      |(_,_) -> false
     
 let simplify (atom : t) =
-    let poly_simplify = Polynomials.simplify in
+    let poly_simplify = Polynomial.simplify in
         match atom with
             |GreaterThan (p1, p2)-> mk_gt (poly_simplify p1) (poly_simplify p2)
             |GreaterEqual (p1, p2)-> mk_ge (poly_simplify p1) (poly_simplify p2)
@@ -89,54 +91,54 @@ let simplify (atom : t) =
             |Equal (p1, p2)-> mk_eq (poly_simplify p1) (poly_simplify p2)
             
 let equal (atom1 : t) (atom2 : t) =
-    let poly_equal = Polynomials.equal in
+    let poly_equal = Polynomial.(==) in
         (is_same_constr atom1 atom2) && (poly_equal (get_first_arg atom1) (get_first_arg atom2)) && (poly_equal (get_second_arg atom1) (get_second_arg atom2))
     
-let one = Polynomials.one
+let one = Polynomial.one
 
 (* In this setting everything represents integer values. Hence strictness can be removed by adding/subtracting one*)
 
 let remove_strictness (comp : t) =
     match comp with
-    | GreaterThan (p1, p2)-> GreaterEqual (p1, (Polynomials.add p2 one))
-    | LessThan (p1, p2)-> LessEqual( p1, (Polynomials.subtract p2 one))
+    | GreaterThan (p1, p2)-> GreaterEqual (p1, (Polynomial.add p2 one))
+    | LessThan (p1, p2)-> LessEqual( p1, (Polynomial.subtract p2 one))
     | _ -> comp
     
 let to_string (comp : t) =
     match comp with
-    |GreaterThan (p1, p2)-> String.concat " > " [Polynomials.to_string p1; Polynomials.to_string p2]
-    |GreaterEqual (p1, p2)-> String.concat " >= " [Polynomials.to_string p1; Polynomials.to_string p2]
-    |LessThan (p1, p2)-> String.concat " < " [Polynomials.to_string p1; Polynomials.to_string p2]
-    |LessEqual (p1, p2)-> String.concat " <= " [Polynomials.to_string p1; Polynomials.to_string p2]
-    |Neq (p1, p2)-> String.concat " != " [Polynomials.to_string p1; Polynomials.to_string p2]
-    |Equal (p1, p2)-> String.concat " = " [Polynomials.to_string p1; Polynomials.to_string p2]
+    |GreaterThan (p1, p2)-> String.concat " > " [Polynomial.to_string p1; Polynomial.to_string p2]
+    |GreaterEqual (p1, p2)-> String.concat " >= " [Polynomial.to_string p1; Polynomial.to_string p2]
+    |LessThan (p1, p2)-> String.concat " < " [Polynomial.to_string p1; Polynomial.to_string p2]
+    |LessEqual (p1, p2)-> String.concat " <= " [Polynomial.to_string p1; Polynomial.to_string p2]
+    |Neq (p1, p2)-> String.concat " != " [Polynomial.to_string p1; Polynomial.to_string p2]
+    |Equal (p1, p2)-> String.concat " = " [Polynomial.to_string p1; Polynomial.to_string p2]
     
 let to_z3 (ctx : Z3.context) (comp : t) =
     match comp with
-    |GreaterThan (p1, p2)-> Z3.Arithmetic.mk_gt ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
-    |GreaterEqual (p1, p2)-> Z3.Arithmetic.mk_ge ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
-    |LessThan (p1, p2)-> Z3.Arithmetic.mk_lt ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
-    |LessEqual (p1, p2)-> Z3.Arithmetic.mk_le ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
-    |Equal (p1, p2)-> Z3.Boolean.mk_eq ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2)
-    |Neq (p1, p2)-> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx (Polynomials.to_z3 ctx p1) (Polynomials.to_z3 ctx p2))
+    |GreaterThan (p1, p2)-> Z3.Arithmetic.mk_gt ctx (Polynomial.to_z3 ctx p1) (Polynomial.to_z3 ctx p2)
+    |GreaterEqual (p1, p2)-> Z3.Arithmetic.mk_ge ctx (Polynomial.to_z3 ctx p1) (Polynomial.to_z3 ctx p2)
+    |LessThan (p1, p2)-> Z3.Arithmetic.mk_lt ctx (Polynomial.to_z3 ctx p1) (Polynomial.to_z3 ctx p2)
+    |LessEqual (p1, p2)-> Z3.Arithmetic.mk_le ctx (Polynomial.to_z3 ctx p1) (Polynomial.to_z3 ctx p2)
+    |Equal (p1, p2)-> Z3.Boolean.mk_eq ctx (Polynomial.to_z3 ctx p1) (Polynomial.to_z3 ctx p2)
+    |Neq (p1, p2)-> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx (Polynomial.to_z3 ctx p1) (Polynomial.to_z3 ctx p2))
     
 let get_variables (comp : t) =
-    Tools.remove_dup (List.append (Polynomials.get_variables (get_first_arg comp)) (Polynomials.get_variables (get_second_arg comp)))
+    List.unique (List.append (Polynomial.vars (get_first_arg comp)) (Polynomial.vars (get_second_arg comp)))
     
 let rename_vars (varmapping : Variables.StringVariableTerm.rename_map) (comp : t) =
     match comp with
-    |GreaterThan (p1, p2)-> GreaterThan ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
-    |GreaterEqual (p1, p2)-> GreaterEqual ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
-    |LessThan (p1, p2)-> LessThan ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
-    |LessEqual (p1, p2)-> LessEqual ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
-    |Neq (p1, p2)-> Neq ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
-    |Equal (p1, p2)-> Equal ((Polynomials.rename_vars varmapping p1), (Polynomials.rename_vars varmapping p2))
+    |GreaterThan (p1, p2)-> GreaterThan ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
+    |GreaterEqual (p1, p2)-> GreaterEqual ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
+    |LessThan (p1, p2)-> LessThan ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
+    |LessEqual (p1, p2)-> LessEqual ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
+    |Neq (p1, p2)-> Neq ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
+    |Equal (p1, p2)-> Equal ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
 
 let instantiate_with_big_int (varmapping : Variables.StringVariableTerm.valuation) (comp : t) =
     match comp with
-    |GreaterThan (p1, p2)-> (Big_int.gt_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
-    |GreaterEqual (p1, p2)-> (Big_int.ge_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
-    |LessThan (p1, p2)-> (Big_int.lt_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
-    |LessEqual (p1, p2)-> (Big_int.le_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
-    |Neq (p1, p2)-> not(Big_int.eq_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
-    |Equal (p1, p2)-> (Big_int.eq_big_int (Polynomials.eval varmapping p1) (Polynomials.eval varmapping p2))
+    |GreaterThan (p1, p2)-> (Big_int.gt_big_int (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
+    |GreaterEqual (p1, p2)-> (Big_int.ge_big_int (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
+    |LessThan (p1, p2)-> (Big_int.lt_big_int (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
+    |LessEqual (p1, p2)-> (Big_int.le_big_int (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
+    |Neq (p1, p2)-> not(Big_int.eq_big_int (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
+    |Equal (p1, p2)-> (Big_int.eq_big_int (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))

@@ -3,6 +3,7 @@ USE_OCAMLFIND = true
 OCAMLPACKS[] =
     Z3
     batteries
+    oUnit
 
 OCAMLINCLUDES += ../poly
 OCAMLINCLUDES += ../constraints

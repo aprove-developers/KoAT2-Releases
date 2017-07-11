@@ -10,3 +10,5 @@ module type ID =
   end
 
 module StringID : ID
+
+module PrePostID : ID

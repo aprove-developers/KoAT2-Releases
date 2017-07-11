@@ -12,9 +12,7 @@ module type Monomial =
     val degree_variable : var -> t -> int
     val delete_var : var -> t -> power list
     val simplify : t -> t
-    val to_string_simplified : t -> string
-    val equal_simplified : t -> t -> bool
-    val is_univariate_linear_monomial : t -> bool
+    val is_univariate_linear : t -> bool
     val mult : t -> t -> t
     val one : t
   end

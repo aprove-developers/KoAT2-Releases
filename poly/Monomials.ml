@@ -12,9 +12,7 @@ module type Monomial =
     val degree_variable : var -> t -> int
     val delete_var : var -> t -> power list
     val simplify : t -> t
-    val to_string_simplified : t -> string
-    val equal_simplified : t -> t -> bool
-    val is_univariate_linear_monomial : t -> bool
+    val is_univariate_linear : t -> bool
     val mult : t -> t -> t
     val one : t
   end
@@ -39,7 +37,7 @@ module MakeMonomial(Var : ID) =
 
     let lift power = [power]
          
-    let vars mon = Tools.remove_dup (List.map Power.var mon)
+    let vars mon = List.unique (List.map Power.var mon)
              
     let degree mon =
          mon
@@ -86,7 +84,7 @@ module MakeMonomial(Var : ID) =
            ((degree_variable var1 mon2) == (Power.degree pow1)) && (equal_simplified tail1 (delete_var var1 mon2))     
       else false
       
-    let is_univariate_linear_monomial mon =
+    let is_univariate_linear mon =
       match vars mon with
         [x] -> degree_variable x mon == 1
       | _ -> false

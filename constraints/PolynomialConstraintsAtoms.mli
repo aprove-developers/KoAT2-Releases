@@ -2,21 +2,22 @@ open Batteries
 open ID
 
 type var = Variables.MakeVariableTerm(StringID).t
+type polynomial = Polynomials.MakePolynomial(StringID).t
 type t =
-    GreaterThan of Polynomials.t * Polynomials.t
-  | GreaterEqual of Polynomials.t * Polynomials.t
-  | LessThan of Polynomials.t * Polynomials.t
-  | LessEqual of Polynomials.t * Polynomials.t
-  | Neq of Polynomials.t * Polynomials.t
-  | Equal of Polynomials.t * Polynomials.t
-val get_first_arg : t -> Polynomials.t
-val get_second_arg : t -> Polynomials.t
-val mk_gt : Polynomials.t -> Polynomials.t -> t
-val mk_ge : Polynomials.t -> Polynomials.t -> t
-val mk_lt : Polynomials.t -> Polynomials.t -> t
-val mk_le : Polynomials.t -> Polynomials.t -> t
-val mk_eq : Polynomials.t -> Polynomials.t -> t
-val mk_neq : Polynomials.t -> Polynomials.t -> t
+    GreaterThan of polynomial * polynomial
+  | GreaterEqual of polynomial * polynomial
+  | LessThan of polynomial * polynomial
+  | LessEqual of polynomial * polynomial
+  | Neq of polynomial * polynomial
+  | Equal of polynomial * polynomial
+val get_first_arg : t -> polynomial
+val get_second_arg : t -> polynomial
+val mk_gt : polynomial -> polynomial -> t
+val mk_ge : polynomial -> polynomial -> t
+val mk_lt : polynomial -> polynomial -> t
+val mk_le : polynomial -> polynomial -> t
+val mk_eq : polynomial -> polynomial -> t
+val mk_neq : polynomial -> polynomial -> t
 val is_gt : t -> bool
 val is_ge : t -> bool
 val is_lt : t -> bool
@@ -26,7 +27,7 @@ val is_neq : t -> bool
 val is_same_constr : t -> t -> bool
 val simplify : t -> t
 val equal : t -> t -> bool
-val one : Polynomials.t
+val one : polynomial
 val remove_strictness : t -> t
 val to_string : t -> string
 val to_z3 : Z3.context -> t -> Z3.Expr.expr
