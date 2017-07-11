@@ -33,7 +33,7 @@ module MakeMonomial(Var : ID) =
     type rename_map = var RenameMap.t
     type power = Power.t
            
-    let compare a b = 0 (* TODO Change? *)
+    let compare a b = 0 (* TODO Change? There are total orders on the monomials but I don't know if we can use them.*)
 
     let make powers = powers
 
