@@ -1,16 +1,6 @@
 open Batteries
 open ID
-open Evaluable
-
-module type Power =
-  sig
-    type t
-    include Evaluable with type t := t
-    val make : var -> int -> t
-    val lift : var -> t
-    val var : t -> var
-    val n : t -> int
-  end
+open PolyTypes
 
 module MakePower(Var : ID) : Power with type var = Var.t
                                     and type rename_map = Var.t Map.Make(Var).t

@@ -16,7 +16,6 @@ OCamlGeneratedFiles(parser.ml lexer.ml)
 FILES[] =
     ID
     Valuation
-    Evaluable
     Variables
     Monomials
     Polynomials

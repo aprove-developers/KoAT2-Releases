@@ -1,6 +1,6 @@
 open Batteries
 open ID
-open Evaluable
+open PolyTypes
    
 module MakeVariableTerm(Var : ID) : Evaluable with type var = Var.t
                                                and type t = Var.t

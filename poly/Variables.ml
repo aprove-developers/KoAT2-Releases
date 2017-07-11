@@ -1,7 +1,6 @@
 open Batteries
-open ID
-open Evaluable
-
+open PolyTypes
+   
 module MakeVariableTerm(Var : ID) =
   struct
     module Valuation = Valuation.MakeValuation(Var)
@@ -34,4 +33,4 @@ module MakeVariableTerm(Var : ID) =
       
   end
 
-module StringVariableTerm = MakeVariableTerm(StringID)
+module StringVariableTerm = MakeVariableTerm(ID.StringID)

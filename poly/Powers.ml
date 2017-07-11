@@ -1,16 +1,5 @@
 open Batteries
-open ID
-open Evaluable
-   
-module type Power =
-  sig
-    type t
-    include Evaluable with type t := t
-    val make : var -> int -> t
-    val lift : var -> t
-    val var : t -> var
-    val n : t -> int
-  end
+open PolyTypes
    
 module MakePower(Var : ID) =
   struct
@@ -71,4 +60,4 @@ module MakePower(Var : ID) =
 
   end
 
-module StringPower = MakePower(StringID)
+module StringPower = MakePower(ID.StringID)

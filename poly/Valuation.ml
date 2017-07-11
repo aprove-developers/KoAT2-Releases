@@ -1,20 +1,6 @@
 open Batteries
-open ID
+open PolyTypes
 
-module type Valuation =
-  sig
-    type t
-    type var
-    type value = Big_int.big_int
-    val from : (var * value) list -> t
-    val zero : var list -> t
-    val eval : var -> t -> value
-    val vars : t -> var list
-  end
-
-module type ValuationFunctor =
-  functor (Var : ID) -> Valuation with type var = Var.t
-                          
 module MakeValuation(Var : ID) =
   struct
     module M = Map.Make(Var)
@@ -30,4 +16,4 @@ module MakeValuation(Var : ID) =
     let vars valuation = List.map (fun (key, value) -> key) (M.bindings valuation)
   end
 
-module StringValuation = MakeValuation(StringID)
+module StringValuation = MakeValuation(ID.StringID)
