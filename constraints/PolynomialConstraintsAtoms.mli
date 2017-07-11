@@ -25,9 +25,7 @@ val is_le : t -> bool
 val is_eq : t -> bool
 val is_neq : t -> bool
 val is_same_constr : t -> t -> bool
-val simplify : t -> t
 val equal : t -> t -> bool
-val one : polynomial
 val remove_strictness : t -> t
 val to_string : t -> string
 val to_z3 : Z3.context -> t -> Z3.Expr.expr
