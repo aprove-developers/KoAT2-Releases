@@ -9,6 +9,7 @@ module Polynomial = Polynomials.MakePolynomial(StringID)
 module Valuation = Valuation.MakeValuation(StringID)
 open Z3
 open OUnit2
+open PolyTypes
    
 let x = VariableTerm.of_string "x"
 let y = VariableTerm.of_string "y"
@@ -45,13 +46,13 @@ let intmapping = Valuation.from [(StringID.of_string "x", Big_int.big_int_of_int
                                  (StringID.of_string "z", Big_int.big_int_of_int 3)]
 
 (* Unambigous transformation to string to make tests more readable *)
-let rec polynomial_to_string (ex : PolynomialType.t) = match ex with
-  | PolynomialType.Constant c -> string_of_int c
-  | PolynomialType.Variable v -> v
-  | PolynomialType.Neg t -> String.concat "" ["("; "-"; polynomial_to_string t; ")"]
-  | PolynomialType.Plus (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "+"; polynomial_to_string t2; ")"]
-  | PolynomialType.Times (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "*"; polynomial_to_string t2; ")"]
-  | PolynomialType.Pow (t,n) -> String.concat "" ["("; polynomial_to_string t; "^"; string_of_int n; ")"]
+let rec polynomial_to_string (ex : PolynomialAST.t) = match ex with
+  | PolynomialAST.Constant c -> string_of_int c
+  | PolynomialAST.Variable v -> v
+  | PolynomialAST.Neg t -> String.concat "" ["("; "-"; polynomial_to_string t; ")"]
+  | PolynomialAST.Plus (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "+"; polynomial_to_string t2; ")"]
+  | PolynomialAST.Times (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "*"; polynomial_to_string t2; ")"]
+  | PolynomialAST.Pow (t,n) -> String.concat "" ["("; polynomial_to_string t; "^"; string_of_int n; ")"]
 
 let process str =
      str

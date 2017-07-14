@@ -8,12 +8,12 @@
 %left			TIMES
 %left			POW
 			
-%start <PolynomialType.t> polynomial
+%start <PolyTypes.PolynomialAST.t> polynomial
 
-%type <PolynomialType.t> expression
+%type <PolyTypes.PolynomialAST.t> expression
 
 %{
-  open PolynomialType
+  open PolyTypes.PolynomialAST
 %}
 			
 %%

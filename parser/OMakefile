@@ -5,6 +5,12 @@ MENHIR_ENABLED = true
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
+OCAMLINCLUDES[] =
+    ../poly
+
+OCAML_LIBS[] =
+    ../poly/poly
+
 GEN_FILES[] =
     PolynomialParser.ml
     PolynomialParser.mli
@@ -13,7 +19,6 @@ GEN_FILES[] =
 OCamlGeneratedFiles($(GEN_FILES))
 
 FILES[] =
-    PolynomialType
     PolynomialParser
     PolynomialLexer
 
