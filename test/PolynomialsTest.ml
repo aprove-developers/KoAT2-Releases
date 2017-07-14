@@ -57,7 +57,7 @@ module ParserTest(Var : ID) =
       | AST.Neg t -> String.concat "" ["("; "-"; polynomial_to_string t; ")"]
       | AST.Plus (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "+"; polynomial_to_string t2; ")"]
       | AST.Times (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "*"; polynomial_to_string t2; ")"]
-      | AST.Pow (t,n) -> String.concat "" ["("; polynomial_to_string t; "^"; string_of_int n; ")"]
+      | AST.Pow (v,n) -> String.concat "" ["("; Var.to_string v; "^"; string_of_int n; ")"]
                        
     module Parser = PolynomialParser.Make(Var)
     module Lexer = PolynomialLexer.Make(Var)

@@ -12,3 +12,4 @@ module MakePolynomial
                      and type power = Powers.MakePower(Var)(Value).t
                      and type monomial = Monomials.MakeMonomial(Var)(Value).t
                      and type scaled_monomial = ScaledMonomials.MakeScaledMonomial(Var)(Value).t
+                     and type polynomial_ast = PolynomialAST(Var).t

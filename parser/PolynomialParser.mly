@@ -23,9 +23,13 @@
 polynomial :
 	|	ex = expression EOF { ex };
 
-expression :
+variable :
 	|	v = ID
-                  { P.Variable (Var.of_string v) }
+                  { Var.of_string v }
+
+expression :
+	|       v = variable
+                  { P.Variable v }
 	| 	c = UINT
                   { P.Constant c }
 	|	LPAR; ex = expression; RPAR
@@ -38,5 +42,5 @@ expression :
 	          { P.Times (ex1, ex2) }
 	|       ex1 = expression; MINUS; ex2 = expression
 	          { P.Plus (ex1, P.Neg ex2) }
-	|       ex = expression; POW; c = UINT
-	          { P.Pow (ex, c) } ;
+	|       v = variable; POW; c = UINT
+	          { P.Pow (v, c) } ;

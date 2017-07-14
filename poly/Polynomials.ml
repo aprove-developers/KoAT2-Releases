@@ -9,6 +9,7 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
     module Power = Powers.MakePower(Var)(Value)
     module Monomial = Monomials.MakeMonomial(Var)(Value)
     module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(Var)(Value)
+    module PolynomialAST = PolynomialAST(Var)
                           
     type t = ScaledMonomial.t list 
     type value = Value.t
@@ -18,6 +19,7 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
     type power = Power.t
     type monomial = Monomial.t
     type scaled_monomial = ScaledMonomial.t
+    type polynomial_ast = PolynomialAST.t
 
     let make scaleds = scaleds
 
@@ -85,11 +87,15 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
 
     (* Returns a variable as a polynomial *)
 
-    let from_var var =
-         Power.make var 1
-      |> Monomial.lift
-      |> ScaledMonomial.make Value.one
-      |> List.singleton
+    let from_scaled_monomial = lift
+
+    let from_monomial mon = from_scaled_monomial (ScaledMonomial.lift mon)
+
+    let from_power power = from_monomial (Monomial.lift power)
+      
+    let from_constant c = lift (ScaledMonomial.make c Monomial.one)
+
+    let from_var var = from_power (Power.lift var)
 
     (* Return "zero" as a polynomial *)
 
@@ -97,15 +103,10 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
 
     (* Return "one" as a polynomial *)
 
-    let one = 
-      [ ScaledMonomial.make Value.one Monomial.one ]
+    let one = lift ScaledMonomial.one
 
     (* Gets the constant *)
     let constant poly = coeff Monomial.one poly
-
-    let from_constant c =
-      [(ScaledMonomial.make c Monomial.one)]
-
 
     (* Returns the variables of a polynomial *)          
     let vars poly =
@@ -193,5 +194,13 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
 
     let (==) poly1 poly2 = 
       equal_simplified (simplify poly1) (simplify poly2)
+
+    let rec from_ast ast = match ast with
+      | PolynomialAST.Constant c -> from_constant (Value.of_int c)
+      | PolynomialAST.Variable v -> from_var v
+      | PolynomialAST.Neg t -> negate (from_ast t)
+      | PolynomialAST.Plus (t1, t2) -> add (from_ast t1) (from_ast t2)
+      | PolynomialAST.Times (t1, t2) -> mult (from_ast t1) (from_ast t2)
+      | PolynomialAST.Pow (var, n) -> from_power (Power.make var n)
 
   end

@@ -17,7 +17,7 @@ module PolynomialAST(Var : ID) =
       | Neg of t
       | Plus of t * t
       | Times of t * t
-      | Pow of t * int
+      | Pow of Var.t * int
   end
    
 module type Evaluable =
@@ -88,19 +88,24 @@ module type Polynomial =
     type power
     type monomial
     type scaled_monomial
+    type polynomial_ast
     include Evaluable with type t := t
     val make : scaled_monomial list -> t
     val lift : scaled_monomial -> t
+    val from_ast : polynomial_ast -> t
     val coeff : monomial -> t -> value
     val delete_monomial : monomial -> t -> t
     val simplify : t -> t
     val to_string : t -> string
     val monomials : t -> monomial list
     val from_var : var -> t
+    val from_constant : value -> t
+    val from_power : power -> t
+    val from_monomial : monomial -> t
+    val from_scaled_monomial : scaled_monomial -> t
     val zero : t
     val one : t
     val constant : t -> value
-    val from_constant : value -> t
     val is_var : t -> bool
     val is_var_plus_constant : t -> bool
     val is_sum_of_vars_plus_constant : t -> bool
