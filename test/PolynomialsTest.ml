@@ -45,70 +45,87 @@ let intmapping = Valuation.from [(StringID.of_string "x", Big_int.big_int_of_int
                                  (StringID.of_string "y", Big_int.big_int_of_int 5);
                                  (StringID.of_string "z", Big_int.big_int_of_int 3)]
 
-(* Unambigous transformation to string to make tests more readable *)
-let rec polynomial_to_string (ex : PolynomialAST.t) = match ex with
-  | PolynomialAST.Constant c -> string_of_int c
-  | PolynomialAST.Variable v -> v
-  | PolynomialAST.Neg t -> String.concat "" ["("; "-"; polynomial_to_string t; ")"]
-  | PolynomialAST.Plus (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "+"; polynomial_to_string t2; ")"]
-  | PolynomialAST.Times (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "*"; polynomial_to_string t2; ")"]
-  | PolynomialAST.Pow (t,n) -> String.concat "" ["("; polynomial_to_string t; "^"; string_of_int n; ")"]
+module ParserTest(Var : ID) =
+  struct
+               
+    module AST = PolynomialAST(Var)
+               
+    (* Unambigous transformation to string to make tests more readable *)
+    let rec polynomial_to_string (ex : AST.t) = match ex with
+      | AST.Constant c -> string_of_int c
+      | AST.Variable v -> Var.to_string v
+      | AST.Neg t -> String.concat "" ["("; "-"; polynomial_to_string t; ")"]
+      | AST.Plus (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "+"; polynomial_to_string t2; ")"]
+      | AST.Times (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "*"; polynomial_to_string t2; ")"]
+      | AST.Pow (t,n) -> String.concat "" ["("; polynomial_to_string t; "^"; string_of_int n; ")"]
+                       
+    module Parser = PolynomialParser.Make(Var)
+    module Lexer = PolynomialLexer.Make(Var)
+                 
+    let process str =
+         str
+      |> Lexing.from_string
+      |> Parser.polynomial Lexer.read
+      |> polynomial_to_string
 
-let process str =
-     str
-  |> Lexing.from_string
-  |> PolynomialParser.polynomial PolynomialLexer.read
-  |> polynomial_to_string
+    let tests =
+      "Parser" >::: [
+          "Positive Tests" >::: [
+            "Constant" >::
+              (fun _ -> assert_equal "42" (process " 42 "));
+            "Negated Constant" >::
+              (fun _ -> assert_equal "(-42)" (process " - 42 "));
+            "Variable" >::
+              (fun _ -> assert_equal "x" (process " x "));
+            "Negated Variable" >::
+              (fun _ -> assert_equal "(-x)" (process " - x "));
+            "Parentheses" >::
+              (fun _ -> assert_equal "x" (process " ( x ) "));
+            "Double Parentheses" >::
+              (fun _ -> assert_equal "x" (process " ( ( x ) )"));
+            "Constant Addition" >::
+              (fun _ -> assert_equal "(42+24)" (process " 42 + 24 "));
+            "Constant Subtraction" >::
+              (fun _ -> assert_equal "(42+(-24))" (process " 42 - 24 "));
+            "Constant Multiplication" >::
+              (fun _ -> assert_equal "(42*24)" (process " 42 * 24 "));
+            "Addition" >::
+              (fun _ -> assert_equal "((x+24)+y)" (process " x + 24 + y "));
+            "Subtraction" >::
+              (fun _ -> assert_equal "((42+(-24))+(-x))" (process " 42 - 24 - x "));
+            "Multiplication" >::
+              (fun _ -> assert_equal "((42*x)*24)" (process " 42 * x * 24 "));
+            "Power" >::
+              (fun _ -> assert_equal "(x^3)" (process " x ^ 3 "));
+            "Double Negation" >::
+              (fun _ -> assert_equal "(-(-42))" (process " - - 42 "));
+            "Multiplication before Addition" >::
+              (fun _ -> assert_equal "(x+(y*z))" (process " x + y * z "));
+            "Power before Negation" >::
+              (fun _ -> assert_equal "(-(x^3))" (process " - x ^ 3 "));
+            "Power before Multiplication" >::
+              (fun _ -> assert_equal "((x^3)*(y^4))" (process " x ^ 3 * y ^ 4 "));
+          ];
+          "Negative Tests" >::: [
+              "Power with negative exponent" >::
+                (fun _ -> assert_raises Parser.Error (fun _ -> process " x ^ - 3 "));
+              "Power with variable exponent" >::
+                (fun _ -> assert_raises Parser.Error (fun _ -> process " x ^ y "));
+              "Power with term exponent" >::
+                (fun _ -> assert_raises Parser.Error (fun _ -> process " x ^ (y + 3) "));
+            ]
+        ]
+
+  end
+
+module StringIDParser = ParserTest(StringID)
+module PrePostParser = ParserTest(PrePostID)
 
 let suite =
-  "Polynomials" >::: [
-      "Parser" >::: [
-        "Positive Tests" >::: [
-          "Constant" >::
-            (fun _ -> assert_equal "42" (process " 42 "));
-          "Negated Constant" >::
-            (fun _ -> assert_equal "(-42)" (process " - 42 "));
-          "Variable" >::
-            (fun _ -> assert_equal "x" (process " x "));
-          "Negated Variable" >::
-            (fun _ -> assert_equal "(-x)" (process " - x "));
-          "Parentheses" >::
-            (fun _ -> assert_equal "x" (process " ( x ) "));
-          "Double Parentheses" >::
-            (fun _ -> assert_equal "x" (process " ( ( x ) )"));
-          "Constant Addition" >::
-            (fun _ -> assert_equal "(42+24)" (process " 42 + 24 "));
-          "Constant Subtraction" >::
-            (fun _ -> assert_equal "(42+(-24))" (process " 42 - 24 "));
-          "Constant Multiplication" >::
-            (fun _ -> assert_equal "(42*24)" (process " 42 * 24 "));
-          "Addition" >::
-            (fun _ -> assert_equal "((x+24)+y)" (process " x + 24 + y "));
-          "Subtraction" >::
-            (fun _ -> assert_equal "((42+(-24))+(-x))" (process " 42 - 24 - x "));
-          "Multiplication" >::
-            (fun _ -> assert_equal "((42*x)*24)" (process " 42 * x * 24 "));
-          "Power" >::
-            (fun _ -> assert_equal "(x^3)" (process " x ^ 3 "));
-          "Double Negation" >::
-            (fun _ -> assert_equal "(-(-42))" (process " - - 42 "));
-          "Multiplication before Addition" >::
-            (fun _ -> assert_equal "(x+(y*z))" (process " x + y * z "));
-          "Power before Negation" >::
-            (fun _ -> assert_equal "(-(x^3))" (process " - x ^ 3 "));
-          "Power before Multiplication" >::
-            (fun _ -> assert_equal "((x^3)*(y^4))" (process " x ^ 3 * y ^ 4 "));
-        ];
-        "Negative Tests" >::: [
-            "Power with negative exponent" >::
-              (fun _ -> assert_raises PolynomialParser.Error (fun _ -> process " x ^ - 3 "));
-            "Power with variable exponent" >::
-              (fun _ -> assert_raises PolynomialParser.Error (fun _ -> process " x ^ y "));
-            "Power with term exponent" >::
-              (fun _ -> assert_raises PolynomialParser.Error (fun _ -> process " x ^ (y + 3) "));
-          ];
-      ];
+  "Suite" >::: [
+      StringIDParser.tests;
+      PrePostParser.tests
     ]
-
+                     
 let () =
   run_test_tt_main suite

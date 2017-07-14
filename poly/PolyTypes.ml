@@ -1,10 +1,19 @@
 open Batteries
 
-module PolynomialAST =
+module type ID =
+  sig
+    type t
+    val (==) : t -> t -> bool
+    val of_string : string -> t
+    val to_string : t -> string
+    val compare : t -> t -> int
+  end
+  
+module PolynomialAST(Var : ID) =
   struct
     type t =
       | Constant of int
-      | Variable of string
+      | Variable of Var.t
       | Neg of t
       | Plus of t * t
       | Times of t * t
@@ -29,15 +38,6 @@ module type Evaluable =
     val degree : t -> int
   end
 
-module type ID =
-  sig
-    type t
-    val (==) : t -> t -> bool
-    val of_string : string -> t
-    val to_string : t -> string
-    val compare : t -> t -> int
-  end
-  
 module type EvaluableFunctor =
   functor (Var : ID) -> Evaluable with type var = Var.t
 

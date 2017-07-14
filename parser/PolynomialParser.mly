@@ -1,3 +1,5 @@
+%parameter<Var : PolyTypes.ID>
+
 %token	<string>	ID
 %token	<int>		UINT
 %token			PLUS MINUS TIMES POW
@@ -8,12 +10,12 @@
 %left			TIMES
 %left			POW
 			
-%start <PolyTypes.PolynomialAST.t> polynomial
+%start <PolyTypes.PolynomialAST(Var).t> polynomial
 
-%type <PolyTypes.PolynomialAST.t> expression
+%type <PolyTypes.PolynomialAST(Var).t> expression
 
 %{
-  open PolyTypes.PolynomialAST
+  module P = PolyTypes.PolynomialAST(Var)
 %}
 			
 %%
@@ -23,18 +25,18 @@ polynomial :
 
 expression :
 	|	v = ID
-                  { Variable v }
+                  { P.Variable (Var.of_string v) }
 	| 	c = UINT
-                  { Constant c }
+                  { P.Constant c }
 	|	LPAR; ex = expression; RPAR
                   { ex }
 	|       MINUS; ex = expression
-	          { Neg ex }
+	          { P.Neg ex }
 	|       ex1 = expression; PLUS; ex2 = expression
-	          { Plus (ex1, ex2) }
+	          { P.Plus (ex1, ex2) }
 	|       ex1 = expression; TIMES; ex2 = expression
-	          { Times (ex1, ex2) }
+	          { P.Times (ex1, ex2) }
 	|       ex1 = expression; MINUS; ex2 = expression
-	          { Plus (ex1, Neg ex2) }
+	          { P.Plus (ex1, P.Neg ex2) }
 	|       ex = expression; POW; c = UINT
-	          { Pow (ex, c) } ;
+	          { P.Pow (ex, c) } ;
