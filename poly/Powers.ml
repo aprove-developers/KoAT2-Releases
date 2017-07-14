@@ -1,17 +1,17 @@
 open Batteries
 open PolyTypes
    
-module MakePower(Var : ID) =
+module MakePower(Var : ID)(Value : Number.Numeric) =
   struct
-    module VariableTerm = Variables.MakeVariableTerm(Var)
-    module Valuation = Valuation.MakeValuation(Var)
+    module VariableTerm = Variables.MakeVariableTerm(Var)(Value)
+    module Valuation = Valuation.MakeValuation(Var)(Value)
     module RenameMap = Map.Make(Var)
 
     type t = {
         var : VariableTerm.t;
         n : int
       }
-    type value = Valuation.value
+    type value = Value.t
     type valuation = Valuation.t
     type var = Var.t
     type rename_map = var RenameMap.t
@@ -22,7 +22,7 @@ module MakePower(Var : ID) =
       }
 
     let to_string power =
-      if power.n<=0 then "1"
+      if power.n <= 0 then "1"
       else if power.n == 1 then (VariableTerm.to_string power.var) 
       else String.concat "^" [(VariableTerm.to_string power.var); (string_of_int power.n)]
 
@@ -34,8 +34,8 @@ module MakePower(Var : ID) =
     let vars power = [power.var]
 
     let eval power valuation =
-      if power.n < 0 then Big_int.zero_big_int
-      else Big_int.power_big_int_positive_int (VariableTerm.eval power.var valuation) power.n
+      if power.n < 0 then Value.zero
+      else Value.pow (VariableTerm.eval power.var valuation) (Value.of_int power.n)
                
     let to_z3 ctx power =
       Z3.Arithmetic.mk_power ctx ( VariableTerm.to_z3 ctx power.var ) (Z3.Arithmetic.Integer.mk_numeral_i ctx power.n)
@@ -59,5 +59,3 @@ module MakePower(Var : ID) =
     let degree = n
 
   end
-
-module StringPower = MakePower(ID.StringID)

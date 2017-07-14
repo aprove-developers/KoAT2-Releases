@@ -1,8 +1,8 @@
 open Batteries
 open ID
 
-type var = Variables.MakeVariableTerm(StringID).t
-type polynomial = Polynomials.MakePolynomial(StringID).t
+type var = StdPoly.VariableTerm.t
+type polynomial = StdPoly.Polynomial.t
 type t =
     GreaterThan of polynomial * polynomial
   | GreaterEqual of polynomial * polynomial
@@ -32,5 +32,5 @@ val remove_strictness : t -> t
 val to_string : t -> string
 val to_z3 : Z3.context -> t -> Z3.Expr.expr
 val get_variables : t -> var list
-val rename_vars : Variables.StringVariableTerm.rename_map -> t -> t
-val instantiate_with_big_int : Variables.StringVariableTerm.valuation -> t -> bool
+val rename_vars : StdPoly.VariableTerm.rename_map -> t -> t
+val instantiate_with_big_int : StdPoly.VariableTerm.valuation -> t -> bool

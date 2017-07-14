@@ -1,13 +1,13 @@
 open Batteries
 open PolyTypes
    
-module MakeVariableTerm(Var : ID) =
+module MakeVariableTerm(Var : ID)(Value : Number.Numeric) =
   struct
-    module Valuation = Valuation.MakeValuation(Var)
+    module Valuation = Valuation.MakeValuation(Var)(Value)
     module RenameMap = Map.Make(Var)
 
     type t = Var.t
-    type value = Valuation.value
+    type value = Value.t
     type valuation = Valuation.t
     type var = Var.t
     type rename_map = var RenameMap.t
@@ -32,5 +32,3 @@ module MakeVariableTerm(Var : ID) =
     let degree var = 1
       
   end
-
-module StringVariableTerm = MakeVariableTerm(ID.StringID)

@@ -1,12 +1,12 @@
 open Batteries
 open ID
 module VarMap = Map.Make(StringID)
-module VariableTerm = Variables.MakeVariableTerm(StringID)
-module Power = Powers.MakePower(StringID)
-module Monomial = Monomials.MakeMonomial(StringID)
-module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(StringID)
-module Polynomial = Polynomials.MakePolynomial(StringID)
-module Valuation = Valuation.MakeValuation(StringID)
+module VariableTerm = StdPoly.VariableTerm
+module Power = StdPoly.Power
+module Monomial = StdPoly.Monomial
+module ScaledMonomial = StdPoly.ScaledMonomial
+module Polynomial = StdPoly.Polynomial
+module Valuation = StdPoly.Valuation
 open Z3
 open OUnit2
 open PolyTypes

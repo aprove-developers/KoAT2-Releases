@@ -1,19 +1,19 @@
 open Batteries
 open PolyTypes
    
-module MakePolynomial(Var : ID) =
+module MakePolynomial(Var : ID)(Value : Number.Numeric) =
   struct
-    module VariableTerm = Variables.MakeVariableTerm(Var)
-    module Valuation = Valuation.MakeValuation(Var)
+    module VariableTerm = Variables.MakeVariableTerm(Var)(Value)
+    module Valuation = Valuation.MakeValuation(Var)(Value)
     module RenameMap = Map.Make(Var)
-    module Power = Powers.MakePower(Var)
-    module Monomial = Monomials.MakeMonomial(Var)
-    module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(Var)
+    module Power = Powers.MakePower(Var)(Value)
+    module Monomial = Monomials.MakeMonomial(Var)(Value)
+    module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(Var)(Value)
                           
     type t = ScaledMonomial.t list 
-    type value = VariableTerm.value
-    type valuation = VariableTerm.valuation
-    type var = VariableTerm.t
+    type value = Value.t
+    type valuation = Valuation.t
+    type var = Var.t
     type rename_map = var RenameMap.t
     type power = Power.t
     type monomial = Monomial.t
@@ -33,7 +33,7 @@ module MakePolynomial(Var : ID) =
          poly
       |> List.filter (fun scaled -> Monomial.(==) (ScaledMonomial.monomial scaled) mon)
       |> List.map ScaledMonomial.coeff
-      |> List.fold_left Big_int.add Big_int.zero
+      |> List.fold_left Value.add Value.zero
 
     let delete_monomial mon poly =
       List.filter (fun x -> not (Monomial.(==) (ScaledMonomial.monomial x) mon)) poly
@@ -44,7 +44,7 @@ module MakePolynomial(Var : ID) =
       | scaled::tail ->
          let curr_monom = ScaledMonomial.monomial scaled in
          let curr_coeff = coeff curr_monom poly in
-         if (Big_int.equal curr_coeff Big_int.zero) then (simplify_partial_simplified (delete_monomial curr_monom tail))
+         if (Value.equal curr_coeff Value.zero) then (simplify_partial_simplified (delete_monomial curr_monom tail))
          else (ScaledMonomial.make curr_coeff curr_monom) :: (simplify_partial_simplified (delete_monomial curr_monom tail) )
 
     let simplify poly =
@@ -73,7 +73,7 @@ module MakePolynomial(Var : ID) =
         | scaled :: tail ->
            let curr_mon = ScaledMonomial.monomial scaled in
            let curr_coeff = ScaledMonomial.coeff scaled in
-           Big_int.equal curr_coeff (coeff curr_mon poly2) &&
+           Value.equal curr_coeff (coeff curr_mon poly2) &&
              equal_simplified tail (delete_monomial curr_mon poly2)
 
     (* Returns the monomials of a polynomial without the empty monomial *)
@@ -88,7 +88,7 @@ module MakePolynomial(Var : ID) =
     let from_var var =
          Power.make var 1
       |> Monomial.lift
-      |> ScaledMonomial.make Big_int.one
+      |> ScaledMonomial.make Value.one
       |> List.singleton
 
     (* Return "zero" as a polynomial *)
@@ -98,7 +98,7 @@ module MakePolynomial(Var : ID) =
     (* Return "one" as a polynomial *)
 
     let one = 
-      [ ScaledMonomial.make Big_int.one Monomial.one ]
+      [ ScaledMonomial.make Value.one Monomial.one ]
 
     (* Gets the constant *)
     let constant poly = coeff Monomial.one poly
@@ -134,7 +134,7 @@ module MakePolynomial(Var : ID) =
     let is_sum_of_vars_plus_constant poly =
          poly
       |> delete_monomial Monomial.one
-      |> List.for_all (fun scaled -> Big_int.equal (ScaledMonomial.coeff scaled) Big_int.one &&
+      |> List.for_all (fun scaled -> Value.equal (ScaledMonomial.coeff scaled) Value.one &&
                                        Monomial.is_univariate_linear (ScaledMonomial.monomial scaled))
 
     (* Checks whether a polynomial is a sum of variables plus a constant *)
@@ -160,7 +160,7 @@ module MakePolynomial(Var : ID) =
       List.map (ScaledMonomial.mult_with_const const) poly
 
     let negate poly =
-      mult_with_const (Big_int.neg Big_int.one) poly
+      mult_with_const (Value.neg Value.one) poly
 
     (*addition of two polynomials is just concatenation*)
 
@@ -189,11 +189,9 @@ module MakePolynomial(Var : ID) =
     let eval poly valuation =
          poly
       |> List.map (fun scaled -> ScaledMonomial.eval scaled valuation)
-      |> List.fold_left Big_int.add Big_int.zero
+      |> List.fold_left Value.add Value.zero
 
     let (==) poly1 poly2 = 
       equal_simplified (simplify poly1) (simplify poly2)
 
   end
-
-module StringPolynomial = MakePolynomial(ID.StringID)

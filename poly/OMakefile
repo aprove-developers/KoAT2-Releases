@@ -18,6 +18,7 @@ FILES[] =
     Powers
     ScaledMonomials
     PolyTypes
+    StdPoly
 
 LIB = poly
 

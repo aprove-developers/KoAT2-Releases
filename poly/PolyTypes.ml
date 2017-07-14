@@ -39,7 +39,7 @@ module type Evaluable =
   end
 
 module type EvaluableFunctor =
-  functor (Var : ID) -> Evaluable with type var = Var.t
+  functor (Var : ID)(Value : Number.Numeric) -> Evaluable with type var = Var.t
 
 module type Power =
   sig
@@ -120,7 +120,7 @@ module type Valuation =
   sig
     type t
     type var
-    type value = Big_int.big_int
+    type value
     val from : (var * value) list -> t
     val zero : var list -> t
     val eval : var -> t -> value
@@ -128,5 +128,5 @@ module type Valuation =
   end
 
 module type ValuationFunctor =
-  functor (Id : ID) -> Valuation with type var = Id.t
-                                  and type value = Big_int.big_int
+  functor (Id : ID)(Value : Number.Numeric) -> Valuation with type var = Id.t
+                                                          and type value = Value.t

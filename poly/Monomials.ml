@@ -1,15 +1,15 @@
 open Batteries
 open PolyTypes
    
-module MakeMonomial(Var : ID) =
+module MakeMonomial(Var : ID)(Value : Number.Numeric) =
   struct
-    module VariableTerm = Variables.MakeVariableTerm(Var)
-    module Valuation = Valuation.MakeValuation(Var)
+    module VariableTerm = Variables.MakeVariableTerm(Var)(Value)
+    module Valuation = Valuation.MakeValuation(Var)(Value)
     module RenameMap = Map.Make(Var)
-    module Power = Powers.MakePower(Var)
+    module Power = Powers.MakePower(Var)(Value)
 
     type t = Power.t list
-    type value = Valuation.value
+    type value = Value.t
     type valuation = Valuation.t
     type var = Var.t
     type rename_map = var RenameMap.t
@@ -84,10 +84,8 @@ module MakeMonomial(Var : ID) =
       simplify (List.append mon1 mon2)  
 
     let eval mon valuation = 
-      List.fold_left (Big_int.mult_big_int) (Big_int.unit_big_int) (List.map (fun power -> Power.eval power valuation) mon)
+      List.fold_left Value.mul Value.one (List.map (fun power -> Power.eval power valuation) mon)
 
     let one = []
                     
   end
-
-module StringMonomial = MakeMonomial(ID.StringID)
