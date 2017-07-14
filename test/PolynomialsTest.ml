@@ -9,7 +9,7 @@ module Polynomial = Polynomials.MakePolynomial(StringID)
 module Valuation = Valuation.MakeValuation(StringID)
 open Z3
 open OUnit2
-
+   
 let x = VariableTerm.of_string "x"
 let y = VariableTerm.of_string "y"
 let z = VariableTerm.of_string "z"
@@ -43,75 +43,71 @@ let varmapping = VarMap.add (StringID.of_string "z") (StringID.of_string "c") va
 let intmapping = Valuation.from [(StringID.of_string "x", Big_int.big_int_of_int 2);
                                  (StringID.of_string "y", Big_int.big_int_of_int 5);
                                  (StringID.of_string "z", Big_int.big_int_of_int 3)]
-let () =	
-  Printf.printf "x is %s\n" (VariableTerm.to_string x);
-  Printf.printf "Running Z3 version %s\n" Version.to_string ;
-  Printf.printf "Z3 full version string: %s\n" Version.full_version ;
 
-  Printf.printf "Monomial mon1 = %s \n" (Monomial.to_string mon1);
-  Printf.printf "Simplified Monomial = %s \n" (Monomial.to_string (Monomial.simplify mon1));
-  
-  Printf.printf "Monomial mon2 = %s \n" (Monomial.to_string mon2);
-  Printf.printf "Simplified Monomial mon2 = %s \n"  (Monomial.to_string (Monomial.simplify mon2));
+(* Unambigous transformation to string to make tests more readable *)
+let rec polynomial_to_string (ex : PolynomialType.t) = match ex with
+  | PolynomialType.Constant c -> string_of_int c
+  | PolynomialType.Variable v -> v
+  | PolynomialType.Neg t -> String.concat "" ["("; "-"; polynomial_to_string t; ")"]
+  | PolynomialType.Plus (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "+"; polynomial_to_string t2; ")"]
+  | PolynomialType.Times (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "*"; polynomial_to_string t2; ")"]
+  | PolynomialType.Pow (t,n) -> String.concat "" ["("; polynomial_to_string t; "^"; string_of_int n; ")"]
 
-  Printf.printf "EqualityTest = %B \n" (Monomial.(==) mon1 mon2);
-  Printf.printf "Degree of mon1 is %d\n" (Monomial.degree mon1);
+let process str =
+     str
+  |> Lexing.from_string
+  |> PolynomialParser.polynomial PolynomialLexer.read
+  |> polynomial_to_string
 
-  Printf.printf "Variables of mon1 are %s\n" (String.concat "," (List.map VariableTerm.to_string (Monomial.vars mon1)));
-  Printf.printf "Degree of x in mon1 is %d \n" (Monomial.degree_variable x mon1);
-  Printf.printf "Monomial mon1 in Z3 = %s \n" (Z3.Expr.to_string (Monomial.to_z3 ctx mon1));
-  
-  Printf.printf "Constant Monomial = %s\n" (Monomial.to_string Monomial.one);
-  Printf.printf "Constant Monomial in Z3 = %s \n" (Z3.Expr.to_string (Monomial.to_z3 ctx Monomial.one));
+let suite =
+  "Polynomials" >::: [
+      "Parser" >::: [
+        "Positive Tests" >::: [
+          "Constant" >::
+            (fun _ -> assert_equal "42" (process " 42 "));
+          "Negated Constant" >::
+            (fun _ -> assert_equal "(-42)" (process " - 42 "));
+          "Variable" >::
+            (fun _ -> assert_equal "x" (process " x "));
+          "Negated Variable" >::
+            (fun _ -> assert_equal "(-x)" (process " - x "));
+          "Parentheses" >::
+            (fun _ -> assert_equal "x" (process " ( x ) "));
+          "Double Parentheses" >::
+            (fun _ -> assert_equal "x" (process " ( ( x ) )"));
+          "Constant Addition" >::
+            (fun _ -> assert_equal "(42+24)" (process " 42 + 24 "));
+          "Constant Subtraction" >::
+            (fun _ -> assert_equal "(42+(-24))" (process " 42 - 24 "));
+          "Constant Multiplication" >::
+            (fun _ -> assert_equal "(42*24)" (process " 42 * 24 "));
+          "Addition" >::
+            (fun _ -> assert_equal "((x+24)+y)" (process " x + 24 + y "));
+          "Subtraction" >::
+            (fun _ -> assert_equal "((42+(-24))+(-x))" (process " 42 - 24 - x "));
+          "Multiplication" >::
+            (fun _ -> assert_equal "((42*x)*24)" (process " 42 * x * 24 "));
+          "Power" >::
+            (fun _ -> assert_equal "(x^3)" (process " x ^ 3 "));
+          "Double Negation" >::
+            (fun _ -> assert_equal "(-(-42))" (process " - - 42 "));
+          "Multiplication before Addition" >::
+            (fun _ -> assert_equal "(x+(y*z))" (process " x + y * z "));
+          "Power before Negation" >::
+            (fun _ -> assert_equal "(-(x^3))" (process " - x ^ 3 "));
+          "Power before Multiplication" >::
+            (fun _ -> assert_equal "((x^3)*(y^4))" (process " x ^ 3 * y ^ 4 "));
+        ];
+        "Negative Tests" >::: [
+            "Power with negative exponent" >::
+              (fun _ -> assert_raises PolynomialParser.Error (fun _ -> process " x ^ - 3 "));
+            "Power with variable exponent" >::
+              (fun _ -> assert_raises PolynomialParser.Error (fun _ -> process " x ^ y "));
+            "Power with term exponent" >::
+              (fun _ -> assert_raises PolynomialParser.Error (fun _ -> process " x ^ (y + 3) "));
+          ];
+      ];
+    ]
 
-  Printf.printf "Constant Scaled Monomial = %s \n " (ScaledMonomial.to_string scaled_const);
-
-  Printf.printf "poly1 = %s\n" (Polynomial.to_string poly1);
-  
-  Printf.printf "Coefficient of mon1 in poly1 = %s \n" (Big_int.string_of_big_int (Polynomial.coeff mon1 poly1));
-  Printf.printf "Simplified Polynomial poly1  is = %s\n" (Polynomial.to_string (Polynomial.simplify poly1));
-  Printf.printf "Scaled z3 = %s \n" (Z3.Expr.to_string (Polynomial.to_z3 ctx poly1));
-  Printf.printf "Simplified Polynomial poly2  is = %s\n" (Polynomial.to_string (Polynomial.simplify poly2));
-  Printf.printf "poly1 == poly2 ? %B \n" (Polynomial.(==) poly1 poly2);
-  Printf.printf "zero polynomial = %s \n" (Polynomial.to_string (Polynomial.zero));
-  Printf.printf "constant polynomial 1 = %s \n" (Polynomial.to_string (Polynomial.one));
-  Printf.printf "1 = 0 ? %B \n" (Polynomial.(==) (Polynomial.zero) (Polynomial.one)); 
-
-  Printf.printf "zero polynomial in Z3 = %s \n" (Z3.Expr.to_string (Polynomial.to_z3 ctx (Polynomial.zero)));
-
-  Printf.printf "unit polynomial in Z3 = %s \n" (Z3.Expr.to_string (Polynomial.to_z3 ctx (Polynomial.one)));
-
-  Printf.printf "get_constant unit polynomial = %s\n" (Big_int.string_of_big_int (Polynomial.constant (Polynomial.one)));
-
-  Printf.printf "get_constant of poly1 = %s\n" (Big_int.string_of_big_int (Polynomial.constant poly1));
-  
-  Printf.printf "get_variables of poly = %s\n" (String.concat ", " (List.map VariableTerm.to_string (Polynomial.vars poly1)));
-  
-  Printf.printf "get_monomials of poly = %s\n" (String.concat "," (List.map (Monomial.to_string) (Polynomial.monomials poly1))) ;
-
-  Printf.printf "get_degree of poly = %d\n" (Polynomial.degree poly1);
-  
-  Printf.printf "poly3 = %s\n" (Polynomial.to_string poly3);
-
-  Printf.printf "get_degree of poly3 = %d \n"  (Polynomial.degree poly3); 
-
-  Printf.printf "is_univariate_and_linear poly3 = %B \n"  (Polynomial.is_univariate_linear poly3);
-
-  Printf.printf "renaming the variables in mon1 yields %s\n" (Monomial.to_string (Monomial.rename varmapping mon1));
-
-  Printf.printf "renaming the variables in poly1 yields %s\n" (Polynomial.to_string (Polynomial.rename varmapping poly1));
-  Printf.printf "Adding poly1 and poly2 = %s\n" (Polynomial.to_string (Polynomial.add poly1 poly2));
-
-  Printf.printf "Subtracting poly1 and poly 2 = %s\n" (Polynomial.to_string (Polynomial.subtract poly1 poly2));
-  Printf.printf "Multiplying poly 1 and poly 3 = %s\n" (Polynomial.to_string (Polynomial.mult poly1 poly3));
-
-  Printf.printf "Binomial formular = %s\n" (Polynomial.to_string (Polynomial.pow (Polynomial.add (Polynomial.from_var x) (Polynomial.from_var y)) 10));
-
-
-  Printf.printf "Multinomial formular = %s\n" (Polynomial.to_string (Polynomial.pow (Polynomial.sum [(Polynomial.from_var x); (Polynomial.from_var y) ;(Polynomial.from_var z)]) 3  ));
-
-  Printf.printf "instantiating the variables in mon1 yields %s\n" (Big_int.string_of_big_int (Monomial.eval mon1 intmapping));
-
-  Printf.printf "instantiating the variables in poly1 yields %s\n" (Big_int.string_of_big_int (Polynomial.eval poly1 intmapping))
-                      
-;;
+let () =
+  run_test_tt_main suite

@@ -5,23 +5,33 @@ OCAMLPACKS[] =
     batteries
     oUnit
 
-OCAMLINCLUDES += ../poly
-OCAMLINCLUDES += ../constraints
+OCAMLINCLUDES[] =
+    ../poly
+    ../parser
+    ../constraints
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
-OCamlGeneratedFiles(parser.ml lexer.ml)
+OCAML_LIBS[] =
+    ../poly/poly
+    ../parser/parser
+    ../constraints/constraints
 
-
-OCAML_LIBS += ../poly/poly
-OCAML_LIBS += ../constraints/constraints
-
-# OCAML_CLIBS +=
-# OCAML_OTHER_LIBS +=
-# OCAML_LIB_FLAGS +=
+TESTS[] =
+    PolynomialsTest
+    PolynomialConstraintsTest
 
 OCamlProgram(PolynomialsTest, PolynomialsTest)
 OCamlProgram(PolynomialConstraintsTest, PolynomialConstraintsTest)
 
-.DEFAULT: PolynomialsTest PolynomialConstraintsTest
+.DEFAULT: $(TESTS)
+    ./PolynomialsTest
+    ./PolynomialConstraintsTest
+
+clean:
+  rm -f \
+     *.omc \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(TESTS)))) \
+     $(TESTS) \
+     *~
