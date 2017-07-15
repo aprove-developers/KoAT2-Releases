@@ -34,4 +34,6 @@ clean:
      *.omc \
      $(filter-proper-targets $(glob $(addsuffix .*, $(TESTS)))) \
      $(TESTS) \
-     *~
+     *~ \
+     *.log \
+     *.cache

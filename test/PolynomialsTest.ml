@@ -1,55 +1,18 @@
 open Batteries
 open ID
-module VarMap = Map.Make(StringID)
-module VariableTerm = StdPoly.VariableTerm
-module Power = StdPoly.Power
-module Monomial = StdPoly.Monomial
-module ScaledMonomial = StdPoly.ScaledMonomial
-module Polynomial = StdPoly.Polynomial
-module Valuation = StdPoly.Valuation
 open Z3
 open OUnit2
 open PolyTypes
    
-let x = VariableTerm.of_string "x"
-let y = VariableTerm.of_string "y"
-let z = VariableTerm.of_string "z"
-
-let pow1 = Power.make x 2
-let pow2 = Power.make y 3
-let pow3 = Power.make z 0
-
-let mon1 = Monomial.make [pow1;pow2;pow1;pow2]
-let mon2 = Monomial.make [pow2;pow2;pow1;pow1;pow3;pow3;pow3]
-
-let cfg = [("model", "true"); ("proof", "false")]
-let ctx = (mk_context cfg)
-
-let scaled1 = ScaledMonomial.make (Big_int.of_int 2) mon1
-let scaled2 = ScaledMonomial.make (Big_int.of_int 1) (Monomial.lift pow1)
-let scaled3 = ScaledMonomial.make (Big_int.of_int (-1)) (Monomial.lift pow2)
-let scaled4 = ScaledMonomial.make (Big_int.of_int (-3)) mon2
-let scaled5 = ScaledMonomial.make (Big_int.of_int 0) mon2
-let scaled_const = ScaledMonomial.make (Big_int.of_int 123) Monomial.one
-
-let poly1 = Polynomial.make [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4 ; scaled5 ; scaled5 ; scaled_const ; scaled5 ; scaled5 ; scaled5]
-let poly2 = Polynomial.make [scaled2 ; scaled3 ; scaled4 ; scaled1 ; scaled4 ; scaled5 ; scaled5 ; scaled_const]
-let poly3 = Polynomial.from_var (VariableTerm.of_string "z")
-                    
-let varmapping = VarMap.empty
-let varmapping = VarMap.add (StringID.of_string "x") (StringID.of_string "a") varmapping
-let varmapping = VarMap.add (StringID.of_string "y") (StringID.of_string "b") varmapping
-let varmapping = VarMap.add (StringID.of_string "z") (StringID.of_string "c") varmapping
-
-let intmapping = Valuation.from [(StringID.of_string "x", Big_int.big_int_of_int 2);
-                                 (StringID.of_string "y", Big_int.big_int_of_int 5);
-                                 (StringID.of_string "z", Big_int.big_int_of_int 3)]
-
-module ParserTest(Var : ID) =
+module PolynomialTest(Var : ID) =
   struct
                
     module AST = PolynomialAST(Var)
-               
+    module Parser = PolynomialParser.Make(Var)
+    module Lexer = PolynomialLexer.Make(Var)
+    module Polynomial = Polynomials.MakePolynomial(Var)(Number.MakeNumeric(Big_int))
+    module Valuation = Valuation.MakeValuation(Var)(Number.MakeNumeric(Big_int))
+
     (* Unambigous transformation to string to make tests more readable *)
     let rec polynomial_to_string (ex : AST.t) = match ex with
       | AST.Constant c -> string_of_int c
@@ -59,72 +22,141 @@ module ParserTest(Var : ID) =
       | AST.Times (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "*"; polynomial_to_string t2; ")"]
       | AST.Pow (v,n) -> String.concat "" ["("; Var.to_string v; "^"; string_of_int n; ")"]
                        
-    module Parser = PolynomialParser.Make(Var)
-    module Lexer = PolynomialLexer.Make(Var)
-                 
-    let process str =
+    let to_ast str =
          str
       |> Lexing.from_string
       |> Parser.polynomial Lexer.read
+
+    let to_polynomial str =
+         str
+      |> to_ast
+      |> Polynomial.from_ast
+
+       
+    let to_ast_and_back str =
+         str
+      |> to_ast
       |> polynomial_to_string
 
-    let tests =
+    let example_valuation = Valuation.from [(Var.of_string "x", Big_int.of_int 3);
+                                            (Var.of_string "y", Big_int.of_int 5);
+                                            (Var.of_string "z", Big_int.of_int 7)]
+
+    let evaluate str =
+         str
+      |> to_ast
+      |> Polynomial.from_ast
+      |> fun poly -> Polynomial.eval poly example_valuation
+
+    let assert_equal_big_int =
+      assert_equal ~cmp:Big_int.equal ~printer:Big_int.to_string
+
+    let assert_true = assert_bool ""
+    let assert_false b = assert_true (not b)
+
+    let parser_tests =
       "Parser" >::: [
-          "Positive Tests" >::: [
-            "Constant" >::
-              (fun _ -> assert_equal "42" (process " 42 "));
-            "Negated Constant" >::
-              (fun _ -> assert_equal "(-42)" (process " - 42 "));
-            "Variable" >::
-              (fun _ -> assert_equal "x" (process " x "));
-            "Negated Variable" >::
-              (fun _ -> assert_equal "(-x)" (process " - x "));
-            "Parentheses" >::
-              (fun _ -> assert_equal "x" (process " ( x ) "));
-            "Double Parentheses" >::
-              (fun _ -> assert_equal "x" (process " ( ( x ) )"));
-            "Constant Addition" >::
-              (fun _ -> assert_equal "(42+24)" (process " 42 + 24 "));
-            "Constant Subtraction" >::
-              (fun _ -> assert_equal "(42+(-24))" (process " 42 - 24 "));
-            "Constant Multiplication" >::
-              (fun _ -> assert_equal "(42*24)" (process " 42 * 24 "));
-            "Addition" >::
-              (fun _ -> assert_equal "((x+24)+y)" (process " x + 24 + y "));
-            "Subtraction" >::
-              (fun _ -> assert_equal "((42+(-24))+(-x))" (process " 42 - 24 - x "));
-            "Multiplication" >::
-              (fun _ -> assert_equal "((42*x)*24)" (process " 42 * x * 24 "));
-            "Power" >::
-              (fun _ -> assert_equal "(x^3)" (process " x ^ 3 "));
-            "Double Negation" >::
-              (fun _ -> assert_equal "(-(-42))" (process " - - 42 "));
-            "Multiplication before Addition" >::
-              (fun _ -> assert_equal "(x+(y*z))" (process " x + y * z "));
-            "Power before Negation" >::
-              (fun _ -> assert_equal "(-(x^3))" (process " - x ^ 3 "));
-            "Power before Multiplication" >::
-              (fun _ -> assert_equal "((x^3)*(y^4))" (process " x ^ 3 * y ^ 4 "));
-          ];
-          "Negative Tests" >::: [
-              "Power with negative exponent" >::
-                (fun _ -> assert_raises Parser.Error (fun _ -> process " x ^ - 3 "));
-              "Power with variable exponent" >::
-                (fun _ -> assert_raises Parser.Error (fun _ -> process " x ^ y "));
-              "Power with term exponent" >::
-                (fun _ -> assert_raises Parser.Error (fun _ -> process " x ^ (y + 3) "));
-            ]
+          "Positive Tests" >::: (
+            List.map (fun (testname, expected, expression) ->
+                testname >:: (fun _ -> assert_equal expected (to_ast_and_back expression)))
+                     [
+                       ("Constant", "42", " 42 ");
+                       ("Negated Constant", "(-42)", " - 42 ");
+                       ("Variable", "x", " x ");
+                       ("Negated Variable", "(-x)", " - x ");
+                       ("Parentheses", "x", " ( x ) ");
+                       ("Double Parentheses", "x", " ( ( x ) )");
+                       ("Constant Addition", "(42+24)", " 42 + 24 ");
+                       ("Constant Subtraction", "(42+(-24))", " 42 - 24 ");
+                       ("Constant Multiplication", "(42*24)", " 42 * 24 ");
+                       ("Addition", "((x+24)+y)", " x + 24 + y ");
+                       ("Subtraction", "((42+(-24))+(-x))", " 42 - 24 - x ");
+                       ("Multiplication", "((42*x)*24)", " 42 * x * 24 ");
+                       ("Power", "(x^3)", " x ^ 3 ");
+                       ("Double Negation", "(-(-42))", " - - 42 ");
+                       ("Multiplication before Addition", "(x+(y*z))", " x + y * z ");
+                       ("Power before Negation", "(-(x^3))", " - x ^ 3 ");
+                       ("Power before Multiplication", "((x^3)*(y^4))", " x ^ 3 * y ^ 4 ");
+                     ]
+          );
+          "Negative Tests" >::: (
+            List.map (fun (testname, expression) ->
+                testname >:: (fun _ -> assert_raises Parser.Error (fun _ -> to_ast_and_back expression)))
+                     [
+                       ("Power with negative exponent", " x ^ - 3 ");
+                       ("Power with variable exponent", " x ^ y ");
+                       ("Power with term exponent", " x ^ (y + 3) ");
+                     ]
+          );
+        ]
+
+    let poly_tests =
+      "Polynomial" >::: [
+          "Evaluate" >::: (
+            List.map (fun (testname, expected, expression) ->
+                testname >:: (fun _ -> assert_equal_big_int (Big_int.of_int expected) (evaluate expression)))
+                     [
+                       ("Constant", 42, " 42 ");
+                       ("Negated Constant", -42, " - 42 ");
+                       ("Variable", 3, " x ");
+                       ("Negated Variable", -3, " - x ");
+                       ("Parentheses", 3, " ( x ) ");
+                       ("Double Parentheses", 3, " ( ( x ) )");
+                       ("Constant Addition", 42+24, " 42 + 24 ");
+                       ("Constant Subtraction", 42-24, " 42 - 24 ");
+                       ("Constant Multiplication", 42*24, " 42 * 24 ");
+                       ("Addition", 32, " x + 24 + y ");
+                       ("Subtraction", 15, " 42 - 24 - x ");
+                       ("Multiplication", 3*42*24, " 42 * x * 24 ");
+                       ("Power", 27, " x ^ 3 ");
+                       ("Double Negation", 42, " - - 42 ");
+                       ("Multiplication before Addition", 38, " x + y * z ");
+                       ("Power before Negation", -27, " - x ^ 3 ");
+                       ("Power before Multiplication", 27*625, " x ^ 3 * y ^ 4 ");
+                     ];
+          );
+            "Math" >::: [
+                "zero" >:: (fun _ -> assert_equal_big_int (Big_int.of_int 0) (Polynomial.eval Polynomial.zero example_valuation));
+                "one" >:: (fun _ -> assert_equal_big_int (Big_int.of_int 1) (Polynomial.eval Polynomial.one example_valuation));
+                "constant" >::: (
+                  List.map (fun (expected, expression) ->
+                      expression >:: (fun _ -> assert_equal_big_int (Big_int.of_int expected) (Polynomial.constant (to_polynomial expression))))
+                           [
+                             (5, " 5 ");
+                             (0, " x ");
+                             (15, " 5 + 2 + x + 8 ");
+                             (10, " 5 * 2 + x ");
+                             (0, " 5 * 2 * x ");
+                             (1, " x ^ 0 ");
+                             (15, " 5 * ( x + 3 ) ");
+                           ];
+                );
+                "is_var" >::: (
+                  List.map (fun (expected, expression) ->
+                      expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (Polynomial.is_var (to_polynomial expression))))
+                           [
+                             (false, " 1 ");
+                             (true, " x ");
+                             (true, " 1 * x ");
+                             (true, " - - x ");
+                             (false, " x ^ 0 ");
+                             (true, " x ^ 1 ");
+                             (false, " x ^ 2 ");
+                             (false, " 2 * x ");
+                             (true, " 2 * x - 1 * x ");
+                           ];
+                );
+              ]
         ]
 
   end
 
-module StringIDParser = ParserTest(StringID)
-module PrePostParser = ParserTest(PrePostID)
+module StringIDPolynomial = PolynomialTest(StringID)
 
 let suite =
   "Suite" >::: [
-      StringIDParser.tests;
-      PrePostParser.tests
+      StringIDPolynomial.parser_tests;
+      StringIDPolynomial.poly_tests;
     ]
                      
 let () =
