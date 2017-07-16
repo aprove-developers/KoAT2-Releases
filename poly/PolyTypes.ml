@@ -16,21 +16,19 @@ module type ID =
     val compare : t -> t -> int
   end
 
-module type PartialOrder =
-  sig
-    type t
-    include Eq with type t := t
-    val (>) : t -> t -> bool Option.t
-    val (<) : t -> t -> bool Option.t
-    val (>=) : t -> t -> bool Option.t      
-    val (>=) : t -> t -> bool Option.t
-  end
-
 module type BasePartialOrder =
   sig
     type t
     include Eq with type t := t
     val (>) : t -> t -> bool Option.t
+  end
+
+module type PartialOrder =
+  sig
+    include BasePartialOrder
+    val (<) : t -> t -> bool Option.t
+    val (>=) : t -> t -> bool Option.t      
+    val (>=) : t -> t -> bool Option.t
   end
 
 module MakePartialOrder(Base : BasePartialOrder) : (PartialOrder with type t := Base.t) =
@@ -122,13 +120,27 @@ module type BaseMath =
     val one : t
     val neg : t -> t
     val add : t -> t -> t
-    val sum : t list -> t
-    val sub : t -> t -> t
     val mul : t -> t -> t
-    val product : t list -> t
     val pow : t -> int -> t
   end
 
+module type Math =
+  sig
+    include BaseMath
+    val sum : t list -> t
+    val product : t list -> t
+    val sub : t -> t -> t
+  end
+
+module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
+  struct
+    include Base
+    let sum = List.fold_left add zero
+    let product = List.fold_left mul one
+    let sub t1 t2 = add t1 (neg t2)
+  end
+
+  
 module type Polynomial =
   sig
     type t
@@ -138,7 +150,7 @@ module type Polynomial =
     type polynomial_ast
     type poly_valuation
     include Evaluable with type t := t
-    include BaseMath with type t := t
+    include Math with type t := t
     include PartialOrder with type t := t
           
     (* Creation *)

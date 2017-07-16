@@ -29,59 +29,50 @@ module MakeMinMaxPolynomial(Var : ID)(Value : Number.Numeric) =
               
     let of_constant c = of_poly (Polynomial.from_constant c)
 
-    let zero = of_poly Polynomial.zero
-             
-    let one = of_poly Polynomial.one
-            
-    let rec simplify = function
-      | Neg (Neg b) -> simplify b
-      | Pow (v,b) ->
-         if v == Value.zero then zero
-         else if v == Value.one then one
-         else if b == zero then one
-         else if b == one then of_constant v
-         else Pow (v,b)
-      | b -> b
-
-    let rec neg = function
-      | Poly p -> Poly (Polynomial.neg p)
-      | Max bounds -> Min (List.map neg bounds)
-      | Min bounds -> Max (List.map neg bounds)
-      | Neg b -> b
-      | Sum bounds -> Sum (List.map neg bounds)
-      | Product (b::bs) -> Product (neg b :: bs)
-      (* TODO Add more simplification? *)
-      | b -> Neg b
-              
-    let rec add b1 b2 = match (b1, b2) with
-      | (Poly p1, Poly p2) -> Poly (Polynomial.add p1 p2)
-      | (Max bounds1, Max bounds2) -> Max (List.map (uncurry add) (List.cartesian_product bounds1 bounds2))
-      | (Min bounds1, Min bounds2) -> Min (List.map (uncurry add) (List.cartesian_product bounds1 bounds2))
-      | (Max bounds, Poly p) -> add (Max bounds) (Max [Poly p])
-      | (Min bounds, Poly p) -> add (Min bounds) (Min [Poly p])
-      (* TODO Add more simplification *)
-      | (b1, b2) -> Sum [b1; b2]
-                  
-    let sum = List.fold_left add zero
-            
-    let sub b1 b2 = add b1 (neg b2)
-                  
-    let mul b1 b2 = match (b1, b2) with
-      (* TODO Add more simplification *)
-      | (b1, b2) -> Product [b1; b2]
-
-    let product = List.fold_left mul one
-              
-    let pow b n = match (b, n) with
-      (* TODO Add more simplification *)
-      | (b, n) ->
-         if b == zero then zero
-         else if b == one then one
-         else if n == 0 then one
-         else if n == 1 then b
-         else product (List.of_enum (Enum.repeat ~times:n b))
-
     type outer_t = t
+    module BaseMathImpl : (BaseMath with type t = outer_t) =
+      struct
+        type t = outer_t
+               
+        let zero = of_poly Polynomial.zero
+                 
+        let one = of_poly Polynomial.one
+            
+        let rec neg = function
+          | Poly p -> Poly (Polynomial.neg p)
+          | Max bounds -> Min (List.map neg bounds)
+          | Min bounds -> Max (List.map neg bounds)
+          | Neg b -> b
+          | Sum bounds -> Sum (List.map neg bounds)
+          | Product (b::bs) -> Product (neg b :: bs)
+          (* TODO Add more simplification? *)
+          | b -> Neg b
+               
+        let rec add b1 b2 = match (b1, b2) with
+          | (Poly p1, Poly p2) -> Poly (Polynomial.add p1 p2)
+          | (Max bounds1, Max bounds2) -> Max (List.map (uncurry add) (List.cartesian_product bounds1 bounds2))
+          | (Min bounds1, Min bounds2) -> Min (List.map (uncurry add) (List.cartesian_product bounds1 bounds2))
+          | (Max bounds, Poly p) -> add (Max bounds) (Max [Poly p])
+          | (Min bounds, Poly p) -> add (Min bounds) (Min [Poly p])
+          (* TODO Add more simplification *)
+          | (b1, b2) -> Sum [b1; b2]
+                      
+        let mul b1 b2 = match (b1, b2) with
+          (* TODO Add more simplification *)
+          | (b1, b2) -> Product [b1; b2]
+                      
+        let pow b n = match (b, n) with
+          (* TODO Add more simplification *)
+          | (b, n) ->
+             if b == zero then zero
+             else if b == one then one
+             else if n == 0 then one
+             else if n == 1 then b
+             else List.fold_left mul one (List.of_enum (Enum.repeat ~times:n b))
+            
+      end
+    include MakeMath(BaseMathImpl)
+          
     module BasePartialOrderImpl : (BasePartialOrder with type t = outer_t) =
       struct
         type t = outer_t

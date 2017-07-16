@@ -96,18 +96,6 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
 
     let from_var var = from_power (Power.lift var)
 
-    (* Return "zero" as a polynomial *)
-
-    let zero = []
-
-    (* Return "one" as a polynomial *)
-
-    let one = lift ScaledMonomial.one
-
-    let is_zero poly = simplify poly == zero
-
-    let is_one poly = simplify poly == one
-                     
     (* Gets the constant *)
     let constant poly = coeff Monomial.one poly
 
@@ -163,41 +151,33 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
     let mult_with_const const poly =
       List.map (ScaledMonomial.mult_with_const const) poly
 
-    let neg poly =
-      mult_with_const (Value.neg Value.one) poly
-
-    (*addition of two polynomials is just concatenation*)
-
-    let add poly1 poly2 =
-      simplify (List.append poly1 poly2)
-
-    let sum pollist =
-      simplify (List.concat pollist) 
-
-    let sub poly1 poly2 =
-      add poly1 (neg poly2)
-
-    (*multiplication of two polynomials*)
-
-    let mul poly1 poly2 =
-         List.cartesian_product poly1 poly2
-      |> List.map (fun (a, b) -> ScaledMonomial.mul a b) 
-
-    let product = List.fold_left mul one
-      
-    let pow poly d =
-         poly
-      |> Enum.repeat ~times:d
-      |> Enum.fold mul one
-      
-    (*instantiates the variables in a polynomial with big ints*)
-
-    let eval poly valuation =
-         poly
-      |> List.map (fun scaled -> ScaledMonomial.eval scaled valuation)
-      |> List.fold_left Value.add Value.zero
-
     type outer_t = t
+    module BaseMathImpl : (BaseMath with type t = outer_t) =
+      struct
+        type t = outer_t
+               
+        let zero = []
+                 
+        let one = lift ScaledMonomial.one
+                
+        let neg poly =
+          mult_with_const (Value.neg Value.one) poly
+          
+        let add poly1 poly2 =
+          simplify (List.append poly1 poly2)
+          
+        let mul poly1 poly2 =
+             List.cartesian_product poly1 poly2
+          |> List.map (fun (a, b) -> ScaledMonomial.mul a b) 
+           
+        let pow poly d =
+             poly
+          |> Enum.repeat ~times:d
+          |> Enum.fold mul one
+      
+      end
+    include MakeMath(BaseMathImpl)
+
     module BasePartialOrderImpl : (BasePartialOrder with type t = outer_t) =
       struct
         type t = outer_t
@@ -212,6 +192,17 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
                
       end
     include MakePartialOrder(BasePartialOrderImpl)
+
+    let is_zero poly = simplify poly == zero
+
+    let is_one poly = simplify poly == one
+                     
+    (*instantiates the variables in a polynomial with big ints*)
+
+    let eval poly valuation =
+         poly
+      |> List.map (fun scaled -> ScaledMonomial.eval scaled valuation)
+      |> List.fold_left Value.add Value.zero
 
     let rec from_ast ast = match ast with
       | PolynomialAST.Constant c -> from_constant (Value.of_int c)
