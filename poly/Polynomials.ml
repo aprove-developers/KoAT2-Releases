@@ -10,6 +10,7 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
     module Monomial = Monomials.MakeMonomial(Var)(Value)
     module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(Var)(Value)
     module PolynomialAST = PolynomialAST(Var)
+    module PolyValuation = Valuation (* TODO Problem with self reference: Valuation.MakeValuation(Var)(MakePolynomial(Var)(Value)) *)
                           
     type t = ScaledMonomial.t list 
     type value = Value.t
@@ -20,7 +21,8 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
     type monomial = Monomial.t
     type scaled_monomial = ScaledMonomial.t
     type polynomial_ast = PolynomialAST.t
-
+    type poly_valuation = PolyValuation.t
+                        
     let make scaleds = scaleds
 
     let lift scaled = [scaled]
@@ -203,4 +205,7 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
       | PolynomialAST.Times (t1, t2) -> mult (from_ast t1) (from_ast t2)
       | PolynomialAST.Pow (var, n) -> from_power (Power.make var n)
 
+    let replace poly poly_valuation =
+      raise (Failure "Not yet implemented")
+                                    
   end

@@ -89,6 +89,7 @@ module type Polynomial =
     type monomial
     type scaled_monomial
     type polynomial_ast
+    type poly_valuation
     include Evaluable with type t := t
     val make : scaled_monomial list -> t
     val lift : scaled_monomial -> t
@@ -119,6 +120,7 @@ module type Polynomial =
     val subtract : t -> t -> t
     val mult : t -> t -> t
     val pow : t -> int -> t
+    val replace : t -> poly_valuation -> t
   end
   
 module type Valuation =
