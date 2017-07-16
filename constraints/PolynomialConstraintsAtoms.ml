@@ -101,7 +101,7 @@ let one = Polynomial.one
 let remove_strictness (comp : t) =
     match comp with
     | GreaterThan (p1, p2)-> GreaterEqual (p1, (Polynomial.add p2 one))
-    | LessThan (p1, p2)-> LessEqual( p1, (Polynomial.subtract p2 one))
+    | LessThan (p1, p2)-> LessEqual( p1, (Polynomial.sub p2 one))
     | _ -> comp
     
 let to_string (comp : t) =

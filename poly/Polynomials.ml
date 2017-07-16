@@ -162,7 +162,7 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
     let mult_with_const const poly =
       List.map (ScaledMonomial.mult_with_const const) poly
 
-    let negate poly =
+    let neg poly =
       mult_with_const (Value.neg Value.one) poly
 
     (*addition of two polynomials is just concatenation*)
@@ -173,19 +173,19 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
     let sum pollist =
       simplify (List.concat pollist) 
 
-    let subtract poly1 poly2 =
-      add poly1 (negate poly2)
+    let sub poly1 poly2 =
+      add poly1 (neg poly2)
 
     (*multiplication of two polynomials*)
 
-    let mult poly1 poly2 =
+    let mul poly1 poly2 =
          List.cartesian_product poly1 poly2
-      |> List.map (fun (a, b) -> ScaledMonomial.mult a b) 
+      |> List.map (fun (a, b) -> ScaledMonomial.mul a b) 
 
     let pow poly d =
          poly
       |> Enum.repeat ~times:d
-      |> Enum.fold mult one
+      |> Enum.fold mul one
       
     (*instantiates the variables in a polynomial with big ints*)
 
@@ -200,9 +200,9 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
     let rec from_ast ast = match ast with
       | PolynomialAST.Constant c -> from_constant (Value.of_int c)
       | PolynomialAST.Variable v -> from_var v
-      | PolynomialAST.Neg t -> negate (from_ast t)
+      | PolynomialAST.Neg t -> neg (from_ast t)
       | PolynomialAST.Plus (t1, t2) -> add (from_ast t1) (from_ast t2)
-      | PolynomialAST.Times (t1, t2) -> mult (from_ast t1) (from_ast t2)
+      | PolynomialAST.Times (t1, t2) -> mul (from_ast t1) (from_ast t2)
       | PolynomialAST.Pow (var, n) -> from_power (Power.make var n)
 
     let replace poly poly_valuation =

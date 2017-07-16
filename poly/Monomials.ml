@@ -80,7 +80,7 @@ module MakeMonomial(Var : ID)(Value : Number.Numeric) =
 
     (*Multiplication of monomials*)
 
-    let mult mon1 mon2 =
+    let mul mon1 mon2 =
       simplify (List.append mon1 mon2)  
 
     let eval mon valuation = 

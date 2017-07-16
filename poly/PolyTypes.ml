@@ -62,7 +62,7 @@ module type Monomial =
     val delete_var : var -> t -> power list
     val simplify : t -> t
     val is_univariate_linear : t -> bool
-    val mult : t -> t -> t
+    val mul : t -> t -> t
     val one : t
   end
 
@@ -75,7 +75,7 @@ module type ScaledMonomial =
     val make : value -> monomial -> t
     val lift : monomial -> t
     val simplify : t -> t
-    val mult : t -> t -> t
+    val mul : t -> t -> t
     val mult_with_const : value -> t -> t
     val one : t
     val coeff : t -> value
@@ -91,36 +91,46 @@ module type Polynomial =
     type polynomial_ast
     type poly_valuation
     include Evaluable with type t := t
+          
+    (* Creation *)
     val make : scaled_monomial list -> t
     val lift : scaled_monomial -> t
     val from_ast : polynomial_ast -> t
-    val coeff : monomial -> t -> value
-    val delete_monomial : monomial -> t -> t
-    val simplify : t -> t
-    val to_string : t -> string
-    val monomials : t -> monomial list
     val from_var : var -> t
     val from_constant : value -> t
     val from_power : power -> t
     val from_monomial : monomial -> t
     val from_scaled_monomial : scaled_monomial -> t
-    val zero : t
-    val one : t
+      
+    (* Get data *)
+    val coeff : monomial -> t -> value
+    val monomials : t -> monomial list
     val constant : t -> value
+    val to_string : t -> string
+      
+    (* Find out properties *)
     val is_var : t -> bool
     val is_var_plus_constant : t -> bool
     val is_sum_of_vars_plus_constant : t -> bool
     val is_univariate_linear : t -> bool
     val is_const : t -> bool
     val is_linear : t -> bool
-    val mult_with_const : value -> t -> t
-    val negate : t -> t
+
+    (* Some Number.Numeric functions *)
+    val zero : t
+    val one : t
+    val neg : t -> t
     val add : t -> t -> t
     val sum : t list -> t
-    val subtract : t -> t -> t
-    val mult : t -> t -> t
+    val sub : t -> t -> t
+    val mul : t -> t -> t
     val pow : t -> int -> t
+
+    (* Misc *)
     val replace : t -> poly_valuation -> t
+    val delete_monomial : monomial -> t -> t
+    val simplify : t -> t
+    val mult_with_const : value -> t -> t
   end
   
 module type Valuation =

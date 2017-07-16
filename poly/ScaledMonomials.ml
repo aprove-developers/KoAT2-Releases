@@ -59,10 +59,10 @@ module MakeScaledMonomial(Var : ID)(Value : Number.Numeric) =
       
     let mult_with_const const scaled = { scaled with coeff = Value.mul scaled.coeff const }
                                      
-    let mult scaled1 scaled2 =
+    let mul scaled1 scaled2 =
       {
         coeff = Value.mul scaled1.coeff scaled2.coeff;
-        mon = Monomial.mult scaled1.mon scaled2.mon
+        mon = Monomial.mul scaled1.mon scaled2.mon
       }
 
     let one =
