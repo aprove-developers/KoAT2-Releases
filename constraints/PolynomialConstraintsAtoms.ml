@@ -2,7 +2,7 @@ open Batteries
 open ID
 
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
-type var = StdPoly.VariableTerm.t
+type var = StdPoly.Polynomial.var
 module Polynomial = StdPoly.Polynomial
 type polynomial = Polynomial.t
 
@@ -125,7 +125,7 @@ let to_z3 (ctx : Z3.context) (comp : t) =
 let get_variables (comp : t) =
     List.unique (List.append (Polynomial.vars (get_first_arg comp)) (Polynomial.vars (get_second_arg comp)))
     
-let rename_vars (varmapping : StdPoly.VariableTerm.rename_map) (comp : t) =
+let rename_vars (varmapping : StdPoly.Polynomial.rename_map) (comp : t) =
     match comp with
     |GreaterThan (p1, p2)-> GreaterThan ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
     |GreaterEqual (p1, p2)-> GreaterEqual ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
@@ -134,7 +134,7 @@ let rename_vars (varmapping : StdPoly.VariableTerm.rename_map) (comp : t) =
     |Neq (p1, p2)-> Neq ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
     |Equal (p1, p2)-> Equal ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
 
-let instantiate_with_big_int (varmapping : StdPoly.VariableTerm.valuation) (comp : t) =
+let instantiate_with_big_int (varmapping : StdPoly.Polynomial.valuation) (comp : t) =
     match comp with
     |GreaterThan (p1, p2)-> (Big_int.gt_big_int (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
     |GreaterEqual (p1, p2)-> (Big_int.ge_big_int (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))

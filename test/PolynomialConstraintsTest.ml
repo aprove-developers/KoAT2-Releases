@@ -1,7 +1,6 @@
 open Batteries
 open ID
 module VarMap = Map.Make(StringID)
-module VariableTerm = StdPoly.VariableTerm
 module Power = StdPoly.Power
 module Monomial = StdPoly.Monomial
 module ScaledMonomial = StdPoly.ScaledMonomial
@@ -9,9 +8,9 @@ module Polynomial = StdPoly.Polynomial
 module Valuation = StdPoly.Valuation
 open Z3
 let () =	
-    let x = (VariableTerm.of_string "x") in
-    let y = (VariableTerm.of_string "y") in
-    Printf.printf "x is %s\n" (VariableTerm.to_string x);
+    let x = (StringID.of_string "x") in
+    let y = (StringID.of_string "y") in
+    Printf.printf "x is %s\n" (StringID.to_string x);
         let pow1 = Power.make x 2 in
         let pow2 = Power.make y 3 in
             let mon1 = Monomial.lift pow1 in
@@ -29,7 +28,7 @@ let () =
                 let scaled_const = ScaledMonomial.make (Big_int.big_int_of_int 123) const in
                     let poly1 = Polynomial.make [scaled1 ; scaled2 ; scaled3 ; scaled4; scaled4 ; scaled5 ; scaled5 ; scaled_const ; scaled5 ; scaled5 ; scaled5] in
                     let poly2 = Polynomial.make [scaled2 ; scaled3 ; scaled4 ; scaled1 ; scaled4 ; scaled5 ; scaled5 ; scaled_const] in
-                    let poly3 = Polynomial.from_var (VariableTerm.of_string "z") in 
+                    let poly3 = Polynomial.from_var (StringID.of_string "z") in 
                     
                     let greater_equal = PolynomialConstraintsAtoms.mk_ge poly1 poly2 in
                     let equal = PolynomialConstraintsAtoms.mk_eq poly2 poly3 in
@@ -38,7 +37,7 @@ let () =
                     Printf.printf "poly 1 >= poly 2 in Z3 :\n %s \n" (Z3.Expr.to_string (PolynomialConstraintsAtoms.to_z3 ctx greater_equal));
                     Printf.printf "poly 2 = poly 3 : %s \n" (PolynomialConstraintsAtoms.to_string equal);
                     Printf.printf "poly 2 = poly3 in Z3 :\n %s \n" (Z3.Expr.to_string (PolynomialConstraintsAtoms.to_z3 ctx equal));
-                    Printf.printf "The variables in equal are : %s \n" (String.concat ", " (List.map VariableTerm.to_string (PolynomialConstraintsAtoms.get_variables equal)));
+                    Printf.printf "The variables in equal are : %s \n" (String.concat ", " (List.map StringID.to_string (PolynomialConstraintsAtoms.get_variables equal)));
                     
                     let varmapping = VarMap.empty in
                     let varmapping = VarMap.add (StringID.of_string "x") (StringID.of_string "a") varmapping in
@@ -50,7 +49,7 @@ let () =
                         Printf.printf "poly 1 >= poly 2 in Z3 :\n %s \n" (Z3.Expr.to_string (PolynomialConstraintsAtoms.to_z3 ctx greater_equal_ren));
                         Printf.printf "poly 2 = poly 3 : %s \n" (PolynomialConstraintsAtoms.to_string equal_ren);
                         Printf.printf "poly 2 = poly3 in Z3 :\n %s \n" (Z3.Expr.to_string (PolynomialConstraintsAtoms.to_z3 ctx equal_ren));
-                        Printf.printf "The variables in equal_ren are : %s \n" (String.concat ", " (List.map VariableTerm.to_string (PolynomialConstraintsAtoms.get_variables equal_ren)));
+                        Printf.printf "The variables in equal_ren are : %s \n" (String.concat ", " (List.map StringID.to_string (PolynomialConstraintsAtoms.get_variables equal_ren)));
                     
                        let intmapping = Valuation.from [(StringID.of_string "x", Big_int.big_int_of_int 2);
                                                         (StringID.of_string "y", Big_int.big_int_of_int 5);

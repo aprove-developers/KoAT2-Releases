@@ -3,7 +3,6 @@ open PolyTypes
    
 module MakeMonomial(Var : ID)(Value : Number.Numeric) =
   struct
-    module VariableTerm = Variables.MakeVariableTerm(Var)(Value)
     module Valuation = Valuation.MakeValuation(Var)(Value)
     module RenameMap = Map.Make(Var)
     module Power = Powers.MakePower(Var)(Value)
@@ -15,8 +14,6 @@ module MakeMonomial(Var : ID)(Value : Number.Numeric) =
     type rename_map = var RenameMap.t
     type power = Power.t
            
-    let compare a b = 0 (* TODO Change? There are total orders on the monomials but I don't know if we can use them.*)
-
     let make powers = powers
 
     let lift power = [power]
@@ -29,15 +26,15 @@ module MakeMonomial(Var : ID)(Value : Number.Numeric) =
       |> List.fold_left (+) 0
 
     let degree_variable var mon =
-      let var_list = List.filter (fun power -> VariableTerm.(==) (Power.var power) var ) mon  in 
+      let var_list = List.filter (fun power -> Var.(==) (Power.var power) var ) mon  in 
       degree var_list  
 
     let delete_var var mon =
-      List.filter(fun x -> let var_x = Power.var x in not (VariableTerm.(==) var var_x)) mon
+      List.filter(fun x -> let var_x = Power.var x in not (Var.(==) var var_x)) mon
       
     let simplify mon =
          mon
-      |> List.group (fun p1 p2 -> VariableTerm.compare (Power.var p1) (Power.var p2))
+      |> List.group (fun p1 p2 -> Var.compare (Power.var p1) (Power.var p2))
       |> List.map (fun (powers : Power.t list) -> Power.make (Power.var (List.hd powers)) (degree powers))
                   
     let to_string_simplified = function 

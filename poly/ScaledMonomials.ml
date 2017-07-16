@@ -4,7 +4,6 @@ open Big_int.Infix
 
 module MakeScaledMonomial(Var : ID)(Value : Number.Numeric) =
   struct    
-    module VariableTerm = Variables.MakeVariableTerm(Var)(Value)
     module Valuation = Valuation.MakeValuation(Var)(Value)
     module RenameMap = Map.Make(Var)
     module Power = Powers.MakePower(Var)(Value)
@@ -22,8 +21,6 @@ module MakeScaledMonomial(Var : ID)(Value : Number.Numeric) =
     type power = Power.t
     type monomial = Monomial.t
                
-    let compare a b = 0 (* TODO Change? *)
-
     let make coefficient monomial = { coeff = coefficient; mon = monomial }
                                   
     let coeff scaled = scaled.coeff
@@ -49,9 +46,23 @@ module MakeScaledMonomial(Var : ID)(Value : Number.Numeric) =
     let to_z3 ctx scaled =
       to_z3_simplified ctx (simplify scaled)
       
-    let (==) scaled1 scaled2 =
-      (scaled1.coeff == scaled2.coeff) && (Monomial.(==) scaled1.mon scaled2.mon)
-      
+    type outer_t = t
+    module BasePartialOrderImpl : (BasePartialOrder with type t = outer_t) =
+      struct
+        type t = outer_t
+               
+        let (==) scaled1 scaled2 =
+          (scaled1.coeff == scaled2.coeff) && (Monomial.(==) scaled1.mon scaled2.mon)
+          
+        let (>) s1 s2 = match (s1, s2) with
+          (* TODO Find some rules to compare *)
+          | (s1, s2) -> if (Monomial.(==) (monomial s1) (monomial s2) && (coeff s1 > coeff s2)) then
+                          Some true
+                        else None
+                      
+      end
+    include MakePartialOrder(BasePartialOrderImpl)
+
     let rename varmapping scaled = { scaled with mon = Monomial.rename varmapping scaled.mon }
                                  
     let eval scaled valuation =

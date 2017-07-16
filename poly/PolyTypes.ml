@@ -1,12 +1,44 @@
 open Batteries
 
-module type ID =
+module type Eq =
   sig
     type t
     val (==) : t -> t -> bool
+    (* TODO val (!=) : t -> t -> bool *)
+  end
+  
+module type ID =
+  sig
+    type t
+    include Eq with type t := t
     val of_string : string -> t
     val to_string : t -> string
     val compare : t -> t -> int
+  end
+
+module type PartialOrder =
+  sig
+    type t
+    include Eq with type t := t
+    val (>) : t -> t -> bool Option.t
+    val (<) : t -> t -> bool Option.t
+    val (>=) : t -> t -> bool Option.t      
+    val (>=) : t -> t -> bool Option.t
+  end
+
+module type BasePartialOrder =
+  sig
+    type t
+    include Eq with type t := t
+    val (>) : t -> t -> bool Option.t
+  end
+
+module MakePartialOrder(Base : BasePartialOrder) : (PartialOrder with type t := Base.t) =
+  struct
+    include Base
+    let (>=) b1 b2 = Option.map (fun greater -> b1 == b2 || greater) (b1 > b2)
+    let (<) b1 b2 = Option.map not (b1 >= b2)
+    let (<=) b1 b2 = Option.map not (b1 > b2)
   end
   
 module PolynomialAST(Var : ID) =
@@ -30,7 +62,6 @@ module type Evaluable =
     val (==) : t -> t -> bool
     val of_string : string -> t
     val to_string : t -> string
-    val compare : t -> t -> int
     val vars : t -> var list
     val eval : t -> valuation -> value
     val to_z3 : Z3.context -> t -> Z3.Expr.expr
@@ -72,6 +103,8 @@ module type ScaledMonomial =
     type power
     type monomial
     include Evaluable with type t := t
+    include PartialOrder with type t := t
+
     val make : value -> monomial -> t
     val lift : monomial -> t
     val simplify : t -> t
@@ -81,7 +114,21 @@ module type ScaledMonomial =
     val coeff : t -> value
     val monomial : t -> monomial
   end
-  
+
+module type BaseMath =
+  sig
+    type t
+    val zero : t
+    val one : t
+    val neg : t -> t
+    val add : t -> t -> t
+    val sum : t list -> t
+    val sub : t -> t -> t
+    val mul : t -> t -> t
+    val product : t list -> t
+    val pow : t -> int -> t
+  end
+
 module type Polynomial =
   sig
     type t
@@ -91,6 +138,8 @@ module type Polynomial =
     type polynomial_ast
     type poly_valuation
     include Evaluable with type t := t
+    include BaseMath with type t := t
+    include PartialOrder with type t := t
           
     (* Creation *)
     val make : scaled_monomial list -> t
@@ -115,22 +164,23 @@ module type Polynomial =
     val is_univariate_linear : t -> bool
     val is_const : t -> bool
     val is_linear : t -> bool
-
-    (* Some Number.Numeric functions *)
-    val zero : t
-    val one : t
-    val neg : t -> t
-    val add : t -> t -> t
-    val sum : t list -> t
-    val sub : t -> t -> t
-    val mul : t -> t -> t
-    val pow : t -> int -> t
+    val is_zero : t -> bool
+    val is_one : t -> bool
 
     (* Misc *)
     val replace : t -> poly_valuation -> t
     val delete_monomial : monomial -> t -> t
     val simplify : t -> t
     val mult_with_const : value -> t -> t
+  end
+
+module type MinMaxPolynomial =
+  sig
+    type t
+    type polynomial_ast
+    include Evaluable with type t := t
+    include BaseMath with type t := t
+    include PartialOrder with type t := t
   end
   
 module type Valuation =

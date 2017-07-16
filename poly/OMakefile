@@ -12,9 +12,9 @@ BYTE_ENABLED = true
 FILES[] =
     ID
     Valuation
-    Variables
     Monomials
     Polynomials
+    MinMaxPolynomial
     Powers
     ScaledMonomials
     PolyTypes

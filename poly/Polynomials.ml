@@ -3,7 +3,6 @@ open PolyTypes
    
 module MakePolynomial(Var : ID)(Value : Number.Numeric) =
   struct
-    module VariableTerm = Variables.MakeVariableTerm(Var)(Value)
     module Valuation = Valuation.MakeValuation(Var)(Value)
     module RenameMap = Map.Make(Var)
     module Power = Powers.MakePower(Var)(Value)
@@ -27,8 +26,6 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
 
     let lift scaled = [scaled]
 
-    let compare a b = 0 (* TODO *)
-                         
     let degree poly =
       List.max (List.map (ScaledMonomial.degree) poly )
       
@@ -107,6 +104,10 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
 
     let one = lift ScaledMonomial.one
 
+    let is_zero poly = simplify poly == zero
+
+    let is_one poly = simplify poly == one
+                     
     (* Gets the constant *)
     let constant poly = coeff Monomial.one poly
 
@@ -182,6 +183,8 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
          List.cartesian_product poly1 poly2
       |> List.map (fun (a, b) -> ScaledMonomial.mul a b) 
 
+    let product = List.fold_left mul one
+      
     let pow poly d =
          poly
       |> Enum.repeat ~times:d
@@ -194,8 +197,21 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
       |> List.map (fun scaled -> ScaledMonomial.eval scaled valuation)
       |> List.fold_left Value.add Value.zero
 
-    let (==) poly1 poly2 = 
-      equal_simplified (simplify poly1) (simplify poly2)
+    type outer_t = t
+    module BasePartialOrderImpl : (BasePartialOrder with type t = outer_t) =
+      struct
+        type t = outer_t
+               
+        let (==) poly1 poly2 = 
+          equal_simplified (simplify poly1) (simplify poly2)
+          
+        let (>) p1 p2 = match (p1, p2) with
+          (* TODO Find some rules to compare polynomials *)
+          | ([s1], [s2]) -> ScaledMonomial.(>) s1 s2
+          | _ -> None
+               
+      end
+    include MakePartialOrder(BasePartialOrderImpl)
 
     let rec from_ast ast = match ast with
       | PolynomialAST.Constant c -> from_constant (Value.of_int c)

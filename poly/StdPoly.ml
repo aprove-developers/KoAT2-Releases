@@ -2,7 +2,7 @@ open Batteries
 
 module Valuation = Valuation.MakeValuation(ID.StringID)(Number.MakeNumeric(Big_int))
                     
-module VariableTerm = Variables.MakeVariableTerm(ID.StringID)(Number.MakeNumeric(Big_int))
+module Var = ID.StringID
                        
 module Power = Powers.MakePower(ID.StringID)(Number.MakeNumeric(Big_int))
                 
