@@ -1,65 +1,31 @@
 open Batteries
-open ID
-open Evaluable
+open PolyTypes
    
-module type Polynomial =
-  sig
-    type t
-    type power
-    type monomial
-    type scaled_monomial
-    include Evaluable with type t := t
-    val make : scaled_monomial list -> t
-    val lift : scaled_monomial -> t
-    val coeff : monomial -> t -> value
-    val delete_monomial : monomial -> t -> t
-    val simplify : t -> t
-    val to_string : t -> string
-    val monomials : t -> monomial list
-    val from_var : var -> t
-    val zero : t
-    val one : t
-    val constant : t -> value
-    val from_constant : value -> t
-    val is_var : t -> bool
-    val is_var_plus_constant : t -> bool
-    val is_sum_of_vars_plus_constant : t -> bool
-    val is_univariate_linear : t -> bool
-    val is_const : t -> bool
-    val is_linear : t -> bool
-    val mult_with_const : value -> t -> t
-    val negate : t -> t
-    val add : t -> t -> t
-    val sum : t list -> t
-    val subtract : t -> t -> t
-    val mult : t -> t -> t
-    val pow : t -> int -> t
-  end
-
-module MakePolynomial(Var : ID) =
+module MakePolynomial(Var : ID)(Value : Number.Numeric) =
   struct
-    module VariableTerm = Variables.MakeVariableTerm(Var)
-    module Valuation = Valuation.MakeValuation(Var)
+    module Valuation = Valuation.MakeValuation(Var)(Value)
     module RenameMap = Map.Make(Var)
-    module Power = Powers.MakePower(Var)
-    module Monomial = Monomials.MakeMonomial(Var)
-    module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(Var)
+    module Power = Powers.MakePower(Var)(Value)
+    module Monomial = Monomials.MakeMonomial(Var)(Value)
+    module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(Var)(Value)
+    module PolynomialAST = PolynomialAST(Var)
+    module PolyValuation = Valuation (* TODO Problem with self reference: Valuation.MakeValuation(Var)(MakePolynomial(Var)(Value)) *)
                           
     type t = ScaledMonomial.t list 
-    type value = VariableTerm.value
-    type valuation = VariableTerm.valuation
-    type var = VariableTerm.t
+    type value = Value.t
+    type valuation = Valuation.t
+    type var = Var.t
     type rename_map = var RenameMap.t
     type power = Power.t
     type monomial = Monomial.t
     type scaled_monomial = ScaledMonomial.t
-
+    type polynomial_ast = PolynomialAST.t
+    type poly_valuation = PolyValuation.t
+                        
     let make scaleds = scaleds
 
     let lift scaled = [scaled]
 
-    let compare a b = 0 (* TODO *)
-                         
     let degree poly =
       List.max (List.map (ScaledMonomial.degree) poly )
       
@@ -68,7 +34,7 @@ module MakePolynomial(Var : ID) =
          poly
       |> List.filter (fun scaled -> Monomial.(==) (ScaledMonomial.monomial scaled) mon)
       |> List.map ScaledMonomial.coeff
-      |> List.fold_left Big_int.add Big_int.zero
+      |> List.fold_left Value.add Value.zero
 
     let delete_monomial mon poly =
       List.filter (fun x -> not (Monomial.(==) (ScaledMonomial.monomial x) mon)) poly
@@ -79,7 +45,7 @@ module MakePolynomial(Var : ID) =
       | scaled::tail ->
          let curr_monom = ScaledMonomial.monomial scaled in
          let curr_coeff = coeff curr_monom poly in
-         if (Big_int.equal curr_coeff Big_int.zero) then (simplify_partial_simplified (delete_monomial curr_monom tail))
+         if (Value.equal curr_coeff Value.zero) then (simplify_partial_simplified (delete_monomial curr_monom tail))
          else (ScaledMonomial.make curr_coeff curr_monom) :: (simplify_partial_simplified (delete_monomial curr_monom tail) )
 
     let simplify poly =
@@ -108,7 +74,7 @@ module MakePolynomial(Var : ID) =
         | scaled :: tail ->
            let curr_mon = ScaledMonomial.monomial scaled in
            let curr_coeff = ScaledMonomial.coeff scaled in
-           Big_int.equal curr_coeff (coeff curr_mon poly2) &&
+           Value.equal curr_coeff (coeff curr_mon poly2) &&
              equal_simplified tail (delete_monomial curr_mon poly2)
 
     (* Returns the monomials of a polynomial without the empty monomial *)
@@ -120,27 +86,18 @@ module MakePolynomial(Var : ID) =
 
     (* Returns a variable as a polynomial *)
 
-    let from_var var =
-         Power.make var 1
-      |> Monomial.lift
-      |> ScaledMonomial.make Big_int.one
-      |> List.singleton
+    let from_scaled_monomial = lift
 
-    (* Return "zero" as a polynomial *)
+    let from_monomial mon = from_scaled_monomial (ScaledMonomial.lift mon)
 
-    let zero = []
+    let from_power power = from_monomial (Monomial.lift power)
+      
+    let from_constant c = lift (ScaledMonomial.make c Monomial.one)
 
-    (* Return "one" as a polynomial *)
-
-    let one = 
-      [ ScaledMonomial.make Big_int.one Monomial.one ]
+    let from_var var = from_power (Power.lift var)
 
     (* Gets the constant *)
     let constant poly = coeff Monomial.one poly
-
-    let from_constant c =
-      [(ScaledMonomial.make c Monomial.one)]
-
 
     (* Returns the variables of a polynomial *)          
     let vars poly =
@@ -169,7 +126,7 @@ module MakePolynomial(Var : ID) =
     let is_sum_of_vars_plus_constant poly =
          poly
       |> delete_monomial Monomial.one
-      |> List.for_all (fun scaled -> Big_int.equal (ScaledMonomial.coeff scaled) Big_int.one &&
+      |> List.for_all (fun scaled -> Value.equal (ScaledMonomial.coeff scaled) Value.one &&
                                        Monomial.is_univariate_linear (ScaledMonomial.monomial scaled))
 
     (* Checks whether a polynomial is a sum of variables plus a constant *)
@@ -194,41 +151,68 @@ module MakePolynomial(Var : ID) =
     let mult_with_const const poly =
       List.map (ScaledMonomial.mult_with_const const) poly
 
-    let negate poly =
-      mult_with_const (Big_int.neg Big_int.one) poly
-
-    (*addition of two polynomials is just concatenation*)
-
-    let add poly1 poly2 =
-      simplify (List.append poly1 poly2)
-
-    let sum pollist =
-      simplify (List.concat pollist) 
-
-    let subtract poly1 poly2 =
-      add poly1 (negate poly2)
-
-    (*multiplication of two polynomials*)
-
-    let mult poly1 poly2 =
-         List.cartesian_product poly1 poly2
-      |> List.map (fun (a, b) -> ScaledMonomial.mult a b) 
-
-    let pow poly d =
-         poly
-      |> Enum.repeat ~times:d
-      |> Enum.fold mult one
+    type outer_t = t
+    module BaseMathImpl : (BaseMath with type t = outer_t) =
+      struct
+        type t = outer_t
+               
+        let zero = []
+                 
+        let one = lift ScaledMonomial.one
+                
+        let neg poly =
+          mult_with_const (Value.neg Value.one) poly
+          
+        let add poly1 poly2 =
+          simplify (List.append poly1 poly2)
+          
+        let mul poly1 poly2 =
+             List.cartesian_product poly1 poly2
+          |> List.map (fun (a, b) -> ScaledMonomial.mul a b) 
+           
+        let pow poly d =
+             poly
+          |> Enum.repeat ~times:d
+          |> Enum.fold mul one
       
+      end
+    include MakeMath(BaseMathImpl)
+
+    module BasePartialOrderImpl : (BasePartialOrder with type t = outer_t) =
+      struct
+        type t = outer_t
+               
+        let (==) poly1 poly2 = 
+          equal_simplified (simplify poly1) (simplify poly2)
+          
+        let (>) p1 p2 = match (p1, p2) with
+          (* TODO Find some rules to compare polynomials *)
+          | ([s1], [s2]) -> ScaledMonomial.(>) s1 s2
+          | _ -> None
+               
+      end
+    include MakePartialOrder(BasePartialOrderImpl)
+
+    let is_zero poly = simplify poly == zero
+
+    let is_one poly = simplify poly == one
+                     
     (*instantiates the variables in a polynomial with big ints*)
 
     let eval poly valuation =
          poly
       |> List.map (fun scaled -> ScaledMonomial.eval scaled valuation)
-      |> List.fold_left Big_int.add Big_int.zero
+      |> List.fold_left Value.add Value.zero
 
-    let (==) poly1 poly2 = 
-      equal_simplified (simplify poly1) (simplify poly2)
+    let rec from_ast ast = match ast with
+      | PolynomialAST.Constant c -> from_constant (Value.of_int c)
+      | PolynomialAST.Variable v -> from_var v
+      | PolynomialAST.Neg t -> neg (from_ast t)
+      | PolynomialAST.Plus (t1, t2) -> add (from_ast t1) (from_ast t2)
+      | PolynomialAST.Times (t1, t2) -> mul (from_ast t1) (from_ast t2)
+      | PolynomialAST.Pow (var, n) -> from_power (Power.make var n)
 
+    let replace poly poly_valuation =
+      raise (Failure "Not yet implemented")
+                                    
   end
-
-module StringPolynomial = MakePolynomial(StringID)

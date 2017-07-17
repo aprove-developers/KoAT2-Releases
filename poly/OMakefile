@@ -6,23 +6,27 @@ OCAMLPACKS[] =
 
 OCAMLFLAGS += -thread
 
-# OCAMLINCLUDES +=
-
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
-
-OCamlGeneratedFiles(parser.ml lexer.ml)
 
 FILES[] =
     ID
     Valuation
-    Evaluable
-    Variables
     Monomials
     Polynomials
+    MinMaxPolynomial
     Powers
     ScaledMonomials
+    PolyTypes
+    StdPoly
 
 LIB = poly
 
-OCamlLibrary($(LIB), $(FILES))
+.DEFAULT: $(OCamlLibrary $(LIB), $(FILES))
+
+clean:
+  rm -f \
+     *.omc \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
+     $(LIB).a $(LIB).cmxa $(LIB).cma \
+     *~

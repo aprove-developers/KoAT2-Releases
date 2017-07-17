@@ -1,6 +1,9 @@
-.SUBDIRS: poly constraints test
-
 .PHONY: clean
 
+.SUBDIRS: poly constraints parser test
+
 clean:
-    rm -f **/*.cmi **/*.cmo **/*.cmx **/*.o **/*.a **/*.cmxa **/*.omc 
+    rm -f \
+        *.omc \
+        *.log \
+        *.cache

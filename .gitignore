@@ -23,3 +23,5 @@
 
 #Ignore Makefile
 Makefile
+*.log
+*.cache

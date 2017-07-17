@@ -1,38 +1,19 @@
 open Batteries
-open ID
-open Evaluable
+open PolyTypes
    
-module type Monomial =
-  sig
-    type t
-    type power
-    include Evaluable with type t := t
-    val make : power list -> t
-    val lift : power -> t
-    val degree_variable : var -> t -> int
-    val delete_var : var -> t -> power list
-    val simplify : t -> t
-    val is_univariate_linear : t -> bool
-    val mult : t -> t -> t
-    val one : t
-  end
-
-module MakeMonomial(Var : ID) =
+module MakeMonomial(Var : ID)(Value : Number.Numeric) =
   struct
-    module VariableTerm = Variables.MakeVariableTerm(Var)
-    module Valuation = Valuation.MakeValuation(Var)
+    module Valuation = Valuation.MakeValuation(Var)(Value)
     module RenameMap = Map.Make(Var)
-    module Power = Powers.MakePower(Var)
+    module Power = Powers.MakePower(Var)(Value)
 
     type t = Power.t list
-    type value = Valuation.value
+    type value = Value.t
     type valuation = Valuation.t
     type var = Var.t
     type rename_map = var RenameMap.t
     type power = Power.t
            
-    let compare a b = 0 (* TODO Change? There are total orders on the monomials but I don't know if we can use them.*)
-
     let make powers = powers
 
     let lift power = [power]
@@ -45,15 +26,15 @@ module MakeMonomial(Var : ID) =
       |> List.fold_left (+) 0
 
     let degree_variable var mon =
-      let var_list = List.filter (fun power -> VariableTerm.(==) (Power.var power) var ) mon  in 
+      let var_list = List.filter (fun power -> Var.(==) (Power.var power) var ) mon  in 
       degree var_list  
 
     let delete_var var mon =
-      List.filter(fun x -> let var_x = Power.var x in not (VariableTerm.(==) var var_x)) mon
+      List.filter(fun x -> let var_x = Power.var x in not (Var.(==) var var_x)) mon
       
     let simplify mon =
          mon
-      |> List.group (fun p1 p2 -> VariableTerm.compare (Power.var p1) (Power.var p2))
+      |> List.group (fun p1 p2 -> Var.compare (Power.var p1) (Power.var p2))
       |> List.map (fun (powers : Power.t list) -> Power.make (Power.var (List.hd powers)) (degree powers))
                   
     let to_string_simplified = function 
@@ -96,14 +77,12 @@ module MakeMonomial(Var : ID) =
 
     (*Multiplication of monomials*)
 
-    let mult mon1 mon2 =
+    let mul mon1 mon2 =
       simplify (List.append mon1 mon2)  
 
     let eval mon valuation = 
-      List.fold_left (Big_int.mult_big_int) (Big_int.unit_big_int) (List.map (fun power -> Power.eval power valuation) mon)
+      List.fold_left Value.mul Value.one (List.map (fun power -> Power.eval power valuation) mon)
 
     let one = []
                     
   end
-
-module StringMonomial = MakeMonomial(StringID)

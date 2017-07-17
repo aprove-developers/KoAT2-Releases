@@ -1,23 +1,9 @@
 open Batteries
 open ID
+open PolyTypes
 
-module type Valuation =
-  sig
-    type t
-    type var
-    type value = Big_int.big_int
-    val from : (var * value) list -> t
-    val zero : var list -> t
-    val eval : var -> t -> value
-    val vars : t -> var list
-  end
-
-module type ValuationFunctor =
-  functor (Id : ID) -> Valuation with type var = Id.t
-                                  and type value = Big_int.big_int
-
-module MakeValuation(Id : ID) : Valuation with type var = Id.t
-                                           and type value = Big_int.big_int
-
-module StringValuation : Valuation with type var = StringID.t
-                                    and type value = Big_int.big_int
+module MakeValuation
+         (Var : ID)
+         (Value : Number.Numeric)
+       : Valuation with type var = Var.t
+                    and type value = Value.t

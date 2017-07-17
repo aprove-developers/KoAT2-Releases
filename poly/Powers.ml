@@ -1,61 +1,49 @@
 open Batteries
-open ID
-open Evaluable
+open PolyTypes
    
-module type Power =
-  sig
-    type t
-    include Evaluable with type t := t
-    val make : var -> int -> t
-    val lift : var -> t
-    val var : t -> var
-    val n : t -> int
-  end
-   
-module MakePower(Var : ID) =
+module MakePower(Var : ID)(Value : Number.Numeric) =
   struct
-    module VariableTerm = Variables.MakeVariableTerm(Var)
-    module Valuation = Valuation.MakeValuation(Var)
+    module Valuation = Valuation.MakeValuation(Var)(Value)
     module RenameMap = Map.Make(Var)
 
     type t = {
-        var : VariableTerm.t;
+        var : Var.t;
         n : int
       }
-    type value = Valuation.value
+    type value = Value.t
     type valuation = Valuation.t
     type var = Var.t
     type rename_map = var RenameMap.t
              
     let of_string name = {
-        var = VariableTerm.of_string name;
+        var = Var.of_string name;
         n = 1
       }
 
     let to_string power =
-      if power.n<=0 then "1"
-      else if power.n == 1 then (VariableTerm.to_string power.var) 
-      else String.concat "^" [(VariableTerm.to_string power.var); (string_of_int power.n)]
+      if power.n <= 0 then "1"
+      else if power.n == 1 then (Var.to_string power.var) 
+      else String.concat "^" [(Var.to_string power.var); (string_of_int power.n)]
 
     let (==) power1 power2 =
       (power1.var == power2.var) && ( power1.n == power2.n)
 
-    let compare a b = 0 (* TODO Change? *)
-
     let vars power = [power.var]
 
     let eval power valuation =
-      if power.n < 0 then Big_int.zero_big_int
-      else Big_int.power_big_int_positive_int (VariableTerm.eval power.var valuation) power.n
+      if power.n < 0 then Value.zero
+      else Value.pow (Valuation.eval power.var valuation) (Value.of_int power.n)
                
     let to_z3 ctx power =
-      Z3.Arithmetic.mk_power ctx ( VariableTerm.to_z3 ctx power.var ) (Z3.Arithmetic.Integer.mk_numeral_i ctx power.n)
+      Z3.Arithmetic.mk_power ctx ( Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx (Var.to_string power.var)) ) (Z3.Arithmetic.Integer.mk_numeral_i ctx power.n)
           
-    let rename valuation power = {
-        var = VariableTerm.rename valuation power.var;
-        n = power.n
+    let rename varmapping power = {
+        power with var =
+                     if RenameMap.mem power.var varmapping then
+                       RenameMap.find power.var varmapping
+                     else power.var
       }
-    
+
     let make var n = {
         var = var;
         n = n
@@ -70,5 +58,3 @@ module MakePower(Var : ID) =
     let degree = n
 
   end
-
-module StringPower = MakePower(StringID)
