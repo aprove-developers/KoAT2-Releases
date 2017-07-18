@@ -114,7 +114,7 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
       |> simplify
       |> monomials
       |> fun monomials -> List.length monomials == 1 &&
-                            Monomial.is_univariate_linear (List.hd monomials)
+                            Monomial.is_univariate_linear (List.hd monomials) && (Value.equal (coeff (List.hd monomials) poly) Value.one)
 
     (* Checks wheather a polynomial is a single variable plus a constant*)
     let is_var_plus_constant poly =
