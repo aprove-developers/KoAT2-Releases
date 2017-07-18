@@ -142,8 +142,10 @@ module PolynomialTest(Var : ID) =
                              (false, " x ^ 0 ");
                              (true, " x ^ 1 ");
                              (false, " x ^ 2 ");
-                             (false, " 2 * x ");
+                             (false, " 2 * x "); 
                              (true, " 2 * x - 1 * x ");
+                             (false, "6 * x ^5 *y - 2*z");
+                             (true , "x*y*z*a*b*c + d - x*y*z*a*b*c");
                            ];
                 );
               ]
