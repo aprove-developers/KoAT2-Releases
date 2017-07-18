@@ -50,6 +50,9 @@ module PolynomialTest(Var : ID) =
 
     let assert_equal_big_int =
       assert_equal ~cmp:Big_int.equal ~printer:Big_int.to_string
+    
+    let assert_equal_string =
+      assert_equal ~cmp:String.equal
 
     let assert_true = assert_bool ""
     let assert_false b = assert_true (not b)
@@ -115,7 +118,7 @@ module PolynomialTest(Var : ID) =
                        ("Power before Multiplication", 27*625, " x ^ 3 * y ^ 4 ");
                      ];
           );
-            "Math" >::: [
+            "Math" >::: ([
                 "zero" >:: (fun _ -> assert_equal_big_int (Big_int.of_int 0) (Polynomial.eval Polynomial.zero example_valuation));
                 "one" >:: (fun _ -> assert_equal_big_int (Big_int.of_int 1) (Polynomial.eval Polynomial.one example_valuation));
                 "constant" >::: (
@@ -149,6 +152,16 @@ module PolynomialTest(Var : ID) =
                            ];
                 );
               ]
+            );
+            
+            "String" >::: (
+                List.map (fun (expected, expression)-> expression >::(fun _ -> assert_equal_string expected (Polynomial.to_string (to_polynomial expression))) )
+                     [
+                       ("1" , "1");
+                       
+                     ];
+          );
+              
         ]
 
   end
