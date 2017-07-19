@@ -7,21 +7,27 @@ BYTE_ENABLED = true
 
 OCAMLINCLUDES[] =
     ../poly
+    ../constraints
 
 OCAML_LIBS[] =
     ../poly/poly
+    ../constraints/constraints
 
 GEN_FILES[] =
     PolynomialParser.ml
     PolynomialParser.mli
     PolynomialLexer.ml
-
+    PolynomialConstraintsAtomParser.ml
+    PolynomialConstraintsAtomParser.mli
+    PolynomialConstraintsAtomLexer.ml
+    
 OCamlGeneratedFiles($(GEN_FILES))
 
 FILES[] =
     PolynomialParser
     PolynomialLexer
-
+    PolynomialConstraintsAtomParser
+    PolynomialConstraintsAtomLexer
 LIB = parser
 
 .DEFAULT: $(OCamlLibrary $(LIB), $(FILES))
