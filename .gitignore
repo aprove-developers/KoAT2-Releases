@@ -1,4 +1,4 @@
-#Ignore files created by make commands
+#Ignore files created by omake commands
 *.byte
 *.cmi
 *.cmo
@@ -9,6 +9,7 @@
 *.cmxa
 *.opt
 *.cma
+_build/
 
 #Ignore files created by editors
 *.swp
@@ -26,3 +27,7 @@
 Makefile
 *.log
 *.cache
+
+#Ignore symbolic links to .opt files
+test/PolynomialsTest
+test/PolynomialConstraintsTest
