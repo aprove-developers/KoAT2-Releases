@@ -10,7 +10,7 @@ struct
     module PolynomialConstraintsAtomAST = PolynomialConstraintsAtomAST(Var)
     module Power = Powers.MakePower(Var)(Value)
     module Polynomial = Polynomials.MakePolynomial(Var)(Value)
-
+    
     type var = Var.t
     type polynomial = Polynomial.t
     type rename_map = var RenameMap.t
