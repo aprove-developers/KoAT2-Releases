@@ -36,6 +36,7 @@ module MakeMonomial(Var : ID)(Value : Number.Numeric) =
          mon
       |> List.group (fun p1 p2 -> Var.compare (Power.var p1) (Power.var p2))
       |> List.map (fun (powers : Power.t list) -> Power.make (Power.var (List.hd powers)) (degree powers))
+      |> List.filter (fun (power : Power.t) -> (Power.degree power > 0)) (* Removing ones*)
                   
     let to_string_simplified = function 
         [] -> "1"

@@ -97,7 +97,7 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
     let from_var var = from_power (Power.lift var)
 
     (* Gets the constant *)
-    let constant poly = coeff Monomial.one poly
+    let constant poly = coeff Monomial.one (simplify poly)
 
     (* Returns the variables of a polynomial *)          
     let vars poly =
