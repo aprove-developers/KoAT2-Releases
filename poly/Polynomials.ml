@@ -129,17 +129,13 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
       |> List.for_all (fun scaled -> Value.equal (ScaledMonomial.coeff scaled) Value.one &&
                                        Monomial.is_univariate_linear (ScaledMonomial.monomial scaled))
 
-    (* Checks whether a polynomial is a sum of variables plus a constant *)
-    let is_sum_of_vars_plus_constant poly =
-      degree poly == 1
-
     (* Checks whether a polyomial is linear and contains just one active variable*)
     let is_univariate_linear poly = 
       degree poly == 1 && List.length (vars poly) == 1
 
     let is_const poly = degree poly <= 0
 
-    let is_linear = is_sum_of_vars_plus_constant 
+    let is_linear poly = (degree poly == 1)
 
     (*renames the variables occuring inside a polynomial*) 
 

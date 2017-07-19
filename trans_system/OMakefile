@@ -1,7 +1,7 @@
 USE_OCAMLFIND = true
 
 OCAMLPACKS[] =
-    Z3
+    ocamlgraph
 
 OCAMLINCLUDES += ../poly
 
@@ -12,8 +12,19 @@ OCamlGeneratedFiles(parser.ml lexer.ml)
 OCAML_LIBS += ../poly/poly
 
 FILES[] =
-    PolynomialConstraintsAtoms
+    Locations
+    Transitions
+    TransitionGraph
 
-LIB = constraints
+LIB = transitionsystem
 
 OCamlLibrary($(LIB), $(FILES))
+
+.DEFAULT: $(OCamlLibrary $(LIB), $(FILES))
+
+clean:
+  rm -f \
+     *.omc \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
+     $(LIB).a $(LIB).cmxa $(LIB).cma \
+     *~

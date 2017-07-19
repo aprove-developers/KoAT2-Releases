@@ -29,7 +29,7 @@
 # Any of these can be deleted if you are not using them,
 # but you probably want to keep the Common file.
 #
-open build/OCaml
+open build/OCaml.om
 
 #
 # The command-line variables are defined *after* the

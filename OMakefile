@@ -1,6 +1,6 @@
 .PHONY: clean
 
-.SUBDIRS: poly constraints parser test
+.SUBDIRS: poly constraints parser trans_system test
 
 clean:
     rm -f \

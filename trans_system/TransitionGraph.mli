@@ -19,7 +19,7 @@ module TransitionGraph :
         type t =
             Graph.Imperative.Digraph.AbstractLabeled(Locations)(Transitions).E.t
         val compare : t -> t -> int
-        type vertex = vertex
+(*        type vertex = vertex*)
         val src : t -> vertex
         val dst : t -> vertex
         type label = Transitions.t
@@ -69,7 +69,7 @@ module TransitionGraph :
     module Mark :
       sig
         type graph = t
-        type vertex = vertex
+        (*type vertex = vertex*)
         val clear : graph -> unit
         val get : vertex -> int
         val set : vertex -> int -> unit
