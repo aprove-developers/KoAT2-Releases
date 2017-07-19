@@ -8,6 +8,7 @@
 *.a
 *.cmxa
 *.opt
+*.cma
 
 #Ignore files created by editors
 *.swp
