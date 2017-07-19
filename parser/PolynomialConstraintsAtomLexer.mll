@@ -2,7 +2,7 @@
   module Make(Var : PolyTypes.ID) =
     struct
       open Lexing
-      module P = PolynomialParser.Make(Var)
+      module P = PolynomialConstraintsAtomParser.Make(Var)
          
       exception SyntaxError of string
                              
@@ -18,7 +18,10 @@ let int = ['0'-'9'] ['0'-'9']*
 let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']* '\''?
-
+let eq = '=''='
+let neq = '<''>'
+let leq = '<''='
+let geq = '>''='
 rule read =
   parse
   | white    { read lexbuf }
@@ -32,6 +35,12 @@ rule read =
   | '-'      { P.MINUS }
   | '^'      { P.POW }
   | eof      { P.EOF }
+  | eq       { P.EQUAL }
+  | neq      { P.NEQ }
+  | '<'      { P.LESSTHAN }
+  | leq      { P.LESSEQUAL }
+  | '>'      { P.GREATERTHAN }
+  | geq      { P.GREATEREQUAL }
   | _        { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
 
 {
