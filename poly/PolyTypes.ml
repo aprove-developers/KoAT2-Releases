@@ -149,6 +149,7 @@ module type Polynomial =
     type scaled_monomial
     type polynomial_ast
     type poly_valuation
+    
     include Evaluable with type t := t
     include Math with type t := t
     include PartialOrder with type t := t
