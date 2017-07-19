@@ -1,11 +1,14 @@
 open Batteries
 open ID
+open PolynomialConstraintsAtoms
+
 module VarMap = Map.Make(StringID)
 module Power = StdPoly.Power
 module Monomial = StdPoly.Monomial
 module ScaledMonomial = StdPoly.ScaledMonomial
-module Polynomial = StdPoly.Polynomial
-module Valuation = StdPoly.Valuation
+module Polynomial = Polynomials.MakePolynomial(StringID)(Number.MakeNumeric(Big_int))
+module Valuation = Valuation.MakeValuation(StringID)(Number.MakeNumeric(Big_int))
+module PolynomialConstraintsAtoms = MakePolynomialConstraintsAtom(StringID)(Number.MakeNumeric(Big_int))
 open Z3
 let () =	
     let x = (StringID.of_string "x") in
@@ -54,12 +57,12 @@ let () =
                        let intmapping = Valuation.from [(StringID.of_string "x", Big_int.big_int_of_int 2);
                                                         (StringID.of_string "y", Big_int.big_int_of_int 5);
                                                         (StringID.of_string "z", Big_int.big_int_of_int 3)] in        
-                            let greater_equal_in = PolynomialConstraintsAtoms.instantiate_with_big_int intmapping greater_equal in
-                            let equal_in = PolynomialConstraintsAtoms.instantiate_with_big_int intmapping equal in
+                            let greater_equal_in = PolynomialConstraintsAtoms.eval greater_equal intmapping in
+                            let equal_in = PolynomialConstraintsAtoms.eval equal intmapping in
                             Printf.printf "poly1 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomial.eval poly1 intmapping)); 
                             Printf.printf "poly2 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomial.eval poly2 intmapping)); 
                             Printf.printf "poly3 evaluates to : %s\n" (Big_int.string_of_big_int (Polynomial.eval poly3 intmapping)); 
                             Printf.printf "poly 1 >= poly 2 : %B \n" (greater_equal_in);
                             Printf.printf "poly 2 = poly 3 : %B \n" (equal_in);
-                            Printf.printf "comparison of constraints : %B \n" (PolynomialConstraintsAtoms.equal greater_equal equal)
+                            Printf.printf "comparison of constraints : %B \n" (PolynomialConstraintsAtoms.(==) greater_equal equal)
 ;;
