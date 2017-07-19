@@ -32,3 +32,22 @@ module type PolynomialConstraintsAtom =
         val rename_vars : rename_map -> t -> t
         val eval : t -> valuation -> bool
     end
+    
+module PolynomialConstraintsAtomAST(Var : ID) =
+  struct
+    type polynomial =
+      | Constant of int
+      | Variable of Var.t
+      | Neg of polynomial
+      | Plus of polynomial * polynomial
+      | Times of polynomial * polynomial
+      | Pow of Var.t * int
+      
+    type t =
+      | LessThan of polynomial * polynomial
+      | LessEqual of polynomial * polynomial
+      | GreaterThan of polynomial * polynomial
+      | GreaterEqual of polynomial * polynomial
+      | Equal of polynomial * polynomial
+      | Neq of polynomial * polynomial
+end
