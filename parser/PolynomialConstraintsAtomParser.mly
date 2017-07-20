@@ -12,12 +12,12 @@
 %token			LPAR RPAR 
 %token			EOF
 			
+%left                   EQUAL NEQ LESSTHAN LESSEQUAL GREATERTHAN GREATEREQUAL
 %left			PLUS MINUS
 %left			TIMES
 %left			POW
-%left                   EQUAL NEQ
-%left                   GREATERTHAN GREATEREQUAL
-%left                   LESSTHAN LESSEQUAL
+
+                  
 			
 %start <ConstraintTypes.PolynomialConstraintsAtomAST(Var).t> polynomialConstraintAtom
 
@@ -27,6 +27,7 @@
 
 %{
   module P = ConstraintTypes.PolynomialConstraintsAtomAST(Var)
+  module PolynomialAST = PolyTypes.PolynomialAST(Var)
 %}
 			
 %%
@@ -54,18 +55,18 @@ variable :
 
 expression :
 	|       v = variable
-                  { P.Variable v }
+                  { PolynomialAST.Variable v }
 	| 	c = UINT
-                  { P.Constant c }
+                  { PolynomialAST.Constant c }
 	|	LPAR; ex = expression; RPAR
                   { ex }
 	|       MINUS; ex = expression
-	          { P.Neg ex }
+	          { PolynomialAST.Neg ex }
 	|       ex1 = expression; PLUS; ex2 = expression
-	          { P.Plus (ex1, ex2) }
+	          { PolynomialAST.Plus (ex1, ex2) }
 	|       ex1 = expression; TIMES; ex2 = expression
-	          { P.Times (ex1, ex2) }
+	          { PolynomialAST.Times (ex1, ex2) }
 	|       ex1 = expression; MINUS; ex2 = expression
-	          { P.Plus (ex1, P.Neg ex2) }
+	          { PolynomialAST.Plus (ex1, PolynomialAST.Neg ex2) }
 	|       v = variable; POW; c = UINT
-	          { P.Pow (v, c) } ;
+	          { PolynomialAST.Pow (v, c) } ;
