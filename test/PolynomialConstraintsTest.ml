@@ -1,4 +1,4 @@
-open Batteries
+(*open Batteries
 open ID
 open PolynomialConstraintsAtoms
 
@@ -65,10 +65,10 @@ let () =
                             Printf.printf "poly 1 >= poly 2 : %B \n" (greater_equal_in);
                             Printf.printf "poly 2 = poly 3 : %B \n" (equal_in);
                             Printf.printf "comparison of constraints : %B \n" (PolynomialConstraintsAtoms.(==) greater_equal equal)
-;;
+;;*)
 
 
-(*open Batteries
+open Batteries
 open ID
 open Z3
 open OUnit2
@@ -79,6 +79,7 @@ open PolynomialConstraintsAtoms
 module PolynomialConstraintsTest (Var : ID) =
     struct
         module AST = PolynomialConstraintsAtomAST(Var)
+        module PolynomialAST = PolynomialAST(Var)
         module Parser = PolynomialConstraintsAtomParser.Make(Var)
         module Lexer = PolynomialConstraintsAtomLexer.Make(Var)
         module Polynomial = Polynomials.MakePolynomial(Var)(Number.MakeNumeric(Big_int))
@@ -86,13 +87,13 @@ module PolynomialConstraintsTest (Var : ID) =
         module Valuation = Valuation.MakeValuation(Var)(Number.MakeNumeric(Big_int))
     
     (* Unambigous transformation to string to make tests more readable *)
-    let rec polynomial_to_string (ex : AST.polynomial) = match ex with
-      | AST.Constant c -> string_of_int c
-      | AST.Variable v -> Var.to_string v
-      | AST.Neg t -> String.concat "" ["("; "-"; polynomial_to_string t; ")"]
-      | AST.Plus (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "+"; polynomial_to_string t2; ")"]
-      | AST.Times (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "*"; polynomial_to_string t2; ")"]
-      | AST.Pow (v,n) -> String.concat "" ["("; Var.to_string v; "^"; string_of_int n; ")"]
+    let rec polynomial_to_string (ex : PolynomialAST.t) = match ex with
+      | PolynomialAST.Constant c -> string_of_int c
+      | PolynomialAST.Variable v -> Var.to_string v
+      | PolynomialAST.Neg t -> String.concat "" ["("; "-"; polynomial_to_string t; ")"]
+      | PolynomialAST.Plus (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "+"; polynomial_to_string t2; ")"]
+      | PolynomialAST.Times (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "*"; polynomial_to_string t2; ")"]
+      | PolynomialAST.Pow (v,n) -> String.concat "" ["("; Var.to_string v; "^"; string_of_int n; ")"]
 
     let rec atom_to_string (ex : AST.t) = match ex with
       | AST.Equal (p1, p2) -> String.concat "==" [(polynomial_to_string p1); (polynomial_to_string p2)]
@@ -107,19 +108,18 @@ module PolynomialConstraintsTest (Var : ID) =
       |> Lexing.from_string
       |> Parser.polynomialConstraintAtom Lexer.read
 
-    (*let to_atom str =
+    let to_atom str =
          str
       |> to_ast
-      |> PolynomialConstraintsAtom.from_ast_atom*)
+      |> PolynomialConstraintsAtom.from_ast_atom
 
-       
-    (*let to_ast_and_back str =
+    let to_ast_and_back str =
          str
       |> to_ast
-      |> atom_to_string*)
+      |> atom_to_string
 
     let example_valuation = Valuation.from [(Var.of_string "x", Big_int.of_int 3);
                                             (Var.of_string "y", Big_int.of_int 5);
                                             (Var.of_string "z", Big_int.of_int 7)]
 
-    end*)
+    end

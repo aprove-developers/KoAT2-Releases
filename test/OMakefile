@@ -6,17 +6,19 @@ OCAMLPACKS[] =
     oUnit
 
 OCAMLINCLUDES[] =
-    ../poly
-    ../parser
+    ../poly 
     ../constraints
+    ../parser
+
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
 OCAML_LIBS[] =
     ../poly/poly
-    ../parser/parser
     ../constraints/constraints
+    ../parser/parser
+    
 
 TESTS[] =
     PolynomialsTest
