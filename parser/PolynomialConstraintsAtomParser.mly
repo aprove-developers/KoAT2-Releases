@@ -9,7 +9,7 @@
 %token			GREATEREQUAL 
 %token			LESSTHAN 
 %token			LESSEQUAL
-%token			LPAR RPAR 
+%token			LPAR RPAR
 %token			EOF
 			
 %left                   EQUAL NEQ LESSTHAN LESSEQUAL GREATERTHAN GREATEREQUAL
