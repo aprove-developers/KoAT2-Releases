@@ -31,3 +31,7 @@ Makefile
 #Ignore symbolic links to .opt files
 test/PolynomialsTest
 test/PolynomialConstraintsTest
+
+#Ignore auto generated parser files
+parser/*.mli
+parser/*.ml
