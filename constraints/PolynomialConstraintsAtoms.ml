@@ -17,8 +17,7 @@ struct
     type value = Value.t
     type valuation = Valuation.t
     type constraint_atom_ast = PolynomialConstraintsAtomAST.t
-    
-    
+        
     type t = 
         |GreaterThan of polynomial * polynomial
         |GreaterEqual of polynomial * polynomial
@@ -147,7 +146,7 @@ struct
         |Neq (p1, p2)-> Neq ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
         |Equal (p1, p2)-> Equal ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
 
-    let eval (comp : t) (varmapping : valuation)  =
+    let eval (comp : t) (varmapping : valuation) =
         match comp with
         |GreaterThan (p1, p2)-> (Value.Compare.(>) (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
         |GreaterEqual (p1, p2)-> (Value.Compare.(>=) (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
@@ -156,20 +155,15 @@ struct
         |Neq (p1, p2)-> (Value.Compare.(<>) (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
         |Equal (p1, p2)-> (Value.Compare.(=) (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
         
-    let rec from_ast_poly ast = match ast with
-      | PolynomialConstraintsAtomAST.Constant c -> Polynomial.from_constant (Value.of_int c)
-      | PolynomialConstraintsAtomAST.Variable v -> Polynomial.from_var v
-      | PolynomialConstraintsAtomAST.Neg t -> Polynomial.neg (from_ast_poly t)
-      | PolynomialConstraintsAtomAST.Plus (t1, t2) -> Polynomial.add (from_ast_poly t1) (from_ast_poly t2)
-      | PolynomialConstraintsAtomAST.Times (t1, t2) -> Polynomial.mul (from_ast_poly t1) (from_ast_poly t2)
-      | PolynomialConstraintsAtomAST.Pow (var, n) -> Polynomial.from_power (Power.make var n)
-      
-     let from_ast_atom ast = match ast with 
-      | PolynomialConstraintsAtomAST.Equal(p1, p2) -> mk_eq (from_ast_poly p1) (from_ast_poly p2)
-      | PolynomialConstraintsAtomAST.Neq(p1, p2) -> mk_neq (from_ast_poly p1) (from_ast_poly p2)
-      | PolynomialConstraintsAtomAST.LessThan(p1, p2) -> mk_lt (from_ast_poly p1) (from_ast_poly p2)
-      | PolynomialConstraintsAtomAST.LessEqual(p1, p2) -> mk_le (from_ast_poly p1) (from_ast_poly p2)
-      | PolynomialConstraintsAtomAST.GreaterThan(p1, p2) -> mk_gt (from_ast_poly p1) (from_ast_poly p2)
-      | PolynomialConstraintsAtomAST.GreaterEqual(p1, p2) -> mk_ge (from_ast_poly p1) (from_ast_poly p2)
+     
+     let from_ast_atom ast = 
+        let from_ast_poly = Polynomial.from_ast in
+            match ast with 
+            | PolynomialConstraintsAtomAST.Equal(p1, p2) -> mk_eq (from_ast_poly p1) (from_ast_poly p2)
+            | PolynomialConstraintsAtomAST.Neq(p1, p2) -> mk_neq (from_ast_poly p1) (from_ast_poly p2)
+            | PolynomialConstraintsAtomAST.LessThan(p1, p2) -> mk_lt (from_ast_poly p1) (from_ast_poly p2)
+            | PolynomialConstraintsAtomAST.LessEqual(p1, p2) -> mk_le (from_ast_poly p1) (from_ast_poly p2)
+            | PolynomialConstraintsAtomAST.GreaterThan(p1, p2) -> mk_gt (from_ast_poly p1) (from_ast_poly p2)
+            | PolynomialConstraintsAtomAST.GreaterEqual(p1, p2) -> mk_ge (from_ast_poly p1) (from_ast_poly p2)
 
 end

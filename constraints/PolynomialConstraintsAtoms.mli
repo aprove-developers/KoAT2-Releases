@@ -8,3 +8,4 @@ module MakePolynomialConstraintsAtom(Var : ID) (Value : Number.Numeric) : Polyno
     and type rename_map = Var.t Map.Make(Var).t
     and type value = Value.t
     and type valuation = Valuation.MakeValuation(Var)(Value).t
+    and type constraint_atom_ast = PolynomialConstraintsAtomAST(Var).t
