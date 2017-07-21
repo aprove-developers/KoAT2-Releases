@@ -192,13 +192,7 @@ module PolynomialTest(Var : ID) =
               ]
             );
             
-            (*"String" >::: (
-                List.map (fun (expected, expression)-> expression >::(fun _ -> assert_equal_string expected (Polynomial.to_string (to_polynomial expression))) )
-                     [
-                       ("1" , "1");
-                       
-                     ];
-          );*)
+
               
         ]
 
