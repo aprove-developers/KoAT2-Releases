@@ -292,7 +292,16 @@ module PolynomialConstraintsTest (Var : ID) =
                             (true,"x < x ^ 2 + 2 * x * y" );
                             (false, "x^5+y^6-z^3 == x * y * z + x^2 ");
                             (false , "x^2 * y^2 < 7");
-
+                            
+                        ]);
+                        
+            ("is_redundant" >:::
+                List.map (fun (expected, atom1, atom2) ->
+                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (PolynomialConstraintsAtom.is_redundant (to_atom atom1) (to_atom atom2))))
+                        [
+                            (true, "x < y", "y > x");
+                            (true, "x <= a^2 + b * 3 -6", "x <= a^2 + b * 3 -6" );
+                            (false, "x <= a^2 + b * 3 -6" , "x >= a^2 + b * 3 -6" );
 
                         ]);
                         
