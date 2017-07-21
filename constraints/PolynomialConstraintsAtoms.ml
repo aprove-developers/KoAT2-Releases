@@ -92,6 +92,16 @@ struct
         |(Neq (_,_), Neq (_,_)) -> true
         |(_,_) -> false
         
+    let is_inverted_constr (atom1 : t) (atom2 : t) =
+        match (atom1, atom2) with
+        |(GreaterThan (_,_), LessThan(_,_)) -> true
+        |(GreaterEqual (_,_), LessEqual(_,_)) -> true
+        |(LessThan (_,_), GreaterThan(_,_)) -> true
+        |(LessEqual (_,_), GreaterEqual(_,_)) -> true
+        |(Equal (_,_), Equal (_,_)) -> true
+        |(Neq (_,_), Neq (_,_)) -> true
+        |(_,_) -> false
+        
     let simplify (atom : t) =
         let poly_simplify = Polynomial.simplify in
             match atom with
@@ -105,6 +115,10 @@ struct
     let (==) (atom1 : t) (atom2 : t) =
         let poly_equal = Polynomial.(==) in
             (is_same_constr atom1 atom2) && (poly_equal (get_first_arg atom1) (get_first_arg atom2)) && (poly_equal (get_second_arg atom1) (get_second_arg atom2))
+            
+    let is_redundant (atom1 : t) (atom2 : t) =
+        let poly_equal = Polynomial.(==) in
+            ((is_inverted_constr atom1 atom2) && (poly_equal (get_first_arg atom1) (get_second_arg atom2)) && (poly_equal (get_second_arg atom1) (get_first_arg atom2))) || ( atom1 == atom2 )
         
     let one = Polynomial.one
 

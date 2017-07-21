@@ -30,6 +30,8 @@ module type PolynomialConstraintsAtom =
         val is_eq : t -> bool
         val is_neq : t -> bool
         val is_same_constr : t -> t -> bool
+        val is_inverted_constr : t -> t -> bool
+        val is_redundant : t -> t -> bool
         val (==) : t -> t -> bool
         
         (*export*)
