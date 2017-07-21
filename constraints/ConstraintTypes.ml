@@ -36,8 +36,8 @@ module type PolynomialConstraintsAtom =
         val to_string : t -> string
         val to_z3 : Z3.context -> t -> Z3.Expr.expr
         val get_variables : t -> var list
-        val rename_vars : rename_map -> t -> t
-        val eval : t -> valuation -> bool
+        val rename_vars : t -> rename_map -> t
+        val eval_bool : t -> valuation -> bool
         val from_ast_atom : constraint_atom_ast -> t
     end
     

@@ -137,7 +137,7 @@ struct
     let get_variables (comp : t) =
         List.unique (List.append (Polynomial.vars (get_first_arg comp)) (Polynomial.vars (get_second_arg comp)))
         
-    let rename_vars (varmapping : rename_map) (comp : t) =
+    let rename_vars (comp : t) (varmapping : rename_map) =
         match comp with
         |GreaterThan (p1, p2)-> GreaterThan ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
         |GreaterEqual (p1, p2)-> GreaterEqual ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
@@ -146,7 +146,7 @@ struct
         |Neq (p1, p2)-> Neq ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
         |Equal (p1, p2)-> Equal ((Polynomial.rename varmapping p1), (Polynomial.rename varmapping p2))
 
-    let eval (comp : t) (varmapping : valuation) =
+    let eval_bool (comp : t) (varmapping : valuation) =
         match comp with
         |GreaterThan (p1, p2)-> (Value.Compare.(>) (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
         |GreaterEqual (p1, p2)-> (Value.Compare.(>=) (Polynomial.eval p1 varmapping) (Polynomial.eval p2 varmapping))
