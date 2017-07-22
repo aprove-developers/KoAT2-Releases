@@ -49,7 +49,7 @@ module PolynomialAST(Var : ID) =
       | Times of t * t
       | Pow of Var.t * int
   end
-   
+
 module type Evaluable =
   sig
     type t
@@ -190,10 +190,17 @@ module type Polynomial =
 module type MinMaxPolynomial =
   sig
     type t
+    type polynomial
     type polynomial_ast
     include Evaluable with type t := t
     include BaseMath with type t := t
     include PartialOrder with type t := t
+    val of_poly : polynomial -> t              
+    val of_constant : value -> t
+    val min : t -> t -> t
+    val max : t -> t -> t
+    val minimum : t list -> t
+    val maximum : t list -> t
   end
   
 module type Valuation =

@@ -5,6 +5,9 @@ MENHIR_ENABLED = true
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
+OCAMLPACKS[] =
+    batteries
+
 OCAMLINCLUDES[] =
     ../poly
     ../constraints

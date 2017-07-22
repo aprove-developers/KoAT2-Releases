@@ -13,7 +13,8 @@ module MakeMinMaxPolynomial(Var : ID)(Value : Number.Numeric) =
     type var = Var.t
     type rename_map = var RenameMap.t
     type polynomial_ast = PolynomialAST.t
-
+    type polynomial = Polynomial.t
+       
     (* Infinity is max of an empty list *)
     (* Minus Infinity is min of an empty list *)
     type t =
@@ -98,6 +99,10 @@ module MakeMinMaxPolynomial(Var : ID)(Value : Number.Numeric) =
     let min b1 b2 = match (b1, b2) with
       (* TODO Add more simplification *)
       | (b1, b2) -> Min [b1; b2]
+
+    let maximum bounds = Max bounds
+                  
+    let minimum bounds = Min bounds
 
     let rec to_string = function
       | Poly p -> Polynomial.to_string p

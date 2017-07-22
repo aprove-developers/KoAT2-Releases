@@ -11,3 +11,5 @@ module Monomial = Monomials.MakeMonomial(ID.StringID)(Number.MakeNumeric(Big_int
 module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(ID.StringID)(Number.MakeNumeric(Big_int))
                          
 module Polynomial = Polynomials.MakePolynomial(ID.StringID)(Number.MakeNumeric(Big_int))
+
+module MinMaxPolynomial = MinMaxPolynomial.MakeMinMaxPolynomial(ID.StringID)(Number.MakeNumeric(Big_int))
