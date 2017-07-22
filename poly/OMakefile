@@ -22,7 +22,7 @@ FILES[] =
 
 LIB = poly
 
-.DEFAULT: $(OCamlLibrary $(LIB), $(FILES))
+OCamlLibrary($(LIB), $(FILES))
 
 clean:
   rm -f \

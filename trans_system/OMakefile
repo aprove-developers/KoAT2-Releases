@@ -8,7 +8,6 @@ OCAMLINCLUDES += ../poly
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
-OCamlGeneratedFiles(parser.ml lexer.ml)
 OCAML_LIBS += ../poly/poly
 
 FILES[] =
@@ -19,8 +18,6 @@ FILES[] =
 LIB = transitionsystem
 
 OCamlLibrary($(LIB), $(FILES))
-
-.DEFAULT: $(OCamlLibrary $(LIB), $(FILES))
 
 clean:
   rm -f \

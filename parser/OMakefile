@@ -1,6 +1,7 @@
 USE_OCAMLFIND = true
 
 MENHIR_ENABLED = true
+MENHIR_FLAGS += --infer
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
@@ -16,29 +17,36 @@ OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
 
-GEN_FILES[] =
+GEN_FILES_1[] =
     PolynomialParser.ml
     PolynomialParser.mli
     PolynomialLexer.ml
+
+GEN_FILES_2[] =
     PolynomialConstraintsAtomParser.ml
     PolynomialConstraintsAtomParser.mli
     PolynomialConstraintsAtomLexer.ml
-    
-OCamlGeneratedFiles($(GEN_FILES))
 
-FILES[] =
+OCamlGeneratedFiles($(GEN_FILES_1))
+OCamlGeneratedFiles($(GEN_FILES_2))
+
+FILES_1[] =
     PolynomialParser
     PolynomialLexer
+
+FILES_2[] =
     PolynomialConstraintsAtomParser
     PolynomialConstraintsAtomLexer
-LIB = parser
 
-.DEFAULT: $(OCamlLibrary $(LIB), $(FILES))
+OCamlLibrary(poly_parser, $(FILES_1))
+OCamlLibrary(poly_constraint_parser, $(FILES_2))
 
 clean:
   rm -f \
      *.omc \
-     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES_1)))) \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES_2)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
-     $(GEN_FILES) \
+     $(GEN_FILES_1) \
+     $(GEN_FILES_2) \
      *~

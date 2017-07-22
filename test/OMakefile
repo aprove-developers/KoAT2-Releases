@@ -10,15 +10,14 @@ OCAMLINCLUDES[] =
     ../constraints
     ../parser
 
-
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
 OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
-    ../parser/parser
-    
+    ../parser/poly_parser    
+    ../parser/poly_constraint_parser    
 
 TESTS[] =
     PolynomialsTest

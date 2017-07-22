@@ -4,7 +4,6 @@ open Z3
 open OUnit2
 open PolyTypes
 open ConstraintTypes
-open PolynomialConstraintsAtoms
 
 module PolynomialConstraintsTest (Var : ID) =
     struct
@@ -13,7 +12,7 @@ module PolynomialConstraintsTest (Var : ID) =
         module Parser = PolynomialConstraintsAtomParser.Make(Var)
         module Lexer = PolynomialConstraintsAtomLexer.Make(Var)
         module Polynomial = Polynomials.MakePolynomial(Var)(Number.MakeNumeric(Big_int))
-        module PolynomialConstraintsAtom = MakePolynomialConstraintsAtom(Var)(Number.MakeNumeric(Big_int))
+        module PolynomialConstraintsAtom = PolynomialConstraintsAtoms.MakePolynomialConstraintsAtom(Var)(Number.MakeNumeric(Big_int))
         module Valuation = Valuation.MakeValuation(Var)(Number.MakeNumeric(Big_int))
         module RenameMap = Map.Make(Var)
 

@@ -7,6 +7,8 @@ OCAMLPACKS[] =
 OCAMLINCLUDES[] =
     ../poly
 
+OCAMLFLAGS += -thread
+
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
@@ -14,12 +16,12 @@ OCAML_LIBS[] =
     ../poly/poly
 
 FILES[] =
-    PolynomialConstraintsAtoms
     ConstraintTypes
+    PolynomialConstraintsAtoms
 
 LIB = constraints
 
-.DEFAULT: $(OCamlLibrary $(LIB), $(FILES))
+OCamlLibrary($(LIB), $(FILES))
 
 clean:
   rm -f \
