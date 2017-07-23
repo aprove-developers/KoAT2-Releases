@@ -1,67 +1,24 @@
 open Batteries
-open ID
 open Z3
 open OUnit2
 open PolyTypes
-   
-module PolynomialTest(Var : ID) =
-  struct
-               
-    module AST = PolynomialAST(Var)
-    module Parser = PolynomialParser.Make(Var)
-    module Lexer = PolynomialLexer.Make(Var)
-    module Polynomial = Polynomials.MakePolynomial(Var)(Number.MakeNumeric(Big_int))
-    module Valuation = Valuation.MakeValuation(Var)(Number.MakeNumeric(Big_int))
 
-    (* Unambigous transformation to string to make tests more readable *)
-    let rec polynomial_to_string (ex : AST.t) = match ex with
-      | AST.Constant c -> string_of_int c
-      | AST.Variable v -> Var.to_string v
-      | AST.Neg t -> String.concat "" ["("; "-"; polynomial_to_string t; ")"]
-      | AST.Plus (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "+"; polynomial_to_string t2; ")"]
-      | AST.Times (t1,t2) -> String.concat "" ["("; polynomial_to_string t1; "*"; polynomial_to_string t2; ")"]
-      | AST.Pow (v,n) -> String.concat "" ["("; Var.to_string v; "^"; string_of_int n; ")"]
+module PolynomialParserTest(P : ParseablePolynomial) =
+  struct
+    module Parser = PolynomialParser.Make(P)
+    module Lexer = PolynomialLexer.Make(P)
                        
-    let to_ast str =
+    let to_polynomial_and_back str =
          str
       |> Lexing.from_string
       |> Parser.polynomial Lexer.read
+      |> P.to_string
 
-    let to_polynomial str =
-         str
-      |> to_ast
-      |> Polynomial.from_ast
-
-       
-    let to_ast_and_back str =
-         str
-      |> to_ast
-      |> polynomial_to_string
-
-    let example_valuation = Valuation.from [(Var.of_string "x", Big_int.of_int 3);
-                                            (Var.of_string "y", Big_int.of_int 5);
-                                            (Var.of_string "z", Big_int.of_int 7)]
-
-    let evaluate str =
-         str
-      |> to_ast
-      |> Polynomial.from_ast
-      |> fun poly -> Polynomial.eval poly example_valuation
-
-    let assert_equal_big_int =
-      assert_equal ~cmp:Big_int.equal ~printer:Big_int.to_string
-    
-    let assert_equal_string =
-      assert_equal ~cmp:String.equal
-
-    let assert_true = assert_bool ""
-    let assert_false b = assert_true (not b)
-
-    let parser_tests =
+    let tests =
       "Parser" >::: [
           "Positive Tests" >::: (
             List.map (fun (testname, expected, expression) ->
-                testname >:: (fun _ -> assert_equal expected (to_ast_and_back expression)))
+                testname >:: (fun _ -> assert_equal expected (to_polynomial_and_back expression)))
                      [
                        ("Constant", "42", " 42 ");
                        ("Negated Constant", "(-42)", " - 42 ");
@@ -84,7 +41,7 @@ module PolynomialTest(Var : ID) =
           );
           "Negative Tests" >::: (
             List.map (fun (testname, expression) ->
-                testname >:: (fun _ -> assert_raises Parser.Error (fun _ -> to_ast_and_back expression)))
+                testname >:: (fun _ -> assert_raises Parser.Error (fun _ -> to_polynomial_and_back expression)))
                      [
                        ("Power with negative exponent", " x ^ - 3 ");
                        ("Power with variable exponent", " x ^ y ");
@@ -93,11 +50,41 @@ module PolynomialTest(Var : ID) =
           );
         ]
 
-    let poly_tests =
+  end
+  
+module PolynomialTest(P : Polynomial) =
+  struct
+    module Parser = PolynomialParser.Make(P)
+    module Lexer = PolynomialLexer.Make(P)
+               
+    let example_valuation = P.Valuation_.from [(P.Var.of_string "x", P.Value.of_int 3);
+                                               (P.Var.of_string "y", P.Value.of_int 5);
+                                               (P.Var.of_string "z", P.Value.of_int 7)]
+
+    let to_polynomial str =
+         str
+      |> Lexing.from_string
+      |> Parser.polynomial Lexer.read
+
+    let evaluate str =
+         str
+      |> to_polynomial
+      |> fun poly -> P.eval poly example_valuation
+
+    let assert_equal_value =
+      assert_equal ~cmp:P.Value.equal ~printer:P.Value.to_string
+    
+    let assert_equal_string =
+      assert_equal ~cmp:String.equal
+
+    let assert_true = assert_bool ""
+    let assert_false b = assert_true (not b)
+
+    let tests =
       "Polynomial" >::: [
           "Evaluate" >::: (
             List.map (fun (testname, expected, expression) ->
-                testname >:: (fun _ -> assert_equal_big_int (Big_int.of_int expected) (evaluate expression)))
+                testname >:: (fun _ -> assert_equal_value (P.Value.of_int expected) (evaluate expression)))
                      [
                        ("Constant", 42, " 42 ");
                        ("Negated Constant", -42, " - 42 ");
@@ -119,11 +106,11 @@ module PolynomialTest(Var : ID) =
                      ];
           );
             "Math" >::: ([
-                "zero" >:: (fun _ -> assert_equal_big_int (Big_int.of_int 0) (Polynomial.eval Polynomial.zero example_valuation));
-                "one" >:: (fun _ -> assert_equal_big_int (Big_int.of_int 1) (Polynomial.eval Polynomial.one example_valuation));
+                "zero" >:: (fun _ -> assert_equal_value (P.Value.of_int 0) (P.eval P.zero example_valuation));
+                "one" >:: (fun _ -> assert_equal_value (P.Value.of_int 1) (P.eval P.one example_valuation));
                 "constant" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal_big_int (Big_int.of_int expected) (Polynomial.constant (to_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_value (P.Value.of_int expected) (P.constant (to_polynomial expression))))
                            [
                              (5, " 5 ");
                              (0, " x ");
@@ -136,7 +123,7 @@ module PolynomialTest(Var : ID) =
                 );
                 "is_var" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (Polynomial.is_var (to_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_var (to_polynomial expression))))
                            [
                              (false, " 1 ");
                              (true, " x ");
@@ -154,7 +141,7 @@ module PolynomialTest(Var : ID) =
                 
                 "is_univariate_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (Polynomial.is_univariate_linear (to_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_univariate_linear (to_polynomial expression))))
                             [
                                 (false, " 1 ");
                                 (true, " x ");
@@ -172,7 +159,7 @@ module PolynomialTest(Var : ID) =
                     
                 "is_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (Polynomial.is_linear (to_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_linear (to_polynomial expression))))
                             [
                                 (false, " 1 ");
                                 (true, " x ");
@@ -198,12 +185,13 @@ module PolynomialTest(Var : ID) =
 
   end
 
-module StringIDPolynomial = PolynomialTest(StringID)
-
+module StringIDPolynomial = PolynomialTest(StdPoly.Polynomial)
+module MockPolynomialParserTest = PolynomialParserTest(Mocks.Polynomial)
+                          
 let suite =
   "Suite" >::: [
-      StringIDPolynomial.parser_tests;
-      StringIDPolynomial.poly_tests;
+      MockPolynomialParserTest.tests;
+      StringIDPolynomial.tests;
     ]
                      
 let () =

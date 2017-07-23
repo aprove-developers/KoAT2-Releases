@@ -1,8 +1,8 @@
 {
-  module Make(Var : PolyTypes.ID) =
+  module Make(P : PolyTypes.ParseablePolynomial) =
     struct
       open Lexing
-      module P = PolynomialParser.Make(Var)
+      module P = PolynomialParser.Make(P)
          
       exception SyntaxError of string
                              

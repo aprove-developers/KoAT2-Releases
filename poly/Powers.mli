@@ -1,11 +1,9 @@
 open Batteries
-open ID
-open PolyTypes
 
 module MakePower
-         (Var : ID)
+         (Var : PolyTypes.ID)
          (Value : Number.Numeric)
-       : Power with type var = Var.t
-                and type value = Value.t
-                and type rename_map = Var.t Map.Make(Var).t
-                and type valuation = Valuation.MakeValuation(Var)(Value).t
+       : PolyTypes.Power with module Var = Var
+                          and module Value = Value
+                          and module Valuation_ = Valuation.MakeValuation(Var)(Value)
+                          and module RenameMap_ = RenameMap.MakeRenameMap(Var)

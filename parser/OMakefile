@@ -38,15 +38,19 @@ FILES_2[] =
     PolynomialConstraintsAtomParser
     PolynomialConstraintsAtomLexer
 
-OCamlLibrary(poly_parser, $(FILES_1))
-OCamlLibrary(poly_constraint_parser, $(FILES_2))
+LIB_1 = poly_parser
+LIB_2 = poly_constraint_parser
+
+OCamlLibrary($(LIB_1), $(FILES_1))
+OCamlLibrary($(LIB_2), $(FILES_2))
 
 clean:
   rm -f \
      *.omc \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES_1)))) \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES_2)))) \
-     $(LIB).a $(LIB).cmxa $(LIB).cma \
+     $(LIB_1).a $(LIB_1).cmxa $(LIB_1).cma \
+     $(LIB_2).a $(LIB_2).cmxa $(LIB_2).cma \
      $(GEN_FILES_1) \
      $(GEN_FILES_2) \
      *~

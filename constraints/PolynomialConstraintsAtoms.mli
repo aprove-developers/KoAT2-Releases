@@ -3,9 +3,6 @@ open PolyTypes
 open ConstraintTypes
 
 module MakePolynomialConstraintsAtom(Var : ID) (Value : Number.Numeric) : PolynomialConstraintsAtom with   
-    type var = Var.t
-    and type polynomial = Polynomials.MakePolynomial(Var)(Value).t
-    and type rename_map = Var.t Map.Make(Var).t
-    and type value = Value.t
-    and type valuation = Valuation.MakeValuation(Var)(Value).t
-    and type constraint_atom_ast = PolynomialConstraintsAtomAST(Var).t
+         module Var = Var
+       and module Value = Value
+       and module Polynomial_ = Polynomials.MakePolynomial(Var)(Value)

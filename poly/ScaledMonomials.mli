@@ -1,14 +1,12 @@
 open Batteries
-open ID
-open PolyTypes
 
 module MakeScaledMonomial
-         (Var : ID)
+         (Var : PolyTypes.ID)
          (Value : Number.Numeric)
-       : ScaledMonomial with type var = Var.t
-                         and type rename_map = Var.t Map.Make(Var).t
-                         and type value = Value.t
-                         and type valuation = Valuation.MakeValuation(Var)(Value).t
+       : PolyTypes.ScaledMonomial with module Var = Var
+                         and module Value = Value
+                         and module Valuation_ = Valuation.MakeValuation(Var)(Value)
+                         and module RenameMap_ = RenameMap.MakeRenameMap(Var)
                          and type power = Powers.MakePower(Var)(Value).t
                          and type monomial = Monomials.MakeMonomial(Var)(Value).t
 

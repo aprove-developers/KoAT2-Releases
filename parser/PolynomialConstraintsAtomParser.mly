@@ -1,4 +1,4 @@
-%parameter<Var : PolyTypes.ID>
+%parameter<C : ConstraintTypes.ParseablePolynomialConstraintsAtom>
 
 %token	<string>	ID
 %token	<int>		UINT
@@ -19,17 +19,12 @@
 
                   
 			
-%start <ConstraintTypes.PolynomialConstraintsAtomAST(Var).t> polynomialConstraintAtom
+%start <C.t> polynomialConstraintAtom
 
-%type <ConstraintTypes.PolynomialConstraintsAtomAST(Var).polynomial> expression
+%type <C.Polynomial_.t> expression
 
-%type <ConstraintTypes.PolynomialConstraintsAtomAST(Var).t> atom
+%type <C.t> atom
 
-%{
-  module P = ConstraintTypes.PolynomialConstraintsAtomAST(Var)
-  module PolynomialAST = PolyTypes.PolynomialAST(Var)
-%}
-			
 %%
 
 polynomialConstraintAtom :
@@ -37,36 +32,36 @@ polynomialConstraintAtom :
 
 atom :
         |   p1 = expression; EQUAL ; p2 = expression
-            {P.Equal(p1, p2)}
+            {C.mk_eq p1 p2}
         |   p1 = expression; NEQ ; p2 = expression
-            {P.Neq(p1, p2)}
+            {C.mk_neq p1 p2}
         |   p1 = expression; GREATERTHAN ; p2 = expression
-            {P.GreaterThan(p1, p2)}
+            {C.mk_gt p1 p2}
         |   p1 = expression; GREATEREQUAL ; p2 = expression
-            {P.GreaterEqual(p1, p2)}
+            {C.mk_ge p1 p2}
         |   p1 = expression; LESSTHAN ; p2 = expression
-            {P.LessThan(p1, p2)}
+            {C.mk_lt p1 p2}
         |   p1 = expression; LESSEQUAL ; p2 = expression
-            {P.LessEqual(p1, p2)}
+            {C.mk_le p1 p2}
 
 variable :
 	|	v = ID
-                  { Var.of_string v }
+                  { C.Polynomial_.from_var_string v }
 
 expression :
 	|       v = variable
-                  { PolynomialAST.Variable v }
+                  { v }
 	| 	c = UINT
-                  { PolynomialAST.Constant c }
+                  { C.Polynomial_.from_constant_int c }
 	|	LPAR; ex = expression; RPAR
                   { ex }
 	|       MINUS; ex = expression
-	          { PolynomialAST.Neg ex }
+	          { C.Polynomial_.neg ex }
 	|       ex1 = expression; PLUS; ex2 = expression
-	          { PolynomialAST.Plus (ex1, ex2) }
+	          { C.Polynomial_.add ex1 ex2 }
 	|       ex1 = expression; TIMES; ex2 = expression
-	          { PolynomialAST.Times (ex1, ex2) }
+	          { C.Polynomial_.mul ex1 ex2 }
 	|       ex1 = expression; MINUS; ex2 = expression
-	          { PolynomialAST.Plus (ex1, PolynomialAST.Neg ex2) }
+	          { C.Polynomial_.add ex1 (C.Polynomial_.neg ex2) }
 	|       v = variable; POW; c = UINT
-	          { PolynomialAST.Pow (v, c) } ;
+	          { C.Polynomial_.pow v c } ;

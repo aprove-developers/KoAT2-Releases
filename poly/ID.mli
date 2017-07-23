@@ -1,6 +1,5 @@
 open Batteries
-open PolyTypes
    
-module StringID : ID
+module StringID : PolyTypes.ID
 
-module PrePostID : ID
+module PrePostID : PolyTypes.ID

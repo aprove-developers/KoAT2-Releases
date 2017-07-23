@@ -1,27 +1,21 @@
 open Batteries
-open PolyTypes
    
-module MakePolynomial(Var : ID)(Value : Number.Numeric) =
+module MakePolynomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct
-    module Valuation = Valuation.MakeValuation(Var)(Value)
-    module RenameMap = Map.Make(Var)
     module Power = Powers.MakePower(Var)(Value)
     module Monomial = Monomials.MakeMonomial(Var)(Value)
     module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(Var)(Value)
-    module PolynomialAST = PolynomialAST(Var)
-    module PolyValuation = Valuation (* TODO Problem with self reference: Valuation.MakeValuation(Var)(MakePolynomial(Var)(Value)) *)
+    module Valuation_ = Valuation.MakeValuation(Var)(Value)
+    module RenameMap_ = RenameMap.MakeRenameMap(Var)
                           
     type t = ScaledMonomial.t list 
-    type value = Value.t
-    type valuation = Valuation.t
-    type var = Var.t
-    type rename_map = var RenameMap.t
     type power = Power.t
     type monomial = Monomial.t
     type scaled_monomial = ScaledMonomial.t
-    type polynomial_ast = PolynomialAST.t
-    type poly_valuation = PolyValuation.t
                         
+    module Var = Var
+    module Value = Value
+
     let make scaleds = scaleds
 
     let lift scaled = [scaled]
@@ -58,7 +52,7 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
 
     let to_string poly = to_string_simplified (simplify poly)
 
-    let of_string poly = raise (Failure "Not yet implemented") (* TODO Use ocamlyacc *)
+    let of_string poly = raise (Failure "of_string for Polynomial not yet implemented") (* TODO Use ocamlyacc *)
 
     let to_z3_simplified ctx poly = 
       if poly == [] then (Z3.Arithmetic.Integer.mk_numeral_i ctx 0)
@@ -96,6 +90,10 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
 
     let from_var var = from_power (Power.lift var)
 
+    let from_var_string str = from_var (Var.of_string str)
+
+    let from_constant_int c = from_constant (Value.of_int c)
+                      
     (* Gets the constant *)
     let constant poly = coeff Monomial.one (simplify poly)
 
@@ -148,7 +146,7 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
       List.map (ScaledMonomial.mult_with_const const) poly
 
     type outer_t = t
-    module BaseMathImpl : (BaseMath with type t = outer_t) =
+    module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
       struct
         type t = outer_t
                
@@ -172,9 +170,9 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
           |> Enum.fold mul one
       
       end
-    include MakeMath(BaseMathImpl)
+    include PolyTypes.MakeMath(BaseMathImpl)
 
-    module BasePartialOrderImpl : (BasePartialOrder with type t = outer_t) =
+    module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
       struct
         type t = outer_t
                
@@ -187,7 +185,7 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
           | _ -> None
                
       end
-    include MakePartialOrder(BasePartialOrderImpl)
+    include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
     let is_zero poly = simplify poly == zero
 
@@ -200,15 +198,6 @@ module MakePolynomial(Var : ID)(Value : Number.Numeric) =
       |> List.map (fun scaled -> ScaledMonomial.eval scaled valuation)
       |> List.fold_left Value.add Value.zero
 
-    let rec from_ast ast = match ast with
-      | PolynomialAST.Constant c -> from_constant (Value.of_int c)
-      | PolynomialAST.Variable v -> from_var v
-      | PolynomialAST.Neg t -> neg (from_ast t)
-      | PolynomialAST.Plus (t1, t2) -> add (from_ast t1) (from_ast t2)
-      | PolynomialAST.Times (t1, t2) -> mul (from_ast t1) (from_ast t2)
-      | PolynomialAST.Pow (var, n) -> from_power (Power.make var n)
-
     let replace poly poly_valuation =
-      raise (Failure "Not yet implemented")
-                                    
+      raise (Failure "Replace for Polynomial not yet implemented")
   end

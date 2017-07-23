@@ -28,5 +28,5 @@ module PrePostID =
         Pre str -> str
       | Post str -> String.concat "" [str;"'"]
                   
-    let compare a b = 0 (* TODO *)
+    let compare a b = raise (Failure "compare for PrePostID not yet implemented")
   end

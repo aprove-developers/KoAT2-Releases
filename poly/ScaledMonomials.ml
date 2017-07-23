@@ -1,11 +1,10 @@
 open Batteries
-open PolyTypes
 open Big_int.Infix
 
-module MakeScaledMonomial(Var : ID)(Value : Number.Numeric) =
+module MakeScaledMonomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct    
-    module Valuation = Valuation.MakeValuation(Var)(Value)
-    module RenameMap = Map.Make(Var)
+    module Valuation_ = Valuation.MakeValuation(Var)(Value)
+    module RenameMap_ = RenameMap.MakeRenameMap(Var)
     module Power = Powers.MakePower(Var)(Value)
     module Monomial = Monomials.MakeMonomial(Var)(Value)
 
@@ -14,12 +13,11 @@ module MakeScaledMonomial(Var : ID)(Value : Number.Numeric) =
         coeff : Value.t; 
         mon :   Monomial.t;
       }    
-    type value = Value.t
-    type valuation = Valuation.t
-    type var = Var.t
-    type rename_map = var RenameMap.t
     type power = Power.t
     type monomial = Monomial.t
+
+    module Var = Var
+    module Value = Value
                
     let make coefficient monomial = { coeff = coefficient; mon = monomial }
                                   
@@ -47,7 +45,7 @@ module MakeScaledMonomial(Var : ID)(Value : Number.Numeric) =
       to_z3_simplified ctx (simplify scaled)
       
     type outer_t = t
-    module BasePartialOrderImpl : (BasePartialOrder with type t = outer_t) =
+    module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
       struct
         type t = outer_t
                
@@ -61,7 +59,7 @@ module MakeScaledMonomial(Var : ID)(Value : Number.Numeric) =
                         else None
                       
       end
-    include MakePartialOrder(BasePartialOrderImpl)
+    include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
     let rename varmapping scaled = { scaled with mon = Monomial.rename varmapping scaled.mon }
                                  

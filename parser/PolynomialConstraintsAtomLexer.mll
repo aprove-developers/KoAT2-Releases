@@ -1,8 +1,8 @@
 {
-  module Make(Var : PolyTypes.ID) =
+  module Make(C : ConstraintTypes.ParseablePolynomialConstraintsAtom) =
     struct
       open Lexing
-      module P = PolynomialConstraintsAtomParser.Make(Var)
+      module P = PolynomialConstraintsAtomParser.Make(C)
          
       exception SyntaxError of string
                              

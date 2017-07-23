@@ -1,46 +1,40 @@
 open Batteries
-open PolyTypes
    
-module MakeMinMaxPolynomial(Var : ID)(Value : Number.Numeric) =
+module MakeMinMaxPolynomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct
-    module Valuation = Valuation.MakeValuation(Var)(Value)
-    module RenameMap = Map.Make(Var)
-    module PolynomialAST = PolynomialAST(Var)
-    module Polynomial = Polynomials.MakePolynomial(Var)(Value)
+    module Valuation_ = Valuation.MakeValuation(Var)(Value)
+    module RenameMap_ = RenameMap.MakeRenameMap(Var)
+    module Polynomial_ = Polynomials.MakePolynomial(Var)(Value)
                           
-    type value = Value.t
-    type valuation = Valuation.t
-    type var = Var.t
-    type rename_map = var RenameMap.t
-    type polynomial_ast = PolynomialAST.t
-    type polynomial = Polynomial.t
-       
     (* Infinity is max of an empty list *)
     (* Minus Infinity is min of an empty list *)
     type t =
-      | Poly of Polynomial.t
+      | Poly of Polynomial_.t
       | Max of t list
       | Min of t list
       | Neg of t
-      | Pow of value * t
+      | Pow of Value.t * t
       | Sum of t list
       | Product of t list
               
+    module Var = Var
+    module Value = Value
+                    
     let of_poly p = Poly p
               
-    let of_constant c = of_poly (Polynomial.from_constant c)
+    let of_constant c = of_poly (Polynomial_.from_constant c)
 
     type outer_t = t
-    module BaseMathImpl : (BaseMath with type t = outer_t) =
+    module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
       struct
         type t = outer_t
                
-        let zero = of_poly Polynomial.zero
+        let zero = of_poly Polynomial_.zero
                  
-        let one = of_poly Polynomial.one
+        let one = of_poly Polynomial_.one
             
         let rec neg = function
-          | Poly p -> Poly (Polynomial.neg p)
+          | Poly p -> Poly (Polynomial_.neg p)
           | Max bounds -> Min (List.map neg bounds)
           | Min bounds -> Max (List.map neg bounds)
           | Neg b -> b
@@ -50,7 +44,7 @@ module MakeMinMaxPolynomial(Var : ID)(Value : Number.Numeric) =
           | b -> Neg b
                
         let rec add b1 b2 = match (b1, b2) with
-          | (Poly p1, Poly p2) -> Poly (Polynomial.add p1 p2)
+          | (Poly p1, Poly p2) -> Poly (Polynomial_.add p1 p2)
           | (Max bounds1, Max bounds2) -> Max (List.map (uncurry add) (List.cartesian_product bounds1 bounds2))
           | (Min bounds1, Min bounds2) -> Min (List.map (uncurry add) (List.cartesian_product bounds1 bounds2))
           | (Max bounds, Poly p) -> add (Max bounds) (Max [Poly p])
@@ -72,16 +66,16 @@ module MakeMinMaxPolynomial(Var : ID)(Value : Number.Numeric) =
              else List.fold_left mul one (List.of_enum (Enum.repeat ~times:n b))
             
       end
-    include MakeMath(BaseMathImpl)
+    include PolyTypes.MakeMath(BaseMathImpl)
           
-    module BasePartialOrderImpl : (BasePartialOrder with type t = outer_t) =
+    module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
       struct
         type t = outer_t
                
         let (==) b1 b2 = b1 == b2
                        
         let rec (>) b1 b2 = match (b1, b2) with
-          | (Poly p1, Poly p2) -> Polynomial.(>) p1 p2
+          | (Poly p1, Poly p2) -> Polynomial_.(>) p1 p2
           | (_, Max []) -> Some false
           | (Max [], _) -> Some true
           | (Max bounds1, Max bounds2) -> Some (List.exists (fun b1 -> List.for_all (fun b2 -> Option.default false (b1 > b2)) bounds2) bounds1)
@@ -90,7 +84,7 @@ module MakeMinMaxPolynomial(Var : ID)(Value : Number.Numeric) =
           | (b1, b2) -> None
                       
       end
-    include MakePartialOrder(BasePartialOrderImpl)
+    include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
                   
     let max b1 b2 = match (b1, b2) with
       (* TODO Add more simplification *)
@@ -105,7 +99,7 @@ module MakeMinMaxPolynomial(Var : ID)(Value : Number.Numeric) =
     let minimum bounds = Min bounds
 
     let rec to_string = function
-      | Poly p -> Polynomial.to_string p
+      | Poly p -> Polynomial_.to_string p
       | Max bounds -> String.concat "" ["max{"; String.concat ", " (List.map to_string bounds); "}"]
       | Min bounds -> String.concat "" ["min{"; String.concat ", " (List.map to_string bounds); "}"]
       | Neg b -> String.concat "" ["-("; to_string b; ")"]
@@ -114,7 +108,7 @@ module MakeMinMaxPolynomial(Var : ID)(Value : Number.Numeric) =
       | Product bounds -> String.concat "" ["("; String.concat "*" (List.map to_string bounds); ")"]
 
     let rec vars = function
-      | Poly p -> Polynomial.vars p
+      | Poly p -> Polynomial_.vars p
       | Max bounds -> List.flatten (List.map vars bounds)
       | Min bounds -> List.flatten (List.map vars bounds)
       | Neg b -> vars b
@@ -122,10 +116,10 @@ module MakeMinMaxPolynomial(Var : ID)(Value : Number.Numeric) =
       | Sum bounds -> List.flatten (List.map vars bounds)
       | Product bounds -> List.flatten (List.map vars bounds)
 
-    let degree = raise (Failure "Not yet implemented")
-    let rename = raise (Failure "Not yet implemented")
-    let to_z3 = raise (Failure "Not yet implemented")
-    let eval = raise (Failure "Not yet implemented")
-    let of_string = raise (Failure "Not yet implemented")
+    let degree n = raise (Failure "degree for MinMaxPolynomial not yet implemented")
+    let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implemented")
+    let to_z3 ctx p = raise (Failure "to_z3 for MinMaxPolynomial not yet implemented")
+    let eval p valuation = raise (Failure "eval for MinMaxPolynomial not yet implemented")
+    let of_string p = raise (Failure "of_string for MinMaxPolynomial not yet implemented")
 
   end

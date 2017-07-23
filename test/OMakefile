@@ -23,8 +23,8 @@ TESTS[] =
     PolynomialsTest
     PolynomialConstraintsTest
 
-OCamlProgram(PolynomialsTest, PolynomialsTest)
-OCamlProgram(PolynomialConstraintsTest, PolynomialConstraintsTest)
+OCamlProgram(PolynomialsTest, Mocks PolynomialsTest)
+OCamlProgram(PolynomialConstraintsTest, Mocks PolynomialConstraintsTest)
 
 .DEFAULT: $(TESTS)
     ./PolynomialsTest

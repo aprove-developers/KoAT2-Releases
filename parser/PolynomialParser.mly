@@ -1,4 +1,4 @@
-%parameter<Var : PolyTypes.ID>
+%parameter<P : PolyTypes.ParseablePolynomial>
 
 %token	<string>	ID
 %token	<int>		UINT
@@ -10,14 +10,10 @@
 %left			TIMES
 %left			POW
 			
-%start <PolyTypes.PolynomialAST(Var).t> polynomial
+%start <P.t> polynomial
 
-%type <PolyTypes.PolynomialAST(Var).t> expression
+%type <P.t> expression
 
-%{
-  module P = PolyTypes.PolynomialAST(Var)
-%}
-			
 %%
 
 polynomial :
@@ -25,22 +21,22 @@ polynomial :
 
 variable :
 	|	v = ID
-                  { Var.of_string v }
+                  { P.from_var_string v }
 
 expression :
 	|       v = variable
-                  { P.Variable v }
+                  { v }
 	| 	c = UINT
-                  { P.Constant c }
+                  { P.from_constant_int c }
 	|	LPAR; ex = expression; RPAR
                   { ex }
 	|       MINUS; ex = expression
-	          { P.Neg ex }
+	          { P.neg ex }
 	|       ex1 = expression; PLUS; ex2 = expression
-	          { P.Plus (ex1, ex2) }
+	          { P.add ex1 ex2 }
 	|       ex1 = expression; TIMES; ex2 = expression
-	          { P.Times (ex1, ex2) }
+	          { P.mul ex1 ex2 }
 	|       ex1 = expression; MINUS; ex2 = expression
-	          { P.Plus (ex1, P.Neg ex2) }
+	          { P.add ex1 (P.neg ex2) }
 	|       v = variable; POW; c = UINT
-	          { P.Pow (v, c) } ;
+	          { P.pow v c } ;

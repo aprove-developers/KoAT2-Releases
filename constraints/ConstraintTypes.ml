@@ -1,26 +1,38 @@
 open Batteries
 open PolyTypes
 
+module type ParseablePolynomialConstraintsAtom =
+  sig
+    type t
+    module Polynomial_ : ParseablePolynomial
+    val mk_gt : Polynomial_.t -> Polynomial_.t -> t
+    val mk_ge : Polynomial_.t -> Polynomial_.t -> t
+    val mk_lt : Polynomial_.t -> Polynomial_.t -> t
+    val mk_le : Polynomial_.t -> Polynomial_.t -> t
+    val mk_eq : Polynomial_.t -> Polynomial_.t -> t
+    val mk_neq : Polynomial_.t -> Polynomial_.t -> t
+    val to_string : t -> string
+  end
+  
 module type PolynomialConstraintsAtom =
-    sig
-        type var
-        type polynomial
-        type rename_map
-        type value
-        type valuation
-        type constraint_atom_ast
+  sig
+        module Var : ID
+        module Value : Number.Numeric
+        module Polynomial_ : (Polynomial with module Var = Var and module Value = Value)
+             
         type t
+           
         (*getting information*)
-        val get_first_arg : t -> polynomial
-        val get_second_arg : t -> polynomial
+        val get_first_arg : t -> Polynomial_.t
+        val get_second_arg : t -> Polynomial_.t
         
         (*creation*)
-        val mk_gt : polynomial -> polynomial -> t
-        val mk_ge : polynomial -> polynomial -> t
-        val mk_lt : polynomial -> polynomial -> t
-        val mk_le : polynomial -> polynomial -> t
-        val mk_eq : polynomial -> polynomial -> t
-        val mk_neq : polynomial -> polynomial -> t
+        val mk_gt : Polynomial_.t -> Polynomial_.t -> t
+        val mk_ge : Polynomial_.t -> Polynomial_.t -> t
+        val mk_lt : Polynomial_.t -> Polynomial_.t -> t
+        val mk_le : Polynomial_.t -> Polynomial_.t -> t
+        val mk_eq : Polynomial_.t -> Polynomial_.t -> t
+        val mk_neq : Polynomial_.t -> Polynomial_.t -> t
         
         (*boolean tests*)
         val is_gt : t -> bool
@@ -37,21 +49,7 @@ module type PolynomialConstraintsAtom =
         (*export*)
         val to_string : t -> string
         val to_z3 : Z3.context -> t -> Z3.Expr.expr
-        val get_variables : t -> var list
-        val rename_vars : t -> rename_map -> t
-        val eval_bool : t -> valuation -> bool
-        val from_ast_atom : constraint_atom_ast -> t
+        val get_variables : t -> Var.t list
+        val rename_vars : t -> Polynomial_.RenameMap_.t -> t
+        val eval_bool : t -> Polynomial_.Valuation_.t -> bool
     end
-    
-module PolynomialConstraintsAtomAST(Var : ID) =
-    struct
-        module PolynomialAST = PolynomialAST(Var)
-        type polynomial = PolynomialAST.t
-        type t =
-            | LessThan of polynomial * polynomial
-            | LessEqual of polynomial * polynomial
-            | GreaterThan of polynomial * polynomial
-            | GreaterEqual of polynomial * polynomial
-            | Equal of polynomial * polynomial
-            | Neq of polynomial * polynomial
-end

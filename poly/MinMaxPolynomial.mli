@@ -1,12 +1,10 @@
 open Batteries
-open ID
-open PolyTypes
 
 module MakeMinMaxPolynomial
-         (Var : ID)
+         (Var : PolyTypes.ID)
          (Value : Number.Numeric)
-       : MinMaxPolynomial with type var = Var.t
-                           and type rename_map = Var.t Map.Make(Var).t
-                           and type value = Value.t
-                           and type valuation = Valuation.MakeValuation(Var)(Value).t
-                           and type polynomial_ast = PolynomialAST(Var).t
+       : PolyTypes.MinMaxPolynomial with module Var = Var
+                                     and module Value = Value
+                                     and module Valuation_ = Valuation.MakeValuation(Var)(Value)
+                                     and module RenameMap_ = RenameMap.MakeRenameMap(Var)
+                                     and module Polynomial_ = Polynomials.MakePolynomial(Var)(Value)
