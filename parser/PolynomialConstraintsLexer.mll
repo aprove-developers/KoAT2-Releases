@@ -1,8 +1,8 @@
 {
-  module Make(C : ConstraintTypes.ParseablePolynomialConstraintsAtom) =
+  module Make(C : ConstraintTypes.ParseablePolynomialConstraints) =
     struct
       open Lexing
-      module P = PolynomialConstraintsAtomParser.Make(C)
+      module P = PolynomialConstraintsParser.Make(C)
          
       exception SyntaxError of string
                              
@@ -41,6 +41,7 @@ rule read =
   | leq      { P.LESSEQUAL }
   | '>'      { P.GREATERTHAN }
   | geq      { P.GREATEREQUAL }
+  | '&''&'   { P.COMMA }
   | _        { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
 
 {

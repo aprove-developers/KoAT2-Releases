@@ -5,16 +5,16 @@ open OUnit2
 open PolyTypes
 open ConstraintTypes
    
-module PolynomialConstraintsParserTest(C : ParseablePolynomialConstraintsAtom) =
+module PolynomialConstraintsParserTest(C : ParseablePolynomialConstraints) =
   struct
-    module Parser = PolynomialConstraintsAtomParser.Make(C)
-    module Lexer = PolynomialConstraintsAtomLexer.Make(C)
+    module Parser = PolynomialConstraintsParser.Make(C)
+    module Lexer = PolynomialConstraintsLexer.Make(C)
 
     let to_atom_and_back str =
          str
       |> Lexing.from_string
       |> Parser.polynomialConstraintAtom Lexer.read
-      |> C.to_string
+      |> C.PolynomialConstraintsAtoms_.to_string
 
     let tests =
         "Parser" >::: [
@@ -52,10 +52,10 @@ module PolynomialConstraintsParserTest(C : ParseablePolynomialConstraintsAtom) =
         ]
   end
 
-module PolynomialConstraintsTest (C : PolynomialConstraintsAtom) =
+module PolynomialConstraintsTest (C : PolynomialConstraints) =
   struct
-    module Parser = PolynomialConstraintsAtomParser.Make(C)
-    module Lexer = PolynomialConstraintsAtomLexer.Make(C)
+    module Parser = PolynomialConstraintsParser.Make(C)
+    module Lexer = PolynomialConstraintsLexer.Make(C)
                      
     let to_atom str =
          str
@@ -65,31 +65,31 @@ module PolynomialConstraintsTest (C : PolynomialConstraintsAtom) =
     let to_atom_and_back str =
          str
       |> to_atom
-      |> C.to_string
+      |> C.PolynomialConstraintsAtoms_.to_string
 
-    let example_valuation = C.Polynomial_.Valuation_.from [(C.Var.of_string "x", C.Value.of_int 3);
-                                                           (C.Var.of_string "y", C.Value.of_int 5);
-                                                           (C.Var.of_string "z", C.Value.of_int 7)]
+    let example_valuation = C.PolynomialConstraintsAtoms_.Polynomial_.Valuation_.from [(C.PolynomialConstraintsAtoms_.Var.of_string "x", C.PolynomialConstraintsAtoms_.Value.of_int 3);
+                                                           (C.PolynomialConstraintsAtoms_.Var.of_string "y", C.PolynomialConstraintsAtoms_.Value.of_int 5);
+                                                           (C.PolynomialConstraintsAtoms_.Var.of_string "z", C.PolynomialConstraintsAtoms_.Value.of_int 7)]
                                         
-    let example_renaming = C.Polynomial_.RenameMap_.from [(C.Var.of_string "x"), (C.Var.of_string "a");
-                                                          (C.Var.of_string "y"), (C.Var.of_string "b");
-                                                          (C.Var.of_string "z"), (C.Var.of_string "c")]
+    let example_renaming = C.PolynomialConstraintsAtoms_.Polynomial_.RenameMap_.from [(C.PolynomialConstraintsAtoms_.Var.of_string "x"), (C.PolynomialConstraintsAtoms_.Var.of_string "a");
+                                                          (C.PolynomialConstraintsAtoms_.Var.of_string "y"), (C.PolynomialConstraintsAtoms_.Var.of_string "b");
+                                                          (C.PolynomialConstraintsAtoms_.Var.of_string "z"), (C.PolynomialConstraintsAtoms_.Var.of_string "c")]
     
     
     let varlist_to_string varl =
         varl
-        |> List.map C.Var.to_string
+        |> List.map C.PolynomialConstraintsAtoms_.Var.to_string
         |> String.concat ","
                                     
     let rename str =
          str
       |> to_atom
-      |> fun atom -> C.rename_vars atom example_renaming
+      |> fun atom -> C.PolynomialConstraintsAtoms_.rename_vars atom example_renaming
       
     let evaluate str =
          str
       |> to_atom
-      |> fun atom -> C.eval_bool atom example_valuation
+      |> fun atom -> C.PolynomialConstraintsAtoms_.eval_bool atom example_valuation
       
     let assert_equal_string =
         assert_equal ~cmp:String.equal
@@ -99,11 +99,11 @@ module PolynomialConstraintsTest (C : PolynomialConstraintsAtom) =
     
     
     let rec equal_varlist varl1 varl2 = 
-        let sort1 = (List.sort C.Var.compare varl1) in
-        let sort2 = (List.sort C.Var.compare varl2) in
+        let sort1 = (List.sort C.PolynomialConstraintsAtoms_.Var.compare varl1) in
+        let sort2 = (List.sort C.PolynomialConstraintsAtoms_.Var.compare varl2) in
         match (sort1,sort2) with 
         | ([],[]) -> true
-        | (h1::t1, h2::t2) -> (C.Var.(==) h1 h2) && (equal_varlist t1 t2)
+        | (h1::t1, h2::t2) -> (C.PolynomialConstraintsAtoms_.Var.(==) h1 h2) && (equal_varlist t1 t2)
         | (_,_) -> false
         
     let assert_equal_varlist = 
@@ -111,150 +111,120 @@ module PolynomialConstraintsTest (C : PolynomialConstraintsAtom) =
         assert_equal ~cmp:equal_varlist
 
     let tests = 
+        let default_poly_l_1 = "x^5+y^6-z^3" in
+        let default_poly_r_1 = "x^2+ 5*x*y*z" in
+        let default_poly_l_2 = "x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17" in
+                 
         "ConstraintsAtom" >:::[
-            ("is_lt" >:::
+            
+            
+            ("is_lt" >:::  
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.is_lt (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_lt (to_atom atom))))
+                      (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
-                            (true, " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
-                            (false,  " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z ");
-                        ]);
+                            (true, " < ");
+                            (false,  " <= ");
+                            (false, " > ");
+                            (false, " >= ");
+                            (false, " == ");
+                            (false, " <> ");
+                        ])
+            );
             
             ("is_le" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.is_le (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_le (to_atom atom))))
+                        (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
-                            (false, " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
-                            (true,  " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z ");                                   
-
-                        ]);
+                            (false, " < ");
+                            (true,  " <= ");
+                            (false, " > ");
+                            (false, " >= ");
+                            (false, " == ");
+                            (false, " <> ");
+                        ])
+            );
             
             ("is_gt" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.is_gt (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_gt (to_atom atom))))
+                        (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
-                            (false, " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
-                            (false,  " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
-                            (true, " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z ");
-                        ]);
+                            (false, " < ");
+                            (false,  " <= ");
+                            (true, " > ");
+                            (false, " >= ");
+                            (false, " == ");
+                            (false, " <> ");
+                        ])
+            );
                         
             ("is_ge" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.is_ge (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_ge (to_atom atom))))
+                        (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
-                            (false, " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
-                            (false,  " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
-                            (true, " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z ");
-                        ]);
+                            (false, " < ");
+                            (false,  " <= ");
+                            (false, " > ");
+                            (true, " >= ");
+                            (false, " == ");
+                            (false, " <> ");
+                        ])
+            );
             ("is_eq" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.is_eq (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_eq (to_atom atom))))
+                        (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
-                            (false, " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
-                            (false,  " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
-                            (true, " x^5+y^6-z^3 == x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z ");
-                        ]);
+                            (false, " < ");
+                            (false,  " <= ");
+                            (false, " > ");
+                            (false, " >= ");
+                            (true, " == ");
+                            (false, " <> ");
+                        ])
+            );
+            
             ("is_neq" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.is_neq (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_neq (to_atom atom))))
+                        (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
-                            (false, " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
-                            (false,  " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z ");
-                            (true, " x^5+y^6-z^3 <> x^2+ 5*x*y*z ");
-                        ]);
+                            (false, " < ");
+                            (false,  " <= ");
+                            (false, " > ");
+                            (false, " >= ");
+                            (false, " == ");
+                            (true, " <> ");
+                        ])
+            );
                         
             ("(==)" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.(==) (to_atom atom1) (to_atom atom2))))
-                        [
-                            (true, " x^5+y^6-z^3 < x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 <= x^2+ 5*x*y*z ", "a*b*c + 2*z^3 +7*y^17 < a*b*c + 2*z^3 +7*y^17");
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z ", "a*b*c + 2*z^3 +7*y^17 < a*b*c + 2*z^3 +7*y^17");
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z ", "a*b*c + 2*z^3 +7*y^17 < a*b*c + 2*z^3 +7*y^17");
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z ", "a*b*c + 2*z^3 +7*y^17 < a*b*c + 2*z^3 +7*y^17");
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z ", "a*b*c + 2*z^3 +7*y^17 < a*b*c + 2*z^3 +7*y^17");
-                        ]);
+                      (String.concat "==" [atom1 ; atom2]) >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.(==) (to_atom atom1) (to_atom atom2))))
+                        (List.map (fun (a,b,c)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1]), (String.concat c [default_poly_l_2 ; default_poly_r_1]))) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
+            );
                         
             ("is_same_constr" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.is_same_constr (to_atom atom1) (to_atom atom2))))
-                        [
-                            (true, " x^5+y^6-z^3 < x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 < x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 < x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <= x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 < x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 > x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 < x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 >= x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 < x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 == x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 < x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <> x^2+ 5*x*y*z " );
-                            
-                            (false, " x^5+y^6-z^3 <= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 < x^2+ 5*x*y*z " );
-                            (true, " x^5+y^6-z^3 <= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <= x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 <= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 > x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 <= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 >= x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 <= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 == x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 <= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <> x^2+ 5*x*y*z " );
-                            
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 < x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <= x^2+ 5*x*y*z " );
-                            (true, " x^5+y^6-z^3 > x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 > x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 >= x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 == x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 > x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <> x^2+ 5*x*y*z " );
-                            
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 < x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <= x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 > x^2+ 5*x*y*z " );
-                            (true, " x^5+y^6-z^3 >= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 >= x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 == x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 >= x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <> x^2+ 5*x*y*z " );
-                            
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 < x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <= x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 > x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 >= x^2+ 5*x*y*z " );
-                            (true, " x^5+y^6-z^3 == x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 == x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 == x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <> x^2+ 5*x*y*z " );
-                            
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 < x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <= x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 > x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 >= x^2+ 5*x*y*z " );
-                            (false, " x^5+y^6-z^3 <> x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 == x^2+ 5*x*y*z " );
-                            (true, " x^5+y^6-z^3 <> x^2+ 5*x*y*z "," x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c -7*y^17 <> x^2+ 5*x*y*z " );
-                            
-
-                        ]);
+                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_same_constr (to_atom atom1) (to_atom atom2))))
+                        (List.map (fun (a,b,c)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1]), (String.concat c [default_poly_l_2 ; default_poly_r_1]))) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
+            );
+            
             ("get_variables" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string expected (C.get_variables (to_atom atom) )))
+                      atom >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string expected (C.PolynomialConstraintsAtoms_.get_variables (to_atom atom) )))
                         [
-                            ([C.Var.of_string "x"], " x^3+2*x -1 < x^5 " );
-                            ([C.Var.of_string "x"; C.Var.of_string "y"; C.Var.of_string "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
+                            ([C.PolynomialConstraintsAtoms_.Var.of_string "x"], " x^3+2*x -1 < x^5 " );
+                            ([C.PolynomialConstraintsAtoms_.Var.of_string "x"; C.PolynomialConstraintsAtoms_.Var.of_string "y"; C.PolynomialConstraintsAtoms_.Var.of_string "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
 
                         ]);
                         
             ("rename_vars" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~cmp:C.(==) ~printer:C.to_string (to_atom expected) (rename atom )))
+                      atom >:: (fun _ -> assert_equal ~cmp:C.PolynomialConstraintsAtoms_.(==) ~printer:C.PolynomialConstraintsAtoms_.to_string (to_atom expected) (rename atom )))
                         [
                             ("5 <= 5", " 5 <= 5 " );
                             ("a == a", "x == x" );
@@ -278,7 +248,7 @@ module PolynomialConstraintsTest (C : PolynomialConstraintsAtom) =
                         
             ("is_redundant" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.is_redundant (to_atom atom1) (to_atom atom2))))
+                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_redundant (to_atom atom1) (to_atom atom2))))
                         [
                             (true, "x < y", "y > x");
                             (true, "x <= a^2 + b * 3 -6", "x <= a^2 + b * 3 -6" );
@@ -291,16 +261,15 @@ module PolynomialConstraintsTest (C : PolynomialConstraintsAtom) =
         
       end  
       
-module StringIDPolynomialConstraintsTest = PolynomialConstraintsTest(PolynomialConstraintsAtoms.MakePolynomialConstraintsAtom(StringID)(Number.MakeNumeric(Big_int)))
-module MockPolynomialConstraintParserTest = PolynomialConstraintsParserTest(Mocks.PolynomialConstraintAtom)
+module StringIDPolynomialConstraintsTest = PolynomialConstraintsTest(PolynomialConstraints.MakePolynomialConstraints(StringID) (Number.MakeNumeric(Big_int)))
+module MockPolynomialConstraintParserTest = PolynomialConstraintsParserTest(Mocks.PolynomialConstraints)
                                          
 let suite =
   "Suite" >::: [
-      MockPolynomialConstraintParserTest.tests;
+      (*MockPolynomialConstraintParserTest.tests;*)
       StringIDPolynomialConstraintsTest.tests;
     ]
                      
-let () =
-  run_test_tt_main suite
+let () =  run_test_tt_main suite
 
     

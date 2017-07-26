@@ -23,9 +23,9 @@ GEN_FILES_1[] =
     PolynomialLexer.ml
 
 GEN_FILES_2[] =
-    PolynomialConstraintsAtomParser.ml
-    PolynomialConstraintsAtomParser.mli
-    PolynomialConstraintsAtomLexer.ml
+    PolynomialConstraintsParser.ml
+    PolynomialConstraintsParser.mli
+    PolynomialConstraintsLexer.ml
 
 OCamlGeneratedFiles($(GEN_FILES_1))
 OCamlGeneratedFiles($(GEN_FILES_2))
@@ -35,8 +35,8 @@ FILES_1[] =
     PolynomialLexer
 
 FILES_2[] =
-    PolynomialConstraintsAtomParser
-    PolynomialConstraintsAtomLexer
+    PolynomialConstraintsParser
+    PolynomialConstraintsLexer
 
 LIB_1 = poly_parser
 LIB_2 = poly_constraint_parser
