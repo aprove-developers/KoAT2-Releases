@@ -62,19 +62,33 @@ module type PolynomialConstraints =
         module PolynomialConstraintsAtoms_ : (PolynomialConstraintsAtom with module Var = Var and module Value = Value and module Polynomial_ = Polynomial_)
              
         type t
+        
+        type atom = PolynomialConstraintsAtoms_.t
            
         (*getting information*)
-
+        val get_variables : t -> Var.t list
+        
         (*creation*)
-
+        val lift : atom -> t      
+        val mk : atom list -> t
         
         (*boolean tests*)
 
-        
         (*export*)
         val to_string : t -> string
         val to_z3 : Z3.context -> t -> Z3.Expr.expr
-        val get_variables : t -> Var.t list
+        
         val rename_vars : t -> Polynomial_.RenameMap_.t -> t
         val eval_bool : t -> Polynomial_.Valuation_.t -> bool
     end
+    
+module type ParseablePolynomialConstraints =
+  sig
+    type t
+    module Polynomial_ : ParseablePolynomial
+    module PolynomialConstraintsAtoms_ : ParseablePolynomialConstraintsAtom
+    
+    type atom = PolynomialConstraintsAtoms_.t
+    val to_string : t -> string
+    val mk : atom list -> t
+  end

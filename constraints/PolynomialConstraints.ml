@@ -14,6 +14,8 @@ struct
     module Value = Value
 
     type t = PolynomialConstraintsAtoms_.t list
+    
+    type atom = PolynomialConstraintsAtoms_.t
 
     let to_string (constr : t) = String.concat " /\ " (List.map PolynomialConstraintsAtoms_.to_string constr)
         
@@ -32,5 +34,9 @@ struct
             constr
         |> List.map (fun atom -> (PolynomialConstraintsAtoms_.eval_bool atom varmapping))
         |> List.fold_left (&&) true
+        
+    let lift atom = [ atom ]
+    
+    let mk atoms = atoms
 
 end
