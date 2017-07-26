@@ -11,7 +11,7 @@ type t =
             
             guard : anytype*)
             
-            cost : Big_int.big_int;
+            (*cost : Polynomial in the variables;*)
             
         }
         
