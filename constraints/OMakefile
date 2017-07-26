@@ -18,6 +18,7 @@ OCAML_LIBS[] =
 FILES[] =
     ConstraintTypes
     PolynomialConstraintsAtoms
+    PolynomialConstraints
 
 LIB = constraints
 

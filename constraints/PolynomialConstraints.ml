@@ -1,10 +1,36 @@
 open Batteries
-
+open PolyTypes
+open ConstraintTypes
+module MakePolynomialConstraints(Var : ID) (Value : Number.Numeric) =
 (*Polynomial Constraints are conjunctions of PolynomialConstraintsAtoms*)
-type t = PolynomialConstraintsAtoms.constraint_atom list
-
-let to_string (constr : t) =
-    let atom_strings = List.concat " /\ " (List.map PolynomialConstraintsAtoms.to_string constr)
+struct
     
-let to_z3 (ctx : Z3.context) (constr : t) =
-    mk_and ctx (List.map (PolynomialConstraintsAtoms.to_z3 ctx) constr)
+    module Polynomial_ = Polynomials.MakePolynomial(Var)(Value)
+    
+    module PolynomialConstraintsAtoms_ = PolynomialConstraintsAtoms.MakePolynomialConstraintsAtom(Var)(Value)
+    
+    module Var = Var
+    
+    module Value = Value
+
+    type t = PolynomialConstraintsAtoms_.t list
+
+    let to_string (constr : t) = String.concat " /\ " (List.map PolynomialConstraintsAtoms_.to_string constr)
+        
+    let to_z3 ctx constr =
+        Z3.Boolean.mk_and ctx (List.map (PolynomialConstraintsAtoms_.to_z3 ctx) constr)
+   
+    let get_variables constr =
+            constr
+        |> List.map (PolynomialConstraintsAtoms_.get_variables)
+        |> List.concat
+        |> List.unique
+        
+    let rename_vars (constr : t) (varmapping : Polynomial_.RenameMap_.t) = List.map (fun atom -> PolynomialConstraintsAtoms_.rename_vars atom varmapping) constr
+
+    let eval_bool (constr:t) (varmapping : Polynomial_.Valuation_.t) = 
+            constr
+        |> List.map (fun atom -> (PolynomialConstraintsAtoms_.eval_bool atom varmapping))
+        |> List.fold_left (&&) true
+
+end

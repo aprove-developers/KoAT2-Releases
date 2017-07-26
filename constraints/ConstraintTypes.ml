@@ -53,3 +53,28 @@ module type PolynomialConstraintsAtom =
         val rename_vars : t -> Polynomial_.RenameMap_.t -> t
         val eval_bool : t -> Polynomial_.Valuation_.t -> bool
     end
+
+module type PolynomialConstraints =
+  sig
+        module Var : ID
+        module Value : Number.Numeric
+        module Polynomial_ : (Polynomial with module Var = Var and module Value = Value)
+        module PolynomialConstraintsAtoms_ : (PolynomialConstraintsAtom with module Var = Var and module Value = Value and module Polynomial_ = Polynomial_)
+             
+        type t
+           
+        (*getting information*)
+
+        (*creation*)
+
+        
+        (*boolean tests*)
+
+        
+        (*export*)
+        val to_string : t -> string
+        val to_z3 : Z3.context -> t -> Z3.Expr.expr
+        val get_variables : t -> Var.t list
+        val rename_vars : t -> Polynomial_.RenameMap_.t -> t
+        val eval_bool : t -> Polynomial_.Valuation_.t -> bool
+    end
