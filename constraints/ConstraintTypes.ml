@@ -60,11 +60,10 @@ module type PolynomialConstraints =
         module Value : Number.Numeric
         module Polynomial_ : (Polynomial with module Var = Var and module Value = Value)
         module PolynomialConstraintsAtoms_ : (PolynomialConstraintsAtom with module Var = Var and module Value = Value and module Polynomial_ = Polynomial_)
-             
-        type t
-        
+
         type atom = PolynomialConstraintsAtoms_.t
-           
+        type t = atom list  
+        
         (*getting information*)
         val get_variables : t -> Var.t list
         
