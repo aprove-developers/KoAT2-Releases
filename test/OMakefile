@@ -9,6 +9,7 @@ OCAMLINCLUDES[] =
     ../poly 
     ../constraints
     ../parser
+    ../smt
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
@@ -17,23 +18,28 @@ OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
     ../parser/poly_parser    
-    ../parser/poly_constraint_parser    
+    ../parser/poly_constraint_parser
+    ../smt/smtsolver
 
 TESTS[] =
     PolynomialsTest
     PolynomialConstraintsTest
+    SMTTest
 
 OCamlProgram(PolynomialsTest, Mocks PolynomialsTest)
 OCamlProgram(PolynomialConstraintsTest, Mocks PolynomialConstraintsTest)
+OCamlProgram(SMTTest, Mocks SMTTest)
 
 .DEFAULT: $(TESTS)
     ./PolynomialsTest
     ./PolynomialConstraintsTest
+    ./SMTTest
 
 clean:
   rm -f \
      *.omc \
      $(filter-proper-targets $(glob $(addsuffix .*, $(TESTS)))) \
+     $(filter-proper-targets $(glob $(addsuffix .*, Mocks))) \
      $(TESTS) \
      *~ \
      *.log \

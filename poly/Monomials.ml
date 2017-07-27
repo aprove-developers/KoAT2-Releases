@@ -47,13 +47,8 @@ module MakeMonomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
       |> String.split_on_char '*'
       |> List.map Power.of_string
       
-    let to_z3_simplified ctx mon = 
-      if mon !=[] then Z3.Arithmetic.mk_mul ctx (List.map (Power.to_z3 ctx) mon) 
-      else Z3.Arithmetic.Integer.mk_numeral_i ctx 1
+    let data = List.map Power.data
       
-    let to_z3 ctx mon = 
-      to_z3_simplified ctx (simplify mon)
-
     (*compares two monomials under the assumption that both have already been simplified*)
     let rec equal_simplified mon1 mon2 =
       if (List.length mon1 == List.length mon2) then
@@ -83,5 +78,5 @@ module MakeMonomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
       List.fold_left Value.mul Value.one (List.map (fun power -> Power.eval power valuation) mon)
 
     let one = []
-                    
+
   end

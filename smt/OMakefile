@@ -1,32 +1,33 @@
 USE_OCAMLFIND = true
 
 OCAMLPACKS[] =
+    Z3
     batteries
 
-OCAMLFLAGS += -thread
+OCAMLINCLUDES[] =
+    ../poly 
+    ../constraints
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
+OCAML_LIBS[] =
+    ../poly/poly
+    ../constraints/constraints
+
 FILES[] =
-    ID
-    Valuation
-    RenameMap
-    Monomials
-    Polynomials
-    MinMaxPolynomial
-    Powers
-    ScaledMonomials
-    PolyTypes
-    StdPoly
+    SMT
 
-LIB = poly
+LIB = smtsolver
 
-OCamlLibrary($(LIB), $(FILES))
+.DEFAULT: $(OCamlLibrary $(LIB), $(FILES))
 
 clean:
   rm -f \
      *.omc \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
-     *~
+     $(FILES) \
+     *~ \
+     *.log \
+     *.cache

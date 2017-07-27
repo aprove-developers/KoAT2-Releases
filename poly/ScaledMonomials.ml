@@ -38,12 +38,8 @@ module MakeScaledMonomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
                          
     let of_string str = raise (Failure "Not implemented") (* TODO Use ocamlyacc here *)
 
-    let to_z3_simplified ctx scaled =
-      Z3.Arithmetic.mk_mul ctx [(Z3.Arithmetic.Integer.mk_numeral_s ctx (Value.to_string scaled.coeff)) ; (Monomial.to_z3 ctx scaled.mon)]
-      
-    let to_z3 ctx scaled =
-      to_z3_simplified ctx (simplify scaled)
-      
+    let data scaled = (scaled.coeff, Monomial.data scaled.mon)
+
     type outer_t = t
     module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
       struct

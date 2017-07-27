@@ -1,6 +1,4 @@
 open Batteries
-open ID
-open Z3
 open OUnit2
 open PolyTypes
 open ConstraintTypes
@@ -188,7 +186,7 @@ module PolynomialTest(P : PolynomialConstraints) =
 
   end
 
-module StringIDPolynomial = PolynomialTest(PolynomialConstraints.MakePolynomialConstraints(StringID) (Number.MakeNumeric(Big_int)))
+module StringIDPolynomial = PolynomialTest(PolynomialConstraints.MakePolynomialConstraints(ID.StringID) (Number.MakeNumeric(Big_int)))
 module MockPolynomialParserTest = PolynomialParserTest(Mocks.PolynomialConstraints)
                           
 let suite =

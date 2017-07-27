@@ -54,12 +54,7 @@ module MakePolynomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let of_string poly = raise (Failure "of_string for Polynomial not yet implemented") (* TODO Use ocamlyacc *)
 
-    let to_z3_simplified ctx poly = 
-      if poly == [] then (Z3.Arithmetic.Integer.mk_numeral_i ctx 0)
-      else    Z3.Arithmetic.mk_add ctx  (List.map (ScaledMonomial.to_z3 ctx) poly)
-      
-    let to_z3 ctx poly = 
-      to_z3_simplified ctx (simplify poly)
+    let data = List.map ScaledMonomial.data
 
     let rec equal_simplified poly1 poly2 =
       List.length poly1 == List.length poly2 &&

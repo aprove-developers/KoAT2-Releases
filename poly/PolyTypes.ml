@@ -76,7 +76,6 @@ module type Evaluable =
     val to_string : t -> string
     val vars : t -> Var.t list
     val eval : t -> Valuation_.t -> Value.t
-    val to_z3 : Z3.context -> t -> Z3.Expr.expr
     val rename : RenameMap_.t -> t -> t
     val degree : t -> int
   end
@@ -91,6 +90,7 @@ module type Power =
     include Evaluable with type t := t
     val make : Var.t -> int -> t
     val lift : Var.t -> t
+    val data : t -> (Var.t * int)
     val var : t -> Var.t
     val n : t -> int
   end
@@ -102,6 +102,7 @@ module type Monomial =
     include Evaluable with type t := t
     val make : power list -> t
     val lift : power -> t
+    val data : t -> (Var.t * int) list
     val degree_variable : Var.t -> t -> int
     val delete_var : Var.t -> t -> t
     val simplify : t -> t
@@ -120,6 +121,7 @@ module type ScaledMonomial =
 
     val make : Value.t -> monomial -> t
     val lift : monomial -> t
+    val data : t -> Value.t * ((Var.t * int) list)
     val simplify : t -> t
     val mul : t -> t -> t
     val mult_with_const : Value.t -> t -> t
@@ -191,7 +193,8 @@ module type Polynomial =
     val monomials : t -> monomial list
     val constant : t -> Value.t
     val to_string : t -> string
-      
+    val data : t -> (Value.t * ((Var.t * int) list)) list
+
     (* Find out properties *)
     val is_var : t -> bool
     val is_var_plus_constant : t -> bool

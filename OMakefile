@@ -1,6 +1,8 @@
+USE_OCAMLFIND = true
+
 .PHONY: clean
 
-.SUBDIRS: poly constraints parser trans_system test
+.SUBDIRS: poly constraints parser trans_system smt test
 
 clean:
     rm -f \

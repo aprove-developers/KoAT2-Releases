@@ -1,6 +1,5 @@
 open Batteries
 open ID
-open Z3
 open OUnit2
 open PolyTypes
 open ConstraintTypes

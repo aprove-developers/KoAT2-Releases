@@ -20,8 +20,19 @@ module type PolynomialConstraintsAtom =
         module Value : Number.Numeric
         module Polynomial_ : (Polynomial with module Var = Var and module Value = Value)
              
-        type t
-           
+        type t = 
+          |GreaterThan of Polynomial_.t * Polynomial_.t
+          |GreaterEqual of Polynomial_.t * Polynomial_.t
+          |LessThan of Polynomial_.t * Polynomial_.t
+          |LessEqual of Polynomial_.t * Polynomial_.t
+          |Neq of Polynomial_.t * Polynomial_.t
+          |Equal of Polynomial_.t * Polynomial_.t
+
+        (* TODO Make t = polynomial * comparator * polynomial for comfortability *)
+        type comparator = GT | GE | LT | LE | NEQ | EQ        
+
+        val get_comparator : t -> comparator
+
         (*getting information*)
         val get_first_arg : t -> Polynomial_.t
         val get_second_arg : t -> Polynomial_.t
@@ -48,7 +59,6 @@ module type PolynomialConstraintsAtom =
         
         (*export*)
         val to_string : t -> string
-        val to_z3 : Z3.context -> t -> Z3.Expr.expr
         val get_variables : t -> Var.t list
         val rename_vars : t -> Polynomial_.RenameMap_.t -> t
         val eval_bool : t -> Polynomial_.Valuation_.t -> bool
@@ -75,7 +85,6 @@ module type PolynomialConstraints =
 
         (*export*)
         val to_string : t -> string
-        val to_z3 : Z3.context -> t -> Z3.Expr.expr
         
         val rename_vars : t -> Polynomial_.RenameMap_.t -> t
         val eval_bool : t -> Polynomial_.Valuation_.t -> bool

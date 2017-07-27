@@ -16,10 +16,21 @@ struct
         |LessEqual of polynomial * polynomial
         |Neq of polynomial * polynomial
         |Equal of polynomial * polynomial
-                                
+
+    (* TODO Make t = polynomial * comparator * polynomial for comfortability *)
+    type comparator = GT | GE | LT | LE | NEQ | EQ
+                
     module Var = Var
     module Value = Value
-                
+
+    let get_comparator = function 
+      | GreaterThan(_,_) -> GT
+      | GreaterEqual(_,_) -> GE
+      | LessThan(_,_) -> LT
+      | LessEqual(_,_) -> LE
+      | Neq(_,_) -> NEQ
+      | Equal(_,_) -> EQ
+                 
     let get_first_arg (comp : t) =
         match comp with
         |GreaterThan(p1, p2) | GreaterEqual (p1, p2) | LessThan (p1, p2) | LessEqual (p1, p2) | Neq (p1, p2) | Equal (p1, p2)-> p1
@@ -132,15 +143,6 @@ struct
         |LessEqual (p1, p2)-> String.concat " <= " [Polynomial_.to_string p1; Polynomial_.to_string p2]
         |Neq (p1, p2)-> String.concat " != " [Polynomial_.to_string p1; Polynomial_.to_string p2]
         |Equal (p1, p2)-> String.concat " = " [Polynomial_.to_string p1; Polynomial_.to_string p2]
-        
-    let to_z3 (ctx : Z3.context) (comp : t) =
-        match comp with
-        |GreaterThan (p1, p2)-> Z3.Arithmetic.mk_gt ctx (Polynomial_.to_z3 ctx p1) (Polynomial_.to_z3 ctx p2)
-        |GreaterEqual (p1, p2)-> Z3.Arithmetic.mk_ge ctx (Polynomial_.to_z3 ctx p1) (Polynomial_.to_z3 ctx p2)
-        |LessThan (p1, p2)-> Z3.Arithmetic.mk_lt ctx (Polynomial_.to_z3 ctx p1) (Polynomial_.to_z3 ctx p2)
-        |LessEqual (p1, p2)-> Z3.Arithmetic.mk_le ctx (Polynomial_.to_z3 ctx p1) (Polynomial_.to_z3 ctx p2)
-        |Equal (p1, p2)-> Z3.Boolean.mk_eq ctx (Polynomial_.to_z3 ctx p1) (Polynomial_.to_z3 ctx p2)
-        |Neq (p1, p2)-> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx (Polynomial_.to_z3 ctx p1) (Polynomial_.to_z3 ctx p2))
         
     let get_variables (comp : t) =
         List.unique (List.append (Polynomial_.vars (get_first_arg comp)) (Polynomial_.vars (get_second_arg comp)))

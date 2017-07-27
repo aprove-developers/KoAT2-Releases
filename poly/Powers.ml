@@ -32,9 +32,6 @@ module MakePower(Var : PolyTypes.ID)(Value : Number.Numeric) =
       if power.n < 0 then Value.zero
       else Value.pow (Valuation_.eval power.var valuation) (Value.of_int power.n)
                
-    let to_z3 ctx power =
-      Z3.Arithmetic.mk_power ctx ( Z3.Arithmetic.Integer.mk_const ctx (Z3.Symbol.mk_string ctx (Var.to_string power.var)) ) (Z3.Arithmetic.Integer.mk_numeral_i ctx power.n)
-          
     let rename varmapping power = {
         power with var = RenameMap_.find power.var varmapping power.var
       }
@@ -46,6 +43,8 @@ module MakePower(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let lift var = make var 1
 
+    let data power = (power.var, power.n)
+                 
     let var t = t.var
                    
     let n t = t.n

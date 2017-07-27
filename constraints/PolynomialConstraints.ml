@@ -1,3 +1,4 @@
+
 open Batteries
 open PolyTypes
 open ConstraintTypes
@@ -19,9 +20,6 @@ struct
 
     let to_string (constr : t) = String.concat " /\ " (List.map PolynomialConstraintsAtoms_.to_string constr)
         
-    let to_z3 ctx constr =
-        Z3.Boolean.mk_and ctx (List.map (PolynomialConstraintsAtoms_.to_z3 ctx) constr)
-   
     let get_variables constr =
             constr
         |> List.map (PolynomialConstraintsAtoms_.get_variables)
