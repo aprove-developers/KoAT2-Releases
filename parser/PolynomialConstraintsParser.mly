@@ -25,6 +25,8 @@
 
 %start <C.t> polynomialConstraints
 
+%start <C.PolynomialConstraintsAtoms_.Polynomial_.t> polynomial
+
 %type <C.PolynomialConstraintsAtoms_.Polynomial_.t> expression
 
 %type <C.atom> atom
@@ -42,6 +44,9 @@ constraints :
 
 polynomialConstraintAtom :
 	|	at = atom EOF { at };
+	
+polynomial :
+        |       poly = expression EOF { poly }
 
 atom :
         |   p1 = expression; EQUAL ; p2 = expression

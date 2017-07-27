@@ -1,18 +1,20 @@
 open Batteries
+open ID
 open Z3
 open OUnit2
 open PolyTypes
+open ConstraintTypes
 
-module PolynomialParserTest(P : ParseablePolynomial) =
+module PolynomialParserTest(P : ParseablePolynomialConstraints) =
   struct
-    module Parser = PolynomialParser.Make(P)
-    module Lexer = PolynomialLexer.Make(P)
+    module Parser = PolynomialConstraintsParser.Make(P)
+    module Lexer = PolynomialConstraintsLexer.Make(P)
                        
     let to_polynomial_and_back str =
          str
       |> Lexing.from_string
       |> Parser.polynomial Lexer.read
-      |> P.to_string
+      |> P.PolynomialConstraintsAtoms_.Polynomial_.to_string
 
     let tests =
       "Parser" >::: [
@@ -52,15 +54,16 @@ module PolynomialParserTest(P : ParseablePolynomial) =
 
   end
   
-module PolynomialTest(P : Polynomial) =
+module PolynomialTest(P : PolynomialConstraints) =
   struct
-    module Parser = PolynomialParser.Make(P)
-    module Lexer = PolynomialLexer.Make(P)
+    module Parser = PolynomialConstraintsParser.Make(P)
+    module Lexer = PolynomialConstraintsLexer.Make(P)
                
-    let example_valuation = P.Valuation_.from [(P.Var.of_string "x", P.Value.of_int 3);
-                                               (P.Var.of_string "y", P.Value.of_int 5);
-                                               (P.Var.of_string "z", P.Value.of_int 7)]
-
+    let example_valuation = P.PolynomialConstraintsAtoms_.Polynomial_.Valuation_.from [(P.PolynomialConstraintsAtoms_.Var.of_string "x", P.PolynomialConstraintsAtoms_.Value.of_int 3);
+                                                           (P.PolynomialConstraintsAtoms_.Var.of_string "y", P.PolynomialConstraintsAtoms_.Value.of_int 5);
+                                                           (P.PolynomialConstraintsAtoms_.Var.of_string "z", P.PolynomialConstraintsAtoms_.Value.of_int 7)]
+                                        
+    
     let to_polynomial str =
          str
       |> Lexing.from_string
@@ -69,10 +72,10 @@ module PolynomialTest(P : Polynomial) =
     let evaluate str =
          str
       |> to_polynomial
-      |> fun poly -> P.eval poly example_valuation
+      |> fun poly -> P.PolynomialConstraintsAtoms_.Polynomial_.eval poly example_valuation
 
     let assert_equal_value =
-      assert_equal ~cmp:P.Value.equal ~printer:P.Value.to_string
+      assert_equal ~cmp:P.Value.equal ~printer:P.PolynomialConstraintsAtoms_.Polynomial_.Value.to_string
     
     let assert_equal_string =
       assert_equal ~cmp:String.equal
@@ -106,11 +109,11 @@ module PolynomialTest(P : Polynomial) =
                      ];
           );
             "Math" >::: ([
-                "zero" >:: (fun _ -> assert_equal_value (P.Value.of_int 0) (P.eval P.zero example_valuation));
-                "one" >:: (fun _ -> assert_equal_value (P.Value.of_int 1) (P.eval P.one example_valuation));
+                "zero" >:: (fun _ -> assert_equal_value (P.PolynomialConstraintsAtoms_.Polynomial_.Value.of_int 0) (P.PolynomialConstraintsAtoms_.Polynomial_.eval P.PolynomialConstraintsAtoms_.Polynomial_.zero example_valuation));
+                "one" >:: (fun _ -> assert_equal_value (P.PolynomialConstraintsAtoms_.Polynomial_.Value.of_int 1) (P.PolynomialConstraintsAtoms_.Polynomial_.eval P.PolynomialConstraintsAtoms_.Polynomial_.one example_valuation));
                 "constant" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal_value (P.Value.of_int expected) (P.constant (to_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_value (P.PolynomialConstraintsAtoms_.Polynomial_.Value.of_int expected) (P.PolynomialConstraintsAtoms_.Polynomial_.constant (to_polynomial expression))))
                            [
                              (5, " 5 ");
                              (0, " x ");
@@ -123,7 +126,7 @@ module PolynomialTest(P : Polynomial) =
                 );
                 "is_var" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_var (to_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.PolynomialConstraintsAtoms_.Polynomial_.is_var (to_polynomial expression))))
                            [
                              (false, " 1 ");
                              (true, " x ");
@@ -141,7 +144,7 @@ module PolynomialTest(P : Polynomial) =
                 
                 "is_univariate_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_univariate_linear (to_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.PolynomialConstraintsAtoms_.Polynomial_.is_univariate_linear (to_polynomial expression))))
                             [
                                 (false, " 1 ");
                                 (true, " x ");
@@ -159,7 +162,7 @@ module PolynomialTest(P : Polynomial) =
                     
                 "is_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_linear (to_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.PolynomialConstraintsAtoms_.Polynomial_.is_linear (to_polynomial expression))))
                             [
                                 (false, " 1 ");
                                 (true, " x ");
@@ -185,8 +188,8 @@ module PolynomialTest(P : Polynomial) =
 
   end
 
-module StringIDPolynomial = PolynomialTest(StdPoly.Polynomial)
-module MockPolynomialParserTest = PolynomialParserTest(Mocks.Polynomial)
+module StringIDPolynomial = PolynomialTest(PolynomialConstraints.MakePolynomialConstraints(StringID) (Number.MakeNumeric(Big_int)))
+module MockPolynomialParserTest = PolynomialParserTest(Mocks.PolynomialConstraints)
                           
 let suite =
   "Suite" >::: [
