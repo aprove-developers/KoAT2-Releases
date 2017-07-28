@@ -14,11 +14,18 @@ module type ParseablePolynomialConstraintsAtom =
     val to_string : t -> string
   end
   
+module type ParseablePolynomialConstraints =
+  sig
+    type t
+    module PolynomialConstraintsAtoms_ : ParseablePolynomialConstraintsAtom
+    
+    val to_string : t -> string
+    val mk : PolynomialConstraintsAtoms_.t list -> t
+  end
+   
 module type PolynomialConstraintsAtom =
   sig
-        module Var : ID
-        module Value : Number.Numeric
-        module Polynomial_ : (Polynomial with module Var = Var and module Value = Value)
+        module Polynomial_ : Polynomial
 
         type comparator = GT | GE | LT | LE | NEQ | EQ        
 
@@ -53,44 +60,29 @@ module type PolynomialConstraintsAtom =
         
         (*export*)
         val to_string : t -> string
-        val get_variables : t -> Var.t list
+        val get_variables : t -> Polynomial_.Var.t list
         val rename_vars : t -> Polynomial_.RenameMap_.t -> t
         val eval_bool : t -> Polynomial_.Valuation_.t -> bool
     end
 
 module type PolynomialConstraints =
   sig
-        module Var : ID
-        module Value : Number.Numeric
-        module Polynomial_ : (Polynomial with module Var = Var and module Value = Value)
-        module PolynomialConstraintsAtoms_ : (PolynomialConstraintsAtom with module Var = Var and module Value = Value and module Polynomial_ = Polynomial_)
+        module PolynomialConstraintsAtoms_ : PolynomialConstraintsAtom
 
-        type atom = PolynomialConstraintsAtoms_.t
-        type t = atom list  
+        type t = PolynomialConstraintsAtoms_.t list  
         
         (*getting information*)
-        val get_variables : t -> Var.t list
+        val get_variables : t -> PolynomialConstraintsAtoms_.Polynomial_.Var.t list
         
         (*creation*)
-        val lift : atom -> t      
-        val mk : atom list -> t
+        val lift : PolynomialConstraintsAtoms_.t -> t      
+        val mk : PolynomialConstraintsAtoms_.t list -> t
         
         (*boolean tests*)
 
         (*export*)
         val to_string : t -> string
         
-        val rename_vars : t -> Polynomial_.RenameMap_.t -> t
-        val eval_bool : t -> Polynomial_.Valuation_.t -> bool
+        val rename_vars : t -> PolynomialConstraintsAtoms_.Polynomial_.RenameMap_.t -> t
+        val eval_bool : t -> PolynomialConstraintsAtoms_.Polynomial_.Valuation_.t -> bool
     end
-    
-module type ParseablePolynomialConstraints =
-  sig
-    type t
-    module Polynomial_ : ParseablePolynomial
-    module PolynomialConstraintsAtoms_ : ParseablePolynomialConstraintsAtom
-    
-    type atom = PolynomialConstraintsAtoms_.t
-    val to_string : t -> string
-    val mk : atom list -> t
-  end

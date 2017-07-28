@@ -9,9 +9,9 @@ module type Solver =
 
 module Z3Solver : Solver =
   struct
-    module Constraint = PolynomialConstraints.MakePolynomialConstraints(ID.StringID)(Number.MakeNumeric(Big_int))
+    module Polynomial = Polynomials.MakePolynomial(ID.StringID)(Number.MakeNumeric(Big_int))
+    module Constraint = PolynomialConstraints.MakePolynomialConstraints(Polynomial)
     module Atom = Constraint.PolynomialConstraintsAtoms_
-    module Polynomial = Constraint.Polynomial_
        
     let context = ref (Z3.mk_context [
                            ("model", "true");

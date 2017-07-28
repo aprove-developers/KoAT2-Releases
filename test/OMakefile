@@ -17,7 +17,6 @@ BYTE_ENABLED = true
 OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
-    ../parser/poly_parser    
     ../parser/poly_constraint_parser
     ../smt/smtsolver
 

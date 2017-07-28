@@ -55,6 +55,9 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
   struct
     module Parser = PolynomialConstraintsParser.Make(C)
     module Lexer = PolynomialConstraintsLexer.Make(C)
+
+    module Atom = C.PolynomialConstraintsAtoms_
+    module Polynomial = Atom.Polynomial_
                      
     let to_atom str =
          str
@@ -66,29 +69,29 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
       |> to_atom
       |> C.PolynomialConstraintsAtoms_.to_string
 
-    let example_valuation = C.PolynomialConstraintsAtoms_.Polynomial_.Valuation_.from [(C.PolynomialConstraintsAtoms_.Var.of_string "x", C.PolynomialConstraintsAtoms_.Value.of_int 3);
-                                                           (C.PolynomialConstraintsAtoms_.Var.of_string "y", C.PolynomialConstraintsAtoms_.Value.of_int 5);
-                                                           (C.PolynomialConstraintsAtoms_.Var.of_string "z", C.PolynomialConstraintsAtoms_.Value.of_int 7)]
+    let example_valuation = Polynomial.Valuation_.from [(Polynomial.Var.of_string "x", Polynomial.Value.of_int 3);
+                                                        (Polynomial.Var.of_string "y", Polynomial.Value.of_int 5);
+                                                        (Polynomial.Var.of_string "z", Polynomial.Value.of_int 7)]
                                         
-    let example_renaming = C.PolynomialConstraintsAtoms_.Polynomial_.RenameMap_.from [(C.PolynomialConstraintsAtoms_.Var.of_string "x"), (C.PolynomialConstraintsAtoms_.Var.of_string "a");
-                                                          (C.PolynomialConstraintsAtoms_.Var.of_string "y"), (C.PolynomialConstraintsAtoms_.Var.of_string "b");
-                                                          (C.PolynomialConstraintsAtoms_.Var.of_string "z"), (C.PolynomialConstraintsAtoms_.Var.of_string "c")]
+    let example_renaming = Polynomial.RenameMap_.from [(Polynomial.Var.of_string "x"), (Polynomial.Var.of_string "a");
+                                                       (Polynomial.Var.of_string "y"), (Polynomial.Var.of_string "b");
+                                                       (Polynomial.Var.of_string "z"), (Polynomial.Var.of_string "c")]
     
     
     let varlist_to_string varl =
         varl
-        |> List.map C.PolynomialConstraintsAtoms_.Var.to_string
+        |> List.map Polynomial.Var.to_string
         |> String.concat ","
                                     
     let rename str =
          str
       |> to_atom
-      |> fun atom -> C.PolynomialConstraintsAtoms_.rename_vars atom example_renaming
+      |> fun atom -> Atom.rename_vars atom example_renaming
       
     let evaluate str =
          str
       |> to_atom
-      |> fun atom -> C.PolynomialConstraintsAtoms_.eval_bool atom example_valuation
+      |> fun atom -> Atom.eval_bool atom example_valuation
       
     let assert_equal_string =
         assert_equal ~cmp:String.equal
@@ -98,11 +101,11 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
     
     
     let rec equal_varlist varl1 varl2 = 
-        let sort1 = (List.sort C.PolynomialConstraintsAtoms_.Var.compare varl1) in
-        let sort2 = (List.sort C.PolynomialConstraintsAtoms_.Var.compare varl2) in
+        let sort1 = (List.sort Polynomial.Var.compare varl1) in
+        let sort2 = (List.sort Polynomial.Var.compare varl2) in
         match (sort1,sort2) with 
         | ([],[]) -> true
-        | (h1::t1, h2::t2) -> (C.PolynomialConstraintsAtoms_.Var.(==) h1 h2) && (equal_varlist t1 t2)
+        | (h1::t1, h2::t2) -> (Polynomial.Var.(==) h1 h2) && (equal_varlist t1 t2)
         | (_,_) -> false
         
     let assert_equal_varlist = 
@@ -216,8 +219,8 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
                 List.map (fun (expected, atom) ->
                       atom >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string expected (C.PolynomialConstraintsAtoms_.get_variables (to_atom atom) )))
                         [
-                            ([C.PolynomialConstraintsAtoms_.Var.of_string "x"], " x^3+2*x -1 < x^5 " );
-                            ([C.PolynomialConstraintsAtoms_.Var.of_string "x"; C.PolynomialConstraintsAtoms_.Var.of_string "y"; C.PolynomialConstraintsAtoms_.Var.of_string "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
+                            ([Polynomial.Var.of_string "x"], " x^3+2*x -1 < x^5 " );
+                            ([Polynomial.Var.of_string "x"; Polynomial.Var.of_string "y"; Polynomial.Var.of_string "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
 
                         ]);
                         
@@ -325,6 +328,9 @@ module PolynomialConstraintsTest (C : PolynomialConstraints) =
     module Parser = PolynomialConstraintsParser.Make(C)
     module Lexer = PolynomialConstraintsLexer.Make(C)
                      
+    module Atom = C.PolynomialConstraintsAtoms_
+    module Polynomial = Atom.Polynomial_
+                     
     let to_constr str =
          str
       |> Lexing.from_string
@@ -335,18 +341,18 @@ module PolynomialConstraintsTest (C : PolynomialConstraints) =
       |> to_constr
       |> C.to_string
 
-    let example_valuation = C.PolynomialConstraintsAtoms_.Polynomial_.Valuation_.from [(C.PolynomialConstraintsAtoms_.Var.of_string "x", C.PolynomialConstraintsAtoms_.Value.of_int 3);
-                                                           (C.PolynomialConstraintsAtoms_.Var.of_string "y", C.PolynomialConstraintsAtoms_.Value.of_int 5);
-                                                           (C.PolynomialConstraintsAtoms_.Var.of_string "z", C.PolynomialConstraintsAtoms_.Value.of_int 7)]
-                                        
-    let example_renaming = C.PolynomialConstraintsAtoms_.Polynomial_.RenameMap_.from [(C.PolynomialConstraintsAtoms_.Var.of_string "x"), (C.PolynomialConstraintsAtoms_.Var.of_string "a");
-                                                          (C.PolynomialConstraintsAtoms_.Var.of_string "y"), (C.PolynomialConstraintsAtoms_.Var.of_string "b");
-                                                          (C.PolynomialConstraintsAtoms_.Var.of_string "z"), (C.PolynomialConstraintsAtoms_.Var.of_string "c")]
+    let example_valuation = Polynomial.Valuation_.from [(Polynomial.Var.of_string "x", Polynomial.Value.of_int 3);
+                                                        (Polynomial.Var.of_string "y", Polynomial.Value.of_int 5);
+                                                        (Polynomial.Var.of_string "z", Polynomial.Value.of_int 7)]
+                          
+    let example_renaming = Polynomial.RenameMap_.from [(Polynomial.Var.of_string "x"), (Polynomial.Var.of_string "a");
+                                                       (Polynomial.Var.of_string "y"), (Polynomial.Var.of_string "b");
+                                                       (Polynomial.Var.of_string "z"), (Polynomial.Var.of_string "c")]
     
     
     let varlist_to_string varl =
         varl
-        |> List.map C.PolynomialConstraintsAtoms_.Var.to_string
+        |> List.map Polynomial.Var.to_string
         |> String.concat ","
                                     
     let rename str =
@@ -367,11 +373,11 @@ module PolynomialConstraintsTest (C : PolynomialConstraints) =
     
     
     let rec equal_varlist varl1 varl2 = 
-        let sort1 = (List.sort C.PolynomialConstraintsAtoms_.Var.compare varl1) in
-        let sort2 = (List.sort C.PolynomialConstraintsAtoms_.Var.compare varl2) in
+        let sort1 = (List.sort Polynomial.Var.compare varl1) in
+        let sort2 = (List.sort Polynomial.Var.compare varl2) in
         match (sort1,sort2) with 
         | ([],[]) -> true
-        | (h1::t1, h2::t2) -> (C.PolynomialConstraintsAtoms_.Var.(==) h1 h2) && (equal_varlist t1 t2)
+        | (h1::t1, h2::t2) -> (Polynomial.Var.(==) h1 h2) && (equal_varlist t1 t2)
         | (_,_) -> false
         
     let assert_equal_varlist = 
@@ -399,8 +405,8 @@ module PolynomialConstraintsTest (C : PolynomialConstraints) =
                 List.map (fun (expected, constr) ->
                       constr >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string expected (C.get_variables (to_constr constr) )))
                         [
-                            ([C.PolynomialConstraintsAtoms_.Var.of_string "x"], " x^3+2*x -1 < x^5 && x <> 0 && 3 > 2 " );
-                            ([C.PolynomialConstraintsAtoms_.Var.of_string "x"; C.PolynomialConstraintsAtoms_.Var.of_string "y"; C.PolynomialConstraintsAtoms_.Var.of_string "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 && y >= 0 && z <= 4" );
+                            ([Polynomial.Var.of_string "x"], " x^3+2*x -1 < x^5 && x <> 0 && 3 > 2 " );
+                            ([Polynomial.Var.of_string "x"; Polynomial.Var.of_string "y"; Polynomial.Var.of_string "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 && y >= 0 && z <= 4" );
 
                         ]);
                         
@@ -435,8 +441,8 @@ module PolynomialConstraintsTest (C : PolynomialConstraints) =
         
       end
       
-module StringIDPolynomialConstraintsAtomTest = PolynomialConstraintsAtomTest(PolynomialConstraints.MakePolynomialConstraints(StringID) (Number.MakeNumeric(Big_int)))
-module StringIDPolynomialConstraintsTest = PolynomialConstraintsTest(PolynomialConstraints.MakePolynomialConstraints(StringID) (Number.MakeNumeric(Big_int)))
+module StringIDPolynomialConstraintsAtomTest = PolynomialConstraintsAtomTest(PolynomialConstraints.MakePolynomialConstraints(Polynomials.MakePolynomial(StringID)(Number.MakeNumeric(Big_int))))
+module StringIDPolynomialConstraintsTest = PolynomialConstraintsTest(PolynomialConstraints.MakePolynomialConstraints(Polynomials.MakePolynomial(StringID) (Number.MakeNumeric(Big_int))))
 module MockPolynomialConstraintAtomParserTest = PolynomialConstraintsAtomParserTest(Mocks.PolynomialConstraints)
 module MockPolynomialConstraintParserTest = PolynomialConstraintsParserTest(Mocks.PolynomialConstraints)                                        
 

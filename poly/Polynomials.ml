@@ -7,12 +7,12 @@ module MakePolynomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
     module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(Var)(Value)
     module Valuation_ = Valuation.MakeValuation(Var)(Value)
     module RenameMap_ = RenameMap.MakeRenameMap(Var)
-                          
+                      
     type t = ScaledMonomial.t list 
     type power = Power.t
     type monomial = Monomial.t
     type scaled_monomial = ScaledMonomial.t
-                        
+                         
     module Var = Var
     module Value = Value
 

@@ -17,40 +17,26 @@ OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
 
-GEN_FILES_1[] =
-    PolynomialParser.ml
-    PolynomialParser.mli
-    PolynomialLexer.ml
-
-GEN_FILES_2[] =
+GEN_FILES[] =
     PolynomialConstraintsParser.ml
     PolynomialConstraintsParser.mli
     PolynomialConstraintsLexer.ml
 
-OCamlGeneratedFiles($(GEN_FILES_1))
-OCamlGeneratedFiles($(GEN_FILES_2))
+OCamlGeneratedFiles($(GEN_FILES))
 
-FILES_1[] =
-    PolynomialParser
-    PolynomialLexer
-
-FILES_2[] =
+FILES[] =
     PolynomialConstraintsParser
     PolynomialConstraintsLexer
 
-LIB_1 = poly_parser
-LIB_2 = poly_constraint_parser
+LIB = poly_constraint_parser
 
-OCamlLibrary($(LIB_1), $(FILES_1))
-OCamlLibrary($(LIB_2), $(FILES_2))
+OCamlLibrary($(LIB), $(FILES))
 
 clean:
   rm -f \
      *.omc \
-     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES_1)))) \
-     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES_2)))) \
-     $(LIB_1).a $(LIB_1).cmxa $(LIB_1).cma \
-     $(LIB_2).a $(LIB_2).cmxa $(LIB_2).cma \
-     $(GEN_FILES_1) \
-     $(GEN_FILES_2) \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
+     $(LIB).a $(LIB).cmxa $(LIB).cma \
+     $(GEN_FILES) \
      *~
