@@ -1,5 +1,5 @@
 {
-  module Make(C : ConstraintTypes.ParseablePolynomialConstraints) =
+  module Make(C : ConstraintTypes.ParseableConstraint) =
     struct
       open Lexing
       module P = PolynomialConstraintsParser.Make(C)

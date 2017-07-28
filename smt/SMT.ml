@@ -2,7 +2,7 @@ open Batteries
 
 module type Solver =
   sig
-    module Constraint : ConstraintTypes.PolynomialConstraints
+    module Constraint : ConstraintTypes.Constraint
 
     val satisfiable : Constraint.t -> bool
   end
@@ -10,8 +10,8 @@ module type Solver =
 module Z3Solver : Solver =
   struct
     module Polynomial = Polynomials.MakePolynomial(ID.StringID)(Number.MakeNumeric(Big_int))
-    module Constraint = PolynomialConstraints.MakePolynomialConstraints(Polynomial)
-    module Atom = Constraint.PolynomialConstraintsAtoms_
+    module Constraint = Constraints.MakeConstraint(Polynomial)
+    module Atom = Constraint.Atom_
        
     let context = ref (Z3.mk_context [
                            ("model", "true");
@@ -48,20 +48,20 @@ module Z3Solver : Solver =
                              |> Z3.Arithmetic.mk_add !context)
 
     (* Returns the appropiate constructor for z3 constraint depending on the type of comparation *)
-    let get_constructor (comparator : Atom.comparator) = match comparator with
-      | Atom.GT -> Z3.Arithmetic.mk_gt
-      | Atom.GE -> Z3.Arithmetic.mk_ge
-      | Atom.LT -> Z3.Arithmetic.mk_lt
-      | Atom.LE -> Z3.Arithmetic.mk_le
-      | Atom.EQ -> Z3.Boolean.mk_eq
-      | Atom.NEQ -> (fun ctx p1 p2 -> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx p1 p2))
+    let get_constructor (comparator : Atom.Comparator.t) = match comparator with
+      | Atom.Comparator.GT -> Z3.Arithmetic.mk_gt
+      | Atom.Comparator.GE -> Z3.Arithmetic.mk_ge
+      | Atom.Comparator.LT -> Z3.Arithmetic.mk_lt
+      | Atom.Comparator.LE -> Z3.Arithmetic.mk_le
+      | Atom.Comparator.EQ -> Z3.Boolean.mk_eq
+      | Atom.Comparator.NEQ -> (fun ctx p1 p2 -> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx p1 p2))
       
     (* Converts our representation of constraints to the z3 representation *)
     let from_atom (constr : Atom.t) =
-      let constructor = get_constructor (Atom.get_comparator constr) in
+      let constructor = get_constructor (Atom.comparator constr) in
       constructor !context
-                  (from_polynomial (Atom.get_first_arg constr))
-                  (from_polynomial (Atom.get_second_arg constr))
+                  (from_polynomial (Atom.fst constr))
+                  (from_polynomial (Atom.snd constr))
 
     let from_constraint (constraints : Constraint.t) =
         Z3.Boolean.mk_and !context (List.map from_atom constraints)

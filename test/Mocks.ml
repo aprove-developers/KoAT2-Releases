@@ -24,7 +24,7 @@ module Polynomial =
       | Pow (p,n) -> String.concat "" ["("; to_string p; "^"; string_of_int n; ")"]
   end
 
-module PolynomialConstraintAtom =
+module Atom =
   struct
     module Polynomial_ = Polynomial
     type polynomial = Polynomial_.t
@@ -50,15 +50,14 @@ module PolynomialConstraintAtom =
       | GreaterThan (p1, p2) -> String.concat " > " [(Polynomial.to_string p1); (Polynomial.to_string p2)]
   end
 
-module PolynomialConstraints = 
+module Constraint = 
   struct
     module Polynomial_ = Polynomial
-    module PolynomialConstraintsAtoms_= PolynomialConstraintAtom
+    module Atom_= Atom
     type polynomial = Polynomial_.t
-    type atom = PolynomialConstraintsAtoms_.t
-    type t = atom list
+    type t = Atom_.t list
       
-    let to_string c = String.concat " /\ " ( List.map PolynomialConstraintsAtoms_.to_string c)
+    let to_string c = String.concat " /\ " ( List.map Atom_.to_string c)
     
     let mk atoms = atoms
       

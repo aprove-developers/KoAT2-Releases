@@ -4,7 +4,7 @@ open OUnit2
 open PolyTypes
 open ConstraintTypes
    
-module PolynomialConstraintsAtomParserTest(C : ParseablePolynomialConstraints) =
+module PolynomialConstraintsAtomParserTest(C : ParseableConstraint) =
   struct
     module Parser = PolynomialConstraintsParser.Make(C)
     module Lexer = PolynomialConstraintsLexer.Make(C)
@@ -13,7 +13,7 @@ module PolynomialConstraintsAtomParserTest(C : ParseablePolynomialConstraints) =
          str
       |> Lexing.from_string
       |> Parser.polynomialConstraintAtom Lexer.read
-      |> C.PolynomialConstraintsAtoms_.to_string
+      |> C.Atom_.to_string
 
     let tests =
         "Parser" >::: [
@@ -51,12 +51,12 @@ module PolynomialConstraintsAtomParserTest(C : ParseablePolynomialConstraints) =
         ]
   end
 
-module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
+module PolynomialConstraintsAtomTest (C : Constraint) =
   struct
     module Parser = PolynomialConstraintsParser.Make(C)
     module Lexer = PolynomialConstraintsLexer.Make(C)
 
-    module Atom = C.PolynomialConstraintsAtoms_
+    module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
                      
     let to_atom str =
@@ -67,7 +67,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
     let to_atom_and_back str =
          str
       |> to_atom
-      |> C.PolynomialConstraintsAtoms_.to_string
+      |> C.Atom_.to_string
 
     let example_valuation = Polynomial.Valuation_.from [(Polynomial.Var.of_string "x", Polynomial.Value.of_int 3);
                                                         (Polynomial.Var.of_string "y", Polynomial.Value.of_int 5);
@@ -86,7 +86,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
     let rename str =
          str
       |> to_atom
-      |> fun atom -> Atom.rename_vars atom example_renaming
+      |> fun atom -> Atom.rename atom example_renaming
       
     let evaluate str =
          str
@@ -122,7 +122,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
             
             ("is_lt" >:::  
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_lt (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_lt (to_atom atom))))
                       (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
                             (true, " < ");
@@ -136,7 +136,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
             
             ("is_le" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_le (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_le (to_atom atom))))
                         (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
                             (false, " < ");
@@ -150,7 +150,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
             
             ("is_gt" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_gt (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_gt (to_atom atom))))
                         (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
                             (false, " < ");
@@ -164,7 +164,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
                         
             ("is_ge" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_ge (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_ge (to_atom atom))))
                         (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
                             (false, " < ");
@@ -177,7 +177,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
             );
             ("is_eq" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_eq (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_eq (to_atom atom))))
                         (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
                             (false, " < ");
@@ -191,7 +191,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
             
             ("is_neq" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_neq (to_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_neq (to_atom atom))))
                         (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
                         [
                             (false, " < ");
@@ -205,19 +205,19 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
                         
             ("(==)" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                      (String.concat "==" [atom1 ; atom2]) >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.(==) (to_atom atom1) (to_atom atom2))))
+                      (String.concat "==" [atom1 ; atom2]) >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.(==) (to_atom atom1) (to_atom atom2))))
                         (List.map (fun (a,b,c)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1]), (String.concat c [default_poly_l_2 ; default_poly_r_1]))) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
             );
                         
             ("is_same_constr" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_same_constr (to_atom atom1) (to_atom atom2))))
+                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_same (to_atom atom1) (to_atom atom2))))
                         (List.map (fun (a,b,c)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1]), (String.concat c [default_poly_l_2 ; default_poly_r_1]))) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
             );
             
             ("get_variables" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string expected (C.PolynomialConstraintsAtoms_.get_variables (to_atom atom) )))
+                      atom >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string expected (C.Atom_.vars (to_atom atom) )))
                         [
                             ([Polynomial.Var.of_string "x"], " x^3+2*x -1 < x^5 " );
                             ([Polynomial.Var.of_string "x"; Polynomial.Var.of_string "y"; Polynomial.Var.of_string "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
@@ -226,7 +226,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
                         
             ("rename_vars" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~cmp:C.PolynomialConstraintsAtoms_.(==) ~printer:C.PolynomialConstraintsAtoms_.to_string (to_atom expected) (rename atom )))
+                      atom >:: (fun _ -> assert_equal ~cmp:C.Atom_.(==) ~printer:C.Atom_.to_string (to_atom expected) (rename atom )))
                         [
                             ("5 <= 5", " 5 <= 5 " );
                             ("a == a", "x == x" );
@@ -250,7 +250,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
                         
             ("is_redundant" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.PolynomialConstraintsAtoms_.is_redundant (to_atom atom1) (to_atom atom2))))
+                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_redundant (to_atom atom1) (to_atom atom2))))
                         [
                             (true, "x < y", "y > x");
                             (true, "x <= a^2 + b * 3 -6", "x <= a^2 + b * 3 -6" );
@@ -263,7 +263,7 @@ module PolynomialConstraintsAtomTest (C : PolynomialConstraints) =
         
       end
       
-module PolynomialConstraintsParserTest(C : ParseablePolynomialConstraints) =
+module PolynomialConstraintsParserTest(C : ParseableConstraint) =
   struct
     module Parser = PolynomialConstraintsParser.Make(C)
     module Lexer = PolynomialConstraintsLexer.Make(C)
@@ -323,12 +323,12 @@ module PolynomialConstraintsParserTest(C : ParseablePolynomialConstraints) =
         
   end
   
-module PolynomialConstraintsTest (C : PolynomialConstraints) =
+module PolynomialConstraintsTest (C : Constraint) =
   struct
     module Parser = PolynomialConstraintsParser.Make(C)
     module Lexer = PolynomialConstraintsLexer.Make(C)
                      
-    module Atom = C.PolynomialConstraintsAtoms_
+    module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
                      
     let to_constr str =
@@ -358,7 +358,7 @@ module PolynomialConstraintsTest (C : PolynomialConstraints) =
     let rename str =
          str
       |> to_constr
-      |> fun constr -> C.rename_vars constr example_renaming
+      |> fun constr -> C.rename constr example_renaming
       
     let evaluate str =
          str
@@ -387,7 +387,7 @@ module PolynomialConstraintsTest (C : PolynomialConstraints) =
     let rec equal_constr constr1 constr2 = 
         match (constr1,constr2) with 
         | ([],[]) -> true
-        | (h1::t1, h2::t2) -> (C.PolynomialConstraintsAtoms_.(==) h1 h2) && (equal_constr t1 t2)
+        | (h1::t1, h2::t2) -> (C.Atom_.(==) h1 h2) && (equal_constr t1 t2)
         | (_,_) -> false
             
     let assert_equal_constr = 
@@ -403,7 +403,7 @@ module PolynomialConstraintsTest (C : PolynomialConstraints) =
 
             ("get_variables" >:::
                 List.map (fun (expected, constr) ->
-                      constr >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string expected (C.get_variables (to_constr constr) )))
+                      constr >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string expected (C.vars (to_constr constr) )))
                         [
                             ([Polynomial.Var.of_string "x"], " x^3+2*x -1 < x^5 && x <> 0 && 3 > 2 " );
                             ([Polynomial.Var.of_string "x"; Polynomial.Var.of_string "y"; Polynomial.Var.of_string "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 && y >= 0 && z <= 4" );
@@ -441,10 +441,10 @@ module PolynomialConstraintsTest (C : PolynomialConstraints) =
         
       end
       
-module StringIDPolynomialConstraintsAtomTest = PolynomialConstraintsAtomTest(PolynomialConstraints.MakePolynomialConstraints(Polynomials.MakePolynomial(StringID)(Number.MakeNumeric(Big_int))))
-module StringIDPolynomialConstraintsTest = PolynomialConstraintsTest(PolynomialConstraints.MakePolynomialConstraints(Polynomials.MakePolynomial(StringID) (Number.MakeNumeric(Big_int))))
-module MockPolynomialConstraintAtomParserTest = PolynomialConstraintsAtomParserTest(Mocks.PolynomialConstraints)
-module MockPolynomialConstraintParserTest = PolynomialConstraintsParserTest(Mocks.PolynomialConstraints)                                        
+module StringIDPolynomialConstraintsAtomTest = PolynomialConstraintsAtomTest(Constraints.MakeConstraint(Polynomials.MakePolynomial(StringID)(Number.MakeNumeric(Big_int))))
+module StringIDPolynomialConstraintsTest = PolynomialConstraintsTest(Constraints.MakeConstraint(Polynomials.MakePolynomial(StringID) (Number.MakeNumeric(Big_int))))
+module MockPolynomialConstraintAtomParserTest = PolynomialConstraintsAtomParserTest(Mocks.Constraint)
+module MockPolynomialConstraintParserTest = PolynomialConstraintsParserTest(Mocks.Constraint)                                        
 
 let suite =
   "Suite" >::: [

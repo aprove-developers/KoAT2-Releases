@@ -1,7 +1,7 @@
 open Batteries
 open PolyTypes
 
-module type ParseablePolynomialConstraintsAtom =
+module type ParseableAtom =
   sig
     type t
     module Polynomial_ : ParseablePolynomial
@@ -14,31 +14,33 @@ module type ParseablePolynomialConstraintsAtom =
     val to_string : t -> string
   end
   
-module type ParseablePolynomialConstraints =
+module type ParseableConstraint =
   sig
     type t
-    module PolynomialConstraintsAtoms_ : ParseablePolynomialConstraintsAtom
+    module Atom_ : ParseableAtom
     
     val to_string : t -> string
-    val mk : PolynomialConstraintsAtoms_.t list -> t
+    val mk : Atom_.t list -> t
   end
    
-module type PolynomialConstraintsAtom =
+module type Atom =
   sig
         module Polynomial_ : Polynomial
 
-        type comparator = GT | GE | LT | LE | NEQ | EQ        
-
-        type t = Polynomial_.t * comparator * Polynomial_.t
+        module Comparator : sig
+          type t = GT | GE | LT | LE | NEQ | EQ
+        end
+                                                  
+        type t = Polynomial_.t * Comparator.t * Polynomial_.t
              
-        val get_comparator : t -> comparator
+        val comparator : t -> Comparator.t
 
         (*getting information*)
-        val get_first_arg : t -> Polynomial_.t
-        val get_second_arg : t -> Polynomial_.t
+        val fst : t -> Polynomial_.t
+        val snd : t -> Polynomial_.t
         
         (*creation*)
-        val mk : comparator -> Polynomial_.t -> Polynomial_.t -> t
+        val mk : Comparator.t -> Polynomial_.t -> Polynomial_.t -> t
         val mk_gt : Polynomial_.t -> Polynomial_.t -> t
         val mk_ge : Polynomial_.t -> Polynomial_.t -> t
         val mk_lt : Polynomial_.t -> Polynomial_.t -> t
@@ -53,36 +55,36 @@ module type PolynomialConstraintsAtom =
         val is_le : t -> bool
         val is_eq : t -> bool
         val is_neq : t -> bool
-        val is_same_constr : t -> t -> bool
-        val is_inverted_constr : t -> t -> bool
+        val is_same : t -> t -> bool
+        val is_inverted : t -> t -> bool
         val is_redundant : t -> t -> bool
         val (==) : t -> t -> bool
         
         (*export*)
         val to_string : t -> string
-        val get_variables : t -> Polynomial_.Var.t list
-        val rename_vars : t -> Polynomial_.RenameMap_.t -> t
+        val vars : t -> Polynomial_.Var.t list
+        val rename : t -> Polynomial_.RenameMap_.t -> t
         val eval_bool : t -> Polynomial_.Valuation_.t -> bool
     end
 
-module type PolynomialConstraints =
+module type Constraint =
   sig
-        module PolynomialConstraintsAtoms_ : PolynomialConstraintsAtom
+        module Atom_ : Atom
 
-        type t = PolynomialConstraintsAtoms_.t list  
+        type t = Atom_.t list  
         
         (*getting information*)
-        val get_variables : t -> PolynomialConstraintsAtoms_.Polynomial_.Var.t list
+        val vars : t -> Atom_.Polynomial_.Var.t list
         
         (*creation*)
-        val lift : PolynomialConstraintsAtoms_.t -> t      
-        val mk : PolynomialConstraintsAtoms_.t list -> t
+        val lift : Atom_.t -> t      
+        val mk : Atom_.t list -> t
         
         (*boolean tests*)
 
         (*export*)
         val to_string : t -> string
         
-        val rename_vars : t -> PolynomialConstraintsAtoms_.Polynomial_.RenameMap_.t -> t
-        val eval_bool : t -> PolynomialConstraintsAtoms_.Polynomial_.Valuation_.t -> bool
+        val rename : t -> Atom_.Polynomial_.RenameMap_.t -> t
+        val eval_bool : t -> Atom_.Polynomial_.Valuation_.t -> bool
     end

@@ -1,4 +1,4 @@
-%parameter<C : ConstraintTypes.ParseablePolynomialConstraints>
+%parameter<C : ConstraintTypes.ParseableConstraint>
 
 %token	<string>	ID
 %token	<int>		UINT
@@ -22,19 +22,19 @@
 			
 %start <C.t> polynomialConstraints
 
-%start <C.PolynomialConstraintsAtoms_.t> polynomialConstraintAtom
+%start <C.Atom_.t> polynomialConstraintAtom
 
-%start <C.PolynomialConstraintsAtoms_.Polynomial_.t> polynomial
+%start <C.Atom_.Polynomial_.t> polynomial
 
-%type <C.PolynomialConstraintsAtoms_.Polynomial_.t> expression
+%type <C.Atom_.Polynomial_.t> expression
 
-%type <C.PolynomialConstraintsAtoms_.t> atom
+%type <C.Atom_.t> atom
 
 %type <C.t> constraints
 
 %{
-  module Atom = C.PolynomialConstraintsAtoms_
-  module Poly = C.PolynomialConstraintsAtoms_.Polynomial_
+  module Atom = C.Atom_
+  module Poly = C.Atom_.Polynomial_
 %}
 
 %%

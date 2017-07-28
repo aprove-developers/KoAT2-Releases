@@ -3,7 +3,7 @@ open OUnit2
 open PolyTypes
 open ConstraintTypes
 
-module PolynomialParserTest(P : ParseablePolynomialConstraints) =
+module PolynomialParserTest(P : ParseableConstraint) =
   struct
     module Parser = PolynomialConstraintsParser.Make(P)
     module Lexer = PolynomialConstraintsLexer.Make(P)
@@ -12,7 +12,7 @@ module PolynomialParserTest(P : ParseablePolynomialConstraints) =
          str
       |> Lexing.from_string
       |> Parser.polynomial Lexer.read
-      |> P.PolynomialConstraintsAtoms_.Polynomial_.to_string
+      |> P.Atom_.Polynomial_.to_string
 
     let tests =
       "Parser" >::: [
@@ -54,8 +54,8 @@ module PolynomialParserTest(P : ParseablePolynomialConstraints) =
   
 module PolynomialTest(P : Polynomial) =
   struct
-    module Parser = PolynomialConstraintsParser.Make(PolynomialConstraints.MakePolynomialConstraints(P))
-    module Lexer = PolynomialConstraintsLexer.Make(PolynomialConstraints.MakePolynomialConstraints(P))
+    module Parser = PolynomialConstraintsParser.Make(Constraints.MakeConstraint(P))
+    module Lexer = PolynomialConstraintsLexer.Make(Constraints.MakeConstraint(P))
                
     let example_valuation = P.Valuation_.from [(P.Var.of_string "x", P.Value.of_int 3);
                                                (P.Var.of_string "y", P.Value.of_int 5);
@@ -187,7 +187,7 @@ module PolynomialTest(P : Polynomial) =
   end
 
 module StringIDPolynomial = PolynomialTest(StdPoly.Polynomial)
-module MockPolynomialParserTest = PolynomialParserTest(Mocks.PolynomialConstraints)
+module MockPolynomialParserTest = PolynomialParserTest(Mocks.Constraint)
                           
 let suite =
   "Suite" >::: [
