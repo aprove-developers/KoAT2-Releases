@@ -19,18 +19,11 @@ module type PolynomialConstraintsAtom =
         module Var : ID
         module Value : Number.Numeric
         module Polynomial_ : (Polynomial with module Var = Var and module Value = Value)
-             
-        type t = 
-          |GreaterThan of Polynomial_.t * Polynomial_.t
-          |GreaterEqual of Polynomial_.t * Polynomial_.t
-          |LessThan of Polynomial_.t * Polynomial_.t
-          |LessEqual of Polynomial_.t * Polynomial_.t
-          |Neq of Polynomial_.t * Polynomial_.t
-          |Equal of Polynomial_.t * Polynomial_.t
 
-        (* TODO Make t = polynomial * comparator * polynomial for comfortability *)
         type comparator = GT | GE | LT | LE | NEQ | EQ        
 
+        type t = Polynomial_.t * comparator * Polynomial_.t
+             
         val get_comparator : t -> comparator
 
         (*getting information*)
@@ -38,6 +31,7 @@ module type PolynomialConstraintsAtom =
         val get_second_arg : t -> Polynomial_.t
         
         (*creation*)
+        val mk : comparator -> Polynomial_.t -> Polynomial_.t -> t
         val mk_gt : Polynomial_.t -> Polynomial_.t -> t
         val mk_ge : Polynomial_.t -> Polynomial_.t -> t
         val mk_lt : Polynomial_.t -> Polynomial_.t -> t
