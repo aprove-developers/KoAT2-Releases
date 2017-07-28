@@ -15,7 +15,10 @@ module MakeMonomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let make powers = powers
 
     let lift power = [power]
-         
+
+    let fold ~const ~var ~times ~pow =
+      List.fold_left (fun b power -> times b (Power.fold ~const ~var ~times ~pow power)) (const Value.one)
+                   
     let vars mon = List.unique (List.map Power.var mon)
              
     let degree mon =

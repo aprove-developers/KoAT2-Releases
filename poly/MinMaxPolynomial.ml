@@ -19,7 +19,18 @@ module MakeMinMaxPolynomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
               
     module Var = Var
     module Value = Value
-                    
+
+    let rec fold ~const ~var ~neg ~plus ~times ~pow ~min ~max ~inf p =
+      let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~min ~max ~inf in
+      match p with
+      | Poly p -> Polynomial_.fold ~const ~var ~neg ~plus ~times ~pow:(fun v (n:int) -> pow v (const (Value.of_int n))) p
+      | Max bounds -> List.fold_left (fun b bound -> max b (fold_ bound)) (neg inf) bounds
+      | Min bounds -> List.fold_left (fun b bound -> min b (fold_ bound)) inf bounds
+      | Neg b -> neg (fold_ b)
+      | Pow (value, n) -> pow (const value) (fold_ n)
+      | Sum bounds -> List.fold_left (fun b bound -> plus b (fold_ bound)) (const Value.zero) bounds
+      | Product bounds -> List.fold_left (fun b bound -> times b (fold_ bound)) (const Value.one) bounds                    
+                                     
     let of_poly p = Poly p
               
     let of_constant c = of_poly (Polynomial_.from_constant c)

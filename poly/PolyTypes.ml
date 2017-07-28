@@ -93,6 +93,12 @@ module type Power =
     val data : t -> (Var.t * int)
     val var : t -> Var.t
     val n : t -> int
+
+    val fold : const:(Value.t -> 'b) ->
+               var:(Var.t -> 'b) ->
+               times:('b -> 'b -> 'b) ->
+               pow:('b -> int -> 'b) ->
+               t -> 'b 
   end
                       
 module type Monomial =
@@ -109,6 +115,12 @@ module type Monomial =
     val is_univariate_linear : t -> bool
     val mul : t -> t -> t
     val one : t
+
+    val fold : const:(Value.t -> 'b) ->
+               var:(Var.t -> 'b) ->
+               times:('b -> 'b -> 'b) ->
+               pow:('b -> int -> 'b) ->
+               t -> 'b 
   end
 
 module type ScaledMonomial =
@@ -128,6 +140,12 @@ module type ScaledMonomial =
     val one : t
     val coeff : t -> Value.t
     val monomial : t -> monomial
+
+    val fold : const:(Value.t -> 'b) ->
+               var:(Var.t -> 'b) ->
+               times:('b -> 'b -> 'b) ->
+               pow:('b -> int -> 'b) ->
+               t -> 'b 
   end
 
 module type BaseMath =
@@ -187,7 +205,15 @@ module type Polynomial =
     val from_power : power -> t
     val from_monomial : monomial -> t
     val from_scaled_monomial : scaled_monomial -> t
-      
+
+    val fold : const:(Value.t -> 'b) ->
+               var:(Var.t -> 'b) ->
+               neg:('b -> 'b) ->               
+               plus:('b -> 'b -> 'b) ->
+               times:('b -> 'b -> 'b) ->
+               pow:('b -> int -> 'b) ->
+               t -> 'b 
+
     (* Get data *)
     val coeff : monomial -> t -> Value.t
     val monomials : t -> monomial list
@@ -225,4 +251,15 @@ module type MinMaxPolynomial =
     val max : t -> t -> t
     val minimum : t list -> t
     val maximum : t list -> t
+
+    val fold : const:(Value.t -> 'b) ->
+               var:(Var.t -> 'b) ->
+               neg:('b -> 'b) ->               
+               plus:('b -> 'b -> 'b) ->
+               times:('b -> 'b -> 'b) ->
+               pow:('b -> 'b -> 'b) ->
+               min:('b -> 'b -> 'b) -> 
+               max:('b -> 'b -> 'b) ->
+               inf:'b ->
+               t -> 'b 
   end

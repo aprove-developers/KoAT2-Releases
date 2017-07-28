@@ -20,6 +20,9 @@ module MakeScaledMonomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
     module Value = Value
                
     let make coefficient monomial = { coeff = coefficient; mon = monomial }
+
+    let fold ~const ~var ~times ~pow scaled =
+      times (const scaled.coeff) (Monomial.fold ~const ~var ~times ~pow scaled.mon)
                                   
     let coeff scaled = scaled.coeff
                      

@@ -20,6 +20,9 @@ module MakePolynomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let lift scaled = [scaled]
 
+    let fold ~const ~var ~neg ~plus ~times ~pow =
+      List.fold_left (fun b scaled -> plus b (ScaledMonomial.fold ~const ~var ~times ~pow scaled)) (const Value.zero)
+                    
     let degree poly =
       List.max (List.map (ScaledMonomial.degree) poly )
       

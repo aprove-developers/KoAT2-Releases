@@ -13,6 +13,9 @@ module MakePower(Var : PolyTypes.ID)(Value : Number.Numeric) =
     module Var = Var
     module Value = Value
 
+    let fold ~const ~var ~times ~pow power =
+      pow (var power.var) power.n
+
     let of_string name = {
         var = Var.of_string name;
         n = 1
