@@ -7,17 +7,19 @@ module type Solver =
     val satisfiable : Constraint.t -> bool
   end
 
-module Z3Solver : Solver =
+module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constraint = C) =
   struct
-    module Polynomial = Polynomials.MakePolynomial(ID.StringID)(Number.MakeNumeric(Big_int))
-    module Constraint = Constraints.MakeConstraint(Polynomial)
-    module Atom = Constraint.Atom_
+    module Constraint = C
+    module Atom = C.Atom_
+    module Polynomial = Atom.Polynomial_
        
-    let context = ref (Z3.mk_context [
-                           ("model", "true");
-                           ("proof", "false");
-                      ])
-
+    let context = ref (
+                      Z3.mk_context [
+                          ("model", "true");
+                          ("proof", "false");
+                        ]
+                    )
+                    
     let from_power = function
       | (var, pow) -> Z3.Arithmetic.mk_power !context
                                              (Z3.Arithmetic.Integer.mk_const !context (Z3.Symbol.mk_string !context (Polynomial.Var.to_string var)))
@@ -66,6 +68,10 @@ module Z3Solver : Solver =
     let from_constraint (constraints : Constraint.t) =
         Z3.Boolean.mk_and !context (List.map from_atom constraints)
       
-    let satisfiable (constraints : Constraint.t) = (Z3.Solver.check (Z3.Solver.mk_simple_solver !context) []) == Z3.Solver.SATISFIABLE
+    let satisfiable (constraints : Constraint.t) =
+      let solver = Z3.Solver.mk_simple_solver !context in
+      let formula = from_constraint constraints in
+      Z3.Solver.add solver [formula];
+      (Z3.Solver.check solver []) == Z3.Solver.SATISFIABLE
 
   end

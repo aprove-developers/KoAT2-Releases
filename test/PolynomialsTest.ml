@@ -5,13 +5,11 @@ open ConstraintTypes
 
 module PolynomialParserTest(P : ParseableConstraint) =
   struct
-    module Parser = PolynomialConstraintsParser.Make(P)
-    module Lexer = PolynomialConstraintsLexer.Make(P)
-                       
+    module Reader = Readers.MakeReader(P)
+
     let to_polynomial_and_back str =
          str
-      |> Lexing.from_string
-      |> Parser.polynomial Lexer.read
+      |> Reader.read_polynomial
       |> P.Atom_.Polynomial_.to_string
 
     let tests =
@@ -41,7 +39,7 @@ module PolynomialParserTest(P : ParseableConstraint) =
           );
           "Negative Tests" >::: (
             List.map (fun (testname, expression) ->
-                testname >:: (fun _ -> assert_raises Parser.Error (fun _ -> to_polynomial_and_back expression)))
+                testname >:: (fun _ -> assert_raises Reader.Parser.Error (fun _ -> to_polynomial_and_back expression)))
                      [
                        ("Power with negative exponent", " x ^ - 3 ");
                        ("Power with variable exponent", " x ^ y ");
@@ -54,23 +52,16 @@ module PolynomialParserTest(P : ParseableConstraint) =
   
 module PolynomialTest(P : Polynomial) =
   struct
-    module Parser = PolynomialConstraintsParser.Make(Constraints.MakeConstraint(P))
-    module Lexer = PolynomialConstraintsLexer.Make(Constraints.MakeConstraint(P))
+    module Reader = Readers.MakeReader(Constraints.MakeConstraint(P))
                
     let example_valuation = P.Valuation_.from [(P.Var.of_string "x", P.Value.of_int 3);
                                                (P.Var.of_string "y", P.Value.of_int 5);
                                                (P.Var.of_string "z", P.Value.of_int 7)]
-                                        
-    
-    let to_polynomial str =
-         str
-      |> Lexing.from_string
-      |> Parser.polynomial Lexer.read
-
+                                            
     let evaluate str =
          str
-      |> to_polynomial
-         |> fun poly -> P.eval poly example_valuation
+      |> Reader.read_polynomial
+      |> fun poly -> P.eval poly example_valuation
 
     let assert_equal_value =
       assert_equal ~cmp:P.Value.equal ~printer:P.Value.to_string
@@ -111,7 +102,7 @@ module PolynomialTest(P : Polynomial) =
                 "one" >:: (fun _ -> assert_equal_value (P.Value.of_int 1) (P.eval P.one example_valuation));
                 "constant" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal_value (P.Value.of_int expected) (P.constant (to_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_value (P.Value.of_int expected) (P.constant (Reader.read_polynomial expression))))
                            [
                              (5, " 5 ");
                              (0, " x ");
@@ -124,7 +115,7 @@ module PolynomialTest(P : Polynomial) =
                 );
                 "is_var" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_var (to_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_var (Reader.read_polynomial expression))))
                            [
                              (false, " 1 ");
                              (true, " x ");
@@ -142,7 +133,7 @@ module PolynomialTest(P : Polynomial) =
                 
                 "is_univariate_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_univariate_linear (to_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_univariate_linear (Reader.read_polynomial expression))))
                             [
                                 (false, " 1 ");
                                 (true, " x ");
@@ -160,7 +151,7 @@ module PolynomialTest(P : Polynomial) =
                     
                 "is_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_linear (to_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_linear (Reader.read_polynomial expression))))
                             [
                                 (false, " 1 ");
                                 (true, " x ");

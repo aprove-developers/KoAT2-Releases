@@ -27,6 +27,7 @@ OCamlGeneratedFiles($(GEN_FILES))
 FILES[] =
     PolynomialConstraintsParser
     PolynomialConstraintsLexer
+    Readers
 
 LIB = poly_constraint_parser
 
@@ -35,7 +36,6 @@ OCamlLibrary($(LIB), $(FILES))
 clean:
   rm -f \
      *.omc \
-     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
      $(GEN_FILES) \
