@@ -53,18 +53,16 @@ polynomial :
         |       poly = expression EOF { poly }
 
 atom :
-        |   p1 = expression; EQUAL ; p2 = expression
-            {Atom.mk_eq p1 p2}
-        |   p1 = expression; NEQ ; p2 = expression
-            {Atom.mk_neq p1 p2}
-        |   p1 = expression; GREATERTHAN ; p2 = expression
-            {Atom.mk_gt p1 p2}
-        |   p1 = expression; GREATEREQUAL ; p2 = expression
-            {Atom.mk_ge p1 p2}
-        |   p1 = expression; LESSTHAN ; p2 = expression
-            {Atom.mk_lt p1 p2}
-        |   p1 = expression; LESSEQUAL ; p2 = expression
-            {Atom.mk_le p1 p2}
+        |   	p1 = expression; comp = comparator; p2 = expression
+                  { comp p1 p2 }
+
+%inline comparator :
+  	| 	EQUAL { Atom.mk_eq }
+  	| 	NEQ { Atom.mk_neq }
+  	| 	GREATERTHAN { Atom.mk_gt }
+  	| 	GREATEREQUAL { Atom.mk_ge }
+  	| 	LESSTHAN { Atom.mk_lt }
+  	| 	LESSEQUAL { Atom.mk_le }
 
 variable :
 	|	v = ID
@@ -79,11 +77,12 @@ expression :
                   { ex }
 	|       MINUS; ex = expression
 	          { Poly.neg ex }
-	|       ex1 = expression; PLUS; ex2 = expression
-	          { Poly.add ex1 ex2 }
-	|       ex1 = expression; TIMES; ex2 = expression
-	          { Poly.mul ex1 ex2 }
-	|       ex1 = expression; MINUS; ex2 = expression
-	          { Poly.add ex1 (Poly.neg ex2) }
+	|       ex1 = expression; op = bioperator; ex2 = expression
+	          { op ex1 ex2 }
 	|       v = variable; POW; c = UINT
 	          { Poly.pow v c } ;
+
+%inline bioperator :
+	|	PLUS { Poly.add }
+	|	TIMES { Poly.mul }
+	|       MINUS { fun ex1 ex2 -> Poly.add ex1 (Poly.neg ex2) }
