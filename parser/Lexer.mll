@@ -2,7 +2,7 @@
   module Make(C : ConstraintTypes.ParseableConstraint) =
     struct
       open Lexing
-      module P = PolynomialConstraintsParser.Make(C)
+      module P = Parser.Make(C)
          
       exception SyntaxError of string
                              

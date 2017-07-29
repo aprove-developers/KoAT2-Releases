@@ -18,18 +18,18 @@ OCAML_LIBS[] =
     ../constraints/constraints
 
 GEN_FILES[] =
-    PolynomialConstraintsParser.ml
-    PolynomialConstraintsParser.mli
-    PolynomialConstraintsLexer.ml
+    Parser.ml
+    Parser.mli
+    Lexer.ml
 
 OCamlGeneratedFiles($(GEN_FILES))
 
 FILES[] =
-    PolynomialConstraintsParser
-    PolynomialConstraintsLexer
+    Parser
+    Lexer
     Readers
 
-LIB = poly_constraint_parser
+LIB = parser
 
 OCamlLibrary($(LIB), $(FILES))
 

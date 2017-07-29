@@ -35,3 +35,4 @@ test/PolynomialConstraintsTest
 #Ignore auto generated parser files
 parser/*.mli
 parser/*.ml
+/test/SMTTest
