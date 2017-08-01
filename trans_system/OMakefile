@@ -1,18 +1,23 @@
 USE_OCAMLFIND = true
 
 OCAMLPACKS[] =
+    batteries
     ocamlgraph
 
-OCAMLINCLUDES += ../poly
+OCAMLINCLUDES[] =
+    ../poly
+    ../constraints
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
-OCAML_LIBS += ../poly/poly
+OCAML_LIBS[] =
+    ../poly/poly
+    ../constraints/constraints
 
 FILES[] =
-    Locations
-    Transitions
+    TransitionGraphTypes
+    TransitionGraphImpl
     TransitionGraph
 
 LIB = transitionsystem

@@ -175,15 +175,6 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
     let sub t1 t2 = add t1 (neg t2)
   end
 
-module type ParseablePolynomial =
-  sig
-    type t
-    val from_constant_int : int -> t
-    val from_var_string : string -> t
-    val to_string : t -> string
-    include BaseMath with type t := t
-  end
-  
 module type Polynomial =
   sig
     type t

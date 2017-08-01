@@ -12,4 +12,4 @@ B smt
 B parser
 B trans_system
 
-PKG batteries oUnit Z3
+PKG batteries oUnit Z3 ocamlgraph

@@ -12,10 +12,12 @@ OCAMLPACKS[] =
 OCAMLINCLUDES[] =
     ../poly
     ../constraints
+    ../trans_system
 
 OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
+    ../trans_system/transitionsystem
 
 GEN_FILES[] =
     Parser.ml
@@ -25,6 +27,7 @@ GEN_FILES[] =
 OCamlGeneratedFiles($(GEN_FILES))
 
 FILES[] =
+    Parseable
     Parser
     Lexer
     Readers

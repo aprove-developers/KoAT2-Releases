@@ -28,4 +28,6 @@ struct
     
     let mk atoms = atoms
 
+    let mk_true = mk []
+
 end

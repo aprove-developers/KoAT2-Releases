@@ -4,14 +4,14 @@ open OUnit2
 open PolyTypes
 open ConstraintTypes
    
-module PolynomialConstraintsAtomParserTest(C : ParseableConstraint) =
+module PolynomialConstraintsAtomParserTest =
   struct
-    module Reader = Readers.MakeReader(C)
+    module Reader = Readers.MakeReader(Mocks.TransitionGraph)
 
     let to_atom_and_back str =
          str
       |> Reader.read_atom
-      |> C.Atom_.to_string
+      |> Mocks.TransitionGraph.Transition_.Constraint_.Atom_.to_string
 
     let tests =
         "Parser" >::: [
@@ -51,7 +51,7 @@ module PolynomialConstraintsAtomParserTest(C : ParseableConstraint) =
 
 module PolynomialConstraintsAtomTest (C : Constraint) =
   struct
-    module Reader = Readers.MakeReader(C)
+    module Reader = Readers.MakeReader(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(C)))
 
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
@@ -255,14 +255,14 @@ module PolynomialConstraintsAtomTest (C : Constraint) =
         
       end
       
-module PolynomialConstraintsParserTest(C : ParseableConstraint) =
+module PolynomialConstraintsParserTest =
   struct
-    module Reader = Readers.MakeReader(C)
+    module Reader = Readers.MakeReader(Mocks.TransitionGraph)
 
     let to_constr_and_back str =
          str
       |> Reader.read_constraint
-      |> C.to_string
+      |> Mocks.TransitionGraph.Transition_.Constraint_.to_string
 
     
     let tests =
@@ -315,7 +315,7 @@ module PolynomialConstraintsParserTest(C : ParseableConstraint) =
   
 module PolynomialConstraintsTest (C : Constraint) =
   struct
-    module Reader = Readers.MakeReader(C)
+    module Reader = Readers.MakeReader(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(C)))
 
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
@@ -424,20 +424,3 @@ module PolynomialConstraintsTest (C : Constraint) =
         ]
         
       end
-      
-module StringIDPolynomialConstraintsAtomTest = PolynomialConstraintsAtomTest(Constraints.MakeConstraint(Polynomials.MakePolynomial(StringID)(Number.MakeNumeric(Big_int))))
-module StringIDPolynomialConstraintsTest = PolynomialConstraintsTest(Constraints.MakeConstraint(Polynomials.MakePolynomial(StringID) (Number.MakeNumeric(Big_int))))
-module MockPolynomialConstraintAtomParserTest = PolynomialConstraintsAtomParserTest(Mocks.Constraint)
-module MockPolynomialConstraintParserTest = PolynomialConstraintsParserTest(Mocks.Constraint)                                        
-
-let suite =
-  "Suite" >::: [
-      MockPolynomialConstraintParserTest.tests;
-      StringIDPolynomialConstraintsAtomTest.tests;
-      MockPolynomialConstraintParserTest.tests;
-      StringIDPolynomialConstraintsTest.tests
-    ]
-                     
-let () =  run_test_tt_main suite
-
-    

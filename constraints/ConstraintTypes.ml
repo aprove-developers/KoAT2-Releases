@@ -1,28 +1,6 @@
 open Batteries
 open PolyTypes
 
-module type ParseableAtom =
-  sig
-    type t
-    module Polynomial_ : ParseablePolynomial
-    val mk_gt : Polynomial_.t -> Polynomial_.t -> t
-    val mk_ge : Polynomial_.t -> Polynomial_.t -> t
-    val mk_lt : Polynomial_.t -> Polynomial_.t -> t
-    val mk_le : Polynomial_.t -> Polynomial_.t -> t
-    val mk_eq : Polynomial_.t -> Polynomial_.t -> t
-    val mk_neq : Polynomial_.t -> Polynomial_.t -> t
-    val to_string : t -> string
-  end
-  
-module type ParseableConstraint =
-  sig
-    type t
-    module Atom_ : ParseableAtom
-    
-    val to_string : t -> string
-    val mk : Atom_.t list -> t
-  end
-   
 module type Atom =
   sig
         module Polynomial_ : Polynomial
@@ -79,6 +57,7 @@ module type Constraint =
         (*creation*)
         val lift : Atom_.t -> t      
         val mk : Atom_.t list -> t
+        val mk_true : t
         
         (*boolean tests*)
 

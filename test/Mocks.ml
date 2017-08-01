@@ -1,5 +1,6 @@
-module Polynomial =
+module Polynomial : Parseable.Polynomial =
   struct
+    module Var = ID.StringID
     type t =
       | Constant of int
       | Variable of string
@@ -24,7 +25,7 @@ module Polynomial =
       | Pow (p,n) -> String.concat "" ["("; to_string p; "^"; string_of_int n; ")"]
   end
 
-module Atom =
+module Atom : Parseable.Atom =
   struct
     module Polynomial_ = Polynomial
     type polynomial = Polynomial_.t
@@ -50,7 +51,7 @@ module Atom =
       | GreaterThan (p1, p2) -> String.concat " > " [(Polynomial.to_string p1); (Polynomial.to_string p2)]
   end
 
-module Constraint = 
+module Constraint : Parseable.Constraint = 
   struct
     module Polynomial_ = Polynomial
     module Atom_= Atom
@@ -59,6 +60,56 @@ module Constraint =
       
     let to_string c = String.concat " /\ " ( List.map Atom_.to_string c)
     
-    let mk atoms = atoms
+    let mk atoms = atoms      
+  end
+
+module Location : Parseable.Location =
+  struct
+    type t = string
+    let to_string l = l
+    let of_string l = l
+  end
+   
+module Transition : Parseable.Transition =
+  struct
+    module Constraint_ = Constraint
+
+    type t = {
+        name : string;           
+        vars : Constraint_.Atom_.Polynomial_.Var.t list;
+        assignments : Constraint_.Atom_.Polynomial_.t list;
+        guard : Constraint_.t;
+      }
+
+    let mk name vars assignments guard vars =
+      { name; vars; assignments; guard }
+
+    let to_string start target transition =
+      let varstring = String.concat "," (List.map Constraint_.Atom_.Polynomial_.Var.to_string transition.vars)
+      and assignmentstring = String.concat "," (List.map Constraint_.Atom_.Polynomial_.to_string transition.assignments) in
+      String.concat "" [start; "("; varstring; ") -> "; transition.name; "("; assignmentstring; ") :|: "; Constraint_.to_string transition.guard]
+      
+  end
+
+module TransitionGraph : Parseable.TransitionGraph =
+  struct
+    module Transition_ = Transition
+    module Location_ = Location
+
+    type t = {
+        vars : Transition_.Constraint_.Atom_.Polynomial_.Var.t list;
+        edges : (Location_.t * Transition_.t * Location_.t) list;
+      }
+                     
+    let from vars transitions =
+      let edges = List.map
+                    (fun (start, target, transition) -> (Location_.of_string start, transition, Location_.of_string target))
+                    transitions in 
+      { vars; edges }
+
+    let to_string graph =
+      let varstring = String.concat "" ["( VAR "; String.concat "" (List.map Transition_.Constraint_.Atom_.Polynomial_.Var.to_string graph.vars); ")"]
+      and edgestring = String.concat "" ["( RULES "; String.concat "\n" (List.map (fun (start, transition, target) -> Transition_.to_string (Location_.to_string start) (Location_.to_string target) transition) graph.edges); ")"] in
+      String.concat "\n" [varstring; edgestring]
       
   end

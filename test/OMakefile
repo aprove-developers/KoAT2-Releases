@@ -3,6 +3,7 @@ USE_OCAMLFIND = true
 OCAMLPACKS[] =
     Z3
     batteries
+    ocamlgraph
     oUnit
 
 OCAMLINCLUDES[] =
@@ -10,6 +11,7 @@ OCAMLINCLUDES[] =
     ../constraints
     ../parser
     ../smt
+    ../trans_system
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
@@ -19,26 +21,25 @@ OCAML_LIBS[] =
     ../constraints/constraints
     ../parser/parser
     ../smt/smtsolver
+    ../trans_system/transitionsystem
 
 TESTS[] =
     PolynomialsTest
     PolynomialConstraintsTest
     SMTTest
+    TransitionGraphTest
 
-OCamlProgram(PolynomialsTest, Mocks PolynomialsTest)
-OCamlProgram(PolynomialConstraintsTest, Mocks PolynomialConstraintsTest)
-OCamlProgram(SMTTest, Mocks SMTTest)
+OCamlProgram(Test, Mocks $(TESTS) Suite)
 
-.DEFAULT: $(TESTS)
-    ./PolynomialsTest
-    ./PolynomialConstraintsTest
-    ./SMTTest
+.DEFAULT: Test
+    ./Test
 
 clean:
   rm -f \
      *.omc \
      $(filter-proper-targets $(glob $(addsuffix .*, $(TESTS)))) \
      $(filter-proper-targets $(glob $(addsuffix .*, Mocks))) \
+     $(filter-proper-targets $(glob $(addsuffix .*, Suite))) \
      $(TESTS) \
      *~ \
      *.log \

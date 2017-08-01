@@ -3,14 +3,14 @@ open OUnit2
 open PolyTypes
 open ConstraintTypes
 
-module PolynomialParserTest(P : ParseableConstraint) =
+module PolynomialParserTest =
   struct
-    module Reader = Readers.MakeReader(P)
+    module Reader = Readers.MakeReader(Mocks.TransitionGraph)
 
     let to_polynomial_and_back str =
          str
       |> Reader.read_polynomial
-      |> P.Atom_.Polynomial_.to_string
+      |> Mocks.TransitionGraph.Transition_.Constraint_.Atom_.Polynomial_.to_string
 
     let tests =
       "Parser" >::: [
@@ -52,7 +52,7 @@ module PolynomialParserTest(P : ParseableConstraint) =
   
 module PolynomialTest(P : Polynomial) =
   struct
-    module Reader = Readers.MakeReader(Constraints.MakeConstraint(P))
+    module Reader = Readers.MakeReader(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(Constraints.MakeConstraint(P))))
                
     let example_valuation = P.Valuation_.from [(P.Var.of_string "x", P.Value.of_int 3);
                                                (P.Var.of_string "y", P.Value.of_int 5);
@@ -176,15 +176,3 @@ module PolynomialTest(P : Polynomial) =
         ]
 
   end
-
-module StringIDPolynomial = PolynomialTest(StdPoly.Polynomial)
-module MockPolynomialParserTest = PolynomialParserTest(Mocks.Constraint)
-                          
-let suite =
-  "Suite" >::: [
-      MockPolynomialParserTest.tests;
-      StringIDPolynomial.tests;
-    ]
-                     
-let () =
-  run_test_tt_main suite

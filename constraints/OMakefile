@@ -16,6 +16,7 @@ OCAML_LIBS[] =
 
 FILES[] =
     ConstraintTypes
+    ConstraintImpl
     Atoms
     Constraints
 

@@ -2,7 +2,7 @@ open Batteries
 open OUnit2
 
 module Z3Solver = SMT.MakeZ3Solver(Constraints.MakeConstraint(StdPoly.Polynomial))
-module Reader = Readers.MakeReader(Constraints.MakeConstraint(StdPoly.Polynomial))
+module Reader = Readers.MakeReader(TransitionGraphImpl.StdTransitionGraph)
 
 let assert_true = assert_bool ""
 
@@ -17,7 +17,3 @@ let suite =
                (* Should work? ("Different Variable Equality", "x == y"); *)
              ]
   )
-                     
-let () =
-  run_test_tt_main suite
-
