@@ -29,10 +29,9 @@ Makefile
 *.cache
 
 #Ignore symbolic links to .opt files
-test/PolynomialsTest
-test/PolynomialConstraintsTest
+test/Test
 
 #Ignore auto generated parser files
-parser/*.mli
-parser/*.ml
-/test/SMTTest
+parser/Parser.mli
+parser/Parser.ml
+parser/Lexer.ml
