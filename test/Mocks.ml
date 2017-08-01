@@ -87,7 +87,7 @@ module Transition : Parseable.Transition =
     let to_string start target transition =
       let varstring = String.concat "," (List.map Constraint_.Atom_.Polynomial_.Var.to_string transition.vars)
       and assignmentstring = String.concat "," (List.map Constraint_.Atom_.Polynomial_.to_string transition.assignments) in
-      String.concat "" [start; "("; varstring; ") -> "; transition.name; "("; assignmentstring; ") :|: "; Constraint_.to_string transition.guard]
+      String.concat "" [start; " ( "; varstring; " ) -> "; transition.name; "( "; assignmentstring; " ) :|: "; Constraint_.to_string transition.guard]
       
   end
 
@@ -108,8 +108,8 @@ module TransitionGraph : Parseable.TransitionGraph =
       { vars; edges }
 
     let to_string graph =
-      let varstring = String.concat "" ["( VAR "; String.concat "" (List.map Transition_.Constraint_.Atom_.Polynomial_.Var.to_string graph.vars); ")"]
-      and edgestring = String.concat "" ["( RULES "; String.concat "\n" (List.map (fun (start, transition, target) -> Transition_.to_string (Location_.to_string start) (Location_.to_string target) transition) graph.edges); ")"] in
+      let varstring = String.concat "" ["( VAR "; String.concat "" (List.map Transition_.Constraint_.Atom_.Polynomial_.Var.to_string graph.vars); " )"]
+      and edgestring = String.concat "" ["( RULES \n "; String.concat "\n" (List.map (fun (start, transition, target) -> Transition_.to_string (Location_.to_string start) (Location_.to_string target) transition) graph.edges); " )"] in
       String.concat "\n" [varstring; edgestring]
       
   end

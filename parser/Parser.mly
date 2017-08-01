@@ -49,51 +49,51 @@
 %%
 
 onlyTransitiongraph :
-        |       graph = transitiongraph EOF
-                  { graph }
+        |       graph = transitiongraph; EOF
+                  { graph } ;
 
 transitiongraph :
 	|       vars = variables; list(EOL); trans = transitions
-		  { G.from vars (List.map (fun (start, target, t) -> (start, target, t vars)) trans) }
+		  { G.from vars (List.map (fun (start, target, t) -> (start, target, t vars)) trans) } ;
 
 transitions :
-	|	l = delimited(LPAR, preceded(RULES, separated_list(EOL, transition)), RPAR)
-		  { l }
+	|	LPAR RULES EOL* l = separated_nonempty_list(EOL, transition) EOL* RPAR
+		  { l } ;
 
 variables :   
-	|	vars = delimited(LPAR, preceded(VAR, list(ID)), RPAR)
-		  { List.map Poly.Var.of_string vars }
-
-transition_lhs :
-	|	start = ID; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR)
-	          { (start, patterns) }
-
-transition_rhs :
-	|	name = ID; LPAR target = ID; assignments = delimited(LPAR, separated_list(COMMA, polynomial), RPAR) RPAR
-	          { (target, name, assignments) }
+	|	LPAR VAR vars = list(ID) RPAR
+		  { List.map Poly.Var.of_string vars } ;
 
 transition :
 	|	lhs = transition_lhs; ARROW; rhs = transition_rhs; constr = withConstraints
-                  { (Tuple2.first lhs, Tuple3.first rhs, G.Transition_.mk (Tuple3.second rhs) (List.map Poly.Var.of_string (Tuple2.second lhs)) (Tuple3.third rhs) constr) }
+                  { (Tuple2.first lhs, Tuple3.first rhs, G.Transition_.mk (Tuple3.second rhs) (List.map Poly.Var.of_string (Tuple2.second lhs)) (Tuple3.third rhs) constr) } ;
+
+transition_lhs :
+	|	start = ID; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR)
+	          { (start, patterns) } ;
+
+transition_rhs :
+	|	name = ID; LPAR target = ID; LPAR assignments = separated_list(COMMA, polynomial) RPAR RPAR
+	          { (target, name, assignments) } ;
 
 withConstraints :
 	|	{ Constr.mk [] }
-	|       constr = preceded(WITH, separated_nonempty_list(AND, atom)) { Constr.mk constr }
+	|       WITH constr = separated_nonempty_list(AND, atom) { Constr.mk constr } ;
 
 onlyConstraints :
-        |       constr = constraints EOF { constr }
+        |       constr = constraints EOF { constr } ;
         
 constraints :
         |       constr = separated_list(AND, atom)
-                  {Constr.mk constr}
+                  {Constr.mk constr} ;
 
               
 onlyAtom :
-	|	at = terminated(atom, EOF) { at };
+	|	at = terminated(atom, EOF) { at } ;
 	
 atom :
         |   	p1 = polynomial; comp = comparator; p2 = polynomial
-                  { comp p1 p2 }
+                  { comp p1 p2 } ;
                 
 %inline comparator :
   	| 	EQUAL { Atom.mk_eq }
@@ -101,15 +101,15 @@ atom :
   	| 	GREATERTHAN { Atom.mk_gt }
   	| 	GREATEREQUAL { Atom.mk_ge }
   	| 	LESSTHAN { Atom.mk_lt }
-  	| 	LESSEQUAL { Atom.mk_le }
+  	| 	LESSEQUAL { Atom.mk_le } ;
 
               
 onlyPolynomial :
-        |       poly = polynomial EOF { poly }
+        |       poly = polynomial EOF { poly } ;
 
 variable :
 	|	v = ID
-                  { Poly.from_var_string v }
+                  { Poly.from_var_string v } ;
 
 polynomial :
 	|       v = variable
@@ -128,4 +128,4 @@ polynomial :
 %inline bioperator :
 	|	PLUS { Poly.add }
 	|	TIMES { Poly.mul }
-	|       MINUS { fun ex1 ex2 -> Poly.add ex1 (Poly.neg ex2) }
+	|       MINUS { fun ex1 ex2 -> Poly.add ex1 (Poly.neg ex2) } ;

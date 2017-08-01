@@ -23,9 +23,12 @@ let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']* '\''?
 rule read =
   parse
   | white    { read lexbuf }
-  | newline  { P.EOL }
+  | newline  { next_line lexbuf; P.EOL }
+  | "RULES"  { P.RULES }
+  | "VAR"    { P.VAR }
   | int      { P.UINT (int_of_string (Lexing.lexeme lexbuf)) }
   | id       { P.ID (Lexing.lexeme lexbuf) }
+  | "->"     { P.ARROW }
   | '('      { P.LPAR }
   | ')'      { P.RPAR }
   | '+'      { P.PLUS }
@@ -34,15 +37,12 @@ rule read =
   | '^'      { P.POW }
   | "=="     { P.EQUAL }
   | "<>"     { P.NEQ }
-  | '<'      { P.LESSTHAN }
   | "<="     { P.LESSEQUAL }
-  | '>'      { P.GREATERTHAN }
   | ">="     { P.GREATEREQUAL }
+  | '<'      { P.LESSTHAN }
+  | '>'      { P.GREATERTHAN }
   | "&&"     { P.AND }
-  | "->"     { P.ARROW }
   | ":|:"    { P.WITH }
-  | "RULES"  { P.RULES }
-  | "VAR"    { P.VAR }
   | ','      { P.COMMA }
   | eof      { P.EOF }
   | _        { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
