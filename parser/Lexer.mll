@@ -19,8 +19,6 @@ let int = ['0'-'9'] ['0'-'9']*
 let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']* '\''?
-let rules = 'R''U''L''E''S'
-let var = 'V''A''R'
 
 rule read =
   parse
@@ -34,17 +32,17 @@ rule read =
   | '*'      { P.TIMES }
   | '-'      { P.MINUS }
   | '^'      { P.POW }
-  | '=''='   { P.EQUAL }
-  | '<''>'   { P.NEQ }
+  | "=="     { P.EQUAL }
+  | "<>"     { P.NEQ }
   | '<'      { P.LESSTHAN }
-  | '<''='   { P.LESSEQUAL }
+  | "<="     { P.LESSEQUAL }
   | '>'      { P.GREATERTHAN }
-  | '>''='   { P.GREATEREQUAL }
-  | '&''&'   { P.AND }
-  | '-''>'   { P.ARROW }
-  | ':''|'':'{ P.WITH }
-  | rules    { P.RULES }
-  | var      { P.VAR }
+  | ">="     { P.GREATEREQUAL }
+  | "&&"     { P.AND }
+  | "->"     { P.ARROW }
+  | ":|:"    { P.WITH }
+  | "RULES"  { P.RULES }
+  | "VAR"    { P.VAR }
   | ','      { P.COMMA }
   | eof      { P.EOF }
   | _        { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
