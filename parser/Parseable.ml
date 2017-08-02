@@ -30,6 +30,7 @@ module type Constraint =
     
     val to_string : t -> string
     val mk : Atom_.t list -> t
+    val is_true : t -> bool
   end
    
 module type Location =

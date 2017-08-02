@@ -16,6 +16,7 @@ let suite =
                 Printf.fprintf stderr "%s\n" text;
                 assert_equal_string (Mocks.TransitionGraph.to_string (Reader.read_transitiongraph text)) text))
              [
+               ("No var, no guard, self loop", "", ["a (  ) -> t ( a (  ) )"]);
                ("B", "A", ["a ( A ) -> t ( a ( A ) ) :|: A > 0"]);
              ]
   )                  

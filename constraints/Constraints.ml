@@ -30,4 +30,8 @@ struct
 
     let mk_true = mk []
 
+    let is_true = function
+      | [] -> true
+      | _ -> false
+
 end

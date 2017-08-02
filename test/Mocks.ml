@@ -60,7 +60,11 @@ module Constraint : Parseable.Constraint =
       
     let to_string c = String.concat " /\ " ( List.map Atom_.to_string c)
     
-    let mk atoms = atoms      
+    let mk atoms = atoms
+
+    let is_true = function
+      | [] -> true
+      | _ -> false
   end
 
 module Location : Parseable.Location =
@@ -87,7 +91,8 @@ module Transition : Parseable.Transition =
     let to_string start target transition =
       let varstring = String.concat "," (List.map Constraint_.Atom_.Polynomial_.Var.to_string transition.vars)
       and assignmentstring = String.concat "," (List.map Constraint_.Atom_.Polynomial_.to_string transition.assignments) in
-      String.concat " " [start; "("; varstring; ")"; "->"; transition.name; "("; target; "("; assignmentstring; ")"; ")"; ":|:"; Constraint_.to_string transition.guard]
+      let without_guard = [start; "("; varstring; ")"; "->"; transition.name; "("; target; "("; assignmentstring; ")"; ")"] in
+      String.concat " " (if Constraint_.is_true transition.guard then without_guard else List.append without_guard [":|:"; Constraint_.to_string transition.guard])
       
   end
 

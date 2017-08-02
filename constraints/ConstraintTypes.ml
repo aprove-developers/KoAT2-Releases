@@ -60,6 +60,7 @@ module type Constraint =
         val mk_true : t
         
         (*boolean tests*)
+        val is_true : t -> bool
 
         (*export*)
         val to_string : t -> string
