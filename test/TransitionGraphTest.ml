@@ -10,12 +10,12 @@ let suite =
   "Graphs" >::: (
     List.map (fun (testname, vars, transitions) ->
         testname >:: (fun _ ->
-                let varstring = String.concat "" ["( VAR "; vars; " )"]
-                and rulestring = String.concat "" ["( RULES \n "; String.concat "\n" transitions; ")"] in
+                let varstring = String.concat " " ["("; "VAR"; vars; ")"]
+                and rulestring = String.concat " " ["("; "RULES"; "\n"; String.concat "\n" transitions; ")"] in
                 let text = String.concat "\n" [varstring; rulestring] in
                 Printf.fprintf stderr "%s\n" text;
                 assert_equal_string (Mocks.TransitionGraph.to_string (Reader.read_transitiongraph text)) text))
              [
-               ("B", "A", [" a ( A ) -> t ( a ( A ) ) :|: A > 0 "]);
+               ("B", "A", ["a ( A ) -> t ( a ( A ) ) :|: A > 0"]);
              ]
   )                  
