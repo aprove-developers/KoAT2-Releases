@@ -1,12 +1,12 @@
 open Batteries
    
-module MakePolynomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
+module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct
-    module Power = Powers.MakePower(Var)(Value)
-    module Monomial = Monomials.MakeMonomial(Var)(Value)
-    module ScaledMonomial = ScaledMonomials.MakeScaledMonomial(Var)(Value)
-    module Valuation_ = Valuation.MakeValuation(Var)(Value)
-    module RenameMap_ = RenameMap.MakeRenameMap(Var)
+    module Power = Powers.Make(Var)(Value)
+    module Monomial = Monomials.Make(Var)(Value)
+    module ScaledMonomial = ScaledMonomials.Make(Var)(Value)
+    module Valuation_ = Valuation.Make(Var)(Value)
+    module RenameMap_ = RenameMap.Make(Var)
                       
     type t = ScaledMonomial.t list 
     type power = Power.t

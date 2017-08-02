@@ -1,6 +1,6 @@
 open Batteries
 
-module MakeRenameMap(Var : PolyTypes.ID) =
+module Make(Var : PolyTypes.ID) =
   struct
     module M = Map.Make(Var)
     type var = Var.t

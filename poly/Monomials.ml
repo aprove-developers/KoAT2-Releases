@@ -1,10 +1,10 @@
 open Batteries
    
-module MakeMonomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
+module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct
-    module Valuation_ = Valuation.MakeValuation(Var)(Value)
-    module RenameMap_ = RenameMap.MakeRenameMap(Var)
-    module Power = Powers.MakePower(Var)(Value)
+    module Valuation_ = Valuation.Make(Var)(Value)
+    module RenameMap_ = RenameMap.Make(Var)
+    module Power = Powers.Make(Var)(Value)
 
     type t = Power.t list
     type power = Power.t

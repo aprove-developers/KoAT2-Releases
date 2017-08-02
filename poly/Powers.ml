@@ -1,9 +1,9 @@
 open Batteries
    
-module MakePower(Var : PolyTypes.ID)(Value : Number.Numeric) =
+module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct
-    module Valuation_ = Valuation.MakeValuation(Var)(Value)
-    module RenameMap_ = RenameMap.MakeRenameMap(Var)
+    module Valuation_ = Valuation.Make(Var)(Value)
+    module RenameMap_ = RenameMap.Make(Var)
 
     type t = {
         var : Var.t;

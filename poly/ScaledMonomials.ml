@@ -1,12 +1,12 @@
 open Batteries
 open Big_int.Infix
 
-module MakeScaledMonomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
+module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct    
-    module Valuation_ = Valuation.MakeValuation(Var)(Value)
-    module RenameMap_ = RenameMap.MakeRenameMap(Var)
-    module Power = Powers.MakePower(Var)(Value)
-    module Monomial = Monomials.MakeMonomial(Var)(Value)
+    module Valuation_ = Valuation.Make(Var)(Value)
+    module RenameMap_ = RenameMap.Make(Var)
+    module Power = Powers.Make(Var)(Value)
+    module Monomial = Monomials.Make(Var)(Value)
 
     type t = 
       {

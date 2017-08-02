@@ -1,10 +1,10 @@
 open Batteries
    
-module MakeMinMaxPolynomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
+module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct
-    module Valuation_ = Valuation.MakeValuation(Var)(Value)
-    module RenameMap_ = RenameMap.MakeRenameMap(Var)
-    module Polynomial_ = Polynomials.MakePolynomial(Var)(Value)
+    module Valuation_ = Valuation.Make(Var)(Value)
+    module RenameMap_ = RenameMap.Make(Var)
+    module Polynomial_ = Polynomials.Make(Var)(Value)
                           
     (* Minus Infinity is max of an empty list *)
     (* Infinity is min of an empty list *)

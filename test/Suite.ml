@@ -1,8 +1,8 @@
 open Batteries
 open OUnit2
    
-module StringIDPolynomialConstraintsAtomTest = PolynomialConstraintsTest.PolynomialConstraintsAtomTest(Constraints.MakeConstraint(Polynomials.MakePolynomial(ID.StringID)(Number.MakeNumeric(Big_int))))
-module StringIDPolynomialConstraintsTest = PolynomialConstraintsTest.PolynomialConstraintsTest(Constraints.MakeConstraint(Polynomials.MakePolynomial(ID.StringID) (Number.MakeNumeric(Big_int))))
+module StringIDPolynomialConstraintsAtomTest = PolynomialConstraintsTest.PolynomialConstraintsAtomTest(Constraints.MakeConstraint(Polynomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))))
+module StringIDPolynomialConstraintsTest = PolynomialConstraintsTest.PolynomialConstraintsTest(Constraints.MakeConstraint(Polynomials.Make(ID.StringID) (Number.MakeNumeric(Big_int))))
 
 module StringIDPolynomial = PolynomialsTest.PolynomialTest(StdPoly.Polynomial)
                           
