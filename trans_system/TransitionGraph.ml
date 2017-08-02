@@ -81,9 +81,9 @@ module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
       |> List.fold_left (fun gr adder -> adder gr) graph
       
     let from vars transitions =
-      let vertices = List.append
+      let vertices = List.unique (List.append
                        (List.map (fun (start, _, _) -> Location_.of_string start) transitions)
-                       (List.map (fun (_, target, _) -> Location_.of_string target) transitions) in
+                       (List.map (fun (_, target, _) -> Location_.of_string target) transitions)) in
       let edges = List.map
                     (fun (start, target, transition) -> (Location_.of_string start, transition, Location_.of_string target))
                     transitions in 

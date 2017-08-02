@@ -28,13 +28,13 @@ rule read =
   | "VAR"    { P.VAR }
   | int      { P.UINT (int_of_string (Lexing.lexeme lexbuf)) }
   | id       { P.ID (Lexing.lexeme lexbuf) }
-  | "->"     { P.ARROW }
   | '('      { P.LPAR }
   | ')'      { P.RPAR }
   | '+'      { P.PLUS }
   | '*'      { P.TIMES }
   | '-'      { P.MINUS }
   | '^'      { P.POW }
+  | "->"     { P.ARROW }
   | "=="     { P.EQUAL }
   | "<>"     { P.NEQ }
   | "<="     { P.LESSEQUAL }
