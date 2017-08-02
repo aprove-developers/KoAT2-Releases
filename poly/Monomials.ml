@@ -50,8 +50,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       |> String.split_on_char '*'
       |> List.map Power.of_string
       
-    let data = List.map Power.data
-      
     (*compares two monomials under the assumption that both have already been simplified*)
     let rec equal_simplified mon1 mon2 =
       if (List.length mon1 == List.length mon2) then

@@ -46,8 +46,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let lift var = make var 1
 
-    let data power = (power.var, power.n)
-                 
     let var t = t.var
                    
     let n t = t.n

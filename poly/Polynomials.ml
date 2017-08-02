@@ -57,8 +57,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let of_string poly = raise (Failure "of_string for Polynomial not yet implemented") (* TODO Use ocamlyacc *)
 
-    let data = List.map ScaledMonomial.data
-
     let rec equal_simplified poly1 poly2 =
       List.length poly1 == List.length poly2 &&
         match poly1 with

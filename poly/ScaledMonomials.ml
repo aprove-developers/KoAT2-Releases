@@ -41,8 +41,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
                          
     let of_string str = raise (Failure "Not implemented") (* TODO Use ocamlyacc here *)
 
-    let data scaled = (scaled.coeff, Monomial.data scaled.mon)
-
     type outer_t = t
     module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
       struct
