@@ -2,7 +2,7 @@ open Batteries
 open OUnit2
 
 module Z3Solver = SMT.MakeZ3Solver(Constraints.Make(StdPoly.Polynomial))
-module Reader = Readers.MakeReader(TransitionGraphImpl.StdTransitionGraph)
+module Reader = Readers.Make(TransitionGraphImpl.StdTransitionGraph)
 
 let assert_true = assert_bool ""
 

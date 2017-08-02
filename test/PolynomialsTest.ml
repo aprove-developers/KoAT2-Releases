@@ -5,7 +5,7 @@ open ConstraintTypes
 
 module PolynomialParserTest =
   struct
-    module Reader = Readers.MakeReader(Mocks.TransitionGraph)
+    module Reader = Readers.Make(Mocks.TransitionGraph)
 
     let to_polynomial_and_back str =
          str
@@ -52,7 +52,7 @@ module PolynomialParserTest =
   
 module PolynomialTest(P : Polynomial) =
   struct
-    module Reader = Readers.MakeReader(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(Constraints.Make(P))))
+    module Reader = Readers.Make(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(Constraints.Make(P))))
                
     let example_valuation = P.Valuation_.from [(P.Var.of_string "x", P.Value.of_int 3);
                                                (P.Var.of_string "y", P.Value.of_int 5);

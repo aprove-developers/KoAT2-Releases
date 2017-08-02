@@ -6,7 +6,7 @@ open ConstraintTypes
    
 module PolynomialConstraintsAtomParserTest =
   struct
-    module Reader = Readers.MakeReader(Mocks.TransitionGraph)
+    module Reader = Readers.Make(Mocks.TransitionGraph)
 
     let to_atom_and_back str =
          str
@@ -51,7 +51,7 @@ module PolynomialConstraintsAtomParserTest =
 
 module PolynomialConstraintsAtomTest (C : Constraint) =
   struct
-    module Reader = Readers.MakeReader(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(C)))
+    module Reader = Readers.Make(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(C)))
 
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
@@ -257,7 +257,7 @@ module PolynomialConstraintsAtomTest (C : Constraint) =
       
 module PolynomialConstraintsParserTest =
   struct
-    module Reader = Readers.MakeReader(Mocks.TransitionGraph)
+    module Reader = Readers.Make(Mocks.TransitionGraph)
 
     let to_constr_and_back str =
          str
@@ -315,7 +315,7 @@ module PolynomialConstraintsParserTest =
   
 module PolynomialConstraintsTest (C : Constraint) =
   struct
-    module Reader = Readers.MakeReader(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(C)))
+    module Reader = Readers.Make(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(C)))
 
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_

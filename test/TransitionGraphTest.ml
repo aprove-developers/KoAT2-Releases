@@ -1,7 +1,7 @@
 open Batteries
 open OUnit2
 
-module Reader = Readers.MakeReader(Mocks.TransitionGraph)
+module Reader = Readers.Make(Mocks.TransitionGraph)
 
 let assert_equal_string =
   assert_equal ~cmp:String.equal ~printer:(fun x -> x)

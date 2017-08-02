@@ -2,7 +2,7 @@ open Batteries
 open ConstraintTypes
 open Lexing
    
-module MakeReader(G : Parseable.TransitionGraph) =
+module Make(G : Parseable.TransitionGraph) =
   struct
     module Parser = Parser.Make(G)
     module Lexer = Lexer.Make(G)
