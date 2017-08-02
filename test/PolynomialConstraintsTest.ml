@@ -87,6 +87,8 @@ module PolynomialConstraintsAtomTest (C : Constraint) =
       
     let assert_equal_string =
         assert_equal ~cmp:String.equal
+        
+    let assert_equal_atoms = assert_equal ~printer:Atom.to_string ~cmp:Atom.(==)
 
     let assert_true = assert_bool ""
     let assert_false b = assert_true (not b)
@@ -109,7 +111,7 @@ module PolynomialConstraintsAtomTest (C : Constraint) =
         let default_poly_r_1 = "x^2+ 5*x*y*z" in
         let default_poly_l_2 = "x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17" in
                  
-        "ConstraintsAtom" >:::[
+        "Atom" >:::[
             
             
             ("is_lt" >:::  
@@ -250,6 +252,28 @@ module PolynomialConstraintsAtomTest (C : Constraint) =
 
                         ]);
                         
+            ("is_linear" >:::
+                List.map (fun (expected, atom) ->
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_linear (Reader.read_atom atom))))
+                        [
+                            (true, "x < y");
+                            (false, "x <= a^2 + b * 3 -6");
+                            (false, "x >= a^2 + b * 3 -6" );
+                            (true, "x+y-2*z+3*x ^ 2 - x*x - x*x - x*x == 7 * z + 4 * y");
+                            (false, "x*x + y*z <> a^17");
+
+                        ]);
+            
+            ("normalise" >:::
+                List.map (fun (expected, atom) ->
+                      atom >:: (fun _ -> assert_equal_atoms (Reader.read_atom expected) (C.Atom_.normalise (Reader.read_atom atom))))
+                        [
+                            ("x<=3","x<=3");
+                            ("a + b + c <= -2", "a+2 <= -b-c");
+                            ("y + z > 4","-4 + y > -z ");
+                            ("a + b + c < -2", "a+2 < -b-c");
+                            ("x^2 - y^3 == 8", "10 + x^2 - 1 == y^3 + 3 + 5 + 9");
+                        ]);
 
         ]
         

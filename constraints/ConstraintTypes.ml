@@ -26,6 +26,9 @@ module type Atom =
         val mk_eq : Polynomial_.t -> Polynomial_.t -> t
         val mk_neq : Polynomial_.t -> Polynomial_.t -> t
         
+        (*handling*)
+        val normalise : t->t
+        
         (*boolean tests*)
         val is_gt : t -> bool
         val is_ge : t -> bool
@@ -33,10 +36,12 @@ module type Atom =
         val is_le : t -> bool
         val is_eq : t -> bool
         val is_neq : t -> bool
+        val is_linear : t -> bool
         val is_same : t -> t -> bool
         val is_inverted : t -> t -> bool
         val is_redundant : t -> t -> bool
         val (==) : t -> t -> bool
+        
         
         (*export*)
         val to_string : t -> string
