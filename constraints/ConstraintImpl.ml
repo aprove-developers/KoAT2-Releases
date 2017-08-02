@@ -1,3 +1,3 @@
 open Batteries
 
-module StdConstraint = Constraints.MakeConstraint(StdPoly.Polynomial)
+module StdConstraint = Constraints.Make(StdPoly.Polynomial)

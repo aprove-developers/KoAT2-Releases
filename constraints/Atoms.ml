@@ -2,7 +2,7 @@ open Batteries
 open PolyTypes
 open ConstraintTypes
 
-module MakeAtom(P : Polynomial) =
+module Make(P : Polynomial) =
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
 struct
     module Polynomial_ = P

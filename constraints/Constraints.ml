@@ -2,10 +2,10 @@ open Batteries
 open PolyTypes
 open ConstraintTypes
    
-module MakeConstraint(P : Polynomial) =
+module Make(P : Polynomial) =
 (*Polynomial Constraints are conjunctions of PolynomialConstraintsAtoms*)
 struct
-    module Atom_ = Atoms.MakeAtom(P)
+    module Atom_ = Atoms.Make(P)
         
     type t = Atom_.t list
     
