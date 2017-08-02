@@ -13,10 +13,12 @@ let suite =
                 let varstring = String.concat " " ["("; "VAR"; vars; ")"]
                 and rulestring = String.concat " " ["("; "RULES"; "\n"; String.concat "\n" transitions; ")"] in
                 let text = String.concat "\n" [varstring; rulestring] in
-                Printf.fprintf stderr "%s\n" text;
                 assert_equal_string (Mocks.TransitionGraph.to_string (Reader.read_transitiongraph text)) text))
              [
                ("No var, no guard, self loop", "", ["a (  ) -> t ( a (  ) )"]);
-               ("B", "A", ["a ( A ) -> t ( a ( A ) ) :|: A > 0"]);
+               ("No var, trivial guard, self loop", "", ["a (  ) -> t ( a (  ) ) :|: 1 > 0"]);
+               ("No var, two locs", "", ["a (  ) -> t ( b (  ) )"]);
+               ("No var, two locs", "", ["a (  ) -> t ( b (  ) )"]);
+               ("One var, self loop", "A", ["a ( A ) -> t ( b ( A ) )"]);
              ]
   )                  
