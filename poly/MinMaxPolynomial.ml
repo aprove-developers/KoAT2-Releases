@@ -6,8 +6,8 @@ module MakeMinMaxPolynomial(Var : PolyTypes.ID)(Value : Number.Numeric) =
     module RenameMap_ = RenameMap.MakeRenameMap(Var)
     module Polynomial_ = Polynomials.MakePolynomial(Var)(Value)
                           
-    (* Infinity is max of an empty list *)
-    (* Minus Infinity is min of an empty list *)
+    (* Minus Infinity is max of an empty list *)
+    (* Infinity is min of an empty list *)
     type t =
       | Poly of Polynomial_.t
       | Max of t list
