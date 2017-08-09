@@ -34,6 +34,6 @@ struct
       | [] -> true
       | _ -> false
       
-    let filter_linear constr = List.filter Atom_.is_linear constr 
+    let drop_nonlinear constr = List.filter Atom_.is_linear constr 
 
 end
