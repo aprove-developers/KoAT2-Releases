@@ -77,7 +77,6 @@ struct
       
     let is_linear (atom : t) =
       Polynomial_.is_linear (fst atom) && Polynomial_.is_linear (snd atom)
-
         
     let simplify = function
       | (p1, comp, p2)-> (P.simplify p1, comp, P.simplify p2)

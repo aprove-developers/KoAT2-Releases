@@ -28,6 +28,7 @@ module type Atom =
         
         (*handling*)
         val normalise : t->t
+        val remove_strictness : t->t
         
         (*boolean tests*)
         val is_gt : t -> bool
@@ -72,5 +73,7 @@ module type Constraint =
         
         val rename : t -> Atom_.Polynomial_.RenameMap_.t -> t
         val eval_bool : t -> Atom_.Polynomial_.Valuation_.t -> bool
-        val filter_linear : t -> t
+        val drop_nonlinear : t -> t
+        val drop_not_equal : t -> t
+        val to_less_equal : Atom_.t -> t
     end

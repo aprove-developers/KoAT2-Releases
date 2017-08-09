@@ -456,6 +456,24 @@ module PolynomialConstraintsTest (C : Constraint) =
                             ("x == y && y == z","x == y && y == z");
                             
                         ]);
+                        
+            ("drop_not_equal" >:::
+                List.map (fun (expected, constr) ->
+                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.drop_not_equal (Reader.read_constraint constr))))
+                        [
+                            ("x == y ","x == y && z <> 3");
+                        ]);
+                        
+            ("to_less_equal" >:::
+                List.map (fun (expected, atom) ->
+                      atom >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.to_less_equal (Reader.read_atom atom) )))
+                        [
+                            ("x <= y && y<=x ","x == y");
+                            ("x <= y - 1", "x < y");
+                            ("x <= y - 1","y > x");
+                            
+                        ]);
+             
         ]
         
       end
