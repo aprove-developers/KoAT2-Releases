@@ -33,5 +33,7 @@ struct
     let is_true = function
       | [] -> true
       | _ -> false
+      
+    let filter_linear constr = List.filter Atom_.is_linear constr 
 
 end

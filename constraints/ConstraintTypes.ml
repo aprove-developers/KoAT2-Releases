@@ -72,4 +72,5 @@ module type Constraint =
         
         val rename : t -> Atom_.Polynomial_.RenameMap_.t -> t
         val eval_bool : t -> Atom_.Polynomial_.Valuation_.t -> bool
+        val filter_linear : t -> t
     end
