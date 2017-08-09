@@ -135,11 +135,11 @@ module PolynomialTest(P : Polynomial) =
                     List.map (fun (expected, expression) ->
                         expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_univariate_linear (Reader.read_polynomial expression))))
                             [
-                                (false, " 1 ");
+                                (true, " 1 ");
                                 (true, " x ");
                                 (false, " x^2 + y^3 ");
                                 (true, " - - x ");
-                                (false, " x ^ 0 ");
+                                (true, " x ^ 0 ");
                                 (false, " x - 100 * y + 3 * z ");
                                 (false, " x ^ 2 ");
                                 (true, " 2 * x "); 
@@ -153,11 +153,11 @@ module PolynomialTest(P : Polynomial) =
                     List.map (fun (expected, expression) ->
                         expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_linear (Reader.read_polynomial expression))))
                             [
-                                (false, " 1 ");
+                                (true, " 1 ");
                                 (true, " x ");
                                 (false, " x^2 + y^3 ");
                                 (true, " - - x ");
-                                (false, " x ^ 0 ");
+                                (true, " x ^ 0 ");
                                 (true, " x - 100 * y + 3 * z ");
                                 (false, " x ^ 2 ");
                                 (true, " 2 * x "); 
@@ -166,6 +166,8 @@ module PolynomialTest(P : Polynomial) =
                                 (true , "x*y*z*a*b*c + d - x*y*z*a*b*c");
                                 (false, "-10*z^3 + 10 * z^3 + x*x*x*x^0");
                                 (true, "x^0 + y^0 + z + f + g");
+                                (true, "3");
+                                (true, "0");
                             ];
                     );
               ]

@@ -445,6 +445,17 @@ module PolynomialConstraintsTest (C : Constraint) =
                             (false, "x^2 > 0 && y^3 < 100 && x^5+y^6-z^3 <> x^2+ 5*x*y*z");
                             (true, "x^2 > 0 && y^3 < 126 && x^5+y^6-z^3 <> x^2+ 5*x*y*z");
                         ]);
+                        
+            ("filter_linear" >:::
+                List.map (fun (expected, constr) ->
+                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.filter_linear (Reader.read_constraint constr) )))
+                        [
+                            ("x <> 0 && 3 > 2", " x^3+2*x -1 < x^5 && x <> 0 && 3 > 2 " );
+                            ("","x^2 < x*y + 3");
+                            ("3 < x","3 < x + y^3 - y*y^2");
+                            ("x == y && y == z","x == y && y == z");
+                            
+                        ]);
         ]
         
       end
