@@ -7,6 +7,8 @@ module type Atom =
 
         module Comparator : sig
           type t = GT | GE | LT | LE | NEQ | EQ
+          val values : t list
+          val to_string : t -> string
         end
                                                   
         type t = Polynomial_.t * Comparator.t * Polynomial_.t

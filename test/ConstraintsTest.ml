@@ -13,51 +13,42 @@ module Parser =
       |> Reader.read_constraint
       |> Mocks.TransitionGraph.Transition_.Constraint_.to_string
 
-    
+    let comp_tests comp = 
+      comp >::: [
+          "Constants" >:: (fun _ -> assert_equal
+                                      ("42 " ^ comp ^ " 42")
+                                      (to_constr_and_back ("42 " ^ comp ^ " 42"))
+                          );
+          "Constants and Poly" >:: (fun _ -> assert_equal
+                                               ("42 " ^ comp ^ " ((x^2)+(((5*x)*y)*z))")
+                                               (to_constr_and_back (" 42 " ^ comp ^ " x^2+ 5*x*y*z "))
+                                   );
+          "Poly and Poly" >:: (fun _ -> assert_equal
+                                          ("(((x^5)+(y^6))+(-(z^3))) " ^ comp ^ " ((x^2)+(((5*x)*y)*z))")
+                                          (to_constr_and_back (" x^5+y^6-z^3 " ^ comp ^ " x^2+ 5*x*y*z "))
+                              );
+        ]
+      
     let tests =
-        "Parser" >::: [
-            "Positive Tests" >::: (
-                List.map (fun (testname, expected, atom) ->
+      "Parser" >::: [
+          "All comparators" >::: List.map comp_tests ["<"; "<="; ">"; ">="; "=="; "<>"];
+          "All together" >::: (
+            List.map (fun (testname, expected, atom) ->
                 testname >:: (fun _ -> assert_equal expected (to_constr_and_back atom)))
-                        [
-                        ("Constants LT", "42 < 42", " 42 < 42 ");
-                        ("Constants LE", "42 <= 42", " 42 <= 42 ");
-                        ("Constants GT", "42 > 42", " 42 > 42 ");
-                        ("Constants GE", "42 >= 42", " 42 >= 42 ");
-                        ("Constants EQ", "42 == 42", " 42 == 42 ");
-                        ("Constants NEQ", "42 <> 42", " 42 <> 42 ");
-                        ("Constants ", "42 < 42 /\ 1 >= 0 /\ 2 <= 4 /\ 6 == 7", " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 == 7");
-                        
-                        ("Constant and Poly LT", "42 < ((x^2)+(((5*x)*y)*z))", " 42 < x^2+ 5*x*y*z ");
-                        ("Constant and Poly LE", "42 <= ((x^2)+(((5*x)*y)*z))", " 42 <= x^2+ 5*x*y*z ");
-                        ("Constant and Poly GT", "42 > ((x^2)+(((5*x)*y)*z))", " 42 > x^2+ 5*x*y*z ");
-                        ("Constant and Poly GE", "42 >= ((x^2)+(((5*x)*y)*z))", " 42 >= x^2+ 5*x*y*z ");
-                        ("Constant and Poly EQ", "42 == ((x^2)+(((5*x)*y)*z))", " 42 == x^2+ 5*x*y*z ");
-                        ("Constant and Poly NEQ", "42 <> ((x^2)+(((5*x)*y)*z))", " 42 <> x^2+ 5*x*y*z ");
-                        ("Constants and Variables", "x > 0 /\ y < 3", "x > 0 && y < 3");
-                        ("Constants and Polynomials", "(x*x) > 0 /\ (y^2) < 3 /\ ((x^2)+(((5*x)*y)*z)) <> 17", "x*x > 0 && y^2 < 3 && x^2+ 5*x*y*z <> 17");
-                        
-                        
-                        ("Poly and Poly LT", "(((x^5)+(y^6))+(-(z^3))) < ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
-                        ("Poly and Poly LE", "(((x^5)+(y^6))+(-(z^3))) <= ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
-                        ("Poly and Poly GT", "(((x^5)+(y^6))+(-(z^3))) > ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
-                        ("Poly and Poly GE", "(((x^5)+(y^6))+(-(z^3))) >= ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
-                        ("Poly and Poly EQ", "(((x^5)+(y^6))+(-(z^3))) == ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 == x^2+ 5*x*y*z ");
-                        ("Poly and Poly NEQ", "(((x^5)+(y^6))+(-(z^3))) <> ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 <> x^2+ 5*x*y*z ");
-                        ("Polynomial Constraints", "(((x^5)+(y^6))+(-(z^3))) <> ((x^2)+(((5*x)*y)*z)) /\ (z^3) < (x+y)","x^5+y^6-z^3 <> x^2+ 5*x*y*z && z^3 < x +y" )
-
-                        ]
-            );
-            "Negative Tests" >::: 
-            (
-                List.map (fun (testname, atom) ->
-                    testname >:: (fun _ -> assert_raises (Reader.Lexer.SyntaxError (testname)) (fun _ -> to_constr_and_back atom)))
-                            [
-                            ("Unexpected char: =", "x = y");
-                            ]
-                );
-                
-            
+                     [
+                       ("Constants ", "42 < 42 /\ 1 >= 0 /\ 2 <= 4 /\ 6 == 7", " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 == 7");
+                       ("Constants and Variables", "x > 0 /\ y < 3", "x > 0 && y < 3");
+                       ("Constants and Polynomials", "(x*x) > 0 /\ (y^2) < 3 /\ ((x^2)+(((5*x)*y)*z)) <> 17", "x*x > 0 && y^2 < 3 && x^2+ 5*x*y*z <> 17");
+                       ("Polynomial Constraints", "(((x^5)+(y^6))+(-(z^3))) <> ((x^2)+(((5*x)*y)*z)) /\ (z^3) < (x+y)","x^5+y^6-z^3 <> x^2+ 5*x*y*z && z^3 < x +y" );
+                     ]
+          );
+          "Negative Tests" >::: (
+            List.map (fun (testname, atom) ->
+                testname >:: (fun _ -> assert_raises (Reader.Lexer.SyntaxError (testname)) (fun _ -> to_constr_and_back atom)))
+                     [
+                       ("Unexpected char: =", "x = y");
+                     ]
+          );
         ]
         
   end

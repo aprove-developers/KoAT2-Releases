@@ -9,7 +9,9 @@ struct
 
     module Comparator =
       struct
-        type t = GT | GE | LT | LE | NEQ | EQ        
+        type t = GT | GE | LT | LE | NEQ | EQ
+
+        let values = [GT; GE; LT; LE; NEQ; EQ]
                                          
         let is_inverted (comp1 : t) (comp2 : t) =
           match (comp1, comp2) with
