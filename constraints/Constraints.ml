@@ -22,7 +22,7 @@ struct
     let eval_bool (constr:t) (varmapping : P.Valuation_.t) = 
             constr
         |> List.map (fun atom -> (Atom_.eval_bool atom varmapping))
-        |> List.fold_left (&&) true
+        |> List.for_all identity
         
     let lift atom = [ atom ]
     
