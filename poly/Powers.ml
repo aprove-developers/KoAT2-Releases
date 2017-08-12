@@ -23,8 +23,8 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let to_string power =
       if power.n <= 0 then "1"
-      else if power.n == 1 then (Var.to_string power.var) 
-      else String.concat "^" [(Var.to_string power.var); (string_of_int power.n)]
+      else if power.n == 1 then Var.to_string power.var
+      else Var.to_string power.var ^ "^" ^ string_of_int power.n
 
     let (==) power1 power2 =
       (power1.var == power2.var) && ( power1.n == power2.n)

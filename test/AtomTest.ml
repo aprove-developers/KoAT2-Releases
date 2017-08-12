@@ -115,7 +115,7 @@ module Methods (C : Constraint) =
             ("is_lt" >:::  
                 List.map (fun (expected, atom) ->
                       atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_lt (Reader.read_atom atom))))
-                      (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
+                      (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (true, " < ");
                             (false,  " <= ");
@@ -129,7 +129,7 @@ module Methods (C : Constraint) =
             ("is_le" >:::
                 List.map (fun (expected, atom) ->
                       atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_le (Reader.read_atom atom))))
-                        (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
+                        (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (false, " < ");
                             (true,  " <= ");
@@ -143,7 +143,7 @@ module Methods (C : Constraint) =
             ("is_gt" >:::
                 List.map (fun (expected, atom) ->
                       atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_gt (Reader.read_atom atom))))
-                        (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
+                        (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (false, " < ");
                             (false,  " <= ");
@@ -157,7 +157,7 @@ module Methods (C : Constraint) =
             ("is_ge" >:::
                 List.map (fun (expected, atom) ->
                       atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_ge (Reader.read_atom atom))))
-                        (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
+                        (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (false, " < ");
                             (false,  " <= ");
@@ -170,7 +170,7 @@ module Methods (C : Constraint) =
             ("is_eq" >:::
                 List.map (fun (expected, atom) ->
                       atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_eq (Reader.read_atom atom))))
-                        (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
+                        (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (false, " < ");
                             (false,  " <= ");
@@ -184,7 +184,7 @@ module Methods (C : Constraint) =
             ("is_neq" >:::
                 List.map (fun (expected, atom) ->
                       atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_neq (Reader.read_atom atom))))
-                        (List.map (fun (a,b)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1])))
+                        (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (false, " < ");
                             (false,  " <= ");
@@ -197,14 +197,14 @@ module Methods (C : Constraint) =
                         
             ("(==)" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                      (String.concat "==" [atom1 ; atom2]) >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.(==) (Reader.read_atom atom1) (Reader.read_atom atom2))))
-                        (List.map (fun (a,b,c)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1]), (String.concat c [default_poly_l_2 ; default_poly_r_1]))) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
+                    (atom1 ^ "==" ^ atom2) >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.(==) (Reader.read_atom atom1) (Reader.read_atom atom2))))
+                        (List.map (fun (a,b,c)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1, default_poly_l_2 ^ c ^ default_poly_r_1)) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
             );
                         
             ("is_same_constr" >:::
                 List.map (fun (expected, atom1, atom2) ->
                       atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_same (Reader.read_atom atom1) (Reader.read_atom atom2))))
-                        (List.map (fun (a,b,c)-> (a, (String.concat b [default_poly_l_1 ; default_poly_r_1]), (String.concat c [default_poly_l_2 ; default_poly_r_1]))) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
+                        (List.map (fun (a,b,c)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1, default_poly_l_2 ^ c ^ default_poly_r_1)) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
             );
             
             ("get_variables" >:::

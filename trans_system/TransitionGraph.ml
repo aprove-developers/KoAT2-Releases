@@ -18,7 +18,7 @@ module StdLocation =
     (*Needed by ocamlgraph*)    
     let hash l = Hashtbl.hash l.name
                        
-    let to_string l = String.concat "_" ["loc"; l.name]
+    let to_string l = "loc_" ^ l.name
                             
     let of_string name = { name }
                        

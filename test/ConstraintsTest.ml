@@ -15,15 +15,15 @@ module Parser =
 
     let comp_tests comp = 
       comp >::: [
-          "Constants" >:: (fun _ -> assert_equal
+          "Constants" >:: (fun _ -> assert_equal ~printer:identity
                                       ("42 " ^ comp ^ " 42")
                                       (to_constr_and_back ("42 " ^ comp ^ " 42"))
                           );
-          "Constants and Poly" >:: (fun _ -> assert_equal
+          "Constants and Poly" >:: (fun _ -> assert_equal ~printer:identity
                                                ("42 " ^ comp ^ " ((x^2)+(((5*x)*y)*z))")
                                                (to_constr_and_back (" 42 " ^ comp ^ " x^2+ 5*x*y*z "))
                                    );
-          "Poly and Poly" >:: (fun _ -> assert_equal
+          "Poly and Poly" >:: (fun _ -> assert_equal ~printer:identity
                                           ("(((x^5)+(y^6))+(-(z^3))) " ^ comp ^ " ((x^2)+(((5*x)*y)*z))")
                                           (to_constr_and_back (" x^5+y^6-z^3 " ^ comp ^ " x^2+ 5*x*y*z "))
                               );
@@ -34,7 +34,7 @@ module Parser =
           "All comparators" >::: List.map comp_tests ["<"; "<="; ">"; ">="; "=="; "<>"];
           "All together" >::: (
             List.map (fun (testname, expected, atom) ->
-                testname >:: (fun _ -> assert_equal expected (to_constr_and_back atom)))
+                testname >:: (fun _ -> assert_equal ~printer:identity expected (to_constr_and_back atom)))
                      [
                        ("Constants ", "42 < 42 /\ 1 >= 0 /\ 2 <= 4 /\ 6 == 7", " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 == 7");
                        ("Constants and Variables", "x > 0 /\ y < 3", "x > 0 && y < 3");

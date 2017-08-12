@@ -19,10 +19,10 @@ module Polynomial : Parseable.Polynomial =
     let rec to_string = function
       | Constant c -> string_of_int c
       | Variable v -> v
-      | Neg t -> String.concat "" ["("; "-"; to_string t; ")"]
-      | Plus (t1,t2) -> String.concat "" ["("; to_string t1; "+"; to_string t2; ")"]
-      | Times (t1,t2) -> String.concat "" ["("; to_string t1; "*"; to_string t2; ")"]
-      | Pow (p,n) -> String.concat "" ["("; to_string p; "^"; string_of_int n; ")"]
+      | Neg t -> "(-" ^ to_string t ^ ")"
+      | Plus (t1,t2) -> "(" ^ to_string t1 ^ "+" ^ to_string t2 ^ ")"
+      | Times (t1,t2) -> "(" ^ to_string t1 ^ "*" ^ to_string t2 ^ ")"
+      | Pow (p,n) -> "(" ^ to_string p ^ "^" ^ string_of_int n ^ ")"
   end
 
 module Atom : Parseable.Atom =
@@ -43,12 +43,12 @@ module Atom : Parseable.Atom =
     let mk_eq p1 p2 = Equal(p1, p2)
     let mk_neq p1 p2 = Neq(p1, p2)
     let to_string c = match c with
-      | Equal (p1, p2) -> String.concat " == " [(Polynomial.to_string p1); (Polynomial.to_string p2)]
-      | Neq (p1, p2) -> String.concat " <> " [(Polynomial.to_string p1); (Polynomial.to_string p2)]
-      | LessThan (p1, p2) -> String.concat " < " [(Polynomial.to_string p1); (Polynomial.to_string p2)]
-      | LessEqual (p1, p2) -> String.concat " <= " [(Polynomial.to_string p1); (Polynomial.to_string p2)]
-      | GreaterEqual (p1, p2) -> String.concat " >= " [(Polynomial.to_string p1); (Polynomial.to_string p2)]
-      | GreaterThan (p1, p2) -> String.concat " > " [(Polynomial.to_string p1); (Polynomial.to_string p2)]
+      | Equal (p1, p2) -> Polynomial.to_string p1 ^ " == " ^ Polynomial.to_string p2
+      | Neq (p1, p2) -> Polynomial.to_string p1 ^ " <> " ^ Polynomial.to_string p2
+      | LessThan (p1, p2) -> Polynomial.to_string p1 ^ " < " ^ Polynomial.to_string p2
+      | LessEqual (p1, p2) -> Polynomial.to_string p1 ^ " <= " ^ Polynomial.to_string p2
+      | GreaterEqual (p1, p2) -> Polynomial.to_string p1 ^ " >= " ^ Polynomial.to_string p2
+      | GreaterThan (p1, p2) -> Polynomial.to_string p1 ^ " > " ^ Polynomial.to_string p2
   end
 
 module Constraint : Parseable.Constraint = 
@@ -92,7 +92,10 @@ module Transition : Parseable.Transition =
       let varstring = String.concat "," (List.map Constraint_.Atom_.Polynomial_.Var.to_string transition.vars)
       and assignmentstring = String.concat "," (List.map Constraint_.Atom_.Polynomial_.to_string transition.assignments) in
       let without_guard = [start; "("; varstring; ")"; "->"; transition.name; "("; target; "("; assignmentstring; ")"; ")"] in
-      String.concat " " (if Constraint_.is_true transition.guard then without_guard else List.append without_guard [":|:"; Constraint_.to_string transition.guard])
+      let transition_elements = if Constraint_.is_true transition.guard
+                                then without_guard
+                                else List.append without_guard [":|:"; Constraint_.to_string transition.guard] in
+      String.concat " " transition_elements
       
   end
 
@@ -115,6 +118,6 @@ module TransitionGraph : Parseable.TransitionGraph =
     let to_string graph =
       let varstring = String.concat " " ["("; "VAR"; String.concat "" (List.map Transition_.Constraint_.Atom_.Polynomial_.Var.to_string graph.vars); ")"]
       and edgestring = String.concat " " ["("; "RULES"; "\n"; String.concat "\n" (List.map (fun (start, transition, target) -> Transition_.to_string (Location_.to_string start) (Location_.to_string target) transition) graph.edges); ")"] in
-      String.concat "\n" [varstring; edgestring]
+      varstring ^ "\n" ^ edgestring
       
   end

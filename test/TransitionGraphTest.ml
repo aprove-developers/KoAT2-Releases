@@ -12,7 +12,7 @@ let suite =
         testname >:: (fun _ ->
                 let varstring = String.concat " " ["("; "VAR"; vars; ")"]
                 and rulestring = String.concat " " ["("; "RULES"; "\n"; String.concat "\n" transitions; ")"] in
-                let text = String.concat "\n" [varstring; rulestring] in
+                let text = varstring ^ "\n" ^ rulestring in
                 assert_equal_string (Mocks.TransitionGraph.to_string (Reader.read_transitiongraph text)) text))
              [
                ("No var, no guard, self loop", "", ["a (  ) -> t ( a (  ) )"]);

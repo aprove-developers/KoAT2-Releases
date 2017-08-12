@@ -34,8 +34,8 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let to_string_simplified scaled =
       if scaled.coeff == Value.one then Monomial.to_string scaled.mon
-      else if scaled.mon == Monomial.one then String.concat "" ["(" ; (Value.to_string scaled.coeff) ; ")"] 
-      else String.concat "" ["(" ; (Value.to_string scaled.coeff) ; ")" ; "*" ; (Monomial.to_string scaled.mon)]
+      else if scaled.mon == Monomial.one then "(" ^ Value.to_string scaled.coeff ^ ")"
+      else "(" ^ Value.to_string scaled.coeff ^ ")" ^ "*" ^ Monomial.to_string scaled.mon
       
     let to_string scaled = to_string_simplified (simplify scaled)
                          

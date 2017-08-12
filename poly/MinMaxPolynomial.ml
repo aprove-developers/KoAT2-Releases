@@ -111,12 +111,12 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let rec to_string = function
       | Poly p -> Polynomial_.to_string p
-      | Max bounds -> String.concat "" ["max{"; String.concat ", " (List.map to_string bounds); "}"]
-      | Min bounds -> String.concat "" ["min{"; String.concat ", " (List.map to_string bounds); "}"]
-      | Neg b -> String.concat "" ["-("; to_string b; ")"]
-      | Pow (v,b) -> String.concat "" ["("; Value.to_string v; "^"; to_string b; ")"]
-      | Sum bounds -> String.concat "" ["("; String.concat "+" (List.map to_string bounds); ")"]
-      | Product bounds -> String.concat "" ["("; String.concat "*" (List.map to_string bounds); ")"]
+      | Max bounds -> "max{" ^ String.concat ", " (List.map to_string bounds) ^ "}"
+      | Min bounds -> "min{" ^ String.concat ", " (List.map to_string bounds) ^ "}"
+      | Neg b -> "-(" ^ to_string b ^ ")"
+      | Pow (v,b) -> "(" ^ Value.to_string v ^ "^" ^ to_string b ^ ")"
+      | Sum bounds -> "(" ^ String.concat "+" (List.map to_string bounds) ^ ")"
+      | Product bounds -> "(" ^ String.concat "*" (List.map to_string bounds) ^ ")"
 
     let rec vars = function
       | Poly p -> Polynomial_.vars p
