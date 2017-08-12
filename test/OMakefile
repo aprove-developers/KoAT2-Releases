@@ -25,7 +25,8 @@ OCAML_LIBS[] =
 
 TESTS[] =
     PolynomialsTest
-    PolynomialConstraintsTest
+    AtomTest
+    ConstraintsTest
     SMTTest
     TransitionGraphTest
 

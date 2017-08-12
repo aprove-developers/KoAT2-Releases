@@ -3,7 +3,7 @@ open OUnit2
 open PolyTypes
 open ConstraintTypes
 
-module PolynomialParserTest =
+module Parser =
   struct
     module Reader = Readers.Make(Mocks.TransitionGraph)
 
@@ -50,7 +50,7 @@ module PolynomialParserTest =
 
   end
   
-module PolynomialTest(P : Polynomial) =
+module Methods (P : Polynomial) =
   struct
     module Reader = Readers.Make(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(Constraints.Make(P))))
                

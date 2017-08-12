@@ -1,22 +1,22 @@
 open Batteries
 open OUnit2
    
-module StringIDPolynomialConstraintsAtomTest = PolynomialConstraintsTest.PolynomialConstraintsAtomTest(Constraints.Make(Polynomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))))
-module StringIDPolynomialConstraintsTest = PolynomialConstraintsTest.PolynomialConstraintsTest(Constraints.Make(Polynomials.Make(ID.StringID) (Number.MakeNumeric(Big_int))))
+module StringIDAtomTest = AtomTest.Methods(Constraints.Make(Polynomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))))
+module StringIDConstraintsTest = ConstraintsTest.Methods(Constraints.Make(Polynomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))))
 
-module StringIDPolynomial = PolynomialsTest.PolynomialTest(StdPoly.Polynomial)
+module StringIDPolynomial = PolynomialsTest.Methods(StdPoly.Polynomial)
                           
 let suite =
   "Suite" >::: [
       "Polynomial" >::: [
-        PolynomialsTest.PolynomialParserTest.tests;
+        PolynomialsTest.Parser.tests;
         StringIDPolynomial.tests;
       ];
       "PolynomialConstraints" >::: [
-          PolynomialConstraintsTest.PolynomialConstraintsParserTest.tests;
-          StringIDPolynomialConstraintsAtomTest.tests;
-          PolynomialConstraintsTest.PolynomialConstraintsAtomParserTest.tests;
-          StringIDPolynomialConstraintsTest.tests
+          ConstraintsTest.Parser.tests;
+          StringIDAtomTest.tests;
+          AtomTest.Parser.tests;
+          StringIDConstraintsTest.tests;
         ];
       TransitionGraphTest.suite;
       SMTTest.suite;
