@@ -14,7 +14,7 @@ module PrePostID =
     type t = Pre of StringID.t | Post of StringID.t
                                        
     let (==) a b = match (a, b) with
-        (Pre _, Post _) -> false
+      | (Pre _, Post _) -> false
       | (Post _, Pre _) -> false
       | (Pre id1, Pre id2) -> id1 == id2
       | (Post id1, Post id2) -> id1 == id2
@@ -25,8 +25,8 @@ module PrePostID =
       else Pre str
       
     let to_string = function
-        Pre str -> str
-      | Post str -> String.concat "" [str;"'"]
+      | Pre str -> str
+      | Post str -> str ^ "'"
                   
     let compare a b = raise (Failure "compare for PrePostID not yet implemented")
   end
