@@ -136,10 +136,10 @@ module Methods (C : Constraint) =
 
             ("get_variables" >:::
                 List.map (fun (expected, constr) ->
-                      constr >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string expected (C.vars (Reader.read_constraint constr) )))
+                      constr >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string (List.map Polynomial.Var.of_string expected) (C.vars (Reader.read_constraint constr) )))
                         [
-                            ([Polynomial.Var.of_string "x"], " x^3+2*x -1 < x^5 && x <> 0 && 3 > 2 " );
-                            ([Polynomial.Var.of_string "x"; Polynomial.Var.of_string "y"; Polynomial.Var.of_string "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 && y >= 0 && z <= 4" );
+                            (["x"], " x^3+2*x -1 < x^5 && x <> 0 && 3 > 2 " );
+                            (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 && y >= 0 && z <= 4" );
 
                         ]);
                         
