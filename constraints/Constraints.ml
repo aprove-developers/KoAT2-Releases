@@ -20,9 +20,7 @@ struct
     let rename (constr : t) (varmapping : P.RenameMap_.t) = List.map (fun atom -> Atom_.rename atom varmapping) constr
 
     let eval_bool (constr:t) (varmapping : P.Valuation_.t) = 
-            constr
-        |> List.map (fun atom -> (Atom_.eval_bool atom varmapping))
-        |> List.for_all identity
+      List.for_all (fun atom -> Atom_.eval_bool atom varmapping) constr
         
     let lift atom = [ atom ]
     
