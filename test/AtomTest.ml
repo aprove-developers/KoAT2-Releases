@@ -70,9 +70,10 @@ module Methods (C : Constraint) =
                                                        (Polynomial.Var.of_string "z"), (Polynomial.Var.of_string "c")]
     
     
-    let varlist_to_string varl =
+    let varset_to_string varl =
         varl
-        |> List.map Polynomial.Var.to_string
+        |> Set.map Polynomial.Var.to_string
+        |> Set.to_list
         |> String.concat ","
                                     
     let rename str =
@@ -92,18 +93,6 @@ module Methods (C : Constraint) =
     let assert_false b = assert_true (not b)
     
     
-    let rec equal_varlist varl1 varl2 = 
-        let sort1 = (List.sort Polynomial.Var.compare varl1) in
-        let sort2 = (List.sort Polynomial.Var.compare varl2) in
-        match (sort1,sort2) with 
-        | ([],[]) -> true
-        | (h1::t1, h2::t2) -> (Polynomial.Var.(==) h1 h2) && (equal_varlist t1 t2)
-        | (_,_) -> false
-        
-    let assert_equal_varlist = 
-        
-        assert_equal ~cmp:equal_varlist
-
     let tests = 
         let default_poly_l_1 = "x^5+y^6-z^3" in
         let default_poly_r_1 = "x^2+ 5*x*y*z" in
@@ -209,10 +198,10 @@ module Methods (C : Constraint) =
             
             ("get_variables" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal_varlist ~printer:varlist_to_string expected (C.Atom_.vars (Reader.read_atom atom) )))
+                      atom >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string (Set.map Polynomial.Var.of_string (Set.of_list expected)) (C.Atom_.vars (Reader.read_atom atom) )))
                         [
-                            ([Polynomial.Var.of_string "x"], " x^3+2*x -1 < x^5 " );
-                            ([Polynomial.Var.of_string "x"; Polynomial.Var.of_string "y"; Polynomial.Var.of_string "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
+                            (["x"], " x^3+2*x -1 < x^5 " );
+                            (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
 
                         ]);
                         

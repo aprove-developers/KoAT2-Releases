@@ -102,7 +102,7 @@ struct
       | (p1, comp, p2) -> String.concat " " [P.to_string p1; Comparator.to_string comp; P.to_string p2]
         
     let vars = function
-      | (p1, comp, p2) -> List.unique (List.append (P.vars p1) (P.vars p2))
+      | (p1, _, p2) -> Set.union (P.vars p1) (P.vars p2)
         
     let rename (constr : t) (varmapping : P.RenameMap_.t) =
       match constr with

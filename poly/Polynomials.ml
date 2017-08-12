@@ -99,8 +99,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       |> simplify
       |> monomials
       |> List.map Monomial.vars
-      |> List.concat
-      |> List.unique
+      |> List.fold_left Set.union Set.empty
       
     (* Checks whether a polynomial is a single variable *)
     let is_var poly =
@@ -125,7 +124,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     (* Checks whether a polyomial is linear and contains just one active variable*)
     let is_univariate_linear poly = 
-      degree poly == 1 && List.length (vars poly) == 1
+      degree poly == 1 && Set.cardinal (vars poly) == 1
 
     let is_const poly = degree poly <= 0
 

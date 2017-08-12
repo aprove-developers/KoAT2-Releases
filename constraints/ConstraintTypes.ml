@@ -42,7 +42,7 @@ module type Atom =
         
         (*export*)
         val to_string : t -> string
-        val vars : t -> Polynomial_.Var.t list
+        val vars : t -> Polynomial_.Var.t Set.t
         val rename : t -> Polynomial_.RenameMap_.t -> t
         val eval_bool : t -> Polynomial_.Valuation_.t -> bool
     end
@@ -54,7 +54,7 @@ module type Constraint =
         type t = Atom_.t list  
         
         (*getting information*)
-        val vars : t -> Atom_.Polynomial_.Var.t list
+        val vars : t -> Atom_.Polynomial_.Var.t Set.t
         
         (*creation*)
         val lift : Atom_.t -> t      

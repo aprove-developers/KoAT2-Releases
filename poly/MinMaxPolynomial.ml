@@ -120,12 +120,12 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let rec vars = function
       | Poly p -> Polynomial_.vars p
-      | Max bounds -> List.flatten (List.map vars bounds)
-      | Min bounds -> List.flatten (List.map vars bounds)
+      | Max bounds -> List.fold_left Set.union Set.empty (List.map vars bounds)
+      | Min bounds -> List.fold_left Set.union Set.empty (List.map vars bounds)
       | Neg b -> vars b
       | Pow (v,b) -> vars b
-      | Sum bounds -> List.flatten (List.map vars bounds)
-      | Product bounds -> List.flatten (List.map vars bounds)
+      | Sum bounds -> List.fold_left Set.union Set.empty (List.map vars bounds)
+      | Product bounds -> List.fold_left Set.union Set.empty (List.map vars bounds)
 
     let degree n = raise (Failure "degree for MinMaxPolynomial not yet implemented")
     let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implemented")

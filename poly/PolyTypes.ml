@@ -63,7 +63,6 @@ module type RenameMap =
     val find : var -> t -> var -> var
   end
 
-                                              
 module type Evaluable =
   sig
     type t
@@ -74,7 +73,7 @@ module type Evaluable =
     val (==) : t -> t -> bool
     val of_string : string -> t
     val to_string : t -> string
-    val vars : t -> Var.t list
+    val vars : t -> Var.t Set.t
     val eval : t -> Valuation_.t -> Value.t
     val rename : RenameMap_.t -> t -> t
     val degree : t -> int

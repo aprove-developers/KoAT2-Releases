@@ -19,7 +19,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let fold ~const ~var ~times ~pow =
       List.fold_left (fun b power -> times b (Power.fold ~const ~var ~times ~pow power)) (const Value.one)
                    
-    let vars mon = List.unique (List.map Power.var mon)
+    let vars mon = Set.of_list (List.map Power.var mon)
              
     let degree mon =
          mon
@@ -61,9 +61,9 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       else false
       
     let is_univariate_linear mon =
-      match vars mon with
-        [x] -> degree_variable x mon == 1
-      | _ -> false
+      if Set.cardinal (vars mon) == 1 then
+        degree_variable (Set.choose (vars mon)) mon == 1
+      else false
 
     let (==) mon1 mon2 = equal_simplified (simplify mon1)(simplify mon2)
                        

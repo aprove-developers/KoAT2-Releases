@@ -4,7 +4,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct
     module Valuation_ = Valuation.Make(Var)(Value)
     module RenameMap_ = RenameMap.Make(Var)
-
+                      
     type t = {
         var : Var.t;
         n : int
@@ -29,7 +29,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let (==) power1 power2 =
       (power1.var == power2.var) && ( power1.n == power2.n)
 
-    let vars power = [power.var]
+    let vars power = Set.singleton power.var
 
     let eval power valuation =
       if power.n < 0 then Value.zero

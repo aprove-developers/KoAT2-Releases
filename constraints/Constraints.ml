@@ -12,10 +12,9 @@ struct
     let to_string (constr : t) = String.concat " /\ " (List.map Atom_.to_string constr)
         
     let vars constr =
-            constr
-        |> List.map (Atom_.vars)
-        |> List.concat
-        |> List.unique
+         constr
+      |> List.map (Atom_.vars)
+      |> List.fold_left Set.union Set.empty
         
     let rename (constr : t) (varmapping : P.RenameMap_.t) = List.map (fun atom -> Atom_.rename atom varmapping) constr
 
