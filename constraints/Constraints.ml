@@ -30,5 +30,17 @@ struct
     let is_true = function
       | [] -> true
       | _ -> false
+      
+    let to_less_equal atom =
+        match (Atom_.comparator atom) with
+            |Atom_.Comparator.LE -> lift atom
+            |Atom_.Comparator.LT -> lift (Atom_.remove_strictness atom)
+            |Atom_.Comparator.GE -> lift (Atom_.mk (Atom_.Comparator.LE)(Atom_.fst atom)(Atom_.snd atom))
+            |Atom_.Comparator.GT -> lift (Atom_.remove_strictness (Atom_.mk (Atom_.Comparator.LT)(Atom_.snd atom)(Atom_.fst atom)))
+            |Atom_.Comparator.EQ -> [Atom_.mk (Atom_.Comparator.LE)(Atom_.fst atom)(Atom_.snd atom); Atom_.mk (Atom_.Comparator.LE)(Atom_.snd atom)(Atom_.fst atom)]
+            |_ -> (lift atom) (*I don't know what to do with <>*)
+      
+    let drop_nonlinear constr = List.filter Atom_.is_linear constr 
+    let drop_not_equal constr = List.filter (fun x -> not (Atom_.is_neq x)) constr
 
 end

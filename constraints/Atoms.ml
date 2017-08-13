@@ -76,10 +76,24 @@ struct
         
     let is_inverted (atom1 : t) (atom2 : t) =
       Comparator.is_inverted (comparator atom1) (comparator atom2)
+      
+    let is_linear (atom : t) =
+      Polynomial_.is_linear (fst atom) && Polynomial_.is_linear (snd atom)
         
     let simplify = function
       | (p1, comp, p2)-> (P.simplify p1, comp, P.simplify p2)
-                
+     
+    let normalise (atom : t) =
+      let atom_in = simplify atom in
+        let fst_in = fst atom_in in
+        let snd_in = snd atom_in in
+          let fst_min_snd = Polynomial_.sub fst_in snd_in in
+          let const_part = Polynomial_.from_constant (Polynomial_.constant fst_min_snd) in
+          let new_left = Polynomial_.sub fst_min_snd const_part in
+          let new_right = Polynomial_.neg const_part in
+          (new_left, (comparator atom), new_right)
+        
+                 
     let (==) (atom1 : t) (atom2 : t) =
       match (atom1, atom2) with
       | ((p1, comp1, q1), (p2, comp2, q2)) ->
@@ -90,7 +104,7 @@ struct
       | ((p1, comp1, q1), (p2, comp2, q2)) ->
          (Comparator.is_inverted comp1 comp2 && P.(==) p1 q2 && P.(==) q1 p2) || atom1 == atom2 
         
-    (* In this setting everything represents integer values. Hence strictness can be removed by adding/subtracting one*)
+    (* In this setting everything represents integer values. Hence strictness can be removed by adding/subtracting one: TODO what happens if we are not working with ints?*)
 
     let remove_strictness (constr : t) =
       match constr with

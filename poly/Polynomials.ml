@@ -122,13 +122,13 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       |> List.for_all (fun scaled -> Value.equal (ScaledMonomial.coeff scaled) Value.one &&
                                        Monomial.is_univariate_linear (ScaledMonomial.monomial scaled))
 
-    (* Checks whether a polyomial is linear and contains just one active variable*)
+    (* Checks whether a polyomial is linear and contains at most one active variable*)
     let is_univariate_linear poly = 
-      degree poly == 1 && Set.cardinal (vars poly) == 1
+      degree poly <= 1 && Set.cardinal (vars poly) <= 1
 
     let is_const poly = degree poly <= 0
 
-    let is_linear poly = (degree poly == 1)
+    let is_linear poly = (degree poly <= 1)
 
     (*renames the variables occuring inside a polynomial*) 
 
