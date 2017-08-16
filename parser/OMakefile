@@ -35,11 +35,14 @@ FILES[] =
 LIB = parser
 
 OCamlLibrary($(LIB), $(FILES))
+InterfaceDoc($(LIB), $(FILES))
 
 clean:
   rm -f \
      *.omc \
+     *.idoc \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
      $(GEN_FILES) \
      *~
+

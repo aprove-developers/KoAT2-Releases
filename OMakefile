@@ -1,6 +1,39 @@
 USE_OCAMLFIND = true
 
-.PHONY: clean
+.PHONY: clean doc
+
+# Function that creates an intermediate format for a documentation
+# Has to be called from each package which should occur in the documentation
+# We also add documentation of ml-files, because we define module types in ml-files, to prevent duplication of code
+public.InterfaceDoc(name, files) =
+    protected.mlifiles = $(filter-exists $(addsuffix .mli, $(files)))
+    protected.mlfiles = $(filter-exists $(addsuffix .ml, $(files)))
+    protected.cmifiles = $(addsuffix .cmi, $(removesuffix $(mlifiles)))
+
+    $(name).idoc: $(mlifiles) $(mlfiles) $(cmifiles) /.PHONY/OCamlGeneratedFilesTarget
+        ocamlfind ocamldoc -dump $(name).idoc -stars \
+            $(PREFIXED_OCAMLINCLUDES) -package "$(OCAMLPACKS)" \
+            $(mlifiles) \
+            $(mlfiles) 
+    return $(name).idoc
+
+# All the intermediate formats of package documentations
+IDOCS[] =
+    poly/poly.idoc
+    constraints/constraints.idoc
+    smt/smtsolver.idoc
+    trans_system/transitionsystem.idoc
+    parser/parser.idoc
+
+# The directory where the documentation should be stored
+DOC_DIR = doc
+
+# Target how the whole documentation should be build
+doc: $(IDOCS)
+    mkdir -p $(DOC_DIR)
+    rm -rf $(DOC_DIR)/*
+    ocamlfind ocamldoc -d $(DOC_DIR) -stars -t "Koat" -html \
+        $(mapprefix -load, $(IDOCS))
 
 .SUBDIRS: poly constraints parser trans_system smt test
 
@@ -8,4 +41,6 @@ clean:
     rm -f \
         *.omc \
         *.log \
-        *.cache
+        *.cache \
+        $(DOC_DIR)/* \
+        *.idoc
