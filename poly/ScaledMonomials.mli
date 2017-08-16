@@ -1,6 +1,6 @@
 open Batteries
 
-(** TODO Internal *)
+(** Internal *)
 module Make
          (Var : PolyTypes.ID)
          (Value : Number.Numeric)

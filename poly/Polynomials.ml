@@ -14,9 +14,9 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     module Var = Var
     module Value = Value
 
-    let make scaleds = scaleds
+    let make = List.map (fun (coeff, mon) -> ScaledMonomial.make coeff mon)
 
-    let lift scaled = [scaled]
+    let lift coeff mon = [ScaledMonomial.make coeff mon]
 
     let fold ~const ~var ~neg ~plus ~times ~pow =
       List.fold_left (fun b scaled -> plus b (ScaledMonomial.fold ~const ~var ~times ~pow scaled)) (const Value.zero)
@@ -74,13 +74,11 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     (* Returns a variable as a polynomial *)
 
-    let from_scaled_monomial = lift
-
-    let from_monomial mon = from_scaled_monomial (ScaledMonomial.lift mon)
+    let from_monomial mon = lift Value.one mon
 
     let from_power var n = from_monomial (Monomial.lift var n)
       
-    let from_constant c = lift (ScaledMonomial.make c Monomial.one)
+    let from_constant c = lift c Monomial.one
 
     let from_var var = from_power var 1
 
@@ -145,7 +143,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
                
         let zero = []
                  
-        let one = lift ScaledMonomial.one
+        let one = lift Value.one Monomial.one
                 
         let neg poly =
           mult_with_const (Value.neg Value.one) poly

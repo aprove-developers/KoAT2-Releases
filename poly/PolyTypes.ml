@@ -194,22 +194,20 @@ module type Polynomial =
   sig
     type t
     type monomial
-    type scaled_monomial
 
     include Evaluable with type t := t
     include Math with type t := t
     include PartialOrder with type t := t
           
     (* Creation *)
-    val make : scaled_monomial list -> t
-    val lift : scaled_monomial -> t
+    val make : (Value.t * monomial) list -> t
+    val lift : Value.t -> monomial -> t
     val from_var : Var.t -> t
     val from_constant : Value.t -> t
     val from_var_string : string -> t
     val from_constant_int : int -> t
     val from_power : Var.t -> int -> t
     val from_monomial : monomial -> t
-    val from_scaled_monomial : scaled_monomial -> t
 
     val fold : const:(Value.t -> 'b) ->
                var:(Var.t -> 'b) ->

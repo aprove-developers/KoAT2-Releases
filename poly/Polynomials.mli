@@ -13,4 +13,3 @@ module Make
                      and module Valuation_ = Valuation.Make(Var)(Value)
                      and module RenameMap_ = RenameMap.Make(Var)
                      and type monomial = Monomials.Make(Var)(Value).t
-                     and type scaled_monomial = ScaledMonomials.Make(Var)(Value).t
