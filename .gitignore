@@ -35,3 +35,7 @@ test/Test
 parser/Parser.mli
 parser/Parser.ml
 parser/Lexer.ml
+
+#Ignore intermediate doc files and doc directory
+*.idoc
+doc

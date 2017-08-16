@@ -17,13 +17,15 @@ public.InterfaceDoc(name, files) =
             $(mlfiles) 
     return $(name).idoc
 
+CUSTOM_LIBS[] =
+    poly
+    constraints
+    smt
+    transitionsystem
+    parser
+
 # All the intermediate formats of package documentations
-IDOCS[] =
-    poly/poly.idoc
-    constraints/constraints.idoc
-    smt/smt.idoc
-    transitionsystem/transitionsystem.idoc
-    parser/parser.idoc
+IDOCS[] = $(foreach $(fun x => $(x)/$(x).idoc), $(CUSTOM_LIBS))
 
 # The directory where the documentation should be stored
 DOC_DIR = doc
@@ -35,7 +37,7 @@ doc: $(IDOCS)
     ocamlfind ocamldoc -d $(DOC_DIR) -stars -t "Koat" -html \
         $(mapprefix -load, $(IDOCS))
 
-.SUBDIRS: poly constraints parser transitionsystem smt test
+.SUBDIRS: $(CUSTOM_LIBS) test
 
 clean:
     rm -f \
