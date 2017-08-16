@@ -2,14 +2,12 @@ open Batteries
    
 module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct
-    module Power = Powers.Make(Var)(Value)
     module Monomial = Monomials.Make(Var)(Value)
     module ScaledMonomial = ScaledMonomials.Make(Var)(Value)
     module Valuation_ = Valuation.Make(Var)(Value)
     module RenameMap_ = RenameMap.Make(Var)
                       
     type t = ScaledMonomial.t list 
-    type power = Power.t
     type monomial = Monomial.t
     type scaled_monomial = ScaledMonomial.t
                          
@@ -80,11 +78,11 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let from_monomial mon = from_scaled_monomial (ScaledMonomial.lift mon)
 
-    let from_power power = from_monomial (Monomial.lift power)
+    let from_power var n = from_monomial (Monomial.lift var n)
       
     let from_constant c = lift (ScaledMonomial.make c Monomial.one)
 
-    let from_var var = from_power (Power.lift var)
+    let from_var var = from_power var 1
 
     let from_var_string str = from_var (Var.of_string str)
 

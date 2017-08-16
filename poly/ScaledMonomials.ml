@@ -5,7 +5,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct    
     module Valuation_ = Valuation.Make(Var)(Value)
     module RenameMap_ = RenameMap.Make(Var)
-    module Power = Powers.Make(Var)(Value)
     module Monomial = Monomials.Make(Var)(Value)
 
     type t = 
@@ -13,7 +12,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
         coeff : Value.t; 
         mon :   Monomial.t;
       }    
-    type power = Power.t
     type monomial = Monomial.t
 
     module Var = Var

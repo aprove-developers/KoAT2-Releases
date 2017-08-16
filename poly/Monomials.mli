@@ -10,4 +10,3 @@ module Make
                              and module Value = Value
                              and module Valuation_ = Valuation.Make(Var)(Value)
                              and module RenameMap_ = RenameMap.Make(Var)
-                             and type power = Powers.Make(Var)(Value).t

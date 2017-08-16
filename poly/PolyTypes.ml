@@ -117,10 +117,9 @@ module type Power =
 module type Monomial =
   sig
     type t
-    type power
     include Evaluable with type t := t
-    val make : power list -> t
-    val lift : power -> t
+    val make : (Var.t * int) list -> t
+    val lift : Var.t -> int -> t
     val degree_variable : Var.t -> t -> int
     val delete_var : Var.t -> t -> t
     val simplify : t -> t
@@ -139,7 +138,6 @@ module type Monomial =
 module type ScaledMonomial =
   sig
     type t
-    type power
     type monomial
     include Evaluable with type t := t
     include PartialOrder with type t := t
@@ -195,7 +193,6 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
 module type Polynomial =
   sig
     type t
-    type power
     type monomial
     type scaled_monomial
 
@@ -210,7 +207,7 @@ module type Polynomial =
     val from_constant : Value.t -> t
     val from_var_string : string -> t
     val from_constant_int : int -> t
-    val from_power : power -> t
+    val from_power : Var.t -> int -> t
     val from_monomial : monomial -> t
     val from_scaled_monomial : scaled_monomial -> t
 
