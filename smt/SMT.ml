@@ -1,5 +1,8 @@
 open Batteries
 
+(** Provides different implementations of SMT solvers *)
+   
+(** A unified interface for SMT solvers (currently supported: Z3) *)
 module type Solver =
   sig
     module Constraint : ConstraintTypes.Constraint
@@ -7,6 +10,7 @@ module type Solver =
     val satisfiable : Constraint.t -> bool
   end
 
+(** Constructs an SMT solver which uses the microsoft project Z3 *)
 module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constraint = C) =
   struct
     module Constraint = C
