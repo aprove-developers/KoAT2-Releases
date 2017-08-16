@@ -1,7 +1,11 @@
 open Batteries
 open ConstraintTypes
 open Lexing
-   
+
+(** Provides a unified interface of the parser and lexer for transition graphs *)
+(** With this module it is possible to abstract from the details of parsing and lexing *)
+
+(** Constructs a reader for the given transition graph *)
 module Make(G : Parseable.TransitionGraph) =
   struct
     module Parser = Parser.Make(G)

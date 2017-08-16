@@ -1,4 +1,7 @@
 {
+  (** Provides an lexer generated with ocamllex to lex transition graphs, its constraints and polynomials *)
+  
+  (** Constructs a lexer for transition graphs as well as its used constraints and polynomials *)
   module Make(G : Parseable.TransitionGraph) =
     struct
       open Lexing
