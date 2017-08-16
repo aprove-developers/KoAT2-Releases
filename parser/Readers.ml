@@ -2,8 +2,8 @@ open Batteries
 open ConstraintTypes
 open Lexing
 
-(** Provides a unified interface of the parser and lexer for transition graphs *)
-(** With this module it is possible to abstract from the details of parsing and lexing *)
+(** Provides a unified interface of the parser and lexer for transition graphs.
+    With this module it is possible to abstract from the details of parsing and lexing *)
 
 (** Constructs a reader for the given transition graph *)
 module Make(G : Parseable.TransitionGraph) =
@@ -16,7 +16,7 @@ module Make(G : Parseable.TransitionGraph) =
       Printf.fprintf outx "%s:%d:%d" pos.pos_fname
               pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
-    (* Takes a string and tries to parse and lexe it to the wanted type *)
+    (** Takes a string and tries to parse and lexe it to the wanted type *)
     let read rule str =
       let lexbuf = Lexing.from_string str in
       try rule Lexer.read lexbuf with

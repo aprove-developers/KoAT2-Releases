@@ -1,7 +1,7 @@
 open Batteries
 
-(** Provides module types which represent a minimal subset of their complete counterparts in the modules contraints and poly *)
-(** Those are the minimal methods needed to construct the types from a textual representation *)
+(** Provides module types which represent a minimal subset of their complete counterparts in the modules contraints and poly.
+    Those are the minimal methods needed to construct the types from a textual representation *)
 
 module type Polynomial =
   sig

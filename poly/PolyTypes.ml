@@ -158,7 +158,7 @@ module type ScaledMonomial =
                t -> 'b 
   end
 
-(** Modules including BaseMath define basic math operations
+(** Modules including BaseMath define basic math operations.
     They can be typeclass-like extended by MakeMath *)
 module type BaseMath =
   sig
