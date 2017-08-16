@@ -22,7 +22,7 @@ IDOCS[] =
     poly/poly.idoc
     constraints/constraints.idoc
     smt/smtsolver.idoc
-    trans_system/transitionsystem.idoc
+    transitionsystem/transitionsystem.idoc
     parser/parser.idoc
 
 # The directory where the documentation should be stored
@@ -35,7 +35,7 @@ doc: $(IDOCS)
     ocamlfind ocamldoc -d $(DOC_DIR) -stars -t "Koat" -html \
         $(mapprefix -load, $(IDOCS))
 
-.SUBDIRS: poly constraints parser trans_system smt test
+.SUBDIRS: poly constraints parser transitionsystem smt test
 
 clean:
     rm -f \

@@ -11,7 +11,7 @@ OCAMLINCLUDES[] =
     ../constraints
     ../parser
     ../smt
-    ../trans_system
+    ../transitionsystem
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
@@ -21,7 +21,7 @@ OCAML_LIBS[] =
     ../constraints/constraints
     ../parser/parser
     ../smt/smtsolver
-    ../trans_system/transitionsystem
+    ../transitionsystem/transitionsystem
 
 TESTS[] =
     PolynomialsTest
