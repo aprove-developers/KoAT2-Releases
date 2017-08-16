@@ -1,5 +1,8 @@
 open Batteries
 
+(** Provides all module types related to the transition system (program graph) *)
+
+(** A location is a node of a transition system and can be connected to other locations via transitions *)
 module type Location =
   sig
     type t
@@ -10,6 +13,10 @@ module type Location =
     val of_string : string -> t
   end
 
+(** A transition is an edge of a transition system.
+    It connects two locations and is annotated with a guard and an update
+    A guard has to be fulfiled for a state to reach another state via the transition
+    An update assigns variables a new value as a linear combination of the old values *)
 module type Transition =
   sig
     module Constraint_ : ConstraintTypes.Constraint
@@ -26,6 +33,7 @@ module type Transition =
     val to_string : string -> string -> t -> string
   end
 
+(** A graph is a integer transition system based on transitions and locations *)
 module type Graph =
   sig
     module Transition_ : Transition

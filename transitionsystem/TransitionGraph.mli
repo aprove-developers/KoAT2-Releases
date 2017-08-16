@@ -1,5 +1,7 @@
 open Batteries
 
+(** Provides default modules to create locations, transitions and transitionsystems *)
+
 module StdLocation : TransitionGraphTypes.Location
 
 module MakeTransition(C : ConstraintTypes.Constraint) : TransitionGraphTypes.Transition

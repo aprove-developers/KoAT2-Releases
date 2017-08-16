@@ -1,6 +1,5 @@
 open Batteries
 
-(** Locations of integer transition systems, should end up in a system using ocamlgraph *)
 module StdLocation =
   struct
     type t = {
