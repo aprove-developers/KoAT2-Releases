@@ -9,4 +9,3 @@ module Make
                          and module Valuation_ = Valuation.Make(Var)(Value)
                          and module RenameMap_ = RenameMap.Make(Var)
                          and type monomial = Monomials.Make(Var)(Value).t
-

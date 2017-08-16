@@ -1,6 +1,6 @@
 open Batteries
 
-(** Holds default implementations of a monomial *)
+(** Provides default implementations of a monomial *)
 
 (** Constructs a default monomial using a list of pairs of variables and their exponents *)
 module Make

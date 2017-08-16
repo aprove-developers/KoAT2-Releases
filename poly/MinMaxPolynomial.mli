@@ -1,6 +1,6 @@
 open Batteries
 
-(** Holds default implementations of a polynomial with min and max functions *)
+(** Provides default implementations of a polynomial with min and max functions *)
 
 (** Constructs a default MinMaxPolynomial based on a polynomial extending it with an algebraic data type *)
 module Make

@@ -20,8 +20,8 @@ module type ID =
     val compare : t -> t -> int
   end
 
-(** Modules including BasePartialOrder fulfil all requirements to become a partial order *)
-(** They can be typeclass-like extended by MakePartialOrder *)
+(** Modules including BasePartialOrder fulfil all requirements to become a partial order.
+    They can be typeclass-like extended by MakePartialOrder. *)
 module type BasePartialOrder =
   sig
     type t
@@ -158,8 +158,8 @@ module type ScaledMonomial =
                t -> 'b 
   end
 
-(** Modules including BaseMath define basic math operations *)
-(** They can be typeclass-like extended by MakeMath *)
+(** Modules including BaseMath define basic math operations
+    They can be typeclass-like extended by MakeMath *)
 module type BaseMath =
   sig
     type t

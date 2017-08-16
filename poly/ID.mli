@@ -1,6 +1,6 @@
 open Batteries
 
-(** Holds default implementations of an ID *)
+(** Provides default implementations of an ID *)
    
 (** An ID represented by a string *)
 module StringID : PolyTypes.ID
