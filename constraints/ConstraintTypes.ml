@@ -1,6 +1,9 @@
 open Batteries
 open PolyTypes
 
+(** Provides all module types related to constraints *)
+
+(** An atom is a comparison between two polynomials *)
 module type Atom =
   sig
         module Polynomial_ : Polynomial
@@ -53,6 +56,7 @@ module type Atom =
         val eval_bool : t -> Polynomial_.Valuation_.t -> bool
     end
 
+(** A constraint is a conjunction of atoms *)
 module type Constraint =
   sig
         module Atom_ : Atom
