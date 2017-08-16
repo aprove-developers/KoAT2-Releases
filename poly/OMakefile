@@ -17,7 +17,7 @@ FILES[] =
     MinMaxPolynomial
     ScaledMonomials
     PolyTypes
-    StdPoly
+    PolyImpl
 
 LIB = poly
 

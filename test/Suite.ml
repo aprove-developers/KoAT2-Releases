@@ -4,7 +4,7 @@ open OUnit2
 module StringIDAtomTest = AtomTest.Methods(Constraints.Make(Polynomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))))
 module StringIDConstraintsTest = ConstraintsTest.Methods(Constraints.Make(Polynomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))))
 
-module StringIDPolynomial = PolynomialsTest.Methods(StdPoly.Polynomial)
+module StringIDPolynomial = PolynomialsTest.Methods(PolyImpl.Polynomial)
                           
 let suite =
   "Suite" >::: [
