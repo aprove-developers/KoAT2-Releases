@@ -1,12 +1,16 @@
 open Batteries
 
+(** Provides all module types related to polynomials *)
+
+(** Modules including Eq hold a type that defines an equality relation on its elements *)
 module type Eq =
   sig
     type t
     val (==) : t -> t -> bool
     (* TODO val (!=) : t -> t -> bool *)
   end
-  
+
+(** An ID is a unique identifier for the elements of an arbitrary set (of variables) *)
 module type ID =
   sig
     type t
@@ -16,6 +20,8 @@ module type ID =
     val compare : t -> t -> int
   end
 
+(** Modules including BasePartialOrder fulfil all requirements to become a partial order *)
+(** They can be typeclass-like extended by MakePartialOrder *)
 module type BasePartialOrder =
   sig
     type t
@@ -23,6 +29,7 @@ module type BasePartialOrder =
     val (>) : t -> t -> bool Option.t
   end
 
+(** Modules including PartialOrder hold a type that defines a partial order on its elements *)
 module type PartialOrder =
   sig
     include BasePartialOrder
@@ -31,6 +38,7 @@ module type PartialOrder =
     val (>=) : t -> t -> bool Option.t
   end
 
+(** Extends a BasePartialOrder to get all the methods of a partial order *)
 module MakePartialOrder(Base : BasePartialOrder) : (PartialOrder with type t := Base.t) =
   struct
     include Base
@@ -39,6 +47,7 @@ module MakePartialOrder(Base : BasePartialOrder) : (PartialOrder with type t := 
     let (<=) b1 b2 = Option.map not (b1 > b2)
   end
 
+(** A valuation is a function which maps from a finite set of variables to values *)
 module type Valuation =
   sig
     type t
@@ -50,10 +59,12 @@ module type Valuation =
     val vars : t -> var list
   end
 
+(** This module type defines how functors constructing valuations have to be defined *)
 module type ValuationFunctor =
   functor (Var : ID)(Value : Number.Numeric) -> Valuation with type var = Var.t
                                                            and type value = Value.t
 
+(** A rename map is a function which maps from a finite set of variables to another finite set of variables *)
 module type RenameMap =
   sig
     type t
@@ -63,6 +74,7 @@ module type RenameMap =
     val find : var -> t -> var -> var
   end
 
+(** Evaluable is a unified interface of all parts of a polynomial *)
 module type Evaluable =
   sig
     type t
@@ -79,10 +91,12 @@ module type Evaluable =
     val degree : t -> int
   end
 
+(** This module type defines how functors constructing evaluables have to be defined *)
 module type EvaluableFunctor =
   functor (Var : ID)(Value : Number.Numeric) -> Evaluable with module Var = Var
                                                            and module Value = Value
-                                              
+
+(** A power is a single variable with a positive integer exponent *)
 module type Power =
   sig
     type t
@@ -98,7 +112,8 @@ module type Power =
                pow:('b -> int -> 'b) ->
                t -> 'b 
   end
-                      
+
+(** A monomial is a finite product of powers *)
 module type Monomial =
   sig
     type t
@@ -120,6 +135,7 @@ module type Monomial =
                t -> 'b 
   end
 
+(** A scaled monomial is a monomial multiplied with a coefficient *)
 module type ScaledMonomial =
   sig
     type t
@@ -144,6 +160,8 @@ module type ScaledMonomial =
                t -> 'b 
   end
 
+(** Modules including BaseMath define basic math operations *)
+(** They can be typeclass-like extended by MakeMath *)
 module type BaseMath =
   sig
     type t
@@ -155,6 +173,7 @@ module type BaseMath =
     val pow : t -> int -> t
   end
 
+(** Modules including Math hold a type that defines basic math operations on its elements *)
 module type Math =
   sig
     include BaseMath
@@ -163,6 +182,7 @@ module type Math =
     val sub : t -> t -> t
   end
 
+(** Extends a BaseMath module to get all math methods *)
 module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
   struct
     include Base
@@ -171,6 +191,7 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
     let sub t1 t2 = add t1 (neg t2)
   end
 
+(** A Polynomial represents a mathematical polynomial *)
 module type Polynomial =
   sig
     type t
@@ -224,6 +245,7 @@ module type Polynomial =
     val mult_with_const : Value.t -> t -> t
   end
 
+(** A MinMaxPolynomial is a polynomial which allows the usage of min and max functions  *)
 module type MinMaxPolynomial =
   sig
     type t

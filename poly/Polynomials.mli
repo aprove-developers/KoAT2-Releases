@@ -2,6 +2,9 @@ open Batteries
 open ID
 open PolyTypes
 
+(** Holds default implementations of a polynomial *)
+
+(** Constructs a default polynomial using a list of monomials and their coefficients *)
 module Make
          (Var : ID)
          (Value : Number.Numeric)

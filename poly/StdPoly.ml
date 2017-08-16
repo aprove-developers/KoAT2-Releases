@@ -1,5 +1,7 @@
 open Batteries
 
+(** Provides all necessary types for polynomials with basic string variables and numbers represented as BigInt *)
+   
 module Valuation = Valuation.Make(ID.StringID)(Number.MakeNumeric(Big_int))
                     
 module Var = ID.StringID
