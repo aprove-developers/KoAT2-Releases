@@ -20,7 +20,7 @@ OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
     ../parser/parser
-    ../smt/smtsolver
+    ../smt/smt
     ../transitionsystem/transitionsystem
 
 TESTS[] =

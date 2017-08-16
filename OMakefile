@@ -21,7 +21,7 @@ public.InterfaceDoc(name, files) =
 IDOCS[] =
     poly/poly.idoc
     constraints/constraints.idoc
-    smt/smtsolver.idoc
+    smt/smt.idoc
     transitionsystem/transitionsystem.idoc
     parser/parser.idoc
 
