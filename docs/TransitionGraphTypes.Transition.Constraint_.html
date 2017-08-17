@@ -7,6 +7,7 @@
 <link rel="Start" href="index.html">
 <link rel="Up" href="TransitionGraphTypes.Transition.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
@@ -27,7 +28,9 @@
 <link title="TransitionGraph" rel="Chapter" href="TransitionGraph.html">
 <link title="TransitionGraphTypes" rel="Chapter" href="TransitionGraphTypes.html">
 <link title="TransitionGraphImpl" rel="Chapter" href="TransitionGraphImpl.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Parseable" rel="Chapter" href="Parseable.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="Readers" rel="Chapter" href="Readers.html"><title>Koat : TransitionGraphTypes.Transition.Constraint_</title>
 </head>
 <body>
@@ -41,14 +44,43 @@
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type">Atom_.t list</code> </pre>
 
 
-<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> Atom_.Polynomial_.Var.t Batteries.Set.t</code></pre>
+<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> Atom_.Polynomial_.Var.t Batteries.Set.t</code></pre><div class="info ">
+Returns the set of variables which are active in the constraint.
+            A variable is active, if it's value has an effect on the evaluation of the constraint.<br>
+</div>
+
 <pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type">Atom_.t -> <a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre>
 <pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type">Atom_.t list -> <a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre>
 <pre><span id="VALmk_true"><span class="keyword">val</span> mk_true</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre>
-<pre><span id="VALis_true"><span class="keyword">val</span> is_true</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_true"><span class="keyword">val</span> is_true</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+Returns if the constraint is a tautology<br>
+</div>
+
 <pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> string</code></pre>
-<pre><span id="VALrename"><span class="keyword">val</span> rename</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -><br>       Atom_.Polynomial_.RenameMap_.t -> <a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre>
-<pre><span id="VALeval_bool"><span class="keyword">val</span> eval_bool</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> Atom_.Polynomial_.Valuation_.t -> bool</code></pre>
-<pre><span id="VALdrop_nonlinear"><span class="keyword">val</span> drop_nonlinear</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> <a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre>
-<pre><span id="VALdrop_not_equal"><span class="keyword">val</span> drop_not_equal</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> <a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre>
-<pre><span id="VALto_less_equal"><span class="keyword">val</span> to_less_equal</span> : <code class="type">Atom_.t -> <a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre></body></html>
+<pre><span id="VALrename"><span class="keyword">val</span> rename</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -><br>       Atom_.Polynomial_.RenameMap_.t -> <a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre><div class="info ">
+Assigns the variables of the constraint new names based on the rename map<br>
+</div>
+
+<pre><span id="VALeval_bool"><span class="keyword">val</span> eval_bool</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> Atom_.Polynomial_.Valuation_.t -> bool</code></pre><div class="info ">
+Assigns each variable a value and returns if the constraint is satisfied for those values<br>
+</div>
+<br>
+The result of the following drop methods is not equivalent to the input constraint. 
+            But each satisfying valuation of the input constraint is still a model of the new constraint.<br>
+
+<pre><span id="VALdrop_nonlinear"><span class="keyword">val</span> drop_nonlinear</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> <a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre><div class="info ">
+Drops all nonlinear atoms from the constraints. 
+            Example: (a &gt; 0 &amp;&amp; b^2 &lt; 2) gets transformed to (a &gt; 0)<br>
+</div>
+
+<pre><span id="VALdrop_not_equal"><span class="keyword">val</span> drop_not_equal</span> : <code class="type"><a href="ConstraintTypes.Constraint.html#TYPEt">t</a> -> <a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre><div class="info ">
+Drops all atoms which use an unequal comparator.
+            Example: (a &gt; 0 &amp;&amp; b &lt;&gt; 0) gets transformed to (a &gt; 0)<br>
+</div>
+
+<pre><span id="VALto_less_equal"><span class="keyword">val</span> to_less_equal</span> : <code class="type">Atom_.t -> <a href="ConstraintTypes.Constraint.html#TYPEt">t</a></code></pre><div class="info ">
+Returns an constraint which only uses the LT comparator (&lt;).
+            This constraint is equivalent if it does not contain unequal comparators. 
+            Otherwise it has the effect of a drop operator.<br>
+</div>
+</body></html>

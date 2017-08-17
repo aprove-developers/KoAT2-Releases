@@ -63,7 +63,8 @@ module type Constraint =
 
         type t = Atom_.t list  
         
-        (*getting information*)
+        (** Returns the set of variables which are active in the constraint.
+            A variable is active, if it's value has an effect on the evaluation of the constraint. *)
         val vars : t -> Atom_.Polynomial_.Var.t Set.t
         
         (*creation*)
@@ -71,15 +72,32 @@ module type Constraint =
         val mk : Atom_.t list -> t
         val mk_true : t
         
-        (*boolean tests*)
+        (** Returns if the constraint is a tautology *)
         val is_true : t -> bool
 
         (*export*)
         val to_string : t -> string
-        
+
+        (** Assigns the variables of the constraint new names based on the rename map *)
         val rename : t -> Atom_.Polynomial_.RenameMap_.t -> t
+
+        (** Assigns each variable a value and returns if the constraint is satisfied for those values *)
         val eval_bool : t -> Atom_.Polynomial_.Valuation_.t -> bool
+
+          
+        (** The result of the following drop methods is not equivalent to the input constraint. 
+            But each satisfying valuation of the input constraint is still a model of the new constraint. *)
+          
+        (** Drops all nonlinear atoms from the constraints. 
+            Example: (a > 0 && b^2 < 2) gets transformed to (a > 0) *)
         val drop_nonlinear : t -> t
+
+        (** Drops all atoms which use an unequal comparator.
+            Example: (a > 0 && b <> 0) gets transformed to (a > 0) *)
         val drop_not_equal : t -> t
+
+        (** Returns an constraint which only uses the LT comparator (<).
+            This constraint is equivalent if it does not contain unequal comparators. 
+            Otherwise it has the effect of a drop operator. *)
         val to_less_equal : Atom_.t -> t
     end

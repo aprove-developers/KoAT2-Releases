@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="Start" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
 <link title="Index of values" rel=Appendix href="index_values.html">
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
@@ -25,7 +26,9 @@
 <link title="TransitionGraph" rel="Chapter" href="TransitionGraph.html">
 <link title="TransitionGraphTypes" rel="Chapter" href="TransitionGraphTypes.html">
 <link title="TransitionGraphImpl" rel="Chapter" href="TransitionGraphImpl.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Parseable" rel="Chapter" href="Parseable.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="Readers" rel="Chapter" href="Readers.html"><title>Koat : Index of modules</title>
 </head>
 <body>
@@ -78,6 +81,11 @@ Provides default implementations of an ID
 <tr><td align="left"><br>L</td></tr>
 <tr><td><a href="Readers.Make.Lexer.html">Lexer</a> [<a href="Readers.Make.html">Readers.Make</a>]</td>
 <td></td></tr>
+<tr><td><a href="Lexer.html">Lexer</a> </td>
+<td><div class="info">
+Provides an lexer generated with ocamllex to lex transition graphs, its constraints and polynomials
+</div>
+</td></tr>
 <tr><td><a href="Parseable.TransitionGraph.Location_.html">Location_</a> [<a href="Parseable.TransitionGraph.html">Parseable.TransitionGraph</a>]</td>
 <td></td></tr>
 <tr><td><a href="TransitionGraphTypes.Graph.Location_.html">Location_</a> [<a href="TransitionGraphTypes.Graph.html">TransitionGraphTypes.Graph</a>]</td>
@@ -88,6 +96,13 @@ Provides default implementations of an ID
 Constructs a reader for the given transition graph
 </div>
 </td></tr>
+<tr><td><a href="Lexer.Make.html">Make</a> [<a href="Lexer.html">Lexer</a>]</td>
+<td><div class="info">
+Constructs a lexer for transition graphs as well as its used constraints and polynomials
+</div>
+</td></tr>
+<tr><td><a href="Parser.Make.html">Make</a> [<a href="Parser.html">Parser</a>]</td>
+<td></td></tr>
 <tr><td><a href="Constraints.Make.html">Make</a> [<a href="Constraints.html">Constraints</a>]</td>
 <td><div class="info">
 Constructs a default constraint using a list of atoms each comparing two polynomials
@@ -162,12 +177,16 @@ Provides default implementations of a monomial
 </div>
 </td></tr>
 <tr><td align="left"><br>P</td></tr>
+<tr><td><a href="Lexer.Make.P.html">P</a> [<a href="Lexer.Make.html">Lexer.Make</a>]</td>
+<td></td></tr>
 <tr><td><a href="Parseable.html">Parseable</a> </td>
 <td><div class="info">
 Provides module types which represent a minimal subset of their complete counterparts in the modules contraints and poly.
 </div>
 </td></tr>
 <tr><td><a href="Readers.Make.Parser.html">Parser</a> [<a href="Readers.Make.html">Readers.Make</a>]</td>
+<td></td></tr>
+<tr><td><a href="Parser.html">Parser</a> </td>
 <td></td></tr>
 <tr><td><a href="PolyImpl.html">PolyImpl</a> </td>
 <td><div class="info">
