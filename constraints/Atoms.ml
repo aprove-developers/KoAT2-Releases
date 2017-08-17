@@ -71,12 +71,6 @@ struct
     let is_eq = is Comparator.EQ
     let is_neq = is Comparator.NEQ
             
-    let is_same (atom1 : t) (atom2 : t) =
-      comparator atom1 == comparator atom2
-        
-    let is_inverted (atom1 : t) (atom2 : t) =
-      Comparator.is_inverted (comparator atom1) (comparator atom2)
-      
     let is_linear (atom : t) =
       Polynomial_.is_linear (fst atom) && Polynomial_.is_linear (snd atom)
         
@@ -104,8 +98,6 @@ struct
       | ((p1, comp1, q1), (p2, comp2, q2)) ->
          (Comparator.is_inverted comp1 comp2 && P.(==) p1 q2 && P.(==) q1 p2) || atom1 == atom2 
         
-    (* In this setting everything represents integer values. Hence strictness can be removed by adding/subtracting one: TODO what happens if we are not working with ints?*)
-
     let remove_strictness (constr : t) =
       match constr with
       | (p1, Comparator.GT, p2)-> mk_ge p1 (P.add p2 P.one)
