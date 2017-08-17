@@ -15,8 +15,8 @@ OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
 
-FILES[] =
-    SMT
+# Include all .ml files
+FILES[] = $(removesuffix .ml, $(glob *.ml))
 
 LIB = smt
 

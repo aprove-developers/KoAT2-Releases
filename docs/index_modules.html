@@ -10,14 +10,14 @@
 <link title="Index of modules" rel=Appendix href="index_modules.html">
 <link title="Index of module types" rel=Appendix href="index_module_types.html">
 <link title="ID" rel="Chapter" href="ID.html">
-<link title="Valuation" rel="Chapter" href="Valuation.html">
 <link title="RenameMap" rel="Chapter" href="RenameMap.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
+<link title="Valuation" rel="Chapter" href="Valuation.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
-<link title="MinMaxPolynomial" rel="Chapter" href="MinMaxPolynomial.html">
 <link title="ScaledMonomials" rel="Chapter" href="ScaledMonomials.html">
-<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
+<link title="MinMaxPolynomial" rel="Chapter" href="MinMaxPolynomial.html">
 <link title="PolyImpl" rel="Chapter" href="PolyImpl.html">
+<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Atoms" rel="Chapter" href="Atoms.html">
 <link title="Constraints" rel="Chapter" href="Constraints.html">
 <link title="ConstraintTypes" rel="Chapter" href="ConstraintTypes.html">
@@ -113,19 +113,24 @@ Constructs a default constraint using a list of atoms each comparing two polynom
 Constructs a default constraint using a simple record
 </div>
 </td></tr>
-<tr><td><a href="ScaledMonomials.Make.html">Make</a> [<a href="ScaledMonomials.html">ScaledMonomials</a>]</td>
-<td><div class="info">
-Internal
-</div>
-</td></tr>
 <tr><td><a href="MinMaxPolynomial.Make.html">Make</a> [<a href="MinMaxPolynomial.html">MinMaxPolynomial</a>]</td>
 <td><div class="info">
 Constructs a default MinMaxPolynomial based on a polynomial extending it with an algebraic data type
 </div>
 </td></tr>
+<tr><td><a href="ScaledMonomials.Make.html">Make</a> [<a href="ScaledMonomials.html">ScaledMonomials</a>]</td>
+<td><div class="info">
+Internal
+</div>
+</td></tr>
 <tr><td><a href="Polynomials.Make.html">Make</a> [<a href="Polynomials.html">Polynomials</a>]</td>
 <td><div class="info">
 Constructs a default polynomial using a list of monomials and their coefficients
+</div>
+</td></tr>
+<tr><td><a href="Valuation.Make.html">Make</a> [<a href="Valuation.html">Valuation</a>]</td>
+<td><div class="info">
+Constructs a valuation with the variable and value type
 </div>
 </td></tr>
 <tr><td><a href="Monomials.Make.html">Make</a> [<a href="Monomials.html">Monomials</a>]</td>
@@ -136,11 +141,6 @@ Constructs a default monomial using a list of pairs of variables and their expon
 <tr><td><a href="RenameMap.Make.html">Make</a> [<a href="RenameMap.html">RenameMap</a>]</td>
 <td><div class="info">
 Constructs a rename map with the given variable type
-</div>
-</td></tr>
-<tr><td><a href="Valuation.Make.html">Make</a> [<a href="Valuation.html">Valuation</a>]</td>
-<td><div class="info">
-Constructs a valuation with the variable and value type
 </div>
 </td></tr>
 <tr><td><a href="PolyTypes.MakeMath.html">MakeMath</a> [<a href="PolyTypes.html">PolyTypes</a>]</td>
@@ -291,9 +291,9 @@ Constructs a valuation with the variable and value type
 <td></td></tr>
 <tr><td><a href="Parseable.Polynomial.Var.html">Var</a> [<a href="Parseable.Polynomial.html">Parseable.Polynomial</a>]</td>
 <td></td></tr>
-<tr><td><a href="PolyImpl.Var.html">Var</a> [<a href="PolyImpl.html">PolyImpl</a>]</td>
-<td></td></tr>
 <tr><td><a href="PolyTypes.Evaluable.Var.html">Var</a> [<a href="PolyTypes.Evaluable.html">PolyTypes.Evaluable</a>]</td>
+<td></td></tr>
+<tr><td><a href="PolyImpl.Var.html">Var</a> [<a href="PolyImpl.html">PolyImpl</a>]</td>
 <td></td></tr>
 </table>
 </body>

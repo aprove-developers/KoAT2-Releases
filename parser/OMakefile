@@ -45,4 +45,3 @@ clean:
      $(LIB).a $(LIB).cmxa $(LIB).cma \
      $(GEN_FILES) \
      *~
-

@@ -14,11 +14,8 @@ BYTE_ENABLED = true
 OCAML_LIBS[] =
     ../poly/poly
 
-FILES[] =
-    ConstraintTypes
-    ConstraintImpl
-    Atoms
-    Constraints
+# Include all .ml files
+FILES[] = $(removesuffix .ml, $(glob *.ml))
 
 LIB = constraints
 

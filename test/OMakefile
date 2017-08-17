@@ -23,14 +23,10 @@ OCAML_LIBS[] =
     ../smt/smt
     ../transitionsystem/transitionsystem
 
-TESTS[] =
-    PolynomialsTest
-    AtomTest
-    ConstraintsTest
-    SMTTest
-    TransitionGraphTest
+# Include all .ml files
+FILES[] = $(removesuffix .ml, $(glob *.ml))
 
-OCamlProgram(Test, Mocks $(TESTS) Suite)
+OCamlProgram(Test, $(FILES))
 
 .DEFAULT: Test
     ./Test
@@ -38,10 +34,8 @@ OCamlProgram(Test, Mocks $(TESTS) Suite)
 clean:
   rm -f \
      *.omc \
-     $(filter-proper-targets $(glob $(addsuffix .*, $(TESTS)))) \
-     $(filter-proper-targets $(glob $(addsuffix .*, Mocks))) \
-     $(filter-proper-targets $(glob $(addsuffix .*, Suite))) \
-     $(TESTS) \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
+     Test Test.opt \
      *~ \
      *.log \
      *.cache
