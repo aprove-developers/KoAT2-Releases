@@ -13,5 +13,5 @@ module Make(Var : PolyTypes.ID) =
 
     let id vars = from (List.map (fun var -> (var, var)) vars)
 
-    let find var map default = if M.mem var map then M.find var map else default
+    let find var map ~default = if M.mem var map then M.find var map else default
   end

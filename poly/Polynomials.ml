@@ -24,7 +24,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let degree poly =
       List.max (List.map (ScaledMonomial.degree) poly )
       
-    (* Returns the coefficient of a monomial *)
     let coeff mon poly =
          poly
       |> List.filter (fun scaled -> Monomial.(==) (ScaledMonomial.monomial scaled) mon)
@@ -65,14 +64,11 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
            Value.equal curr_coeff (coeff curr_mon poly2) &&
              equal_simplified tail (delete_monomial curr_mon poly2)
 
-    (* Returns the monomials of a polynomial without the empty monomial *)
     let monomials poly =
          poly
       |> simplify
       |> List.map ScaledMonomial.monomial
       |> List.filter ((<>) Monomial.one)
-
-    (* Returns a variable as a polynomial *)
 
     let from_monomial mon = lift Value.one mon
 
@@ -86,10 +82,8 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let from_constant_int c = from_constant (Value.of_int c)
                       
-    (* Gets the constant *)
     let constant poly = coeff Monomial.one (simplify poly)
 
-    (* Returns the variables of a polynomial *)          
     let vars poly =
          poly
       |> simplify
@@ -97,7 +91,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       |> List.map Monomial.vars
       |> List.fold_left Set.union Set.empty
       
-    (* Checks whether a polynomial is a single variable *)
     let is_var poly =
          poly
       |> simplify
@@ -105,20 +98,17 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       |> fun monomials -> List.length monomials == 1 &&
                             Monomial.is_univariate_linear (List.hd monomials) && (Value.equal (coeff (List.hd monomials) poly) Value.one)
 
-    (* Checks wheather a polynomial is a single variable plus a constant*)
     let is_var_plus_constant poly =
          poly
       |> delete_monomial Monomial.one
       |> is_var
 
-    (* Checks whether a polynomial is a sum of variables plus a constant *)
     let is_sum_of_vars_plus_constant poly =
          poly
       |> delete_monomial Monomial.one
       |> List.for_all (fun scaled -> Value.equal (ScaledMonomial.coeff scaled) Value.one &&
                                        Monomial.is_univariate_linear (ScaledMonomial.monomial scaled))
 
-    (* Checks whether a polyomial is linear and contains at most one active variable*)
     let is_univariate_linear poly = 
       degree poly <= 1 && Set.cardinal (vars poly) <= 1
 
@@ -126,12 +116,8 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let is_linear poly = (degree poly <= 1)
 
-    (*renames the variables occuring inside a polynomial*) 
-
     let rename varmapping poly =
       List.map (ScaledMonomial.rename varmapping) poly
-
-    (*multiply a polynomial by a constant*)
 
     let mult_with_const const poly =
       List.map (ScaledMonomial.mult_with_const const) poly
@@ -182,8 +168,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let is_one poly = simplify poly == one
                      
-    (*instantiates the variables in a polynomial with big ints*)
-
     let eval poly valuation =
          poly
       |> List.map (fun scaled -> ScaledMonomial.eval scaled valuation)
