@@ -28,7 +28,7 @@ FILES[] = $(removesuffix .ml, $(glob *.ml))
 
 OCamlProgram(Test, $(FILES))
 
-.DEFAULT: Test
+install: Test
     ./Test
 
 clean:
