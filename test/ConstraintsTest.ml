@@ -149,6 +149,35 @@ module Methods (C : Constraint) =
                             (false, "x^2 > 0 && y^3 < 100 && x^5+y^6-z^3 <> x^2+ 5*x*y*z");
                             (true, "x^2 > 0 && y^3 < 126 && x^5+y^6-z^3 <> x^2+ 5*x*y*z");
                         ]);
+                        
+            ("drop_nonlinear" >:::
+                List.map (fun (expected, constr) ->
+                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.drop_nonlinear (Reader.read_constraint constr) )))
+                        [
+                            ("x <> 0 && 3 > 2", " x^3+2*x -1 < x^5 && x <> 0 && 3 > 2 " );
+                            ("","x^2 < x*y + 3");
+                            ("3 < x","3 < x + y^3 - y*y^2");
+                            ("x == y && y == z","x == y && y == z");
+
+                        ]);
+
+            ("drop_not_equal" >:::
+                List.map (fun (expected, constr) ->
+                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.drop_not_equal (Reader.read_constraint constr))))
+                        [
+                            ("x == y ","x == y && z <> 3");
+                        ]);
+
+            ("to_less_equal" >:::
+                List.map (fun (expected, atom) ->
+                      atom >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.to_less_equal (Reader.read_atom atom) )))
+                        [
+                            ("x <= y && y<=x ","x == y");
+                            ("x <= y - 1", "x < y");
+                            ("x <= y - 1","y > x");
+
+                        ]);
+
         ]
         
       end

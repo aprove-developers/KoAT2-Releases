@@ -238,6 +238,29 @@ module Methods (C : Constraint) =
                             (false, "x <= a^2 + b * 3 -6" , "x >= a^2 + b * 3 -6" );
 
                         ]);
+            
+            ("is_linear" >:::
+                List.map (fun (expected, atom) ->
+                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_linear (Reader.read_atom atom))))
+                        [
+                            (true, "x < y");
+                            (false, "x <= a^2 + b * 3 -6");
+                            (false, "x >= a^2 + b * 3 -6" );
+                            (true, "x+y-2*z+3*x ^ 2 - x*x - x*x - x*x == 7 * z + 4 * y");
+                            (false, "x*x + y*z <> a^17");
+
+                        ]);
+
+            ("normalise" >:::
+                List.map (fun (expected, atom) ->
+                      atom >:: (fun _ -> assert_equal ~cmp:C.Atom_.(==) ~printer:C.Atom_.to_string (Reader.read_atom expected) (C.Atom_.normalise (Reader.read_atom atom))))
+                        [
+                            ("x<=3","x<=3");
+                            ("a + b + c <= -2", "a+2 <= -b-c");
+                            ("y + z > 4","-4 + y > -z ");
+                            ("a + b + c < -2", "a+2 < -b-c");
+                            ("x^2 - y^3 == 8", "10 + x^2 - 1 == y^3 + 3 + 5 + 9");
+                        ]);
                         
 
         ]
