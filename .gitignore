@@ -36,5 +36,6 @@ parser/Parser.mli
 parser/Parser.ml
 parser/Lexer.ml
 
-#Ignore intermediate doc files, but not the docs directory, because this is needed by GitHub pages
+#Ignore intermediate doc files and the docs directory (later add it again for GitHub pages)
 *.idoc
+docs
