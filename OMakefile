@@ -28,7 +28,7 @@ CUSTOM_LIBS[] =
 IDOCS[] = $(foreach $(fun x => $(x)/$(x).idoc), $(CUSTOM_LIBS))
 
 # The directory where the documentation should be stored
-DOC_DIR = doc
+DOC_DIR = docs
 
 # Target how the whole documentation should be build
 doc: $(IDOCS)

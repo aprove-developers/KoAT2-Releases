@@ -1,0 +1,206 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="Up" href="Lexer.Make.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="ID" rel="Chapter" href="ID.html">
+<link title="Valuation" rel="Chapter" href="Valuation.html">
+<link title="RenameMap" rel="Chapter" href="RenameMap.html">
+<link title="Monomials" rel="Chapter" href="Monomials.html">
+<link title="Polynomials" rel="Chapter" href="Polynomials.html">
+<link title="MinMaxPolynomial" rel="Chapter" href="MinMaxPolynomial.html">
+<link title="ScaledMonomials" rel="Chapter" href="ScaledMonomials.html">
+<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
+<link title="PolyImpl" rel="Chapter" href="PolyImpl.html">
+<link title="Atoms" rel="Chapter" href="Atoms.html">
+<link title="Constraints" rel="Chapter" href="Constraints.html">
+<link title="ConstraintTypes" rel="Chapter" href="ConstraintTypes.html">
+<link title="ConstraintImpl" rel="Chapter" href="ConstraintImpl.html">
+<link title="SMT" rel="Chapter" href="SMT.html">
+<link title="TransitionGraph" rel="Chapter" href="TransitionGraph.html">
+<link title="TransitionGraphTypes" rel="Chapter" href="TransitionGraphTypes.html">
+<link title="TransitionGraphImpl" rel="Chapter" href="TransitionGraphImpl.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Parseable" rel="Chapter" href="Parseable.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
+<link title="Readers" rel="Chapter" href="Readers.html"><title>Koat : Lexer.Make.P</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="Lexer.Make.html" title="Lexer.Make">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_Lexer.Make.P.html">Lexer.Make.P</a></h1>
+
+<pre><span class="keyword">module</span> P: <code class="type"><a href="Parser.Make.html">Parser.Make</a></code><code class="code">(</code><code class="type">G</code><code class="code">)</code></pre><hr width="100%">
+
+<pre><code><span id="TYPEtoken"><span class="keyword">type</span> <code class="type"></code>token</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.WITH"><span class="constructor">WITH</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.VAR"><span class="constructor">VAR</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.UINT"><span class="constructor">UINT</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.TIMES"><span class="constructor">TIMES</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.RULES"><span class="constructor">RULES</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.RPAR"><span class="constructor">RPAR</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.POW"><span class="constructor">POW</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.PLUS"><span class="constructor">PLUS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.NEQ"><span class="constructor">NEQ</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.MINUS"><span class="constructor">MINUS</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.LPAR"><span class="constructor">LPAR</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.LESSTHAN"><span class="constructor">LESSTHAN</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.LESSEQUAL"><span class="constructor">LESSEQUAL</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.ID"><span class="constructor">ID</span></span> <span class="keyword">of</span> <code class="type">string</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.GREATERTHAN"><span class="constructor">GREATERTHAN</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.GREATEREQUAL"><span class="constructor">GREATEREQUAL</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.EQUAL"><span class="constructor">EQUAL</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.EOL"><span class="constructor">EOL</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.EOF"><span class="constructor">EOF</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.COMMA"><span class="constructor">COMMA</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.ARROW"><span class="constructor">ARROW</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTtoken.AND"><span class="constructor">AND</span></span></code></td>
+
+</tr></table>
+
+
+
+<pre><span id="EXCEPTIONError"><span class="keyword">exception</span> Error</span></pre>
+
+<pre><span id="VALonlyTransitiongraph"><span class="keyword">val</span> onlyTransitiongraph</span> : <code class="type">(Lexing.lexbuf -> <a href="Parser.Make.html#TYPEtoken">token</a>) -> Lexing.lexbuf -> G.t</code></pre>
+<pre><span id="VALonlyPolynomial"><span class="keyword">val</span> onlyPolynomial</span> : <code class="type">(Lexing.lexbuf -> <a href="Parser.Make.html#TYPEtoken">token</a>) -><br>       Lexing.lexbuf -> G.Transition_.Constraint_.Atom_.Polynomial_.t</code></pre>
+<pre><span id="VALonlyConstraints"><span class="keyword">val</span> onlyConstraints</span> : <code class="type">(Lexing.lexbuf -> <a href="Parser.Make.html#TYPEtoken">token</a>) -><br>       Lexing.lexbuf -> G.Transition_.Constraint_.t</code></pre>
+<pre><span id="VALonlyAtom"><span class="keyword">val</span> onlyAtom</span> : <code class="type">(Lexing.lexbuf -> <a href="Parser.Make.html#TYPEtoken">token</a>) -><br>       Lexing.lexbuf -> G.Transition_.Constraint_.Atom_.t</code></pre></body></html>
