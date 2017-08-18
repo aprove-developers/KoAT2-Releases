@@ -12,4 +12,5 @@ module Make
                      and module Value = Value
                      and module Valuation_ = Valuation.Make(Var)(Value)
                      and module RenameMap_ = RenameMap.Make(Var)
+                     and module Monomial_ = Monomials.Make(Var)(Value)
                      and type monomial = Monomials.Make(Var)(Value).t
