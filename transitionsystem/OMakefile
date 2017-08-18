@@ -15,10 +15,8 @@ OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
 
-FILES[] =
-    TransitionGraphTypes
-    TransitionGraphImpl
-    TransitionGraph
+# Include all .ml files
+FILES[] = $(removesuffix .ml, $(glob *.ml))
 
 LIB = transitionsystem
 

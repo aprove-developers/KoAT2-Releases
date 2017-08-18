@@ -8,16 +8,8 @@ OCAMLFLAGS += -thread
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
-FILES[] =
-    ID
-    Valuation
-    RenameMap
-    Monomials
-    Polynomials
-    MinMaxPolynomial
-    ScaledMonomials
-    PolyTypes
-    PolyImpl
+# Include all .ml files
+FILES[] = $(removesuffix .ml, $(glob *.ml))
 
 LIB = poly
 

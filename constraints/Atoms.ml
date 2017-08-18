@@ -78,6 +78,7 @@ struct
       Comparator.is_inverted (comparator atom1) (comparator atom2)
     
     (**checks if fst and snd are linear polynomials*) 
+
     let is_linear (atom : t) =
       Polynomial_.is_linear (fst atom) && Polynomial_.is_linear (snd atom)
         
@@ -107,9 +108,12 @@ struct
       | ((p1, comp1, q1), (p2, comp2, q2)) ->
          (Comparator.is_inverted comp1 comp2 && P.(==) p1 q2 && P.(==) q1 p2) || atom1 == atom2 
         
+<<<<<<< HEAD
     (* In this setting everything represents integer values. Hence strictness can be removed by adding/subtracting one: TODO what happens if we are not working with ints?*)
     
     (**LT and GT are transformed to LE and GE by adding/subtracting one from snd*)
+=======
+>>>>>>> 980201a05e77ef677c13b4cf01977d384163b229
     let remove_strictness (constr : t) =
       match constr with
       | (p1, Comparator.GT, p2)-> mk_ge p1 (P.add p2 P.one)
