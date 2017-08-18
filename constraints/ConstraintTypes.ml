@@ -71,6 +71,8 @@ module type Atom =
         val is_eq : t -> bool
         val is_neq : t -> bool
 
+        val is_same : t -> t -> bool
+
         (** Returns if both polynomials are linear. *)
         val is_linear : t -> bool
 
