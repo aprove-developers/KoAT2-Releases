@@ -70,6 +70,9 @@ struct
     let is_le = is Comparator.LE
     let is_eq = is Comparator.EQ
     let is_neq = is Comparator.NEQ
+               
+    let is_same atom1 atom2 =
+      comparator atom1 == comparator atom2
             
     let is_linear (atom : t) =
       Polynomial_.is_linear (fst atom) && Polynomial_.is_linear (snd atom)
