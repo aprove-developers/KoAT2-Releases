@@ -100,22 +100,29 @@ module type Constraint =
   sig
         module Atom_ : Atom
 
-        type t = Atom_.t list  
+        type t = Atom_.t list (** TODO Should not be exposed *)
         
-        (** Returns the set of variables which are active in the constraint.
-            A variable is active, if it's value has an effect on the evaluation of the constraint. *)
-        val vars : t -> Atom_.Polynomial_.Var.t Set.t
-        
-        (*creation*)
+
+        (** Following methods are convenience methods for the creation of atoms. *)
+          
         val lift : Atom_.t -> t      
         val mk : Atom_.t list -> t
         val mk_true : t
         
+
+        (** Following methods return if the atom has certain properties. *)
+          
         (** Returns if the constraint is a tautology *)
         val is_true : t -> bool
 
-        (*export*)
+        (** Returns the set of variables which are active in the constraint.
+            A variable is active, if it's value has an effect on the evaluation of the constraint. *)
+        val vars : t -> Atom_.Polynomial_.Var.t Set.t
+
         val to_string : t -> string
+
+
+        (** Following methods manipulate atoms and return the manipulated versions. *)
 
         (** Assigns the variables of the constraint new names based on the rename map *)
         val rename : t -> Atom_.Polynomial_.RenameMap_.t -> t
