@@ -294,6 +294,10 @@ module type Polynomial =
     (** Creates a polynomial where every variable for which a value is assigned by the valuation is replaced by this value. *)
     val replace : t -> Valuation_.t -> t
 
+    (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
+        Ignores naming equalities. *)
+    val substitute : Var.t -> replacement:t -> t -> t
+      
     (** Removes all summands from the polynomial which are equivalent to the monomial. *)
     val delete_monomial : monomial -> t -> t
 
