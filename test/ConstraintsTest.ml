@@ -99,7 +99,7 @@ module Methods (C : Constraint) =
     let rec equal_constr constr1 constr2 = 
         match (constr1,constr2) with 
         | ([],[]) -> true
-        | (h1::t1, h2::t2) -> (C.Atom_.(==) h1 h2) && (equal_constr t1 t2)
+        | (h1::t1, h2::t2) -> C.Atom_.(h1 =~= h2) && equal_constr t1 t2
         | (_,_) -> false
             
     let assert_equal_constr = 

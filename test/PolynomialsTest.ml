@@ -97,6 +97,7 @@ module Methods (P : Polynomial) =
                        ("Power before Multiplication", 27*625, " x ^ 3 * y ^ 4 ");
                      ];
           );
+
             "Math" >::: ([
                 "zero" >:: (fun _ -> assert_equal_value (P.Value.of_int 0) (P.eval P.zero example_valuation));
                 "one" >:: (fun _ -> assert_equal_value (P.Value.of_int 1) (P.eval P.one example_valuation));

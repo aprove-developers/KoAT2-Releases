@@ -26,12 +26,12 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       
     let coeff mon poly =
          poly
-      |> List.filter (fun scaled -> Monomial.(==) (ScaledMonomial.monomial scaled) mon)
+      |> List.filter (fun scaled -> Monomial.(ScaledMonomial.monomial scaled =~= mon))
       |> List.map ScaledMonomial.coeff
       |> List.fold_left Value.add Value.zero
 
     let delete_monomial mon poly =
-      List.filter (fun x -> not (Monomial.(==) (ScaledMonomial.monomial x) mon)) poly
+      List.filter (fun x -> not Monomial.(ScaledMonomial.monomial x =~= mon)) poly
 
     let rec simplify_partial_simplified poly =
       match poly with 
@@ -53,16 +53,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let to_string poly = to_string_simplified (simplify poly)
 
     let of_string poly = raise (Failure "of_string for Polynomial not yet implemented") (* TODO Use ocamlyacc *)
-
-    let rec equal_simplified poly1 poly2 =
-      List.length poly1 == List.length poly2 &&
-        match poly1 with
-        | [] -> true
-        | scaled :: tail ->
-           let curr_mon = ScaledMonomial.monomial scaled in
-           let curr_coeff = ScaledMonomial.coeff scaled in
-           Value.equal curr_coeff (coeff curr_mon poly2) &&
-             equal_simplified tail (delete_monomial curr_mon poly2)
 
     let monomials poly =
          poly
@@ -151,7 +141,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let substitute var ~replacement poly =
       let substituted (target_var : Var.t) =
-        if var == target_var then replacement else from_var target_var
+        if Var.(var =~= target_var) then replacement else from_var target_var
       in
       fold ~const:from_constant ~var:substituted ~neg:neg ~plus:add ~times:mul ~pow:pow poly
       
@@ -159,7 +149,17 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       struct
         type t = outer_t
                
-        let (==) poly1 poly2 = 
+        let rec equal_simplified poly1 poly2 =
+          List.length poly1 == List.length poly2 &&
+            match poly1 with
+            | [] -> true
+            | scaled :: tail ->
+               let curr_mon = ScaledMonomial.monomial scaled in
+               let curr_coeff = ScaledMonomial.coeff scaled in
+               Value.equal curr_coeff (coeff curr_mon poly2) &&
+                 equal_simplified tail (delete_monomial curr_mon poly2)
+               
+        let (=~=) poly1 poly2 = 
           equal_simplified (simplify poly1) (simplify poly2)
           
         let (>) p1 p2 = match (p1, p2) with
@@ -170,9 +170,9 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       end
     include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
-    let is_zero poly = simplify poly == zero
+    let is_zero poly = poly =~= zero
 
-    let is_one poly = simplify poly == one
+    let is_one poly = poly =~= one
                      
     let eval poly valuation =
          poly

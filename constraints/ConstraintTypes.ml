@@ -52,7 +52,7 @@ module type Atom =
         (** Returns the the right hand side of the constraint. *)
         val snd : t -> Polynomial_.t
         
-        val (==) : t -> t -> bool
+        val (=~=) : t -> t -> bool
         
         val to_string : t -> string
 

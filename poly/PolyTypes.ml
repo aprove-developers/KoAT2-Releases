@@ -2,11 +2,12 @@ open Batteries
 
 (** Provides all module types related to polynomials *)
 
-(** Modules including Eq hold a type that defines an equality relation on its elements *)
+(** Modules including Eq hold a type that defines a semantic equality relation on its elements.
+    (==) is not used for that, because it has a reserved meaning in Ocaml. *)
 module type Eq =
   sig
     type t
-    val (==) : t -> t -> bool
+    val (=~=) : t -> t -> bool
     (* TODO val (!=) : t -> t -> bool *)
   end
 
@@ -95,7 +96,7 @@ module type Evaluable =
     module Valuation_ : (Valuation with type var = Var.t and type value = Value.t)
     module RenameMap_ : (RenameMap with type var = Var.t)
 
-    val (==) : t -> t -> bool
+    include Eq with type t := t
     val of_string : string -> t
     val to_string : t -> string
 

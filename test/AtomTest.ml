@@ -184,9 +184,9 @@ module Methods (C : Constraint) =
                         ])
             );
                         
-            ("(==)" >:::
+            ("(=~=)" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                    (atom1 ^ "==" ^ atom2) >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.(==) (Reader.read_atom atom1) (Reader.read_atom atom2))))
+                    (atom1 ^ "=~=" ^ atom2) >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.(Reader.read_atom atom1 =~= Reader.read_atom atom2))))
                         (List.map (fun (a,b,c)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1, default_poly_l_2 ^ c ^ default_poly_r_1)) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
             );
                         
@@ -207,7 +207,7 @@ module Methods (C : Constraint) =
                         
             ("rename_vars" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~cmp:C.Atom_.(==) ~printer:C.Atom_.to_string (Reader.read_atom expected) (rename atom )))
+                      atom >:: (fun _ -> assert_equal ~cmp:C.Atom_.(=~=) ~printer:C.Atom_.to_string (Reader.read_atom expected) (rename atom )))
                         [
                             ("5 <= 5", " 5 <= 5 " );
                             ("a == a", "x == x" );
@@ -253,7 +253,7 @@ module Methods (C : Constraint) =
 
             ("normalise" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~cmp:C.Atom_.(==) ~printer:C.Atom_.to_string (Reader.read_atom expected) (C.Atom_.normalise (Reader.read_atom atom))))
+                      atom >:: (fun _ -> assert_equal ~cmp:C.Atom_.(=~=) ~printer:C.Atom_.to_string (Reader.read_atom expected) (C.Atom_.normalise (Reader.read_atom atom))))
                         [
                             ("x<=3","x<=3");
                             ("a + b + c <= -2", "a+2 <= -b-c");

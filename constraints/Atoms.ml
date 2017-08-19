@@ -13,9 +13,6 @@ struct
 
         let values = [GT; GE; LT; LE; NEQ; EQ]
 
-        (* Makes the equality of comparators available outside of the module via Comparator.(==) *)
-        let (==) = (==)
-
         (* Helper function *)
         let is_inverted (comp1 : t) (comp2 : t) =
           match (comp1, comp2) with
@@ -68,10 +65,10 @@ struct
     let snd = function
       | (_,_,snd) -> snd
 
-    let (==) atom1 atom2 =
+    let (=~=) atom1 atom2 =
       match (atom1, atom2) with
       | ((p1, comp1, q1), (p2, comp2, q2)) ->
-         comp1 == comp2 && P.(p1 == p2 && q1 == q2)
+         Comparator.(comp1 == comp2) && P.(p1 =~= p2 && q1 =~= q2)
             
     let to_string = function
       | (p1, comp, p2) -> String.concat " " [P.to_string p1; Comparator.to_string comp; P.to_string p2]
@@ -96,7 +93,7 @@ struct
     let is_redundant atom1 atom2 =
       match (atom1, atom2) with
       | ((p1, comp1, q1), (p2, comp2, q2)) ->
-         (Comparator.is_inverted comp1 comp2 && P.(p1 == q2 && q1 == p2)) || atom1 == atom2 
+         (Comparator.is_inverted comp1 comp2 && P.(p1 =~= q2 && q1 =~= p2)) || atom1 =~= atom2 
         
     let vars = function
       | (p1, _, p2) -> Set.union (P.vars p1) (P.vars p2)

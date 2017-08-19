@@ -26,8 +26,8 @@ module MakePower(Var : PolyTypes.ID)(Value : Number.Numeric) =
       else if power.n == 1 then Var.to_string power.var
       else Var.to_string power.var ^ "^" ^ string_of_int power.n
 
-    let (==) power1 power2 =
-      (power1.var == power2.var) && ( power1.n == power2.n)
+    let (=~=) power1 power2 =
+      Var.(power1.var =~= power2.var) && power1.n == power2.n
 
     let vars power = Set.singleton power.var
 
@@ -82,11 +82,11 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       |> List.fold_left (+) 0
 
     let degree_variable var mon =
-      let var_list = List.filter (fun power -> Var.(==) (Power.var power) var ) mon  in 
+      let var_list = List.filter (fun power -> Var.(Power.var power =~= var)) mon in 
       degree var_list  
 
     let delete_var var mon =
-      List.filter(fun x -> let var_x = Power.var x in not (Var.(==) var var_x)) mon
+      List.filter (fun x -> not Var.(var =~= Power.var x)) mon
       
     let simplify mon =
          mon
@@ -120,7 +120,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
         degree_variable (Set.choose (vars mon)) mon == 1
       else false
 
-    let (==) mon1 mon2 = equal_simplified (simplify mon1)(simplify mon2)
+    let (=~=) mon1 mon2 = equal_simplified (simplify mon1)(simplify mon2)
                        
     let rename varmapping mon = 
       List.map (Power.rename varmapping) mon
