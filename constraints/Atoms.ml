@@ -12,7 +12,11 @@ struct
         type t = GT | GE | LT | LE | NEQ | EQ
 
         let values = [GT; GE; LT; LE; NEQ; EQ]
-                                         
+
+        (* Makes the equality of comparators available outside of the module via Comparator.(==) *)
+        let (==) = (==)
+
+        (* Helper function *)
         let is_inverted (comp1 : t) (comp2 : t) =
           match (comp1, comp2) with
           | (GT, LT) -> true
@@ -31,25 +35,18 @@ struct
           | EQ -> "="
           | NEQ -> "!="
                
-        let to_function = function
-          | GT -> (P.Value.Compare.(>))
-          | GE -> (P.Value.Compare.(>=))
-          | LT -> (P.Value.Compare.(<))
-          | LE -> (P.Value.Compare.(<=))
-          | EQ -> (P.Value.Compare.(=))
-          | NEQ -> (P.Value.Compare.(<>))
+        let to_function =
+          let open P.Value.Compare in function
+          | GT -> (>)
+          | GE -> (>=)
+          | LT -> (<)
+          | LE -> (<=)
+          | EQ -> (=)
+          | NEQ -> (<>)
       end
            
     type t = P.t * Comparator.t * P.t
 
-    let comparator = function 
-      | (_,comparator,_) -> comparator
-                 
-    let fst = function
-      | (fst,_,_) -> fst
-
-    let snd = function
-      | (_,_,snd) -> snd
 
     let mk comp poly1 poly2 =
       (poly1, comp, poly2)
@@ -61,8 +58,27 @@ struct
     let mk_eq = mk Comparator.EQ
     let mk_neq = mk Comparator.NEQ
 
+
+    let comparator = function 
+      | (_,comparator,_) -> comparator
+                 
+    let fst = function
+      | (fst,_,_) -> fst
+
+    let snd = function
+      | (_,_,snd) -> snd
+
+    let (==) atom1 atom2 =
+      match (atom1, atom2) with
+      | ((p1, comp1, q1), (p2, comp2, q2)) ->
+         comp1 == comp2 && P.(p1 == p2 && q1 == q2)
+            
+    let to_string = function
+      | (p1, comp, p2) -> String.concat " " [P.to_string p1; Comparator.to_string comp; P.to_string p2]
+        
+    (* Helper function *)                        
     let is comp atom =
-      (comparator atom) == comp
+      Comparator.(comparator atom == comp)
 
     let is_gt = is Comparator.GT
     let is_ge = is Comparator.GE
@@ -72,15 +88,35 @@ struct
     let is_neq = is Comparator.NEQ
                
     let is_same atom1 atom2 =
-      comparator atom1 == comparator atom2
+      Comparator.(comparator atom1 == comparator atom2)
             
-    let is_linear (atom : t) =
+    let is_linear atom =
       Polynomial_.is_linear (fst atom) && Polynomial_.is_linear (snd atom)
         
+    let is_redundant atom1 atom2 =
+      match (atom1, atom2) with
+      | ((p1, comp1, q1), (p2, comp2, q2)) ->
+         (Comparator.is_inverted comp1 comp2 && P.(p1 == q2 && q1 == p2)) || atom1 == atom2 
+        
+    let vars = function
+      | (p1, _, p2) -> Set.union (P.vars p1) (P.vars p2)
+        
+
+    let rename atom varmapping =
+      match atom with
+      | (p1, comp, p2) -> (P.rename varmapping p1, comp, P.rename varmapping p2)
+
+    (* TODO It's maybe possible to compare polynomials without full evaluation *)
+    (* However, there are probably more expensive operations *)
+    let eval_bool atom valuation =
+      match atom with
+      | (p1, comp, p2) -> (Comparator.to_function comp) (P.eval p1 valuation) (P.eval p2 valuation)
+
+    (* Helper function *)                        
     let simplify = function
       | (p1, comp, p2)-> (P.simplify p1, comp, P.simplify p2)
      
-    let normalise (atom : t) =
+    let normalise atom =
       let atom_in = simplify atom in
         let fst_in = fst atom_in in
         let snd_in = snd atom_in in
@@ -89,38 +125,10 @@ struct
           let new_left = Polynomial_.sub fst_min_snd const_part in
           let new_right = Polynomial_.neg const_part in
           (new_left, (comparator atom), new_right)
-        
-                 
-    let (==) (atom1 : t) (atom2 : t) =
-      match (atom1, atom2) with
-      | ((p1, comp1, q1), (p2, comp2, q2)) ->
-         comp1 == comp2 && P.(==) p1 p2 && P.(==) q1 q2
-            
-    let is_redundant (atom1 : t) (atom2 : t) =
-      match (atom1, atom2) with
-      | ((p1, comp1, q1), (p2, comp2, q2)) ->
-         (Comparator.is_inverted comp1 comp2 && P.(==) p1 q2 && P.(==) q1 p2) || atom1 == atom2 
-        
-    let remove_strictness (constr : t) =
-      match constr with
+                         
+    let remove_strictness = function
       | (p1, Comparator.GT, p2)-> mk_ge p1 (P.add p2 P.one)
       | (p1, Comparator.LT, p2)-> mk_le p1 (P.sub p2 P.one)
-      | _ -> constr
+      | atom -> atom
 
-    let to_string = function
-      | (p1, comp, p2) -> String.concat " " [P.to_string p1; Comparator.to_string comp; P.to_string p2]
-        
-    let vars = function
-      | (p1, _, p2) -> Set.union (P.vars p1) (P.vars p2)
-        
-    let rename (constr : t) (varmapping : P.RenameMap_.t) =
-      match constr with
-      | (p1, comp, p2) -> (P.rename varmapping p1, comp, P.rename varmapping p2)
-
-    (* TODO It's maybe possible to compare polynomials without full evaluation *)
-    (* However, there are probably more expensive operations *)
-    let eval_bool (constr : t) (varmapping : P.Valuation_.t) =
-      match constr with
-      | (p1, comp, p2) -> (Comparator.to_function comp) (P.eval p1 varmapping) (P.eval p2 varmapping)
-        
 end

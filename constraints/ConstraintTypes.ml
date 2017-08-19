@@ -27,17 +27,8 @@ module type Atom =
 
         end
                                                   
-        type t = Polynomial_.t * Comparator.t * Polynomial_.t
+        type t = Polynomial_.t * Comparator.t * Polynomial_.t  (** TODO Should not be exposed *)
              
-        (** Returns the comparator of the atom as-is. *)
-        val comparator : t -> Comparator.t
-
-        (** Returns the the left hand side of the constraint. *)
-        val fst : t -> Polynomial_.t
-
-        (** Returns the the right hand side of the constraint. *)
-        val snd : t -> Polynomial_.t
-        
 
         (** Following methods are convenience methods for the creation of atoms. *)
           
@@ -50,20 +41,21 @@ module type Atom =
         val mk_neq : Polynomial_.t -> Polynomial_.t -> t
         
 
-        (** Following methods manipulate atoms and return the manipulated versions. *)
-
-        (** Transforms the atom to a form, where all variables occur on the lhs and the rhs consists of a single constant. 
-            Example: (2*a^2 - 4b + 1 >= 2b - 7) gets transformed to (2*a^2 - 6b >= -8). *)
-        val normalise : t->t
-
-        (** Returns an atom which does not use strict comparators (GT (>=), LT (<=)). 
-            To be correct, the underlying polynomial must be based on values which have unique predecessors and successors. 
-            !! This is not checked at the moment !! *)
-        val remove_strictness : t->t
-        
-
-        (** Following methods return if the atom has certain properties. *)
+        (** Following methods return certain properties of the atom. *)
           
+        (** Returns the comparator of the atom as-is. *)
+        val comparator : t -> Comparator.t
+
+        (** Returns the the left hand side of the constraint. *)
+        val fst : t -> Polynomial_.t
+
+        (** Returns the the right hand side of the constraint. *)
+        val snd : t -> Polynomial_.t
+        
+        val (==) : t -> t -> bool
+        
+        val to_string : t -> string
+
         val is_gt : t -> bool
         val is_ge : t -> bool
         val is_lt : t -> bool
@@ -79,20 +71,28 @@ module type Atom =
         (** Returns if the atoms are equivalent. *)
         val is_redundant : t -> t -> bool
           
-        val (==) : t -> t -> bool
-        
-        val to_string : t -> string
-
         (** Returns the set of variables which are active in the atom.
             A variable is active, if it's value has an effect on the evaluation of the atom. *)
         val vars : t -> Polynomial_.Var.t Set.t
-          
+
+
+        (** Following methods manipulate atoms and return the manipulated versions. *)
+
         (** Assigns the variables of the atom new names based on the rename map. *)
         val rename : t -> Polynomial_.RenameMap_.t -> t
 
         (** Assigns each variable a value and returns if the atom is satisfied for those values. *)
         val eval_bool : t -> Polynomial_.Valuation_.t -> bool
           
+        (** Transforms the atom to a form, where all variables occur on the lhs and the rhs consists of a single constant. 
+            Example: (2*a^2 - 4b + 1 >= 2b - 7) gets transformed to (2*a^2 - 6b >= -8). *)
+        val normalise : t->t
+
+        (** Returns an atom which does not use strict comparators (GT (>=), LT (<=)). 
+            To be correct, the underlying polynomial must be based on values which have unique predecessors and successors. 
+            !! This is not checked at the moment !! *)
+        val remove_strictness : t->t
+                  
     end
 
 (** A constraint is a conjunction of atoms *)
@@ -110,7 +110,7 @@ module type Constraint =
         val mk_true : t
         
 
-        (** Following methods return if the atom has certain properties. *)
+        (** Following methods return certain properties of the constraint. *)
           
         (** Returns if the constraint is a tautology *)
         val is_true : t -> bool
