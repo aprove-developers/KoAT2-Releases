@@ -34,7 +34,7 @@ module type Transition =
   end
 
 (** A graph is a integer transition system based on transitions and locations *)
-module type Graph =
+module type TransitionGraph =
   sig
     module Transition_ : Transition
     module Location_ : Location
