@@ -38,9 +38,16 @@ module type TransitionGraph =
   sig
     module Transition_ : Transition
     module Location_ : Location
-    include module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_)
-    val add_vertices : t -> vertex list -> t
-    val add_edges : t -> edge list -> t
+
+    type t
+
+    module Graph : sig
+      include module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_)
+      val add_vertices : t -> vertex list -> t
+      val add_edges : t -> edge list -> t
+      val mk : vertex list -> edge list -> t
+    end
+
     val from : Transition_.Constraint_.Atom_.Polynomial_.Var.t list
                -> (string * string * Transition_.t) list
                -> t
