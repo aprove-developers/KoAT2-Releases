@@ -219,6 +219,10 @@ module type Math =
     val sum : t list -> t
     val product : t list -> t
     val sub : t -> t -> t
+    val (+) : t -> t -> t
+    val (-) : t -> t -> t
+    val ( * ) : t -> t -> t
+    val ( ** ) : t -> int -> t
   end
 
 (** Extends a BaseMath module to get all math methods *)
@@ -228,6 +232,10 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
     let sum = List.fold_left add zero
     let product = List.fold_left mul one
     let sub t1 t2 = add t1 (neg t2)
+    let (+) = add
+    let (-) = sub
+    let ( * ) = mul
+    let ( ** ) = pow
   end
 
 (** A Polynomial represents a mathematical polynomial *)
