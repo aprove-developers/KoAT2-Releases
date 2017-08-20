@@ -65,6 +65,7 @@ struct
     let snd = function
       | (_,_,snd) -> snd
 
+    (* TODO Wrong *)
     let (=~=) atom1 atom2 =
       match (atom1, atom2) with
       | ((p1, comp1, q1), (p2, comp2, q2)) ->

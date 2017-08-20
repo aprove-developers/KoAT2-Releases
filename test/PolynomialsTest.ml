@@ -2,7 +2,8 @@ open Batteries
 open OUnit2
 open PolyTypes
 open ConstraintTypes
-
+open Helper
+   
 module Parser =
   struct
     module Reader = Readers.Make(Mocks.TransitionGraph)
@@ -16,7 +17,7 @@ module Parser =
       "Parser" >::: [
           "Positive Tests" >::: (
             List.map (fun (testname, expected, expression) ->
-                testname >:: (fun _ -> assert_equal expected (to_polynomial_and_back expression)))
+                testname >:: (fun _ -> assert_equal_string expected (to_polynomial_and_back expression)))
                      [
                        ("Constant", "42", " 42 ");
                        ("Negated Constant", "(-42)", " - 42 ");
@@ -65,13 +66,10 @@ module Methods (P : Polynomial) =
 
     let assert_equal_value =
       assert_equal ~cmp:P.Value.equal ~printer:P.Value.to_string
+
+    let assert_equal_polynomial =
+      assert_equal ~cmp:P.(=~=) ~printer:P.to_string
     
-    let assert_equal_string =
-      assert_equal ~cmp:String.equal
-
-    let assert_true = assert_bool ""
-    let assert_false b = assert_true (not b)
-
     let tests =
       "Polynomial" >::: [
           "Evaluate" >::: (
@@ -116,7 +114,7 @@ module Methods (P : Polynomial) =
                 );
                 "is_var" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_var (Reader.read_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_bool expected (P.is_var (Reader.read_polynomial expression))))
                            [
                              (false, " 1 ");
                              (true, " x ");
@@ -134,7 +132,7 @@ module Methods (P : Polynomial) =
                 
                 "is_univariate_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_univariate_linear (Reader.read_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal_bool expected (P.is_univariate_linear (Reader.read_polynomial expression))))
                             [
                                 (true, " 1 ");
                                 (true, " x ");
@@ -152,7 +150,7 @@ module Methods (P : Polynomial) =
                     
                 "is_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (P.is_linear (Reader.read_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal_bool expected (P.is_linear (Reader.read_polynomial expression))))
                             [
                                 (true, " 1 ");
                                 (true, " x ");
@@ -174,7 +172,7 @@ module Methods (P : Polynomial) =
 
                 "substitute" >::: (
                     List.map (fun (expected, substitution, polynomial) ->
-                        polynomial >:: (fun _ -> assert_equal ~cmp:P.(=~=) ~printer:P.to_string
+                        polynomial >:: (fun _ -> assert_equal_polynomial
                                                               (Reader.read_polynomial expected)
                                                               (P.substitute (P.Var.of_string "x")
                                                                             ~replacement:(Reader.read_polynomial substitution)
