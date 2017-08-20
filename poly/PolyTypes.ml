@@ -60,8 +60,12 @@ module type Valuation =
     (** Creates a valuation where every variable is assigned the value zero *)
     val zero : var list -> t
 
-    (** Returns the value of the variable *)
+    (** Returns the value of the variable.
+        !! If the valuation does not provide a value for a variable, an exception is raised. !! *)
     val eval : var -> t -> value
+
+    (** Returns the value of the variable, if the valuation defines one for it. *)
+    val eval_opt : var -> t -> value Option.t
 
     (** Returns a list of the variables for which the valuation is defined *)
     val vars : t -> var list
@@ -293,7 +297,7 @@ module type Polynomial =
     (** Misc *)
 
     (** Creates a polynomial where every variable for which a value is assigned by the valuation is replaced by this value. *)
-    val replace : t -> Valuation_.t -> t
+    val eval_partial : t -> Valuation_.t -> t
 
     (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
         Ignores naming equalities. *)
@@ -302,7 +306,7 @@ module type Polynomial =
     (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
         Leaves all variables unchanged which are not in the replacement map.  *)
     val substitute_all : t Map.Make(Var).t -> t -> t
-      
+
     (** Removes all summands from the polynomial which are equivalent to the monomial. *)
     val delete_monomial : monomial -> t -> t
 

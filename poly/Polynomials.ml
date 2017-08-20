@@ -173,22 +173,24 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       |> List.map (fun scaled -> ScaledMonomial.eval scaled valuation)
       |> List.fold_left Value.add Value.zero
 
-    let replace poly poly_valuation =
-      raise (Failure "Replace for Polynomial not yet implemented")
-
     (* Helper function *)
-    let substitute_ (substitution : Var.t -> t) =
+    let var_replace (substitution : Var.t -> t) =
       fold ~const:from_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow
           
     let substitute var ~replacement =
-      substitute_ (fun target_var ->
+      var_replace (fun target_var ->
           if Var.(var =~= target_var) then replacement else from_var target_var
         )
 
     let substitute_all substitution =
       let module VarMap = Map.Make(Var) in
-      substitute_ (fun var ->
+      var_replace (fun var ->
           VarMap.find_default (from_var var) var substitution
         )
       
+    let eval_partial poly valuation =
+      var_replace (fun var ->
+          Option.map from_constant (Valuation_.eval_opt var valuation) |? from_var var
+        ) poly
+
   end
