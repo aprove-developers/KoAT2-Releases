@@ -57,6 +57,9 @@ module type Valuation =
 
     val from : (var * value) list -> t
 
+    (** Creates a valuation from a string (var) to int (value) association list *)
+    val from_native : (string * int) list -> t
+
     (** Creates a valuation where every variable is assigned the value zero *)
     val zero : var list -> t
 
@@ -83,6 +86,9 @@ module type RenameMap =
     type var
 
     val from : (var * var) list -> t
+
+    (** Creates a rename map from a two strings (vars) association list *)
+    val from_native : (string * string) list -> t
 
     (** Creates a rename map where every variable keeps its name *)
     val id : var list -> t

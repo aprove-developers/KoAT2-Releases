@@ -55,9 +55,7 @@ module Methods (P : Polynomial) =
   struct
     module Reader = Readers.Make(TransitionGraph.MakeTransitionGraph(TransitionGraph.MakeTransition(Constraints.Make(P))))
                
-    let example_valuation = P.Valuation_.from [(P.Var.of_string "x", P.Value.of_int 3);
-                                               (P.Var.of_string "y", P.Value.of_int 5);
-                                               (P.Var.of_string "z", P.Value.of_int 7)]
+    let example_valuation = P.Valuation_.from_native [("x", 3); ("y", 5); ("z", 7)]
                                             
     let evaluate str =
          str

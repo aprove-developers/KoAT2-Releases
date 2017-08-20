@@ -66,13 +66,11 @@ module Methods (C : Constraint) =
       |> Reader.read_constraint
       |> C.to_string
 
-    let example_valuation = Polynomial.Valuation_.from [(Polynomial.Var.of_string "x", Polynomial.Value.of_int 3);
-                                                        (Polynomial.Var.of_string "y", Polynomial.Value.of_int 5);
-                                                        (Polynomial.Var.of_string "z", Polynomial.Value.of_int 7)]
+    let example_valuation = Polynomial.Valuation_.from_native [("x", 3);
+                                                        ("y", 5);
+                                                        ("z", 7)]
                           
-    let example_renaming = Polynomial.RenameMap_.from [(Polynomial.Var.of_string "x"), (Polynomial.Var.of_string "a");
-                                                       (Polynomial.Var.of_string "y"), (Polynomial.Var.of_string "b");
-                                                       (Polynomial.Var.of_string "z"), (Polynomial.Var.of_string "c")]
+    let example_renaming = Polynomial.RenameMap_.from_native [("x", "a"); ("y", "b"); ("z", "c")]
     
     
     let varset_to_string varl =

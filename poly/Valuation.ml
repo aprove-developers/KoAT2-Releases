@@ -12,6 +12,9 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
         | (key, value) -> M.add key value in
       List.fold_left (fun map keyadder -> keyadder map) M.empty (List.map addEntry entries)
 
+    let from_native entries =
+      from (List.map (fun (var, value) -> (Var.of_string var, Value.of_int value)) entries)
+
     let zero vars = from (List.map (fun var -> (var, Value.zero)) vars)
 
     let eval = M.find
