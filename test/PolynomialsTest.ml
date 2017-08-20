@@ -171,7 +171,41 @@ module Methods (P : Polynomial) =
                                 (true, "0");
                             ];
                     );
-              ]
+
+                "substitute" >::: (
+                    List.map (fun (expected, substitution, polynomial) ->
+                        polynomial >:: (fun _ -> assert_equal ~cmp:P.(=~=) ~printer:P.to_string
+                                                              (Reader.read_polynomial expected)
+                                                              (P.substitute (P.Var.of_string "x")
+                                                                            ~replacement:(Reader.read_polynomial substitution)
+                                                                            (Reader.read_polynomial polynomial))))
+                             [
+                               (* No variables -> No change *)
+                               (" 0 ", " 1 ", " 0 ");
+                               (" 0 ", " x ", " 0 ");
+                               (* Variable does not occur -> No change *)
+                               (" y ", " 1 ", " y ");
+                               (" y ", " x ", " y ");
+                               (* Polynomial is just variable *)
+                               (" 1 ", " 1 ", " x ");
+                               (" y ", " y ", " x ");
+                               (" 2 * x ", " 2 * x ", " x ");
+                               (* More complex *)
+                               (" 2 ", " 1 ", " 2 * x ");
+                               (" 2 * x ", " x ", " 2 * x ");
+                               (" 4 * x ", " 2 * x ", " 2 * x ");
+                               (" 1 ", " 1 ", " x ^ 2 ");
+                               (" x ^ 2 ", " x ", " x ^ 2 ");
+                               (" x ^ 4 ", " x ^ 2 ", " x ^ 2 ");
+                               (" 4 * x ^ 2  ", " 2 * x ", " x ^ 2 ");
+                               (* Variable occurs multiple times *)
+                               (" 2 ", " 1 ", " x + x ");
+                               (" 2 ", " 1 ", " x * x + x ^ 2 ");
+                               (" y * y + y ^ 2 ", " y ", " x * x + x ^ 2 ");
+                            ];
+                    );
+
+                          ]
             );
             
 
