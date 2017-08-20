@@ -298,6 +298,10 @@ module type Polynomial =
     (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
         Ignores naming equalities. *)
     val substitute : Var.t -> replacement:t -> t -> t
+
+    (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
+        Leaves all variables unchanged which are not in the replacement map.  *)
+    val substitute_all : t Map.Make(Var).t -> t -> t
       
     (** Removes all summands from the polynomial which are equivalent to the monomial. *)
     val delete_monomial : monomial -> t -> t

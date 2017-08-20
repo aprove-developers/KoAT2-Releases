@@ -139,12 +139,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       end
     include PolyTypes.MakeMath(BaseMathImpl)
 
-    let substitute var ~replacement poly =
-      let substituted (target_var : Var.t) =
-        if Var.(var =~= target_var) then replacement else from_var target_var
-      in
-      fold ~const:from_constant ~var:substituted ~neg:neg ~plus:add ~times:mul ~pow:pow poly
-      
     module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
       struct
         type t = outer_t
@@ -182,4 +176,19 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let replace poly poly_valuation =
       raise (Failure "Replace for Polynomial not yet implemented")
 
+    (* Helper function *)
+    let substitute_ (substitution : Var.t -> t) =
+      fold ~const:from_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow
+          
+    let substitute var ~replacement =
+      substitute_ (fun target_var ->
+          if Var.(var =~= target_var) then replacement else from_var target_var
+        )
+
+    let substitute_all substitution =
+      let module VarMap = Map.Make(Var) in
+      substitute_ (fun var ->
+          VarMap.find_default (from_var var) var substitution
+        )
+      
   end
