@@ -83,7 +83,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       struct
         type t = outer_t
                
-        let (==) b1 b2 = b1 == b2
+        let (=~=) b1 b2 = b1 == b2
                        
         let rec (>) b1 b2 = match (b1, b2) with
           | (Poly p1, Poly p2) -> Polynomial_.(>) p1 p2

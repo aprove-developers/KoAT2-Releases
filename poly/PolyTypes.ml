@@ -2,11 +2,12 @@ open Batteries
 
 (** Provides all module types related to polynomials *)
 
-(** Modules including Eq hold a type that defines an equality relation on its elements *)
+(** Modules including Eq hold a type that defines a semantic equality relation on its elements.
+    (==) is not used for that, because it has a reserved meaning in Ocaml. *)
 module type Eq =
   sig
     type t
-    val (==) : t -> t -> bool
+    val (=~=) : t -> t -> bool
     (* TODO val (!=) : t -> t -> bool *)
   end
 
@@ -59,8 +60,12 @@ module type Valuation =
     (** Creates a valuation where every variable is assigned the value zero *)
     val zero : var list -> t
 
-    (** Returns the value of the variable *)
+    (** Returns the value of the variable.
+        !! If the valuation does not provide a value for a variable, an exception is raised. !! *)
     val eval : var -> t -> value
+
+    (** Returns the value of the variable, if the valuation defines one for it. *)
+    val eval_opt : var -> t -> value Option.t
 
     (** Returns a list of the variables for which the valuation is defined *)
     val vars : t -> var list
@@ -95,7 +100,7 @@ module type Evaluable =
     module Valuation_ : (Valuation with type var = Var.t and type value = Value.t)
     module RenameMap_ : (RenameMap with type var = Var.t)
 
-    val (==) : t -> t -> bool
+    include Eq with type t := t
     val of_string : string -> t
     val to_string : t -> string
 
@@ -214,6 +219,10 @@ module type Math =
     val sum : t list -> t
     val product : t list -> t
     val sub : t -> t -> t
+    val (+) : t -> t -> t
+    val (-) : t -> t -> t
+    val ( * ) : t -> t -> t
+    val ( ** ) : t -> int -> t
   end
 
 (** Extends a BaseMath module to get all math methods *)
@@ -223,6 +232,10 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
     let sum = List.fold_left add zero
     let product = List.fold_left mul one
     let sub t1 t2 = add t1 (neg t2)
+    let (+) = add
+    let (-) = sub
+    let ( * ) = mul
+    let ( ** ) = pow
   end
 
 (** A Polynomial represents a mathematical polynomial *)
@@ -294,7 +307,15 @@ module type Polynomial =
     (** Misc *)
 
     (** Creates a polynomial where every variable for which a value is assigned by the valuation is replaced by this value. *)
-    val replace : t -> Valuation_.t -> t
+    val eval_partial : t -> Valuation_.t -> t
+
+    (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
+        Ignores naming equalities. *)
+    val substitute : Var.t -> replacement:t -> t -> t
+
+    (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
+        Leaves all variables unchanged which are not in the replacement map.  *)
+    val substitute_all : t Map.Make(Var).t -> t -> t
 
     (** Removes all summands from the polynomial which are equivalent to the monomial. *)
     val delete_monomial : monomial -> t -> t

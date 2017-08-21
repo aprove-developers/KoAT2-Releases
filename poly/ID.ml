@@ -3,7 +3,7 @@ open Batteries
 module StringID =
   struct
     type t = String.t
-    let (==) = String.equal
+    let (=~=) = String.equal
     let of_string str = str
     let to_string var = var
     let compare = String.compare
@@ -13,7 +13,7 @@ module PrePostID =
   struct
     type t = Pre of StringID.t | Post of StringID.t
                                        
-    let (==) a b = match (a, b) with
+    let (=~=) a b = match (a, b) with
       | (Pre _, Post _) -> false
       | (Post _, Pre _) -> false
       | (Pre id1, Pre id2) -> id1 == id2

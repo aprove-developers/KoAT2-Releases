@@ -3,6 +3,7 @@ open ID
 open OUnit2
 open PolyTypes
 open ConstraintTypes
+open Helper
    
 module Parser =
   struct
@@ -17,7 +18,7 @@ module Parser =
         "Parser" >::: [
             "Positive Tests" >::: (
                 List.map (fun (testname, expected, atom) ->
-                testname >:: (fun _ -> assert_equal expected (to_atom_and_back atom)))
+                testname >:: (fun _ -> assert_equal_string expected (to_atom_and_back atom)))
                         [
                         ("Constants LT", "42 < 42", " 42 < 42 ");
                         ("Constants LE", "42 <= 42", " 42 <= 42 ");
@@ -86,13 +87,9 @@ module Methods (C : Constraint) =
       |> Reader.read_atom
       |> fun atom -> Atom.eval_bool atom example_valuation
       
-    let assert_equal_string =
-        assert_equal ~cmp:String.equal
+    let assert_equal_atom =
+      assert_equal ~cmp:C.Atom_.(=~=) ~printer:C.Atom_.to_string
 
-    let assert_true = assert_bool ""
-    let assert_false b = assert_true (not b)
-    
-    
     let tests = 
         let default_poly_l_1 = "x^5+y^6-z^3" in
         let default_poly_r_1 = "x^2+ 5*x*y*z" in
@@ -103,7 +100,7 @@ module Methods (C : Constraint) =
             
             ("is_lt" >:::  
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_lt (Reader.read_atom atom))))
+                      atom >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_lt (Reader.read_atom atom))))
                       (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (true, " < ");
@@ -117,7 +114,7 @@ module Methods (C : Constraint) =
             
             ("is_le" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_le (Reader.read_atom atom))))
+                      atom >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_le (Reader.read_atom atom))))
                         (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (false, " < ");
@@ -131,7 +128,7 @@ module Methods (C : Constraint) =
             
             ("is_gt" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_gt (Reader.read_atom atom))))
+                      atom >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_gt (Reader.read_atom atom))))
                         (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (false, " < ");
@@ -145,7 +142,7 @@ module Methods (C : Constraint) =
                         
             ("is_ge" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_ge (Reader.read_atom atom))))
+                      atom >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_ge (Reader.read_atom atom))))
                         (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (false, " < ");
@@ -158,7 +155,7 @@ module Methods (C : Constraint) =
             );
             ("is_eq" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_eq (Reader.read_atom atom))))
+                      atom >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_eq (Reader.read_atom atom))))
                         (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (false, " < ");
@@ -172,7 +169,7 @@ module Methods (C : Constraint) =
             
             ("is_neq" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_neq (Reader.read_atom atom))))
+                      atom >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_neq (Reader.read_atom atom))))
                         (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
                         [
                             (false, " < ");
@@ -184,15 +181,15 @@ module Methods (C : Constraint) =
                         ])
             );
                         
-            ("(==)" >:::
+            ("(=~=)" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                    (atom1 ^ "==" ^ atom2) >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.(==) (Reader.read_atom atom1) (Reader.read_atom atom2))))
+                    (atom1 ^ "=~=" ^ atom2) >:: (fun _ -> assert_equal_bool expected (C.Atom_.(Reader.read_atom atom1 =~= Reader.read_atom atom2))))
                         (List.map (fun (a,b,c)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1, default_poly_l_2 ^ c ^ default_poly_r_1)) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
             );
                         
             ("is_same_constr" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_same (Reader.read_atom atom1) (Reader.read_atom atom2))))
+                      atom1 >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_same (Reader.read_atom atom1) (Reader.read_atom atom2))))
                         (List.map (fun (a,b,c)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1, default_poly_l_2 ^ c ^ default_poly_r_1)) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
             );
             
@@ -207,7 +204,7 @@ module Methods (C : Constraint) =
                         
             ("rename_vars" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~cmp:C.Atom_.(==) ~printer:C.Atom_.to_string (Reader.read_atom expected) (rename atom )))
+                      atom >:: (fun _ -> assert_equal_atom (Reader.read_atom expected) (rename atom )))
                         [
                             ("5 <= 5", " 5 <= 5 " );
                             ("a == a", "x == x" );
@@ -219,7 +216,7 @@ module Methods (C : Constraint) =
                         ]);
             ("eval_bool" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ ->  assert_equal ~printer:Bool.to_string (expected) (evaluate atom )))
+                      atom >:: (fun _ ->  assert_equal_bool (expected) (evaluate atom )))
                         [
                             (true, " 5 <= 5 " );
                             (true, "x == x" );
@@ -231,7 +228,7 @@ module Methods (C : Constraint) =
                         
             ("is_redundant" >:::
                 List.map (fun (expected, atom1, atom2) ->
-                      atom1 >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_redundant (Reader.read_atom atom1) (Reader.read_atom atom2))))
+                      atom1 >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_redundant (Reader.read_atom atom1) (Reader.read_atom atom2))))
                         [
                             (true, "x < y", "y > x");
                             (true, "x <= a^2 + b * 3 -6", "x <= a^2 + b * 3 -6" );
@@ -241,7 +238,7 @@ module Methods (C : Constraint) =
             
             ("is_linear" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~printer:Bool.to_string expected (C.Atom_.is_linear (Reader.read_atom atom))))
+                      atom >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_linear (Reader.read_atom atom))))
                         [
                             (true, "x < y");
                             (false, "x <= a^2 + b * 3 -6");
@@ -253,7 +250,7 @@ module Methods (C : Constraint) =
 
             ("normalise" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~cmp:C.Atom_.(==) ~printer:C.Atom_.to_string (Reader.read_atom expected) (C.Atom_.normalise (Reader.read_atom atom))))
+                      atom >:: (fun _ -> assert_equal_atom (Reader.read_atom expected) (C.Atom_.normalise (Reader.read_atom atom))))
                         [
                             ("x<=3","x<=3");
                             ("a + b + c <= -2", "a+2 <= -b-c");

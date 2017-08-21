@@ -32,7 +32,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let to_string_simplified scaled =
       if scaled.coeff == Value.one then Monomial.to_string scaled.mon
-      else if scaled.mon == Monomial.one then "(" ^ Value.to_string scaled.coeff ^ ")"
+      else if Monomial.(scaled.mon =~= Monomial.one) then "(" ^ Value.to_string scaled.coeff ^ ")"
       else "(" ^ Value.to_string scaled.coeff ^ ")" ^ "*" ^ Monomial.to_string scaled.mon
       
     let to_string scaled = to_string_simplified (simplify scaled)
@@ -44,12 +44,12 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       struct
         type t = outer_t
                
-        let (==) scaled1 scaled2 =
-          (scaled1.coeff == scaled2.coeff) && (Monomial.(==) scaled1.mon scaled2.mon)
+        let (=~=) scaled1 scaled2 =
+          (scaled1.coeff == scaled2.coeff) && Monomial.(scaled1.mon =~= scaled2.mon)
           
         let (>) s1 s2 = match (s1, s2) with
           (* TODO Find some rules to compare *)
-          | (s1, s2) -> if (Monomial.(==) (monomial s1) (monomial s2) && (coeff s1 > coeff s2)) then
+          | (s1, s2) -> if Monomial.(monomial s1 =~= monomial s2) && (coeff s1 > coeff s2) then
                           Some true
                         else None
                       

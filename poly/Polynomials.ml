@@ -26,12 +26,12 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       
     let coeff mon poly =
          poly
-      |> List.filter (fun scaled -> Monomial_.(==) (ScaledMonomial_.monomial scaled) mon)
+      |> List.filter (fun scaled -> Monomial_.(=~=) (ScaledMonomial_.monomial scaled) mon)
       |> List.map ScaledMonomial_.coeff
       |> List.fold_left Value.add Value.zero
 
     let delete_monomial mon poly =
-      List.filter (fun x -> not (Monomial_.(==) (ScaledMonomial_.monomial x) mon)) poly
+      List.filter (fun x -> not (Monomial_.(=~=) (ScaledMonomial_.monomial x) mon)) poly
 
     let rec simplify_partial_simplified poly =
       match poly with 
@@ -53,6 +53,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let to_string poly = to_string_simplified (simplify poly)
 
     let of_string poly = raise (Failure "of_string for Polynomial not yet implemented") (* TODO Use ocamlyacc *)
+
 
     let rec equal_simplified poly1 poly2 =
       List.length poly1 == List.length poly2 &&
@@ -154,7 +155,17 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       struct
         type t = outer_t
                
-        let (==) poly1 poly2 = 
+        let rec equal_simplified poly1 poly2 =
+          List.length poly1 == List.length poly2 &&
+            match poly1 with
+            | [] -> true
+            | scaled :: tail ->
+               let curr_mon = ScaledMonomial_.monomial scaled in
+               let curr_coeff = ScaledMonomial_.coeff scaled in
+               Value.equal curr_coeff (coeff curr_mon poly2) &&
+                 equal_simplified tail (delete_monomial curr_mon poly2)
+               
+        let (=~=) poly1 poly2 = 
           equal_simplified (simplify poly1) (simplify poly2)
           
         let (>) p1 p2 = match (p1, p2) with
@@ -165,15 +176,33 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       end
     include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
-    let is_zero poly = simplify poly == zero
+    let is_zero poly = poly =~= zero
 
-    let is_one poly = simplify poly == one
+    let is_one poly = poly =~= one
                      
     let eval poly valuation =
          poly
       |> List.map (fun scaled -> ScaledMonomial_.eval scaled valuation)
       |> List.fold_left Value.add Value.zero
 
-    let replace poly poly_valuation =
-      raise (Failure "Replace for Polynomial not yet implemented")
+    (* Helper function *)
+    let var_replace (substitution : Var.t -> t) =
+      fold ~const:from_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow
+          
+    let substitute var ~replacement =
+      var_replace (fun target_var ->
+          if Var.(var =~= target_var) then replacement else from_var target_var
+        )
+
+    let substitute_all substitution =
+      let module VarMap = Map.Make(Var) in
+      var_replace (fun var ->
+          VarMap.find_default (from_var var) var substitution
+        )
+      
+    let eval_partial poly valuation =
+      var_replace (fun var ->
+          Option.map from_constant (Valuation_.eval_opt var valuation) |? from_var var
+        ) poly
+
   end

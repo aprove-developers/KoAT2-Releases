@@ -3,6 +3,7 @@ open ID
 open OUnit2
 open PolyTypes
 open ConstraintTypes
+open Helper
    
 module Parser =
   struct
@@ -15,15 +16,15 @@ module Parser =
 
     let comp_tests comp = 
       comp >::: [
-          "Constants" >:: (fun _ -> assert_equal ~printer:identity
+          "Constants" >:: (fun _ -> assert_equal_string
                                       ("42 " ^ comp ^ " 42")
                                       (to_constr_and_back ("42 " ^ comp ^ " 42"))
                           );
-          "Constants and Poly" >:: (fun _ -> assert_equal ~printer:identity
+          "Constants and Poly" >:: (fun _ -> assert_equal_string
                                                ("42 " ^ comp ^ " ((x^2)+(((5*x)*y)*z))")
                                                (to_constr_and_back (" 42 " ^ comp ^ " x^2+ 5*x*y*z "))
                                    );
-          "Poly and Poly" >:: (fun _ -> assert_equal ~printer:identity
+          "Poly and Poly" >:: (fun _ -> assert_equal_string
                                           ("(((x^5)+(y^6))+(-(z^3))) " ^ comp ^ " ((x^2)+(((5*x)*y)*z))")
                                           (to_constr_and_back (" x^5+y^6-z^3 " ^ comp ^ " x^2+ 5*x*y*z "))
                               );
@@ -34,7 +35,7 @@ module Parser =
           "All comparators" >::: List.map comp_tests ["<"; "<="; ">"; ">="; "=="; "<>"];
           "All together" >::: (
             List.map (fun (testname, expected, atom) ->
-                testname >:: (fun _ -> assert_equal ~printer:identity expected (to_constr_and_back atom)))
+                testname >:: (fun _ -> assert_equal_string expected (to_constr_and_back atom)))
                      [
                        ("Constants ", "42 < 42 /\ 1 >= 0 /\ 2 <= 4 /\ 6 == 7", " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 == 7");
                        ("Constants and Variables", "x > 0 /\ y < 3", "x > 0 && y < 3");
@@ -89,24 +90,18 @@ module Methods (C : Constraint) =
          str
       |> Reader.read_constraint
       |> fun constr -> C.eval_bool constr example_valuation
-      
-    let assert_equal_string =
-        assert_equal ~cmp:String.equal
 
-    let assert_true = assert_bool ""
-    let assert_false b = assert_true (not b)
-    
+                                   (* TODO Wrong *)
     let rec equal_constr constr1 constr2 = 
         match (constr1,constr2) with 
         | ([],[]) -> true
-        | (h1::t1, h2::t2) -> (C.Atom_.(==) h1 h2) && (equal_constr t1 t2)
+        | (h1::t1, h2::t2) -> C.Atom_.(h1 =~= h2) && equal_constr t1 t2
         | (_,_) -> false
             
-    let assert_equal_constr = 
-    
-        assert_equal ~cmp:equal_constr ~printer:C.to_string   
-    
-    
+
+    let assert_equal_constr =     
+        assert_equal ~cmp:equal_constr ~printer:C.to_string
+
     let tests = 
 
         "Constraints" >:::[
@@ -135,7 +130,7 @@ module Methods (C : Constraint) =
                         ]);
             ("eval_bool" >:::
                 List.map (fun (expected, constr) ->
-                      constr >:: (fun _ ->  assert_equal ~printer:Bool.to_string (expected) (evaluate constr )))
+                      constr >:: (fun _ ->  assert_equal_bool (expected) (evaluate constr )))
                         [
                             (true, " 5 <= 5 " );
                             (true, "x == x" );
