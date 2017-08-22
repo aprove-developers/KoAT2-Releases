@@ -3,7 +3,7 @@
 %token	<string>	ID
 %token	<int>		UINT
 %token			PLUS MINUS TIMES POW
-%token			EQUAL NEQ GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
+%token			EQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
 %token			LPAR RPAR
 %token			EOF EOL
 %token                  AND
@@ -11,7 +11,7 @@
 %token			RULES VAR
 %token                  COMMA
 
-%left                   EQUAL NEQ LESSTHAN LESSEQUAL GREATERTHAN GREATEREQUAL
+%left                   EQUAL LESSTHAN LESSEQUAL GREATERTHAN GREATEREQUAL
 %left			PLUS MINUS
 %left			TIMES
 %left			POW
@@ -97,7 +97,6 @@ atom :
                 
 %inline comparator :
   	| 	EQUAL { Atom.mk_eq }
-  	| 	NEQ { Atom.mk_neq }
   	| 	GREATERTHAN { Atom.mk_gt }
   	| 	GREATEREQUAL { Atom.mk_ge }
   	| 	LESSTHAN { Atom.mk_lt }

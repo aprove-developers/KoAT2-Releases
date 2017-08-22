@@ -9,9 +9,9 @@ struct
 
     module Comparator =
       struct
-        type t = GT | GE | LT | LE | NEQ | EQ
+        type t = GT | GE | LT | LE | EQ
 
-        let values = [GT; GE; LT; LE; NEQ; EQ]
+        let values = [GT; GE; LT; LE; EQ]
 
         (* Helper function *)
         let is_inverted (comp1 : t) (comp2 : t) =
@@ -21,7 +21,6 @@ struct
           | (LT, GT) -> true
           | (LE, GE) -> true
           | (EQ, EQ) -> true
-          | (NEQ, NEQ) -> true
           | (_,_) -> false
 
         let to_string = function
@@ -30,7 +29,6 @@ struct
           | LT -> "<"
           | LE -> "<="
           | EQ -> "="
-          | NEQ -> "!="
                
         let to_function =
           let open P.Value.Compare in function
@@ -39,7 +37,6 @@ struct
           | LT -> (<)
           | LE -> (<=)
           | EQ -> (=)
-          | NEQ -> (<>)
       end
            
     type t = P.t * Comparator.t * P.t
@@ -53,7 +50,6 @@ struct
     let mk_lt = mk Comparator.LT
     let mk_le = mk Comparator.LE
     let mk_eq = mk Comparator.EQ
-    let mk_neq = mk Comparator.NEQ
 
 
     let comparator = function 
@@ -83,7 +79,6 @@ struct
     let is_lt = is Comparator.LT
     let is_le = is Comparator.LE
     let is_eq = is Comparator.EQ
-    let is_neq = is Comparator.NEQ
                
     let is_same atom1 atom2 =
       Comparator.(comparator atom1 == comparator atom2)

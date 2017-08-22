@@ -25,19 +25,16 @@ module Parser =
                         ("Constants GT", "42 > 42", " 42 > 42 ");
                         ("Constants GE", "42 >= 42", " 42 >= 42 ");
                         ("Constants EQ", "42 == 42", " 42 == 42 ");
-                        ("Constants NEQ", "42 <> 42", " 42 <> 42 ");
                         ("Constant and Poly LT", "42 < ((x^2)+(((5*x)*y)*z))", " 42 < x^2+ 5*x*y*z ");
                         ("Constant and Poly LE", "42 <= ((x^2)+(((5*x)*y)*z))", " 42 <= x^2+ 5*x*y*z ");
                         ("Constant and Poly GT", "42 > ((x^2)+(((5*x)*y)*z))", " 42 > x^2+ 5*x*y*z ");
                         ("Constant and Poly GE", "42 >= ((x^2)+(((5*x)*y)*z))", " 42 >= x^2+ 5*x*y*z ");
                         ("Constant and Poly EQ", "42 == ((x^2)+(((5*x)*y)*z))", " 42 == x^2+ 5*x*y*z ");
-                        ("Constant and Poly NEQ", "42 <> ((x^2)+(((5*x)*y)*z))", " 42 <> x^2+ 5*x*y*z ");
                         ("Poly and Poly LT", "(((x^5)+(y^6))+(-(z^3))) < ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
                         ("Poly and Poly LE", "(((x^5)+(y^6))+(-(z^3))) <= ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
                         ("Poly and Poly GT", "(((x^5)+(y^6))+(-(z^3))) > ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
                         ("Poly and Poly GE", "(((x^5)+(y^6))+(-(z^3))) >= ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
                         ("Poly and Poly EQ", "(((x^5)+(y^6))+(-(z^3))) == ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 == x^2+ 5*x*y*z ");
-                        ("Poly and Poly NEQ", "(((x^5)+(y^6))+(-(z^3))) <> ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 <> x^2+ 5*x*y*z ");
                         ]
             );
             "Negative Tests" >::: (
@@ -104,7 +101,6 @@ module Methods (C : Constraint) =
                             (false, " > ");
                             (false, " >= ");
                             (false, " == ");
-                            (false, " <> ");
                         ])
             );
             
@@ -118,7 +114,6 @@ module Methods (C : Constraint) =
                             (false, " > ");
                             (false, " >= ");
                             (false, " == ");
-                            (false, " <> ");
                         ])
             );
             
@@ -132,7 +127,6 @@ module Methods (C : Constraint) =
                             (true, " > ");
                             (false, " >= ");
                             (false, " == ");
-                            (false, " <> ");
                         ])
             );
                         
@@ -146,7 +140,6 @@ module Methods (C : Constraint) =
                             (false, " > ");
                             (true, " >= ");
                             (false, " == ");
-                            (false, " <> ");
                         ])
             );
             ("is_eq" >:::
@@ -159,34 +152,19 @@ module Methods (C : Constraint) =
                             (false, " > ");
                             (false, " >= ");
                             (true, " == ");
-                            (false, " <> ");
                         ])
             );
             
-            ("is_neq" >:::
-                List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_neq (Reader.read_atom atom))))
-                        (List.map (fun (a,b)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1))
-                        [
-                            (false, " < ");
-                            (false,  " <= ");
-                            (false, " > ");
-                            (false, " >= ");
-                            (false, " == ");
-                            (true, " <> ");
-                        ])
-            );
-                        
             ("(=~=)" >:::
                 List.map (fun (expected, atom1, atom2) ->
                     (atom1 ^ "=~=" ^ atom2) >:: (fun _ -> assert_equal_bool expected (C.Atom_.(Reader.read_atom atom1 =~= Reader.read_atom atom2))))
-                        (List.map (fun (a,b,c)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1, default_poly_l_2 ^ c ^ default_poly_r_1)) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
+                        (List.map (fun (a,b,c)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1, default_poly_l_2 ^ c ^ default_poly_r_1)) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="] ["<"; "<="; ">"; ">="; "=="]))) 
             );
                         
             ("is_same_constr" >:::
                 List.map (fun (expected, atom1, atom2) ->
                       atom1 >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_same (Reader.read_atom atom1) (Reader.read_atom atom2))))
-                        (List.map (fun (a,b,c)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1, default_poly_l_2 ^ c ^ default_poly_r_1)) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="; "<>"] ["<"; "<="; ">"; ">="; "=="; "<>"]))) 
+                        (List.map (fun (a,b,c)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1, default_poly_l_2 ^ c ^ default_poly_r_1)) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="; "=="] ["<"; "<="; ">"; ">="; "=="]))) 
             );
             
             ("get_variables" >:::
@@ -205,7 +183,6 @@ module Methods (C : Constraint) =
                             ("5 <= 5", " 5 <= 5 " );
                             ("a == a", "x == x" );
                             ("a < a ^ 2 + 2 * a * b", "x < x ^ 2 + 2 * x * y" );
-                            ("a^5+b^6-c^3 <> a * b * c + a^2 " , "x^5+y^6-z^3 <> x * y * z + x^2 ");
                             ("a^2 * b^2 < 7", "x^2 * y^2 < 7");
 
 
@@ -240,7 +217,6 @@ module Methods (C : Constraint) =
                             (false, "x <= a^2 + b * 3 -6");
                             (false, "x >= a^2 + b * 3 -6" );
                             (true, "x+y-2*z+3*x ^ 2 - x*x - x*x - x*x == 7 * z + 4 * y");
-                            (false, "x*x + y*z <> a^17");
 
                         ]);
 

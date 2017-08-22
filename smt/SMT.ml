@@ -39,7 +39,6 @@ module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constr
       | Atom.Comparator.LT -> Z3.Arithmetic.mk_lt
       | Atom.Comparator.LE -> Z3.Arithmetic.mk_le
       | Atom.Comparator.EQ -> Z3.Boolean.mk_eq
-      | Atom.Comparator.NEQ -> (fun ctx p1 p2 -> Z3.Boolean.mk_not ctx (Z3.Boolean.mk_eq ctx p1 p2))
       
     (* Converts our representation of constraints to the z3 representation *)
     let from_atom (constr : Atom.t) =

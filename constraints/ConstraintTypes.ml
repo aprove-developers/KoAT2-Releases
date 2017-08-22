@@ -16,9 +16,8 @@ module type Atom =
               GE -> a >= b.
               LT -> a < b.
               LE -> a <= b.
-              NEQ -> a <> b.
               EQ -> a = b. *)
-          type t = GT | GE | LT | LE | NEQ | EQ
+          type t = GT | GE | LT | LE | EQ
 
           (** Returns a list of all possible comparators *)
           val values : t list
@@ -38,7 +37,6 @@ module type Atom =
         val mk_lt : Polynomial_.t -> Polynomial_.t -> t
         val mk_le : Polynomial_.t -> Polynomial_.t -> t
         val mk_eq : Polynomial_.t -> Polynomial_.t -> t
-        val mk_neq : Polynomial_.t -> Polynomial_.t -> t
         
 
         (** Following methods return certain properties of the atom. *)
@@ -61,7 +59,6 @@ module type Atom =
         val is_lt : t -> bool
         val is_le : t -> bool
         val is_eq : t -> bool
-        val is_neq : t -> bool
 
         val is_same : t -> t -> bool
 
@@ -137,10 +134,6 @@ module type Constraint =
         (** Drops all nonlinear atoms from the constraints. 
             Example: (a > 0 && b^2 < 2) gets transformed to (a > 0) *)
         val drop_nonlinear : t -> t
-
-        (** Drops all atoms which use an unequal comparator.
-            Example: (a > 0 && b <> 0) gets transformed to (a > 0) *)
-        val drop_not_equal : t -> t
 
         (** Returns an constraint which only uses the LT comparator (<).
             This constraint is equivalent if it does not contain unequal comparators. 

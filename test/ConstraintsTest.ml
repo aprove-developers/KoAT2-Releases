@@ -32,15 +32,13 @@ module Parser =
       
     let tests =
       "Parser" >::: [
-          "All comparators" >::: List.map comp_tests ["<"; "<="; ">"; ">="; "=="; "<>"];
+          "All comparators" >::: List.map comp_tests ["<"; "<="; ">"; ">="; "=="];
           "All together" >::: (
             List.map (fun (testname, expected, atom) ->
                 testname >:: (fun _ -> assert_equal_string expected (to_constr_and_back atom)))
                      [
                        ("Constants ", "42 < 42 /\ 1 >= 0 /\ 2 <= 4 /\ 6 == 7", " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 == 7");
                        ("Constants and Variables", "x > 0 /\ y < 3", "x > 0 && y < 3");
-                       ("Constants and Polynomials", "(x*x) > 0 /\ (y^2) < 3 /\ ((x^2)+(((5*x)*y)*z)) <> 17", "x*x > 0 && y^2 < 3 && x^2+ 5*x*y*z <> 17");
-                       ("Polynomial Constraints", "(((x^5)+(y^6))+(-(z^3))) <> ((x^2)+(((5*x)*y)*z)) /\ (z^3) < (x+y)","x^5+y^6-z^3 <> x^2+ 5*x*y*z && z^3 < x +y" );
                      ]
           );
           "Negative Tests" >::: (
@@ -108,7 +106,6 @@ module Methods (C : Constraint) =
                 List.map (fun (expected, constr) ->
                       constr >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string (Set.map Polynomial.Var.of_string (Set.of_list expected)) (C.vars (Reader.read_constraint constr) )))
                         [
-                            (["x"], " x^3+2*x -1 < x^5 && x <> 0 && 3 > 2 " );
                             (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 && y >= 0 && z <= 4" );
 
                         ]);
@@ -120,10 +117,8 @@ module Methods (C : Constraint) =
                             ("5 <= 5", " 5 <= 5 " );
                             ("a == a", "x == x" );
                             ("a < a ^ 2 + 2 * a * b", "x < x ^ 2 + 2 * x * y" );
-                            ("a^5+b^6-c^3 <> a * b * c + a^2 " , "x^5+y^6-z^3 <> x * y * z + x^2 ");
                             ("a^2 * b^2 < 7", "x^2 * y^2 < 7");
                             ("a == a && b < c", "x == x && y < z" );
-                            (" a^2 > 0 && b^2-2*c^3 <> a^5 && 2 < 5 && 2 *a < a + b + c  ", "x^2 > 0 && y^2 -2*z^3 <> x^5 && 2 < 5 && 2*x < x+y+z ")
 
                         ]);
             ("eval_bool" >:::
@@ -137,26 +132,16 @@ module Methods (C : Constraint) =
                             (false , "x^2 * y^2 < 7");
                             (true , "2 < 3 && 3 < 4 && 4 < 5");
                             (false, "3 == 3 && 2 == 2 && 1 == 0");
-                            (false, "x^2 > 0 && y^3 < 100 && x^5+y^6-z^3 <> x^2+ 5*x*y*z");
-                            (true, "x^2 > 0 && y^3 < 126 && x^5+y^6-z^3 <> x^2+ 5*x*y*z");
                         ]);
                         
             ("drop_nonlinear" >:::
                 List.map (fun (expected, constr) ->
                       constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.drop_nonlinear (Reader.read_constraint constr) )))
                         [
-                            ("x <> 0 && 3 > 2", " x^3+2*x -1 < x^5 && x <> 0 && 3 > 2 " );
                             ("","x^2 < x*y + 3");
                             ("3 < x","3 < x + y^3 - y*y^2");
                             ("x == y && y == z","x == y && y == z");
 
-                        ]);
-
-            ("drop_not_equal" >:::
-                List.map (fun (expected, constr) ->
-                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.drop_not_equal (Reader.read_constraint constr))))
-                        [
-                            ("x == y ","x == y && z <> 3");
                         ]);
 
             ("to_less_equal" >:::

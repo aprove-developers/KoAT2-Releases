@@ -39,7 +39,6 @@ rule read =
   | '^'      { P.POW }
   | "->"     { P.ARROW }
   | "=="     { P.EQUAL }
-  | "<>"     { P.NEQ }
   | "<="     { P.LESSEQUAL }
   | ">="     { P.GREATEREQUAL }
   | '<'      { P.LESSTHAN }

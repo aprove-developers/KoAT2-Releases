@@ -22,7 +22,6 @@ module type Atom =
     val mk_lt : Polynomial_.t -> Polynomial_.t -> t
     val mk_le : Polynomial_.t -> Polynomial_.t -> t
     val mk_eq : Polynomial_.t -> Polynomial_.t -> t
-    val mk_neq : Polynomial_.t -> Polynomial_.t -> t
     val to_string : t -> string
   end
   
