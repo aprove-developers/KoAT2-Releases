@@ -33,17 +33,14 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let delete_monomial mon poly =
       List.filter (fun x -> not (Monomial_.(=~=) (ScaledMonomial_.monomial x) mon)) poly
 
-    let rec simplify_partial_simplified poly =
+    let rec simplify poly =
       match poly with 
       | [] -> []
       | scaled::tail ->
          let curr_monom = ScaledMonomial_.monomial scaled in
          let curr_coeff = coeff curr_monom poly in
-         if (Value.equal curr_coeff Value.zero) then (simplify_partial_simplified (delete_monomial curr_monom tail))
-         else (ScaledMonomial_.make curr_coeff curr_monom) :: (simplify_partial_simplified (delete_monomial curr_monom tail) )
-
-    let simplify poly =
-      simplify_partial_simplified (List.map (ScaledMonomial_.simplify) poly)
+         if (Value.equal curr_coeff Value.zero) then (simplify (delete_monomial curr_monom tail))
+         else (ScaledMonomial_.make curr_coeff curr_monom) :: (simplify (delete_monomial curr_monom tail) )
 
     let to_string_simplified poly = 
       if (poly == []) then "0" 

@@ -28,17 +28,11 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
                         
     let degree scaled = Monomial.degree scaled.mon
                       
-    let simplify scaled = { scaled with mon = scaled.mon }
-
-    let to_string_simplified scaled =
+    let to_string scaled =
       if scaled.coeff == Value.one then Monomial.to_string scaled.mon
       else if Monomial.(scaled.mon =~= Monomial.one) then "(" ^ Value.to_string scaled.coeff ^ ")"
       else "(" ^ Value.to_string scaled.coeff ^ ")" ^ "*" ^ Monomial.to_string scaled.mon
       
-    let to_string scaled = to_string_simplified (simplify scaled)
-                         
-    let of_string str = raise (Failure "Not implemented") (* TODO Use ocamlyacc here *)
-
     type outer_t = t
     module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
       struct

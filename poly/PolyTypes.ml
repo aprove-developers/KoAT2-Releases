@@ -172,7 +172,6 @@ module type ScaledMonomial =
 
     val make : Value.t -> monomial -> t
     val lift : monomial -> t
-    val simplify : t -> t
     val mul : t -> t -> t
     val mult_with_const : Value.t -> t -> t
     val one : t
