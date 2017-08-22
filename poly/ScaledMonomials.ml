@@ -28,7 +28,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
                         
     let degree scaled = Monomial.degree scaled.mon
                       
-    let simplify scaled = { scaled with mon = Monomial.simplify scaled.mon }
+    let simplify scaled = { scaled with mon = scaled.mon }
 
     let to_string_simplified scaled =
       if scaled.coeff == Value.one then Monomial.to_string scaled.mon

@@ -1,137 +1,63 @@
 open Batteries
 
-module MakePower(Var : PolyTypes.ID)(Value : Number.Numeric) =
-  struct
-    module Valuation_ = Valuation.Make(Var)(Value)
-    module RenameMap_ = RenameMap.Make(Var)
-                      
-    type t = {
-        var : Var.t;
-        n : int
-      }
-
-    module Var = Var
-    module Value = Value
-
-    let fold ~const ~var ~times ~pow power =
-      pow (var power.var) power.n
-
-    let of_string name = {
-        var = Var.of_string name;
-        n = 1
-      }
-
-    let to_string power =
-      if power.n <= 0 then "1"
-      else if power.n == 1 then Var.to_string power.var
-      else Var.to_string power.var ^ "^" ^ string_of_int power.n
-
-    let (=~=) power1 power2 =
-      Var.(power1.var =~= power2.var) && power1.n == power2.n
-
-    let vars power = Set.singleton power.var
-
-    let eval power valuation =
-      if power.n < 0 then Value.zero
-      else Value.pow (Valuation_.eval power.var valuation) (Value.of_int power.n)
-               
-    let rename varmapping power = {
-        power with var = RenameMap_.find power.var varmapping power.var
-      }
-
-    let make var n = {
-        var = var;
-        n = n
-      }
-
-    let lift var = make var 1
-
-    let var t = t.var
-                   
-    let n t = t.n
-
-    let degree = n
-
-  end
-  
 module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct
     module Valuation_ = Valuation.Make(Var)(Value)
     module RenameMap_ = RenameMap.Make(Var)
-    module Power = MakePower(Var)(Value)
+    module Map = Map.Make(Var)
 
-    type t = Power.t list
-    type power = Power.t
+    type t = int Map.t
            
     module Var = Var
     module Value = Value
 
-    let make = List.map (fun (var, n) -> Power.make var n)
+    let make list =
+      let addEntry map (var, n) = Map.modify_def 0 var ((+) n) map in
+      List.fold_left addEntry Map.empty list
 
-    let lift var n = [Power.make var n]
+    let lift var n = make [(var, n)]
 
-    let fold ~const ~var ~times ~pow =
-      List.fold_left (fun b power -> times b (Power.fold ~const ~var ~times ~pow power)) (const Value.one)
+    let fold ~const ~var ~times ~pow mon =
+      Map.fold (fun key n a -> times (pow (var key) n) a) mon (const Value.one)
                    
-    let vars mon = Set.of_list (List.map Power.var mon)
+    let vars mon =
+      Set.of_enum (Map.keys mon)
              
     let degree mon =
-         mon
-      |> List.map Power.degree
-      |> List.fold_left (+) 0
+      Map.fold (fun _ -> (+)) mon 0 
 
     let degree_variable var mon =
-      let var_list = List.filter (fun power -> Var.(Power.var power =~= var)) mon in 
-      degree var_list  
+      Map.find_default 0 var mon
 
-    let delete_var var mon =
-      List.filter (fun x -> not Var.(var =~= Power.var x)) mon
-      
-    let simplify mon =
-         mon
-      |> List.group (fun p1 p2 -> Var.compare (Power.var p1) (Power.var p2))
-      |> List.map (fun (powers : Power.t list) -> Power.make (Power.var (List.hd powers)) (degree powers))
-      |> List.filter (fun (power : Power.t) -> (Power.degree power > 0)) (* Removing ones*)
-                  
-    let to_string_simplified = function 
-        [] -> "1"
-      | mon -> String.concat "*" (List.map Power.to_string mon)
+    let delete_var = Map.remove
 
-    let to_string mon = to_string_simplified (simplify mon)
-                      
-    let of_string str =
-         str
-      |> String.split_on_char '*'
-      |> List.map Power.of_string
-      
-    (*compares two monomials under the assumption that both have already been simplified*)
-    let rec equal_simplified mon1 mon2 =
-      if (List.length mon1 == List.length mon2) then
-        match mon1 with
-        | [] -> true (*same length, hence mon2 == []*)
-        | pow1::tail1 -> 
-           let var1 = Power.var pow1 in
-           ((degree_variable var1 mon2) == (Power.degree pow1)) && (equal_simplified tail1 (delete_var var1 mon2))     
-      else false
-      
+    (* Probably inefficient but not important in to_string *)
+    let to_string mon =
+      let entry_string key n =
+        Var.to_string key ^ (if n == 1 then "^" ^ string_of_int n else "") in
+      Map.fold (fun key n str -> str ^ "*" ^ (entry_string key n)) mon "1"
+
     let is_univariate_linear mon =
-      if Set.cardinal (vars mon) == 1 then
-        degree_variable (Set.choose (vars mon)) mon == 1
-      else false
+      degree mon == 1
+      
+    let (=~=) = Map.equal (==) 
 
-    let (=~=) mon1 mon2 = equal_simplified (simplify mon1)(simplify mon2)
-                       
-    let rename varmapping mon = 
-      List.map (Power.rename varmapping) mon
+    let rename varmapping mon =
+      let addRenamed var n map = Map.add (RenameMap_.find var varmapping var) n map in
+      Map.fold addRenamed mon Map.empty
 
-    (*Multiplication of monomials*)
+    let mul =
+      let addPowers ?(p1=0) ?(p2=0) = p1 + p2 in
+      Map.merge (fun key p1 p2 -> Some (addPowers ?p1 ?p2))  
 
-    let mul mon1 mon2 =
-      simplify (List.append mon1 mon2)  
+    (* Idea: Merge each var from the monomial with its value from the valuation, do the exponentation and fold the result with a multiplication *)
+    let eval mon valuation =
+      let power v ?(n=0) = Value.pow v (Value.of_int n)
+      and valuation_map = Map.of_enum (Valuation_.bindings valuation) in
+      let merge key n value = Some (power (Option.get value) ?n) in
+         Map.merge merge mon valuation_map
+      |> fun map -> Map.fold (fun key -> Value.mul) map Value.one
 
-    let eval mon valuation = 
-      List.fold_left Value.mul Value.one (List.map (fun power -> Power.eval power valuation) mon)
-
-    let one = []
+    let one = Map.empty
 
   end

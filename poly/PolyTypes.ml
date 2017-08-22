@@ -72,6 +72,9 @@ module type Valuation =
 
     (** Returns a list of the variables for which the valuation is defined *)
     val vars : t -> var list
+
+    (** Returns the var to value bindings. *)
+    val bindings : t -> (var * value) Enum.t
   end
 
 (** This module type defines how functors constructing valuations have to be defined *)
@@ -107,7 +110,6 @@ module type Evaluable =
     module RenameMap_ : (RenameMap with type var = Var.t)
 
     include Eq with type t := t
-    val of_string : string -> t
     val to_string : t -> string
 
     (** Returns a set of the variables which occur in the evaluable *)
@@ -128,23 +130,6 @@ module type EvaluableFunctor =
   functor (Var : ID)(Value : Number.Numeric) -> Evaluable with module Var = Var
                                                            and module Value = Value
 
-(** A power is a single variable with a positive integer exponent *)
-module type Power =
-  sig
-    type t
-    include Evaluable with type t := t
-    val make : Var.t -> int -> t
-    val lift : Var.t -> t
-    val var : t -> Var.t
-    val n : t -> int
-
-    val fold : const:(Value.t -> 'b) ->
-               var:(Var.t -> 'b) ->
-               times:('b -> 'b -> 'b) ->
-               pow:('b -> int -> 'b) ->
-               t -> 'b 
-  end
-
 (** A monomial is a finite product of powers *)
 module type Monomial =
   sig
@@ -159,10 +144,6 @@ module type Monomial =
 
     (** Deletes all occurences of the given variable. *)
     val delete_var : Var.t -> t -> t
-
-    (** Returns a simplified version of the monomial.
-        Subsequent calls to simplify will not lead to a further simplification. *)
-    val simplify : t -> t
 
     (** Returns if the monomial is of the simplified form x^1 for any variable x. *)
     val is_univariate_linear : t -> bool

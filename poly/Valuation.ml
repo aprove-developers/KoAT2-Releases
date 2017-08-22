@@ -24,4 +24,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
         Not_found -> None
                                       
     let vars valuation = List.map (fun (key, value) -> key) (M.bindings valuation)
+
+    let bindings = M.enum
   end
