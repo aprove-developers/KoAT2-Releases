@@ -41,8 +41,8 @@ module Make(P : Polynomial) =
 
     let rename constr varmapping = List.map (fun atom -> Atom_.rename atom varmapping) constr
 
-    let eval_bool constr valuation = 
-      List.for_all (fun atom -> Atom_.eval_bool atom valuation) constr
+    let models constr valuation = 
+      List.for_all (fun atom -> Atom_.models atom valuation) constr
         
 
     let drop_nonlinear constr =

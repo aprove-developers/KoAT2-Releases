@@ -85,7 +85,7 @@ module Methods (C : Constraint) =
     let evaluate str =
          str
       |> Reader.read_constraint
-      |> fun constr -> C.eval_bool constr example_valuation
+      |> fun constr -> C.models constr example_valuation
 
                                    (* TODO Wrong *)
     let rec equal_constr constr1 constr2 = 
@@ -121,9 +121,9 @@ module Methods (C : Constraint) =
                             ("a <= a && b < c", "x <= x && y < z" );
 
                         ]);
-            ("eval_bool" >:::
+            ("models" >:::
                 List.map (fun (expected, constr) ->
-                      constr >:: (fun _ ->  assert_equal_bool (expected) (evaluate constr )))
+                      constr >:: (fun _ ->  assert_equal_bool expected (evaluate constr )))
                         [
                             (true, " 5 <= 5 " );
                             (true, "x <= x" );

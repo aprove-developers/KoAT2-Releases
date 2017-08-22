@@ -21,6 +21,9 @@ module type Atom =
           (** Returns a list of all possible comparators *)
           val values : t list
 
+          (** Returns a list of all possible comparators with their string representation *)
+          val str_values : string list
+
           val to_string : t -> string
 
         end
@@ -60,7 +63,7 @@ module type Atom =
         val rename : t -> Polynomial_.RenameMap_.t -> t
 
         (** Assigns each variable a value and returns if the atom is satisfied for those values. *)
-        val eval_bool : t -> Polynomial_.Valuation_.t -> bool
+        val models : t -> Polynomial_.Valuation_.t -> bool
                             
     end
 
@@ -107,7 +110,7 @@ module type Constraint =
         val rename : t -> Atom_.Polynomial_.RenameMap_.t -> t
 
         (** Assigns each variable a value and returns if the constraint is satisfied for those values *)
-        val eval_bool : t -> Atom_.Polynomial_.Valuation_.t -> bool
+        val models : t -> Atom_.Polynomial_.Valuation_.t -> bool
 
           
         (** The result of the following drop methods is not equivalent to the input constraint. 

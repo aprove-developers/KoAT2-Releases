@@ -56,70 +56,68 @@ module Methods (C : Constraint) =
       |> Reader.read_atom
       |> C.Atom_.to_string
 
-    let example_valuation = Polynomial.Valuation_.from_native [("x", 3); ("y", 5); ("z", 7)]
-                                        
-    let example_renaming = Polynomial.RenameMap_.from_native [("x", "a"); ("y", "b"); ("z", "c")]
-    
-    
     let varset_to_string varl =
         varl
         |> Set.map Polynomial.Var.to_string
         |> Set.to_list
         |> String.concat ","
                                     
-    let rename str =
+    let rename str rename_map =
          str
       |> Reader.read_atom
-      |> fun atom -> Atom.rename atom example_renaming
+      |> fun atom -> Atom.rename atom (Polynomial.RenameMap_.from_native rename_map)
       
-    let evaluate str =
+    let evaluate str valuation =
          str
       |> Reader.read_atom
-      |> fun atom -> Atom.eval_bool atom example_valuation
+      |> fun atom -> Atom.models atom (Polynomial.Valuation_.from_native valuation)
       
     let assert_equal_atom =
       assert_equal ~cmp:C.Atom_.(=~=) ~printer:C.Atom_.to_string
 
     let tests = 
-        let default_poly_l_1 = "x^5+y^6-z^3" in
-        let default_poly_r_1 = "x^2+ 5*x*y*z" in
-        let default_poly_l_2 = "x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17" in
-                 
         "ConstraintsAtom" >:::[
                         
             ("(=~=)" >:::
-                List.map (fun (expected, atom1, atom2) ->
-                    (atom1 ^ "=~=" ^ atom2) >:: (fun _ -> assert_equal_bool expected (C.Atom_.(Reader.read_atom atom1 =~= Reader.read_atom atom2))))
-                        (List.map (fun (a,b,c)-> (a, default_poly_l_1 ^ b ^ default_poly_r_1, default_poly_l_2 ^ c ^ default_poly_r_1)) (List.map (fun (e,f)-> if (String.compare e f == 0) then (true, e, f) else (false, e, f)) (List.cartesian_product ["<"; "<="; ">"; ">="] ["<"; "<="; ">"; ">="]))) 
-            );
+                List.map (fun (atom1, atom2) ->
+                    (atom1 ^ "=~=" ^ atom2) >:: (fun _ -> assert_equal_atom (Reader.read_atom atom1) (Reader.read_atom atom2)))
+                                                  [
+                                                    ("x < y", "y > x");
+                                                    ("x <= y", "y >= x");
+                                                    ("x <= y", "x - 1 < y");
+                                                    ("x > y", "x - 1 >= y");
+                                                    ("4*x > 2*y", "2*x > y");
+                                                    ("x*y < x", "x * (y - 1) < 0");
+                  ]);
                         
-            ("get_variables" >:::
+            ("vars" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string (Set.map Polynomial.Var.of_string (Set.of_list expected)) (C.Atom_.vars (Reader.read_atom atom) )))
-                        [
-                            (["x"], " x^3+2*x -1 < x^5 " );
-                            (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
-
-                        ]);
+                    atom >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string
+                                                    (Set.map Polynomial.Var.of_string (Set.of_list expected))
+                                                    (C.Atom_.vars (Reader.read_atom atom))))
+                         [
+                           (["x"], " x^3+2*x -1 < x^5 " );
+                           (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
+            ]);
                         
-            ("rename_vars" >:::
+            ("rename" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal_atom (Reader.read_atom expected) (rename atom )))
+                      atom >:: (fun _ -> assert_equal_atom (Reader.read_atom expected) (rename atom [("x", "a"); ("y", "b"); ("z", "c")])))
                         [
-                            ("5 <= 5", " 5 <= 5 " );
+                            ("5 <= 5", "5 <= 5");
+                            ("a <= a", "x <= x" );
+                            ("a <= b", "x <= y" );
                             ("a < a ^ 2 + 2 * a * b", "x < x ^ 2 + 2 * x * y" );
                             ("a^2 * b^2 < 7", "x^2 * y^2 < 7");
-
-
-                        ]);
-            ("eval_bool" >:::
-                List.map (fun (expected, atom) ->
-                      atom >:: (fun _ ->  assert_equal_bool (expected) (evaluate atom )))
+            ]);
+            
+            ("models" >:::
+                List.map (fun (expected, atom, valuation) ->
+                      atom >:: (fun _ ->  assert_equal_bool expected (evaluate atom valuation)))
                         [
-                            (true, " 5 <= 5 " );
-                            (true,"x < x ^ 2 + 2 * x * y" );
-                            (false , "x^2 * y^2 < 7");
-                            
+                            (true, " 5 <= 5 ", [("x", 3)]);
+                            (true, "x < x ^ 2 + 2 * x * y", [("x", 3); ("y", 5)]);
+                            (false, "x^2 * y^2 < 7", [("x", 3); ("y", 5); ("z", 7)]);
                         ]);
                         
             ("is_linear" >:::
