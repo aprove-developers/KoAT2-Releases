@@ -21,7 +21,6 @@ module type Atom =
     val mk_ge : Polynomial_.t -> Polynomial_.t -> t
     val mk_lt : Polynomial_.t -> Polynomial_.t -> t
     val mk_le : Polynomial_.t -> Polynomial_.t -> t
-    val mk_eq : Polynomial_.t -> Polynomial_.t -> t
     val to_string : t -> string
   end
   
@@ -32,6 +31,12 @@ module type Constraint =
     
     val to_string : t -> string
     val mk : Atom_.t list -> t
+    val mk_eq : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+    val mk_gt : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+    val mk_ge : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+    val mk_lt : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+    val mk_le : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+    val all : t list -> t
     val is_true : t -> bool
   end
    

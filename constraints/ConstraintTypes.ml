@@ -15,9 +15,8 @@ module type Atom =
               GT -> a > b.
               GE -> a >= b.
               LT -> a < b.
-              LE -> a <= b.
-              EQ -> a = b. *)
-          type t = GT | GE | LT | LE | EQ
+              LE -> a <= b. *)
+          type t = GT | GE | LT | LE
 
           (** Returns a list of all possible comparators *)
           val values : t list
@@ -36,7 +35,6 @@ module type Atom =
         val mk_ge : Polynomial_.t -> Polynomial_.t -> t
         val mk_lt : Polynomial_.t -> Polynomial_.t -> t
         val mk_le : Polynomial_.t -> Polynomial_.t -> t
-        val mk_eq : Polynomial_.t -> Polynomial_.t -> t
         
 
         (** Following methods return certain properties of the atom. *)
@@ -58,7 +56,6 @@ module type Atom =
         val is_ge : t -> bool
         val is_lt : t -> bool
         val is_le : t -> bool
-        val is_eq : t -> bool
 
         val is_same : t -> t -> bool
 
@@ -105,13 +102,23 @@ module type Constraint =
         val lift : Atom_.t -> t      
         val mk : Atom_.t list -> t
         val mk_true : t
-        
 
+        (** Creates a constraint that expresses the equality of the two polynomials. *)
+        val mk_eq : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+
+        val mk_gt : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+        val mk_ge : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+        val mk_lt : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+        val mk_le : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+
+
+        val all : t list -> t
+          
         (** Following methods return certain properties of the constraint. *)
           
         (** Returns if the constraint is a tautology *)
         val is_true : t -> bool
-
+          
         (** Returns the set of variables which are active in the constraint.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
         val vars : t -> Atom_.Polynomial_.Var.t Set.t

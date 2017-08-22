@@ -15,7 +15,18 @@ module Make(P : Polynomial) =
 
     let mk_true = mk []
 
+    let mk_eq poly1 poly2 =
+      mk [Atom_.mk_le poly1 poly2; Atom_.mk_le poly2 poly1]
 
+    let mk_gt p1 p2 = lift (Atom_.mk_gt p1 p2)
+    let mk_ge p1 p2 = lift (Atom_.mk_ge p1 p2)
+    let mk_lt p1 p2 = lift (Atom_.mk_lt p1 p2)
+    let mk_le p1 p2 = lift (Atom_.mk_le p1 p2)
+
+                    
+    (** TODO Filter related: x < 0 && x < 1*)
+    let all = List.flatten 
+      
     let is_true = function
       | [] -> true
       | _ -> false
@@ -43,7 +54,6 @@ module Make(P : Polynomial) =
             |Atom_.Comparator.LT -> lift (Atom_.remove_strictness atom)
             |Atom_.Comparator.GE -> lift (Atom_.mk (Atom_.Comparator.LE)(Atom_.fst atom)(Atom_.snd atom))
             |Atom_.Comparator.GT -> lift (Atom_.remove_strictness (Atom_.mk (Atom_.Comparator.LT)(Atom_.snd atom)(Atom_.fst atom)))
-            |Atom_.Comparator.EQ -> [Atom_.mk (Atom_.Comparator.LE)(Atom_.fst atom)(Atom_.snd atom); Atom_.mk (Atom_.Comparator.LE)(Atom_.snd atom)(Atom_.fst atom)]
       
     (**returns a list of the coefficients of a variable in all the left sides of the constraints*)
     let get_coefficient_vector var constr = 

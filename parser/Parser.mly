@@ -29,7 +29,7 @@
 
 %type <G.Transition_.Constraint_.t> constraints
 
-%type <G.Transition_.Constraint_.Atom_.t> atom
+%type <G.Transition_.Constraint_.t> atom
 
 %type <G.Transition_.Constraint_.Atom_.Polynomial_.t> polynomial
 
@@ -78,29 +78,35 @@ transition_rhs :
 
 withConstraints :
 	|	{ Constr.mk [] }
-	|       WITH constr = separated_nonempty_list(AND, atom) { Constr.mk constr } ;
+	|       WITH constr = separated_nonempty_list(AND, atom) { Constr.all constr } ;
 
 onlyConstraints :
         |       constr = constraints EOF { constr } ;
         
 constraints :
         |       constr = separated_list(AND, atom)
-                  {Constr.mk constr} ;
+                  { Constr.all constr } ;
 
-              
 onlyAtom :
-	|	at = terminated(atom, EOF) { at } ;
-	
+	|	p1 = polynomial; comp = atomComparator; p2 = polynomial; EOF
+                  { comp p1 p2 } ;
+
+%inline atomComparator :
+  	| 	GREATERTHAN { Atom.mk_gt }
+  	| 	GREATEREQUAL { Atom.mk_ge }
+  	| 	LESSTHAN { Atom.mk_lt }
+  	| 	LESSEQUAL { Atom.mk_le } ;
+              
 atom :
         |   	p1 = polynomial; comp = comparator; p2 = polynomial
                   { comp p1 p2 } ;
                 
 %inline comparator :
-  	| 	EQUAL { Atom.mk_eq }
-  	| 	GREATERTHAN { Atom.mk_gt }
-  	| 	GREATEREQUAL { Atom.mk_ge }
-  	| 	LESSTHAN { Atom.mk_lt }
-  	| 	LESSEQUAL { Atom.mk_le } ;
+  	| 	EQUAL { Constr.mk_eq }
+  	| 	GREATERTHAN { Constr.mk_gt }
+  	| 	GREATEREQUAL { Constr.mk_ge }
+  	| 	LESSTHAN { Constr.mk_lt }
+  	| 	LESSEQUAL { Constr.mk_le } ;
 
               
 onlyPolynomial :

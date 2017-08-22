@@ -15,7 +15,6 @@ let suite =
       "PolynomialConstraints" >::: [
           ConstraintsTest.Parser.tests;
           StringIDAtomTest.tests;
-          AtomTest.Parser.tests;
           StringIDConstraintsTest.tests;
         ];
       TransitionGraphTest.suite;

@@ -30,8 +30,6 @@ module Atom : Parseable.Atom =
     module Polynomial_ = Polynomial
     type polynomial = Polynomial_.t
     type t =
-      | Equal of polynomial * polynomial
-      | Neq of polynomial * polynomial
       | LessThan of polynomial * polynomial
       | LessEqual of polynomial * polynomial
       | GreaterEqual of polynomial * polynomial
@@ -40,11 +38,7 @@ module Atom : Parseable.Atom =
     let mk_ge p1 p2 = GreaterEqual(p1, p2)
     let mk_lt p1 p2 = LessThan(p1, p2)
     let mk_le p1 p2 = LessEqual(p1, p2)
-    let mk_eq p1 p2 = Equal(p1, p2)
-    let mk_neq p1 p2 = Neq(p1, p2)
     let to_string c = match c with
-      | Equal (p1, p2) -> Polynomial.to_string p1 ^ " == " ^ Polynomial.to_string p2
-      | Neq (p1, p2) -> Polynomial.to_string p1 ^ " <> " ^ Polynomial.to_string p2
       | LessThan (p1, p2) -> Polynomial.to_string p1 ^ " < " ^ Polynomial.to_string p2
       | LessEqual (p1, p2) -> Polynomial.to_string p1 ^ " <= " ^ Polynomial.to_string p2
       | GreaterEqual (p1, p2) -> Polynomial.to_string p1 ^ " >= " ^ Polynomial.to_string p2
@@ -61,6 +55,13 @@ module Constraint : Parseable.Constraint =
     let to_string c = String.concat " /\ " ( List.map Atom_.to_string c)
     
     let mk atoms = atoms
+    let mk_eq poly1 poly2 =
+      mk [Atom_.mk_le poly1 poly2; Atom_.mk_le poly2 poly1]
+    let mk_gt p1 p2 = mk [Atom_.mk_gt p1 p2]
+    let mk_ge p1 p2 = mk [Atom_.mk_ge p1 p2]
+    let mk_lt p1 p2 = mk [Atom_.mk_lt p1 p2]
+    let mk_le p1 p2 = mk [Atom_.mk_le p1 p2]
+    let all = List.flatten 
 
     let is_true = function
       | [] -> true

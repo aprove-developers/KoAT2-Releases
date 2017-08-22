@@ -32,12 +32,12 @@ module Parser =
       
     let tests =
       "Parser" >::: [
-          "All comparators" >::: List.map comp_tests ["<"; "<="; ">"; ">="; "=="];
+          "All comparators" >::: List.map comp_tests ["<"; "<="; ">"; ">="];
           "All together" >::: (
             List.map (fun (testname, expected, atom) ->
                 testname >:: (fun _ -> assert_equal_string expected (to_constr_and_back atom)))
                      [
-                       ("Constants ", "42 < 42 /\ 1 >= 0 /\ 2 <= 4 /\ 6 == 7", " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 == 7");
+                       ("Constants ", "42 < 42 /\ 1 >= 0 /\ 2 <= 4 /\ 6 <= 7 /\ 7 <= 6", " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 == 7");
                        ("Constants and Variables", "x > 0 /\ y < 3", "x > 0 && y < 3");
                      ]
           );
@@ -115,10 +115,10 @@ module Methods (C : Constraint) =
                       constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (rename constr )))
                         [
                             ("5 <= 5", " 5 <= 5 " );
-                            ("a == a", "x == x" );
+                            ("a <= a", "x <= x" );
                             ("a < a ^ 2 + 2 * a * b", "x < x ^ 2 + 2 * x * y" );
                             ("a^2 * b^2 < 7", "x^2 * y^2 < 7");
-                            ("a == a && b < c", "x == x && y < z" );
+                            ("a <= a && b < c", "x <= x && y < z" );
 
                         ]);
             ("eval_bool" >:::
@@ -126,12 +126,12 @@ module Methods (C : Constraint) =
                       constr >:: (fun _ ->  assert_equal_bool (expected) (evaluate constr )))
                         [
                             (true, " 5 <= 5 " );
-                            (true, "x == x" );
+                            (true, "x <= x" );
                             (true,"x < x ^ 2 + 2 * x * y" );
                             (false, "x^5+y^6-z^3 == x * y * z + x^2 ");
                             (false , "x^2 * y^2 < 7");
                             (true , "2 < 3 && 3 < 4 && 4 < 5");
-                            (false, "3 == 3 && 2 == 2 && 1 == 0");
+                            (false, "3 <= 3 && 2 <= 2 && 1 <= 0");
                         ]);
                         
             ("drop_nonlinear" >:::
@@ -140,19 +140,10 @@ module Methods (C : Constraint) =
                         [
                             ("","x^2 < x*y + 3");
                             ("3 < x","3 < x + y^3 - y*y^2");
-                            ("x == y && y == z","x == y && y == z");
+                            ("x <= y && y <= z","x <= y && y <= z");
 
                         ]);
 
-            ("to_less_equal" >:::
-                List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.to_less_equal (Reader.read_atom atom) )))
-                        [
-                            ("x <= y && y<=x ","x == y");
-                            ("x <= y - 1", "x < y");
-                            ("x <= y - 1","y > x");
-
-                        ]);
         ]
         
       end
