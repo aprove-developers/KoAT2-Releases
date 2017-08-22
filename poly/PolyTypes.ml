@@ -248,8 +248,10 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
 module type Polynomial =
   sig
     type t
-    type monomial
-
+    module Monomial_ : Monomial
+    type monomial = Monomial_.t
+    module ScaledMonomial_ : ScaledMonomial
+    
     include Evaluable with type t := t
     include Math with type t := t
     include PartialOrder with type t := t

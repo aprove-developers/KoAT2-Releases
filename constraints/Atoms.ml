@@ -87,7 +87,11 @@ struct
                
     let is_same atom1 atom2 =
       Comparator.(comparator atom1 == comparator atom2)
-            
+        
+    let is_inverted (atom1 : t) (atom2 : t) =
+      Comparator.is_inverted (comparator atom1) (comparator atom2)
+    
+    (**checks if fst and snd are linear polynomials*) 
     let is_linear atom =
       Polynomial_.is_linear (fst atom) && Polynomial_.is_linear (snd atom)
         
@@ -113,7 +117,9 @@ struct
     (* Helper function *)                        
     let simplify = function
       | (p1, comp, p2)-> (P.simplify p1, comp, P.simplify p2)
-     
+    
+    
+    (** transforms the atom into an equivalent one s.t. snd is a constant*)
     let normalise atom =
       let atom_in = simplify atom in
         let fst_in = fst atom_in in
@@ -123,7 +129,22 @@ struct
           let new_left = Polynomial_.sub fst_min_snd const_part in
           let new_right = Polynomial_.neg const_part in
           (new_left, (comparator atom), new_right)
-                         
+        
+                 
+    let (=~=) (atom1 : t) (atom2 : t) =
+      match (atom1, atom2) with
+      | ((p1, comp1, q1), (p2, comp2, q2)) ->
+         comp1 == comp2 && P.(=~=) p1 p2 && P.(=~=) q1 q2
+    
+    (**returns true if the atoms are equal or if atom2 is just atom1 inverted*)
+    let is_redundant (atom1 : t) (atom2 : t) =
+      match (atom1, atom2) with
+      | ((p1, comp1, q1), (p2, comp2, q2)) ->
+         (Comparator.is_inverted comp1 comp2 && P.(=~=) p1 q2 && P.(=~=) q1 p2) || atom1 =~= atom2 
+        
+    (* In this setting everything represents integer values. Hence strictness can be removed by adding/subtracting one: TODO what happens if we are not working with ints?*)
+    
+    (**LT and GT are transformed to LE and GE by adding/subtracting one from snd*) 
     let remove_strictness = function
       | (p1, Comparator.GT, p2)-> mk_ge p1 (P.add p2 P.one)
       | (p1, Comparator.LT, p2)-> mk_le p1 (P.sub p2 P.one)

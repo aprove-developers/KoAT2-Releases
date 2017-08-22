@@ -96,13 +96,11 @@ module Methods (C : Constraint) =
         | (h1::t1, h2::t2) -> C.Atom_.(h1 =~= h2) && equal_constr t1 t2
         | (_,_) -> false
             
+
     let assert_equal_constr =     
         assert_equal ~cmp:equal_constr ~printer:C.to_string
-        
+
     let tests = 
-        (*let default_poly_l_1 = "x^5+y^6-z^3" in
-        let default_poly_r_1 = "x^2+ 5*x*y*z" in
-        let default_poly_l_2 = "x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17" in*)
 
         "Constraints" >:::[
 
@@ -170,7 +168,6 @@ module Methods (C : Constraint) =
                             ("x <= y - 1","y > x");
 
                         ]);
-
         ]
         
       end

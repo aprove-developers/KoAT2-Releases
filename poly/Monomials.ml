@@ -53,8 +53,7 @@ module MakePower(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let degree = n
 
   end
-
-   
+  
 module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
   struct
     module Valuation_ = Valuation.Make(Var)(Value)

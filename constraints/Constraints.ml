@@ -49,4 +49,12 @@ module Make(P : Polynomial) =
             |Atom_.Comparator.EQ -> [Atom_.mk (Atom_.Comparator.LE)(Atom_.fst atom)(Atom_.snd atom); Atom_.mk (Atom_.Comparator.LE)(Atom_.snd atom)(Atom_.fst atom)]
             |_ -> (lift atom) (*I don't know what to do with <>*)
       
+    let drop_nonlinear constr = List.filter Atom_.is_linear constr 
+    
+    let drop_not_equal constr = List.filter (fun x -> not (Atom_.is_neq x)) constr
+    
+    (**returns a list of the coefficients of a variable in all the left sides of the constraints*)
+    let get_coefficient_vector var constr = 
+        let mon = P.Monomial_.lift var 1 in 
+            List.map (fun atom ->P.coeff mon (Atom_.fst atom)) constr
   end
