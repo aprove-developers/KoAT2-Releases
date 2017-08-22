@@ -31,20 +31,12 @@ module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constr
                       ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add !context [p1; p2])
                       ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul !context [p1; p2])
                       ~pow:(fun b e -> Z3.Arithmetic.mk_power !context b (Z3.Arithmetic.Integer.mk_numeral_i !context e))
-  
-    (* Returns the appropiate constructor for z3 constraint depending on the type of comparation *)
-    let get_constructor (comparator : Atom.Comparator.t) = match comparator with
-      | Atom.Comparator.GT -> Z3.Arithmetic.mk_gt
-      | Atom.Comparator.GE -> Z3.Arithmetic.mk_ge
-      | Atom.Comparator.LT -> Z3.Arithmetic.mk_lt
-      | Atom.Comparator.LE -> Z3.Arithmetic.mk_le
       
     (* Converts our representation of constraints to the z3 representation *)
     let from_atom (constr : Atom.t) =
-      let constructor = get_constructor (Atom.comparator constr) in
-      constructor !context
-                  (from_polynomial (Atom.fst constr))
-                  (from_polynomial (Atom.snd constr))
+      Z3.Arithmetic.mk_le !context
+                  (from_polynomial (Atom.normalised_lhs constr))
+                  (Z3.Arithmetic.Integer.mk_numeral_i !context 0)
 
     let from_constraint (constraints : Constraint.t) =
         Z3.Boolean.mk_and !context (List.map from_atom constraints)
