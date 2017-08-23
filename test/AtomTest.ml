@@ -86,7 +86,11 @@ module Methods (C : Constraint) =
                                                     ("x <= y", "y >= x");
                                                     ("x <= y", "x - 1 < y");
                                                     ("x > y", "x - 1 >= y");
-                                                    ("4*x > 2*y", "2*x > y");
+                                                    ("4*x >= 2*y", "2*x >= y");
+                                                    (* Those are equivalent, but we can not decide (yet): 
+                                                       ("2*x < 0", "x < 0");)
+                                                       ("4*x > 2*y", "2*x > y");
+                                                     *)
                                                     ("x*y < x", "x * (y - 1) < 0");
                   ]);
                         

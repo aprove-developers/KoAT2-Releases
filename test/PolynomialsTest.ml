@@ -168,6 +168,29 @@ module Methods (P : Polynomial) =
                             ];
                     );
 
+                "scale_coefficients" >::: (
+                    List.map (fun (expression, expected) ->
+                        "unnamed" >:: (fun _ ->
+                                let poly_of_coefficients (x, y) =
+                                  P.((from_constant_int x) * (from_var_string "x") + (from_constant_int y) * (from_var_string "y")) in
+                                assert_equal_polynomial (poly_of_coefficients expected) (P.scale_coefficients (poly_of_coefficients expression))))
+                             (
+                               let tests = [
+                                   ((1, 0), (1, 0));
+                                   ((2, 0), (1, 0));
+                                   ((3, 0), (1, 0));
+                                   ((4, 2), (2, 1));
+                                   ((8, 2), (4, 1));
+                                   ((12, 8), (3, 2));
+                                   ((7, 5), (7, 5));
+                                   ((3, 3), (1, 1));
+                                 ] in
+                               List.append
+                                 (* Positive coefficients *) tests
+                                 (* Negative coefficients *) (List.map (fun ((x, y), (a, b)) -> ((-x, -y), (-a, -b))) tests)
+                             )
+                    );
+
                 "substitute" >::: (
                     List.map (fun (expected, substitution, polynomial) ->
                         polynomial >:: (fun _ -> assert_equal_polynomial

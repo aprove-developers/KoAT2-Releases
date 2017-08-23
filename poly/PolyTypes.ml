@@ -260,8 +260,11 @@ module type Polynomial =
     (** Returns the constant of the polynomial. *)
     val constant : t -> Value.t
 
+    (** Returns a maybe not equivalent polynom where all factors of polynomials are minized but stay in same proportion. *)
+    val scale_coefficients : t -> t
+      
     val to_string : t -> string
-
+      
 
     (** Following methods return if the atom has certain properties. *)
 

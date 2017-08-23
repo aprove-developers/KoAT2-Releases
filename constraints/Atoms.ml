@@ -42,12 +42,15 @@ struct
     type t = P.t 
 
 
-    let mk comp poly1 poly2 =
-      match comp with
+    (* Helper function *)
+    let normalise poly1 poly2 = function
       | Comparator.LE -> P.sub poly1 poly2
       | Comparator.GE -> P.sub poly2 poly1
       | Comparator.LT -> P.sub (P.add poly1 P.one) poly2
       | Comparator.GT -> P.sub (P.add poly2 P.one) poly1
+
+    let mk comp poly1 poly2 =
+      P.scale_coefficients (normalise poly1 poly2 comp)
 
     let mk_gt = mk Comparator.GT
     let mk_ge = mk Comparator.GE

@@ -173,6 +173,20 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       end
     include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
+    (* Helper: Returns the greatest common divisor of the two values. Uses the Euclid algorithm. *)
+    let rec gcd (a: Value.t) (b: Value.t) =
+      if Value.Compare.(b = Value.zero) then a
+      else gcd b (Value.modulo a b)
+          
+    (* Helper: Returns the greatest common divisor of all coefficients. *)
+    let coefficients_gcd (poly: t) =
+      List.fold_right gcd (List.map ScaledMonomial_.coeff poly) Value.zero
+          
+    let scale_coefficients poly =
+      let divisor: Value.t = Value.abs (coefficients_gcd poly) in
+      let scale_coeff scaled = ScaledMonomial_.(make Value.(coeff scaled / divisor) (monomial scaled)) in
+      List.map scale_coeff poly
+
     let is_zero poly = poly =~= zero
 
     let is_one poly = poly =~= one

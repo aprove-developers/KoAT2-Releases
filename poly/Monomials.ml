@@ -32,6 +32,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let delete_var = Map.remove
 
     (* Probably inefficient but not important in to_string *)
+    (* TODO Eliminate 1 at begin if not necessary *)
     let to_string mon =
       let entry_string key n =
         Var.to_string key ^ (if n == 1 then "^" ^ string_of_int n else "") in
