@@ -21,10 +21,10 @@ module Make(G : Parseable.TransitionGraph) =
       let lexbuf = Lexing.from_string str in
       try rule Lexer.read lexbuf with
       | Lexer.SyntaxError msg ->
-         Printf.fprintf stderr "%a: %s\n" print_position lexbuf msg;
+         (* Printf.fprintf stderr "%a: %s\n" print_position lexbuf msg; *)
          raise (Lexer.SyntaxError msg)
       | Parser.Error ->
-         Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf;
+         (* Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf; *)
          raise Parser.Error
 
     let read_transitiongraph =
