@@ -1,0 +1,11 @@
+.PHONY: clean doc install
+
+.SUBDIRS: src
+
+.DEFAULT: doc install
+
+clean:
+    rm -f \
+        *.omc \
+        *.log \
+        *.cache
