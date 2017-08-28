@@ -79,15 +79,25 @@ module Transition : Parseable.Transition =
   struct
     module Constraint_ = Constraint
 
+    exception RecursionNotSupported
+
     type t = {
-        name : string;           
+        name : string;
+        start : string;
+        target : string;
         vars : Constraint_.Atom_.Polynomial_.Var.t list;
         assignments : Constraint_.Atom_.Polynomial_.t list;
         guard : Constraint_.t;
       }
 
-    let mk name vars assignments guard vars =
-      { name; vars; assignments; guard }
+    let mk ~name ~start ~targets ~patterns ~guard ~vars =
+      if List.length targets != 1 then raise RecursionNotSupported else
+        let (target, assignments) = List.hd targets in
+        { name; start; target; vars; assignments; guard }
+
+    let start t = t.start
+
+    let target t = t.target
 
     let to_string start target transition =
       let varstring = String.concat "," (List.map Constraint_.Atom_.Polynomial_.Var.to_string transition.vars)
@@ -112,9 +122,10 @@ module TransitionGraph : Parseable.TransitionGraph =
       }
                      
     let from vars transitions start =
-      let edges = List.map
-                    (fun (start, transition, target) -> (Location_.of_string start, transition, Location_.of_string target))
-                    transitions in 
+      let edges = List.map (fun t -> (Location_.of_string (Transition_.start t),
+                                      t,
+                                      Location_.of_string (Transition_.target t)))
+                           transitions in
       { vars; edges; start }
 
     let to_string graph =

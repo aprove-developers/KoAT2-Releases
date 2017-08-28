@@ -5,7 +5,7 @@
 %token			PLUS MINUS TIMES POW
 %token			EQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
 %token			LPAR RPAR
-%token			EOF EOL
+%token			EOF
 %token                  AND
 %token 			ARROW WITH
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
@@ -35,9 +35,9 @@
 
 %type <G.Transition_.Constraint_.Atom_.Polynomial_.Var.t list> variables
 
-%type <string * (G.Transition_.Constraint_.Atom_.Polynomial_.Var.t list -> G.Transition_.t) * string> transition
+%type <vars:G.Transition_.Constraint_.Atom_.Polynomial_.Var.t list -> G.Transition_.t> transition
 
-%type <(string * (G.Transition_.Constraint_.Atom_.Polynomial_.Var.t list -> G.Transition_.t) * string) list> transitions
+%type <(vars:G.Transition_.Constraint_.Atom_.Polynomial_.Var.t list -> G.Transition_.t) list> transitions
 
 %{
   open BatTuple
@@ -53,11 +53,11 @@ onlyTransitiongraph :
                   { graph } ;
 
 transitiongraph :
-        |       goal EOL*
-                start = start EOL*
-                vars = variables EOL*
-                trans = transitions EOL*
-                  { G.from vars (List.map (fun (start, t, target) -> (start, t vars, target)) trans) start } ;
+        |       goal
+                start = start
+                vars = variables
+                trans = transitions
+                  { G.from vars (List.map (fun t -> t ~vars) trans) start } ;
 
 goal :		
 	|	LPAR GOAL goal = ID RPAR
@@ -68,7 +68,7 @@ start :
 		  { G.Location_.of_string start } ;
 
 transitions :
-	|	LPAR RULES EOL* l = separated_nonempty_list(EOL, transition) EOL* RPAR
+	|	LPAR RULES l = nonempty_list(transition) RPAR
 		  { l } ;
 
 variables :   
@@ -77,20 +77,23 @@ variables :
 
 transition :
 	|	lhs = transition_lhs; ARROW; rhs = transition_rhs; constr = withConstraints
-	          { ( Tuple2.first lhs,
-                      G.Transition_.mk (Tuple3.second rhs)
-                                       (List.map Poly.Var.of_string (Tuple2.second lhs))
-                                       (Tuple3.third rhs)
-                                       constr,
-                      Tuple3.first rhs ) } ;
+	          { G.Transition_.mk ~name:(Tuple2.first rhs)
+                                     ~start:(Tuple2.first lhs)
+                                     ~targets:(Tuple2.second rhs)
+                                     ~patterns:(List.map Poly.Var.of_string (Tuple2.second lhs))
+                                     ~guard:constr } ;
 
 transition_lhs :
 	|	start = ID; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR)
 	          { (start, patterns) } ;
 
 transition_rhs :
-	|	name = ID; LPAR target = ID; LPAR assignments = separated_list(COMMA, polynomial) RPAR RPAR
-	          { (target, name, assignments) } ;
+	|	name = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
+ 	          { (name, targets) } ;
+
+transition_target :
+	|       target = ID; LPAR assignments = separated_list(COMMA, polynomial) RPAR
+	          { (target, assignments) } ;
 
 withConstraints :
 	|	{ Constr.mk [] }

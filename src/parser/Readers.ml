@@ -2,41 +2,43 @@ open Batteries
 open ConstraintTypes
 open Lexing
 
-(** Provides a unified interface of the parser and lexer for transition graphs.
-    With this module it is possible to abstract from the details of parsing and lexing *)
-
-(** Constructs a reader for the given transition graph *)
 module Make(G : Parseable.TransitionGraph) =
   struct
-    module Parser = Parser.Make(G)
-    module Lexer = Lexer.Make(G)
+    module Parser_ = Parser.Make(G)
+    module Lexer_ = Lexer.Make(G)
                  
-    let print_position outx lexbuf =
+    exception Error of string
+                                 
+    let position_string lexbuf =
       let pos = lexbuf.lex_curr_p in
-      Printf.fprintf outx "%s:%d:%d" pos.pos_fname
-              pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
+      Printf.sprintf "%s:%d:%d"
+                     pos.pos_fname
+                     pos.pos_lnum
+                     (pos.pos_cnum - pos.pos_bol + 1)
 
-    (** Takes a string and tries to parse and lexe it to the wanted type *)
+    let read_ rule lexbuf =
+      try rule Lexer_.read lexbuf with
+      | Lexer_.SyntaxError msg ->
+         raise (Error (Printf.sprintf "%s: %s" msg (position_string lexbuf)))
+      | Parser_.Error ->
+         raise (Error (Printf.sprintf "%s: %s" "ParserError" (position_string lexbuf)))
+      
+    let read_file path =
+      read_ Parser_.onlyTransitiongraph (Lexing.from_input (File.open_in path))
+
     let read rule str =
-      let lexbuf = Lexing.from_string str in
-      try rule Lexer.read lexbuf with
-      | Lexer.SyntaxError msg ->
-         (* Printf.fprintf stderr "%a: %s\n" print_position lexbuf msg; *)
-         raise (Lexer.SyntaxError msg)
-      | Parser.Error ->
-         (* Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf; *)
-         raise Parser.Error
+      read_ rule (Lexing.from_string str)
 
     let read_transitiongraph =
-      read Parser.onlyTransitiongraph
+      read Parser_.onlyTransitiongraph
 
     let read_constraint =
-      read Parser.onlyConstraints
+      read Parser_.onlyConstraints
       
     let read_atom =
-      read Parser.onlyAtom
+      read Parser_.onlyAtom
 
     let read_polynomial =
-      read Parser.onlyPolynomial
+      read Parser_.onlyPolynomial
 
   end

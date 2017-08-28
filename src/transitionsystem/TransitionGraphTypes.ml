@@ -21,14 +21,18 @@ module type Transition =
   sig
     module Constraint_ : ConstraintTypes.Constraint
     type t
-    val mk : string ->
-             Constraint_.Atom_.Polynomial_.Var.t list ->
-             Constraint_.Atom_.Polynomial_.t list ->
-             Constraint_.t ->
-             Constraint_.Atom_.Polynomial_.Var.t list ->
+    exception RecursionNotSupported
+    val mk : name:string ->
+             start:string ->
+             targets:(string * (Constraint_.Atom_.Polynomial_.t list)) list ->
+             patterns:Constraint_.Atom_.Polynomial_.Var.t list ->
+             guard:Constraint_.t ->
+             vars:Constraint_.Atom_.Polynomial_.Var.t list ->
              t
     val equal : t -> t -> bool
     val compare : t -> t -> int
+    val start : t -> string
+    val target : t -> string
     val default : t
     val to_string : string -> string -> t -> string
   end
@@ -49,9 +53,11 @@ module type TransitionGraph =
     end
 
     val from : Transition_.Constraint_.Atom_.Polynomial_.Var.t list
-               -> (string * Transition_.t * string) list
+               -> Transition_.t list
                -> Location_.t
                -> t
+
     val to_string : t -> string
+
   end
 

@@ -29,20 +29,26 @@ module MakeTransition(C : ConstraintTypes.Constraint) =
     module Constraint_ = C
     module Map = Map.Make(C.Atom_.Polynomial_.Var)
 
+    exception RecursionNotSupported
+
     type t = {
-        name : string;           
+        name : string;
+        start : string;
+        target : string;
         update : Constraint_.Atom_.Polynomial_.t Map.t;
         guard : Constraint_.t;
         (* TODO Transitions should have costs *)
       }
 
-    (* TODO Wrong *)
-    let mk name patterns assignments guard vars =
-         List.combine vars assignments
-      |> List.map (fun (var, assignment) -> Map.add var assignment)
-      |> List.fold_left (fun map adder -> adder map) Map.empty 
-      |> fun update -> { name; update; guard }
-           
+    (* TODO Pattern <-> Assigment relation *)
+    let mk ~name ~start ~targets ~patterns ~guard ~vars =
+      if List.length targets != 1 then raise RecursionNotSupported else
+        let (target, assignments) = List.hd targets in
+           List.combine vars assignments
+        |> List.map (fun (var, assignment) -> Map.add var assignment)
+        |> List.fold_left (fun map adder -> adder map) Map.empty 
+        |> fun update -> { name; start; target; update; guard }
+                       
     let equal t1 t2 =
       t1.name == t2.name
         
@@ -50,9 +56,15 @@ module MakeTransition(C : ConstraintTypes.Constraint) =
       if (t1 == t2) then 0
       else if (t1.name < t1.name) then (-1)
       else 1
-    
+
+    let start t = t.start
+      
+    let target t = t.target
+
     let default = {   
         name = "default";
+        start = "";
+        target = "";
         update = Map.empty;
         guard = C.mk_true;
       }
@@ -91,12 +103,13 @@ module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
     end
 
     let from vars transitions start =
-      let edges = List.map
-                    (fun (start, transition, target) -> (Location_.of_string start, transition, Location_.of_string target))
-                    transitions in 
+      let edges = List.map (fun t -> (Location_.of_string (Transition_.start t),
+                                      t,
+                                      Location_.of_string (Transition_.target t)))
+                           transitions in
       let vertices = List.unique (List.append
-                       (List.map (fun (start, _, _) -> start) edges)
-                       (List.map (fun (_, _, target) -> target) edges)) in
+                                    (List.map (fun (start, _, _) -> start) edges)
+                                    (List.map (fun (_, _, target) -> target) edges)) in
       {
         graph = Graph.mk vertices edges;
         vars = vars;

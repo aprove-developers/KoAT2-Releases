@@ -40,7 +40,7 @@ module Parser =
           );
           "Negative Tests" >::: (
             List.map (fun (testname, expression) ->
-                testname >:: (fun _ -> assert_raises Reader.Parser.Error (fun _ -> to_polynomial_and_back expression)))
+                testname >:: (fun _ -> assert_exception (fun _ -> to_polynomial_and_back expression)))
                      [
                        ("Power with negative exponent", " x ^ - 3 ");
                        ("Power with variable exponent", " x ^ y ");

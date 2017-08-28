@@ -9,3 +9,5 @@ let assert_true = assert_bool ""
                 
 let assert_false b = assert_true (not b)
 
+let assert_exception f =
+  assert_true (Result.is_bad (Result.catch f ()))
