@@ -41,7 +41,7 @@ rule read =
   | '-'               { P.MINUS }
   | '^'               { P.POW }
   | "->"              { P.ARROW }
-  | "=="              { P.EQUAL }
+  | "="               { P.EQUAL }
   | "<="              { P.LESSEQUAL }
   | ">="              { P.GREATEREQUAL }
   | '<'               { P.LESSTHAN }

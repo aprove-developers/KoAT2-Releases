@@ -11,8 +11,8 @@ let suite =
         testname >:: (fun _ -> assert_true (Z3Solver.satisfiable (Reader.read_constraint constr))))
              [
                ("Empty", "");
-               ("Constant Equality", "1 == 1");
-               ("Variable Equality", "x == x");
-               (* Should work? ("Different Variable Equality", "x == y"); *)
+               ("Constant Equality", "1 = 1");
+               ("Variable Equality", "x = x");
+               (* Should work? ("Different Variable Equality", "x = y"); *)
              ]
   )

@@ -25,11 +25,14 @@ let suite =
                    ("One var, self loop", "A", "a", ["a ( A ) -> t ( b ( A ) )"]);
                  ]
       );
-      "examples/KoAT-2013/" >::: (
-        let files = Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir "../../examples/KoAT-2013")
-        and test (file : string): unit = try Reader.read_file ("../../examples/KoAT-2013/" ^ file); () with
-                        | Reader.Error msg -> failwith msg
-                        | Mocks.TransitionGraph.Transition_.RecursionNotSupported -> skip_if true "Recursion not supported" in
-        Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s; ()))) files)
+      (
+        let test_folder folder =
+          ("examples/" ^ folder ^ "/") >::: (
+            let files = Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir ("../../examples/" ^ folder))
+            and test (file : string): unit = try Reader.read_file ("../../examples/" ^ folder ^ "/" ^ file); () with
+                                             | Reader.Error msg -> failwith msg
+                                             | Mocks.TransitionGraph.Transition_.RecursionNotSupported -> skip_if true "Recursion not supported" in
+            Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s; ()))) files)) in
+        "Examples" >::: List.map test_folder ["KoAT-2013"; "KoAT-2014"; "SAS10"; "T2"]
       );
     ]                  

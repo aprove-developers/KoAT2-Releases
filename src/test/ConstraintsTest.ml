@@ -37,7 +37,7 @@ module Parser =
             List.map (fun (testname, expected, atom) ->
                 testname >:: (fun _ -> assert_equal_string expected (to_constr_and_back atom)))
                      [
-                       ("Constants ", "42 < 42 /\ 1 >= 0 /\ 2 <= 4 /\ 6 <= 7 /\ 7 <= 6", " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 == 7");
+                       ("Constants ", "42 < 42 /\ 1 >= 0 /\ 2 <= 4 /\ 6 <= 7 /\ 7 <= 6", " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 = 7");
                        ("Constants and Variables", "x > 0 /\ y < 3", "x > 0 && y < 3");
                      ]
           );
@@ -45,7 +45,7 @@ module Parser =
             List.map (fun (testname, atom) ->
                 testname >:: (fun _ -> assert_exception (fun _ -> to_constr_and_back atom)))
                      [
-                       ("Unexpected char: =", "x = y");
+                       ("Unexpected char: =", "x == y");
                      ]
           );
         ]
@@ -128,7 +128,7 @@ module Methods (C : Constraint) =
                             (true, " 5 <= 5 " );
                             (true, "x <= x" );
                             (true,"x < x ^ 2 + 2 * x * y" );
-                            (false, "x^5+y^6-z^3 == x * y * z + x^2 ");
+                            (false, "x^5+y^6-z^3 = x * y * z + x^2 ");
                             (false , "x^2 * y^2 < 7");
                             (true , "2 < 3 && 3 < 4 && 4 < 5");
                             (false, "3 <= 3 && 2 <= 2 && 1 <= 0");
