@@ -1,0 +1,50 @@
+USE_OCAMLFIND = true
+
+.PHONY: clean doc install
+
+# Function that creates an intermediate format for a documentation
+# Has to be called from each package which should occur in the documentation
+# We also add documentation of ml-files, because we define module types in ml-files, to prevent duplication of code
+public.InterfaceDoc(name, files) =
+    protected.mlifiles = $(filter-exists $(addsuffix .mli, $(files)))
+    protected.mlfiles = $(filter-exists $(addsuffix .ml, $(files)))
+    protected.cmifiles = $(addsuffix .cmi, $(removesuffix $(mlifiles)))
+
+    $(name).idoc: $(mlifiles) $(mlfiles) $(cmifiles) $(OCamlLibrary $(LIB), $(FILES)) /.PHONY/OCamlGeneratedFilesTarget
+        ocamlfind ocamldoc -dump $(name).idoc -stars \
+            $(PREFIXED_OCAMLINCLUDES) -package "$(OCAMLPACKS)" \
+            $(mlifiles) \
+            $(mlfiles) 
+    return $(name).idoc
+
+CUSTOM_LIBS[] =
+    poly
+    constraints
+    smt
+    transitionsystem
+    parser
+
+# All the intermediate formats of package documentations
+IDOCS[] = $(foreach $(fun x => $(x)/$(x).idoc), $(CUSTOM_LIBS))
+
+# The directory where the documentation should be stored
+DOC_DIR = ../docs
+
+.SUBDIRS: $(CUSTOM_LIBS) test
+
+# Target how the whole documentation should be build
+doc: $(IDOCS)
+    mkdir -p $(DOC_DIR)
+    rm -rf $(DOC_DIR)/*
+    ocamlfind ocamldoc -d $(DOC_DIR) -stars -t "Koat" -html \
+        $(mapprefix -load, $(IDOCS))
+
+.DEFAULT: doc install
+
+clean:
+    rm -f \
+        *.omc \
+        *.log \
+        *.cache \
+        $(DOC_DIR)/* \
+        *.idoc

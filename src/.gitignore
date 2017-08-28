@@ -1,0 +1,41 @@
+#Ignore files created by omake commands
+*.byte
+*.cmi
+*.cmo
+*.cmx
+*.native
+*.o
+*.a
+*.cmxa
+*.opt
+*.cma
+_build/
+
+#Ignore files created by editors
+*.swp
+
+#Ignore emacs autosave
+*~
+
+*.omc
+*.run
+/.omakedb
+/.omakedb.lock
+*.kate-swp
+
+#Ignore Makefile
+Makefile
+*.log
+*.cache
+
+#Ignore symbolic links to .opt files
+test/Test
+
+#Ignore auto generated parser files
+parser/Parser.mli
+parser/Parser.ml
+parser/Lexer.ml
+
+#Ignore intermediate doc files and the docs directory (later add it again for GitHub pages)
+*.idoc
+docs
