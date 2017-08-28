@@ -108,17 +108,20 @@ module TransitionGraph : Parseable.TransitionGraph =
     type t = {
         vars : Transition_.Constraint_.Atom_.Polynomial_.Var.t list;
         edges : (Location_.t * Transition_.t * Location_.t) list;
+        start : Location_.t;
       }
                      
-    let from vars transitions =
+    let from vars transitions start =
       let edges = List.map
-                    (fun (start, target, transition) -> (Location_.of_string start, transition, Location_.of_string target))
+                    (fun (start, transition, target) -> (Location_.of_string start, transition, Location_.of_string target))
                     transitions in 
-      { vars; edges }
+      { vars; edges; start }
 
     let to_string graph =
-      let varstring = String.concat " " ["("; "VAR"; String.concat "" (List.map Transition_.Constraint_.Atom_.Polynomial_.Var.to_string graph.vars); ")"]
+      let goalstring = String.concat " " ["("; "GOAL"; "COMPLEXITY"; ")"]
+      and startterm = String.concat " " ["("; "STARTTERM"; "("; "FUNCTIONSYMBOLS"; Location_.to_string graph.start; ")"; ")"]
+      and varstring = String.concat " " ["("; "VAR"; String.concat "" (List.map Transition_.Constraint_.Atom_.Polynomial_.Var.to_string graph.vars); ")"]
       and edgestring = String.concat " " ["("; "RULES"; "\n"; String.concat "\n" (List.map (fun (start, transition, target) -> Transition_.to_string (Location_.to_string start) (Location_.to_string target) transition) graph.edges); ")"] in
-      varstring ^ "\n" ^ edgestring
+      String.concat "\n" [goalstring; startterm; varstring; edgestring]
       
   end

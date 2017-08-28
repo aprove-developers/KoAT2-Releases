@@ -66,7 +66,8 @@ module type TransitionGraph =
     module Transition_ : Transition
     module Location_ : Location
     val from : Transition_.Constraint_.Atom_.Polynomial_.Var.t list
-               -> (string * string * Transition_.t) list
+               -> (string * Transition_.t * string) list
+               -> Location_.t
                -> t
     val to_string : t -> string
   end
