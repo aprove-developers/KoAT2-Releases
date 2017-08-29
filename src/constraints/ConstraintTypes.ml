@@ -64,7 +64,17 @@ module type Atom =
 
         (** Assigns each variable a value and returns if the atom is satisfied for those values. *)
         val models : t -> Polynomial_.Valuation_.t -> bool
-                            
+
+        (** Replaces all operations by new constructors. *)
+        val fold : const:(Polynomial_.Value.t -> 'b) ->
+                   var:(Polynomial_.Var.t -> 'b) ->
+                   neg:('b -> 'b) ->               
+                   plus:('b -> 'b -> 'b) ->
+                   times:('b -> 'b -> 'b) ->
+                   pow:('b -> int -> 'b) ->
+                   le:('b -> 'b -> 'c) ->
+                   t -> 'c 
+          
     end
 
 (** A constraint is a conjunction of atoms *)
@@ -72,7 +82,7 @@ module type Constraint =
   sig
         module Atom_ : Atom
 
-        type t = Atom_.t list (** TODO Should not be exposed *)
+        type t
         
 
         (** Following methods are convenience methods for the creation of atoms. *)
@@ -97,6 +107,8 @@ module type Constraint =
         (** Returns if the constraint is a tautology *)
         val is_true : t -> bool
           
+        val (=~=) : t -> t -> bool
+          
         (** Returns the set of variables which are active in the constraint.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
         val vars : t -> Atom_.Polynomial_.Var.t Set.t
@@ -111,6 +123,18 @@ module type Constraint =
 
         (** Assigns each variable a value and returns if the constraint is satisfied for those values *)
         val models : t -> Atom_.Polynomial_.Valuation_.t -> bool
+
+        (** Replaces all operations by new constructors. *)
+        val fold : const:(Atom_.Polynomial_.Value.t -> 'b) ->
+                   var:(Atom_.Polynomial_.Var.t -> 'b) ->
+                   neg:('b -> 'b) ->               
+                   plus:('b -> 'b -> 'b) ->
+                   times:('b -> 'b -> 'b) ->
+                   pow:('b -> int -> 'b) ->
+                   le:('b -> 'b -> 'c) ->
+                   correct:('d) ->
+                   conj:('d -> 'c -> 'd) ->
+                   t -> 'd
 
           
         (** The result of the following drop methods is not equivalent to the input constraint. 

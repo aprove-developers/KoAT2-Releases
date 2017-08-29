@@ -9,15 +9,8 @@ module Parser =
   struct
     module Reader = Readers.Make(TransitionGraphImpl.StdTransitionGraph)
 
-    (* TODO Wrong *)
-    let rec equal_constr constr1 constr2 = 
-        match (constr1,constr2) with 
-        | ([],[]) -> true
-        | (h1::t1, h2::t2) -> TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.(h1 =~= h2) && equal_constr t1 t2
-        | (_,_) -> false
-
     let assert_equal_constr =     
-        assert_equal ~cmp:equal_constr ~printer:TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.to_string
+        assert_equal ~cmp:TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.(=~=) ~printer:TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.to_string
 
     let tests =
       "Parser" >::: [
@@ -76,16 +69,9 @@ module Methods (C : Constraint) =
       |> Reader.read_constraint
       |> fun constr -> C.models constr example_valuation
 
-                                   (* TODO Wrong *)
-    let rec equal_constr constr1 constr2 = 
-        match (constr1,constr2) with 
-        | ([],[]) -> true
-        | (h1::t1, h2::t2) -> C.Atom_.(h1 =~= h2) && equal_constr t1 t2
-        | (_,_) -> false
-            
 
     let assert_equal_constr =     
-        assert_equal ~cmp:equal_constr ~printer:C.to_string
+        assert_equal ~cmp:C.(=~=) ~printer:C.to_string
 
     let tests = 
 

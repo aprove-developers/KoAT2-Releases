@@ -58,6 +58,8 @@ struct
     let mk_le = mk Comparator.LE
 
 
+    (* TODO We can not decide all equalities right now because of some integer arithmetic *)
+    (* Maybe use SMT-solver here *)
     let (=~=) = P.(=~=)
             
     let to_string atom = (P.to_string atom) ^ " <= 0"
@@ -75,4 +77,7 @@ struct
     let models atom valuation =
       P.Value.Compare.((P.eval atom valuation) <= P.Value.zero)
 
+    let fold ~const ~var ~neg ~plus ~times ~pow ~le poly =
+      le (P.fold ~const ~var ~neg ~plus ~times ~pow poly) (P.fold ~const ~var ~neg ~plus ~times ~pow P.zero)
+      
 end

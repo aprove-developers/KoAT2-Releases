@@ -31,6 +31,12 @@ module Make(P : Polynomial) =
       | [] -> true
       | _ -> false
       
+    (* TODO Wrong, use SMT-solver here *)
+    let (=~=) constr1 constr2 =
+         List.combine constr1 constr2
+      |> List.map (uncurry Atom_.(=~=))
+      |> List.fold_left (&&) true 
+            
     let vars constr =
          constr
       |> List.map (Atom_.vars)
@@ -44,7 +50,10 @@ module Make(P : Polynomial) =
     let models constr valuation = 
       List.for_all (fun atom -> Atom_.models atom valuation) constr
         
+    let fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj =
+      List.fold_left (fun c atom -> conj c (Atom_.fold ~const ~var ~neg ~plus ~times ~pow ~le atom)) correct
 
+      
     let drop_nonlinear constr =
       List.filter Atom_.is_linear constr 
 
