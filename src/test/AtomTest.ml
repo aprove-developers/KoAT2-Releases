@@ -7,36 +7,37 @@ open Helper
    
 module Parser =
   struct
-    module Reader = Readers.Make(Mocks.TransitionGraph)
+    module Reader = Readers.Make(TransitionGraphImpl.StdTransitionGraph)
                   
-   let to_atom_and_back str =
-         str
-      |> Reader.read_atom
-      |> Mocks.TransitionGraph.Transition_.Constraint_.Atom_.to_string
+    let assert_equal_atom =
+      assert_equal ~cmp:TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.(=~=)
+                   ~printer:TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.to_string
 
     let tests =
         "Parser" >::: [
-            "Positive Tests" >::: (
+          "Positive Tests" >::: (
+            let open TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.Polynomial_ in
+            let open TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_ in
                 List.map (fun (testname, expected, atom) ->
-                testname >:: (fun _ -> assert_equal_string expected (to_atom_and_back atom)))
+                testname >:: (fun _ -> assert_equal_atom expected (Reader.read_atom atom)))
                         [
-                        ("Constants LT", "42 < 42", " 42 < 42 ");
-                        ("Constants LE", "42 <= 42", " 42 <= 42 ");
-                        ("Constants GT", "42 > 42", " 42 > 42 ");
-                        ("Constants GE", "42 >= 42", " 42 >= 42 ");
-                        ("Constant and Poly LT", "42 < ((x^2)+(((5*x)*y)*z))", " 42 < x^2+ 5*x*y*z ");
-                        ("Constant and Poly LE", "42 <= ((x^2)+(((5*x)*y)*z))", " 42 <= x^2+ 5*x*y*z ");
-                        ("Constant and Poly GT", "42 > ((x^2)+(((5*x)*y)*z))", " 42 > x^2+ 5*x*y*z ");
-                        ("Constant and Poly GE", "42 >= ((x^2)+(((5*x)*y)*z))", " 42 >= x^2+ 5*x*y*z ");
-                        ("Poly and Poly LT", "(((x^5)+(y^6))+(-(z^3))) < ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
-                        ("Poly and Poly LE", "(((x^5)+(y^6))+(-(z^3))) <= ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
-                        ("Poly and Poly GT", "(((x^5)+(y^6))+(-(z^3))) > ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
-                        ("Poly and Poly GE", "(((x^5)+(y^6))+(-(z^3))) >= ((x^2)+(((5*x)*y)*z))", " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
+                        ("Constants LT", mk_lt (value 42) (value 42), " 42 < 42 ");
+                        ("Constants LE", mk_le (value 42) (value 42), " 42 <= 42 ");
+                        ("Constants GT", mk_gt (value 42) (value 42), " 42 > 42 ");
+                        ("Constants GE", mk_ge (value 42) (value 42), " 42 >= 42 ");
+                        ("Constant and Poly LT", mk_lt (value 42) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " 42 < x^2+ 5*x*y*z ");
+                        ("Constant and Poly LE", mk_le (value 42) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " 42 <= x^2+ 5*x*y*z ");
+                        ("Constant and Poly GT", mk_gt (value 42) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " 42 > x^2+ 5*x*y*z ");
+                        ("Constant and Poly GE", mk_ge (value 42) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " 42 >= x^2+ 5*x*y*z ");
+                        ("Poly and Poly LT", mk_lt ((var "x") ** 5 + (var "y") ** 6 - (var "z" **3)) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
+                        ("Poly and Poly LE", mk_le ((var "x") ** 5 + (var "y") ** 6 - (var "z" ** 3)) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
+                        ("Poly and Poly GT", mk_gt ((var "x") ** 5 + (var "y") ** 6 - (var "z" ** 3)) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
+                        ("Poly and Poly GE", mk_ge ((var "x") ** 5 + (var "y") ** 6 - (var "z" ** 3)) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
                         ]
             );
             "Negative Tests" >::: (
                 List.map (fun (testname, atom) ->
-                    testname >:: (fun _ -> assert_raises (Reader.Lexer_.SyntaxError (testname)) (fun _ -> to_atom_and_back atom)))
+                    testname >:: (fun _ -> assert_raises (Reader.Lexer_.SyntaxError (testname)) (fun _ -> Reader.read_atom atom)))
                             [
                             ("Unexpected char: =", "x = y");
                             ]
@@ -50,11 +51,6 @@ module Methods (C : Constraint) =
 
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
-
-    let to_atom_and_back str =
-         str
-      |> Reader.read_atom
-      |> C.Atom_.to_string
 
     let varset_to_string varl =
         varl

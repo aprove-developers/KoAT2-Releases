@@ -13,11 +13,6 @@ module Parser =
         ~cmp:TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.Polynomial_.(=~=)
         ~printer:TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.Polynomial_.to_string
 
-    let to_polynomial_and_back str =
-         str
-      |> Reader.read_polynomial
-      |> TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.Polynomial_.to_string
-
     let tests =
       "Parser" >::: [
           "Positive Tests" >::: (
@@ -46,7 +41,7 @@ module Parser =
           );
           "Negative Tests" >::: (
             List.map (fun (testname, expression) ->
-                testname >:: (fun _ -> assert_exception (fun _ -> to_polynomial_and_back expression)))
+                testname >:: (fun _ -> assert_exception (fun _ -> Reader.read_polynomial expression)))
                      [
                        ("Power with negative exponent", " x ^ - 3 ");
                        ("Power with variable exponent", " x ^ y ");
