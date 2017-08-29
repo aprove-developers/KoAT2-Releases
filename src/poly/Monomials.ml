@@ -48,14 +48,14 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       Map.fold addRenamed mon Map.empty
 
     let mul =
-      let addPowers ?(p1=0) ?(p2=0) = p1 + p2 in
-      Map.merge (fun key p1 p2 -> Some (addPowers ?p1 ?p2))  
+      let addPowers ?(p1=0) ?(p2=0) _ = p1 + p2 in
+      Map.merge (fun key p1 p2 -> Some (addPowers ?p1 ?p2 ()))  
 
     (* Idea: Merge each var from the monomial with its value from the valuation, do the exponentation and fold the result with a multiplication *)
     let eval mon valuation =
-      let power v ?(n=0) = Value.pow v (Value.of_int n)
+      let power ?(n=0) v = Value.pow v (Value.of_int n)
       and valuation_map = Map.of_enum (Valuation_.bindings valuation) in
-      let merge key n value = Some (power (Option.get value) ?n) in
+      let merge key n value = Some (power ?n (Option.get value)) in
          Map.merge merge mon valuation_map
       |> fun map -> Map.fold (fun key -> Value.mul) map Value.one
 

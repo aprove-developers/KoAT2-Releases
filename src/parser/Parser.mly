@@ -11,10 +11,8 @@
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
 %token                  COMMA
 
-%left                   EQUAL LESSTHAN LESSEQUAL GREATERTHAN GREATEREQUAL
 %left			PLUS MINUS
 %left			TIMES
-%left			POW
                   
 			
 %start <G.t> onlyTransitiongraph
