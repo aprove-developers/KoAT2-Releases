@@ -209,6 +209,7 @@ module type Math =
     val (-) : t -> t -> t
     val ( * ) : t -> t -> t
     val ( ** ) : t -> int -> t
+    val (~-) : t -> t
   end
 
 (** Extends a BaseMath module to get all math methods *)
@@ -222,6 +223,7 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
     let (-) = sub
     let ( * ) = mul
     let ( ** ) = pow
+    let (~-) = neg
   end
 
 (** A Polynomial represents a mathematical polynomial *)
@@ -243,11 +245,10 @@ module type Polynomial =
     val lift : Value.t -> monomial -> t
     val from_var : Var.t -> t
     val from_constant : Value.t -> t
-    val from_var_string : string -> t
-    val from_constant_int : int -> t
+    val var : string -> t
+    val value : int -> t
     val from_power : Var.t -> int -> t
     val from_monomial : monomial -> t
-
 
     (** Following methods return information over the polynomial. *)
 

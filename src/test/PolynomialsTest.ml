@@ -6,36 +6,42 @@ open Helper
    
 module Parser =
   struct
-    module Reader = Readers.Make(Mocks.TransitionGraph)
+    module Reader = Readers.Make(TransitionGraphImpl.StdTransitionGraph)
+
+    let assert_equal_polynomial =
+      assert_equal
+        ~cmp:TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.Polynomial_.(=~=)
+        ~printer:TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.Polynomial_.to_string
 
     let to_polynomial_and_back str =
          str
       |> Reader.read_polynomial
-      |> Mocks.TransitionGraph.Transition_.Constraint_.Atom_.Polynomial_.to_string
+      |> TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.Polynomial_.to_string
 
     let tests =
       "Parser" >::: [
           "Positive Tests" >::: (
+            let open TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.Polynomial_ in
             List.map (fun (testname, expected, expression) ->
-                testname >:: (fun _ -> assert_equal_string expected (to_polynomial_and_back expression)))
+                testname >:: (fun _ -> assert_equal_polynomial expected (Reader.read_polynomial expression)))
                      [
-                       ("Constant", "42", " 42 ");
-                       ("Negated Constant", "(-42)", " - 42 ");
-                       ("Variable", "x", " x ");
-                       ("Negated Variable", "(-x)", " - x ");
-                       ("Parentheses", "x", " ( x ) ");
-                       ("Double Parentheses", "x", " ( ( x ) )");
-                       ("Constant Addition", "(42+24)", " 42 + 24 ");
-                       ("Constant Subtraction", "(42+(-24))", " 42 - 24 ");
-                       ("Constant Multiplication", "(42*24)", " 42 * 24 ");
-                       ("Addition", "((x+24)+y)", " x + 24 + y ");
-                       ("Subtraction", "((42+(-24))+(-x))", " 42 - 24 - x ");
-                       ("Multiplication", "((42*x)*24)", " 42 * x * 24 ");
-                       ("Power", "(x^3)", " x ^ 3 ");
-                       ("Double Negation", "(-(-42))", " - - 42 ");
-                       ("Multiplication before Addition", "(x+(y*z))", " x + y * z ");
-                       ("Power before Negation", "(-(x^3))", " - x ^ 3 ");
-                       ("Power before Multiplication", "((x^3)*(y^4))", " x ^ 3 * y ^ 4 ");
+                       ("Const", value 42, " 42 ");
+                       ("Negated Constant", -(value 42), " - 42 ");
+                       ("Variable", var "x", " x ");
+                       ("Negated Variable", -(var "x"), " - x ");
+                       ("Parentheses", var "x", " ( x ) ");
+                       ("Double Parentheses", var "x", " ( ( x ) )");
+                       ("Constant Addition", (value 42) + (value 24), " 42 + 24 ");
+                       ("Constant Subtraction", (value 42) - (value 24), " 42 - 24 ");
+                       ("Constant Multiplication", (value 42) * (value 24), " 42 * 24 ");
+                       ("Addition", (var "x") + (value 24) + (var "y"), " x + 24 + y ");
+                       ("Subtraction", (value 42) - (value 24) - (var "x"), " 42 - 24 - x ");
+                       ("Multiplication", (value 42) * (var "x") * (value 24), " 42 * x * 24 ");
+                       ("Power", (var "x") ** 3, " x ^ 3 ");
+                       ("Double Negation", -(-(value 42)), " - - 42 ");
+                       ("Multiplication before Addition", (var "x") + (var "y") * (var "z"), " x + y * z ");
+                       ("Power before Negation", - (var "x") ** 3, " - x ^ 3 ");
+                       ("Power before Multiplication", (var "x") ** 3 * (var "y") ** 4, " x ^ 3 * y ^ 4 ");
                      ]
           );
           "Negative Tests" >::: (
@@ -172,7 +178,7 @@ module Methods (P : Polynomial) =
                     List.map (fun (expression, expected) ->
                         "unnamed" >:: (fun _ ->
                                 let poly_of_coefficients (x, y) =
-                                  P.((from_constant_int x) * (from_var_string "x") + (from_constant_int y) * (from_var_string "y")) in
+                                  P.((value x) * (var "x") + (value y) * (var "y")) in
                                 assert_equal_polynomial (poly_of_coefficients expected) (P.scale_coefficients (poly_of_coefficients expression))))
                              (
                                let tests = [

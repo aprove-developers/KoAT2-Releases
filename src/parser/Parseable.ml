@@ -7,8 +7,8 @@ module type Polynomial =
   sig
     type t
     module Var : PolyTypes.ID
-    val from_constant_int : int -> t
-    val from_var_string : string -> t
+    val value : int -> t
+    val var : string -> t
     val to_string : t -> string
     include PolyTypes.BaseMath with type t := t
   end

@@ -76,9 +76,9 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let from_var var = from_power var 1
 
-    let from_var_string str = from_var (Var.of_string str)
+    let var str = from_var (Var.of_string str)
 
-    let from_constant_int c = from_constant (Value.of_int c)
+    let value c = from_constant (Value.of_int c)
                       
     (* Gets the constant *)
     let constant poly = coeff Monomial_.one (simplify poly)

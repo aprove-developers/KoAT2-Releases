@@ -8,8 +8,8 @@ module Polynomial : Parseable.Polynomial =
       | Plus of t * t
       | Times of t * t
       | Pow of t * int              
-    let from_constant_int c = Constant c
-    let from_var_string str = Variable str
+    let value c = Constant c
+    let var str = Variable str
     let zero = Constant 0
     let one = Constant 1
     let neg p = Neg p

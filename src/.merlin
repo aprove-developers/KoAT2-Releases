@@ -3,13 +3,13 @@ S poly
 S test
 S smt
 S parser
-S trans_system
+S transitionsystem
 
 B constraints
 B poly
 B test
 B smt
 B parser
-B trans_system
+B transitionsystem
 
 PKG batteries oUnit Z3 ocamlgraph

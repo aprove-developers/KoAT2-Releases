@@ -133,13 +133,13 @@ onlyPolynomial :
 
 variable :
 	|	v = ID
-                  { Poly.from_var_string v } ;
+                  { Poly.var v } ;
 
 polynomial :
 	|       v = variable
                   { v }
 	| 	c = UINT
-                  { Poly.from_constant_int c }
+                  { Poly.value c }
 	|	LPAR; ex = polynomial; RPAR
                   { ex }
 	|       MINUS; ex = polynomial
