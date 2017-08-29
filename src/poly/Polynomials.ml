@@ -49,8 +49,6 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     let to_string poly = to_string_simplified (simplify poly)
 
-    let of_string poly = raise (Failure "of_string for Polynomial not yet implemented") (* TODO Use ocamlyacc *)
-
 
     let rec equal_simplified poly1 poly2 =
       List.length poly1 == List.length poly2 &&
