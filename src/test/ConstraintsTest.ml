@@ -7,43 +7,37 @@ open Helper
    
 module Parser =
   struct
-    module Reader = Readers.Make(Mocks.TransitionGraph)
+    module Reader = Readers.Make(TransitionGraphImpl.StdTransitionGraph)
 
-    let to_constr_and_back str =
-         str
-      |> Reader.read_constraint
-      |> Mocks.TransitionGraph.Transition_.Constraint_.to_string
+    (* TODO Wrong *)
+    let rec equal_constr constr1 constr2 = 
+        match (constr1,constr2) with 
+        | ([],[]) -> true
+        | (h1::t1, h2::t2) -> TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.(h1 =~= h2) && equal_constr t1 t2
+        | (_,_) -> false
 
-    let comp_tests comp = 
-      comp >::: [
-          "Constants" >:: (fun _ -> assert_equal_string
-                                      ("42 " ^ comp ^ " 42")
-                                      (to_constr_and_back ("42 " ^ comp ^ " 42"))
-                          );
-          "Constants and Poly" >:: (fun _ -> assert_equal_string
-                                               ("42 " ^ comp ^ " ((x^2)+(((5*x)*y)*z))")
-                                               (to_constr_and_back (" 42 " ^ comp ^ " x^2+ 5*x*y*z "))
-                                   );
-          "Poly and Poly" >:: (fun _ -> assert_equal_string
-                                          ("(((x^5)+(y^6))+(-(z^3))) " ^ comp ^ " ((x^2)+(((5*x)*y)*z))")
-                                          (to_constr_and_back (" x^5+y^6-z^3 " ^ comp ^ " x^2+ 5*x*y*z "))
-                              );
-        ]
-      
+    let assert_equal_constr =     
+        assert_equal ~cmp:equal_constr ~printer:TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.to_string
+
     let tests =
       "Parser" >::: [
-          "All comparators" >::: List.map comp_tests ["<"; "<="; ">"; ">="];
           "All together" >::: (
+            let open TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_.Atom_.Polynomial_ in
+            let open TransitionGraphImpl.StdTransitionGraph.Transition_.Constraint_ in
             List.map (fun (testname, expected, atom) ->
-                testname >:: (fun _ -> assert_equal_string expected (to_constr_and_back atom)))
+                testname >:: (fun _ -> assert_equal_constr expected (Reader.read_constraint atom)))
                      [
-                       ("Constants ", "42 < 42 /\ 1 >= 0 /\ 2 <= 4 /\ 6 <= 7 /\ 7 <= 6", " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 = 7");
-                       ("Constants and Variables", "x > 0 /\ y < 3", "x > 0 && y < 3");
+                       ("Constants ",
+                        all [mk_lt (value 42) (value 42); mk_ge (value 1) (value 0); mk_le (value 2) (value 4); mk_le (value 6) (value 7); mk_le (value 7) (value 6)],
+                        " 42 < 42 && 1 >= 0 && 2 <= 4 && 6 = 7");
+                       ("Constants and Variables",
+                        all [mk_gt (var "x") (value 0); mk_lt (var "y") (value 3)],
+                        "x > 0 && y < 3");
                      ]
           );
           "Negative Tests" >::: (
             List.map (fun (testname, atom) ->
-                testname >:: (fun _ -> assert_exception (fun _ -> to_constr_and_back atom)))
+                testname >:: (fun _ -> assert_exception (fun _ -> Reader.read_constraint atom)))
                      [
                        ("Unexpected char: =", "x == y");
                      ]
@@ -59,11 +53,6 @@ module Methods (C : Constraint) =
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
                      
-    let to_constr_and_back str =
-         str
-      |> Reader.read_constraint
-      |> C.to_string
-
     let example_valuation = Polynomial.Valuation_.from_native [("x", 3);
                                                         ("y", 5);
                                                         ("z", 7)]
