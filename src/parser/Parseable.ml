@@ -9,7 +9,6 @@ module type Polynomial =
     module Var : PolyTypes.ID
     val value : int -> t
     val var : string -> t
-    val to_string : t -> string
     include PolyTypes.BaseMath with type t := t
   end
   
@@ -21,7 +20,6 @@ module type Atom =
     val mk_ge : Polynomial_.t -> Polynomial_.t -> t
     val mk_lt : Polynomial_.t -> Polynomial_.t -> t
     val mk_le : Polynomial_.t -> Polynomial_.t -> t
-    val to_string : t -> string
   end
   
 module type Constraint =
@@ -29,7 +27,6 @@ module type Constraint =
     type t
     module Atom_ : Atom
     
-    val to_string : t -> string
     val mk : Atom_.t list -> t
     val mk_eq : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
     val mk_gt : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
@@ -43,7 +40,6 @@ module type Constraint =
 module type Location =
   sig
     type t
-    val to_string : t -> string
     val of_string : string -> t       
   end
    
@@ -61,7 +57,6 @@ module type Transition =
              t
     val start : t -> string
     val target : t -> string
-    val to_string : string -> string -> t -> string
   end
 
 module type TransitionGraph =
@@ -73,6 +68,5 @@ module type TransitionGraph =
                -> Transition_.t list
                -> Location_.t
                -> t
-    val to_string : t -> string
   end
 
