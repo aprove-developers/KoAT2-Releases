@@ -17,7 +17,7 @@ OCAMLINCLUDES[] =
 OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
-    ../trans_system/transitionsystem
+    ../transitionsystem/transitionsystem
 
 GEN_FILES[] =
     Parser.ml

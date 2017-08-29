@@ -7,10 +7,11 @@ USE_OCAMLFIND = true
 # We also add documentation of ml-files, because we define module types in ml-files, to prevent duplication of code
 public.InterfaceDoc(name, files) =
     protected.mlifiles = $(filter-exists $(addsuffix .mli, $(files)))
-    protected.mlfiles = $(filter-exists $(addsuffix .ml, $(files)))
-    protected.cmifiles = $(addsuffix .cmi, $(removesuffix $(mlifiles)))
+    protected.correspondend_mlfiles = $(addsuffix .ml, $(removesuffix $(mlifiles)))
+    protected.mlfiles = $(set-diff $(filter-exists $(addsuffix .ml, $(files))), $(correspondend_mlfiles))
+    protected.cmifiles = $(addsuffix .cmi, $(removesuffix $(mlifiles) $(mlfiles)))
 
-    $(name).idoc: $(mlifiles) $(mlfiles) $(cmifiles) $(OCamlLibrary $(LIB), $(FILES)) /.PHONY/OCamlGeneratedFilesTarget
+    $(name).idoc: $(mlifiles) $(mlfiles) $(cmifiles) $(OCamlLibrary $(LIB), $(FILES)) /.PHONY/OCamlGeneratedFilesTarget $(addsuffix .idoc, $(OCAML_LIBS))
         ocamlfind ocamldoc -dump $(name).idoc -stars \
             $(PREFIXED_OCAMLINCLUDES) -package "$(OCAMLPACKS)" \
             $(mlifiles) \

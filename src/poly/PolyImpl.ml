@@ -9,7 +9,7 @@ module Var = ID.StringID
 module Monomial = Monomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))
                    
 module ScaledMonomial = ScaledMonomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))
-                         
+
 module Polynomial = Polynomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))
 
 module MinMaxPolynomial = MinMaxPolynomial.Make(ID.StringID)(Number.MakeNumeric(Big_int))
