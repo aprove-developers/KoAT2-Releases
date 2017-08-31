@@ -42,7 +42,7 @@ module Make(P : Polynomial) =
       |> List.map (Atom_.vars)
       |> List.fold_left Set.union Set.empty
         
-    let to_string constr = String.concat " /\ " (List.map Atom_.to_string constr)
+    let to_string constr = String.concat " && " (List.map Atom_.to_string constr)
         
 
     let rename constr varmapping = List.map (fun atom -> Atom_.rename atom varmapping) constr
