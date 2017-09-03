@@ -1,5 +1,5 @@
 open Batteries
-
+   
 (** Provides all module types related to the transition system (program graph) *)
 
 (** A location is a node of a transition system and can be connected to other locations via transitions *)
@@ -37,11 +37,36 @@ module type Transition =
     val to_string : string -> string -> t -> string
   end
 
+(** A result variable graph relates variables of transitions to the variables in other transitions which value they can influence.
+    It can be derived from a transitionsystem and is needed to recognize SCCs of variables which can influence each other. *)
+module type VariableGraph =
+  sig
+    module ResultVariable :
+      sig
+        module Transition_ : Transition
+        type t
+        val equal : t -> t -> bool
+        val compare : t -> t -> int
+        val hash : t -> int
+      end
+  
+    type t
+
+    module Graph : sig
+      include module type of Graph.Persistent.Digraph.ConcreteBidirectional(ResultVariable)
+      val add_vertices : t -> vertex list -> t
+      val add_edges : t -> edge list -> t
+      val mk : vertex list -> edge list -> t
+    end
+
+  end
+
 (** A graph is a integer transition system based on transitions and locations *)
 module type TransitionGraph =
   sig
     module Transition_ : Transition
     module Location_ : Location
+    module VariableGraph_ : VariableGraph
 
     type t
 
@@ -57,7 +82,8 @@ module type TransitionGraph =
                -> Location_.t
                -> t
 
+    val create_variable_graph : t -> VariableGraph_.t
+
     val to_string : t -> string
 
   end
-

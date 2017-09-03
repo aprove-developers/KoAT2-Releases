@@ -73,11 +73,45 @@ module MakeTransition(C : ConstraintTypes.Constraint) =
       "TODO"
                 
   end
+
+module MakeVariableGraph(T : TransitionGraphTypes.Transition) =
+  struct
+    module ResultVariable =
+      struct
+        module Transition_ = T
+        type t = unit
+        let equal v1 v2 = raise (Failure "Not yet implemented")
+        let compare v1 v2 = raise (Failure "Not yet implemented")
+        let hash v = raise (Failure "Not yet implemented")
+      end
+
+    type t = {
+        graph: Graph.Persistent.Digraph.ConcreteBidirectional(ResultVariable).t;
+      }
+
+    module Graph = struct
+      include Graph.Persistent.Digraph.ConcreteBidirectional(ResultVariable)
+
+      let add_vertices graph vertices =
+           vertices
+        |> List.map (fun vertex -> fun gr -> add_vertex gr vertex)
+        |> List.fold_left (fun gr adder -> adder gr) graph
+        
+      let add_edges graph edges =
+           edges
+        |> List.map (fun edge -> fun gr -> add_edge_e gr edge)
+        |> List.fold_left (fun gr adder -> adder gr) graph
+
+      let mk vertices edges =
+        add_edges (add_vertices empty vertices) edges
+    end
+  end
   
 module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
   struct
     module Transition_ = T
     module Location_ = StdLocation
+    module VariableGraph_ = MakeVariableGraph(T)
 
     type t = {
         graph: Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_).t;
@@ -115,6 +149,9 @@ module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
         vars = vars;
         start = start;
       }
+
+    let create_variable_graph graph =
+      raise (Failure "Not yet implemented")
 
     let to_string graph =
       "TODO"
