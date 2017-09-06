@@ -73,6 +73,14 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let from_constant c = lift c Monomial_.one
 
     let from_var var = from_power var 1
+    
+    let rec from_coeff_list coeffs vars =
+        if (List.length coeffs) == (List.length vars) then
+            match (coeffs, vars) with
+                |([],[])-> []
+                |(c::coefftail, v::varstail)-> (ScaledMonomial_.make c (Monomial_.lift v 1)) :: (from_coeff_list coefftail varstail)
+        else []
+            
 
     let var str = from_var (Var.of_string str)
 

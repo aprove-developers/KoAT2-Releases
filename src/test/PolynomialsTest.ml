@@ -68,6 +68,18 @@ module Methods (P : Polynomial) =
 
     let assert_equal_polynomial =
       assert_equal ~cmp:P.(=~=) ~printer:P.to_string
+      
+    let of_int = P.Value.of_int
+
+    let of_string = P.Var.of_string
+    
+    let rec list_equality (xs : P.Value.t list ) (ys : P.Value.t list) =
+        match (xs, ys) with
+            |([],[]) -> true
+            |(x::tailxs, y::tailys) ->  ( P.Value.Compare.(=) x y ) && (list_equality tailxs tailys)
+            | (_,_) -> false
+            
+    let rec list_print (xs : P.Value.t list ) = String.concat "," (List.map P.Value.to_string xs)
     
     let tests =
       "Polynomial" >::: [
@@ -92,6 +104,17 @@ module Methods (P : Polynomial) =
                        ("Multiplication before Addition", 38, " x + y * z ");
                        ("Power before Negation", -27, " - x ^ 3 ");
                        ("Power before Multiplication", 27*625, " x ^ 3 * y ^ 4 ");
+                     ];
+          );
+                     
+          "from_coeff_list" >::: (
+            List.map (fun (expected, coeffs, vars) ->
+                expected >:: (fun _ -> assert_equal~cmp:P.(=~=) ~printer:P.to_string (P.from_coeff_list coeffs vars) (Reader.read_polynomial expected)))
+                     [
+                       ("2 * x + 3 * y - 4 * z", [(of_int 2); (of_int 3); (of_int (-4))],[(of_string "x"); (of_string "y"); (of_string "z")]);
+                       ("0", [(of_int 2); (of_int 3)],[(of_string "x"); (of_string "y"); (of_string "z")]);
+                       ("0", [(of_int 2); (of_int 3); (of_int (-4))],[(of_string "z")]);
+                       ("(-1) * a + 3 * b - 2 * c", [(of_int (-1)); (of_int 3); (of_int (-2))],[(of_string "a"); (of_string "b"); (of_string "c")]);
                      ];
           );
 

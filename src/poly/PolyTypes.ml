@@ -249,6 +249,7 @@ module type Polynomial =
     val value : int -> t
     val from_power : Var.t -> int -> t
     val from_monomial : monomial -> t
+    val from_coeff_list : Value.t list -> Var.t list -> t
 
     (** Following methods return information over the polynomial. *)
 
