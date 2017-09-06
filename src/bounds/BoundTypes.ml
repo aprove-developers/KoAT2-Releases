@@ -51,3 +51,19 @@ module type Approximation =
     val add_sizebound : kind -> bound -> TransitionGraph_.Transition_.t -> TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Var.t -> t -> t
 
   end
+
+module type TimeBounds =
+  sig
+    module Approximation_ : Approximation
+
+    (** Performs a single improvement step to find better timebounds for the approximation and updates the approximation. *)
+    val improve : Approximation_.TransitionGraph_.t -> Approximation_.t -> unit
+  end
+  
+module type SizeBounds =
+  sig
+    module Approximation_ : Approximation
+
+    (** Performs a single improvement step to find better sizebounds for the approximation and updates the approximation. *)
+    val improve : Approximation_.TransitionGraph_.VariableGraph_.t -> Approximation_.t -> unit
+  end
