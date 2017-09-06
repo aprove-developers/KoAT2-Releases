@@ -1,0 +1,40 @@
+USE_OCAMLFIND = true
+
+OCAMLPACKS[] =
+    batteries
+
+OCAMLINCLUDES[] =
+    ../poly
+    ../constraints
+    ../transitionsystem
+    ../bounds
+    ../preprocessors
+    ../parser
+    ../smt
+
+OCAMLFLAGS += -thread
+
+OCAML_LIBS[] =
+    ../poly/poly
+    ../constraints/constraints
+    ../transitionsystem/transitionsystem
+    ../bounds/bounds
+    ../preprocessors/preprocessors
+    ../parser/parser
+    ../smt/smt
+
+# Include all .ml files
+FILES[] = $(removesuffix .ml, $(glob *.ml))
+
+LIB = main
+
+OCamlLibrary($(LIB), $(FILES))
+InterfaceDoc($(LIB), $(FILES))
+
+clean:
+  rm -f \
+     *.omc \
+     *.idoc \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
+     $(LIB).a $(LIB).cmxa $(LIB).cma \
+     *~
