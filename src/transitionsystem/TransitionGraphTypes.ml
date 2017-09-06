@@ -84,6 +84,8 @@ module type TransitionGraph =
 
     val create_variable_graph : t -> VariableGraph_.t
 
+    val graph : t -> Graph.t
+
     val to_string : t -> string
 
   end

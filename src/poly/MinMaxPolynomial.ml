@@ -109,6 +109,10 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
                   
     let minimum bounds = Min bounds
 
+    let infinity = minimum []
+
+    let minus_infinity = maximum []
+
     let rec to_string = function
       | Poly p -> Polynomial_.to_string p
       | Max bounds -> "max{" ^ String.concat ", " (List.map to_string bounds) ^ "}"

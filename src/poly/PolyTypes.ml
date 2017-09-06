@@ -353,6 +353,8 @@ module type MinMaxPolynomial =
     val max : t -> t -> t
     val minimum : t list -> t
     val maximum : t list -> t
+    val infinity : t
+    val minus_infinity : t
 
     (** Replaces all arithmetical operations by new constructors. *)
     val fold : const:(Value.t -> 'b) ->
