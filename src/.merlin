@@ -4,6 +4,7 @@ S test
 S smt
 S parser
 S transitionsystem
+S bounds
 
 B constraints
 B poly
@@ -11,5 +12,6 @@ B test
 B smt
 B parser
 B transitionsystem
+B bounds
 
 PKG batteries oUnit Z3 ocamlgraph

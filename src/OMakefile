@@ -24,6 +24,7 @@ CUSTOM_LIBS[] =
     smt
     transitionsystem
     parser
+    bounds
 
 # All the intermediate formats of package documentations
 IDOCS[] = $(foreach $(fun x => $(x)/$(x).idoc), $(CUSTOM_LIBS))
