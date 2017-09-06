@@ -8,7 +8,6 @@ module Make(P : Polynomial) =
         
     type t = Atom_.t list
     
-
     let lift atom = [ atom ]
     
     let mk atoms = atoms
@@ -52,7 +51,6 @@ module Make(P : Polynomial) =
         
     let fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj =
       List.fold_left (fun c atom -> conj c (Atom_.fold ~const ~var ~neg ~plus ~times ~pow ~le atom)) correct
-
       
     let drop_nonlinear constr =
       List.filter Atom_.is_linear constr 
@@ -61,4 +59,8 @@ module Make(P : Polynomial) =
     let get_coefficient_vector var constr = 
         let mon = P.Monomial_.lift var 1 in 
             List.map (fun atom ->P.coeff mon (Atom_.normalised_lhs atom)) constr
+            
+    (**returns a list of the constants of the constraints*)
+    let get_constant_vector constr = 
+        List.map (fun atom -> P.Value.neg (P.constant (Atom_.normalised_lhs atom))) constr 
   end

@@ -143,5 +143,10 @@ module type Constraint =
         (** Drops all nonlinear atoms from the constraints. 
             Example: (a > 0 && b^2 < 2) gets transformed to (a > 0) *)
         val drop_nonlinear : t -> t
-
+        
+        (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
+        val get_coefficient_vector : Atom_.Polynomial_.Monomial_.Var.t -> t -> Atom_.Polynomial_.Value.t list
+        
+        (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
+        val get_constant_vector : t -> Atom_.Polynomial_.Value.t list
   end

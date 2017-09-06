@@ -266,7 +266,7 @@ module type Polynomial =
       
     val to_string : t -> string
       
-
+      
     (** Following methods return if the atom has certain properties. *)
 
     (** Returns if the polynomial is equivalent to a term x^1 for any variable x. *)
