@@ -14,10 +14,21 @@ module Reader_ = Readers.Make(TransitionGraph_)
             
 
 let preprocessors: (TransitionGraph_.t -> TransitionGraph_.t) list = []
-            
+
+(* We apply each preprocessor exactly one time *)
+let preprocess (graph: TransitionGraph_.t): TransitionGraph_.t =
+  List.fold_left (fun graph preprocessor -> preprocessor graph) graph preprocessors
+
 let find_bounds (graph: TransitionGraph_.t): Approximation_.t =
   raise (Failure "Not yet implemented")
 
+let print_results (appr: Approximation_.t): unit =
+  raise (Failure "Not yet implemented")  
+
 let () =
-  raise (Failure "Not yet implemented")
+  let file = "file" in
+     Reader_.read_file file
+  |> preprocess
+  |> find_bounds
+  |> print_results
 
