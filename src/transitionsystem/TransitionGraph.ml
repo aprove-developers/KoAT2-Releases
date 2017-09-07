@@ -153,6 +153,8 @@ module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
     let create_variable_graph graph =
       raise (Failure "Not yet implemented")
 
+    let graph g = g.graph
+      
     let to_string graph =
       "TODO"
       

@@ -19,6 +19,7 @@ let suite =
         ];
       TransitionGraphTest.suite;
       SMTTest.suite;
+      IDTest.tests;
     ]
                      
 let () =

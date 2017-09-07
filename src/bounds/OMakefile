@@ -1,45 +1,32 @@
 USE_OCAMLFIND = true
 
 OCAMLPACKS[] =
-    Z3
     batteries
-    ocamlgraph
-    oUnit
 
 OCAMLINCLUDES[] =
-    ../poly 
+    ../poly
     ../constraints
-    ../parser
-    ../smt
     ../transitionsystem
-    ../bounds
-    ../preprocessors
 
-NATIVE_ENABLED = true
-BYTE_ENABLED = true
+OCAMLFLAGS += -thread
 
 OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
-    ../parser/parser
-    ../smt/smt
     ../transitionsystem/transitionsystem
-    ../bounds/bounds
-    ../preprocessors/preprocessors
 
 # Include all .ml files
 FILES[] = $(removesuffix .ml, $(glob *.ml))
 
-OCamlProgram(Test, $(FILES))
+LIB = bounds
 
-install: Test
-    ./Test
+OCamlLibrary($(LIB), $(FILES))
+InterfaceDoc($(LIB), $(FILES))
 
 clean:
   rm -f \
      *.omc \
+     *.idoc \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
-     Test Test.opt \
-     *~ \
-     *.log \
-     *.cache
+     $(LIB).a $(LIB).cmxa $(LIB).cma \
+     *~
