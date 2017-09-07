@@ -67,4 +67,6 @@ module Make(P : Polynomial) =
     let rec get_matrix constr = 
         let variables = Set.elements (vars constr) in
             List.map (fun var -> get_coefficient_vector var constr) variables
+            
+    
   end

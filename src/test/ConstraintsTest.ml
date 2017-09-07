@@ -161,11 +161,8 @@ module Methods (C : Constraint) =
                       constr >:: (fun _ -> assert_equal ~cmp:list_list_equality ~printer:list_list_print (expected) (C.get_matrix (Reader.read_constraint constr) )))
                         [
                             ([[(of_int 1); (of_int 2); (of_int 3)];[(of_int 1); (of_int 3); (of_int (-4))]], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
-                            (*([(of_int 1); (of_int 3); (of_int (-4))], "y", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
-                            ([(of_int 0); (of_int 0); (of_int 0)], "z", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
-                            ([(of_int 3); (of_int 1); (of_int 7); (of_int (-7))], "x", "3*x + 2 * y + 4 * z <= 8 && (-1) * x - 3*y > 3 && 7 * x + 3 * z = 1");
-                            ([(of_int 2); (of_int 3); (of_int 0); (of_int (0))], "y", "3*x + 2 * y + 4 * z <= 8 && (-1) * x - 3*y > 3 && 7 * x + 3 * z = 1");
-                            ([(of_int 4); (of_int 0); (of_int 3); (of_int (-3))], "z", "3*x + 2 * y + 4 * z <= 8 && (-1) * x - 3*y > 3 && 7 * x + 3 * z = 1");*)
+                            ([[(of_int 1); (of_int (-1))];[(of_int (-1)); (of_int 1)]], "x = y");
+                            ([[(of_int (-1)); (of_int 0);(of_int 0);(of_int (-1))];[(of_int 0); (of_int (-1));(of_int 1);(of_int (-1))];[(of_int 1); (of_int 1);(of_int (-1));(of_int (-1))]],"x > z && z = y && x + y + z > 3");
                         ]);
 
         ]
