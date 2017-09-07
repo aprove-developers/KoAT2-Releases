@@ -20,6 +20,7 @@ module type Location =
 module type Transition =
   sig
     module Constraint_ : ConstraintTypes.Constraint
+    module Map : module type of Map.Make(Constraint_.Atom_.Polynomial_.Var)
     type t
     exception RecursionNotSupported
     val mk : name:string ->
@@ -33,6 +34,8 @@ module type Transition =
     val compare : t -> t -> int
     val start : t -> string
     val target : t -> string
+    val update : t -> Constraint_.Atom_.Polynomial_.t Map.t
+    val guard : t -> Constraint_.t
     val default : t
     val to_string : string -> string -> t -> string
   end

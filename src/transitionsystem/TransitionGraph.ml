@@ -27,7 +27,7 @@ module StdLocation =
 module MakeTransition(C : ConstraintTypes.Constraint) =
   struct
     module Constraint_ = C
-    module Map = Map.Make(C.Atom_.Polynomial_.Var)
+    module Map = Map.Make(Constraint_.Atom_.Polynomial_.Var)
 
     exception RecursionNotSupported
 
@@ -60,6 +60,10 @@ module MakeTransition(C : ConstraintTypes.Constraint) =
     let start t = t.start
       
     let target t = t.target
+
+    let update t = t.update
+                 
+    let guard t = t.guard
 
     let default = {   
         name = "default";
