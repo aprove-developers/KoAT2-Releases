@@ -255,6 +255,7 @@ module type Polynomial =
 
     (** Returns the coefficient of the monomial. *)
     val coeff : monomial -> t -> Value.t
+    val coeff_of_var : Var.t -> t -> Value.t
 
     (** Returns the monomials of the polynomial without the empty monomial. *)
     val monomials : t -> monomial list

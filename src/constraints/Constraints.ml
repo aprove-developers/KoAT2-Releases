@@ -57,10 +57,14 @@ module Make(P : Polynomial) =
 
     (**returns a list of the coefficients of a variable in all the left sides of the constraints*)
     let get_coefficient_vector var constr = 
-        let mon = P.Monomial_.lift var 1 in 
-            List.map (fun atom ->P.coeff mon (Atom_.normalised_lhs atom)) constr
+        List.map (fun atom ->P.coeff_of_var var (Atom_.normalised_lhs atom)) constr
             
     (**returns a list of the constants of the constraints*)
     let get_constant_vector constr = 
         List.map (fun atom -> P.Value.neg (P.constant (Atom_.normalised_lhs atom))) constr 
+        
+    (** returns a list of list of the coefficients of the constraint*)
+    let rec get_matrix constr = 
+        let variables = Set.elements (vars constr) in
+            List.map (fun var -> get_coefficient_vector var constr) variables
   end
