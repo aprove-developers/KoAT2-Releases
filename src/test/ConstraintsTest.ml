@@ -163,6 +163,15 @@ module Methods (C : Constraint) =
                             ([[(of_int 1); (of_int 2); (of_int 3)];[(of_int 1); (of_int 3); (of_int (-4))]],["x";"y"], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                             ([[(of_int 1); (of_int (-1))];[(of_int (-1)); (of_int 1)]],["x";"y"], "x = y");
                             ([[(of_int (-1)); (of_int 0);(of_int 0);(of_int (-1))];[(of_int 0); (of_int (-1));(of_int 1);(of_int (-1))];[(of_int 1); (of_int 1);(of_int (-1));(of_int (-1))]],["x";"y";"z"],"x > z && z = y && x + y + z > 3");
+                            ([[(of_int 2)];[(of_int 1)]],["x";"y"],"2 *x + y <= 0");
+                            ([[(of_int 1);(of_int 1);(of_int (-1));(of_int 0)];[(of_int 1);(of_int 0);(of_int 0);(of_int (-1))]],["x";"y"],"x + y <= 4 && x <= 3 && x >= 0 && y>=0");
+                        ]);
+                        
+            ("farkas" >:::
+                List.map (fun (expected, constr, atom) ->
+                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.farkas  (Reader.read_constraint constr) (Reader.read_atom atom) )))
+                        [
+                            ("x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y", "x + y <= 4 && x <= 3 && x >= 0 && y>=0", "2*x + y <= 0"); 
                         ]);
 
         ]

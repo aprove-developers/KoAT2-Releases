@@ -151,4 +151,8 @@ module type Constraint =
         
         (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
         val get_constant_vector : t -> Atom_.Polynomial_.Value.t list
+        
+        val dualise : Atom_.Polynomial_.Var.t list -> Atom_.Polynomial_.Value.t list list -> Atom_.Polynomial_.t list -> t
+        
+        val farkas : t -> Atom_.t -> t
   end

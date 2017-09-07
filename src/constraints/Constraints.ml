@@ -4,8 +4,6 @@ open ConstraintTypes
    
 module Make(P : Polynomial) =
   struct
-  
-    exception FarkasError of string
     
     module Atom_ = Atoms.Make(P)
         
@@ -46,7 +44,6 @@ module Make(P : Polynomial) =
         
     let to_string constr = String.concat " && " (List.map Atom_.to_string constr)
         
-
     let rename constr varmapping = List.map (fun atom -> Atom_.rename atom varmapping) constr
 
     let models constr valuation = 
@@ -66,10 +63,28 @@ module Make(P : Polynomial) =
     let get_constant_vector constr = 
         List.map (fun atom -> P.Value.neg (P.constant (Atom_.normalised_lhs atom))) constr 
         
-    (** returns a list of list of the coefficients of the constraint*)
+    (** returns a list of lists of the coefficients of the constraint*)
     let rec get_matrix vars constr = 
         let variables = Set.elements vars in
             List.map (fun var -> get_coefficient_vector var constr) variables
-
     
+    let dualise vars matrix column =
+        let dualised_left = List.map (fun row -> P.from_coeff_list row vars) matrix in
+            let dualised_left_ge = List.map2 (Atom_.mk Atom_.Comparator.GE) dualised_left column in
+                let dualised_left_le = List.map2 (Atom_.mk Atom_.Comparator.LE) dualised_left column in
+                        let ensure_pos = List.map (fun v -> Atom_.mk Atom_.Comparator.GE (P.from_var v) P.zero ) vars in
+                            mk (List.concat [dualised_left_le; dualised_left_ge ;ensure_pos])
+        
+        
+    let farkas constr atom =
+            let vars = Set.union (vars constr) (Atom_.vars atom) in
+            let costfunction = lift atom in
+                let a_matrix = get_matrix vars constr in
+                let b_right = get_constant_vector constr in
+                let c_left = List.map (P.from_constant) (List.flatten (get_matrix vars costfunction)) in
+                let d_right = get_constant_vector costfunction in
+                    let num_of_constr = List.length constr in
+                    let fresh_vars = P.Var.fresh_id_list num_of_constr in
+                        dualise fresh_vars a_matrix c_left
+            
   end
