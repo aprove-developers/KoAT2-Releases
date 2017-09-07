@@ -157,12 +157,12 @@ module Methods (C : Constraint) =
                         ]);
                         
             ("get_matrix" >:::
-                List.map (fun (expected, constr) ->
-                      constr >:: (fun _ -> assert_equal ~cmp:list_list_equality ~printer:list_list_print (expected) (C.get_matrix (Reader.read_constraint constr) )))
+                List.map (fun (expected, vars, constr) ->
+                      constr >:: (fun _ -> assert_equal ~cmp:list_list_equality ~printer:list_list_print (expected) (C.get_matrix ((Set.map Polynomial.Var.of_string (Set.of_list vars))) (Reader.read_constraint constr) )))
                         [
-                            ([[(of_int 1); (of_int 2); (of_int 3)];[(of_int 1); (of_int 3); (of_int (-4))]], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
-                            ([[(of_int 1); (of_int (-1))];[(of_int (-1)); (of_int 1)]], "x = y");
-                            ([[(of_int (-1)); (of_int 0);(of_int 0);(of_int (-1))];[(of_int 0); (of_int (-1));(of_int 1);(of_int (-1))];[(of_int 1); (of_int 1);(of_int (-1));(of_int (-1))]],"x > z && z = y && x + y + z > 3");
+                            ([[(of_int 1); (of_int 2); (of_int 3)];[(of_int 1); (of_int 3); (of_int (-4))]],["x";"y"], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
+                            ([[(of_int 1); (of_int (-1))];[(of_int (-1)); (of_int 1)]],["x";"y"], "x = y");
+                            ([[(of_int (-1)); (of_int 0);(of_int 0);(of_int (-1))];[(of_int 0); (of_int (-1));(of_int 1);(of_int (-1))];[(of_int 1); (of_int 1);(of_int (-1));(of_int (-1))]],["x";"y";"z"],"x > z && z = y && x + y + z > 3");
                         ]);
 
         ]

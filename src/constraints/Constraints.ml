@@ -4,6 +4,9 @@ open ConstraintTypes
    
 module Make(P : Polynomial) =
   struct
+  
+    exception FarkasError of string
+    
     module Atom_ = Atoms.Make(P)
         
     type t = Atom_.t list
@@ -64,9 +67,9 @@ module Make(P : Polynomial) =
         List.map (fun atom -> P.Value.neg (P.constant (Atom_.normalised_lhs atom))) constr 
         
     (** returns a list of list of the coefficients of the constraint*)
-    let rec get_matrix constr = 
-        let variables = Set.elements (vars constr) in
+    let rec get_matrix vars constr = 
+        let variables = Set.elements vars in
             List.map (fun var -> get_coefficient_vector var constr) variables
-            
+
     
   end
