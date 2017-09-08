@@ -154,6 +154,7 @@ module Methods (C : Constraint) =
                         [
                             ([(of_int 5); (of_int (-2)); (of_int 0)], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                             ([(of_int 8); (of_int (-4)); (of_int 1); (of_int (-1))], "3*x + 2 * y + 4 * z <= 8 && (-1) * x - 3*y > 3 && 7 * x + 3 * z = 1");
+                            ([(of_int 0)],"2 *x + y <= 0");
                         ]);
                         
             ("get_matrix" >:::
@@ -167,11 +168,13 @@ module Methods (C : Constraint) =
                             ([[(of_int 1);(of_int 1);(of_int (-1));(of_int 0)];[(of_int 1);(of_int 0);(of_int 0);(of_int (-1))]],["x";"y"],"x + y <= 4 && x <= 3 && x >= 0 && y>=0");
                         ]);
                         
-            ("farkas" >:::
+            ("farkas_transform" >:::
                 List.map (fun (expected, constr, atom) ->
-                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.farkas  (Reader.read_constraint constr) (Reader.read_atom atom) )))
+                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.farkas_transform  (Reader.read_constraint constr) (Reader.read_atom atom) )))
                         [
-                            ("x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y", "x + y <= 4 && x <= 3 && x >= 0 && y>=0", "2*x + y <= 0"); 
+                            ("x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y", "x + y <= 4 && x <= 3 && x >= 0 && y>=0", "2*x + y <= 0");
+                            ("x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y ", "x + y <= 4 && x <= 3 && y>=0", "2*x + y <= 0");
+                            ("x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y", "x + y = 4 && x <= 3 && x>=0 && y>=0", "2*x + y <= 0");
                         ]);
 
         ]

@@ -22,6 +22,8 @@ module Make(P : Polynomial) =
     let mk_ge p1 p2 = lift (Atom_.mk_ge p1 p2)
     let mk_lt p1 p2 = lift (Atom_.mk_lt p1 p2)
     let mk_le p1 p2 = lift (Atom_.mk_le p1 p2)
+    
+    let mk_and = List.append
 
                     
     (** TODO Filter related: x < 0 && x < 1*)
@@ -70,21 +72,22 @@ module Make(P : Polynomial) =
     
     let dualise vars matrix column =
         let dualised_left = List.map (fun row -> P.from_coeff_list row vars) matrix in
-            let dualised_left_ge = List.map2 (Atom_.mk Atom_.Comparator.GE) dualised_left column in
-                let dualised_left_le = List.map2 (Atom_.mk Atom_.Comparator.LE) dualised_left column in
-                        let ensure_pos = List.map (fun v -> Atom_.mk Atom_.Comparator.GE (P.from_var v) P.zero ) vars in
-                            mk (List.concat [dualised_left_le; dualised_left_ge ;ensure_pos])
+            let dualised_eq = List.flatten (List.map2 mk_eq dualised_left column) in
+                let ensure_pos = List.map (fun v -> Atom_.mk_ge (P.from_var v) P.zero ) vars in
+                    mk (List.flatten [dualised_eq;ensure_pos])
         
         
-    let farkas constr atom =
+    let farkas_transform constr atom =
             let vars = Set.union (vars constr) (Atom_.vars atom) in
             let costfunction = lift atom in
                 let a_matrix = get_matrix vars constr in
                 let b_right = get_constant_vector constr in
                 let c_left = List.map (P.from_constant) (List.flatten (get_matrix vars costfunction)) in
-                let d_right = get_constant_vector costfunction in
+                let d_right = List.at (get_constant_vector costfunction) 0 in
                     let num_of_constr = List.length constr in
                     let fresh_vars = P.Var.fresh_id_list num_of_constr in
-                        dualise fresh_vars a_matrix c_left
-            
+                        let dual_constr = dualise fresh_vars a_matrix c_left in
+                            let cost_constr = P.from_coeff_list b_right fresh_vars in
+                                mk_and dual_constr (mk_le cost_constr (P.from_constant d_right))
+                                
   end

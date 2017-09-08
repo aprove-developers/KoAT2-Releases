@@ -90,6 +90,7 @@ module type Constraint =
         val lift : Atom_.t -> t      
         val mk : Atom_.t list -> t
         val mk_true : t
+        val mk_and : t -> t -> t
 
         (** Creates a constraint that expresses the equality of the two polynomials. *)
         val mk_eq : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
@@ -154,5 +155,5 @@ module type Constraint =
         
         val dualise : Atom_.Polynomial_.Var.t list -> Atom_.Polynomial_.Value.t list list -> Atom_.Polynomial_.t list -> t
         
-        val farkas : t -> Atom_.t -> t
+        val farkas_transform : t -> Atom_.t -> t
   end
