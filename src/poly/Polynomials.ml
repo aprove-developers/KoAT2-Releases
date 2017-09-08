@@ -15,7 +15,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     module Value = Value
 
     let make = List.map (fun (coeff, mon) -> ScaledMonomial_.make coeff mon)
-
+    
     let lift coeff mon = [ScaledMonomial_.make coeff mon]
 
     let fold ~const ~var ~neg ~plus ~times ~pow =
@@ -29,6 +29,10 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       |> List.filter (fun scaled -> Monomial_.(=~=) (ScaledMonomial_.monomial scaled) mon)
       |> List.map ScaledMonomial_.coeff
       |> List.fold_left Value.add Value.zero
+      
+    let coeff_of_var var poly =
+        let mon = Monomial_.lift var 1 in 
+            coeff mon poly
 
     let delete_monomial mon poly =
       List.filter (fun x -> not (Monomial_.(=~=) (ScaledMonomial_.monomial x) mon)) poly
@@ -73,6 +77,15 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let from_constant c = lift c Monomial_.one
 
     let from_var var = from_power var 1
+    
+    let rec from_coeff_list coeffs vars =
+        if (List.length coeffs) == (List.length vars) then
+            match (coeffs, vars) with
+                |([],[])-> []
+                |(c::coefftail, v::varstail)-> (ScaledMonomial_.make c (Monomial_.lift v 1)) :: (from_coeff_list coefftail varstail)
+                |_ -> []
+        else []
+            
 
     let var str = from_var (Var.of_string str)
 

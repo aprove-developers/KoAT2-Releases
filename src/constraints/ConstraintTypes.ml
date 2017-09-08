@@ -90,6 +90,7 @@ module type Constraint =
         val lift : Atom_.t -> t      
         val mk : Atom_.t list -> t
         val mk_true : t
+        val mk_and : t -> t -> t
 
         (** Creates a constraint that expresses the equality of the two polynomials. *)
         val mk_eq : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
@@ -143,5 +144,16 @@ module type Constraint =
         (** Drops all nonlinear atoms from the constraints. 
             Example: (a > 0 && b^2 < 2) gets transformed to (a > 0) *)
         val drop_nonlinear : t -> t
-
+        
+        (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
+        val get_coefficient_vector : Atom_.Polynomial_.Var.t -> t -> Atom_.Polynomial_.Value.t list
+        
+        val get_matrix : Atom_.Polynomial_.Var.t Set.t -> t -> Atom_.Polynomial_.Value.t list list
+        
+        (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
+        val get_constant_vector : t -> Atom_.Polynomial_.Value.t list
+        
+        val dualise : Atom_.Polynomial_.Var.t list -> Atom_.Polynomial_.Value.t list list -> Atom_.Polynomial_.t list -> t
+        
+        val farkas_transform : t -> Atom_.t -> t
   end

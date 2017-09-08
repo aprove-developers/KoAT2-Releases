@@ -254,11 +254,13 @@ module type Polynomial =
     val value : int -> t
     val from_power : Var.t -> int -> t
     val from_monomial : monomial -> t
+    val from_coeff_list : Value.t list -> Var.t list -> t
 
     (** Following methods return information over the polynomial. *)
 
     (** Returns the coefficient of the monomial. *)
     val coeff : monomial -> t -> Value.t
+    val coeff_of_var : Var.t -> t -> Value.t
 
     (** Returns the monomials of the polynomial without the empty monomial. *)
     val monomials : t -> monomial list
@@ -271,7 +273,7 @@ module type Polynomial =
       
     val to_string : t -> string
       
-
+      
     (** Following methods return if the atom has certain properties. *)
 
     (** Returns if the polynomial is equivalent to a term x^1 for any variable x. *)
