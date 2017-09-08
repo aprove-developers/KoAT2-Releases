@@ -57,7 +57,7 @@ module type TimeBounds =
     module Approximation_ : Approximation
 
     (** Performs a single improvement step to find better timebounds for the approximation and updates the approximation. *)
-    val improve : Approximation_.TransitionGraph_.t -> Approximation_.t -> unit
+    val improve : Approximation_.TransitionGraph_.t -> Approximation_.t -> Approximation_.t
   end
   
 module type SizeBounds =
@@ -65,5 +65,5 @@ module type SizeBounds =
     module Approximation_ : Approximation
 
     (** Performs a single improvement step to find better sizebounds for the approximation and updates the approximation. *)
-    val improve : Approximation_.TransitionGraph_.VariableGraph_.t -> Approximation_.t -> unit
+    val improve : Approximation_.TransitionGraph_.VariableGraph_.Graph.t -> Approximation_.t -> Approximation_.t
   end

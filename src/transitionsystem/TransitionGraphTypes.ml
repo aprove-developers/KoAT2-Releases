@@ -61,7 +61,7 @@ module type VariableGraph =
       val add_edges : t -> edge list -> t
       val mk : vertex list -> edge list -> t
     end
-
+         
   end
 
 (** A graph is a integer transition system based on transitions and locations *)
