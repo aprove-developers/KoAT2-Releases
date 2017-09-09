@@ -1,4 +1,4 @@
-%parameter<G : Parseable.TransitionGraph>
+%parameter<G : Parseable.Program>
 
 %token	<string>	ID
 %token	<int>		UINT
@@ -17,31 +17,31 @@
 			
 %start <G.t> onlyTransitiongraph
 
-%start <G.Transition_.Constraint_.t> onlyConstraints
+%start <G.Constraint_.t> onlyConstraints
 
-%start <G.Transition_.Constraint_.Atom_.t> onlyAtom
+%start <G.Constraint_.Atom_.t> onlyAtom
 
-%start <G.Transition_.Constraint_.Atom_.Polynomial_.t> onlyPolynomial
+%start <G.Constraint_.Atom_.Polynomial_.t> onlyPolynomial
 
 %type <G.t> transitiongraph
 
-%type <G.Transition_.Constraint_.t> constraints
+%type <G.Constraint_.t> constraints
 
-%type <G.Transition_.Constraint_.t> atom
+%type <G.Constraint_.t> atom
 
-%type <G.Transition_.Constraint_.Atom_.Polynomial_.t> polynomial
+%type <G.Constraint_.Atom_.Polynomial_.t> polynomial
 
-%type <G.Transition_.Constraint_.Atom_.Polynomial_.Var.t list> variables
+%type <G.Constraint_.Atom_.Polynomial_.Var.t list> variables
 
-%type <vars:G.Transition_.Constraint_.Atom_.Polynomial_.Var.t list -> G.Transition_.t> transition
+%type <vars:G.Constraint_.Atom_.Polynomial_.Var.t list -> G.Transition.t> transition
 
-%type <(vars:G.Transition_.Constraint_.Atom_.Polynomial_.Var.t list -> G.Transition_.t) list> transitions
+%type <(vars:G.Constraint_.Atom_.Polynomial_.Var.t list -> G.Transition.t) list> transitions
 
 %{
   open BatTuple
-  module Constr = G.Transition_.Constraint_
-  module Atom = G.Transition_.Constraint_.Atom_
-  module Poly = G.Transition_.Constraint_.Atom_.Polynomial_
+  module Constr = G.Constraint_
+  module Atom = G.Constraint_.Atom_
+  module Poly = G.Constraint_.Atom_.Polynomial_
 %}
 
 %%
@@ -75,7 +75,7 @@ variables :
 
 transition :
 	|	lhs = transition_lhs; ARROW; rhs = transition_rhs; constr = withConstraints
-	          { G.Transition_.mk ~name:(Tuple2.first rhs)
+	          { G.Transition.mk ~name:(Tuple2.first rhs)
                                      ~start:(Tuple2.first lhs)
                                      ~targets:(Tuple2.second rhs)
                                      ~patterns:(List.map Poly.Var.of_string (Tuple2.second lhs))

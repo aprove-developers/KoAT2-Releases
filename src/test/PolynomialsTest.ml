@@ -10,13 +10,13 @@ module Parser =
 
     let assert_equal_polynomial =
       assert_equal
-        ~cmp:TransitionGraphImpl.StdProgram.Transition_.Constraint_.Atom_.Polynomial_.(=~=)
-        ~printer:TransitionGraphImpl.StdProgram.Transition_.Constraint_.Atom_.Polynomial_.to_string
+        ~cmp:TransitionGraphImpl.StdProgram.Constraint_.Atom_.Polynomial_.(=~=)
+        ~printer:TransitionGraphImpl.StdProgram.Constraint_.Atom_.Polynomial_.to_string
 
     let tests =
       "Parser" >::: [
           "Positive Tests" >::: (
-            let open TransitionGraphImpl.StdProgram.Transition_.Constraint_.Atom_.Polynomial_ in
+            let open TransitionGraphImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
             List.map (fun (testname, expected, expression) ->
                 testname >:: (fun _ -> assert_equal_polynomial expected (Reader.read_polynomial expression)))
                      [
@@ -54,7 +54,7 @@ module Parser =
   
 module Methods (P : Polynomial) =
   struct
-    module Reader = Readers.Make(TransitionGraph.MakeProgram(TransitionGraph.MakeTransition(Constraints.Make(P))))
+    module Reader = Readers.Make(TransitionGraph.MakeProgram(Constraints.Make(P)))
                
     let example_valuation = P.Valuation_.from_native [("x", 3); ("y", 5); ("z", 7)]
                                             

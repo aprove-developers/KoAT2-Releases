@@ -4,9 +4,5 @@ open Batteries
 
 module StdLocation : TransitionGraphTypes.Location
 
-module MakeTransition(C : ConstraintTypes.Constraint) : TransitionGraphTypes.Transition
+module MakeProgram(C : ConstraintTypes.Constraint) : TransitionGraphTypes.Program
        with module Constraint_ = C
-
-module MakeProgram(T : TransitionGraphTypes.Transition) : TransitionGraphTypes.Program
-     with module Transition_ = T
-     and module Location_ = StdLocation

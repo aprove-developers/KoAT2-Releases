@@ -10,13 +10,13 @@ module Parser =
     module Reader = Readers.Make(TransitionGraphImpl.StdProgram)
 
     let assert_equal_constr =     
-        assert_equal ~cmp:TransitionGraphImpl.StdProgram.Transition_.Constraint_.(=~=) ~printer:TransitionGraphImpl.StdProgram.Transition_.Constraint_.to_string
+        assert_equal ~cmp:TransitionGraphImpl.StdProgram.Constraint_.(=~=) ~printer:TransitionGraphImpl.StdProgram.Constraint_.to_string
 
     let tests =
       "Parser" >::: [
           "All together" >::: (
-            let open TransitionGraphImpl.StdProgram.Transition_.Constraint_.Atom_.Polynomial_ in
-            let open TransitionGraphImpl.StdProgram.Transition_.Constraint_ in
+            let open TransitionGraphImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
+            let open TransitionGraphImpl.StdProgram.Constraint_ in
             List.map (fun (testname, expected, atom) ->
                 testname >:: (fun _ -> assert_equal_constr expected (Reader.read_constraint atom)))
                      [
@@ -41,7 +41,7 @@ module Parser =
   
 module Methods (C : Constraint) =
   struct
-    module Reader = Readers.Make(TransitionGraph.MakeProgram(TransitionGraph.MakeTransition(C)))
+    module Reader = Readers.Make(TransitionGraph.MakeProgram(C))
 
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_

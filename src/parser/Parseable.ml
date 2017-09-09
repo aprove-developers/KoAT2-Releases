@@ -43,29 +43,28 @@ module type Location =
     val of_string : string -> t       
   end
    
-module type Transition =
+module type Program =
   sig
     type t
     module Constraint_ : Constraint
-    exception RecursionNotSupported
-    val mk : name:string ->
-             start:string ->
-             targets:(string * (Constraint_.Atom_.Polynomial_.t list)) list ->
-             patterns:Constraint_.Atom_.Polynomial_.Var.t list ->
-             guard:Constraint_.t ->
-             vars:Constraint_.Atom_.Polynomial_.Var.t list ->
-             t
-    val start : t -> string
-    val target : t -> string
-  end
-
-module type TransitionGraph =
-  sig
-    type t
-    module Transition_ : Transition
+    module Transition :
+    sig
+      type t
+      exception RecursionNotSupported
+      val mk : name:string ->
+               start:string ->
+               targets:(string * (Constraint_.Atom_.Polynomial_.t list)) list ->
+               patterns:Constraint_.Atom_.Polynomial_.Var.t list ->
+               guard:Constraint_.t ->
+               vars:Constraint_.Atom_.Polynomial_.Var.t list ->
+               t
+      val start : t -> string
+      val target : t -> string
+    end
     module Location_ : Location
-    val from : Transition_.Constraint_.Atom_.Polynomial_.Var.t list
-               -> Transition_.t list
+         
+    val from : Constraint_.Atom_.Polynomial_.Var.t list
+               -> Transition.t list
                -> Location_.t
                -> t
   end

@@ -4,6 +4,4 @@ open Batteries
    
 module StdLocation = TransitionGraph.StdLocation
 
-module StdTransition = TransitionGraph.MakeTransition(ConstraintImpl.StdConstraint)
-
-module StdProgram = TransitionGraph.MakeProgram(StdTransition)
+module StdProgram = TransitionGraph.MakeProgram(ConstraintImpl.StdConstraint)
