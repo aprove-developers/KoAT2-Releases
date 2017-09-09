@@ -12,7 +12,7 @@ module type Program =
         It connects two locations and is annotated with a guard and an update
         A guard has to be fulfiled for a state to reach another state via the transition
         An update assigns variables a new value as a linear combination of the old values *)
-    module Transition :
+    module TransitionLabel :
       sig
         module Map : module type of Map.Make(Constraint_.Polynomial_.Var)
         type t
@@ -33,7 +33,7 @@ module type Program =
         val default : t
         val to_string : string -> string -> t -> string
       end
-      
+
     (** A location is a node of a transition system and can be connected to other locations via transitions *)
     module Location :
     sig
@@ -45,17 +45,19 @@ module type Program =
       val of_string : string -> t
     end
 
-    module TransitionGraph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(Transition)
-                                  with type edge = Location.t * Transition.t * Location.t
+    module TransitionGraph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
+                                  with type edge = Location.t * TransitionLabel.t * Location.t
                                    and type vertex = Location.t
 
+    module Transition : module type of TransitionGraph.E
+      
     module RV :
       sig
-        type t = TransitionGraph.E.t * Constraint_.Polynomial_.Var.t
+        type t = Transition.t * Constraint_.Polynomial_.Var.t
         val equal : t -> t -> bool
         val compare : t -> t -> int
         val hash : t -> int
-        val transition : t -> (Location.t * Transition.t * Location.t)
+        val transition : t -> Transition.t
         val variable : t -> Constraint_.Polynomial_.Var.t
       end
          
@@ -70,7 +72,7 @@ module type Program =
     val mk : TransitionGraph.vertex list -> TransitionGraph.edge list -> TransitionGraph.t
 
     val from : Constraint_.Polynomial_.Var.t list
-               -> Transition.t list
+               -> TransitionLabel.t list
                -> Location.t
                -> t
 

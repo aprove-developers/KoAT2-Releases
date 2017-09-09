@@ -42,7 +42,7 @@ module type Program =
   sig
     type t
     module Constraint_ : Constraint
-    module Transition :
+    module TransitionLabel :
     sig
       type t
       exception RecursionNotSupported
@@ -63,7 +63,7 @@ module type Program =
       end
    
     val from : Constraint_.Polynomial_.Var.t list
-               -> Transition.t list
+               -> TransitionLabel.t list
                -> Location.t
                -> t
   end

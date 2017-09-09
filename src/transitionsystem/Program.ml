@@ -5,7 +5,7 @@ module Make(C : ConstraintTypes.Constraint) =
     
     module Constraint_ = C
 
-    module Transition =
+    module TransitionLabel =
       struct
         module Map = Map.Make(Constraint_.Polynomial_.Var)
                    
@@ -81,11 +81,13 @@ module Make(C : ConstraintTypes.Constraint) =
                            
       end
 
-    module TransitionGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(Transition)
+    module TransitionGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
+
+    module Transition = TransitionGraph.E
 
     module RV =
       struct
-        type t = TransitionGraph.E.t * Constraint_.Polynomial_.Var.t
+        type t = Transition.t * Constraint_.Polynomial_.Var.t
         let equal v1 v2 = raise (Failure "Not yet implemented")
         let compare v1 v2 = raise (Failure "Not yet implemented")
         let hash v = raise (Failure "Not yet implemented")
@@ -114,9 +116,9 @@ module Make(C : ConstraintTypes.Constraint) =
       add_edges (add_vertices TransitionGraph.empty vertices) edges
 
     let from vars transitions start =
-      let edges = List.map (fun t -> (Location.of_string (Transition.start t),
+      let edges = List.map (fun t -> (Location.of_string (TransitionLabel.start t),
                                       t,
-                                      Location.of_string (Transition.target t)))
+                                      Location.of_string (TransitionLabel.target t)))
                            transitions in
       let vertices = List.unique (List.append
                                     (List.map (fun (start, _, _) -> start) edges)
@@ -132,8 +134,8 @@ module Make(C : ConstraintTypes.Constraint) =
 
     let graph g = g.graph
       
-    let is_initial graph t =
-      graph.start == Location.of_string (Transition.start t)
+    let is_initial graph (l,t,l') =
+      graph.start == l
 
     let to_string graph =
       "TODO"

@@ -33,9 +33,9 @@
 
 %type <G.Constraint_.Polynomial_.Var.t list> variables
 
-%type <vars:G.Constraint_.Polynomial_.Var.t list -> G.Transition.t> transition
+%type <vars:G.Constraint_.Polynomial_.Var.t list -> G.TransitionLabel.t> transition
 
-%type <(vars:G.Constraint_.Polynomial_.Var.t list -> G.Transition.t) list> transitions
+%type <(vars:G.Constraint_.Polynomial_.Var.t list -> G.TransitionLabel.t) list> transitions
 
 %{
   open BatTuple
@@ -75,7 +75,7 @@ variables :
 
 transition :
 	|	lhs = transition_lhs; ARROW; rhs = transition_rhs; constr = withConstraints
-	          { G.Transition.mk ~name:(Tuple2.first rhs)
+	          { G.TransitionLabel.mk ~name:(Tuple2.first rhs)
                                      ~start:(Tuple2.first lhs)
                                      ~targets:(Tuple2.second rhs)
                                      ~patterns:(List.map Poly.Var.of_string (Tuple2.second lhs))

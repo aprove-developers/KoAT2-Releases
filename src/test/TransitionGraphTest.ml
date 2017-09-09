@@ -14,7 +14,7 @@ let suite =
             let files = Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir ("../../examples/" ^ folder))
             and test (file : string): unit = try ignore (Reader.read_file ("../../examples/" ^ folder ^ "/" ^ file)) with
                                              | Reader.Error msg -> failwith msg
-                                             | ProgramImpl.StdProgram.Transition.RecursionNotSupported -> skip_if true "Recursion not supported" in
+                                             | ProgramImpl.StdProgram.TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported" in
             Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
         "Examples" >::: List.map test_folder ["KoAT-2013"; "KoAT-2014"; "SAS10"; "T2"]
       );

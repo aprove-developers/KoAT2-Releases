@@ -18,8 +18,8 @@ module Make(A : BoundTypes.Approximation) =
     (* Returns a list of all transitions which occur directly before the given transition in the graph. 
        Corresponds to pre(t). *)
     let pre (program: Program_.t)
-            (l: Program_.Location.t)
-        : Program_.TransitionGraph.E.t list =
+            ((l,t,l'): Program_.Transition.t)
+        : Program_.Transition.t list =
       Program_.(TransitionGraph.pred_e (graph program) l)
 
     (* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
@@ -28,22 +28,22 @@ module Make(A : BoundTypes.Approximation) =
     let highest_incoming_bound (program: Program_.t)
                                (appr: Approximation_.t)
                                (local_sizebound: Bound.t)
-                               (l: Program_.Location.t)
+                               (t: Program_.Transition.t)
       : Bound.t =
-      let substitute_with_prevalues (_,t',_) = Bound.substitute_f Approximation_.(sizebound Upper appr t') local_sizebound in
-      Bound.maximum (List.map substitute_with_prevalues (pre program l))
+      let substitute_with_prevalues t' = Bound.substitute_f Approximation_.(sizebound Upper appr t') local_sizebound in
+      Bound.maximum (List.map substitute_with_prevalues (pre program t))
 
     (* Improves a trivial scc. That is an scc which consists only of one result variable.
        Corresponds to 'SizeBounds for trivial SCCs'. *)
     let improve_trivial_scc (program: Program_.t)
                             (appr: Approximation_.t)
-                            ((l,t,l'),v)
+                            (t,v)
         : Approximation_.t =
       let (local_sizebound: Bound.t) = Approximation_.(sizebound_local Upper appr t v) in
       let newbound =
         if Program_.is_initial program t then
           local_sizebound
-        else highest_incoming_bound program appr local_sizebound l
+        else highest_incoming_bound program appr local_sizebound t
       in Approximation_.(add_sizebound Upper newbound t v appr)      
       
     (* Improves a nontrivial scc. That is an scc which consists of more than one result variable.
