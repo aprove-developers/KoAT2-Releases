@@ -52,6 +52,28 @@ module type Approximation =
     val add_sizebound : kind -> Bound.t -> Program_.Transition.t -> Program_.Constraint_.Polynomial_.Var.t -> t -> t
 
   end
+
+module type RankingFunction =
+  sig
+    module Program_ : ProgramTypes.Program
+    module Polynomial_ : PolyTypes.Polynomial
+
+    type t
+
+    (** Returns a non-empty list of all transitions which are strictly decreasing and at the same time bounded with one.
+        Corresponds to T_> . *)
+    val strictly_decreasing : t -> Program_.Transition.t list
+
+    (** Returns a non-empty list of all transitions which are non increasing.
+        This list also contains all transitions that are strictly decreasing. *)
+    val non_increasing : t -> Program_.Transition.t list
+
+    (** Finds a suitable ranking function which decreases at least one transition and does not increase any transition. *)
+    val find : Program_.t -> t
+
+    (** Transforms the ranking function to a monotonic function. *)
+    val monotonize : t -> t
+  end
   
 module type TimeBounds =
   sig
