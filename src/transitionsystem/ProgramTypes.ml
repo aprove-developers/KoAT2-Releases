@@ -58,6 +58,7 @@ module type Program =
         val transition : t -> (Location.t * Transition.t * Location.t)
         val variable : t -> Constraint_.Polynomial_.Var.t
       end
+         
     module RVG : module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
     type t
@@ -73,7 +74,7 @@ module type Program =
                -> Location.t
                -> t
 
-    val create_variable_graph : t -> RVG.t
+    val rvg : t -> RVG.t
 
     val graph : t -> TransitionGraph.t
 

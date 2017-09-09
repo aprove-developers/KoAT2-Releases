@@ -127,7 +127,7 @@ module Make(C : ConstraintTypes.Constraint) =
         start = start;
       }
 
-    let create_variable_graph graph =
+    let rvg graph =
       raise (Failure "Not yet implemented")
 
     let graph g = g.graph

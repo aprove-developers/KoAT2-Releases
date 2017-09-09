@@ -52,7 +52,7 @@ module type Approximation =
     val add_sizebound : kind -> Bound.t -> Program_.Transition.t -> Program_.Constraint_.Polynomial_.Var.t -> t -> t
 
   end
-
+  
 module type TimeBounds =
   sig
     module Approximation_ : Approximation
