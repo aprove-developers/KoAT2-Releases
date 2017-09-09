@@ -78,7 +78,7 @@ module MakeTransition(C : ConstraintTypes.Constraint) =
                 
   end
 
-module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
+module MakeProgram(T : TransitionGraphTypes.Transition) =
   struct
     module Transition_ = T
     module Location_ = StdLocation

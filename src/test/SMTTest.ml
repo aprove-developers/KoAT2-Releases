@@ -3,7 +3,7 @@ open OUnit2
 open Helper
    
 module Z3Solver = SMT.MakeZ3Solver(Constraints.Make(PolyImpl.Polynomial))
-module Reader = Readers.Make(TransitionGraphImpl.StdTransitionGraph)
+module Reader = Readers.Make(TransitionGraphImpl.StdProgram)
 
 let suite =
   "Satisfiable" >::: (

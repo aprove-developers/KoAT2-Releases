@@ -1,19 +1,19 @@
 open Batteries
 
-module Make(G : TransitionGraphTypes.TransitionGraph) =
+module Make(P : TransitionGraphTypes.Program) =
   struct
 
-    module TransitionGraph_ = G
+    module Program_ = P
 
     module Bound = MinMaxPolynomial.Make
-                     (TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Var)
-                     (TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Value)
+                     (Program_.Transition_.Constraint_.Atom_.Polynomial_.Var)
+                     (Program_.Transition_.Constraint_.Atom_.Polynomial_.Value)
        
     type kind = Lower | Upper
 
     type t = {
-        time: ((kind * G.Transition_.t), Bound.t) Hashtbl.t;
-        size: ((kind * G.Transition_.t * G.Transition_.Constraint_.Atom_.Polynomial_.Var.t), Bound.t) Hashtbl.t;
+        time: ((kind * Program_.Transition_.t), Bound.t) Hashtbl.t;
+        size: ((kind * Program_.Transition_.t * Program_.Transition_.Constraint_.Atom_.Polynomial_.Var.t), Bound.t) Hashtbl.t;
       }
 
 
@@ -41,7 +41,7 @@ module Make(G : TransitionGraphTypes.TransitionGraph) =
     let timebound_graph kind appr graph =
       match kind with
       | Lower -> Bound.one
-      | Upper -> G.TransitionGraph.fold_edges_e (fun (start, transition, target) -> Bound.add (timebound Upper appr transition)) (G.graph graph) Bound.zero
+      | Upper -> Program_.TransitionGraph.fold_edges_e (fun (start, transition, target) -> Bound.add (timebound Upper appr transition)) (Program_.graph graph) Bound.zero
 
     let add_timebound kind bound transition appr =
       Hashtbl.modify (kind, transition) (combine_bounds kind bound) appr.time;

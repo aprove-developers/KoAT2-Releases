@@ -4,12 +4,12 @@ module Make(A : BoundTypes.Approximation) =
   struct
 
     module Approximation_ = A
-    module TransitionGraph_ = Approximation_.TransitionGraph_
+    module Program_ = Approximation_.Program_
 
-    type prf = TransitionGraph_.Location_.t -> TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.t
+    type prf = Program_.Location_.t -> Program_.Transition_.Constraint_.Atom_.Polynomial_.t
 
     (* Finds a suitable prf which decreases at least one transition and does not increase any transition. *)
-    let find_prf (graph: TransitionGraph_.t): prf =
+    let find_prf (program: Program_.t): prf =
       raise (Failure "Not yet implemented")
 
     (* Transforms the prf to a monotonic function. *)

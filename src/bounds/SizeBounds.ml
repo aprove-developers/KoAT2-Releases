@@ -4,8 +4,8 @@ module Make(A : BoundTypes.Approximation) =
   struct
 
     module Approximation_ = A
-    module TransitionGraph_ = Approximation_.TransitionGraph_
-    module RVG = Approximation_.TransitionGraph_.RVG
+    module TransitionGraph_ = Approximation_.Program_
+    module RVG = Approximation_.Program_.RVG
 
     module VarMap = Map.Make(Approximation_.Bound.Var)
 

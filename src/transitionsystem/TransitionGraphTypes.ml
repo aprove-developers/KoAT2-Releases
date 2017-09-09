@@ -40,8 +40,8 @@ module type Transition =
     val to_string : string -> string -> t -> string
   end
 
-(** A graph is a integer transition system based on transitions and locations *)
-module type TransitionGraph =
+(** A program is an integer transition system based on transitions and locations *)
+module type Program =
   sig
     module Transition_ : Transition
     module Location_ : Location

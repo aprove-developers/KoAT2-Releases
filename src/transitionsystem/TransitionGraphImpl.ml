@@ -6,4 +6,4 @@ module StdLocation = TransitionGraph.StdLocation
 
 module StdTransition = TransitionGraph.MakeTransition(ConstraintImpl.StdConstraint)
 
-module StdTransitionGraph = TransitionGraph.MakeTransitionGraph(StdTransition)
+module StdProgram = TransitionGraph.MakeProgram(StdTransition)
