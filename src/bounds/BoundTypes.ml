@@ -7,11 +7,12 @@ module type Approximation =
   sig
     module TransitionGraph_ : TransitionGraphTypes.TransitionGraph
 
+    module Bound : module type of MinMaxPolynomial.Make
+                                    (TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Var)
+                                    (TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Value)
+         
     type t
          
-    (** The actual type we use to represent bounds *)
-    type bound
-
     (** Distinguish between lower and upper bounds *)
     type kind = Lower | Upper
 
@@ -26,29 +27,29 @@ module type Approximation =
     (** Timebound related methods *)
                         
     (** Returns a timebound of the specified kind for the transition. *)
-    val timebound : kind -> t -> TransitionGraph_.Transition_.t -> bound
+    val timebound : kind -> t -> TransitionGraph_.Transition_.t -> Bound.t
 
     (** Returns a timebound of the specified kind for the execution of the whole graph. *)
-    val timebound_graph : kind -> t -> TransitionGraph_.t -> bound
+    val timebound_graph : kind -> t -> TransitionGraph_.t -> Bound.t
 
     (** Adds the information that the specified bound is a valid timebound for the given transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
-    val add_timebound : kind -> bound -> TransitionGraph_.Transition_.t -> t -> t
+    val add_timebound : kind -> Bound.t -> TransitionGraph_.Transition_.t -> t -> t
       
 
     (** Sizebound related methods *)
 
     (** Returns a sizebound of the specified kind for the var of the transition. 
         A sizebound is expressed in relation to the input variable values of the program. *)
-    val sizebound : kind -> t -> TransitionGraph_.Transition_.t -> TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Var.t -> bound
+    val sizebound : kind -> t -> TransitionGraph_.Transition_.t -> TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Var.t -> Bound.t
 
     (** Returns a local sizebound of the specified kind for the var of the transition. 
         A local sizebound is expressed in relation to the values directly before executing the transition. *)
-    val sizebound_local : kind -> t -> TransitionGraph_.Transition_.t -> TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Var.t -> bound
+    val sizebound_local : kind -> t -> TransitionGraph_.Transition_.t -> TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Var.t -> Bound.t
 
     (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
-    val add_sizebound : kind -> bound -> TransitionGraph_.Transition_.t -> TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Var.t -> t -> t
+    val add_sizebound : kind -> Bound.t -> TransitionGraph_.Transition_.t -> TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Var.t -> t -> t
 
   end
 
@@ -65,5 +66,5 @@ module type SizeBounds =
     module Approximation_ : Approximation
 
     (** Performs a single improvement step to find better sizebounds for the approximation and updates the approximation. *)
-    val improve : Approximation_.TransitionGraph_.VariableGraph_.Graph.t -> Approximation_.t -> Approximation_.t
+    val improve : Approximation_.TransitionGraph_.t -> Approximation_.t -> Approximation_.t
   end

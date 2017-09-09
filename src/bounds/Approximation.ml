@@ -6,16 +6,14 @@ module Make(G : TransitionGraphTypes.TransitionGraph) =
     module TransitionGraph_ = G
 
     module Bound = MinMaxPolynomial.Make
-                     (G.Transition_.Constraint_.Atom_.Polynomial_.Var)
-                     (G.Transition_.Constraint_.Atom_.Polynomial_.Value)
+                     (TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Var)
+                     (TransitionGraph_.Transition_.Constraint_.Atom_.Polynomial_.Value)
        
-    type bound = Bound.t
-
     type kind = Lower | Upper
 
     type t = {
-        time: ((kind * G.Transition_.t), bound) Hashtbl.t;
-        size: ((kind * G.Transition_.t * G.Transition_.Constraint_.Atom_.Polynomial_.Var.t), bound) Hashtbl.t;
+        time: ((kind * G.Transition_.t), Bound.t) Hashtbl.t;
+        size: ((kind * G.Transition_.t * G.Transition_.Constraint_.Atom_.Polynomial_.Var.t), Bound.t) Hashtbl.t;
       }
 
 

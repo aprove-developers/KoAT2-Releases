@@ -20,20 +20,22 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     module Var = Var
     module Value = Value
 
-    let rec fold ~const ~var ~neg ~plus ~times ~pow ~min ~max ~inf p =
-      let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~min ~max ~inf in
+    let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf p =
+      let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf in
       match p with
-      | Poly p -> Polynomial_.fold ~const ~var ~neg ~plus ~times ~pow:(fun v (n:int) -> pow v (const (Value.of_int n))) p
+      | Poly p -> Polynomial_.fold ~const ~var ~neg ~plus ~times ~pow p
       | Max bounds -> List.fold_left (fun b bound -> max b (fold_ bound)) (neg inf) bounds
       | Min bounds -> List.fold_left (fun b bound -> min b (fold_ bound)) inf bounds
       | Neg b -> neg (fold_ b)
-      | Pow (value, n) -> pow (const value) (fold_ n)
+      | Pow (value, n) -> exp value (fold_ n)
       | Sum bounds -> List.fold_left (fun b bound -> plus b (fold_ bound)) (const Value.zero) bounds
       | Product bounds -> List.fold_left (fun b bound -> times b (fold_ bound)) (const Value.one) bounds                    
                                      
     let of_poly p = Poly p
               
     let of_constant c = of_poly (Polynomial_.from_constant c)
+
+    let of_var v = of_poly (Polynomial_.from_var v)
 
     type outer_t = t
     module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
@@ -112,6 +114,22 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let infinity = minimum []
 
     let minus_infinity = maximum []
+
+    let exp value b = Pow (value, b)
+                       
+    let substitute_f substitution =
+      fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow ~exp:exp ~min:min ~max:max ~inf:infinity
+          
+    let substitute var ~replacement =
+      substitute_f (fun target_var ->
+          if Var.(var =~= target_var) then replacement else of_var target_var
+        )
+
+    let substitute_all substitution =
+      let module VarMap = Map.Make(Var) in
+      substitute_f (fun var ->
+          VarMap.find_default (of_var var) var substitution
+        )                      
 
     let rec to_string = function
       | Poly p -> Polynomial_.to_string p

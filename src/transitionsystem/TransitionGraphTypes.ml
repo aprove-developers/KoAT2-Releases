@@ -47,10 +47,13 @@ module type VariableGraph =
     module ResultVariable :
       sig
         module Transition_ : Transition
-        type t
+        module Location_ : Location
+        type t = (Location_.t * Transition_.t * Location_.t) * Transition_.Constraint_.Atom_.Polynomial_.Var.t
         val equal : t -> t -> bool
         val compare : t -> t -> int
         val hash : t -> int
+        val transition : t -> (Location_.t * Transition_.t * Location_.t)
+        val variable : t -> Transition_.Constraint_.Atom_.Polynomial_.Var.t
       end
   
     type t
@@ -61,6 +64,8 @@ module type VariableGraph =
       val add_edges : t -> edge list -> t
       val mk : vertex list -> edge list -> t
     end
+
+    val graph : t -> Graph.t
          
   end
 
@@ -70,15 +75,19 @@ module type TransitionGraph =
     module Transition_ : Transition
     module Location_ : Location
     module VariableGraph_ : VariableGraph
+           with module ResultVariable.Transition_ = Transition_
+            and module ResultVariable.Location_ = Location_
+    module Graph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_)
+                                  with type edge = Location_.t * Transition_.t * Location_.t
+                                   and type vertex = Location_.t
 
     type t
 
-    module Graph : sig
-      include module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_)
-      val add_vertices : t -> vertex list -> t
-      val add_edges : t -> edge list -> t
-      val mk : vertex list -> edge list -> t
-    end
+    val add_vertices : Graph.t -> Graph.vertex list -> Graph.t
+
+    val add_edges : Graph.t -> Graph.edge list -> Graph.t
+
+    val mk : Graph.vertex list -> Graph.edge list -> Graph.t
 
     val from : Transition_.Constraint_.Atom_.Polynomial_.Var.t list
                -> Transition_.t list
@@ -88,6 +97,9 @@ module type TransitionGraph =
     val create_variable_graph : t -> VariableGraph_.t
 
     val graph : t -> Graph.t
+
+    (** Returns if the given transition is an initial transition. *)
+    val is_initial : t -> Transition_.t -> bool
 
     val to_string : t -> string
 

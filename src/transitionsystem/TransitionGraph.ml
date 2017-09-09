@@ -78,15 +78,18 @@ module MakeTransition(C : ConstraintTypes.Constraint) =
                 
   end
 
-module MakeVariableGraph(T : TransitionGraphTypes.Transition) =
+module MakeVariableGraph(L : TransitionGraphTypes.Location)(T : TransitionGraphTypes.Transition) =
   struct
     module ResultVariable =
       struct
         module Transition_ = T
-        type t = unit
+        module Location_ = L
+        type t = (Location_.t * Transition_.t * Location_.t) * Transition_.Constraint_.Atom_.Polynomial_.Var.t
         let equal v1 v2 = raise (Failure "Not yet implemented")
         let compare v1 v2 = raise (Failure "Not yet implemented")
         let hash v = raise (Failure "Not yet implemented")
+        let transition (t,v) = t
+        let variable (t,v) = v
       end
 
     type t = {
@@ -109,36 +112,36 @@ module MakeVariableGraph(T : TransitionGraphTypes.Transition) =
       let mk vertices edges =
         add_edges (add_vertices empty vertices) edges
     end
+
+    let graph g = g.graph
+
   end
   
 module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
   struct
     module Transition_ = T
     module Location_ = StdLocation
-    module VariableGraph_ = MakeVariableGraph(T)
+    module VariableGraph_ = MakeVariableGraph(Location_)(Transition_)
+    module Graph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_)
 
     type t = {
-        graph: Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_).t;
+        graph: Graph.t;
         vars: Transition_.Constraint_.Atom_.Polynomial_.Var.t list;
         start: Location_.t;
       }
                      
-    module Graph = struct
-      include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_)
-
-      let add_vertices graph vertices =
-           vertices
-        |> List.map (fun vertex -> fun gr -> add_vertex gr vertex)
-        |> List.fold_left (fun gr adder -> adder gr) graph
-        
-      let add_edges graph edges =
-           edges
-        |> List.map (fun edge -> fun gr -> add_edge_e gr edge)
-        |> List.fold_left (fun gr adder -> adder gr) graph
-
-      let mk vertices edges =
-        add_edges (add_vertices empty vertices) edges
-    end
+    let add_vertices graph vertices =
+      vertices
+      |> List.map (fun vertex -> fun gr -> Graph.add_vertex gr vertex)
+      |> List.fold_left (fun gr adder -> adder gr) graph
+      
+    let add_edges graph edges =
+      edges
+      |> List.map (fun edge -> fun gr -> Graph.add_edge_e gr edge)
+      |> List.fold_left (fun gr adder -> adder gr) graph
+      
+    let mk vertices edges =
+      add_edges (add_vertices Graph.empty vertices) edges
 
     let from vars transitions start =
       let edges = List.map (fun t -> (Location_.of_string (Transition_.start t),
@@ -149,7 +152,7 @@ module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
                                     (List.map (fun (start, _, _) -> start) edges)
                                     (List.map (fun (_, _, target) -> target) edges)) in
       {
-        graph = Graph.mk vertices edges;
+        graph = mk vertices edges;
         vars = vars;
         start = start;
       }
@@ -159,6 +162,9 @@ module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
 
     let graph g = g.graph
       
+    let is_initial graph t =
+      graph.start == Location_.of_string (Transition_.start t)
+
     let to_string graph =
       "TODO"
       
