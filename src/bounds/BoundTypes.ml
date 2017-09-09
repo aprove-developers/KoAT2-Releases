@@ -8,8 +8,8 @@ module type Approximation =
     module Program_ : ProgramTypes.Program
 
     module Bound : module type of MinMaxPolynomial.Make
-                                    (Program_.Constraint_.Atom_.Polynomial_.Var)
-                                    (Program_.Constraint_.Atom_.Polynomial_.Value)
+                                    (Program_.Constraint_.Polynomial_.Var)
+                                    (Program_.Constraint_.Polynomial_.Value)
          
     type t
          
@@ -41,15 +41,15 @@ module type Approximation =
 
     (** Returns a sizebound of the specified kind for the var of the transition. 
         A sizebound is expressed in relation to the input variable values of the program. *)
-    val sizebound : kind -> t -> Program_.Transition.t -> Program_.Constraint_.Atom_.Polynomial_.Var.t -> Bound.t
+    val sizebound : kind -> t -> Program_.Transition.t -> Program_.Constraint_.Polynomial_.Var.t -> Bound.t
 
     (** Returns a local sizebound of the specified kind for the var of the transition. 
         A local sizebound is expressed in relation to the values directly before executing the transition. *)
-    val sizebound_local : kind -> t -> Program_.Transition.t -> Program_.Constraint_.Atom_.Polynomial_.Var.t -> Bound.t
+    val sizebound_local : kind -> t -> Program_.Transition.t -> Program_.Constraint_.Polynomial_.Var.t -> Bound.t
 
     (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
-    val add_sizebound : kind -> Bound.t -> Program_.Transition.t -> Program_.Constraint_.Atom_.Polynomial_.Var.t -> t -> t
+    val add_sizebound : kind -> Bound.t -> Program_.Transition.t -> Program_.Constraint_.Polynomial_.Var.t -> t -> t
 
   end
 

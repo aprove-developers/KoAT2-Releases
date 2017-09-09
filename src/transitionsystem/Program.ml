@@ -7,7 +7,7 @@ module Make(C : ConstraintTypes.Constraint) =
 
     module Transition =
       struct
-        module Map = Map.Make(Constraint_.Atom_.Polynomial_.Var)
+        module Map = Map.Make(Constraint_.Polynomial_.Var)
                    
         exception RecursionNotSupported
                 
@@ -15,7 +15,7 @@ module Make(C : ConstraintTypes.Constraint) =
             name : string;
             start : string;
             target : string;
-            update : Constraint_.Atom_.Polynomial_.t Map.t;
+            update : Constraint_.Polynomial_.t Map.t;
             guard : Constraint_.t;
             (* TODO Transitions should have costs *)
           }
@@ -85,7 +85,7 @@ module Make(C : ConstraintTypes.Constraint) =
 
     module RV =
       struct
-        type t = TransitionGraph.E.t * Constraint_.Atom_.Polynomial_.Var.t
+        type t = TransitionGraph.E.t * Constraint_.Polynomial_.Var.t
         let equal v1 v2 = raise (Failure "Not yet implemented")
         let compare v1 v2 = raise (Failure "Not yet implemented")
         let hash v = raise (Failure "Not yet implemented")
@@ -96,7 +96,7 @@ module Make(C : ConstraintTypes.Constraint) =
 
     type t = {
         graph: TransitionGraph.t;
-        vars: Constraint_.Atom_.Polynomial_.Var.t list;
+        vars: Constraint_.Polynomial_.Var.t list;
         start: Location.t;
       }
                      

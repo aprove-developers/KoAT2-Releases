@@ -6,7 +6,7 @@ module Make(A : BoundTypes.Approximation) =
     module Approximation_ = A
     module Program_ = Approximation_.Program_
 
-    type prf = Program_.Location.t -> Program_.Constraint_.Atom_.Polynomial_.t
+    type prf = Program_.Location.t -> Program_.Constraint_.Polynomial_.t
 
     (* Finds a suitable prf which decreases at least one transition and does not increase any transition. *)
     let find_prf (program: Program_.t): prf =

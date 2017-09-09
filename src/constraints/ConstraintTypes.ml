@@ -80,7 +80,9 @@ module type Atom =
 (** A constraint is a conjunction of atoms *)
 module type Constraint =
   sig
-        module Atom_ : Atom
+        module Polynomial_ : Polynomial
+
+        module Atom_ : Atom with module Polynomial_ = Polynomial_
 
         type t
         
@@ -93,12 +95,12 @@ module type Constraint =
         val mk_and : t -> t -> t
 
         (** Creates a constraint that expresses the equality of the two polynomials. *)
-        val mk_eq : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+        val mk_eq : Polynomial_.t -> Polynomial_.t -> t
 
-        val mk_gt : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
-        val mk_ge : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
-        val mk_lt : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
-        val mk_le : Atom_.Polynomial_.t -> Atom_.Polynomial_.t -> t
+        val mk_gt : Polynomial_.t -> Polynomial_.t -> t
+        val mk_ge : Polynomial_.t -> Polynomial_.t -> t
+        val mk_lt : Polynomial_.t -> Polynomial_.t -> t
+        val mk_le : Polynomial_.t -> Polynomial_.t -> t
 
 
         val all : t list -> t
@@ -112,7 +114,7 @@ module type Constraint =
           
         (** Returns the set of variables which are active in the constraint.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
-        val vars : t -> Atom_.Polynomial_.Var.t Set.t
+        val vars : t -> Polynomial_.Var.t Set.t
 
         val to_string : t -> string
 
@@ -120,14 +122,14 @@ module type Constraint =
         (** Following methods manipulate atoms and return the manipulated versions. *)
 
         (** Assigns the variables of the constraint new names based on the rename map *)
-        val rename : t -> Atom_.Polynomial_.RenameMap_.t -> t
+        val rename : t -> Polynomial_.RenameMap_.t -> t
 
         (** Assigns each variable a value and returns if the constraint is satisfied for those values *)
-        val models : t -> Atom_.Polynomial_.Valuation_.t -> bool
+        val models : t -> Polynomial_.Valuation_.t -> bool
 
         (** Replaces all operations by new constructors. *)
-        val fold : const:(Atom_.Polynomial_.Value.t -> 'b) ->
-                   var:(Atom_.Polynomial_.Var.t -> 'b) ->
+        val fold : const:(Polynomial_.Value.t -> 'b) ->
+                   var:(Polynomial_.Var.t -> 'b) ->
                    neg:('b -> 'b) ->               
                    plus:('b -> 'b -> 'b) ->
                    times:('b -> 'b -> 'b) ->
@@ -146,14 +148,14 @@ module type Constraint =
         val drop_nonlinear : t -> t
         
         (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
-        val get_coefficient_vector : Atom_.Polynomial_.Var.t -> t -> Atom_.Polynomial_.Value.t list
+        val get_coefficient_vector : Polynomial_.Var.t -> t -> Polynomial_.Value.t list
         
-        val get_matrix : Atom_.Polynomial_.Var.t Set.t -> t -> Atom_.Polynomial_.Value.t list list
+        val get_matrix : Polynomial_.Var.t Set.t -> t -> Polynomial_.Value.t list list
         
         (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
-        val get_constant_vector : t -> Atom_.Polynomial_.Value.t list
+        val get_constant_vector : t -> Polynomial_.Value.t list
         
-        val dualise : Atom_.Polynomial_.Var.t list -> Atom_.Polynomial_.Value.t list list -> Atom_.Polynomial_.t list -> t
+        val dualise : Polynomial_.Var.t list -> Polynomial_.Value.t list list -> Polynomial_.t list -> t
         
         val farkas_transform : t -> Atom_.t -> t
   end

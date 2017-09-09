@@ -5,5 +5,6 @@ open ConstraintTypes
 (** Provides default implementations of a constraint *)
 
 (** Constructs a default constraint using a list of atoms each comparing two polynomials *)
-module Make(P : Polynomial) : Constraint with   
-         module Atom_ = Atoms.Make(P)
+module Make(P : Polynomial) : Constraint
+       with module Polynomial_ = P
+       and module Atom_ = Atoms.Make(P)

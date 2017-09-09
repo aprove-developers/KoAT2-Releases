@@ -14,21 +14,21 @@ module type Program =
         An update assigns variables a new value as a linear combination of the old values *)
     module Transition :
       sig
-        module Map : module type of Map.Make(Constraint_.Atom_.Polynomial_.Var)
+        module Map : module type of Map.Make(Constraint_.Polynomial_.Var)
         type t
         exception RecursionNotSupported
         val mk : name:string ->
                  start:string ->
-                 targets:(string * (Constraint_.Atom_.Polynomial_.t list)) list ->
-                 patterns:Constraint_.Atom_.Polynomial_.Var.t list ->
+                 targets:(string * (Constraint_.Polynomial_.t list)) list ->
+                 patterns:Constraint_.Polynomial_.Var.t list ->
                  guard:Constraint_.t ->
-                 vars:Constraint_.Atom_.Polynomial_.Var.t list ->
+                 vars:Constraint_.Polynomial_.Var.t list ->
                  t
         val equal : t -> t -> bool
         val compare : t -> t -> int
         val start : t -> string
         val target : t -> string
-        val update : t -> Constraint_.Atom_.Polynomial_.t Map.t
+        val update : t -> Constraint_.Polynomial_.t Map.t
         val guard : t -> Constraint_.t
         val default : t
         val to_string : string -> string -> t -> string
@@ -51,12 +51,12 @@ module type Program =
 
     module RV :
       sig
-        type t = TransitionGraph.E.t * Constraint_.Atom_.Polynomial_.Var.t
+        type t = TransitionGraph.E.t * Constraint_.Polynomial_.Var.t
         val equal : t -> t -> bool
         val compare : t -> t -> int
         val hash : t -> int
         val transition : t -> (Location.t * Transition.t * Location.t)
-        val variable : t -> Constraint_.Atom_.Polynomial_.Var.t
+        val variable : t -> Constraint_.Polynomial_.Var.t
       end
     module RVG : module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
@@ -68,7 +68,7 @@ module type Program =
 
     val mk : TransitionGraph.vertex list -> TransitionGraph.edge list -> TransitionGraph.t
 
-    val from : Constraint_.Atom_.Polynomial_.Var.t list
+    val from : Constraint_.Polynomial_.Var.t list
                -> Transition.t list
                -> Location.t
                -> t

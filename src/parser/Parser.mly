@@ -21,7 +21,7 @@
 
 %start <G.Constraint_.Atom_.t> onlyAtom
 
-%start <G.Constraint_.Atom_.Polynomial_.t> onlyPolynomial
+%start <G.Constraint_.Polynomial_.t> onlyPolynomial
 
 %type <G.t> transitiongraph
 
@@ -29,19 +29,19 @@
 
 %type <G.Constraint_.t> atom
 
-%type <G.Constraint_.Atom_.Polynomial_.t> polynomial
+%type <G.Constraint_.Polynomial_.t> polynomial
 
-%type <G.Constraint_.Atom_.Polynomial_.Var.t list> variables
+%type <G.Constraint_.Polynomial_.Var.t list> variables
 
-%type <vars:G.Constraint_.Atom_.Polynomial_.Var.t list -> G.Transition.t> transition
+%type <vars:G.Constraint_.Polynomial_.Var.t list -> G.Transition.t> transition
 
-%type <(vars:G.Constraint_.Atom_.Polynomial_.Var.t list -> G.Transition.t) list> transitions
+%type <(vars:G.Constraint_.Polynomial_.Var.t list -> G.Transition.t) list> transitions
 
 %{
   open BatTuple
   module Constr = G.Constraint_
   module Atom = G.Constraint_.Atom_
-  module Poly = G.Constraint_.Atom_.Polynomial_
+  module Poly = G.Constraint_.Polynomial_
 %}
 
 %%

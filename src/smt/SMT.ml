@@ -15,7 +15,7 @@ module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constr
   struct
     module Constraint = C
     module Atom = C.Atom_
-    module Polynomial = Atom.Polynomial_
+    module Polynomial = C.Polynomial_
        
     let context = ref (
                       Z3.mk_context [
