@@ -1,6 +1,6 @@
 open Batteries
 
-module MakeProgram(C : ConstraintTypes.Constraint) =
+module Make(C : ConstraintTypes.Constraint) =
   struct
     
     module Constraint_ = C

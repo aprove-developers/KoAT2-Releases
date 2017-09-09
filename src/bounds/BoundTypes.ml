@@ -5,7 +5,7 @@ open Batteries
 (** An atom is a comparison between two polynomials *)
 module type Approximation =
   sig
-    module Program_ : TransitionGraphTypes.Program
+    module Program_ : ProgramTypes.Program
 
     module Bound : module type of MinMaxPolynomial.Make
                                     (Program_.Constraint_.Atom_.Polynomial_.Var)

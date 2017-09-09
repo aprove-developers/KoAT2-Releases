@@ -4,7 +4,7 @@ module Var_ = ID.StringID
 module Value_ = Number.MakeNumeric(Big_int)
 module Polynomial_ = Polynomials.Make(Var_)(Value_)
 module Constraint_ = Constraints.Make(Polynomial_)
-module Program_ = TransitionGraph.MakeProgram(Constraint_)
+module Program_ = Program.Make(Constraint_)
 module Approximation_ = Approximation.Make(Program_)
 
 module SMT_ = SMT.MakeZ3Solver(Constraint_)                      

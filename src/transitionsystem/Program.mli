@@ -2,5 +2,5 @@ open Batteries
 
 (** Provides default modules to create locations, transitions and transitionsystems *)
 
-module MakeProgram(C : ConstraintTypes.Constraint) : TransitionGraphTypes.Program
+module Make(C : ConstraintTypes.Constraint) : ProgramTypes.Program
        with module Constraint_ = C

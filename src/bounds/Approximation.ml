@@ -1,6 +1,6 @@
 open Batteries
 
-module Make(P : TransitionGraphTypes.Program) =
+module Make(P : ProgramTypes.Program) =
   struct
 
     module Program_ = P

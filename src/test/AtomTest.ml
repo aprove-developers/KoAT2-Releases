@@ -7,17 +7,17 @@ open Helper
    
 module Parser =
   struct
-    module Reader = Readers.Make(TransitionGraphImpl.StdProgram)
+    module Reader = Readers.Make(ProgramImpl.StdProgram)
                   
     let assert_equal_atom =
-      assert_equal ~cmp:TransitionGraphImpl.StdProgram.Constraint_.Atom_.(=~=)
-                   ~printer:TransitionGraphImpl.StdProgram.Constraint_.Atom_.to_string
+      assert_equal ~cmp:ProgramImpl.StdProgram.Constraint_.Atom_.(=~=)
+                   ~printer:ProgramImpl.StdProgram.Constraint_.Atom_.to_string
 
     let tests =
         "Parser" >::: [
           "Positive Tests" >::: (
-            let open TransitionGraphImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
-            let open TransitionGraphImpl.StdProgram.Constraint_.Atom_ in
+            let open ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
+            let open ProgramImpl.StdProgram.Constraint_.Atom_ in
                 List.map (fun (testname, expected, atom) ->
                 testname >:: (fun _ -> assert_equal_atom expected (Reader.read_atom atom)))
                         [
@@ -47,7 +47,7 @@ module Parser =
 
 module Methods (C : Constraint) =
   struct
-    module Reader = Readers.Make(TransitionGraph.MakeProgram(C))
+    module Reader = Readers.Make(Program.Make(C))
 
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
