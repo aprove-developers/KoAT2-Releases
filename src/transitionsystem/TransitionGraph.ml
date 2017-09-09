@@ -78,70 +78,41 @@ module MakeTransition(C : ConstraintTypes.Constraint) =
                 
   end
 
-module MakeVariableGraph(L : TransitionGraphTypes.Location)(T : TransitionGraphTypes.Transition) =
+module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
   struct
-    module ResultVariable =
+    module Transition_ = T
+    module Location_ = StdLocation
+    module TransitionGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_)
+
+    module RV =
       struct
-        module Transition_ = T
-        module Location_ = L
-        type t = (Location_.t * Transition_.t * Location_.t) * Transition_.Constraint_.Atom_.Polynomial_.Var.t
+        type t = TransitionGraph.E.t * Transition_.Constraint_.Atom_.Polynomial_.Var.t
         let equal v1 v2 = raise (Failure "Not yet implemented")
         let compare v1 v2 = raise (Failure "Not yet implemented")
         let hash v = raise (Failure "Not yet implemented")
         let transition (t,v) = t
         let variable (t,v) = v
       end
+    module RVG = Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
     type t = {
-        graph: Graph.Persistent.Digraph.ConcreteBidirectional(ResultVariable).t;
-      }
-
-    module Graph = struct
-      include Graph.Persistent.Digraph.ConcreteBidirectional(ResultVariable)
-
-      let add_vertices graph vertices =
-           vertices
-        |> List.map (fun vertex -> fun gr -> add_vertex gr vertex)
-        |> List.fold_left (fun gr adder -> adder gr) graph
-        
-      let add_edges graph edges =
-           edges
-        |> List.map (fun edge -> fun gr -> add_edge_e gr edge)
-        |> List.fold_left (fun gr adder -> adder gr) graph
-
-      let mk vertices edges =
-        add_edges (add_vertices empty vertices) edges
-    end
-
-    let graph g = g.graph
-
-  end
-  
-module MakeTransitionGraph(T : TransitionGraphTypes.Transition) =
-  struct
-    module Transition_ = T
-    module Location_ = StdLocation
-    module VariableGraph_ = MakeVariableGraph(Location_)(Transition_)
-    module Graph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_)
-
-    type t = {
-        graph: Graph.t;
+        graph: TransitionGraph.t;
         vars: Transition_.Constraint_.Atom_.Polynomial_.Var.t list;
         start: Location_.t;
       }
                      
     let add_vertices graph vertices =
       vertices
-      |> List.map (fun vertex -> fun gr -> Graph.add_vertex gr vertex)
+      |> List.map (fun vertex -> fun gr -> TransitionGraph.add_vertex gr vertex)
       |> List.fold_left (fun gr adder -> adder gr) graph
       
     let add_edges graph edges =
       edges
-      |> List.map (fun edge -> fun gr -> Graph.add_edge_e gr edge)
+      |> List.map (fun edge -> fun gr -> TransitionGraph.add_edge_e gr edge)
       |> List.fold_left (fun gr adder -> adder gr) graph
       
     let mk vertices edges =
-      add_edges (add_vertices Graph.empty vertices) edges
+      add_edges (add_vertices TransitionGraph.empty vertices) edges
 
     let from vars transitions start =
       let edges = List.map (fun t -> (Location_.of_string (Transition_.start t),

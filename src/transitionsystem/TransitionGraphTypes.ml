@@ -40,63 +40,42 @@ module type Transition =
     val to_string : string -> string -> t -> string
   end
 
-(** A result variable graph relates variables of transitions to the variables in other transitions which value they can influence.
-    It can be derived from a transitionsystem and is needed to recognize SCCs of variables which can influence each other. *)
-module type VariableGraph =
+(** A graph is a integer transition system based on transitions and locations *)
+module type TransitionGraph =
   sig
-    module ResultVariable :
+    module Transition_ : Transition
+    module Location_ : Location
+    module TransitionGraph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_)
+                                  with type edge = Location_.t * Transition_.t * Location_.t
+                                   and type vertex = Location_.t
+
+    module RV :
       sig
-        module Transition_ : Transition
-        module Location_ : Location
-        type t = (Location_.t * Transition_.t * Location_.t) * Transition_.Constraint_.Atom_.Polynomial_.Var.t
+        type t = TransitionGraph.E.t * Transition_.Constraint_.Atom_.Polynomial_.Var.t
         val equal : t -> t -> bool
         val compare : t -> t -> int
         val hash : t -> int
         val transition : t -> (Location_.t * Transition_.t * Location_.t)
         val variable : t -> Transition_.Constraint_.Atom_.Polynomial_.Var.t
       end
-  
-    type t
-
-    module Graph : sig
-      include module type of Graph.Persistent.Digraph.ConcreteBidirectional(ResultVariable)
-      val add_vertices : t -> vertex list -> t
-      val add_edges : t -> edge list -> t
-      val mk : vertex list -> edge list -> t
-    end
-
-    val graph : t -> Graph.t
-         
-  end
-
-(** A graph is a integer transition system based on transitions and locations *)
-module type TransitionGraph =
-  sig
-    module Transition_ : Transition
-    module Location_ : Location
-    module VariableGraph_ : VariableGraph
-           with module ResultVariable.Transition_ = Transition_
-            and module ResultVariable.Location_ = Location_
-    module Graph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition_)
-                                  with type edge = Location_.t * Transition_.t * Location_.t
-                                   and type vertex = Location_.t
+    module RVG : module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
     type t
 
-    val add_vertices : Graph.t -> Graph.vertex list -> Graph.t
+    val add_vertices : TransitionGraph.t -> TransitionGraph.vertex list -> TransitionGraph.t
 
-    val add_edges : Graph.t -> Graph.edge list -> Graph.t
+    val add_edges : TransitionGraph.t -> TransitionGraph.edge list -> TransitionGraph.t
 
-    val mk : Graph.vertex list -> Graph.edge list -> Graph.t
+    val mk : TransitionGraph.vertex list -> TransitionGraph.edge list -> TransitionGraph.t
 
     val from : Transition_.Constraint_.Atom_.Polynomial_.Var.t list
                -> Transition_.t list
                -> Location_.t
                -> t
 
-    val create_variable_graph : t -> VariableGraph_.t
+    val create_variable_graph : t -> RVG.t
 
-    val graph : t -> Graph.t
+    val graph : t -> TransitionGraph.t
 
     (** Returns if the given transition is an initial transition. *)
     val is_initial : t -> Transition_.t -> bool

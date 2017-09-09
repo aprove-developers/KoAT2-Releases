@@ -41,7 +41,7 @@ module Make(G : TransitionGraphTypes.TransitionGraph) =
     let timebound_graph kind appr graph =
       match kind with
       | Lower -> Bound.one
-      | Upper -> G.Graph.fold_edges_e (fun (start, transition, target) -> Bound.add (timebound Upper appr transition)) (G.graph graph) Bound.zero
+      | Upper -> G.TransitionGraph.fold_edges_e (fun (start, transition, target) -> Bound.add (timebound Upper appr transition)) (G.graph graph) Bound.zero
 
     let add_timebound kind bound transition appr =
       Hashtbl.modify (kind, transition) (combine_bounds kind bound) appr.time;
