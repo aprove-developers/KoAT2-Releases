@@ -2,17 +2,6 @@ open Batteries
    
 (** Provides all module types related to the transition system (program graph) *)
 
-(** A location is a node of a transition system and can be connected to other locations via transitions *)
-module type Location =
-  sig
-    type t
-    val equal : t -> t -> bool
-    val compare : t -> t -> int
-    val hash : t -> int
-    val to_string : t -> string
-    val of_string : string -> t
-  end
-
 (** A program is an integer transition system based on transitions and locations *)
 module type Program =
   sig
@@ -45,10 +34,20 @@ module type Program =
         val to_string : string -> string -> t -> string
       end
       
-    module Location_ : Location
-    module TransitionGraph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition)
-                                  with type edge = Location_.t * Transition.t * Location_.t
-                                   and type vertex = Location_.t
+    (** A location is a node of a transition system and can be connected to other locations via transitions *)
+    module Location :
+    sig
+      type t
+      val equal : t -> t -> bool
+      val compare : t -> t -> int
+      val hash : t -> int
+      val to_string : t -> string
+      val of_string : string -> t
+    end
+
+    module TransitionGraph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(Transition)
+                                  with type edge = Location.t * Transition.t * Location.t
+                                   and type vertex = Location.t
 
     module RV :
       sig
@@ -56,7 +55,7 @@ module type Program =
         val equal : t -> t -> bool
         val compare : t -> t -> int
         val hash : t -> int
-        val transition : t -> (Location_.t * Transition.t * Location_.t)
+        val transition : t -> (Location.t * Transition.t * Location.t)
         val variable : t -> Constraint_.Atom_.Polynomial_.Var.t
       end
     module RVG : module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
@@ -71,7 +70,7 @@ module type Program =
 
     val from : Constraint_.Atom_.Polynomial_.Var.t list
                -> Transition.t list
-               -> Location_.t
+               -> Location.t
                -> t
 
     val create_variable_graph : t -> RVG.t

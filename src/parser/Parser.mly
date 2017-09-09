@@ -63,7 +63,7 @@ goal :
 
 start :
 	|	LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
-		  { G.Location_.of_string start } ;
+		  { G.Location.of_string start } ;
 
 transitions :
 	|	LPAR RULES l = nonempty_list(transition) RPAR

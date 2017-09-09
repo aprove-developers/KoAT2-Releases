@@ -1,28 +1,5 @@
 open Batteries
 
-module StdLocation =
-  struct
-    type t = {
-        name : string;
-        (* TODO Possible optimization: invariant : PolynomialConstraints.t*)
-      }
-
-    let equal l1 l2 = l1.name == l2.name (*&& (Variables.equal_varlist l1.vars l2.vars)*)
-                                
-    let compare l1 l2 = 
-      if equal l1 l2 then 0
-      else if l1.name < l2.name then (-1)
-      else 1
-      
-    (*Needed by ocamlgraph*)    
-    let hash l = Hashtbl.hash l.name
-                       
-    let to_string l = "loc_" ^ l.name
-                            
-    let of_string name = { name }
-                       
-  end
-
 module MakeProgram(C : ConstraintTypes.Constraint) =
   struct
     
@@ -81,8 +58,30 @@ module MakeProgram(C : ConstraintTypes.Constraint) =
           
       end
 
-    module Location_ = StdLocation
-    module TransitionGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location_)(Transition)
+    module Location =
+      struct
+        type t = {
+            name : string;
+            (* TODO Possible optimization: invariant : PolynomialConstraints.t*)
+          }
+               
+        let equal l1 l2 = l1.name == l2.name (*&& (Variables.equal_varlist l1.vars l2.vars)*)
+                        
+        let compare l1 l2 = 
+          if equal l1 l2 then 0
+          else if l1.name < l2.name then (-1)
+          else 1
+          
+        (*Needed by ocamlgraph*)    
+        let hash l = Hashtbl.hash l.name
+                   
+        let to_string l = "loc_" ^ l.name
+                        
+        let of_string name = { name }
+                           
+      end
+
+    module TransitionGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(Transition)
 
     module RV =
       struct
@@ -98,7 +97,7 @@ module MakeProgram(C : ConstraintTypes.Constraint) =
     type t = {
         graph: TransitionGraph.t;
         vars: Constraint_.Atom_.Polynomial_.Var.t list;
-        start: Location_.t;
+        start: Location.t;
       }
                      
     let add_vertices graph vertices =
@@ -115,9 +114,9 @@ module MakeProgram(C : ConstraintTypes.Constraint) =
       add_edges (add_vertices TransitionGraph.empty vertices) edges
 
     let from vars transitions start =
-      let edges = List.map (fun t -> (Location_.of_string (Transition.start t),
+      let edges = List.map (fun t -> (Location.of_string (Transition.start t),
                                       t,
-                                      Location_.of_string (Transition.target t)))
+                                      Location.of_string (Transition.target t)))
                            transitions in
       let vertices = List.unique (List.append
                                     (List.map (fun (start, _, _) -> start) edges)
@@ -134,7 +133,7 @@ module MakeProgram(C : ConstraintTypes.Constraint) =
     let graph g = g.graph
       
     let is_initial graph t =
-      graph.start == Location_.of_string (Transition.start t)
+      graph.start == Location.of_string (Transition.start t)
 
     let to_string graph =
       "TODO"

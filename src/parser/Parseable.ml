@@ -37,12 +37,6 @@ module type Constraint =
     val is_true : t -> bool
   end
    
-module type Location =
-  sig
-    type t
-    val of_string : string -> t       
-  end
-   
 module type Program =
   sig
     type t
@@ -61,11 +55,15 @@ module type Program =
       val start : t -> string
       val target : t -> string
     end
-    module Location_ : Location
-         
+    module Location :
+      sig
+        type t
+        val of_string : string -> t       
+      end
+   
     val from : Constraint_.Atom_.Polynomial_.Var.t list
                -> Transition.t list
-               -> Location_.t
+               -> Location.t
                -> t
   end
 
