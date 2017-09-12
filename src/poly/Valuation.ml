@@ -1,6 +1,6 @@
 open Batteries
 
-module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
+module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
   struct
     module M = Map.Make(Var)
     type var = Var.t

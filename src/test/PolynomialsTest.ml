@@ -64,7 +64,7 @@ module Methods (P : Polynomial) =
       |> fun poly -> P.eval poly example_valuation
 
     let assert_equal_value =
-      assert_equal ~cmp:P.Value.equal ~printer:P.Value.to_string
+      assert_equal ~cmp:P.Value.(=~=) ~printer:P.Value.to_string
 
     let assert_equal_polynomial =
       assert_equal ~cmp:P.(=~=) ~printer:P.to_string
@@ -76,7 +76,7 @@ module Methods (P : Polynomial) =
     let rec list_equality (xs : P.Value.t list ) (ys : P.Value.t list) =
         match (xs, ys) with
             |([],[]) -> true
-            |(x::tailxs, y::tailys) ->  ( P.Value.Compare.(=) x y ) && (list_equality tailxs tailys)
+            |(x::tailxs, y::tailys) ->  P.Value.(x =~= y) && (list_equality tailxs tailys)
             | (_,_) -> false
             
     let rec list_print (xs : P.Value.t list ) = String.concat "," (List.map P.Value.to_string xs)
@@ -191,7 +191,7 @@ module Methods (P : Polynomial) =
                                 (true, "0");
                             ];
                     );
-
+                (*
                 "scale_coefficients" >::: (
                     List.map (fun (expression, expected) ->
                         "unnamed" >:: (fun _ ->
@@ -214,7 +214,7 @@ module Methods (P : Polynomial) =
                                  (* Negative coefficients *) (List.map (fun ((x, y), (a, b)) -> ((-x, -y), (-a, -b))) tests)
                              )
                     );
-
+                 *)
                 "substitute" >::: (
                     List.map (fun (expected, substitution, polynomial) ->
                         polynomial >:: (fun _ -> assert_equal_polynomial

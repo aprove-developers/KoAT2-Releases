@@ -1,15 +1,17 @@
 open Batteries
 
 (** Provides all necessary types for polynomials with basic string variables and numbers represented as BigInt *)
-   
-module Valuation = Valuation.Make(ID.StringID)(Number.MakeNumeric(Big_int))
+
+module Valuation = Valuation.Make(ID.StringID)(PolyTypes.OurInt)
                     
 module Var = ID.StringID
                        
-module Monomial = Monomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))
+module Monomial = Monomials.Make(ID.StringID)(PolyTypes.OurInt)
                    
-module ScaledMonomial = ScaledMonomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))
+module ScaledMonomial = ScaledMonomials.Make(ID.StringID)(PolyTypes.OurInt)
 
-module Polynomial = Polynomials.Make(ID.StringID)(Number.MakeNumeric(Big_int))
+module Polynomial = Polynomials.Make(ID.StringID)(PolyTypes.OurInt)
 
-module MinMaxPolynomial = MinMaxPolynomial.Make(ID.StringID)(Number.MakeNumeric(Big_int))
+module TemplatePolynomial = Polynomials.Make(ID.StringID)(Polynomials.Make(ID.StringID)(PolyTypes.OurInt))
+                  
+module MinMaxPolynomial = MinMaxPolynomial.Make(ID.StringID)(PolyTypes.OurInt)

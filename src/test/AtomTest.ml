@@ -62,11 +62,13 @@ module Methods (C : Constraint) =
          str
       |> Reader.read_atom
       |> fun atom -> Atom.rename atom (Polynomial.RenameMap_.from_native rename_map)
-      
+
+                   (*
     let evaluate str valuation =
          str
       |> Reader.read_atom
       |> fun atom -> Atom.models atom (Polynomial.Valuation_.from_native valuation)
+                    *)
       
     let assert_equal_atom =
       assert_equal ~cmp:C.Atom_.(=~=) ~printer:C.Atom_.to_string
@@ -110,7 +112,8 @@ module Methods (C : Constraint) =
                             ("a < a ^ 2 + 2 * a * b", "x < x ^ 2 + 2 * x * y" );
                             ("a^2 * b^2 < 7", "x^2 * y^2 < 7");
             ]);
-            
+
+            (*
             ("models" >:::
                 List.map (fun (expected, atom, valuation) ->
                       atom >:: (fun _ ->  assert_equal_bool expected (evaluate atom valuation)))
@@ -119,7 +122,7 @@ module Methods (C : Constraint) =
                             (true, "x < x ^ 2 + 2 * x * y", [("x", 3); ("y", 5)]);
                             (false, "x^2 * y^2 < 7", [("x", 3); ("y", 5); ("z", 7)]);
                         ]);
-                        
+             *)          
             ("is_linear" >:::
                 List.map (fun (expected, atom) ->
                       atom >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_linear (Reader.read_atom atom))))

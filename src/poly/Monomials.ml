@@ -1,6 +1,6 @@
 open Batteries
 
-module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
+module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
   struct
     module Valuation_ = Valuation.Make(Var)(Value)
     module RenameMap_ = RenameMap.Make(Var)
@@ -53,7 +53,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
 
     (* Idea: Merge each var from the monomial with its value from the valuation, do the exponentation and fold the result with a multiplication *)
     let eval mon valuation =
-      let power ?(n=0) v = Value.pow v (Value.of_int n)
+      let power ?(n=0) v = (Value.pow v n)
       and valuation_map = Map.of_enum (Valuation_.bindings valuation) in
       let merge key n value = Some (power ?n (Option.get value)) in
          Map.merge merge mon valuation_map

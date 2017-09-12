@@ -7,10 +7,9 @@ open PolyTypes
 (** Constructs a default polynomial using a list of monomials and their coefficients *)
 module Make
          (Var : ID)
-         (Value : Number.Numeric)
+         (Value : Field)
        : Polynomial with module Var = Var
                      and module Value = Value
-                     and module Valuation_ = Valuation.Make(Var)(Value)
                      and module RenameMap_ = RenameMap.Make(Var)
                      and module Monomial_ = Monomials.Make(Var)(Value)
                      and type monomial = Monomials.Make(Var)(Value).t

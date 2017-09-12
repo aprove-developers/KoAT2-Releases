@@ -26,6 +26,34 @@ module type ID =
     val fresh_id_list : int -> t list
   end
 
+(** TODO *)
+module type Field =
+  sig
+    type t
+
+    val zero : t
+    val one : t
+    val neg : t -> t
+    val add : t -> t -> t
+    val mul : t -> t -> t
+    val pow : t -> int -> t
+
+    val (=~=) : t -> t -> bool
+
+    val of_int : int -> t
+    val to_int : t -> int
+
+    val to_string: t -> string
+                          (* val eval : t -> (Var.t -> value) -> value *)
+  end
+
+module OurInt : Field =
+  struct
+    include Number.MakeNumeric(Big_int)
+    let (=~=) = equal
+    let pow i (n: int) = pow i (of_int n)
+  end
+  
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
     They can be typeclass-like extended by MakePartialOrder. *)
 module type BasePartialOrder =
@@ -84,8 +112,8 @@ module type Valuation =
 
 (** This module type defines how functors constructing valuations have to be defined *)
 module type ValuationFunctor =
-  functor (Var : ID)(Value : Number.Numeric) -> Valuation with type var = Var.t
-                                                           and type value = Value.t
+  functor (Var : ID)(Value : Field) -> Valuation with type var = Var.t
+                                                  and type value = Value.t
 
 (** A rename map is a function which maps from a finite set of variables to another finite set of variables *)
 module type RenameMap =
@@ -110,7 +138,7 @@ module type Evaluable =
   sig
     type t
     module Var : ID
-    module Value : Number.Numeric
+    module Value : Field
     module Valuation_ : (Valuation with type var = Var.t and type value = Value.t)
     module RenameMap_ : (RenameMap with type var = Var.t)
 
@@ -132,8 +160,8 @@ module type Evaluable =
 
 (** This module type defines how functors constructing evaluables have to be defined *)
 module type EvaluableFunctor =
-  functor (Var : ID)(Value : Number.Numeric) -> Evaluable with module Var = Var
-                                                           and module Value = Value
+  functor (Var : ID)(Value : Field) -> Evaluable with module Var = Var
+                                                  and module Value = Value
 
 (** A monomial is a finite product of powers *)
 module type Monomial =
@@ -242,7 +270,7 @@ module type Polynomial =
     include Evaluable with type t := t
     include Math with type t := t
     include PartialOrder with type t := t
-          
+    include Field with type t := t
 
     (** Following methods are convenience methods for the creation of polynomials. *)
 
@@ -268,8 +296,10 @@ module type Polynomial =
     (** Returns the constant of the polynomial. *)
     val constant : t -> Value.t
 
+      (*
     (** Returns a maybe not equivalent polynom where all factors of polynomials are minized but stay in same proportion. *)
     val scale_coefficients : t -> t
+       *)
       
     val to_string : t -> string
       

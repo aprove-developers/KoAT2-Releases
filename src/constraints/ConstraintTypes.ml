@@ -62,8 +62,10 @@ module type Atom =
         (** Assigns the variables of the atom new names based on the rename map. *)
         val rename : t -> Polynomial_.RenameMap_.t -> t
 
+          (*
         (** Assigns each variable a value and returns if the atom is satisfied for those values. *)
         val models : t -> Polynomial_.Valuation_.t -> bool
+           *)
 
         (** Replaces all operations by new constructors. *)
         val fold : const:(Polynomial_.Value.t -> 'b) ->
@@ -124,8 +126,10 @@ module type Constraint =
         (** Assigns the variables of the constraint new names based on the rename map *)
         val rename : t -> Polynomial_.RenameMap_.t -> t
 
+          (*
         (** Assigns each variable a value and returns if the constraint is satisfied for those values *)
         val models : t -> Polynomial_.Valuation_.t -> bool
+           *)
 
         (** Replaces all operations by new constructors. *)
         val fold : const:(Polynomial_.Value.t -> 'b) ->

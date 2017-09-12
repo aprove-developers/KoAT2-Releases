@@ -1,6 +1,6 @@
 open Batteries
    
-module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
+module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
   struct
     module Monomial_ = Monomials.Make(Var)(Value)
     module ScaledMonomial_ = ScaledMonomials.Make(Var)(Value)
@@ -43,7 +43,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       | scaled::tail ->
          let curr_monom = ScaledMonomial_.monomial scaled in
          let curr_coeff = coeff curr_monom poly in
-         if (Value.equal curr_coeff Value.zero) then (simplify (delete_monomial curr_monom tail))
+         if Value.(curr_coeff =~= zero) then (simplify (delete_monomial curr_monom tail))
          else (ScaledMonomial_.make curr_coeff curr_monom) :: (simplify (delete_monomial curr_monom tail) )
 
     let to_string_simplified poly = 
@@ -61,7 +61,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
         | scaled :: tail ->
            let curr_mon = ScaledMonomial_.monomial scaled in
            let curr_coeff = ScaledMonomial_.coeff scaled in
-           Value.equal curr_coeff (coeff curr_mon poly2) &&
+           Value.(=~=) curr_coeff (coeff curr_mon poly2) &&
              equal_simplified tail (delete_monomial curr_mon poly2)
 
     let monomials poly =
@@ -90,7 +90,11 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let var str = from_var (Var.of_string str)
 
     let value c = from_constant (Value.of_int c)
-                      
+
+    let of_int = value                        
+
+    let to_int poly = raise (Failure "TODO: Not possible")
+                
     (* Gets the constant *)
     let constant poly = coeff Monomial_.one (simplify poly)
 
@@ -106,7 +110,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       |> simplify
       |> monomials
       |> fun monomials -> List.length monomials == 1 &&
-                            Monomial_.is_univariate_linear (List.hd monomials) && (Value.equal (coeff (List.hd monomials) poly) Value.one)
+                            Monomial_.is_univariate_linear (List.hd monomials) && (Value.(=~=) (coeff (List.hd monomials) poly) Value.one)
 
     let is_var_plus_constant poly =
          poly
@@ -116,7 +120,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
     let is_sum_of_vars_plus_constant poly =
          poly
       |> delete_monomial Monomial_.one
-      |> List.for_all (fun scaled -> Value.equal (ScaledMonomial_.coeff scaled) Value.one &&
+      |> List.for_all (fun scaled -> Value.(=~=) (ScaledMonomial_.coeff scaled) Value.one &&
                                        Monomial_.is_univariate_linear (ScaledMonomial_.monomial scaled))
 
     let is_univariate_linear poly = 
@@ -170,7 +174,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
             | scaled :: tail ->
                let curr_mon = ScaledMonomial_.monomial scaled in
                let curr_coeff = ScaledMonomial_.coeff scaled in
-               Value.equal curr_coeff (coeff curr_mon poly2) &&
+               Value.(=~=) curr_coeff (coeff curr_mon poly2) &&
                  equal_simplified tail (delete_monomial curr_mon poly2)
                
         let (=~=) poly1 poly2 = 
@@ -184,9 +188,10 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       end
     include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
+          (*
     (* Helper: Returns the greatest common divisor of the two values. Uses the Euclid algorithm. *)
     let rec gcd (a: Value.t) (b: Value.t) =
-      if Value.Compare.(b = Value.zero) then a
+      if Value.(b =~= zero) then a
       else gcd b (Value.modulo a b)
           
     (* Helper: Returns the greatest common divisor of all coefficients. *)
@@ -197,6 +202,7 @@ module Make(Var : PolyTypes.ID)(Value : Number.Numeric) =
       let divisor: Value.t = Value.abs (coefficients_gcd poly) in
       let scale_coeff scaled = ScaledMonomial_.(make Value.(coeff scaled / divisor) (monomial scaled)) in
       List.map scale_coeff poly
+           *)
 
     let is_zero poly = poly =~= zero
 

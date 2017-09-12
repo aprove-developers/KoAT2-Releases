@@ -1,7 +1,7 @@
 open Batteries
 
 module Var_ = ID.StringID
-module Value_ = Number.MakeNumeric(Big_int)
+module Value_ = PolyTypes.OurInt
 module Polynomial_ = Polynomials.Make(Var_)(Value_)
 module Constraint_ = Constraints.Make(Polynomial_)
 module Program_ = Program.Make(Constraint_)

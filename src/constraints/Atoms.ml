@@ -30,12 +30,14 @@ struct
                
         let str_values = List.map to_string values
 
+                       (*
         let to_function =
           let open P.Value.Compare in function
           | GT -> (>)
           | GE -> (>=)
           | LT -> (<)
           | LE -> (<=)
+                        *)
       end
 
     (* Always in normalised form: polynomial <= 0 *)
@@ -50,7 +52,7 @@ struct
       | Comparator.GT -> P.sub (P.add poly2 P.one) poly1
 
     let mk comp poly1 poly2 =
-      P.scale_coefficients (normalise poly1 poly2 comp)
+      (*P.scale_coefficients*) (normalise poly1 poly2 comp)
 
     let mk_gt = mk Comparator.GT
     let mk_ge = mk Comparator.GE
@@ -72,10 +74,12 @@ struct
              
     let rename atom varmapping = P.rename varmapping atom
 
+                               (*
     (* TODO It's maybe possible to compare polynomials without full evaluation *)
     (* However, there are probably more expensive operations *)
     let models atom valuation =
       P.Value.Compare.((P.eval atom valuation) <= P.Value.zero)
+                                *)
 
     let fold ~const ~var ~neg ~plus ~times ~pow ~le poly =
       le (P.fold ~const ~var ~neg ~plus ~times ~pow poly) (P.fold ~const ~var ~neg ~plus ~times ~pow P.zero)

@@ -50,8 +50,10 @@ module Make(P : Polynomial) =
         
     let rename constr varmapping = List.map (fun atom -> Atom_.rename atom varmapping) constr
 
+                                 (*
     let models constr valuation = 
       List.for_all (fun atom -> Atom_.models atom valuation) constr
+                                  *)
         
     let fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj =
       List.fold_left (fun c atom -> conj c (Atom_.fold ~const ~var ~neg ~plus ~times ~pow ~le atom)) correct

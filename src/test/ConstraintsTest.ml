@@ -63,11 +63,13 @@ module Methods (C : Constraint) =
          str
       |> Reader.read_constraint
       |> fun constr -> C.rename constr example_renaming
-      
+
+                     (*
     let evaluate str =
          str
       |> Reader.read_constraint
       |> fun constr -> C.models constr example_valuation
+                      *)
 
 
     let assert_equal_constr =     
@@ -78,7 +80,7 @@ module Methods (C : Constraint) =
     let rec list_equality (xs : Polynomial.Value.t list ) (ys : Polynomial.Value.t list) =
         match (xs, ys) with
             |([],[]) -> true
-            |(x::tailxs, y::tailys) ->  ( Polynomial.Value.Compare.(=) x y ) && (list_equality tailxs tailys)
+            |(x::tailxs, y::tailys) -> Polynomial.Value.(x =~= y) && (list_equality tailxs tailys)
             | (_,_) -> false
             
     let rec list_print (xs : Polynomial.Value.t list ) = "[" ^ String.concat "," (List.map Polynomial.Value.to_string xs) ^ "]"
@@ -112,7 +114,8 @@ module Methods (C : Constraint) =
                             ("a^2 * b^2 < 7", "x^2 * y^2 < 7");
                             ("a <= a && b < c", "x <= x && y < z" );
 
-                        ]);
+            ]);
+            (*
             ("models" >:::
                 List.map (fun (expected, constr) ->
                       constr >:: (fun _ ->  assert_equal_bool expected (evaluate constr )))
@@ -125,7 +128,7 @@ module Methods (C : Constraint) =
                             (true , "2 < 3 && 3 < 4 && 4 < 5");
                             (false, "3 <= 3 && 2 <= 2 && 1 <= 0");
                         ]);
-                        
+             *)          
             ("drop_nonlinear" >:::
                 List.map (fun (expected, constr) ->
                       constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.drop_nonlinear (Reader.read_constraint constr) )))
