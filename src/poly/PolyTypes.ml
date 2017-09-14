@@ -376,11 +376,11 @@ module type Polynomial =
 
 (** This module type defines how functors constructing polynomials have to be defined *)
 module type PolynomialFunctor =
-  functor (Var : ID)(Value : Field) -> Polynomial with module Var = Var
+  functor (Var : ID)(Value : Ring) -> Polynomial with module Var = Var
                                                   and module Value = Value
 
 (** Monadize adds the monadic flatten method to a polynomial. *)
-module Monadize(P : PolynomialFunctor)(Var : ID)(Value : Field) = struct
+module Monadize(P : PolynomialFunctor)(Var : ID)(Value : Ring) = struct
   module AbstractPoly = P(Var)
   module Inner = AbstractPoly(Value)
   module Outer = AbstractPoly(AbstractPoly(Value))
