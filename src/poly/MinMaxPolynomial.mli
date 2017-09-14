@@ -5,7 +5,7 @@ open Batteries
 (** Constructs a default MinMaxPolynomial based on a polynomial extending it with an algebraic data type *)
 module Make
          (Var : PolyTypes.ID)
-         (Value : PolyTypes.Field)
+         (Value : PolyTypes.Ring)
        : PolyTypes.MinMaxPolynomial with module Var = Var
                                      and module Value = Value
                                      and module Valuation_ = Valuation.Make(Var)(Value)

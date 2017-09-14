@@ -1,6 +1,6 @@
 open Batteries
    
-module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
+module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
   struct
     module Monomial_ = Monomials.Make(Var)(Value)
     module ScaledMonomial_ = ScaledMonomials.Make(Var)(Value)
@@ -90,6 +90,8 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
     let var str = from_var (Var.of_string str)
 
     let value c = from_constant (Value.of_int c)
+    
+    let helper n = from_var (Var.mk_helper n)
 
     let of_int = value                        
 

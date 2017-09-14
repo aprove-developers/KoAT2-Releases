@@ -24,10 +24,12 @@ module type ID =
     (** Returns a bunch of fresh ids. *)
     val fresh_ids : int -> t Enum.t
     val fresh_id_list : int -> t list
+    val is_helper : t -> bool
+    val mk_helper : int -> t
   end
 
 (** TODO *)
-module type Field =
+module type Ring =
   sig
     type t
 
@@ -47,7 +49,7 @@ module type Field =
                           (* val eval : t -> (Var.t -> value) -> value *)
   end
 
-module OurInt : Field =
+module OurInt : Ring =
   struct
     include Number.MakeNumeric(Big_int)
     let (=~=) = equal
@@ -112,7 +114,7 @@ module type Valuation =
 
 (** This module type defines how functors constructing valuations have to be defined *)
 module type ValuationFunctor =
-  functor (Var : ID)(Value : Field) -> Valuation with type var = Var.t
+  functor (Var : ID)(Value : Ring) -> Valuation with type var = Var.t
                                                   and type value = Value.t
 
 (** A rename map is a function which maps from a finite set of variables to another finite set of variables *)
@@ -138,7 +140,7 @@ module type Evaluable =
   sig
     type t
     module Var : ID
-    module Value : Field
+    module Value : Ring
     module Valuation_ : (Valuation with type var = Var.t and type value = Value.t)
     module RenameMap_ : (RenameMap with type var = Var.t)
 
@@ -160,7 +162,7 @@ module type Evaluable =
 
 (** This module type defines how functors constructing evaluables have to be defined *)
 module type EvaluableFunctor =
-  functor (Var : ID)(Value : Field) -> Evaluable with module Var = Var
+  functor (Var : ID)(Value : Ring) -> Evaluable with module Var = Var
                                                   and module Value = Value
 
 (** A monomial is a finite product of powers *)
@@ -270,7 +272,7 @@ module type Polynomial =
     include Evaluable with type t := t
     include Math with type t := t
     include PartialOrder with type t := t
-    include Field with type t := t
+    include Ring with type t := t
 
     (** Following methods are convenience methods for the creation of polynomials. *)
 
@@ -280,6 +282,7 @@ module type Polynomial =
     val from_constant : Value.t -> t
     val var : string -> t
     val value : int -> t
+    val helper : int -> t
     val from_power : Var.t -> int -> t
     val from_monomial : monomial -> t
     val from_coeff_list : Value.t list -> Var.t list -> t

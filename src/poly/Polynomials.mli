@@ -7,7 +7,7 @@ open PolyTypes
 (** Constructs a default polynomial using a list of monomials and their coefficients *)
 module Make
          (Var : ID)
-         (Value : Field)
+         (Value : Ring)
        : Polynomial with module Var = Var
                      and module Value = Value
                      and module RenameMap_ = RenameMap.Make(Var)

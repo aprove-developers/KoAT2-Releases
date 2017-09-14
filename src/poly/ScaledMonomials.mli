@@ -3,7 +3,7 @@ open Batteries
 (** Internal *)
 module Make
          (Var : PolyTypes.ID)
-         (Value : PolyTypes.Field)
+         (Value : PolyTypes.Ring)
        : PolyTypes.ScaledMonomial with module Var = Var
                                    and module Value = Value
                                    and module Valuation_ = Valuation.Make(Var)(Value)

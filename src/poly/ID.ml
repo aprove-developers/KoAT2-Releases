@@ -1,5 +1,6 @@
 open Batteries
 
+(** Implements a variable as a String *)
 module StringID =
   struct
     type t =
@@ -13,6 +14,8 @@ module StringID =
       | (_, _) -> false
               
     let of_string str = Var str
+    
+    let mk_helper n = Helper n
                       
     let to_string = function
       | Var str -> str
@@ -36,6 +39,12 @@ module StringID =
       
     let fresh_id_list n =
       List.of_enum (fresh_ids n)
+      
+    (**returns true if the variable represents real numbers*)
+    let is_helper var =
+        match var with 
+            |Var name -> false
+            |Helper name -> true
 
   end
 

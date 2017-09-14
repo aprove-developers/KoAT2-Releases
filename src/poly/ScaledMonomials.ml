@@ -1,7 +1,7 @@
 open Batteries
 open Big_int.Infix
 
-module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
+module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
   struct    
     module Valuation_ = Valuation.Make(Var)(Value)
     module RenameMap_ = RenameMap.Make(Var)
