@@ -154,6 +154,8 @@ module type Evaluable =
         !! If the valuation does not provide a value for a variable, an exception is raised. !! *)
     val eval : t -> Valuation_.t -> Value.t
 
+    val eval_f : t -> (Var.t -> Value.t) -> Value.t
+
     (** Assigns the variables of the evaluable new names based on the rename map. *)
     val rename : RenameMap_.t -> t -> t
 
@@ -286,7 +288,7 @@ module type Polynomial =
     val from_power : Var.t -> int -> t
     val from_monomial : monomial -> t
     val from_coeff_list : Value.t list -> Var.t list -> t
-
+      
     (** Following methods return information over the polynomial. *)
 
     (** Returns the coefficient of the monomial. *)
@@ -339,6 +341,9 @@ module type Polynomial =
     (** Creates a polynomial where every variable for which a value is assigned by the valuation is replaced by this value. *)
     val eval_partial : t -> Valuation_.t -> t
 
+    (** Maps all coefficients to elements from the polynomial. *)
+    val instantiate : (Value.t -> t) -> t -> t
+      
     (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
         Ignores naming equalities. *)
     val substitute : Var.t -> replacement:t -> t -> t

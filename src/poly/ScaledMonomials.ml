@@ -29,9 +29,11 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
     let degree scaled = Monomial.degree scaled.mon
                       
     let to_string scaled =
-      if scaled.coeff == Value.one then Monomial.to_string scaled.mon
-      else if Monomial.(scaled.mon =~= Monomial.one) then "(" ^ Value.to_string scaled.coeff ^ ")"
-      else "(" ^ Value.to_string scaled.coeff ^ ")" ^ "*" ^ Monomial.to_string scaled.mon
+      if Value.(scaled.coeff =~= one) then "+" ^ Monomial.to_string scaled.mon
+      else if Value.(scaled.coeff =~= (neg one)) then "-" ^ Monomial.to_string scaled.mon
+      else if Monomial.(scaled.mon =~= Monomial.one) then
+        (if scaled.coeff > Value.zero then "+" else "") ^ Value.to_string scaled.coeff
+      else (if scaled.coeff > Value.zero then "+" else "") ^ Value.to_string scaled.coeff ^ Monomial.to_string scaled.mon
       
     type outer_t = t
     module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
@@ -39,7 +41,7 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
         type t = outer_t
                
         let (=~=) scaled1 scaled2 =
-          (scaled1.coeff == scaled2.coeff) && Monomial.(scaled1.mon =~= scaled2.mon)
+          Value.(scaled1.coeff =~= scaled2.coeff) && Monomial.(scaled1.mon =~= scaled2.mon)
           
         let (>) s1 s2 = match (s1, s2) with
           (* TODO Find some rules to compare *)
@@ -52,6 +54,9 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
 
     let rename varmapping scaled = { scaled with mon = Monomial.rename varmapping scaled.mon }
                                  
+    let eval_f scaled f =
+      Value.mul scaled.coeff (Monomial.eval_f scaled.mon f)
+
     let eval scaled valuation =
       Value.mul scaled.coeff (Monomial.eval scaled.mon valuation)
       
