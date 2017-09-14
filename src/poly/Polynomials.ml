@@ -1,4 +1,5 @@
 open Batteries
+open PolyTypes
    
 module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
   struct
@@ -49,7 +50,7 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
     let to_string_simplified poly = 
       if (poly == []) then "0" 
       else 
-        String.concat "+" (List.map ScaledMonomial_.to_string poly)
+        String.concat "" (List.map ScaledMonomial_.to_string poly)
 
     let to_string poly = to_string_simplified (simplify poly)
 
@@ -207,7 +208,15 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
     let is_zero poly = poly =~= zero
 
     let is_one poly = poly =~= one
-                     
+                    
+    let instantiate (substitution : Value.t -> t) =
+      fold ~const:substitution ~var:from_var ~neg:neg ~plus:add ~times:mul ~pow:pow
+
+    let eval_f poly f =
+         poly
+      |> List.map (fun scaled -> ScaledMonomial_.eval_f scaled f)
+      |> List.fold_left Value.add Value.zero      
+      
     let eval poly valuation =
          poly
       |> List.map (fun scaled -> ScaledMonomial_.eval scaled valuation)

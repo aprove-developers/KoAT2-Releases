@@ -32,11 +32,14 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
     let delete_var = Map.remove
 
     (* Probably inefficient but not important in to_string *)
-    (* TODO Eliminate 1 at begin if not necessary *)
     let to_string mon =
-      let entry_string key n =
-        Var.to_string key ^ (if n == 1 then "^" ^ string_of_int n else "") in
-      Map.fold (fun key n str -> str ^ "*" ^ (entry_string key n)) mon "1"
+      if Map.is_empty mon then
+        "1"
+      else
+        let entry_string key n =
+          Var.to_string key ^ (if n != 1 then "^" ^ string_of_int n else "")
+        and ((var, n), without_first) = Map.pop mon in
+        Map.fold (fun key n str -> str ^ (entry_string key n)) without_first (entry_string var n)
 
     let is_univariate_linear mon =
       degree mon == 1
@@ -51,6 +54,9 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
       let addPowers ?(p1=0) ?(p2=0) _ = p1 + p2 in
       Map.merge (fun key p1 p2 -> Some (addPowers ?p1 ?p2 ()))  
 
+    let eval_f mon f =
+      Map.fold (fun var n result -> Value.mul result (f var)) mon Value.one
+      
     (* Idea: Merge each var from the monomial with its value from the valuation, do the exponentation and fold the result with a multiplication *)
     let eval mon valuation =
       let power ?(n=0) v = (Value.pow v n)

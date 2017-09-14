@@ -106,7 +106,39 @@ module Methods (P : Polynomial) =
                        ("Power before Multiplication", 27*625, " x ^ 3 * y ^ 4 ");
                      ];
           );
-                     
+
+          "Instantiate" >::: (
+            let module P = PolyImpl.Polynomial in
+            List.map (fun (testname, expected, poly) ->
+                testname >:: (fun _ -> assert_equal ~cmp:P.(=~=) ~printer:P.to_string (expected) (P.instantiate P.from_constant poly)))
+                     [
+                       ("Constant", P.value 42, P.value 42);
+                     ];
+          );
+          
+          "Instantiate TemplatePolynomial" >::: (
+            let module T = PolyImpl.TemplatePolynomial in
+            let module P = PolyImpl.Polynomial in
+            List.map (fun (testname, expected, poly) ->
+                testname >:: (fun _ -> assert_equal ~cmp:T.(=~=) ~printer:T.to_string (expected) (T.instantiate (fun v -> T.from_constant (P.from_constant (P.eval_f v (fun _ -> P.Value.of_int 2)))) poly)))
+                     [
+                       ("a*x", T.((value 2) * (var "x")), T.((from_constant (P.var "a")) * (var "x")) );
+                     ];
+          );
+
+          "Flatten TemplatePolynomial" >::: (
+            let module T = PolyImpl.TemplatePolynomial in
+            let module P = PolyImpl.Polynomial in
+            List.map (fun (testname, expected, poly) ->
+                testname >:: (fun _ -> assert_equal ~cmp:P.(=~=) ~printer:P.to_string (expected) (T.flatten poly)))
+                     [
+                       ("1st", P.((value 2) * (var "a") * (var "x") + (var "b") * (var "x") + (value 3) * (var "a") * (var "y") - (value 1)),
+                        T.((from_constant P.((value 2) * (var "a") + (var "b"))) * (var "x") +
+                             (from_constant P.((value 3) * (var "a"))) * (var "y") -
+                             (value 1)));
+                     ];
+          );
+          
           "from_coeff_list" >::: (
             List.map (fun (expected, coeffs, vars) ->
                 expected >:: (fun _ -> assert_equal~cmp:P.(=~=) ~printer:P.to_string (P.from_coeff_list coeffs vars) (Reader.read_polynomial expected)))

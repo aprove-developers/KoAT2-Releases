@@ -153,6 +153,7 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Field) =
     let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implemented")
     let to_z3 ctx p = raise (Failure "to_z3 for MinMaxPolynomial not yet implemented")
     let eval p valuation = raise (Failure "eval for MinMaxPolynomial not yet implemented")
+    let eval_f p valuation = raise (Failure "eval_f for MinMaxPolynomial not yet implemented")
     let of_string p = raise (Failure "of_string for MinMaxPolynomial not yet implemented")
 
   end
