@@ -413,6 +413,11 @@ module type MinMaxPolynomial =
     val infinity : t
     val minus_infinity : t
 
+    (** Following methods can be used to classify the type of the polynomial. *)
+
+    (** TODO *)
+      
+
     (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
         Ignores naming equalities. *)
     val substitute : Var.t -> replacement:t -> t -> t

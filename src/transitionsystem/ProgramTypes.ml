@@ -13,27 +13,29 @@ module type Program =
         A guard has to be fulfiled for a state to reach another state via the transition
         An update assigns variables a new value as a linear combination of the old values *)
     module TransitionLabel :
-      sig
-        module Map : module type of Map.Make(Constraint_.Polynomial_.Var)
-        type t
-        exception RecursionNotSupported
-        val mk : name:string ->
-                 start:string ->
-                 targets:(string * (Constraint_.Polynomial_.t list)) list ->
-                 patterns:Constraint_.Polynomial_.Var.t list ->
-                 guard:Constraint_.t ->
-                 vars:Constraint_.Polynomial_.Var.t list ->
-                 t
-        val equal : t -> t -> bool
-        val compare : t -> t -> int
-        val start : t -> string
-        val target : t -> string
-        val update : t -> Constraint_.Polynomial_.t Map.t
-        val guard : t -> Constraint_.t
-        val default : t
-        val to_string : string -> string -> t -> string
-      end
-
+    sig
+      module Polynomial = Constraint_.Polynomial_
+      module Var = Constraint_.Polynomial_.Var
+      module Map : module type of Map.Make(Constraint_.Polynomial_.Var)
+      type t
+      exception RecursionNotSupported
+      val mk : name:string ->
+               start:string ->
+               targets:(string * (Polynomial.t list)) list ->
+               patterns:Var.t list ->
+               guard:Constraint_.t ->
+               vars:Var.t list ->
+               t
+      val equal : t -> t -> bool
+      val compare : t -> t -> int
+      val start : t -> string
+      val target : t -> string
+      val update : t -> Var.t -> Polynomial.t Option.t
+      val guard : t -> Constraint_.t
+      val default : t
+      val to_string : string -> string -> t -> string
+    end
+         
     (** A location is a node of a transition system and can be connected to other locations via transitions *)
     module Location :
     sig

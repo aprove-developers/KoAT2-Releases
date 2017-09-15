@@ -1,10 +1,12 @@
 open Batteries
    
-module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
+module Make(P : PolyTypes.Polynomial) =
   struct
-    module Valuation_ = Valuation.Make(Var)(Value)
-    module RenameMap_ = RenameMap.Make(Var)
-    module Polynomial_ = Polynomials.Make(Var)(Value)
+    module Polynomial_ = P
+    module Value = P.Value
+    module Var = P.Var
+    module Valuation_ = P.Valuation_
+    module RenameMap_ = P.RenameMap_
                           
     (* Minus Infinity is max of an empty list *)
     (* Infinity is min of an empty list *)
@@ -17,9 +19,6 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
       | Sum of t list
       | Product of t list
               
-    module Var = Var
-    module Value = Value
-
     let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf p =
       let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf in
       match p with

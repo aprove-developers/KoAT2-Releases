@@ -14,4 +14,4 @@ module Polynomial = Polynomials.Make(ID.StringID)(PolyTypes.OurInt)
 
 module TemplatePolynomial = PolyTypes.Monadize(Polynomials.Make)(ID.StringID)(PolyTypes.OurInt)
                   
-module MinMaxPolynomial = MinMaxPolynomial.Make(ID.StringID)(PolyTypes.OurInt)
+module MinMaxPolynomial = MinMaxPolynomial.Make(Polynomial)

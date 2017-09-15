@@ -7,6 +7,8 @@ module Make(C : ConstraintTypes.Constraint) =
 
     module TransitionLabel =
       struct
+        module Polynomial = Constraint_.Polynomial_
+        module Var = Constraint_.Polynomial_.Var
         module Map = Map.Make(Constraint_.Polynomial_.Var)
                    
         exception RecursionNotSupported
@@ -41,7 +43,7 @@ module Make(C : ConstraintTypes.Constraint) =
                     
         let target t = t.target
                      
-        let update t = t.update                    
+        let update t var = Map.Exceptionless.find var t.update                    
                  
         let guard t = t.guard
                     

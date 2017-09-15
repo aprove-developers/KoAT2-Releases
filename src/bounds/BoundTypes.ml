@@ -11,7 +11,7 @@ module type Approximation =
     module Var = Program_.Constraint_.Polynomial_.Var
     module Value = Program_.Constraint_.Polynomial_.Value
                                 
-    module Bound : module type of MinMaxPolynomial.Make(Var)(Value)
+    module Bound : module type of MinMaxPolynomial.Make(Program_.Constraint_.Polynomial_)
 
     type t
          
