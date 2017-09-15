@@ -8,9 +8,14 @@ module Make(A : BoundTypes.Approximation) =
     module RVG = Approximation_.Program_.RVG
     module Bound = Approximation_.Bound
                
-    module VarMap = Map.Make(Approximation_.Bound.Var)
-
-    type classification = Equality | Constant | ScaledSum | Unbound
+    (** A classification is an upper bound of a certain form.
+        The different classifications are not disjunctive.
+        The upcoming classification set always includes the previous one. *)
+    type classification =
+      | Equality (** Always smaller or equal to a constant or the value of a prevariable. Examples: x'=x , x'=y , x'=2 *)
+      | AddsConstant (** Always smaller or equal to the value of a prevariable plus a constant. Examples: x'=x+1 , x'=y+2 *)
+      | ScaledSum (** Always smaller or equal to a scaling factor multiplied with the sum of all prevariables and a constant. Examples: x'=x+y , x'=2*(x+y+z) *)
+      | Unbound (** Always smaller or equal to infinity *)
 
     let classify (poly: Approximation_.Bound.t): classification =
       raise (Failure "Not yet implemented")
