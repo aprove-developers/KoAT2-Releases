@@ -5,15 +5,17 @@ module Make(P : ProgramTypes.Program) =
 
     module Program_ = P
 
-    module Bound = MinMaxPolynomial.Make
-                     (Program_.Constraint_.Polynomial_.Var)
-                     (Program_.Constraint_.Polynomial_.Value)
+    module Transition = Program_.Transition
+    module Var = Program_.Constraint_.Polynomial_.Var
+    module Value = Program_.Constraint_.Polynomial_.Value
+
+    module Bound = MinMaxPolynomial.Make(Var)(Value)
        
     type kind = Lower | Upper
 
     type t = {
-        time: ((kind * Program_.Transition.t), Bound.t) Hashtbl.t;
-        size: ((kind * Program_.Transition.t * Program_.Constraint_.Polynomial_.Var.t), Bound.t) Hashtbl.t;
+        time: ((kind * Transition.t), Bound.t) Hashtbl.t;
+        size: ((kind * Transition.t * Var.t), Bound.t) Hashtbl.t;
       }
 
 
