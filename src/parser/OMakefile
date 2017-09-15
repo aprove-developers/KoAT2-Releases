@@ -12,7 +12,7 @@ OCAMLPACKS[] =
 OCAMLINCLUDES[] =
     ../poly
     ../constraints
-    ../trans_system
+    ../transitionsystem
 
 OCAML_LIBS[] =
     ../poly/poly
