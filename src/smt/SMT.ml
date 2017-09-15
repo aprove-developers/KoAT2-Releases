@@ -9,6 +9,8 @@ module type Solver =
 
     val satisfiable : Constraint.t -> bool
     
+    val get_model : Constraint.t -> Constraint.Polynomial_.Valuation_.t
+    
     (*val to_string : Constraint.t -> string*)
   end
 
@@ -52,12 +54,46 @@ module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constr
     (** checks if there exists a satisfying assignment for a given constraint
         uses Z3 optimisation methods*)
     let satisfiable (constraints : Constraint.t) =
-      let solver = Z3.Solver.mk_simple_solver !context in
-      let formula = from_constraint constraints in
-      let optimisation_goal = Z3.Optimize.mk_opt !context in
-      Z3.Optimize.add optimisation_goal [formula];
-      (*Z3.Solver.add solver [formula];
-      (Z3.Solver.check solver []) == Z3.Solver.SATISFIABLE*)
-      (Z3.Optimize.check optimisation_goal) == Z3.Solver.SATISFIABLE
-
+        let formula = from_constraint constraints in
+        let optimisation_goal = Z3.Optimize.mk_opt !context in
+        Z3.Optimize.add optimisation_goal [formula];
+        (Z3.Optimize.check optimisation_goal) == Z3.Solver.SATISFIABLE
+      
+    let get_model (constraints : Constraint.t) =
+        let formula = from_constraint constraints in
+        let optimisation_goal = Z3.Optimize.mk_opt !context in
+            Z3.Optimize.add optimisation_goal [formula];
+            let status = Z3.Optimize.check optimisation_goal in
+                if (status == Z3.Solver.SATISFIABLE) then
+                    let model = Z3.Optimize.get_model optimisation_goal in
+                        match model with
+                        | None -> Polynomial.Valuation_.from []
+                        | Some model -> 
+                            let assigned_values = Z3.Model.get_const_decls model in
+                                Polynomial.Valuation_.from 
+                                (List.map 
+                                    (fun func_decl -> 
+                                        let name = Z3.Symbol.get_string (Z3.FuncDecl.get_name func_decl) in
+                                        let var_of_name = (Polynomial.Var.of_string name) in
+                                        let value = Option.get (Z3.Model.get_const_interp
+                                        model func_decl)(*careful, this returns an option*) in
+                                        let int_of_value = int_of_float (float_of_string (Z3.Expr.to_string value)) in (*dirty hack, might be solved better*)
+                                        let value_of_value = (Polynomial.Value.of_int int_of_value) in
+                                            (var_of_name,value_of_value)) assigned_values)
+                                        
+                else Polynomial.Valuation_.from []
+            
+(*match Solver.get_model solver with
+          | Some model ->
+            let consts = Model.get_const_decls model in
+            Some (List.fold_left
+                    (fun assignment func_decl ->
+                      let name = Symbol.get_string (FuncDecl.get_name func_decl) in
+                      let value = Utils.unboxOption (Model.get_const_interp model func_decl) in
+                      let value_string = Str.replace_first neg_re "-\\1" (Expr.to_string value) in
+                      VarMap.add (Poly.mkVar name) (Big_int.big_int_of_string value_string) assignment)
+                    VarMap.empty
+                    consts)
+          | _ -> assert (false) (* SAT but no model! Oh noes! *)*)
+        
   end
