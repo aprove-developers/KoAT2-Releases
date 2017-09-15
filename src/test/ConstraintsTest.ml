@@ -45,6 +45,8 @@ module Methods (C : Constraint) =
 
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
+    module ParameterPolynomial = Polynomials.Make(Polynomial.Var)(Polynomial)
+    module ParameterAtom = Atoms.Make(ParameterPolynomial)
                      
     let example_valuation = Polynomial.Valuation_.from_native [("x", 3);
                                                         ("y", 5);
@@ -91,10 +93,14 @@ module Methods (C : Constraint) =
         xs
       |>(List.map list_print)
       |>(String.concat ",")
+      
+    let print_str (str : string) = str
 
     let tests = 
         
         "Constraints" >:::[
+         (*let open ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
+            let open ProgramImpl.StdProgram.Constraint_ in*)
 
             ("get_variables" >:::
                 List.map (fun (expected, constr) ->
@@ -115,8 +121,8 @@ module Methods (C : Constraint) =
                             ("a <= a && b < c", "x <= x && y < z" );
 
             ]);
-            (*
-            ("models" >:::
+            
+(*            ("models" >:::
                 List.map (fun (expected, constr) ->
                       constr >:: (fun _ ->  assert_equal_bool expected (evaluate constr )))
                         [
@@ -127,8 +133,8 @@ module Methods (C : Constraint) =
                             (false , "x^2 * y^2 < 7");
                             (true , "2 < 3 && 3 < 4 && 4 < 5");
                             (false, "3 <= 3 && 2 <= 2 && 1 <= 0");
-                        ]);
-             *)          
+                        ]);*)
+                       
             ("drop_nonlinear" >:::
                 List.map (fun (expected, constr) ->
                       constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.drop_nonlinear (Reader.read_constraint constr) )))
@@ -172,14 +178,28 @@ module Methods (C : Constraint) =
                         ]);
                         
             ("farkas_transform" >:::
+                let open ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
+                let open ProgramImpl.StdProgram.Constraint_ in
+                    let assert_equal_constr = assert_equal ~cmp:ProgramImpl.StdProgram.Constraint_.(=~=) ~printer:ProgramImpl.StdProgram.Constraint_.to_string in
                 List.map (fun (expected, constr, atom) ->
-                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.farkas_transform  (Reader.read_constraint constr) (Reader.read_atom atom) )))
+                      (ProgramImpl.StdProgram.Constraint_.Atom_.to_string atom) >:: (fun _ -> assert_equal_constr expected (farkas_transform  constr atom )))
                         [
-                            ("x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y", "x + y <= 4 && x <= 3 && x >= 0 && y>=0", "2*x + y <= 0");
-                            ("x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y ", "x + y <= 4 && x <= 3 && y>=0", "2*x + y <= 0");
-                            ("x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y && x <= y", "x + y = 4 && x <= 3 && x>=0 && y>=0", "2*x + y <= 0");
+                            ( (all [ mk_eq (((value 1)*(helper 1)) + ((value 1)*(helper 2)) + ((value (-1))*(helper 3))) (value 2); mk_eq (((value 1)*(helper 1)) + ((value (-1))*(helper 4)))(value 1);mk_ge (helper 1) (value 0);mk_ge (helper 2) (value 0);mk_ge (helper 3) (value 0);mk_ge (helper 4) (value 0);mk_le ((value 4)*(helper 1) + (value 3) * (helper 2)) (value 0)]), 
+                            (all [mk_le ((var "x")+(var "y")) (value 4); mk_le (var "x") (value 3); mk_ge (var "x")(value 0); mk_ge (var "y")(value 0)]),
+                            ProgramImpl.StdProgram.Constraint_.Atom_.mk_le (((value 2) * (var "x")) + (var "y")) (value 0));
+                            
+                            (all ([ mk_eq ((value (-1))*(helper 5))(value (-1));mk_ge (helper 5) (value 0);mk_le (value 0) (value 0)]), 
+                            (all [mk_ge (var "x") (value 0)]),
+                            ProgramImpl.StdProgram.Constraint_.Atom_.mk_ge (var "x") (value 0));
                         ]);
+                        
+            (*("parametric_atom" >:::
+                List.map (fun (expected, params, vars) ->
+                      expected >:: (fun _ -> assert_equal ~cmp:String.equal ~printer:print_str expected (ParameterAtom.to_string (ParameterAtom.mk_ge (ParameterPolynomial.from_coeff_list (List.map Reader.read_polynomial params) (List.map ParameterPolynomial.Var.of_string vars)) ParameterPolynomial.zero)) ))
+                      [
+                            ("(-a)*x+(-b)*y <= 0",["a";"b";"c";"d"],["x";"y";"z";"w"]);
 
+                        ]);*)
         ]
-        
+
       end

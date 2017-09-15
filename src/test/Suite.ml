@@ -5,12 +5,18 @@ module StringIDAtomTest = AtomTest.Methods(Constraints.Make(Polynomials.Make(ID.
 module StringIDConstraintsTest = ConstraintsTest.Methods(Constraints.Make(Polynomials.Make(ID.StringID)(PolyTypes.OurInt)))
 
 module StringIDPolynomial = PolynomialsTest.Methods(PolyImpl.Polynomial)
+module StringIDTemplatePolynomial = PolynomialsTest.Methods(PolyImpl.TemplatePolynomial)
+
                           
 let suite =
   "Suite" >::: [
       "Polynomial" >::: [
         PolynomialsTest.Parser.tests;
         StringIDPolynomial.tests;
+      ];
+      "TemplatePolynomial" >::: [
+        StringIDTemplatePolynomial.tests;
+
       ];
       "PolynomialConstraints" >::: [
           ConstraintsTest.Parser.tests;
