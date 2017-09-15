@@ -113,6 +113,8 @@ module type Constraint =
         val is_true : t -> bool
           
         val (=~=) : t -> t -> bool
+        
+        val num_of_atoms : t -> int
           
         (** Returns the set of variables which are active in the constraint.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)

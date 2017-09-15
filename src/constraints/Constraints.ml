@@ -6,10 +6,13 @@ module Make(P : Polynomial) =
   struct
 
     module Polynomial_ = P
-    
+      
     module Atom_ = Atoms.Make(P)
         
     type t = Atom_.t list
+    
+    (** Same as List.length but outside of this module the list structure of constraints is invisible*)
+    let num_of_atoms = List.length
     
     let lift atom = [ atom ]
     
@@ -26,7 +29,6 @@ module Make(P : Polynomial) =
     let mk_le p1 p2 = lift (Atom_.mk_le p1 p2)
     
     let mk_and = List.append
-
                     
     (** TODO Filter related: x < 0 && x < 1*)
     let all = List.flatten 
@@ -80,18 +82,18 @@ module Make(P : Polynomial) =
                 let ensure_pos = List.map (fun v -> Atom_.mk_ge (P.from_var v) P.zero ) vars in
                     mk (List.flatten [dualised_eq;ensure_pos])
         
-        
+    (** Farkas Lemma applied to a linear constraint and an atom which is the cost function*)    
     let farkas_transform constr atom =
-            let vars = Set.union (vars constr) (Atom_.vars atom) in
-            let costfunction = lift atom in
-                let a_matrix = get_matrix vars constr in
-                let b_right = get_constant_vector constr in
-                let c_left = List.map (P.from_constant) (List.flatten (get_matrix vars costfunction)) in
-                let d_right = List.at (get_constant_vector costfunction) 0 in
-                    let num_of_constr = List.length constr in
-                    let fresh_vars = P.Var.fresh_id_list num_of_constr in
-                        let dual_constr = dualise fresh_vars a_matrix c_left in
-                            let cost_constr = P.from_coeff_list b_right fresh_vars in
-                                mk_and dual_constr (mk_le cost_constr (P.from_constant d_right))
+        let vars = Set.union (vars constr) (Atom_.vars atom) in
+        let costfunction = lift atom in
+            let a_matrix = get_matrix vars constr in
+            let b_right = get_constant_vector constr in
+            let c_left = List.map (P.from_constant) (List.flatten (get_matrix vars costfunction)) in
+            let d_right = List.at (get_constant_vector costfunction) 0 in
+                let num_of_constr = List.length constr in
+                let fresh_vars = P.Var.fresh_id_list num_of_constr in
+                    let dual_constr = dualise fresh_vars a_matrix c_left in
+                        let cost_constr = P.from_coeff_list b_right fresh_vars in
+                            mk_and dual_constr (mk_le cost_constr (P.from_constant d_right))
                                 
   end
