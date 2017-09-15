@@ -41,7 +41,7 @@ module Make(C : ConstraintTypes.Constraint) =
                     
         let target t = t.target
                      
-        let update t = t.update
+        let update t = t.update                    
                  
         let guard t = t.guard
                     
