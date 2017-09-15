@@ -57,6 +57,10 @@ module type RankingFunction =
   sig
     module Program_ : ProgramTypes.Program
     module Polynomial_ : PolyTypes.Polynomial
+    module Constraints_ : ConstraintTypes.Constraint
+    module ParameterPolynomial_ : PolyTypes.Polynomial
+    module ParameterConstraints_ :ConstraintTypes.Constraint
+    module ParameterAtoms_ :ConstraintTypes.Atom
 
     type t
 
@@ -73,6 +77,9 @@ module type RankingFunction =
 
     (** Transforms the ranking function to a monotonic function. *)
     val monotonize : t -> t
+    
+    (** Invokes Farkas Lemma, to compute a ranking function*)
+    val farkas_transform : Constraints_.t -> ParameterConstraints_.Atom_.t -> ParameterConstraints_.t
   end
   
 module type TimeBounds =
