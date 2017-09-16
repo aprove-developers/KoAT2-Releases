@@ -47,10 +47,11 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
          if Value.(curr_coeff =~= zero) then (simplify (delete_monomial curr_monom tail))
          else (ScaledMonomial_.make curr_coeff curr_monom) :: (simplify (delete_monomial curr_monom tail) )
 
-    let to_string_simplified poly = 
-      if (poly == []) then "0" 
-      else 
-        String.concat "" (List.map ScaledMonomial_.to_string poly)
+    let to_string_simplified = function 
+      | [] -> "0"
+      | poly -> let str = String.concat "" (List.map ScaledMonomial_.to_string poly) in
+                if String.starts_with str "+" then
+                  String.lchop str else str
 
     let to_string poly = to_string_simplified (simplify poly)
 

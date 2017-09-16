@@ -17,7 +17,7 @@ module Make(C : ConstraintTypes.Constraint) =
             name : string;
             start : string;
             target : string;
-            update : Constraint_.Polynomial_.t Map.t;
+            update : Polynomial.t Map.t;
             guard : Constraint_.t;
             (* TODO Transitions should have costs *)
           }
@@ -55,8 +55,17 @@ module Make(C : ConstraintTypes.Constraint) =
             guard = C.mk_true;
           }
                     
-        let to_string start target transition =
-          "TODO"
+        let update_to_string_list update =
+          if Map.is_empty update then
+            "true"
+          else
+            let entry_string var poly = Var.to_string var ^ "' := " ^ Polynomial.to_string poly
+            and ((var, poly), without_first) = Map.pop update in
+            Map.fold (fun var poly result -> result ^ " && " ^ entry_string var poly) without_first (entry_string var poly)
+
+        let to_string label =          
+          let guard = if Constraint_.is_true label.guard then "" else " && " ^ Constraint_.to_string label.guard in
+          update_to_string_list label.update ^ guard
           
       end
 
@@ -77,7 +86,7 @@ module Make(C : ConstraintTypes.Constraint) =
         (*Needed by ocamlgraph*)    
         let hash l = Hashtbl.hash l.name
                    
-        let to_string l = "loc_" ^ l.name
+        let to_string l = l.name
                         
         let of_string name = { name }
                            
@@ -135,7 +144,28 @@ module Make(C : ConstraintTypes.Constraint) =
       raise (Failure "Not yet implemented")
 
     let graph g = g.graph
-      
+
+    let print_graph name program =
+      (* Definition of some graphviz options how it should be layout *)
+      let module Dot = Graph.Graphviz.Dot(struct
+                                           include TransitionGraph
+                                           let edge_attributes (a, e, b) = [`Label (TransitionLabel.to_string e); `Color 4711]
+                                           let default_edge_attributes _ = []
+                                           let get_subgraph _ = None
+                                           let vertex_attributes _ = [`Shape `Box]
+                                           let vertex_name v = Location.to_string v
+                                           let default_vertex_attributes _ = []
+                                           let graph_attributes _ = []
+                                         end) in
+      let out_dir = "output" in
+      (* Create output directory if not existing *)
+      ignore (Sys.command ("mkdir " ^ out_dir));
+      (* Write a graphviz dot file *)
+      Dot.output_graph (Pervasives.open_out_bin (out_dir ^ "/" ^ name ^ ".dot")) (graph program);
+      (* Generate a png from the dot file with an external call to graphviz *)
+      ignore (Sys.command ("dot -T png -o " ^ (out_dir ^ "/" ^ name ^ ".png ") ^ (out_dir ^ "/" ^ name ^ ".dot")))
+
+                
     let is_initial graph (l,t,l') =
       graph.start == l
 

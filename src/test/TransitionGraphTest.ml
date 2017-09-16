@@ -18,4 +18,9 @@ let suite =
             Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
         "Examples" >::: List.map test_folder ["KoAT-2013"; "KoAT-2014"; "SAS10"; "T2"]
       );
-    ]                  
+      (
+        "Print" >:: (fun _ ->
+          ProgramImpl.StdProgram.print_graph "sect1-lin" (Reader.read_file "../../examples/KoAT-2013/sect1-lin.koat")
+        )
+      );
+    ]

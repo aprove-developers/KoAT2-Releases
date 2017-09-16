@@ -33,7 +33,7 @@ module type Program =
       val update : t -> Var.t -> Polynomial.t Option.t
       val guard : t -> Constraint_.t
       val default : t
-      val to_string : string -> string -> t -> string
+      val to_string : t -> string
     end
          
     (** A location is a node of a transition system and can be connected to other locations via transitions *)
@@ -48,9 +48,7 @@ module type Program =
     end
 
     module TransitionGraph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
-                                  with type edge = Location.t * TransitionLabel.t * Location.t
-                                   and type vertex = Location.t
-
+                                          
     module Transition : module type of TransitionGraph.E
       
     module RV :
@@ -81,6 +79,10 @@ module type Program =
     val rvg : t -> RVG.t
 
     val graph : t -> TransitionGraph.t
+
+    (** Prints a png file with the given filename (the extension .png will be generated) for the transition graph of the program. 
+        For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
+    val print_graph : string -> t -> unit
 
     (** Returns if the given transition is an initial transition. *)
     val is_initial : t -> Transition.t -> bool

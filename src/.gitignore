@@ -28,8 +28,8 @@ Makefile
 *.log
 *.cache
 
-#Ignore symbolic links to .opt files
 test/Test
+test/output
 
 #Ignore auto generated parser files
 parser/Parser.mli
