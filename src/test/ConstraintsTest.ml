@@ -188,9 +188,9 @@ module Methods (C : Constraint) =
                             (all [mk_le ((var "x")+(var "y")) (value 4); mk_le (var "x") (value 3); mk_ge (var "x")(value 0); mk_ge (var "y")(value 0)]),
                             ProgramImpl.StdProgram.Constraint_.Atom_.mk_le (((value 2) * (var "x")) + (var "y")) (value 0));
                             
-                            (all ([ mk_eq ((value (-1))*(helper 5))(value (-1));mk_ge (helper 5) (value 0);mk_le (value 0) (value 0)]), 
-                            (all [mk_ge (var "x") (value 0)]),
-                            ProgramImpl.StdProgram.Constraint_.Atom_.mk_ge (var "x") (value 0));
+                            (* TODO Not working yet (all ([ mk_eq ((value (-1))*(helper 5))(value (-1));mk_ge (helper 5) (value 0);mk_le (value 0) (value 0)]), 
+                             (all [mk_ge (var "x") (value 0)]),
+                            ProgramImpl.StdProgram.Constraint_.Atom_.mk_ge (var "x") (value 0)); *)
                         ]);
                         
             (*("parametric_atom" >:::

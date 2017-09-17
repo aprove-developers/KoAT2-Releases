@@ -86,13 +86,13 @@ module type Program =
        Corresponds to pre(t). *)
     val pre : t -> Transition.t -> Transition.t Set.t
 
-    (** Prints a png file with the given filename (the extension .png will be generated) for the transition graph of the program. 
+    (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program. 
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-    val print_system : string -> t -> unit
+    val print_system : outdir:string -> file:string -> t -> unit
 
-    (** Prints a png file with the given filename (the extension .png will be generated) for the result variable graph of the program. 
+    (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program. 
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-    val print_rvg : string -> t -> unit
+    val print_rvg : outdir:string -> file:string -> t -> unit
 
     (** Returns if the given transition is an initial transition. *)
     val is_initial : t -> Transition.t -> bool

@@ -2,6 +2,10 @@ USE_OCAMLFIND = true
 
 OCAMLPACKS[] =
     batteries
+    ppx_deriving_cmdliner
+    ppx_deriving.show
+    Z3
+    ocamlgraph
 
 OCAMLINCLUDES[] =
     ../poly
@@ -28,13 +32,18 @@ FILES[] = $(removesuffix .ml, $(glob *.ml))
 
 LIB = main
 
-OCamlLibrary($(LIB), $(FILES))
+OCamlProgram(koat, $(FILES))
+
+install: koat
+
 InterfaceDoc($(LIB), $(FILES))
 
 clean:
   rm -f \
      *.omc \
      *.idoc \
+     *.cmo \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
+     koat koat.opt \
      *~

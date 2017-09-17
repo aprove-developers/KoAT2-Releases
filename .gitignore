@@ -2,3 +2,4 @@ docs
 *.omc
 .omakedb
 .omakedb.lock
+/src/output/tmp_rvg.dot

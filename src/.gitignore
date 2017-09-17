@@ -30,6 +30,8 @@ Makefile
 
 test/Test
 test/output
+output
+main/koat
 
 #Ignore auto generated parser files
 parser/Parser.mli

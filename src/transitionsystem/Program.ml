@@ -179,8 +179,7 @@ module Make(C : ConstraintTypes.Constraint) =
       in
       TransitionGraph.fold_edges_e add_transition program.graph RVG.empty
       
-    let print_graph name graph output_graph =
-      let out_dir = "output" in
+    let print_graph out_dir name graph output_graph =
       (* Create output directory if not existing *)
       ignore (Sys.command ("mkdir -p " ^ out_dir));
       (* Write a graphviz dot file *)
@@ -188,7 +187,7 @@ module Make(C : ConstraintTypes.Constraint) =
       (* Generate a png from the dot file with an external call to graphviz *)
       ignore (Sys.command ("dot -T png -o " ^ (out_dir ^ "/" ^ name ^ ".png ") ^ (out_dir ^ "/" ^ name ^ ".dot")))
                 
-    let print_system name program =
+    let print_system ~outdir ~file program =
       (* Definition of some graphviz options how it should be layout *)
       let module Dot = Graph.Graphviz.Dot(struct
                                            include TransitionGraph
@@ -200,9 +199,9 @@ module Make(C : ConstraintTypes.Constraint) =
                                            let default_vertex_attributes _ = []
                                            let graph_attributes _ = []
                                          end) in
-      print_graph (name ^ "_system") (graph program) Dot.output_graph
+      print_graph outdir (file ^ "_system") (graph program) Dot.output_graph
 
-    let print_rvg name program =
+    let print_rvg ~outdir ~file program =
       (* Definition of some graphviz options how it should be layout *)
       let module Dot = Graph.Graphviz.Dot(struct
                                            include RVG
@@ -214,7 +213,7 @@ module Make(C : ConstraintTypes.Constraint) =
                                            let default_vertex_attributes _ = []
                                            let graph_attributes _ = []
                                          end) in
-      print_graph (name ^ "_rvg") (rvg program) Dot.output_graph
+      print_graph outdir (file ^ "_rvg") (rvg program) Dot.output_graph
 
     let is_initial graph (l,t,l') =
       graph.start == l
