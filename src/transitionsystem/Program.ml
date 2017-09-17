@@ -15,7 +15,7 @@ module Make(C : ConstraintTypes.Constraint) =
                 
         module Bound = MinMaxPolynomial.Make(Polynomial)
        
-        type kind = Lower | Upper
+        type kind = Lower | Upper [@@deriving eq, ord]
 
         type t = {
             name : string;
@@ -25,6 +25,11 @@ module Make(C : ConstraintTypes.Constraint) =
             guard : Constraint_.t;
             (* TODO Transitions should have costs *)
           }
+
+        let make ~name ~start ~target ~update ~guard = {
+            name; start; target; update; guard
+          }
+          
                
         (* TODO Pattern <-> Assigment relation *)
         let mk ~name ~start ~targets ~patterns ~guard ~vars =

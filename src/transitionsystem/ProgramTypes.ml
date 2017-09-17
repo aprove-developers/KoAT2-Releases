@@ -18,9 +18,10 @@ module type Program =
       module Var = Constraint_.Polynomial_.Var
       module Map : module type of Map.Make(Constraint_.Polynomial_.Var)
       module Bound : module type of MinMaxPolynomial.Make(Polynomial) 
-      type kind = Lower | Upper
+      type kind = Lower | Upper  [@@deriving eq, ord]
       type t
       exception RecursionNotSupported
+      val make : name:string -> start:string -> target:string -> update:Polynomial.t Map.t -> guard:Constraint_.t -> t
       val mk : name:string ->
                start:string ->
                targets:(string * (Polynomial.t list)) list ->

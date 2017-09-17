@@ -12,7 +12,7 @@ module SMT_ = SMT.MakeZ3Solver(Constraint_)
 module Reader_ = Readers.Make(Program_)
 
 (** The shell arguments which can be defined in the console. *)
-type params = {
+type main_params = {
     
     print_system : bool;
     (** Prints the integer transition system at the start as png *)
@@ -30,7 +30,25 @@ type params = {
     (** An absolute or relative path to the output directory, where all generated files should end up *)
 
   } [@@deriving cmdliner, show]
-               
+
+type localsizebound_params = {
+
+    kind : [`Upper | `Lower]; [@enum ["upper", `Upper; "lower", `Lower]] [@pos 0]
+    (** Which type of bound is requested. Available options: upper and lower. *)
+
+    guard : string;
+    (** The guard of the transition in the form of a constraint.
+        That is a &&-separated list of atoms.
+        Atoms are two polynomials in a relation with <, >, <=, >= or =. *)
+
+    var : string; [@default "x"]
+    (** The variable for which a local size bound should be found. *)
+
+    update : string option;
+    (** The polynomial to which the value of the variable gets updated after the transition. *)
+    
+  } [@@deriving cmdliner, show]
+                
 let preprocessors: (Program_.t -> Program_.t) list = []
 
 (* We apply each preprocessor exactly one time *)
@@ -43,7 +61,7 @@ let find_bounds (graph: Program_.t): Approximation_.t =
 let print_results (appr: Approximation_.t): unit =
   raise (Failure "Not yet implemented")  
 
-let run (params: params) =
+let run (params: main_params) =
   let program = Reader_.read_file params.input in
   if params.print_system then
     Program_.print_system ~outdir:params.output_dir ~file:"tmp" program;
@@ -53,12 +71,29 @@ let run (params: params) =
        program
     |> preprocess
     |> find_bounds
-    |> print_results  
+       |> print_results
+
+let run_localsizebound (params: localsizebound_params) =
+  let open Program_.TransitionLabel in
+  let kind = match params.kind with
+    | `Upper -> Upper
+    | `Lower -> Lower in
+  let guard = Reader_.read_constraint params.guard in
+  let var = Polynomial_.Var.of_string params.var in
+  let update = match params.update with
+    | Some str -> Map.(add var (Reader_.read_polynomial str) empty)
+    | None -> Map.empty in
+  let label = make ~name:"" ~start:"" ~target:"" ~update ~guard in
+  print_string (Bound.to_string (sizebound_local kind label var))
+  
+let subcommands =
+    let open Cmdliner in [
+        Term.(const run_localsizebound $ localsizebound_params_cmdliner_term (), Term.info ~doc:"Search for a local size bound" "lsb");
+        ]
   
 let () =
   (* Read the arguments from the shell via an api and call run *)
   let open Cmdliner in
-  let term = Term.(const run $ params_cmdliner_term ()) in
-  let info = Term.info Sys.argv.(0) in
-  Term.exit @@ Term.eval (term, info)
+  let main_command = (Term.(const run $ main_params_cmdliner_term ()), Term.info Sys.argv.(0)) in
+  Term.exit @@ Term.eval_choice main_command subcommands
 
