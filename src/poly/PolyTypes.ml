@@ -412,6 +412,8 @@ module type MinMaxPolynomial =
     val infinity : t
     val minus_infinity : t
 
+    val to_string : t -> string
+
     (** Following methods can be used to classify the type of the polynomial. *)
 
     (** TODO *)

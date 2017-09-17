@@ -114,7 +114,9 @@ module Make(C : ConstraintTypes.Constraint) =
         let hash v = raise (Failure "Not yet implemented")
         let transition (t,v) = t
         let variable (t,v) = v
-        let to_string (t,v) = Transition.to_string t ^ "," ^ Constraint_.Polynomial_.Var.to_string v
+        let to_string ((l,t,l'),v) = TransitionLabel.(Bound.to_string (sizebound_local Upper t v)) ^ " >= " ^
+                                       "|" ^ Location.to_string l ^ " -> " ^ Location.to_string l' ^ "," ^ Constraint_.Polynomial_.Var.to_string v ^ "|"
+                                   ^ " >= " ^ TransitionLabel.(Bound.to_string (sizebound_local Lower t v))
       end
     module RVG = Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
