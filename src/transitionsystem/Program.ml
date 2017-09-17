@@ -104,6 +104,7 @@ module Make(C : ConstraintTypes.Constraint) =
 
     module Transition = struct
       include TransitionGraph.E
+      let to_string (l,t,l') = Location.to_string l ^ "->" ^ Location.to_string l' ^ ", " ^ TransitionLabel.to_string t
       let equal = (=)
     end
 
@@ -113,7 +114,7 @@ module Make(C : ConstraintTypes.Constraint) =
         let hash v = raise (Failure "Not yet implemented")
         let transition (t,v) = t
         let variable (t,v) = v
-        let to_string ((l,t,l'),v) = TransitionLabel.to_string t ^ "," ^ Constraint_.Polynomial_.Var.to_string v
+        let to_string (t,v) = Transition.to_string t ^ "," ^ Constraint_.Polynomial_.Var.to_string v
       end
     module RVG = Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
