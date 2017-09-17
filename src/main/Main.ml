@@ -101,8 +101,10 @@ let run_smt (params: smt_params) =
   let solve = match params.solver with
     | `Z3 -> Z3.get_model
   and constr = Reader_.read_constraint params.constr in
-     Polynomial_.Valuation_.bindings (solve constr)
-  |> Enum.iter (fun (var,value) -> print_string (Polynomial_.Var.to_string var ^ " -> " ^ Polynomial_.Value.to_string value))
+  let valuation_bindings = Polynomial_.Valuation_.bindings (solve constr) in
+  if Enum.is_empty valuation_bindings then
+    print_string "unsatisfiable"
+  else Enum.iter (fun (var,value) -> print_string (Polynomial_.Var.to_string var ^ " -> " ^ Polynomial_.Value.to_string value ^ "\n")) valuation_bindings
   
 let subcommands =
     let open Cmdliner in [
