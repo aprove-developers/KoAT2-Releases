@@ -8,13 +8,6 @@ module Make(A : BoundTypes.Approximation) =
     module RVG = Approximation_.Program_.RVG
     module Bound = Approximation_.Bound
                
-    (* Returns a list of all transitions which occur directly before the given transition in the graph. 
-       Corresponds to pre(t). *)
-    let pre (program: Program_.t)
-            ((l,t,l'): Program_.Transition.t)
-        : Program_.Transition.t list =
-      Program_.(TransitionGraph.pred_e (graph program) l)
-
     (* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
        Corresponds to 'SizeBounds for trivial SCCs':
        S'(alpha) = max{ S_l(alpha)(S(t',v_1),...,S(t',v_n)) | t' in pre(t) } *)
@@ -24,7 +17,7 @@ module Make(A : BoundTypes.Approximation) =
                                (t: Program_.Transition.t)
       : Bound.t =
       let substitute_with_prevalues t' = Bound.substitute_f Approximation_.(sizebound Upper appr t') local_sizebound in
-      Bound.maximum (List.map substitute_with_prevalues (pre program t))
+      Bound.maximum (Set.to_list (Set.map substitute_with_prevalues (Program_.pre program t)))
 
     (* Improves a trivial scc. That is an scc which consists only of one result variable.
        Corresponds to 'SizeBounds for trivial SCCs'. *)
@@ -32,7 +25,7 @@ module Make(A : BoundTypes.Approximation) =
                             (appr: Approximation_.t)
                             (t,v)
         : Approximation_.t =
-      let (local_sizebound: Bound.t) = Approximation_.(sizebound_local Upper appr t v) in
+      let (local_sizebound: Bound.t) = Program_.TransitionLabel.(sizebound_local Upper (Program_.Transition.label t) v) in
       let newbound =
         if Program_.is_initial program t then
           local_sizebound

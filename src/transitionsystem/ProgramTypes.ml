@@ -17,6 +17,8 @@ module type Program =
       module Polynomial = Constraint_.Polynomial_
       module Var = Constraint_.Polynomial_.Var
       module Map : module type of Map.Make(Constraint_.Polynomial_.Var)
+      module Bound : module type of MinMaxPolynomial.Make(Polynomial) 
+      type kind = Lower | Upper
       type t
       exception RecursionNotSupported
       val mk : name:string ->
@@ -33,6 +35,9 @@ module type Program =
       val update : t -> Var.t -> Polynomial.t Option.t
       val guard : t -> Constraint_.t
       val default : t
+      (** Returns a local sizebound of the specified kind for the var of the transition. 
+          A local sizebound is expressed in relation to the values directly before executing the transition. *)
+      val sizebound_local : kind -> t -> Var.t -> Bound.t
       val to_string : t -> string
     end
          
@@ -80,9 +85,17 @@ module type Program =
 
     val graph : t -> TransitionGraph.t
 
+    (** Returns a set of all transitions which occur directly before the given transition in the graph. 
+       Corresponds to pre(t). *)
+    val pre : t -> Transition.t -> Transition.t Set.t
+
     (** Prints a png file with the given filename (the extension .png will be generated) for the transition graph of the program. 
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-    val print_graph : string -> t -> unit
+    val print_system : string -> t -> unit
+
+    (** Prints a png file with the given filename (the extension .png will be generated) for the result variable graph of the program. 
+        For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
+    val print_rvg : string -> t -> unit
 
     (** Returns if the given transition is an initial transition. *)
     val is_initial : t -> Transition.t -> bool

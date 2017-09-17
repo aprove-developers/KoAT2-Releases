@@ -76,16 +76,6 @@ module Make(P : ProgramTypes.Program) =
       Hashtbl.find_option appr.size (kind, transition, var)
       |? default_bound kind      
 
-    let sizebound_local kind appr transition var =
-      (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
-      (* TODO Should we also try to substitute vars in the bound if it leads to a simpler bound? E.g. x<=10 && x'=x : b:=x or b:=10? *)
-      match Program_.TransitionLabel.update (Transition.label transition) var with
-      | Some bound -> Bound.of_poly bound
-      | None ->
-         match kind with
-         | Upper -> raise (Failure "Not yet implemented")
-         | Lower -> raise (Failure "Not yet implemented")
-
     let add_sizebound kind bound transition var appr =
       Hashtbl.modify (kind, transition, var) (combine_bounds kind bound) appr.size;
       appr      

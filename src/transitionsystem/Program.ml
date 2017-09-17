@@ -13,6 +13,10 @@ module Make(C : ConstraintTypes.Constraint) =
                    
         exception RecursionNotSupported
                 
+        module Bound = MinMaxPolynomial.Make(Polynomial)
+       
+        type kind = Lower | Upper
+
         type t = {
             name : string;
             start : string;
@@ -55,6 +59,16 @@ module Make(C : ConstraintTypes.Constraint) =
             guard = C.mk_true;
           }
                     
+        let sizebound_local kind label var =
+          (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
+          (* TODO Should we also try to substitute vars in the bound if it leads to a simpler bound? E.g. x<=10 && x'=x : b:=x or b:=10? *)
+          match update label var with
+          | Some bound -> Bound.of_poly bound
+          | None ->
+             match kind with
+             | Upper -> raise (Failure "Not yet implemented")
+             | Lower -> raise (Failure "Not yet implemented")
+
         let update_to_string_list update =
           if Map.is_empty update then
             "true"
@@ -104,6 +118,7 @@ module Make(C : ConstraintTypes.Constraint) =
         let hash v = raise (Failure "Not yet implemented")
         let transition (t,v) = t
         let variable (t,v) = v
+        let to_string ((l,t,l'),v) = TransitionLabel.to_string t ^ "," ^ Constraint_.Polynomial_.Var.to_string v
       end
     module RVG = Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
@@ -140,12 +155,44 @@ module Make(C : ConstraintTypes.Constraint) =
         start = start;
       }
 
-    let rvg graph =
-      raise (Failure "Not yet implemented")
+    let vars program =
+      Set.of_list program.vars
+
+    let add_vertices_to_rvg vertices rvg =
+      vertices
+      |> List.map (flip RVG.add_vertex)
+      |> List.fold_left (fun rvg adder -> adder rvg) rvg
 
     let graph g = g.graph
 
-    let print_graph name program =
+    let pre program (l,t,l') =
+      Set.of_list (TransitionGraph.pred_e (graph program) l)
+
+    let rvg program =
+      let add_transition post_transition (rvg: RVG.t) =
+        let rvg_with_vertices: RVG.t = add_vertices_to_rvg (List.map (fun var -> (post_transition,var)) program.vars) rvg in
+        let pre_nodes post_transition post_var =
+          TransitionLabel.sizebound_local TransitionLabel.Upper (Transition.label post_transition) post_var
+          |> TransitionLabel.Bound.vars
+          |> Set.cartesian_product (pre program post_transition)
+          |> Set.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
+        in
+        Set.map (pre_nodes post_transition) (vars program)
+        |> fun set -> Set.fold Set.union set Set.empty
+        |> fun set -> Set.fold (fun (pre_transition,pre_var,post_var) rvg -> RVG.add_edge rvg (pre_transition,pre_var) (post_transition,post_var)) set rvg_with_vertices                          
+      in
+      TransitionGraph.fold_edges_e add_transition program.graph RVG.empty
+      
+    let print_graph name graph output_graph =
+      let out_dir = "output" in
+      (* Create output directory if not existing *)
+      ignore (Sys.command ("mkdir " ^ out_dir));
+      (* Write a graphviz dot file *)
+      output_graph (Pervasives.open_out_bin (out_dir ^ "/" ^ name ^ ".dot")) graph;
+      (* Generate a png from the dot file with an external call to graphviz *)
+      ignore (Sys.command ("dot -T png -o " ^ (out_dir ^ "/" ^ name ^ ".png ") ^ (out_dir ^ "/" ^ name ^ ".dot")))
+                
+    let print_system name program =
       (* Definition of some graphviz options how it should be layout *)
       let module Dot = Graph.Graphviz.Dot(struct
                                            include TransitionGraph
@@ -157,15 +204,22 @@ module Make(C : ConstraintTypes.Constraint) =
                                            let default_vertex_attributes _ = []
                                            let graph_attributes _ = []
                                          end) in
-      let out_dir = "output" in
-      (* Create output directory if not existing *)
-      ignore (Sys.command ("mkdir " ^ out_dir));
-      (* Write a graphviz dot file *)
-      Dot.output_graph (Pervasives.open_out_bin (out_dir ^ "/" ^ name ^ ".dot")) (graph program);
-      (* Generate a png from the dot file with an external call to graphviz *)
-      ignore (Sys.command ("dot -T png -o " ^ (out_dir ^ "/" ^ name ^ ".png ") ^ (out_dir ^ "/" ^ name ^ ".dot")))
+      print_graph (name ^ "_system") (graph program) Dot.output_graph
 
-                
+    let print_rvg name program =
+      (* Definition of some graphviz options how it should be layout *)
+      let module Dot = Graph.Graphviz.Dot(struct
+                                           include RVG
+                                           let edge_attributes _ = [`Label ""; `Color 4711]
+                                           let default_edge_attributes _ = []
+                                           let get_subgraph _ = None
+                                           let vertex_attributes _ = [`Shape `Box]
+                                           let vertex_name = RV.to_string
+                                           let default_vertex_attributes _ = []
+                                           let graph_attributes _ = []
+                                         end) in
+      print_graph (name ^ "_system") (rvg program) Dot.output_graph
+
     let is_initial graph (l,t,l') =
       graph.start == l
 
