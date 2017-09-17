@@ -66,8 +66,9 @@ module Make(C : ConstraintTypes.Constraint) =
           | Some bound -> Bound.of_poly bound
           | None ->
              match kind with
-             | Upper -> raise (Failure "Not yet implemented")
-             | Lower -> raise (Failure "Not yet implemented")
+             (* TODO Use SMT-Solving to find bounds *)
+             | Upper -> Bound.infinity
+             | Lower -> Bound.minus_infinity
 
         let update_to_string_list update =
           if Map.is_empty update then
@@ -88,15 +89,8 @@ module Make(C : ConstraintTypes.Constraint) =
         type t = {
             name : string;
             (* TODO Possible optimization: invariant : PolynomialConstraints.t*)
-          }
+          } [@@deriving eq, ord]
                
-        let equal l1 l2 = l1.name == l2.name (*&& (Variables.equal_varlist l1.vars l2.vars)*)
-                        
-        let compare l1 l2 = 
-          if equal l1 l2 then 0
-          else if l1.name < l2.name then (-1)
-          else 1
-          
         (*Needed by ocamlgraph*)    
         let hash l = Hashtbl.hash l.name
                    
@@ -108,13 +102,14 @@ module Make(C : ConstraintTypes.Constraint) =
 
     module TransitionGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
 
-    module Transition = TransitionGraph.E
+    module Transition = struct
+      include TransitionGraph.E
+      let equal = (=)
+    end
 
     module RV =
       struct
-        type t = Transition.t * Constraint_.Polynomial_.Var.t
-        let equal v1 v2 = raise (Failure "Not yet implemented")
-        let compare v1 v2 = raise (Failure "Not yet implemented")
+        type t = Transition.t * Constraint_.Polynomial_.Var.t [@@deriving eq, ord]
         let hash v = raise (Failure "Not yet implemented")
         let transition (t,v) = t
         let variable (t,v) = v
@@ -186,7 +181,7 @@ module Make(C : ConstraintTypes.Constraint) =
     let print_graph name graph output_graph =
       let out_dir = "output" in
       (* Create output directory if not existing *)
-      ignore (Sys.command ("mkdir " ^ out_dir));
+      ignore (Sys.command ("mkdir -p " ^ out_dir));
       (* Write a graphviz dot file *)
       output_graph (Pervasives.open_out_bin (out_dir ^ "/" ^ name ^ ".dot")) graph;
       (* Generate a png from the dot file with an external call to graphviz *)
@@ -214,11 +209,11 @@ module Make(C : ConstraintTypes.Constraint) =
                                            let default_edge_attributes _ = []
                                            let get_subgraph _ = None
                                            let vertex_attributes _ = [`Shape `Box]
-                                           let vertex_name = RV.to_string
+                                           let vertex_name v = "\"" ^ RV.to_string v ^ "\""
                                            let default_vertex_attributes _ = []
                                            let graph_attributes _ = []
                                          end) in
-      print_graph (name ^ "_system") (rvg program) Dot.output_graph
+      print_graph (name ^ "_rvg") (rvg program) Dot.output_graph
 
     let is_initial graph (l,t,l') =
       graph.start == l

@@ -17,7 +17,7 @@ module Make(P : PolyTypes.Polynomial) =
       | Neg of t
       | Pow of Value.t * t
       | Sum of t list
-      | Product of t list
+      | Product of t list [@@deriving eq]
               
     let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf p =
       let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf in
@@ -84,7 +84,7 @@ module Make(P : PolyTypes.Polynomial) =
       struct
         type t = outer_t
                
-        let (=~=) b1 b2 = b1 == b2
+        let (=~=) = equal
                        
         let rec (>) b1 b2 = match (b1, b2) with
           | (Poly p1, Poly p2) -> Polynomial_.(>) p1 p2

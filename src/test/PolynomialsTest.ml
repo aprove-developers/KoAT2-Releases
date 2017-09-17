@@ -8,17 +8,12 @@ module Parser =
   struct
     module Reader = Readers.Make(ProgramImpl.StdProgram)
 
-    let assert_equal_polynomial =
-      assert_equal
-        ~cmp:ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_.(=~=)
-        ~printer:ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_.to_string
-
     let tests =
       "Parser" >::: [
           "Positive Tests" >::: (
             let open ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
             List.map (fun (testname, expected, expression) ->
-                testname >:: (fun _ -> assert_equal_polynomial expected (Reader.read_polynomial expression)))
+                testname >:: (fun _ -> assert_equal_poly expected (Reader.read_polynomial expression)))
                      [
                        ("Const", value 42, " 42 ");
                        ("Negated Constant", -(value 42), " - 42 ");

@@ -8,10 +8,8 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
     module Valuation_ = Valuation.Make(Var)(Value)
     module RenameMap_ = RenameMap.Make(Var)
                       
-    type t = ScaledMonomial_.t list 
     type monomial = Monomial_.t
-    type scaled_monomial = ScaledMonomial_.t
-                         
+    type t = ScaledMonomial_.t list                          
     module Var = Var
     module Value = Value
 
@@ -183,7 +181,7 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
                
         let (=~=) poly1 poly2 = 
           equal_simplified (simplify poly1) (simplify poly2)
-          
+
         let (>) p1 p2 = match (p1, p2) with
           (* TODO Find some rules to compare polynomials *)
           | ([s1], [s2]) -> ScaledMonomial_.(>) s1 s2
@@ -192,6 +190,8 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
       end
     include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
+    let equal = (=~=)
+          
           (*
     (* Helper: Returns the greatest common divisor of the two values. Uses the Euclid algorithm. *)
     let rec gcd (a: Value.t) (b: Value.t) =

@@ -5,13 +5,9 @@ module StringID =
   struct
     type t =
       | Var of String.t
-      | Helper of int
+      | Helper of int [@@deriving eq, ord]
                 
-    let (=~=) id1 id2 =
-      match (id1, id2) with
-      | (Var str1, Var str2) -> String.equal str1 str2
-      | (Helper i1, Helper i2) -> i1 == i2
-      | (_, _) -> false
+    let (=~=) = equal
               
     let of_string str = Var str
     
@@ -21,13 +17,6 @@ module StringID =
       | Var str -> str
       | Helper i -> "_" ^ (String.of_int i)
                   
-    let compare id1 id2 =
-      match (id1, id2) with
-      | (Var str1, Var str2) -> String.compare str1 str2
-      | (Helper i1, Helper i2) -> Int.compare i1 i2
-      | (Var str, Helper i) -> (-1)
-      | (Helper i, Var str) -> 1
-
     let counter = ref 0
                              
     let fresh_id () =

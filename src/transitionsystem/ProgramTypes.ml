@@ -44,9 +44,7 @@ module type Program =
     (** A location is a node of a transition system and can be connected to other locations via transitions *)
     module Location :
     sig
-      type t
-      val equal : t -> t -> bool
-      val compare : t -> t -> int
+      type t [@@deriving eq, ord]
       val hash : t -> int
       val to_string : t -> string
       val of_string : string -> t
@@ -58,8 +56,7 @@ module type Program =
       
     module RV :
       sig
-        type t = Transition.t * Constraint_.Polynomial_.Var.t
-        val equal : t -> t -> bool
+        type t = Transition.t * Constraint_.Polynomial_.Var.t [@@deriving eq]
         val compare : t -> t -> int
         val hash : t -> int
         val transition : t -> Transition.t

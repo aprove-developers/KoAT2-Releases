@@ -14,11 +14,10 @@ module type Eq =
 (** An ID is a unique identifier for the elements of an arbitrary set (of variables) *)
 module type ID =
   sig
-    type t
+    type t [@@deriving eq, ord]
     include Eq with type t := t
     val of_string : string -> t
     val to_string : t -> string
-    val compare : t -> t -> int
     (** Returns a not yet used id, which is guaranteed to be distinct from any yet existing ids. *)
     val fresh_id : unit -> t
     (** Returns a bunch of fresh ids. *)
@@ -31,7 +30,7 @@ module type ID =
 (** TODO *)
 module type Ring =
   sig
-    type t
+    type t [@@deriving eq]
 
     val zero : t
     val one : t
