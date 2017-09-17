@@ -48,9 +48,19 @@ type localsizebound_params = {
     (** The polynomial to which the value of the variable gets updated after the transition. *)
     
   } [@@deriving cmdliner, show]
-                
-let preprocessors: (Program_.t -> Program_.t) list = []
 
+type smt_params = {
+
+    constr : string; [@pos 0]
+    (** The constraint for which a solution should be found. *)
+
+    solver : [`Z3]; [@enum ["z3", `Z3]] [@default `Z3]
+    (** The solver which should be used. *)
+
+  } [@@deriving cmdliner, show]
+                           
+let preprocessors: (Program_.t -> Program_.t) list = []
+                                                   
 (* We apply each preprocessor exactly one time *)
 let preprocess (graph: Program_.t): Program_.t =
   List.fold_left (fun graph preprocessor -> preprocessor graph) graph preprocessors
@@ -85,10 +95,19 @@ let run_localsizebound (params: localsizebound_params) =
     | None -> Map.empty in
   let label = make ~name:"" ~start:"" ~target:"" ~update ~guard in
   print_string (Bound.to_string (sizebound_local kind label var))
+
+let run_smt (params: smt_params) =
+  let module Z3 = SMT.MakeZ3Solver(Constraint_) in
+  let solve = match params.solver with
+    | `Z3 -> Z3.get_model
+  and constr = Reader_.read_constraint params.constr in
+     Polynomial_.Valuation_.bindings (solve constr)
+  |> Enum.iter (fun (var,value) -> print_string (Polynomial_.Var.to_string var ^ " -> " ^ Polynomial_.Value.to_string value))
   
 let subcommands =
     let open Cmdliner in [
         Term.(const run_localsizebound $ localsizebound_params_cmdliner_term (), Term.info ~doc:"Search for a local size bound" "lsb");
+        Term.(const run_smt $ smt_params_cmdliner_term (), Term.info ~doc:"Find solutions for a constraint" "smt");
         ]
   
 let () =
