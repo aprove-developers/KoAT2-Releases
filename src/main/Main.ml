@@ -58,7 +58,17 @@ type smt_params = {
     (** The solver which should be used. *)
 
   } [@@deriving cmdliner, show]
-                           
+
+type normalize_params = {
+
+    kind : [`Atom | `Polynomial | `Bound]; [@enum ["atom", `Atom; "poly", `Polynomial; "bound", `Bound]] [@pos 0]  [@docv "KIND"]
+    (** How the input should be interpreted. *)
+
+    input : string; [@pos 1] [@docv "INPUT"]
+    (** The input which should be normalized *)
+    
+  } [@@deriving cmdliner, show]
+                
 let preprocessors: (Program_.t -> Program_.t) list = []
                                                    
 (* We apply each preprocessor exactly one time *)
@@ -106,10 +116,18 @@ let run_smt (params: smt_params) =
     print_string "unsatisfiable"
   else Enum.iter (fun (var,value) -> print_string (Polynomial_.Var.to_string var ^ " -> " ^ Polynomial_.Value.to_string value ^ "\n")) valuation_bindings
   
-let subcommands =
+let run_normalize (params: normalize_params) =
+  let output = match params.kind with
+    | `Polynomial -> Polynomial_.to_string (Polynomial_.simplify (Reader_.read_polynomial params.input))
+    | `Atom -> Constraint_.Atom_.to_string (Reader_.read_atom params.input)
+    | `Bound -> "Bound normalization currently not supported" in
+  print_string output
+  
+  let subcommands =
     let open Cmdliner in [
         Term.(const run_localsizebound $ localsizebound_params_cmdliner_term (), Term.info ~doc:"Search for a local size bound" "lsb");
         Term.(const run_smt $ smt_params_cmdliner_term (), Term.info ~doc:"Find solutions for a constraint" "smt");
+        Term.(const run_normalize $ normalize_params_cmdliner_term (), Term.info ~doc:"Find a normalform for an input" "normalize");
         ]
   
 let () =
