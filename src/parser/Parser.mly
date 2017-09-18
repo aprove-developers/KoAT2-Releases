@@ -5,11 +5,13 @@
 %token			PLUS MINUS TIMES POW
 %token			EQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
 %token			LPAR RPAR
+%token                  LBRACE RBRACE
 %token			EOF
 %token                  AND
 %token 			ARROW WITH
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
 %token                  COMMA
+%token                  MIN MAX NEG SUM PRODUCT INFINITY EXP
 
 %left			PLUS MINUS
 %left			TIMES
@@ -22,6 +24,8 @@
 %start <G.Constraint_.Atom_.t> onlyAtom
 
 %start <G.Constraint_.Polynomial_.t> onlyPolynomial
+
+%start <G.TransitionLabel.Bound.t> onlyBound
 
 %type <G.t> transitiongraph
 
@@ -42,6 +46,7 @@
   module Constr = G.Constraint_
   module Atom = G.Constraint_.Atom_
   module Poly = G.Constraint_.Polynomial_
+  module Bound = G.TransitionLabel.Bound
 %}
 
 %%
@@ -146,6 +151,27 @@ polynomial :
 	          { op p1 p2 }
 	|       v = variable; POW; c = UINT
 	          { Poly.pow v c } ;
+
+onlyBound :
+        |       b = bound EOF { b } ;
+
+bound :
+	|	p = polynomial
+		{ Bound.of_poly p }
+	|	MAX LBRACE max = separated_list(COMMA, bound) RBRACE
+		{ Bound.maximum max }
+	|	MIN LBRACE min = separated_list(COMMA, bound) RBRACE
+		{ Bound.minimum min }
+	|	NEG b = bound
+		{ Bound.neg b }
+	|	v = UINT; EXP; b = bound
+		{ Bound.exp (Bound.Polynomial_.Value.of_int v) b }
+	|	SUM LBRACE sum = separated_list(COMMA, bound) RBRACE
+		{ Bound.sum sum }
+	|	PRODUCT LBRACE product = separated_list(COMMA, bound) RBRACE
+		{ Bound.product product }
+	|	INFINITY
+		{ Bound.infinity }
 
 %inline bioperator :
 	|	PLUS { Poly.add }

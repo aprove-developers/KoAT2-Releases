@@ -7,9 +7,24 @@ module type Polynomial =
   sig
     type t
     module Var : PolyTypes.ID
+    module Value : PolyTypes.Ring
     val value : int -> t
     val var : string -> t
     include PolyTypes.BaseMath with type t := t
+  end
+
+module type MinMaxPolynomial =
+  sig
+    type t
+    module Polynomial_ : Polynomial
+    val of_poly : Polynomial_.t -> t              
+    val minimum : t list -> t
+    val maximum : t list -> t
+    val sum : t list -> t
+    val product : t list -> t
+    val infinity : t
+    val neg : t -> t
+    val exp : Polynomial_.Value.t -> t -> t
   end
   
 module type Atom =
@@ -45,6 +60,7 @@ module type Program =
     module TransitionLabel :
     sig
       type t
+      module Bound : (MinMaxPolynomial with module Polynomial_ = Constraint_.Polynomial_)
       exception RecursionNotSupported
       val mk : name:string ->
                start:string ->

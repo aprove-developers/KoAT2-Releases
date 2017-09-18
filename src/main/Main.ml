@@ -6,7 +6,8 @@ module Polynomial_ = Polynomials.Make(Var_)(Value_)
 module Constraint_ = Constraints.Make(Polynomial_)
 module Program_ = Program.Make(Constraint_)
 module Approximation_ = Approximation.Make(Program_)
-
+module Bound = Program_.TransitionLabel.Bound
+                      
 module SMT_ = SMT.MakeZ3Solver(Constraint_)                      
 
 module Reader_ = Readers.Make(Program_)
@@ -120,7 +121,7 @@ let run_normalize (params: normalize_params) =
   let output = match params.kind with
     | `Polynomial -> Polynomial_.to_string (Polynomial_.simplify (Reader_.read_polynomial params.input))
     | `Atom -> Constraint_.Atom_.to_string (Reader_.read_atom params.input)
-    | `Bound -> "Bound normalization currently not supported" in
+    | `Bound -> Bound.to_string (Reader_.read_bound params.input) in
   print_string output
   
   let subcommands =

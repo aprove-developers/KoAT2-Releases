@@ -41,4 +41,7 @@ module Make(G : Parseable.Program) =
     let read_polynomial =
       read Parser_.onlyPolynomial
 
+    let read_bound =
+      read Parser_.onlyBound
+
   end

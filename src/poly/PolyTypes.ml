@@ -44,7 +44,7 @@ module type Ring =
     val of_int : int -> t
     val to_int : t -> int
 
-    val to_string: t -> string
+    val to_string : t -> string
                           (* val eval : t -> (Var.t -> value) -> value *)
   end
 
@@ -395,7 +395,7 @@ module type MinMaxPolynomial =
   sig
     type t
     include Evaluable with type t := t
-    include BaseMath with type t := t
+    include Math with type t := t
     include PartialOrder with type t := t
     module Polynomial_ : (Polynomial with module Var = Var and module Value = Value)
 
@@ -411,7 +411,8 @@ module type MinMaxPolynomial =
     val maximum : t list -> t
     val infinity : t
     val minus_infinity : t
-
+    val exp : Value.t -> t -> t
+      
     val to_string : t -> string
 
     (** Following methods can be used to classify the type of the polynomial. *)

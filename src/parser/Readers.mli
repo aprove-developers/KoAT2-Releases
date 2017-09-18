@@ -21,4 +21,6 @@ module Make(G : Parseable.Program) :
 
     val read_polynomial : string -> G.Constraint_.Atom_.Polynomial_.t
 
+    val read_bound : string -> G.TransitionLabel.Bound.t
+      
   end

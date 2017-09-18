@@ -97,7 +97,7 @@ module Make(P : PolyTypes.Polynomial) =
                       
       end
     include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
-                  
+
     let max b1 b2 = match (b1, b2) with
       (* TODO Add more simplification *)
       | (b1, b2) -> Max [b1; b2]
@@ -132,6 +132,8 @@ module Make(P : PolyTypes.Polynomial) =
 
     let rec to_string = function
       | Poly p -> Polynomial_.to_string p
+      | Max [] -> "inf"
+      | Min [] -> "neg inf"
       | Max bounds -> "max{" ^ String.concat ", " (List.map to_string bounds) ^ "}"
       | Min bounds -> "min{" ^ String.concat ", " (List.map to_string bounds) ^ "}"
       | Neg b -> "-(" ^ to_string b ^ ")"
