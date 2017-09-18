@@ -18,7 +18,17 @@ module Make(P : PolyTypes.Polynomial) =
       | Pow of Value.t * t
       | Sum of t list
       | Product of t list [@@deriving eq]
+
+    let of_poly p = Poly p
               
+    let of_constant c = of_poly (Polynomial_.from_constant c)
+
+    let of_var v = of_poly (Polynomial_.from_var v)
+
+    let infinity = Min []
+
+    let minus_infinity = Max []
+
     let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf p =
       let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf in
       match p with
@@ -30,12 +40,60 @@ module Make(P : PolyTypes.Polynomial) =
       | Sum bounds -> List.fold_left (fun b bound -> plus b (fold_ bound)) (const Value.zero) bounds
       | Product bounds -> List.fold_left (fun b bound -> times b (fold_ bound)) (const Value.one) bounds                    
                                      
-    let of_poly p = Poly p
-              
-    let of_constant c = of_poly (Polynomial_.from_constant c)
+    let rec simplify = function
+      | Poly p -> Poly p
 
-    let of_var v = of_poly (Polynomial_.from_var v)
+      (* Simplify terms with negation head *)
+      | Neg (Poly p) -> Poly (Polynomial_.neg p)
+      | Neg (Max bounds) -> simplify (Min (List.map (fun b -> Neg b) bounds))
+      | Neg (Min bounds) -> simplify (Max (List.map (fun b -> Neg b) bounds))
+      | Neg (Sum bounds) -> simplify (Sum (List.map (fun b -> Neg b) bounds))
+      | Neg (Neg b) -> simplify b
+      | Neg (Product (b::bs)) -> simplify (Product (Neg b :: bs))
+      | Neg b -> Neg (simplify b)
 
+      (* Simplify terms with sum head *)
+      | Sum [] -> of_constant Value.zero
+      | Sum [b] -> simplify b
+      | Sum (Sum bounds :: bs) -> simplify (Sum (List.append bounds bs))
+      | Sum (Poly p :: bs) when Polynomial_.(p =~= zero) -> simplify (Sum bs)
+      | Sum [Poly p1; Poly p2] -> Poly Polynomial_.(p1 + p2)
+      | Sum (Poly p1 :: Poly p2 :: bs) -> simplify (Sum (Poly Polynomial_.(p1 + p2) :: bs))
+      | Sum (Max bounds1 :: Max bounds2 :: bs) -> simplify (Sum (Max (List.map (fun (b1, b2) -> Sum [b1; b2]) (List.cartesian_product bounds1 bounds2)) :: bs))
+      | Sum (Min bounds1 :: Min bounds2 :: bs) -> simplify (Sum (Min (List.map (fun (b1, b2) -> Sum [b1; b2]) (List.cartesian_product bounds1 bounds2)) :: bs))
+      | Sum (Poly p :: Max bounds :: bs) -> simplify (Sum (Max bounds :: Poly p :: bs))
+      | Sum (Max bounds :: Poly p :: bs) -> simplify (Sum ((Max (List.map (fun b -> Sum [Poly p; b]) bounds)) :: bs))
+      | Sum (Poly p :: Min bounds :: bs) -> simplify (Sum (Min bounds :: Poly p :: bs))
+      | Sum (Min bounds :: Poly p :: bs) -> simplify (Sum ((Min (List.map (fun b -> Sum [Poly p; b]) bounds)) :: bs))
+      | Sum bounds -> Sum (List.map simplify bounds)
+
+      (* Simplify terms with product head *)
+      | Product [] -> of_constant Value.one
+      | Product [b] -> simplify b
+      | Product (Product bounds :: bs) -> simplify (Product (List.append bounds bs))
+      | Product (Poly p :: bs) when Polynomial_.(p =~= one) -> simplify (Product bs)
+      | Product bounds -> Product (List.map simplify bounds)
+
+      (* Simplify terms with pow head *)
+      | Pow (value, bound) ->
+         if value == Value.zero then of_constant Value.zero
+         else if value == Value.one then of_constant Value.one
+         else if bound == of_constant Value.zero then of_constant Value.one
+         else if bound == of_constant Value.one then simplify bound
+         else Pow (value, simplify bound)
+
+      (* Simplify terms with min head *)
+      | Min [] -> Min []
+      | Min [b] -> simplify b
+      | Min (Min bounds :: bs) -> simplify (Min (List.append bounds bs))
+      | Min bounds -> Min (List.map simplify bounds)
+
+      (* Simplify terms with max head *)
+      | Max [] -> Max []
+      | Max [b] -> simplify b
+      | Max (Max bounds :: bs) -> simplify (Max (List.append bounds bs))
+      | Max bounds -> Max (List.map simplify bounds)
+          
     type outer_t = t
     module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
       struct
@@ -45,37 +103,16 @@ module Make(P : PolyTypes.Polynomial) =
                  
         let one = of_poly Polynomial_.one
             
-        let rec neg = function
-          | Poly p -> Poly (Polynomial_.neg p)
-          | Max bounds -> Min (List.map neg bounds)
-          | Min bounds -> Max (List.map neg bounds)
-          | Neg b -> b
-          | Sum bounds -> Sum (List.map neg bounds)
-          | Product (b::bs) -> Product (neg b :: bs)
-          (* TODO Add more simplification? *)
-          | b -> Neg b
+        let neg b = simplify (Neg b)
                
-        let rec add b1 b2 = match (b1, b2) with
-          | (Poly p1, Poly p2) -> Poly (Polynomial_.add p1 p2)
-          | (Max bounds1, Max bounds2) -> Max (List.map (uncurry add) (List.cartesian_product bounds1 bounds2))
-          | (Min bounds1, Min bounds2) -> Min (List.map (uncurry add) (List.cartesian_product bounds1 bounds2))
-          | (Max bounds, Poly p) -> add (Max bounds) (Max [Poly p])
-          | (Min bounds, Poly p) -> add (Min bounds) (Min [Poly p])
-          (* TODO Add more simplification *)
-          | (b1, b2) -> Sum [b1; b2]
+        let add b1 b2 =
+          simplify (Sum [b1; b2])
                       
-        let mul b1 b2 = match (b1, b2) with
-          (* TODO Add more simplification *)
-          | (b1, b2) -> Product [b1; b2]
+        let mul b1 b2 =
+          simplify (Product [b1; b2])
                       
-        let pow b n = match (b, n) with
-          (* TODO Add more simplification *)
-          | (b, n) ->
-             if b == zero then zero
-             else if b == one then one
-             else if n == 0 then one
-             else if n == 1 then b
-             else List.fold_left mul one (List.of_enum (Enum.repeat ~times:n b))
+        let pow b n =
+          List.fold_left mul one (List.of_enum (Enum.repeat ~times:n b))
             
       end
     include PolyTypes.MakeMath(BaseMathImpl)
@@ -98,23 +135,20 @@ module Make(P : PolyTypes.Polynomial) =
       end
     include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
-    let max b1 b2 = match (b1, b2) with
-      (* TODO Add more simplification *)
-      | (b1, b2) -> Max [b1; b2]
+    let max b1 b2 = 
+      simplify (Max [b1; b2])
 
-    let min b1 b2 = match (b1, b2) with
-      (* TODO Add more simplification *)
-      | (b1, b2) -> Min [b1; b2]
+    let min b1 b2 =
+      simplify (Min [b1; b2])
 
-    let maximum bounds = Max bounds
+    let maximum bounds =
+      simplify (Max bounds)
                   
-    let minimum bounds = Min bounds
+    let minimum bounds =
+      simplify (Min bounds)
 
-    let infinity = minimum []
-
-    let minus_infinity = maximum []
-
-    let exp value b = Pow (value, b)
+    let exp value b =
+      simplify (Pow (value, b))
                        
     let substitute_f substitution =
       fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow ~exp:exp ~min:min ~max:max ~inf:infinity
@@ -134,12 +168,12 @@ module Make(P : PolyTypes.Polynomial) =
       | Poly p -> Polynomial_.to_string p
       | Max [] -> "inf"
       | Min [] -> "neg inf"
-      | Max bounds -> "max{" ^ String.concat ", " (List.map to_string bounds) ^ "}"
-      | Min bounds -> "min{" ^ String.concat ", " (List.map to_string bounds) ^ "}"
-      | Neg b -> "-(" ^ to_string b ^ ")"
-      | Pow (v,b) -> "(" ^ Value.to_string v ^ "^" ^ to_string b ^ ")"
-      | Sum bounds -> "(" ^ String.concat "+" (List.map to_string bounds) ^ ")"
-      | Product bounds -> "(" ^ String.concat "*" (List.map to_string bounds) ^ ")"
+      | Max bounds -> "max {" ^ String.concat ", " (List.map to_string bounds) ^ "}"
+      | Min bounds -> "min {" ^ String.concat ", " (List.map to_string bounds) ^ "}"
+      | Neg b -> "neg " ^ to_string b
+      | Pow (v,b) -> "(" ^ Value.to_string v ^ "**" ^ to_string b ^ ")"
+      | Sum bounds -> "sum {" ^ String.concat ", " (List.map to_string bounds) ^ "}"
+      | Product bounds -> "product {" ^ String.concat ", " (List.map to_string bounds) ^ ")}"
 
     let rec vars = function
       | Poly p -> Polynomial_.vars p
