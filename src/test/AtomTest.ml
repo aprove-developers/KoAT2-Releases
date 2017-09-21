@@ -17,22 +17,22 @@ module Parser =
         "Parser" >::: [
           "Positive Tests" >::: (
             let open ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
-            let open ProgramImpl.StdProgram.Constraint_.Atom_ in
+            let open ProgramImpl.StdProgram.Constraint_.Atom_.Infix in
                 List.map (fun (testname, expected, atom) ->
                 testname >:: (fun _ -> assert_equal_atom expected (Reader.read_atom atom)))
                         [
-                        ("Constants LT", mk_lt (value 42) (value 42), " 42 < 42 ");
-                        ("Constants LE", mk_le (value 42) (value 42), " 42 <= 42 ");
-                        ("Constants GT", mk_gt (value 42) (value 42), " 42 > 42 ");
-                        ("Constants GE", mk_ge (value 42) (value 42), " 42 >= 42 ");
-                        ("Constant and Poly LT", mk_lt (value 42) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " 42 < x^2+ 5*x*y*z ");
-                        ("Constant and Poly LE", mk_le (value 42) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " 42 <= x^2+ 5*x*y*z ");
-                        ("Constant and Poly GT", mk_gt (value 42) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " 42 > x^2+ 5*x*y*z ");
-                        ("Constant and Poly GE", mk_ge (value 42) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " 42 >= x^2+ 5*x*y*z ");
-                        ("Poly and Poly LT", mk_lt ((var "x") ** 5 + (var "y") ** 6 - (var "z" **3)) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
-                        ("Poly and Poly LE", mk_le ((var "x") ** 5 + (var "y") ** 6 - (var "z" ** 3)) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
-                        ("Poly and Poly GT", mk_gt ((var "x") ** 5 + (var "y") ** 6 - (var "z" ** 3)) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
-                        ("Poly and Poly GE", mk_ge ((var "x") ** 5 + (var "y") ** 6 - (var "z" ** 3)) ((var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z")), " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
+                        ("Constants LT", value 42 < value 42, " 42 < 42 ");
+                        ("Constants LE", value 42 <= value 42, " 42 <= 42 ");
+                        ("Constants GT", value 42 > value 42, " 42 > 42 ");
+                        ("Constants GE", value 42 >= value 42, " 42 >= 42 ");
+                        ("Constant and Poly LT", value 42 < (var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z"), " 42 < x^2+ 5*x*y*z ");
+                        ("Constant and Poly LE", value 42 <= (var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z"), " 42 <= x^2+ 5*x*y*z ");
+                        ("Constant and Poly GT", value 42 > (var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z"), " 42 > x^2+ 5*x*y*z ");
+                        ("Constant and Poly GE", value 42 >= (var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z"), " 42 >= x^2+ 5*x*y*z ");
+                        ("Poly and Poly LT", (var "x") ** 5 + (var "y") ** 6 - (var "z" **3) < (var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z"), " x^5+y^6-z^3 < x^2+ 5*x*y*z ");
+                        ("Poly and Poly LE", (var "x") ** 5 + (var "y") ** 6 - (var "z" ** 3) <= (var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z"), " x^5+y^6-z^3 <= x^2+ 5*x*y*z ");
+                        ("Poly and Poly GT", (var "x") ** 5 + (var "y") ** 6 - (var "z" ** 3) > (var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z"), " x^5+y^6-z^3 > x^2+ 5*x*y*z ");
+                        ("Poly and Poly GE", (var "x") ** 5 + (var "y") ** 6 - (var "z" ** 3) <= (var "x") ** 2 + (value 5) * (var "x") * (var "y") * (var "z"), " x^5+y^6-z^3 >= x^2+ 5*x*y*z ");
                         ]
             );
             "Negative Tests" >::: (
