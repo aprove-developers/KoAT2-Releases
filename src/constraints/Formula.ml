@@ -24,7 +24,7 @@ module Make(P : Polynomial) =
       []
 
     let mk_eq poly1 poly2 =
-      mk (Constraint_.mk_eq poly1 poly2)
+      mk (Constraint_.Infix.(poly1 = poly2))
 
     let mk_gt p1 p2 = mk (Constraint_.mk_gt p1 p2)
     let mk_ge p1 p2 = mk (Constraint_.mk_ge p1 p2)
@@ -38,13 +38,20 @@ module Make(P : Polynomial) =
     let mk_or =
       List.append
 
-    let (||) = mk_or
-    let (&&) = mk_and
-      
+    module Infix = struct
+      let (=) = mk_eq
+      let (>) = mk_gt
+      let (>=) = mk_ge 
+      let (<) = mk_lt 
+      let (<=) = mk_le
+      let (&&) = mk_and
+      let (||) = mk_or
+    end
+
     let mk_le_than_max poly max_list =
       max_list
-      |> List.map (fun max -> Atom_.mk_le poly max)
-      |> List.map (fun atom further_conditions -> (lift atom) || ((lift (Atom_.neg atom)) && further_conditions))
+      |> List.map (fun max -> Atom_.Infix.(poly <= max))
+      |> List.map (fun atom further_conditions -> Infix.(lift atom || (lift Atom_.(neg atom) && further_conditions)))
       |> List.fold_left (fun result f -> f result) mk_false
 
     let all =

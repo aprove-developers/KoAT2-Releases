@@ -21,7 +21,7 @@ module Make(P : Polynomial) =
     let mk_true = mk []
 
     let mk_eq poly1 poly2 =
-      mk [Atom_.mk_le poly1 poly2; Atom_.mk_le poly2 poly1]
+      mk Atom_.Infix.([poly1 <= poly2; poly2 <= poly1])
 
     let mk_gt p1 p2 = lift (Atom_.mk_gt p1 p2)
     let mk_ge p1 p2 = lift (Atom_.mk_ge p1 p2)
@@ -30,6 +30,15 @@ module Make(P : Polynomial) =
     
     let mk_and = List.append
                     
+    module Infix = struct
+      let (=) = mk_eq
+      let (>) = mk_gt
+      let (>=) = mk_ge 
+      let (<) = mk_lt 
+      let (<=) = mk_le
+      let (&&) = mk_and
+    end
+
     (** TODO Filter related: x < 0 && x < 1*)
     let all = List.flatten 
       
@@ -79,7 +88,7 @@ module Make(P : Polynomial) =
     let dualise vars matrix column =
         let dualised_left = List.map (fun row -> P.from_coeff_list row vars) matrix in
             let dualised_eq = List.flatten (List.map2 mk_eq dualised_left column) in
-                let ensure_pos = List.map (fun v -> Atom_.mk_ge (P.from_var v) P.zero ) vars in
+                let ensure_pos = List.map (fun v -> Atom_.Infix.(P.from_var v >= P.zero)) vars in
                     mk (List.flatten [dualised_eq;ensure_pos])
         
     (** Farkas Lemma applied to a linear constraint and an atom which is the cost function*)    
@@ -94,6 +103,6 @@ module Make(P : Polynomial) =
                 let fresh_vars = P.Var.fresh_id_list num_of_constr in
                     let dual_constr = dualise fresh_vars a_matrix c_left in
                         let cost_constr = P.from_coeff_list b_right fresh_vars in
-                            mk_and dual_constr (mk_le cost_constr (P.from_constant d_right))
+                            Infix.(dual_constr && cost_constr <= P.from_constant d_right)
                                 
   end

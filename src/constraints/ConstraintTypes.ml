@@ -38,7 +38,13 @@ module type Atom =
         val mk_ge : Polynomial_.t -> Polynomial_.t -> t
         val mk_lt : Polynomial_.t -> Polynomial_.t -> t
         val mk_le : Polynomial_.t -> Polynomial_.t -> t
-        
+
+        module Infix : sig
+          val (>) : Polynomial_.t -> Polynomial_.t -> t
+          val (>=) : Polynomial_.t -> Polynomial_.t -> t
+          val (<) : Polynomial_.t -> Polynomial_.t -> t
+          val (<=) : Polynomial_.t -> Polynomial_.t -> t
+        end
 
         (** Following methods return certain properties of the atom. *)
           
@@ -106,6 +112,14 @@ module type Constraint =
         val mk_lt : Polynomial_.t -> Polynomial_.t -> t
         val mk_le : Polynomial_.t -> Polynomial_.t -> t
 
+        module Infix : sig
+          val (=) : Polynomial_.t -> Polynomial_.t -> t
+          val (>) : Polynomial_.t -> Polynomial_.t -> t
+          val (>=) : Polynomial_.t -> Polynomial_.t -> t
+          val (<) : Polynomial_.t -> Polynomial_.t -> t
+          val (<=) : Polynomial_.t -> Polynomial_.t -> t
+          val (&&) : t -> t -> t
+        end
 
         val all : t list -> t
           
@@ -196,6 +210,16 @@ module type Formula =
         val all : t list -> t
         val any : t list -> t
           
+        module Infix : sig
+          val (=) : Polynomial_.t -> Polynomial_.t -> t
+          val (>) : Polynomial_.t -> Polynomial_.t -> t
+          val (>=) : Polynomial_.t -> Polynomial_.t -> t
+          val (<) : Polynomial_.t -> Polynomial_.t -> t
+          val (<=) : Polynomial_.t -> Polynomial_.t -> t
+          val (&&) : t -> t -> t
+          val (||) : t -> t -> t
+        end
+
         (** Following methods return certain properties of the formula. *)
           
         (** Returns the set of variables which are active in the formula.

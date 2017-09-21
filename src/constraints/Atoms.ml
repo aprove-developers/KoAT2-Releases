@@ -59,6 +59,12 @@ struct
     let mk_lt = mk Comparator.LT
     let mk_le = mk Comparator.LE
 
+    module Infix = struct
+      let (>) = mk_gt
+      let (>=) = mk_ge 
+      let (<) = mk_lt 
+      let (<=) = mk_le      
+    end
 
     (* TODO We can not decide all equalities right now because of some integer arithmetic *)
     (* Maybe use SMT-solver here *)
