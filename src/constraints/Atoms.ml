@@ -63,7 +63,9 @@ struct
     (* TODO We can not decide all equalities right now because of some integer arithmetic *)
     (* Maybe use SMT-solver here *)
     let (=~=) = P.(=~=)
-            
+
+    let neg = P.neg
+              
     let to_string atom = (P.to_string atom) ^ " <= 0"
         
     let is_linear = P.is_linear 

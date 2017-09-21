@@ -43,7 +43,9 @@ module type Atom =
         (** Following methods return certain properties of the atom. *)
           
         val (=~=) : t -> t -> bool
-        
+
+        val neg : t -> t
+          
         val to_string : t -> string
 
         (** Returns if both polynomials are linear. *)
