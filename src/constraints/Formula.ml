@@ -51,6 +51,7 @@ module Make(P : Polynomial) =
       let (||) = mk_or
     end
 
+    (* a <= max{b1,...,bn}   <=>   a<=b1 || (not (a<=b1) && ...) *)
     let mk_le_than_max poly max_list =
       max_list
       |> List.map (fun max -> Atom_.Infix.(poly <= max))
