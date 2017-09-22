@@ -56,7 +56,7 @@ module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constr
     let satisfiable (constraints : Constraint.t) =
         let formula = from_constraint constraints in
         let optimisation_goal = Z3.Optimize.mk_opt !context in
-        Z3.Optimize.add optimisation_goal [formula];
+        Z3.Optimize.add  optimisation_goal [formula];
         (Z3.Optimize.check optimisation_goal) == Z3.Solver.SATISFIABLE
       
     let get_model (constraints : Constraint.t) =
@@ -82,18 +82,6 @@ module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constr
                                             (var_of_name,value_of_value)) assigned_values)
                                         
                 else Polynomial.Valuation_.from []
-            
-(*match Solver.get_model solver with
-          | Some model ->
-            let consts = Model.get_const_decls model in
-            Some (List.fold_left
-                    (fun assignment func_decl ->
-                      let name = Symbol.get_string (FuncDecl.get_name func_decl) in
-                      let value = Utils.unboxOption (Model.get_const_interp model func_decl) in
-                      let value_string = Str.replace_first neg_re "-\\1" (Expr.to_string value) in
-                      VarMap.add (Poly.mkVar name) (Big_int.big_int_of_string value_string) assignment)
-                    VarMap.empty
-                    consts)
-          | _ -> assert (false) (* SAT but no model! Oh noes! *)*)
+
         
   end
