@@ -7,4 +7,5 @@ open ConstraintTypes
 (** Constructs a default constraint using a list of atoms each comparing two polynomials *)
 module Make(P : Polynomial) : Formula
        with module Polynomial_ = P
-       and module Atom_ = Atoms.Make(P)
+        and module Atom_ = Atoms.Make(P)
+        and module Constraint_ = Constraints.Make(P)

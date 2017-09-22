@@ -15,6 +15,8 @@ module Make(G : Parseable.Program) :
 
     val read_transitiongraph : string -> G.t
 
+    val read_formula : string -> G.Formula_.t
+
     val read_constraint : string -> G.Constraint_.t
       
     val read_atom : string -> G.Constraint_.Atom_.t

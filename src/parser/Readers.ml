@@ -32,6 +32,9 @@ module Make(G : Parseable.Program) =
     let read_transitiongraph =
       read Parser_.onlyTransitiongraph
 
+    let read_formula =
+      read Parser_.onlyFormula
+
     let read_constraint =
       read Parser_.onlyConstraints
       

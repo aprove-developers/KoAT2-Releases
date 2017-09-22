@@ -7,7 +7,7 @@
 %token			LPAR RPAR
 %token                  LBRACE RBRACE
 %token			EOF
-%token                  AND
+%token                  AND OR
 %token 			ARROW WITH
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
 %token                  COMMA
@@ -19,34 +19,39 @@
 			
 %start <G.t> onlyTransitiongraph
 
+%start <G.Formula_.t> onlyFormula
+
 %start <G.Constraint_.t> onlyConstraints
 
-%start <G.Constraint_.Atom_.t> onlyAtom
+%start <G.Atom_.t> onlyAtom
 
-%start <G.Constraint_.Polynomial_.t> onlyPolynomial
+%start <G.Polynomial_.t> onlyPolynomial
 
 %start <G.TransitionLabel.Bound.t> onlyBound
 
 %type <G.t> transitiongraph
 
+%type <G.Formula_.t> formula
+
 %type <G.Constraint_.t> constraints
 
 %type <G.Constraint_.t> atom
 
-%type <G.Constraint_.Polynomial_.t> polynomial
+%type <G.Polynomial_.t> polynomial
 
-%type <G.Constraint_.Polynomial_.Var.t list> variables
+%type <G.Polynomial_.Var.t list> variables
 
-%type <vars:G.Constraint_.Polynomial_.Var.t list -> G.TransitionLabel.t> transition
+%type <vars:G.Polynomial_.Var.t list -> G.TransitionLabel.t> transition
 
-%type <(vars:G.Constraint_.Polynomial_.Var.t list -> G.TransitionLabel.t) list> transitions
+%type <(vars:G.Polynomial_.Var.t list -> G.TransitionLabel.t) list> transitions
 
 %{
   open BatTuple
   module Constr = G.Constraint_
-  module Atom = G.Constraint_.Atom_
-  module Poly = G.Constraint_.Polynomial_
+  module Atom = G.Atom_
+  module Poly = G.Polynomial_
   module Bound = G.TransitionLabel.Bound
+  module Formula = G.Formula_
 %}
 
 %%
@@ -102,6 +107,13 @@ withConstraints :
 	|	{ Constr.mk [] }
 	|       WITH constr = separated_nonempty_list(AND, atom) { Constr.all constr } ;
 
+onlyFormula :
+        |       f = formula EOF { f } ;
+
+formula :
+        |       disj = separated_list(OR, constraints)
+                  { Formula.disj disj } ;
+
 onlyConstraints :
         |       constr = constraints EOF { constr } ;
         
@@ -110,7 +122,7 @@ constraints :
                   { Constr.all constr } ;
 
 onlyAtom :
-	|	p1 = polynomial; comp = atomComparator; p2 = polynomial; EOF
+        |   	p1 = polynomial; comp = atomComparator; p2 = polynomial; EOF
                   { comp p1 p2 } ;
 
 %inline atomComparator :
@@ -118,11 +130,11 @@ onlyAtom :
   	| 	GREATEREQUAL { Atom.mk_ge }
   	| 	LESSTHAN { Atom.mk_lt }
   	| 	LESSEQUAL { Atom.mk_le } ;
-              
+
 atom :
         |   	p1 = polynomial; comp = comparator; p2 = polynomial
                   { comp p1 p2 } ;
-                
+
 %inline comparator :
   	| 	EQUAL { Constr.mk_eq }
   	| 	GREATERTHAN { Constr.mk_gt }

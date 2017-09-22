@@ -186,8 +186,8 @@ module type Constraint =
 module type Formula =
   sig
         module Polynomial_ : Polynomial
-
         module Atom_ : Atom with module Polynomial_ = Polynomial_
+        module Constraint_ : Constraint with module Polynomial_ = Polynomial_ and module Atom_ = Atom_
 
         type t
         
@@ -195,6 +195,8 @@ module type Formula =
         (** Following methods are convenience methods for the creation of atoms. *)
           
         val lift : Atom_.t -> t      
+        val mk : Constraint_.t -> t      
+        val disj : Constraint_.t list -> t      
         val mk_true : t
         val mk_and : t -> t -> t
         val mk_or : t -> t -> t

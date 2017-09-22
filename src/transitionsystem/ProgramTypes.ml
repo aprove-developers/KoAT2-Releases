@@ -6,7 +6,10 @@ open Batteries
 module type Program =
   sig
     
-    module Constraint_ : ConstraintTypes.Constraint
+    module Polynomial_ : PolyTypes.Polynomial
+    module Atom_ : ConstraintTypes.Atom with module Polynomial_ = Polynomial_
+    module Constraint_ : ConstraintTypes.Constraint with module Polynomial_ = Polynomial_
+    module Formula_ : ConstraintTypes.Formula with module Polynomial_ = Polynomial_
          
     (** A transition is an edge of a transition system.
         It connects two locations and is annotated with a guard and an update

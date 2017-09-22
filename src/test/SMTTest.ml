@@ -2,8 +2,7 @@ open Batteries
 open OUnit2
 open Helper
    
-module Constraints = Constraints.Make(PolyImpl.Polynomial)
-module Z3Solver = SMT.MakeZ3Solver(Constraints)
+module Z3Solver = SMT.MakeZ3Solver(PolyImpl.Polynomial)
 module Reader = Readers.Make(ProgramImpl.StdProgram)
 
 let print_str (str : string) = str
@@ -20,7 +19,7 @@ let suite =
         );*)  
         "Satisfiable" >::: (
         List.map (fun (testname,expected, constr) ->
-            testname >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Reader.read_constraint constr))))
+            testname >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Reader.read_formula constr))))
                     [
                         ("Empty",true, "");
                         ("Constant Equality",true, "1 = 1");
@@ -36,7 +35,7 @@ let suite =
         );
         "Satisfiable_Farkas" >::: (
         List.map (fun (expected,constr,atom) ->
-            constr >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Constraints.farkas_transform (Reader.read_constraint constr) (Reader.read_atom atom)))))
+            constr >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Z3Solver.Formula_.mk (Z3Solver.Constraint_.farkas_transform (Reader.read_constraint constr) (Reader.read_atom atom))))))
                     [
                         (true, "x>=0", "x>=0");
                         (false, "x>=0", "x < -10");

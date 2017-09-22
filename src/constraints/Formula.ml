@@ -6,14 +6,17 @@ module Make(P : Polynomial) =
   struct
 
     module Polynomial_ = P
-    module Atom_ = Atoms.Make(P)
     module Constraint_ = Constraints.Make(P)
+    module Atom_ = Atoms.Make(P)
     
     type t = Constraint_.t list
 
     let mk constr =
       [constr]
            
+    let disj constraints =
+      constraints
+
     let lift atom =
       mk (Constraint_.lift atom)
     

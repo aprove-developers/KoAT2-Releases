@@ -45,10 +45,11 @@ module Parser =
         ]
   end
 
-module Methods (C : Constraint) =
+module Methods (P : PolyTypes.Polynomial) =
   struct
-    module Reader = Readers.Make(Program.Make(C))
+    module Reader = Readers.Make(Program.Make(P))
 
+    module C = Constraints.Make(P)                  
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
 

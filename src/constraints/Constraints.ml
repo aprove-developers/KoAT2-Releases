@@ -5,8 +5,7 @@ open ConstraintTypes
 module Make(P : Polynomial) =
   struct
 
-    module Polynomial_ = P
-      
+    module Polynomial_ = P      
     module Atom_ = Atoms.Make(P)
         
     type t = Atom_.t list
