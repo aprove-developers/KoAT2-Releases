@@ -160,7 +160,7 @@ module Make(C : ConstraintTypes.Constraint) =
 
     let vars program =
       Set.of_list program.vars
-
+      
     let add_vertices_to_rvg vertices rvg =
       vertices
       |> List.map (flip RVG.add_vertex)

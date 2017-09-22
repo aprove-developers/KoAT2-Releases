@@ -99,5 +99,7 @@ module type Program =
     val is_initial : t -> Transition.t -> bool
 
     val to_string : t -> string
+    
+    val vars : t -> Constraint_.Polynomial_.Var.t Set.t
 
   end
