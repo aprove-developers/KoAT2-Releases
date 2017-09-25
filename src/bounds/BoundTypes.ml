@@ -61,6 +61,8 @@ module type RankingFunction =
     module ParameterAtoms_ :ConstraintTypes.Atom
 
     type t
+    
+(*    val fresh_ranking_map: vars list -> location list -> location -> parameterpoly*)
 
     (** Returns a non-empty list of all transitions which are strictly decreasing and at the same time bounded with one.
         Corresponds to T_> . *)
@@ -78,6 +80,8 @@ module type RankingFunction =
     
     (** Invokes Farkas Lemma, to compute a ranking function*)
     val farkas_transform : Constraints_.t -> ParameterConstraints_.Atom_.t -> ParameterConstraints_.t
+    
+    val generate_ranking_template : Program_.t -> (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t
   end
   
 module type TimeBounds =

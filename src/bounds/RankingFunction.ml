@@ -43,6 +43,30 @@ module Make(P : ProgramTypes.Program) =
             let d_right = List.at (ParameterConstraints_.get_constant_vector costfunction) 0 in
                 apply_farkas a_matrix b_right c_left d_right
                 
+    (** Given a list of variables an affine template-polynomial is generated*)            
+    let ranking_template vars =
+        let num_vars = (List.length vars) in
+            let fresh_coeffs = List.map Polynomial_.from_var (Polynomial_.Var.fresh_id_list num_vars) in
+                let linear_poly = ParameterPolynomial_.from_coeff_list fresh_coeffs vars in
+                    let constant = ParameterPolynomial_.from_constant (Polynomial_.from_var (List.at (Polynomial_.Var.fresh_id_list 1) 1)) in
+                        ParameterPolynomial_.add linear_poly constant 
+                        
+    let copy_list_into_hash hashtbl pairs_list =
+        let n = List.length pairs_list in
+            for i = 1 to n do
+                let (first,second) = List.at pairs_list i in
+                    Hashtbl.add hashtbl first second
+            done;;
+                        
+    let generate_ranking_template program =
+        let vars = Set.elements (Program_.vars program) in
+            let graph = Program_.graph program in
+                let fresh_table = Hashtbl.create (Program_.TransitionGraph.nb_vertex graph) in
+                    let loc_prf = [] in
+                        let ins_loc_prf = fun vertex-> List.cons (vertex,(ranking_template vars))  in
+                            let list_of_prf = Program_.TransitionGraph.fold_vertex ins_loc_prf graph loc_prf in
+                                copy_list_into_hash fresh_table list_of_prf;
+                                fresh_table
  end     
     
   
