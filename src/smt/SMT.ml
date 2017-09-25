@@ -13,6 +13,8 @@ module type Solver =
     
     val get_model : Formula_.t -> Polynomial_.Valuation_.t
     
+    val match_string_for_float : string -> string
+    
     (*val to_string : Constraint.t -> string*)
   end
 
@@ -64,6 +66,11 @@ module MakeZ3Solver(P : PolyTypes.Polynomial) : (Solver with module Polynomial_ 
         let optimisation_goal = Z3.Optimize.mk_opt !context in
         Z3.Optimize.add  optimisation_goal [formula];
         (Z3.Optimize.check optimisation_goal) == Z3.Solver.SATISFIABLE
+        
+    let match_string_for_float str =
+        let float_regexp = Str.regexp "(?\\([-]?\\)[ ]?\\([0-9]*\.?[0-9]+\\))?" in             (*(?\\([-0-9\\.]*\\))?*)
+            Str.replace_first float_regexp "\\1\\2" str 
+
       
     let get_model (constraints : Formula_.t) =
         let formula = from_constraint constraints in
@@ -83,7 +90,8 @@ module MakeZ3Solver(P : PolyTypes.Polynomial) : (Solver with module Polynomial_ 
                                         let var_of_name = (Polynomial_.Var.of_string name) in
                                         let value = Option.get (Z3.Model.get_const_interp
                                         model func_decl)(*careful, this returns an option*) in
-                                        let int_of_value = int_of_float (float_of_string (Z3.Expr.to_string value)) in (*dirty hack, might be solved better*)
+
+                                        let int_of_value = Int.of_float (Float.of_string ( match_string_for_float (Z3.Expr.to_string value))) in 
                                         let value_of_value = (Polynomial_.Value.of_int int_of_value) in
                                             (var_of_name,value_of_value)) assigned_values)
                 else Polynomial_.Valuation_.from []

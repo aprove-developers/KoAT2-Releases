@@ -7,6 +7,8 @@ module Reader = Readers.Make(ProgramImpl.StdProgram)
 
 let print_str (str : string) = str
 
+let print_fl = Float.to_string
+
 let suite =
   "SMT Tests" >::: [
         (*"from_constraint" >::: (
@@ -45,6 +47,17 @@ let suite =
                     ]
         );
         
+        "String_matching" >::: (
+        List.map (fun (expected,input_str) ->
+            "input_str" >:: (fun _ -> assert_equal ~cmp:(=) ~printer:print_fl (Float.of_string expected) (Float.of_string (Z3Solver.match_string_for_float input_str))))
+                    [
+                        ("1","(1)");
+                        ("1.5","1.5");
+                        ("-23.0","(- 23)");
+                        ("3.1415","3.1415");
+                    ]
+        );
+        
 (*        "get_model" >::: (
         List.map (fun (testname, expected, constr) ->
             testname >:: (fun _ -> assert_equal ~cmp:String.equal ~printer:print_str expected (Z3Solver.get_model (Reader.read_constraint constr))))
@@ -56,10 +69,11 @@ let suite =
                         ("Obvious contradiction", "", "0 = 1");
                         ("Sofisticated contradiction" , "", "x > y && y > z && z > x");
                         ("Contradiction over the integers", "", "x > x^2");
+                        ("negative check", "", "x<0");
                     ]
-        );
+        );*)
         
-        "get_model_advanced" >::: (
+(*        "get_model_advanced" >::: (
         List.map (fun (expected, constr, atom) ->
             constr >:: (fun _ -> assert_equal ~cmp:String.equal ~printer:print_str expected (Z3Solver.get_model (Constraints.farkas_transform (Reader.read_constraint constr)(Reader.read_atom atom)))))
                     [
