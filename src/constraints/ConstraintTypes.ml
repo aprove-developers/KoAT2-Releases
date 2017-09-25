@@ -38,12 +38,20 @@ module type Atom =
         val mk_ge : Polynomial_.t -> Polynomial_.t -> t
         val mk_lt : Polynomial_.t -> Polynomial_.t -> t
         val mk_le : Polynomial_.t -> Polynomial_.t -> t
-        
+
+        module Infix : sig
+          val (>) : Polynomial_.t -> Polynomial_.t -> t
+          val (>=) : Polynomial_.t -> Polynomial_.t -> t
+          val (<) : Polynomial_.t -> Polynomial_.t -> t
+          val (<=) : Polynomial_.t -> Polynomial_.t -> t
+        end
 
         (** Following methods return certain properties of the atom. *)
           
         val (=~=) : t -> t -> bool
-        
+
+        val neg : t -> t
+          
         val to_string : t -> string
 
         (** Returns if both polynomials are linear. *)
@@ -104,6 +112,14 @@ module type Constraint =
         val mk_lt : Polynomial_.t -> Polynomial_.t -> t
         val mk_le : Polynomial_.t -> Polynomial_.t -> t
 
+        module Infix : sig
+          val (=) : Polynomial_.t -> Polynomial_.t -> t
+          val (>) : Polynomial_.t -> Polynomial_.t -> t
+          val (>=) : Polynomial_.t -> Polynomial_.t -> t
+          val (<) : Polynomial_.t -> Polynomial_.t -> t
+          val (<=) : Polynomial_.t -> Polynomial_.t -> t
+          val (&&) : t -> t -> t
+        end
 
         val all : t list -> t
           
@@ -164,4 +180,73 @@ module type Constraint =
         val dualise : Polynomial_.Var.t list -> Polynomial_.Value.t list list -> Polynomial_.t list -> t
         
         val farkas_transform : t -> Atom_.t -> t
+  end
+
+(** A formula is a propositional formula *)
+module type Formula =
+  sig
+        module Polynomial_ : Polynomial
+        module Atom_ : Atom with module Polynomial_ = Polynomial_
+        module Constraint_ : Constraint with module Polynomial_ = Polynomial_ and module Atom_ = Atom_
+
+        type t
+        
+
+        (** Following methods are convenience methods for the creation of atoms. *)
+          
+        val lift : Atom_.t -> t      
+        val mk : Constraint_.t -> t      
+        val disj : Constraint_.t list -> t      
+        val mk_true : t
+        val mk_and : t -> t -> t
+        val mk_or : t -> t -> t
+
+        (** Creates a constraint that expresses the equality of the two polynomials. *)
+        val mk_eq : Polynomial_.t -> Polynomial_.t -> t
+        val mk_gt : Polynomial_.t -> Polynomial_.t -> t
+        val mk_ge : Polynomial_.t -> Polynomial_.t -> t
+        val mk_lt : Polynomial_.t -> Polynomial_.t -> t
+        val mk_le : Polynomial_.t -> Polynomial_.t -> t
+        val mk_le_than_max : Polynomial_.t -> Polynomial_.t list -> t
+          
+        val all : t list -> t
+        val any : t list -> t
+          
+        module Infix : sig
+          val (=) : Polynomial_.t -> Polynomial_.t -> t
+          val (>) : Polynomial_.t -> Polynomial_.t -> t
+          val (>=) : Polynomial_.t -> Polynomial_.t -> t
+          val (<) : Polynomial_.t -> Polynomial_.t -> t
+          val (<=) : Polynomial_.t -> Polynomial_.t -> t
+          val (&&) : t -> t -> t
+          val (||) : t -> t -> t
+        end
+
+        (** Following methods return certain properties of the formula. *)
+          
+        (** Returns the set of variables which are active in the formula.
+            A variable is active, if it's value has an effect on the evaluation of the constraint. *)
+        val vars : t -> Polynomial_.Var.t Set.t
+
+        val to_string : t -> string
+
+
+        (** Following methods manipulate atoms and return the manipulated versions. *)
+
+        (** Assigns the variables of the constraint new names based on the rename map *)
+        val rename : t -> Polynomial_.RenameMap_.t -> t
+
+        (** Replaces all operations by new constructors. *)
+        val fold : const:(Polynomial_.Value.t -> 'b) ->
+                   var:(Polynomial_.Var.t -> 'b) ->
+                   neg:('b -> 'b) ->               
+                   plus:('b -> 'b -> 'b) ->
+                   times:('b -> 'b -> 'b) ->
+                   pow:('b -> int -> 'b) ->
+                   le:('b -> 'b -> 'c) ->
+                   correct:('d) ->
+                   conj:('d -> 'c -> 'd) ->
+                   wrong:('e) ->
+                   disj:('e -> 'd -> 'e) ->
+                   t -> 'e
   end

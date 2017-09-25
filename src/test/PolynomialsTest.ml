@@ -49,7 +49,7 @@ module Parser =
   
 module Methods (P : Polynomial) =
   struct
-    module Reader = Readers.Make(Program.Make(Constraints.Make(P)))
+    module Reader = Readers.Make(Program.Make(P))
                
     let example_valuation = P.Valuation_.from_native [("x", 3); ("y", 5); ("z", 7)]
                                             

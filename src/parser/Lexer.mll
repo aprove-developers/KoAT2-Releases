@@ -56,6 +56,7 @@ rule read =
   | '<'               { P.LESSTHAN }
   | '>'               { P.GREATERTHAN }
   | "&&"              { P.AND }
+  | "||"              { P.OR }
   | ":|:"             { P.WITH }
   | ','               { P.COMMA }
   | eof               { P.EOF }

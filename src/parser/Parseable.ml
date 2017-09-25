@@ -52,11 +52,26 @@ module type Constraint =
     val all : t list -> t
     val is_true : t -> bool
   end
-   
+
+module type Formula =
+  sig
+    type t
+    module Polynomial_ : Polynomial
+    module Atom_ : Atom with module Polynomial_ = Polynomial_
+    module Constraint_ : Constraint with module Polynomial_ = Polynomial_ and module Atom_ = Atom_
+    
+    val lift : Atom_.t -> t      
+    val all : t list -> t
+    val disj : Constraint_.t list -> t
+  end
+  
 module type Program =
   sig
     type t
-    module Constraint_ : Constraint
+    module Polynomial_ : Polynomial
+    module Atom_ : Atom with module Polynomial_ = Polynomial_
+    module Constraint_ : Constraint with module Polynomial_ = Polynomial_ and module Atom_ = Atom_
+    module Formula_ : Formula with module Polynomial_ = Polynomial_ and module Atom_ = Atom_ and module Constraint_ = Constraint_
     module TransitionLabel :
     sig
       type t

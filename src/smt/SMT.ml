@@ -5,21 +5,25 @@ open Batteries
 (** A unified interface for SMT solvers (currently supported: Z3) *)
 module type Solver =
   sig
-    module Constraint : ConstraintTypes.Constraint
+    module Polynomial_ : PolyTypes.Polynomial
+    module Constraint_ : ConstraintTypes.Constraint with module Polynomial_ = Polynomial_
+    module Formula_ : ConstraintTypes.Formula with module Polynomial_ = Polynomial_
 
-    val satisfiable : Constraint.t -> bool
+    val satisfiable : Formula_.t -> bool
     
-    val get_model : Constraint.t -> Constraint.Polynomial_.Valuation_.t
+    val get_model : Formula_.t -> Polynomial_.Valuation_.t
     
     (*val to_string : Constraint.t -> string*)
   end
 
 (** Constructs an SMT solver which uses the microsoft project Z3 *)
-module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constraint = C) =
+module MakeZ3Solver(P : PolyTypes.Polynomial) : (Solver with module Polynomial_ = P
+                                                         and module Constraint_ = Constraints.Make(P)
+                                                         and module Formula_ = Formula.Make(P)) =
   struct
-    module Constraint = C
-    module Atom = C.Atom_
-    module Polynomial = C.Polynomial_
+    module Polynomial_ = P
+    module Constraint_ = Constraints.Make(P)
+    module Formula_ = Formula.Make(P)
        
     let context = ref (
                       Z3.mk_context [
@@ -28,12 +32,12 @@ module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constr
                         ]
                     )
 
-    let from_constraint (constraints : Constraint.t) =
-      Constraint.fold ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i !context (Polynomial.Value.to_int value))
-                      ~var:(fun var ->  if (Polynomial.Var.is_helper var) then 
-                                            Z3.Arithmetic.Real.mk_const_s !context (Polynomial.Var.to_string var) 
+    let from_constraint (constraints : Formula_.t) =
+      Formula_.fold ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i !context (Polynomial_.Value.to_int value))
+                      ~var:(fun var ->  if (Polynomial_.Var.is_helper var) then 
+                                            Z3.Arithmetic.Real.mk_const_s !context (Polynomial_.Var.to_string var) 
                                         else
-                                            Z3.Arithmetic.Integer.mk_const_s !context (Polynomial.Var.to_string var))
+                                            Z3.Arithmetic.Integer.mk_const_s !context (Polynomial_.Var.to_string var))
                       ~neg:(Z3.Arithmetic.mk_unary_minus !context)
                       ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add !context [p1; p2])
                       ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul !context [p1; p2])
@@ -41,6 +45,8 @@ module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constr
                       ~le:(Z3.Arithmetic.mk_le !context)
                       ~correct:(Z3.Boolean.mk_true !context)
                       ~conj:(fun a1 a2 -> Z3.Boolean.mk_and !context [a1; a2])
+                      ~wrong:(Z3.Boolean.mk_false !context)
+                      ~disj:(fun a1 a2 -> Z3.Boolean.mk_or !context [a1; a2])
                       constraints
                       
 (*    let to_string (constraints : Constraint.t) =
@@ -53,13 +59,13 @@ module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constr
         
     (** checks if there exists a satisfying assignment for a given constraint
         uses Z3 optimisation methods*)
-    let satisfiable (constraints : Constraint.t) =
+    let satisfiable (constraints : Formula_.t) =
         let formula = from_constraint constraints in
         let optimisation_goal = Z3.Optimize.mk_opt !context in
         Z3.Optimize.add  optimisation_goal [formula];
         (Z3.Optimize.check optimisation_goal) == Z3.Solver.SATISFIABLE
       
-    let get_model (constraints : Constraint.t) =
+    let get_model (constraints : Formula_.t) =
         let formula = from_constraint constraints in
         let optimisation_goal = Z3.Optimize.mk_opt !context in
             Z3.Optimize.add optimisation_goal [formula];
@@ -67,21 +73,21 @@ module MakeZ3Solver(C : ConstraintTypes.Constraint) : (Solver with module Constr
                 if (status == Z3.Solver.SATISFIABLE) then
                     let model = Z3.Optimize.get_model optimisation_goal in
                         match model with
-                        | None -> Polynomial.Valuation_.from []
+                        | None -> Polynomial_.Valuation_.from []
                         | Some model -> 
                             let assigned_values = Z3.Model.get_const_decls model in
-                                Polynomial.Valuation_.from 
+                                Polynomial_.Valuation_.from 
                                 (List.map 
                                     (fun func_decl -> 
                                         let name = Z3.Symbol.get_string (Z3.FuncDecl.get_name func_decl) in
-                                        let var_of_name = (Polynomial.Var.of_string name) in
+                                        let var_of_name = (Polynomial_.Var.of_string name) in
                                         let value = Option.get (Z3.Model.get_const_interp
                                         model func_decl)(*careful, this returns an option*) in
                                         let int_of_value = int_of_float (float_of_string (Z3.Expr.to_string value)) in (*dirty hack, might be solved better*)
-                                        let value_of_value = (Polynomial.Value.of_int int_of_value) in
+                                        let value_of_value = (Polynomial_.Value.of_int int_of_value) in
                                             (var_of_name,value_of_value)) assigned_values)
-                                        
-                else Polynomial.Valuation_.from []
+                else Polynomial_.Valuation_.from []
+
 
         
   end

@@ -4,11 +4,11 @@ module Var_ = ID.StringID
 module Value_ = PolyTypes.OurInt
 module Polynomial_ = Polynomials.Make(Var_)(Value_)
 module Constraint_ = Constraints.Make(Polynomial_)
-module Program_ = Program.Make(Constraint_)
+module Program_ = Program.Make(Polynomial_)
 module Approximation_ = Approximation.Make(Program_)
 module Bound = Program_.TransitionLabel.Bound
                       
-module SMT_ = SMT.MakeZ3Solver(Constraint_)                      
+module SMT_ = SMT.MakeZ3Solver(Polynomial_)                      
 
 module Reader_ = Readers.Make(Program_)
 
@@ -108,10 +108,10 @@ let run_localsizebound (params: localsizebound_params) =
   print_string (Bound.to_string (sizebound_local kind label var))
 
 let run_smt (params: smt_params) =
-  let module Z3 = SMT.MakeZ3Solver(Constraint_) in
+  let module Z3 = SMT.MakeZ3Solver(Polynomial_) in
   let solve = match params.solver with
     | `Z3 -> Z3.get_model
-  and constr = Reader_.read_constraint params.constr in
+  and constr = Reader_.read_formula params.constr in
   let valuation_bindings = Polynomial_.Valuation_.bindings (solve constr) in
   if Enum.is_empty valuation_bindings then
     print_string "unsatisfiable"

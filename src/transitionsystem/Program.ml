@@ -1,9 +1,12 @@
 open Batteries
 
-module Make(C : ConstraintTypes.Constraint) =
+module Make(P : PolyTypes.Polynomial) =
   struct
     
-    module Constraint_ = C
+    module Polynomial_ = P
+    module Atom_ = Atoms.Make(P)
+    module Constraint_ = Constraints.Make(P)
+    module Formula_ = Formula.Make(P)
 
     module TransitionLabel =
       struct
@@ -61,7 +64,7 @@ module Make(C : ConstraintTypes.Constraint) =
             start = "";
             target = "";
             update = Map.empty;
-            guard = C.mk_true;
+            guard = Constraint_.mk_true;
           }
                     
         let sizebound_local kind label var =
