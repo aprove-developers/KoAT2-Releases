@@ -226,22 +226,22 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
       |> List.fold_left Value.add Value.zero
 
     (* Helper function *)
-    let var_replace (substitution : Var.t -> t) =
+    let substitute_f substitution =
       fold ~const:from_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow
           
     let substitute var ~replacement =
-      var_replace (fun target_var ->
+      substitute_f (fun target_var ->
           if Var.(var =~= target_var) then replacement else from_var target_var
         )
 
     let substitute_all substitution =
       let module VarMap = Map.Make(Var) in
-      var_replace (fun var ->
+      substitute_f (fun var ->
           VarMap.find_default (from_var var) var substitution
         )
       
     let eval_partial poly valuation =
-      var_replace (fun var ->
+      substitute_f (fun var ->
           Option.map from_constant (Valuation_.eval_opt var valuation) |? from_var var
         ) poly
 

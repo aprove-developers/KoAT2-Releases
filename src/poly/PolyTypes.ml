@@ -418,8 +418,10 @@ module type MinMaxPolynomial =
     (** Following methods can be used to classify the type of the polynomial. *)
 
     (** TODO *)
-      
-
+    
+    (**Substitutes the variables in by polynomials using the map given as first argument*)
+    val substitute_f : (Var.t -> t) -> t -> t
+    
     (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
         Ignores naming equalities. *)
     val substitute : Var.t -> replacement:t -> t -> t
