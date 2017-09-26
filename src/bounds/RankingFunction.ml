@@ -99,11 +99,14 @@ module Make(P : ProgramTypes.Program) =
                     let new_atom = ParameterAtoms_.mk_gt start_parapoly ParameterPolynomial_.zero in 
                             farkas_transform guard new_atom
                             
-    let get_non_decrease_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : P.t) =
+    let get_non_increase_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : P.t) =
         let graph = Program_.graph program in
             let vars = Set.elements (Program_.vars program) in
-            Program_.TransitionGraph.fold_edges_e (fun trans -> ParameterConstraints_.mk_and (help_non_increasing table trans vars) ) graph ParameterConstraints_.mk_true 
-
+                Program_.TransitionGraph.fold_edges_e (fun trans -> ParameterConstraints_.mk_and (help_non_increasing table trans vars) ) graph ParameterConstraints_.mk_true
+                
+    let get_strict_decrease_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : P.t) (str_decr :Program_.Transition.t list) =
+        let vars = Set.elements (Program_.vars program) in
+            List.fold_left (fun constr -> (fun trans -> ParameterConstraints_.mk_and (help_strict_decrease table trans vars) constr) ) ParameterConstraints_.mk_true str_decr
  end     
     
   
