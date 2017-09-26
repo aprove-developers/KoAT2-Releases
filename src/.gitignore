@@ -41,3 +41,6 @@ parser/Lexer.ml
 #Ignore intermediate doc files and the docs directory (later add it again for GitHub pages)
 *.idoc
 docs
+
+#Ignore git patch files
+*.patch

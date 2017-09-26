@@ -3,3 +3,6 @@ docs
 .omakedb
 .omakedb.lock
 /src/output/tmp_rvg.dot
+
+#Ignore git patch files
+*.patch
