@@ -225,7 +225,6 @@ module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
       |> List.map (fun scaled -> ScaledMonomial_.eval scaled valuation)
       |> List.fold_left Value.add Value.zero
 
-    (* Helper function *)
     let substitute_f substitution =
       fold ~const:from_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow
           

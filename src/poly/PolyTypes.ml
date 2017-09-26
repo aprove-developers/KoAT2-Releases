@@ -346,10 +346,14 @@ module type Polynomial =
     (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
         Ignores naming equalities. *)
     val substitute : Var.t -> replacement:t -> t -> t
-
+    
+    (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
+    val substitute_f : (Var.t -> t) -> t -> t
+    
     (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
         Leaves all variables unchanged which are not in the replacement map.  *)
     val substitute_all : t Map.Make(Var).t -> t -> t
+
 
     (** Removes all summands from the polynomial which are equivalent to the monomial. *)
     val delete_monomial : monomial -> t -> t
@@ -418,9 +422,6 @@ module type MinMaxPolynomial =
     (** Following methods can be used to classify the type of the polynomial. *)
 
     (** TODO *)
-    
-    (**Substitutes the variables in by polynomials using the map given as first argument*)
-    val substitute_f : (Var.t -> t) -> t -> t
     
     (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
         Ignores naming equalities. *)
