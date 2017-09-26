@@ -68,15 +68,36 @@ module Make(P : ProgramTypes.Program) =
                                 copy_list_into_hash fresh_table list_of_prf;
                                 fresh_table
                                 
-(*    let help_non_increasing (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Program_.Constraint_.Polynomial_.Var.t list) =
+    let help_update label var =
+        let update_var = Program_.TransitionLabel.update label var in
+            match update_var with
+                |None -> ParameterPolynomial_.from_var var
+                |Some p -> ParameterPolynomial_.from_constant p
+                                
+    let help_non_increasing (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Program_.Constraint_.Polynomial_.Var.t list) =
         let trans_label = Program_.TransitionGraph.E.label trans in
-        let start_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.src trans) in
-            let target_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.dst trans) in
-                let guard = Program_.TransitionLabel.guard trans_label in
-                    let update = Program_.TransitionLabel.Map.map (ParameterPolynomial_.from_constant) (Program_.TransitionLabel.update_map trans_label) in
-                        (*let updated_target = *)ParameterPolynomial_.substitute_all update target_parapoly (*in
+            let start_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.src trans) in
+                let target_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.dst trans) in
+                    let guard = Program_.TransitionLabel.guard trans_label in
+                        let updated_target = ParameterPolynomial_.substitute_f (help_update trans_label) target_parapoly in
                             let new_atom = ParameterAtoms_.mk_ge start_parapoly updated_target in
-                                farkas_transform guard new_atom*)*)
+                                farkas_transform guard new_atom
+                            
+    let help_strict_decrease (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Program_.Constraint_.Polynomial_.Var.t list) =
+        let trans_label = Program_.TransitionGraph.E.label trans in
+            let start_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.src trans) in
+                let target_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.dst trans) in
+                    let guard = Program_.TransitionLabel.guard trans_label in
+                        let updated_target = ParameterPolynomial_.substitute_f (help_update trans_label) target_parapoly in
+                            let new_atom = ParameterAtoms_.mk_gt start_parapoly updated_target in (*here's the difference*)
+                                farkas_transform guard new_atom
+                            
+    let help_boundedness (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Program_.Constraint_.Polynomial_.Var.t list) =
+        let trans_label = Program_.TransitionGraph.E.label trans in
+            let start_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.src trans) in
+                let guard = Program_.TransitionLabel.guard trans_label in
+                    let new_atom = ParameterAtoms_.mk_gt start_parapoly ParameterPolynomial_.zero in 
+                            farkas_transform guard new_atom
 
  end     
     
