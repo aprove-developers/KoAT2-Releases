@@ -61,7 +61,7 @@ module Methods (P : PolyTypes.Polynomial) =
     let rename str rename_map =
          str
       |> Reader.read_atom
-      |> fun atom -> Atom.rename atom (Polynomial.RenameMap_.from_native rename_map)
+      |> fun atom -> Atom.rename atom (RenameMap.from_native rename_map)
 
                    (*
     let evaluate str valuation =

@@ -7,5 +7,4 @@ module Make
          (P : PolyTypes.Polynomial)
        : PolyTypes.MinMaxPolynomial with module Value = P.Value
                                      and module Valuation_ = P.Valuation_
-                                     and module RenameMap_ = P.RenameMap_
                                      and module Polynomial_ = P

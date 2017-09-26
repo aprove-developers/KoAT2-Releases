@@ -6,7 +6,6 @@ module Make(Value : PolyTypes.Ring) =
     module Monomial_ = Monomials.Make(Value)
     module ScaledMonomial_ = ScaledMonomials.Make(Value)
     module Valuation_ = Valuation.Make(Value)
-    module RenameMap_ = RenameMap.Make
                       
     type monomial = Monomial_.t
     type t = ScaledMonomial_.t list                          

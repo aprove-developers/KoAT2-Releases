@@ -5,7 +5,6 @@ module Make(P : PolyTypes.Polynomial) =
     module Polynomial_ = P
     module Value = P.Value
     module Valuation_ = P.Valuation_
-    module RenameMap_ = P.RenameMap_
                           
     (* Minus Infinity is max of an empty list *)
     (* Infinity is min of an empty list *)

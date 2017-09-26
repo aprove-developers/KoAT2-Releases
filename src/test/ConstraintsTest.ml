@@ -52,7 +52,7 @@ module Methods (P : PolyTypes.Polynomial) =
                                                         ("y", 5);
                                                         ("z", 7)]
                           
-    let example_renaming = Polynomial.RenameMap_.from_native [("x", "a"); ("y", "b"); ("z", "c")]
+    let example_renaming = RenameMap.from_native [("x", "a"); ("y", "b"); ("z", "c")]
     
     
     let varset_to_string varl =

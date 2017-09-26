@@ -4,7 +4,6 @@ open Big_int.Infix
 module Make(Value : PolyTypes.Ring) =
   struct    
     module Valuation_ = Valuation.Make(Value)
-    module RenameMap_ = RenameMap.Make
     module Monomial = Monomials.Make(Value)
 
     type t = 

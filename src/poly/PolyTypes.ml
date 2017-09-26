@@ -95,31 +95,12 @@ module type Valuation =
     val bindings : t -> (var * value) Enum.t
   end
 
-(** A rename map is a function which maps from a finite set of variables to another finite set of variables *)
-module type RenameMap =
-  sig
-    type t
-    type var = Var.t
-
-    val from : (var * var) list -> t
-
-    (** Creates a rename map from a two strings (vars) association list *)
-    val from_native : (string * string) list -> t
-
-    (** Creates a rename map where every variable keeps its name *)
-    val id : var list -> t
-
-    (** Returns the new name of the variable or a default value, if the rename map does not assign a new name to the variable *)
-    val find : var -> t -> default:var -> var
-  end
-
 (** Evaluable is a unified interface of all parts of a polynomial *)
 module type Evaluable =
   sig
     type t
     module Value : Ring
     module Valuation_ : (Valuation with type var = Var.t and type value = Value.t)
-    module RenameMap_ : (RenameMap with type var = Var.t)
 
     include Eq with type t := t
     val to_string : t -> string
@@ -134,7 +115,7 @@ module type Evaluable =
     val eval_f : t -> (Var.t -> Value.t) -> Value.t
 
     (** Assigns the variables of the evaluable new names based on the rename map. *)
-    val rename : RenameMap_.t -> t -> t
+    val rename : RenameMap.t -> t -> t
 
     val degree : t -> int
   end

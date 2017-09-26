@@ -3,7 +3,6 @@ open Batteries
 module Make(Value : PolyTypes.Ring) =
   struct
     module Valuation_ = Valuation.Make(Value)
-    module RenameMap_ = RenameMap.Make
     module Map = Map.Make(Var)
 
     type t = int Map.t
@@ -46,7 +45,7 @@ module Make(Value : PolyTypes.Ring) =
     let (=~=) = Map.equal (==) 
 
     let rename varmapping mon =
-      let addRenamed var n map = Map.add (RenameMap_.find var varmapping var) n map in
+      let addRenamed var n map = Map.add (RenameMap.find var varmapping var) n map in
       Map.fold addRenamed mon Map.empty
 
     let mul =
