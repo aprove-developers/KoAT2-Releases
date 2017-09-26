@@ -1,6 +1,6 @@
 open Batteries
 
-module Make(Var : PolyTypes.ID) =
+module Make =
   struct
     module M = Map.Make(Var)
     type var = Var.t

@@ -11,8 +11,7 @@ module Make(P : PolyTypes.Polynomial) =
     module TransitionLabel =
       struct
         module Polynomial = Constraint_.Polynomial_
-        module Var = Constraint_.Polynomial_.Var
-        module Map = Map.Make(Constraint_.Polynomial_.Var)
+        module Map = Map.Make(Var)
                    
         exception RecursionNotSupported
                 
@@ -118,19 +117,19 @@ module Make(P : PolyTypes.Polynomial) =
 
     module RV =
       struct
-        type t = Transition.t * Constraint_.Polynomial_.Var.t [@@deriving eq, ord]
+        type t = Transition.t * Var.t [@@deriving eq, ord]
         let hash v = raise (Failure "Not yet implemented")
         let transition (t,v) = t
         let variable (t,v) = v
         let to_string ((l,t,l'),v) = TransitionLabel.(Bound.to_string (sizebound_local Upper t v)) ^ " >= " ^
-                                       "|" ^ Location.to_string l ^ " -> " ^ Location.to_string l' ^ "," ^ Constraint_.Polynomial_.Var.to_string v ^ "|"
+                                       "|" ^ Location.to_string l ^ " -> " ^ Location.to_string l' ^ "," ^ Var.to_string v ^ "|"
                                    ^ " >= " ^ TransitionLabel.(Bound.to_string (sizebound_local Lower t v))
       end
     module RVG = Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
     type t = {
         graph: TransitionGraph.t;
-        vars: Constraint_.Polynomial_.Var.t list;
+        vars: Var.t list;
         start: Location.t;
       }
                      

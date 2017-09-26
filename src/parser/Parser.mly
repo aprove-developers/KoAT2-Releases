@@ -39,11 +39,11 @@
 
 %type <G.Polynomial_.t> polynomial
 
-%type <G.Polynomial_.Var.t list> variables
+%type <Var.t list> variables
 
-%type <vars:G.Polynomial_.Var.t list -> G.TransitionLabel.t> transition
+%type <vars:Var.t list -> G.TransitionLabel.t> transition
 
-%type <(vars:G.Polynomial_.Var.t list -> G.TransitionLabel.t) list> transitions
+%type <(vars:Var.t list -> G.TransitionLabel.t) list> transitions
 
 %{
   open BatTuple
@@ -81,14 +81,14 @@ transitions :
 
 variables :   
 	|	LPAR VAR vars = list(ID) RPAR
-		  { List.map Poly.Var.of_string vars } ;
+		  { List.map Var.of_string vars } ;
 
 transition :
 	|	lhs = transition_lhs; ARROW; rhs = transition_rhs; constr = withConstraints
 	          { G.TransitionLabel.mk ~name:(Tuple2.first rhs)
                                      ~start:(Tuple2.first lhs)
                                      ~targets:(Tuple2.second rhs)
-                                     ~patterns:(List.map Poly.Var.of_string (Tuple2.second lhs))
+                                     ~patterns:(List.map Var.of_string (Tuple2.second lhs))
                                      ~guard:constr } ;
 
 transition_lhs :

@@ -18,8 +18,7 @@ module type Program =
     module TransitionLabel :
     sig
       module Polynomial = Constraint_.Polynomial_
-      module Var = Constraint_.Polynomial_.Var
-      module Map : module type of Map.Make(Constraint_.Polynomial_.Var)
+      module Map : module type of Map.Make(Var)
       module Bound : module type of MinMaxPolynomial.Make(Polynomial) 
       type kind = Lower | Upper  [@@deriving eq, ord]
       type t
@@ -60,11 +59,11 @@ module type Program =
       
     module RV :
       sig
-        type t = Transition.t * Constraint_.Polynomial_.Var.t [@@deriving eq]
+        type t = Transition.t * Var.t [@@deriving eq]
         val compare : t -> t -> int
         val hash : t -> int
         val transition : t -> Transition.t
-        val variable : t -> Constraint_.Polynomial_.Var.t
+        val variable : t -> Var.t
       end
          
     module RVG : module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
@@ -77,7 +76,7 @@ module type Program =
 
     val mk : TransitionGraph.vertex list -> TransitionGraph.edge list -> TransitionGraph.t
 
-    val from : Constraint_.Polynomial_.Var.t list
+    val from : Var.t list
                -> TransitionLabel.t list
                -> Location.t
                -> t
@@ -103,6 +102,6 @@ module type Program =
 
     val to_string : t -> string
     
-    val vars : t -> Constraint_.Polynomial_.Var.t Set.t
+    val vars : t -> Var.t Set.t
 
   end

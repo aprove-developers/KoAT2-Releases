@@ -59,7 +59,7 @@ module type Atom =
 
         (** Returns the set of variables which are active in the atom.
             A variable is active, if it's value has an effect on the evaluation of the atom. *)
-        val vars : t -> Polynomial_.Var.t Set.t
+        val vars : t -> Var.t Set.t
 
         (** Returns a normalised form of the atom, where the returned polynomial represents the atom in the form p <= 0. *)
         val normalised_lhs : t -> Polynomial_.t
@@ -77,7 +77,7 @@ module type Atom =
 
         (** Replaces all operations by new constructors. *)
         val fold : const:(Polynomial_.Value.t -> 'b) ->
-                   var:(Polynomial_.Var.t -> 'b) ->
+                   var:(Var.t -> 'b) ->
                    neg:('b -> 'b) ->               
                    plus:('b -> 'b -> 'b) ->
                    times:('b -> 'b -> 'b) ->
@@ -134,7 +134,7 @@ module type Constraint =
           
         (** Returns the set of variables which are active in the constraint.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
-        val vars : t -> Polynomial_.Var.t Set.t
+        val vars : t -> Var.t Set.t
 
         val to_string : t -> string
 
@@ -151,7 +151,7 @@ module type Constraint =
 
         (** Replaces all operations by new constructors. *)
         val fold : const:(Polynomial_.Value.t -> 'b) ->
-                   var:(Polynomial_.Var.t -> 'b) ->
+                   var:(Var.t -> 'b) ->
                    neg:('b -> 'b) ->               
                    plus:('b -> 'b -> 'b) ->
                    times:('b -> 'b -> 'b) ->
@@ -170,14 +170,14 @@ module type Constraint =
         val drop_nonlinear : t -> t
         
         (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
-        val get_coefficient_vector : Polynomial_.Var.t -> t -> Polynomial_.Value.t list
+        val get_coefficient_vector : Var.t -> t -> Polynomial_.Value.t list
         
-        val get_matrix : Polynomial_.Var.t Set.t -> t -> Polynomial_.Value.t list list
+        val get_matrix : Var.t Set.t -> t -> Polynomial_.Value.t list list
         
         (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
         val get_constant_vector : t -> Polynomial_.Value.t list
         
-        val dualise : Polynomial_.Var.t list -> Polynomial_.Value.t list list -> Polynomial_.t list -> t
+        val dualise : Var.t list -> Polynomial_.Value.t list list -> Polynomial_.t list -> t
         
         val farkas_transform : t -> Atom_.t -> t
   end
@@ -187,7 +187,7 @@ module type Formula =
   sig
         module Polynomial_ : Polynomial
         module Atom_ : Atom with module Polynomial_ = Polynomial_
-        module Constraint_ : Constraint with module Polynomial_ = Polynomial_ and module Atom_ = Atom_
+        module Constraint_ : Constraint with module Polynomial_ = Polynomial_
 
         type t
         
@@ -226,7 +226,7 @@ module type Formula =
           
         (** Returns the set of variables which are active in the formula.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
-        val vars : t -> Polynomial_.Var.t Set.t
+        val vars : t -> Var.t Set.t
 
         val to_string : t -> string
 
@@ -238,7 +238,7 @@ module type Formula =
 
         (** Replaces all operations by new constructors. *)
         val fold : const:(Polynomial_.Value.t -> 'b) ->
-                   var:(Polynomial_.Var.t -> 'b) ->
+                   var:(Var.t -> 'b) ->
                    neg:('b -> 'b) ->               
                    plus:('b -> 'b -> 'b) ->
                    times:('b -> 'b -> 'b) ->

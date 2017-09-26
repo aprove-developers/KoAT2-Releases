@@ -66,7 +66,7 @@ module Methods (P : Polynomial) =
       
     let of_int = P.Value.of_int
 
-    let of_string = P.Var.of_string
+    let of_string = Var.of_string
     
     let rec list_equality (xs : P.Value.t list ) (ys : P.Value.t list) =
         match (xs, ys) with
@@ -246,7 +246,7 @@ module Methods (P : Polynomial) =
                     List.map (fun (expected, substitution, polynomial) ->
                         polynomial >:: (fun _ -> assert_equal_polynomial
                                                               (Reader.read_polynomial expected)
-                                                              (P.substitute (P.Var.of_string "x")
+                                                              (P.substitute (Var.of_string "x")
                                                                             ~replacement:(Reader.read_polynomial substitution)
                                                                             (Reader.read_polynomial polynomial))))
                              [

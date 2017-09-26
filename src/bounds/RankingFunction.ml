@@ -5,11 +5,11 @@ module Make(P : ProgramTypes.Program) =
     module Program_ = P
     module Constraints_ = Program_.Constraint_
     module Polynomial_ = Constraints_.Polynomial_
-    module ParameterPolynomial_ = Polynomials.Make(P.Constraint_.Polynomial_.Var)(P.Constraint_.Polynomial_)
-    module ParameterFormula_= Formula.Make(Polynomials.Make(P.Constraint_.Polynomial_.Var)(P.Constraint_.Polynomial_))
+    module ParameterPolynomial_ = Polynomials.Make(P.Constraint_.Polynomial_)
+    module ParameterFormula_= Formula.Make(Polynomials.Make(P.Constraint_.Polynomial_))
     module ParameterConstraints_ = ParameterFormula_.Constraint_
     module ParameterAtoms_= ParameterConstraints_.Atom_
-    module SMTSolver_ = SMT.MakeZ3Solver(Polynomials.Make(P.Constraint_.Polynomial_.Var)(P.Constraint_.Polynomial_))
+    module SMTSolver_ = SMT.MakeZ3Solver(Polynomials.Make(P.Constraint_.Polynomial_))
     
     type t = {
         pol : Program_.Location.t -> ParameterPolynomial_.t (*This should be a parameter Polynomial, so that it can be used a few times*);
@@ -28,7 +28,7 @@ module Make(P : ProgramTypes.Program) =
     (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
     let apply_farkas a_matrix b_right c_left d_right =
         let num_of_fresh = List.length b_right in
-            let fresh_vars = Polynomial_.Var.fresh_id_list num_of_fresh in
+            let fresh_vars = Var.fresh_id_list num_of_fresh in
                 let dual_constr = ParameterConstraints_.dualise fresh_vars a_matrix c_left in
                     let cost_constr = ParameterPolynomial_.from_coeff_list b_right fresh_vars in
                         ParameterConstraints_.mk_and dual_constr (ParameterConstraints_.mk_le cost_constr (ParameterPolynomial_.from_constant d_right))
@@ -46,9 +46,9 @@ module Make(P : ProgramTypes.Program) =
     (** Given a list of variables an affine template-polynomial is generated*)            
     let ranking_template vars =
         let num_vars = (List.length vars) in
-            let fresh_coeffs = List.map Polynomial_.from_var (Polynomial_.Var.fresh_id_list num_vars) in
+            let fresh_coeffs = List.map Polynomial_.from_var (Var.fresh_id_list num_vars) in
                 let linear_poly = ParameterPolynomial_.from_coeff_list fresh_coeffs vars in
-                    let constant = ParameterPolynomial_.from_constant (Polynomial_.from_var (List.at (Polynomial_.Var.fresh_id_list 1) 1)) in
+                    let constant = ParameterPolynomial_.from_constant (Polynomial_.from_var (List.at (Var.fresh_id_list 1) 1)) in
                         ParameterPolynomial_.add linear_poly constant 
                         
     let copy_list_into_hash hashtbl pairs_list =
@@ -74,7 +74,7 @@ module Make(P : ProgramTypes.Program) =
                 |None -> ParameterPolynomial_.from_var var
                 |Some p -> ParameterPolynomial_.from_constant p
                                 
-    let help_non_increasing (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Program_.Constraint_.Polynomial_.Var.t list) =
+    let help_non_increasing (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Var.t list) =
         let trans_label = Program_.TransitionGraph.E.label trans in
             let start_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.src trans) in
                 let target_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.dst trans) in
@@ -83,7 +83,7 @@ module Make(P : ProgramTypes.Program) =
                             let new_atom = ParameterAtoms_.mk_ge start_parapoly updated_target in
                                 farkas_transform guard new_atom
                             
-    let help_strict_decrease (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Program_.Constraint_.Polynomial_.Var.t list) =
+    let help_strict_decrease (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Var.t list) =
         let trans_label = Program_.TransitionGraph.E.label trans in
             let start_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.src trans) in
                 let target_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.dst trans) in
@@ -92,7 +92,7 @@ module Make(P : ProgramTypes.Program) =
                             let new_atom = ParameterAtoms_.mk_gt start_parapoly updated_target in (*here's the difference*)
                                 farkas_transform guard new_atom
                             
-    let help_boundedness (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Program_.Constraint_.Polynomial_.Var.t list) =
+    let help_boundedness (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Var.t list) =
         let trans_label = Program_.TransitionGraph.E.label trans in
             let start_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.src trans) in
                 let guard = Program_.TransitionLabel.guard trans_label in

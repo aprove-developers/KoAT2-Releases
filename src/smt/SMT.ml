@@ -36,10 +36,10 @@ module MakeZ3Solver(P : PolyTypes.Polynomial) : (Solver with module Polynomial_ 
 
     let from_constraint (constraints : Formula_.t) =
       Formula_.fold ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i !context (Polynomial_.Value.to_int value))
-                      ~var:(fun var ->  if (Polynomial_.Var.is_helper var) then 
-                                            Z3.Arithmetic.Real.mk_const_s !context (Polynomial_.Var.to_string var) 
+                      ~var:(fun var ->  if (Var.is_helper var) then 
+                                            Z3.Arithmetic.Real.mk_const_s !context (Var.to_string var) 
                                         else
-                                            Z3.Arithmetic.Integer.mk_const_s !context (Polynomial_.Var.to_string var))
+                                            Z3.Arithmetic.Integer.mk_const_s !context (Var.to_string var))
                       ~neg:(Z3.Arithmetic.mk_unary_minus !context)
                       ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add !context [p1; p2])
                       ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul !context [p1; p2])
@@ -86,7 +86,7 @@ module MakeZ3Solver(P : PolyTypes.Polynomial) : (Solver with module Polynomial_ 
                                 (List.map 
                                     (fun func_decl -> 
                                         let name = Z3.Symbol.get_string (Z3.FuncDecl.get_name func_decl) in
-                                        let var_of_name = (Polynomial_.Var.of_string name) in
+                                        let var_of_name = (Var.of_string name) in
                                         let value = Option.get (Z3.Model.get_const_interp
                                         model func_decl)(*careful, this returns an option*) in
 

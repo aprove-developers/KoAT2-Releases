@@ -8,7 +8,6 @@ module type Approximation =
     module Program_ : ProgramTypes.Program
 
     module Transition = Program_.Transition
-    module Var = Program_.Constraint_.Polynomial_.Var
     module Value = Program_.Constraint_.Polynomial_.Value
                                 
     module Bound : module type of MinMaxPolynomial.Make(Program_.Constraint_.Polynomial_)
@@ -56,7 +55,7 @@ module type RankingFunction =
     module Program_ : ProgramTypes.Program
     module Constraints_ : ConstraintTypes.Constraint
     module Polynomial_ : PolyTypes.Polynomial
-    module ParameterPolynomial_ : PolyTypes.Polynomial with module Var = Program_.Constraint_.Polynomial_.Var
+    module ParameterPolynomial_ : PolyTypes.Polynomial
     module ParameterFormula_ : ConstraintTypes.Formula
     module ParameterConstraints_ : ConstraintTypes.Constraint
     module ParameterAtoms_ : ConstraintTypes.Atom

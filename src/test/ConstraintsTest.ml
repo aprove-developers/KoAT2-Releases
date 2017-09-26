@@ -1,5 +1,4 @@
 open Batteries
-open ID
 open OUnit2
 open PolyTypes
 open ConstraintTypes
@@ -46,7 +45,7 @@ module Methods (P : PolyTypes.Polynomial) =
     module C = Constraints.Make(P)                  
     module Atom = C.Atom_
     module Polynomial = Atom.Polynomial_
-    module ParameterPolynomial = Polynomials.Make(Polynomial.Var)(Polynomial)
+    module ParameterPolynomial = Polynomials.Make(Polynomial)
     module ParameterAtom = Atoms.Make(ParameterPolynomial)
                      
     let example_valuation = Polynomial.Valuation_.from_native [("x", 3);
@@ -58,7 +57,7 @@ module Methods (P : PolyTypes.Polynomial) =
     
     let varset_to_string varl =
         varl
-        |> Set.map Polynomial.Var.to_string
+        |> Set.map Var.to_string
         |> Set.to_list
         |> String.concat ","
                                     
@@ -105,7 +104,7 @@ module Methods (P : PolyTypes.Polynomial) =
 
             ("get_variables" >:::
                 List.map (fun (expected, constr) ->
-                      constr >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string (Set.map Polynomial.Var.of_string (Set.of_list expected)) (C.vars (Reader.read_constraint constr) )))
+                      constr >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string (Set.map Var.of_string (Set.of_list expected)) (C.vars (Reader.read_constraint constr) )))
                         [
                             (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 && y >= 0 && z <= 4" );
 
@@ -150,7 +149,7 @@ module Methods (P : PolyTypes.Polynomial) =
                 List.map (fun (expected, var, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_equality ~printer:list_print
                                                       (List.map Polynomial.Value.of_int expected)
-                                                      (C.get_coefficient_vector (Polynomial.Var.of_string var) (Reader.read_constraint constr) )))
+                                                      (C.get_coefficient_vector (Var.of_string var) (Reader.read_constraint constr) )))
                         [
                             ([1; 2; 3], "x", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                             ([1; 3; -4], "y", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
@@ -175,7 +174,7 @@ module Methods (P : PolyTypes.Polynomial) =
                 List.map (fun (expected, vars, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_list_equality ~printer:list_list_print
                                                       (List.map (List.map Polynomial.Value.of_int) expected)
-                                                      (C.get_matrix ((Set.map Polynomial.Var.of_string (Set.of_list vars))) (Reader.read_constraint constr) )))
+                                                      (C.get_matrix ((Set.map Var.of_string (Set.of_list vars))) (Reader.read_constraint constr) )))
                         [
                             ([[1; 2; 3];[1; 3; -4]],["x";"y"], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                             ([[1; -1];[-1; 1]],["x";"y"], "x = y");

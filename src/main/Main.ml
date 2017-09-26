@@ -1,8 +1,7 @@
 open Batteries
 
-module Var_ = ID.StringID
 module Value_ = PolyTypes.OurInt
-module Polynomial_ = Polynomials.Make(Var_)(Value_)
+module Polynomial_ = Polynomials.Make(Value_)
 module Constraint_ = Constraints.Make(Polynomial_)
 module Program_ = Program.Make(Polynomial_)
 module Approximation_ = Approximation.Make(Program_)
@@ -100,7 +99,7 @@ let run_localsizebound (params: localsizebound_params) =
     | `Upper -> Upper
     | `Lower -> Lower in
   let guard = Reader_.read_constraint params.guard in
-  let var = Polynomial_.Var.of_string params.var in
+  let var = Var.of_string params.var in
   let update = match params.update with
     | Some str -> Map.(add var (Reader_.read_polynomial str) empty)
     | None -> Map.empty in
@@ -115,7 +114,7 @@ let run_smt (params: smt_params) =
   let valuation_bindings = Polynomial_.Valuation_.bindings (solve constr) in
   if Enum.is_empty valuation_bindings then
     print_string "unsatisfiable"
-  else Enum.iter (fun (var,value) -> print_string (Polynomial_.Var.to_string var ^ " -> " ^ Polynomial_.Value.to_string value ^ "\n")) valuation_bindings
+  else Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ Polynomial_.Value.to_string value ^ "\n")) valuation_bindings
   
 let run_normalize (params: normalize_params) =
   let output = match params.kind with

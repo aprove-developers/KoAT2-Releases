@@ -1,14 +1,13 @@
 open Batteries
 
-module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
+module Make(Value : PolyTypes.Ring) =
   struct
-    module Valuation_ = Valuation.Make(Var)(Value)
-    module RenameMap_ = RenameMap.Make(Var)
+    module Valuation_ = Valuation.Make(Value)
+    module RenameMap_ = RenameMap.Make
     module Map = Map.Make(Var)
 
     type t = int Map.t
            
-    module Var = Var
     module Value = Value
 
     let make list =

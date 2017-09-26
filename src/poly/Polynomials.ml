@@ -1,12 +1,12 @@
 open Batteries
 open PolyTypes
    
-module Make(Var : PolyTypes.ID)(Value : PolyTypes.Ring) =
+module Make(Value : PolyTypes.Ring) =
   struct
-    module Monomial_ = Monomials.Make(Var)(Value)
-    module ScaledMonomial_ = ScaledMonomials.Make(Var)(Value)
-    module Valuation_ = Valuation.Make(Var)(Value)
-    module RenameMap_ = RenameMap.Make(Var)
+    module Monomial_ = Monomials.Make(Value)
+    module ScaledMonomial_ = ScaledMonomials.Make(Value)
+    module Valuation_ = Valuation.Make(Value)
+    module RenameMap_ = RenameMap.Make
                       
     type monomial = Monomial_.t
     type t = ScaledMonomial_.t list                          

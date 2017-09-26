@@ -1,5 +1,4 @@
 open Batteries
-open ID
 open OUnit2
 open PolyTypes
 open ConstraintTypes
@@ -55,7 +54,7 @@ module Methods (P : PolyTypes.Polynomial) =
 
     let varset_to_string varl =
         varl
-        |> Set.map Polynomial.Var.to_string
+        |> Set.map Var.to_string
         |> Set.to_list
         |> String.concat ","
                                     
@@ -96,7 +95,7 @@ module Methods (P : PolyTypes.Polynomial) =
             ("vars" >:::
                 List.map (fun (expected, atom) ->
                     atom >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string
-                                                    (Set.map Polynomial.Var.of_string (Set.of_list expected))
+                                                    (Set.map Var.of_string (Set.of_list expected))
                                                     (C.Atom_.vars (Reader.read_atom atom))))
                          [
                            (["x"], " x^3+2*x -1 < x^5 " );

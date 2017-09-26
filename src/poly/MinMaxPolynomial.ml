@@ -4,7 +4,6 @@ module Make(P : PolyTypes.Polynomial) =
   struct
     module Polynomial_ = P
     module Value = P.Value
-    module Var = P.Var
     module Valuation_ = P.Valuation_
     module RenameMap_ = P.RenameMap_
                           

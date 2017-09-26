@@ -40,7 +40,7 @@ let suite =
                        let (l,t,l') = Program.TransitionGraph.find_edge (Program.graph program) (Program.Location.of_string l) (Program.Location.of_string l') in
                        Program.TransitionLabel.(assert_equal_bound
                                                   (Bound.of_poly (Reader.read_polynomial bound))
-                                                  (sizebound_local Upper t (Program.Constraint_.Polynomial_.Var.of_string var))
+                                                  (sizebound_local Upper t (Var.of_string var))
                        )
                      )
              )

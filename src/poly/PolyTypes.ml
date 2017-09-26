@@ -11,22 +11,6 @@ module type Eq =
     (* TODO val (!=) : t -> t -> bool *)
   end
 
-(** An ID is a unique identifier for the elements of an arbitrary set (of variables) *)
-module type ID =
-  sig
-    type t [@@deriving eq, ord]
-    include Eq with type t := t
-    val of_string : string -> t
-    val to_string : t -> string
-    (** Returns a not yet used id, which is guaranteed to be distinct from any yet existing ids. *)
-    val fresh_id : unit -> t
-    (** Returns a bunch of fresh ids. *)
-    val fresh_ids : int -> t Enum.t
-    val fresh_id_list : int -> t list
-    val is_helper : t -> bool
-    val mk_helper : int -> t
-  end
-
 (** TODO *)
 module type Ring =
   sig
@@ -86,7 +70,7 @@ module MakePartialOrder(Base : BasePartialOrder) : (PartialOrder with type t := 
 module type Valuation =
   sig
     type t
-    type var
+    type var = Var.t
     type value
 
     val from : (var * value) list -> t
@@ -111,16 +95,11 @@ module type Valuation =
     val bindings : t -> (var * value) Enum.t
   end
 
-(** This module type defines how functors constructing valuations have to be defined *)
-module type ValuationFunctor =
-  functor (Var : ID)(Value : Ring) -> Valuation with type var = Var.t
-                                                  and type value = Value.t
-
 (** A rename map is a function which maps from a finite set of variables to another finite set of variables *)
 module type RenameMap =
   sig
     type t
-    type var
+    type var = Var.t
 
     val from : (var * var) list -> t
 
@@ -138,7 +117,6 @@ module type RenameMap =
 module type Evaluable =
   sig
     type t
-    module Var : ID
     module Value : Ring
     module Valuation_ : (Valuation with type var = Var.t and type value = Value.t)
     module RenameMap_ : (RenameMap with type var = Var.t)
@@ -163,8 +141,7 @@ module type Evaluable =
 
 (** This module type defines how functors constructing evaluables have to be defined *)
 module type EvaluableFunctor =
-  functor (Var : ID)(Value : Ring) -> Evaluable with module Var = Var
-                                                  and module Value = Value
+  functor (Value : Ring) -> Evaluable with module Value = Value
 
 (** A monomial is a finite product of powers *)
 module type Monomial =
@@ -379,14 +356,12 @@ module type Polynomial =
 
 (** This module type defines how functors constructing polynomials have to be defined *)
 module type PolynomialFunctor =
-  functor (Var : ID)(Value : Ring) -> Polynomial with module Var = Var
-                                                  and module Value = Value
+  functor (Value : Ring) -> Polynomial with module Value = Value
 
 (** Monadize adds the monadic flatten method to a polynomial. *)
-module Monadize(P : PolynomialFunctor)(Var : ID)(Value : Ring) = struct
-  module AbstractPoly = P(Var)
-  module Inner = AbstractPoly(Value)
-  module Outer = AbstractPoly(AbstractPoly(Value))
+module Monadize(P : PolynomialFunctor)(Value : Ring) = struct
+  module Inner = P(Value)
+  module Outer = P(P(Value))
   include Outer
   (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
   (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
@@ -401,7 +376,7 @@ module type MinMaxPolynomial =
     include Evaluable with type t := t
     include Math with type t := t
     include PartialOrder with type t := t
-    module Polynomial_ : (Polynomial with module Var = Var and module Value = Value)
+    module Polynomial_ : (Polynomial with module Value = Value)
 
 
     (** Following methods are convenience methods for the creation of polynomials. *)

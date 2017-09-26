@@ -6,7 +6,6 @@ open Batteries
 module type Polynomial =
   sig
     type t
-    module Var : PolyTypes.ID
     module Value : PolyTypes.Ring
     val value : int -> t
     val var : string -> t
@@ -58,7 +57,7 @@ module type Formula =
     type t
     module Polynomial_ : Polynomial
     module Atom_ : Atom with module Polynomial_ = Polynomial_
-    module Constraint_ : Constraint with module Polynomial_ = Polynomial_ and module Atom_ = Atom_
+    module Constraint_ : Constraint with module Polynomial_ = Polynomial_
     
     val lift : Atom_.t -> t      
     val all : t list -> t
@@ -71,7 +70,7 @@ module type Program =
     module Polynomial_ : Polynomial
     module Atom_ : Atom with module Polynomial_ = Polynomial_
     module Constraint_ : Constraint with module Polynomial_ = Polynomial_ and module Atom_ = Atom_
-    module Formula_ : Formula with module Polynomial_ = Polynomial_ and module Atom_ = Atom_ and module Constraint_ = Constraint_
+    module Formula_ : Formula with module Polynomial_ = Polynomial_ and module Constraint_ = Constraint_ and module Atom_ = Atom_ 
     module TransitionLabel :
     sig
       type t
@@ -80,9 +79,9 @@ module type Program =
       val mk : name:string ->
                start:string ->
                targets:(string * (Constraint_.Polynomial_.t list)) list ->
-               patterns:Constraint_.Polynomial_.Var.t list ->
+               patterns:Var.t list ->
                guard:Constraint_.t ->
-               vars:Constraint_.Polynomial_.Var.t list ->
+               vars:Var.t list ->
                t
       val start : t -> string
       val target : t -> string
@@ -93,7 +92,7 @@ module type Program =
         val of_string : string -> t       
       end
    
-    val from : Constraint_.Polynomial_.Var.t list
+    val from : Var.t list
                -> TransitionLabel.t list
                -> Location.t
                -> t
