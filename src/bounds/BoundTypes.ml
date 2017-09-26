@@ -54,15 +54,16 @@ module type Approximation =
 module type RankingFunction =
   sig
     module Program_ : ProgramTypes.Program
-    module Polynomial_ : PolyTypes.Polynomial
     module Constraints_ : ConstraintTypes.Constraint
-    module ParameterPolynomial_ : PolyTypes.Polynomial
-    module ParameterConstraints_ :ConstraintTypes.Constraint
-    module ParameterAtoms_ :ConstraintTypes.Atom
-
+    module Polynomial_ : PolyTypes.Polynomial
+    module ParameterPolynomial_ : PolyTypes.Polynomial with module Var = Program_.Constraint_.Polynomial_.Var
+    module ParameterConstraints_ : ConstraintTypes.Constraint
+    module ParameterAtoms_ : ConstraintTypes.Atom
+    module SMTSolver_ : SMT.Solver
+    
     type t
     
-(*    val fresh_ranking_map: vars list -> location list -> location -> parameterpoly*)
+    (* val fresh_ranking_map: vars list -> location list -> location -> parameterpoly*)
 
     (** Returns a non-empty list of all transitions which are strictly decreasing and at the same time bounded with one.
         Corresponds to T_> . *)
@@ -82,6 +83,7 @@ module type RankingFunction =
     val farkas_transform : Constraints_.t -> ParameterConstraints_.Atom_.t -> ParameterConstraints_.t
     
     val generate_ranking_template : Program_.t -> (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t
+    
   end
   
 module type TimeBounds =
