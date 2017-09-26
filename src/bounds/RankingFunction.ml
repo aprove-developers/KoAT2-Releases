@@ -5,8 +5,8 @@ module Make(P : ProgramTypes.Program) =
     module Program_ = P
     module Constraints_ = Program_.Constraint_
     module Polynomial_ = Constraints_.Polynomial_
-    module ParameterPolynomial_ = Polynomials.Make(Polynomial_.Var)(Polynomial_)
-    module ParameterConstraints_= Constraints.Make(ParameterPolynomial_)
+    module ParameterPolynomial_ = Polynomials.Make(P.Constraint_.Polynomial_.Var)(P.Constraint_.Polynomial_)
+    module ParameterConstraints_= Constraints.Make(Polynomials.Make(P.Constraint_.Polynomial_.Var)(P.Constraint_.Polynomial_))
     module ParameterAtoms_= ParameterConstraints_.Atom_
     
     type t = {
@@ -67,6 +67,17 @@ module Make(P : ProgramTypes.Program) =
                             let list_of_prf = Program_.TransitionGraph.fold_vertex ins_loc_prf graph loc_prf in
                                 copy_list_into_hash fresh_table list_of_prf;
                                 fresh_table
+                                
+(*    let help_non_increasing (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (trans : Program_.TransitionGraph.E.t) (vars : Program_.Constraint_.Polynomial_.Var.t list) =
+        let trans_label = Program_.TransitionGraph.E.label trans in
+        let start_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.src trans) in
+            let target_parapoly = Hashtbl.find table (Program_.TransitionGraph.E.dst trans) in
+                let guard = Program_.TransitionLabel.guard trans_label in
+                    let update = Program_.TransitionLabel.Map.map (ParameterPolynomial_.from_constant) (Program_.TransitionLabel.update_map trans_label) in
+                        (*let updated_target = *)ParameterPolynomial_.substitute_all update target_parapoly (*in
+                            let new_atom = ParameterAtoms_.mk_ge start_parapoly updated_target in
+                                farkas_transform guard new_atom*)*)
+
  end     
     
   
