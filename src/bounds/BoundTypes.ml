@@ -57,6 +57,7 @@ module type RankingFunction =
     module Constraints_ : ConstraintTypes.Constraint
     module Polynomial_ : PolyTypes.Polynomial
     module ParameterPolynomial_ : PolyTypes.Polynomial with module Var = Program_.Constraint_.Polynomial_.Var
+    module ParameterFormula_ : ConstraintTypes.Formula
     module ParameterConstraints_ : ConstraintTypes.Constraint
     module ParameterAtoms_ : ConstraintTypes.Atom
     module SMTSolver_ : SMT.Solver
@@ -71,7 +72,11 @@ module type RankingFunction =
 
     (** Returns a non-empty list of all transitions which are non increasing.
         This list also contains all transitions that are strictly decreasing. *)
-    val non_increasing : t -> Program_.Transition.t list
+    (*val non_increasing : t -> Program_.Transition.t list*)
+    
+    (** Returns a non-empty list of all transitions which are bounded below by zero.
+        This list also contains all transitions that are strictly decreasing. *)
+    val bounded : t -> Program_.Transition.t list
 
     (** Finds a suitable ranking function which decreases at least one transition and does not increase any transition. *)
     val find : Program_.t -> t

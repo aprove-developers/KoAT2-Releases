@@ -6,21 +6,21 @@ module Make(P : ProgramTypes.Program) =
     module Constraints_ = Program_.Constraint_
     module Polynomial_ = Constraints_.Polynomial_
     module ParameterPolynomial_ = Polynomials.Make(P.Constraint_.Polynomial_.Var)(P.Constraint_.Polynomial_)
-    module ParameterConstraints_= Constraints.Make(Polynomials.Make(P.Constraint_.Polynomial_.Var)(P.Constraint_.Polynomial_))
+    module ParameterFormula_= Formula.Make(Polynomials.Make(P.Constraint_.Polynomial_.Var)(P.Constraint_.Polynomial_))
+    module ParameterConstraints_ = ParameterFormula_.Constraint_
     module ParameterAtoms_= ParameterConstraints_.Atom_
+    module SMTSolver_ = SMT.MakeZ3Solver(Polynomials.Make(P.Constraint_.Polynomial_.Var)(P.Constraint_.Polynomial_))
     
     type t = {
-        pol : Program_.Location.t -> Polynomial_.t (*This should be a parameter Polynomial, so that it can be used a few times*);
+        pol : Program_.Location.t -> ParameterPolynomial_.t (*This should be a parameter Polynomial, so that it can be used a few times*);
         strictly_decreasing : Program_.Transition.t list;
-        non_increasing : Program_.Transition.t list;
+        (*non_increasing : Program_.Transition.t list; not necessary as it contains every transition *)
+        bounded : Program_.Transition.t list;
       }
 
     let strictly_decreasing f = f.strictly_decreasing
-
-    let non_increasing f = f.non_increasing
-
-    let find program =
-      raise (Failure "Not yet implemented")
+   
+    let bounded f = f.bounded
 
     let monotonize f =
       raise (Failure "Not yet implemented")
@@ -107,6 +107,25 @@ module Make(P : ProgramTypes.Program) =
     let get_strict_decrease_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : P.t) (str_decr :Program_.Transition.t list) =
         let vars = Set.elements (Program_.vars program) in
             List.fold_left (fun constr -> (fun trans -> ParameterConstraints_.mk_and (help_strict_decrease table trans vars) constr) ) ParameterConstraints_.mk_true str_decr
+            
+    let get_boundedness_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : P.t) (bnds :Program_.Transition.t list) =
+        let vars = Set.elements (Program_.vars program) in
+            List.fold_left (fun constr -> (fun trans -> ParameterConstraints_.mk_and (help_boundedness table trans vars) constr)) ParameterConstraints_.mk_true bnds
+            
+    let ranking_function_procedure (program : Program_.t) =
+        let table = generate_ranking_template program in
+            let non_incr = get_non_increase_constraints table program in
+                let sol_non_incr = SMTSolver_.get_model (ParameterFormula_.mk non_incr) in
+                    Hashtbl.map (fun loc -> (fun prf -> ParameterPolynomial_.eval_partial prf sol_non_incr)) table
+                    
+    
+    let find program =
+        let table = ranking_function_procedure program in
+            {   pol = Hashtbl.find table;
+                strictly_decreasing = [];
+                bounded = [];
+            }
+      
  end     
     
   

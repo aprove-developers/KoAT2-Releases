@@ -71,7 +71,6 @@ module MakeZ3Solver(P : PolyTypes.Polynomial) : (Solver with module Polynomial_ 
         let float_regexp = Str.regexp "(?\\([-]?\\)[ ]?\\([0-9]*\.?[0-9]+\\))?" in             (*(?\\([-0-9\\.]*\\))?*)
             Str.replace_first float_regexp "\\1\\2" str 
 
-      
     let get_model (constraints : Formula_.t) =
         let formula = from_constraint constraints in
         let optimisation_goal = Z3.Optimize.mk_opt !context in
