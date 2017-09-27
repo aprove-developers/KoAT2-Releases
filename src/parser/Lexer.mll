@@ -2,10 +2,10 @@
   (** Provides an lexer generated with ocamllex to lex transition graphs, its constraints and polynomials *)
   
   (** Constructs a lexer for transition graphs as well as its used constraints and polynomials *)
-  module Make(G : Parseable.Program) =
-    struct
+(*  module Make(G : Parseable.Program) =
+    struct*)
       open Lexing
-      module P = Parser.Make(G)
+      module P = Parser(*.Make(G)*)
          
       exception SyntaxError of string
                              
@@ -62,6 +62,6 @@ rule read =
   | eof               { P.EOF }
   | _                 { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
 
-{
+(*{
   end
-}
+}*)

@@ -33,7 +33,7 @@ module Make(P : ProgramTypes.Program) =
                     let cost_constr = ParameterPolynomial_.from_coeff_list b_right fresh_vars in
                         ParameterConstraints_.mk_and dual_constr (ParameterConstraints_.mk_le cost_constr (ParameterPolynomial_.from_constant d_right))
                         
-    (** Invokes farkas quatifier elimination. Uses apply_farkas*)
+    (** Invokes farkas quantifier elimination. Uses apply_farkas*)
     let farkas_transform constr param_atom =
         let vars = Set.union (Constraints_.vars constr) (ParameterAtoms_.vars param_atom) in
         let costfunction = ParameterConstraints_.lift param_atom in

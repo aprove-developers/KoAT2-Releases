@@ -2,12 +2,12 @@ open Batteries
 open OUnit2
 open Helper
 
-module Reader = Readers.Make(ProgramImpl.StdProgram)
+module Reader = Readers
 
 let assert_equal_string =
   assert_equal ~cmp:String.equal ~printer:(fun x -> x)
 
-module Program = ProgramImpl.StdProgram
+module Program = Program
 
 let suite =
   "Graphs" >::: [

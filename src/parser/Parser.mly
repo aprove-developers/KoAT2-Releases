@@ -1,5 +1,3 @@
-%parameter<G : Parseable.Program>
-
 %token	<string>	ID
 %token	<int>		UINT
 %token			PLUS MINUS TIMES POW
@@ -17,41 +15,41 @@
 %left			TIMES
                   
 			
-%start <G.t> onlyTransitiongraph
+%start <Program.t> onlyTransitiongraph
 
-%start <G.Formula_.t> onlyFormula
+%start <Program.Formula_.t> onlyFormula
 
-%start <G.Constraint_.t> onlyConstraints
+%start <Program.Constraint_.t> onlyConstraints
 
-%start <G.Atom_.t> onlyAtom
+%start <Program.Atom_.t> onlyAtom
 
-%start <G.Polynomial_.t> onlyPolynomial
+%start <Program.Polynomial_.t> onlyPolynomial
 
-%start <G.TransitionLabel.Bound.t> onlyBound
+%start <Program.TransitionLabel.Bound.t> onlyBound
 
-%type <G.t> transitiongraph
+%type <Program.t> transitiongraph
 
-%type <G.Formula_.t> formula
+%type <Program.Formula_.t> formula
 
-%type <G.Constraint_.t> constraints
+%type <Program.Constraint_.t> constraints
 
-%type <G.Constraint_.t> atom
+%type <Program.Constraint_.t> atom
 
-%type <G.Polynomial_.t> polynomial
+%type <Program.Polynomial_.t> polynomial
 
 %type <Var.t list> variables
 
-%type <vars:Var.t list -> G.TransitionLabel.t> transition
+%type <vars:Var.t list -> Program.TransitionLabel.t> transition
 
-%type <(vars:Var.t list -> G.TransitionLabel.t) list> transitions
+%type <(vars:Var.t list -> Program.TransitionLabel.t) list> transitions
 
 %{
   open BatTuple
-  module Constr = G.Constraint_
-  module Atom = G.Atom_
-  module Poly = G.Polynomial_
-  module Bound = G.TransitionLabel.Bound
-  module Formula = G.Formula_
+  module Constr = Program.Constraint_
+  module Atom = Program.Atom_
+  module Poly = Program.Polynomial_
+  module Bound = Program.TransitionLabel.Bound
+  module Formula = Program.Formula_
 %}
 
 %%
@@ -65,7 +63,7 @@ transitiongraph :
                 start = start
                 vars = variables
                 trans = transitions
-                  { G.from vars (List.map (fun t -> t ~vars) trans) start } ;
+                  { Program.from vars (List.map (fun t -> t ~vars) trans) start } ;
 
 goal :		
 	|	LPAR GOAL goal = ID RPAR
@@ -73,7 +71,7 @@ goal :
 
 start :
 	|	LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
-		  { G.Location.of_string start } ;
+		  { Program.Location.of_string start } ;
 
 transitions :
 	|	LPAR RULES l = nonempty_list(transition) RPAR
@@ -85,7 +83,7 @@ variables :
 
 transition :
 	|	lhs = transition_lhs; ARROW; rhs = transition_rhs; constr = withConstraints
-	          { G.TransitionLabel.mk ~name:(Tuple2.first rhs)
+	          { Program.TransitionLabel.mk ~name:(Tuple2.first rhs)
                                      ~start:(Tuple2.first lhs)
                                      ~targets:(Tuple2.second rhs)
                                      ~patterns:(List.map Var.of_string (Tuple2.second lhs))

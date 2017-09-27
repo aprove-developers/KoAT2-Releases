@@ -6,12 +6,12 @@ open Helper
    
 module Parser =
   struct
-    module Reader = Readers.Make(ProgramImpl.StdProgram)
+    module Reader = Readers
 
     let tests =
       "Parser" >::: [
           "Positive Tests" >::: (
-            let open ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
+            let open Program.Polynomial_ in
             List.map (fun (testname, expected, expression) ->
                 testname >:: (fun _ -> assert_equal_poly expected (Reader.read_polynomial expression)))
                      [
@@ -47,9 +47,11 @@ module Parser =
 
   end
   
-module Methods (P : Polynomial) =
+module Methods (*(P : Polynomial)*) =
   struct
-    module Reader = Readers.Make(Program.Make(P))
+    module Reader = Readers
+    
+    module P = Program.Polynomial_
                
     let example_valuation = P.Valuation_.from_native [("x", 3); ("y", 5); ("z", 7)]
                                             

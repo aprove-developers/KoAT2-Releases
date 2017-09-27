@@ -5,7 +5,7 @@ open Batteries
 (** A program is an integer transition system based on transitions and locations *)
 module type Program =
   sig
-    
+    module PolynomialMonad_ : PolyTypes.PolyMonad 
     module Polynomial_ : PolyTypes.Polynomial
     module Atom_ : ConstraintTypes.Atom with module Polynomial_ = Polynomial_
     module Constraint_ : ConstraintTypes.Constraint with module Polynomial_ = Polynomial_
@@ -17,7 +17,7 @@ module type Program =
         An update assigns variables a new value as a linear combination of the old values *)
     module TransitionLabel :
     sig
-      module Polynomial = Constraint_.Polynomial_
+      module Polynomial = Polynomial_
       module Map : module type of Map.Make(Var)
       module Bound : module type of MinMaxPolynomial.Make(Polynomial) 
       type kind = Lower | Upper  [@@deriving eq, ord]

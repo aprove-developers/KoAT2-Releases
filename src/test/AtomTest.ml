@@ -6,17 +6,17 @@ open Helper
    
 module Parser =
   struct
-    module Reader = Readers.Make(ProgramImpl.StdProgram)
+    module Reader = Readers
                   
     let assert_equal_atom =
-      assert_equal ~cmp:ProgramImpl.StdProgram.Constraint_.Atom_.(=~=)
-                   ~printer:ProgramImpl.StdProgram.Constraint_.Atom_.to_string
+      assert_equal ~cmp:Program.Constraint_.Atom_.(=~=)
+                   ~printer:Program.Constraint_.Atom_.to_string
 
     let tests =
         "Parser" >::: [
           "Positive Tests" >::: (
-            let open ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
-            let open ProgramImpl.StdProgram.Constraint_.Atom_.Infix in
+            let open Program.Constraint_.Atom_.Polynomial_ in
+            let open Program.Constraint_.Atom_.Infix in
                 List.map (fun (testname, expected, atom) ->
                 testname >:: (fun _ -> assert_equal_atom expected (Reader.read_atom atom)))
                         [
@@ -44,13 +44,14 @@ module Parser =
         ]
   end
 
-module Methods (P : PolyTypes.Polynomial) =
+module Methods (*(P : PolyTypes.Polynomial)*) =
   struct
-    module Reader = Readers.Make(Program.Make(P))
+    module P = Program.Polynomial_
+    module Reader = Readers
 
-    module C = Constraints.Make(P)                  
-    module Atom = C.Atom_
-    module Polynomial = Atom.Polynomial_
+    module C = Program.Constraint_                  
+    module Atom = Program.Atom_
+    module Polynomial = P
 
     let varset_to_string varl =
         varl

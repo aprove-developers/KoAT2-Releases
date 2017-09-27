@@ -1,15 +1,15 @@
-open Batteries
+(*open Batteries
 
 module Value_ = PolyTypes.OurInt
-module Polynomial_ = Polynomials.Make(Value_)
-module Constraint_ = Constraints.Make(Polynomial_)
-module Program_ = Program.Make(Polynomial_)
+module Program_ = Program(*.Make(Value_)*)
+module Polynomial_ = Program_.Polynomial_
+module Constraint_ = Program_.Constraint_
 module Approximation_ = Approximation.Make(Program_)
 module Bound = Program_.TransitionLabel.Bound
                       
 module SMT_ = SMT.MakeZ3Solver(Polynomial_)                      
 
-module Reader_ = Readers.Make(Program_)
+module Reader_ = Readers
 
 (** The shell arguments which can be defined in the console. *)
 type main_params = {
@@ -135,4 +135,4 @@ let () =
   let open Cmdliner in
   let main_command = (Term.(const run $ main_params_cmdliner_term ()), Term.info Sys.argv.(0)) in
   Term.exit @@ Term.eval_choice main_command subcommands
-
+*)

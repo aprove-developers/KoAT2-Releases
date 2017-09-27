@@ -64,17 +64,25 @@ module type Formula =
     val disj : Constraint_.t list -> t
   end
   
-module type Program =
+module type Monadize =
+    sig
+        module Outer : Polynomial
+        module Inner : Polynomial
+        val flatten : Outer.t -> Inner.t
+    end
+  
+(*module type Program =
   sig
     type t
-    module Polynomial_ : Polynomial
-    module Atom_ : Atom with module Polynomial_ = Polynomial_
-    module Constraint_ : Constraint with module Polynomial_ = Polynomial_ and module Atom_ = Atom_
-    module Formula_ : Formula with module Polynomial_ = Polynomial_ and module Constraint_ = Constraint_ and module Atom_ = Atom_ 
+    module PolynomialMonad_ : Monadize
+    module Polynomial_ = PolynomialMonad_.Inner
+    module Atom_ : Atom with module Polynomial_ = PolynomialMonad_.Inner
+    module Constraint_ : Constraint with module Polynomial_ = PolynomialMonad_.Inner and module Atom_ = Atom_
+    module Formula_ : Formula with module Polynomial_ = PolynomialMonad_.Inner and module Constraint_ = Constraint_ and module Atom_ = Atom_ 
     module TransitionLabel :
     sig
       type t
-      module Bound : (MinMaxPolynomial with module Polynomial_ = Constraint_.Polynomial_)
+      module Bound : (MinMaxPolynomial with module Polynomial_ = PolynomialMonad_.Inner)
       exception RecursionNotSupported
       val mk : name:string ->
                start:string ->
@@ -96,5 +104,5 @@ module type Program =
                -> TransitionLabel.t list
                -> Location.t
                -> t
-  end
+  end*)
 

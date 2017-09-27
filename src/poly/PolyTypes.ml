@@ -339,10 +339,18 @@ module type Polynomial =
 module type PolynomialFunctor =
   functor (Value : Ring) -> Polynomial with module Value = Value
 
+  
+module type PolyMonad =
+    sig
+        module Value : Ring
+        module Inner : Polynomial
+        module Outer : Polynomial
+        val flatten : Outer.t -> Inner.t
+    end
 (** Monadize adds the monadic flatten method to a polynomial. *)
-module Monadize(P : PolynomialFunctor)(Value : Ring) = struct
-  module Inner = P(Value)
-  module Outer = P(P(Value))
+module Monadize(P : PolynomialFunctor)(R : Ring) = struct
+  module Inner = P(R)
+  module Outer = P(P(R))
   include Outer
   (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
   (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)

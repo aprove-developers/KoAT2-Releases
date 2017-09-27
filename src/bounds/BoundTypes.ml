@@ -8,9 +8,9 @@ module type Approximation =
     module Program_ : ProgramTypes.Program
 
     module Transition = Program_.Transition
-    module Value = Program_.Constraint_.Polynomial_.Value
+    module Value = Program_.Polynomial_.Value
                                 
-    module Bound : module type of MinMaxPolynomial.Make(Program_.Constraint_.Polynomial_)
+    module Bound : module type of MinMaxPolynomial.Make(Program_.Polynomial_)
 
     type t
          

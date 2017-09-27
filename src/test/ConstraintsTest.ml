@@ -6,16 +6,16 @@ open Helper
    
 module Parser =
   struct
-    module Reader = Readers.Make(ProgramImpl.StdProgram)
+    module Reader = Readers
 
     let assert_equal_constr =     
-        assert_equal ~cmp:ProgramImpl.StdProgram.Constraint_.(=~=) ~printer:ProgramImpl.StdProgram.Constraint_.to_string
+        assert_equal ~cmp:Program.Constraint_.(=~=) ~printer:Program.Constraint_.to_string
 
     let tests =
       "Parser" >::: [
           "All together" >::: (
-            let open ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
-            let open ProgramImpl.StdProgram.Constraint_.Infix in
+            let open Program.Constraint_.Atom_.Polynomial_ in
+            let open Program.Constraint_.Infix in
             List.map (fun (testname, expected, atom) ->
                 testname >:: (fun _ -> assert_equal_constr expected (Reader.read_constraint atom)))
                      [
@@ -38,14 +38,14 @@ module Parser =
         
   end
   
-module Methods (P : PolyTypes.Polynomial) =
+module Methods (*(P : PolyTypes.Polynomial)*) =
   struct
-    module Reader = Readers.Make(Program.Make(P))
-
-    module C = Constraints.Make(P)                  
-    module Atom = C.Atom_
-    module Polynomial = Atom.Polynomial_
-    module ParameterPolynomial = Polynomials.Make(Polynomial)
+    module Reader = Readers
+    module P = Program.Polynomial_
+    module C = Program.Constraint_                  
+    module Atom = Program.Atom_
+    module Polynomial = P
+    module ParameterPolynomial = Program.PolynomialMonad_.Outer
     module ParameterAtom = Atoms.Make(ParameterPolynomial)
                      
     let example_valuation = Polynomial.Valuation_.from_native [("x", 3);
@@ -99,8 +99,8 @@ module Methods (P : PolyTypes.Polynomial) =
     let tests = 
         
         "Constraints" >:::[
-         (*let open ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
-            let open ProgramImpl.StdProgram.Constraint_ in*)
+         (*let open Program.Constraint_.Atom_.Polynomial_ in
+            let open Program.Constraint_ in*)
 
             ("get_variables" >:::
                 List.map (fun (expected, constr) ->
@@ -184,12 +184,12 @@ module Methods (P : PolyTypes.Polynomial) =
                         ]);
                         
             ("farkas_transform" >:::
-                let open ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_ in
-                let open ProgramImpl.StdProgram.Constraint_ in
-                let open ProgramImpl.StdProgram.Constraint_.Infix in
-                    let assert_equal_constr = assert_equal ~cmp:ProgramImpl.StdProgram.Constraint_.(=~=) ~printer:ProgramImpl.StdProgram.Constraint_.to_string in
+                let open Program.Constraint_.Atom_.Polynomial_ in
+                let open Program.Constraint_ in
+                let open Program.Constraint_.Infix in
+                    let assert_equal_constr = assert_equal ~cmp:Program.Constraint_.(=~=) ~printer:Program.Constraint_.to_string in
                 List.map (fun (expected, constr, atom) ->
-                      (ProgramImpl.StdProgram.Constraint_.Atom_.to_string atom) >:: (fun _ -> assert_equal_constr expected (farkas_transform constr atom )))
+                      (Program.Constraint_.Atom_.to_string atom) >:: (fun _ -> assert_equal_constr expected (farkas_transform constr atom )))
                         [
                           ( (all [ (((value 1)*(helper 1)) + ((value 1)*(helper 2)) + ((value (-1))*(helper 3))) = value 2;
                                    (((value 1)*(helper 1)) + ((value (-1))*(helper 4))) = value 1;
@@ -204,11 +204,11 @@ module Methods (P : PolyTypes.Polynomial) =
                                   var "x" >= value 0;
                                   var "y" >= value 0
                             ]),
-                            ProgramImpl.StdProgram.Constraint_.Atom_.Infix.(((value 2) * (var "x")) + (var "y") <= value 0));
+                            Program.Constraint_.Atom_.Infix.(((value 2) * (var "x")) + (var "y") <= value 0));
                             
                             (all ([mk_eq ((value (-1))*(helper 1))(value (-1));mk_ge (helper 1) (value 0);mk_le (value 0) (value 0)]), 
                             (all [mk_ge (var "x") (value 0)]),
-                            ProgramImpl.StdProgram.Constraint_.Atom_.mk_ge (var "x") (value 0)); 
+                            Program.Constraint_.Atom_.mk_ge (var "x") (value 0)); 
                         ]);
         ]
 

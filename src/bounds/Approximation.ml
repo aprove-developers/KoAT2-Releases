@@ -6,9 +6,9 @@ module Make(P : ProgramTypes.Program) =
     module Program_ = P
 
     module Transition = Program_.Transition
-    module Value = Program_.Constraint_.Polynomial_.Value
+    module Value = Program_.Polynomial_.Value
 
-    module Bound = MinMaxPolynomial.Make(Program_.Constraint_.Polynomial_)
+    module Bound = MinMaxPolynomial.Make(Program_.Polynomial_)
        
     type kind = Lower | Upper
 

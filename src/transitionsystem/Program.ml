@@ -1,16 +1,16 @@
 open Batteries
 
-module Make(P : PolyTypes.Polynomial) =
-  struct
+(*module Make(R : PolyTypes.Ring) =*)
+    module PolynomialMonad_ = PolyTypes.Monadize(Polynomials.Make)(PolyTypes.OurInt)
+    module Polynomial_ = PolynomialMonad_.Inner
+    module Formula_ = Formula.Make(Polynomial_)
+    module Constraint_ = Formula_.Constraint_
+    module Atom_ = Constraint_.Atom_
     
-    module Polynomial_ = P
-    module Atom_ = Atoms.Make(P)
-    module Constraint_ = Constraints.Make(P)
-    module Formula_ = Formula.Make(P)
 
     module TransitionLabel =
       struct
-        module Polynomial = Constraint_.Polynomial_
+        module Polynomial = Polynomial_
         module Map = Map.Make(Var)
                    
         exception RecursionNotSupported
@@ -229,5 +229,3 @@ module Make(P : PolyTypes.Polynomial) =
 
     let to_string graph =
       "TODO"
-      
-  end

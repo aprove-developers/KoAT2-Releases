@@ -2,11 +2,10 @@ open Batteries
 open ConstraintTypes
 open Lexing
 
-module Make(G : Parseable.Program) =
-  struct
-    module Parser_ = Parser.Make(G)
-    module Lexer_ = Lexer.Make(G)
-                 
+(*module Make(G : Parseable.Program) =
+  struct*)
+    module Parser_ = Parser
+    module Lexer_ = Lexer
     exception Error of string
                                  
     let position_string lexbuf =
@@ -47,4 +46,4 @@ module Make(G : Parseable.Program) =
     let read_bound =
       read Parser_.onlyBound
 
-  end
+ (* end*)

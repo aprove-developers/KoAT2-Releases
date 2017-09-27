@@ -1,9 +1,9 @@
-open Batteries
+(*open Batteries
 open OUnit2
 open Helper
    
-module Z3Solver = SMT.MakeZ3Solver(PolyImpl.Polynomial)
-module Reader = Readers.Make(ProgramImpl.StdProgram)
+module Z3Solver = SMT.MakeZ3Solver(Program.Polynomial_)
+module Reader = Readers
 
 let print_str (str : string) = str
 
@@ -83,4 +83,4 @@ let suite =
                         ("","x+y<=24 && x + y <= 25 && x<= 14 && y <= 20 && x >= 0 && y>= 0","2660 * x + 1700 * y <=54240 ");
                     ]
         );*)
-  ]
+  ]*)

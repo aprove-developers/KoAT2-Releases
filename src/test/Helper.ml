@@ -9,13 +9,13 @@ let assert_equal_int = assert_equal ~printer:string_of_int ~cmp:Int.equal
                         
 let assert_equal_poly =
   assert_equal
-    ~cmp:ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_.(=~=)
-    ~printer:ProgramImpl.StdProgram.Constraint_.Atom_.Polynomial_.to_string
+    ~cmp:Program.Constraint_.Atom_.Polynomial_.(=~=)
+    ~printer:Program.Atom_.Polynomial_.to_string
 
 let assert_equal_bound =
   assert_equal
-    ~cmp:ProgramImpl.StdProgram.TransitionLabel.Bound.(=~=)
-    ~printer:ProgramImpl.StdProgram.TransitionLabel.Bound.to_string
+    ~cmp:Program.TransitionLabel.Bound.(=~=)
+    ~printer:Program.TransitionLabel.Bound.to_string
   
 let assert_true = assert_bool ""
                 
