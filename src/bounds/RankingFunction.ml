@@ -1,15 +1,15 @@
 open Batteries
 
-module Make(P : ProgramTypes.Program) =
-  struct
-    module Program_ = P
+(*module Make(P : ProgramTypes.Program) =
+  struct*)
+    module Program_ = Program
     module Constraints_ = Program_.Constraint_
     module Polynomial_ = Constraints_.Polynomial_
-    module ParameterPolynomial_ = Polynomials.Make(P.Constraint_.Polynomial_)
-    module ParameterFormula_= Formula.Make(Polynomials.Make(P.Constraint_.Polynomial_))
+    module ParameterPolynomial_ = Polynomials.Make(Program_.Constraint_.Polynomial_)
+    module ParameterFormula_= Formula.Make(Polynomials.Make(Program_.Constraint_.Polynomial_))
     module ParameterConstraints_ = ParameterFormula_.Constraint_
     module ParameterAtoms_= ParameterConstraints_.Atom_
-    module SMTSolver_ = SMT.MakeZ3Solver(Polynomials.Make(P.Constraint_.Polynomial_))
+    module SMTSolver_ = SMT.MakeZ3Solver(Polynomials.Make(Program_.Constraint_.Polynomial_))
     
     type t = {
         pol : Program_.Location.t -> ParameterPolynomial_.t (*This should be a parameter Polynomial, so that it can be used a few times*);
@@ -99,16 +99,16 @@ module Make(P : ProgramTypes.Program) =
                     let new_atom = ParameterAtoms_.mk_gt start_parapoly ParameterPolynomial_.zero in 
                             farkas_transform guard new_atom
                             
-    let get_non_increase_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : P.t) =
+    let get_non_increase_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : Program_.t) =
         let graph = Program_.graph program in
             let vars = Set.elements (Program_.vars program) in
                 Program_.TransitionGraph.fold_edges_e (fun trans -> ParameterConstraints_.mk_and (help_non_increasing table trans vars) ) graph ParameterConstraints_.mk_true
                 
-    let get_strict_decrease_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : P.t) (str_decr :Program_.Transition.t list) =
+    let get_strict_decrease_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : Program_.t) (str_decr :Program_.Transition.t list) =
         let vars = Set.elements (Program_.vars program) in
             List.fold_left (fun constr -> (fun trans -> ParameterConstraints_.mk_and (help_strict_decrease table trans vars) constr) ) ParameterConstraints_.mk_true str_decr
             
-    let get_boundedness_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : P.t) (bnds :Program_.Transition.t list) =
+    let get_boundedness_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t) (program : Program_.t) (bnds :Program_.Transition.t list) =
         let vars = Set.elements (Program_.vars program) in
             List.fold_left (fun constr -> (fun trans -> ParameterConstraints_.mk_and (help_boundedness table trans vars) constr)) ParameterConstraints_.mk_true bnds
             
@@ -126,7 +126,7 @@ module Make(P : ProgramTypes.Program) =
                 bounded = [];
             }
       
- end     
+(* end *)    
     
   
   

@@ -1,9 +1,9 @@
 open Batteries
 
-module Make(P : ProgramTypes.Program) =
-  struct
+(*module Make(P : ProgramTypes.Program) =
+  struct*)
 
-    module Program_ = P
+    module Program_ = Program
 
     module Transition = Program_.Transition
     module Value = Program_.Polynomial_.Value
@@ -79,5 +79,5 @@ module Make(P : ProgramTypes.Program) =
       Hashtbl.modify (kind, transition, var) (combine_bounds kind bound) appr.size;
       appr      
 
-  end
+(*  end*)
                      
