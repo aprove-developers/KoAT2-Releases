@@ -9,9 +9,9 @@ OCAMLPACKS[] =
 OCAMLINCLUDES[] =
     ../poly 
     ../constraints
+    ../transitionsystem
     ../parser
     ../smt
-    ../transitionsystem
     ../bounds
     ../preprocessors
 
@@ -21,9 +21,9 @@ BYTE_ENABLED = true
 OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
+    ../transitionsystem/transitionsystem
     ../parser/parser
     ../smt/smt
-    ../transitionsystem/transitionsystem
     ../bounds/bounds
     ../preprocessors/preprocessors
 
