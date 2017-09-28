@@ -50,7 +50,7 @@ module type Approximation =
 
   end
 
-module type RankingFunction =
+(*module type RankingFunction =
   sig
     module Program_ : ProgramTypes.Program
     module Constraints_ : ConstraintTypes.Constraint
@@ -88,7 +88,7 @@ module type RankingFunction =
     
     val generate_ranking_template : Program_.t -> (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t
     
-  end
+  end*)
   
 module type TimeBounds =
   sig

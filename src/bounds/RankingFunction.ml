@@ -5,11 +5,11 @@ open Batteries
     module Program_ = Program
     module Constraints_ = Program_.Constraint_
     module Polynomial_ = Constraints_.Polynomial_
-    module ParameterPolynomial_ = Polynomials.Make(Program_.Constraint_.Polynomial_)
-    module ParameterFormula_= Formula.Make(Polynomials.Make(Program_.Constraint_.Polynomial_))
+    module ParameterPolynomial_ = Program.PolynomialMonad_.Outer
+    module ParameterFormula_= Formula.Make(ParameterPolynomial_ )
     module ParameterConstraints_ = ParameterFormula_.Constraint_
     module ParameterAtoms_= ParameterConstraints_.Atom_
-    module SMTSolver_ = SMT.MakeZ3Solver(Polynomials.Make(Program_.Constraint_.Polynomial_))
+    module SMTSolver_ = SMT.Z3Solver
     
     type t = {
         pol : Program_.Location.t -> ParameterPolynomial_.t (*This should be a parameter Polynomial, so that it can be used a few times*);

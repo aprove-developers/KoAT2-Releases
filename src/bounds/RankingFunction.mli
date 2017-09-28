@@ -8,14 +8,14 @@ open Batteries
         and module Polynomial_ = P.Constraint_.Polynomial_
         and module ParameterPolynomial_ = Polynomials.Make(P.Constraint_.Polynomial_)
         and module ParameterFormula_= Formula.Make(Polynomials.Make(P.Constraint_.Polynomial_))*)
-    module Program_ : ProgramTypes.Program
-    module Constraints_ : ConstraintTypes.Constraint
-    module Polynomial_ : PolyTypes.Polynomial
-    module ParameterPolynomial_ : PolyTypes.Polynomial
-    module ParameterFormula_ : ConstraintTypes.Formula
-    module ParameterConstraints_ : ConstraintTypes.Constraint
-    module ParameterAtoms_ : ConstraintTypes.Atom
-    module SMTSolver_ : SMT.Solver
+    module Program_ = Program
+    module Constraints_ = Program_.Constraint_
+    module Polynomial_ = Constraints_.Polynomial_
+    module ParameterPolynomial_ = Program.PolynomialMonad_.Outer
+    module ParameterFormula_: ConstraintTypes.Formula with module Polynomial_ = ParameterPolynomial_
+    module ParameterConstraints_ = ParameterFormula_.Constraint_
+    module ParameterAtoms_= ParameterConstraints_.Atom_
+    module SMTSolver_ = SMT.Z3Solver
     
     type t
     
@@ -24,11 +24,7 @@ open Batteries
     (** Returns a non-empty list of all transitions which are strictly decreasing and at the same time bounded with one.
         Corresponds to T_> . *)
     val strictly_decreasing : t -> Program_.Transition.t list
-
-    (** Returns a non-empty list of all transitions which are non increasing.
-        This list also contains all transitions that are strictly decreasing. *)
-    (*val non_increasing : t -> Program_.Transition.t list*)
-    
+   
     (** Returns a non-empty list of all transitions which are bounded below by zero.
         This list also contains all transitions that are strictly decreasing. *)
     val bounded : t -> Program_.Transition.t list
