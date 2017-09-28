@@ -1,31 +1,11 @@
 open Batteries
 
-(** Provides different implementations of SMT solvers *)
-   
-(** A unified interface for SMT solvers (currently supported: Z3) *)
-module type Solver =
-  sig
-    module Polynomial_ : PolyTypes.Polynomial
-    module Constraint_ : ConstraintTypes.Constraint with module Polynomial_ = Polynomial_
-    module Formula_ : ConstraintTypes.Formula with module Polynomial_ = Polynomial_
-
-    val satisfiable : Formula_.t -> bool
-    
-    val get_model : Formula_.t -> Polynomial_.Valuation_.t
-    
-    val match_string_for_float : string -> string
-    
-    (*val to_string : Constraint.t -> string*)
-  end
-
-(** Constructs an SMT solver which uses the microsoft project Z3 *)
-module MakeZ3Solver(P : PolyTypes.Polynomial) : (Solver with module Polynomial_ = P
-                                                         and module Constraint_ = Constraints.Make(P)
-                                                         and module Formula_ = Formula.Make(P)) =
+(** SMT solver which uses the microsoft project Z3 *)
+module Z3Solver =
   struct
-    module Polynomial_ = P
-    module Constraint_ = Constraints.Make(P)
-    module Formula_ = Formula.Make(P)
+    module Polynomial_ = Program.Polynomial_
+    module Constraint_ = Program.Constraint_
+    module Formula_ = Program.Formula_
        
     let context = ref (
                       Z3.mk_context [
@@ -68,9 +48,9 @@ module MakeZ3Solver(P : PolyTypes.Polynomial) : (Solver with module Polynomial_ 
         (Z3.Optimize.check optimisation_goal) == Z3.Solver.SATISFIABLE
         
     let match_string_for_float str =
-        let float_regexp = Str.regexp "(?\\([-]?\\)[ ]?\\([0-9]*\.?[0-9]+\\))?" in             (*(?\\([-0-9\\.]*\\))?*)
+        let float_regexp = Str.regexp "(?\\([-]?\\)[ ]?\\([0-9]*\\.?[0-9]+\\))?" in             (*(?\\([-0-9\\.]*\\))?*)
             Str.replace_first float_regexp "\\1\\2" str 
-
+    
     let get_model (constraints : Formula_.t) =
         let formula = from_constraint constraints in
         let optimisation_goal = Z3.Optimize.mk_opt !context in
