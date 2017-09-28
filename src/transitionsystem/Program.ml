@@ -1,7 +1,7 @@
 open Batteries
 
 (*module Make(R : PolyTypes.Ring) =*)
-    module PolynomialMonad_ = PolyTypes.Monadize(Polynomials.Make)(PolyTypes.OurInt)
+    module PolynomialMonad_ = Polynomials.Monadize(Polynomials.Make)(PolyTypes.OurInt)
     module Polynomial_ = PolynomialMonad_.Inner
     module Formula_ = Formula.Make(Polynomial_)
     module Constraint_ = Formula_.Constraint_

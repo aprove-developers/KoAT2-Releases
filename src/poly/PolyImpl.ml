@@ -10,6 +10,6 @@ module ScaledMonomial = ScaledMonomials.Make(PolyTypes.OurInt)
 
 module Polynomial = Polynomials.Make(PolyTypes.OurInt)
 
-module TemplatePolynomial = PolyTypes.Monadize(Polynomials.Make)(PolyTypes.OurInt)
+module TemplatePolynomial = Polynomials.Monadize(Polynomials.Make)(PolyTypes.OurInt)
                   
 module MinMaxPolynomial = MinMaxPolynomial.Make(Polynomial)
