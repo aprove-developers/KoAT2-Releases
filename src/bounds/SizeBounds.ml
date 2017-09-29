@@ -1,59 +1,52 @@
 open Batteries
 
-module Make(A : BoundTypes.Approximation) =
-  struct
-
-    module Approximation_ = A
-    module Program_ = Approximation_.Program_
-    module RVG = Approximation_.Program_.RVG
-    module Bound = Approximation_.Bound
-               
-    (* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
+module RVG = Program.RVG
+module Bound = MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
+             
+(* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
        Corresponds to 'SizeBounds for trivial SCCs':
        S'(alpha) = max{ S_l(alpha)(S(t',v_1),...,S(t',v_n)) | t' in pre(t) } *)
-    let highest_incoming_bound (program: Program_.t)
-                               (appr: Approximation_.t)
-                               (local_sizebound: Bound.t)
-                               (t: Program_.Transition.t)
-      : Bound.t =
-      let substitute_with_prevalues t' = Bound.substitute_f Approximation_.(sizebound Upper appr t') local_sizebound in
-      Bound.maximum (Set.to_list (Set.map substitute_with_prevalues (Program_.pre program t)))
+let highest_incoming_bound (program: Program.t)
+                           (appr: Approximation.t)
+                           (local_sizebound: Bound.t)
+                           (t: Program.Transition.t)
+    : Bound.t =
+  let substitute_with_prevalues t' = Bound.substitute_f Approximation.(sizebound Upper appr t') local_sizebound in
+  Bound.maximum (Set.to_list (Set.map substitute_with_prevalues (Program.pre program t)))
 
-    (* Improves a trivial scc. That is an scc which consists only of one result variable.
+(* Improves a trivial scc. That is an scc which consists only of one result variable.
        Corresponds to 'SizeBounds for trivial SCCs'. *)
-    let improve_trivial_scc (program: Program_.t)
-                            (appr: Approximation_.t)
-                            (t,v)
-        : Approximation_.t =
-      let (local_sizebound: Bound.t) = Program_.TransitionLabel.(sizebound_local Upper (Program_.Transition.label t) v) in
-      let newbound =
-        if Program_.is_initial program t then
-          local_sizebound
-        else highest_incoming_bound program appr local_sizebound t
-      in Approximation_.(add_sizebound Upper newbound t v appr)      
-      
-    (* Improves a nontrivial scc. That is an scc which consists of more than one result variable.
+let improve_trivial_scc (program: Program.t)
+                        (appr: Approximation.t)
+                        (t,v)
+    : Approximation.t =
+  let (local_sizebound: Bound.t) = Program.TransitionLabel.(sizebound_local Upper (Program.Transition.label t) v) in
+  let newbound =
+    if Program.is_initial program t then
+      local_sizebound
+    else highest_incoming_bound program appr local_sizebound t
+  in Approximation.(add_sizebound Upper newbound t v appr)      
+   
+(* Improves a nontrivial scc. That is an scc which consists of more than one result variable.
        Corresponds to 'SizeBounds for nontrivial SCCs'. *)
-    let improve_nontrivial_scc (program: Program_.t)
-                               (rvg: RVG.t)
-                               (appr: Approximation_.t)
-                               (scc: RVG.V.t list)
-        : Approximation_.t =
-      raise (Failure "Not yet implemented")
+let improve_nontrivial_scc (program: Program.t)
+                           (rvg: RVG.t)
+                           (appr: Approximation.t)
+                           (scc: RVG.V.t list)
+    : Approximation.t =
+  raise (Failure "Not yet implemented")
 
-    (* Improves a whole scc. *)
-    let improve_scc (program: Program_.t)
-                    (rvg: RVG.t)
-                    (appr: Approximation_.t)
-                    (scc: RVG.V.t list)
-        : Approximation_.t  =
-      match scc with
-      | [rv] -> improve_trivial_scc program appr rv
-      | scc -> improve_nontrivial_scc program rvg appr scc
-      
-    let improve program appr =
-      let module C = Graph.Components.Make(RVG) in
-      let rvg = Program_.rvg program in
-      List.fold_left (fun appr scc -> improve_scc program rvg appr scc) appr (C.scc_list rvg)
-      
-  end
+(* Improves a whole scc. *)
+let improve_scc (program: Program.t)
+                (rvg: RVG.t)
+                (appr: Approximation.t)
+                (scc: RVG.V.t list)
+    : Approximation.t  =
+  match scc with
+  | [rv] -> improve_trivial_scc program appr rv
+  | scc -> improve_nontrivial_scc program rvg appr scc
+         
+let improve program appr =
+  let module C = Graph.Components.Make(RVG) in
+  let rvg = Program.rvg program in
+  List.fold_left (fun appr scc -> improve_scc program rvg appr scc) appr (C.scc_list rvg)

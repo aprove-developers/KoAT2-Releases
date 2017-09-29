@@ -1,6 +1,4 @@
 open Batteries
 
-(** Provides default implementations of TimeBounds *)
-
-module Make(A : BoundTypes.Approximation) : BoundTypes.TimeBounds with   
-         module Approximation_ = A
+(** Performs a single improvement step to find better timebounds for the approximation and updates the approximation. *)
+val improve : Program.t -> Approximation.t -> Approximation.t

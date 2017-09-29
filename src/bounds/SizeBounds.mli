@@ -1,6 +1,4 @@
 open Batteries
 
-(** Provides default implementations of SizeBounds *)
-
-module Make(A : BoundTypes.Approximation) : BoundTypes.SizeBounds with   
-         module Approximation_ = A
+(** Performs a single improvement step to find better sizebounds for the approximation and updates the approximation. *)
+val improve : Program.t -> Approximation.t -> Approximation.t
