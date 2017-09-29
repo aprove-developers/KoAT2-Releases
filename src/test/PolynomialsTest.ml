@@ -114,8 +114,8 @@ module Methods (*(P : Polynomial)*) =
           );
           
           "Instantiate TemplatePolynomial" >::: (
-            let module T = PolyImpl.TemplatePolynomial in
-            let module P = PolyImpl.Polynomial in
+            let module T = ParameterPolynomial in
+            let module P = ParameterPolynomial.Value in
             List.map (fun (testname, expected, poly) ->
                 testname >:: (fun _ -> assert_equal ~cmp:T.(=~=) ~printer:T.to_string (expected) (T.instantiate (fun v -> T.from_constant (P.from_constant (P.eval_f v (fun _ -> P.Value.of_int 2)))) poly)))
                      [

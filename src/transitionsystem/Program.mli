@@ -4,7 +4,7 @@ open Batteries
 
 (*module Make(R : PolyTypes.Ring) : ProgramTypes.Program
        with module PolynomialMonad_ = PolyTypes.Monadize(Polynomials.Make)(R)*)
-    module PolynomialMonad_ : PolyTypes.PolyMonad 
+    module PolynomialMonad_ = ParameterPolynomial
     module Polynomial_ = PolynomialMonad_.Inner
     module Formula_ : ConstraintTypes.Formula with module Polynomial_ = Polynomial_
     module Constraint_ = Formula_.Constraint_

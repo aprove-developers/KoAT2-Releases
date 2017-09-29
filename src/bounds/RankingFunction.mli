@@ -1,4 +1,4 @@
-open Batteries
+(*open Batteries
 
 (** Provides default implementations of RankingFunctions *)
 
@@ -38,4 +38,4 @@ open Batteries
     (** Invokes Farkas Lemma, to compute a ranking function*)
     val farkas_transform : Constraints_.t -> ParameterConstraints_.Atom_.t -> ParameterConstraints_.t
     
-    val generate_ranking_template : Program_.t -> (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t
+    val generate_ranking_template : Program_.t -> (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t*)
