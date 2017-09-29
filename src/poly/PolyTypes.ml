@@ -334,7 +334,20 @@ module type Polynomial =
                t -> 'b 
 
   end
- 
+
+(** This module type defines how functors constructing polynomials have to be defined *)
+(*module type PolynomialFunctor =
+  functor (Value : Ring) -> Polynomial with module Value = Value
+
+  
+module type PolyMonad =
+    sig
+        module Value : Ring
+        module Inner : Polynomial
+        module Outer : Polynomial
+        val flatten : Outer.t -> Inner.t
+    end*)
+
 (** A MinMaxPolynomial is a polynomial which allows the usage of min and max functions  *)
 module type MinMaxPolynomial =
   sig

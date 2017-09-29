@@ -1,8 +1,8 @@
-(*open Batteries
+open Batteries
 open OUnit2
 open Helper
    
-module Z3Solver = SMT.MakeZ3Solver(Program.Polynomial_)
+module Z3Solver = SMT.Z3Solver
 module Reader = Readers
 
 let print_str (str : string) = str
@@ -47,7 +47,7 @@ let suite =
                     ]
         );
         
-        "String_matching" >::: (
+(*        "String_matching" >::: (
         List.map (fun (expected,input_str) ->
             "input_str" >:: (fun _ -> assert_equal ~cmp:(=) ~printer:print_fl (Float.of_string expected) (Float.of_string (Z3Solver.match_string_for_float input_str))))
                     [
@@ -56,7 +56,7 @@ let suite =
                         ("-23.0","(- 23)");
                         ("3.1415","3.1415");
                     ]
-        );
+        );*)
         
 (*        "get_model" >::: (
         List.map (fun (testname, expected, constr) ->
@@ -83,4 +83,4 @@ let suite =
                         ("","x+y<=24 && x + y <= 25 && x<= 14 && y <= 20 && x >= 0 && y>= 0","2660 * x + 1700 * y <=54240 ");
                     ]
         );*)
-  ]*)
+  ]

@@ -1,13 +1,13 @@
-(*open Batteries
+open Batteries
 
 module Value_ = PolyTypes.OurInt
-module Program_ = Program(*.Make(Value_)*)
+module Program_ = Program
 module Polynomial_ = Program_.Polynomial_
 module Constraint_ = Program_.Constraint_
-module Approximation_ = Approximation.Make(Program_)
+module Approximation_ = Approximation
 module Bound = Program_.TransitionLabel.Bound
                       
-module SMT_ = SMT.MakeZ3Solver(Polynomial_)                      
+module SMT_ = SMT.Z3Solver                      
 
 module Reader_ = Readers
 
@@ -107,7 +107,7 @@ let run_localsizebound (params: localsizebound_params) =
   print_string (Bound.to_string (sizebound_local kind label var))
 
 let run_smt (params: smt_params) =
-  let module Z3 = SMT.MakeZ3Solver(Polynomial_) in
+  let module Z3 = SMT.Z3Solver in
   let solve = match params.solver with
     | `Z3 -> Z3.get_model
   and constr = Reader_.read_formula params.constr in
@@ -135,4 +135,4 @@ let () =
   let open Cmdliner in
   let main_command = (Term.(const run $ main_params_cmdliner_term ()), Term.info Sys.argv.(0)) in
   Term.exit @@ Term.eval_choice main_command subcommands
-*)
+
