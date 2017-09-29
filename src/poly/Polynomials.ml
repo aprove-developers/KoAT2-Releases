@@ -247,7 +247,7 @@ module Make(Value : PolyTypes.Ring) =
   
   
 (** Monadize adds the monadic flatten method to a polynomial. *)
-module Monadize(P : PolynomialFunctor)(R : Ring) = 
+(*module Monadize(P : PolynomialFunctor)(R : Ring) = 
     struct
         module Inner = P(R)
         module Outer = P(Inner)
@@ -256,4 +256,4 @@ module Monadize(P : PolynomialFunctor)(R : Ring) =
         (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
         let flatten (templatepoly : t): Inner.t =
         Outer.fold ~const:identity ~var:Inner.from_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
-    end
+    end*)
