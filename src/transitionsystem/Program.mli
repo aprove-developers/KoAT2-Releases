@@ -1,5 +1,5 @@
 open Batteries
-
+   
 (** Provides default modules to create locations, transitions and transitionsystems *)
 
 (** A transition is an edge of a transition system.
@@ -8,7 +8,7 @@ open Batteries
         An update assigns variables a new value as a linear combination of the old values *)
 module TransitionLabel :
 sig
-  module Guard : module type of Constraints.Make(Polynomials.Make(PolyTypes.OurInt))         
+  module Guard : module type of Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
   module Polynomial : module type of Polynomials.Make(PolyTypes.OurInt)
   module Map : module type of Map.Make(Var)
   module Bound : module type of MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))

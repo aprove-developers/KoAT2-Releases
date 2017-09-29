@@ -1,8 +1,8 @@
 open Batteries
-
+   
 module TransitionLabel =
   struct
-    module Guard = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))         
+    module Guard = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
     module Polynomial = Polynomials.Make(PolyTypes.OurInt)
     module Map = Map.Make(Var)
     module Bound = MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))

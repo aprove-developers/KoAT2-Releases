@@ -105,7 +105,6 @@ module Methods (*(P : Polynomial)*) =
           );
 
           "Instantiate" >::: (
-            let module P = PolyImpl.Polynomial in
             List.map (fun (testname, expected, poly) ->
                 testname >:: (fun _ -> assert_equal ~cmp:P.(=~=) ~printer:P.to_string (expected) (P.instantiate P.from_constant poly)))
                      [
@@ -123,8 +122,7 @@ module Methods (*(P : Polynomial)*) =
           );
 
           "Flatten TemplatePolynomial" >::: (
-            let module T = PolyImpl.TemplatePolynomial in
-            let module P = PolyImpl.Polynomial in
+            let module T = ParameterPolynomial in
             List.map (fun (testname, expected, poly) ->
                 testname >:: (fun _ -> assert_equal ~cmp:P.(=~=) ~printer:P.to_string (expected) (T.flatten poly)))
                      [
