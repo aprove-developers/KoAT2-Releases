@@ -8,9 +8,10 @@ let assert_equal_string = assert_equal ~printer:identity ~cmp:String.equal
 let assert_equal_int = assert_equal ~printer:string_of_int ~cmp:Int.equal
                         
 let assert_equal_poly =
+  let module P = Polynomials.Make(PolyTypes.OurInt) in
   assert_equal
-    ~cmp:Program.Constraint_.Atom_.Polynomial_.(=~=)
-    ~printer:Program.Atom_.Polynomial_.to_string
+    ~cmp:P.(=~=)
+    ~printer:P.to_string
 
 let assert_equal_bound =
   assert_equal

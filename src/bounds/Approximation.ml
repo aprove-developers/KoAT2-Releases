@@ -1,14 +1,7 @@
 open Batteries
 
-(*module Make(P : ProgramTypes.Program) =
-  struct*)
-
-    module Program_ = Program
-
-    module Transition = Program_.Transition
-    module Value = Program_.Polynomial_.Value
-
-    module Bound = MinMaxPolynomial.Make(Program_.Polynomial_)
+    module Transition = Program.Transition
+    module Bound = MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
        
     type kind = Lower | Upper
 
@@ -42,7 +35,7 @@ open Batteries
     let timebound_graph kind appr graph =
       match kind with
       | Lower -> Bound.one
-      | Upper -> Program_.TransitionGraph.fold_edges_e (fun transition -> Bound.add (timebound Upper appr transition)) (Program_.graph graph) Bound.zero
+      | Upper -> Program.TransitionGraph.fold_edges_e (fun transition -> Bound.add (timebound Upper appr transition)) (Program.graph graph) Bound.zero
 
     let add_timebound kind bound transition appr =
       Hashtbl.modify (kind, transition) (combine_bounds kind bound) appr.time;

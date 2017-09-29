@@ -3,21 +3,23 @@ open OUnit2
 open PolyTypes
 open ConstraintTypes
 open Helper
-   
+
 module Parser =
   struct
-    module Reader = Readers
+    module Formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt))
+    module Constraint = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
+    module Polynomial = Polynomials.Make(PolyTypes.OurInt)
 
     let assert_equal_constr =     
-        assert_equal ~cmp:Program.Constraint_.(=~=) ~printer:Program.Constraint_.to_string
+        assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string
 
     let tests =
       "Parser" >::: [
           "All together" >::: (
-            let open Program.Constraint_.Atom_.Polynomial_ in
-            let open Program.Constraint_.Infix in
+            let open Polynomial in
+            let open Constraint.Infix in
             List.map (fun (testname, expected, atom) ->
-                testname >:: (fun _ -> assert_equal_constr expected (Reader.read_constraint atom)))
+                testname >:: (fun _ -> assert_equal_constr expected (Readers.read_constraint atom)))
                      [
                        ("Constants ",
                         value 42 < value 42 && value 1 >= value 0 && value 2 <= value 4 && value 6 <= value 7 && value 7 <= value 6,
@@ -29,7 +31,7 @@ module Parser =
           );
           "Negative Tests" >::: (
             List.map (fun (testname, atom) ->
-                testname >:: (fun _ -> assert_exception (fun _ -> Reader.read_constraint atom)))
+                testname >:: (fun _ -> assert_exception (fun _ -> Readers.read_constraint atom)))
                      [
                        ("Unexpected char: =", "x == y");
                      ]
@@ -40,12 +42,10 @@ module Parser =
   
 module Methods (*(P : PolyTypes.Polynomial)*) =
   struct
-    module Reader = Readers
-    module P = Program.Polynomial_
-    module C = Program.Constraint_                  
-    module Atom = Program.Atom_
-    module Polynomial = P
-    module ParameterPolynomial = Program.PolynomialMonad_.Outer
+    module Constraint = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
+    module Polynomial = Polynomials.Make(PolyTypes.OurInt)
+    module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
+    module ParameterPolynomial = Polynomials.Make(Polynomials.Make(PolyTypes.OurInt))
     module ParameterAtom = Atoms.Make(ParameterPolynomial)
                      
     let example_valuation = Polynomial.Valuation_.from_native [("x", 3);
@@ -63,8 +63,8 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                                     
     let rename str =
          str
-      |> Reader.read_constraint
-      |> fun constr -> C.rename constr example_renaming
+      |> Readers.read_constraint
+      |> fun constr -> Constraint.rename constr example_renaming
 
                      (*
     let evaluate str =
@@ -75,7 +75,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
 
 
     let assert_equal_constr =     
-        assert_equal ~cmp:C.(=~=) ~printer:C.to_string
+        assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string
         
     let of_int = Polynomial.Value.of_int
     
@@ -104,7 +104,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
 
             ("get_variables" >:::
                 List.map (fun (expected, constr) ->
-                      constr >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string (Set.map Var.of_string (Set.of_list expected)) (C.vars (Reader.read_constraint constr) )))
+                      constr >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string (Set.map Var.of_string (Set.of_list expected)) (Constraint.vars (Readers.read_constraint constr) )))
                         [
                             (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 && y >= 0 && z <= 4" );
 
@@ -112,7 +112,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                         
             ("rename_vars" >:::
                 List.map (fun (expected, constr) ->
-                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (rename constr )))
+                      constr >:: (fun _ -> assert_equal_constr (Readers.read_constraint expected) (rename constr )))
                         [
                             ("5 <= 5", " 5 <= 5 " );
                             ("a <= a", "x <= x" );
@@ -137,7 +137,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                        
             ("drop_nonlinear" >:::
                 List.map (fun (expected, constr) ->
-                      constr >:: (fun _ -> assert_equal_constr (Reader.read_constraint expected) (C.drop_nonlinear (Reader.read_constraint constr) )))
+                      constr >:: (fun _ -> assert_equal_constr (Readers.read_constraint expected) (Constraint.drop_nonlinear (Readers.read_constraint constr) )))
                         [
                             ("","x^2 < x*y + 3");
                             ("3 < x","3 < x + y^3 - y*y^2");
@@ -149,7 +149,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                 List.map (fun (expected, var, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_equality ~printer:list_print
                                                       (List.map Polynomial.Value.of_int expected)
-                                                      (C.get_coefficient_vector (Var.of_string var) (Reader.read_constraint constr) )))
+                                                      (Constraint.get_coefficient_vector (Var.of_string var) (Readers.read_constraint constr) )))
                         [
                             ([1; 2; 3], "x", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                             ([1; 3; -4], "y", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
@@ -163,7 +163,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                 List.map (fun (expected, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_equality ~printer:list_print
                                                       (List.map Polynomial.Value.of_int expected)
-                                                      (C.get_constant_vector (Reader.read_constraint constr))))
+                                                      (Constraint.get_constant_vector (Readers.read_constraint constr))))
                         [
                             ([5; -2; 0], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                             ([8; -4; 1; -1], "3*x + 2 * y + 4 * z <= 8 && (-1) * x - 3*y > 3 && 7 * x + 3 * z = 1");
@@ -174,7 +174,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                 List.map (fun (expected, vars, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_list_equality ~printer:list_list_print
                                                       (List.map (List.map Polynomial.Value.of_int) expected)
-                                                      (C.get_matrix ((Set.map Var.of_string (Set.of_list vars))) (Reader.read_constraint constr) )))
+                                                      (Constraint.get_matrix ((Set.map Var.of_string (Set.of_list vars))) (Readers.read_constraint constr) )))
                         [
                             ([[1; 2; 3];[1; 3; -4]],["x";"y"], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                             ([[1; -1];[-1; 1]],["x";"y"], "x = y");
@@ -184,12 +184,12 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                         ]);
                         
             ("farkas_transform" >:::
-                let open Program.Constraint_.Atom_.Polynomial_ in
-                let open Program.Constraint_ in
-                let open Program.Constraint_.Infix in
-                    let assert_equal_constr = assert_equal ~cmp:Program.Constraint_.(=~=) ~printer:Program.Constraint_.to_string in
+                let open Polynomial in
+                let open Constraint in
+                let open Constraint.Infix in
+                    let assert_equal_constr = assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string in
                 List.map (fun (expected, constr, atom) ->
-                      (Program.Constraint_.Atom_.to_string atom) >:: (fun _ -> assert_equal_constr expected (farkas_transform constr atom )))
+                      (Atom.to_string atom) >:: (fun _ -> assert_equal_constr expected (farkas_transform constr atom )))
                         [
                           ( (all [ (((value 1)*(helper 1)) + ((value 1)*(helper 2)) + ((value (-1))*(helper 3))) = value 2;
                                    (((value 1)*(helper 1)) + ((value (-1))*(helper 4))) = value 1;
@@ -204,11 +204,11 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                                   var "x" >= value 0;
                                   var "y" >= value 0
                             ]),
-                            Program.Constraint_.Atom_.Infix.(((value 2) * (var "x")) + (var "y") <= value 0));
+                            Atom.Infix.(((value 2) * (var "x")) + (var "y") <= value 0));
                             
                             (all ([mk_eq ((value (-1))*(helper 1))(value (-1));mk_ge (helper 1) (value 0);mk_le (value 0) (value 0)]), 
                             (all [mk_ge (var "x") (value 0)]),
-                            Program.Constraint_.Atom_.mk_ge (var "x") (value 0)); 
+                            Atom.mk_ge (var "x") (value 0)); 
                         ]);
         ]
 

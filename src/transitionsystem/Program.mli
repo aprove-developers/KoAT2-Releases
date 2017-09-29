@@ -2,32 +2,26 @@ open Batteries
 
 (** Provides default modules to create locations, transitions and transitionsystems *)
 
-(*module Make(R : PolyTypes.Ring) : ProgramTypes.Program
-       with module PolynomialMonad_ = PolyTypes.Monadize(Polynomials.Make)(R)*)
-    module PolynomialMonad_ = ParameterPolynomial
-    module Polynomial_ = PolynomialMonad_.Inner
-    module Formula_ : ConstraintTypes.Formula with module Polynomial_ = Polynomial_
-    module Constraint_ = Formula_.Constraint_
-    module Atom_ = Constraint_.Atom_
-         
     (** A transition is an edge of a transition system.
         It connects two locations and is annotated with a guard and an update
         A guard has to be fulfiled for a state to reach another state via the transition
         An update assigns variables a new value as a linear combination of the old values *)
     module TransitionLabel :
     sig
-      module Polynomial = Polynomial_
+      module Guard : module type of Constraints.Make(Polynomials.Make(PolyTypes.OurInt))         
+      module Polynomial : module type of Polynomials.Make(PolyTypes.OurInt)
       module Map : module type of Map.Make(Var)
-      module Bound : module type of MinMaxPolynomial.Make(Polynomial) 
+      module Bound : module type of MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
+                                  
       type kind = Lower | Upper  [@@deriving eq, ord]
       type t
       exception RecursionNotSupported
-      val make : name:string -> start:string -> target:string -> update:Polynomial.t Map.t -> guard:Constraint_.t -> t
+      val make : name:string -> start:string -> target:string -> update:Polynomial.t Map.t -> guard:Guard.t -> t
       val mk : name:string ->
                start:string ->
                targets:(string * (Polynomial.t list)) list ->
                patterns:Var.t list ->
-               guard:Constraint_.t ->
+               guard:Guard.t ->
                vars:Var.t list ->
                t
       val equal : t -> t -> bool
@@ -35,7 +29,7 @@ open Batteries
       val start : t -> string
       val target : t -> string
       val update : t -> Var.t -> Polynomial.t Option.t
-      val guard : t -> Constraint_.t
+      val guard : t -> Guard.t
       val default : t
       (** Returns a local sizebound of the specified kind for the var of the transition. 
           A local sizebound is expressed in relation to the values directly before executing the transition. *)

@@ -6,14 +6,14 @@ open Helper
    
 module Parser =
   struct
-    module Reader = Readers
+    module Polynomial = Polynomials.Make(PolyTypes.OurInt)
 
     let tests =
       "Parser" >::: [
           "Positive Tests" >::: (
-            let open Program.Polynomial_ in
+            let open Polynomial in
             List.map (fun (testname, expected, expression) ->
-                testname >:: (fun _ -> assert_equal_poly expected (Reader.read_polynomial expression)))
+                testname >:: (fun _ -> assert_equal_poly expected (Readers.read_polynomial expression)))
                      [
                        ("Const", value 42, " 42 ");
                        ("Negated Constant", -(value 42), " - 42 ");
@@ -36,7 +36,7 @@ module Parser =
           );
           "Negative Tests" >::: (
             List.map (fun (testname, expression) ->
-                testname >:: (fun _ -> assert_exception (fun _ -> Reader.read_polynomial expression)))
+                testname >:: (fun _ -> assert_exception (fun _ -> Readers.read_polynomial expression)))
                      [
                        ("Power with negative exponent", " x ^ - 3 ");
                        ("Power with variable exponent", " x ^ y ");
@@ -51,7 +51,7 @@ module Methods (*(P : Polynomial)*) =
   struct
     module Reader = Readers
     
-    module P = Program.Polynomial_
+    module P = Polynomials.Make(PolyTypes.OurInt)
                
     let example_valuation = P.Valuation_.from_native [("x", 3); ("y", 5); ("z", 7)]
                                             
@@ -115,7 +115,6 @@ module Methods (*(P : Polynomial)*) =
           
           "Instantiate TemplatePolynomial" >::: (
             let module T = ParameterPolynomial in
-            let module P = ParameterPolynomial.Value in
             List.map (fun (testname, expected, poly) ->
                 testname >:: (fun _ -> assert_equal ~cmp:T.(=~=) ~printer:T.to_string (expected) (T.instantiate (fun v -> T.from_constant (P.from_constant (P.eval_f v (fun _ -> P.Value.of_int 2)))) poly)))
                      [

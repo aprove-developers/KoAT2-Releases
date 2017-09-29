@@ -2,8 +2,10 @@ open Batteries
 
 module Value_ = PolyTypes.OurInt
 module Program_ = Program
-module Polynomial_ = Program_.Polynomial_
-module Constraint_ = Program_.Constraint_
+module Formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt))
+module Constraint = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
+module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
+module Polynomial = Polynomials.Make(PolyTypes.OurInt)
 module Approximation_ = Approximation
 module Bound = Program_.TransitionLabel.Bound
                       
@@ -111,15 +113,15 @@ let run_smt (params: smt_params) =
   let solve = match params.solver with
     | `Z3 -> Z3.get_model
   and constr = Reader_.read_formula params.constr in
-  let valuation_bindings = Polynomial_.Valuation_.bindings (solve constr) in
+  let valuation_bindings = Polynomial.Valuation_.bindings (solve constr) in
   if Enum.is_empty valuation_bindings then
     print_string "unsatisfiable"
-  else Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ Polynomial_.Value.to_string value ^ "\n")) valuation_bindings
+  else Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ Polynomial.Value.to_string value ^ "\n")) valuation_bindings
   
 let run_normalize (params: normalize_params) =
   let output = match params.kind with
-    | `Polynomial -> Polynomial_.to_string (Polynomial_.simplify (Reader_.read_polynomial params.input))
-    | `Atom -> Constraint_.Atom_.to_string (Reader_.read_atom params.input)
+    | `Polynomial -> Polynomial.to_string (Polynomial.simplify (Reader_.read_polynomial params.input))
+    | `Atom -> Atom.to_string (Reader_.read_atom params.input)
     | `Bound -> Bound.to_string (Reader_.read_bound params.input) in
   print_string output
   

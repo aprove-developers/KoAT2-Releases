@@ -17,25 +17,25 @@
 			
 %start <Program.t> onlyTransitiongraph
 
-%start <Program.Formula_.t> onlyFormula
+%start <Formula.Make(Polynomials.Make(PolyTypes.OurInt)).t> onlyFormula
 
-%start <Program.Constraint_.t> onlyConstraints
+%start <Constraints.Make(Polynomials.Make(PolyTypes.OurInt)).t> onlyConstraints
 
-%start <Program.Atom_.t> onlyAtom
+%start <Atoms.Make(Polynomials.Make(PolyTypes.OurInt)).t> onlyAtom
 
-%start <Program.Polynomial_.t> onlyPolynomial
+%start <Polynomials.Make(PolyTypes.OurInt).t> onlyPolynomial
 
 %start <Program.TransitionLabel.Bound.t> onlyBound
 
 %type <Program.t> transitiongraph
 
-%type <Program.Formula_.t> formula
+%type <Formula.Make(Polynomials.Make(PolyTypes.OurInt)).t> formula
 
-%type <Program.Constraint_.t> constraints
+%type <Constraints.Make(Polynomials.Make(PolyTypes.OurInt)).t> constraints
 
-%type <Program.Constraint_.t> atom
+%type <Constraints.Make(Polynomials.Make(PolyTypes.OurInt)).t> atom
 
-%type <Program.Polynomial_.t> polynomial
+%type <Polynomials.Make(PolyTypes.OurInt).t> polynomial
 
 %type <Var.t list> variables
 
@@ -45,11 +45,11 @@
 
 %{
   open BatTuple
-  module Constr = Program.Constraint_
-  module Atom = Program.Atom_
-  module Poly = Program.Polynomial_
-  module Bound = Program.TransitionLabel.Bound
-  module Formula = Program.Formula_
+  module Constr = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
+  module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
+  module Poly = Polynomials.Make(PolyTypes.OurInt)
+  module Bound = MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
+  module Formula_ = Formula.Make(Polynomials.Make(PolyTypes.OurInt))
 %}
 
 %%
@@ -110,7 +110,7 @@ onlyFormula :
 
 formula :
         |       disj = separated_list(OR, constraints)
-                  { Formula.disj disj } ;
+                  { Formula_.disj disj } ;
 
 onlyConstraints :
         |       constr = constraints EOF { constr } ;

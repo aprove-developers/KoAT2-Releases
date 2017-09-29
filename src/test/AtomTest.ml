@@ -3,22 +3,22 @@ open OUnit2
 open PolyTypes
 open ConstraintTypes
 open Helper
-   
+
 module Parser =
   struct
-    module Reader = Readers
+    module Polynomial = Polynomials.Make(PolyTypes.OurInt)
+    module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
                   
     let assert_equal_atom =
-      assert_equal ~cmp:Program.Constraint_.Atom_.(=~=)
-                   ~printer:Program.Constraint_.Atom_.to_string
+      assert_equal ~cmp:Atom.(=~=) ~printer:Atom.to_string
 
     let tests =
         "Parser" >::: [
           "Positive Tests" >::: (
-            let open Program.Constraint_.Atom_.Polynomial_ in
-            let open Program.Constraint_.Atom_.Infix in
+            let open Polynomial in
+            let open Atom.Infix in
                 List.map (fun (testname, expected, atom) ->
-                testname >:: (fun _ -> assert_equal_atom expected (Reader.read_atom atom)))
+                testname >:: (fun _ -> assert_equal_atom expected (Readers.read_atom atom)))
                         [
                         ("Constants LT", value 42 < value 42, " 42 < 42 ");
                         ("Constants LE", value 42 <= value 42, " 42 <= 42 ");
@@ -36,7 +36,7 @@ module Parser =
             );
             "Negative Tests" >::: (
                 List.map (fun (testname, atom) ->
-                    testname >:: (fun _ -> assert_raises (Reader.Lexer_.SyntaxError (testname)) (fun _ -> Reader.read_atom atom)))
+                    testname >:: (fun _ -> assert_raises (Readers.Lexer_.SyntaxError (testname)) (fun _ -> Readers.read_atom atom)))
                             [
                             ("Unexpected char: =", "x = y");
                             ]
@@ -46,13 +46,8 @@ module Parser =
 
 module Methods (*(P : PolyTypes.Polynomial)*) =
   struct
-    module P = Program.Polynomial_
-    module Reader = Readers
-
-    module C = Program.Constraint_                  
-    module Atom = Program.Atom_
-    module Polynomial = P
-
+    module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
+   
     let varset_to_string varl =
         varl
         |> Set.map Var.to_string
@@ -61,7 +56,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                                     
     let rename str rename_map =
          str
-      |> Reader.read_atom
+      |> Readers.read_atom
       |> fun atom -> Atom.rename atom (RenameMap.from_native rename_map)
 
                    (*
@@ -72,14 +67,14 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                     *)
       
     let assert_equal_atom =
-      assert_equal ~cmp:C.Atom_.(=~=) ~printer:C.Atom_.to_string
+      assert_equal ~cmp:Atom.(=~=) ~printer:Atom.to_string
 
     let tests = 
         "ConstraintsAtom" >:::[
                         
             ("(=~=)" >:::
                 List.map (fun (atom1, atom2) ->
-                    (atom1 ^ "=~=" ^ atom2) >:: (fun _ -> assert_equal_atom (Reader.read_atom atom1) (Reader.read_atom atom2)))
+                    (atom1 ^ "=~=" ^ atom2) >:: (fun _ -> assert_equal_atom (Readers.read_atom atom1) (Readers.read_atom atom2)))
                                                   [
                                                     ("x < y", "y > x");
                                                     ("x <= y", "y >= x");
@@ -97,7 +92,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                 List.map (fun (expected, atom) ->
                     atom >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string
                                                     (Set.map Var.of_string (Set.of_list expected))
-                                                    (C.Atom_.vars (Reader.read_atom atom))))
+                                                    (Atom.vars (Readers.read_atom atom))))
                          [
                            (["x"], " x^3+2*x -1 < x^5 " );
                            (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
@@ -105,7 +100,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                         
             ("rename" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal_atom (Reader.read_atom expected) (rename atom [("x", "a"); ("y", "b"); ("z", "c")])))
+                      atom >:: (fun _ -> assert_equal_atom (Readers.read_atom expected) (rename atom [("x", "a"); ("y", "b"); ("z", "c")])))
                         [
                             ("5 <= 5", "5 <= 5");
                             ("a <= a", "x <= x" );
@@ -126,7 +121,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
              *)          
             ("is_linear" >:::
                 List.map (fun (expected, atom) ->
-                      atom >:: (fun _ -> assert_equal_bool expected (C.Atom_.is_linear (Reader.read_atom atom))))
+                      atom >:: (fun _ -> assert_equal_bool expected (Atom.is_linear (Readers.read_atom atom))))
                         [
                             (true, "x < y");
                             (false, "x <= a^2 + b * 3 -6");

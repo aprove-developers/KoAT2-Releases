@@ -3,9 +3,11 @@ open Batteries
 (** SMT solver which uses the microsoft project Z3 *)
 module Z3Solver =
   struct
-    module Polynomial_ = Program.Polynomial_
-    module Constraint_ = Program.Constraint_
-    module Formula_ = Program.Formula_
+    module Formula_ = Formula.Make(Polynomials.Make(PolyTypes.OurInt))
+    module Polynomial_ = Polynomials.Make(PolyTypes.OurInt)
+
+    type valuation = Polynomials.Make(PolyTypes.OurInt).Valuation_.t
+    type formula = Formula_.t
        
     let context = ref (
                       Z3.mk_context [

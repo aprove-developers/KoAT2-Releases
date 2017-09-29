@@ -4,12 +4,11 @@ open Batteries
    
 (** A unified interface for SMT solvers (currently supported: Z3) *)
 module Z3Solver :
-  sig
-    module Polynomial_ = Program.Polynomial_
-    module Constraint_ = Program.Constraint_
-    module Formula_ = Program.Formula_
+sig
+    type valuation = Polynomials.Make(PolyTypes.OurInt).Valuation_.t
+    type formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt)).t
 
-    val satisfiable : Formula_.t -> bool
+    val satisfiable : formula -> bool
     
-    val get_model : Formula_.t -> Polynomial_.Valuation_.t
+    val get_model : formula -> valuation
   end

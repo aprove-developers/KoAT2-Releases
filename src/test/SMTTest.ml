@@ -4,7 +4,10 @@ open Helper
    
 module Z3Solver = SMT.Z3Solver
 module Reader = Readers
+module Formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt))
+module Constraint = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
 
+               
 let print_str (str : string) = str
 
 let print_fl = Float.to_string
@@ -37,7 +40,7 @@ let suite =
         );
         "Satisfiable_Farkas" >::: (
         List.map (fun (expected,constr,atom) ->
-            constr >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Z3Solver.Formula_.mk (Z3Solver.Constraint_.farkas_transform (Reader.read_constraint constr) (Reader.read_atom atom))))))
+            constr >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Formula.mk (Constraint.farkas_transform (Reader.read_constraint constr) (Reader.read_atom atom))))))
                     [
                         (true, "x>=0", "x>=0");
                         (false, "x>=0", "x < -10");

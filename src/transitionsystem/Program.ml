@@ -1,22 +1,14 @@
 open Batteries
 
-(*module Make(R : PolyTypes.Ring) =*)
-    module PolynomialMonad_ = ParameterPolynomial
-    module Polynomial_ = PolynomialMonad_.Inner
-    module Formula_ = Formula.Make(Polynomial_)
-    module Constraint_ = Formula_.Constraint_
-    module Atom_ = Constraint_.Atom_
-    
-
     module TransitionLabel =
       struct
-        module Polynomial = Polynomial_
+        module Guard = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))         
+        module Polynomial = Polynomials.Make(PolyTypes.OurInt)
         module Map = Map.Make(Var)
-                   
+        module Bound = MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
+                          
         exception RecursionNotSupported
                 
-        module Bound = MinMaxPolynomial.Make(Polynomial)
-       
         type kind = Lower | Upper [@@deriving eq, ord]
 
         type t = {
@@ -24,7 +16,7 @@ open Batteries
             start : string;
             target : string;
             update : Polynomial.t Map.t;
-            guard : Constraint_.t;
+            guard : Guard.t;
             (* TODO Transitions should have costs *)
           }
 
@@ -63,7 +55,7 @@ open Batteries
             start = "";
             target = "";
             update = Map.empty;
-            guard = Constraint_.mk_true;
+            guard = Guard.mk_true;
           }
                     
         let sizebound_local kind label var =
@@ -86,7 +78,7 @@ open Batteries
             Map.fold (fun var poly result -> result ^ " && " ^ entry_string var poly) without_first (entry_string var poly)
 
         let to_string label =          
-          let guard = if Constraint_.is_true label.guard then "" else " && " ^ Constraint_.to_string label.guard in
+          let guard = if Guard.is_true label.guard then "" else " && " ^ Guard.to_string label.guard in
           update_to_string_list label.update ^ guard
           
       end

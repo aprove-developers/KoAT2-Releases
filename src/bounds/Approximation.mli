@@ -2,14 +2,8 @@ open Batteries
 
 (** Provides default implementations of an approximation *)
 
-(*module Make(P : ProgramTypes.Program) : BoundTypes.Approximation with   
-         module Program_ = P*)
-    module Program_ = Program
-
-    module Transition = Program_.Transition
-    module Value = Program_.Polynomial_.Value
-                                
-    module Bound : module type of MinMaxPolynomial.Make(Program_.Polynomial_)
+    module Transition = Program.Transition                                
+    module Bound : module type of MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
 
     type t
          
@@ -30,7 +24,7 @@ open Batteries
     val timebound : kind -> t -> Transition.t -> Bound.t
 
     (** Returns a timebound of the specified kind for the execution of the whole graph. *)
-    val timebound_graph : kind -> t -> Program_.t -> Bound.t
+    val timebound_graph : kind -> t -> Program.t -> Bound.t
 
     (** Adds the information that the specified bound is a valid timebound for the given transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
