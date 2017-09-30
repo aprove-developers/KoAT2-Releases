@@ -17,16 +17,12 @@ type t =
   | Sum of t list
   | Product of t list [@@deriving eq]
 
-type classification =
-  | Equality of int
-  | AddsConstant of int
-  | ScaledSum of int * int
-  | Unbound [@@deriving eq]
-
 let of_poly p = Poly p
               
 let of_constant c = of_poly (Polynomial.from_constant c)
 
+let of_int i = of_constant (PolyTypes.OurInt.of_int i)
+                  
 let of_var v = of_poly (Polynomial.from_var v)
 
 let infinity = Min []
@@ -153,10 +149,11 @@ let minimum bounds =
 
 let exp value b =
   simplify (Pow (value, b))
-  
-let classify bound =
-  raise (Failure "classify for MinMaxPolynomial not yet implemented")
-  
+
+let is_var = function
+  | Poly poly -> Polynomial.is_var poly
+  | _ -> false
+
 let substitute_f substitution =
   fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow ~exp:exp ~min:min ~max:max ~inf:infinity
   
