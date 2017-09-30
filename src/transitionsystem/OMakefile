@@ -6,10 +6,12 @@ OCAMLPACKS[] =
     ppx_deriving
     ppx_deriving.eq
     ppx_deriving.ord
+    ppx_deriving.show
 
 OCAMLINCLUDES[] =
     ../poly
     ../constraints
+    ../smt
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
@@ -17,6 +19,7 @@ BYTE_ENABLED = true
 OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
+    ../smt/smt
 
 # Include all .ml files
 FILES[] = $(removesuffix .ml, $(glob *.ml))

@@ -200,7 +200,9 @@ module type Formula =
         val mk_true : t
         val mk_and : t -> t -> t
         val mk_or : t -> t -> t
-
+        val neg : t -> t
+        val implies : t -> t -> t
+          
         (** Creates a constraint that expresses the equality of the two polynomials. *)
         val mk_eq : Polynomial_.t -> Polynomial_.t -> t
         val mk_gt : Polynomial_.t -> Polynomial_.t -> t

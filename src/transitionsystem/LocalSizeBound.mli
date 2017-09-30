@@ -1,5 +1,7 @@
 open Batteries
 
+type formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt)).t
+   
 (** A classified bound is a bound of a certain form.
     The different classifications are not disjunctive.
     The upcoming classification set always includes the previous one. *)
@@ -14,8 +16,26 @@ type classification =
       s * (e + sum [x1;...;xn]) *)
   | ScaledSum of int * int
   (** Always smaller or equal to infinity *)
-  | Unbound [@@deriving eq]
+  | Unbound [@@deriving eq, show]
   
-type t = classification * Var.t list
-                
+type t = classification * Var.t list [@@deriving eq]
+
+val equal_classification : classification -> classification -> bool
+
+val show_classification : classification -> string
+
+val equal : t -> t -> bool
+
+val to_string : t -> string
+
 val as_bound : t -> Bound.t 
+
+val as_formula : Var.t -> t -> formula 
+
+val is_bounded_with : Var.t -> formula -> t -> bool
+                  
+val find_bound : Var.t -> formula -> t
+
+(** Returns a local sizebound of the specified kind for the var of the transition. 
+    A local sizebound is expressed in relation to the values directly before executing the transition. *)
+val sizebound_local : TransitionLabel.kind -> TransitionLabel.t -> Var.t -> Bound.t

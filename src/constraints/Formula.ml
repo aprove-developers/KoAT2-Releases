@@ -14,6 +14,9 @@ module Make(P : Polynomial) =
     let mk constr =
       [constr]
            
+    let fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj ~wrong ~disj =
+      List.fold_left (fun c constr -> disj c (Constraint_.fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj constr)) wrong
+      
     let disj constraints =
       constraints
 
@@ -41,6 +44,22 @@ module Make(P : Polynomial) =
     let mk_or =
       List.append
 
+    let neg =
+      fold ~const:Polynomial_.from_constant
+           ~var:Polynomial_.from_var
+           ~neg:Polynomial_.neg
+           ~plus:Polynomial_.add
+           ~times:Polynomial_.mul
+           ~pow:Polynomial_.pow
+           ~le:mk_gt
+           ~correct:mk_false
+           ~conj:mk_or
+           ~wrong:mk_true
+           ~disj:mk_and
+
+    let implies formula1 formula2 =
+      mk_or (neg formula1) formula2
+
     module Infix = struct
       let (=) = mk_eq
       let (>) = mk_gt
@@ -51,12 +70,11 @@ module Make(P : Polynomial) =
       let (||) = mk_or
     end
 
-    (* a <= max{b1,...,bn}   <=>   a<=b1 || (not (a<=b1) && ...) *)
+    (* a <= max{b1,...,bn}   <=>   a<=b1 || ... || a<=bn *)
     let mk_le_than_max poly max_list =
       max_list
-      |> List.map (fun max -> Atom_.Infix.(poly <= max))
-      |> List.map (fun atom further_conditions -> Infix.(lift atom || (lift Atom_.(neg atom) && further_conditions)))
-      |> List.fold_left (fun result f -> f result) mk_false
+      |> List.map (fun max -> Infix.(poly <= max))
+      |> List.fold_left mk_or mk_false
 
     let all =
       List.fold_left mk_and mk_true
@@ -75,7 +93,4 @@ module Make(P : Polynomial) =
     let rename formula varmapping =
       List.map (fun constr -> Constraint_.rename constr varmapping) formula
         
-    let fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj ~wrong ~disj =
-      List.fold_left (fun c constr -> disj c (Constraint_.fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj constr)) wrong
-      
   end

@@ -17,7 +17,7 @@ let suite =
             let files = Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir ("../../examples/" ^ folder))
             and test (file : string): unit = try ignore (Reader.read_file ("../../examples/" ^ folder ^ "/" ^ file)) with
                                              | Reader.Error msg -> failwith msg
-                                             | Program.TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported" in
+                                             | TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported" in
             Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
         "Examples" >::: List.map test_folder ["KoAT-2013"; "KoAT-2014"; "SAS10"; "T2"]
       );
@@ -38,9 +38,9 @@ let suite =
                "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ var ^ " is " ^ bound ^ "?" >:: (fun _ ->
                        let program = Reader.read_file "../../examples/KoAT-2013/sect1-lin.koat" in
                        let (l,t,l') = Program.TransitionGraph.find_edge (Program.graph program) (Program.Location.of_string l) (Program.Location.of_string l') in
-                       Program.TransitionLabel.(assert_equal_bound
+                       TransitionLabel.(assert_equal_bound
                                                   (Bound.of_poly (Reader.read_polynomial bound))
-                                                  (sizebound_local Upper t (Var.of_string var))
+                                                  (LocalSizeBound.sizebound_local Upper t (Var.of_string var))
                        )
                      )
              )

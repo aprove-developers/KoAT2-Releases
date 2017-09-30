@@ -9,6 +9,8 @@ sig
     type formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt)).t
 
     val satisfiable : formula -> bool
-    
+
+    val unsatisfiable : formula -> bool
+
     val get_model : formula -> valuation
   end

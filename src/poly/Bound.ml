@@ -25,6 +25,8 @@ let of_int i = of_constant (PolyTypes.OurInt.of_int i)
                   
 let of_var v = of_poly (Polynomial.from_var v)
 
+let of_var_string str = of_var (Var.of_string str)
+
 let infinity = Min []
 
 let minus_infinity = Max []

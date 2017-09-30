@@ -16,6 +16,7 @@ val of_poly : polynomial -> t
 val of_constant : Value.t -> t
 val of_int : int -> t
 val of_var : Var.t -> t
+val of_var_string : string -> t
   
 val min : t -> t -> t
 val max : t -> t -> t

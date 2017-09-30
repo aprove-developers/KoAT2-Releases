@@ -10,22 +10,22 @@ OCAMLPACKS[] =
 OCAMLINCLUDES[] =
     ../poly
     ../constraints
+    ../smt
     ../transitionsystem
     ../bounds
     ../preprocessors
     ../parser
-    ../smt
 
 OCAMLFLAGS += -thread
 
 OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
+    ../smt/smt
     ../transitionsystem/transitionsystem
     ../bounds/bounds
     ../preprocessors/preprocessors
     ../parser/parser
-    ../smt/smt
 
 # Include all .ml files
 FILES[] = $(removesuffix .ml, $(glob *.ml))

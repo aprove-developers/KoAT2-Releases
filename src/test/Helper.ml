@@ -13,7 +13,16 @@ let assert_equal_poly =
 
 let assert_equal_bound =
   assert_equal ~cmp:Bound.(=~=) ~printer:Bound.to_string
-  
+
+let assert_equal_classified_bound =
+  assert_equal ~cmp:LocalSizeBound.equal ~printer:LocalSizeBound.to_string
+
+let assert_equal_formula =
+  let module F = Formula.Make(Polynomials.Make(PolyTypes.OurInt)) in
+  assert_equal
+    ~cmp:(fun f1 f2 -> SMT.Z3Solver.unsatisfiable F.Infix.(f1 && F.neg f2))
+    ~printer:F.to_string
+
 let assert_true = assert_bool ""
                 
 let assert_false b = assert_true (not b)

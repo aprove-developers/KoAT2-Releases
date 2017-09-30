@@ -19,7 +19,7 @@ let improve_trivial_scc (program: Program.t)
                         (appr: Approximation.t)
                         (t,v)
     : Approximation.t =
-  let (local_sizebound: Bound.t) = Program.TransitionLabel.(sizebound_local Upper (Program.Transition.label t) v) in
+  let (local_sizebound: Bound.t) = TransitionLabel.(LocalSizeBound.sizebound_local Upper (Program.Transition.label t) v) in
   let newbound =
     if Program.is_initial program t then
       local_sizebound

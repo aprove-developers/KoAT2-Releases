@@ -1,31 +1,26 @@
 open Batteries
 open OUnit2
-   
-module StringIDAtomTest = AtomTest.Methods(*(Polynomials.Make(PolyTypes.OurInt))*)
-module StringIDConstraintsTest = ConstraintsTest.Methods(*(Polynomials.Make(PolyTypes.OurInt))*)
-
-module StringIDPolynomial = PolynomialsTest.Methods(*(PolyImpl.Polynomial)*)
-module StringIDTemplatePolynomial = PolynomialsTest.Methods(*(PolyImpl.TemplatePolynomial)*)
-
-                          
+                             
 let suite =
   "Suite" >::: [
       "Polynomial" >::: [
         PolynomialsTest.Parser.tests;
-        StringIDPolynomial.tests;
+        PolynomialsTest.Methods.tests;
       ];
       "TemplatePolynomial" >::: [
-        StringIDTemplatePolynomial.tests;
+        PolynomialsTest.Methods.tests;
 
       ];
       "PolynomialConstraints" >::: [
           ConstraintsTest.Parser.tests;
-          StringIDAtomTest.tests;
-          StringIDConstraintsTest.tests;
+          AtomTest.Methods.tests;
+          ConstraintsTest.Methods.tests;
         ];
-(*      TransitionGraphTest.suite;
-      SMTTest.suite;*)
+      TransitionGraphTest.suite;
+      SMTTest.suite;
       IDTest.tests;
+      LocalSizeBoundTest.tests;
+      FormulaTest.tests;
     ]
                      
 let () =

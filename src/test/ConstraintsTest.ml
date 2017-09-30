@@ -6,7 +6,6 @@ open Helper
 
 module Parser =
   struct
-    module Formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt))
     module Constraint = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
     module Polynomial = Polynomials.Make(PolyTypes.OurInt)
 

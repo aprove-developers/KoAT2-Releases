@@ -1,87 +1,5 @@
 open Batteries
    
-module TransitionLabel =
-  struct
-    module Guard = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
-    module Polynomial = Polynomials.Make(PolyTypes.OurInt)
-    module Map = Map.Make(Var)
-                 
-    exception RecursionNotSupported
-            
-    type kind = Lower | Upper [@@deriving eq, ord]
-
-    type t = {
-        name : string;
-        start : string;
-        target : string;
-        update : Polynomial.t Map.t;
-        guard : Guard.t;
-        (* TODO Transitions should have costs *)
-      }
-
-    let make ~name ~start ~target ~update ~guard = {
-        name; start; target; update; guard
-      }
-                                                 
-                                                 
-    (* TODO Pattern <-> Assigment relation *)
-    let mk ~name ~start ~targets ~patterns ~guard ~vars =
-      if List.length targets != 1 then raise RecursionNotSupported else
-        let (target, assignments) = List.hd targets in
-        List.combine patterns assignments
-        |> List.map (fun (var, assignment) -> Map.add var assignment)
-        |> List.fold_left (fun map adder -> adder map) Map.empty 
-        |> fun update -> { name; start; target; update; guard }
-                       
-    let equal t1 t2 =
-      t1.name == t2.name
-      
-    let compare t1 t2 = 
-      if (t1 == t2) then 0
-      else if (t1.name < t1.name) then (-1)
-      else 1
-      
-    let start t = t.start
-                
-    let target t = t.target
-                 
-    let update t var = Map.Exceptionless.find var t.update                    
-                     
-    let guard t = t.guard
-                
-    let default = {   
-        name = "default";
-        start = "";
-        target = "";
-        update = Map.empty;
-        guard = Guard.mk_true;
-      }
-                
-    let sizebound_local kind label var =
-      (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
-      (* TODO Should we also try to substitute vars in the bound if it leads to a simpler bound? E.g. x<=10 && x'=x : b:=x or b:=10? *)
-      match update label var with
-      | Some bound -> Bound.of_poly bound
-      | None ->
-         match kind with
-         (* TODO Use SMT-Solving to find bounds *)
-         | Upper -> Bound.infinity
-         | Lower -> Bound.minus_infinity
-
-    let update_to_string_list update =
-      if Map.is_empty update then
-        "true"
-      else
-        let entry_string var poly = Var.to_string var ^ "' := " ^ Polynomial.to_string poly
-        and ((var, poly), without_first) = Map.pop update in
-        Map.fold (fun var poly result -> result ^ " && " ^ entry_string var poly) without_first (entry_string var poly)
-
-    let to_string label =          
-      let guard = if Guard.is_true label.guard then "" else " && " ^ Guard.to_string label.guard in
-      update_to_string_list label.update ^ guard
-      
-  end
-
 module Location =
   struct
     type t = {
@@ -112,9 +30,9 @@ module RV =
     let hash v = raise (Failure "Not yet implemented")
     let transition (t,v) = t
     let variable (t,v) = v
-    let to_string ((l,t,l'),v) = TransitionLabel.(Bound.to_string (sizebound_local Upper t v)) ^ " >= " ^
+    let to_string ((l,t,l'),v) = TransitionLabel.(Bound.to_string (LocalSizeBound.sizebound_local Upper t v)) ^ " >= " ^
                                    "|" ^ Location.to_string l ^ " -> " ^ Location.to_string l' ^ "," ^ Var.to_string v ^ "|"
-                                   ^ " >= " ^ TransitionLabel.(Bound.to_string (sizebound_local Lower t v))
+                                   ^ " >= " ^ TransitionLabel.(Bound.to_string (LocalSizeBound.sizebound_local Lower t v))
   end
 module RVG = Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
@@ -168,7 +86,7 @@ let rvg program =
   let add_transition post_transition (rvg: RVG.t) =
     let rvg_with_vertices: RVG.t = add_vertices_to_rvg (List.map (fun var -> (post_transition,var)) program.vars) rvg in
     let pre_nodes post_transition post_var =
-      TransitionLabel.sizebound_local TransitionLabel.Upper (Transition.label post_transition) post_var
+      LocalSizeBound.sizebound_local TransitionLabel.Upper (Transition.label post_transition) post_var
       |> Bound.vars
       |> Set.cartesian_product (pre program post_transition)
       |> Set.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))

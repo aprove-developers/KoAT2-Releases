@@ -39,9 +39,9 @@
 
 %type <Var.t list> variables
 
-%type <vars:Var.t list -> Program.TransitionLabel.t> transition
+%type <vars:Var.t list -> TransitionLabel.t> transition
 
-%type <(vars:Var.t list -> Program.TransitionLabel.t) list> transitions
+%type <(vars:Var.t list -> TransitionLabel.t) list> transitions
 
 %{
   open BatTuple
@@ -82,11 +82,11 @@ variables :
 
 transition :
 	|	lhs = transition_lhs; ARROW; rhs = transition_rhs; constr = withConstraints
-	          { Program.TransitionLabel.mk ~name:(Tuple2.first rhs)
-                                     ~start:(Tuple2.first lhs)
-                                     ~targets:(Tuple2.second rhs)
-                                     ~patterns:(List.map Var.of_string (Tuple2.second lhs))
-                                     ~guard:constr } ;
+	          { TransitionLabel.mk ~name:(Tuple2.first rhs)
+                    		       ~start:(Tuple2.first lhs)
+                                       ~targets:(Tuple2.second rhs)
+                                       ~patterns:(List.map Var.of_string (Tuple2.second lhs))
+                                       ~guard:constr } ;
 
 transition_lhs :
 	|	start = ID; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR)

@@ -40,14 +40,19 @@ module Z3Solver =
         Z3.Optimize.add optimisation_goal [formula];
         Z3.Optimize.to_string optimisation_goal*)
 
-        
-    (** checks if there exists a satisfying assignment for a given constraint
-        uses Z3 optimisation methods*)
-    let satisfiable (constraints : Formula_.t) =
-        let formula = from_constraint constraints in
+    let result_is expected_result formula =
+        let formula = from_constraint formula in
         let optimisation_goal = Z3.Optimize.mk_opt !context in
         Z3.Optimize.add  optimisation_goal [formula];
-        (Z3.Optimize.check optimisation_goal) == Z3.Solver.SATISFIABLE
+        (Z3.Optimize.check optimisation_goal) == expected_result
+
+    (** checks if there exists a satisfying assignment for a given constraint
+        uses Z3 optimisation methods*)
+    let satisfiable formula =
+      result_is Z3.Solver.SATISFIABLE formula      
+        
+    let unsatisfiable formula =
+      result_is Z3.Solver.UNSATISFIABLE formula      
         
     let match_string_for_float str =
         let float_regexp = Str.regexp "(?\\([-]?\\)[ ]?\\([0-9]*\\.?[0-9]+\\))?" in             (*(?\\([-0-9\\.]*\\))?*)
