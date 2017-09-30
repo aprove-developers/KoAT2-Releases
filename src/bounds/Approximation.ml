@@ -1,8 +1,6 @@
 open Batteries
 
 module Transition = Program.Transition
-module Bound = MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
-type bound = Bound.t
            
 type kind = Lower | Upper
 

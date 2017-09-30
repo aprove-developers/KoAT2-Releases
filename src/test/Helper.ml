@@ -9,14 +9,10 @@ let assert_equal_int = assert_equal ~printer:string_of_int ~cmp:Int.equal
                         
 let assert_equal_poly =
   let module P = Polynomials.Make(PolyTypes.OurInt) in
-  assert_equal
-    ~cmp:P.(=~=)
-    ~printer:P.to_string
+  assert_equal ~cmp:P.(=~=) ~printer:P.to_string
 
 let assert_equal_bound =
-  assert_equal
-    ~cmp:Program.TransitionLabel.Bound.(=~=)
-    ~printer:Program.TransitionLabel.Bound.to_string
+  assert_equal ~cmp:Bound.(=~=) ~printer:Bound.to_string
   
 let assert_true = assert_bool ""
                 

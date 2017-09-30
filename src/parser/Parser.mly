@@ -25,7 +25,7 @@
 
 %start <Polynomials.Make(PolyTypes.OurInt).t> onlyPolynomial
 
-%start <Program.TransitionLabel.Bound.t> onlyBound
+%start <Bound.t> onlyBound
 
 %type <Program.t> transitiongraph
 
@@ -48,7 +48,6 @@
   module Constr = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
   module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
   module Poly = Polynomials.Make(PolyTypes.OurInt)
-  module Bound = MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
   module Formula_ = Formula.Make(Polynomials.Make(PolyTypes.OurInt))
 %}
 
@@ -175,7 +174,7 @@ bound :
 	|	NEG b = bound
 		{ Bound.neg b }
 	|	v = UINT; EXP; b = bound
-		{ Bound.exp (Bound.Polynomial_.Value.of_int v) b }
+		{ Bound.exp (Bound.Value.of_int v) b }
 	|	SUM LBRACE sum = separated_list(COMMA, bound) RBRACE
 		{ Bound.sum sum }
 	|	PRODUCT LBRACE product = separated_list(COMMA, bound) RBRACE

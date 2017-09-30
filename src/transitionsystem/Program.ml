@@ -5,7 +5,6 @@ module TransitionLabel =
     module Guard = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
     module Polynomial = Polynomials.Make(PolyTypes.OurInt)
     module Map = Map.Make(Var)
-    module Bound = MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
                  
     exception RecursionNotSupported
             
@@ -170,7 +169,7 @@ let rvg program =
     let rvg_with_vertices: RVG.t = add_vertices_to_rvg (List.map (fun var -> (post_transition,var)) program.vars) rvg in
     let pre_nodes post_transition post_var =
       TransitionLabel.sizebound_local TransitionLabel.Upper (Transition.label post_transition) post_var
-      |> TransitionLabel.Bound.vars
+      |> Bound.vars
       |> Set.cartesian_product (pre program post_transition)
       |> Set.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
     in

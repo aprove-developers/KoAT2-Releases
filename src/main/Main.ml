@@ -7,7 +7,6 @@ module Constraint = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
 module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
 module Polynomial = Polynomials.Make(PolyTypes.OurInt)
 module Approximation_ = Approximation
-module Bound = Program_.TransitionLabel.Bound
                       
 module SMT_ = SMT.Z3Solver                      
 

@@ -23,6 +23,6 @@ open Batteries
 
     val read_polynomial : string -> Polynomials.Make(PolyTypes.OurInt).t
 
-    val read_bound : string -> Program.TransitionLabel.Bound.t
+    val read_bound : string -> Bound.t
       
 (*  end*)

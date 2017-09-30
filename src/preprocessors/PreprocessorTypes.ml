@@ -5,8 +5,6 @@ open Batteries
 (** An atom is a comparison between two polynomials *)
 module type Preprocessor =
   sig
-    module Program_ : ProgramTypes.Program
-
     (** Transforms the transition graph in an equivalent form, which is more suitable for the upcoming computations. *)
-    val transform : Program_.t -> Program_.t
+    val transform : Program.t -> Program.t
   end

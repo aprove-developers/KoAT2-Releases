@@ -11,7 +11,6 @@ sig
   module Guard : module type of Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
   module Polynomial : module type of Polynomials.Make(PolyTypes.OurInt)
   module Map : module type of Map.Make(Var)
-  module Bound : module type of MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
                               
   type kind = Lower | Upper  [@@deriving eq, ord]
   type t

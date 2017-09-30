@@ -1,7 +1,6 @@
 open Batteries
 
 module RVG = Program.RVG
-module Bound = MinMaxPolynomial.Make(Polynomials.Make(PolyTypes.OurInt))
              
 (* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
        Corresponds to 'SizeBounds for trivial SCCs':
