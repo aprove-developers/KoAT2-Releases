@@ -28,12 +28,16 @@ val equal : t -> t -> bool
 
 val to_string : t -> string
 
+(** Converts the classified bound to an actual bound. *)
 val as_bound : t -> Bound.t 
 
+(** Returns a formula which expresses that the variable is smaller or equal to the bound *)
 val as_formula : Var.t -> t -> formula 
 
+(** Checks if the variable is bounded with the classified bound in the formula. *)
 val is_bounded_with : Var.t -> formula -> t -> bool
-                  
+
+(** Tries to find a classified bounds of any of the defined forms. *)
 val find_bound : Var.t -> formula -> t
 
 (** Returns a local sizebound of the specified kind for the var of the transition. 
