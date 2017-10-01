@@ -6,8 +6,7 @@ open Helper
 
 module Parser =
   struct
-    module Constraint = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
-    module Polynomial = Polynomials.Make(PolyTypes.OurInt)
+    module Constraint = Constraints.PolynomialConstraint
 
     let assert_equal_constr =     
         assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string
@@ -41,10 +40,8 @@ module Parser =
   
 module Methods (*(P : PolyTypes.Polynomial)*) =
   struct
-    module Constraint = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
-    module Polynomial = Polynomials.Make(PolyTypes.OurInt)
-    module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
-    module ParameterPolynomial = Polynomials.Make(Polynomials.Make(PolyTypes.OurInt))
+    module Constraint = Constraints.PolynomialConstraint
+    module Atom = Atoms.PolynomialAtom
     module ParameterAtom = Atoms.Make(ParameterPolynomial)
                      
     let example_valuation = Polynomial.Valuation_.from_native [("x", 3);

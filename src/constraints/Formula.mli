@@ -1,10 +1,18 @@
 open Batteries
-open PolyTypes
 
 (** Provides default implementations of a constraint *)
 
 (** Constructs a default constraint using a list of atoms each comparing two polynomials *)
-module Make(P : Polynomial) : ConstraintTypes.Formula
-       with module Polynomial_ = P
-        and module Atom_ = Atoms.Make(P)
-        and module Constraint_ = Constraints.Make(P)
+module Make(C : ConstraintTypes.Constraint) : ConstraintTypes.Formula
+       with type constr = C.t
+        and type atom = C.atom
+        and type polynomial = C.polynomial
+        and type value = C.value
+        and module C = C
+
+module PolynomialFormula : ConstraintTypes.Formula
+       with type constr = Constraints.PolynomialConstraint.t
+        and type atom = Atoms.PolynomialAtom.t
+        and type polynomial = Polynomial.t
+        and type value = Polynomial.Value.t
+        and module C = Constraints.PolynomialConstraint

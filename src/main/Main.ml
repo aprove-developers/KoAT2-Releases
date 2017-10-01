@@ -2,10 +2,9 @@ open Batteries
 
 module Value_ = PolyTypes.OurInt
 module Program_ = Program
-module Formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt))
-module Constraint = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
-module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
-module Polynomial = Polynomials.Make(PolyTypes.OurInt)
+module Formula = Formula.PolynomialFormula
+module Constraint = Constraints.PolynomialConstraint
+module Atom = Atoms.PolynomialAtom
 module Approximation_ = Approximation
                       
 module SMT_ = SMT.Z3Solver                      

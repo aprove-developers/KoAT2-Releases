@@ -8,8 +8,7 @@ let assert_equal_string = assert_equal ~printer:identity ~cmp:String.equal
 let assert_equal_int = assert_equal ~printer:string_of_int ~cmp:Int.equal
                         
 let assert_equal_poly =
-  let module P = Polynomials.Make(PolyTypes.OurInt) in
-  assert_equal ~cmp:P.(=~=) ~printer:P.to_string
+  assert_equal ~cmp:Polynomial.(=~=) ~printer:Polynomial.to_string
 
 let assert_equal_bound =
   assert_equal ~cmp:Bound.(=~=) ~printer:Bound.to_string
@@ -18,7 +17,7 @@ let assert_equal_classified_bound =
   assert_equal ~cmp:LocalSizeBound.equal ~printer:LocalSizeBound.to_string
 
 let assert_equal_formula =
-  let module F = Formula.Make(Polynomials.Make(PolyTypes.OurInt)) in
+  let module F = Formula.PolynomialFormula in
   assert_equal
     ~cmp:(fun f1 f2 -> SMT.Z3Solver.unsatisfiable F.Infix.(f1 && F.neg f2))
     ~printer:F.to_string

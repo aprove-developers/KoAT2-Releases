@@ -2,7 +2,7 @@ open Batteries
 open OUnit2
 open Helper
    
-module Formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt))
+module Formula = Formula.PolynomialFormula
                   
 let tests =      
   "Formula" >:::[

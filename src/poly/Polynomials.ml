@@ -16,6 +16,8 @@ module Make(Value : PolyTypes.Ring) =
     
     let lift coeff mon = [ScaledMonomial_.make coeff mon]
 
+    let from_scaled scaled = scaled
+
     let fold ~const ~var ~neg ~plus ~times ~pow =
       List.fold_left (fun b scaled -> plus b (ScaledMonomial_.fold ~const ~var ~times ~pow scaled)) (const Value.zero)
                     
@@ -243,17 +245,7 @@ module Make(Value : PolyTypes.Ring) =
           Option.map from_constant (Valuation_.eval_opt var valuation) |? from_var var
         ) poly
 
+    let partition =
+      List.partition
+      
   end
-  
-  
-(** Monadize adds the monadic flatten method to a polynomial. *)
-(*module Monadize(P : PolynomialFunctor)(R : Ring) = 
-    struct
-        module Inner = P(R)
-        module Outer = P(Inner)
-        include Outer
-        (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
-        (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
-        let flatten (templatepoly : t): Inner.t =
-        Outer.fold ~const:identity ~var:Inner.from_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
-    end*)

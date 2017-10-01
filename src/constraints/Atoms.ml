@@ -1,11 +1,12 @@
 open Batteries
-open PolyTypes
-open ConstraintTypes
 
-module Make(P : Polynomial) =
+module Make(P : PolyTypes.Polynomial) =
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
 struct
-    module Polynomial_ = P
+    module P = P
+
+    type polynomial = P.t
+    type value = P.Value.t
 
     module Comparator =
       struct
@@ -93,3 +94,14 @@ struct
       le (P.fold ~const ~var ~neg ~plus ~times ~pow poly) (P.fold ~const ~var ~neg ~plus ~times ~pow P.zero)
       
 end
+
+module PolynomialAtom =
+  struct
+
+    include Make(Polynomial)
+        
+    let to_string atom =
+      Polynomial.separate_by_sign atom
+      |> (fun (positive, negative) -> Polynomial.to_string positive ^ " <= " ^ Polynomial.to_string (Polynomial.neg negative))
+      
+  end

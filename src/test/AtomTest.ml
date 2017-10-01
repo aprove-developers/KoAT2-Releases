@@ -6,8 +6,7 @@ open Helper
 
 module Parser =
   struct
-    module Polynomial = Polynomials.Make(PolyTypes.OurInt)
-    module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
+    module Atom = Atoms.PolynomialAtom
                   
     let assert_equal_atom =
       assert_equal ~cmp:Atom.(=~=) ~printer:Atom.to_string
@@ -46,7 +45,7 @@ module Parser =
 
 module Methods (*(P : PolyTypes.Polynomial)*) =
   struct
-    module Atom = Atoms.Make(Polynomials.Make(PolyTypes.OurInt))
+    module Atom = Atoms.PolynomialAtom
    
     let varset_to_string varl =
         varl

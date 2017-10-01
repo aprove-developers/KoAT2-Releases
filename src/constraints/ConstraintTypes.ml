@@ -6,9 +6,7 @@ open PolyTypes
 (** An atom is a comparison between two polynomials *)
 module type Atom =
   sig
-        module Polynomial_ : Polynomial
-
-        (** A comparator sets two values in a binary relation *)
+    (** A comparator sets two values in a binary relation *)
         module Comparator : sig
 
           (** The different comparators.
@@ -28,22 +26,30 @@ module type Atom =
 
         end
                                                   
+        type polynomial
+        type value
+
+        (* TODO Shouldn't be exposed *)
+        module P : PolyTypes.Polynomial
+               with type t = polynomial
+                and type Value.t = value
+
         type t
              
 
         (** Following methods are convenience methods for the creation of atoms. *)
           
-        val mk : Comparator.t -> Polynomial_.t -> Polynomial_.t -> t
-        val mk_gt : Polynomial_.t -> Polynomial_.t -> t
-        val mk_ge : Polynomial_.t -> Polynomial_.t -> t
-        val mk_lt : Polynomial_.t -> Polynomial_.t -> t
-        val mk_le : Polynomial_.t -> Polynomial_.t -> t
+        val mk : Comparator.t -> polynomial -> polynomial -> t
+        val mk_gt : polynomial -> polynomial -> t
+        val mk_ge : polynomial -> polynomial -> t
+        val mk_lt : polynomial -> polynomial -> t
+        val mk_le : polynomial -> polynomial -> t
 
         module Infix : sig
-          val (>) : Polynomial_.t -> Polynomial_.t -> t
-          val (>=) : Polynomial_.t -> Polynomial_.t -> t
-          val (<) : Polynomial_.t -> Polynomial_.t -> t
-          val (<=) : Polynomial_.t -> Polynomial_.t -> t
+          val (>) : polynomial -> polynomial -> t
+          val (>=) : polynomial -> polynomial -> t
+          val (<) : polynomial -> polynomial -> t
+          val (<=) : polynomial -> polynomial -> t
         end
 
         (** Following methods return certain properties of the atom. *)
@@ -62,7 +68,7 @@ module type Atom =
         val vars : t -> Var.t Set.t
 
         (** Returns a normalised form of the atom, where the returned polynomial represents the atom in the form p <= 0. *)
-        val normalised_lhs : t -> Polynomial_.t
+        val normalised_lhs : t -> polynomial
           
 
         (** Following methods manipulate atoms and return the manipulated versions. *)
@@ -76,7 +82,7 @@ module type Atom =
            *)
 
         (** Replaces all operations by new constructors. *)
-        val fold : const:(Polynomial_.Value.t -> 'b) ->
+        val fold : const:(value -> 'b) ->
                    var:(Var.t -> 'b) ->
                    neg:('b -> 'b) ->               
                    plus:('b -> 'b -> 'b) ->
@@ -90,34 +96,38 @@ module type Atom =
 (** A constraint is a conjunction of atoms *)
 module type Constraint =
   sig
-        module Polynomial_ : Polynomial
-
-        module Atom_ : Atom with module Polynomial_ = Polynomial_
-
+        type value
+        type polynomial
+        type atom
         type t
         
+        (* TODO Shouldn't be exposed *)
+        module A : Atom
+               with type t = atom
+                and type polynomial = polynomial
+                and type value = value
 
         (** Following methods are convenience methods for the creation of atoms. *)
           
-        val lift : Atom_.t -> t      
-        val mk : Atom_.t list -> t
+        val lift : atom -> t      
+        val mk : atom list -> t
         val mk_true : t
         val mk_and : t -> t -> t
 
         (** Creates a constraint that expresses the equality of the two polynomials. *)
-        val mk_eq : Polynomial_.t -> Polynomial_.t -> t
+        val mk_eq : polynomial -> polynomial -> t
 
-        val mk_gt : Polynomial_.t -> Polynomial_.t -> t
-        val mk_ge : Polynomial_.t -> Polynomial_.t -> t
-        val mk_lt : Polynomial_.t -> Polynomial_.t -> t
-        val mk_le : Polynomial_.t -> Polynomial_.t -> t
+        val mk_gt : polynomial -> polynomial -> t
+        val mk_ge : polynomial -> polynomial -> t
+        val mk_lt : polynomial -> polynomial -> t
+        val mk_le : polynomial -> polynomial -> t
 
         module Infix : sig
-          val (=) : Polynomial_.t -> Polynomial_.t -> t
-          val (>) : Polynomial_.t -> Polynomial_.t -> t
-          val (>=) : Polynomial_.t -> Polynomial_.t -> t
-          val (<) : Polynomial_.t -> Polynomial_.t -> t
-          val (<=) : Polynomial_.t -> Polynomial_.t -> t
+          val (=) : polynomial -> polynomial -> t
+          val (>) : polynomial -> polynomial -> t
+          val (>=) : polynomial -> polynomial -> t
+          val (<) : polynomial -> polynomial -> t
+          val (<=) : polynomial -> polynomial -> t
           val (&&) : t -> t -> t
         end
 
@@ -150,7 +160,7 @@ module type Constraint =
            *)
 
         (** Replaces all operations by new constructors. *)
-        val fold : const:(Polynomial_.Value.t -> 'b) ->
+        val fold : const:(value -> 'b) ->
                    var:(Var.t -> 'b) ->
                    neg:('b -> 'b) ->               
                    plus:('b -> 'b -> 'b) ->
@@ -170,33 +180,40 @@ module type Constraint =
         val drop_nonlinear : t -> t
         
         (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
-        val get_coefficient_vector : Var.t -> t -> Polynomial_.Value.t list
+        val get_coefficient_vector : Var.t -> t -> value list
         
-        val get_matrix : Var.t Set.t -> t -> Polynomial_.Value.t list list
+        val get_matrix : Var.t Set.t -> t -> value list list
         
         (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
-        val get_constant_vector : t -> Polynomial_.Value.t list
+        val get_constant_vector : t -> value list
         
-        val dualise : Var.t list -> Polynomial_.Value.t list list -> Polynomial_.t list -> t
+        val dualise : Var.t list -> value list list -> polynomial list -> t
         
-        val farkas_transform : t -> Atom_.t -> t
+        val farkas_transform : t -> atom -> t
   end
 
 (** A formula is a propositional formula *)
 module type Formula =
   sig
-        module Polynomial_ : Polynomial
-        module Atom_ : Atom with module Polynomial_ = Polynomial_
-        module Constraint_ : Constraint with module Polynomial_ = Polynomial_
+        type atom
+        type constr
+        type polynomial
+        type value
+       
+        module C : Constraint
+               with type polynomial = polynomial
+                and type atom = atom
+                and type value = value
+                and type t = constr
 
         type t
         
 
         (** Following methods are convenience methods for the creation of atoms. *)
           
-        val lift : Atom_.t -> t      
-        val mk : Constraint_.t -> t      
-        val disj : Constraint_.t list -> t      
+        val lift : atom -> t      
+        val mk : constr -> t      
+        val disj : constr list -> t      
         val mk_true : t
         val mk_and : t -> t -> t
         val mk_or : t -> t -> t
@@ -204,22 +221,22 @@ module type Formula =
         val implies : t -> t -> t
           
         (** Creates a constraint that expresses the equality of the two polynomials. *)
-        val mk_eq : Polynomial_.t -> Polynomial_.t -> t
-        val mk_gt : Polynomial_.t -> Polynomial_.t -> t
-        val mk_ge : Polynomial_.t -> Polynomial_.t -> t
-        val mk_lt : Polynomial_.t -> Polynomial_.t -> t
-        val mk_le : Polynomial_.t -> Polynomial_.t -> t
-        val mk_le_than_max : Polynomial_.t -> Polynomial_.t list -> t
+        val mk_eq : polynomial -> polynomial -> t
+        val mk_gt : polynomial -> polynomial -> t
+        val mk_ge : polynomial -> polynomial -> t
+        val mk_lt : polynomial -> polynomial -> t
+        val mk_le : polynomial -> polynomial -> t
+        val mk_le_than_max : polynomial -> polynomial list -> t
           
         val all : t list -> t
         val any : t list -> t
           
         module Infix : sig
-          val (=) : Polynomial_.t -> Polynomial_.t -> t
-          val (>) : Polynomial_.t -> Polynomial_.t -> t
-          val (>=) : Polynomial_.t -> Polynomial_.t -> t
-          val (<) : Polynomial_.t -> Polynomial_.t -> t
-          val (<=) : Polynomial_.t -> Polynomial_.t -> t
+          val (=) : polynomial -> polynomial -> t
+          val (>) : polynomial -> polynomial -> t
+          val (>=) : polynomial -> polynomial -> t
+          val (<) : polynomial -> polynomial -> t
+          val (<=) : polynomial -> polynomial -> t
           val (&&) : t -> t -> t
           val (||) : t -> t -> t
         end
@@ -239,7 +256,7 @@ module type Formula =
         val rename : t -> RenameMap.t -> t
 
         (** Replaces all operations by new constructors. *)
-        val fold : const:(Polynomial_.Value.t -> 'b) ->
+        val fold : const:(value -> 'b) ->
                    var:(Var.t -> 'b) ->
                    neg:('b -> 'b) ->               
                    plus:('b -> 'b -> 'b) ->

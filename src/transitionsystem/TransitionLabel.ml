@@ -1,7 +1,6 @@
 open Batteries
 
-module Guard = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
-module Polynomial = Polynomials.Make(PolyTypes.OurInt)
+module Guard = Constraints.PolynomialConstraint
 module Map = Map.Make(Var)
            
 exception RecursionNotSupported

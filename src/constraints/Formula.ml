@@ -1,56 +1,57 @@
 open Batteries
-open PolyTypes
-open ConstraintTypes
    
-module Make(P : Polynomial) =
+module Make(C : ConstraintTypes.Constraint) =
   struct
 
-    module Polynomial_ = P
-    module Constraint_ = Constraints.Make(P)
-    module Atom_ = Atoms.Make(P)
+    module C = C
     
-    type t = Constraint_.t list
+    type value = C.value
+    type polynomial = C.polynomial
+    type constr = C.t
+    type atom = C.atom
+
+    type t = C.t list
 
     let mk constr =
       [constr]
            
     let fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj ~wrong ~disj =
-      List.fold_left (fun c constr -> disj c (Constraint_.fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj constr)) wrong
+      List.fold_left (fun c constr -> disj c (C.fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj constr)) wrong
       
     let disj constraints =
       constraints
 
     let lift atom =
-      mk (Constraint_.lift atom)
+      mk (C.lift atom)
     
     let mk_true =
-      mk Constraint_.mk_true
+      mk C.mk_true
 
     let mk_false =
       []
 
     let mk_eq poly1 poly2 =
-      mk (Constraint_.Infix.(poly1 = poly2))
+      mk (C.Infix.(poly1 = poly2))
 
-    let mk_gt p1 p2 = mk (Constraint_.mk_gt p1 p2)
-    let mk_ge p1 p2 = mk (Constraint_.mk_ge p1 p2)
-    let mk_lt p1 p2 = mk (Constraint_.mk_lt p1 p2)
-    let mk_le p1 p2 = mk (Constraint_.mk_le p1 p2)
+    let mk_gt p1 p2 = mk (C.mk_gt p1 p2)
+    let mk_ge p1 p2 = mk (C.mk_ge p1 p2)
+    let mk_lt p1 p2 = mk (C.mk_lt p1 p2)
+    let mk_le p1 p2 = mk (C.mk_le p1 p2)
     
     let mk_and formula1 formula2 =
       List.cartesian_product formula1 formula2
-      |> List.map (uncurry Constraint_.mk_and)
+      |> List.map (uncurry C.mk_and)
       
     let mk_or =
       List.append
 
     let neg =
-      fold ~const:Polynomial_.from_constant
-           ~var:Polynomial_.from_var
-           ~neg:Polynomial_.neg
-           ~plus:Polynomial_.add
-           ~times:Polynomial_.mul
-           ~pow:Polynomial_.pow
+      fold ~const:C.A.P.from_constant
+           ~var:C.A.P.from_var
+           ~neg:C.A.P.neg
+           ~plus:C.A.P.add
+           ~times:C.A.P.mul
+           ~pow:C.A.P.pow
            ~le:mk_gt
            ~correct:mk_false
            ~conj:mk_or
@@ -84,13 +85,18 @@ module Make(P : Polynomial) =
       
     let vars formula =
          formula
-      |> List.map (Constraint_.vars)
+      |> List.map (C.vars)
       |> List.fold_left Set.union Set.empty
         
     let to_string constr =
-      String.concat " || " (List.map Constraint_.to_string constr)
+      String.concat " || " (List.map C.to_string constr)
         
     let rename formula varmapping =
-      List.map (fun constr -> Constraint_.rename constr varmapping) formula
+      List.map (fun constr -> C.rename constr varmapping) formula
         
+  end
+
+module PolynomialFormula =
+  struct
+    include Make(Constraints.PolynomialConstraint)
   end

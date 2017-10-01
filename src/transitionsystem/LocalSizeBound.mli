@@ -1,6 +1,6 @@
 open Batteries
 
-type formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt)).t
+type formula = Formula.PolynomialFormula.t
    
 (** A classified bound is a bound of a certain form.
     The different classifications are not disjunctive.
@@ -18,8 +18,10 @@ type classification =
   (** Always smaller or equal to infinity *)
   | Unbound [@@deriving eq, show]
   
-type t = classification * Var.t list [@@deriving eq]
+type t = classification * Var.t Set.t
 
+val mk : classification -> string list -> t
+       
 val equal_classification : classification -> classification -> bool
 
 val show_classification : classification -> string

@@ -1,4 +1,5 @@
 USE_OCAMLFIND = true
+OCAMLCFLAGS += -g
 
 .PHONY: clean doc install
 

@@ -4,8 +4,7 @@ open Batteries
     It connects two locations and is annotated with a guard and an update
     A guard has to be fulfiled for a state to reach another state via the transition
     An update assigns variables a new value as a linear combination of the old values *)
-module Guard : module type of Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
-module Polynomial : module type of Polynomials.Make(PolyTypes.OurInt)
+module Guard = Constraints.PolynomialConstraint
 module Map : module type of Map.Make(Var)
                           
 type kind = Lower | Upper  [@@deriving eq, ord]

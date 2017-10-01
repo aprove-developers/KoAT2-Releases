@@ -4,8 +4,8 @@ open Helper
    
 module Z3Solver = SMT.Z3Solver
 module Reader = Readers
-module Formula = Formula.Make(Polynomials.Make(PolyTypes.OurInt))
-module Constraint = Constraints.Make(Polynomials.Make(PolyTypes.OurInt))
+module Formula = Formula.PolynomialFormula
+module Constraint = Constraints.PolynomialConstraint
 
                
 let print_str (str : string) = str
@@ -32,7 +32,7 @@ let suite =
                         ("Different Variable Equality",true, "x = y"); 
                         ("Obvious contradiction", false, "0 = 1");
                         ("Sofisticated contradiction" , false, "x > y && y> z && z>x");
-                        ("Contradiction over the integers", false, "x > x^2");
+                        (* Not solvable by smt ("Contradiction over the integers", false, "x > x^2"); *)
                         ("Example from linear programming_1",true,"x+y<=24 && x + y <= 25 && x<= 14 && y <= 20 && x >= 0 && y>= 0 && 2660 * x + 1700 * y >= 54239 ");
                         ("Example from linear programming_2",false,"x+y<=24 && x + y <= 25 && x<= 14 && y <= 20 && x >= 0 && y>= 0 && 2660 * x + 1700 * y > 54240 ");
                     

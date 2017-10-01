@@ -15,13 +15,13 @@ open Batteries
 
     val read_transitiongraph : string -> Program.t
 
-    val read_formula : string -> Formula.Make(Polynomials.Make(PolyTypes.OurInt)).t
+    val read_formula : string -> Formula.PolynomialFormula.t
 
-    val read_constraint : string -> Constraints.Make(Polynomials.Make(PolyTypes.OurInt)).t
+    val read_constraint : string -> Constraints.PolynomialConstraint.t
       
-    val read_atom : string -> Atoms.Make(Polynomials.Make(PolyTypes.OurInt)).t
+    val read_atom : string -> Atoms.PolynomialAtom.t
 
-    val read_polynomial : string -> Polynomials.Make(PolyTypes.OurInt).t
+    val read_polynomial : string -> Polynomial.t
 
     val read_bound : string -> Bound.t
       

@@ -32,7 +32,7 @@ module type Ring =
                           (* val eval : t -> (Var.t -> value) -> value *)
   end
 
-module OurInt : Ring =
+module OurInt =
   struct
     include Number.MakeNumeric(Big_int)
     let (=~=) = equal
@@ -224,19 +224,21 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
 module type Polynomial =
   sig
     type t
-    module Monomial_ : Monomial
-    type monomial = Monomial_.t
-    module ScaledMonomial_ : ScaledMonomial
-    
+
     include Evaluable with type t := t
     include Math with type t := t
     include PartialOrder with type t := t
     include Ring with type t := t
 
+    module Monomial_ : Monomial
+    type monomial = Monomial_.t
+    module ScaledMonomial_ : (ScaledMonomial with module Value = Value)
+    
     (** Following methods are convenience methods for the creation of polynomials. *)
 
     val make : (Value.t * monomial) list -> t
     val lift : Value.t -> monomial -> t
+    val from_scaled : ScaledMonomial_.t list -> t
     val from_var : Var.t -> t
     val from_constant : Value.t -> t
     val var : string -> t
@@ -251,7 +253,7 @@ module type Polynomial =
     (** Returns the coefficient of the monomial. *)
     val coeff : monomial -> t -> Value.t
     val coeff_of_var : Var.t -> t -> Value.t
-
+      
     (** Returns the monomials of the polynomial without the empty monomial. *)
     val monomials : t -> monomial list
 
@@ -333,6 +335,8 @@ module type Polynomial =
                pow:('b -> int -> 'b) ->
                t -> 'b 
 
+    val partition : (ScaledMonomial_.t -> bool) -> t -> (t * t)
+      
   end
 
 (** This module type defines how functors constructing polynomials have to be defined *)
