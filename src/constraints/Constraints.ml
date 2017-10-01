@@ -4,6 +4,7 @@ module Make(A : ConstraintTypes.Atom) =
   struct
     
     module A = A
+    module VarSet = Set.Make(Var)
     
     type value = A.value
     type polynomial = A.polynomial
@@ -55,7 +56,7 @@ module Make(A : ConstraintTypes.Atom) =
     let vars constr =
          constr
       |> List.map (A.vars)
-      |> List.fold_left Set.union Set.empty
+      |> List.fold_left VarSet.union VarSet.empty
         
     let to_string constr = String.concat " && " (List.map A.to_string constr)
         
@@ -82,7 +83,7 @@ module Make(A : ConstraintTypes.Atom) =
         
     (** returns a list of lists of the coefficients of the constraint*)
     let rec get_matrix vars constr = 
-        let variables = Set.elements vars in
+        let variables = VarSet.elements vars in
             List.map (fun var -> get_coefficient_vector var constr) variables
     
     let dualise vars matrix column =
@@ -93,7 +94,7 @@ module Make(A : ConstraintTypes.Atom) =
         
     (** Farkas Lemma applied to a linear constraint and an atom which is the cost function*)    
     let farkas_transform constr atom =
-        let vars = Set.union (vars constr) (A.vars atom) in
+        let vars = VarSet.union (vars constr) (A.vars atom) in
         let costfunction = lift atom in
             let a_matrix = get_matrix vars constr in
             let b_right = get_constant_vector constr in

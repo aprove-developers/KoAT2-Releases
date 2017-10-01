@@ -9,7 +9,9 @@ let logger = Logger.make_log "lsb"
 type formula = Formula.PolynomialFormula.t
 
 module Formula = Formula.PolynomialFormula
-                  
+
+module Set = Set.Make(Var)
+               
 type classification =
   (** Always smaller or equal to a constant or the value of a prevariable. Examples: x'=x , x'=y , x'=2
       max [c;x1;...;xn]) *)
@@ -23,8 +25,13 @@ type classification =
   (** Always smaller or equal to infinity *)
   | Unbound [@@deriving eq, show]
   
-type t = classification * Var.t Set.t
+type t = classification * Set.t
 
+let to_string_varset (vars: Set.t): string =
+  let output = IO.output_string () in
+  Set.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
+  IO.close_out output
+       
 let mk classification vars =
   (classification, Set.of_list (List.map Var.of_string vars))
        
@@ -33,14 +40,14 @@ let equal c1 c2 =
   | ((cl1, vars1), (cl2, vars2)) -> equal_classification cl1 cl2 && Set.equal vars1 vars2
 
 let to_string = function
-  | (classification, vars) -> (show_classification classification) ^ " [" ^ (String.concat ", " (Set.to_list (Set.map Var.to_string vars))) ^ "]"
+  | (classification, vars) -> (show_classification classification) ^ to_string_varset vars
                 
 let as_bound classified =
   let open Bound in
   match classified with
-  | (Equality c, vars) -> maximum (of_int c :: Set.to_list (Set.map of_var vars))
-  | (AddsConstant d, vars) -> add (of_int d) (maximum (Set.to_list (Set.map of_var vars)))
-  | (ScaledSum (s,e), vars) -> mul (of_int s) (add (of_int e) (sum (Set.to_list (Set.map of_var vars))))
+  | (Equality c, vars) -> maximum (of_int c :: List.map of_var (Set.to_list vars))
+  | (AddsConstant d, vars) -> add (of_int d) (maximum (List.map of_var (Set.to_list vars)))
+  | (ScaledSum (s,e), vars) -> mul (of_int s) (add (of_int e) (sum (List.map of_var (Set.to_list vars))))
   | (Unbound, _) -> infinity
 
 let as_formula v classified =
@@ -49,15 +56,15 @@ let as_formula v classified =
   | (Equality c, vars) ->
      Formula.mk_le_than_max
        (from_var v)
-       (of_int c :: Set.to_list (Set.map from_var vars))
+       (of_int c :: List.map from_var (Set.to_list vars))
   | (AddsConstant d, vars) ->
      Formula.mk_le_than_max
        (from_var v)
-       (Set.to_list (Set.map (fun v' -> add (from_var v') (of_int d)) vars))
+       (List.map (fun v' -> add (from_var v') (of_int d)) (Set.to_list vars))
   | (ScaledSum (s,e), vars) ->
      Formula.Infix.(from_var v <= mul (of_int s)
                                  (add (of_int e)
-                                      (sum (Set.to_list (Set.map from_var vars)))))
+                                      (sum (List.map from_var (Set.to_list vars)))))
   | (Unbound, _) -> Formula.mk_true
 
 let is_bounded_with var formula classified =
@@ -87,17 +94,12 @@ let binary_search (lowest: int) (highest: int) (p: int -> bool) =
                   (fun () -> binary_search_ lowest highest p)
                                                                                           
 
-let to_string_varset (vars: Var.t Set.t): string =
-  let output = IO.output_string () in
-  Set.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
-  IO.close_out output
-
 let to_string_option_classified (option: t Option.t): string =
   let output = IO.output_string () in
   Option.print (fun output classified -> IO.nwrite output (Bound.to_string (as_bound classified))) output option;
   IO.close_out output
 
-let minimize_vars (vars: Var.t Set.t) (p: Var.t Set.t -> bool) =
+let minimize_vars (vars: Set.t) (p: Set.t -> bool) =
   let minimize_vars_ vars p =
     let is_necessary var = not (p (Set.remove var vars)) in
     Set.filter is_necessary vars
@@ -108,7 +110,7 @@ let minimize_vars (vars: Var.t Set.t) (p: Var.t Set.t -> bool) =
                   (fun () -> minimize_vars_ vars p)
   
 
-let find_equality_bound (vars: Var.t Set.t) (var: Var.t) (formula: formula) =
+let find_equality_bound (vars: Set.t) (var: Var.t) (formula: formula) =
   let find_equality_bound_ vars var formula =
     let low = 0
     and high = 1024 in

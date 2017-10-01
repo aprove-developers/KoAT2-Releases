@@ -6,6 +6,7 @@ module Make(Value : PolyTypes.Ring) =
     module Monomial_ = Monomials.Make(Value)
     module ScaledMonomial_ = ScaledMonomials.Make(Value)
     module Valuation_ = Valuation.Make(Value)
+    module VarSet = Set.Make(Var)
                       
     type monomial = Monomial_.t
     type t = ScaledMonomial_.t list                          
@@ -106,7 +107,7 @@ module Make(Value : PolyTypes.Ring) =
       |> simplify
       |> monomials
       |> List.map Monomial_.vars
-      |> List.fold_left Set.union Set.empty
+      |> List.fold_left VarSet.union VarSet.empty
       
     let is_var poly =
          poly
@@ -127,7 +128,7 @@ module Make(Value : PolyTypes.Ring) =
                                        Monomial_.is_univariate_linear (ScaledMonomial_.monomial scaled))
 
     let is_univariate_linear poly = 
-      degree poly <= 1 && Set.cardinal (vars poly) <= 1
+      degree poly <= 1 && VarSet.cardinal (vars poly) <= 1
 
     let is_const poly = degree poly <= 0
 

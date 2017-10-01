@@ -44,19 +44,20 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
     module Atom = Atoms.PolynomialAtom
     module ParameterAtom = Atoms.Make(ParameterPolynomial)
                      
+    module VarSet = Set.Make(Var)
+                
+    (* TODO Redundant in LocalSizeBound.ml *)
+    let to_string_varset (vars: VarSet.t): string =
+      let output = IO.output_string () in
+      VarSet.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
+      IO.close_out output
+
     let example_valuation = Polynomial.Valuation_.from_native [("x", 3);
                                                         ("y", 5);
                                                         ("z", 7)]
                           
     let example_renaming = RenameMap.from_native [("x", "a"); ("y", "b"); ("z", "c")]
-    
-    
-    let varset_to_string varl =
-        varl
-        |> Set.map Var.to_string
-        |> Set.to_list
-        |> String.concat ","
-                                    
+
     let rename str =
          str
       |> Readers.read_constraint
@@ -100,7 +101,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
 
             ("get_variables" >:::
                 List.map (fun (expected, constr) ->
-                      constr >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string (Set.map Var.of_string (Set.of_list expected)) (Constraint.vars (Readers.read_constraint constr) )))
+                      constr >:: (fun _ -> assert_equal ~cmp:VarSet.equal ~printer:to_string_varset (VarSet.of_list (List.map Var.of_string expected)) (Constraint.vars (Readers.read_constraint constr) )))
                         [
                             (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 && y >= 0 && z <= 4" );
 
@@ -170,7 +171,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                 List.map (fun (expected, vars, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_list_equality ~printer:list_list_print
                                                       (List.map (List.map Polynomial.Value.of_int) expected)
-                                                      (Constraint.get_matrix ((Set.map Var.of_string (Set.of_list vars))) (Readers.read_constraint constr) )))
+                                                      (Constraint.get_matrix (VarSet.of_list (List.map Var.of_string vars)) (Readers.read_constraint constr) )))
                         [
                             ([[1; 2; 3];[1; 3; -4]],["x";"y"], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                             ([[1; -1];[-1; 1]],["x";"y"], "x = y");

@@ -1,5 +1,5 @@
 open Batteries
-   
+
 module Location =
   struct
     type t = {
@@ -35,6 +35,13 @@ module RV =
                                    ^ " >= " ^ TransitionLabel.(Bound.to_string (LocalSizeBound.sizebound_local Lower t v))
   end
 module RVG = Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+   
+module TransitionSet = Set.Make(Transition)
+module CartesianSet = Set.Make2(Transition)(Var)
+module VarSet = Set.Make(Var)
+
+type transition_set = Set.Make(Transition).t
+type var_set = Set.Make(Var).t
 
 type t = {
     graph: TransitionGraph.t;
@@ -70,7 +77,7 @@ let from vars transitions start =
   }
 
 let vars program =
-  Set.of_list program.vars
+  VarSet.of_list program.vars
   
 let add_vertices_to_rvg vertices rvg =
   vertices
@@ -78,22 +85,27 @@ let add_vertices_to_rvg vertices rvg =
   |> List.fold_left (fun rvg adder -> adder rvg) rvg
 
 let graph g = g.graph
-
+            
 let pre program (l,t,l') =
-  Set.of_list (TransitionGraph.pred_e (graph program) l)
+  TransitionSet.of_list (TransitionGraph.pred_e (graph program) l)
 
 let rvg program =
-  let add_transition post_transition (rvg: RVG.t) =
+  let add_transition (post_transition: Transition.t) (rvg: RVG.t): RVG.t =
     let rvg_with_vertices: RVG.t = add_vertices_to_rvg (List.map (fun var -> (post_transition,var)) program.vars) rvg in
-    let pre_nodes post_transition post_var =
+    let pre_nodes (post_transition: Transition.t) (post_var: Var.t) =
       LocalSizeBound.sizebound_local TransitionLabel.Upper (Transition.label post_transition) post_var
       |> Bound.vars
-      |> Set.cartesian_product (pre program post_transition)
-      |> Set.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
+      |> CartesianSet.cartesian_product (pre program post_transition)
+      |> CartesianSet.Product.to_list
+      |> List.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
+      |> Set.of_list
     in
-    Set.map (pre_nodes post_transition) (vars program)
-    |> fun set -> Set.fold Set.union set Set.empty
-                  |> fun set -> Set.fold (fun (pre_transition,pre_var,post_var) rvg -> RVG.add_edge rvg (pre_transition,pre_var) (post_transition,post_var)) set rvg_with_vertices                          
+    vars program
+    |> VarSet.to_list
+    |> Set.of_list
+    |> Set.map (pre_nodes post_transition)
+    |> (fun set -> Set.fold Set.union set Set.empty)
+    |> (fun set -> Set.fold (fun (pre_transition,pre_var,post_var) rvg -> RVG.add_edge rvg (pre_transition,pre_var) (post_transition,post_var)) set rvg_with_vertices)
   in
   TransitionGraph.fold_edges_e add_transition program.graph RVG.empty
   

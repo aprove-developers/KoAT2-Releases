@@ -7,6 +7,7 @@ type t =
   | Var of String.t
   | Helper of int [@@deriving eq, ord]
 
+val compare : t -> t -> int
 val (=~=) : t -> t -> bool
 val of_string : string -> t
 val to_string : t -> string

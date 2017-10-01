@@ -26,6 +26,9 @@ end
      
 module RVG : module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
+type transition_set = Set.Make(Transition).t
+type var_set = Set.Make(Var).t
+
 type t
 
 val add_vertices : TransitionGraph.t -> TransitionGraph.vertex list -> TransitionGraph.t
@@ -45,7 +48,7 @@ val graph : t -> TransitionGraph.t
 
 (** Returns a set of all transitions which occur directly before the given transition in the graph. 
        Corresponds to pre(t). *)
-val pre : t -> Transition.t -> Transition.t Set.t
+val pre : t -> Transition.t -> transition_set
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program. 
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
@@ -60,5 +63,5 @@ val is_initial : t -> Transition.t -> bool
 
 val to_string : t -> string
   
-val vars : t -> Var.t Set.t
+val vars : t -> var_set
   

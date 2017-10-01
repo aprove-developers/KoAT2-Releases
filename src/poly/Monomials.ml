@@ -4,6 +4,7 @@ module Make(Value : PolyTypes.Ring) =
   struct
     module Valuation_ = Valuation.Make(Value)
     module Map = Map.Make(Var)
+    module VarSet = Set.Make(Var)
 
     type t = int Map.t
            
@@ -19,7 +20,7 @@ module Make(Value : PolyTypes.Ring) =
       Map.fold (fun key n a -> times (pow (var key) n) a) mon (const Value.one)
                    
     let vars mon =
-      Set.of_enum (Map.keys mon)
+      VarSet.of_enum (Map.keys mon)
              
     let degree mon =
       Map.fold (fun _ -> (+)) mon 0 

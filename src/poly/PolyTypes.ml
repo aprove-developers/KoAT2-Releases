@@ -2,6 +2,8 @@ open Batteries
 
 (** Provides all module types related to polynomials *)
 
+module VarSet = Set.Make(Var)
+   
 (** Modules including Eq hold a type that defines a semantic equality relation on its elements.
     (==) is not used for that, because it has a reserved meaning in Ocaml. *)
 module type Eq =
@@ -106,7 +108,7 @@ module type Evaluable =
     val to_string : t -> string
 
     (** Returns a set of the variables which occur in the evaluable *)
-    val vars : t -> Var.t Set.t
+    val vars : t -> VarSet.t
 
     (** Assigns each variable inside the polynomial the value of the valuation and returns the arithmetically computed result. 
         !! If the valuation does not provide a value for a variable, an exception is raised. !! *)

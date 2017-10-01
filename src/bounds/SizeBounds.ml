@@ -1,6 +1,8 @@
 open Batteries
 
 module RVG = Program.RVG
+
+module TransitionSet = Set.Make(Program.Transition)
              
 (* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
        Corresponds to 'SizeBounds for trivial SCCs':
@@ -11,7 +13,7 @@ let highest_incoming_bound (program: Program.t)
                            (t: Program.Transition.t)
     : Bound.t =
   let substitute_with_prevalues t' = Bound.substitute_f Approximation.(sizebound Upper appr t') local_sizebound in
-  Bound.maximum (Set.to_list (Set.map substitute_with_prevalues (Program.pre program t)))
+  Bound.maximum (List.map substitute_with_prevalues (TransitionSet.to_list (Program.pre program t)))
 
 (* Improves a trivial scc. That is an scc which consists only of one result variable.
        Corresponds to 'SizeBounds for trivial SCCs'. *)

@@ -46,13 +46,14 @@ module Parser =
 module Methods (*(P : PolyTypes.Polynomial)*) =
   struct
     module Atom = Atoms.PolynomialAtom
-   
-    let varset_to_string varl =
-        varl
-        |> Set.map Var.to_string
-        |> Set.to_list
-        |> String.concat ","
-                                    
+    module VarSet = Set.Make(Var)
+                
+    (* TODO Redundant in LocalSizeBound.ml *)
+    let to_string_varset (vars: VarSet.t): string =
+      let output = IO.output_string () in
+      VarSet.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
+      IO.close_out output
+
     let rename str rename_map =
          str
       |> Readers.read_atom
@@ -89,8 +90,8 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
                         
             ("vars" >:::
                 List.map (fun (expected, atom) ->
-                    atom >:: (fun _ -> assert_equal ~cmp:Set.equal ~printer:varset_to_string
-                                                    (Set.map Var.of_string (Set.of_list expected))
+                    atom >:: (fun _ -> assert_equal ~cmp:VarSet.equal ~printer:to_string_varset
+                                                    (VarSet.of_list (List.map Var.of_string expected))
                                                     (Atom.vars (Readers.read_atom atom))))
                          [
                            (["x"], " x^3+2*x -1 < x^5 " );

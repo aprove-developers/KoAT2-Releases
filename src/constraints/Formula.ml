@@ -4,6 +4,7 @@ module Make(C : ConstraintTypes.Constraint) =
   struct
 
     module C = C
+    module VarSet = Set.Make(Var)
     
     type value = C.value
     type polynomial = C.polynomial
@@ -86,7 +87,7 @@ module Make(C : ConstraintTypes.Constraint) =
     let vars formula =
          formula
       |> List.map (C.vars)
-      |> List.fold_left Set.union Set.empty
+      |> List.fold_left VarSet.union VarSet.empty
         
     let to_string constr =
       String.concat " || " (List.map C.to_string constr)

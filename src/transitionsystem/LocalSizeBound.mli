@@ -1,7 +1,7 @@
 open Batteries
 
 type formula = Formula.PolynomialFormula.t
-   
+
 (** A classified bound is a bound of a certain form.
     The different classifications are not disjunctive.
     The upcoming classification set always includes the previous one. *)
@@ -18,7 +18,7 @@ type classification =
   (** Always smaller or equal to infinity *)
   | Unbound [@@deriving eq, show]
   
-type t = classification * Var.t Set.t
+type t = classification * Set.Make(Var).t
 
 val mk : classification -> string list -> t
        

@@ -3,6 +3,8 @@ open PolyTypes
 
 (** Provides all module types related to constraints *)
 
+module VarSet = Set.Make(Var)
+   
 (** An atom is a comparison between two polynomials *)
 module type Atom =
   sig
@@ -65,7 +67,7 @@ module type Atom =
 
         (** Returns the set of variables which are active in the atom.
             A variable is active, if it's value has an effect on the evaluation of the atom. *)
-        val vars : t -> Var.t Set.t
+        val vars : t -> VarSet.t
 
         (** Returns a normalised form of the atom, where the returned polynomial represents the atom in the form p <= 0. *)
         val normalised_lhs : t -> polynomial
@@ -144,7 +146,7 @@ module type Constraint =
           
         (** Returns the set of variables which are active in the constraint.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
-        val vars : t -> Var.t Set.t
+        val vars : t -> VarSet.t
 
         val to_string : t -> string
 
@@ -182,7 +184,7 @@ module type Constraint =
         (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
         val get_coefficient_vector : Var.t -> t -> value list
         
-        val get_matrix : Var.t Set.t -> t -> value list list
+        val get_matrix : VarSet.t -> t -> value list list
         
         (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
         val get_constant_vector : t -> value list
@@ -245,7 +247,7 @@ module type Formula =
           
         (** Returns the set of variables which are active in the formula.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
-        val vars : t -> Var.t Set.t
+        val vars : t -> VarSet.t
 
         val to_string : t -> string
 
