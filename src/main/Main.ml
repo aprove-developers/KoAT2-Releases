@@ -123,16 +123,17 @@ let run_normalize (params: normalize_params) =
     | `Bound -> Bound.to_string (Reader_.read_bound params.input) in
   print_string output
   
-  let subcommands =
-    let open Cmdliner in [
-        Term.(const run_localsizebound $ localsizebound_params_cmdliner_term (), Term.info ~doc:"Search for a local size bound" "lsb");
-        Term.(const run_smt $ smt_params_cmdliner_term (), Term.info ~doc:"Find solutions for a constraint" "smt");
-        Term.(const run_normalize $ normalize_params_cmdliner_term (), Term.info ~doc:"Find a normalform for an input" "normalize");
-        ]
+let subcommands =
+  let open Cmdliner in [
+      Term.(const run_localsizebound $ localsizebound_params_cmdliner_term (), Term.info ~doc:"Search for a local size bound" "lsb");
+      Term.(const run_smt $ smt_params_cmdliner_term (), Term.info ~doc:"Find solutions for a constraint" "smt");
+      Term.(const run_normalize $ normalize_params_cmdliner_term (), Term.info ~doc:"Find a normalform for an input" "normalize");
+    ]
   
 let () =
   (* Read the arguments from the shell via an api and call run *)
   let open Cmdliner in
   let main_command = (Term.(const run $ main_params_cmdliner_term ()), Term.info Sys.argv.(0)) in
+  Logger.init ["lsb", Logger.DEBUG] (Logger.make_dbg_formatter IO.stdout);
   Term.exit @@ Term.eval_choice main_command subcommands
 

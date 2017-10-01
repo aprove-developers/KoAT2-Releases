@@ -1,5 +1,7 @@
 open Batteries
 
+let logger = Logger.make_log "lsb"
+           
 (** A classified bound is a bound of a certain form.
     The different classifications are not disjunctive.
     The upcoming classification set always includes the previous one. *)
@@ -68,53 +70,96 @@ let is_bounded_with var formula classified =
 (** Performs a binary search between the lowest and highest value to find the optimal value which satisfies the predicate.
     We assume that the highest value already satisfies the predicate.
     Therefore this method always finds a solution. *)
-let rec binary_search lowest highest p =
-  if lowest >= highest then
-    highest
-  else
-    let newBound = (lowest + highest) / 2 in
-    if p newBound then
-      binary_search lowest newBound p
+let binary_search (lowest: int) (highest: int) (p: int -> bool) =
+  let rec binary_search_ lowest highest p =
+    if lowest >= highest then
+      highest
     else
-      binary_search (newBound + 1) highest p
+      let newBound = (lowest + highest) / 2 in
+      if p newBound then
+        binary_search_ lowest newBound p
+      else
+        binary_search_ (newBound + 1) highest p
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "binary search optimum", ["lowest", Int.to_string lowest; "highest", Int.to_string highest])
+                  ~result:Int.to_string
+                  (fun () -> binary_search_ lowest highest p)
+                                                                                          
 
-let minimize_vars vars p =
-  let is_necessary var = not (p (Set.remove var vars)) in
-  Set.filter is_necessary vars
-    
-let find_equality_bound vars var formula =
-  let low = 0
-  and high = 1024 in
-  let is_bound c = is_bounded_with var formula (Equality c, vars) in
-  if is_bound high then
-    (* TODO If the var is bounded for every constant, we can remove the constant. This is the case e.g. if x'=y *)
-    let c = binary_search low high is_bound in
-    let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (Equality c, newVars)) in
-    Some (Equality c, minimized_vars)
-  else None
+let to_string_varset (vars: Var.t Set.t): string =
+  let output = IO.output_string () in
+  Set.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
+  IO.close_out output
 
-let find_addsconstant_bound var formula =
-  let low = 0
-  and high = 1024 in
-  let vars = Set.remove var (Formula.vars formula) in
-  let is_bound d = is_bounded_with var formula (AddsConstant d, vars) in
-  if is_bound high then
-    let d = binary_search low high is_bound in
-    let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (AddsConstant d, newVars)) in
-    Some (AddsConstant d, minimized_vars)
-  else None
-                  
+let to_string_option_classified (option: t Option.t): string =
+  let output = IO.output_string () in
+  Option.print (fun output classified -> IO.nwrite output (Bound.to_string (as_bound classified))) output option;
+  IO.close_out output
+
+let minimize_vars (vars: Var.t Set.t) (p: Var.t Set.t -> bool) =
+  let minimize_vars_ vars p =
+    let is_necessary var = not (p (Set.remove var vars)) in
+    Set.filter is_necessary vars
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "minimize vars", ["vars", to_string_varset vars])
+                  ~result:(fun result -> to_string_varset result)
+                  (fun () -> minimize_vars_ vars p)
+  
+
+let find_equality_bound (vars: Var.t Set.t) (var: Var.t) (formula: formula) =
+  let find_equality_bound_ vars var formula =
+    let low = 0
+    and high = 1024 in
+    let is_bound c = is_bounded_with var formula (Equality c, vars) in
+    if is_bound high then
+      (* TODO If the var is bounded for every constant, we can remove the constant. This is the case e.g. if x'=y *)
+      let c = binary_search low high is_bound in
+      let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (Equality c, newVars)) in
+      Some (Equality c, minimized_vars)
+    else None
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "looking for equality bound", ["vars", to_string_varset vars])
+                  ~result:(fun result -> to_string_option_classified result)
+                  (fun () -> find_equality_bound_ vars var formula)
+
+let find_addsconstant_bound (var: Var.t) (formula: formula) =
+  let find_addsconstant_bound_ var formula =
+    let low = 0
+    and high = 1024 in
+    let vars = Set.remove var (Formula.vars formula) in
+    let is_bound d = is_bounded_with var formula (AddsConstant d, vars) in
+    if is_bound high then
+      let d = binary_search low high is_bound in
+      let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (AddsConstant d, newVars)) in
+      Some (AddsConstant d, minimized_vars)
+    else None
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "looking for addsconstant bound", [])
+                  ~result:(fun result -> to_string_option_classified result)
+                  (fun () -> find_addsconstant_bound_ var formula)
+
+  
+  
 let find_bound var formula =
-  let finders =
-    List.enum [
-        (* Check if x <= c. We have to check this up front, because find_equality_bound will always prefer a variable with x <= max{-inf,v}. *)
-        find_equality_bound Set.empty;
-        find_equality_bound (Set.remove var (Formula.vars formula));
-        find_addsconstant_bound
-      ] in
-  try
-    Enum.find_map (fun find -> find var formula) finders
-  with Not_found -> (Unbound, Set.empty)
+  let find_bound_ var formula =
+    let finders =
+      List.enum [
+          (* Check if x <= c. We have to check this up front, because find_equality_bound will always prefer a variable with x <= max{-inf,v}. *)
+          find_equality_bound Set.empty;
+          find_equality_bound (Set.remove var (Formula.vars formula));
+          find_addsconstant_bound
+        ] in
+    try
+      Enum.find_map (fun find -> find var formula) finders
+    with Not_found -> (Unbound, Set.empty) in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "find local size bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
+                  ~result:(fun result -> Bound.to_string (as_bound result))
+                  (fun () -> find_bound_ var formula)
                   
 let sizebound_local kind label var =
   (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
