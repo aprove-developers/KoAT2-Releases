@@ -2,73 +2,72 @@ open Batteries
 
 let logger = Logger.make_log "lsb"
            
-(** A classified bound is a bound of a certain form.
-    The different classifications are not disjunctive.
-    The upcoming classification set always includes the previous one. *)
-
-type formula = Formula.PolynomialFormula.t
-
 module Formula = Formula.PolynomialFormula
+type formula = Formula.t
 
-module Set = Set.Make(Var)
-               
-type classification =
-  (** Always smaller or equal to a constant or the value of a prevariable. Examples: x'=x , x'=y , x'=2
-      max [c;x1;...;xn]) *)
+module VarSet = Set.Make(Var)
+type varset = Set.Make(Var).t
+            
+type template =
   | Equality of int
-  (** Always smaller or equal to the value of a prevariable plus a constant. Examples: x'=x+1 , x'=y+2 
-      d + max [x1;...;xn] *)
   | AddsConstant of int
-  (** Always smaller or equal to a scaling factor multiplied with the sum of all prevariables and a constant. Examples: x'=x+y , x'=2*(x+y+z) 
-      s * (e + sum [x1;...;xn]) *)
   | ScaledSum of int * int
-  (** Always smaller or equal to infinity *)
   | Unbound [@@deriving eq, show]
   
-type t = classification * Set.t
+type t = template * varset
 
-let to_string_varset (vars: Set.t): string =
-  let output = IO.output_string () in
-  Set.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
-  IO.close_out output
-       
-let mk classification vars =
-  (classification, Set.of_list (List.map Var.of_string vars))
+let mk template vars =
+  (template, VarSet.of_list (List.map Var.of_string vars))
        
 let equal c1 c2 =
   match (c1,c2) with
-  | ((cl1, vars1), (cl2, vars2)) -> equal_classification cl1 cl2 && Set.equal vars1 vars2
+  | ((cl1, vars1), (cl2, vars2)) -> equal_template cl1 cl2 && VarSet.equal vars1 vars2
+
+let as_bound (template, vars) =
+  let var_list = List.map Bound.of_var (VarSet.to_list vars) in
+  let open Bound in
+  match template with
+  | Equality c ->
+     maximum (of_int c :: var_list)
+  | AddsConstant d ->
+     of_int d + maximum var_list
+  | ScaledSum (s,e) ->
+     of_int s * (of_int e + sum var_list)
+  | Unbound -> infinity
+
+(* There is no to_string for sets in batteries,
+   but there is a very efficient print function which is however a bit inconvenient to use. *)
+let to_string_varset (vars: varset): string =
+  let output = IO.output_string () in
+  VarSet.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
+  IO.close_out output
+       
+(* There is no to_string for options in batteries,
+   but there is a very efficient print function which is however a bit inconvenient to use. *)
+let to_string_option_template_bound (option: t Option.t): string =
+  let output = IO.output_string () in
+  Option.print (fun output template_bound -> IO.nwrite output (Bound.to_string (as_bound template_bound))) output option;
+  IO.close_out output
 
 let to_string = function
-  | (classification, vars) -> (show_classification classification) ^ to_string_varset vars
+  | (template, vars) -> (show_template template) ^ to_string_varset vars
                 
-let as_bound classified =
-  let open Bound in
-  match classified with
-  | (Equality c, vars) -> maximum (of_int c :: List.map of_var (Set.to_list vars))
-  | (AddsConstant d, vars) -> add (of_int d) (maximum (List.map of_var (Set.to_list vars)))
-  | (ScaledSum (s,e), vars) -> mul (of_int s) (add (of_int e) (sum (List.map of_var (Set.to_list vars))))
-  | (Unbound, _) -> infinity
-
-let as_formula v classified =
+let as_formula in_v (template, vars) =
+  let var_list = List.map Polynomial.from_var (VarSet.to_list vars)
+  and v = Polynomial.from_var in_v in
   let open Polynomial in
-  match classified with
-  | (Equality c, vars) ->
-     Formula.mk_le_than_max
-       (from_var v)
-       (of_int c :: List.map from_var (Set.to_list vars))
-  | (AddsConstant d, vars) ->
-     Formula.mk_le_than_max
-       (from_var v)
-       (List.map (fun v' -> add (from_var v') (of_int d)) (Set.to_list vars))
-  | (ScaledSum (s,e), vars) ->
-     Formula.Infix.(from_var v <= mul (of_int s)
-                                 (add (of_int e)
-                                      (sum (List.map from_var (Set.to_list vars)))))
-  | (Unbound, _) -> Formula.mk_true
+  match template with
+  | Equality c ->
+     Formula.mk_le_than_max v (of_int c :: var_list)
+  | AddsConstant d ->
+     Formula.mk_le_than_max v (List.map ((+) (of_int d)) var_list)
+  | ScaledSum (s,e) ->
+     Formula.Infix.(v <= of_int s * (of_int e + sum var_list))
+  | Unbound ->
+     Formula.mk_true
 
-let is_bounded_with var formula classified =
-  classified
+let is_bounded_with var formula template_bound =
+  template_bound
   |> as_formula var
   |> Formula.implies formula
   |> Formula.neg
@@ -93,24 +92,19 @@ let binary_search (lowest: int) (highest: int) (p: int -> bool) =
                   ~result:Int.to_string
                   (fun () -> binary_search_ lowest highest p)
                                                                                           
-
-let to_string_option_classified (option: t Option.t): string =
-  let output = IO.output_string () in
-  Option.print (fun output classified -> IO.nwrite output (Bound.to_string (as_bound classified))) output option;
-  IO.close_out output
-
-let minimize_vars (vars: Set.t) (p: Set.t -> bool) =
+(** Minimizes the given variable set, such that the predicate p is still satisified.
+    We assume that the given variable set satisfies the predicate p. *)
+let minimize_vars (vars: varset) (p: varset -> bool): varset =
   let minimize_vars_ vars p =
-    let is_necessary var = not (p (Set.remove var vars)) in
-    Set.filter is_necessary vars
+    let is_necessary var = not (p (VarSet.remove var vars)) in
+    VarSet.filter is_necessary vars
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "minimize vars", ["vars", to_string_varset vars])
                   ~result:(fun result -> to_string_varset result)
                   (fun () -> minimize_vars_ vars p)
   
-
-let find_equality_bound (vars: Set.t) (var: Var.t) (formula: formula) =
+let find_equality_bound vars var formula =
   let find_equality_bound_ vars var formula =
     let low = 0
     and high = 1024 in
@@ -124,14 +118,13 @@ let find_equality_bound (vars: Set.t) (var: Var.t) (formula: formula) =
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "looking for equality bound", ["vars", to_string_varset vars])
-                  ~result:(fun result -> to_string_option_classified result)
+                  ~result:(fun result -> to_string_option_template_bound result)
                   (fun () -> find_equality_bound_ vars var formula)
 
-let find_addsconstant_bound (var: Var.t) (formula: formula) =
+let find_addsconstant_bound vars var formula =
   let find_addsconstant_bound_ var formula =
     let low = 0
     and high = 1024 in
-    let vars = Set.remove var (Formula.vars formula) in
     let is_bound d = is_bounded_with var formula (AddsConstant d, vars) in
     if is_bound high then
       let d = binary_search low high is_bound in
@@ -141,23 +134,24 @@ let find_addsconstant_bound (var: Var.t) (formula: formula) =
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "looking for addsconstant bound", [])
-                  ~result:(fun result -> to_string_option_classified result)
+                  ~result:(fun result -> to_string_option_template_bound result)
                   (fun () -> find_addsconstant_bound_ var formula)
 
-  
-  
 let find_bound var formula =
+  (* Our strategy to find local size bounds.
+     Functions which come first have precedence over later functions.
+     If none of the functions finds a bound the result is Unbound. *)
+  let finders =
+    List.enum [
+        (* Check if x <= c. We have to check this up front, because find_equality_bound will always prefer a variable with x <= max{-inf,v}. *)
+        find_equality_bound VarSet.empty;
+        find_equality_bound (VarSet.remove var (Formula.vars formula));
+        find_addsconstant_bound (VarSet.remove var (Formula.vars formula));
+      ] in
   let find_bound_ var formula =
-    let finders =
-      List.enum [
-          (* Check if x <= c. We have to check this up front, because find_equality_bound will always prefer a variable with x <= max{-inf,v}. *)
-          find_equality_bound Set.empty;
-          find_equality_bound (Set.remove var (Formula.vars formula));
-          find_addsconstant_bound
-        ] in
     try
       Enum.find_map (fun find -> find var formula) finders
-    with Not_found -> (Unbound, Set.empty) in
+    with Not_found -> (Unbound, VarSet.empty) in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "find local size bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
                   ~result:(fun result -> Bound.to_string (as_bound result))
@@ -167,15 +161,16 @@ let sizebound_local kind label var =
   (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
   (* TODO Should we also try to substitute vars in the bound if it leads to a simpler bound? E.g. x<=10 && x'=x : b:=x or b:=10? *)
   match TransitionLabel.update label var with
+  (* TODO Wrong *)
   | Some bound -> Bound.of_poly bound
   | None ->
      match kind with
-     (* TODO Use SMT-Solving to find bounds *)
      | TransitionLabel.Upper ->
            label
         |> TransitionLabel.guard
         |> Formula.mk
         |> find_bound var
         |> as_bound
-     | TransitionLabel.Lower -> Bound.minus_infinity
+     | TransitionLabel.Lower ->
+        Bound.minus_infinity
 
