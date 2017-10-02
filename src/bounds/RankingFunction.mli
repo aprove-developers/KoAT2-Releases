@@ -1,20 +1,10 @@
-(*open Batteries
+open Batteries
 
 (** Provides default implementations of RankingFunctions *)
 
-(*module Make(P : ProgramTypes.Program) : BoundTypes.RankingFunction
-       with module Program_ = P
-        and module Constraints_ = P.Constraint_
-        and module Polynomial_ = P.Constraint_.Polynomial_
-        and module ParameterPolynomial_ = Polynomials.Make(P.Constraint_.Polynomial_)
-        and module ParameterFormula_= Formula.Make(Polynomials.Make(P.Constraint_.Polynomial_))*)
     module Program_ = Program
-    module Constraints_ = Program_.Constraint_
-    module Polynomial_ = Constraints_.Polynomial_
-    module ParameterPolynomial_ = Program.PolynomialMonad_.Outer
-    module ParameterFormula_: ConstraintTypes.Formula with module Polynomial_ = ParameterPolynomial_
-    module ParameterConstraints_ = ParameterFormula_.Constraint_
-    module ParameterAtoms_= ParameterConstraints_.Atom_
+    module Constraints_ = Constraints.PolynomialConstraint
+    module Polynomial_ = Constraints_.A.P
     module SMTSolver_ = SMT.Z3Solver
     
     type t
@@ -36,6 +26,6 @@
     val monotonize : t -> t
     
     (** Invokes Farkas Lemma, to compute a ranking function*)
-    val farkas_transform : Constraints_.t -> ParameterConstraints_.Atom_.t -> ParameterConstraints_.t
+    val farkas_transform : Constraints_.t -> Atoms.Make(ParameterPolynomial).t -> Constraints_.t
     
-    val generate_ranking_template : Program_.t -> (Program_.TransitionGraph.vertex, ParameterPolynomial_.t) Hashtbl.t*)
+    val generate_ranking_template : Program_.t -> (Program_.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t

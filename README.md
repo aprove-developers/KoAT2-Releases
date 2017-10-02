@@ -13,3 +13,15 @@ Reimplementation of cage Koat
   6. `opam install menhir ounit`
   7. `opam install omake`
   8. `omake`
+  
+## Links
+
+- Ocaml Forum: https://discuss.ocaml.org/
+- Opam: https://opam.ocaml.org/
+- Batteries Included: http://ocaml-batteries-team.github.io/batteries-included/hdoc2/
+- Omake: http://omake.metaprl.org/manual/omake-doc.html
+- Omake Recipes: http://www.camlcity.org/knowledge/kb_001_omake_recipes.html
+- OUnit: http://ounit.forge.ocamlcore.org/api-ounit/index.html
+- Menhir: http://gallium.inria.fr/~fpottier/menhir/
+- Ocamlgraph: http://ocamlgraph.lri.fr/doc/
+- Cmdliner: http://erratique.ch/software/cmdliner/doc/Cmdliner

@@ -14,7 +14,9 @@ end
 module TransitionGraph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
                                       
 module Transition : module type of TransitionGraph.E
-                                 
+
+module VarSet : module type of Set.Make(Var)
+
 module RV :
 sig
   type t = Transition.t * Var.t [@@deriving eq]
