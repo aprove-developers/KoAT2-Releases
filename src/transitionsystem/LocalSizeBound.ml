@@ -81,7 +81,9 @@ let binary_search (lowest: int) (highest: int) (p: int -> bool) =
     if lowest >= highest then
       highest
     else
-      let newBound = (lowest + highest) / 2 in
+      (* We need to ensure that the result is always round down to prevent endless loops.
+         Normal integer division rounds towards zero. *)
+      let newBound = Float.to_int (Float.floor (Float.div (Float.of_int (lowest + highest)) 2.)) in
       if p newBound then
         binary_search_ lowest newBound p
       else
@@ -106,7 +108,7 @@ let minimize_vars (vars: varset) (p: varset -> bool): varset =
   
 let find_equality_bound vars var formula =
   let find_equality_bound_ vars var formula =
-    let low = 0
+    let low = -1024
     and high = 1024 in
     let is_bound c = is_bounded_with var formula (Equality c, vars) in
     if is_bound high then

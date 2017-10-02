@@ -42,7 +42,7 @@ let tests =
                            (find_equality_bound (VarSet.remove var (Formula.vars formula)) var formula)))
                   [
                     (5, [], "x <= 5");
-                    (0, ["y"], "x <= y");
+                    (-1024, ["y"], "x <= y");
                     (* Not solvable yet (10, [], "x <= y && y <= 10"); *)
                     (* Not solvable yet (Equality 0, ["z"], "x", "x <= y && y <= z"); *)
                   ]
@@ -56,7 +56,7 @@ let tests =
                            (find_bound (Var.of_string "x") (Readers.read_formula guard))))
                   [
                     (Equality 5, [], "x <= 5");
-                    (Equality 0, ["y"], "x <= y");
+                    (Equality (-1024), ["y"], "x <= y");
                     (Equality 10, [], "x <= y && y <= 10");
                     (* Not solvable yet (Equality 0, ["z"], "x", "x <= y && y <= z"); *)
                   ]

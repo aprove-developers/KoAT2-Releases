@@ -15,7 +15,8 @@ let to_string = function
   | Helper i -> "_" ^ (String.of_int i)
               
 let counter = ref 0
-            
+
+(* TODO Use unique from batteries because of thread safety *)
 let fresh_id () =
   incr counter;
   Helper !counter
