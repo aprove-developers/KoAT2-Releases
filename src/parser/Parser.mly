@@ -5,7 +5,8 @@
 %token			LPAR RPAR
 %token                  LBRACE RBRACE
 %token			EOF
-%token                  AND OR
+%token                  OR
+%token                  AND
 %token 			ARROW WITH
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
 %token                  COMMA
@@ -108,7 +109,7 @@ onlyFormula :
         |       f = formula EOF { f } ;
 
 formula :
-        |       disj = separated_list(OR, constraints)
+        |       disj = separated_nonempty_list(OR, constraints)
                   { Formula_.disj disj } ;
 
 onlyConstraints :
