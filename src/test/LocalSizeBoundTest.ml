@@ -32,22 +32,6 @@ let tests =
                   ]
       );
 
-      ("find_equality_bound" >:::
-         List.map (fun (expected_c, expected_vars, guard) ->
-             let formula = Readers.read_formula guard
-             and var = Var.of_string "x" in
-             "equality bound for x with " ^ guard >::
-               (fun _ -> assert_equal_template_bound_option
-                           (Some (mk (Equality expected_c) expected_vars))
-                           (find_equality_bound (VarSet.remove var (Formula.vars formula)) var formula)))
-                  [
-                    (5, [], "x <= 5");
-                    (-1024, ["y"], "x <= y");
-                    (* Not solvable yet (10, [], "x <= y && y <= 10"); *)
-                    (* Not solvable yet (Equality 0, ["z"], "x", "x <= y && y <= z"); *)
-                  ]
-      );
-
       ("find_bound" >:::
          List.map (fun (expected_classification, expected_vars, guard) ->
              "bound for x with " ^ guard >::
@@ -56,7 +40,7 @@ let tests =
                            (find_bound (Var.of_string "x") (Readers.read_formula guard))))
                   [
                     (Equality 5, [], "x <= 5");
-                    (Equality (-1024), ["y"], "x <= y");
+                    (VarEquality, ["y"], "x <= y");
                     (Equality 10, [], "x <= y && y <= 10");
                     (* Not solvable yet (Equality 0, ["z"], "x", "x <= y && y <= z"); *)
                   ]

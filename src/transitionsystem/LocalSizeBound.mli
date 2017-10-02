@@ -7,6 +7,9 @@ type varset = Set.Make(Var).t
     The different templates are not disjunctive.
     The upcoming template set always includes the previous one. *)
 type template =
+  (** Always smaller or equal to the value of a prevariable. Examples: x'=x , x'=y
+      max [x1;...;xn]) *)
+  | VarEquality
   (** Always smaller or equal to a constant or the value of a prevariable. Examples: x'=x , x'=y , x'=2
       max [c;x1;...;xn]) *)
   | Equality of int

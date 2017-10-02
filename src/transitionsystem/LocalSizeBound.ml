@@ -9,6 +9,7 @@ module VarSet = Set.Make(Var)
 type varset = Set.Make(Var).t
             
 type template =
+  | VarEquality
   | Equality of int
   | AddsConstant of int
   | ScaledSum of int * int
@@ -27,6 +28,8 @@ let as_bound (template, vars) =
   let var_list = List.map Bound.of_var (VarSet.to_list vars) in
   let open Bound in
   match template with
+  | VarEquality ->
+     maximum var_list
   | Equality c ->
      maximum (of_int c :: var_list)
   | AddsConstant d ->
@@ -57,6 +60,8 @@ let as_formula in_v (template, vars) =
   and v = Polynomial.from_var in_v in
   let open Polynomial in
   match template with
+  | VarEquality ->
+     Formula.mk_le_than_max v var_list
   | Equality c ->
      Formula.mk_le_than_max v (of_int c :: var_list)
   | AddsConstant d ->
@@ -94,12 +99,20 @@ let binary_search (lowest: int) (highest: int) (p: int -> bool) =
                   ~result:Int.to_string
                   (fun () -> binary_search_ lowest highest p)
                                                                                           
-(** Minimizes the given variable set, such that the predicate p is still satisified.
-    We assume that the given variable set satisfies the predicate p. *)
+(** Minimizes the given variable set, such that the predicate p is still satisfied.
+    We assume that the given variable set satisfies the predicate p.
+    TODO Currently we use an arbitrary order. This is sound, however for "x <= y && y <= z" we may return z although y would be definitely better. *)
 let minimize_vars (vars: varset) (p: varset -> bool): varset =
   let minimize_vars_ vars p =
-    let is_necessary var = not (p (VarSet.remove var vars)) in
-    VarSet.filter is_necessary vars
+    (** Removes the candidate from the set, if the candidate is not necessary. *)
+    let minimize_with_candidate var current_minimized_set =
+      let further_minimized_set = VarSet.remove var current_minimized_set in
+      if p further_minimized_set then
+        further_minimized_set
+      else
+        current_minimized_set
+    in
+    VarSet.fold minimize_with_candidate vars vars
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "minimize vars", ["vars", to_string_varset vars])
@@ -112,10 +125,18 @@ let find_equality_bound vars var formula =
     and high = 1024 in
     let is_bound c = is_bounded_with var formula (Equality c, vars) in
     if is_bound high then
-      (* TODO If the var is bounded for every constant, we can remove the constant. This is the case e.g. if x'=y *)
       let c = binary_search low high is_bound in
-      let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (Equality c, newVars)) in
-      Some (Equality c, minimized_vars)
+      if c = low then
+        let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (VarEquality, newVars)) in
+        (* If we reached the lower end we assume (-inf) would also be a possible c and we can therefore neglect it in the max clause. *)
+        if VarSet.is_empty minimized_vars then
+          (* If additionally the varset is empty, we have max{}=-inf and therefore no (acceptable) bound. *)
+          None
+        else
+          Some (VarEquality, minimized_vars)
+      else
+        let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (Equality c, newVars)) in
+        Some (Equality c, minimized_vars)
     else None
   in
   Logger.with_log logger Logger.DEBUG
@@ -174,5 +195,6 @@ let sizebound_local kind label var =
         |> find_bound var
         |> as_bound
      | TransitionLabel.Lower ->
+        (* TODO Not yet implemented *)
         Bound.minus_infinity
 
