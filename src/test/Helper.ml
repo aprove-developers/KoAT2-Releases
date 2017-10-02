@@ -1,6 +1,14 @@
 open Batteries
 open OUnit2
 
+(* TODO REDUNDANT in LocalSizeBound
+   There is no to_string for options in batteries,
+   but there is a very efficient print function which is however a bit inconvenient to use. *)
+let to_string_template_bound_option (option: LocalSizeBound.t Option.t): string =
+  let output = IO.output_string () in
+  Option.print (fun output template_bound -> IO.nwrite output (Bound.to_string (LocalSizeBound.as_bound template_bound))) output option;
+  IO.close_out output
+
 let assert_equal_bool = assert_equal ~printer:Bool.to_string ~cmp:Bool.equal
 
 let assert_equal_string = assert_equal ~printer:identity ~cmp:String.equal
@@ -12,6 +20,9 @@ let assert_equal_poly =
 
 let assert_equal_bound =
   assert_equal ~cmp:Bound.(=~=) ~printer:Bound.to_string
+
+let assert_equal_template_bound_option =
+  assert_equal ~cmp:(Option.eq ~eq:LocalSizeBound.equal) ~printer:to_string_template_bound_option
 
 let assert_equal_classified_bound =
   assert_equal ~cmp:LocalSizeBound.equal ~printer:LocalSizeBound.to_string
