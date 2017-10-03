@@ -8,7 +8,7 @@ module Make(Value : PolyTypes.Ring) =
 
     type t = int Map.t
            
-    module Value = Value
+    type value = Value.t
 
     let make list =
       let addEntry map (var, n) = Map.modify_def 0 var ((+) n) map in

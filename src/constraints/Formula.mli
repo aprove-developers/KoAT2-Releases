@@ -14,5 +14,5 @@ module PolynomialFormula : ConstraintTypes.Formula
        with type constr = Constraints.PolynomialConstraint.t
         and type atom = Atoms.PolynomialAtom.t
         and type polynomial = Polynomial.t
-        and type value = Polynomial.Value.t
+        and type value = Polynomial.value
         and module C = Constraints.PolynomialConstraint

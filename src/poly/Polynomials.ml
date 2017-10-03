@@ -9,8 +9,8 @@ module Make(Value : PolyTypes.Ring) =
     type valuation = Valuation.Make(Value).t
                       
     type monomial = Monomial_.t
-    type t = ScaledMonomial_.t list                          
-    module Value = Value
+    type t = ScaledMonomial_.t list
+    type value = Value.t
 
     let make = List.map (fun (coeff, mon) -> ScaledMonomial_.make coeff mon)
     

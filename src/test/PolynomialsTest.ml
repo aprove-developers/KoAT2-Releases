@@ -51,6 +51,7 @@ module Methods =
   struct
     module P = Polynomials.Make(PolyTypes.OurInt)
     module Valuation = Valuation.Make(PolyTypes.OurInt)
+    module OurInt = PolyTypes.OurInt
                
     let example_valuation = Valuation.from_native [("x", 3); ("y", 5); ("z", 7)]
                                             
@@ -60,28 +61,28 @@ module Methods =
       |> fun poly -> P.eval poly example_valuation
 
     let assert_equal_value =
-      assert_equal ~cmp:P.Value.(=~=) ~printer:P.Value.to_string
+      assert_equal ~cmp:OurInt.(=~=) ~printer:OurInt.to_string
 
     let assert_equal_polynomial =
       assert_equal ~cmp:P.(=~=) ~printer:P.to_string
       
-    let of_int = P.Value.of_int
+    let of_int = OurInt.of_int
 
     let of_string = Var.of_string
     
-    let rec list_equality (xs : P.Value.t list ) (ys : P.Value.t list) =
+    let rec list_equality (xs : OurInt.t list ) (ys : OurInt.t list) =
         match (xs, ys) with
             |([],[]) -> true
-            |(x::tailxs, y::tailys) ->  P.Value.(x =~= y) && (list_equality tailxs tailys)
+            |(x::tailxs, y::tailys) ->  OurInt.(x =~= y) && (list_equality tailxs tailys)
             | (_,_) -> false
             
-    let rec list_print (xs : P.Value.t list ) = String.concat "," (List.map P.Value.to_string xs)
+    let rec list_print (xs : OurInt.t list ) = String.concat "," (List.map OurInt.to_string xs)
     
     let tests =
       "Polynomial" >::: [
           "Evaluate" >::: (
             List.map (fun (testname, expected, expression) ->
-                testname >:: (fun _ -> assert_equal_value (P.Value.of_int expected) (evaluate expression)))
+                testname >:: (fun _ -> assert_equal_value (OurInt.of_int expected) (evaluate expression)))
                      [
                        ("Constant", 42, " 42 ");
                        ("Negated Constant", -42, " - 42 ");
@@ -114,7 +115,7 @@ module Methods =
           "Instantiate TemplatePolynomial" >::: (
             let module T = ParameterPolynomial in
             List.map (fun (testname, expected, poly) ->
-                testname >:: (fun _ -> assert_equal ~cmp:T.(=~=) ~printer:T.to_string (expected) (T.instantiate (fun v -> T.from_constant (P.from_constant (P.eval_f v (fun _ -> P.Value.of_int 2)))) poly)))
+                testname >:: (fun _ -> assert_equal ~cmp:T.(=~=) ~printer:T.to_string (expected) (T.instantiate (fun v -> T.from_constant (P.from_constant (P.eval_f v (fun _ -> OurInt.of_int 2)))) poly)))
                      [
                        ("a*x", T.((value 2) * (var "x")), T.((from_constant (P.var "a")) * (var "x")) );
                      ];
@@ -144,11 +145,11 @@ module Methods =
           );
 
             "Math" >::: ([
-                "zero" >:: (fun _ -> assert_equal_value (P.Value.of_int 0) (P.eval P.zero example_valuation));
-                "one" >:: (fun _ -> assert_equal_value (P.Value.of_int 1) (P.eval P.one example_valuation));
+                "zero" >:: (fun _ -> assert_equal_value (OurInt.of_int 0) (P.eval P.zero example_valuation));
+                "one" >:: (fun _ -> assert_equal_value (OurInt.of_int 1) (P.eval P.one example_valuation));
                 "constant" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal_value (P.Value.of_int expected) (P.constant (Readers.read_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_value (OurInt.of_int expected) (P.constant (Readers.read_polynomial expression))))
                            [
                              (5, " 5 ");
                              (0, " x ");

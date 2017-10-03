@@ -15,7 +15,7 @@ module Z3Solver =
                     )
 
     let from_constraint (constraints : formula) =
-      Formula.PolynomialFormula.fold ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i !context (Polynomial.Value.to_int value))
+      Formula.PolynomialFormula.fold ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i !context (PolyTypes.OurInt.to_int value))
                                      ~var:(fun var ->  if (Var.is_helper var) then 
                                                          Z3.Arithmetic.Real.mk_const_s !context (Var.to_string var) 
                                                        else
@@ -80,7 +80,7 @@ module Z3Solver =
                                         model func_decl)(*careful, this returns an option*) in
 
                                         let int_of_value = Int.of_float (Float.of_string ( match_string_for_float (Z3.Expr.to_string value))) in 
-                                        let value_of_value = (Polynomial.Value.of_int int_of_value) in
+                                        let value_of_value = (PolyTypes.OurInt.of_int int_of_value) in
                                             (var_of_name,value_of_value)) assigned_values)
                 else Valuation.from []
         

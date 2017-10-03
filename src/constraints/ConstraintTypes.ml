@@ -32,7 +32,7 @@ module type Atom =
         (* TODO Shouldn't be exposed *)
         module P : PolyTypes.Polynomial
                with type t = polynomial
-                and type Value.t = value
+                and type value = value
 
         type t
              
@@ -69,7 +69,9 @@ module type Atom =
 
         (** Returns a normalised form of the atom, where the returned polynomial represents the atom in the form p <= 0. *)
         val normalised_lhs : t -> polynomial
-          
+
+        (** Returns the single right hand side constant of the atom *)
+        val get_constant : t -> value
 
         (** Following methods manipulate atoms and return the manipulated versions. *)
 

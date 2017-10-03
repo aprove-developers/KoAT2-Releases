@@ -78,7 +78,7 @@ module Make(A : ConstraintTypes.Atom) =
             
     (**returns a list of the constants of the constraints*)
     let get_constant_vector constr = 
-        List.map (fun atom -> A.P.Value.neg (A.P.constant (A.normalised_lhs atom))) constr 
+        List.map A.get_constant constr 
         
     (** returns a list of lists of the coefficients of the constraint*)
     let rec get_matrix vars constr = 

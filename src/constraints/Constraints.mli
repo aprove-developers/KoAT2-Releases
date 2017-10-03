@@ -10,6 +10,6 @@ module Make(A : ConstraintTypes.Atom) : ConstraintTypes.Constraint
 
 module PolynomialConstraint :  ConstraintTypes.Constraint
        with type polynomial = Polynomial.t
-        and type value = Polynomial.Value.t
+        and type value = Polynomial.value
         and type atom = Atoms.PolynomialAtom.t
         and module A = Atoms.PolynomialAtom

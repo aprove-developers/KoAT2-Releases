@@ -44,6 +44,7 @@ module Methods =
     module Atom = Atoms.PolynomialAtom
     module ParameterAtom = Atoms.Make(ParameterPolynomial)
     module Valuation = Valuation.Make(PolyTypes.OurInt)
+    module OurInt = PolyTypes.OurInt
                      
     (* TODO Redundant in LocalSizeBound.ml *)
     let to_string_varset (vars: VarSet.t): string =
@@ -73,15 +74,15 @@ module Methods =
     let assert_equal_constr =     
         assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string
         
-    let of_int = Polynomial.Value.of_int
+    let of_int = OurInt.of_int
     
-    let rec list_equality (xs : Polynomial.Value.t list ) (ys : Polynomial.Value.t list) =
+    let rec list_equality (xs : OurInt.t list ) (ys : OurInt.t list) =
         match (xs, ys) with
             |([],[]) -> true
-            |(x::tailxs, y::tailys) -> Polynomial.Value.(x =~= y) && (list_equality tailxs tailys)
+            |(x::tailxs, y::tailys) -> OurInt.(x =~= y) && (list_equality tailxs tailys)
             | (_,_) -> false
             
-    let rec list_print (xs : Polynomial.Value.t list ) = "[" ^ String.concat "," (List.map Polynomial.Value.to_string xs) ^ "]"
+    let rec list_print (xs : OurInt.t list ) = "[" ^ String.concat "," (List.map OurInt.to_string xs) ^ "]"
     
     let list_list_equality xs ys = list_equality (List.concat xs) (List.concat ys)
     
@@ -144,7 +145,7 @@ module Methods =
             ("get_coefficient_vector" >:::
                 List.map (fun (expected, var, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_equality ~printer:list_print
-                                                      (List.map Polynomial.Value.of_int expected)
+                                                      (List.map OurInt.of_int expected)
                                                       (Constraint.get_coefficient_vector (Var.of_string var) (Readers.read_constraint constr) )))
                         [
                             ([1; 2; 3], "x", "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
@@ -158,7 +159,7 @@ module Methods =
             ("get_constant_vector" >:::
                 List.map (fun (expected, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_equality ~printer:list_print
-                                                      (List.map Polynomial.Value.of_int expected)
+                                                      (List.map OurInt.of_int expected)
                                                       (Constraint.get_constant_vector (Readers.read_constraint constr))))
                         [
                             ([5; -2; 0], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
@@ -169,7 +170,7 @@ module Methods =
             ("get_matrix" >:::
                 List.map (fun (expected, vars, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_list_equality ~printer:list_list_print
-                                                      (List.map (List.map Polynomial.Value.of_int) expected)
+                                                      (List.map (List.map OurInt.of_int) expected)
                                                       (Constraint.get_matrix (VarSet.of_list (List.map Var.of_string vars)) (Readers.read_constraint constr) )))
                         [
                             ([[1; 2; 3];[1; 3; -4]],["x";"y"], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");

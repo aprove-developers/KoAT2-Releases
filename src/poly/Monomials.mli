@@ -5,5 +5,5 @@ open Batteries
 (** Constructs a default monomial using a list of pairs of variables and their exponents *)
 module Make
          (Value : PolyTypes.Ring)
-       : PolyTypes.Monomial with module Value = Value
+       : PolyTypes.Monomial with type value = Value.t
                              and type valuation = Valuation.Make(Value).t

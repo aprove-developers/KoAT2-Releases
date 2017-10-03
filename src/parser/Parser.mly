@@ -175,7 +175,7 @@ bound :
 	|	NEG b = bound
 		{ Bound.neg b }
 	|	v = UINT; EXP; b = bound
-		{ Bound.exp (Bound.Value.of_int v) b }
+		{ Bound.exp (PolyTypes.OurInt.of_int v) b }
 	|	SUM LBRACE sum = separated_list(COMMA, bound) RBRACE
 		{ Bound.sum sum }
 	|	PRODUCT LBRACE product = separated_list(COMMA, bound) RBRACE

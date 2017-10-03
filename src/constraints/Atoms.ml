@@ -6,7 +6,7 @@ struct
     module P = P
 
     type polynomial = P.t
-    type value = P.Value.t
+    type value = P.value
 
     module Comparator =
       struct
@@ -78,8 +78,11 @@ struct
     let is_linear = P.is_linear 
         
     let vars = P.vars
-        
+
     let normalised_lhs atom = atom
+             
+    let get_constant atom =
+      P.constant (P.neg atom)
              
     let rename atom varmapping = P.rename varmapping atom
 

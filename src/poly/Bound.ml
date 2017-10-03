@@ -6,6 +6,7 @@ module Valuation_ = Valuation.Make(PolyTypes.OurInt)
 type valuation = Valuation.Make(PolyTypes.OurInt).t
                   
 type polynomial = Polynomial.t
+type value = Value.t
                 
 (* Minus Infinity is max of an empty list *)
 (* Infinity is min of an empty list *)
