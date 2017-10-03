@@ -224,8 +224,7 @@ module type Polynomial =
     include PartialOrder with type t := t
     include Ring with type t := t
 
-    module Monomial_ : Monomial
-    type monomial = Monomial_.t
+    type monomial
     type scaled_monomial
                   
     (** Following methods are convenience methods for the creation of polynomials. *)

@@ -7,7 +7,6 @@ open PolyTypes
 module PolynomialOver
          (Value : Ring)
        : Polynomial with type value = Value.t
-                     and module Monomial_ = Monomials.Make(Value)
                      and type valuation = Valuation.Make(Value).t
                      and type monomial = Monomials.Make(Value).t
                     
