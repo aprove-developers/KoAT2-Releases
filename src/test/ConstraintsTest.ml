@@ -43,6 +43,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
     module Constraint = Constraints.PolynomialConstraint
     module Atom = Atoms.PolynomialAtom
     module ParameterAtom = Atoms.Make(ParameterPolynomial)
+    module Valuation = Valuation.Make(PolyTypes.OurInt)
                      
     (* TODO Redundant in LocalSizeBound.ml *)
     let to_string_varset (vars: VarSet.t): string =
@@ -50,7 +51,7 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
       VarSet.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
       IO.close_out output
 
-    let example_valuation = Polynomial.Valuation_.from_native [("x", 3);
+    let example_valuation = Valuation.from_native [("x", 3);
                                                         ("y", 5);
                                                         ("z", 7)]
                           

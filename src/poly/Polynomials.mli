@@ -8,5 +8,6 @@ module Make
          (Value : Ring)
        : Polynomial with module Value = Value
                      and module Monomial_ = Monomials.Make(Value)
+                     and type valuation = Valuation.Make(Value).t
                      and type monomial = Monomials.Make(Value).t
                     

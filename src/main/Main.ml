@@ -4,7 +4,8 @@ module Value = PolyTypes.OurInt
 module Formula = Formula.PolynomialFormula
 module Constraint = Constraints.PolynomialConstraint
 module Atom = Atoms.PolynomialAtom
-                      
+module Valuation = Valuation.Make(PolyTypes.OurInt)
+            
 module SMT_ = SMT.Z3Solver                      
 
 (** The shell arguments which can be defined in the console. *)
@@ -107,7 +108,7 @@ let run_smt (params: smt_params) =
   let solve = match params.solver with
     | `Z3 -> Z3.get_model
   and constr = Readers.read_formula params.constr in
-  let valuation_bindings = Polynomial.Valuation_.bindings (solve constr) in
+  let valuation_bindings = Valuation.bindings (solve constr) in
   if Enum.is_empty valuation_bindings then
     print_string "unsatisfiable"
   else Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ Value.to_string value ^ "\n")) valuation_bindings

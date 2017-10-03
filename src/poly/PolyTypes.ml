@@ -23,6 +23,7 @@ module type Ring =
     val mul : t -> t -> t
     val pow : t -> int -> t
 
+    val equal : t -> t -> bool
     val (=~=) : t -> t -> bool
 
     val of_int : int -> t
@@ -100,7 +101,7 @@ module type Evaluable =
   sig
     type t
     module Value : Ring
-    module Valuation_ : (Valuation with type var = Var.t and type value = Value.t)
+    type valuation
 
     include Eq with type t := t
     val to_string : t -> string
@@ -110,7 +111,7 @@ module type Evaluable =
 
     (** Assigns each variable inside the polynomial the value of the valuation and returns the arithmetically computed result. 
         !! If the valuation does not provide a value for a variable, an exception is raised. !! *)
-    val eval : t -> Valuation_.t -> Value.t
+    val eval : t -> valuation -> Value.t
 
     val eval_f : t -> (Var.t -> Value.t) -> Value.t
 
@@ -298,7 +299,7 @@ module type Polynomial =
     (** Misc *)
 
     (** Creates a polynomial where every variable for which a value is assigned by the valuation is replaced by this value. *)
-    val eval_partial : t -> Valuation_.t -> t
+    val eval_partial : t -> valuation -> t
 
     (** Maps all coefficients to elements from the polynomial. *)
     val instantiate : (Value.t -> t) -> t -> t

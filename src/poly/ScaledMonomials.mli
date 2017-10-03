@@ -4,5 +4,5 @@ open Batteries
 module Make
          (Value : PolyTypes.Ring)
        : PolyTypes.ScaledMonomial with module Value = Value
-                                   and module Valuation_ = Valuation.Make(Value)
+                                   and type valuation = Valuation.Make(Value).t
                                    and type monomial = Monomials.Make(Value).t

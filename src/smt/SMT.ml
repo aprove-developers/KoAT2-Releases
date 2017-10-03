@@ -3,7 +3,8 @@ open Batteries
 (** SMT solver which uses the microsoft project Z3 *)
 module Z3Solver =
   struct
-    type valuation = Polynomial.Valuation_.t
+    module Valuation = Valuation.Make(PolyTypes.OurInt)
+    type valuation = Valuation.t
     type formula = Formula.PolynomialFormula.t
        
     let context = ref (
@@ -67,10 +68,10 @@ module Z3Solver =
                 if (status == Z3.Solver.SATISFIABLE) then
                     let model = Z3.Optimize.get_model optimisation_goal in
                         match model with
-                        | None -> Polynomial.Valuation_.from []
+                        | None -> Valuation.from []
                         | Some model -> 
                             let assigned_values = Z3.Model.get_const_decls model in
-                                Polynomial.Valuation_.from 
+                                Valuation.from 
                                 (List.map 
                                     (fun func_decl -> 
                                         let name = Z3.Symbol.get_string (Z3.FuncDecl.get_name func_decl) in
@@ -81,6 +82,6 @@ module Z3Solver =
                                         let int_of_value = Int.of_float (Float.of_string ( match_string_for_float (Z3.Expr.to_string value))) in 
                                         let value_of_value = (Polynomial.Value.of_int int_of_value) in
                                             (var_of_name,value_of_value)) assigned_values)
-                else Polynomial.Valuation_.from []
+                else Valuation.from []
         
   end

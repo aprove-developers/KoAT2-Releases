@@ -1,8 +1,9 @@
 open Batteries
 
 module Polynomial = Polynomials.Make(PolyTypes.OurInt)
-module Value = Polynomial.Value
-module Valuation_ = Polynomial.Valuation_
+module Value = PolyTypes.OurInt
+module Valuation_ = Valuation.Make(PolyTypes.OurInt)
+type valuation = Valuation.Make(PolyTypes.OurInt).t
                   
 type polynomial = Polynomial.t
                 
@@ -21,7 +22,7 @@ let of_poly p = Poly p
               
 let of_constant c = of_poly (Polynomial.from_constant c)
 
-let of_int i = of_constant (PolyTypes.OurInt.of_int i)
+let of_int i = of_constant (Value.of_int i)
                   
 let of_var v = of_poly (Polynomial.from_var v)
 

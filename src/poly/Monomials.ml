@@ -3,6 +3,7 @@ open Batteries
 module Make(Value : PolyTypes.Ring) =
   struct
     module Valuation_ = Valuation.Make(Value)
+    type valuation = Valuation.Make(Value).t
     module Map = Map.Make(Var)
 
     type t = int Map.t

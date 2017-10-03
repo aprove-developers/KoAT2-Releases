@@ -52,8 +52,9 @@ module Methods (*(P : Polynomial)*) =
     module Reader = Readers
     
     module P = Polynomials.Make(PolyTypes.OurInt)
+    module Valuation = Valuation.Make(PolyTypes.OurInt)
                
-    let example_valuation = P.Valuation_.from_native [("x", 3); ("y", 5); ("z", 7)]
+    let example_valuation = Valuation.from_native [("x", 3); ("y", 5); ("z", 7)]
                                             
     let evaluate str =
          str
