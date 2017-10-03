@@ -38,7 +38,7 @@ module Parser =
         
   end
   
-module Methods (*(P : PolyTypes.Polynomial)*) =
+module Methods =
   struct
     module Constraint = Constraints.PolynomialConstraint
     module Atom = Atoms.PolynomialAtom

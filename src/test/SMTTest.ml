@@ -3,7 +3,6 @@ open OUnit2
 open Helper
    
 module Z3Solver = SMT.Z3Solver
-module Reader = Readers
 module Formula = Formula.PolynomialFormula
 module Constraint = Constraints.PolynomialConstraint
 
@@ -24,7 +23,7 @@ let suite =
         );*)  
         "Satisfiable" >::: (
         List.map (fun (testname,expected, constr) ->
-            testname >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Reader.read_formula constr))))
+            testname >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Readers.read_formula constr))))
                     [
                         ("Empty",true, "");
                         ("Constant Equality",true, "1 = 1");
@@ -40,7 +39,7 @@ let suite =
         );
         "Satisfiable_Farkas" >::: (
         List.map (fun (expected,constr,atom) ->
-            constr >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Formula.mk (Constraint.farkas_transform (Reader.read_constraint constr) (Reader.read_atom atom))))))
+            constr >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Formula.mk (Constraint.farkas_transform (Readers.read_constraint constr) (Readers.read_atom atom))))))
                     [
                         (true, "x>=0", "x>=0");
                         (false, "x>=0", "x < -10");

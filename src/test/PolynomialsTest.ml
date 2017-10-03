@@ -47,10 +47,8 @@ module Parser =
 
   end
   
-module Methods (*(P : Polynomial)*) =
+module Methods =
   struct
-    module Reader = Readers
-    
     module P = Polynomials.Make(PolyTypes.OurInt)
     module Valuation = Valuation.Make(PolyTypes.OurInt)
                
@@ -58,7 +56,7 @@ module Methods (*(P : Polynomial)*) =
                                             
     let evaluate str =
          str
-      |> Reader.read_polynomial
+      |> Readers.read_polynomial
       |> fun poly -> P.eval poly example_valuation
 
     let assert_equal_value =
@@ -136,7 +134,7 @@ module Methods (*(P : Polynomial)*) =
           
           "from_coeff_list" >::: (
             List.map (fun (expected, coeffs, vars) ->
-                expected >:: (fun _ -> assert_equal~cmp:P.(=~=) ~printer:P.to_string (P.from_coeff_list coeffs vars) (Reader.read_polynomial expected)))
+                expected >:: (fun _ -> assert_equal~cmp:P.(=~=) ~printer:P.to_string (P.from_coeff_list coeffs vars) (Readers.read_polynomial expected)))
                      [
                        ("2 * x + 3 * y - 4 * z", [(of_int 2); (of_int 3); (of_int (-4))],[(of_string "x"); (of_string "y"); (of_string "z")]);
                        ("0", [(of_int 2); (of_int 3)],[(of_string "x"); (of_string "y"); (of_string "z")]);
@@ -150,7 +148,7 @@ module Methods (*(P : Polynomial)*) =
                 "one" >:: (fun _ -> assert_equal_value (P.Value.of_int 1) (P.eval P.one example_valuation));
                 "constant" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal_value (P.Value.of_int expected) (P.constant (Reader.read_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_value (P.Value.of_int expected) (P.constant (Readers.read_polynomial expression))))
                            [
                              (5, " 5 ");
                              (0, " x ");
@@ -163,7 +161,7 @@ module Methods (*(P : Polynomial)*) =
                 );
                 "is_var" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal_bool expected (P.is_var (Reader.read_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_bool expected (P.is_var (Readers.read_polynomial expression))))
                            [
                              (false, " 1 ");
                              (true, " x ");
@@ -181,7 +179,7 @@ module Methods (*(P : Polynomial)*) =
                 
                 "is_univariate_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal_bool expected (P.is_univariate_linear (Reader.read_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal_bool expected (P.is_univariate_linear (Readers.read_polynomial expression))))
                             [
                                 (true, " 1 ");
                                 (true, " x ");
@@ -199,7 +197,7 @@ module Methods (*(P : Polynomial)*) =
                     
                 "is_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal_bool expected (P.is_linear (Reader.read_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal_bool expected (P.is_linear (Readers.read_polynomial expression))))
                             [
                                 (true, " 1 ");
                                 (true, " x ");
@@ -245,10 +243,10 @@ module Methods (*(P : Polynomial)*) =
                 "substitute" >::: (
                     List.map (fun (expected, substitution, polynomial) ->
                         polynomial >:: (fun _ -> assert_equal_polynomial
-                                                              (Reader.read_polynomial expected)
+                                                              (Readers.read_polynomial expected)
                                                               (P.substitute (Var.of_string "x")
-                                                                            ~replacement:(Reader.read_polynomial substitution)
-                                                                            (Reader.read_polynomial polynomial))))
+                                                                            ~replacement:(Readers.read_polynomial substitution)
+                                                                            (Readers.read_polynomial polynomial))))
                              [
                                (* No variables -> No change *)
                                (" 0 ", " 1 ", " 0 ");
