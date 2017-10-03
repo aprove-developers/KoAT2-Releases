@@ -7,8 +7,6 @@ module Atom = Atoms.PolynomialAtom
                       
 module SMT_ = SMT.Z3Solver                      
 
-module Reader_ = Readers
-
 (** The shell arguments which can be defined in the console. *)
 type main_params = {
     
@@ -80,7 +78,7 @@ let print_results (appr: Approximation.t): unit =
   raise (Failure "Not yet implemented")  
 
 let run (params: main_params) =
-  let program = Reader_.read_file params.input in
+  let program = Readers.read_file params.input in
   if params.print_system then
     Program.print_system ~outdir:params.output_dir ~file:"tmp" program;
   if params.print_rvg then
@@ -96,10 +94,10 @@ let run_localsizebound (params: localsizebound_params) =
   let kind = match params.kind with
     | `Upper -> Upper
     | `Lower -> Lower in
-  let guard = Reader_.read_constraint params.guard in
+  let guard = Readers.read_constraint params.guard in
   let var = Var.of_string params.var in
   let update = match params.update with
-    | Some str -> Map.(add var (Reader_.read_polynomial str) empty)
+    | Some str -> Map.(add var (Readers.read_polynomial str) empty)
     | None -> Map.empty in
   let label = make ~name:"" ~start:"" ~target:"" ~update ~guard in
   print_string (Bound.to_string LocalSizeBound.(as_bound (sizebound_local kind label var)))
@@ -108,7 +106,7 @@ let run_smt (params: smt_params) =
   let module Z3 = SMT.Z3Solver in
   let solve = match params.solver with
     | `Z3 -> Z3.get_model
-  and constr = Reader_.read_formula params.constr in
+  and constr = Readers.read_formula params.constr in
   let valuation_bindings = Polynomial.Valuation_.bindings (solve constr) in
   if Enum.is_empty valuation_bindings then
     print_string "unsatisfiable"
@@ -116,9 +114,9 @@ let run_smt (params: smt_params) =
   
 let run_normalize (params: normalize_params) =
   let output = match params.kind with
-    | `Polynomial -> Polynomial.to_string (Polynomial.simplify (Reader_.read_polynomial params.input))
-    | `Atom -> Atom.to_string (Reader_.read_atom params.input)
-    | `Bound -> Bound.to_string (Reader_.read_bound params.input) in
+    | `Polynomial -> Polynomial.to_string (Polynomial.simplify (Readers.read_polynomial params.input))
+    | `Atom -> Atom.to_string (Readers.read_atom params.input)
+    | `Bound -> Bound.to_string (Readers.read_bound params.input) in
   print_string output
   
 let subcommands =
