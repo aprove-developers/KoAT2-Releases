@@ -182,19 +182,19 @@ let find_bound var formula =
                   
 let sizebound_local kind label var =
   (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
-  (* TODO Should we also try to substitute vars in the bound if it leads to a simpler bound? E.g. x<=10 && x'=x : b:=x or b:=10? *)
   match TransitionLabel.update label var with
-  (* TODO Wrong *)
-  | Some bound -> Bound.of_poly bound
+  | Some bound -> (
+    (* Introduce a temporary result variable *)
+    let v' = Var.fresh_id () in
+    let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.from_var v' = bound) in
+    match kind with
+    | TransitionLabel.Upper ->
+       find_bound v' guard_with_update
+    | TransitionLabel.Lower ->
+       (* TODO Not yet implemented *)
+       (Unbound, VarSet.empty)
+  )
+  (* If we don't have an update, the result variable is completely unbounded *)
   | None ->
-     match kind with
-     | TransitionLabel.Upper ->
-           label
-        |> TransitionLabel.guard
-        |> Formula.mk
-        |> find_bound var
-        |> as_bound
-     | TransitionLabel.Lower ->
-        (* TODO Not yet implemented *)
-        Bound.minus_infinity
+     (Unbound, VarSet.empty)
 

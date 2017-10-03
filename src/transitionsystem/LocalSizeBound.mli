@@ -61,4 +61,4 @@ val find_bound : Var.t -> formula -> t
 
 (** Returns a local sizebound of the specified kind for the variable of the transition. 
     A local sizebound is expressed in relation to the values directly before executing the transition. *)
-val sizebound_local : TransitionLabel.kind -> TransitionLabel.t -> Var.t -> Bound.t
+val sizebound_local : TransitionLabel.kind -> TransitionLabel.t -> Var.t -> t
