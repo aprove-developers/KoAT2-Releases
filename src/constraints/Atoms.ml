@@ -84,7 +84,10 @@ struct
              
     let get_constant atom =
       P.constant (P.neg atom)
-             
+
+    let get_coefficient var atom =
+      P.coeff_of_var var (normalised_lhs atom)
+      
     let rename atom varmapping = P.rename varmapping atom
 
                                (*

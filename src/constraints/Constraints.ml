@@ -75,7 +75,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
 
     (**returns a list of the coefficients of a variable in all the left sides of the constraints*)
     let get_coefficient_vector var constr = 
-        List.map (fun atom -> A.P.coeff_of_var var (A.normalised_lhs atom)) constr
+        List.map (A.get_coefficient var) constr
             
     (**returns a list of the constants of the constraints*)
     let get_constant_vector constr = 

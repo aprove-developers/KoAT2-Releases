@@ -70,9 +70,12 @@ module type Atom =
         (** Returns a normalised form of the atom, where the returned polynomial represents the atom in the form p <= 0. *)
         val normalised_lhs : t -> polynomial
 
-        (** Returns the single right hand side constant of the atom *)
+        (** Returns the single right hand side constant of the atom. *)
         val get_constant : t -> value
 
+        (** Returns the coefficient of a variable which is normalised to the lhs. *)
+        val get_coefficient : Var.t -> t -> value
+          
         (** Following methods manipulate atoms and return the manipulated versions. *)
 
         (** Assigns the variables of the atom new names based on the rename map. *)
@@ -190,7 +193,7 @@ module type Constraint =
         val get_constant_vector : t -> value list
         
         val dualise : Var.t list -> value list list -> polynomial list -> t
-        
+
         val farkas_transform : t -> atom -> t
   end
 
