@@ -100,9 +100,7 @@ let rvg program =
       |> Set.of_list
     in
     vars program
-    |> VarSet.to_list
-    |> Set.of_list
-    |> Set.map (pre_nodes post_transition)
+    |> VarSet.map_to_set (pre_nodes post_transition)
     |> (fun set -> Set.fold Set.union set Set.empty)
     |> (fun set -> Set.fold (fun (pre_transition,pre_var,post_var) rvg -> RVG.add_edge rvg (pre_transition,pre_var) (post_transition,post_var)) set rvg_with_vertices)
   in

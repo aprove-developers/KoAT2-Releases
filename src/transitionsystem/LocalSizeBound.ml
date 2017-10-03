@@ -23,7 +23,7 @@ let equal c1 c2 =
   | ((cl1, vars1), (cl2, vars2)) -> equal_template cl1 cl2 && VarSet.equal vars1 vars2
 
 let as_bound (template, vars) =
-  let var_list = List.map Bound.of_var (VarSet.to_list vars) in
+  let var_list = VarSet.map_to_list Bound.of_var vars in
   let open Bound in
   match template with
   | VarEquality ->
@@ -36,13 +36,6 @@ let as_bound (template, vars) =
      of_int s * (of_int e + sum var_list)
   | Unbound -> infinity
 
-(* There is no to_string for sets in batteries,
-   but there is a very efficient print function which is however a bit inconvenient to use. *)
-let to_string_varset (vars: VarSet.t): string =
-  let output = IO.output_string () in
-  VarSet.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
-  IO.close_out output
-       
 (* There is no to_string for options in batteries,
    but there is a very efficient print function which is however a bit inconvenient to use. *)
 let to_string_option_template_bound (option: t Option.t): string =
@@ -51,10 +44,10 @@ let to_string_option_template_bound (option: t Option.t): string =
   IO.close_out output
 
 let to_string = function
-  | (template, vars) -> (show_template template) ^ to_string_varset vars
+  | (template, vars) -> (show_template template) ^ VarSet.to_string vars
                 
 let as_formula in_v (template, vars) =
-  let var_list = List.map Polynomial.from_var (VarSet.to_list vars)
+  let var_list = VarSet.map_to_list Polynomial.from_var vars
   and v = Polynomial.from_var in_v in
   let open Polynomial in
   match template with
@@ -113,8 +106,8 @@ let minimize_vars (vars: VarSet.t) (p: VarSet.t -> bool): VarSet.t =
     VarSet.fold minimize_with_candidate vars vars
   in
   Logger.with_log logger Logger.DEBUG
-                  (fun () -> "minimize vars", ["vars", to_string_varset vars])
-                  ~result:(fun result -> to_string_varset result)
+                  (fun () -> "minimize vars", ["vars", VarSet.to_string vars])
+                  ~result:(fun result -> VarSet.to_string result)
                   (fun () -> minimize_vars_ vars p)
   
 let find_equality_bound vars var formula =
@@ -138,7 +131,7 @@ let find_equality_bound vars var formula =
     else None
   in
   Logger.with_log logger Logger.DEBUG
-                  (fun () -> "looking for equality bound", ["vars", to_string_varset vars])
+                  (fun () -> "looking for equality bound", ["vars", VarSet.to_string vars])
                   ~result:(fun result -> to_string_option_template_bound result)
                   (fun () -> find_equality_bound_ vars var formula)
 

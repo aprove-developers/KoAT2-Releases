@@ -1,8 +1,9 @@
 open Batteries
 open OUnit2
-open Polynomials
 open Formulas
 open Constraints
+open Atoms
+open Polynomials
    
 (* TODO REDUNDANT in LocalSizeBound
    There is no to_string for options in batteries,
@@ -21,6 +22,9 @@ let assert_equal_int = assert_equal ~printer:string_of_int ~cmp:Int.equal
 let assert_equal_value =
   assert_equal ~cmp:OurInt.(=~=) ~printer:OurInt.to_string
 
+let assert_equal_varset =
+  assert_equal ~cmp:VarSet.equal ~printer:VarSet.to_string
+  
 let assert_equal_poly =
   assert_equal ~cmp:Polynomial.(=~=) ~printer:Polynomial.to_string
 
@@ -29,6 +33,9 @@ let assert_equal_parameter_poly =
 
 let assert_equal_bound =
   assert_equal ~cmp:Bound.(=~=) ~printer:Bound.to_string
+
+let assert_equal_atom =
+  assert_equal ~cmp:Atom.(=~=) ~printer:Atom.to_string
 
 let assert_equal_constr =     
   assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string

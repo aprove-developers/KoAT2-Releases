@@ -43,11 +43,6 @@ module Parser =
 
 module Methods =
   struct
-    (* TODO Redundant in LocalSizeBound.ml *)
-    let to_string_varset (vars: VarSet.t): string =
-      let output = IO.output_string () in
-      VarSet.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
-      IO.close_out output
 
     let rename str rename_map =
          str
@@ -61,9 +56,6 @@ module Methods =
       |> fun atom -> Atom.models atom (Polynomial.Valuation_.from_native valuation)
                     *)
       
-    let assert_equal_atom =
-      assert_equal ~cmp:Atom.(=~=) ~printer:Atom.to_string
-
     let tests = 
         "ConstraintsAtom" >:::[
                         
@@ -85,9 +77,9 @@ module Methods =
                         
             ("vars" >:::
                 List.map (fun (expected, atom) ->
-                    atom >:: (fun _ -> assert_equal ~cmp:VarSet.equal ~printer:to_string_varset
-                                                    (VarSet.of_list (List.map Var.of_string expected))
-                                                    (Atom.vars (Readers.read_atom atom))))
+                    atom >:: (fun _ -> assert_equal_varset
+                                         (VarSet.of_string_list expected)
+                                         (Atom.vars (Readers.read_atom atom))))
                          [
                            (["x"], " x^3+2*x -1 < x^5 " );
                            (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );

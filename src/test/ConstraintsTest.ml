@@ -38,12 +38,6 @@ module Methods =
   struct
     module Valuation = Valuation.Make(OurInt)
                      
-    (* TODO Redundant in LocalSizeBound.ml *)
-    let to_string_varset (vars: VarSet.t): string =
-      let output = IO.output_string () in
-      VarSet.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
-      IO.close_out output
-
     let example_valuation = Valuation.from_native [("x", 3);
                                                         ("y", 5);
                                                         ("z", 7)]
@@ -93,7 +87,9 @@ module Methods =
 
             ("get_variables" >:::
                 List.map (fun (expected, constr) ->
-                      constr >:: (fun _ -> assert_equal ~cmp:VarSet.equal ~printer:to_string_varset (VarSet.of_list (List.map Var.of_string expected)) (Constraint.vars (Readers.read_constraint constr) )))
+                    constr >:: (fun _ -> assert_equal_varset
+                                           (VarSet.of_string_list expected)
+                                           (Constraint.vars (Readers.read_constraint constr) )))
                         [
                             (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z && x > 0 && y >= 0 && z <= 4" );
 
@@ -163,7 +159,7 @@ module Methods =
                 List.map (fun (expected, vars, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_list_equality ~printer:list_list_print
                                                       (List.map (List.map OurInt.of_int) expected)
-                                                      (Constraint.get_matrix (VarSet.of_list (List.map Var.of_string vars)) (Readers.read_constraint constr) )))
+                                                      (Constraint.get_matrix (VarSet.of_string_list vars) (Readers.read_constraint constr) )))
                         [
                             ([[1; 2; 3];[1; 3; -4]],["x";"y"], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                             ([[1; -1];[-1; 1]],["x";"y"], "x = y");
