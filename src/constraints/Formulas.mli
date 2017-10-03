@@ -9,7 +9,6 @@ module FormulaOver(C : ConstraintTypes.Constraint) : ConstraintTypes.Formula
         and type atom = C.atom
         and type polynomial = C.polynomial
         and type value = C.value
-        and module C = C
 
 module Formula :
 sig

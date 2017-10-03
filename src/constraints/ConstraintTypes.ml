@@ -205,12 +205,6 @@ module type Formula =
         type polynomial
         type value
        
-        module C : Constraint
-               with type polynomial = polynomial
-                and type atom = atom
-                and type value = value
-                and type t = constr
-
         type t
         
 
