@@ -6,7 +6,7 @@ open Helper
    
 module Parser =
   struct
-    module Polynomial = Polynomials.Make(PolyTypes.OurInt)
+    module Polynomial = Polynomials.Make(OurInt)
 
     let tests =
       "Parser" >::: [
@@ -49,9 +49,8 @@ module Parser =
   
 module Methods =
   struct
-    module P = Polynomials.Make(PolyTypes.OurInt)
-    module Valuation = Valuation.Make(PolyTypes.OurInt)
-    module OurInt = PolyTypes.OurInt
+    module P = Polynomials.Make(OurInt)
+    module Valuation = Valuation.Make(OurInt)
                
     let example_valuation = Valuation.from_native [("x", 3); ("y", 5); ("z", 7)]
                                             

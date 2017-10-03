@@ -43,8 +43,7 @@ module Methods =
     module Constraint = Constraints.PolynomialConstraint
     module Atom = Atoms.PolynomialAtom
     module ParameterAtom = Atoms.Make(ParameterPolynomial)
-    module Valuation = Valuation.Make(PolyTypes.OurInt)
-    module OurInt = PolyTypes.OurInt
+    module Valuation = Valuation.Make(OurInt)
                      
     (* TODO Redundant in LocalSizeBound.ml *)
     let to_string_varset (vars: VarSet.t): string =

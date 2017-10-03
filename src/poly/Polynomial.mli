@@ -1,6 +1,6 @@
 open Batteries
 
-include module type of Polynomials.Make(PolyTypes.OurInt)
+include module type of Polynomials.Make(OurInt)
              
 (** Separates the polynomial in two polynomials 
     where the first one contains all the monomials with positive sign 

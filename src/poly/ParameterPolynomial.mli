@@ -1,5 +1,5 @@
 open Batteries
 
-include module type of Polynomials.Make(Polynomials.Make(PolyTypes.OurInt))
+include module type of Polynomials.Make(Polynomials.Make(OurInt))
              
-val flatten : Polynomials.Make(Polynomials.Make(PolyTypes.OurInt)).t -> Polynomials.Make(PolyTypes.OurInt).t
+val flatten : Polynomials.Make(Polynomials.Make(OurInt)).t -> Polynomials.Make(OurInt).t

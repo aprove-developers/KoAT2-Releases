@@ -5,7 +5,7 @@ open Batteries
 (** A unified interface for SMT solvers (currently supported: Z3) *)
 module Z3Solver :
 sig
-    type valuation = Valuation.Make(PolyTypes.OurInt).t
+    type valuation = Valuation.Make(OurInt).t
     type formula = Formula.PolynomialFormula.t
 
     val satisfiable : formula -> bool

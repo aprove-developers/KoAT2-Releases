@@ -1,10 +1,9 @@
 open Batteries
 
-module Value = PolyTypes.OurInt
 module Formula = Formula.PolynomialFormula
 module Constraint = Constraints.PolynomialConstraint
 module Atom = Atoms.PolynomialAtom
-module Valuation = Valuation.Make(PolyTypes.OurInt)
+module Valuation = Valuation.Make(OurInt)
             
 module SMT_ = SMT.Z3Solver                      
 
@@ -111,7 +110,7 @@ let run_smt (params: smt_params) =
   let valuation_bindings = Valuation.bindings (solve constr) in
   if Enum.is_empty valuation_bindings then
     print_string "unsatisfiable"
-  else Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ Value.to_string value ^ "\n")) valuation_bindings
+  else Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n")) valuation_bindings
   
 let run_normalize (params: normalize_params) =
   let output = match params.kind with

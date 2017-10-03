@@ -1,12 +1,11 @@
 open Batteries
 
-module Polynomial = Polynomials.Make(PolyTypes.OurInt)
-module Value = PolyTypes.OurInt
-module Valuation_ = Valuation.Make(PolyTypes.OurInt)
-type valuation = Valuation.Make(PolyTypes.OurInt).t
+module Polynomial = Polynomials.Make(OurInt)
+module Valuation_ = Valuation.Make(OurInt)
+type valuation = Valuation.Make(OurInt).t
                   
 type polynomial = Polynomial.t
-type value = Value.t
+type value = OurInt.t
                 
 (* Minus Infinity is max of an empty list *)
 (* Infinity is min of an empty list *)
@@ -15,7 +14,7 @@ type t =
   | Max of t list
   | Min of t list
   | Neg of t
-  | Pow of Value.t * t
+  | Pow of OurInt.t * t
   | Sum of t list
   | Product of t list [@@deriving eq]
 
@@ -23,7 +22,7 @@ let of_poly p = Poly p
               
 let of_constant c = of_poly (Polynomial.from_constant c)
 
-let of_int i = of_constant (Value.of_int i)
+let of_int i = of_constant (OurInt.of_int i)
                   
 let of_var v = of_poly (Polynomial.from_var v)
 
@@ -41,8 +40,8 @@ let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf p =
   | Min bounds -> List.fold_left (fun b bound -> min b (fold_ bound)) inf bounds
   | Neg b -> neg (fold_ b)
   | Pow (value, n) -> exp value (fold_ n)
-  | Sum bounds -> List.fold_left (fun b bound -> plus b (fold_ bound)) (const Value.zero) bounds
-  | Product bounds -> List.fold_left (fun b bound -> times b (fold_ bound)) (const Value.one) bounds                    
+  | Sum bounds -> List.fold_left (fun b bound -> plus b (fold_ bound)) (const OurInt.zero) bounds
+  | Product bounds -> List.fold_left (fun b bound -> times b (fold_ bound)) (const OurInt.one) bounds                    
                     
 let rec simplify = function
   | Poly p -> Poly p
@@ -57,7 +56,7 @@ let rec simplify = function
   | Neg b -> Neg (simplify b)
 
   (* Simplify terms with sum head *)
-  | Sum [] -> of_constant Value.zero
+  | Sum [] -> of_constant OurInt.zero
   | Sum [b] -> simplify b
   | Sum (Sum bounds :: bs) -> simplify (Sum (List.append bounds bs))
   | Sum (Poly p :: bs) when Polynomial.(p =~= zero) -> simplify (Sum bs)
@@ -72,7 +71,7 @@ let rec simplify = function
   | Sum bounds -> Sum (List.map simplify bounds)
 
   (* Simplify terms with product head *)
-  | Product [] -> of_constant Value.one
+  | Product [] -> of_constant OurInt.one
   | Product [b] -> simplify b
   | Product (Product bounds :: bs) -> simplify (Product (List.append bounds bs))
   | Product (Poly p :: bs) when Polynomial.(p =~= one) -> simplify (Product bs)
@@ -80,10 +79,10 @@ let rec simplify = function
 
   (* Simplify terms with pow head *)
   | Pow (value, bound) ->
-     if value == Value.zero then of_constant Value.zero
-     else if value == Value.one then of_constant Value.one
-     else if bound == of_constant Value.zero then of_constant Value.one
-     else if bound == of_constant Value.one then simplify bound
+     if value == OurInt.zero then of_constant OurInt.zero
+     else if value == OurInt.one then of_constant OurInt.one
+     else if bound == of_constant OurInt.zero then of_constant OurInt.one
+     else if bound == of_constant OurInt.one then simplify bound
      else Pow (value, simplify bound)
 
   (* Simplify terms with min head *)
@@ -179,7 +178,7 @@ let rec to_string = function
   | Max bounds -> "max {" ^ String.concat ", " (List.map to_string bounds) ^ "}"
   | Min bounds -> "min {" ^ String.concat ", " (List.map to_string bounds) ^ "}"
   | Neg b -> "neg " ^ to_string b
-  | Pow (v,b) -> "(" ^ Value.to_string v ^ "**" ^ to_string b ^ ")"
+  | Pow (v,b) -> "(" ^ OurInt.to_string v ^ "**" ^ to_string b ^ ")"
   | Sum bounds -> "sum {" ^ String.concat ", " (List.map to_string bounds) ^ "}"
   | Product bounds -> "product {" ^ String.concat ", " (List.map to_string bounds) ^ ")}"
 

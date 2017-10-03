@@ -1,7 +1,7 @@
 open Batteries
 
-module Outer = Polynomials.Make(Polynomials.Make(PolyTypes.OurInt))
-module Inner = Polynomials.Make(PolyTypes.OurInt)
+module Outer = Polynomials.Make(Polynomials.Make(OurInt))
+module Inner = Polynomials.Make(OurInt)
 
 include Outer
 

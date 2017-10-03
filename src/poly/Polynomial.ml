@@ -1,7 +1,7 @@
 open Batteries
 
-include Polynomials.Make(PolyTypes.OurInt)
+include Polynomials.Make(OurInt)
 
 let separate_by_sign poly =
-  partition (fun scaled -> PolyTypes.OurInt.Compare.(ScaledMonomial_.coeff scaled >= PolyTypes.OurInt.zero)) poly
+  partition (fun scaled -> OurInt.Compare.(ScaledMonomial_.coeff scaled >= OurInt.zero)) poly
 

@@ -33,13 +33,6 @@ module type Ring =
                           (* val eval : t -> (Var.t -> value) -> value *)
   end
 
-module OurInt =
-  struct
-    include Number.MakeNumeric(Big_int)
-    let (=~=) = equal
-    let pow i (n: int) = pow i (of_int n)
-  end
-  
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
     They can be typeclass-like extended by MakePartialOrder. *)
 module type BasePartialOrder =
