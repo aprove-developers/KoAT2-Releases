@@ -1,11 +1,9 @@
 open Batteries
 
-module Value_ = PolyTypes.OurInt
-module Program_ = Program
+module Value = PolyTypes.OurInt
 module Formula = Formula.PolynomialFormula
 module Constraint = Constraints.PolynomialConstraint
 module Atom = Atoms.PolynomialAtom
-module Approximation_ = Approximation
                       
 module SMT_ = SMT.Z3Solver                      
 
@@ -69,24 +67,24 @@ type normalize_params = {
     
   } [@@deriving cmdliner, show]
                 
-let preprocessors: (Program_.t -> Program_.t) list = []
+let preprocessors: (Program.t -> Program.t) list = []
                                                    
 (* We apply each preprocessor exactly one time *)
-let preprocess (graph: Program_.t): Program_.t =
+let preprocess (graph: Program.t): Program.t =
   List.fold_left (fun graph preprocessor -> preprocessor graph) graph preprocessors
 
-let find_bounds (graph: Program_.t): Approximation_.t =
+let find_bounds (graph: Program.t): Approximation.t =
   raise (Failure "Not yet implemented")
 
-let print_results (appr: Approximation_.t): unit =
+let print_results (appr: Approximation.t): unit =
   raise (Failure "Not yet implemented")  
 
 let run (params: main_params) =
   let program = Reader_.read_file params.input in
   if params.print_system then
-    Program_.print_system ~outdir:params.output_dir ~file:"tmp" program;
+    Program.print_system ~outdir:params.output_dir ~file:"tmp" program;
   if params.print_rvg then
-    Program_.print_rvg ~outdir:params.output_dir ~file:"tmp" program;
+    Program.print_rvg ~outdir:params.output_dir ~file:"tmp" program;
   if not params.no_boundsearch then
        program
     |> preprocess
@@ -114,7 +112,7 @@ let run_smt (params: smt_params) =
   let valuation_bindings = Polynomial.Valuation_.bindings (solve constr) in
   if Enum.is_empty valuation_bindings then
     print_string "unsatisfiable"
-  else Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ Polynomial.Value.to_string value ^ "\n")) valuation_bindings
+  else Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ Value.to_string value ^ "\n")) valuation_bindings
   
 let run_normalize (params: normalize_params) =
   let output = match params.kind with
