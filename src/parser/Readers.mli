@@ -1,5 +1,9 @@
 open Batteries
-
+open Formulas
+open Constraints
+open Atoms
+open Polynomials
+   
 (** Provides a unified interface of the parser and lexer for transition graphs.
     With this module it is possible to abstract from the details of parsing and lexing *)
 
@@ -15,11 +19,11 @@ open Batteries
 
     val read_transitiongraph : string -> Program.t
 
-    val read_formula : string -> Formula.PolynomialFormula.t
+    val read_formula : string -> Formula.t
 
-    val read_constraint : string -> Constraints.PolynomialConstraint.t
+    val read_constraint : string -> Constraint.t
       
-    val read_atom : string -> Atoms.PolynomialAtom.t
+    val read_atom : string -> Atom.t
 
     val read_polynomial : string -> Polynomial.t
 

@@ -1,6 +1,6 @@
 open Batteries
-
-type formula = Formula.PolynomialFormula.t
+   
+type formula = Formulas.Formula.t
              
 (** A templated bound is a bound of a certain templated form.
     The different templates are not disjunctive.

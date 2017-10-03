@@ -18,25 +18,25 @@
 			
 %start <Program.t> onlyTransitiongraph
 
-%start <Formula.PolynomialFormula.t> onlyFormula
+%start <Formulas.Formula.t> onlyFormula
 
-%start <Constraints.PolynomialConstraint.t> onlyConstraints
+%start <Constraints.Constraint.t> onlyConstraints
 
-%start <Atoms.PolynomialAtom.t> onlyAtom
+%start <Atoms.Atom.t> onlyAtom
 
-%start <Polynomial.t> onlyPolynomial
+%start <Polynomials.Polynomial.t> onlyPolynomial
 
 %start <Bound.t> onlyBound
 
 %type <Program.t> transitiongraph
 
-%type <Formula.PolynomialFormula.t> formula
+%type <Formulas.Formula.t> formula
 
-%type <Constraints.PolynomialConstraint.t> constraints
+%type <Constraints.Constraint.t> constraints
 
-%type <Constraints.PolynomialConstraint.t> atom
+%type <Constraints.Constraint.t> atom
 
-%type <Polynomial.t> polynomial
+%type <Polynomials.Polynomial.t> polynomial
 
 %type <Var.t list> variables
 
@@ -46,10 +46,10 @@
 
 %{
   open BatTuple
-  module Constr = Constraints.PolynomialConstraint
-  module Atom = Atoms.PolynomialAtom
-  module Poly = Polynomial
-  module Formula_ = Formula.PolynomialFormula
+  module Constr = Constraints.Constraint
+  open Atoms
+  module Poly = Polynomials.Polynomial
+  open Formulas
 %}
 
 %%
@@ -110,7 +110,7 @@ onlyFormula :
 
 formula :
         |       disj = separated_nonempty_list(OR, constraints)
-                  { Formula_.disj disj } ;
+                  { Formula.disj disj } ;
 
 onlyConstraints :
         |       constr = constraints EOF { constr } ;

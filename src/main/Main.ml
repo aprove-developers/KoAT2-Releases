@@ -1,8 +1,8 @@
 open Batteries
-
-module Formula = Formula.PolynomialFormula
-module Constraint = Constraints.PolynomialConstraint
-module Atom = Atoms.PolynomialAtom
+open Formulas
+open Constraints
+open Atoms
+open Polynomials
 module Valuation = Valuation.Make(OurInt)
             
 module SMT_ = SMT.Z3Solver                      

@@ -1,6 +1,7 @@
 open Batteries
+open Constraints
    
-module Make(C : ConstraintTypes.Constraint) =
+module FormulaOver(C : ConstraintTypes.Constraint) =
   struct
 
     module C = C
@@ -96,7 +97,12 @@ module Make(C : ConstraintTypes.Constraint) =
         
   end
 
-module PolynomialFormula =
+module Formula =
   struct
-    include Make(Constraints.PolynomialConstraint)
+    include FormulaOver(Constraint)
+  end
+
+module ParameterFormula =
+  struct
+    include FormulaOver(ParameterConstraint)
   end

@@ -1,5 +1,6 @@
 open Batteries
-
+open Polynomials
+   
 (** A MinMaxPolynomial is a polynomial which allows the usage of min and max functions  *)
 
 type t
@@ -8,7 +9,7 @@ include PolyTypes.Evaluable with type t := t with type value = OurInt.t
 include PolyTypes.Math with type t := t
 include PolyTypes.PartialOrder with type t := t
 
-type polynomial = Polynomials.Make(OurInt).t
+type polynomial = PolynomialOver(OurInt).t
 
 (** Following methods are convenience methods for the creation of polynomials. *)
 

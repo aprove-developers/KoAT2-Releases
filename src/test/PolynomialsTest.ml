@@ -1,13 +1,10 @@
 open Batteries
 open OUnit2
-open PolyTypes
-open ConstraintTypes
 open Helper
+open Polynomials
    
 module Parser =
   struct
-    module Polynomial = Polynomials.Make(OurInt)
-
     let tests =
       "Parser" >::: [
           "Positive Tests" >::: (
@@ -49,7 +46,6 @@ module Parser =
   
 module Methods =
   struct
-    module P = Polynomials.Make(OurInt)
     module Valuation = Valuation.Make(OurInt)
                
     let example_valuation = Valuation.from_native [("x", 3); ("y", 5); ("z", 7)]
@@ -57,14 +53,8 @@ module Methods =
     let evaluate str =
          str
       |> Readers.read_polynomial
-      |> fun poly -> P.eval poly example_valuation
+      |> fun poly -> Polynomial.eval poly example_valuation
 
-    let assert_equal_value =
-      assert_equal ~cmp:OurInt.(=~=) ~printer:OurInt.to_string
-
-    let assert_equal_polynomial =
-      assert_equal ~cmp:P.(=~=) ~printer:P.to_string
-      
     let of_int = OurInt.of_int
 
     let of_string = Var.of_string
@@ -105,36 +95,37 @@ module Methods =
 
           "Instantiate" >::: (
             List.map (fun (testname, expected, poly) ->
-                testname >:: (fun _ -> assert_equal ~cmp:P.(=~=) ~printer:P.to_string (expected) (P.instantiate P.from_constant poly)))
+                testname >:: (fun _ -> assert_equal_poly expected (Polynomial.instantiate Polynomial.from_constant poly)))
                      [
-                       ("Constant", P.value 42, P.value 42);
+                       ("Constant", Polynomial.value 42, Polynomial.value 42);
                      ];
           );
           
           "Instantiate TemplatePolynomial" >::: (
-            let module T = ParameterPolynomial in
             List.map (fun (testname, expected, poly) ->
-                testname >:: (fun _ -> assert_equal ~cmp:T.(=~=) ~printer:T.to_string (expected) (T.instantiate (fun v -> T.from_constant (P.from_constant (P.eval_f v (fun _ -> OurInt.of_int 2)))) poly)))
+                testname >:: (fun _ -> assert_equal_parameter_poly
+                                         expected
+                                         (ParameterPolynomial.instantiate (fun v -> ParameterPolynomial.from_constant (Polynomial.from_constant (Polynomial.eval_f v (fun _ -> OurInt.of_int 2)))) poly)))
                      [
-                       ("a*x", T.((value 2) * (var "x")), T.((from_constant (P.var "a")) * (var "x")) );
+                       ("a*x", ParameterPolynomial.((value 2) * (var "x")), ParameterPolynomial.((from_constant (Polynomial.var "a")) * (var "x")) );
                      ];
           );
 
           "Flatten TemplatePolynomial" >::: (
             let module T = ParameterPolynomial in
             List.map (fun (testname, expected, poly) ->
-                testname >:: (fun _ -> assert_equal ~cmp:P.(=~=) ~printer:P.to_string (expected) (T.flatten poly)))
+                testname >:: (fun _ -> assert_equal_poly (expected) (T.flatten poly)))
                      [
-                       ("1st", P.((value 2) * (var "a") * (var "x") + (var "b") * (var "x") + (value 3) * (var "a") * (var "y") - (value 1)),
-                        T.((from_constant P.((value 2) * (var "a") + (var "b"))) * (var "x") +
-                             (from_constant P.((value 3) * (var "a"))) * (var "y") -
+                       ("1st", Polynomial.((value 2) * (var "a") * (var "x") + (var "b") * (var "x") + (value 3) * (var "a") * (var "y") - (value 1)),
+                        T.((from_constant Polynomial.((value 2) * (var "a") + (var "b"))) * (var "x") +
+                             (from_constant Polynomial.((value 3) * (var "a"))) * (var "y") -
                              (value 1)));
                      ];
           );
           
           "from_coeff_list" >::: (
             List.map (fun (expected, coeffs, vars) ->
-                expected >:: (fun _ -> assert_equal~cmp:P.(=~=) ~printer:P.to_string (P.from_coeff_list coeffs vars) (Readers.read_polynomial expected)))
+                expected >:: (fun _ -> assert_equal_poly (Polynomial.from_coeff_list coeffs vars) (Readers.read_polynomial expected)))
                      [
                        ("2 * x + 3 * y - 4 * z", [(of_int 2); (of_int 3); (of_int (-4))],[(of_string "x"); (of_string "y"); (of_string "z")]);
                        ("0", [(of_int 2); (of_int 3)],[(of_string "x"); (of_string "y"); (of_string "z")]);
@@ -144,11 +135,11 @@ module Methods =
           );
 
             "Math" >::: ([
-                "zero" >:: (fun _ -> assert_equal_value (OurInt.of_int 0) (P.eval P.zero example_valuation));
-                "one" >:: (fun _ -> assert_equal_value (OurInt.of_int 1) (P.eval P.one example_valuation));
+                "zero" >:: (fun _ -> assert_equal_value (OurInt.of_int 0) (Polynomial.eval Polynomial.zero example_valuation));
+                "one" >:: (fun _ -> assert_equal_value (OurInt.of_int 1) (Polynomial.eval Polynomial.one example_valuation));
                 "constant" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal_value (OurInt.of_int expected) (P.constant (Readers.read_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_value (OurInt.of_int expected) (Polynomial.constant (Readers.read_polynomial expression))))
                            [
                              (5, " 5 ");
                              (0, " x ");
@@ -161,7 +152,7 @@ module Methods =
                 );
                 "is_var" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal_bool expected (P.is_var (Readers.read_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_bool expected (Polynomial.is_var (Readers.read_polynomial expression))))
                            [
                              (false, " 1 ");
                              (true, " x ");
@@ -179,7 +170,7 @@ module Methods =
                 
                 "is_univariate_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal_bool expected (P.is_univariate_linear (Readers.read_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal_bool expected (Polynomial.is_univariate_linear (Readers.read_polynomial expression))))
                             [
                                 (true, " 1 ");
                                 (true, " x ");
@@ -197,7 +188,7 @@ module Methods =
                     
                 "is_linear" >::: (
                     List.map (fun (expected, expression) ->
-                        expression >:: (fun _ -> assert_equal_bool expected (P.is_linear (Readers.read_polynomial expression))))
+                        expression >:: (fun _ -> assert_equal_bool expected (Polynomial.is_linear (Readers.read_polynomial expression))))
                             [
                                 (true, " 1 ");
                                 (true, " x ");
@@ -242,9 +233,9 @@ module Methods =
                  *)
                 "substitute" >::: (
                     List.map (fun (expected, substitution, polynomial) ->
-                        polynomial >:: (fun _ -> assert_equal_polynomial
+                        polynomial >:: (fun _ -> assert_equal_poly
                                                               (Readers.read_polynomial expected)
-                                                              (P.substitute (Var.of_string "x")
+                                                              (Polynomial.substitute (Var.of_string "x")
                                                                             ~replacement:(Readers.read_polynomial substitution)
                                                                             (Readers.read_polynomial polynomial))))
                              [

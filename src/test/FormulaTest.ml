@@ -1,8 +1,7 @@
 open Batteries
 open OUnit2
 open Helper
-   
-module Formula = Formula.PolynomialFormula
+open Formulas   
                   
 let tests =      
   "Formula" >:::[

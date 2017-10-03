@@ -1,6 +1,6 @@
 open Batteries
-
-module Polynomial = Polynomials.Make(OurInt)
+open Polynomials
+   
 module Valuation_ = Valuation.Make(OurInt)
 type valuation = Valuation.Make(OurInt).t
                   

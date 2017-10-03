@@ -2,9 +2,8 @@ open Batteries
 open OUnit2
 open Helper
 open LocalSizeBound
-
-module Formula = Formula.PolynomialFormula
-              
+open Formulas
+   
 let tests = 
   "LocalSizeBound" >::: [
                         

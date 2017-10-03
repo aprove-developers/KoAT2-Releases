@@ -1,8 +1,9 @@
 open Batteries
-
+open Formulas
+open Polynomials
+   
 let logger = Logger.make_log "lsb"
            
-module Formula = Formula.PolynomialFormula
 type formula = Formula.t
 
 type template =

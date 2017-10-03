@@ -6,7 +6,7 @@ open Batteries
 module Z3Solver :
 sig
     type valuation = Valuation.Make(OurInt).t
-    type formula = Formula.PolynomialFormula.t
+    type formula = Formulas.Formula.t
 
     val satisfiable : formula -> bool
 

@@ -1,6 +1,7 @@
 open Batteries
+open Atoms
    
-module Make(A : ConstraintTypes.Atom) =
+module ConstraintOver(A : ConstraintTypes.Atom) =
   struct
     
     module A = A
@@ -107,8 +108,12 @@ module Make(A : ConstraintTypes.Atom) =
                                 
   end
 
-module PolynomialConstraint =
+module Constraint =
   struct
-    include Make(Atoms.PolynomialAtom)
+    include ConstraintOver(Atom)
+  end
 
+module ParameterConstraint =
+  struct
+    include ConstraintOver(ParameterAtom)
   end

@@ -1,16 +1,12 @@
 open Batteries
 open OUnit2
-open PolyTypes
-open ConstraintTypes
 open Helper
-
+open Constraints
+open Atoms
+open Polynomials
+   
 module Parser =
   struct
-    module Constraint = Constraints.PolynomialConstraint
-
-    let assert_equal_constr =     
-        assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string
-
     let tests =
       "Parser" >::: [
           "All together" >::: (
@@ -40,9 +36,6 @@ module Parser =
   
 module Methods =
   struct
-    module Constraint = Constraints.PolynomialConstraint
-    module Atom = Atoms.PolynomialAtom
-    module ParameterAtom = Atoms.Make(ParameterPolynomial)
     module Valuation = Valuation.Make(OurInt)
                      
     (* TODO Redundant in LocalSizeBound.ml *)

@@ -4,7 +4,8 @@ open Batteries
     It connects two locations and is annotated with a guard and an update
     A guard has to be fulfiled for a state to reach another state via the transition
     An update assigns variables a new value as a linear combination of the old values *)
-module Guard = Constraints.PolynomialConstraint
+module Guard = Constraints.Constraint
+type polynomial = Polynomials.Polynomial.t
 module Map : module type of Map.Make(Var)
                           
 type kind = Lower | Upper  [@@deriving eq, ord]
@@ -13,11 +14,11 @@ type t
 
 exception RecursionNotSupported
 
-val make : name:string -> start:string -> target:string -> update:Polynomial.t Map.t -> guard:Guard.t -> t
+val make : name:string -> start:string -> target:string -> update:polynomial Map.t -> guard:Guard.t -> t
 
 val mk : name:string ->
          start:string ->
-         targets:(string * (Polynomial.t list)) list ->
+         targets:(string * (polynomial list)) list ->
          patterns:Var.t list ->
          guard:Guard.t ->
          vars:Var.t list ->
@@ -31,7 +32,7 @@ val start : t -> string
 
 val target : t -> string
 
-val update : t -> Var.t -> Polynomial.t Option.t
+val update : t -> Var.t -> polynomial Option.t
 
 val guard : t -> Guard.t
 

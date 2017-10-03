@@ -1,6 +1,7 @@
 open Batteries
-
-module Make(P : PolyTypes.Polynomial) =
+open Polynomials
+   
+module AtomOver(P : PolyTypes.Polynomial) =
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
 struct
     module P = P
@@ -98,13 +99,17 @@ struct
       
 end
 
-module PolynomialAtom =
+module Atom =
   struct
-
-    include Make(Polynomial)
+    include AtomOver(Polynomial)
         
     let to_string atom =
       Polynomial.separate_by_sign atom
       |> (fun (positive, negative) -> Polynomial.to_string positive ^ " <= " ^ Polynomial.to_string (Polynomial.neg negative))
       
+  end
+
+module ParameterAtom =
+  struct
+    include AtomOver(ParameterPolynomial)
   end

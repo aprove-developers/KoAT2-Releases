@@ -1,7 +1,7 @@
 open Batteries
 open PolyTypes
    
-module Make(Value : PolyTypes.Ring) =
+module PolynomialOver(Value : PolyTypes.Ring) =
   struct
     module Monomial_ = Monomials.Make(Value)
     module ScaledMonomial_ = ScaledMonomials.Make(Value)
@@ -9,6 +9,7 @@ module Make(Value : PolyTypes.Ring) =
     type valuation = Valuation.Make(Value).t
                       
     type monomial = Monomial_.t
+    type scaled_monomial = ScaledMonomial_.t
     type t = ScaledMonomial_.t list
     type value = Value.t
 
@@ -248,4 +249,25 @@ module Make(Value : PolyTypes.Ring) =
     let partition =
       List.partition
       
+  end
+
+module ParameterPolynomial =
+  struct
+    module Outer = PolynomialOver(PolynomialOver(OurInt))
+    module Inner = PolynomialOver(OurInt)
+                 
+    include Outer
+          
+    (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
+    (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
+    let flatten (templatepoly : Outer.t): Inner.t =
+      Outer.fold ~const:identity ~var:Inner.from_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
+  end
+
+module Polynomial =
+  struct
+    include PolynomialOver(OurInt)
+
+    let separate_by_sign poly =
+      partition (fun scaled -> OurInt.Compare.(ScaledMonomial_.coeff scaled >= OurInt.zero)) poly
   end

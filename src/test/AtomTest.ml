@@ -1,13 +1,11 @@
 open Batteries
 open OUnit2
-open PolyTypes
-open ConstraintTypes
+open Atoms
+open Polynomials
 open Helper
 
 module Parser =
   struct
-    module Atom = Atoms.PolynomialAtom
-                  
     let assert_equal_atom =
       assert_equal ~cmp:Atom.(=~=) ~printer:Atom.to_string
 
@@ -45,8 +43,6 @@ module Parser =
 
 module Methods =
   struct
-    module Atom = Atoms.PolynomialAtom
-                
     (* TODO Redundant in LocalSizeBound.ml *)
     let to_string_varset (vars: VarSet.t): string =
       let output = IO.output_string () in

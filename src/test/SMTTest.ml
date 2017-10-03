@@ -1,14 +1,11 @@
 open Batteries
 open OUnit2
 open Helper
+open Formulas
+open Constraints
    
 module Z3Solver = SMT.Z3Solver
-module Formula = Formula.PolynomialFormula
-module Constraint = Constraints.PolynomialConstraint
-
                
-let print_str (str : string) = str
-
 let print_fl = Float.to_string
 
 let suite =

@@ -226,13 +226,13 @@ module type Polynomial =
 
     module Monomial_ : Monomial
     type monomial = Monomial_.t
-    module ScaledMonomial_ : (ScaledMonomial with type value = value)
-    
+    type scaled_monomial
+                  
     (** Following methods are convenience methods for the creation of polynomials. *)
 
     val make : (value * monomial) list -> t
     val lift : value -> monomial -> t
-    val from_scaled : ScaledMonomial_.t list -> t
+    val from_scaled : scaled_monomial list -> t
     val from_var : Var.t -> t
     val from_constant : value -> t
     val var : string -> t
@@ -329,7 +329,7 @@ module type Polynomial =
                pow:('b -> int -> 'b) ->
                t -> 'b 
 
-    val partition : (ScaledMonomial_.t -> bool) -> t -> (t * t)
+    val partition : (scaled_monomial -> bool) -> t -> (t * t)
       
   end
 

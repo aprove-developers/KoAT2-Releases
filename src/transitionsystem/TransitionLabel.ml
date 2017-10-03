@@ -1,6 +1,8 @@
 open Batteries
-
-module Guard = Constraints.PolynomialConstraint
+open Polynomials
+   
+module Guard = Constraints.Constraint
+type polynomial = Polynomial.t
 module Map = Map.Make(Var)
            
 exception RecursionNotSupported
@@ -11,7 +13,7 @@ type t = {
     name : string;
     start : string;
     target : string;
-    update : Polynomial.t Map.t;
+    update : polynomial Map.t;
     guard : Guard.t;
     (* TODO Transitions should have costs *)
   }
