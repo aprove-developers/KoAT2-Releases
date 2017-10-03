@@ -5,9 +5,6 @@ let logger = Logger.make_log "lsb"
 module Formula = Formula.PolynomialFormula
 type formula = Formula.t
 
-module VarSet = Set.Make(Var)
-type varset = Set.Make(Var).t
-            
 type template =
   | VarEquality
   | Equality of int
@@ -15,7 +12,7 @@ type template =
   | ScaledSum of int * int
   | Unbound [@@deriving eq, show]
   
-type t = template * varset
+type t = template * VarSet.t
 
 let mk template vars =
   (template, VarSet.of_list (List.map Var.of_string vars))
@@ -40,7 +37,7 @@ let as_bound (template, vars) =
 
 (* There is no to_string for sets in batteries,
    but there is a very efficient print function which is however a bit inconvenient to use. *)
-let to_string_varset (vars: varset): string =
+let to_string_varset (vars: VarSet.t): string =
   let output = IO.output_string () in
   VarSet.print (fun output var -> IO.nwrite output (Var.to_string var)) output vars;
   IO.close_out output
@@ -102,7 +99,7 @@ let binary_search (lowest: int) (highest: int) (p: int -> bool) =
 (** Minimizes the given variable set, such that the predicate p is still satisfied.
     We assume that the given variable set satisfies the predicate p.
     TODO Currently we use an arbitrary order. This is sound, however for "x <= y && y <= z" we may return z although y would be definitely better. *)
-let minimize_vars (vars: varset) (p: varset -> bool): varset =
+let minimize_vars (vars: VarSet.t) (p: VarSet.t -> bool): VarSet.t =
   let minimize_vars_ vars p =
     (** Removes the candidate from the set, if the candidate is not necessary. *)
     let minimize_with_candidate var current_minimized_set =

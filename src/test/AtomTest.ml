@@ -46,7 +46,6 @@ module Parser =
 module Methods (*(P : PolyTypes.Polynomial)*) =
   struct
     module Atom = Atoms.PolynomialAtom
-    module VarSet = Set.Make(Var)
                 
     (* TODO Redundant in LocalSizeBound.ml *)
     let to_string_varset (vars: VarSet.t): string =

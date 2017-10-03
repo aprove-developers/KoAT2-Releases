@@ -36,7 +36,7 @@ open Batteries
                         
     (** Invokes farkas quantifier elimination. Uses apply_farkas*)
     let farkas_transform constr param_atom =
-        let vars = ConstraintTypes.VarSet.union (Constraints_.vars constr) (ParameterAtoms_.vars param_atom) in
+        let vars = VarSet.union (Constraints_.vars constr) (ParameterAtoms_.vars param_atom) in
         let costfunction = ParameterConstraints_.lift param_atom in
             let a_matrix = Constraints_.get_matrix vars constr in
             let b_right = Constraints_.get_constant_vector constr in
@@ -60,7 +60,7 @@ open Batteries
             done;;
                         
     let generate_ranking_template program =
-        let vars = Program.VarSet.elements (Program_.vars program) in
+        let vars = VarSet.elements (Program_.vars program) in
             let graph = Program_.graph program in
                 let fresh_table = Hashtbl.create (Program_.TransitionGraph.nb_vertex graph) in
                     let loc_prf = [] in
@@ -102,15 +102,15 @@ open Batteries
                             
     let get_non_increase_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t) (program : Program_.t) =
         let graph = Program_.graph program in
-            let vars = Program_.VarSet.elements (Program_.vars program) in
+            let vars = VarSet.elements (Program_.vars program) in
                 Program_.TransitionGraph.fold_edges_e (fun trans -> Constraints_.mk_and (help_non_increasing table trans vars) ) graph Constraints_.mk_true
                 
     let get_strict_decrease_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t) (program : Program_.t) (str_decr :Program_.Transition.t list) =
-        let vars = Program_.VarSet.elements (Program_.vars program) in
+        let vars = VarSet.elements (Program_.vars program) in
             List.fold_left (fun constr -> (fun trans -> Constraints_.mk_and (help_strict_decrease table trans vars) constr) ) Constraints_.mk_true str_decr
             
     let get_boundedness_constraints (table : (Program_.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t) (program : Program_.t) (bnds :Program_.Transition.t list) =
-        let vars = Program_.VarSet.elements (Program_.vars program) in
+        let vars = VarSet.elements (Program_.vars program) in
             List.fold_left (fun constr -> (fun trans -> Constraints_.mk_and (help_boundedness table trans vars) constr)) Constraints_.mk_true bnds
             
     let ranking_function_procedure (program : Program_.t) =

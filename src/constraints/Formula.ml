@@ -4,7 +4,6 @@ module Make(C : ConstraintTypes.Constraint) =
   struct
 
     module C = C
-    module VarSet = Set.Make(Var)
     
     type value = C.value
     type polynomial = C.polynomial

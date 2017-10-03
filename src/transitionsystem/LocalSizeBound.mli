@@ -1,7 +1,6 @@
 open Batteries
 
 type formula = Formula.PolynomialFormula.t
-type varset = Set.Make(Var).t
              
 (** A templated bound is a bound of a certain templated form.
     The different templates are not disjunctive.
@@ -24,7 +23,7 @@ type template =
 
 (** A template with a set of variables makes up a templated bound.
     It can be transformed to a real bound, but the way back is not possible. *)
-type t = template * varset
+type t = template * VarSet.t
 
 (** Creates a templated bound from the template and a string list which represents the variable set. *)
 val mk : template -> string list -> t
@@ -51,10 +50,10 @@ val as_formula : Var.t -> t -> formula
 val is_bounded_with : Var.t -> formula -> t -> bool
 
 (** Tries to find an equality bound with any constant c and a subset of the given variable set. *)
-val find_equality_bound : varset -> Var.t -> formula -> t Option.t
+val find_equality_bound : VarSet.t -> Var.t -> formula -> t Option.t
 
 (** Tries to find an addsconstant bound with any constant d and a subset of the given variable set. *)
-val find_addsconstant_bound : varset -> Var.t -> formula -> t Option.t
+val find_addsconstant_bound : VarSet.t -> Var.t -> formula -> t Option.t
   
 (** Tries to find a templated bound of any of the defined templates. *)
 val find_bound : Var.t -> formula -> t

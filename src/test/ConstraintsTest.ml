@@ -44,8 +44,6 @@ module Methods (*(P : PolyTypes.Polynomial)*) =
     module Atom = Atoms.PolynomialAtom
     module ParameterAtom = Atoms.Make(ParameterPolynomial)
                      
-    module VarSet = Set.Make(Var)
-                
     (* TODO Redundant in LocalSizeBound.ml *)
     let to_string_varset (vars: VarSet.t): string =
       let output = IO.output_string () in

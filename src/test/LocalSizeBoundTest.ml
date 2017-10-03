@@ -3,7 +3,6 @@ open OUnit2
 open Helper
 open LocalSizeBound
 
-module VarSet = Set.Make(Var)
 module Formula = Formula.PolynomialFormula
               
 let tests = 

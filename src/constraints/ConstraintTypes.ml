@@ -3,8 +3,6 @@ open PolyTypes
 
 (** Provides all module types related to constraints *)
 
-module VarSet = Set.Make(Var)
-   
 (** An atom is a comparison between two polynomials *)
 module type Atom =
   sig

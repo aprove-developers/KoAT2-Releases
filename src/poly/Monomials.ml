@@ -4,7 +4,6 @@ module Make(Value : PolyTypes.Ring) =
   struct
     module Valuation_ = Valuation.Make(Value)
     module Map = Map.Make(Var)
-    module VarSet = Set.Make(Var)
 
     type t = int Map.t
            

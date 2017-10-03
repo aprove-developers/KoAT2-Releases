@@ -3,7 +3,6 @@ open Batteries
 module Polynomial = Polynomials.Make(PolyTypes.OurInt)
 module Value = Polynomial.Value
 module Valuation_ = Polynomial.Valuation_
-module VarSet = Set.Make(Var)
                   
 type polynomial = Polynomial.t
                 

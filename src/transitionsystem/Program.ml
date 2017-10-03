@@ -38,10 +38,8 @@ module RVG = Graph.Persistent.Digraph.ConcreteBidirectional(RV)
    
 module TransitionSet = Set.Make(Transition)
 module CartesianSet = Set.Make2(Transition)(Var)
-module VarSet = Set.Make(Var)
 
 type transition_set = Set.Make(Transition).t
-type var_set = Set.Make(Var).t
 
 type t = {
     graph: TransitionGraph.t;

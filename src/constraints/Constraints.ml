@@ -4,7 +4,6 @@ module Make(A : ConstraintTypes.Atom) =
   struct
     
     module A = A
-    module VarSet = Set.Make(Var)
     
     type value = A.value
     type polynomial = A.polynomial

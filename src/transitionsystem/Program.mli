@@ -15,8 +15,6 @@ module TransitionGraph : module type of Graph.Persistent.Digraph.ConcreteBidirec
                                       
 module Transition : module type of TransitionGraph.E
 
-module VarSet : module type of Set.Make(Var)
-
 module RV :
 sig
   type t = Transition.t * Var.t [@@deriving eq]
@@ -29,7 +27,6 @@ end
 module RVG : module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
 type transition_set = Set.Make(Transition).t
-type var_set = Set.Make(Var).t
 
 type t
 
@@ -65,5 +62,5 @@ val is_initial : t -> Transition.t -> bool
 
 val to_string : t -> string
   
-val vars : t -> var_set
+val vars : t -> VarSet.t
   
