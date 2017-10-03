@@ -13,7 +13,6 @@ module Make(Value : PolyTypes.Ring) =
       }    
     type monomial = Monomial.t
 
-    module Var = Var
     module Value = Value
                
     let make coefficient monomial = { coeff = coefficient; mon = monomial }
