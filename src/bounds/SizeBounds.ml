@@ -1,7 +1,5 @@
 open Batteries
 
-module RVG = Program.RVG
-
 module TransitionSet = Set.Make(Program.Transition)
              
 (* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
@@ -31,23 +29,23 @@ let improve_trivial_scc (program: Program.t)
 (* Improves a nontrivial scc. That is an scc which consists of more than one result variable.
        Corresponds to 'SizeBounds for nontrivial SCCs'. *)
 let improve_nontrivial_scc (program: Program.t)
-                           (rvg: RVG.t)
+                           (rvg: Program.RVG.t)
                            (appr: Approximation.t)
-                           (scc: RVG.V.t list)
+                           (scc: Program.RV.t list)
     : Approximation.t =
   raise (Failure "Not yet implemented")
 
 (* Improves a whole scc. *)
 let improve_scc (program: Program.t)
-                (rvg: RVG.t)
+                (rvg: Program.RVG.t)
                 (appr: Approximation.t)
-                (scc: RVG.V.t list)
+                (scc: Program.RV.t list)
     : Approximation.t  =
   match scc with
   | [rv] -> improve_trivial_scc program appr rv
   | scc -> improve_nontrivial_scc program rvg appr scc
          
 let improve program appr =
-  let module C = Graph.Components.Make(RVG) in
+  let module C = Graph.Components.Make(Program.RVG) in
   let rvg = Program.rvg program in
   List.fold_left (fun appr scc -> improve_scc program rvg appr scc) appr (C.scc_list rvg)

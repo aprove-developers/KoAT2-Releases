@@ -1,12 +1,10 @@
 open Batteries
 
-module Transition = Program.Transition
-           
 type kind = Lower | Upper
 
 type t = {
-    time: ((kind * Transition.t), Bound.t) Hashtbl.t;
-    size: ((kind * Transition.t * Var.t), Bound.t) Hashtbl.t;
+    time: ((kind * Program.Transition.t), Bound.t) Hashtbl.t;
+    size: ((kind * Program.Transition.t * Var.t), Bound.t) Hashtbl.t;
   }
 
 
@@ -47,6 +45,3 @@ let sizebound kind appr transition var =
 let add_sizebound kind bound transition var appr =
   Hashtbl.modify (kind, transition, var) (combine_bounds kind bound) appr.size;
   appr      
-
-    (*  end*)
-  
