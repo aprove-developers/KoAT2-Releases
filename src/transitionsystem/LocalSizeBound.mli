@@ -1,6 +1,20 @@
 open Batteries
    
 type formula = Formulas.Formula.t
+
+(* Concept:
+   Incoming part:
+   For UPPER bounds the MAXIMUM of all incoming variables leading to the SCC or a constant bound anywhere in the SCC.
+   For LOWER bounds the MINIMUM of all incoming variables leading to the SCC or a constant bound anywhere in the SCC.
+   Constant adds:
+   For UPPER bounds the sum over all transitions of the SCC, where we differ two cases:
+   If there exists a POSITIVE added constant for any of its result variables, then we multiply the HIGHEST constant with the upper runtime bound of the transition.
+   If all added constants are negative for all of its result variables, then we multiply the HIGHEST constant (next toward zero) with the lower runtime bound of the transition.
+   For LOWER bounds the sum over all transitions of the SCC, where we also differ two cases:
+   If there exists a NEGATIVE added constant for any of its result variables, then we multiply the LOWEST constant with the upper runtime bound of the transition.
+   If all added constants are POSITIVE for all of its result variables, then we multiply the LOWEST constant (next toward zero) with the lower runtime bound of the transition.
+   Scaled sums: upcoming
+ *)
              
 (** A templated bound is a bound of a certain templated form.
     The different templates are not disjunctive.
