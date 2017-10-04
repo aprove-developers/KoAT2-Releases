@@ -13,10 +13,10 @@ public.InterfaceDoc(name, files) =
     protected.cmifiles = $(addsuffix .cmi, $(removesuffix $(mlifiles) $(mlfiles)))
 
     $(name).idoc: $(mlifiles) $(mlfiles) $(cmifiles) $(OCamlLibrary $(LIB), $(FILES)) /.PHONY/OCamlGeneratedFilesTarget $(addsuffix .idoc, $(OCAML_LIBS))
-        ocamlfind ocamldoc -dump $(name).idoc -stars \
+        ocamlfind ocamldoc -hide-warnings -dump $(name).idoc -stars \
             $(PREFIXED_OCAMLINCLUDES) -package "$(OCAMLPACKS)" \
             $(mlifiles) \
-            $(mlfiles) 
+            $(mlfiles)
     return $(name).idoc
 
 CUSTOM_LIBS[] =
@@ -41,7 +41,7 @@ DOC_DIR = ../docs
 doc: $(IDOCS)
     mkdir -p $(DOC_DIR)
     rm -rf $(DOC_DIR)/*
-    ocamlfind ocamldoc -d $(DOC_DIR) -stars -t "Koat" -html \
+    ocamlfind ocamldoc -hide-warnings -d $(DOC_DIR) -stars -t "Koat" -html \
         $(mapprefix -load, $(IDOCS))
 
 .DEFAULT: doc install
