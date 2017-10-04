@@ -29,10 +29,10 @@ type main_params = {
 
 type localsizebound_params = {
 
-    kind : [`Upper | `Lower]; [@enum ["upper", `Upper; "lower", `Lower]] [@pos 0]
+    kind : [`Upper | `Lower]; [@enum ["upper", `Upper; "lower", `Lower]] [@pos 0] [@default `Upper]
     (** Which type of bound is requested. Available options: upper and lower. *)
 
-    guard : string;
+    guard : string; [@default ""]
     (** The guard of the transition in the form of a constraint.
         That is a &&-separated list of atoms.
         Atoms are two polynomials in a relation with <, >, <=, >= or =. *)
