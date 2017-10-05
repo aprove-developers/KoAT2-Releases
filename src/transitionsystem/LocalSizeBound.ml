@@ -49,9 +49,9 @@ let as_formula in_v (template, vars) =
   let open Polynomial in
   match template with
   | Equality c ->
-     Formula.mk_le_than_max v (of_int c :: var_list)
+     Formula.le_than_any v (of_int c :: var_list)
   | AddsConstant d ->
-     Formula.mk_le_than_max v (List.map ((+) (of_int d)) var_list)
+     Formula.le_than_any v (List.map ((+) (of_int d)) var_list)
   | ScaledSum (s,e) ->
      Formula.Infix.(v <= of_int s * (of_int e + sum var_list))
   | Unbound ->
