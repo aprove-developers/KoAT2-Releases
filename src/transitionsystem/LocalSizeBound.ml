@@ -171,8 +171,7 @@ let sizebound_local kind label var =
     | TransitionLabel.Upper ->
        find_bound v' guard_with_update
     | TransitionLabel.Lower ->
-       (* TODO Not yet implemented *)
-       (Unbound, VarSet.empty)
+       find_bound v' (Formula.turn guard_with_update)
   )
   (* If we don't have an update, the result variable is completely unbounded *)
   | None ->

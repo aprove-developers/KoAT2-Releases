@@ -99,7 +99,10 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
         
     let rename formula varmapping =
       List.map (fun constr -> C.rename constr varmapping) formula
-        
+
+    let turn =
+      List.map C.turn
+      
   end
 
 module Formula =
