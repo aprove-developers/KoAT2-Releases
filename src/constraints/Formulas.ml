@@ -72,17 +72,22 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
       let (||) = mk_or
     end
 
-    (* a <= max{b1,...,bn}   <=>   a<=b1 || ... || a<=bn *)
-    let le_than_any poly max_list =
-      max_list
-      |> List.map (fun max -> Infix.(poly <= max))
-      |> List.fold_left mk_or mk_false
-
     let all =
       List.fold_left mk_and mk_true
 
     let any =
       List.flatten
+      
+    (* a <= max{b1,...,bn}   <=>   a<=b1 || ... || a<=bn *)
+    let le_than_any poly list =
+         list
+      |> List.map (fun b -> Infix.(poly <= b))
+      |> any
+
+    let le_than_all poly list =
+         list
+      |> List.map (fun b -> Infix.(poly <= b))
+      |> all
       
     let vars formula =
          formula

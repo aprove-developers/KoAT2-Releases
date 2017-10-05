@@ -226,6 +226,7 @@ module type Formula =
         val mk_lt : polynomial -> polynomial -> t
         val mk_le : polynomial -> polynomial -> t
         val le_than_any : polynomial -> polynomial list -> t
+        val le_than_all : polynomial -> polynomial list -> t
           
         val all : t list -> t
         val any : t list -> t
