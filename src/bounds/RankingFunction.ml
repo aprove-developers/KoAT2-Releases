@@ -50,13 +50,13 @@ let copy_list_into_hash hashtbl pairs_list =
   let n = List.length pairs_list in
   for i = 1 to n do
     let (first,second) = List.at pairs_list i in
-    Hashtbl.add hashtbl first second
+    PrfTable.add hashtbl first second
   done;;
   
 let generate_ranking_template program =
   let vars = VarSet.elements (Program.vars program) in
   let graph = Program.graph program in
-  let fresh_table = Hashtbl.create (Program.TransitionGraph.nb_vertex graph) in
+  let fresh_table = PrfTable.create (Program.TransitionGraph.nb_vertex graph) in
   let loc_prf = [] in
   let ins_loc_prf = fun vertex-> List.cons (vertex,(ranking_template vars))  in
   let list_of_prf = Program.TransitionGraph.fold_vertex ins_loc_prf graph loc_prf in
@@ -69,54 +69,69 @@ let help_update label var =
   |None -> ParameterPolynomial.from_var var
   |Some p -> ParameterPolynomial.from_constant p
            
-let help_non_increasing (table : (Program.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
+let help_non_increasing (table : PrfTable.table) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
   let trans_label = Program.TransitionGraph.E.label trans in
-  let start_parapoly = Hashtbl.find table (Program.TransitionGraph.E.src trans) in
-  let target_parapoly = Hashtbl.find table (Program.TransitionGraph.E.dst trans) in
+  let start_parapoly = PrfTable.find table (Program.TransitionGraph.E.src trans) in
+  let target_parapoly = PrfTable.find table (Program.TransitionGraph.E.dst trans) in
   let guard = TransitionLabel.guard trans_label in
   let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) target_parapoly in
   let new_atom = ParameterAtom.mk_ge start_parapoly updated_target in
   farkas_transform guard new_atom
   
-let help_strict_decrease (table : (Program.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
+let help_strict_decrease (table : PrfTable.table) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
   let trans_label = Program.TransitionGraph.E.label trans in
-  let start_parapoly = Hashtbl.find table (Program.TransitionGraph.E.src trans) in
-  let target_parapoly = Hashtbl.find table (Program.TransitionGraph.E.dst trans) in
+  let start_parapoly = PrfTable.find table (Program.TransitionGraph.E.src trans) in
+  let target_parapoly = PrfTable.find table (Program.TransitionGraph.E.dst trans) in
   let guard = TransitionLabel.guard trans_label in
   let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) target_parapoly in
   let new_atom = ParameterAtom.mk_gt start_parapoly updated_target in (*here's the difference*)
   farkas_transform guard new_atom
   
-let help_boundedness (table : (Program.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
+let help_boundedness (table : PrfTable.table) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
   let trans_label = Program.TransitionGraph.E.label trans in
-  let start_parapoly = Hashtbl.find table (Program.TransitionGraph.E.src trans) in
+  let start_parapoly = PrfTable.find table (Program.TransitionGraph.E.src trans) in
   let guard = TransitionLabel.guard trans_label in
   let new_atom = ParameterAtom.mk_gt start_parapoly ParameterPolynomial.zero in 
   farkas_transform guard new_atom
   
-let get_non_increase_constraints (table : (Program.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t) (program : Program.t) =
+let get_non_increase_constraints (table : PrfTable.table) (program : Program.t) =
   let graph = Program.graph program in
   let vars = VarSet.elements (Program.vars program) in
   Program.TransitionGraph.fold_edges_e (fun trans -> Constraint.mk_and (help_non_increasing table trans vars) ) graph Constraint.mk_true
   
-let get_strict_decrease_constraints (table : (Program.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t) (program : Program.t) (str_decr :Program.Transition.t list) =
+let get_strict_decrease_constraints (table : PrfTable.table) (program : Program.t) (str_decr :Program.Transition.t list) =
   let vars = VarSet.elements (Program.vars program) in
   List.fold_left (fun constr -> (fun trans -> Constraint.mk_and (help_strict_decrease table trans vars) constr) ) Constraint.mk_true str_decr
   
-let get_boundedness_constraints (table : (Program.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t) (program : Program.t) (bnds :Program.Transition.t list) =
+let get_boundedness_constraints (table : PrfTable.table) (program : Program.t) (bnds :Program.Transition.t list) =
   let vars = VarSet.elements (Program.vars program) in
   List.fold_left (fun constr -> (fun trans -> Constraint.mk_and (help_boundedness table trans vars) constr)) Constraint.mk_true bnds
+
+let help_strict_oriented table vars trans (smt,bounded) =
+  let curr_smt = Constraint.mk_and smt (help_boundedness table trans vars) in
+  let curr_smt = Constraint.mk_and curr_smt (help_strict_decrease table trans vars) in
+    let sol = SMTSolver_.satisfiable (Formula.mk curr_smt) in
+      if sol then
+        (curr_smt, List.append bounded [trans])
+      else (smt,bounded)
+    
+let build_strict_oriented (table : PrfTable.table) (program : Program.t) (non_incr:Constraint.t) =
+  let graph = Program.graph program in
+  let vars = VarSet.elements (Program.vars program) in
+    Program.TransitionGraph.fold_edges_e (help_strict_oriented table vars) graph (non_incr,[])
+  
   
 let ranking_function_procedure (program : Program.t) =
   let table = generate_ranking_template program in
   let non_incr = get_non_increase_constraints table program in
-  let sol_non_incr = SMTSolver_.get_model (Formula.mk non_incr) in
-  Hashtbl.map (fun loc -> (fun prf -> Polynomial.eval_partial (ParameterPolynomial.flatten prf) sol_non_incr)) table
+  let (smt_form , bounded) = build_strict_oriented table program non_incr in
+  let model = SMTSolver_.get_model (Formula.mk smt_form) in
+  (PrfTable.map (fun loc -> (fun prf -> Polynomial.eval_partial (ParameterPolynomial.flatten prf) model)) table , bounded)
   
   
 let find program =
-  let table = ranking_function_procedure program in
-  {   pol = Hashtbl.find table;
-      strictly_decreasing = [];
-      bounded = [];
+  let (table,bounded) = ranking_function_procedure program in
+  {   pol = PrfTable.find table;
+      strictly_decreasing = bounded;
+      bounded = bounded;
   }

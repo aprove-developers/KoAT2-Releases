@@ -1,6 +1,6 @@
 open Batteries
 open Constraints
-open Atoms
+open Atomsd
 open Polynomials
    
 (** Provides default implementations of RankingFunctions *)
@@ -24,6 +24,6 @@ val find : Program.t -> t
 val monotonize : t -> t
   
 (** Invokes Farkas Lemma, to compute a ranking function*)
-val farkas_transform : Constraint.t -> AtomOver(ParameterPolynomial).t -> Constraint.t
+val farkas_transform : Constraint.t -> ParameterAtom.t -> Constraint.t
   
-val generate_ranking_template : Program.t -> (Program.TransitionGraph.vertex, ParameterPolynomial.t) Hashtbl.t
+val generate_ranking_template : Program.t -> PrfTable.table
