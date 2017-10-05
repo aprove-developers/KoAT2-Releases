@@ -1,6 +1,6 @@
 open Batteries
 open Constraints
-open Atomsd
+open Atoms
 open Polynomials
    
 (** Provides default implementations of RankingFunctions *)
