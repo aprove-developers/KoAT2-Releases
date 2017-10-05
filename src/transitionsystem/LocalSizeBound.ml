@@ -110,20 +110,14 @@ let find_equality_bound vars var formula =
     let low = -1024
     and high = 1024 in
     let is_bound c = is_bounded_with var formula (Equality c, vars) in
-    if is_bound high then
-      let c = binary_search low high is_bound in
-      if c = low then
-        let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (AddsConstant 0, newVars)) in
-        (* If we reached the lower end we assume (-inf) would also be a possible c and we can therefore neglect it in the max clause. *)
-        if VarSet.is_empty minimized_vars then
-          (* If additionally the varset is empty, we have max{}=-inf and therefore no (acceptable) bound. *)
-          None
-        else
-          Some (AddsConstant 0, minimized_vars)
-      else
-        let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (Equality c, newVars)) in
-        Some (Equality c, minimized_vars)
-    else None
+       Option.some high
+    |> Option.filter is_bound
+    |> Option.map (fun high -> binary_search low high is_bound)
+    |> Option.filter (fun c -> c != low)
+    |> Option.map (fun c ->
+      let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (Equality c, newVars)) in
+      (Equality c, minimized_vars)
+    )
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "looking for equality bound", ["vars", VarSet.to_string vars])
@@ -132,7 +126,7 @@ let find_equality_bound vars var formula =
 
 let find_addsconstant_bound vars var formula =
   let find_addsconstant_bound_ var formula =
-    let low = 0
+    let low = -1024
     and high = 1024 in
     let is_bound d = is_bounded_with var formula (AddsConstant d, vars) in
     if is_bound high then
