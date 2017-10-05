@@ -56,6 +56,9 @@ val equal : t -> t -> bool
 (** Converts the templated bound to a string. *)
 val to_string : t -> string
 
+(** Returns the constant c of the equality bound, if it is an equality bound. *)
+val equality_constant : t -> int Option.t
+
 (** Converts the templated bound to an actual bound. *)
 val as_bound : t -> Bound.t 
 

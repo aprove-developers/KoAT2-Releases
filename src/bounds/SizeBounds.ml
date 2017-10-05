@@ -11,7 +11,11 @@ let highest_incoming_bound (program: Program.t)
                            (t: Program.Transition.t)
     : Bound.t =
   let substitute_with_prevalues t' = Bound.substitute_f Approximation.(sizebound Upper appr t') local_sizebound in
-  Bound.maximum (List.map substitute_with_prevalues (TransitionSet.to_list (Program.pre program t)))
+     t
+  |> Program.pre program
+  |> TransitionSet.to_list
+  |> List.map substitute_with_prevalues
+  |> Bound.maximum
 
 (* Improves a trivial scc. That is an scc which consists only of one result variable.
        Corresponds to 'SizeBounds for trivial SCCs'. *)
@@ -25,7 +29,28 @@ let improve_trivial_scc (program: Program.t)
       local_sizebound
     else highest_incoming_bound program appr local_sizebound t
   in Approximation.(add_sizebound Upper newbound t v appr)      
-   
+
+(* Returns the highest possible start value for the nontrivial scc approximation.
+   This is the maximum of the highest values of variables which reach the scc and the constants assigned in the scc. *)
+let highest_start_value (program: Program.t)
+                        (rvg: Program.RVG.t)
+                        (appr: Approximation.t)
+                        (scc: Program.RV.t list)
+    : Bound.t =
+  let incoming_bounds =
+       Program.RVG.entry_points rvg scc
+    |> Enum.map (fun (t,v) -> Approximation.(sizebound Upper appr t v))
+  and constants =
+       scc
+    |> List.enum
+    |> Enum.map (fun ((l,t,l'),v) -> LocalSizeBound.sizebound_local TransitionLabel.Upper t v)
+    |> Enum.filter_map LocalSizeBound.equality_constant
+    |> Enum.map Bound.of_int
+  in
+     Enum.append incoming_bounds constants
+  |> List.of_enum
+  |> Bound.maximum 
+
 (* Improves a nontrivial scc. That is an scc which consists of more than one result variable.
        Corresponds to 'SizeBounds for nontrivial SCCs'. *)
 let improve_nontrivial_scc (program: Program.t)

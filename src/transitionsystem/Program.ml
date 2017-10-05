@@ -34,7 +34,23 @@ module RV =
                                    "|" ^ Location.to_string l ^ " -> " ^ Location.to_string l' ^ "," ^ Var.to_string v ^ "|"
                                    ^ " >= " ^ TransitionLabel.(Bound.to_string (LocalSizeBound.(as_bound (sizebound_local Lower t v))))
   end
-module RVG = Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+module RVG =
+  struct
+    include Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+
+    let pre rvg rv =
+      pred rvg rv
+      |> List.enum
+
+    (* TODO Optimizable *)
+    let entry_points rvg scc =
+      scc
+      |> List.enum
+      |> Enum.map (pre rvg)
+      |> Enum.flatten
+      |> Enum.uniq_by RV.equal
+      |> Enum.filter (fun rv -> List.mem_cmp RV.compare rv scc)
+  end  
    
 module TransitionSet = Set.Make(Transition)
 module CartesianSet = Set.Make2(Transition)(Var)

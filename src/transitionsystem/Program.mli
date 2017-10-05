@@ -24,7 +24,14 @@ sig
   val variable : t -> Var.t
 end
      
-module RVG : module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+module RVG :
+sig
+  include module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+
+  (** Returns all the entry points of the SCC.
+      Those are all result variables that are in the RVG, but not in the SCC and lead to any result variable in the RVG. *)
+  val entry_points : t -> RV.t list -> RV.t Enum.t
+end
 
 type transition_set = Set.Make(Transition).t
 

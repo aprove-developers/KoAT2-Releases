@@ -57,6 +57,10 @@ let as_formula in_v (template, vars) =
   | Unbound ->
      Formula.mk_true
 
+let equality_constant = function
+  | (Equality c, _) -> Some c
+  | _ -> None
+    
 let is_bounded_with var formula template_bound =
   template_bound
   |> as_formula var
