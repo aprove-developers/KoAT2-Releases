@@ -38,7 +38,7 @@ let tests =
                            (find_bound (Var.of_string "x") (Readers.read_formula guard))))
                   [
                     (Equality 5, [], "x <= 5");
-                    (VarEquality, ["y"], "x <= y");
+                    (AddsConstant 0, ["y"], "x <= y");
                     (Equality 10, [], "x <= y && y <= 10");
                     (* Not solvable yet (Equality 0, ["z"], "x", "x <= y && y <= z"); *)
                   ]
