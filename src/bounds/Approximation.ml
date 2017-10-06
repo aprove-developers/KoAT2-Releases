@@ -14,11 +14,6 @@ let empty transitioncount varcount = {
   }
 
                                    
-(* Returns the default bound for a kind. *)
-let default_bound = function
-  | `Lower -> Bound.minus_infinity
-  | `Upper -> Bound.infinity
-
 (* Returns the operator to combine two bounds with the best result. *)
 let combine_bounds = function
   | `Lower -> Bound.max
@@ -27,7 +22,9 @@ let combine_bounds = function
            
 let timebound kind appr transition =
   Hashtbl.find_option appr.time (kind, transition)
-  |? default_bound kind
+  |? match kind with
+     | `Lower -> Bound.zero
+     | `Upper -> Bound.infinity
 
 let timebound_graph kind appr graph =
   match kind with
@@ -40,7 +37,9 @@ let add_timebound kind bound transition appr =
   
 let sizebound kind appr transition var =
   Hashtbl.find_option appr.size (kind, transition, var)
-  |? default_bound kind      
+  |? match kind with
+     | `Lower -> Bound.minus_infinity
+     | `Upper -> Bound.infinity       
 
 let add_sizebound kind bound transition var appr =
   Hashtbl.modify (kind, transition, var) (combine_bounds kind bound) appr.size;
