@@ -59,6 +59,12 @@ val to_string : t -> string
 (** Returns the constant c of the equality bound, if it is an equality bound. *)
 val equality_constant : t -> int Option.t
 
+(** Returns the constant d of the addsconstant bound, if it is an addsconstant bound. *)
+val addsconstant_constant : t -> int Option.t
+
+(** Returns the type of the template. *)
+val boundtype : t -> [ `Equality | `AddsConstant | `ScaledSum | `Unbound ]
+  
 (** Converts the templated bound to an actual bound. *)
 val as_bound : t -> Bound.t 
 
@@ -80,3 +86,5 @@ val find_bound : Var.t -> formula -> t
 (** Returns a local sizebound of the specified kind for the variable of the transition. 
     A local sizebound is expressed in relation to the values directly before executing the transition. *)
 val sizebound_local : TransitionLabel.kind -> TransitionLabel.t -> Var.t -> t
+  
+val sizebound_local_rv : TransitionLabel.kind -> Program.RV.t -> t

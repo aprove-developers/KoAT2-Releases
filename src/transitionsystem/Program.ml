@@ -21,7 +21,10 @@ module TransitionGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(L
 module Transition = struct
   include TransitionGraph.E
   let to_string (l,t,l') = Location.to_string l ^ "->" ^ Location.to_string l' ^ ", " ^ TransitionLabel.to_string t
-  let equal = (=)
+  let equal (l1,t1,l'1) (l2,t2,l'2) =
+       Location.equal l1 l2
+    && TransitionLabel.equal t1 t2
+    && Location.equal l'1 l'2
 end
 
 module RV =
@@ -38,6 +41,8 @@ module RVG =
   struct
     include Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
+    type scc = RV.t list
+
     let pre rvg rv =
       pred rvg rv
       |> List.enum
@@ -50,6 +55,12 @@ module RVG =
       |> Enum.flatten
       |> Enum.uniq_by RV.equal
       |> Enum.filter (fun rv -> List.mem_cmp RV.compare rv scc)
+
+    let transitions scc =
+      scc
+      |> List.enum
+      |> Enum.map RV.transition
+      |> Enum.uniq_by Transition.equal
   end  
    
 module TransitionSet = Set.Make(Transition)

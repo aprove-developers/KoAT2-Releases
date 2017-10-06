@@ -45,3 +45,7 @@ let sizebound kind appr transition var =
 let add_sizebound kind bound transition var appr =
   Hashtbl.modify (kind, transition, var) (combine_bounds kind bound) appr.size;
   appr      
+
+let add_sizebounds kind bound scc appr =
+  List.iter (fun (t,v) -> ignore (add_sizebound kind bound t v appr)) scc;
+  appr

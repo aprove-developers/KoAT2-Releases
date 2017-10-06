@@ -60,7 +60,17 @@ let as_formula in_v (template, vars) =
 let equality_constant = function
   | (Equality c, _) -> Some c
   | _ -> None
-    
+
+let addsconstant_constant = function
+  | (AddsConstant d, _) -> Some d
+  | _ -> None
+
+let boundtype = function
+  | (Equality _, _) -> `Equality
+  | (AddsConstant _, _) -> `AddsConstant
+  | (ScaledSum _, _) -> `ScaledSum
+  | (Unbound, _) -> `Unbound
+       
 let is_bounded_with var formula template_bound =
   template_bound
   |> as_formula var
@@ -181,3 +191,5 @@ let sizebound_local kind label var =
   | None ->
      (Unbound, VarSet.empty)
 
+let sizebound_local_rv kind ((l,t,l'),v) =
+  sizebound_local kind t v
