@@ -5,7 +5,7 @@ open Batteries
 type t
    
 (** Distinguish between lower and upper bounds *)
-type kind = Lower | Upper
+type kind = [ `Lower | `Upper ]
 
                   
 (** Returns an empty approximation that does not contain any non-trivial information.

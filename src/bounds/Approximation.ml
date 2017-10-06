@@ -1,6 +1,6 @@
 open Batteries
 
-type kind = Lower | Upper
+type kind = [ `Lower | `Upper ]
 
 type t = {
     time: ((kind * Program.Transition.t), Bound.t) Hashtbl.t;
@@ -16,13 +16,13 @@ let empty transitioncount varcount = {
                                    
 (* Returns the default bound for a kind. *)
 let default_bound = function
-  | Lower -> Bound.minus_infinity
-  | Upper -> Bound.infinity
+  | `Lower -> Bound.minus_infinity
+  | `Upper -> Bound.infinity
 
 (* Returns the operator to combine two bounds with the best result. *)
 let combine_bounds = function
-  | Lower -> Bound.max
-  | Upper -> Bound.min
+  | `Lower -> Bound.max
+  | `Upper -> Bound.min
 
            
 let timebound kind appr transition =
@@ -31,8 +31,8 @@ let timebound kind appr transition =
 
 let timebound_graph kind appr graph =
   match kind with
-  | Lower -> Bound.one
-  | Upper -> Program.TransitionGraph.fold_edges_e (fun transition -> Bound.add (timebound Upper appr transition)) (Program.graph graph) Bound.zero
+  | `Lower -> Bound.one
+  | `Upper -> Program.TransitionGraph.fold_edges_e (fun transition -> Bound.add (timebound `Upper appr transition)) (Program.graph graph) Bound.zero
 
 let add_timebound kind bound transition appr =
   Hashtbl.modify (kind, transition) (combine_bounds kind bound) appr.time;

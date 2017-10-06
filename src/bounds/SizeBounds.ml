@@ -10,7 +10,7 @@ let highest_incoming_bound (program: Program.t)
                            (local_sizebound: Bound.t)
                            (t: Program.Transition.t)
     : Bound.t =
-  let substitute_with_prevalues t' = Bound.substitute_f Approximation.(sizebound Upper appr t') local_sizebound in
+  let substitute_with_prevalues t' = Bound.substitute_f (Approximation.sizebound `Upper appr t') local_sizebound in
      t
   |> Program.pre program
   |> TransitionSet.to_list
@@ -23,12 +23,12 @@ let improve_trivial_scc (program: Program.t)
                         (appr: Approximation.t)
                         (t,v)
     : Approximation.t =
-  let (local_sizebound: Bound.t) = TransitionLabel.(LocalSizeBound.(as_bound (sizebound_local Upper (Program.Transition.label t) v))) in
+  let (local_sizebound: Bound.t) = LocalSizeBound.(as_bound (sizebound_local `Upper (Program.Transition.label t) v)) in
   let newbound =
     if Program.is_initial program t then
       local_sizebound
     else highest_incoming_bound program appr local_sizebound t
-  in Approximation.(add_sizebound Upper newbound t v appr)      
+  in Approximation.add_sizebound `Upper newbound t v appr
 
 (* Returns all bounds for result variables entering the scc. *)
 let incoming_bounds (rvg: Program.RVG.t)
@@ -36,14 +36,14 @@ let incoming_bounds (rvg: Program.RVG.t)
                     (scc: Program.RV.t list)
   : Bound.t Enum.t =
      Program.RVG.entry_points rvg scc
-  |> Enum.map (fun (t,v) -> Approximation.(sizebound Upper appr t v))
+  |> Enum.map (fun (t,v) -> Approximation.sizebound `Upper appr t v)
 
 (* Returns all constants which bound a result variable of the scc of an rvg. *)
 let constants (scc: Program.RV.t list)
     : Bound.t Enum.t =
      scc
   |> List.enum
-  |> Enum.map (LocalSizeBound.sizebound_local_rv TransitionLabel.Upper)
+  |> Enum.map (LocalSizeBound.sizebound_local_rv `Upper)
   |> Enum.filter_map LocalSizeBound.equality_constant
   |> Enum.map Bound.of_int
 
@@ -71,7 +71,7 @@ let max_adding_constant (scc: Program.RVG.scc)
   scc
   |> List.enum
   |> Enum.filter (fun (t',v) -> Program.Transition.equal t t')
-  |> Enum.map (LocalSizeBound.sizebound_local_rv TransitionLabel.Upper)
+  |> Enum.map (LocalSizeBound.sizebound_local_rv `Upper)
   |> Enum.filter_map LocalSizeBound.addsconstant_constant
   |> max
 
@@ -82,7 +82,7 @@ let single_adding_constants_effect (scc: Program.RVG.scc)
     : Bound.t Option.t =
   max_adding_constant scc t
   |> Option.map (fun max_d ->
-         let timebound_kind = Approximation.(if max_d >= 0 then Upper else Lower) in
+         let timebound_kind = if max_d >= 0 then `Upper else `Lower in
          Bound.(Approximation.(timebound timebound_kind appr t) * of_int max_d)
        )
 
@@ -103,14 +103,14 @@ let improve_nontrivial_scc (program: Program.t)
                            (scc: Program.RV.t list)
     : Approximation.t =
   let lsbs =
-    List.map (LocalSizeBound.sizebound_local_rv TransitionLabel.Upper) scc
+    List.map (LocalSizeBound.sizebound_local_rv `Upper) scc
   in
   if List.for_all (fun lsb -> LocalSizeBound.boundtype lsb != `Unbound && LocalSizeBound.boundtype lsb != `ScaledSum) lsbs then
     let new_bound =
       Bound.(highest_start_value rvg appr scc
              + adding_constants_effect rvg appr scc)
     in
-    Approximation.(add_sizebounds Upper new_bound scc appr) 
+    Approximation.add_sizebounds `Upper new_bound scc appr
   else
     appr
   

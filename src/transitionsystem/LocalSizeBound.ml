@@ -182,9 +182,9 @@ let sizebound_local kind label var =
     let v' = Var.fresh_id () in
     let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.from_var v' = bound) in
     match kind with
-    | TransitionLabel.Upper ->
+    | `Upper ->
        find_bound v' guard_with_update
-    | TransitionLabel.Lower ->
+    | `Lower ->
        find_bound v' (Formula.turn guard_with_update)
   )
   (* If we don't have an update, the result variable is completely unbounded *)
