@@ -62,6 +62,9 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
         
     let rename constr varmapping = List.map (fun atom -> A.rename atom varmapping) constr
 
+    let turn =
+      List.map A.neg
+                                 
                                  (*
     let models constr valuation = 
       List.for_all (fun atom -> Atom_.models atom valuation) constr

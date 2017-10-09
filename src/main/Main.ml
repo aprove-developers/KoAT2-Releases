@@ -91,16 +91,13 @@ let run (params: main_params) =
 
 let run_localsizebound (params: localsizebound_params) =
   let open TransitionLabel in
-  let kind = match params.kind with
-    | `Upper -> Upper
-    | `Lower -> Lower in
   let guard = Readers.read_constraint params.guard in
   let var = Var.of_string params.var in
   let update = match params.update with
     | Some str -> Map.(add var (Readers.read_polynomial str) empty)
     | None -> Map.empty in
   let label = make ~name:"" ~start:"" ~target:"" ~update ~guard in
-  print_string (Bound.to_string LocalSizeBound.(as_bound (sizebound_local kind label var)))
+  print_string (Bound.to_string LocalSizeBound.(as_bound (sizebound_local params.kind label var)))
 
 let run_smt (params: smt_params) =
   let module Z3 = SMT.Z3Solver in

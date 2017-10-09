@@ -5,7 +5,7 @@ open Batteries
 type t
    
 (** Distinguish between lower and upper bounds *)
-type kind = Lower | Upper
+type kind = [ `Lower | `Upper ]
 
                   
 (** Returns an empty approximation that does not contain any non-trivial information.
@@ -37,3 +37,5 @@ val sizebound : kind -> t -> Program.Transition.t -> Var.t -> Bound.t
 (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 val add_sizebound : kind -> Bound.t -> Program.Transition.t -> Var.t -> t -> t
+  
+val add_sizebounds : kind -> Bound.t -> Program.RVG.scc -> t -> t

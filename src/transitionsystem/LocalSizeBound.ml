@@ -7,7 +7,6 @@ let logger = Logger.make_log "lsb"
 type formula = Formula.t
 
 type template =
-  | VarEquality
   | Equality of int
   | AddsConstant of int
   | ScaledSum of int * int
@@ -26,8 +25,6 @@ let as_bound (template, vars) =
   let var_list = VarSet.map_to_list Bound.of_var vars in
   let open Bound in
   match template with
-  | VarEquality ->
-     maximum var_list
   | Equality c ->
      maximum (of_int c :: var_list)
   | AddsConstant d ->
@@ -51,17 +48,29 @@ let as_formula in_v (template, vars) =
   and v = Polynomial.from_var in_v in
   let open Polynomial in
   match template with
-  | VarEquality ->
-     Formula.mk_le_than_max v var_list
   | Equality c ->
-     Formula.mk_le_than_max v (of_int c :: var_list)
+     Formula.le_than_any v (of_int c :: var_list)
   | AddsConstant d ->
-     Formula.mk_le_than_max v (List.map ((+) (of_int d)) var_list)
+     Formula.le_than_any v (List.map ((+) (of_int d)) var_list)
   | ScaledSum (s,e) ->
      Formula.Infix.(v <= of_int s * (of_int e + sum var_list))
   | Unbound ->
      Formula.mk_true
 
+let equality_constant = function
+  | (Equality c, _) -> Some c
+  | _ -> None
+
+let addsconstant_constant = function
+  | (AddsConstant d, _) -> Some d
+  | _ -> None
+
+let boundtype = function
+  | (Equality _, _) -> `Equality
+  | (AddsConstant _, _) -> `AddsConstant
+  | (ScaledSum _, _) -> `ScaledSum
+  | (Unbound, _) -> `Unbound
+       
 let is_bounded_with var formula template_bound =
   template_bound
   |> as_formula var
@@ -115,20 +124,14 @@ let find_equality_bound vars var formula =
     let low = -1024
     and high = 1024 in
     let is_bound c = is_bounded_with var formula (Equality c, vars) in
-    if is_bound high then
-      let c = binary_search low high is_bound in
-      if c = low then
-        let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (VarEquality, newVars)) in
-        (* If we reached the lower end we assume (-inf) would also be a possible c and we can therefore neglect it in the max clause. *)
-        if VarSet.is_empty minimized_vars then
-          (* If additionally the varset is empty, we have max{}=-inf and therefore no (acceptable) bound. *)
-          None
-        else
-          Some (VarEquality, minimized_vars)
-      else
-        let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (Equality c, newVars)) in
-        Some (Equality c, minimized_vars)
-    else None
+       Option.some high
+    |> Option.filter is_bound
+    |> Option.map (fun high -> binary_search low high is_bound)
+    |> Option.filter (fun c -> c != low)
+    |> Option.map (fun c ->
+      let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (Equality c, newVars)) in
+      (Equality c, minimized_vars)
+    )
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "looking for equality bound", ["vars", VarSet.to_string vars])
@@ -137,7 +140,7 @@ let find_equality_bound vars var formula =
 
 let find_addsconstant_bound vars var formula =
   let find_addsconstant_bound_ var formula =
-    let low = 0
+    let low = -1024
     and high = 1024 in
     let is_bound d = is_bounded_with var formula (AddsConstant d, vars) in
     if is_bound high then
@@ -179,13 +182,14 @@ let sizebound_local kind label var =
     let v' = Var.fresh_id () in
     let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.from_var v' = bound) in
     match kind with
-    | TransitionLabel.Upper ->
+    | `Upper ->
        find_bound v' guard_with_update
-    | TransitionLabel.Lower ->
-       (* TODO Not yet implemented *)
-       (Unbound, VarSet.empty)
+    | `Lower ->
+       find_bound v' (Formula.turn guard_with_update)
   )
   (* If we don't have an update, the result variable is completely unbounded *)
   | None ->
      (Unbound, VarSet.empty)
 
+let sizebound_local_rv kind ((l,t,l'),v) =
+  sizebound_local kind t v

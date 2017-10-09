@@ -138,6 +138,8 @@ module type Constraint =
 
         val all : t list -> t
           
+        val turn : t -> t
+
         (** Following methods return certain properties of the constraint. *)
           
         (** Returns if the constraint is a tautology *)
@@ -225,10 +227,13 @@ module type Formula =
         val mk_ge : polynomial -> polynomial -> t
         val mk_lt : polynomial -> polynomial -> t
         val mk_le : polynomial -> polynomial -> t
-        val mk_le_than_max : polynomial -> polynomial list -> t
+        val le_than_any : polynomial -> polynomial list -> t
+        val le_than_all : polynomial -> polynomial list -> t
           
         val all : t list -> t
         val any : t list -> t
+
+        val turn : t -> t
           
         module Infix : sig
           val (=) : polynomial -> polynomial -> t

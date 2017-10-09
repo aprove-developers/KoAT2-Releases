@@ -13,7 +13,11 @@ end
 
 module TransitionGraph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
                                       
-module Transition : module type of TransitionGraph.E
+module Transition :
+sig
+  include module type of TransitionGraph.E
+  val equal : t -> t -> bool
+end
 
 module RV :
 sig
@@ -24,7 +28,20 @@ sig
   val variable : t -> Var.t
 end
      
-module RVG : module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+module RVG :
+sig
+  include module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+
+  type scc = RV.t list
+
+  (** Returns all the entry points of the SCC.
+      Those are all result variables that are in the RVG, but not in the SCC and lead to any result variable in the RVG. *)
+  val entry_points : t -> scc -> RV.t Enum.t
+
+  (** Returns all transitions that are used in the SCC of the RVG. *)
+  val transitions : scc -> Transition.t Enum.t
+    
+end
 
 type transition_set = Set.Make(Transition).t
 

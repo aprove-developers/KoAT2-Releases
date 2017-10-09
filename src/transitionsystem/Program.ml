@@ -21,7 +21,10 @@ module TransitionGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(L
 module Transition = struct
   include TransitionGraph.E
   let to_string (l,t,l') = Location.to_string l ^ "->" ^ Location.to_string l' ^ ", " ^ TransitionLabel.to_string t
-  let equal = (=)
+  let equal (l1,t1,l'1) (l2,t2,l'2) =
+       Location.equal l1 l2
+    && TransitionLabel.equal t1 t2
+    && Location.equal l'1 l'2
 end
 
 module RV =
@@ -30,11 +33,35 @@ module RV =
     let hash v = raise (Failure "Not yet implemented")
     let transition (t,v) = t
     let variable (t,v) = v
-    let to_string ((l,t,l'),v) = TransitionLabel.(Bound.to_string (LocalSizeBound.(as_bound (sizebound_local Upper t v)))) ^ " >= " ^
+    let to_string ((l,t,l'),v) = Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Upper t v))) ^ " >= " ^
                                    "|" ^ Location.to_string l ^ " -> " ^ Location.to_string l' ^ "," ^ Var.to_string v ^ "|"
-                                   ^ " >= " ^ TransitionLabel.(Bound.to_string (LocalSizeBound.(as_bound (sizebound_local Lower t v))))
+                                   ^ " >= " ^ Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Lower t v)))
   end
-module RVG = Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+module RVG =
+  struct
+    include Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+
+    type scc = RV.t list
+
+    let pre rvg rv =
+      pred rvg rv
+      |> List.enum
+
+    (* TODO Optimizable *)
+    let entry_points rvg scc =
+      scc
+      |> List.enum
+      |> Enum.map (pre rvg)
+      |> Enum.flatten
+      |> Enum.uniq_by RV.equal
+      |> Enum.filter (fun rv -> List.mem_cmp RV.compare rv scc)
+
+    let transitions scc =
+      scc
+      |> List.enum
+      |> Enum.map RV.transition
+      |> Enum.uniq_by Transition.equal
+  end  
    
 module TransitionSet = Set.Make(Transition)
 module CartesianSet = Set.Make2(Transition)(Var)
@@ -91,7 +118,7 @@ let rvg program =
   let add_transition (post_transition: Transition.t) (rvg: RVG.t): RVG.t =
     let rvg_with_vertices: RVG.t = add_vertices_to_rvg (List.map (fun var -> (post_transition,var)) program.vars) rvg in
     let pre_nodes (post_transition: Transition.t) (post_var: Var.t) =
-      LocalSizeBound.sizebound_local TransitionLabel.Upper (Transition.label post_transition) post_var
+      LocalSizeBound.sizebound_local `Upper (Transition.label post_transition) post_var
       |> LocalSizeBound.as_bound
       |> Bound.vars
       |> CartesianSet.cartesian_product (pre program post_transition)

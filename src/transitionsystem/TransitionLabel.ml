@@ -7,7 +7,7 @@ module Map = Map.Make(Var)
            
 exception RecursionNotSupported
         
-type kind = Lower | Upper [@@deriving eq, ord]
+type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
 
 type t = {
     name : string;

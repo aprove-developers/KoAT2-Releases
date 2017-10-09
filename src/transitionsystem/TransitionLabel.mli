@@ -8,7 +8,7 @@ module Guard = Constraints.Constraint
 type polynomial = Polynomials.Polynomial.t
 module Map : module type of Map.Make(Var)
                           
-type kind = Lower | Upper  [@@deriving eq, ord]
+type kind = [ `Lower | `Upper ]  [@@deriving eq, ord]
 
 type t
 
