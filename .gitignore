@@ -6,3 +6,6 @@ docs
 
 #Ignore git patch files
 *.patch
+#Ignore Koat output
+*.dot
+*.png
