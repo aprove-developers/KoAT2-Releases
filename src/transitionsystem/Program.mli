@@ -17,6 +17,7 @@ module Transition :
 sig
   include module type of TransitionGraph.E
   val equal : t -> t -> bool
+  val to_string : t -> string
 end
 
 module RV :
