@@ -44,7 +44,12 @@ type localsizebound_params = {
     (** The polynomial to which the value of the variable gets updated after the transition. *)
     
   } [@@deriving cmdliner, show]
-
+  
+type prf_params = {
+  input : string; [@pos 0] [@docv "INPUT"]
+  (** An absolute or relative path to the koat input file which defines the integer transition system *)
+  } [@@deriving cmdliner, show]
+  
 type smt_params = {
 
     constr : string; [@pos 0]
@@ -99,6 +104,10 @@ let run_localsizebound (params: localsizebound_params) =
   let label = make ~name:"" ~start:"" ~target:"" ~update ~guard in
   print_string (Bound.to_string LocalSizeBound.(as_bound (sizebound_local params.kind label var)))
 
+let run_prf_search (params: prf_params) =
+  let program = Readers.read_file params.input in
+  print_string (RankingFunction.ranking_function_procedure program)
+  
 let run_smt (params: smt_params) =
   let module Z3 = SMT.Z3Solver in
   let solve = match params.solver with
@@ -118,6 +127,7 @@ let run_normalize (params: normalize_params) =
   
 let subcommands =
   let open Cmdliner in [
+      Term.(const run_prf_search $ prf_params_cmdliner_term (), Term.info ~doc:"Search for a linear ranking function" "prf");
       Term.(const run_localsizebound $ localsizebound_params_cmdliner_term (), Term.info ~doc:"Search for a local size bound" "lsb");
       Term.(const run_smt $ smt_params_cmdliner_term (), Term.info ~doc:"Find solutions for a constraint" "smt");
       Term.(const run_normalize $ normalize_params_cmdliner_term (), Term.info ~doc:"Find a normalform for an input" "normalize");
