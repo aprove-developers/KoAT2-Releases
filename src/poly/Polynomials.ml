@@ -263,6 +263,8 @@ module ParameterPolynomial =
     let flatten (templatepoly : Outer.t): Inner.t =
       Outer.fold ~const:identity ~var:Inner.from_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
       
+    (** Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
+    (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
     let from_polynomial (poly : Inner.t): t =
       Inner.fold ~const:(fun value -> from_constant (Inner.from_constant value)) ~var:from_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
   end
