@@ -18,4 +18,3 @@ val fresh_ids : int -> t Enum.t
 val fresh_id_list : int -> t list
 val is_helper : t -> bool
 val mk_helper : int -> t
-

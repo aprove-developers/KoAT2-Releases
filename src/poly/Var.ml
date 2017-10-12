@@ -12,7 +12,7 @@ let mk_helper n = Helper n
                 
 let to_string = function
   | Var str -> str
-  | Helper i -> "_" ^ (String.of_int i)
+  | Helper i -> "$_" ^ (String.of_int i)
               
 let counter = ref 0
 
