@@ -262,6 +262,9 @@ module ParameterPolynomial =
     (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
     let flatten (templatepoly : Outer.t): Inner.t =
       Outer.fold ~const:identity ~var:Inner.from_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
+      
+    let from_polynomial (poly : Inner.t): t =
+      Inner.fold ~const:(fun value -> from_constant (Inner.from_constant value)) ~var:from_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
   end
 
 module Polynomial =

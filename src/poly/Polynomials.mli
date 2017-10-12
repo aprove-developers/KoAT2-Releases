@@ -22,4 +22,6 @@ sig
   include module type of PolynomialOver(PolynomialOver(OurInt))
 
   val flatten : t -> PolynomialOver(OurInt).t
+  
+  val from_polynomial : PolynomialOver(OurInt).t -> t
 end
