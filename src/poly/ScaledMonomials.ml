@@ -32,7 +32,7 @@ module Make(Value : PolyTypes.Ring) =
       else if Value.(scaled.coeff =~= (neg one)) then "-" ^ Monomial.to_string scaled.mon
       else if Monomial.(scaled.mon =~= Monomial.one) then
         (if scaled.coeff > Value.zero then "+" else "") ^ Value.to_string scaled.coeff
-      else (if scaled.coeff > Value.zero then "+" else "") ^ Value.to_string scaled.coeff ^ Monomial.to_string scaled.mon
+      else (if scaled.coeff > Value.zero then "+" else "") ^ Value.to_string scaled.coeff ^ "*" ^ Monomial.to_string scaled.mon
       
     type outer_t = t
     module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
