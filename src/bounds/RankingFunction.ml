@@ -87,9 +87,12 @@ let help_update label var =
 let help_non_increasing (table : PrfTable.table) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
   let trans_label = Program.TransitionGraph.E.label trans in
   let start_parapoly = PrfTable.find table (Program.TransitionGraph.E.src trans) in
+    print_string (String.concat"-> "["help_non_increasing_start_parapoly";(ParameterPolynomial.to_string start_parapoly);"\n"]);
   let target_parapoly = PrfTable.find table (Program.TransitionGraph.E.dst trans) in
+    print_string (String.concat"-> "["help_non_increasing_target_parapoly";(ParameterPolynomial.to_string target_parapoly);"\n"]);
   let guard = TransitionLabel.guard trans_label in
   let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) target_parapoly in
+    print_string (String.concat"-> "["help_non_increasing_updated_target";(ParameterPolynomial.to_string updated_target);"\n"]);
   let new_atom = ParameterAtom.mk_ge start_parapoly updated_target in
     print_string (String.concat"-> "["help_non_increasing_input";(ParameterConstraint.to_string (ParameterConstraint.lift new_atom));"\n"]);
   let result = farkas_transform guard new_atom in
