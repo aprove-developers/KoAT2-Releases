@@ -9,3 +9,5 @@ docs
 #Ignore Koat output
 *.dot
 *.png
+#Ignore txt files
+*.txt
