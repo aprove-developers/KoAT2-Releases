@@ -5,6 +5,8 @@ open Formulas
 open Constraints
    
 module Z3Solver = SMT.Z3Solver
+
+module Polynomial = Polynomials.Polynomial
                
 let print_fl = Float.to_string
 
@@ -46,31 +48,24 @@ let suite =
                     ]
         );
         
-(*        "String_matching" >::: (
+        "String_matching" >::: (
         List.map (fun (expected,input_str) ->
-            "input_str" >:: (fun _ -> assert_equal ~cmp:(=) ~printer:print_fl (Float.of_string expected) (Float.of_string (Z3Solver.match_string_for_float input_str))))
+            "input_str" >:: (fun _ -> assert_equal ~cmp:Var.(=~=) ~printer:Var.to_string (expected) (Z3Solver.model_string_to_var input_str) ))
                     [
-                        ("1","(1)");
-                        ("1.5","1.5");
-                        ("-23.0","(- 23)");
-                        ("3.1415","3.1415");
+                        (Var.of_string "x","x");
+                        ((Var.mk_helper 1), "$_1");
+                        ((Var.mk_helper 1234567), "$_1234567");
                     ]
-        );*)
+        );
         
-(*        "get_model" >::: (
-        List.map (fun (testname, expected, constr) ->
-            testname >:: (fun _ -> assert_equal ~cmp:String.equal ~printer:print_str expected (Z3Solver.get_model (Reader.read_constraint constr))))
+        "get_model_valuation" >::: (
+        List.map (fun (testname, expected, constr, poly) ->
+            testname >:: (fun _ -> assert_equal_poly  (Readers.read_polynomial expected) (Polynomial.eval_partial (Readers.read_polynomial poly) (Z3Solver.get_model (Readers.read_formula constr)) )))
                     [
-                        ("Empty","", "");
-                        ("Constant Equality","", "1 = 1");
-                        ("Variable Equality","", "x = x");
-                        ("Different Variable Equality","", "x = y"); 
-                        ("Obvious contradiction", "", "0 = 1");
-                        ("Sofisticated contradiction" , "", "x > y && y > z && z > x");
-                        ("Contradiction over the integers", "", "x > x^2");
-                        ("negative check", "", "x<0");
+                        ("fst", "x+y","a = 1 && b = 1", "a*x+b*y" );
+                        ("snd", "x+y","a = 1 && b = 1 && c<=0 && d<=0 || a = 1 && b = 1 && c > 0 && d > 0", "a*x+b*y + c*z + d*w" );
                     ]
-        );*)
+        );
         
 (*        "get_model_advanced" >::: (
         List.map (fun (expected, constr, atom) ->

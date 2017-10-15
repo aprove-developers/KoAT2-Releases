@@ -54,6 +54,11 @@ module Methods =
          str
       |> Readers.read_polynomial
       |> fun poly -> Polynomial.eval poly example_valuation
+      
+    let example_valuation2 = Valuation.from [((Var.mk_helper 1), (OurInt.of_int 1)); ((Var.mk_helper 2), (OurInt.of_int 0)); ((Var.mk_helper 3), (OurInt.of_int (-1)))]
+                                            
+    let evaluate_partial poly =
+         Polynomial.eval_partial poly example_valuation2
 
     let of_int = OurInt.of_int
 
@@ -90,6 +95,18 @@ module Methods =
                        ("Multiplication before Addition", 38, " x + y * z ");
                        ("Power before Negation", -27, " - x ^ 3 ");
                        ("Power before Multiplication", 27*625, " x ^ 3 * y ^ 4 ");
+                     ];
+          );
+          "Evaluate_partial" >::: (
+            List.map (fun (testname, expected, poly) ->
+                testname >:: (fun _ -> assert_equal_poly (expected) (evaluate_partial poly)))
+                     [
+                       ("Constant", (Polynomial.value 42), (Polynomial.value 42));
+                       ("Parameter", (Polynomial.value 1), (Polynomial.helper 1));
+                       ("Parameter and Variable", Polynomial.((Polynomial.value 1) + (Polynomial.var "x")), Polynomial.((Polynomial.helper 1) + (Polynomial.var "x")) );
+                       ("Parameter as a factor", Polynomial.(Polynomial.mul (Polynomial.value 1) (Polynomial.var "x")), Polynomial.(Polynomial.mul (Polynomial.helper 1) (Polynomial.var "x")));
+                       ("Parameter as a factor vanishes", Polynomial.zero, Polynomial.(Polynomial.mul (Polynomial.helper 2) (Polynomial.var "x")));
+                       ("Multiple parameters"), Polynomial.((Polynomial.var "x") - (Polynomial.var "z")) , Polynomial.(((Polynomial.helper 1)*(Polynomial.var "x")) + (((Polynomial.helper 2)*(Polynomial.var "y")) + ((Polynomial.helper 3)*(Polynomial.var "z"))))
                      ];
           );
 

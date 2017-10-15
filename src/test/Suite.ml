@@ -7,10 +7,6 @@ let suite =
         PolynomialsTest.Parser.tests;
         PolynomialsTest.Methods.tests;
       ];
-      "TemplatePolynomial" >::: [
-        PolynomialsTest.Methods.tests;
-
-      ];
       "PolynomialConstraints" >::: [
           ConstraintsTest.Parser.tests;
           AtomTest.Methods.tests;
