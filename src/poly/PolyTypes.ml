@@ -87,6 +87,9 @@ module type Valuation =
 
     (** Returns the var to value bindings. *)
     val bindings : t -> (var * value) Enum.t
+    
+    (** Converts the valuation into a string using the print function*)
+    val to_string : t -> string 
   end
 
 (** Evaluable is a unified interface of all parts of a polynomial *)

@@ -26,4 +26,9 @@ module Make(Value : PolyTypes.Ring) =
     let vars valuation = List.map (fun (key, value) -> key) (M.bindings valuation)
 
     let bindings = M.enum
+    
+    let to_string valuation =
+      let output = IO.output_string () in
+      M.print (fun output key -> IO.nwrite output (Var.to_string key)) (fun output value -> IO.nwrite output (Value.to_string value)) output valuation;
+      IO.close_out output
   end
