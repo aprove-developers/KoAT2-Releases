@@ -26,11 +26,14 @@ val monotonize : t -> t
 (** Invokes Farkas Lemma, to compute a ranking function*)
 val farkas_transform : Constraint.t -> ParameterAtom.t -> Constraint.t
   
-val generate_ranking_template : Program.t -> PrfTable.table
+val generate_ranking_template : Program.t -> PrfTable.parameter_table
 
 (**Converts a ranking function into a string*)
 val to_string : t -> string
 
-val ranking_function_procedure : Program.t -> string
+val ranking_function_procedure : Program.t -> string (*Polynomials.Polynomial.t PrfTable.t *
+           Program.TransitionGraph.E.t list*)
+           
+(*val to_string_prog : Program.t -> string*)
 
-val generate_ranking_template : Program.t -> PrfTable.table
+val generate_ranking_template : Program.t -> PrfTable.parameter_table
