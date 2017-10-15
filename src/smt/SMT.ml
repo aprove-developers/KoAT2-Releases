@@ -61,6 +61,16 @@ module Z3Solver =
         let float_regexp = Str.regexp "(?\\([-]?\\)[ ]?\\([0-9]*\\.?[0-9]+\\))?" in             (*(?\\([-0-9\\.]*\\))?*)
             Str.replace_first float_regexp "\\1\\2" str 
     
+    let model_string_to_var str =
+        let is_helper_regexp = Str.regexp "[$][_][0-9]+" in
+          let is_helper = Str.string_match is_helper_regexp str 0 in
+            if is_helper then
+              let number_string = String.lchop (String.lchop str) in
+                let number = Int.of_string number_string in
+                  Var.mk_helper number
+            else
+              Var.of_string str
+        
     let get_model (constraints : formula) =
         let formula = from_constraint constraints in
         let optimisation_goal = Z3.Optimize.mk_opt !context in
@@ -76,7 +86,9 @@ module Z3Solver =
                                 (List.map 
                                     (fun func_decl -> 
                                         let name = Z3.Symbol.get_string (Z3.FuncDecl.get_name func_decl) in
-                                        let var_of_name = (Var.of_string name) in
+                                        
+                                        (*This is wrong, we have to check if the string is "$_number"*, to get helper variables*)
+                                        let var_of_name = model_string_to_var name in
                                         let value = Option.get (Z3.Model.get_const_interp
                                         model func_decl)(*careful, this returns an option*) in
 

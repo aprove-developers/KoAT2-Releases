@@ -13,4 +13,6 @@ sig
     val unsatisfiable : formula -> bool
 
     val get_model : formula -> valuation
+    
+    val model_string_to_var : string -> Var.t
   end
