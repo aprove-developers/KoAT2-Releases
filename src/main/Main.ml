@@ -106,7 +106,8 @@ let run_localsizebound (params: localsizebound_params) =
 
 let run_prf_search (params: prf_params) =
   let program = Readers.read_file params.input in
-  print_string (RankingFunction.ranking_function_procedure program)
+  (*print_string ("prf_procedure: "^(RankingFunction.to_string_prog program));*)
+  print_string ("model: "^(RankingFunction.ranking_function_procedure program))
   
 let run_smt (params: smt_params) =
   let module Z3 = SMT.Z3Solver in
