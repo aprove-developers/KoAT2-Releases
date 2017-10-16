@@ -74,6 +74,16 @@ module Methods =
     
     let tests =
       "Polynomial" >::: [
+          "String_matching" >::: (
+            List.map (fun (expected,input_str) ->
+                "input_str" >:: (fun _ -> assert_equal ~cmp:Var.(=~=) ~printer:Var.to_string (expected) (Var.of_string input_str) ))
+                        [
+                            (Var.of_string "x","x");
+                            ((Var.mk_helper 1), "$_1");
+                            ((Var.mk_helper 1234567), "$_1234567");
+                        ]
+        );
+        
           "Evaluate" >::: (
             List.map (fun (testname, expected, expression) ->
                 testname >:: (fun _ -> assert_equal_value (OurInt.of_int expected) (evaluate expression)))

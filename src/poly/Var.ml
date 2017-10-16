@@ -6,7 +6,15 @@ type t =
             
 let (=~=) = equal
           
-let of_string str = Var str
+let of_string str =
+    let is_helper_regexp = Str.regexp "[$][_][0-9]+" in
+      let is_helper = Str.string_match is_helper_regexp str 0 in
+        if is_helper then
+          let number_string = String.lchop (String.lchop str) in
+            let number = Int.of_string number_string in
+             Helper number
+        else
+          Var str
                   
 let mk_helper n = Helper n
                 

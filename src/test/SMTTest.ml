@@ -50,7 +50,7 @@ let suite =
         
         "String_matching" >::: (
         List.map (fun (expected,input_str) ->
-            "input_str" >:: (fun _ -> assert_equal ~cmp:Var.(=~=) ~printer:Var.to_string (expected) (Z3Solver.model_string_to_var input_str) ))
+            "input_str" >:: (fun _ -> assert_equal ~cmp:Var.(=~=) ~printer:Var.to_string (expected) (Var.of_string input_str) ))
                     [
                         (Var.of_string "x","x");
                         ((Var.mk_helper 1), "$_1");
