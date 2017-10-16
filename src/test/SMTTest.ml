@@ -48,16 +48,6 @@ let suite =
                     ]
         );
         
-        "String_matching" >::: (
-        List.map (fun (expected,input_str) ->
-            "input_str" >:: (fun _ -> assert_equal ~cmp:Var.(=~=) ~printer:Var.to_string (expected) (Var.of_string input_str) ))
-                    [
-                        (Var.of_string "x","x");
-                        ((Var.mk_helper 1), "$_1");
-                        ((Var.mk_helper 1234567), "$_1234567");
-                    ]
-        );
-        
         "get_model_valuation" >::: (
         List.map (fun (testname, expected, constr, poly) ->
             testname >:: (fun _ -> assert_equal_poly  (Readers.read_polynomial expected) (Polynomial.eval_partial (Readers.read_polynomial poly) (Z3Solver.get_model (Readers.read_formula constr)) )))
