@@ -81,4 +81,6 @@ val is_initial : t -> Transition.t -> bool
 val to_string : t -> string
   
 val vars : t -> VarSet.t
+
+val start : t -> Location.t
   

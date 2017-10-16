@@ -4,6 +4,7 @@ module Location =
   struct
     type t = {
         name : string;
+        (*initial : bool;*)
         (* TODO Possible optimization: invariant : PolynomialConstraints.t*)
       } [@@deriving eq, ord]
            
@@ -12,7 +13,7 @@ module Location =
                
     let to_string l = l.name
                     
-    let of_string name = { name }
+    let of_string inp_name = { name = inp_name }
                        
   end
 
@@ -104,6 +105,8 @@ let from vars transitions start =
 let vars program =
   VarSet.of_list program.vars
   
+let start program = program.start
+  
 let add_vertices_to_rvg vertices rvg =
   vertices
   |> List.map (flip RVG.add_vertex)
@@ -169,8 +172,8 @@ let print_rvg ~outdir ~file program =
                                      end) in
   print_graph outdir (file ^ "_rvg") (rvg program) Dot.output_graph
 
-let is_initial graph (l,t,l') =
-  graph.start == l
+let is_initial program trans =
+  program.start == (Transition.src trans)
 
 let to_string graph =
   "TODO"
