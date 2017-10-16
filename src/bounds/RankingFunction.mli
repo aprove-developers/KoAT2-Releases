@@ -18,7 +18,7 @@ val strictly_decreasing : t -> Program.Transition.t list
 val bounded : t -> Program.Transition.t list
 
 (** Finds a suitable ranking function which decreases at least one transition and does not increase any transition. *)
-(*val find : Program.t -> t*)
+val find : Program.t -> t
 
 (** Transforms the ranking function to a monotonic function. *)
 val monotonize : t -> t
@@ -31,8 +31,8 @@ val generate_ranking_template : Program.t -> PrfTable.parameter_table
 (**Converts a ranking function into a string*)
 val to_string : t -> string
 
-val ranking_function_procedure : Program.t -> string (*Polynomials.Polynomial.t PrfTable.t *
-           Program.TransitionGraph.E.t list*)
+val ranking_function_procedure : Program.t -> (*string*) PrfTable.polynomial_table *
+           Program.TransitionGraph.E.t list
            
 (*val to_string_prog : Program.t -> string*)
 
