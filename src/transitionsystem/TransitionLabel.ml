@@ -15,11 +15,14 @@ type t = {
     target : string;
     update : polynomial Map.t;
     guard : Guard.t;
+    cost : polynomial;
     (* TODO Transitions should have costs *)
   }
+  
+let one = Polynomial.one
 
 let make ~name ~start ~target ~update ~guard = {
-    name; start; target; update; guard
+    name; start; target; update; guard; cost = one;
   }
                                              
                                              
@@ -30,7 +33,7 @@ let mk ~name ~start ~targets ~patterns ~guard ~vars =
     List.combine patterns assignments
     |> List.map (fun (var, assignment) -> Map.add var assignment)
     |> List.fold_left (fun map adder -> adder map) Map.empty 
-    |> fun update -> { name; start; target; update; guard }
+    |> fun update -> { name; start; target; update; guard; cost = one;}
                    
 let equal t1 t2 =
   t1.name == t2.name
@@ -47,6 +50,8 @@ let target t = t.target
 let update t var = Map.Exceptionless.find var t.update                    
                  
 let guard t = t.guard
+
+let cost t = t.cost
             
 let default = {   
     name = "default";
@@ -54,6 +59,7 @@ let default = {
     target = "";
     update = Map.empty;
     guard = Guard.mk_true;
+    cost = one;
   }
             
 let update_to_string_list update =
