@@ -21,19 +21,20 @@ type t = {
   
 let one = Polynomial.one
 
-let make ~name ~start ~target ~update ~guard = {
-    name; start; target; update; guard; cost = one;
+let make  ?(cost=one) name ~start ~target ~update ~guard =
+  {
+    name; start; target; update; guard; cost;
   }
                                              
                                              
 (* TODO Pattern <-> Assigment relation *)
-let mk ~name ~start ~targets ~patterns ~guard ~vars =
+let mk ?(cost=one) ~name ~start ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
     let (target, assignments) = List.hd targets in
     List.combine patterns assignments
     |> List.map (fun (var, assignment) -> Map.add var assignment)
     |> List.fold_left (fun map adder -> adder map) Map.empty 
-    |> fun update -> { name; start; target; update; guard; cost = one;}
+    |> fun update -> { name; start; target; update; guard; cost;}
                    
 let equal t1 t2 =
   t1.name == t2.name
