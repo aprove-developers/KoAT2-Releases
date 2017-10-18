@@ -44,18 +44,23 @@ rule read =
   | ')'               { P.RPAR }
   | '{'               { P.LBRACE }
   | '}'               { P.RBRACE }
+  | '['               { P.LBRACK }
+  | ']'               { P.RBRACK }
   | '+'               { P.PLUS }
   | '*'               { P.TIMES }
   | '-'               { P.MINUS }
   | '^'               { P.POW }
   | "**"              { P.EXP }
   | "->"              { P.ARROW }
+  | "-{"              { P.COSTLEFT }
+  | "}>"              { P.COSTRIGHT }
   | "="               { P.EQUAL }
   | "<="              { P.LESSEQUAL }
   | ">="              { P.GREATEREQUAL }
   | '<'               { P.LESSTHAN }
   | '>'               { P.GREATERTHAN }
   | "&&"              { P.AND }
+  | "/\\"              { P.AND }
   | "||"              { P.OR }
   | ":|:"             { P.WITH }
   | ','               { P.COMMA }

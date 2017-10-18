@@ -7,7 +7,7 @@
 %token			EOF
 %token                  OR
 %token                  AND
-%token 			ARROW WITH
+%token 			ARROW WITH COSTLEFT COSTRIGHT LBRACK RBRACK
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
 %token                  COMMA
 %token                  MIN MAX NEG SUM PRODUCT INFINITY EXP
@@ -80,15 +80,23 @@ transitions :
 variables :   
 	|	LPAR VAR vars = list(ID) RPAR
 		  { List.map Var.of_string vars } ;
+		  
+
+        
 
 transition :
-	|	lhs = transition_lhs; ARROW; rhs = transition_rhs; constr = withConstraints
+	|	lhs = transition_lhs; cost_pair = cost ; rhs = transition_rhs; constr = withConstraints
 	          { TransitionLabel.mk ~name:(Tuple2.first rhs)
                     		       ~start:(Tuple2.first lhs)
                                        ~targets:(Tuple2.second rhs)
                                        ~patterns:(List.map Var.of_string (Tuple2.second lhs))
-                                       ~guard:constr } ;
-
+                                       ~guard:constr 
+                                       ~cost: (Tuple2.second cost_pair)} ;
+cost : 
+        |       COSTLEFT ub = polynomial COMMA lb = polynomial COSTRIGHT
+                  { (lb, ub) };
+        |       ARROW
+                  { (Poly.zero, Poly.one) };
 transition_lhs :
 	|	start = ID; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR)
 	          { (start, patterns) } ;
@@ -96,7 +104,8 @@ transition_lhs :
 transition_rhs :
 	|	name = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
  	          { (name, targets) } ;
-
+        |       targets = separated_nonempty_list(COMMA, transition_target)
+                  { ("Com_1", targets) } ;
 transition_target :
 	|       target = ID; LPAR assignments = separated_list(COMMA, polynomial) RPAR
 	          { (target, assignments) } ;
@@ -104,6 +113,7 @@ transition_target :
 withConstraints :
 	|	{ Constr.mk [] }
 	|       WITH constr = separated_nonempty_list(AND, atom) { Constr.all constr } ;
+	|       LBRACK constr = separated_nonempty_list(AND, atom) RBRACK { Constr.all constr } ;
 
 onlyFormula :
         |       f = formula EOF { f } ;
