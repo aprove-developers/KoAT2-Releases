@@ -1,0 +1,6 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR x y)
+(RULES
+  start(x, y) -{a,b}> g(x, 0)
+)

@@ -1,0 +1,11 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR env o70' o71' i9 i10' o1 o2 o16' o17' o5 o18' i1' o18 x)
+(RULES
+  start(env, o70', o71') -{0,0}> f2(env, o70', o71')
+  f2(o1, o5, env) -{5,5}> f2(o1, o16', env) :|: o16' < o5 && o5 > 0
+  f2(o1, o5, env) -{4,3 + env}> f3(o1, o5, o18', env) :|: o18' <= env
+  f3(o1, o5, o18, env) -{7,7}> f3(o1, o5, o70', env) :|: o70' < o18 && o18 > 0 && i10' != 0
+)
+
+

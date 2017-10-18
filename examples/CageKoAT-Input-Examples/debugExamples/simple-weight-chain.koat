@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR x y)
+(RULES
+  start(x, y) -> g(x, y)
+  g(x,y) -{1,x}> f(y^2,y)
+  f(x,y) -{1,x^2}> h(0,0)
+)

@@ -1,0 +1,9 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR a)
+(RULES
+        start(a) -> one(a)
+        one(a) -> two(a)
+        two(a) -> three(a)
+        three(a) -> four(a)
+)
