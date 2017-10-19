@@ -101,7 +101,7 @@ let run_localsizebound (params: localsizebound_params) =
   let update = match params.update with
     | Some str -> Map.(add var (Readers.read_polynomial str) empty)
     | None -> Map.empty in
-  let label = make ~name:"" ~start:"" ~target:"" ~update ~guard in
+  let label = make "" ~start:"" ~target:"" ~update ~guard in
   print_string (Bound.to_string LocalSizeBound.(as_bound (sizebound_local params.kind label var)))
 
 let run_prf_search (params: prf_params) =

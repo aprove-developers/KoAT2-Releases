@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR x)
+(RULES
+  start(x) -{0,0}> g(x)
+  g(x) -{0,0}> f(5) [ x > 5 && x <= 6 ]
+  f(x) -> f(x-1) [ x >= 0 ]
+)

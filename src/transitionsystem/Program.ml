@@ -173,7 +173,7 @@ let print_rvg ~outdir ~file program =
   print_graph outdir (file ^ "_rvg") (rvg program) Dot.output_graph
 
 let is_initial program trans =
-  program.start == (Transition.src trans)
+  Location.(program.start == (Transition.src trans))
 
 let to_string graph =
   "TODO"

@@ -1,0 +1,6 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x)
+(RULES
+ f(x) -> g(x) :|: x <= 2 * x
+)

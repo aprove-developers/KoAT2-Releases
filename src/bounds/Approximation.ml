@@ -7,18 +7,15 @@ type t = {
     size: ((kind * Program.Transition.t * Var.t), Bound.t) Hashtbl.t;
   }
 
-
 let empty transitioncount varcount = {
     time = Hashtbl.create (2 * transitioncount);
     size = Hashtbl.create (2 * transitioncount * varcount);
   }
 
-                                   
 (* Returns the operator to combine two bounds with the best result. *)
 let combine_bounds = function
   | `Lower -> Bound.max
   | `Upper -> Bound.min
-
            
 let timebound kind appr transition =
   Hashtbl.find_option appr.time (kind, transition)

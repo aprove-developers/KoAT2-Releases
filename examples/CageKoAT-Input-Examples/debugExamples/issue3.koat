@@ -1,0 +1,17 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f1))
+(VAR x' x i37' i16 y' a170 i3' a3 i7' i9' y i6 i12' i9 i7 i8 x2' i16' o6' i6' i8')
+(RULES
+f4(x, y) -> f6(x, y) :|: x < y
+f6(x, y) -> f7(x, y)
+f4(x, y) -> f5(0, x, a3, i16) :|: x = y
+f4(x, y) -> f6(x, y) :|: x > y
+f5(x, y, a3, i16) -> f2(y, 0) :|: x = 0
+f1(x, y) -> f2(x', y') :|: -x2' < y' && i12' + 1 = i16' && y' >= 0 && y' < x2' && x2' < x && i6' < x && x2' >= 0 && o6' > 0 && i6' >= 0 && o6' < x && -x < i6' && o6' >= 0 && -o6' < x' && x' >= 0 && x' < o6' && x2' > 0 && i3' + 1 = i12'
+f2(x, y) -> f3(x, y) :|: y > 0
+f7(x, y) -> f6(x-y, y) :|: x > y
+f3(x, y) -> f4(x, y) :|: y > 0 && x > 0
+f7(x, y) -> f2(y, x) :|: x <= y
+f3(x, y) -> f5(0, y, a3, i16) :|: x = 0
+)
+
