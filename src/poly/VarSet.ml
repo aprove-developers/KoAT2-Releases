@@ -24,3 +24,7 @@ let of_string_list list =
   list
   |> List.map Var.of_string
   |> of_list
+
+let powerset set =
+  let combine (result: t Enum.t) (x: Var.t) = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
+  Enum.fold combine (Enum.singleton empty) (enum set)

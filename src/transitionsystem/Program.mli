@@ -23,6 +23,7 @@ end
 module RV :
 sig
   type t = Transition.t * Var.t [@@deriving eq]
+  val equal : t -> t -> bool
   val compare : t -> t -> int
   val hash : t -> int
   val transition : t -> Transition.t
@@ -34,6 +35,8 @@ sig
   include module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
   type scc = RV.t list
+
+  val pre : t -> RV.t -> RV.t Enum.t
 
   (** Returns all the entry points of the SCC.
       Those are all result variables that are in the RVG, but not in the SCC and lead to any result variable in the RVG. *)
