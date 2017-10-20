@@ -162,6 +162,7 @@ let abs var =
 
 let is_var = function
   | Poly poly -> Polynomial.is_var poly
+  | Abs var -> true
   | _ -> false
 
 let substitute_f substitution =
