@@ -109,10 +109,6 @@ module type Evaluable =
     val degree : t -> int
   end
 
-(** This module type defines how functors constructing evaluables have to be defined *)
-module type EvaluableFunctor =
-  functor (Value : Ring) -> Evaluable with type value = Value.t
-
 (** A monomial is a finite product of powers *)
 module type Monomial =
   sig
