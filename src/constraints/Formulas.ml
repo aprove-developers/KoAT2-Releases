@@ -16,9 +16,6 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let mk constr =
       [constr]
            
-    let fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj ~wrong ~disj =
-      List.fold_left (fun c constr -> disj c (C.fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj constr)) wrong
-      
     let disj constraints =
       constraints
 
@@ -46,13 +43,11 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let mk_or =
       List.append
 
+    let fold ~subject ~le ~correct ~conj ~wrong ~disj =
+      List.fold_left (fun c constr -> disj c (C.fold ~subject ~le ~correct ~conj constr)) wrong
+
     let neg =
-      fold ~const:C.A.P.from_constant
-           ~var:C.A.P.from_var
-           ~neg:C.A.P.neg
-           ~plus:C.A.P.add
-           ~times:C.A.P.mul
-           ~pow:C.A.P.pow
+      fold ~subject:identity
            ~le:mk_gt
            ~correct:mk_false
            ~conj:mk_or
@@ -108,6 +103,7 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
 module Formula =
   struct
     include FormulaOver(Constraint)
+
   end
 
 module ParameterFormula =

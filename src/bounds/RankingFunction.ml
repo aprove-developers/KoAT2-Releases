@@ -30,7 +30,7 @@ let apply_farkas a_matrix b_right c_left d_right =
   let num_of_fresh = List.length b_right in
   let fresh_vars = Var.fresh_id_list num_of_fresh in
   let dual_constr = Constraint.dualise fresh_vars a_matrix c_left in
-  let cost_constr = Polynomial.from_coeff_list b_right fresh_vars in
+  let cost_constr = Polynomial.of_coeff_list b_right fresh_vars in
   Constraint.mk_and dual_constr (Constraint.mk_le cost_constr d_right)
   
 (** Invokes farkas quantifier elimination. Uses apply_farkas*)
@@ -47,9 +47,9 @@ let farkas_transform constr param_atom =
 (** Given a list of variables an affine template-polynomial is generated*)            
 let ranking_template vars =
   let num_vars = (List.length vars) in
-  let fresh_coeffs = List.map Polynomial.from_var (Var.fresh_id_list num_vars) in
-  let linear_poly = ParameterPolynomial.from_coeff_list fresh_coeffs vars in
-  let constant = ParameterPolynomial.from_constant (Polynomial.from_var (List.at (Var.fresh_id_list 1) 0)) in
+  let fresh_coeffs = List.map Polynomial.of_var (Var.fresh_id_list num_vars) in
+  let linear_poly = ParameterPolynomial.of_coeff_list fresh_coeffs vars in
+  let constant = ParameterPolynomial.of_constant (Polynomial.of_var (List.at (Var.fresh_id_list 1) 0)) in
   ParameterPolynomial.add linear_poly constant 
   
 let copy_list_into_hash hashtbl pairs_list =
@@ -82,8 +82,8 @@ let generate_ranking_template program =
 let help_update label var =
   let update_var = TransitionLabel.update label var in
   match update_var with
-  |None -> ParameterPolynomial.from_var var
-  |Some p -> ParameterPolynomial.from_polynomial p
+  |None -> ParameterPolynomial.of_var var
+  |Some p -> ParameterPolynomial.of_polynomial p
            
 let help_non_increasing (program : Program.t) (table : PrfTable.parameter_table) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
   let initial = Program.is_initial program trans in
@@ -114,7 +114,7 @@ let help_strict_decrease (program : Program.t) (table : PrfTable.parameter_table
                   let target_parapoly = PrfTable.find table (Program.TransitionGraph.E.dst trans) in
                   let guard = TransitionLabel.guard trans_label in
                   let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) target_parapoly in
-                  let cost = ParameterPolynomial.from_polynomial (TransitionLabel.cost trans_label) in
+                  let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
                     let new_atom = ParameterAtom.mk_ge start_parapoly ParameterPolynomial.(cost + updated_target) in (*here's the difference*)
                     farkas_transform guard new_atom
   
@@ -126,7 +126,7 @@ let help_boundedness (program : Program.t) (table : PrfTable.parameter_table) (t
                   let trans_label = Program.TransitionGraph.E.label trans in
                   let start_parapoly = PrfTable.find table (Program.TransitionGraph.E.src trans) in
                   let guard = TransitionLabel.guard trans_label in
-                  let cost = ParameterPolynomial.from_polynomial (TransitionLabel.cost trans_label) in
+                  let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
                     let new_atom = ParameterAtom.mk_ge start_parapoly cost in 
                     farkas_transform guard new_atom
   

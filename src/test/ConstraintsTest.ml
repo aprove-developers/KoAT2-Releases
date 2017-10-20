@@ -174,7 +174,7 @@ module Methods =
                 let open Constraint.Infix in
                     let assert_equal_constr = assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string in
                 List.map (fun (expected, constr, atom) ->
-                      (Atom.to_string atom) >:: (fun _ -> assert_equal_constr expected (farkas_transform constr atom )))
+                      (Atom.to_string atom) >:: (fun _ -> assert_equal_constr expected (Constraint.farkas_transform constr atom )))
                         [
                           ( (all [ (((value 1)*(helper 1)) + ((value 1)*(helper 2)) + ((value (-1))*(helper 3))) = value 2;
                                    (((value 1)*(helper 1)) + ((value (-1))*(helper 4))) = value 1;

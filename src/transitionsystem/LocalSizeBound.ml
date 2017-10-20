@@ -34,8 +34,8 @@ let to_string = function
                 
 let as_formula in_v = function
   | ScaledSum (s, e, vars) ->
-     let v = Polynomial.from_var in_v in
-     let var_list = VarSet.map_to_list Polynomial.from_var vars in
+     let v = Polynomial.of_var in_v in
+     let var_list = VarSet.map_to_list Polynomial.of_var vars in
      Polynomial.(Formula.Infix.(v <= of_int s * (of_int e + sum var_list)))
 
 let is_bounded_with var formula template_bound =
@@ -174,7 +174,7 @@ let sizebound_local kind label var =
   >>= fun bound ->
     (* Introduce a temporary result variable *)
     let v' = Var.fresh_id () in
-    let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.from_var v' = bound) in
+    let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = bound) in
     match kind with
     | `Upper ->
        find_bound v' guard_with_update

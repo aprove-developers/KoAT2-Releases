@@ -102,6 +102,8 @@ let of_poly =
               
 let of_int i = Const (OurInt.of_int i)
                   
+let to_int poly = raise (Failure "TODO: Not possible")
+                
 let of_var_string str = Var (Var.of_string str)
 
 let infinity = Min []

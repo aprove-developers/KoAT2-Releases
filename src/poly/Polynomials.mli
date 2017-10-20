@@ -23,5 +23,5 @@ sig
 
   val flatten : t -> PolynomialOver(OurInt).t
   
-  val from_polynomial : PolynomialOver(OurInt).t -> t
+  val of_polynomial : PolynomialOver(OurInt).t -> t
 end

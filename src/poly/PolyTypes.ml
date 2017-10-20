@@ -215,15 +215,15 @@ module type Polynomial =
 
     val make : (value * monomial) list -> t
     val lift : value -> monomial -> t
-    val from_scaled : scaled_monomial list -> t
-    val from_var : Var.t -> t
-    val from_constant : value -> t
+    val of_scaled : scaled_monomial list -> t
+    val of_var : Var.t -> t
+    val of_constant : value -> t
     val var : string -> t
     val value : int -> t
     val helper : int -> t
-    val from_power : Var.t -> int -> t
-    val from_monomial : monomial -> t
-    val from_coeff_list : value list -> Var.t list -> t
+    val of_power : Var.t -> int -> t
+    val of_monomial : monomial -> t
+    val of_coeff_list : value list -> Var.t list -> t
       
     (** Following methods return information over the polynomial. *)
 
