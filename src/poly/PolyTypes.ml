@@ -2,15 +2,6 @@ open Batteries
 
 (** Provides all module types related to polynomials *)
 
-(** Modules including Eq hold a type that defines a semantic equality relation on its elements.
-    (==) is not used for that, because it has a reserved meaning in Ocaml. *)
-module type Eq =
-  sig
-    type t
-    val (=~=) : t -> t -> bool
-    (* TODO val (!=) : t -> t -> bool *)
-  end
-
 (** TODO *)
 module type Ring =
   sig
@@ -38,7 +29,7 @@ module type Ring =
 module type BasePartialOrder =
   sig
     type t
-    include Eq with type t := t
+    val (=~=) : t -> t -> bool
     val (>) : t -> t -> bool Option.t
   end
 
@@ -99,7 +90,8 @@ module type Evaluable =
     type value
     type valuation
 
-    include Eq with type t := t
+    val (=~=) : t -> t -> bool       
+       
     val to_string : t -> string
 
     (** Returns a set of the variables which occur in the evaluable *)
