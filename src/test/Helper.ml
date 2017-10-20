@@ -10,15 +10,23 @@ open Polynomials
    but there is a very efficient print function which is however a bit inconvenient to use. *)
 let to_string_template_bound_option (option: LocalSizeBound.t Option.t): string =
   let output = IO.output_string () in
-  Option.print (fun output template_bound -> IO.nwrite output (Bound.to_string (LocalSizeBound.as_bound template_bound))) output option;
+  Option.print (fun output template_bound -> IO.nwrite output (Bound.to_string (LocalSizeBound.as_bound (Some template_bound)))) output option;
   IO.close_out output
 
+let to_string_varset_enum (enum: VarSet.t Enum.t): string =
+  let output = IO.output_string () in
+  Enum.print (fun output varset -> IO.nwrite output (VarSet.to_string varset)) output enum;
+  IO.close_out output
+  
 let assert_equal_bool = assert_equal ~printer:Bool.to_string ~cmp:Bool.equal
 
 let assert_equal_string = assert_equal ~printer:identity ~cmp:String.equal
 
 let assert_equal_int = assert_equal ~printer:string_of_int ~cmp:Int.equal
-                        
+
+let assert_equal_varset_enum =
+  assert_equal ~cmp:(Enum.equal VarSet.equal) ~printer:to_string_varset_enum
+
 let assert_equal_value =
   assert_equal ~cmp:OurInt.(=~=) ~printer:OurInt.to_string
 

@@ -17,7 +17,7 @@ module PolynomialOver(Value : PolyTypes.Ring) =
     
     let lift coeff mon = [ScaledMonomial_.make coeff mon]
 
-    let from_scaled scaled = scaled
+    let of_scaled scaled = scaled
 
     let fold ~const ~var ~neg ~plus ~times ~pow =
       List.fold_left (fun b scaled -> plus b (ScaledMonomial_.fold ~const ~var ~times ~pow scaled)) (const Value.zero)
@@ -72,28 +72,28 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       |> List.map ScaledMonomial_.monomial
       |> List.filter ((<>) Monomial_.one)
 
-    let from_monomial mon = lift Value.one mon
+    let of_monomial mon = lift Value.one mon
 
-    let from_power var n = from_monomial (Monomial_.lift var n)
+    let of_power var n = of_monomial (Monomial_.lift var n)
       
-    let from_constant c = lift c Monomial_.one
+    let of_constant c = lift c Monomial_.one
 
-    let from_var var = from_power var 1
+    let of_var var = of_power var 1
     
-    let rec from_coeff_list coeffs vars =
+    let rec of_coeff_list coeffs vars =
         if (List.length coeffs) == (List.length vars) then
             match (coeffs, vars) with
                 |([],[])-> []
-                |(c::coefftail, v::varstail)-> (ScaledMonomial_.make c (Monomial_.lift v 1)) :: (from_coeff_list coefftail varstail)
+                |(c::coefftail, v::varstail)-> (ScaledMonomial_.make c (Monomial_.lift v 1)) :: (of_coeff_list coefftail varstail)
                 |_ -> []
         else []
             
 
-    let var str = from_var (Var.of_string str)
+    let var str = of_var (Var.of_string str)
 
-    let value c = from_constant (Value.of_int c)
+    let value c = of_constant (Value.of_int c)
     
-    let helper n = from_var (Var.mk_helper n)
+    let helper n = of_var (Var.mk_helper n)
 
     let of_int = value                        
 
@@ -215,7 +215,7 @@ module PolynomialOver(Value : PolyTypes.Ring) =
     let is_one poly = poly =~= one
                     
     let instantiate (substitution : Value.t -> t) =
-      fold ~const:substitution ~var:from_var ~neg:neg ~plus:add ~times:mul ~pow:pow
+      fold ~const:substitution ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow
 
     let eval_f poly f =
          poly
@@ -228,22 +228,22 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       |> List.fold_left Value.add Value.zero
 
     let substitute_f substitution =
-      fold ~const:from_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow
+      fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow
           
     let substitute var ~replacement =
       substitute_f (fun target_var ->
-          if Var.(var =~= target_var) then replacement else from_var target_var
+          if Var.(var =~= target_var) then replacement else of_var target_var
         )
 
     let substitute_all substitution =
       let module VarMap = Map.Make(Var) in
       substitute_f (fun var ->
-          VarMap.find_default (from_var var) var substitution
+          VarMap.find_default (of_var var) var substitution
         )
       
     let eval_partial poly valuation =
       substitute_f (fun var ->
-          Option.map from_constant (Valuation_.eval_opt var valuation) |? from_var var
+          Option.map of_constant (Valuation_.eval_opt var valuation) |? of_var var
         ) poly
 
     let partition =
@@ -261,12 +261,12 @@ module ParameterPolynomial =
     (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
     (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
     let flatten (templatepoly : Outer.t): Inner.t =
-      Outer.fold ~const:identity ~var:Inner.from_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
+      Outer.fold ~const:identity ~var:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
       
     (** Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
     (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
-    let from_polynomial (poly : Inner.t): t =
-      Inner.fold ~const:(fun value -> from_constant (Inner.from_constant value)) ~var:from_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
+    let of_polynomial (poly : Inner.t): t =
+      Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
   end
 
 module Polynomial =

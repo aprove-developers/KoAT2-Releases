@@ -9,3 +9,5 @@ val map_to_list : (elt -> 'b) -> t -> 'b list
 val to_string : t -> string
 
 val of_string_list : string list -> t
+
+val powerset : t -> t Enum.t

@@ -3,6 +3,19 @@ open PolyTypes
 
 (** Provides all module types related to constraints *)
 
+module type Atomizable =
+  sig
+    type t
+    type value
+    include Ring with type t := t
+
+    val sub : t -> t -> t
+    val of_constant : value -> t
+    val of_var : Var.t -> t
+    val vars : t -> VarSet.t
+    val rename : RenameMap.t -> t -> t
+  end
+   
 (** An atom is a comparison between two polynomials *)
 module type Atom =
   sig
@@ -30,7 +43,7 @@ module type Atom =
         type value
 
         (* TODO Shouldn't be exposed *)
-        module P : PolyTypes.Polynomial
+        module P : Atomizable
                with type t = polynomial
                 and type value = value
 
@@ -60,9 +73,6 @@ module type Atom =
           
         val to_string : t -> string
 
-        (** Returns if both polynomials are linear. *)
-        val is_linear : t -> bool
-
         (** Returns the set of variables which are active in the atom.
             A variable is active, if it's value has an effect on the evaluation of the atom. *)
         val vars : t -> VarSet.t
@@ -70,33 +80,17 @@ module type Atom =
         (** Returns a normalised form of the atom, where the returned polynomial represents the atom in the form p <= 0. *)
         val normalised_lhs : t -> polynomial
 
-        (** Returns the single right hand side constant of the atom. *)
-        val get_constant : t -> value
-
-        (** Returns the coefficient of a variable which is normalised to the lhs. *)
-        val get_coefficient : Var.t -> t -> value
-          
         (** Following methods manipulate atoms and return the manipulated versions. *)
 
         (** Assigns the variables of the atom new names based on the rename map. *)
         val rename : t -> RenameMap.t -> t
 
-          (*
-        (** Assigns each variable a value and returns if the atom is satisfied for those values. *)
-        val models : t -> Polynomial_.Valuation_.t -> bool
-           *)
-
         (** Replaces all operations by new constructors. *)
-        val fold : const:(value -> 'b) ->
-                   var:(Var.t -> 'b) ->
-                   neg:('b -> 'b) ->               
-                   plus:('b -> 'b -> 'b) ->
-                   times:('b -> 'b -> 'b) ->
-                   pow:('b -> int -> 'b) ->
+        val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
-                   t -> 'c 
-          
-    end
+                   t -> 'c
+
+  end
 
 (** A constraint is a conjunction of atoms *)
 module type Constraint =
@@ -161,42 +155,13 @@ module type Constraint =
         (** Assigns the variables of the constraint new names based on the rename map *)
         val rename : t -> RenameMap.t -> t
 
-          (*
-        (** Assigns each variable a value and returns if the constraint is satisfied for those values *)
-        val models : t -> Polynomial_.Valuation_.t -> bool
-           *)
-
         (** Replaces all operations by new constructors. *)
-        val fold : const:(value -> 'b) ->
-                   var:(Var.t -> 'b) ->
-                   neg:('b -> 'b) ->               
-                   plus:('b -> 'b -> 'b) ->
-                   times:('b -> 'b -> 'b) ->
-                   pow:('b -> int -> 'b) ->
+        val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
                    correct:('d) ->
                    conj:('d -> 'c -> 'd) ->
                    t -> 'd
-
           
-        (** The result of the following drop methods is not equivalent to the input constraint. 
-            But each satisfying valuation of the input constraint is still a model of the new constraint. *)
-          
-        (** Drops all nonlinear atoms from the constraints. 
-            Example: (a > 0 && b^2 < 2) gets transformed to (a > 0) *)
-        val drop_nonlinear : t -> t
-        
-        (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
-        val get_coefficient_vector : Var.t -> t -> value list
-        
-        val get_matrix : VarSet.t -> t -> value list list
-        
-        (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
-        val get_constant_vector : t -> value list
-        
-        val dualise : Var.t list -> value list list -> polynomial list -> t
-
-        val farkas_transform : t -> atom -> t
   end
 
 (** A formula is a propositional formula *)
@@ -260,12 +225,7 @@ module type Formula =
         val rename : t -> RenameMap.t -> t
 
         (** Replaces all operations by new constructors. *)
-        val fold : const:(value -> 'b) ->
-                   var:(Var.t -> 'b) ->
-                   neg:('b -> 'b) ->               
-                   plus:('b -> 'b -> 'b) ->
-                   times:('b -> 'b -> 'b) ->
-                   pow:('b -> int -> 'b) ->
+        val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
                    correct:('d) ->
                    conj:('d -> 'c -> 'd) ->

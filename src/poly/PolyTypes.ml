@@ -2,43 +2,12 @@ open Batteries
 
 (** Provides all module types related to polynomials *)
 
-(** Modules including Eq hold a type that defines a semantic equality relation on its elements.
-    (==) is not used for that, because it has a reserved meaning in Ocaml. *)
-module type Eq =
-  sig
-    type t
-    val (=~=) : t -> t -> bool
-    (* TODO val (!=) : t -> t -> bool *)
-  end
-
-(** TODO *)
-module type Ring =
-  sig
-    type t [@@deriving eq]
-
-    val zero : t
-    val one : t
-    val neg : t -> t
-    val add : t -> t -> t
-    val mul : t -> t -> t
-    val pow : t -> int -> t
-
-    val equal : t -> t -> bool
-    val (=~=) : t -> t -> bool
-
-    val of_int : int -> t
-    val to_int : t -> int
-
-    val to_string : t -> string
-                          (* val eval : t -> (Var.t -> value) -> value *)
-  end
-
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
     They can be typeclass-like extended by MakePartialOrder. *)
 module type BasePartialOrder =
   sig
     type t
-    include Eq with type t := t
+    val (=~=) : t -> t -> bool
     val (>) : t -> t -> bool Option.t
   end
 
@@ -99,7 +68,8 @@ module type Evaluable =
     type value
     type valuation
 
-    include Eq with type t := t
+    val (=~=) : t -> t -> bool       
+       
     val to_string : t -> string
 
     (** Returns a set of the variables which occur in the evaluable *)
@@ -116,10 +86,6 @@ module type Evaluable =
 
     val degree : t -> int
   end
-
-(** This module type defines how functors constructing evaluables have to be defined *)
-module type EvaluableFunctor =
-  functor (Value : Ring) -> Evaluable with type value = Value.t
 
 (** A monomial is a finite product of powers *)
 module type Monomial =
@@ -217,6 +183,21 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
     let (~-) = neg
   end
 
+module type Ring =
+  sig
+    type t [@@deriving eq]
+
+    include BaseMath with type t := t
+       
+    val equal : t -> t -> bool
+    val (=~=) : t -> t -> bool
+
+    val of_int : int -> t
+    val to_int : t -> int
+
+    val to_string : t -> string
+  end
+  
 (** A Polynomial represents a mathematical polynomial *)
 module type Polynomial =
   sig
@@ -234,15 +215,15 @@ module type Polynomial =
 
     val make : (value * monomial) list -> t
     val lift : value -> monomial -> t
-    val from_scaled : scaled_monomial list -> t
-    val from_var : Var.t -> t
-    val from_constant : value -> t
+    val of_scaled : scaled_monomial list -> t
+    val of_var : Var.t -> t
+    val of_constant : value -> t
     val var : string -> t
     val value : int -> t
     val helper : int -> t
-    val from_power : Var.t -> int -> t
-    val from_monomial : monomial -> t
-    val from_coeff_list : value list -> Var.t list -> t
+    val of_power : Var.t -> int -> t
+    val of_monomial : monomial -> t
+    val of_coeff_list : value list -> Var.t list -> t
       
     (** Following methods return information over the polynomial. *)
 

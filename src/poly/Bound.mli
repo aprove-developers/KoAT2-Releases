@@ -16,6 +16,7 @@ type polynomial = PolynomialOver(OurInt).t
 val of_poly : polynomial -> t              
 val of_constant : value -> t
 val of_int : int -> t
+val to_int : t -> int
 val of_var : Var.t -> t
 val of_var_string : string -> t
   
@@ -27,6 +28,7 @@ val infinity : t
 val minus_infinity : t
 val exp : value -> t -> t
   
+val equal : t -> t -> bool
 val to_string : t -> string
 
 (** Following methods can be used to classify the type of the polynomial. *)
@@ -52,5 +54,6 @@ val fold : const:(value -> 'b) ->
            exp:(value -> 'b -> 'b) ->
            min:('b -> 'b -> 'b) -> 
            max:('b -> 'b -> 'b) ->
+           abs:(Var.t -> 'b) -> 
            inf:'b ->
            t -> 'b 

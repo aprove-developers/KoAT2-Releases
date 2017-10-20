@@ -3,6 +3,7 @@ open OUnit2
                              
 let suite =
   "Suite" >::: [
+      VarSetTest.tests;
       "Polynomial" >::: [
         PolynomialsTest.Parser.tests;
         PolynomialsTest.Methods.tests;

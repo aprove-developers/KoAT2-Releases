@@ -1,7 +1,7 @@
 open Batteries
 open Polynomials
    
-module AtomOver(P : PolyTypes.Polynomial) =
+module AtomOver(P : ConstraintTypes.Atomizable) =
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
 struct
     module P = P
@@ -76,20 +76,15 @@ struct
               
     let to_string atom = (P.to_string atom) ^ " <= 0"
         
-    let is_linear = P.is_linear 
-        
     let vars = P.vars
 
     let normalised_lhs atom = atom
              
-    let get_constant atom =
-      P.constant (P.neg atom)
-
-    let get_coefficient var atom =
-      P.coeff_of_var var (normalised_lhs atom)
-      
     let rename atom varmapping = P.rename varmapping atom
 
+    let fold ~subject ~le poly =
+      le (subject poly) (subject P.zero)
+      
                                (*
     (* TODO It's maybe possible to compare polynomials without full evaluation *)
     (* However, there are probably more expensive operations *)
@@ -97,15 +92,20 @@ struct
       P.Value.Compare.((P.eval atom valuation) <= P.Value.zero)
                                 *)
 
-    let fold ~const ~var ~neg ~plus ~times ~pow ~le poly =
-      le (P.fold ~const ~var ~neg ~plus ~times ~pow poly) (P.fold ~const ~var ~neg ~plus ~times ~pow P.zero)
-      
 end
 
 module Atom =
   struct
     include AtomOver(Polynomial)
         
+    let is_linear = Polynomial.is_linear 
+        
+    let get_coefficient var atom =
+      Polynomial.coeff_of_var var (normalised_lhs atom)
+      
+    let get_constant atom =
+      Polynomial.constant (Polynomial.neg atom)
+
     let to_string atom =
       Polynomial.separate_by_sign atom
       |> (fun (positive, negative) -> Polynomial.to_string positive ^ " <= " ^ Polynomial.to_string (Polynomial.neg negative))
@@ -115,4 +115,16 @@ module Atom =
 module ParameterAtom =
   struct
     include AtomOver(ParameterPolynomial)
+
+    let get_coefficient var atom =
+      ParameterPolynomial.coeff_of_var var (normalised_lhs atom)
+      
+    let get_constant atom =
+      ParameterPolynomial.constant (ParameterPolynomial.neg atom)
+
+  end
+
+module BoundAtom =
+  struct
+    include AtomOver(Bound)
   end

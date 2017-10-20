@@ -122,7 +122,7 @@ module Methods =
 
           "Instantiate" >::: (
             List.map (fun (testname, expected, poly) ->
-                testname >:: (fun _ -> assert_equal_poly expected (Polynomial.instantiate Polynomial.from_constant poly)))
+                testname >:: (fun _ -> assert_equal_poly expected (Polynomial.instantiate Polynomial.of_constant poly)))
                      [
                        ("Constant", Polynomial.value 42, Polynomial.value 42);
                      ];
@@ -132,9 +132,9 @@ module Methods =
             List.map (fun (testname, expected, poly) ->
                 testname >:: (fun _ -> assert_equal_parameter_poly
                                          expected
-                                         (ParameterPolynomial.instantiate (fun v -> ParameterPolynomial.from_constant (Polynomial.from_constant (Polynomial.eval_f v (fun _ -> OurInt.of_int 2)))) poly)))
+                                         (ParameterPolynomial.instantiate (fun v -> ParameterPolynomial.of_constant (Polynomial.of_constant (Polynomial.eval_f v (fun _ -> OurInt.of_int 2)))) poly)))
                      [
-                       ("a*x", ParameterPolynomial.((value 2) * (var "x")), ParameterPolynomial.((from_constant (Polynomial.var "a")) * (var "x")) );
+                       ("a*x", ParameterPolynomial.((value 2) * (var "x")), ParameterPolynomial.((of_constant (Polynomial.var "a")) * (var "x")) );
                      ];
           );
 
@@ -144,15 +144,15 @@ module Methods =
                 testname >:: (fun _ -> assert_equal_poly (expected) (T.flatten poly)))
                      [
                        ("1st", Polynomial.((value 2) * (var "a") * (var "x") + (var "b") * (var "x") + (value 3) * (var "a") * (var "y") - (value 1)),
-                        T.((from_constant Polynomial.((value 2) * (var "a") + (var "b"))) * (var "x") +
-                             (from_constant Polynomial.((value 3) * (var "a"))) * (var "y") -
+                        T.((of_constant Polynomial.((value 2) * (var "a") + (var "b"))) * (var "x") +
+                             (of_constant Polynomial.((value 3) * (var "a"))) * (var "y") -
                              (value 1)));
                      ];
           );
           
           "from_coeff_list" >::: (
             List.map (fun (expected, coeffs, vars) ->
-                expected >:: (fun _ -> assert_equal_poly (Polynomial.from_coeff_list coeffs vars) (Readers.read_polynomial expected)))
+                expected >:: (fun _ -> assert_equal_poly (Polynomial.of_coeff_list coeffs vars) (Readers.read_polynomial expected)))
                      [
                        ("2 * x + 3 * y - 4 * z", [(of_int 2); (of_int 3); (of_int (-4))],[(of_string "x"); (of_string "y"); (of_string "z")]);
                        ("0", [(of_int 2); (of_int 3)],[(of_string "x"); (of_string "y"); (of_string "z")]);

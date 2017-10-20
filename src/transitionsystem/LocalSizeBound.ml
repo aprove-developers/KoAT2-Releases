@@ -6,78 +6,55 @@ let logger = Logger.make_log "lsb"
            
 type formula = Formula.t
 
-type template =
-  | Equality of int
-  | AddsConstant of int
-  | ScaledSum of int * int
-  | Unbound [@@deriving eq, show]
+type t = ScaledSum of int * int * VarSet.t
   
-type t = template * VarSet.t
-
-let mk template vars =
-  (template, VarSet.of_list (List.map Var.of_string vars))
+let mk s e vars =
+  ScaledSum (s, e, VarSet.of_list (List.map Var.of_string vars))
        
 let equal c1 c2 =
   match (c1,c2) with
-  | ((cl1, vars1), (cl2, vars2)) -> equal_template cl1 cl2 && VarSet.equal vars1 vars2
+  | (ScaledSum (s1, e1, vars1), ScaledSum (s2, e2, vars2)) ->
+     s1 = s2 && e1 = e2 && VarSet.equal vars1 vars2
 
-let as_bound (template, vars) =
-  let var_list = VarSet.map_to_list Bound.of_var vars in
-  let open Bound in
-  match template with
-  | Equality c ->
-     maximum (of_int c :: var_list)
-  | AddsConstant d ->
-     of_int d + maximum var_list
-  | ScaledSum (s,e) ->
-     of_int s * (of_int e + sum var_list)
-  | Unbound -> infinity
+let as_bound = function
+  | Some (ScaledSum (s,e,vars)) ->
+     let var_list = VarSet.map_to_list Bound.of_var vars in
+     Bound.(of_int s * (of_int e + sum var_list))
+  | None -> Bound.infinity
 
 (* There is no to_string for options in batteries,
    but there is a very efficient print function which is however a bit inconvenient to use. *)
 let to_string_option_template_bound (option: t Option.t): string =
   let output = IO.output_string () in
-  Option.print (fun output template_bound -> IO.nwrite output (Bound.to_string (as_bound template_bound))) output option;
+  Option.print (fun output template_bound -> IO.nwrite output (Bound.to_string (as_bound (Some template_bound)))) output option;
   IO.close_out output
 
 let to_string = function
-  | (template, vars) -> (show_template template) ^ VarSet.to_string vars
+  | (ScaledSum (s, e, vars)) -> String.concat " " ["ScaledSum"; String.of_int s; String.of_int e; VarSet.to_string vars]
                 
-let as_formula in_v (template, vars) =
-  let var_list = VarSet.map_to_list Polynomial.from_var vars
-  and v = Polynomial.from_var in_v in
-  let open Polynomial in
-  match template with
-  | Equality c ->
-     Formula.le_than_any v (of_int c :: var_list)
-  | AddsConstant d ->
-     Formula.le_than_any v (List.map ((+) (of_int d)) var_list)
-  | ScaledSum (s,e) ->
-     Formula.Infix.(v <= of_int s * (of_int e + sum var_list))
-  | Unbound ->
-     Formula.mk_true
+let as_formula in_v = function
+  | ScaledSum (s, e, vars) ->
+     let v = Polynomial.of_var in_v in
+     let var_list = VarSet.map_to_list Polynomial.of_var vars in
+     Polynomial.(Formula.Infix.(v <= of_int s * (of_int e + sum var_list)))
 
-let equality_constant = function
-  | (Equality c, _) -> Some c
-  | _ -> None
-
-let addsconstant_constant = function
-  | (AddsConstant d, _) -> Some d
-  | _ -> None
-
-let boundtype = function
-  | (Equality _, _) -> `Equality
-  | (AddsConstant _, _) -> `AddsConstant
-  | (ScaledSum _, _) -> `ScaledSum
-  | (Unbound, _) -> `Unbound
-       
 let is_bounded_with var formula template_bound =
   template_bound
   |> as_formula var
   |> Formula.implies formula
   |> Formula.neg
+  |> (fun f -> Logger.log logger Logger.DEBUG (fun () -> "is_bounded_with", ["formula", Formula.to_string f]); f)
   |> SMT.Z3Solver.unsatisfiable
 
+let is_bounded_with_constant var formula c =
+  is_bounded_with var formula (ScaledSum (1, c, VarSet.empty))
+
+let is_bounded_with_var var formula var =
+  is_bounded_with var formula (ScaledSum (1, 0, VarSet.singleton var))
+
+let is_bounded_with_var_plus_constant var formula var c =
+  is_bounded_with var formula (ScaledSum (1, c, VarSet.singleton var))
+  
 (** Performs a binary search between the lowest and highest value to find the optimal value which satisfies the predicate.
     We assume that the highest value already satisfies the predicate.
     Therefore this method always finds a solution. *)
@@ -98,12 +75,12 @@ let binary_search (lowest: int) (highest: int) (p: int -> bool) =
                   (fun () -> "binary search optimum", ["lowest", Int.to_string lowest; "highest", Int.to_string highest])
                   ~result:Int.to_string
                   (fun () -> binary_search_ lowest highest p)
-                                                                                          
+
 (** Minimizes the given variable set, such that the predicate p is still satisfied.
     We assume that the given variable set satisfies the predicate p.
     TODO Currently we use an arbitrary order. This is sound, however for "x <= y && y <= z" we may return z although y would be definitely better. *)
-let minimize_vars (vars: VarSet.t) (p: VarSet.t -> bool): VarSet.t =
-  let minimize_vars_ vars p =
+let minimize_vars (p: VarSet.t -> bool) (vars: VarSet.t): VarSet.t =
+  let minimize_vars_ () =
     (** Removes the candidate from the set, if the candidate is not necessary. *)
     let minimize_with_candidate var current_minimized_set =
       let further_minimized_set = VarSet.remove var current_minimized_set in
@@ -117,79 +94,92 @@ let minimize_vars (vars: VarSet.t) (p: VarSet.t -> bool): VarSet.t =
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "minimize vars", ["vars", VarSet.to_string vars])
                   ~result:(fun result -> VarSet.to_string result)
-                  (fun () -> minimize_vars_ vars p)
+                  (fun () -> minimize_vars_ ())
+
+let minimize_scaledsum_vars (p: t -> bool) (template_bound: t): t =
+  match template_bound with
+  | (ScaledSum (s, e, vars)) ->
+     ScaledSum (s, e, minimize_vars (fun vars -> p (ScaledSum (s, e, vars))) vars)
+
+let optimize_c (lowest: int) (highest: int) (p: t -> bool) (template_bound: t): t =
+  let optimize_c_ () = match template_bound with
+  | (ScaledSum (s, e, vars)) ->
+     ScaledSum (s, binary_search lowest highest (fun c -> p (ScaledSum (s, c, vars))), vars)
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "optimize_c", ["lowest", Int.to_string lowest; "highest", Int.to_string highest; "template_bound", to_string template_bound])
+                  ~result:to_string
+                  (fun () -> optimize_c_ ())
+
+let optimize_s (lowest: int) (highest: int) (p: t -> bool) (template_bound: t): t =
+  let optimize_s_ () = match template_bound with
+    | (ScaledSum (s, e, vars)) ->
+       ScaledSum (binary_search lowest highest (fun s -> p (ScaledSum (s, e, vars))), e, vars)
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "optimize_s", ["lowest", Int.to_string lowest; "highest", Int.to_string highest; "template_bound", to_string template_bound])
+                  ~result:to_string
+                  (fun () -> optimize_s_ ())
+
+let find_unscaled (var: Var.t) (formula: Formula.t) (varsets: VarSet.t Enum.t): t Option.t =
+  try
+    Some (
+        Enum.find_map (fun varset ->
+            Some (ScaledSum (1, 1024, varset))
+            |> Option.filter (is_bounded_with var formula)
+            |> Option.map (optimize_c (-1024) 1024 (is_bounded_with var formula))
+          ) varsets
+      )
+  with Not_found -> None
+
   
-let find_equality_bound vars var formula =
-  let find_equality_bound_ vars var formula =
-    let low = -1024
-    and high = 1024 in
-    let is_bound c = is_bounded_with var formula (Equality c, vars) in
-       Option.some high
-    |> Option.filter is_bound
-    |> Option.map (fun high -> binary_search low high is_bound)
-    |> Option.filter (fun c -> c != low)
-    |> Option.map (fun c ->
-      let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (Equality c, newVars)) in
-      (Equality c, minimized_vars)
-    )
-  in
-  Logger.with_log logger Logger.DEBUG
-                  (fun () -> "looking for equality bound", ["vars", VarSet.to_string vars])
-                  ~result:(fun result -> to_string_option_template_bound result)
-                  (fun () -> find_equality_bound_ vars var formula)
-
-let find_addsconstant_bound vars var formula =
-  let find_addsconstant_bound_ var formula =
-    let low = -1024
-    and high = 1024 in
-    let is_bound d = is_bounded_with var formula (AddsConstant d, vars) in
-    if is_bound high then
-      let d = binary_search low high is_bound in
-      let minimized_vars = minimize_vars vars (fun newVars -> is_bounded_with var formula (AddsConstant d, newVars)) in
-      Some (AddsConstant d, minimized_vars)
-    else None
-  in
-  Logger.with_log logger Logger.DEBUG
-                  (fun () -> "looking for addsconstant bound", [])
-                  ~result:(fun result -> to_string_option_template_bound result)
-                  (fun () -> find_addsconstant_bound_ var formula)
-
 let find_bound var formula =
   (* Our strategy to find local size bounds.
      Functions which come first have precedence over later functions.
      If none of the functions finds a bound the result is Unbound. *)
-  let finders =
-    List.enum [
-        (* Check if x <= c. We have to check this up front, because find_equality_bound will always prefer a variable with x <= max{-inf,v}. *)
-        find_equality_bound VarSet.empty;
-        find_equality_bound (VarSet.remove var (Formula.vars formula));
-        find_addsconstant_bound (VarSet.remove var (Formula.vars formula));
-      ] in
-  let find_bound_ var formula =
-    try
-      Enum.find_map (fun find -> find var formula) finders
-    with Not_found -> (Unbound, VarSet.empty) in
-  Logger.with_log logger Logger.DEBUG
+  (* Check if x <= 1 * (c + [v1,...,vn]). *)
+  (* Check if x <= s * (c + [v1,...,vn]). *)
+  (* find_equality_bound (VarSet.remove var (Formula.vars formula)); *)
+  let find_bound_ () =
+    let vars = VarSet.remove var (Formula.vars formula)
+    and low = -1024
+    and high = 1024 in
+    try 
+      Some (
+          Enum.find_map
+            (fun f -> f ())
+            (List.enum
+               [
+                 (fun () -> find_unscaled var formula (VarSet.powerset vars));
+                 (fun () -> 
+                   Some (ScaledSum (high, high, vars))
+                   |> Option.filter (is_bounded_with var formula)
+                   |> Option.map (optimize_s 1 high (is_bounded_with var formula))
+                   |> Option.map (optimize_c low high (is_bounded_with var formula))
+                   |> Option.map (minimize_scaledsum_vars (is_bounded_with var formula))
+                 )
+               ]
+            )
+        )
+    with Not_found -> None
+  in Logger.with_log logger Logger.DEBUG
                   (fun () -> "find local size bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
-                  ~result:(fun result -> Bound.to_string (as_bound result))
-                  (fun () -> find_bound_ var formula)
+                  ~result:(fun result -> to_string_option_template_bound result)
+                  (fun () -> find_bound_ ())
                   
 let sizebound_local kind label var =
+  let open Option.Infix in
   (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
-  match TransitionLabel.update label var with
-  | Some bound -> (
+  TransitionLabel.update label var
+  >>= fun bound ->
     (* Introduce a temporary result variable *)
     let v' = Var.fresh_id () in
-    let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.from_var v' = bound) in
+    let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = bound) in
     match kind with
     | `Upper ->
        find_bound v' guard_with_update
     | `Lower ->
        find_bound v' (Formula.turn guard_with_update)
-  )
-  (* If we don't have an update, the result variable is completely unbounded *)
-  | None ->
-     (Unbound, VarSet.empty)
 
 let sizebound_local_rv kind ((l,t,l'),v) =
   sizebound_local kind t v

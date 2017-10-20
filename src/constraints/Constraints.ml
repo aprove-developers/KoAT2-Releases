@@ -1,5 +1,6 @@
 open Batteries
 open Atoms
+open Polynomials
    
 module ConstraintOver(A : ConstraintTypes.Atom) =
   struct
@@ -65,24 +66,25 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
     let turn =
       List.map A.neg
                                  
-                                 (*
-    let models constr valuation = 
-      List.for_all (fun atom -> Atom_.models atom valuation) constr
-                                  *)
-        
-    let fold ~const ~var ~neg ~plus ~times ~pow ~le ~correct ~conj =
-      List.fold_left (fun c atom -> conj c (A.fold ~const ~var ~neg ~plus ~times ~pow ~le atom)) correct
+    let fold ~subject ~le ~correct ~conj =
+      List.fold_left (fun c atom -> conj c (A.fold ~subject ~le atom)) correct
       
+  end
+
+module Constraint =
+  struct
+    include ConstraintOver(Atom)
+
     let drop_nonlinear constr =
-      List.filter A.is_linear constr 
+      List.filter Atom.is_linear constr 
 
     (**returns a list of the coefficients of a variable in all the left sides of the constraints*)
     let get_coefficient_vector var constr = 
-        List.map (A.get_coefficient var) constr
+        List.map (Atom.get_coefficient var) constr
             
     (**returns a list of the constants of the constraints*)
     let get_constant_vector constr = 
-        List.map A.get_constant constr 
+        List.map Atom.get_constant constr 
         
     (** returns a list of lists of the coefficients of the constraint*)
     let rec get_matrix vars constr = 
@@ -90,33 +92,47 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
             List.map (fun var -> get_coefficient_vector var constr) variables
     
     let dualise vars matrix column =
-        let dualised_left = List.map (fun row -> A.P.from_coeff_list row vars) matrix in
+        let dualised_left = List.map (fun row -> Polynomial.of_coeff_list row vars) matrix in
             let dualised_eq = List.flatten (List.map2 mk_eq dualised_left column) in
-                let ensure_pos = List.map (fun v -> A.Infix.(A.P.from_var v >= A.P.zero)) vars in
+                let ensure_pos = List.map (fun v -> A.Infix.(Polynomial.of_var v >= Polynomial.zero)) vars in
                     mk (List.flatten [dualised_eq;ensure_pos])
-        
+
     (** Farkas Lemma applied to a linear constraint and an atom which is the cost function*)    
     let farkas_transform constr atom =
-        let vars = VarSet.union (vars constr) (A.vars atom) in
-        let costfunction = lift atom in
-            let a_matrix = get_matrix vars constr in
-            let b_right = get_constant_vector constr in
-            let c_left = List.map (A.P.from_constant) (List.flatten (get_matrix vars costfunction)) in
-            let d_right = List.at (get_constant_vector costfunction) 0 in
-                let num_of_constr = List.length constr in
-                let fresh_vars = Var.fresh_id_list num_of_constr in
-                    let dual_constr = dualise fresh_vars a_matrix c_left in
-                        let cost_constr = A.P.from_coeff_list b_right fresh_vars in
-                            Infix.(dual_constr && cost_constr <= A.P.from_constant d_right)
-                                
-  end
+      let vars = VarSet.union (vars constr) (A.vars atom) in
+      let costfunction = lift atom in
+      let a_matrix = get_matrix vars constr in
+      let b_right = get_constant_vector constr in
+      let c_left = List.map (Polynomial.of_constant) (List.flatten (get_matrix vars costfunction)) in
+      let d_right = List.at (get_constant_vector costfunction) 0 in
+      let num_of_constr = List.length constr in
+      let fresh_vars = Var.fresh_id_list num_of_constr in
+      let dual_constr = dualise fresh_vars a_matrix c_left in
+      let cost_constr = Polynomial.of_coeff_list b_right fresh_vars in
+      Infix.(dual_constr && cost_constr <= Polynomial.of_constant d_right)
 
-module Constraint =
-  struct
-    include ConstraintOver(Atom)
   end
 
 module ParameterConstraint =
   struct
     include ConstraintOver(ParameterAtom)
+
+    (**returns a list of the coefficients of a variable in all the left sides of the constraints*)
+    let get_coefficient_vector var constr = 
+        List.map (ParameterAtom.get_coefficient var) constr
+            
+    (**returns a list of the constants of the constraints*)
+    let get_constant_vector constr = 
+        List.map ParameterAtom.get_constant constr 
+        
+    (** returns a list of lists of the coefficients of the constraint*)
+    let rec get_matrix vars constr = 
+        let variables = VarSet.elements vars in
+            List.map (fun var -> get_coefficient_vector var constr) variables
+    
+  end
+
+module BoundConstraint =
+  struct
+    include ConstraintOver(BoundAtom)
   end
