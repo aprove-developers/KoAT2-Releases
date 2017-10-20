@@ -6,7 +6,8 @@ open Polynomials
 (** Provides default implementations of RankingFunctions *)
 
 type t
-   
+
+type transitionEnum
 (* val fresh_ranking_map: vars list -> location list -> location -> parameterpoly*)
 
 (** Returns a non-empty list of all transitions which are strictly decreasing and at the same time bounded with one.
@@ -31,7 +32,7 @@ val generate_ranking_template : Program.t -> PrfTable.parameter_table
 (**Converts a ranking function into a string*)
 val to_string : t -> string
 
-val ranking_function_procedure : Program.t -> (*string*) PrfTable.polynomial_table *
+val ranking_function_procedure : Program.t -> transitionEnum -> PrfTable.polynomial_table *
            Program.TransitionGraph.E.t list
            
 (*val to_string_prog : Program.t -> string*)
