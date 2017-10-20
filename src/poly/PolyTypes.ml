@@ -2,28 +2,6 @@ open Batteries
 
 (** Provides all module types related to polynomials *)
 
-(** TODO *)
-module type Ring =
-  sig
-    type t [@@deriving eq]
-
-    val zero : t
-    val one : t
-    val neg : t -> t
-    val add : t -> t -> t
-    val mul : t -> t -> t
-    val pow : t -> int -> t
-
-    val equal : t -> t -> bool
-    val (=~=) : t -> t -> bool
-
-    val of_int : int -> t
-    val to_int : t -> int
-
-    val to_string : t -> string
-                          (* val eval : t -> (Var.t -> value) -> value *)
-  end
-
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
     They can be typeclass-like extended by MakePartialOrder. *)
 module type BasePartialOrder =
@@ -205,6 +183,21 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
     let (~-) = neg
   end
 
+module type Ring =
+  sig
+    type t [@@deriving eq]
+
+    include BaseMath with type t := t
+       
+    val equal : t -> t -> bool
+    val (=~=) : t -> t -> bool
+
+    val of_int : int -> t
+    val to_int : t -> int
+
+    val to_string : t -> string
+  end
+  
 (** A Polynomial represents a mathematical polynomial *)
 module type Polynomial =
   sig
