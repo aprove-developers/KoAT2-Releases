@@ -131,7 +131,7 @@ let help_boundedness (initial : bool) (table : PrfTable.parameter_table) (trans 
   
 (**Generates the constraints due to the non increase rule of a polynomial ranking function*)
 let get_non_increase_constraints (table : PrfTable.parameter_table) (program : Program.t) (transitions : transitionEnum) =
-  let get_non_increase_constraints_ table program transitions=
+  let get_non_increase_constraints_ table program transitions =
     let vars = VarSet.elements (Program.vars program) in
     Enum.fold (fun constr -> fun trans -> Constraint.mk_and constr (help_non_increasing (Program.is_initial program trans) table trans vars) ) Constraint.mk_true transitions 
   in Logger.with_log logger Logger.DEBUG
@@ -163,6 +163,8 @@ let ranking_function_procedure (program : Program.t) (transitions : transitionEn
     print_string "Enum_is_empty = ";
     print_string (Bool.to_string (Enum.is_empty transitions));
     print_string "\n";
+    
+  let transitions_for_strict = (Enum.clone transitions) in
   let table = generate_ranking_template program in
     print_string (String.concat "\n" ["ranking_function_procedure"; "Input table"; (PrfTable.to_string_parapoly table); "\n"]);
   let non_incr = get_non_increase_constraints table program transitions in
@@ -170,7 +172,7 @@ let ranking_function_procedure (program : Program.t) (transitions : transitionEn
     print_string "Enum_is_empty = ";
     print_string (Bool.to_string (Enum.is_empty transitions));
     print_string "\n";
-  let (smt_form , bounded) = build_strict_oriented table program transitions non_incr in
+  let (smt_form , bounded) = build_strict_oriented table program transitions_for_strict non_incr in
     print_string (String.concat "-> " ["final_ranking constraint" ; (Constraint.to_string smt_form); "\n"]);
   let model = SMTSolver_.get_model (Formula.mk smt_form) in
     print_string (String.concat "\n" ["ranking_function_procedure" ; "Z3 has found the ranking table" ; (Valuation.to_string model);"\n"]);
