@@ -52,5 +52,6 @@ val fold : const:(value -> 'b) ->
            exp:(value -> 'b -> 'b) ->
            min:('b -> 'b -> 'b) -> 
            max:('b -> 'b -> 'b) ->
+           abs:(Var.t -> 'b) -> 
            inf:'b ->
            t -> 'b 

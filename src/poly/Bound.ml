@@ -11,6 +11,7 @@ type value = OurInt.t
 (* Infinity is min of an empty list *)
 type t =
   | Poly of Polynomial.t
+  | Abs of Var.t
   | Max of t list
   | Min of t list
   | Neg of t
@@ -32,10 +33,11 @@ let infinity = Min []
 
 let minus_infinity = Max []
 
-let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf p =
-  let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf in
+let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~abs ~inf p =
+  let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~abs ~inf in
   match p with
   | Poly p -> Polynomial.fold ~const ~var ~neg ~plus ~times ~pow p
+  | Abs v -> abs v
   | Max bounds -> List.fold_left (fun b bound -> max b (fold_ bound)) (neg inf) bounds
   | Min bounds -> List.fold_left (fun b bound -> min b (fold_ bound)) inf bounds
   | Neg b -> neg (fold_ b)
@@ -45,6 +47,8 @@ let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf p =
                     
 let rec simplify = function
   | Poly p -> Poly p
+
+  | Abs v -> Abs v
 
   (* Simplify terms with negation head *)
   | Neg (Poly p) -> Poly (Polynomial.neg p)
@@ -153,12 +157,15 @@ let minimum bounds =
 let exp value b =
   simplify (Pow (value, b))
 
+let abs var =
+  Abs var
+
 let is_var = function
   | Poly poly -> Polynomial.is_var poly
   | _ -> false
 
 let substitute_f substitution =
-  fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow ~exp:exp ~min:min ~max:max ~inf:infinity
+  fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow ~exp:exp ~min:min ~max:max ~abs:abs ~inf:infinity
   
 let substitute var ~replacement =
   substitute_f (fun target_var ->
@@ -173,6 +180,7 @@ let substitute_all substitution =
 
 let rec to_string = function
   | Poly p -> Polynomial.to_string p
+  | Abs v -> "|" ^ Var.to_string v ^ "|"
   | Max [] -> "inf"
   | Min [] -> "neg inf"
   | Max bounds -> "max {" ^ String.concat ", " (List.map to_string bounds) ^ "}"
@@ -184,6 +192,7 @@ let rec to_string = function
 
 let rec vars = function
   | Poly p -> Polynomial.vars p
+  | Abs v -> VarSet.singleton v
   | Max bounds -> List.fold_left VarSet.union VarSet.empty (List.map vars bounds)
   | Min bounds -> List.fold_left VarSet.union VarSet.empty (List.map vars bounds)
   | Neg b -> vars b
