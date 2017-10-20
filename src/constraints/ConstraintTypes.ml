@@ -3,6 +3,30 @@ open PolyTypes
 
 (** Provides all module types related to constraints *)
 
+module type Atomizable =
+  sig
+    type t
+    type value
+    include Ring with type t := t
+
+    val sub : t -> t -> t
+    val from_coeff_list : value list -> Var.t list -> t
+    val from_constant : value -> t
+    val from_var : Var.t -> t
+    val is_linear : t -> bool
+    val vars : t -> VarSet.t
+    val constant : t -> value
+    val coeff_of_var : Var.t -> t -> value
+    val rename : RenameMap.t -> t -> t
+    val fold : const:(value -> 'b) ->
+               var:(Var.t -> 'b) ->
+               neg:('b -> 'b) ->               
+               plus:('b -> 'b -> 'b) ->
+               times:('b -> 'b -> 'b) ->
+               pow:('b -> int -> 'b) ->
+               t -> 'b 
+  end
+   
 (** An atom is a comparison between two polynomials *)
 module type Atom =
   sig
@@ -30,7 +54,7 @@ module type Atom =
         type value
 
         (* TODO Shouldn't be exposed *)
-        module P : PolyTypes.Polynomial
+        module P : Atomizable
                with type t = polynomial
                 and type value = value
 

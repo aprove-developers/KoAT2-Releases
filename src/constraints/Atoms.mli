@@ -4,7 +4,7 @@ open Polynomials
 (** Provides default implementations of an atom *)
 
 (** Constructs a default constraint using a simple record *)
-module AtomOver(P : PolyTypes.Polynomial) : ConstraintTypes.Atom
+module AtomOver(P : ConstraintTypes.Atomizable) : ConstraintTypes.Atom
        with type polynomial = P.t
         and type value = P.value
         and module P = P
