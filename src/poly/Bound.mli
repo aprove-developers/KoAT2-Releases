@@ -18,6 +18,7 @@ val of_constant : value -> t
 val of_int : int -> t
 val to_int : t -> int
 val of_var : Var.t -> t
+val of_abs_var : Var.t -> t
 val of_var_string : string -> t
   
 val min : t -> t -> t

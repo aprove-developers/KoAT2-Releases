@@ -191,7 +191,7 @@ bound :
 	|	PRODUCT LBRACE product = separated_list(COMMA, bound) RBRACE
 		{ Bound.product product }
 	|	INFINITY
-		{ Bound.infinity }
+		{ Bound.infinity } ;
 
 %inline bioperator :
 	|	PLUS { Poly.add }

@@ -22,6 +22,8 @@ type t =
 
 let of_var v = Var v
 
+let of_abs_var v = Abs v
+
 let of_constant c = Const c
 
 let rec simplify = function

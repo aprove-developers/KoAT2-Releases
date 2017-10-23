@@ -7,19 +7,6 @@ open Formulas
 let tests = 
   "LocalSizeBound" >::: [
                         
-      ("as_bound" >:::
-         List.map (fun (expected, template_bound) ->
-             "as_bound-Test" >::
-               (fun _ -> assert_equal_bound
-                           (Readers.read_bound expected)
-                           (as_bound (Some template_bound))))
-                  [
-                    ("5", ScaledSum (1, 5, VarSet.empty));
-                    ("3 + x", ScaledSum(1, 3, VarSet.of_string_list ["x"]));
-                    ("-2 + x + y", ScaledSum (1, (-2), VarSet.of_string_list ["x"; "y"]));
-                  ]
-      );
-
       ("is_bounded_with" >:::
          List.map (fun (formula, template_bound) ->
              "as_bound-Test" >::
@@ -33,9 +20,10 @@ let tests =
       ("find_bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
-               (fun _ -> assert_equal_classified_bound
-                           expected
-                           (Option.get (find_bound (Var.of_string "x") (Readers.read_formula guard)))))
+               (fun _ -> find_bound (Var.of_string "x") (Readers.read_formula guard)
+                         |> Option.map (fun bound -> fun () -> assert_equal_classified_bound expected bound)
+                         |? (fun () -> assert_failure "No bound")
+                         |> fun f -> f () ))
                   [
                     (* Bounded by constants *)
                     (ScaledSum (1, 0, VarSet.empty), "x <= 0");
@@ -55,6 +43,13 @@ let tests =
                     (ScaledSum (1, 5, VarSet.of_string_list ["y"]), "x <= y + 5");
                     (ScaledSum (1, (-5), VarSet.of_string_list ["y"]), "x <= y - 5");
                     (ScaledSum (1, 2, VarSet.of_string_list ["y"]), "x <= y + z - 5 && z <= 7");
+                    (* With factor *)
+                    (ScaledSum (2, 0, VarSet.of_string_list ["y"]), "x <= 2*y");
+                    (ScaledSum (2, 0, VarSet.of_string_list ["y"; "z"]), "x <= 2*y + 2*z");
+                    (ScaledSum (3, 0, VarSet.of_string_list ["y"; "z"]), "x <= 2*y + 3*z");
+                    (ScaledSum (3, 0, VarSet.of_string_list ["y"; "z"]), "x <= 2*y + (-3)*z");
+                    (ScaledSum (2, 0, VarSet.of_string_list ["y"]), "x <= 2*y + (-3)*z && z >= 0");
+                    (ScaledSum (3, 0, VarSet.of_string_list ["z"]), "x <= 2*y + (-3)*z && y <= 0");
                   ]
       );
 

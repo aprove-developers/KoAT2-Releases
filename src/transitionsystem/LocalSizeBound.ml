@@ -18,8 +18,9 @@ let equal c1 c2 =
 
 let as_bound = function
   | Some (ScaledSum (s,e,vars)) ->
-     let var_list = VarSet.map_to_list Bound.of_var vars in
-     Bound.(of_int s * (of_int e + sum var_list))
+     vars
+     |> VarSet.map_to_list Bound.of_abs_var
+     |> fun var_list -> Bound.(of_int s * (of_int e + sum var_list))
   | None -> Bound.infinity
 
 (* There is no to_string for options in batteries,
@@ -34,16 +35,21 @@ let to_string = function
                 
 let as_formula in_v = function
   | ScaledSum (s, e, vars) ->
-     let v = Polynomial.of_var in_v in
-     let var_list = VarSet.map_to_list Polynomial.of_var vars in
-     Polynomial.(Formula.Infix.(v <= of_int s * (of_int e + sum var_list)))
+     VarSet.to_list vars
+     |> List.map Polynomial.of_var
+     |> List.map (fun v -> [v; Polynomial.neg v])
+     |> List.n_cartesian_product
+     |> List.map (fun var_list ->
+            let v = Polynomial.of_var in_v in
+            Polynomial.(Formula.Infix.(v <= of_int s * (of_int e + sum var_list))))
+     |> Formula.any
 
 let is_bounded_with var formula template_bound =
   template_bound
   |> as_formula var
+  |> (fun f -> Logger.log logger Logger.DEBUG (fun () -> "is_bounded_with", ["formula", Formula.to_string f]); f)
   |> Formula.implies formula
   |> Formula.neg
-  |> (fun f -> Logger.log logger Logger.DEBUG (fun () -> "is_bounded_with", ["formula", Formula.to_string f]); f)
   |> SMT.Z3Solver.unsatisfiable
 
 let is_bounded_with_constant var formula c =
