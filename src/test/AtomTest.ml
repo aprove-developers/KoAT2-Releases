@@ -33,7 +33,7 @@ module Parser =
             );
             "Negative Tests" >::: (
                 List.map (fun (testname, atom) ->
-                    testname >:: (fun _ -> assert_raises (Readers.Lexer_.SyntaxError (testname)) (fun _ -> Readers.read_atom atom)))
+                    testname >:: (fun _ -> assert_raises (Lexer.SyntaxError (testname)) (fun _ -> Readers.read_atom atom)))
                             [
                             ("Unexpected char: =", "x = y");
                             ]
