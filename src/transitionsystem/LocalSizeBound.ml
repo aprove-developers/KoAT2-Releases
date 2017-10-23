@@ -9,7 +9,7 @@ type formula = Formula.t
 type t = ScaledSum of int * int * VarSet.t
   
 let mk s e vars =
-  ScaledSum (s, e, VarSet.of_list (List.map Var.of_string vars))
+  ScaledSum (s, e, VarSet.of_string_list vars)
        
 let equal c1 c2 =
   match (c1,c2) with
