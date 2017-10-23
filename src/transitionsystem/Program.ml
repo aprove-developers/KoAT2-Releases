@@ -31,7 +31,7 @@ end
 module RV =
   struct
     type t = Transition.t * Var.t [@@deriving eq, ord]
-    let hash v = raise (Failure "Not yet implemented")
+    let hash (t,v) = Hashtbl.hash (Transition.to_string t ^ Var.to_string v)
     let transition (t,v) = t
     let variable (t,v) = v
     let to_string ((l,t,l'),v) = Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Upper t v))) ^ " >= " ^

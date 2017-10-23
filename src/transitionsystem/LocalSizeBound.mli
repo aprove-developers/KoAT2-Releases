@@ -32,6 +32,9 @@ val mk : int -> int -> string list -> t
 (** Returns if the templated bounds represent the same bound. *)
 val equal : t -> t -> bool
 
+(** Returns the negation of the templated bound. *)
+val neg : t -> t
+  
 (** Converts the templated bound to a string. *)
 val to_string : t -> string
 

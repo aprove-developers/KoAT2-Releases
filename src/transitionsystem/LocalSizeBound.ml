@@ -16,6 +16,9 @@ let equal c1 c2 =
   | (ScaledSum (s1, e1, vars1), ScaledSum (s2, e2, vars2)) ->
      s1 = s2 && e1 = e2 && VarSet.equal vars1 vars2
 
+let neg = function
+  | ScaledSum (s, e, vars) -> ScaledSum (-s, e, vars)
+    
 let as_bound = function
   | Some (ScaledSum (s,e,vars)) ->
      vars
@@ -47,7 +50,6 @@ let as_formula in_v = function
 let is_bounded_with var formula template_bound =
   template_bound
   |> as_formula var
-  |> (fun f -> Logger.log logger Logger.DEBUG (fun () -> "is_bounded_with", ["formula", Formula.to_string f]); f)
   |> Formula.implies formula
   |> Formula.neg
   |> SMT.Z3Solver.unsatisfiable
@@ -145,8 +147,7 @@ let find_bound var formula =
      If none of the functions finds a bound the result is Unbound. *)
   (* Check if x <= 1 * (c + [v1,...,vn]). *)
   (* Check if x <= s * (c + [v1,...,vn]). *)
-  (* find_equality_bound (VarSet.remove var (Formula.vars formula)); *)
-  let find_bound_ () =
+  let execute () =
     let vars = VarSet.remove var (Formula.vars formula)
     and low = -1024
     and high = 1024 in
@@ -171,13 +172,14 @@ let find_bound var formula =
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "find local size bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
                   ~result:(fun result -> to_string_option_template_bound result)
-                  (fun () -> find_bound_ ())
+                  execute
                   
 let sizebound_local kind label var =
-  let open Option.Infix in
-  (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
-  TransitionLabel.update label var
-  >>= fun bound ->
+  (* TODO Cache let f (kind, label, var) = *)
+    let open Option.Infix in
+    (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
+    TransitionLabel.update label var
+    >>= fun bound ->
     (* Introduce a temporary result variable *)
     let v' = Var.fresh_id () in
     let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = bound) in
@@ -185,7 +187,15 @@ let sizebound_local kind label var =
     | `Upper ->
        find_bound v' guard_with_update
     | `Lower ->
-       find_bound v' (Formula.turn guard_with_update)
-
+       guard_with_update
+       |> Formula.turn
+       |> find_bound v'
+       |> Option.map neg
+  (* TODO Cache, but with care
+     in let memo = Lru.memo ~hashed:(Hashtbl.hash, fun (kind1, label1, var1) (kind2, label2, var2) -> kind1 = kind2 && TransitionLabel.equal label1 label2 && Var.equal var1 var2)
+     ~cap:50 (fun _ -> f) in
+     memo (kind, label, var)
+   *)
+      
 let sizebound_local_rv kind ((l,t,l'),v) =
   sizebound_local kind t v

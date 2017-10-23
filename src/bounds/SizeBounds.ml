@@ -2,6 +2,8 @@ open Batteries
 
 module TransitionSet = Set.Make(Program.Transition)
              
+let logger = Logger.make_log "size"
+           
 (* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
        Corresponds to 'SizeBounds for trivial SCCs':
        S'(alpha) = max{ S_l(alpha)(S(t',v_1),...,S(t',v_n)) | t' in pre(t) } *)
@@ -10,12 +12,17 @@ let highest_incoming_bound (program: Program.t)
                            (local_sizebound: Bound.t)
                            (t: Program.Transition.t)
     : Bound.t =
-  let substitute_with_prevalues t' = Bound.substitute_f (Approximation.sizebound `Upper appr t') local_sizebound in
-     t
-  |> Program.pre program
-  |> TransitionSet.to_list
-  |> List.map substitute_with_prevalues
-  |> Bound.maximum
+  let execute () =
+    let substitute_with_prevalues t' = Bound.substitute_f (Approximation.sizebound `Upper appr t') local_sizebound in
+    t
+    |> Program.pre program
+    |> TransitionSet.to_list
+    |> List.map substitute_with_prevalues
+    |> Bound.maximum
+  in Logger.with_log logger Logger.DEBUG
+                  (fun () -> "compute highest incoming bound", ["lsb", Bound.to_string local_sizebound; "transition", Program.Transition.to_string t])
+                  ~result:Bound.to_string
+                  execute
 
 (* Improves a trivial scc. That is an scc which consists only of one result variable.
        Corresponds to 'SizeBounds for trivial SCCs'. *)
@@ -23,12 +30,16 @@ let improve_trivial_scc (program: Program.t)
                         (appr: Approximation.t)
                         (t,v)
     : Approximation.t =
-  let (local_sizebound: Bound.t) = LocalSizeBound.(as_bound (sizebound_local `Upper (Program.Transition.label t) v)) in
-  let newbound =
-    if Program.is_initial program t then
-      local_sizebound
-    else highest_incoming_bound program appr local_sizebound t
-  in Approximation.add_sizebound `Upper newbound t v appr
+  let execute () =
+    let (local_sizebound: Bound.t) = LocalSizeBound.(as_bound (sizebound_local `Upper (Program.Transition.label t) v)) in
+    let newbound =
+      if Program.is_initial program t then
+        local_sizebound
+      else highest_incoming_bound program appr local_sizebound t
+    in Approximation.add_sizebound `Upper newbound t v appr
+  in Logger.with_log logger Logger.DEBUG
+                  (fun () -> "improve trivial scc", ["rv", Program.RV.to_string (t,v)])
+                  execute
 
 (* Returns all bounds for result variables entering the scc. *)
 let incoming_bounds (rvg: Program.RVG.t)
@@ -157,12 +168,16 @@ let improve_nontrivial_scc (program: Program.t)
                            (appr: Approximation.t)
                            (scc: Program.RV.t list)
     : Approximation.t =
-  scc
-  |> List.map (LocalSizeBound.sizebound_local_rv `Upper)
-  |> get_all
-  |> Option.map (fun lsbs -> Bound.(overall_scaling_factor rvg appr scc * effects rvg appr scc))
-  |> Option.map (fun new_bound -> Approximation.add_sizebounds `Upper new_bound scc appr)
-  |? appr
+  let execute () =
+    scc
+    |> List.map (LocalSizeBound.sizebound_local_rv `Upper)
+    |> get_all
+    |> Option.map (fun lsbs -> Bound.(overall_scaling_factor rvg appr scc * effects rvg appr scc))
+    |> Option.map (fun new_bound -> Approximation.add_sizebounds `Upper new_bound scc appr)
+    |? appr
+  in Logger.with_log logger Logger.DEBUG
+                  (fun () -> "improve nontrivial scc", ["scc", String.concat "," (List.map Program.RV.to_string scc)])
+                  execute
          
 (* Improves a whole scc. *)
 let improve_scc (program: Program.t)
@@ -175,6 +190,10 @@ let improve_scc (program: Program.t)
   | scc -> improve_nontrivial_scc program rvg appr scc
          
 let improve program appr =
-  let module C = Graph.Components.Make(Program.RVG) in
-  let rvg = Program.rvg program in
-  List.fold_left (fun appr scc -> improve_scc program rvg appr scc) appr (C.scc_list rvg)
+  let execute () =
+    let module C = Graph.Components.Make(Program.RVG) in
+    let rvg = Program.rvg program in
+    List.fold_left (fun appr scc -> improve_scc program rvg appr scc) appr (C.scc_list rvg)
+  in Logger.with_log logger Logger.DEBUG
+                  (fun () -> "improve size bounds", [])
+                  execute

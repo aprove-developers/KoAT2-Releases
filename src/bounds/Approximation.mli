@@ -14,6 +14,7 @@ type kind = [ `Lower | `Upper ]
         The second parameter should be the count of program variables. *)
 val empty : int -> int -> t
 
+val to_string : t -> string
   
 (** Timebound related methods *)
   

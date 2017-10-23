@@ -25,6 +25,7 @@ sig
   type t = Transition.t * Var.t [@@deriving eq]
   val equal : t -> t -> bool
   val compare : t -> t -> int
+  val to_string : t -> string
   val hash : t -> int
   val transition : t -> Transition.t
   val variable : t -> Var.t
