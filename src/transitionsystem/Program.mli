@@ -6,6 +6,8 @@ open Batteries
 module Location :
 sig
   type t [@@deriving eq, ord]
+  val equal : t -> t -> bool
+  val compare : t -> t -> int
   val hash : t -> int
   val to_string : t -> string
   val of_string : string -> t
@@ -56,6 +58,9 @@ val add_vertices : TransitionGraph.t -> TransitionGraph.vertex list -> Transitio
 
 val add_edges : TransitionGraph.t -> TransitionGraph.edge list -> TransitionGraph.t
 
+(** Removes the location from the program and all edges to it. *)
+val remove_location : t -> Location.t -> t
+  
 val mk : TransitionGraph.vertex list -> TransitionGraph.edge list -> TransitionGraph.t
 
 val from : Var.t list

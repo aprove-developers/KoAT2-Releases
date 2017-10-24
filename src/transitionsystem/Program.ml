@@ -84,6 +84,9 @@ let add_edges graph edges =
   edges
   |> List.map (fun edge -> fun gr -> TransitionGraph.add_edge_e gr edge)
   |> List.fold_left (fun gr adder -> adder gr) graph
+
+let remove_location program location =
+  { program with graph = TransitionGraph.remove_vertex program.graph location }
   
 let mk vertices edges =
   add_edges (add_vertices TransitionGraph.empty vertices) edges
