@@ -54,6 +54,13 @@ let max_option (enum: int Enum.t): int Option.t =
     | (Some x, y) -> if x > y then Some x else Some y in
   Enum.fold (curry f) None enum
 
+(* Computes the minimum of the enum if non-empty, else returns None. *)
+let min_option (enum: int Enum.t): int Option.t =
+  let f = function
+    | (None, y) -> Some y
+    | (Some x, y) -> if x < y then Some x else Some y in
+  Enum.fold (curry f) None enum
+
 let max =
   Enum.fold Bound.max Bound.minus_infinity
   
@@ -64,13 +71,16 @@ let product =
   Enum.fold Bound.mul Bound.one
   
 (* Computes for each transition max{s_alpha | alpha in C_t} and multiplies the results. *)
-let maximal_scaling_factor (ct: Program.RV.t Enum.t)
+let extreme_scaling_factor (kind: kind)
+                           (ct: Program.RV.t Enum.t)
     : int =
   ct
-  |> Enum.map (LocalSizeBound.sizebound_local_rv `Upper)
+  |> Enum.map (LocalSizeBound.sizebound_local_rv kind)
   |> Enum.map Option.get (* Should exist *)
   |> Enum.map (fun lsb -> lsb.LocalSizeBound.factor)
-  |> max_option
+  |> (match kind with
+     | `Lower -> min_option
+     | `Upper -> max_option)
   |? 1
 
 let scc_variables (rvg: Program.RVG.t)
@@ -101,7 +111,7 @@ let transition_scaling_factor (rvg: Program.RVG.t)
                               (ct: Program.RV.t Enum.t)
     : Bound.t =
   let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
-  Bound.exp (OurInt.of_int (maximal_scaling_factor ct *
+  Bound.exp (OurInt.of_int (extreme_scaling_factor `Upper ct *
                               maximal_affecting_scc_variables rvg scc (Enum.clone ct)))
             (Approximation.timebound `Upper appr transition) 
   
