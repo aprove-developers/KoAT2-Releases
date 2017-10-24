@@ -48,12 +48,21 @@ let improve_trivial_scc (kind: kind)
                   execute
 
 (* Computes the maximum of the enum if non-empty, else returns None. *)
-let max (enum: int Enum.t): int Option.t =
+let max_option (enum: int Enum.t): int Option.t =
   let f = function
     | (None, y) -> Some y
     | (Some x, y) -> if x > y then Some x else Some y in
   Enum.fold (curry f) None enum
 
+let max =
+  Enum.fold Bound.max Bound.minus_infinity
+  
+let sum =
+  Enum.fold Bound.add Bound.zero
+
+let product =
+  Enum.fold Bound.mul Bound.one
+  
 (* Computes for each transition max{s_alpha | alpha in C_t} and multiplies the results. *)
 let maximal_scaling_factor (ct: Program.RV.t Enum.t)
     : int =
@@ -61,7 +70,7 @@ let maximal_scaling_factor (ct: Program.RV.t Enum.t)
   |> Enum.map (LocalSizeBound.sizebound_local_rv `Upper)
   |> Enum.map Option.get (* Should exist *)
   |> Enum.map (fun (LocalSizeBound.ScaledSum (s, _, _)) -> s)
-  |> max
+  |> max_option
   |? 1
 
 let scc_variables (rvg: Program.RVG.t)
@@ -83,7 +92,7 @@ let maximal_affecting_scc_variables (rvg: Program.RVG.t)
   |> Enum.map (scc_variables rvg scc)
   (* Filter also all pre variables that can only have a negative effect. *)
   |> Enum.map Enum.count
-  |> max
+  |> max_option
   |? 1
 
 let transition_scaling_factor (rvg: Program.RVG.t)
@@ -105,7 +114,7 @@ let overall_scaling_factor (rvg: Program.RVG.t)
   |> List.enum
   |> Enum.group_by (fun (t1, v1) (t2, v2) -> Program.Transition.equal t1 t2)
   |> Enum.map (transition_scaling_factor rvg appr scc)
-  |> Enum.fold Bound.( * ) Bound.one
+  |> product
 
 let incoming_vars_effect (rvg: Program.RVG.t)
                          (appr: Approximation.t)
@@ -123,9 +132,9 @@ let incoming_vars_effect (rvg: Program.RVG.t)
          |> Enum.filter (fun rv -> not (Enum.exists (Program.RV.equal rv) (List.enum scc)))
          |> Enum.filter (fun (t,v') -> Var.equal v v')
          |> Enum.map (fun (t,v) -> Approximation.sizebound `Upper appr t v)
-         |> Enum.fold Bound.max Bound.minus_infinity
+         |> max
        )
-  |> Enum.fold Bound.(+) Bound.zero
+  |> sum
   
 let transition_effect (rvg: Program.RVG.t)
                       (appr: Approximation.t)
@@ -139,7 +148,7 @@ let transition_effect (rvg: Program.RVG.t)
   |> Enum.map (fun (alpha, LocalSizeBound.ScaledSum (_, e, vars)) ->
          Bound.add (Bound.of_int e) (incoming_vars_effect rvg appr scc vars transition alpha)
        )
-  |> Enum.fold Bound.max Bound.minus_infinity
+  |> max
 
 let effects (rvg: Program.RVG.t)
             (appr: Approximation.t)
@@ -152,7 +161,7 @@ let effects (rvg: Program.RVG.t)
          let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
          Bound.(Approximation.timebound `Upper appr transition * transition_effect rvg appr scc ct transition)
        )
-  |> Enum.fold Bound.add Bound.zero
+  |> sum
 
 let get_all (xs: ('a Option.t) list): ('a list) Option.t =
   let combine result maybe =
