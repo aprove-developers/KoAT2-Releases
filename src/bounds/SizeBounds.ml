@@ -3,22 +3,27 @@ open Batteries
 module TransitionSet = Set.Make(Program.Transition)
              
 let logger = Logger.make_log "size"
+
+type kind = [ `Lower | `Upper ]
            
 (* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
        Corresponds to 'SizeBounds for trivial SCCs':
        S'(alpha) = max{ S_l(alpha)(S(t',v_1),...,S(t',v_n)) | t' in pre(t) } *)
-let highest_incoming_bound (program: Program.t)
-                           (appr: Approximation.t)
-                           (local_sizebound: Bound.t)
-                           (t: Program.Transition.t)
+let incoming_bound (kind: kind)
+                   (program: Program.t)
+                   (appr: Approximation.t)
+                   (local_sizebound: Bound.t)
+                   (t: Program.Transition.t)
     : Bound.t =
   let execute () =
-    let substitute_with_prevalues t' = Bound.substitute_f (Approximation.sizebound `Upper appr t') local_sizebound in
+    let substitute_with_prevalues t' = Bound.substitute_f (Approximation.sizebound kind appr t') local_sizebound in
     t
     |> Program.pre program
     |> TransitionSet.to_list
     |> List.map substitute_with_prevalues
-    |> Bound.maximum
+    |> match kind with
+        | `Lower -> Bound.minimum
+        | `Upper -> Bound.maximum
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "compute highest incoming bound", ["lsb", Bound.to_string local_sizebound; "transition", Program.Transition.to_string t])
                   ~result:Bound.to_string
@@ -35,7 +40,7 @@ let improve_trivial_scc (program: Program.t)
     let newbound =
       if Program.is_initial program t then
         local_sizebound
-      else highest_incoming_bound program appr local_sizebound t
+      else incoming_bound `Upper program appr local_sizebound t
     in Approximation.add_sizebound `Upper newbound t v appr
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "improve trivial scc", ["rv", Program.RV.to_string (t,v)])
