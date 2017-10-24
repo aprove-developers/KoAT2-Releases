@@ -94,7 +94,8 @@ let scc_variables (rvg: Program.RVG.t)
   |> Enum.map (fun (t,v) -> v)
   
 (* Computes for each transition max{ |pre(alpha)| intersected with C | alpha in C_t } and multiplies the results. *)
-let maximal_affecting_scc_variables (rvg: Program.RVG.t)
+let extreme_affecting_scc_variables (kind: kind)
+                                    (rvg: Program.RVG.t)
                                     (scc: Program.RVG.scc)
                                     (ct: Program.RV.t Enum.t)
     : int =
@@ -102,7 +103,9 @@ let maximal_affecting_scc_variables (rvg: Program.RVG.t)
   |> Enum.map (scc_variables rvg scc)
   (* Filter also all pre variables that can only have a negative effect. *)
   |> Enum.map Enum.count
-  |> max_option
+  |> (match kind with
+      | `Lower -> min_option
+      | `Upper -> max_option)
   |? 1
 
 let transition_scaling_factor (rvg: Program.RVG.t)
@@ -112,7 +115,7 @@ let transition_scaling_factor (rvg: Program.RVG.t)
     : Bound.t =
   let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
   Bound.exp (OurInt.of_int (extreme_scaling_factor `Upper ct *
-                              maximal_affecting_scc_variables rvg scc (Enum.clone ct)))
+                              extreme_affecting_scc_variables `Upper rvg scc (Enum.clone ct)))
             (Approximation.timebound `Upper appr transition) 
   
 
