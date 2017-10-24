@@ -1,0 +1,9 @@
+\begin{theorem}[Upper SizeBounds for trivial SCCs]
+  Let $(\UTime, \USize)$ be a complexity approximation.
+  Let $\ULSB$ be a local size bound.
+  Let $\braced{\alpha} \subseteq \RV$ be a trivial SCC of the RVG.
+  We define $\USize'(\alpha') = \USize(\alpha')$ for all $\alpha' \neq \alpha$ and
+  \[ \USize'(\alpha) = \ULSB(\alpha), \text{ if } \alpha = (t, v') \text{ for some initial transition } t \]
+  \[ \USize'(\alpha) = \maximum{ \ULSB(\alpha)( \USize(\tilde{t}, v'_1), \dots, \USize(\tilde{t}, v'_n)) \mid \tilde{t} \in \pre(t)}, otherwise \]
+  Then, $\mathit{SizeBounds}(\UTime, \USize, \braced{\alpha}) = \USize'$ is also a size approximation.
+\end{theorem}

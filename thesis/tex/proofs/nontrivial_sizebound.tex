@@ -1,0 +1,105 @@
+We only regard the case where $\alpha \in \ScaledSum$ holds for all $\alpha \in \SCC$.
+Then, for all $(r, w') \in \RV$, we have to show that
+\[ \USize'(r, w')(m) \geq \SizeComplexity{r}{w} \]
+holds for all $m \in \mathbb{N}^n$.
+To this end, we now fix m to an arbitrary value and consider a fixed valuation $\sigma_0 \leq m$ and a fixed evaluation
+\[ \configuration{0} \valuateto{r} \configuration{}. \]
+Our goal is to show that
+\[ \USize'(r, w')(m) \geq \abs{\valuation(w)}. \]
+
+For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition t was used in the evaluation.
+To simplify the remaining proof, we define the following values:
+\[ f^\alpha = \sum_{v \in \actV{\ULSB(\alpha)} \setminus \VSet_\alpha} f^\alpha_v(m) \]
+\[ s_t = \maximum{s_{\alpha} \mid \alpha \in \SCC_t} \cdot \maximum{\abs{(\pre(\alpha) \setminus \pre^-(\alpha)) \cap \SCC} \mid \alpha \in \SCC_t} \]
+\[ d = \prod_{t \in \TSet} s^{k_t}_t \cdot \sum_{t \in \TSet} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}). \]
+Then we prove the following claim:
+\[ d \geq \abs{\valuation(w)}. \]
+Note that the theorem follows from the claim, as $\UTime(t)(m) \geq k_t$ holds by definition of $k_t$.
+Let $\gamma = (r, w')$.
+The only interesting case is if $\gamma \in \SCC$.
+Then, we have
+\begin{align*}
+  \USize'(\gamma)(m) &= \prod_{t \in \TSet} s_t^{\UTime(t)} & \cdot \sum_{t \in \TSet} (& \UTime(t)(m) & \cdot \maximum{ e_\alpha + f^\alpha \mid \alpha \in \SCC_t }) \\
+  & \geq \prod_{t \in \TSet} s_t^{k_t} & \cdot \sum_{t \in \TSet} (& k_t & \cdot \maximum{ e_\alpha + f^\alpha \mid \alpha \in \SCC_t }) \\
+  &= d \\
+  & \geq \abs{\valuation(w)}.
+\end{align*}
+
+We prove the claim by induction on the length of the evaluation.
+Intuitively, we show that we correctly approximate the effect of the last transition step $r$ on the size of the value obtained so far (which in turn is captured by the induction hypothesis).
+
+Note that $r$ can not be an initial transition, as there are no transitions leading back to the initial location $\location_0$
+(i.e., then $\gamma = (r, w')$ would not be contained in a nontrivial SCC $\SCC$ of the RVG).
+Thus, the reduction has the form
+\[ \configuration{0} \valuateto{\tilde{r}} (\tilde{\location}, \tilde{\valuation}) \rightarrow_r \configuration{}. \]
+for some transition $\tilde{r} \in \pre(r)$.
+
+For all $u_1, \dots, u_n \in \mathbb{N}$, we have by the definition of scaled sums
+\[ s_\gamma \cdot (e_\gamma + u_1 + \dots + u_n) \geq \ULSB(\gamma)(u_1, \dots, u_n). \]
+Since $\ULSB(\gamma)$ only depends on the active variables in $\actV{\ULSB(\gamma)}$, let $\hat{u}_i = u_i$ if $v_i \in \actV{\ULSB{\gamma}}$ and $\hat{u}_i = 0$ otherwise.
+Then,
+\begin{align*}
+  s_\gamma \cdot (e_\gamma + \sum_{v_i \in \actV{\ULSB(\gamma)}} u_i) &= s_\gamma \cdot (e_\gamma + \hat{u}_1 + \dots + \hat{u}_n) \\
+  & \geq \ULSB(\gamma)(\hat{u}_1, \dots, \hat{u}_n) \\
+  &= \ULSB(\gamma)(u_i, \dots, u_n).
+\end{align*}
+
+We have to estimate the sizes of the input variables $u_1, \dots, u_n$,
+that is, we have to find a bound on the size of each $v_i \in \VSet$ after the application of the transition $\tilde{r}$ that precedes $r$.
+
+If $(\tilde{r}, v'_i) \in \SCC$, then the induction hypothesis implies that $d \geq \abs{\valuation(w)}$ also holds for the reduction from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
+Let
+\begin{align*}
+  d' &= \prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t \cdot s^{k_r - 1}_r & \cdot (\sum_{t \in \TSet \setminus \braced{r}} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}) \\
+  & & + (k_r - 1) \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r}).
+\end{align*}
+The reason for using $k_r - 1$ in $d'$ is that the last application of the transition $r$ in the evaluation is missing in the evaluation from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
+Then, the induction hypothesis implies that $d' \geq \abs{\tilde{\valuation}(v_i)}$.
+For $v_i \in \actV{\ULSB(\gamma)}$ with $v_i \notin \VSet_\gamma$, we have $(\tilde{r}, v'_i) \notin \SCC$ (by definition of $\VSet_\gamma$).
+For such $v_i$, we can deduce the following:
+\[ f^\gamma_{v_i}(m) \geq \USize(\tilde{r}, v'_i)(m) \geq \abs{\tilde{\valuation}(v_i)}. \]
+
+We now combine these bounds to prove that $d$ is indeed a bound for $\abs{\valuation(w)}$.
+
+Note that we have
+\[ \prod_{t \in \TSet} s^{k_t}_t = s^{k_r}_r \cdot \prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t = s_r \cdot s^{k_r - 1}_r \cdot \prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t \]
+and also
+\begin{align*}
+  & \sum_{t \in \TSet} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}) \\
+  & = k_r \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} + \sum_{t \in \TSet \setminus \braced{r}} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}) \\
+  & =
+  \begin{aligned}[t]
+    & \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} \\
+    + & (k_r - 1) \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} \\
+    + & \sum_{t \in \TSet \setminus \braced{r}} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t})
+  \end{aligned}
+\end{align*}
+
+Thus, we have
+\begin{IEEEeqnarray*}{rClr}
+  d & = & (\prod_{t \in \TSet} s^{k_t}_t) \cdot \sum_{t \in \TSet} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}) \\
+  & = & s_r \cdot s^{k_r - 1}_r \cdot (\prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t) \cdot (\maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} \\
+  && + (k_r - 1) \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} \\
+  && + \sum_{t \in \TSet \setminus \braced{r}} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t})) \\
+  & = & s_r \cdot d' + s_r \cdot s^{k_r - 1}_r \cdot (\prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t) \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} \\
+  & = & s_r \cdot (d' + s^{k_r - 1}_r \cdot (\prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t) \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r}) \\
+  & \geq & s_r \cdot (d' + \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r}) \\
+  & \geq & s_r \cdot (d' + e_\gamma + f^\gamma) \\
+  & = & \maximum{s_{\alpha} \mid \alpha \in \SCC_r} \\
+  && \cdot \maximum{\abs{(\pre(\alpha) \setminus \pre^-(\alpha)) \cap \SCC} \mid \alpha \in \SCC_r} \\
+  && \cdot (d' + e_\gamma + f^\gamma) \\
+  & \geq & s_\gamma \cdot \abs{(\pre(\gamma) \setminus \pre^-(\gamma)) \cap \SCC} \cdot (d' + e_\gamma + f^\gamma) \\
+  & \geq & s_\gamma \cdot (\abs{(\pre(\gamma) \setminus \pre^-(\gamma)) \cap \SCC} \cdot d' + e_\gamma + f^\gamma) \\
+  & \geq & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} d' + e_\gamma + f^\gamma) \\
+  & \geq & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)} + e_\gamma + f^\gamma) \\
+  & = & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)} + e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)} \setminus \VSet_\gamma} f^\gamma_v(m)) \\
+  & = & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)} + e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)}} f^\gamma_v(m) - \sum_{v \in \VSet_\gamma} f^\gamma_v(m)) & \text{since } V_\gamma \subseteq \actV{\ULSB(\gamma)} \\
+  & = & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)} + e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)}} f^\gamma_v(m) \\
+  && - \sum_{v \in \VSet^-_\gamma} f^\gamma_v(m) - \sum_{v \in \VSet_\gamma \setminus \VSet^-_\gamma} f^\gamma_v(m)) \\
+  & = & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)} + e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)}} f^\gamma_v(m) \\
+  && - \sum_{v \in \VSet^-_\gamma} -\abs{\tilde{\valuation}(v_i)} - \sum_{v \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)}) \\
+  & = & s_\gamma \cdot (e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)}} \abs{\tilde{\valuation}(v_i)} + \sum_{v_i \in \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)}) \\
+  & \geq & s_\gamma \cdot (e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)}} \abs{\tilde{\valuation}(v_i)}) \\
+  & \geq & \ULSB(\gamma)(\abs{\tilde{\valuation}(v_1),\dots,\abs{\tilde{\valuation}(v_n)}}) \\
+  & \geq & \abs{\valuation(w)}
+\end{IEEEeqnarray*}

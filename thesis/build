@@ -1,0 +1,9 @@
+#!/bin/bash
+set -x
+
+wdir=$(pwd)
+cd "$(dirname "$0")"/tex
+mkdir -p ../output
+pdflatex --output-directory ../output main.tex
+pdflatex --output-directory ../output main.tex
+cd $wdir

@@ -1,0 +1,16 @@
+\begin{definition}[Negative/Positive split of polynomials]
+  Let $p \in \mathbb{Z}[\VSet]$ be a polynomial.
+  Then we define $p_+ \in \mathbb{N}[\VSet]$ as the sum of all components of $p$ with a positive factor and $p_- \in \mathbb{N}[\VSet]$ as the sum of all components with a negative factor with the factor inverted.
+\end{definition}
+
+\begin{theorem}[TimeBounds]
+  Let $(\UTime, (\LSize, \USize))$ be a complexity approximation. \\
+  Let $\TSet' \subseteq \TSet$ a subset of all transitions such that $\TSet'$ contains no initial transitions. \\
+  Let $\TSet_{\location} = \braced{(\location', \tau, \location) \mid \exists \location', \tau: (\location', \tau, \location) \in \TSet \setminus \TSet'}$ denote the set of all transitions outside of the subprogram $\TSet'$ leading to an $\location \in \LSet$. \\
+  Let $\mathcal{E}_{\TSet'} = \braced{\location_{in} \mid \TSet_{\location_{in}} \neq \emptyset \wedge \exists \location': (\location_{in}, \tau, \location') \in \TSet'}$ denote the set of all entry locations of $\TSet'$. \\
+  Let $\Pol$ be a \textbf{linear} PRF for $\TSet'$. \\
+  For $t \in \TSet'_>$ let
+  \[ \UTime'(t) = \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\tilde{t} \in \TSet_\location} \UTime(\tilde{t}) \cdot \maximum{0, (\Pol(\location)_+)(\USize(\tilde{t})) - (\Pol(\location)_-)(\LSize(\tilde{t}))} \]
+  Let $\UTime'(t) = \UTime(t)$ for $t \in \TSet \setminus \TSet'_>$. \\
+  Then, $\text{TimeBounds}(\UTime, (\USize, \LSize), \TSet') = \UTime'$ is also a runtime approximation.
+\end{theorem}

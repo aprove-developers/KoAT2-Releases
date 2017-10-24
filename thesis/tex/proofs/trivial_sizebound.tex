@@ -1,0 +1,16 @@
+Let $\alpha = (t, v') \in \RV$ be the trivial SCC for which the processor was applied.
+We have to show that
+\[ \USize'(t, v')(m) \geq \SizeComplexity{t}{v} \]
+holds for all $m \in \mathbb{N}^n$. To this end, we consider a valuation $\valuation_0 \leq m$ and an evaluation
+\[ \configuration{0} \valuateto{t} \configuration. \]
+Now the goal is to show that $\USize'(t, v')(m) \geq \abs{\valuation(v)}$ holds.
+
+If $t$ i an initial transition, then the evaluation has the form $\configuration{0} \rightarrow_t \configuration{}$, as by definition there are no transitions leading back to the initial location $\location_0$. Thus, $\ULSB(t, v')(m) \geq \abs{\valuation(v)}$. Since $\USize(t, v') is defined as \ULSB(t, v')$ for initial transitions t, we obtain
+\[ \USize'(t, v')(m) = \ULSB(t, v')(m) \geq \abs{\sigma(v)}. \]
+In the case where t is not an initial transition, the evaluation has the form
+\[ \configuration{0}  \valuateto{\tilde{t}} (\tilde{\location}, \tilde{\valuation}) \rightarrow_t \configuration{} \]
+for some transition $\tilde{t} \in \pre(t)$. As $\valuation_0 \leq m$, we have $\USize(\tilde{t}, v'_i)(m) \geq \abs{\tilde{\valuation}(v_i)}$ for all $i \in \braced{1,\dots,n}$, thus, $\USize(\tilde{t}, v'_i)$ is a bound for the size of the variable $v_i$ before the transition $t$ is applied.
+
+The local size change resulting from the transition $t$ is approximated by the function $\ULSB(t, v')$. Thus, we have
+\[ \ULSB(t, v')(\USize(\tilde{t}, v'_1),\dots,\USize(\tilde{t}, v'_n))(m) \geq \abs{\valuation(v)}, \]
+and hence $\USize'(t, v')(m) \geq \abs{\valuation(v)}$.

@@ -1,0 +1,28 @@
+\begin{definition}[Pre-variables]
+  Let $\pre(\alpha) \subseteq \RV$ be an overapproximation of all the result variables that directly affect the value of a result variable $\alpha \in \RV$.
+  Let $\pre^+(\alpha) \subseteq \pre(\alpha)$ be those possibly affecting result variables that enter for each possible evaluation with a positive value
+  (i.e. for $\beta \in \pre^+(\alpha)$ it holds that $\LSize(\beta) > 0$).
+  Similar, let $\pre^-(\alpha) \subseteq \pre(\alpha)$ be those possibly affecting result variables that enter for each possible evaluation with a negative value
+  (i.e. for $\beta \in \pre^+(\alpha)$ it holds that $\USize(\beta) < 0$).
+\end{definition}
+
+\begin{definition}[SCC-variables]
+  Let $\VSet_\alpha = \braced{ \tilde{v} \mid (\tilde{t}, \tilde{v}') \in \pre(\alpha) \cap \SCC }$ be an overapproximation of all variables occuring directly before $\alpha$ in $\SCC$ that may affect the value of $\alpha \in \RV$.
+  Let $\VSet^+_\alpha = \braced{ \tilde{v} \mid (\tilde{t}, \tilde{v}') \in \pre^+(\alpha) \cap \SCC } \subseteq \VSet_\alpha$ be those variables from $\VSet_\alpha$ that enter for each possible evaluation with a positive value.
+  Similar, let $\VSet^-_\alpha$ be the negative version.
+\end{definition}
+
+\begin{theorem}[Upper SizeBounds for nontrivial SCCs]
+  Let $(\UTime, \USize)$ be a complexity approximation.
+  Let $\ULSB$ be a local size bound.
+  Let $\SCC \subseteq \RV$ a nontrivial SCC of the RVG.
+  If there is a $\beta \in \SCC$ with $\beta \notin \ScaledSum$, then we set $\USize' = \USize$.
+  Otherwise, for all $\beta \notin \SCC$, let $\USize'(\beta) = \USize(\beta)$.
+  For all $\beta \in \SCC$, we set
+  \begin{align*}
+    \USize'(\beta) = & \prod_{t \in \TSet} (\maximum{s_{\alpha} \mid \alpha \in \SCC_t}
+                       \cdot \maximum{\abs{(\pre(\alpha) \setminus \pre^-(\alpha)) \cap \SCC} \mid \alpha \in \SCC_t})^{\UTime(t)} \\
+                     & \cdot \sum_{t \in \TSet} (\UTime(t) \cdot \maximum{ e_\alpha + \sum_{v \in \actV{\ULSB(\alpha}) \setminus \VSet_\alpha} f^\alpha_v \mid \alpha \in \SCC_t }).
+  \end{align*}
+  Then, $\mathit{SizeBounds}(\UTime, \USize, \SCC) = \USize'$ is also a size approximation. 
+\end{theorem}
