@@ -31,17 +31,18 @@ let incoming_bound (kind: kind)
 
 (* Improves a trivial scc. That is an scc which consists only of one result variable.
        Corresponds to 'SizeBounds for trivial SCCs'. *)
-let improve_trivial_scc (program: Program.t)
+let improve_trivial_scc (kind: kind)
+                        (program: Program.t)
                         (appr: Approximation.t)
                         (t,v)
     : Approximation.t =
   let execute () =
-    let (local_sizebound: Bound.t) = LocalSizeBound.(as_bound (sizebound_local `Upper (Program.Transition.label t) v)) in
+    let (local_sizebound: Bound.t) = LocalSizeBound.(as_bound (sizebound_local kind (Program.Transition.label t) v)) in
     let newbound =
       if Program.is_initial program t then
         local_sizebound
-      else incoming_bound `Upper program appr local_sizebound t
-    in Approximation.add_sizebound `Upper newbound t v appr
+      else incoming_bound kind program appr local_sizebound t
+    in Approximation.add_sizebound kind newbound t v appr
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "improve trivial scc", ["rv", Program.RV.to_string (t,v)])
                   execute
@@ -191,7 +192,10 @@ let improve_scc (program: Program.t)
                 (scc: Program.RV.t list)
     : Approximation.t  =
   match scc with
-  | [rv] -> improve_trivial_scc program appr rv
+  | [rv] ->
+     appr
+     |> fun appr -> improve_trivial_scc `Upper program appr rv
+     |> fun appr -> improve_trivial_scc `Lower program appr rv                  
   | scc -> improve_nontrivial_scc program rvg appr scc
          
 let improve program appr =
