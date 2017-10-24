@@ -47,14 +47,6 @@ let improve_trivial_scc (kind: kind)
                   (fun () -> "improve trivial scc", ["rv", Program.RV.to_string (t,v)])
                   execute
 
-(* Returns all bounds for result variables entering the scc. *)
-let incoming_bounds (rvg: Program.RVG.t)
-                    (appr: Approximation.t)
-                    (scc: Program.RV.t list)
-  : Bound.t Enum.t =
-     Program.RVG.entry_points rvg scc
-  |> Enum.map (fun (t,v) -> Approximation.sizebound `Upper appr t v)
-
 (* Computes the maximum of the enum if non-empty, else returns None. *)
 let max (enum: int Enum.t): int Option.t =
   let f = function
