@@ -36,6 +36,9 @@ val equal : t -> t -> bool
 
 (** Returns the negation of the templated bound. *)
 val neg : t -> t
+
+(** Returns the absolute value of the factor. *)
+val abs_factor : t -> int
   
 (** Converts the templated bound to a string. *)
 val to_string : t -> string

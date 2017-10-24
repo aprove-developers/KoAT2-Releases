@@ -25,7 +25,10 @@ let equal lsb1 lsb2 =
 
 let neg lsb =
   { lsb with factor = -lsb.factor }
-    
+
+let abs_factor lsb =
+  abs lsb.factor
+  
 let as_bound = function
   | Some lsb ->
      lsb.vars
