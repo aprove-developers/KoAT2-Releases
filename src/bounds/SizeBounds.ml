@@ -69,7 +69,7 @@ let maximal_scaling_factor (ct: Program.RV.t Enum.t)
   ct
   |> Enum.map (LocalSizeBound.sizebound_local_rv `Upper)
   |> Enum.map Option.get (* Should exist *)
-  |> Enum.map (fun (LocalSizeBound.ScaledSum (s, _, _)) -> s)
+  |> Enum.map (fun lsb -> lsb.LocalSizeBound.factor)
   |> max_option
   |? 1
 
@@ -145,8 +145,8 @@ let transition_effect (rvg: Program.RVG.t)
   ct
   |> Enum.map (fun alpha -> (alpha, Option.get (LocalSizeBound.sizebound_local_rv `Upper alpha)))
   (* Should exist *)
-  |> Enum.map (fun (alpha, LocalSizeBound.ScaledSum (_, e, vars)) ->
-         Bound.add (Bound.of_int e) (incoming_vars_effect rvg appr scc vars transition alpha)
+  |> Enum.map (fun (alpha, lsb) ->
+         Bound.add (Bound.of_int lsb.LocalSizeBound.constant) (incoming_vars_effect rvg appr scc lsb.LocalSizeBound.vars transition alpha)
        )
   |> max
 

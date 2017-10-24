@@ -19,12 +19,14 @@ type formula = Formulas.Formula.t
 (** A templated bound is a bound of a certain templated form.
     The different templates are not disjunctive.
     The upcoming template set always includes the previous one. *)
-type t =
-
-  (* TODO We can not use the sum of all variables, if the value of a variable might be negative and not actually used in the transition.  *)
-  (** Always smaller or equal to a scaling factor multiplied with the sum of all prevariables and a constant. Examples: x'=x+y , x'=2*(x+y+z) 
-      s * (e + sum [x1;...;xn]) *)
-  | ScaledSum of int * int * VarSet.t
+(* TODO We can not use the sum of all variables, if the value of a variable might be negative and not actually used in the transition.  *)
+(** Always smaller or equal to a scaling factor multiplied with the sum of all prevariables and a constant. Examples: x'=x+y , x'=2*(x+y+z) 
+    s * (e + sum [x1;...;xn]) *)
+type t = {
+    factor: int;
+    constant: int;
+    vars: VarSet.t;
+  }
 
 (** Creates a templated bound from the template and a string list which represents the variable set. *)
 val mk : int -> int -> string list -> t
