@@ -25,6 +25,9 @@ type main_params = {
     output_dir : string option;
     (** An absolute or relative path to the output directory, where all generated files should end up *)
 
+    logs : string list; [@default []] [@sep ',']
+    (** The loggers which should be activated. *)
+
   } [@@deriving cmdliner, show]
 
 type localsizebound_params = {
@@ -89,7 +92,12 @@ let find_bounds (graph: Program.t): Approximation.t =
 let print_results (appr: Approximation.t): unit =
   raise (Failure "Not yet implemented")  
 
+let init_logger (logs: (string * Logger.level) list) =
+  Logger.init logs (Logger.make_dbg_formatter IO.stdout)
+  
 let run (params: main_params) =
+  let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
+  init_logger logs;
   let program = Readers.read_file params.input
   and input_filename =
     params.input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
@@ -106,6 +114,7 @@ let run (params: main_params) =
        |> print_results
 
 let run_localsizebound (params: localsizebound_params) =
+  init_logger ["lsb", Logger.DEBUG];
   let open TransitionLabel in
   let guard = Readers.read_constraint params.guard in
   let var = Var.of_string params.var in
@@ -141,6 +150,7 @@ let run_normalize (params: normalize_params) =
   print_string output
   
 let run_size (params: size_params) =
+  init_logger ["size", Logger.DEBUG];
   let appr = Approximation.empty 10 3
   and program = Readers.read_file params.program in
   SizeBounds.improve program appr
@@ -160,6 +170,5 @@ let () =
   (* Read the arguments from the shell via an api and call run *)
   let open Cmdliner in
   let main_command = (Term.(const run $ main_params_cmdliner_term ()), Term.info Sys.argv.(0)) in
-  Logger.init ["lsb", Logger.DEBUG; "size", Logger.DEBUG] (Logger.make_dbg_formatter IO.stdout);
   Term.exit @@ Term.eval_choice main_command subcommands
 
