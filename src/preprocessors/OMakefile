@@ -8,6 +8,7 @@ OCAMLINCLUDES[] =
     ../poly
     ../constraints
     ../transitionsystem
+    ../bounds
 
 OCAMLFLAGS += -thread
 
@@ -15,6 +16,7 @@ OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
     ../transitionsystem/transitionsystem
+    ../bounds/bounds
 
 # Include all .ml files
 FILES[] = $(removesuffix .ml, $(glob *.ml))

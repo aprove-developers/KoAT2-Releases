@@ -80,13 +80,9 @@ type size_params = {
 
   } [@@deriving cmdliner, show]
                       
-let preprocessors: (Program.t -> Program.t) list = []
+let preprocessors: PreprocessorTypes.preprocessor list = []
                                                    
-(* We apply each preprocessor exactly one time *)
-let preprocess (graph: Program.t): Program.t =
-  List.fold_left (fun graph preprocessor -> preprocessor graph) graph preprocessors
-
-let find_bounds (graph: Program.t): Approximation.t =
+let find_bounds (graph: PreprocessorTypes.subject): Approximation.t =
   raise (Failure "Not yet implemented")
 
 let print_results (appr: Approximation.t): unit =
@@ -108,10 +104,10 @@ let run (params: main_params) =
   if params.print_rvg then
     Program.print_rvg ~outdir:output_dir ~file:input_filename program;
   if not params.no_boundsearch then
-       program
-    |> preprocess
+       (program, Approximation.empty 10 10) (* TODO Better values *)
+    |> PreprocessorTypes.preprocess preprocessors
     |> find_bounds
-       |> print_results
+    |> print_results
 
 let run_localsizebound (params: localsizebound_params) =
   init_logger ["lsb", Logger.DEBUG];

@@ -2,14 +2,16 @@ open Batteries
 
 (** Provides all module types related to preprocessors *)
 
-(** An atom is a comparison between two polynomials *)
-module type Preprocessor =
-  sig
-    (** Transforms the transition graph in an equivalent form, which is more suitable for the upcoming computations. *)
-    val transform : Program.t -> Program.t
-  end
+type subject = Program.t * Approximation.t
 
-module CutUnreachable : Preprocessor =
+(** Transforms the transition graph in an equivalent form, which is more suitable for the upcoming computations. *)
+type preprocessor = subject -> subject
+   
+(* Applies each preprocessor exactly one time. *)
+let preprocess (preprocessors: preprocessor list) (subject: subject) =
+  List.fold_left (fun s preprocessor -> preprocessor s) subject preprocessors
+
+module CutUnreachable =
   struct
     module LocationSet = Set.Make(Program.Location)
                        
@@ -24,8 +26,9 @@ module CutUnreachable : Preprocessor =
     let unreachable_locations graph start : LocationSet.t =
       LocationSet.diff (locations graph) (reachable_locations graph start)
 
-    let transform program =
-      let unreachable_locations = unreachable_locations (Program.graph program) (Program.start program) in
-      LocationSet.fold (flip Program.remove_location) unreachable_locations program
-      
+    let transform: preprocessor =
+      Tuple2.map1 (fun program -> 
+          let unreachable_locations = unreachable_locations (Program.graph program) (Program.start program) in
+          LocationSet.fold (flip Program.remove_location) unreachable_locations program
+        )
   end
