@@ -79,7 +79,7 @@ transitiongraph_simple :
 
 transition_simple :
 	|	start = ID; cost_pair = cost ; rhs = transition_rhs; constr = withConstraints
-	          { TransitionLabel.mk ~name:(Tuple2.first rhs)
+	          { TransitionLabel.mk ~com_kind:(Tuple2.first rhs)
                     		       ~start:start
                                        ~targets:(Tuple2.second rhs)
                                        ~patterns:default_vars
@@ -105,7 +105,7 @@ variables :
 		  
 transition :
 	|	lhs = transition_lhs; cost_pair = cost ; rhs = transition_rhs; constr = withConstraints
-	          { TransitionLabel.mk ~name:(Tuple2.first rhs)
+	          { TransitionLabel.mk ~com_kind:(Tuple2.first rhs)
                     		       ~start:(Tuple2.first lhs)
                                        ~targets:(Tuple2.second rhs)
                                        ~patterns:(List.map Var.of_string (Tuple2.second lhs))
@@ -121,8 +121,8 @@ transition_lhs :
 	          { (start, patterns) } ;
 
 transition_rhs :
-	|	name = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
- 	          { (name, targets) } ;
+	|       com_kind = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
+ 	          { (com_kind, targets) } ;
         |       target = transition_target
                   { ("Com_1", [target]) } ;
 transition_target :
