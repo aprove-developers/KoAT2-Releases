@@ -4,6 +4,7 @@ OCAMLPACKS[] =
     Z3
     batteries
     ocamlgraph
+    fpath
     oUnit
     ppx_deriving
     ppx_deriving.eq

@@ -22,7 +22,7 @@ type main_params = {
     input : string; [@pos 0] [@docv "INPUT"]
     (** An absolute or relative path to the koat input file which defines the integer transition system *)
     
-    output_dir : string; [@default "."]
+    output_dir : string option;
     (** An absolute or relative path to the output directory, where all generated files should end up *)
 
   } [@@deriving cmdliner, show]
@@ -90,13 +90,15 @@ let print_results (appr: Approximation.t): unit =
   raise (Failure "Not yet implemented")  
 
 let run (params: main_params) =
-  let program = Readers.read_file params.input in
-  let input_filename =
-    params.input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename in
+  let program = Readers.read_file params.input
+  and input_filename =
+    params.input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
+  and output_dir =
+    Option.map Fpath.v params.output_dir |? (params.input |> Fpath.v |> Fpath.parent) in
   if params.print_system then
-    Program.print_system ~outdir:params.output_dir ~file:input_filename program;
+    Program.print_system ~outdir:output_dir ~file:input_filename program;
   if params.print_rvg then
-    Program.print_rvg ~outdir:params.output_dir ~file:input_filename program;
+    Program.print_rvg ~outdir:output_dir ~file:input_filename program;
   if not params.no_boundsearch then
        program
     |> preprocess

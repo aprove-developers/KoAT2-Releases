@@ -54,8 +54,8 @@ let suite =
       );
       (
         "Print" >:: (fun _ ->
-          Program.print_system ~outdir:"output" ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
-          Program.print_rvg ~outdir:"output" ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat")
+          Program.print_system ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
+          Program.print_rvg ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat")
         )
       );
     ]
