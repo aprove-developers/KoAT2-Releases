@@ -11,6 +11,7 @@ type preprocessor = subject -> subject
 let preprocess (preprocessors: preprocessor list) (subject: subject) =
   List.fold_left (fun s preprocessor -> preprocessor s) subject preprocessors
 
+(** This preprocessor cuts all unreachable locations (and all transitions connected to them) from the program. *)
 module CutUnreachable =
   struct
     module LocationSet = Set.Make(Program.Location)
@@ -31,4 +32,21 @@ module CutUnreachable =
           let unreachable_locations = unreachable_locations (Program.graph program) (Program.start program) in
           LocationSet.fold (flip Program.remove_location) unreachable_locations program
         )
+  end
+
+(** This preprocessor infers for all transitions which are not part of an scc a time bound of their cost.
+    Those transitions can only be executed once and preprocessing might increase performance and also might lead to better bounds. *)
+module TrivialTimeBounds =
+  struct
+    module SCC = Graph.Components.Make(Program.TransitionGraph)
+
+    let transform (program, appr) =
+      let graph = Program.graph program in
+      let (_, scc_number) = SCC.scc graph in
+      let may_improve l1 l2 appr =
+        if scc_number l1 = scc_number l2 then
+          appr
+        else Approximation.add_timebound `Upper Bound.one (Program.TransitionGraph.find_edge graph l1 l2) appr in
+      Program.TransitionGraph.fold_edges may_improve graph appr
+    
   end
