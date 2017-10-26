@@ -91,10 +91,12 @@ let print_results (appr: Approximation.t): unit =
 
 let run (params: main_params) =
   let program = Readers.read_file params.input in
+  let input_filename =
+    params.input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename in
   if params.print_system then
-    Program.print_system ~outdir:params.output_dir ~file:"tmp" program;
+    Program.print_system ~outdir:params.output_dir ~file:input_filename program;
   if params.print_rvg then
-    Program.print_rvg ~outdir:params.output_dir ~file:"tmp" program;
+    Program.print_rvg ~outdir:params.output_dir ~file:input_filename program;
   if not params.no_boundsearch then
        program
     |> preprocess
