@@ -1,0 +1,12 @@
+#!/bin/bash
+
+wdir=$(pwd)
+cd "$(dirname "$0")"
+
+for f in **/*.koat
+do
+  koat --print-rvg --no-boundsearch --print-system $f
+done
+
+cd $wdir
+
