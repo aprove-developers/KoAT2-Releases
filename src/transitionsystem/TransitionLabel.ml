@@ -39,12 +39,14 @@ let mk ?(cost=one) ~name ~start ~targets ~patterns ~guard ~vars =
     |> fun update -> { name; start; target; update; guard; cost;}
                    
 let equal t1 t2 =
-  t1.name == t2.name
+     t1.start = t2.start
+  && t1.target = t2.target
   
 let compare t1 t2 = 
-  if (t1 == t2) then 0
-  else if (t1.name < t1.name) then (-1)
-  else 1
+  let cmp = String.compare t1.start t2.start in
+  if cmp = 0 then
+    String.compare t1.target t2.target
+  else cmp
   
 let start t = t.start
             

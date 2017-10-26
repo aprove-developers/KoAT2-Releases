@@ -18,6 +18,8 @@
 			
 %start <Program.t> onlyTransitiongraph
 
+%start <Program.t> onlyTransitiongraph_simple
+
 %start <Formulas.Formula.t> onlyFormula
 
 %start <Constraints.Constraint.t> onlyConstraints
@@ -50,6 +52,8 @@
   open Atoms
   module Poly = Polynomials.Polynomial
   open Formulas
+
+  let default_vars = List.map Var.of_string ["x"; "y"; "z"; "u"; "v"; "w"; "p"; "q"]
 %}
 
 %%
@@ -64,6 +68,24 @@ transitiongraph :
                 vars = variables
                 trans = transitions
                   { Program.from vars (List.map (fun t -> t ~vars) trans) start } ;
+
+onlyTransitiongraph_simple :
+        |       graph = transitiongraph_simple; EOF
+                  { graph } ;
+
+transitiongraph_simple :
+	|       trans = separated_nonempty_list(COMMA, transition_simple)
+                  { Program.from default_vars trans (Program.Location.of_string (TransitionLabel.start (List.hd trans))) } ;
+
+transition_simple :
+	|	start = ID; cost_pair = cost ; rhs = transition_rhs; constr = withConstraints
+	          { TransitionLabel.mk ~name:(Tuple2.first rhs)
+                    		       ~start:start
+                                       ~targets:(Tuple2.second rhs)
+                                       ~patterns:default_vars
+                                       ~guard:constr 
+                                       ~cost:(Tuple2.second cost_pair)
+                                       ~vars:default_vars} ;
 
 goal :		
 	|	LPAR GOAL goal = ID RPAR
@@ -81,9 +103,6 @@ variables :
 	|	LPAR VAR vars = list(ID) RPAR
 		  { List.map Var.of_string vars } ;
 		  
-
-        
-
 transition :
 	|	lhs = transition_lhs; cost_pair = cost ; rhs = transition_rhs; constr = withConstraints
 	          { TransitionLabel.mk ~name:(Tuple2.first rhs)
@@ -104,8 +123,8 @@ transition_lhs :
 transition_rhs :
 	|	name = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
  	          { (name, targets) } ;
-        |       targets = separated_nonempty_list(COMMA, transition_target)
-                  { ("Com_1", targets) } ;
+        |       target = transition_target
+                  { ("Com_1", [target]) } ;
 transition_target :
 	|       target = ID; LPAR assignments = separated_list(COMMA, polynomial) RPAR
 	          { (target, assignments) } ;

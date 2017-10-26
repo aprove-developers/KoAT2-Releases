@@ -13,20 +13,40 @@ module Location =
                
     let to_string l = l.name
                     
-    let of_string inp_name = { name = inp_name }
-                       
+    let of_string inp_name = { name = inp_name }               
   end
+module LocationSet = Set.Make(Location)
 
-module TransitionGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
+module Transition =
+  struct
+    type t = Location.t * TransitionLabel.t * Location.t [@@deriving eq, ord]
 
-module Transition = struct
-  include TransitionGraph.E
-  let to_string (l,t,l') = Location.to_string l ^ "->" ^ Location.to_string l' ^ ", " ^ TransitionLabel.to_string t
-  let equal (l1,t1,l'1) (l2,t2,l'2) =
-       Location.equal l1 l2
-    && TransitionLabel.equal t1 t2
-    && Location.equal l'1 l'2
-end
+    let src (src, _, _) = src
+           
+    let label (_, label, _) = label
+
+    let target (_, _, target) = target
+
+    let to_string (l,t,l') =
+      Location.to_string l ^ "->" ^ Location.to_string l' ^ ", " ^ TransitionLabel.to_string t
+  end
+module TransitionSet = Set.Make(Transition)
+
+module TransitionGraph =
+  struct
+    include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
+
+    let locations graph : LocationSet.t =
+      fold_vertex LocationSet.add graph LocationSet.empty
+
+    let transitions graph : TransitionSet.t =
+      fold_edges_e TransitionSet.add graph TransitionSet.empty
+
+    let equal graph1 graph2 =
+      LocationSet.equal (locations graph1) (locations graph2)
+      && TransitionSet.equal (transitions graph1) (transitions graph2)
+
+  end
 
 module RV =
   struct
@@ -64,7 +84,6 @@ module RVG =
       |> Enum.uniq_by Transition.equal
   end  
    
-module TransitionSet = Set.Make(Transition)
 module CartesianSet = Set.Make2(Transition)(Var)
 
 type transition_set = Set.Make(Transition).t
@@ -73,7 +92,7 @@ type t = {
     graph: TransitionGraph.t;
     vars: Var.t list;
     start: Location.t;
-  }
+  } [@@deriving eq]
        
 let add_vertices graph vertices =
   vertices
@@ -181,5 +200,6 @@ let print_rvg ~outdir ~file program =
 let is_initial program trans =
   Location.(equal (program.start) (Transition.src trans))
 
-let to_string graph =
-  "TODO"
+let to_string program =
+  let graph = TransitionGraph.fold_edges_e (fun t str -> str ^ Transition.to_string t) program.graph "" in
+  String.concat " " ["Start:"; Location.to_string program.start; "Graph:"; graph; "Vars:"] 
