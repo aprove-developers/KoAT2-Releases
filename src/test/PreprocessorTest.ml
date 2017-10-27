@@ -19,6 +19,26 @@ let tests =
                   ]
       );
       
+      ("TrivialTimeBounds" >:::
+         List.map (fun (src, target, program) ->
+             program >:: (fun _ ->
+                     assert_equal_bound_option
+                       (Some Bound.one)
+                       ((Readers.read_program_simple program, Approximation.empty 5 5)
+                        |> PreprocessorTypes.TrivialTimeBounds.transform
+                        |> Tuple2.second
+                        |> (fun time -> Approximation.timebound_between time (Program.Location.of_string src) (Program.Location.of_string target))
+           )))
+                  [
+                    ("l1", "l2", "l1 -> l2(x)");
+                    ("l2", "l3", "l1 -> l2(x), l2 -> l3(x)");
+                    ("l1", "l2", "l1 -> l1(x), l1 -> l2(x)");
+                    ("l2", "l3", "l1 -> l2(x), l2 -> l1(x), l2 -> l3(x)");
+                    ("l2", "l3", "l1 -> l2(x), l2 -> l1(x), l2 -> l3(x), l3 -> l3(x), l3 -> l4(x)");
+                    ("l3", "l4", "l1 -> l2(x), l2 -> l1(x), l2 -> l3(x), l3 -> l3(x), l3 -> l4(x)");
+                  ]
+      );
+
     ]
 
     

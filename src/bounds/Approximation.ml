@@ -17,6 +17,14 @@ module Time =
     let get map transition =
       Map.find_option map transition |? Bound.infinity
 
+    let get_between map src target =
+      map
+      |> Map.filteri (fun (l,_,l') _ -> Program.Location.(equal l src && equal l' target))
+      |> Map.values
+      |> Option.some
+      |> Option.filter (fun values -> Enum.count values = 1)
+      |> fun option -> Option.bind option Enum.get
+
     let sum map program =
       Program.TransitionGraph.fold_edges_e (fun transition -> Bound.add (get map transition)) (Program.graph program) Bound.zero
       
@@ -112,6 +120,8 @@ let size (_, size) = size
 
 let timebound (time, _) = Time.get time
 
+let timebound_between (time, _) = Time.get_between time
+                        
 let add_timebound bound transition = Tuple2.map1 (Time.add bound transition)
 
 let sizebound kind (_, size) = Size.get kind size

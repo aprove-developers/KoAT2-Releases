@@ -13,6 +13,11 @@ let to_string_template_bound_option (option: LocalSizeBound.t Option.t): string 
   Option.print (fun output template_bound -> IO.nwrite output (Bound.to_string (LocalSizeBound.as_bound (Some template_bound)))) output option;
   IO.close_out output
 
+let to_string_option (to_string: 'a -> string) (option: 'a Option.t): string =
+  let output = IO.output_string () in
+  Option.print (fun output a -> IO.nwrite output (to_string a)) output option;
+  IO.close_out output
+
 let to_string_varset_enum (enum: VarSet.t Enum.t): string =
   let output = IO.output_string () in
   Enum.print (fun output varset -> IO.nwrite output (VarSet.to_string varset)) output enum;
@@ -41,6 +46,9 @@ let assert_equal_parameter_poly =
 
 let assert_equal_bound =
   assert_equal ~cmp:Bound.(=~=) ~printer:Bound.to_string
+
+let assert_equal_bound_option =
+  assert_equal ~cmp:(Option.eq ~eq:Bound.(=~=)) ~printer:(to_string_option Bound.to_string)
 
 let assert_equal_atom =
   assert_equal ~cmp:Atom.(=~=) ~printer:Atom.to_string
