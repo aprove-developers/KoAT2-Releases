@@ -1,24 +1,37 @@
 open Batteries
 
-type kind = [ `Lower | `Upper ]
+type kind = [ `Lower | `Upper ] [@@deriving eq]
 
 let kind_to_string = function
   | `Upper -> "Upper"
   | `Lower -> "Lower"
 
+module TimeMap = Hashtbl.Make(Program.Transition)
+
+module SizeMap =
+  Hashtbl.Make(
+      struct
+        type t = kind * Program.Transition.t * Var.t [@@deriving eq]
+        let hash (kind, t, v) =
+          Hashtbl.hash (kind_to_string kind
+                        ^ Program.(Location.to_string (Transition.src t) ^ Location.to_string (Transition.target t))
+                        ^ Var.to_string v)
+      end
+    )
+
 type t = {
-    time: (Program.Transition.t, Bound.t) Hashtbl.t;
-    size: ((kind * Program.Transition.t * Var.t), Bound.t) Hashtbl.t;
+    time: Bound.t TimeMap.t;
+    size: Bound.t SizeMap.t;
   }
 
 let empty transitioncount varcount = {
-    time = Hashtbl.create (2 * transitioncount);
-    size = Hashtbl.create (2 * transitioncount * varcount);
+    time = TimeMap.create (2 * transitioncount);
+    size = SizeMap.create (2 * transitioncount * varcount);
   }
 
 let timebounds_to_string appr =
   let output = IO.output_string () in
-  Hashtbl.print
+  TimeMap.print
     (fun output transition -> IO.nwrite output (Program.Transition.to_src_target_string transition))
     (fun output bound -> IO.nwrite output (Bound.to_string bound))
     output appr.time;  
@@ -26,7 +39,7 @@ let timebounds_to_string appr =
 
 let sizebounds_to_string appr =
   let output = IO.output_string () in
-  Hashtbl.print
+  SizeMap.print
     (fun output (kind, transition, var) -> IO.nwrite output (kind_to_string kind ^ ": (" ^ Program.Transition.to_src_target_string transition ^ ", " ^ Var.to_string var ^ ")"))
     (fun output bound -> IO.nwrite output (Bound.to_string bound))
     output appr.size;
@@ -41,7 +54,7 @@ let to_string appr =
   IO.close_out output
 
 let timebound appr transition =
-  Hashtbl.find_option appr.time transition
+  TimeMap.find_option appr.time transition
   |? Bound.infinity
 
 let timebound_graph appr graph =
@@ -49,8 +62,8 @@ let timebound_graph appr graph =
 
 let add_timebound bound transition appr =
   (try
-    Hashtbl.modify transition (Bound.min bound) appr.time
-  with Not_found -> Hashtbl.add appr.time transition bound);
+    TimeMap.modify transition (Bound.min bound) appr.time
+  with Not_found -> TimeMap.add appr.time transition bound);
   appr
   
 (* Returns the operator to combine two bounds with the best result. *)
@@ -59,15 +72,15 @@ let combine_bounds = function
   | `Upper -> Bound.min
            
 let sizebound kind appr transition var =
-  Hashtbl.find_option appr.size (kind, transition, var)
+  SizeMap.find_option appr.size (kind, transition, var)
   |? match kind with
      | `Lower -> Bound.minus_infinity
      | `Upper -> Bound.infinity       
 
 let add_sizebound kind bound transition var appr =
   (try
-    Hashtbl.modify (kind, transition, var) (combine_bounds kind bound) appr.size
-  with Not_found -> Hashtbl.add appr.size (kind, transition, var) bound)
+    SizeMap.modify (kind, transition, var) (combine_bounds kind bound) appr.size
+  with Not_found -> SizeMap.add appr.size (kind, transition, var) bound)
   ; appr      
 
 let add_sizebounds kind bound scc appr =

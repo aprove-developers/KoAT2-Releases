@@ -8,11 +8,10 @@ module Location =
         (* TODO Possible optimization: invariant : PolynomialConstraints.t*)
       } [@@deriving eq, ord]
            
-    (*Needed by ocamlgraph*)    
-    let hash l = Hashtbl.hash l.name
-               
     let to_string l = l.name
                     
+    let hash l = Hashtbl.hash (to_string l)
+               
     let of_string inp_name = { name = inp_name }               
   end
 module LocationSet = Set.Make(Location)
@@ -26,6 +25,12 @@ module Transition =
     let label (_, label, _) = label
 
     let target (_, _, target) = target
+
+    (* Needs to be fast for usage in the timebound hashtables.
+       There might be transitions with the same src and target, 
+       but that is not a problem for the hashtables,
+       since it should not occur very often. *)
+    let hash (l,_,l') = Hashtbl.hash (Location.to_string l ^ Location.to_string l')
 
     let to_src_target_string (l,_,l') =
       Location.to_string l ^ "->" ^ Location.to_string l'
