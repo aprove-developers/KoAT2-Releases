@@ -14,8 +14,12 @@ type kind = [ `Lower | `Upper ]
         The second parameter should be the count of program variables. *)
 val empty : int -> int -> t
 
+val timebounds_to_string : t -> string
+
+val sizebounds_to_string : t -> string
+
 val to_string : t -> string
-  
+
 (** Timebound related methods *)
   
 (** Returns a timebound of the specified kind for the transition. *)

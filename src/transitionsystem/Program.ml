@@ -27,8 +27,11 @@ module Transition =
 
     let target (_, _, target) = target
 
+    let to_src_target_string (l,_,l') =
+      Location.to_string l ^ "->" ^ Location.to_string l'
+
     let to_string (l,t,l') =
-      Location.to_string l ^ "->" ^ Location.to_string l' ^ ", " ^ TransitionLabel.to_string t
+       to_src_target_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
   end
 module TransitionSet = Set.Make(Transition)
 

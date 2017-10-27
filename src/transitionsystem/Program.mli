@@ -19,6 +19,7 @@ sig
   type t = Location.t * TransitionLabel.t * Location.t
   val equal : t -> t -> bool
   val compare : t -> t -> int
+  val to_src_target_string : t -> string
   val to_string : t -> string
   val src : t -> Location.t
   val label : t -> TransitionLabel.t

@@ -16,20 +16,30 @@ let empty transitioncount varcount = {
     size = Hashtbl.create (2 * transitioncount * varcount);
   }
 
-let to_string appr =
+let timebounds_to_string appr =
   let output = IO.output_string () in
-  IO.nwrite output "Timebounds: ";
   Hashtbl.print
-    (fun output (kind, transition) -> IO.nwrite output (kind_to_string kind ^ ", " ^ Program.Transition.to_string transition))
+    (fun output (kind, transition) -> IO.nwrite output (Program.Transition.to_src_target_string transition))
     (fun output bound -> IO.nwrite output (Bound.to_string bound))
-    output appr.time;
-  IO.nwrite output "\nSizebounds: ";
+    output appr.time;  
+  IO.close_out output
+
+let sizebounds_to_string appr =
+  let output = IO.output_string () in
   Hashtbl.print
-    (fun output (kind, transition, var) -> IO.nwrite output (kind_to_string kind ^ ", " ^ Program.Transition.to_string transition ^ ", " ^ Var.to_string var))
+    (fun output (kind, transition, var) -> IO.nwrite output (kind_to_string kind ^ ": (" ^ Program.Transition.to_src_target_string transition ^ ", " ^ Var.to_string var ^ ")"))
     (fun output bound -> IO.nwrite output (Bound.to_string bound))
     output appr.size;
   IO.close_out output
-                                   
+
+let to_string appr =
+  let output = IO.output_string () in
+  IO.nwrite output "Timebounds: ";
+  IO.nwrite output (timebounds_to_string appr);
+  IO.nwrite output "\nSizebounds: ";
+  IO.nwrite output (sizebounds_to_string appr);
+  IO.close_out output
+
 (* Returns the operator to combine two bounds with the best result. *)
 let combine_bounds = function
   | `Lower -> Bound.max
