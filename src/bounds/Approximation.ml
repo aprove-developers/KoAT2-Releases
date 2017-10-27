@@ -7,7 +7,7 @@ let kind_to_string = function
   | `Lower -> "Lower"
 
 type t = {
-    time: ((kind * Program.Transition.t), Bound.t) Hashtbl.t;
+    time: (Program.Transition.t, Bound.t) Hashtbl.t;
     size: ((kind * Program.Transition.t * Var.t), Bound.t) Hashtbl.t;
   }
 
@@ -19,7 +19,7 @@ let empty transitioncount varcount = {
 let timebounds_to_string appr =
   let output = IO.output_string () in
   Hashtbl.print
-    (fun output (kind, transition) -> IO.nwrite output (Program.Transition.to_src_target_string transition))
+    (fun output transition -> IO.nwrite output (Program.Transition.to_src_target_string transition))
     (fun output bound -> IO.nwrite output (Bound.to_string bound))
     output appr.time;  
   IO.close_out output
@@ -40,28 +40,24 @@ let to_string appr =
   IO.nwrite output (sizebounds_to_string appr);
   IO.close_out output
 
+let timebound appr transition =
+  Hashtbl.find_option appr.time transition
+  |? Bound.infinity
+
+let timebound_graph appr graph =
+  Program.TransitionGraph.fold_edges_e (fun transition -> Bound.add (timebound appr transition)) (Program.graph graph) Bound.zero
+
+let add_timebound bound transition appr =
+  (try
+    Hashtbl.modify transition (Bound.min bound) appr.time
+  with Not_found -> Hashtbl.add appr.time transition bound);
+  appr
+  
 (* Returns the operator to combine two bounds with the best result. *)
 let combine_bounds = function
   | `Lower -> Bound.max
   | `Upper -> Bound.min
            
-let timebound kind appr transition =
-  Hashtbl.find_option appr.time (kind, transition)
-  |? match kind with
-     | `Lower -> Bound.zero
-     | `Upper -> Bound.infinity
-
-let timebound_graph kind appr graph =
-  match kind with
-  | `Lower -> Bound.one
-  | `Upper -> Program.TransitionGraph.fold_edges_e (fun transition -> Bound.add (timebound `Upper appr transition)) (Program.graph graph) Bound.zero
-
-let add_timebound kind bound transition appr =
-  (try
-    Hashtbl.modify (kind, transition) (combine_bounds kind bound) appr.time
-  with Not_found -> Hashtbl.add appr.time (kind, transition) bound);
-  appr
-  
 let sizebound kind appr transition var =
   Hashtbl.find_option appr.size (kind, transition, var)
   |? match kind with

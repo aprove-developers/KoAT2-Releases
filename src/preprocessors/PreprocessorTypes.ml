@@ -49,7 +49,7 @@ module TrivialTimeBounds =
       let may_improve l1 l2 appr =
         if scc_number l1 = scc_number l2 then
           appr
-        else Approximation.add_timebound `Upper Bound.one (Program.TransitionGraph.find_edge graph l1 l2) appr in
+        else Approximation.add_timebound Bound.one (Program.TransitionGraph.find_edge graph l1 l2) appr in
       (program, Program.TransitionGraph.fold_edges may_improve graph appr)
     
   end

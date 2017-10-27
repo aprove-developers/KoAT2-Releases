@@ -23,14 +23,14 @@ val to_string : t -> string
 (** Timebound related methods *)
   
 (** Returns a timebound of the specified kind for the transition. *)
-val timebound : kind -> t -> Program.Transition.t -> Bound.t
+val timebound : t -> Program.Transition.t -> Bound.t
 
 (** Returns a timebound of the specified kind for the execution of the whole graph. *)
-val timebound_graph : kind -> t -> Program.t -> Bound.t
+val timebound_graph : t -> Program.t -> Bound.t
 
 (** Adds the information that the specified bound is a valid timebound for the given transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
-val add_timebound : kind -> Bound.t -> Program.Transition.t -> t -> t
+val add_timebound : Bound.t -> Program.Transition.t -> t -> t
   
 
 (** Sizebound related methods *)
