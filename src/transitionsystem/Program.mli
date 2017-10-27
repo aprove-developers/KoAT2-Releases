@@ -74,6 +74,8 @@ val add_edges : TransitionGraph.t -> TransitionGraph.edge list -> TransitionGrap
 
 (** Removes the location from the program and all edges to it. *)
 val remove_location : t -> Location.t -> t
+
+val remove_transition : t -> Transition.t -> t
   
 val mk : TransitionGraph.vertex list -> TransitionGraph.edge list -> TransitionGraph.t
 

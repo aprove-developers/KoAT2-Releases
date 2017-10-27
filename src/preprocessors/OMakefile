@@ -9,6 +9,7 @@ OCAMLINCLUDES[] =
     ../constraints
     ../transitionsystem
     ../bounds
+    ../smt
 
 OCAMLFLAGS += -thread
 
@@ -17,6 +18,7 @@ OCAML_LIBS[] =
     ../constraints/constraints
     ../transitionsystem/transitionsystem
     ../bounds/bounds
+    ../smt/smt
 
 # Include all .ml files
 FILES[] = $(removesuffix .ml, $(glob *.ml))

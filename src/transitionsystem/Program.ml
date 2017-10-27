@@ -114,6 +114,9 @@ let add_edges graph edges =
 
 let remove_location program location =
   { program with graph = TransitionGraph.remove_vertex program.graph location }
+
+let remove_transition program transition =
+  { program with graph = TransitionGraph.remove_edge_e program.graph transition }
   
 let mk vertices edges =
   add_edges (add_vertices TransitionGraph.empty vertices) edges

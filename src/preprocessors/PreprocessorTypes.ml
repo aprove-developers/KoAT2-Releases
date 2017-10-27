@@ -53,3 +53,20 @@ module TrivialTimeBounds =
       (program, Program.TransitionGraph.fold_edges may_improve graph appr)
     
   end
+
+module CutUnsatisfiableTransitions =
+  struct
+    module TransitionSet = Set.Make(Program.Transition)
+    open Formulas
+                         
+    let unsatisfiable_transitions graph : TransitionSet.t =
+      let combine (l,t,l') set =
+        if SMT.Z3Solver.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then
+          TransitionSet.add (l,t,l') set
+        else set in
+      Program.TransitionGraph.fold_edges_e combine graph TransitionSet.empty
+        
+    let transform_program program =
+      TransitionSet.fold (flip Program.remove_transition) (unsatisfiable_transitions (Program.graph program)) program
+      
+  end
