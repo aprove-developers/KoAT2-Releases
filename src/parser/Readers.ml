@@ -19,16 +19,16 @@ let read_ rule lexbuf =
      raise (Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
     
 let read_file path =
-  read_ Parser.onlyTransitiongraph (Lexing.from_input (File.open_in path))
+  read_ Parser.onlyProgram (Lexing.from_input (File.open_in path))
 
 let read rule str =
   read_ rule (Lexing.from_string str)
 
-let read_transitiongraph =
-  read Parser.onlyTransitiongraph
+let read_program =
+  read Parser.onlyProgram
 
-let read_transitiongraph_simple =
-  read Parser.onlyTransitiongraph_simple
+let read_program_simple =
+  read Parser.onlyProgram_simple
 
 let read_formula =
   read Parser.onlyFormula

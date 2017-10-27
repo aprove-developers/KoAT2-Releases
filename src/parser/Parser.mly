@@ -16,9 +16,9 @@
 %left			TIMES
                   
 			
-%start <Program.t> onlyTransitiongraph
+%start <Program.t> onlyProgram
 
-%start <Program.t> onlyTransitiongraph_simple
+%start <Program.t> onlyProgram_simple
 
 %start <Formulas.Formula.t> onlyFormula
 
@@ -30,7 +30,7 @@
 
 %start <Bound.t> onlyBound
 
-%type <Program.t> transitiongraph
+%type <Program.t> program
 
 %type <Formulas.Formula.t> formula
 
@@ -58,22 +58,22 @@
 
 %%
 
-onlyTransitiongraph :
-        |       graph = transitiongraph; EOF
-                  { graph } ;
+onlyProgram :
+        |       p = program; EOF
+                  { p } ;
 
-transitiongraph :
+program :
         |       goal
                 start = start
                 vars = variables
                 trans = transitions
                   { Program.from vars (List.map (fun t -> t ~vars) trans) start } ;
 
-onlyTransitiongraph_simple :
-        |       graph = transitiongraph_simple; EOF
+onlyProgram_simple :
+        |       graph = program_simple; EOF
                   { graph } ;
 
-transitiongraph_simple :
+program_simple :
 	|       trans = separated_nonempty_list(COMMA, transition_simple)
                   { Program.from default_vars trans (Program.Location.of_string (TransitionLabel.start (List.hd trans))) } ;
 
