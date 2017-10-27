@@ -1,6 +1,6 @@
 open Batteries
 
-type kind = [ `Lower | `Upper ] [@@deriving eq]
+type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
 
 let kind_to_string = function
   | `Upper -> "Upper"
@@ -33,6 +33,14 @@ module Time =
         (fun output bound -> IO.nwrite output (Bound.to_string bound))
         output time;  
       IO.close_out output
+
+    (** Very slow equality, only for testing purposes *)
+    let equal time1 time2 =
+      let module Set =
+        Set.Make(struct type t = Program.Transition.t * Bound.t [@@deriving ord] end)
+      in
+      let to_set time = time |> Map.enum |> Set.of_enum in
+      Set.equal (to_set time1) (to_set time2)
 
   end
 
@@ -82,9 +90,17 @@ module Size =
         output size;
       IO.close_out output
 
+    (** Very slow equality, only for testing purposes *)
+    let equal size1 size2 =
+      let module Set =
+        Set.Make(struct type t = (kind * Program.Transition.t * Var.t) * Bound.t [@@deriving ord] end)
+      in
+      let to_set time = time |> Map.enum |> Set.of_enum in
+      Set.equal (to_set size1) (to_set size2)
+            
   end
 
-type t = Time.t * Size.t
+type t = Time.t * Size.t [@@deriving eq]
 
 let empty transitioncount varcount =
     Time.empty transitioncount,

@@ -29,7 +29,11 @@ val infinity : t
 val minus_infinity : t
 val exp : value -> t -> t
   
+(** Stable structural equal, but not equality of the bounds *)
 val equal : t -> t -> bool
+(** Stable structural compare, but not an actual compare of the bounds *)
+val compare : t -> t -> int
+  
 val to_string : t -> string
 
 (** Following methods can be used to classify the type of the polynomial. *)

@@ -18,7 +18,7 @@ type t =
   | Neg of t
   | Pow of OurInt.t * t
   | Sum of t * t
-  | Product of t * t [@@deriving eq]
+  | Product of t * t [@@deriving eq, ord]
 
 let of_var v = Var v
 

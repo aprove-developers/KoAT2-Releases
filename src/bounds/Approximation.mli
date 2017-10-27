@@ -2,7 +2,7 @@ open Batteries
 
 (** Provides default implementations of an approximation *)
 
-type t
+type t 
    
 (** Distinguish between lower and upper bounds *)
 type kind = [ `Lower | `Upper ]
@@ -12,8 +12,6 @@ type kind = [ `Lower | `Upper ]
         The first parameter should be the count of transitions in the program.
         The second parameter should be the count of program variables. *)
 val empty : int -> int -> t
-
-val to_string : t -> string
 
 (** Timebound related methods *)
   
@@ -37,6 +35,9 @@ val add_sizebound : kind -> Bound.t -> Program.Transition.t -> Var.t -> t -> t
   
 val add_sizebounds : kind -> Bound.t -> Program.RVG.scc -> t -> t
 
+val to_string : t -> string
+
+val equal : t -> t -> bool
 
 module Time :
 sig
@@ -47,6 +48,7 @@ sig
   val sum : t -> Program.t -> Bound.t
   val add : Bound.t -> Program.Transition.t -> t -> t
   val to_string : t -> string
+  val equal : t -> t -> bool
 end
 
 module Size :
@@ -57,4 +59,5 @@ sig
   val add : kind -> Bound.t -> Program.Transition.t -> Var.t -> t -> t
   val add_all : kind -> Bound.t -> Program.RVG.scc -> t -> t
   val to_string : t -> string
+  val equal : t -> t -> bool
 end
