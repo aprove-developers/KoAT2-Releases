@@ -7,16 +7,11 @@ type t
 (** Distinguish between lower and upper bounds *)
 type kind = [ `Lower | `Upper ]
 
-                  
 (** Returns an empty approximation that does not contain any non-trivial information.
         That means, that every upper bound is infinite and every lower bound is minus infinite.
         The first parameter should be the count of transitions in the program.
         The second parameter should be the count of program variables. *)
 val empty : int -> int -> t
-
-val timebounds_to_string : t -> string
-
-val sizebounds_to_string : t -> string
 
 val to_string : t -> string
 
@@ -24,9 +19,6 @@ val to_string : t -> string
   
 (** Returns a timebound of the specified kind for the transition. *)
 val timebound : t -> Program.Transition.t -> Bound.t
-
-(** Returns a timebound of the specified kind for the execution of the whole graph. *)
-val timebound_graph : t -> Program.t -> Bound.t
 
 (** Adds the information that the specified bound is a valid timebound for the given transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
@@ -44,3 +36,25 @@ val sizebound : kind -> t -> Program.Transition.t -> Var.t -> Bound.t
 val add_sizebound : kind -> Bound.t -> Program.Transition.t -> Var.t -> t -> t
   
 val add_sizebounds : kind -> Bound.t -> Program.RVG.scc -> t -> t
+
+
+module Time :
+sig
+  type t
+  val empty : int -> t
+  val get : t -> Program.Transition.t -> Bound.t
+  (** Returns a timebound of the specified kind for the execution of the whole graph. *)
+  val sum : t -> Program.t -> Bound.t
+  val add : Bound.t -> Program.Transition.t -> t -> t
+  val to_string : t -> string
+end
+
+module Size :
+sig
+  type t
+  val empty : int -> t
+  val get : kind -> t -> Program.Transition.t -> Var.t -> Bound.t
+  val add : kind -> Bound.t -> Program.Transition.t -> Var.t -> t -> t
+  val add_all : kind -> Bound.t -> Program.RVG.scc -> t -> t
+  val to_string : t -> string
+end
