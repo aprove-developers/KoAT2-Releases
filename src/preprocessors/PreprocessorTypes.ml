@@ -58,7 +58,8 @@ module CutUnsatisfiableTransitions =
   struct
     module TransitionSet = Set.Make(Program.Transition)
     open Formulas
-                         
+
+    (** Returns a set of all transitions in the graph which guard is unsatisfiable for each possible valuation. *)
     let unsatisfiable_transitions graph : TransitionSet.t =
       let combine (l,t,l') set =
         if SMT.Z3Solver.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then
@@ -69,4 +70,6 @@ module CutUnsatisfiableTransitions =
     let transform_program program =
       TransitionSet.fold (flip Program.remove_transition) (unsatisfiable_transitions (Program.graph program)) program
       
+    let transform: preprocessor =
+      Tuple2.map1 transform_program
   end
