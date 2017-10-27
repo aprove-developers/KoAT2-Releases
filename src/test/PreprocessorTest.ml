@@ -39,6 +39,16 @@ let tests =
                   ]
       );
 
+      ("CutUnsatisfiableTransitions" >:::
+         List.map (fun (expected_program, program) ->
+             program >:: (fun _ -> assert_equal_program
+                                     (Readers.read_program_simple expected_program)
+                                     (PreprocessorTypes.CutUnsatisfiableTransitions.transform_program (Readers.read_program_simple program))))
+                  [
+                    ("l1 -> l2(x), l2 -> l3(x)", "l1 -> l3(x) :|: 2 > 3, l1 -> l2(x), l2 -> l3(x)");
+                  ]
+      );
+
     ]
 
     

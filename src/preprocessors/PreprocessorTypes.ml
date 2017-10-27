@@ -54,12 +54,15 @@ module TrivialTimeBounds =
     
   end
 
+(** This preprocessor removes all unsatisfiable transitions from the graph. 
+    Those transitions can never be part of an evaluation.
+    Note that it only removes the specific transitions. 
+    After the transformation the graph might contain unreachable locations, and even locations that are not connected to any transition. *)
 module CutUnsatisfiableTransitions =
   struct
     module TransitionSet = Set.Make(Program.Transition)
     open Formulas
 
-    (** Returns a set of all transitions in the graph which guard is unsatisfiable for each possible valuation. *)
     let unsatisfiable_transitions graph : TransitionSet.t =
       let combine (l,t,l') set =
         if SMT.Z3Solver.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then
