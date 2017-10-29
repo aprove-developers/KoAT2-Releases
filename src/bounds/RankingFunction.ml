@@ -51,9 +51,11 @@ let farkas_transform constr param_atom =
 (** Given a list of variables an affine template-polynomial is generated*)            
 let ranking_template vars =
   let num_vars = (List.length vars) in
-  let fresh_coeffs = List.map Polynomial.of_var (Var.fresh_id_list num_vars) in
+  let fresh_vars = Var.fresh_id_list num_vars in
+  let fresh_coeffs = List.map Polynomial.of_var (fresh_vars) in
   let linear_poly = ParameterPolynomial.of_coeff_list fresh_coeffs vars in
-  let constant = ParameterPolynomial.of_constant (Polynomial.of_var (List.at (Var.fresh_id_list 1) 0)) in
+  let constant_var = Var.fresh_id_list 1 in
+  let constant = ParameterPolynomial.of_constant (Polynomial.of_var (List.at (constant_var) 0)) in
   (ParameterPolynomial.add linear_poly constant)
   
 let copy_enum_into_hash hashtbl pairs_enum =
@@ -164,7 +166,7 @@ let determine_locations (transitions) =
   let trans_src = Enum.clone transitions in
   let trans_dst = Enum.clone transitions in
     let loc_list = Enum.fold (function tails -> function trans -> (Program.Transition.src trans)::tails ) [] trans_src in
-      let loc_list = Enum.fold (function tails -> function trans -> (Program.Transition.dst trans)::tails) loc_list trans_dst in
+      let loc_list = Enum.fold (function tails -> function trans -> (Program.Transition.target trans)::tails) loc_list trans_dst in
        List.enum (List.unique loc_list)
       
 let ranking_function_procedure (program : Program.t) (transitions : transitionEnum) =
@@ -178,7 +180,7 @@ let ranking_function_procedure (program : Program.t) (transitions : transitionEn
 
 (** Checks if a transition has already been oriented strictly in a given approximation     *)
 let is_already_bounded appr transition =  
-  Bound.(equal (Approximation.timebound `Upper appr transition) infinity)    
+  Bound.(equal (Approximation.timebound appr transition) infinity)    
     
 let find program appr=
   let graph = Program.graph program in
