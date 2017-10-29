@@ -56,7 +56,7 @@ let ranking_template vars =
   let linear_poly = ParameterPolynomial.of_coeff_list fresh_coeffs vars in
   let constant_var = Var.fresh_id_list 1 in
   let constant = ParameterPolynomial.of_constant (Polynomial.of_var (List.at (constant_var) 0)) in
-  (ParameterPolynomial.add linear_poly constant)
+  (ParameterPolynomial.add linear_poly constant),(List.concat [fresh_vars;constant_var])
   
 let copy_enum_into_hash hashtbl pairs_enum =
     let n = Enum.hard_count (Enum.clone pairs_enum) in
@@ -70,20 +70,26 @@ let copy_enum_into_hash hashtbl pairs_enum =
     done
 
 (**Generates a ranking function template for every location in the program*)
-let generate_ranking_template (program : Program.t) (locations : Program.Location.t Enum.t)=
+let generate_ranking_template (program : Program.t) (locations : Program.Location.t Enum.t) =
   let generate_ranking_template_ program locations =
     let vars = VarSet.elements (Program.vars program) in
     let nb_locations = (Enum.hard_count (Enum.clone locations)) in
     let fresh_table = PrfTable.create nb_locations in
-    let ins_loc_prf = fun vertex-> if Program.Location.(vertex = (Program.start program)) then (vertex,(ParameterPolynomial.one)) else (vertex,(ranking_template vars)) in
+    let ins_loc_prf = fun vertex->  if Program.Location.(vertex = (Program.start program)) then 
+                                      (vertex,ParameterPolynomial.one,[]) 
+                                    else 
+                                      let template = (ranking_template vars) in (vertex,Tuple2.first template, Tuple2.second template) in
     let enum_of_prf = Enum.map (ins_loc_prf ) locations in
-    copy_enum_into_hash fresh_table enum_of_prf;
-    fresh_table
+    let enum_of_prf_to_copy = Enum.map (fun (a,b,c)-> (a,b)) (Enum.clone enum_of_prf) in
+    let enum_of_varlists = Enum.map (fun (a,b,c)-> c) (Enum.clone enum_of_prf) in
+    let constructed_parameters = List.concat (Enum.fold ( fun xs -> fun ys -> List.cons ys xs ) [] enum_of_varlists) in 
+    copy_enum_into_hash fresh_table enum_of_prf_to_copy;
+    fresh_table, constructed_parameters
   
   in Logger.with_log logger Logger.DEBUG
     (fun () -> "generated_ranking_template", [])
-                    ~result:PrfTable.to_string_parapoly
-                    (fun () -> generate_ranking_template_ program locations)
+                    ~result:(fun tuple -> PrfTable.to_string_parapoly (Tuple2.first tuple))
+                    (fun () -> (generate_ranking_template_ program locations))
                   
                   
 let help_update label var =
@@ -127,7 +133,6 @@ let help_strict_decrease (initial : bool) (table : PrfTable.parameter_table) (tr
 let help_boundedness (initial : bool) (table : PrfTable.parameter_table) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
   if initial  then 
                   Constraint.mk_true 
-
   else
     let trans_label = Program.TransitionGraph.E.label trans in
     let start_parapoly = PrfTable.find table (Program.TransitionGraph.E.src trans) in
@@ -172,7 +177,7 @@ let determine_locations (transitions) =
 let ranking_function_procedure (program : Program.t) (transitions : transitionEnum) =
   let transitions_for_strict = (Enum.clone transitions) in
   let locations = determine_locations transitions in
-    let table = generate_ranking_template program locations in
+    let table = Tuple2.first (generate_ranking_template program locations) in
     let non_incr = get_non_increase_constraints table program transitions in
     let (smt_form , bounded) = build_strict_oriented table program transitions_for_strict non_incr in
     let model = SMTSolver_.get_model (Formula.mk smt_form) in

@@ -27,7 +27,7 @@ val monotonize : t -> t
 (** Invokes Farkas Lemma, to compute a ranking function*)
 val farkas_transform : Constraint.t -> ParameterAtom.t -> Constraint.t
   
-val generate_ranking_template : Program.t -> Program.Location.t Batteries.Enum.t -> PrfTable.parameter_table
+val generate_ranking_template : Program.t -> Program.Location.t Batteries.Enum.t -> PrfTable.parameter_table * Var.t list
 
 (**Converts a ranking function into a string*)
 val to_string : t -> string
