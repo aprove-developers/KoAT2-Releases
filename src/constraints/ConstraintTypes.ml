@@ -185,6 +185,7 @@ module type Formula =
         val mk_or : t -> t -> t
         val neg : t -> t
         val implies : t -> t -> t
+        val constraints : t -> constr list
           
         (** Creates a constraint that expresses the equality of the two polynomials. *)
         val mk_eq : polynomial -> polynomial -> t
@@ -192,6 +193,7 @@ module type Formula =
         val mk_ge : polynomial -> polynomial -> t
         val mk_lt : polynomial -> polynomial -> t
         val mk_le : polynomial -> polynomial -> t
+        val mk_uneq : polynomial -> polynomial -> t
         val le_than_any : polynomial -> polynomial list -> t
         val le_than_all : polynomial -> polynomial list -> t
           

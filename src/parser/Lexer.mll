@@ -55,6 +55,7 @@ rule read =
   | "-{"              { P.COSTLEFT }
   | "}>"              { P.COSTRIGHT }
   | "="               { P.EQUAL }
+  | "!="              { P.UNEQUAL }
   | "<="              { P.LESSEQUAL }
   | ">="              { P.GREATEREQUAL }
   | '<'               { P.LESSTHAN }

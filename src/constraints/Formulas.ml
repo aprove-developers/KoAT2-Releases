@@ -43,6 +43,12 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let mk_or =
       List.append
 
+    let mk_uneq p1 p2 =
+      mk_or (mk_lt p1 p2) (mk_gt p1 p2)
+
+    let constraints formula =
+      formula
+
     let fold ~subject ~le ~correct ~conj ~wrong ~disj =
       List.fold_left (fun c constr -> disj c (C.fold ~subject ~le ~correct ~conj constr)) wrong
 
