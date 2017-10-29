@@ -36,7 +36,19 @@ module Z3Solver =
         ~wrong:(Z3.Boolean.mk_false !context)
         ~disj:(fun a1 a2 -> Z3.Boolean.mk_or !context [a1; a2])
         constraints
-                      
+        
+        
+    let from_poly = 
+      Polynomial.fold
+            ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i !context (OurInt.to_int value))
+            ~var:(fun var -> if (Var.is_helper var) then 
+                               Z3.Arithmetic.Real.mk_const_s !context (Var.to_string var) 
+                             else
+                               Z3.Arithmetic.Integer.mk_const_s !context (Var.to_string var))
+            ~neg:(Z3.Arithmetic.mk_unary_minus !context)
+            ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add !context [p1; p2])
+            ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul !context [p1; p2])
+            ~pow:(fun b e -> Z3.Arithmetic.mk_power !context b (Z3.Arithmetic.Integer.mk_numeral_i !context e))
 (*    let to_string (constraints : Constraint.t) =
         let solver = Z3.Solver.mk_simple_solver !context in
         let formula = from_constraint constraints in
@@ -93,11 +105,15 @@ module Z3Solver =
                 else Valuation.from []
                 
                 
-    let get_model_opt (constraints : formula) () =
+    let get_model_opt (constraints : formula) (coeffs_to_minimise) =
         let formula = from_constraint constraints in
         let optimisation_goal = Z3.Optimize.mk_opt !context in
             Z3.Optimize.add optimisation_goal [formula];
-            let status = Z3.Optimize.check optimisation_goal in
+            let minimise_constr = List.map (fun var -> from_poly (Polynomial.pow (Polynomial.of_var var) 2)) coeffs_to_minimise in
+              for i = 0 to (List.length minimise_constr) - 1 do
+                  Z3.Optimize.minimize optimisation_goal (List.at minimise_constr i);
+              done;
+              let status = Z3.Optimize.check optimisation_goal in
                 if (status == Z3.Solver.SATISFIABLE) then
                     let model = Z3.Optimize.get_model optimisation_goal in
                         match model with
@@ -118,5 +134,6 @@ module Z3Solver =
                                         let value_of_value = (OurInt.of_int int_of_value) in
                                             (var_of_name,value_of_value)) assigned_values)
                 else Valuation.from []
+                
         
   end

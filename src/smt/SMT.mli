@@ -14,4 +14,6 @@ sig
 
     val get_model : formula -> valuation
     
+    val get_model_opt : formula -> Var.t list-> valuation
+    
   end
