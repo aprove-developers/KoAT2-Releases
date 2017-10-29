@@ -182,14 +182,13 @@ let is_already_bounded appr transition =
     
 let find program appr=
   let graph = Program.graph program in
-    let allTransitions = List.enum (Program.TransitionGraph.fold_edges_e (fun trans -> List.cons trans) graph []) in
-      let transitions = Enum.filter (function trans -> is_already_bounded appr trans) allTransitions in  
-        let find_ program transitions =
-          let (table,bounded) = ranking_function_procedure program transitions in
-          {   pol = PrfTable.find table;
-              strictly_decreasing = bounded;
-              bounded = bounded;
-          }
+    let transitions = Enum.filter (function trans -> is_already_bounded appr trans) (List.enum (Program.TransitionGraph.fold_edges_e (fun trans -> List.cons trans) graph [])) in
+      let find_ program transitions =
+        let (table,bounded) = ranking_function_procedure program transitions in
+        {   pol = PrfTable.find table;
+            strictly_decreasing = bounded;
+            bounded = bounded;
+        }
     in Logger.with_log logger Logger.DEBUG 
     (fun () -> "Generated Ranking Function",["prf_values", (PrfTable.to_string_poly (Tuple2.first (ranking_function_procedure program transitions)))])
     ~result: to_string
