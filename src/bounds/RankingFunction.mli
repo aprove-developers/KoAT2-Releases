@@ -19,7 +19,7 @@ val strictly_decreasing : t -> Program.Transition.t list
 val bounded : t -> Program.Transition.t list
 
 (** Finds a suitable ranking function which decreases at least one transition and does not increase any transition. *)
-val find : Program.t -> t
+val find : Program.t -> Approximation.t -> t
 
 (** Transforms the ranking function to a monotonic function. *)
 val monotonize : t -> t
@@ -27,7 +27,7 @@ val monotonize : t -> t
 (** Invokes Farkas Lemma, to compute a ranking function*)
 val farkas_transform : Constraint.t -> ParameterAtom.t -> Constraint.t
   
-val generate_ranking_template : Program.t -> PrfTable.parameter_table
+val generate_ranking_template : Program.t -> Program.Location.t Batteries.Enum.t -> PrfTable.parameter_table
 
 (**Converts a ranking function into a string*)
 val to_string : t -> string
@@ -36,5 +36,3 @@ val ranking_function_procedure : Program.t -> transitionEnum -> PrfTable.polynom
            Program.TransitionGraph.E.t list
            
 (*val to_string_prog : Program.t -> string*)
-
-val generate_ranking_template : Program.t -> PrfTable.parameter_table

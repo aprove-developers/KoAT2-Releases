@@ -91,5 +91,32 @@ module Z3Solver =
                                         let value_of_value = (OurInt.of_int int_of_value) in
                                             (var_of_name,value_of_value)) assigned_values)
                 else Valuation.from []
+                
+                
+    let get_model_opt (constraints : formula) () =
+        let formula = from_constraint constraints in
+        let optimisation_goal = Z3.Optimize.mk_opt !context in
+            Z3.Optimize.add optimisation_goal [formula];
+            let status = Z3.Optimize.check optimisation_goal in
+                if (status == Z3.Solver.SATISFIABLE) then
+                    let model = Z3.Optimize.get_model optimisation_goal in
+                        match model with
+                        | None -> Valuation.from []
+                        | Some model -> 
+                            let assigned_values = Z3.Model.get_const_decls model in
+                                Valuation.from 
+                                (List.map 
+                                    (fun func_decl -> 
+                                        let name = Z3.Symbol.get_string (Z3.FuncDecl.get_name func_decl) in
+                                        
+                                        (*This is wrong, we have to check if the string is "$_number"*, to get helper variables*)
+                                        let var_of_name = Var.of_string name in
+                                        let value = Option.get (Z3.Model.get_const_interp
+                                        model func_decl)(*careful, this returns an option*) in
+
+                                        let int_of_value = Int.of_float (Float.of_string ( match_string_for_float (Z3.Expr.to_string value))) in 
+                                        let value_of_value = (OurInt.of_int int_of_value) in
+                                            (var_of_name,value_of_value)) assigned_values)
+                else Valuation.from []
         
   end

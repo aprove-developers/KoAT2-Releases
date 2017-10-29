@@ -113,11 +113,11 @@ let run_localsizebound (params: localsizebound_params) =
 
 let run_prf_search (params: prf_params) =
   let program = Readers.read_file params.input in
-  print_string ("STARTLOCATION = " ^"\n" ^(Program.Location.to_string (Program.start program))^"\n");
-  (*print_string ("prf_procedure: "^(RankingFunction.to_string_prog program));*)
-  (*print_string ("model: "^(RankingFunction.ranking_function_procedure program))*)
-  let prf = RankingFunction.find program in
-    print_string (RankingFunction.to_string prf)
+    let nb_vars = VarSet.cardinal (Program.vars program) in
+      let nb_trans = Program.TransitionGraph.nb_edges (Program.graph program ) in
+        let appr = Approximation.empty nb_trans nb_vars in
+          let prf = RankingFunction.find program appr in
+            print_string (RankingFunction.to_string prf)
   
 let run_smt (params: smt_params) =
   let module Z3 = SMT.Z3Solver in
@@ -156,6 +156,6 @@ let () =
   (* Read the arguments from the shell via an api and call run *)
   let open Cmdliner in
   let main_command = (Term.(const run $ main_params_cmdliner_term ()), Term.info Sys.argv.(0)) in
-  Logger.init ["lsb", Logger.DEBUG; "size", Logger.DEBUG] (Logger.make_dbg_formatter IO.stdout);
+  Logger.init ["lsb", Logger.DEBUG; "size", Logger.DEBUG; "prf", Logger.DEBUG] (Logger.make_dbg_formatter IO.stdout);
   Term.exit @@ Term.eval_choice main_command subcommands
 
