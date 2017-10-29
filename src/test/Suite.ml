@@ -18,6 +18,7 @@ let suite =
       IDTest.tests;
       LocalSizeBoundTest.tests;
       FormulaTest.tests;
+      PreprocessorTest.tests;
     ]
                      
 let () =

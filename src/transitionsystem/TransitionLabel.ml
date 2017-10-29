@@ -6,11 +6,11 @@ type polynomial = Polynomial.t
 module Map = Map.Make(Var)
            
 exception RecursionNotSupported
+exception OnlyCom1Supported
         
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
 
 type t = {
-    name : string;
     start : string;
     target : string;
     update : polynomial Map.t;
@@ -21,28 +21,34 @@ type t = {
   
 let one = Polynomial.one
 
-let make  ?(cost=one) name ~start ~target ~update ~guard =
+let make ?(cost=one) com_kind ~start ~target ~update ~guard =
+  if com_kind <> "Com_1" then raise OnlyCom1Supported else
   {
-    name; start; target; update; guard; cost;
+    start; target; update; guard; cost;
   }
                                              
                                              
 (* TODO Pattern <-> Assigment relation *)
-let mk ?(cost=one) ~name ~start ~targets ~patterns ~guard ~vars =
+let mk ?(cost=one) ~com_kind ~start ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
-    let (target, assignments) = List.hd targets in
-    List.combine patterns assignments
-    |> List.map (fun (var, assignment) -> Map.add var assignment)
-    |> List.fold_left (fun map adder -> adder map) Map.empty 
-    |> fun update -> { name; start; target; update; guard; cost;}
+    if com_kind <> "Com_1" then raise OnlyCom1Supported else
+      let (target, assignments) = List.hd targets in
+      (* TODO Better error handling in case the sizes differ *)
+      (List.enum patterns, List.enum assignments)
+      |> Enum.combine
+      |> Enum.map (fun (var, assignment) -> Map.add var assignment)
+      |> Enum.fold (fun map adder -> adder map) Map.empty 
+      |> fun update -> { start; target; update; guard; cost;}
                    
 let equal t1 t2 =
-  t1.name == t2.name
+     t1.start = t2.start
+  && t1.target = t2.target
   
 let compare t1 t2 = 
-  if (t1 == t2) then 0
-  else if (t1.name < t1.name) then (-1)
-  else 1
+  let cmp = String.compare t1.start t2.start in
+  if cmp = 0 then
+    String.compare t1.target t2.target
+  else cmp
   
 let start t = t.start
             
@@ -55,7 +61,6 @@ let guard t = t.guard
 let cost t = t.cost
             
 let default = {   
-    name = "default";
     start = "";
     target = "";
     update = Map.empty;

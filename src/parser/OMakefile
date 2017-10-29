@@ -27,7 +27,6 @@ GEN_FILES[] =
 OCamlGeneratedFiles($(GEN_FILES))
 
 FILES[] =
-    Parseable
     Parser
     Lexer
     Readers

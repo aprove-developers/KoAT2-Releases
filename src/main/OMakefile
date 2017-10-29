@@ -6,6 +6,7 @@ OCAMLPACKS[] =
     ppx_deriving.show
     Z3
     ocamlgraph
+    fpath
 
 OCAMLINCLUDES[] =
     ../poly

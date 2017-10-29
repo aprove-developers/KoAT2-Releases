@@ -5,26 +5,40 @@ open Batteries
 (** A location is a node of a transition system and can be connected to other locations via transitions *)
 module Location :
 sig
-  type t [@@deriving eq, ord]
+  type t
   val equal : t -> t -> bool
   val compare : t -> t -> int
   val hash : t -> int
   val to_string : t -> string
   val of_string : string -> t
 end
+module LocationSet : module type of Set.Make(Location)
 
-module TransitionGraph : module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
-                                      
 module Transition :
 sig
-  include module type of TransitionGraph.E
+  type t = Location.t * TransitionLabel.t * Location.t
   val equal : t -> t -> bool
+  val compare : t -> t -> int
+  val hash : t -> int
+  val to_src_target_string : t -> string
   val to_string : t -> string
+  val src : t -> Location.t
+  val label : t -> TransitionLabel.t
+  val target : t -> Location.t
 end
+module TransitionSet : module type of Set.Make(Transition)
 
+module TransitionGraph :
+sig
+  include module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
+  val locations : t -> LocationSet.t
+  val transitions : t -> TransitionSet.t
+  val equal : t -> t -> bool
+end
+                                      
 module RV :
 sig
-  type t = Transition.t * Var.t [@@deriving eq]
+  type t = Transition.t * Var.t
   val equal : t -> t -> bool
   val compare : t -> t -> int
   val to_string : t -> string
@@ -60,6 +74,8 @@ val add_edges : TransitionGraph.t -> TransitionGraph.edge list -> TransitionGrap
 
 (** Removes the location from the program and all edges to it. *)
 val remove_location : t -> Location.t -> t
+
+val remove_transition : t -> Transition.t -> t
   
 val mk : TransitionGraph.vertex list -> TransitionGraph.edge list -> TransitionGraph.t
 
@@ -78,15 +94,17 @@ val pre : t -> Transition.t -> transition_set
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program. 
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-val print_system : outdir:string -> file:string -> t -> unit
+val print_system : outdir:Fpath.t -> file:string -> t -> unit
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program. 
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-val print_rvg : outdir:string -> file:string -> t -> unit
+val print_rvg : outdir:Fpath.t -> file:string -> t -> unit
 
 (** Returns if the given transition is an initial transition. *)
 val is_initial : t -> Transition.t -> bool
 
+val equal : t -> t -> bool
+  
 val to_string : t -> string
   
 val vars : t -> VarSet.t

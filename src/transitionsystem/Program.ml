@@ -8,25 +8,53 @@ module Location =
         (* TODO Possible optimization: invariant : PolynomialConstraints.t*)
       } [@@deriving eq, ord]
            
-    (*Needed by ocamlgraph*)    
-    let hash l = Hashtbl.hash l.name
-               
     let to_string l = l.name
                     
-    let of_string inp_name = { name = inp_name }
-                       
+    let hash l = Hashtbl.hash (to_string l)
+               
+    let of_string inp_name = { name = inp_name }               
   end
+module LocationSet = Set.Make(Location)
 
-module TransitionGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
+module Transition =
+  struct
+    type t = Location.t * TransitionLabel.t * Location.t [@@deriving eq, ord]
 
-module Transition = struct
-  include TransitionGraph.E
-  let to_string (l,t,l') = Location.to_string l ^ "->" ^ Location.to_string l' ^ ", " ^ TransitionLabel.to_string t
-  let equal (l1,t1,l'1) (l2,t2,l'2) =
-       Location.equal l1 l2
-    && TransitionLabel.equal t1 t2
-    && Location.equal l'1 l'2
-end
+    let src (src, _, _) = src
+           
+    let label (_, label, _) = label
+
+    let target (_, _, target) = target
+
+    (* Needs to be fast for usage in the timebound hashtables.
+       There might be transitions with the same src and target, 
+       but that is not a problem for the hashtables,
+       since it should not occur very often. *)
+    let hash (l,_,l') = Hashtbl.hash (Location.to_string l ^ Location.to_string l')
+
+    let to_src_target_string (l,_,l') =
+      Location.to_string l ^ "->" ^ Location.to_string l'
+
+    let to_string (l,t,l') =
+       to_src_target_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
+  end
+module TransitionSet = Set.Make(Transition)
+
+module TransitionGraph =
+  struct
+    include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
+
+    let locations graph : LocationSet.t =
+      fold_vertex LocationSet.add graph LocationSet.empty
+
+    let transitions graph : TransitionSet.t =
+      fold_edges_e TransitionSet.add graph TransitionSet.empty
+
+    let equal graph1 graph2 =
+      LocationSet.equal (locations graph1) (locations graph2)
+      && TransitionSet.equal (transitions graph1) (transitions graph2)
+
+  end
 
 module RV =
   struct
@@ -64,7 +92,6 @@ module RVG =
       |> Enum.uniq_by Transition.equal
   end  
    
-module TransitionSet = Set.Make(Transition)
 module CartesianSet = Set.Make2(Transition)(Var)
 
 type transition_set = Set.Make(Transition).t
@@ -73,7 +100,7 @@ type t = {
     graph: TransitionGraph.t;
     vars: Var.t list;
     start: Location.t;
-  }
+  } [@@deriving eq]
        
 let add_vertices graph vertices =
   vertices
@@ -87,6 +114,9 @@ let add_edges graph edges =
 
 let remove_location program location =
   { program with graph = TransitionGraph.remove_vertex program.graph location }
+
+let remove_transition program transition =
+  { program with graph = TransitionGraph.remove_edge_e program.graph transition }
   
 let mk vertices edges =
   add_edges (add_vertices TransitionGraph.empty vertices) edges
@@ -140,12 +170,15 @@ let rvg program =
   TransitionGraph.fold_edges_e add_transition program.graph RVG.empty
   
 let print_graph out_dir name graph output_graph =
+  let full_path ext =
+    Fpath.(to_string (out_dir // (v name |> add_ext ext)))
+  in
   (* Create output directory if not existing *)
-  ignore (Sys.command ("mkdir -p " ^ out_dir));
+  ignore (Sys.command ("mkdir -p " ^ Fpath.to_string out_dir));
   (* Write a graphviz dot file *)
-  output_graph (Pervasives.open_out_bin (out_dir ^ "/" ^ name ^ ".dot")) graph;
+  output_graph (Pervasives.open_out_bin (full_path "dot")) graph;
   (* Generate a png from the dot file with an external call to graphviz *)
-  ignore (Sys.command ("dot -T png -o " ^ (out_dir ^ "/" ^ name ^ ".png ") ^ (out_dir ^ "/" ^ name ^ ".dot")))
+  ignore (Sys.command ("dot -T png -o " ^ full_path "png" ^ " " ^ full_path "dot"))
   
 let print_system ~outdir ~file program =
   (* Definition of some graphviz options how it should be layout *)
@@ -178,5 +211,6 @@ let print_rvg ~outdir ~file program =
 let is_initial program trans =
   Location.(equal (program.start) (Transition.src trans))
 
-let to_string graph =
-  "TODO"
+let to_string program =
+  let graph = TransitionGraph.fold_edges_e (fun t str -> str ^ Transition.to_string t) program.graph "" in
+  String.concat " " ["Start:"; Location.to_string program.start; "Graph:"; graph; "Vars:"] 

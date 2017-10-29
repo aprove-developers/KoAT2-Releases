@@ -113,7 +113,7 @@ let transition_scaling_factor (kind: kind)
   let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
   Bound.exp (OurInt.of_int (extreme_scaling_factor kind ct *
                               extreme_affecting_scc_variables kind rvg scc (Enum.clone ct)))
-            (Approximation.timebound `Upper appr transition) 
+            (Approximation.timebound appr transition) 
   
 
 let overall_scaling_factor (kind: kind)
@@ -173,7 +173,7 @@ let effects (kind: kind)
   |> Enum.group_by (fun (t1, v1) (t2, v2) -> Program.Transition.equal t1 t2)
   |> Enum.map (fun ct ->
          let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
-         Bound.(Approximation.timebound `Upper appr transition * transition_effect kind rvg appr scc ct transition)
+         Bound.(Approximation.timebound appr transition * transition_effect kind rvg appr scc ct transition)
        )
   |> sum
 

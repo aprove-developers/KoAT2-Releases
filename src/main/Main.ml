@@ -22,8 +22,11 @@ type main_params = {
     input : string; [@pos 0] [@docv "INPUT"]
     (** An absolute or relative path to the koat input file which defines the integer transition system *)
     
-    output_dir : string; [@default "."]
+    output_dir : string option;
     (** An absolute or relative path to the output directory, where all generated files should end up *)
+
+    logs : string list; [@default []] [@sep ',']
+    (** The loggers which should be activated. *)
 
   } [@@deriving cmdliner, show]
 
@@ -77,31 +80,37 @@ type size_params = {
 
   } [@@deriving cmdliner, show]
                       
-let preprocessors: (Program.t -> Program.t) list = []
+let preprocessors: PreprocessorTypes.preprocessor list = []
                                                    
-(* We apply each preprocessor exactly one time *)
-let preprocess (graph: Program.t): Program.t =
-  List.fold_left (fun graph preprocessor -> preprocessor graph) graph preprocessors
-
-let find_bounds (graph: Program.t): Approximation.t =
+let find_bounds (graph: PreprocessorTypes.subject): Approximation.t =
   raise (Failure "Not yet implemented")
 
 let print_results (appr: Approximation.t): unit =
   raise (Failure "Not yet implemented")  
 
+let init_logger (logs: (string * Logger.level) list) =
+  Logger.init logs (Logger.make_dbg_formatter IO.stdout)
+  
 let run (params: main_params) =
-  let program = Readers.read_file params.input in
+  let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
+  init_logger logs;
+  let program = Readers.read_file params.input
+  and input_filename =
+    params.input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
+  and output_dir =
+    Option.map Fpath.v params.output_dir |? (params.input |> Fpath.v |> Fpath.parent) in
   if params.print_system then
-    Program.print_system ~outdir:params.output_dir ~file:"tmp" program;
+    Program.print_system ~outdir:output_dir ~file:input_filename program;
   if params.print_rvg then
-    Program.print_rvg ~outdir:params.output_dir ~file:"tmp" program;
+    Program.print_rvg ~outdir:output_dir ~file:input_filename program;
   if not params.no_boundsearch then
-       program
-    |> preprocess
+       (program, Approximation.empty 10 10) (* TODO Better values *)
+    |> PreprocessorTypes.preprocess preprocessors
     |> find_bounds
-       |> print_results
+    |> print_results
 
 let run_localsizebound (params: localsizebound_params) =
+  init_logger ["lsb", Logger.DEBUG];
   let open TransitionLabel in
   let guard = Readers.read_constraint params.guard in
   let var = Var.of_string params.var in
@@ -137,6 +146,7 @@ let run_normalize (params: normalize_params) =
   print_string output
   
 let run_size (params: size_params) =
+  init_logger ["size", Logger.DEBUG];
   let appr = Approximation.empty 10 3
   and program = Readers.read_file params.program in
   SizeBounds.improve program appr
