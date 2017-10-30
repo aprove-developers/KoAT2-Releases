@@ -6,7 +6,7 @@ open Batteries
     An update assigns variables a new value as a linear combination of the old values *)
 module Guard = Constraints.Constraint
 type polynomial = Polynomials.Polynomial.t
-module Map : module type of Map.Make(Var)
+module VarMap : module type of Map.Make(Var)
                           
 type kind = [ `Lower | `Upper ]  [@@deriving eq, ord]
 
@@ -14,7 +14,7 @@ type t
 
 exception RecursionNotSupported
 
-val make : ?cost:polynomial -> string -> start:string -> target:string -> update:polynomial Map.t -> guard:Guard.t -> t
+val make : ?cost:polynomial -> string -> start:string -> target:string -> update:polynomial VarMap.t -> guard:Guard.t -> t
 
 val mk : ?cost:polynomial ->
          com_kind:string ->
@@ -25,6 +25,10 @@ val mk : ?cost:polynomial ->
          vars:Var.t list ->
          t
 
+(** Appends the second label to the first label.
+    An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
+val append : t -> t -> t
+  
 val equal : t -> t -> bool
 
 val compare : t -> t -> int

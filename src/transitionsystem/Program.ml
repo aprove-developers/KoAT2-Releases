@@ -104,31 +104,35 @@ type t = {
        
 let add_vertices graph vertices =
   vertices
-  |> List.map (fun vertex -> fun gr -> TransitionGraph.add_vertex gr vertex)
-  |> List.fold_left (fun gr adder -> adder gr) graph
+  |> Enum.map (fun vertex -> fun gr -> TransitionGraph.add_vertex gr vertex)
+  |> Enum.fold (fun gr adder -> adder gr) graph
   
 let add_edges graph edges =
   edges
-  |> List.map (fun edge -> fun gr -> TransitionGraph.add_edge_e gr edge)
-  |> List.fold_left (fun gr adder -> adder gr) graph
+  |> Enum.map (fun edge -> fun gr -> TransitionGraph.add_edge_e gr edge)
+  |> Enum.fold (fun gr adder -> adder gr) graph
 
 let remove_location program location =
   { program with graph = TransitionGraph.remove_vertex program.graph location }
 
 let remove_transition program transition =
   { program with graph = TransitionGraph.remove_edge_e program.graph transition }
+
+let map_graph f program =
+  { program with graph = f program.graph }
   
 let mk vertices edges =
   add_edges (add_vertices TransitionGraph.empty vertices) edges
 
 let from vars transitions start =
-  let edges = List.map (fun t -> (Location.of_string (TransitionLabel.start t),
+  let edges = Enum.map (fun t -> (Location.of_string (TransitionLabel.start t),
                                   t,
                                   Location.of_string (TransitionLabel.target t)))
-                       transitions in
-  let vertices = List.unique (List.append
-                                (List.map (fun (start, _, _) -> start) edges)
-                                (List.map (fun (_, _, target) -> target) edges)) in
+                       (List.enum transitions) in
+  let vertices =
+    Enum.clone edges
+    |> Enum.concat_map (fun (l,_,l') -> List.enum [l; l'])
+    |> Enum.uniq in
   {
     graph = mk vertices edges;
     vars = vars;
@@ -212,5 +216,6 @@ let is_initial program trans =
   Location.(equal (program.start) (Transition.src trans))
 
 let to_string program =
-  let graph = TransitionGraph.fold_edges_e (fun t str -> str ^ Transition.to_string t) program.graph "" in
-  String.concat " " ["Start:"; Location.to_string program.start; "Graph:"; graph; "Vars:"] 
+  let transitions = TransitionGraph.fold_edges_e (fun t str -> str ^ "; " ^ Transition.to_string t) program.graph ""
+  and locations = TransitionGraph.fold_vertex (fun l str -> str ^ "; " ^ Location.to_string l) program.graph "" in
+  String.concat " " ["Start:"; Location.to_string program.start; "Locations:"; locations; "Transitions:"; transitions; "Vars:"; String.concat ", " (List.map Var.to_string program.vars)] 

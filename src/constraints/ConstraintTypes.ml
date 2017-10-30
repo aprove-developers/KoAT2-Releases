@@ -69,6 +69,12 @@ module type Atom =
           
         val (=~=) : t -> t -> bool
 
+        (** Stable structural equality, but not an actual equality *)
+        val equal : t -> t -> bool
+          
+        (** Stable structural compare, but not an actual compare *)
+        val compare : t -> t -> int
+          
         val neg : t -> t
           
         val to_string : t -> string
@@ -113,6 +119,8 @@ module type Constraint =
         val mk_true : t
         val mk_and : t -> t -> t
 
+        val map_polynomial : (polynomial -> polynomial) -> t -> t
+
         (** Creates a constraint that expresses the equality of the two polynomials. *)
         val mk_eq : polynomial -> polynomial -> t
 
@@ -141,6 +149,12 @@ module type Constraint =
           
         val (=~=) : t -> t -> bool
         
+        (** Stable structural equality, but not an actual equality *)
+        val equal : t -> t -> bool
+
+        (** Stable structural compare, but not an actual compare *)
+        val compare : t -> t -> int
+
         val num_of_atoms : t -> int
           
         (** Returns the set of variables which are active in the constraint.
@@ -186,6 +200,8 @@ module type Formula =
         val neg : t -> t
         val implies : t -> t -> t
         val constraints : t -> constr list
+
+        val map_polynomial : (polynomial -> polynomial) -> t -> t
           
         (** Creates a constraint that expresses the equality of the two polynomials. *)
         val mk_eq : polynomial -> polynomial -> t

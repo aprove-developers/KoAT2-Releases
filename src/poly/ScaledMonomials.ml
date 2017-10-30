@@ -11,7 +11,7 @@ module Make(Value : PolyTypes.Ring) =
       {
         coeff : Value.t; 
         mon :   Monomial.t;
-      }    
+      } [@@deriving eq, ord]
     type monomial = Monomial.t
 
     type value = Value.t

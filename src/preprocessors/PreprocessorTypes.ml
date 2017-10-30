@@ -76,3 +76,33 @@ module CutUnsatisfiableTransitions =
     let transform: preprocessor =
       Tuple2.map1 transform_program
   end
+
+(** *)
+module Chaining =
+  struct
+
+    (** Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location,
+        making the location obsolete. *)
+    let skip_location location graph =
+      Program.TransitionGraph.(pred_e, succ_e)
+      |> Tuple2.mapn (fun f -> f graph location)
+      |> Tuple2.mapn List.enum
+      |> uncurry Enum.cartesian_product
+      |> Enum.map (fun ((l,t,_), (_,t',l')) -> (l, TransitionLabel.append t t', l'))
+      |> Program.add_edges graph      
+
+    let try_chaining location graph : Program.TransitionGraph.t =
+      if Program.TransitionGraph.(
+        not (mem_edge graph location location)
+        && out_degree graph location >= 1
+        && in_degree graph location >= 1)
+      then
+        Program.TransitionGraph.remove_vertex (skip_location location graph) location
+      else graph
+        
+    let transform_program =
+      Program.map_graph (fun graph -> Program.LocationSet.fold try_chaining (Program.TransitionGraph.locations graph) graph)
+      
+    let transform: preprocessor =
+      Tuple2.map1 transform_program
+  end

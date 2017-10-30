@@ -115,8 +115,8 @@ let run_localsizebound (params: localsizebound_params) =
   let guard = Readers.read_constraint params.guard in
   let var = Var.of_string params.var in
   let update = match params.update with
-    | Some str -> Map.(add var (Readers.read_polynomial str) empty)
-    | None -> Map.empty in
+    | Some str -> VarMap.(add var (Readers.read_polynomial str) empty)
+    | None -> VarMap.empty in
   let label = make "" ~start:"" ~target:"" ~update ~guard in
   print_string (Bound.to_string LocalSizeBound.(as_bound (sizebound_local params.kind label var)))
 

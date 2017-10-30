@@ -49,6 +49,23 @@ let tests =
                   ]
       );
 
+      ("Chaining" >:::
+         List.map (fun (expected_program, program) ->
+             program >:: (fun _ -> assert_equal_program
+                                     (Readers.read_program_simple expected_program)
+                                     (PreprocessorTypes.Chaining.transform_program (Readers.read_program_simple program))))
+                  [
+                    ("l1 -> l2(x)", "l1 -> l2(x)");
+                    ("l1 -{2,2}> l3(x)", "l1 -> l2(x), l2 -> l3(x)");
+                    ("l1 -{3,3}> l4(x)", "l1 -> l2(x), l2 -> l3(x), l3 -> l4(x)");
+                    ("l1 -{2,2}> l3(x), l3 -{2,2}> l3(x)", "l1 -> l2(x), l2 -> l3(x), l3 -> l2(x)");
+                    ("l1 -{2,2}> l3(6*x)", "l1 -> l2(2*x), l2 -> l3(3*x)");
+                    ("l1 -{2,2}> l3(6*y,15)", "l1 -> l2(2*y,3), l2 -> l3(3*x,5*y)");
+                    ("l1 -{2,2}> l3(x) :|: x > 2", "l1 -> l2(x) :|: x > 2, l2 -> l3(x)");
+                    ("l1 -{2,2}> l3(y) :|: y > 2", "l1 -> l2(y), l2 -> l3(x) :|: x > 2");
+                  ]
+      );
+
     ]
 
     

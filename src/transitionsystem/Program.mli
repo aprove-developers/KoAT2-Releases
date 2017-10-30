@@ -68,16 +68,18 @@ type transition_set = Set.Make(Transition).t
 
 type t
 
-val add_vertices : TransitionGraph.t -> TransitionGraph.vertex list -> TransitionGraph.t
+val add_vertices : TransitionGraph.t -> Location.t Enum.t -> TransitionGraph.t
 
-val add_edges : TransitionGraph.t -> TransitionGraph.edge list -> TransitionGraph.t
+val add_edges : TransitionGraph.t -> Transition.t Enum.t -> TransitionGraph.t
 
 (** Removes the location from the program and all edges to it. *)
 val remove_location : t -> Location.t -> t
 
 val remove_transition : t -> Transition.t -> t
+
+val map_graph : (TransitionGraph.t -> TransitionGraph.t) -> t -> t
   
-val mk : TransitionGraph.vertex list -> TransitionGraph.edge list -> TransitionGraph.t
+val mk : Location.t Enum.t -> Transition.t Enum.t -> TransitionGraph.t
 
 val from : Var.t list
            -> TransitionLabel.t list

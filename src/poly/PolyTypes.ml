@@ -70,6 +70,12 @@ module type Evaluable =
 
     val (=~=) : t -> t -> bool       
        
+    (** Stable structural equality, but not actual equality *)
+    val equal : t -> t -> bool
+
+    (** Stable structural compare, but not an actual compare *)
+    val compare : t -> t -> int
+
     val to_string : t -> string
 
     (** Returns a set of the variables which occur in the evaluable *)
@@ -191,6 +197,8 @@ module type Ring =
        
     val equal : t -> t -> bool
     val (=~=) : t -> t -> bool
+    (** Stable structural compare, but not an actual compare *)
+    val compare : t -> t -> int      
 
     val of_int : int -> t
     val to_int : t -> int
@@ -243,7 +251,6 @@ module type Polynomial =
        *)
       
     val to_string : t -> string
-      
       
     (** Following methods return if the atom has certain properties. *)
 

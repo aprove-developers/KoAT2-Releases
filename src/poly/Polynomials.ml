@@ -10,7 +10,7 @@ module PolynomialOver(Value : PolyTypes.Ring) =
                       
     type monomial = Monomial_.t
     type scaled_monomial = ScaledMonomial_.t
-    type t = ScaledMonomial_.t list
+    type t = ScaledMonomial_.t list [@@deriving eq, ord]
     type value = Value.t
 
     let make = List.map (fun (coeff, mon) -> ScaledMonomial_.make coeff mon)
@@ -192,8 +192,6 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       end
     include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
-    let equal = (=~=)
-          
           (*
     (* Helper: Returns the greatest common divisor of the two values. Uses the Euclid algorithm. *)
     let rec gcd (a: Value.t) (b: Value.t) =

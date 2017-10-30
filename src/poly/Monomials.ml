@@ -6,7 +6,7 @@ module Make(Value : PolyTypes.Ring) =
     type valuation = Valuation.Make(Value).t
     module Map = Map.Make(Var)
 
-    type t = int Map.t
+    type t = int Map.t [@@deriving eq, ord]
            
     type value = Value.t
 

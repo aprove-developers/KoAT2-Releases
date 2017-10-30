@@ -61,7 +61,12 @@ module Z3Solver =
         
     let unsatisfiable formula =
       result_is Z3.Solver.UNSATISFIABLE formula      
-        
+
+    let equivalent formula1 formula2 =
+      (* Negating formula1 <=> formula2 *)
+      Formula.Infix.((formula1 && Formula.neg formula2) || (formula2 && Formula.neg formula1))
+      |> unsatisfiable
+      
     let match_string_for_float str =
         let float_regexp = Str.regexp "(?\\([-]?\\)[ ]?\\([0-9]*\\.?[0-9]+\\))?" in             (*(?\\([-0-9\\.]*\\))?*)
             Str.replace_first float_regexp "\\1\\2" str 

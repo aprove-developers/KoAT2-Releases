@@ -15,7 +15,9 @@ let of_string str =
              Helper number
         else
           Var str
-                  
+
+let hash = Hashtbl.hash
+      
 let mk_helper n = Helper n
                 
 let to_string = function

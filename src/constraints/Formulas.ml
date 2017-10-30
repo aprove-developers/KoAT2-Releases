@@ -52,6 +52,9 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let fold ~subject ~le ~correct ~conj ~wrong ~disj =
       List.fold_left (fun c constr -> disj c (C.fold ~subject ~le ~correct ~conj constr)) wrong
 
+    let map_polynomial f =
+      fold ~subject:f ~le:mk_le ~correct:mk_true ~conj:mk_and ~wrong:mk_false ~disj:mk_or
+      
     let neg =
       fold ~subject:identity
            ~le:mk_gt

@@ -11,7 +11,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
     type polynomial = A.polynomial
     type atom = A.t
        
-    type t = A.t list
+    type t = A.t list [@@deriving eq, ord]
     
     (** Same as List.length but outside of this module the list structure of constraints is invisible*)
     let num_of_atoms = List.length
@@ -53,7 +53,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
          List.combine constr1 constr2
       |> List.map (uncurry A.(=~=))
       |> List.fold_left (&&) true 
-            
+
     let vars constr =
          constr
       |> List.map (A.vars)
@@ -69,6 +69,9 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
     let fold ~subject ~le ~correct ~conj =
       List.fold_left (fun c atom -> conj c (A.fold ~subject ~le atom)) correct
       
+    let map_polynomial f =
+      fold ~subject:f ~le:mk_le ~correct:mk_true ~conj:mk_and
+
   end
 
 module Constraint =

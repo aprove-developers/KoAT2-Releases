@@ -43,7 +43,7 @@ struct
       end
 
     (* Always in normalised form: polynomial <= 0 *)
-    type t = P.t 
+    type t = P.t [@@deriving eq, ord]
 
 
     (* Helper function *)
