@@ -79,7 +79,7 @@ program_simple :
                     |> Program.from default_vars (List.flatten trans) } ;
 
 transition_simple :
-	|	start = ID; cost_pair = cost ; rhs = transition_rhs; formula = withConstraints
+	|	start = ID; cost = cost ; rhs = transition_rhs; formula = withConstraints
 	          {    formula
           	    |> Formula.constraints
                     |> List.map (fun constr ->
@@ -89,7 +89,7 @@ transition_simple :
                            ~targets:(Tuple2.second rhs)
                            ~patterns:default_vars
                            ~guard:constr 
-                           ~cost:(Tuple2.second cost_pair)
+                           ~cost:cost
                            ~vars:default_vars)} ;
 
 goal :		
@@ -109,7 +109,7 @@ variables :
 		  { List.map Var.of_string vars } ;
 		  
 transition :
-	|	lhs = transition_lhs; cost_pair = cost ; rhs = transition_rhs; formula = withConstraints
+	|	lhs = transition_lhs; cost = cost ; rhs = transition_rhs; formula = withConstraints
 	          {    formula
           	    |> Formula.constraints
                     |> List.map (fun constr ->
@@ -119,12 +119,14 @@ transition :
                            ~targets:(Tuple2.second rhs)
                            ~patterns:(List.map Var.of_string (Tuple2.second lhs))
                            ~guard:constr 
-                           ~cost: (Tuple2.second cost_pair))} ;
+                           ~cost:cost)} ;
 cost : 
         |       COSTLEFT ub = polynomial COMMA lb = polynomial COSTRIGHT
-                  { (lb, ub) };
+                  { ub };
+        |       COSTLEFT ub = polynomial COSTRIGHT
+                  { ub };
         |       ARROW
-                  { (Poly.zero, Poly.one) };
+                  { Poly.one };
 transition_lhs :
 	|	start = ID; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR)
 	          { (start, patterns) } ;
