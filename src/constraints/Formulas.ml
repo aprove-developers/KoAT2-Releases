@@ -16,9 +16,6 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let mk constr =
       [constr]
            
-    let disj constraints =
-      constraints
-
     let lift atom =
       mk (C.lift atom)
     

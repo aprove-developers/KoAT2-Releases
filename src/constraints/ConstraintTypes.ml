@@ -155,8 +155,6 @@ module type Constraint =
         (** Stable structural compare, but not an actual compare *)
         val compare : t -> t -> int
 
-        val num_of_atoms : t -> int
-          
         (** Returns the set of variables which are active in the constraint.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
         val vars : t -> VarSet.t
@@ -193,7 +191,6 @@ module type Formula =
           
         val lift : atom -> t      
         val mk : constr -> t      
-        val disj : constr list -> t      
         val mk_true : t
         val mk_and : t -> t -> t
         val mk_or : t -> t -> t
