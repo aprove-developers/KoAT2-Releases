@@ -113,12 +113,14 @@ module Z3Solver =
               for i = 0 to (List.length minimise_constr) - 1 do
                   Z3.Optimize.minimize optimisation_goal (List.at minimise_constr i);
               done;
+(*              print_string ("\nOptimise to_string:"^(Z3.Optimize.to_string optimisation_goal)^"\n");*)
               let status = Z3.Optimize.check optimisation_goal in
-                if (status == Z3.Solver.SATISFIABLE) then
+                if (status == Z3.Solver.SATISFIABLE || status == Z3.Solver.UNKNOWN) then
                     let model = Z3.Optimize.get_model optimisation_goal in
                         match model with
                         | None -> Valuation.from []
                         | Some model -> 
+(*                          print_string ("\n Z3 model to string"^(Z3.Model.to_string model)^"\n");*)
                             let assigned_values = Z3.Model.get_const_decls model in
                                 Valuation.from 
                                 (List.map 
