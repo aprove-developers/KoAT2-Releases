@@ -177,10 +177,11 @@ let determine_locations (transitions) =
 let ranking_function_procedure (program : Program.t) (transitions : transitionEnum) =
   let transitions_for_strict = (Enum.clone transitions) in
   let locations = determine_locations transitions in
-    let table = Tuple2.first (generate_ranking_template program locations) in
+  let (table, fresh_coeffs) = generate_ranking_template program locations in
+(*    print_string ("ranking_function_procedure, generated coeffs = "^(String.concat "\n" (List.map (Var.to_string) fresh_coeffs)));*)
     let non_incr = get_non_increase_constraints table program transitions in
     let (smt_form , bounded) = build_strict_oriented table program transitions_for_strict non_incr in
-    let model = SMTSolver_.get_model (Formula.mk smt_form) in
+    let model = SMTSolver_.get_model_opt (Formula.mk smt_form) fresh_coeffs in (*(fresh coeffs should be used here)*)
     (PrfTable.map (fun loc prf -> Polynomial.eval_partial (ParameterPolynomial.flatten prf) model) table), bounded
 
 (** Checks if a transition has already been oriented strictly in a given approximation     *)
