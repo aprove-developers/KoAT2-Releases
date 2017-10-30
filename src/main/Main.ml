@@ -79,7 +79,8 @@ type size_params = {
     (** The file of the program which should be analyzed. *)
 
   } [@@deriving cmdliner, show]
-                      
+
+(* TODO Make configurable which preprocessors to use. *)
 let preprocessors: PreprocessorTypes.preprocessor list = []
                                                    
 let find_bounds (graph: PreprocessorTypes.subject): Approximation.t =
@@ -105,7 +106,7 @@ let run (params: main_params) =
     Program.print_rvg ~outdir:output_dir ~file:input_filename program;
   if not params.no_boundsearch then
        (program, Approximation.empty 10 10) (* TODO Better values *)
-    |> PreprocessorTypes.preprocess preprocessors
+    |> PreprocessorTypes.(process_til_fixpoint preprocessors)
     |> find_bounds
     |> print_results
 

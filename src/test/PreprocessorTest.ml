@@ -9,7 +9,7 @@ let tests =
          List.map (fun (expected_program, program) ->
              program >:: (fun _ -> assert_equal_program
                                      (Readers.read_program_simple expected_program)
-                                     (PreprocessorTypes.CutUnreachable.transform_program (Readers.read_program_simple program))))
+                                     (PreprocessorTypes.(MaybeChanged.unpack (CutUnreachable.transform_program (Readers.read_program_simple program))))))
                   [
                     ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l4(x)");
                     ("l1 -> l2(x), l2 -> l3(x)", "l1 -> l2(x), l2 -> l3(x), l4 -> l5(x)");
@@ -26,6 +26,7 @@ let tests =
                        (Some Bound.one)
                        ((Readers.read_program_simple program, Approximation.empty 5 5)
                         |> PreprocessorTypes.TrivialTimeBounds.transform
+                        |> MaybeChanged.unpack
                         |> Tuple2.second
                         |> (fun time -> Approximation.timebound_between time (Program.Location.of_string src) (Program.Location.of_string target))
            )))
@@ -43,7 +44,7 @@ let tests =
          List.map (fun (expected_program, program) ->
              program >:: (fun _ -> assert_equal_program
                                      (Readers.read_program_simple expected_program)
-                                     (PreprocessorTypes.CutUnsatisfiableTransitions.transform_program (Readers.read_program_simple program))))
+                                     (PreprocessorTypes.(MaybeChanged.unpack (CutUnsatisfiableTransitions.transform_program (Readers.read_program_simple program))))))
                   [
                     ("l1 -> l2(x), l2 -> l3(x)", "l1 -> l3(x) :|: 2 > 3, l1 -> l2(x), l2 -> l3(x)");
                   ]
@@ -53,7 +54,7 @@ let tests =
          List.map (fun (expected_program, program) ->
              program >:: (fun _ -> assert_equal_program
                                      (Readers.read_program_simple expected_program)
-                                     (PreprocessorTypes.Chaining.transform_program (Readers.read_program_simple program))))
+                                     (PreprocessorTypes.(MaybeChanged.unpack (MaybeChanged.lift_to_program Chaining.transform_graph (Readers.read_program_simple program))))))
                   [
                     ("l1 -> l2(x)", "l1 -> l2(x)");
                     ("l1 -{2}> l3(x)", "l1 -> l2(x), l2 -> l3(x)");
@@ -65,6 +66,20 @@ let tests =
                     ("l1 -{2}> l3(y) :|: y > 2", "l1 -> l2(y), l2 -> l3(x) :|: x > 2");
                   ]
       );
+
+      ("process_til_fixpoint" >:::
+         List.map (fun (expected_program, program) ->
+             program >:: (fun _ -> assert_equal_program
+                                     (Readers.read_program_simple expected_program)
+                                     (Tuple2.first (PreprocessorTypes.process_til_fixpoint
+                                                      [PreprocessorTypes.CutUnreachable; PreprocessorTypes.CutUnsatisfiableTransitions; PreprocessorTypes.Chaining]
+                                                      (Readers.read_program_simple program, Approximation.empty 0 0)))))
+                  [
+                    ("l1 -> l2(x)", "l1 -> l2(x)");
+                    ("l1 -> l2(x)", "l1 -> l2(x), l2 -> l3(x) :|: 2 > 3");
+                    ("l1 -> l1(x)", "l1 -> l1(x), l1 -> l2(x) :|: x > 0, l2 -> l3(x) :|: x < 0");
+                  ]
+      );      
 
     ]
 

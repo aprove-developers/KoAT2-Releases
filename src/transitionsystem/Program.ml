@@ -120,7 +120,7 @@ let remove_transition program transition =
 
 let map_graph f program =
   { program with graph = f program.graph }
-  
+
 let mk vertices edges =
   add_edges (add_vertices TransitionGraph.empty vertices) edges
 
