@@ -1,7 +1,7 @@
 %token	<string>	ID
 %token	<int>		UINT
 %token			PLUS MINUS TIMES POW
-%token			EQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
+%token			EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
 %token			LPAR RPAR
 %token                  LBRACE RBRACE
 %token			EOF
@@ -34,15 +34,11 @@
 
 %type <Formulas.Formula.t> formula
 
-%type <Constraints.Constraint.t> constraints
-
-%type <Constraints.Constraint.t> atom
-
 %type <Polynomials.Polynomial.t> polynomial
 
 %type <Var.t list> variables
 
-%type <vars:Var.t list -> TransitionLabel.t> transition
+%type <(vars:Var.t list -> TransitionLabel.t) list> transition
 
 %type <(vars:Var.t list -> TransitionLabel.t) list> transitions
 
@@ -75,17 +71,26 @@ onlyProgram_simple :
 
 program_simple :
 	|       trans = separated_nonempty_list(COMMA, transition_simple)
-                  { Program.from default_vars trans (Program.Location.of_string (TransitionLabel.start (List.hd trans))) } ;
+                  {    trans
+                    |> List.flatten
+                    |> List.hd
+	            |> TransitionLabel.start
+	            |> Program.Location.of_string
+                    |> Program.from default_vars (List.flatten trans) } ;
 
 transition_simple :
-	|	start = ID; cost_pair = cost ; rhs = transition_rhs; constr = withConstraints
-	          { TransitionLabel.mk ~com_kind:(Tuple2.first rhs)
-                    		       ~start:start
-                                       ~targets:(Tuple2.second rhs)
-                                       ~patterns:default_vars
-                                       ~guard:constr 
-                                       ~cost:(Tuple2.second cost_pair)
-                                       ~vars:default_vars} ;
+	|	start = ID; cost_pair = cost ; rhs = transition_rhs; formula = withConstraints
+	          {    formula
+          	    |> Formula.constraints
+                    |> List.map (fun constr ->
+                         TransitionLabel.mk
+                           ~com_kind:(Tuple2.first rhs)
+                    	   ~start:start
+                           ~targets:(Tuple2.second rhs)
+                           ~patterns:default_vars
+                           ~guard:constr 
+                           ~cost:(Tuple2.second cost_pair)
+                           ~vars:default_vars)} ;
 
 goal :		
 	|	LPAR GOAL goal = ID RPAR
@@ -97,20 +102,24 @@ start :
 
 transitions :
 	|	LPAR RULES l = nonempty_list(transition) RPAR
-		  { l } ;
+		  { List.flatten l } ;
 
 variables :   
 	|	LPAR VAR vars = list(ID) RPAR
 		  { List.map Var.of_string vars } ;
 		  
 transition :
-	|	lhs = transition_lhs; cost_pair = cost ; rhs = transition_rhs; constr = withConstraints
-	          { TransitionLabel.mk ~com_kind:(Tuple2.first rhs)
-                    		       ~start:(Tuple2.first lhs)
-                                       ~targets:(Tuple2.second rhs)
-                                       ~patterns:(List.map Var.of_string (Tuple2.second lhs))
-                                       ~guard:constr 
-                                       ~cost: (Tuple2.second cost_pair)} ;
+	|	lhs = transition_lhs; cost_pair = cost ; rhs = transition_rhs; formula = withConstraints
+	          {    formula
+          	    |> Formula.constraints
+                    |> List.map (fun constr ->
+                         TransitionLabel.mk
+                           ~com_kind:(Tuple2.first rhs)
+                    	   ~start:(Tuple2.first lhs)
+                           ~targets:(Tuple2.second rhs)
+                           ~patterns:(List.map Var.of_string (Tuple2.second lhs))
+                           ~guard:constr 
+                           ~cost: (Tuple2.second cost_pair))} ;
 cost : 
         |       COSTLEFT ub = polynomial COMMA lb = polynomial COSTRIGHT
                   { (lb, ub) };
@@ -130,44 +139,57 @@ transition_target :
 	          { (target, assignments) } ;
 
 withConstraints :
-	|	{ Constr.mk [] }
-	|       WITH constr = separated_nonempty_list(AND, atom) { Constr.all constr } ;
-	|       LBRACK constr = separated_nonempty_list(AND, atom) RBRACK { Constr.all constr } ;
+	|	{ Formula.mk_true }
+	|       WITH constr = separated_nonempty_list(AND, formula_atom) { Formula.all constr } ;
+	|       LBRACK constr = separated_nonempty_list(AND, formula_atom) RBRACK { Formula.all constr } ;
 
 onlyFormula :
         |       f = formula EOF { f } ;
 
 formula :
-        |       disj = separated_nonempty_list(OR, constraints)
-                  { Formula.disj disj } ;
+        |       disj = separated_nonempty_list(OR, formula_constraint)
+                  { Formula.any disj } ;
 
 onlyConstraints :
-        |       constr = constraints EOF { constr } ;
-        
-constraints :
-        |       constr = separated_list(AND, atom)
+        |       constr = separated_list(AND, constraint_atom) EOF
                   { Constr.all constr } ;
+        
+formula_constraint :
+        |       constr = separated_list(AND, formula_atom)
+                  { Formula.all constr } ;
 
 onlyAtom :
-        |   	p1 = polynomial; comp = atomComparator; p2 = polynomial; EOF
+        |   	p1 = polynomial; comp = atom_comparator; p2 = polynomial; EOF
                   { comp p1 p2 } ;
 
-%inline atomComparator :
+constraint_atom :
+        |   	p1 = polynomial; comp = constraint_comparator; p2 = polynomial
+                  { comp p1 p2 } ;
+
+formula_atom :
+        |   	p1 = polynomial; comp = formula_comparator; p2 = polynomial
+                  { comp p1 p2 } ;
+
+%inline atom_comparator :
   	| 	GREATERTHAN { Atom.mk_gt }
   	| 	GREATEREQUAL { Atom.mk_ge }
   	| 	LESSTHAN { Atom.mk_lt }
   	| 	LESSEQUAL { Atom.mk_le } ;
 
-atom :
-        |   	p1 = polynomial; comp = comparator; p2 = polynomial
-                  { comp p1 p2 } ;
-
-%inline comparator :
+%inline constraint_comparator :
   	| 	EQUAL { Constr.mk_eq }
   	| 	GREATERTHAN { Constr.mk_gt }
   	| 	GREATEREQUAL { Constr.mk_ge }
   	| 	LESSTHAN { Constr.mk_lt }
   	| 	LESSEQUAL { Constr.mk_le } ;
+
+%inline formula_comparator :
+  	| 	EQUAL { Formula.mk_eq }
+  	| 	UNEQUAL { Formula.mk_uneq }
+  	| 	GREATERTHAN { Formula.mk_gt }
+  	| 	GREATEREQUAL { Formula.mk_ge }
+  	| 	LESSTHAN { Formula.mk_lt }
+  	| 	LESSEQUAL { Formula.mk_le } ;
 
               
 onlyPolynomial :
