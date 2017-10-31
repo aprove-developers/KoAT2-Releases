@@ -6,7 +6,7 @@ type preprocessor =
   | CutUnreachableLocations
   | TrivialTimeBounds
   | CutUnsatisfiableTransitions
-  | Chaining [@@deriving show, ord]
+  | Chaining [@@deriving show, ord, eq]
 
 let affects = function
   | CutUnreachableLocations -> []
@@ -29,17 +29,17 @@ module PreprocessorSet =
     )
 
 let all_preprocessors =
-  PreprocessorSet.of_list [CutUnreachableLocations; TrivialTimeBounds; CutUnsatisfiableTransitions; Chaining]
+  [CutUnreachableLocations; TrivialTimeBounds; CutUnsatisfiableTransitions; Chaining]
   
 type strategy = preprocessor list -> subject -> subject
-  
+
 let process strategy preprocessors subject =
   strategy preprocessors subject
 
 let process_only_once preprocessors =
   PreprocessorSet.fold (fun preprocessor subject -> MaybeChanged.unpack (transform subject preprocessor)) (PreprocessorSet.of_list preprocessors)
 
-let rec process_til_fixpoint_ ?(wanted=all_preprocessors) (todos: PreprocessorSet.t) (subject: subject) : subject =
+let rec process_til_fixpoint_ ?(wanted=PreprocessorSet.of_list all_preprocessors) (todos: PreprocessorSet.t) (subject: subject) : subject =
   if PreprocessorSet.is_empty todos then
     subject
   else
@@ -54,4 +54,6 @@ let rec process_til_fixpoint_ ?(wanted=all_preprocessors) (todos: PreprocessorSe
 let process_til_fixpoint preprocessors =
   let set = PreprocessorSet.of_list preprocessors in
   process_til_fixpoint_ ~wanted:set set
+  
+let all_strategies = [process_only_once; process_til_fixpoint]
   

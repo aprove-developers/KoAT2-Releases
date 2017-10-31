@@ -28,7 +28,13 @@ type main_params = {
     logs : string list; [@default []] [@sep ',']
     (** The loggers which should be activated. *)
 
-  } [@@deriving cmdliner, show]
+    preprocessors : PreprocessorTypes.preprocessor list; [@enum PreprocessorTypes.(List.map (fun p -> show_preprocessor p, p) all_preprocessors)] [@default PreprocessorTypes.all_preprocessors]
+    (** The preprocessors which should be applied before running the actual algorithm. *)
+    
+    preprocessing_strategy : PreprocessorTypes.strategy; [@enum PreprocessorTypes.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default PreprocessorTypes.process_til_fixpoint]
+    (** The strategy which should be used to apply the preprocessors. *)
+    
+  } [@@deriving cmdliner]
 
 type localsizebound_params = {
 
@@ -80,9 +86,6 @@ type size_params = {
 
   } [@@deriving cmdliner, show]
 
-(* TODO Make configurable which preprocessors to use. *)
-let preprocessors: PreprocessorTypes.preprocessor list = []
-                                                   
 let find_bounds (graph: PreprocessorTypes.subject): Approximation.t =
   raise (Failure "Not yet implemented")
 
@@ -95,20 +98,27 @@ let init_logger (logs: (string * Logger.level) list) =
 let run (params: main_params) =
   let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
   init_logger logs;
-  let program = Readers.read_file params.input
-  and input_filename =
+  let input_filename =
     params.input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
   and output_dir =
-    Option.map Fpath.v params.output_dir |? (params.input |> Fpath.v |> Fpath.parent) in
-  if params.print_system then
-    Program.print_system ~outdir:output_dir ~file:input_filename program;
-  if params.print_rvg then
-    Program.print_rvg ~outdir:output_dir ~file:input_filename program;
-  if not params.no_boundsearch then
-       (program, Approximation.empty 10 10) (* TODO Better values *)
-    |> PreprocessorTypes.(process_til_fixpoint preprocessors)
-    |> find_bounds
-    |> print_results
+    Option.map Fpath.v params.output_dir |? (params.input |> Fpath.v |> Fpath.parent)
+  in
+  (Readers.read_file params.input, Approximation.empty 10 10) (* TODO Better values *)
+  |> params.preprocessing_strategy params.preprocessors
+  |> (fun (program, appr) ->
+    if params.print_system then
+      Program.print_system ~outdir:output_dir ~file:input_filename program;
+    (program, appr))
+  |> (fun (program, appr) ->
+    if params.print_rvg then
+      Program.print_rvg ~outdir:output_dir ~file:input_filename program;
+    (program, appr))
+  |> fun (program, appr) ->
+     if not params.no_boundsearch then
+       (program, appr)
+       |> params.preprocessing_strategy params.preprocessors
+       |> find_bounds
+       |> print_results
 
 let run_localsizebound (params: localsizebound_params) =
   init_logger ["lsb", Logger.DEBUG];

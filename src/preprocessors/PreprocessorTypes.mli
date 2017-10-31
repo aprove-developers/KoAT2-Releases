@@ -8,7 +8,9 @@ type preprocessor =
   | CutUnreachableLocations
   | TrivialTimeBounds
   | CutUnsatisfiableTransitions
-  | Chaining
+  | Chaining [@@deriving show, ord, eq]
+
+val all_preprocessors : preprocessor list
   
 (** Returns all the preprocessors that might successfully run after a run of the specific preprocessor. *)
 val affects : preprocessor -> preprocessor list
@@ -19,6 +21,8 @@ val transform : subject -> preprocessor -> subject MaybeChanged.t
 
 type strategy = preprocessor list -> subject -> subject
 
+val all_strategies : strategy list
+              
 (** Uses the strategy to preprocess the given subject with the specified preprocessors. *)
 val process : strategy -> preprocessor list -> subject -> subject
               
