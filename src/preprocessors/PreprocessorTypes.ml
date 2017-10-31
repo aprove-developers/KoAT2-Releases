@@ -31,6 +31,11 @@ module PreprocessorSet =
 let all_preprocessors =
   PreprocessorSet.of_list [CutUnreachableLocations; TrivialTimeBounds; CutUnsatisfiableTransitions; Chaining]
   
+type strategy = preprocessor list -> subject -> subject
+  
+let process strategy preprocessors subject =
+  strategy preprocessors subject
+
 let process_only_once preprocessors =
   PreprocessorSet.fold (fun preprocessor subject -> MaybeChanged.unpack (transform subject preprocessor)) (PreprocessorSet.of_list preprocessors)
 
