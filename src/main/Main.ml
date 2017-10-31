@@ -28,10 +28,10 @@ type main_params = {
     logs : string list; [@default []] [@sep ',']
     (** The loggers which should be activated. *)
 
-    preprocessors : PreprocessorTypes.preprocessor list; [@enum PreprocessorTypes.(List.map (fun p -> show_preprocessor p, p) all_preprocessors)] [@default PreprocessorTypes.all_preprocessors]
+    preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.all]
     (** The preprocessors which should be applied before running the actual algorithm. *)
     
-    preprocessing_strategy : PreprocessorTypes.strategy; [@enum PreprocessorTypes.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default PreprocessorTypes.process_til_fixpoint]
+    preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
     
   } [@@deriving cmdliner]
@@ -86,7 +86,7 @@ type size_params = {
 
   } [@@deriving cmdliner, show]
 
-let find_bounds (graph: PreprocessorTypes.subject): Approximation.t =
+let find_bounds (graph: Preprocessor.subject): Approximation.t =
   raise (Failure "Not yet implemented")
 
 let print_results (appr: Approximation.t): unit =
