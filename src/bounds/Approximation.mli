@@ -16,6 +16,7 @@ sig
   (** Returns a timebound of the specified kind for the execution of the whole graph. *)
   val sum : t -> Program.t -> Bound.t
   val add : Bound.t -> Program.Transition.t -> t -> t
+  val all_bounded : t -> Program.Transition.t list -> bool
   val to_string : t -> string
   val equal : t -> t -> bool
 end
@@ -52,6 +53,8 @@ val timebound_between : t -> Program.Location.t -> Program.Location.t -> Bound.t
 (** Adds the information that the specified bound is a valid timebound for the given transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 val add_timebound : Bound.t -> Program.Transition.t -> t -> t
+
+val all_times_bounded : t -> Program.Transition.t list -> bool
   
 
 (** Sizebound related methods *)

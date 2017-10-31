@@ -86,11 +86,8 @@ type size_params = {
 
   } [@@deriving cmdliner, show]
 
-let find_bounds (graph: Preprocessor.subject): Approximation.t =
-  raise (Failure "Not yet implemented")
-
 let print_results (appr: Approximation.t): unit =
-  raise (Failure "Not yet implemented")  
+  print_string (Approximation.to_string appr)
 
 let init_logger (logs: (string * Logger.level) list) =
   Logger.init logs (Logger.make_dbg_formatter IO.stdout)
@@ -117,7 +114,7 @@ let run (params: main_params) =
      if not params.no_boundsearch then
        (program, appr)
        |> params.preprocessing_strategy params.preprocessors
-       |> find_bounds
+       |> uncurry Bounds.find_bounds
        |> print_results
 
 let run_localsizebound (params: localsizebound_params) =
@@ -177,6 +174,6 @@ let () =
   (* Read the arguments from the shell via an api and call run *)
   let open Cmdliner in
   let main_command = (Term.(const run $ main_params_cmdliner_term ()), Term.info Sys.argv.(0)) in
-  Logger.init ["lsb", Logger.DEBUG; "size", Logger.DEBUG; "prf", Logger.DEBUG] (Logger.make_dbg_formatter IO.stdout);
+  (* Logger.init ["lsb", Logger.DEBUG; "size", Logger.DEBUG; "prf", Logger.DEBUG] (Logger.make_dbg_formatter IO.stdout); *)
   Term.exit @@ Term.eval_choice main_command subcommands
 

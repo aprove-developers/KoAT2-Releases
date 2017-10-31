@@ -4,9 +4,9 @@ type subject = Program.t * Approximation.t
 
 type t =
   | CutUnreachableLocations
-  | TrivialTimeBounds
   | CutUnsatisfiableTransitions
-  | Chaining [@@deriving show, ord, eq]
+  | Chaining
+  | TrivialTimeBounds [@@deriving show, ord, eq]
 
 let affects = function
   | CutUnreachableLocations -> []
