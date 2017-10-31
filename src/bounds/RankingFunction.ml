@@ -11,16 +11,18 @@ type t = {
     pol : Program.Location.t -> Polynomial.t (*This should be a parameter Polynomial, so that it can be used a few times*);
     strictly_decreasing : Program.Transition.t list;
     (*non_increasing : Program_.Transition.t list; not necessary as it contains every transition *)
-    bounded : Program.Transition.t list;
+    transitions : Program.Transition.t list;
   }
   
 type transitionEnum = Program.Transition.t Enum.t
   
 let logger = Logger.make_log "prf"  
 
+let rank f = f.pol
+           
 let strictly_decreasing f = f.strictly_decreasing
                           
-let bounded f = f.bounded
+let transitions f = f.transitions
 
 (* TODO Obsolete? *)
 let square (pol1 : Polynomials.Polynomial.t) (pol2: Polynomials.Polynomial.t) = Polynomials.Polynomial.(pol1 * pol2)
@@ -202,7 +204,7 @@ let find program appr =
     let (table,bounded) = ranking_function_procedure program transitions in
     {   pol = PrfTable.find table;
         strictly_decreasing = bounded;
-        bounded = bounded;
+        transitions = List.of_enum transitions;
     }
   in Logger.with_log logger Logger.DEBUG 
                      (fun () -> "Generated Ranking Function",["prf_values", (PrfTable.to_string_poly (Tuple2.first (ranking_function_procedure program transitions)))])
