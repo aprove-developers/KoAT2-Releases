@@ -44,10 +44,10 @@ module TransitionGraph =
   struct
     include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
 
-    let locations graph : LocationSet.t =
+    let locations graph =
       fold_vertex LocationSet.add graph LocationSet.empty
 
-    let transitions graph : TransitionSet.t =
+    let transitions graph =
       fold_edges_e TransitionSet.add graph TransitionSet.empty
 
     let equal graph1 graph2 =
@@ -214,6 +214,9 @@ let print_rvg ~outdir ~file program =
 
 let is_initial program trans =
   Location.(equal (program.start) (Transition.src trans))
+
+let is_initial_location program location =
+  Location.(equal (program.start) location)
 
 let to_string program =
   let transitions = TransitionGraph.fold_edges_e (fun t str -> str ^ "; " ^ Transition.to_string t) program.graph ""

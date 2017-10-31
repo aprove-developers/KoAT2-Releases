@@ -105,6 +105,9 @@ val print_rvg : outdir:Fpath.t -> file:string -> t -> unit
 (** Returns if the given transition is an initial transition. *)
 val is_initial : t -> Transition.t -> bool
 
+(** Returns if the given transition is an initial transition. *)
+val is_initial_location : t -> Location.t -> bool
+
 val equal : t -> t -> bool
   
 val to_string : t -> string
