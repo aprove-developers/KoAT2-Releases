@@ -69,6 +69,6 @@ val add_sizebound : kind -> Bound.t -> Program.Transition.t -> Var.t -> t -> t
   
 val add_sizebounds : kind -> Bound.t -> Program.RVG.scc -> t -> t
 
-val to_string : t -> string
+val to_string : Program.t -> t -> string
 
 val equal : t -> t -> bool

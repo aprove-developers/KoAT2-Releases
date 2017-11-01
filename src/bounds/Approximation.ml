@@ -26,7 +26,7 @@ module Time =
       |> fun option -> Option.bind option Enum.get
 
     let sum map program =
-      Program.TransitionGraph.fold_edges_e (fun transition -> Bound.add (get map transition)) (Program.graph program) Bound.zero
+      Program.TransitionGraph.fold_edges_e (fun transition result -> Bound.(of_poly (Program.Transition.cost transition) * get map transition + result)) (Program.graph program) Bound.zero
 
     let sum_available map =
       Map.fold (fun transition bound result -> Bound.(bound + result)) map Bound.zero
@@ -138,10 +138,10 @@ let add_sizebound kind bound transition var = Tuple2.map2 (Size.add kind bound t
 
 let add_sizebounds kind bound scc = Tuple2.map2 (Size.add_all kind bound scc)
 
-let to_string (time, size) =
+let to_string program (time, size) =
   let output = IO.output_string () in
   IO.nwrite output "Timebounds: \n";
-  IO.nwrite output ("Overall timebound: " ^ Bound.to_string (Time.sum_available time) ^ "\n");
+  IO.nwrite output ("Overall timebound: " ^ Bound.to_string (Time.sum time program) ^ "\n");
   time |> Time.to_string |> IO.nwrite output;
   IO.nwrite output "\nSizebounds: ";
   size |> Size.to_string |> IO.nwrite output;

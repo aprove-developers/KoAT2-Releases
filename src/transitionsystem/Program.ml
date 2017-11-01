@@ -26,6 +26,8 @@ module Transition =
 
     let target (_, _, target) = target
 
+    let cost t = TransitionLabel.cost (label t)
+
     (* Needs to be fast for usage in the timebound hashtables.
        There might be transitions with the same src and target, 
        but that is not a problem for the hashtables,

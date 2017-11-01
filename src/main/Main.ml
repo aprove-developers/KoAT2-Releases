@@ -86,8 +86,8 @@ type size_params = {
 
   } [@@deriving cmdliner, show]
 
-let print_results (appr: Approximation.t): unit =
-  print_string (Approximation.to_string appr)
+let print_results (program: Program.t) (appr: Approximation.t): unit =
+  print_string (Approximation.to_string program appr)
 
 let init_logger (logs: (string * Logger.level) list) =
   Logger.init logs (Logger.make_dbg_formatter IO.stdout)
@@ -115,7 +115,7 @@ let run (params: main_params) =
        (program, appr)
        |> params.preprocessing_strategy params.preprocessors
        |> uncurry Bounds.find_bounds
-       |> print_results
+       |> print_results program
 
 let run_localsizebound (params: localsizebound_params) =
   init_logger ["lsb", Logger.DEBUG];
@@ -158,7 +158,7 @@ let run_size (params: size_params) =
   let appr = Approximation.empty 10 3
   and program = Readers.read_file params.program in
   SizeBounds.improve program appr
-  |> Approximation.to_string
+  |> Approximation.to_string program
   |> print_string
 
 let subcommands =

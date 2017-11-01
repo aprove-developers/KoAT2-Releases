@@ -1,4 +1,5 @@
 open Batteries
+open Polynomials
    
 (** Provides default modules to create locations, transitions and transitionsystems *)
 
@@ -25,6 +26,7 @@ sig
   val src : t -> Location.t
   val label : t -> TransitionLabel.t
   val target : t -> Location.t
+  val cost : t -> Polynomial.t
 end
 module TransitionSet : module type of Set.Make(Transition)
 
