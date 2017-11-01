@@ -14,11 +14,17 @@ let affects = function
   | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining]
   | Chaining -> [CutUnsatisfiableTransitions]
 
+let lift_to_program transform program =
+  MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (fun _ -> graph) program)))
+
+let lift_to_tuple transform tuple =
+  MaybeChanged.(transform (Tuple2.first tuple) >>= (fun program -> same (Tuple2.map1 (fun _ -> program) tuple)))
+              
 let transform subject = function
-  | CutUnreachableLocations -> MaybeChanged.lift_to_subject CutUnreachableLocations.transform_program subject
+  | CutUnreachableLocations -> lift_to_tuple CutUnreachableLocations.transform_program subject
   | TrivialTimeBounds -> TrivialTimeBounds.transform subject
-  | CutUnsatisfiableTransitions -> MaybeChanged.lift_to_subject CutUnsatisfiableTransitions.transform_program subject
-  | Chaining -> MaybeChanged.lift_to_subject (MaybeChanged.lift_to_program Chaining.transform_graph) subject
+  | CutUnsatisfiableTransitions -> lift_to_tuple CutUnsatisfiableTransitions.transform_program subject
+  | Chaining -> lift_to_tuple (lift_to_program Chaining.transform_graph) subject
 
 type outer_t = t
 module PreprocessorSet =

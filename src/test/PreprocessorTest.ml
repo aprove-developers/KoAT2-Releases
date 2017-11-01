@@ -54,7 +54,7 @@ let tests =
          List.map (fun (expected_program, program) ->
              program >:: (fun _ -> assert_equal_program
                                      (Readers.read_program_simple expected_program)
-                                     (MaybeChanged.unpack (MaybeChanged.lift_to_program Chaining.transform_graph (Readers.read_program_simple program)))))
+                                     (MaybeChanged.unpack (Preprocessor.lift_to_program Chaining.transform_graph (Readers.read_program_simple program)))))
                   [
                     ("l1 -> l2(x)", "l1 -> l2(x)");
                     ("l1 -{2}> l3(x)", "l1 -> l2(x), l2 -> l3(x)");

@@ -19,6 +19,7 @@ public.InterfaceDoc(name, files) =
     return $(name).idoc
 
 CUSTOM_LIBS[] =
+    util
     poly
     constraints
     smt

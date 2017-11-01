@@ -1,4 +1,5 @@
 S constraints
+S util
 S poly
 S test
 S smt
@@ -9,6 +10,7 @@ S preprocessors
 S main
 
 B constraints
+B util
 B poly
 B test
 B smt

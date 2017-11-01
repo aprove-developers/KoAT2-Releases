@@ -10,6 +10,7 @@ OCAMLPACKS[] =
     fpath
 
 OCAMLINCLUDES[] =
+    ../util
     ../poly
     ../constraints
     ../smt
@@ -19,6 +20,7 @@ OCAMLINCLUDES[] =
     ../parser
 
 OCAML_LIBS[] =
+    ../util/util
     ../poly/poly
     ../constraints/constraints
     ../smt/smt

@@ -12,6 +12,7 @@ OCAMLPACKS[] =
     ppx_deriving.show
 
 OCAMLINCLUDES[] =
+    ../util 
     ../poly 
     ../constraints
     ../smt
@@ -21,6 +22,7 @@ OCAMLINCLUDES[] =
     ../preprocessors
 
 OCAML_LIBS[] =
+    ../util/util
     ../poly/poly
     ../constraints/constraints
     ../smt/smt
