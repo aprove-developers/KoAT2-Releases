@@ -67,18 +67,20 @@ let rec simplify = function
   (* Simplify terms with min head *)
   | Min (b1, b2) ->
      (* Optimization if we have structural equality *)
+     let (b1, b2) = (simplify b1, simplify b2) in
      if equal b1 b2 then
        b1
      else
-       Min (simplify b1, simplify b2)
+       Min (b1, b2)
 
   (* Simplify terms with max head *)
   | Max (b1, b2) ->
      (* Optimization if we have structural equality *)
+     let (b1, b2) = (simplify b1, simplify b2) in
      if equal b1 b2 then
        b1
      else
-       Max (simplify b1, simplify b2)
+       Max (b1, b2)
                 
 type outer_t = t
 module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
@@ -156,10 +158,10 @@ let min b1 b2 =
   simplify (Min (b1, b2))
 
 let maximum =
-  List.fold_left max (minus_infinity)
+  Enum.fold max (minus_infinity)
   
 let minimum =
-  List.fold_left min infinity
+  Enum.fold min infinity
 
 let exp value b =
   simplify (Pow (value, b))

@@ -19,8 +19,8 @@ let incoming_bound (kind: kind)
     let substitute_with_prevalues t' = Bound.substitute_f (Approximation.sizebound kind appr t') local_sizebound in
     t
     |> Program.pre program
-    |> TransitionSet.to_list
-    |> List.map substitute_with_prevalues
+    |> TransitionSet.enum
+    |> Enum.map substitute_with_prevalues
     |> match kind with
         | `Lower -> Bound.minimum
         | `Upper -> Bound.maximum

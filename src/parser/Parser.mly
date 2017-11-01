@@ -222,9 +222,9 @@ bound :
 	|	p = polynomial
 		{ Bound.of_poly p }
 	|	MAX LBRACE max = separated_list(COMMA, bound) RBRACE
-		{ Bound.maximum max }
+		{ Bound.maximum (BatList.enum max) }
 	|	MIN LBRACE min = separated_list(COMMA, bound) RBRACE
-		{ Bound.minimum min }
+		{ Bound.minimum (BatList.enum min) }
 	|	NEG b = bound
 		{ Bound.neg b }
 	|	v = UINT; EXP; b = bound

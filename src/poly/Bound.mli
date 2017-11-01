@@ -23,8 +23,8 @@ val of_var_string : string -> t
   
 val min : t -> t -> t
 val max : t -> t -> t
-val minimum : t list -> t
-val maximum : t list -> t
+val minimum : t Enum.t -> t
+val maximum : t Enum.t -> t
 val infinity : t
 val minus_infinity : t
 val exp : value -> t -> t
