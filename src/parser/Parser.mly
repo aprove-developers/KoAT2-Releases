@@ -230,9 +230,9 @@ bound :
 	|	v = UINT; EXP; b = bound
 		{ Bound.exp (OurInt.of_int v) b }
 	|	SUM LBRACE sum = separated_list(COMMA, bound) RBRACE
-		{ Bound.sum sum }
+		{ Bound.sum (BatList.enum sum) }
 	|	PRODUCT LBRACE product = separated_list(COMMA, bound) RBRACE
-		{ Bound.product product }
+		{ Bound.product (BatList.enum product) }
 	|	INFINITY
 		{ Bound.infinity } ;
 

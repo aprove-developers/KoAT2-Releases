@@ -32,7 +32,8 @@ let abs_factor lsb =
 let as_bound = function
   | Some lsb ->
      lsb.vars
-     |> VarSet.map_to_list Bound.of_abs_var
+     |> VarSet.enum
+     |> Enum.map Bound.of_abs_var
      |> fun var_list -> Bound.(of_int lsb.factor * (of_int lsb.constant + sum var_list))
   | None -> Bound.infinity
 
@@ -53,7 +54,7 @@ let as_formula in_v lsb =
   |> List.n_cartesian_product
   |> List.map (fun var_list ->
          let v = Polynomial.of_var in_v in
-         Polynomial.(Formula.Infix.(v <= of_int lsb.factor * (of_int lsb.constant + sum var_list))))
+         Polynomial.(Formula.Infix.(v <= of_int lsb.factor * (of_int lsb.constant + sum (List.enum var_list)))))
   |> Formula.any
 
 let is_bounded_with var formula template_bound =

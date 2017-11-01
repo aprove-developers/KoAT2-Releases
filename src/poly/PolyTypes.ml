@@ -165,8 +165,8 @@ module type BaseMath =
 module type Math =
   sig
     include BaseMath
-    val sum : t list -> t
-    val product : t list -> t
+    val sum : t Enum.t -> t
+    val product : t Enum.t -> t
     val sub : t -> t -> t
     val (+) : t -> t -> t
     val (-) : t -> t -> t
@@ -179,8 +179,8 @@ module type Math =
 module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
   struct
     include Base
-    let sum = List.fold_left add zero
-    let product = List.fold_left mul one
+    let sum = Enum.fold add zero
+    let product = Enum.fold mul one
     let sub t1 t2 = add t1 (neg t2)
     let (+) = add
     let (-) = sub
