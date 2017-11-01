@@ -10,11 +10,12 @@ type value = OurInt.t
 (* Minus Infinity is max of an empty list *)
 (* Infinity is min of an empty list *)
 type t =
+  | Infinity
   | Var of Var.t
   | Abs of Var.t
   | Const of OurInt.t
-  | Max of t list
-  | Min of t list
+  | Max of t * t
+  | Min of t * t
   | Neg of t
   | Pow of OurInt.t * t
   | Sum of t * t
@@ -27,6 +28,8 @@ let of_abs_var v = Abs v
 let of_constant c = Const c
 
 let rec simplify = function
+  | Infinity -> Infinity
+
   | Var v -> Var v
 
   | Abs v -> Abs v
@@ -35,8 +38,8 @@ let rec simplify = function
 
   (* Simplify terms with negation head *)
   | Neg (Const c) -> Const (OurInt.neg c)
-  | Neg (Max bounds) -> simplify (Min (List.map (fun b -> Neg b) bounds))
-  | Neg (Min bounds) -> simplify (Max (List.map (fun b -> Neg b) bounds))
+  | Neg (Max (b1, b2)) -> simplify (Min (Neg b1, Neg b2))
+  | Neg (Min (b1, b2)) -> simplify (Max (Neg b1, Neg b2))
   | Neg (Sum (b1, b2)) -> simplify (Sum (Neg b1, Neg b2))
   | Neg (Neg b) -> simplify b
   | Neg (Product (b1, b2)) -> simplify (Product (Neg b1, b2))
@@ -62,16 +65,20 @@ let rec simplify = function
      else Pow (value, simplify bound)
 
   (* Simplify terms with min head *)
-  | Min [] -> Min []
-  | Min [b] -> simplify b
-  | Min (Min bounds :: bs) -> simplify (Min (List.append bounds bs))
-  | Min bounds -> Min (List.map simplify bounds)
+  | Min (b1, b2) ->
+     (* Optimization if we have structural equality *)
+     if equal b1 b2 then
+       b1
+     else
+       Min (simplify b1, simplify b2)
 
   (* Simplify terms with max head *)
-  | Max [] -> Max []
-  | Max [b] -> simplify b
-  | Max (Max bounds :: bs) -> simplify (Max (List.append bounds bs))
-  | Max bounds -> Max (List.map simplify bounds)
+  | Max (b1, b2) ->
+     (* Optimization if we have structural equality *)
+     if equal b1 b2 then
+       b1
+     else
+       Max (simplify b1, simplify b2)
                 
 type outer_t = t
 module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
@@ -108,18 +115,19 @@ let to_int poly = raise (Failure "TODO: Not possible")
                 
 let of_var_string str = Var (Var.of_string str)
 
-let infinity = Min []
+let infinity = Infinity
 
-let minus_infinity = Max []
+let minus_infinity = Neg Infinity
 
 let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~abs ~inf p =
   let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~abs ~inf in
   match p with
+  | Infinity -> inf
   | Var v -> var v
   | Abs v -> abs v
   | Const c -> const c
-  | Max bounds -> List.fold_left (fun b bound -> max b (fold_ bound)) (neg inf) bounds
-  | Min bounds -> List.fold_left (fun b bound -> min b (fold_ bound)) inf bounds
+  | Max (b1, b2) -> max (fold_ b1) (fold_ b2)
+  | Min (b1, b2) -> min (fold_ b1) (fold_ b2)
   | Neg b -> neg (fold_ b)
   | Pow (value, n) -> exp value (fold_ n)
   | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
@@ -131,10 +139,10 @@ module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t)
            
     let (=~=) = equal
               
-    let rec (>) b1 b2 = match (b1, b2) with
-      | (_, Max []) -> Some false
-      | (Max [], _) -> Some true
-      | (Max bounds1, Max bounds2) -> Some (List.exists (fun b1 -> List.for_all (fun b2 -> Option.default false (b1 > b2)) bounds2) bounds1)
+    let rec (>) b1 b2 =
+      match (b1, b2) with
+      | (_, Infinity) -> Some false
+      | (Infinity, _) -> Some true
       (* TODO Add more cases *)
       | (b1, b2) -> None
                   
@@ -142,24 +150,16 @@ module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t)
 include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
 let max b1 b2 =
-  (* Optimization if we have structural equality *)
-  if equal b1 b2 then
-    b1
-  else
-    simplify (Max [b1; b2])
+  simplify (Max (b1, b2))
 
 let min b1 b2 =
-  (* Optimization if we have structural equality *)
-  if equal b1 b2 then
-    b1
-  else
-    simplify (Min [b1; b2])
+  simplify (Min (b1, b2))
 
-let maximum bounds =
-  simplify (Max bounds)
+let maximum =
+  List.fold_left max (minus_infinity)
   
-let minimum bounds =
-  simplify (Min bounds)
+let minimum =
+  List.fold_left min infinity
 
 let exp value b =
   simplify (Pow (value, b))
@@ -190,10 +190,9 @@ let rec to_string = function
   | Var v -> Var.to_string v
   | Abs v -> "|" ^ Var.to_string v ^ "|"
   | Const c -> OurInt.to_string c
-  | Max [] -> "inf"
-  | Min [] -> "neg inf"
-  | Max bounds -> "max {" ^ String.concat ", " (List.map to_string bounds) ^ "}"
-  | Min bounds -> "min {" ^ String.concat ", " (List.map to_string bounds) ^ "}"
+  | Infinity -> "inf"
+  | Max (b1, b2) -> "max {" ^ to_string b1 ^ ", " ^ to_string b1 ^ "}"
+  | Min (b1, b2) -> "min {" ^ to_string b1 ^ ", " ^ to_string b1 ^ "}"
   | Neg b -> "neg " ^ to_string b
   | Pow (v,b) -> "(" ^ OurInt.to_string v ^ "**" ^ to_string b ^ ")"
   | Sum (b1, Sum (b2, b3)) -> "(" ^ to_string b1 ^ "+" ^ to_string b2 ^ "+" ^ to_string b3 ^ ")"
@@ -204,11 +203,12 @@ let rec to_string = function
   | Product (b1, b2) -> "(" ^ to_string b1 ^ "*" ^ to_string b2 ^ ")"
 
 let rec vars = function
+  | Infinity -> VarSet.empty
   | Var v -> VarSet.singleton v
   | Abs v -> VarSet.singleton v
   | Const _ -> VarSet.empty
-  | Max bounds -> List.fold_left VarSet.union VarSet.empty (List.map vars bounds)
-  | Min bounds -> List.fold_left VarSet.union VarSet.empty (List.map vars bounds)
+  | Max (b1, b2) -> VarSet.union (vars b1) (vars b2)
+  | Min (b1, b2) -> VarSet.union (vars b1) (vars b2)
   | Neg b -> vars b
   | Pow (v,b) -> vars b
   | Sum (b1, b2) -> VarSet.union (vars b1) (vars b2)
