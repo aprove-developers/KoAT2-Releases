@@ -166,12 +166,13 @@ let rvg program =
       |> CartesianSet.cartesian_product (pre program post_transition)
       |> CartesianSet.Product.to_list
       |> List.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
-      |> Set.of_list
+      |> List.enum
     in
     vars program
-    |> VarSet.map_to_set (pre_nodes post_transition)
-    |> (fun set -> Set.fold Set.union set Set.empty)
-    |> (fun set -> Set.fold (fun (pre_transition,pre_var,post_var) rvg -> RVG.add_edge rvg (pre_transition,pre_var) (post_transition,post_var)) set rvg_with_vertices)
+    |> VarSet.enum
+    |> Enum.map (pre_nodes post_transition)
+    |> Enum.flatten
+    |> Enum.fold (fun rvg (pre_transition,pre_var,post_var) -> RVG.add_edge rvg (pre_transition,pre_var) (post_transition,post_var)) rvg_with_vertices
   in
   TransitionGraph.fold_edges_e add_transition program.graph RVG.empty
   
