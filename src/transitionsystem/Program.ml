@@ -72,7 +72,7 @@ module RVG =
   struct
     include Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
-    type scc = RV.t list
+    type scc = RV.t Enum.t
 
     let pre rvg rv =
       pred rvg rv
@@ -81,23 +81,17 @@ module RVG =
     (* TODO Optimizable *)
     let entry_points rvg scc =
       scc
-      |> List.enum
       |> Enum.map (pre rvg)
       |> Enum.flatten
       |> Enum.uniq_by RV.equal
-      |> Enum.filter (fun rv -> List.mem_cmp RV.compare rv scc)
+      |> Util.intersection RV.equal scc
 
     let transitions scc =
       scc
-      |> List.enum
       |> Enum.map RV.transition
       |> Enum.uniq_by Transition.equal
   end  
    
-module CartesianSet = Set.Make2(Transition)(Var)
-
-type transition_set = Set.Make(Transition).t
-
 type t = {
     graph: TransitionGraph.t;
     vars: Var.t list;
@@ -154,7 +148,7 @@ let add_vertices_to_rvg vertices rvg =
 let graph g = g.graph
             
 let pre program (l,t,l') =
-  TransitionSet.of_list (TransitionGraph.pred_e (graph program) l)
+  List.enum (TransitionGraph.pred_e (graph program) l)
 
 let rvg program =
   let add_transition (post_transition: Transition.t) (rvg: RVG.t): RVG.t =
@@ -163,10 +157,9 @@ let rvg program =
       LocalSizeBound.sizebound_local `Upper (Transition.label post_transition) post_var
       |> LocalSizeBound.as_bound
       |> Bound.vars
-      |> CartesianSet.cartesian_product (pre program post_transition)
-      |> CartesianSet.Product.to_list
-      |> List.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
-      |> List.enum
+      |> VarSet.enum
+      |> Enum.cartesian_product (pre program post_transition)
+      |> Enum.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
     in
     vars program
     |> VarSet.enum

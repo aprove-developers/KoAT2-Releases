@@ -10,6 +10,7 @@ OCAMLPACKS[] =
     ppx_deriving.show
 
 OCAMLINCLUDES[] =
+    ../util
     ../poly
     ../constraints
     ../smt
@@ -18,6 +19,7 @@ NATIVE_ENABLED = true
 BYTE_ENABLED = true
 
 OCAML_LIBS[] =
+    ../util/util
     ../poly/poly
     ../constraints/constraints
     ../smt/smt

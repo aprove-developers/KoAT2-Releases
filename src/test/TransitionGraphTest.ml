@@ -30,7 +30,7 @@ let suite =
         "pre(t)" >:: (fun _ ->
           let program = Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat" in
           let transition = Program.TransitionGraph.find_edge (Program.graph program) (Program.Location.of_string "l1") (Program.Location.of_string "l2") in
-          assert_equal_int 2 (TransitionSet.cardinal (Program.pre program transition))
+          assert_equal_int 2 (Enum.count (Program.pre program transition))
         )
       );
       (

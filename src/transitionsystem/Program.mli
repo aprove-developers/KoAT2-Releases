@@ -53,7 +53,7 @@ module RVG :
 sig
   include module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
-  type scc = RV.t list
+  type scc = RV.t Enum.t
 
   val pre : t -> RV.t -> RV.t Enum.t
 
@@ -65,8 +65,6 @@ sig
   val transitions : scc -> Transition.t Enum.t
     
 end
-
-type transition_set = Set.Make(Transition).t
 
 type t
 
@@ -94,7 +92,7 @@ val graph : t -> TransitionGraph.t
 
 (** Returns a set of all transitions which occur directly before the given transition in the graph. 
        Corresponds to pre(t). *)
-val pre : t -> Transition.t -> transition_set
+val pre : t -> Transition.t -> Transition.t Enum.t
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program. 
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
