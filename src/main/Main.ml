@@ -45,14 +45,12 @@ let run (params: main_params) =
   in
   (Readers.read_file params.input, Approximation.empty 10 10) (* TODO Better values *)
   |> params.preprocessing_strategy params.preprocessors
-  |> (fun (program, appr) ->
+  |> tap (fun (program, appr) ->
     if params.print_system then
-      Program.print_system ~outdir:output_dir ~file:input_filename program;
-    (program, appr))
-  |> (fun (program, appr) ->
+      Program.print_system ~outdir:output_dir ~file:input_filename program)
+  |> tap (fun (program, appr) ->
     if params.print_rvg then
-      Program.print_rvg ~outdir:output_dir ~file:input_filename program;
-    (program, appr))
+      Program.print_rvg ~outdir:output_dir ~file:input_filename program)
   |> fun (program, appr) ->
      if not params.no_boundsearch then
        (program, appr)
