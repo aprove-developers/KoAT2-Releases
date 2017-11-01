@@ -1,0 +1,20 @@
+USE_OCAMLFIND = true
+
+OCAMLPACKS[] =
+    batteries
+
+# Include all .ml files
+FILES[] = $(removesuffix .ml, $(glob *.ml))
+
+LIB = util
+
+OCamlLibrary($(LIB), $(FILES))
+InterfaceDoc($(LIB), $(FILES))
+
+clean:
+  rm -f \
+     *.omc \
+     *.idoc \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
+     $(LIB).a $(LIB).cmxa $(LIB).cma \
+     *~
