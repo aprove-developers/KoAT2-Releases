@@ -1,4 +1,5 @@
 USE_OCAMLFIND = true
+OCAMLOPTFLAGS += -g -p
 
 OCAMLPACKS[] =
     batteries
@@ -16,8 +17,6 @@ OCAMLINCLUDES[] =
     ../bounds
     ../preprocessors
     ../parser
-
-OCAMLFLAGS += -thread
 
 OCAML_LIBS[] =
     ../poly/poly

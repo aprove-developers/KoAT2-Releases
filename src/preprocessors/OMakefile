@@ -15,8 +15,6 @@ OCAMLINCLUDES[] =
     ../bounds
     ../smt
 
-OCAMLFLAGS += -thread
-
 OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints

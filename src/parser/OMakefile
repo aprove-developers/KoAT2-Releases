@@ -3,9 +3,6 @@ USE_OCAMLFIND = true
 MENHIR_ENABLED = true
 MENHIR_FLAGS += --infer
 
-NATIVE_ENABLED = true
-BYTE_ENABLED = true
-
 OCAMLPACKS[] =
     batteries
 

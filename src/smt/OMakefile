@@ -8,9 +8,6 @@ OCAMLINCLUDES[] =
     ../poly 
     ../constraints
 
-NATIVE_ENABLED = true
-BYTE_ENABLED = true
-
 OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints

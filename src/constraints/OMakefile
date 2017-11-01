@@ -9,11 +9,6 @@ OCAMLPACKS[] =
 OCAMLINCLUDES[] =
     ../poly
 
-OCAMLFLAGS += -thread
-
-NATIVE_ENABLED = true
-BYTE_ENABLED = true
-
 OCAML_LIBS[] =
     ../poly/poly
 
