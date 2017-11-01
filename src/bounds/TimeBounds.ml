@@ -39,6 +39,10 @@ let compute_timebound (appr: Approximation.t) (graph: Program.TransitionGraph.t)
     
 let improve program appr =
   let prf = RankingFunction.find program appr in
-  RankingFunction.strictly_decreasing prf
-  |> List.enum
-  |> Enum.fold (fun appr t -> Approximation.add_timebound (compute_timebound appr (Program.graph program) prf t) t appr) appr
+  let strictly_decreasing = List.enum (RankingFunction.strictly_decreasing prf) in
+  if Enum.count strictly_decreasing = 0 then
+    MaybeChanged.same appr
+  else
+    strictly_decreasing
+    |> Enum.fold (fun appr t -> Approximation.add_timebound (compute_timebound appr (Program.graph program) prf t) t appr) appr
+    |> MaybeChanged.changed

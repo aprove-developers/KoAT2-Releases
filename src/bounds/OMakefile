@@ -8,12 +8,14 @@ OCAMLPACKS[] =
     ppx_deriving.ord
 
 OCAMLINCLUDES[] =
+    ../util
     ../poly
     ../constraints
     ../transitionsystem
     ../smt
 
 OCAML_LIBS[] =
+    ../util/util
     ../poly/poly
     ../constraints/constraints
     ../transitionsystem/transitionsystem
