@@ -141,11 +141,19 @@ module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t)
   end
 include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
-let max b1 b2 = 
-  simplify (Max [b1; b2])
+let max b1 b2 =
+  (* Optimization if we have structural equality *)
+  if equal b1 b2 then
+    b1
+  else
+    simplify (Max [b1; b2])
 
 let min b1 b2 =
-  simplify (Min [b1; b2])
+  (* Optimization if we have structural equality *)
+  if equal b1 b2 then
+    b1
+  else
+    simplify (Min [b1; b2])
 
 let maximum bounds =
   simplify (Max bounds)
