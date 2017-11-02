@@ -184,10 +184,10 @@ let improve_scc (program: Program.t)
                 (scc: Program.RV.t list)
     : Approximation.t  =
   match scc with
-  | [rv] ->
+  | [((l,t,l'),v)] when not (Program.Location.equal l l') ->
      appr
-     |> fun appr -> improve_trivial_scc `Upper program appr rv
-     |> fun appr -> improve_trivial_scc `Lower program appr rv                  
+     |> fun appr -> improve_trivial_scc `Upper program appr ((l,t,l'),v)
+     |> fun appr -> improve_trivial_scc `Lower program appr ((l,t,l'),v)         
   | scc ->
      appr
      |> fun appr -> improve_nontrivial_scc `Upper program rvg appr (List.enum scc)
@@ -197,7 +197,7 @@ let improve program appr =
   let execute () =
     let module C = Graph.Components.Make(Program.RVG) in
     let rvg = Program.rvg program in
-    List.fold_left (fun appr scc -> improve_scc program rvg appr scc) appr (C.scc_list rvg)
+    List.fold_left (fun appr scc -> improve_scc program rvg appr scc) appr (List.rev (C.scc_list rvg))
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "improve size bounds", [])
                   execute
