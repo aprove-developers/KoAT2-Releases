@@ -43,6 +43,9 @@ module Time =
     let to_string time =
       let output = IO.output_string () in
       Map.print
+        ~first:("  ")
+        ~last:"\n"
+        ~sep:"\n  "
         (fun output transition -> IO.nwrite output (Program.Transition.to_src_target_string transition))
         (fun output bound -> IO.nwrite output (Bound.to_string bound))
         output time;  
@@ -95,13 +98,22 @@ module Size =
     let add_all kind bound scc map =
       List.iter (fun (t,v) -> ignore (add kind bound t v map)) scc;
       map
+
+    let print_all_of_kind output kind size =
+      size
+      |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
+      |> Map.print
+           ~first:(kind_to_string kind ^ ":\n  ")
+           ~last:"\n"
+           ~sep:"\n  "
+           (fun output (_, transition, var) -> IO.nwrite output (Program.Transition.to_src_target_string transition ^ ", " ^ Var.to_string var))
+           (fun output bound -> IO.nwrite output (Bound.to_string bound))
+           output
       
     let to_string size =
       let output = IO.output_string () in
-      Map.print
-        (fun output (kind, transition, var) -> IO.nwrite output (kind_to_string kind ^ ": (" ^ Program.Transition.to_src_target_string transition ^ ", " ^ Var.to_string var ^ ")"))
-        (fun output bound -> IO.nwrite output (Bound.to_string bound))
-        output size;
+      print_all_of_kind output `Lower size;
+      print_all_of_kind output `Upper size;
       IO.close_out output
 
     (** Very slow equality, only for testing purposes *)
@@ -141,8 +153,8 @@ let add_sizebounds kind bound scc = Tuple2.map2 (Size.add_all kind bound scc)
 let to_string program (time, size) =
   let output = IO.output_string () in
   IO.nwrite output "Timebounds: \n";
-  IO.nwrite output ("Overall timebound: " ^ Bound.to_string (Time.sum time program) ^ "\n");
+  IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (Time.sum time program) ^ "\n");
   time |> Time.to_string |> IO.nwrite output;
-  IO.nwrite output "\nSizebounds: ";
+  IO.nwrite output "\nSizebounds:\n";
   size |> Size.to_string |> IO.nwrite output;
   IO.close_out output
