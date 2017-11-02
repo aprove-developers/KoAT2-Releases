@@ -34,11 +34,11 @@ module Transition =
        since it should not occur very often. *)
     let hash (l,_,l') = Hashtbl.hash (Location.to_string l ^ Location.to_string l')
 
-    let to_src_target_string (l,_,l') =
+    let to_id_string (l,_,l') =
       Location.to_string l ^ "->" ^ Location.to_string l'
 
     let to_string (l,t,l') =
-       to_src_target_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
+       to_id_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
   end
 module TransitionSet = Set.Make(Transition)
 
@@ -61,18 +61,32 @@ module TransitionGraph =
 module RV =
   struct
     type t = Transition.t * Var.t [@@deriving eq, ord]
-    let hash (t,v) = Hashtbl.hash (Transition.to_string t ^ Var.to_string v)
-    let transition (t,v) = t
-    let variable (t,v) = v
-    let to_string ((l,t,l'),v) = Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Upper t v))) ^ " >= " ^
-                                   "|" ^ Location.to_string l ^ " -> " ^ Location.to_string l' ^ "," ^ Var.to_string v ^ "|"
-                                   ^ " >= " ^ Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Lower t v)))
+           
+    let hash (t,v) =
+      Hashtbl.hash (Transition.to_string t ^ Var.to_string v)
+                   
+    let transition (t,_) = t
+                         
+    let variable (_,v) = v
+                       
+    let to_id_string (t,v) =
+      "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
+
+    let to_string ((l,t,l'),v) =
+      Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Upper t v))) ^ " >= " ^
+        to_id_string ((l,t,l'),v) ^ " >= " ^
+          Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Lower t v)))
   end
 module RVG =
   struct
     include Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
     type scc = RV.t list
+
+    let rvs_to_id_string rvs =
+      rvs
+      |> List.map RV.to_id_string
+      |> String.concat ","
 
     let rvs_to_string rvs =
       rvs

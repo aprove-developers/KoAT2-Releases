@@ -4,7 +4,7 @@ module TransitionSet = Set.Make(Program.Transition)
              
 let logger = Logger.make_log "size"
 
-type kind = [ `Lower | `Upper ]
+type kind = [ `Lower | `Upper ] [@@deriving show]
            
 (* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
        Corresponds to 'SizeBounds for trivial SCCs':
@@ -24,9 +24,25 @@ let incoming_bound (kind: kind)
         | `Lower -> Bound.minimum
         | `Upper -> Bound.maximum
   in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "compute highest incoming bound", ["lsb", Bound.to_string local_sizebound; "transition", Program.Transition.to_string t])
+                  (fun () -> "compute highest incoming bound", ["lsb", Bound.to_string local_sizebound; "transition", Program.Transition.to_id_string t])
                   ~result:Bound.to_string
                   execute
+
+let compute_trivial_bound (kind: kind)
+                          (program: Program.t)
+                          (appr: Approximation.t)
+                          (lsb: Bound.t)
+                          (t: Program.Transition.t)
+    : Bound.t =
+  let execute () =
+    if Program.is_initial program t then
+      lsb
+    else incoming_bound kind program appr lsb t
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "compute trivial bound", ["lsb", Bound.to_string lsb;
+                                                          "transition", Program.Transition.to_id_string t])
+                     ~result:Bound.to_string
+                     execute
 
 (* Improves a trivial scc. That is an scc which consists only of one result variable.
        Corresponds to 'SizeBounds for trivial SCCs'. *)
@@ -37,13 +53,11 @@ let improve_trivial_scc (kind: kind)
     : Approximation.t =
   let execute () =
     let (local_sizebound: Bound.t) = LocalSizeBound.(as_bound (sizebound_local kind (Program.Transition.label t) v)) in
-    let newbound =
-      if Program.is_initial program t then
-        local_sizebound
-      else incoming_bound kind program appr local_sizebound t
-    in Approximation.add_sizebound kind newbound t v appr
+    let new_bound = compute_trivial_bound kind program appr local_sizebound t in
+    Approximation.add_sizebound kind new_bound t v appr
   in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "improve trivial scc", ["rv", Program.RV.to_string (t,v)])
+                     (fun () -> "improve trivial scc", ["kind", show_kind kind;
+                                                        "rv", Program.RV.to_id_string (t,v)])
                   execute
 
 (* Computes for each transition max{s_alpha | alpha in C_t} and multiplies the results. *)
@@ -59,7 +73,7 @@ let extreme_scaling_factor (kind: kind)
     |> Util.max_option (>)
     |? 1
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "extreme scaling factor", [])
+                     (fun () -> "extreme scaling factor", ["ct", Program.RVG.rvs_to_id_string ct])
                      ~result:Int.to_string
                      execute
 
@@ -86,7 +100,7 @@ let extreme_affecting_scc_variables (kind: kind) (* TODO Relevant for only posit
     |> Util.max_option (>)
     |? 1
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "extreme affecting scc variables", [])
+                     (fun () -> "extreme affecting scc variables", ["scc", Program.RVG.rvs_to_id_string scc])
                      ~result:Int.to_string
                      execute
 
@@ -102,7 +116,7 @@ let transition_scaling_factor (kind: kind)
                                 extreme_affecting_scc_variables kind rvg scc ct))
               (Approximation.timebound appr transition) 
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "transition scaling factor", ["ct", Program.RVG.rvs_to_string ct])
+                     (fun () -> "transition scaling factor", ["ct", Program.RVG.rvs_to_id_string ct; "scc", Program.RVG.rvs_to_id_string scc])
                      ~result:Bound.to_string
                      execute
   
@@ -120,7 +134,7 @@ let overall_scaling_factor (kind: kind)
     |> Enum.map (transition_scaling_factor kind rvg appr scc)
     |> Bound.product
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "overall scaling factor", [])
+                     (fun () -> "overall scaling factor", ["scc", Program.RVG.rvs_to_id_string scc])
                      ~result:Bound.to_string
                      execute
 
@@ -146,9 +160,10 @@ let incoming_vars_effect (kind: kind)
          )
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "incoming vars effect", ["vars", VarSet.to_string vars;
-                                                         "transition", Program.Transition.to_string transition;
-                                                         "alpha", Program.RV.to_string alpha])
+                     (fun () -> "incoming vars effect", ["scc", Program.RVG.rvs_to_id_string scc;
+                                                         "vars", VarSet.to_string vars;
+                                                         "transition", Program.Transition.to_id_string transition;
+                                                         "alpha", Program.RV.to_id_string alpha])
                      ~result:Bound.to_string
                      execute
 
@@ -168,8 +183,9 @@ let transition_effect (kind: kind)
          )
     |> Bound.maximum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "transition effect", ["ct", Program.RVG.rvs_to_string (List.of_enum ct);
-                                                         "transition", Program.Transition.to_string transition])
+                     (fun () -> "transition effect", ["scc", Program.RVG.rvs_to_id_string scc;
+                                                      "ct", Program.RVG.rvs_to_id_string (List.of_enum ct);
+                                                      "transition", Program.Transition.to_id_string transition])
                      ~result:Bound.to_string
                      execute
 
@@ -188,7 +204,7 @@ let effects (kind: kind)
          )
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "effects", [])
+                     (fun () -> "effects", ["scc", Program.RVG.rvs_to_id_string scc])
                      ~result:Bound.to_string
                      execute
 
@@ -216,8 +232,9 @@ let improve_nontrivial_scc (kind: kind)
       Approximation.add_sizebounds kind new_bound scc appr
     else appr
   in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "improve nontrivial scc", ["scc", Program.RVG.rvs_to_string scc])
-                  execute
+                     (fun () -> "improve nontrivial scc", ["kind", show_kind kind;
+                                                           "scc", Program.RVG.rvs_to_id_string scc])
+                     execute
          
 (* Improves a whole scc. *)
 let improve_scc (program: Program.t)

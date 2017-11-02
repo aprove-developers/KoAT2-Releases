@@ -11,7 +11,8 @@ let transitions_to (graph: Program.TransitionGraph.t) (prf_transitions: Program.
     |> fun transitions -> Program.TransitionSet.(diff transitions (of_list prf_transitions))
     |> Program.TransitionSet.enum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "transitions to", ["location", Program.Location.to_string location])
+                     (fun () -> "transitions to", ["location", Program.Location.to_string location;
+                                                   "prf_transitions", String.concat "," (List.map Program.Transition.to_id_string prf_transitions)])
                      execute
 
 (** All entry locations of the given transitions.
@@ -24,13 +25,13 @@ let entry_locations (graph: Program.TransitionGraph.t) (prf_transitions: Program
     |> Enum.uniq_by Program.Location.equal
     |> Enum.filter (fun location -> not Enum.(is_empty (transitions_to graph prf_transitions location)))
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "entry locations", [])
+                     (fun () -> "entry locations", ["prf_transitions", String.concat "," (List.map Program.Transition.to_id_string prf_transitions)])
                      execute
 
-let apply (appr: Approximation.t) (polynomial: Polynomial.t) (transition: Program.Transition.t): Bound.t =
+let apply (appr: Approximation.t) (rank: Polynomial.t) (transition: Program.Transition.t): Bound.t =
   let execute () =
     let (pol_plus, pol_minus) =
-      Polynomial.separate_by_sign polynomial
+      Polynomial.separate_by_sign rank
       |> Tuple2.mapn Bound.of_poly
     in
     let insert_sizebounds kind bound =
@@ -38,7 +39,8 @@ let apply (appr: Approximation.t) (polynomial: Polynomial.t) (transition: Progra
     in
     Bound.(insert_sizebounds `Upper pol_plus - insert_sizebounds `Lower pol_minus)
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "apply to prf", ["transition", Program.Transition.to_string transition])
+                     (fun () -> "apply to prf", ["rank", Polynomial.to_string rank;
+                                                 "transition", Program.Transition.to_id_string transition])
                      ~result:Bound.to_string
                      execute
   
@@ -53,7 +55,7 @@ let compute_timebound (appr: Approximation.t) (graph: Program.TransitionGraph.t)
     |> Enum.map (fun (location,transition) -> Bound.(Approximation.timebound appr transition * max zero (apply appr (RankingFunction.rank prf location) transition)))
     |> Enum.fold Bound.add Bound.zero
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute time bound", ["transition", Program.Transition.to_string transition])
+                     (fun () -> "compute time bound", ["transition", Program.Transition.to_id_string transition])
                      ~result:Bound.to_string
                      execute
     

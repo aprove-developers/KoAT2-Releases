@@ -21,7 +21,7 @@ sig
   val equal : t -> t -> bool
   val compare : t -> t -> int
   val hash : t -> int
-  val to_src_target_string : t -> string
+  val to_id_string : t -> string
   val to_string : t -> string
   val src : t -> Location.t
   val label : t -> TransitionLabel.t
@@ -43,6 +43,7 @@ sig
   type t = Transition.t * Var.t
   val equal : t -> t -> bool
   val compare : t -> t -> int
+  val to_id_string : t -> string
   val to_string : t -> string
   val hash : t -> int
   val transition : t -> Transition.t
@@ -52,6 +53,8 @@ end
 module RVG :
 sig
   include module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+
+  val rvs_to_id_string : RV.t list -> string
 
   val rvs_to_string : RV.t list -> string
 

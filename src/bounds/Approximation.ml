@@ -1,10 +1,6 @@
 open Batteries
 
-type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
-
-let kind_to_string = function
-  | `Upper -> "Upper"
-  | `Lower -> "Lower"
+type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
 module Time =
   struct
@@ -46,7 +42,7 @@ module Time =
         ~first:("  ")
         ~last:"\n"
         ~sep:"\n  "
-        (fun output transition -> IO.nwrite output (Program.Transition.to_src_target_string transition))
+        (fun output transition -> IO.nwrite output (Program.Transition.to_id_string transition))
         (fun output bound -> IO.nwrite output (Bound.to_string bound))
         output time;  
       IO.close_out output
@@ -68,7 +64,7 @@ module Size =
           struct
             type t = kind * Program.Transition.t * Var.t [@@deriving eq]
             let hash (kind, t, v) =
-              Hashtbl.hash (kind_to_string kind
+              Hashtbl.hash (show_kind kind
                             ^ Program.(Location.to_string (Transition.src t) ^ Location.to_string (Transition.target t))
                             ^ Var.to_string v)
           end
@@ -103,10 +99,10 @@ module Size =
       size
       |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
       |> Map.print
-           ~first:(kind_to_string kind ^ ":\n  ")
+           ~first:(show_kind kind ^ ":\n  ")
            ~last:"\n"
            ~sep:"\n  "
-           (fun output (_, transition, var) -> IO.nwrite output (Program.Transition.to_src_target_string transition ^ ", " ^ Var.to_string var))
+           (fun output (_, transition, var) -> IO.nwrite output (Program.Transition.to_id_string transition ^ ", " ^ Var.to_string var))
            (fun output bound -> IO.nwrite output (Bound.to_string bound))
            output
       
