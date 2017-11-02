@@ -7,15 +7,7 @@ let logger = Logger.make_log "size"
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
            
-(* Returns the maximum of all incoming sizebounds applicated to the local sizebound.
-       Corresponds to 'SizeBounds for trivial SCCs':
-       S'(alpha) = max{ S_l(alpha)(S(t',v_1),...,S(t',v_n)) | t' in pre(t) } *)
-let incoming_bound (kind: kind)
-                   (program: Program.t)
-                   (appr: Approximation.t)
-                   (local_sizebound: Bound.t)
-                   (t: Transition.t)
-    : Bound.t =
+let incoming_bound kind program appr local_sizebound t =
   let execute () =
     let substitute_with_prevalues t' = Bound.substitute_f (Approximation.sizebound kind appr t') local_sizebound in
     t
@@ -29,12 +21,7 @@ let incoming_bound (kind: kind)
                   ~result:Bound.to_string
                   execute
 
-let compute_trivial_bound (kind: kind)
-                          (program: Program.t)
-                          (appr: Approximation.t)
-                          (lsb: Bound.t)
-                          (t: Transition.t)
-    : Bound.t =
+let compute_trivial_bound kind program appr lsb t =
   let execute () =
     if Program.is_initial program t then
       lsb
@@ -45,13 +32,7 @@ let compute_trivial_bound (kind: kind)
                      ~result:Bound.to_string
                      execute
 
-(* Improves a trivial scc. That is an scc which consists only of one result variable.
-       Corresponds to 'SizeBounds for trivial SCCs'. *)
-let improve_trivial_scc (kind: kind)
-                        (program: Program.t)
-                        (appr: Approximation.t)
-                        (t,v)
-    : Approximation.t =
+let improve_trivial_scc kind program appr (t,v) =
   let execute () =
     let (local_sizebound: Bound.t) = LocalSizeBound.(as_bound (sizebound_local kind (Transition.label t) v)) in
     let new_bound = compute_trivial_bound kind program appr local_sizebound t in
@@ -61,10 +42,7 @@ let improve_trivial_scc (kind: kind)
                                                         "rv", RV.to_id_string (t,v)])
                   execute
 
-(* Computes for each transition max{s_alpha | alpha in C_t} and multiplies the results. *)
-let extreme_scaling_factor (kind: kind)
-                           (ct: RV.t list)
-    : int =
+let extreme_scaling_factor kind ct =
   let execute () =
     ct
     |> List.enum
@@ -78,20 +56,12 @@ let extreme_scaling_factor (kind: kind)
                      ~result:Int.to_string
                      execute
 
-let scc_variables (rvg: RVG.t)
-                  (scc: RV.t list)
-                  (rv: RV.t)
-    : Var.t Enum.t =
+let scc_variables rvg scc rv =
   RVG.pre rvg rv
   |> Util.intersection RV.equal (List.enum scc)
   |> Enum.map (fun (t,v) -> v)
   
-(* Computes for each transition max{ |pre(alpha)| intersected with C | alpha in C_t } and multiplies the results. *)
-let extreme_affecting_scc_variables (kind: kind) (* TODO Relevant for only positive and only negative effects. *)
-                                    (rvg: RVG.t)
-                                    (scc: RV.t list)
-                                    (ct: RV.t list)
-    : int =
+let extreme_affecting_scc_variables kind rvg scc ct =
   let execute () =
     ct
     |> List.enum
@@ -105,12 +75,7 @@ let extreme_affecting_scc_variables (kind: kind) (* TODO Relevant for only posit
                      ~result:Int.to_string
                      execute
 
-let transition_scaling_factor (kind: kind)
-                              (rvg: RVG.t)
-                              (appr: Approximation.t)
-                              (scc: RV.t list)
-                              (ct: RV.t list)
-    : Bound.t =
+let transition_scaling_factor kind rvg appr scc ct =
   let execute () =
     let (transition, _) = List.hd ct (* We require ct to be non-empty *) in
     Bound.exp (OurInt.of_int (extreme_scaling_factor kind ct *
@@ -121,12 +86,7 @@ let transition_scaling_factor (kind: kind)
                      ~result:Bound.to_string
                      execute
   
-
-let overall_scaling_factor (kind: kind)
-                           (rvg: RVG.t)
-                           (appr: Approximation.t)
-                           (scc: RV.t list)
-    : Bound.t =
+let overall_scaling_factor kind rvg appr scc=
   let execute () =
     scc
     |> List.enum
@@ -140,14 +100,7 @@ let overall_scaling_factor (kind: kind)
                      execute
 
 
-let incoming_vars_effect (kind: kind)
-                         (rvg: RVG.t)
-                         (appr: Approximation.t)
-                         (scc: RV.t list)
-                         (vars: VarSet.t)
-                         (transition: Transition.t)
-                         (alpha: RV.t)
-    : Bound.t =
+let incoming_vars_effect kind rvg appr scc vars transition alpha =
   let execute () =
     vars
     |> VarSet.enum
@@ -168,13 +121,7 @@ let incoming_vars_effect (kind: kind)
                      ~result:Bound.to_string
                      execute
 
-let transition_effect (kind: kind)
-                      (rvg: RVG.t)
-                      (appr: Approximation.t)
-                      (scc: RV.t list)
-                      (ct: RV.t Enum.t)
-                      (transition: Transition.t)
-    : Bound.t =
+let transition_effect kind rvg appr scc ct transition=
   let execute () =
     ct
     |> Enum.map (fun alpha -> (alpha, Option.get (LocalSizeBound.sizebound_local_rv kind alpha)))
@@ -190,11 +137,7 @@ let transition_effect (kind: kind)
                      ~result:Bound.to_string
                      execute
 
-let effects (kind: kind)
-            (rvg: RVG.t)
-            (appr: Approximation.t)
-            (scc: RV.t list)
-    : Bound.t =
+let effects kind rvg appr scc =
   let execute () =
     scc
     |> List.enum
@@ -216,12 +159,7 @@ let sign = function
   
 (* Improves a nontrivial scc. That is an scc which consists of more than one result variable.
        Corresponds to 'SizeBounds for nontrivial SCCs'. *)
-let improve_nontrivial_scc (kind: kind)
-                           (program: Program.t)
-                           (rvg: RVG.t)
-                           (appr: Approximation.t)
-                           (scc: RV.t list)
-    : Approximation.t =
+let improve_nontrivial_scc kind program rvg appr scc =
   let execute () =
     (* Only if all lsbs have a bound of our required form *)
     if scc
@@ -238,11 +176,7 @@ let improve_nontrivial_scc (kind: kind)
                      execute
          
 (* Improves a whole scc. *)
-let improve_scc (program: Program.t)
-                (rvg: RVG.t)
-                (appr: Approximation.t)
-                (scc: RV.t list)
-    : Approximation.t  =
+let improve_scc program rvg appr scc =
   match scc with
   | [((l,t,l'),v)] when not (Location.equal l l') ->
      appr
