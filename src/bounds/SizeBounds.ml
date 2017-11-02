@@ -111,11 +111,10 @@ let incoming_vars_effect (kind: kind)
     : Bound.t =
   vars
   |> VarSet.enum
-  (* TODO Performance issue *)
-  |> Enum.filter (fun v -> not (Enum.exists (Var.equal v) (scc_variables rvg (Enum.clone scc) alpha)))
+  |> Util.without Var.equal (scc_variables rvg (Enum.clone scc) alpha)
   |> Enum.map (fun v ->
-         Program.RVG.pre rvg alpha 
-         |> Enum.filter (fun rv -> not (Enum.exists (Program.RV.equal rv) (Enum.clone scc)))
+         Program.RVG.pre rvg alpha
+         |> Util.without Program.RV.equal (Enum.clone scc)
          |> Enum.filter (fun (t,v') -> Var.equal v v')
          |> Enum.map (fun (t,v) -> Approximation.sizebound kind appr t v)
          |> Bound.maximum

@@ -17,3 +17,5 @@ let intersection (p: 'a -> 'a -> bool) (enum1: 'a Enum.t) (enum2: 'a Enum.t) =
   |> Enum.filter (uncurry p)
   |> Enum.map Tuple2.first
 
+let without (p: 'a -> 'a -> bool) (toBeRemoved: 'a Enum.t) (enum: 'a Enum.t) =
+  Enum.filter (fun v -> not (Enum.exists (p v) (Enum.clone toBeRemoved))) enum
