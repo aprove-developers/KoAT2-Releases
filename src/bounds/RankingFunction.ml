@@ -14,8 +14,6 @@ type t = {
     transitions : Program.Transition.t list;
   }
   
-type transitionEnum = Program.Transition.t Enum.t
-  
 let logger = Logger.make_log "prf"  
 
 let rank f = f.pol
@@ -29,9 +27,6 @@ let square (pol1 : Polynomials.Polynomial.t) (pol2: Polynomials.Polynomial.t) = 
 
 let to_string prf = (String.concat ", " (List.map Program.Transition.to_string (strictly_decreasing prf) ))^"\n"
 
-let monotonize f =
-  raise (Failure "Not yet implemented")
-  
 (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
 let apply_farkas a_matrix b_right c_left d_right =
   let num_of_fresh = List.length b_right in
@@ -145,7 +140,7 @@ let help_boundedness (initial : bool) (table : PrfTable.parameter_table) (trans 
 
   
 (**Generates the constraints due to the non increase rule of a polynomial ranking function*)
-let get_non_increase_constraints (table : PrfTable.parameter_table) (program : Program.t) (transitions : transitionEnum) =
+let get_non_increase_constraints (table : PrfTable.parameter_table) (program : Program.t) (transitions : Program.Transition.t Enum.t) =
   let execute () =
     let variables = VarSet.elements (Program.vars program) in
     Enum.map (fun trans -> help_non_increasing (Program.is_initial program trans) table trans variables) transitions
@@ -169,11 +164,11 @@ let help_strict_oriented program table vars trans (smt,bounded) =
       else (smt,bounded)
 
 (*Given a set of transitions the pair (constr,bound) is generated. Constr is the constraint for the ranking function and bounded consists of all strictly oriented transitions *)
-let build_strict_oriented (table : PrfTable.parameter_table) (program : Program.t) (transitions:transitionEnum) (non_incr:Constraint.t) =
+let build_strict_oriented (table : PrfTable.parameter_table) (program : Program.t) (transitions: Program.Transition.t Enum.t) (non_incr: Constraint.t) =
   let vars = VarSet.elements (Program.vars program) in
   Enum.fold (fun tuple trans -> help_strict_oriented program table vars trans tuple) (non_incr,[]) transitions
 
-let ranking_function_procedure (program : Program.t) (transitions : transitionEnum) =
+let ranking_function_procedure (program : Program.t) (transitions : Program.Transition.t Enum.t) =
   let transitions_for_strict = (Enum.clone transitions) in
   let locations = Program.locations transitions in
   let (table, fresh_coeffs) = generate_ranking_template program locations in
