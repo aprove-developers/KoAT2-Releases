@@ -19,6 +19,7 @@ let suite =
       LocalSizeBoundTest.tests;
       FormulaTest.tests;
       PreprocessorTest.tests;
+      BoundTest.tests;
     ]
                      
 let () =

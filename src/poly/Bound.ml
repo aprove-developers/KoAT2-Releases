@@ -27,6 +27,41 @@ let of_abs_var v = Abs v
 
 let of_constant c = Const c
 
+let rec to_string = function
+  | Var v -> Var.to_string v
+  | Abs v -> "|" ^ Var.to_string v ^ "|"
+  | Const c -> OurInt.to_string c
+  | Infinity -> "inf"
+  | Max (b1, b2) -> "max {" ^ to_string b1 ^ ", " ^ to_string b1 ^ "}"
+  | Min (b1, b2) -> "min {" ^ to_string b1 ^ ", " ^ to_string b1 ^ "}"
+  | Neg b -> "neg " ^ to_string b
+  | Pow (v,b) -> "(" ^ OurInt.to_string v ^ "**" ^ to_string b ^ ")"
+  | Sum (b1, Sum (b2, b3)) -> "(" ^ to_string b1 ^ "+" ^ to_string b2 ^ "+" ^ to_string b3 ^ ")"
+  | Sum (Sum (b1, b2), b3) -> "(" ^ to_string b1 ^ "+" ^ to_string b2 ^ "+" ^ to_string b3 ^ ")"
+  | Sum (b1, b2) -> "(" ^ to_string b1 ^ "+" ^ to_string b2 ^ ")"
+  | Product (b1, Product (b2, b3)) -> "(" ^ to_string b1 ^ "*" ^ to_string b2 ^ "*" ^ to_string b3 ^ ")"
+  | Product (Product (b1, b2), b3) -> "(" ^ to_string b1 ^ "*" ^ to_string b2 ^ "*" ^ to_string b3 ^ ")"
+  | Product (b1, b2) -> "(" ^ to_string b1 ^ "*" ^ to_string b2 ^ ")"
+
+type outer_t = t
+module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
+  struct
+    type t = outer_t
+           
+    let (=~=) = equal
+              
+    let rec (>) b1 b2 =
+      match (b1, b2) with
+      | (_, Infinity) -> Some false
+      | (Infinity, _) -> Some true
+      | (_, Neg Infinity) -> Some true
+      | (Neg Infinity, _) -> Some false
+      (* TODO Add more cases *)
+      | (b1, b2) -> None
+                  
+  end
+include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
+
 let rec simplify = function
   | Infinity -> Infinity
 
@@ -54,35 +89,44 @@ let rec simplify = function
   (* Simplify terms with product head *)
   | Product (Const c, b) when OurInt.(c =~= one) -> simplify b
   | Product (b, Const c) when OurInt.(c =~= one) -> simplify b
+  | Product (Const c, b) when OurInt.(c =~= zero) -> Const c
+  | Product (b, Const c) when OurInt.(c =~= zero) -> Const c
+  | Product (Const c, b) when OurInt.(c =~= neg one) -> simplify (Neg b)
+  | Product (b, Const c) when OurInt.(c =~= neg one) -> simplify (Neg b)
   | Product (b1, b2) -> Product (simplify b1, simplify b2)
 
   (* Simplify terms with pow head *)
   | Pow (value, bound) ->
-     if value == OurInt.zero then of_constant OurInt.zero
-     else if value == OurInt.one then of_constant OurInt.one
-     else if bound == of_constant OurInt.zero then of_constant OurInt.one
-     else if bound == of_constant OurInt.one then simplify bound
+     if OurInt.(equal value zero) then of_constant OurInt.zero
+     else if OurInt.(equal value one) then of_constant OurInt.one
+     else if equal bound (of_constant OurInt.zero) then of_constant OurInt.one
+     else if equal bound (of_constant OurInt.one) then simplify bound
      else Pow (value, simplify bound)
 
   (* Simplify terms with min head *)
   | Min (b1, b2) ->
-     (* Optimization if we have structural equality *)
      let (b1, b2) = (simplify b1, simplify b2) in
-     if equal b1 b2 then
-       b1
-     else
-       Min (b1, b2)
+     (match b1 > b2 with
+     | Some true -> b2
+     | _ ->
+        match b2 > b1 with
+        | Some true -> b1
+        | _ ->
+           (* Optimization if we have structural equality *)
+           if equal b1 b2 then b1 else Min (b1, b2))
 
   (* Simplify terms with max head *)
   | Max (b1, b2) ->
-     (* Optimization if we have structural equality *)
      let (b1, b2) = (simplify b1, simplify b2) in
-     if equal b1 b2 then
-       b1
-     else
-       Max (b1, b2)
+     (match b1 > b2 with
+     | Some true -> b1
+     | _ ->
+        match b2 > b1 with
+        | Some true -> b2
+        | _ ->
+           (* Optimization if we have structural equality *)
+           if equal b1 b2 then b1 else Max (b1, b2))
                 
-type outer_t = t
 module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
   struct
     type t = outer_t
@@ -135,22 +179,6 @@ let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~abs ~inf p =
   | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
   | Product (b1, b2) -> times (fold_ b1) (fold_ b2)
                     
-module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
-  struct
-    type t = outer_t
-           
-    let (=~=) = equal
-              
-    let rec (>) b1 b2 =
-      match (b1, b2) with
-      | (_, Infinity) -> Some false
-      | (Infinity, _) -> Some true
-      (* TODO Add more cases *)
-      | (b1, b2) -> None
-                  
-  end
-include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
-
 let max b1 b2 =
   simplify (Max (b1, b2))
 
@@ -187,22 +215,6 @@ let substitute_all substitution =
   substitute_f (fun var ->
       VarMap.find_default (of_var var) var substitution
     )                      
-
-let rec to_string = function
-  | Var v -> Var.to_string v
-  | Abs v -> "|" ^ Var.to_string v ^ "|"
-  | Const c -> OurInt.to_string c
-  | Infinity -> "inf"
-  | Max (b1, b2) -> "max {" ^ to_string b1 ^ ", " ^ to_string b1 ^ "}"
-  | Min (b1, b2) -> "min {" ^ to_string b1 ^ ", " ^ to_string b1 ^ "}"
-  | Neg b -> "neg " ^ to_string b
-  | Pow (v,b) -> "(" ^ OurInt.to_string v ^ "**" ^ to_string b ^ ")"
-  | Sum (b1, Sum (b2, b3)) -> "(" ^ to_string b1 ^ "+" ^ to_string b2 ^ "+" ^ to_string b3 ^ ")"
-  | Sum (Sum (b1, b2), b3) -> "(" ^ to_string b1 ^ "+" ^ to_string b2 ^ "+" ^ to_string b3 ^ ")"
-  | Sum (b1, b2) -> "(" ^ to_string b1 ^ "+" ^ to_string b2 ^ ")"
-  | Product (b1, Product (b2, b3)) -> "(" ^ to_string b1 ^ "*" ^ to_string b2 ^ "*" ^ to_string b3 ^ ")"
-  | Product (Product (b1, b2), b3) -> "(" ^ to_string b1 ^ "*" ^ to_string b2 ^ "*" ^ to_string b3 ^ ")"
-  | Product (b1, b2) -> "(" ^ to_string b1 ^ "*" ^ to_string b2 ^ ")"
 
 let rec vars = function
   | Infinity -> VarSet.empty
