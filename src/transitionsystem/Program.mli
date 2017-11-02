@@ -55,6 +55,8 @@ sig
 
   type scc = RV.t Enum.t
 
+  val rvs_to_string : RV.t Enum.t -> string
+
   val pre : t -> RV.t -> RV.t Enum.t
 
   (** Returns all the entry points of the SCC.

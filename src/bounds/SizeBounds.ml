@@ -50,12 +50,17 @@ let improve_trivial_scc (kind: kind)
 let extreme_scaling_factor (kind: kind)
                            (ct: Program.RV.t Enum.t)
     : int =
-  ct
-  |> Enum.map (LocalSizeBound.sizebound_local_rv kind)
-  |> Enum.map Option.get (* Should exist *)
-  |> Enum.map LocalSizeBound.abs_factor
-  |> Util.max_option (>)
-  |? 1
+  let execute () =
+    ct
+    |> Enum.map (LocalSizeBound.sizebound_local_rv kind)
+    |> Enum.map Option.get (* Should exist *)
+    |> Enum.map LocalSizeBound.abs_factor
+    |> Util.max_option (>)
+    |? 1
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "extreme scaling factor", [])
+                     ~result:Int.to_string
+                     execute
 
 let scc_variables (rvg: Program.RVG.t)
                   (scc: Program.RVG.scc)
@@ -71,12 +76,17 @@ let extreme_affecting_scc_variables (kind: kind) (* TODO Relevant for only posit
                                     (scc: Program.RVG.scc)
                                     (ct: Program.RV.t Enum.t)
     : int =
-  ct
-  |> Enum.map (scc_variables rvg scc)
-  (* Filter also all pre variables that can only have a negative effect. *)
-  |> Enum.map Enum.count
-  |> Util.max_option (>)
-  |? 1
+  let execute () =
+    ct
+    |> Enum.map (scc_variables rvg scc)
+    (* Filter also all pre variables that can only have a negative effect. *)
+    |> Enum.map Enum.count
+    |> Util.max_option (>)
+    |? 1
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "extreme affecting scc variables", [])
+                     ~result:Int.to_string
+                     execute
 
 let transition_scaling_factor (kind: kind)
                               (rvg: Program.RVG.t)
@@ -84,10 +94,16 @@ let transition_scaling_factor (kind: kind)
                               (scc: Program.RVG.scc)
                               (ct: Program.RV.t Enum.t)
     : Bound.t =
-  let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
-  Bound.exp (OurInt.of_int (extreme_scaling_factor kind ct *
-                              extreme_affecting_scc_variables kind rvg scc (Enum.clone ct)))
-            (Approximation.timebound appr transition) 
+  let cloned_ct = Enum.clone ct in
+  let execute () =
+    let (transition, _) = Option.get (Enum.peek cloned_ct) (* We require ct to be non-empty *) in
+    Bound.exp (OurInt.of_int (extreme_scaling_factor kind ct *
+                                extreme_affecting_scc_variables kind rvg scc (Enum.clone ct)))
+              (Approximation.timebound appr transition) 
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "transition scaling factor", ["ct", Program.RVG.rvs_to_string ct])
+                     ~result:Bound.to_string
+                     execute
   
 
 let overall_scaling_factor (kind: kind)
@@ -95,11 +111,17 @@ let overall_scaling_factor (kind: kind)
                            (appr: Approximation.t)
                            (scc: Program.RVG.scc)
     : Bound.t =
-  scc
-  |> Enum.clone
-  |> Enum.group_by (fun (t1, v1) (t2, v2) -> Program.Transition.equal t1 t2)
-  |> Enum.map (transition_scaling_factor kind rvg appr (Enum.clone scc))
-  |> Bound.product
+  let execute () =
+    scc
+    |> Enum.clone
+    |> Enum.group_by (fun (t1, v1) (t2, v2) -> Program.Transition.equal t1 t2)
+    |> Enum.map (transition_scaling_factor kind rvg appr (Enum.clone scc))
+    |> Bound.product
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "overall scaling factor", [])
+                     ~result:Bound.to_string
+                     execute
+
 
 let incoming_vars_effect (kind: kind)
                          (rvg: Program.RVG.t)
@@ -109,18 +131,25 @@ let incoming_vars_effect (kind: kind)
                          (transition: Program.Transition.t)
                          (alpha: Program.RV.t)
     : Bound.t =
-  vars
-  |> VarSet.enum
-  |> Util.without Var.equal (scc_variables rvg (Enum.clone scc) alpha)
-  |> Enum.map (fun v ->
-         Program.RVG.pre rvg alpha
-         |> Util.without Program.RV.equal (Enum.clone scc)
-         |> Enum.filter (fun (t,v') -> Var.equal v v')
-         |> Enum.map (fun (t,v) -> Approximation.sizebound kind appr t v)
-         |> Bound.maximum
-       )
-  |> Bound.sum
-  
+  let execute () =
+    vars
+    |> VarSet.enum
+    |> Util.without Var.equal (scc_variables rvg (Enum.clone scc) alpha)
+    |> Enum.map (fun v ->
+           Program.RVG.pre rvg alpha
+           |> Util.without Program.RV.equal (Enum.clone scc)
+           |> Enum.filter (fun (t,v') -> Var.equal v v')
+           |> Enum.map (fun (t,v) -> Approximation.sizebound kind appr t v)
+           |> Bound.maximum
+         )
+    |> Bound.sum
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "incoming vars effect", ["vars", VarSet.to_string vars;
+                                                         "transition", Program.Transition.to_string transition;
+                                                         "alpha", Program.RV.to_string alpha])
+                     ~result:Bound.to_string
+                     execute
+
 let transition_effect (kind: kind)
                       (rvg: Program.RVG.t)
                       (appr: Approximation.t)
@@ -128,27 +157,39 @@ let transition_effect (kind: kind)
                       (ct: Program.RV.t Enum.t)
                       (transition: Program.Transition.t)
     : Bound.t =
-  ct
-  |> Enum.map (fun alpha -> (alpha, Option.get (LocalSizeBound.sizebound_local_rv kind alpha)))
-  (* Should exist *)
-  |> Enum.map (fun (alpha, lsb) ->
-         Bound.(max zero (of_int lsb.LocalSizeBound.constant + incoming_vars_effect kind rvg appr (Enum.clone scc) lsb.LocalSizeBound.vars transition alpha))
-       )
-  |> Bound.maximum
+  let execute () =
+    ct
+    |> Enum.map (fun alpha -> (alpha, Option.get (LocalSizeBound.sizebound_local_rv kind alpha)))
+    (* Should exist *)
+    |> Enum.map (fun (alpha, lsb) ->
+           Bound.(max zero (of_int lsb.LocalSizeBound.constant + incoming_vars_effect kind rvg appr (Enum.clone scc) lsb.LocalSizeBound.vars transition alpha))
+         )
+    |> Bound.maximum
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "transition effect", ["ct", Program.RVG.rvs_to_string ct;
+                                                         "transition", Program.Transition.to_string transition])
+                     ~result:Bound.to_string
+                     execute
 
 let effects (kind: kind)
             (rvg: Program.RVG.t)
             (appr: Approximation.t)
             (scc: Program.RVG.scc)
     : Bound.t =
-  scc
-  |> Enum.clone
-  |> Enum.group_by (fun (t1, v1) (t2, v2) -> Program.Transition.equal t1 t2)
-  |> Enum.map (fun ct ->
-         let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
-         Bound.(Approximation.timebound appr transition * transition_effect kind rvg appr (Enum.clone scc) ct transition)
-       )
-  |> Bound.sum
+  let execute () =
+    scc
+    |> Enum.clone
+    |> Enum.group_by (fun (t1, v1) (t2, v2) -> Program.Transition.equal t1 t2)
+    |> Enum.map (fun ct ->
+           let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
+           Bound.(Approximation.timebound appr transition * transition_effect kind rvg appr (Enum.clone scc) ct transition)
+         )
+    |> Bound.sum
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "effects", [])
+                     ~result:Bound.to_string
+                     execute
+
 
 let sign = function
   | `Lower -> Bound.neg Bound.one

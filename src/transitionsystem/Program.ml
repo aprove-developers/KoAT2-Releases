@@ -74,6 +74,13 @@ module RVG =
 
     type scc = RV.t Enum.t
 
+    let rvs_to_string rvs =
+      rvs
+      |> Enum.clone
+      |> Enum.map RV.to_string
+      |> List.of_enum
+      |> String.concat ","
+
     let pre rvg rv =
       pred rvg rv
       |> List.enum
