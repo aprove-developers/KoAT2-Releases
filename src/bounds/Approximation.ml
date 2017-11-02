@@ -93,7 +93,7 @@ module Size =
       map
 
     let add_all kind bound scc map =
-      Enum.iter (fun (t,v) -> ignore (add kind bound t v map)) scc;
+      List.iter (fun (t,v) -> ignore (add kind bound t v map)) scc;
       map
       
     let to_string size =

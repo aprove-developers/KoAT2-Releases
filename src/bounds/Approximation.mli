@@ -27,7 +27,7 @@ sig
   val empty : int -> t
   val get : kind -> t -> Program.Transition.t -> Var.t -> Bound.t
   val add : kind -> Bound.t -> Program.Transition.t -> Var.t -> t -> t
-  val add_all : kind -> Bound.t -> Program.RVG.scc -> t -> t
+  val add_all : kind -> Bound.t -> Program.RV.t list -> t -> t
   val to_string : t -> string
   val equal : t -> t -> bool
 end
@@ -67,7 +67,7 @@ val sizebound : kind -> t -> Program.Transition.t -> Var.t -> Bound.t
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 val add_sizebound : kind -> Bound.t -> Program.Transition.t -> Var.t -> t -> t
   
-val add_sizebounds : kind -> Bound.t -> Program.RVG.scc -> t -> t
+val add_sizebounds : kind -> Bound.t -> Program.RV.t list -> t -> t
 
 val to_string : Program.t -> t -> string
 

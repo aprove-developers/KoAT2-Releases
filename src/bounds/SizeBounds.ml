@@ -48,10 +48,11 @@ let improve_trivial_scc (kind: kind)
 
 (* Computes for each transition max{s_alpha | alpha in C_t} and multiplies the results. *)
 let extreme_scaling_factor (kind: kind)
-                           (ct: Program.RV.t Enum.t)
+                           (ct: Program.RV.t list)
     : int =
   let execute () =
     ct
+    |> List.enum
     |> Enum.map (LocalSizeBound.sizebound_local_rv kind)
     |> Enum.map Option.get (* Should exist *)
     |> Enum.map LocalSizeBound.abs_factor
@@ -63,21 +64,22 @@ let extreme_scaling_factor (kind: kind)
                      execute
 
 let scc_variables (rvg: Program.RVG.t)
-                  (scc: Program.RVG.scc)
+                  (scc: Program.RV.t list)
                   (rv: Program.RV.t)
     : Var.t Enum.t =
   Program.RVG.pre rvg rv
-  |> Util.intersection Program.RV.equal scc
+  |> Util.intersection Program.RV.equal (List.enum scc)
   |> Enum.map (fun (t,v) -> v)
   
 (* Computes for each transition max{ |pre(alpha)| intersected with C | alpha in C_t } and multiplies the results. *)
 let extreme_affecting_scc_variables (kind: kind) (* TODO Relevant for only positive and only negative effects. *)
                                     (rvg: Program.RVG.t)
-                                    (scc: Program.RVG.scc)
-                                    (ct: Program.RV.t Enum.t)
+                                    (scc: Program.RV.t list)
+                                    (ct: Program.RV.t list)
     : int =
   let execute () =
     ct
+    |> List.enum
     |> Enum.map (scc_variables rvg scc)
     (* Filter also all pre variables that can only have a negative effect. *)
     |> Enum.map Enum.count
@@ -91,14 +93,13 @@ let extreme_affecting_scc_variables (kind: kind) (* TODO Relevant for only posit
 let transition_scaling_factor (kind: kind)
                               (rvg: Program.RVG.t)
                               (appr: Approximation.t)
-                              (scc: Program.RVG.scc)
-                              (ct: Program.RV.t Enum.t)
+                              (scc: Program.RV.t list)
+                              (ct: Program.RV.t list)
     : Bound.t =
-  let cloned_ct = Enum.clone ct in
   let execute () =
-    let (transition, _) = Option.get (Enum.peek cloned_ct) (* We require ct to be non-empty *) in
+    let (transition, _) = List.hd ct (* We require ct to be non-empty *) in
     Bound.exp (OurInt.of_int (extreme_scaling_factor kind ct *
-                                extreme_affecting_scc_variables kind rvg scc (Enum.clone ct)))
+                                extreme_affecting_scc_variables kind rvg scc ct))
               (Approximation.timebound appr transition) 
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "transition scaling factor", ["ct", Program.RVG.rvs_to_string ct])
@@ -109,13 +110,14 @@ let transition_scaling_factor (kind: kind)
 let overall_scaling_factor (kind: kind)
                            (rvg: Program.RVG.t)
                            (appr: Approximation.t)
-                           (scc: Program.RVG.scc)
+                           (scc: Program.RV.t list)
     : Bound.t =
   let execute () =
     scc
-    |> Enum.clone
+    |> List.enum
     |> Enum.group_by (fun (t1, v1) (t2, v2) -> Program.Transition.equal t1 t2)
-    |> Enum.map (transition_scaling_factor kind rvg appr (Enum.clone scc))
+    |> Enum.map List.of_enum
+    |> Enum.map (transition_scaling_factor kind rvg appr scc)
     |> Bound.product
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "overall scaling factor", [])
@@ -126,7 +128,7 @@ let overall_scaling_factor (kind: kind)
 let incoming_vars_effect (kind: kind)
                          (rvg: Program.RVG.t)
                          (appr: Approximation.t)
-                         (scc: Program.RVG.scc)
+                         (scc: Program.RV.t list)
                          (vars: VarSet.t)
                          (transition: Program.Transition.t)
                          (alpha: Program.RV.t)
@@ -134,10 +136,10 @@ let incoming_vars_effect (kind: kind)
   let execute () =
     vars
     |> VarSet.enum
-    |> Util.without Var.equal (scc_variables rvg (Enum.clone scc) alpha)
+    |> Util.without Var.equal (scc_variables rvg scc alpha)
     |> Enum.map (fun v ->
            Program.RVG.pre rvg alpha
-           |> Util.without Program.RV.equal (Enum.clone scc)
+           |> Util.without Program.RV.equal (List.enum scc)
            |> Enum.filter (fun (t,v') -> Var.equal v v')
            |> Enum.map (fun (t,v) -> Approximation.sizebound kind appr t v)
            |> Bound.maximum
@@ -153,7 +155,7 @@ let incoming_vars_effect (kind: kind)
 let transition_effect (kind: kind)
                       (rvg: Program.RVG.t)
                       (appr: Approximation.t)
-                      (scc: Program.RVG.scc)
+                      (scc: Program.RV.t list)
                       (ct: Program.RV.t Enum.t)
                       (transition: Program.Transition.t)
     : Bound.t =
@@ -162,11 +164,11 @@ let transition_effect (kind: kind)
     |> Enum.map (fun alpha -> (alpha, Option.get (LocalSizeBound.sizebound_local_rv kind alpha)))
     (* Should exist *)
     |> Enum.map (fun (alpha, lsb) ->
-           Bound.(max zero (of_int lsb.LocalSizeBound.constant + incoming_vars_effect kind rvg appr (Enum.clone scc) lsb.LocalSizeBound.vars transition alpha))
+           Bound.(max zero (of_int lsb.LocalSizeBound.constant + incoming_vars_effect kind rvg appr scc lsb.LocalSizeBound.vars transition alpha))
          )
     |> Bound.maximum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "transition effect", ["ct", Program.RVG.rvs_to_string ct;
+                     (fun () -> "transition effect", ["ct", Program.RVG.rvs_to_string (List.of_enum ct);
                                                          "transition", Program.Transition.to_string transition])
                      ~result:Bound.to_string
                      execute
@@ -174,15 +176,15 @@ let transition_effect (kind: kind)
 let effects (kind: kind)
             (rvg: Program.RVG.t)
             (appr: Approximation.t)
-            (scc: Program.RVG.scc)
+            (scc: Program.RV.t list)
     : Bound.t =
   let execute () =
     scc
-    |> Enum.clone
+    |> List.enum
     |> Enum.group_by (fun (t1, v1) (t2, v2) -> Program.Transition.equal t1 t2)
     |> Enum.map (fun ct ->
            let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
-           Bound.(Approximation.timebound appr transition * transition_effect kind rvg appr (Enum.clone scc) ct transition)
+           Bound.(Approximation.timebound appr transition * transition_effect kind rvg appr scc ct transition)
          )
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
@@ -201,20 +203,20 @@ let improve_nontrivial_scc (kind: kind)
                            (program: Program.t)
                            (rvg: Program.RVG.t)
                            (appr: Approximation.t)
-                           (scc: Program.RVG.scc)
+                           (scc: Program.RV.t list)
     : Approximation.t =
   let execute () =
     (* Only if all lsbs have a bound of our required form *)
     if scc
-       |> Enum.clone
+       |> List.enum
        |> Enum.map (LocalSizeBound.sizebound_local_rv kind)
        |> Enum.for_all Option.is_some
     then
-      let new_bound = Bound.(sign kind * overall_scaling_factor kind rvg appr (Enum.clone scc) * effects kind rvg appr (Enum.clone scc)) in
-      Approximation.add_sizebounds kind new_bound (Enum.clone scc) appr
+      let new_bound = Bound.(sign kind * overall_scaling_factor kind rvg appr scc * effects kind rvg appr scc) in
+      Approximation.add_sizebounds kind new_bound scc appr
     else appr
   in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "improve nontrivial scc", ["scc", String.concat "," (List.of_enum (Enum.map Program.RV.to_string (Enum.clone scc)))])
+                  (fun () -> "improve nontrivial scc", ["scc", Program.RVG.rvs_to_string scc])
                   execute
          
 (* Improves a whole scc. *)
@@ -230,8 +232,8 @@ let improve_scc (program: Program.t)
      |> fun appr -> improve_trivial_scc `Lower program appr ((l,t,l'),v)         
   | scc ->
      appr
-     |> fun appr -> improve_nontrivial_scc `Upper program rvg appr (List.enum scc)
-     |> fun appr -> improve_nontrivial_scc `Lower program rvg appr (List.enum scc)
+     |> fun appr -> improve_nontrivial_scc `Upper program rvg appr scc
+     |> fun appr -> improve_nontrivial_scc `Lower program rvg appr scc
          
 let improve program appr =
   let execute () =

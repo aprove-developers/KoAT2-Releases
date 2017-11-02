@@ -72,13 +72,11 @@ module RVG =
   struct
     include Graph.Persistent.Digraph.ConcreteBidirectional(RV)
 
-    type scc = RV.t Enum.t
+    type scc = RV.t list
 
     let rvs_to_string rvs =
       rvs
-      |> Enum.clone
-      |> Enum.map RV.to_string
-      |> List.of_enum
+      |> List.map RV.to_string
       |> String.concat ","
 
     let pre rvg rv =
@@ -88,13 +86,15 @@ module RVG =
     (* TODO Optimizable *)
     let entry_points rvg scc =
       scc
+      |> List.enum
       |> Enum.map (pre rvg)
       |> Enum.flatten
       |> Enum.uniq_by RV.equal
-      |> Util.intersection RV.equal scc
+      |> Util.intersection RV.equal (List.enum scc)
 
     let transitions scc =
       scc
+      |> List.enum
       |> Enum.map RV.transition
       |> Enum.uniq_by Transition.equal
   end  
