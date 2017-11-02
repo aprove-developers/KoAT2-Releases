@@ -1,8 +1,9 @@
 open Batteries
 open OUnit2
 open Helper
-
-module TransitionSet = Set.Make(Program.Transition)
+open Program.Types
+   
+module TransitionSet = Set.Make(Transition)
                
 let suite =
   "Graphs" >::: [
@@ -29,7 +30,7 @@ let suite =
       (
         "pre(t)" >:: (fun _ ->
           let program = Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat" in
-          let transition = Program.TransitionGraph.find_edge (Program.graph program) (Program.Location.of_string "l1") (Program.Location.of_string "l2") in
+          let transition = TransitionGraph.find_edge (Program.graph program) (Location.of_string "l1") (Location.of_string "l2") in
           assert_equal_int 2 (Enum.count (Program.pre program transition))
         )
       );
@@ -42,7 +43,7 @@ let suite =
         |> List.map (fun (l,l',var,bound) ->
                "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ var ^ " is " ^ bound ^ "?" >:: (fun _ ->
                        let program = Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat" in
-                       let (l,t,l') = Program.TransitionGraph.find_edge (Program.graph program) (Program.Location.of_string l) (Program.Location.of_string l') in
+                       let (l,t,l') = TransitionGraph.find_edge (Program.graph program) (Location.of_string l) (Location.of_string l') in
                        TransitionLabel.(assert_equal_bound
                                                   (Bound.of_poly (Readers.read_polynomial bound))
                                                   LocalSizeBound.(as_bound (sizebound_local `Upper t (Var.of_string var)))

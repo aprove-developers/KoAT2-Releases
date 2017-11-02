@@ -1,5 +1,6 @@
 open Batteries
-
+open Program.Types
+   
 (** Provides all module types related to preprocessors *)
 
 type subject = Program.t * Approximation.t
@@ -32,6 +33,6 @@ val process_only_once : strategy
 (** Applies the preprocessors continously until a fixpoint is reached, such that no preprocessor is able to do another successful preprocessing step. *)
 val process_til_fixpoint : strategy
 
-val lift_to_program : (Program.TransitionGraph.t -> Program.TransitionGraph.t MaybeChanged.t) -> Program.t -> Program.t MaybeChanged.t
+val lift_to_program : (TransitionGraph.t -> TransitionGraph.t MaybeChanged.t) -> Program.t -> Program.t MaybeChanged.t
   
 val lift_to_tuple : ('b -> 'c MaybeChanged.t) -> ('b * 'a) -> ('c * 'a) MaybeChanged.t

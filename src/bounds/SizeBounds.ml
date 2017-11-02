@@ -1,6 +1,7 @@
 open Batteries
-
-module TransitionSet = Set.Make(Program.Transition)
+open Program.Types
+   
+module TransitionSet = Set.Make(Transition)
              
 let logger = Logger.make_log "size"
 
@@ -13,7 +14,7 @@ let incoming_bound (kind: kind)
                    (program: Program.t)
                    (appr: Approximation.t)
                    (local_sizebound: Bound.t)
-                   (t: Program.Transition.t)
+                   (t: Transition.t)
     : Bound.t =
   let execute () =
     let substitute_with_prevalues t' = Bound.substitute_f (Approximation.sizebound kind appr t') local_sizebound in
@@ -24,7 +25,7 @@ let incoming_bound (kind: kind)
         | `Lower -> Bound.minimum
         | `Upper -> Bound.maximum
   in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "compute highest incoming bound", ["lsb", Bound.to_string local_sizebound; "transition", Program.Transition.to_id_string t])
+                  (fun () -> "compute highest incoming bound", ["lsb", Bound.to_string local_sizebound; "transition", Transition.to_id_string t])
                   ~result:Bound.to_string
                   execute
 
@@ -32,7 +33,7 @@ let compute_trivial_bound (kind: kind)
                           (program: Program.t)
                           (appr: Approximation.t)
                           (lsb: Bound.t)
-                          (t: Program.Transition.t)
+                          (t: Transition.t)
     : Bound.t =
   let execute () =
     if Program.is_initial program t then
@@ -40,7 +41,7 @@ let compute_trivial_bound (kind: kind)
     else incoming_bound kind program appr lsb t
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute trivial bound", ["lsb", Bound.to_string lsb;
-                                                          "transition", Program.Transition.to_id_string t])
+                                                          "transition", Transition.to_id_string t])
                      ~result:Bound.to_string
                      execute
 
@@ -52,17 +53,17 @@ let improve_trivial_scc (kind: kind)
                         (t,v)
     : Approximation.t =
   let execute () =
-    let (local_sizebound: Bound.t) = LocalSizeBound.(as_bound (sizebound_local kind (Program.Transition.label t) v)) in
+    let (local_sizebound: Bound.t) = LocalSizeBound.(as_bound (sizebound_local kind (Transition.label t) v)) in
     let new_bound = compute_trivial_bound kind program appr local_sizebound t in
     Approximation.add_sizebound kind new_bound t v appr
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve trivial scc", ["kind", show_kind kind;
-                                                        "rv", Program.RV.to_id_string (t,v)])
+                                                        "rv", RV.to_id_string (t,v)])
                   execute
 
 (* Computes for each transition max{s_alpha | alpha in C_t} and multiplies the results. *)
 let extreme_scaling_factor (kind: kind)
-                           (ct: Program.RV.t list)
+                           (ct: RV.t list)
     : int =
   let execute () =
     ct
@@ -73,23 +74,23 @@ let extreme_scaling_factor (kind: kind)
     |> Util.max_option (>)
     |? 1
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "extreme scaling factor", ["ct", Program.RVG.rvs_to_id_string ct])
+                     (fun () -> "extreme scaling factor", ["ct", RVG.rvs_to_id_string ct])
                      ~result:Int.to_string
                      execute
 
-let scc_variables (rvg: Program.RVG.t)
-                  (scc: Program.RV.t list)
-                  (rv: Program.RV.t)
+let scc_variables (rvg: RVG.t)
+                  (scc: RV.t list)
+                  (rv: RV.t)
     : Var.t Enum.t =
-  Program.RVG.pre rvg rv
-  |> Util.intersection Program.RV.equal (List.enum scc)
+  RVG.pre rvg rv
+  |> Util.intersection RV.equal (List.enum scc)
   |> Enum.map (fun (t,v) -> v)
   
 (* Computes for each transition max{ |pre(alpha)| intersected with C | alpha in C_t } and multiplies the results. *)
 let extreme_affecting_scc_variables (kind: kind) (* TODO Relevant for only positive and only negative effects. *)
-                                    (rvg: Program.RVG.t)
-                                    (scc: Program.RV.t list)
-                                    (ct: Program.RV.t list)
+                                    (rvg: RVG.t)
+                                    (scc: RV.t list)
+                                    (ct: RV.t list)
     : int =
   let execute () =
     ct
@@ -100,15 +101,15 @@ let extreme_affecting_scc_variables (kind: kind) (* TODO Relevant for only posit
     |> Util.max_option (>)
     |? 1
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "extreme affecting scc variables", ["scc", Program.RVG.rvs_to_id_string scc])
+                     (fun () -> "extreme affecting scc variables", ["scc", RVG.rvs_to_id_string scc])
                      ~result:Int.to_string
                      execute
 
 let transition_scaling_factor (kind: kind)
-                              (rvg: Program.RVG.t)
+                              (rvg: RVG.t)
                               (appr: Approximation.t)
-                              (scc: Program.RV.t list)
-                              (ct: Program.RV.t list)
+                              (scc: RV.t list)
+                              (ct: RV.t list)
     : Bound.t =
   let execute () =
     let (transition, _) = List.hd ct (* We require ct to be non-empty *) in
@@ -116,63 +117,63 @@ let transition_scaling_factor (kind: kind)
                                 extreme_affecting_scc_variables kind rvg scc ct))
               (Approximation.timebound appr transition) 
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "transition scaling factor", ["ct", Program.RVG.rvs_to_id_string ct; "scc", Program.RVG.rvs_to_id_string scc])
+                     (fun () -> "transition scaling factor", ["ct", RVG.rvs_to_id_string ct; "scc", RVG.rvs_to_id_string scc])
                      ~result:Bound.to_string
                      execute
   
 
 let overall_scaling_factor (kind: kind)
-                           (rvg: Program.RVG.t)
+                           (rvg: RVG.t)
                            (appr: Approximation.t)
-                           (scc: Program.RV.t list)
+                           (scc: RV.t list)
     : Bound.t =
   let execute () =
     scc
     |> List.enum
-    |> Enum.group_by (fun (t1, v1) (t2, v2) -> Program.Transition.equal t1 t2)
+    |> Enum.group_by (fun (t1, v1) (t2, v2) -> Transition.equal t1 t2)
     |> Enum.map List.of_enum
     |> Enum.map (transition_scaling_factor kind rvg appr scc)
     |> Bound.product
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "overall scaling factor", ["scc", Program.RVG.rvs_to_id_string scc])
+                     (fun () -> "overall scaling factor", ["scc", RVG.rvs_to_id_string scc])
                      ~result:Bound.to_string
                      execute
 
 
 let incoming_vars_effect (kind: kind)
-                         (rvg: Program.RVG.t)
+                         (rvg: RVG.t)
                          (appr: Approximation.t)
-                         (scc: Program.RV.t list)
+                         (scc: RV.t list)
                          (vars: VarSet.t)
-                         (transition: Program.Transition.t)
-                         (alpha: Program.RV.t)
+                         (transition: Transition.t)
+                         (alpha: RV.t)
     : Bound.t =
   let execute () =
     vars
     |> VarSet.enum
     |> Util.without Var.equal (scc_variables rvg scc alpha)
     |> Enum.map (fun v ->
-           Program.RVG.pre rvg alpha
-           |> Util.without Program.RV.equal (List.enum scc)
+           RVG.pre rvg alpha
+           |> Util.without RV.equal (List.enum scc)
            |> Enum.filter (fun (t,v') -> Var.equal v v')
            |> Enum.map (fun (t,v) -> Approximation.sizebound kind appr t v)
            |> Bound.maximum
          )
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "incoming vars effect", ["scc", Program.RVG.rvs_to_id_string scc;
+                     (fun () -> "incoming vars effect", ["scc", RVG.rvs_to_id_string scc;
                                                          "vars", VarSet.to_string vars;
-                                                         "transition", Program.Transition.to_id_string transition;
-                                                         "alpha", Program.RV.to_id_string alpha])
+                                                         "transition", Transition.to_id_string transition;
+                                                         "alpha", RV.to_id_string alpha])
                      ~result:Bound.to_string
                      execute
 
 let transition_effect (kind: kind)
-                      (rvg: Program.RVG.t)
+                      (rvg: RVG.t)
                       (appr: Approximation.t)
-                      (scc: Program.RV.t list)
-                      (ct: Program.RV.t Enum.t)
-                      (transition: Program.Transition.t)
+                      (scc: RV.t list)
+                      (ct: RV.t Enum.t)
+                      (transition: Transition.t)
     : Bound.t =
   let execute () =
     ct
@@ -183,28 +184,28 @@ let transition_effect (kind: kind)
          )
     |> Bound.maximum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "transition effect", ["scc", Program.RVG.rvs_to_id_string scc;
-                                                      "ct", Program.RVG.rvs_to_id_string (List.of_enum ct);
-                                                      "transition", Program.Transition.to_id_string transition])
+                     (fun () -> "transition effect", ["scc", RVG.rvs_to_id_string scc;
+                                                      "ct", RVG.rvs_to_id_string (List.of_enum ct);
+                                                      "transition", Transition.to_id_string transition])
                      ~result:Bound.to_string
                      execute
 
 let effects (kind: kind)
-            (rvg: Program.RVG.t)
+            (rvg: RVG.t)
             (appr: Approximation.t)
-            (scc: Program.RV.t list)
+            (scc: RV.t list)
     : Bound.t =
   let execute () =
     scc
     |> List.enum
-    |> Enum.group_by (fun (t1, v1) (t2, v2) -> Program.Transition.equal t1 t2)
+    |> Enum.group_by (fun (t1, v1) (t2, v2) -> Transition.equal t1 t2)
     |> Enum.map (fun ct ->
            let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
            Bound.(Approximation.timebound appr transition * transition_effect kind rvg appr scc ct transition)
          )
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "effects", ["scc", Program.RVG.rvs_to_id_string scc])
+                     (fun () -> "effects", ["scc", RVG.rvs_to_id_string scc])
                      ~result:Bound.to_string
                      execute
 
@@ -217,9 +218,9 @@ let sign = function
        Corresponds to 'SizeBounds for nontrivial SCCs'. *)
 let improve_nontrivial_scc (kind: kind)
                            (program: Program.t)
-                           (rvg: Program.RVG.t)
+                           (rvg: RVG.t)
                            (appr: Approximation.t)
-                           (scc: Program.RV.t list)
+                           (scc: RV.t list)
     : Approximation.t =
   let execute () =
     (* Only if all lsbs have a bound of our required form *)
@@ -233,17 +234,17 @@ let improve_nontrivial_scc (kind: kind)
     else appr
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve nontrivial scc", ["kind", show_kind kind;
-                                                           "scc", Program.RVG.rvs_to_id_string scc])
+                                                           "scc", RVG.rvs_to_id_string scc])
                      execute
          
 (* Improves a whole scc. *)
 let improve_scc (program: Program.t)
-                (rvg: Program.RVG.t)
+                (rvg: RVG.t)
                 (appr: Approximation.t)
-                (scc: Program.RV.t list)
+                (scc: RV.t list)
     : Approximation.t  =
   match scc with
-  | [((l,t,l'),v)] when not (Program.Location.equal l l') ->
+  | [((l,t,l'),v)] when not (Location.equal l l') ->
      appr
      |> fun appr -> improve_trivial_scc `Upper program appr ((l,t,l'),v)
      |> fun appr -> improve_trivial_scc `Lower program appr ((l,t,l'),v)         
@@ -254,7 +255,7 @@ let improve_scc (program: Program.t)
          
 let improve program appr =
   let execute () =
-    let module C = Graph.Components.Make(Program.RVG) in
+    let module C = Graph.Components.Make(RVG) in
     let rvg = Program.rvg program in
     List.fold_left (fun appr scc -> improve_scc program rvg appr scc) appr (List.rev (C.scc_list rvg))
   in Logger.with_log logger Logger.DEBUG

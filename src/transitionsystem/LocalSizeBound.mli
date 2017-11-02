@@ -1,4 +1,5 @@
 open Batteries
+open Program.Types
    
 type formula = Formulas.Formula.t
 
@@ -59,4 +60,4 @@ val find_bound : Var.t -> formula -> t Option.t
     A local sizebound is expressed in relation to the values directly before executing the transition. *)
 val sizebound_local : TransitionLabel.kind -> TransitionLabel.t -> Var.t -> t Option.t
   
-val sizebound_local_rv : TransitionLabel.kind -> Program.RV.t -> t Option.t
+val sizebound_local_rv : TransitionLabel.kind -> RV.t -> t Option.t

@@ -1,10 +1,12 @@
 open Batteries
+open Polynomials
+open Program.Types
+   
+include module type of Hashtbl.Make(TransitionGraph.V)
 
-include module type of Hashtbl.Make(Program.TransitionGraph.V)
+type parameter_table = ParameterPolynomial.t t
 
-type parameter_table = (Polynomials.ParameterPolynomial.t) t
-
-type polynomial_table = (Polynomials.Polynomial.t) t
+type polynomial_table = Polynomial.t t
 
 val to_string_poly : polynomial_table -> string
 

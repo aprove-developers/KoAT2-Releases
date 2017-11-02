@@ -1,7 +1,8 @@
 open Batteries
 open OUnit2
 open Helper
-
+open Program.Types
+   
 let tests = 
   "Preprocessors" >::: [
       
@@ -28,7 +29,7 @@ let tests =
                         |> TrivialTimeBounds.transform
                         |> MaybeChanged.unpack
                         |> Tuple2.second
-                        |> (fun time -> Approximation.timebound_between time (Program.Location.of_string src) (Program.Location.of_string target))
+                        |> (fun time -> Approximation.timebound_between time (Location.of_string src) (Location.of_string target))
            )))
                   [
                     ("l1", "l2", "l1 -> l2(x)");

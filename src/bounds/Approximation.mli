@@ -1,5 +1,6 @@
 open Batteries
-
+open Program.Types
+   
 (** Provides default implementations of an approximation *)
 
 type t 
@@ -12,11 +13,11 @@ module Time :
 sig
   type t
   val empty : int -> t
-  val get : t -> Program.Transition.t -> Bound.t
+  val get : t -> Transition.t -> Bound.t
   (** Returns a timebound of the specified kind for the execution of the whole graph. *)
   val sum : t -> Program.t -> Bound.t
-  val add : Bound.t -> Program.Transition.t -> t -> t
-  val all_bounded : t -> Program.Transition.t list -> bool
+  val add : Bound.t -> Transition.t -> t -> t
+  val all_bounded : t -> Transition.t list -> bool
   val to_string : t -> string
   val equal : t -> t -> bool
 end
@@ -25,9 +26,9 @@ module Size :
 sig
   type t
   val empty : int -> t
-  val get : kind -> t -> Program.Transition.t -> Var.t -> Bound.t
-  val add : kind -> Bound.t -> Program.Transition.t -> Var.t -> t -> t
-  val add_all : kind -> Bound.t -> Program.RV.t list -> t -> t
+  val get : kind -> t -> Transition.t -> Var.t -> Bound.t
+  val add : kind -> Bound.t -> Transition.t -> Var.t -> t -> t
+  val add_all : kind -> Bound.t -> RV.t list -> t -> t
   val to_string : t -> string
   val equal : t -> t -> bool
 end
@@ -45,29 +46,29 @@ val size : t -> Size.t
 (** Timebound related methods *)
   
 (** Returns a timebound for the transition. *)
-val timebound : t -> Program.Transition.t -> Bound.t
+val timebound : t -> Transition.t -> Bound.t
 
 (** Returns a timebound for the unique transition from the source to the target or None if there isn't such a single transition. *)
-val timebound_between : t -> Program.Location.t -> Program.Location.t -> Bound.t Option.t
+val timebound_between : t -> Location.t -> Location.t -> Bound.t Option.t
 
 (** Adds the information that the specified bound is a valid timebound for the given transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
-val add_timebound : Bound.t -> Program.Transition.t -> t -> t
+val add_timebound : Bound.t -> Transition.t -> t -> t
 
-val all_times_bounded : t -> Program.Transition.t list -> bool
+val all_times_bounded : t -> Transition.t list -> bool
   
 
 (** Sizebound related methods *)
 
 (** Returns a sizebound of the specified kind for the var of the transition. 
         A sizebound is expressed in relation to the input variable values of the program. *)
-val sizebound : kind -> t -> Program.Transition.t -> Var.t -> Bound.t
+val sizebound : kind -> t -> Transition.t -> Var.t -> Bound.t
 
 (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
-val add_sizebound : kind -> Bound.t -> Program.Transition.t -> Var.t -> t -> t
+val add_sizebound : kind -> Bound.t -> Transition.t -> Var.t -> t -> t
   
-val add_sizebounds : kind -> Bound.t -> Program.RV.t list -> t -> t
+val add_sizebounds : kind -> Bound.t -> RV.t list -> t -> t
 
 val to_string : Program.t -> t -> string
 

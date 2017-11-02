@@ -1,34 +1,35 @@
 open Batteries
 open Polynomials
+open Program.Types
    
 let logger = Logger.make_log "time"
 
 (** All transitions outside of the prf transitions that lead to the given location. *)
-let transitions_to (graph: Program.TransitionGraph.t) (prf_transitions: Program.Transition.t list) (location: Program.Location.t): Program.Transition.t Enum.t =
+let transitions_to (graph: TransitionGraph.t) (prf_transitions: Transition.t list) (location: Location.t): Transition.t Enum.t =
   let execute () =
-    Program.TransitionGraph.pred_e graph location
-    |> Program.TransitionSet.of_list
-    |> fun transitions -> Program.TransitionSet.(diff transitions (of_list prf_transitions))
-    |> Program.TransitionSet.enum
+    TransitionGraph.pred_e graph location
+    |> TransitionSet.of_list
+    |> fun transitions -> TransitionSet.(diff transitions (of_list prf_transitions))
+    |> TransitionSet.enum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "transitions to", ["location", Program.Location.to_string location;
-                                                   "prf_transitions", String.concat "," (List.map Program.Transition.to_id_string prf_transitions)])
+                     (fun () -> "transitions to", ["location", Location.to_string location;
+                                                   "prf_transitions", String.concat "," (List.map Transition.to_id_string prf_transitions)])
                      execute
 
 (** All entry locations of the given transitions.
     Those are such locations, that are the target of any transition outside of the given transitions. *)
-let entry_locations (graph: Program.TransitionGraph.t) (prf_transitions: Program.Transition.t list): Program.Location.t Enum.t =
+let entry_locations (graph: TransitionGraph.t) (prf_transitions: Transition.t list): Location.t Enum.t =
   let execute () =
     prf_transitions
     |> List.enum
-    |> Enum.map Program.Transition.src
-    |> Enum.uniq_by Program.Location.equal
+    |> Enum.map Transition.src
+    |> Enum.uniq_by Location.equal
     |> Enum.filter (fun location -> not Enum.(is_empty (transitions_to graph prf_transitions location)))
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "entry locations", ["prf_transitions", String.concat "," (List.map Program.Transition.to_id_string prf_transitions)])
+                     (fun () -> "entry locations", ["prf_transitions", String.concat "," (List.map Transition.to_id_string prf_transitions)])
                      execute
 
-let apply (appr: Approximation.t) (rank: Polynomial.t) (transition: Program.Transition.t): Bound.t =
+let apply (appr: Approximation.t) (rank: Polynomial.t) (transition: Transition.t): Bound.t =
   let execute () =
     let (pol_plus, pol_minus) =
       Polynomial.separate_by_sign rank
@@ -40,11 +41,11 @@ let apply (appr: Approximation.t) (rank: Polynomial.t) (transition: Program.Tran
     Bound.(insert_sizebounds `Upper pol_plus - insert_sizebounds `Lower pol_minus)
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "apply to prf", ["rank", Polynomial.to_string rank;
-                                                 "transition", Program.Transition.to_id_string transition])
+                                                 "transition", Transition.to_id_string transition])
                      ~result:Bound.to_string
                      execute
   
-let compute_timebound (appr: Approximation.t) (graph: Program.TransitionGraph.t) (prf: RankingFunction.t) (transition: Program.Transition.t): Bound.t =
+let compute_timebound (appr: Approximation.t) (graph: TransitionGraph.t) (prf: RankingFunction.t) (transition: Transition.t): Bound.t =
   let execute () =
     entry_locations graph (RankingFunction.transitions prf)
     |> Enum.map (fun location ->
@@ -55,7 +56,7 @@ let compute_timebound (appr: Approximation.t) (graph: Program.TransitionGraph.t)
     |> Enum.map (fun (location,transition) -> Bound.(Approximation.timebound appr transition * max zero (apply appr (RankingFunction.rank prf location) transition)))
     |> Enum.fold Bound.add Bound.zero
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute time bound", ["transition", Program.Transition.to_id_string transition])
+                     (fun () -> "compute time bound", ["transition", Transition.to_id_string transition])
                      ~result:Bound.to_string
                      execute
     

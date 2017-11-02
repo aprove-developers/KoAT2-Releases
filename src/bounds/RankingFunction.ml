@@ -3,15 +3,16 @@ open Formulas
 open Constraints
 open Atoms
 open Polynomials
+open Program.Types
    
 module SMTSolver_ = SMT.Z3Solver
 module Valuation = Valuation.Make(OurInt)
                   
 type t = {
-    pol : Program.Location.t -> Polynomial.t (*This should be a parameter Polynomial, so that it can be used a few times*);
-    strictly_decreasing : Program.Transition.t list;
+    pol : Location.t -> Polynomial.t (*This should be a parameter Polynomial, so that it can be used a few times*);
+    strictly_decreasing : Transition.t list;
     (*non_increasing : Program_.Transition.t list; not necessary as it contains every transition *)
-    transitions : Program.Transition.t list;
+    transitions : Transition.t list;
   }
   
 let logger = Logger.make_log "prf"  
@@ -25,7 +26,7 @@ let transitions f = f.transitions
 (* TODO Obsolete? *)
 let square (pol1 : Polynomials.Polynomial.t) (pol2: Polynomials.Polynomial.t) = Polynomials.Polynomial.(pol1 * pol2)
 
-let to_string prf = (String.concat ", " (List.map Program.Transition.to_string (strictly_decreasing prf) ))^"\n"
+let to_string prf = (String.concat ", " (List.map Transition.to_string (strictly_decreasing prf) ))^"\n"
 
 (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
 let apply_farkas a_matrix b_right c_left d_right =
@@ -64,7 +65,7 @@ let copy_enum_into_hash pairs_enum =
   Enum.iter add pairs_enum; hashtbl
 
 (**Generates a ranking function template for every location in the program*)
-let generate_ranking_template (program : Program.t) (locations : Program.Location.t Enum.t) =
+let generate_ranking_template (program : Program.t) (locations : Location.t Enum.t) =
   let execute () =
     let vars = VarSet.elements (Program.vars program) in
     let ins_loc_prf location =
@@ -95,7 +96,7 @@ let help_update label var =
   |None -> ParameterPolynomial.of_var var
   |Some p -> ParameterPolynomial.of_polynomial p
            
-let help_non_increasing (initial : bool) (table : PrfTable.parameter_table) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
+let help_non_increasing (initial : bool) (table : PrfTable.parameter_table) (trans : Transition.t) (vars : Var.t list) =
   if initial then 
     Constraint.mk_true 
   else
@@ -113,7 +114,7 @@ let help_non_increasing (initial : bool) (table : PrfTable.parameter_table) (tra
     (*print_string (String.concat"-> "["help_non_increasing_output";(Constraint.to_string result);"\n"]);*)
     result
   
-let help_strict_decrease (initial : bool) (table : PrfTable.parameter_table) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
+let help_strict_decrease (initial : bool) (table : PrfTable.parameter_table) (trans : Transition.t) (vars : Var.t list) =
   if initial then 
     Constraint.mk_true 
   else
@@ -127,7 +128,7 @@ let help_strict_decrease (initial : bool) (table : PrfTable.parameter_table) (tr
     farkas_transform guard new_atom
 
   
-let help_boundedness (initial : bool) (table : PrfTable.parameter_table) (trans : Program.TransitionGraph.E.t) (vars : Var.t list) =
+let help_boundedness (initial : bool) (table : PrfTable.parameter_table) (trans : Transition.t) (vars : Var.t list) =
   if initial then 
     Constraint.mk_true 
   else
@@ -140,7 +141,7 @@ let help_boundedness (initial : bool) (table : PrfTable.parameter_table) (trans 
 
   
 (**Generates the constraints due to the non increase rule of a polynomial ranking function*)
-let get_non_increase_constraints (table : PrfTable.parameter_table) (program : Program.t) (transitions : Program.Transition.t Enum.t) =
+let get_non_increase_constraints (table : PrfTable.parameter_table) (program : Program.t) (transitions : Transition.t Enum.t) =
   let execute () =
     let variables = VarSet.elements (Program.vars program) in
     Enum.map (fun trans -> help_non_increasing (Program.is_initial program trans) table trans variables) transitions
@@ -164,11 +165,11 @@ let help_strict_oriented program table vars trans (smt,bounded) =
       else (smt,bounded)
 
 (*Given a set of transitions the pair (constr,bound) is generated. Constr is the constraint for the ranking function and bounded consists of all strictly oriented transitions *)
-let build_strict_oriented (table : PrfTable.parameter_table) (program : Program.t) (transitions: Program.Transition.t Enum.t) (non_incr: Constraint.t) =
+let build_strict_oriented (table : PrfTable.parameter_table) (program : Program.t) (transitions: Transition.t Enum.t) (non_incr: Constraint.t) =
   let vars = VarSet.elements (Program.vars program) in
   Enum.fold (fun tuple trans -> help_strict_oriented program table vars trans tuple) (non_incr,[]) transitions
 
-let ranking_function_procedure (program : Program.t) (transitions : Program.Transition.t Enum.t) =
+let ranking_function_procedure (program : Program.t) (transitions : Transition.t Enum.t) =
   let transitions_for_strict = (Enum.clone transitions) in
   let locations = Program.locations transitions in
   let (table, fresh_coeffs) = generate_ranking_template program locations in
@@ -186,8 +187,8 @@ let find program appr =
   let transitions =
     program
     |> Program.graph
-    |> Program.TransitionGraph.transitions
-    |> Program.TransitionSet.enum
+    |> TransitionGraph.transitions
+    |> TransitionSet.enum
     |> Enum.filter (is_already_bounded appr) in
   let execute () =
     let (table,bounded) = ranking_function_procedure program transitions in

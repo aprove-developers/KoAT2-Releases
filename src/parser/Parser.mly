@@ -48,6 +48,7 @@
   open Atoms
   module Poly = Polynomials.Polynomial
   open Formulas
+  open Program.Types
 
   let default_vars = List.map Var.of_string ["x"; "y"; "z"; "u"; "v"; "w"; "p"; "q"]
 %}
@@ -75,7 +76,7 @@ program_simple :
                     |> List.flatten
                     |> List.hd
 	            |> TransitionLabel.start
-	            |> Program.Location.of_string
+	            |> Location.of_string
                     |> Program.from default_vars (List.flatten trans) } ;
 
 transition_simple :
@@ -98,7 +99,7 @@ goal :
 
 start :
 	|	LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
-		  { Program.Location.of_string start } ;
+		  { Location.of_string start } ;
 
 transitions :
 	|	LPAR RULES l = nonempty_list(transition) RPAR

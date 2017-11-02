@@ -1,10 +1,11 @@
 open Batteries
-
+open Program.Types
+   
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
 module Time =
   struct
-    module Map = Hashtbl.Make(Program.Transition)
+    module Map = Hashtbl.Make(Transition)
                
     type t = Bound.t Map.t
            
@@ -15,14 +16,14 @@ module Time =
 
     let get_between map src target =
       map
-      |> Map.filteri (fun (l,_,l') _ -> Program.Location.(equal l src && equal l' target))
+      |> Map.filteri (fun (l,_,l') _ -> Location.(equal l src && equal l' target))
       |> Map.values
       |> Option.some
       |> Option.filter (fun values -> Enum.count values = 1)
       |> fun option -> Option.bind option Enum.get
 
     let sum map program =
-      Program.TransitionGraph.fold_edges_e (fun transition result -> Bound.(of_poly (Program.Transition.cost transition) * get map transition + result)) (Program.graph program) Bound.zero
+      TransitionGraph.fold_edges_e (fun transition result -> Bound.(of_poly (Transition.cost transition) * get map transition + result)) (Program.graph program) Bound.zero
 
     let sum_available map =
       Map.fold (fun transition bound result -> Bound.(bound + result)) map Bound.zero
@@ -42,7 +43,7 @@ module Time =
         ~first:("  ")
         ~last:"\n"
         ~sep:"\n  "
-        (fun output transition -> IO.nwrite output (Program.Transition.to_id_string transition))
+        (fun output transition -> IO.nwrite output (Transition.to_id_string transition))
         (fun output bound -> IO.nwrite output (Bound.to_string bound))
         output time;  
       IO.close_out output
@@ -50,7 +51,7 @@ module Time =
     (** Very slow equality, only for testing purposes *)
     let equal time1 time2 =
       let module Set =
-        Set.Make(struct type t = Program.Transition.t * Bound.t [@@deriving ord] end)
+        Set.Make(struct type t = Transition.t * Bound.t [@@deriving ord] end)
       in
       let to_set time = time |> Map.enum |> Set.of_enum in
       Set.equal (to_set time1) (to_set time2)
@@ -62,10 +63,10 @@ module Size =
     module Map =
       Hashtbl.Make(
           struct
-            type t = kind * Program.Transition.t * Var.t [@@deriving eq]
+            type t = kind * Transition.t * Var.t [@@deriving eq]
             let hash (kind, t, v) =
               Hashtbl.hash (show_kind kind
-                            ^ Program.(Location.to_string (Transition.src t) ^ Location.to_string (Transition.target t))
+                            ^ Location.to_string (Transition.src t) ^ Location.to_string (Transition.target t)
                             ^ Var.to_string v)
           end
         )
@@ -102,7 +103,7 @@ module Size =
            ~first:(show_kind kind ^ ":\n  ")
            ~last:"\n"
            ~sep:"\n  "
-           (fun output (_, transition, var) -> IO.nwrite output (Program.Transition.to_id_string transition ^ ", " ^ Var.to_string var))
+           (fun output (_, transition, var) -> IO.nwrite output (Transition.to_id_string transition ^ ", " ^ Var.to_string var))
            (fun output bound -> IO.nwrite output (Bound.to_string bound))
            output
       
@@ -115,7 +116,7 @@ module Size =
     (** Very slow equality, only for testing purposes *)
     let equal size1 size2 =
       let module Set =
-        Set.Make(struct type t = (kind * Program.Transition.t * Var.t) * Bound.t [@@deriving ord] end)
+        Set.Make(struct type t = (kind * Transition.t * Var.t) * Bound.t [@@deriving ord] end)
       in
       let to_set time = time |> Map.enum |> Set.of_enum in
       Set.equal (to_set size1) (to_set size2)

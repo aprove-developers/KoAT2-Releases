@@ -1,118 +1,125 @@
 open Batteries
 
-module Location =
+module Types =
   struct
-    type t = {
-        name : string;
-        (*initial : bool;*)
-        (* TODO Possible optimization: invariant : PolynomialConstraints.t*)
-      } [@@deriving eq, ord]
-           
-    let to_string l = l.name
-                    
-    let hash l = Hashtbl.hash (to_string l)
+   
+    module Location =
+      struct
+        type t = {
+            name : string;
+            (*initial : bool;*)
+            (* TODO Possible optimization: invariant : PolynomialConstraints.t*)
+          } [@@deriving eq, ord]
                
-    let of_string inp_name = { name = inp_name }               
-  end
-module LocationSet = Set.Make(Location)
+        let to_string l = l.name
+                        
+        let hash l = Hashtbl.hash (to_string l)
+                   
+        let of_string inp_name = { name = inp_name }               
+      end
+    module LocationSet = Set.Make(Location)
 
-module Transition =
-  struct
-    type t = Location.t * TransitionLabel.t * Location.t [@@deriving eq, ord]
+    module Transition =
+      struct
+        type t = Location.t * TransitionLabel.t * Location.t [@@deriving eq, ord]
 
-    let src (src, _, _) = src
-           
-    let label (_, label, _) = label
+        let src (src, _, _) = src
+                            
+        let label (_, label, _) = label
 
-    let target (_, _, target) = target
+        let target (_, _, target) = target
 
-    let cost t = TransitionLabel.cost (label t)
+        let cost t = TransitionLabel.cost (label t)
 
-    (* Needs to be fast for usage in the timebound hashtables.
+        (* Needs to be fast for usage in the timebound hashtables.
        There might be transitions with the same src and target, 
        but that is not a problem for the hashtables,
        since it should not occur very often. *)
-    let hash (l,_,l') = Hashtbl.hash (Location.to_string l ^ Location.to_string l')
+        let hash (l,_,l') = Hashtbl.hash (Location.to_string l ^ Location.to_string l')
 
-    let to_id_string (l,_,l') =
-      Location.to_string l ^ "->" ^ Location.to_string l'
+        let to_id_string (l,_,l') =
+          Location.to_string l ^ "->" ^ Location.to_string l'
 
-    let to_string (l,t,l') =
-       to_id_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
+        let to_string (l,t,l') =
+          to_id_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
+      end
+    module TransitionSet = Set.Make(Transition)
+
+    module TransitionGraph =
+      struct
+        include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
+
+        let locations graph =
+          fold_vertex LocationSet.add graph LocationSet.empty
+
+        let transitions graph =
+          fold_edges_e TransitionSet.add graph TransitionSet.empty
+
+        let equal graph1 graph2 =
+          LocationSet.equal (locations graph1) (locations graph2)
+          && TransitionSet.equal (transitions graph1) (transitions graph2)
+
+      end
+
+    module RV =
+      struct
+        type t = Transition.t * Var.t [@@deriving eq, ord]
+               
+        let hash (t,v) =
+          Hashtbl.hash (Transition.to_string t ^ Var.to_string v)
+          
+        let transition (t,_) = t
+                             
+        let variable (_,v) = v
+                           
+        let to_id_string (t,v) =
+          "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
+
+        let to_string ((l,t,l'),v) =
+          Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Upper t v))) ^ " >= " ^
+            to_id_string ((l,t,l'),v) ^ " >= " ^
+              Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Lower t v)))
+      end
+    module RVG =
+      struct
+        include Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+
+        type scc = RV.t list
+
+        let rvs_to_id_string rvs =
+          rvs
+          |> List.map RV.to_id_string
+          |> String.concat ","
+
+        let rvs_to_string rvs =
+          rvs
+          |> List.map RV.to_string
+          |> String.concat ","
+
+        let pre rvg rv =
+          pred rvg rv
+          |> List.enum
+
+        (* TODO Optimizable *)
+        let entry_points rvg scc =
+          scc
+          |> List.enum
+          |> Enum.map (pre rvg)
+          |> Enum.flatten
+          |> Enum.uniq_by RV.equal
+          |> Util.intersection RV.equal (List.enum scc)
+
+        let transitions scc =
+          scc
+          |> List.enum
+          |> Enum.map RV.transition
+          |> Enum.uniq_by Transition.equal
+      end  
+
   end
-module TransitionSet = Set.Make(Transition)
 
-module TransitionGraph =
-  struct
-    include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
-
-    let locations graph =
-      fold_vertex LocationSet.add graph LocationSet.empty
-
-    let transitions graph =
-      fold_edges_e TransitionSet.add graph TransitionSet.empty
-
-    let equal graph1 graph2 =
-      LocationSet.equal (locations graph1) (locations graph2)
-      && TransitionSet.equal (transitions graph1) (transitions graph2)
-
-  end
-
-module RV =
-  struct
-    type t = Transition.t * Var.t [@@deriving eq, ord]
-           
-    let hash (t,v) =
-      Hashtbl.hash (Transition.to_string t ^ Var.to_string v)
-                   
-    let transition (t,_) = t
-                         
-    let variable (_,v) = v
-                       
-    let to_id_string (t,v) =
-      "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
-
-    let to_string ((l,t,l'),v) =
-      Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Upper t v))) ^ " >= " ^
-        to_id_string ((l,t,l'),v) ^ " >= " ^
-          Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Lower t v)))
-  end
-module RVG =
-  struct
-    include Graph.Persistent.Digraph.ConcreteBidirectional(RV)
-
-    type scc = RV.t list
-
-    let rvs_to_id_string rvs =
-      rvs
-      |> List.map RV.to_id_string
-      |> String.concat ","
-
-    let rvs_to_string rvs =
-      rvs
-      |> List.map RV.to_string
-      |> String.concat ","
-
-    let pre rvg rv =
-      pred rvg rv
-      |> List.enum
-
-    (* TODO Optimizable *)
-    let entry_points rvg scc =
-      scc
-      |> List.enum
-      |> Enum.map (pre rvg)
-      |> Enum.flatten
-      |> Enum.uniq_by RV.equal
-      |> Util.intersection RV.equal (List.enum scc)
-
-    let transitions scc =
-      scc
-      |> List.enum
-      |> Enum.map RV.transition
-      |> Enum.uniq_by Transition.equal
-  end  
-   
+open Types
+  
 type t = {
     graph: TransitionGraph.t;
     vars: Var.t list;
