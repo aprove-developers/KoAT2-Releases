@@ -10,7 +10,7 @@ type t = {
     factor: int;
     constant: int;
     vars: VarSet.t;
-  }
+  } [@@deriving eq]
   
 let mk factor constant vars = {
     factor;
@@ -18,11 +18,6 @@ let mk factor constant vars = {
     vars = VarSet.of_string_list vars
   }
        
-let equal lsb1 lsb2 =
-  lsb1.factor = lsb2.factor
-  && lsb1.constant = lsb2.constant
-  && VarSet.equal lsb1.vars lsb2.vars
-
 let neg lsb =
   { lsb with factor = -lsb.factor }
 
