@@ -14,11 +14,11 @@ type kind = [ `Lower | `Upper ] [@@deriving show]
 val improve_scc : Program.t -> RVG.t -> Approximation.t -> RV.t list -> Approximation.t
 
           
-(** Improves a trivial scc. That is an scc which consists only of one result variable.
+(** Improves a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
 val improve_trivial_scc : kind -> Program.t -> Approximation.t -> RV.t-> Approximation.t
 
-(** Improves a nontrivial scc. That is an scc which consists of more than one result variable.
+(** Improves a nontrivial scc. That is an scc which consists of a loop.
     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
 val improve_nontrivial_scc : kind -> Program.t -> RVG.t -> Approximation.t -> RV.t list -> Approximation.t
 
@@ -28,11 +28,13 @@ val improve_nontrivial_scc : kind -> Program.t -> RVG.t -> Approximation.t -> RV
     S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
 val incoming_bound : kind -> Program.t -> Approximation.t -> Bound.t -> Transition.t -> Bound.t
 
+(** Computes a trivial sizebound for the given transition with the specified local sizebound.  *)
 val compute_trivial_bound : kind -> Program.t -> Approximation.t -> Bound.t -> Transition.t -> Bound.t
   
-(** Computes for each transition max{s_alpha \| alpha in C_t} and multiplies the results. *)
+(** Computes for each transition max(s_alpha for all alpha in C_t) and multiplies the results. *)
 val extreme_scaling_factor : kind -> RV.t list -> int
 
+(** Returns all the variables that may influence the given alpha and get changed in the scc. *)
 val scc_variables : RVG.t -> RV.t list -> RV.t -> Var.t Enum.t
 
 (** Computes for each transition max(abs(pre(alpha)) intersected with C for all alpha in C_t) and multiplies the results. *)
