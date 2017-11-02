@@ -8,7 +8,7 @@ let skip_location location graph =
   |> Tuple2.mapn List.enum
   |> uncurry Enum.cartesian_product
   |> Enum.map (fun ((l,t,_), (_,t',l')) -> (l, TransitionLabel.append t t', l'))
-  |> Program.add_edges graph      
+  |> (flip Program.add_transitions) graph
 
 (** Returns if the specific location is chainable in the graph. *)
 let chainable graph location : bool =

@@ -119,14 +119,14 @@ type t = {
     start: Location.t;
   } [@@deriving eq]
        
-let add_vertices graph vertices =
-  vertices
-  |> Enum.map (fun vertex -> fun gr -> TransitionGraph.add_vertex gr vertex)
+let add_locations locations graph =
+  locations
+  |> Enum.map (fun l -> fun gr -> TransitionGraph.add_vertex gr l)
   |> Enum.fold (fun gr adder -> adder gr) graph
   
-let add_edges graph edges =
-  edges
-  |> Enum.map (fun edge -> fun gr -> TransitionGraph.add_edge_e gr edge)
+let add_transitions transitions graph =
+  transitions
+  |> Enum.map (fun t -> fun gr -> TransitionGraph.add_edge_e gr t)
   |> Enum.fold (fun gr adder -> adder gr) graph
 
 let remove_location program location =
@@ -138,27 +138,35 @@ let remove_transition program transition =
 let map_graph f program =
   { program with graph = f program.graph }
 
-let mk vertices edges =
-  add_edges (add_vertices TransitionGraph.empty vertices) edges
+let locations transitions =
+  transitions
+  |> Enum.concat_map (fun (l,_,l') -> List.enum [l; l'])
+  |> Enum.uniq_by Location.equal
+  
+let mk transitions =
+  let locations = locations (Enum.clone transitions) in
+  TransitionGraph.empty
+  |> add_locations locations
+  |> add_transitions transitions
 
+let label_to_transition label =
+  (TransitionLabel.start label, label, TransitionLabel.target label)
+  
 let from vars transitions start =
-  let edges = Enum.map (fun t -> (Location.of_string (TransitionLabel.start t),
-                                  t,
-                                  Location.of_string (TransitionLabel.target t)))
-                       (List.enum transitions) in
-  let vertices =
-    Enum.clone edges
-    |> Enum.concat_map (fun (l,_,l') -> List.enum [l; l'])
-    |> Enum.uniq in
-  {
-    graph = mk vertices edges;
-    vars = vars;
-    start = start;
-  }
+  transitions
+  |> List.enum
+  |> Enum.map label_to_transition
+  |> Enum.map (fun (l,t,l') -> (Location.of_string l, t, Location.of_string l'))
+  |> fun transitions ->
+     {
+       graph = mk transitions;
+       vars = vars;
+       start = start;
+     }
 
 let vars program =
   VarSet.of_list program.vars
-  
+
 let start program = program.start
   
 let add_vertices_to_rvg vertices rvg =

@@ -173,15 +173,9 @@ let build_strict_oriented (table : PrfTable.parameter_table) (program : Program.
   let vars = VarSet.elements (Program.vars program) in
   Enum.fold (fun tuple trans -> help_strict_oriented program table vars trans tuple) (non_incr,[]) transitions
 
-let determine_locations transitions =
-  let sources = Enum.map Program.Transition.src (Enum.clone transitions) in
-  let targets = Enum.map Program.Transition.target (Enum.clone transitions) in
-  Enum.append sources targets
-  |> Enum.uniq_by Program.Location.equal
-      
 let ranking_function_procedure (program : Program.t) (transitions : transitionEnum) =
   let transitions_for_strict = (Enum.clone transitions) in
-  let locations = determine_locations transitions in
+  let locations = Program.locations transitions in
   let (table, fresh_coeffs) = generate_ranking_template program locations in
 (*    print_string ("ranking_function_procedure, generated coeffs = "^(String.concat "\n" (List.map (Var.to_string) fresh_coeffs)));*)
   let non_incr = get_non_increase_constraints table program transitions in

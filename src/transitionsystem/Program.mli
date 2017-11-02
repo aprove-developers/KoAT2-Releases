@@ -71,9 +71,9 @@ end
 
 type t
 
-val add_vertices : TransitionGraph.t -> Location.t Enum.t -> TransitionGraph.t
+val add_locations : Location.t Enum.t -> TransitionGraph.t -> TransitionGraph.t
 
-val add_edges : TransitionGraph.t -> Transition.t Enum.t -> TransitionGraph.t
+val add_transitions : Transition.t Enum.t -> TransitionGraph.t -> TransitionGraph.t
 
 (** Removes the location from the program and all edges to it. *)
 val remove_location : t -> Location.t -> t
@@ -82,7 +82,7 @@ val remove_transition : t -> Transition.t -> t
 
 val map_graph : (TransitionGraph.t -> TransitionGraph.t) -> t -> t
   
-val mk : Location.t Enum.t -> Transition.t Enum.t -> TransitionGraph.t
+val mk : Transition.t Enum.t -> TransitionGraph.t
 
 val from : Var.t list
            -> TransitionLabel.t list
@@ -117,5 +117,8 @@ val to_string : t -> string
   
 val vars : t -> VarSet.t
 
+(** Returns all locations which occur in the transitions, but each location only once. *)
+val locations : Transition.t Enum.t -> Location.t Enum.t
+  
 val start : t -> Location.t
   
