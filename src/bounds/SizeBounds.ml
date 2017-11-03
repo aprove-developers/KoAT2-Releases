@@ -113,9 +113,10 @@ let incoming_vars_effect kind rvg get_sizebound scc vars transition alpha =
                      ~result:Bound.to_string
                      execute
 
-let transition_effect kind rvg get_sizebound scc ct transition=
+let transition_effect kind rvg get_sizebound scc ct transition =
   let execute () =
     ct
+    |> List.enum
     |> Enum.map (fun alpha -> (alpha, Option.get (LocalSizeBound.sizebound_local_rv kind alpha)))
     (* Should exist *)
     |> Enum.map (fun (alpha, lsb) ->
@@ -124,7 +125,7 @@ let transition_effect kind rvg get_sizebound scc ct transition=
     |> Bound.maximum
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "transition effect", ["scc", RVG.rvs_to_id_string scc;
-                                                      "ct", RVG.rvs_to_id_string (List.of_enum ct);
+                                                      "ct", RVG.rvs_to_id_string ct;
                                                       "transition", Transition.to_id_string transition])
                      ~result:Bound.to_string
                      execute
@@ -134,8 +135,9 @@ let effects kind rvg get_timebound get_sizebound scc =
     scc
     |> List.enum
     |> Enum.group_by (fun (t1, v1) (t2, v2) -> Transition.equal t1 t2)
+    |> Enum.map List.of_enum
     |> Enum.map (fun ct ->
-           let (transition, _) = Option.get (Enum.peek ct) (* We require ct to be non-empty *) in
+           let ((transition, v) :: _) = ct (* We require ct to be non-empty *) in
            Bound.(get_timebound transition * transition_effect kind rvg get_sizebound scc ct transition)
          )
     |> Bound.sum

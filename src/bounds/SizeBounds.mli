@@ -44,6 +44,9 @@ val overall_scaling_factor : kind -> RVG.t -> (Transition.t -> Bound.t) -> RV.t 
 
 val incoming_vars_effect : kind -> RVG.t -> (kind -> Transition.t -> Var.t -> Bound.t) -> RV.t list -> VarSet.t -> Transition.t -> RV.t -> Bound.t
 
-val transition_effect : kind -> RVG.t -> (kind -> Transition.t -> Var.t -> Bound.t) -> RV.t list -> RV.t Enum.t -> Transition.t -> Bound.t
+(** The highest effect of the specific transition in the scc.
+    A transition can manipulate different variables.
+    The result of this function is for all those variables the highest incoming value. *)  
+val transition_effect : kind -> RVG.t -> (kind -> Transition.t -> Var.t -> Bound.t) -> RV.t list -> RV.t list -> Transition.t -> Bound.t
 
 val effects : kind -> RVG.t -> (Transition.t -> Bound.t) -> (kind -> Transition.t -> Var.t -> Bound.t) -> RV.t list -> Bound.t
