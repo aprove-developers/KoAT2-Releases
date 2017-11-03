@@ -10,10 +10,11 @@
 %token 			ARROW WITH COSTLEFT COSTRIGHT LBRACK RBRACK
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
 %token                  COMMA
-%token                  MIN MAX NEG SUM PRODUCT INFINITY EXP
+%token                  MIN MAX INFINITY ABS
 
 %left			PLUS MINUS
 %left			TIMES
+%left			POW
                   
 			
 %start <Program.t> onlyProgram
@@ -220,24 +221,31 @@ onlyBound :
         |       b = bound EOF { b } ;
 
 bound :
-	|	p = polynomial
-		{ Bound.of_poly p }
+	|	INFINITY
+		{ Bound.infinity }
+	|	LPAR; b = bound; RPAR
+                { b }
 	|	MAX LBRACE max = separated_list(COMMA, bound) RBRACE
 		{ Bound.maximum (BatList.enum max) }
 	|	MIN LBRACE min = separated_list(COMMA, bound) RBRACE
 		{ Bound.minimum (BatList.enum min) }
-	|	NEG b = bound
+	|	MINUS b = bound
 		{ Bound.neg b }
-	|	v = UINT; EXP; b = bound
-		{ Bound.exp (OurInt.of_int v) b }
-	|	SUM LBRACE sum = separated_list(COMMA, bound) RBRACE
-		{ Bound.sum (BatList.enum sum) }
-	|	PRODUCT LBRACE product = separated_list(COMMA, bound) RBRACE
-		{ Bound.product (BatList.enum product) }
-	|	INFINITY
-		{ Bound.infinity } ;
+	|	c = UINT b = option(preceded(POW, bound))
+		{ Bound.exp (OurInt.of_int c) BatOption.(b |? Bound.zero) }
+	|       v = ID c = option(preceded(POW, UINT))
+	        { Bound.pow (Bound.of_var (Var.of_string v)) BatOption.(c |? 1) }
+	|       ABS v = ID ABS c = option(preceded(POW, UINT))
+	        { Bound.pow (Bound.of_abs_var (Var.of_string v)) BatOption.(c |? 1) }
+	|	b1 = bound; bound_bioperator; b2 = bound
+		{ Bound.add b1 b2 } ;
+
+%inline bound_bioperator :
+	|	PLUS { Bound.add }
+	|	TIMES { Bound.mul }
+	|       MINUS { Bound.sub } ;
 
 %inline bioperator :
 	|	PLUS { Poly.add }
 	|	TIMES { Poly.mul }
-	|       MINUS { fun ex1 ex2 -> Poly.add ex1 (Poly.neg ex2) } ;
+	|       MINUS { Poly.sub } ;

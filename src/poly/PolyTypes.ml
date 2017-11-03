@@ -24,7 +24,10 @@ module type PartialOrder =
 module MakePartialOrder(Base : BasePartialOrder) : (PartialOrder with type t := Base.t) =
   struct
     include Base
-    let (>=) b1 b2 = Option.map (fun greater -> b1 == b2 || greater) (b1 > b2)
+    let (>=) b1 b2 =
+      if b1 =~= b2 then
+        Some true
+      else b1 > b2
     let (<) b1 b2 = Option.map not (b1 >= b2)
     let (<=) b1 b2 = Option.map not (b1 > b2)
   end

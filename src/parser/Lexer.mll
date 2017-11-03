@@ -34,12 +34,10 @@ rule read =
   | "VAR"             { P.VAR }
   | "min"             { P.MIN }
   | "max"             { P.MAX }
-  | "sum"             { P.SUM }
-  | "product"         { P.PRODUCT }
-  | "neg"             { P.NEG }
   | "inf"             { P.INFINITY }
   | int               { P.UINT (int_of_string (Lexing.lexeme lexbuf)) }
   | id                { P.ID (Lexing.lexeme lexbuf) }
+  | '|'               { P.ABS }
   | '('               { P.LPAR }
   | ')'               { P.RPAR }
   | '{'               { P.LBRACE }
@@ -50,7 +48,6 @@ rule read =
   | '*'               { P.TIMES }
   | '-'               { P.MINUS }
   | '^'               { P.POW }
-  | "**"              { P.EXP }
   | "->"              { P.ARROW }
   | "-{"              { P.COSTLEFT }
   | "}>"              { P.COSTRIGHT }
@@ -61,7 +58,7 @@ rule read =
   | '<'               { P.LESSTHAN }
   | '>'               { P.GREATERTHAN }
   | "&&"              { P.AND }
-  | "/\\"              { P.AND }
+  | "/\\"             { P.AND }
   | "||"              { P.OR }
   | ":|:"             { P.WITH }
   | ','               { P.COMMA }

@@ -40,7 +40,7 @@ let rec to_string = function
       | Product (b1, b2) -> "(" ^ to_string (Product (b1, b2)) ^ ")"
       | b -> to_string b
     )
-  | Pow (v, b) -> OurInt.to_string v ^ "**" ^ (
+  | Pow (v, b) -> OurInt.to_string v ^ "^" ^ (
                     match b with
                     | Sum (b1, b2) -> "(" ^ to_string (Sum (b1, b2)) ^ ")"
                     | Product (b1, b2) -> "(" ^ to_string (Product (b1, b2)) ^ ")"
@@ -65,6 +65,7 @@ module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t)
       | (Infinity, _) -> Some true
       | (_, Neg Infinity) -> Some true
       | (Neg Infinity, _) -> Some false
+      | (Const c1, Const c2) when OurInt.Compare.(c1 > c2) -> Some true
       (* TODO Add more cases *)
       | (b1, b2) -> None
                   
@@ -93,6 +94,12 @@ let rec simplify = function
   | Sum (Const c, b) when OurInt.(c =~= zero) -> simplify b
   | Sum (b, Const c) when OurInt.(c =~= zero) -> simplify b
   | Sum (Const c1, Const c2) -> Const OurInt.(c1 + c2)
+  | Sum (Neg Infinity, Infinity) -> Const OurInt.zero
+  | Sum (Infinity, Neg Infinity) -> Const OurInt.zero
+  | Sum (_, Infinity) -> Infinity
+  | Sum (Infinity, _) -> Infinity
+  | Sum (_, Neg Infinity) -> Neg Infinity
+  | Sum (Neg Infinity, _) -> Neg Infinity
   | Sum (b1, b2) -> Sum (simplify b1, simplify b2)
 
   (* Simplify terms with product head *)
@@ -106,19 +113,19 @@ let rec simplify = function
 
   (* Simplify terms with pow head *)
   | Pow (value, bound) ->
-     if OurInt.(equal value zero) then of_constant OurInt.zero
-     else if OurInt.(equal value one) then of_constant OurInt.one
-     else if equal bound (of_constant OurInt.zero) then of_constant OurInt.one
-     else if equal bound (of_constant OurInt.one) then simplify bound
+     if OurInt.(equal value zero) then Const OurInt.zero
+     else if OurInt.(equal value one) then Const OurInt.one
+     else if equal bound (Const OurInt.zero) then Const OurInt.one
+     else if equal bound (Const OurInt.one) then simplify bound
      else Pow (value, simplify bound)
 
   (* Simplify terms with min head *)
   | Min (b1, b2) ->
      let (b1, b2) = (simplify b1, simplify b2) in
-     (match b1 > b2 with
+     (match b1 >= b2 with
      | Some true -> b2
      | _ ->
-        match b2 > b1 with
+        match b2 >= b1 with
         | Some true -> b1
         | _ ->
            (* Optimization if we have structural equality *)
@@ -127,10 +134,10 @@ let rec simplify = function
   (* Simplify terms with max head *)
   | Max (b1, b2) ->
      let (b1, b2) = (simplify b1, simplify b2) in
-     (match b1 > b2 with
+     (match b1 >= b2 with
      | Some true -> b1
      | _ ->
-        match b2 > b1 with
+        match b2 >= b1 with
         | Some true -> b2
         | _ ->
            (* Optimization if we have structural equality *)
@@ -160,6 +167,19 @@ module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
       
   end
 include PolyTypes.MakeMath(BaseMathImpl)
+
+let sum bounds =
+  bounds
+  |> Enum.fold add zero
+  |> simplify
+  
+let product bounds =
+  bounds
+  |> Enum.fold mul one
+  |> simplify
+  
+let sub t1 t2 =
+  simplify (add t1 (neg t2))
       
 let of_poly =
   Polynomial.fold ~const:of_constant ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow
@@ -194,11 +214,15 @@ let max b1 b2 =
 let min b1 b2 =
   simplify (Min (b1, b2))
 
-let maximum =
-  Enum.fold max (minus_infinity)
+let maximum bounds =
+  bounds
+  |> Enum.fold max minus_infinity
+  |> simplify
   
-let minimum =
-  Enum.fold min infinity
+let minimum bounds =
+  bounds
+  |> Enum.fold min infinity
+  |> simplify
 
 let exp value b =
   simplify (Pow (value, b))
