@@ -58,14 +58,7 @@ let ranking_template vars =
   let constant_poly = ParameterPolynomial.of_constant (Polynomial.of_var constant_var) in
   (ParameterPolynomial.(linear_poly + constant_poly)),(List.append fresh_vars [constant_var])
   
-let copy_enum_into_hash pairs_enum =
-  let hashtbl = PrfTable.create (Enum.count pairs_enum) in
-  let add (key, element) =
-    PrfTable.add hashtbl key element in
-  Enum.iter add pairs_enum; hashtbl
-
-(**Generates a ranking function template for every location in the program*)
-let generate_ranking_template (program : Program.t) (locations : Location.t Enum.t) =
+let generate_ranking_template program locations =
   let execute () =
     let vars = VarSet.elements (Program.vars program) in
     let ins_loc_prf location =
@@ -75,15 +68,10 @@ let generate_ranking_template (program : Program.t) (locations : Location.t Enum
         let (parameter_poly, var) = ranking_template vars in
         (location, parameter_poly, var)
     in
-    let enum_of_prf = Enum.map ins_loc_prf locations in
-    let enum_of_prf_to_copy = Enum.map (fun (a,b,c)-> (a,b)) (Enum.clone enum_of_prf) in
-    let enum_of_varlists = Enum.map (fun (a,b,c)-> c) (Enum.clone enum_of_prf) in
-    let constructed_parameters =
-      enum_of_varlists
-      |> Enum.map List.enum
-      |> Enum.flatten
-      |> List.of_enum in 
-    copy_enum_into_hash enum_of_prf_to_copy, constructed_parameters
+    let enum_of_prf = List.map ins_loc_prf locations in
+    let enum_of_prf_to_copy = List.map (fun (a,b,c)-> (a,b)) enum_of_prf in
+    let varlist = List.flatten (List.map (fun (a,b,c)-> c) enum_of_prf) in
+    (PrfTable.of_list enum_of_prf_to_copy, varlist)
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "generated_ranking_template", [])
                      ~result:(fun (parameter_table, _) -> PrfTable.to_string_parapoly parameter_table)
@@ -96,25 +84,28 @@ let help_update label var =
   |None -> ParameterPolynomial.of_var var
   |Some p -> ParameterPolynomial.of_polynomial p
            
-let help_non_increasing (initial : bool) (table : PrfTable.parameter_table) (trans : Transition.t) (vars : Var.t list) =
-  if initial then 
-    Constraint.mk_true 
-  else
-    let (src, trans_label, target) = trans in
-    let start_parapoly = PrfTable.find table src in
-    (*    print_string (String.concat"-> "["help_non_increasing_start_parapoly";(ParameterPolynomial.to_string start_parapoly);"\n"]);*)
-    let target_parapoly = PrfTable.find table target in
-    (*    print_string (String.concat"-> "["help_non_increasing_target_parapoly";(ParameterPolynomial.to_string target_parapoly);"\n"]);*)
-    let guard = TransitionLabel.guard trans_label in
-    let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) target_parapoly in
-    (*    print_string (String.concat"-> "["help_non_increasing_updated_target";(ParameterPolynomial.to_string updated_target);"\n"]);*)
-    let new_atom = ParameterAtom.Infix.(start_parapoly >= updated_target) in
-    (*    print_string (String.concat"-> "["help_non_increasing_input_farkas";(ParameterConstraint.to_string (ParameterConstraint.lift new_atom));"\n"]);*)
-    let result = farkas_transform guard new_atom in
-    (*print_string (String.concat"-> "["help_non_increasing_output";(Constraint.to_string result);"\n"]);*)
-    result
+let help_non_increasing (initial : bool) (table : ParameterPolynomial.t PrfTable.t) (trans : Transition.t) (vars : Var.t list) =
+  let execute () =
+    if initial then 
+      Constraint.mk_true 
+    else
+      let (src, trans_label, target) = trans in
+      print_string (Location.to_string src);
+      print_string (Location.to_string target);
+      let start_parapoly =
+        try PrfTable.find table src with Not_found -> (print_string (Location.to_string src); raise Not_found) in
+      let target_parapoly = PrfTable.find table target in
+      let guard = TransitionLabel.guard trans_label in
+      let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) target_parapoly in
+      let new_atom = ParameterAtom.Infix.(start_parapoly >= updated_target) in
+      farkas_transform guard new_atom
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "help non increasing", ["prf", PrfTable.to_string_parapoly table;
+                                                        "transition", Transition.to_id_string trans])
+                     ~result:Constraint.to_string
+                     execute
   
-let help_strict_decrease (initial : bool) (table : PrfTable.parameter_table) (trans : Transition.t) (vars : Var.t list) =
+let help_strict_decrease (initial : bool) (table : ParameterPolynomial.t PrfTable.t) (trans : Transition.t) (vars : Var.t list) =
   if initial then 
     Constraint.mk_true 
   else
@@ -128,7 +119,7 @@ let help_strict_decrease (initial : bool) (table : PrfTable.parameter_table) (tr
     farkas_transform guard new_atom
 
   
-let help_boundedness (initial : bool) (table : PrfTable.parameter_table) (trans : Transition.t) (vars : Var.t list) =
+let help_boundedness (initial : bool) (table : ParameterPolynomial.t PrfTable.t) (trans : Transition.t) (vars : Var.t list) =
   if initial then 
     Constraint.mk_true 
   else
@@ -141,43 +132,49 @@ let help_boundedness (initial : bool) (table : PrfTable.parameter_table) (trans 
 
   
 (**Generates the constraints due to the non increase rule of a polynomial ranking function*)
-let get_non_increase_constraints (table : PrfTable.parameter_table) (program : Program.t) (transitions : Transition.t Enum.t) =
+let get_non_increase_constraints (table : ParameterPolynomial.t PrfTable.t) (program : Program.t) (transitions : Transition.t list) =
   let execute () =
     let variables = VarSet.elements (Program.vars program) in
-    Enum.map (fun trans -> help_non_increasing (Program.is_initial program trans) table trans variables) transitions
-    |> List.of_enum
+    transitions
+    |> List.map (fun trans -> help_non_increasing (Program.is_initial program trans) table trans variables)
     |> Constraint.all
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "determined non_incr constraints", [])
+                     (fun () -> "determined non_incr constraints", ["prf", PrfTable.to_string_parapoly table])
                      ~result:Constraint.to_string
                      execute
 
 (* Generates the strictly decreasing constraints for one single transition wrt to the generated ranking templates*)
 let help_strict_oriented program table vars trans (smt,bounded) =
-  let initial = Program.is_initial program trans in
-  let curr_smt =
-    Constraint.Infix.(smt
-                      && help_boundedness initial table trans vars
-                      && help_strict_decrease initial table trans vars) in
+  let execute () =
+    let initial = Program.is_initial program trans in
+    let curr_smt =
+      Constraint.Infix.(smt
+                        && help_boundedness initial table trans vars
+                        && help_strict_decrease initial table trans vars) in
     let sol = SMTSolver_.satisfiable (Formula.mk curr_smt) in
-      if (sol && not(initial)) then
-        (curr_smt, List.append bounded [trans])
-      else (smt,bounded)
+    if (sol && not(initial)) then
+      (curr_smt, List.append bounded [trans])
+    else (smt,bounded)
+  in Logger.with_log logger Logger.DEBUG 
+                     (fun () -> "help strict oriented", ["transition", Transition.to_id_string trans;
+                                                         "vars", String.concat ", " (List.map Var.to_string vars)])
+                     execute
 
 (*Given a set of transitions the pair (constr,bound) is generated. Constr is the constraint for the ranking function and bounded consists of all strictly oriented transitions *)
-let build_strict_oriented (table : PrfTable.parameter_table) (program : Program.t) (transitions: Transition.t Enum.t) (non_incr: Constraint.t) =
+let build_strict_oriented (table : ParameterPolynomial.t PrfTable.t) (program : Program.t) (transitions: Transition.t list) (non_incr: Constraint.t) =
   let vars = VarSet.elements (Program.vars program) in
-  Enum.fold (fun tuple trans -> help_strict_oriented program table vars trans tuple) (non_incr,[]) transitions
+  List.fold_left (fun tuple trans -> help_strict_oriented program table vars trans tuple) (non_incr,[]) transitions
 
-let ranking_function_procedure (program : Program.t) (transitions : Transition.t Enum.t) =
-  let transitions_for_strict = (Enum.clone transitions) in
-  let locations = Program.locations transitions in
-  let (table, fresh_coeffs) = generate_ranking_template program locations in
-(*    print_string ("ranking_function_procedure, generated coeffs = "^(String.concat "\n" (List.map (Var.to_string) fresh_coeffs)));*)
-  let non_incr = get_non_increase_constraints table program transitions in
-  let (smt_form , bounded) = build_strict_oriented table program transitions_for_strict non_incr in
-  let model = SMTSolver_.get_model_opt (Formula.mk smt_form) fresh_coeffs in (*(fresh coeffs should be used here)*)
-  (PrfTable.map (fun loc prf -> Polynomial.eval_partial (ParameterPolynomial.flatten prf) model) table), bounded
+let ranking_function_procedure (program : Program.t) (transitions : Transition.t list) =
+  let execute () =
+    let (table, fresh_coeffs) = generate_ranking_template program (transitions |> List.enum |> Program.locations |> List.of_enum) in
+    let non_incr = get_non_increase_constraints table program transitions in
+    let (smt_form , bounded) = build_strict_oriented table program transitions non_incr in
+    let model = SMTSolver_.get_model_opt (Formula.mk smt_form) fresh_coeffs in (*(fresh coeffs should be used here)*)
+    (PrfTable.map (fun loc prf -> Polynomial.eval_partial (ParameterPolynomial.flatten prf) model) table), bounded
+  in Logger.with_log logger Logger.DEBUG 
+                     (fun () -> "ranking function procedure", ["transitions", String.concat ", " (List.map Transition.to_id_string transitions)])
+                     execute
 
 (** Checks if a transition has already been oriented strictly in a given approximation     *)
 let is_already_bounded appr transition =  
@@ -188,15 +185,15 @@ let find program appr =
     program
     |> Program.graph
     |> TransitionGraph.transitions
-    |> TransitionSet.enum
-    |> Enum.filter (is_already_bounded appr) in
+    |> TransitionSet.to_list
+    |> List.filter (is_already_bounded appr) in
   let execute () =
     let (table,bounded) = ranking_function_procedure program transitions in
     {   pol = PrfTable.find table;
         strictly_decreasing = bounded;
-        transitions = List.of_enum transitions;
+        transitions = transitions;
     }
   in Logger.with_log logger Logger.DEBUG 
-                     (fun () -> "Generated Ranking Function",["prf_values", (PrfTable.to_string_poly (Tuple2.first (ranking_function_procedure program transitions)))])
-                     ~result: to_string
+                     (fun () -> "find ranking function", ["prf", (PrfTable.to_string_poly (Tuple2.first (ranking_function_procedure program transitions)))])
+                     ~result:to_string
                      execute

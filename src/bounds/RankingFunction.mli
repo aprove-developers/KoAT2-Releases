@@ -25,9 +25,10 @@ val find : Program.t -> Approximation.t -> t
 (** Invokes Farkas Lemma, to compute a ranking function*)
 val farkas_transform : Constraint.t -> ParameterAtom.t -> Constraint.t
   
-val generate_ranking_template : Program.t -> Location.t Enum.t -> PrfTable.parameter_table * Var.t list
+(** Generates a ranking function template for every location in the program*)
+val generate_ranking_template : Program.t -> Location.t list -> ParameterPolynomial.t PrfTable.t * Var.t list
 
-(**Converts a ranking function into a string*)
+(** Converts a ranking function into a string*)
 val to_string : t -> string
 
-val ranking_function_procedure : Program.t -> Transition.t Enum.t -> PrfTable.polynomial_table * Transition.t list
+val ranking_function_procedure : Program.t -> Transition.t list -> Polynomial.t PrfTable.t * Transition.t list

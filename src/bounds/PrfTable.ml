@@ -2,18 +2,23 @@ open Batteries
 open Polynomials
 open Program.Types
    
-include Hashtbl.Make(TransitionGraph.V)
+include Hashtbl.Make(Location)
 
-type parameter_table = ParameterPolynomial.t t
+(* The default method from Hashtbl seems to be buggy *)
+let of_list pairs =
+  let hashtbl = create (List.length pairs) in
+  let add_e (key, element) =
+    add hashtbl key element in
+  List.iter add_e pairs; hashtbl
 
-type polynomial_table = Polynomial.t t
-
-let to_string_parapoly hashtable =
+let to_string poly_to_string hashtable =
   let output = IO.output_string () in
-  print (fun output key -> IO.nwrite output (Location.to_string key)) (fun output parapoly -> IO.nwrite output (ParameterPolynomial.to_string parapoly)) output hashtable;
-  IO.close_out output
+  print ~first:"[" ~last:"]" ~sep:", "
+        (fun output key -> IO.nwrite output (Location.to_string key)) (fun output poly -> IO.nwrite output (poly_to_string poly)) output hashtable;
+  IO.close_out output  
 
-let to_string_poly hashtable =
-  let output = IO.output_string () in
-  print (fun output key -> IO.nwrite output (Location.to_string key)) (fun output parapoly -> IO.nwrite output (Polynomial.to_string parapoly)) output hashtable;
-  IO.close_out output
+let to_string_parapoly =
+  to_string ParameterPolynomial.to_string
+
+let to_string_poly =
+  to_string Polynomial.to_string
