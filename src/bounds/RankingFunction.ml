@@ -30,7 +30,7 @@ let pol_to_string (locations: Location.t list) (pol: Location.t -> Polynomial.t)
 
 let to_string {pol; strictly_decreasing; transitions} =
   let locations = transitions |> List.enum |> Program.locations |> List.of_enum in
-  "pol: [" ^ pol_to_string locations pol ^ "] strictly_decreasing: " ^ (List.map Transition.to_id_string strictly_decreasing |> String.concat ", ")
+  "pol: [" ^ pol_to_string locations pol ^ "] T'>: " ^ (List.map Transition.to_id_string strictly_decreasing |> String.concat ", ")
 
 (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
 let apply_farkas a_matrix b_right c_left d_right =

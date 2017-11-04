@@ -3,6 +3,8 @@ open Program.Types
    
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
+let logger = Logger.make_log "appr"
+
 module Time =
   struct
     module Map = Hashtbl.Make(Transition)
@@ -12,7 +14,12 @@ module Time =
     let empty = Map.create
               
     let get map transition =
-      Map.find_option map transition |? Bound.infinity
+      let execute () =
+        Map.find_option map transition |? Bound.infinity
+      in Logger.with_log logger Logger.DEBUG
+                         (fun () -> "timebound", ["transition", Transition.to_id_string transition])
+                         ~result:Bound.to_string
+                         execute
 
     let get_between map src target =
       map
@@ -81,10 +88,16 @@ module Size =
       | `Upper -> Bound.min
                 
     let get kind map transition var =
-      Map.find_option map (kind, transition, var)
-      |? match kind with
-         | `Lower -> Bound.minus_infinity
-         | `Upper -> Bound.infinity       
+      let execute () =
+        Map.find_option map (kind, transition, var)
+        |? match kind with
+           | `Lower -> Bound.minus_infinity
+           | `Upper -> Bound.infinity       
+      in Logger.with_log logger Logger.DEBUG
+                         (fun () -> "sizebound", ["kind", show_kind kind;
+                                                  "rv", RV.to_id_string (transition, var)])
+                         ~result:Bound.to_string
+                         execute
 
     let add kind bound transition var map =
       (try

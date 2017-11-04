@@ -32,8 +32,8 @@ let rec to_string = function
   | Abs v -> "|" ^ Var.to_string v ^ "|"
   | Const c -> OurInt.to_string c
   | Infinity -> "inf"
-  | Max (b1, b2) -> "max{" ^ to_string b1 ^ ", " ^ to_string b1 ^ "}"
-  | Min (b1, b2) -> "min{" ^ to_string b1 ^ ", " ^ to_string b1 ^ "}"
+  | Max (b1, b2) -> "max{" ^ to_string b1 ^ ", " ^ to_string b2 ^ "}"
+  | Min (b1, b2) -> "min{" ^ to_string b1 ^ ", " ^ to_string b2 ^ "}"
   | Neg b -> "-" ^ (
       match b with
       | Sum (b1, b2) -> "(" ^ to_string (Sum (b1, b2)) ^ ")"
