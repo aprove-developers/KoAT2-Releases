@@ -5,17 +5,13 @@ module Types =
    
     module Location =
       struct
-        type t = {
-            name : string;
-            (*initial : bool;*)
-            (* TODO Possible optimization: invariant : PolynomialConstraints.t*)
-          } [@@deriving eq, ord]
+        type t = string [@@deriving eq, ord]
                
-        let to_string l = l.name
+        let to_string l = l
                         
-        let hash l = Hashtbl.hash (to_string l)
+        let hash l = Hashtbl.hash l
                    
-        let of_string inp_name = { name = inp_name }               
+        let of_string name = name               
       end
     module LocationSet = Set.Make(Location)
 

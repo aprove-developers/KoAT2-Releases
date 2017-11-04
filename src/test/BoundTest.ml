@@ -29,6 +29,8 @@ let tests =
                     ("4", "max {min {3,7}, min{4,5}}");
                     ("inf", "1 + max {0, 0} + inf + 1 + max {0, 0} + inf");
                     ("0", "max{0, 0}+max{0, 0}");
+                    ("0", "max{0, 0, -inf}");
+                    ("inf", "max{0, 1, inf}");
                   ]
       );
       
