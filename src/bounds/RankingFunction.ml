@@ -7,7 +7,7 @@ open Program.Types
    
 module SMTSolver_ = SMT.Z3Solver
 module Valuation = Valuation.Make(OurInt)
-                  
+
 type t = {
     pol : Location.t -> Polynomial.t;
     strictly_decreasing : Transition.t list;
@@ -22,7 +22,15 @@ let strictly_decreasing f = f.strictly_decreasing
                           
 let transitions f = f.transitions
 
-let to_string prf = (String.concat ", " (List.map Transition.to_string (strictly_decreasing prf) ))^"\n"
+let para_pol_to_string (locations: Location.t list) (pol: Location.t -> ParameterPolynomial.t) =
+  locations |> List.map (fun l -> Location.to_string l ^ ": " ^ ParameterPolynomial.to_string (pol l)) |> String.concat ", "  
+
+let pol_to_string (locations: Location.t list) (pol: Location.t -> Polynomial.t) =
+  locations |> List.map (fun l -> Location.to_string l ^ ": " ^ Polynomial.to_string (pol l)) |> String.concat ", "  
+
+let to_string {pol; strictly_decreasing; transitions} =
+  let locations = transitions |> List.enum |> Program.locations |> List.of_enum in
+  "pol: [" ^ pol_to_string locations pol ^ "] strictly_decreasing: " ^ (List.map Transition.to_id_string strictly_decreasing |> String.concat ", ")
 
 (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
 let apply_farkas a_matrix b_right c_left d_right =
@@ -34,7 +42,6 @@ let apply_farkas a_matrix b_right c_left d_right =
   
 (** Invokes farkas quantifier elimination. Uses apply_farkas*)
 let farkas_transform constr param_atom =
-(*    print_string (String.concat "-> " ["farkas_transform input";(Constraint.to_string constr);ParameterConstraint.to_string (ParameterConstraint.lift param_atom);"\n"]);*)
   let vars = VarSet.union (Constraint.vars constr) (ParameterAtom.vars param_atom) in
   let costfunction = ParameterConstraint.lift param_atom in
   let a_matrix = Constraint.get_matrix vars constr in
@@ -68,7 +75,7 @@ let generate_ranking_template program locations =
     (PrfTable.find prf_table, varlist)
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "generated_ranking_template", [])
-                     ~result:(fun (pol, _) -> locations |> List.map pol |> List.map ParameterPolynomial.to_string |> String.concat ", ")
+                     ~result:(fun (pol, _) -> para_pol_to_string locations pol)
                      execute
                   
                   
@@ -81,8 +88,6 @@ let help_update label var =
 let help_non_increasing (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t) (vars : Var.t list) =
   let execute () =
     let (src, trans_label, target) = trans in
-    print_string (Location.to_string src);
-    print_string (Location.to_string target);
     let guard = TransitionLabel.guard trans_label in
     let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) (pol target) in
     let new_atom = ParameterAtom.Infix.(pol src >= updated_target) in
