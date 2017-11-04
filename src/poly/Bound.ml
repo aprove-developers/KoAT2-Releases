@@ -100,6 +100,8 @@ let rec simplify = function
   | Sum (Infinity, _) -> Infinity
   | Sum (_, Neg Infinity) -> Neg Infinity
   | Sum (Neg Infinity, _) -> Neg Infinity
+  | Sum (Max (Const zero1, b1), Max (Const zero2, b2)) when OurInt.(zero1 =~= zero) && OurInt.(zero1 =~= zero) ->
+     simplify (Max (Const OurInt.zero, Sum (b1, b2)))     
   | Sum (b1, b2) -> Sum (simplify b1, simplify b2)
 
   (* Simplify terms with product head *)
