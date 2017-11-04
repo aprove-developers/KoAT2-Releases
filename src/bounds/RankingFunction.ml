@@ -59,11 +59,8 @@ let generate_ranking_template program locations =
   let execute () =
     let vars = VarSet.elements (Program.vars program) in
     let ins_loc_prf location =
-      if Program.is_initial_location program location then 
-        (location,ParameterPolynomial.one,[]) 
-      else 
-        let (parameter_poly, var) = ranking_template vars in
-        (location, parameter_poly, var)
+      let (parameter_poly, var) = ranking_template vars in
+      (location, parameter_poly, var)
     in
     let enum_of_prf = List.map ins_loc_prf locations in
     let prf_table = PrfTable.of_list (List.map (fun (a,b,c)-> (a,b)) enum_of_prf) in
@@ -81,44 +78,34 @@ let help_update label var =
   |None -> ParameterPolynomial.of_var var
   |Some p -> ParameterPolynomial.of_polynomial p
            
-let help_non_increasing (initial : bool) (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t) (vars : Var.t list) =
+let help_non_increasing (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t) (vars : Var.t list) =
   let execute () =
-    if initial then 
-      Constraint.mk_true 
-    else
-      let (src, trans_label, target) = trans in
-      print_string (Location.to_string src);
-      print_string (Location.to_string target);
-      let guard = TransitionLabel.guard trans_label in
-      let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) (pol target) in
-      let new_atom = ParameterAtom.Infix.(pol src >= updated_target) in
-      farkas_transform guard new_atom
+    let (src, trans_label, target) = trans in
+    print_string (Location.to_string src);
+    print_string (Location.to_string target);
+    let guard = TransitionLabel.guard trans_label in
+    let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) (pol target) in
+    let new_atom = ParameterAtom.Infix.(pol src >= updated_target) in
+    farkas_transform guard new_atom
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "help non increasing", ["transition", Transition.to_id_string trans])
                      ~result:Constraint.to_string
                      execute
   
-let help_strict_decrease (initial : bool) (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t) (vars : Var.t list) =
-  if initial then 
-    Constraint.mk_true 
-  else
-    let (src, trans_label, target) = trans in
-    let guard = TransitionLabel.guard trans_label in
-    let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) (pol target) in
-    let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
-    let new_atom = ParameterAtom.mk_ge (pol src) ParameterPolynomial.(cost + updated_target) in (*here's the difference*)
-    farkas_transform guard new_atom
-
+let help_strict_decrease (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t) (vars : Var.t list) =
+  let (src, trans_label, target) = trans in
+  let guard = TransitionLabel.guard trans_label in
+  let updated_target = ParameterPolynomial.substitute_f (help_update trans_label) (pol target) in
+  let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
+  let new_atom = ParameterAtom.mk_ge (pol src) ParameterPolynomial.(cost + updated_target) in (*here's the difference*)
+  farkas_transform guard new_atom
   
-let help_boundedness (initial : bool) (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t) (vars : Var.t list) =
-  if initial then 
-    Constraint.mk_true 
-  else
-    let (src, trans_label, _) = trans in
-    let guard = TransitionLabel.guard trans_label in
-    let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
-    let new_atom = ParameterAtom.Infix.(pol src >= cost) in 
-    farkas_transform guard new_atom
+let help_boundedness (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t) (vars : Var.t list) =
+  let (src, trans_label, _) = trans in
+  let guard = TransitionLabel.guard trans_label in
+  let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
+  let new_atom = ParameterAtom.Infix.(pol src >= cost) in 
+  farkas_transform guard new_atom
 
   
 (**Generates the constraints due to the non increase rule of a polynomial ranking function*)
@@ -126,7 +113,7 @@ let get_non_increase_constraints (pol : Location.t -> ParameterPolynomial.t) (pr
   let execute () =
     let variables = VarSet.elements (Program.vars program) in
     transitions
-    |> List.map (fun trans -> help_non_increasing (Program.is_initial program trans) pol trans variables)
+    |> List.map (fun trans -> help_non_increasing pol trans variables)
     |> Constraint.all
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "determined non_incr constraints", [])
@@ -136,13 +123,11 @@ let get_non_increase_constraints (pol : Location.t -> ParameterPolynomial.t) (pr
 (* Generates the strictly decreasing constraints for one single transition wrt to the generated ranking templates*)
 let help_strict_oriented program table vars trans (smt,bounded) =
   let execute () =
-    let initial = Program.is_initial program trans in
     let curr_smt =
       Constraint.Infix.(smt
-                        && help_boundedness initial table trans vars
-                        && help_strict_decrease initial table trans vars) in
-    let sol = SMTSolver_.satisfiable (Formula.mk curr_smt) in
-    if (sol && not(initial)) then
+                        && help_boundedness table trans vars
+                        && help_strict_decrease table trans vars) in
+    if SMTSolver_.satisfiable (Formula.mk curr_smt) then
       (curr_smt, List.append bounded [trans])
     else (smt,bounded)
   in Logger.with_log logger Logger.DEBUG 
@@ -176,7 +161,7 @@ let find program appr =
     |> Program.graph
     |> TransitionGraph.transitions
     |> TransitionSet.to_list
-    |> List.filter (is_already_bounded appr) in
+    |> List.filter (is_already_bounded appr)in
   let execute () =
     let (pol,bounded) = ranking_function_procedure program transitions in
     {   pol = pol;
