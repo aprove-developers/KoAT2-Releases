@@ -30,6 +30,6 @@ let run (params: params) =
   let update = match params.update with
     | Some str -> VarMap.(add var (Readers.read_polynomial str) empty)
     | None -> VarMap.empty in
-  let label = make "" ~start:"" ~target:"" ~update ~guard in
+  let label = make "Com_1" ~start:"" ~target:"" ~update ~guard in
   print_string (Bound.to_string LocalSizeBound.(as_bound (sizebound_local params.kind label var)))
 
