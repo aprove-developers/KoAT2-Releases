@@ -9,38 +9,64 @@ type formula = Formula.t
 type t = {
     factor: int;
     constant: int;
-    vars: VarSet.t;
+    abs_vars: VarSet.t;
+    pure_vars: VarSet.t;
   } [@@deriving eq]
   
-let mk factor constant vars = {
+let mk factor constant abs_vars pure_vars = {
     factor;
     constant;
-    vars = VarSet.of_string_list vars
+    abs_vars = VarSet.of_string_list abs_vars;
+    pure_vars = VarSet.of_string_list pure_vars;
   }
        
 let neg lsb =
   { lsb with factor = -lsb.factor }
 
+let factor lsb =
+  lsb.factor
+  
 let abs_factor lsb =
   abs lsb.factor
+
+let vars lsb =
+  VarSet.union lsb.abs_vars lsb.pure_vars
+
+let constant lsb =
+  lsb.constant
   
 let as_bound = function
   | Some lsb ->
-     lsb.vars
-     |> VarSet.enum
-     |> Enum.map Bound.of_var
-     |> Enum.map Bound.abs
-     |> fun var_list -> Bound.(of_int lsb.factor * (of_int lsb.constant + sum var_list))
+     let abs_vars =
+       lsb.abs_vars
+       |> VarSet.enum
+       |> Enum.map Bound.of_var
+       |> Enum.map Bound.abs
+     and pure_vars =
+       lsb.pure_vars
+       |> VarSet.enum
+       |> Enum.map Bound.of_var
+     in
+     Bound.(of_int lsb.factor * (of_int lsb.constant + sum abs_vars + sum pure_vars))
   | None -> Bound.infinity
 
 let to_string lsb =
-  String.concat " " ["ScaledSum"; String.of_int lsb.factor; String.of_int lsb.constant; VarSet.to_string lsb.vars]
-                
-let as_formula in_v lsb = 
-  VarSet.to_list lsb.vars
+  String.concat " " ["ScaledSum"; String.of_int lsb.factor; String.of_int lsb.constant; VarSet.to_string lsb.abs_vars; VarSet.to_string lsb.pure_vars]
+
+let abs_vars_combinations lsb =
+  VarSet.to_list lsb.abs_vars
   |> List.map Polynomial.of_var
   |> List.map (fun v -> [v; Polynomial.neg v])
-  |> List.n_cartesian_product
+  |> List.n_cartesian_product  
+
+let pure_vars_combinations lsb =
+  VarSet.to_list lsb.pure_vars
+  |> List.map Polynomial.of_var
+
+let as_formula in_v lsb =
+  lsb
+  |> abs_vars_combinations
+  |> List.map (fun abs_vars -> List.append abs_vars (pure_vars_combinations lsb))
   |> List.map (fun var_list ->
          let v = Polynomial.of_var in_v in
          Polynomial.(Formula.Infix.(v <= of_int lsb.factor * (of_int lsb.constant + sum (List.enum var_list)))))
@@ -95,9 +121,9 @@ let minimize_vars (p: VarSet.t -> bool) (vars: VarSet.t): VarSet.t =
                   (fun () -> minimize_vars_ ())
 
 let minimize_scaledsum_vars (p: t -> bool) (lsb: t): t = {
-    lsb with vars = minimize_vars
-                      (fun vars -> p { lsb with vars = vars } )
-                      lsb.vars
+    lsb with abs_vars = minimize_vars
+                      (fun vars -> p { lsb with abs_vars = vars } )
+                      lsb.abs_vars
   }
 
 let optimize_c (lowest: int) (highest: int) (p: t -> bool) (lsb: t): t =
@@ -130,7 +156,7 @@ let find_unscaled (var: Var.t) (formula: Formula.t) (varsets: VarSet.t Enum.t): 
   try
     Some (
         Enum.find_map (fun varset ->
-            Some {factor = 1; constant = 1024; vars = varset}
+            Some {factor = 1; constant = 1024; abs_vars = varset; pure_vars = VarSet.empty}
             |> Option.filter (is_bounded_with var formula)
             |> Option.map (optimize_c (-1024) 1024 (is_bounded_with var formula))
           ) varsets
@@ -156,7 +182,7 @@ let find_bound var formula =
                [
                  (fun () -> find_unscaled var formula (VarSet.powerset vars));
                  (fun () -> 
-                   Some {factor = high; constant = high; vars}
+                   Some {factor = high; constant = high; abs_vars = vars; pure_vars = VarSet.empty}
                    |> Option.filter (is_bounded_with var formula)
                    |> Option.map (optimize_s 1 high (is_bounded_with var formula))
                    |> Option.map (optimize_c low high (is_bounded_with var formula))

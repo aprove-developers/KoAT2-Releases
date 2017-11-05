@@ -23,14 +23,10 @@ type formula = Formulas.Formula.t
 (* TODO We can not use the sum of all variables, if the value of a variable might be negative and not actually used in the transition.  *)
 (** Always smaller or equal to a scaling factor multiplied with the sum of all prevariables and a constant. Examples: x'=x+y , x'=2*(x+y+z) 
     s * (e + sum [x1;...;xn]) *)
-type t = {
-    factor: int;
-    constant: int;
-    vars: VarSet.t;
-  }
+type t
 
 (** Creates a templated bound from the template and a string list which represents the variable set. *)
-val mk : int -> int -> string list -> t
+val mk : int -> int -> string list -> string list -> t
 
 (** Returns if the templated bounds represent the same bound. *)
 val equal : t -> t -> bool
@@ -38,8 +34,17 @@ val equal : t -> t -> bool
 (** Returns the negation of the templated bound. *)
 val neg : t -> t
 
+(** Returns the factor of the local sizebound. *)
+val factor : t -> int
+
 (** Returns the absolute value of the factor. *)
 val abs_factor : t -> int
+
+(** Returns a set of of variables which affect the local sizebound *)
+val vars : t -> VarSet.t
+
+(** Returns the constant of the local sizebound. *)
+val constant : t -> int
   
 (** Converts the templated bound to a string. *)
 val to_string : t -> string

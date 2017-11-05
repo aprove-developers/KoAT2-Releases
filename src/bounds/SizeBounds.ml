@@ -120,7 +120,7 @@ let transition_effect kind rvg get_sizebound scc ct transition =
     |> Enum.map (fun alpha -> (alpha, Option.get (LocalSizeBound.sizebound_local_rv kind alpha)))
     (* Should exist *)
     |> Enum.map (fun (alpha, lsb) ->
-           Bound.(max zero (of_int lsb.LocalSizeBound.constant + incoming_vars_effect kind rvg get_sizebound scc lsb.LocalSizeBound.vars transition alpha))
+           Bound.(max zero (of_int (LocalSizeBound.constant lsb) + incoming_vars_effect kind rvg get_sizebound scc (LocalSizeBound.vars lsb) transition alpha))
          )
     |> Bound.maximum
   in Logger.with_log logger Logger.DEBUG
