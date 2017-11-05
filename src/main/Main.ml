@@ -58,7 +58,7 @@ let run (params: main_params) =
       Program.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
   |> tap (fun (program, appr) ->
     if params.print_rvg then
-      Program.print_rvg ~outdir:output_dir ~file:input_filename program)
+      Program.print_rvg ~label:RV.to_string ~outdir:output_dir ~file:input_filename program)
   |> (fun (program, appr) ->
      if not params.no_boundsearch then
        (program, appr)
@@ -76,6 +76,12 @@ let run (params: main_params) =
                                                                    Location.of_string (TransitionLabel.target label)) |> Bound.to_string)
                              ^ "\n" ^ TransitionLabel.to_string label)
         ~outdir:output_dir ~file:input_filename program)
+  |> tap (fun (program, appr) ->
+    if params.print_rvg then
+      Program.print_rvg ~label:(fun (t,v) -> "Global: " ^ (Approximation.sizebound `Upper appr t v |> Bound.to_string) ^ " >= "
+                                             ^ RV.to_id_string (t,v) ^ " >= "
+                                             ^ (Approximation.sizebound `Lower appr t v |> Bound.to_string) ^ "\n"
+                                             ^ "Local: " ^ RV.to_string (t,v)) ~outdir:output_dir ~file:input_filename program)
   |> ignore
 
 let subcommand run params_cmdliner_term description command =

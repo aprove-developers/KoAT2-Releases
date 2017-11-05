@@ -226,7 +226,7 @@ let print_system ~label ~outdir ~file program =
                                      end) in
   print_graph outdir (file ^ "_system") (graph program) Dot.output_graph
 
-let print_rvg ~outdir ~file program =
+let print_rvg ~label ~outdir ~file program =
   (* Definition of some graphviz options how it should be layout *)
   let module Dot = Graph.Graphviz.Dot(struct
                                        include RVG
@@ -234,7 +234,7 @@ let print_rvg ~outdir ~file program =
                                        let default_edge_attributes _ = []
                                        let get_subgraph _ = None
                                        let vertex_attributes _ = [`Shape `Box]
-                                       let vertex_name v = "\"" ^ RV.to_string v ^ "\""
+                                       let vertex_name v = "\"" ^ label v ^ "\""
                                        let default_vertex_attributes _ = []
                                        let graph_attributes _ = []
                                      end) in

@@ -108,7 +108,7 @@ val print_system : label:(TransitionLabel.t -> string) -> outdir:Fpath.t -> file
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program. 
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-val print_rvg : outdir:Fpath.t -> file:string -> t -> unit
+val print_rvg : label:(RV.t -> string) -> outdir:Fpath.t -> file:string -> t -> unit
 
 (** Returns if the given transition is an initial transition. *)
 val is_initial : t -> Transition.t -> bool
