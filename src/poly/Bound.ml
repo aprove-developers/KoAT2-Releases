@@ -288,14 +288,14 @@ let min b1 b2 =
   simplify (Min (b1, b2))
 
 let maximum bounds =
-  bounds
-  |> Enum.reduce max
-  |> simplify
-  
+  try
+    bounds |> Enum.reduce max |> simplify
+  with Not_found -> minus_infinity
+
 let minimum bounds =
-  bounds
-  |> Enum.reduce min
-  |> simplify
+  try
+    bounds |> Enum.reduce min |> simplify
+  with Not_found -> infinity
 
 let exp value b =
   simplify (Pow (value, b))
