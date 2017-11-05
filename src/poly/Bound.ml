@@ -122,6 +122,8 @@ let rec simplify bound =
 
     | Abs b -> (
       match simplify b with
+      | Abs b1 -> Abs b1
+      | Neg b -> Abs b
       | b when b >= (Const OurInt.zero) |? false -> b
       | b when b < (Const OurInt.zero) |? false -> simplify (Neg b)
       | b -> Abs b
