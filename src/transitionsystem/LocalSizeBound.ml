@@ -28,7 +28,8 @@ let as_bound = function
   | Some lsb ->
      lsb.vars
      |> VarSet.enum
-     |> Enum.map Bound.of_abs_var
+     |> Enum.map Bound.of_var
+     |> Enum.map Bound.abs
      |> fun var_list -> Bound.(of_int lsb.factor * (of_int lsb.constant + sum var_list))
   | None -> Bound.infinity
 

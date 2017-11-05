@@ -18,7 +18,6 @@ val of_constant : value -> t
 val of_int : int -> t
 val to_int : t -> int
 val of_var : Var.t -> t
-val of_abs_var : Var.t -> t
 val of_var_string : string -> t
   
 val min : t -> t -> t
@@ -28,6 +27,7 @@ val maximum : t Enum.t -> t
 val infinity : t
 val minus_infinity : t
 val exp : value -> t -> t
+val abs : t -> t
   
 (** Stable structural equal, but not equality of the bounds *)
 val equal : t -> t -> bool
@@ -59,6 +59,6 @@ val fold : const:(value -> 'b) ->
            exp:(value -> 'b -> 'b) ->
            min:('b -> 'b -> 'b) -> 
            max:('b -> 'b -> 'b) ->
-           abs:(Var.t -> 'b) -> 
+           abs:('b -> 'b) -> 
            inf:'b ->
            t -> 'b 

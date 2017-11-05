@@ -15,7 +15,7 @@ type value = OurInt.t
 type t =
   | Infinity
   | Var of Var.t
-  | Abs of Var.t
+  | Abs of t
   | Const of OurInt.t
   | Max of t * t
   | Min of t * t
@@ -26,13 +26,11 @@ type t =
 
 let of_var v = Var v
 
-let of_abs_var v = Abs v
-
 let of_constant c = Const c
 
 let rec to_string = function
   | Var v -> Var.to_string v
-  | Abs v -> "|" ^ Var.to_string v ^ "|"
+  | Abs b -> "|" ^ to_string b  ^ "|"
   | Const c -> OurInt.to_string c
   | Infinity -> "inf"
   | Max (b1, b2) -> "max{" ^ to_string b1 ^ ", " ^ to_string b2 ^ "}"
@@ -67,7 +65,7 @@ module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t)
         | (Const c1, Const c2) when OurInt.Compare.(c1 > c2) -> Some true
         | (b, Const z1) when OurInt.(equal z1 zero) -> (
           match b with
-          | Abs _ -> Some true
+          (* Unsound | Abs b when not (equal b (Const OurInt.zero)) -> Some true *)
           | Max (b, _) when b > (Const OurInt.zero) |? false -> Some true
           | _ -> None
         )
@@ -89,7 +87,7 @@ let rec simplify bound =
 
     | Var v -> Var v
 
-    | Abs v -> Abs v
+    | Abs b -> Abs (simplify b)
 
     | Const c -> Const c
 
@@ -136,7 +134,7 @@ let rec simplify bound =
       | (b, Neg Infinity) when b >= Const OurInt.zero |? false -> Neg Infinity
       | (Neg Infinity, b) when b <= Const OurInt.zero |? false -> Infinity
       | (b, Neg Infinity) when b <= Const OurInt.zero |? false -> Infinity
-      | (Abs x, Abs y) when Var.equal x y -> Product (Var x, Var x)
+      | (Abs b1, Abs b2) when equal b1 b2 -> Product (b1, b2)
       | (Max (Const zero1, b1), Max (Const zero2, b2)) when OurInt.(zero1 =~= zero) && OurInt.(zero2 =~= zero) ->
          simplify (Max (Const OurInt.zero, Product (b1, b2)))
       | (Max (Const zero1, b1), b2) when OurInt.(zero1 =~= zero) ->
@@ -237,7 +235,7 @@ let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~abs ~inf p =
   match p with
   | Infinity -> inf
   | Var v -> var v
-  | Abs v -> abs v
+  | Abs b -> abs (fold_ b)
   | Const c -> const c
   | Max (b1, b2) -> max (fold_ b1) (fold_ b2)
   | Min (b1, b2) -> min (fold_ b1) (fold_ b2)
@@ -265,12 +263,11 @@ let minimum bounds =
 let exp value b =
   simplify (Pow (value, b))
 
-let abs var =
-  Abs var
+let abs bound =
+  simplify (Abs bound)
 
 let is_var = function
   | Var _ -> true
-  | Abs _ -> true
   | _ -> false
 
 let substitute_f substitution =
@@ -290,7 +287,7 @@ let substitute_all substitution =
 let rec vars = function
   | Infinity -> VarSet.empty
   | Var v -> VarSet.singleton v
-  | Abs v -> VarSet.singleton v
+  | Abs b -> vars b
   | Const _ -> VarSet.empty
   | Max (b1, b2) -> VarSet.union (vars b1) (vars b2)
   | Min (b1, b2) -> VarSet.union (vars b1) (vars b2)

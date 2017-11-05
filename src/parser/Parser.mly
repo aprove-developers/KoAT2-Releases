@@ -236,7 +236,7 @@ bound :
 	|       v = ID c = option(preceded(POW, UINT))
 	        { Bound.pow (Bound.of_var (Var.of_string v)) BatOption.(c |? 1) }
 	|       ABS v = ID ABS c = option(preceded(POW, UINT))
-	        { Bound.pow (Bound.of_abs_var (Var.of_string v)) BatOption.(c |? 1) }
+	        { Bound.pow (Bound.abs (Bound.of_var_string v)) BatOption.(c |? 1) }
 	|	b1 = bound; op = bound_bioperator; b2 = bound
 		{ op b1 b2 } ;
 
