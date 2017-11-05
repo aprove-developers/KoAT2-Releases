@@ -212,11 +212,11 @@ let print_graph out_dir name graph output_graph =
   (* Generate a png from the dot file with an external call to graphviz *)
   ignore (Sys.command ("dot -T png -o " ^ full_path "png" ^ " " ^ full_path "dot"))
   
-let print_system ~outdir ~file program =
+let print_system ~label ~outdir ~file program =
   (* Definition of some graphviz options how it should be layout *)
   let module Dot = Graph.Graphviz.Dot(struct
                                        include TransitionGraph
-                                       let edge_attributes (a, e, b) = [`Label (TransitionLabel.to_string e); `Color 4711]
+                                       let edge_attributes (a, e, b) = [`Label (label e); `Color 4711]
                                        let default_edge_attributes _ = []
                                        let get_subgraph _ = None
                                        let vertex_attributes _ = [`Shape `Box]

@@ -1,5 +1,6 @@
 open Batteries
-            
+open Program.Types
+   
 (** The shell arguments which can be defined in the console. *)
 type main_params = {
     
@@ -54,16 +55,28 @@ let run (params: main_params) =
   |> params.preprocessing_strategy params.preprocessors
   |> tap (fun (program, appr) ->
     if params.print_system then
-      Program.print_system ~outdir:output_dir ~file:input_filename program)
+      Program.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
   |> tap (fun (program, appr) ->
     if params.print_rvg then
       Program.print_rvg ~outdir:output_dir ~file:input_filename program)
-  |> fun (program, appr) ->
+  |> (fun (program, appr) ->
      if not params.no_boundsearch then
        (program, appr)
        |> params.preprocessing_strategy params.preprocessors
        |> uncurry Bounds.find_bounds
-       |> print_results program
+       |> fun appr -> (program, appr)
+     else (program, appr))
+  |> tap (fun (program, appr) -> print_results program appr)
+  |> tap (fun (program, appr) ->
+    if params.print_system then
+      Program.print_system
+        ~label:(fun label -> "Timebound: " ^ (Approximation.timebound appr
+                                                                  (Location.of_string (TransitionLabel.start label),
+                                                                   label,
+                                                                   Location.of_string (TransitionLabel.target label)) |> Bound.to_string)
+                             ^ "\n" ^ TransitionLabel.to_string label)
+        ~outdir:output_dir ~file:input_filename program)
+  |> ignore
 
 let subcommand run params_cmdliner_term description command =
   Cmdliner.Term.(const run $ params_cmdliner_term (), info ~doc:description command)
