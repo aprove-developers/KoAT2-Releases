@@ -32,13 +32,6 @@ let as_bound = function
      |> fun var_list -> Bound.(of_int lsb.factor * (of_int lsb.constant + sum var_list))
   | None -> Bound.infinity
 
-(* There is no to_string for options in batteries,
-   but there is a very efficient print function which is however a bit inconvenient to use. *)
-let to_string_option_template_bound (option: t Option.t): string =
-  let output = IO.output_string () in
-  Option.print (fun output template_bound -> IO.nwrite output (Bound.to_string (as_bound (Some template_bound)))) output option;
-  IO.close_out output
-
 let to_string lsb =
   String.concat " " ["ScaledSum"; String.of_int lsb.factor; String.of_int lsb.constant; VarSet.to_string lsb.vars]
                 
@@ -174,7 +167,7 @@ let find_bound var formula =
     with Not_found -> None
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "find local size bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
-                  ~result:(fun result -> to_string_option_template_bound result)
+                  ~result:(Util.option_to_string (Bound.to_string % as_bound % Option.some))
                   execute
                   
 let sizebound_local kind label var =

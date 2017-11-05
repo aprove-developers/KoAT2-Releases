@@ -14,3 +14,5 @@ val intersection : ('a -> 'a -> bool) -> 'a Enum.t -> 'a Enum.t -> 'a Enum.t
 val without : ('a -> 'a -> bool) -> 'a Enum.t -> 'a Enum.t -> 'a Enum.t 
 
 val option_to_string : ('a -> string) -> 'a Option.t -> string
+  
+val enum_to_string : ('a -> string) -> 'a Enum.t -> string

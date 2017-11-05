@@ -5,24 +5,6 @@ open Constraints
 open Atoms
 open Polynomials
    
-(* TODO REDUNDANT in LocalSizeBound
-   There is no to_string for options in batteries,
-   but there is a very efficient print function which is however a bit inconvenient to use. *)
-let to_string_template_bound_option (option: LocalSizeBound.t Option.t): string =
-  let output = IO.output_string () in
-  Option.print (fun output template_bound -> IO.nwrite output (Bound.to_string (LocalSizeBound.as_bound (Some template_bound)))) output option;
-  IO.close_out output
-
-let to_string_option (to_string: 'a -> string) (option: 'a Option.t): string =
-  let output = IO.output_string () in
-  Option.print (fun output a -> IO.nwrite output (to_string a)) output option;
-  IO.close_out output
-
-let to_string_varset_enum (enum: VarSet.t Enum.t): string =
-  let output = IO.output_string () in
-  Enum.print (fun output varset -> IO.nwrite output (VarSet.to_string varset)) output enum;
-  IO.close_out output
-  
 let assert_equal_bool = assert_equal ~printer:Bool.to_string ~cmp:Bool.equal
 
 let assert_equal_string = assert_equal ~printer:identity ~cmp:String.equal
@@ -30,7 +12,7 @@ let assert_equal_string = assert_equal ~printer:identity ~cmp:String.equal
 let assert_equal_int = assert_equal ~printer:string_of_int ~cmp:Int.equal
 
 let assert_equal_varset_enum =
-  assert_equal ~cmp:(Enum.equal VarSet.equal) ~printer:to_string_varset_enum
+  assert_equal ~cmp:(Enum.equal VarSet.equal) ~printer:(Util.enum_to_string VarSet.to_string)
 
 let assert_equal_value =
   assert_equal ~cmp:OurInt.(=~=) ~printer:OurInt.to_string
@@ -48,7 +30,7 @@ let assert_equal_bound =
   assert_equal ~cmp:Bound.(=~=) ~printer:Bound.to_string
 
 let assert_equal_bound_option =
-  assert_equal ~cmp:(Option.eq ~eq:Bound.(=~=)) ~printer:(to_string_option Bound.to_string)
+  assert_equal ~cmp:(Option.eq ~eq:Bound.(=~=)) ~printer:(Util.option_to_string Bound.to_string)
 
 let assert_equal_atom =
   assert_equal ~cmp:Atom.(=~=) ~printer:Atom.to_string
@@ -57,7 +39,7 @@ let assert_equal_constr =
   assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string
 
 let assert_equal_template_bound_option =
-  assert_equal ~cmp:(Option.eq ~eq:LocalSizeBound.equal) ~printer:to_string_template_bound_option
+  assert_equal ~cmp:(Option.eq ~eq:LocalSizeBound.equal) ~printer:(Util.option_to_string (Bound.to_string % LocalSizeBound.as_bound % Option.some))
 
 let assert_equal_classified_bound =
   assert_equal ~cmp:LocalSizeBound.equal ~printer:LocalSizeBound.to_string
