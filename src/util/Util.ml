@@ -18,3 +18,8 @@ let intersection p enum1 enum2 =
 
 let without p toBeRemoved =
   Enum.filter (fun v -> not (Enum.exists (p v) (Enum.clone toBeRemoved)))
+
+let option_to_string content_to_string option =
+  let output = IO.output_string () in
+  Option.print (fun output a -> IO.nwrite output (content_to_string a)) output option;
+  IO.close_out output

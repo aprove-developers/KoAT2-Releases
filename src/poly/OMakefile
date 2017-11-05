@@ -6,6 +6,12 @@ OCAMLPACKS[] =
     ppx_deriving.eq
     ppx_deriving.ord
 
+OCAMLINCLUDES[] =
+    ../util
+
+OCAML_LIBS[] =
+    ../util/util
+
 # Include all .ml files
 FILES[] = $(removesuffix .ml, $(glob *.ml))
 

@@ -7,9 +7,11 @@ OCAMLPACKS[] =
     ppx_deriving.ord
 
 OCAMLINCLUDES[] =
+    ../util
     ../poly
 
 OCAML_LIBS[] =
+    ../util/util
     ../poly/poly
 
 # Include all .ml files

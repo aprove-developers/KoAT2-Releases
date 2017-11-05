@@ -12,3 +12,5 @@ val intersection : ('a -> 'a -> bool) -> 'a Enum.t -> 'a Enum.t -> 'a Enum.t
 
 (** Returns an enum that contains all elements that are present in the second enum but not in the first enum.  *)
 val without : ('a -> 'a -> bool) -> 'a Enum.t -> 'a Enum.t -> 'a Enum.t 
+
+val option_to_string : ('a -> string) -> 'a Option.t -> string

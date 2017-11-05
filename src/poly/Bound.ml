@@ -1,6 +1,9 @@
 open Batteries
 open Polynomials
+open Util
    
+let logger = Logger.make_log "bound"
+           
 module Valuation_ = Valuation.Make(OurInt)
 type valuation = Valuation.Make(OurInt).t
                   
@@ -55,114 +58,128 @@ module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t)
     let (=~=) = equal
               
     let rec (>) b1 b2 =
-      match (b1, b2) with
-      | (_, Infinity) -> Some false
-      | (Infinity, _) -> Some true
-      | (_, Neg Infinity) -> Some true
-      | (Neg Infinity, _) -> Some false
-      | (Const c1, Const c2) when OurInt.Compare.(c1 > c2) -> Some true
-      | (b, Const z1) when OurInt.(equal z1 zero) -> (
-        match b with
-        | Abs _ -> Some true
-        | Max (Const z2, _) when OurInt.Compare.(z2 > OurInt.zero) -> Some true
-        | _ -> None
-      )
-      | (b1, b2) -> None
+      let execute () =
+        match (b1, b2) with
+        | (_, Infinity) -> Some false
+        | (Infinity, _) -> Some true
+        | (_, Neg Infinity) -> Some true
+        | (Neg Infinity, _) -> Some false
+        | (Const c1, Const c2) when OurInt.Compare.(c1 > c2) -> Some true
+        | (b, Const z1) when OurInt.(equal z1 zero) -> (
+          match b with
+          | Abs _ -> Some true
+          | Max (b, _) when b > (Const OurInt.zero) |? false -> Some true
+          | _ -> None
+        )
+        | (b1, b2) -> None
+      in
+      Logger.with_log logger Logger.DEBUG
+                      (fun () -> ">", ["lhs", to_string b1; "rhs", to_string b2])
+                      ~result:(Util.option_to_string Bool.to_string)
+                      execute
                   
   end
 include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
-let rec simplify = function
-  | Infinity -> Infinity
+let rec simplify bound =
+  let execute () =
+    match bound with
+      
+    | Infinity -> Infinity
 
-  | Var v -> Var v
+    | Var v -> Var v
 
-  | Abs v -> Abs v
+    | Abs v -> Abs v
 
-  | Const c -> Const c
+    | Const c -> Const c
 
-  (* Simplify terms with negation head *)
-  | Neg (Const c) -> Const (OurInt.neg c)
-  | Neg (Max (b1, b2)) -> simplify (Min (Neg b1, Neg b2))
-  | Neg (Min (b1, b2)) -> simplify (Max (Neg b1, Neg b2))
-  | Neg (Sum (b1, b2)) -> simplify (Sum (Neg b1, Neg b2))
-  | Neg (Neg b) -> simplify b
-  | Neg (Product (b1, b2)) -> simplify (Product (Neg b1, b2))
-  | Neg b -> Neg (simplify b)
+    (* Simplify terms with negation head *)
+    | Neg (Const c) -> Const (OurInt.neg c)
+    | Neg (Max (b1, b2)) -> simplify (Min (Neg b1, Neg b2))
+    | Neg (Min (b1, b2)) -> simplify (Max (Neg b1, Neg b2))
+    | Neg (Sum (b1, b2)) -> simplify (Sum (Neg b1, Neg b2))
+    | Neg (Neg b) -> simplify b
+    | Neg (Product (b1, b2)) -> simplify (Product (Neg b1, b2))
+    | Neg b -> Neg (simplify b)
 
-  (* Simplify terms with sum head *)
-  | Sum (Const c, b) when OurInt.(c =~= zero) -> simplify b
-  | Sum (b, Const c) when OurInt.(c =~= zero) -> simplify b
-  | Sum (Const c1, Const c2) -> Const OurInt.(c1 + c2)
-  | Sum (Neg Infinity, Infinity) -> Const OurInt.zero
-  | Sum (Infinity, Neg Infinity) -> Const OurInt.zero
-  | Sum (_, Infinity) -> Infinity
-  | Sum (Infinity, _) -> Infinity
-  | Sum (_, Neg Infinity) -> Neg Infinity
-  | Sum (Neg Infinity, _) -> Neg Infinity
-  | Sum (Max (Const zero1, b1), Max (Const zero2, b2)) when OurInt.(zero1 =~= zero) && OurInt.(zero2 =~= zero) ->
-     simplify (Max (Const OurInt.zero, Sum (b1, b2)))
-  | Sum (b1, Neg b2) when equal b1 b2 -> Const OurInt.zero
-  | Sum (Neg b1, b2) when equal b1 b2 -> Const OurInt.zero
-  | Sum (b1, b2) when equal b1 b2 -> Product (Const (OurInt.of_int 2), simplify b1)
-  | Sum (b1, b2) -> Sum (simplify b1, simplify b2)
+    (* Simplify terms with sum head *)
+    | Sum (Const c, b) when OurInt.(c =~= zero) -> simplify b
+    | Sum (b, Const c) when OurInt.(c =~= zero) -> simplify b
+    | Sum (Const c1, Const c2) -> Const OurInt.(c1 + c2)
+    | Sum (Neg Infinity, Infinity) -> Const OurInt.zero
+    | Sum (Infinity, Neg Infinity) -> Const OurInt.zero
+    | Sum (_, Infinity) -> Infinity
+    | Sum (Infinity, _) -> Infinity
+    | Sum (_, Neg Infinity) -> Neg Infinity
+    | Sum (Neg Infinity, _) -> Neg Infinity
+    | Sum (Max (Const zero1, b1), Max (Const zero2, b2)) when OurInt.(zero1 =~= zero) && OurInt.(zero2 =~= zero) ->
+       simplify (Max (Const OurInt.zero, Sum (b1, b2)))
+    | Sum (b1, Neg b2) when equal b1 b2 -> Const OurInt.zero
+    | Sum (Neg b1, b2) when equal b1 b2 -> Const OurInt.zero
+    | Sum (b1, b2) when equal b1 b2 -> Product (Const (OurInt.of_int 2), simplify b1)
+    | Sum (b1, b2) -> Sum (simplify b1, simplify b2)
 
-  (* Simplify terms with product head *)
-  | Product (b1, b2) -> (
-    match (simplify b1, simplify b2) with
-    | (Const c, b) when OurInt.(c =~= one) -> b
-    | (b, Const c) when OurInt.(c =~= one) -> b
-    | (Const c, b) when OurInt.(c =~= zero) -> Const c
-    | (b, Const c) when OurInt.(c =~= zero) -> Const c
-    | (Const c, b) when OurInt.(c =~= neg one) -> simplify (Neg b)
-    | (b, Const c) when OurInt.(c =~= neg one) -> simplify (Neg b)
-    | (Infinity, b) when b >= Const OurInt.zero |? false -> Infinity
-    | (b, Infinity) when b >= Const OurInt.zero |? false -> Infinity
-    | (Infinity, b) when b <= Const OurInt.zero |? false -> Neg Infinity
-    | (b, Infinity) when b <= Const OurInt.zero |? false -> Neg Infinity
-    | (Neg Infinity, b) when b >= Const OurInt.zero |? false -> Neg Infinity
-    | (b, Neg Infinity) when b >= Const OurInt.zero |? false -> Neg Infinity
-    | (Neg Infinity, b) when b <= Const OurInt.zero |? false -> Infinity
-    | (b, Neg Infinity) when b <= Const OurInt.zero |? false -> Infinity
-    | (Abs x, Abs y) when Var.equal x y -> Product (Var x, Var x)
-    | (Max (Const zero1, b1), Max (Const zero2, b2)) when OurInt.(zero1 =~= zero) && OurInt.(zero2 =~= zero) ->
-       simplify (Max (Const OurInt.zero, Product (b1, b2)))
-    | (Max (Const zero1, b1), b2) when OurInt.(zero1 =~= zero) ->
-       simplify (Max (Const OurInt.zero, Product (b1, b2)))
-    | (b1, b2) -> Product (b1, b2)
-  )
-                      
-  (* Simplify terms with pow head *)
-  | Pow (value, Infinity) when OurInt.Compare.(value > OurInt.zero) -> Infinity
-  | Pow (value, Neg Infinity) when OurInt.Compare.(value > OurInt.zero) -> Const OurInt.zero
-  | Pow (value, Const c) -> Const OurInt.(pow value (to_int c))
-  | Pow (value, bound) when OurInt.(equal value zero) -> Const OurInt.zero
-  | Pow (value, bound) when OurInt.(equal value one) -> Const OurInt.one
-  | Pow (value, bound) -> Pow (value, simplify bound)
+    (* Simplify terms with product head *)
+    | Product (b1, b2) -> (
+      match (simplify b1, simplify b2) with
+      | (Const c, b) when OurInt.(c =~= one) -> b
+      | (b, Const c) when OurInt.(c =~= one) -> b
+      | (Const c, b) when OurInt.(c =~= zero) -> Const c
+      | (b, Const c) when OurInt.(c =~= zero) -> Const c
+      | (Const c, b) when OurInt.(c =~= neg one) -> simplify (Neg b)
+      | (b, Const c) when OurInt.(c =~= neg one) -> simplify (Neg b)
+      | (Infinity, b) when b >= Const OurInt.zero |? false -> Infinity
+      | (b, Infinity) when b >= Const OurInt.zero |? false -> Infinity
+      | (Infinity, b) when b <= Const OurInt.zero |? false -> Neg Infinity
+      | (b, Infinity) when b <= Const OurInt.zero |? false -> Neg Infinity
+      | (Neg Infinity, b) when b >= Const OurInt.zero |? false -> Neg Infinity
+      | (b, Neg Infinity) when b >= Const OurInt.zero |? false -> Neg Infinity
+      | (Neg Infinity, b) when b <= Const OurInt.zero |? false -> Infinity
+      | (b, Neg Infinity) when b <= Const OurInt.zero |? false -> Infinity
+      | (Abs x, Abs y) when Var.equal x y -> Product (Var x, Var x)
+      | (Max (Const zero1, b1), Max (Const zero2, b2)) when OurInt.(zero1 =~= zero) && OurInt.(zero2 =~= zero) ->
+         simplify (Max (Const OurInt.zero, Product (b1, b2)))
+      | (Max (Const zero1, b1), b2) when OurInt.(zero1 =~= zero) ->
+         simplify (Max (Const OurInt.zero, Product (b1, b2)))
+      | (b1, b2) -> Product (b1, b2)
+    )
+                        
+    (* Simplify terms with pow head *)
+    | Pow (value, Infinity) when OurInt.Compare.(value > OurInt.zero) -> Infinity
+    | Pow (value, Neg Infinity) when OurInt.Compare.(value > OurInt.zero) -> Const OurInt.zero
+    | Pow (value, Const c) -> Const OurInt.(pow value (to_int c))
+    | Pow (value, bound) when OurInt.(equal value zero) -> Const OurInt.zero
+    | Pow (value, bound) when OurInt.(equal value one) -> Const OurInt.one
+    | Pow (value, bound) -> Pow (value, simplify bound)
 
-  (* Simplify terms with min head *)
-  | Min (b1, b2) ->
-     let (b1, b2) = (simplify b1, simplify b2) in
-     (match b1 >= b2 with
-     | Some true -> b2
-     | _ ->
-        match b2 >= b1 with
-        | Some true -> b1
-        | _ ->
-           (* Optimization if we have structural equality *)
-           if equal b1 b2 then b1 else Min (b1, b2))
-
-  (* Simplify terms with max head *)
-  | Max (b1, b2) ->
-     let (b1, b2) = (simplify b1, simplify b2) in
-     (match b1 >= b2 with
-     | Some true -> b1
-     | _ ->
-        match b2 >= b1 with
+    (* Simplify terms with min head *)
+    | Min (b1, b2) ->
+       let (b1, b2) = (simplify b1, simplify b2) in
+       (match b1 >= b2 with
         | Some true -> b2
         | _ ->
-           (* Optimization if we have structural equality *)
-           if equal b1 b2 then b1 else Max (b1, b2))
+           match b2 >= b1 with
+           | Some true -> b1
+           | _ ->
+              (* Optimization if we have structural equality *)
+              if equal b1 b2 then b1 else Min (b1, b2))
+
+    (* Simplify terms with max head *)
+    | Max (b1, b2) ->
+       let (b1, b2) = (simplify b1, simplify b2) in
+       (match b1 >= b2 with
+        | Some true -> b1
+        | _ ->
+           match b2 >= b1 with
+           | Some true -> b2
+           | _ ->
+              (* Optimization if we have structural equality *)
+              if equal b1 b2 then b1 else Max (b1, b2))
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "simplify", ["input", to_string bound])
+                  ~result:to_string
+                  execute
                 
 module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
   struct

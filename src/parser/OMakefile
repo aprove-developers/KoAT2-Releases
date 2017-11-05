@@ -7,11 +7,13 @@ OCAMLPACKS[] =
     batteries
 
 OCAMLINCLUDES[] =
+    ../util
     ../poly
     ../constraints
     ../transitionsystem
 
 OCAML_LIBS[] =
+    ../util/util
     ../poly/poly
     ../constraints/constraints
     ../transitionsystem/transitionsystem
