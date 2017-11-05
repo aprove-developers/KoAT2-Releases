@@ -232,13 +232,13 @@ bound :
 	|	MINUS b = bound
 		{ Bound.neg b }
 	|	c = UINT b = option(preceded(POW, bound))
-		{ Bound.exp (OurInt.of_int c) BatOption.(b |? Bound.zero) }
+		{ Bound.exp (OurInt.of_int c) BatOption.(b |? Bound.one) }
 	|       v = ID c = option(preceded(POW, UINT))
 	        { Bound.pow (Bound.of_var (Var.of_string v)) BatOption.(c |? 1) }
 	|       ABS v = ID ABS c = option(preceded(POW, UINT))
 	        { Bound.pow (Bound.of_abs_var (Var.of_string v)) BatOption.(c |? 1) }
-	|	b1 = bound; bound_bioperator; b2 = bound
-		{ Bound.add b1 b2 } ;
+	|	b1 = bound; op = bound_bioperator; b2 = bound
+		{ op b1 b2 } ;
 
 %inline bound_bioperator :
 	|	PLUS { Bound.add }

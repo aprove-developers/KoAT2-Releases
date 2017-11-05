@@ -9,6 +9,9 @@ type main_params = {
     print_rvg : bool;
     (** Prints the input result variable graph at the start as png *)
 
+    print_input : bool;
+    (** Prints the raw unmodified input before the start *)
+
     no_boundsearch : bool;
     (** Disables the search for bounds. Useful if you just want information about the integer transition system via the other options or for debugging purposes. *)
 
@@ -43,6 +46,10 @@ let run (params: main_params) =
   and output_dir =
     Option.map Fpath.v params.output_dir |? (params.input |> Fpath.v |> Fpath.parent)
   in
+  if params.print_input then (
+    params.input |> File.lines_of |> List.of_enum |> String.concat "\n" |> print_string;
+    print_string "\n\n"
+  );
   (Readers.read_file params.input, Approximation.empty 10 10) (* TODO Better values *)
   |> params.preprocessing_strategy params.preprocessors
   |> tap (fun (program, appr) ->

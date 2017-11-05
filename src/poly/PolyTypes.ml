@@ -17,7 +17,7 @@ module type PartialOrder =
     include BasePartialOrder
     val (<) : t -> t -> bool Option.t
     val (>=) : t -> t -> bool Option.t      
-    val (>=) : t -> t -> bool Option.t
+    val (<=) : t -> t -> bool Option.t
   end
 
 (** Extends a BasePartialOrder to get all the methods of a partial order *)
