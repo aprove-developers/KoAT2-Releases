@@ -130,30 +130,36 @@ let rec simplify bound =
     )
 
     (* Simplify terms with negation head *)
-    | Neg (Const c) -> Const (OurInt.neg c)
-    | Neg (Max (b1, b2)) -> simplify (Min (Neg b1, Neg b2))
-    | Neg (Min (b1, b2)) -> simplify (Max (Neg b1, Neg b2))
-    | Neg (Sum (b1, b2)) -> simplify (Sum (Neg b1, Neg b2))
-    | Neg (Neg b) -> simplify b
-    | Neg (Product (b1, b2)) -> simplify (Product (Neg b1, b2))
-    | Neg b -> Neg (simplify b)
+    | Neg b -> (
+      match simplify b with
+      | Const c -> Const (OurInt.neg c)
+      | Max (b1, b2) -> simplify (Min (Neg b1, Neg b2))
+      | Min (b1, b2) -> simplify (Max (Neg b1, Neg b2))
+      | Sum (b1, b2) -> simplify (Sum (Neg b1, Neg b2))
+      | Neg b -> b
+      | Product (b1, b2) -> simplify (Product (Neg b1, b2))
+      | b -> Neg b
+    )
 
     (* Simplify terms with sum head *)
-    | Sum (Const c, b) when OurInt.(c =~= zero) -> simplify b
-    | Sum (b, Const c) when OurInt.(c =~= zero) -> simplify b
-    | Sum (Const c1, Const c2) -> Const OurInt.(c1 + c2)
-    | Sum (Neg Infinity, Infinity) -> Const OurInt.zero
-    | Sum (Infinity, Neg Infinity) -> Const OurInt.zero
-    | Sum (_, Infinity) -> Infinity
-    | Sum (Infinity, _) -> Infinity
-    | Sum (_, Neg Infinity) -> Neg Infinity
-    | Sum (Neg Infinity, _) -> Neg Infinity
-    | Sum (Max (Const zero1, b1), Max (Const zero2, b2)) when OurInt.(zero1 =~= zero) && OurInt.(zero2 =~= zero) ->
-       simplify (Max (Const OurInt.zero, Sum (b1, b2)))
-    | Sum (b1, Neg b2) when equal b1 b2 -> Const OurInt.zero
-    | Sum (Neg b1, b2) when equal b1 b2 -> Const OurInt.zero
-    | Sum (b1, b2) when equal b1 b2 -> Product (Const (OurInt.of_int 2), simplify b1)
-    | Sum (b1, b2) -> Sum (simplify b1, simplify b2)
+    | Sum (b1, b2) -> (
+      match (simplify b1, simplify b2) with
+      | (Const c, b) when OurInt.(c =~= zero) -> b
+      | (b, Const c) when OurInt.(c =~= zero) -> b
+      | (Const c1, Const c2) -> Const OurInt.(c1 + c2)
+      | (Neg Infinity, Infinity) -> Const OurInt.zero
+      | (Infinity, Neg Infinity) -> Const OurInt.zero
+      | (_, Infinity) -> Infinity
+      | (Infinity, _) -> Infinity
+      | (_, Neg Infinity) -> Neg Infinity
+      | (Neg Infinity, _) -> Neg Infinity
+      | (Max (Const zero1, b1), Max (Const zero2, b2)) when OurInt.(zero1 =~= zero) && OurInt.(zero2 =~= zero) ->
+         simplify (Max (Const OurInt.zero, Sum (b1, b2)))
+      | (b1, Neg b2) when equal b1 b2 -> Const OurInt.zero
+      | (Neg b1, b2) when equal b1 b2 -> Const OurInt.zero
+      | (b1, b2) when equal b1 b2 -> simplify (Product (Const (OurInt.of_int 2), b1))
+      | (b1, b2) -> Sum (b1, b2)
+    )
 
     (* Simplify terms with product head *)
     | Product (b1, b2) -> (
@@ -181,36 +187,35 @@ let rec simplify bound =
     )
                         
     (* Simplify terms with pow head *)
-    | Pow (value, Infinity) when OurInt.Compare.(value > OurInt.zero) -> Infinity
-    | Pow (value, Neg Infinity) when OurInt.Compare.(value > OurInt.zero) -> Const OurInt.zero
-    | Pow (value, Const c) -> Const OurInt.(pow value (to_int c))
-    | Pow (value, bound) when OurInt.(equal value zero) -> Const OurInt.zero
-    | Pow (value, bound) when OurInt.(equal value one) -> Const OurInt.one
-    | Pow (value, bound) -> Pow (value, simplify bound)
+    | Pow (value, exponent) -> (
+       match simplify exponent with
+       | Infinity when OurInt.Compare.(value > OurInt.zero) -> Infinity
+       | Neg Infinity when OurInt.Compare.(value > OurInt.zero) -> Const OurInt.zero
+       | Const c -> Const OurInt.(pow value (to_int c))
+       | _ when OurInt.(equal value zero) -> Const OurInt.zero
+       | _ when OurInt.(equal value one) -> Const OurInt.one
+       | exponent -> Pow (value, exponent)
+    )
 
     (* Simplify terms with min head *)
     | Min (b1, b2) ->
        let (b1, b2) = (simplify b1, simplify b2) in
-       (match b1 >= b2 with
-        | Some true -> b2
-        | _ ->
-           match b2 >= b1 with
-           | Some true -> b1
-           | _ ->
-              (* Optimization if we have structural equality *)
-              if equal b1 b2 then b1 else Min (b1, b2))
+       if b1 >= b2 |? false then
+         b2
+       else if b2 >= b1 |? false then
+         b1
+       else
+         Min (b1, b2)
 
     (* Simplify terms with max head *)
     | Max (b1, b2) ->
        let (b1, b2) = (simplify b1, simplify b2) in
-       (match b1 >= b2 with
-        | Some true -> b1
-        | _ ->
-           match b2 >= b1 with
-           | Some true -> b2
-           | _ ->
-              (* Optimization if we have structural equality *)
-              if equal b1 b2 then b1 else Max (b1, b2))
+       if b1 >= b2 |? false then
+         b1
+       else if b2 >= b1 |? false then
+         b2
+       else
+         Max (b1, b2)
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "simplify", ["input", to_string bound])
