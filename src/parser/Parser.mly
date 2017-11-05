@@ -225,18 +225,20 @@ bound :
 		{ Bound.infinity }
 	|	LPAR; b = bound; RPAR
                 { b }
-	|	MAX LBRACE max = separated_list(COMMA, bound) RBRACE
+	|	MAX LBRACE max = separated_nonempty_list(COMMA, bound) RBRACE
 		{ Bound.maximum (BatList.enum max) }
-	|	MIN LBRACE min = separated_list(COMMA, bound) RBRACE
+	|	MIN LBRACE min = separated_nonempty_list(COMMA, bound) RBRACE
 		{ Bound.minimum (BatList.enum min) }
 	|	MINUS b = bound
 		{ Bound.neg b }
 	|	c = UINT b = option(preceded(POW, bound))
 		{ Bound.exp (OurInt.of_int c) BatOption.(b |? Bound.one) }
-	|       v = ID c = option(preceded(POW, UINT))
-	        { Bound.pow (Bound.of_var (Var.of_string v)) BatOption.(c |? 1) }
-	|       ABS v = ID ABS c = option(preceded(POW, UINT))
-	        { Bound.pow (Bound.abs (Bound.of_var_string v)) BatOption.(c |? 1) }
+	|       v = ID
+	        { Bound.of_var_string v }
+	|       ABS b = bound ABS
+	        { Bound.abs b }
+	|       b = bound POW c = UINT
+	        { Bound.pow b c }
 	|	b1 = bound; op = bound_bioperator; b2 = bound
 		{ op b1 b2 } ;
 

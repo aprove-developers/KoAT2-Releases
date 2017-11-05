@@ -48,37 +48,68 @@ let rec to_string = function
   | Product (b1, Sum (b2, b3)) -> to_string b1 ^ "*(" ^ to_string (Sum (b1, b2)) ^ ")"
   | Product (b1, b2) -> to_string b1 ^ "*" ^ to_string b2
 
-type outer_t = t
-module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =
-  struct
-    type t = outer_t
-           
-    let (=~=) = equal
-              
-    let rec (>) b1 b2 =
-      let execute () =
-        match (b1, b2) with
-        | (_, Infinity) -> Some false
-        | (Infinity, _) -> Some true
-        | (_, Neg Infinity) -> Some true
-        | (Neg Infinity, _) -> Some false
-        | (Const c1, Const c2) when OurInt.Compare.(c1 > c2) -> Some true
-        | (b, Const z1) when OurInt.(equal z1 zero) -> (
-          match b with
-          (* Unsound | Abs b when not (equal b (Const OurInt.zero)) -> Some true *)
-          | Max (b, _) when b > (Const OurInt.zero) |? false -> Some true
-          | _ -> None
-        )
-        | (b1, b2) -> None
-      in
-      Logger.with_log logger Logger.DEBUG
-                      (fun () -> ">", ["lhs", to_string b1; "rhs", to_string b2])
-                      ~result:(Util.option_to_string Bool.to_string)
-                      execute
-                  
-  end
-include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
+let rec (>) b1 b2 =
+  let execute () =
+    match (b1, b2) with
+    | (_, Infinity) -> Some false
+    | (Neg Infinity, _) -> Some false
+    | (Const c1, Const c2) when OurInt.Compare.(c1 > c2) -> Some true
+    | (Abs b, Const z1) when OurInt.Compare.(OurInt.zero > z1) -> Some true
+    | (b, Const z1) when OurInt.(equal z1 zero) -> (
+      match b with
+      | Max (b, _) when b > (Const OurInt.zero) |? false -> Some true
+      | Max (_, b) when b > (Const OurInt.zero) |? false -> Some true
+      | _ -> None
+    )
+    | (Const z1, b) when OurInt.(equal z1 zero) -> (
+      match b with
+      | Min (b, _) when (Const OurInt.zero) > b |? false -> Some true
+      | Min (_, b) when (Const OurInt.zero) > b |? false -> Some true
+      | _ -> None
+    )
+    | (b1, b2) -> None
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> ">", ["condition", to_string b1 ^ ">" ^ to_string b2])
+                  ~result:(Util.option_to_string Bool.to_string)
+                  execute
 
+let rec (>=) b1 b2 =
+  let execute () =
+    if equal b1 b2 then
+      Some true
+    else (
+      match (b1, b2) with
+      | (Infinity, _) -> Some true
+      | (_, Neg Infinity) -> Some true
+      | (Const c1, Const c2) when OurInt.Compare.(c1 >= c2) -> Some true
+      | (Abs b, Const z1) when OurInt.Compare.(OurInt.zero >= z1) -> Some true
+      | (b, Const z1) when OurInt.(equal z1 zero) -> (
+        match b with
+        | Max (b, _) when b >= (Const OurInt.zero) |? false -> Some true
+        | Max (_, b) when b >= (Const OurInt.zero) |? false -> Some true
+        | _ -> None
+      )
+      | (b, Const z1) when OurInt.(equal z1 zero) -> (
+        match b with
+        | Min (b, _) when (Const OurInt.zero) >= b |? false -> Some true
+        | Min (_, b) when (Const OurInt.zero) >= b |? false -> Some true
+        | _ -> None
+      )
+      | (b1, b2) -> None
+    )
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> ">=", ["condition", to_string b1 ^ ">=" ^ to_string b2])
+                  ~result:(Util.option_to_string Bool.to_string)
+                  execute
+
+let (<) = flip (>)
+
+let (<=) = flip (>=)
+
+let (=~=) = equal
+         
 let rec simplify bound =
   let execute () =
     match bound with
@@ -87,9 +118,14 @@ let rec simplify bound =
 
     | Var v -> Var v
 
-    | Abs b -> Abs (simplify b)
-
     | Const c -> Const c
+
+    | Abs b -> (
+      match simplify b with
+      | b when b >= (Const OurInt.zero) |? false -> b
+      | b when b < (Const OurInt.zero) |? false -> simplify (Neg b)
+      | b -> Abs b
+    )
 
     (* Simplify terms with negation head *)
     | Neg (Const c) -> Const (OurInt.neg c)
@@ -178,7 +214,8 @@ let rec simplify bound =
                   (fun () -> "simplify", ["input", to_string bound])
                   ~result:to_string
                   execute
-                
+
+type outer_t = t
 module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
   struct
     type t = outer_t
@@ -252,12 +289,12 @@ let min b1 b2 =
 
 let maximum bounds =
   bounds
-  |> Enum.fold max minus_infinity
+  |> Enum.reduce max
   |> simplify
   
 let minimum bounds =
   bounds
-  |> Enum.fold min infinity
+  |> Enum.reduce min
   |> simplify
 
 let exp value b =
