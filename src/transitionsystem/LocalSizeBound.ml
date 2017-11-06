@@ -100,11 +100,32 @@ let binary_search (lowest: int) (highest: int) (p: int -> bool) =
                   ~result:Int.to_string
                   (fun () -> binary_search_ lowest highest p)
 
+(** Tries to convert conservatively choosed absolute values of variables by the variables themself. *)
+let unabsify_vars (p: t -> bool) (lsb: t): t =
+  let execute () =
+    let unabsify_with_candidate var current_lsb =
+      let possible_better_lsb =
+        { current_lsb with
+          abs_vars = VarSet.remove var current_lsb.abs_vars;
+          pure_vars = VarSet.add var current_lsb.pure_vars;
+        } in
+      if p possible_better_lsb then
+        possible_better_lsb
+      else
+        current_lsb
+    in
+    VarSet.fold unabsify_with_candidate lsb.abs_vars lsb
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "unabsify vars", ["lsb", to_string lsb])
+                  ~result:to_string
+                  execute
+  
 (** Minimizes the given variable set, such that the predicate p is still satisfied.
     We assume that the given variable set satisfies the predicate p.
     TODO Currently we use an arbitrary order. This is sound, however for "x <= y && y <= z" we may return z although y would be definitely better. *)
 let minimize_vars (p: VarSet.t -> bool) (vars: VarSet.t): VarSet.t =
-  let minimize_vars_ () =
+  let execute () =
     (** Removes the candidate from the set, if the candidate is not necessary. *)
     let minimize_with_candidate var current_minimized_set =
       let further_minimized_set = VarSet.remove var current_minimized_set in
@@ -118,8 +139,8 @@ let minimize_vars (p: VarSet.t -> bool) (vars: VarSet.t): VarSet.t =
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "minimize vars", ["vars", VarSet.to_string vars])
                   ~result:(fun result -> VarSet.to_string result)
-                  (fun () -> minimize_vars_ ())
-
+                  execute
+  
 let minimize_scaledsum_vars (p: t -> bool) (lsb: t): t = {
     lsb with abs_vars = minimize_vars
                       (fun vars -> p { lsb with abs_vars = vars } )
@@ -180,13 +201,17 @@ let find_bound var formula =
             (fun f -> f ())
             (List.enum
                [
-                 (fun () -> find_unscaled var formula (VarSet.powerset vars));
+                 (fun () ->
+                   find_unscaled var formula (VarSet.powerset vars)
+                   |> Option.map (unabsify_vars (is_bounded_with var formula))
+                 );
                  (fun () -> 
                    Some {factor = high; constant = high; abs_vars = vars; pure_vars = VarSet.empty}
                    |> Option.filter (is_bounded_with var formula)
                    |> Option.map (optimize_s 1 high (is_bounded_with var formula))
                    |> Option.map (optimize_c low high (is_bounded_with var formula))
                    |> Option.map (minimize_scaledsum_vars (is_bounded_with var formula))
+                   |> Option.map (unabsify_vars (is_bounded_with var formula))
                  )
                ]
             )

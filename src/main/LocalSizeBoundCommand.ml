@@ -11,25 +11,18 @@ type params = {
 
     guard : string; [@default ""]
     (** The guard of the transition in the form of a constraint.
-        That is a &&-separated list of atoms.
+        That is a formula with and-separators (&&) and or-separators (||).
         Atoms are two polynomials in a relation with <, >, <=, >= or =. *)
 
     var : string; [@default "x"]
     (** The variable for which a local size bound should be found. *)
 
-    update : string option;
-    (** The polynomial to which the value of the variable gets updated after the transition. *)
-    
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
   Logger.init ["lsb", Logger.DEBUG] (Logger.make_dbg_formatter IO.stdout);
   let open TransitionLabel in
-  let guard = Readers.read_constraint params.guard in
+  let guard = Readers.read_formula params.guard in
   let var = Var.of_string params.var in
-  let update = match params.update with
-    | Some str -> VarMap.(add var (Readers.read_polynomial str) empty)
-    | None -> VarMap.empty in
-  let label = make "Com_1" ~start:"" ~target:"" ~update ~guard in
-  print_string (Bound.to_string LocalSizeBound.(as_bound (sizebound_local params.kind label var)))
+  print_string (Bound.to_string LocalSizeBound.(as_bound (find_bound var guard)))
 

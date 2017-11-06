@@ -36,20 +36,21 @@ let tests =
                     (mk 1 15 [] [], "x <= y + 7 && y <= 8");
                     (mk 1 10 [] [], "x <= y && x <= 10");
                     (* Bounded by variable *)
-                    (mk 1 0 ["y"] [], "x <= y");
-                    (mk 1 0 ["y"] [], "x <= y && x > 5");
+                    (mk 1 0 [] ["y"], "x <= y");
+                    (mk 1 0 [] ["y"], "x <= y && x >= y");
+                    (mk 1 0 [] ["y"], "x <= y && x > 5");
                     (* TODO Better heuristic for optimize vars: (AddsConstant 0 ["y"] "x <= y && y <= z"); *)
-                    (mk 1 0 ["z"] [], "x <= z && y <= z");
+                    (mk 1 0 [] ["z"], "x <= z && y <= z");
                     (* Bounded by constant plus variable *)
-                    (mk 1 5 ["y"] [], "x <= y + 5");
-                    (mk 1 (-5) ["y"] [], "x <= y - 5");
-                    (mk 1 2 ["y"] [], "x <= y + z - 5 && z <= 7");
+                    (mk 1 5 [] ["y"], "x <= y + 5");
+                    (mk 1 (-5) [] ["y"], "x <= y - 5");
+                    (mk 1 2 [] ["y"], "x <= y + z - 5 && z <= 7");
                     (* With factor *)
-                    (mk 2 0 ["y"] [], "x <= 2*y");
-                    (mk 2 0 ["y"; "z"] [], "x <= 2*y + 2*z");
-                    (mk 3 0 ["y"; "z"] [], "x <= 2*y + 3*z");
+                    (mk 2 0 [] ["y"], "x <= 2*y");
+                    (mk 2 0 [] ["y"; "z"], "x <= 2*y + 2*z");
+                    (mk 3 0 ["y"] ["z"], "x <= 2*y + 3*z");
                     (mk 3 0 ["y"; "z"] [], "x <= 2*y + (-3)*z");
-                    (mk 2 0 ["y"] [], "x <= 2*y + (-3)*z && z >= 0");
+                    (mk 2 0 [] ["y"], "x <= 2*y + (-3)*z && z >= 0");
                     (mk 3 0 ["z"] [], "x <= 2*y + (-3)*z && y <= 0");
                   ]
       );

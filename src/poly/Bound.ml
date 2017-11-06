@@ -44,8 +44,8 @@ let rec to_string = function
   | Pow (v, b) -> OurInt.to_string v ^ "^(" ^ to_string b ^ ")"
   | Sum (b1, b2) -> to_string b1 ^ "+" ^ to_string b2
   | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ to_string (Sum (b1, b2)) ^ ")*(" ^ to_string (Sum (b3, b4)) ^ ")"
-  | Product (Sum (b1, b2), b3) -> "(" ^ to_string (Sum (b1, b2)) ^ ")*" ^ to_string b2
-  | Product (b1, Sum (b2, b3)) -> to_string b1 ^ "*(" ^ to_string (Sum (b1, b2)) ^ ")"
+  | Product (Sum (b1, b2), b3) -> "(" ^ to_string (Sum (b1, b2)) ^ ")*" ^ to_string b3
+  | Product (b1, Sum (b2, b3)) -> to_string b1 ^ "*(" ^ to_string (Sum (b2, b3)) ^ ")"
   | Product (b1, b2) -> to_string b1 ^ "*" ^ to_string b2
 
 let rec (>) b1 b2 =
@@ -122,7 +122,7 @@ let rec simplify bound =
 
     | Abs b -> (
       match simplify b with
-      | Abs b1 -> Abs b1
+      | Abs b -> Abs b
       | Neg b -> Abs b
       | b when b >= (Const OurInt.zero) |? false -> b
       | b when b < (Const OurInt.zero) |? false -> simplify (Neg b)
@@ -166,8 +166,8 @@ let rec simplify bound =
       match (simplify b1, simplify b2) with
       | (Const c, b) when OurInt.(c =~= one) -> b
       | (b, Const c) when OurInt.(c =~= one) -> b
-      | (Const c, b) when OurInt.(c =~= zero) -> Const c
-      | (b, Const c) when OurInt.(c =~= zero) -> Const c
+      | (Const c, b) when OurInt.(c =~= zero) -> Const OurInt.zero
+      | (b, Const c) when OurInt.(c =~= zero) -> Const OurInt.zero
       | (Const c, b) when OurInt.(c =~= neg one) -> simplify (Neg b)
       | (b, Const c) when OurInt.(c =~= neg one) -> simplify (Neg b)
       | (Infinity, b) when b >= Const OurInt.zero |? false -> Infinity
@@ -249,14 +249,14 @@ module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
 include PolyTypes.MakeMath(BaseMathImpl)
 
 let sum bounds =
-  bounds
-  |> Enum.fold add zero
-  |> simplify
+  try
+    bounds |> Enum.reduce add |> simplify
+  with Not_found -> zero
   
 let product bounds =
-  bounds
-  |> Enum.fold mul one
-  |> simplify
+  try
+    bounds |> Enum.reduce mul |> simplify
+  with Not_found -> one
   
 let sub t1 t2 =
   simplify (add t1 (neg t2))
