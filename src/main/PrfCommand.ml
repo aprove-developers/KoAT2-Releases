@@ -16,4 +16,4 @@ let run (params: params) =
   let nb_trans = TransitionGraph.nb_edges (Program.graph program ) in
   let appr = Approximation.empty nb_trans nb_vars in
   let prf = RankingFunction.find program appr in
-  print_string (RankingFunction.to_string prf)
+  print_string ((RankingFunction.to_string prf)^"\n")
