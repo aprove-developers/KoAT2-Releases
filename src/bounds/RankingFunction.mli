@@ -22,13 +22,15 @@ val transitions : t -> Transition.t list
 (** Finds a suitable ranking function which decreases at least one transition and does not increase any transition. *)
 val find : Program.t -> Approximation.t -> t
 
+(** Finds a suitable ranking function for the given transitions T'. *)
+val find_prf : VarSet.t -> Transition.t list -> t
+
 (** Invokes Farkas Lemma, to compute a ranking function*)
 val farkas_transform : Constraint.t -> ParameterAtom.t -> Constraint.t
   
 (** Generates a ranking function template for every location in the program*)
-val generate_ranking_template : Program.t -> Location.t list -> (Location.t -> ParameterPolynomial.t) * Var.t list
+val generate_ranking_template : VarSet.t -> Location.t list -> (Location.t -> ParameterPolynomial.t) * Var.t list
 
 (** Converts a ranking function into a string*)
 val to_string : t -> string
 
-val ranking_function_procedure : Program.t -> Transition.t list -> (Location.t -> Polynomial.t) * Transition.t list

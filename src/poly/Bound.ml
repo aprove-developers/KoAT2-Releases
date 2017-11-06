@@ -302,6 +302,8 @@ let infinity = Infinity
 
 let minus_infinity = Neg Infinity
 
+let is_infinity = equal Infinity
+                   
 let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~abs ~inf p =
   let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~abs ~inf in
   match p with

@@ -36,11 +36,8 @@ val infinity : t
 val minus_infinity : t
 val exp : value -> t -> t
 val abs : t -> t
-  
-(** Stable structural equal, but not equality of the bounds *)
-val equal : t -> t -> bool
-(** Stable structural compare, but not an actual compare of the bounds *)
-val compare : t -> t -> int
+
+val is_infinity : t -> bool
   
 val to_string : t -> string
 
