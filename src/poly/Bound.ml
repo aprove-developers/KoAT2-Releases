@@ -14,20 +14,38 @@ type value = OurInt.t
 (* Infinity is min of an empty list *)
 type t =
   | Infinity
+  | Const of OurInt.t
   | Var of Var.t
   | Abs of t
-  | Const of OurInt.t
-  | Max of t * t
-  | Min of t * t
   | Neg of t
   | Pow of OurInt.t * t
   | Sum of t * t
-  | Product of t * t [@@deriving eq, ord]
+  | Product of t * t 
+  | Max of t * t
+  | Min of t * t [@@deriving eq, ord]
 
 let of_var v = Var v
 
 let of_constant c = Const c
 
+module Constructor =
+  struct
+    let number = function
+      | Infinity -> 0
+      | Const _ -> 1
+      | Var _ -> 2
+      | Abs _ -> 3
+      | Neg _ -> 4
+      | Pow _ -> 5
+      | Sum _ -> 6
+      | Product _ -> 7
+      | Max _ -> 8
+      | Min _ -> 9
+        
+    let (<) b1 b2 =
+      number b1 < number b2
+  end
+          
 let rec to_string = function
   | Var v -> Var.to_string v
   | Abs b -> "|" ^ to_string b  ^ "|"
@@ -111,7 +129,7 @@ let (<) = flip (>)
 let (<=) = flip (>=)
 
 let (=~=) = equal
-         
+
 let rec simplify bound =
   let execute () =
     match bound with
@@ -160,6 +178,9 @@ let rec simplify bound =
       | (b1, Neg b2) when equal b1 b2 -> Const OurInt.zero
       | (Neg b1, b2) when equal b1 b2 -> Const OurInt.zero
       | (b1, b2) when equal b1 b2 -> simplify (Product (Const (OurInt.of_int 2), b1))
+      | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify (Sum (b2, Sum (b1, b3)))
+      | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Sum (Sum (b1, b3), b2))
+      | (b1, b2) when Constructor.(b2 < b1) -> simplify (Sum (b2, b1))
       | (b1, b2) -> Sum (b1, b2)
     )
 
@@ -206,8 +227,10 @@ let rec simplify bound =
          b2
        else if b2 >= b1 |? false then
          b1
+       else if equal b2 (Const OurInt.zero) then
+         Min (b2, b1)
        else
-         Min (b1, b2)
+         Min (b1, b2)         
 
     (* Simplify terms with max head *)
     | Max (b1, b2) ->
@@ -216,8 +239,11 @@ let rec simplify bound =
          b1
        else if b2 >= b1 |? false then
          b2
+       else if equal b2 (Const OurInt.zero) then
+         Max (b2, b1)
        else
-         Max (b1, b2)
+         Max (b1, b2)         
+
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "simplify", ["input", to_string bound])
