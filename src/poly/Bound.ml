@@ -167,6 +167,7 @@ let rec simplify bound =
       | (Const c, b) when OurInt.(c =~= zero) -> b
       | (b, Const c) when OurInt.(c =~= zero) -> b
       | (Const c1, Const c2) -> Const OurInt.(c1 + c2)
+      | (Const c1, Sum (Const c2, b)) -> Sum (Const OurInt.(c1 + c2), b)
       | (Neg Infinity, Infinity) -> Const OurInt.zero
       | (Infinity, Neg Infinity) -> Const OurInt.zero
       | (_, Infinity) -> Infinity
