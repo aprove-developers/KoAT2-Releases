@@ -21,7 +21,7 @@ let tests =
       ("find_bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
-               (fun _ -> find_bound (Var.of_string "x") (Readers.read_formula guard)
+               (fun _ -> find_bound `Upper (Var.of_string "x") (Readers.read_formula guard)
                          |> Option.map (fun bound -> fun () -> assert_equal_classified_bound expected bound)
                          |? (fun () -> assert_failure "No bound")
                          |> fun f -> f () ))

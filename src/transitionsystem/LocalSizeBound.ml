@@ -173,57 +173,72 @@ let optimize_s (lowest: int) (highest: int) (p: t -> bool) (lsb: t): t =
                   ~result:to_string
                   execute
 
-let find_unscaled (var: Var.t) (formula: Formula.t) (varsets: VarSet.t Enum.t): t Option.t =
-  try
-    Some (
-        Enum.find_map (fun varset ->
-            Some {factor = 1; constant = 1024; abs_vars = varset; pure_vars = VarSet.empty}
-            |> Option.filter (is_bounded_with var formula)
-            |> Option.map (optimize_c (-1024) 1024 (is_bounded_with var formula))
-          ) varsets
-      )
-  with Not_found -> None
-
+(* Check if x <= 1 * (c + [v1,...,vn]). *)
+let find_unscaled_bound (var: Var.t) (formula: Formula.t) (varsets: VarSet.t Enum.t): t Option.t =
+  let execute () =
+    try
+      Some (
+          Enum.find_map (fun varset ->
+              Some {factor = 1; constant = 1024; abs_vars = varset; pure_vars = VarSet.empty}
+              |> Option.filter (is_bounded_with var formula)
+              |> Option.map (optimize_c (-1024) 1024 (is_bounded_with var formula))
+              |> Option.map (unabsify_vars (is_bounded_with var formula))
+            ) varsets
+        )
+    with Not_found -> None
+  in Logger.with_log logger Logger.DEBUG
+                  (fun () -> "find unscaled bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
+                  ~result:(Util.option_to_string (Bound.to_string % as_bound % Option.some))
+                  execute
   
-let find_bound var formula =
-  (* Our strategy to find local size bounds.
-     Functions which come first have precedence over later functions.
-     If none of the functions finds a bound the result is Unbound. *)
-  (* Check if x <= 1 * (c + [v1,...,vn]). *)
-  (* Check if x <= s * (c + [v1,...,vn]). *)
+(* Check if x <= s * (c + [v1,...,vn]). *)
+let find_scaled_bound var formula =
   let execute () =
     let vars = VarSet.remove var (Formula.vars formula)
     and low = -1024
     and high = 1024 in
     try 
-      Some (
-          Enum.find_map
-            (fun f -> f ())
-            (List.enum
-               [
-                 (fun () ->
-                   find_unscaled var formula (VarSet.powerset vars)
-                   |> Option.map (unabsify_vars (is_bounded_with var formula))
-                 );
-                 (fun () -> 
-                   Some {factor = high; constant = high; abs_vars = vars; pure_vars = VarSet.empty}
-                   |> Option.filter (is_bounded_with var formula)
-                   |> Option.map (optimize_s 1 high (is_bounded_with var formula))
-                   |> Option.map (optimize_c low high (is_bounded_with var formula))
-                   |> Option.map (minimize_scaledsum_vars (is_bounded_with var formula))
-                   |> Option.map (unabsify_vars (is_bounded_with var formula))
-                 )
-               ]
-            )
-        )
+      Some {factor = high; constant = high; abs_vars = vars; pure_vars = VarSet.empty}
+      |> Option.filter (is_bounded_with var formula)
+      |> Option.map (optimize_s 1 high (is_bounded_with var formula))
+      |> Option.map (optimize_c low high (is_bounded_with var formula))
+      |> Option.map (minimize_scaledsum_vars (is_bounded_with var formula))
+      |> Option.map (unabsify_vars (is_bounded_with var formula))
     with Not_found -> None
   in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "find local size bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
+                  (fun () -> "find scaled bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
                   ~result:(Util.option_to_string (Bound.to_string % as_bound % Option.some))
                   execute
-                  
+
+type kind = [`Lower | `Upper] [@@deriving show]
+   
+let find_bound kind var formula =
+  let execute () =
+    let unscaled_bound =
+      formula
+      |> Formula.vars
+      |> VarSet.remove var
+      |> VarSet.powerset
+      |> find_unscaled_bound var formula
+    in
+    if Option.is_some unscaled_bound then
+      unscaled_bound
+    else
+      match kind with
+      | `Upper ->
+         find_scaled_bound var formula
+      | `Lower ->
+         formula
+         |> Formula.turn
+         |> find_scaled_bound var
+         |> Option.map neg
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "find local size bound", ["kind", show_kind kind; "var", Var.to_string var; "formula", Formula.to_string formula])
+                     ~result:(Util.option_to_string (Bound.to_string % as_bound % Option.some))
+                     execute
+      
+   
 let sizebound_local kind label var =
-  (* TODO Cache let f (kind, label, var) = *)
     let open Option.Infix in
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
     TransitionLabel.update label var
@@ -231,19 +246,7 @@ let sizebound_local kind label var =
     (* Introduce a temporary result variable *)
     let v' = Var.fresh_id () in
     let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = bound) in
-    match kind with
-    | `Upper ->
-       find_bound v' guard_with_update
-    | `Lower ->
-       guard_with_update
-       |> Formula.turn
-       |> find_bound v'
-       |> Option.map neg
-  (* TODO Cache, but with care
-     in let memo = Lru.memo ~hashed:(Hashtbl.hash, fun (kind1, label1, var1) (kind2, label2, var2) -> kind1 = kind2 && TransitionLabel.equal label1 label2 && Var.equal var1 var2)
-     ~cap:50 (fun _ -> f) in
-     memo (kind, label, var)
-   *)
+    find_bound kind v' guard_with_update
 
 let sizebound_local_rv kind ((l,t,l'),v) =
   sizebound_local kind t v

@@ -6,7 +6,7 @@ let command = "lsb"
    
 type params = {
     
-    kind : [`Upper | `Lower]; [@enum ["upper", `Upper; "lower", `Lower]] [@pos 0] [@default `Upper]
+    kind : [`Lower | `Upper]; [@enum ["upper", `Upper; "lower", `Lower]] [@pos 0] [@default `Upper]
     (** Which type of bound is requested. Available options: upper and lower. *)
 
     guard : string; [@default ""]
@@ -24,5 +24,5 @@ let run (params: params) =
   let open TransitionLabel in
   let guard = Readers.read_formula params.guard in
   let var = Var.of_string params.var in
-  print_string (Bound.to_string LocalSizeBound.(as_bound (find_bound var guard)))
+  print_string (Bound.to_string LocalSizeBound.(as_bound (find_bound params.kind var guard)))
 

@@ -59,10 +59,10 @@ val as_formula : Var.t -> t -> formula
 val is_bounded_with : Var.t -> formula -> t -> bool
 
 (** Tries to find a templated bound of any of the defined templates. *)
-val find_bound : Var.t -> formula -> t Option.t
+val find_bound : [`Lower | `Upper] -> Var.t -> formula -> t Option.t
 
 (** Returns a local sizebound of the specified kind for the variable of the transition. 
     A local sizebound is expressed in relation to the values directly before executing the transition. *)
-val sizebound_local : TransitionLabel.kind -> TransitionLabel.t -> Var.t -> t Option.t
+val sizebound_local : [`Lower | `Upper] -> TransitionLabel.t -> Var.t -> t Option.t
   
-val sizebound_local_rv : TransitionLabel.kind -> RV.t -> t Option.t
+val sizebound_local_rv : [`Lower | `Upper] -> RV.t -> t Option.t
