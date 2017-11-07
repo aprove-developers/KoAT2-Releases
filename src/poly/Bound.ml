@@ -175,6 +175,7 @@ let rec simplify bound =
       | (Neg Infinity, _) -> Neg Infinity
       | (Max (Const zero1, b1), Max (Const zero2, b2)) when OurInt.(zero1 =~= zero) && OurInt.(zero2 =~= zero) ->
          simplify (Max (Const OurInt.zero, Sum (b1, b2)))
+      | (Const c1, Max (Const c2, b)) -> Max (Const OurInt.(c1 + c2), Sum (Const c1, b))
       | (b1, Neg b2) when equal b1 b2 -> Const OurInt.zero
       | (Neg b1, b2) when equal b1 b2 -> Const OurInt.zero
       | (b1, b2) when equal b1 b2 -> simplify (Product (Const (OurInt.of_int 2), b1))
@@ -206,6 +207,9 @@ let rec simplify bound =
          simplify (Max (Const OurInt.zero, Product (b1, b2)))
       | (Max (Const zero1, b1), b2) when OurInt.(zero1 =~= zero) ->
          simplify (Max (Const OurInt.zero, Product (b1, b2)))
+      | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify (Product (b2, Product (b1, b3)))
+      | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Product (Product (b1, b3), b2))
+      | (b1, b2) when Constructor.(b2 < b1) -> simplify (Product (b2, b1))
       | (b1, b2) -> Product (b1, b2)
     )
                         
@@ -215,6 +219,8 @@ let rec simplify bound =
        | Infinity when OurInt.Compare.(value > OurInt.zero) -> Infinity
        | Neg Infinity when OurInt.Compare.(value > OurInt.zero) -> Const OurInt.zero
        | Const c -> Const OurInt.(pow value (to_int c))
+       (* TODO Do not use OurInt.to_int *)
+       | Max (Const c, b) -> Max (Const (OurInt.pow value (OurInt.to_int c)), Pow (value, b))
        | _ when OurInt.(equal value zero) -> Const OurInt.zero
        | _ when OurInt.(equal value one) -> Const OurInt.one
        | exponent -> Pow (value, exponent)
@@ -227,10 +233,13 @@ let rec simplify bound =
          b2
        else if b2 >= b1 |? false then
          b1
-       else if equal b2 (Const OurInt.zero) then
-         Min (b2, b1)
-       else
-         Min (b1, b2)         
+       else (
+         match (b1, b2) with
+         | (b1, Min (b2, b3)) when Constructor.(b2 < b1) -> simplify (Min (b2, Min (b1, b3)))
+         | (Min (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Min (Min (b1, b3), b2))
+         | (b1, b2) when Constructor.(b2 < b1) -> simplify (Min (b2, b1))
+         | (b1, b2) -> Min (b1, b2)
+       )
 
     (* Simplify terms with max head *)
     | Max (b1, b2) ->
@@ -239,11 +248,13 @@ let rec simplify bound =
          b1
        else if b2 >= b1 |? false then
          b2
-       else if equal b2 (Const OurInt.zero) then
-         Max (b2, b1)
-       else
-         Max (b1, b2)         
-
+       else (
+         match (b1, b2) with
+         | (b1, Max (b2, b3)) when Constructor.(b2 < b1) -> simplify (Max (b2, Max (b1, b3)))
+         | (Max (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Max (Max (b1, b3), b2))
+         | (b1, b2) when Constructor.(b2 < b1) -> simplify (Max (b2, b1))
+         | (b1, b2) -> Max (b1, b2)
+       )
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "simplify", ["input", to_string bound])
