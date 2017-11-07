@@ -46,6 +46,33 @@ type main_params = {
 
 let init_logger (logs: (string * Logger.level) list) =
   Logger.init logs (Logger.make_dbg_formatter IO.stdout)
+
+let read_input (file: string): Program.t Option.t =
+  try
+    Some (Readers.read_file file)
+  with TransitionLabel.RecursionNotSupported ->
+    prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat. The program will exit now."; None
+
+let create_approximation (program: Program.t): Approximation.t =
+  Approximation.empty (TransitionGraph.nb_edges (Program.graph program)) (VarSet.cardinal (Program.vars program))
+
+let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
+  let get accessor = Location.of_string (accessor label) in
+  String.concat "" ["Timebound: ";
+                    Approximation.timebound appr (get TransitionLabel.start, label, get TransitionLabel.target) |> Bound.to_string;
+                    "\n";
+                    TransitionLabel.to_string label]
+
+let bounded_rv_to_string (appr: Approximation.t) (t,v) =
+  String.concat "" ["Global: ";
+                    Approximation.sizebound `Upper appr t v |> Bound.to_string;
+                    " >= ";
+                    RV.to_id_string (t,v);
+                    " >= ";
+                    Approximation.sizebound `Lower appr t v |> Bound.to_string;
+                    "\n";
+                    "Local: ";
+                    RV.to_string (t,v)]
   
 let run (params: main_params) =
   let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
@@ -60,12 +87,9 @@ let run (params: main_params) =
     print_string "\n\n"
   );
   params.input
-  |> (fun file ->
-     try Some (Readers.read_file file)
-     with TransitionLabel.RecursionNotSupported ->
-       prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat. The program will exit now."; None)
+  |> read_input
   |> Option.map (fun program ->
-         (program, Approximation.empty (TransitionGraph.nb_edges (Program.graph program)) (VarSet.cardinal (Program.vars program)))
+         (program, create_approximation program)
          |> params.preprocessing_strategy params.preprocessors
          |> tap (fun (program, appr) ->
                 if params.print_system then
@@ -83,19 +107,10 @@ let run (params: main_params) =
          |> tap (fun (program, appr) -> params.result program appr)
          |> tap (fun (program, appr) ->
                 if params.print_system then
-                  Program.print_system
-                    ~label:(fun label -> "Timebound: " ^ (Approximation.timebound appr
-                                                                                  (Location.of_string (TransitionLabel.start label),
-                                                                                   label,
-                                                                                   Location.of_string (TransitionLabel.target label)) |> Bound.to_string)
-                                         ^ "\n" ^ TransitionLabel.to_string label)
-                    ~outdir:output_dir ~file:input_filename program)
+                  Program.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then
-                  Program.print_rvg ~label:(fun (t,v) -> "Global: " ^ (Approximation.sizebound `Upper appr t v |> Bound.to_string) ^ " >= "
-                                                         ^ RV.to_id_string (t,v) ^ " >= "
-                                                         ^ (Approximation.sizebound `Lower appr t v |> Bound.to_string) ^ "\n"
-                                                         ^ "Local: " ^ RV.to_string (t,v)) ~outdir:output_dir ~file:input_filename program)
+                  Program.print_rvg ~label:(bounded_rv_to_string appr) ~outdir:output_dir ~file:input_filename program)
        )
   |> ignore
 
