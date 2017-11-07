@@ -59,7 +59,9 @@ let run (params: main_params) =
     params.input |> File.lines_of |> List.of_enum |> String.concat "\n" |> print_string;
     print_string "\n\n"
   );
-  (Readers.read_file params.input, Approximation.empty 10 10) (* TODO Better values *)
+  params.input
+  |> Readers.read_file
+  |> fun program -> (program, Approximation.empty (TransitionGraph.nb_edges (Program.graph program)) (VarSet.cardinal (Program.vars program)))
   |> params.preprocessing_strategy params.preprocessors
   |> tap (fun (program, appr) ->
     if params.print_system then
