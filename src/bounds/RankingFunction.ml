@@ -14,6 +14,8 @@ type t = {
     transitions : Transition.t list;
   }
   
+let one = ParameterPolynomial.one
+  
 let logger = Logger.make_log "prf"  
 
 let rank f = f.pol
@@ -81,20 +83,29 @@ let as_parapoly label var =
   (** Correct? In the nondeterministic case we just make it deterministic? *)
   |None -> ParameterPolynomial.of_var var
   |Some p -> ParameterPolynomial.of_polynomial p
-           
+
+(* If the cost of the transition is nonlinear, then we have to do it the old way as long as we do not infer nonlinear ranking functions *)
 let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t): Constraint.t =
   let (src, trans_label, target) = trans in
   let guard = TransitionLabel.guard trans_label in
   let updated_target = ParameterPolynomial.substitute_f (as_parapoly trans_label) (pol target) in
   let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
-  let new_atom = ParameterAtom.Infix.(pol src >= ParameterPolynomial.(cost + updated_target)) in (*here's the difference*)
+  let new_atom = 
+    if ParameterPolynomial.is_linear cost then
+      ParameterAtom.Infix.(pol src >= ParameterPolynomial.(cost + updated_target)) (*here's the difference*)
+    else 
+      ParameterAtom.Infix.(pol src >= ParameterPolynomial.(one + updated_target)) in
   farkas_transform guard new_atom
   
 let bounded_constraint (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t): Constraint.t =
   let (src, trans_label, _) = trans in
   let guard = TransitionLabel.guard trans_label in
   let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
-  let new_atom = ParameterAtom.Infix.(pol src >= cost) in 
+  let new_atom = 
+    if ParameterPolynomial.is_linear cost then
+      ParameterAtom.Infix.(pol src >= cost) 
+    else
+      ParameterAtom.Infix.(pol src >= one) in
   farkas_transform guard new_atom
 
 (** Returns a non increasing constraint for a single transition. *)
@@ -154,7 +165,7 @@ let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (tran
 
 let find vars transitions =
   let execute () =
-    let (pol, fresh_coeffs) = generate_ranking_template vars (transitions |> List.enum |> Program.locations |> List.of_enum) in
+    let (pol, fresh_coeffs) = generate_ranking_template vars (transitions |> List.enum |> Program.locations |> List.of_enum |> List.unique) in
     let non_increasing = non_increasing_constraints pol transitions in
     let strictly_decreasing_transitions = single_strictly_decreasing pol transitions non_increasing in
     let bounded = Constraint.all (List.map (bounded_constraint pol) strictly_decreasing_transitions) in

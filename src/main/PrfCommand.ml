@@ -13,4 +13,4 @@ type params = {
 let run (params: params) =
   let program = Readers.read_file params.input in
   let prf = RankingFunction.find (Program.vars program) (TransitionSet.to_list (TransitionGraph.transitions (Program.graph program))) in
-  print_string (RankingFunction.to_string prf)
+  print_string (RankingFunction.to_string prf ^ "\n")
