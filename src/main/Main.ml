@@ -60,38 +60,43 @@ let run (params: main_params) =
     print_string "\n\n"
   );
   params.input
-  |> Readers.read_file
-  |> fun program -> (program, Approximation.empty (TransitionGraph.nb_edges (Program.graph program)) (VarSet.cardinal (Program.vars program)))
-  |> params.preprocessing_strategy params.preprocessors
-  |> tap (fun (program, appr) ->
-    if params.print_system then
-      Program.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
-  |> tap (fun (program, appr) ->
-    if params.print_rvg then
-      Program.print_rvg ~label:RV.to_string ~outdir:output_dir ~file:input_filename program)
-  |> (fun (program, appr) ->
-     if not params.no_boundsearch then
-       (program, appr)
-       |> params.preprocessing_strategy params.preprocessors
-       |> uncurry Bounds.find_bounds
-       |> fun appr -> (program, appr)
-     else (program, appr))
-  |> tap (fun (program, appr) -> params.result program appr)
-  |> tap (fun (program, appr) ->
-    if params.print_system then
-      Program.print_system
-        ~label:(fun label -> "Timebound: " ^ (Approximation.timebound appr
-                                                                  (Location.of_string (TransitionLabel.start label),
-                                                                   label,
-                                                                   Location.of_string (TransitionLabel.target label)) |> Bound.to_string)
-                             ^ "\n" ^ TransitionLabel.to_string label)
-        ~outdir:output_dir ~file:input_filename program)
-  |> tap (fun (program, appr) ->
-    if params.print_rvg then
-      Program.print_rvg ~label:(fun (t,v) -> "Global: " ^ (Approximation.sizebound `Upper appr t v |> Bound.to_string) ^ " >= "
-                                             ^ RV.to_id_string (t,v) ^ " >= "
-                                             ^ (Approximation.sizebound `Lower appr t v |> Bound.to_string) ^ "\n"
-                                             ^ "Local: " ^ RV.to_string (t,v)) ~outdir:output_dir ~file:input_filename program)
+  |> (fun file ->
+     try Some (Readers.read_file file)
+     with TransitionLabel.RecursionNotSupported ->
+       prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat. The program will exit now."; None)
+  |> Option.map (fun program ->
+         (program, Approximation.empty (TransitionGraph.nb_edges (Program.graph program)) (VarSet.cardinal (Program.vars program)))
+         |> params.preprocessing_strategy params.preprocessors
+         |> tap (fun (program, appr) ->
+                if params.print_system then
+                  Program.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
+         |> tap (fun (program, appr) ->
+                if params.print_rvg then
+                  Program.print_rvg ~label:RV.to_string ~outdir:output_dir ~file:input_filename program)
+         |> (fun (program, appr) ->
+                   if not params.no_boundsearch then
+                     (program, appr)
+                     |> params.preprocessing_strategy params.preprocessors
+                     |> uncurry Bounds.find_bounds
+                     |> fun appr -> (program, appr)
+                   else (program, appr))
+         |> tap (fun (program, appr) -> params.result program appr)
+         |> tap (fun (program, appr) ->
+                if params.print_system then
+                  Program.print_system
+                    ~label:(fun label -> "Timebound: " ^ (Approximation.timebound appr
+                                                                                  (Location.of_string (TransitionLabel.start label),
+                                                                                   label,
+                                                                                   Location.of_string (TransitionLabel.target label)) |> Bound.to_string)
+                                         ^ "\n" ^ TransitionLabel.to_string label)
+                    ~outdir:output_dir ~file:input_filename program)
+         |> tap (fun (program, appr) ->
+                if params.print_rvg then
+                  Program.print_rvg ~label:(fun (t,v) -> "Global: " ^ (Approximation.sizebound `Upper appr t v |> Bound.to_string) ^ " >= "
+                                                         ^ RV.to_id_string (t,v) ^ " >= "
+                                                         ^ (Approximation.sizebound `Lower appr t v |> Bound.to_string) ^ "\n"
+                                                         ^ "Local: " ^ RV.to_string (t,v)) ~outdir:output_dir ~file:input_filename program)
+       )
   |> ignore
 
 let subcommand run params_cmdliner_term description command =
