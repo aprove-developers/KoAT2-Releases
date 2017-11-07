@@ -44,3 +44,6 @@ docs
 
 #Ignore git patch files
 *.patch
+
+#Profiling file
+gmon.out
