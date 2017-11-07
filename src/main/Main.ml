@@ -1,6 +1,14 @@
 open Batteries
 open Program.Types
    
+(** Prints the whole resulting approximation to the shell. *)
+let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
+  print_string (Approximation.to_string program appr)
+
+(** Prints the overall timebound of the program to the shell. *)
+let print_overall_timebound (program: Program.t) (appr: Approximation.t): unit =
+  print_string (Bound.to_string Approximation.(Time.sum (time appr) program))
+  
 (** The shell arguments which can be defined in the console. *)
 type main_params = {
     
@@ -17,14 +25,17 @@ type main_params = {
     (** Disables the search for bounds. Useful if you just want information about the integer transition system via the other options or for debugging purposes. *)
 
     input : string; [@pos 0] [@docv "INPUT"]
-    (** An absolute or relative path to the koat input file which defines the integer transition system *)
+    (** An absolute or relative path to the koat input file which defines the integer transition system. *)
     
     output_dir : string option;
-    (** An absolute or relative path to the output directory, where all generated files should end up *)
+    (** An absolute or relative path to the output directory, where all generated files should end up. *)
 
     logs : string list; [@default []] [@sep ',']
     (** The loggers which should be activated. *)
 
+    result : (Program.t -> Approximation.t -> unit); [@enum ["all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound]
+    (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. *)
+    
     preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.all]
     (** The preprocessors which should be applied before running the actual algorithm. *)
     
@@ -32,9 +43,6 @@ type main_params = {
     (** The strategy which should be used to apply the preprocessors. *)
     
   } [@@deriving cmdliner]
-
-let print_results (program: Program.t) (appr: Approximation.t): unit =
-  print_string (Approximation.to_string program appr)
 
 let init_logger (logs: (string * Logger.level) list) =
   Logger.init logs (Logger.make_dbg_formatter IO.stdout)
@@ -66,7 +74,7 @@ let run (params: main_params) =
        |> uncurry Bounds.find_bounds
        |> fun appr -> (program, appr)
      else (program, appr))
-  |> tap (fun (program, appr) -> print_results program appr)
+  |> tap (fun (program, appr) -> params.result program appr)
   |> tap (fun (program, appr) ->
     if params.print_system then
       Program.print_system
