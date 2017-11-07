@@ -37,6 +37,7 @@ sig
     include module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
     val locations : t -> LocationSet.t
     val transitions : t -> TransitionSet.t
+    val loc_transitions : t -> Location.t list -> TransitionSet.t
     val equal : t -> t -> bool
   end
        

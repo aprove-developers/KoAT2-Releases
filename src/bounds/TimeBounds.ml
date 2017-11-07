@@ -37,6 +37,7 @@ let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t)
     let (pol_plus, pol_minus) =
       Polynomial.separate_by_sign rank
       |> Tuple2.mapn Bound.of_poly
+      |> Tuple2.map2 Bound.neg (* Make negative coefficients positive *)
     in
     let insert_sizebounds kind bound =
       Bound.substitute_f (get_sizebound kind transition) bound
@@ -67,17 +68,41 @@ let compute_timebound (appr: Approximation.t) (graph: TransitionGraph.t) (prf: R
                      ~result:Bound.to_string
                      execute
     
-let improve program appr =
+let improve_with_pol program appr pol =
   let execute () =
-    let prf = RankingFunction.find program appr in
-    let strictly_decreasing = List.enum (RankingFunction.strictly_decreasing prf) in
-    if Enum.count strictly_decreasing = 0 then
+    let strictly_decreasing = RankingFunction.strictly_decreasing pol in
+    if List.is_empty strictly_decreasing then
       MaybeChanged.same appr
     else
-      let timebound = compute_timebound appr (Program.graph program) prf in
-      strictly_decreasing
-      |> Enum.fold (fun appr t -> Approximation.add_timebound timebound t appr) appr
-      |> MaybeChanged.changed
+      let timebound = compute_timebound appr (Program.graph program) pol in
+      if Bound.is_infinity timebound then
+        MaybeChanged.same appr
+      else
+        strictly_decreasing
+        |> List.enum
+        |> Enum.fold (fun appr t -> Approximation.add_timebound timebound t appr) appr
+        |> MaybeChanged.changed
+  in Logger.with_log logger Logger.DEBUG
+                     (fun () -> "improve time bounds with pol", [])
+                     execute
+
+(** Checks if a transition has already been oriented strictly in a given approximation *)
+let unbound appr transition =  
+  Bound.is_infinity (Approximation.timebound appr transition)
+    
+let improve program appr =
+  let execute () =
+    let module SCC = Graph.Components.Make(TransitionGraph) in
+    program
+    |> Program.graph
+    |> SCC.scc_list
+    |> List.rev
+    |> List.enum
+    |> Enum.map (TransitionGraph.loc_transitions (Program.graph program))
+    |> Enum.filter (not % TransitionSet.is_empty)
+    |> Enum.map (TransitionSet.filter (unbound appr))
+    |> Enum.map TransitionSet.to_list
+    |> MaybeChanged.fold_enum (fun appr transitions -> improve_with_pol program appr (RankingFunction.find (Program.vars program) transitions)) appr
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve time bounds", [])
                      execute

@@ -12,8 +12,5 @@ type params = {
   
 let run (params: params) =
   let program = Readers.read_file params.input in
-  let nb_vars = VarSet.cardinal (Program.vars program) in
-  let nb_trans = TransitionGraph.nb_edges (Program.graph program ) in
-  let appr = Approximation.empty nb_trans nb_vars in
-  let prf = RankingFunction.find program appr in
+  let prf = RankingFunction.find (Program.vars program) (TransitionSet.to_list (TransitionGraph.transitions (Program.graph program))) in
   print_string (RankingFunction.to_string prf)

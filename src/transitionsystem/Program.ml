@@ -51,6 +51,12 @@ module Types =
         let transitions graph =
           fold_edges_e TransitionSet.add graph TransitionSet.empty
 
+        let loc_transitions graph locations =
+          transitions graph
+          |> TransitionSet.filter (fun (l,_,l') ->
+                 List.mem_cmp Location.compare l locations
+                 && List.mem_cmp Location.compare l' locations)
+          
         let equal graph1 graph2 =
           LocationSet.equal (locations graph1) (locations graph2)
           && TransitionSet.equal (transitions graph1) (transitions graph2)

@@ -121,33 +121,48 @@ let non_increasing_constraints (pol : Location.t -> ParameterPolynomial.t) (tran
                      ~result:Constraint.to_string
                      execute
 
-(* Generates the strictly decreasing constraints for one single transition wrt to the generated ranking templates*)
-let try_add_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr,bounded) (transition: Transition.t): Constraint.t * Transition.t list =
+(** Returns, if we can add a strictly decreasing constraint to the given constraint such that it is still satisfiable. *)
+let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr: Constraint.t) (transition: Transition.t): bool =
   let execute () =
-    let curr_constr =
-      Constraint.Infix.(constr
-                        && bounded_constraint pol transition
-                        && strictly_decreasing_constraint pol transition) in
-    if SMTSolver.satisfiable (Formula.mk curr_constr) then
-      (curr_constr, List.append bounded [transition])
-    else (constr,bounded)
+    let open Constraint.Infix in
+    (constr && bounded_constraint pol transition && strictly_decreasing_constraint pol transition)
+    |> Formula.mk
+    |> SMTSolver.satisfiable
   in Logger.with_log logger Logger.DEBUG 
-                     (fun () -> "try add as strictly decreasing", ["transition", Transition.to_id_string transition])
+                     (fun () -> "addable as strictly decreasing", ["transition", Transition.to_id_string transition])
+                     ~result:Bool.to_string
                      execute
-
+  
 (*Given a set of transitions the pair (constr,bound) is generated. Constr is the constraint for the ranking function and bounded consists of all strictly oriented transitions *)
-let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t) =
-  List.fold_left (try_add_as_strictly_decreasing pol) (non_incr,[]) transitions
+let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): Transition.t list =
+  let combine (constr,transitions) transition =
+    let open Constraint.Infix in
+    if addable_as_strictly_decreasing pol constr transition then
+      (constr && bounded_constraint pol transition && strictly_decreasing_constraint pol transition, transition::transitions)
+    else
+      (constr, transitions)
+  in
+  List.fold_left combine (non_incr,[]) transitions
+  |> Tuple2.second
 
-let find_prf vars transitions =
+(** Tries to add a single transition from the given list as strictly decreasing transition to the given constraint.
+    This should always lead to better or equal results than searching for sets of strictly decreasing transitions. *)
+let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): Transition.t list =
+  match List.find_opt (addable_as_strictly_decreasing pol non_incr) transitions with
+  | Some transition -> [transition]
+  | None -> []
+
+let find vars transitions =
   let execute () =
     let (pol, fresh_coeffs) = generate_ranking_template vars (transitions |> List.enum |> Program.locations |> List.of_enum) in
-    let non_incr = non_increasing_constraints pol transitions in
-    let (constr, bounded) = add_strictly_decreasing pol transitions non_incr in
-    let model = SMTSolver.get_model_opt (Formula.mk constr) fresh_coeffs in (*(fresh coeffs should be used here)*)
+    let non_increasing = non_increasing_constraints pol transitions in
+    let strictly_decreasing_transitions = single_strictly_decreasing pol transitions non_increasing in
+    let bounded = Constraint.all (List.map (bounded_constraint pol) strictly_decreasing_transitions) in
+    let strictly_decreasing = Constraint.all (List.map (strictly_decreasing_constraint pol) strictly_decreasing_transitions) in
+    let model = SMTSolver.get_model_opt (Formula.mk (Constraint.Infix.(non_increasing && bounded && strictly_decreasing))) fresh_coeffs in
     {
       pol = (fun loc -> Polynomial.eval_partial (ParameterPolynomial.flatten (pol loc)) model);
-      strictly_decreasing = bounded;
+      strictly_decreasing = strictly_decreasing_transitions;
       transitions = transitions;
     }
   in Logger.with_log logger Logger.DEBUG 
@@ -160,11 +175,11 @@ let find_prf vars transitions =
 let is_already_bounded appr transition =  
   Bound.is_infinity (Approximation.timebound appr transition)
     
-let find program appr =
+let find_ program appr =
   let transitions =
     program
     |> Program.graph
     |> TransitionGraph.transitions
     |> TransitionSet.to_list
     |> List.filter (is_already_bounded appr)
-  in find_prf (Program.vars program) transitions
+  in find (Program.vars program) transitions
