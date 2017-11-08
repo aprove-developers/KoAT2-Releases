@@ -109,18 +109,32 @@ module Z3Solver =
                                             (var_of_name,value_of_value)) assigned_values)
                 else Valuation.from []
                 
-                
-    let get_model_opt (constraints : formula) (coeffs_to_minimise) =
+    let check_positivity (constraints : formula) (var: Var.t) =
+      let var_as_poly = (Polynomial.of_var var) in
+      let positivity_formula = (Formula.mk_and constraints (Formula.mk_lt var_as_poly Polynomial.zero)) in
+        unsatisfiable positivity_formula
+        
+    let check_negativity (constraints : formula) (var: Var.t) =
+      let var_as_poly = (Polynomial.of_var var) in
+      let negativity_formula = (Formula.mk_and constraints (Formula.mk_gt var_as_poly Polynomial.zero)) in
+        unsatisfiable negativity_formula
+    
+    let generate_minimise (constraints : formula) (coeffs_to_minimise: Var.t list) =
+      let generator = fun poly -> (fun vrbl -> if (check_positivity constraints vrbl) then Polynomial.(poly + (of_var vrbl)) else (if (check_negativity constraints vrbl) then Polynomial.(poly - (of_var vrbl)) else poly)) in
+      from_poly (List.fold_left generator Polynomial.zero coeffs_to_minimise)
+    
+    let get_model_opt (constraints : formula) (coeffs_to_minimise: Var.t list) =
         let formula = from_constraint constraints in
         let optimisation_goal = Z3.Optimize.mk_opt !context in
             Z3.Optimize.add optimisation_goal [formula];
-            let minimise_constr = List.map (fun var -> from_poly (Polynomial.pow (Polynomial.of_var var) 2)) coeffs_to_minimise in
+            (*let minimise_constr = List.map (fun var -> from_poly (Polynomial.pow (Polynomial.of_var var) 2)) coeffs_to_minimise in
               for i = 0 to (List.length minimise_constr) - 1 do
                   Z3.Optimize.minimize optimisation_goal (List.at minimise_constr i);
-              done;
-(*              print_string ("\nOptimise to_string:"^(Z3.Optimize.to_string optimisation_goal)^"\n");*)
+              done;*)
+            Z3.Optimize.minimize optimisation_goal (generate_minimise constraints coeffs_to_minimise);
+              print_string ("\nOptimise to_string:\n"^(Z3.Optimize.to_string optimisation_goal)^"\n");
               let status = Z3.Optimize.check optimisation_goal in
-                if (status == Z3.Solver.SATISFIABLE || status == Z3.Solver.UNKNOWN) then
+                if (status == Z3.Solver.SATISFIABLE (*|| status == Z3.Solver.UNKNOWN*)) then
                     let model = Z3.Optimize.get_model optimisation_goal in
                         match model with
                         | None -> Valuation.from []
