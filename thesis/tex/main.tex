@@ -36,8 +36,11 @@
 \newcommand{\minimum}[1]{\mathit{min} \lbrace #1 \rbrace}
 \newcommand{\braced}[1]{\lbrace #1 \rbrace}
 \newcommand{\valuateto}[1]{(\rightarrow^* \circ \rightarrow_{#1})}
-\newcommand{\SizeComplexity}[2]{
-  \sup \braced{ \abs{\valuation(#2)} \mid \exists \valuation_0, \location, \valuation: \valuation_0 \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
+\newcommand{\UpperSizeComplexity}[2]{
+  \sup \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \valuation_0 \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
+}
+\newcommand{\LowerSizeComplexity}[2]{
+  \inf \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \valuation_0 \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
 }
 
 \newtheorem{theorem}{Theorem}
@@ -57,7 +60,7 @@
 \Proof{TimeBounds}{timebound}
 
 \input{theorems/trivial_sizebound}
-\Proof{Upper SizeBounds for trivial SCCs}{trivial_sizebound}
+\Proof{SizeBounds for trivial SCCs}{trivial_sizebound}
 
 \input{theorems/nontrivial_sizebound}
 \Proof{Upper SizeBounds for nontrivial SCCs}{nontrivial_sizebound}

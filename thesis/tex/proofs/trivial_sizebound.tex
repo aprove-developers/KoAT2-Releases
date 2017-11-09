@@ -1,16 +1,27 @@
 Let $\alpha = (t, v') \in \RV$ be the trivial SCC for which the processor was applied.
-We have to show that
-\[ \USize'(t, v')(m) \geq \SizeComplexity{t}{v} \]
-holds for all $m \in \mathbb{N}^n$. To this end, we consider a valuation $\valuation_0 \leq m$ and an evaluation
-\[ \configuration{0} \valuateto{t} \configuration. \]
-Now the goal is to show that $\USize'(t, v')(m) \geq \abs{\valuation(v)}$ holds.
+We have to show that for all $m \in \mathbb{N}^n$ two statements hold.
+\[ \USize'(t, v')(m) \geq \UpperSizeComplexity{t}{v} \]
+\[ \LSize'(t, v')(m) \leq \LowerSizeComplexity{t}{v} \]
 
-If $t$ i an initial transition, then the evaluation has the form $\configuration{0} \rightarrow_t \configuration{}$, as by definition there are no transitions leading back to the initial location $\location_0$. Thus, $\ULSB(t, v')(m) \geq \abs{\valuation(v)}$. Since $\USize(t, v') is defined as \ULSB(t, v')$ for initial transitions t, we obtain
-\[ \USize'(t, v')(m) = \ULSB(t, v')(m) \geq \abs{\sigma(v)}. \]
-In the case where t is not an initial transition, the evaluation has the form
-\[ \configuration{0}  \valuateto{\tilde{t}} (\tilde{\location}, \tilde{\valuation}) \rightarrow_t \configuration{} \]
-for some transition $\tilde{t} \in \pre(t)$. As $\valuation_0 \leq m$, we have $\USize(\tilde{t}, v'_i)(m) \geq \abs{\tilde{\valuation}(v_i)}$ for all $i \in \braced{1,\dots,n}$, thus, $\USize(\tilde{t}, v'_i)$ is a bound for the size of the variable $v_i$ before the transition $t$ is applied.
+To this end, we consider a valuation $\valuation_0 \leq m$ and an evaluation
+\[ \configuration{0} \valuateto{t} \configuration{} . \]
+Now the goal is to show that $\USize'(t, v')(m) \geq \valuation(v) \geq \LSize'(t, v')(m)$ holds.
 
-The local size change resulting from the transition $t$ is approximated by the function $\ULSB(t, v')$. Thus, we have
-\[ \ULSB(t, v')(\USize(\tilde{t}, v'_1),\dots,\USize(\tilde{t}, v'_n))(m) \geq \abs{\valuation(v)}, \]
-and hence $\USize'(t, v')(m) \geq \abs{\valuation(v)}$.
+If $t$ is an initial transition, then the evaluation has the form $\configuration{0} \rightarrow_t \configuration{}$, as by definition there are no transitions leading back to the initial location $\location_0$.
+
+Thus, for initial transitions by the definition of sizebounds we obtain
+\[ \USize'(t, v')(m) = \ULSB(t, v')(m) \geq \valuation(v). \]
+\[ \LSize'(t, v')(m) = \LLSB(t, v')(m) \leq \valuation(v). \]
+
+In the case where t is not an initial transition, the evaluation has for some transition $\tilde{t} \in \pre(t)$ the form
+\[ \configuration{0}  \valuateto{\tilde{t}} (\tilde{\location}, \tilde{\valuation}) \rightarrow_t \configuration{}. \]
+
+Lets assume that our initial assumption holds.
+As $\valuation_0 \leq m$, we then have for all $v \in \VSet$
+\[ \USize(\tilde{t}, v')(m) \geq \tilde{\valuation}(v) \geq \LSize(\tilde{t}, v')(m). \]
+Thus, $\USize(\tilde{t}, v')$ and $\LSize(\tilde{t}, v')$ are bounds for the size of all variables $v \in \VSet$ before the transition $t$ is applied.
+
+By the weak monotonicity of $p_+$ and $p_-$ for every polynomial $p$ we can conclude the following statement.
+\[ ((\ULSB(t, v')_+)(\USize(\tilde{t})) - (\ULSB(t, v')_-)(\LSize(\tilde{t})))(m) \geq \valuation(v) \]
+
+Hence, $\USize'(t, v')(m) \geq \valuation(v)$.
