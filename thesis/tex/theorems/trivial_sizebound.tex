@@ -1,3 +1,11 @@
+\begin{definition}[Local Size Bound]
+  We call $\ULSB: \RV \rightarrow \BoundSet$ a \textbf{upper} local size bound if and only if for all $(t, v') \in \RV$ and all $m \in \mathbb{N}^n$
+  \[ \ULSB(t, v)(m) \geq \sup \braced{\valuation'(v) \mid \exists \location, \valuation, \location', \valuation': \valuation \leq m \wedge \configuration{} \rightarrow_t (\location', \valuation')}. \]
+  Futhermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local size bound if and only if for all $(t, v') \in \RV$ and all $m \in \mathbb{N}^n$
+  \[ \LLSB(t, v)(m) \leq \inf \braced{\valuation'(v) \mid \exists \location, \valuation, \location', \valuation': \valuation \leq m \wedge \configuration{} \rightarrow_t (\location', \valuation')}. \]
+  
+\end{definition}
+
 \begin{theorem}[Upper SizeBounds for trivial SCCs]
   Let $(\UTime, \USize)$ be a complexity approximation.
   Let $\ULSB$ be a local size bound.
