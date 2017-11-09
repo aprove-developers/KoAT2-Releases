@@ -22,7 +22,7 @@
   \begin{align*}
     \USize'(\beta) = & \prod_{t \in \TSet} (\maximum{s_{\alpha} \mid \alpha \in \SCC_t}
                        \cdot \maximum{\abs{(\pre(\alpha) \setminus \pre^-(\alpha)) \cap \SCC} \mid \alpha \in \SCC_t})^{\UTime(t)} \\
-                     & \cdot \sum_{t \in \TSet} (\UTime(t) \cdot \maximum{ e_\alpha + \sum_{v \in \actV{\ULSB(\alpha}) \setminus \VSet_\alpha} f^\alpha_v \mid \alpha \in \SCC_t }).
+                     & \cdot \sum_{t \in \TSet} (\UTime(t) \cdot \maximum{ e_\alpha + \sum_{v \in \actV{\ULSB(\alpha}) \setminus \VSet_\alpha} \maximum{\USize(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \mid \alpha \in \SCC_t }).
   \end{align*}
   Then, $\mathit{SizeBounds}(\UTime, \USize, \SCC) = \USize'$ is also a size approximation. 
 \end{theorem}

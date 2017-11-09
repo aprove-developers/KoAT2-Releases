@@ -9,6 +9,7 @@ Our goal is to show that
 
 For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition t was used in the evaluation.
 To simplify the remaining proof, we define the following values:
+\[ f^\alpha_v = \maximum{\USize(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \]
 \[ f^\alpha = \sum_{v \in \actV{\ULSB(\alpha)} \setminus \VSet_\alpha} f^\alpha_v(m) \]
 \[ s_t = \maximum{s_{\alpha} \mid \alpha \in \SCC_t} \cdot \maximum{\abs{(\pre(\alpha) \setminus \pre^-(\alpha)) \cap \SCC} \mid \alpha \in \SCC_t} \]
 \[ d = \prod_{t \in \TSet} s^{k_t}_t \cdot \sum_{t \in \TSet} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}). \]
