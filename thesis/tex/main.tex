@@ -3,6 +3,7 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}
+\usepackage{amsthm}
 \usepackage{IEEEtrantools}
 \usepackage{todonotes}
 
@@ -43,10 +44,11 @@
   \inf \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \valuation_0 \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
 }
 
+\theoremstyle{definition}
+
 \newtheorem{theorem}{Theorem}
 \newtheorem{definition}{Definition}
 \newtheorem{remark}{Remark}
-\newtheorem{proof}{Proof}
 
 \newcommand{\Proof}[2]{
   \begin{proof}[#1]
