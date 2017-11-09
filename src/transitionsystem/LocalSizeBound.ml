@@ -41,7 +41,7 @@ let as_bound = function
        lsb.abs_vars
        |> VarSet.enum
        |> Enum.map Bound.of_var
-       |> Enum.map Bound.abs
+       |> Enum.map Bound.(max zero)
      and pure_vars =
        lsb.pure_vars
        |> VarSet.enum
@@ -210,6 +210,26 @@ let find_scaled_bound var formula =
                   ~result:(Util.option_to_string (Bound.to_string % as_bound % Option.some))
                   execute
 
+(* Check if x >= s * (c + [v1,...,vn]). *)
+let find_lower_scaled_bound var formula =
+  let execute () =
+    let vars = VarSet.remove var (Formula.vars formula)
+    and low = -1024
+    and high = 1024 in
+    try 
+      Some {factor = high; constant = high; abs_vars = vars; pure_vars = VarSet.empty}
+      |> Option.filter (is_bounded_with var formula)
+      |> Option.map (optimize_s 1 high (is_bounded_with var formula))
+      |> Option.map (optimize_c low high (is_bounded_with var formula))
+      |> Option.map (minimize_scaledsum_vars (is_bounded_with var formula))
+      |> Option.map (unabsify_vars (is_bounded_with var formula))
+    with Not_found -> None
+  in Logger.with_log logger Logger.DEBUG
+                  (fun () -> "find scaled bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
+                  ~result:(Util.option_to_string (Bound.to_string % as_bound % Option.some))
+                  execute
+
+   
 type kind = [`Lower | `Upper] [@@deriving show]
    
 let find_bound kind var formula =
@@ -228,10 +248,7 @@ let find_bound kind var formula =
       | `Upper ->
          find_scaled_bound var formula
       | `Lower ->
-         formula
-         |> Formula.turn
-         |> find_scaled_bound var
-         |> Option.map neg
+         find_lower_scaled_bound var formula
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find local size bound", ["kind", show_kind kind; "var", Var.to_string var; "formula", Formula.to_string formula])
                      ~result:(Util.option_to_string (Bound.to_string % as_bound % Option.some))
