@@ -1,6 +1,8 @@
-\begin{definition}[Negative/Positive split of polynomials]
-  Let $p \in \mathbb{Z}[\VSet]$ be a polynomial.
-  Then we define $p_+ \in \mathbb{N}[\VSet]$ as the sum of all components of $p$ with a positive factor and $p_- \in \mathbb{N}[\VSet]$ as the sum of all components with a negative factor with the factor inverted.
+\begin{definition}[Negative/Positive split]
+  For every $i \in \mathbb{N}$ let $f_i: \VSet \rightarrow \mathbb{Z}$ be a weakly monotonic function over a single variable.
+  Let $p = \sum_{i \in \braced{1, \dots, n}} c_i * f_i(v_i)$ with $c_i \in \mathbb{Z}$ and $v_i \in \VSet$.
+
+  Then we define $p_+ = \sum_{\braced{i \mid i \in \braced{1, \dots, n}: c_i \geq 0}} c_i * f_i(v_i)$ as the sum of all components of $p$ with a positive factor and $p_- = \sum_{\braced{i \mid i \in \braced{1, \dots, n}: c_i < 0}} -c_i * f_i(v_i)$ as the sum of all components with a negative factor with the factor inverted.
 \end{definition}
 
 \begin{theorem}[TimeBounds]
