@@ -1,11 +1,11 @@
 We only regard the case where $\alpha \in \ScaledSum$ holds for all $\alpha \in \SCC$.
-Then, for all $(r, w') \in \RV$, we have to show that
+Then, for all $(r, w') \in \RV$, we have to show that two statements hold for all $m \in \mathbb{N}^n$.
 \[ \USize'(r, w')(m) \geq \UpperSizeComplexity{r}{w} \]
-holds for all $m \in \mathbb{N}^n$.
-To this end, we now fix m to an arbitrary value and consider a fixed valuation $\sigma_0 \leq m$ and a fixed evaluation
+\[ \LSize'(r, w')(m) \leq \LowerSizeComplexity{r}{w} \]
+To this end, we now fix $m$ to an arbitrary value and consider a fixed valuation $\sigma_0 \leq m$ and a fixed evaluation
 \[ \configuration{0} \valuateto{r} \configuration{}. \]
 Our goal is to show that
-\[ \USize'(r, w')(m) \geq \abs{\valuation(w)}. \]
+\[ \USize'(r, w')(m) \geq \valuation(w) \geq \LSize'(r, w')(m). \]
 
 For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition t was used in the evaluation.
 To simplify the remaining proof, we define the following values:
