@@ -24,10 +24,9 @@
   \[ s^\square_t = \maximum{s^\square_{\alpha} \mid \alpha \in \SCC_t} \cdot \maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_t}. \]
 
   Also for all $\alpha \in \RV$ and $\square \in \braced{\sqcup, \sqcap}$ let
-  \[ \text{in}^\square_\alpha = \sum_{v \in \actV{\mathcal{S}^\square_l(\alpha}) \setminus \VSet_\alpha} \max(\braced{0} \cup \braced{\mathcal{S}^\square(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C}. \]
+  \[ \text{in}^\square_\alpha = \sum_{v \in \actV{\mathcal{S}^\square_l(\alpha}) \setminus \VSet_\alpha} \text{sel}^\square \left( \braced{0} \cup \braced{\mathcal{S}^\square(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \right). \]
 
-  With these definitions we define $(\LSize', \USize')$ for all other $\beta \in \SCC$ as
-  \[ \USize'(\beta) = \prod_{t \in \TSet} (s^\sqcap_t)^{\UTime(t)} \cdot \sum_{t \in \TSet} (\UTime(t) \cdot \maximum{\max(0, e^{\sqcap}_\alpha) + \text{in}^\sqcap_\alpha \mid \alpha \in \SCC_t }) \]
-  \[ \LSize'(\beta) = \prod_{t \in \TSet} (s^\sqcup_t)^{\UTime(t)} \cdot \sum_{t \in \TSet} (\UTime(t) \cdot \minimum{\min(0, e^{\sqcup}_\alpha) + \text{in}^\sqcup_\alpha \mid \alpha \in \SCC_t }) \]
+  With these definitions we define $(\LSize', \USize')$ for all other $\beta \in \SCC$ and $\square \in \braced{\sqcup, \sqcap}$ as
+  \[ {\mathcal{S}^\square}'(\beta) = \prod_{t \in \TSet} (s^\square_t)^{\UTime(t)} \cdot \sum_{t \in \TSet} \left( \UTime(t) \cdot \text{sel}^\square \braced{\text{sel}^\square(0, e^{\square}_\alpha) + \text{in}^\square_\alpha \mid \alpha \in \SCC_t } \right) \]
   Then, $\mathit{SizeBounds}(\UTime, \Size, \SCC) = (\LSize', \USize')$ is also a size approximation. 
 \end{theorem}

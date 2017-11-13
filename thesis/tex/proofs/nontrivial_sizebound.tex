@@ -9,22 +9,21 @@ Our goal is to show that
 
 For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition t was used in the evaluation.
 To simplify the remaining proof, we define the following values:
-\[ f^\alpha_v = \maximum{\USize(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \]
-\[ f^\alpha = \sum_{v \in \actV{\ULSB(\alpha)} \setminus \VSet_\alpha} f^\alpha_v(m) \]
-\[ s_t = \maximum{s_{\alpha} \mid \alpha \in \SCC_t} \cdot \maximum{\abs{(\pre(\alpha) \setminus \pre^-(\alpha)) \cap \SCC} \mid \alpha \in \SCC_t} \]
-\[ d = \prod_{t \in \TSet} s^{k_t}_t \cdot \sum_{t \in \TSet} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}). \]
+\[ \text{in}^\square_{\alpha,v} = \text{sel}^\square \left( \braced{0} \cup \braced{\mathcal{S}^\square(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \right) \]
+\[ \text{in}^\square_\alpha(m) = \sum_{v \in \actV{\ULSB(\alpha)} \setminus \VSet_\alpha} \text{in}^\square_{\alpha,v}(m) \]
+\[ \text{in}^\square_t(m) = \text{sel}^\square \braced{\text{sel}^\square(0, e^{\square}_\alpha) + \text{in}^\square_\alpha(m) \mid \alpha \in \SCC_t }. \]
+\[ d^\square = \prod_{t \in \TSet} (s^\square_t)^{k_t} \cdot \sum_{t \in \TSet} \left( k_t \cdot \text{in}^\square_t(m) \right). \]
 Then we prove the following claim:
-\[ d \geq \abs{\valuation(w)}. \]
+\[ d^\sqcap \geq \valuation(w) \geq d^\sqcup. \]
 Note that the theorem follows from the claim, as $\UTime(t)(m) \geq k_t$ holds by definition of $k_t$.
+Also note that by the definition of the local size bounds $s^\square_t \geq 0$ holds for $\square \in \braced{\sqcup, \sqcap}$.
+Therefore for all $p^+_t \geq 0$ and $p^-_t \leq 0$ it holds that
+\[ \prod_{t \in \TSet} (s^\sqcap_t)^{\UTime(t)} \cdot \sum_{t \in \TSet} \left( \UTime(t)(m) \cdot p^+_t \right) \geq \prod_{t \in \TSet} (s^\sqcap_t)^{k_t} \cdot \sum_{t \in \TSet} \left( k_t \cdot p^+_t \right) \]
+\[ \prod_{t \in \TSet} (s^\sqcup_t)^{\UTime(t)} \cdot \sum_{t \in \TSet} \left( \UTime(t)(m) \cdot p^-_t \right) \leq \prod_{t \in \TSet} (s^\sqcap_t)^{k_t} \cdot \sum_{t \in \TSet} \left( k_t \cdot p^-_t \right) \]
 Let $\gamma = (r, w')$.
 The only interesting case is if $\gamma \in \SCC$.
-Then, we have
-\begin{align*}
-  \USize'(\gamma)(m) &= \prod_{t \in \TSet} s_t^{\UTime(t)} & \cdot \sum_{t \in \TSet} (& \UTime(t)(m) & \cdot \maximum{ e_\alpha + f^\alpha \mid \alpha \in \SCC_t }) \\
-  & \geq \prod_{t \in \TSet} s_t^{k_t} & \cdot \sum_{t \in \TSet} (& k_t & \cdot \maximum{ e_\alpha + f^\alpha \mid \alpha \in \SCC_t }) \\
-  &= d \\
-  & \geq \abs{\valuation(w)}.
-\end{align*}
+Since $\text{in}^\sqcap_t(m) \geq 0 \geq \text{in}^\sqcup_t(m)$ we can substitute them for $p^+_t$ and $p^-_t$ and get
+\[ {\mathcal{S}^\sqcap}'(\gamma)(m) \geq d^\sqcap \geq \valuation(w) \geq d^\sqcup \geq {\mathcal{S}^\sqcup}'(\gamma)(m) \]
 
 We prove the claim by induction on the length of the evaluation.
 Intuitively, we show that we correctly approximate the effect of the last transition step $r$ on the size of the value obtained so far (which in turn is captured by the induction hypothesis).
@@ -35,8 +34,10 @@ Thus, the reduction has the form
 \[ \configuration{0} \valuateto{\tilde{r}} (\tilde{\location}, \tilde{\valuation}) \rightarrow_r \configuration{}. \]
 for some transition $\tilde{r} \in \pre(r)$.
 
-For all $u_1, \dots, u_n \in \mathbb{N}$, we have by the definition of scaled sums
-\[ s_\gamma \cdot (e_\gamma + u_1 + \dots + u_n) \geq \ULSB(\gamma)(u_1, \dots, u_n). \]
+For all $u_1, \dots, u_n \in \mathbb{Z}$, we have by the definition of local size bounds
+\todo{What do we need here?}
+\[ s^\sqcap_\gamma \cdot (e^\sqcap_\gamma + u_1 + \dots + u_n) \geq \ULSB(\gamma)(u_1, \dots, u_n) \]
+\[ \LLSB(\gamma)(u_1, \dots, u_n) \geq s^\sqcup_\gamma \cdot (e^\sqcup_\gamma + u_1 + \dots + u_n) \]
 Since $\ULSB(\gamma)$ only depends on the active variables in $\actV{\ULSB(\gamma)}$, let $\hat{u}_i = u_i$ if $v_i \in \actV{\ULSB{\gamma}}$ and $\hat{u}_i = 0$ otherwise.
 Then,
 \begin{align*}
@@ -48,59 +49,54 @@ Then,
 We have to estimate the sizes of the input variables $u_1, \dots, u_n$,
 that is, we have to find a bound on the size of each $v_i \in \VSet$ after the application of the transition $\tilde{r}$ that precedes $r$.
 
-If $(\tilde{r}, v'_i) \in \SCC$, then the induction hypothesis implies that $d \geq \abs{\valuation(w)}$ also holds for the reduction from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
+If $(\tilde{r}, v'_i) \in \SCC$, then the induction hypothesis implies that $d^\sqcap \geq \valuation(w) \geq d^\sqcup$ also holds for the reduction from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
 Let
-\begin{align*}
-  d' &= \prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t \cdot s^{k_r - 1}_r & \cdot (\sum_{t \in \TSet \setminus \braced{r}} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}) \\
-  & & + (k_r - 1) \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r}).
-\end{align*}
-The reason for using $k_r - 1$ in $d'$ is that the last application of the transition $r$ in the evaluation is missing in the evaluation from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
-Then, the induction hypothesis implies that $d' \geq \abs{\tilde{\valuation}(v_i)}$.
-For $v_i \in \actV{\ULSB(\gamma)}$ with $v_i \notin \VSet_\gamma$, we have $(\tilde{r}, v'_i) \notin \SCC$ (by definition of $\VSet_\gamma$).
+\[ {d^\square}' = \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} \cdot (s^\square_r)^{k_r - 1} \cdot \left( \sum_{t \in \TSet \setminus \braced{r}} \left( k_t \cdot \text{in}^\square_t(m) \right) + \left( k_r - 1 \right) \cdot \text{in}^\square_r(m) \right). \]
+The reason for using $k_r - 1$ in ${d^\square}'$ is that the last application of the transition $r$ in the evaluation is missing in the evaluation from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
+Then, the induction hypothesis implies that ${d^\sqcap}' \geq \tilde{\valuation}(v_i) \geq {d^\sqcup}'$.
+For $v_i \in \actV{\mathcal{S}^\square_l(\gamma)}$ with $v_i \notin \VSet_\gamma$, we have $(\tilde{r}, v'_i) \notin \SCC$ (by definition of $\VSet_\gamma$).
 For such $v_i$, we can deduce the following:
-\[ f^\gamma_{v_i}(m) \geq \USize(\tilde{r}, v'_i)(m) \geq \abs{\tilde{\valuation}(v_i)}. \]
+\[ \text{in}^\sqcap_{\gamma,{v_i}}(m) \geq \USize(\tilde{r}, v'_i)(m) \geq \tilde{\valuation}(v_i) \geq \LSize(\tilde{r}, v'_i)(m) \geq \text{in}^\sqcup_{\gamma,{v_i}}(m). \]
 
-We now combine these bounds to prove that $d$ is indeed a bound for $\abs{\valuation(w)}$.
+We now combine these bounds to prove that $d^\sqcap \geq \valuation(w) \geq d^\sqcup$ indeed holds.
 
 Note that we have
-\[ \prod_{t \in \TSet} s^{k_t}_t = s^{k_r}_r \cdot \prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t = s_r \cdot s^{k_r - 1}_r \cdot \prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t \]
+\[ \prod_{t \in \TSet} (s^\square_t)^{k_t} = (s^\square_r)^{k_r} \cdot \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} = s^\square_r \cdot (s^\square_r)^{k_r - 1} \cdot \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} \]
 and also
 \begin{align*}
-  & \sum_{t \in \TSet} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}) \\
-  & = k_r \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} + \sum_{t \in \TSet \setminus \braced{r}} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}) \\
-  & =
-  \begin{aligned}[t]
-    & \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} \\
-    + & (k_r - 1) \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} \\
-    + & \sum_{t \in \TSet \setminus \braced{r}} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t})
-  \end{aligned}
+  \sum_{t \in \TSet} (k_t \cdot \text{in}^\square_t)
+  & = k_r \cdot \text{in}^\square_r + \sum_{t \in \TSet \setminus \braced{r}} (k_t \cdot \text{in}^\square_t) \\
+  & = \text{in}^\square_r
+    + (k_r - 1) \cdot \text{in}^\square_r
+    + \sum_{t \in \TSet \setminus \braced{r}} (k_t \cdot \text{in}^\square_t)
 \end{align*}
 
 Thus, we have
 \begin{IEEEeqnarray*}{rClr}
-  d & = & (\prod_{t \in \TSet} s^{k_t}_t) \cdot \sum_{t \in \TSet} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t}) \\
-  & = & s_r \cdot s^{k_r - 1}_r \cdot (\prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t) \cdot (\maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} \\
-  && + (k_r - 1) \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} \\
-  && + \sum_{t \in \TSet \setminus \braced{r}} (k_t \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_t})) \\
-  & = & s_r \cdot d' + s_r \cdot s^{k_r - 1}_r \cdot (\prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t) \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r} \\
-  & = & s_r \cdot (d' + s^{k_r - 1}_r \cdot (\prod_{t \in \TSet \setminus \braced{r}} s^{k_t}_t) \cdot \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r}) \\
-  & \geq & s_r \cdot (d' + \maximum{e_\alpha + f^\alpha \mid \alpha \in \SCC_r}) \\
-  & \geq & s_r \cdot (d' + e_\gamma + f^\gamma) \\
-  & = & \maximum{s_{\alpha} \mid \alpha \in \SCC_r} \\
-  && \cdot \maximum{\abs{(\pre(\alpha) \setminus \pre^-(\alpha)) \cap \SCC} \mid \alpha \in \SCC_r} \\
-  && \cdot (d' + e_\gamma + f^\gamma) \\
-  & \geq & s_\gamma \cdot \abs{(\pre(\gamma) \setminus \pre^-(\gamma)) \cap \SCC} \cdot (d' + e_\gamma + f^\gamma) \\
-  & \geq & s_\gamma \cdot (\abs{(\pre(\gamma) \setminus \pre^-(\gamma)) \cap \SCC} \cdot d' + e_\gamma + f^\gamma) \\
-  & \geq & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} d' + e_\gamma + f^\gamma) \\
-  & \geq & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)} + e_\gamma + f^\gamma) \\
-  & = & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)} + e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)} \setminus \VSet_\gamma} f^\gamma_v(m)) \\
-  & = & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)} + e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)}} f^\gamma_v(m) - \sum_{v \in \VSet_\gamma} f^\gamma_v(m)) & \text{since } V_\gamma \subseteq \actV{\ULSB(\gamma)} \\
-  & = & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)} + e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)}} f^\gamma_v(m) \\
-  && - \sum_{v \in \VSet^-_\gamma} f^\gamma_v(m) - \sum_{v \in \VSet_\gamma \setminus \VSet^-_\gamma} f^\gamma_v(m)) \\
-  & = & s_\gamma \cdot (\sum_{v_i \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)} + e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)}} f^\gamma_v(m) \\
-  && - \sum_{v \in \VSet^-_\gamma} -\abs{\tilde{\valuation}(v_i)} - \sum_{v \in \VSet_\gamma \setminus \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)}) \\
-  & = & s_\gamma \cdot (e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)}} \abs{\tilde{\valuation}(v_i)} + \sum_{v_i \in \VSet^-_\gamma} \abs{\tilde{\valuation}(v_i)}) \\
-  & \geq & s_\gamma \cdot (e_\gamma + \sum_{v \in \actV{\ULSB(\gamma)}} \abs{\tilde{\valuation}(v_i)}) \\
-  & \geq & \ULSB(\gamma)(\abs{\tilde{\valuation}(v_1),\dots,\abs{\tilde{\valuation}(v_n)}}) \\
-  & \geq & \abs{\valuation(w)}
+  d^\square & = & \prod_{t \in \TSet} (s^\square_t)^{k_t} \cdot \sum_{t \in \TSet} \left( k_t \cdot \text{in}^\square_t(m) \right) \\
+  & = & \left( s^\square_r \cdot (s^\square_r)^{k_r - 1} \cdot \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} \right) \cdot \\
+    && \left( \text{in}^\square_r(m) + \left( k_r - 1 \right) \cdot \text{in}^\square_r(m) + \sum_{t \in \TSet \setminus \braced{r}} \left( k_t \cdot \text{in}^\square_t(m) \right) \right) \\
+  & = & s^\square_r \cdot {d^\square}' + \left( s^\square_r \cdot (s^\square_r)^{k_r - 1} \cdot \left( \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} \right) \cdot \text{in}^\square_r(m) \right) \\
+  & = & s^\square_r \cdot \left( {d^\square}' + (s^\square_r)^{k_r - 1} \cdot \left( \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} \right) \cdot \text{in}^\square_r(m) \right) \\
+  & \lesseqgtr & s^\square_r \cdot \left( {d^\square}' + \text{in}^\square_r(m) \right) & \text{since } \text{in}^\sqcap_r(m) \geq 0 \geq \text{in}^\sqcup_r(m) \\
+  & \lesseqgtr & s^\square_r \cdot \left( {d^\square}' + \text{sel}^\square \braced{\text{sel}^\square(0, e^{\square}_\alpha) + \text{in}^\square_\alpha(m) \mid \alpha \in \SCC_r } \right) & \text{by definition} \\
+  & \lesseqgtr & s^\square_r \cdot \left( {d^\square}' + \text{sel}^\square(0, e^{\square}_\gamma) + \text{in}^\square_\gamma(m) \right) & \text{with any } \gamma \in \SCC_r \\
+  & = & \maximum{s^\square_{\alpha} \mid \alpha \in \SCC_r} \cdot \\
+    && \maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_r} \cdot \\
+    && \left( {d^\square}' + \text{sel}^\square(0, e^{\square}_\gamma) + \text{in}^\square_\gamma(m) \right) & \text{substitute } s^\square_r \\
+  & \lesseqgtr & s^\square_\gamma \cdot \abs{\pre(\gamma) \cap \SCC} \cdot \left( {d^\square}' + \text{sel}^\square(0, e^{\square}_\gamma) + \text{in}^\square_\gamma(m) \right)
+    & \text{since } \gamma \in \SCC_r \\
+  & \lesseqgtr & s^\square_\gamma \cdot \left( \abs{\pre(\gamma) \cap \SCC} \cdot {d^\square}' + \text{sel}^\square(0, e^{\square}_\gamma) + \text{in}^\square_\gamma(m) \right) \\
+  & \lesseqgtr & s^\square_\gamma \cdot \left( \abs{\pre(\gamma) \cap \SCC} \cdot {d^\square}' + e^{\square}_\gamma + \text{in}^\square_\gamma(m) \right)
+    & \text{since } \text{sel}^\sqcap(0, e^\sqcap_\gamma) \geq e^\sqcap_\gamma, e^\sqcup_\gamma \geq \text{sel}^\sqcup(0, e^{\sqcup}_\gamma) \\
+  & \lesseqgtr & s^\square_\gamma \cdot \left( \sum_{v \in \VSet_\gamma} {d^\square}' + e^{\square}_\gamma + \text{in}^\square_\gamma(m) \right) \\
+  & \lesseqgtr & s^\square_\gamma \cdot \left( \sum_{v \in \VSet_\gamma} \tilde{\valuation}(v) + e^{\square}_\gamma + \text{in}^\square_\gamma(m) \right) & \text{IH} \\
+  & = & s^\square_\gamma \cdot \left( \sum_{v \in \VSet_\gamma} \tilde{\valuation}(v) + e^{\square}_\gamma + \sum_{v \in \actV{\mathcal{S}^\square_l(\gamma)} \setminus \VSet_\gamma} \text{in}^\square_{\gamma,v}(m) \right) \\
+  & \lesseqgtr & s^\sqcap_\gamma \cdot \left( \sum_{v \in \VSet_\gamma} \tilde{\valuation}(v) + e^{\sqcap}_\gamma + \sum_{v \in \actV{\mathcal{S}^\square_l(\gamma)} \setminus \VSet_\gamma} \tilde{\valuation}(v) \right)
+    & \text{since } \text{in}^\sqcap_{\gamma,v}(m) \geq \tilde{\valuation}(v) \geq \text{in}^\sqcup_{\gamma,v}(m) \\
+  & = & s^\square_\gamma \cdot \left( \sum_{v \in \VSet_\gamma} \tilde{\valuation}(v) + e^{\square}_\gamma + \sum_{v \in \actV{\mathcal{S}^\square_l(\gamma)}} \tilde{\valuation}(v)
+  - \sum_{v \in \VSet_\gamma} \tilde{\valuation}(v) \right) & \text{since } V_\gamma \subseteq \actV{\mathcal{S}^\square_l(\gamma)} \\
+  & = & s^\square_\gamma \cdot \left( e^{\square}_\gamma + \sum_{v \in \actV{\mathcal{S}^\square_l(\gamma)}} \tilde{\valuation}(v) \right) \\
+  & \lesseqgtr & \mathcal{S}^\square_l(\gamma)(\tilde{\valuation}(v_1),\dots,\tilde{\valuation}(v_n)) \\
+  & \lesseqgtr & \valuation(w)
 \end{IEEEeqnarray*}
