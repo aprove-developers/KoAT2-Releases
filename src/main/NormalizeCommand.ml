@@ -14,17 +14,14 @@ type params = {
     input : string; [@pos 1] [@docv "INPUT"]
     (** The input which should be normalized *)
     
-    logs : string list; [@default []] [@sep ',']
+    logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default []] [@sep ',']
     (** The loggers which should be activated. *)
 
-  } [@@deriving cmdliner, show]
-
-let init_logger (logs: (string * Logger.level) list) =
-  Logger.init logs (Logger.make_dbg_formatter IO.stdout)
+  } [@@deriving cmdliner]
 
 let run (params: params) =
   let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
-  init_logger logs;
+  Logging.use_loggers logs;
   let output = match params.kind with
     | `Polynomial -> Polynomial.to_string (Polynomial.simplify (Readers.read_polynomial params.input))
     | `Atom -> Atom.to_string (Readers.read_atom params.input)

@@ -11,6 +11,7 @@ type params = {
   } [@@deriving cmdliner, show]
   
 let run (params: params) =
+  Logging.(use_loggers [PRF, Logger.DEBUG]);
   let program = Readers.read_file params.input in
   let prf = RankingFunction.find (Program.vars program) (TransitionSet.to_list (TransitionGraph.transitions (Program.graph program))) in
   print_string (RankingFunction.to_string prf ^ "\n")

@@ -16,7 +16,7 @@ type t = {
   
 let one = ParameterPolynomial.one
   
-let logger = Logger.make_log "prf"  
+let logger = Logging.(get PRF)  
 
 let rank f = f.pol
            

@@ -2,7 +2,7 @@ open Batteries
 open Polynomials
 open Program.Types
    
-let logger = Logger.make_log "time"
+let logger = Logging.(get Time)
 
 (** All transitions outside of the prf transitions that lead to the given location. *)
 let transitions_to (graph: TransitionGraph.t) (prf_transitions: Transition.t list) (location: Location.t): Transition.t List.t =

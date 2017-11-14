@@ -3,7 +3,7 @@ open Program.Types
    
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
-let logger = Logger.make_log "appr"
+let logger = Logging.(get Approximation) 
 
 module Time =
   struct

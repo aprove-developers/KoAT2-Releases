@@ -2,7 +2,7 @@ open Batteries
 open Formulas
 open Polynomials
    
-let logger = Logger.make_log "lsb"
+let logger = Logging.(get LocalSizeBound)
            
 type formula = Formula.t
 

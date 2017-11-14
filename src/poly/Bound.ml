@@ -2,7 +2,7 @@ open Batteries
 open Polynomials
 open Util
    
-let logger = Logger.make_log "bound"
+let logger = Logging.(get Bound)
            
 module Valuation_ = Valuation.Make(OurInt)
 type valuation = Valuation.Make(OurInt).t

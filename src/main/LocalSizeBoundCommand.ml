@@ -20,7 +20,7 @@ type params = {
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
-  Logger.init ["lsb", Logger.DEBUG] (Logger.make_dbg_formatter IO.stdout);
+  Logging.(use_loggers [LocalSizeBound, Logger.DEBUG]);
   let open TransitionLabel in
   let guard = Readers.read_formula params.guard in
   let var = Var.of_string params.var in
