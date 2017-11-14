@@ -1,11 +1,11 @@
 We want to prove the following claim for all $t \in \TSet$ and all $m \in \mathbb{N}^n$.
-\[ \UTime'(t)(m) \geq \braced{k \in \mathbb{N} \mid \exists \location', \valuation', \valuation_0: \valuation_0 \leq m \wedge (\location_0, \valuation_0) \valuateto{t}^k (\location', \valuation')} \]
+\[ \UTime'(t)(m) \geq \braced{k \in \mathbb{N} \mid \exists \location', \valuation', \valuation_0: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \valuateto{t}^k (\location', \valuation')} \]
 
 For $m \in \mathbb{N}^n$, let $\USize_m(t)$ be an assignment from each variable $v \in \VSet$ to the approximated value $\USize(t, v')(m)$.
 It suffices to show that for all $t \in \TSet'_>$ and $m \in \mathbb{N}^n$ the following claim holds.
 \begin{IEEEeqnarray*}{rCl}
   \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\tilde{t} \in \TSet_l} \UTime(\tilde{t})(m) \cdot \maximum{0, ((\Pol(\location)_+)(\USize_m(\tilde{t})) - (\Pol(\location)_-)(\LSize_m(\tilde{t}))} \\
-  \geq \sup \braced{k \in \mathbb{N} \mid \exists \location', \valuation', \valuation_0: \valuation_0 \leq m \wedge (\location_0, \valuation_0) \valuateto{t}^k (\location', \valuation')}
+  \geq \sup \braced{k \in \mathbb{N} \mid \exists \location', \valuation', \valuation_0: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \valuateto{t}^k (\location', \valuation')}
 \end{IEEEeqnarray*}
 To this end, let $\valuation_0$ be a valuation with $\valuation_0 \leq m$ and consider a (finite or infinite) evaluation starting with the configuration $\configuration{0}$ where $k \in \mathbb{N} \cup \braced{\omega}$ steps are performed with the transition $t$.
 The goal is now to show that

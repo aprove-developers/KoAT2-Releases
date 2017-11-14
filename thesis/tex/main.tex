@@ -38,10 +38,10 @@
 \newcommand{\braced}[1]{\lbrace #1 \rbrace}
 \newcommand{\valuateto}[1]{(\rightarrow^* \circ \rightarrow_{#1})}
 \newcommand{\UpperSizeComplexity}[2]{
-  \sup \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \valuation_0 \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
+  \sup \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
 }
 \newcommand{\LowerSizeComplexity}[2]{
-  \inf \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \valuation_0 \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
+  \inf \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
 }
 
 \theoremstyle{definition}
