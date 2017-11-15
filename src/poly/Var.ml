@@ -2,6 +2,7 @@ open Batteries
 
 type t =
   | Var of String.t
+  
   | Helper of int [@@deriving eq, ord]
             
 let (=~=) = equal
