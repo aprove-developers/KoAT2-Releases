@@ -3,7 +3,7 @@ open Program.Types
    
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
-let logger = Logger.make_log "appr"
+let logger = Logging.(get Approximation) 
 
 module Time =
   struct
@@ -30,7 +30,7 @@ module Time =
       |> fun option -> Option.bind option Enum.get
 
     let sum map program =
-      TransitionGraph.fold_edges_e (fun transition result -> Bound.(of_poly (Transition.cost transition) * get map transition + result)) (Program.graph program) Bound.zero
+      TransitionGraph.fold_edges_e (fun transition result -> Bound.(get map transition + result)) (Program.graph program) Bound.zero
 
     let sum_available map =
       Map.fold (fun transition bound result -> Bound.(bound + result)) map Bound.zero

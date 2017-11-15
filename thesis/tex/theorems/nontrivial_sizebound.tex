@@ -12,17 +12,21 @@
   Similar, let $\VSet^-_\alpha$ be the negative version.
 \end{definition}
 
-\begin{theorem}[Upper SizeBounds for nontrivial SCCs]
-  Let $(\UTime, \USize)$ be a complexity approximation.
-  Let $\ULSB$ be a local size bound.
-  Let $\SCC \subseteq \RV$ a nontrivial SCC of the RVG.
-  If there is a $\beta \in \SCC$ with $\beta \notin \ScaledSum$, then we set $\USize' = \USize$.
-  Otherwise, for all $\beta \notin \SCC$, let $\USize'(\beta) = \USize(\beta)$.
-  For all $\beta \in \SCC$, we set
-  \begin{align*}
-    \USize'(\beta) = & \prod_{t \in \TSet} (\maximum{s_{\alpha} \mid \alpha \in \SCC_t}
-                       \cdot \maximum{\abs{(\pre(\alpha) \setminus \pre^-(\alpha)) \cap \SCC} \mid \alpha \in \SCC_t})^{\UTime(t)} \\
-                     & \cdot \sum_{t \in \TSet} (\UTime(t) \cdot \maximum{ e_\alpha + \sum_{v \in \actV{\ULSB(\alpha}) \setminus \VSet_\alpha} f^\alpha_v \mid \alpha \in \SCC_t }).
-  \end{align*}
-  Then, $\mathit{SizeBounds}(\UTime, \USize, \SCC) = \USize'$ is also a size approximation. 
+\begin{theorem}[SizeBounds for nontrivial SCCs]
+  Let $(\UTime, \Size)$ be a complexity approximation.
+  Let $\LSB$ be a local size bound.
+  Let $\SCC \subseteq \RV$ be a nontrivial SCC of the RVG.
+  If there is a $\beta \in \SCC$ with $\beta \notin \ScaledSum$, then we set $\USize' = \USize$ and $\LSize' = \LSize$.
+  Otherwise, for all $\beta \notin \SCC$, let $\USize'(\beta) = \USize(\beta)$ and $\LSize'(\beta) = \LSize(\beta)$.
+  For the definition of $(\LSize', \USize')$ for all other $\beta \in \SCC$, we will use following abbreviations.
+
+  For all $t \in \TSet$ and $\square \in \braced{\sqcup, \sqcap}$ let
+  \[ s^\square_t = \maximum{s^\square_{\alpha} \mid \alpha \in \SCC_t} \cdot \maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_t}. \]
+
+  Also for all $\alpha \in \RV$ and $\square \in \braced{\sqcup, \sqcap}$ let
+  \[ \text{in}^\square_\alpha = \sum_{v \in \actV{\mathcal{S}^\square_l(\alpha}) \setminus \VSet_\alpha} \text{sel}^\square \left( \braced{0} \cup \braced{\mathcal{S}^\square(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \right). \]
+
+  With these definitions we define $(\LSize', \USize')$ for all other $\beta \in \SCC$ and $\square \in \braced{\sqcup, \sqcap}$ as
+  \[ {\mathcal{S}^\square}'(\beta) = \prod_{t \in \TSet} (s^\square_t)^{\UTime(t)} \cdot \sum_{t \in \TSet} \left( \UTime(t) \cdot \text{sel}^\square \braced{\text{sel}^\square(0, e^{\square}_\alpha) + \text{in}^\square_\alpha \mid \alpha \in \SCC_t } \right) \]
+  Then, $\mathit{SizeBounds}(\UTime, \Size, \SCC) = (\LSize', \USize')$ is also a size approximation. 
 \end{theorem}

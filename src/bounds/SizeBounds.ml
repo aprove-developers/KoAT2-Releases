@@ -3,7 +3,7 @@ open Program.Types
    
 module TransitionSet = Set.Make(Transition)
              
-let logger = Logger.make_log "size"
+let logger = Logging.(get Size)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
            

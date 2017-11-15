@@ -30,7 +30,7 @@ type main_params = {
     output_dir : string option;
     (** An absolute or relative path to the output directory, where all generated files should end up. *)
 
-    logs : string list; [@default []] [@sep ',']
+    logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default []] [@sep ',']
     (** The loggers which should be activated. *)
 
     result : (Program.t -> Approximation.t -> unit); [@enum ["all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound]
@@ -43,9 +43,6 @@ type main_params = {
     (** The strategy which should be used to apply the preprocessors. *)
     
   } [@@deriving cmdliner]
-
-let init_logger (logs: (string * Logger.level) list) =
-  Logger.init logs (Logger.make_dbg_formatter IO.stdout)
 
 let read_input (file: string): Program.t Option.t =
   try
@@ -76,7 +73,7 @@ let bounded_rv_to_string (appr: Approximation.t) (t,v) =
   
 let run (params: main_params) =
   let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
-  init_logger logs;
+  Logging.use_loggers logs;
   let input_filename =
     params.input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
   and output_dir =

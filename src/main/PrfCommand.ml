@@ -11,6 +11,7 @@ type params = {
   } [@@deriving cmdliner, show]
   
 let run (params: params) =
+  Logging.(use_loggers [PRF, Logger.DEBUG]);
   let program = Readers.read_file params.input in
   let empty_approx = Approximation.empty (program |> Program.graph |> TransitionGraph.transitions |> TransitionSet.cardinal) (program |> Program.vars |> VarSet.cardinal) in
   let (_,(program_procs,approx_trivial_tb)) = TrivialTimeBounds.transform (program, empty_approx) in
