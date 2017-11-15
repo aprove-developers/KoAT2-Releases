@@ -132,7 +132,7 @@ module Z3Solver =
                   Z3.Optimize.minimize optimisation_goal (List.at minimise_constr i);
               done;*)
             Z3.Optimize.minimize optimisation_goal (generate_minimise constraints coeffs_to_minimise);
-              print_string ("\nOptimise to_string:\n"^(Z3.Optimize.to_string optimisation_goal)^"\n");
+              (*print_string ("\nOptimise to_string:\n"^(Z3.Optimize.to_string optimisation_goal)^"\n");*)
               let status = Z3.Optimize.check optimisation_goal in
                 if (status == Z3.Solver.SATISFIABLE (*|| status == Z3.Solver.UNKNOWN*)) then
                     let model = Z3.Optimize.get_model optimisation_goal in
