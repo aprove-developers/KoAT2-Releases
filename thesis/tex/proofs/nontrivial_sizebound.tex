@@ -35,8 +35,9 @@ Thus, the reduction has the form
 \[ \configuration{0} \valuateto{\tilde{r}} (\tilde{\location}, \tilde{\valuation}) \rightarrow_r \configuration{}. \]
 for some transition $\tilde{r} \in \pre(r)$.
 
-For all $u_1, \dots, u_n \in \mathbb{Z}$, we have by the definition of local size bounds
-\todo{What do we need here?}
+For all $u_1, \dots, u_n \in \mathbb{Z}$, we have by the definition of scaled sums
+  \[ s^\sqcap_\alpha \cdot \left( e^\sqcap_\alpha + \sum_{i \in P^\sqcap} u_i + \sum_{i \in Q^\sqcap} \max \braced{0,u_i} \right) \geq \ULSB(\alpha)(u_1, \cdots, u_n). \]
+  \[ s^\sqcup_\alpha \cdot \left( e^\sqcup_\alpha + \sum_{i \in P^\sqcup} u_i - \sum_{i \in Q^\sqcup} \min \braced{0,u_i} \right) \leq \LLSB(\alpha)(u_1, \cdots, u_n). \]
 \[ s^\sqcap_\gamma \cdot (e^\sqcap_\gamma + u_1 + \dots + u_n) \geq \ULSB(\gamma)(u_1, \dots, u_n) \]
 \[ \LLSB(\gamma)(u_1, \dots, u_n) \geq s^\sqcup_\gamma \cdot (e^\sqcup_\gamma + u_1 + \dots + u_n) \]
 Since $\ULSB(\gamma)$ only depends on the active variables in $\actV{\ULSB(\gamma)}$, let $\hat{u}_i = u_i$ if $v_i \in \actV{\ULSB{\gamma}}$ and $\hat{u}_i = 0$ otherwise.

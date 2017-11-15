@@ -1,9 +1,10 @@
 Let $\alpha = (t, v') \in \RV$ be the trivial SCC for which the processor was applied.
+
 We have to show that for all $m \in \mathbb{N}^n$ two statements hold.
 \[ \USize'(t, v')(m) \geq \UpperSizeComplexity{t}{v} \]
 \[ \LSize'(t, v')(m) \leq \LowerSizeComplexity{t}{v} \]
 
-To this end, we consider a valuation $\valuation_0 \leq m$ and an evaluation
+To this end, we consider a valuation $\abs{\valuation_0} \leq m$ and an evaluation
 \[ \configuration{0} \valuateto{t} \configuration{} . \]
 Now the goal is to show that $\USize'(t, v')(m) \geq \valuation(v) \geq \LSize'(t, v')(m)$ holds.
 
@@ -17,11 +18,21 @@ In the case where t is not an initial transition, the evaluation has for some tr
 \[ \configuration{0}  \valuateto{\tilde{t}} (\tilde{\location}, \tilde{\valuation}) \rightarrow_t \configuration{}. \]
 
 Lets assume that our initial assumption holds.
-As $\valuation_0 \leq m$, we then have for all $v \in \VSet$
+As $\abs{\valuation_0} \leq m$, we then have for all $v \in \VSet$
 \[ \USize(\tilde{t}, v')(m) \geq \tilde{\valuation}(v) \geq \LSize(\tilde{t}, v')(m). \]
 Thus, $\USize(\tilde{t}, v')$ and $\LSize(\tilde{t}, v')$ are bounds for the size of all variables $v \in \VSet$ before the transition $t$ is applied.
 
-By the weak monotonicity of $p_+$ and $p_-$ for every polynomial $p$ we can conclude the following statement.
-\[ ((\ULSB(t, v')_+)(\USize(\tilde{t})) - (\ULSB(t, v')_-)(\LSize(\tilde{t})))(m) \geq \valuation(v) \]
+The only interesting case is when $\alpha$ is bounded by a lower scaled sum and by an upper scaled sum.
 
-Hence, $\USize'(t, v')(m) \geq \valuation(v)$.
+We can easily see that the following unequations hold.
+\[ \sum_{v \in P_+^\sqcap} \USize(\tilde{t}, v') \geq \sum_{v \in P_+^\sqcap} \tilde{\valuation}(v) \]
+\[ - \sum_{v \in P_-^\sqcap} \LSize(\tilde{t}, v') \geq - \sum_{v \in P_-^\sqcap} \tilde{\valuation}(v) \]
+\[ \sum_{v \in Q^\sqcap} \max \braced{0,\USize(\tilde{t}, v')} \geq \sum_{v \in Q^\sqcap} \max \braced{0,\tilde{\valuation}(v)} \]
+Since $s^\sqcap_\alpha \geq 1$ it holds that $\USize(t, v')(m) \geq \valuation(v)$.
+
+We now show that $\LSize(t, v')(m) \leq \valuation(v)$ also holds.
+Again we can easily see that the following unequations hold.
+\[ \sum_{v \in P_+^\sqcup} \LSize(\tilde{t}, v') \leq \sum_{v \in P_+^\sqcup} \tilde{\valuation}(v) \]
+\[ - \sum_{v \in P_-^\sqcup} \USize(\tilde{t}, v') \leq - \sum_{v \in P_-^\sqcup} \tilde{\valuation}(v) \]
+\[ \sum_{v \in Q^\sqcup} \min \braced{0,\LSize(\tilde{t}, v')} \leq \sum_{v \in Q^\sqcup} \min \braced{0,\tilde{\valuation}(v)} \]
+Since $s^\sqcup_\alpha \geq 1$ it holds that $\LSize(t, v')(m) \leq \valuation(v)$.

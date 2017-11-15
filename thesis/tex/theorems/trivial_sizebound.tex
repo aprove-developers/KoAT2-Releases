@@ -1,20 +1,15 @@
-\begin{definition}[Local Size Bound]
-  We call $\ULSB: \RV \rightarrow \BoundSet$ a \textbf{upper} local size bound if and only if for all $(t, v') \in \RV$ and all $m \in \mathbb{N}^n$
-  \[ \ULSB(t, v)(m) \geq \sup \braced{\valuation'(v) \mid \exists \location, \valuation, \location', \valuation': \abs{\valuation} \leq m \wedge \configuration{} \rightarrow_t (\location', \valuation')}. \]
-  Futhermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local size bound if and only if for all $(t, v') \in \RV$ and all $m \in \mathbb{N}^n$
-  \[ \LLSB(t, v)(m) \leq \inf \braced{\valuation'(v) \mid \exists \location, \valuation, \location', \valuation': \abs{\valuation} \leq m \wedge \configuration{} \rightarrow_t (\location', \valuation')}. \]
-  We call $\LSB$ a local size bound.
-\end{definition}
-
 \begin{theorem}[SizeBounds for trivial SCCs]
   Let $(\UTime, \Size)$ be a complexity approximation.
-  Let $\LSB$ be a local size bound.
   Let $\braced{\alpha} \subseteq \RV$ be a trivial SCC of the RVG.
+  Let $\LSB$ be a local size bound.
   We define $\USize'(\alpha') = \USize(\alpha')$ and $\LSize'(\alpha') = \LSize(\alpha')$ for all $\alpha' \neq \alpha$.
   For all $\alpha = (t, v')$ with an initial transition $t$ we define
   \[ \LSize'(\alpha) = \LLSB(\alpha) \text{ and } \USize'(\alpha) = \ULSB(\alpha). \]
-  For all other $\alpha$ we define 
-  \[ \USize'(\alpha) = \maximum{ (\ULSB(\alpha)_+)(\USize(\tilde{t})) - (\ULSB(\alpha)_-)(\LSize(\tilde{t})) \mid \tilde{t} \in \pre(t)} \]
-  \[ \LSize'(\alpha) = \minimum{ (\LLSB(\alpha)_+)(\LSize(\tilde{t})) - (\LLSB(\alpha)_-)(\USize(\tilde{t})) \mid \tilde{t} \in \pre(t)} \]
+  For all $\alpha = (t, v')$ where $t$ is not an initial transition we define the following.
+  We define $\LSize'(\alpha) = \LSize(\alpha)$, if $\alpha$ is not bounded by a lower scaled sum.
+  Similar, we define $\USize'(\alpha) = \USize(\alpha)$, if $\alpha$ is not bounded by an upper scaled sum.
+  For all $\alpha$ which are bounded by an upper scaled sum and by a lower scaled sum we define 
+  \[ \USize'(\alpha) = \max \braced{ s^\sqcap_\alpha \cdot \left( e^\sqcap_\alpha + \sum_{v \in P_+^\sqcap} \USize(\tilde{t}, v) - \sum_{v \in P_-^\sqcap} \LSize(\tilde{t}, v) + \sum_{v \in Q^\sqcap} \max \braced{0,\USize(\tilde{t}, v)} \right) \mid \tilde{t} \in \pre(t)} \]
+  \[ \LSize'(\alpha) = \min \braced{ s^\sqcup_\alpha \cdot \left( e^\sqcup_\alpha + \sum_{v \in P_+^\sqcup} \LSize(\tilde{t}, v) - \sum_{v \in P_-^\sqcup} \USize(\tilde{t}, v) + \sum_{v \in Q^\sqcup} \min \braced{0,\LSize(\tilde{t}, v)} \right) \mid \tilde{t} \in \pre(t)} \]
   Then, $\mathit{SizeBounds}(\UTime, \Size, \braced{\alpha}) = (\LSize', \USize')$ is also a size approximation.
 \end{theorem}
