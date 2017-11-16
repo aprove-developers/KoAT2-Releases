@@ -1,0 +1,15 @@
+\begin{definition}[Local Size Bound]
+  We call $\ULSB: \RV \rightarrow \BoundSet$ a \textbf{upper} local size bound if and only if for all $(t, v') \in \RV$ and all $m \in \mathbb{N}^n$
+  \[ \ULSB(t, v)(m) \geq \sup \braced{\valuation'(v) \mid \exists \location, \valuation, \location', \valuation': \abs{\valuation} \leq m \wedge \configuration{} \rightarrow_t (\location', \valuation')}. \]
+  Futhermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local size bound if and only if for all $(t, v') \in \RV$ and all $m \in \mathbb{N}^n$
+  \[ \LLSB(t, v)(m) \leq \inf \braced{\valuation'(v) \mid \exists \location, \valuation, \location', \valuation': \abs{\valuation} \leq m \wedge \configuration{} \rightarrow_t (\location', \valuation')}. \]
+  We call $\LSB$ a local size bound.
+\end{definition}
+
+\begin{definition}[Scaled sum]
+  We say that $\alpha \in \RV$ is bounded by an \textbf{upper} scaled sum if and only if there are numbers $s^\sqcap_\alpha \in \mathbb{N}$ with $s^\sqcap_\alpha \geq 1$ and $e^\sqcap_\alpha \in \mathbb{Z}$ and three pairwise disjunctive sets $P_+^\sqcap, P_-^\sqcap, Q^\sqcap \subseteq \VSet$ such that it holds for all $\valuation$ that
+  \[ \ULSB(\alpha)(\valuation) = s^\sqcap_\alpha \cdot \left( e^\sqcap_\alpha + \sum_{v \in P_+^\sqcap} \valuation(v) - \sum_{v \in P_-^\sqcap} \valuation(v) + \sum_{v \in Q^\sqcap} \max \braced{0,\valuation(v)} \right). \]
+
+  We say $\alpha \in \RV$ is bounded by a \textbf{lower} scaled sum if and only if there are numbers $s^\sqcup_\alpha \in \mathbb{N}$ with $s^\sqcup_\alpha \geq 1$ and $e^\sqcup_\alpha \in \mathbb{Z}$ and three pairwise disjunctive sets $P_+^\sqcap, P_-^\sqcap, Q^\sqcap \subseteq \VSet$ such that it holds for all $\valuation$ that
+  \[ \LLSB(\alpha)(\valuation) = s^\sqcup_\alpha \cdot \left( e^\sqcup_\alpha + \sum_{v \in P_+^\sqcup} \valuation(v) - \sum_{v \in P_-^\sqcap} \valuation(v) - \sum_{v \in Q^\sqcup} \min \braced{0,\valuation(v)} \right). \]
+\end{definition}

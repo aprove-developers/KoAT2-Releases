@@ -49,16 +49,16 @@ Then,
 \end{align*}
 
 We have to estimate the sizes of the input variables $u_1, \dots, u_n$,
-that is, we have to find a bound on the size of each $v_i \in \VSet$ after the application of the transition $\tilde{r}$ that precedes $r$.
+that is, we have to find a bound on the size of each $v \in \VSet$ after the application of the transition $\tilde{r}$ that precedes $r$.
 
-If $(\tilde{r}, v'_i) \in \SCC$, then the induction hypothesis implies that $d^\sqcap \geq \valuation(w) \geq d^\sqcup$ also holds for the reduction from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
+If $(\tilde{r}, v') \in \SCC$, then the induction hypothesis implies that $d^\sqcap \geq \valuation(w) \geq d^\sqcup$ also holds for the reduction from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
 Let
 \[ {d^\square}' = s^\square_{\TSet \setminus \braced{r}} \cdot (s^\square_r)^{k_r - 1} \cdot \left( \sum_{t \in \TSet \setminus \braced{r}} \left( k_t \cdot \text{in}^\square_t(m) \right) + \left( k_r - 1 \right) \cdot \text{in}^\square_r(m) \right). \]
 The reason for using $k_r - 1$ in ${d^\square}'$ is that the last application of the transition $r$ in the evaluation is missing in the evaluation from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
-Then, the induction hypothesis implies that ${d^\sqcap}' \geq \tilde{\valuation}(v_i) \geq {d^\sqcup}'$.
-For $v_i \in \actV{\mathcal{S}^\square_l(\gamma)}$ with $v_i \notin \VSet_\gamma$, we have $(\tilde{r}, v'_i) \notin \SCC$ (by definition of $\VSet_\gamma$).
-For such $v_i$, we can deduce the following:
-\[ \text{in}^\sqcap_{\gamma,{v_i}}(m) \geq \USize(\tilde{r}, v'_i)(m) \geq \tilde{\valuation}(v_i) \geq \LSize(\tilde{r}, v'_i)(m) \geq \text{in}^\sqcup_{\gamma,{v_i}}(m). \]
+Then, the induction hypothesis implies that ${d^\sqcap}' \geq \tilde{\valuation}(v) \geq {d^\sqcup}'$.
+For $v \in \actV{\mathcal{S}^\square_l(\gamma)}$ with $v \notin \VSet_\gamma$, we have $(\tilde{r}, v') \notin \SCC$ (by definition of $\VSet_\gamma$).
+For such $v$, we can deduce the following:
+\[ \text{in}^\sqcap_{\gamma,{v}}(m) \geq \USize(\tilde{r}, v')(m) \geq \tilde{\valuation}(v) \geq \LSize(\tilde{r}, v')(m) \geq \text{in}^\sqcup_{\gamma,{v}}(m). \]
 
 We now combine these bounds to prove that $d^\sqcap \geq \valuation(w) \geq d^\sqcup$ indeed holds.
 
