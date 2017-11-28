@@ -20,13 +20,35 @@
   Otherwise, for all $\beta \notin \SCC$, let $\USize'(\beta) = \USize(\beta)$ and $\LSize'(\beta) = \LSize(\beta)$.
   For the definition of $(\LSize', \USize')$ for all other $\beta \in \SCC$, we will use following abbreviations.
 
+  Let $e$ denote a bound for the highest value coming into $\SCC$.
+  \[ e = \max ( 0,
+    \max \braced{\USize(\tilde{\alpha}) \mid \exists \alpha \in \SCC: \tilde{\alpha} \in \pre(\alpha) \setminus \SCC},
+    \max \braced{-\LSize(\tilde{\alpha}) \mid \exists \alpha \in \SCC: \tilde{\alpha} \in \pre(\alpha) \setminus \SCC})
+  \]
+
   For all $t \in \TSet$ and $\square \in \braced{\sqcup, \sqcap}$ let
   \[ s^\square_t = \maximum{s^\square_{\alpha} \mid \alpha \in \SCC_t} \cdot \maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_t}. \]
 
-  Also for all $\alpha \in \RV$ and $\square \in \braced{\sqcup, \sqcap}$ let
-  \[ \text{in}^\square_\alpha = \sum_{v \in \actV{\mathcal{S}^\square_l(\alpha}) \setminus \VSet_\alpha} \text{sel}^\square \left( \braced{0} \cup \braced{\mathcal{S}^\square(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \right). \]
+  Also for $\square \in \braced{\sqcup, \sqcap}$ we define the biggest/smallest incoming value of a variable $v \in \VSet$.
+  \[ \text{in}^\sqcap_{\alpha,v} = \max \left( 0, \max \braced{\mathcal{S}^\sqcap(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \right) \]
+  \[ \text{in}^\sqcup_{\alpha,v} = \max \left( 0, \max \braced{-\mathcal{S}^\sqcup(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \right) \]
 
-  With these definitions we define $(\LSize', \USize')$ for all other $\beta \in \SCC$ and $\square \in \braced{\sqcup, \sqcap}$ as
-  \[ {\mathcal{S}^\square}'(\beta) = \prod_{t \in \TSet} (s^\square_t)^{\UTime(t)} \cdot \sum_{t \in \TSet} \left( \UTime(t) \cdot \text{sel}^\square \braced{\text{sel}^\square(0, e^{\square}_\alpha) + \text{in}^\square_\alpha \mid \alpha \in \SCC_t } \right) \]
+  Furthermore we define for $\square \in \braced{\sqcup, \sqcap}$ the biggest/smallest incoming value of a result variable $\alpha \in \RV$.
+  \[ \text{in}^\sqcap_\alpha = \sum_{v \in (P_{\alpha,+}^\sqcap \cup Q_{\alpha,+}^\sqcap) \setminus \VSet_\alpha} \text{in}^\sqcap_{\alpha,v} + \sum_{v \in (P_{\alpha,-}^\sqcap \cup Q_{\alpha,-}^\sqcap) \setminus \VSet_\alpha} \text{in}^\sqcup_{\alpha,v} \]
+  \[ \text{in}^\sqcup_\alpha = \sum_{v \in (P_{\alpha,+}^\sqcup \cup Q_{\alpha,+}^\sqcup) \setminus \VSet_\alpha} \text{in}^\sqcup_{\alpha,v} + \sum_{v \in (P_{\alpha,-}^\sqcup \cup Q_{\alpha,-}^\sqcup) \setminus \VSet_\alpha} \text{in}^\sqcap_{\alpha,v} \]
+  
+  \[ \text{in}^\sqcap_t = \max \braced{\max(0, e^{\sqcap}_\alpha) + \text{in}^\sqcap_\alpha \mid \alpha \in \SCC_t }. \]
+  \[ \text{in}^\sqcup_t = \max \braced{\max(0, -e^{\sqcup}_\alpha) + \text{in}^\sqcup_\alpha \mid \alpha \in \SCC_t }. \]
+
+  With these definitions we define $(\LSize', \USize')$ for all other $\beta \in \SCC$ and $\square \in \braced{\sqcup, \sqcap}$.
+  \[ {\mathcal{S}^\sqcap}'(\beta) =
+  \prod_{t \in \TSet} (s^\sqcap_t)^{\UTime(t)} \cdot \left( e + 
+  \sum_{t \in \TSet} \left( \UTime(t) \cdot \text{in}^\sqcap_t \right) \right)
+  \]
+  \[ {\mathcal{S}^\sqcup}'(\beta) = (-1) \cdot \left(
+  \prod_{t \in \TSet} (s^\sqcup_t)^{\UTime(t)} \cdot \left( e + 
+  \sum_{t \in \TSet} \left( \UTime(t) \cdot \text{in}^\sqcup_t \right) \right)
+  \right)
+  \]
   Then, $\mathit{SizeBounds}(\UTime, \Size, \SCC) = (\LSize', \USize')$ is also a size approximation. 
 \end{theorem}

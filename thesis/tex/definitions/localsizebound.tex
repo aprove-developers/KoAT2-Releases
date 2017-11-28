@@ -7,9 +7,23 @@
 \end{definition}
 
 \begin{definition}[Scaled sum]
-  We say that $\alpha \in \RV$ is bounded by an \textbf{upper} scaled sum if and only if there are numbers $s^\sqcap_\alpha \in \mathbb{N}$ with $s^\sqcap_\alpha \geq 1$ and $e^\sqcap_\alpha \in \mathbb{Z}$ and three pairwise disjunctive sets $P_+^\sqcap, P_-^\sqcap, Q^\sqcap \subseteq \VSet$ such that it holds for all $\valuation$ that
-  \[ \ULSB(\alpha)(\valuation) = s^\sqcap_\alpha \cdot \left( e^\sqcap_\alpha + \sum_{v \in P_+^\sqcap} \valuation(v) - \sum_{v \in P_-^\sqcap} \valuation(v) + \sum_{v \in Q^\sqcap} \max \braced{0,\valuation(v)} \right). \]
+  We say that $\alpha \in \RV$ is bounded by an \textbf{upper} scaled sum if and only if there are numbers $s^\sqcap_\alpha \in \mathbb{N}$ with $s^\sqcap_\alpha \geq 1$ and $e^\sqcap_\alpha \in \mathbb{Z}$ and four pairwise disjoint sets $P_{\alpha,+}^\sqcap, P_{\alpha,-}^\sqcap, Q_{\alpha,+}^\sqcap, Q_{\alpha,-}^\sqcap \subseteq \VSet$ such that it holds for all $\valuation$ that
+  \[ \ULSB(\alpha)(\valuation) =
+    s^\sqcap_\alpha \cdot \left(
+        e^\sqcap_\alpha
+      + \sum_{v \in P_{\alpha,+}^\sqcap} \valuation(v)
+      - \sum_{v \in P_{\alpha,-}^\sqcap} \valuation(v)
+      + \sum_{v \in Q_{\alpha,+}^\sqcap} \max \braced{0,\valuation(v)}
+      - \sum_{v \in Q_{\alpha,-}^\sqcap} \min \braced{0,\valuation(v)}
+    \right). \]
 
-  We say $\alpha \in \RV$ is bounded by a \textbf{lower} scaled sum if and only if there are numbers $s^\sqcup_\alpha \in \mathbb{N}$ with $s^\sqcup_\alpha \geq 1$ and $e^\sqcup_\alpha \in \mathbb{Z}$ and three pairwise disjunctive sets $P_+^\sqcap, P_-^\sqcap, Q^\sqcap \subseteq \VSet$ such that it holds for all $\valuation$ that
-  \[ \LLSB(\alpha)(\valuation) = s^\sqcup_\alpha \cdot \left( e^\sqcup_\alpha + \sum_{v \in P_+^\sqcup} \valuation(v) - \sum_{v \in P_-^\sqcap} \valuation(v) - \sum_{v \in Q^\sqcup} \min \braced{0,\valuation(v)} \right). \]
+  We say $\alpha \in \RV$ is bounded by a \textbf{lower} scaled sum if and only if there are numbers $s^\sqcup_\alpha \in \mathbb{N}$ with $s^\sqcup_\alpha \geq 1$ and $e^\sqcup_\alpha \in \mathbb{Z}$ and three pairwise disjoint sets $P_{\alpha,+}^\sqcup, P_{\alpha,-}^\sqcup, Q_{\alpha,+}^\sqcup, Q_{\alpha,-}^\sqcup \subseteq \VSet$ such that it holds for all $\valuation$ that
+  \[ \LLSB(\alpha)(\valuation) =
+    s^\sqcup_\alpha \cdot \left(
+      e^\sqcup_\alpha
+    + \sum_{v \in P_{\alpha,+}^\sqcup} \valuation(v)
+    - \sum_{v \in P_{\alpha,-}^\sqcup} \valuation(v)
+    + \sum_{v \in Q_{\alpha,+}^\sqcup} \min \braced{0,\valuation(v)}
+    - \sum_{v \in Q_{\alpha,-}^\sqcup} \max \braced{0,\valuation(v)}
+  \right). \]
 \end{definition}
