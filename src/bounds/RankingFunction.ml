@@ -91,7 +91,7 @@ let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) (
   let updated_target = ParameterPolynomial.substitute_f (as_parapoly trans_label) (pol target) in
   let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
   let new_atom = 
-    if ParameterPolynomial.is_linear cost then
+    if (ParameterPolynomial.is_linear cost && SMTSolver.check_positivity (Formula.mk guard) (TransitionLabel.cost trans_label)) then
       ParameterAtom.Infix.(pol src >= ParameterPolynomial.(cost + updated_target)) (*here's the difference*)
     else 
       ParameterAtom.Infix.(pol src >= ParameterPolynomial.(one + updated_target)) in
@@ -102,7 +102,7 @@ let bounded_constraint (pol : Location.t -> ParameterPolynomial.t) (trans : Tran
   let guard = TransitionLabel.guard trans_label in
   let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
   let new_atom = 
-    if ParameterPolynomial.is_linear cost then
+    if (ParameterPolynomial.is_linear cost && SMTSolver.check_positivity (Formula.mk guard) (TransitionLabel.cost trans_label)) then
       ParameterAtom.Infix.(pol src >= cost) 
     else
       ParameterAtom.Infix.(pol src >= one) in

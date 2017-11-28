@@ -18,4 +18,7 @@ sig
     
     val get_model_opt : formula -> Var.t list-> valuation
     
+    val check_positivity : formula -> Polynomials.Polynomial.t -> bool
+    
+    val check_negativity : formula -> Polynomials.Polynomial.t -> bool
   end
