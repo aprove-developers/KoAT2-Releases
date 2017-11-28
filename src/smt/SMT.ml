@@ -108,19 +108,19 @@ module Z3Solver =
                                         let value_of_value = (OurInt.of_int int_of_value) in
                                             (var_of_name,value_of_value)) assigned_values)
                 else Valuation.from []
-                
-    let check_positivity (constraints : formula) (var: Var.t) =
-      let var_as_poly = (Polynomial.of_var var) in
-      let positivity_formula = (Formula.mk_and constraints (Formula.mk_lt var_as_poly Polynomial.zero)) in
+     
+    (** Returns true iff the formula implies the positivity of the polynomial*)
+    let check_positivity (constraints : formula) (poly: Polynomial.t) =
+      let positivity_formula = (Formula.mk_and constraints (Formula.mk_lt poly Polynomial.zero)) in
         unsatisfiable positivity_formula
-        
-    let check_negativity (constraints : formula) (var: Var.t) =
-      let var_as_poly = (Polynomial.of_var var) in
-      let negativity_formula = (Formula.mk_and constraints (Formula.mk_gt var_as_poly Polynomial.zero)) in
+    
+    (** Returns true iff the formula implies the negativity of the polynomial*)
+    let check_negativity (constraints : formula) (poly: Polynomial.t) =
+      let negativity_formula = (Formula.mk_and constraints (Formula.mk_gt poly Polynomial.zero)) in
         unsatisfiable negativity_formula
     
     let generate_minimise (constraints : formula) (coeffs_to_minimise: Var.t list) =
-      let generator = fun poly -> (fun vrbl -> if (check_positivity constraints vrbl) then Polynomial.(poly + (of_var vrbl)) else (if (check_negativity constraints vrbl) then Polynomial.(poly - (of_var vrbl)) else poly)) in
+      let generator = fun poly -> (fun vrbl -> if (check_positivity constraints Polynomial.(of_var vrbl)) then Polynomial.(poly + (of_var vrbl)) else (if (check_negativity constraints Polynomial.(of_var vrbl)) then Polynomial.(poly - (of_var vrbl)) else poly)) in
       from_poly (List.fold_left generator Polynomial.zero coeffs_to_minimise)
     
     let get_model_opt (constraints : formula) (coeffs_to_minimise: Var.t list) =
