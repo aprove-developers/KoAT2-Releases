@@ -25,14 +25,16 @@ Thus, $\USize(\tilde{t}, v')$ and $\LSize(\tilde{t}, v')$ are bounds for the siz
 The only interesting case is when $\alpha$ is bounded by a lower scaled sum and by an upper scaled sum.
 
 We can easily see that the following unequations hold.
-\[ \sum_{v \in P_+^\sqcap} \USize(\tilde{t}, v') \geq \sum_{v \in P_+^\sqcap} \tilde{\valuation}(v) \]
-\[ - \sum_{v \in P_-^\sqcap} \LSize(\tilde{t}, v') \geq - \sum_{v \in P_-^\sqcap} \tilde{\valuation}(v) \]
-\[ \sum_{v \in Q^\sqcap} \max \braced{0,\USize(\tilde{t}, v')} \geq \sum_{v \in Q^\sqcap} \max \braced{0,\tilde{\valuation}(v)} \]
+\[ \sum_{v \in P_{\alpha,1}^\sqcap} \USize(\tilde{t}, v') \geq \sum_{v \in P_{\alpha,1}^\sqcap} \tilde{\valuation}(v) \]
+\[ - \sum_{v \in N_{\alpha,1}^\sqcap} \LSize(\tilde{t}, v') \geq - \sum_{v \in N_{\alpha,1}^\sqcap} \tilde{\valuation}(v) \]
+\[ \sum_{v \in P_{\alpha,2}^\sqcap} \max \braced{0,\USize(\tilde{t}, v')} \geq \sum_{v \in P_{\alpha,2}^\sqcap} \max \braced{0,\tilde{\valuation}(v)} \]
+\[ - \sum_{v \in N_{\alpha,2}^\sqcap} \min \braced{0,\LSize(\tilde{t}, v')} \geq - \sum_{v \in N_{\alpha,2}^\sqcap} \min \braced{0,\tilde{\valuation}(v)} \]
 Since $s^\sqcap_\alpha \geq 1$ it holds that $\USize(t, v')(m) \geq \valuation(v)$.
 
 We now show that $\LSize(t, v')(m) \leq \valuation(v)$ also holds.
 Again we can easily see that the following unequations hold.
-\[ \sum_{v \in P_+^\sqcup} \LSize(\tilde{t}, v') \leq \sum_{v \in P_+^\sqcup} \tilde{\valuation}(v) \]
-\[ - \sum_{v \in P_-^\sqcup} \USize(\tilde{t}, v') \leq - \sum_{v \in P_-^\sqcup} \tilde{\valuation}(v) \]
-\[ \sum_{v \in Q^\sqcup} \min \braced{0,\LSize(\tilde{t}, v')} \leq \sum_{v \in Q^\sqcup} \min \braced{0,\tilde{\valuation}(v)} \]
+\[ \sum_{v \in P_{\alpha,1}^\sqcup} \LSize(\tilde{t}, v') \leq \sum_{v \in P_{\alpha,1}^\sqcup} \tilde{\valuation}(v) \]
+\[ - \sum_{v \in N_{\alpha,1}^\sqcup} \USize(\tilde{t}, v') \leq - \sum_{v \in N_{\alpha,1}^\sqcup} \tilde{\valuation}(v) \]
+\[ \sum_{v \in P_{\alpha,2}^\sqcup} \min \braced{0,\LSize(\tilde{t}, v')} \leq \sum_{v \in P_{\alpha,2}^\sqcup} \min \braced{0,\tilde{\valuation}(v)} \]
+\[ - \sum_{v \in N_{\alpha,2}^\sqcup} \max \braced{0,\USize(\tilde{t}, v')} \leq - \sum_{v \in N_{\alpha,2}^\sqcup} \max \braced{0,\tilde{\valuation}(v)} \]
 Since $s^\sqcup_\alpha \geq 1$ it holds that $\LSize(t, v')(m) \leq \valuation(v)$.

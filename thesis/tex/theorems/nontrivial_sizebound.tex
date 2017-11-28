@@ -34,8 +34,8 @@
   \[ \text{in}^\sqcup_{\alpha,v} = \max \left( 0, \max \braced{-\mathcal{S}^\sqcup(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \right) \]
 
   Furthermore we define for $\square \in \braced{\sqcup, \sqcap}$ the biggest/smallest incoming value of a result variable $\alpha \in \RV$.
-  \[ \text{in}^\sqcap_\alpha = \sum_{v \in (P_{\alpha,+}^\sqcap \cup Q_{\alpha,+}^\sqcap) \setminus \VSet_\alpha} \text{in}^\sqcap_{\alpha,v} + \sum_{v \in (P_{\alpha,-}^\sqcap \cup Q_{\alpha,-}^\sqcap) \setminus \VSet_\alpha} \text{in}^\sqcup_{\alpha,v} \]
-  \[ \text{in}^\sqcup_\alpha = \sum_{v \in (P_{\alpha,+}^\sqcup \cup Q_{\alpha,+}^\sqcup) \setminus \VSet_\alpha} \text{in}^\sqcup_{\alpha,v} + \sum_{v \in (P_{\alpha,-}^\sqcup \cup Q_{\alpha,-}^\sqcup) \setminus \VSet_\alpha} \text{in}^\sqcap_{\alpha,v} \]
+  \[ \text{in}^\sqcap_\alpha = \sum_{v \in P_\alpha^\sqcap \setminus \VSet_\alpha} \text{in}^\sqcap_{\alpha,v} + \sum_{v \in N_\alpha^\sqcap \setminus \VSet_\alpha} \text{in}^\sqcup_{\alpha,v} \]
+  \[ \text{in}^\sqcup_\alpha = \sum_{v \in P_\alpha^\sqcup \setminus \VSet_\alpha} \text{in}^\sqcup_{\alpha,v} + \sum_{v \in N_\alpha^\sqcup \setminus \VSet_\alpha} \text{in}^\sqcap_{\alpha,v} \]
   
   \[ \text{in}^\sqcap_t = \max \braced{\max(0, e^{\sqcap}_\alpha) + \text{in}^\sqcap_\alpha \mid \alpha \in \SCC_t }. \]
   \[ \text{in}^\sqcup_t = \max \braced{\max(0, -e^{\sqcup}_\alpha) + \text{in}^\sqcup_\alpha \mid \alpha \in \SCC_t }. \]

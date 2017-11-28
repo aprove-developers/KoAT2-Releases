@@ -9,7 +9,17 @@
   We define $\LSize'(\alpha) = \LSize(\alpha)$, if $\alpha$ is not bounded by a lower scaled sum.
   Similar, we define $\USize'(\alpha) = \USize(\alpha)$, if $\alpha$ is not bounded by an upper scaled sum.
   For all $\alpha$ which are bounded by an upper scaled sum and by a lower scaled sum we define 
-  \[ \USize'(\alpha) = \max \braced{ s^\sqcap_\alpha \cdot \left( e^\sqcap_\alpha + \sum_{v \in P_+^\sqcap} \USize(\tilde{t}, v) - \sum_{v \in P_-^\sqcap} \LSize(\tilde{t}, v) + \sum_{v \in Q^\sqcap} \max \braced{0,\USize(\tilde{t}, v)} \right) \mid \tilde{t} \in \pre(t)} \]
-  \[ \LSize'(\alpha) = \min \braced{ s^\sqcup_\alpha \cdot \left( e^\sqcup_\alpha + \sum_{v \in P_+^\sqcup} \LSize(\tilde{t}, v) - \sum_{v \in P_-^\sqcup} \USize(\tilde{t}, v) + \sum_{v \in Q^\sqcup} \min \braced{0,\LSize(\tilde{t}, v)} \right) \mid \tilde{t} \in \pre(t)} \]
+  \begin{equation}
+    \begin{split}
+      \USize'(\alpha) = \max \braced{ s^\sqcap_\alpha \cdot ( e^\sqcap_\alpha & + \sum_{v \in P_{\alpha,1}^\sqcap} \USize(\tilde{t}, v) - \sum_{v \in N_{\alpha,1}^\sqcap} \LSize(\tilde{t}, v) \\
+        & + \sum_{v \in P_{\alpha,2}^\sqcap} \max \braced{0,\USize(\tilde{t}, v)} - \sum_{v \in N_{\alpha,2}^\sqcap} \min \braced{0,\LSize(\tilde{t}, v)} ) \mid \tilde{t} \in \pre(t)}
+    \end{split}
+  \end{equation}
+  \begin{equation}
+    \begin{split}
+      \LSize'(\alpha) = \min \braced{ s^\sqcup_\alpha \cdot ( e^\sqcup_\alpha & + \sum_{v \in P_{\alpha,1}^\sqcup} \LSize(\tilde{t}, v) - \sum_{v \in N_{\alpha,1}^\sqcup} \USize(\tilde{t}, v) \\
+        & + \sum_{v \in P_{\alpha,2}^\sqcup} \min \braced{0,\LSize(\tilde{t}, v)} - \sum_{v \in N_{\alpha,2}^\sqcup} \max \braced{0,\USize(\tilde{t}, v)} ) \mid \tilde{t} \in \pre(t)}
+    \end{split}
+  \end{equation}
   Then, $\mathit{SizeBounds}(\UTime, \Size, \braced{\alpha}) = (\LSize', \USize')$ is also a size approximation.
 \end{theorem}

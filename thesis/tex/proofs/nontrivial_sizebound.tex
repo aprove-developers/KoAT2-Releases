@@ -44,30 +44,7 @@ Thus, the reduction has the form
 \[ \configuration{0} \valuateto{\tilde{r}} \configuration{\tilde{r}} \rightarrow_r \configuration{r}. \]
 for some transition $\tilde{r} \in \pre(r)$.
 
-For a valuation $\valuation$ we have by the definition of scaled sums
-  \[ \ULSB(\alpha)(\valuation) =
-    s^\sqcap_\alpha \cdot \left(
-        e^\sqcap_\alpha
-      + \sum_{v \in P_{\alpha,+}^\sqcap} \valuation(v)
-      - \sum_{v \in P_{\alpha,-}^\sqcap} \valuation(v)
-      + \sum_{v \in Q_{\alpha,+}^\sqcap} \max \braced{0,\valuation(v)}
-      - \sum_{v \in Q_{\alpha,-}^\sqcap} \min \braced{0,\valuation(v)}
-    \right). \]
-  \[ \LLSB(\alpha)(\valuation) =
-    s^\sqcup_\alpha \cdot \left(
-      e^\sqcup_\alpha
-    + \sum_{v \in P_{\alpha,+}^\sqcup} \valuation(v)
-    - \sum_{v \in P_{\alpha,-}^\sqcup} \valuation(v)
-    + \sum_{v \in Q_{\alpha,+}^\sqcup} \min \braced{0,\valuation(v)}
-    - \sum_{v \in Q_{\alpha,-}^\sqcup} \max \braced{0,\valuation(v)}
-  \right). \]
-
-\todo{Lower case}{Note that following sentence holds.}
-\begin{equation} \label{eq:maxmineq}
-  \sum_{v \in Q_{\alpha,+}^\sqcap} \max \braced{0,\valuation(v)} \geq \sum_{v \in P_{\alpha,+}^\sqcap} \valuation(v) \wedge - \sum_{v \in Q_{\alpha,-}^\sqcap} \min \braced{0,\valuation(v)} \geq - \sum_{v \in P_{\alpha,-}^\sqcap} \valuation(v).
-\end{equation}
-
-Also note that the value of a non active variable does not affect the value of a local sizebound.
+\todo{Maybe obsolete here}{Note that the value of a non active variable does not affect the value of a local sizebound.}
 \begin{equation} \label{eq:nonactiveequalzero}
   \forall v \notin \actV(\ULSB(\alpha)): \valuation(v) = 0
 \end{equation}
@@ -115,15 +92,15 @@ We can now propagate this to $\text{in}^\sqcap_{(r, w')}(m)$.
 
 \begin{IEEEeqnarray*}{rClr} \label{eq:input_rv_reduction}
   & & \text{in}^\sqcap_{(r, w')}(m) \\
-  & = & \sum_{v \in (P_{{(r, w')},+}^\sqcap \cup Q_{{(r, w')},+}^\sqcap) \setminus \VSet_{(r, w')}} \text{in}^\sqcap_{{(r, w')},v}(m)
-    + \sum_{v \in (P_{{(r, w')},-}^\sqcap \cup Q_{{(r, w')},-}^\sqcap)} \text{in}^\sqcup_{{(r, w')},v}(m) \\
-  & = & \sum_{v \in (P_{{(r, w')},+}^\sqcap \cup Q_{{(r, w')},+}^\sqcap) \setminus \VSet_{(r, w')}} \max (0, \USize(\tilde{r}, v')(m))
-    + \sum_{v \in (P_{{(r, w')},-}^\sqcap \cup Q_{{(r, w')},-}^\sqcap)} \max (0, -\LSize(\tilde{r}, v')(m)) \\
-  & \geq & \sum_{v \in (P_{{(r, w')},+}^\sqcap \cup Q_{{(r, w')},+}^\sqcap) \setminus \VSet_{(r, w')}} \max(0, \valuation_{\tilde{r}}(v))
-    + \sum_{v \in (P_{{(r, w')},-}^\sqcap \cup Q_{{(r, w')},-}^\sqcap)} \max(0, -\valuation_{\tilde{r}}(v)) \\
-  & \geq & \sum_{v \in (P_{{(r, w')},+}^\sqcap \cup Q_{{(r, w')},+}^\sqcap)} \max(0, \valuation_{\tilde{r}}(v))
+  & = & \sum_{v \in P_{(r, w')}^\sqcap \setminus \VSet_{(r, w')}} \text{in}^\sqcap_{{(r, w')},v}(m)
+    + \sum_{v \in N_{(r, w')}^\sqcap} \text{in}^\sqcup_{{(r, w')},v}(m) \\
+  & = & \sum_{v \in P_{(r, w')}^\sqcap \setminus \VSet_{(r, w')}} \max (0, \USize(\tilde{r}, v')(m))
+    + \sum_{v \in N_{(r, w')}^\sqcap} \max (0, -\LSize(\tilde{r}, v')(m)) \\
+  & \geq & \sum_{v \in P_{(r, w')}^\sqcap \setminus \VSet_{(r, w')}} \max(0, \valuation_{\tilde{r}}(v))
+    + \sum_{v \in N_{(r, w')}^\sqcap} \max(0, -\valuation_{\tilde{r}}(v)) \\
+  & \geq & \sum_{v \in P_{(r, w')}^\sqcap} \max(0, \valuation_{\tilde{r}}(v))
     - \sum_{v \in \VSet_{(r, w')}} \max(0, \valuation_{\tilde{r}}(v))
-    + \sum_{v \in (P_{{(r, w')},-}^\sqcap \cup Q_{{(r, w')},-}^\sqcap)} \max(0, -\valuation_{\tilde{r}}(v))
+    + \sum_{v \in N_{(r, w')}^\sqcap} \max(0, -\valuation_{\tilde{r}}(v))
 \end{IEEEeqnarray*}
 
 Thus, we have
@@ -148,11 +125,10 @@ Thus, we have
   & \geq & s^\square_{(r, w')} \cdot \left( \abs{\pre(r, w') \cap \SCC} \cdot {d^\square}' \pm e^{\square}_{(r, w')} + \text{in}^\square_{(r, w')}(m) \right) \\
   & \geq & s^\square_{(r, w')} \cdot \left( \sum_{v \in \VSet_{(r, w')}} {d^\square}' \pm e^{\square}_{(r, w')} + \text{in}^\square_{(r, w')}(m) \right) \\
   & \geq & s^\square_{(r, w')} \cdot \left( \sum_{v \in \VSet_{(r, w')}} \max(0,\pm \valuation_{\tilde{r}}(v)) \pm e^{\square}_{(r, w')} + \text{in}^\square_{(r, w')}(m) \right) & (\ref{eq:sizebound_hypothesis}) \\
-  & = & s^\square_{(r, w')} \cdot ( \pm e^{\square}_{(r, w')} + \sum_{v \in (P_{{(r, w')},+}^\sqcap \cup Q_{{(r, w')},+}^\sqcap)} \max(0, \valuation_{\tilde{r}}(v)) \\
-    && + \sum_{v \in (P_{{(r, w')},-}^\sqcap \cup Q_{{(r, w')},-}^\sqcap)} \max(0, -\valuation_{\tilde{r}}(v)) )
+  & = & s^\square_{(r, w')} \cdot \left( \pm e^{\square}_{(r, w')} + \sum_{v \in P_{(r, w')}^\sqcap} \max(0, \valuation_{\tilde{r}}(v)) + \sum_{v \in N_{(r, w')}^\sqcap} \max(0, -\valuation_{\tilde{r}}(v)) \right)
     & (\ref{eq:input_rv_reduction}) \\
-  & \geq & s^\square_{(r, w')} \cdot ( \pm e^\square_{(r, w')} + \sum_{v \in P_{(r, w'),+}^\sqcap} \valuation_{\tilde{r}}(v) - \sum_{v \in P_{(r, w'),-}^\sqcap} \valuation_{\tilde{r}}(v) \\
-    && + \sum_{v \in Q_{(r, w'),+}^\sqcap} \max \braced{0,\valuation_{\tilde{r}}(v)} - \sum_{v \in Q_{(r, w'),-}^\sqcap} \min \braced{0,\valuation_{\tilde{r}}(v)} ) & (\ref{eq:maxmineq}) \\
+  & \geq & s^\square_{(r, w')} \cdot ( \pm e^\square_{(r, w')} + \sum_{v \in P_{(r, w'),1}^\sqcap} \valuation_{\tilde{r}}(v) - \sum_{v \in N_{(r, w'),1}^\sqcap} \valuation_{\tilde{r}}(v) \\
+    && + \sum_{v \in P_{(r, w'),2}^\sqcap} \max \braced{0,\valuation_{\tilde{r}}(v)} - \sum_{v \in N_{(r, w'),2}^\sqcap} \min \braced{0,\valuation_{\tilde{r}}(v)} ) \\
   & = & \mathcal{S}^\square_l({(r, w')})(\valuation_{\tilde{r}}) \\
   & \geq & \valuation(w)
 \end{IEEEeqnarray*}}
