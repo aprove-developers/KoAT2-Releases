@@ -111,8 +111,7 @@ Thus, we have
   & = & \left( s^\square_r \cdot (s^\square_r)^{k_r - 1} \cdot \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} \right) \cdot \\
     && \left( e + \text{in}^\square_r(m) + \left( k_r - 1 \right) \cdot \text{in}^\square_r(m) + \sum_{t \in \TSet \setminus \braced{r}} \left( k_t \cdot \text{in}^\square_t(m) \right) \right)
     & (\ref{eq:scaling_factor_reduction}), (\ref{eq:input_reduction}) \\
-  & = & s^\square_r \cdot {d^\square}' + \left( s^\square_r \cdot (s^\square_r)^{k_r - 1} \cdot \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} \cdot \text{in}^\square_r(m) \right) & (\ref{eq:induction_consequence}) \\
-  & = & s^\square_r \cdot \left( {d^\square}' + (s^\square_r)^{k_r - 1} \cdot \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} \cdot \text{in}^\square_r(m) \right) \\
+  & = & s^\square_r \cdot \left( {d^\square}' + (s^\square_r)^{k_r - 1} \cdot \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} \cdot \text{in}^\square_r(m) \right) & (\ref{eq:induction_consequence}) \\
   & \geq & s^\square_r \cdot \left( {d^\square}' + \text{in}^\square_r(m) \right) & \text{since } \text{in}^\square_r(m) \geq 0 \\
   & \geq & s^\square_r \cdot \left( {d^\square}' + \max \braced{\max(0, \pm e^{\square}_\alpha) + \text{in}^\square_\alpha(m) \mid \alpha \in \SCC_r } \right) & \text{by definition} \\
   & \geq & s^\square_r \cdot \left( {d^\square}' + \max(0, \pm e^{\square}_{(r, w')}) + \text{in}^\square_{(r, w')}(m) \right) & \text{with any } (r, w') \in \SCC_r \\
