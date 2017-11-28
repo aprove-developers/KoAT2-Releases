@@ -52,6 +52,10 @@ for some transition $\tilde{r} \in \pre(r)$.
 We have to estimate the sizes of the input variables,
 that is, we have to find a bound on the size of each $v \in \VSet$ after the application of the transition $\tilde{r}$ that precedes $r$.
 
+If $(\tilde{r}, v') \notin \SCC$, then $\valuation_0 \leq m$ implies that $\USize(\tilde{r}, v')(m) \geq \valuation_{\tilde{r}}(w) \geq \LSize(\tilde{r}, w')(m)$.
+As $(\tilde{r}, v') \in \pre(r, w') \setminus \SCC$, we have $e \geq \USize(\tilde{r}, v')(m)$ and $e \geq 0$ which implies that $d^\sqcap \geq e \geq \USize(\tilde{r}, v')(m) \geq \valuation_{\tilde{r}}(w)$.
+We also have $e \geq -\LSize(\tilde{r}, v')(m)$ and $e \geq 0$ which implies that $d^\sqcup \geq e \geq -\LSize(\tilde{r}, v')(m) \geq -\valuation_{\tilde{r}}(w)$.
+
 If $(\tilde{r}, v') \in \SCC$, then the induction hypothesis (\ref{eq:sizebound_target}) implies that $d^\sqcap(m) \geq \max(0, \valuation_{\tilde{r}}(v))$ and $-d^\sqcup(m) \leq \min(0, \valuation_{\tilde{r}}(v))$ also hold for the reduction from $\configuration{0}$ to $\configuration{\tilde{r}}$.
 Let
 \begin{equation} \label{eq:induction_consequence}
