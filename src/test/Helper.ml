@@ -38,11 +38,8 @@ let assert_equal_atom =
 let assert_equal_constr =     
   assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string
 
-let assert_equal_template_bound_option =
-  assert_equal ~cmp:(Option.eq ~eq:LocalSizeBound.equal) ~printer:(Util.option_to_string (Bound.to_string % LocalSizeBound.as_bound % Option.some))
-
-let assert_equal_classified_bound =
-  assert_equal ~cmp:LocalSizeBound.equal ~printer:LocalSizeBound.to_string
+let assert_equal_lsb =
+  assert_equal ~cmp:LocalSizeBound.equal ~printer:(Bound.to_string % LocalSizeBound.as_bound)
 
 let assert_equal_formula =
   assert_equal

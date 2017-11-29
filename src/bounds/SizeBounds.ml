@@ -24,7 +24,7 @@ let incoming_bound kind program get_sizebound local_sizebound t =
 
 let compute_trivial_bound kind program get_sizebound (t,v) =
   let execute () =
-    let (lsb: Bound.t) = LocalSizeBound.(as_bound (sizebound_local kind (Transition.label t) v)) in
+    let (lsb: Bound.t) = LocalSizeBound.(sizebound_local kind (Transition.label t) v |> Option.map as_bound |? default kind) in
     if Program.is_initial program t then
       lsb
     else incoming_bound kind program get_sizebound lsb t
@@ -40,7 +40,7 @@ let extreme_scaling_factor kind ct =
     |> List.enum
     |> Enum.map (LocalSizeBound.sizebound_local_rv kind)
     |> Enum.map Option.get (* Should exist *)
-    |> Enum.map LocalSizeBound.abs_factor
+    |> Enum.map LocalSizeBound.factor
     |> Util.max_option (>)
     |? 1
   in Logger.with_log logger Logger.DEBUG

@@ -24,5 +24,5 @@ let run (params: params) =
   let open TransitionLabel in
   let guard = Readers.read_formula params.guard in
   let var = Var.of_string params.var in
-  print_string (Bound.to_string LocalSizeBound.(as_bound (find_bound params.kind var guard)))
+  print_string (Bound.to_string LocalSizeBound.(find_bound params.kind var guard |> Option.map as_bound |? default params.kind))
 

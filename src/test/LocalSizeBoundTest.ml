@@ -13,46 +13,96 @@ let tests =
              "as_bound-Test" >::
                (fun _ -> assert_true (is_bounded_with (Var.of_string "x") (Readers.read_formula formula) template_bound)))
                   [
-                    ("x = 5", mk 1 5 [] []);
-                    ("x = y", mk 1 0 ["y"] []);
+                    ("x = 5", mk ~c:5 `Upper);
+                    ("x = y", mk ~pos_pure:["y"] `Upper);
                   ]
       );
 
-      ("find_bound" >:::
+      ("find upper bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
                (fun _ -> find_bound `Upper (Var.of_string "x") (Readers.read_formula guard)
-                         |> Option.map (fun bound -> fun () -> assert_equal_classified_bound expected bound)
+                         |> Option.map (fun bound () -> assert_equal_lsb expected bound)
                          |? (fun () -> assert_failure "No bound")
                          |> fun f -> f () ))
                   [
                     (* Bounded by constants *)
-                    (mk 1 0 [] [], "x <= 0");
-                    (mk 1 5 [] [], "x <= 5");
-                    (mk 1 (-5) [] [], "x <= -5");
-                    (mk 1 (-3) [] [], "x <= 7 - 10");
-                    (mk 1 7 [] [], "x <= 7 + y - y");
-                    (mk 1 10 [] [], "x <= y && y <= 10");
-                    (mk 1 15 [] [], "x <= y + 7 && y <= 8");
-                    (mk 1 10 [] [], "x <= y && x <= 10");
+                    (mk `Upper, "x <= 0");
+                    (mk ~c:5 `Upper, "x <= 5");
+                    (mk ~c:(-5) `Upper, "x <= -5");
+                    (mk ~c:(-3) `Upper, "x <= 7 - 10");
+                    (mk ~c:7 `Upper, "x <= 7 + y - y");
+                    (mk ~c:10 `Upper, "x <= y && y <= 10");
+                    (mk ~c:15 `Upper, "x <= y + 7 && y <= 8");
+                    (mk ~c:10 `Upper, "x <= y && x <= 10");
                     (* Bounded by variable *)
-                    (mk 1 0 [] ["y"], "x <= y");
-                    (mk 1 0 [] ["y"], "x <= y && x >= y");
-                    (mk 1 0 [] ["y"], "x <= y && x > 5");
+                    (mk ~pos_pure:["y"] `Upper, "x <= y");
+                    (mk ~pos_pure:["y"] `Upper, "x <= y && x >= y");
+                    (mk ~pos_pure:["y"] `Upper, "x <= y && x > 5");
                     (* TODO Better heuristic for optimize vars: (AddsConstant 0 ["y"] "x <= y && y <= z"); *)
-                    (mk 1 0 [] ["z"], "x <= z && y <= z");
+                    (mk ~pos_pure:["z"] `Upper, "x <= z && y <= z");
                     (* Bounded by constant plus variable *)
-                    (mk 1 5 [] ["y"], "x <= y + 5");
-                    (mk 1 (-5) [] ["y"], "x <= y - 5");
-                    (mk 1 2 [] ["y"], "x <= y + z - 5 && z <= 7");
-                    (* With factor *)
-                    (mk 2 0 [] ["y"], "x <= 2*y");
-                    (mk 2 0 [] ["y"; "z"], "x <= 2*y + 2*z");
-                    (mk 3 0 ["y"] ["z"], "x <= 2*y + 3*z");
-                    (mk 3 0 ["y"; "z"] [], "x <= 2*y + (-3)*z");
-                    (mk 2 0 [] ["y"], "x <= 2*y + (-3)*z && z >= 0");
-                    (mk 3 0 ["z"] [], "x <= 2*y + (-3)*z && y <= 0");
+                    (mk ~c:5 ~pos_pure:["y"] `Upper, "x <= y + 5");
+                    (mk ~c:(-5) ~pos_pure:["y"] `Upper, "x <= y - 5");
+                    (mk ~c:2 ~pos_pure:["y"] `Upper, "x <= y + z - 5 && z <= 7");
+                    (* With factor and positive coefficients *)
+                    (mk ~s:2 ~pos_pure:["y"] `Upper, "x <= 2*y");
+                    (mk ~s:2 ~pos_pure:["y"; "z"] `Upper, "x <= 2*y + 2*z");
+                    (mk ~s:3 ~pos_abs:["y"] ~pos_pure:["z"] `Upper, "x <= 2*y + 3*z");
+                    (* With factor and negative coefficients *)
+                    (mk ~s:2 ~neg_pure:["y"] `Upper, "x <= (-2)*y");
+                    (mk ~s:2 ~neg_pure:["y"; "z"] `Upper, "x <= (-2)*y + (-2)*z");
+                    (mk ~s:3 ~neg_abs:["y"] ~neg_pure:["z"] `Upper, "x <= (-2)*y + (-3)*z");
+                    (* With factor and mixed coefficients *)
+                    (mk ~s:3 ~pos_abs:["y"] ~neg_pure:["z"] `Upper, "x <= 2*y + (-3)*z");
+                    (mk ~s:2 ~pos_pure:["y"] `Upper, "x <= 2*y + (-3)*z && z >= 0");
+                    (mk ~s:3 ~neg_pure:["z"] `Upper, "x <= 2*y + (-3)*z && y <= 0");
+                    (mk ~s:2 ~neg_pure:["y"] `Upper, "x <= (-2)*y + (-3)*z && z >= 0");
+                    (mk ~s:3 ~pos_pure:["z"] `Upper, "x <= 2*y + 3*z && y <= 0");
                   ]
       );
 
+      ("find lower bound" >:::
+         List.map (fun (expected, guard) ->
+             "bound for x with " ^ guard >::
+               (fun _ -> find_bound `Lower (Var.of_string "x") (Readers.read_formula guard)
+                         |> Option.map (fun bound () -> assert_equal_lsb expected bound)
+                         |? (fun () -> assert_failure "No bound")
+                         |> fun f -> f () ))
+                  [
+                    (* Bounded by constants *)
+                    (mk `Lower, "x >= 0");
+                    (mk ~c:5 `Lower, "x >= 5");
+                    (mk ~c:(-5) `Lower, "x >= -5");
+                    (mk ~c:(-3) `Lower, "x >= 7 - 10");
+                    (mk ~c:7 `Lower, "x >= 7 + y - y");
+                    (mk ~c:10 `Lower, "x >= y && y >= 10");
+                    (mk ~c:15 `Lower, "x >= y + 7 && y >= 8");
+                    (mk ~c:10 `Lower, "x >= y && x >= 10");
+                    (* Bounded by variable *)
+                    (mk ~pos_pure:["y"] `Lower, "x >= y");
+                    (mk ~pos_pure:["y"] `Lower, "x >= y && x >= y");
+                    (mk ~pos_pure:["y"] `Lower, "x >= y && x < 5");
+                    (* TODO Better heuristic for optimize vars: (AddsConstant 0 ["y"] "x >= y && y >= z"); *)
+                    (mk ~pos_pure:["z"] `Lower, "x >= z && y >= z");
+                    (* Bounded by constant plus variable *)
+                    (mk ~c:5 ~pos_pure:["y"] `Lower, "x >= y + 5");
+                    (mk ~c:(-5) ~pos_pure:["y"] `Lower, "x >= y - 5");
+                    (mk ~c:2 ~pos_pure:["y"] `Lower, "x >= y + z - 5 && z >= 7");
+                    (* With factor and positive coefficients *)
+                    (mk ~s:2 ~pos_pure:["y"] `Lower, "x >= 2*y");
+                    (mk ~s:2 ~pos_pure:["y"; "z"] `Lower, "x >= 2*y + 2*z");
+                    (mk ~s:3 ~pos_abs:["y"] ~pos_pure:["z"] `Lower, "x >= 2*y + 3*z");
+                    (* With factor and negative coefficients *)
+                    (mk ~s:2 ~neg_pure:["y"] `Lower, "x >= (-2)*y");
+                    (mk ~s:2 ~neg_pure:["y"; "z"] `Lower, "x >= (-2)*y + (-2)*z");
+                    (mk ~s:3 ~neg_abs:["y"] ~neg_pure:["z"] `Lower, "x >= (-2)*y + (-3)*z");
+                    (* With factor and mixed coefficients *)
+                    (mk ~s:3 ~pos_abs:["y"] ~neg_pure:["z"] `Lower, "x >= 2*y + (-3)*z");
+                    (mk ~s:2 ~pos_pure:["y"] `Lower, "x >= 2*y + (-3)*z && z <= 0");
+                    (mk ~s:3 ~neg_pure:["z"] ~pos_pure:["y"] `Lower, "x >= 2*y + (-3)*z && y <= 0");
+                    (mk ~s:2 ~neg_pure:["y"] `Lower, "x >= (-2)*y + (-3)*z && z <= 0");
+                    (mk ~s:3 ~pos_pure:["y"; "z"] `Lower, "x >= 2*y + 3*z && y <= 0");
+                  ]
+      );
     ]

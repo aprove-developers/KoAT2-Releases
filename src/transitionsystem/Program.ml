@@ -78,9 +78,9 @@ module Types =
           "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
         let to_string ((l,t,l'),v) =
-          Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Upper t v))) ^ " >= " ^
+          Bound.to_string (LocalSizeBound.(sizebound_local `Upper t v |> Option.map as_bound |? default `Upper)) ^ " >= " ^
             to_id_string ((l,t,l'),v) ^ " >= " ^
-              Bound.to_string (LocalSizeBound.(as_bound (sizebound_local `Lower t v)))
+              Bound.to_string (LocalSizeBound.(sizebound_local `Lower t v |> Option.map as_bound |? default `Lower))
       end
     module RVG =
       struct
@@ -192,10 +192,10 @@ let rvg program =
   let add_transition (post_transition: Transition.t) (rvg: RVG.t): RVG.t =
     let rvg_with_vertices: RVG.t = add_vertices_to_rvg (List.map (fun var -> (post_transition,var)) program.vars) rvg in
     let pre_nodes (post_transition: Transition.t) (post_var: Var.t) =
-      LocalSizeBound.sizebound_local `Upper (Transition.label post_transition) post_var
-      |> LocalSizeBound.as_bound
-      |> Bound.vars
-      |> VarSet.enum
+      (* Overapproximation of pre(alpha). We use all program variables here *)
+      (* TODO We can try to find a better approximation, however, it is not valid to use the variables of the local sizebounds. *)
+      program.vars
+      |> List.enum
       |> Enum.cartesian_product (pre program post_transition)
       |> Enum.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
     in

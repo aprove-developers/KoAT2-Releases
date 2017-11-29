@@ -1,8 +1,7 @@
 open Batteries
+open Formulas
 open Program.Types
    
-type formula = Formulas.Formula.t
-
 (* Concept:
    Incoming part:
    For UPPER bounds the MAXIMUM of all incoming variables leading to the SCC or a constant bound anywhere in the SCC.
@@ -26,40 +25,48 @@ type formula = Formulas.Formula.t
 type t
 
 (** Creates a templated bound from the template and a string list which represents the variable set. *)
-val mk : int -> int -> string list -> string list -> t
+val mk : ?s:int -> ?c:int -> ?pos_abs:(string list) -> ?pos_pure:(string list) -> ?neg_abs:(string list) -> ?neg_pure:(string list) -> [`Lower | `Upper] -> t
 
 (** Returns if the templated bounds represent the same bound. *)
 val equal : t -> t -> bool
 
-(** Returns the negation of the templated bound. *)
-val neg : t -> t
-
 (** Returns the factor of the local sizebound. *)
 val factor : t -> int
 
-(** Returns the absolute value of the factor. *)
-val abs_factor : t -> int
-
+(** Returns the constant of the local sizebound. *)
+val constant : t -> int
+  
 (** Returns a set of of variables which affect the local sizebound *)
 val vars : t -> VarSet.t
 
-(** Returns the constant of the local sizebound. *)
-val constant : t -> int
+(** Returns a set of all variables which monotonical increasingly affect the local sizebound *)
+(** Those are variables with a positive coefficient. *)
+val pos_vars: t -> VarSet.t
+
+(** Returns a set of all variables which monotonical decreasingly affect the local sizebound *)
+(** Those are variables with a negative coefficient. *)
+val neg_vars: t -> VarSet.t
+
+val pure_vars : t -> VarSet.t
+
+val abs_vars : t -> VarSet.t
   
 (** Converts the templated bound to a string. *)
 val to_string : t -> string
 
 (** Converts the templated bound to an actual bound. *)
-val as_bound : t Option.t -> Bound.t 
+val as_bound : t -> Bound.t 
 
+val default : [`Lower | `Upper] -> Bound.t
+  
 (** Returns a formula which expresses that the variable is smaller or equal to the bound, e.g. x <= b. *)
-val as_formula : Var.t -> t -> formula 
+val as_formula : Var.t -> t -> Formula.t
 
 (** Checks if the variable is bounded with the templated bound in the formula. *)
-val is_bounded_with : Var.t -> formula -> t -> bool
+val is_bounded_with : Var.t -> Formula.t -> t -> bool
 
 (** Tries to find a templated bound of any of the defined templates. *)
-val find_bound : [`Lower | `Upper] -> Var.t -> formula -> t Option.t
+val find_bound : [`Lower | `Upper] -> Var.t -> Formula.t -> t Option.t
 
 (** Returns a local sizebound of the specified kind for the variable of the transition. 
     A local sizebound is expressed in relation to the values directly before executing the transition. *)

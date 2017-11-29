@@ -46,7 +46,7 @@ let suite =
                        let (l,t,l') = TransitionGraph.find_edge (Program.graph program) (Location.of_string l) (Location.of_string l') in
                        TransitionLabel.(assert_equal_bound
                                                   (Bound.of_poly (Readers.read_polynomial bound))
-                                                  LocalSizeBound.(as_bound (sizebound_local `Upper t (Var.of_string var)))
+                                                  LocalSizeBound.(sizebound_local `Upper t (Var.of_string var) |> Option.map as_bound |? default `Upper)
                        )
                      )
              )
