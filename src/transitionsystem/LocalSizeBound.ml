@@ -45,37 +45,44 @@ let abs_vars { vars; _ } =
 let vars lsb =
   VarSet.union (pos_vars lsb) (neg_vars lsb)
 
-let vars_to_bounds vars =
-  vars
-  |> VarSet.enum
-  |> Enum.map Bound.of_var  
+let sign = function
+  | _, `Pos, _ -> identity
+  | _, `Neg, _ -> Bound.neg
 
 let absifier = function
-  | (`Upper, `Pos) -> Bound.(max zero)
-  | (`Upper, `Neg) -> Bound.(min zero)
-  | (`Lower, `Pos) -> Bound.(min zero)
-  | (`Lower, `Neg) -> Bound.(max zero)
+  | _, _, `Pure -> identity
+  | `Upper, `Pos, `Abs -> Bound.(max zero)
+  | `Upper, `Neg, `Abs -> Bound.(min zero)
+  | `Lower, `Pos, `Abs -> Bound.(min zero)
+  | `Lower, `Neg, `Abs -> Bound.(max zero)
 
-let absify kind vars sign =
-  vars (sign, `Abs)
-  |> vars_to_bounds
-  |> Enum.map (absifier (kind, sign))
-
-let as_bound lsb =
-  let variables = function
-    | (sign, `Pure) -> vars_to_bounds (lsb.vars (sign, `Pure))
-    | (sign, `Abs) -> absify lsb.kind lsb.vars sign
+let pre_kind = function
+  | `Upper, `Pos, _ -> `Upper
+  | `Upper, `Neg, _ -> `Lower
+  | `Lower, `Pos, _ -> `Lower
+  | `Lower, `Neg, _ -> `Upper
+  
+let sum_vars substitution (vars: VarSet.t) setup: Bound.t =
+  vars
+  |> VarSet.enum
+  |> Enum.map Bound.of_var
+  |> Enum.map (absifier setup)
+  |> Enum.map (sign setup)
+  |> Bound.sum
+  |> Bound.substitute_f (substitution (pre_kind setup))
+  
+let as_substituted_bound substitution lsb =
+  let variables =
+    List.cartesian_product [`Pos; `Neg] [`Pure; `Abs]
+    |> List.map (fun (sign, purifier) -> sum_vars substitution (lsb.vars (sign, purifier)) (lsb.kind, sign, purifier))
+    |> List.enum
+    |> Bound.sum
   in
-  Bound.(of_int lsb.factor *
-           (
-             of_int lsb.constant
-             + sum (variables (`Pos, `Pure))
-             - sum (variables (`Neg, `Pure))
-             + sum (variables (`Pos, `Abs))
-             - sum (variables (`Neg, `Abs))
-           )
-  )
+  Bound.(of_int lsb.factor * (of_int lsb.constant + variables))
 
+let as_bound =
+  as_substituted_bound (fun _ -> Bound.of_var)
+  
 let default = function
   | `Lower -> Bound.minus_infinity
   | `Upper -> Bound.infinity

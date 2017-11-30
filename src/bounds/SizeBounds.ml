@@ -7,9 +7,9 @@ let logger = Logging.(get Size)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
            
-let incoming_bound kind program get_sizebound local_sizebound t =
+let incoming_bound kind program get_sizebound lsb t =
   let execute () =
-    let substitute_with_prevalues t' = Bound.substitute_f (get_sizebound kind t') local_sizebound in
+    let substitute_with_prevalues t' = LocalSizeBound.as_substituted_bound (fun kind v -> get_sizebound kind t' v) lsb in
     t
     |> Program.pre program
     |> Enum.map substitute_with_prevalues
@@ -17,16 +17,19 @@ let incoming_bound kind program get_sizebound local_sizebound t =
         | `Lower -> Bound.minimum
         | `Upper -> Bound.maximum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute highest incoming bound", ["lsb", Bound.to_string local_sizebound;
+                     (fun () -> "compute highest incoming bound", ["lsb", (Bound.to_string % LocalSizeBound.as_bound) lsb;
                                                                    "transition", Transition.to_id_string t])
                   ~result:Bound.to_string
                   execute
 
 let compute_trivial_bound kind program get_sizebound (t,v) =
   let execute () =
-    let (lsb: Bound.t) = LocalSizeBound.(sizebound_local kind (Transition.label t) v |> Option.map as_bound |? default kind) in
+    let (lsb: LocalSizeBound.t) =
+      LocalSizeBound.sizebound_local kind (Transition.label t) v
+      |> Option.get
+    in
     if Program.is_initial program t then
-      lsb
+      LocalSizeBound.as_bound lsb
     else incoming_bound kind program get_sizebound lsb t
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute trivial bound", ["kind", show_kind kind;

@@ -26,7 +26,7 @@ val compute_nontrivial_bound : kind -> Program.t -> RVG.t -> (Transition.t -> Bo
 (** Returns the maximum of all incoming sizebounds applicated to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
-val incoming_bound : kind -> Program.t -> (kind -> Transition.t -> Var.t -> Bound.t) -> Bound.t -> Transition.t -> Bound.t
+val incoming_bound : kind -> Program.t -> (kind -> Transition.t -> Var.t -> Bound.t) -> LocalSizeBound.t -> Transition.t -> Bound.t
 
 (** Computes for each transition max(s_alpha for all alpha in C_t) and multiplies the results. *)
 val extreme_scaling_factor : kind -> RV.t list -> int
