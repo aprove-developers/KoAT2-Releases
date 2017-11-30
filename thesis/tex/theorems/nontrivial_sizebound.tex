@@ -30,15 +30,15 @@
   \[ s^\square_t = \maximum{s^\square_{\alpha} \mid \alpha \in \SCC_t} \cdot \maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_t}. \]
 
   Also for $\square \in \braced{\sqcup, \sqcap}$ we define the biggest/smallest incoming value of a variable $v \in \VSet$.
-  \[ \text{in}^\sqcap_{\alpha,v} = \max \left( 0, \max \braced{\mathcal{S}^\sqcap(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \right) \]
-  \[ \text{in}^\sqcup_{\alpha,v} = \max \left( 0, \max \braced{-\mathcal{S}^\sqcup(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C} \right) \]
+  \[ \text{in}^\sqcap_{\alpha,v} = \maxO {\max \braced{\mathcal{S}^\sqcap(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C}} \]
+  \[ \text{in}^\sqcup_{\alpha,v} = \maxO {\max \braced{-\mathcal{S}^\sqcup(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C}} \]
 
   Furthermore we define for $\square \in \braced{\sqcup, \sqcap}$ the biggest/smallest incoming value of a result variable $\alpha \in \RV$.
   \[ \text{in}^\sqcap_\alpha = \sum_{v \in P_\alpha^\sqcap \setminus \VSet_\alpha} \text{in}^\sqcap_{\alpha,v} + \sum_{v \in N_\alpha^\sqcap \setminus \VSet_\alpha} \text{in}^\sqcup_{\alpha,v} \]
   \[ \text{in}^\sqcup_\alpha = \sum_{v \in P_\alpha^\sqcup \setminus \VSet_\alpha} \text{in}^\sqcup_{\alpha,v} + \sum_{v \in N_\alpha^\sqcup \setminus \VSet_\alpha} \text{in}^\sqcap_{\alpha,v} \]
   
-  \[ \text{in}^\sqcap_t = \max \braced{\max(0, e^{\sqcap}_\alpha) + \text{in}^\sqcap_\alpha \mid \alpha \in \SCC_t }. \]
-  \[ \text{in}^\sqcup_t = \max \braced{\max(0, -e^{\sqcup}_\alpha) + \text{in}^\sqcup_\alpha \mid \alpha \in \SCC_t }. \]
+  \[ \text{in}^\sqcap_t = \max \braced{\maxO{e^{\sqcap}_\alpha} + \text{in}^\sqcap_\alpha \mid \alpha \in \SCC_t }. \]
+  \[ \text{in}^\sqcup_t = \max \braced{\maxO{-e^{\sqcup}_\alpha} + \text{in}^\sqcup_\alpha \mid \alpha \in \SCC_t }. \]
 
   With these definitions we define $(\LSize', \USize')$ for all other $\beta \in \SCC$ and $\square \in \braced{\sqcup, \sqcap}$.
   \[ {\mathcal{S}^\sqcap}'(\beta) =

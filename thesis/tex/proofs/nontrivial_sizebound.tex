@@ -16,11 +16,11 @@ To simplify the remaining proof, we define the following values:
 Then we prove the following claims.
 \begin{equation} \label{eq:sizebound_hypothesis}
   \begin{split}
-    d^\sqcap(m) & \geq \max(0, \hat{\valuation}(v)) \\
-    d^\sqcup(m) & \geq \max(0, -\hat{\valuation}(v))
+    d^\sqcap(m) & \geq \maxO{\hat{\valuation}(v)} \\
+    d^\sqcup(m) & \geq \maxO{-\hat{\valuation}(v)}
   \end{split}
 \end{equation}
-Note that the theorem follows from the claim, as $\UTime(t)(m) \geq k_t$ holds by definition of $k_t$ and $\max(0, \hat{\valuation}(v))$ is always greater or equal than $\hat{\valuation}(v)$ as well as $\max(0, -\hat{\valuation}(v))$ is always greater or equal than $-\hat{\valuation}(v)$.
+Note that the theorem follows from the claim, as $\UTime(t)(m) \geq k_t$ holds by definition of $k_t$ and $\maxO{\hat{\valuation}(v)}$ is always greater or equal than $\hat{\valuation}(v)$ as well as $\maxO{-\hat{\valuation}(v)}$ is always greater or equal than $-\hat{\valuation}(v)$.
 Also note that by the definition of the local sizebounds $s^\square_t \geq 1$ holds for $\square \in \braced{\sqcup, \sqcap}$.
 Therefore for all $p^+_t \geq 0$ and $p^-_t \leq 0$ it holds that
 \[ \prod_{t \in \TSet} (s^\sqcap_t)^{\UTime(t)} \cdot \left( e + \sum_{t \in \TSet} \left( \UTime(t)(m) \cdot p^+_t \right) \right) \geq \prod_{t \in \TSet} (s^\square_t)^{k_t} \cdot \left( e + \sum_{t \in \TSet} \left( k_t \cdot p^+_t \right) \right) \]
@@ -56,13 +56,13 @@ If $(\tilde{t}, v) \notin \SCC$, then $\valuation_0 \leq m$ implies that $\USize
 As $(\tilde{t}, v) \in \pre(\hat{t}, v) \setminus \SCC$, we have $e \geq \USize(\tilde{t}, v)(m)$ and $e \geq 0$ which implies that $d^\sqcap \geq e \geq \USize(\tilde{t}, v)(m) \geq \tilde{\valuation}(v)$.
 We also have $e \geq -\LSize(\tilde{t}, v)(m)$ and $e \geq 0$ which implies that $d^\sqcup \geq e \geq -\LSize(\tilde{t}, v)(m) \geq -\tilde{\valuation}(v)$.
 
-If $(\tilde{t}, v) \in \SCC$, then the induction hypothesis (\ref{eq:sizebound_target}) implies that $d^\sqcap(m) \geq \max(0, \tilde{\valuation}(v))$ and $d^\sqcup(m) \geq \max(0, -\tilde{\valuation}(v))$ also hold for the reduction from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
+If $(\tilde{t}, v) \in \SCC$, then the induction hypothesis (\ref{eq:sizebound_target}) implies that $d^\sqcap(m) \geq \maxO{\tilde{\valuation}(v)}$ and $d^\sqcup(m) \geq \maxO{-\tilde{\valuation}(v)}$ also hold for the reduction from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
 Let
 \begin{equation} \label{eq:induction_consequence}
   {d^\square}'(m) = (s^\square_{\hat{t}})^{k_{\hat{t}} - 1} \cdot \prod_{t \in \TSet \setminus \braced{\hat{t}}} (s^\square_t)^{k_t} \cdot \left( e + \left( k_{\hat{t}} - 1 \right) \cdot \text{in}^\square_{\hat{t}}(m) + \sum_{t \in \TSet \setminus \braced{\hat{t}}} \left( k_t \cdot \text{in}^\square_t(m) \right) \right)
 \end{equation}
 The reason for using $k_{\hat{t}} - 1$ in ${d^\square}'(m)$ is that the last application of the transition $\hat{t}$ in the evaluation is missing in the evaluation from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
-Then, the induction hypothesis (\ref{eq:sizebound_target}) implies that ${d^\sqcap}'(m) \geq \max(0, \tilde{\valuation}(v))$ and ${d^\sqcup}'(m) \geq \max(0, -\tilde{\valuation}(v))$.
+Then, the induction hypothesis (\ref{eq:sizebound_target}) implies that ${d^\sqcap}'(m) \geq \maxO{\tilde{\valuation}(v)}$ and ${d^\sqcup}'(m) \geq \maxO{-\tilde{\valuation}(v)}$.
 
 We now combine these bounds to prove that the induction hypothesis (\ref{eq:sizebound_target}) indeed holds.
 
@@ -85,8 +85,8 @@ For $v \in \VSet \setminus \VSet_{\hat{\alpha}}$, we have $(\tilde{t}, v) \notin
 For such $v$, we can deduce the following:
 \begin{equation} \label{eq:input_rv_var_reduction}
   \begin{split}
-    \text{in}^\sqcap_{\hat{\alpha},v}(m) \geq \max (0, \USize(\tilde{t}, v)(m)) \geq \max (0, \tilde{\valuation}(v)) \\
-    \text{in}^\sqcup_{\hat{\alpha},v}(m) \geq \max (0, -\LSize(\tilde{t}, v)(m)) \geq \max (0, -\tilde{\valuation}(v))
+    \text{in}^\sqcap_{\hat{\alpha},v}(m) \geq \maxO{\USize(\tilde{t}, v)(m)} \geq \maxO{\tilde{\valuation}(v)} \\
+    \text{in}^\sqcup_{\hat{\alpha},v}(m) \geq \maxO{-\LSize(\tilde{t}, v)(m)} \geq \maxO{-\tilde{\valuation}(v)}
   \end{split}
 \end{equation}
 
@@ -98,13 +98,13 @@ We can now propagate this to $\text{in}^\sqcap_{\hat{\alpha}}(m)$.
   & & \text{in}^\sqcap_{\hat{\alpha}}(m) \\
   & = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \text{in}^\sqcap_{{\hat{\alpha}},v}(m)
     + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \text{in}^\sqcup_{{\hat{\alpha}},v}(m) \\
-  & = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \max (0, \USize(\tilde{t}, v)(m))
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \max (0, -\LSize(\tilde{t}, v)(m)) \\
-  & \geq & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \max(0, \tilde{\valuation}(v))
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \max(0, -\tilde{\valuation}(v)) \\
-  & \geq & \sum_{v \in P_{\hat{\alpha}}^\sqcap} \max(0, \tilde{\valuation}(v))
-    - \sum_{v \in \VSet_{\hat{\alpha}}} \max(0, \tilde{\valuation}(v))
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \max(0, -\tilde{\valuation}(v))
+  & = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{\USize(\tilde{t}, v)(m)}
+    + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \maxO{-\LSize(\tilde{t}, v)(m)} \\
+  & \geq & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)}
+    + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \maxO{-\tilde{\valuation}(v)} \\
+  & \geq & \sum_{v \in P_{\hat{\alpha}}^\sqcap} \maxO{\tilde{\valuation}(v)}
+    - \sum_{v \in \VSet_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)}
+    + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \maxO{-\tilde{\valuation}(v)}
 \end{IEEEeqnarray*}
 
 Thus, we have
@@ -117,21 +117,21 @@ Thus, we have
     & (\ref{eq:scaling_factor_reduction}), (\ref{eq:input_reduction}) \\
   & = & s^\square_{\hat{t}} \cdot \left( {d^\square}' + \left( (s^\square_{\hat{t}})^{k_{\hat{t}} - 1} \cdot \prod_{t \in \TSet \setminus \braced{\hat{t}}} (s^\square_t)^{k_t} \right) \cdot \text{in}^\square_{\hat{t}}(m) \right) & (\ref{eq:induction_consequence}) \\
   & \geq & s^\square_{\hat{t}} \cdot \left( {d^\square}' + \text{in}^\square_{\hat{t}}(m) \right) & \text{since } \text{in}^\square_{\hat{t}}(m) \geq 0 \\
-  & \geq & s^\square_{\hat{t}} \cdot \left( {d^\square}' + \max \braced{\max(0, \pm e^{\square}_\alpha) + \text{in}^\square_\alpha(m) \mid \alpha \in \SCC_{\hat{t}} } \right) & \text{by definition} \\
-  & \geq & s^\square_{\hat{t}} \cdot \left( {d^\square}' + \max(0, \pm e^{\square}_{\hat{\alpha}}) + \text{in}^\square_{\hat{\alpha}}(m) \right) & \text{since } {\hat{\alpha}} \in \SCC_{\hat{t}} \\
+  & \geq & s^\square_{\hat{t}} \cdot \left( {d^\square}' + \max \braced{\maxO{\pm e^{\square}_\alpha} + \text{in}^\square_\alpha(m) \mid \alpha \in \SCC_{\hat{t}} } \right) & \text{by definition} \\
+  & \geq & s^\square_{\hat{t}} \cdot \left( {d^\square}' + \maxO{\pm e^{\square}_{\hat{\alpha}}} + \text{in}^\square_{\hat{\alpha}}(m) \right) & \text{since } {\hat{\alpha}} \in \SCC_{\hat{t}} \\
   & = & \maximum{s^\square_{\alpha} \mid \alpha \in \SCC_{\hat{t}}} \cdot \\
     && \maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_{\hat{t}}} \cdot \\
-    && \left( {d^\square}' + \max(0, \pm e^{\square}_{\hat{\alpha}}) + \text{in}^\square_{\hat{\alpha}}(m) \right) & \text{substitute } s^\square_{\hat{t}} \\
-  & \geq & s^\square_{\hat{\alpha}} \cdot \abs{\pre(\hat{\alpha}) \cap \SCC} \cdot \left( {d^\square}' + \max(0, \pm e^\square_{\hat{\alpha}}) + \text{in}^\square_{\hat{\alpha}}(m) \right)
+    && \left( {d^\square}' + \maxO{\pm e^{\square}_{\hat{\alpha}}} + \text{in}^\square_{\hat{\alpha}}(m) \right) & \text{substitute } s^\square_{\hat{t}} \\
+  & \geq & s^\square_{\hat{\alpha}} \cdot \abs{\pre(\hat{\alpha}) \cap \SCC} \cdot \left( {d^\square}' + \maxO{\pm e^\square_{\hat{\alpha}}} + \text{in}^\square_{\hat{\alpha}}(m) \right)
     & \text{since } \hat{\alpha} \in \SCC_{\hat{t}} \\
-  & \geq & s^\square_{\hat{\alpha}} \cdot \left( \abs{\pre(\hat{\alpha}) \cap \SCC} \cdot {d^\square}' + \max(0, \pm e^\square_{\hat{\alpha}}) + \text{in}^\square_{\hat{\alpha}}(m) \right) \\
+  & \geq & s^\square_{\hat{\alpha}} \cdot \left( \abs{\pre(\hat{\alpha}) \cap \SCC} \cdot {d^\square}' + \maxO{\pm e^\square_{\hat{\alpha}}} + \text{in}^\square_{\hat{\alpha}}(m) \right) \\
   & \geq & s^\square_{\hat{\alpha}} \cdot \left( \abs{\pre(\hat{\alpha}) \cap \SCC} \cdot {d^\square}' \pm e^{\square}_{\hat{\alpha}} + \text{in}^\square_{\hat{\alpha}}(m) \right) \\
   & \geq & s^\square_{\hat{\alpha}} \cdot \left( \sum_{v \in \VSet_{\hat{\alpha}}} {d^\square}' \pm e^\square_{\hat{\alpha}} + \text{in}^\square_{\hat{\alpha}}(m) \right) \\
-  & \geq & s^\square_{\hat{\alpha}} \cdot \left( \sum_{v \in \VSet_{\hat{\alpha}}} \max(0,\pm \tilde{\valuation}(v)) \pm e^\square_{\hat{\alpha}} + \text{in}^\square_{\hat{\alpha}}(m) \right) & (\ref{eq:sizebound_hypothesis}) \\
-  & = & s^\square_{\hat{\alpha}} \cdot \left( \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha}}^\sqcap} \max(0, \tilde{\valuation}(v)) + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \max(0, -\tilde{\valuation}(v)) \right)
+  & \geq & s^\square_{\hat{\alpha}} \cdot \left( \sum_{v \in \VSet_{\hat{\alpha}}} \maxO{\pm \tilde{\valuation}(v)} \pm e^\square_{\hat{\alpha}} + \text{in}^\square_{\hat{\alpha}}(m) \right) & (\ref{eq:sizebound_hypothesis}) \\
+  & = & s^\square_{\hat{\alpha}} \cdot \left( \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha}}^\sqcap} \maxO{\tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \maxO{-\tilde{\valuation}(v)} \right)
     & (\ref{eq:input_rv_reduction}) \\
   & \geq & s^\square_{\hat{\alpha}} \cdot ( \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha},1}^\sqcap} \tilde{\valuation}(v) - \sum_{v \in N_{\hat{\alpha},1}^\sqcap} \tilde{\valuation}(v) \\
-    && + \sum_{v \in P_{\hat{\alpha},2}^\sqcap} \max \braced{0, \tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\alpha},2}^\sqcap} \max \braced{0, -\tilde{\valuation}(v)} ) \\
+    && + \sum_{v \in P_{\hat{\alpha},2}^\sqcap} \maxO{\tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\alpha},2}^\sqcap} \maxO{-\tilde{\valuation}(v)} ) \\
   & = & \mathcal{S}^\square_l({\hat{\alpha}})(\tilde{\valuation}) \\
   & \geq & \hat{\valuation}(v)
 \end{IEEEeqnarray*}}
