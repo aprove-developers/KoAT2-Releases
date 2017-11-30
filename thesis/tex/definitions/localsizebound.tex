@@ -14,7 +14,7 @@
       + \sum_{v \in P_{\alpha,1}^\sqcap} \valuation(v)
       - \sum_{v \in N_{\alpha,1}^\sqcap} \valuation(v)
       + \sum_{v \in P_{\alpha,2}^\sqcap} \max \braced{0,\valuation(v)}
-      - \sum_{v \in N_{\alpha,2}^\sqcap} \min \braced{0,\valuation(v)}
+      + \sum_{v \in N_{\alpha,2}^\sqcap} \max \braced{0,-\valuation(v)}
     \right). \]
 
   We say $\alpha \in \RV$ is bounded by a \textbf{lower} scaled sum if and only if there are numbers $s^\sqcup_\alpha \in \mathbb{N}$ with $s^\sqcup_\alpha \geq 1$ and $e^\sqcup_\alpha \in \mathbb{Z}$ and three pairwise disjoint sets $P_{\alpha,1}^\sqcap, P_{\alpha,2}^\sqcap, N_{\alpha,1}^\sqcap, N_{\alpha,2}^\sqcap \subseteq \VSet$ such that it holds for all $\valuation$ that
@@ -23,7 +23,7 @@
       e^\sqcup_\alpha
     + \sum_{v \in P_{\alpha,1}^\sqcup} \valuation(v)
     - \sum_{v \in N_{\alpha,1}^\sqcup} \valuation(v)
-    + \sum_{v \in P_{\alpha,2}^\sqcup} \min \braced{0,\valuation(v)}
+    - \sum_{v \in P_{\alpha,2}^\sqcup} \max \braced{0,-\valuation(v)}
     - \sum_{v \in N_{\alpha,2}^\sqcup} \max \braced{0,\valuation(v)}
   \right). \]
 \end{definition}

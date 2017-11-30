@@ -56,7 +56,7 @@ If $(\tilde{t}, v) \notin \SCC$, then $\valuation_0 \leq m$ implies that $\USize
 As $(\tilde{t}, v) \in \pre(\hat{t}, v) \setminus \SCC$, we have $e \geq \USize(\tilde{t}, v)(m)$ and $e \geq 0$ which implies that $d^\sqcap \geq e \geq \USize(\tilde{t}, v)(m) \geq \tilde{\valuation}(v)$.
 We also have $e \geq -\LSize(\tilde{t}, v)(m)$ and $e \geq 0$ which implies that $d^\sqcup \geq e \geq -\LSize(\tilde{t}, v)(m) \geq -\tilde{\valuation}(v)$.
 
-If $(\tilde{t}, v) \in \SCC$, then the induction hypothesis (\ref{eq:sizebound_target}) implies that $d^\sqcap(m) \geq \max(0, \tilde{\valuation}(v))$ and $-d^\sqcup(m) \leq \min(0, \tilde{\valuation}(v))$ also hold for the reduction from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
+If $(\tilde{t}, v) \in \SCC$, then the induction hypothesis (\ref{eq:sizebound_target}) implies that $d^\sqcap(m) \geq \max(0, \tilde{\valuation}(v))$ and $d^\sqcup(m) \geq \max(0, -\tilde{\valuation}(v))$ also hold for the reduction from $\configuration{0}$ to $(\tilde{\location}, \tilde{\valuation})$.
 Let
 \begin{equation} \label{eq:induction_consequence}
   {d^\square}'(m) = (s^\square_{\hat{t}})^{k_{\hat{t}} - 1} \cdot \prod_{t \in \TSet \setminus \braced{\hat{t}}} (s^\square_t)^{k_t} \cdot \left( e + \left( k_{\hat{t}} - 1 \right) \cdot \text{in}^\square_{\hat{t}}(m) + \sum_{t \in \TSet \setminus \braced{\hat{t}}} \left( k_t \cdot \text{in}^\square_t(m) \right) \right)
@@ -131,7 +131,7 @@ Thus, we have
   & = & s^\square_{\hat{\alpha}} \cdot \left( \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha}}^\sqcap} \max(0, \tilde{\valuation}(v)) + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \max(0, -\tilde{\valuation}(v)) \right)
     & (\ref{eq:input_rv_reduction}) \\
   & \geq & s^\square_{\hat{\alpha}} \cdot ( \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha},1}^\sqcap} \tilde{\valuation}(v) - \sum_{v \in N_{\hat{\alpha},1}^\sqcap} \tilde{\valuation}(v) \\
-    && + \sum_{v \in P_{\hat{\alpha},2}^\sqcap} \max \braced{0, \tilde{\valuation}(v)} - \sum_{v \in N_{\hat{\alpha},2}^\sqcap} \min \braced{0, \tilde{\valuation}(v)} ) \\
+    && + \sum_{v \in P_{\hat{\alpha},2}^\sqcap} \max \braced{0, \tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\alpha},2}^\sqcap} \max \braced{0, -\tilde{\valuation}(v)} ) \\
   & = & \mathcal{S}^\square_l({\hat{\alpha}})(\tilde{\valuation}) \\
   & \geq & \hat{\valuation}(v)
 \end{IEEEeqnarray*}}
