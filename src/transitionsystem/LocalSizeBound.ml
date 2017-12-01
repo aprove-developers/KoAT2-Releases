@@ -337,3 +337,11 @@ let sizebound_local kind label var =
 
 let sizebound_local_rv kind ((l,t,l'),v) =
   sizebound_local kind t v
+  
+let sizebound_local_scc kind scc =
+  if scc
+     |> List.map (sizebound_local_rv kind)
+     |> List.for_all Option.is_some
+  then
+    Some (fun kind rv -> Option.get (sizebound_local_rv kind rv))
+  else None

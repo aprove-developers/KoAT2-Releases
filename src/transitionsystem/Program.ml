@@ -77,11 +77,12 @@ module Types =
         let to_id_string (t,v) =
           "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
-        let to_string ((l,t,l'),v) =
+        let to_string ((l,t,l'), v) =
           Bound.to_string (LocalSizeBound.(sizebound_local `Upper t v |> Option.map as_bound |? default `Upper)) ^ " >= " ^
-            to_id_string ((l,t,l'),v) ^ " >= " ^
+            to_id_string ((l,t,l'), v) ^ " >= " ^
               Bound.to_string (LocalSizeBound.(sizebound_local `Lower t v |> Option.map as_bound |? default `Lower))
       end
+
     module RVG =
       struct
         include Graph.Persistent.Digraph.ConcreteBidirectional(RV)

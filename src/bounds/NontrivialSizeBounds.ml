@@ -6,12 +6,11 @@ let logger = Logging.(get Size)
 type kind = [ `Lower | `Upper ] [@@deriving show]
 
 (** Computes for each transition max(s_alpha for all alpha in C_t) and multiplies the results. *)
-let extreme_scaling_factor kind ct =
+let extreme_scaling_factor kind get_lsb ct =
   let execute () =
     ct
     |> List.enum
-    |> Enum.map (LocalSizeBound.sizebound_local_rv kind)
-    |> Enum.map Option.get (* Should exist *)
+    |> Enum.map (get_lsb kind)
     |> Enum.map LocalSizeBound.factor
     |> Util.max_option (>)
     |? 1
@@ -42,11 +41,11 @@ let extreme_affecting_scc_variables kind rvg scc ct =
                      ~result:Int.to_string
                      execute
 
-let transition_scaling_factor kind rvg get_timebound scc ct =
+let transition_scaling_factor kind rvg get_lsb get_timebound scc ct =
   let execute () =
     let (transition, _) = List.hd ct (* We require ct to be non-empty *) in
     Bound.exp
-      (OurInt.of_int (extreme_scaling_factor kind ct * extreme_affecting_scc_variables kind rvg scc ct))
+      (OurInt.of_int (extreme_scaling_factor kind get_lsb ct * extreme_affecting_scc_variables kind rvg scc ct))
       (get_timebound transition)
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "transition scaling factor", ["ct", RVG.rvs_to_id_string ct; "scc", RVG.rvs_to_id_string scc])
@@ -74,13 +73,13 @@ let incoming_vars_effect kind rvg get_sizebound scc vars transition alpha =
                      ~result:Bound.to_string
                      execute
 
-let overall_scaling_factor kind rvg get_timebound scc=
+let overall_scaling_factor kind rvg get_lsb get_timebound scc=
   let execute () =
     scc
     |> List.enum
     |> Enum.group_by (fun (t1, v1) (t2, v2) -> Transition.equal t1 t2)
     |> Enum.map List.of_enum
-    |> Enum.map (transition_scaling_factor kind rvg get_timebound scc)
+    |> Enum.map (transition_scaling_factor kind rvg get_lsb get_timebound scc)
     |> Bound.product
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "overall scaling factor", ["scc", RVG.rvs_to_id_string scc])
@@ -90,11 +89,11 @@ let overall_scaling_factor kind rvg get_timebound scc=
 (** The highest effect of the specific transition in the scc.
     A transition can manipulate different variables.
     The result of this function is for all those variables the highest incoming value. *)  
-let transition_effect kind rvg get_sizebound scc ct transition =
+let transition_effect kind rvg get_lsb get_sizebound scc ct transition =
   let execute () =
     ct
     |> List.enum
-    |> Enum.map (fun alpha -> (alpha, Option.get (LocalSizeBound.sizebound_local_rv kind alpha)))
+    |> Enum.map (fun alpha -> (alpha, get_lsb kind alpha))
     (* Should exist *)
     |> Enum.map (fun (alpha, lsb) ->
            Bound.(max zero (of_int (LocalSizeBound.constant lsb) + incoming_vars_effect kind rvg get_sizebound scc (LocalSizeBound.vars lsb) transition alpha))
@@ -107,7 +106,7 @@ let transition_effect kind rvg get_sizebound scc ct transition =
                      ~result:Bound.to_string
                      execute
 
-let effects kind rvg get_timebound get_sizebound scc =
+let effects kind rvg get_lsb get_timebound get_sizebound scc =
   let execute () =
     scc
     |> List.enum
@@ -115,7 +114,7 @@ let effects kind rvg get_timebound get_sizebound scc =
     |> Enum.map List.of_enum
     |> Enum.map (fun ct ->
            let ((transition, v) :: _) = ct (* We require ct to be non-empty *) in
-           Bound.(get_timebound transition * transition_effect kind rvg get_sizebound scc ct transition)
+           Bound.(get_timebound transition * transition_effect kind rvg get_lsb get_sizebound scc ct transition)
          )
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
@@ -131,18 +130,14 @@ let sign = function
     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
 let compute kind program rvg get_timebound get_sizebound scc =
   let execute () =
-    (* Only if all lsbs have a bound of our required form *)
-    if scc
-       |> List.enum
-       |> Enum.map (LocalSizeBound.sizebound_local_rv kind)
-       |> Enum.for_all Option.is_some
-    then
-      Bound.(overall_scaling_factor kind rvg get_timebound scc * effects kind rvg get_timebound get_sizebound scc)
-      |> sign kind
-    else
-      match kind with
-      | `Lower -> Bound.minus_infinity
-      | `Upper -> Bound.infinity
+    LocalSizeBound.sizebound_local_scc kind scc
+    |> Option.map (fun get_lsb ->
+           Bound.(overall_scaling_factor kind rvg get_lsb get_timebound scc * effects kind rvg get_lsb get_timebound get_sizebound scc)
+           |> sign kind
+         )
+    |? match kind with
+       | `Lower -> Bound.minus_infinity
+       | `Upper -> Bound.infinity
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute nontrivial bound", ["kind", show_kind kind;
                                                              "scc", RVG.rvs_to_id_string scc])

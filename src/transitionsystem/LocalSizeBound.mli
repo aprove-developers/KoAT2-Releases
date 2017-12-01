@@ -77,3 +77,7 @@ val find_bound : [`Lower | `Upper] -> Var.t -> Formula.t -> t Option.t
 val sizebound_local : [`Lower | `Upper] -> TransitionLabel.t -> Var.t -> t Option.t
   
 val sizebound_local_rv : [`Lower | `Upper] -> RV.t -> t Option.t
+
+(** If for all result variables of the given kind a local sizebound is defined, this function returns a local sizebound function.
+    Otherwise it returns None. *)
+val sizebound_local_scc : [`Lower | `Upper] -> RV.t list -> ([`Lower | `Upper] -> RV.t -> t) Option.t
