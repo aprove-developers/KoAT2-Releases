@@ -94,15 +94,17 @@ For such $v$, we can deduce the following:
 
 We can now propagate this to $\text{in}^\sqcap_{\hat{\alpha}}(m)$.
 
-\begin{IEEEeqnarray*}{rClr} \label{eq:input_rv_reduction}
-  & & \text{in}^\sqcap_{\hat{\alpha}}(m) \\
-  & = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \text{in}^\sqcap_{{\hat{\alpha}},v}(m)
+\begin{equation} \label{eq:input_rv_reduction}
+  \begin{split}
+  & \text{in}^\sqcap_{\hat{\alpha}}(m) \\
+  = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \text{in}^\sqcap_{{\hat{\alpha}},v}(m)
     + \sum_{v \in N_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \text{in}^\sqcup_{{\hat{\alpha}},v}(m) \\
-  & = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{\USize(\tilde{t}, v)(m)}
+  = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{\USize(\tilde{t}, v)(m)}
     + \sum_{v \in N_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{-\LSize(\tilde{t}, v)(m)} \\
-  & \geq & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)}
+  \geq & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)}
     + \sum_{v \in N_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{-\tilde{\valuation}(v)} \\
-\end{IEEEeqnarray*}
+  \end{split}
+\end{equation}
 
 Thus, we have
 {\allowdisplaybreaks
