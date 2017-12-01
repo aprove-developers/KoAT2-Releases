@@ -97,14 +97,11 @@ We can now propagate this to $\text{in}^\sqcap_{\hat{\alpha}}(m)$.
 \begin{IEEEeqnarray*}{rClr} \label{eq:input_rv_reduction}
   & & \text{in}^\sqcap_{\hat{\alpha}}(m) \\
   & = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \text{in}^\sqcap_{{\hat{\alpha}},v}(m)
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \text{in}^\sqcup_{{\hat{\alpha}},v}(m) \\
+    + \sum_{v \in N_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \text{in}^\sqcup_{{\hat{\alpha}},v}(m) \\
   & = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{\USize(\tilde{t}, v)(m)}
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \maxO{-\LSize(\tilde{t}, v)(m)} \\
+    + \sum_{v \in N_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{-\LSize(\tilde{t}, v)(m)} \\
   & \geq & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)}
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \maxO{-\tilde{\valuation}(v)} \\
-  & \geq & \sum_{v \in P_{\hat{\alpha}}^\sqcap} \maxO{\tilde{\valuation}(v)}
-    - \sum_{v \in \VSet_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)}
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \maxO{-\tilde{\valuation}(v)}
+    + \sum_{v \in N_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{-\tilde{\valuation}(v)} \\
 \end{IEEEeqnarray*}
 
 Thus, we have
@@ -128,8 +125,12 @@ Thus, we have
   & \geq & s^\square_{\hat{\alpha}} \cdot \left( \abs{\pre(\hat{\alpha}) \cap \SCC} \cdot {d^\square}' \pm e^{\square}_{\hat{\alpha}} + \text{in}^\square_{\hat{\alpha}}(m) \right) \\
   & \geq & s^\square_{\hat{\alpha}} \cdot \left( \sum_{v \in \VSet_{\hat{\alpha}}} {d^\square}' \pm e^\square_{\hat{\alpha}} + \text{in}^\square_{\hat{\alpha}}(m) \right) \\
   & \geq & s^\square_{\hat{\alpha}} \cdot \left( \sum_{v \in \VSet_{\hat{\alpha}}} \maxO{\pm \tilde{\valuation}(v)} \pm e^\square_{\hat{\alpha}} + \text{in}^\square_{\hat{\alpha}}(m) \right) & (\ref{eq:sizebound_hypothesis}) \\
-  & = & s^\square_{\hat{\alpha}} \cdot \left( \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha}}^\sqcap} \maxO{\tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \maxO{-\tilde{\valuation}(v)} \right)
-    & (\ref{eq:input_rv_reduction}) \\
+  & \geq & s^\square_{\hat{\alpha}} \cdot \left( \sum_{v \in \VSet_{\hat{\alpha}}} \maxO{\pm \tilde{\valuation}(v)} \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)}
+    + \sum_{v \in N_{\hat{\alpha}}^\sqcap \setminus \VSet_{\hat{\alpha}}} \maxO{-\tilde{\valuation}(v)} \right) & (\ref{eq:input_rv_reduction}) \\
+  & = & s^\square_{\hat{\alpha}} \cdot \left( \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha}}^\sqcap} \maxO{\tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \maxO{-\tilde{\valuation}(v)} \right) \\
+  & & \text{Is the previous step possible?} \\
+  & & \text{Given: } \VSet_{\hat{\alpha}} \subseteq P_{\hat{\alpha}}^\sqcap \uplus N_{\hat{\alpha}}^\sqcap \text{ and obviously } \maxO{\tilde{\valuation}(v)} \geq \maxO{\tilde{\valuation}(v)} \\
+  & & \text{But why should } \maxO{\tilde{\valuation}(v)} \geq \maxO{-\tilde{\valuation}(v)} \text{hold?} \\
   & \geq & s^\square_{\hat{\alpha}} \cdot ( \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha},1}^\sqcap} \tilde{\valuation}(v) - \sum_{v \in N_{\hat{\alpha},1}^\sqcap} \tilde{\valuation}(v) \\
     && + \sum_{v \in P_{\hat{\alpha},2}^\sqcap} \maxO{\tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\alpha},2}^\sqcap} \maxO{-\tilde{\valuation}(v)} ) \\
   & = & \mathcal{S}^\square_l({\hat{\alpha}})(\tilde{\valuation}) \\
