@@ -4,6 +4,11 @@ open Program.Types
 let logger = Logging.(get Size)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
+type sign = [ `Pos | `Neg ] [@@deriving show]
+
+let sign = function
+  | `Lower -> Bound.neg
+  | `Upper -> identity
 
 let compute_
       (kind: kind)
@@ -19,6 +24,7 @@ let compute_
     scc
     |> List.map (fun (t,v) -> t)
     |> List.unique ~eq:Transition.equal
+    |> tap (fun transitions -> Logger.log logger Logger.DEBUG (fun () -> "transitions", ["result", Util.enum_to_string Transition.to_id_string (List.enum transitions)]))
   in
 
   (** Returns all the variables with which the given transition does occur as result variable in the scc. *)
@@ -26,17 +32,31 @@ let compute_
     scc
     |> List.filter (fun (t,v) -> Transition.equal t transition)
     |> List.map (fun (t,v) -> v)
+    |> tap (fun scc_vars -> Logger.log logger Logger.DEBUG (fun () -> "scc_vars", ["result", Util.enum_to_string Var.to_string (List.enum scc_vars)]))
     |> List.enum
   in  
     
-  (** Returns all the variables that may influence the given result variable and get changed in the scc. *)
-  let scc_variables rv =
+  (** Returns all result variables that may influence the given result variable and that are part of the scc. *)
+  let pre_in_scc rv =
     rv
     |> RVG.pre rvg
     |> Util.intersection RV.equal (List.enum scc)
+  in
+
+  (** Returns all result variables that may influence the given result variable and that are not part of the scc. *)
+  let pre_out_scc rv =
+    rv
+    |> RVG.pre rvg
+    |> Util.without RV.equal (List.enum scc)
+  in
+
+  (** Returns all result variables that may influence the given result variable from within the scc. *)
+  let scc_variables rv =
+    rv
+    |> pre_in_scc
     |> Enum.map (fun (t,v) -> v)
   in
-  
+    
   (** The transition scaling factor corresponds to (s_t)^R(t) *)
   let transition_scaling_factor t =
     let execute () =
@@ -49,6 +69,7 @@ let compute_
         |> Enum.map Enum.count
         |> Util.max_option (>)
         |? 1
+        |> tap (fun result -> Logger.log logger Logger.DEBUG (fun () -> "extreme_affecting_scc_variables", ["result", Int.to_string result]))
       in
       
       (** Computes for each transition max(s_alpha for all alpha in C_t) and multiplies the results. *)
@@ -59,6 +80,7 @@ let compute_
         |> Enum.map LocalSizeBound.factor
         |> Util.max_option (>)
         |? 1
+        |> tap (fun result -> Logger.log logger Logger.DEBUG (fun () -> "extreme_scaling_factor", ["result", Int.to_string result]))
       in
   
       Bound.exp
@@ -75,31 +97,61 @@ let compute_
       each scaling factor with the timebound of the transition as exponent.
       prod_{t in T} (s_t)^R(t) *)
   let overall_scaling_factor =
-    transitions
-    |> List.enum
-    |> Enum.map transition_scaling_factor
-    |> Bound.product
-    |> tap (fun result -> Logger.log logger Logger.DEBUG (fun () -> "overall scaling factor", ["result", Bound.to_string result]))
+    let execute () =
+      transitions
+      |> List.enum
+      |> Enum.map transition_scaling_factor
+      |> Bound.product
+    in Logger.with_log logger Logger.DEBUG
+                       (fun () -> "overall scaling factor", [])
+                       ~result:Bound.to_string
+                       execute
+  in
+
+  let rv_prevar_effect prekind rv v =
+    let execute () =
+      rv
+      |> pre_out_scc
+      |> Enum.filter (fun (_,v') -> Var.equal v v')
+      |> Enum.map (fun (t,v) -> get_sizebound prekind t v)
+      |> Enum.map (sign prekind)
+      |> Bound.maximum
+      |> Bound.(max zero)
+    in Logger.with_log logger Logger.DEBUG
+                       (fun () -> "rv prevar effect", ["prekind", show_kind kind;
+                                                       "rv", RV.to_id_string rv;
+                                                       "variable", Var.to_string v])
+                       ~result:Bound.to_string
+                       execute
   in
   
-  let incoming_vars_effect (t,v) =
+  let rv_effect sign rv =
+    let execute () =
+      rv
+      |> get_lsb
+      |> LocalSizeBound.vars_of_sign sign
+      |> VarSet.enum
+      |> Util.without Var.equal (scc_variables rv)
+      |> Enum.map (rv_prevar_effect (LocalSizeBound.pre_kind (kind, sign)) rv)
+      |> Bound.sum
+    in Logger.with_log logger Logger.DEBUG
+                       (fun () -> "rv effect", ["sign", show_sign sign;
+                                                "rv", RV.to_id_string rv])
+                       ~result:Bound.to_string
+                       execute
+  in
+
+  (** Returns the constant of the local sizebound of the given result variable in a positive way. *)
+  let rv_constant (t,v) =
     let execute () =
       (t,v)
       |> get_lsb
-      |> LocalSizeBound.vars
-      |> VarSet.enum
-      |> Util.without Var.equal (scc_variables (t,v))
-      |> Enum.map (fun v ->
-             (t,v)
-             |> RVG.pre rvg
-             |> Util.without RV.equal (List.enum scc)
-             |> Enum.filter (fun (t,v') -> Var.equal v v')
-             |> Enum.map (fun (t,v) -> get_sizebound kind t v)
-             |> Bound.maximum
-           )
-      |> Bound.sum
+      |> LocalSizeBound.constant
+      |> Bound.of_int
+      |> sign kind
+      |> Bound.(max zero)
     in Logger.with_log logger Logger.DEBUG
-                       (fun () -> "incoming vars effect", ["alpha", RV.to_id_string (t,v)])
+                       (fun () -> "rv constant", ["variable", RV.to_id_string (t,v)])
                        ~result:Bound.to_string
                        execute
   in
@@ -112,7 +164,7 @@ let compute_
       t
       |> get_scc_vars
       |> Enum.map (fun v ->
-             Bound.(max zero (of_int (LocalSizeBound.constant (get_lsb (t,v))) + incoming_vars_effect (t,v)))
+             Bound.(rv_constant (t,v) + (rv_effect `Pos (t,v) + rv_effect `Neg (t,v)))
            )
       |> Bound.maximum
     in Logger.with_log logger Logger.DEBUG
@@ -120,22 +172,41 @@ let compute_
                        ~result:Bound.to_string
                        execute
   in
-  
+
+  (** The effects inside the scc of all transitions all together. *)
   let effects =
-    transitions
+    let execute () =
+      transitions
+      |> List.enum
+      |> Enum.map (fun t -> Bound.(get_timebound t * transition_effect t))
+      |> Bound.sum
+    in Logger.with_log logger Logger.DEBUG
+                       (fun () -> "effects", [])
+                       ~result:Bound.to_string
+                       execute
+  in
+
+  (** The maximum of the highest positive value that can enter the scc and the amount of the lowest negative value that can enter the scc.
+      Corresponds to the definition of 'e'. *)
+  let start_value =
+    scc
     |> List.enum
-    |> Enum.map (fun t -> Bound.(get_timebound t * transition_effect t))
-    |> Bound.sum
-    |> tap (fun result -> Logger.log logger Logger.DEBUG (fun () -> "effects", ["result", Bound.to_string result]))
+    |> Enum.map pre_out_scc
+    |> Enum.flatten
+    |> Enum.map (fun (t',v') ->
+           [
+             get_sizebound `Upper t' v';
+             get_sizebound `Lower t' v' |> Bound.neg;
+           ]
+           |> List.enum
+         )
+    |> Enum.flatten
+    |> Bound.maximum
+    |> Bound.(max zero)
+    |> tap (fun start_value -> Logger.log logger Logger.DEBUG (fun () -> "start_value", ["result", Bound.to_string start_value]))
   in
-  
-  let sign =
-    match kind with
-    | `Lower -> Bound.neg
-    | `Upper -> identity
-  in
-              
-  Bound.(sign (overall_scaling_factor * effects))
+    
+  Bound.(sign kind (overall_scaling_factor * (start_value + effects)))
 
             
 (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.

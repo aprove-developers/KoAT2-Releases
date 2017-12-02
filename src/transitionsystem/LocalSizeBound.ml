@@ -30,24 +30,22 @@ let factor lsb =
 let constant lsb =
   lsb.constant
   
-let pos_vars { vars; _ } =
-  VarSet.union (vars (`Pos, `Pure)) (vars (`Pos, `Abs))
-  
-let neg_vars { vars; _ } =
-  VarSet.union (vars (`Neg, `Pure)) (vars (`Neg, `Abs))
+let vars_of_sign sign { vars; _ } =
+  match sign with
+  | `Pos -> VarSet.union (vars (`Pos, `Pure)) (vars (`Pos, `Abs))
+  | `Neg -> VarSet.union (vars (`Neg, `Pure)) (vars (`Neg, `Abs))
 
-let pure_vars { vars; _ } =
-  VarSet.union (vars (`Pos, `Pure)) (vars (`Neg, `Pure))
-
-let abs_vars { vars; _ } =
-  VarSet.union (vars (`Pos, `Abs)) (vars (`Neg, `Abs))
+let vars_of_purity purity { vars; _ } =
+  match purity with
+  | `Pure -> VarSet.union (vars (`Pos, `Pure)) (vars (`Neg, `Pure))
+  | `Abs -> VarSet.union (vars (`Pos, `Abs)) (vars (`Neg, `Abs))
 
 let vars lsb =
-  VarSet.union (pos_vars lsb) (neg_vars lsb)
-
-let sign = function
-  | _, `Pos, _ -> identity
-  | _, `Neg, _ -> Bound.neg
+  VarSet.union (vars_of_sign `Pos lsb) (vars_of_sign `Neg lsb)
+          
+let multiplier = function
+  | `Pos -> identity
+  | `Neg -> Bound.neg
 
 let absifier = function
   | _, _, `Pure -> identity
@@ -57,19 +55,19 @@ let absifier = function
   | `Lower, `Neg, `Abs -> Bound.(max zero)
 
 let pre_kind = function
-  | `Upper, `Pos, _ -> `Upper
-  | `Upper, `Neg, _ -> `Lower
-  | `Lower, `Pos, _ -> `Lower
-  | `Lower, `Neg, _ -> `Upper
+  | `Upper, `Pos -> `Upper
+  | `Upper, `Neg -> `Lower
+  | `Lower, `Pos -> `Lower
+  | `Lower, `Neg -> `Upper
   
-let sum_vars substitution (vars: VarSet.t) setup: Bound.t =
+let sum_vars substitution (vars: VarSet.t) (kind, sign, purity): Bound.t =
   vars
   |> VarSet.enum
   |> Enum.map Bound.of_var
-  |> Enum.map (absifier setup)
-  |> Enum.map (sign setup)
+  |> Enum.map (absifier (kind, sign, purity))
+  |> Enum.map (multiplier sign)
   |> Bound.sum
-  |> Bound.substitute_f (substitution (pre_kind setup))
+  |> ((kind, sign) |> pre_kind |> substitution |> Bound.substitute_f)
   
 let as_substituted_bound substitution lsb =
   let variables =
@@ -179,7 +177,7 @@ let unabsify_vars (p: t -> bool) (lsb: t): t =
       else
         current_lsb
     in
-    VarSet.fold unabsify_with_candidate (abs_vars lsb) lsb
+    VarSet.fold unabsify_with_candidate (vars_of_purity `Abs lsb) lsb
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "unabsify vars", ["lsb", to_string lsb])

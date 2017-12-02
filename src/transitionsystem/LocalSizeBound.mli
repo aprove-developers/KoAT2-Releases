@@ -39,17 +39,13 @@ val constant : t -> int
 (** Returns a set of of variables which affect the local sizebound *)
 val vars : t -> VarSet.t
 
-(** Returns a set of all variables which monotonical increasingly affect the local sizebound *)
-(** Those are variables with a positive coefficient. *)
-val pos_vars: t -> VarSet.t
+(** Returns a set of all variables which monotonical increasingly or monotonical decreasingly affect the local sizebound *)
+(** Those are variables with a positive coefficient or a negative coefficient. *)
+val vars_of_sign : [`Pos | `Neg] -> t -> VarSet.t
+  
+val vars_of_purity : [`Pure | `Abs] -> t -> VarSet.t
 
-(** Returns a set of all variables which monotonical decreasingly affect the local sizebound *)
-(** Those are variables with a negative coefficient. *)
-val neg_vars: t -> VarSet.t
-
-val pure_vars : t -> VarSet.t
-
-val abs_vars : t -> VarSet.t
+val pre_kind : ([`Upper | `Lower] * [`Pos | `Neg]) -> [`Upper | `Lower]
   
 (** Converts the templated bound to a string. *)
 val to_string : t -> string
