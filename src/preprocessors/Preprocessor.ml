@@ -12,7 +12,7 @@ let affects = function
   | CutUnreachableLocations -> []
   | TrivialTimeBounds -> []
   | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining]
-  | Chaining -> [CutUnsatisfiableTransitions]
+  | Chaining -> [CutUnsatisfiableTransitions; Chaining]
 
 let lift_to_program transform program =
   MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (fun _ -> graph) program)))
