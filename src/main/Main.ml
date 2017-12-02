@@ -25,7 +25,12 @@ type main_params = {
     (** Disables the search for bounds. Useful if you just want information about the integer transition system via the other options or for debugging purposes. *)
 
     input : string; [@pos 0] [@docv "INPUT"]
-    (** An absolute or relative path to the koat input file which defines the integer transition system. *)
+    (** Either an absolute or relative path to the koat input file which defines the integer transition system.
+        Or the program defined in simple mode.
+        How this string is interpreted is defined by the simple-input flag *)
+
+    simple_input : bool; [@default false]
+    (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
     
     output_dir : string option;
     (** An absolute or relative path to the output directory, where all generated files should end up. *)
@@ -44,11 +49,14 @@ type main_params = {
     
   } [@@deriving cmdliner]
 
-let read_input (file: string): Program.t Option.t =
-  try
-    Some (Readers.read_file file)
-  with TransitionLabel.RecursionNotSupported ->
-    prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat. The program will exit now."; None
+let read_input (simple: bool) (program_str: string): Program.t Option.t =
+  if simple then
+    Some (Readers.read_program_simple program_str)
+  else
+    try
+      Some (Readers.read_file program_str)
+    with TransitionLabel.RecursionNotSupported ->
+      prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat. The program will exit now."; None
 
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
   let get accessor = Location.of_string (accessor label) in
@@ -72,16 +80,28 @@ let run (params: main_params) =
   let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
   Logging.use_loggers logs;
   let input_filename =
-    params.input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
+    if params.simple_input then
+      "dummyname"
+    else
+      params.input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
   and output_dir =
-    Option.map Fpath.v params.output_dir |? (params.input |> Fpath.v |> Fpath.parent)
+    Option.map Fpath.v params.output_dir
+    |? (if params.simple_input then
+          Fpath.v "."
+        else
+          params.input |> Fpath.v |> Fpath.parent)
   in
   if params.print_input then (
-    params.input |> File.lines_of |> List.of_enum |> String.concat "\n" |> print_string;
-    print_string "\n\n"
+    let program_str =
+      if params.simple_input then
+        params.input
+      else
+        params.input |> File.lines_of |> List.of_enum |> String.concat "\n"
+    in
+    print_string (program_str ^ "\n\n")
   );
   params.input
-  |> read_input
+  |> read_input params.simple_input
   |> Option.map (fun program ->
          (program, Approximation.create program)
          |> params.preprocessing_strategy params.preprocessors
