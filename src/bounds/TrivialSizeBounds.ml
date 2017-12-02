@@ -27,13 +27,20 @@ let incoming_bound kind program get_sizebound lsb t =
     Corresponds to 'SizeBounds for trivial SCCs'. *)
 let compute kind program get_sizebound (t,v) =
   let execute () =
-    let (lsb: LocalSizeBound.t) =
+    let (lsb: LocalSizeBound.t Option.t) =
       LocalSizeBound.sizebound_local_rv kind (t, v)
-      |> Option.get
     in
     if Program.is_initial program t then
-      LocalSizeBound.as_bound lsb
-    else incoming_bound kind program get_sizebound lsb t
+      LocalSizeBound.(
+      lsb
+      |> Option.map as_bound
+      |? default kind)
+    else
+      LocalSizeBound.(
+      lsb
+      |> Option.map (fun lsb -> incoming_bound kind program get_sizebound lsb t)
+      |? default kind)
+      
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute trivial bound", ["kind", show_kind kind;
                                                           "rv", RV.to_id_string (t,v)])
