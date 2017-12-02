@@ -142,6 +142,9 @@ let empty transitioncount varcount =
     Time.empty transitioncount,
     Size.empty (2 * transitioncount * varcount)
 
+let create program =
+  empty (TransitionGraph.nb_edges (Program.graph program)) (VarSet.cardinal (Program.vars program))
+
 let time (time, _) = time
 
 let size (_, size) = size

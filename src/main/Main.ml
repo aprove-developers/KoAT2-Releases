@@ -50,9 +50,6 @@ let read_input (file: string): Program.t Option.t =
   with TransitionLabel.RecursionNotSupported ->
     prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat. The program will exit now."; None
 
-let create_approximation (program: Program.t): Approximation.t =
-  Approximation.empty (TransitionGraph.nb_edges (Program.graph program)) (VarSet.cardinal (Program.vars program))
-
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
   let get accessor = Location.of_string (accessor label) in
   String.concat "" ["Timebound: ";
@@ -70,7 +67,7 @@ let bounded_rv_to_string (appr: Approximation.t) (t,v) =
                     "\n";
                     "Local: ";
                     RV.to_string (t,v)]
-  
+
 let run (params: main_params) =
   let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
   Logging.use_loggers logs;
@@ -86,7 +83,7 @@ let run (params: main_params) =
   params.input
   |> read_input
   |> Option.map (fun program ->
-         (program, create_approximation program)
+         (program, Approximation.create program)
          |> params.preprocessing_strategy params.preprocessors
          |> tap (fun (program, appr) ->
                 if params.print_system then
@@ -97,7 +94,6 @@ let run (params: main_params) =
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
                      (program, appr)
-                     |> params.preprocessing_strategy params.preprocessors
                      |> uncurry Bounds.find_bounds
                      |> fun appr -> (program, appr)
                    else (program, appr))

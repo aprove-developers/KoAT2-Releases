@@ -20,6 +20,7 @@ let suite =
       FormulaTest.tests;
       PreprocessorTest.tests;
       BoundTest.tests;
+      TimeboundTest.tests;
     ]
                      
 let () =

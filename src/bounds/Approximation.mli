@@ -39,6 +39,8 @@ end
         The second parameter should be the count of program variables. *)
 val empty : int -> int -> t
 
+val create : Program.t -> t
+
 val time : t -> Time.t
 
 val size : t -> Size.t
