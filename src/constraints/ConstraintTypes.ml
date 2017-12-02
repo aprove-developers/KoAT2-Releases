@@ -223,6 +223,8 @@ module type Formula =
           val (<=) : polynomial -> polynomial -> t
           val (&&) : t -> t -> t
           val (||) : t -> t -> t
+          val (=>) : t -> t -> t
+          val (<=>) : t -> t -> t
         end
 
         (** Following methods return certain properties of the formula. *)

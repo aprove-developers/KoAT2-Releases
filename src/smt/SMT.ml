@@ -74,87 +74,102 @@ module Z3Solver =
     let unsatisfiable formula =
       result_is Z3.Solver.UNSATISFIABLE formula      
 
+    let tautology =
+      unsatisfiable % Formula.neg
+      
     let equivalent formula1 formula2 =
       (* Negating formula1 <=> formula2 *)
       Formula.Infix.((formula1 && Formula.neg formula2) || (formula2 && Formula.neg formula1))
       |> unsatisfiable
       
     let match_string_for_float str =
-        let float_regexp = Str.regexp "(?\\([-]?\\)[ ]?\\([0-9]*\\.?[0-9]+\\))?" in             (*(?\\([-0-9\\.]*\\))?*)
-            Str.replace_first float_regexp "\\1\\2" str 
-           
+      let float_regexp = Str.regexp "(?\\([-]?\\)[ ]?\\([0-9]*\\.?[0-9]+\\))?" in             (*(?\\([-0-9\\.]*\\))?*)
+      Str.replace_first float_regexp "\\1\\2" str 
+      
     let get_model (constraints : formula) =
-        let formula = from_constraint constraints in
-        let optimisation_goal = Z3.Optimize.mk_opt !context in
-            Z3.Optimize.add optimisation_goal [formula];
-            let status = Z3.Optimize.check optimisation_goal in
-                if (status == Z3.Solver.SATISFIABLE) then
-                    let model = Z3.Optimize.get_model optimisation_goal in
-                        match model with
-                        | None -> Valuation.from []
-                        | Some model -> 
-                            let assigned_values = Z3.Model.get_const_decls model in
-                                Valuation.from 
-                                (List.map 
-                                    (fun func_decl -> 
-                                        let name = Z3.Symbol.get_string (Z3.FuncDecl.get_name func_decl) in
-                                        
-                                        (*This is wrong, we have to check if the string is "$_number"*, to get helper variables*)
-                                        let var_of_name = Var.of_string name in
-                                        let value = Option.get (Z3.Model.get_const_interp
-                                        model func_decl)(*careful, this returns an option*) in
-
-                                        let int_of_value = Int.of_float (Float.of_string ( match_string_for_float (Z3.Expr.to_string value))) in 
-                                        let value_of_value = (OurInt.of_int int_of_value) in
-                                            (var_of_name,value_of_value)) assigned_values)
-                else Valuation.from []
+      let formula = from_constraint constraints in
+      let optimisation_goal = Z3.Optimize.mk_opt !context in
+      Z3.Optimize.add optimisation_goal [formula];
+      let status = Z3.Optimize.check optimisation_goal in
+      if (status == Z3.Solver.SATISFIABLE) then
+        let model = Z3.Optimize.get_model optimisation_goal in
+        match model with
+        | None -> Valuation.from []
+        | Some model -> 
+           let assigned_values = Z3.Model.get_const_decls model in
+           Valuation.from 
+             (List.map 
+                (fun func_decl -> 
+                  let name = Z3.Symbol.get_string (Z3.FuncDecl.get_name func_decl) in
+                  
+                  (*This is wrong, we have to check if the string is "$_number"*, to get helper variables*)
+                  let var_of_name = Var.of_string name in
+                  let value = Option.get (Z3.Model.get_const_interp model func_decl) in
+                  (*careful, this returns an option*) 
+                  
+                  let int_of_value = Int.of_float (Float.of_string ( match_string_for_float (Z3.Expr.to_string value))) in 
+                  let value_of_value = OurInt.of_int int_of_value in
+                  (var_of_name,value_of_value)) assigned_values)
+      else Valuation.from []
      
     (** Returns true iff the formula implies the positivity of the polynomial*)
-    let check_positivity (constraints : formula) (poly: Polynomial.t) =
-      let positivity_formula = (Formula.mk_and constraints (Formula.mk_lt poly Polynomial.zero)) in
-        unsatisfiable positivity_formula
+    let check_positivity (formula : formula) (poly: Polynomial.t) =
+      tautology Formula.Infix.(formula => (poly >= Polynomial.zero))
     
     (** Returns true iff the formula implies the negativity of the polynomial*)
-    let check_negativity (constraints : formula) (poly: Polynomial.t) =
-      let negativity_formula = (Formula.mk_and constraints (Formula.mk_gt poly Polynomial.zero)) in
-        unsatisfiable negativity_formula
+    let check_negativity (formula : formula) (poly: Polynomial.t) =
+      tautology Formula.Infix.(formula => (poly <= Polynomial.zero))
     
     let generate_minimise (constraints : formula) (coeffs_to_minimise: Var.t list) =
-      let generator = fun poly -> (fun vrbl -> if (check_positivity constraints Polynomial.(of_var vrbl)) then Polynomial.(poly + (of_var vrbl)) else (if (check_negativity constraints Polynomial.(of_var vrbl)) then Polynomial.(poly - (of_var vrbl)) else poly)) in
+      let generator poly vrbl =
+        if check_positivity constraints Polynomial.(of_var vrbl) then
+          Polynomial.(poly + (of_var vrbl))
+        else if check_negativity constraints Polynomial.(of_var vrbl) then
+          Polynomial.(poly - (of_var vrbl))
+        else
+          poly
+      in
       from_poly (List.fold_left generator Polynomial.zero coeffs_to_minimise)
     
-    let get_model_opt (constraints : formula) (coeffs_to_minimise: Var.t list) =
-        let formula = from_constraint constraints in
-        let optimisation_goal = Z3.Optimize.mk_opt !context in
-            Z3.Optimize.add optimisation_goal [formula];
-            (*let minimise_constr = List.map (fun var -> from_poly (Polynomial.pow (Polynomial.of_var var) 2)) coeffs_to_minimise in
-              for i = 0 to (List.length minimise_constr) - 1 do
-                  Z3.Optimize.minimize optimisation_goal (List.at minimise_constr i);
-              done;*)
-            Z3.Optimize.minimize optimisation_goal (generate_minimise constraints coeffs_to_minimise);
-              (*print_string ("\nOptimise to_string:\n"^(Z3.Optimize.to_string optimisation_goal)^"\n");*)
-              let status = Z3.Optimize.check optimisation_goal in
-                if (status == Z3.Solver.SATISFIABLE (*|| status == Z3.Solver.UNKNOWN*)) then
-                    let model = Z3.Optimize.get_model optimisation_goal in
-                        match model with
-                        | None -> Valuation.from []
-                        | Some model -> 
-(*                          print_string ("\n Z3 model to string"^(Z3.Model.to_string model)^"\n");*)
-                            let assigned_values = Z3.Model.get_const_decls model in
-                                Valuation.from 
-                                (List.map 
-                                    (fun func_decl -> 
-                                        let name = Z3.Symbol.get_string (Z3.FuncDecl.get_name func_decl) in
-                                        
-                                        (*This is wrong, we have to check if the string is "$_number"*, to get helper variables*)
-                                        let var_of_name = Var.of_string name in
-                                        let value = Option.get (Z3.Model.get_const_interp
-                                        model func_decl)(*careful, this returns an option*) in
-
-                                        let int_of_value = Int.of_float (Float.of_string ( match_string_for_float (Z3.Expr.to_string value))) in 
-                                        let value_of_value = (OurInt.of_int int_of_value) in
-                                            (var_of_name,value_of_value)) assigned_values)
-                else Valuation.from []
-                
-        
+    let get_model_opt (formula : formula) (coeffs_to_minimise: Var.t list) =
+      let z3_expr = from_constraint formula in
+      let optimisation_goal = Z3.Optimize.mk_opt !context in
+      Z3.Optimize.add optimisation_goal [z3_expr];
+      (*let minimise_constr = List.map (fun var -> from_poly (Polynomial.pow (Polynomial.of_var var) 2)) coeffs_to_minimise in
+        for i = 0 to (List.length minimise_constr) - 1 do
+        Z3.Optimize.minimize optimisation_goal (List.at minimise_constr i);
+        done;*)
+      Z3.Optimize.minimize optimisation_goal (generate_minimise formula coeffs_to_minimise);
+      (*print_string ("\nOptimise to_string:\n"^(Z3.Optimize.to_string optimisation_goal)^"\n");*)
+      let status = Z3.Optimize.check optimisation_goal in
+      if status == Z3.Solver.SATISFIABLE (*|| status == Z3.Solver.UNKNOWN*) then
+        optimisation_goal
+        |> Z3.Optimize.get_model
+        |> Option.map (fun model ->
+               model
+               |> Z3.Model.get_const_decls
+               |> List.map (fun func_decl -> 
+                      let var =
+                        func_decl
+                        |> Z3.FuncDecl.get_name
+                        |> Z3.Symbol.get_string
+                        |> Var.of_string
+                      in                  
+                      (*This is wrong, we have to check if the string is "$_number"*, to get helper variables*)                  
+                      let value =
+                        func_decl
+                        |> Z3.Model.get_const_interp model
+                        (*careful, this returns an option*)
+                        |> Option.get
+                        |> Z3.Expr.to_string
+                        |> match_string_for_float
+                        |> Float.of_string
+                        |> Int.of_float
+                        |> OurInt.of_int
+                      in 
+                      (var, value)))
+        |? []
+        |> Valuation.from
+      else Valuation.from []
+      
   end

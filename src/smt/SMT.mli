@@ -12,6 +12,8 @@ sig
 
     val unsatisfiable : formula -> bool
 
+    val tautology : formula -> bool
+      
     val equivalent : formula -> formula -> bool
       
     val get_model : formula -> valuation

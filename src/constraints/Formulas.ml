@@ -63,6 +63,9 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let implies formula1 formula2 =
       mk_or (neg formula1) formula2
 
+    let equivalent formula1 formula2 =
+      mk_and (implies formula1 formula2) (implies formula2 formula1)
+
     module Infix = struct
       let (=) = mk_eq
       let (>) = mk_gt
@@ -71,6 +74,8 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
       let (<=) = mk_le
       let (&&) = mk_and
       let (||) = mk_or
+      let (=>) = implies
+      let (<=>) = equivalent
     end
 
     let all =
