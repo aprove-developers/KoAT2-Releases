@@ -65,7 +65,7 @@ let tests =
                     (* Minus *)
                     ("-x", "0-x");                   
                     ("3", "7-4");                   
-                    ("0", "|x|-|x|");                   
+                    (* Not supported ("0", "|x|-|x|"); *)
                     ("-inf", "7-inf");                   
                     ("inf", "inf-8");                   
                     ("0", "inf-inf");                   
@@ -88,7 +88,7 @@ let tests =
                     ("-inf", "-inf*inf");
                     ("-inf", "inf*-inf");
                     ("inf", "-inf*-inf");
-                    ("x*x", "|x|*|x|");
+                    (* Not supported ("x*x", "|x|*|x|"); *)
 
                     (* Max *)
                     ("inf", "max {inf, inf}");

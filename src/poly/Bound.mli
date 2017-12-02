@@ -41,6 +41,9 @@ val is_infinity : t -> bool
   
 val to_string : t -> string
 
+(** Functions to classify the quality of the bound *)
+
+  
 (** Following methods can be used to classify the type of the polynomial. *)
 
 (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
@@ -64,6 +67,5 @@ val fold : const:(value -> 'b) ->
            exp:(value -> 'b -> 'b) ->
            min:('b -> 'b -> 'b) -> 
            max:('b -> 'b -> 'b) ->
-           abs:('b -> 'b) -> 
            inf:'b ->
            t -> 'b 
