@@ -126,11 +126,8 @@ let as_formula in_v lsb =
   |> Formula.any
 
 let is_bounded_with var formula lsb =
-  lsb
-  |> as_formula var
-  |> Formula.implies formula
-  |> Formula.neg
-  |> SMT.Z3Solver.unsatisfiable
+  Formula.Infix.(formula => as_formula var lsb)
+  |> SMT.Z3Solver.tautology
 
 (** Performs a binary search between the lowest and highest value to find the optimal value which satisfies the predicate.
     We assume that the highest value already satisfies the predicate.
