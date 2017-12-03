@@ -162,14 +162,19 @@ let mk transitions =
 let label_to_transition label =
   (TransitionLabel.start label, label, TransitionLabel.target label)
   
-let from vars transitions start =
+let from transitions start =
+  let vars =
+    transitions
+    |> List.map TransitionLabel.vars
+    |> List.fold_left VarSet.union VarSet.empty
+    |> VarSet.to_list
+  in
   transitions
-  |> List.enum
-  |> Enum.map label_to_transition
-  |> Enum.map (fun (l,t,l') -> (Location.of_string l, t, Location.of_string l'))
+  |> List.map label_to_transition
+  |> List.map (fun (l,t,l') -> (Location.of_string l, t, Location.of_string l'))
   |> fun transitions ->
      {
-       graph = mk transitions;
+       graph = mk (List.enum transitions);
        vars = vars;
        start = start;
      }

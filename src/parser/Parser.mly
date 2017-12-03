@@ -65,7 +65,7 @@ program :
                 start = start
                 vars = variables
                 trans = transitions
-                  { Program.from vars (List.map (fun t -> t ~vars) trans) start } ;
+                  { Program.from (List.map (fun t -> t ~vars) trans) start } ;
 
 onlyProgram_simple :
         |       graph = program_simple; EOF
@@ -78,7 +78,7 @@ program_simple :
                     |> List.hd
 	            |> TransitionLabel.start
 	            |> Location.of_string
-                    |> Program.from default_vars (List.flatten trans) } ;
+                    |> Program.from (List.flatten trans) } ;
 
 transition_simple :
 	|	start = ID; cost = cost ; rhs = transition_rhs; formula = withConstraints

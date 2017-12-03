@@ -77,7 +77,13 @@ let update t var = VarMap.Exceptionless.find var t.update
 let guard t = t.guard
 
 let cost t = t.cost
-            
+
+let vars {update; guard; cost; _} =
+  VarMap.fold (fun _ -> VarSet.union % Polynomial.vars) update VarSet.empty
+  |> (VarSet.union % VarSet.of_enum % VarMap.keys) update
+  |> (VarSet.union % Guard.vars) guard
+  |> (VarSet.union % Polynomial.vars) cost
+           
 let default = {   
     start = "";
     target = "";

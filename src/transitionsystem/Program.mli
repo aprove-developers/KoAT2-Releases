@@ -90,10 +90,7 @@ val map_graph : (TransitionGraph.t -> TransitionGraph.t) -> t -> t
   
 val mk : Transition.t Enum.t -> TransitionGraph.t
 
-val from : Var.t list
-           -> TransitionLabel.t list
-           -> Location.t
-           -> t
+val from : TransitionLabel.t list -> Location.t -> t
 
 val rvg : t -> RVG.t
 

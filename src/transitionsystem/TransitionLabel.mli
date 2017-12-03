@@ -43,6 +43,8 @@ val guard : t -> Guard.t
 
 val default : t
 
+val vars : t -> VarSet.t
+  
 val cost : t -> polynomial
 
 val to_string : t -> string
