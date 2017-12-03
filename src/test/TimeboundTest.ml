@@ -46,16 +46,23 @@ let tests =
              program_str >:: (fun _ ->
                      let program = Readers.read_program_simple program_str in
                      let timebound = find_timebound program in
-                     assert_bool ("Bound not fine: " ^ Bound.to_string timebound) (is_bound_between (Program.vars program) timebound minimal_sound_timebound wanted_timebound)))
+                     assert_bool ("Bound not fine: " ^ Bound.to_string timebound)
+                                 (is_bound_between (Program.vars program) timebound (Readers.read_bound minimal_sound_timebound) (Readers.read_bound wanted_timebound))))
                   [
                     (* Constant bound *)
-                    (Bound.one, Bound.one, "l1 -> l2(x)");
-                    (Bound.of_int 2, Bound.of_int 2, "l1 -> l2(x), l2 -> l3(x)");
-                    (Bound.of_int 2, Bound.of_int 2, "l1 -> l2(x), l2 -> l3(x), l2 -> l4(x)");
-                    (Bound.of_int 3, Bound.of_int 3, "l1 -> l2(x), l2 -> l3(x), l2 -> l4(x), l3 -> l4(x)");
-                    (Bound.of_int 11, Bound.of_int 11, "l1 -> l2(10), l2 -> l2(x-1) :|: x>0");
-                    (Bound.of_int 6, Bound.of_int 6, "l1 -> l2(10), l2 -> l2(x-2) :|: x>0");
+                    ("1", "1", "l1 -> l2(x)");
+                    ("2", "2", "l1 -> l2(x), l2 -> l3(x)");
+                    ("2", "2", "l1 -> l2(x), l2 -> l3(x), l2 -> l4(x)");
+                    ("3", "3", "l1 -> l2(x), l2 -> l3(x), l2 -> l4(x), l3 -> l4(x)");
+                    ("11", "11", "l1 -> l2(10), l2 -> l2(x-1) :|: x>0");
+                    ("6", "6", "l1 -> l2(10), l2 -> l2(x-2) :|: x>0");
                     (* Linear bound *)
+                    ("max{0,x}+1", "max{0,x}+1", "l1 -> l2(x), l2 -> l2(x-1) :|: x>0");
+                    ("max{0,x+y}+1", "max{0,x+y}+1", "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x+y>0");
+                    ("max{0,x-y}+1", "max{0,x-y}+1", "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x>y");
+                    ("max{0,y}+1", "max{0,y}+1", "l1 -> l2(0,y), l2 -> l2(x+1,y) :|: x<y");
+                    ("max{0,x}+max{0,y}+1", "max{0,x}+max{0,y}+1", "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x>0, l2 -> l2(x,y-1) :|: y>0");
+                    (* Quadratic bound *)
                   ]
       );
       
