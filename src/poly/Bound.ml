@@ -200,13 +200,13 @@ let rec simplify bound =
     (* Simplify terms with pow head *)
     | Pow (value, exponent) -> (
        match simplify exponent with
-       | Infinity when OurInt.Compare.(value > OurInt.zero) -> Infinity
-       | Neg Infinity when OurInt.Compare.(value > OurInt.zero) -> Const OurInt.zero
+       | exponent when OurInt.(equal value zero) && (exponent > Const (OurInt.zero) |? false) -> Const OurInt.zero
+       | _ when OurInt.(equal value one) -> Const OurInt.one
+       | Infinity when OurInt.Compare.(value >= OurInt.of_int 2) -> Infinity
+       | Neg Infinity when OurInt.Compare.(value >= OurInt.of_int 2) -> Const OurInt.zero
        | Const c -> Const OurInt.(pow value (to_int c))
        (* TODO Do not use OurInt.to_int *)
        | Max (Const c, b) -> Max (Const (OurInt.pow value (OurInt.to_int c)), Pow (value, b))
-       | _ when OurInt.(equal value zero) -> Const OurInt.zero
-       | _ when OurInt.(equal value one) -> Const OurInt.one
        | exponent -> Pow (value, exponent)
     )
 
