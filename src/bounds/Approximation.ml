@@ -112,6 +112,9 @@ module Size =
     let print_all_of_kind output kind size =
       size
       |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
+      |> Map.filter (match kind with
+                     | `Upper -> not % Bound.is_infinity
+                     | `Lower -> not % Bound.is_infinity % Bound.neg)
       |> Map.print
            ~first:(show_kind kind ^ ":\n  ")
            ~last:"\n"
