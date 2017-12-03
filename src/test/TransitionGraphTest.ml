@@ -3,8 +3,6 @@ open OUnit2
 open Helper
 open Program.Types
    
-module TransitionSet = Set.Make(Transition)
-               
 let suite =
   "Graphs" >::: [
       (

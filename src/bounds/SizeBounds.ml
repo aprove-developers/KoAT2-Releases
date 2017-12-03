@@ -1,8 +1,6 @@
 open Batteries
 open Program.Types
    
-module TransitionSet = Set.Make(Transition)
-             
 let logger = Logging.(get Size)
 
 let improve_scc program rvg appr = function

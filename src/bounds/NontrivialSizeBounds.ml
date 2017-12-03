@@ -23,14 +23,14 @@ let compute_
   let transitions =
     scc
     |> List.map (fun (t,v) -> t)
-    |> List.unique ~eq:Transition.equal
+    |> List.unique ~eq:Transition.same
     |> tap (fun transitions -> Logger.log logger Logger.DEBUG (fun () -> "transitions", ["result", Util.enum_to_string Transition.to_id_string (List.enum transitions)]))
   in
 
   (** Returns all the variables with which the given transition does occur as result variable in the scc. *)
   let get_scc_vars transition =
     scc
-    |> List.filter (fun (t,v) -> Transition.equal t transition)
+    |> List.filter (fun (t,v) -> Transition.same t transition)
     |> List.map (fun (t,v) -> v)
     |> tap (fun scc_vars -> Logger.log logger Logger.DEBUG (fun () -> "scc_vars", ["result", Util.enum_to_string Var.to_string (List.enum scc_vars)]))
     |> List.enum
@@ -40,14 +40,14 @@ let compute_
   let pre_in_scc rv =
     rv
     |> RVG.pre rvg
-    |> Util.intersection RV.equal (List.enum scc)
+    |> Util.intersection RV.same (List.enum scc)
   in
 
   (** Returns all result variables that may influence the given result variable and that are not part of the scc. *)
   let pre_out_scc rv =
     rv
     |> RVG.pre rvg
-    |> Util.without RV.equal (List.enum scc)
+    |> Util.without RV.same (List.enum scc)
   in
 
   (** Returns all result variables that may influence the given result variable from within the scc. *)

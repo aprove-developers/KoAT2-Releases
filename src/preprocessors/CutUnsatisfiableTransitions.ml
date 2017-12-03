@@ -7,8 +7,6 @@ open Program.Types
     Note that it only removes the specific transitions. 
     After the transformation the graph might contain unreachable locations, and even locations that are not connected to any transition. *)
 
-module TransitionSet = Set.Make(Transition)
-
 let unsatisfiable_transitions graph : TransitionSet.t =
   let combine (l,t,l') set =
     if SMT.Z3Solver.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then

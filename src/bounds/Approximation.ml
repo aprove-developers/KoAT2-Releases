@@ -7,7 +7,12 @@ let logger = Logging.(get Approximation)
 
 module Time =
   struct
-    module Map = Hashtbl.Make(Transition)
+    module Time_Transition =
+      struct
+        include Transition
+        let equal = same
+      end
+    module Map = Hashtbl.Make(Time_Transition)
                
     type t = Bound.t Map.t
            
@@ -56,9 +61,19 @@ module Time =
       IO.close_out output
 
     (** Very slow equality, only for testing purposes *)
-    let equal time1 time2 =
+    let equivalent time1 time2 =
       let module Set =
-        Set.Make(struct type t = Transition.t * Bound.t [@@deriving ord] end)
+        Set.Make(struct type t = Transition.t * Bound.t
+                        let compare (t1,bound1) (t2,bound2) =
+                          if Transition.compare_same t1 t2 != 0 then
+                            Transition.compare_same t1 t2
+                          else if Bound.(bound1 < bound2) |? false then
+                            -1
+                          else if Bound.(bound1 > bound2) |? false then
+                            1
+                          else
+                            0
+                 end)
       in
       let to_set time = time |> Map.enum |> Set.of_enum in
       Set.equal (to_set time1) (to_set time2)
@@ -70,7 +85,13 @@ module Size =
     module Map =
       Hashtbl.Make(
           struct
-            type t = kind * Transition.t * Var.t [@@deriving eq]
+            type t = kind * Transition.t * Var.t
+                   
+            let equal (kind1, t1, v1) (kind2, t2, v2) =
+              equal_kind kind1 kind2
+              && Transition.same t1 t2
+              && Var.equal v1 v2
+              
             let hash (kind, t, v) =
               Hashtbl.hash (show_kind kind
                             ^ Location.to_string (Transition.src t) ^ Location.to_string (Transition.target t)
@@ -130,17 +151,35 @@ module Size =
       IO.close_out output
 
     (** Very slow equality, only for testing purposes *)
-    let equal size1 size2 =
+    let equivalent size1 size2 =
       let module Set =
-        Set.Make(struct type t = (kind * Transition.t * Var.t) * Bound.t [@@deriving ord] end)
+        Set.Make(struct type t = (kind * Transition.t * Var.t) * Bound.t
+                        let compare ((kind1,t1,v1),bound1) ((kind2,t2,v2),bound2) =
+                          if compare_kind kind1 kind2 != 0 then
+                            compare_kind kind1 kind2
+                          else if Transition.compare_same t1 t2 != 0 then
+                            Transition.compare_same t1 t2
+                          else if Var.compare v1 v2 != 0 then
+                            Var.compare v1 v2
+                          else if Bound.(bound1 < bound2) |? false then
+                            -1
+                          else if Bound.(bound1 > bound2) |? false then
+                            1
+                          else
+                            0
+                 end)
       in
       let to_set time = time |> Map.enum |> Set.of_enum in
       Set.equal (to_set size1) (to_set size2)
             
   end
 
-type t = Time.t * Size.t [@@deriving eq]
+type t = Time.t * Size.t
 
+let equivalent (time1,size1) (time2,size2) =
+  Time.equivalent time1 time2
+  && Size.equivalent size1 size2
+  
 let empty transitioncount varcount =
     Time.empty transitioncount,
     Size.empty (2 * transitioncount * varcount)

@@ -20,8 +20,10 @@ sig
   module Transition :
   sig
     type t = Location.t * TransitionLabel.t * Location.t
-    val equal : t -> t -> bool
-    val compare : t -> t -> int
+    val same : t -> t -> bool
+    val equivalent : t -> t -> bool
+    val compare_same : t -> t -> int
+    val compare_equivalent : t -> t -> int
     val hash : t -> int
     val to_id_string : t -> string
     val to_string : t -> string
@@ -30,22 +32,24 @@ sig
     val target : t -> Location.t
     val cost : t -> Polynomial.t
   end
-  module TransitionSet : module type of Set.Make(Transition)
+  module TransitionSet : module type of Set.Make(struct include Transition let compare = Transition.compare_same end)
 
   module TransitionGraph :
   sig
-    include module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
+    include module type of Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_same end)
     val locations : t -> LocationSet.t
     val transitions : t -> TransitionSet.t
     val loc_transitions : t -> Location.t list -> TransitionSet.t
-    val equal : t -> t -> bool
+    val equivalent : t -> t -> bool
   end
        
   module RV :
   sig
     type t = Transition.t * Var.t
-    val equal : t -> t -> bool
-    val compare : t -> t -> int
+    val same : t -> t -> bool
+    val equivalent : t -> t -> bool
+    val compare_same : t -> t -> int
+    val compare_equivalent : t -> t -> int
     val to_id_string : t -> string
     val to_string : t -> string
     val hash : t -> int
@@ -55,7 +59,11 @@ sig
        
   module RVG :
   sig
-    include module type of Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+    include module type of Graph.Persistent.Digraph.ConcreteBidirectional(struct
+                                                                           include RV
+                                                                           let equal = same
+                                                                           let compare = compare_same
+                                                                         end)
 
     val rvs_to_id_string : RV.t list -> string
 
@@ -114,7 +122,7 @@ val is_initial : t -> Transition.t -> bool
 (** Returns if the given transition is an initial transition. *)
 val is_initial_location : t -> Location.t -> bool
 
-val equal : t -> t -> bool
+val equivalent : t -> t -> bool
   
 val to_string : t -> string
   

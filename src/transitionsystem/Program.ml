@@ -17,8 +17,35 @@ module Types =
 
     module Transition =
       struct
-        type t = Location.t * TransitionLabel.t * Location.t [@@deriving eq, ord]
+        type t = Location.t * TransitionLabel.t * Location.t
 
+        let equal equal_lbl (l1,t1,l1') (l2,t2,l2') =
+          Location.equal l1 l2
+          && equal_lbl t1 t2
+          && Location.equal l1' l2'
+               
+        let same =
+          equal TransitionLabel.same
+          
+        let equivalent =
+          equal TransitionLabel.equivalent
+
+        let compare compare_lbl (l1,t1,l1') (l2,t2,l2') =
+          if Location.compare l1 l2 != 0 then
+            Location.compare l1 l2
+          else if compare_lbl t1 t2 != 0 then
+            compare_lbl t1 t2
+          else if Location.compare l1' l2' != 0 then
+            Location.compare l1' l2'
+          else
+            0
+          
+        let compare_same =
+          compare TransitionLabel.compare_same
+          
+        let compare_equivalent =
+          compare TransitionLabel.compare_equivalent
+          
         let src (src, _, _) = src
                             
         let label (_, label, _) = label
@@ -39,11 +66,11 @@ module Types =
         let to_string (l,t,l') =
           to_id_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
       end
-    module TransitionSet = Set.Make(Transition)
+    module TransitionSet = Set.Make(struct include Transition let compare = Transition.compare_same end)
 
     module TransitionGraph =
       struct
-        include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(TransitionLabel)
+        include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_same end)
 
         let locations graph =
           fold_vertex LocationSet.add graph LocationSet.empty
@@ -57,16 +84,41 @@ module Types =
                  List.mem_cmp Location.compare l locations
                  && List.mem_cmp Location.compare l' locations)
           
-        let equal graph1 graph2 =
+        module Equivalence_TransitionSet = Set.Make(struct include Transition let compare = Transition.compare_equivalent end)
+          
+        let equivalent graph1 graph2 =
           LocationSet.equal (locations graph1) (locations graph2)
-          && TransitionSet.equal (transitions graph1) (transitions graph2)
+          && Equivalence_TransitionSet.equal (graph1 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
+                                             (graph2 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
 
       end
 
     module RV =
       struct
-        type t = Transition.t * Var.t [@@deriving eq, ord]
-               
+        type t = Transition.t * Var.t
+
+        let same (t1,v1) (t2,v2) =
+          Transition.same t1 t2
+          && Var.equal v1 v2
+
+        let equivalent (t1,v1) (t2,v2) =
+          Transition.equivalent t1 t2
+          && Var.equal v1 v2
+
+        let compare compare_transition (t1,v1) (t2,v2) =
+          if compare_transition t1 t2 != 0 then
+            compare_transition t1 t2
+          else if Var.compare v1 v2 != 0 then
+            Var.compare v1 v2
+          else
+            0
+
+        let compare_same =
+          compare Transition.compare_same
+          
+        let compare_equivalent =
+          compare Transition.compare_equivalent
+
         let hash (t,v) =
           Hashtbl.hash (Transition.to_string t ^ Var.to_string v)
           
@@ -85,7 +137,11 @@ module Types =
 
     module RVG =
       struct
-        include Graph.Persistent.Digraph.ConcreteBidirectional(RV)
+        include Graph.Persistent.Digraph.ConcreteBidirectional(struct
+                                                                include RV
+                                                                let equal = same
+                                                                let compare = compare_same
+                                                              end)
 
         type scc = RV.t list
 
@@ -109,14 +165,14 @@ module Types =
           |> List.enum
           |> Enum.map (pre rvg)
           |> Enum.flatten
-          |> Enum.uniq_by RV.equal
-          |> Util.intersection RV.equal (List.enum scc)
+          |> Enum.uniq_by RV.same
+          |> Util.intersection RV.same (List.enum scc)
 
         let transitions scc =
           scc
           |> List.enum
           |> Enum.map RV.transition
-          |> Enum.uniq_by Transition.equal
+          |> Enum.uniq_by Transition.same
       end  
 
   end
@@ -127,8 +183,16 @@ type t = {
     graph: TransitionGraph.t;
     vars: Var.t list;
     start: Location.t;
-  } [@@deriving eq]
-       
+  }
+
+let equal equal_graph program1 program2 =
+  equal_graph program1.graph program2.graph
+  && List.eq Var.equal program1.vars program2.vars
+  && Location.equal program1.start program2.start
+
+let equivalent =
+  equal TransitionGraph.equivalent
+
 let add_locations locations graph =
   locations
   |> Enum.map (fun l -> fun gr -> TransitionGraph.add_vertex gr l)

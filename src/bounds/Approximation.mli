@@ -19,7 +19,7 @@ sig
   val add : Bound.t -> Transition.t -> t -> t
   val all_bounded : t -> Transition.t list -> bool
   val to_string : t -> string
-  val equal : t -> t -> bool
+  val equivalent : t -> t -> bool
 end
 
 module Size :
@@ -30,7 +30,7 @@ sig
   val add : kind -> Bound.t -> Transition.t -> Var.t -> t -> t
   val add_all : kind -> Bound.t -> RV.t list -> t -> t
   val to_string : t -> string
-  val equal : t -> t -> bool
+  val equivalent : t -> t -> bool
 end
 
 (** Returns an empty approximation that does not contain any non-trivial information.
@@ -74,4 +74,4 @@ val add_sizebounds : kind -> Bound.t -> RV.t list -> t -> t
 
 val to_string : Program.t -> t -> string
 
-val equal : t -> t -> bool
+val equivalent : t -> t -> bool

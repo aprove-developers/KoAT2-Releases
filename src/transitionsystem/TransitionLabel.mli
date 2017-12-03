@@ -28,10 +28,16 @@ val mk : ?cost:polynomial ->
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
 val append : t -> t -> t
-  
-val equal : t -> t -> bool
 
-val compare : t -> t -> int
+(** Returns if the two labels are the same entity. *)
+val same : t -> t -> bool
+
+(** Returns if the two labels describe the same transition *)
+val equivalent : t -> t -> bool
+  
+val compare_same : t -> t -> int
+
+val compare_equivalent : t -> t -> int
 
 val start : t -> string
 

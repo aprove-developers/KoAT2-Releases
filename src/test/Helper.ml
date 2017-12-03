@@ -47,7 +47,7 @@ let assert_equal_formula =
     ~printer:Formula.to_string
 
 let assert_equal_program =     
-  assert_equal ~cmp:Program.equal ~printer:Program.to_string
+  assert_equal ~cmp:Program.equivalent ~printer:Program.to_string
   
 let assert_true = assert_bool ""
                 
