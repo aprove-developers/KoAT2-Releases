@@ -170,7 +170,7 @@ let find vars transitions =
     let strictly_decreasing_transitions = single_strictly_decreasing pol transitions non_increasing in
     let bounded = Constraint.all (List.map (bounded_constraint pol) strictly_decreasing_transitions) in
     let strictly_decreasing = Constraint.all (List.map (strictly_decreasing_constraint pol) strictly_decreasing_transitions) in
-    let model = SMTSolver.get_model_opt (Formula.mk (Constraint.Infix.(non_increasing && bounded && strictly_decreasing))) fresh_coeffs in
+    let model = SMTSolver.get_model (Formula.mk (Constraint.Infix.(non_increasing && bounded && strictly_decreasing))) ~coeffs_to_minimise:fresh_coeffs in
     {
       pol = (fun loc -> Polynomial.eval_partial (ParameterPolynomial.flatten (pol loc)) model);
       strictly_decreasing = strictly_decreasing_transitions;

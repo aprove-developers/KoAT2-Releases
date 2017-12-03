@@ -81,37 +81,7 @@ module Z3Solver =
       (* Negating formula1 <=> formula2 *)
       Formula.Infix.((formula1 && Formula.neg formula2) || (formula2 && Formula.neg formula1))
       |> unsatisfiable
-      
-    let match_string_for_float str =
-      let float_regexp = Str.regexp "(?\\([-]?\\)[ ]?\\([0-9]*\\.?[0-9]+\\))?" in             (*(?\\([-0-9\\.]*\\))?*)
-      Str.replace_first float_regexp "\\1\\2" str 
-      
-    let get_model (constraints : formula) =
-      let formula = from_constraint constraints in
-      let optimisation_goal = Z3.Optimize.mk_opt !context in
-      Z3.Optimize.add optimisation_goal [formula];
-      let status = Z3.Optimize.check optimisation_goal in
-      if (status == Z3.Solver.SATISFIABLE) then
-        let model = Z3.Optimize.get_model optimisation_goal in
-        match model with
-        | None -> Valuation.from []
-        | Some model -> 
-           let assigned_values = Z3.Model.get_const_decls model in
-           Valuation.from 
-             (List.map 
-                (fun func_decl -> 
-                  let name = Z3.Symbol.get_string (Z3.FuncDecl.get_name func_decl) in
-                  
-                  (*This is wrong, we have to check if the string is "$_number"*, to get helper variables*)
-                  let var_of_name = Var.of_string name in
-                  let value = Option.get (Z3.Model.get_const_interp model func_decl) in
-                  (*careful, this returns an option*) 
-                  
-                  let int_of_value = Int.of_float (Float.of_string ( match_string_for_float (Z3.Expr.to_string value))) in 
-                  let value_of_value = OurInt.of_int int_of_value in
-                  (var_of_name,value_of_value)) assigned_values)
-      else Valuation.from []
-     
+           
     (** Returns true iff the formula implies the positivity of the polynomial*)
     let check_positivity (formula : formula) (poly: Polynomial.t) =
       tautology Formula.Infix.(formula => (poly >= Polynomial.zero))
@@ -131,7 +101,7 @@ module Z3Solver =
       in
       from_poly (List.fold_left generator Polynomial.zero coeffs_to_minimise)
     
-    let get_model_opt (formula : formula) (coeffs_to_minimise: Var.t list) =
+    let get_model ?(coeffs_to_minimise=[]) formula =
       let z3_expr = from_constraint formula in
       let optimisation_goal = Z3.Optimize.mk_opt !context in
       Z3.Optimize.add optimisation_goal [z3_expr];
@@ -148,26 +118,31 @@ module Z3Solver =
         |> Option.map (fun model ->
                model
                |> Z3.Model.get_const_decls
-               |> List.map (fun func_decl -> 
+               |> List.map (fun func_decl ->
                       let var =
                         func_decl
                         |> Z3.FuncDecl.get_name
                         |> Z3.Symbol.get_string
                         |> Var.of_string
-                      in                  
-                      (*This is wrong, we have to check if the string is "$_number"*, to get helper variables*)                  
+                      in
                       let value =
                         func_decl
-                        |> Z3.Model.get_const_interp model
-                        (*careful, this returns an option*)
-                        |> Option.get
-                        |> Z3.Expr.to_string
-                        |> match_string_for_float
-                        |> Float.of_string
-                        |> Int.of_float
-                        |> OurInt.of_int
-                      in 
-                      (var, value)))
+                        |> Z3.Model.get_const_interp model                        
+                        |> Option.get (* Should be fine here *)
+                        |> (fun expr ->
+                          if Z3.Arithmetic.is_int expr then
+                            Z3.Arithmetic.Integer.get_int expr
+                            |> OurInt.of_int
+                          else
+                            expr
+                            |> Z3.Arithmetic.Real.get_ratio
+                            (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
+                            |> Ratio.round_ratio
+                        )
+                      in
+                      (var, value)
+                    )
+             )
         |? []
         |> Valuation.from
       else Valuation.from []

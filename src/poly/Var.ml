@@ -2,20 +2,19 @@ open Batteries
 
 type t =
   | Var of String.t
-  
   | Helper of int [@@deriving eq, ord]
             
 let (=~=) = equal
           
 let of_string str =
-    let is_helper_regexp = Str.regexp "[$][_][0-9]+" in
-      let is_helper = Str.string_match is_helper_regexp str 0 in
-        if is_helper then
-          let number_string = String.lchop (String.lchop str) in
-            let number = Int.of_string number_string in
-             Helper number
-        else
-          Var str
+  if String.starts_with str "$_" then
+    Helper (
+        str
+        |> String.lchop ~n:2
+        |> Int.of_string
+      )
+  else
+    Var str
 
 let hash = Hashtbl.hash
       

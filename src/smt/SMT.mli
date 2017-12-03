@@ -16,9 +16,7 @@ sig
       
     val equivalent : formula -> formula -> bool
       
-    val get_model : formula -> valuation
-    
-    val get_model_opt : formula -> Var.t list-> valuation
+    val get_model : ?coeffs_to_minimise:Var.t list -> formula -> valuation
     
     val check_positivity : formula -> Polynomials.Polynomial.t -> bool
     
