@@ -262,10 +262,18 @@ let rvg program =
   let add_transition (post_transition: Transition.t) (rvg: RVG.t): RVG.t =
     let rvg_with_vertices: RVG.t = add_vertices_to_rvg (List.map (fun var -> (post_transition,var)) program.vars) rvg in
     let pre_nodes (post_transition: Transition.t) (post_var: Var.t) =
-      (* Overapproximation of pre(alpha). We use all program variables here *)
-      (* TODO We can try to find a better approximation, however, it is not valid to use the variables of the local sizebounds. *)
-      program.vars
-      |> List.enum
+      (* TODO We can maybe try to split upper and lower pre variables. *)
+      let vars =
+        VarSet.union
+          (LocalSizeBound.sizebound_local `Upper (Transition.label post_transition) post_var
+           |> Option.map LocalSizeBound.vars
+           |? (VarSet.of_list program.vars))
+          (LocalSizeBound.sizebound_local `Upper (Transition.label post_transition) post_var
+           |> Option.map LocalSizeBound.vars
+           |? (VarSet.of_list program.vars))
+      in
+      vars
+      |> VarSet.enum
       |> Enum.cartesian_product (pre program post_transition)
       |> Enum.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
     in
