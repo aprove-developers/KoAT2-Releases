@@ -46,6 +46,7 @@ let rec to_string = function
   | Var v -> Var.to_string v
   | Const c -> OurInt.to_string c
   | Infinity -> "inf"
+  | Max (b1, Max (b2, b3)) -> "max{" ^ to_string b1 ^ ", " ^ to_string b2 ^ ", " ^ to_string b3 ^ "}"
   | Max (b1, b2) -> "max{" ^ to_string b1 ^ ", " ^ to_string b2 ^ "}"
   | Neg b -> "-" ^ (
       match b with
