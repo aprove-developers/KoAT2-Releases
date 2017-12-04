@@ -1,5 +1,6 @@
 \section{Preliminaries}
 
+
 \subsection{Programs}
 
 \begin{definition}[Program] 
@@ -28,6 +29,29 @@
 	We write $\configuration{} \rightarrow_{\TSet'} (\location', \valuation')$ iff there exists a transition $t \in \TSet' \subseteq \TSet$ such that $\configuration{} \rightarrow_t (\location', \valuation')$ holds.
 \end{definition}
 
+
+\subsection{Result Variable Graph}
+
+\begin{definition}[Pre-Transitions] 
+	We define $\pre: \TSet \rightarrow 2^\TSet$ as $\pre(t') = \braced{t \in \TSet \mid \exists \valuation_0, \location, \valuation: (\location_0, \valuation_0) \rightarrow^* \circ \rightarrow_t \circ \rightarrow_{t'} (\location, \valuation)}$ to denote the set of all transitions that may precede $t'$ in an evaluation.	
+\end{definition}
+
+If $\pre(t)$ represents the set of all transitions that may precede $t$ in an evaluation, then $\pre_{\mathit{trivial}}((\location_1, \tau_1, \location_1')) = \braced{(\location_2, \tau_2, \location_2') \in \TSet \mid \location_2' = \location_1}$ is a valid overapproximation.
+
+\begin{definition}[Active variables] 
+	We define $\actV: B \rightarrow 2^\VSet$ as 
+	\[ \actV(f) = \braced{ v_i \in \VSet \mid \exists m_1, \dots, m_n, m_i' \in \mathbb{Z}: f(m_1, \dots, m_i, \dots, m_n) \neq f(m_1, \dots, m_i', \dots, m_n)} \]
+	to denote the set of active variables in $f$.
+\end{definition}
+
+\begin{definition}[Result Variable Graph]
+	Let $\LSB$ be a local size bound.
+	We define 
+	\[ RVG = (\TSet \times \VSet, \braced{((t, v), (t', v')) \mid t \in \pre(t'), v \in \actV(\LLSB(t,v)) \cup \actV(\ULSB(t,v))}) \]
+	to denote the result variable graph.
+\end{definition}
+
+
 \subsection{Ranking functions}
 
 \begin{definition}[Polynomial Ranking Function] 
@@ -38,3 +62,21 @@
 	\[ \text{For all } (\location, \tau, \location') \in \TSet_{>} \text{ it holds that } \tau \Rightarrow \mathit{Pol}(\location)(\valuation) > \mathit{Pol}(\location)(\valuation') \]
 	\[ \text{For all } (\location, \tau, \location') \in \TSet_{>} \text{ it holds that } \tau \Rightarrow \mathit{Pol}(\location)(\valuation) > 1 \]
 \end{definition}
+
+
+\subsection{Complexity}
+
+\begin{definition}[Worst-Case Runtime Complexity]
+	\[ \text{rc}_{\text{worst}}(\valuation_0) = \mathit{sup} \braced{ k \in \mathbb{N} \mid \exists \location', \valuation': (\location_0, \valuation_0) \rightarrow^k (\location', \valuation') } \]
+\end{definition}
+
+\begin{definition}[Upper Runtime Bound]
+	\[ \UTime(t)(m) \geq \mathit{sup} \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location', \valuation': (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location', \valuation') } \]
+\end{definition}
+
+\begin{theorem}[Approximating Runtime Complexity]
+	Let $\UTime$ be a runtime approximation for $\TSet$.
+	Then it holds that 
+	\[ \mathit{rc}_\mathit{worst} \leq \sum_{t \in \TSet}\UTime(t) \]
+\end{theorem}
+
