@@ -80,7 +80,7 @@ let improve_with_pol program appr pol =
       else
         strictly_decreasing
         |> List.enum
-        |> Enum.fold (fun appr t -> Approximation.add_timebound timebound t appr) appr
+        |> Enum.fold (fun appr (t,cost_sens) -> Approximation.add_timebound timebound t appr) appr (*Still not clear, what to do with the costs*)
         |> MaybeChanged.changed
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve time bounds with pol", [])

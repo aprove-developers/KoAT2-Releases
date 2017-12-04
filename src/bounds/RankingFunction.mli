@@ -8,12 +8,14 @@ open Program.Types
 
 type t
 
+type kind = [ `Sensitive | `Unsensitive ] [@@deriving show]
+
 (** Returns the ranking polynomial for the specific location. *)
 val rank : t -> Location.t -> Polynomial.t
 
 (** Returns a non-empty list of all transitions which are strictly decreasing and at the same time bounded with one.
     Corresponds to T_> . *)
-val strictly_decreasing : t -> Transition.t list
+val strictly_decreasing : t -> (Transition.t*kind) list
   
 (** Returns a list of all transitions for which the prf is defined.
     Corresponds to T'. *)
