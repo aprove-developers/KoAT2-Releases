@@ -8,10 +8,10 @@ let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
 (** Prints the overall timebound of the program to the shell. *)
 let print_overall_timebound (program: Program.t) (appr: Approximation.t): unit =
   print_string (Bound.to_string Approximation.(Time.sum (time appr) program))
-  
+
 (** The shell arguments which can be defined in the console. *)
 type main_params = {
-    
+
     print_system : bool;
     (** Prints the integer transition system at the start as png *)
 
@@ -21,24 +21,24 @@ type main_params = {
     print_input : bool;
     (** Prints the raw unmodified input before the start *)
 
-    no_boundsearch : bool;
+    no_boundsearch : bool; [@aka ["n"]]
     (** Disables the search for bounds. Useful if you just want information about the integer transition system via the other options or for debugging purposes. *)
 
-    input : string; [@pos 0] [@docv "INPUT"]
+    input : string; [@aka ["i"]]
     (** Either an absolute or relative path to the koat input file which defines the integer transition system.
         Or the program defined in simple mode.
         How this string is interpreted is defined by the simple-input flag *)
 
-    simple_input : bool; [@default false]
+    simple_input : bool; [@default false] [@aka ["s"]]
     (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
     
-    output_dir : string option;
+    output_dir : string option; [@aka ["o"]]
     (** An absolute or relative path to the output directory, where all generated files should end up. *)
 
-    logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default []] [@sep ',']
+    logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default []] [@sep ','] [@aka ["l"]]
     (** The loggers which should be activated. *)
 
-    result : (Program.t -> Approximation.t -> unit); [@enum ["all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound]
+    result : (Program.t -> Approximation.t -> unit); [@enum ["all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. *)
     
     preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.all]
