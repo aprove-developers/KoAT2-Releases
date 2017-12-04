@@ -31,6 +31,7 @@
 
   Also for $\square \in \braced{\sqcup, \sqcap}$ we define the biggest/smallest incoming value of a variable $v \in \VSet$.
   \[ \text{in}^\sqcap_{\alpha,v} = \maxO {\max \braced{\mathcal{S}^\sqcap(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C}} \]
+  \todo{In this case you get a positive lower bound. Shouldn't there be a minus in front of this thing, to make it work?}
   \[ \text{in}^\sqcup_{\alpha,v} = \maxO {\max \braced{-\mathcal{S}^\sqcup(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C}} \]
 
   Furthermore we define for $\square \in \braced{\sqcup, \sqcap}$ the biggest/smallest incoming value of a result variable $\alpha \in \RV$.
