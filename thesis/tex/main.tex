@@ -7,43 +7,7 @@
 \usepackage{IEEEtrantools}
 \usepackage{todonotes}
 
-\newcommand{\location}{\ell}
-\newcommand{\valuation}{\sigma}
-\newcommand{\configuration}[1]{(\location_{#1}, \valuation_{#1})}
-\newcommand{\Configuration}[2]{(#2{\location}_{#1}, #2{\valuation}_{#1})}
-
-\newcommand{\abs}[1]{\left|#1\right|}
-
-\newcommand{\LSize}{{\mathcal{S}^\sqcup}}
-\newcommand{\USize}{{\mathcal{S}^\sqcap}}
-\newcommand{\Size}{{(\LSize, \USize)}}
-\newcommand{\UTime}{{\mathcal{R}^\sqcap}}
-\newcommand{\LLSB}{{\mathcal{S}^\sqcup_l}}
-\newcommand{\ULSB}{{\mathcal{S}^\sqcap_l}}
-\newcommand{\LSB}{{(\LLSB, \ULSB)}}
-\newcommand{\LTime}{{\mathcal{R}^\sqcup}}
-
-\newcommand{\SCC}{C}
-\newcommand{\Pol}{\mathit{Pol}}
-\newcommand{\RV}{\mathit{RV}}
-\newcommand{\BoundSet}{\mathit{UB}}
-\newcommand{\TSet}{\mathcal{T}}
-\newcommand{\VSet}{\mathcal{V}}
-\newcommand{\LSet}{\mathcal{L}}
-\newcommand{\ScaledSum}{\dot{x}}
-\newcommand{\pre}{\mathit{pre}}
-\newcommand{\actV}{\mathit{actV}}
-\newcommand{\maxO}[1]{\left\Vert#1\right\Vert}
-\newcommand{\maximum}[1]{\max \lbrace #1 \rbrace}
-\newcommand{\minimum}[1]{\min \lbrace #1 \rbrace}
-\newcommand{\braced}[1]{\lbrace #1 \rbrace}
-\newcommand{\valuateto}[1]{(\rightarrow^* \circ \rightarrow_{#1})}
-\newcommand{\UpperSizeComplexity}[2]{
-  \sup \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
-}
-\newcommand{\LowerSizeComplexity}[2]{
-  \inf \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
-}
+\input{commands}
 
 \theoremstyle{definition}
 
