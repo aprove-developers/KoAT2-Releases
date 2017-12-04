@@ -20,8 +20,7 @@ type t =
   | Pow of OurInt.t * t
   | Sum of t * t
   | Product of t * t 
-  | Max of t * t
-  | Min of t * t [@@deriving eq, ord]
+  | Max of t * t [@@deriving eq, ord]
 
 let of_var v = Var v
 
@@ -38,7 +37,6 @@ module Constructor =
       | Sum _ -> 5
       | Product _ -> 6
       | Max _ -> 7
-      | Min _ -> 8
         
     let (<) b1 b2 =
       number b1 < number b2
@@ -49,7 +47,6 @@ let rec to_string = function
   | Const c -> OurInt.to_string c
   | Infinity -> "inf"
   | Max (b1, b2) -> "max{" ^ to_string b1 ^ ", " ^ to_string b2 ^ "}"
-  | Min (b1, b2) -> "min{" ^ to_string b1 ^ ", " ^ to_string b2 ^ "}"
   | Neg b -> "-" ^ (
       match b with
       | Sum (b1, b2) -> "(" ^ to_string (Sum (b1, b2)) ^ ")"
@@ -79,8 +76,8 @@ let rec (>) b1 b2 =
     )
     | (Const z1, b) when OurInt.(equal z1 zero) -> (
       match b with
-      | Min (b, _) when (Const OurInt.zero) > b |? false -> Some true
-      | Min (_, b) when (Const OurInt.zero) > b |? false -> Some true
+      | Neg (Max (b, _)) when b > (Const OurInt.zero) |? false -> Some true
+      | Neg (Max (_, b)) when b > (Const OurInt.zero) |? false -> Some true
       | _ -> None
     )
     | (b1, b2) -> None
@@ -107,8 +104,8 @@ let rec (>=) b1 b2 =
       )
       | (b, Const z1) when OurInt.(equal z1 zero) -> (
         match b with
-        | Min (b, _) when (Const OurInt.zero) >= b |? false -> Some true
-        | Min (_, b) when (Const OurInt.zero) >= b |? false -> Some true
+        | Neg (Max (b, _)) when b >= (Const OurInt.zero) |? false -> Some true
+        | Neg (Max (_, b)) when b >= (Const OurInt.zero) |? false -> Some true
         | _ -> None
       )
       | (b1, b2) -> None
@@ -139,8 +136,6 @@ let rec simplify bound =
     | Neg b -> (
       match simplify b with
       | Const c -> Const (OurInt.neg c)
-      | Max (b1, b2) -> simplify (Min (Neg b1, Neg b2))
-      | Min (b1, b2) -> simplify (Max (Neg b1, Neg b2))
       | Sum (b1, b2) -> simplify (Sum (Neg b1, Neg b2))
       | Neg b -> b
       | Product (b1, b2) -> simplify (Product (Neg b1, b2))
@@ -209,21 +204,6 @@ let rec simplify bound =
        | Max (Const c, b) -> Max (Const (OurInt.pow value (OurInt.to_int c)), Pow (value, b))
        | exponent -> Pow (value, exponent)
     )
-
-    (* Simplify terms with min head *)
-    | Min (b1, b2) ->
-       let (b1, b2) = (simplify b1, simplify b2) in
-       if b1 >= b2 |? false then
-         b2
-       else if b2 >= b1 |? false then
-         b1
-       else (
-         match (b1, b2) with
-         | (b1, Min (b2, b3)) when Constructor.(b2 < b1) -> simplify (Min (b2, Min (b1, b3)))
-         | (Min (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Min (Min (b1, b3), b2))
-         | (b1, b2) when Constructor.(b2 < b1) -> simplify (Min (b2, b1))
-         | (b1, b2) -> Min (b1, b2)
-       )
 
     (* Simplify terms with max head *)
     | Max (b1, b2) ->
@@ -299,14 +279,13 @@ let minus_infinity = Neg Infinity
 
 let is_infinity = equal Infinity
                    
-let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf p =
-  let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~min ~max ~inf in
+let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~max ~inf p =
+  let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~max ~inf in
   match p with
   | Infinity -> inf
   | Var v -> var v
   | Const c -> const c
   | Max (b1, b2) -> max (fold_ b1) (fold_ b2)
-  | Min (b1, b2) -> min (fold_ b1) (fold_ b2)
   | Neg b -> neg (fold_ b)
   | Pow (value, n) -> exp value (fold_ n)
   | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
@@ -316,7 +295,7 @@ let max b1 b2 =
   simplify (Max (b1, b2))
 
 let min b1 b2 =
-  simplify (Min (b1, b2))
+  simplify (Neg (Max (neg b1, neg b2)))
 
 let maximum bounds =
   try
@@ -339,7 +318,7 @@ let is_var = function
   | _ -> false
 
 let substitute_f substitution =
-  fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow ~exp:exp ~min:min ~max:max ~inf:infinity
+  fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow ~exp:exp ~max:max ~inf:infinity
   
 let substitute var ~replacement =
   substitute_f (fun target_var ->
@@ -357,7 +336,6 @@ let rec vars = function
   | Var v -> VarSet.singleton v
   | Const _ -> VarSet.empty
   | Max (b1, b2) -> VarSet.union (vars b1) (vars b2)
-  | Min (b1, b2) -> VarSet.union (vars b1) (vars b2)
   | Neg b -> vars b
   | Pow (v,b) -> vars b
   | Sum (b1, b2) -> VarSet.union (vars b1) (vars b2)

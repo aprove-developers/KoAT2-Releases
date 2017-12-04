@@ -65,7 +65,6 @@ val fold : const:(value -> 'b) ->
            times:('b -> 'b -> 'b) ->
            pow:('b -> int -> 'b) ->
            exp:(value -> 'b -> 'b) ->
-           min:('b -> 'b -> 'b) -> 
            max:('b -> 'b -> 'b) ->
            inf:'b ->
            t -> 'b 

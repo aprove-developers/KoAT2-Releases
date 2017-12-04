@@ -61,7 +61,8 @@ let tests =
                     ("max{0,x+y}+1", "max{0,x+y}+1", "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x+y>0");
                     ("max{0,x-y}+1", "max{0,x-y}+1", "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x>y");
                     ("max{0,y}+1", "max{0,y}+1", "l1 -> l2(0,y), l2 -> l2(x+1,y) :|: x<y");
-                    ("max{0,x}+max{0,y}+1", "max{0,x}+max{0,y}+1", "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x>0, l2 -> l2(x,y-1) :|: y>0");
+                    ("max{0,x}+max{0,y}+2", "max{0,x}+max{0,y}+1", "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x>0, l2 -> l3(x,y), l3 -> l3(x,y-1) :|: y>0");
+                    ("max{0,x}+max{0,y}+2", "max{0,x}+max{0,y}+1", "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x>0, l2 -> l3(x,y), l3 -> l3(x,y-1) :|: y>0");
                     (* Quadratic bound *)
                   ]
       );
