@@ -98,6 +98,8 @@ let append t1 t2 =
     cost = Polynomial.(t1.cost + t2.cost);
   }
 
+let id t = t.id
+
 let start t = t.start
             
 let target t = t.target

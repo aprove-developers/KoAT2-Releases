@@ -32,6 +32,7 @@ let compute_
     scc
     |> List.filter (fun (t,v) -> Transition.same t transition)
     |> List.map (fun (t,v) -> v)
+    |> List.unique ~eq:Var.equal
     |> tap (fun scc_vars -> Logger.log logger Logger.DEBUG (fun () -> "scc_vars", ["result", Util.enum_to_string Var.to_string (List.enum scc_vars)]))
     |> List.enum
   in  
@@ -55,6 +56,7 @@ let compute_
     rv
     |> pre_in_scc
     |> Enum.map (fun (t,v) -> v)
+    |> Enum.uniq_by Var.equal
   in
     
   (** The transition scaling factor corresponds to (s_t)^R(t) *)

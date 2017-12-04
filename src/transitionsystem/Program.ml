@@ -60,8 +60,8 @@ module Types =
        since it should not occur very often. *)
         let hash (l,_,l') = Hashtbl.hash (Location.to_string l ^ Location.to_string l')
 
-        let to_id_string (l,_,l') =
-          Location.to_string l ^ "->" ^ Location.to_string l'
+        let to_id_string (l,label,l') =
+          (Int.to_string % TransitionLabel.id) label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
 
         let to_string (l,t,l') =
           to_id_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t

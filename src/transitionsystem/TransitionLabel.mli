@@ -39,6 +39,8 @@ val compare_same : t -> t -> int
 
 val compare_equivalent : t -> t -> int
 
+val id : t -> int
+  
 val start : t -> string
 
 val target : t -> string
