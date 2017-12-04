@@ -1,0 +1,82 @@
+\section{Preliminaries}
+
+
+\subsection{Programs}
+
+\begin{definition}[Program] 
+	Let $\VSet$ be the set of all occurring program variables.
+	Let $\LSet$ be the set of all locations of a program.
+	Let $\TSet = \LSet \times F(\VSet) \times \LSet$ be the set of all transitions of the program where $F(\VSet)$ is the set of all quantifier-free formulas over $\VSet$.
+	A program is a graph $P = (\LSet, \TSet)$ where $\LSet$ is the set of program locations and $\TSet$ is a subset of all possible transitions between them.
+	We write $\location_0$ for the unique program location with $\location_0 \in \LSet$ which has no entry transitions in the program.
+	We write $\location_e$ for a program location $\location_e \in \LSet$ which has no outgoing transitions in the program.
+\end{definition}
+
+\begin{definition}[Valuation] 
+	A valuation is a function $\valuation: \VSet \rightarrow \mathbb{Z}$ which assigns each program variable a value.
+\end{definition}
+
+\begin{definition}[Configuration] 
+	A configuration is a tuple $\configuration{}$ where $\location \in \LSet$ and $\sigma: \VSet \rightarrow \mathbb{Z}$.
+\end{definition}
+
+\begin{definition}[Evaluation] 
+	An evaluation is a function which maps a configuration with a transition to a result configuration.
+	We write $(\location, \valuation) \rightarrow_t (\location', \valuation')$ iff with $t = (\location, \tau, \location') \in \TSet$ it holds that $\valuation \models \tau$ and $\valuation' \models \tau$.
+	We omit the transition and write $(\location, \valuation) \rightarrow (\location', \valuation')$ iff there exists a transition $t \in \TSet$ such that $(\location, \valuation) \rightarrow_t (\location', \valuation')$ holds.
+	We write $\configuration{} \rightarrow^k (\location', \valuation')$ iff there exists a sequence of transitions $t_1, \dots, t_k \in \TSet$ such that $\configuration{} \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location', \valuation')$ holds.
+	We write $\configuration{} \rightarrow^* (\location', \valuation')$ iff there exists a $k \in \mathbb{N}$ such that $\configuration{} \rightarrow^k (\location', \valuation')$ holds.
+	We write $\configuration{} \rightarrow_{\TSet'} (\location', \valuation')$ iff there exists a transition $t \in \TSet' \subseteq \TSet$ such that $\configuration{} \rightarrow_t (\location', \valuation')$ holds.
+\end{definition}
+
+
+\subsection{Result Variable Graph}
+
+\begin{definition}[Pre-Transitions] 
+	We define $\pre: \TSet \rightarrow 2^\TSet$ as $\pre(t') = \braced{t \in \TSet \mid \exists \valuation_0, \location, \valuation: (\location_0, \valuation_0) \rightarrow^* \circ \rightarrow_t \circ \rightarrow_{t'} (\location, \valuation)}$ to denote the set of all transitions that may precede $t'$ in an evaluation.	
+\end{definition}
+
+If $\pre(t)$ represents the set of all transitions that may precede $t$ in an evaluation, then $\pre_{\mathit{trivial}}((\location_1, \tau_1, \location_1')) = \braced{(\location_2, \tau_2, \location_2') \in \TSet \mid \location_2' = \location_1}$ is a valid overapproximation.
+
+\begin{definition}[Active variables] 
+	We define $\actV: B \rightarrow 2^\VSet$ as 
+	\[ \actV(f) = \braced{ v_i \in \VSet \mid \exists m_1, \dots, m_n, m_i' \in \mathbb{Z}: f(m_1, \dots, m_i, \dots, m_n) \neq f(m_1, \dots, m_i', \dots, m_n)} \]
+	to denote the set of active variables in $f$.
+\end{definition}
+
+\begin{definition}[Result Variable Graph]
+	Let $\LSB$ be a local size bound.
+	We define 
+	\[ RVG = (\TSet \times \VSet, \braced{((t, v), (t', v')) \mid t \in \pre(t'), v \in \actV(\LLSB(t,v)) \cup \actV(\ULSB(t,v))}) \]
+	to denote the result variable graph.
+\end{definition}
+
+
+\subsection{Ranking functions}
+
+\begin{definition}[Polynomial Ranking Function] 
+	Let $\mathbb{Z}[\VSet]$ be the polynomial ring in the variables $v \in \VSet$ over the field $\mathbb{Z}$.
+	We define $p(\valuation) = p[v_1/\valuation(v_1), \dots, v_n/\valuation(v_n)]$ as the substitution of all $v_1, \dots v_n \in \VSet$ by the valuation $\valuation: \VSet \rightarrow \mathbb{Z}$ in the polynomial $p \in \mathbb{Z}[\VSet]$.
+	We define $\mathit{Pol}: \LSet \rightarrow \mathbb{Z}[\VSet]$ as polynomial ranking function for a transition set $\TSet$ iff there is a nonempty $\TSet_{>} \subseteq \TSet$ such that:
+	\[ \text{For all } (\location, \tau, \location') \in \TSet \text{ it holds that } \tau \Rightarrow \mathit{Pol}(\location)(\valuation) \geq \mathit{Pol}(\location)(\valuation') \]
+	\[ \text{For all } (\location, \tau, \location') \in \TSet_{>} \text{ it holds that } \tau \Rightarrow \mathit{Pol}(\location)(\valuation) > \mathit{Pol}(\location)(\valuation') \]
+	\[ \text{For all } (\location, \tau, \location') \in \TSet_{>} \text{ it holds that } \tau \Rightarrow \mathit{Pol}(\location)(\valuation) > 1 \]
+\end{definition}
+
+
+\subsection{Complexity}
+
+\begin{definition}[Worst-Case Runtime Complexity]
+	\[ \text{rc}_{\text{worst}}(\valuation_0) = \mathit{sup} \braced{ k \in \mathbb{N} \mid \exists \location', \valuation': (\location_0, \valuation_0) \rightarrow^k (\location', \valuation') } \]
+\end{definition}
+
+\begin{definition}[Upper Runtime Bound]
+	\[ \UTime(t)(m) \geq \mathit{sup} \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location', \valuation': (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location', \valuation') } \]
+\end{definition}
+
+\begin{theorem}[Approximating Runtime Complexity]
+	Let $\UTime$ be a runtime approximation for $\TSet$.
+	Then it holds that 
+	\[ \mathit{rc}_\mathit{worst} \leq \sum_{t \in \TSet}\UTime(t) \]
+\end{theorem}
+
