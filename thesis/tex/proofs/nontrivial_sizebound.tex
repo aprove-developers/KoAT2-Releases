@@ -8,12 +8,10 @@ Our goal is to show that the defined sizebounds are correct lower and upper boun
 \begin{equation} \label{eq:sizebound_target}
   \USize'(\hat{t}, v)(m) \geq \hat{\valuation}(v) \geq \LSize'(\hat{t}, v)(m).
 \end{equation}
-
 For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition t was used in the evaluation.
-To simplify the remaining proof, we define the following values:
+Then, we define an upper bound for the absolute value of any variable which can be reached in the evaluation for a direction $\square \in \braced{\sqcup, \sqcap}$.
 \[ d^\square = \prod_{t \in \TSet} (s^\square_t)^{k_t} \cdot \left( e + \sum_{t \in \TSet} \left( k_t \cdot \text{in}^\square_t \right) \right). \]
-
-Then we prove the following claims.
+Now, we prove that $d^\square$ is indeed such an upper bound.
 \begin{equation} \label{eq:sizebound_hypothesis}
   \begin{split}
     d^\sqcap(m) & \geq \maxO{\hat{\valuation}(v)} \\
@@ -21,20 +19,19 @@ Then we prove the following claims.
   \end{split}
 \end{equation}
 Note that the theorem follows from the claim, as $\UTime(t)(m) \geq k_t$ holds by definition of $k_t$ and $\maxO{\hat{\valuation}(v)}$ is always greater or equal than $\hat{\valuation}(v)$ as well as $\maxO{-\hat{\valuation}(v)}$ is always greater or equal than $-\hat{\valuation}(v)$.
-Also note that by the definition of the local sizebounds $s^\square_t \geq 1$ holds for $\square \in \braced{\sqcup, \sqcap}$.
-Therefore for all $p^+_t \geq 0$ and $p^-_t \leq 0$ it holds that
-\[ \prod_{t \in \TSet} (s^\sqcap_t)^{\UTime(t)} \cdot \left( e + \sum_{t \in \TSet} \left( \UTime(t)(m) \cdot p^+_t \right) \right) \geq \prod_{t \in \TSet} (s^\square_t)^{k_t} \cdot \left( e + \sum_{t \in \TSet} \left( k_t \cdot p^+_t \right) \right) \]
-\[ \prod_{t \in \TSet} (s^\sqcup_t)^{\UTime(t)} \cdot \left( e + \sum_{t \in \TSet} \left( \UTime(t)(m) \cdot p^-_t \right) \right) \leq \prod_{t \in \TSet} (s^\square_t)^{k_t} \cdot \left( e + \sum_{t \in \TSet} \left( k_t \cdot p^-_t \right) \right) \]
+
 We now fix $v$ to an arbitrary variable.
 The only interesting case is if $\hat{\alpha} = (\hat{t}, v) \in \SCC$.
-Since \todo{Not trivial anymore}{$\text{in}^\sqcap_{\hat{t}}(m) \geq 0 \geq \text{in}^\sqcup_{\hat{t}}(m)$} we can substitute them for $p^+_t$ and $p^-_t$ and get
+For all $\square \in \braced{\sqcup, \sqcap}$ we have $s^\square_t \geq 1$ by the definition of the local sizebounds and $\text{in}^\square_{\hat{t}}(m) \geq 0$ holds by definition of the theorem.
+Therefore it holds that
+\[ \prod_{t \in \TSet} (s^\square_t)^{\UTime(t)} \cdot \left( e + \sum_{t \in \TSet} \left( \UTime(t)(m) \cdot \text{in}^\square_t(m) \right) \right) \geq \prod_{t \in \TSet} (s^\square_t)^{k_t} \cdot \left( e + \sum_{t \in \TSet} \left( k_t \cdot \text{in}^\square_t(m) \right) \right) \]
+By definition of the nontrivial sizebounds we can then conclude that if we prove the claim (\ref{eq:sizebound_hypothesis}), we also get sound sizebounds when we use upper timebounds instead of the actual runtime.
 \begin{equation}
   \begin{split}
     {\mathcal{S}^\sqcap}'(\hat{\alpha})(m) & \geq d^\sqcap(m) \\
     {\mathcal{S}^\sqcup}'(\hat{\alpha})(m) & \leq -d^\sqcup(m)
   \end{split}
 \end{equation}
-
 We prove the claim by induction on the length of the evaluation.
 Intuitively, we show that we correctly approximate the effect of the last transition step $\hat{t}$ on the size of the value obtained so far (which in turn is captured by the induction hypothesis (\ref{eq:sizebound_target})).
 
