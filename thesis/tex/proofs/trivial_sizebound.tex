@@ -1,21 +1,21 @@
 Let $\alpha = (t, v) \in \RV$ be the trivial SCC for which the processor was applied.
 
-We have to show that for all $m \in \mathbb{N}^n$ two statements hold.
-\[ \USize'(t, v)(m) \geq \UpperSizeComplexity{t}{v} \]
-\[ \LSize'(t, v)(m) \leq \LowerSizeComplexity{t}{v} \]
+We have to show that for all \todo{Really m here?}{$m \in \mathbb{N}^n$} two statements hold.
+\[ \USize'(t, v)(m) \geq \sup \braced{ \valuation(v) \mid \exists \valuation_0, \valuation: \abs{\valuation_0} \leq m \wedge \valuation_0 (\rightarrow_{t_0} \circ \rightarrow^* \circ \rightarrow_t) \valuation} \]
+\[ \LSize'(t, v)(m) \leq \inf \braced{ \valuation(v) \mid \exists \valuation_0, \valuation: \abs{\valuation_0} \leq m \wedge \valuation_0 (\rightarrow_{t_0} \circ \rightarrow^* \circ \rightarrow_t) \valuation} \]
 
-To this end, we consider a valuation $\abs{\valuation_0} \leq m$ and an evaluation
-\[ \configuration{0} \valuateto{t} \configuration{} . \]
+To this end, we consider a state $\abs{\valuation_0} \leq m$ and an evaluation
+\[ \valuation_0 (\rightarrow_{t_0} \circ \rightarrow^* \circ \rightarrow_t) \valuation. \]
 Now the goal is to show that $\USize'(t, v)(m) \geq \valuation(v) \geq \LSize'(t, v)(m)$ holds.
 
-If $t$ is an initial transition, then the evaluation has the form $\configuration{0} \rightarrow_t \configuration{}$, as by definition there are no transitions leading back to the initial location $\location_0$.
+If $t$ is an initial transition, then the evaluation has the form $\valuation_0 \rightarrow_t \valuation$, as by definition there are no transitions leading back to the start location $\location_0$ of $t$.
 
 Thus, for initial transitions by the definition of sizebounds we obtain
 \[ \USize'(t, v)(m) = \ULSB(t, v)(m) \geq \valuation(v). \]
 \[ \LSize'(t, v)(m) = \LLSB(t, v)(m) \leq \valuation(v). \]
 
 In the case where t is not an initial transition, the evaluation has for some transition $\tilde{t} \in \pre(t)$ the form
-\[ \configuration{0}  \valuateto{\tilde{t}} (\tilde{\location}, \tilde{\valuation}) \rightarrow_t \configuration{}. \]
+\[ \valuation_0 (\rightarrow_{t_0} \circ \rightarrow^* \circ \rightarrow_{\tilde{t}}) \tilde{\valuation} \rightarrow_t \valuation. \]
 
 Lets assume that our initial assumption holds.
 As $\abs{\valuation_0} \leq m$, we then have for all $v \in \VSet$

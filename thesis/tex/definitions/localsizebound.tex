@@ -1,8 +1,8 @@
 \begin{definition}[Local Size Bound]
-  We call $\ULSB: \RV \rightarrow \BoundSet$ a \textbf{upper} local size bound if and only if for all $(t, v') \in \RV$ and all $m \in \mathbb{N}^n$
-  \[ \ULSB(t, v)(m) \geq \sup \braced{\valuation'(v) \mid \exists \location, \valuation, \location', \valuation': \abs{\valuation} \leq m \wedge \configuration{} \rightarrow_t (\location', \valuation')}. \]
-  Futhermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local size bound if and only if for all $(t, v') \in \RV$ and all $m \in \mathbb{N}^n$
-  \[ \LLSB(t, v)(m) \leq \inf \braced{\valuation'(v) \mid \exists \location, \valuation, \location', \valuation': \abs{\valuation} \leq m \wedge \configuration{} \rightarrow_t (\location', \valuation')}. \]
+  We call $\ULSB: \RV \rightarrow \BoundSet$ a \textbf{upper} local size bound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation$} it holds that
+  \[ \ULSB(t, v)(\valuation) \geq \sup \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
+  Futhermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local size bound if and only if for all $(t, v') \in \RV$ and all $\valuation$ it holds that
+  \[ \LLSB(t, v)(\valuation) \geq \inf \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
   We call $\LSB$ a local size bound.
 \end{definition}
 

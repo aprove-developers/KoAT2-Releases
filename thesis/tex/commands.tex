@@ -33,7 +33,7 @@
 \newcommand{\braced}[1]{\lbrace #1 \rbrace}
 \newcommand{\valuateto}[1]{(\rightarrow^* \circ \rightarrow_{#1})}
 \newcommand{\UpperSizeComplexity}[2]{
-  \sup \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
+  \sup \braced{ \valuation(#2) \mid \exists \valuation_0, \valuation: \abs{\valuation_0} \leq m \wedge \valuation_0 \valuateto{#1} \valuation}
 }
 \newcommand{\LowerSizeComplexity}[2]{
   \inf \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
