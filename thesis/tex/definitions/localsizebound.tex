@@ -1,11 +1,3 @@
-\begin{definition}[Local Size Bound]
-  We call $\ULSB: \RV \rightarrow \BoundSet$ a \textbf{upper} local size bound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation$} it holds that
-  \[ \ULSB(t, v)(\valuation) \geq \sup \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
-  Futhermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local size bound if and only if for all $(t, v') \in \RV$ and all $\valuation$ it holds that
-  \[ \LLSB(t, v)(\valuation) \geq \inf \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
-  We call $\LSB$ a local size bound.
-\end{definition}
-
 \begin{definition}[Scaled sum]
   We say that $\alpha \in \RV$ is bounded by an \textbf{upper} scaled sum if and only if there are numbers $s^\sqcap_\alpha \in \mathbb{N}$ with $s^\sqcap_\alpha \geq 1$ and $e^\sqcap_\alpha \in \mathbb{Z}$ and four pairwise disjoint sets $P_{\alpha,1}^\sqcap, P_{\alpha,2}^\sqcap, N_{\alpha,1}^\sqcap, N_{\alpha,2}^\sqcap \subseteq \VSet$ such that it holds for all $\valuation$ that
   \[ \ULSB(\alpha)(\valuation) =
