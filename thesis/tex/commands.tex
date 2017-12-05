@@ -1,7 +1,5 @@
 \newcommand{\location}{\ell}
 \newcommand{\valuation}{\sigma}
-\newcommand{\configuration}[1]{(\location_{#1}, \valuation_{#1})}
-\newcommand{\Configuration}[2]{(#2{\location}_{#1}, #2{\valuation}_{#1})}
 
 \newcommand{\abs}[1]{\left|#1\right|}
 
@@ -31,13 +29,6 @@
 \newcommand{\maximum}[1]{\max \lbrace #1 \rbrace}
 \newcommand{\minimum}[1]{\min \lbrace #1 \rbrace}
 \newcommand{\braced}[1]{\lbrace #1 \rbrace}
-\newcommand{\valuateto}[1]{(\rightarrow^* \circ \rightarrow_{#1})}
-\newcommand{\UpperSizeComplexity}[2]{
-  \sup \braced{ \valuation(#2) \mid \exists \valuation_0, \valuation: \abs{\valuation_0} \leq m \wedge \valuation_0 \valuateto{#1} \valuation}
-}
-\newcommand{\LowerSizeComplexity}[2]{
-  \inf \braced{ \valuation(#2) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge \configuration{0} \valuateto{#1} \configuration{}}
-}
 
 \newcommand{\Proof}[2]{
   \begin{proof}[#1]

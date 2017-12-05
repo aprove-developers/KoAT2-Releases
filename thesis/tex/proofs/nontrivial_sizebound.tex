@@ -1,9 +1,9 @@
 We only regard the case where $\alpha \in \ScaledSum$ holds for all $\alpha \in \SCC$.
 Then, for all result variables $\hat{\alpha} = (\hat{t}, \hat{v}) \in \RV$, we have to show that two statements hold for all $m \in \mathbb{N}^n$.
-\[ \USize'(\hat{\alpha})(m) \geq \sup \braced{ \valuation(\hat{v}) \mid \exists \valuation_0, \valuation: \abs{\valuation_0} \leq m \wedge \valuation_0 (\rightarrow_{t_0} \circ \rightarrow^* \circ \rightarrow_{\hat{t}}) \valuation} \]
-\[ \LSize'(\hat{\alpha})(m) \leq \inf \braced{ \valuation(\hat{v}) \mid \exists \valuation_0, \valuation: \abs{\valuation_0} \leq m \wedge \valuation_0 (\rightarrow_{t_0} \circ \rightarrow^* \circ \rightarrow_{\hat{t}}) \valuation} \]
+\[ \USize'(\hat{\alpha})(m) \geq \sup \braced{ \valuation(\hat{v}) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\location, \valuation)} \]
+\[ \LSize'(\hat{\alpha})(m) \leq \inf \braced{ \valuation(\hat{v}) \mid \exists \valuation_0, \location \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\location, \valuation)} \]
 To this end, we now fix $m$ to an arbitrary value and consider a fixed state $\abs{\valuation_0} \leq m$ and a fixed evaluation
-\[ \valuation_0 (\rightarrow_{t_0} \circ \rightarrow^* \circ \rightarrow_{\hat{t}}) \hat{\valuation}. \]
+\[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\hat{\location}, \hat{\valuation}). \]
 Our goal is to show that the defined sizebounds are correct lower and upper bounds for each variable $v \in \VSet$.
 \begin{equation} \label{eq:sizebound_target}
   \USize'(\hat{t}, v)(m) \geq \hat{\valuation}(v) \geq \LSize'(\hat{t}, v)(m).
@@ -38,7 +38,7 @@ Intuitively, we show that we correctly approximate the effect of the last transi
 Note that $\hat{t}$ can not be an initial transition, as there are no transitions leading back to the initial location $\location_0$
 (i.e., then $\hat{\alpha}$ would not be contained in a nontrivial SCC $\SCC$ of the RVG).
 Thus, the reduction has the form
-\[ \valuation_0 (\rightarrow_{t_0} \circ \rightarrow^* \circ \rightarrow_{\tilde{t}}) \tilde{\valuation} \rightarrow_{\hat{t}} \hat{\valuation}. \]
+\[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\tilde{t}}) (\tilde{\location}, \tilde{\valuation}) \rightarrow_{\hat{t}} (\hat{\location}, \hat{\valuation}). \]
 for some transition $\tilde{t} \in \pre(\hat{t})$.
 
 \todo{Maybe obsolete here}{Note that the value of a non active variable does not affect the value of a local sizebound.}
@@ -53,12 +53,12 @@ If $(\tilde{t}, v) \notin \SCC$, then $\valuation_0 \leq m$ implies that $\USize
 As $(\tilde{t}, v) \in \pre(\hat{t}, v) \setminus \SCC$, we have $e \geq \USize(\tilde{t}, v)(m)$ and $e \geq 0$ which implies that $d^\sqcap \geq e \geq \USize(\tilde{t}, v)(m) \geq \tilde{\valuation}(v)$.
 We also have $e \geq -\LSize(\tilde{t}, v)(m)$ and $e \geq 0$ which implies that $d^\sqcup \geq e \geq -\LSize(\tilde{t}, v)(m) \geq -\tilde{\valuation}(v)$.
 
-If $(\tilde{t}, v) \in \SCC$, then the induction hypothesis (\ref{eq:sizebound_target}) implies that $d^\sqcap(m) \geq \maxO{\tilde{\valuation}(v)}$ and $d^\sqcup(m) \geq \maxO{-\tilde{\valuation}(v)}$ also hold for the evaluation from $\valuation_0$ to $\tilde{\valuation}$.
+If $(\tilde{t}, v) \in \SCC$, then the induction hypothesis (\ref{eq:sizebound_target}) implies that $d^\sqcap(m) \geq \maxO{\tilde{\valuation}(v)}$ and $d^\sqcup(m) \geq \maxO{-\tilde{\valuation}(v)}$ also hold for the evaluation from $(\location_0, \valuation_0)$ to $(\tilde{\location}, \tilde{\valuation})$.
 Let
 \begin{equation} \label{eq:induction_consequence}
   {d^\square}'(m) = (s^\square_{\hat{t}})^{k_{\hat{t}} - 1} \cdot \prod_{t \in \TSet \setminus \braced{\hat{t}}} (s^\square_t)^{k_t} \cdot \left( e + \left( k_{\hat{t}} - 1 \right) \cdot \text{in}^\square_{\hat{t}}(m) + \sum_{t \in \TSet \setminus \braced{\hat{t}}} \left( k_t \cdot \text{in}^\square_t(m) \right) \right)
 \end{equation}
-The reason for using $k_{\hat{t}} - 1$ in ${d^\square}'(m)$ is that the last application of the transition $\hat{t}$ in the evaluation is missing in the evaluation from $\valuation_0$ to $\tilde{\valuation}$.
+The reason for using $k_{\hat{t}} - 1$ in ${d^\square}'(m)$ is that the last application of the transition $\hat{t}$ in the evaluation is missing in the evaluation from $(\location_0, \valuation_0)$ to $(\tilde{\location}, \tilde{\valuation})$.
 Then, the induction hypothesis (\ref{eq:sizebound_target}) implies that ${d^\sqcap}'(m) \geq \maxO{\tilde{\valuation}(v)}$ and ${d^\sqcup}'(m) \geq \maxO{-\tilde{\valuation}(v)}$.
 
 We now combine these bounds to prove that the induction hypothesis (\ref{eq:sizebound_target}) indeed holds.
