@@ -30,4 +30,3 @@ let enum_to_string content_to_string enum =
   let list = List.of_enum enum in
   List.print (fun output varset -> IO.nwrite output (content_to_string varset)) output list;
   IO.close_out output
-  

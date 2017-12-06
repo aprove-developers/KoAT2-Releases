@@ -6,15 +6,31 @@ let description = "Search for a linear ranking function"
 let command = "prf"
 
 type params = {
-  input : string; [@pos 0] [@docv "INPUT"]
-  (** An absolute or relative path to the koat input file which defines the integer transition system *)
+    input : string; [@aka ["i"]] [@pos 0]
+    (** Either an absolute or relative path to the koat input file which defines the integer transition system.
+        Or the program defined in simple mode.
+        How this string is interpreted is defined by the simple-input flag *)
+
+    simple_input : bool; [@default false] [@aka ["s"]]
+    (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
+    
   } [@@deriving cmdliner, show]
   
 let run (params: params) =
   Logging.(use_loggers [PRF, Logger.DEBUG]);
-  let program = Readers.read_file params.input in
-  let empty_approx = Approximation.empty (program |> Program.graph |> TransitionGraph.transitions |> TransitionSet.cardinal) (program |> Program.vars |> VarSet.cardinal) in
-  let (_,(program_procs,approx_trivial_tb)) = TrivialTimeBounds.transform (program, empty_approx) in
-  let transitions = List.filter (fun trans -> Bound.is_infinity (Approximation.timebound approx_trivial_tb trans)) (TransitionSet.to_list (TransitionGraph.transitions (Program.graph program_procs))) in
-  let prf = RankingFunction.find (Program.vars program_procs) transitions in
-  print_string (RankingFunction.to_string prf ^ "\n")
+  params.input
+  |> MainUtil.read_input params.simple_input
+  |> Option.may (fun program ->
+         (program, Approximation.create program)
+         |> TrivialTimeBounds.transform
+         |> MaybeChanged.unpack
+         |> (fun (program, appr) ->
+                   let transitions =
+                     program
+                     |> Program.graph
+                     |> TransitionGraph.transitions
+                     |> TransitionSet.to_list
+                     |> List.filter (Bound.is_infinity % Approximation.timebound appr)
+                   in
+                   RankingFunction.find (Program.vars program) transitions
+                   |> (fun prf -> print_string (RankingFunction.to_string prf ^ "\n"))))

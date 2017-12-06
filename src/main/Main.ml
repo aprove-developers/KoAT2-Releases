@@ -49,15 +49,6 @@ type main_params = {
     
   } [@@deriving cmdliner]
 
-let read_input (simple: bool) (program_str: string): Program.t Option.t =
-  if simple then
-    Some (Readers.read_program_simple program_str)
-  else
-    try
-      Some (Readers.read_file program_str)
-    with TransitionLabel.RecursionNotSupported ->
-      prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat. The program will exit now."; None
-
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
   let get accessor = Location.of_string (accessor label) in
   String.concat "" ["Timebound: ";
@@ -101,7 +92,7 @@ let run (params: main_params) =
     print_string (program_str ^ "\n\n")
   );
   params.input
-  |> read_input params.simple_input
+  |> MainUtil.read_input params.simple_input
   |> Option.map (fun program ->
          (program, Approximation.create program)
          |> params.preprocessing_strategy params.preprocessors
