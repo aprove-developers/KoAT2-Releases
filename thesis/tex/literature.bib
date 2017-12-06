@@ -1,4 +1,4 @@
-@article{brockschmidt2016analyzing,
+@article{koat,
   title={Analyzing runtime and size complexity of integer programs},
   author={Brockschmidt, Marc and Emmes, Fabian and Falke, Stephan and Fuhs, Carsten and Giesl, J{\"u}rgen},
   journal={ACM Transactions on Programming Languages and Systems (TOPLAS)},
@@ -7,4 +7,125 @@
   pages={13},
   year={2016},
   publisher={ACM}
+}
+
+@inproceedings{cofloco1,
+  title={Resource analysis of complex programs with cost equations},
+  author={Flores-Montoya, Antonio and H{\"a}hnle, Reiner},
+  booktitle={Asian Symposium on Programming Languages and Systems},
+  pages={275--295},
+  year={2014},
+  organization={Springer}
+}
+
+@Inbook{cofloco2,
+author="Flores-Montoya, Antonio",
+editor="Fitzgerald, John
+and Heitmeyer, Constance
+and Gnesi, Stefania
+and Philippou, Anna",
+title="Upper and Lower Amortized Cost Bounds of Programs Expressed as Cost Relations",
+bookTitle="FM 2016: Formal Methods: 21st International Symposium, Limassol, Cyprus, November 9-11, 2016, Proceedings",
+year="2016",
+publisher="Springer International Publishing",
+address="Cham",
+pages="254--273",
+abstract="Resource analysis aims at statically obtaining bounds on the resource consumption of programs in terms of input parameters. A well known approach to resource analysis is based on transforming the target program into a set of cost relations, then solving these into a closed-form bound. In this paper we develop a new analysis for computing upper and lower cost bounds of programs expressed as cost relations. The analysis is compositional: it computes the cost of each loop or function separately and composes the obtained expressions to obtain the total cost. Despite being modular, the analysis can obtain precise upper and lower bounds of programs with amortized cost. The key is to obtain bounds that depend on the values of the variables at the beginning and at the end of each program part. In addition we use a novel cost representation called cost structure. It allows to reduce the inference of complex polynomial expressions to a set of linear problems that can be solved efficiently. We implemented our method and performed an extensive experimental evaluation that demonstrates its power.",
+isbn="978-3-319-48989-6",
+doi="10.1007/978-3-319-48989-6_16",
+url="https://doi.org/10.1007/978-3-319-48989-6_16"
+}
+
+@phdthesis{cofloco3,
+            year = {2017},
+         address = {Darmstadt},
+          school = {Technische Universit{\"a}t},
+           month = {August},
+           title = {Cost Analysis of Programs Based on the Refinement of Cost Relations},
+          author = {Antonio Flores Montoya},
+        abstract = {Cost analysis aims at statically inferring the amount of resources, such as time or memory, needed to execute a program. This amount of resources is the cost of the program and it depends on its input
+parameters. Obtaining a function (in terms of the input parameters) that represents the cost of a program precisely is generally not possible. Thus, cost analyses attempt to infer functions that represent upper or lower bounds of the cost of programs instead.
+
+Many existing cost analyses approach the problem in two stages. First, the target program is transformed into an integer abstract representation where the resource consumption is explicit and second,
+the abstract representation is analyzed and cost bounds are inferred from it. The advantage of this approach is that the second part is language independent and resource independent. That is, it can be
+reused across different programming languages and to analyze the program cost with respect to different resources. Cost relations are a possible abstract representation. They are similar to constraint logic
+programs annotated with costs and they can easily represent both imperative and functional programs.
+
+Existing cost analyses based on cost relations have limited support for programs that have a complex control flow, or present amortized complexity, that is, when the sum of the cost of the parts yields a
+higher asymptotic cost than the cost of the whole. This thesis identifies these limitations, and presents a new analysis of cost relations that overcomes them.
+
+The analysis can obtain upper and lower bounds of programs expressed as cost relations and it contains three parts:
+
+1. The first part reduces any mutually recursive cost relations to cost relations that only have direct recursion and performs some simplifications.
+
+2. The second part consists of a refinement of cost relations that partitions all possible executions of the program into a finite set of execution patterns named chains. The refinement also infers precise invariants for each of the chains, discards unfeasible execution patterns and proves termination.
+
+3. In the third part of the analysis, cost bounds are inferred compositionally. For that purpose, a novel cost representation, named cost structures, is presented. Cost structures reduce the computation of complex bounds to the inference of simple constraints using linear programming. They can represent polynomial upper and lower bounds of programs with max and min operators.
+
+The analysis is proven sound with respect to a new semantics of cost relations. This semantics distinguishes between terminating and non-terminating executions and models the behavior of non-terminating executions accurately.
+
+In addition, the analysis has been implemented in the tool CoFloCo and it has been extensively evaluated against other state-of-the-art tools and with respect to a variety of benchmarks. These benchmarks include imperative programs, functional programs, and term rewrite systems. CoFloCo performs well in all categories which demonstrates both the power of the analysis and its versatility.},
+             url = {http://tuprints.ulb.tu-darmstadt.de/6746/}
+}
+
+@Article{cofloco4,
+author="Albert, Elvira
+and Flores-Montoya, Antonio
+and Genaim, Samir
+and Martin-Martin, Enrique",
+title="Rely-Guarantee Termination and Cost Analyses of Loops with Concurrent Interleavings",
+journal="Journal of Automated Reasoning",
+year="2017",
+month="Jun",
+day="01",
+volume="59",
+number="1",
+pages="47--85",
+abstract="By following a rely-guarantee style of reasoning, we present novel termination and cost analyses for concurrent programs that, in order to prove termination or infer the cost of a considered loop: (1) infer the termination/cost of each loop as if it were a sequential one, imposing assertions on how shared-data is modified concurrently; and then (2) prove that these assertions cannot be violated infinitely many times and, for cost analysis, infer how many times they are violated. At the core of the analysis, we use a may-happen-in-parallel analysis to restrict the set of program points whose execution can interleave. Interestingly, the same kind of reasoning can be applied to prove termination and infer upper bounds on the number of iterations of loops with concurrent interleavings. To the best of our knowledge, this is the first method to automatically bound the cost of such kind of loops. We have implemented our analysis for an actor-based language, and showed its accuracy and efficiency by applying it on several typical applications for concurrent programs and on an industrial case study.",
+issn="1573-0670",
+doi="10.1007/s10817-016-9400-6",
+url="https://doi.org/10.1007/s10817-016-9400-6"
+}
+
+@inproceedings{loopus1,
+  title={Bound Analysis of Imperative Programs with the Size-Change Abstraction.},
+  author={Zuleger, Florian and Gulwani, Sumit and Sinn, Moritz and Veith, Helmut},
+  booktitle={SAS},
+  volume={11},
+  pages={280--297},
+  year={2011},
+  organization={Springer}
+}
+
+@inproceedings{loopus2,
+  title={A simple and scalable static analysis for bound analysis and amortized complexity analysis},
+  author={Sinn, Moritz and Zuleger, Florian and Veith, Helmut},
+  booktitle={International Conference on Computer Aided Verification},
+  pages={745--761},
+  year={2014},
+  organization={Springer}
+}
+
+@Article{difference_constraints,
+author="Sinn, Moritz
+and Zuleger, Florian
+and Veith, Helmut",
+title="Complexity and Resource Bound Analysis of Imperative Programs Using Difference Constraints",
+journal="Journal of Automated Reasoning",
+year="2017",
+month="Jun",
+day="01",
+volume="59",
+number="1",
+pages="3--45",
+abstract="Difference constraints have been used for termination analysis in the literature, where they denote relational inequalities of the form                                                                           {\$}{\$}x' {\backslash}le y + c{\$}{\$}                                                                                                              x                          {\textasciiacutex}                                                ≤                        y                        +                        c                                                                            , and describe that the value of x in the current state is at most the value of y in the previous state plus some constant                                                                           {\$}{\$}c {\backslash}in {\backslash}mathbb {\{}Z{\}}{\$}{\$}                                                                                    c                        ∈                        Z                                                                            . We believe that difference constraints are also a good choice for complexity and resource bound analysis because the complexity of imperative programs typically arises from counter increments and resets, which can be modeled naturally by difference constraints. In this article we propose a bound analysis based on difference constraints. We make the following contributions: (1) our analysis handles bound analysis problems of high practical relevance which current approaches cannot handle: we extend the range of bound analysis to a class of challenging but natural loop iteration patterns which typically appear in parsing and string-matching routines. (2) We advocate the idea of using bound analysis to infer invariants: our soundness proven algorithm obtains invariants through bound analysis, the inferred invariants are in turn used for obtaining bounds. Our bound analysis therefore does not rely on external techniques for invariant generation. (3) We demonstrate that difference constraints are a suitable abstract program model for automatic complexity and resource bound analysis: we provide efficient abstraction techniques for obtaining difference constraint programs from imperative code. (4) We report on a thorough experimental comparison of state-of-the-art bound analysis tools: we set up a tool comparison on (a) a large benchmark of real-world C code, (b) a benchmark built of examples taken from the bound analysis literature and (c) a benchmark of challenging iteration patterns which we found in real source code. (5) Our analysis is more scalable than existing approaches: we discuss how we achieve scalability.",
+issn="1573-0670",
+doi="10.1007/s10817-016-9402-4",
+url="https://doi.org/10.1007/s10817-016-9402-4"
+}
+
+@article{monadic_refinements,
+  title={Monadic Refinements for Relational Cost Analysis},
+  author={RADI{\v{C}}EK, IVAN and Barthe, Gilles and Gaboardi, Marco and Garg, Deepak and Zuleger, Florian},
+  year={2018}
 }
