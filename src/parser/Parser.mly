@@ -7,7 +7,7 @@
 %token			EOF
 %token                  OR
 %token                  AND
-%token 			ARROW WITH COSTLEFT COSTRIGHT LBRACK RBRACK
+%token 			ARROW WITH LBRACK RBRACK
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
 %token                  COMMA
 %token                  MIN MAX INFINITY ABS
@@ -123,9 +123,11 @@ transition :
                            ~guard:constr 
                            ~cost:cost)} ;
 cost : 
-        |       COSTLEFT ub = polynomial COMMA lb = polynomial COSTRIGHT
+        |       MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
                   { ub };
-        |       COSTLEFT ub = polynomial COSTRIGHT
+        |       MINUS ub = polynomial GREATERTHAN
+                  { ub };
+        |       MINUS LBRACE ub = polynomial RBRACE GREATERTHAN
                   { ub };
         |       ARROW
                   { Poly.one };

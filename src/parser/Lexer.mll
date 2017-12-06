@@ -49,8 +49,6 @@ rule read =
   | '-'               { P.MINUS }
   | '^'               { P.POW }
   | "->"              { P.ARROW }
-  | "-{"              { P.COSTLEFT }
-  | "}>"              { P.COSTRIGHT }
   | "="               { P.EQUAL }
   | "!="              { P.UNEQUAL }
   | "<="              { P.LESSEQUAL }
