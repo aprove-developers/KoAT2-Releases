@@ -57,7 +57,7 @@ If $\pre(t)$ represents the set of all transitions that may precede $t$ in an ev
 
 \begin{definition}[Polynomial Ranking Function] 
 	Let $\mathbb{Z}[\VSet]$ be the polynomial ring in the variables $v \in \VSet$ over the field $\mathbb{Z}$.
-	We define $p(\valuation) = p[v_1/\valuation(v_1), \dots, v_n/\valuation(v_n)]$ as the substitution of all $v_1, \dots v_n \in \VSet$ by the state $\valuation: \VSet \rightarrow \mathbb{Z}$ in the polynomial $p \in \mathbb{Z}[\VSet]$.
+	We define $p(\valuation) = p[v_1/\valuation(v_1), \dots, v_n/\valuation(v_n)]$ as the substitution of all $v_1, \dots v_n \in \VSet$ by the state $\valuation: \VSet \rightarrow \mathbb{Z}_\bot$ in the polynomial $p \in \mathbb{Z}[\VSet]$.
 	We define $\mathit{Pol}: \LSet \rightarrow \mathbb{Z}[\VSet]$ as polynomial ranking function for a transition set $\TSet$ iff there is a nonempty $\TSet_{>} \subseteq \TSet$ such that:
 	\[ \text{For all } (\location, \tau, \location') \in \TSet \text{ it holds that } \tau \Rightarrow \mathit{Pol}(\location)(\valuation) \geq \mathit{Pol}(\location)(\valuation') \]
 	\[ \text{For all } (\location, \tau, \location') \in \TSet_{>} \text{ it holds that } \tau \Rightarrow \mathit{Pol}(\location)(\valuation) > \mathit{Pol}(\location)(\valuation') \]
@@ -106,6 +106,20 @@ If $\pre(t)$ represents the set of all transitions that may precede $t$ in an ev
 \end{theorem}
 
 \subsubsection{Size complexity}
+
+\begin{definition}[Bound set]
+	The set $\BoundSet$ of possible bounds is the smallest set with
+	\[ \omega \in \BoundSet \]
+	\[ k \in \BoundSet \text{ for all } k \in \mathbb{N} \] 
+	\[ v \in \BoundSet \text{ for all } v \in \VSet \] 
+	\[ -b \in \BoundSet \text{ for all } b \in \BoundSet \] 
+	\[ b_1 + b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
+	\[ b_1 * b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
+	\[ \max(b_1, b_2) \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \]
+	\[ k^b \in \BoundSet \text{ for all } k \in \mathbb{N}, b \in \BoundSet \]
+        For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$ we write $b(\valuation)$ to denote the evaluation of the bound $b$ to a value in $\mathbb{Z}_\bot$.
+        For a bound $b \in \BoundSet$ and a bound assignment $\valuation \in \VSet \rightarrow \BoundSet$ we write $b(\valuation)$ to denote the substitution of every variable $v$ of the bound $b$ with the appropiate value $\valuation(v) \in BoundSet$.
+\end{definition}
 
 \todo{Define size complexity}{}
 
