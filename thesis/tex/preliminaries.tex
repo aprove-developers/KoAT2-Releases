@@ -29,30 +29,6 @@
 \end{definition}
 
 
-\subsection{Result Variable Graph}
-
-\begin{definition}[Pre-Transitions] 
-  We define $\pre: \TSet \rightarrow 2^\TSet$ as
-  \[\pre(t) = \braced{\tilde{t} \in \TSet \mid \exists \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\tilde{t}} \circ \rightarrow_{t}) (\location, \valuation)}\]
-  to denote the set of all transitions that may precede $t$ in an evaluation.	
-\end{definition}
-
-If $\pre(t)$ represents the set of all transitions that may precede $t$ in an evaluation, then $\pre_{\mathit{trivial}}((\location_1, \tau_1, \location_1')) = \braced{(\location_2, \tau_2, \location_2') \in \TSet \mid \location_2' = \location_1}$ is a valid overapproximation.
-
-\begin{definition}[Active variables] 
-	We define $\actV: B \rightarrow 2^\VSet$ as 
-	\[ \actV(f) = \braced{ v_i \in \VSet \mid \exists m_1, \dots, m_n, m_i' \in \mathbb{Z}: f(m_1, \dots, m_i, \dots, m_n) \neq f(m_1, \dots, m_i', \dots, m_n)} \]
-	to denote the set of active variables in $f$.
-\end{definition}
-
-\begin{definition}[Result Variable Graph]
-	Let $\LSB$ be a local sizebound.
-	We define 
-	\[ RVG = (\TSet \times \VSet, \braced{((t, v), (t', v')) \mid t \in \pre(t'), v \in \actV(\LLSB(t,v)) \cup \actV(\ULSB(t,v))}) \]
-	to denote the result variable graph.
-\end{definition}
-
-
 \subsection{Ranking functions}
 
 \begin{definition}[Polynomial Ranking Function] 
@@ -121,8 +97,6 @@ If $\pre(t)$ represents the set of all transitions that may precede $t$ in an ev
         For a bound $b \in \BoundSet$ and a bound assignment $\valuation \in \VSet \rightarrow \BoundSet$ we write $b(\valuation)$ to denote the substitution of every variable $v$ of the bound $b$ with the appropiate value $\valuation(v) \in BoundSet$.
 \end{definition}
 
-\todo{Define size complexity}{}
-
 \begin{definition}[Worst-Case Size Complexity]
   We call $\USize: \RV \rightarrow \BoundSet$ an \textbf{upper} sizebound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation \in \Valuation$} it holds that
   \[ \USize(t, v)(\valuation_0) \geq \sup \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
@@ -138,4 +112,32 @@ If $\pre(t)$ represents the set of all transitions that may precede $t$ in an ev
   \[ \LLSB(t, v)(\valuation) \geq \inf \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
   We call $\LSB$ a local sizebound.
 \end{definition}
+
+\subsection{Result Variable Graph}
+
+\todo{Provide an example for a result variable graph corresponding to a program graph}{}
+
+\begin{definition}[Pre-Transitions] 
+  We define $\pre: \TSet \rightarrow 2^\TSet$ as
+  \[\pre(t) = \braced{\tilde{t} \in \TSet \mid \exists \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\tilde{t}} \circ \rightarrow_{t}) (\location, \valuation)}\]
+  to denote the set of all transitions that may precede $t$ in an evaluation.	
+\end{definition}
+
+If $\pre(t)$ represents the set of all transitions that may precede $t$ in an evaluation, then $\pre_{\mathit{trivial}}((\location_1, \tau_1, \location_1')) = \braced{(\location_2, \tau_2, \location_2') \in \TSet \mid \location_2' = \location_1}$ is a valid overapproximation.
+
+\todo{Show with the example what pre transitions are}{}
+
+\begin{definition}[Active variables] 
+	We define $\actV: \BoundSet \rightarrow 2^\VSet$ as 
+	\[ \actV(f) = \braced{ v_i \in \VSet \mid \exists m_1, \dots, m_n, m_i' \in \mathbb{Z}: f(m_1, \dots, m_i, \dots, m_n) \neq f(m_1, \dots, m_i', \dots, m_n)} \]
+	to denote the set of active variables in $f$.
+\end{definition}
+
+\begin{definition}[Result Variable Graph]
+	Let $\LSB$ be a local sizebound.
+	We define 
+	\[ RVG = (\TSet \times \VSet, \braced{((t, v), (t', v')) \mid t \in \pre(t'), v \in \actV(\LLSB(t,v)) \cup \actV(\ULSB(t,v))}) \]
+	to denote the result variable graph.
+\end{definition}
+
 
