@@ -5,7 +5,9 @@ There exist complexity analysis tools which already address the same task.
 Those tools use different approaches for the search for timebounds.
 The tool Loopus \cite{loopus1} \cite{loopus2} \todo{Do and check papers}{...}
 The tool CoFloCo \cite{cofloco1} \cite{cofloco2} \cite{cofloco3} \cite{cofloco4} \todo{Do and check papers}{...}
-The tool KoAT \cite{koat} \todo{Do}{...}
+The tool KoAT \cite{koat} uses an approach which alternates between the computation of timebounds and sizebounds.
+Also its approach is modular, making it possible to analyze parts of the program independently to get better timebounds in return.
+\todo{Do}{...}
 
 The method of this master's thesis is based on the work of KoAT \cite{koat}.
 It changes the methods of KoAT, such that the restriction for non-monotonic bounds is no longer necessary.
