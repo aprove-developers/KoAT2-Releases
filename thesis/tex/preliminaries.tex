@@ -46,7 +46,7 @@ If $\pre(t)$ represents the set of all transitions that may precede $t$ in an ev
 \end{definition}
 
 \begin{definition}[Result Variable Graph]
-	Let $\LSB$ be a local size bound.
+	Let $\LSB$ be a local sizebound.
 	We define 
 	\[ RVG = (\TSet \times \VSet, \braced{((t, v), (t', v')) \mid t \in \pre(t'), v \in \actV(\LLSB(t,v)) \cup \actV(\ULSB(t,v))}) \]
 	to denote the result variable graph.
@@ -114,7 +114,7 @@ If $\pre(t)$ represents the set of all transitions that may precede $t$ in an ev
 	\[ v \in \BoundSet \text{ for all } v \in \VSet \] 
 	\[ -b \in \BoundSet \text{ for all } b \in \BoundSet \] 
 	\[ b_1 + b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
-	\[ b_1 * b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
+	\[ b_1 \cdot b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
 	\[ \max(b_1, b_2) \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \]
 	\[ k^b \in \BoundSet \text{ for all } k \in \mathbb{N}, b \in \BoundSet \]
         For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$ we write $b(\valuation)$ to denote the evaluation of the bound $b$ to a value in $\mathbb{Z}_\bot$.
@@ -123,11 +123,19 @@ If $\pre(t)$ represents the set of all transitions that may precede $t$ in an ev
 
 \todo{Define size complexity}{}
 
-\begin{definition}[Local Size Bound]
-  We call $\ULSB: \RV \rightarrow \BoundSet$ an \textbf{upper} local size bound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation$} it holds that
+\begin{definition}[Worst-Case Size Complexity]
+  We call $\USize: \RV \rightarrow \BoundSet$ an \textbf{upper} sizebound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation \in \Valuation$} it holds that
+  \[ \USize(t, v)(\valuation_0) \geq \sup \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
+  Futhermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} sizebound if and only if for all $(t, v) \in \RV$ and all $\valuation$ it holds that
+  \[ \LSize(t, v)(\valuation_0) \geq \inf \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
+  We call $\Size$ a sizebound.
+\end{definition}
+
+\begin{definition}[Local Sizebound]
+  We call $\ULSB: \RV \rightarrow \BoundSet$ an \textbf{upper} local sizebound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation$} it holds that
   \[ \ULSB(t, v)(\valuation) \geq \sup \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
-  Futhermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local size bound if and only if for all $(t, v') \in \RV$ and all $\valuation$ it holds that
+  Futhermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local sizebound if and only if for all $(t, v') \in \RV$ and all $\valuation$ it holds that
   \[ \LLSB(t, v)(\valuation) \geq \inf \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
-  We call $\LSB$ a local size bound.
+  We call $\LSB$ a local sizebound.
 \end{definition}
 
