@@ -4,7 +4,7 @@ Then, for all result variables $\hat{\alpha} = (\hat{t}, \hat{v}) \in \RV$, we h
 \[ \LSize'(\hat{\alpha})(m) \leq \inf \braced{ \valuation(\hat{v}) \mid \exists \valuation_0, \location \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\location, \valuation)} \]
 To this end, we now fix $m$ to an arbitrary value and consider a fixed state $\abs{\valuation_0} \leq m$ and a fixed evaluation
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\hat{\location}, \hat{\valuation}). \]
-Our goal is to show that the defined sizebounds are correct lower and upper bounds for each variable $v \in \VSet$.
+Our goal is to show that the defined size bounds are correct lower and upper bounds for each variable $v \in \VSet$.
 \begin{equation} \label{eq:sizebound_target}
   \USize'(\hat{t}, v)(m) \geq \hat{\valuation}(v) \geq \LSize'(\hat{t}, v)(m).
 \end{equation}
@@ -22,10 +22,10 @@ Note that the theorem follows from the claim, as $\UTime(t)(m) \geq k_t$ holds b
 
 We now fix $v$ to an arbitrary variable.
 The only interesting case is if $\hat{\alpha} = (\hat{t}, v) \in \SCC$.
-For all $\square \in \braced{\sqcup, \sqcap}$ we have $s^\square_t \geq 1$ by the definition of the local sizebounds and $\text{in}^\square_{\hat{t}}(m) \geq 0$ holds by definition of the theorem.
+For all $\square \in \braced{\sqcup, \sqcap}$ we have $s^\square_t \geq 1$ by the definition of the local size bounds and $\text{in}^\square_{\hat{t}}(m) \geq 0$ holds by definition of the theorem.
 Therefore it holds that
 \[ \prod_{t \in \TSet} (s^\square_t)^{\UTime(t)} \cdot \left( e + \sum_{t \in \TSet} \left( \UTime(t)(m) \cdot \text{in}^\square_t(m) \right) \right) \geq \prod_{t \in \TSet} (s^\square_t)^{k_t} \cdot \left( e + \sum_{t \in \TSet} \left( k_t \cdot \text{in}^\square_t(m) \right) \right) \]
-By definition of the nontrivial sizebounds we can then conclude that if we prove the claim (\ref{eq:sizebound_hypothesis}), we also get sound sizebounds when we use upper timebounds instead of the actual runtime.
+By definition of the nontrivial size bounds we can then conclude that if we prove the claim (\ref{eq:sizebound_hypothesis}), we also get sound size bounds when we use upper time bounds instead of the actual runtime.
 \begin{equation}
   \begin{split}
     {\mathcal{S}^\sqcap}'(\hat{\alpha})(m) & \geq d^\sqcap(m) \\
@@ -41,7 +41,7 @@ Thus, the reduction has the form
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\tilde{t}}) (\tilde{\location}, \tilde{\valuation}) \rightarrow_{\hat{t}} (\hat{\location}, \hat{\valuation}). \]
 for some transition $\tilde{t} \in \pre(\hat{t})$.
 
-\todo{Maybe obsolete here}{Note that the value of a non active variable does not affect the value of a local sizebound.}
+\todo{Maybe obsolete here}{Note that the value of a non active variable does not affect the value of a local size bound.}
 \begin{equation} \label{eq:nonactiveequalzero}
   \forall v \notin \actV(\ULSB(\alpha)): \valuation(v) = 0
 \end{equation}

@@ -10,7 +10,7 @@ Now the goal is to show that $\USize'(t, v)(m) \geq \valuation(v) \geq \LSize'(t
 
 If $t$ is an initial transition, then the evaluation has the form $\valuation_0 \rightarrow_t \valuation$, as by definition there are no transitions leading back to the start location $\location_0$ of $t$.
 
-Thus, for initial transitions by the definition of sizebounds we obtain
+Thus, for initial transitions by the definition of size bounds we obtain
 \[ \USize'(t, v)(m) = \ULSB(t, v)(m) \geq \valuation(v). \]
 \[ \LSize'(t, v)(m) = \LLSB(t, v)(m) \leq \valuation(v). \]
 
@@ -24,7 +24,7 @@ Thus, $\USize(\tilde{t}, v)$ and $\LSize(\tilde{t}, v)$ are bounds for the size 
 
 The only interesting case is when $\alpha$ is bounded by a lower scaled sum and by an upper scaled sum.
 
-We can easily see that the following unequations hold.
+We can easily see that the following inequations hold.
 \[ \sum_{v \in P_{\alpha,1}^\sqcap} \USize(\tilde{t}, v) \geq \sum_{v \in P_{\alpha,1}^\sqcap} \tilde{\valuation}(v) \]
 \[ - \sum_{v \in N_{\alpha,1}^\sqcap} \LSize(\tilde{t}, v) \geq - \sum_{v \in N_{\alpha,1}^\sqcap} \tilde{\valuation}(v) \]
 \[ \sum_{v \in P_{\alpha,2}^\sqcap} \maxO{\USize(\tilde{t}, v)} \geq \sum_{v \in P_{\alpha,2}^\sqcap} \maxO{\tilde{\valuation}(v)} \]
@@ -32,7 +32,7 @@ We can easily see that the following unequations hold.
 Since $s^\sqcap_\alpha \geq 1$ it holds that $\USize(t, v)(m) \geq \valuation(v)$.
 
 We now show that $\LSize(t, v)(m) \leq \valuation(v)$ also holds.
-Again we can easily see that the following unequations hold.
+Again we can easily see that the following inequations hold.
 \[ \sum_{v \in P_{\alpha,1}^\sqcup} \LSize(\tilde{t}, v) \leq \sum_{v \in P_{\alpha,1}^\sqcup} \tilde{\valuation}(v) \]
 \[ - \sum_{v \in N_{\alpha,1}^\sqcup} \USize(\tilde{t}, v) \leq - \sum_{v \in N_{\alpha,1}^\sqcup} \tilde{\valuation}(v) \]
 \[ - \sum_{v \in P_{\alpha,2}^\sqcup} \maxO{-\LSize(\tilde{t}, v)} \leq - \sum_{v \in P_{\alpha,2}^\sqcup} \maxO{-\tilde{\valuation}(v)} \]
