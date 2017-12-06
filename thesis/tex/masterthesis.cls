@@ -24,6 +24,7 @@
 %\usepackage{newalg}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
+\usepackage{cite}
 
 \let\oldReturn\Return
 \renewcommand{\Return}{\State\oldReturn}

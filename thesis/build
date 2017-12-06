@@ -5,5 +5,10 @@ wdir=$(pwd)
 cd "$(dirname "$0")"/tex
 mkdir -p ../output
 pdflatex --output-directory ../output main.tex
+cp literature.bib ../output/
+cd ../output
+bibtex main
+cd ../tex
+pdflatex --output-directory ../output main.tex
 pdflatex --output-directory ../output main.tex
 cd $wdir
