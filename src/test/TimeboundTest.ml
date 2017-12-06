@@ -55,31 +55,31 @@ let tests =
                   [
                     (* Constant bound *)
                     ("1", None,
-                     "l1 -> l2(x)");
+                     "a -> b(x)");
                     ("2", None,
-                     "l1 -> l2(x), l2 -> l3(x)");
+                     "a -> b(x), b -> c(x)");
                     ("2", None,
-                     "l1 -> l2(x), l2 -> l3(x), l2 -> l4(x)");
+                     "a -> b(x), b -> c(x), b -> d(x)");
                     ("3", None,
-                     "l1 -> l2(x), l2 -> l3(x), l2 -> l4(x), l3 -> l4(x)");
+                     "a -> b(x), b -> c(x), b -> d(x), c -> d(x)");
                     ("11", None,
-                     "l1 -> l2(10), l2 -> l2(x-1) :|: x>0");
+                     "a -> b(10), b -> b(x-1) :|: x>0");
                     ("6", None,
-                     "l1 -> l2(10), l2 -> l2(x-2) :|: x>0");
+                     "a -> b(10), b -> b(x-2) :|: x>0");
 
                     (* Linear bound *)
                     ("max{0,x}+1", None,
-                     "l1 -> l2(x), l2 -> l2(x-1) :|: x>0");
+                     "a -> b(x), b -> b(x-1) :|: x>0");
                     ("max{0,x+y}+1", None,
-                     "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x+y>0");
+                     "a -> b(x,y), b -> b(x-1,y) :|: x+y>0");
                     ("max{0,x-y}+1", None,
-                     "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x>y");
+                     "a -> b(x,y), b -> b(x-1,y) :|: x>y");
                     ("max{0,y}+1", None,
-                     "l1 -> l2(0,y), l2 -> l2(x+1,y) :|: x<y");
+                     "a -> b(0,y), b -> b(x+1,y) :|: x<y");
                     ("max{0,x}+max{0,y}+2", None,
-                     "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x>0, l2 -> l3(x,y), l3 -> l3(x,y-1) :|: y>0");
+                     "a -> b(x,y), b -> b(x-1,y) :|: x>0, b -> c(x,y), c -> c(x,y-1) :|: y>0");
                     ("max{0,min{x,y}}+1", Some "max{0,y}+1",
-                     "l1 -> l2(x,y), l2 -> l2(x-1,y-1) :|: x>0 && y>0");
+                     "a -> b(x,y), b -> b(x-1,y-1) :|: x>0 && y>0");
                     ("max{0,x}+max{0,max{0,x}+y}+2", None,
                      "a -> b(x,y), b -> b(x-1,y+1) :|: x>0, b -> c(x,y) :|: x<=0, c -> c(x,y-1) :|: y>0");
                     (* Quadratic bound *)
