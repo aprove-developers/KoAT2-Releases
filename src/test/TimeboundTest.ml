@@ -80,6 +80,8 @@ let tests =
                      "l1 -> l2(x,y), l2 -> l2(x-1,y) :|: x>0, l2 -> l3(x,y), l3 -> l3(x,y-1) :|: y>0");
                     ("max{0,min{x,y}}+1", Some "max{0,y}+1",
                      "l1 -> l2(x,y), l2 -> l2(x-1,y-1) :|: x>0 && y>0");
+                    ("max{0,x}+max{0,max{0,x}+y}+2", None,
+                     "a -> b(x,y), b -> b(x-1,y+1) :|: x>0, b -> c(x,y) :|: x<=0, c -> c(x,y-1) :|: y>0");
                     (* Quadratic bound *)
                   ]
       );
