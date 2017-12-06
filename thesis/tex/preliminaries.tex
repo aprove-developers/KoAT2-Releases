@@ -16,16 +16,16 @@
 \begin{definition}[State] 
   A state is a total function $\valuation: \VSet \rightarrow \mathbb{Z}_\bot$ which assigns each program variable $v \in \VSet$ a value $\valuation(v) \in \mathbb{Z}_\bot = \mathbb{Z} \cup \braced{\bot}$.
   We denote with $\valuation(v) = \bot$ that the state does not define a value for the variable $v$.
-  We write $\Sigma$ to denote the set of all states.
+  We write $\Sigma = \braced{ \valuation \mid \valuation: \VSet \rightarrow \mathbb{Z}_\bot}$ to denote the set of all states.
 \end{definition}
 
 \begin{definition}[Evaluation] 
-  For a transition $t \in \TSet$ an evaluation step $\rightarrow_t \in \Sigma \times \Sigma$ is a relation between a previous state and a resulting state.
-  We write $\valuation \rightarrow_t \valuation'$ iff with $t = (\location, \tau, \location') \in \TSet$ it holds that $\valuation \models \tau$ and $\valuation' \models \tau$.
-  \todo{Does it make sense without location?}{We omit the transition and write $\valuation \rightarrow \valuation'$ iff there exists a transition $t \in \TSet$ such that $\valuation \rightarrow_t \valuation'$ holds.}
-  We write $\valuation \rightarrow^k \valuation'$ iff there exists a sequence of transitions $t_1, \dots, t_k \in \TSet$ such that $\valuation \rightarrow_{t_1} \dots \rightarrow_{t_k} \valuation'$ holds.
-  We write $\valuation \rightarrow^* \valuation'$ iff there exists a $k \in \mathbb{N}$ such that $\valuation \rightarrow^k \valuation'$ holds.
-  We write $\valuation \rightarrow_{\TSet'} \valuation'$ iff there exists a transition $t \in \TSet' \subseteq \TSet$ such that $\valuation \rightarrow_t \valuation'$ holds.
+  For a transition $t \in \TSet$ an evaluation step $\rightarrow_t \in (\LSet \times \Sigma) \times (\LSet \times \Sigma)$ is a relation between a previous state at a location and a resulting state at a following location.
+  We write $(\location, \valuation) \rightarrow_t (\location', \valuation')$ iff with $t = (\location_t, \tau, \location_t') \in \TSet$ it holds that $\valuation \models \tau$ and $\valuation' \models \tau$ as well as $\location = \location_t$ and $\location' = \location_t'$.
+  We omit the transition and write $(\location, \valuation) \rightarrow (\location', \valuation')$ iff there exists a transition $t \in \TSet$ such that $(\location, \valuation) \rightarrow_t (\location', \valuation')$ holds.
+  We write $(\location, \valuation) \rightarrow^k (\location', \valuation')$ iff there exists a sequence of transitions $t_1, \dots, t_k \in \TSet$ such that $(\location, \valuation) \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location', \valuation')$ holds.
+  We write $(\location, \valuation) \rightarrow^* (\location', \valuation')$ iff there exists a $k \in \mathbb{N}$ such that $(\location, \valuation) \rightarrow^k (\location', \valuation')$ holds.
+  We write $(\location, \valuation) \rightarrow_{\TSet'} (\location', \valuation')$ iff there exists a transition $t \in \TSet' \subseteq \TSet$ such that $(\location, \valuation) \rightarrow_t (\location', \valuation')$ holds.
 \end{definition}
 
 
