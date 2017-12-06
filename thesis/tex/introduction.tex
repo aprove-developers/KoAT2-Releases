@@ -1,5 +1,16 @@
 \section{Introduction}
 
+In this master's thesis we will present a method to find timebounds for arbitrary integer programs.
+\todo{Provide information about existing tools CoFloCo, KoAT, Loopus, ...}{There exist complexity analysis tools which already address the same task.}
+
+The method of this master's thesis is based on the work of KoAT.
+It changes the methods of KoAT, such that the restriction for non-monotonic bounds is no longer necessary.
+As a result the method is now able to infer non-monotonic time bounds.
+
+We now take a look at an example to see the benefit of non-monotonic bounds.
+Figure \ref{fig:motivational_example} shows a program, which takes two variables $x$ and $y$ as input and runs a loop, which decrements $x$ in each step with $t_1$ until $x$ is not greater than 0 anymore.
+We can easily see, that the transition $t_1$ will be used at most $\max \braced{0, x-y}$ times.
+However, since the previous method only used monotonic bounds, it only infers the bound $\abs{x}+\abs{y}$ for $t_1$.
 
 \subsection{Motivation}
 
