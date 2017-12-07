@@ -1,5 +1,11 @@
 \subsection{Complexity}
 
+In this section we define three different types of complexities.
+Runtime complexity describes how many steps an evaluation of a program will take in a worst-case szenario.
+The costs of a transition are not considered in this complexity type.
+On the other hand cost complexity does consider the costs of transitions and describes the cost of the sequence of transitions taken in a worst-case run.
+\todo{Short sentence for size complexity}
+
 \subsubsection{Runtime Complexity}
 
 \begin{definition}[Worst-Case Runtime Complexity]
@@ -7,7 +13,7 @@
 \end{definition}
 
 \begin{definition}[Upper Runtime Bound]
-  \[ \UTime(t)(m) \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
+  \[ \UTime(t)(m) \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
 \end{definition}
 
 \begin{theorem}[Approximating Runtime Complexity]
@@ -40,6 +46,8 @@
 
 \subsubsection{Size complexity}
 
+For the size complexity of a program we distinguish between the upper size complexity and the lower size complexity.
+
 \begin{definition}[Bound set]
 	The set $\BoundSet$ of possible bounds is the smallest set with
 	\[ \omega \in \BoundSet \]
@@ -51,8 +59,10 @@
 	\[ \max(b_1, b_2) \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \]
 	\[ k^b \in \BoundSet \text{ for all } k \in \mathbb{N}, b \in \BoundSet \]
         For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$ we write $b(\valuation)$ to denote the evaluation of the bound $b$ to a value in $\mathbb{Z}_\bot$.
-        For a bound $b \in \BoundSet$ and a bound assignment $\valuation \in \VSet \rightarrow \BoundSet$ we write $b(\valuation)$ to denote the substitution of every variable $v$ of the bound $b$ with the appropriate value $\valuation(v) \in BoundSet$.
+        For a bound $b \in \BoundSet$ and a bound assignment $\valuation \in \VSet \rightarrow \BoundSet$ we write $b(\valuation)$ to denote the substitution of every variable $v$ of the bound $b$ with the appropriate value $\valuation(v) \in \BoundSet$.
 \end{definition}
+
+\todo{Actually define sc}{}
 
 \begin{definition}[Worst-Case Size Complexity]
   We call $\USize: \RV \rightarrow \BoundSet$ an \textbf{upper} size bound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation \in \Valuation$} it holds that
