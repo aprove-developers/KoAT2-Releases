@@ -9,10 +9,12 @@ On the other hand cost complexity does consider the costs of transitions and des
 \subsubsection{Runtime Complexity}
 
 \begin{definition}[Worst-Case Runtime Complexity]
+  We call $\text{rc} \in \BoundSet$ the time complexity of a program if and only if for all $m \in \Valuation$ it holds that
   \[ \text{rc}(m) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) } \]
 \end{definition}
 
 \begin{definition}[Upper Runtime Bound]
+  We call $\UTime: \TSet \rightarrow \BoundSet$ a time bound if and only if for all $t \in \TSet$ and all $m \in \Valuation$ it holds that
   \[ \UTime(t)(m) \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
 \end{definition}
 
@@ -47,6 +49,7 @@ On the other hand cost complexity does consider the costs of transitions and des
 \subsubsection{Size complexity}
 
 For the size complexity of a program we distinguish between the upper size complexity and the lower size complexity.
+
 
 \begin{definition}[Bound set]
 	The set $\BoundSet$ of possible bounds is the smallest set with
