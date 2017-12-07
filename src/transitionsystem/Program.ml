@@ -334,3 +334,4 @@ let to_string program =
   let transitions = TransitionGraph.fold_edges_e (fun t str -> str ^ "; " ^ Transition.to_string t) program.graph ""
   and locations = TransitionGraph.fold_vertex (fun l str -> str ^ "; " ^ Location.to_string l) program.graph "" in
   String.concat " " ["Start:"; Location.to_string program.start; "Locations:"; locations; "Transitions:"; transitions; "Vars:"; String.concat ", " (List.map Var.to_string program.vars)] 
+  
