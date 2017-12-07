@@ -1,0 +1,71 @@
+\subsection{Complexity}
+
+\subsubsection{Runtime Complexity}
+
+\begin{definition}[Worst-Case Runtime Complexity]
+  \[ \text{rc}(m) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) } \]
+\end{definition}
+
+\begin{definition}[Upper Runtime Bound]
+  \[ \UTime(t)(m) \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
+\end{definition}
+
+\begin{theorem}[Approximating Runtime Complexity]
+	Let $\UTime$ be a runtime approximation for $\TSet$.
+	Then it holds that 
+	\[ \mathit{rc} \leq \sum_{t \in \TSet}\UTime(t) \]
+\end{theorem}
+
+\subsubsection{Cost Complexity}
+
+\begin{definition}[Worst-Case Cost Complexity]
+\[ \text{cc}(m) = \sup \braced{ \sum_{0 \leq i \leq k} c(t_i)(\valuation_i) \mid \exists k \geq 1, \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge
+  (\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location_k, \valuation_k) } \]
+\end{definition}
+
+\begin{definition}[Upper Cost Bound]
+  \[ \UCost(t)(m) =
+  \begin{cases}
+    \UTime(t) \cdot \maxO{c(t)} & \text{if } t \text{ is an initial transition} \\
+    \UTime(t) \cdot \maxO{\maximum{(c(t)_+)(\USize(\tilde{t})) - (c(t)_-)(\LSize(\tilde{t})) \mid \tilde{t} \in \pre(t)}} & \text{otherwise}
+  \end{cases}
+  \]
+\end{definition}
+
+\begin{theorem}[Approximating Cost Complexity]
+	Let $\UCost$ be a cost approximation for $\TSet$.
+	Then it holds that 
+	\[ \mathit{cc} \leq \sum_{t \in \TSet} \UCost(t) \]
+\end{theorem}
+
+\subsubsection{Size complexity}
+
+\begin{definition}[Bound set]
+	The set $\BoundSet$ of possible bounds is the smallest set with
+	\[ \omega \in \BoundSet \]
+	\[ k \in \BoundSet \text{ for all } k \in \mathbb{N} \] 
+	\[ v \in \BoundSet \text{ for all } v \in \VSet \] 
+	\[ -b \in \BoundSet \text{ for all } b \in \BoundSet \] 
+	\[ b_1 + b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
+	\[ b_1 \cdot b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
+	\[ \max(b_1, b_2) \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \]
+	\[ k^b \in \BoundSet \text{ for all } k \in \mathbb{N}, b \in \BoundSet \]
+        For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$ we write $b(\valuation)$ to denote the evaluation of the bound $b$ to a value in $\mathbb{Z}_\bot$.
+        For a bound $b \in \BoundSet$ and a bound assignment $\valuation \in \VSet \rightarrow \BoundSet$ we write $b(\valuation)$ to denote the substitution of every variable $v$ of the bound $b$ with the appropriate value $\valuation(v) \in BoundSet$.
+\end{definition}
+
+\begin{definition}[Worst-Case Size Complexity]
+  We call $\USize: \RV \rightarrow \BoundSet$ an \textbf{upper} size bound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation \in \Valuation$} it holds that
+  \[ \USize(t, v)(\valuation_0) \geq \sup \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
+  Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} size bound if and only if for all $(t, v) \in \RV$ and all $\valuation$ it holds that
+  \[ \LSize(t, v)(\valuation_0) \geq \inf \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
+  We call $\Size$ a size bound.
+\end{definition}
+
+\begin{definition}[Local Sizebound]
+  We call $\ULSB: \RV \rightarrow \BoundSet$ an \textbf{upper} local size bound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation$} it holds that
+  \[ \ULSB(t, v)(\valuation) \geq \sup \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
+  Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local size bound if and only if for all $(t, v') \in \RV$ and all $\valuation$ it holds that
+  \[ \LLSB(t, v)(\valuation) \geq \inf \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
+  We call $\LSB$ a local size bound.
+\end{definition}

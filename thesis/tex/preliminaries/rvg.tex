@@ -1,0 +1,26 @@
+\subsection{Result Variable Graph}
+
+\todo{Provide an example for a result variable graph corresponding to a program graph}{}
+
+\begin{definition}[Pre-Transitions] 
+  We define $\pre: \TSet \rightarrow 2^\TSet$ as
+  \[\pre(t) = \braced{\tilde{t} \in \TSet \mid \exists \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\tilde{t}} \circ \rightarrow_{t}) (\location, \valuation)}\]
+  to denote the set of all transitions that may precede $t$ in an evaluation.	
+\end{definition}
+
+If $\pre(t)$ represents the set of all transitions that may precede $t$ in an evaluation, then $\pre_{\mathit{trivial}}((\location_1, \tau_1, \location_1')) = \braced{(\location_2, \tau_2, \location_2') \in \TSet \mid \location_2' = \location_1}$ is a valid over approximation.
+
+\todo{Show with the example what pre transitions are}{}
+
+\begin{definition}[Active variables] 
+	We define $\actV: \BoundSet \rightarrow 2^\VSet$ as 
+	\[ \actV(f) = \braced{ v_i \in \VSet \mid \exists m_1, \dots, m_n, m_i' \in \mathbb{Z}: f(m_1, \dots, m_i, \dots, m_n) \neq f(m_1, \dots, m_i', \dots, m_n)} \]
+	to denote the set of active variables in $f$.
+\end{definition}
+
+\begin{definition}[Result Variable Graph]
+	Let $\LSB$ be a local size bound.
+	We define 
+	\[ RVG = (\TSet \times \VSet, \braced{((t, v), (t', v')) \mid t \in \pre(t'), v \in \actV(\LLSB(t,v)) \cup \actV(\ULSB(t,v))}) \]
+	to denote the result variable graph.
+\end{definition}
