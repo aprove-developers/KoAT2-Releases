@@ -14,8 +14,8 @@ If $\pre(t)$ represents the set of all transitions that may precede $t$ in an ev
 
 \begin{definition}[Active variables] 
 	We define $\actV: \BoundSet \rightarrow 2^\VSet$ as 
-	\[ \actV(f) = \braced{ v_i \in \VSet \mid \exists m_1, \dots, m_n, m_i' \in \mathbb{Z}: f(m_1, \dots, m_i, \dots, m_n) \neq f(m_1, \dots, m_i', \dots, m_n)} \]
-	to denote the set of active variables in $f$.
+	\[ \actV(b) = \braced{ v' \in \VSet \mid \exists \valuation, \valuation' \in \Valuation, v' \in \VSet: \valuation(v') \neq \valuation'(v') \wedge \forall v \in \VSet \setminus \braced{v'}: \valuation(v) = \valuation'(v) \wedge \eval{b}{\valuation} \neq \eval{b}{\valuation'}} \]
+	to denote the set of active variables in $b$.
 \end{definition}
 
 \begin{definition}[Result Variable Graph]

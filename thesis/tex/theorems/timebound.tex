@@ -5,7 +5,7 @@
   Let $\mathcal{E}_{\TSet'} = \braced{\location_{in} \mid \TSet_{\location_{in}} \neq \emptyset \wedge \exists \location': (\location_{in}, \tau, \location') \in \TSet'}$ denote the set of all entry locations of $\TSet'$. \\
   Let $\Pol$ be a \textbf{linear} PRF for $\TSet'$. \\
   For $t \in \TSet'_>$ let
-  \[ \UTime'(t) = \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\tilde{t} \in \TSet_\location} \UTime(\tilde{t}) \cdot \maximum{0, (\Pol(\location)_+)(\USize(\tilde{t})) - (\Pol(\location)_-)(\LSize(\tilde{t}))} \]
+  \[ \UTime'(t) = \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\tilde{t} \in \TSet_\location} \UTime(\tilde{t}) \cdot \maximum{0, \eval{\Pol(\location)_+}{\USize(\tilde{t})} - \eval{\Pol(\location)_-}{\LSize(\tilde{t})}} \]
   Let $\UTime'(t) = \UTime(t)$ for $t \in \TSet \setminus \TSet'_>$. \\
   Then, $\text{TimeBounds}(\UTime, (\USize, \LSize), \TSet') = \UTime'$ is also a runtime approximation.
 \end{theorem}

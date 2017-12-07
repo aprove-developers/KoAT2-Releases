@@ -1,25 +1,25 @@
 Let $\alpha = (t, v) \in \RV$ be the trivial SCC for which the processor was applied.
 
-We have to show that for all \todo{Really m here?}{$m \in \mathbb{N}^n$} two statements hold.
-\[ \USize'(t, v)(m) \geq \sup \braced{ \valuation(v) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)} \]
-\[ \USize'(t, v)(m) \geq \inf \braced{ \valuation(v) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)} \]
+We have to show that for all \todo{Really m here?}{$m \in \Valuation$} with $m(v) \in \mathbb{N}$ for all $v \in \VSet$ two statements hold.
+\[ \eval{\USize'(t, v)}{m} \geq \sup \braced{ \valuation(v) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)} \]
+\[ \eval{\USize'(t, v)}{m} \geq \inf \braced{ \valuation(v) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)} \]
 
 To this end, we consider a state $\abs{\valuation_0} \leq m$ and an evaluation
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation). \]
-Now the goal is to show that $\USize'(t, v)(m) \geq \valuation(v) \geq \LSize'(t, v)(m)$ holds.
+Now the goal is to show that $\eval{\USize'(t, v)}{m} \geq \valuation(v) \geq \eval{\LSize'(t, v)}{m}$ holds.
 
 If $t$ is an initial transition, then the evaluation has the form $\valuation_0 \rightarrow_t \valuation$, as by definition there are no transitions leading back to the start location $\location_0$ of $t$.
 
 Thus, for initial transitions by the definition of size bounds we obtain
-\[ \USize'(t, v)(m) = \ULSB(t, v)(m) \geq \valuation(v). \]
-\[ \LSize'(t, v)(m) = \LLSB(t, v)(m) \leq \valuation(v). \]
+\[ \eval{\USize'(t, v)}{m} = \eval{\ULSB(t, v)}{m} \geq \valuation(v). \]
+\[ \eval{\LSize'(t, v)}{m} = \eval{\LLSB(t, v)}{m} \leq \valuation(v). \]
 
 In the case where t is not an initial transition, the evaluation has for some transition $\tilde{t} \in \pre(t)$ the form
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\tilde{t}}) (\tilde{\location}, \tilde{\valuation}) \rightarrow_t (\location, \valuation). \]
 
 Lets assume that our initial assumption holds.
 As $\abs{\valuation_0} \leq m$, we then have for all $v \in \VSet$
-\[ \USize(\tilde{t}, v)(m) \geq \tilde{\valuation}(v) \geq \LSize(\tilde{t}, v)(m). \]
+\[ \eval{\USize(\tilde{t}, v)}{m} \geq \tilde{\valuation}(v) \geq \eval{\LSize(\tilde{t}, v)}{m}. \]
 Thus, $\USize(\tilde{t}, v)$ and $\LSize(\tilde{t}, v)$ are bounds for the size of all variables $v \in \VSet$ before the transition $t$ is applied.
 
 The only interesting case is when $\alpha$ is bounded by a lower scaled sum and by an upper scaled sum.
@@ -29,12 +29,12 @@ We can easily see that the following inequations hold.
 \[ - \sum_{v \in N_{\alpha,1}^\sqcap} \LSize(\tilde{t}, v) \geq - \sum_{v \in N_{\alpha,1}^\sqcap} \tilde{\valuation}(v) \]
 \[ \sum_{v \in P_{\alpha,2}^\sqcap} \maxO{\USize(\tilde{t}, v)} \geq \sum_{v \in P_{\alpha,2}^\sqcap} \maxO{\tilde{\valuation}(v)} \]
 \[ \sum_{v \in N_{\alpha,2}^\sqcap} \maxO{-\LSize(\tilde{t}, v)} \geq \sum_{v \in N_{\alpha,2}^\sqcap} \maxO{-\tilde{\valuation}(v)} \]
-Since $s^\sqcap_\alpha \geq 1$ it holds that $\USize(t, v)(m) \geq \valuation(v)$.
+Since $s^\sqcap_\alpha \geq 1$ it holds that $\eval{\USize(t, v)}{m} \geq \valuation(v)$.
 
-We now show that $\LSize(t, v)(m) \leq \valuation(v)$ also holds.
+We now show that $\eval{\LSize(t, v)}{m} \leq \valuation(v)$ also holds.
 Again we can easily see that the following inequations hold.
 \[ \sum_{v \in P_{\alpha,1}^\sqcup} \LSize(\tilde{t}, v) \leq \sum_{v \in P_{\alpha,1}^\sqcup} \tilde{\valuation}(v) \]
 \[ - \sum_{v \in N_{\alpha,1}^\sqcup} \USize(\tilde{t}, v) \leq - \sum_{v \in N_{\alpha,1}^\sqcup} \tilde{\valuation}(v) \]
 \[ - \sum_{v \in P_{\alpha,2}^\sqcup} \maxO{-\LSize(\tilde{t}, v)} \leq - \sum_{v \in P_{\alpha,2}^\sqcup} \maxO{-\tilde{\valuation}(v)} \]
 \[ - \sum_{v \in N_{\alpha,2}^\sqcup} \maxO{\USize(\tilde{t}, v)} \leq - \sum_{v \in N_{\alpha,2}^\sqcup} \maxO{\tilde{\valuation}(v)} \]
-Since $s^\sqcup_\alpha \geq 1$ it holds that $\LSize(t, v)(m) \leq \valuation(v)$.
+Since $s^\sqcup_\alpha \geq 1$ it holds that $\eval{\LSize(t, v)}{m} \leq \valuation(v)$.

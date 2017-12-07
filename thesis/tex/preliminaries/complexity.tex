@@ -52,33 +52,44 @@ For the size complexity of a program we distinguish between the upper size compl
 
 
 \begin{definition}[Bound set]
-	The set $\BoundSet$ of possible bounds is the smallest set with
-	\[ \omega \in \BoundSet \]
-	\[ k \in \BoundSet \text{ for all } k \in \mathbb{N} \] 
-	\[ v \in \BoundSet \text{ for all } v \in \VSet \] 
-	\[ -b \in \BoundSet \text{ for all } b \in \BoundSet \] 
-	\[ b_1 + b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
-	\[ b_1 \cdot b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
-	\[ \max(b_1, b_2) \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \]
-	\[ k^b \in \BoundSet \text{ for all } k \in \mathbb{N}, b \in \BoundSet \]
-        For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$ we write $b(\valuation)$ to denote the evaluation of the bound $b$ to a value in $\mathbb{Z}_\bot$.
-        For a bound $b \in \BoundSet$ and a bound assignment $\valuation \in \VSet \rightarrow \BoundSet$ we write $b(\valuation)$ to denote the substitution of every variable $v$ of the bound $b$ with the appropriate value $\valuation(v) \in \BoundSet$.
+  The set $\BoundSet$ of possible bounds is the smallest set with
+  \[ \omega \in \BoundSet \]
+  \[ k \in \BoundSet \text{ for all } k \in \mathbb{N} \] 
+  \[ v \in \BoundSet \text{ for all } v \in \VSet \] 
+  \[ -b \in \BoundSet \text{ for all } b \in \BoundSet \] 
+  \[ b_1 + b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ b_1 \cdot b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \max(b_1, b_2) \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \]
+  \[ k^b \in \BoundSet \text{ for all } k \in \mathbb{N}, b \in \BoundSet \]
+\end{definition}
+
+\begin{definition}[Bound evaluation]
+  For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$ we define $\eval{b}{\valuation}$ to denote the evaluation of the bound $b$ to a value in $\mathbb{Z}_\bot$.
+  \[ \eval{\omega}{\valuation} = \bot \text{ for } \omega \in \BoundSet \] \todo{Really bot?}
+  \[ \eval{k}{\valuation} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
+  \[ \eval{v}{\valuation} = \valuation(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
+  \[ \eval{-b}{\valuation} = -\eval{b}{\valuation} \text{ for all } b \in \BoundSet \] 
+  \[ \eval{b_1 + b_2}{\valuation} = \eval{b_1}{\valuation} + \eval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \eval{b_1 \cdot b_2}{\valuation} = \eval{b_1}{\valuation} \cdot \eval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \eval{\max(b_1, b_2)}{\valuation} = \max(\eval{b_1}{\valuation}, \eval{b_2}{\valuation}) \text{ for all } b_1, b_2 \in \BoundSet \]
+  \[ \eval{k^b}{\valuation} = k^{\eval{b}{\valuation}} \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
+  For a bound $b \in \BoundSet$ and a bound assignment $\valuation \in \VSet \rightarrow \BoundSet$ we write $\eval{b}{\valuation}$ to denote the substitution of every variable $v$ of the bound $b$ with the appropriate value $\valuation(v) \in \BoundSet$.
 \end{definition}
 
 \todo{Actually define sc}{}
 
 \begin{definition}[Worst-Case Size Complexity]
   We call $\USize: \RV \rightarrow \BoundSet$ an \textbf{upper} size bound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation \in \Valuation$} it holds that
-  \[ \USize(t, v)(\valuation_0) \geq \sup \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
+  \[ \eval{\USize(t, v)}{\valuation_0} \geq \sup \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
   Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} size bound if and only if for all $(t, v) \in \RV$ and all $\valuation$ it holds that
-  \[ \LSize(t, v)(\valuation_0) \geq \inf \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
+  \[ \eval{\LSize(t, v)}{\valuation_0} \geq \inf \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
   We call $\Size$ a size bound.
 \end{definition}
 
 \begin{definition}[Local Sizebound]
   We call $\ULSB: \RV \rightarrow \BoundSet$ an \textbf{upper} local size bound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation$} it holds that
-  \[ \ULSB(t, v)(\valuation) \geq \sup \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
+  \[ \eval{\ULSB(t, v)}{\valuation} \geq \sup \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
   Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local size bound if and only if for all $(t, v') \in \RV$ and all $\valuation$ it holds that
-  \[ \LLSB(t, v)(\valuation) \geq \inf \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
+  \[ \eval{\LLSB(t, v)}{\valuation} \geq \inf \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
   We call $\LSB$ a local size bound.
 \end{definition}

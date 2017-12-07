@@ -25,6 +25,7 @@
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage{cite}
+\usepackage{stmaryrd}
 
 \let\oldReturn\Return
 \renewcommand{\Return}{\State\oldReturn}

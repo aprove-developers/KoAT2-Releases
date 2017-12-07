@@ -1,16 +1,16 @@
 We want to prove the following claim for all \todo{Exclude t0}{$t \in \TSet$} and all $m \in \mathbb{N}^n$.
-\[ \UTime'(t)(m) \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
+\[ \eval{\UTime'(t)}{m} \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
 
-For $m \in \mathbb{N}^n$, let $\USize_m(t)$ be an assignment from each variable $v \in \VSet$ to the approximated value $\USize(t, v)(m)$.
+For $m \in \mathbb{N}^n$, let $\USize_m(t)$ be an assignment from each variable $v \in \VSet$ to the approximated value $\eval{\USize(t, v)}{m}$.
 It suffices to show that for all $t \in \TSet'_>$ and $m \in \mathbb{N}^n$ the following claim holds.
 \begin{IEEEeqnarray*}{rCl}
-  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\tilde{t} \in \TSet_l} \UTime(\tilde{t})(m) \cdot \maximum{0, ((\Pol(\location)_+)(\USize_m(\tilde{t})) - (\Pol(\location)_-)(\LSize_m(\tilde{t}))} \\
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\tilde{t} \in \TSet_l} \eval{\UTime(\tilde{t})}{m} \cdot \maximum{0, \eval{\Pol(\location)_+}{\USize_m(\tilde{t})} - \eval{\Pol(\location)_-}{\LSize_m(\tilde{t})}} \\
   \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) }
 \end{IEEEeqnarray*}
 To this end, let $\valuation_0$ be a state with $\abs{\valuation_0} \leq m$ and consider a (finite or infinite) evaluation starting with $\valuation_0$ where $k \in \mathbb{N} \cup \braced{\omega}$ steps are performed with the transition $t$.
 The goal is now to show that
 \begin{IEEEeqnarray*}{rCl}
-  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\tilde{t} \in \TSet_l} \UTime(\tilde{t})(m) \cdot \maximum{0, ((\Pol(\location)_+)(\USize_m(\tilde{t})) - ((\Pol(\location)_-)(\LSize_m(\tilde{t}))} \geq k
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\tilde{t} \in \TSet_l} \eval{\UTime(\tilde{t})}{m} \cdot \maximum{0, \eval{\Pol(\location)_+}{\USize_m(\tilde{t})} - \eval{\Pol(\location)_-}{\LSize_m(\tilde{t})}} \geq k
 \end{IEEEeqnarray*}
 
 \todo{Is it?}{This is trivial for $k = 0$.}
@@ -30,24 +30,24 @@ Now we have to investigate how often the transition $t$ is used in the evaluatio
 Since $t \in \TSet'$, it can only be used in sequences of the following form.
 \[ (\hat{\location}_i, \hat{\valuation}_i) \rightarrow^+_{\TSet'} (\location_i, \valuation_i) \]
 \todo{And we probably should}{We can show that the following term is an upper bound on the number of times the transition $t$ is used in this sequence.}
-\[ \maximum{0, (\Pol(\location)_+)(\hat{\valuation}_i) - (\Pol(\location)_-)(\hat{\valuation}_i)} \]
+\[ \maximum{0, \eval{\Pol(\location)_+}{\hat{\valuation}_i} - \eval{\Pol(\location)_-}{\hat{\valuation}_i}} \]
 
 Let the transition in the evaluation reaching $(\hat{\location}_i, \hat{\valuation}_i)$ be $\tilde{t}_i$.
 Thus, we have $\hat{\location}_i \in \mathcal{E}_{\TSet'}$ and $\tilde{t}_i \in \TSet_{\hat{\location}_i}$.
-As \todo{Check, if that hasn't changed}{$(\location_o, \valuation_o) \rightarrow^*_\TSet \circ \rightarrow_{\tilde{t}_i} (\hat{\location}_i, \hat{\valuation}_i)$} and $\abs{\valuation_0} \leq m$, by definition of the size approximations we have $\USize(\tilde{t}_i, v')(m) \geq \hat{\valuation}_i(v) \geq \LSize(\tilde{t}_i, v')(m)$.
+As \todo{Check, if that hasn't changed}{$(\location_o, \valuation_o) \rightarrow^*_\TSet \circ \rightarrow_{\tilde{t}_i} (\hat{\location}_i, \hat{\valuation}_i)$} and $\abs{\valuation_0} \leq m$, by definition of the size approximations we have $\eval{\USize(\tilde{t}_i, v)}{m} \geq \hat{\valuation}_i(v) \geq \eval{\LSize(\tilde{t}_i, v)}{m}$.
 By the weak monotonicity of $\Pol(\hat{\location}_i)_+$ and $\Pol(\hat{\location}_i)_-$ we can conclude the following two statements.
 \begin{IEEEeqnarray*}{lCl}
-  \Pol(\hat{\location}_i)_+(\USize_m(\tilde{t}_i)) \geq \Pol(\hat{\location}_i)_+(\hat{\valuation}_i) \\
-  \Pol(\hat{\location}_i)_-(\LSize_m(\tilde{t}_i)) \leq \Pol(\hat{\location}_i)_-(\hat{\valuation}_i)
+  \eval{\Pol(\hat{\location}_i)_+}{\USize_m(\tilde{t}_i)} \geq \eval{\Pol(\hat{\location}_i)_+}{\hat{\valuation}_i} \\
+  \eval{\Pol(\hat{\location}_i)_-}{\LSize_m(\tilde{t}_i)} \leq \eval{\Pol(\hat{\location}_i)_-}{\hat{\valuation}_i}
 \end{IEEEeqnarray*}
 Thus, we can conclude an upper bound on the number of times the transition $t$ is used in the sequence.
-\[ \maximum{0, (\Pol(\location)_+)(\USize_m(\tilde{t})) - ((\Pol(\location)_-)(\LSize_m(\tilde{t})} \]
+\[ \maximum{0, \eval{\Pol(\location)_+}{\USize_m(\tilde{t})} - \eval{\Pol(\location)_-}{\LSize_m(\tilde{t})}} \]
 
 It remains to examine how often such a sequence can occur in the full evaluation.
 As observed earlier, the transition reaching $\hat{\valuation}_i$ in the evaluation is always some $\tilde{t}_i \in \TSet_{\hat{\location}_i}$.
-Each $\tilde{t}_i$ can occur at most $\UTime(\tilde{t}_i)(m)$ times in evaluations.
-As discussed previously, in every $\TSet'$-sequence the transition $t$ can be applied at most $(\Pol(\location)_+)(\hat{\valuation}_i) - (\Pol(\location)_-)(\hat{\valuation}_i)$ times.
+Each $\tilde{t}_i$ can occur at most $\eval{\UTime(\tilde{t}_i}{m}$ times in evaluations.
+As discussed previously, in every $\TSet'$-sequence the transition $t$ can be applied at most $\eval{\Pol(\location)_+}{\hat{\valuation}_i} - \eval{\Pol(\location)_-}{\hat{\valuation}_i}$ times.
 Thus, we can infer that our initial statement holds.
 \begin{IEEEeqnarray*}{rCl}
-  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\tilde{t} \in \TSet_l} \UTime(\tilde{t})(m) \cdot \maximum{0, (\Pol(\location)_+)(\USize_m(\tilde{t})) - ((\Pol(\location)_-)(\LSize_m(\tilde{t})} \geq k
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\tilde{t} \in \TSet_l} \eval{\UTime(\tilde{t})}{m} \cdot \maximum{0, \eval{\Pol(\location)_+}{\USize_m(\tilde{t})} - \eval{\Pol(\location)_-}{\LSize_m(\tilde{t})}} \geq k
 \end{IEEEeqnarray*}
