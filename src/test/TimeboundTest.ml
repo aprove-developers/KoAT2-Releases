@@ -19,7 +19,7 @@ let from entries =
     | (key, value) -> M.add key value in
   List.fold_left (fun map keyadder -> keyadder map) M.empty (List.map addEntry entries)
   
-let is_bound_between (vars: VarSet.t) bound lower upper =
+let smaller_or_equal (vars: VarSet.t) b1 b2 =
   [-999999;0;999999]
   |> Enum.repeat ~times:(VarSet.cardinal vars)
   |> List.of_enum
@@ -33,8 +33,7 @@ let is_bound_between (vars: VarSet.t) bound lower upper =
            |> (fun map var -> M.find var map)
          in
          (
-           Bound.(substitute_f valuation bound <= substitute_f valuation upper) |? false
-           && Bound.(substitute_f valuation lower <= substitute_f valuation bound) |? false
+           Bound.(substitute_f valuation b1 <= substitute_f valuation b2) |? false
          )
        )
   
@@ -48,17 +47,19 @@ let tests =
                      let minimal_sound_timebound = Readers.read_bound minimal_sound_timebound_str in
                      let wanted_timebound = Option.map Readers.read_bound wanted_timebound_str |? minimal_sound_timebound in
                      let timebound = find_timebound program in
-                     assert_bool (String.concat " " [Bound.to_string minimal_sound_timebound; "<="; Bound.to_string timebound; "<="; Bound.to_string wanted_timebound; "does not hold."])
-                                 (is_bound_between (Program.vars program) timebound minimal_sound_timebound wanted_timebound)))
+                     assert_bool (String.concat " " [Bound.to_string timebound; "is not sound, since it is smaller than"; Bound.to_string minimal_sound_timebound])
+                                 (smaller_or_equal (Program.vars program) minimal_sound_timebound timebound);
+                     assert_bool (String.concat " " [Bound.to_string timebound; "is not as small as wanted, since it is greater than"; Bound.to_string wanted_timebound])
+                                 (smaller_or_equal (Program.vars program) timebound wanted_timebound)))
                   [
                     (* Constant bound *)
                     ("1", None,
                      "a -> b(x)");
                     ("2", None,
                      "a -> b(x), b -> c(x)");
-                    ("2", None,
+                    ("2", Some "4",
                      "a -> b(x), b -> c(x), b -> d(x)");
-                    ("3", None,
+                    ("3", Some "5",
                      "a -> b(x), b -> c(x), b -> d(x), c -> d(x)");
                     ("11", None,
                      "a -> b(10), b -> b(x-1) :|: x>0");
