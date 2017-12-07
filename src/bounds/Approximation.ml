@@ -41,10 +41,14 @@ module Time =
       Map.fold (fun transition bound result -> Bound.(bound + result)) map Bound.zero
       
     let add bound transition map =
-      (try
-         Map.modify transition (Bound.min bound) map
-       with Not_found -> Map.add map transition bound);
-      map
+      let execute () =
+        (try
+           Map.modify transition (Bound.min bound) map
+         with Not_found -> Map.add map transition bound);
+        map
+      in Logger.with_log logger Logger.DEBUG
+                         (fun () -> "add_timebound", ["transition", Transition.to_id_string transition; "bound", Bound.to_string bound])
+                         execute
 
     let all_bounded map =
       List.for_all (fun t -> not (Bound.equal (get map t) Bound.infinity))
