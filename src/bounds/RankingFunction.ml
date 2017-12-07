@@ -86,29 +86,28 @@ let as_parapoly label var =
   |None -> ParameterPolynomial.of_var var
   |Some p -> ParameterPolynomial.of_polynomial p
 
+(** Returns if the given transition qualifies for a cost sensitive approach. *)
+let qualifies_for_sensitive_costs ((l, t, l'): Transition.t): bool =
+  Polynomial.is_linear (TransitionLabel.cost t)
+  && SMTSolver.check_positivity (Formula.mk (TransitionLabel.guard t)) (TransitionLabel.cost t)
+
 (* If the cost of the transition is nonlinear, then we have to do it the old way as long as we do not infer nonlinear ranking functions *)
-let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t) (sensitive:bool): Constraint.t =
-  let (src, trans_label, target) = trans in
-  let guard = TransitionLabel.guard trans_label in
-  let updated_target = ParameterPolynomial.substitute_f (as_parapoly trans_label) (pol target) in
-  let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
-  let new_atom = 
-    if (ParameterPolynomial.is_linear cost && SMTSolver.check_positivity (Formula.mk guard) (TransitionLabel.cost trans_label) && sensitive) then
-      ParameterAtom.Infix.(pol src >= ParameterPolynomial.(cost + updated_target)) (*here's the difference*)
-    else 
-      ParameterAtom.Infix.(pol src >= ParameterPolynomial.(one + updated_target)) in
-  farkas_transform guard new_atom
+let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, l'): Transition.t) (sensitivity: kind): Constraint.t =
+  let guard = TransitionLabel.guard t in
+  let cost =
+    match sensitivity with
+    | `Sensitive -> TransitionLabel.cost t
+    | `Unsensitive -> Polynomial.one
+  in
+  farkas_transform guard ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial cost + substitute_f (as_parapoly t) (pol l')))
   
-let bounded_constraint (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t) (sensitive:bool): Constraint.t =
-  let (src, trans_label, _) = trans in
-  let guard = TransitionLabel.guard trans_label in
-  let cost = ParameterPolynomial.of_polynomial (TransitionLabel.cost trans_label) in
-  let new_atom = 
-    if (ParameterPolynomial.is_linear cost && SMTSolver.check_positivity (Formula.mk guard) (TransitionLabel.cost trans_label) && sensitive) then
-      ParameterAtom.Infix.(pol src >= cost) 
-    else
-      ParameterAtom.Infix.(pol src >= one) in
-  farkas_transform guard new_atom
+let bounded_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, _) : Transition.t) (sensitivity: kind): Constraint.t =
+  let cost = 
+    match sensitivity with
+    | `Sensitive -> TransitionLabel.cost t
+    | `Unsensitive -> Polynomial.one
+  in
+  farkas_transform (TransitionLabel.guard t) ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial cost)
 
 (** Returns a non increasing constraint for a single transition. *)
 let non_increasing_constraint (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t): Constraint.t =
@@ -135,12 +134,15 @@ let non_increasing_constraints (pol : Location.t -> ParameterPolynomial.t) (tran
                      execute
 
 (** Returns, if we can add a strictly decreasing constraint to the given constraint such that it is still satisfiable. *)
-let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr: Constraint.t) (transition: Transition.t) (sensitive:bool): bool =
+let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr: Constraint.t) (transition: Transition.t) (sensitivity: kind): bool =
   let execute () =
-    let open Constraint.Infix in
-    (constr && bounded_constraint pol transition sensitive && strictly_decreasing_constraint pol transition sensitive)
-    |> Formula.mk
-    |> SMTSolver.satisfiable
+    if sensitivity = `Sensitive && not (qualifies_for_sensitive_costs transition) then
+      false
+    else 
+      let open Constraint.Infix in
+      (constr && bounded_constraint pol transition sensitivity && strictly_decreasing_constraint pol transition sensitivity)
+      |> Formula.mk
+      |> SMTSolver.satisfiable
   in Logger.with_log logger Logger.DEBUG 
                      (fun () -> "addable as strictly decreasing", ["transition", Transition.to_id_string transition])
                      ~result:Bool.to_string
@@ -150,12 +152,15 @@ let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (
 let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): (Transition.t*kind) list =
   let combine (constr,transitions) transition =
     let open Constraint.Infix in
-    if addable_as_strictly_decreasing pol constr transition true then
-      (constr && bounded_constraint pol transition true && strictly_decreasing_constraint pol transition true, (transition, `Sensitive)::transitions)
-    else if addable_as_strictly_decreasing pol constr transition false then
-      (constr && bounded_constraint pol transition false && strictly_decreasing_constraint pol transition false, (transition, `Unsensitive)::transitions)
-      else
-        (constr, transitions)
+    let add sensitivity =
+      (constr && bounded_constraint pol transition sensitivity && strictly_decreasing_constraint pol transition sensitivity, (transition, sensitivity)::transitions)
+    in
+    if addable_as_strictly_decreasing pol constr transition `Sensitive then
+      add `Sensitive
+    else if addable_as_strictly_decreasing pol constr transition `Unsensitive then
+      add `Unsensitive
+    else
+      (constr, transitions)
   in
   List.fold_left combine (non_incr,[]) transitions
   |> Tuple2.second
@@ -163,9 +168,9 @@ let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transit
 (** Tries to add a single transition from the given list as strictly decreasing transition to the given constraint.
     This should always lead to better or equal results than searching for sets of strictly decreasing transitions. *)
 let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): (Transition.t*kind) list =
-  match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans true) transitions with
+  match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans `Sensitive) transitions with
   | Some transition -> [transition,`Sensitive]
-  | None -> match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans false) transitions with
+  | None -> match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans `Unsensitive) transitions with
             | Some transition -> [transition,`Unsensitive]
             | None -> []
 
@@ -175,15 +180,9 @@ let find vars transitions =
     let (pol, fresh_coeffs) = generate_ranking_template vars (transitions |> List.enum |> Program.locations |> List.of_enum |> List.unique) in
     let non_increasing = non_increasing_constraints pol transitions in
     let strictly_decreasing_transitions = single_strictly_decreasing pol transitions non_increasing in
-    let get_bounded = fun (trans, sens)-> 
-                  match sens with
-                  |`Sensitive -> bounded_constraint pol trans true
-                  |`Unsensitive -> bounded_constraint pol trans false in
+    let get_bounded (trans, sens) = bounded_constraint pol trans sens in
     let bounded = Constraint.all (List.map get_bounded strictly_decreasing_transitions) in (*Problem: How to generate the final constraints*)
-    let get_strictly_decreasing = fun (trans, sens)-> 
-                  match sens with
-                  |`Sensitive -> strictly_decreasing_constraint pol trans true
-                  |`Unsensitive -> strictly_decreasing_constraint pol trans false in
+    let get_strictly_decreasing (trans, sens) = strictly_decreasing_constraint pol trans sens in
     let strictly_decreasing = Constraint.all (List.map get_strictly_decreasing strictly_decreasing_transitions) in
     let model = SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs (Formula.mk (Constraint.Infix.(non_increasing && bounded && strictly_decreasing))) in
     {

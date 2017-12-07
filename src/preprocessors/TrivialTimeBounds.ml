@@ -17,4 +17,6 @@ let transform (program, appr) =
   if TransitionSet.is_empty one_bounded_transitions then
     MaybeChanged.same (program, appr)
   else
-    MaybeChanged.changed (program, (TransitionSet.fold (fun (l,t,l') appr -> Approximation.add_timebound Bound.one (TransitionGraph.find_edge graph l l') appr) one_bounded_transitions appr))
+    appr
+    |> TransitionSet.fold (fun (l,t,l') appr -> Approximation.add_timebound ((Bound.of_poly % TransitionLabel.cost) t) (TransitionGraph.find_edge graph l l') appr) one_bounded_transitions
+    |> fun appr -> MaybeChanged.changed (program, appr)
