@@ -42,16 +42,14 @@ let tests =
   "Overall timebound" >::: [
       
       ("Simple" >:::
-         List.map (fun (minimal_sound_timebound_str, wanted_timebound, program_str) ->
+         List.map (fun (minimal_sound_timebound_str, wanted_timebound_str, program_str) ->
              program_str >:: (fun _ ->
                      let program = Readers.read_program_simple program_str in
                      let minimal_sound_timebound = Readers.read_bound minimal_sound_timebound_str in
+                     let wanted_timebound = Option.map Readers.read_bound wanted_timebound_str |? minimal_sound_timebound in
                      let timebound = find_timebound program in
-                     assert_bool ("Bound not fine: " ^ Bound.to_string timebound)
-                                 (is_bound_between (Program.vars program)
-                                                   timebound
-                                                   minimal_sound_timebound
-                                                   (Option.map Readers.read_bound wanted_timebound |? minimal_sound_timebound))))
+                     assert_bool (String.concat " " [Bound.to_string minimal_sound_timebound; "<="; Bound.to_string timebound; "<="; Bound.to_string wanted_timebound; "does not hold."])
+                                 (is_bound_between (Program.vars program) timebound minimal_sound_timebound wanted_timebound)))
                   [
                     (* Constant bound *)
                     ("1", None,
