@@ -1,10 +1,62 @@
 \subsection{Complexity}
 
-In this section we define three different types of complexities.
+In this section we define the terms of runtime, cost and size complexity.
 Runtime complexity describes how many steps an evaluation of a program will take in a worst-case szenario.
 The costs of a transition are not considered in this complexity type.
 On the other hand cost complexity does consider the costs of transitions and describes the cost of the sequence of transitions taken in a worst-case run.
-\todo{Short sentence for size complexity}
+The third complexity type we need is size complexity.
+Size complexity yields for each transition an assignment \todo{Correct?}{from each variable to its maximum value} after the execution of the transition in an arbitrary run.
+
+\subsubsection{Bounds}
+
+In our setup we need a definition of the kind of bounds we want to compute.
+
+\begin{definition}[Bound set]
+  The set $\BoundSet$ of possible bounds is the smallest set with
+  \[ \inf \in \BoundSet \]
+  \[ \mathbb{N} \subset \BoundSet \] 
+  \[ \VSet \subset \BoundSet \] 
+  \[ -b \in \BoundSet \text{ for all } b \in \BoundSet \] 
+  \[ b_1 + b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ b_1 \cdot b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \max(b_1, b_2) \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \]
+  \[ k^b \in \BoundSet \text{ for all } k \in \mathbb{N}, b \in \BoundSet \]
+\end{definition}
+
+We use $\inf$ to represent infinity.
+Together with the defined negation we can also represent minus infinity by $-\inf$.
+This is not necessary for time bounds, since time bounds are only allowed to be positive.
+But we use this for lower size bounds, where $-\inf$ is a valid lower size bound for every possible evaluation.
+
+We include numbers from $\mathbb{N}$.
+All numbers from $\mathbb{Z}$ are also in in the bound set $\BoundSet$, since for each number $n \in \mathbb{N}$ its negation $-n$ is element of the bound set $\BoundSet$.
+As the third base component we add the program variables $\VSet$ to the bound set $\BoundSet$.
+
+We define the usual addition $+$ and multiplication $\cdot$ between two bounds.
+The maximum operator $\max$ is also included with the common meaning.
+Note that the bound $-\max(-b_1,-b_2)$ is also included in the bound set $\BoundSet$ and that we therefore also have a representation of $\min(b_1,b_2)$.
+Also note that for a set of bounds $S \subseteq \BoundSet$ we denote with $\max S$ the maximum value of the whole set.
+For an empty set of bounds $S = \emptyset$ we define $\max S$ to be $-\inf$.
+
+For the representation of exponential bounds we include $k^b$ for all positive integers $k \in \mathbb{N}$ and all bounds $b \in \BoundSet$.
+Therefore we do not allow arbitrary exponentation.
+
+\todo{Examples}{}
+
+We will now formally introduce an evaluation operation on all elements of the bound set.
+
+\begin{definition}[Bound evaluation]
+  For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$ we define $\eval{b}{\valuation}$ to denote the evaluation of the bound $b$ to a value in $\mathbb{Z}_\bot$.
+  \[ \eval{\inf}{\valuation} = \bot \text{ for } \inf \in \BoundSet \] \todo{Really bot?}
+  \[ \eval{k}{\valuation} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
+  \[ \eval{v}{\valuation} = \valuation(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
+  \[ \eval{-b}{\valuation} = -\eval{b}{\valuation} \text{ for all } b \in \BoundSet \] 
+  \[ \eval{b_1 + b_2}{\valuation} = \eval{b_1}{\valuation} + \eval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \eval{b_1 \cdot b_2}{\valuation} = \eval{b_1}{\valuation} \cdot \eval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \eval{\max(b_1, b_2)}{\valuation} = \max(\eval{b_1}{\valuation}, \eval{b_2}{\valuation}) \text{ for all } b_1, b_2 \in \BoundSet \]
+  \[ \eval{k^b}{\valuation} = k^{\eval{b}{\valuation}} \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
+  For a bound $b \in \BoundSet$ and a bound assignment $\valuation \in \VSet \rightarrow \BoundSet$ we write $\eval{b}{\valuation}$ to denote the substitution of every variable $v$ of the bound $b$ with the appropriate value $\valuation(v) \in \BoundSet$.
+\end{definition}
 
 \subsubsection{Runtime Complexity}
 
@@ -50,31 +102,6 @@ On the other hand cost complexity does consider the costs of transitions and des
 
 For the size complexity of a program we distinguish between the upper size complexity and the lower size complexity.
 
-
-\begin{definition}[Bound set]
-  The set $\BoundSet$ of possible bounds is the smallest set with
-  \[ \omega \in \BoundSet \]
-  \[ k \in \BoundSet \text{ for all } k \in \mathbb{N} \] 
-  \[ v \in \BoundSet \text{ for all } v \in \VSet \] 
-  \[ -b \in \BoundSet \text{ for all } b \in \BoundSet \] 
-  \[ b_1 + b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ b_1 \cdot b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \max(b_1, b_2) \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \]
-  \[ k^b \in \BoundSet \text{ for all } k \in \mathbb{N}, b \in \BoundSet \]
-\end{definition}
-
-\begin{definition}[Bound evaluation]
-  For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$ we define $\eval{b}{\valuation}$ to denote the evaluation of the bound $b$ to a value in $\mathbb{Z}_\bot$.
-  \[ \eval{\omega}{\valuation} = \bot \text{ for } \omega \in \BoundSet \] \todo{Really bot?}
-  \[ \eval{k}{\valuation} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
-  \[ \eval{v}{\valuation} = \valuation(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
-  \[ \eval{-b}{\valuation} = -\eval{b}{\valuation} \text{ for all } b \in \BoundSet \] 
-  \[ \eval{b_1 + b_2}{\valuation} = \eval{b_1}{\valuation} + \eval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \eval{b_1 \cdot b_2}{\valuation} = \eval{b_1}{\valuation} \cdot \eval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \eval{\max(b_1, b_2)}{\valuation} = \max(\eval{b_1}{\valuation}, \eval{b_2}{\valuation}) \text{ for all } b_1, b_2 \in \BoundSet \]
-  \[ \eval{k^b}{\valuation} = k^{\eval{b}{\valuation}} \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
-  For a bound $b \in \BoundSet$ and a bound assignment $\valuation \in \VSet \rightarrow \BoundSet$ we write $\eval{b}{\valuation}$ to denote the substitution of every variable $v$ of the bound $b$ with the appropriate value $\valuation(v) \in \BoundSet$.
-\end{definition}
 
 \todo{Actually define sc}{}
 
