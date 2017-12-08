@@ -100,18 +100,25 @@ We will now formally introduce an evaluation operation on all elements of the bo
 
 \subsubsection{Size complexity}
 
-For the size complexity of a program we distinguish between the upper size complexity and the lower size complexity.
+A size bound of a program approximates the extreme value of each variable at a particular transition in a worst-case evaluation.
+We distinguish between upper size bounds and lower size bounds.
+While upper size bounds are always higher than the highest possible values at a transition, lower size bounds are always smaller than the lowest possible values.
 
-
-\todo{Actually define sc}{}
-
-\begin{definition}[Worst-Case Size Complexity]
+\begin{definition}[Worst-Case Size Bound]
   We call $\USize: \RV \rightarrow \BoundSet$ an \textbf{upper} size bound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation \in \Valuation$} it holds that
   \[ \eval{\USize(t, v)}{\valuation_0} \geq \sup \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
   Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} size bound if and only if for all $(t, v) \in \RV$ and all $\valuation$ it holds that
   \[ \eval{\LSize(t, v)}{\valuation_0} \geq \inf \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
   We call $\Size$ a size bound.
 \end{definition}
+
+Note that for a transition $t = (\location,\tau,\location') \in \TSet$ with a condition $\tau = (x' = x)$, the upper size bound $\USize(t,x) = x$ is identical to the lower size bound $\LSize(t,x) = x$.
+We have different upper and lower size bounds if we have further restrictions on the incoming variables.
+For $\tau = (x' = x \wedge x \geq 0)$ we can determine $\USize(t,x) = x$ as an upper bound and $\USize(t,x) = 0$ as a lower bound.
+
+The presented definition of size bounds expresses a bound depending on the values at the start of the program.
+For the definition of the methods for the computation of trivial and nontrivial size bounds we also need a definition of bounds depending on the values immediately before the execution of a transition.
+We then use those local size bounds to lift them in higher contexts like the whole program.
 
 \begin{definition}[Local Sizebound]
   We call $\ULSB: \RV \rightarrow \BoundSet$ an \textbf{upper} local size bound if and only if for all $(t, v) \in \RV$ and all \todo{Correct, not to use m here?}{$\valuation$} it holds that
@@ -120,3 +127,5 @@ For the size complexity of a program we distinguish between the upper size compl
   \[ \eval{\LLSB(t, v)}{\valuation} \geq \inf \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
   We call $\LSB$ a local size bound.
 \end{definition}
+
+\todo{Example for the difference between local and global}
