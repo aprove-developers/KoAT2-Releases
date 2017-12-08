@@ -27,9 +27,12 @@ For the definition of a run in a program, we define the terms of states and conf
 \begin{definition}[Configuration] 
   A state is a total function $\valuation: \VSet \rightarrow \mathbb{Z}_\bot$ which assigns each program variable $v \in \VSet$ a value $\valuation(v) \in \mathbb{Z}_\bot = \mathbb{Z} \cup \braced{\bot}$.
   We denote with $\valuation(v) = \bot$ that the state does not define a value for the variable $v$.
-  We write $\Sigma = \braced{ \valuation \mid \valuation: \VSet \rightarrow \mathbb{Z}_\bot}$ to denote the set of all states.
-  A configuration is a pair $(\location, \valuation) \in \LSet \times \Sigma$ that defines the values of the program variables at a specific location.
+  We write $\Valuation = \braced{ \valuation \mid \valuation: \VSet \rightarrow \mathbb{Z}_\bot}$ to denote the set of all states.
+  A configuration is a pair $(\location, \valuation) \in \LSet \times \Valuation$ that defines the values of the program variables at a specific location.
 \end{definition}
+
+For two states $\valuation_1, \valuation_2 \in \Valuation$ we define $\valuation_1 \leq \valuation_2$ iff for all variables $v \in \VSet$ it holds that $\valuation_1(v) \leq \valuation_2(v)$.
+We also define for a state $\valuation \in \Valuation$ the absolute value $\abs{\valuation} \in \Valuation$ iff for all variables $v \in \VSet$ it holds that $\abs{\valuation}(v) = \abs{\valuation(v)}$.
 
 In a last step, we have to define, how a program can be executed.
 Therefore we define the term of an evaluation.
