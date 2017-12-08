@@ -1,26 +1,57 @@
-\begin{definition}[Scaled sum]
-  We say that $\alpha \in \RV$ is bounded by an \textbf{upper} scaled sum if and only if there are numbers $s^\sqcap_\alpha \in \mathbb{N}$ with $s^\sqcap_\alpha \geq 1$ and $e^\sqcap_\alpha \in \mathbb{Z}$ and four pairwise disjoint sets $P_{\alpha,1}^\sqcap, P_{\alpha,2}^\sqcap, N_{\alpha,1}^\sqcap, N_{\alpha,2}^\sqcap \subseteq \VSet$ such that it holds for all $\valuation$ that
-  \[ \ULSB(\alpha)(\valuation) =
-    s^\sqcap_\alpha \cdot \left(
-        e^\sqcap_\alpha
-      + \sum_{v \in P_{\alpha,1}^\sqcap} \valuation(v)
-      - \sum_{v \in N_{\alpha,1}^\sqcap} \valuation(v)
-      + \sum_{v \in P_{\alpha,2}^\sqcap} \maxO{\valuation(v)}
-      + \sum_{v \in N_{\alpha,2}^\sqcap} \maxO{-\valuation(v)}
-    \right). \]
+In this section we present a template for local size bounds.
+If we require the local size bounds to be a of that form, we are able to use those characteristics in the definition of the methods for global size bounds.
+Therefore we define two subsets $\BoundSet^\sqcap_l, \BoundSet^\sqcup_l \subseteq \BoundSet$.
 
-  We say $\alpha \in \RV$ is bounded by a \textbf{lower} scaled sum if and only if there are numbers $s^\sqcup_\alpha \in \mathbb{N}$ with $s^\sqcup_\alpha \geq 1$ and $e^\sqcup_\alpha \in \mathbb{Z}$ and three pairwise disjoint sets $P_{\alpha,1}^\sqcap, P_{\alpha,2}^\sqcap, N_{\alpha,1}^\sqcap, N_{\alpha,2}^\sqcap \subseteq \VSet$ such that it holds for all $\valuation$ that
-  \[ \LLSB(\alpha)(\valuation) =
-    s^\sqcup_\alpha \cdot \left(
-      e^\sqcup_\alpha
-    + \sum_{v \in P_{\alpha,1}^\sqcup} \valuation(v)
-    - \sum_{v \in N_{\alpha,1}^\sqcup} \valuation(v)
-    - \sum_{v \in P_{\alpha,2}^\sqcup} \maxO{-\valuation(v)}
-    - \sum_{v \in N_{\alpha,2}^\sqcup} \maxO{\valuation(v)}
-  \right). \]
+\begin{definition}[Local bound sets]
+  We define $\BoundSet^\sqcap_l \in \BoundSet$ as 
+  \[ \BoundSet^\sqcap_l = \braced{
+    s \cdot \left(
+        e
+      + \sum_{v \in P_1} v
+      - \sum_{v \in N_1} v
+      + \sum_{v \in P_2} \maxO{v}
+      + \sum_{v \in N_2} \maxO{-v}
+      \right) \mid \exists s \in \mathbb{N} \text{ with } s \geq 1, e \in \mathbb{Z}, P_1, P_2, N_1, N_2 \subseteq \VSet }\]
+  Also we define $\BoundSet^\sqcup_l \in \BoundSet$ as 
+  \[ \BoundSet^\sqcup_l = \braced{
+    s \cdot \left(
+        e
+      + \sum_{v \in P_1} v
+      - \sum_{v \in N_1} v
+      - \sum_{v \in P_2} \maxO{-v}
+      - \sum_{v \in N_2} \maxO{v}
+      \right) \mid \exists s \in \mathbb{N} \text{ with } s \geq 1, e \in \mathbb{Z}, P_1, P_2, N_1, N_2 \subseteq \VSet }\]
 \end{definition}
 
-\todo{Provide examples what scaledsums we can infer}{}
+We now use these local bound sets for the definition of the scaled sum.
+
+\begin{definition}[Scaled sum]
+  We say that $\alpha \in \RV$ is bounded by an \textbf{upper} scaled sum if and only if there is a bound $b \in \BoundSet^\sqcap_l$ such that it holds for all states $\valuation$ that
+  \[ \eval{\ULSB(\alpha)}{\valuation} = \eval{b}{\valuation} \]
+  We then denote with $s^\sqcap_\alpha$ the scaling factor $s$, with $e^\sqcap_\alpha$ the constant $e$ and with the sets $P_{\alpha,1}^\sqcap, P_{\alpha,2}^\sqcap, N_{\alpha,1}^\sqcap, N_{\alpha,2}^\sqcap$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
+  We say that $\alpha \in \RV$ is bounded by a \textbf{lower} scaled sum if and only if there is a bound $b \in \BoundSet^\sqcup_l$ such that it holds for all states $\valuation$ that
+  \[ \eval{\LLSB(\alpha)}{\valuation} = \eval{b}{\valuation} \]
+  We then denote with $s^\sqcup_\alpha$ the scaling factor $s$, with $e^\sqcup_\alpha$ the constant $e$ and with the sets $P_{\alpha,1}^\sqcup, P_{\alpha,2}^\sqcup, N_{\alpha,1}^\sqcup, N_{\alpha,2}^\sqcup$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
+\end{definition}
+
+We show the possible bounds with this definition by some examples.
+Let $t = (\location,\tau,\location') \in \TSet$ be a transition for which we want to find a local size bound $b$.
+If $\tau = (x' = x)$, we can represent the bound with $b = 1 \cdot (0 + x)$.
+If $\tau = (x' = -x)$, we can represent the bound with $b = 1 \cdot (0 - x)$.
+This would not be possible, if $N_1$ would not be a part of the template.
+If $\tau = (x' = 2 \cdot x + 2 \cdot y + 4)$, we have a possible bound $b = 2 \cdot (2 + x + y)$.
+
+For the previous examples, it was sufficient to have $P_2 = \emptyset$ and $N_2 = \emptyset$.
+If $\tau = (x' = 2 \cdot x + 3 \cdot y)$, one could suggest the bound $b = 3 \cdot (x + y)$.
+But for a state $\valuation$ with $\eval{x}{\valuation} < 0$ and $\eval{y}{\valuation} = k$ this bound is not sound, since with $\eval{b}{\valuation}$ we would underapproximate the actual value $\eval{2 \cdot x + 3 \cdot y}{\valuation}$.
+Therefore the elements of the local bound set provide the sets $P_2$ and $N_2$.
+For $\tau = (x' = 2 \cdot x + 3 \cdot y)$ we can then infer the bound $b = 3 \cdot (\maxO{x} + y)$.
+With the defined state $\valuation$ we then have $\eval{b}{\valuation} = k$, which is a sound overapproximation of the actual value. 
+
+For the previous case we used the set $P_2$.
+We provide the set $N_2$ for the negative counterpart.
+If $\tau = (x' = -(2 \cdot x) + -(3 \cdot y))$, we can infer the bound $b = 3 \cdot (\maxO{-x} - y)$.
+With this construction we only consider negative values for $x$ and therefore ensure a sound overapproximation.
 
 \todo{Provide the algorithm how we infer those sizebounds}{}
 
