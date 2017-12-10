@@ -55,25 +55,86 @@ With this construction we only consider negative values for $x$ and therefore en
 
 We will now present the algorithm for the computation of sound, but minimal local size bounds $b^\sqcap \in \BoundSet^\sqcap_l$ and $b^\sqcup \in \BoundSet^\sqcup_l$.
 We first consider the upper case.
-\todo{As mentioned before}{Fix with usage of tau}, a local size bound $b = \ULSB(t,v)$ is a sound overapproximation of the effect of a transition $t$, iff for all states $\valuation$ it holds that
-\[ \eval{\ULSB(t, v)}{\valuation} \geq \sup \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'}. \]
-Therefore we are looking for a model of the following formula.
+A local size bound $b = \ULSB(t,v)$ is a sound overapproximation of the effect of a transition $t = (\location,\tau,\location')$, iff the formula $\tau \Rightarrow v' \leq b$ is valid.
+Therefore we are looking for a model of the \todo{Proper definition of eval for formulas?}{following formula}.
 \[ \exists s \in \mathbb{N} \text{ with } s \geq 1:
 \exists e \in \mathbb{Z}:
 \exists P_1, P_2, N_1, N_2 \subseteq \VSet:
 \forall \valuation \in \Valuation:
-\eval{b}{\valuation} \geq \sup \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'} \]
+\eval{\tau}{\valuation} \Rightarrow \eval{v'}{\valuation} \leq \eval{b}{\valuation} \]
 \todo{Cite}{An SMT-Solver is only able to find models for existential formulas} $\exists v_0: \exists v_1: \dots \exists v_k: \phi(v_0, \dots, v_k)$.
 Therefore we use an approach, where we fix the parameters $s$, $e$ and $P_1, N_1, P_2, N_2$ and use the SMT-Solver to prove unsatisfiability of the negation of the formula.
-That is, for fixed $s \in \mathbb{N}$ with $s \geq 1$, $e \in \mathbb{Z}$ and $P_1, N_1, P_2, N_2 \subseteq \VSet$ we search for a model for the following formula.
-\[ \exists \valuation \in \Valuation: \eval{b}{\valuation} < \sup \braced{\valuation'(v) \mid \exists \valuation': \valuation \rightarrow_t \valuation'} \]
+That is, for fixed $s \in \mathbb{N}$ with $s \geq 1$, $e \in \mathbb{Z}$ and $P_1, N_1, P_2, N_2 \subseteq \VSet$ we search for a model of the following formula.
+\[ \exists \valuation \in \Valuation: \eval{\tau}{\valuation} \wedge \eval{v'}{\valuation} > \eval{b}{\valuation} \]
 If the SMT-Solver does not find a model, the formula is unsatisfiable and therefore the fixed parameters form a sound overapproximation.
 
 It is still open, how we choose the parameters.
 Therefore we first need to define a measure for the quality of local bounds.
 We say that $b_1 \in \BoundSet^\sqcap_l$ is a better bound than $b_2 \in \BoundSet^\sqcap_l$ iff for all states $\valuation$ it holds that $\eval{b_1}{\valuation} \leq \eval{b_2}{\valuation}$.
+We then write $b_1 \leq b_2$
+We want to find a bound $b \in \BoundSet^\sqcap_l$ such that for all bounds $b' \in \BoundSet^\sqcap_l$ it holds that $b \leq b'$.
+Note that there might be multiple such bounds in the local bound set $\BoundSet^\sqcap_l$.
+For a transition condition $\tau = (x \leq y \vee x \leq z)$ we have two minimal bounds $y \in \BoundSet^\sqcap_l$ and $z \in \BoundSet^\sqcap_l$.
 
+At this point, we present an algorithm, that finds the optimal bound $b$.
+The idea of this algorithm is to start with a trivial bound, that is always valid.
+Then, we take multiple steps for a component-wise improvement of this bound, always staying with a valid bound.
+In a first step, we define the trivial valid bound.
 
-\todo{Provide the algorithm how we infer those sizebounds}{}
+\begin{definition}[Trivial upper local size bound]
+  Let $\alpha = ((\location,\tau,\location'),v) \in \RV$ be a result variable, for which we want to find an upper local size bound.
+  Let $\VSet$ be the set of all variables which occur in the condition $\tau$.
+  Let $s, e \in \mathbb{N}$ be the multiplication of the absolute values of all integers occuring in $\tau$.
+  Then, the local size bound $b \in \BoundSet^\sqcap_l$ defined by the scaling factor $s$, the constant $e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid upper local size bound for the value of $v$ after the application of the transition $t$.
+\end{definition}
+
+\todo{Proof}{}
+
+We show the construction of a trivial upper local size bound by an example.
+Let $\alpha = ((\location,\tau,\location'),x) \in \RV$ be a result variable with the condition $\tau = (x' = 4 + 2 \cdot y - 3 \cdot z)$.
+Then, by definition of the trivial upper local size bound we can obtain $b^\sqcap = 24 * (24 + \maxO{y} + \maxO{z} + \maxO{-y} + \maxO{-z}$.
+Note that for all variables $v \in \VSet$ we have $\maxO{v} + \maxO{-v} = \abs{v}$, where $\abs{v}$ represents the absolute value of the variable $v$.
+
+With a given trivial upper local size bound we can now search the local bound set $\BoundSet^\sqcap_l$ for better bounds.
+
+\begin{algorithm}
+\caption{Inferring upper local size bound}\label{lsb_algorithm}
+\begin{algorithmic}[1]
+  \State Input: A result variable $t = ((\location,\tau,\location'),v) \in \RV$
+  \State Construct a trivial upper local size bound $b$ with the defining parameters $s$, $e$, $P_1$, $N_1$, $P_2$ and $N_2$
+  \State Binary search $1 \dots s$ to find an $s$ such that $\tau \Rightarrow v' \leq b$ is valid with this $s$, but not valid with $s-1$.
+  \State Binary search $-e \dots e$ to find an $e$ such that $\tau \Rightarrow v' \leq b$ is valid with this $e$, but not valid with $e-1$.
+  \ForAll {variables $v \in \VSet$}
+    \State Set $P_2 := P_2 \setminus \braced{v}$
+    \If {$\tau \Rightarrow v' \leq b$ is not valid}
+      \State Set $P_1 := P_1 \cup \braced{v}$
+      \If {$\tau \Rightarrow v' \leq b$ is not valid}
+        \State Revert to $P_2 := P_2 \cup \braced{v}$ and $P_1 := P_1 \setminus \braced{v}$
+      \EndIf
+    \EndIf
+    \State Set $N_2 := N_2 \setminus \braced{v}$
+    \If {$\tau \Rightarrow v' \leq b$ is not valid}
+      \State Set $N_1 := N_1 \cup \braced{v}$
+      \If {$\tau \Rightarrow v' \leq b$ is not valid}
+        \State Revert to $N_2 := N_2 \cup \braced{v}$ and $N_1 := N_1 \setminus \braced{v}$
+      \EndIf
+    \EndIf
+  \EndFor
+\end{algorithmic}
+\end{algorithm}
+
+The presented algorithm consists of three steps.
+In the first step the scaling factor $s$ gets minimized.
+Since we chose the constant $e$ to be big enough, we can be sure at this point, that the reason for $\tau \Rightarrow v' \leq b$ not being valid with $s-1$ is not the constant.
+Instead there exists a variable, which does not allow further minimization of the scaling factor $s$.
+With the minimized scaling factor the next step is then to also minimize the constant $e$.
+Then, it might be possible to move variables from the sets $P_2$ and $N_2$ in the sets $P_1$ and $N_2$.
+Note that this is possible, since for each variable $v \in \VSet$ and each valuation $\valuation \in \Valuation$ it holds that $\eval{v}{\valuation} \leq \eval{\maxO{v}}{\valuation}$ and also $\eval{-v}{\valuation} \leq \eval{\maxO{-v}}{\valuation}$.
+
+The algorithm does not define an order for the iteration of the variables.
+Note that the order affects the resulting bound, but not its optimality.
+Consider the condition $\tau = (x' = y + z \wedge y = z)$.
+Depending on the order it is both possible to receive the bounds $2 \cdot y$ and $2 \cdot z$.
+But since $2 \cdot y \leq 2 \cdot z$ and $2 \cdot z \leq 2 \cdot y$ does not hold, they are both optimal.
 
 \todo{Proof that the algorithm always finds a valid local sizebound}{}
