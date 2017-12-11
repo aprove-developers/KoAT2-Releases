@@ -1,3 +1,30 @@
+With the definition of local size bounds in the form of scaled sums, it is now possible to lift those local effects to a global level.
+Instead of expressing the effect depending on the values immediately before a transition, we will now express the effect depending on the start values.
+
+We first provide those global size bounds for trivial SCCs of the RVG.
+Note that a node in the RVG is a result variable $\alpha = (t,v) \in \RV$.
+Trivial SCCs consist of a single node and they have the property that every evaluation passes the SCC only once.
+In the graph this is recognizable through the fact, that no sequence of edges is leading back to the single node.
+
+Again, we have to distinguish two cases.
+If the transition $t$ of the result variable $\alpha$ of the node is an initial transition $t \in \TSet_0$, then the effect of the local size bound already depends on the start values.
+Thus, the local size bound for the result variable $\alpha$ is also a global size bound.
+If the transition $t$ is not an initial transition $t \notin \TSet_0$, then we have to substitute the variables of the local size bound by the global size bounds before entering the SCC.
+The old KoAT tool uses monotonically increasing bounds for the local size bounds.
+Therefore it is able to substitute every variable with its upper size bound obtained so far.
+Since the defined scaled sums for local size bounds of KoAT2 are non-monotonic, it is necessary to split additional cases.
+For scaled sums we have monotonically increasing and monotonically decreasing components.
+Let $\alpha = (t,v) \in \RV$ be a result variable.
+Then, the upper local size bound $\ULSB(\alpha)$ and the lower local size bound $\LLSB(\alpha)$ are monotonically increasing for each variable $v \in P_{\alpha,1} \cup P_{\alpha,2}$.
+On the other hand for each variable $v \in N_{\alpha,1} \cup N_{\alpha,2}$ the upper local size bound $\ULSB(\alpha)$ and the lower local size bound $\LLSB(\alpha)$ are monotonically decreasing.
+
+The redefined upper size bound ${\USize}'$ must be a sound overapproximation of the values of the variables.
+Since upper size bounds $\USize$ overapproximate the value of variables and lower size bounds $\LSize$ underapproximate the value, it is sound to use the upper size bound $\USize$ for the substitution with the monotonically increasing variables and the lower size bound $\LSize$ for the substitution with the monotonically decreasing variables.
+
+The redefined lower size bound ${\LSize}'$ must be a sound underapproximation of the values of the variables.
+Therefore the upper size bound $\USize$ must be used for the substitution with the monotonically decreasing variables and the lower size bound $\LSize$ must be used for the substitution with the monotonically increasing variables.
+The following definition formally introduces the computation of size bounds for trivial SCCs.
+
 \begin{theorem}[SizeBounds for trivial SCCs]
   Let $(\UTime, \Size)$ be a complexity approximation.
   Let $\braced{\alpha} \subseteq \RV$ be a trivial SCC of the RVG.
@@ -23,3 +50,5 @@
   \end{equation}
   Then, $\mathit{SizeBounds}(\UTime, \Size, \braced{\alpha}) = (\LSize', \USize')$ is also a size approximation.
 \end{theorem}
+
+\todo{Example}{}
