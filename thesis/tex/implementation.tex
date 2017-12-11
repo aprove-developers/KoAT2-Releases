@@ -1,3 +1,49 @@
 \section{Implementation}
 
 We developed a prototype which implements the search for non-monotonic bounds.
+This implementation is focused on high modularity and maintainability.
+The tool is implemented with the ML-derived language OCaml.
+\todo{Will we?}{In this chapter we give an overview of the modules of the implementation.}
+
+\subsection{Preprocessors}
+
+In the implementation we use several common preprocessors.
+We provide two different execution strategies.
+The trivial execution strategy executes every preprocessor once.
+The second execution strategy is a work-list algorithm, which executes every preprocessor and appends all dependent preprocessors to the work-list if a preprocessor resulted in a change. 
+
+\todo{Mathematical definition?}{}
+
+\subsubsection{Removal of unreachable locations}
+
+\subsubsection{Removal of unsatisfiable transitions}
+
+\subsubsection{Chaining}
+
+
+\subsection{Algorithm}
+
+In the last two chapters we presented the theorems for the computation of time and size bounds.
+For the computation of a time bound for a whole program, it is necessary to define an algorithm, which uses the time and size bound theorems to infer the global time bound.
+In this chapter we will present such an algorithm and show its execution on a detailed example.
+While the actual code is written in a functional style, we will present the algorithm in an imperative style to make the execution order explicit.
+
+\begin{algorithm}
+\caption{Inferring a global time bound}\label{complete_algorithm}
+\begin{algorithmic}[1]
+  \State Input: A program graph $P = (\LSet, \TSet)$
+  \State Run preprocessors
+  \State Create a trivial time bound $\UTime$ and a trivial size bound $\Size$
+  \State Infer time bounds for transitions between SCCs
+  \State Construct the result variable graph RVG from $P$
+  \State Compute local size bounds $\ULSB$ and $\LLSB$
+  \Repeat
+    \ForAll{SCCs $\SCC$ of RVG in topological order}
+      \State Run $\text{SizeBounds}(\UTime, \Size, \SCC)$
+    \EndFor
+    \ForAll{SCCs $\TSet'$ of $P$ in topological order}
+      \State Run $\text{TimeBounds}(\UTime, \Size, \TSet')$
+    \EndFor
+  \Until{all TimeBounds executions did not improve any time bound}
+\end{algorithmic}
+\end{algorithm}
