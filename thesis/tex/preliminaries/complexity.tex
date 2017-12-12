@@ -13,7 +13,7 @@ In our setup we need a definition of the kind of bounds we want to compute.
 
 \begin{definition}[Bound set]
   The set $\BoundSet$ of possible bounds is the smallest set with
-  \[ \inf \in \BoundSet \]
+  \[ \infty \in \BoundSet \]
   \[ \mathbb{N} \subset \BoundSet \] 
   \[ \VSet \subset \BoundSet \] 
   \[ -b \in \BoundSet \text{ for all } b \in \BoundSet \] 
@@ -23,10 +23,10 @@ In our setup we need a definition of the kind of bounds we want to compute.
   \[ k^b \in \BoundSet \text{ for all } k \in \mathbb{N}, b \in \BoundSet \]
 \end{definition}
 
-We use $\inf$ to represent infinity.
-Together with the defined negation we can also represent minus infinity by $-\inf$.
+We use $\infty$ to represent infinity.
+Together with the defined negation we can also represent minus infinity by $-\infty$.
 This is not necessary for time bounds, since time bounds are only allowed to be positive.
-But we use this for lower size bounds, where $-\inf$ is a valid lower size bound for every possible evaluation.
+But we use this for lower size bounds, where $-\infty$ is a valid lower size bound for every possible evaluation.
 
 We include numbers from $\mathbb{N}$.
 All numbers from $\mathbb{Z}$ are also in in the bound set $\BoundSet$, since for each number $n \in \mathbb{N}$ its negation $-n$ is element of the bound set $\BoundSet$.
@@ -36,7 +36,7 @@ We define the usual addition $+$ and multiplication $\cdot$ between two bounds.
 The maximum operator $\max$ is also included with the common meaning.
 Note that the bound $-\max(-b_1,-b_2)$ is also included in the bound set $\BoundSet$ and that we therefore also have a representation of $\min(b_1,b_2)$.
 Also note that for a set of bounds $S \subseteq \BoundSet$ we denote with $\max S$ the maximum value of the whole set.
-For an empty set of bounds $S = \emptyset$ we define $\max S$ to be $-\inf$.
+For an empty set of bounds $S = \emptyset$ we define $\max S$ to be $-\infty$.
 
 For the representation of exponential bounds we include $k^b$ for all positive integers $k \in \mathbb{N}$ and all bounds $b \in \BoundSet$.
 Therefore we do not allow arbitrary exponentation.
@@ -47,7 +47,7 @@ We will now formally introduce an evaluation operation on all elements of the bo
 
 \begin{definition}[Bound evaluation]
   For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$ we define $\eval{b}{\valuation}$ to denote the evaluation of the bound $b$ to a value in $\mathbb{Z}_\bot$.
-  \[ \eval{\inf}{\valuation} = \bot \text{ for } \inf \in \BoundSet \] \todo{Really bot?}
+  \[ \eval{\infty}{\valuation} = \bot \text{ for } \infty \in \BoundSet \] \todo{Really bot?}
   \[ \eval{k}{\valuation} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
   \[ \eval{v}{\valuation} = \valuation(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
   \[ \eval{-b}{\valuation} = -\eval{b}{\valuation} \text{ for all } b \in \BoundSet \] 
