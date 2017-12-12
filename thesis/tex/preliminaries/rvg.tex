@@ -8,7 +8,7 @@
   to denote the set of all transitions that may precede $t$ in an evaluation.	
 \end{definition}
 
-If $\pre(t)$ represents the set of all transitions that may precede $t$ in an evaluation, then $\pre_{\mathit{trivial}}((\location_1, \tau_1, \location_1')) = \braced{(\location_2, \tau_2, \location_2') \in \TSet \mid \location_2' = \location_1}$ is a valid over approximation.
+If $\pre(t)$ represents the set of all transitions that may precede $t$ in an evaluation, then $\pre_{\mathit{trivial}}((\location_1, \update_1, \guard_1, \location_1')) = \braced{(\location_2, \update_2, \guard_2, \location_2') \in \TSet \mid \location_2' = \location_1}$ is a valid over approximation.
 
 \todo{Show with the example what pre transitions are}{}
 

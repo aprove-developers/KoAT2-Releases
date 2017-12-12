@@ -112,9 +112,9 @@ While upper size bounds are always higher than the highest possible values at a 
   We call $\Size$ a size bound.
 \end{definition}
 
-Note that for a transition $t = (\location,\tau,\location') \in \TSet$ with a condition $\tau = (x' = x)$, the upper size bound $\USize(t,x) = x$ is identical to the lower size bound $\LSize(t,x) = x$.
+Note that for a transition $t = (\location,\text{id},\guard,\location') \in \TSet$, the upper size bound $\USize(t,x) = x$ is identical to the lower size bound $\LSize(t,x) = x$.
 We have different upper and lower size bounds if we have further restrictions on the incoming variables.
-For $\tau = (x' = x \wedge x \geq 0)$ we can determine $\USize(t,x) = x$ as an upper bound and $\USize(t,x) = 0$ as a lower bound.
+With $\guard = \braced{x \geq 0}$ we can determine $\USize(t,x) = x$ as an upper bound and $\USize(t,x) = 0$ as a lower bound.
 
 The presented definition of size bounds expresses a bound depending on the values at the start of the program.
 For the definition of the methods for the computation of trivial and nontrivial size bounds we also need a definition of bounds depending on the values immediately before the execution of a transition.

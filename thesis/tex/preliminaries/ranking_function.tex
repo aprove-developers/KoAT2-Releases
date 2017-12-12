@@ -4,7 +4,7 @@
 	Let $\mathbb{Z}[\VSet]$ be the polynomial ring in the variables $v \in \VSet$ over the field $\mathbb{Z}$.
 	We define $\eval{p}{\valuation} = p[v_1/\valuation(v_1), \dots, v_n/\valuation(v_n)]$ as the substitution of all $v_1, \dots v_n \in \VSet$ by the state $\valuation: \VSet \rightarrow \mathbb{Z}_\bot$ in the polynomial $p \in \mathbb{Z}[\VSet]$.
 	We define $\mathit{Pol}: \LSet \rightarrow \mathbb{Z}[\VSet]$ as polynomial ranking function for a transition set $\TSet$ iff there is a nonempty $\TSet_{>} \subseteq \TSet$ such that:
-	\[ \text{For all } (\location, \tau, \location') \in \TSet \text{ it holds that } \tau \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} \geq \eval{\mathit{Pol}(\location)}{\valuation'} \]
-	\[ \text{For all } (\location, \tau, \location') \in \TSet_{>} \text{ it holds that } \tau \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} > \eval{\mathit{Pol}(\location)}{\valuation'} \]
-	\[ \text{For all } (\location, \tau, \location') \in \TSet_{>} \text{ it holds that } \tau \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} > 1 \]
+	\[ \text{For all } (\location, \update, \guard, \location') \in \TSet \text{ it holds that } \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} \geq \eval{\mathit{Pol}(\location)}{\valuation \circ \update} \]
+	\[ \text{For all } (\location, \update, \guard, \location') \in \TSet_{>} \text{ it holds that } \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} > \eval{\mathit{Pol}(\location)}{\valuation \circ \update} \]
+	\[ \text{For all } (\location, \update, \guard, \location') \in \TSet_{>} \text{ it holds that } \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} > 1 \]
 \end{definition}
