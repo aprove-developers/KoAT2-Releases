@@ -57,6 +57,16 @@ This enables the preprocessor $p_{\text{sat}}$ to remove the unsatisfiable trans
 
 \todo{Define condition composition}{}
 
+\subsection{Trivial time bounds}
+
+For a program $\Program = ((\LSet, \TSet), \location_0, \VSet, c)$ the algorithm needs an initial time and size bound prior to the execution.
+Obviously a time bound $\UTime$ with $\UTime(t) = \infty$ for all transitions $t \in \TSet$ is sound for all programs $\Program$.
+Also an upper size bound $\USize$ with $\USize(\alpha) = \infty$ for all result variables $\alpha \in \RV$ and a lower size bound $\LSize$ with $\LSize(\alpha) = -\infty$ for all result variables $\alpha \in \RV$ are sound for all programs $\Program$.
+
+For time bounds it is possible to infer a better time bound prior to the execution.
+For all transitions $t \in \TSet$ which are not part of an SCC, we know, that they can only occur once in every evaluation.
+Therefore, it is sound to use the initial time bound $\UTime$ with $\UTime(t) = c(t)$ for all transitions which does not occur in an SCC of the program $\Program$ and $\UTime(t) = \infty$ for all transitions which does occur in an SCC of the program $\Program$.
+
 \subsection{Algorithm}
 
 In the last two chapters we presented the theorems for the computation of time and size bounds.
