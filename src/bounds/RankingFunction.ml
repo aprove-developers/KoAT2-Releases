@@ -88,8 +88,9 @@ let as_parapoly label var =
 
 (** Returns if the given transition qualifies for a cost sensitive approach. *)
 let qualifies_for_sensitive_costs ((l, t, l'): Transition.t): bool =
-  Polynomial.is_linear (TransitionLabel.cost t)
-  && SMTSolver.check_positivity (Formula.mk (TransitionLabel.guard t)) (TransitionLabel.cost t)
+  (*Polynomial.is_linear (TransitionLabel.cost t)
+  && SMTSolver.check_positivity (Formula.mk (TransitionLabel.guard t)) (TransitionLabel.cost t)*)
+  false
 
 (* If the cost of the transition is nonlinear, then we have to do it the old way as long as we do not infer nonlinear ranking functions *)
 let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, l'): Transition.t) (sensitivity: kind): Constraint.t =
