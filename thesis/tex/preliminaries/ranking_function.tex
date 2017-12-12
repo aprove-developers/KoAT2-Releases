@@ -1,13 +1,11 @@
 \subsection{Ranking functions}
 
 \begin{definition}[Polynomial Ranking Function] 
-	Let $\mathbb{Z}[\VSet]$ be the polynomial ring in the variables $v \in \VSet$ over the field $\mathbb{Z}$.
-	We define $\eval{p}{\valuation} = p[v_1/\valuation(v_1), \dots, v_n/\valuation(v_n)]$ as the substitution of all $v_1, \dots v_n \in \VSet$ by the state $\valuation: \VSet \rightarrow \mathbb{Z}_\bot$ in the polynomial $p \in \mathbb{Z}[\VSet]$.
-	We define $\mathit{Pol}: \LSet \rightarrow \mathbb{Z}[\VSet]$ as polynomial ranking function for a transition set $\TSet$ iff there is a nonempty $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
+	We define $\mathit{Pol}: \LSet \rightarrow \BoundSet_p$ as polynomial ranking function for a transition set $\TSet$ iff there is a nonempty $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
         For all transitions $(\location, \update, \guard, \location') \in \TSet$ and every state $\valuation \in \Valuation$ it holds that
-	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} \geq \eval{\mathit{Pol}(\location)}{\valuation \circ \update}. \]
+	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} \geq \eval{\mathit{Pol}(\location')}{\valuation \circ \update}. \]
         For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every state $\valuation \in \Valuation$ it holds that        
-	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} \geq \eval{\mathit{Pol}(\location)}{\valuation \circ \update} + c((\location, \update, \guard, \location'))(\valuation) \]
+	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} \geq \eval{\mathit{Pol}(\location')}{\valuation \circ \update} + \eval{\cost((\location, \update, \guard, \location'))}{\valuation} \]
         and
 	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} > 1. \]
         \todo{Boundedness >1?}{}

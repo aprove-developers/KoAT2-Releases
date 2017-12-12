@@ -9,11 +9,11 @@ In this master's thesis, we consider a program to be an integer transition syste
   We denote with $\valuation(v) = \bot$ that the state does not define a value for the variable $v$.
   We write $\Valuation = \braced{ \valuation \mid \valuation: \VSet \rightarrow \mathbb{Z}_\bot}$ to denote the set of all states.
   Let $\LSet$ be the set of all locations of a program.
-  Let $\mathbb{Z}[\VSet]_\bot = \mathbb{Z}[\VSet] \cup \braced{\bot}$ be the polynomial ring over the variables $\VSet$ and the undefined value $\bot$.
-  Let $\AtomSet = \braced{p \leq 0 \mid \exists p \in \mathbb{Z}[\VSet]}$ be the set of atoms with the usual evaluation of the formula $p \leq 0$. 
-  Let $\TSet = \LSet \times (\VSet \rightarrow \mathbb{Z}[\VSet]) \times 2^\AtomSet \times \LSet$ be the set of all transitions of the program.
+  Let $\AtomSet = \braced{p_1 \circ p_2 \mid \exists p_1, p_2 \in \BoundSet_p, \exists \circ \in \braced{\leq, \geq, <, >, =}}$ be the set of atoms.
+  \todo{Define valuation on atom set}{}
+  Let $\TSet = \LSet \times (\VSet \rightarrow \BoundSet_p) \times 2^\AtomSet \times \LSet$ be the set of all transitions of the program.
   A program graph is a tuple $(\LSet, \TSet)$ where $\LSet$ is the set of program locations and $\TSet$ is a subset of all possible transitions between them.
-  Let $c: \TSet \rightarrow \Valuation \rightarrow \mathbb{Z}_\bot$ be a function which maps each transition to its costs with a specific state.
+  Let $\cost: \TSet \rightarrow \BoundSet$ be a function which maps each transition to its costs with a specific state.
   A program is a tuple $\Program = ((\LSet, \TSet), \location_0, \VSet, c)$.
   We denote with $\location_0$ the unique program location with $\location_0 \in \LSet$ which has no entry transitions in the program.
   We write $t_0$ for an initial transition. That is a transition $(\location_0, \tau, \location) \in \TSet$ where the start location is the initial location $\location_0$.
