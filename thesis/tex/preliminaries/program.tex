@@ -24,7 +24,7 @@ In a transition $(\location,\update,\guard,\location') \in \TSet$, the guard $\g
 
 We consider non-deterministic programs in this master's thesis.
 Therefore there is no restriction, that from a location $\location \in \LSet$ there must be only one possible transition, for which the condition is fulfiled.
-For example $\Program = (\braced{a,b,c},\braced{(a,\text{id},\text{true},b),(a,\text{id},\text{true},\cost)})$ is a valid program, although it is possible to both move to $b$ and $c$ from location $a$.
+For example $\Program = (\braced{\location_0,\location_1,\location_2},\braced{(\location_0,\text{id},\text{true},\location_1),(\location_0,\text{id},\text{true},\location_2)})$ is a valid program, although it is possible to both move to $\location_1$ and $\location_2$ from location $\location_0$.
 Such a program is not representable in common software languages.
 
 For the definition of a run in a program, we define the terms of states and configurations.
