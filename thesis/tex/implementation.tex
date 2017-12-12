@@ -9,8 +9,8 @@ The tool is implemented with the ML-derived language OCaml.
 
 In the implementation we use several common preprocessors.
 A preprocessor is a function $p: 2^{\LSet \times \TSet} \rightarrow 2^{\LSet \times \TSet}$ which maps a program to an equivalent program.
-We say that a preprocessor $p$ changes a program $P = (\LSet, \TSet)$ iff $p(P) \neq P$.
-We say that a preprocessor $p_1$ affects another preprocessor $p_2$ iff there are programs $P = (\LSet, \TSet)$ such that $p_2(P) = P$, but $p_2$ changes the preprocessed program $p_1(P)$, e.g. $p_2(p_1(P)) \neq p_1(P)$.
+We say that a preprocessor $p$ changes a program $\Program = ((\LSet, \TSet), \location_0, \VSet, c)$ iff $p(\Program) \neq \Program$.
+We say that a preprocessor $p_1$ affects another preprocessor $p_2$ iff there are programs $\Program = ((\LSet, \TSet), \location_0, \VSet, c)$ such that $p_2(\Program) = \Program$, but $p_2$ changes the preprocessed program $p_1(\Program)$, e.g. $p_2(p_1(\Program)) \neq p_1(\Program)$.
 
 We provide two different execution strategies.
 The trivial execution strategy executes a given sequence of preprocessors $p_1, \dots, p_n$.
@@ -23,20 +23,20 @@ We will now define three common preprocessors $p_{\text{reachable}}$, $p_{\text{
 The preprocessor $p_{\text{reachable}}$ removes all locations, which are unreachable from the start location.
 To achieve that, the preprocessor follows the transitions of the graph and marks each visited location, adding them to a set $\LSet'$.
 The set of locations $\LSet \setminus \LSet'$ is then the set of all unreachable locations.
-The result of the preprocessor is a graph $(\LSet', \TSet')$, where $\TSet' = \braced{(\location,\update,\guard,\location') \mid \exists (\location,\update,\guard,\location') \in \TSet: \location \in \LSet' \wedge \location' \in \LSet'}$ is the set of transitions whose start and end locations are both in the reachable set $\LSet'$.
+The result of the preprocessor is a program $((\LSet', \TSet'), \location_0, \VSet, c)$, where $\TSet' = \braced{(\location,\update,\guard,\location') \mid \exists (\location,\update,\guard,\location') \in \TSet: \location \in \LSet' \wedge \location' \in \LSet'}$ is the set of transitions whose start and end locations are both in the reachable set $\LSet'$.
 
 The preprocessor $p_{\text{reachable}}$ does not affect any defined preprocessor.
 
 \subsubsection{Removal of unsatisfiable transitions}
 
 The preprocessor $p_{\text{sat}}$ removes transitions which conditions are unsatisfiable.
-The result of the preprocessor is a graph $(\LSet, \TSet')$, where $\TSet' = \braced{(\location,\update,\guard,\location') \mid \exists (\location,\update,\guard,\location') \in \TSet: \neg (\bigwedge \guard \models \emptyset)}$ is the set of all satisfiable transitions.
+The result of the preprocessor is a program $((\LSet, \TSet'), \location_0, \VSet, c)$, where $\TSet' = \braced{(\location,\update,\guard,\location') \mid \exists (\location,\update,\guard,\location') \in \TSet: \neg (\bigwedge \guard \models \emptyset)}$ is the set of all satisfiable transitions.
 
 The preprocessor $p_{\text{sat}}$ affects the preprocessors $p_{\text{reachable}}$ and $p_{\text{chaining}}$.
-The preprocessor $p_{\text{reachable}}$ is affected in a scenario $P = (\braced{\location_0, \location_1}, \braced{(\location_0,\text{false},\location_1)})$.
+The preprocessor $p_{\text{reachable}}$ is affected in a scenario $\Program = ((\braced{\location_0, \location_1}, \braced{(\location_0,\text{false},\location_1)}), \location_0, \emptyset, c)$.
 In this example the transition $(\location_0,\text{false},\location_1)$ will be removed by $p_{\text{sat}}$.
 This leaves the location $\location_1$ unreachable.
-The preprocessor $p_{\text{chaining}}$ is affected in a scenario $P = (\braced{\location_0, \location_1, \location_2}, \braced{(\location_0,\text{true},\location_1), (\location_1,\text{true},\location_2), (\location_1,\text{false},\location_1)})$.
+The preprocessor $p_{\text{chaining}}$ is affected in a scenario $\Program = ((\braced{\location_0, \location_1, \location_2}, \braced{(\location_0,\text{true},\location_1), (\location_1,\text{true},\location_2), (\location_1,\text{false},\location_1)}), \location_0, \emptyset, c)$.
 In this example the transition $(\location_1,\text{false},\location_1)$ will be removed by $p_{\text{sat}}$.
 This enables the preprocessor $p_{\text{chaining}}$ to skip the location $\location_1$.
 
@@ -44,7 +44,9 @@ This enables the preprocessor $p_{\text{chaining}}$ to skip the location $\locat
 
 The preprocessor $p_{\text{chaining}}$ does a single run on all locations $\location \in \LSet$ to check if they can be skipped by chaining.
 For such a location a chaining step is possible iff there does not exist a transition $(\location,\update,\guard,\location)$ with any update $\update$ and guard $\guard$, e.g. iff the location forms a trivial SCC $\braced{\location}$.
-Then and only then we can define the equivalent program without this location $P' = (\LSet', \TSet')$ with the reduced location set $\LSet' = \LSet \setminus \braced{\location}$ and the replaced transition set $\TSet' = (\TSet \setminus \TSet^-) \cup \TSet^+$ with $\TSet^- = \braced{(\location',\update,\guard,\location'') \mid \exists (\location',\update,\guard,\location'') \in \TSet: \location \neq \location' \wedge \location \neq \location''}$ and $\TSet^+ = \braced{(\location_1,\update_2 \circ \update_1,\eval{\guard_2}{\update_1} \cup \guard_1,\location_2') \mid \exists (\location_1,\update_1,\guard_1,\location) \in \TSet, \exists (\location,\update_2,\guard_2,\location_2') \in \TSet}$. \todo{More precise}{}
+Then and only then we can define the equivalent program without this location $((\LSet', \TSet'), \location_0, \VSet, c')$ with the reduced location set $\LSet' = \LSet \setminus \braced{\location}$ and the replaced transition set $\TSet' = (\TSet \setminus \TSet^-) \cup \TSet^+$ with $\TSet^- = \braced{(\location',\update,\guard,\location'') \mid \exists (\location',\update,\guard,\location'') \in \TSet: \location \neq \location' \wedge \location \neq \location''}$ and $\TSet^+ = \braced{(\location_1,\update_2 \circ \update_1,\eval{\guard_2}{\update_1} \cup \guard_1,\location_2') \mid \exists (\location_1,\update_1,\guard_1,\location) \in \TSet, \exists (\location,\update_2,\guard_2,\location_2') \in \TSet}$. \todo{More precise}{}
+The new transition represents the execution of both transitions.
+Therefore for all $t \in \TSet^+$ the costs are defined as $c'(t)(\valuation) = c(t_1)(\valuation) + c(t_2)(\valuation)$, where $t_1, t_2 \in \TSet^-$ are the corresponding removed transitions.
 The preprocessor $p_{\text{chaining}}$ performs consecutive chaining steps for all locations $\location \in \LSet$.
 
 It affects the preprocessor $p_{\text{sat}}$.
