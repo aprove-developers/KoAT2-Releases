@@ -10,3 +10,17 @@
 	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} > 1. \]
         \todo{Boundedness >1?}{}
 \end{definition}
+
+\todo{Problem with prf and smt}{}
+
+
+
+Farkas lemma specialized for polyranking \cite{bradley2005polyranking}
+General farkas lemma \cite{schrijver1998theory}
+\begin{definition}[Farkas Lemma]
+  Let all atoms $\atom \in \guard$ be of the following linear form with $d_\atom \in \mathbb{Z}$ and $d_{\atom,v} \in \mathbb{Z}$ for each variable $v \in \VSet$.
+  \[ d_\atom + \sum_{v \in \VSet} d_{\atom,v} \cdot v \geq 0 \]
+  If there exists a $d_\atom$ for each atom $\atom$ and if there exist $d_{\atom,v}$ for each atom $\atom$ and each variable $v$ such that $d_\atom + \sum_{v \in \VSet} d_{\atom,v} \cdot \valuation(v) \geq 0$ is satisfiable for all states $\valuation \in \Valuation$, then it entails a linear inequality $c + \sum_{v \in \VSet} c_v \cdot v \geq 0$ iff there exist real numbers $\lambda_\atom \geq 0$ for each atom $\atom \in \guard$ such that for the constant part it holds that $c \geq \sum_{\atom \in \guard} \lambda_\atom \cdot d_\atom$ and for all variables $v \in \VSet$ it holds that
+  \[ c_v = \sum_{\atom \in \guard} \lambda_\atom \cdot d_{\atom,v}. \]
+\end{definition}
+With this definition of the farkas lemma we can infer from the satisfiability of the existential formula $\exists \lambda_{\atom_1}, \dots, \lambda_{\atom,n}: \exists c_{v_1}, \dots, c_{v_m}: c_v = \sum_{\atom \in \guard} \lambda_\atom \cdot d_{\atom,v}$ that a satisfiable constraint $\guard \in \ConstraintSet$ with only linear atoms entails a linear inequality $c + \sum_{v \in \VSet} c_v \cdot v \geq 0$.
