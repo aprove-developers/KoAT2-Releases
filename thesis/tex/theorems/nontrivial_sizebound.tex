@@ -1,3 +1,7 @@
+In the last section we presented a method SizeBounds to infer upper and lower size bounds for result variables $\alpha \in \RV$ which form a trivial SCC $\braced{\alpha}$.
+In this section we extend the method to infer upper and lower size bounds for nontrivial SCCs.
+Prior to the definition of the method we define utility definitions.
+
 \begin{definition}[Pre-variables]
   Let $\pre(\alpha) \subseteq \RV$ be an overapproximation of all the result variables that directly affect the value of a result variable $\alpha \in \RV$.
   Let $\pre^+(\alpha) \subseteq \pre(\alpha)$ be those possibly affecting result variables that enter for each possible evaluation with a positive value
