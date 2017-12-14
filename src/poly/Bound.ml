@@ -57,7 +57,7 @@ let rec fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf p =
 type complexity =
   | Inf
   | Polynomial of int
-  | Exponential of int
+  | Exponential of int [@@deriving eq]
 
 let rec show_complexity = function
   | Inf -> "Infinity"

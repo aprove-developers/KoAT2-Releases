@@ -73,5 +73,9 @@ type complexity =
   | Polynomial of int
   | Exponential of int
 
+val equal_complexity : complexity -> complexity -> bool
+
+val show_complexity : complexity -> string
+  
 (** Returns an overapproximation of the asymptotic complexity of the given bound. *)
 val asymptotic_complexity : t -> complexity
