@@ -63,8 +63,15 @@ val fold : const:(value -> 'b) ->
            neg:('b -> 'b) ->               
            plus:('b -> 'b -> 'b) ->
            times:('b -> 'b -> 'b) ->
-           pow:('b -> int -> 'b) ->
            exp:(value -> 'b -> 'b) ->
            max:('b -> 'b -> 'b) ->
            inf:'b ->
            t -> 'b 
+
+type complexity =
+  | Inf
+  | Polynomial of int
+  | Exponential of int
+
+(** Returns an overapproximation of the asymptotic complexity of the given bound. *)
+val asymptotic_complexity : t -> complexity

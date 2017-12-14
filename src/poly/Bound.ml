@@ -42,27 +42,95 @@ module Constructor =
       number b1 < number b2
   end
           
-let rec to_string = function
+let rec fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf p =
+  let fold_ = fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf in
+  match p with
+  | Infinity -> inf
+  | Var v -> var v
+  | Const c -> const c
+  | Max (b1, b2) -> max (fold_ b1) (fold_ b2)
+  | Neg b -> neg (fold_ b)
+  | Pow (value, n) -> exp value (fold_ n)
+  | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
+  | Product (b1, b2) -> times (fold_ b1) (fold_ b2)
+                    
+type complexity =
+  | Inf
+  | Polynomial of int
+  | Exponential of int
+
+let rec show_complexity = function
+  | Inf -> "Infinity"
+  | Polynomial 0 -> "k"
+  | Polynomial 1 -> "v"
+  | Polynomial x -> "v^" ^ Int.to_string x
+  | Exponential 1 -> "k^v"
+  | Exponential x -> "k^" ^ show_complexity (Exponential (x-1))
+                      
+let asymptotic_complexity =
+  fold
+    ~const:(fun _ -> Polynomial 0)
+    ~var:(fun _ -> Polynomial 1)
+    ~neg:identity
+    ~plus:(fun x y ->
+      match (x,y) with
+      | (Inf,_) -> Inf
+      | (_,Inf) -> Inf
+      | (Polynomial x, Polynomial y) -> Polynomial (Int.max x y)
+      | (Exponential x, Exponential y) -> Exponential (Int.max x y)
+      | (Polynomial x, Exponential y) -> Exponential y
+      | (Exponential x, Polynomial y) -> Exponential x
+    )
+    ~times:(fun x y ->
+      match (x,y) with
+      | (Inf,_) -> Inf
+      | (_,Inf) -> Inf
+      | (Polynomial x, Polynomial y) -> Polynomial (Int.add x y)
+      | (Exponential x, Exponential y) -> Exponential (Int.max x y)
+      | (Polynomial x, Exponential y) -> Exponential y
+      | (Exponential x, Polynomial y) -> Exponential x
+    )
+    ~exp:(fun _ b ->
+      match b with
+      | Inf -> Inf
+      | Polynomial x -> Exponential 1
+      | Exponential x -> Exponential (Int.succ x)
+    )
+    ~max:(fun x y ->
+      match (x,y) with
+      | (Inf,_) -> Inf
+      | (_,Inf) -> Inf
+      | (Polynomial x, Polynomial y) -> Polynomial (Int.max x y)
+      | (Exponential x, Exponential y) -> Exponential (Int.max x y)
+      | (Polynomial x, Exponential y) -> Exponential y
+      | (Exponential x, Polynomial y) -> Exponential x
+    )
+    ~inf:Inf
+
+let rec show_bound = function
   | Var v -> Var.to_string v
   | Const c -> OurInt.to_string c
   | Infinity -> "inf"
-  | Max (b1, Max (b2, b3)) -> "max{" ^ to_string b1 ^ ", " ^ to_string b2 ^ ", " ^ to_string b3 ^ "}"
-  | Max (b1, b2) -> "max{" ^ to_string b1 ^ ", " ^ to_string b2 ^ "}"
+  | Max (b1, Max (b2, b3)) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ ", " ^ show_bound b3 ^ "}"
+  | Max (b1, b2) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ "}"
   | Neg b -> "-" ^ (
       match b with
-      | Sum (b1, b2) -> "(" ^ to_string (Sum (b1, b2)) ^ ")"
-      | Product (b1, b2) -> "(" ^ to_string (Product (b1, b2)) ^ ")"
-      | b -> to_string b
+      | Sum (b1, b2) -> "(" ^ show_bound (Sum (b1, b2)) ^ ")"
+      | Product (b1, b2) -> "(" ^ show_bound (Product (b1, b2)) ^ ")"
+      | b -> show_bound b
     )
-  | Pow (v, b) -> OurInt.to_string v ^ "^(" ^ to_string b ^ ")"
-  | Sum (b1, Neg b2) -> to_string b1 ^ "-" ^ to_string b2
-  | Sum (b1, Const b2) when OurInt.Compare.(b2 < OurInt.zero) -> to_string b1 ^ "-" ^ to_string (Const (OurInt.neg b2))
-  | Sum (b1, b2) -> to_string b1 ^ "+" ^ to_string b2
-  | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ to_string (Sum (b1, b2)) ^ ")*(" ^ to_string (Sum (b3, b4)) ^ ")"
-  | Product (Sum (b1, b2), b3) -> "(" ^ to_string (Sum (b1, b2)) ^ ")*" ^ to_string b3
-  | Product (b1, Sum (b2, b3)) -> to_string b1 ^ "*(" ^ to_string (Sum (b2, b3)) ^ ")"
-  | Product (b1, b2) -> to_string b1 ^ "*" ^ to_string b2
+  | Pow (v, b) -> OurInt.to_string v ^ "^(" ^ show_bound b ^ ")"
+  | Sum (b1, Neg b2) -> show_bound b1 ^ "-" ^ show_bound b2
+  | Sum (b1, Const b2) when OurInt.Compare.(b2 < OurInt.zero) -> show_bound b1 ^ "-" ^ show_bound (Const (OurInt.neg b2))
+  | Sum (b1, b2) -> show_bound b1 ^ "+" ^ show_bound b2
+  | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ show_bound (Sum (b1, b2)) ^ ")*(" ^ show_bound (Sum (b3, b4)) ^ ")"
+  | Product (Sum (b1, b2), b3) -> "(" ^ show_bound (Sum (b1, b2)) ^ ")*" ^ show_bound b3
+  | Product (b1, Sum (b2, b3)) -> show_bound b1 ^ "*(" ^ show_bound (Sum (b2, b3)) ^ ")"
+  | Product (b1, b2) -> show_bound b1 ^ "*" ^ show_bound b2
 
+let to_string bound =
+  show_bound bound ^ " [" ^ (show_complexity % asymptotic_complexity) bound ^ "]"
+                      
 let rec (>) b1 b2 =
   let execute () =
     match (b1, b2) with
@@ -280,18 +348,6 @@ let minus_infinity = Neg Infinity
 
 let is_infinity = equal Infinity
                    
-let rec fold ~const ~var ~neg ~plus ~times ~pow ~exp ~max ~inf p =
-  let fold_ = fold ~const ~var ~neg ~plus ~times ~pow ~exp ~max ~inf in
-  match p with
-  | Infinity -> inf
-  | Var v -> var v
-  | Const c -> const c
-  | Max (b1, b2) -> max (fold_ b1) (fold_ b2)
-  | Neg b -> neg (fold_ b)
-  | Pow (value, n) -> exp value (fold_ n)
-  | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
-  | Product (b1, b2) -> times (fold_ b1) (fold_ b2)
-                    
 let max b1 b2 =
   simplify (Max (b1, b2))
 
@@ -319,7 +375,7 @@ let is_var = function
   | _ -> false
 
 let substitute_f substitution =
-  fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow ~exp:exp ~max:max ~inf:infinity
+  fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~exp:exp ~max:max ~inf:infinity
   
 let substitute var ~replacement =
   substitute_f (fun target_var ->
