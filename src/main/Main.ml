@@ -24,7 +24,7 @@ type main_params = {
     no_boundsearch : bool; [@aka ["n"]]
     (** Disables the search for bounds. Useful if you just want information about the integer transition system via the other options or for debugging purposes. *)
 
-    input : string; [@aka ["i"]]
+    input : string option; [@aka ["i"]]
     (** Either an absolute or relative path to the koat input file which defines the integer transition system.
         Or the program defined in simple mode.
         How this string is interpreted is defined by the simple-input flag *)
@@ -70,28 +70,29 @@ let bounded_rv_to_string (appr: Approximation.t) (t,v) =
 let run (params: main_params) =
   let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
   Logging.use_loggers logs;
+  let input = Option.default_delayed read_line params.input in
   let input_filename =
     if params.simple_input then
       "dummyname"
     else
-      params.input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
+      input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
   and output_dir =
     Option.map Fpath.v params.output_dir
     |? (if params.simple_input then
           Fpath.v "."
         else
-          params.input |> Fpath.v |> Fpath.parent)
+          input |> Fpath.v |> Fpath.parent)
   in
   if params.print_input then (
     let program_str =
       if params.simple_input then
-        params.input
+        input
       else
-        params.input |> File.lines_of |> List.of_enum |> String.concat "\n"
+        input |> File.lines_of |> List.of_enum |> String.concat "\n"
     in
     print_string (program_str ^ "\n\n")
   );
-  params.input
+  input
   |> MainUtil.read_input params.simple_input
   |> Option.map (fun program ->
          (program, Approximation.create program)
