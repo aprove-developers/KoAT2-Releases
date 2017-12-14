@@ -50,6 +50,9 @@ val size : t -> Size.t
 (** Returns a timebound for the transition. *)
 val timebound : t -> Transition.t -> Bound.t
 
+(** Returns a costbound for the prgram. *)
+val costbound : t -> Program.t -> Bound.t
+
 (** Returns a timebound for the unique transition from the source to the target or None if there isn't such a single transition. *)
 val timebound_between : t -> Location.t -> Location.t -> Bound.t Option.t
 

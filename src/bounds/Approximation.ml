@@ -195,6 +195,9 @@ let time (time, _) = time
 
 let size (_, size) = size
 
+let costbound (time, _) program =
+  TransitionGraph.fold_edges_e (fun transition result -> Bound.(Time.get time transition * of_poly (Transition.cost transition) + result)) (Program.graph program) Bound.zero
+
 let timebound (time, _) = Time.get time
 
 let timebound_between (time, _) = Time.get_between time
@@ -213,6 +216,7 @@ let to_string program (time, size) =
   let output = IO.output_string () in
   IO.nwrite output "Timebounds: \n";
   IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (Time.sum time program) ^ "\n");
+  IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (costbound (time, size) program) ^ "\n");
   time |> Time.to_string |> IO.nwrite output;
   IO.nwrite output "\nSizebounds:\n";
   size |> Size.to_string |> IO.nwrite output;

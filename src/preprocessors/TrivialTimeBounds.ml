@@ -18,5 +18,5 @@ let transform (program, appr) =
     MaybeChanged.same (program, appr)
   else
     appr
-    |> TransitionSet.fold (fun (l,t,l') appr -> Approximation.add_timebound ((Bound.of_poly % TransitionLabel.cost) t) (l,t,l') appr) one_bounded_transitions
+    |> TransitionSet.fold (fun (l,t,l') appr -> Approximation.add_timebound Bound.one (l,t,l') appr) one_bounded_transitions
     |> fun appr -> MaybeChanged.changed (program, appr)
