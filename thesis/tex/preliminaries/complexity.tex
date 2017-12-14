@@ -33,10 +33,12 @@ Size complexity yields for each transition an assignment \todo{Correct?}{from ea
 \end{definition}
 
 \begin{definition}[Upper Cost Bound]
+  Let $\abs{\mathcal{S}}(t, v)$ denote highest absolute value $\max(\USize(t, v), -\LSize(t, v))$ a variable $v$ can reach at a transition $t$. 
   \[ \UCost(t)(m) =
   \begin{cases}
     \UTime(t) \cdot \maxO{\cost(t)} & \text{if } t \text{ is an initial transition} \\
-    \UTime(t) \cdot \maxO{\maximum{\eval{\cost(t)_+}{\USize(\tilde{t})} - \eval{\cost(t)_-}{\LSize(\tilde{t})} \mid \tilde{t} \in \pre(t)}} & \text{otherwise}
+    \UTime(t) \cdot \maxO{\maximum{\eval{\cost(t)_+}{\USize(\tilde{t})} - \eval{\cost(t)_-}{\LSize(\tilde{t})} \mid \tilde{t} \in \pre(t)}} & \text{if } \cost(t) \text{ is an affine polynomial} \\
+    \UTime(t) \cdot \maxO{\maximum{\eval{\abs{\cost(t)}}{\abs{\mathcal{S}}(\tilde{t})} \mid \tilde{t} \in \pre(t)}} & \text{otherwise} \\
   \end{cases}
   \]
 \end{definition}
