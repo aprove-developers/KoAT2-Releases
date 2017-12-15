@@ -54,15 +54,15 @@ We will now formally introduce an evaluation operation on all elements of the bo
 Furthermore, we define the comparison of bounds.
 
 \begin{definition}[Comparison sets]
-  We define the atom set $\AtomSet$ as $\braced{p_1 \circ p_2 \mid \exists p_1, p_2 \in \BoundSet_p, \exists \circ \in \braced{\leq, \geq, <, >, =}}$.
+  We define the atom set $\AtomSet$ as $\braced{p_1 \bowtie p_2 \mid \exists p_1, p_2 \in \BoundSet_p, \exists \bowtie \in \braced{\leq, \geq, <, >, =}}$.
   We define the constraint set $\ConstraintSet$ as $2^\AtomSet$.
 \end{definition}
 Also, we extend the definition of the bound evaluation to comparison sets.
 
 \begin{definition}[Comparison evaluation]
   Let $\valuation$ be a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$.
-  For an atom $b_1 \circ b_2 \in \AtomSet$ we define $\eval{b_1 \circ b_2}{\valuation}$ to denote the evaluation of the atom $b_1 \circ b_2$ to a value in $\mathbb{B}_\bot$.
-  \[ \eval{b_1 \circ b_2}{\valuation} = \eval{b_1}{\valuation} \circ \eval{b_2}{\valuation} \]
+  For an atom $b_1 \bowtie b_2 \in \AtomSet$ we define $\eval{b_1 \bowtie b_2}{\valuation}$ to denote the evaluation of the atom $b_1 \bowtie b_2$ to a value in $\mathbb{B}_\bot$.
+  \[ \eval{b_1 \bowtie b_2}{\valuation} = \eval{b_1}{\valuation} \bowtie \eval{b_2}{\valuation} \]
   For a constraint $\guard \in \ConstraintSet$ we define $\eval{\guard}{\valuation}$ to denote the evaluation of the constraint $\guard$ to a value in $\mathbb{B}_\bot$.
   \[ \eval{\guard}{\valuation} = \bigwedge_{\atom \in \guard} \eval{\atom}{\valuation} \]
 \end{definition}
