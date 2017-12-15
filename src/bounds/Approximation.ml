@@ -55,13 +55,15 @@ module Time =
       
     let to_string time =
       let output = IO.output_string () in
-      Map.print
+      time
+      |> Map.to_list
+      |> List.sort (fun (t1,b1) (t2,b2) -> Transition.compare_same t1 t2)
+      |> List.print
         ~first:("  ")
         ~last:"\n"
         ~sep:"\n  "
-        (fun output transition -> IO.nwrite output (Transition.to_id_string transition))
-        (fun output bound -> IO.nwrite output (Bound.to_string bound))
-        output time;  
+        (fun output (t,b) -> IO.nwrite output (Transition.to_id_string t ^ ": " ^ Bound.to_string b))
+        output;  
       IO.close_out output
 
     (** Very slow equality, only for testing purposes *)
@@ -140,12 +142,18 @@ module Size =
       |> Map.filter (match kind with
                      | `Upper -> not % Bound.is_infinity
                      | `Lower -> not % Bound.is_infinity % Bound.neg)
-      |> Map.print
+      |> Map.to_list
+      |> List.sort (fun ((_,t1,v1),b1) ((_,t2,v2),b2) ->
+             if Transition.compare_same t1 t2 != 0 then
+               Transition.compare_same t1 t2
+             else
+               Var.compare v1 v2
+           )
+      |> List.print
            ~first:(show_kind kind ^ ":\n  ")
            ~last:"\n"
            ~sep:"\n  "
-           (fun output (_, transition, var) -> IO.nwrite output (Transition.to_id_string transition ^ ", " ^ Var.to_string var))
-           (fun output bound -> IO.nwrite output (Bound.to_string bound))
+           (fun output ((_, transition, var), bound) -> IO.nwrite output (Transition.to_id_string transition ^ ", " ^ Var.to_string var ^ ": " ^ Bound.to_string bound))
            output
       
     let to_string size =
