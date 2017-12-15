@@ -25,17 +25,45 @@ As the third base component we add the program variables $\VSet$ to the bound se
 
 We define the usual addition $+$ and multiplication $\cdot$ between two bounds.
 The maximum operator $\max$ is also included with the common meaning.
-Note that the bound $-\max(-b_1,-b_2)$ is also included in the bound set $\BoundSet$ and that we therefore also have a representation of $\min(b_1,b_2)$.
-Also note that for a set of bounds $S \subseteq \BoundSet$ we denote with $\max S$ the maximum value of the whole set.
-For an empty set of bounds $S = \emptyset$ we define $\max S$ to be $-\infty$.
-
 For the representation of exponential bounds we include $k^b$ for all positive integers $k \in \mathbb{N}$ and all bounds $b \in \BoundSet$.
 Therefore we do not allow arbitrary exponentation.
 
-Note that the bound set $\BoundSet$ also includes all polynomials over the variable set $\VSet$ by definition.
-\todo{Maybe concrete definition}{We define $\BoundSet_p \subseteq \BoundSet$ as the subset of all polynomials in $\BoundSet$.}
+In specific scenarios we only allow a subset of those bounds.
+For this purpose we define with $\BoundSet_p \subseteq \BoundSet$ the subset of all polynomials in $\BoundSet$.
+\begin{definition}[Polynomial set]
+  The set $\BoundSet_p \subseteq \BoundSet$ of all polynomials is the smallest set with
+  \[ \mathbb{N} \subset \BoundSet_p \] 
+  \[ \VSet \subset \BoundSet_p \] 
+  \[ -b \in \BoundSet_p \text{ for all } b \in \BoundSet_p \] 
+  \[ b_1 + b_2 \in \BoundSet_p \text{ for all } b_1, b_2 \in \BoundSet_p \] 
+  \[ b_1 \cdot b_2 \in \BoundSet_p \text{ for all } b_1, b_2 \in \BoundSet_p \] 
+\end{definition}
+Furthermore we define the set of all affine polynomials as $\BoundSet_a \subseteq \BoundSet$. 
+\begin{definition}[Affine polynomial set]
+  The set $\BoundSet_a \subseteq \BoundSet_p$ of all affine polynomials is the smallest set with
+  \[ a \cdot v \in \BoundSet_a \text{ for all } a \in \mathbb{N}, v \in \VSet \] 
+  \[ -a \cdot v \in \BoundSet_a \text{ for all } a \in \mathbb{N}, v \in \VSet \] 
+  \[ b_1 + b_2 \in \BoundSet_a \text{ for all } b_1, b_2 \in \BoundSet_p \] 
+\end{definition}
 
-\todo{Examples}{}
+Note that we allow some additional notations to simplify the representation of some bounds.
+\begin{align*}
+  \min(b_1,b_2) &= -\max(-b_1,-b_2) & \text{ for all } b_1, b_2 \in \BoundSet \\
+  \max S &= \max(b_1, \max(b_2, \dots \max(\dots, b_n))) & \text{ for all } S = \braced{b_1, \dots, b_n} \subseteq \BoundSet \text{ with } S \neq \emptyset \\
+  \max S &= -\infty & \text{ for } S = \emptyset \\
+  \maxO{b} &= \max(b,0) & \text{ for all } b \in \BoundSet \\
+  \abs{b} &= \maxO{b} + \maxO{-b} & \text{ for all } b \in \BoundSet \\
+  b_1 - b_2 &= b_1 + (-b_2) & \text{ for all } b_1, b_2 \in \BoundSet \\
+  b^n &= \underbrace{b \cdot b \dots b \cdot b}_\text{n times} & \text{ for all } b \in \BoundSet, n \in \mathbb{N}
+\end{align*}
+
+The following examples show, which kind of bounds are included in the defined sets $\BoundSet$, $\BoundSet_p$ and $\BoundSet_a$.
+\begin{align*}
+  0 \cdot x \in \BoundSet_a \subset \BoundSet_p \subset \BoundSet \\
+  2 \cdot x - 3 \cdot y \in \BoundSet_a \subset \BoundSet_p \subset \BoundSet \\
+  2 \cdot x^2 + 4 \cdot z \in \BoundSet_p \subset \BoundSet \\
+  2^{\max(x,3 \cdot y^2)} \cdot 7 \cdot x^3 \in \BoundSet \\
+\end{align*}
 
 We will now formally introduce an evaluation operation on all elements of the bound set.
 
@@ -51,6 +79,15 @@ We will now formally introduce an evaluation operation on all elements of the bo
   \[ \eval{k^b}{\valuation} = k^{\eval{b}{\valuation}} \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
   For a bound $b \in \BoundSet$ and a bound assignment $\valuation \in \VSet \rightarrow \BoundSet$ we write $\eval{b}{\valuation}$ to denote the substitution of every variable $v$ of the bound $b$ with the appropriate value $\valuation(v) \in \BoundSet$.
 \end{definition}
+
+The mentioned examples can therefore be evaluated as expected.
+\begin{align*}
+  \eval{0 \cdot x}{\valuation} &= 0 \cdot \valuation(x) \\
+  \eval{2 \cdot x - 3 \cdot y}{\valuation} &= 2 \cdot \valuation(x) - 3 \cdot \valuation(y) \\
+  \eval{2 \cdot x^2 + 4 \cdot z}{\valuation} &= 2 \cdot \valuation(x)^2 + 4 \cdot \valuation(z) \\
+  \eval{2^{\max(x,3 \cdot y^2)} \cdot 7 \cdot x^3}{\valuation} &= 2^{\max(\valuation(x),3 \cdot \valuation(y)^2)} \cdot 7 \cdot \valuation(x)^3 \\
+\end{align*}
+
 Furthermore, we define the comparison of bounds.
 
 \begin{definition}[Comparison sets]
