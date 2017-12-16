@@ -19,6 +19,13 @@ In this master's thesis, we consider a program to be an integer transition syste
   \todo{Definition of SCCs}{}
 \end{definition}
 
+Futhermore, we use a common definition of strongly connected components of a program $\Program$ \cite{sccs}.
+
+\begin{definition}[Strongly connected component]
+  Let $\Program = ((\LSet, \TSet), \location_0, \VSet, c)$ be a program.
+  We define $\SCC \subseteq \LSet$ as strongly connected component iff it is maximal and from every location $\location \in \SCC$ every other location $\location' \in \SCC$ is reachable.
+\end{definition}
+
 In an integer transition system, every variable is considered to be an integer value.
 A transition defines a possible move from one location to another location, if certain conditions are met.
 In a transition $(\location,\update,\guard,\location') \in \TSet$, the guard $\guard$ represents the condition, which has to be fulfiled to move to the location $\location'$. The update function $\update$ assigns each variable a new value after the transition step.
