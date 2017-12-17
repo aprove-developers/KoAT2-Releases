@@ -1,7 +1,16 @@
 \subsection{Programs}
 
 This section defines the term of a program.
-In this master's thesis, we consider a program to be an integer transition system.
+In this master's thesis, we consider programs with the following properties.
+
+\begin{itemize}
+\item Sequential: All operations get executed one after the other
+\item Non-recursive: Recursive function calls are not allowed
+\item Mathematical integers: The variables have values from the mathematical integer domain $\mathbb{Z}$
+\item Non-determinism: From a state we can enter non-deterministically multiple other states
+\item No heap usage
+\item Under- and overapproximation: Programs are allowed to be non-exact
+\end{itemize}
 
 \todo{Example}{}
 
