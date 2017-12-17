@@ -2,10 +2,11 @@
 
 \begin{definition}[Polynomial Ranking Function] 
 	We define $\mathit{Pol}: \LSet \rightarrow \BoundSet_p$ as polynomial ranking function for a transition set $\TSet$ iff there is a nonempty $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
-        For all transitions $(\location, \update, \guard, \location') \in \TSet$ and every state $\valuation \in \Valuation$ it holds that
-	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} \geq \eval{\mathit{Pol}(\location')}{\valuation \circ \update}. \]
-        For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every state $\valuation \in \Valuation$ it holds that        
-	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} \geq \eval{\mathit{Pol}(\location')}{\valuation \circ \update} + \eval{\cost((\location, \update, \guard, \location'))}{\valuation} \]
+        For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
+        \todo{How do we achieve that with the lower und upper update?}{}
+	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} \geq \eval{\mathit{Pol}(\location')}{\valuation'}. \]
+        For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
+	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} \geq \eval{\mathit{Pol}(\location')}{\valuation'} + \eval{\cost((\location, \update, \guard, \location'))}{\valuation} \]
         and
 	\[ \guard \Rightarrow \eval{\mathit{Pol}(\location)}{\valuation} > 1. \]
         \todo{Boundedness >1?}{}

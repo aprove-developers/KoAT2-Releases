@@ -33,14 +33,16 @@ The preprocessor $p_{\text{sat}}$ removes transitions which conditions are unsat
 The result of the preprocessor is a program $((\LSet, \TSet'), \location_0, \VSet, \cost)$, where $\TSet' = \braced{(\location,\update,\guard,\location') \mid \exists (\location,\update,\guard,\location') \in \TSet: \neg (\bigwedge \guard \models \emptyset)}$ is the set of all satisfiable transitions.
 
 The preprocessor $p_{\text{sat}}$ affects the preprocessors $p_{\text{reachable}}$ and $p_{\text{chaining}}$.
-The preprocessor $p_{\text{reachable}}$ is affected in a scenario $\Program = ((\braced{\location_0, \location_1}, \braced{(\location_0,\text{false},\location_1)}), \location_0, \emptyset, \cost)$.
-In this example the transition $(\location_0,\text{false},\location_1)$ will be removed by $p_{\text{sat}}$.
+The preprocessor $p_{\text{reachable}}$ is affected in a scenario $\Program = ((\braced{\location_0, \location_1}, \braced{(\location_0,\update,\text{false},\location_1)}), \location_0, \emptyset, \cost)$.
+In this example the transition $(\location_0,\update,\text{false},\location_1)$ will be removed by $p_{\text{sat}}$.
 This leaves the location $\location_1$ unreachable.
-The preprocessor $p_{\text{chaining}}$ is affected in a scenario $\Program = ((\braced{\location_0, \location_1, \location_2}, \braced{(\location_0,\text{true},\location_1), (\location_1,\text{true},\location_2), (\location_1,\text{false},\location_1)}), \location_0, \emptyset, \cost)$.
-In this example the transition $(\location_1,\text{false},\location_1)$ will be removed by $p_{\text{sat}}$.
+The preprocessor $p_{\text{chaining}}$ is affected in a scenario $\Program = ((\braced{\location_0, \location_1, \location_2}, \braced{(\location_0,\update_1,\text{true},\location_1), (\location_1,\update_2,\text{true},\location_2), (\location_1,\update_3,\text{false},\location_1)}), \location_0, \emptyset, \cost)$.
+In this example the transition $(\location_1,\update_3,\text{false},\location_1)$ will be removed by $p_{\text{sat}}$.
 This enables the preprocessor $p_{\text{chaining}}$ to skip the location $\location_1$.
 
 \subsubsection{Chaining}
+
+\todo{Chaining does not work anymore with lower and upper updates (for non-monotonic updates)}{}
 
 The preprocessor $p_{\text{chaining}}$ does a single run on all locations $\location \in \LSet$ to check if they can be skipped by chaining.
 For such a location a chaining step is possible iff there does not exist a transition $(\location,\update,\guard,\location)$ with any update $\update$ and guard $\guard$, e.g. iff the location forms a trivial SCC $\braced{\location}$.
