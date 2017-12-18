@@ -18,7 +18,7 @@ In the case where t is not an initial transition, the evaluation has for some tr
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\tilde{t}}) (\tilde{\location}, \tilde{\valuation}) \rightarrow_t (\location, \valuation). \]
 
 Lets assume that our initial assumption holds.
-As $\abs{\valuation_0} \leq m$, we then have for all $v \in \VSet$
+\todo{We havent anymore}{As $\abs{\valuation_0} \leq m$}, we then have for all $v \in \VSet$
 \[ \eval{\USize(\tilde{t}, v)}{m} \geq \tilde{\valuation}(v) \geq \eval{\LSize(\tilde{t}, v)}{m}. \]
 Thus, $\USize(\tilde{t}, v)$ and $\LSize(\tilde{t}, v)$ are bounds for the size of all variables $v \in \VSet$ before the transition $t$ is applied.
 
