@@ -7,10 +7,7 @@
   For the definition of $(\LSize', \USize')$ for all other $\beta \in \SCC$, we will use following abbreviations.
 
   Let $e$ denote a bound for the highest value coming into $\SCC$.
-  \[ e = \max ( 0,
-    \max \braced{\USize(\tilde{\alpha}) \mid \exists \alpha \in \SCC: \tilde{\alpha} \in \pre(\alpha) \setminus \SCC},
-    \max \braced{-\LSize(\tilde{\alpha}) \mid \exists \alpha \in \SCC: \tilde{\alpha} \in \pre(\alpha) \setminus \SCC})
-  \]
+  \[ e = \maxO{\maximum{\max(\USize(\tilde{\alpha}), -\LSize(\tilde{\alpha})) \mid \exists \alpha \in \SCC: \tilde{\alpha} \in \pre(\alpha) \setminus \SCC}} \]
 
   For all $t \in \TSet$ and $\square \in \braced{\sqcup, \sqcap}$ let
   \[ s^\square_t = \maximum{s^\square_{\alpha} \mid \alpha \in \SCC_t} \cdot \maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_t}. \]
