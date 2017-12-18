@@ -11,12 +11,12 @@ Size complexity yields for each transition an assignment \todo{Correct?}{from ea
 
 \begin{definition}[Worst-Case Runtime Complexity]
   We call $\text{rc} \in \BoundSet$ the time complexity of a program if and only if for all $m \in \Valuation$ it holds that
-  \[ \text{rc}(m) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) } \]
+  \[ \eval{\text{rc}}{m} = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) } \]
 \end{definition}
 
 \begin{definition}[Upper Runtime Bound]
   We call $\UTime: \TSet \rightarrow \BoundSet$ a time bound if and only if for all $t \in \TSet$ and all $m \in \Valuation$ it holds that
-  \[ \UTime(t)(m) \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
+  \[ \eval{\UTime(t)}{m} \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
 \end{definition}
 
 \begin{theorem}[Approximating Runtime Complexity]
@@ -28,13 +28,14 @@ Size complexity yields for each transition an assignment \todo{Correct?}{from ea
 \subsubsection{Cost Complexity}
 
 \begin{definition}[Worst-Case Cost Complexity]
-\[ \text{cc}(m) = \sup \braced{ \sum_{0 \leq i \leq k} \eval{\cost(t_i)}{\valuation_i} \mid \exists k \geq 1, \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge
+\[ \eval{\text{cc}}{m} = \sup \braced{ \sum_{0 \leq i \leq k} \eval{\cost(t_i)}{\valuation_i} \mid \exists k \geq 1, \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge
   (\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location_k, \valuation_k) } \]
 \end{definition}
 
 \begin{definition}[Upper Cost Bound]
-  Let $\abs{\mathcal{S}}(t, v)$ denote highest absolute value $\max(\USize(t, v), -\LSize(t, v))$ a variable $v$ can reach at a transition $t$. 
-  \[ \UCost(t)(m) =
+  Let $\abs{\mathcal{S}}(t, v)$ denote highest absolute value $\max(\USize(t, v), -\LSize(t, v))$ a variable $v$ can reach at a transition $t$.
+  We call $\UCost: \TSet \rightarrow \BoundSet$ a cost bound if and only if for all $t \in \TSet$ it holds that
+  \[ \UCost(t) =
   \begin{cases}
     \UTime(t) \cdot \maxO{\cost(t)} & \text{if } t \text{ is an initial transition} \\
     \UTime(t) \cdot \maxO{\maximum{\eval{\cost(t)_+}{\USize(\tilde{t})} - \eval{\cost(t)_-}{\LSize(\tilde{t})} \mid \tilde{t} \in \pre(t)}} & \text{if } \cost(t) \text{ is an affine polynomial} \\
