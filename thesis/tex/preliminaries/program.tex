@@ -5,14 +5,24 @@ In this master's thesis, we consider programs with the following properties.
 
 \begin{itemize}
 \item Sequential: All operations get executed one after the other
+\item Imperative: Program state is changed by statements
 \item Non-recursive: Recursive function calls are not allowed
 \item Mathematical integers: The variables have values from the mathematical integer domain $\mathbb{Z}$
 \item Non-determinism: From a state we can enter non-deterministically multiple other states
-\item No heap usage
-\item Under- and overapproximation: Programs are allowed to be non-exact
+\item No heap usage: All values are directly accessed and not referenced
+\item Under- and overapproximation: Assignments are allowed to be non-exact
 \end{itemize}
 
-\todo{Example}{}
+All properties except the last one are common in related work.
+Note that using imperative programs is not a restriction, since \todo{Source?}{every functional and logic program can be transformed into an imperative program.}
+There also exist related work which extends the analysis to bitvector arithmetic instead of mathematical integers from $\mathbb{Z}$. \cite{bitvectorarithmetic}
+
+In related work it is common to consider overapproximation of programs.
+\todo{Source?}{Those overapproximations can result from approximations of heap usage.}
+For a modular approach with the presented method, we require to provide additionally an underapproximation.
+Note that this is trivial for exact programs, since every exact program is a sound underapproximation and a sound overapproximation.
+
+\todo{Example: Cartesian product with filter of (x,x)?}{}
 
 \begin{definition}[Program] 
   Let $\VSet$ be the set of all occurring program variables.
