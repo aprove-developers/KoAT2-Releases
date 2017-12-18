@@ -1,4 +1,4 @@
-We only regard the case where $\alpha \in \ScaledSum$ holds for all $\alpha \in \SCC$.
+We only regard the case where every $\alpha \in \SCC$ is bounded by an upper scaled sum and a lower scaled sum.
 Then, for all result variables $\hat{\alpha} = (\hat{t}, \hat{v}) \in \RV$, we have to show that two statements hold for all \todo{Really m here?}{$m \in \Valuation$} with $m(v) \in \mathbb{N}$ for all $v \in \VSet$.
 \[ \eval{\USize'(\hat{\alpha})}{m} \geq \sup \braced{ \valuation(\hat{v}) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\location, \valuation)} \]
 \[ \eval{\LSize'(\hat{\alpha})}{m} \leq \inf \braced{ \valuation(\hat{v}) \mid \exists \valuation_0, \location \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\location, \valuation)} \]
