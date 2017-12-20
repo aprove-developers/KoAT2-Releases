@@ -6,15 +6,15 @@
   Otherwise, for all $\beta \notin \SCC$, let $\USize'(\beta) = \USize(\beta)$ and $\LSize'(\beta) = \LSize(\beta)$.
   For the definition of $(\LSize', \USize')$ for all other $\beta \in \SCC$, we will use following abbreviations.
 
-  Let $e$ denote a bound for the highest value coming into $\SCC$.
+  Let $e$ denote a bound for the highest absolute value coming into $\SCC$.
   \[ e = \maxO{\maximum{\max(\USize(\tilde{\alpha}), -\LSize(\tilde{\alpha})) \mid \exists \alpha \in \SCC: \tilde{\alpha} \in \pre(\alpha) \setminus \SCC}} \]
-
+  \todo{Idea: If $\SCC$ only consists of positive edges, we can infer better bounds}{}
+  
   For all $t \in \TSet$ and $\square \in \braced{\sqcup, \sqcap}$ let
   \[ s^\square_t = \maximum{s^\square_{\alpha} \mid \alpha \in \SCC_t} \cdot \maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_t}. \]
 
   Also for $\square \in \braced{\sqcup, \sqcap}$ we define the biggest/smallest incoming value of a variable $v \in \VSet$.
   \[ \text{in}^\sqcap_{\alpha,v} = \maxO {\max \braced{\mathcal{S}^\sqcap(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C}} \]
-  \todo{In this case you get a positive lower bound. Shouldn't there be a minus in front of this thing, to make it work?}
   \[ \text{in}^\sqcup_{\alpha,v} = \maxO {\max \braced{-\mathcal{S}^\sqcup(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C}} \]
 
   Furthermore we define for $\square \in \braced{\sqcup, \sqcap}$ the biggest/smallest incoming value of a result variable $\alpha \in \RV$.
