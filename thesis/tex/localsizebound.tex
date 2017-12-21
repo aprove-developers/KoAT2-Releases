@@ -86,7 +86,7 @@ In a first step, we define the trivial valid bound.
 \begin{definition}[Trivial upper local size bound]
   Let $\alpha = ((\location,(\uupdate,\lupdate),\guard,\location'),v) \in \RV$ be a result variable, for which we want to find an upper local size bound.
   Let $\VSet$ be the set of all program variables.
-  Let $s, e \in \mathbb{N}$ be the multiplication of the absolute values of all integers occuring in any upper update $\uupdate(v)$ or any guard atom in $\guard$.
+  Let $s, e \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\uupdate(v)$ or any guard atom in $\guard$.
   Then, the local size bound $b \in \BoundSet^\sqcap_l$ defined by the scaling factor $s$, the constant $e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid upper local size bound for the value of $v$ after the application of the transition $t$.
 \end{definition}
 
@@ -139,6 +139,6 @@ Consider the update $\update(x) = y + z$ and the guard $\guard = \braced{y = z}$
 Depending on the order it is both possible to receive the bounds $2 \cdot y$ and $2 \cdot z$.
 But since $2 \cdot y \leq 2 \cdot z$ and $2 \cdot z \leq 2 \cdot y$ does not hold, they are both optimal.
 
-\todo{Proof that the algorithm always finds a valid local sizebound}{}
+\todo{Proof that the algorithm always finds a valid local size bound}{}
 
 \todo{Lower case}{}

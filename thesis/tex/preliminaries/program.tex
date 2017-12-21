@@ -15,7 +15,7 @@ In this master's thesis, we consider programs with the following properties.
 
 All properties except the last one are common in related work.
 Note that using imperative programs is not a restriction, since \todo{Source?}{every functional and logic program can be transformed into an imperative program.}
-There also exist related work which extends the analysis to bitvector arithmetic instead of mathematical integers from $\mathbb{Z}$. \cite{bitvectorarithmetic}
+There also exist related work which extends the analysis to bit-vector arithmetic instead of mathematical integers from $\mathbb{Z}$. \cite{bitvectorarithmetic}
 
 In related work it is common to consider overapproximation of programs.
 \todo{Source?}{Those overapproximations can result from approximations of heap usage.}
@@ -41,7 +41,7 @@ Note that this is trivial for exact programs, since every exact program is a sou
 \end{definition}
 The definition is based on the definition of programs of the previous KoAT \cite{koat} and a definition which distinguishes between guards and updates \cite{lowerruntime}.
 
-Futhermore, we use a common definition of strongly connected components of a program $\Program$ \cite{sccs}.
+Furthermore, we use a common definition of strongly connected components of a program $\Program$ \cite{sccs}.
 
 \begin{definition}[Strongly connected component]
   Let $\Program = ((\LSet, \TSet), \location_0, \VSet, c)$ be a program.
@@ -53,13 +53,13 @@ From this point on, we also use the abbreviation SCC for a strongly connected co
 
 In an integer transition system, every variable is considered to be an integer value.
 A transition defines a possible move from one location to another location, if certain conditions are met.
-In a transition $(\location,\update,\guard,\location') \in \TSet$, the guard $\guard$ represents the condition, which has to be fulfiled to move to the location $\location'$.
+In a transition $(\location,\update,\guard,\location') \in \TSet$, the guard $\guard$ represents the condition, which has to be fulfilled to move to the location $\location'$.
 The pair of update functions $\update = (\lupdate, \uupdate)$ assigns each variable an underapproximated value and an overapproximated value after the transition step.
 We write $\update(v) = b$ for any variable $v \in \VSet$ and any bound $b \in \BoundSet$ iff we have an exact approximation $\uupdate(v) = \lupdate(v) = b$.
 \todo{Explain}{}
 
 We consider non-deterministic programs in this master's thesis.
-Therefore there is no restriction, that from a location $\location \in \LSet$ there must be only one possible transition, for which the condition is fulfiled.
+Therefore there is no restriction, that from a location $\location \in \LSet$ there must be only one possible transition, for which the condition is fulfilled.
 For example $\Program = (\braced{\location_0,\location_1,\location_2},\braced{(\location_0,\text{id},\text{true},\location_1),(\location_0,\text{id},\text{true},\location_2)})$ is a valid program, although it is possible to both move to $\location_1$ and $\location_2$ from location $\location_0$.
 Such a program is not representable in common software languages.
 

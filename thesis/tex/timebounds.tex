@@ -8,7 +8,7 @@ The original KoAT allows the usage of arbitrary polynomial ranking functions.
 But to obtain monotonicity, it uses an operator which considers the absolute values of variables and converts all negative signs in positive signs.
 This is necessary to ensure, that a substitution of the variables with upper size bounds is still a sound overapproximation.
 The new method only considers affine ranking functions, but does not need to apply such an operator.
-Instead, the signs of the coefficients are considered and the appropiate upper or lower size bound is chosen respectively.
+Instead, the signs of the coefficients are considered and the appropriate upper or lower size bound is chosen respectively.
 Note that the restriction to affine ranking functions is in practice not a major restriction, since most existing techniques also only generate affine ranking functions (e.g. \cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}).
 
 For the definition of the method we need to define the terms of entry locations and entry transitions.
@@ -34,8 +34,8 @@ The old KoAT would now apply an operator to $\Pol$, such that the result would b
 The new method instead applies a split to $\Pol$, which results in the positive component $\Pol(\location_1)_+ = x$ and the negative component $\Pol(\location_1)_- = y$.
 While the positive component $\Pol(\location_1)_+$ is a monotonically increasing function, the negative component $\Pol(\location_1)_-$ is a monotonically decreasing function.
 Lets assume, that we already inferred the size bounds $\USize(t_0,x) = \LSize(t_0,x) = x$ and $\USize(t_0,y) = \LSize(t_0,y) = y$.
-It is now possible to lift the components of the ranking functions to a global level with the substitution by the appropiate lower and upper size bounds $\eval{\Pol(\location_1)_+}{\USize(t_0)} - \eval{\Pol(\location_1)_-}{\LSize(t_0)} = x - y$.
-Since with a state $\valuation$ with $\valuation(x) < \valuation(y)$ the transition $t_1$ will simply not occur in an evaluation instead of occuring a negative number of times, we have to ensure the positivity of $x - y$ with the operation $\maxO{x - y}$.
+It is now possible to lift the components of the ranking functions to a global level with the substitution by the appropriate lower and upper size bounds $\eval{\Pol(\location_1)_+}{\USize(t_0)} - \eval{\Pol(\location_1)_-}{\LSize(t_0)} = x - y$.
+Since with a state $\valuation$ with $\valuation(x) < \valuation(y)$ the transition $t_1$ will simply not occur in an evaluation instead of occurring a negative number of times, we have to ensure the positivity of $x - y$ with the operation $\maxO{x - y}$.
 Then, the only step left is to consider the number of times an evaluation might enter the SCC from $t_0$.
 Since $t_0$ is an initial transition, its time bound is $\UTime(t_0) = 1$.
 Therefore an evaluation might only enter a single time from $t_0$ and the resulting time bound for $t_1$ is $\maxO{x - y}$.

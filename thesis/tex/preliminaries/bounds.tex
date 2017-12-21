@@ -20,13 +20,13 @@ This is not necessary for time bounds, since time bounds are only allowed to be 
 But we use this for lower size bounds, where $-\infty$ is a valid lower size bound for every possible evaluation.
 
 We include numbers from $\mathbb{N}$.
-All numbers from $\mathbb{Z}$ are also in in the bound set $\BoundSet$, since for each number $n \in \mathbb{N}$ its negation $-n$ is element of the bound set $\BoundSet$.
+All numbers from $\mathbb{Z}$ are also in the bound set $\BoundSet$, since for each number $n \in \mathbb{N}$ its negation $-n$ is element of the bound set $\BoundSet$.
 As the third base component we add the program variables $\VSet$ to the bound set $\BoundSet$.
 
 We define the usual addition $+$ and multiplication $\cdot$ between two bounds.
 The maximum operator $\max$ is also included with the common meaning.
 For the representation of exponential bounds we include $k^b$ for all positive integers $k \in \mathbb{N}$ and all bounds $b \in \BoundSet$.
-Therefore we do not allow arbitrary exponentation.
+Therefore we do not allow arbitrary exponentiation.
 
 In specific scenarios we only allow a subset of those bounds.
 For this purpose we define with $\BoundSet_p \subseteq \BoundSet$ the subset of all polynomials in $\BoundSet$.
@@ -96,7 +96,7 @@ For all polynomials, we also define polynomial inequalities.
   We define $p_1 \bowtie p_2$ as a polynomial inequality between $p_1$ and $p_2$.
   We define the atom set
   \[ \AtomSet = \braced{p_1 \bowtie p_2 \mid \exists p_1, p_2 \in \BoundSet_p, \exists \bowtie \in \braced{\leq, \geq, <, >, =}} \]
-  as the set of all polynomial inequlities.
+  as the set of all polynomial inequalities.
   Furthermore, we define the constraint set $\ConstraintSet = 2^\AtomSet$ as set of conjunctions between polynomial inequalities.
 \end{definition}
 Also, we extend the definition of the bound evaluation to comparison sets.
