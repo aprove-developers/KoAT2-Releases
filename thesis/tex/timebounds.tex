@@ -1,5 +1,46 @@
 \section{Computing time bounds}
 
 In this chapter we will present the method, which is able to infer time bounds for transitions of a program.
+The original KoAT paper \cite{koat} presented two approaches: One basic approach, considering all transitions and a modular approach, considering a selected subset of transitions.
+This master's thesis only considers the modular approach, since the other approach can just be defined as a special case of the modular approach, where the subset of transitions is the set of non-initial transitions $\TSet \setminus \TSet_0$.
+The basis of the method are polynomial ranking functions.
+The original KoAT allows the usage of arbitrary polynomial ranking functions.
+But to obtain monotonicity, it uses an operator which considers the absolute values of variables and converts all negative signs in positive signs.
+This is necessary to ensure, that a substitution of the variables with upper size bounds is still a sound overapproximation.
+The new method only considers affine ranking functions, but does not need to apply such an operator.
+Instead, the signs of the coefficients are considered and the appropiate upper or lower size bound is chosen respectively.
+Note that the restriction to affine ranking functions is in practice not a major restriction, since most existing techniques also only generate affine ranking functions (e.g. \cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}).
+
+\input{graphs/timebound_example}
 
 \input{theorems/timebound}
+
+\subsection{Choosing the transition set $\TSet'$}
+
+\input{graphs/entrytransitions}
+
+The choice of the transition set $\TSet'$ has a major impact on the quality of the time bounds.
+Consider the program in figure \ref{fig:entrytransitions} with arbitrary guards and update for each transition.
+
+A trivial approach would be to set $\TSet'$ to $\TSet \setminus \TSet_0 = \braced{t_1, t_2, t_3, t_4}$.
+Then, we have $\mathcal{E}_{\TSet'} = \braced{\location_1}$ and $\TSet_{\location_1} = \braced{t_0}$.
+Therefore for each $t \in \TSet'_>$ we end up with $\UTime'(t) = \UTime(t_0) \cdot \maxO{\eval{\Pol(\location_1)_+}{\USize(t_0)} - \eval{\Pol(\location_1)_-}{\LSize(t_0)}}$.
+Since $t_0 \in \TSet_0$ is an initial transition, we have $\UTime(t_0) = 1$ and $\UTime'(t)$ then reflects the expected result of a non-modular approach.
+
+This trivial approach requires us to find a ranking function, that satisfies the non-increasing constraint for all transitions.
+If no such ranking function can be found, it is not possible to infer any time bounds with this transition set $\TSet'$.
+But since the method allows us to only consider a subset of the transitions, it might be possible, to remove the transition which violates its non-increasing constraint.
+Then, a ranking function could be found.
+
+Let's assume that the transition violating the non-increasing constraint is $t_1$ and consider the transition set $\TSet' = \braced{t_3, t_4}$.
+Since we reduced the set, we have fewer constraints and are more likely to find a ranking function.
+We have $\mathcal{E}_{\TSet'} = \braced{\location_2}$ and $\TSet_{\location_2} = \braced{t_2}$.
+Since $t_2$ is not part of a loop, its time bound is $\UTime(t_2) = 1$.
+Therefore we end up with $\UTime'(t) = \maxO{\eval{\Pol(\location_2)_+}{\USize(t_2)} - \eval{\Pol(\location_2)_-}{\LSize(t_2)}}$.
+
+Note that it is possible to select arbitrary subsets $\TSet' \subseteq \TSet$.
+A non-connected subset $\TSet' = \braced{t_1, t_3, t_4}$ could be chosen, but would lead to a bound $\UTime'(t) = \maxO{\eval{\Pol(\location_1)_+}{\USize(t_0)} - \eval{\Pol(\location_1)_-}{\LSize(t_0)}} + \maxO{\eval{\Pol(\location_2)_+}{\USize(t_2)} - \eval{\Pol(\location_2)_-}{\LSize(t_2)}}$.
+Also only a part of an SCC such as $\TSet' = \braced{t_4}$ could be chosen.
+But since $t_3 \in \TSet_{\location_3}$ would be a entry transition of $\TSet' = \braced{t_4}$, this would only be of benefit if we already inferred a time bound $\UTime(t_3) < \infty$.
+
+The implementation selects the transitions of the different SCCs of the program as transition set $\TSet'$ and excludes those transitions $t$, for which we already inferred a time bound $\UTime(t) < \infty$.
