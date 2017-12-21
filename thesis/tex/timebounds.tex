@@ -11,6 +11,15 @@ The new method only considers affine ranking functions, but does not need to app
 Instead, the signs of the coefficients are considered and the appropiate upper or lower size bound is chosen respectively.
 Note that the restriction to affine ranking functions is in practice not a major restriction, since most existing techniques also only generate affine ranking functions (e.g. \cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}).
 
+For the definition of the method we need to define the terms of entry locations and entry transitions.
+We define the entry locations of a transition set $\TSet' \subseteq \TSet$ as $\mathcal{E}_{\TSet'} = \braced{\location_{in} \mid \TSet_{\location_{in}} \neq \emptyset \wedge \exists \location': (\location_{in}, \update, \guard, \location') \in \TSet'}$.
+The entry transitions of a location $\location \in \mathcal{E}_{\TSet'}$ are defined as $\TSet_{\location} = \braced{(\location', \update, \guard, \location) \mid \exists \location', \update, \guard: (\location', \update, \guard, \location) \in \TSet \setminus \TSet'}$.
+This is the same definition as used by the original KoAT \cite{koat}.
+
+As an example, consider the program in figure \ref{fig:entrytransitions}.
+The highlighted set of transitions $\TSet' = \braced{t_1, t_3, t_4}$ does have to entry locations $\mathcal{E}_{\TSet'} = \braced{\location_1, \location_2}$.
+These entry locations define the entry transitions $\TSet_{\location_1} = \braced{t_0}$ and $\TSet_{\location_2} = \braced{t_2}$.
+
 \input{theorems/timebound}
 
 \input{graphs/motivational_example}
