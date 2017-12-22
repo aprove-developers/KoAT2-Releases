@@ -90,7 +90,7 @@ While the actual code is written in a functional style, we will present the algo
       \State Run $\text{SizeBounds}(\UTime, \Size, \SCC)$
     \EndFor
     \ForAll{SCCs $\TSet'$ of $P$ in topological order}
-      \State Run $\text{TimeBounds}(\UTime, \Size, \TSet')$
+      \State Run $\text{TimeBounds}(\UTime, \Size, \braced{t \in \TSet' \mid \UTime(t) = \infty})$
     \EndFor
   \Until{all TimeBounds executions did not improve any time bound}
 \end{algorithmic}
