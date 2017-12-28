@@ -13,16 +13,17 @@ In this master's thesis, we consider programs with the following properties.
 \item Under- and overapproximation: Assignments are allowed to be non-exact
 \end{itemize}
 
-All properties except the last one are common in related work.
+All these properties are common in related work.
 Note that using imperative programs is not a restriction, since \todo{Source?}{every functional and logic program can be transformed into an imperative program.}
 There also exist related work which extends the analysis to bit-vector arithmetic instead of mathematical integers from $\mathbb{Z}$. \cite{bitvectorarithmetic}
 
-In related work it is common to consider overapproximation of programs.
-\todo{Source?}{Those overapproximations can result from approximations of heap usage.}
-For a modular approach with the presented method, we require to provide additionally an underapproximation.
-Note that this is trivial for exact programs, since every exact program is a sound underapproximation and a sound overapproximation.
+In related work as well as in this thesis, it is common to consider non-exact programs.
+This is necessary, since the analyzed programs are often abstractions of other programs, which are using a heap.
+\todo{Maybe an example}{}
 
 \todo{Example: Cartesian product with filter of (x,x)?}{}
+
+We now formally define the programs used in this thesis.
 
 \begin{definition}[Program] 
   Let $\VSet$ be the set of all occurring program variables.
@@ -30,7 +31,7 @@ Note that this is trivial for exact programs, since every exact program is a sou
   We denote with $\valuation(v) = \bot$ that the state does not define a value for the variable $v$.
   We write $\Valuation = \braced{ \valuation \mid \valuation: \VSet \rightarrow \mathbb{Z}_\bot}$ to denote the set of all states.
   Let $\LSet$ be the set of all locations of a program.
-  Let $\TSet = \LSet \times ((\VSet \rightarrow \BoundSet_p) \times (\VSet \rightarrow \BoundSet_p)) \times 2^\AtomSet \times \LSet$ be the set of all transitions of the program.
+  \todo{Not yet decided}{Let $\TSet = \LSet \times ((\VSet \rightarrow \BoundSet_p) \times (\VSet \rightarrow \BoundSet_p)) \times 2^\AtomSet \times \LSet$ be the set of all transitions of the program.}
   A transition $t = (\location, (\lupdate, \uupdate), \guard, \location')$ consists of the start location $\location$, the target location $\location'$, the lower and upper update functions $\update^\sqcup$ and $\update^\sqcap$ and the guard $\guard$. 
   A program graph is a tuple $(\LSet, \TSet)$ where $\LSet$ is the set of program locations and $\TSet$ is a subset of all possible transitions between them.
   Let $\cost: \TSet \rightarrow \BoundSet$ be a function which maps each transition to its costs with a specific state.
@@ -45,13 +46,13 @@ Furthermore, we use a common definition of strongly connected components of a pr
 
 \begin{definition}[Strongly connected component]
   Let $\Program = ((\LSet, \TSet), \location_0, \VSet, c)$ be a program.
-  We define $\SCC \subseteq \LSet$ as strongly connected component iff it is maximal and from every location $\location \in \SCC$ every other location $\location' \in \SCC$ is reachable.
+  We define $\SCC \subseteq \LSet$ as strongly connected component if and only if it is maximal and from every location $\location \in \SCC$ every other location $\location' \in \SCC$ is reachable.
 \end{definition}
 
 Informally, we can describe a strongly connected component as a maximal loop in a program.
 From this point on, we also use the abbreviation SCC for a strongly connected component.
 
-In an integer transition system, every variable is considered to be an integer value.
+In a program, every variable is considered to be an integer value.
 A transition defines a possible move from one location to another location, if certain conditions are met.
 In a transition $(\location,\update,\guard,\location') \in \TSet$, the guard $\guard$ represents the condition, which has to be fulfilled to move to the location $\location'$.
 The pair of update functions $\update = (\lupdate, \uupdate)$ assigns each variable an underapproximated value and an overapproximated value after the transition step.
@@ -59,11 +60,11 @@ We write $\update(v) = b$ for any variable $v \in \VSet$ and any bound $b \in \B
 \todo{Explain}{}
 
 We consider non-deterministic programs in this master's thesis.
-Therefore there is no restriction, that from a location $\location \in \LSet$ there must be only one possible transition, for which the condition is fulfilled.
-For example $\Program = (\braced{\location_0,\location_1,\location_2},\braced{(\location_0,\text{id},\text{true},\location_1),(\location_0,\text{id},\text{true},\location_2)})$ is a valid program, although it is possible to both move to $\location_1$ and $\location_2$ from location $\location_0$.
+Therefore, there is no restriction, that from a location $\location \in \LSet$ there must be only one possible transition, for which the condition is fulfilled.
+For example, the program $\Program = (\braced{\location_0,\location_1,\location_2},\braced{(\location_0,\text{id},\text{true},\location_1),(\location_0,\text{id},\text{true},\location_2)})$ is a valid program, although it is possible to both move to $\location_1$ and $\location_2$ from location $\location_0$.
 Such a program is not representable in common software languages.
 
-For the definition of a run in a program, we define the terms of states and configurations.
+For the definition of a run in a program, we define the term of a configuration.
 
 \begin{definition}[Configuration] 
   A configuration is a pair $(\location, \valuation) \in \LSet \times \Valuation$ that defines the values of the program variables at a specific location.
@@ -72,7 +73,7 @@ For the definition of a run in a program, we define the terms of states and conf
 For two states $\valuation_1, \valuation_2 \in \Valuation$ we define $\valuation_1 \leq \valuation_2$ iff for all variables $v \in \VSet$ it holds that $\valuation_1(v) \leq \valuation_2(v)$.
 We also define for a state $\valuation \in \Valuation$ the absolute value $\abs{\valuation} \in \Valuation$ iff for all variables $v \in \VSet$ it holds that $\abs{\valuation}(v) = \abs{\valuation(v)}$.
 
-In a last step, we have to define, how a program can be executed.
+In a last step, we have to define how a program can be executed.
 Therefore we define the term of an evaluation.
 
 \begin{definition}[Evaluation] 

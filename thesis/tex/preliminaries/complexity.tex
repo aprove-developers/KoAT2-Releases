@@ -1,15 +1,17 @@
 \subsection{Complexity}
 
-In this section we define the terms of time, size and cost complexity.
+In the last section, we introduced the object of the analysis.
+In this section, we define the measures we want to compute with the analysis.
+Therefore, we introduce the terms of time, size and cost complexity.
 Time complexity describes how many steps an evaluation of a program will take in a worst-case scenario.
 The costs of a transition are not considered in this complexity type.
-On the other hand cost complexity considers the costs of transitions and describes the cost of the sequence of transitions taken in a worst-case run.
-The third complexity type we need is size complexity.
-Size complexity yields for each transition an assignment \todo{Correct?}{from each variable to its maximum value} after the execution of the transition in an arbitrary run.
+On the other hand, cost complexity considers the costs of transitions and describes the cost of the sequence of transitions taken in a worst-case run.
+The third complexity type is size complexity.
+Size complexity yields for each transition an assignment from each variable to an interval, in which its value ranges after the execution of the transition in an arbitrary run.
 
 \subsubsection{Time Complexity}
 
-We define the time complexity of a program $\Program$ as the highest number of steps possible in an arbitrary run with an arbitrary initial state $\valuation_0 \in \Valuation$.
+We define the time complexity of a program $\Program$ as the highest possible number of steps in an arbitrary run with an arbitrary initial state $\valuation_0 \in \Valuation$.
 
 \begin{definition}[Worst-Case Time Complexity]
   We call $\text{rc} \in \BoundSet$ the time complexity of a program if and only if for all initial states $\valuation_0 \in \Valuation$ it holds that
@@ -18,9 +20,9 @@ We define the time complexity of a program $\Program$ as the highest number of s
 
 This definition is slightly different than in related work. \todo{Source needed?}{}
 Often time complexity is considered to be a function which is monotonic in its input state $\eval{\text{rc}'}{m} = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) }$.
-This guarantees that for a input $m \in \Valuation$ there is no other input $m' \leq m$ with $\eval{\text{rc}'}{m'} > \eval{\text{rc}'}{m}$.
+This guarantees that for an input $m \in \Valuation$ there is no other input $m' \leq m$ with $\eval{\text{rc}'}{m'} > \eval{\text{rc}'}{m}$.
 Unfortunately, this property can not be guaranteed anymore with non-monotonic bounds.
-Consider the motivational program in figure \ref{fig:motivational_example} and a input state $m \in \Valuation$ with $m(x) = 4$ and $m(y) = 2$.
+Consider the motivational program in figure \ref{fig:motivational_example} and an input state $m \in \Valuation$ with $m(x) = 4$ and $m(y) = 2$.
 The time complexity according to the definition in related work would then be $\eval{\text{rc}'}{m} = 7$, since with a state $\valuation_0 \in \Valuation$ with $\valuation_0(x) = 4$ and $\valuation_0(y) = -2$ we have one occurrence of $t_0$ and six occurrences of $t_1$.
 \todo{We should define the upper time bound first}{}
 As mentioned before, the new method should be able to yield a time bound $1 + \maxO{x-y}$.
@@ -28,21 +30,24 @@ But for the defined input state $m \in \Valuation$ this would yield $1 + \maxO{4
 With the changed definition the time complexity is $\eval{\text{rc}}{m} = 1 + 2$.
 Therefore the non-monotonic bound is sound according to this definition.
 
-The upper time bound of transition $t \in \TSet$ describes the maximal number of occurrences of that transition in an evaluation starting with an arbitrary initial state $\valuation_0 \in \Valuation$.
+An upper time bound of a transition $t \in \TSet$ describes a maximal number of occurrences of that transition in an evaluation starting with an arbitrary initial state $\valuation_0 \in \Valuation$.
 
 \begin{definition}[Upper Time Bound]
   We call $\UTime: \TSet \rightarrow \BoundSet$ a time bound if and only if for all $t \in \TSet$ and all initial states $\valuation_0 \in \Valuation$ it holds that
   \[ \eval{\UTime(t)}{\valuation_0} \geq \sup \braced{ k \in \mathbb{N} \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
 \end{definition}
 
-This definition is again slightly different as in related work, expressing the bound in dependency on a concrete state $\valuation_0$.
+This definition is again slightly different as in related work.
+The bound is again expressed in dependency on a concrete state $\valuation_0$.
 \todo{To be proved}{This does not affect the known theorem, that it is possible to approximate the time complexity of a program by the sum of all upper time bounds.}
 
 \begin{theorem}[Approximating Time Complexity]
 	Let $\UTime$ be a time bound for $\TSet$.
 	Then it holds that 
-	\[ \mathit{rc} \leq \sum_{t \in \TSet}\UTime(t) \]
+	\[ \text{rc} \leq \sum_{t \in \TSet}\UTime(t) \]
 \end{theorem}
+
+Therefore, it is sufficient to determine an upper time bound for a program and build the sum over all transitions $\TSet$ of the program, to approximate the runtime complexity. 
 
 \subsubsection{Size complexity}
 
@@ -51,20 +56,21 @@ An interval is defined by a lower size bound and an upper size bound.
 While upper size bounds are always higher than the highest possible value at a transition, lower size bounds are always smaller than the lowest possible value.
 
 \begin{definition}[Worst-Case Size Bound]
+  Let $\RV = \TSet \cup \VSet$ be the set of all result variables.
   We call $\USize: \RV \rightarrow \BoundSet$ an \textbf{upper} size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
   \[ \eval{\USize(t, v)}{\valuation_0} \geq \sup \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
   Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
   \[ \eval{\LSize(t, v)}{\valuation_0} \geq \inf \braced{\valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
-  We then call $\Size$ a size bound.
+  Then, we call $\Size$ a size bound.
 \end{definition}
 
 Note that for a transition $t = (\location,\text{id},\guard,\location') \in \TSet$, the upper size bound $\USize(t,x) = x$ is identical to the lower size bound $\LSize(t,x) = x$.
-We have different upper and lower size bounds if we have further restrictions on the incoming variables.
-With $\guard = \braced{x \geq 0}$ we can determine $\USize(t,x) = x$ as an upper bound and $\USize(t,x) = 0$ as a lower bound.
+Different upper and lower size bounds result from further restrictions on the incoming variables.
+With $\guard = \braced{x \geq 0}$, we can determine $\USize(t,x) = x$ as an upper bound and $\USize(t,x) = 0$ as a lower bound.
 
 The presented definition of size bounds expresses a bound depending on the values at the start of the program.
-For the definition of the methods for the computation of trivial and nontrivial size bounds we also need a definition of bounds depending on the values immediately before the execution of a transition.
-We then use those local size bounds to lift them in higher contexts like the whole program.
+For the definition of the methods for the computation of trivial and nontrivial size bounds, we also need a definition of bounds depending on the values immediately before the execution of a transition.
+We then use those local size bounds to lift them in a global context.
 
 \begin{definition}[Local Size Bound]
   We call $\ULSB: \RV \rightarrow \BoundSet$ an \textbf{upper} local size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
@@ -74,9 +80,14 @@ We then use those local size bounds to lift them in higher contexts like the who
   We then call $\LSB$ a local size bound.
 \end{definition}
 
-\todo{Example for the difference between local and global}
+\input{graphs/localglobal}
 
-Throughout this master's thesis we use the application of a global or local size bound to an argument for different purposes.
+Consider figure \ref{fig:localglobal}.
+While $\ULSB(t_1, x) = 2 \cdot x$ is a valid upper local size bound for the result variable $(t_1, x)$, it only describes the value of $x$ in terms of the value immediately before the execution of the transition $t_1$.
+An upper global size bound instead expresses the value of $x$ in terms of the initial values of the program.
+Therefore $\USize(t_1, x) = 2 \cdot (x + 1)$ is a valid upper global size bound for the result variable $(t_1, x)$.
+
+Throughout this master's thesis, we use the application of a global or local size bound as a function for different purposes.
 Let $f: \RV \rightarrow \BoundSet$ be an arbitrary size bound.
 Then, we denote with $f(\alpha)$ for a result variable $\alpha \in \RV$ the trivial application of the function $f$ to the argument $\alpha$ which results in a bound $f(\alpha) \in \BoundSet$.
 We use the abbreviation $f(t, v)$ for a transition $t \in \TSet$ and a variable $v \in \VSet$ to denote the application $f((t,v)) \in \BoundSet$ with $(t,v) \in \RV$.
@@ -84,7 +95,7 @@ If the function $f$ is only applied to a transition $t \in \TSet$, this denotes 
 
 \subsubsection{Cost Complexity}
 
-Additionally to time and size complexity we consider cost complexity.
+Additionally to time and size complexity, we consider cost complexity.
 The cost complexity of a program is defined as the highest sum of the costs of a transition sequence of an arbitrary evaluation starting in an input state $\valuation_0 \in \Valuation$.
 
 \begin{definition}[Worst-Case Cost Complexity]
@@ -94,8 +105,8 @@ The cost complexity of a program is defined as the highest sum of the costs of a
 
 The definition of cost complexity is useful for a modular analysis, where a transition is able to describe the whole effect of a subprogram.
 Then, a transition might occur only a specific number of times in the outer program, but in fact every occurrence is not just a link to a single transition usage, but to a complete execution of a subprogram with an own time bound.
-Lifting those time bounds into the context of the outer program, we consider them as cost of the transition of the outer program. \todo{Example or later?}{}.
-For that reason, the cost function $\cost: \TSet \rightarrow \BoundSet$ is defined for the bound set $\BoundSet$.
+Lifting those time bounds into the context of the outer program, we consider them as cost of the transition of the outer program. \todo{Example or later?}{}
+For that reason, the cost function $\cost: \TSet \rightarrow \BoundSet$ is defined for the whole bound set $\BoundSet$.
 
 Unfortunately, the usefulness of the distinction between upper and lower size bounds is limited for the computation of a cost bound.
 Note that for a transition $t \in \TSet$ the costs $\cost(t)$ are defined as local costs.
@@ -106,7 +117,7 @@ In fact, we are only able to use the distinction between upper and lower size bo
 For arbitrary costs $\cost(t) \in \BoundSet \setminus \BoundSet_a$ it is necessary to consider the monotonic approach from the original KoAT.
 
 \begin{definition}[Upper Cost Bound]
-  Let $\abs{\mathcal{S}}(t, v)$ denote highest absolute value $\max(\USize(t, v), -\LSize(t, v))$ a variable $v$ can reach at a transition $t$.
+  Let $\abs{\mathcal{S}}(t, v)$ denote the highest absolute value $\max(\USize(t, v), -\LSize(t, v))$ a variable $v$ can reach at a transition $t$.
   We call $\UCost: \TSet \rightarrow \BoundSet$ a cost bound if and only if for all $t \in \TSet$ it holds that
   \[ \UCost(t) = \UTime(t) \cdot
   \begin{cases}
@@ -117,10 +128,12 @@ For arbitrary costs $\cost(t) \in \BoundSet \setminus \BoundSet_a$ it is necessa
   \]
 \end{definition}
 
+Similar to time bounds, it is also possible to approximate the cost complexity of a program with the sum of cost bounds for all transitions in $\TSet$.
+
 \begin{theorem}[Approximating Cost Complexity]
 	Let $\UCost$ be a cost approximation for $\TSet$.
 	Then it holds that 
-	\[ \mathit{cc} \leq \sum_{t \in \TSet} \UCost(t) \]
+	\[ \text{cc} \leq \sum_{t \in \TSet} \UCost(t) \]
 \end{theorem}
 
 \todo{To be proved}{}

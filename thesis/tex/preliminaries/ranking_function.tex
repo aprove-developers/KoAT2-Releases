@@ -4,31 +4,28 @@ In this section we introduce a definition of ranking functions.
 Ranking functions are well studied (\cite{bradley2005polyranking}, \cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}) and widely used in termination and complexity analysis.
 As mentioned earlier, we restrict the method to affine ranking functions.
 
-
 \begin{definition}[Ranking Function] 
 	We define $\Pol: \LSet \rightarrow \BoundSet_a$ as ranking function for a transition set $\TSet$ if and only if there is a nonempty set of decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
         For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
         \todo{How do we achieve that with the lower and upper update?}{}
 	\[ \guard \Rightarrow \eval{\Pol(\location)}{\valuation} \geq \eval{\Pol(\location')}{\valuation'}. \]
         For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
-	\[ \guard \Rightarrow \eval{\Pol(\location)}{\valuation} \geq \eval{\Pol(\location')}{\valuation'} + \eval{\cost((\location, \update, \guard, \location'))}{\valuation} \]
+	\[ \guard \Rightarrow \eval{\Pol(\location)}{\valuation} - \eval{\cost((\location, \update, \guard, \location'))}{\valuation} \geq \eval{\Pol(\location')}{\valuation'} \]
         and
 	\[ \guard \Rightarrow \eval{\Pol(\location)}{\valuation} > 1. \]
-        \todo{Boundedness >1 ?}{}
 \end{definition}
 
 \todo{PRF Examples}{}
 
-\todo{Problem with prf and smt}{}
+For the computation of a ranking function, it is common to use an SMT-Solver.
+Since an SMT-Solver is only capable of finding models for existential formulas, but the definition of ranking functions contains both universal quantifiers and existential quantifiers, it is necessary to perform a transformation step.
+For this purpose, it is common to use a variant of the farkas lemma \cite{schrijver1998theory} specialized for polyranking \cite{bradley2005polyranking}.
 
-
-
-Farkas lemma specialized for polyranking \cite{bradley2005polyranking}
-General farkas lemma \cite{schrijver1998theory}
 \begin{definition}[Farkas Lemma]
-  Let all atoms $\atom \in \guard$ be of the following linear form with $d_\atom \in \mathbb{Z}$ and $d_{\atom,v} \in \mathbb{Z}$ for each variable $v \in \VSet$.
+  Let all atoms $\atom \in \guard$ be of the following affine form with $d_\atom \in \mathbb{Z}$ and $d_{\atom,v} \in \mathbb{Z}$ for each variable $v \in \VSet$.
   \[ d_\atom + \sum_{v \in \VSet} d_{\atom,v} \cdot v \geq 0 \]
-  If there exists a $d_\atom$ for each atom $\atom$ and if there exist $d_{\atom,v}$ for each atom $\atom$ and each variable $v$ such that $d_\atom + \sum_{v \in \VSet} d_{\atom,v} \cdot \valuation(v) \geq 0$ is satisfiable for all states $\valuation \in \Valuation$, then it entails a linear inequality $c + \sum_{v \in \VSet} c_v \cdot v \geq 0$ iff there exist real numbers $\lambda_\atom \geq 0$ for each atom $\atom \in \guard$ such that for the constant part it holds that $c \geq \sum_{\atom \in \guard} \lambda_\atom \cdot d_\atom$ and for all variables $v \in \VSet$ it holds that
+  If there exists a $d_\atom$ for each atom $\atom$ and if there exist $d_{\atom,v}$ for each atom $\atom$ and each variable $v$ such that $d_\atom + \sum_{v \in \VSet} d_{\atom,v} \cdot \valuation(v) \geq 0$ is satisfiable for all states $\valuation \in \Valuation$, then it entails an affine inequality $c + \sum_{v \in \VSet} c_v \cdot v \geq 0$ iff there exist real numbers $\lambda_\atom \geq 0$ for each atom $\atom \in \guard$ such that for the constant part it holds that $c \geq \sum_{\atom \in \guard} \lambda_\atom \cdot d_\atom$ and for all variables $v \in \VSet$ it holds that
   \[ c_v = \sum_{\atom \in \guard} \lambda_\atom \cdot d_{\atom,v}. \]
 \end{definition}
-With this definition of the farkas lemma we can infer from the satisfiability of the existential formula $\exists \lambda_{\atom_1}, \dots, \lambda_{\atom,n}: \exists c_{v_1}, \dots, c_{v_m}: c_v = \sum_{\atom \in \guard} \lambda_\atom \cdot d_{\atom,v}$ that a satisfiable constraint $\guard \in \ConstraintSet$ with only linear atoms entails a linear inequality $c + \sum_{v \in \VSet} c_v \cdot v \geq 0$.
+With this definition of the farkas lemma, we can infer from the satisfiability of the existential formula $\exists \lambda_{\atom_1}, \dots, \lambda_{\atom,n}: \exists c_{v_1}, \dots, c_{v_m}: c_v = \sum_{\atom \in \guard} \lambda_\atom \cdot d_{\atom,v}$ that a satisfiable constraint $\guard \in \ConstraintSet$ with only affine atoms entails an affine inequality $c + \sum_{v \in \VSet} c_v \cdot v \geq 0$.
+Since a ranking function assigns each location an affine polynomial, it is possible to transform the problem of finding a ranking function into a problem solvable with an SMT-Solver.
