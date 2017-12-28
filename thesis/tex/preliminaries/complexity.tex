@@ -18,18 +18,6 @@ We define the time complexity of a program $\Program$ as the highest possible nu
   \[ \eval{\text{rc}}{\valuation_0} = \sup \braced{ k \in \mathbb{N} \mid \exists \location, \valuation: (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) } \]
 \end{definition}
 
-This definition is slightly different than in related work. \todo{Source needed?}{}
-Often time complexity is considered to be a function which is monotonic in its input state $\eval{\text{rc}'}{m} = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) }$.
-This guarantees that for an input $m \in \Valuation$ there is no other input $m' \leq m$ with $\eval{\text{rc}'}{m'} > \eval{\text{rc}'}{m}$.
-Unfortunately, this property can not be guaranteed anymore with non-monotonic bounds.
-Consider the motivational program in figure \ref{fig:motivational_example} and an input state $m \in \Valuation$ with $m(x) = 4$ and $m(y) = 2$.
-The time complexity according to the definition in related work would then be $\eval{\text{rc}'}{m} = 7$, since with a state $\valuation_0 \in \Valuation$ with $\valuation_0(x) = 4$ and $\valuation_0(y) = -2$ we have one occurrence of $t_0$ and six occurrences of $t_1$.
-\todo{We should define the upper time bound first}{}
-As mentioned before, the new method should be able to yield a time bound $1 + \maxO{x-y}$.
-But for the defined input state $m \in \Valuation$ this would yield $1 + \maxO{4-2} = 3$, which would be unsound according to the definition of time complexity.
-With the changed definition the time complexity is $\eval{\text{rc}}{m} = 1 + 2$.
-Therefore the non-monotonic bound is sound according to this definition.
-
 An upper time bound of a transition $t \in \TSet$ describes a maximal number of occurrences of that transition in an evaluation starting with an arbitrary initial state $\valuation_0 \in \Valuation$.
 
 \begin{definition}[Upper Time Bound]
@@ -37,9 +25,18 @@ An upper time bound of a transition $t \in \TSet$ describes a maximal number of 
   \[ \eval{\UTime(t)}{\valuation_0} \geq \sup \braced{ k \in \mathbb{N} \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
 \end{definition}
 
-This definition is again slightly different as in related work.
-The bound is again expressed in dependency on a concrete state $\valuation_0$.
-\todo{To be proved}{This does not affect the known theorem, that it is possible to approximate the time complexity of a program by the sum of all upper time bounds.}
+Those definitions are slightly different than in related work. \todo{Source needed?}{}
+Often time complexity is considered to be a function which is monotonic in its input state $\eval{\text{rc}'}{m} = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) }$.
+This guarantees that for an input $m \in \Valuation$ there is no other input $m' \leq m$ with $\eval{\text{rc}'}{m'} > \eval{\text{rc}'}{m}$.
+Unfortunately, this property can not be guaranteed anymore with non-monotonic bounds.
+Consider the motivational program in figure \ref{fig:motivational_example} and an input state $m \in \Valuation$ with $m(x) = 4$ and $m(y) = 2$.
+The time complexity according to the definition in related work would then be $\eval{\text{rc}'}{m} = 7$, since with a state $\valuation_0 \in \Valuation$ with $\valuation_0(x) = 4$ and $\valuation_0(y) = -2$ we have one occurrence of $t_0$ and six occurrences of $t_1$.
+As mentioned before, the new method should be able to yield a time bound $1 + \maxO{x-y}$.
+But for the defined input state $m \in \Valuation$ this would yield $1 + \maxO{4-2} = 3$, which would be unsound according to the definition of time complexity.
+With the changed definition the time complexity is $\eval{\text{rc}}{m} = 1 + 2$.
+Therefore the non-monotonic bound is sound according to this definition.
+
+\todo{To be proved}{Although we changed the definitions of time complexity and time bounds, the known theorem, that it is possible to approximate the time complexity of a program by the sum of all upper time bounds, is not affected.}
 
 \begin{theorem}[Approximating Time Complexity]
 	Let $\UTime$ be a time bound for $\TSet$.
@@ -47,7 +44,7 @@ The bound is again expressed in dependency on a concrete state $\valuation_0$.
 	\[ \text{rc} \leq \sum_{t \in \TSet}\UTime(t) \]
 \end{theorem}
 
-Therefore, it is sufficient to determine an upper time bound for a program and build the sum over all transitions $\TSet$ of the program, to approximate the runtime complexity. 
+Therefore, it is sufficient to determine an upper time bound for a program and build the sum over all transitions $\TSet$ of the program, to approximate the time complexity. 
 
 \subsubsection{Size complexity}
 
