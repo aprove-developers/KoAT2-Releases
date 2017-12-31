@@ -1,8 +1,8 @@
-We only regard the case where every $\alpha \in \SCC$ is bounded by an upper scaled sum and a lower scaled sum.
-Then, for all result variables $\hat{\alpha} = (\hat{t}, \hat{v}) \in \RV$, we have to show that two statements hold for all \todo{Really m here?}{$m \in \Valuation$} with $m(v) \in \mathbb{N}$ for all $v \in \VSet$.
-\[ \eval{\USize'(\hat{\alpha})}{m} \geq \sup \braced{ \valuation(\hat{v}) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\location, \valuation)} \]
-\[ \eval{\LSize'(\hat{\alpha})}{m} \leq \inf \braced{ \valuation(\hat{v}) \mid \exists \valuation_0, \location \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\location, \valuation)} \]
-To this end, we now fix $m$ to an arbitrary value and consider a fixed state $\abs{\valuation_0} \leq m$ and a fixed evaluation.
+We only regard the case where every $\rv \in \SCC$ is bounded by an upper scaled sum and a lower scaled sum.
+Then, for all result variables $\hat{\rv} = (\hat{t}, \hat{v}) \in \RV$, we have to show that two statements hold for all initial states $\valuation_0 \in \Valuation$ and variables $v \in \VSet$.
+\[ \eval{\USize'(\hat{\rv})}{m} \geq \sup \braced{ \valuation(\hat{v}) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\location, \valuation)} \]
+\[ \eval{\LSize'(\hat{\rv})}{m} \leq \inf \braced{ \valuation(\hat{v}) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\location, \valuation)} \]
+To this end, we now fix $\valuation_0$ to an arbitrary initial state and consider a fixed evaluation.
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\hat{t}}) (\hat{\location}, \hat{\valuation}) \]
 Our goal is to show that the defined size bounds are correct lower and upper bounds.
 \begin{equation} \label{eq:sizebound_target}
@@ -11,7 +11,7 @@ Our goal is to show that the defined size bounds are correct lower and upper bou
 Instead of proving (\ref{eq:sizebound_target}) directly, we proof a simplified hypothesis, which implies the target (\ref{eq:sizebound_target}).
 For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition t was used in the evaluation.
 Then, we define an upper bound $d^\sqcap \in \BoundSet$ and a lower bound $d^\sqcup \in \BoundSet$ for the absolute value of any variable which can be reached in the evaluation.
-\[ d^\square = \prod_{t \in \TSet} (s^\square_t)^{k_t} \cdot \left( e + \sum_{t \in \TSet} \left( k_t \cdot \effect^\square_t \right) \right). \]
+\[ d^\square = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} \cdot \left( \start + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \effect^\square_t \right) \right). \]
 This enables us to define the hypothesis.
 \begin{equation} \label{eq:sizebound_hypothesis}
   \forall v \in \VSet: \eval{d^\sqcap}{m} \geq \maxO{\hat{\valuation}(v)} \wedge \eval{d^\sqcup}{m} \geq \maxO{-\hat{\valuation}(v)}
@@ -19,24 +19,24 @@ This enables us to define the hypothesis.
 We now show that the goal (\ref{eq:sizebound_target}) indeed follows from the claim (\ref{eq:sizebound_hypothesis}).
 Note that $\eval{\UTime(t)}{m} \geq k_t$ holds by definition of $k_t$.
 Also $\maxO{\hat{\valuation}(v)}$ is always greater or equal than $\hat{\valuation}(v)$ as well as $\maxO{-\hat{\valuation}(v)}$ is always greater or equal than $-\hat{\valuation}(v)$.
-Additionally we have $s^\sqcap_t \geq 1$ and $s^\sqcup_t \geq 1$ by definition of the local size bounds.
-Furthermore $\eval{\effect^\sqcap_{\hat{t}}}{m} \geq 0$, $\eval{\effect^\sqcup_{\hat{t}}}{m} \geq 0$ and $e \geq 0$ hold by definition of the theorem.
+Additionally we have $\scale^\sqcap_t \geq 1$ and $\scale^\sqcup_t \geq 1$ by definition of the local size bounds.
+Furthermore $\eval{\effect^\sqcap_{\hat{t}}}{m} \geq 0$, $\eval{\effect^\sqcup_{\hat{t}}}{m} \geq 0$ and $\start \geq 0$ hold by definition of the theorem.
 Because of the resulting monotonicity we can conclude that it is sufficient to proof the hypothesis (\ref{eq:sizebound_hypothesis}). 
 \[ \eval{{\mathcal{S}^\sqcap}'(\hat{t},v)}{m} =
-   \prod_{t \in \TSet} (s^\sqcap_t)^{\eval{\UTime(t)}{m}} \cdot \left( \eval{e}{m} + \sum_{t \in \TSet} \left( \eval{\UTime(t)}{m} \cdot \eval{\effect^\sqcap_t}{m} \right) \right) \geq \eval{d^\sqcap}{m} \]
+   \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\eval{\UTime(t)}{m}} \cdot \left( \eval{\start}{m} + \sum_{t \in \TSet_\SCC} \left( \eval{\UTime(t)}{m} \cdot \eval{\effect^\sqcap_t}{m} \right) \right) \geq \eval{d^\sqcap}{m} \]
 \[ \eval{{\mathcal{S}^\sqcup}'(\hat{t},v)}{m} =
-   (-1) \cdot \prod_{t \in \TSet} (s^\sqcup_t)^{\eval{\UTime(t)}{m}} \cdot \left( \eval{e}{m} + \sum_{t \in \TSet} \left( \eval{\UTime(t)}{m} \cdot \eval{\effect^\sqcup_t}{m} \right) \right) \leq \eval{d^\sqcup}{m} \]
+   (-1) \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{\eval{\UTime(t)}{m}} \cdot \left( \eval{\start}{m} + \sum_{t \in \TSet_\SCC} \left( \eval{\UTime(t)}{m} \cdot \eval{\effect^\sqcup_t}{m} \right) \right) \leq \eval{d^\sqcup}{m} \]
 
-We now fix $v$ to an arbitrary variable and define with $\hat{\alpha} = (\hat{t}, v)$ the result variable, for which we want to find an upper size bound $\USize'(\hat{\alpha})$ and a lower size bound $\LSize'(\hat{\alpha})$.
+We now fix $v$ to an arbitrary variable and define with $\hat{\rv} = (\hat{t}, v)$ the result variable, for which we want to find an upper size bound $\USize'(\hat{\rv})$ and a lower size bound $\LSize'(\hat{\rv})$.
 
-If $\hat{\alpha} \notin \SCC$, then the size bounds stay the same $\USize'(\hat{\alpha}) = \USize(\hat{\alpha})$ and $\LSize'(\hat{\alpha}) = \LSize(\hat{\alpha})$.
+If $\hat{\rv} \notin \SCC$, then the size bounds stay the same $\USize'(\hat{\rv}) = \USize(\hat{\rv})$ and $\LSize'(\hat{\rv}) = \LSize(\hat{\rv})$.
 
-We will consider from now a result variable $\hat{\alpha} \in \SCC$.
+We will consider from now a result variable $\hat{\rv} \in \SCC$.
 
 We prove the claim (\ref{eq:sizebound_hypothesis}) by induction on the length of the evaluation, using the last transition step $\hat{t}$ as base case.
 
 Note that $\hat{t}$ can not be an initial transition, as there are no transitions leading back to the initial location $\location_0$
-(i.e., then $\hat{\alpha}$ would not be contained in a nontrivial SCC $\SCC$ of the RVG).
+(i.e., then $\hat{\rv}$ would not be contained in a nontrivial SCC $\SCC$ of the RVG).
 Thus, for some transition $\tilde{t} \in \pre(\hat{t})$ we can expect the evaluation to have the following form.
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\tilde{t}}) (\tilde{\location}, \tilde{\valuation}) \rightarrow_{\hat{t}} (\hat{\location}, \hat{\valuation}). \]
 
@@ -44,18 +44,18 @@ We have to estimate the sizes of the input variables, that is, we have to find a
 
 We will first consider the base case of the induction.
 
-For $(\tilde{t}, v) \notin \SCC$ we have existing size bounds $\eval{\USize(\tilde{t}, v)}{m} \geq \tilde{\valuation}(v) \geq \eval{\LSize(\tilde{t}, v)}{m}$.
-As $(\tilde{t}, v) \in \pre(\hat{t}, v) \setminus \SCC$, we have $e \geq \eval{\USize(\tilde{t}, v)}{m}$ and $e \geq 0$.
-Therefore it holds that $\eval{d^\sqcap}{m} \geq e \geq \eval{\USize(\tilde{t}, v)}{m} \geq \tilde{\valuation}(v)$.
-We also have $e \geq -\eval{\LSize(\tilde{t}, v)}{m}$ and $e \geq 0$.
-Therefore it also holds that $\eval{d^\sqcup}{m} \geq e \geq -\eval{\LSize(\tilde{t}, v)}{m} \geq -\tilde{\valuation}(v)$.
+For $(\tilde{t}, v) \notin \SCC$, we have existing size bounds $\eval{\USize(\tilde{t}, v)}{m} \geq \tilde{\valuation}(v) \geq \eval{\LSize(\tilde{t}, v)}{m}$.
+As $(\tilde{t}, v) \in \pre(\hat{t}, v) \setminus \SCC$, we have $\start \geq \eval{\USize(\tilde{t}, v)}{m}$ and $\start \geq 0$.
+Therefore it holds that $\eval{d^\sqcap}{m} \geq \start \geq \eval{\USize(\tilde{t}, v)}{m} \geq \tilde{\valuation}(v)$.
+We also have $\start \geq -\eval{\LSize(\tilde{t}, v)}{m}$ and $\start \geq 0$.
+Therefore it also holds that $\eval{d^\sqcup}{m} \geq \start \geq -\eval{\LSize(\tilde{t}, v)}{m} \geq -\tilde{\valuation}(v)$.
 This proofs the hypothesis (\ref{eq:sizebound_hypothesis}) for all incoming $(\tilde{t}, v) \notin \SCC$.
 
 If $(\tilde{t}, v) \in \SCC$, then the induction hypothesis implies that $\eval{d^\sqcap}{m} \geq \maxO{\tilde{\valuation}(v)}$ and $\eval{d^\sqcup}{m} \geq \maxO{-\tilde{\valuation}(v)}$ also hold for the evaluation from $(\location_0, \valuation_0)$ to $(\tilde{\location}, \tilde{\valuation})$.
 
 Now we continue with the inductive step.
 \begin{equation} \label{eq:induction_consequence}
-  \eval{\dpre{\square}}{m} = (s^\square_{\hat{t}})^{k_{\hat{t}} - 1} \cdot \prod_{t \in \TSet \setminus \braced{\hat{t}}} (s^\square_t)^{k_t} \cdot \left( e + \left( k_{\hat{t}} - 1 \right) \cdot \eval{\effect^\square_{\hat{t}}}{m} + \sum_{t \in \TSet \setminus \braced{\hat{t}}} \left( k_t \cdot \eval{\effect^\square_t}{m} \right) \right)
+  \eval{\dpre{\square}}{m} = (\scale^\square_{\hat{t}})^{k_{\hat{t}} - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\hat{t}}} (\scale^\square_t)^{k_t} \cdot \left( \start + \left( k_{\hat{t}} - 1 \right) \cdot \eval{\effect^\square_{\hat{t}}}{m} + \sum_{t \in \TSet_\SCC \setminus \braced{\hat{t}}} \left( k_t \cdot \eval{\effect^\square_t}{m} \right) \right)
 \end{equation}
 The reason for using $k_{\hat{t}} - 1$ in $\eval{\dpre{\square}}{m}$ is that the last application of the transition $\hat{t}$ in the evaluation is missing in the evaluation from $(\location_0, \valuation_0)$ to $(\tilde{\location}, \tilde{\valuation})$.
 Then, the induction hypothesis implies that $\eval{\dpre{\sqcap}}{m} \geq \maxO{\tilde{\valuation}(v)}$ and $\eval{\dpre{\sqcap}}{m} \geq \maxO{-\tilde{\valuation}(v)}$.
@@ -64,60 +64,66 @@ We now combine these bounds to prove that the induction hypothesis indeed holds.
 
 Note that the overall scaling factor can be rewritten.
 \begin{equation} \label{eq:scaling_factor_reduction}
-  \prod_{t \in \TSet} (s^\square_t)^{k_t} = (s^\square_r)^{k_r} \cdot \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t} = s^\square_r \cdot (s^\square_r)^{k_r - 1} \cdot \prod_{t \in \TSet \setminus \braced{r}} (s^\square_t)^{k_t}
+  \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} = (\scale^\square_r)^{k_r} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{r}} (\scale^\square_t)^{k_t} = \scale^\square_r \cdot (\scale^\square_r)^{k_r - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{r}} (\scale^\square_t)^{k_t}
 \end{equation}
 Also the input values can be rewritten.
 \begin{equation} \label{eq:input_reduction}
   \begin{split}
-  \sum_{t \in \TSet} (k_t \cdot \effect^\square_t)
-  & = k_{\hat{t}} \cdot \effect^\square_{\hat{t}} + \sum_{t \in \TSet \setminus \braced{\hat{t}}} (k_t \cdot \effect^\square_t) \\
+  \sum_{t \in \TSet_\SCC} (k_t \cdot \effect^\square_t)
+  & = k_{\hat{t}} \cdot \effect^\square_{\hat{t}} + \sum_{t \in \TSet_\SCC \setminus \braced{\hat{t}}} (k_t \cdot \effect^\square_t) \\
   & = \effect^\square_{\hat{t}}
     + (k_{\hat{t}} - 1) \cdot \effect^\square_{\hat{t}}
-    + \sum_{t \in \TSet \setminus \braced{\hat{t}}} (k_t \cdot \effect^\square_t)
+    + \sum_{t \in \TSet_\SCC \setminus \braced{\hat{t}}} (k_t \cdot \effect^\square_t)
   \end{split}
 \end{equation}
-Note that for all $v \in \VSet \setminus \VSet_{\hat{\alpha}}$ we have $\eval{\effect^\sqcap_{\hat{\alpha},v}}{m} \geq \maxO{\eval{\USize(\tilde{t}, v)}{m}}$ and $\eval{\effect^\sqcup_{\hat{\alpha},v}}{m} \geq \maxO{-\eval{\LSize(\tilde{t}, v)}{m}}$.
-We can now propagate this to $\eval{\effect^\sqcap_{\hat{\alpha}}}{m}$.
+Note that for all $v \in \VSet \setminus \VSet_{\hat{\rv}}$ we have $\eval{\effect^\sqcap_{\hat{\rv}}(v)}{m} \geq \maxO{\eval{\USize(\tilde{t}, v)}{m}}$ and $\eval{\effect^\sqcup_{\hat{\rv}}(v)}{m} \geq \maxO{-\eval{\LSize(\tilde{t}, v)}{m}}$.
+We can now propagate this to $\eval{\effect^\sqcap_{\hat{\rv}}}{m}$.
 
 \begin{equation} \label{eq:input_rv_reduction_upper}
   \begin{split}
-  & \eval{\effect^\sqcap_{\hat{\alpha}}}{m} \\
-  = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet^+_{\hat{\alpha}}} \eval{\effect^\sqcap_{{\hat{\alpha}},v}}{m}
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcap \setminus \VSet^-_{\hat{\alpha}}} \eval{\effect^\sqcup_{{\hat{\alpha}},v}}{m} \\
-  = & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet^+_{\hat{\alpha}}} \maxO{\eval{\USize(\tilde{t}, v)}{m}}
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcap \setminus \VSet^-_{\hat{\alpha}}} \maxO{-\eval{\LSize(\tilde{t}, v)}{m}} \\
-  \geq & \sum_{v \in P_{\hat{\alpha}}^\sqcap \setminus \VSet^+_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)}
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcap \setminus \VSet^-_{\hat{\alpha}}} \maxO{-\tilde{\valuation}(v)} \\
+  & \eval{\effect^\sqcap_{\hat{\rv}}}{m} \\
+  = & \maxO{e^{\sqcap}_\rv}
+    + \sum_{v \in P_{\hat{\rv}}^\sqcap \setminus \VSet^+_{\hat{\rv}}} \eval{\effect^\sqcap_{\hat{\rv}}(v)}{m}
+    + \sum_{v \in N_{\hat{\rv}}^\sqcap \setminus \VSet^-_{\hat{\rv}}} \eval{\effect^\sqcup_{\hat{\rv}}(v)}{m} \\
+  = & \maxO{e^{\sqcap}_\rv}
+    + \sum_{v \in P_{\hat{\rv}}^\sqcap \setminus \VSet^+_{\hat{\rv}}} \maxO{\eval{\USize(\tilde{t}, v)}{m}}
+    + \sum_{v \in N_{\hat{\rv}}^\sqcap \setminus \VSet^-_{\hat{\rv}}} \maxO{-\eval{\LSize(\tilde{t}, v)}{m}} \\
+  \geq & \maxO{e^{\sqcap}_\rv}
+    + \sum_{v \in P_{\hat{\rv}}^\sqcap \setminus \VSet^+_{\hat{\rv}}} \maxO{\tilde{\valuation}(v)}
+    + \sum_{v \in N_{\hat{\rv}}^\sqcap \setminus \VSet^-_{\hat{\rv}}} \maxO{-\tilde{\valuation}(v)} \\
   \end{split}
 \end{equation}
 
 \begin{equation} \label{eq:d_upper_reduction}
   \begin{split} 
-  & \sum_{v \in \VSet_{\hat{\alpha}}} \dpre{\sqcap} \\
-  = & \sum_{v \in \VSet^+_{\hat{\alpha}}} \dpre{\sqcap} + \sum_{v \in \VSet^-_{\hat{\alpha}}} \dpre{\sqcap} \\
-  \geq & \sum_{v \in \VSet^+_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)} + \sum_{v \in \VSet^-_{\hat{\alpha}}} \maxO{-\tilde{\valuation}(v)} (\ref{eq:sizebound_hypothesis}) \\
+  & \sum_{v \in \VSet_{\hat{\rv}}} \dpre{\sqcap} \\
+  = & \sum_{v \in \VSet^+_{\hat{\rv}}} \dpre{\sqcap} + \sum_{v \in \VSet^-_{\hat{\rv}}} \dpre{\sqcap} \\
+  \geq & \sum_{v \in \VSet^+_{\hat{\rv}}} \maxO{\tilde{\valuation}(v)} + \sum_{v \in \VSet^-_{\hat{\rv}}} \maxO{-\tilde{\valuation}(v)} (\ref{eq:sizebound_hypothesis}) \\
   \end{split}      
 \end{equation}
 
-It is also possible to propagate the same approach to $\eval{\effect^\sqcup_{\hat{\alpha}}}{m}$.
+It is also possible to propagate the same approach to $\eval{\effect^\sqcup_{\hat{\rv}}}{m}$.
 
 \begin{equation} \label{eq:input_rv_reduction_lower}
   \begin{split}
-  & \eval{\effect^\sqcup_{\hat{\alpha}}}{m} \\
-  = & \sum_{v \in P_{\hat{\alpha}}^\sqcup \setminus \VSet^+_{\hat{\alpha}}} \eval{\effect^\sqcup_{{\hat{\alpha}},v}}{m}
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcup \setminus \VSet^-_{\hat{\alpha}}} \eval{\effect^\sqcap_{{\hat{\alpha}},v}}{m} \\
-  = & \sum_{v \in P_{\hat{\alpha}}^\sqcup \setminus \VSet^+_{\hat{\alpha}}} \maxO{-\eval{\LSize(\tilde{t}, v)}{m}}
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcup \setminus \VSet^-_{\hat{\alpha}}} \maxO{\eval{\USize(\tilde{t}, v)}{m}} \\
-  \geq & \sum_{v \in P_{\hat{\alpha}}^\sqcup \setminus \VSet^+_{\hat{\alpha}}} \maxO{-\tilde{\valuation}(v)}
-    + \sum_{v \in N_{\hat{\alpha}}^\sqcup \setminus \VSet^-_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)} \\
+  & \eval{\effect^\sqcup_{\hat{\rv}}}{m} \\
+  = & \maxO{-e^{\sqcup}_\rv}
+    + \sum_{v \in P_{\hat{\rv}}^\sqcup \setminus \VSet^+_{\hat{\rv}}} \eval{\effect^\sqcup_{\hat{\rv}}(v)}{m}
+    + \sum_{v \in N_{\hat{\rv}}^\sqcup \setminus \VSet^-_{\hat{\rv}}} \eval{\effect^\sqcap_{\hat{\rv}}(v)}{m} \\
+  = & \maxO{-e^{\sqcup}_\rv}
+    + \sum_{v \in P_{\hat{\rv}}^\sqcup \setminus \VSet^+_{\hat{\rv}}} \maxO{-\eval{\LSize(\tilde{t}, v)}{m}}
+    + \sum_{v \in N_{\hat{\rv}}^\sqcup \setminus \VSet^-_{\hat{\rv}}} \maxO{\eval{\USize(\tilde{t}, v)}{m}} \\
+  \geq & \maxO{-e^{\sqcup}_\rv}
+    + \sum_{v \in P_{\hat{\rv}}^\sqcup \setminus \VSet^+_{\hat{\rv}}} \maxO{-\tilde{\valuation}(v)}
+    + \sum_{v \in N_{\hat{\rv}}^\sqcup \setminus \VSet^-_{\hat{\rv}}} \maxO{\tilde{\valuation}(v)} \\
   \end{split}
 \end{equation}
 
 \begin{equation} \label{eq:d_lower_reduction}
   \begin{split} 
-  & \sum_{v \in \VSet_{\hat{\alpha}}} \dpre{\sqcup} \\
-  = & \sum_{v \in \VSet^+_{\hat{\alpha}}} \dpre{\sqcup} + \sum_{v \in \VSet^-_{\hat{\alpha}}} \dpre{\sqcup} \\
-  \geq & \sum_{v \in \VSet^+_{\hat{\alpha}}} \maxO{-\tilde{\valuation}(v)} + \sum_{v \in \VSet^-_{\hat{\alpha}}} \maxO{\tilde{\valuation}(v)} (\ref{eq:sizebound_hypothesis}) \\
+  & \sum_{v \in \VSet_{\hat{\rv}}} \dpre{\sqcup} \\
+  = & \sum_{v \in \VSet^+_{\hat{\rv}}} \dpre{\sqcup} + \sum_{v \in \VSet^-_{\hat{\rv}}} \dpre{\sqcup} \\
+  \geq & \sum_{v \in \VSet^+_{\hat{\rv}}} \maxO{-\tilde{\valuation}(v)} + \sum_{v \in \VSet^-_{\hat{\rv}}} \maxO{\tilde{\valuation}(v)} (\ref{eq:sizebound_hypothesis}) \\
   \end{split}      
 \end{equation}
 
@@ -125,26 +131,25 @@ Thus, we have
 {\allowdisplaybreaks
 \begin{IEEEeqnarray*}{rClr}
   & & \eval{d^\square}{m} \\
-  & = & \prod_{t \in \TSet} (s^\square_t)^{k_t} \cdot \left( e + \sum_{t \in \TSet} \left( k_t \cdot \eval{\effect^\square_t}{m} \right) \right) \\
-  & = & \left( s^\square_{\hat{t}} \cdot (s^\square_{\hat{t}})^{k_{\hat{t}} - 1} \cdot \prod_{t \in \TSet \setminus \braced{\hat{t}}} (s^\square_t)^{k_t} \right) \cdot \\
-    && \left( e + \eval{\effect^\square_{\hat{t}}}{m} + \left( k_{\hat{t}} - 1 \right) \cdot \eval{\effect^\square_{\hat{t}}}{m} + \sum_{t \in \TSet \setminus \braced{\hat{t}}} \left( k_t \cdot \eval{\effect^\square_t}{m} \right) \right)
+  & = & \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} \cdot \left( \start + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \eval{\effect^\square_t}{m} \right) \right) \\
+  & = & \left( \scale^\square_{\hat{t}} \cdot (\scale^\square_{\hat{t}})^{k_{\hat{t}} - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\hat{t}}} (\scale^\square_t)^{k_t} \right) \cdot \\
+    && \left( \start + \eval{\effect^\square_{\hat{t}}}{m} + \left( k_{\hat{t}} - 1 \right) \cdot \eval{\effect^\square_{\hat{t}}}{m} + \sum_{t \in \TSet_\SCC \setminus \braced{\hat{t}}} \left( k_t \cdot \eval{\effect^\square_t}{m} \right) \right)
     & (\ref{eq:scaling_factor_reduction}), (\ref{eq:input_reduction}) \\
-  & = & s^\square_{\hat{t}} \cdot \left( \dpre{\square} + \left( (s^\square_{\hat{t}})^{k_{\hat{t}} - 1} \cdot \prod_{t \in \TSet \setminus \braced{\hat{t}}} (s^\square_t)^{k_t} \right) \cdot \eval{\effect^\square_{\hat{t}}}{m} \right) & (\ref{eq:induction_consequence}) \\
-  & \geq & s^\square_{\hat{t}} \cdot \left( \dpre{\square} + \eval{\effect^\square_{\hat{t}}}{m} \right) & \text{since } \eval{\effect^\square_{\hat{t}}}{m} \geq 0 \\
-  & \geq & s^\square_{\hat{t}} \cdot \left( \dpre{\square} + \max \braced{\maxO{\pm e^{\square}_\alpha} + \eval{\effect^\square_\alpha}{m} \mid \alpha \in \SCC_{\hat{t}} } \right) & \text{by definition} \\
-  & \geq & s^\square_{\hat{t}} \cdot \left( \dpre{\square} + \maxO{\pm e^{\square}_{\hat{\alpha}}} + \eval{\effect^\square_{\hat{\alpha}}}{m} \right) & \text{since } {\hat{\alpha}} \in \SCC_{\hat{t}} \\
-  & = & \maximum{s^\square_{\alpha} \mid \alpha \in \SCC_{\hat{t}}} \cdot \\
-    && \maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_{\hat{t}}} \cdot \\
-    && \left( \dpre{\square} + \maxO{\pm e^{\square}_{\hat{\alpha}}} + \eval{\effect^\square_{\hat{\alpha}}}{m} \right) & \text{substitute } s^\square_{\hat{t}} \\
-  & \geq & s^\square_{\hat{\alpha}} \cdot \abs{\pre(\hat{\alpha}) \cap \SCC} \cdot \left( \dpre{\square} + \maxO{\pm e^\square_{\hat{\alpha}}} + \eval{\effect^\square_{\hat{\alpha}}}{m} \right)
-    & \text{since } \hat{\alpha} \in \SCC_{\hat{t}} \\
-  & \geq & s^\square_{\hat{\alpha}} \cdot \left( \abs{\pre(\hat{\alpha}) \cap \SCC} \cdot \dpre{\square} + \maxO{\pm e^\square_{\hat{\alpha}}} + \eval{\effect^\square_{\hat{\alpha}}}{m} \right) \\
-  & \geq & s^\square_{\hat{\alpha}} \cdot \left( \abs{\pre(\hat{\alpha}) \cap \SCC} \cdot \dpre{\square} \pm e^{\square}_{\hat{\alpha}} + \eval{\effect^\square_{\hat{\alpha}}}{m} \right) \\
-  & \geq & s^\square_{\hat{\alpha}} \cdot \left( \sum_{v \in \VSet_{\hat{\alpha}}} \dpre{\square} \pm e^\square_{\hat{\alpha}} + \eval{\effect^\square_{\hat{\alpha}}}{m} \right) \\
-  & \geq & s^\square_{\hat{\alpha}} \cdot \left( \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha}}^\sqcap} \maxO{\tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\alpha}}^\sqcap} \maxO{-\tilde{\valuation}(v)} \right)
+  & = & \scale^\square_{\hat{t}} \cdot \left( \dpre{\square} + \left( (\scale^\square_{\hat{t}})^{k_{\hat{t}} - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\hat{t}}} (\scale^\square_t)^{k_t} \right) \cdot \eval{\effect^\square_{\hat{t}}}{m} \right) & (\ref{eq:induction_consequence}) \\
+  & \geq & \scale^\square_{\hat{t}} \cdot \left( \dpre{\square} + \eval{\effect^\square_{\hat{t}}}{m} \right) & \text{since } \eval{\effect^\square_{\hat{t}}}{m} \geq 0 \\
+  & \geq & \scale^\square_{\hat{t}} \cdot \left( \dpre{\square} + \max \braced{\eval{\effect^\square_\rv}{m} \mid \rv \in \SCC_{\hat{t}} } \right) & \text{by definition} \\
+  & \geq & \scale^\square_{\hat{t}} \cdot \left( \dpre{\square} + \eval{\effect^\square_{\hat{\rv}}}{m} \right) & \text{since } {\hat{\rv}} \in \SCC_{\hat{t}} \\
+  & = & \left( \maximum{s^\square_{\rv} \mid \rv \in \SCC_{\hat{t}}} \cdot
+    \maximum{\abs{\VSet_\rv} \mid \rv \in \SCC_{\hat{t}}} \right) \cdot
+    \left( \dpre{\square} + \eval{\effect^\square_{\hat{\rv}}}{m} \right) & \text{substitute } \scale^\square_{\hat{t}} \\
+  & \geq & s^\square_{\hat{\rv}} \cdot \abs{V_{\hat{\rv}}} \cdot \left( \dpre{\square} + \eval{\effect^\square_{\hat{\rv}}}{m} \right)
+    & \text{since } \hat{\rv} \in \SCC_{\hat{t}} \\
+  & \geq & s^\square_{\hat{\rv}} \cdot \left( \abs{V_{\hat{\rv}}} \cdot \dpre{\square} + \eval{\effect^\square_{\hat{\rv}}}{m} \right) \\
+  & \geq & s^\square_{\hat{\rv}} \cdot \left( \sum_{v \in \VSet_{\hat{\rv}}} \dpre{\square} + \eval{\effect^\square_{\hat{\rv}}}{m} \right) \\
+  & \geq & s^\square_{\hat{\rv}} \cdot \left( \maxO{\pm e^\square_{\hat{\rv}}} + \sum_{v \in P_{\hat{\rv}}^\sqcap} \maxO{\tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\rv}}^\sqcap} \maxO{-\tilde{\valuation}(v)} \right)
     & (\ref{eq:d_upper_reduction}, \ref{eq:input_rv_reduction_upper}) \\
-  & \geq & s^\square_{\hat{\alpha}} \cdot ( \pm e^\square_{\hat{\alpha}} + \sum_{v \in P_{\hat{\alpha},1}^\sqcap} \tilde{\valuation}(v) - \sum_{v \in N_{\hat{\alpha},1}^\sqcap} \tilde{\valuation}(v) \\
-    && + \sum_{v \in P_{\hat{\alpha},2}^\sqcap} \maxO{\tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\alpha},2}^\sqcap} \maxO{-\tilde{\valuation}(v)} ) \\
-  & = & \eval{\mathcal{S}^\square_l({\hat{\alpha}})}{\tilde{\valuation}} \\
+  & \geq & s^\square_{\hat{\rv}} \cdot ( \pm e^\square_{\hat{\rv}} + \sum_{v \in P_{\hat{\rv},1}^\sqcap} \tilde{\valuation}(v) - \sum_{v \in N_{\hat{\rv},1}^\sqcap} \tilde{\valuation}(v) \\
+    && + \sum_{v \in P_{\hat{\rv},2}^\sqcap} \maxO{\tilde{\valuation}(v)} + \sum_{v \in N_{\hat{\rv},2}^\sqcap} \maxO{-\tilde{\valuation}(v)} ) \\
+  & = & \eval{\mathcal{S}^\square_l({\hat{\rv}})}{\tilde{\valuation}} \\
   & \geq & \hat{\valuation}(v)
 \end{IEEEeqnarray*}}
