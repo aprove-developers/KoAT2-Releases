@@ -1,0 +1,42 @@
+\begin{figure}
+\centering
+
+\begin{tikzpicture}[->,>=stealth',auto,node distance=5cm,
+    thick,
+    main node/.style={circle,draw,font=\sffamily\Large\bfseries},
+    aligned edge/.style={align=left}]
+
+  \node[main node] (0) {$l_0$};
+  \node[main node] (1) [right of=0] {$l_1$};
+
+  \path[every node/.style={font=\sffamily\small}]
+    (0) edge[aligned edge] node[above=0.2cm] {$t_0$} node[below=0.2cm] {$\update(x) = x$\\$\update(y) = y$\\$\update(z) = z$} (1)
+    (1) edge[aligned edge, loop above] node[left=0.2cm] {$t_1$} node[right=0.2cm] {$\update(x) = x - 1$\\$\update(y) = y + z$\\$\update(z) = z$\\$\guard = \braced{x > 0}$} (1)
+    ;
+\end{tikzpicture}
+
+\begin{tikzpicture}[->,>=stealth',auto,node distance=1.5cm]
+
+  \node (0x) {$t_0,x$};
+  \node (1x) [right of=0x] {$t_1,x$};
+  \node (0y) [right of=1x] {$t_0,y$};
+  \node (0z) [below of=0y] {$t_0,z$};
+  \node (1y) [right of=0y] {$t_1,y$};
+  \node (1z) [right of=0z] {$t_1,z$};
+
+  \path
+    (0x) edge[dashed] (1x)
+    (0y) edge (1y)
+    (0z) edge[dashed] (1z)
+    (0z) edge (1y)
+    (1x) edge[loop below, dashed] (1x)
+    (1y) edge[loop right, very thick] (1y)
+    (1z) edge[loop right, dashed] (1z)
+    (1z) edge (1y)
+    ;
+\end{tikzpicture}
+
+\caption{Program which adds a constant value multiple times in a loop}
+\label{fig:additive_loop}
+\end{figure}
+

@@ -1,0 +1,35 @@
+\begin{figure}
+\centering
+
+\begin{tikzpicture}[->,>=stealth',auto,node distance=5cm,
+    thick,
+    main node/.style={circle,draw,font=\sffamily\Large\bfseries},
+    aligned edge/.style={align=left}]
+
+  \node[main node] (0) {$l_0$};
+  \node[main node] (1) [right of=0] {$l_1$};
+
+  \path[every node/.style={font=\sffamily\small}]
+    (0) edge[aligned edge] node[above=0.2cm] {$t_0$} node[below=0.2cm] {$\update(x) = x$\\$\update(y) = y$} (1)
+    (1) edge[aligned edge, loop above] node[left=0.2cm] {$t_1$} node[right=0.2cm] {$\update(x) = x - 1$\\$\update(y) = -2 \cdot y$\\$\guard = \braced{x > 0}$} (1)
+    ;
+\end{tikzpicture}
+
+\begin{tikzpicture}[->,>=stealth',auto,node distance=1.5cm]
+
+  \node (0x) {$t_0,x$};
+  \node (1x) [right of=0x] {$t_1,x$};
+  \node (0y) [right of=1x] {$t_0,y$};
+  \node (1y) [right of=0y] {$t_1,y$};
+
+  \path
+    (0x) edge[dashed] (1x)
+    (1x) edge[loop above, dashed] (1x)
+    (0y) edge (1y)
+    (1y) edge[loop above, thick] (1y)
+    ;
+\end{tikzpicture}
+
+\caption{Program, where $y$ only depends on itself}
+\label{fig:nontrivial_nodependency}
+\end{figure}

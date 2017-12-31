@@ -58,7 +58,6 @@ With this construction we only consider negative values for $x$ and therefore en
 We will now present the algorithm for the computation of sound, but minimal local size bounds $b^\sqcap \in \BoundSet^\sqcap_l$ and $b^\sqcup \in \BoundSet^\sqcup_l$.
 We first consider the upper case.
 A local size bound $b = \ULSB(t,v)$ is a sound overapproximation of the effect of a transition $t = (\location,(\lupdate,\uupdate),\guard,\location')$, iff the formula $\guard \Rightarrow \uupdate(v) \leq b$ is valid.
-Therefore we are looking for a model of the \todo{Proper definition of eval for formulas?}{following formula}.
 \[ \exists s \in \mathbb{N} \text{ with } s \geq 1:
 \exists e \in \mathbb{Z}:
 \exists P_1, P_2, N_1, N_2 \subseteq \VSet:

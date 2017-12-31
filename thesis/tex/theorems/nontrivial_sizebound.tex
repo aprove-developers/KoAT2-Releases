@@ -2,37 +2,28 @@
   Let $(\UTime, \Size)$ be a complexity approximation.
   Let $\LSB$ be a local size bound.
   Let $\SCC \subseteq \RV$ be a nontrivial SCC of the RVG.
-  If there is a $\beta \in \SCC$ with $\beta \notin \ScaledSum$, then we set $\USize' = \USize$ and $\LSize' = \LSize$.
-  Otherwise, for all $\beta \notin \SCC$, let $\USize'(\beta) = \USize(\beta)$ and $\LSize'(\beta) = \LSize(\beta)$.
-  For the definition of $(\LSize', \USize')$ for all other $\beta \in \SCC$, we will use following abbreviations.
-
-  Let $e$ denote a bound for the highest absolute value coming into $\SCC$.
-  \[ e = \maxO{\maximum{\max(\USize(\tilde{\alpha}), -\LSize(\tilde{\alpha})) \mid \exists \alpha \in \SCC: \tilde{\alpha} \in \pre(\alpha) \setminus \SCC}} \]
+  If there is a result variable $\beta \in \SCC$ which is not bounded by an upper scaled sum and a lower scaled sum, then we set $\USize' = \USize$ and $\LSize' = \LSize$.
+  Otherwise, for all result variables $\beta \notin \SCC$, let $\USize'(\beta) = \USize(\beta)$ and $\LSize'(\beta) = \LSize(\beta)$.
+  For the definition of $(\LSize', \USize')$ for all other result variables $\beta \in \SCC$, we will use following abbreviations.
+  Let $\start$ denote the highest \textbf{starting value} when entering the SCC $\SCC$.
+  \[ \start = \maximum{\max(\USize(\tilde{\rv}), -\LSize(\tilde{\rv})) \mid \exists \rv \in \SCC: \tilde{\rv} \in \pre(\rv) \setminus \SCC} \]
   \todo{Idea: If $\SCC$ only consists of positive edges, we can infer better bounds}{}
-  
-  For all $t \in \TSet$ and $\square \in \braced{\sqcup, \sqcap}$ let
-  \[ s^\square_t = \maximum{s^\square_{\alpha} \mid \alpha \in \SCC_t} \cdot \maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_t}. \]
-
-  Also for $\square \in \braced{\sqcup, \sqcap}$ we define the biggest/smallest incoming value of a variable $v \in \VSet$.
-  \[ \text{in}^\sqcap_{\alpha,v} = \maxO {\max \braced{\mathcal{S}^\sqcap(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C}} \]
-  \[ \text{in}^\sqcup_{\alpha,v} = \maxO {\max \braced{-\mathcal{S}^\sqcup(\tilde{t}, v') \mid \exists \tilde{t}: (\tilde{t}, v') \in \pre(\alpha) \setminus C}} \]
-
-  Furthermore we define for $\square \in \braced{\sqcup, \sqcap}$ the biggest/smallest incoming value of a result variable $\alpha \in \RV$.
-  \[ \text{in}^\sqcap_\alpha = \sum_{v \in P_\alpha^\sqcap \setminus \VSet_\alpha} \text{in}^\sqcap_{\alpha,v} + \sum_{v \in N_\alpha^\sqcap \setminus \VSet_\alpha} \text{in}^\sqcup_{\alpha,v} \]
-  \[ \text{in}^\sqcup_\alpha = \sum_{v \in P_\alpha^\sqcup \setminus \VSet_\alpha} \text{in}^\sqcup_{\alpha,v} + \sum_{v \in N_\alpha^\sqcup \setminus \VSet_\alpha} \text{in}^\sqcap_{\alpha,v} \]
-  
-  \[ \text{in}^\sqcap_t = \max \braced{\maxO{e^{\sqcap}_\alpha} + \text{in}^\sqcap_\alpha \mid \alpha \in \SCC_t }. \]
-  \[ \text{in}^\sqcup_t = \max \braced{\maxO{-e^{\sqcup}_\alpha} + \text{in}^\sqcup_\alpha \mid \alpha \in \SCC_t }. \]
-
-  With these definitions we define $(\LSize', \USize')$ for all other $\beta \in \SCC$ and $\square \in \braced{\sqcup, \sqcap}$.
-  \[ {\mathcal{S}^\sqcap}'(\beta) =
-  \prod_{t \in \TSet} (s^\sqcap_t)^{\UTime(t)} \cdot \left( e + 
-  \sum_{t \in \TSet} \left( \UTime(t) \cdot \text{in}^\sqcap_t \right) \right)
-  \]
-  \[ {\mathcal{S}^\sqcup}'(\beta) = (-1) \cdot \left(
-  \prod_{t \in \TSet} (s^\sqcup_t)^{\UTime(t)} \cdot \left( e + 
-  \sum_{t \in \TSet} \left( \UTime(t) \cdot \text{in}^\sqcup_t \right) \right)
-  \right)
-  \]
-  Then, $\mathit{SizeBounds}(\UTime, \Size, \SCC) = (\LSize', \USize')$ is also a size approximation. 
+  Let $\scale^\sqcap_t$ denote the \textbf{upper transition scaling factor} and let $\scale^\sqcup_t$ denote the \textbf{lower transition scaling factor} of a transition $t \in \TSet$.
+  \[ \scale^\square_t = \maximum{s^\square_{\rv} \mid \rv \in \SCC_t} \cdot \maximum{\abs{V_\rv} \mid \rv \in \SCC_t} \]
+  Let $\scale^\sqcap_\SCC$ denote the \textbf{upper loop scaling factor} and let $\scale^\sqcup_\SCC$ denote the \textbf{lower loop scaling factor} of a transition $\SCC \subseteq \RV$.
+  \[ \scale^\square_\SCC = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{\UTime(t)} \]
+  Let $\incoming^\sqcap_\rv(v)$ denote the \textbf{highest incoming constant} and let $\incoming^\sqcup_\rv(v)$ denote the \textbf{lowest incoming constant} influencing variable $v \in \VSet$ of the local size bound of the result variable $\rv \in \RV$.
+  \[ \incoming^\sqcap_\rv(v) = \max \braced{\USize(\tilde{t}, v) \mid \exists \tilde{t}: (\tilde{t}, v) \in \pre(\rv) \setminus C} \]
+  \[ \incoming^\sqcup_\rv(v) = \max \braced{-\LSize(\tilde{t}, v) \mid \exists \tilde{t}: (\tilde{t}, v) \in \pre(\rv) \setminus C} \]
+  Furthermore, let $\effect^\sqcap_\rv$ denote the \textbf{positive result variable effect} and let $\effect^\sqcup_\rv$ denote the \textbf{negative result variable effect} of a result variable $\rv \in \RV$.
+  \[ \effect^\sqcap_\rv = \maxO{e^{\sqcap}_\rv} + \sum_{v \in P_\rv^\sqcap \setminus \VSet_\rv} \maxO{\incoming^\sqcap_\rv(v)} + \sum_{v \in N_\rv^\sqcap \setminus \VSet_\rv} \maxO{\incoming^\sqcup_\rv(v)} \]
+  \[ \effect^\sqcup_\rv = \maxO{-e^{\sqcup}_\rv} + \sum_{v \in P_\rv^\sqcup \setminus \VSet_\rv} \maxO{\incoming^\sqcup_\rv(v)} + \sum_{v \in N_\rv^\sqcup \setminus \VSet_\rv} \maxO{\incoming^\sqcap_\rv(v)} \]
+  Let $\effect^\sqcap_t$ denote the \textbf{positive transition effect} and let $\effect^\sqcup_t$ denote the \textbf{negative transition effect} of a transition $t \in \TSet$.
+  \[ \effect^\square_t = \max \braced{\effect^\square_\rv \mid \rv \in \SCC_t }. \]
+  Let $\effect^\sqcap_\SCC$ denote the \textbf{positive loop effect} and let $\effect^\sqcup_\SCC$ denote the \textbf{negative loop effect} of an SCC $\SCC \subseteq \RV$.
+  \[ \effect^\square_\SCC = \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\square_t \right) \]
+  With these definitions we define $(\LSize', \USize')$ for all other result variables $\beta \in \SCC$ and $\square \in \braced{\sqcup, \sqcap}$.
+  \[ {\mathcal{S}^\sqcap}'(\beta) = \scale^\sqcap_\SCC \cdot \left( \start + \effect^\sqcap_\SCC \right) \]
+  \[ {\mathcal{S}^\sqcup}'(\beta) = (-1) \cdot \scale^\sqcup_\SCC \cdot \left( \start + \effect^\sqcup_\SCC \right) \]
+  Then, $\text{SizeBounds}(\UTime, \Size, \SCC) = (\LSize', \USize')$ is also a size approximation. 
 \end{theorem}
