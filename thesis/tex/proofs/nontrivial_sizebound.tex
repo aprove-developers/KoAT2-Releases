@@ -82,13 +82,13 @@ We can now propagate this to $\eval{\effect^\sqcap_{\hat{\rv}}}{m}$.
 \begin{equation} \label{eq:input_rv_reduction_upper}
   \begin{split}
   & \eval{\effect^\sqcap_{\hat{\rv}}}{m} \\
-  = & \maxO{e^{\sqcap}_\rv}
+  = & \maxO{e^{\sqcap}_{\hat{\rv}}}
     + \sum_{v \in P_{\hat{\rv}}^\sqcap \setminus \VSet^+_{\hat{\rv}}} \eval{\effect^\sqcap_{\hat{\rv}}(v)}{m}
     + \sum_{v \in N_{\hat{\rv}}^\sqcap \setminus \VSet^-_{\hat{\rv}}} \eval{\effect^\sqcup_{\hat{\rv}}(v)}{m} \\
-  = & \maxO{e^{\sqcap}_\rv}
+  = & \maxO{e^{\sqcap}_{\hat{\rv}}}
     + \sum_{v \in P_{\hat{\rv}}^\sqcap \setminus \VSet^+_{\hat{\rv}}} \maxO{\eval{\USize(\tilde{t}, v)}{m}}
     + \sum_{v \in N_{\hat{\rv}}^\sqcap \setminus \VSet^-_{\hat{\rv}}} \maxO{-\eval{\LSize(\tilde{t}, v)}{m}} \\
-  \geq & \maxO{e^{\sqcap}_\rv}
+  \geq & \maxO{e^{\sqcap}_{\hat{\rv}}}
     + \sum_{v \in P_{\hat{\rv}}^\sqcap \setminus \VSet^+_{\hat{\rv}}} \maxO{\tilde{\valuation}(v)}
     + \sum_{v \in N_{\hat{\rv}}^\sqcap \setminus \VSet^-_{\hat{\rv}}} \maxO{-\tilde{\valuation}(v)} \\
   \end{split}
@@ -107,13 +107,13 @@ It is also possible to propagate the same approach to $\eval{\effect^\sqcup_{\ha
 \begin{equation} \label{eq:input_rv_reduction_lower}
   \begin{split}
   & \eval{\effect^\sqcup_{\hat{\rv}}}{m} \\
-  = & \maxO{-e^{\sqcup}_\rv}
+  = & \maxO{-e^{\sqcup}_{\hat{\rv}}}
     + \sum_{v \in P_{\hat{\rv}}^\sqcup \setminus \VSet^+_{\hat{\rv}}} \eval{\effect^\sqcup_{\hat{\rv}}(v)}{m}
     + \sum_{v \in N_{\hat{\rv}}^\sqcup \setminus \VSet^-_{\hat{\rv}}} \eval{\effect^\sqcap_{\hat{\rv}}(v)}{m} \\
-  = & \maxO{-e^{\sqcup}_\rv}
+  = & \maxO{-e^{\sqcup}_{\hat{\rv}}}
     + \sum_{v \in P_{\hat{\rv}}^\sqcup \setminus \VSet^+_{\hat{\rv}}} \maxO{-\eval{\LSize(\tilde{t}, v)}{m}}
     + \sum_{v \in N_{\hat{\rv}}^\sqcup \setminus \VSet^-_{\hat{\rv}}} \maxO{\eval{\USize(\tilde{t}, v)}{m}} \\
-  \geq & \maxO{-e^{\sqcup}_\rv}
+  \geq & \maxO{-e^{\sqcup}_{\hat{\rv}}}
     + \sum_{v \in P_{\hat{\rv}}^\sqcup \setminus \VSet^+_{\hat{\rv}}} \maxO{-\tilde{\valuation}(v)}
     + \sum_{v \in N_{\hat{\rv}}^\sqcup \setminus \VSet^-_{\hat{\rv}}} \maxO{\tilde{\valuation}(v)} \\
   \end{split}
