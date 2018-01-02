@@ -162,7 +162,7 @@ The other reason is, that the local size bound of the result variable $(t_1,y) \
 We can exclude those variables from the \textbf{result variable effect} $\effect^\sqcap_{(t_1,y)}$, because we consider them in another part of the definition.
 
 This leads us, to the second part, which we did not cover yet.
-This is the factor $\maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_t}$, which was not yet mentioned, but is part of the \textbf{transition scaling factor} $s^\sqcap_t$.
+This is the factor $\maximum{\abs{V_\alpha} \mid \alpha \in \SCC_t}$, which was not yet mentioned, but is part of the \textbf{transition scaling factor} $s^\sqcap_t$.
 In the example this part of the transition scaling factor is $1$, but in general it can be a number greater than $1$.
 This factor reflects, that exponential bounds can not only result from scaling factors which are greater than $1$, but also from variables, which affect each other consecutively in a loop.
 Consider the example in figure \ref{fig:exp_with_vars}.
@@ -192,7 +192,7 @@ Since the fibonacci sequence can not be represented with the bound set $\BoundSe
 Lets consider the update $\update(y) = y + z$.
 We have a non-polynomial bound, because the incoming values of $y$ and $z$ can change during the loop $t_1$.
 For this reason they are part of the set $\VSet_{(t_1,y)} = \braced{y,z}$.
-The idea of the factor $\maximum{\abs{\pre(\alpha) \cap \SCC} \mid \alpha \in \SCC_t}$ is, that we can overapproximate the effect of $\update(y)$ with $2 \cdot \max(y,z)$.
+The idea of the factor $\maximum{\abs{V_\alpha} \mid \alpha \in \SCC_t}$ is, that we can overapproximate the effect of $\update(y)$ with $2 \cdot \max(y,z)$.
 This bound is representable in the bound set $\BoundSet$. 
 
 \subsubsection{Step Two: Dependency on outside variables}
