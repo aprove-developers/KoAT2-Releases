@@ -6,7 +6,7 @@
   Otherwise, for all result variables $\beta \notin \SCC$, let $\USize'(\beta) = \USize(\beta)$ and $\LSize'(\beta) = \LSize(\beta)$.
   For the definition of $(\LSize', \USize')$ for all other result variables $\beta \in \SCC$, we will use following abbreviations.
   Let $\start$ denote the highest \textbf{starting value} when entering the SCC $\SCC$.
-  \[ \start = \maximum{\max(\USize(\tilde{\rv}), -\LSize(\tilde{\rv})) \mid \exists \rv \in \SCC: \tilde{\rv} \in \pre(\rv) \setminus \SCC} \]
+  \[ \start = \maximum{\max(\USize(\prerv), -\LSize(\prerv)) \mid \exists \rv \in \SCC: \prerv \in \pre(\rv) \setminus \SCC} \]
   \todo{Idea: If $\SCC$ only consists of positive edges, we can infer better bounds}{}
   Let $\scale^\sqcap_t$ denote the \textbf{upper transition scaling factor} and let $\scale^\sqcup_t$ denote the \textbf{lower transition scaling factor} of a transition $t \in \TSet$.
   \[ \scale^\square_t = \maximum{s^\square_{\rv} \mid \rv \in \SCC_t} \cdot \maximum{\abs{V_\rv} \mid \rv \in \SCC_t} \]

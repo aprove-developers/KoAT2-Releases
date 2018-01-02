@@ -1,40 +1,40 @@
-Let $\alpha = (t, v) \in \RV$ be the trivial SCC for which the processor was applied.
+Let $\rv = (t, v) \in \RV$ be the trivial SCC for which the processor was applied.
 
-We have to show that for all \todo{Really m here?}{$m \in \Valuation$} with $m(v) \in \mathbb{N}$ for all $v \in \VSet$ two statements hold.
-\[ \eval{\USize'(t, v)}{m} \geq \sup \braced{ \valuation(v) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)} \]
-\[ \eval{\USize'(t, v)}{m} \geq \inf \braced{ \valuation(v) \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)} \]
+We have to show that for all $\valuation_0 \in \Valuation$ with $\valuation_0(v) \in \mathbb{N}$ for all $v \in \VSet$ two statements hold.
+\[ \eval{\USize'(t, v)}{\valuation_0} \geq \sup \braced{ \valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)} \]
+\[ \eval{\USize'(t, v)}{\valuation_0} \geq \inf \braced{ \valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)} \]
 
-To this end, we consider a state $\abs{\valuation_0} \leq m$ and an evaluation
+To this end, we consider an evaluation
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation). \]
 Now the goal is to show that $\eval{\USize'(t, v)}{m} \geq \valuation(v) \geq \eval{\LSize'(t, v)}{m}$ holds.
 
-If $t$ is an initial transition, then the evaluation has the form $\valuation_0 \rightarrow_t \valuation$, as by definition there are no transitions leading back to the start location $\location_0$ of $t$.
+If $t$ is an initial transition, then the evaluation has the form $(\location_0, \valuation_0) \rightarrow_t (\location, \valuation)$, as by definition there are no transitions leading back to the start location $\location_0$ of $t$.
 
 Thus, for initial transitions by the definition of size bounds we obtain
 \[ \eval{\USize'(t, v)}{m} = \eval{\ULSB(t, v)}{m} \geq \valuation(v). \]
 \[ \eval{\LSize'(t, v)}{m} = \eval{\LLSB(t, v)}{m} \leq \valuation(v). \]
 
-In the case where t is not an initial transition, the evaluation has for some transition $\tilde{t} \in \pre(t)$ the form
-\[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\tilde{t}}) (\tilde{\location}, \tilde{\valuation}) \rightarrow_t (\location, \valuation). \]
+In the case where t is not an initial transition, the evaluation has for some transition $\pret \in \pre(t)$ the form
+\[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\pret) (\prel, \prestate) \rightarrow_t (\location, \valuation). \]
 
 Lets assume that our initial assumption holds.
-\todo{We havent anymore}{As $\abs{\valuation_0} \leq m$}, we then have for all $v \in \VSet$
-\[ \eval{\USize(\tilde{t}, v)}{m} \geq \tilde{\valuation}(v) \geq \eval{\LSize(\tilde{t}, v)}{m}. \]
-Thus, $\USize(\tilde{t}, v)$ and $\LSize(\tilde{t}, v)$ are bounds for the size of all variables $v \in \VSet$ before the transition $t$ is applied.
+Then, we have for all $v \in \VSet$
+\[ \eval{\USize(\pret, v)}{m} \geq \prestate(v) \geq \eval{\LSize(\pret, v)}{m}. \]
+Thus, $\USize(\pret, v)$ and $\LSize(\pret, v)$ are bounds for the size of all variables $v \in \VSet$ before the transition $t$ is applied.
 
-The only interesting case is when $\alpha$ is bounded by a lower scaled sum and by an upper scaled sum.
+The only interesting case is when $\rv$ is bounded by a lower scaled sum and by an upper scaled sum.
 
 We can easily see that the following inequations hold.
-\[ \sum_{v \in P_{\alpha,1}^\sqcap} \USize(\tilde{t}, v) \geq \sum_{v \in P_{\alpha,1}^\sqcap} \tilde{\valuation}(v) \]
-\[ - \sum_{v \in N_{\alpha,1}^\sqcap} \LSize(\tilde{t}, v) \geq - \sum_{v \in N_{\alpha,1}^\sqcap} \tilde{\valuation}(v) \]
-\[ \sum_{v \in P_{\alpha,2}^\sqcap} \maxO{\USize(\tilde{t}, v)} \geq \sum_{v \in P_{\alpha,2}^\sqcap} \maxO{\tilde{\valuation}(v)} \]
-\[ \sum_{v \in N_{\alpha,2}^\sqcap} \maxO{-\LSize(\tilde{t}, v)} \geq \sum_{v \in N_{\alpha,2}^\sqcap} \maxO{-\tilde{\valuation}(v)} \]
-Since $s^\sqcap_\alpha \geq 1$ it holds that $\eval{\USize(t, v)}{m} \geq \valuation(v)$.
+\[ \sum_{v \in P_{\rv,1}^\sqcap} \USize(\pret, v) \geq \sum_{v \in P_{\rv,1}^\sqcap} \prestate(v) \]
+\[ - \sum_{v \in N_{\rv,1}^\sqcap} \LSize(\pret, v) \geq - \sum_{v \in N_{\rv,1}^\sqcap} \prestate(v) \]
+\[ \sum_{v \in P_{\rv,2}^\sqcap} \maxO{\USize(\pret, v)} \geq \sum_{v \in P_{\rv,2}^\sqcap} \maxO{\prestate(v)} \]
+\[ \sum_{v \in N_{\rv,2}^\sqcap} \maxO{-\LSize(\pret, v)} \geq \sum_{v \in N_{\rv,2}^\sqcap} \maxO{-\prestate(v)} \]
+Since $s^\sqcap_\rv \geq 1$ it holds that $\eval{\USize(t, v)}{m} \geq \valuation(v)$.
 
 We now show that $\eval{\LSize(t, v)}{m} \leq \valuation(v)$ also holds.
 Again we can easily see that the following inequations hold.
-\[ \sum_{v \in P_{\alpha,1}^\sqcup} \LSize(\tilde{t}, v) \leq \sum_{v \in P_{\alpha,1}^\sqcup} \tilde{\valuation}(v) \]
-\[ - \sum_{v \in N_{\alpha,1}^\sqcup} \USize(\tilde{t}, v) \leq - \sum_{v \in N_{\alpha,1}^\sqcup} \tilde{\valuation}(v) \]
-\[ - \sum_{v \in P_{\alpha,2}^\sqcup} \maxO{-\LSize(\tilde{t}, v)} \leq - \sum_{v \in P_{\alpha,2}^\sqcup} \maxO{-\tilde{\valuation}(v)} \]
-\[ - \sum_{v \in N_{\alpha,2}^\sqcup} \maxO{\USize(\tilde{t}, v)} \leq - \sum_{v \in N_{\alpha,2}^\sqcup} \maxO{\tilde{\valuation}(v)} \]
-Since $s^\sqcup_\alpha \geq 1$ it holds that $\eval{\LSize(t, v)}{m} \leq \valuation(v)$.
+\[ \sum_{v \in P_{\rv,1}^\sqcup} \LSize(\pret, v) \leq \sum_{v \in P_{\rv,1}^\sqcup} \prestate(v) \]
+\[ - \sum_{v \in N_{\rv,1}^\sqcup} \USize(\pret, v) \leq - \sum_{v \in N_{\rv,1}^\sqcup} \prestate(v) \]
+\[ - \sum_{v \in P_{\rv,2}^\sqcup} \maxO{-\LSize(\pret, v)} \leq - \sum_{v \in P_{\rv,2}^\sqcup} \maxO{-\prestate(v)} \]
+\[ - \sum_{v \in N_{\rv,2}^\sqcup} \maxO{\USize(\pret, v)} \leq - \sum_{v \in N_{\rv,2}^\sqcup} \maxO{\prestate(v)} \]
+Since $s^\sqcup_\rv \geq 1$ it holds that $\eval{\LSize(t, v)}{m} \leq \valuation(v)$.

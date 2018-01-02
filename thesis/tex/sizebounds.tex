@@ -14,21 +14,21 @@ With the definition of local size bounds in the form of scaled sums, it is now p
 Instead of expressing the effect depending on the values immediately before a transition, we will now express the effect depending on the start values.
 
 We first provide those global size bounds for trivial SCCs of the RVG.
-Note that a node in the RVG is a result variable $\alpha = (t,v) \in \RV$.
+Note that a node in the RVG is a result variable $\rv = (t,v) \in \RV$.
 Trivial SCCs consist of a single node and they have the property that every evaluation passes the SCC only once.
 In the graph this is recognizable through the fact, that no sequence of edges is leading back to the single node.
 
 Again, we have to distinguish two cases.
-If the transition $t$ of the result variable $\alpha$ of the node is an initial transition $t \in \TSet_0$, then the effect of the local size bound already depends on the start values.
-Thus, the local size bound for the result variable $\alpha$ is also a global size bound.
+If the transition $t$ of the result variable $\rv$ of the node is an initial transition $t \in \TSet_0$, then the effect of the local size bound already depends on the start values.
+Thus, the local size bound for the result variable $\rv$ is also a global size bound.
 If the transition $t$ is not an initial transition $t \notin \TSet_0$, then we have to substitute the variables of the local size bound by the global size bounds before entering the SCC.
 The original KoAT uses monotonically increasing bounds for the local size bounds.
 Therefore it is able to substitute every variable with a bound of the maximum absolute value obtained so far.
 Since the defined scaled sums for local size bounds of the presented method are non-monotonic, it is necessary to split additional cases.
 For scaled sums, we have monotonically increasing and monotonically decreasing components.
-Let $\alpha = (t,v) \in \RV$ be a result variable.
-Then, the upper local size bound $\ULSB(\alpha)$ and the lower local size bound $\LLSB(\alpha)$ are monotonically increasing for each variable $v \in P_{\alpha,1} \cup P_{\alpha,2}$.
-On the other hand for each variable $v \in N_{\alpha,1} \cup N_{\alpha,2}$ the upper local size bound $\ULSB(\alpha)$ and the lower local size bound $\LLSB(\alpha)$ are monotonically decreasing.
+Let $\rv = (t,v) \in \RV$ be a result variable.
+Then, the upper local size bound $\ULSB(\rv)$ and the lower local size bound $\LLSB(\rv)$ are monotonically increasing for each variable $v \in P_{\rv,1} \cup P_{\rv,2}$.
+On the other hand for each variable $v \in N_{\rv,1} \cup N_{\rv,2}$ the upper local size bound $\ULSB(\rv)$ and the lower local size bound $\LLSB(\rv)$ are monotonically decreasing.
 
 The redefined upper size bound ${\USize}'$ must be a sound overapproximation of the values of the variables.
 Since upper size bounds $\USize$ overapproximate the value of variables and lower size bounds $\LSize$ underapproximate the value, it is sound to use the upper size bound $\USize$ for the substitution with the monotonically increasing variables and the lower size bound $\LSize$ for the substitution with the monotonically decreasing variables.
@@ -58,7 +58,7 @@ For the computation of the global size bounds we need to substitute these variab
 We already inferred those size bounds $\USize(t_0,x)$ and $\LSize(t_0,x)$ for the single transition $t_0$ leading to $t_1$.
 Additionally, we can trivially infer the size bounds $\USize(t_0,y) = y$ and $\LSize(t_0,y) = y$.
 We can also determine a scaled sum $3 \cdot (\maxO{-x} + y)$ as upper local size bound $\ULSB(t_1,x)$ and a scaled sum $3 \cdot (-1 - \maxO{x} + y)$ as lower local size bound $\LLSB(t_1,x)$.
-For the result variable $\alpha = (t_0,x)$ the parameters of the upper local size bound are $s^\sqcap_\alpha = 3$, $\start^\sqcap_\alpha = 0$, $N^\sqcap_{\alpha,2} = \braced{x}$, $P^\sqcap_{\alpha,1} = \braced{y}$ and $P^\sqcap_{\alpha,2} = N^\sqcap_{\alpha,1} = \emptyset$ and the parameters of the lower local size bound are $s^\sqcup_\alpha = 3$, $\start^\sqcup_\alpha = -1$, $N^\sqcup_{\alpha,2} = \braced{x}$, $P^\sqcup_{\alpha,1} = \braced{y}$ and $P^\sqcup_{\alpha,2} = N^\sqcup_{\alpha,1} = \emptyset$.
+For the result variable $\rv = (t_0,x)$ the parameters of the upper local size bound are $s^\sqcap_\rv = 3$, $\start^\sqcap_\rv = 0$, $N^\sqcap_{\rv,2} = \braced{x}$, $P^\sqcap_{\rv,1} = \braced{y}$ and $P^\sqcap_{\rv,2} = N^\sqcap_{\rv,1} = \emptyset$ and the parameters of the lower local size bound are $s^\sqcup_\rv = 3$, $\start^\sqcup_\rv = -1$, $N^\sqcup_{\rv,2} = \braced{x}$, $P^\sqcup_{\rv,1} = \braced{y}$ and $P^\sqcup_{\rv,2} = N^\sqcup_{\rv,1} = \emptyset$.
 For a sound approximation it is necessary to substitute the variables with the correct incoming bounds depending on whether we want to infer an upper or lower bound and whether the sign of the variable is positive or negative.
 The resulting global upper size bound $\USize'(t_0,x)$ therefore is 
 \begin{align*}
@@ -74,18 +74,18 @@ The resulting global lower size bound $\LSize'(t_0,x)$ we can determine as
 
 \subsection{Computing nontrivial size bounds}
 
-In the last section we presented a method SizeBounds to infer upper and lower size bounds for result variables $\alpha \in \RV$ which form a trivial SCC $\braced{\alpha}$.
+In the last section we presented a method SizeBounds to infer upper and lower size bounds for result variables $\rv \in \RV$ which form a trivial SCC $\braced{\rv}$.
 In this section, we extend the method to infer upper and lower size bounds for nontrivial SCCs.
 
 \todo{Move to preliminaries}{
   Prior to the definition of the method, we need to define three utility definitions also used by the original KoAT.
 }
 
-First, we define the pre-variables of a result variable $\rv \in \RV$ as an overapproximation $\pre(\rv) \subseteq \RV$ of all the result variables that directly affect the value of a result variable $\alpha \in \RV$.
+First, we define the pre-variables of a result variable $\rv \in \RV$ as an overapproximation $\pre(\rv) \subseteq \RV$ of all the result variables that directly affect the value of a result variable $\rv \in \RV$.
 This is a similar definition to the pre-transitions of a transition, but acting on the result variable graph instead of the program graph.
 Since the result variable graph represents the information about which result variables affect each other, the predecessors of a result variable in a result variable graph are a valid implementation of the function $\pre$.
 
-Additionally, we define the scc-variables $\VSet_\alpha = \braced{ v \mid \exists (t, v) \in \pre(\alpha) \cap \SCC }$ of a result variable as those variables, which affect the result variable from within the SCC of the result variable graph.
+Additionally, we define the scc-variables $\VSet_\rv = \braced{ v \mid \exists (t, v) \in \pre(\rv) \cap \SCC }$ of a result variable as those variables, which affect the result variable from within the SCC of the result variable graph.
 For those variables we know, that their value is mutated throughout a loop.
 
 The third definition $\SCC_t$ selects from an SCC $\SCC$ of the result variable graph those result variables $\SCC_t = \braced{(t,v) \mid \exists v \in \VSet : (t,v) \in \SCC}$, that use a specific transition $t$.
@@ -131,10 +131,10 @@ Thus, the value of $y$ after the loop $t_1$ does only depend on the value of $y$
 The idea is, that we start with an overapproximation of the initial value of $y$ before entering the loop and then multiply it with the maximal factors inside the loop.
 
 The overapproximation of the initial value of $y$ is reflected by the \textbf{starting value}.
-\[ \start = \maximum{\max(\USize(\tilde{\alpha}), -\LSize(\tilde{\alpha})) \mid \exists \alpha \in \SCC: \tilde{\alpha} \in \pre(\alpha) \setminus \SCC} \]
+\[ \start = \maximum{\max(\USize(\prerv), -\LSize(\prerv)) \mid \exists \rv \in \SCC: \prerv \in \pre(\rv) \setminus \SCC} \]
 We consider all result variables, which might affect the value of $y$ and select the maximal value among them.
 One might initially think, that it is sufficient, to consider a different starting value.
-\[ \start = \maximum{\USize(\tilde{\alpha}) \mid \exists \alpha \in \SCC: \tilde{\alpha} \in \pre(\alpha) \setminus \SCC} \]
+\[ \start = \maximum{\USize(\prerv) \mid \exists \rv \in \SCC: \prerv \in \pre(\rv) \setminus \SCC} \]
 But this starting value is not sound.
 The reason is, that we are not able to predict the exact number of occurrences of a transition, since we only have a bound.
 In the example, we have the time bound $\UTime$ with $\UTime(t_1) = x$.
@@ -150,7 +150,7 @@ After $\UTime(t_1)$ occurrences of $t_1$, the value of $y$ is at most $2^{\UTime
 This is covered by the \textbf{loop scaling factor} $\scale^\sqcap_\SCC$.
 It consists of the multiplication of all the \textbf{transition scaling factors} $\scale^\sqcap_t$ of the transitions $t \in \TSet_\SCC$ of the SCC $\SCC$.
 For the example, there is only one transition in the SCC, therefore the loop scaling factor reduces to the exponentiation with a single transition scaling factor $(\scale^\sqcap_{t_1})^{\UTime(t_1)}$.
-Since the scaling factor of the local size bound of the result variable $(t_1,y) \in \SCC$ is $2$ and $(t_1,y)$ is the only result variable of the SCC $\SCC$, $2$ is also the maximal scaling factor $\maximum{s^\square_{\alpha} \mid \alpha \in \SCC_t}$ for the transition $t$ in the SCC $\SCC$.
+Since the scaling factor of the local size bound of the result variable $(t_1,y) \in \SCC$ is $2$ and $(t_1,y)$ is the only result variable of the SCC $\SCC$, $2$ is also the maximal scaling factor $\maximum{s^\square_{\rv} \mid \rv \in \SCC_t}$ for the transition $t$ in the SCC $\SCC$.
 This results in the expected upper size bound $2^{\UTime(t_1)} \cdot \start$ for the result variable $(t_1,y)$.
 
 There are two parts, which still need to be covered, before we can be sure, that $2^{\UTime(t_1)} \cdot \start$ is actually the result of ${\mathcal{S}^\sqcap}'(t_1,y)$.
@@ -162,7 +162,7 @@ The other reason is, that the local size bound of the result variable $(t_1,y) \
 We can exclude those variables from the \textbf{result variable effect} $\effect^\sqcap_{(t_1,y)}$, because we consider them in another part of the definition.
 
 This leads us, to the second part, which we did not cover yet.
-This is the factor $\maximum{\abs{V_\alpha} \mid \alpha \in \SCC_t}$, which was not yet mentioned, but is part of the \textbf{transition scaling factor} $s^\sqcap_t$.
+This is the factor $\maximum{\abs{V_\rv} \mid \rv \in \SCC_t}$, which was not yet mentioned, but is part of the \textbf{transition scaling factor} $s^\sqcap_t$.
 In the example this part of the transition scaling factor is $1$, but in general it can be a number greater than $1$.
 This factor reflects, that exponential bounds can not only result from scaling factors which are greater than $1$, but also from variables, which affect each other consecutively in a loop.
 Consider the example in figure \ref{fig:exp_with_vars}.
@@ -192,7 +192,7 @@ Since the fibonacci sequence can not be represented with the bound set $\BoundSe
 Lets consider the update $\update(y) = y + z$.
 We have a non-polynomial bound, because the incoming values of $y$ and $z$ can change during the loop $t_1$.
 For this reason they are part of the set $\VSet_{(t_1,y)} = \braced{y,z}$.
-The idea of the factor $\maximum{\abs{V_\alpha} \mid \alpha \in \SCC_t}$ is, that we can overapproximate the effect of $\update(y)$ with $2 \cdot \max(y,z)$.
+The idea of the factor $\maximum{\abs{V_\rv} \mid \rv \in \SCC_t}$ is, that we can overapproximate the effect of $\update(y)$ with $2 \cdot \max(y,z)$.
 This bound is representable in the bound set $\BoundSet$. 
 
 \subsubsection{Step Two: Dependency on outside variables}
