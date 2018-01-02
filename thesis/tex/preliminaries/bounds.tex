@@ -89,6 +89,24 @@ The mentioned examples can therefore be evaluated as expected.
   \eval{2 \cdot x^2 + 4 \cdot z}{\valuation} &= 2 \cdot \valuation(x)^2 + 4 \cdot \valuation(z) \\
   \eval{2^{\max(x,3 \cdot y^2)} \cdot 7 \cdot x^3}{\valuation} &= 2^{\max(\valuation(x),3 \cdot \valuation(y)^2)} \cdot 7 \cdot \valuation(x)^3
 \end{align*}
+
+Additionally, we define the substitution for a subset of the bounds.
+Instead of a substitution which replaces variables with a single substitution $\delta: \VSet \rightarrow \BoundSet$, we define a substitution with a case distinction for monotonically increasing and monotonically decreasing variables.
+In a substitution $\subst{b}{\delta_1}{\delta_2}$, a monotonically increasing variable is substituted with the substitution $\delta_2: \VSet \rightarrow \BoundSet$ and a monotonically decreasing variable is substituted with the substitution $\delta_1: \VSet \rightarrow \BoundSet$.
+If the variable is not monotonous in the bound $b$, then the substitution is undefined.
+\begin{definition}[Bound substitution]
+  For a bound $b \in \BoundSet$ and two substitutions $\delta_1, \delta_2 \in \VSet \rightarrow \BoundSet$, we define $\subst{b}{\delta_1}{\delta_2}$ to denote the substitution of the variables of the bound $b$ with bounds from the substitutions $\delta_1, \delta_2$.
+  \[ \subst{\infty}{\delta_1}{\delta_2} = \infty \text{ for } \infty \in \BoundSet \]
+  \[ \subst{k}{\delta_1}{\delta_2} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
+  \[ \subst{v}{\delta_1}{\delta_2} = \delta_2(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
+  \[ \subst{-b}{\delta_1}{\delta_2} = -\subst{b}{\delta_2}{\delta_1} \text{ for all } b \in \BoundSet \] 
+  \[ \subst{b_1 + b_2}{\delta_1}{\delta_2} = \subst{b_1}{\delta_1}{\delta_2} + \subst{b_2}{\delta_1}{\delta_2} \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \subst{k \cdot b}{\delta_1}{\delta_2} = k \cdot \subst{b}{\delta_1}{\delta_2} \text{ for all } b \in \BoundSet \text{ and } k \in \mathbb{N} \] 
+  \[ \subst{\max(b_1, b_2)}{\delta_1}{\delta_2} = \max(\subst{b_1}{\delta_1}{\delta_2}, \subst{b_2}{\delta_1}{\delta_2}) \text{ for all } b_1, b_2 \in \BoundSet \]
+  For all other $b \in \BoundSet$ the substitution $\subst{b}{\delta_1}{\delta_2}$ is undefined.
+  We also write $\subst{b}{\delta}{}$ to denote $\subst{b}{\delta}{\delta}$.
+\end{definition}
+
 For all polynomials, we also define polynomial inequalities.
 
 \begin{definition}[Polynomial inequality]
@@ -109,14 +127,3 @@ Also, we extend the definition of the bound evaluation to polynomial inequalitie
   For a constraint $\guard \in \ConstraintSet$, we define $\eval{\guard}{\valuation}$ to denote the evaluation of the constraint $\guard$ to a value in $\mathbb{B}_\bot$.
   \[ \eval{\guard}{\valuation} = \bigwedge_{\atom \in \guard} \eval{\atom}{\valuation} \]
 \end{definition}
-
-At some points, it is necessary to distinguish the areas of monotonicity of the bounds.
-Therefore, we define two split operators, that allow us to extract monotonic bounds from a non-monotonic bound.
-
-\begin{definition}[Negative/Positive split]
-  Let $b \in \BoundSet$ be a bound of the form $b = \sum_{i \in \braced{1, \dots, n}} c_i \cdot b_i$ with $c_i \in \mathbb{Z}$ and $b_i \in \BoundSet$.
-  Then, we define $b_+ = \sum_{\braced{i \mid i \in \braced{1, \dots, n}: c_i > 0}} c_i \cdot b_i$ as the sum of all components of $b$ with a positive factor and $b_- = \sum_{\braced{i \mid i \in \braced{1, \dots, n}: c_i < 0}} -c_i \cdot b_i$ as the sum of all components with a negative factor with the factor inverted.
-\end{definition}
-
-Note that with this definition, for a bound $b = \sum_{i \in \braced{1, \dots, n}} c_i \cdot b_i$ it holds that $\eval{b}{\valuation} = \eval{b_+}{\valuation} - \eval{b_-}{\valuation}$ for all states $\valuation \in \Valuation$.
-Also note that the monotonicity of all bounds $b_i$ implies the monotonicity of the splits $b_+$ and $b_-$, while the bound $b$ might be non-monotonic.

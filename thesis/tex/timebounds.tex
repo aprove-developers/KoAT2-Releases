@@ -30,11 +30,14 @@ These entry locations define the entry transitions $\TSet_{\location_1} = \brace
 
 As an example, we consider the motivational program from the introduction \ref{fig:motivational_example}.
 With the transition set $\TSet' = \braced{t_1}$ it is possible to determine a ranking function $\Pol(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).
-The old KoAT would now apply an operator to $\Pol$, such that the result would be a monotonic function with $\Pol'(\location_1) = \abs{x} + \abs{y}$.
-The new method instead applies a split to $\Pol$, which results in the positive component $\Pol(\location_1)_+ = x$ and the negative component $\Pol(\location_1)_- = y$.
-While the positive component $\Pol(\location_1)_+$ is a monotonically increasing function, the negative component $\Pol(\location_1)_-$ is a monotonically decreasing function.
+The original KoAT would now apply an operator to $\Pol$, such that the result would be a monotonic function with $\Pol'(\location_1) = \abs{x} + \abs{y}$.
+Then it is able to substitute each variable by its absolute size bound and therefore lift it to a global context.
+The new method does not use such an operator.
+Instead, it substitutes each variable of $\Pol$ by its lower/upper size bound depending on the monotonicity of this component.
+Since $x$ is monotonically increasing in $x-y$ and $y$ is monotonically decreasing in $x-y$, we can substitute $x$ with the upper size bound and $y$ with the lower size bound.
 Lets assume, that we already inferred the size bounds $\USize(t_0,x) = \LSize(t_0,x) = x$ and $\USize(t_0,y) = \LSize(t_0,y) = y$.
-It is now possible to lift the components of the ranking functions to a global level with the substitution by the appropriate lower and upper size bounds $\eval{\Pol(\location_1)_+}{\USize(t_0)} - \eval{\Pol(\location_1)_-}{\LSize(t_0)} = x - y$.
+It is now possible to lift the components of the ranking functions to a global level.
+\[ \subst{\Pol(\location)}{\LSize(t_0)}{\USize(t_0)} = \USize(t_0, x) - \LSize(t_0, y) = x - y \]
 Since with a state $\valuation$ with $\valuation(x) < \valuation(y)$ the transition $t_1$ will simply not occur in an evaluation instead of occurring a negative number of times, we have to ensure the positivity of $x - y$ with the operation $\maxO{x - y}$.
 Then, the only step left is to consider the number of times an evaluation might enter the SCC from $t_0$.
 Since $t_0$ is an initial transition, its time bound is $\UTime(t_0) = 1$.
@@ -47,7 +50,7 @@ Consider again the program in figure \ref{fig:entrytransitions} with arbitrary g
 
 A trivial approach would be the usage of the second $\TSet'$ with $\TSet' = \TSet \setminus \TSet_0 = \braced{t_1, t_2, t_3, t_4}$.
 Then, we have $\mathcal{E}_{\TSet'} = \braced{\location_1}$ and $\TSet_{\location_1} = \braced{t_0}$.
-Therefore for each $t \in \TSet'_>$ we end up with $\UTime'(t) = \UTime(t_0) \cdot \maxO{\eval{\Pol(\location_1)_+}{\USize(t_0)} - \eval{\Pol(\location_1)_-}{\LSize(t_0)}}$.
+Therefore for each $t \in \TSet'_>$ we end up with $\UTime'(t) = \UTime(t_0) \cdot \maxO{\subst{\Pol(\location_1)}{\LSize(t_0)}{\USize(t_0)}}$.
 Since $t_0 \in \TSet_0$ is an initial transition, we have $\UTime(t_0) = 1$ and $\UTime'(t)$ then reflects the expected result of a non-modular approach.
 
 This trivial approach requires us to find a ranking function, that satisfies the non-increasing constraint for all transitions.
@@ -59,10 +62,10 @@ Let's assume that the transition violating the non-increasing constraint is $t_1
 Since we reduced the set, we have fewer constraints and are more likely to find a ranking function.
 We have $\mathcal{E}_{\TSet'} = \braced{\location_2}$ and $\TSet_{\location_2} = \braced{t_2}$.
 Since $t_2$ is not part of a loop, its time bound is $\UTime(t_2) = 1$.
-Therefore we end up with $\UTime'(t) = \maxO{\eval{\Pol(\location_2)_+}{\USize(t_2)} - \eval{\Pol(\location_2)_-}{\LSize(t_2)}}$.
+Therefore, we end up with $\UTime'(t) = \maxO{\subst{\Pol(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$.
 
 Note that it is possible to select arbitrary subsets $\TSet' \subseteq \TSet$.
-A non-connected subset $\TSet' = \braced{t_1, t_3, t_4}$ could be chosen, but would lead to a bound $\UTime'(t) = \maxO{\eval{\Pol(\location_1)_+}{\USize(t_0)} - \eval{\Pol(\location_1)_-}{\LSize(t_0)}} + \maxO{\eval{\Pol(\location_2)_+}{\USize(t_2)} - \eval{\Pol(\location_2)_-}{\LSize(t_2)}}$.
+A non-connected subset $\TSet' = \braced{t_1, t_3, t_4}$ could be chosen, but would lead to a bound $\UTime'(t) = \maxO{\subst{\Pol(\location_1)}{\LSize(t_0)}{\USize(t_0)}} + \maxO{\subst{\Pol(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$.
 Also only a part of an SCC such as $\TSet' = \braced{t_4}$ could be chosen.
 But since $t_3 \in \TSet_{\location_3}$ would be a entry transition of $\TSet' = \braced{t_4}$, this would only be of benefit if we already inferred a time bound $\UTime(t_3) < \infty$.
 

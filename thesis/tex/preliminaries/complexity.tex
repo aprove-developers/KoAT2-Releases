@@ -119,8 +119,8 @@ For arbitrary costs $\cost(t) \in \BoundSet \setminus \BoundSet_a$ it is necessa
   \[ \UCost(t) = \UTime(t) \cdot
   \begin{cases}
     \maxO{\cost(t)} & \text{if } t \in \TSet_0 \\
-    \maxO{\maximum{\eval{\cost(t)_+}{\USize(\tilde{t})} - \eval{\cost(t)_-}{\LSize(\tilde{t})} \mid \tilde{t} \in \pre(t)}} & \text{if } \cost(t) \in \BoundSet_a \\
-    \maxO{\maximum{\eval{\abs{\cost(t)}}{\abs{\mathcal{S}}(\tilde{t})} \mid \tilde{t} \in \pre(t)}} & \text{otherwise} \\
+    \maxO{\maximum{\subst{\cost(t)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)}} & \text{if } \cost(t) \in \BoundSet_a \\
+    \maxO{\maximum{\subst{\abs{\cost(t)}}{\abs{\mathcal{S}}(\pret)}{} \mid \pret \in \pre(t)}} & \text{otherwise} \\
   \end{cases}
   \]
 \end{definition}

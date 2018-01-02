@@ -9,12 +9,12 @@
   \[ \start = \maximum{\max(\USize(\prerv), -\LSize(\prerv)) \mid \exists \rv \in \SCC: \prerv \in \pre(\rv) \setminus \SCC} \]
   \todo{Idea: If $\SCC$ only consists of positive edges, we can infer better bounds}{}
   Let $\scale^\sqcap_t$ denote the \textbf{upper transition scaling factor} and let $\scale^\sqcup_t$ denote the \textbf{lower transition scaling factor} of a transition $t \in \TSet$.
-  \[ \scale^\square_t = \maximum{s^\square_{\rv} \mid \rv \in \SCC_t} \cdot \maximum{\abs{V_\rv} \mid \rv \in \SCC_t} \]
+  \[ \scale^\square_t = \maximum{s^\square_\rv \mid \rv \in \SCC_t} \cdot \maximum{\abs{V_\rv} \mid \rv \in \SCC_t} \]
   Let $\scale^\sqcap_\SCC$ denote the \textbf{upper loop scaling factor} and let $\scale^\sqcup_\SCC$ denote the \textbf{lower loop scaling factor} of a transition $\SCC \subseteq \RV$.
   \[ \scale^\square_\SCC = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{\UTime(t)} \]
   Let $\incoming^\sqcap_\rv(v)$ denote the \textbf{highest incoming constant} and let $\incoming^\sqcup_\rv(v)$ denote the \textbf{lowest incoming constant} influencing variable $v \in \VSet$ of the local size bound of the result variable $\rv \in \RV$.
-  \[ \incoming^\sqcap_\rv(v) = \max \braced{\USize(\tilde{t}, v) \mid \exists \tilde{t}: (\tilde{t}, v) \in \pre(\rv) \setminus C} \]
-  \[ \incoming^\sqcup_\rv(v) = \max \braced{-\LSize(\tilde{t}, v) \mid \exists \tilde{t}: (\tilde{t}, v) \in \pre(\rv) \setminus C} \]
+  \[ \incoming^\sqcap_\rv(v) = \max \braced{\USize(\pret, v) \mid \exists \pret: (\pret, v) \in \pre(\rv) \setminus C} \]
+  \[ \incoming^\sqcup_\rv(v) = \max \braced{-\LSize(\pret, v) \mid \exists \pret: (\pret, v) \in \pre(\rv) \setminus C} \]
   Furthermore, let $\effect^\sqcap_\rv$ denote the \textbf{positive result variable effect} and let $\effect^\sqcup_\rv$ denote the \textbf{negative result variable effect} of a result variable $\rv \in \RV$.
   \[ \effect^\sqcap_\rv = \maxO{e^{\sqcap}_\rv} + \sum_{v \in P_\rv^\sqcap \setminus \VSet_\rv} \maxO{\incoming^\sqcap_\rv(v)} + \sum_{v \in N_\rv^\sqcap \setminus \VSet_\rv} \maxO{\incoming^\sqcup_\rv(v)} \]
   \[ \effect^\sqcup_\rv = \maxO{-e^{\sqcup}_\rv} + \sum_{v \in P_\rv^\sqcup \setminus \VSet_\rv} \maxO{\incoming^\sqcup_\rv(v)} + \sum_{v \in N_\rv^\sqcup \setminus \VSet_\rv} \maxO{\incoming^\sqcap_\rv(v)} \]

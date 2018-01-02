@@ -1,25 +1,15 @@
 \begin{theorem}[SizeBounds for trivial SCCs]
   Let $(\UTime, \Size)$ be a complexity approximation.
-  Let $\braced{\rv} \subseteq \RV$ be a trivial SCC of the RVG.
+  Let $\braced{(t,v)} \subseteq \RV$ be a trivial SCC of the RVG.
   Let $\LSB$ be a local size bound in the form of a scaled sum.
-  We define $\USize'(\outrv) = \USize(\outrv)$ and $\LSize'(\outrv) = \LSize(\outrv)$ for all $\outrv \neq \rv$.
-  For all $\rv = (t_0, v)$ with an initial transition $t_0 \in \TSet_0$ we define
-  \[ \LSize'(\rv) = \LLSB(\rv) \text{ and } \USize'(\rv) = \ULSB(\rv). \]
-  For all $\alpha = (t, v)$ where $t \in \TSet \setminus \TSet_0$ is not an initial transition, we define the following.
-  We define $\LSize'(\rv) = \LSize(\rv)$, if $\rv$ is not bounded by a lower scaled sum.
-  Similar, we define $\USize'(\rv) = \USize(\rv)$, if $\rv$ is not bounded by an upper scaled sum.
-  For all $\rv$ which are bounded by an upper scaled sum and by a lower scaled sum, we define 
-  \begin{equation}
-    \begin{split}
-      \USize'(\rv) = \max \braced{ s^\sqcap_\rv \cdot ( e^\sqcap_\rv & + \sum_{v \in P_{\rv,1}^\sqcap} \USize(\pret, v) - \sum_{v \in N_{\rv,1}^\sqcap} \LSize(\pret, v) \\
-        & + \sum_{v \in P_{\rv,2}^\sqcap} \maxO{\USize(\pret, v)} + \sum_{v \in N_{\rv,2}^\sqcap} \maxO{-\LSize(\pret, v)} ) \mid \pret \in \pre(t)}
-    \end{split}
-  \end{equation}
-  \begin{equation}
-    \begin{split}
-      \LSize'(\rv) = \min \braced{ s^\sqcup_\rv \cdot ( e^\sqcup_\rv & + \sum_{v \in P_{\rv,1}^\sqcup} \LSize(\pret, v) - \sum_{v \in N_{\rv,1}^\sqcup} \USize(\pret, v) \\
-        & - \sum_{v \in P_{\rv,2}^\sqcup} \maxO{-\LSize(\pret, v)} - \sum_{v \in N_{\rv,2}^\sqcup} \maxO{\USize(\pret, v)} ) \mid \pret \in \pre(t)}
-    \end{split}
-  \end{equation}
-  Then, $\mathit{SizeBounds}(\UTime, \Size, \braced{\rv}) = (\LSize', \USize')$ is also a size approximation.
+  We define $\USize'(\outrv) = \USize(\outrv)$ and $\LSize'(\outrv) = \LSize(\outrv)$ for all $\outrv \neq (t,v)$.
+  If $t \in \TSet_0$ is an initial transition, we define
+  \[ \LSize'(t, v) = \LLSB(t, v) \text{ and } \USize'(t, v) = \ULSB(t, v). \]
+  If $t \in \TSet \setminus \TSet_0$ is not an initial transition, we define the following.
+  We define $\LSize'(t,v) = \LSize(t,v)$, if $(t,v)$ is not bounded by a lower scaled sum.
+  Similar, we define $\USize'(t,v) = \USize(t,v)$, if $(t,v)$ is not bounded by an upper scaled sum.
+  For all $(t,v)$ which are bounded by an upper scaled sum and by a lower scaled sum, we define 
+  \[ \USize'(t,v) = \maximum{ \subst{\ULSB(t,v)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)} \]
+  \[ \LSize'(t,v) = \minimum{ \subst{\LLSB(t,v)}{\USize(\pret)}{\LSize(\pret)} \mid \pret \in \pre(t)} \]
+  Then, $\mathit{SizeBounds}(\UTime, \Size, \braced{(t,v)}) = (\LSize', \USize')$ is also a size approximation.
 \end{theorem}
