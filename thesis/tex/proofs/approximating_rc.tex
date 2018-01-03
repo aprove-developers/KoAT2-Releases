@@ -1,0 +1,14 @@
+We have to show that $\eval{\text{rc}}{\valuation_0} \leq \eval{\sum_{t \in \TSet}\UTime(t)}{\valuation_0}$ holds for every state $\valuation_0 \in \Valuation$.
+
+Lets assume there exists an infinite evaluation $(\location_0, \valuation_0) \rightarrow_T (\location_1, \valuation_1) \rightarrow_T \dots$.
+Then, the time complexity $\eval{\text{rc}}{\valuation_0} = \infty$ is infinite.
+Also, there must be a transition $t \in \TSet$, which occurs infinitely often in the evaluation.
+Thus, $\eval{\UTime(t)}{\valuation_0} = \infty$ and therefore we have $\eval{\sum_{t \in \TSet}\UTime(t)}{\valuation_0} = \infty$ and $\eval{\text{rc}}{\valuation_0} \leq \eval{\sum_{t \in \TSet}\UTime(t)}{\valuation_0}$.
+
+Otherwise, every evaluation $(\location_0, \valuation_0) \rightarrow^k_T (\location, \valuation)$ is finite.
+Since the time complexity $\text{rc}$ is defined as the maximal $k$ of all those evaluations, it suffices to prove that for any such evaluation $\eval{\sum_{t \in \TSet}\UTime(t)}{\valuation_0} \geq k$ holds.
+Lets consider a fixed evaluation $(\location_0, \valuation_0) \rightarrow^k_T (\location, \valuation)$.
+Let $k_t \in \mathbb{N}$ be the number of times a transition $t \in \TSet$ occurs in this evaluation.
+Then, we have $k = \sum{t \in \TSet} k_t$.
+Also, for each $t \in \TSet$ the evaluation must be of the form $(\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation)$.
+Since by definition of $\UTime$ it holds that $\eval{\UTime(t)}{\valuation_0} \geq k_t$, we have $\eval{\sum_{t \in \TSet}\UTime(t)}{\valuation_0} \geq \sum{t \in \TSet} k_t = k$.

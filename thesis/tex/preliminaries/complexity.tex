@@ -36,13 +36,9 @@ But for the defined input state $m \in \Valuation$ this would yield $1 + \maxO{4
 With the changed definition the time complexity is $\eval{\text{rc}}{m} = 1 + 2$.
 Therefore the non-monotonic bound is sound according to this definition.
 
-\todo{To be proved}{Although we changed the definitions of time complexity and time bounds, the known theorem, that it is possible to approximate the time complexity of a program by the sum of all upper time bounds, is not affected.}
+Although we changed the definitions of time complexity and time bounds, the known theorem, that it is possible to approximate the time complexity of a program by the sum of all upper time bounds, is not affected.
 
-\begin{theorem}[Approximating Time Complexity]
-	Let $\UTime$ be a time bound for $\TSet$.
-	Then it holds that 
-	\[ \text{rc} \leq \sum_{t \in \TSet}\UTime(t) \]
-\end{theorem}
+\input{theorems/approximating_rc}
 
 Therefore, it is sufficient to determine an upper time bound for a program and build the sum over all transitions $\TSet$ of the program, to approximate the time complexity. 
 
