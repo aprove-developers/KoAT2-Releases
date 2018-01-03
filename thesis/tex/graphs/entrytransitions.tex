@@ -6,10 +6,10 @@
     main node/.style={circle,draw,font=\sffamily\small\bfseries},
     aligned edge/.style={align=left}]
 
-  \node[main node] (0) {$l_0$};
-  \node[main node, dashed, font=\tiny] (1) [right of=0] {$l_1 \in \mathcal{E}_{\TSet'}$};
-  \node[main node, dashed, font=\tiny] (2) [right of=1] {$l_2 \in \mathcal{E}_{\TSet'}$};
-  \node[main node] (3) [right of=2] {$l_3$};
+  \node[main node] (0) {$\location_0$};
+  \node[main node, dashed, font=\tiny] (1) [right of=0] {$\location_1 \in \mathcal{E}_{\TSet'}$};
+  \node[main node, dashed, font=\tiny] (2) [right of=1] {$\location_2 \in \mathcal{E}_{\TSet'}$};
+  \node[main node] (3) [right of=2] {$\location_3$};
 
   \path[every node/.style={font=\sffamily\small}]
     (0) edge[aligned edge, dashed] node[above=0.2cm] {$t_0 \in \TSet_{\location_1}$} (1)
@@ -25,10 +25,10 @@
     main node/.style={circle,draw,font=\sffamily\small\bfseries},
     aligned edge/.style={align=left}]
 
-  \node[main node] (0) {$l_0$};
-  \node[main node, dashed, font=\tiny] (1) [right of=0] {$l_1 \in \mathcal{E}_{\TSet'}$};
-  \node[main node] (2) [right of=1] {$l_2$};
-  \node[main node] (3) [right of=2] {$l_3$};
+  \node[main node] (0) {$\location_0$};
+  \node[main node, dashed, font=\tiny] (1) [right of=0] {$\location_1 \in \mathcal{E}_{\TSet'}$};
+  \node[main node] (2) [right of=1] {$\location_2$};
+  \node[main node] (3) [right of=2] {$\location_3$};
 
   \path[every node/.style={font=\sffamily\small}]
     (0) edge[aligned edge, dashed] node[above=0.2cm] {$t_0 \in \TSet_{\location_1}$} (1)
@@ -44,10 +44,10 @@
     main node/.style={circle,draw,font=\sffamily\small\bfseries},
     aligned edge/.style={align=left}]
 
-  \node[main node] (0) {$l_0$};
-  \node[main node] (1) [right of=0] {$l_1$};
-  \node[main node, dashed, font=\tiny] (2) [right of=1] {$l_2 \in \mathcal{E}_{\TSet'}$};
-  \node[main node] (3) [right of=2] {$l_3$};
+  \node[main node] (0) {$\location_0$};
+  \node[main node] (1) [right of=0] {$\location_1$};
+  \node[main node, dashed, font=\tiny] (2) [right of=1] {$\location_2 \in \mathcal{E}_{\TSet'}$};
+  \node[main node] (3) [right of=2] {$\location_3$};
 
   \path[every node/.style={font=\sffamily\small}]
     (0) edge[aligned edge] node[above=0.2cm] {$t_0$} (1)
