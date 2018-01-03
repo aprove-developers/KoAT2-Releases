@@ -11,4 +11,4 @@ Lets consider a fixed evaluation $(\location_0, \valuation_0) \rightarrow^k_T (\
 Let $k_t \in \mathbb{N}$ be the number of times a transition $t \in \TSet$ occurs in this evaluation.
 Then, we have $k = \sum{t \in \TSet} k_t$.
 Also, for each $t \in \TSet$ the evaluation must be of the form $(\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation)$.
-Since by definition of $\UTime$ it holds that $\eval{\UTime(t)}{\valuation_0} \geq k_t$, we have $\eval{\sum_{t \in \TSet}\UTime(t)}{\valuation_0} \geq \sum{t \in \TSet} k_t = k$.
+Since by definition of $\UTime$ it holds that $\eval{\UTime(t)}{\valuation_0} \geq k_t$, we have $\eval{\sum_{t \in \TSet}\UTime(t)}{\valuation_0} \geq \sum_{t \in \TSet} k_t = k$.

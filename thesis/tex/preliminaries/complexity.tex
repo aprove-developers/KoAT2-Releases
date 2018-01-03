@@ -123,10 +123,4 @@ For arbitrary costs $\cost(t) \in \BoundSet \setminus \BoundSet_a$ it is necessa
 
 Similar to time bounds, it is also possible to approximate the cost complexity of a program with the sum of cost bounds for all transitions in $\TSet$.
 
-\begin{theorem}[Approximating Cost Complexity]
-	Let $\UCost$ be a cost approximation for $\TSet$.
-	Then it holds that 
-	\[ \text{cc} \leq \sum_{t \in \TSet} \UCost(t) \]
-\end{theorem}
-
-\todo{To be proved}{}
+\input{theorems/approximating_cc}
