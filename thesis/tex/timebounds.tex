@@ -18,13 +18,28 @@ This is the same definition as used by the original KoAT \cite{koat}.
 
 \input{graphs/entrytransitions}
 
-As an example, consider the program in figure \ref{fig:entrytransitions}.
-The highlighted set of transitions $\TSet' = \braced{t_1, t_3, t_4}$ does have to entry locations $\mathcal{E}_{\TSet'} = \braced{\location_1, \location_2}$.
+As an example, consider the programs in figure \ref{fig:entrytransitions}.
+In each of the programs, a chosen set $\TSet' \subseteq \TSet$ is highlighted.
+Additionally, all entry locations and entry transitions are shown.
+In the first program, the set of transitions $\TSet' = \braced{t_1, t_3, t_4}$ does have two entry locations $\mathcal{E}_{\TSet'} = \braced{\location_1, \location_2}$.
 These entry locations define the entry transitions $\TSet_{\location_1} = \braced{t_0}$ and $\TSet_{\location_2} = \braced{t_2}$.
+The second program only has one entry location $\mathcal{E}_{\TSet'} = \braced{\location_1}$ and therefore only one entry transition $\TSet_{\location_1} = \braced{t_0}$.
+The third program also only has one entry location, but in this example it is $\mathcal{E}_{\TSet'} = \braced{\location_2}$.
+Its entry transition is $\TSet_{\location_2} = \braced{t_2}$.
+
+Now it is possible to define the method for the construction of time bounds.
 
 \input{theorems/timebound}
 
-\todo{Add justification}{}
+The idea of this method is, that with a rank $\Pol(\location)$ for an entry location $\location \in \mathcal{E}_{\TSet'}$ we have a time bound for all decreasing transitions $t \in \TSet'_>$ from the location $\location$.
+Then, we need to lift this time bound into a global context, such that it expresses a time bound depending on the variables from the start of the program.
+For this purpose, we first need to substitute all variables of the rank $\Pol(\location)$ with the size bounds $\USize(r), \LSize(r)$ from the start to the transition $r \in \TSet_{\location}$ immediately before the location $\location$.
+Since $\Pol(\location)$ is affine, it only consists of monotonous variables.
+Therefore, the substitution is defined.
+Because a time bound can only be positive, we apply to the result $\subst{\Pol(\location)}{\LSize(r)}{\USize(r)}$ a $\maxO{\dot}$ operator.
+Now, we have to overapproximate the number of evaluations which might enter through the entry location $\location$.
+The previous time bound $\UTime$ yields such a bound for all entry transitions.
+Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\subst{\Pol(\location)}{\LSize(\pret)}{\USize(\pret)}}$ is a time bound for $t \in \TSet'_>$ depending on the variables from the start.
 
 \input{graphs/motivational_example}
 
