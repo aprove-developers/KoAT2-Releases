@@ -1,21 +1,23 @@
-We want to prove the following claim for all \todo{Exclude t0}{$t \in \TSet$} and all initial states $\valuation_0: \VSet \rightarrow \mathbb{N}$.
-\[ \eval{\UTime'(t)}{\valuation_0} \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
+We want to prove the following claim for all transitions $t \in \TSet$ and all initial states $\valuation_0 \in \Valuation$.
+\[ \eval{\UTime'(t)}{\valuation_0} \geq \sup \braced{ k \in \mathbb{N} \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) } \]
 
-For $m \in \mathbb{N}^n$ and $\square \in \braced{\sqcup, \sqcap}$, let $m^\square_t: \VSet \rightarrow \mathbb{Z}_\bot$ be a fixed upper or lower size bound $\eval{\GSize(t, v)}{m}$ for each variable $v \in \VSet$ at the transition $t \in \TSet$.
-It suffices to show that for all $t \in \TSet'_>$ and $m: \VSet \rightarrow \mathbb{N}$ the following claim holds.
+This is trivial, if $t \notin \TSet'_>$.
+Therefore, lets consider a transition $t \in \TSet'_>$.
+For $\valuation_0 \in \Valuation$ and $\square \in \braced{\sqcup, \sqcap}$, let $\valuation^\square_t: \VSet \rightarrow \mathbb{Z}_\bot$ be a fixed upper or lower size bound $\eval{\GSize(t, v)}{\valuation_0}$ for each variable $v \in \VSet$ at the transition $t$.
+It suffices to show that for all $t \in \TSet'_>$ and $\valuation_0: \VSet \rightarrow \mathbb{N}$ the following claim holds.
 \begin{IEEEeqnarray*}{rCl}
-  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \eval{\UTime(\pret)}{m} \cdot \maxO{\eval{\Pol(\location)_+}{m^\sqcap_\pret} - \eval{\Pol(\location)_-}{m^\sqcup_\pret}} \\
-  \geq \sup \braced{ k \mid \exists k \in \mathbb{N}, \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) }
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \eval{\UTime(\pret)}{\valuation_0} \cdot \maxO{\subst{\Pol(\location)}{\valuation^\sqcup_\pret}{\valuation^\sqcap_\pret}} \\
+  \geq \sup \braced{ k \in \mathbb{N} \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) }
 \end{IEEEeqnarray*}
-To this end, let $\valuation_0$ be an initial state and consider a (finite or infinite) evaluation starting with $\valuation_0$ where $k \in \mathbb{N} \cup \braced{\omega}$ steps are performed with the transition $t$.
+To this end, let $\valuation_0$ be an initial state and consider a (finite or infinite) evaluation starting with $\valuation_0$ where $k \in \mathbb{N} \cup \braced{\infty}$ steps are performed with the transition $t$.
 The goal is now to show that
 \begin{IEEEeqnarray*}{rCl}
-  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \eval{\UTime(\pret)}{m} \cdot \maxO{\eval{\Pol(\location)_+}{m^\sqcap_\pret} - \eval{\Pol(\location)_-}{m^\sqcup_\pret}} \geq k
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \eval{\UTime(\pret)}{\valuation_0} \cdot \maxO{\subst{\Pol(\location)}{\valuation^\sqcup_\pret}{\valuation^\sqcap_\pret}} \geq k
 \end{IEEEeqnarray*}
 
-\todo{Is it?}{This is trivial for $k = 0$.}
-We now consider the case where $k > 0$.
+This is trivial for $k = 0$, since the operator $\maxO{.}$ ensures positivity and $\eval{\UTime(t)}{\valuation} \geq 0$ holds for any transition $t$ and any state $\valuation$.
 
+We now consider the case $k > 0$.
 Let $\rightarrow^+_\TSet$ denote the transitive closure of $\rightarrow_\TSet$.
 Then, we can use the following representation for the considered evaluation.
 \begin{IEEEeqnarray*}{lClC}
@@ -26,28 +28,23 @@ Then, we can use the following representation for the considered evaluation.
 In this evaluation, the outgoing transitions of all $(\actl_i, \actstate_i)$ are transitions from $\TSet'$.
 The outgoing transitions of all $(\prel_i, \prestate_i)$ are transitions from $\TSet \setminus \TSet'$.
 
-Now we have to investigate how often the transition $t$ is used in the evaluation.
+Now we have to investigate how often the transition $t$ is used in this evaluation.
 Since $t \in \TSet'$, it can only be used in sequences of the following form.
 \[ (\actl_i, \actstate_i) \rightarrow^+_{\TSet'} (\prel_i, \prestate_i) \]
-\todo{And we probably should}{We can show that the following term is an upper bound on the number of times the transition $t$ is used in this sequence.}
-\[ \maxO{\eval{\Pol(\location)_+}{\actstate_i} - \eval{\Pol(\location)_-}{\actstate_i}} \]
+\todo{Show with Complexities from PRFs proof from old koat}{We can show that $\maxO{\eval{\Pol(\location_i)}{\actstate_i}{}}$ is an upper bound on the number of times the transition $t$ is used in this sequence.}
 
-Let the transition in the evaluation reaching $(\actl_i, \actstate_i)$ be $\pret_i$.
-Thus, we have $\actl_i \in \mathcal{E}_{\TSet'}$ and $\pret_i \in \TSet_{\actl_i}$.
-As $(\location_o, \valuation_o) \rightarrow^*_\TSet \circ \rightarrow_{\pret_i} (\actl_i, \actstate_i)$, by definition of the size approximations we have $\eval{\USize(\pret_i, v)}{m} \geq \actstate_i(v) \geq \eval{\LSize(\pret_i, v)}{m}$.
-By the weak monotonicity of $\Pol(\actl_i)_+$ and $\Pol(\actl_i)_-$ we can conclude the following two statements.
-\begin{IEEEeqnarray*}{lCl}
-  \eval{\Pol(\actl_i)_+}{m^\sqcap_{\pret_i}} \geq \eval{\Pol(\actl_i)_+}{\actstate_i} \\
-  \eval{\Pol(\actl_i)_-}{m^\sqcup_{\pret_i}} \leq \eval{\Pol(\actl_i)_-}{\actstate_i}
-\end{IEEEeqnarray*}
-Thus, we can conclude an upper bound on the number of times the transition $t$ is used in the sequence.
-\[ \maxO{\eval{\Pol(\location)_+}{m^\sqcap_{\pret}} - \eval{\Pol(\location)_-}{m^\sqcup_\pret}} \]
+In this paragraph, lets fix this $i$ and consider the evaluation $(\actl_i, \actstate_i) \rightarrow^+_{\TSet'} (\prel_i, \prestate_i)$ as $(\actl, \actstate) \rightarrow^+_{\TSet'} (\prel, \prestate)$.
+Let the transition in the evaluation reaching $(\actl, \actstate)$ be $\pret$.
+Thus, we have $\actl \in \mathcal{E}_{\TSet'}$ and $\pret \in \TSet_{\actl}$.
+As $(\location_0, \valuation_0) \rightarrow^*_\TSet \circ \rightarrow_{\pret} (\actl, \actstate)$, by definition of the size approximations we have $\valuation^\sqcap_\pret(v) \geq \actstate(v) \geq \valuation^\sqcup_\pret(v)$.
+By definition of the substitution of bounds, we can conclude that $\subst{\Pol(\actl)}{\valuation^\sqcup_\pret}{\valuation^\sqcap_\pret} \geq \subst{\Pol(\actl)}{\actstate}{\actstate}$.
+Thus, if we ensure positivity, we can conclude an upper bound $\maxO{\subst{\Pol(\location)}{\valuation^\sqcup_\pret}{\valuation^\sqcap_{\pret}}}$ on the number of times the transition $t$ is used in the sequence.
 
-It remains to examine how often such a sequence can occur in the full evaluation.
-As observed earlier, the transition reaching $\actstate_i$ in the evaluation is always some $\pret_i \in \TSet_{\actl_i}$.
+It remains to examine how often a sequence $(\actl_i, \actstate_i) \rightarrow^+_{\TSet'} (\prel_i, \prestate_i)$ can occur in the full evaluation.
+As observed earlier, the transition reaching $(\actl_i, \actstate_i)$ in the evaluation is always some $\pret_i \in \TSet_{\actl_i}$.
 Each $\pret_i$ can occur at most $\eval{\UTime(\pret_i)}{m}$ times in evaluations.
-As discussed previously, in every $\TSet'$-sequence the transition $t$ can be applied at most $\eval{\Pol(\location)_+}{\actstate_i} - \eval{\Pol(\location)_-}{\actstate_i}$ times.
+We found out, that in every $\TSet'$-sequence the transition $t$ can occur at most $\maxO{\subst{\Pol(\location)}{\valuation^\sqcup_\pret}{\valuation^\sqcap_\pret}}$ times.
 Thus, we can infer that our initial statement holds.
 \begin{IEEEeqnarray*}{rCl}
-  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \eval{\UTime(\pret)}{m} \cdot \maxO{\eval{\Pol(\location)_+}{m^\sqcap_\pret} - \eval{\Pol(\location)_-}{m^\sqcup_\pret}} \geq k
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \eval{\UTime(\pret)}{\valuation_0} \cdot \maxO{\subst{\Pol(\location)}{\valuation^\sqcup_\pret}{\valuation^\sqcap_\pret}} \geq k
 \end{IEEEeqnarray*}
