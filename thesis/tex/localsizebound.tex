@@ -63,7 +63,7 @@ A local size bound $b = \ULSB(t,v)$ is a sound overapproximation of the effect o
 \exists P_1, P_2, N_1, N_2 \subseteq \VSet:
 \forall \valuation \in \Valuation:
 \eval{\guard}{\valuation} \Rightarrow \eval{\uupdate(v)}{\valuation} \leq \eval{b}{\valuation} \]
-\todo{Cite}{An SMT-Solver is only able to find models for existential formulas} $\exists v_0: \exists v_1: \dots \exists v_k: \phi(v_0, \dots, v_k)$.
+An SMT-Solver is only able to find models for existential formulas $\exists v_0: \exists v_1: \dots \exists v_k: \phi(v_0, \dots, v_k)$. \cite{smt} \\
 Therefore we use an approach, where we fix the parameters $s$, $e$ and $P_1, N_1, P_2, N_2$ and use the SMT-Solver to prove unsatisfiability of the negation of the formula.
 That is, for fixed $s \in \mathbb{N}$ with $s \geq 1$, $e \in \mathbb{Z}$ and $P_1, N_1, P_2, N_2 \subseteq \VSet$ we search for a model of the following formula.
 \[ \exists \valuation \in \Valuation: \eval{\guard}{\valuation} \wedge \eval{\uupdate(v)}{\valuation} > \eval{b}{\valuation} \]
@@ -77,6 +77,8 @@ We want to find a bound $b \in \BoundSet^\sqcap_l$ such that for all bounds $b' 
 \todo{Can there be multiple with only conjunctive?}{Note that there might be multiple such bounds in the local bound set $\BoundSet^\sqcap_l$.
 For a transition guard $\guard = x \leq y \vee x \leq z)$ we have two minimal bounds $y \in \BoundSet^\sqcap_l$ and $z \in \BoundSet^\sqcap_l$.}
 
+\subsection{Computing upper local size bounds}
+
 At this point, we present an algorithm, that finds the optimal bound $b$.
 The idea of this algorithm is to start with a trivial bound, that is always valid.
 Then, we take multiple steps for a component-wise improvement of this bound, always staying with a valid bound.
@@ -85,7 +87,7 @@ In a first step, we define the trivial valid bound.
 \begin{definition}[Trivial upper local size bound]
   Let $\alpha = ((\location,(\uupdate,\lupdate),\guard,\location'),v) \in \RV$ be a result variable, for which we want to find an upper local size bound.
   Let $\VSet$ be the set of all program variables.
-  Let $s, e \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\uupdate(v)$ or any guard atom in $\guard$.
+  Let $s = e \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\uupdate(v)$ or any guard atom in $\guard$.
   Then, the local size bound $b \in \BoundSet^\sqcap_l$ defined by the scaling factor $s$, the constant $e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid upper local size bound for the value of $v$ after the application of the transition $t$.
 \end{definition}
 
@@ -99,7 +101,7 @@ Note that for all variables $v \in \VSet$ we have $\maxO{v} + \maxO{-v} = \abs{v
 With a given trivial upper local size bound we can now search the local bound set $\BoundSet^\sqcap_l$ for better bounds.
 
 \begin{algorithm}
-\caption{Inferring upper local size bound}\label{lsb_algorithm}
+\caption{Inferring upper local size bound}\label{ulsb_algorithm}
 \begin{algorithmic}[1]
   \State Input: A result variable $t = ((\location,(\uupdate,\lupdate),\guard,\location'),v) \in \RV$
   \State Construct a trivial upper local size bound $b$ with the defining parameters $s$, $e$, $P_1$, $N_1$, $P_2$ and $N_2$
@@ -138,6 +140,45 @@ Consider the update $\update(x) = y + z$ and the guard $\guard = \braced{y = z}$
 Depending on the order it is both possible to receive the bounds $2 \cdot y$ and $2 \cdot z$.
 But since $2 \cdot y \leq 2 \cdot z$ and $2 \cdot z \leq 2 \cdot y$ does not hold, they are both optimal.
 
-\todo{Proof that the algorithm always finds a valid local size bound}{}
+\subsection{Computing lower local size bounds}
 
-\todo{Lower case}{}
+The algorithm for the search for a lower local size bound $\BoundSet^\sqcup_l$ is very similar to the search for an upper local size bound $\BoundSet^\sqcap_l$.
+First, we need to define a trivial lower local size bound.
+
+\begin{definition}[Trivial lower local size bound]
+  Let $\alpha = ((\location,(\uupdate,\lupdate),\guard,\location'),v) \in \RV$ be a result variable, for which we want to find a lower local size bound.
+  Let $\VSet$ be the set of all program variables.
+  Let $s \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\lupdate(v)$ or any guard atom in $\guard$.
+  Let $e = -s$ be its negation.
+  Then, the local size bound $b \in \BoundSet^\sqcup_l$ defined by the scaling factor $s$, the constant $e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid lower local size bound for the value of $v$ after the application of the transition $t$.
+\end{definition}
+
+With the trivial lower local size bound we are now able to define the algorithm to infer lower local size bounds.
+
+\begin{algorithm}
+\caption{Inferring lower local size bound}\label{llsb_algorithm}
+\begin{algorithmic}[1]
+  \State Input: A result variable $t = ((\location,(\uupdate,\lupdate),\guard,\location'),v) \in \RV$
+  \State Construct a trivial lower local size bound $b$ with the defining parameters $s$, $e$, $P_1$, $N_1$, $P_2$ and $N_2$
+  \State Binary search $1 \dots s$ to find an $s$ such that $\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is valid with this $s$, but not valid with $s-1$.
+  \State Binary search $-e \dots e$ to find an $e$ such that $\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is valid with this $e$, but not valid with $e+1$.
+  \ForAll {variables $v \in \VSet$}
+    \State Set $P_2 := P_2 \setminus \braced{v}$
+    \If {$\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is not valid}
+      \State Set $P_1 := P_1 \cup \braced{v}$
+      \If {$\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is not valid}
+        \State Revert to $P_2 := P_2 \cup \braced{v}$ and $P_1 := P_1 \setminus \braced{v}$
+      \EndIf
+    \EndIf
+    \State Set $N_2 := N_2 \setminus \braced{v}$
+    \If {$\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is not valid}
+      \State Set $N_1 := N_1 \cup \braced{v}$
+      \If {$\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is not valid}
+        \State Revert to $N_2 := N_2 \cup \braced{v}$ and $N_1 := N_1 \setminus \braced{v}$
+      \EndIf
+    \EndIf
+  \EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\todo{Proof that the algorithm always finds a valid local size bound}{}
