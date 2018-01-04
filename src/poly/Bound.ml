@@ -365,7 +365,10 @@ let minimum bounds =
   with Not_found -> infinity
 
 let exp value b =
-  simplify (Pow (value, b))
+  if OurInt.(Compare.(value < zero)) then
+    raise (Failure "Zero not allowed in bound pow")
+  else
+    simplify (Pow (value, b))
 
 let abs bound =
   simplify (Max (zero, bound) + Max (zero, Neg bound))

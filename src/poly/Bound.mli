@@ -9,11 +9,9 @@ include PolyTypes.Evaluable with type t := t with type value = OurInt.t
 include PolyTypes.Math with type t := t
 include PolyTypes.PartialOrder with type t := t
 
-type polynomial = PolynomialOver(OurInt).t
-
 (** Following methods are convenience methods for the creation of polynomials. *)
 
-val of_poly : polynomial -> t              
+val of_poly : Polynomial.t -> t              
 val of_constant : value -> t
 val of_int : int -> t
 val to_int : t -> int

@@ -5,7 +5,7 @@ let logger = Logging.(get Size)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
            
-(** Returns the maximum of all incoming sizebounds applicated to the local sizebound.
+(** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
 let incoming_bound kind program get_sizebound lsb t =

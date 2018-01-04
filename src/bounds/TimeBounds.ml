@@ -81,6 +81,7 @@ let improve_with_pol program appr pol =
         strictly_decreasing
         |> List.enum
         |> Enum.fold (fun appr ((l,t,l'), sensitivity) ->
+               (* TODO No sensitivity *)
                match sensitivity with
                | `Sensitive -> Approximation.add_timebound timebound (l,t,l') appr
                | `Unsensitive -> Approximation.add_timebound Bound.(timebound * of_poly (TransitionLabel.cost t)) (l,t,l') appr) appr
