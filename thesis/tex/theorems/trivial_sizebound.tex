@@ -1,13 +1,22 @@
 \begin{theorem}[SizeBounds for trivial SCCs]
   Let $(\UTime, \Size)$ be a complexity approximation.
   Let $\braced{(t,v)} \subseteq \RV$ be a trivial SCC of the RVG.
-  Let $\LSB$ be a local size bound in the form of a scaled sum.
   We define $\USize'(\outrv) = \USize(\outrv)$ and $\LSize'(\outrv) = \LSize(\outrv)$ for all $\outrv \neq (t,v)$.
+  Let $\LSB$ be a local size bound.
+
+  \[ \USize'(t,v) =
+  \begin{cases}
+    \ULSB(t, v) & \text{ if } t \in \TSet_0 \\
+    \USize(t, v) & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \ULSB(t,v) \notin \BoundSet^\sqcap_l \\
+    \maximum{ \subst{\ULSB(t,v)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)} & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \ULSB(t,v) \in \BoundSet^\sqcap_l \\
+  \end{cases}
+  \]
+
   If $t \in \TSet_0$ is an initial transition, we define
   \[ \LSize'(t, v) = \LLSB(t, v) \text{ and } \USize'(t, v) = \ULSB(t, v). \]
   If $t \in \TSet \setminus \TSet_0$ is not an initial transition, we define the following.
-  We define $\LSize'(t,v) = \LSize(t,v)$, if $(t,v)$ is not bounded by a lower scaled sum.
-  Similar, we define $\USize'(t,v) = \USize(t,v)$, if $(t,v)$ is not bounded by an upper scaled sum.
+  We define $\LSize'(t,v) = \LSize(t,v)$, if $\LLSB(t,v) \notin \BoundSet^\sqcup_l$ is not bounded by a lower scaled sum.
+  Similar, we define $\USize'(t,v) = \USize(t,v)$, if $\ULSB(t,v) \notin \BoundSet^\sqcap_l$ is not bounded by an upper scaled sum.
   For all $(t,v)$ which are bounded by an upper scaled sum and by a lower scaled sum, we define 
   \[ \USize'(t,v) = \maximum{ \subst{\ULSB(t,v)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)} \]
   \[ \LSize'(t,v) = \minimum{ \subst{\LLSB(t,v)}{\USize(\pret)}{\LSize(\pret)} \mid \pret \in \pre(t)} \]

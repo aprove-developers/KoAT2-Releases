@@ -27,9 +27,8 @@ We now formally define the programs used in this thesis.
 
 \begin{definition}[Program] 
   Let $\VSet$ be the set of all occurring program variables.
-  A state is a total function $\valuation: \VSet \rightarrow \mathbb{Z}_\bot$ which assigns each program variable $v \in \VSet$ a value $\valuation(v) \in \mathbb{Z}_\bot = \mathbb{Z} \cup \braced{\bot}$.
-  We denote with $\valuation(v) = \bot$ that the state does not define a value for the variable $v$.
-  We write $\Valuation = \braced{ \valuation \mid \valuation: \VSet \rightarrow \mathbb{Z}_\bot}$ to denote the set of all states.
+  A state is a function $\valuation: \VSet \rightarrow \mathbb{Z}$ which assigns each program variable $v \in \VSet$ a value $\valuation(v) \in \mathbb{Z}$.
+  We write $\Valuation = \braced{ \valuation \mid \valuation: \VSet \rightarrow \mathbb{Z}}$ to denote the set of all states.
   Let $\LSet$ be the set of all locations of a program.
   \todo{Not yet decided}{Let $\TSet = \LSet \times ((\VSet \rightarrow \BoundSet_p) \times (\VSet \rightarrow \BoundSet_p)) \times 2^\AtomSet \times \LSet$ be the set of all transitions of the program.}
   A transition $t = (\location, (\lupdate, \uupdate), \guard, \location')$ consists of the start location $\location$, the target location $\location'$, the lower and upper update functions $\update^\sqcup$ and $\update^\sqcap$ and the guard $\guard$. 

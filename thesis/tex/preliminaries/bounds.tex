@@ -5,8 +5,8 @@ In our setup, we need a definition of the kind of bounds, we want to compute.
 \begin{definition}[Bound set]
   The set $\BoundSet$ of possible bounds is the smallest set with
   \[ \infty \in \BoundSet \]
-  \[ \mathbb{N} \subset \BoundSet \] 
-  \[ \VSet \subset \BoundSet \] 
+  \[ \mathbb{N} \subseteq \BoundSet \] 
+  \[ \VSet \subseteq \BoundSet \] 
   \[ -b \in \BoundSet \text{ for all } b \in \BoundSet \] 
   \[ b_1 + b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
   \[ b_1 \cdot b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
@@ -66,13 +66,14 @@ We now present some examples of bounds, which are included in the defined sets $
 \end{align*}
 
 After this informal presentation of the meaning of the bounds, we will now formally introduce the formal semantics.
-We refer to an assignment of variables $v \in \VSet$ to values from $\mathbb{Z}_\bot$ as state.
-We define the set of values $\mathbb{Z}_\bot$ as $\mathbb{Z} \cup \braced{\bot}$ and denote with $\bot$ the undefined value.
-\todo{Is it? Multiplication with 0?}{The application of any operator is strict, therefore the result of any application to values, where any value is undefined, is also undefined.}
+We refer to an assignment of variables $v \in \VSet$ to values from $\ValueSet$ as state.
+We define the set of values $\ValueSet$ as the closure $\mathbb{Z} \cup \braced{\infty, -\infty}$ of $\mathbb{Z}$.
+The symbol $\infty$ represents the infinity with $\infty > k$ for every $k \in \mathbb{Z}$.
+The symbol $-\infty$ represents the minus infinity with $-\infty < k$ for every $k \in \mathbb{Z}$.
 
 \begin{definition}[Bound evaluation]
-  For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$ we define $\eval{b}{\valuation}$ to denote the evaluation of the bound $b$ to a value in $\mathbb{Z}_\bot$.
-  \[ \eval{\infty}{\valuation} = \bot \text{ for } \infty \in \BoundSet \]
+  For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}$ we define $\eval{b}{\valuation}$ to denote the evaluation of the bound $b$ to a value in $\ValueSet$.
+  \[ \eval{\infty}{\valuation} = \infty \text{ for } \infty \in \BoundSet \]
   \[ \eval{k}{\valuation} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
   \[ \eval{v}{\valuation} = \valuation(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
   \[ \eval{-b}{\valuation} = -\eval{b}{\valuation} \text{ for all } b \in \BoundSet \] 
@@ -80,7 +81,6 @@ We define the set of values $\mathbb{Z}_\bot$ as $\mathbb{Z} \cup \braced{\bot}$
   \[ \eval{b_1 \cdot b_2}{\valuation} = \eval{b_1}{\valuation} \cdot \eval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
   \[ \eval{\max(b_1, b_2)}{\valuation} = \max(\eval{b_1}{\valuation}, \eval{b_2}{\valuation}) \text{ for all } b_1, b_2 \in \BoundSet \]
   \[ \eval{k^b}{\valuation} = k^{\eval{b}{\valuation}} \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
-  For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \BoundSet$, we write $\eval{b}{\valuation}$ to denote the substitution of every variable $v$ of the bound $b$ with the appropriate value $\valuation(v) \in \BoundSet$.
 \end{definition}
 The mentioned examples can therefore be evaluated as expected.
 \begin{align*}
@@ -121,9 +121,9 @@ For all polynomials, we also define polynomial inequalities.
 Also, we extend the definition of the bound evaluation to polynomial inequalities.
 
 \begin{definition}[Evaluation of polynomial inequalities]
-  Let $\valuation$ be a state $\valuation \in \VSet \rightarrow \mathbb{Z}_\bot$.
-  For an atom $b_1 \bowtie b_2 \in \AtomSet$, we define $\eval{b_1 \bowtie b_2}{\valuation}$ to denote the evaluation of the atom $b_1 \bowtie b_2$ to a value in $\mathbb{B}_\bot$.
+  Let $\valuation$ be a state $\valuation \in \VSet \rightarrow \ValueSet$.
+  For an atom $b_1 \bowtie b_2 \in \AtomSet$, we define $\eval{b_1 \bowtie b_2}{\valuation}$ to denote the evaluation of the atom $b_1 \bowtie b_2$ to a value in $\mathbb{B}$.
   \[ \eval{b_1 \bowtie b_2}{\valuation} = \eval{b_1}{\valuation} \bowtie \eval{b_2}{\valuation} \]
-  For a constraint $\guard \in \ConstraintSet$, we define $\eval{\guard}{\valuation}$ to denote the evaluation of the constraint $\guard$ to a value in $\mathbb{B}_\bot$.
+  For a constraint $\guard \in \ConstraintSet$, we define $\eval{\guard}{\valuation}$ to denote the evaluation of the constraint $\guard$ to a value in $\mathbb{B}$.
   \[ \eval{\guard}{\valuation} = \bigwedge_{\atom \in \guard} \eval{\atom}{\valuation} \]
 \end{definition}
