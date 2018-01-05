@@ -30,6 +30,8 @@
 \newcommand{\outrv}{\beta}
 \newcommand{\prestate}{{\tilde{\valuation}}}
 \newcommand{\actstate}{\valuation}
+\newcommand{\ustate}{{\valuation^\sqcap}}
+\newcommand{\lstate}{{\valuation^\sqcup}}
 \newcommand{\prel}{{\tilde{\location}}}
 \newcommand{\actl}{\location}
 
@@ -55,8 +57,34 @@
 \newcommand{\maximum}[1]{\max \lbrace #1 \rbrace}
 \newcommand{\minimum}[1]{\min \lbrace #1 \rbrace}
 \newcommand{\braced}[1]{\lbrace #1 \rbrace}
-\newcommand{\eval}[2]{\llbracket #1 \rrbracket_{#2}}
-\newcommand{\subst}[3]{\llbracket #1 \rrbracket_{#2}^{#3}}
+
+\newcommand{\exacteval}[2]{\text{Val}_{#2}(#1)}
+\newcommand{\appreval}[3]{\text{Val}_{#2}^{#3}(#1)}
+\newcommand{\exactsubst}[2]{\llbracket #1 \rrbracket_{#2}}
+\newcommand{\apprsubst}[3]{\llbracket #1 \rrbracket_{#2}^{#3}}
+
+\newcommand{\timeboundterm}{
+  \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, (\location, \valuation): \valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) }
+}
+
+\newcommand{\sizeboundterm}{
+  \braced{ \valuation(v) \mid \exists \valuation_0, (\location, \valuation): \valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\actt) (\location, \valuation)}
+}
+
+\newcommand{\usizeboundterm}{\sup \sizeboundterm}
+\newcommand{\lsizeboundterm}{\inf \sizeboundterm}
+
+\newcommand{\localsizeboundterm}{
+  \braced{\valuation'(v) \mid \exists (\location, \valuation), (\location', \valuation'): \valuation^\sqcup \leq \valuation \leq \valuation^\sqcap \wedge (\location, \valuation) \rightarrow_t (\location', \valuation')}
+}
+
+\newcommand{\ulocalsizeboundterm}{\sup \localsizeboundterm}
+\newcommand{\llocalsizeboundterm}{\inf \localsizeboundterm}
+
+\newcommand{\costcomplexityterm}{
+  \braced{ \sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i} \mid \exists \valuation_0, k \geq 1: 
+    \valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap \wedge (\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location_k, \valuation_k) }
+}
 
 \newcommand{\Proof}[2]{
   \begin{proof}[#1]

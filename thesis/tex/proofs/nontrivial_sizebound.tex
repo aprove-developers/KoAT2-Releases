@@ -1,12 +1,12 @@
 We only regard the case where every $\rv \in \SCC$ is bounded by an upper scaled sum and a lower scaled sum.
 Then, for all result variables $\actrv = (\actt, v) \in \RV$, we have to show that two statements hold for all initial states $\valuation_0 \in \Valuation$ and variables $v \in \VSet$.
-\[ \eval{\USize'(\actt, v)}{m} \geq \sup \braced{ \valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\actt) (\location, \valuation)} \]
-\[ \eval{\LSize'(\actt, v)}{m} \leq \inf \braced{ \valuation(v) \mid \exists \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\actt) (\location, \valuation)} \]
-To this end, we now \textbf{fix $\valuation_0$ to an arbitrary initial state} and consider a \textbf{fixed evaluation}.
+\[ \appreval{\USize'(\actt, v)}{\lstate}{\ustate} \geq \usizeboundterm \]
+\[ \appreval{\LSize'(\actt, v)}{\lstate}{\ustate} \leq \lsizeboundterm \]
+To this end, we now \textbf{fix $\lstate$, $\ustate$ and $\valuation_0$} to arbitrary initial states with $\lstate \leq \valuation_0 \leq \ustate$ and consider a \textbf{fixed evaluation}.
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\actt) (\actl, \actstate) \]
 Our goal is to show that the defined size bounds are correct lower and upper bounds.
 \begin{equation} \label{eq:sizebound_target}
-  \forall v \in \VSet: \eval{\USize'(\actt, v)}{m} \geq \actstate(v) \geq \eval{\LSize'(\actt, v)}{m}.
+  \forall v \in \VSet: \appreval{\USize'(\actt, v)}{\lstate}{\ustate} \geq \actstate(v) \geq \appreval{\LSize'(\actt, v)}{\lstate}{\ustate}
 \end{equation}
 Instead of proving (\ref{eq:sizebound_target}) directly, we proof a simplified hypothesis, which implies the target (\ref{eq:sizebound_target}).
 For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition t was used in the evaluation.
@@ -14,18 +14,18 @@ Then, we define an upper bound $d^\sqcap \in \BoundSet$ and a lower bound $d^\sq
 \[ d^\square = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} \cdot \left( \start + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \effect^\square_t \right) \right). \]
 This enables us to define the hypothesis.
 \begin{equation} \label{eq:sizebound_hypothesis}
-  \forall v \in \VSet: \eval{d^\sqcap}{m} \geq \maxO{\actstate(v)} \wedge \eval{d^\sqcup}{m} \geq \maxO{-\actstate(v)}
+  \forall v \in \VSet: \appreval{d^\sqcap}{\lstate}{\ustate} \geq \maxO{\actstate(v)} \wedge \appreval{d^\sqcup}{\ustate}{\lstate} \geq \maxO{-\actstate(v)}
 \end{equation}
 We now show that the goal (\ref{eq:sizebound_target}) indeed follows from the claim (\ref{eq:sizebound_hypothesis}).
-Note that $\eval{\UTime(t)}{m} \geq k_t$ holds by definition of $k_t$.
+Note that $\appreval{\UTime(t)}{\lstate}{\ustate} \geq k_t$ holds by definition of $k_t$.
 Also $\maxO{\actstate(v)}$ is always greater or equal than $\actstate(v)$ as well as $\maxO{-\actstate(v)}$ is always greater or equal than $-\actstate(v)$.
 Additionally we have $\scale^\sqcap_t \geq 1$ and $\scale^\sqcup_t \geq 1$ by definition of the local size bounds.
-Furthermore $\eval{\effect^\sqcap_\actt}{m} \geq 0$, $\eval{\effect^\sqcup_\actt}{m} \geq 0$ and $\start \geq 0$ hold by definition of the theorem.
+Furthermore $\appreval{\effect^\sqcap_\actt}{\lstate}{\ustate} \geq 0$, $\appreval{\effect^\sqcup_\actt}{\ustate}{\lstate} \geq 0$ and $\start \geq 0$ hold by definition of the theorem.
 Because of the resulting monotonicity we can conclude that it is sufficient to proof the hypothesis (\ref{eq:sizebound_hypothesis}). 
-\[ \eval{{\mathcal{S}^\sqcap}'(\actt,v)}{m} =
-   \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\eval{\UTime(t)}{m}} \cdot \left( \eval{\start}{m} + \sum_{t \in \TSet_\SCC} \left( \eval{\UTime(t)}{m} \cdot \eval{\effect^\sqcap_t}{m} \right) \right) \geq \eval{d^\sqcap}{m} \]
-\[ \eval{{\mathcal{S}^\sqcup}'(\actt,v)}{m} =
-   (-1) \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{\eval{\UTime(t)}{m}} \cdot \left( \eval{\start}{m} + \sum_{t \in \TSet_\SCC} \left( \eval{\UTime(t)}{m} \cdot \eval{\effect^\sqcup_t}{m} \right) \right) \leq \eval{d^\sqcup}{m} \]
+\[ \appreval{{\mathcal{S}^\sqcap}'(\actt,v)}{\lstate}{\ustate} =
+   \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\appreval{\UTime(t)}{\lstate}{\ustate}} \cdot \left( \appreval{\start}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( \appreval{\UTime(t)}{\lstate}{\ustate} \cdot \appreval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \geq \appreval{d^\sqcap}{\lstate}{\ustate} \]
+\[ \appreval{{\mathcal{S}^\sqcup}'(\actt,v)}{\lstate}{\ustate} =
+   (-1) \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{\appreval{\UTime(t)}{\ustate}{\lstate}} \cdot \left( \appreval{\start}{\ustate}{\lstate} + \sum_{t \in \TSet_\SCC} \left( \appreval{\UTime(t)}{\ustate}{\lstate} \cdot \appreval{\effect^\sqcup_t}{\ustate}{\lstate} \right) \right) \leq \appreval{d^\sqcup}{\ustate}{\lstate} \]
 
 We now \textbf{fix $v$ to an arbitrary variable} and define with $\actrv = (\actt, v)$ the result variable, for which we want to find an upper size bound $\USize'(\actrv)$ and a lower size bound $\LSize'(\actrv)$.
 
@@ -44,21 +44,22 @@ We have to estimate the sizes of the input variables, that is, we have to find a
 
 We will first consider the base case of the induction.
 
-For $(\pret, v) \notin \SCC$, we have existing size bounds $\eval{\USize(\pret, v)}{m} \geq \prestate(v) \geq \eval{\LSize(\pret, v)}{m}$.
-As $(\pret, v) \in \pre(\actt, v) \setminus \SCC$, we have $\start \geq \eval{\USize(\pret, v)}{m}$ and $\start \geq 0$.
-Therefore it holds that $\eval{d^\sqcap}{m} \geq \start \geq \eval{\USize(\pret, v)}{m} \geq \prestate(v)$.
-We also have $\start \geq -\eval{\LSize(\pret, v)}{m}$ and $\start \geq 0$.
-Therefore it also holds that $\eval{d^\sqcup}{m} \geq \start \geq -\eval{\LSize(\pret, v)}{m} \geq -\prestate(v)$.
-This proofs the hypothesis (\ref{eq:sizebound_hypothesis}) for all incoming $(\pret, v) \notin \SCC$.
+Consider $(\pret, v) \notin \SCC$.
+We have existing size bounds $\appreval{\USize(\pret, v)}{\lstate}{\ustate} \geq \prestate(v) \geq \appreval{\LSize(\pret, v)}{\lstate}{\ustate}$.
+For the upper case, since $(\pret, v) \in \pre(\actt, v) \setminus \SCC$, we have $\appreval{\start}{\lstate}{\ustate} \geq \appreval{\USize(\pret, v)}{\lstate}{\ustate}$ and $\appreval{\start}{\lstate}{\ustate} \geq 0$.
+Therefore it holds that $\appreval{d^\sqcap}{\lstate}{\ustate} \geq \appreval{\start}{\lstate}{\ustate} \geq \appreval{\USize(\pret, v)}{\lstate}{\ustate} \geq \prestate(v)$.
+For the lower case, we have $\appreval{\start}{\ustate}{\lstate} \geq -\appreval{\LSize(\pret, v)}{\ustate}{\lstate}$ and $\appreval{\start}{\ustate}{\lstate} \geq 0$.
+Therefore it holds that $\appreval{d^\sqcup}{\ustate}{\lstate} \geq \appreval{\start}{\ustate}{\lstate} \geq -\appreval{\LSize(\pret, v)}{\ustate}{\lstate} \geq -\prestate(v)$.
+This proves the hypothesis (\ref{eq:sizebound_hypothesis}) for all incoming $(\pret, v) \notin \SCC$.
 
-If $(\pret, v) \in \SCC$, then the induction hypothesis implies that $\eval{d^\sqcap}{m} \geq \maxO{\prestate(v)}$ and $\eval{d^\sqcup}{m} \geq \maxO{-\prestate(v)}$ also hold for the evaluation from $(\location_0, \valuation_0)$ to $(\prel, \prestate)$.
+If $(\pret, v) \in \SCC$, then the induction hypothesis implies that $\appreval{d^\sqcap}{\lstate}{\ustate} \geq \maxO{\prestate(v)}$ and $\appreval{d^\sqcup}{\ustate}{\lstate} \geq \maxO{-\prestate(v)}$ also hold for the evaluation from $(\location_0, \valuation_0)$ to $(\prel, \prestate)$.
 
 Now we continue with the inductive step.
 \begin{equation} \label{eq:induction_consequence}
-  \eval{\dpre{\square}}{m} = (\scale^\square_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\square_t)^{k_t} \cdot \left( \start + \left( k_\actt - 1 \right) \cdot \eval{\effect^\square_\actt}{m} + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \eval{\effect^\square_t}{m} \right) \right)
+  \dpre{\square} = (\scale^\square_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\square_t)^{k_t} \cdot \left( \start + \left( k_\actt - 1 \right) \cdot \effect^\square_\actt + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \effect^\square_t \right) \right)
 \end{equation}
-The reason for using $k_\actt - 1$ in $\eval{\dpre{\square}}{m}$ is that the last application of the transition $\actt$ in the evaluation is missing in the evaluation from $(\location_0, \valuation_0)$ to $(\prel, \prestate)$.
-Then, the induction hypothesis implies that $\eval{\dpre{\sqcap}}{m} \geq \maxO{\prestate(v)}$ and $\eval{\dpre{\sqcap}}{m} \geq \maxO{-\prestate(v)}$.
+The reason for using $k_\actt - 1$ in $\dpre{\square}$ is that the last application of the transition $\actt$ in the evaluation is missing in the evaluation from $(\location_0, \valuation_0)$ to $(\prel, \prestate)$.
+Then, the induction hypothesis implies that $\appreval{\dpre{\sqcap}}{\lstate}{\ustate} \geq \maxO{\prestate(v)}$ and $\appreval{\dpre{\sqcup}}{\ustate}{\lstate} \geq \maxO{-\prestate(v)}$.
 
 We now combine these bounds to prove that the induction hypothesis indeed holds.
 
@@ -76,18 +77,20 @@ Also the input values can be rewritten.
     + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} (k_t \cdot \effect^\square_t)
   \end{split}
 \end{equation}
-Note that for all $v \in \VSet \setminus \VSet_\actrv$ we have $\eval{\effect^\sqcap_\actrv(v)}{m} \geq \maxO{\eval{\USize(\pret, v)}{m}}$ and $\eval{\effect^\sqcup_\actrv(v)}{m} \geq \maxO{-\eval{\LSize(\pret, v)}{m}}$.
-We can now propagate this to $\eval{\effect^\sqcap_\actrv}{m}$.
+Note that by definition of the \textbf{incoming constants}, for all $v \in \VSet \setminus \VSet_\actrv$ we have $\appreval{\incoming^\sqcap_\actrv(v)}{\lstate}{\ustate} \geq \appreval{\USize(\pret, v)}{\lstate}{\ustate}$ and $\appreval{\incoming^\sqcup_\actrv(v)}{\lstate}{\ustate} \geq \appreval{-\LSize(\pret, v)}{\lstate}{\ustate}$.
+By definition of size bounds, we also have $\appreval{\LSize(\pret, v)}{\lstate}{\ustate} \leq \prestate(v)$ and therefore $-\appreval{\LSize(\pret, v)}{\lstate}{\ustate} \geq -\prestate(v)$.
+\todo{Find error}{But $\appreval{-\LSize(\pret, v)}{\lstate}{\ustate} \neq -\appreval{\LSize(\pret, v)}{\lstate}{\ustate}$}
+We can now propagate this to $\appreval{\effect^\sqcap_\actrv}{\lstate}{\ustate}$.
 
 \begin{equation} \label{eq:input_rv_reduction_upper}
   \begin{split}
-  & \eval{\effect^\sqcap_\actrv}{m} \\
+  & \appreval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \\
   = & \maxO{e^{\sqcap}_\actrv}
-    + \sum_{v \in P_\actrv^\sqcap \setminus \VSet^+_\actrv} \eval{\effect^\sqcap_\actrv(v)}{m}
-    + \sum_{v \in N_\actrv^\sqcap \setminus \VSet^-_\actrv} \eval{\effect^\sqcup_\actrv(v)}{m} \\
+    + \sum_{v \in P_\actrv^\sqcap \setminus \VSet^+_\actrv} \maxO{\appreval{\incoming^\sqcap_\actrv(v)}{\lstate}{\ustate}}
+    + \sum_{v \in N_\actrv^\sqcap \setminus \VSet^-_\actrv} \maxO{\appreval{\incoming^\sqcup_\actrv(v)}{\lstate}{\ustate}} \\
   = & \maxO{e^{\sqcap}_\actrv}
-    + \sum_{v \in P_\actrv^\sqcap \setminus \VSet^+_\actrv} \maxO{\eval{\USize(\pret, v)}{m}}
-    + \sum_{v \in N_\actrv^\sqcap \setminus \VSet^-_\actrv} \maxO{-\eval{\LSize(\pret, v)}{m}} \\
+    + \sum_{v \in P_\actrv^\sqcap \setminus \VSet^+_\actrv} \maxO{\appreval{\USize(\pret, v)}{\lstate}{\ustate}}
+    + \sum_{v \in N_\actrv^\sqcap \setminus \VSet^-_\actrv} \maxO{-\appreval{\LSize(\pret, v)}{\ustate}{\lstate}} \\
   \geq & \maxO{e^{\sqcap}_\actrv}
     + \sum_{v \in P_\actrv^\sqcap \setminus \VSet^+_\actrv} \maxO{\prestate(v)}
     + \sum_{v \in N_\actrv^\sqcap \setminus \VSet^-_\actrv} \maxO{-\prestate(v)} \\
@@ -96,23 +99,25 @@ We can now propagate this to $\eval{\effect^\sqcap_\actrv}{m}$.
 
 \begin{equation} \label{eq:d_upper_reduction}
   \begin{split} 
-  & \sum_{v \in \VSet_\actrv} \dpre{\sqcap} \\
-  = & \sum_{v \in \VSet^+_\actrv} \dpre{\sqcap} + \sum_{v \in \VSet^-_\actrv} \dpre{\sqcap} \\
+  & \sum_{v \in \VSet_\actrv} \appreval{\dpre{\sqcap}}{\lstate}{\ustate} \\
+  = & \sum_{v \in \VSet^+_\actrv} \appreval{\dpre{\sqcap}}{\lstate}{\ustate} + \sum_{v \in \VSet^-_\actrv} \appreval{\dpre{\sqcap}}{\lstate}{\ustate} \\
   \geq & \sum_{v \in \VSet^+_\actrv} \maxO{\prestate(v)} + \sum_{v \in \VSet^-_\actrv} \maxO{-\prestate(v)} (\ref{eq:sizebound_hypothesis}) \\
   \end{split}      
 \end{equation}
 
-It is also possible to propagate the same approach to $\eval{\effect^\sqcup_\actrv}{m}$.
+It is also possible to propagate the same approach to $\appreval{\effect^\sqcup_\actrv}{\lstate}{\ustate}$.
+
+\todo{Lower case}{}
 
 \begin{equation} \label{eq:input_rv_reduction_lower}
   \begin{split}
-  & \eval{\effect^\sqcup_\actrv}{m} \\
+  & \appreval{\effect^\sqcup_\actrv}{\lstate}{\ustate} \\
   = & \maxO{-e^{\sqcup}_\actrv}
-    + \sum_{v \in P_\actrv^\sqcup \setminus \VSet^+_\actrv} \eval{\effect^\sqcup_\actrv(v)}{m}
-    + \sum_{v \in N_\actrv^\sqcup \setminus \VSet^-_\actrv} \eval{\effect^\sqcap_\actrv(v)}{m} \\
+    + \sum_{v \in P_\actrv^\sqcup \setminus \VSet^+_\actrv} \maxO{\appreval{\effect^\sqcup_\actrv(v)}{\lstate}{\ustate}}
+    + \sum_{v \in N_\actrv^\sqcup \setminus \VSet^-_\actrv} \maxO{\appreval{\effect^\sqcap_\actrv(v)}{\lstate}{\ustate}} \\
   = & \maxO{-e^{\sqcup}_\actrv}
-    + \sum_{v \in P_\actrv^\sqcup \setminus \VSet^+_\actrv} \maxO{-\eval{\LSize(\pret, v)}{m}}
-    + \sum_{v \in N_\actrv^\sqcup \setminus \VSet^-_\actrv} \maxO{\eval{\USize(\pret, v)}{m}} \\
+    + \sum_{v \in P_\actrv^\sqcup \setminus \VSet^+_\actrv} \maxO{-\appreval{\LSize(\pret, v)}{\lstate}{\ustate}}
+    + \sum_{v \in N_\actrv^\sqcup \setminus \VSet^-_\actrv} \maxO{\appreval{\USize(\pret, v)}{\lstate}{\ustate}} \\
   \geq & \maxO{-e^{\sqcup}_\actrv}
     + \sum_{v \in P_\actrv^\sqcup \setminus \VSet^+_\actrv} \maxO{-\prestate(v)}
     + \sum_{v \in N_\actrv^\sqcup \setminus \VSet^-_\actrv} \maxO{\prestate(v)} \\
@@ -130,26 +135,26 @@ It is also possible to propagate the same approach to $\eval{\effect^\sqcup_\act
 Thus, we have
 {\allowdisplaybreaks
 \begin{IEEEeqnarray*}{rClr}
-  & & \eval{d^\square}{m} \\
-  & = & \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} \cdot \left( \start + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \eval{\effect^\square_t}{m} \right) \right) \\
-  & = & \left( \scale^\square_\actt \cdot (\scale^\square_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\square_t)^{k_t} \right) \cdot \\
-    && \left( \start + \eval{\effect^\square_\actt}{m} + \left( k_\actt - 1 \right) \cdot \eval{\effect^\square_\actt}{m} + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \eval{\effect^\square_t}{m} \right) \right)
+  & & \appreval{d^\sqcap}{\lstate}{\ustate} \\
+  & = & \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{k_t} \cdot \left( \appreval{\start}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \appreval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \\
+  & = & \left( \scale^\sqcap_\actt \cdot (\scale^\sqcap_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcap_t)^{k_t} \right) \cdot \\
+    && \left( \appreval{\start}{\lstate}{\ustate} + \appreval{\effect^\sqcap_\actt}{\lstate}{\ustate} + \left( k_\actt - 1 \right) \cdot \appreval{\effect^\sqcap_\actt}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \appreval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right)
     & (\ref{eq:scaling_factor_reduction}), (\ref{eq:input_reduction}) \\
-  & = & \scale^\square_\actt \cdot \left( \dpre{\square} + \left( (\scale^\square_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\square_t)^{k_t} \right) \cdot \eval{\effect^\square_\actt}{m} \right) & (\ref{eq:induction_consequence}) \\
-  & \geq & \scale^\square_\actt \cdot \left( \dpre{\square} + \eval{\effect^\square_\actt}{m} \right) & \text{since } \eval{\effect^\square_\actt}{m} \geq 0 \\
-  & \geq & \scale^\square_\actt \cdot \left( \dpre{\square} + \max \braced{\eval{\effect^\square_\rv}{m} \mid \rv \in \SCC_\actt } \right) & \text{by definition} \\
-  & \geq & \scale^\square_\actt \cdot \left( \dpre{\square} + \eval{\effect^\square_\actrv}{m} \right) & \text{since } \actrv \in \SCC_\actt \\
-  & = & \left( \maximum{s^\square_{\rv} \mid \rv \in \SCC_\actt} \cdot
+  & = & \scale^\sqcap_\actt \cdot \left( \appreval{\dpre{\sqcap}}{\lstate}{\ustate} + \left( (\scale^\sqcap_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcap_t)^{k_t} \right) \cdot \appreval{\effect^\sqcap_\actt}{\lstate}{\ustate} \right) & (\ref{eq:induction_consequence}) \\
+  & \geq & \scale^\sqcap_\actt \cdot \left( \appreval{\dpre{\sqcap}}{\lstate}{\ustate} + \appreval{\effect^\sqcap_\actt}{\lstate}{\ustate} \right) & \text{since } \appreval{\effect^\sqcap_\actt}{\lstate}{\ustate} \geq 0 \\
+  & \geq & \scale^\sqcap_\actt \cdot \left( \appreval{\dpre{\sqcap}}{\lstate}{\ustate} + \max \braced{\appreval{\effect^\sqcap_\rv}{\lstate}{\ustate} \mid \rv \in \SCC_\actt } \right) & \text{by definition} \\
+  & \geq & \scale^\sqcap_\actt \cdot \left( \appreval{\dpre{\sqcap}}{\lstate}{\ustate} + \appreval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right) & \text{since } \actrv \in \SCC_\actt \\
+  & = & \left( \maximum{s^\sqcap_{\rv} \mid \rv \in \SCC_\actt} \cdot
     \maximum{\abs{\VSet_\rv} \mid \rv \in \SCC_\actt} \right) \cdot
-    \left( \dpre{\square} + \eval{\effect^\square_\actrv}{m} \right) & \text{substitute } \scale^\square_\actt \\
-  & \geq & s^\square_\actrv \cdot \abs{V_\actrv} \cdot \left( \dpre{\square} + \eval{\effect^\square_\actrv}{m} \right)
+    \left( \appreval{\dpre{\sqcap}}{\lstate}{\ustate} + \appreval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right) & \text{substitute } \scale^\sqcap_\actt \\
+  & \geq & s^\sqcap_\actrv \cdot \abs{V_\actrv} \cdot \left( \appreval{\dpre{\sqcap}}{\lstate}{\ustate} + \appreval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right)
     & \text{since } \actrv \in \SCC_\actt \\
-  & \geq & s^\square_\actrv \cdot \left( \abs{V_\actrv} \cdot \dpre{\square} + \eval{\effect^\square_\actrv}{m} \right) \\
-  & \geq & s^\square_\actrv \cdot \left( \sum_{v \in \VSet_\actrv} \dpre{\square} + \eval{\effect^\square_\actrv}{m} \right) \\
-  & \geq & s^\square_\actrv \cdot \left( \maxO{\pm e^\square_\actrv} + \sum_{v \in P_\actrv^\sqcap} \maxO{\prestate(v)} + \sum_{v \in N_\actrv^\sqcap} \maxO{-\prestate(v)} \right)
+  & \geq & s^\sqcap_\actrv \cdot \left( \abs{V_\actrv} \cdot \appreval{\dpre{\sqcap}}{\lstate}{\ustate} + \appreval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right) \\
+  & \geq & s^\sqcap_\actrv \cdot \left( \sum_{v \in \VSet_\actrv} \appreval{\dpre{\sqcap}}{\lstate}{\ustate} + \appreval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right) \\
+  & \geq & s^\sqcap_\actrv \cdot \left( \maxO{e^\sqcap_\actrv} + \sum_{v \in P_\actrv^\sqcap} \maxO{\prestate(v)} + \sum_{v \in N_\actrv^\sqcap} \maxO{-\prestate(v)} \right)
     & (\ref{eq:d_upper_reduction}, \ref{eq:input_rv_reduction_upper}) \\
-  & \geq & s^\square_\actrv \cdot ( \pm e^\square_\actrv + \sum_{v \in P_{\actrv,1}^\sqcap} \prestate(v) - \sum_{v \in N_{\actrv,1}^\sqcap} \prestate(v) \\
+  & \geq & s^\sqcap_\actrv \cdot (e^\sqcap_\actrv + \sum_{v \in P_{\actrv,1}^\sqcap} \prestate(v) - \sum_{v \in N_{\actrv,1}^\sqcap} \prestate(v) \\
     && + \sum_{v \in P_{\actrv,2}^\sqcap} \maxO{\prestate(v)} + \sum_{v \in N_{\actrv,2}^\sqcap} \maxO{-\prestate(v)} ) \\
-  & = & \eval{\mathcal{S}^\square_l(\actrv)}{\prestate} \\
+  & = & \exacteval{\mathcal{S}^\sqcap_l(\actrv)}{\prestate} \\
   & \geq & \actstate(v)
 \end{IEEEeqnarray*}}

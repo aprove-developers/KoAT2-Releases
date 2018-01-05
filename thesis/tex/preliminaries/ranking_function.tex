@@ -8,11 +8,11 @@ As mentioned earlier, we restrict the method to affine ranking functions.
 	We define $\Pol: \LSet \rightarrow \BoundSet_a$ as ranking function for a transition set $\TSet$ if and only if there is a nonempty set of decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
         For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
         \todo{How do we achieve that with the lower and upper update?}{}
-	\[ \guard \Rightarrow \eval{\Pol(\location)}{\valuation} \geq \eval{\Pol(\location')}{\valuation'}. \]
+	\[ \guard \Rightarrow \exacteval{\Pol(\location)}{\valuation} \geq \exacteval{\Pol(\location')}{\valuation'}. \]
         For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
-	\[ \guard \Rightarrow \eval{\Pol(\location)}{\valuation} - \eval{\cost((\location, \update, \guard, \location'))}{\valuation} \geq \eval{\Pol(\location')}{\valuation'} \]
+	\[ \guard \Rightarrow \exacteval{\Pol(\location)}{\valuation} - \exacteval{\cost((\location, \update, \guard, \location'))}{\valuation} \geq \exacteval{\Pol(\location')}{\valuation'} \]
         and
-	\[ \guard \Rightarrow \eval{\Pol(\location)}{\valuation} > 1. \]
+	\[ \guard \Rightarrow \exacteval{\Pol(\location)}{\valuation} > 1. \]
 \end{definition}
 
 \todo{PRF Examples}{}

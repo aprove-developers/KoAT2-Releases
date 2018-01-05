@@ -25,15 +25,17 @@ Therefore we define two subsets $\BoundSet^\sqcap_l, \BoundSet^\sqcup_l \subsete
 
 We now use these local bound sets for the definition of the scaled sum.
 
+\todo{With approximated valuation?}{}
 \begin{definition}[Scaled sum]
-  We say that $\alpha \in \RV$ is bounded by an \textbf{upper} scaled sum if and only if there is a bound $b \in \BoundSet^\sqcap_l$ such that it holds for all states $\valuation$ that
-  \[ \eval{\ULSB(\alpha)}{\valuation} = \eval{b}{\valuation} \]
+  We say that $\alpha \in \RV$ is bounded by an \textbf{upper} scaled sum if and only if there is a bound $b \in \BoundSet^\sqcap_l$ such that it holds for all states $\lstate \leq \ustate$ that
+  \[ \appreval{\ULSB(\alpha)}{\lstate}{\ustate} = \appreval{b}{\lstate}{\ustate} \]
   We then denote with $s^\sqcap_\alpha$ the scaling factor $s$, with $e^\sqcap_\alpha$ the constant $e$ and with the sets $P_{\alpha,1}^\sqcap, P_{\alpha,2}^\sqcap, N_{\alpha,1}^\sqcap, N_{\alpha,2}^\sqcap$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
-  We say that $\alpha \in \RV$ is bounded by a \textbf{lower} scaled sum if and only if there is a bound $b \in \BoundSet^\sqcup_l$ such that it holds for all states $\valuation$ that
-  \[ \eval{\LLSB(\alpha)}{\valuation} = \eval{b}{\valuation} \]
+  We say that $\alpha \in \RV$ is bounded by a \textbf{lower} scaled sum if and only if there is a bound $b \in \BoundSet^\sqcup_l$ such that it holds for all states $\lstate \leq \ustate$ that
+  \[ \appreval{\LLSB(\alpha)}{\lstate}{\ustate} = \appreval{b}{\lstate}{\ustate} \]
   We then denote with $s^\sqcup_\alpha$ the scaling factor $s$, with $e^\sqcup_\alpha$ the constant $e$ and with the sets $P_{\alpha,1}^\sqcup, P_{\alpha,2}^\sqcup, N_{\alpha,1}^\sqcup, N_{\alpha,2}^\sqcup$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
 \end{definition}
 
+\todo{Non-exact explanation}{}
 \todo{Lower and upper update examples}{}
 
 We show the possible bounds with this definition by some examples.
@@ -45,10 +47,10 @@ If $\update(x) = 2 \cdot x + 2 \cdot y + 4$, we have a possible bound $b = 2 \cd
 
 For the previous examples, it was sufficient to have $P_2 = \emptyset$ and $N_2 = \emptyset$.
 If $\update(x) = 2 \cdot x + 3 \cdot y$, one could suggest the bound $b = 3 \cdot (x + y)$.
-But for a state $\valuation$ with $\eval{x}{\valuation} < 0$ and $\eval{y}{\valuation} = k$ this bound is not sound, since with $\eval{b}{\valuation}$ we would underapproximate the actual value $\eval{2 \cdot x + 3 \cdot y}{\valuation}$.
+But for a state $\valuation$ with $\exacteval{x}{\valuation} < 0$ and $\exacteval{y}{\valuation} = k$ this bound is not sound, since with $\exacteval{b}{\valuation}$ we would underapproximate the actual value $\exacteval{2 \cdot x + 3 \cdot y}{\valuation}$.
 Therefore the elements of the local bound set provide the sets $P_2$ and $N_2$.
 For $\update(x) = 2 \cdot x + 3 \cdot y$ we can then infer the bound $b = 3 \cdot (\maxO{x} + y)$.
-With the defined state $\valuation$ we then have $\eval{b}{\valuation} = k$, which is a sound overapproximation of the actual value. 
+With the defined state $\valuation$ we then have $\exacteval{b}{\valuation} = k$, which is a sound overapproximation of the actual value. 
 
 For the previous case we used the set $P_2$.
 We provide the set $N_2$ for the negative counterpart.
@@ -62,16 +64,17 @@ A local size bound $b = \ULSB(t,v)$ is a sound overapproximation of the effect o
 \exists e \in \mathbb{Z}:
 \exists P_1, P_2, N_1, N_2 \subseteq \VSet:
 \forall \valuation \in \Valuation:
-\eval{\guard}{\valuation} \Rightarrow \eval{\uupdate(v)}{\valuation} \leq \eval{b}{\valuation} \]
+\lstate \leq \valuation \leq \ustate \Rightarrow
+\exacteval{\guard}{\valuation} \Rightarrow \exacteval{\uupdate(v)}{\valuation} \leq \exacteval{b}{\valuation} \]
 An SMT-Solver is only able to find models for existential formulas $\exists v_0: \exists v_1: \dots \exists v_k: \phi(v_0, \dots, v_k)$. \cite{smt} \\
 Therefore we use an approach, where we fix the parameters $s$, $e$ and $P_1, N_1, P_2, N_2$ and use the SMT-Solver to prove unsatisfiability of the negation of the formula.
 That is, for fixed $s \in \mathbb{N}$ with $s \geq 1$, $e \in \mathbb{Z}$ and $P_1, N_1, P_2, N_2 \subseteq \VSet$ we search for a model of the following formula.
-\[ \exists \valuation \in \Valuation: \eval{\guard}{\valuation} \wedge \eval{\uupdate(v)}{\valuation} > \eval{b}{\valuation} \]
+\[ \exists \valuation \in \Valuation: \lstate \leq \valuation \leq \ustate \wedge \exacteval{\guard}{\valuation} \wedge \exacteval{\uupdate(v)}{\valuation} > \exacteval{b}{\valuation} \]
 If the SMT-Solver does not find a model, the formula is unsatisfiable and therefore the fixed parameters form a sound overapproximation.
 
 It is still open, how we choose the parameters.
 Therefore we first need to define a measure for the quality of local bounds.
-We say that $b_1 \in \BoundSet^\sqcap_l$ is a better bound than $b_2 \in \BoundSet^\sqcap_l$ iff for all states $\valuation$ it holds that $\eval{b_1}{\valuation} \leq \eval{b_2}{\valuation}$.
+We say that $b_1 \in \BoundSet^\sqcap_l$ is a better bound than $b_2 \in \BoundSet^\sqcap_l$ iff for all states $\valuation$ it holds that $\exacteval{b_1}{\valuation} \leq \exacteval{b_2}{\valuation}$.
 We then write $b_1 \leq b_2$
 We want to find a bound $b \in \BoundSet^\sqcap_l$ such that for all bounds $b' \in \BoundSet^\sqcap_l$ it holds that $b \leq b'$.
 \todo{Can there be multiple with only conjunctive?}{Note that there might be multiple such bounds in the local bound set $\BoundSet^\sqcap_l$.
@@ -132,7 +135,7 @@ Since we chose the constant $e$ to be big enough, we can be sure at this point, 
 Instead there exists a variable, which does not allow further minimization of the scaling factor $s$.
 With the minimized scaling factor the next step is then to also minimize the constant $e$.
 Then, it might be possible to move variables from the sets $P_2$ and $N_2$ in the sets $P_1$ and $N_2$.
-Note that this is possible, since for each variable $v \in \VSet$ and each valuation $\valuation \in \Valuation$ it holds that $\eval{v}{\valuation} \leq \eval{\maxO{v}}{\valuation}$ and also $\eval{-v}{\valuation} \leq \eval{\maxO{-v}}{\valuation}$.
+Note that this is possible, since for each variable $v \in \VSet$ and each valuation $\valuation \in \Valuation$ it holds that $\exacteval{v}{\valuation} \leq \exacteval{\maxO{v}}{\valuation}$ and also $\exacteval{-v}{\valuation} \leq \exacteval{\maxO{-v}}{\valuation}$.
 
 The algorithm does not define an order for the iteration of the variables.
 Note that the order affects the resulting bound, but not its optimality.

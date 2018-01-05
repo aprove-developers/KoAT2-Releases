@@ -72,41 +72,63 @@ The symbol $\infty$ represents the infinity with $\infty > k$ for every $k \in \
 The symbol $-\infty$ represents the minus infinity with $-\infty < k$ for every $k \in \mathbb{Z}$.
 
 \begin{definition}[Bound evaluation]
-  For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}$ we define $\eval{b}{\valuation}$ to denote the evaluation of the bound $b$ to a value in $\ValueSet$.
-  \[ \eval{\infty}{\valuation} = \infty \text{ for } \infty \in \BoundSet \]
-  \[ \eval{k}{\valuation} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
-  \[ \eval{v}{\valuation} = \valuation(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
-  \[ \eval{-b}{\valuation} = -\eval{b}{\valuation} \text{ for all } b \in \BoundSet \] 
-  \[ \eval{b_1 + b_2}{\valuation} = \eval{b_1}{\valuation} + \eval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \eval{b_1 \cdot b_2}{\valuation} = \eval{b_1}{\valuation} \cdot \eval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \eval{\max(b_1, b_2)}{\valuation} = \max(\eval{b_1}{\valuation}, \eval{b_2}{\valuation}) \text{ for all } b_1, b_2 \in \BoundSet \]
-  \[ \eval{k^b}{\valuation} = k^{\eval{b}{\valuation}} \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
+  For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}$ we define $\exacteval{b}{\valuation}$ to denote the evaluation of the bound $b$ to a value in $\ValueSet$.
+  \[ \exacteval{\infty}{\valuation} = \infty \text{ for } \infty \in \BoundSet \]
+  \[ \exacteval{k}{\valuation} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
+  \[ \exacteval{v}{\valuation} = \valuation(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
+  \[ \exacteval{-b}{\valuation} = -\exacteval{b}{\valuation} \text{ for all } b \in \BoundSet \] 
+  \[ \exacteval{b_1 + b_2}{\valuation} = \exacteval{b_1}{\valuation} + \exacteval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \exacteval{b_1 \cdot b_2}{\valuation} = \exacteval{b_1}{\valuation} \cdot \exacteval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \exacteval{\max(b_1, b_2)}{\valuation} = \max(\exacteval{b_1}{\valuation}, \exacteval{b_2}{\valuation}) \text{ for all } b_1, b_2 \in \BoundSet \]
+  \[ \exacteval{k^b}{\valuation} = k^{\exacteval{b}{\valuation}} \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
 \end{definition}
 The mentioned examples can therefore be evaluated as expected.
 \begin{align*}
-  \eval{0 \cdot x}{\valuation} &= 0 \cdot \valuation(x) \\
-  \eval{2 \cdot x - 3 \cdot y}{\valuation} &= 2 \cdot \valuation(x) - 3 \cdot \valuation(y) \\
-  \eval{2 \cdot x^2 + 4 \cdot z}{\valuation} &= 2 \cdot \valuation(x)^2 + 4 \cdot \valuation(z) \\
-  \eval{2^{\max(x,3 \cdot y^2)} \cdot 7 \cdot x^3}{\valuation} &= 2^{\max(\valuation(x),3 \cdot \valuation(y)^2)} \cdot 7 \cdot \valuation(x)^3
+  \exacteval{0 \cdot x}{\valuation} &= 0 \cdot \valuation(x) \\
+  \exacteval{2 \cdot x - 3 \cdot y}{\valuation} &= 2 \cdot \valuation(x) - 3 \cdot \valuation(y) \\
+  \exacteval{2 \cdot x^2 + 4 \cdot z}{\valuation} &= 2 \cdot \valuation(x)^2 + 4 \cdot \valuation(z) \\
+  \exacteval{2^{\max(x,3 \cdot y^2)} \cdot 7 \cdot x^3}{\valuation} &= 2^{\max(\valuation(x),3 \cdot \valuation(y)^2)} \cdot 7 \cdot \valuation(x)^3
 \end{align*}
 
 Additionally, we define the substitution for a subset of the bounds.
 Instead of a substitution which replaces variables with a single substitution $\delta: \VSet \rightarrow \BoundSet$, we define a substitution with a case distinction for monotonically increasing and monotonically decreasing variables.
-In a substitution $\subst{b}{\delta_1}{\delta_2}$, a monotonically increasing variable is substituted with the substitution $\delta_2: \VSet \rightarrow \BoundSet$ and a monotonically decreasing variable is substituted with the substitution $\delta_1: \VSet \rightarrow \BoundSet$.
+In a substitution $\apprsubst{b}{\delta_1}{\delta_2}$, a monotonically increasing variable is substituted with the substitution $\delta_2: \VSet \rightarrow \BoundSet$ and a monotonically decreasing variable is substituted with the substitution $\delta_1: \VSet \rightarrow \BoundSet$.
 If the variable is not monotonous in the bound $b$, then the substitution is undefined.
-\begin{definition}[Bound substitution]
-  For a bound $b \in \BoundSet$ and two substitutions $\delta_1, \delta_2 \in \VSet \rightarrow \BoundSet$, we define $\subst{b}{\delta_1}{\delta_2}$ to denote the substitution of the variables of the bound $b$ with bounds from the substitutions $\delta_1, \delta_2$.
-  \[ \subst{\infty}{\delta_1}{\delta_2} = \infty \text{ for } \infty \in \BoundSet \]
-  \[ \subst{k}{\delta_1}{\delta_2} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
-  \[ \subst{v}{\delta_1}{\delta_2} = \delta_2(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
-  \[ \subst{-b}{\delta_1}{\delta_2} = -\subst{b}{\delta_2}{\delta_1} \text{ for all } b \in \BoundSet \] 
-  \[ \subst{b_1 + b_2}{\delta_1}{\delta_2} = \subst{b_1}{\delta_1}{\delta_2} + \subst{b_2}{\delta_1}{\delta_2} \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \subst{k \cdot b}{\delta_1}{\delta_2} = k \cdot \subst{b}{\delta_1}{\delta_2} \text{ for all } b \in \BoundSet \text{ and } k \in \mathbb{N} \] 
-  \[ \subst{\max(b_1, b_2)}{\delta_1}{\delta_2} = \max(\subst{b_1}{\delta_1}{\delta_2}, \subst{b_2}{\delta_1}{\delta_2}) \text{ for all } b_1, b_2 \in \BoundSet \]
-  For all other $b \in \BoundSet$ the substitution $\subst{b}{\delta_1}{\delta_2}$ is undefined.
-  We also write $\subst{b}{\delta}{}$ to denote $\subst{b}{\delta}{\delta}$.
+\begin{definition}[Approximated replacement]
+  Let $K$ be an arbitrary sets of elements with an addition $+: K \times K \rightarrow K$, a negation $-: K \rightarrow K$, a multiplication $\cdot: K \times K \rightarrow K$ and a max operator $\max: K \times K \rightarrow K$.
+  For a bound $b \in \BoundSet$ and two functions $\delta_1, \delta_2: \VSet \rightarrow K$, we denote with $\apprsubst{b}{\delta_1}{\delta_2}$ a function of the type $(\VSet \rightarrow K) \times (\VSet \rightarrow K) \rightarrow K$, which replaces the variables of the bound $b$ with values from the functions $\delta_1, \delta_2$ such that the following equations hold.
+  \[ \apprsubst{\infty}{\delta_1}{\delta_2} = \infty \text{ for } \infty \in \BoundSet \]
+  \[ \apprsubst{k}{\delta_1}{\delta_2} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
+  \[ \apprsubst{v}{\delta_1}{\delta_2} = \delta_2(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
+  \[ \apprsubst{-b}{\delta_1}{\delta_2} = -\apprsubst{b}{\delta_2}{\delta_1} \text{ for all } b \in \BoundSet \] 
+  \[ \apprsubst{b_1 + b_2}{\delta_1}{\delta_2} = \apprsubst{b_1}{\delta_1}{\delta_2} + \apprsubst{b_2}{\delta_1}{\delta_2} \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \apprsubst{b_1 \cdot b_2}{\delta_1}{\delta_2} = \maximum{
+    \apprsubst{b_1}{\delta_1}{\delta_2} \cdot \apprsubst{b_2}{\delta_1}{\delta_2},
+    \apprsubst{b_1}{\delta_1}{\delta_2} \cdot \apprsubst{b_2}{\delta_2}{\delta_1},
+    \apprsubst{b_1}{\delta_2}{\delta_1} \cdot \apprsubst{b_2}{\delta_1}{\delta_2},
+    \apprsubst{b_1}{\delta_2}{\delta_1} \cdot \apprsubst{b_2}{\delta_2}{\delta_1}
+  } \text{ for all } b_1, b_2 \in \BoundSet \] 
+  \[ \apprsubst{k \cdot b}{\delta_1}{\delta_2} = k \cdot \apprsubst{b}{\delta_1}{\delta_2} \text{ for all } b \in \BoundSet \text{ and } k \in \mathbb{N} \] 
+  \[ \apprsubst{\max(b_1, b_2)}{\delta_1}{\delta_2} = \maximum{\apprsubst{b_1}{\delta_1}{\delta_2}, \apprsubst{b_1}{\delta_2}{\delta_1}, \apprsubst{b_2}{\delta_1}{\delta_2}, \apprsubst{b_2}{\delta_2}{\delta_1}} \text{ for all } b_1, b_2 \in \BoundSet \]
+  \[ \apprsubst{k^b}{\delta_1}{\delta_2} = k^{\max(\apprsubst{b}{\delta_1}{\delta_2}, \apprsubst{b}{\delta_2}{\delta_1})} \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
+  We also write $\exactsubst{b}{\delta}$ to denote $\apprsubst{b}{\delta}{\delta}$.
 \end{definition}
 
+The bound set $\BoundSet$ meets the criteria of $K$.
+Therefore, two functions $\delta_1, \delta_2: \VSet \rightarrow \BoundSet$ qualify for an approximated replacement.
+We call an approximated replacement with such functions a substitution.
+
+\todo{Prove, put out of preliminaries}{}
+
+Under certain circumstances a substitution can be a safe over- or underapproximation.
+This is shown by the following theorem.
+
+\begin{theorem}[Soundness of approximated bound substitutions]
+  Let $\delta_1, \delta_2: \VSet \rightarrow \BoundSet$ be two substitutions with $\exacteval{\delta_1(v)}{\valuation} \leq \exacteval{\delta_2(v)}{\valuation}$ for each variable $v \in \VSet$ and each state $\valuation \in \Valuation$.
+  Let $b \in \BoundSet$ be a bound and $\valuation \in \Valuation$ a state.
+  Then, we have
+  \[ \exacteval{\apprsubst{b}{\delta_2}{\delta_1}}{\valuation} \leq \exacteval{b}{\valuation} \leq \exacteval{\apprsubst{b}{\delta_1}{\delta_2}}{\valuation}. \]
+\end{theorem}
 For all polynomials, we also define polynomial inequalities.
 
 \begin{definition}[Polynomial inequality]
@@ -122,8 +144,8 @@ Also, we extend the definition of the bound evaluation to polynomial inequalitie
 
 \begin{definition}[Evaluation of polynomial inequalities]
   Let $\valuation$ be a state $\valuation \in \VSet \rightarrow \ValueSet$.
-  For an atom $b_1 \bowtie b_2 \in \AtomSet$, we define $\eval{b_1 \bowtie b_2}{\valuation}$ to denote the evaluation of the atom $b_1 \bowtie b_2$ to a value in $\mathbb{B}$.
-  \[ \eval{b_1 \bowtie b_2}{\valuation} = \eval{b_1}{\valuation} \bowtie \eval{b_2}{\valuation} \]
-  For a constraint $\guard \in \ConstraintSet$, we define $\eval{\guard}{\valuation}$ to denote the evaluation of the constraint $\guard$ to a value in $\mathbb{B}$.
-  \[ \eval{\guard}{\valuation} = \bigwedge_{\atom \in \guard} \eval{\atom}{\valuation} \]
+  For an atom $b_1 \bowtie b_2 \in \AtomSet$, we define $\exacteval{b_1 \bowtie b_2}{\valuation}$ to denote the evaluation of the atom $b_1 \bowtie b_2$ to a value in $\mathbb{B}$.
+  \[ \exacteval{b_1 \bowtie b_2}{\valuation} = \exacteval{b_1}{\valuation} \bowtie \exacteval{b_2}{\valuation} \]
+  For a constraint $\guard \in \ConstraintSet$, we define $\exacteval{\guard}{\valuation}$ to denote the evaluation of the constraint $\guard$ to a value in $\mathbb{B}$.
+  \[ \exacteval{\guard}{\valuation} = \bigwedge_{\atom \in \guard} \exacteval{\atom}{\valuation} \]
 \end{definition}

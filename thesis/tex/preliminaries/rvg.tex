@@ -23,7 +23,7 @@ Also, the set of pre-transitions for $t_2$ is $\pre(t_2) = \braced{t_0, t_1}$.
 Additionally to the pre-transitions, we define the active variables of bounds. 
 
 \begin{definition}[Active variables] 
-  We define that a variable $v \in \VSet$ is active in a bound $b \in \BoundSet$ if and only if there are two states $\valuation, \valuation' \in \Valuation$, which only vary in the value of $v$ and result in a different evaluation $\eval{b}{\valuation} \neq \eval{b}{\valuation'}$.
+  We define that a variable $v \in \VSet$ is active in a bound $b \in \BoundSet$ if and only if there are two states $\valuation, \valuation' \in \Valuation$, which only vary in the value of $v$ and result in a different evaluation $\exacteval{b}{\valuation} \neq \exacteval{b}{\valuation'}$.
   Then, the function $\actV: \BoundSet \rightarrow 2^\VSet$ describes with $\actV(b)$ all variables, which are active in the bound $b \in \BoundSet$.
 \end{definition}
 
