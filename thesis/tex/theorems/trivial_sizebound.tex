@@ -1,9 +1,9 @@
 \begin{theorem}[SizeBounds for trivial SCCs]
   Let $(\UTime, \Size)$ be a complexity approximation.
-  Let $\braced{(t,v)} \subseteq \RV$ be a trivial SCC of the RVG.
-  We define $\USize'(\outrv) = \USize(\outrv)$ and $\LSize'(\outrv) = \LSize(\outrv)$ for all $\outrv \neq (t,v)$.
+  Let $\SCC = \braced{(t,v)} \subseteq \RV$ be a trivial SCC of the RVG.
+  We define $\USize'(\outrv) = \USize(\outrv)$ and $\LSize'(\outrv) = \LSize(\outrv)$ for all $\outrv \notin \SCC$.
   Let $\LSB$ be a local size bound.
-
+  Then, we define an upper size bound for $(t,v)$. 
   \[ \USize'(t,v) =
   \begin{cases}
     \ULSB(t, v) & \text{ if } t \in \TSet_0 \\
@@ -11,14 +11,13 @@
     \maximum{ \apprsubst{\ULSB(t,v)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)} & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \ULSB(t,v) \in \BoundSet^\sqcap_l \\
   \end{cases}
   \]
-
-  If $t \in \TSet_0$ is an initial transition, we define
-  \[ \LSize'(t, v) = \LLSB(t, v) \text{ and } \USize'(t, v) = \ULSB(t, v). \]
-  If $t \in \TSet \setminus \TSet_0$ is not an initial transition, we define the following.
-  We define $\LSize'(t,v) = \LSize(t,v)$, if $\LLSB(t,v) \notin \BoundSet^\sqcup_l$ is not bounded by a lower scaled sum.
-  Similar, we define $\USize'(t,v) = \USize(t,v)$, if $\ULSB(t,v) \notin \BoundSet^\sqcap_l$ is not bounded by an upper scaled sum.
-  For all $(t,v)$ which are bounded by an upper scaled sum and by a lower scaled sum, we define 
-  \[ \USize'(t,v) = \maximum{ \apprsubst{\ULSB(t,v)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)} \]
-  \[ \LSize'(t,v) = \minimum{ \apprsubst{\LLSB(t,v)}{\USize(\pret)}{\LSize(\pret)} \mid \pret \in \pre(t)} \]
+  Similarly, we define a lower size bound for $(t,v)$.
+  \[ \LSize'(t,v) =
+  \begin{cases}
+    \LLSB(t, v) & \text{ if } t \in \TSet_0 \\
+    \LSize(t, v) & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \LLSB(t,v) \notin \BoundSet^\sqcap_l \\
+    \maximum{ \apprsubst{\LLSB(t,v)}{\USize(\pret)}{\LSize(\pret)} \mid \pret \in \pre(t)} & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \LLSB(t,v) \in \BoundSet^\sqcap_l \\
+  \end{cases}
+  \]
   Then, $\mathit{SizeBounds}(\UTime, \Size, \braced{(t,v)}) = (\LSize', \USize')$ is also a size approximation.
 \end{theorem}
