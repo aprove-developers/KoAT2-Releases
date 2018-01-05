@@ -36,7 +36,7 @@ let to_string {pol; strictly_decreasing; transitions} =
 (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
 let apply_farkas a_matrix b_right c_left d_right =
   let num_of_fresh = List.length b_right in
-  let fresh_vars = Var.fresh_id_list num_of_fresh in
+  let fresh_vars = Var.fresh_id_list Var.Real num_of_fresh in
   let dual_constr = Constraint.dualise fresh_vars a_matrix c_left in
   let cost_constr = Polynomial.of_coeff_list b_right fresh_vars in
   Constraint.Infix.(dual_constr && cost_constr <= d_right)
@@ -56,10 +56,10 @@ let farkas_transform constr param_atom =
 let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
   let vars = VarSet.elements vars in
   let num_vars = List.length vars in
-  let fresh_vars = Var.fresh_id_list num_vars in
+  let fresh_vars = Var.fresh_id_list Var.Int num_vars in
   let fresh_coeffs = List.map Polynomial.of_var fresh_vars in
   let linear_poly = ParameterPolynomial.of_coeff_list fresh_coeffs vars in
-  let constant_var = Var.fresh_id () in
+  let constant_var = Var.fresh_id Var.Int () in
   let constant_poly = ParameterPolynomial.of_constant (Polynomial.of_var constant_var) in
   (ParameterPolynomial.(linear_poly + constant_poly)),(List.append fresh_vars [constant_var])
   
