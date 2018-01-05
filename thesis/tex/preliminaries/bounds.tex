@@ -123,6 +123,8 @@ We call an approximated replacement with such functions a substitution.
 Under certain circumstances a substitution can be a safe over- or underapproximation.
 This is shown by the following theorem.
 
+\todo{Probably wrong, we need to an upper and a lower substitution?}{}
+
 \begin{theorem}[Soundness of approximated bound substitutions]
   Let $\delta_1, \delta_2: \VSet \rightarrow \BoundSet$ be two substitutions with $\exacteval{\delta_1(v)}{\valuation} \leq \exacteval{\delta_2(v)}{\valuation}$ for each variable $v \in \VSet$ and each state $\valuation \in \Valuation$.
   Let $b \in \BoundSet$ be a bound and $\valuation \in \Valuation$ a state.

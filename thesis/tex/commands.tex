@@ -58,10 +58,10 @@
 \newcommand{\minimum}[1]{\min \lbrace #1 \rbrace}
 \newcommand{\braced}[1]{\lbrace #1 \rbrace}
 
-\newcommand{\exacteval}[2]{\text{Val}_{#2}(#1)}
-\newcommand{\appreval}[3]{\text{Val}_{#2}^{#3}(#1)}
-\newcommand{\exactsubst}[2]{\llbracket #1 \rrbracket_{#2}}
-\newcommand{\apprsubst}[3]{\llbracket #1 \rrbracket_{#2}^{#3}}
+\newcommand{\exactsubst}[2]{\text{sub}_{#2}(#1)}
+\newcommand{\apprsubst}[3]{\text{sub}_{#2}^{#3}(#1)}
+\newcommand{\exacteval}[2]{\llbracket #1 \rrbracket_{#2}}
+\newcommand{\appreval}[3]{\llbracket #1 \rrbracket_{#2}^{#3}}
 
 \newcommand{\timeboundterm}{
   \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, (\location, \valuation): \valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) }

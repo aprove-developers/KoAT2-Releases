@@ -1,5 +1,5 @@
 We only regard the case where every $\rv \in \SCC$ is bounded by an upper scaled sum and a lower scaled sum.
-Then, for all result variables $\actrv = (\actt, v) \in \RV$, we have to show that two statements hold for all initial states $\valuation_0 \in \Valuation$ and variables $v \in \VSet$.
+Then, for all result variables $\actrv = (\actt, v) \in \RV$, we have to show that two statements hold for all states $\lstate, \ustate \in \Valuation$ and variables $v \in \VSet$.
 \[ \appreval{\USize'(\actt, v)}{\lstate}{\ustate} \geq \usizeboundterm \]
 \[ \appreval{\LSize'(\actt, v)}{\lstate}{\ustate} \leq \lsizeboundterm \]
 To this end, we now \textbf{fix $\lstate$, $\ustate$ and $\valuation_0$} to arbitrary initial states with $\lstate \leq \valuation_0 \leq \ustate$ and consider a \textbf{fixed evaluation}.
