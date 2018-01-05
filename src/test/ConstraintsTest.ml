@@ -176,13 +176,13 @@ module Methods =
                 List.map (fun (expected, constr, atom) ->
                       (Atom.to_string atom) >:: (fun _ -> assert_equal_constr expected (Constraint.farkas_transform constr atom )))
                         [
-                          ( (all [ (((value 1)*(helper 1)) + ((value 1)*(helper 2)) + ((value (-1))*(helper 3))) = value 2;
-                                   (((value 1)*(helper 1)) + ((value (-1))*(helper 4))) = value 1;
-                                   helper 1 >= value 0;
-                                   helper 2 >= value 0;
-                                   helper 3 >= value 0;
-                                   helper 4 >= value 0;
-                                   (value 4)*(helper 1) + (value 3) * (helper 2) <= value 0
+                          ( (all [ (((value 1)*(real_helper 1)) + ((value 1)*(real_helper 2)) + ((value (-1))*(real_helper 3))) = value 2;
+                                   (((value 1)*(real_helper 1)) + ((value (-1))*(real_helper 4))) = value 1;
+                                   real_helper 1 >= value 0;
+                                   real_helper 2 >= value 0;
+                                   real_helper 3 >= value 0;
+                                   real_helper 4 >= value 0;
+                                   (value 4)*(real_helper 1) + (value 3) * (real_helper 2) <= value 0
                             ]), 
                             (all [(var "x")+(var "y") <= value 4;
                                   var "x" <= value 3;
@@ -191,7 +191,7 @@ module Methods =
                             ]),
                             Atom.Infix.(((value 2) * (var "x")) + (var "y") <= value 0));
                             
-                            (all ([mk_eq ((value (-1))*(helper 1))(value (-1));mk_ge (helper 1) (value 0);mk_le (value 0) (value 0)]), 
+                            (all ([mk_eq ((value (-1))*(real_helper 1))(value (-1));mk_ge (real_helper 1) (value 0);mk_le (value 0) (value 0)]), 
                             (all [mk_ge (var "x") (value 0)]),
                             Atom.mk_ge (var "x") (value 0)); 
                         ]);

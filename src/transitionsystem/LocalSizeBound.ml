@@ -326,7 +326,7 @@ let sizebound_local kind label var =
     TransitionLabel.update label var
     >>= fun bound ->
     (* Introduce a temporary result variable *)
-    let v' = Var.fresh_id () in
+    let v' = Var.fresh_id Var.Int () in
     let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = bound) in
     find_bound kind v' guard_with_update
 

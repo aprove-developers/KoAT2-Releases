@@ -93,8 +93,10 @@ module PolynomialOver(Value : PolyTypes.Ring) =
 
     let value c = of_constant (Value.of_int c)
     
-    let helper n = of_var (Var.mk_helper n)
+    let real_helper n = of_var (Var.mk_helper Var.Real n)
 
+    let int_helper n = of_var (Var.mk_helper Var.Int n)
+    
     let of_int = value                        
 
     let to_int poly = raise (Failure "TODO: Not possible")

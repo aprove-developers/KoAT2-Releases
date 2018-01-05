@@ -109,7 +109,8 @@ module Constraint =
       let c_left = List.map (Polynomial.of_constant) (List.flatten (get_matrix vars costfunction)) in
       let d_right = List.at (get_constant_vector costfunction) 0 in
       let num_of_constr = List.length constr in
-      let fresh_vars = Var.fresh_id_list num_of_constr in
+      (** These are the lambdas in Farkas Lemma which are assumed to take real values*)
+      let fresh_vars = Var.fresh_id_list Var.Real num_of_constr in
       let dual_constr = dualise fresh_vars a_matrix c_left in
       let cost_constr = Polynomial.of_coeff_list b_right fresh_vars in
       Infix.(dual_constr && cost_constr <= Polynomial.of_constant d_right)

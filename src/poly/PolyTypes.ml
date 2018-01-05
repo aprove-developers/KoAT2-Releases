@@ -231,7 +231,8 @@ module type Polynomial =
     val of_constant : value -> t
     val var : string -> t
     val value : int -> t
-    val helper : int -> t
+    val real_helper : int -> t
+    val int_helper : int -> t
     val of_power : Var.t -> int -> t
     val of_monomial : monomial -> t
     val of_coeff_list : value list -> Var.t list -> t
