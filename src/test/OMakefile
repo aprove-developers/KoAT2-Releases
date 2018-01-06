@@ -4,6 +4,7 @@ OCAMLPACKS[] =
     Z3
     batteries
     apron
+    apron.octD
     ocamlgraph
     fpath
     oUnit

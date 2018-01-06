@@ -65,6 +65,7 @@ let transform_program program =
     |> List.map to_apron_single_constraint
     |> Array.of_list
   in
-    
+
+  let manager = Oct.manager_alloc () in
   (* TODO Implement *)
   MaybeChanged.same program
