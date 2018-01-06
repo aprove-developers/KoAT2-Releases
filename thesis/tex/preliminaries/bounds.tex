@@ -3,15 +3,16 @@
 In our setup, we need a definition of the kind of bounds, we want to compute.
 
 \begin{definition}[Bound set]
-  The set $\BoundSet$ of possible bounds is the smallest set with
-  \[ \infty \in \BoundSet \]
-  \[ \mathbb{N} \subseteq \BoundSet \] 
-  \[ \VSet \subseteq \BoundSet \] 
-  \[ -b \in \BoundSet \text{ for all } b \in \BoundSet \] 
-  \[ b_1 + b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ b_1 \cdot b_2 \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \max(b_1, b_2) \in \BoundSet \text{ for all } b_1, b_2 \in \BoundSet \]
-  \[ k^b \in \BoundSet \text{ for all } k \in \mathbb{N}, b \in \BoundSet \]
+  Let $\VSet$ be finite set of variables.
+  The set $\BoundSet(\VSet)$ of possible bounds is the smallest set with
+  \[ \infty \in \BoundSet(\VSet) \]
+  \[ \mathbb{N} \subseteq \BoundSet(\VSet) \] 
+  \[ \VSet \subseteq \BoundSet(\VSet) \] 
+  \[ -b \in \BoundSet(\VSet) \text{ for all } b \in \BoundSet(\VSet) \] 
+  \[ b_1 + b_2 \in \BoundSet(\VSet) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ b_1 \cdot b_2 \in \BoundSet(\VSet) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ \max(b_1, b_2) \in \BoundSet(\VSet) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
+  \[ k^b \in \BoundSet(\VSet) \text{ for all } k \in \mathbb{N}, b \in \BoundSet(\VSet) \]
 \end{definition}
 
 We use the common symbol $\infty$ to represent infinity.
@@ -19,50 +20,52 @@ With the defined negation $-$, we can also represent minus infinity by $-\infty$
 This is useful for lower size bounds, where $-\infty$ is a valid lower size bound for every possible evaluation.
 
 We include numbers from $\mathbb{N}$.
-All numbers from $\mathbb{Z}$ are also included in the bound set $\BoundSet$, since for each number $n \in \mathbb{N}$ its negation $-n$ is also element of the bound set $\BoundSet$.
-As the third base component, we include the program variables $\VSet$ in the bound set $\BoundSet$.
+All numbers from $\mathbb{Z}$ are implicitly included in the bound set $\BoundSet(\VSet)$, since for each number $n \in \mathbb{N}$ its negation $-n$ is also element of the bound set $\BoundSet(\VSet)$.
+As the third base component, we include the variable set $\VSet$ itself in the bound set $\BoundSet(\VSet)$.
 
 We define the usual addition $+$ and multiplication $\cdot$ between two bounds.
 The maximum operator $\max$ is also included with the common meaning.
-For the representation of exponential bounds we include $k^b$ for all positive integers $k \in \mathbb{N}$ and all bounds $b \in \BoundSet$.
+For the representation of exponential bounds we include $k^b$ for all positive integers $k \in \mathbb{N}$ and all bounds $b \in \BoundSet(\VSet)$.
 Therefore, we do not allow arbitrary exponentiation.
 
 In specific scenarios, we only allow a subset of those bounds.
-For this purpose, we define with $\BoundSet_p \subseteq \BoundSet$ the subset of all polynomials in $\BoundSet$.
+For this purpose, we define with $\BoundSet_p(\VSet) \subseteq \BoundSet(\VSet)$ the subset of all polynomials in $\BoundSet(\VSet)$.
 \begin{definition}[Polynomial set]
-  The set $\BoundSet_p \subseteq \BoundSet$ of all polynomials is the smallest set with
-  \[ \mathbb{N} \subset \BoundSet_p \] 
-  \[ \VSet \subset \BoundSet_p \] 
-  \[ -b \in \BoundSet_p \text{ for all } b \in \BoundSet_p \] 
-  \[ b_1 + b_2 \in \BoundSet_p \text{ for all } b_1, b_2 \in \BoundSet_p \] 
-  \[ b_1 \cdot b_2 \in \BoundSet_p \text{ for all } b_1, b_2 \in \BoundSet_p \] 
+  Let $\VSet$ be finite set of variables.
+  The set $\BoundSet_p(\VSet) \subseteq \BoundSet(\VSet)$ of all polynomials is the smallest set with
+  \[ \mathbb{N} \subset \BoundSet_p(\VSet) \] 
+  \[ \VSet \subset \BoundSet_p(\VSet) \] 
+  \[ -b \in \BoundSet_p(\VSet) \text{ for all } b \in \BoundSet_p(\VSet) \] 
+  \[ b_1 + b_2 \in \BoundSet_p(\VSet) \text{ for all } b_1, b_2 \in \BoundSet_p(\VSet) \] 
+  \[ b_1 \cdot b_2 \in \BoundSet_p(\VSet) \text{ for all } b_1, b_2 \in \BoundSet_p(\VSet) \] 
 \end{definition}
-Furthermore we define the set of all affine polynomials as $\BoundSet_a \subseteq \BoundSet_p \subseteq \BoundSet$. 
+Furthermore we define the set of all affine polynomials as $\BoundSet_a(\VSet) \subseteq \BoundSet_p(\VSet) \subseteq \BoundSet(\VSet)$. 
 \begin{definition}[Affine polynomial set]
-  The set $\BoundSet_a \subseteq \BoundSet_p$ of all affine polynomials is the smallest set with
-  \[ a \cdot v \in \BoundSet_a \text{ for all } a \in \mathbb{N}, v \in \VSet \] 
-  \[ -a \cdot v \in \BoundSet_a \text{ for all } a \in \mathbb{N}, v \in \VSet \] 
-  \[ b_1 + b_2 \in \BoundSet_a \text{ for all } b_1, b_2 \in \BoundSet_p \] 
+  Let $\VSet$ be finite set of variables.
+  The set $\BoundSet_a(\VSet) \subseteq \BoundSet_p(\VSet)$ of all affine polynomials is the smallest set with
+  \[ a \cdot v \in \BoundSet_a(\VSet) \text{ for all } a \in \mathbb{N}, v \in \VSet \] 
+  \[ -a \cdot v \in \BoundSet_a(\VSet) \text{ for all } a \in \mathbb{N}, v \in \VSet \] 
+  \[ b_1 + b_2 \in \BoundSet_a(\VSet) \text{ for all } b_1, b_2 \in \BoundSet_p(\VSet) \] 
 \end{definition}
 Note that we allow some additional notations to simplify the representation of some bounds.
 \begin{align*}
-  \min(b_1,b_2) &= -\max(-b_1,-b_2) & \text{ for all } b_1, b_2 \in \BoundSet \\
-  \max S &= \max(b_1, \max(b_2, \dots \max(\dots, b_n))) & \text{ for all } S = \braced{b_1, \dots, b_n} \subseteq \BoundSet \text{ with } S \neq \emptyset \\
+  \min(b_1,b_2) &= -\max(-b_1,-b_2) & \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+  \max S &= \max(b_1, \max(b_2, \dots \max(\dots, b_n))) & \text{ for all } S = \braced{b_1, \dots, b_n} \subseteq \BoundSet(\VSet) \text{ with } S \neq \emptyset \\
   \max S &= -\infty & \text{ for } S = \emptyset \\
-  \maxO{b} &= \max(b,0) & \text{ for all } b \in \BoundSet \\
-  \abs{b} &= \maxO{b} + \maxO{-b} & \text{ for all } b \in \BoundSet \\
-  b_1 - b_2 &= b_1 + (-b_2) & \text{ for all } b_1, b_2 \in \BoundSet \\
-  b^n &= \underbrace{b \cdot b \dots b \cdot b}_\text{n times} & \text{ for all } b \in \BoundSet, n \in \mathbb{N}
+  \maxO{b} &= \max(b,0) & \text{ for all } b \in \BoundSet(\VSet) \\
+  \abs{b} &= \maxO{b} + \maxO{-b} & \text{ for all } b \in \BoundSet(\VSet) \\
+  b_1 - b_2 &= b_1 + (-b_2) & \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+  b^n &= \underbrace{b \cdot b \dots b \cdot b}_\text{n times} & \text{ for all } b \in \BoundSet(\VSet), n \in \mathbb{N}
 \end{align*}
 Therefore, the minimum operator $\min$, the subtraction $-$, the absolute value $\abs{\cdot}$ and the exponentiation with a natural number are defined with the expected meaning.
 The operator $\maxO{\cdot}$ is used as a abbreviation because of its high usage.
 
-We now present some examples of bounds, which are included in the defined sets $\BoundSet$, $\BoundSet_p$ and $\BoundSet_a$.
+We now present some examples of bounds, which are included in the defined sets $\BoundSet(\VSet)$, $\BoundSet_p(\VSet)$ and $\BoundSet_a(\VSet)$.
 \begin{align*}
-  0 \cdot x \in \BoundSet_a \subset \BoundSet_p \subset \BoundSet \\
-  2 \cdot x - 3 \cdot y \in \BoundSet_a \subset \BoundSet_p \subset \BoundSet \\
-  2 \cdot x^2 + 4 \cdot z \in \BoundSet_p \subset \BoundSet \\
-  2^{\max(x,3 \cdot y^2)} \cdot 7 \cdot x^3 \in \BoundSet
+  0 \cdot x \in \BoundSet_a(\VSet) \subset \BoundSet_p(\VSet) \subset \BoundSet(\VSet) \\
+  2 \cdot x - 3 \cdot y \in \BoundSet_a(\VSet) \subset \BoundSet_p(\VSet) \subset \BoundSet(\VSet) \\
+  2 \cdot x^2 + 4 \cdot z \in \BoundSet_p(\VSet) \subset \BoundSet(\VSet) \\
+  2^{\max(x,3 \cdot y^2)} \cdot 7 \cdot x^3 \in \BoundSet(\VSet)
 \end{align*}
 
 After this informal presentation of the meaning of the bounds, we will now formally introduce the formal semantics.
@@ -72,15 +75,15 @@ The symbol $\infty$ represents the infinity with $\infty > k$ for every $k \in \
 The symbol $-\infty$ represents the minus infinity with $-\infty < k$ for every $k \in \mathbb{Z}$.
 
 \begin{definition}[Bound evaluation]
-  For a bound $b \in \BoundSet$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}$ we define $\exacteval{b}{\valuation}$ to denote the evaluation of the bound $b$ to a value in $\ValueSet$.
-  \[ \exacteval{\infty}{\valuation} = \infty \text{ for } \infty \in \BoundSet \]
-  \[ \exacteval{k}{\valuation} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
-  \[ \exacteval{v}{\valuation} = \valuation(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
-  \[ \exacteval{-b}{\valuation} = -\exacteval{b}{\valuation} \text{ for all } b \in \BoundSet \] 
-  \[ \exacteval{b_1 + b_2}{\valuation} = \exacteval{b_1}{\valuation} + \exacteval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \exacteval{b_1 \cdot b_2}{\valuation} = \exacteval{b_1}{\valuation} \cdot \exacteval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \exacteval{\max(b_1, b_2)}{\valuation} = \max(\exacteval{b_1}{\valuation}, \exacteval{b_2}{\valuation}) \text{ for all } b_1, b_2 \in \BoundSet \]
-  \[ \exacteval{k^b}{\valuation} = k^{\exacteval{b}{\valuation}} \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
+  For a bound $b \in \BoundSet(\VSet)$ and a state $\valuation \in \VSet \rightarrow \mathbb{Z}$ we define $\exacteval{b}{\valuation}$ to denote the evaluation of the bound $b$ to a value in $\ValueSet$.
+  \[ \exacteval{\infty}{\valuation} = \infty \text{ for } \infty \in \BoundSet(\VSet) \]
+  \[ \exacteval{k}{\valuation} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet) \] 
+  \[ \exacteval{v}{\valuation} = \valuation(v) \text{ for all } v \in \VSet \subset \BoundSet(\VSet) \] 
+  \[ \exacteval{-b}{\valuation} = -\exacteval{b}{\valuation} \text{ for all } b \in \BoundSet(\VSet) \] 
+  \[ \exacteval{b_1 + b_2}{\valuation} = \exacteval{b_1}{\valuation} + \exacteval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ \exacteval{b_1 \cdot b_2}{\valuation} = \exacteval{b_1}{\valuation} \cdot \exacteval{b_2}{\valuation} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ \exacteval{\max(b_1, b_2)}{\valuation} = \max(\exacteval{b_1}{\valuation}, \exacteval{b_2}{\valuation}) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
+  \[ \exacteval{k^b}{\valuation} = k^{\exacteval{b}{\valuation}} \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
 \end{definition}
 The mentioned examples can therefore be evaluated as expected.
 \begin{align*}
@@ -91,31 +94,31 @@ The mentioned examples can therefore be evaluated as expected.
 \end{align*}
 
 Additionally, we define the substitution for a subset of the bounds.
-Instead of a substitution which replaces variables with a single substitution $\delta: \VSet \rightarrow \BoundSet$, we define a substitution with a case distinction for monotonically increasing and monotonically decreasing variables.
-In a substitution $\apprsubst{b}{\delta_1}{\delta_2}$, a monotonically increasing variable is substituted with the substitution $\delta_2: \VSet \rightarrow \BoundSet$ and a monotonically decreasing variable is substituted with the substitution $\delta_1: \VSet \rightarrow \BoundSet$.
+Instead of a substitution which replaces variables with a single substitution $\delta: \VSet \rightarrow \BoundSet(\VSet)$, we define a substitution with a case distinction for monotonically increasing and monotonically decreasing variables.
+In a substitution $\apprsubst{b}{\delta_1}{\delta_2}$, a monotonically increasing variable is substituted with the substitution $\delta_2: \VSet \rightarrow \BoundSet(\VSet)$ and a monotonically decreasing variable is substituted with the substitution $\delta_1: \VSet \rightarrow \BoundSet(\VSet)$.
 If the variable is not monotonous in the bound $b$, then the substitution is undefined.
 \begin{definition}[Approximated replacement]
   Let $K$ be an arbitrary sets of elements with an addition $+: K \times K \rightarrow K$, a negation $-: K \rightarrow K$, a multiplication $\cdot: K \times K \rightarrow K$ and a max operator $\max: K \times K \rightarrow K$.
-  For a bound $b \in \BoundSet$ and two functions $\delta_1, \delta_2: \VSet \rightarrow K$, we denote with $\apprsubst{b}{\delta_1}{\delta_2}$ a function of the type $(\VSet \rightarrow K) \times (\VSet \rightarrow K) \rightarrow K$, which replaces the variables of the bound $b$ with values from the functions $\delta_1, \delta_2$ such that the following equations hold.
-  \[ \apprsubst{\infty}{\delta_1}{\delta_2} = \infty \text{ for } \infty \in \BoundSet \]
-  \[ \apprsubst{k}{\delta_1}{\delta_2} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
-  \[ \apprsubst{v}{\delta_1}{\delta_2} = \delta_2(v) \text{ for all } v \in \VSet \subset \BoundSet \] 
-  \[ \apprsubst{-b}{\delta_1}{\delta_2} = -\apprsubst{b}{\delta_2}{\delta_1} \text{ for all } b \in \BoundSet \] 
-  \[ \apprsubst{b_1 + b_2}{\delta_1}{\delta_2} = \apprsubst{b_1}{\delta_1}{\delta_2} + \apprsubst{b_2}{\delta_1}{\delta_2} \text{ for all } b_1, b_2 \in \BoundSet \] 
+  For a bound $b \in \BoundSet(\VSet)$ and two functions $\delta_1, \delta_2: \VSet \rightarrow K$, we denote with $\apprsubst{b}{\delta_1}{\delta_2}$ a function of the type $(\VSet \rightarrow K) \times (\VSet \rightarrow K) \rightarrow K$, which replaces the variables of the bound $b$ with values from the functions $\delta_1, \delta_2$ such that the following equations hold.
+  \[ \apprsubst{\infty}{\delta_1}{\delta_2} = \infty \text{ for } \infty \in \BoundSet(\VSet) \]
+  \[ \apprsubst{k}{\delta_1}{\delta_2} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet) \] 
+  \[ \apprsubst{v}{\delta_1}{\delta_2} = \delta_2(v) \text{ for all } v \in \VSet \subset \BoundSet(\VSet) \] 
+  \[ \apprsubst{-b}{\delta_1}{\delta_2} = -\apprsubst{b}{\delta_2}{\delta_1} \text{ for all } b \in \BoundSet(\VSet) \] 
+  \[ \apprsubst{b_1 + b_2}{\delta_1}{\delta_2} = \apprsubst{b_1}{\delta_1}{\delta_2} + \apprsubst{b_2}{\delta_1}{\delta_2} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
   \[ \apprsubst{b_1 \cdot b_2}{\delta_1}{\delta_2} = \maximum{
     \apprsubst{b_1}{\delta_1}{\delta_2} \cdot \apprsubst{b_2}{\delta_1}{\delta_2},
     \apprsubst{b_1}{\delta_1}{\delta_2} \cdot \apprsubst{b_2}{\delta_2}{\delta_1},
     \apprsubst{b_1}{\delta_2}{\delta_1} \cdot \apprsubst{b_2}{\delta_1}{\delta_2},
     \apprsubst{b_1}{\delta_2}{\delta_1} \cdot \apprsubst{b_2}{\delta_2}{\delta_1}
-  } \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \apprsubst{k \cdot b}{\delta_1}{\delta_2} = k \cdot \apprsubst{b}{\delta_1}{\delta_2} \text{ for all } b \in \BoundSet \text{ and } k \in \mathbb{N} \] 
-  \[ \apprsubst{\max(b_1, b_2)}{\delta_1}{\delta_2} = \maximum{\apprsubst{b_1}{\delta_1}{\delta_2}, \apprsubst{b_1}{\delta_2}{\delta_1}, \apprsubst{b_2}{\delta_1}{\delta_2}, \apprsubst{b_2}{\delta_2}{\delta_1}} \text{ for all } b_1, b_2 \in \BoundSet \]
-  \[ \apprsubst{k^b}{\delta_1}{\delta_2} = k^{\max(\apprsubst{b}{\delta_1}{\delta_2}, \apprsubst{b}{\delta_2}{\delta_1})} \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
+  } \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ \apprsubst{k \cdot b}{\delta_1}{\delta_2} = k \cdot \apprsubst{b}{\delta_1}{\delta_2} \text{ for all } b \in \BoundSet(\VSet) \text{ and } k \in \mathbb{N} \] 
+  \[ \apprsubst{\max(b_1, b_2)}{\delta_1}{\delta_2} = \maximum{\apprsubst{b_1}{\delta_1}{\delta_2}, \apprsubst{b_1}{\delta_2}{\delta_1}, \apprsubst{b_2}{\delta_1}{\delta_2}, \apprsubst{b_2}{\delta_2}{\delta_1}} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
+  \[ \apprsubst{k^b}{\delta_1}{\delta_2} = k^{\max(\apprsubst{b}{\delta_1}{\delta_2}, \apprsubst{b}{\delta_2}{\delta_1})} \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
   We also write $\exactsubst{b}{\delta}$ to denote $\apprsubst{b}{\delta}{\delta}$.
 \end{definition}
 
-The bound set $\BoundSet$ meets the criteria of $K$.
-Therefore, two functions $\delta_1, \delta_2: \VSet \rightarrow \BoundSet$ qualify for an approximated replacement.
+The bound set $\BoundSet(\VSet)$ meets the criteria of $K$.
+Therefore, two functions $\delta_1, \delta_2: \VSet \rightarrow \BoundSet(\VSet)$ qualify for an approximated replacement.
 We call an approximated replacement with such functions a substitution.
 
 \todo{Prove, put out of preliminaries}{}
@@ -126,19 +129,19 @@ This is shown by the following theorem.
 \todo{Probably wrong, we need to an upper and a lower substitution?}{}
 
 \begin{theorem}[Soundness of approximated bound substitutions]
-  Let $\delta_1, \delta_2: \VSet \rightarrow \BoundSet$ be two substitutions with $\exacteval{\delta_1(v)}{\valuation} \leq \exacteval{\delta_2(v)}{\valuation}$ for each variable $v \in \VSet$ and each state $\valuation \in \Valuation$.
-  Let $b \in \BoundSet$ be a bound and $\valuation \in \Valuation$ a state.
+  Let $\delta_1, \delta_2: \VSet \rightarrow \BoundSet(\VSet)$ be two substitutions with $\exacteval{\delta_1(v)}{\valuation} \leq \exacteval{\delta_2(v)}{\valuation}$ for each variable $v \in \VSet$ and each state $\valuation \in \Valuation$.
+  Let $b \in \BoundSet(\VSet)$ be a bound and $\valuation \in \Valuation$ a state.
   Then, we have
   \[ \exacteval{\apprsubst{b}{\delta_2}{\delta_1}}{\valuation} \leq \exacteval{b}{\valuation} \leq \exacteval{\apprsubst{b}{\delta_1}{\delta_2}}{\valuation}. \]
 \end{theorem}
 For all polynomials, we also define polynomial inequalities.
 
 \begin{definition}[Polynomial inequality]
-  Let $p_1, p_2 \in \BoundSet_p$ be two polynomials.
+  Let $p_1, p_2 \in \BoundSet_p(\VSet)$ be two polynomials.
   Let $\bowtie \in \braced{\leq, \geq, <, >, =}$ be an arbitrary comparator.
   We define $p_1 \bowtie p_2$ as a polynomial inequality between $p_1$ and $p_2$.
   We define the atom set
-  \[ \AtomSet = \braced{p_1 \bowtie p_2 \mid \exists p_1, p_2 \in \BoundSet_p, \exists \bowtie \in \braced{\leq, \geq, <, >, =}} \]
+  \[ \AtomSet = \braced{p_1 \bowtie p_2 \mid \exists p_1, p_2 \in \BoundSet_p(\VSet), \exists \bowtie \in \braced{\leq, \geq, <, >, =}} \]
   as the set of all polynomial inequalities.
   Furthermore, we define the constraint set $\ConstraintSet = 2^\AtomSet$ as set of conjunctions between polynomial inequalities.
 \end{definition}

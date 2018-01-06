@@ -186,12 +186,12 @@ Then, for starting values $x$, $y$ and $z$, we can define a possible evaluation.
 We can observe, that the variables $y$ and $z$ enumerate the fibonacci numbers.
 They affect each other in the loop and as a result their value is not bounded by a polynomial.
 
-Since the fibonacci sequence can not be represented with the bound set $\BoundSet$, it is necessary to use an overapproximation.
+Since the fibonacci sequence can not be represented with the bound set $\BoundSet(\PVSet)$, it is necessary to use an overapproximation.
 Lets consider the update $\update(y) = y + z$.
 We have a non-polynomial bound, because the incoming values of $y$ and $z$ can change during the loop $t_1$.
 For this reason they are part of the set $\VSet_{(t_1,y)} = \braced{y,z}$.
 The idea of the factor $\maximum{\abs{V_\rv} \mid \rv \in \SCC_t}$ is, that we can overapproximate the effect of $\update(y)$ with $2 \cdot \max(y,z)$.
-This bound is representable in the bound set $\BoundSet$. 
+This bound is representable in the bound set $\BoundSet(\PVSet)$. 
 
 \subsubsection{Step Two: Dependency on outside variables}
 

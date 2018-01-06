@@ -10,7 +10,7 @@ Our goal is to show that the defined size bounds are correct lower and upper bou
 \end{equation}
 Instead of proving (\ref{eq:sizebound_target}) directly, we proof a simplified hypothesis, which implies the target (\ref{eq:sizebound_target}).
 For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition t was used in the evaluation.
-Then, we define an upper bound $d^\sqcap \in \BoundSet$ and a lower bound $d^\sqcup \in \BoundSet$ for the absolute value of any variable which can be reached in the evaluation.
+Then, we define an upper bound $d^\sqcap \in \BoundSet(\PVSet)$ and a lower bound $d^\sqcup \in \BoundSet(\PVSet)$ for the absolute value of any variable which can be reached in the evaluation.
 \[ d^\square = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} \cdot \left( \start + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \effect^\square_t \right) \right). \]
 This enables us to define the hypothesis.
 \begin{equation} \label{eq:sizebound_hypothesis}

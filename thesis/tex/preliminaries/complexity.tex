@@ -11,18 +11,18 @@ Size complexity yields for each transition an assignment from each variable to a
 
 \subsubsection{Time Complexity}
 
-We define the time complexity of a program $\Program$ as the highest possible number of steps in an arbitrary run with an initial state $\valuation_0 \in \Valuation$ between a lower and an upper bound $\valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap$.
+We define the time complexity of a program $\Program$ as the highest possible number of steps in an arbitrary run with an initial state $\valuation_0 \in \Valuation$ between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
 
 \begin{definition}[Worst-Case Time Complexity]
-  We call $\text{rc}: (\Valuation \times \Valuation) \rightarrow \mathbb{N}$ the time complexity of a program if and only if for all states $\valuation^\sqcup, \valuation^\sqcap \in \Valuation$ it holds that
-  \[ \text{rc}(\valuation^\sqcup, \valuation^\sqcap) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, (\location, \valuation): \valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) } \]
+  We call $\text{rc}: (\Valuation \times \Valuation) \rightarrow \mathbb{N}$ the time complexity of a program if and only if for all states $\lstate, \ustate \in \Valuation$ it holds that
+  \[ \text{rc}(\lstate, \ustate) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, (\location, \valuation): \lstate \leq \valuation_0 \leq \ustate \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) } \]
 \end{definition}
 
 An upper time bound of a transition $t \in \TSet$ describes a maximal number of occurrences of that transition in an evaluation starting with an arbitrary initial state $\valuation_0 \in \Valuation$ between a lower and an upper bound $\valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap$.
 
 \begin{definition}[Upper Time Bound]
-  We call $\UTime: \TSet \rightarrow \BoundSet$ a time bound if and only if for all $t \in \TSet$ and all states $\valuation^\sqcup, \valuation^\sqcap \in \Valuation$ it holds that
-  \[ \apprsubst{\UTime(t)}{\valuation^\sqcup}{\valuation^\sqcap} \geq \timeboundterm \]
+  We call $\UTime: \TSet \rightarrow \BoundSet(\PVSet)$ a time bound if and only if for all $t \in \TSet$ and all states $\lstate, \ustate \in \Valuation$ it holds that
+  \[ \apprsubst{\UTime(t)}{\lstate}{\ustate} \geq \timeboundterm \]
 \end{definition}
 
 Those definitions are slightly different than in related work. \todo{Source needed?}{}
@@ -50,9 +50,9 @@ While upper size bounds are always higher than the highest possible value at a t
 
 \begin{definition}[Worst-Case Size Bound]
   Let $\RV = \TSet \cup \VSet$ be the set of all result variables.
-  We call $\USize: \RV \rightarrow \BoundSet$ an \textbf{upper} size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
+  We call $\USize: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper} size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
   \[ \appreval{\USize(t, v)}{\lstate}{\ustate} \geq \usizeboundterm. \]
-  Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
+  Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower} size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
   \[ \appreval{\LSize(t, v)}{\lstate}{\ustate} \geq \lsizeboundterm. \]
   Then, we call $\Size$ a size bound.
 \end{definition}
@@ -66,9 +66,9 @@ For the definition of the methods for the computation of trivial and nontrivial 
 We then use those local size bounds to lift them in a global context.
 
 \begin{definition}[Local Size Bound]
-  We call $\ULSB: \RV \rightarrow \BoundSet$ an \textbf{upper} local size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
+  We call $\ULSB: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper} local size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
   \[ \appreval{\ULSB(t, v)}{\lstate}{\ustate} \geq \ulocalsizeboundterm. \]
-  Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet$ a \textbf{lower} local size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
+  Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower} local size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
   \[ \appreval{\LLSB(t, v)}{\lstate}{\ustate} \geq \llocalsizeboundterm. \]
   We then call $\LSB$ a local size bound.
 \end{definition}
@@ -81,10 +81,10 @@ An upper global size bound instead expresses the value of $x$ in terms of the in
 Therefore $\USize(t_1, x) = 2 \cdot (x + 1)$ is a valid upper global size bound for the result variable $(t_1, x)$.
 
 Throughout this master's thesis, we use the application of a global or local size bound as a function for different purposes.
-Let $f: \RV \rightarrow \BoundSet$ be an arbitrary size bound.
-Then, we denote with $f(\alpha)$ for a result variable $\alpha \in \RV$ the trivial application of the function $f$ to the argument $\alpha$ which results in a bound $f(\alpha) \in \BoundSet$.
-We use the abbreviation $f(t, v)$ for a transition $t \in \TSet$ and a variable $v \in \VSet$ to denote the application $f((t,v)) \in \BoundSet$ with $(t,v) \in \RV$.
-If the function $f$ is only applied to a transition $t \in \TSet$, this denotes the partial application of $f$ to $t$ resulting in $f(t): \VSet \rightarrow \BoundSet$.
+Let $f: \RV \rightarrow \BoundSet(\PVSet)$ be an arbitrary size bound.
+Then, we denote with $f(\alpha)$ for a result variable $\alpha \in \RV$ the trivial application of the function $f$ to the argument $\alpha$ which results in a bound $f(\alpha) \in \BoundSet(\PVSet)$.
+We use the abbreviation $f(t, v)$ for a transition $t \in \TSet$ and a variable $v \in \VSet$ to denote the application $f((t,v)) \in \BoundSet(\PVSet)$ with $(t,v) \in \RV$.
+If the function $f$ is only applied to a transition $t \in \TSet$, this denotes the partial application of $f$ to $t$ resulting in $f(t): \VSet \rightarrow \BoundSet(\PVSet)$.
 
 \subsubsection{Cost Complexity}
 
@@ -98,23 +98,23 @@ The cost complexity of a program is defined as the highest sum of the costs of a
 The definition of cost complexity is useful for a modular analysis, where a transition is able to describe the whole effect of a subprogram.
 Then, a transition might occur only a specific number of times in the outer program, but in fact every occurrence is not just a link to a single transition usage, but to a complete execution of a subprogram with an own time bound.
 Lifting those time bounds into the context of the outer program, we consider them as cost of the transition of the outer program. \todo{Example or later?}{}
-For that reason, the cost function $\cost: \TSet \rightarrow \BoundSet$ is defined for the whole bound set $\BoundSet$.
+For that reason, the cost function $\cost: \TSet \rightarrow \BoundSet(\PVSet)$ is defined for the whole bound set $\BoundSet(\PVSet)$.
 
 Unfortunately, the usefulness of the distinction between upper and lower size bounds is limited for the computation of a cost bound.
 Note that for a transition $t \in \TSet$ the costs $\cost(t)$ are defined as local costs.
 For the computation of a cost bound we need to lift them similar as the local size bounds to a global context.
 Therefore, it is necessary to substitute the variables of the costs $\cost(t)$ with the appropriate size bound computed so far.
-Since $\cost(t) \in \BoundSet$ is in general not a monotonic function, this substitution is not trivial.
-In fact, we are only able to use the distinction between upper and lower size bounds for affine costs $\cost(t) \in \BoundSet_a$.
-For arbitrary costs $\cost(t) \in \BoundSet \setminus \BoundSet_a$ it is necessary to consider the monotonic approach from the original KoAT.
+Since $\cost(t) \in \BoundSet(\PVSet)$ is in general not a monotonic function, this substitution is not trivial.
+In fact, we are only able to use the distinction between upper and lower size bounds for affine costs $\cost(t) \in \BoundSet_a(\PVSet)$.
+For arbitrary costs $\cost(t) \in \BoundSet(\PVSet) \setminus \BoundSet_a(\PVSet)$ it is necessary to consider the monotonic approach from the original KoAT.
 
 \begin{definition}[Upper Cost Bound]
   Let $\abs{\mathcal{S}}(t, v)$ denote the highest absolute value $\max(\USize(t, v), -\LSize(t, v))$ a variable $v$ can reach at a transition $t$.
-  We call $\UCost: \TSet \rightarrow \BoundSet$ a cost bound if and only if for all $t \in \TSet$ it holds that
+  We call $\UCost: \TSet \rightarrow \BoundSet(\PVSet)$ a cost bound if and only if for all $t \in \TSet$ it holds that
   \[ \UCost(t) = \UTime(t) \cdot
   \begin{cases}
     \maxO{\cost(t)} & \text{if } t \in \TSet_0 \\
-    \maxO{\maximum{\apprsubst{\cost(t)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)}} & \text{if } \cost(t) \in \BoundSet_a \\
+    \maxO{\maximum{\apprsubst{\cost(t)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)}} & \text{if } \cost(t) \in \BoundSet_a(\PVSet) \\
     \maxO{\maximum{\exactsubst{\abs{\cost(t)}}{\abs{\mathcal{S}}(\pret)}{} \mid \pret \in \pre(t)}} & \text{otherwise} \\
   \end{cases}
   \]

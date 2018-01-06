@@ -1,9 +1,9 @@
 In this section we present a template for local size bounds.
 If we require the local size bounds to be a of that form, we are able to use those characteristics in the definition of the methods for global size bounds.
-Therefore we define two subsets $\BoundSet^\sqcap_l, \BoundSet^\sqcup_l \subseteq \BoundSet$.
+Therefore we define two subsets $\BoundSet^\sqcap_l, \BoundSet^\sqcup_l \subseteq \BoundSet(\PVSet)$.
 
 \begin{definition}[Local bound sets]
-  We define $\BoundSet^\sqcap_l \in \BoundSet$ as 
+  We define $\BoundSet^\sqcap_l \in \BoundSet(\PVSet)$ as 
   \[ \BoundSet^\sqcap_l = \braced{
     s \cdot \left(
         e
@@ -12,7 +12,7 @@ Therefore we define two subsets $\BoundSet^\sqcap_l, \BoundSet^\sqcup_l \subsete
       + \sum_{v \in P_2} \maxO{v}
       + \sum_{v \in N_2} \maxO{-v}
       \right) \mid \exists s \in \mathbb{N} \text{ with } s \geq 1, e \in \mathbb{Z}, P_1, P_2, N_1, N_2 \subseteq \VSet }\]
-  Also we define $\BoundSet^\sqcup_l \in \BoundSet$ as 
+  Also we define $\BoundSet^\sqcup_l \in \BoundSet(\PVSet)$ as 
   \[ \BoundSet^\sqcup_l = \braced{
     s \cdot \left(
         e
@@ -59,17 +59,17 @@ With this construction we only consider negative values for $x$ and therefore en
 
 We will now present the algorithm for the computation of sound, but minimal local size bounds $b^\sqcap \in \BoundSet^\sqcap_l$ and $b^\sqcup \in \BoundSet^\sqcup_l$.
 We first consider the upper case.
-A local size bound $b = \ULSB(t,v)$ is a sound overapproximation of the effect of a transition $t = (\location,(\lupdate,\uupdate),\guard,\location')$, iff the formula $\guard \Rightarrow \uupdate(v) \leq b$ is valid.
+A local size bound $b = \ULSB(t,v)$ is a sound overapproximation of the effect of a transition $t = (\location,\update,\guard,\location')$, iff the formula $\guard \Rightarrow \update(v) \leq b$ is valid.
 \[ \exists s \in \mathbb{N} \text{ with } s \geq 1:
 \exists e \in \mathbb{Z}:
 \exists P_1, P_2, N_1, N_2 \subseteq \VSet:
 \forall \valuation \in \Valuation:
 \lstate \leq \valuation \leq \ustate \Rightarrow
-\exacteval{\guard}{\valuation} \Rightarrow \exacteval{\uupdate(v)}{\valuation} \leq \exacteval{b}{\valuation} \]
+\exacteval{\guard}{\valuation} \Rightarrow \exacteval{\update(v)}{\valuation} \leq \exacteval{b}{\valuation} \]
 An SMT-Solver is only able to find models for existential formulas $\exists v_0: \exists v_1: \dots \exists v_k: \phi(v_0, \dots, v_k)$. \cite{smt} \\
 Therefore we use an approach, where we fix the parameters $s$, $e$ and $P_1, N_1, P_2, N_2$ and use the SMT-Solver to prove unsatisfiability of the negation of the formula.
 That is, for fixed $s \in \mathbb{N}$ with $s \geq 1$, $e \in \mathbb{Z}$ and $P_1, N_1, P_2, N_2 \subseteq \VSet$ we search for a model of the following formula.
-\[ \exists \valuation \in \Valuation: \lstate \leq \valuation \leq \ustate \wedge \exacteval{\guard}{\valuation} \wedge \exacteval{\uupdate(v)}{\valuation} > \exacteval{b}{\valuation} \]
+\[ \exists \valuation \in \Valuation: \lstate \leq \valuation \leq \ustate \wedge \exacteval{\guard}{\valuation} \wedge \exacteval{\update(v)}{\valuation} > \exacteval{b}{\valuation} \]
 If the SMT-Solver does not find a model, the formula is unsatisfiable and therefore the fixed parameters form a sound overapproximation.
 
 It is still open, how we choose the parameters.
@@ -88,16 +88,16 @@ Then, we take multiple steps for a component-wise improvement of this bound, alw
 In a first step, we define the trivial valid bound.
 
 \begin{definition}[Trivial upper local size bound]
-  Let $\alpha = ((\location,(\uupdate,\lupdate),\guard,\location'),v) \in \RV$ be a result variable, for which we want to find an upper local size bound.
+  Let $\alpha = ((\location,\update,\guard,\location'),v) \in \RV$ be a result variable, for which we want to find an upper local size bound.
   Let $\VSet$ be the set of all program variables.
-  Let $s = e \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\uupdate(v)$ or any guard atom in $\guard$.
+  Let $s = e \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\update(v)$ or any guard atom in $\guard$.
   Then, the local size bound $b \in \BoundSet^\sqcap_l$ defined by the scaling factor $s$, the constant $e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid upper local size bound for the value of $v$ after the application of the transition $t$.
 \end{definition}
 
 \input{theorems/trivial_lsb}
 
 We show the construction of a trivial upper local size bound by an example.
-Let $\alpha = ((\location,(\lupdate,\uupdate),\text{true},\location'),x) \in \RV$ be a result variable with the update $\uupdate(x) = 4 + 2 \cdot y - 3 \cdot z$.
+Let $\alpha = ((\location,\update,\text{true},\location'),x) \in \RV$ be a result variable with the update $\update(x) = 4 + 2 \cdot y - 3 \cdot z$.
 Then, by definition of the trivial upper local size bound we can obtain $b^\sqcap = 24 * (24 + \maxO{y} + \maxO{z} + \maxO{-y} + \maxO{-z}$.
 Note that for all variables $v \in \VSet$ we have $\maxO{v} + \maxO{-v} = \abs{v}$, where $\abs{v}$ represents the absolute value of the variable $v$.
 
@@ -106,22 +106,22 @@ With a given trivial upper local size bound we can now search the local bound se
 \begin{algorithm}
 \caption{Inferring upper local size bound}\label{ulsb_algorithm}
 \begin{algorithmic}[1]
-  \State Input: A result variable $t = ((\location,(\uupdate,\lupdate),\guard,\location'),v) \in \RV$
+  \State Input: A result variable $t = ((\location,\update,\guard,\location'),v) \in \RV$
   \State Construct a trivial upper local size bound $b$ with the defining parameters $s$, $e$, $P_1$, $N_1$, $P_2$ and $N_2$
-  \State Binary search $1 \dots s$ to find an $s$ such that $\bigwedge \guard \Rightarrow \uupdate(v) \leq b$ is valid with this $s$, but not valid with $s-1$.
-  \State Binary search $-e \dots e$ to find an $e$ such that $\bigwedge \guard \Rightarrow \uupdate(v) \leq b$ is valid with this $e$, but not valid with $e-1$.
+  \State Binary search $1 \dots s$ to find an $s$ such that $\bigwedge \guard \Rightarrow \update(v) \leq b$ is valid with this $s$, but not valid with $s-1$.
+  \State Binary search $-e \dots e$ to find an $e$ such that $\bigwedge \guard \Rightarrow \update(v) \leq b$ is valid with this $e$, but not valid with $e-1$.
   \ForAll {variables $v \in \VSet$}
     \State Set $P_2 := P_2 \setminus \braced{v}$
-    \If {$\bigwedge \guard \Rightarrow \uupdate(v) \leq b$ is not valid}
+    \If {$\bigwedge \guard \Rightarrow \update(v) \leq b$ is not valid}
       \State Set $P_1 := P_1 \cup \braced{v}$
-      \If {$\bigwedge \guard \Rightarrow \uupdate(v) \leq b$ is not valid}
+      \If {$\bigwedge \guard \Rightarrow \update(v) \leq b$ is not valid}
         \State Revert to $P_2 := P_2 \cup \braced{v}$ and $P_1 := P_1 \setminus \braced{v}$
       \EndIf
     \EndIf
     \State Set $N_2 := N_2 \setminus \braced{v}$
-    \If {$\bigwedge \guard \Rightarrow \uupdate(v) \leq b$ is not valid}
+    \If {$\bigwedge \guard \Rightarrow \update(v) \leq b$ is not valid}
       \State Set $N_1 := N_1 \cup \braced{v}$
-      \If {$\bigwedge \guard \Rightarrow \uupdate(v) \leq b$ is not valid}
+      \If {$\bigwedge \guard \Rightarrow \update(v) \leq b$ is not valid}
         \State Revert to $N_2 := N_2 \cup \braced{v}$ and $N_1 := N_1 \setminus \braced{v}$
       \EndIf
     \EndIf
@@ -131,7 +131,7 @@ With a given trivial upper local size bound we can now search the local bound se
 
 The presented algorithm consists of three steps.
 In the first step the scaling factor $s$ gets minimized.
-Since we chose the constant $e$ to be big enough, we can be sure at this point, that the reason for $\bigwedge \guard \Rightarrow \uupdate(v) \leq b$ not being valid with $s-1$ is not the constant.
+Since we chose the constant $e$ to be big enough, we can be sure at this point, that the reason for $\bigwedge \guard \Rightarrow \update(v) \leq b$ not being valid with $s-1$ is not the constant.
 Instead there exists a variable, which does not allow further minimization of the scaling factor $s$.
 With the minimized scaling factor the next step is then to also minimize the constant $e$.
 Then, it might be possible to move variables from the sets $P_2$ and $N_2$ in the sets $P_1$ and $N_2$.
@@ -149,9 +149,9 @@ The algorithm for the search for a lower local size bound $\BoundSet^\sqcup_l$ i
 First, we need to define a trivial lower local size bound.
 
 \begin{definition}[Trivial lower local size bound]
-  Let $\alpha = ((\location,(\uupdate,\lupdate),\guard,\location'),v) \in \RV$ be a result variable, for which we want to find a lower local size bound.
+  Let $\alpha = ((\location,\update,\guard,\location'),v) \in \RV$ be a result variable, for which we want to find a lower local size bound.
   Let $\VSet$ be the set of all program variables.
-  Let $s \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\lupdate(v)$ or any guard atom in $\guard$.
+  Let $s \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\update(v)$ or any guard atom in $\guard$.
   Let $e = -s$ be its negation.
   Then, the local size bound $b \in \BoundSet^\sqcup_l$ defined by the scaling factor $s$, the constant $e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid lower local size bound for the value of $v$ after the application of the transition $t$.
 \end{definition}
@@ -161,22 +161,22 @@ With the trivial lower local size bound we are now able to define the algorithm 
 \begin{algorithm}
 \caption{Inferring lower local size bound}\label{llsb_algorithm}
 \begin{algorithmic}[1]
-  \State Input: A result variable $t = ((\location,(\uupdate,\lupdate),\guard,\location'),v) \in \RV$
+  \State Input: A result variable $t = ((\location,\update,\guard,\location'),v) \in \RV$
   \State Construct a trivial lower local size bound $b$ with the defining parameters $s$, $e$, $P_1$, $N_1$, $P_2$ and $N_2$
-  \State Binary search $1 \dots s$ to find an $s$ such that $\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is valid with this $s$, but not valid with $s-1$.
-  \State Binary search $-e \dots e$ to find an $e$ such that $\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is valid with this $e$, but not valid with $e+1$.
+  \State Binary search $1 \dots s$ to find an $s$ such that $\bigwedge \guard \Rightarrow \update(v) \geq b$ is valid with this $s$, but not valid with $s-1$.
+  \State Binary search $-e \dots e$ to find an $e$ such that $\bigwedge \guard \Rightarrow \update(v) \geq b$ is valid with this $e$, but not valid with $e+1$.
   \ForAll {variables $v \in \VSet$}
     \State Set $P_2 := P_2 \setminus \braced{v}$
-    \If {$\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is not valid}
+    \If {$\bigwedge \guard \Rightarrow \update(v) \geq b$ is not valid}
       \State Set $P_1 := P_1 \cup \braced{v}$
-      \If {$\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is not valid}
+      \If {$\bigwedge \guard \Rightarrow \update(v) \geq b$ is not valid}
         \State Revert to $P_2 := P_2 \cup \braced{v}$ and $P_1 := P_1 \setminus \braced{v}$
       \EndIf
     \EndIf
     \State Set $N_2 := N_2 \setminus \braced{v}$
-    \If {$\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is not valid}
+    \If {$\bigwedge \guard \Rightarrow \update(v) \geq b$ is not valid}
       \State Set $N_1 := N_1 \cup \braced{v}$
-      \If {$\bigwedge \guard \Rightarrow \lupdate(v) \geq b$ is not valid}
+      \If {$\bigwedge \guard \Rightarrow \update(v) \geq b$ is not valid}
         \State Revert to $N_2 := N_2 \cup \braced{v}$ and $N_1 := N_1 \setminus \braced{v}$
       \EndIf
     \EndIf

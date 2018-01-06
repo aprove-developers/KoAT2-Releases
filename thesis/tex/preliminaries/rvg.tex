@@ -22,22 +22,23 @@ Also, the set of pre-transitions for $t_2$ is $\pre(t_2) = \braced{t_0, t_1}$.
 
 Additionally to the pre-transitions, we define the active variables of bounds. 
 
-\begin{definition}[Active variables] 
-  We define that a variable $v \in \VSet$ is active in a bound $b \in \BoundSet$ if and only if there are two states $\valuation, \valuation' \in \Valuation$, which only vary in the value of $v$ and result in a different evaluation $\exacteval{b}{\valuation} \neq \exacteval{b}{\valuation'}$.
-  Then, the function $\actV: \BoundSet \rightarrow 2^\VSet$ describes with $\actV(b)$ all variables, which are active in the bound $b \in \BoundSet$.
+\begin{definition}[Active variables]
+  Let $\VSet$ be finite set of variables.  
+  We define that a variable $v \in \VSet$ is active in a bound $b \in \BoundSet(\VSet)$ if and only if there are two states $\valuation, \valuation' \in \Valuation$, which only vary in the value of $v$ and result in a different evaluation $\exacteval{b}{\valuation} \neq \exacteval{b}{\valuation'}$.
+  Then, the function $\actV: \BoundSet(\VSet) \rightarrow 2^\VSet$ describes with $\actV(b)$ all variables, which are active in the bound $b \in \BoundSet(\VSet)$.
 \end{definition}
 
-A valid overapproximation of the active variables of a bound $b \in \BoundSet$ is the set of all occurring variables.
+A valid overapproximation of the active variables of a bound $b \in \BoundSet(\VSet)$ is the set of all occurring variables.
 \begin{definition}[Overapproximation of active variables]
-  For a bound $b \in \BoundSet$ we define the active variables $\actV(b)$.
-  \[ \actV(\infty) = \emptyset \text{ for } \infty \in \BoundSet \]
-  \[ \actV(k) = \emptyset \text{ for all } k \in \mathbb{N} \subset \BoundSet \] 
-  \[ \actV(v) = \braced{v} \text{ for all } v \in \VSet \subset \BoundSet \] 
-  \[ \actV(-b) = \actV(b) \text{ for all } b \in \BoundSet \] 
-  \[ \actV(b_1 + b_2) = \actV(b_1) \cup \actV(b_2) \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \actV(b_1 \cdot b_2) = \actV(b_1) \cup \actV(b_2) \text{ for all } b_1, b_2 \in \BoundSet \] 
-  \[ \actV(\max(b_1, b_2)) = \actV(b_1) \cup \actV(b_2) \text{ for all } b_1, b_2 \in \BoundSet \]
-  \[ \actV(k^b) = \actV(b) \text{ for all } k \in \mathbb{N} \subset \BoundSet, b \in \BoundSet \]  
+  For a bound $b \in \BoundSet(\VSet)$ we define the active variables $\actV(b)$.
+  \[ \actV(\infty) = \emptyset \text{ for } \infty \in \BoundSet(\VSet) \]
+  \[ \actV(k) = \emptyset \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet) \] 
+  \[ \actV(v) = \braced{v} \text{ for all } v \in \VSet \subset \BoundSet(\VSet) \] 
+  \[ \actV(-b) = \actV(b) \text{ for all } b \in \BoundSet(\VSet) \] 
+  \[ \actV(b_1 + b_2) = \actV(b_1) \cup \actV(b_2) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ \actV(b_1 \cdot b_2) = \actV(b_1) \cup \actV(b_2) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ \actV(\max(b_1, b_2)) = \actV(b_1) \cup \actV(b_2) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
+  \[ \actV(k^b) = \actV(b) \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
 \end{definition}
 
 Note that this overapproximation recognizes for example the variable $x$ as active in a bound $x - x$.
