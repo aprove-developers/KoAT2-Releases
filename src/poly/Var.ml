@@ -15,14 +15,12 @@ let of_string str =
     Helper (Int,(
         str
         |> String.lchop ~n:2
-        |> tap (print_string)
         |> Int.of_string
       ))
   else if String.starts_with str "@_" then
     Helper (Real,(
         str
         |> String.lchop ~n:2
-        |> tap (print_string)
         |> Int.of_string
       ))
   else
