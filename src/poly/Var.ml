@@ -15,12 +15,14 @@ let of_string str =
     Helper (Int,(
         str
         |> String.lchop ~n:2
+        |> tap (print_string)
         |> Int.of_string
       ))
-  else if String.starts_with str "§_" then
+  else if String.starts_with str "@_" then
     Helper (Real,(
         str
         |> String.lchop ~n:2
+        |> tap (print_string)
         |> Int.of_string
       ))
   else
@@ -32,7 +34,7 @@ let mk_helper domain n = Helper (domain, n)
                 
 let to_string = function
   | Var str -> str
-  | Helper (Real,i) -> "§_" ^ (String.of_int i)
+  | Helper (Real,i) -> "@_" ^ (String.of_int i)
   | Helper (Int,i) -> "$_" ^ (String.of_int i)
   
 let counter = ref 0
@@ -47,6 +49,11 @@ let fresh_ids domain n =
   
 let fresh_id_list domain n =
   List.of_enum (fresh_ids domain n)
+
+let is_real = function
+  | Var _ -> false
+  | Helper (Int,_) -> false
+  | Helper (Real,_) -> true
   
 (**returns true if the variable represents real numbers*)
 let is_helper var =

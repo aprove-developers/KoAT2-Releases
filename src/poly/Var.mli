@@ -27,3 +27,4 @@ val fresh_ids : sort -> int -> t Enum.t
 val fresh_id_list : sort -> int -> t list
 val is_helper : t -> bool
 val mk_helper : sort -> int -> t
+val is_real : t -> bool

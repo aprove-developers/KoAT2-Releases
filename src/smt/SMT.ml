@@ -21,8 +21,8 @@ module Z3Solver =
         ~subject:(
           Polynomial.fold
             ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i !context (OurInt.to_int value))
-            ~var:(fun var -> if (Var.is_helper var) then 
-                               Z3.Arithmetic.Real.mk_const_s !context (Var.to_string var) 
+            ~var:(fun var -> if Var.is_real var then
+                               Z3.Arithmetic.Real.mk_const_s !context (Var.to_string var)
                              else
                                Z3.Arithmetic.Integer.mk_const_s !context (Var.to_string var))
             ~neg:(Z3.Arithmetic.mk_unary_minus !context)
@@ -41,10 +41,8 @@ module Z3Solver =
     let from_poly = 
       Polynomial.fold
             ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i !context (OurInt.to_int value))
-            ~var:(fun var -> if (Var.is_helper var) then
-                              match var with
-                                |Var.Helper (Var.Int,_) -> Z3.Arithmetic.Integer.mk_const_s !context (Var.to_string var)
-                                |Var.Helper (Var.Real,_) -> Z3.Arithmetic.Real.mk_const_s !context (Var.to_string var)
+            ~var:(fun var -> if Var.is_real var then
+                               Z3.Arithmetic.Real.mk_const_s !context (Var.to_string var)
                              else
                                Z3.Arithmetic.Integer.mk_const_s !context (Var.to_string var))
             ~neg:(Z3.Arithmetic.mk_unary_minus !context)
