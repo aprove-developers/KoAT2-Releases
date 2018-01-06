@@ -31,28 +31,28 @@ Now it is possible to define the method for the construction of time bounds.
 
 \input{theorems/timebound}
 
-The idea of this method is, that with a rank $\Pol(\location)$ for an entry location $\location \in \mathcal{E}_{\TSet'}$ we have a time bound for all decreasing transitions $t \in \TSet'_>$ from the location $\location$.
+The idea of this method is, that with a rank $\timerank(\location)$ for an entry location $\location \in \mathcal{E}_{\TSet'}$ we have a time bound for all decreasing transitions $t \in \TSet'_>$ from the location $\location$.
 Then, we need to lift this time bound into a global context, such that it expresses a time bound depending on the variables from the start of the program.
-For this purpose, we first need to substitute all variables of the rank $\Pol(\location)$ with the size bounds $\USize(r), \LSize(r)$ from the start to the transition $r \in \TSet_{\location}$ immediately before the location $\location$.
-Since $\Pol(\location)$ is affine, it only consists of monotonous variables.
+For this purpose, we first need to substitute all variables of the rank $\timerank(\location)$ with the size bounds $\USize(r), \LSize(r)$ from the start to the transition $r \in \TSet_{\location}$ immediately before the location $\location$.
+Since $\timerank(\location)$ is affine, it only consists of monotonous variables.
 Therefore, the substitution is defined.
-Because a time bound can only be positive, we apply to the result $\apprsubst{\Pol(\location)}{\LSize(r)}{\USize(r)}$ a $\maxO{\dot}$ operator.
+Because a time bound can only be positive, we apply to the result $\apprsubst{\timerank(\location)}{\LSize(r)}{\USize(r)}$ a $\maxO{\dot}$ operator.
 Now, we have to overapproximate the number of evaluations which might enter through the entry location $\location$.
 The previous time bound $\UTime$ yields such a bound for all entry transitions.
-Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\apprsubst{\Pol(\location)}{\LSize(\pret)}{\USize(\pret)}}$ is a time bound for $t \in \TSet'_>$ depending on the variables from the start.
+Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\apprsubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}$ is a time bound for $t \in \TSet'_>$ depending on the variables from the start.
 
 \input{graphs/motivational_example}
 
 As an example, we consider the motivational program from the introduction \ref{fig:motivational_example}.
-With the transition set $\TSet' = \braced{t_1}$ it is possible to determine a ranking function $\Pol(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).
-The original KoAT would now apply an operator to $\Pol$, such that the result would be a monotonic function with $\Pol'(\location_1) = \abs{x} + \abs{y}$.
+With the transition set $\TSet' = \braced{t_1}$ it is possible to determine a ranking function $\timerank(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).
+The original KoAT would now apply an operator to $\timerank$, such that the result would be a monotonic function with $\timerank'(\location_1) = \abs{x} + \abs{y}$.
 Then it is able to substitute each variable by its absolute size bound and therefore lift it to a global context.
 The new method does not use such an operator.
-Instead, it substitutes each variable of $\Pol$ by its lower/upper size bound depending on the monotonicity of this component.
+Instead, it substitutes each variable of $\timerank$ by its lower/upper size bound depending on the monotonicity of this component.
 Since $x$ is monotonically increasing in $x-y$ and $y$ is monotonically decreasing in $x-y$, we can substitute $x$ with the upper size bound and $y$ with the lower size bound.
 Lets assume, that we already inferred the size bounds $\USize(t_0,x) = \LSize(t_0,x) = x$ and $\USize(t_0,y) = \LSize(t_0,y) = y$.
 It is now possible to lift the components of the ranking functions to a global level.
-\[ \apprsubst{\Pol(\location)}{\LSize(t_0)}{\USize(t_0)} = \USize(t_0, x) - \LSize(t_0, y) = x - y \]
+\[ \apprsubst{\timerank(\location)}{\LSize(t_0)}{\USize(t_0)} = \USize(t_0, x) - \LSize(t_0, y) = x - y \]
 Since with a state $\valuation$ with $\valuation(x) < \valuation(y)$ the transition $t_1$ will simply not occur in an evaluation instead of occurring a negative number of times, we have to ensure the positivity of $x - y$ with the operation $\maxO{x - y}$.
 Then, the only step left is to consider the number of times an evaluation might enter the SCC from $t_0$.
 Since $t_0$ is an initial transition, its time bound is $\UTime(t_0) = 1$.
@@ -65,7 +65,7 @@ Consider again the program in figure \ref{fig:entrytransitions} with arbitrary g
 
 A trivial approach would be the usage of the second $\TSet'$ with $\TSet' = \TSet \setminus \TSet_0 = \braced{t_1, t_2, t_3, t_4}$.
 Then, we have $\mathcal{E}_{\TSet'} = \braced{\location_1}$ and $\TSet_{\location_1} = \braced{t_0}$.
-Therefore for each $t \in \TSet'_>$ we end up with $\UTime'(t) = \UTime(t_0) \cdot \maxO{\apprsubst{\Pol(\location_1)}{\LSize(t_0)}{\USize(t_0)}}$.
+Therefore for each $t \in \TSet'_>$ we end up with $\UTime'(t) = \UTime(t_0) \cdot \maxO{\apprsubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)}}$.
 Since $t_0 \in \TSet_0$ is an initial transition, we have $\UTime(t_0) = 1$ and $\UTime'(t)$ then reflects the expected result of a non-modular approach.
 
 This trivial approach requires us to find a ranking function, that satisfies the non-increasing constraint for all transitions.
@@ -77,10 +77,10 @@ Let's assume that the transition violating the non-increasing constraint is $t_1
 Since we reduced the set, we have fewer constraints and are more likely to find a ranking function.
 We have $\mathcal{E}_{\TSet'} = \braced{\location_2}$ and $\TSet_{\location_2} = \braced{t_2}$.
 Since $t_2$ is not part of a loop, its time bound is $\UTime(t_2) = 1$.
-Therefore, we end up with $\UTime'(t) = \maxO{\apprsubst{\Pol(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$.
+Therefore, we end up with $\UTime'(t) = \maxO{\apprsubst{\timerank(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$.
 
 Note that it is possible to select arbitrary subsets $\TSet' \subseteq \TSet$.
-A non-connected subset $\TSet' = \braced{t_1, t_3, t_4}$ could be chosen, but would lead to a bound $\UTime'(t) = \maxO{\apprsubst{\Pol(\location_1)}{\LSize(t_0)}{\USize(t_0)}} + \maxO{\apprsubst{\Pol(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$.
+A non-connected subset $\TSet' = \braced{t_1, t_3, t_4}$ could be chosen, but would lead to a bound $\UTime'(t) = \maxO{\apprsubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} + \maxO{\apprsubst{\timerank(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$.
 Also only a part of an SCC such as $\TSet' = \braced{t_4}$ could be chosen.
 But since $t_3 \in \TSet_{\location_3}$ would be a entry transition of $\TSet' = \braced{t_4}$, this would only be of benefit if we already inferred a time bound $\UTime(t_3) < \infty$.
 

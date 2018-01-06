@@ -4,15 +4,26 @@ In this section we introduce a definition of ranking functions.
 Ranking functions are well studied (\cite{bradley2005polyranking}, \cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}) and widely used in termination and complexity analysis.
 As mentioned earlier, we restrict the method to affine ranking functions.
 
-\begin{definition}[Ranking Function] 
-	We define $\Pol: \LSet \rightarrow \BoundSet_a(\PVSet)$ as ranking function for a transition set $\TSet$ if and only if there is a nonempty set of decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
+\begin{definition}[Time Ranking Function] 
+	We define $\timerank: \LSet \rightarrow \BoundSet_a(\PVSet)$ as time ranking function for a transition set $\TSet$ if and only if there is a nonempty set of decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
         For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
         \todo{How do we achieve that with the lower and upper update?}{}
-	\[ \guard \Rightarrow \exacteval{\Pol(\location)}{\valuation} \geq \exacteval{\Pol(\location')}{\valuation'}. \]
+	\[ \guard \Rightarrow \exacteval{\timerank(\location)}{\valuation} \geq \exacteval{\timerank(\location')}{\valuation'}. \]
         For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
-	\[ \guard \Rightarrow \exacteval{\Pol(\location)}{\valuation} - \exacteval{\cost((\location, \update, \guard, \location'))}{\valuation} \geq \exacteval{\Pol(\location')}{\valuation'} \]
+	\[ \guard \Rightarrow \exacteval{\timerank(\location)}{\valuation} - 1 \geq \exacteval{\timerank(\location')}{\valuation'} \]
         and
-	\[ \guard \Rightarrow \exacteval{\Pol(\location)}{\valuation} > 1. \]
+	\[ \guard \Rightarrow \exacteval{\timerank(\location)}{\valuation} > 1. \]
+\end{definition}
+
+\begin{definition}[Cost Ranking Function] 
+	We define $\costrank: \LSet \rightarrow \BoundSet_a(\PVSet)$ as cost ranking function for a transition set $\TSet$ if and only if there is a nonempty set of decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
+        For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
+        \todo{How do we achieve that with the lower and upper update?}{}
+	\[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'}. \]
+        For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
+	\[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} - \exacteval{\cost((\location, \update, \guard, \location'))}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'} \]
+        and
+	\[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} > 1. \]
 \end{definition}
 
 \todo{PRF Examples}{}
