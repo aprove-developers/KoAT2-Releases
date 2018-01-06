@@ -6,13 +6,15 @@ type t =
   | CutUnreachableLocations
   | CutUnsatisfiableTransitions
   | Chaining
+  | InvariantGeneration
   | TrivialTimeBounds [@@deriving show, ord, eq]
 
 let affects = function
   | CutUnreachableLocations -> []
   | TrivialTimeBounds -> []
+  | InvariantGeneration -> []
   | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining]
-  | Chaining -> [CutUnsatisfiableTransitions; Chaining]
+  | Chaining -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
 
 let lift_to_program transform program =
   MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (fun _ -> graph) program)))
@@ -25,6 +27,7 @@ let transform subject = function
   | TrivialTimeBounds -> TrivialTimeBounds.transform subject
   | CutUnsatisfiableTransitions -> lift_to_tuple CutUnsatisfiableTransitions.transform_program subject
   | Chaining -> lift_to_tuple (lift_to_program Chaining.transform_graph) subject
+  | InvariantGeneration -> lift_to_tuple InvariantGeneration.transform_program subject
 
 type outer_t = t
 module PreprocessorSet =
@@ -36,7 +39,7 @@ module PreprocessorSet =
     )
 
 let all =
-  [CutUnreachableLocations; TrivialTimeBounds; CutUnsatisfiableTransitions; Chaining]
+  [CutUnreachableLocations; TrivialTimeBounds; CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
   
 type strategy = t list -> subject -> subject
 
