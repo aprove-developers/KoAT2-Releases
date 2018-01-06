@@ -3,6 +3,7 @@ OCAMLOPTFLAGS += -g -p
 
 OCAMLPACKS[] =
     batteries
+    apron
     ppx_deriving_cmdliner
     ppx_deriving.show
     Z3

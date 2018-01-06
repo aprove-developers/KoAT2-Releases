@@ -167,6 +167,8 @@ module type Constraint =
         (** Assigns the variables of the constraint new names based on the rename map *)
         val rename : t -> RenameMap.t -> t
 
+        val atom_list : t -> atom list
+          
         (** Replaces all operations by new constructors. *)
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->

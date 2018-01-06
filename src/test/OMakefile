@@ -3,6 +3,7 @@ USE_OCAMLFIND = true
 OCAMLPACKS[] =
     Z3
     batteries
+    apron
     ocamlgraph
     fpath
     oUnit

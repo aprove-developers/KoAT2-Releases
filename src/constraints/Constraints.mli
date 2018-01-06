@@ -30,7 +30,7 @@ sig
     
   val dualise : Var.t list -> value list list -> polynomial list -> t
     
-  val farkas_transform : t -> atom -> t
+  val farkas_transform : t -> atom -> t    
     
   (* Add operations specific to polynomial constraints here if needed *)
 end

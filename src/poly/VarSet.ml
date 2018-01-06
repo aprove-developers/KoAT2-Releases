@@ -13,6 +13,11 @@ let map_to_list f varset =
   |> to_list
   |> List.map f
 
+let map_to_array f varset =
+  varset
+  |> to_array
+  |> Array.map f
+
 (* There is no to_string for sets in batteries,
    but there is a very efficient print function which is however a bit inconvenient to use. *)
 let to_string varset =

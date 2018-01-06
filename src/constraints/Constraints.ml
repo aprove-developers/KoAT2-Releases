@@ -65,7 +65,9 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
 
     let turn =
       List.map A.neg
-                                 
+
+    let atom_list = identity
+      
     let fold ~subject ~le ~correct ~conj =
       List.fold_left (fun c atom -> conj c (A.fold ~subject ~le atom)) correct
       
