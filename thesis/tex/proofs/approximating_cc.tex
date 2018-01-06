@@ -1,6 +1,6 @@
 We have to show that $\text{cc}(\lstate, \ustate) \leq \appreval{\sum_{t \in \TSet}\UCost(t)}{\lstate}{\ustate}$ holds for every state $\valuation_0 \in \Valuation$.
 
-Lets assume there exists a state $\valuation_0 \in \Valuation$ with $\valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcup$ such that there exists an infinite evaluation $(\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots$.
+Lets assume there exists a state $\valuation_0 \in \Valuation$ with $\lstate \leq \valuation_0 \leq \ustate$ such that there exists an infinite evaluation $(\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots$.
 Since $c(t) \geq 1$ for all transitions $t \in \TSet$, the sum of the costs of this sequence of transitions $c(t_0) + c(t_1) + \dots$ is infinite and therefore the cost complexity $\text{cc}(\lstate, \ustate) = \infty$ is infinite.
 Since the transition set $\TSet$ is finite, there must be a transition $t \in \TSet$, which occurs infinitely often in the evaluation.
 Thus, $\appreval{\UTime(t)}{\lstate}{\ustate} = \infty$ and therefore $\appreval{\UCost(t)}{\lstate}{\ustate} = \infty$.
@@ -8,9 +8,9 @@ Then, we have $\appreval{\sum_{t \in \TSet}\UCost(t)}{\lstate}{\ustate} = \infty
 
 \todo{Check cost definition and prove}{}
 
-Otherwise, for every state $\valuation_0 \in \Valuation$ with $\valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcup$ every evaluation $(\location_0, \valuation_0) \rightarrow^k_T (\location, \valuation)$ is finite.
+Otherwise, for every state $\valuation_0 \in \Valuation$ with $\lstate \leq \valuation_0 \leq \ustate$ every evaluation $(\location_0, \valuation_0) \rightarrow^k_T (\location, \valuation)$ is finite.
 Lets fix such a state $\valuation_0$.
-Since the time complexity $\text{rc}$ is defined as the maximal $k$ of all those evaluations, it suffices to prove that for any such evaluation $\appreval{\sum_{t \in \TSet}\UTime(t)}{\valuation^\sqcup}{\valuation^\sqcap} \geq k$ holds.
+Since the time complexity $\text{rc}$ is defined as the maximal $k$ of all those evaluations, it suffices to prove that for any such evaluation $\appreval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate} \geq k$ holds.
 Lets consider a fixed evaluation $(\location_0, \valuation_0) \rightarrow^k_T (\location, \valuation)$.
 Let $k_t \in \mathbb{N}$ be the number of times a transition $t \in \TSet$ occurs in this evaluation.
 Then, we have $k = \sum_{t \in \TSet} k_t$.

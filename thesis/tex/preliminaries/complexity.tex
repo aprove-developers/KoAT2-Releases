@@ -18,11 +18,11 @@ We define the time complexity of a program $\Program$ as the highest possible nu
   \[ \text{rc}(\lstate, \ustate) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, (\location, \valuation): \lstate \leq \valuation_0 \leq \ustate \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) } \]
 \end{definition}
 
-An upper time bound of a transition $t \in \TSet$ describes a maximal number of occurrences of that transition in an evaluation starting with an arbitrary initial state $\valuation_0 \in \Valuation$ between a lower and an upper bound $\valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap$.
+An upper time bound of a transition $t \in \TSet$ describes a maximal number of occurrences of that transition in an evaluation starting with an arbitrary initial state $\valuation_0 \in \Valuation$ between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
 
 \begin{definition}[Upper Time Bound]
   We call $\UTime: \TSet \rightarrow \BoundSet(\PVSet)$ a time bound if and only if for all $t \in \TSet$ and all states $\lstate, \ustate \in \Valuation$ it holds that
-  \[ \apprsubst{\UTime(t)}{\lstate}{\ustate} \geq \timeboundterm \]
+  \[ \appreval{\UTime(t)}{\lstate}{\ustate} \geq \timeboundterm \]
 \end{definition}
 
 Those definitions are slightly different than in related work. \todo{Source needed?}{}
