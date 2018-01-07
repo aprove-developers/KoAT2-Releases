@@ -62,15 +62,15 @@
 \newcommand{\usub}{\delta^\sqcap}
 \newcommand{\lsub}{\delta^\sqcup}
 
-\newcommand{\apprsubst}[3]{\text{replace me}}
+\newcommand{\apprsubst}[3]{\textbf{replace me}}
 \newcommand{\exactsubst}[2]{\llbracket #1 \rrbracket_{#2}}
-\newcommand{\oversubst}[3]{\lceil #1 \rceil^{#3}_{#2}}
-\newcommand{\undersubst}[3]{\lfloor #1 \rfloor^{#3}_{#2}}
+\newcommand{\usubst}[3]{\lceil #1 \rceil^{#3}_{#2}}
+\newcommand{\lsubst}[3]{\lfloor #1 \rfloor^{#3}_{#2}}
 
-\newcommand{\appreval}[3]{\text{replace me}}
+\newcommand{\appreval}[3]{\textbf{replace me}}
 \newcommand{\exacteval}[2]{\llbracket #1 \rrbracket_{#2}}
-\newcommand{\undereval}[3]{\lfloor #1 \rfloor^{#3}_{#2}}
-\newcommand{\overeval}[3]{\lceil #1 \rceil^{#3}_{#2}}
+\newcommand{\ueval}[3]{\lceil #1 \rceil^{#3}_{#2}}
+\newcommand{\leval}[3]{\lfloor #1 \rfloor^{#3}_{#2}}
 
 \newcommand{\timeboundterm}{
   \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, (\location, \valuation): \valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) }
