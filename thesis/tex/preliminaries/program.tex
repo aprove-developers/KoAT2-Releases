@@ -25,17 +25,17 @@ This is necessary, since the analyzed programs are often abstractions of other p
 We now formally define the programs used in this thesis.
 
 \begin{definition}[Program] 
-  Let $\VSet$ be the set of all occurring program variables.
-  Let $\TVSet$ be a finite set of temporary variables with $\TVSet \cap \VSet = \emptyset$.
+  Let $\PVSet$ be the set of all occurring program variables.
+  Let $\TVSet$ be a finite set of temporary variables with $\TVSet \cap \PVSet = \emptyset$.
   A configuration is a pair $(\location, \valuation) \in \LSet \times \Valuation$ that defines the values of the program variables at a specific location.
-  A state is a function $\valuation: (\VSet \cup \TVSet) \rightarrow \mathbb{Z}$ which assigns each program variable $v \in \VSet$ a value $\valuation(v) \in \mathbb{Z}$.
-  We write $\Valuation = \braced{ \valuation \mid \valuation: (\VSet \cup \TVSet) \rightarrow \mathbb{Z}}$ to denote the set of all states.
+  A state is a function $\valuation: \AllVarsSet \rightarrow \mathbb{Z}$ which assigns each program variable $v \in \PVSet$ a value $\valuation(v) \in \mathbb{Z}$.
+  We write $\Valuation = \braced{ \valuation \mid \valuation: \AllVarsSet \rightarrow \mathbb{Z}}$ to denote the set of all states.
   Let $\LSet$ be the set of all locations of a program.
-  Let $\TSet = \LSet \times (\VSet \rightarrow \BoundSet_p(\VSet \cup \TVSet)) \times \ConstraintSet(\VSet \cup \TVSet) \times \LSet$ be the set of all transitions of the program.
+  Let $\TSet = \LSet \times (\PVSet \rightarrow \BoundSet_p(\PVSet \cup \TVSet)) \times \ConstraintSet(\PVSet \cup \TVSet) \times \LSet$ be the set of all transitions of the program.
   A transition $t = (\location, \update, \guard, \location')$ consists of the start location $\location$, the target location $\location'$, the update function $\update$ and the guard $\guard$. 
   A program graph is a tuple $(\LSet, \TSet)$ where $\LSet$ is the set of program locations and $\TSet$ is a subset of all possible transitions between them.
   Let $\cost: \TSet \rightarrow \BoundSet(\PVSet)$ be a function which maps each transition to its costs with a specific state.
-  A program is a tuple $\Program = ((\LSet, \TSet), \location_0, \VSet, c)$.
+  A program is a tuple $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, c)$.
   We denote with $\location_0$ the unique program location with $\location_0 \in \LSet$ which has no entry transitions in the program.
   We write $t_0$ for an initial transition. That is a transition $(\location_0, \tau, \location) \in \TSet$ where the start location is the initial location $\location_0$.
   We write $\TSet_0 \subseteq \TSet$ to denote the set of all initial transitions.
@@ -45,7 +45,7 @@ The definition is based on the definition of programs of the previous KoAT \cite
 Furthermore, we use a common definition of strongly connected components of a program $\Program$ \cite{sccs}.
 
 \begin{definition}[Strongly connected component]
-  Let $\Program = ((\LSet, \TSet), \location_0, \VSet, c)$ be a program.
+  Let $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, c)$ be a program.
   We define $\SCC \subseteq \LSet$ as strongly connected component if and only if it is maximal and from every location $\location \in \SCC$ every other location $\location' \in \SCC$ is reachable.
 \end{definition}
 
@@ -63,8 +63,8 @@ Therefore, there is no restriction, that from a location $\location \in \LSet$ t
 For example, the program $\Program = (\braced{\location_0,\location_1,\location_2},\braced{(\location_0,\text{id},\text{true},\location_1),(\location_0,\text{id},\text{true},\location_2)})$ is a valid program, although it is possible to both move to $\location_1$ and $\location_2$ from location $\location_0$.
 Such a program is not representable in common software languages.
 
-For two states $\valuation_1, \valuation_2 \in \Valuation$ we define $\valuation_1 \leq \valuation_2$ iff for all variables $v \in \VSet$ it holds that $\valuation_1(v) \leq \valuation_2(v)$.
-We also define for a state $\valuation \in \Valuation$ the absolute value $\abs{\valuation} \in \Valuation$ iff for all variables $v \in \VSet$ it holds that $\abs{\valuation}(v) = \abs{\valuation(v)}$.
+For two states $\valuation_1, \valuation_2 \in \Valuation$ we define $\valuation_1 \leq \valuation_2$ iff for all variables $v \in \AllVarsSet$ it holds that $\valuation_1(v) \leq \valuation_2(v)$.
+We also define for a state $\valuation \in \Valuation$ the absolute value $\abs{\valuation} \in \Valuation$ iff for all variables $v \in \AllVarsSet$ it holds that $\abs{\valuation}(v) = \abs{\valuation(v)}$.
 
 In a last step, we have to define how a program can be executed.
 Therefore we define the term of an evaluation.
