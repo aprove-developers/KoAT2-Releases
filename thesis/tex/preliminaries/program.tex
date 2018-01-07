@@ -49,29 +49,37 @@ Furthermore, we use a common definition of strongly connected components of a pr
   We define $\SCC \subseteq \LSet$ as strongly connected component if and only if it is maximal and from every location $\location \in \SCC$ every other location $\location' \in \SCC$ is reachable.
 \end{definition}
 
-Informally, we can describe a strongly connected component as a maximal loop in a program.
 From this point on, we also use the abbreviation SCC for a strongly connected component.
 
-In a program, every variable is considered to be an integer value.
+In a program, every variable is considered to carry an integer value.
 A transition defines a possible move from one location to another location, if certain conditions are met.
 In a transition $(\location,\update,\guard,\location') \in \TSet$, the guard $\guard$ represents the condition, which has to be fulfilled to move to the location $\location'$.
 The update function $\update$ assigns each variable a value after the transition step.
 
 We consider non-deterministic programs in this master's thesis.
-\todo{Explain other non-determinism}{}
-Therefore, there is no restriction, that from a location $\location \in \LSet$ there must be only one possible transition, for which the condition is fulfilled.
+Non-determinism can occur in a program due to two reasons.
+First, if a program state fulfills the guard of multiple succeeding transitions. 
+There is no restriction, that from a location $\location \in \LSet$ there must be only one possible transition, for which the guard is fulfilled.
 For example, the program $\Program = (\braced{\location_0,\location_1,\location_2},\braced{(\location_0,\text{id},\text{true},\location_1),(\location_0,\text{id},\text{true},\location_2)})$ is a valid program, although it is possible to both move to $\location_1$ and $\location_2$ from location $\location_0$.
 Such a program is not representable in common software languages.
+The second reason for for non-determinism is an update $\update$ which assigns a program variable $v \in \PVSet$ an expression depending on one or multiple temporary variables $\tvar_1, \dots, \tvar_n \in \TVSet$.
+The value of these temporary variables are non-deterministic and only restricted by the guard $\guard$.
+Therefore, an update of the value of the variable $v \in \PVSet$ might result in different values.
+Consider the update $\update$ with $\update(x) = \tvar$, where $x \in \PVSet$ is a program variable and $\tvar \in \TVSet$ is a temporary variable.
+Also consider the guard $\guard = \braced{\tvar > 0, \tvar \leq y}$ with $y \in \PVSet$.
+Then, the update of $x$ might result in a range of values $0 < x \leq y$. 
+Note that while the temporary variables $\tvar \in \TVSet$ are global, their value is considered to be local to a transition.
+This is ensured with the definition of an evaluation step.
 
-For two states $\valuation_1, \valuation_2 \in \Valuation$ we define $\valuation_1 \leq \valuation_2$ iff for all variables $v \in \AllVarsSet$ it holds that $\valuation_1(v) \leq \valuation_2(v)$.
-We also define for a state $\valuation \in \Valuation$ the absolute value $\abs{\valuation} \in \Valuation$ iff for all variables $v \in \AllVarsSet$ it holds that $\abs{\valuation}(v) = \abs{\valuation(v)}$.
+\todo{Necessary?}{For two states $\valuation_1, \valuation_2 \in \Valuation$ we define $\valuation_1 \leq \valuation_2$ iff for all variables $v \in \AllVarsSet$ it holds that $\valuation_1(v) \leq \valuation_2(v)$.
+We also define for a state $\valuation \in \Valuation$ the absolute value $\abs{\valuation} \in \Valuation$ iff for all variables $v \in \AllVarsSet$ it holds that $\abs{\valuation}(v) = \abs{\valuation(v)}$.}
 
 In a last step, we have to define how a program can be executed.
 Therefore we define the term of an evaluation.
 
 \begin{definition}[Evaluation] 
   For a transition $t \in \TSet$ an evaluation step $\rightarrow_t \in (\LSet \times \Sigma) \times (\LSet \times \Sigma)$ is a relation between a previous state at a location and a resulting state at a following location.
-  We write $(\location, \valuation) \rightarrow_t (\location', \valuation')$ iff with the transition $t = (\location_t, \update, \guard, \location_t') \in \TSet$ three conditions are met.
+  We write $(\location, \valuation) \rightarrow_t (\location', \valuation')$ iff the transition $t = (\location_t, \update, \guard, \location_t') \in \TSet$ satisfies four conditions.
   First, it holds that the state satisfies the guard $\valuation \models \guard$.
   Second, for each variable $v \in \PVSet$ the resulting state $\valuation'$ satisfies the equation $\exacteval{\update(v)}{\valuation} = \exacteval{v}{\valuation'}$.
   Third, for each temporary variable $v \in \TVSet$ the value $\valuation'(v)$ of the resulting state $\valuation'$ is arbitrary.
