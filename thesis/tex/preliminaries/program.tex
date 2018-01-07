@@ -51,15 +51,15 @@ Furthermore, we use a common definition of strongly connected components of a pr
 
 From this point on, we also use the abbreviation SCC for a strongly connected component.
 
-In a program, every variable is considered to carry an integer value.
+In a program, every variable is assumed to carry an integer value.
 A transition defines a possible move from one location to another location, if certain conditions are met.
 In a transition $(\location,\update,\guard,\location') \in \TSet$, the guard $\guard$ represents the condition, which has to be fulfilled to move to the location $\location'$.
-The update function $\update$ assigns each variable a value after the transition step.
+The update function $\update$ assigns each program variable a value after the transition step.
 
 We consider non-deterministic programs in this master's thesis.
 Non-determinism can occur in a program due to two reasons.
 First, if a program state fulfills the guard of multiple succeeding transitions. 
-There is no restriction, that from a location $\location \in \LSet$ there must be only one possible transition, for which the guard is fulfilled.
+There is no restriction, that only one guard of transitions with the same starting location can be fulfilled.
 For example, the program $\Program = (\braced{\location_0,\location_1,\location_2},\braced{(\location_0,\text{id},\text{true},\location_1),(\location_0,\text{id},\text{true},\location_2)})$ is a valid program, although it is possible to both move to $\location_1$ and $\location_2$ from location $\location_0$.
 Such a program is not representable in common software languages.
 The second reason for for non-determinism is an update $\update$ which assigns a program variable $v \in \PVSet$ an expression depending on one or multiple temporary variables $\tvar_1, \dots, \tvar_n \in \TVSet$.

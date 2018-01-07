@@ -71,19 +71,23 @@
 \newcommand{\ueval}[3]{\lceil #1 \rceil^{#3}_{#2}}
 \newcommand{\leval}[3]{\lfloor #1 \rfloor^{#3}_{#2}}
 
+\newcommand{\timecomplexityterm}{
+  \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, (\location, \valuation): \lstate \leq \valuation_0 \leq \ustate \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) }
+}
+
 \newcommand{\timeboundterm}{
-  \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, (\location, \valuation): \valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) }
+  \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, (\location, \valuation): \lstate \leq \valuation_0 \leq \ustate \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^k (\location, \valuation) }
 }
 
 \newcommand{\sizeboundterm}{
-  \braced{ \valuation(v) \mid \exists \valuation_0, (\location, \valuation): \valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\actt) (\location, \valuation)}
+  \braced{ \valuation(v) \mid \exists \valuation_0, (\location, \valuation): \lstate \leq \valuation_0 \leq \ustate \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\actt) (\location, \valuation)}
 }
 
 \newcommand{\usizeboundterm}{\sup \sizeboundterm}
 \newcommand{\lsizeboundterm}{\inf \sizeboundterm}
 
 \newcommand{\localsizeboundterm}{
-  \braced{\valuation'(v) \mid \exists (\location, \valuation), (\location', \valuation'): \valuation^\sqcup \leq \valuation \leq \valuation^\sqcap \wedge (\location, \valuation) \rightarrow_t (\location', \valuation')}
+  \braced{\valuation'(v) \mid \exists (\location, \valuation), (\location', \valuation'): \lstate \leq \valuation \leq \ustate \wedge (\location, \valuation) \rightarrow_t (\location', \valuation')}
 }
 
 \newcommand{\ulocalsizeboundterm}{\sup \localsizeboundterm}
@@ -91,7 +95,12 @@
 
 \newcommand{\costcomplexityterm}{
   \braced{ \sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i} \mid \exists \valuation_0, k \geq 1: 
-    \valuation^\sqcup \leq \valuation_0 \leq \valuation^\sqcap \wedge (\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location_k, \valuation_k) }
+    \lstate \leq \valuation_0 \leq \ustate \wedge (\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location_k, \valuation_k) }
+}
+
+\newcommand{\costboundterm}{
+  \sup \braced{ \sum_{0 \leq i \leq k} \exacteval{\cost(t)}{\valuation_i} \mid \exists \valuation_0, k \geq 1:
+    \lstate \leq \valuation_0 \leq \ustate \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location_1, \valuation_1) (\rightarrow^* \circ \rightarrow_t) \dots (\rightarrow^* \circ \rightarrow_t) (\location_k, \valuation_k) }
 }
 
 \newcommand{\Proof}[2]{

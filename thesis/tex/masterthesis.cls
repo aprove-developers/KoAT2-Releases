@@ -47,6 +47,7 @@
 %%%%% theorem environments
 \newtheorem{definition}{Definition}
 \newtheorem{theorem}{Theorem}
+\newtheorem{remark}{Remark}
 \newtheorem{Algorithm}{Algorithm}
 
 %%%%% Float styling

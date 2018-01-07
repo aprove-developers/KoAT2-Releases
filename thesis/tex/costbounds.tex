@@ -1,0 +1,13 @@
+\section{Computing cost bounds}
+
+\todo{Do}{}
+
+\begin{definition}[Upper Cost Bound]
+  We call $\UCost: \TSet \rightarrow \BoundSet(\PVSet)$ a \textbf{cost bound} if and only if for all $t \in \TSet$ it holds that
+  \[ \UCost(t) = \UTime(t) \cdot
+  \begin{cases}
+    \maxO{\cost(t)} & \text{if } t \in \TSet_0 \\
+    \maxO{\maximum{\usubst{\cost(t)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)}} & \text{otherwise }
+  \end{cases}
+  \]
+\end{definition}
