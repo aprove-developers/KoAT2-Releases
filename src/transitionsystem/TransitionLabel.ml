@@ -108,6 +108,9 @@ let update t var = VarMap.Exceptionless.find var t.update
                  
 let guard t = t.guard
 
+let map_guard f label =
+  { label with guard = f label.guard }
+
 let cost t = t.cost
 
 let vars {update; guard; cost; _} =

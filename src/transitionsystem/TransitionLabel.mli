@@ -49,6 +49,9 @@ val update : t -> Var.t -> polynomial Option.t
 
 val guard : t -> Guard.t
 
+(** Returns a new transition label with the guard changed. *)
+val map_guard : (Guard.t -> Guard.t) -> t -> t
+
 val default : t
 
 val vars : t -> VarSet.t

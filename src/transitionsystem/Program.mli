@@ -1,5 +1,6 @@
 open Batteries
 open Polynomials
+open Constraints
    
 (** Provides default modules to create locations, transitions and transitionsystems *)
 
@@ -31,6 +32,8 @@ sig
     val label : t -> TransitionLabel.t
     val target : t -> Location.t
     val cost : t -> Polynomial.t
+    (** Adds the invariant to this transition. *)
+    val add_invariant : Constraint.t -> t -> t
   end
   module TransitionSet : module type of Set.Make(struct include Transition let compare = Transition.compare_same end)
 
@@ -41,6 +44,10 @@ sig
     val transitions : t -> TransitionSet.t
     val loc_transitions : t -> Location.t list -> TransitionSet.t
     val equivalent : t -> t -> bool
+    (** Replaces the first edge by the second edge. *)
+    val replace_edge_e : Transition.t -> Transition.t -> t -> t
+    (** Adds the invariant to the location of the graph. *)
+    val add_invariant : Location.t -> Constraint.t -> t -> t
   end
        
   module RV :
@@ -103,6 +110,9 @@ val from : TransitionLabel.t list -> Location.t -> t
 val rvg : t -> RVG.t
 
 val graph : t -> TransitionGraph.t
+
+(** Adds the invariant to the location of the program. *)
+val add_invariant : Location.t -> Constraint.t -> t -> t
 
 (** Returns a set of all transitions which occur directly before the given transition in the graph. 
        Corresponds to pre(t). *)

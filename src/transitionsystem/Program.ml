@@ -1,5 +1,6 @@
 open Batteries
-
+open Constraints
+   
 module Types =
   struct
    
@@ -45,6 +46,9 @@ module Types =
           
         let compare_equivalent =
           compare TransitionLabel.compare_equivalent
+
+        let add_invariant invariant (l,t,l') =
+          (l, TransitionLabel.map_guard (Constraint.mk_and invariant) t, l')
           
         let src (src, _, _) = src
                             
@@ -91,6 +95,16 @@ module Types =
           && Equivalence_TransitionSet.equal (graph1 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
                                              (graph2 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
 
+        let replace_edge_e old_transition new_transition graph =
+          add_edge_e (remove_edge_e graph old_transition) new_transition
+          
+        let add_invariant location invariant graph =
+          location
+          |> succ_e graph (* An invariant holds before the execution of the successor transitions *)
+          |> List.fold_left (fun result transition ->
+                 replace_edge_e transition (Transition.add_invariant invariant transition) result
+               ) graph          
+          
       end
 
     module RV =
@@ -257,6 +271,9 @@ let graph g = g.graph
             
 let pre program (l,t,l') =
   List.enum (TransitionGraph.pred_e (graph program) l)
+
+let add_invariant location invariant =
+  map_graph (TransitionGraph.add_invariant location invariant)
 
 let rvg program =
   let add_transition (post_transition: Transition.t) (rvg: RVG.t): RVG.t =
