@@ -25,13 +25,12 @@ Therefore we define two subsets $\BoundSet^\sqcap_l, \BoundSet^\sqcup_l \subsete
 
 We now use these local bound sets for the definition of the scaled sum.
 
-\todo{With approximated valuation?}{}
 \begin{definition}[Scaled sum]
-  We say that $\alpha \in \RV$ is bounded by an \textbf{upper} scaled sum if and only if there is a bound $b \in \BoundSet^\sqcap_l$ such that it holds for all states $\lstate \leq \ustate$ that
-  \[ \appreval{\ULSB(\alpha)}{\lstate}{\ustate} = \appreval{b}{\lstate}{\ustate} \]
+  We say that $\alpha \in \RV$ is bounded by an \textbf{upper scaled sum} if and only if there is a bound $b \in \BoundSet^\sqcap_l$ such that it holds for all states $\lstate \leq \ustate$ that
+  \[ \ueval{\ULSB(\alpha)}{\lstate}{\ustate} = \ueval{b}{\lstate}{\ustate} \]
   We then denote with $s^\sqcap_\alpha$ the scaling factor $s$, with $e^\sqcap_\alpha$ the constant $e$ and with the sets $P_{\alpha,1}^\sqcap, P_{\alpha,2}^\sqcap, N_{\alpha,1}^\sqcap, N_{\alpha,2}^\sqcap$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
-  We say that $\alpha \in \RV$ is bounded by a \textbf{lower} scaled sum if and only if there is a bound $b \in \BoundSet^\sqcup_l$ such that it holds for all states $\lstate \leq \ustate$ that
-  \[ \appreval{\LLSB(\alpha)}{\lstate}{\ustate} = \appreval{b}{\lstate}{\ustate} \]
+  We say that $\alpha \in \RV$ is bounded by a \textbf{lower scaled sum} if and only if there is a bound $b \in \BoundSet^\sqcup_l$ such that it holds for all states $\lstate \leq \ustate$ that
+  \[ \leval{\LLSB(\alpha)}{\lstate}{\ustate} = \leval{b}{\lstate}{\ustate} \]
   We then denote with $s^\sqcup_\alpha$ the scaling factor $s$, with $e^\sqcup_\alpha$ the constant $e$ and with the sets $P_{\alpha,1}^\sqcup, P_{\alpha,2}^\sqcup, N_{\alpha,1}^\sqcup, N_{\alpha,2}^\sqcup$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
 \end{definition}
 

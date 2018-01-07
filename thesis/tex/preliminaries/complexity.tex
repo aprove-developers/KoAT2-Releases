@@ -22,7 +22,7 @@ An upper time bound of a transition $t \in \TSet$ describes a maximal number of 
 
 \begin{definition}[Upper Time Bound]
   We call $\UTime: \TSet \rightarrow \BoundSet(\PVSet)$ a time bound if and only if for all $t \in \TSet$ and all states $\lstate, \ustate \in \Valuation$ it holds that
-  \[ \appreval{\UTime(t)}{\lstate}{\ustate} \geq \timeboundterm \]
+  \[ \ueval{\UTime(t)}{\lstate}{\ustate} \geq \timeboundterm \]
 \end{definition}
 
 Those definitions are slightly different than in related work. \todo{Source needed?}{}
@@ -51,9 +51,9 @@ While upper size bounds are always higher than the highest possible value at a t
 \begin{definition}[Worst-Case Size Bound]
   Let $\RV = \TSet \cup \VSet$ be the set of all result variables.
   We call $\USize: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper} size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
-  \[ \appreval{\USize(t, v)}{\lstate}{\ustate} \geq \usizeboundterm. \]
+  \[ \ueval{\USize(t, v)}{\lstate}{\ustate} \geq \usizeboundterm. \]
   Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower} size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
-  \[ \appreval{\LSize(t, v)}{\lstate}{\ustate} \geq \lsizeboundterm. \]
+  \[ \leval{\LSize(t, v)}{\lstate}{\ustate} \leq \lsizeboundterm. \]
   Then, we call $\Size$ a size bound.
 \end{definition}
 
@@ -67,9 +67,9 @@ We then use those local size bounds to lift them in a global context.
 
 \begin{definition}[Local Size Bound]
   We call $\ULSB: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper} local size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
-  \[ \appreval{\ULSB(t, v)}{\lstate}{\ustate} \geq \ulocalsizeboundterm. \]
+  \[ \ueval{\ULSB(t, v)}{\lstate}{\ustate} \geq \ulocalsizeboundterm. \]
   Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower} local size bound if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
-  \[ \appreval{\LLSB(t, v)}{\lstate}{\ustate} \geq \llocalsizeboundterm. \]
+  \[ \leval{\LLSB(t, v)}{\lstate}{\ustate} \leq \llocalsizeboundterm. \]
   We then call $\LSB$ a local size bound.
 \end{definition}
 
@@ -109,13 +109,11 @@ In fact, we are only able to use the distinction between upper and lower size bo
 For arbitrary costs $\cost(t) \in \BoundSet(\PVSet) \setminus \BoundSet_a(\PVSet)$ it is necessary to consider the monotonic approach from the original KoAT.
 
 \begin{definition}[Upper Cost Bound]
-  Let $\abs{\mathcal{S}}(t, v)$ denote the highest absolute value $\max(\USize(t, v), -\LSize(t, v))$ a variable $v$ can reach at a transition $t$.
   We call $\UCost: \TSet \rightarrow \BoundSet(\PVSet)$ a cost bound if and only if for all $t \in \TSet$ it holds that
   \[ \UCost(t) = \UTime(t) \cdot
   \begin{cases}
     \maxO{\cost(t)} & \text{if } t \in \TSet_0 \\
-    \maxO{\maximum{\apprsubst{\cost(t)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)}} & \text{if } \cost(t) \in \BoundSet_a(\PVSet) \\
-    \maxO{\maximum{\exactsubst{\abs{\cost(t)}}{\abs{\mathcal{S}}(\pret)}{} \mid \pret \in \pre(t)}} & \text{otherwise} \\
+    \maxO{\maximum{\usubst{\cost(t)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)}} & \text{otherwise }
   \end{cases}
   \]
 \end{definition}

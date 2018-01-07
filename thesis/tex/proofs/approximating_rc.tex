@@ -1,15 +1,15 @@
-We have to show that $\text{rc}(\lstate, \ustate) \leq \appreval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate}$ holds for states $\lstate, \ustate \in \Valuation$ with $\lstate \leq \ustate$.
+We have to show that $\text{rc}(\lstate, \ustate) \leq \ueval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate}$ holds for states $\lstate, \ustate \in \Valuation$ with $\lstate \leq \ustate$.
 
 Lets assume there exists a state $\valuation_0 \in \Valuation$ with $\lstate \leq \valuation_0 \leq \ustate$ such that there exists an infinite evaluation $(\location_0, \valuation_0) \rightarrow_T (\location_1, \valuation_1) \rightarrow_T \dots$.
 Then, the time complexity $\text{rc}(\lstate, \ustate) = \infty$ is infinite.
 Also, there must be a transition $t \in \TSet$, which occurs infinitely often in the evaluation.
-Thus, $\appreval{\UTime(t)}{\lstate}{\ustate} = \infty$ and therefore we have $\appreval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate} = \infty$ and $\text{rc}(\lstate, \ustate) \leq \appreval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate}$.
+Thus, $\ueval{\UTime(t)}{\lstate}{\ustate} = \infty$ and therefore we have $\ueval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate} = \infty$ and $\text{rc}(\lstate, \ustate) \leq \ueval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate}$.
 
 Otherwise, for every state $\valuation_0 \in \Valuation$ with $\lstate \leq \valuation_0 \leq \ustate$ every evaluation $(\location_0, \valuation_0) \rightarrow^k_T (\location, \valuation)$ is finite.
 Lets fix such a state $\valuation_0$.
-Since the time complexity $\text{rc}$ is defined as the maximal $k$ of all those evaluations, it suffices to prove that for any such evaluation $\appreval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate} \geq k$ holds.
+Since the time complexity $\text{rc}$ is defined as the maximal $k$ of all those evaluations, it suffices to prove that for any such evaluation $\ueval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate} \geq k$ holds.
 Lets consider a fixed evaluation $(\location_0, \valuation_0) \rightarrow^k_T (\location, \valuation)$.
 Let $k_t \in \mathbb{N}$ be the number of times a transition $t \in \TSet$ occurs in this evaluation.
 Then, we have $k = \sum_{t \in \TSet} k_t$.
 Also, for each $t \in \TSet$ the evaluation must be of the form $(\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^{k_t} (\location, \valuation)$.
-Since by definition of $\UTime$ it holds that $\appreval{\UTime(t)}{\lstate}{\ustate} \geq k_t$, we have $\appreval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate} \geq \sum_{t \in \TSet} k_t = k$.
+Since by definition of $\UTime$ it holds that $\ueval{\UTime(t)}{\lstate}{\ustate} \geq k_t$, we have $\ueval{\sum_{t \in \TSet}\UTime(t)}{\lstate}{\ustate} \geq \sum_{t \in \TSet} k_t = k$.

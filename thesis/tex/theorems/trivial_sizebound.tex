@@ -8,7 +8,7 @@
   \begin{cases}
     \ULSB(t, v) & \text{ if } t \in \TSet_0 \\
     \USize(t, v) & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \ULSB(t,v) \notin \BoundSet^\sqcap_l \\
-    \maximum{ \apprsubst{\ULSB(t,v)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)} & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \ULSB(t,v) \in \BoundSet^\sqcap_l \\
+    \maximum{ \usubst{\ULSB(t,v)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)} & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \ULSB(t,v) \in \BoundSet^\sqcap_l \\
   \end{cases}
   \]
   Similarly, we define a lower size bound for $(t,v)$.
@@ -16,7 +16,7 @@
   \begin{cases}
     \LLSB(t, v) & \text{ if } t \in \TSet_0 \\
     \LSize(t, v) & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \LLSB(t,v) \notin \BoundSet^\sqcap_l \\
-    \maximum{ \apprsubst{\LLSB(t,v)}{\USize(\pret)}{\LSize(\pret)} \mid \pret \in \pre(t)} & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \LLSB(t,v) \in \BoundSet^\sqcap_l \\
+    \minimum{ \lsubst{\LLSB(t,v)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)} & \text{ if } t \in \TSet \setminus \TSet_0 \text{ and } \LLSB(t,v) \in \BoundSet^\sqcap_l \\
   \end{cases}
   \]
   Then, $\mathit{SizeBounds}(\UTime, \Size, \braced{(t,v)}) = (\LSize', \USize')$ is also a size approximation.
