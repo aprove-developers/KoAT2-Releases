@@ -1,0 +1,64 @@
+In the preliminaries, a definition of an exact evaluation of bounds from the bound set $\BoundSet$ was given.
+With such an exact evaluation it is possible to evaluate a bound $b \in \BoundSet$ with a state $\valuation \in \Valuation$ to a value $\exacteval{b}{\valuation} \in \ValueSet$.
+In general, we can only assume to have a lower bound $\lstate \leq \valuation$ and an upper bound $\ustate \geq \valuation$ for a state $\valuation \in \Valuation$.
+
+\todo{Explain}{}
+
+Instead of a substitution which replaces variables with a single substitution $\delta: \VSet \rightarrow \BoundSet(\VSet)$, we define a substitution with a case distinction for monotonically increasing and monotonically decreasing variables.
+In a substitution $\usubst{b}{\lsub}{\usub}$, a monotonically increasing variable is substituted with the substitution $\usub: \VSet \rightarrow \BoundSet(\VSet)$ and a monotonically decreasing variable is substituted with the substitution $\lsub: \VSet \rightarrow \BoundSet(\VSet)$.
+If the variable is not monotonous in the bound $b$, then the substitution is undefined.
+\begin{definition}[Overapproximated replacement]
+  Let $K$ be an arbitrary sets of elements with an addition $+: K \times K \rightarrow K$, a negation $-: K \rightarrow K$, a multiplication $\cdot: K \times K \rightarrow K$ and a max operator $\max: K \times K \rightarrow K$.
+  For a bound $b \in \BoundSet(\VSet)$ and two functions $\lsub, \usub: \VSet \rightarrow K$, we denote with $\usubst{b}{\lsub}{\usub}$ a function of the type $(\VSet \rightarrow K) \times (\VSet \rightarrow K) \rightarrow K$, which replaces the variables of the bound $b$ with values from the functions $\lsub, \usub$ such that the following equations hold.
+  \[ \usubst{\infty}{\lsub}{\usub} = \infty \text{ for } \infty \in \BoundSet(\VSet) \]
+  \[ \usubst{k}{\lsub}{\usub} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet) \] 
+  \[ \usubst{v}{\lsub}{\usub} = \usub(v) \text{ for all } v \in \VSet \subset \BoundSet(\VSet) \] 
+  \[ \usubst{-b}{\lsub}{\usub} = -\lsubst{b}{\lsub}{\usub} \text{ for all } b \in \BoundSet(\VSet) \] 
+  \[ \usubst{b_1 + b_2}{\lsub}{\usub} = \usubst{b_1}{\lsub}{\usub} + \usubst{b_2}{\lsub}{\usub} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ \usubst{b_1 \cdot b_2}{\lsub}{\usub} = \maximum{
+    \usubst{b_1}{\lsub}{\usub} \cdot \usubst{b_2}{\lsub}{\usub},
+    \usubst{b_1}{\lsub}{\usub} \cdot \lsubst{b_2}{\lsub}{\usub},
+    \lsubst{b_1}{\lsub}{\usub} \cdot \usubst{b_2}{\lsub}{\usub},
+    \lsubst{b_1}{\lsub}{\usub} \cdot \lsubst{b_2}{\lsub}{\usub}
+  } \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ \usubst{\max(b_1, b_2)}{\lsub}{\usub} = \maximum{\usubst{b_1}{\lsub}{\usub}, \usubst{b_2}{\lsub}{\usub}} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
+  \[ \usubst{k^b}{\lsub}{\usub} = k^{\usubst{b}{\lsub}{\usub}} \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
+\end{definition}
+
+\begin{definition}[Underapproximated replacement]
+  Let $K$ be an arbitrary sets of elements with an addition $+: K \times K \rightarrow K$, a negation $-: K \rightarrow K$, a multiplication $\cdot: K \times K \rightarrow K$ and a max operator $\max: K \times K \rightarrow K$.
+  For a bound $b \in \BoundSet(\VSet)$ and two functions $\lsub, \usub: \VSet \rightarrow K$, we denote with $\lsubst{b}{\lsub}{\usub}$ a function of the type $(\VSet \rightarrow K) \times (\VSet \rightarrow K) \rightarrow K$, which replaces the variables of the bound $b$ with values from the functions $\lsub, \usub$ such that the following equations hold.
+  \[ \lsubst{\infty}{\lsub}{\usub} = \infty \text{ for } \infty \in \BoundSet(\VSet) \]
+  \[ \lsubst{k}{\lsub}{\usub} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet) \] 
+  \[ \lsubst{v}{\lsub}{\usub} = \lsub(v) \text{ for all } v \in \VSet \subset \BoundSet(\VSet) \] 
+  \[ \lsubst{-b}{\lsub}{\usub} = -\usubst{b}{\lsub}{\usub} \text{ for all } b \in \BoundSet(\VSet) \] 
+  \[ \lsubst{b_1 + b_2}{\lsub}{\usub} = \lsubst{b_1}{\lsub}{\usub} + \lsubst{b_2}{\lsub}{\usub} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ \lsubst{b_1 \cdot b_2}{\lsub}{\usub} = \minimum{
+    \usubst{b_1}{\lsub}{\usub} \cdot \usubst{b_2}{\lsub}{\usub},
+    \usubst{b_1}{\lsub}{\usub} \cdot \lsubst{b_2}{\lsub}{\usub},
+    \lsubst{b_1}{\lsub}{\usub} \cdot \usubst{b_2}{\lsub}{\usub},
+    \lsubst{b_1}{\lsub}{\usub} \cdot \lsubst{b_2}{\lsub}{\usub}
+  } \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
+  \[ \lsubst{\max(b_1, b_2)}{\lsub}{\usub} = \maximum{\lsubst{b_1}{\lsub}{\usub}, \lsubst{b_2}{\lsub}{\usub}} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
+  \[ \lsubst{k^b}{\lsub}{\usub} = k^{\lsubst{b}{\lsub}{\usub}} \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
+\end{definition}
+
+The bound set $\BoundSet(\VSet)$ meets the criteria of $K$.
+Therefore, two functions $\lsub, \usub: \VSet \rightarrow \BoundSet(\VSet)$ qualify for an approximated replacement.
+We call an approximated replacement with such functions a substitution.
+
+\todo{Prove}{}
+
+\begin{theorem}[Soundness of approximated substitutions]
+  Let $\lsub, \usub: \VSet \rightarrow \BoundSet(\VSet)$ be two substitutions with $\exacteval{\lsub(v)}{\valuation} \leq \exacteval{\usub(v)}{\valuation}$ for each variable $v \in \VSet$ and each state $\valuation \in \Valuation$.
+  Let $b \in \BoundSet(\VSet)$ be a bound and $\valuation \in \Valuation$ a state.
+  Then, we have
+  \[ \exacteval{\lsubst{b}{\lsub}{\usub}}{\valuation} \leq \exacteval{b}{\valuation} \leq \exacteval{\usubst{b}{\lsub}{\usub}}{\valuation}. \]
+\end{theorem}
+
+\begin{theorem}[Soundness of approximated evaluations]
+  Let $\lstate, \valuation, \ustate: \VSet \rightarrow \ValueSet$ be three states with $\lstate \leq \valuation \leq \ustate$.
+  Let $b \in \BoundSet(\VSet)$ be a bound.
+  Then, we have
+  \[ \leval{b}{\lstate}{\ustate} \leq \exacteval{b}{\valuation} \leq \ueval{b}{\lstate}{\ustate}. \]
+\end{theorem}
