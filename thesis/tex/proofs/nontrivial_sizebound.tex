@@ -1,37 +1,47 @@
-We only regard the case where every $\rv \in \SCC$ is bounded by an upper scaled sum and a lower scaled sum.
+We only regard the case where every result variable $\rv \in \SCC$ is bounded by an upper scaled sum and a lower scaled sum.
+That is, if $\ULSB(\rv) \in \BoundSet^\sqcap_l$ and $\LLSB(\rv) \in \BoundSet^\sqcup_l$ for all result variables $\rv \in \SCC$.
 Then, for all result variables $\actrv = (\actt, v) \in \RV$, we have to show that two statements hold for all states $\lstate, \ustate \in \Valuation$ and variables $v \in \VSet$.
 \[ \ueval{\USize'(\actt, v)}{\lstate}{\ustate} \geq \usizeboundterm \]
 \[ \leval{\LSize'(\actt, v)}{\lstate}{\ustate} \leq \lsizeboundterm \]
 To this end, we now \textbf{fix $\lstate$, $\ustate$ and $\valuation_0$} to arbitrary initial states with $\lstate \leq \valuation_0 \leq \ustate$ and consider a \textbf{fixed evaluation}.
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\actt) (\actl, \actstate) \]
-Our goal is to show that the defined size bounds are correct lower and upper bounds.
+Our goal is to show that the defined size bounds are correct lower and upper bounds for each variable $v \in \PVSet$.
 \begin{equation} \label{eq:sizebound_target}
-  \forall v \in \VSet: \ueval{\USize'(\actt, v)}{\lstate}{\ustate} \geq \actstate(v) \geq \leval{\LSize'(\actt, v)}{\lstate}{\ustate}
+  \ueval{\USize'(\actt, v)}{\lstate}{\ustate} \geq \actstate(v) \geq \leval{\LSize'(\actt, v)}{\lstate}{\ustate}
 \end{equation}
 Instead of proving (\ref{eq:sizebound_target}) directly, we proof a simplified hypothesis, which implies the target (\ref{eq:sizebound_target}).
 For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition t was used in the evaluation.
 Then, we define an upper bound $d^\sqcap \in \BoundSet(\PVSet)$ and a lower bound $d^\sqcup \in \BoundSet(\PVSet)$ for the absolute value of any variable which can be reached in the evaluation.
+For $\square \in \braced{\sqcup, \sqcap}$ we define
 \[ d^\square = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} \cdot \left( \start + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \effect^\square_t \right) \right). \]
 This enables us to define the hypothesis.
 \begin{equation} \label{eq:sizebound_hypothesis}
-  \forall v \in \VSet: \ueval{d^\sqcap}{\lstate}{\ustate} \geq \maxO{\actstate(v)} \wedge \leval{d^\sqcup}{\lstate}{\ustate} \geq \maxO{-\actstate(v)}
+  \ueval{d^\sqcap}{\lstate}{\ustate} \geq \maxO{\actstate(v)} \wedge \ueval{d^\sqcup}{\lstate}{\ustate} \geq \maxO{-\actstate(v)}
 \end{equation}
 We now show that the goal (\ref{eq:sizebound_target}) indeed follows from the claim (\ref{eq:sizebound_hypothesis}).
 Note that $\ueval{\UTime(t)}{\lstate}{\ustate} \geq k_t$ holds by definition of $k_t$.
+Additionally, we have $\scale^\sqcap_t \geq 1$ and $\scale^\sqcup_t \geq 1$ by definition of the local size bounds.
 Also $\maxO{\actstate(v)}$ is always greater or equal than $\actstate(v)$ as well as $\maxO{-\actstate(v)}$ is always greater or equal than $-\actstate(v)$.
-Additionally we have $\scale^\sqcap_t \geq 1$ and $\scale^\sqcup_t \geq 1$ by definition of the local size bounds.
-Furthermore $\ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} \geq 0$, $\leval{\effect^\sqcup_\actt}{\lstate}{\ustate} \geq 0$ and $\start \geq 0$ hold by definition of the theorem.
-Because of the resulting monotonicity we can conclude that it is sufficient to proof the hypothesis (\ref{eq:sizebound_hypothesis}). 
-\[ \ueval{{\mathcal{S}^\sqcap}'(\actt,v)}{\lstate}{\ustate} =
-   \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\ueval{\UTime(t)}{\lstate}{\ustate}} \cdot \left( \ueval{\start}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( \ueval{\UTime(t)}{\lstate}{\ustate} \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \geq \ueval{d^\sqcap}{\lstate}{\ustate} \]
-\[ \leval{{\mathcal{S}^\sqcup}'(\actt,v)}{\lstate}{\ustate} =
-   (-1) \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{\ueval{\UTime(t)}{\lstate}{\ustate}} \cdot \left( \ueval{\start}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( \ueval{\UTime(t)}{\lstate}{\ustate} \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \leq \ueval{d^\sqcup}{\lstate}{\ustate} \]
+Furthermore, the transition effects are always positive (e.g. $\ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} \geq 0$ and $\ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \geq 0$) and the starting value $\start \geq 0$ is always positive.
+With those properties, we can conclude that it is sufficient to proof the hypothesis (\ref{eq:sizebound_hypothesis}).
+First, we can show that $\ueval{{\mathcal{S}^\sqcap}'(\actt,v)}{\lstate}{\ustate} \geq \ueval{d^\sqcap}{\lstate}{\ustate}$ holds.
+\begin{align*}
+  \ueval{{\mathcal{S}^\sqcap}'(\actt,v)}{\lstate}{\ustate} = &
+   \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\ueval{\UTime(t)}{\lstate}{\ustate}} \cdot \left( \ueval{\start}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( \ueval{\UTime(t)}{\lstate}{\ustate} \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \\
+   \geq & \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{k_t} \cdot \left( \ueval{\start}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \\
+   = & \ueval{d^\sqcap}{\lstate}{\ustate}
+\end{align*}
+Second, we can also show that $\leval{{\mathcal{S}^\sqcup}'(\actt,v)}{\lstate}{\ustate} \leq -\ueval{d^\sqcup}{\lstate}{\ustate}$ holds.
+\begin{align*}
+  \leval{{\mathcal{S}^\sqcup}'(\actt,v)}{\lstate}{\ustate} = &
+   \leval{(-1) \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{\UTime(t)} \cdot \left( \start + \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\sqcup_t \right) \right)}{\lstate}{\ustate} \\
+   = & (-1) \cdot \ueval{\prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{\UTime(t)} \cdot \left( \start + \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\sqcup_t \right) \right)}{\lstate}{\ustate} \\
+   = & (-1) \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{\ueval{\UTime(t)}{\lstate}{\ustate}} \cdot \left( \ueval{\start}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( \ueval{\UTime(t)}{\lstate}{\ustate} \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \\
+   \leq & (-1) \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{k_t} \cdot \left( \ueval{\start}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \\
+   = & -\ueval{d^\sqcup}{\lstate}{\ustate}
+\end{align*}   
 
-We now \textbf{fix $v$ to an arbitrary variable} and define with $\actrv = (\actt, v)$ the result variable, for which we want to find an upper size bound $\USize'(\actrv)$ and a lower size bound $\LSize'(\actrv)$.
-
-If $\actrv \notin \SCC$, then the size bounds stay the same $\USize'(\actrv) = \USize(\actrv)$ and $\LSize'(\actrv) = \LSize(\actrv)$.
-
-We will consider from now a result variable $\actrv \in \SCC$.
+We now \textbf{fix $v$ to an arbitrary variable} and define with $\actrv = (\actt, v)$ the result variable, for which we want to find an upper size bound $\USize'(\actrv)$ and a lower size bound $\LSize'(\actrv)$. If $\actrv \notin \SCC$, then the size bounds stay the same $\USize'(\actrv) = \USize(\actrv)$ and $\LSize'(\actrv) = \LSize(\actrv)$. We will consider from now on a result variable $\actrv \in \SCC$.
 
 We prove the claim (\ref{eq:sizebound_hypothesis}) by induction on the length of the evaluation, using the last transition step $\actt$ as base case.
 
@@ -40,7 +50,8 @@ Note that $\actt$ can not be an initial transition, as there are no transitions 
 Thus, for some transition $\pret \in \pre(\actt)$ we can expect the evaluation to have the following form.
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\pret) (\prel, \prestate) \rightarrow_\actt (\actl, \actstate). \]
 
-We have to estimate the sizes of the input variables, that is, we have to find an upper bound $\USize(\pret, v)$ and a lower bound $\LSize(\pret, v)$ for each variable $v \in \VSet$ after the application of the transition $\pret$ that precedes $\actt$.
+We have to estimate the sizes of the input variables of the transition $\actt$.
+That is, we have to find an upper bound $\USize(\pret, v)$ and a lower bound $\LSize(\pret, v)$ for each variable $v \in \PVSet$ after the application of the transition $\pret$ that precedes $\actt$.
 
 We will first consider the base case of the induction.
 
@@ -52,14 +63,14 @@ For the lower case, we have $\ueval{\start}{\lstate}{\ustate} \geq -\leval{\LSiz
 Therefore it holds that $\ueval{d^\sqcup}{\lstate}{\ustate} \geq \ueval{\start}{\lstate}{\ustate} \geq -\leval{\LSize(\pret, v)}{\lstate}{\ustate} \geq -\prestate(v)$.
 This proves the hypothesis (\ref{eq:sizebound_hypothesis}) for all incoming $(\pret, v) \notin \SCC$.
 
-If $(\pret, v) \in \SCC$, then the induction hypothesis implies that $\ueval{d^\sqcap}{\lstate}{\ustate} \geq \maxO{\prestate(v)}$ and $\leval{d^\sqcup}{\lstate}{\ustate} \geq \maxO{-\prestate(v)}$ also hold for the evaluation from $(\location_0, \valuation_0)$ to $(\prel, \prestate)$.
+If $(\pret, v) \in \SCC$, then the induction hypothesis implies that $\ueval{d^\sqcap}{\lstate}{\ustate} \geq \maxO{\prestate(v)}$ and $\ueval{d^\sqcup}{\lstate}{\ustate} \geq \maxO{-\prestate(v)}$ also hold for the evaluation from $(\location_0, \valuation_0)$ to $(\prel, \prestate)$.
 
 Now we continue with the inductive step.
 \begin{equation} \label{eq:induction_consequence}
   \dpre{\square} = (\scale^\square_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\square_t)^{k_t} \cdot \left( \start + \left( k_\actt - 1 \right) \cdot \effect^\square_\actt + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \effect^\square_t \right) \right)
 \end{equation}
 The reason for using $k_\actt - 1$ in $\dpre{\square}$ is that the last application of the transition $\actt$ in the evaluation is missing in the evaluation from $(\location_0, \valuation_0)$ to $(\prel, \prestate)$.
-Then, the induction hypothesis implies that $\ueval{\dpre{\sqcap}}{\lstate}{\ustate} \geq \maxO{\prestate(v)}$ and $\leval{\dpre{\sqcup}}{\lstate}{\ustate} \geq \maxO{-\prestate(v)}$.
+Then, the induction hypothesis implies that $\ueval{\dpre{\sqcap}}{\lstate}{\ustate} \geq \maxO{\prestate(v)}$ and $\ueval{\dpre{\sqcup}}{\lstate}{\ustate} \geq \maxO{-\prestate(v)}$.
 
 We now combine these bounds to prove that the induction hypothesis indeed holds.
 
