@@ -1,38 +1,40 @@
 Let $\rv = (t, v) \in \RV$ be the trivial SCC for which the processor was applied.
 
-We have to show that for all states $\lstate, \ustate \in \Valuation$ and for all $v \in \VSet$ two statements hold.
+We have to show that for all states $\lstate, \ustate \in \Valuation$ and for all $v \in \PVSet$ two statements hold.
 \[ \ueval{\USize'(t, v)}{\lstate}{\ustate} \geq \usizeboundterm \]
 \[ \leval{\LSize'(t, v)}{\lstate}{\ustate} \leq \lsizeboundterm \]
-
 Consider a state $\valuation_0 \in \Valuation$ with $\lstate \leq \valuation_0 \leq \ustate$.
 To this end, we consider an evaluation
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation). \]
 Now the goal is to show that $\ueval{\USize'(t, v)}{\lstate}{\ustate} \geq \valuation(v) \geq \leval{\LSize'(t, v)}{\lstate}{\ustate}$ holds.
 
-If $t$ is an initial transition, then the evaluation has the form $(\location_0, \valuation_0) \rightarrow_t (\location, \valuation)$, as by definition there are no transitions leading back to the start location $\location_0$ of $t$.
+If $t$ is an initial transition $t \in \TSet_0$, then the evaluation has the form $(\location_0, \valuation_0) \rightarrow_t (\location, \valuation)$, as by definition there are no transitions leading back to the start location $\location_0$ of $t$.
+Thus, for initial transitions we obtain $\ueval{\USize'(t, v)}{\lstate}{\ustate} = \ueval{\ULSB(t, v)}{\lstate}{\ustate} \geq \exacteval{\ULSB(t, v)}{\valuation_0} \geq \valuation(v)$ and $\leval{\LSize'(t, v)}{\lstate}{\ustate} = \leval{\LLSB(t, v)}{\lstate}{\ustate} \leq \exacteval{\LLSB(t, v)}{\valuation_0} \leq \valuation(v)$.
 
-Thus, for initial transitions by the definition of size bounds we obtain
-\[ \ueval{\USize'(t, v)}{\lstate}{\ustate} = \ueval{\ULSB(t, v)}{\lstate}{\ustate} \geq \valuation(v). \]
-\[ \leval{\LSize'(t, v)}{\lstate}{\ustate} = \leval{\LLSB(t, v)}{\lstate}{\ustate} \leq \valuation(v). \]
-In the case where t is not an initial transition, the evaluation has for some transition $\pret \in \pre(t)$ the form
+Lets now assume $t \in \TSet \setminus \TSet_0$ is not an initial transition.
+If $\ULSB(t,v) \notin \BoundSet^\sqcap_l$, then $\ueval{\USize'(t, v)}{\lstate}{\ustate} = \ueval{\USize(t, v)}{\lstate}{\ustate} \geq \exacteval{\USize(t, v)}{\valuation_0} \geq \valuation(v)$.
+Similar, if $\LLSB(t,v) \notin \BoundSet^\sqcup_l$, then $\leval{\LSize'(t, v)}{\lstate}{\ustate} = \leval{\LSize(t, v)}{\lstate}{\ustate} \leq \exacteval{\LSize(t, v)}{\valuation_0} \leq \valuation(v)$.
+
+Otherwise, for the upper case it holds that $\ULSB(t,v) \in \BoundSet^\sqcap_l$ and for the lower case it holds that $\LLSB(t,v) \in \BoundSet^\sqcup_l$.
+Since $t \notin \TSet_0$ is not an initial transition, the evaluation has for some transition $\pret \in \pre(t)$ the form
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\pret) (\prel, \prestate) \rightarrow_t (\location, \valuation). \]
-By definition of size approximations we have for all $v \in \VSet$
-\[ \ueval{\USize(\pret, v)}{\lstate}{\ustate} \geq \prestate(v) \geq \leval{\LSize(\pret, v)}{\lstate}{\ustate}. \]
-Thus, $\USize(\pret, v)$ and $\LSize(\pret, v)$ are bounds for the size of all variables $v \in \VSet$ before the transition $t$ is applied.
-
-The only interesting case is when $\rv$ is bounded by a lower scaled sum and by an upper scaled sum.
-
-We can easily see that the following inequations hold.
-\[ \sum_{v \in P_{\rv,1}^\sqcap} \USize(\pret, v) \geq \sum_{v \in P_{\rv,1}^\sqcap} \prestate(v) \]
-\[ - \sum_{v \in N_{\rv,1}^\sqcap} \LSize(\pret, v) \geq - \sum_{v \in N_{\rv,1}^\sqcap} \prestate(v) \]
-\[ \sum_{v \in P_{\rv,2}^\sqcap} \maxO{\USize(\pret, v)} \geq \sum_{v \in P_{\rv,2}^\sqcap} \maxO{\prestate(v)} \]
-\[ \sum_{v \in N_{\rv,2}^\sqcap} \maxO{-\LSize(\pret, v)} \geq \sum_{v \in N_{\rv,2}^\sqcap} \maxO{-\prestate(v)} \]
-Since $s^\sqcap_\rv \geq 1$ it holds that $\ueval{\USize(t, v)}{\lstate}{\ustate} \geq \valuation(v)$.
-
-We now show that $\leval{\LSize(t, v)}{\lstate}{\ustate} \leq \valuation(v)$ also holds.
-Again we can easily see that the following inequations hold.
-\[ \sum_{v \in P_{\rv,1}^\sqcup} \LSize(\pret, v) \leq \sum_{v \in P_{\rv,1}^\sqcup} \prestate(v) \]
-\[ - \sum_{v \in N_{\rv,1}^\sqcup} \USize(\pret, v) \leq - \sum_{v \in N_{\rv,1}^\sqcup} \prestate(v) \]
-\[ - \sum_{v \in P_{\rv,2}^\sqcup} \maxO{-\LSize(\pret, v)} \leq - \sum_{v \in P_{\rv,2}^\sqcup} \maxO{-\prestate(v)} \]
-\[ - \sum_{v \in N_{\rv,2}^\sqcup} \maxO{\USize(\pret, v)} \leq - \sum_{v \in N_{\rv,2}^\sqcup} \maxO{\prestate(v)} \]
-Since $s^\sqcup_\rv \geq 1$ it holds that $\leval{\LSize(t, v)}{\lstate}{\ustate} \leq \valuation(v)$.
+For all variables $v \in \PVSet$ we have $\ueval{\USize(\pret, v)}{\lstate}{\ustate} \geq \prestate(v) \geq \leval{\LSize(\pret, v)}{\lstate}{\ustate}$.
+Thus, $\USize(\pret, v)$ and $\LSize(\pret, v)$ are bounds for the value of all variables $v \in \PVSet$ before the transition $t$ is applied.
+Then, we can prove that $\ueval{\USize'(t, v)}{\lstate}{\ustate}$ is indeed an upper bound for the value of all variables $v \in \PVSet$ after the application of the transition $t$.
+\begin{align*}
+  \ueval{\USize'(t, v)}{\lstate}{\ustate} = &
+  \maximum{ \ueval{\ULSB(t,v)}{\leval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}} \mid \pret \in \pre(t)} \\
+  \geq & \ueval{\ULSB(t,v)}{\leval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}} \\
+  \geq & \ueval{\ULSB(t,v)}{\prestate}{\prestate} \\
+  \geq & \exacteval{\ULSB(t,v)}{\prestate} \\
+  \geq & \valuation(v)
+\end{align*}
+Also, $\leval{\LSize'(t, v)}{\lstate}{\ustate}$ is a lower bound for the value of all variables $v \in \PVSet$ after the application of the transition $t$.
+\begin{align*}
+  \leval{\LSize'(t, v)}{\lstate}{\ustate} = &
+  \minimum{ \leval{\LLSB(t,v)}{\leval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}} \mid \pret \in \pre(t)} \\
+  \leq & \leval{\LLSB(t,v)}{\leval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}} \\
+  \leq & \leval{\LLSB(t,v)}{\prestate}{\prestate} \\
+  \leq & \exacteval{\LLSB(t,v)}{\prestate} \\
+  \leq & \valuation(v)
+\end{align*}
