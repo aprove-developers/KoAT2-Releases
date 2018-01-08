@@ -3,42 +3,47 @@ We want to prove the following claim for all transitions $t \in \TSet$ and all s
 
 This is trivial, if $t \notin \TSet'_>$.
 Therefore, lets consider a transition $t \in \TSet'_>$.
-It suffices to show that for all transitions $t \in \TSet'_>$ and all states $\valuation_0 \in \Valuation$ with $\lstate \leq \valuation_0 \leq \ustate$ the following claim holds.
+It suffices to show that for all transitions $t \in \TSet'_>$ and all states $\lstate \leq \ustate$ the following claim holds.
 \begin{IEEEeqnarray*}{rCl}
-  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \exacteval{\UTime(\pret)}{\valuation_0} \cdot \maxO{\exacteval{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}{\valuation_0}} \\
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \ueval{\UTime(\pret)}{\lstate}{\ustate} \cdot \maxO{\usubst{\timerank(\location)}{\ueval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}}} \\
   \geq \timeboundterm
 \end{IEEEeqnarray*}
 To this end, let $\valuation_0$ be an initial state with $\lstate \leq \valuation_0 \leq \ustate$ and consider a (finite or infinite) evaluation starting with $\valuation_0$ where $k \in \mathbb{N} \cup \braced{\infty}$ steps are performed with the transition $t$.
 The goal is now to show that
 \begin{IEEEeqnarray*}{rCl}
-  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \exacteval{\UTime(\pret)}{\valuation_0} \cdot \maxO{\exacteval{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}{\valuation_0}} \geq k
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \ueval{\UTime(\pret)}{\lstate}{\ustate} \cdot \maxO{\usubst{\timerank(\location)}{\ueval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}}} \geq k
 \end{IEEEeqnarray*}
 
-This is trivial for $k = 0$, since the operator $\maxO{\cdot}$ ensures positivity and $\exacteval{\UTime(t)}{\valuation} \geq 0$ holds for any transition $t$ and any state $\valuation$.
+This is trivial for $k = 0$, since the operator $\maxO{\cdot}$ ensures positivity and $\exacteval{\UTime(t)}{\valuation_0} \geq 0$ holds for any transition $t$.
 
 We now consider the case $k > 0$.
-Let $\rightarrow^+_\TSet$ denote the transitive closure of $\rightarrow_\TSet$.
 Then, we can use the following representation for the considered evaluation.
 \begin{IEEEeqnarray*}{lClC}
-  (\prel_0, \prestate_0) & \rightarrow^+_{\TSet \setminus \TSet'} & (\actl_1, \actstate_1) & \rightarrow^+_{\TSet'} \\
-  (\prel_1, \prestate_1) & \rightarrow^+_{\TSet \setminus \TSet'} & (\actl_2, \actstate_2) & \rightarrow^+_{\TSet'} \\
-  (\prel_2, \prestate_2) & \rightarrow^+_{\TSet \setminus \TSet'} & \dots
+  (\prel_0, \prestate_0) & \rightarrow^{\tilde{k}_0}_{\TSet \setminus \TSet'} & (\actl_1, \actstate_1) & \rightarrow^{k_1}_{\TSet'} \\
+  (\prel_1, \prestate_1) & \rightarrow^{\tilde{k}_1}_{\TSet \setminus \TSet'} & (\actl_2, \actstate_2) & \rightarrow^{k_2}_{\TSet'} \\
+  (\prel_2, \prestate_2) & \rightarrow^{\tilde{k}_2}_{\TSet \setminus \TSet'} & \dots
 \end{IEEEeqnarray*}
 In this evaluation, the outgoing transitions of all $(\actl_i, \actstate_i)$ are transitions from $\TSet'$.
 The outgoing transitions of all $(\prel_i, \prestate_i)$ are transitions from $\TSet \setminus \TSet'$.
 
 Now we have to investigate how often the transition $t$ is used in this evaluation.
 Since $t \in \TSet'$, it can only be used in sequences of the following form.
-\[ (\actl_i, \actstate_i) \rightarrow^+_{\TSet'} (\prel_i, \prestate_i) \]
-\todo{Show with Complexities from PRFs proof from old koat}{We can show that $\maxO{\exacteval{\timerank(\location_i)}{\actstate_i}}$ is an upper bound on the number of times the transition $t$ is used in this sequence.}
+\[ (\actl_i, \actstate_i) \rightarrow^{k_i}_{\TSet'} (\prel_i, \prestate_i) \]
+\todo{Show with Complexities from PRFs proof from old koat}{We can show that $\maxO{\exacteval{\timerank(\location_i)}{\actstate_i}} \geq k_i$ and therefore it is an upper bound on the number of times the transition $t$ is used in this sequence.}
 
-In this paragraph, lets fix this $i$ and consider the evaluation $(\actl_i, \actstate_i) \rightarrow^+_{\TSet'} (\prel_i, \prestate_i)$ as $(\actl, \actstate) \rightarrow^+_{\TSet'} (\prel, \prestate)$.
-Let the transition in the evaluation reaching $(\actl, \actstate)$ be $\pret$.
-Thus, we have $\actl \in \mathcal{E}_{\TSet'}$ and $\pret \in \TSet_{\actl}$.
-As $(\location_0, \valuation_0) \rightarrow^*_\TSet \circ \rightarrow_{\pret} (\actl, \actstate)$, by definition of the size approximations we have $\USize(\pret, v) \geq \actstate(v) \geq \LSize(\pret, v)$.
-\todo{Nonsense?}{}
-By definition of the substitution of bounds, we can conclude that $\exacteval{\usubst{\timerank(\actl)}{\LSize(\pret)}{\USize(\pret)}}{\valuation_0} \geq \exacteval{\usubst{\timerank(\actl)}{\LSize(\pret)}{\USize(\pret)}}{\actstate}$.
-Thus, if we ensure positivity, we can conclude an upper bound $\maxO{\exacteval{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}{\actstate}}$ on the number of times the transition $t$ is used in the sequence.
+Let the transition in the evaluation reaching $(\actl_i, \actstate_i)$ be $\pret_i$.
+Thus, we have $\actl_i \in \mathcal{E}_{\TSet'}$ and $\pret_i \in \TSet_{\actl_i}$.
+As $(\location_0, \valuation_0) \rightarrow^*_\TSet \circ \rightarrow_{\pret_i} (\actl_i, \actstate_i)$ and $\lstate \leq \valuation_0 \leq \ustate$, we have by definition of the size approximations
+\[ \ueval{\USize(\pret_i, v)}{\lstate}{\ustate} \geq \exacteval{\USize(\pret_i, v)}{\valuation_0} \geq \actstate_i(v) \geq \exacteval{\LSize(\pret_i, v)}{\valuation_0} \geq \leval{\LSize(\pret_i, v)}{\lstate}{\ustate}. \]
+We can conclude that
+\begin{align*}
+   & \maxO{\ueval{\timerank(\actl_i)}{\leval{\LSize(\pret_i)}{\lstate}{\ustate}}{\ueval{\USize(\pret_i)}{\lstate}{\ustate}}} \\
+   \geq & \maxO{\ueval{\timerank(\actl_i)}{\exacteval{\LSize(\pret_i)}{\valuation_0}}{\exacteval{\USize(\pret_i)}{\valuation_0}}} \\
+   \geq & \maxO{\ueval{\timerank(\actl_i)}{\valuation_i}{\valuation_i}} \\
+   \geq & \maxO{\exacteval{\timerank(\actl_i)}{\valuation_i}} \\
+   \geq & k_i \\
+\end{align*}
+Thus, $\maxO{\usubst{\timerank(\actl_i)}{\leval{\LSize(\pret_i)}{\lstate}{\ustate}}{\ueval{\USize(\pret_i)}{\lstate}{\ustate}}}$ is a bound on the number of times $k_i$ the transition $t$ is used in the sequence.
 
 It remains to examine how often a sequence $(\actl_i, \actstate_i) \rightarrow^+_{\TSet'} (\prel_i, \prestate_i)$ can occur in the full evaluation.
 As observed earlier, the transition reaching $(\actl_i, \actstate_i)$ in the evaluation is always some $\pret_i \in \TSet_{\actl_i}$.
@@ -46,5 +51,5 @@ Each $\pret_i$ can occur at most $\ueval{\UTime(\pret_i)}{\lstate}{\ustate}$ tim
 We found out, that in every $\TSet'$-sequence the transition $t$ can occur at most $\maxO{\exacteval{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}{\valuation_0}}$ times.
 Thus, we can infer that our initial statement holds.
 \begin{IEEEeqnarray*}{rCl}
-  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \exacteval{\UTime(\pret)}{\valuation_0} \cdot \maxO{\exacteval{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}{\valuation_0}} \geq k
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \ueval{\UTime(\pret)}{\lstate}{\ustate} \cdot \maxO{\usubst{\timerank(\location)}{\ueval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}}} \geq k
 \end{IEEEeqnarray*}
