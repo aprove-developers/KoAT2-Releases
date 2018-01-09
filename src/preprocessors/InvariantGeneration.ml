@@ -5,6 +5,16 @@ open Atoms
 open Constraints
 open PolyTypes
 
+(** This preprocessor generates invariants for a given program and adds them to the transitions of the program.
+    This way more restrictive information is available locally in the transitions. *)
+
+(** A map from program locations to anything. *)
+module LocationMap = Map.Make(Location)
+
+(** An abstract value for all values of variable at every program location. *)
+type 'a program_abstract = ('a Apron.Abstract1.t) LocationMap.t
+
+(** This module provides functions which convert koat datastructures to equivalent apron datastructures. *)
 module Koat2Apron =
   struct
 
@@ -79,6 +89,7 @@ module Koat2Apron =
       
   end
   
+(** This module provides functions which convert apron datastructures to equivalent koat datastructures. *)
 module Apron2Koat =
   struct
 
@@ -184,13 +195,11 @@ let transform_program program =
     |> apply_update (Program.vars program) (TransitionLabel.update t)
   in
 
-  let module LocationMap = Map.Make(Location) in
-
   (** The bottom element of the static analysis for the whole program.
       The values at the start location are defined to be not restricted in any way.
       All other values at other program locations are undefined in the beginning.
       This will change through assignments in the program. *)
-  let bottom: ('a Apron.Abstract1.t) LocationMap.t =
+  let bottom: 'a program_abstract =
     program
     |> Program.graph
     |> TransitionGraph.locations
@@ -206,7 +215,7 @@ let transform_program program =
 
   (** Recomputes the abstract value for the single location.
       For this purpose, all incoming transitions are considered and their updated abstract value meet together in a union. *)
-  let recompute_location (location: Location.t) (program_abstract :('a Apron.Abstract1.t) LocationMap.t): ('a Apron.Abstract1.t) LocationMap.t =
+  let recompute_location (location: Location.t) (program_abstract: 'a program_abstract): 'a program_abstract =
     location
     |> TransitionGraph.pred_e (Program.graph program)
     |> List.map (fun (l,t,l') ->
@@ -219,7 +228,7 @@ let transform_program program =
     |> (fun new_abstract -> LocationMap.modify location (Apron.Abstract1.meet manager new_abstract) program_abstract) 
   in
 
-  let find_fixpoint (program_abstract :('a Apron.Abstract1.t) LocationMap.t): ('a Apron.Abstract1.t) LocationMap.t =
+  let find_fixpoint (program_abstract: 'a program_abstract): 'a program_abstract =
     (* TODO At this point, we have a abstract bottom element for the whole program and a function, which can recompute the abstract value for a single location.
        Now it is important, to find a good sequence of locations, such that the recomputation of all locations comes as early as possible to a fixpoint.  *)
     (* TODO Maybe it is better to recompute transitions instead of locations. *)
