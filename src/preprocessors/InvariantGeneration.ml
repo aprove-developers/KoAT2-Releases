@@ -9,7 +9,7 @@ open PolyTypes
     This way more restrictive information is available locally in the transitions. *)
 
 (** A map from program locations to anything. *)
-module LocationMap = Map.Make(Location)
+module LocationMap = Hashtbl.Make(Location)
 
 (** An abstract value for all values of variable at every program location. *)
 type 'a program_abstract = ('a Apron.Abstract1.t) LocationMap.t
@@ -108,7 +108,8 @@ module Apron2Koat =
       match coeff with
       | Coeff.Scalar (Scalar.Float float) ->
          OurInt.of_int (int_of_float float)
-      | Coeff.Scalar _ -> raise (Failure "Apron special floats are not allowed!")
+      | Coeff.Scalar (Scalar.Mpqf float) -> (OurInt.of_int % int_of_float % Mpqf.to_float) float
+      | Coeff.Scalar (Scalar.Mpfrf float) -> (OurInt.of_int % int_of_float % Mpfrf.to_float) float
       | Coeff.Interval _ -> raise (Failure "Apron Intervals are not allowed!")
       
     (** Converts an apron polynomial to its koat equivalent. *)
@@ -119,10 +120,11 @@ module Apron2Koat =
         | Texpr1.Var var -> Polynomial.of_var (var_from_apron var)
         | Texpr1.Unop (Texpr1.Neg, expr, Texpr1.Int, _) -> Polynomial.neg (expr_to_poly expr)
         | Texpr1.Unop _ -> raise (Failure "Usage of not supported apron unary operator!")
-        | Texpr1.Binop (Texpr1.Add, expr1, expr2, Texpr1.Int, _) -> Polynomial.add (expr_to_poly expr1) (expr_to_poly expr2)
-        | Texpr1.Binop (Texpr1.Sub, expr1, expr2, Texpr1.Int, _) -> Polynomial.sub (expr_to_poly expr1) (expr_to_poly expr2)
-        | Texpr1.Binop (Texpr1.Mul, expr1, expr2, Texpr1.Int, _) -> Polynomial.mul (expr_to_poly expr1) (expr_to_poly expr2)
-        | Texpr1.Binop _ -> raise (Failure "Usage of not supported apron binary operator!")
+        | Texpr1.Binop (Texpr1.Add, expr1, expr2, _, _) -> Polynomial.add (expr_to_poly expr1) (expr_to_poly expr2)
+        | Texpr1.Binop (Texpr1.Sub, expr1, expr2, _, _) -> Polynomial.sub (expr_to_poly expr1) (expr_to_poly expr2)
+        | Texpr1.Binop (Texpr1.Mul, expr1, expr2, _, _) -> Polynomial.mul (expr_to_poly expr1) (expr_to_poly expr2)
+        | Texpr1.Binop (op,expr1,expr2,typ,_) ->
+           raise (Failure ("Usage of not supported apron binary operator " ^ Texpr0.string_of_binop op ^ " with types " ^ Texpr0.string_of_typ typ ^ "!"))
       in
       expr
       |> Apron.Texpr1.to_expr
@@ -213,31 +215,30 @@ let transform_program program =
     |> LocationMap.of_enum
   in
 
-  (** Recomputes the abstract value for the single location.
-      For this purpose, all incoming transitions are considered and their updated abstract value meet together in a union. *)
-  let recompute_location (location: Location.t) (program_abstract: 'a program_abstract): 'a program_abstract =
-    location
-    |> TransitionGraph.pred_e (Program.graph program)
-    |> List.map (fun (l,t,l') ->
-           program_abstract
-           |> LocationMap.find l 
-           |> apply_transition (l,t,l')
-         )
-    |> Array.of_list
-    |> Apron.Abstract1.join_array manager
-    |> (fun new_abstract -> LocationMap.modify location (Apron.Abstract1.meet manager new_abstract) program_abstract) 
-  in
-
   let find_fixpoint (program_abstract: 'a program_abstract): 'a program_abstract =
     (* TODO At this point, we have a abstract bottom element for the whole program and a function, which can recompute the abstract value for a single location.
        Now it is important, to find a good sequence of locations, such that the recomputation of all locations comes as early as possible to a fixpoint.  *)
     (* TODO Maybe it is better to recompute transitions instead of locations. *)
-    program
-    |> Program.graph
-    |> TransitionGraph.locations
-    |> LocationSet.enum
-    |> Enum.map (fun location -> (location, Apron.Abstract1.top manager environment)) (* TODO Add the moment we just use a dummy safe overapproximation. *)
-    |> LocationMap.of_enum
+    (** We use a modifiable stack here for performance reasons. *)
+    let worklist: Transition.t Stack.t =
+      program
+      |> Program.transitions
+      |> TransitionSet.enum
+      |> Stack.of_enum
+    in
+    while not (Stack.is_empty worklist) do
+      let (l,t,l') = Stack.pop worklist in
+      let transfered_l_abstract = apply_transition (l,t,l') (LocationMap.find program_abstract l) in
+      if not (Apron.Abstract1.is_leq manager transfered_l_abstract (LocationMap.find program_abstract l')) then (
+        LocationMap.modify l' (fun old_abstract -> Apron.Abstract1.widening manager old_abstract transfered_l_abstract) program_abstract;
+        TransitionGraph.succ_e (Program.graph program) l'
+        |> List.iter (fun transition ->
+               if not (Enum.exists (Transition.same transition) (Stack.enum worklist)) then
+                 Stack.push transition worklist
+             )
+      )
+    done;
+    program_abstract
   in
   
   (** Converts a value of the abstract domain into a koat constraint which acts as an invariant. *)
@@ -251,8 +252,8 @@ let transform_program program =
   let invariants =
     bottom
     |> find_fixpoint
-    |> LocationMap.map extract_invariant
-    |> LocationMap.filterv (not % Constraint.is_true)
+    |> LocationMap.map (fun _ -> extract_invariant)
+    |> LocationMap.filter (not % Constraint.is_true)
   in
 
   if LocationMap.is_empty invariants then

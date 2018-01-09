@@ -269,6 +269,9 @@ let add_vertices_to_rvg vertices rvg =
 
 let graph g = g.graph
             
+let transitions =
+  TransitionGraph.transitions % graph
+  
 let pre program (l,t,l') =
   List.enum (TransitionGraph.pred_e (graph program) l)
 
@@ -352,3 +355,5 @@ let to_string program =
   and locations = TransitionGraph.fold_vertex (fun l str -> str ^ "; " ^ Location.to_string l) program.graph "" in
   String.concat " " ["Start:"; Location.to_string program.start; "Locations:"; locations; "Transitions:"; transitions; "Vars:"; String.concat ", " (List.map Var.to_string program.vars)] 
   
+let to_simple_string program =
+  TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph "" 

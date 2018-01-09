@@ -5,6 +5,7 @@ OCAMLPACKS[] =
     batteries
     apron
     apron.octD
+    apron.boxD
     ocamlgraph
     fpath
     oUnit

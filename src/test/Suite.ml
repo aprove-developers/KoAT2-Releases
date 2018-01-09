@@ -21,6 +21,7 @@ let suite =
       PreprocessorTest.tests;
       BoundTest.tests;
       TimeboundTest.tests;
+      InvariantGenerationTest.tests;
     ]
                      
 let () =

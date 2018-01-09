@@ -135,9 +135,13 @@ val is_initial_location : t -> Location.t -> bool
 val equivalent : t -> t -> bool
   
 val to_string : t -> string
+
+val to_simple_string : t -> string
   
 val vars : t -> VarSet.t
 
+val transitions : t -> TransitionSet.t
+  
 (** Returns all locations which occur in the transitions, but each location only once. *)
 val locations : Transition.t Enum.t -> Location.t Enum.t
   

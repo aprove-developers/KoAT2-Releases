@@ -5,6 +5,7 @@ OCAMLPACKS[] =
     batteries
     apron
     apron.octD
+    apron.boxD
     ppx_deriving_cmdliner
     ppx_deriving.show
     Z3
