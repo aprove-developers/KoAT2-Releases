@@ -216,7 +216,7 @@ let transform_program program =
   in
 
   let find_fixpoint (program_abstract: 'a program_abstract): 'a program_abstract =
-    (* TODO At this point, we have a abstract bottom element for the whole program and a function, which can recompute the abstract value for a single location.
+    (* TODO At this point, we have an abstract bottom element for the whole program and a function, which can recompute the abstract value for a single location.
        Now it is important, to find a good sequence of locations, such that the recomputation of all locations comes as early as possible to a fixpoint.  *)
     (* TODO Maybe it is better to recompute transitions instead of locations. *)
     (** We use a modifiable stack here for performance reasons. *)

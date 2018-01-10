@@ -39,6 +39,12 @@ let tests =
                     (* Propagation after a modifying loop *)
                     ("b", "c", "x > 0",
                      "a -> b(x) :|: x > 0, b -> b(x+1), b -> c(x)");
+                    (* Fixed value propagation *)
+                    ("b","b","y = 1"," a->b(x,1), b->b(x-y,y) :|: x>0");
+                    (* Complex program invariants from exp2.koat *)
+                    ("g","g","z = 1","f-> g(x, 1, 1),  g-> g(x - 1, 2 * y, z):|: x > 0,  g-> h(x, y, z):|: x <= 0,  h-> h(x, y - 1, 2 * z):|: y > 0,  h-> i(x, y, z):|: y <= 0, i-> i(x, y, z - 1):|: z > 0");
+                    ("h","h","x<=0","f-> g(x, 1, 1),  g-> g(x - 1, 2 * y, z):|: x > 0,  g-> h(x, y, z):|: x <= 0,  h-> h(x, y - 1, 2 * z):|: y > 0,  h-> i(x, y, z):|: y <= 0, i-> i(x, y, z - 1):|: z > 0");
+                    ("i","i","x<=0 && y<=0","f-> g(x, 1, 1),  g-> g(x - 1, 2 * y, z):|: x > 0,  g-> h(x, y, z):|: x <= 0,  h-> h(x, y - 1, 2 * z):|: y > 0,  h-> i(x, y, z):|: y <= 0, i-> i(x, y, z - 1):|: z > 0");
                   ]
       )
     ]
