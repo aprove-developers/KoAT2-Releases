@@ -26,6 +26,7 @@
 \usepackage[noend]{algpseudocode}
 \usepackage{cite}
 \usepackage{stmaryrd}
+\usepackage{pgfplots}
 
 \let\oldReturn\Return
 \renewcommand{\Return}{\State\oldReturn}
@@ -41,6 +42,16 @@
 \lstset{language=C++}
 
 \usepackage{todonotes}
+
+\pgfplotsset{
+  width=200pt,
+  tick align=outside,
+  x dir=reverse,
+  y dir=reverse,
+  xlabel={$\ustate$},
+  ylabel={$\lstate$},
+  x filter/.expression={x>=y ? x : nan},
+}
 
 \theoremstyle{definition}
 

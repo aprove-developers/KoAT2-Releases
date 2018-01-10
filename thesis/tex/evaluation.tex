@@ -1,1 +1,29 @@
 \section{Evaluation}
+
+\begin{center}
+  \begin{tikzpicture}
+    \begin{axis}
+      \addplot3 [
+        unbounded coords=jump,
+        mesh,
+        shader=interp,
+        samples at={-5,...,5},
+        samples y={11},
+        only marks,
+      ] {1+max(x-y,0)};
+    \end{axis}
+  \end{tikzpicture}
+  \hfil
+  \begin{tikzpicture}
+    \begin{axis}
+      \addplot3 [
+        unbounded coords=jump,
+        mesh,
+        shader=interp,
+        samples at={-5,...,5},
+        samples y={11},
+        only marks,
+      ] {1+abs(max(x,-y))+abs(max(x,-y))};
+    \end{axis}
+  \end{tikzpicture}
+\end{center}
