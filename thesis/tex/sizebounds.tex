@@ -76,6 +76,9 @@ The resulting global lower size bound $\LSize'(t_0,x)$ we can determine as
 
 In the last section we presented a method SizeBounds to infer upper and lower size bounds for result variables $\rv \in \RV$ which form a trivial SCC $\braced{\rv}$.
 In this section, we extend the method to infer upper and lower size bounds for nontrivial SCCs.
+We split these nontrivial SCCs in two groups.
+
+\todo{Do}{}
 
 Prior to the definition of the method, we need to define three utility definitions also used by the original KoAT.
 
@@ -85,6 +88,8 @@ Since the result variable graph represents the information about which result va
 
 Additionally, we define the scc-variables $\VSet_\rv = \braced{ v \mid \exists (t, v) \in \pre(\rv) \cap \SCC }$ of a result variable as those variables, which affect the result variable from within the SCC of the result variable graph.
 For those variables we know, that their value is mutated throughout a loop.
+The subset $\VSet^+_\rv \subseteq \VSet_\rv$ contains all variables $v$, that are both not in the set $N^\sqcap_\rv$ and $N^\sqcup_\rv$.
+Such variables affect a result variable $\rv$ with a nonnegated value.
 
 The third definition $\SCC_t$ selects from an SCC $\SCC$ of the result variable graph those result variables $\SCC_t = \braced{(t,v) \mid \exists v \in \VSet : (t,v) \in \SCC}$, that use a specific transition $t$.
 
