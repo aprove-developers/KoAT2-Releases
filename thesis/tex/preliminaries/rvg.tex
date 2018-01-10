@@ -7,7 +7,7 @@ The pre-transitions of a transition $t \in \TSet$ are all transitions, which may
 
 \begin{definition}[Pre-Transitions] 
   We define $\pre: \TSet \rightarrow 2^\TSet$ as
-  \[\pre(t) = \braced{\tilde{t} \in \TSet \mid \exists \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_{\tilde{t}} \circ \rightarrow_{t}) (\location, \valuation)}\]
+  \[\pre(t) = \braced{\pret \in \TSet \mid \exists \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\pret \circ \rightarrow_{t}) (\location, \valuation)}\]
   to denote the set of all transitions that may precede $t$ in an evaluation.	
 \end{definition}
 
