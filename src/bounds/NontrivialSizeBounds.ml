@@ -208,8 +208,24 @@ let compute_
     |> tap (fun starting_value -> Logger.log logger Logger.DEBUG
                                              (fun () -> "starting_value", ["result", Bound.to_string starting_value]))
   in
-    
-  Bound.(sign kind (loop_scaling_factor * (starting_value kind + loop_effect)))
+
+  (** Returns if there is any variable manipulated in the SCC that gets negated throughout the SCC. *)
+  let contains_negation =
+    scc
+    |> List.enum
+    |> Enum.exists (fun rv ->
+           rv
+           |> get_lsb
+           |> LocalSizeBound.vars_of_sign `Neg
+           |> (rv |> scc_variables |> VarSet.of_enum |> VarSet.inter)
+           |> not % VarSet.is_empty
+         )
+  in
+
+  if contains_negation then
+    raise (Failure "Negation not yet supported!")
+  else
+    Bound.(sign kind (loop_scaling_factor * (starting_value kind + loop_effect)))
 
             
 (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
