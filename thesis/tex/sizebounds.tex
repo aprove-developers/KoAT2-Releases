@@ -77,8 +77,26 @@ The resulting global lower size bound $\LSize'(t_0,x)$ we can determine as
 In the last section we presented a method SizeBounds to infer upper and lower size bounds for result variables $\rv \in \RV$ which form a trivial SCC $\braced{\rv}$.
 In this section, we extend the method to infer upper and lower size bounds for nontrivial SCCs.
 We split these nontrivial SCCs in two groups.
+The first group contains all nontrivial SCCs, where there exists a variable, that is manipulated inside the SCC and that affects another variable or itself with its negative value inside the SCC.
+For such SCCs, we use the SizeBounds methods from the original KoAT to infer upper and lower size bounds with $\USize(\rv) = -\LSize(\rv) = \mathcal{S}_{\text{original}}(\rv)$ for every result variable $\rv \in \RV$.
 
-\todo{Do}{}
+Consider the program in figure \ref{fig:negating_nontrivial}.
+
+\input{graphs/negating_nontrivial}
+
+It consists of two indices $y$ and $z$, that restrict the number steps with $t_1$ and $t_2$.
+The transition $t_2$ decrements the value of $x$ with every step and the transition $t_1$ negates the value of $x$ each time.
+The steps of the transitions $t_1$ and $t_2$ can happen in an arbitrary order due to non-determinism.
+Consider an evaluation defined by the sequence of transitions $t_0, t_1, t_2, t_1, t_3$.
+If the initial value of $x$ is positive, then its value changes in the sequence $x, -x, -x-1, -(-x-1), -(-x-1)$.
+Therefore, the value of $x$ after the transition $t_3$ would be $-(-x-1) = x+1$.
+Although the upper local size bound of $(t_1,x)$ is $\ULSB(t_1,x) = x-1$, it is not possible to utilize the decrement to conclude, that the transition $t_1$ can not increment the value of $x$, since another transition of the SCC negated its value in a later step.
+
+Therefore, the new method uses the original method for such cases, where negation occurs inside the SCC.
+This property is shown in the annotated result variable graph in figure \ref{fig:negating_nontrivial}.
+Every result variable, that is negated by the local size bound of another result variable, is connected with a negative edge to this result variable.
+Otherwise, it is connected with a positive edge.
+For cases, where there are only positive edges in the analyzed SCC, the new method introduces an optimized technique.
 
 Prior to the definition of the method, we need to define three utility definitions also used by the original KoAT.
 
