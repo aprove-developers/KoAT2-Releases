@@ -176,9 +176,9 @@ let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (tran
             | None -> []
 
 
-(** Checks if a transition has already been oriented strictly in a given approximation *)
-let is_already_bounded appr transition =  
-  not (Bound.is_infinity (Approximation.timebound appr transition))
+(** Checks if a transition is unbounded *)
+let unbounded appr transition =  
+  Bound.is_infinity (Approximation.timebound appr transition)
 
 let find_with (pol, fresh_coeffs) non_increasing_transitions strictly_decreasing_transitions =
   let non_increasing_constraint = non_increasing_constraints pol non_increasing_transitions in
@@ -205,7 +205,7 @@ let find vars transitions appr =
     |> Util.powerset
     |> Util.find_map (fun increasing_transitions ->
            transitions
-           |> List.filter (not % is_already_bounded appr)
+           |> List.filter (unbounded appr)
            |> List.enum
            |> Util.find_map (fun strictly_decreasing_transition ->
                   find_with (pol, fresh_coeffs) (Set.to_list (Set.diff (Set.of_list transitions) increasing_transitions)) (List.singleton strictly_decreasing_transition)
