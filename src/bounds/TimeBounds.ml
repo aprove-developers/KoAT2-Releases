@@ -70,15 +70,16 @@ let compute_timebound (appr: Approximation.t) (graph: TransitionGraph.t) (prf: R
     
 let improve_with_pol program appr pol =
   let execute () =
-    let strictly_decreasing = RankingFunction.strictly_decreasing pol in
-    if List.is_empty strictly_decreasing then
+    if Option.is_none pol then
       MaybeChanged.same appr
     else
-      let timebound = compute_timebound appr (Program.graph program) pol in
+      let timebound = compute_timebound appr (Program.graph program) (Option.get pol) in
       if Bound.is_infinity timebound then
         MaybeChanged.same appr
       else
-        strictly_decreasing
+        pol
+        |> Option.get
+        |> RankingFunction.strictly_decreasing
         |> List.enum
         |> Enum.fold (fun appr ((l,t,l'), sensitivity) ->
                (* TODO No sensitivity *)
@@ -104,9 +105,8 @@ let improve program appr =
     |> List.enum
     |> Enum.map (TransitionGraph.loc_transitions (Program.graph program))
     |> Enum.filter (not % TransitionSet.is_empty)
-    |> Enum.map (TransitionSet.filter (unbound appr))
     |> Enum.map TransitionSet.to_list
-    |> MaybeChanged.fold_enum (fun appr transitions -> improve_with_pol program appr (RankingFunction.find (Program.vars program) transitions)) appr
+    |> MaybeChanged.fold_enum (fun appr transitions -> improve_with_pol program appr (RankingFunction.find (Program.vars program) transitions appr)) appr
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve time bounds", [])
                      execute

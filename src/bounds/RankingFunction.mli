@@ -22,10 +22,10 @@ val strictly_decreasing : t -> (Transition.t*kind) list
 val transitions : t -> Transition.t list
 
 (** Finds a suitable ranking function which decreases at least one transition and does not increase any transition. *)
-val find_ : Program.t -> Approximation.t -> t
+val find_ : Program.t -> Approximation.t -> t Option.t
 
 (** Finds a suitable ranking function for the given transitions T'. *)
-val find : VarSet.t -> Transition.t list -> t
+val find : VarSet.t -> Transition.t list -> Approximation.t -> t Option.t
 
 (** Invokes Farkas Lemma, to compute a ranking function*)
 val farkas_transform : Constraint.t -> ParameterAtom.t -> Constraint.t

@@ -85,3 +85,23 @@ Also only a part of an SCC such as $\TSet' = \braced{t_4}$ could be chosen.
 But since $t_3 \in \TSet_{\location_3}$ would be a entry transition of $\TSet' = \braced{t_4}$, this would only be of benefit if we already inferred a time bound $\UTime(t_3) < \infty$.
 
 The implementation selects the transitions of the different SCCs of the program as transition set $\TSet'$ and excludes those transitions $t$, for which we already inferred a time bound $\UTime(t) < \infty$.
+
+\todo{More}{}
+
+\begin{algorithm}
+\caption{Computing a ranking function}\label{ranking_function_algorithm}
+\begin{algorithmic}[1]
+  \State Input: An SCC $\TSet$, a subset $\TSet_b \subseteq \TSet$ with $\UTime(t) \neq \infty$ for each $t \in \TSet_b$
+  \ForAll{$i$ from $0$ to $\abs{\TSet}-1$}
+    \ForAll{$t$ in $\TSet \setminus \TSet_b$}
+      \ForAll{$\TSet_< \subseteq (\TSet \setminus \braced{t})$ with $\abs{\TSet_\geq} = i$}
+        \State Compute a ranking function $\timerank$ with $\TSet' = \TSet \setminus \TSet_<$ and $\TSet_> = \braced{t}$
+        \If{$\timerank$ is found}
+          \Return $\timerank$
+        \EndIf
+      \EndFor
+    \EndFor
+  \EndFor
+  \Return None
+\end{algorithmic}
+\end{algorithm}

@@ -176,36 +176,53 @@ let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (tran
             | None -> []
 
 
-let find vars transitions =
+(** Checks if a transition has already been oriented strictly in a given approximation *)
+let is_already_bounded appr transition =  
+  not (Bound.is_infinity (Approximation.timebound appr transition))
+
+let find_with (pol, fresh_coeffs) non_increasing_transitions strictly_decreasing_transitions =
+  let non_increasing_constraint = non_increasing_constraints pol non_increasing_transitions in
+  let strictly_decreasing_transitions = single_strictly_decreasing pol strictly_decreasing_transitions non_increasing_constraint in
+  let get_bounded (trans, sens) = bounded_constraint pol trans sens in
+  let bounded = Constraint.all (List.map get_bounded strictly_decreasing_transitions) in (*Problem: How to generate the final constraints*)
+  let get_strictly_decreasing (trans, sens) = strictly_decreasing_constraint pol trans sens in
+  let strictly_decreasing = Constraint.all (List.map get_strictly_decreasing strictly_decreasing_transitions) in
+  let model = SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs (Formula.mk (Constraint.Infix.(non_increasing_constraint && bounded && strictly_decreasing))) in
+  {
+    pol = (fun loc -> Polynomial.eval_partial (ParameterPolynomial.flatten (pol loc)) model);
+    strictly_decreasing = strictly_decreasing_transitions;
+    transitions = non_increasing_transitions;
+  }  
+  
+let found rank =
+  not (List.is_empty rank.strictly_decreasing)
+
+let find vars transitions appr =
   let execute () =
     let (pol, fresh_coeffs) = generate_ranking_template vars (transitions |> List.enum |> Program.locations |> List.of_enum |> List.unique) in
-    let non_increasing = non_increasing_constraints pol transitions in
-    let strictly_decreasing_transitions = single_strictly_decreasing pol transitions non_increasing in
-    let get_bounded (trans, sens) = bounded_constraint pol trans sens in
-    let bounded = Constraint.all (List.map get_bounded strictly_decreasing_transitions) in (*Problem: How to generate the final constraints*)
-    let get_strictly_decreasing (trans, sens) = strictly_decreasing_constraint pol trans sens in
-    let strictly_decreasing = Constraint.all (List.map get_strictly_decreasing strictly_decreasing_transitions) in
-    let model = SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs (Formula.mk (Constraint.Infix.(non_increasing && bounded && strictly_decreasing))) in
-    {
-      pol = (fun loc -> Polynomial.eval_partial (ParameterPolynomial.flatten (pol loc)) model);
-      strictly_decreasing = strictly_decreasing_transitions;
-      transitions = transitions;
-    }
+    transitions
+    |> Set.of_list
+    |> Util.powerset
+    |> Util.find_map (fun increasing_transitions ->
+           transitions
+           |> List.filter (not % is_already_bounded appr)
+           |> List.enum
+           |> Util.find_map (fun strictly_decreasing_transition ->
+                  find_with (pol, fresh_coeffs) (Set.to_list (Set.diff (Set.of_list transitions) increasing_transitions)) (List.singleton strictly_decreasing_transition)
+                  |> Option.some
+                  |> Option.filter found
+                )
+         ) 
   in Logger.with_log logger Logger.DEBUG 
                      (fun () -> "find ranking function", ["transitions", String.concat ", " (List.map Transition.to_id_string transitions);
                                                           "vars", VarSet.to_string vars])
-                     ~result:to_string
+                     ~result:(Util.option_to_string to_string)
                      execute
 
-(** Checks if a transition has already been oriented strictly in a given approximation *)
-let is_already_bounded appr transition =  
-  Bound.is_infinity (Approximation.timebound appr transition)
-    
 let find_ program appr =
   let transitions =
     program
     |> Program.graph
     |> TransitionGraph.transitions
     |> TransitionSet.to_list
-    |> List.filter (is_already_bounded appr)
-  in find (Program.vars program) transitions
+  in find (Program.vars program) transitions appr
