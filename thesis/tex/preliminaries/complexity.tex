@@ -1,4 +1,4 @@
-\subsection{Complexity}
+\section{Complexity}
 
 In the last section, we introduced the object of the analysis.
 In this section, we define the measures which should be computed with the analysis.
@@ -10,7 +10,7 @@ Time complexity can be seen as a special case of cost complexity, where the cost
 The third complexity type is size complexity.
 For each transition the size complexity yields an assignment from each variable to an interval, which defines the range of the value of the variable after the execution of the transition in an arbitrary run.
 
-\subsubsection{Time Complexity}
+\subsection{Time Complexity}
 
 We define the time complexity of a program $\Program$ as the highest possible number of steps in an arbitrary run with an initial state $\valuation_0 \in \Valuation$ between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
 
@@ -54,7 +54,7 @@ Although we changed the definitions of time complexity and time bounds, the know
 
 Therefore, it is sufficient to determine an upper time bound for a program and build the sum over all transitions $\TSet$ of the program, to approximate the time complexity. 
 
-\subsubsection{Size complexity}
+\subsection{Size complexity}
 
 A size bound of a program defines for each variable at a particular transition an interval in which the value ranges in a worst-case evaluation.
 An interval is defined by a lower size bound and an upper size bound.
@@ -98,7 +98,7 @@ Then, we denote with $f(\alpha)$ for a result variable $\alpha \in \RV$ the triv
 We use the abbreviation $f(t, v)$ for a transition $t \in \TSet$ and a variable $v \in \VSet$ to denote the application $f((t,v)) \in \BoundSet(\PVSet)$ with $(t,v) \in \RV$.
 If the function $f$ is only applied to a transition $t \in \TSet$, this denotes the partial application of $f$ to $t$ resulting in $f(t): \VSet \rightarrow \BoundSet(\PVSet)$.
 
-\subsubsection{Cost Complexity}
+\subsection{Cost Complexity}
 
 Additionally to time and size complexity, we consider cost complexity.
 The cost complexity of a program is defined as the highest sum of the costs of a transition sequence of an arbitrary evaluation starting in an input state $\valuation_0 \in \Valuation$.

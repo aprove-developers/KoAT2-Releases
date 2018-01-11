@@ -1,22 +1,5 @@
 \begin{figure}
 \centering
-
-\begin{tikzpicture}[->,>=stealth',auto,node distance=5cm,
-    thick,
-    main node/.style={circle,draw,font=\sffamily\Large\bfseries},
-    aligned edge/.style={align=left}]
-
-  \node[main node] (0) {$\location_0$};
-  \node[main node] (1) [right of=0] {$\location_1$};
-  \node[main node] (2) [right of=1] {$\location_2$};
-
-  \path[every node/.style={font=\sffamily\small}]
-    (0) edge[aligned edge] node[above=0.2cm] {$t_0$} node[below=0.2cm] {$\update(x) = x$\\$\update(y) = y$\\$\update(z) = z$} (1)
-    (1) edge[aligned edge, loop above] node[left=0.2cm] {$t_1$} node[right=0.2cm] {$\update(x) = x$\\$\update(y) = x + y + z$\\$\update(z) = y - z$} (1)
-    (1) edge[aligned edge] node[above=0.2cm] {$t_2$} node[below=0.2cm] {$\update(x) = 5$\\$\update(y) = z$\\$\update(z) = y$} (2)
-    ;
-\end{tikzpicture}
-
 \begin{tikzpicture}[->,>=stealth',auto,node distance=1.5cm]
 
   \node (0x) {$t_0,x$};
@@ -36,17 +19,16 @@
     (0y) edge (1z)
     (0z) edge (1y)
     (0z) edge (1z)
-    (1x) edge[loop above] (1x)
+    (1x) edge[loop above, thick] (1x)
     (1x) edge (1y)
-    (1y) edge[loop right] (1y)
-    (1y) edge (1z)
+    (1y) edge[loop right, thick] (1y)
+    (1y) edge[thick] (1z)
     (1y) edge (2z)
-    (1z) edge (1y)
-    (1z) edge[loop below] (1z)
+    (1z) edge[thick] (1y)
+    (1z) edge[loop below, thick] (1z)
     (1z) edge (2y)
     ;
 \end{tikzpicture}
-
-\caption{Program with only trivial SCCs}
-\label{fig:trivial_sizebound_example}
+\caption{Example of an RVG}
+\label{fig:rvg_example}
 \end{figure}

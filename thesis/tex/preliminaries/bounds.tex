@@ -43,7 +43,7 @@ The variable set $\VSet$ itself is included in the bound set $\BoundSet(\VSet)$ 
 
 We define the usual addition $+$ and multiplication $\cdot$ between two bounds.
 The maximum operator $\max$ is also included with the common meaning.
-For the representation of exponential bounds we include $k^b$ for all positive integers $k \in \mathbb{N}$ and all bounds $b \in \BoundSet(\VSet)$.
+For the representation of exponential bounds, we include $k^b$ for all positive integers $k \in \mathbb{N}$ and all bounds $b \in \BoundSet(\VSet)$.
 Arbitrary exponentiation is not included (e.g. $x^y \notin \BoundSet$).
 
 Note that we allow some additional notations to simplify the representation of some bounds.
@@ -57,11 +57,11 @@ Note that we allow some additional notations to simplify the representation of s
   b^n &:= \underbrace{b \cdot b \dots b \cdot b}_\text{n times} & \text{ for all } b \in \BoundSet(\VSet), n \in \mathbb{N}
 \end{align*}
 The minimum operator $\min$, the subtraction $-$, the absolute value $\abs{\cdot}$ and the exponentiation with a natural number are defined with the expected meaning.
-The operator $\maxO{\cdot}$ is used as a abbreviation due to its high usage.
+The operator $\maxO{\cdot}$ is used as an abbreviation due to its high usage.
 
 In specific scenarios, we only allow a subset of those bounds.
 For this purpose, we define with $\BoundSet_p(\VSet) \subseteq \BoundSet(\VSet)$ the subset of all polynomials in $\BoundSet(\VSet)$.
-This subset can be understood as different representation for the polynomial ring $\mathbb{Z}[\VSet]$.
+This subset can be understood as equivalent representation of the polynomial ring $\mathbb{Z}[\VSet]$.
 \begin{definition}[Polynomial set]
   Let $\VSet$ be a finite set of variables.
   The set $\BoundSet_p(\VSet) \subseteq \BoundSet(\VSet)$ of all polynomials is the smallest set with
@@ -101,9 +101,9 @@ For the subset of polynomials, we define an atom set $\AtomSet$ to express polyn
   Let $\bowtie \in \braced{\leq, \geq, <, >, =}$ be an arbitrary comparator.
   We define $p_1 \bowtie p_2$ as a polynomial inequality between $p_1$ and $p_2$.
   We define the atom set
-  \[ \AtomSet = \braced{p_1 \bowtie p_2 \mid \exists p_1, p_2 \in \BoundSet_p(\VSet), \exists \bowtie \in \braced{\leq, \geq, <, >, =}} \]
+  \[ \AtomSet = \braced{p_1 \bowtie p_2 \mid p_1, p_2 \in \BoundSet_p(\VSet), \bowtie \in \braced{\leq, \geq, <, >, =}} \]
   as the set of all polynomial inequalities.
-  Furthermore, we define the constraint set $\ConstraintSet = 2^\AtomSet$ as set of conjunctions between polynomial inequalities.
+  Furthermore, we define the constraint set $\ConstraintSet = 2^\AtomSet$ as set of conjunctions of polynomial inequalities.
 \end{definition}
 Also, we extend the definition of the bound evaluation to polynomial inequalities.
 
