@@ -21,10 +21,9 @@ let run (params: params) =
   params.input
   |> MainUtil.read_input params.simple_input
   |> Option.may (fun program ->
-         (program, Approximation.create program)
-         |> TrivialTimeBounds.transform
-         |> MaybeChanged.unpack
-         |> (fun (program, appr) ->
+         Approximation.create program
+         |> TrivialTimeBounds.compute program
+         |> (fun appr ->
                    let transitions =
                      program
                      |> Program.graph

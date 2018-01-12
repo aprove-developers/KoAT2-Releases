@@ -9,8 +9,7 @@ type t =
   | CutUnreachableLocations
   | CutUnsatisfiableTransitions
   | Chaining
-  | InvariantGeneration
-  | TrivialTimeBounds [@@deriving show, ord, eq]
+  | InvariantGeneration [@@deriving show, ord, eq]
 
 val all : t list
   

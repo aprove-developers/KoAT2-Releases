@@ -25,10 +25,8 @@ let tests =
              program >:: (fun _ ->
                      assert_equal_bound_option
                        (Some Bound.one)
-                       ((Readers.read_program_simple program, Approximation.empty 5 5)
-                        |> TrivialTimeBounds.transform
-                        |> MaybeChanged.unpack
-                        |> Tuple2.second
+                       (Approximation.empty 5 5
+                        |> TrivialTimeBounds.compute (Readers.read_program_simple program)
                         |> (fun time -> Approximation.timebound_between time (Location.of_string src) (Location.of_string target))
            )))
                   [
