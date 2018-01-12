@@ -42,8 +42,6 @@ This enables the preprocessor $p_{\text{chaining}}$ to skip the location $\locat
 
 \subsubsection{Chaining}
 
-\todo{Chaining does not work anymore with lower and upper updates (for non-monotonic updates)}{}
-
 The preprocessor $p_{\text{chaining}}$ does a single run on all locations $\location \in \LSet$ to check if they can be skipped by chaining.
 For such a location a chaining step is possible iff there does not exist a transition $(\location,\update,\guard,\location)$ with any update $\update$ and guard $\guard$, e.g. iff the location forms a trivial SCC $\braced{\location}$.
 Then and only then we can define the equivalent program without this location $((\LSet', \TSet'), \location_0, \VSet, \cost')$ with the reduced location set $\LSet' = \LSet \setminus \braced{\location}$ and the replaced transition set $\TSet' = (\TSet \setminus \TSet^-) \cup \TSet^+$ with $\TSet^- = \braced{(\location',\update,\guard,\location'') \mid \exists (\location',\update,\guard,\location'') \in \TSet: \location \neq \location' \wedge \location \neq \location''}$ and $\TSet^+ = \braced{(\location_1,\update_2 \circ \update_1,\exacteval{\guard_2}{\update_1} \cup \guard_1,\location_2') \mid \exists (\location_1,\update_1,\guard_1,\location) \in \TSet, \exists (\location,\update_2,\guard_2,\location_2') \in \TSet}$. \todo{More precise}{}
