@@ -135,6 +135,7 @@ let rec (>) b1 b2 =
   let execute () =
     match (b1, b2) with
     | (_, Infinity) -> Some false
+    | (Infinity, _) -> Some true
     | (Neg Infinity, _) -> Some false
     | (Const c1, Const c2) when OurInt.Compare.(c1 > c2) -> Some true
     | (b, Const z1) when OurInt.(equal z1 zero) -> (
