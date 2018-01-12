@@ -4,7 +4,7 @@ open Program.Types
 let logger = Logging.(get Size)
 
 let improve_scc program rvg appr = function
-  | [((l,t,l'),v)] when not (Location.equal l l') ->
+  | [((l,t,l'),v)] ->
      let add_trivial_bound kind =
        let new_bound = TrivialSizeBounds.compute kind program (fun kind -> Approximation.sizebound kind appr) ((l,t,l'),v) in
        Approximation.add_sizebound kind new_bound (l,t,l') v appr
