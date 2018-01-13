@@ -86,12 +86,6 @@ let as_parapoly label var =
   |None -> ParameterPolynomial.of_var var
   |Some p -> ParameterPolynomial.of_polynomial p
 
-(** Returns if the given transition qualifies for a cost sensitive approach. *)
-let qualifies_for_sensitive_costs ((l, t, l'): Transition.t): bool =
-  (*Polynomial.is_linear (TransitionLabel.cost t)
-  && SMTSolver.check_positivity (Formula.mk (TransitionLabel.guard t)) (TransitionLabel.cost t)*)
-  false
-
 (* If the cost of the transition is nonlinear, then we have to do it the old way as long as we do not infer nonlinear ranking functions *)
 let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, l'): Transition.t) (sensitivity: kind): Constraint.t =
   let guard = TransitionLabel.guard t in
@@ -137,7 +131,7 @@ let non_increasing_constraints (pol : Location.t -> ParameterPolynomial.t) (tran
 (** Returns, if we can add a strictly decreasing constraint to the given constraint such that it is still satisfiable. *)
 let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr: Constraint.t) (transition: Transition.t) (sensitivity: kind): bool =
   let execute () =
-    if sensitivity = `Cost && not (qualifies_for_sensitive_costs transition) then
+    if sensitivity = `Cost then
       false
     else 
       let open Constraint.Infix in
