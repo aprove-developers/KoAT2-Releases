@@ -8,7 +8,7 @@ open Program.Types
 module SMTSolver = SMT.Z3Solver
 module Valuation = Valuation.Make(OurInt)
   
-type kind = [ `Cost | `Time ] [@@deriving show]
+type measure = [ `Cost | `Time ] [@@deriving show]
 
 type t = {
     pol : Location.t -> Polynomial.t;
@@ -33,7 +33,7 @@ let to_string {pol; strictly_decreasing; transitions} =
   let locations = transitions |> List.enum |> Program.locations |> List.of_enum in
   "pol: [" ^ pol_to_string locations Polynomial.to_string pol ^ "] T'>: " ^ (List.map Transition.to_id_string strictly_decreasing |> String.concat ", ")
 
-let find kind vars transitions appr =
+let find measure vars transitions appr =
 
   (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
   let apply_farkas a_matrix b_right c_left d_right =
@@ -89,12 +89,12 @@ let find kind vars transitions appr =
   let as_parapoly label var =
     match TransitionLabel.update label var with
     (** Correct? In the nondeterministic case we just make it deterministic? *)
-    |None -> ParameterPolynomial.of_var var
-    |Some p -> ParameterPolynomial.of_polynomial p
+    | None -> ParameterPolynomial.of_var var
+    | Some p -> ParameterPolynomial.of_polynomial p
   in
 
-  let cost t =
-    match kind with
+  let decreaser t =
+    match measure with
     | `Cost -> TransitionLabel.cost t
     | `Time -> Polynomial.one
   in
@@ -102,11 +102,11 @@ let find kind vars transitions appr =
   (* If the cost of the transition is nonlinear, then we have to do it the old way as long as we do not infer nonlinear ranking functions *)
   let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, l'): Transition.t): Constraint.t =
     let guard = TransitionLabel.guard t in
-    farkas_transform guard ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial (cost t) + substitute_f (as_parapoly t) (pol l')))
+    farkas_transform guard ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial (decreaser t) + substitute_f (as_parapoly t) (pol l')))
   in
     
   let bounded_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, _) : Transition.t): Constraint.t =
-    farkas_transform (TransitionLabel.guard t) ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial (cost t))
+    farkas_transform (TransitionLabel.guard t) ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial (decreaser t))
   in
   
   (** Returns a non increasing constraint for a single transition. *)
@@ -138,13 +138,10 @@ let find kind vars transitions appr =
   (** Returns, if we can add a strictly decreasing constraint to the given constraint such that it is still satisfiable. *)
   let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr: Constraint.t) (transition: Transition.t): bool =
     let execute () =
-      if kind = `Cost then
-        false
-      else 
-        let open Constraint.Infix in
-        (constr && bounded_constraint pol transition && strictly_decreasing_constraint pol transition)
-        |> Formula.mk
-        |> SMTSolver.satisfiable
+      let open Constraint.Infix in
+      (constr && bounded_constraint pol transition && strictly_decreasing_constraint pol transition)
+      |> Formula.mk
+      |> SMTSolver.satisfiable
     in Logger.with_log logger Logger.DEBUG 
                        (fun () -> "addable as strictly decreasing", ["transition", Transition.to_id_string transition])
                        ~result:Bool.to_string
@@ -168,9 +165,9 @@ let find kind vars transitions appr =
   in
 
   (** Tries to add a single transition from the given list as strictly decreasing transition to the given constraint.
-    Th      is should always lead to better or equal results than searching for sets of strictly decreasing transitions. *)
+      This should always lead to better or equal results than searching for sets of strictly decreasing transitions. *)
   let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): Transition.t list =
-    match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans) transitions with
+    match transitions |> List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans)  with
     | Some transition -> [transition]
     | None -> []
   in
@@ -223,11 +220,10 @@ let find kind vars transitions appr =
                   ~result:(Util.option_to_string to_string)
                   execute
    
-let find_ kind program appr =
+let find_ measure program appr =
   let transitions =
     program
-    |> Program.graph
-    |> TransitionGraph.transitions
+    |> Program.transitions
     |> TransitionSet.to_list
   in
-  find kind (Program.vars program) transitions appr
+  find measure (Program.vars program) transitions appr

@@ -8,7 +8,7 @@ open Program.Types
 
 type t
 
-type kind = [ `Cost | `Time ] [@@deriving show]
+type measure = [ `Cost | `Time ] [@@deriving show]
 
 (** Returns the ranking polynomial for the specific location. *)
 val rank : t -> Location.t -> Polynomial.t
@@ -22,10 +22,10 @@ val strictly_decreasing : t -> Transition.t list
 val transitions : t -> Transition.t list
 
 (** Finds a suitable ranking function which decreases at least one transition and does not increase any transition. *)
-val find_ : kind -> Program.t -> Approximation.t -> t Option.t
+val find_ : measure -> Program.t -> Approximation.t -> t Option.t
 
 (** Finds a suitable ranking function for the given transitions T'. *)
-val find : kind -> VarSet.t -> Transition.t list -> Approximation.t -> t Option.t
+val find : measure -> VarSet.t -> Transition.t list -> Approximation.t -> t Option.t
 
 (** Converts a ranking function into a string*)
 val to_string : t -> string
