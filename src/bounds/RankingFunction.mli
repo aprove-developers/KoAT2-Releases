@@ -22,10 +22,10 @@ val strictly_decreasing : t -> Transition.t list
 val transitions : t -> Transition.t list
 
 (** Finds a suitable ranking function which decreases at least one transition and does not increase any transition. *)
-val find_ : Program.t -> Approximation.t -> t Option.t
+val find_ : kind -> Program.t -> Approximation.t -> t Option.t
 
 (** Finds a suitable ranking function for the given transitions T'. *)
-val find : VarSet.t -> Transition.t list -> Approximation.t -> t Option.t
+val find : kind -> VarSet.t -> Transition.t list -> Approximation.t -> t Option.t
 
 (** Converts a ranking function into a string*)
 val to_string : t -> string

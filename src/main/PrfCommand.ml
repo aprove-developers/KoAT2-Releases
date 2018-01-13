@@ -31,5 +31,5 @@ let run (params: params) =
                      |> TransitionSet.to_list
                      |> List.filter (Bound.is_infinity % Approximation.timebound appr)
                    in
-                   RankingFunction.find (Program.vars program) transitions appr
+                   RankingFunction.find `Time (Program.vars program) transitions appr
                    |> Option.may (fun prf -> print_string (RankingFunction.to_string prf ^ "\n"))))

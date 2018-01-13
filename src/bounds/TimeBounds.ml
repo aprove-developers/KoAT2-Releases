@@ -103,7 +103,7 @@ let improve program appr =
     |> Enum.map (TransitionGraph.loc_transitions (Program.graph program))
     |> Enum.filter (not % TransitionSet.is_empty)
     |> Enum.map TransitionSet.to_list
-    |> MaybeChanged.fold_enum (fun appr transitions -> improve_with_pol program appr (RankingFunction.find (Program.vars program) transitions appr)) appr
+    |> MaybeChanged.fold_enum (fun appr transitions -> improve_with_pol program appr (RankingFunction.find `Time (Program.vars program) transitions appr)) appr
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve time bounds", [])
                      execute

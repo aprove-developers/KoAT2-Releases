@@ -33,7 +33,7 @@ let to_string {pol; strictly_decreasing; transitions} =
   let locations = transitions |> List.enum |> Program.locations |> List.of_enum in
   "pol: [" ^ pol_to_string locations Polynomial.to_string pol ^ "] T'>: " ^ (List.map Transition.to_id_string strictly_decreasing |> String.concat ", ")
 
-let find vars transitions appr =
+let find kind vars transitions appr =
 
   (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
   let apply_farkas a_matrix b_right c_left d_right =
@@ -93,19 +93,20 @@ let find vars transitions appr =
     |Some p -> ParameterPolynomial.of_polynomial p
   in
 
-  let cost t = function
+  let cost t =
+    match kind with
     | `Cost -> TransitionLabel.cost t
     | `Time -> Polynomial.one
   in
 
   (* If the cost of the transition is nonlinear, then we have to do it the old way as long as we do not infer nonlinear ranking functions *)
-  let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, l'): Transition.t) (sensitivity: kind): Constraint.t =
+  let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, l'): Transition.t): Constraint.t =
     let guard = TransitionLabel.guard t in
-    farkas_transform guard ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial (cost t sensitivity) + substitute_f (as_parapoly t) (pol l')))
+    farkas_transform guard ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial (cost t) + substitute_f (as_parapoly t) (pol l')))
   in
     
-  let bounded_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, _) : Transition.t) (sensitivity: kind): Constraint.t =
-    farkas_transform (TransitionLabel.guard t) ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial (cost t sensitivity))
+  let bounded_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, _) : Transition.t): Constraint.t =
+    farkas_transform (TransitionLabel.guard t) ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial (cost t))
   in
   
   (** Returns a non increasing constraint for a single transition. *)
@@ -135,13 +136,13 @@ let find vars transitions appr =
   in
      
   (** Returns, if we can add a strictly decreasing constraint to the given constraint such that it is still satisfiable. *)
-  let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr: Constraint.t) (transition: Transition.t) (sensitivity: kind): bool =
+  let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr: Constraint.t) (transition: Transition.t): bool =
     let execute () =
-      if sensitivity = `Cost then
+      if kind = `Cost then
         false
       else 
         let open Constraint.Infix in
-        (constr && bounded_constraint pol transition sensitivity && strictly_decreasing_constraint pol transition sensitivity)
+        (constr && bounded_constraint pol transition && strictly_decreasing_constraint pol transition)
         |> Formula.mk
         |> SMTSolver.satisfiable
     in Logger.with_log logger Logger.DEBUG 
@@ -154,13 +155,11 @@ let find vars transitions appr =
   let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): Transition.t list =
     let combine (constr,transitions) transition =
       let open Constraint.Infix in
-      let add sensitivity =
-        (constr && bounded_constraint pol transition sensitivity && strictly_decreasing_constraint pol transition sensitivity, transition::transitions)
+      let add =
+        (constr && bounded_constraint pol transition && strictly_decreasing_constraint pol transition, transition::transitions)
       in
-      if addable_as_strictly_decreasing pol constr transition `Cost then
-        add `Cost
-      else if addable_as_strictly_decreasing pol constr transition `Time then
-        add `Time
+      if addable_as_strictly_decreasing pol constr transition then
+        add
       else
         (constr, transitions)
     in
@@ -171,11 +170,9 @@ let find vars transitions appr =
   (** Tries to add a single transition from the given list as strictly decreasing transition to the given constraint.
     Th      is should always lead to better or equal results than searching for sets of strictly decreasing transitions. *)
   let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): Transition.t list =
-    match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans `Cost) transitions with
+    match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans) transitions with
     | Some transition -> [transition]
-    | None -> match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans `Time) transitions with
-              | Some transition -> [transition]
-              | None -> []
+    | None -> []
   in
   
   
@@ -187,9 +184,9 @@ let find vars transitions appr =
   let find_with (pol, fresh_coeffs) non_increasing_transitions strictly_decreasing_transitions =
     let non_increasing_constraint = non_increasing_constraints pol non_increasing_transitions in
     let strictly_decreasing_transitions = single_strictly_decreasing pol strictly_decreasing_transitions non_increasing_constraint in
-    let get_bounded trans = bounded_constraint pol trans `Time in
+    let get_bounded trans = bounded_constraint pol trans in
     let bounded = Constraint.all (List.map get_bounded strictly_decreasing_transitions) in (*Problem: How to generate the final constraints*)
-    let get_strictly_decreasing trans = strictly_decreasing_constraint pol trans `Time in
+    let get_strictly_decreasing trans = strictly_decreasing_constraint pol trans in
     let strictly_decreasing = Constraint.all (List.map get_strictly_decreasing strictly_decreasing_transitions) in
     let model = SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs (Formula.mk (Constraint.Infix.(non_increasing_constraint && bounded && strictly_decreasing))) in
     {
@@ -226,11 +223,11 @@ let find vars transitions appr =
                   ~result:(Util.option_to_string to_string)
                   execute
    
-let find_ program appr =
+let find_ kind program appr =
   let transitions =
     program
     |> Program.graph
     |> TransitionGraph.transitions
     |> TransitionSet.to_list
   in
-  find (Program.vars program) transitions appr
+  find kind (Program.vars program) transitions appr
