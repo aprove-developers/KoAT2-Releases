@@ -27,12 +27,6 @@ val find_ : Program.t -> Approximation.t -> t Option.t
 (** Finds a suitable ranking function for the given transitions T'. *)
 val find : VarSet.t -> Transition.t list -> Approximation.t -> t Option.t
 
-(** Invokes Farkas Lemma, to compute a ranking function*)
-val farkas_transform : Constraint.t -> ParameterAtom.t -> Constraint.t
-  
-(** Generates a ranking function template for every location in the program*)
-val generate_ranking_template : VarSet.t -> Location.t list -> (Location.t -> ParameterPolynomial.t) * Var.t list
-
 (** Converts a ranking function into a string*)
 val to_string : t -> string
 
