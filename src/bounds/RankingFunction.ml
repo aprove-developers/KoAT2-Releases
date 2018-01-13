@@ -8,7 +8,7 @@ open Program.Types
 module SMTSolver = SMT.Z3Solver
 module Valuation = Valuation.Make(OurInt)
   
-type kind = [ `Sensitive | `Unsensitive ] [@@deriving show]
+type kind = [ `Cost | `Time ] [@@deriving show]
 
 type t = {
     pol : Location.t -> Polynomial.t;
@@ -97,16 +97,16 @@ let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) (
   let guard = TransitionLabel.guard t in
   let cost =
     match sensitivity with
-    | `Sensitive -> TransitionLabel.cost t
-    | `Unsensitive -> Polynomial.one
+    | `Cost -> TransitionLabel.cost t
+    | `Time -> Polynomial.one
   in
   farkas_transform guard ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial cost + substitute_f (as_parapoly t) (pol l')))
   
 let bounded_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, _) : Transition.t) (sensitivity: kind): Constraint.t =
   let cost = 
     match sensitivity with
-    | `Sensitive -> TransitionLabel.cost t
-    | `Unsensitive -> Polynomial.one
+    | `Cost -> TransitionLabel.cost t
+    | `Time -> Polynomial.one
   in
   farkas_transform (TransitionLabel.guard t) ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial cost)
 
@@ -137,7 +137,7 @@ let non_increasing_constraints (pol : Location.t -> ParameterPolynomial.t) (tran
 (** Returns, if we can add a strictly decreasing constraint to the given constraint such that it is still satisfiable. *)
 let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr: Constraint.t) (transition: Transition.t) (sensitivity: kind): bool =
   let execute () =
-    if sensitivity = `Sensitive && not (qualifies_for_sensitive_costs transition) then
+    if sensitivity = `Cost && not (qualifies_for_sensitive_costs transition) then
       false
     else 
       let open Constraint.Infix in
@@ -156,10 +156,10 @@ let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transit
     let add sensitivity =
       (constr && bounded_constraint pol transition sensitivity && strictly_decreasing_constraint pol transition sensitivity, (transition, sensitivity)::transitions)
     in
-    if addable_as_strictly_decreasing pol constr transition `Sensitive then
-      add `Sensitive
-    else if addable_as_strictly_decreasing pol constr transition `Unsensitive then
-      add `Unsensitive
+    if addable_as_strictly_decreasing pol constr transition `Cost then
+      add `Cost
+    else if addable_as_strictly_decreasing pol constr transition `Time then
+      add `Time
     else
       (constr, transitions)
   in
@@ -169,10 +169,10 @@ let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transit
 (** Tries to add a single transition from the given list as strictly decreasing transition to the given constraint.
     This should always lead to better or equal results than searching for sets of strictly decreasing transitions. *)
 let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): (Transition.t*kind) list =
-  match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans `Sensitive) transitions with
-  | Some transition -> [transition,`Sensitive]
-  | None -> match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans `Unsensitive) transitions with
-            | Some transition -> [transition,`Unsensitive]
+  match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans `Cost) transitions with
+  | Some transition -> [transition,`Cost]
+  | None -> match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans `Time) transitions with
+            | Some transition -> [transition,`Time]
             | None -> []
 
 

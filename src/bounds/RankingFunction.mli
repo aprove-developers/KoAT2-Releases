@@ -8,7 +8,7 @@ open Program.Types
 
 type t
 
-type kind = [ `Sensitive | `Unsensitive ] [@@deriving show]
+type kind = [ `Cost | `Time ] [@@deriving show]
 
 (** Returns the ranking polynomial for the specific location. *)
 val rank : t -> Location.t -> Polynomial.t
