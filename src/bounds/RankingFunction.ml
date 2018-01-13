@@ -10,6 +10,8 @@ module Valuation = Valuation.Make(OurInt)
   
 type measure = [ `Cost | `Time ] [@@deriving show]
 
+type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ]
+             
 type t = {
     pol : Location.t -> Polynomial.t;
     strictly_decreasing : Transition.t list;
@@ -99,35 +101,21 @@ let find measure vars transitions appr =
     | `Time -> Polynomial.one
   in
 
-  (* If the cost of the transition is nonlinear, then we have to do it the old way as long as we do not infer nonlinear ranking functions *)
-  let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, l'): Transition.t): Constraint.t =
-    let guard = TransitionLabel.guard t in
-    farkas_transform guard ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial (decreaser t) + substitute_f (as_parapoly t) (pol l')))
+  let transition_constraint (constraint_type: constraint_type) (pol: Location.t -> ParameterPolynomial.t) ((l,t,l'): Transition.t): Constraint.t =
+    let atom =
+      match constraint_type with
+      | `Non_Increasing -> ParameterAtom.Infix.(pol l >= ParameterPolynomial.substitute_f (as_parapoly t) (pol l'))
+      | `Decreasing -> ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial (decreaser t) + substitute_f (as_parapoly t) (pol l')))
+      | `Bounded -> ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial (decreaser t))      
+    in
+    farkas_transform (TransitionLabel.guard t) atom
   in
     
-  let bounded_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, _) : Transition.t): Constraint.t =
-    farkas_transform (TransitionLabel.guard t) ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial (decreaser t))
-  in
-  
-  (** Returns a non increasing constraint for a single transition. *)
-  let non_increasing_constraint (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t): Constraint.t =
-    let execute () =
-      let (src, trans_label, target) = trans in
-      let guard = TransitionLabel.guard trans_label in
-      let updated_target = ParameterPolynomial.substitute_f (as_parapoly trans_label) (pol target) in
-      let new_atom = ParameterAtom.Infix.(pol src >= updated_target) in
-      farkas_transform guard new_atom
-    in Logger.with_log logger Logger.DEBUG
-                       (fun () -> "non increasing constraint", ["transition", Transition.to_id_string trans])
-                       ~result:Constraint.to_string
-                       execute
-  in
-  
   (** Returns a constraint such that all transitions must fulfil the non increasing constraint. *)
   let non_increasing_constraints (pol : Location.t -> ParameterPolynomial.t) (transitions : Transition.t list): Constraint.t =
     let execute () =
       transitions
-      |> List.map (non_increasing_constraint pol)
+      |> List.map (transition_constraint `Non_Increasing pol)
       |> Constraint.all
     in Logger.with_log logger Logger.DEBUG
                        (fun () -> "determined non_incr constraints", [])
@@ -139,7 +127,7 @@ let find measure vars transitions appr =
   let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr: Constraint.t) (transition: Transition.t): bool =
     let execute () =
       let open Constraint.Infix in
-      (constr && bounded_constraint pol transition && strictly_decreasing_constraint pol transition)
+      (constr && transition_constraint `Bounded pol transition && transition_constraint `Decreasing pol transition)
       |> Formula.mk
       |> SMTSolver.satisfiable
     in Logger.with_log logger Logger.DEBUG 
@@ -153,7 +141,7 @@ let find measure vars transitions appr =
     let combine (constr,transitions) transition =
       let open Constraint.Infix in
       let add =
-        (constr && bounded_constraint pol transition && strictly_decreasing_constraint pol transition, transition::transitions)
+        (constr && transition_constraint `Bounded pol transition && transition_constraint `Decreasing pol transition, transition::transitions)
       in
       if addable_as_strictly_decreasing pol constr transition then
         add
@@ -181,9 +169,9 @@ let find measure vars transitions appr =
   let find_with (pol, fresh_coeffs) non_increasing_transitions strictly_decreasing_transitions =
     let non_increasing_constraint = non_increasing_constraints pol non_increasing_transitions in
     let strictly_decreasing_transitions = single_strictly_decreasing pol strictly_decreasing_transitions non_increasing_constraint in
-    let get_bounded trans = bounded_constraint pol trans in
+    let get_bounded trans = transition_constraint `Bounded pol trans in
     let bounded = Constraint.all (List.map get_bounded strictly_decreasing_transitions) in (*Problem: How to generate the final constraints*)
-    let get_strictly_decreasing trans = strictly_decreasing_constraint pol trans in
+    let get_strictly_decreasing trans = transition_constraint `Decreasing pol trans in
     let strictly_decreasing = Constraint.all (List.map get_strictly_decreasing strictly_decreasing_transitions) in
     let model = SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs (Formula.mk (Constraint.Infix.(non_increasing_constraint && bounded && strictly_decreasing))) in
     {
