@@ -1,3 +1,18 @@
 Let $\rv = (t,v) \in \RV$ be a result variable.
-We need to show that $\exacteval{b^\sqcup}{\valuation} \leq \exacteval{\LLSB(\rv)}{\valuation}$ and $\exacteval{\ULSB(\rv)}{\valuation} \leq \exacteval{b^\sqcap}{\valuation}$ hold for any evaluation $(\location_0, \valuation_0) \rightarrow^* (\location, \valuation) \rightarrow_t (\location', \valuation') \rightarrow^* \dots$.
-\todo{Can we assume to have the update function here?}{}
+We need to show that if there exists a lower local size bound $\LLSB(\rv) \in \BoundSet^\sqcup_l$, then also $b^\sqcup_\rv$ is a lower local size bound.
+Also, we need to show that if there exists an upper local size bound $\ULSB(\rv) \in \BoundSet^\sqcap_l$, then also $b^\sqcap_\rv$ is an upper local size bound.
+Lets first regard the lower case.
+We assume there is a lower local size bound $\LLSB(\rv) \in \BoundSet^\sqcup_l$.
+By definition the lower local size bound $\LLSB(\rv)$ is of the following form.
+\[ \LLSB(\rv) = s \cdot \left(e + \sum_{v \in P_1} v - \sum_{v \in N_1} v - \sum_{v \in P_2} \maxO{-v} - \sum_{v \in N_2} \maxO{v} \right) \]
+The trivial lower local size bound $b^\sqcup_l$ is of the following form.
+\begin{align*}
+  b^\sqcup_l = & s_t \cdot \left(e_t - \sum_{v \in \VSet} \maxO{-v} - \sum_{v \in \VSet} \maxO{v} \right) \\
+  = & s_t \cdot \left(e_t - \sum_{v \in \VSet} \abs{v} \right)
+\end{align*}
+By definition the sets $P_1$, $P_2$, $N_1$ and $N_2$ are pairwise disjoint subsets of the variable set $\VSet$.
+Therefore, each variable $v \in \VSet$ is at most element of one of the sets $P_1$, $P_2$, $N_1$ and $N_2$.
+If $-\abs{v}$ is smaller than $v$, $-v$, $-\abs{-v}$ and $-\abs{v}$, then $\sum_{v \in \VSet} \abs{v}$ is also smaller than $\sum_{v \in P_1} v - \sum_{v \in N_1} v - \sum_{v \in P_2} \maxO{-v} - \sum_{v \in N_2} \maxO{v}$.
+We can easily observe that $-\abs{v}$ is indeed smaller than $v$, $-v$, $-\abs{-v}$ and $-\abs{v}$.
+Therefore, it is left to show, that $e_t$ is smaller than $e$ and $s_t$ is greater than $s$.
+\todo{Can we show this with \constant?}{}

@@ -26,12 +26,12 @@ Therefore we define two subsets $\BoundSet^\sqcap_l, \BoundSet^\sqcup_l \subsete
 We now use these local bound sets for the definition of the scaled sum.
 
 \begin{definition}[Scaled sum]
-  We say that $\alpha \in \RV$ is bounded by an \textbf{upper scaled sum} if and only if there is a bound $b \in \BoundSet^\sqcap_l$ such that it holds for all states $\lstate \leq \ustate$ that
-  \[ \ueval{\ULSB(\alpha)}{\lstate}{\ustate} = \ueval{b}{\lstate}{\ustate} \]
-  We then denote with $s^\sqcap_\alpha$ the scaling factor $s$, with $e^\sqcap_\alpha$ the constant $e$ and with the sets $P_{\alpha,1}^\sqcap, P_{\alpha,2}^\sqcap, N_{\alpha,1}^\sqcap, N_{\alpha,2}^\sqcap$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
-  We say that $\alpha \in \RV$ is bounded by a \textbf{lower scaled sum} if and only if there is a bound $b \in \BoundSet^\sqcup_l$ such that it holds for all states $\lstate \leq \ustate$ that
-  \[ \leval{\LLSB(\alpha)}{\lstate}{\ustate} = \leval{b}{\lstate}{\ustate} \]
-  We then denote with $s^\sqcup_\alpha$ the scaling factor $s$, with $e^\sqcup_\alpha$ the constant $e$ and with the sets $P_{\alpha,1}^\sqcup, P_{\alpha,2}^\sqcup, N_{\alpha,1}^\sqcup, N_{\alpha,2}^\sqcup$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
+  We say that $\rv \in \RV$ is bounded by an \textbf{upper scaled sum} if and only if there is a bound $b \in \BoundSet^\sqcap_l$ such that it holds for all states $\lstate \leq \ustate$ that
+  \[ \ueval{\ULSB(\rv)}{\lstate}{\ustate} = \ueval{b}{\lstate}{\ustate} \]
+  We then denote with $s^\sqcap_\rv$ the scaling factor $s$, with $e^\sqcap_\rv$ the constant $e$ and with the sets $P_{\rv,1}^\sqcap, P_{\rv,2}^\sqcap, N_{\rv,1}^\sqcap, N_{\rv,2}^\sqcap$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
+  We say that $\rv \in \RV$ is bounded by a \textbf{lower scaled sum} if and only if there is a bound $b \in \BoundSet^\sqcup_l$ such that it holds for all states $\lstate \leq \ustate$ that
+  \[ \leval{\LLSB(\rv)}{\lstate}{\ustate} = \leval{b}{\lstate}{\ustate} \]
+  We then denote with $s^\sqcup_\rv$ the scaling factor $s$, with $e^\sqcup_\rv$ the constant $e$ and with the sets $P_{\rv,1}^\sqcup, P_{\rv,2}^\sqcup, N_{\rv,1}^\sqcup, N_{\rv,2}^\sqcup$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
 \end{definition}
 
 \todo{Non-exact explanation}{}
@@ -79,6 +79,15 @@ We want to find a bound $b \in \BoundSet^\sqcap_l$ such that for all bounds $b' 
 \todo{Can there be multiple with only conjunctive?}{Note that there might be multiple such bounds in the local bound set $\BoundSet^\sqcap_l$.
 For a transition guard $\guard = x \leq y \vee x \leq z)$ we have two minimal bounds $y \in \BoundSet^\sqcap_l$ and $z \in \BoundSet^\sqcap_l$.}
 
+\begin{definition}[Factor approximation of bounds]
+  We define $\constant: \BoundSet_p(\VSet) \rightarrow \mathbb{N}$ as the following function.
+  \[ \constant(k) = k \text{ for all } k \in \mathbb{N} \subset \BoundSet_p(\VSet) \] 
+  \[ \constant(v) = 1 \text{ for all } v \in \VSet \subset \BoundSet_p(\VSet) \] 
+  \[ \constant(-b) = \constant(b) \text{ for all } b \in \BoundSet_p(\VSet) \] 
+  \[ \constant(b_1 + b_2) = \constant(b_1) + \constant(b_2) \text{ for all } b_1, b_2 \in \BoundSet_p(\VSet) \] 
+  \[ \constant(b_1 \cdot b_2) = \constant(b_1) \cdot \constant(b_2) \text{ for all } b_1, b_2 \in \BoundSet_p(\VSet) \] 
+\end{definition}
+
 \subsection{Computing upper local size bounds}
 
 At this point, we present an algorithm, that finds the optimal bound $b$.
@@ -87,16 +96,16 @@ Then, we take multiple steps for a component-wise improvement of this bound, alw
 In a first step, we define the trivial valid bound.
 
 \begin{definition}[Trivial upper local size bound]
-  Let $\alpha = ((\location,\update,\guard,\location'),v) \in \RV$ be a result variable, for which we want to find an upper local size bound.
+  Let $\rv = ((\location,\update,\guard,\location'),v) \in \RV$ be a result variable, for which we want to find an upper local size bound.
   Let $\VSet$ be the set of all program variables.
-  Let $s = e \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\update(v)$ or any guard atom in $\guard$.
+  Let $s = e = \constant(\update(v)) \cdot \prod_{(l \bowtie r) \in \guard} \left( \constant(l) \cdot \constant(r) \right)$ be an overapproximation of the actual scaling factor and the actual constant.
   Then, the local size bound $b \in \BoundSet^\sqcap_l$ defined by the scaling factor $s$, the constant $e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid upper local size bound for the value of $v$ after the application of the transition $t$.
 \end{definition}
 
 \input{theorems/trivial_lsb}
 
 We show the construction of a trivial upper local size bound by an example.
-Let $\alpha = ((\location,\update,\text{true},\location'),x) \in \RV$ be a result variable with the update $\update(x) = 4 + 2 \cdot y - 3 \cdot z$.
+Let $\rv = ((\location,\update,\text{true},\location'),x) \in \RV$ be a result variable with the update $\update(x) = 4 + 2 \cdot y - 3 \cdot z$.
 Then, by definition of the trivial upper local size bound we can obtain $b^\sqcap = 24 * (24 + \maxO{y} + \maxO{z} + \maxO{-y} + \maxO{-z}$.
 Note that for all variables $v \in \VSet$ we have $\maxO{v} + \maxO{-v} = \abs{v}$, where $\abs{v}$ represents the absolute value of the variable $v$.
 
@@ -148,7 +157,7 @@ The algorithm for the search for a lower local size bound $\BoundSet^\sqcup_l$ i
 First, we need to define a trivial lower local size bound.
 
 \begin{definition}[Trivial lower local size bound]
-  Let $\alpha = ((\location,\update,\guard,\location'),v) \in \RV$ be a result variable, for which we want to find a lower local size bound.
+  Let $\rv = ((\location,\update,\guard,\location'),v) \in \RV$ be a result variable, for which we want to find a lower local size bound.
   Let $\VSet$ be the set of all program variables.
   Let $s \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\update(v)$ or any guard atom in $\guard$.
   Let $e = -s$ be its negation.

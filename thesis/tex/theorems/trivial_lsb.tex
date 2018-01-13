@@ -1,5 +1,5 @@
 \begin{theorem}[Approximating trivial local size bounds]
-  Let $b^\sqcap \in \BoundSet^\sqcap_l$ and $b^\sqcup \in \BoundSet^\sqcup_l$ be trivial local size bounds for a result variable $\rv \in \RV$.
-  Then, we have
-  \[ b^\sqcup \leq \LLSB(\rv) \wedge \ULSB(\rv) \leq b^\sqcap. \]
+  Let $b^\sqcap_\rv \in \BoundSet^\sqcap_l$ and $b^\sqcup_\rv \in \BoundSet^\sqcup_l$ be trivial local size bounds for a result variable $\rv \in \RV$.
+  If there exists a lower local size bound $\LLSB(\rv) \in \BoundSet^\sqcup_l$, then $b^\sqcup_\rv$ is a valid lower local size bound for the result variable $\rv$.
+  Also, if there exists an upper local size bound $\ULSB(\rv) \in \BoundSet^\sqcap_l$, then $b^\sqcap_\rv$ is a valid upper local size bound for the result variable $\rv$.
 \end{theorem}
