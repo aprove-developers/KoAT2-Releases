@@ -8,20 +8,6 @@ type t
 (** Distinguish between lower and upper bounds *)
 type kind = [ `Lower | `Upper ]
 
-
-module Time :
-sig
-  type t
-  val empty : int -> t
-  val get : t -> Transition.t -> Bound.t
-  (** Returns a timebound of the specified kind for the execution of the whole graph. *)
-  val sum : t -> Program.t -> Bound.t
-  val add : Bound.t -> Transition.t -> t -> t
-  val all_bounded : t -> Transition.t list -> bool
-  val to_string : t -> string
-  val equivalent : t -> t -> bool
-end
-
 module Size :
 sig
   type t
@@ -41,7 +27,7 @@ val empty : int -> int -> t
 
 val create : Program.t -> t
 
-val time : t -> Time.t
+val time : t -> TimeApproximation.t
 
 val size : t -> Size.t
 
