@@ -1,18 +1,10 @@
-In this section we present a template for local size bounds.
-If we require the local size bounds to be a of that form, we are able to use those characteristics in the definition of the methods for global size bounds.
-Therefore we define two subsets $\BoundSet^\sqcap_l, \BoundSet^\sqcup_l \subseteq \BoundSet(\PVSet)$.
+In this section, we present an algorithm for the computation of local size bounds.
+In a first step, we define the possible local size bounds as a subset of all bounds $\BoundSet(\PVSet)$.
+This way we are able to use specific characteristics of local size bounds later in the definition of the method for global size bounds.
+We define two subsets $\BoundSet^\sqcup_l, \BoundSet^\sqcap_l \subseteq \BoundSet(\PVSet)$, one for lower local size bounds and one for upper local size bounds.
 
 \begin{definition}[Local bound sets]
-  We define $\BoundSet^\sqcap_l \in \BoundSet(\PVSet)$ as 
-  \[ \BoundSet^\sqcap_l = \braced{
-    s \cdot \left(
-        e
-      + \sum_{v \in P_1} v
-      - \sum_{v \in N_1} v
-      + \sum_{v \in P_2} \maxO{v}
-      + \sum_{v \in N_2} \maxO{-v}
-      \right) \mid \exists s \in \mathbb{N} \text{ with } s \geq 1, e \in \mathbb{Z}, P_1, P_2, N_1, N_2 \subseteq \VSet }\]
-  Also we define $\BoundSet^\sqcup_l \in \BoundSet(\PVSet)$ as 
+  We define $\BoundSet^\sqcup_l \in \BoundSet(\PVSet)$ as 
   \[ \BoundSet^\sqcup_l = \braced{
     s \cdot \left(
         e
@@ -21,65 +13,77 @@ Therefore we define two subsets $\BoundSet^\sqcap_l, \BoundSet^\sqcup_l \subsete
       - \sum_{v \in P_2} \maxO{-v}
       - \sum_{v \in N_2} \maxO{v}
       \right) \mid \exists s \in \mathbb{N} \text{ with } s \geq 1, e \in \mathbb{Z}, P_1, P_2, N_1, N_2 \subseteq \VSet }\]
+  Also, we define $\BoundSet^\sqcap_l \in \BoundSet(\PVSet)$ as 
+  \[ \BoundSet^\sqcap_l = \braced{
+    s \cdot \left(
+        e
+      + \sum_{v \in P_1} v
+      - \sum_{v \in N_1} v
+      + \sum_{v \in P_2} \maxO{v}
+      + \sum_{v \in N_2} \maxO{-v}
+      \right) \mid \exists s \in \mathbb{N} \text{ with } s \geq 1, e \in \mathbb{Z}, P_1, P_2, N_1, N_2 \subseteq \VSet }\]
 \end{definition}
 
 We now use these local bound sets for the definition of the scaled sum.
 
 \begin{definition}[Scaled sum]
-  We say that $\rv \in \RV$ is bounded by an \textbf{upper scaled sum} if and only if there is a bound $b \in \BoundSet^\sqcap_l$ such that it holds for all states $\lstate \leq \ustate$ that
-  \[ \ueval{\ULSB(\rv)}{\lstate}{\ustate} = \ueval{b}{\lstate}{\ustate} \]
+  We say that $\rv \in \RV$ is bounded by an \textbf{upper scaled sum} if and only if there is an upper local size bound $\ULSB(\rv) \in \BoundSet^\sqcap_l$.
   We then denote with $s^\sqcap_\rv$ the scaling factor $s$, with $e^\sqcap_\rv$ the constant $e$ and with the sets $P_{\rv,1}^\sqcap, P_{\rv,2}^\sqcap, N_{\rv,1}^\sqcap, N_{\rv,2}^\sqcap$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
-  We say that $\rv \in \RV$ is bounded by a \textbf{lower scaled sum} if and only if there is a bound $b \in \BoundSet^\sqcup_l$ such that it holds for all states $\lstate \leq \ustate$ that
-  \[ \leval{\LLSB(\rv)}{\lstate}{\ustate} = \leval{b}{\lstate}{\ustate} \]
+  We say that $\rv \in \RV$ is bounded by a \textbf{lower scaled sum} if and only if there is a lower local size bound $\LLSB(\rv) \in \BoundSet^\sqcup_l$.
   We then denote with $s^\sqcup_\rv$ the scaling factor $s$, with $e^\sqcup_\rv$ the constant $e$ and with the sets $P_{\rv,1}^\sqcup, P_{\rv,2}^\sqcup, N_{\rv,1}^\sqcup, N_{\rv,2}^\sqcup$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
 \end{definition}
 
-\todo{Non-exact explanation}{}
-\todo{Lower and upper update examples}{}
-
-We show the possible bounds with this definition by some examples.
-Let $t = (\location,\update,\text{true},\location') \in \TSet$ be a transition for which we want to find a local size bound $b$.
+For the clarification of possible local size bounds we introduce some examples.
+Let $t = (\location,\update,\text{true},\location') \in \TSet$ be a transition for which we want to find an upper scaled sum $b$.
 If $\update(x) = x$, we can represent the bound with $b = 1 \cdot (0 + x)$.
 If $\update(x) = -x$, we can represent the bound with $b = 1 \cdot (0 - x)$.
 This would not be possible, if $N_1$ would not be a part of the template.
 If $\update(x) = 2 \cdot x + 2 \cdot y + 4$, we have a possible bound $b = 2 \cdot (2 + x + y)$.
 
-For the previous examples, it was sufficient to have $P_2 = \emptyset$ and $N_2 = \emptyset$.
+In the previous examples, it was sufficient to have $P_2 = \emptyset$ and $N_2 = \emptyset$.
 If $\update(x) = 2 \cdot x + 3 \cdot y$, one could suggest the bound $b = 3 \cdot (x + y)$.
-But for a state $\valuation$ with $\exacteval{x}{\valuation} < 0$ and $\exacteval{y}{\valuation} = k$ this bound is not sound, since with $\exacteval{b}{\valuation}$ we would underapproximate the actual value $\exacteval{2 \cdot x + 3 \cdot y}{\valuation}$.
-Therefore the elements of the local bound set provide the sets $P_2$ and $N_2$.
-For $\update(x) = 2 \cdot x + 3 \cdot y$ we can then infer the bound $b = 3 \cdot (\maxO{x} + y)$.
-With the defined state $\valuation$ we then have $\exacteval{b}{\valuation} = k$, which is a sound overapproximation of the actual value. 
+But for a state $\valuation$ with $\exacteval{x}{\valuation} < 0$ and $\exacteval{y}{\valuation} > 0$ this bound is not sound, since with $\exacteval{b}{\valuation}$ we would underapproximate the actual value $\exacteval{2 \cdot x + 3 \cdot y}{\valuation}$.
+For these cases, scaled sums provide the sets $P_2$ and $N_2$.
+For $\update(x) = 2 \cdot x + 3 \cdot y$, we can infer the bound $b = 3 \cdot (\maxO{x} + y)$ with $x \in P_2$, such that the scaled sum $b$ is also sound for negative values of $x$.
 
-For the previous case we used the set $P_2$.
-We provide the set $N_2$ for the negative counterpart.
+For the previous case, we used the set $P_2$.
+The set $N_2$ is provided for the negative counterpart.
 If $\update(x) = -(2 \cdot x) + -(3 \cdot y)$, we can infer the bound $b = 3 \cdot (\maxO{-x} - y)$.
-With this construction we only consider negative values for $x$ and therefore ensure a sound overapproximation.
+With this construction, we only consider negative values for $x$ and therefore ensure a sound overapproximation.
 
-We will now present the algorithm for the computation of sound, but minimal local size bounds $b^\sqcap \in \BoundSet^\sqcap_l$ and $b^\sqcup \in \BoundSet^\sqcup_l$.
+The construction of a lower scaled sum is very similar to the construction of an upper scaled sum.
+The components $s$, $e$, $P_1$ and $N_1$ have the same purpose for lower scaled sums and upper scaled sums.
+Consider again the transition $t = (\location,\update,\text{true},\location') \in \TSet$.
+If $\update(x) = x$, we can represent the a lower scaled sum the same way as an upper scaled sum with $b = 1 \cdot (0 + x)$.
+The difference is in the role of the sets $P_2$ and $N_2$.
+While $\sum_{v \in P_2} \maxO{v}$ and $\sum_{v \in N_2} \maxO{-v}$ are added in upper scaled sums, their lower counterparts $\sum_{v \in P_2} \maxO{-v}$ and $\sum_{v \in N_2} \maxO{v}$ are subtracted in lower scaled sums.
+This way the effect of an unscaled variable $v$ is always overapproximated in the upper case and always underapproximated in the lower case.
+
+We will now present an algorithm for the computation of sound, but minimal local size bounds $b^\sqcap \in \BoundSet^\sqcap_l$ and $b^\sqcup \in \BoundSet^\sqcup_l$.
 We first consider the upper case.
-A local size bound $b = \ULSB(t,v)$ is a sound overapproximation of the effect of a transition $t = (\location,\update,\guard,\location')$, iff the formula $\guard \Rightarrow \update(v) \leq b$ is valid.
-\[ \exists s \in \mathbb{N} \text{ with } s \geq 1:
-\exists e \in \mathbb{Z}:
-\exists P_1, P_2, N_1, N_2 \subseteq \VSet:
-\forall \valuation \in \Valuation:
-\lstate \leq \valuation \leq \ustate \Rightarrow
-\exacteval{\guard}{\valuation} \Rightarrow \exacteval{\update(v)}{\valuation} \leq \exacteval{b}{\valuation} \]
-An SMT-Solver is only able to find models for existential formulas $\exists v_0: \exists v_1: \dots \exists v_k: \phi(v_0, \dots, v_k)$. \cite{smt} \\
-Therefore we use an approach, where we fix the parameters $s$, $e$ and $P_1, N_1, P_2, N_2$ and use the SMT-Solver to prove unsatisfiability of the negation of the formula.
-That is, for fixed $s \in \mathbb{N}$ with $s \geq 1$, $e \in \mathbb{Z}$ and $P_1, N_1, P_2, N_2 \subseteq \VSet$ we search for a model of the following formula.
-\[ \exists \valuation \in \Valuation: \lstate \leq \valuation \leq \ustate \wedge \exacteval{\guard}{\valuation} \wedge \exacteval{\update(v)}{\valuation} > \exacteval{b}{\valuation} \]
-If the SMT-Solver does not find a model, the formula is unsatisfiable and therefore the fixed parameters form a sound overapproximation.
+The main idea is to choose a candidate for an upper scaled sum and then use an SMT-Solver to prove the validity of it.
+For a selected upper scaled sum $b \in \BoundSet^\sqcap_l$, the guard must imply for every state $\valuation$ that the upper scaled sum is a bound of the updated value of the variable.
+\[ \forall \valuation \in \Valuation: \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\update(v)}{\valuation} \leq \exacteval{b}{\valuation} \]
+In general, an SMT-Solver is only able to find models for existential formulas $\exists v_0: \exists v_1: \dots \exists v_k: \phi(v_0, \dots, v_k)$. \cite{smt} \\
+Therefore, we use the SMT-Solver to prove the unsatisfiability of the negation of the formula.
+\[ \exists \valuation \in \Valuation: \exacteval{\guard}{\valuation} \wedge \exacteval{\update(v)}{\valuation} > \exacteval{b}{\valuation} \]
+If the SMT-Solver does not find a model, the formula is unsatisfiable and therefore upper scaled sum is a sound overapproximation the actual value of the variable $v$.
 
-It is still open, how we choose the parameters.
-Therefore we first need to define a measure for the quality of local bounds.
+It is still open, how we choose a candidate for an upper scaled sum.
 We say that $b_1 \in \BoundSet^\sqcap_l$ is a better bound than $b_2 \in \BoundSet^\sqcap_l$ iff for all states $\valuation$ it holds that $\exacteval{b_1}{\valuation} \leq \exacteval{b_2}{\valuation}$.
-We then write $b_1 \leq b_2$
+We then write $b_1 \leq b_2$.
 We want to find a bound $b \in \BoundSet^\sqcap_l$ such that for all bounds $b' \in \BoundSet^\sqcap_l$ it holds that $b \leq b'$.
-\todo{Can there be multiple with only conjunctive?}{Note that there might be multiple such bounds in the local bound set $\BoundSet^\sqcap_l$.
-For a transition guard $\guard = x \leq y \vee x \leq z)$ we have two minimal bounds $y \in \BoundSet^\sqcap_l$ and $z \in \BoundSet^\sqcap_l$.}
+We present an algorithm, that finds such an optimal bound $b$.
+The idea of this algorithm is to start with a trivial bound, that is always valid.
+Then, we take multiple steps for a component-wise improvement of this bound, always keeping a valid bound.
 
-\begin{definition}[Factor approximation of bounds]
+\subsection{Trivial local size bounds}
+
+In a first step, we need to define trivial local size bounds as the starting bounds for the algorithm.
+We need to find integers $s$ and $e$ as well as variable sets $P_1$, $P_2$, $N_1$ and $N_2$ to define such a trivial local size bound.
+For the definition of the factor $s$ and the constant $e$ we define an overapproximation of the occurring constants in a bound.
+
+\begin{definition}[Overapproximation of occurring constants]
   We define $\constant: \BoundSet_p(\VSet) \rightarrow \mathbb{N}$ as the following function.
   \[ \constant(k) = k \text{ for all } k \in \mathbb{N} \subset \BoundSet_p(\VSet) \] 
   \[ \constant(v) = 1 \text{ for all } v \in \VSet \subset \BoundSet_p(\VSet) \] 
@@ -88,48 +92,51 @@ For a transition guard $\guard = x \leq y \vee x \leq z)$ we have two minimal bo
   \[ \constant(b_1 \cdot b_2) = \constant(b_1) \cdot \constant(b_2) \text{ for all } b_1, b_2 \in \BoundSet_p(\VSet) \] 
 \end{definition}
 
-\subsection{Computing upper local size bounds}
+\todo{Prove}{Since we consider polynomial updates and guards, the product of all overapproximation of occurring constants of the polynomials of the guard and the update forms an overapproximation of the factor $s$ and the constant $e$.}
+Now, we can define the trivial lower local size bound and the trivial upper local size bound.
 
-At this point, we present an algorithm, that finds the optimal bound $b$.
-The idea of this algorithm is to start with a trivial bound, that is always valid.
-Then, we take multiple steps for a component-wise improvement of this bound, always staying with a valid bound.
-In a first step, we define the trivial valid bound.
-
-\begin{definition}[Trivial upper local size bound]
-  Let $\rv = ((\location,\update,\guard,\location'),v) \in \RV$ be a result variable, for which we want to find an upper local size bound.
-  Let $\VSet$ be the set of all program variables.
+\begin{definition}[Trivial local size bounds]
+  Let $\rv = ((\location,\update,\guard,\location'),v) \in \RV$ be a result variable, for which we want to find a lower local size bound and an upper local size bound.
+  Let $\PVSet$ be the set of all program variables.
   Let $s = e = \constant(\update(v)) \cdot \prod_{(l \bowtie r) \in \guard} \left( \constant(l) \cdot \constant(r) \right)$ be an overapproximation of the actual scaling factor and the actual constant.
-  Then, the local size bound $b \in \BoundSet^\sqcap_l$ defined by the scaling factor $s$, the constant $e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid upper local size bound for the value of $v$ after the application of the transition $t$.
+  Then, the upper local size bound $b \in \BoundSet^\sqcap_l$ defined by the scaling factor $s$, the constant $e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid upper local size bound for the value of $v$ after the application of the transition $t$.
+  Also, the lower local size bound $b \in \BoundSet^\sqcup_l$ defined by the scaling factor $s$, the constant $-e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid lower local size bound for the value of $v$ after the application of the transition $t$.
 \end{definition}
 
 \input{theorems/trivial_lsb}
 
-We show the construction of a trivial upper local size bound by an example.
+We show the construction of a trivial local size bound with an example of a trivial upper local size bound.
 Let $\rv = ((\location,\update,\text{true},\location'),x) \in \RV$ be a result variable with the update $\update(x) = 4 + 2 \cdot y - 3 \cdot z$.
-Then, by definition of the trivial upper local size bound we can obtain $b^\sqcap = 24 * (24 + \maxO{y} + \maxO{z} + \maxO{-y} + \maxO{-z}$.
+Thus, the overapproximation of the occurring constants is $\constant(\update(x)) = 4 + 2 \cdot 1 + 3 \cdot 1 = 11$
+Then, by definition of the trivial upper local size bound we can obtain $b^\sqcap = 11 * (11 + \maxO{y} + \maxO{z} + \maxO{-y} + \maxO{-z}$.
 Note that for all variables $v \in \VSet$ we have $\maxO{v} + \maxO{-v} = \abs{v}$, where $\abs{v}$ represents the absolute value of the variable $v$.
+Then, it is easy to see, that $b^\sqcap = 11 * (11 + \abs{y} + \abs{z})$ is a valid trivial upper local size bound.
 
-With a given trivial upper local size bound we can now search the local bound set $\BoundSet^\sqcap_l$ for better bounds.
+\subsection{Algorithm for local size bounds}
+
+With given trivial local size bounds we can now search the local bound sets $\BoundSet^\sqcup_l$ and $\BoundSet^\sqcap_l$ for better bounds.
 
 \begin{algorithm}
-\caption{Inferring upper local size bound}\label{ulsb_algorithm}
+\caption{Inferring scaled sum}\label{ulsb_algorithm}
 \begin{algorithmic}[1]
   \State Input: A result variable $t = ((\location,\update,\guard,\location'),v) \in \RV$
-  \State Construct a trivial upper local size bound $b$ with the defining parameters $s$, $e$, $P_1$, $N_1$, $P_2$ and $N_2$
-  \State Binary search $1 \dots s$ to find an $s$ such that $\bigwedge \guard \Rightarrow \update(v) \leq b$ is valid with this $s$, but not valid with $s-1$.
-  \State Binary search $-e \dots e$ to find an $e$ such that $\bigwedge \guard \Rightarrow \update(v) \leq b$ is valid with this $e$, but not valid with $e-1$.
+  \State Set $\bowtie$ to $\geq$ for the lower case and to $\leq$ for the upper case
+  \State Set $f$ to the function $+1$ for the lower case and to $-1$ for the upper case
+  \State Construct a trivial local size bound $b$ with the parameters $s$, $e$, $P_1$, $N_1$, $P_2$ and $N_2$
+  \State Binary search $1 \dots s$ to find an $s$ such that $\bigwedge \guard \Rightarrow \update(v) \bowtie b$ is valid with this $s$, but not valid with $s-1$.
+  \State Binary search $-e \dots e$ to find an $e$ such that $\bigwedge \guard \Rightarrow \update(v) \bowtie b$ is valid with this $e$, but not valid with $f(e)$.
   \ForAll {variables $v \in \VSet$}
     \State Set $P_2 := P_2 \setminus \braced{v}$
-    \If {$\bigwedge \guard \Rightarrow \update(v) \leq b$ is not valid}
+    \If {$\bigwedge \guard \Rightarrow \update(v) \bowtie b$ is not valid}
       \State Set $P_1 := P_1 \cup \braced{v}$
-      \If {$\bigwedge \guard \Rightarrow \update(v) \leq b$ is not valid}
+      \If {$\bigwedge \guard \Rightarrow \update(v) \bowtie b$ is not valid}
         \State Revert to $P_2 := P_2 \cup \braced{v}$ and $P_1 := P_1 \setminus \braced{v}$
       \EndIf
     \EndIf
     \State Set $N_2 := N_2 \setminus \braced{v}$
-    \If {$\bigwedge \guard \Rightarrow \update(v) \leq b$ is not valid}
+    \If {$\bigwedge \guard \Rightarrow \update(v) \bowtie b$ is not valid}
       \State Set $N_1 := N_1 \cup \braced{v}$
-      \If {$\bigwedge \guard \Rightarrow \update(v) \leq b$ is not valid}
+      \If {$\bigwedge \guard \Rightarrow \update(v) \bowtie b$ is not valid}
         \State Revert to $N_2 := N_2 \cup \braced{v}$ and $N_1 := N_1 \setminus \braced{v}$
       \EndIf
     \EndIf
@@ -139,57 +146,20 @@ With a given trivial upper local size bound we can now search the local bound se
 
 The presented algorithm consists of three steps.
 In the first step the scaling factor $s$ gets minimized.
-Since we chose the constant $e$ to be big enough, we can be sure at this point, that the reason for $\bigwedge \guard \Rightarrow \update(v) \leq b$ not being valid with $s-1$ is not the constant.
+Since we chose the constant $e$ to be big enough, we can be sure at this point, that the constant $e$ is not the reason for $\bigwedge \guard \Rightarrow \update(v) \leq b$ not being valid with $s-1$.
 Instead there exists a variable, which does not allow further minimization of the scaling factor $s$.
-With the minimized scaling factor the next step is then to also minimize the constant $e$.
-Then, it might be possible to move variables from the sets $P_2$ and $N_2$ in the sets $P_1$ and $N_2$.
-Note that this is possible, since for each variable $v \in \VSet$ and each valuation $\valuation \in \Valuation$ it holds that $\exacteval{v}{\valuation} \leq \exacteval{\maxO{v}}{\valuation}$ and also $\exacteval{-v}{\valuation} \leq \exacteval{\maxO{-v}}{\valuation}$.
+Then, the next step is to also minimize the constant $e$.
+With the minimized factor $s$ and the minimized constant $e$, we can now filter the variables, which are not required for the validity of the bound.
+Assume a variable $v \in \VSet$.
+In a trivial local size bound the variable $v$ is both in $P_2$ and $N_2$.
+If the variable is obsolete for the bound, it is removed from both sets, \todo{Explain why}{otherwise it is removed from at least one set.}
+If the variable can not be removed from both sets, it might be still be possible to move it to the respective set $P_1$ and $N_1$.
+Note that this can be possible, since for each variable $v \in \VSet$ and each valuation $\valuation \in \Valuation$ it holds that $\exacteval{v}{\valuation} \leq \exacteval{\maxO{v}}{\valuation}$ and also $\exacteval{-v}{\valuation} \leq \exacteval{\maxO{-v}}{\valuation}$.
 
 The algorithm does not define an order for the iteration of the variables.
 Note that the order affects the resulting bound, but not its optimality.
 Consider the update $\update(x) = y + z$ and the guard $\guard = \braced{y = z}$.
 Depending on the order it is both possible to receive the bounds $2 \cdot y$ and $2 \cdot z$.
 But since $2 \cdot y \leq 2 \cdot z$ and $2 \cdot z \leq 2 \cdot y$ does not hold, they are both optimal.
-
-\subsection{Computing lower local size bounds}
-
-The algorithm for the search for a lower local size bound $\BoundSet^\sqcup_l$ is very similar to the search for an upper local size bound $\BoundSet^\sqcap_l$.
-First, we need to define a trivial lower local size bound.
-
-\begin{definition}[Trivial lower local size bound]
-  Let $\rv = ((\location,\update,\guard,\location'),v) \in \RV$ be a result variable, for which we want to find a lower local size bound.
-  Let $\VSet$ be the set of all program variables.
-  Let $s \in \mathbb{N}$ be the multiplication of the absolute values of all integers occurring in any upper update $\update(v)$ or any guard atom in $\guard$.
-  Let $e = -s$ be its negation.
-  Then, the local size bound $b \in \BoundSet^\sqcup_l$ defined by the scaling factor $s$, the constant $e$ and the variable sets $P_1 = N_1 = \emptyset$ and $P_2 = N_2 = \VSet$ is a valid lower local size bound for the value of $v$ after the application of the transition $t$.
-\end{definition}
-
-With the trivial lower local size bound we are now able to define the algorithm to infer lower local size bounds.
-
-\begin{algorithm}
-\caption{Inferring lower local size bound}\label{llsb_algorithm}
-\begin{algorithmic}[1]
-  \State Input: A result variable $t = ((\location,\update,\guard,\location'),v) \in \RV$
-  \State Construct a trivial lower local size bound $b$ with the defining parameters $s$, $e$, $P_1$, $N_1$, $P_2$ and $N_2$
-  \State Binary search $1 \dots s$ to find an $s$ such that $\bigwedge \guard \Rightarrow \update(v) \geq b$ is valid with this $s$, but not valid with $s-1$.
-  \State Binary search $-e \dots e$ to find an $e$ such that $\bigwedge \guard \Rightarrow \update(v) \geq b$ is valid with this $e$, but not valid with $e+1$.
-  \ForAll {variables $v \in \VSet$}
-    \State Set $P_2 := P_2 \setminus \braced{v}$
-    \If {$\bigwedge \guard \Rightarrow \update(v) \geq b$ is not valid}
-      \State Set $P_1 := P_1 \cup \braced{v}$
-      \If {$\bigwedge \guard \Rightarrow \update(v) \geq b$ is not valid}
-        \State Revert to $P_2 := P_2 \cup \braced{v}$ and $P_1 := P_1 \setminus \braced{v}$
-      \EndIf
-    \EndIf
-    \State Set $N_2 := N_2 \setminus \braced{v}$
-    \If {$\bigwedge \guard \Rightarrow \update(v) \geq b$ is not valid}
-      \State Set $N_1 := N_1 \cup \braced{v}$
-      \If {$\bigwedge \guard \Rightarrow \update(v) \geq b$ is not valid}
-        \State Revert to $N_2 := N_2 \cup \braced{v}$ and $N_1 := N_1 \setminus \braced{v}$
-      \EndIf
-    \EndIf
-  \EndFor
-\end{algorithmic}
-\end{algorithm}
 
 \todo{Proof that the algorithm always finds a valid local size bound}{}
