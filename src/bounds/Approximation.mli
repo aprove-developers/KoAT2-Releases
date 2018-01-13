@@ -8,17 +8,6 @@ type t
 (** Distinguish between lower and upper bounds *)
 type kind = [ `Lower | `Upper ]
 
-module Size :
-sig
-  type t
-  val empty : int -> t
-  val get : kind -> t -> Transition.t -> Var.t -> Bound.t
-  val add : kind -> Bound.t -> Transition.t -> Var.t -> t -> t
-  val add_all : kind -> Bound.t -> RV.t list -> t -> t
-  val to_string : t -> string
-  val equivalent : t -> t -> bool
-end
-
 (** Returns an empty approximation that does not contain any non-trivial information.
         That means, that every upper bound is infinite and every lower bound is minus infinite.
         The first parameter should be the count of transitions in the program.
@@ -29,7 +18,7 @@ val create : Program.t -> t
 
 val time : t -> TimeApproximation.t
 
-val size : t -> Size.t
+val size : t -> SizeApproximation.t
 
 (** Timebound related methods *)
   
