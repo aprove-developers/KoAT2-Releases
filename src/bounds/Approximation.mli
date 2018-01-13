@@ -20,24 +20,42 @@ val time : t -> TransitionApproximation.t
 
 val size : t -> SizeApproximation.t
 
+val cost : t -> TransitionApproximation.t
+  
+val to_string : Program.t -> t -> string
+
+val equivalent : t -> t -> bool
+
+
 (** Timebound related methods *)
   
 (** Returns a timebound for the transition. *)
 val timebound : t -> Transition.t -> Bound.t
 
-(** Returns a costbound for the program. *)
-val costbound : t -> Program.t -> Bound.t
+(** Returns a timebound for the program. *)
+val program_timebound : t -> Program.t -> Bound.t
 
 (** Returns a timebound for the unique transition from the source to the target or None if there isn't such a single transition. *)
 val timebound_between : t -> Location.t -> Location.t -> Bound.t Option.t
 
 (** Adds the information that the specified bound is a valid timebound for the given transition. 
-        The resulting approximation is guaranteed to be at least as good as the old approximation. *)
+    The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 val add_timebound : Bound.t -> Transition.t -> t -> t
 
 val all_times_bounded : t -> Transition.t list -> bool
   
 
+(** Costbound related methods *)
+
+(** Returns a costbound for the transition. *)
+val costbound : t -> Transition.t -> Bound.t
+
+(** Returns a costbound for the program. *)
+val program_costbound : t -> Program.t -> Bound.t
+
+val add_costbound : Bound.t -> Transition.t -> t -> t
+
+  
 (** Sizebound related methods *)
 
 (** Returns a sizebound of the specified kind for the var of the transition. 
@@ -49,7 +67,3 @@ val sizebound : kind -> t -> Transition.t -> Var.t -> Bound.t
 val add_sizebound : kind -> Bound.t -> Transition.t -> Var.t -> t -> t
   
 val add_sizebounds : kind -> Bound.t -> RV.t list -> t -> t
-
-val to_string : Program.t -> t -> string
-
-val equivalent : t -> t -> bool

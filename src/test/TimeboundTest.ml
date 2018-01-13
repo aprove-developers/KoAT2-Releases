@@ -18,7 +18,7 @@ let find_costbound (program: Program.t): Bound.t =
   |> Preprocessor.process_til_fixpoint Preprocessor.all
   |> (fun (program, appr) ->
     Bounds.find_bounds program appr
-    |> fun appr -> Approximation.costbound appr program
+    |> fun appr -> Approximation.program_costbound appr program
   )
 
 (** Shouldnt be here *)

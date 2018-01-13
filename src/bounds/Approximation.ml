@@ -7,7 +7,8 @@ let logger = Logging.(get Approximation)
 
 type t = {
     time: TransitionApproximation.t;
-    size: SizeApproximation.t
+    size: SizeApproximation.t;
+    cost: TransitionApproximation.t;
   }
 
 let equivalent appr1 appr2 =
@@ -17,6 +18,7 @@ let equivalent appr1 appr2 =
 let empty transitioncount varcount = {
     time = TransitionApproximation.empty "time" transitioncount;
     size = SizeApproximation.empty (2 * transitioncount * varcount);
+    cost = TransitionApproximation.empty "cost" transitioncount;
   }
 
 let create program =
@@ -27,13 +29,16 @@ let time appr = appr.time
 
 let size appr = appr.size
 
-let costbound appr program =
-  TransitionGraph.fold_edges_e (fun transition result ->
-      Bound.(TransitionApproximation.get appr.time transition * of_poly (Transition.cost transition) + result)
-    ) (Program.graph program) Bound.zero
+let cost appr = appr.cost
+
+
+(** Timebound related methods *)
 
 let timebound =
   TransitionApproximation.get % time
+
+let program_timebound =
+  TransitionApproximation.sum % time
 
 let timebound_between =
   TransitionApproximation.get_between % time
@@ -44,6 +49,21 @@ let add_timebound bound transition appr =
 let all_times_bounded =
   TransitionApproximation.all_bounded % time
                                    
+
+(** Costbound related methods *)
+
+let costbound =
+  TransitionApproximation.get % cost
+
+let program_costbound =
+  TransitionApproximation.sum % time
+
+let add_costbound bound transition appr =
+  { appr with cost = TransitionApproximation.add bound transition appr.cost }
+
+
+(** Sizebound related methods *)
+
 let sizebound kind =
   SizeApproximation.get kind % size
 
@@ -56,9 +76,11 @@ let add_sizebounds kind bound scc appr =
 let to_string program appr =
   let output = IO.output_string () in
   IO.nwrite output "Timebounds: \n";
-  IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (TransitionApproximation.sum appr.time program) ^ "\n");
-  IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (costbound appr program) ^ "\n");
+  IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (program_timebound appr program) ^ "\n");
+  IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
   appr.time |> TransitionApproximation.to_string |> IO.nwrite output;
+  IO.nwrite output "\nCostbounds:\n";
+  appr.cost |> TransitionApproximation.to_string |> IO.nwrite output;
   IO.nwrite output "\nSizebounds:\n";
   appr.size |> SizeApproximation.to_string |> IO.nwrite output;
   IO.close_out output
