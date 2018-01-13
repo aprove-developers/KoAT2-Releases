@@ -9,9 +9,9 @@ type t
 type kind = [ `Lower | `Upper ]
 
 (** Returns an empty approximation that does not contain any non-trivial information.
-        That means, that every upper bound is infinite and every lower bound is minus infinite.
-        The first parameter should be the count of transitions in the program.
-        The second parameter should be the count of program variables. *)
+    That means, that every upper bound is infinite and every lower bound is minus infinite.
+    The first parameter should be the count of transitions in the program.
+    The second parameter should be the count of program variables. *)
 val empty : int -> int -> t
 
 val create : Program.t -> t
