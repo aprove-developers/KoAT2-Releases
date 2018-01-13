@@ -11,3 +11,4 @@ let find_bounds (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
   |> TrivialTimeBounds.compute program
   |> find_bounds_ program
+  |> CostBounds.compute program
