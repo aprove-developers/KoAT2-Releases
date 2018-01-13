@@ -4,7 +4,7 @@ open Program.Types
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
 type t
-   
+
 val empty : int -> t
 
 val get : kind -> t -> Transition.t -> Var.t -> Bound.t

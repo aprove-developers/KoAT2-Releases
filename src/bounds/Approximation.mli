@@ -16,7 +16,7 @@ val empty : int -> int -> t
 
 val create : Program.t -> t
 
-val time : t -> TimeApproximation.t
+val time : t -> TransitionApproximation.t
 
 val size : t -> SizeApproximation.t
 

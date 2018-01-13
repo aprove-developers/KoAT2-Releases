@@ -3,7 +3,7 @@ open Program.Types
    
 type t
 
-val empty : int -> t
+val empty : string -> int -> t
 
 val get : t -> Transition.t -> Bound.t
 

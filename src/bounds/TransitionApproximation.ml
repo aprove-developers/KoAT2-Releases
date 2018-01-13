@@ -3,26 +3,26 @@ open Program.Types
    
 let logger = Logging.(get Approximation) 
 
-module Time_Transition =
+module ApproximatedTransition =
   struct
     include Transition
     let equal = same
   end
-module Map = Hashtbl.Make(Time_Transition)
+module Map = Hashtbl.Make(ApproximatedTransition)
            
-type t = Bound.t Map.t
+type t = string * Bound.t Map.t
        
-let empty = Map.create
+let empty name size = (name, Map.create size)
           
-let get map transition =
+let get (name,map) transition =
   let execute () =
     Map.find_option map transition |? Bound.infinity
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "timebound", ["transition", Transition.to_id_string transition])
+                     (fun () -> name ^ "bound", ["transition", Transition.to_id_string transition])
                      ~result:Bound.to_string
                      execute
 
-let get_between map src target =
+let get_between (name,map) src target =
   map
   |> Map.filteri (fun (l,_,l') _ -> Location.(equal l src && equal l' target))
   |> Map.values
@@ -30,32 +30,32 @@ let get_between map src target =
   |> Option.filter (fun values -> Enum.count values = 1)
   |> fun option -> Option.bind option Enum.get
 
-let sum map program =
-  TransitionGraph.fold_edges_e (fun transition result -> Bound.(get map transition + result)) (Program.graph program) Bound.zero
+let sum appr program =
+  TransitionGraph.fold_edges_e (fun transition result -> Bound.(get appr transition + result)) (Program.graph program) Bound.zero
 
-let sum_available map =
+let sum_available (name,map) =
   Map.fold (fun transition bound result -> Bound.(bound + result)) map Bound.zero
   
-let add bound transition map =
+let add bound transition (name,map) =
   let execute () =
     (try
        Map.modify transition (Bound.min bound) map
      with Not_found -> Map.add map transition bound);
-    map
+    (name, map)
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "add_timebound", ["transition", Transition.to_id_string transition; "bound", Bound.to_string bound])
+                     (fun () -> "add_" ^ name ^ "bound", ["transition", Transition.to_id_string transition; "bound", Bound.to_string bound])
                      execute
 
-let all_bounded map =
-  List.for_all (fun t -> not (Bound.equal (get map t) Bound.infinity))
+let all_bounded appr =
+  List.for_all (fun t -> not (Bound.equal (get appr t) Bound.infinity))
   
-let to_string time =
+let to_string (name,map) =
   let output = IO.output_string () in
-  time
+  map
   |> Map.to_list
   |> List.sort (fun (t1,b1) (t2,b2) -> Transition.compare_same t1 t2)
   |> List.print
-       ~first:("  ")
+       ~first:(name ^ "  ")
        ~last:"\n"
        ~sep:"\n  "
        (fun output (t,b) -> IO.nwrite output (Transition.to_id_string t ^ ": " ^ Bound.to_string b))
@@ -63,7 +63,7 @@ let to_string time =
   IO.close_out output
 
 (** Very slow equality, only for testing purposes *)
-let equivalent time1 time2 =
+let equivalent (name1,map1) (name2,map2) =
   let module Set =
     Set.Make(struct type t = Transition.t * Bound.t
                     let compare (t1,bound1) (t2,bound2) =
@@ -77,5 +77,5 @@ let equivalent time1 time2 =
                         0
              end)
   in
-  let to_set time = time |> Map.enum |> Set.of_enum in
-  Set.equal (to_set time1) (to_set time2)
+  let to_set = Set.of_enum % Map.enum in
+  Set.equal (to_set map1) (to_set map2)
