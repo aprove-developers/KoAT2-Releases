@@ -12,7 +12,7 @@ type kind = [ `Cost | `Time ] [@@deriving show]
 
 type t = {
     pol : Location.t -> Polynomial.t;
-    strictly_decreasing : (Transition.t*kind) list;
+    strictly_decreasing : Transition.t list;
     transitions : Transition.t list;
   }
 
@@ -31,7 +31,7 @@ let pol_to_string (locations: Location.t list) (content_to_string: 'a -> string)
 
 let to_string {pol; strictly_decreasing; transitions} =
   let locations = transitions |> List.enum |> Program.locations |> List.of_enum in
-  "pol: [" ^ pol_to_string locations Polynomial.to_string pol ^ "] T'>: " ^ (List.map Transition.to_id_string (List.map Tuple2.first strictly_decreasing) |> String.concat ", ")
+  "pol: [" ^ pol_to_string locations Polynomial.to_string pol ^ "] T'>: " ^ (List.map Transition.to_id_string strictly_decreasing |> String.concat ", ")
 
 (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
 let apply_farkas a_matrix b_right c_left d_right =
@@ -138,11 +138,11 @@ let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (
                      execute
   
 (*Given a set of transitions the pair (constr,bound) is generated. Constr is the constraint for the ranking function and bounded consists of all strictly oriented transitions *)
-let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): (Transition.t*kind) list =
+let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): Transition.t list =
   let combine (constr,transitions) transition =
     let open Constraint.Infix in
     let add sensitivity =
-      (constr && bounded_constraint pol transition sensitivity && strictly_decreasing_constraint pol transition sensitivity, (transition, sensitivity)::transitions)
+      (constr && bounded_constraint pol transition sensitivity && strictly_decreasing_constraint pol transition sensitivity, transition::transitions)
     in
     if addable_as_strictly_decreasing pol constr transition `Cost then
       add `Cost
@@ -156,11 +156,11 @@ let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transit
 
 (** Tries to add a single transition from the given list as strictly decreasing transition to the given constraint.
     This should always lead to better or equal results than searching for sets of strictly decreasing transitions. *)
-let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): (Transition.t*kind) list =
+let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): Transition.t list =
   match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans `Cost) transitions with
-  | Some transition -> [transition,`Cost]
+  | Some transition -> [transition]
   | None -> match List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans `Time) transitions with
-            | Some transition -> [transition,`Time]
+            | Some transition -> [transition]
             | None -> []
 
 
@@ -171,9 +171,9 @@ let unbounded appr transition =
 let find_with (pol, fresh_coeffs) non_increasing_transitions strictly_decreasing_transitions =
   let non_increasing_constraint = non_increasing_constraints pol non_increasing_transitions in
   let strictly_decreasing_transitions = single_strictly_decreasing pol strictly_decreasing_transitions non_increasing_constraint in
-  let get_bounded (trans, sens) = bounded_constraint pol trans sens in
+  let get_bounded trans = bounded_constraint pol trans `Time in
   let bounded = Constraint.all (List.map get_bounded strictly_decreasing_transitions) in (*Problem: How to generate the final constraints*)
-  let get_strictly_decreasing (trans, sens) = strictly_decreasing_constraint pol trans sens in
+  let get_strictly_decreasing trans = strictly_decreasing_constraint pol trans `Time in
   let strictly_decreasing = Constraint.all (List.map get_strictly_decreasing strictly_decreasing_transitions) in
   let model = SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs (Formula.mk (Constraint.Infix.(non_increasing_constraint && bounded && strictly_decreasing))) in
   {
