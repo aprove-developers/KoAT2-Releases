@@ -86,23 +86,17 @@ let as_parapoly label var =
   |None -> ParameterPolynomial.of_var var
   |Some p -> ParameterPolynomial.of_polynomial p
 
-(* If the cost of the transition is nonlinear, then we have to do it the old way as long as we do not infer nonlinear ranking functions *)
+let cost t = function
+  | `Cost -> TransitionLabel.cost t
+  | `Time -> Polynomial.one
+
+  (* If the cost of the transition is nonlinear, then we have to do it the old way as long as we do not infer nonlinear ranking functions *)
 let strictly_decreasing_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, l'): Transition.t) (sensitivity: kind): Constraint.t =
   let guard = TransitionLabel.guard t in
-  let cost =
-    match sensitivity with
-    | `Cost -> TransitionLabel.cost t
-    | `Time -> Polynomial.one
-  in
-  farkas_transform guard ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial cost + substitute_f (as_parapoly t) (pol l')))
+  farkas_transform guard ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial (cost t sensitivity) + substitute_f (as_parapoly t) (pol l')))
   
 let bounded_constraint (pol : Location.t -> ParameterPolynomial.t) ((l, t, _) : Transition.t) (sensitivity: kind): Constraint.t =
-  let cost = 
-    match sensitivity with
-    | `Cost -> TransitionLabel.cost t
-    | `Time -> Polynomial.one
-  in
-  farkas_transform (TransitionLabel.guard t) ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial cost)
+  farkas_transform (TransitionLabel.guard t) ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial (cost t sensitivity))
 
 (** Returns a non increasing constraint for a single transition. *)
 let non_increasing_constraint (pol : Location.t -> ParameterPolynomial.t) (trans : Transition.t): Constraint.t =
