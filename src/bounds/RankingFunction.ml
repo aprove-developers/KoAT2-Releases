@@ -35,6 +35,9 @@ let to_string {pol; decreasing; non_increasing} =
   let locations = non_increasing |> List.enum |> Program.locations |> List.of_enum in
   "pol: [" ^ pol_to_string locations Polynomial.to_string pol ^ "] T'>: " ^ (List.map Transition.to_id_string decreasing |> String.concat ", ")
 
+let found rank =
+  not (List.is_empty rank.decreasing)
+  
 let find measure vars transitions appr =
 
   (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
@@ -158,10 +161,6 @@ let find measure vars transitions appr =
     Bound.is_infinity (Approximation.timebound appr transition)
   in
   
-  let found rank =
-    not (List.is_empty rank.decreasing)
-  in
-
   let execute () =
     transitions
     |> Set.of_list
