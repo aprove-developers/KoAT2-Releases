@@ -23,6 +23,9 @@ module Make(Value : PolyTypes.Ring) =
       try Some (M.find var valuation) with
         Not_found -> None
                                       
+    let is_defined valuation var =
+      M.mem var valuation
+
     let vars valuation = List.map (fun (key, value) -> key) (M.bindings valuation)
 
     let bindings = M.enum

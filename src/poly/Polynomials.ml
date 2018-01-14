@@ -258,6 +258,14 @@ module ParameterPolynomial =
                  
     include Outer
           
+    let eval_coefficients (f: Var.t -> OurInt.t) =
+      Outer.fold ~const:(fun inner -> Inner.of_constant (Inner.eval_f inner f))
+                 ~var:Inner.of_var
+                 ~neg:Inner.neg
+                 ~plus:Inner.add
+                 ~times:Inner.mul
+                 ~pow:Inner.pow
+ 
     (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
     (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
     let flatten (templatepoly : Outer.t): Inner.t =

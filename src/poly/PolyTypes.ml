@@ -54,6 +54,8 @@ module type Valuation =
     (** Returns the value of the variable, if the valuation defines one for it. *)
     val eval_opt : var -> t -> value Option.t
 
+    val is_defined : t -> var -> bool
+
     (** Returns a list of the variables for which the valuation is defined *)
     val vars : t -> var list
 

@@ -37,9 +37,6 @@ let to_string {pol; decreasing; non_increasing} =
   let locations = non_increasing |> List.enum |> Program.locations |> List.of_enum in
   "{rank:" ^ pol_to_string locations Polynomial.to_string pol ^ ";decreasing:" ^ (decreasing |> List.enum |> Util.enum_to_string Transition.to_id_string) ^ "}"
 
-let found rank =
-  not (List.is_empty rank.decreasing)
-  
 let find measure vars transitions appr =
 
   (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
@@ -141,17 +138,24 @@ let find measure vars transitions appr =
     let strictly_decreasing =
       transitions_constraint `Decreasing template decreasing_transitions
     in
-    let rank l =
+    let valuation =
       Constraint.Infix.(non_increasing_constraint && bounded && strictly_decreasing)
       |> Formula.mk
       |> SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs
-      |> Polynomial.eval_partial (ParameterPolynomial.flatten (template l))
     in
-    {
-      pol = rank;
-      decreasing = decreasing_transitions;
-      non_increasing = non_increasing_transitions;
-    }
+    if List.for_all (Valuation.is_defined valuation) fresh_coeffs then
+      let rank location =
+        location
+        |> template 
+        |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval var valuation)
+      in
+      Some {
+        pol = rank;
+        decreasing = decreasing_transitions;
+        non_increasing = non_increasing_transitions;
+      }
+    else
+      None
   in
   
   (** Checks if a transition is unbounded *)
@@ -169,8 +173,6 @@ let find measure vars transitions appr =
            |> List.enum
            |> Util.find_map (fun decreasing_transition ->
                   find_with (Set.to_list (Set.diff (Set.of_list transitions) increasing_transitions)) (List.singleton decreasing_transition)
-                  |> Option.some
-                  |> Option.filter found
                 )
          ) 
   in
