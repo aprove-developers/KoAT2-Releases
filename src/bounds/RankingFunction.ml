@@ -29,11 +29,13 @@ let strictly_decreasing f = f.decreasing
 let transitions f = f.non_increasing
 
 let pol_to_string (locations: Location.t list) (content_to_string: 'a -> string) (pol: Location.t -> 'a) =
-  locations |> List.map (fun l -> Location.to_string l ^ ": " ^ content_to_string (pol l)) |> String.concat ", "  
+  locations
+  |> List.enum
+  |> Util.enum_to_string (fun l -> Location.to_string l ^ ": " ^ content_to_string (pol l))
 
 let to_string {pol; decreasing; non_increasing} =
   let locations = non_increasing |> List.enum |> Program.locations |> List.of_enum in
-  "pol: [" ^ pol_to_string locations Polynomial.to_string pol ^ "] T'>: " ^ (List.map Transition.to_id_string decreasing |> String.concat ", ")
+  "{rank:" ^ pol_to_string locations Polynomial.to_string pol ^ ";decreasing:" ^ (decreasing |> List.enum |> Util.enum_to_string Transition.to_id_string) ^ "}"
 
 let found rank =
   not (List.is_empty rank.decreasing)
@@ -76,20 +78,16 @@ let find measure vars transitions appr =
   
   let ranking_templates (vars: VarSet.t) (locations: Location.t list): (Location.t -> ParameterPolynomial.t) * Var.t list =
     let module TemplateTable = Hashtbl.Make(Location) in
-    let execute () =
-      let ins_loc_prf location =
-        (* Each location needs its own ranking template with different fresh variables *)
-        let (parameter_poly, fresh_vars) = ranking_template vars in
-        (location, parameter_poly, fresh_vars)
-      in
-      let enum_of_prf = List.map ins_loc_prf locations in
-      let prf_table = TemplateTable.of_list (List.map (fun (a,b,c)-> (a,b)) enum_of_prf) in
-      let varlist = List.flatten (List.map (fun (a,b,c)-> c) enum_of_prf) in
-      (TemplateTable.find prf_table, varlist)
-    in Logger.with_log logger Logger.DEBUG
-                       (fun () -> "generated_ranking_template", [])
-                       ~result:(fun (template, _) -> pol_to_string locations ParameterPolynomial.to_string template)
-                       execute
+    let ins_loc_prf location =
+      (* Each location needs its own ranking template with different fresh variables *)
+      let (parameter_poly, fresh_vars) = ranking_template vars in
+      (location, parameter_poly, fresh_vars)
+    in
+    let enum_of_prf = List.map ins_loc_prf locations in
+    let prf_table = TemplateTable.of_list (List.map (fun (a,b,c)-> (a,b)) enum_of_prf) in
+    let varlist = List.flatten (List.map (fun (a,b,c)-> c) enum_of_prf) in
+    (TemplateTable.find prf_table, varlist)
+    |> tap (fun (template, _) -> Logger.log logger Logger.DEBUG (fun () -> "ranking_templates", ["result", pol_to_string locations ParameterPolynomial.to_string template]))
   in
                                     
   let as_parapoly label var =
@@ -178,7 +176,7 @@ let find measure vars transitions appr =
   in
 
   Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find ranking function", ["transitions", String.concat ", " (List.map Transition.to_id_string transitions);
+                  (fun () -> "find ranking function", ["transitions", Util.enum_to_string Transition.to_id_string (List.enum transitions);
                                                        "vars", VarSet.to_string vars])
                   ~result:(Util.option_to_string to_string)
                   execute
