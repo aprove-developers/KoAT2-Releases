@@ -34,15 +34,12 @@ let entry_locations (graph: TransitionGraph.t) (prf_transitions: Transition.t li
 
 let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t) (transition: Transition.t): Bound.t =
   let execute () =
-    let (pol_plus, pol_minus) =
-      Polynomial.separate_by_sign rank
-      |> Tuple2.mapn Bound.of_poly
-      |> Tuple2.map2 Bound.neg (* Make negative coefficients positive *)
-    in
-    let insert_sizebounds kind bound =
-      Bound.substitute_f (get_sizebound kind transition) bound
-    in
-    Bound.(insert_sizebounds `Upper pol_plus - insert_sizebounds `Lower pol_minus)
+    rank
+    |> Bound.of_poly
+    |> Bound.appr_substitution
+         `Upper
+         ~lower:(get_sizebound `Lower transition)
+         ~higher:(get_sizebound `Upper transition)
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "apply to prf", ["rank", Polynomial.to_string rank;
                                                  "transition", Transition.to_id_string transition])

@@ -410,7 +410,7 @@ let rec appr_substitution kind ~lower ~higher = function
   | Infinity -> Infinity
   | Var v -> evaluater lower higher kind v
   | Const k -> Const k
-  | Neg b -> appr_substitution (reverse kind) ~lower ~higher b
+  | Neg b -> neg (appr_substitution (reverse kind) ~lower ~higher b)
   | Sum (b1, b2) -> appr_substitution kind ~lower ~higher b1 + appr_substitution kind ~lower ~higher b2
   | Product (b1, b2) ->
      List.cartesian_product [`Lower; `Upper] [`Lower; `Upper]

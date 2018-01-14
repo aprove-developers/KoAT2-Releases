@@ -323,6 +323,4 @@ module type Polynomial =
                pow:('b -> int -> 'b) ->
                t -> 'b 
 
-    val partition : (scaled_monomial -> bool) -> t -> (t * t)
-      
   end
