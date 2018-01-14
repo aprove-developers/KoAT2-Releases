@@ -71,12 +71,12 @@ module Z3Solver =
     let check_negativity (formula : formula) (poly: Polynomial.t) =
       tautology Formula.Infix.(formula => (poly <= Polynomial.zero))
     
-    let generate_minimise (formula : formula) (coeffs_to_minimise: Var.t list) =
-      let generator poly vrbl =
-        if check_positivity formula Polynomial.(of_var vrbl) then
-          Polynomial.(poly + (of_var vrbl))
-        else if check_negativity formula Polynomial.(of_var vrbl) then
-          Polynomial.(poly - (of_var vrbl))
+    let minimisation_goal (formula : formula) (coeffs_to_minimise: Var.t list): Z3.Expr.expr =
+      let generator poly v =
+        if check_positivity formula Polynomial.(of_var v) then
+          Polynomial.(poly + of_var v)
+        else if check_negativity formula Polynomial.(of_var v) then
+          Polynomial.(poly - of_var v)
         else
           poly
       in
@@ -86,8 +86,11 @@ module Z3Solver =
       let z3_expr = from_formula formula in
       let optimisation_goal = Z3.Optimize.mk_opt !context in
       Z3.Optimize.add optimisation_goal [z3_expr];
-      Z3.Optimize.minimize optimisation_goal (generate_minimise formula coeffs_to_minimise);
+      let handle =
+        Z3.Optimize.minimize optimisation_goal (minimisation_goal formula coeffs_to_minimise)
+      in
       let status = Z3.Optimize.check optimisation_goal in
+      (print_string % Z3.Expr.to_string % Z3.Optimize.get_lower) handle;
       if status == Z3.Solver.SATISFIABLE then
         optimisation_goal
         |> Z3.Optimize.get_model
@@ -107,7 +110,8 @@ module Z3Solver =
                         |> Option.get (* Should be fine here *)
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
-                            Z3.Arithmetic.Integer.get_int expr
+                            expr
+                            |> Z3.Arithmetic.Integer.get_int
                             |> OurInt.of_int
                           else
                             expr
