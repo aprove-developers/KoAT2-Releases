@@ -390,7 +390,35 @@ let substitute_all substitution =
   let module VarMap = Map.Make(Var) in
   substitute_f (fun var ->
       VarMap.find_default (of_var var) var substitution
-    )                      
+    )
+
+type kind = [ `Lower | `Upper ]
+
+let reverse = function
+  | `Lower -> `Upper
+  | `Upper -> `Lower
+
+let selector = function
+  | `Lower -> minimum
+  | `Upper -> maximum
+
+let evaluater lower higher = function
+  | `Lower -> lower
+  | `Upper -> higher
+
+let rec appr_substitution kind ~lower ~higher = function
+  | Infinity -> Infinity
+  | Var v -> evaluater lower higher kind v
+  | Const k -> Const k
+  | Neg b -> appr_substitution (reverse kind) ~lower ~higher b
+  | Sum (b1, b2) -> appr_substitution kind ~lower ~higher b1 + appr_substitution kind ~lower ~higher b2
+  | Product (b1, b2) ->
+     List.cartesian_product [`Lower; `Upper] [`Lower; `Upper]
+     |> List.map (fun (kind1,kind2) -> appr_substitution kind1 ~lower ~higher b1 * appr_substitution kind2 ~lower ~higher b2)
+     |> List.enum
+     |> selector kind
+  | Max (b1, b2) -> max (appr_substitution kind ~lower ~higher b1) (appr_substitution kind ~lower ~higher b2)
+  | Pow (k,b) -> Pow (k, appr_substitution kind ~lower ~higher b)
 
 let rec vars = function
   | Infinity -> VarSet.empty
