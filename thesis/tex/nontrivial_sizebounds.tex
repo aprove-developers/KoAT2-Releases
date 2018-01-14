@@ -51,37 +51,35 @@ Now we are able to extend the method SizeBounds to nontrivial non-negating size 
 
 \input{theorems/nontrivial_sizebound}
 
-The definition is similar to the method presented by the original KoAT, but extends it to the usage of upper and lower bounds.
+The definition extends the method of the original KoAT to a differentiation of upper and lower bounds.
 The overall idea is, to define a maximal \textbf{starting value} $\start$ and accumulate the maximal \textbf{effects} of all transitions within the SCC $\SCC$.
 When we refer to an effect of a transition, we mean the change of a value by a single occurrence of a transition in an evaluation.
 We distinguish between positive and negative effects.
-A positive effect increases the value of a variable, while a negative effect decreases the value of a variable.
-Although we refer to them as positive and negative, both types of effects reflect the absolute value by which the variable increases/decreases.
+A positive effect represents a number, by which the value of a variable increases, while a negative effect represents a number, by which the value of a variable decreases.
 It is easy to see, that in an SCC without negation, it is necessary to capture all positive effects for the computation of an upper size bound, while it is necessary to capture all negative effects for the computation of lower size bounds.
 The capturing of negative effects for the computation of upper size bounds and positive effects for the computation of lower size bounds would lead to better bounds, but in practice this is not achievable.
 For the valid overapproximation of negative effects for upper size bounds, it would be necessary to approximate the accumulation of those negative effects with a multiplication with the lower time bound.
 \todo{Source?}{But related work agrees, that it is not possible to effectively compute lower time bounds.}
-Therefore, in any case which could yield a negative effect (or a positive effect for a lower size bound), we annihilate the effect to $0$.
+Therefore, in any case which could yield a negative effect (or a positive effect for a lower size bound), we ignore it by setting it to $0$.
 
-We now analyze the new method in three steps to explain the reasoning behind the different components of the method.
-First, we analyze the upper case in detail.
-Then, we explain the differences of the lower case.
-In a first step, we consider a program, that multiplies a single variable in a loop with a factor, but does not depend on other variables.
+Now we analyze the new method in three steps to explain the reasoning behind the different components of the method.
+We analyze the upper case in detail and explain the differences of the lower case after that.
+In a first step, we consider a program, that multiplies a single variable in a loop with a factor without depending on other variables.
 In a second step, we consider a program, that adds iteratively another variable to a variable, but does not use a multiplication with a factor.
-As we will see, those are corner cases of the general size bound definition.
-\[ {\mathcal{S}^\sqcap}'(\beta) = \scale^\sqcap_\SCC \cdot \left( \maxO{\start^\sqcap} + \effect^\sqcap_\SCC \right) \]
+As we will see, those are corner cases of the general size bound definition ${\mathcal{S}^\sqcap}'(\beta) = \scale^\sqcap_\SCC \cdot \left( \maxO{\start^\sqcap} + \effect^\sqcap_\SCC \right)$.
 For the first program this definition will break down to ${\mathcal{S}^\sqcap}'(\beta) = \scale^\sqcap_\SCC \cdot \left( \maxO{\start^\sqcap} + 0 \right)$.
 For the second program this definition will break down to ${\mathcal{S}^\sqcap}'(\beta) = 1 \cdot \left( \maxO{\start^\sqcap} + \effect^\sqcap_\SCC \right)$.
-In a third step, we then present a more complex program, to show, that the method also works for the lower case.
+In a third step, we present a more complex program, where we analyze the behavior of the method in the lower case.
 
 \subsubsection{Step One: Internal multiplication}
 
-Consider again the example program from the introduction in figure \ref{fig:nontrivial_nodependency}.
+Consider the program from the introduction in figure \ref{fig:nontrivial_nodependency}.
 
 \input{graphs/nontrivial_nodependency}
 
-It starts with a value for the variable $y$ and multiplies the value of $y$ in a loop $t_1$ with $-2$.
-The value of $y$ therefore switches between negative and positive extremes in a sequence $y, -2 \cdot y, 4 \cdot y, -8 \cdot y, 16 \cdot y, \dots$.
+It takes a value for the variable $y$ and multiplies it in a loop $t_1$ with the factor $2$.
+The number of steps of the transition $t_1$ is bounded by the value of $x$.
+The value of $y$ increases in a sequence $y, 2 \cdot y, 4 \cdot y, 8 \cdot y, 16 \cdot y, \dots$.
 Thus, the value of $y$ after the loop $t_1$ does only depend on the value of $y$ after the transition $t_0$ and the value of $y$ after previous steps of the loop $t_1$.
 The idea is, that we start with an overapproximation of the initial value of $y$ before entering the loop and then multiply it with the maximal factors inside the loop.
 
@@ -91,22 +89,28 @@ We consider all result variables, which might affect the value of $y$ and select
 
 Additionally to the starting value, we have to consider the factors mutating the starting value during the loop $t_1$.
 Intentionally, we can see, that with each occurrence of the transition $t_1$ the upper size bound increases by the factor $2$.
-After $\UTime(t_1)$ occurrences of $t_1$, the value of $y$ is at most $2^{\UTime(t_1)} \cdot \maxO{\start^\sqcap}$.
-This is covered by the \textbf{loop scaling factor} $\scale^\sqcap_\SCC$.
-It consists of the multiplication of all the \textbf{transition scaling factors} $\scale^\sqcap_t$ of the transitions $t \in \TSet_\SCC$ of the SCC $\SCC$.
-For the example, there is only one transition in the SCC, therefore the loop scaling factor reduces to the exponentiation with a single transition scaling factor $(\scale^\sqcap_{t_1})^{\UTime(t_1)}$.
-Since the scaling factor of the local size bound of the result variable $(t_1,y) \in \SCC$ is $2$ and $(t_1,y)$ is the only result variable of the SCC $\SCC$, $2$ is also the maximal scaling factor $\maximum{s^\square_{\rv} \mid \rv \in \SCC_t}$ for the transition $t$ in the SCC $\SCC$.
+After $\UTime(t_1)$ occurrences of $t_1$, the value of $y$ is bounded by $2^{\UTime(t_1)} \cdot \maxO{\start^\sqcap}$.
+This is covered by the \textbf{loop scaling factor} $\scale^\sqcap_\SCC = \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\UTime(t)}$.
+It consists of all \textbf{transition scaling factors} $\scale^\sqcap_t$ of the transitions $t \in \TSet_\SCC$ of the SCC $\SCC$.
+In the example, there is only one transition in the SCC, therefore the loop scaling factor reduces to the exponentiation with a single transition scaling factor $\scale^\sqcap_\SCC = \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\UTime(t)} = (\scale^\sqcap_{t_1})^{\UTime(t_1)}$.
+Assume, we found an upper local size bound $\ULSB(t_1,y) = 2 \cdot y$.
+Since the scaling factor of this upper local size bound is $2$ and $(t_1,y)$ is the only result variable of the SCC $\SCC$, $2$ is also a maximal scaling factor $\maximum{s^\sqcap_\rv \mid \rv \in \SCC_t}$ for the transition $t_1$.
 This results in the expected upper size bound $2^{\UTime(t_1)} \cdot \maxO{\start^\sqcap}$ for the result variable $(t_1,y)$.
 
 There are two parts, which still need to be covered, before we can be sure, that $2^{\UTime(t_1)} \cdot \maxO{\start^\sqcap}$ is actually the result of ${\mathcal{S}^\sqcap}'(t_1,y)$.
-The first part is the \textbf{loop effect} $\effect^\sqcap_\SCC$, which we assumed to be $0$ in the example.
-This is non-obvious, since we have a sum over the non-empty set $\TSet_\SCC = \braced{t_1}$.
-The reason for $\UTime(t_1) \cdot \effect^\sqcap_{t_1}$ to be $0$ has two reasons.
-One reason is, that the constant $e^\sqcap_{(t_1,y)}$ of the local size bound of $(t_1,y)$ is $0$.
-The other reason is, that the local size bound of the result variable $(t_1,y) \in \SCC$ only depends on the variables $\VSet_{(t_1,y)} = \braced{y}$, that are manipulated during the loop.
-We can exclude those variables from the \textbf{result variable effect} $\effect^\sqcap_{(t_1,y)}$, because we consider them in another part of the definition.
+The first part is the \textbf{loop effect} $\effect^\sqcap_\SCC = \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\sqcap_t \right)$, which we assumed to be $0$ in the example.
+This is non-obvious, since the loop effect of the analyzed SCC is a sum over the non-empty set $\TSet_\SCC = \braced{t_1}$.
+It needs to be shown that the loop effect $\effect^\sqcap_\SCC = \UTime(t_1) \cdot \effect^\sqcap_{t_1}$ equals $0$.
+The time bound of $t_1$ can be computed to be $\UTime(t_1) = \maxO{x}$ and therefore does not equal $0$ for every state.
+The \textbf{transition effect} $\effect^\sqcap_{t_1} = \max \braced{\effect^\sqcap_\rv \mid \rv \in \SCC_{t_1} }$ selects the maximal \textbf{result variable effect} among all result variables in $\SCC_{t_1}$.
+Since there is only one result variable $(t_1,y)$ in $\SCC_{t_1}$, it is left to show that the result variable effect $\effect^\sqcap_{(t_1,x)} = \maxO{e^\sqcap_{(t_1,x)}} + \sum_{v \in P_{(t_1,x)}^\sqcap \setminus \VSet_{(t_1,x)}} \maxO{\incoming^\sqcap_{(t_1,x)}(v)} + \sum_{v \in N_{(t_1,x)}^\sqcap} \maxO{\incoming^\sqcup_{(t_1,x)}(v)}$ equals $0$.
+The constant $e^\sqcap_{(t_1,y)}$ of the local size bound $\ULSB(t_1,y) = 2 \cdot y$ of $(t_1,y)$ is $0$.
+Also, this local size bound only depends on the variable $y \in \P^\sqcap_{(t_1,y)}$.
+This variable is an SCC-variable and therefore $\VSet_{(t_1,y)} = \braced{y}$.
+Since there are no other variables affecting $(t_1,y)$, it holds that $\sum_{v \in P_{(t_1,x)}^\sqcap \setminus \VSet_{(t_1,x)}} \maxO{\incoming^\sqcap_{(t_1,x)}(v)} + \sum_{v \in N_{(t_1,x)}^\sqcap} \maxO{\incoming^\sqcup_{(t_1,x)}(v)}$ equals $0$.
+Therefore, it is shown that the loop effect $\effect^\sqcap_\SCC$ is actually $0$.
 
-This leads us, to the second part, which we did not cover yet: the factor $\maximum{\abs{V_\rv} \mid \rv \in \SCC_t}$.
+The second part, which we did not cover yet, is the factor $\maximum{\abs{V_\rv} \mid \rv \in \SCC_t}$.
 This factor was not yet mentioned, but is part of the \textbf{transition scaling factor} $s^\sqcap_t$.
 In the example, this part of the transition scaling factor is $1$, but in general it can be a number greater than $1$.
 This factor reflects, that exponential bounds can not only result from scaling factors which are greater than $1$, but also from variables, which affect each other consecutively in a loop.
