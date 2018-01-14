@@ -125,7 +125,7 @@ let tests =
                     (Polynomial 1, "a -> b(x,y), b -> b(x-1,y) :|: x>y");                    
                     (Polynomial 1, "a -> b(x,y), b -> b(x-1,y) :|: x>0, b -> c(x,y), c -> c(x+1,y) :|: x<y");                    
                     (Polynomial 1, "a -> b(x,y), b -> b(x+1,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0");                    
-                    (Polynomial 2, "a -> b(x), b -> b(x-1) :|: x^2>0");                    
+                    (* Non-linear not supported by Z3 (Polynomial 2, "a -> b(x), b -> b(x-1) :|: x^2>0"); *)
                     (Polynomial 2, "a -> b(x,y), b -> b(x+y,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0");                    
                     (Exponential 1, "a -> b(x,y), b -> b(2*x,y-1) :|: y>0, b -> b(x-1,y) :|: x > 0");                    
                     (Exponential 1, "a -> b(x,y,z), b -> c(x+y,y,z-1) :|: z>0, c -> b(x,x,z) :|: z>0, c -> d(x,y,z), d -> d(x-1,y,z) :|: x>0");                    
