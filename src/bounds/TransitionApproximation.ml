@@ -55,7 +55,7 @@ let to_string (name,map) =
   |> Map.to_list
   |> List.sort (fun (t1,b1) (t2,b2) -> Transition.compare_same t1 t2)
   |> List.print
-       ~first:(name ^ "  ")
+       ~first:"  "
        ~last:"\n"
        ~sep:"\n  "
        (fun output (t,b) -> IO.nwrite output (Transition.to_id_string t ^ ": " ^ Bound.to_string b))
