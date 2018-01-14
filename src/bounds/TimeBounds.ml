@@ -81,9 +81,7 @@ let improve_with_pol program appr pol =
         |> Option.get
         |> RankingFunction.strictly_decreasing
         |> List.enum
-        |> Enum.fold (fun appr (l,t,l') ->
-               Approximation.add_timebound timebound (l,t,l') appr
-             ) appr
+        |> Enum.fold (flip (Approximation.add_timebound timebound)) appr
         |> MaybeChanged.changed
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve time bounds with pol", [])
@@ -104,7 +102,9 @@ let improve program appr =
     |> Enum.map (TransitionGraph.loc_transitions (Program.graph program))
     |> Enum.filter (not % TransitionSet.is_empty)
     |> Enum.map TransitionSet.to_list
-    |> MaybeChanged.fold_enum (fun appr transitions -> improve_with_pol program appr (RankingFunction.find `Time (Program.vars program) transitions appr)) appr
+    |> MaybeChanged.fold_enum (fun appr transitions ->
+           improve_with_pol program appr (RankingFunction.find `Time (Program.vars program) transitions appr)
+         ) appr
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve time bounds", [])
                      execute
