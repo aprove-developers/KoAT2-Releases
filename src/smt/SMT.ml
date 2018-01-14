@@ -37,16 +37,13 @@ module Z3Solver =
         ~wrong:(Z3.Boolean.mk_false !context)
         ~disj:(fun a1 a2 -> Z3.Boolean.mk_or !context [a1; a2])
         
-    let search formula =
+    let result_is expected_result formula =
       let formula = from_formula formula in
       let optimisation_goal = Z3.Optimize.mk_opt !context in
       Z3.Optimize.add optimisation_goal [formula];
-      Z3.Optimize.check optimisation_goal
-      
-    let result_is expected_result formula =
-      let result = search formula in
+      let result = Z3.Optimize.check optimisation_goal in
       if result == Z3.Solver.UNKNOWN then
-        raise (Failure "SMT-Solver does not know a solution")
+        raise (Failure ("SMT-Solver does not know a solution due to: " ^ Z3.Optimize.get_reason_unknown optimisation_goal))
       else
         result == expected_result
 
