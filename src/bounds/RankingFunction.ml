@@ -14,8 +14,8 @@ type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ]
              
 type t = {
     pol : Location.t -> Polynomial.t;
-    strictly_decreasing : Transition.t list;
-    transitions : Transition.t list;
+    decreasing : Transition.t list;
+    non_increasing : Transition.t list;
   }
 
 let one = ParameterPolynomial.one
@@ -24,16 +24,16 @@ let logger = Logging.(get PRF)
 
 let rank f = f.pol
            
-let strictly_decreasing f = f.strictly_decreasing
+let strictly_decreasing f = f.decreasing
                           
-let transitions f = f.transitions
+let transitions f = f.non_increasing
 
 let pol_to_string (locations: Location.t list) (content_to_string: 'a -> string) (pol: Location.t -> 'a) =
   locations |> List.map (fun l -> Location.to_string l ^ ": " ^ content_to_string (pol l)) |> String.concat ", "  
 
-let to_string {pol; strictly_decreasing; transitions} =
-  let locations = transitions |> List.enum |> Program.locations |> List.of_enum in
-  "pol: [" ^ pol_to_string locations Polynomial.to_string pol ^ "] T'>: " ^ (List.map Transition.to_id_string strictly_decreasing |> String.concat ", ")
+let to_string {pol; decreasing; non_increasing} =
+  let locations = non_increasing |> List.enum |> Program.locations |> List.of_enum in
+  "pol: [" ^ pol_to_string locations Polynomial.to_string pol ^ "] T'>: " ^ (List.map Transition.to_id_string decreasing |> String.concat ", ")
 
 let find measure vars transitions appr =
 
@@ -67,11 +67,12 @@ let find measure vars transitions appr =
     let linear_poly = ParameterPolynomial.of_coeff_list fresh_coeffs vars in
     let constant_var = Var.fresh_id Var.Int () in
     let constant_poly = ParameterPolynomial.of_constant (Polynomial.of_var constant_var) in
-    (ParameterPolynomial.(linear_poly + constant_poly)),(List.append fresh_vars [constant_var])
+    ParameterPolynomial.(linear_poly + constant_poly),
+    List.append fresh_vars [constant_var]
   in
   
-  let generate_ranking_template vars locations =
-    let module PrfTable = Hashtbl.Make(Location) in
+  let ranking_templates (vars: VarSet.t) (locations: Location.t list): (Location.t -> ParameterPolynomial.t) * Var.t list =
+    let module TemplateTable = Hashtbl.Make(Location) in
     let execute () =
       let ins_loc_prf location =
         (* Each location needs its own ranking template with different fresh variables *)
@@ -79,12 +80,12 @@ let find measure vars transitions appr =
         (location, parameter_poly, fresh_vars)
       in
       let enum_of_prf = List.map ins_loc_prf locations in
-      let prf_table = PrfTable.of_list (List.map (fun (a,b,c)-> (a,b)) enum_of_prf) in
+      let prf_table = TemplateTable.of_list (List.map (fun (a,b,c)-> (a,b)) enum_of_prf) in
       let varlist = List.flatten (List.map (fun (a,b,c)-> c) enum_of_prf) in
-      (PrfTable.find prf_table, varlist)
+      (TemplateTable.find prf_table, varlist)
     in Logger.with_log logger Logger.DEBUG
                        (fun () -> "generated_ranking_template", [])
-                       ~result:(fun (pol, _) -> pol_to_string locations ParameterPolynomial.to_string pol)
+                       ~result:(fun (template, _) -> pol_to_string locations ParameterPolynomial.to_string template)
                        execute
   in
                                     
@@ -111,82 +112,57 @@ let find measure vars transitions appr =
     farkas_transform (TransitionLabel.guard t) atom
   in
     
-  (** Returns a constraint such that all transitions must fulfil the non increasing constraint. *)
-  let non_increasing_constraints (pol : Location.t -> ParameterPolynomial.t) (transitions : Transition.t list): Constraint.t =
-    let execute () =
-      transitions
-      |> List.map (transition_constraint `Non_Increasing pol)
-      |> Constraint.all
-    in Logger.with_log logger Logger.DEBUG
-                       (fun () -> "determined non_incr constraints", [])
-                       ~result:Constraint.to_string
-                       execute
+  let transitions_constraint (constraint_type: constraint_type) (pol : Location.t -> ParameterPolynomial.t) (transitions : Transition.t list): Constraint.t =
+    transitions
+    |> List.map (transition_constraint constraint_type pol)
+    |> Constraint.all
   in
      
-  (** Returns, if we can add a strictly decreasing constraint to the given constraint such that it is still satisfiable. *)
-  let addable_as_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (constr: Constraint.t) (transition: Transition.t): bool =
-    let execute () =
-      let open Constraint.Infix in
-      (constr && transition_constraint `Bounded pol transition && transition_constraint `Decreasing pol transition)
-      |> Formula.mk
-      |> SMTSolver.satisfiable
-    in Logger.with_log logger Logger.DEBUG 
-                       (fun () -> "addable as strictly decreasing", ["transition", Transition.to_id_string transition])
-                       ~result:Bool.to_string
-                       execute
-  in
-  
-  (*Given a set of transitions the pair (constr,bound) is generated. Constr is the constraint for the ranking function and bounded consists of all strictly oriented transitions *)
-  let add_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): Transition.t list =
-    let combine (constr,transitions) transition =
-      let open Constraint.Infix in
-      let add =
-        (constr && transition_constraint `Bounded pol transition && transition_constraint `Decreasing pol transition, transition::transitions)
-      in
-      if addable_as_strictly_decreasing pol constr transition then
-        add
-      else
-        (constr, transitions)
-    in
-    List.fold_left combine (non_incr,[]) transitions
-    |> Tuple2.second
+  let locations =
+    transitions
+    |> List.enum
+    |> Program.locations
+    |> List.of_enum
+    |> List.unique
   in
 
-  (** Tries to add a single transition from the given list as strictly decreasing transition to the given constraint.
-      This should always lead to better or equal results than searching for sets of strictly decreasing transitions. *)
-  let single_strictly_decreasing (pol : Location.t -> ParameterPolynomial.t) (transitions: Transition.t list) (non_incr: Constraint.t): Transition.t list =
-    match transitions |> List.find_opt (fun trans -> addable_as_strictly_decreasing pol non_incr trans)  with
-    | Some transition -> [transition]
-    | None -> []
+  let (template, fresh_coeffs) =
+    ranking_templates vars locations
   in
-  
+
+  let find_with non_increasing_transitions decreasing_transitions =
+    let non_increasing_constraint =
+      transitions_constraint `Non_Increasing template non_increasing_transitions
+    in
+    let bounded =
+      transitions_constraint `Bounded template decreasing_transitions
+    in
+    let strictly_decreasing =
+      transitions_constraint `Decreasing template decreasing_transitions
+    in
+    let rank l =
+      Constraint.Infix.(non_increasing_constraint && bounded && strictly_decreasing)
+      |> Formula.mk
+      |> SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs
+      |> Polynomial.eval_partial (ParameterPolynomial.flatten (template l))
+    in
+    {
+      pol = rank;
+      decreasing = decreasing_transitions;
+      non_increasing = non_increasing_transitions;
+    }
+  in
   
   (** Checks if a transition is unbounded *)
   let unbounded appr transition =  
     Bound.is_infinity (Approximation.timebound appr transition)
   in
   
-  let find_with (pol, fresh_coeffs) non_increasing_transitions strictly_decreasing_transitions =
-    let non_increasing_constraint = non_increasing_constraints pol non_increasing_transitions in
-    let strictly_decreasing_transitions = single_strictly_decreasing pol strictly_decreasing_transitions non_increasing_constraint in
-    let get_bounded trans = transition_constraint `Bounded pol trans in
-    let bounded = Constraint.all (List.map get_bounded strictly_decreasing_transitions) in (*Problem: How to generate the final constraints*)
-    let get_strictly_decreasing trans = transition_constraint `Decreasing pol trans in
-    let strictly_decreasing = Constraint.all (List.map get_strictly_decreasing strictly_decreasing_transitions) in
-    let model = SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs (Formula.mk (Constraint.Infix.(non_increasing_constraint && bounded && strictly_decreasing))) in
-    {
-      pol = (fun loc -> Polynomial.eval_partial (ParameterPolynomial.flatten (pol loc)) model);
-      strictly_decreasing = strictly_decreasing_transitions;
-      transitions = non_increasing_transitions;
-    }
-  in
-  
   let found rank =
-    not (List.is_empty rank.strictly_decreasing)
+    not (List.is_empty rank.decreasing)
   in
 
   let execute () =
-    let (pol, fresh_coeffs) = generate_ranking_template vars (transitions |> List.enum |> Program.locations |> List.of_enum |> List.unique) in
     transitions
     |> Set.of_list
     |> Util.powerset
@@ -194,8 +170,8 @@ let find measure vars transitions appr =
            transitions
            |> List.filter (unbounded appr)
            |> List.enum
-           |> Util.find_map (fun strictly_decreasing_transition ->
-                  find_with (pol, fresh_coeffs) (Set.to_list (Set.diff (Set.of_list transitions) increasing_transitions)) (List.singleton strictly_decreasing_transition)
+           |> Util.find_map (fun decreasing_transition ->
+                  find_with (Set.to_list (Set.diff (Set.of_list transitions) increasing_transitions)) (List.singleton decreasing_transition)
                   |> Option.some
                   |> Option.filter found
                 )
