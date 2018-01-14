@@ -90,7 +90,6 @@ module Z3Solver =
         Z3.Optimize.minimize optimisation_goal (minimisation_goal formula coeffs_to_minimise)
       in
       let status = Z3.Optimize.check optimisation_goal in
-      (print_string % Z3.Expr.to_string % Z3.Optimize.get_lower) handle;
       if status == Z3.Solver.SATISFIABLE then
         optimisation_goal
         |> Z3.Optimize.get_model
