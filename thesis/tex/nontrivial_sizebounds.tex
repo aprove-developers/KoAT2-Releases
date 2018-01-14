@@ -25,7 +25,7 @@ Otherwise, it is connected with a positive edge.
 From this point on we regard SCCs, that only consists of positive edges.
 For these SCCs we present an optimized technique.
 
-Prior to the definition of the method, we define three utility definitions also used by the original KoAT.
+Prior to the definition of the method, we define four utility definitions, three of them also used by the original KoAT.
 
 First, we define the pre-variables of a result variable $\rv \in \RV$ as an overapproximation $\pre(\rv) \subseteq \RV$ of all the result variables that directly affect the value of a result variable $\rv \in \RV$.
 Since the result variable graph represents the connections of result variables, the predecessors of a result variable in a result variable graph are a valid implementation of the function $\pre$.
@@ -46,6 +46,9 @@ As mentioned earlier, we exclude those cases from the new analysis.
 The third definition $\SCC_t$ selects from an SCC $\SCC$ of the result variable graph those result variables $\SCC_t = \braced{(t,v) \mid \exists v \in \VSet : (t,v) \in \SCC}$, that use a specific transition $t$.
 Consider again the program in figure \ref{fig:negating_nontrivial} and its result variable graph in figure \ref{fig:negating_nontrivial_rvg}.
 For the SCC $\SCC = \braced{(t_1,x), (t_2,x)}$ we have $\SCC_{t_1} = \braced{(t_1,x)}$ and $\SCC_{t_2} = \braced{(t_2,x)}$, while $\SCC_{t_0} = \SCC_{t_3} = \emptyset$.
+
+Additionally, we introduce the SCC-transitions $\TSet_\SCC = \braced{ t \mid (t,v) \in \SCC}$ as the set of transitions, which occur in an SCC $\SCC$.
+The example defines the SCC-transitions $\TSet_\SCC = \braced{t_1, t_2}$.
 
 Now we are able to extend the method SizeBounds to nontrivial non-negating size bounds.
 
@@ -110,8 +113,10 @@ This variable is an SCC-variable and therefore $\VSet_{(t_1,y)} = \braced{y}$.
 Since there are no other variables affecting $(t_1,y)$, it holds that $\sum_{v \in P_{(t_1,x)}^\sqcap \setminus \VSet_{(t_1,x)}} \maxO{\incoming^\sqcap_{(t_1,x)}(v)} + \sum_{v \in N_{(t_1,x)}^\sqcap} \maxO{\incoming^\sqcup_{(t_1,x)}(v)}$ equals $0$.
 Therefore, it is shown that the loop effect $\effect^\sqcap_\SCC$ is actually $0$.
 
+\todo{Go on}{}
+
 The second part, which we did not cover yet, is the factor $\maximum{\abs{V_\rv} \mid \rv \in \SCC_t}$.
-This factor was not yet mentioned, but is part of the \textbf{transition scaling factor} $s^\sqcap_t$.
+This factor was not yet mentioned, but is part of the \textbf{transition scaling factor} $s^\sqcap_t = \maximum{s^\sqcap_\rv \mid \rv \in \SCC_t} \cdot \maximum{\abs{V_\rv} \mid \rv \in \SCC_t}$.
 In the example, this part of the transition scaling factor is $1$, but in general it can be a number greater than $1$.
 This factor reflects, that exponential bounds can not only result from scaling factors which are greater than $1$, but also from variables, which affect each other consecutively in a loop.
 
@@ -139,10 +144,11 @@ They affect each other in the loop and as a result their value is not bounded by
 
 Since the Fibonacci sequence itself can not be represented with the bound set $\BoundSet(\PVSet)$, it is necessary to use an overapproximation.
 Lets consider the update $\update(y) = y + z$.
-We have a non-polynomial bound, because the incoming values of $y$ and $z$ can change during the loop $t_1$.
-For this reason they are part of the set $\VSet_{(t_1,y)} = \braced{y,z}$.
-The idea of the factor $\maximum{\abs{V_\rv} \mid \rv \in \SCC_t}$ is, that we can overapproximate the effect of $\update(y)$ with $2 \cdot \max(y,z)$.
-This bound is representable in the bound set $\BoundSet(\PVSet)$. 
+We have a non-polynomial bound, because the values of $y$ and $z$ can change during the loop $t_1$.
+For this reason they are by definition part of the set $\VSet_{(t_1,y)} = \braced{y,z}$.
+The idea of the factor $\maximum{\abs{V_\rv} \mid \rv \in \SCC_t}$ is, that we can overapproximate the effect of $\update(y)$ with a scaling factor of $2$ in a bound $2 \cdot \max(y,z)$.
+Such a bound is representable in the bound set $\BoundSet(\PVSet)$.
+If the update $\update(y)$ would be a sum of $n$ variables $v_1, \dots, v_n$ of the set $\VSet_{(t_1,y)}$, then the effect of $\update(y)$ could be overapproximated with a bound $n \cdot \max \braced{v_1, \dots, v_n}$.
 
 \subsubsection{Step Two: Dependency on outside variables}
 
@@ -154,12 +160,12 @@ Consider the program in figure \ref{fig:additive_loop}.
 The program is very similar to the program in figure \ref{fig:exp_with_vars}.
 The difference is, that the value of $z$ does not depend on the value of $y$ anymore.
 Instead, the value of $z$ is constant throughout the loop $t_1$.
-The consequence is, that the update $\update(y) = y + z$ can not result in exponential growth anymore, since the variables mutated during the loops are $V_{(t_1,y)} = \braced{y}$ instead of $\braced{y,z}$.
+The consequence is, that the update $\update(y) = y + z$ can not result in exponential growth anymore, since the variables mutated during the loop are $V_{(t_1,y)} = \braced{y}$ instead of $\braced{y,z}$.
 Therefore, we can find a better bound than an exponential bound, if we consider the update $\update(y) = y + z$ to be an addition of $y$ with a constant $z$.
 
 We now want to determine a size bound for the variable $y$ after the transition $t_1$.
 The result variable graph shows, that the value of $y$ affects itself in the loop $t_1$, while it also depends on the value of $y$ after the transition $t_0$ and the value of $z$ after the transitions $t_0$ and $t_1$.
-The \textbf{starting value} $\start^\sqcap$ is $\maximum{y,z}$.
+The \textbf{starting value} $\start^\sqcap = \maximum{\USize(\prerv) \mid \exists \rv \in \SCC: \prerv \in \pre(\rv) \setminus \SCC}$ is $\maximum{y,z}$.
 Now, we must approximate the effect of the addition of the value of $z$ in each step of the loop $t_1$.
 If $z$ is negative, then each iteration of the loop decreases the value of $y$ and therefore the starting value is already an upper size bound.
 Since we do not consider lower time bounds, it is not possible to utilize this decrease to find a better upper size bound.
@@ -168,17 +174,17 @@ On the other hand, if $z$ is positive, then each iteration of the loop increases
 For lower size bounds this logic is contrary.
 If $z$ is negative, then each iteration of the loop decreases the value of $y$ and therefore, in contrast to the definition of upper size bounds, we can approximate the decrease by the upper time bound $\UTime(t_1)$ multiplied with the effect $z$.
 If $z$ is positive, we can infer the starting value as lower size bound.
-Note that for an update $\update(y) = y - z$ for the transition $t_1$, we need an additional case distinction, since the different sign also flips the presented logic.
+Note that for an update $\update(y) = y - z$ instead of $\update(y) = y + z$ for the transition $t_1$, the presented logic is the other way around.
 
 This is all reflected in the definitions of the \textbf{transition effects} $\effect^\sqcap_t$ and $\effect^\sqcup_t$.
 While the positive transition effect $\effect^\sqcap_t$ describes a bound for the upper case, the negative transition effect $\effect^\sqcup_t$ describes a bound for the lower case.
-In the example program, we have to consider the transition effect $\effect^\sqcap_{t_1}$ of the transition $t_1$ for the computation of the upper size bound.
+In the example program, for the computation of the upper size bound we have to consider the transition effect $\effect^\sqcap_{t_1}$ of the transition $t_1$.
 For this purpose, we need to consider the maximal \textbf{result variable effects} of all result variables in the SCC $\SCC$ which use the transition $t_1$.
-We only consider the maximal effect, because a transition effect reflects exactly one step with the transition $t$.
+We only consider the maximal effect, because in one evaluation step with a transition $t$ only the effect of one result variable $\rv \in \SCC_t$ can happen.
 In the example, there is only one result variable $(t_1,y) \in \SCC$, which uses the transition $t_1$.
 Therefore, we have $\effect^\sqcap_{t_1} = \effect^\sqcap_{(t_1,y)}$ and as a direct consequence $\effect^\sqcap_\SCC = \sum_{t \in \TSet_\SCC} \UTime(t) \cdot \effect^\sqcap_{t} = \UTime(t_1) \cdot \effect^\sqcap_{(t_1,y)}$.
 The result variable effect $\effect^\sqcap_{(t_1,y)}$ consists of the factor $e^\sqcap_\rv = 0$ of the local size bound of this result variable and the sum of all incoming variables from outside of the SCC.
-It is not necessary to consider variables from inside the SCC, since their value is already reflected by the starting value $\start^\sqcap$.
+It is not necessary to consider variables from inside the SCC, since their value is already covered by the starting value $\start^\sqcap$.
 Only additions with outside variables or constants and multiplications with constants can increase the upper size bound.
 In the example, we have with $z$ one variable from outside the SCC for the result variable $(t_1,x)$.
 Again, we can only consider the positive effect of this variable.
@@ -187,4 +193,4 @@ Therefore, the loop effect $\effect^\sqcap_\SCC$ equals $\UTime(t_1) \cdot \maxO
 
 \subsubsection{Step Three: All together}
 
-\todo{Useful?}{Use lower case for this}
+\todo{Useful?}{If, then use lower case for this}
