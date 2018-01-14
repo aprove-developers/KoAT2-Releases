@@ -1,41 +1,51 @@
-In the last section we presented a method SizeBounds to infer upper and lower size bounds for result variables $\rv \in \RV$ which form a trivial SCC $\braced{\rv}$.
+In the last section, we presented a method to infer upper and lower size bounds for result variables $\rv \in \RV$ which form a trivial SCC $\braced{\rv}$.
 In this section, we extend the method to infer upper and lower size bounds for nontrivial SCCs.
 We split these nontrivial SCCs in two groups.
-The first group contains all nontrivial SCCs, where there exists a variable, that is manipulated inside the SCC and that affects another variable or itself with its negative value inside the SCC.
+The first group contains all nontrivial SCCs, for which there exists a variable, that is manipulated inside the SCC and that affects another variable or itself with its negated value inside the SCC.
 For such SCCs, we use the SizeBounds methods from the original KoAT to infer upper and lower size bounds with $\USize(\rv) = -\LSize(\rv) = \mathcal{S}_{\text{original}}(\rv)$ for every result variable $\rv \in \RV$.
-
-Consider the program in figure \ref{fig:negating_nontrivial}.
 
 \input{graphs/negating_nontrivial}
 
-It consists of two indices $y$ and $z$, that restrict the number steps with $t_1$ and $t_2$.
-The transition $t_2$ decrements the value of $x$ with every step and the transition $t_1$ negates the value of $x$ each time.
+Consider the program in figure \ref{fig:negating_nontrivial}.
+It consists of two variables $y$ and $z$, that restrict the number of steps with $t_1$ and $t_2$.
+The transition $t_2$ decrements the value of $x$ with every step and the transition $t_1$ negates the value of $x$ with every step.
 The steps of the transitions $t_1$ and $t_2$ can happen in an arbitrary order due to non-determinism.
 Consider an evaluation defined by the sequence of transitions $t_0, t_1, t_2, t_1, t_3$.
 If the initial value of $x$ is positive, then its value changes in the sequence $x, -x, -x-1, -(-x-1), -(-x-1)$.
-Therefore, the value of $x$ after the transition $t_3$ would be $-(-x-1) = x+1$.
+Then, the value of $x$ after the transition $t_3$ is $-(-x-1) = x+1$.
 Although the upper local size bound of $(t_1,x)$ is $\ULSB(t_1,x) = x-1$, it is not possible to utilize the decrement to conclude, that the transition $t_1$ can not increment the value of $x$, since another transition of the SCC negated its value in a later step.
 
+\input{graphs/negating_nontrivial_rvg}
+
 Therefore, the new method uses the original method for such cases, where negation occurs inside the SCC.
-This property is shown in the annotated result variable graph in figure \ref{fig:negating_nontrivial}.
+This property is shown in the annotated result variable graph in figure \ref{fig:negating_nontrivial_rvg}.
+This figure shows only the relevant part regarding the variable $x$.
 Every result variable, that is negated by the local size bound of another result variable, is connected with a negative edge to this result variable.
 Otherwise, it is connected with a positive edge.
-For cases, where there are only positive edges in the analyzed SCC, the new method introduces an optimized technique.
+From this point on we regard SCCs, that only consists of positive edges.
+For these SCCs we present an optimized technique.
 
-Prior to the definition of the method, we need to define three utility definitions also used by the original KoAT.
+Prior to the definition of the method, we define three utility definitions also used by the original KoAT.
 
 First, we define the pre-variables of a result variable $\rv \in \RV$ as an overapproximation $\pre(\rv) \subseteq \RV$ of all the result variables that directly affect the value of a result variable $\rv \in \RV$.
-This is a similar definition to the pre-transitions of a transition, but acting on the result variable graph instead of the program graph.
-Since the result variable graph represents the information about which result variables affect each other, the predecessors of a result variable in a result variable graph are a valid implementation of the function $\pre$.
+Since the result variable graph represents the connections of result variables, the predecessors of a result variable in a result variable graph are a valid implementation of the function $\pre$.
+Consider again the program in figure \ref{fig:negating_nontrivial} and its result variable graph in figure \ref{fig:negating_nontrivial_rvg}.
+The predecessors of $(t_1,x)$ in the result variable graph are $(t_0,x)$, $(t_1,x)$ and $(t_2,x)$.
+Therefore, $\pre(t_1,x) = \braced{(t_0,x), (t_1,x), (t_2,x)}$ are the pre-variables of $(t_1,x)$.
 
-Additionally, we define the SCC-variables $\VSet_\rv = \braced{ v \mid \exists (t, v) \in \pre(\rv) \cap \SCC }$ of a result variable as those variables, which affect the result variable from within the SCC of the result variable graph.
+Additionally, we define the SCC-variables $\VSet_\rv = \braced{ v \mid \exists (t, v) \in \pre(\rv) \cap \SCC }$ of a result variable $\rv \in \SCC$ as those variables, which affect the result variable $\rv$ from within the SCC $\SCC$.
 For those variables we know, that their value is mutated throughout a loop.
-The subset $\VSet^+_\rv \subseteq \VSet_\rv$ contains all variables $v$, that are both not in the set $N^\sqcap_\rv$ and $N^\sqcup_\rv$.
+The subset $\VSet^+_\rv \subseteq \VSet_\rv$ contains all variables $v$, that are both not in the set $N^\sqcap_\rv$ and not in the set $N^\sqcup_\rv$.
 Such variables affect a result variable $\rv$ with a non-negated value.
+Consider again the program in figure \ref{fig:negating_nontrivial} and its result variable graph in figure \ref{fig:negating_nontrivial_rvg}.
+The set $\VSet^+_{(t_2,x)}$ contains the variable $x$, since the variable $x$ has both not a negative factor in the upper local size bound $\ULSB(t_2,x)$ and the lower local size bound $\LLSB(t_2,x)$
+On the other hand, the set $\VSet^+_{(t_1,x)}$ is empty, since the variable $x$ has a negative factor in the upper local size bound $\ULSB(t_1,x)$ and also in the lower local size bound $\LLSB(t_1,x)$.
+Therefore, the variable $x$ is in $\VSet_{(t_1,x)}$, but not in $\VSet^+_{(t_1,x)}$.
+As mentioned earlier, we exclude those cases from the new analysis.
 
 The third definition $\SCC_t$ selects from an SCC $\SCC$ of the result variable graph those result variables $\SCC_t = \braced{(t,v) \mid \exists v \in \VSet : (t,v) \in \SCC}$, that use a specific transition $t$.
-
-\todo{Examples for utilities}{}
+Consider again the program in figure \ref{fig:negating_nontrivial} and its result variable graph in figure \ref{fig:negating_nontrivial_rvg}.
+For the SCC $\SCC = \braced{(t_1,x), (t_2,x)}$ we have $\SCC_{t_1} = \braced{(t_1,x)}$ and $\SCC_{t_2} = \braced{(t_2,x)}$, while $\SCC_{t_0} = \SCC_{t_3} = \emptyset$.
 
 Now we are able to extend the method SizeBounds to nontrivial non-negating size bounds.
 

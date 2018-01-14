@@ -1,0 +1,24 @@
+\begin{figure}
+\centering
+\begin{tikzpicture}[->,>=stealth',auto,node distance=2cm]
+
+  \node (0x) {$t_0,x$};
+  \node (1x) [above right=1cm and 2cm of 0x] {$t_1,x$};
+  \node (2x) [below right=1cm and 2cm of 0x] {$t_2,x$};
+  \node (3x) [right=5cm of 0x] {$t_3,x$};
+
+  \path
+    (0x) edge (1x)
+    (0x) edge (2x)
+    (0x) edge (3x)
+    (1x) edge[loop above, thick] node[left] {\textbf{-}} (1x)
+    (1x) edge[bend left, thick] node[above right] {\textbf{+}} (2x)
+    (1x) edge (3x)
+    (2x) edge[bend left, thick] node[above left] {\textbf{-}} (1x)
+    (2x) edge[loop below, thick] node[right] {\textbf{+}} (2x)
+    (2x) edge (3x)
+    ;
+\end{tikzpicture}
+\caption{RVG of a program with a negating nontrivial SCC}
+\label{fig:negating_nontrivial_rvg}
+\end{figure}
