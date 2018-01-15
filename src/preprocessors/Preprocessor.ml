@@ -36,11 +36,8 @@ module PreprocessorSet =
     )
 
 let all =
-<<<<<<< HEAD
-  [CutUnreachableLocations; CutUnsatisfiableTransitions; (*Chaining;*) InvariantGeneration; TrivialTimeBounds]
-=======
   [CutUnreachableLocations; CutUnsatisfiableTransitions; InvariantGeneration]
->>>>>>> 562cfbe23bbc29b409a240d3bedc14d703cf6cef
+
   
 type strategy = t list -> subject -> subject
 
