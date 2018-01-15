@@ -34,7 +34,7 @@ let pol_to_string (locations: Location.t list) (content_to_string: 'a -> string)
   |> Util.enum_to_string (fun l -> Location.to_string l ^ ": " ^ content_to_string (pol l))
 
 let to_string {pol; decreasing; non_increasing} =
-  let locations = non_increasing |> List.enum |> Program.locations |> List.of_enum in
+  let locations = non_increasing |> List.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
   "{rank:" ^ pol_to_string locations Polynomial.to_string pol ^ ";decreasing:" ^ (decreasing |> List.enum |> Util.enum_to_string Transition.to_id_string) ^ "}"
 
 let find measure vars transitions appr =
