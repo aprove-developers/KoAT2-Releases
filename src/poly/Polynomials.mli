@@ -21,6 +21,8 @@ module ParameterPolynomial :
 sig
   include module type of PolynomialOver(PolynomialOver(OurInt))
 
+  val eval_coefficients : (Var.t -> OurInt.t) -> PolynomialOver(PolynomialOver(OurInt)).t -> PolynomialOver(OurInt).t
+
   val flatten : t -> PolynomialOver(OurInt).t
   
   val of_polynomial : PolynomialOver(OurInt).t -> t

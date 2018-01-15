@@ -21,10 +21,9 @@ let run (params: params) =
   params.input
   |> MainUtil.read_input params.simple_input
   |> Option.may (fun program ->
-         (program, Approximation.create program)
-         |> TrivialTimeBounds.transform
-         |> MaybeChanged.unpack
-         |> (fun (program, appr) ->
+         Approximation.create program
+         |> TrivialTimeBounds.compute program
+         |> (fun appr ->
                    let transitions =
                      program
                      |> Program.graph
@@ -32,5 +31,5 @@ let run (params: params) =
                      |> TransitionSet.to_list
                      |> List.filter (Bound.is_infinity % Approximation.timebound appr)
                    in
-                   RankingFunction.find (Program.vars program) transitions
-                   |> (fun prf -> print_string (RankingFunction.to_string prf ^ "\n"))))
+                   RankingFunction.find `Time (Program.vars program) transitions appr
+                   |> Option.may (fun prf -> print_string (RankingFunction.to_string prf ^ "\n"))))

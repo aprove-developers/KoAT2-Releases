@@ -11,7 +11,7 @@
 
   \path[every node/.style={font=\sffamily\small}]
     (0) edge[aligned edge] node[above=0.2cm] {$t_0$} node[below=0.2cm] {$\update(x) = x$\\$\update(y) = y$} (1)
-    (1) edge[aligned edge, loop above] node[left=0.2cm] {$t_1$} node[right=0.2cm] {$\update(x) = x - 1$\\$\update(y) = -2 \cdot y$\\$\guard = \braced{x > 0}$} (1)
+    (1) edge[aligned edge, loop above] node[left=0.2cm] {$t_1$} node[right=0.2cm] {$\update(x) = x - 1$\\$\update(y) = 2 \cdot y$\\$\guard = \braced{x > 0}$} (1)
     ;
 \end{tikzpicture}
 
@@ -30,6 +30,6 @@
     ;
 \end{tikzpicture}
 
-\caption{Program, where $y$ only depends on itself}
+\caption{Program, where a variable increases by a factor in a loop}
 \label{fig:nontrivial_nodependency}
 \end{figure}

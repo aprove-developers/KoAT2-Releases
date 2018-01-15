@@ -1,0 +1,20 @@
+\begin{figure}
+\centering
+\begin{tikzpicture}[->,>=stealth',auto,node distance=5cm,
+    thick,
+    main node/.style={circle,draw,font=\sffamily\Large\bfseries},
+    aligned edge/.style={align=left}]
+
+  \node[main node] (0) {$\location_0$};
+  \node[main node] (1) [right of=0] {$\location_1$};
+  \node[main node] (2) [right of=1] {$\location_2$};
+
+  \path[every node/.style={font=\sffamily\small}]
+    (0) edge[aligned edge] node[above=0.2cm] {$t_0$} node[below=0.2cm] {$\update_0 = \text{id}$} (1)
+    (1) edge[aligned edge, loop above] node[left=0.2cm] {$t_1$} node[right=0.2cm] {$\update_1(x) = x$\\$\update_1(y) = x + y + z$\\$\update_1(z) = y - z$} (1)
+    (1) edge[aligned edge] node[above=0.2cm] {$t_2$} node[below=0.2cm] {$\update_2(x) = 5$\\$\update_2(y) = z$\\$\update_2(z) = y$} (2)
+    ;
+\end{tikzpicture}
+\caption{Program for the illustration of RVGs}
+\label{fig:rvg_example_program}
+\end{figure}

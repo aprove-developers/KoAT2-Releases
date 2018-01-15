@@ -1,16 +1,14 @@
-\subsection{Complexity}
+\section{Complexity}
 
-In the last section, we introduced the object of the analysis.
 In this section, we define the measures which should be computed with the analysis.
 Therefore, we introduce the terms of time, size and cost complexity.
 Time complexity describes how many steps an evaluation of a program will take in a worst-case scenario.
-The costs of a transition are not considered in this complexity type.
-On the other hand, cost complexity considers the costs of transitions and describes the cost of the sequence of transitions taken in a worst-case run.
+Size complexity yields for each transition an assignment from each variable to an interval, which defines the range of the value of the variable after the execution of the transition in an arbitrary run.
+The third type is cost complexity.
+While the costs of a transition are not considered in the time complexity, the cost complexity considers the costs of transitions and describes the cost of the sequence of transitions taken in a worst-case run.
 Time complexity can be seen as a special case of cost complexity, where the cost $c(t)$ of every transition $t \in \TSet$ equals $1$.
-The third complexity type is size complexity.
-For each transition the size complexity yields an assignment from each variable to an interval, which defines the range of the value of the variable after the execution of the transition in an arbitrary run.
 
-\subsubsection{Time Complexity}
+\subsection{Time Complexity}
 
 We define the time complexity of a program $\Program$ as the highest possible number of steps in an arbitrary run with an initial state $\valuation_0 \in \Valuation$ between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
 
@@ -40,7 +38,7 @@ This is a special case of the new definition.
 This also shows the potentials of the new time complexity definition.
 With different choices for the states $\lstate, \ustate \in \Valuation$ such that $-\lstate \neq \ustate$ the time complexity of a program might be lower than with a single state $m \in \Valuation$.
 
-Consider the motivational program in figure \ref{fig:motivational_example}.
+\todo{Add figure here depending on position of chapter}{Consider the motivational program in figure \ref{fig:motivational_example}.}
 Let $\lstate, \ustate \in \Valuation$ be states with $\ustate(x) = 4$, $\ustate(y) = 2$, $\lstate(x) = -6$ and $\lstate(y) = 0$.
 An input state for the original KoAT would therefore be an $m \in \Valuation$ with $m(x) = 6$ and $m(y) = 2$.
 The time complexity of the original KoAT would then be $\text{rc}'(m) = 9$, since with a state $\valuation'_0 \in \Valuation$ with $\valuation'_0(x) = 6$ and $\valuation'_0(y) = -2$ (and therefore $\abs{\valuation'_0} \leq m$) we have one occurrence of $t_0$ and eight occurrences of $t_1$.
@@ -54,18 +52,18 @@ Although we changed the definitions of time complexity and time bounds, the know
 
 Therefore, it is sufficient to determine an upper time bound for a program and build the sum over all transitions $\TSet$ of the program, to approximate the time complexity. 
 
-\subsubsection{Size complexity}
+\subsection{Size complexity}
 
-A size bound of a program defines for each variable at a particular transition an interval in which the value ranges in a worst-case evaluation.
-An interval is defined by a lower size bound and an upper size bound.
-While upper size bounds are always higher than the highest possible value at a transition, lower size bounds are always smaller than the lowest possible value.
+For each variable at a particular transition a size bound defines an interval in which the value ranges in a worst-case evaluation.
+This interval is defined by a lower size bound and an upper size bound.
+While upper size bounds are always greater than the greatest possible value at a transition, lower size bounds are always smaller than the lowest possible value.
 
 \begin{definition}[Worst-Case Size Bound]
   Let $\RV = \TSet \cup \VSet$ be the set of all result variables.
-  We call $\USize: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper size bound} if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
-  \[ \ueval{\USize(t, v)}{\lstate}{\ustate} \geq \usizeboundterm. \]
-  Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower size bound} if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
-  \[ \leval{\LSize(t, v)}{\lstate}{\ustate} \leq \lsizeboundterm. \]
+  We call $\USize: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper size bound} if and only if for every result variable $(\actt, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
+  \[ \ueval{\USize(\actt, v)}{\lstate}{\ustate} \geq \usizeboundterm. \]
+  Furthermore, we call $\LSize: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower size bound} if and only if for every result variable $(\actt, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
+  \[ \leval{\LSize(\actt, v)}{\lstate}{\ustate} \leq \lsizeboundterm. \]
   Then, we call $\Size$ a size bound.
 \end{definition}
 
@@ -75,12 +73,12 @@ With $\guard = \braced{x \geq 0}$, we can determine $\USize(t,x) = x$ as an uppe
 
 The presented definition of size bounds expresses a bound depending on the values at the start of the program.
 For the definition of the methods for the computation of trivial and nontrivial size bounds, we also need a definition of bounds depending on the values immediately before the execution of a transition.
-We then use those local size bounds to lift them in a global context.
+These local size bounds are then lifted to global size bounds.
 
 \begin{definition}[Local Size Bound]
-  We call $\ULSB: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper local size bound} if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
+  We call $\ULSB: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper local size bound} if and only if for every result variable $(t, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
   \[ \ueval{\ULSB(t, v)}{\lstate}{\ustate} \geq \ulocalsizeboundterm. \]
-  Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower local size bound} if and only if for every result variable $(t, v) \in \RV$ and every state $\valuation \in \Valuation$ it holds that
+  Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower local size bound} if and only if for every result variable $(t, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
   \[ \leval{\LLSB(t, v)}{\lstate}{\ustate} \leq \llocalsizeboundterm. \]
   We then call $\LSB$ a local size bound.
 \end{definition}
@@ -94,17 +92,18 @@ Therefore $\USize(t_1, x) = 2 \cdot (x + 1)$ is a valid upper global size bound 
 
 Throughout this master's thesis, we use the application of a global or local size bound as a function for different purposes.
 Let $f: \RV \rightarrow \BoundSet(\PVSet)$ be an arbitrary size bound.
-Then, we denote with $f(\alpha)$ for a result variable $\alpha \in \RV$ the trivial application of the function $f$ to the argument $\alpha$ which results in a bound $f(\alpha) \in \BoundSet(\PVSet)$.
+For a result variable $\rv \in \RV$ we denote with $f(\rv)$ the trivial application of the function $f$ to the argument $\rv$ which results in a bound $f(\rv) \in \BoundSet(\PVSet)$.
 We use the abbreviation $f(t, v)$ for a transition $t \in \TSet$ and a variable $v \in \VSet$ to denote the application $f((t,v)) \in \BoundSet(\PVSet)$ with $(t,v) \in \RV$.
 If the function $f$ is only applied to a transition $t \in \TSet$, this denotes the partial application of $f$ to $t$ resulting in $f(t): \VSet \rightarrow \BoundSet(\PVSet)$.
 
-\subsubsection{Cost Complexity}
+\subsection{Cost Complexity}
 
 Additionally to time and size complexity, we consider cost complexity.
 The cost complexity of a program is defined as the highest sum of the costs of a transition sequence of an arbitrary evaluation starting in an input state $\valuation_0 \in \Valuation$.
 
 \begin{definition}[Worst-Case Cost Complexity]
-\[ \text{cc}(\lstate, \ustate) = \costcomplexityterm \]
+  We call $\text{cc}: (\Valuation \times \Valuation) \rightarrow \mathbb{N}$ the \textbf{cost complexity} of a program if and only if for all states $\lstate, \ustate \in \Valuation$ it holds that
+  \[ \text{cc}(\lstate, \ustate) = \costcomplexityterm \]
 \end{definition}
 
 The definition of cost complexity is useful for a modular analysis, where a transition is able to describe the whole effect of a subprogram.
@@ -113,10 +112,10 @@ Lifting those time bounds into the context of the outer program, we consider the
 For that reason, the cost function $\cost: \TSet \rightarrow \BoundSet(\PVSet)$ is defined for the whole bound set $\BoundSet(\PVSet)$.
 
 Unfortunately, the usefulness of the distinction between upper and lower size bounds is limited for the computation of a cost bound.
-Note that for a transition $t \in \TSet$ the costs $\cost(t)$ are defined as local costs.
-For the computation of a cost bound we need to lift them similar as the local size bounds to a global context.
+Note that the costs $\cost(t)$ of a transition $t \in \TSet$ are expressed in dependence on the values of the variables immediately before the execution of the transition $t$.
+For the computation of a cost bound, we need to lift them similarly to the local size bounds to a global context.
 Therefore, it is necessary to substitute the variables of the costs $\cost(t)$ with the appropriate size bound computed so far.
-Since $\cost(t) \in \BoundSet(\PVSet)$ is in general not a monotonic function, this substitution is not trivial.
+Since $\cost(t) \in \BoundSet(\PVSet)$ is in general not a monotonic function, this substitution is non-trivial.
 In fact, we are only able to use the distinction between upper and lower size bounds for affine costs $\cost(t) \in \BoundSet_a(\PVSet)$.
 For arbitrary costs $\cost(t) \in \BoundSet(\PVSet) \setminus \BoundSet_a(\PVSet)$ it is necessary to consider the monotonic approach from the original KoAT.
 

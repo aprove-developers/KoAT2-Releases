@@ -7,7 +7,8 @@ let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
 
 (** Prints the overall timebound of the program to the shell. *)
 let print_overall_timebound (program: Program.t) (appr: Approximation.t): unit =
-  print_string ((Bound.to_string Approximation.(Time.sum (time appr) program))^"\n")
+  print_string (Bound.to_string Approximation.(TransitionApproximation.sum (time appr) program))
+
 
 (** The shell arguments which can be defined in the console. *)
 type main_params = {

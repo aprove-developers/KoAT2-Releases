@@ -299,7 +299,7 @@ let find_scaled_bound kind var formula =
                   ~result:(Util.option_to_string (Bound.to_string % as_bound))
                   execute
 
-type kind = [`Lower | `Upper] [@@deriving show]
+type kind = [`Lower | `Upper] [@@deriving show, eq]
    
 let find_bound kind var formula =
   let execute () =
@@ -318,9 +318,36 @@ let find_bound kind var formula =
                      (fun () -> "find local size bound", ["kind", show_kind kind; "var", Var.to_string var; "formula", Formula.to_string formula])
                      ~result:(Util.option_to_string (Bound.to_string % as_bound))
                      execute
-      
+
+(** Internal memoization for local size bounds *)
+module LSB_Cache =
+  Hashtbl.Make(
+      struct
+        type t = kind * TransitionLabel.t * Var.t
+        let equal (k1,t1,v1) (k2,t2,v2) =
+          equal_kind k1 k2
+          && TransitionLabel.same t1 t2
+          && Var.equal v1 v2
+        let hash (k,t,v) =
+          Hashtbl.hash (k, TransitionLabel.id t, v)
+      end
+    )
+   
+let table =
+  LSB_Cache.create 10
+  
+let memoize f =  
+  let g x = 
+    match LSB_Cache.find_option table x with
+    | Some y -> y
+    | None ->
+       let y = f x in
+       LSB_Cache.add table x y;
+       y
+  in g
    
 let sizebound_local kind label var =
+  let f (kind, label, var) =
     let open Option.Infix in
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
     TransitionLabel.update label var
@@ -329,6 +356,8 @@ let sizebound_local kind label var =
     let v' = Var.fresh_id Var.Int () in
     let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = bound) in
     find_bound kind v' guard_with_update
+  in
+  memoize f (kind, label, var)
 
 let sizebound_local_rv kind ((l,t,l'),v) =
   sizebound_local kind t v

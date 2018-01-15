@@ -19,6 +19,16 @@ let intersection p enum1 enum2 =
 let without p toBeRemoved =
   Enum.filter (fun v -> not (Enum.exists (p v) (Enum.clone toBeRemoved)))
 
+let powerset (set: 'a Set.t): ('a Set.t) Enum.t =
+  let combine (result: ('a Set.t) Enum.t) (x: 'a) = Enum.append result (Enum.map (fun ys -> Set.add x ys) (Enum.clone result)) in
+  Enum.fold combine (Enum.singleton Set.empty) (Set.enum set)
+
+let find_map f enum =
+  try
+    Some (Enum.find_map f enum)
+  with
+    Not_found -> None
+
 let option_to_string content_to_string option =
   let output = IO.output_string () in
   Option.print (fun output a -> IO.nwrite output (content_to_string a)) output option;

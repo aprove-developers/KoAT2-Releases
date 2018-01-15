@@ -1,0 +1,12 @@
+\begin{theorem}[CostBounds]
+  Let $(\UTime, \Size)$ be a complexity approximation. \\
+  Let $\UCost$ be a cost bound. \\
+  Let $\TSet' \subseteq \TSet \setminus \TSet_0$ a subset of all transitions such that $\TSet'$ contains no initial transitions. \\
+  Let $\TSet_{\location} = \braced{(\location', \update, \guard, \location) \mid \exists \location', \update, \guard: (\location', \update, \guard, \location) \in \TSet \setminus \TSet'}$ denote the set of all transitions outside of the subprogram $\TSet'$ leading to an $\location \in \LSet$. \\
+  Let $\mathcal{E}_{\TSet'} = \braced{\location_{in} \mid \TSet_{\location_{in}} \neq \emptyset \wedge \exists \location': (\location_{in}, \update, \guard, \location') \in \TSet'}$ denote the set of all entry locations of $\TSet'$. \\
+  Let $\costrank: \LSet \rightarrow \BoundSet(\PVSet)$ be a cost ranking function for $\TSet'$. \\
+  For $t \in \TSet'_>$ let
+  \[ \UCost'(t) = \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\usubst{\costrank(\location)}{\LSize(\pret)}{\USize(\pret)}} \]
+  Let $\UCost'(t) = \UCost(t)$ for $t \in \TSet \setminus \TSet'_>$. \\
+  Then, $\text{CostBounds}(\UTime, (\USize, \LSize), \TSet') = \UCost'$ is also a cost approximation.
+\end{theorem}

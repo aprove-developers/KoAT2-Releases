@@ -1,15 +1,20 @@
 \section{Computing time bounds}
 
-In this chapter we will present the method, which is able to infer time bounds for transitions of a program.
-The original KoAT paper \cite{koat} presented two approaches: One basic approach, considering all transitions and a modular approach, considering a selected subset of transitions.
-This master's thesis only considers the modular approach, since the other approach can just be defined as a special case of the modular approach, where the subset of transitions is the set of non-initial transitions $\TSet \setminus \TSet_0$.
-The basis of the method are polynomial ranking functions.
-The original KoAT allows the usage of arbitrary polynomial ranking functions.
-But to obtain monotonicity, it uses an operator which considers the absolute values of variables and converts all negative signs in positive signs.
-This is necessary to ensure, that a substitution of the variables with upper size bounds is still a sound overapproximation.
-The new method only considers affine ranking functions, but does not need to apply such an operator.
-Instead, the signs of the coefficients are considered and the appropriate upper or lower size bound is chosen respectively.
-Note that the restriction to affine ranking functions is in practice not a major restriction, since most existing techniques also only generate affine ranking functions (e.g. \cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}).
+In this chapter, we present a method, which is able to infer time bounds for the transitions of a program.
+The original KoAT paper \cite{koat} presents two approaches: One basic approach, which considers the whole program at once and a modular approach, which considers a selected subset of the program transitions.
+This master's thesis only considers the modular approach, since the other approach can be defined as a special case of the modular approach.
+
+The presented method is based on ranking functions.
+The original KoAT allows the usage of polynomial ranking functions.
+It uses an operator on the polynomials, which considers the absolute values of variables and converts all negative signs in positive signs.
+This is necessary to ensure component-wise monotonicity in the variables.
+Otherwise a substitution of the variables with upper size bounds would not necessarily be a sound overapproximation.
+The new method does not use this operator.
+Instead, the presented approximated replacement is used and appropriate upper and lower size bound are chosen respectively to the monotonicity of the variables.
+This approach is the more effective, the more we know about the monotonicity about the variables.
+Therefore it leads to best results, if we consider affine ranking functions, since in an affine polynomial every variable is either monotonically increasing or monotonically decreasing.
+In practice most existing techniques generate these affine ranking functions (e.g. \cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}).
+But in general the new method is also applicable to polynomial ranking functions.
 
 For the definition of the method we need to define the terms of entry locations and entry transitions.
 We define the entry locations of a transition set $\TSet' \subseteq \TSet$ as $\mathcal{E}_{\TSet'} = \braced{\location_{in} \mid \TSet_{\location_{in}} \neq \emptyset \wedge \exists \location': (\location_{in}, \update, \guard, \location') \in \TSet'}$.
@@ -19,8 +24,8 @@ This is the same definition as used by the original KoAT \cite{koat}.
 \input{graphs/entrytransitions}
 
 As an example, consider the programs in figure \ref{fig:entrytransitions}.
-In each of the programs, a chosen set $\TSet' \subseteq \TSet$ is highlighted.
-Additionally, all entry locations and entry transitions are shown.
+In each of the programs, a chosen set $\TSet' \subseteq \TSet$ is highlighted with bold arrows.
+Additionally, all entry locations and entry transitions are shown with dashed arrows.
 In the first program, the set of transitions $\TSet' = \braced{t_1, t_3, t_4}$ does have two entry locations $\mathcal{E}_{\TSet'} = \braced{\location_1, \location_2}$.
 These entry locations define the entry transitions $\TSet_{\location_1} = \braced{t_0}$ and $\TSet_{\location_2} = \braced{t_2}$.
 The second program only has one entry location $\mathcal{E}_{\TSet'} = \braced{\location_1}$ and therefore only one entry transition $\TSet_{\location_1} = \braced{t_0}$.
@@ -31,57 +36,89 @@ Now it is possible to define the method for the construction of time bounds.
 
 \input{theorems/timebound}
 
-The idea of this method is, that with a rank $\timerank(\location)$ for an entry location $\location \in \mathcal{E}_{\TSet'}$ we have a time bound for all decreasing transitions $t \in \TSet'_>$ from the location $\location$.
-Then, we need to lift this time bound into a global context, such that it expresses a time bound depending on the variables from the start of the program.
-For this purpose, we first need to substitute all variables of the rank $\timerank(\location)$ with the size bounds $\USize(r), \LSize(r)$ from the start to the transition $r \in \TSet_{\location}$ immediately before the location $\location$.
-Since $\timerank(\location)$ is affine, it only consists of monotonous variables.
-Therefore, the substitution is defined.
-Because a time bound can only be positive, we apply to the result $\usubst{\timerank(\location)}{\LSize(r)}{\USize(r)}$ a $\maxO{\dot}$ operator.
+The idea of this method is, that a time rank $\timerank(\location)$ of an entry location $\location \in \mathcal{E}_{\TSet'}$ is a time bound for all decreasing transitions $t \in \TSet'_>$ depending on the values of the variables at the location $\location$.
+If we lift this time bound, such that it depends on the values of the variables at the start location $\location_0$ of the program, we obtain a global time bound.
+For this purpose, we first need to substitute all variables of the time rank $\timerank(\location)$ with the size bounds $\USize(r), \LSize(r)$ from the start location $\location_0$ to the transition $r \in \TSet_{\location}$ immediately before the location $\location$.
+By definition of the approximated replacement, a substitution $\usubst{\timerank(\location)}{\LSize(r)}{\USize(r)}$ results in such a bound while it ensures, that the result is still an overapproximation. 
+Because a time bound shall only be positive, we apply to the result $\usubst{\timerank(\location)}{\LSize(r)}{\USize(r)}$ a $\maxO{\dot}$ operator.
 Now, we have to overapproximate the number of evaluations which might enter through the entry location $\location$.
 The previous time bound $\UTime$ yields such a bound for all entry transitions.
-Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}$ is a time bound for $t \in \TSet'_>$ depending on the variables from the start.
+Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}$ is a time bound for each strictly decreasing transition $t \in \TSet'_>$ depending on the values of the variables from the start.
 
 \input{graphs/motivational_example}
 
 As an example, we consider the motivational program from the introduction \ref{fig:motivational_example}.
 With the transition set $\TSet' = \braced{t_1}$ it is possible to determine a ranking function $\timerank(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).
 The original KoAT would now apply an operator to $\timerank$, such that the result would be a monotonic function with $\timerank'(\location_1) = \abs{x} + \abs{y}$.
-Then it is able to substitute each variable by its absolute size bound and therefore lift it to a global context.
-The new method does not use such an operator.
-Instead, it substitutes each variable of $\timerank$ by its lower/upper size bound depending on the monotonicity of this component.
+Then, it is able to substitute each variable by its absolute size bound and therefore lift it to a global context.
+The new method does not use this operator.
+Instead, it substitutes each variable of $\timerank(\location_1)$ by its lower/upper size bound depending on the monotonicity of the variables.
 Since $x$ is monotonically increasing in $x-y$ and $y$ is monotonically decreasing in $x-y$, we can substitute $x$ with the upper size bound and $y$ with the lower size bound.
 Lets assume, that we already inferred the size bounds $\USize(t_0,x) = \LSize(t_0,x) = x$ and $\USize(t_0,y) = \LSize(t_0,y) = y$.
 It is now possible to lift the components of the ranking functions to a global level.
 \[ \usubst{\timerank(\location)}{\LSize(t_0)}{\USize(t_0)} = \USize(t_0, x) - \LSize(t_0, y) = x - y \]
-Since with a state $\valuation$ with $\valuation(x) < \valuation(y)$ the transition $t_1$ will simply not occur in an evaluation instead of occurring a negative number of times, we have to ensure the positivity of $x - y$ with the operation $\maxO{x - y}$.
+Note that with a state $\valuation$ with $\valuation(x) < \valuation(y)$ the transition $t_1$ will simply not occur in an evaluation instead of occurring a negative number of times.
+To reflect this in the new time bound, we have to ensure the positivity of $x - y$ with the operation $\maxO{x - y}$.
 Then, the only step left is to consider the number of times an evaluation might enter the SCC from $t_0$.
 Since $t_0$ is an initial transition, its time bound is $\UTime(t_0) = 1$.
-Therefore an evaluation might only enter a single time from $t_0$ and the resulting time bound for $t_1$ is $\maxO{x - y}$.
+Therefore, an evaluation might only enter a single time from $t_0$ and the resulting time bound for $t_1$ is $\maxO{x - y}$.
 
 \subsection{Choosing the transition set $\TSet'$}
 
 The choice of the transition set $\TSet'$ has a major impact on the quality of the time bounds.
-Consider again the program in figure \ref{fig:entrytransitions} with arbitrary guards and update for each transition.
+Consider again the three programs in figure \ref{fig:entrytransitions}.
 
-A trivial approach would be the usage of the second $\TSet'$ with $\TSet' = \TSet \setminus \TSet_0 = \braced{t_1, t_2, t_3, t_4}$.
-Then, we have $\mathcal{E}_{\TSet'} = \braced{\location_1}$ and $\TSet_{\location_1} = \braced{t_0}$.
-Therefore for each $t \in \TSet'_>$ we end up with $\UTime'(t) = \UTime(t_0) \cdot \maxO{\usubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)}}$.
-Since $t_0 \in \TSet_0$ is an initial transition, we have $\UTime(t_0) = 1$ and $\UTime'(t)$ then reflects the expected result of a non-modular approach.
+A trivial choice for $\TSet'$ would be all non-initial transitions.
+This choice is shown in the second program with $\TSet' = \TSet \setminus \TSet_0 = \braced{t_1, t_2, t_3, t_4}$.
+For this choice we have entry locations $\mathcal{E}_{\TSet'} = \braced{\location_1}$ and entry transitions $\TSet_{\location_1} = \braced{t_0}$.
+Therefore, for each transition $t \in \TSet'_>$ we end up with $\UTime'(t) = \UTime(t_0) \cdot \maxO{\usubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)}}$.
+Since $t_0 \in \TSet_0$ is an initial transition, we have $\UTime(t_0) = 1$ and therefore $\UTime'(t) = \maxO{\usubst{\timerank(\location_0)}{\LSize(t_0)}{\USize(t_0)}}$ for all transitions $t \in \TSet'_>$.
 
-This trivial approach requires us to find a ranking function, that satisfies the non-increasing constraint for all transitions.
-If no such ranking function can be found, it is not possible to infer any time bounds with this transition set $\TSet'$.
-But since the method allows us to only consider a subset of the transitions, it might be possible, to remove the transition which violates its non-increasing constraint.
-Then, a ranking function could be found.
+This trivial choice requires us to find a ranking function, that satisfies the non-increasing constraint for all transitions of the program.
+If no such ranking function can be found, it is not possible to infer any time bounds with this choice of the transition set $\TSet'$.
+But since the method allows us to consider a subset of these transitions, it might be possible, to remove the transition which violates its non-increasing constraint.
+Then, a ranking function may be found.
 
-Let's assume that the transition violating the non-increasing constraint is $t_1$ and consider the third example in figure \ref{fig:entrytransitions} with the transition set $\TSet' = \braced{t_3, t_4}$.
-Since we reduced the set, we have fewer constraints and are more likely to find a ranking function.
-We have $\mathcal{E}_{\TSet'} = \braced{\location_2}$ and $\TSet_{\location_2} = \braced{t_2}$.
-Since $t_2$ is not part of a loop, its time bound is $\UTime(t_2) = 1$.
+Assume that the transition violating the non-increasing constraint is $t_1$ and consider the third example in figure \ref{fig:entrytransitions} with the choice $\TSet' = \braced{t_3, t_4}$.
+Since the transition set is smaller, there are fewer constraints and it is more likely to find a ranking function.
+For the transition set $\TSet' = \braced{t_3, t_4}$, we have the entry locations $\mathcal{E}_{\TSet'} = \braced{\location_2}$ and the entry transitions $\TSet_{\location_2} = \braced{t_2}$.
+Since the transition $t_2$ is not part of a loop, its time bound is $\UTime(t_2) = 1$.
 Therefore, we end up with $\UTime'(t) = \maxO{\usubst{\timerank(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$.
 
-Note that it is possible to select arbitrary subsets $\TSet' \subseteq \TSet$.
-A non-connected subset $\TSet' = \braced{t_1, t_3, t_4}$ could be chosen, but would lead to a bound $\UTime'(t) = \maxO{\usubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} + \maxO{\usubst{\timerank(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$.
-Also only a part of an SCC such as $\TSet' = \braced{t_4}$ could be chosen.
-But since $t_3 \in \TSet_{\location_3}$ would be a entry transition of $\TSet' = \braced{t_4}$, this would only be of benefit if we already inferred a time bound $\UTime(t_3) < \infty$.
+Note that the subset of transitions $\TSet' \subseteq \TSet$ does not need to be strongly connected.
+For example, a subset consisting of two SCCs $\TSet' = \braced{t_1, t_3, t_4}$ can be chosen.
+This choice leads to a time bound $\UTime'(t) = \maxO{\usubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} + \maxO{\usubst{\timerank(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$.
+This is a valid time bound for transitions $t \in \TSet'_>$.
+But two independent analyses for the SCCs $\braced{t_1}$ and $\braced{t_3, t_4}$ could yield time bounds $\UTime'(t) = \maxO{\usubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)}}$ for the first SCC and $\UTime'(t) = \maxO{\usubst{\timerank(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$ for the second SCC, since each analysis would now consider its own entry locations $\location_1$ and $\location_2$.
 
-The implementation selects the transitions of the different SCCs of the program as transition set $\TSet'$ and excludes those transitions $t$, for which we already inferred a time bound $\UTime(t) < \infty$.
+Also, only a part of an SCC such as $\TSet' = \braced{t_4}$ could be chosen.
+But since the transition $t_3 \in \TSet_{\location_3}$ is an entry transition of $\TSet' = \braced{t_4}$, this only results in a non-trivial time bound $\neq \infty$, if there already exists a time bound $\UTime(t_3) < \infty$ for the transition $t_3$.
+Even if there is a time bound $\UTime(t_3) < \infty$, the consideration of the transition $t_3$ as entry transition yields an additional addend for the new time bound $\UTime(t_4)$.
+If the found ranking function guarantees that $t_3$ is a non-increasing transition, it would not be necessary to consider it as an entry transition and therefore the new time bound $\UTime(t_4)$ would be reduced.
+
+These examples show, that the best choice of a transition set $\TSet'$ is not trivial.
+The implementation uses an algorithm, which analyses each SCC independently, to reduce the number of entry transitions.
+When it inferred first time bounds for transitions of the SCC, it might be necessary to exclude these transitions from the choice $\TSet'$, but then these transitions become entry transitions.
+Therefore, the algorithm first searches for ranking functions, which guarantee the non-increasing constraint for all transitions of the SCC.
+If it does not find a ranking function, it successively excludes already bounded single transitions $t$ from the choice $\TSet'$.
+If a ranking function is found, then the transition $t$ has to be considered as an additional entry transition.
+If no ranking function is found, the algorithm goes on with a step where two transitions at once are excluded from the choice $\TSet'$.
+The algorithm continues until a ranking function is found or the choice $\TSet'$ only consists of unbounded transitions.
+
+\begin{algorithm}
+\caption{Computing a ranking function}\label{ranking_function_algorithm}
+\begin{algorithmic}[1]
+  \State Input: An SCC $\TSet$, a subset $\TSet_b \subseteq \TSet$ with $\UTime(t) \neq \infty$ for each $t \in \TSet_b$
+  \ForAll{$i$ from $0$ to $\abs{\TSet}-\abs{\TSet_b}$}
+    \ForAll{$t$ in $\TSet \setminus \TSet_b$}
+      \ForAll{$\TSet_< \subseteq (\TSet \setminus \braced{t})$ with $\abs{\TSet_\geq} = i$}
+        \State Compute a ranking function $\timerank$ with $\TSet' = \TSet \setminus \TSet_<$ and $\TSet_> = \braced{t}$
+        \If{$\timerank$ is found}
+          \Return $\timerank$
+        \EndIf
+      \EndFor
+    \EndFor
+  \EndFor
+  \Return None
+\end{algorithmic}
+\end{algorithm}

@@ -6,12 +6,10 @@ type t =
   | CutUnreachableLocations
   | CutUnsatisfiableTransitions
   | Chaining
-  | InvariantGeneration
-  | TrivialTimeBounds [@@deriving show, ord, eq]
+  | InvariantGeneration [@@deriving show, ord, eq]
 
 let affects = function
   | CutUnreachableLocations -> []
-  | TrivialTimeBounds -> []
   | InvariantGeneration -> [CutUnsatisfiableTransitions]
   | CutUnsatisfiableTransitions -> [CutUnreachableLocations; (*Chaining*)]
   | Chaining -> [CutUnsatisfiableTransitions; (*Chaining;*) InvariantGeneration]
@@ -24,7 +22,6 @@ let lift_to_tuple transform tuple =
               
 let transform subject = function
   | CutUnreachableLocations -> lift_to_tuple CutUnreachableLocations.transform_program subject
-  | TrivialTimeBounds -> TrivialTimeBounds.transform subject
   | CutUnsatisfiableTransitions -> lift_to_tuple CutUnsatisfiableTransitions.transform_program subject
   | Chaining -> lift_to_tuple (lift_to_program Chaining.transform_graph) subject
   | InvariantGeneration -> lift_to_tuple InvariantGeneration.transform_program subject
@@ -39,7 +36,11 @@ module PreprocessorSet =
     )
 
 let all =
+<<<<<<< HEAD
   [CutUnreachableLocations; CutUnsatisfiableTransitions; (*Chaining;*) InvariantGeneration; TrivialTimeBounds]
+=======
+  [CutUnreachableLocations; CutUnsatisfiableTransitions; InvariantGeneration]
+>>>>>>> 562cfbe23bbc29b409a240d3bedc14d703cf6cef
   
 type strategy = t list -> subject -> subject
 

@@ -34,15 +34,12 @@ let entry_locations (graph: TransitionGraph.t) (prf_transitions: Transition.t li
 
 let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t) (transition: Transition.t): Bound.t =
   let execute () =
-    let (pol_plus, pol_minus) =
-      Polynomial.separate_by_sign rank
-      |> Tuple2.mapn Bound.of_poly
-      |> Tuple2.map2 Bound.neg (* Make negative coefficients positive *)
-    in
-    let insert_sizebounds kind bound =
-      Bound.substitute_f (get_sizebound kind transition) bound
-    in
-    Bound.(insert_sizebounds `Upper pol_plus - insert_sizebounds `Lower pol_minus)
+    rank
+    |> Bound.of_poly
+    |> Bound.appr_substitution
+         `Upper
+         ~lower:(get_sizebound `Lower transition)
+         ~higher:(get_sizebound `Upper transition)
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "apply to prf", ["rank", Polynomial.to_string rank;
                                                  "transition", Transition.to_id_string transition])
@@ -70,21 +67,18 @@ let compute_timebound (appr: Approximation.t) (graph: TransitionGraph.t) (prf: R
     
 let improve_with_pol program appr pol =
   let execute () =
-    let strictly_decreasing = RankingFunction.strictly_decreasing pol in
-    if List.is_empty strictly_decreasing then
+    if Option.is_none pol then
       MaybeChanged.same appr
     else
-      let timebound = compute_timebound appr (Program.graph program) pol in
+      let timebound = compute_timebound appr (Program.graph program) (Option.get pol) in
       if Bound.is_infinity timebound then
         MaybeChanged.same appr
       else
-        strictly_decreasing
+        pol
+        |> Option.get
+        |> RankingFunction.strictly_decreasing
         |> List.enum
-        |> Enum.fold (fun appr ((l,t,l'), sensitivity) ->
-               (* TODO No sensitivity *)
-               match sensitivity with
-               | `Sensitive -> Approximation.add_timebound timebound (l,t,l') appr
-               | `Unsensitive -> Approximation.add_timebound Bound.(timebound * of_poly (TransitionLabel.cost t)) (l,t,l') appr) appr
+        |> Enum.fold (flip (Approximation.add_timebound timebound)) appr
         |> MaybeChanged.changed
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve time bounds with pol", [])
@@ -104,9 +98,10 @@ let improve program appr =
     |> List.enum
     |> Enum.map (TransitionGraph.loc_transitions (Program.graph program))
     |> Enum.filter (not % TransitionSet.is_empty)
-    |> Enum.map (TransitionSet.filter (unbound appr))
     |> Enum.map TransitionSet.to_list
-    |> MaybeChanged.fold_enum (fun appr transitions -> improve_with_pol program appr (RankingFunction.find (Program.vars program) transitions)) appr
+    |> MaybeChanged.fold_enum (fun appr transitions ->
+           improve_with_pol program appr (RankingFunction.find `Time (Program.vars program) transitions appr)
+         ) appr
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve time bounds", [])
                      execute

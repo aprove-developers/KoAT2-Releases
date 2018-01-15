@@ -1,6 +1,6 @@
 \subsection{Result Variable Graph}
 
-For the analysis of size bounds, it is helpful to consider a graph which contains information about which result variables affect which other result variables.
+For the analysis of size bounds, it is helpful to consider a graph which contains information about which result variables affect each other.
 Such a graph was presented by the original KoAT \cite{koat} as a result variable graph.
 Before we can define the actual result variable graph, we need to define the terms of pre-transitions and active variables.
 The pre-transitions of a transition $t \in \TSet$ are all transitions, which may occur immediately before an evaluation step with the transition $t$.
@@ -8,25 +8,28 @@ The pre-transitions of a transition $t \in \TSet$ are all transitions, which may
 \begin{definition}[Pre-Transitions] 
   We define $\pre: \TSet \rightarrow 2^\TSet$ as
   \[\pre(t) = \braced{\pret \in \TSet \mid \exists \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\pret \circ \rightarrow_{t}) (\location, \valuation)}\]
-  to denote the set of all transitions that may precede $t$ in an evaluation.	
+  to denote the set of all transitions that may precede the transition $t$ in an evaluation.	
 \end{definition}
 
-If $\pre(t)$ represents the set of all transitions that may precede $t$ in an evaluation, then $\pre_{\mathit{trivial}}((\location_1, \update_1, \guard_1, \location_1')) = \braced{(\location_2, \update_2, \guard_2, \location_2') \in \TSet \mid \location_2' = \location_1}$ is a valid over approximation.
+If $\pre(t)$ represents the set of all transitions that may precede the transition $t$ in an evaluation, then $\pre_{\mathit{trivial}}((\location_1, \update_1, \guard_1, \location_1')) = \braced{(\location_2, \update_2, \guard_2, \location_2') \in \TSet \mid \location_2' = \location_1}$ is a valid over approximation of $\pre(t)$.
 
-\input{graphs/rvg_example}
+\input{graphs/rvg_example_program}
 
-For an example for pre-transitions consider figure \ref{fig:rvg_example}.
+As an example consider the program in figure \ref{fig:rvg_example}.
 The set of pre-transitions for $t_0$ is empty, since no transition can occur before an initial transition $t_0 \in \TSet_0$.
 The set of pre-transitions for $t_1$ is $\pre(t_1) = \braced{t_0, t_1}$, since both $t_0$ and $t_1$ may occur directly before the occurrence of the transition $t_1$.
 Also, the set of pre-transitions for $t_2$ is $\pre(t_2) = \braced{t_0, t_1}$.
 
-Additionally to the pre-transitions, we define the active variables of bounds. 
+Additionally to pre-transitions, we define the active variables of bounds. 
 
 \begin{definition}[Active variables]
-  Let $\VSet$ be finite set of variables.  
-  We define that a variable $v \in \VSet$ is active in a bound $b \in \BoundSet(\VSet)$ if and only if there are two states $\valuation, \valuation' \in \Valuation$, which only vary in the value of $v$ and result in a different evaluation $\exacteval{b}{\valuation} \neq \exacteval{b}{\valuation'}$.
+  Let $\VSet$ be a finite set of variables.  
+  A variable $v \in \VSet$ is active in a bound $b \in \BoundSet(\VSet)$ if and only if there are two states $\valuation, \valuation' \in \Valuation$ such that they both only vary in the value of $v$ and also result in a different evaluation $\exacteval{b}{\valuation} \neq \exacteval{b}{\valuation'}$.
   Then, the function $\actV: \BoundSet(\VSet) \rightarrow 2^\VSet$ describes with $\actV(b)$ all variables, which are active in the bound $b \in \BoundSet(\VSet)$.
 \end{definition}
+
+Again consider the example \ref{fig:rvg_example}.
+In the update $\update_1(y)$ the active variables are $\actV(\update_1(y)) = \braced{x,y,z}$, while in the update $\update_2(x)$ there are no active variables (e.g. $\actV(\update_2(x)) = \emptyset$).
 
 A valid overapproximation of the active variables of a bound $b \in \BoundSet(\VSet)$ is the set of all occurring variables.
 \begin{definition}[Overapproximation of active variables]
@@ -41,25 +44,29 @@ A valid overapproximation of the active variables of a bound $b \in \BoundSet(\V
   \[ \actV(k^b) = \actV(b) \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
 \end{definition}
 
-Note that this overapproximation recognizes for example the variable $x$ as active in a bound $x - x$.
-For our purposes this is sufficient.
-In some cases the implementation is able to simplify bounds.
-Therefore, it gets detected that the bound $x - x$ is equivalent with the bound $0$ and as consequence the variable $x$ would not be considered as active.
+Note that this overapproximation recognizes the variable $x$ as active in a bound $x - x$.
+For our purposes this is sufficient, but in some cases the implementation is also able detect such properties due to the simplification of bounds.
+The bound $x - x$ is then simplified to the bound $0$ and as a consequence the variable $x$ would not be considered as active.
 
-With those definitions it is now possible to define the result variable graph.
+With those definitions it is possible to define the result variable graph.
+
+\todo{Sizebounds are actually not yet defined!}{}
 
 \begin{definition}[Result Variable Graph]
 	Let $\LSB$ be a local size bound.
 	We define 
-	\[ RVG = (\TSet \times \VSet, \braced{((t, v), (t', v')) \mid t \in \pre(t'), v \in \actV(\LLSB(t,v)) \cup \actV(\ULSB(t,v))}) \]
+	\[ \text{RVG} = (\TSet \times \VSet, \braced{((t, v), (t', v')) \mid t \in \pre(t'), v \in \actV(\LLSB(t',v')) \cup \actV(\ULSB(t',v'))}) \]
 	to denote the result variable graph.
 \end{definition}
 
 Note that since pre-transitions and active variables are both defined as overapproximation, also a result variable graph is an overapproximation of the dependencies between result variables.
 
-Consider the program and its result variable graph in figure \ref{fig:rvg_example}.
-This program consists of an initial transition $t_0$, a loop $t_1$ and an exit transition $t_2$.
-The value of the variable $x$ is completely unaffected by the other variables of the program and gets set to a constant in the exit transition $t_2$.
+\input{graphs/rvg_example}
+
+Consider the result variable graph in figure \ref{fig:rvg_example}.
+This RVG responds to the program in figure \ref{fig:rvg_example_program}.
+The program consists of an initial transition $t_0$, a loop $t_1$ and an exit transition $t_2$.
+The value of the variable $x$ is completely unaffected by the other variables of the program and is set to a constant in the exit transition $t_2$.
 While this information is not directly available in the program graph, it is shown in the result variable graph, since no edge is leading from a result variable with $y$ or $z$ to a result variable with $x$.
 On the other hand the variables $y$ and $z$ affect each other in the loop $t_1$.
 This is directly reflected by the fact, that $(t_1,y)$ and $(t_1,z)$ form an SCC in the result variable graph.

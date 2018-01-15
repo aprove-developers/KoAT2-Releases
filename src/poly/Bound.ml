@@ -61,11 +61,11 @@ type complexity =
 
 let rec show_complexity = function
   | Inf -> "Infinity"
-  | Polynomial 0 -> "k"
-  | Polynomial 1 -> "v"
-  | Polynomial x -> "v^" ^ Int.to_string x
-  | Exponential 1 -> "k^v"
-  | Exponential x -> "k^" ^ show_complexity (Exponential (x-1))
+  | Polynomial 0 -> "O(1)"
+  | Polynomial 1 -> "O(n)"
+  | Polynomial x -> "O(n^" ^ Int.to_string x ^ ")"
+  | Exponential 1 -> "O(2^n)"
+  | Exponential x -> "O(2^" ^ show_complexity (Exponential (x-1)) ^ ")"
                       
 let asymptotic_complexity =
   fold
@@ -135,6 +135,7 @@ let rec (>) b1 b2 =
   let execute () =
     match (b1, b2) with
     | (_, Infinity) -> Some false
+    | (Infinity, _) -> Some true
     | (Neg Infinity, _) -> Some false
     | (Const c1, Const c2) when OurInt.Compare.(c1 > c2) -> Some true
     | (b, Const z1) when OurInt.(equal z1 zero) -> (
@@ -389,7 +390,35 @@ let substitute_all substitution =
   let module VarMap = Map.Make(Var) in
   substitute_f (fun var ->
       VarMap.find_default (of_var var) var substitution
-    )                      
+    )
+
+type kind = [ `Lower | `Upper ]
+
+let reverse = function
+  | `Lower -> `Upper
+  | `Upper -> `Lower
+
+let selector = function
+  | `Lower -> minimum
+  | `Upper -> maximum
+
+let evaluater lower higher = function
+  | `Lower -> lower
+  | `Upper -> higher
+
+let rec appr_substitution kind ~lower ~higher = function
+  | Infinity -> Infinity
+  | Var v -> evaluater lower higher kind v
+  | Const k -> Const k
+  | Neg b -> neg (appr_substitution (reverse kind) ~lower ~higher b)
+  | Sum (b1, b2) -> appr_substitution kind ~lower ~higher b1 + appr_substitution kind ~lower ~higher b2
+  | Product (b1, b2) ->
+     List.cartesian_product [`Lower; `Upper] [`Lower; `Upper]
+     |> List.map (fun (kind1,kind2) -> appr_substitution kind1 ~lower ~higher b1 * appr_substitution kind2 ~lower ~higher b2)
+     |> List.enum
+     |> selector kind
+  | Max (b1, b2) -> max (appr_substitution kind ~lower ~higher b1) (appr_substitution kind ~lower ~higher b2)
+  | Pow (k,b) -> Pow (k, appr_substitution kind ~lower ~higher b)
 
 let rec vars = function
   | Infinity -> VarSet.empty

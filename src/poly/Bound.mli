@@ -55,6 +55,8 @@ val substitute_all : t Map.Make(Var).t -> t -> t
 (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
 val substitute_f : (Var.t -> t) -> t -> t
   
+val appr_substitution : [ `Lower | `Upper ] -> lower:(Var.t -> t) -> higher:(Var.t -> t) -> t -> t
+
 (** Replaces all arithmetical operations by new constructors. *)
 val fold : const:(value -> 'b) ->
            var:(Var.t -> 'b) ->
