@@ -31,6 +31,7 @@ sig
     val src : t -> Location.t
     val label : t -> TransitionLabel.t
     val target : t -> Location.t
+    val id : t -> int
     val cost : t -> Polynomial.t
     (** Adds the invariant to this transition. *)
     val add_invariant : Constraint.t -> t -> t

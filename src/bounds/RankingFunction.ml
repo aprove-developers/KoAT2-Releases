@@ -8,7 +8,7 @@ open Program.Types
 module SMTSolver = SMT.Z3Solver
 module Valuation = Valuation.Make(OurInt)
   
-type measure = [ `Cost | `Time ] [@@deriving show]
+type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
 type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ]
              
@@ -91,75 +91,107 @@ let ranking_templates (vars: VarSet.t) (locations: Location.t list): (Location.t
   (TemplateTable.find prf_table, varlist)
   |> tap (fun (template, _) -> Logger.log logger Logger.DEBUG (fun () -> "ranking_templates", ["result", pol_to_string locations ParameterPolynomial.to_string template]))
   
+(** Internal memoization for local size bounds *)
+module Ranking_Cache =
+  Hashtbl.Make(
+      struct
+        type t = measure * TransitionSet.t * TransitionSet.t
+        let equal (m1,t1,t'1) (m2,t2,t'2) =
+          equal_measure m1 m2
+          && TransitionSet.equal t1 t2
+          && TransitionSet.equal t'1 t'2
+        let hash (m,t,t') =
+          Hashtbl.hash (m,
+                        List.map Transition.id (TransitionSet.to_list t),
+                        List.map Transition.id (TransitionSet.to_list t'))
+      end
+    )
+   
+let table =
+  Ranking_Cache.create 10
+  
+let memoize f =  
+  let g x = 
+    match Ranking_Cache.find_option table x with
+    | Some y -> y
+    | None ->
+       let y = f x in
+       Ranking_Cache.add table x y;
+       y
+  in g
+   
 let find_with measure vars non_increasing_transitions decreasing_transitions =
-  
-  let decreaser t =
-    match measure with
-    | `Cost -> TransitionLabel.cost t
-    | `Time -> Polynomial.one
-  in
-
-  let transition_constraint (constraint_type: constraint_type) (pol: Location.t -> ParameterPolynomial.t) ((l,t,l'): Transition.t): Constraint.t =
-    let atom =
-      match constraint_type with
-      | `Non_Increasing -> ParameterAtom.Infix.(pol l >= ParameterPolynomial.substitute_f (as_parapoly t) (pol l'))
-      | `Decreasing -> ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial (decreaser t) + substitute_f (as_parapoly t) (pol l')))
-      | `Bounded -> ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial (decreaser t))      
-    in
-    farkas_transform (TransitionLabel.guard t) atom
-  in
+  let f (measure, non_increasing_transitions, decreasing_transitions) =
     
-  let transitions_constraint (constraint_type: constraint_type) (pol : Location.t -> ParameterPolynomial.t) (transitions : Transition.t list): Constraint.t =
-    transitions
-    |> List.map (transition_constraint constraint_type pol)
-    |> Constraint.all
-  in
-     
-  let locations =
-    non_increasing_transitions
-    |> List.append decreasing_transitions
-    |> List.enum
-    |> Program.locations
-    |> List.of_enum
-    |> List.unique
-  in
-
-  let (template, fresh_coeffs) =
-    ranking_templates vars locations
-  in
-
-  let non_increasing_constraint =
-    transitions_constraint `Non_Increasing template non_increasing_transitions
-  in
-  
-  let bounded =
-    transitions_constraint `Bounded template decreasing_transitions
-  in
-
-  let strictly_decreasing =
-    transitions_constraint `Decreasing template decreasing_transitions
-  in
-
-  let valuation =
-    Constraint.Infix.(non_increasing_constraint && bounded && strictly_decreasing)
-      |> Formula.mk
-    |> SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs
-  in
-
-  if List.for_all (Valuation.is_defined valuation) fresh_coeffs then
-    let rank location =
-      location
-      |> template 
-      |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval var valuation)
+    let decreaser t =
+      match measure with
+      | `Cost -> TransitionLabel.cost t
+      | `Time -> Polynomial.one
     in
-    Some {
-        pol = rank;
-        decreasing = decreasing_transitions;
-        non_increasing = non_increasing_transitions;
-      }
-  else
-    None
-  
+
+    let transition_constraint (constraint_type: constraint_type) (pol: Location.t -> ParameterPolynomial.t) ((l,t,l'): Transition.t): Constraint.t =
+      let atom =
+        match constraint_type with
+        | `Non_Increasing -> ParameterAtom.Infix.(pol l >= ParameterPolynomial.substitute_f (as_parapoly t) (pol l'))
+        | `Decreasing -> ParameterAtom.Infix.(pol l >= ParameterPolynomial.(of_polynomial (decreaser t) + substitute_f (as_parapoly t) (pol l')))
+        | `Bounded -> ParameterAtom.Infix.(pol l >= ParameterPolynomial.of_polynomial (decreaser t))      
+      in
+      farkas_transform (TransitionLabel.guard t) atom
+    in
+    
+    let transitions_constraint (constraint_type: constraint_type) (pol : Location.t -> ParameterPolynomial.t) (transitions : Transition.t list): Constraint.t =
+      transitions
+      |> List.map (transition_constraint constraint_type pol)
+      |> Constraint.all
+    in
+    
+    let locations =
+      non_increasing_transitions
+      |> TransitionSet.union decreasing_transitions
+      |> TransitionSet.enum
+      |> Program.locations
+      |> List.of_enum
+      |> List.unique
+    in
+
+    let (template, fresh_coeffs) =
+      ranking_templates vars locations
+    in
+
+    let non_increasing_constraint =
+      transitions_constraint `Non_Increasing template (TransitionSet.to_list non_increasing_transitions)
+    in
+    
+    let bounded =
+      transitions_constraint `Bounded template (TransitionSet.to_list decreasing_transitions)
+    in
+
+    let strictly_decreasing =
+      transitions_constraint `Decreasing template (TransitionSet.to_list decreasing_transitions)
+    in
+
+    let valuation =
+      Constraint.Infix.(non_increasing_constraint && bounded && strictly_decreasing)
+      |> Formula.mk
+      |> SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs
+    in
+
+    if List.for_all (Valuation.is_defined valuation) fresh_coeffs then
+      let rank location =
+        location
+        |> template 
+        |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval var valuation)
+      in
+      Some {
+          pol = rank;
+          decreasing = (TransitionSet.to_list decreasing_transitions);
+          non_increasing = (TransitionSet.to_list non_increasing_transitions);
+        }
+    else
+      None
+
+  in memoize f (measure, non_increasing_transitions, decreasing_transitions)
+    
 let find measure vars transitions appr =
 
   let execute () =
@@ -171,7 +203,7 @@ let find measure vars transitions appr =
            |> List.filter (unbounded appr)
            |> List.enum
            |> Util.find_map (fun decreasing_transition ->
-                  find_with measure vars (Set.to_list (Set.diff (Set.of_list transitions) increasing_transitions)) (List.singleton decreasing_transition)
+                  find_with measure vars (TransitionSet.diff (TransitionSet.of_list transitions) (TransitionSet.of_enum (Set.enum increasing_transitions))) (TransitionSet.singleton decreasing_transition)
                 )
          ) 
   in
@@ -181,8 +213,6 @@ let find measure vars transitions appr =
                                                        "vars", VarSet.to_string vars])
                   ~result:(Util.option_to_string to_string)
                   execute
-
-
   
 let find_ measure program appr =
   let transitions =

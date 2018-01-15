@@ -56,9 +56,12 @@ module Types =
 
         let target (_, _, target) = target
 
+        let id =
+          TransitionLabel.id % label
+
         let cost t = TransitionLabel.cost (label t)
 
-        (* Needs to be fast for usage in the timebound hashtables.
+        (* TODO Needs to be fast for usage in the timebound hashtables.
        There might be transitions with the same src and target, 
        but that is not a problem for the hashtables,
        since it should not occur very often. *)
