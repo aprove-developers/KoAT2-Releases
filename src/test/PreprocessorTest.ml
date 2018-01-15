@@ -15,7 +15,7 @@ let tests =
                     ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l4(x)");
                     ("l1 -> l2(x), l2 -> l3(x)", "l1 -> l2(x), l2 -> l3(x), l4 -> l5(x)");
                     ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l3(x)");
-                    ("l1 -> l1(x)", "l1 -> l1(x), l2 -> l2(x)");
+                    ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l3(x)");
                     ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l4(x), l4 -> l5(x)");
                   ]
       );
@@ -32,10 +32,10 @@ let tests =
                   [
                     ("l1", "l2", "l1 -> l2(x)");
                     ("l2", "l3", "l1 -> l2(x), l2 -> l3(x)");
-                    ("l1", "l2", "l1 -> l1(x), l1 -> l2(x)");
-                    ("l2", "l3", "l1 -> l2(x), l2 -> l1(x), l2 -> l3(x)");
-                    ("l2", "l3", "l1 -> l2(x), l2 -> l1(x), l2 -> l3(x), l3 -> l3(x), l3 -> l4(x)");
-                    ("l3", "l4", "l1 -> l2(x), l2 -> l1(x), l2 -> l3(x), l3 -> l3(x), l3 -> l4(x)");
+                    ("l2", "l3", "l1 -> l2(x), l2 -> l2(x), l2 -> l3(x)");
+                    ("l3", "l4", "l1 -> l2(x), l2 -> l3(x), l3 -> l2(x), l3 -> l4(x)");
+                    ("l3", "l4", "l1 -> l2(x), l2 -> l3(x), l3 -> l2(x), l3 -> l4(x), l4 -> l4(x), l4 -> l5(x)");
+                    ("l4", "l5", "l1 -> l2(x), l2 -> l3(x), l3 -> l2(x), l3 -> l4(x), l4 -> l4(x), l4 -> l5(x)");
                   ]
       );
 
@@ -71,12 +71,11 @@ let tests =
              program >:: (fun _ -> assert_equal_program
                                      (Readers.read_program_simple expected_program)
                                      (Tuple2.first (Preprocessor.process_til_fixpoint
-                                                      Preprocessor.[CutUnreachableLocations; CutUnsatisfiableTransitions; Chaining]
+                                                      Preprocessor.[CutUnreachableLocations; CutUnsatisfiableTransitions]
                                                       (Readers.read_program_simple program, Approximation.empty 0 0)))))
                   [
                     ("l1 -> l2(x)", "l1 -> l2(x)");
                     ("l1 -> l2(x)", "l1 -> l2(x), l2 -> l3(x) :|: 2 > 3");
-                    ("l1 -> l1(x)", "l1 -> l1(x), l1 -> l2(x) :|: x > 0, l2 -> l3(x) :|: x < 0");
                   ]
       );      
 

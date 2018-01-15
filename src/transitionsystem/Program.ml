@@ -251,11 +251,14 @@ let from transitions start =
   |> List.map label_to_transition
   |> List.map (fun (l,t,l') -> (Location.of_string l, t, Location.of_string l'))
   |> fun transitions ->
-     {
-       graph = mk (List.enum transitions);
-       vars = vars;
-       start = start;
-     }
+     if transitions |> List.map Transition.target |> List.mem_cmp Location.compare start then
+       raise (Failure "Transition leading back to the initial location.")
+     else
+       {
+         graph = mk (List.enum transitions);
+         vars = vars;
+         start = start;
+       }
 
 let vars program =
   VarSet.of_list program.vars
