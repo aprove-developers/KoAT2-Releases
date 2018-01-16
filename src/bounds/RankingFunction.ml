@@ -209,7 +209,8 @@ let find measure vars transitions appr =
   in
 
   Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find ranking function", ["transitions", Util.enum_to_string Transition.to_id_string (List.enum transitions);
+                  (fun () -> "find ranking function", ["measure", show_measure measure;
+                                                       "transitions", Util.enum_to_string Transition.to_id_string (List.enum transitions);
                                                        "vars", VarSet.to_string vars])
                   ~result:(Util.option_to_string to_string)
                   execute
