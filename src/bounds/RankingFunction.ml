@@ -216,11 +216,3 @@ let find measure vars transitions appr =
                                                        "vars", VarSet.to_string vars])
                   ~result:(Util.option_to_string to_string)
                   execute
-  
-let find_ measure program appr =
-  let transitions =
-    program
-    |> Program.transitions
-    |> TransitionSet.to_list
-  in
-  find measure (Program.vars program) transitions appr

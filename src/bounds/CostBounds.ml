@@ -12,17 +12,3 @@ let infer_from_timebounds program appr =
       appr
   in
   TransitionGraph.fold_edges_e add_costbound (Program.graph program) appr
-
-let infer_from_ranking program appr =
-  RankingFunction.find_ `Cost program appr
-  |> Option.map (fun rank ->
-         rank
-         |> RankingFunction.decreasing
-         |> fun t -> Approximation.add_costbound (Bound.of_poly (RankingFunction.rank rank (Program.start program))) t appr
-       )
-  |? appr
-  
-let compute program appr =
-  appr
-  |> infer_from_timebounds program
-  |> infer_from_ranking program

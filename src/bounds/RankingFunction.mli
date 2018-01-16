@@ -21,9 +21,6 @@ val decreasing : t -> Transition.t
     Corresponds to T'. *)
 val transitions : t -> Transition.t list
 
-(** Finds a suitable ranking function which decreases at least one transition and does not increase any transition. *)
-val find_ : measure -> Program.t -> Approximation.t -> t Option.t
-
 (** Finds a suitable ranking function for the given transitions T'. *)
 val find : measure -> VarSet.t -> Transition.t list -> Approximation.t -> t Option.t
 
