@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Before viewing the results, you should run `build`.
+
+tail -vn +1 **/*.output | less

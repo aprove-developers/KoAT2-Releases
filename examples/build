@@ -1,12 +1,10 @@
 #!/bin/bash
 
-wdir=$(pwd)
-cd "$(dirname "$0")"
+# Runs all the koat test files in this and every subdirectory.
+# The results are put into *.output files.
+# The build takes about 40 minutes on Intel-hyperthreaded 8 cores.
+# The GNU tool parallel need to be installed.
+# `sudo apt-get install parallel`
+# The timeout stops single tests after x seconds.
 
-for f in **/*.koat
-do
-  koat --print-rvg --no-boundsearch --print-system $f
-done
-
-cd $wdir
-
+ls **/*.koat | parallel -j+0 --eta --timeout 90 'koat -i {} --print-rvg --print-system -r all &> {.}.output'
