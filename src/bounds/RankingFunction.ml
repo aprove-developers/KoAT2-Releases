@@ -188,24 +188,20 @@ let find_with measure vars non_increasing_transitions decreasing_transition =
 
   in memoize f (measure, non_increasing_transitions, decreasing_transition)
     
-let find measure vars (transitions: TransitionSet.t) (bounded_transitions: TransitionSet.t) =
+let find measure vars (transitions: TransitionSet.t) (decreasing_transition: Transition.t) =
 
   let execute () =
     transitions
     |> TransitionSet.powerset
     |> Util.find_map (fun increasing_transitions ->
-           TransitionSet.diff transitions bounded_transitions
-           |> TransitionSet.enum
-           |> Util.find_map (fun decreasing_transition ->
-                  find_with measure vars (TransitionSet.diff transitions increasing_transitions) decreasing_transition
-                )
+           find_with measure vars (TransitionSet.diff transitions increasing_transitions) decreasing_transition
          ) 
   in
 
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> "find ranking function", ["measure", show_measure measure;
                                                        "transitions", TransitionSet.to_string transitions;
-                                                       "bounded_transitions", TransitionSet.to_string bounded_transitions;
+                                                       "decreasing_transition", Transition.to_string decreasing_transition;
                                                        "vars", VarSet.to_string vars])
                   ~result:(Util.option_to_string to_string)
                   execute

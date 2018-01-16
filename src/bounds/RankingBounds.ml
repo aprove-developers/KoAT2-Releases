@@ -106,12 +106,16 @@ let improve measure program appr =
     |> Enum.map (TransitionGraph.loc_transitions (Program.graph program))
     |> Enum.filter (not % TransitionSet.is_empty)
     |> MaybeChanged.fold_enum (fun appr transitions ->
-           RankingFunction.find measure
-                                (Program.vars program)
-                                transitions
-                                (transitions |> TransitionSet.filter (bounded measure appr))
-           |> improve_with_rank measure program appr
-                             
+           transitions
+           |> TransitionSet.filter (fun t -> not (bounded measure appr t))
+           |> TransitionSet.enum
+           |> MaybeChanged.fold_enum (fun appr transition ->
+                  RankingFunction.find measure
+                                       (Program.vars program)
+                                       transitions
+                                       transition
+                  |> improve_with_rank measure program appr
+                ) appr
          ) appr
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve bounds", ["measure", show_measure measure])

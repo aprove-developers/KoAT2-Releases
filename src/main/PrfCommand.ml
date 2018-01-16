@@ -30,5 +30,6 @@ let run (params: params) =
                      |> TransitionGraph.transitions
                      |> TransitionSet.filter (not % Approximation.is_time_bounded appr)
                    in
-                   RankingFunction.find `Time (Program.vars program) transitions TransitionSet.empty
+                   (** TODO Fix *)
+                   RankingFunction.find `Time (Program.vars program) transitions (TransitionSet.any transitions)
                    |> Option.may (fun prf -> print_string (RankingFunction.to_string prf ^ "\n"))))
