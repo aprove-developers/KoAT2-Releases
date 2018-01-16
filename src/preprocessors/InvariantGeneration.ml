@@ -178,13 +178,13 @@ let transform_program program =
 
   (** Applies the update to the abstract value. *)
   let apply_update (vars: VarSet.t) (update: Var.t -> Polynomial.t Option.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
-    (* TODO Reset the temporary variables from the new design *)
+    (* A completely unbound (non-deterministic) choice *)
+    let any_value = Apron.(Texpr1.cst environment (Coeff.Interval Interval.top)) in
     let assignments =
       vars
       |> VarSet.to_array
       |> Array.map update
-      |> Array.map (Option.map (poly_to_apron environment))
-      |> Array.map Option.get (* TODO With the new design an update will be always defined *)
+      |> Array.map (Option.map_default (poly_to_apron environment) any_value)
     in
     Apron.Abstract1.assign_texpr_array manager abstract (vars_to_apron vars) assignments None
   in
