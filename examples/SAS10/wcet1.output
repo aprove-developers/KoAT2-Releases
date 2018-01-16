@@ -1,10 +1,10 @@
 Timebounds: 
-  Overall timebound: 10+2*2*max{0, -1+A}+max{0, -2+2*A}+max{0, -1+2*(-1+A)} [O(n)]
+  Overall timebound: 10+2*max{0, -1+A}+2*2*max{0, -1+A} [O(n)]
   5: cut->cut: 2*max{0, -1+A} [O(n)]
   6: cut->stop: 1 [O(1)]
   7: cut->cut: 2*max{0, -1+A} [O(n)]
   8: cut->stop: 1 [O(1)]
-  9: cut->cut: max{0, -2+2*A}+max{0, -1+2*(-1+A)} [O(n)]
+  9: cut->cut: 2*max{0, -1+A} [O(n)]
   10: cut->stop: 1 [O(1)]
   12: cut->stop: 1 [O(1)]
   0: start->stop: 1 [O(1)]
@@ -15,12 +15,12 @@ Timebounds:
   13: start0->start: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 10+2*2*max{0, -1+A}+max{0, -2+2*A}+max{0, -1+2*(-1+A)} [O(n)]
+  Overall costbound: 10+2*max{0, -1+A}+2*2*max{0, -1+A} [O(n)]
   5: cut->cut: 2*max{0, -1+A} [O(n)]
   6: cut->stop: 1 [O(1)]
   7: cut->cut: 2*max{0, -1+A} [O(n)]
   8: cut->stop: 1 [O(1)]
-  9: cut->cut: max{0, -2+2*A}+max{0, -1+2*(-1+A)} [O(n)]
+  9: cut->cut: 2*max{0, -1+A} [O(n)]
   10: cut->stop: 1 [O(1)]
   12: cut->stop: 1 [O(1)]
   0: start->stop: 1 [O(1)]

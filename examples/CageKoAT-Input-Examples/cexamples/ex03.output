@@ -1,0 +1,21 @@
+Timebounds: 
+  Overall timebound: 1+2*max{0, x} [O(n)]
+  1: f->g: max{0, x} [O(n)]
+  2: g->f: max{0, x} [O(n)]
+  0: start->f: 1 [O(1)]
+
+Costbounds:
+  Overall costbound: 1+2*max{0, x} [O(n)]
+  1: f->g: max{0, x} [O(n)]
+  2: g->f: max{0, x} [O(n)]
+  0: start->f: 1 [O(1)]
+
+Sizebounds:
+`Lower:
+  1: f->g, x: -max{0, -x} [O(n)]
+  2: g->f, x: -max{0, -x} [O(n)]
+  0: start->f, x: x [O(n)]
+`Upper:
+  1: f->g, x: max{0, x} [O(n)]
+  2: g->f, x: max{0, x} [O(n)]
+  0: start->f, x: x [O(n)]

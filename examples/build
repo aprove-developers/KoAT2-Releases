@@ -7,4 +7,4 @@
 # `sudo apt-get install parallel`
 # The timeout stops single tests after x seconds.
 
-ls **/*.koat | parallel -j+0 --eta --timeout 90 'koat -i {} --print-rvg --print-system -r all &> {.}.output'
+find . -name *.koat | parallel -j+0 --eta --timeout 90 'koat -i {} --print-rvg --print-system -r all &> {.}.output'

@@ -6,7 +6,7 @@ Timebounds:
 Costbounds:
   Overall costbound: inf [Infinity]
   0: f2->f300: 1 [O(1)]
-  1: f300->f300: B-A [O(n)]
+  1: f300->f300: inf [Infinity]
   2: f300->f300: inf [Infinity]
   3: f300->f300: inf [Infinity]
   4: f300->f1: 1 [O(1)]

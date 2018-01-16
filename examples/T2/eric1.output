@@ -7,7 +7,7 @@ Timebounds:
 Costbounds:
   Overall costbound: inf [Infinity]
   0: f1->f2: max{0, B} [O(n)]
-  3: f1->f1: -1+B [O(n)]
+  3: f1->f1: inf [Infinity]
   1: f2->f2: inf [Infinity]
   4: f2->f1: max{0, -1+B} [O(n)]
   2: f999->f1: 1 [O(1)]

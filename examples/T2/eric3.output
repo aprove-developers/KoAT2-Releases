@@ -6,7 +6,7 @@ Costbounds:
   Overall costbound: inf [Infinity]
   2: f30->f4: 1 [O(1)]
   0: f4->f5: inf [Infinity]
-  4: f5->f4: 0 [O(1)]
+  4: f5->f4: inf [Infinity]
 
 Sizebounds:
 `Lower:

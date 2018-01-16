@@ -17,7 +17,7 @@ Costbounds:
   1: f6->f9: inf [Infinity]
   2: f6->f17: 1 [O(1)]
   6: f9->f17: 1 [O(1)]
-  7: f9->f6: 0 [O(1)]
+  7: f9->f6: inf [Infinity]
   8: f9->f6: inf [Infinity]
 
 Sizebounds:

@@ -1,0 +1,21 @@
+Timebounds: 
+  Overall timebound: max{1, 1+-1+x} [O(n)]
+  0: l0->l1: 1 [O(1)]
+  1: l1->l1: max{0, -1+x} [O(n)]
+
+Costbounds:
+  Overall costbound: max{1, 1+-1+x} [O(n)]
+  0: l0->l1: 1 [O(1)]
+  1: l1->l1: max{0, -1+x} [O(n)]
+
+Sizebounds:
+`Lower:
+  0: l0->l1, r: -1 [O(1)]
+  0: l0->l1, x: x [O(n)]
+  1: l1->l1, r: -1 [O(1)]
+  1: l1->l1, x: -max{0, -x} [O(n)]
+`Upper:
+  0: l0->l1, r: -1 [O(1)]
+  0: l0->l1, x: x [O(n)]
+  1: l1->l1, r: max{0, -1+x} [O(n)]
+  1: l1->l1, x: max{0, x} [O(n)]

@@ -7,7 +7,7 @@ Costbounds:
   Overall costbound: inf [Infinity]
   0: f0->f3: 1 [O(1)]
   1: f3->f3: inf [Infinity]
-  2: f3->f3: 5 [O(1)]
+  2: f3->f3: inf [Infinity]
   3: f3->f3: inf [Infinity]
   4: f3->f12: 1 [O(1)]
 

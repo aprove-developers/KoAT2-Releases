@@ -9,7 +9,7 @@ Costbounds:
   0: f4->f5: inf [Infinity]
   1: f4->f5: inf [Infinity]
   6: f4->f12: 1 [O(1)]
-  3: f5->f4: 0 [O(1)]
+  3: f5->f4: inf [Infinity]
   4: f5->f4: inf [Infinity]
   5: f5->f4: inf [Infinity]
 

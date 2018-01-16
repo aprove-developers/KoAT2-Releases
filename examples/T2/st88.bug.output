@@ -6,7 +6,7 @@ Costbounds:
   Overall costbound: inf [Infinity]
   11: f0->f9: 1 [O(1)]
   8: f12->f9: inf [Infinity]
-  6: f20->f20: -2+C [O(n)]
+  6: f20->f20: inf [Infinity]
   7: f20->f9: inf [Infinity]
   2: f9->f12: inf [Infinity]
   3: f9->f12: inf [Infinity]

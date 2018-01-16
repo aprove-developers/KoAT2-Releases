@@ -1,9 +1,9 @@
 Timebounds: 
-  Overall timebound: 6+2*max{0, -1+2*G}+max{0, -1+G} [O(n)]
+  Overall timebound: 6+max{0, -3+G+A+G}+max{0, -1+A+G}+max{0, -2+A+G} [O(n)]
   4: lM1->stop: 1 [O(1)]
-  5: lM1->lZZ1: max{0, -1+2*G} [O(n)]
-  6: lM1->lM1: max{0, -1+2*G} [O(n)]
-  9: lZZ1->lM1: max{0, -1+G} [O(n)]
+  5: lM1->lZZ1: max{0, -3+G+A+G} [O(n)]
+  6: lM1->lM1: max{0, -1+A+G} [O(n)]
+  9: lZZ1->lM1: max{0, -2+A+G} [O(n)]
   0: start->stop: 1 [O(1)]
   1: start->stop: 1 [O(1)]
   2: start->stop: 1 [O(1)]
@@ -11,11 +11,11 @@ Timebounds:
   10: start0->start: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 6+2*max{0, -1+2*G}+max{0, -1+G} [O(n)]
+  Overall costbound: 6+max{0, -1+2*G}+max{0, -1+A+G}+max{0, -2+A+G} [O(n)]
   4: lM1->stop: 1 [O(1)]
   5: lM1->lZZ1: max{0, -1+2*G} [O(n)]
-  6: lM1->lM1: max{0, -1+2*G} [O(n)]
-  9: lZZ1->lM1: max{0, -1+G} [O(n)]
+  6: lM1->lM1: max{0, -1+A+G} [O(n)]
+  9: lZZ1->lM1: max{0, -2+A+G} [O(n)]
   0: start->stop: 1 [O(1)]
   1: start->stop: 1 [O(1)]
   2: start->stop: 1 [O(1)]

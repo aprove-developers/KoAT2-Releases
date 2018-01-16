@@ -12,9 +12,9 @@ Timebounds:
   11: start0->start: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 7+max{0, -3+A}+max{1, -1+C} [O(n)]
+  Overall costbound: 7+max{0, -3+A}+max{1, -2+C} [O(n)]
   5: lbl81->stop: 1 [O(1)]
-  6: lbl81->lbl81: max{0, -2+C} [O(n)]
+  6: lbl81->lbl81: max{0, -3+C} [O(n)]
   8: lbl91->stop: 1 [O(1)]
   10: lbl91->lbl91: max{0, -3+A} [O(n)]
   0: start->stop: 1 [O(1)]

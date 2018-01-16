@@ -1,0 +1,33 @@
+Timebounds: 
+  Overall timebound: max{3, 1+2+B-A} [O(n)]
+  0: div->end: 1 [O(1)]
+  1: div->end: 1 [O(1)]
+  2: div->div: max{0, B-A} [O(n)]
+  3: start->div: 1 [O(1)]
+
+Costbounds:
+  Overall costbound: max{3, 1+2+B-A} [O(n)]
+  0: div->end: 1 [O(1)]
+  1: div->end: 1 [O(1)]
+  2: div->div: max{0, B-A} [O(n)]
+  3: start->div: 1 [O(1)]
+
+Sizebounds:
+`Lower:
+  0: div->end, A: -max{0, -A} [O(n)]
+  0: div->end, B: -max{0, -B} [O(n)]
+  1: div->end, A: -max{0, -A} [O(n)]
+  1: div->end, B: -max{0, -B} [O(n)]
+  2: div->div, A: -max{0, -A} [O(n)]
+  2: div->div, B: -max{0, -B} [O(n)]
+  3: start->div, A: A [O(n)]
+  3: start->div, B: B [O(n)]
+`Upper:
+  0: div->end, A: 0 [O(1)]
+  0: div->end, B: max{0, B} [O(n)]
+  1: div->end, A: max{0, A} [O(n)]
+  1: div->end, B: max{0, A} [O(n)]
+  2: div->div, A: max{0, A} [O(n)]
+  2: div->div, B: max{0, B} [O(n)]
+  3: start->div, A: A [O(n)]
+  3: start->div, B: B [O(n)]

@@ -9,10 +9,10 @@ Timebounds:
   6: start0->start: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: max{6, 1+206+-G-A} [O(n)]
+  Overall costbound: max{6, 1+5+-G+-A-E+3*(-1+E)+max{-2*A, -2*100}+max{2*(1+A), 2*101}} [O(n)]
   3: lbl71->stop: 1 [O(1)]
   4: lbl71->stop: 1 [O(1)]
-  5: lbl71->lbl71: max{0, 201+-G-A} [O(n)]
+  5: lbl71->lbl71: max{0, -G+-A-E+3*(-1+E)+max{-2*A, -2*100}+max{2*(1+A), 2*101}} [O(n)]
   0: start->stop: 1 [O(1)]
   1: start->stop: 1 [O(1)]
   2: start->lbl71: 1 [O(1)]

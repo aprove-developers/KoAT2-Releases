@@ -9,8 +9,8 @@ Timebounds:
   7: start0->start: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 4+max{0, -1+2*A}+max{0, A}+max{0, A}+max{0, A*A} [O(n^2)]
-  5: lbl62->lbl72: max{0, A} [O(n)]
+  Overall costbound: 4+max{0, -1+2*A}+max{0, -2+A+max{2, 2*A}}+max{0, A}+max{0, A*A} [O(n^2)]
+  5: lbl62->lbl72: max{0, -2+A+max{2, 2*A}} [O(n)]
   6: lbl62->lbl62: max{0, A}+max{0, A*A} [O(n^2)]
   2: lbl72->stop: 1 [O(1)]
   4: lbl72->lbl62: max{0, -1+2*A} [O(n)]

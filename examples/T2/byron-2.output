@@ -8,7 +8,7 @@ Timebounds:
 Costbounds:
   Overall costbound: inf [Infinity]
   0: f0->f2: 1 [O(1)]
-  1: f0->f0: C [O(n)]
+  1: f0->f0: inf [Infinity]
   2: f0->f0: max{0, A} [O(n)]
   3: f0->f0: max{0, A} [O(n)]
   4: f1->f0: 1 [O(1)]

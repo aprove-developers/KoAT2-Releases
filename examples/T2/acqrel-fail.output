@@ -6,7 +6,7 @@ Timebounds:
 Costbounds:
   Overall costbound: inf [Infinity]
   6: f0->f9: 1 [O(1)]
-  1: f14->f14: E [O(n)]
+  1: f14->f14: inf [Infinity]
   4: f14->f9: inf [Infinity]
   2: f22->f22: inf [Infinity]
   0: f9->f14: inf [Infinity]

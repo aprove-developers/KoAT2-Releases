@@ -8,7 +8,7 @@ Timebounds:
 Costbounds:
   Overall costbound: inf [Infinity]
   5: f0->f11: 1 [O(1)]
-  0: f11->f11: max{0, 3+G} [O(n)]
+  0: f11->f11: 4 [O(1)]
   1: f11->f11: 4 [O(1)]
   4: f11->f21: 1 [O(1)]
   2: f21->f21: inf [Infinity]

@@ -5,9 +5,9 @@ Timebounds:
   2: f2->f2: max{0, -1+B} [O(n)]
 
 Costbounds:
-  Overall costbound: max{0, -1+B}+max{1, 0+A} [O(n)]
+  Overall costbound: max{0, -1+B}+max{1, 1+A} [O(n)]
   0: f1->f2: 1 [O(1)]
-  1: f2->f2: max{0, -1+A} [O(n)]
+  1: f2->f2: max{0, A} [O(n)]
   2: f2->f2: max{0, -1+B} [O(n)]
 
 Sizebounds:

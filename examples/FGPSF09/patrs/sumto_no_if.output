@@ -1,0 +1,27 @@
+Timebounds: 
+  Overall timebound: max{2, 2+1+B-A} [O(n)]
+  2: start->sumto: 1 [O(1)]
+  0: sumto->end: 1 [O(1)]
+  1: sumto->sumto: max{0, 1+B-A} [O(n)]
+
+Costbounds:
+  Overall costbound: max{2, 2+1+B-A} [O(n)]
+  2: start->sumto: 1 [O(1)]
+  0: sumto->end: 1 [O(1)]
+  1: sumto->sumto: max{0, 1+B-A} [O(n)]
+
+Sizebounds:
+`Lower:
+  2: start->sumto, A: A [O(n)]
+  2: start->sumto, B: B [O(n)]
+  0: sumto->end, A: -max{0, -A} [O(n)]
+  0: sumto->end, B: -max{0, -B} [O(n)]
+  1: sumto->sumto, A: -max{0, -A} [O(n)]
+  1: sumto->sumto, B: -max{0, -B} [O(n)]
+`Upper:
+  2: start->sumto, A: A [O(n)]
+  2: start->sumto, B: B [O(n)]
+  0: sumto->end, A: max{A, max{0, A}+max{0, 1+B-A}} [O(n)]
+  0: sumto->end, B: max{-1+max{0, A}+max{0, 1+B-A}, -1+A} [O(n)]
+  1: sumto->sumto, A: max{0, A}+max{0, 1+B-A} [O(n)]
+  1: sumto->sumto, B: max{0, B} [O(n)]

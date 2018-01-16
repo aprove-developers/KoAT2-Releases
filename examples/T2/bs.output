@@ -8,7 +8,7 @@ Costbounds:
   0: f0->f6: 1 [O(1)]
   4: f12->f6: inf [Infinity]
   5: f12->f6: inf [Infinity]
-  1: f6->f12: 1 [O(1)]
+  1: f6->f12: inf [Infinity]
   2: f6->f12: inf [Infinity]
   3: f6->f6: inf [Infinity]
   6: f6->f20: 1 [O(1)]

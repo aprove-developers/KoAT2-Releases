@@ -1,7 +1,7 @@
 Timebounds: 
-  Overall timebound: 5+2*max{0, -1+A}+max{0, -2+A}+max{0, (-1+A)*max{1, 1+A}}+max{2, 2+A*(-1+A)} [O(n^2)]
-  3: lbl111->lbl111: max{2, 2+A*(-1+A)}+max{0, (-1+A)*max{1, 1+A}} [O(n^2)]
-  5: lbl111->lbl82: max{0, -1+A} [O(n)]
+  Overall timebound: 5+max{0, -2+A}+max{0, (-1+A)*max{1, 1+A}}+max{0, -1+A}+max{0, -2+A}+max{2, 2+A*(-2+A)} [O(n^2)]
+  3: lbl111->lbl111: max{2, 2+A*(-2+A)}+max{0, (-1+A)*max{1, 1+A}} [O(n^2)]
+  5: lbl111->lbl82: max{0, -2+A} [O(n)]
   6: lbl111->lbl82: max{0, -1+A} [O(n)]
   2: lbl16->stop: 1 [O(1)]
   7: lbl82->lbl16: 1 [O(1)]
@@ -11,8 +11,8 @@ Timebounds:
   12: start0->start: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 5+2*max{0, -1+A}+max{0, -2+A}+max{0, (-1+A)*max{1, 1+A}}+max{2, 2+A*(-1+A)} [O(n^2)]
-  3: lbl111->lbl111: max{2, 2+A*(-1+A)}+max{0, (-1+A)*max{1, 1+A}} [O(n^2)]
+  Overall costbound: 5+2*max{0, -1+A}+max{0, -2+A}+max{0, (-1+A)*max{1, 1+A}}+max{2, 2+A*(-2+A)} [O(n^2)]
+  3: lbl111->lbl111: max{2, 2+A*(-2+A)}+max{0, (-1+A)*max{1, 1+A}} [O(n^2)]
   5: lbl111->lbl82: max{0, -1+A} [O(n)]
   6: lbl111->lbl82: max{0, -1+A} [O(n)]
   2: lbl16->stop: 1 [O(1)]

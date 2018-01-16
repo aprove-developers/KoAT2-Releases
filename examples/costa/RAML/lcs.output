@@ -1,0 +1,7 @@
+koat: internal error, uncaught exception:
+      Readers.Error("Parser error at line 15 at char number 35 which is directly after max")
+      Raised at file "Readers.ml", line 19, characters 5-81
+      Called from file "MainUtil.ml", line 8, characters 11-42
+      Called from file "Main.ml", line 96, characters 2-52
+      Called from file "src/cmdliner_term.ml", line 27, characters 19-24
+      Called from file "src/cmdliner.ml", line 106, characters 32-39

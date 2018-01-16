@@ -6,7 +6,7 @@ Costbounds:
   Overall costbound: inf [Infinity]
   0: f0->f1: 1 [O(1)]
   1: f1->f1: inf [Infinity]
-  2: f1->f1: A [O(n)]
+  2: f1->f1: inf [Infinity]
 
 Sizebounds:
 `Lower:
