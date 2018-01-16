@@ -15,7 +15,7 @@ val rank : t -> Location.t -> Polynomial.t
 
 (** Returns a non-empty list of all transitions which are strictly decreasing and at the same time bounded with one.
     Corresponds to T_> . *)
-val strictly_decreasing : t -> Transition.t list
+val decreasing : t -> Transition.t
   
 (** Returns a list of all transitions for which the prf is defined.
     Corresponds to T'. *)

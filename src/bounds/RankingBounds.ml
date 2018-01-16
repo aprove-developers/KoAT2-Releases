@@ -82,9 +82,8 @@ let improve_with_pol measure program appr pol =
       else
         pol
         |> Option.get
-        |> RankingFunction.strictly_decreasing
-        |> List.enum
-        |> Enum.fold (flip (add_bound measure bound)) appr
+        |> RankingFunction.decreasing
+        |> fun t -> add_bound measure bound t appr
         |> MaybeChanged.changed
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve bounds with pol", [])

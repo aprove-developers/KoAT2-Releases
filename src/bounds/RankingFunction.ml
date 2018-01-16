@@ -14,7 +14,7 @@ type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ]
              
 type t = {
     pol : Location.t -> Polynomial.t;
-    decreasing : Transition.t list;
+    decreasing : Transition.t;
     non_increasing : Transition.t list;
   }
 
@@ -24,7 +24,7 @@ let logger = Logging.(get PRF)
 
 let rank f = f.pol
            
-let strictly_decreasing f = f.decreasing
+let decreasing f = f.decreasing
                           
 let transitions f = f.non_increasing
 
@@ -35,7 +35,7 @@ let pol_to_string (locations: Location.t list) (content_to_string: 'a -> string)
 
 let to_string {pol; decreasing; non_increasing} =
   let locations = non_increasing |> List.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
-  "{rank:" ^ pol_to_string locations Polynomial.to_string pol ^ ";decreasing:" ^ (decreasing |> List.enum |> Util.enum_to_string Transition.to_id_string) ^ "}"
+  "{rank:" ^ pol_to_string locations Polynomial.to_string pol ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
 (** Checks if a transition is unbounded *)
 let unbounded measure appr transition =
@@ -165,15 +165,15 @@ let find_with measure vars non_increasing_transitions decreasing_transition =
     in
     
     let bounded =
-      transitions_constraint `Bounded template [decreasing_transition]
+      transition_constraint `Bounded template decreasing_transition
     in
 
-    let strictly_decreasing =
-      transitions_constraint `Decreasing template [decreasing_transition]
+    let decreasing =
+      transition_constraint `Decreasing template decreasing_transition
     in
 
     let valuation =
-      Constraint.Infix.(non_increasing_constraint && bounded && strictly_decreasing)
+      Constraint.Infix.(non_increasing_constraint && bounded && decreasing)
       |> Formula.mk
       |> SMTSolver.get_model ~coeffs_to_minimise:fresh_coeffs
     in
@@ -186,7 +186,7 @@ let find_with measure vars non_increasing_transitions decreasing_transition =
       in
       Some {
           pol = rank;
-          decreasing = [decreasing_transition];
+          decreasing = decreasing_transition;
           non_increasing = (TransitionSet.to_list non_increasing_transitions);
         }
     else

@@ -17,10 +17,8 @@ let infer_from_ranking program appr =
   RankingFunction.find_ `Cost program appr
   |> Option.map (fun rank ->
          rank
-         |> RankingFunction.strictly_decreasing
-         |> List.fold_left (fun appr t ->                
-                Approximation.add_costbound (Bound.of_poly (RankingFunction.rank rank (Program.start program))) t appr
-              ) appr
+         |> RankingFunction.decreasing
+         |> fun t -> Approximation.add_costbound (Bound.of_poly (RankingFunction.rank rank (Program.start program))) t appr
        )
   |? appr
   
