@@ -71,22 +71,22 @@ let add_bound = function
   | `Time -> Approximation.add_timebound
   | `Cost -> Approximation.add_costbound
    
-let improve_with_pol measure program appr pol =
+let improve_with_rank measure program appr maybe_rank =
   let execute () =
-    if Option.is_none pol then
-      MaybeChanged.same appr
-    else
-      let bound = compute_bound appr (Program.graph program) (Option.get pol) in
-      if Bound.is_infinity bound then
-        MaybeChanged.same appr
-      else
-        pol
-        |> Option.get
-        |> RankingFunction.decreasing
-        |> fun t -> add_bound measure bound t appr
-        |> MaybeChanged.changed
+    maybe_rank
+    |> Option.map (fun rank ->
+           let bound = compute_bound appr (Program.graph program) rank in
+           if Bound.is_infinity bound then
+             MaybeChanged.same appr
+           else
+             rank
+             |> RankingFunction.decreasing
+             |> fun t -> add_bound measure bound t appr
+             |> MaybeChanged.changed
+         )
+    |? MaybeChanged.same appr
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "improve bounds with pol", [])
+                     (fun () -> "improve bounds with rank", [])
                      execute
 
 let improve measure program appr =
@@ -101,7 +101,7 @@ let improve measure program appr =
     |> Enum.filter (not % TransitionSet.is_empty)
     |> Enum.map TransitionSet.to_list
     |> MaybeChanged.fold_enum (fun appr transitions ->
-           improve_with_pol measure program appr (RankingFunction.find measure (Program.vars program) transitions appr)
+           improve_with_rank measure program appr (RankingFunction.find measure (Program.vars program) transitions appr)
          ) appr
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve bounds", ["measure", show_measure measure])
