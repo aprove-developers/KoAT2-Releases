@@ -22,7 +22,7 @@ val decreasing : t -> Transition.t
 val transitions : t -> Transition.t list
 
 (** Finds a suitable ranking function for the given transitions T'. *)
-val find : measure -> VarSet.t -> Transition.t list -> Approximation.t -> t Option.t
+val find : measure -> VarSet.t -> TransitionSet.t -> TransitionSet.t -> t Option.t
 
 (** Converts a ranking function into a string*)
 val to_string : t -> string

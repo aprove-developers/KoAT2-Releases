@@ -36,7 +36,13 @@ sig
     (** Adds the invariant to this transition. *)
     val add_invariant : Constraint.t -> t -> t
   end
-  module TransitionSet : module type of Set.Make(struct include Transition let compare = Transition.compare_same end)
+
+  module TransitionSet :
+  sig
+    include module type of Set.Make(struct include Transition let compare = Transition.compare_same end)
+    val powerset : t -> t Enum.t
+    val to_string : t -> string
+  end
 
   module TransitionGraph :
   sig

@@ -89,6 +89,12 @@ let improve_with_rank measure program appr maybe_rank =
                      (fun () -> "improve bounds with rank", [])
                      execute
 
+(** Checks if a transition is bounded *)
+let bounded measure appr transition =
+  match measure with
+  | `Time -> Approximation.is_time_bounded appr transition
+  | `Cost -> false
+  
 let improve measure program appr =
   let execute () =
     let module SCC = Graph.Components.Make(TransitionGraph) in
@@ -99,9 +105,13 @@ let improve measure program appr =
     |> List.enum
     |> Enum.map (TransitionGraph.loc_transitions (Program.graph program))
     |> Enum.filter (not % TransitionSet.is_empty)
-    |> Enum.map TransitionSet.to_list
     |> MaybeChanged.fold_enum (fun appr transitions ->
-           improve_with_rank measure program appr (RankingFunction.find measure (Program.vars program) transitions appr)
+           RankingFunction.find measure
+                                (Program.vars program)
+                                transitions
+                                (transitions |> TransitionSet.filter (bounded measure appr))
+           |> improve_with_rank measure program appr
+                             
          ) appr
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "improve bounds", ["measure", show_measure measure])

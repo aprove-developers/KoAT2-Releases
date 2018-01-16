@@ -28,8 +28,7 @@ let run (params: params) =
                      program
                      |> Program.graph
                      |> TransitionGraph.transitions
-                     |> TransitionSet.to_list
-                     |> List.filter (Bound.is_infinity % Approximation.timebound appr)
+                     |> TransitionSet.filter (not % Approximation.is_time_bounded appr)
                    in
-                   RankingFunction.find `Time (Program.vars program) transitions appr
+                   RankingFunction.find `Time (Program.vars program) transitions TransitionSet.empty
                    |> Option.may (fun prf -> print_string (RankingFunction.to_string prf ^ "\n"))))

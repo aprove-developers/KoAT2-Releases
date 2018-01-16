@@ -37,12 +37,6 @@ let to_string {pol; decreasing; non_increasing} =
   let locations = non_increasing |> List.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
   "{rank:" ^ pol_to_string locations Polynomial.to_string pol ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
-(** Checks if a transition is unbounded *)
-let unbounded measure appr transition =
-  match measure with
-  | `Time -> Bound.is_infinity (Approximation.timebound appr transition)
-  | `Cost -> true
-  
 let as_parapoly label var =
   match TransitionLabel.update label var with
   (** Correct? In the nondeterministic case we just make it deterministic? *)
@@ -194,25 +188,24 @@ let find_with measure vars non_increasing_transitions decreasing_transition =
 
   in memoize f (measure, non_increasing_transitions, decreasing_transition)
     
-let find measure vars transitions appr =
+let find measure vars (transitions: TransitionSet.t) (bounded_transitions: TransitionSet.t) =
 
   let execute () =
     transitions
-    |> Set.of_list
-    |> Util.powerset
+    |> TransitionSet.powerset
     |> Util.find_map (fun increasing_transitions ->
-           transitions
-           |> List.filter (unbounded measure appr)
-           |> List.enum
+           TransitionSet.diff transitions bounded_transitions
+           |> TransitionSet.enum
            |> Util.find_map (fun decreasing_transition ->
-                  find_with measure vars (TransitionSet.diff (TransitionSet.of_list transitions) (TransitionSet.of_enum (Set.enum increasing_transitions))) decreasing_transition
+                  find_with measure vars (TransitionSet.diff transitions increasing_transitions) decreasing_transition
                 )
          ) 
   in
 
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> "find ranking function", ["measure", show_measure measure;
-                                                       "transitions", Util.enum_to_string Transition.to_id_string (List.enum transitions);
+                                                       "transitions", TransitionSet.to_string transitions;
+                                                       "bounded_transitions", TransitionSet.to_string bounded_transitions;
                                                        "vars", VarSet.to_string vars])
                   ~result:(Util.option_to_string to_string)
                   execute

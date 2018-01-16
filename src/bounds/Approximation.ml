@@ -48,7 +48,9 @@ let add_timebound bound transition appr =
 
 let all_times_bounded =
   TransitionApproximation.all_bounded % time
-                                   
+
+let is_time_bounded appr =
+  not % Bound.is_infinity % timebound appr
 
 (** Costbound related methods *)
 

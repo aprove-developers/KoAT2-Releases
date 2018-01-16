@@ -73,7 +73,18 @@ module Types =
         let to_string (l,t,l') =
           to_id_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
       end
-    module TransitionSet = Set.Make(struct include Transition let compare = Transition.compare_same end)
+    module TransitionSet =
+      struct
+        include Set.Make(struct include Transition let compare = Transition.compare_same end)
+
+        let powerset set =
+          let combine (result: t Enum.t) (x: Transition.t) = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
+          Enum.fold combine (Enum.singleton empty) (enum set)
+
+        let to_string =
+          Util.enum_to_string Transition.to_id_string % enum
+          
+      end
 
     module TransitionGraph =
       struct

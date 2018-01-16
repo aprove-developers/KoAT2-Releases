@@ -44,6 +44,8 @@ val add_timebound : Bound.t -> Transition.t -> t -> t
 
 val all_times_bounded : t -> Transition.t list -> bool
   
+val is_time_bounded : t -> Transition.t -> bool
+  
 
 (** Costbound related methods *)
 
