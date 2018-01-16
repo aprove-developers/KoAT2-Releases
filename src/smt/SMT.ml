@@ -6,8 +6,6 @@ open Polynomials
 module Z3Solver =
   struct
     module Valuation = Valuation.Make(OurInt)
-    type valuation = Valuation.t
-    type formula = Formula.t
        
     let context = ref (
                       Z3.mk_context [
@@ -64,14 +62,14 @@ module Z3Solver =
       |> unsatisfiable
            
     (** Returns true iff the formula implies the positivity of the polynomial*)
-    let check_positivity (formula : formula) (poly: Polynomial.t) =
+    let check_positivity (formula : Formula.t) (poly: Polynomial.t) =
       tautology Formula.Infix.(formula => (poly >= Polynomial.zero))
     
     (** Returns true iff the formula implies the negativity of the polynomial*)
-    let check_negativity (formula : formula) (poly: Polynomial.t) =
+    let check_negativity (formula : Formula.t) (poly: Polynomial.t) =
       tautology Formula.Infix.(formula => (poly <= Polynomial.zero))
     
-    let minimisation_goal (formula : formula) (coeffs_to_minimise: Var.t list): Z3.Expr.expr =
+    let minimisation_goal (formula : Formula.t) (coeffs_to_minimise: Var.t list): Z3.Expr.expr =
       let generator poly v =
         if check_positivity formula Polynomial.(of_var v) then
           Polynomial.(poly + of_var v)
