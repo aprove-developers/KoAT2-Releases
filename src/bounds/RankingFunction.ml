@@ -97,15 +97,15 @@ let ranking_templates (vars: VarSet.t) (locations: Location.t list): (Location.t
 module Ranking_Cache =
   Hashtbl.Make(
       struct
-        type t = measure * TransitionSet.t * TransitionSet.t
+        type t = measure * TransitionSet.t * Transition.t
         let equal (m1,t1,t'1) (m2,t2,t'2) =
           equal_measure m1 m2
           && TransitionSet.equal t1 t2
-          && TransitionSet.equal t'1 t'2
+          && Transition.same t'1 t'2
         let hash (m,t,t') =
           Hashtbl.hash (m,
                         List.map Transition.id (TransitionSet.to_list t),
-                        List.map Transition.id (TransitionSet.to_list t'))
+                        Transition.id t')
       end
     )
    
@@ -122,8 +122,8 @@ let memoize f =
        y
   in g
    
-let find_with measure vars non_increasing_transitions decreasing_transitions =
-  let f (measure, non_increasing_transitions, decreasing_transitions) =
+let find_with measure vars non_increasing_transitions decreasing_transition =
+  let f (measure, non_increasing_transitions, decreasing_transition) =
     
     let decreaser t =
       match measure with
@@ -149,7 +149,7 @@ let find_with measure vars non_increasing_transitions decreasing_transitions =
     
     let locations =
       non_increasing_transitions
-      |> TransitionSet.union decreasing_transitions
+      |> TransitionSet.add decreasing_transition
       |> TransitionSet.enum
       |> Program.locations
       |> List.of_enum
@@ -165,11 +165,11 @@ let find_with measure vars non_increasing_transitions decreasing_transitions =
     in
     
     let bounded =
-      transitions_constraint `Bounded template (TransitionSet.to_list decreasing_transitions)
+      transitions_constraint `Bounded template [decreasing_transition]
     in
 
     let strictly_decreasing =
-      transitions_constraint `Decreasing template (TransitionSet.to_list decreasing_transitions)
+      transitions_constraint `Decreasing template [decreasing_transition]
     in
 
     let valuation =
@@ -186,13 +186,13 @@ let find_with measure vars non_increasing_transitions decreasing_transitions =
       in
       Some {
           pol = rank;
-          decreasing = (TransitionSet.to_list decreasing_transitions);
+          decreasing = [decreasing_transition];
           non_increasing = (TransitionSet.to_list non_increasing_transitions);
         }
     else
       None
 
-  in memoize f (measure, non_increasing_transitions, decreasing_transitions)
+  in memoize f (measure, non_increasing_transitions, decreasing_transition)
     
 let find measure vars transitions appr =
 
@@ -205,7 +205,7 @@ let find measure vars transitions appr =
            |> List.filter (unbounded measure appr)
            |> List.enum
            |> Util.find_map (fun decreasing_transition ->
-                  find_with measure vars (TransitionSet.diff (TransitionSet.of_list transitions) (TransitionSet.of_enum (Set.enum increasing_transitions))) (TransitionSet.singleton decreasing_transition)
+                  find_with measure vars (TransitionSet.diff (TransitionSet.of_list transitions) (TransitionSet.of_enum (Set.enum increasing_transitions))) decreasing_transition
                 )
          ) 
   in
