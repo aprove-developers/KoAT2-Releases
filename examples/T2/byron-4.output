@@ -1,0 +1,17 @@
+koat: internal error, uncaught exception:
+      Failure("Negation not yet supported!")
+      Raised at file "NontrivialSizeBounds.ml", line 226, characters 4-49
+      Called from file "src/batOption.ml", line 38, characters 19-24
+      Called from file "NontrivialSizeBounds.ml", line 235, characters 4-176
+      Called from file "SizeBounds.ml", line 16, characters 23-151
+      Called from file "SizeBounds.ml", line 19, characters 20-47
+      Called from file "list.ml", line 88, characters 24-34
+      Called from file "Bounds.ml", line 4, characters 2-38
+      Called from file "Bounds.ml", line 11, characters 2-71
+      Called from file "src/batInnerPervasives.mlv" (inlined), line 82, characters 22-27
+      Called from file "Main.ml", line 109, characters 21-87
+      Called from file "Main.ml", line 99, characters 9-772
+      Called from file "src/batOption.ml", line 38, characters 19-24
+      Called from file "Main.ml", line 96, characters 2-1023
+      Called from file "src/cmdliner_term.ml", line 27, characters 19-24
+      Called from file "src/cmdliner.ml", line 106, characters 32-39

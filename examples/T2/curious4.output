@@ -1,0 +1,2 @@
+Error: T2/curious4_system.dot: syntax error in line 32 scanning a quoted string (missing endquote? longer than 16384?)
+String starting:"Cost: 1, P' := P && A' := A && A1' := A1 && A2' := A2 && A3' := A3 && B' := B &&
