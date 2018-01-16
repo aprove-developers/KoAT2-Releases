@@ -4,6 +4,8 @@ open Program.Types
    
 let logger = Logging.(get Time)
 
+type measure = [ `Cost | `Time ] [@@deriving show, eq]
+
 (** All transitions outside of the prf transitions that lead to the given location. *)
 let transitions_to (graph: TransitionGraph.t) (prf_transitions: Transition.t list) (location: Location.t): Transition.t List.t =
   let execute () =
@@ -46,7 +48,7 @@ let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t)
                      ~result:Bound.to_string
                      execute
   
-let compute_timebound (appr: Approximation.t) (graph: TransitionGraph.t) (prf: RankingFunction.t): Bound.t =
+let compute_bound (appr: Approximation.t) (graph: TransitionGraph.t) (prf: RankingFunction.t): Bound.t =
   let execute () =
     entry_locations graph (RankingFunction.transitions prf)
     |> List.enum
@@ -61,34 +63,34 @@ let compute_timebound (appr: Approximation.t) (graph: TransitionGraph.t) (prf: R
                     max zero (apply (fun kind -> Approximation.sizebound kind appr) (RankingFunction.rank prf location) transition)))
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute time bound", ["prf", RankingFunction.to_string prf])
+                     (fun () -> "compute bound", ["prf", RankingFunction.to_string prf])
                      ~result:Bound.to_string
                      execute
-    
-let improve_with_pol program appr pol =
+
+let add_bound = function
+  | `Time -> Approximation.add_timebound
+  | `Cost -> Approximation.add_costbound
+   
+let improve_with_pol measure program appr pol =
   let execute () =
     if Option.is_none pol then
       MaybeChanged.same appr
     else
-      let timebound = compute_timebound appr (Program.graph program) (Option.get pol) in
-      if Bound.is_infinity timebound then
+      let bound = compute_bound appr (Program.graph program) (Option.get pol) in
+      if Bound.is_infinity bound then
         MaybeChanged.same appr
       else
         pol
         |> Option.get
         |> RankingFunction.strictly_decreasing
         |> List.enum
-        |> Enum.fold (flip (Approximation.add_timebound timebound)) appr
+        |> Enum.fold (flip (add_bound measure bound)) appr
         |> MaybeChanged.changed
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "improve time bounds with pol", [])
+                     (fun () -> "improve bounds with pol", [])
                      execute
 
-(** Checks if a transition has already been oriented strictly in a given approximation *)
-let unbound appr transition =  
-  Bound.is_infinity (Approximation.timebound appr transition)
-    
-let improve program appr =
+let improve measure program appr =
   let execute () =
     let module SCC = Graph.Components.Make(TransitionGraph) in
     program
@@ -100,8 +102,8 @@ let improve program appr =
     |> Enum.filter (not % TransitionSet.is_empty)
     |> Enum.map TransitionSet.to_list
     |> MaybeChanged.fold_enum (fun appr transitions ->
-           improve_with_pol program appr (RankingFunction.find `Time (Program.vars program) transitions appr)
+           improve_with_pol measure program appr (RankingFunction.find measure (Program.vars program) transitions appr)
          ) appr
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "improve time bounds", [])
+                     (fun () -> "improve bounds", ["measure", show_measure measure])
                      execute

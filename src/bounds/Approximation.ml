@@ -56,7 +56,7 @@ let costbound =
   TransitionApproximation.get % cost
 
 let program_costbound =
-  TransitionApproximation.sum % time
+  TransitionApproximation.sum % cost
 
 let add_costbound bound transition appr =
   { appr with cost = TransitionApproximation.add bound transition appr.cost }

@@ -38,8 +38,10 @@ let to_string {pol; decreasing; non_increasing} =
   "{rank:" ^ pol_to_string locations Polynomial.to_string pol ^ ";decreasing:" ^ (decreasing |> List.enum |> Util.enum_to_string Transition.to_id_string) ^ "}"
 
 (** Checks if a transition is unbounded *)
-let unbounded appr transition =  
-  Bound.is_infinity (Approximation.timebound appr transition)
+let unbounded measure appr transition =
+  match measure with
+  | `Time -> Bound.is_infinity (Approximation.timebound appr transition)
+  | `Cost -> true
   
 let as_parapoly label var =
   match TransitionLabel.update label var with
@@ -200,7 +202,7 @@ let find measure vars transitions appr =
     |> Util.powerset
     |> Util.find_map (fun increasing_transitions ->
            transitions
-           |> List.filter (unbounded appr)
+           |> List.filter (unbounded measure appr)
            |> List.enum
            |> Util.find_map (fun decreasing_transition ->
                   find_with measure vars (TransitionSet.diff (TransitionSet.of_list transitions) (TransitionSet.of_enum (Set.enum increasing_transitions))) (TransitionSet.singleton decreasing_transition)
