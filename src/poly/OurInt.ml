@@ -11,3 +11,9 @@ let max a b =
     a
   else
     b
+
+let min a b =
+  if Compare.(a <= b) then
+    a
+  else
+    b

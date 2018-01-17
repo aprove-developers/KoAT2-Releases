@@ -109,7 +109,7 @@ let asymptotic_complexity =
 
 let max_of_occurring_constants bound =
   fold
-    ~const:identity
+    ~const:OurInt.abs
     ~var:(fun _ -> OurInt.one)
     ~neg:identity
     ~plus:OurInt.add

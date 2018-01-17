@@ -118,7 +118,7 @@ module Formula =
     let max_of_occurring_constants constraints =
       constraints
       |> List.map Constraint.max_of_occurring_constants
-      |> List.fold_left OurInt.mul OurInt.zero
+      |> List.fold_left OurInt.mul OurInt.one
 
   end
 

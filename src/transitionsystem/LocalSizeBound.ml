@@ -267,14 +267,14 @@ let initial_lsb kind factor (constant: int) (vars: VarSet.t) = {
   
   
 (* Check if x <= 1 * (c + [v1,...,vn]). *)
-let find_unscaled_bound kind (var: Var.t) (solver: Solver.t) (varsets: VarSet.t Enum.t): t Option.t =
+let find_unscaled_bound kind (var: Var.t) (solver: Solver.t) (range: int) (varsets: VarSet.t Enum.t): t Option.t =
   let execute () =
     try
       Some (
           Enum.find_map (fun vars ->
-              Some (initial_lsb kind 1 1024 vars)
+              Some (initial_lsb kind 1 range vars)
               |> Option.filter (is_bounded_with solver var)
-              |> Option.map (optimize_c 1024 (is_bounded_with solver var))
+              |> Option.map (optimize_c range (is_bounded_with solver var))
               |> Option.map (minimize_scaledsum_vars (is_bounded_with solver var))
               |> Option.map (unabsify_vars (is_bounded_with solver var))
             ) varsets
@@ -286,10 +286,9 @@ let find_unscaled_bound kind (var: Var.t) (solver: Solver.t) (varsets: VarSet.t 
                   execute
   
 (* Check if x <= s * (c + [v1,...,vn]). *)
-let find_scaled_bound kind solver var formula =
+let find_scaled_bound kind solver var formula (range: int) =
   let execute () =
     let vars = VarSet.remove var (Formula.vars formula)
-    and range = 1024
     and is_bounded = is_bounded_with solver var in
     try 
       Some (initial_lsb kind range range vars)
@@ -307,6 +306,12 @@ let find_scaled_bound kind solver var formula =
 type kind = [`Lower | `Upper] [@@deriving show, eq]
 
 let find_bound kind var formula =
+  let range =
+    formula
+    |> Formula.max_of_occurring_constants
+    |> OurInt.min (OurInt.of_int 1024) (* TODO We cut it at the moment at 1024, because sometimes the approximation is worse than an integer value. *)
+    |> OurInt.to_int
+  in
   let execute () =
     let solver = Solver.create ~model:false () in
     Solver.add solver formula;
@@ -315,14 +320,18 @@ let find_bound kind var formula =
       |> Formula.vars
       |> VarSet.remove var
       |> VarSet.powerset
-      |> find_unscaled_bound kind var solver
+      |> find_unscaled_bound kind var solver range
     in
     if Option.is_some unscaled_bound then
       unscaled_bound
     else
-      find_scaled_bound kind solver var formula
+      find_scaled_bound kind solver var formula range
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "find local size bound", ["kind", show_kind kind; "var", Var.to_string var; "formula", Formula.to_string formula])
+                     (fun () -> "find local size bound", [
+                          "kind", show_kind kind;
+                          "var", Var.to_string var;
+                          "formula", Formula.to_string formula;
+                          "range", string_of_int range])
                      ~result:(Util.option_to_string (Bound.to_string % as_bound))
                      execute
 

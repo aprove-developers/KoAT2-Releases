@@ -120,7 +120,7 @@ module Constraint =
     let max_of_occurring_constants atoms =
       atoms
       |> List.map Atom.max_of_occurring_constants
-      |> List.fold_left OurInt.mul OurInt.zero
+      |> List.fold_left OurInt.mul OurInt.one
 
   end
 
