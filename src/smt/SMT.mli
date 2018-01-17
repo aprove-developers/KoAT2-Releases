@@ -44,8 +44,14 @@ sig
   (** Asserts the formula. *)
   val add : t -> Formula.t -> unit
 
+  (** Minimizes the variable. *)
+  val minimize : t -> Var.t -> unit
+
+  (** Maximizes the variable. *)
+  val maximize : t -> Var.t -> unit
+
   (** Sets the variables, which absolute value should be minimized. *)
-  val minimize : t -> Var.t list -> unit
+  val minimize_absolute : t -> Var.t list -> unit
 
   (** Returns a model of the current state, if the state is satisfiable. *)
   val model : t -> Polynomial.valuation Option.t

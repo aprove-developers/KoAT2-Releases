@@ -178,7 +178,7 @@ let try_decreasing (opt: Solver.t) (scc: Transition.t array) (non_increasing: Tr
          Solver.add opt (bounded_constraint measure decreasing);
          Solver.add opt (decreasing_constraint measure decreasing);
          if Solver.satisfiable opt then (
-           Solver.minimize opt !fresh_coeffs; (* Check if minimization is forgotten. *)
+           Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
            Solver.model opt
            |> Option.map (make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
            |> Option.may (RankingTable.add (ranking_table measure) decreasing)
