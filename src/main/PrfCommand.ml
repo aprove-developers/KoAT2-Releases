@@ -31,5 +31,8 @@ let run (params: params) =
                      |> TransitionSet.filter (not % Approximation.is_time_bounded appr)
                    in
                    (** TODO Fix *)
-                   RankingFunction.find `Time (Program.vars program) transitions (TransitionSet.any transitions)
-                   |> Option.may (fun prf -> print_string (RankingFunction.to_string prf ^ "\n"))))
+                   transitions
+                   |> TransitionSet.any
+                   |> RankingFunction.find `Time program
+                   |> List.hd
+                   |> (fun prf -> print_string (RankingFunction.to_string prf ^ "\n"))))

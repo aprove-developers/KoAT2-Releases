@@ -187,21 +187,50 @@ let find_with measure vars non_increasing_transitions decreasing_transition =
       None
 
   in memoize f (measure, non_increasing_transitions, decreasing_transition)
-    
-let find measure vars (transitions: TransitionSet.t) (decreasing_transition: Transition.t) =
+
+module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
+   
+let time_ranking_table: t RankingTable.t = RankingTable.create 10
+
+let cost_ranking_table: t RankingTable.t = RankingTable.create 10
+
+let ranking_table = function
+  | `Time -> time_ranking_table
+  | `Cost -> cost_ranking_table
+                                         
+let compute measure vars (scc: TransitionSet.t): unit =
 
   let execute () =
-    transitions
+    scc
     |> TransitionSet.powerset
-    |> Util.find_map (fun increasing_transitions ->
-           find_with measure vars (TransitionSet.diff transitions increasing_transitions) decreasing_transition
+    |> Enum.iter (fun increasing_transitions ->
+           scc
+           |> TransitionSet.enum
+           |> Enum.iter (fun decreasing_transition ->
+                  find_with measure vars (TransitionSet.add decreasing_transition (TransitionSet.diff scc increasing_transitions)) decreasing_transition
+                  |> Option.may (RankingTable.add (ranking_table measure) decreasing_transition)
+                )
          ) 
   in
 
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> "find ranking function", ["measure", show_measure measure;
-                                                       "transitions", TransitionSet.to_string transitions;
-                                                       "decreasing_transition", Transition.to_string decreasing_transition;
+                                                       "scc", TransitionSet.to_string scc;
                                                        "vars", VarSet.to_string vars])
-                  ~result:(Util.option_to_string to_string)
                   execute
+
+let compute_ measure program =
+  program
+  |> Program.sccs
+  |> Enum.iter (compute measure (Program.vars program))
+  
+let find measure program transition =
+  if RankingTable.is_empty (ranking_table measure) then
+    compute_ measure program;
+  RankingTable.find_all (ranking_table measure) transition
+  |> List.rev
+  
+let reset () =
+  RankingTable.clear time_ranking_table;
+  RankingTable.clear cost_ranking_table;
+  Ranking_Cache.clear table

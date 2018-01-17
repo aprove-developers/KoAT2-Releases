@@ -59,7 +59,8 @@ let tests =
                      assert_bool (String.concat " " [Bound.to_string costbound; "is not sound, since it is smaller than"; Bound.to_string minimal_sound_costbound])
                                  (smaller_or_equal (Program.vars program) minimal_sound_costbound costbound);
                      assert_bool (String.concat " " [Bound.to_string costbound; "is not as small as wanted, since it is greater than"; Bound.to_string wanted_costbound])
-                                 (smaller_or_equal (Program.vars program) costbound wanted_costbound)))
+                                 (smaller_or_equal (Program.vars program) costbound wanted_costbound);
+                     RankingFunction.reset ()))
                   [
                     (* Constant bound *)
 
@@ -111,7 +112,8 @@ let tests =
          List.map (fun (expected_complexity, program_str) ->
              program_str >:: (fun _ ->
                      let complexity = (asymptotic_complexity % find_costbound % Readers.read_program_simple) program_str in
-                     assert_equal ~cmp:equal_complexity ~printer:show_complexity expected_complexity complexity))
+                     assert_equal ~cmp:equal_complexity ~printer:show_complexity expected_complexity complexity;
+                     RankingFunction.reset ()))
                   [
                     (Inf, "a -> b(), b -> b()");                    
                     (Inf, "a -> b(x), b -> b(x-1) :|: x>0, b -> b(x+1) :|: x<=0");                    

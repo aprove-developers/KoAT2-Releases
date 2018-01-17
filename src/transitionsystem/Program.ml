@@ -292,6 +292,15 @@ let transitions =
 let pre program (l,t,l') =
   List.enum (TransitionGraph.pred_e (graph program) l)
 
+let sccs program =
+  let module SCC = Graph.Components.Make(TransitionGraph) in
+  program.graph
+  |> SCC.scc_list
+  |> List.rev
+  |> List.enum  
+  |> Enum.map (TransitionGraph.loc_transitions program.graph)
+  |> Enum.filter (not % TransitionSet.is_empty)
+  
 let add_invariant location invariant =
   map_graph (TransitionGraph.add_invariant location invariant)
 

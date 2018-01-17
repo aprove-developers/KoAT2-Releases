@@ -22,8 +22,11 @@ val decreasing : t -> Transition.t
 val transitions : t -> Transition.t list
 
 (** Finds a suitable ranking function for the given transitions T'. *)
-val find : measure -> VarSet.t -> TransitionSet.t -> Transition.t -> t Option.t
+val find : measure -> Program.t -> Transition.t -> t list
 
 (** Converts a ranking function into a string*)
 val to_string : t -> string
 
+(** Resets all cached data.
+    Useful for testing in the same OCaml instance. *)
+val reset : unit -> unit

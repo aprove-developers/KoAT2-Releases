@@ -154,3 +154,4 @@ val locations : Transition.t Enum.t -> Location.t Enum.t
   
 val start : t -> Location.t
   
+val sccs : t -> TransitionSet.t Enum.t
