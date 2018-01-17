@@ -115,6 +115,11 @@ module Formula =
   struct
     include FormulaOver(Constraint)
 
+    let max_of_occurring_constants constraints =
+      constraints
+      |> List.map Constraint.max_of_occurring_constants
+      |> List.fold_left OurInt.mul OurInt.zero
+
   end
 
 module ParameterFormula =

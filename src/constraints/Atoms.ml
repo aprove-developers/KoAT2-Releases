@@ -110,6 +110,9 @@ module Atom =
       Polynomial.separate_by_sign atom
       |> (fun (positive, negative) -> Polynomial.to_string positive ^ " <= " ^ Polynomial.to_string (Polynomial.neg negative))
       
+    let max_of_occurring_constants =
+      Polynomial.max_of_occurring_constants
+
   end
 
 module ParameterAtom =

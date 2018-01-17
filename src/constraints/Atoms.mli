@@ -22,6 +22,8 @@ sig
   (** Returns the single right hand side constant of the atom. *)
   val get_constant : t -> value
 
+  val max_of_occurring_constants : t -> OurInt.t
+
   (* Add operations specific to polynomial atoms here if needed *)
 end
 

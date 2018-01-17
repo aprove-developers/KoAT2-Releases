@@ -116,6 +116,11 @@ module Constraint =
       let dual_constr = dualise fresh_vars a_matrix c_left in
       let cost_constr = Polynomial.of_coeff_list b_right fresh_vars in
       Infix.(dual_constr && cost_constr <= Polynomial.of_constant d_right)
+      
+    let max_of_occurring_constants atoms =
+      atoms
+      |> List.map Atom.max_of_occurring_constants
+      |> List.fold_left OurInt.mul OurInt.zero
 
   end
 

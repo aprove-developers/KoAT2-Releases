@@ -14,6 +14,8 @@ module Formula :
 sig
   include module type of FormulaOver(Constraint)
 
+  val max_of_occurring_constants : t -> OurInt.t
+
   (* Add operations specific to polynomial formula here if needed *)
 end
 

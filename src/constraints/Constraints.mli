@@ -32,6 +32,8 @@ sig
     
   val farkas_transform : t -> atom -> t    
     
+  val max_of_occurring_constants : t -> OurInt.t
+
   (* Add operations specific to polynomial constraints here if needed *)
 end
 

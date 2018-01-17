@@ -283,4 +283,14 @@ module Polynomial =
 
     let separate_by_sign poly =
       partition (fun scaled -> OurInt.Compare.(ScaledMonomial_.coeff scaled >= OurInt.zero)) poly
+
+    let max_of_occurring_constants =
+      fold
+        ~const:identity
+        ~var:(fun _ -> OurInt.one)
+        ~neg:identity
+        ~plus:OurInt.add
+        ~times:OurInt.mul
+        ~pow:OurInt.pow
+      
   end

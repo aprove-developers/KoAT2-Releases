@@ -15,6 +15,9 @@ sig
   include module type of PolynomialOver(OurInt)
 
   val separate_by_sign : t -> (t * t)
+
+  val max_of_occurring_constants : t -> OurInt.t
+
 end
      
 module ParameterPolynomial :
