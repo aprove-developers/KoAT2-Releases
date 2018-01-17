@@ -109,7 +109,7 @@ let decreaser measure t =
   | `Cost -> TransitionLabel.cost t
   | `Time -> Polynomial.one
 
-let transition_constraint measure (constraint_type: constraint_type) (template: Location.t -> ParameterPolynomial.t) ((l,t,l'): Transition.t): Constraint.t =
+let transition_constraint measure (constraint_type: constraint_type) (template: Location.t -> ParameterPolynomial.t) ((l,t,l'): Transition.t): Formula.t =
   let atom =
     match constraint_type with
     | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (as_parapoly t) (template l'))
@@ -117,11 +117,12 @@ let transition_constraint measure (constraint_type: constraint_type) (template: 
     | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))      
   in
   farkas_transform (TransitionLabel.guard t) atom
+  |> Formula.mk
   
-let transitions_constraint measure (constraint_type: constraint_type) (template : Location.t -> ParameterPolynomial.t) (transitions : Transition.t list): Constraint.t =
+let transitions_constraint measure (constraint_type: constraint_type) (template : Location.t -> ParameterPolynomial.t) (transitions : Transition.t list): Formula.t =
   transitions
   |> List.map (transition_constraint measure constraint_type template)
-  |> Constraint.all
+  |> Formula.all
   
 let non_increasing_constraint measure transition =
   transition_constraint measure `Non_Increasing (TemplateTable.find template_table) transition
@@ -137,27 +138,26 @@ let bounded_constraint measure transition =
 let decreasing_constraint measure transition =
   transition_constraint measure `Decreasing (TemplateTable.find template_table) transition
 
+let rank_from_valuation valuation location =
+  location
+  |> TemplateTable.find template_table
+  |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
+
+let make decreasing_transition non_increasing_transitions valuation =
+  {
+    rank = rank_from_valuation valuation;
+    decreasing = decreasing_transition;
+    non_increasing = non_increasing_transitions;
+  }
+
 let find_with measure non_increasing_transitions decreasing_transition =
-  Constraint.Infix.(
+  Formula.Infix.(
     non_increasing_constraints measure non_increasing_transitions
     && bounded_constraint measure decreasing_transition
     && decreasing_constraint measure decreasing_transition)
-  |> Formula.mk
   |> SMTSolver.get_model ~coeffs_to_minimise:!fresh_coeffs
-  |> Option.map (fun valuation ->
-         let rank location =
-           location
-           |> TemplateTable.find template_table
-           |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
-         in
-         Some {
-             rank;
-             decreasing = decreasing_transition;
-             non_increasing = non_increasing_transitions;
-           }
-       )
-  |? None
-
+  |> Option.map (make decreasing_transition non_increasing_transitions)
+  
 module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
                     
 let time_ranking_table: t RankingTable.t = RankingTable.create 10
@@ -168,6 +168,41 @@ let ranking_table = function
   | `Time -> time_ranking_table
   | `Cost -> cost_ranking_table
 
+module Solver = SMT.IncrementalZ3Solver
+
+let try_decreasing (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (measure: measure) =
+  scc
+  |> Array.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
+  |> Array.iter (fun decreasing ->
+         Solver.push opt;
+         Solver.add opt (bounded_constraint measure decreasing);
+         Solver.add opt (decreasing_constraint measure decreasing);
+         if Solver.satisfiable opt then (
+           Solver.minimize opt !fresh_coeffs; (* Check if minimization is forgotten. *)
+           Solver.model opt
+           |> Option.map (make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+           |> Option.may (RankingTable.add (ranking_table measure) decreasing)
+         );
+         Solver.pop opt
+       )
+           
+let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (measure: measure) =
+  if steps_left == 0 then
+    try_decreasing opt scc non_increasing measure
+  else (
+    for i=index to Array.length scc - 1 do
+      let transition = Array.get scc i in
+      Solver.push opt;
+      Solver.add opt (non_increasing_constraint measure transition);
+      Stack.push transition non_increasing;
+      backtrack (steps_left - 1) (index + 1) opt scc non_increasing measure;
+      ignore (Stack.pop non_increasing);
+      Solver.pop opt;
+    done;
+(*    if steps_left < Array.length scc then
+      try_decreasing opt scc non_increasing measure *)
+  )
+           
 let compute measure (scc: TransitionSet.t): unit =
   let execute () =
     scc
@@ -190,7 +225,16 @@ let compute measure (scc: TransitionSet.t): unit =
 let compute_ measure program =
   program
   |> Program.sccs
-  |> Enum.iter (compute measure)
+  |> Enum.iter (fun scc ->
+         try
+           for depth=(TransitionSet.cardinal scc) downto 1 do
+             if TransitionSet.for_all (fun t -> RankingTable.mem (ranking_table measure) t) scc then
+               raise Exit
+             else
+               backtrack depth 0 (Solver.create ()) (Array.of_enum (TransitionSet.enum scc)) (Stack.create ()) measure           
+           done
+         with Exit -> ()
+       )
   
 let find measure program transition =
   let execute () =

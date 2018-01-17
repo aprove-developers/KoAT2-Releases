@@ -196,9 +196,17 @@ module IncrementalZ3Solver =
       in
       from_poly context (List.fold_left generator Polynomial.zero vars)
 
-    let minimize opt vars =
+(*    let minimize opt vars =
       ignore (Z3.Optimize.minimize opt (minimisation_goal opt vars))
-                      
+ *)
+    (* Different try *)
+    let minimize opt vars =
+      vars
+      |> List.iter (fun var ->
+             ignore (Z3.Optimize.add_soft opt (from_formula context Formula.Infix.(Polynomial.of_var var <= Polynomial.zero)) (Var.to_string var) (Z3.Symbol.mk_int !context 1));
+             ignore (Z3.Optimize.add_soft opt (from_formula context Formula.Infix.(Polynomial.of_var var >= Polynomial.zero)) (Var.to_string var) (Z3.Symbol.mk_int !context 1))
+           )
+
     let model opt =
       if Z3.Optimize.check opt == Z3.Solver.SATISFIABLE then
         opt
