@@ -1,5 +1,7 @@
 open Batteries
-
+open Program.Types
+open Polynomials
+   
 let rec find_bounds_ (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
   |> SizeBounds.improve program
@@ -11,6 +13,11 @@ let find_bounds (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
   |> TrivialTimeBounds.compute program
   |> find_bounds_ program
-  |> RankingBounds.improve `Cost program
+  |> (fun appr ->
+    if program |> Program.transitions |> TransitionSet.exists (fun t -> not (Polynomial.is_one (Transition.cost t))) then
+      RankingBounds.improve `Cost program appr
+    else
+      MaybeChanged.same appr
+  )
   |> MaybeChanged.unpack
   |> CostBounds.infer_from_timebounds program
