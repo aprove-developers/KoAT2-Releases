@@ -211,7 +211,7 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
            Solver.model opt
            |> Option.map (make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
            |> Option.may (fun ranking_function ->
-                  to_be_found := !to_be_found + 1;
+                  to_be_found := !to_be_found - 1;
                   RankingTable.add (ranking_table measure) decreasing ranking_function;
                   Logger.(log logger DEBUG (fun () -> "added_ranking_function", [
                                                 "measure", show_measure measure;
