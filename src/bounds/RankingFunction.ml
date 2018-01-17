@@ -227,7 +227,7 @@ let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transitio
         Solver.push opt;
         Solver.add opt (non_increasing_constraint measure transition);
         Stack.push transition non_increasing;
-        backtrack (steps_left - 1) (index + 1) opt scc non_increasing measure;
+        backtrack (steps_left - 1) (i + 1) opt scc non_increasing measure;
         ignore (Stack.pop non_increasing);
         Solver.pop opt;
       done
