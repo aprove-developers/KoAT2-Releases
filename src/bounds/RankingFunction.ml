@@ -187,21 +187,22 @@ let try_decreasing (opt: Solver.t) (scc: Transition.t array) (non_increasing: Tr
        )
            
 let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (measure: measure) =
-  if steps_left == 0 then (
-    try_decreasing opt scc non_increasing measure;
-    if Array.for_all (fun t -> RankingTable.mem (ranking_table measure) t) scc then
-      raise Exit
-  ) else (
-    for i=index to Array.length scc - 1 do
-      let transition = Array.get scc i in
-      Solver.push opt;
-      Solver.add opt (non_increasing_constraint measure transition);
-      Stack.push transition non_increasing;
-      backtrack (steps_left - 1) (index + 1) opt scc non_increasing measure;
-      ignore (Stack.pop non_increasing);
-      Solver.pop opt;
-    done
-  )
+  if Solver.satisfiable opt then
+    if steps_left == 0 then (
+      try_decreasing opt scc non_increasing measure;
+      if Array.for_all (fun t -> RankingTable.mem (ranking_table measure) t) scc then
+        raise Exit
+    ) else (
+      for i=index to Array.length scc - 1 do
+        let transition = Array.get scc i in
+        Solver.push opt;
+        Solver.add opt (non_increasing_constraint measure transition);
+        Stack.push transition non_increasing;
+        backtrack (steps_left - 1) (index + 1) opt scc non_increasing measure;
+        ignore (Stack.pop non_increasing);
+        Solver.pop opt;
+      done
+    )
 
 let compute_ measure program =
   program
