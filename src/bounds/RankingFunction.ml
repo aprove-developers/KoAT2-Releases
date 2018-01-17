@@ -198,7 +198,7 @@ let ranking_table = function
 
 module Solver = SMT.IncrementalZ3Solver
 
-let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (measure: measure) =
+let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
   non_increasing
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
@@ -206,31 +206,36 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (measu
          Solver.push opt;
          Solver.add opt (bounded_constraint measure decreasing);
          Solver.add opt (decreasing_constraint measure decreasing);
-         if Solver.satisfiable opt then (
+         if Solver.satisfiable opt then (           
            Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
            Solver.model opt
            |> Option.map (make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
-           |> Option.may (RankingTable.add (ranking_table measure) decreasing)
+           |> Option.may (fun t ->
+                  to_be_found := !to_be_found + 1;
+                  RankingTable.add (ranking_table measure) decreasing t
+                )
          );
          Solver.pop opt
-       )
+       );
+  if !to_be_found == 0 then
+    raise Exit
+
            
-let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (measure: measure) =
+let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
   if Solver.satisfiable opt then (
     if steps_left == 0 then (
-      try_decreasing opt non_increasing measure;
-      if Array.for_all (fun t -> RankingTable.mem (ranking_table measure) t) scc then
-        raise Exit
+      try_decreasing opt non_increasing to_be_found measure
     ) else (
       for i=index to Array.length scc - 1 do
         let transition = Array.get scc i in
         Solver.push opt;
         Solver.add opt (non_increasing_constraint measure transition);
         Stack.push transition non_increasing;
-        backtrack (steps_left - 1) (i + 1) opt scc non_increasing measure;
+        backtrack (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure;
         ignore (Stack.pop non_increasing);
         Solver.pop opt;
-      done
+      done;
+      try_decreasing opt non_increasing to_be_found measure
     )
   )
 
@@ -239,12 +244,13 @@ let compute_ measure program =
   |> Program.sccs
   |> Enum.iter (fun scc ->
          try
-           for depth=(TransitionSet.cardinal scc) downto 1 do
-             if TransitionSet.for_all (fun t -> RankingTable.mem (ranking_table measure) t) scc then
-               raise Exit
-             else
-               backtrack depth 0 (Solver.create ()) (Array.of_enum (TransitionSet.enum scc)) (Stack.create ()) measure           
-           done
+           backtrack (TransitionSet.cardinal scc)
+                     0
+                     (Solver.create ())
+                     (Array.of_enum (TransitionSet.enum scc))
+                     (Stack.create ())
+                     (ref (TransitionSet.cardinal scc))
+                     measure           
          with Exit -> ()
        )
   
