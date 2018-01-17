@@ -187,9 +187,11 @@ let try_decreasing (opt: Solver.t) (scc: Transition.t array) (non_increasing: Tr
        )
            
 let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (measure: measure) =
-  if steps_left == 0 then
-    try_decreasing opt scc non_increasing measure
-  else (
+  if steps_left == 0 then (
+    try_decreasing opt scc non_increasing measure;
+    if Array.for_all (fun t -> RankingTable.mem (ranking_table measure) t) scc then
+      raise Exit
+  ) else (
     for i=index to Array.length scc - 1 do
       let transition = Array.get scc i in
       Solver.push opt;
@@ -198,29 +200,8 @@ let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transitio
       backtrack (steps_left - 1) (index + 1) opt scc non_increasing measure;
       ignore (Stack.pop non_increasing);
       Solver.pop opt;
-    done;
-(*    if steps_left < Array.length scc then
-      try_decreasing opt scc non_increasing measure *)
+    done
   )
-           
-let compute measure (scc: TransitionSet.t): unit =
-  let execute () =
-    scc
-    |> TransitionSet.powerset
-    |> Enum.iter (fun increasing_transitions ->
-           scc
-           |> TransitionSet.enum
-           |> Enum.iter (fun decreasing_transition ->
-                  find_with measure (TransitionSet.add decreasing_transition (TransitionSet.diff scc increasing_transitions)) decreasing_transition
-                  |> Option.may (RankingTable.add (ranking_table measure) decreasing_transition)
-                )
-         ) 
-  in
-  Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "compute_ranking_functions", ["measure", show_measure measure;
-                                                           "scc", TransitionSet.to_string scc])
-                  ~result:(fun () -> (string_of_int % RankingTable.length % ranking_table) measure)
-                  execute
 
 let compute_ measure program =
   program
