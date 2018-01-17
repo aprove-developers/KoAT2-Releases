@@ -62,9 +62,6 @@ val default : [`Lower | `Upper] -> Bound.t
 (** Returns a formula which expresses that the variable is smaller or equal to the bound, e.g. x <= b. *)
 val as_formula : Var.t -> t -> Formula.t
 
-(** Checks if the variable is bounded with the templated bound in the formula. *)
-val is_bounded_with : Var.t -> Formula.t -> t -> bool
-
 (** Tries to find a templated bound of any of the defined templates. *)
 val find_bound : [`Lower | `Upper] -> Var.t -> Formula.t -> t Option.t
 

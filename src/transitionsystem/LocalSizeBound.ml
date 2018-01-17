@@ -4,6 +4,8 @@ open Polynomials
    
 let logger = Logging.(get LocalSizeBound)
            
+module Solver = SMT.IncrementalZ3Solver
+          
 type t = {
     kind: [`Lower | `Upper];
     factor: int;
@@ -125,9 +127,12 @@ let as_formula in_v lsb =
        )
   |> Formula.any
 
-let is_bounded_with var formula lsb =
-  Formula.Infix.(formula => as_formula var lsb)
-  |> SMT.Z3Solver.tautology
+let is_bounded_with solver var lsb =
+  Solver.push solver;
+  Solver.add solver (Formula.neg (as_formula var lsb));
+  let result = Solver.unsatisfiable solver in
+  Solver.pop solver;
+  result
 
 (** Performs a binary search between the lowest and highest value to find the optimal value which satisfies the predicate.
     We assume that the highest value already satisfies the predicate.
@@ -262,30 +267,30 @@ let initial_lsb kind factor (constant: int) (vars: VarSet.t) = {
   
   
 (* Check if x <= 1 * (c + [v1,...,vn]). *)
-let find_unscaled_bound kind (var: Var.t) (formula: Formula.t) (varsets: VarSet.t Enum.t): t Option.t =
+let find_unscaled_bound kind (var: Var.t) (solver: Solver.t) (varsets: VarSet.t Enum.t): t Option.t =
   let execute () =
     try
       Some (
           Enum.find_map (fun vars ->
               Some (initial_lsb kind 1 1024 vars)
-              |> Option.filter (is_bounded_with var formula)
-              |> Option.map (optimize_c 1024 (is_bounded_with var formula))
-              |> Option.map (minimize_scaledsum_vars (is_bounded_with var formula))
-              |> Option.map (unabsify_vars (is_bounded_with var formula))
+              |> Option.filter (is_bounded_with solver var)
+              |> Option.map (optimize_c 1024 (is_bounded_with solver var))
+              |> Option.map (minimize_scaledsum_vars (is_bounded_with solver var))
+              |> Option.map (unabsify_vars (is_bounded_with solver var))
             ) varsets
         )
     with Not_found -> None
   in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "find unscaled bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
+                  (fun () -> "find unscaled bound", ["var", Var.to_string var])
                   ~result:(Util.option_to_string (Bound.to_string % as_bound))
                   execute
   
 (* Check if x <= s * (c + [v1,...,vn]). *)
-let find_scaled_bound kind var formula =
+let find_scaled_bound kind solver var formula =
   let execute () =
     let vars = VarSet.remove var (Formula.vars formula)
     and range = 1024
-    and is_bounded = is_bounded_with var formula in
+    and is_bounded = is_bounded_with solver var in
     try 
       Some (initial_lsb kind range range vars)
       |> Option.filter is_bounded
@@ -300,20 +305,22 @@ let find_scaled_bound kind var formula =
                   execute
 
 type kind = [`Lower | `Upper] [@@deriving show, eq]
-   
+
 let find_bound kind var formula =
   let execute () =
+    let solver = Solver.create () in
+    Solver.add solver formula;
     let unscaled_bound =
       formula
       |> Formula.vars
       |> VarSet.remove var
       |> VarSet.powerset
-      |> find_unscaled_bound kind var formula
+      |> find_unscaled_bound kind var solver
     in
     if Option.is_some unscaled_bound then
       unscaled_bound
     else
-      find_scaled_bound kind var formula
+      find_scaled_bound kind solver var formula
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find local size bound", ["kind", show_kind kind; "var", Var.to_string var; "formula", Formula.to_string formula])
                      ~result:(Util.option_to_string (Bound.to_string % as_bound))

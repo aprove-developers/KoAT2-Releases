@@ -38,6 +38,9 @@ sig
   (** Checks if the current state is satisfiable. *)
   val satisfiable : t -> bool
 
+  (** Checks if the current state is satisfiable. *)
+  val unsatisfiable : t -> bool
+
   (** Asserts the formula. *)
   val add : t -> Formula.t -> unit
 

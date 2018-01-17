@@ -8,16 +8,6 @@ open LocalSizeBound
 let tests = 
   "LocalSizeBound" >::: [
                         
-      ("is_bounded_with" >:::
-         List.map (fun (formula, template_bound) ->
-             "as_bound-Test" >::
-               (fun _ -> assert_true (is_bounded_with (Var.of_string "x") (Readers.read_formula formula) template_bound)))
-                  [
-                    ("x = 5", mk ~c:5 `Upper);
-                    ("x = y", mk ~pos_pure:["y"] `Upper);
-                  ]
-      );
-
       ("find upper bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
