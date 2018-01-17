@@ -88,7 +88,7 @@ let bounded measure appr transition =
 let improve measure program appr =
   let execute () =
     program
-    |> Program.transitions
+    |> Program.non_trivial_transitions
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
     |> TransitionSet.enum
     |> MaybeChanged.fold_enum (fun appr transition ->
@@ -99,26 +99,5 @@ let improve measure program appr =
                 ) appr           
          ) appr
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "improve bounds", ["measure", show_measure measure])
-                     execute
-
-let improve measure program appr =
-  let execute () =
-    let module SCC = Graph.Components.Make(TransitionGraph) in
-    program
-    |> Program.sccs
-    |> MaybeChanged.fold_enum (fun appr transitions ->
-           transitions
-           |> TransitionSet.filter (fun t -> not (bounded measure appr t))
-           |> TransitionSet.enum
-           |> MaybeChanged.fold_enum (fun appr transition ->
-                  RankingFunction.find measure program transition
-                  |> List.enum
-                  |> MaybeChanged.fold_enum (fun appr rank ->
-                         improve_with_rank measure program appr rank
-                       ) appr
-                ) appr
-         ) appr
-  in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "improve bounds", ["measure", show_measure measure])
+                     (fun () -> "improve_bounds", ["measure", show_measure measure])
                      execute

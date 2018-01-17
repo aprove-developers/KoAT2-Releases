@@ -3,11 +3,12 @@ open OUnit2
 open Helper
 open Formulas
 open Constraints
+open Polynomials
    
 module Z3Solver = SMT.Z3Solver
 
-module Polynomial = Polynomials.Polynomial
-               
+module Valuation = Valuation.Make(OurInt)
+                  
 let print_fl = Float.to_string
 
 let suite =
@@ -50,7 +51,9 @@ let suite =
         
         "get_model_valuation" >::: (
         List.map (fun (testname, expected, constr, poly) ->
-            testname >:: (fun _ -> assert_equal_poly  (Readers.read_polynomial expected) (Polynomial.eval_partial (Readers.read_polynomial poly) (Z3Solver.get_model (Readers.read_formula constr)) )))
+            testname >:: (fun _ -> assert_equal_poly
+                                     (Readers.read_polynomial expected)
+                                     (Polynomial.eval_partial (Readers.read_polynomial poly) (Z3Solver.get_model (Readers.read_formula constr) |? (Valuation.from [])) )))
                     [
                         ("fst", "x+y","a = 1 && b = 1", "a*x+b*y" );
                         ("snd", "x+y","a = 1 && b = 1 && c<=0 && d<=0 || a = 1 && b = 1 && c > 0 && d > 0", "a*x+b*y + c*z + d*w" );

@@ -61,11 +61,7 @@ module Types =
 
         let cost t = TransitionLabel.cost (label t)
 
-        (* TODO Needs to be fast for usage in the timebound hashtables.
-       There might be transitions with the same src and target, 
-       but that is not a problem for the hashtables,
-       since it should not occur very often. *)
-        let hash (l,_,l') = Hashtbl.hash (Location.to_string l ^ Location.to_string l')
+        let hash = Hashtbl.hash % id
 
         let to_id_string (l,label,l') =
           (Int.to_string % TransitionLabel.id) label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
@@ -301,6 +297,9 @@ let sccs program =
   |> Enum.map (TransitionGraph.loc_transitions program.graph)
   |> Enum.filter (not % TransitionSet.is_empty)
   
+let non_trivial_transitions =
+  Enum.fold TransitionSet.union TransitionSet.empty % sccs
+
 let add_invariant location invariant =
   map_graph (TransitionGraph.add_invariant location invariant)
 

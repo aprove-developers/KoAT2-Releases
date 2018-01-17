@@ -21,8 +21,9 @@ let run (params: params) =
   let solve = match params.solver with
     | `Z3 -> Z3.get_model
   and constr = Readers.read_formula params.constr in
-  let valuation_bindings = Valuation.bindings (solve constr) in
-  if Enum.is_empty valuation_bindings then
-    print_string "unsatisfiable\n"
-  else Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n")) valuation_bindings
+  solve constr
+  |> Option.map (fun solution -> 
+         Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n")) (Valuation.bindings solution)
+       )
+  |? print_string "unsatisfiable\n"
   

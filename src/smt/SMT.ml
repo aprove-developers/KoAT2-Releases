@@ -122,6 +122,7 @@ module Z3Solver =
              )
         |? []
         |> Valuation.from
-      else Valuation.from []
+        |> Option.some
+      else None
       
   end
