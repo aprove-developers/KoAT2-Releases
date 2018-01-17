@@ -221,7 +221,7 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
          );
          Solver.pop opt
        );
-  if !to_be_found == 0 then
+  if !to_be_found <= 0 then
     raise Exit
 
            
