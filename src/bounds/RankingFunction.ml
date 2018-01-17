@@ -10,7 +10,7 @@ module Valuation = Valuation.Make(OurInt)
                  
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
-type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ]
+type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ] [@@deriving show, eq]
                      
 type t = {
     rank : Location.t -> Polynomial.t;
@@ -109,15 +109,43 @@ let decreaser measure t =
   | `Cost -> TransitionLabel.cost t
   | `Time -> Polynomial.one
 
+module TransitionConstraintTable =
+  Hashtbl.Make(
+      struct
+        type t = measure * constraint_type * Transition.t
+        let equal (m1,c1,t1) (m2,c2,t2) =
+          equal_measure m1 m2
+          && equal_constraint_type c1 c2
+          && Transition.same t1 t2
+        let hash (m,c,t) =
+          Hashtbl.hash (m,c,Transition.id t)
+      end
+    )
+
+let transition_constraint_table = TransitionConstraintTable.create 10
+
+let memoize f =  
+  let g x = 
+    match TransitionConstraintTable.find_option transition_constraint_table x with
+    | Some y -> y
+    | None ->
+       let y = f x in
+       TransitionConstraintTable.add transition_constraint_table x y;
+       y
+  in g
+
 let transition_constraint measure (constraint_type: constraint_type) (template: Location.t -> ParameterPolynomial.t) ((l,t,l'): Transition.t): Formula.t =
-  let atom =
-    match constraint_type with
-    | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (as_parapoly t) (template l'))
-    | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
-    | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))      
+  let compute_transition_constraint (measure, constraint_type, (l,t,l')) =
+    let atom =
+      match constraint_type with
+      | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (as_parapoly t) (template l'))
+      | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
+      | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))      
+    in
+    farkas_transform (TransitionLabel.guard t) atom
+    |> Formula.mk  
   in
-  farkas_transform (TransitionLabel.guard t) atom
-  |> Formula.mk
+  memoize compute_transition_constraint (measure, constraint_type, (l,t,l'))
   
 let transitions_constraint measure (constraint_type: constraint_type) (template : Location.t -> ParameterPolynomial.t) (transitions : Transition.t list): Formula.t =
   transitions

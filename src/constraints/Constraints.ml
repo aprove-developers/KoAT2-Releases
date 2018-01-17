@@ -97,10 +97,10 @@ module Constraint =
             List.map (fun var -> get_coefficient_vector var constr) variables
     
     let dualise vars matrix column =
-        let dualised_left = List.map (fun row -> Polynomial.of_coeff_list row vars) matrix in
-            let dualised_eq = List.flatten (List.map2 mk_eq dualised_left column) in
-                let ensure_pos = List.map (fun v -> A.Infix.(Polynomial.of_var v >= Polynomial.zero)) vars in
-                    mk (List.flatten [dualised_eq;ensure_pos])
+      let dualised_left = List.map (fun row -> Polynomial.of_coeff_list row vars) matrix in
+      let dualised_eq = List.flatten (List.map2 mk_eq dualised_left column) in
+      let ensure_pos = List.map (fun v -> A.Infix.(Polynomial.of_var v >= Polynomial.zero)) vars in
+      mk (List.flatten [dualised_eq;ensure_pos])
 
     (** Farkas Lemma applied to a linear constraint and an atom which is the cost function*)    
     let farkas_transform constr atom =
