@@ -26,7 +26,7 @@ let rank f = f.rank
            
 let decreasing f = f.decreasing
                  
-let transitions f = TransitionSet.to_list f.non_increasing
+let non_increasing f = TransitionSet.to_list f.non_increasing
 
 let rank_to_string (locations: Location.t list) (content_to_string: 'a -> string) (pol: Location.t -> 'a) =
   locations
@@ -123,28 +123,31 @@ let transitions_constraint measure (constraint_type: constraint_type) (template 
   |> List.map (transition_constraint measure constraint_type template)
   |> Constraint.all
   
-let find_with measure non_increasing_transitions decreasing_transition =
-  let template = TemplateTable.find template_table in
+let non_increasing_constraint measure transition =
+  transition_constraint measure `Non_Increasing (TemplateTable.find template_table) transition
 
-  let non_increasing_constraint =
-    transitions_constraint measure `Non_Increasing template (TransitionSet.to_list non_increasing_transitions)
-  in
+let non_increasing_constraints measure transitions =
+  transitions_constraint measure `Non_Increasing
+                         (TemplateTable.find template_table)
+                         (TransitionSet.to_list transitions)
   
-  let bounded =
-    transition_constraint measure `Bounded template decreasing_transition
-  in
+let bounded_constraint measure transition =
+  transition_constraint measure `Bounded (TemplateTable.find template_table) transition
 
-  let decreasing =
-    transition_constraint measure `Decreasing template decreasing_transition
-  in
+let decreasing_constraint measure transition =
+  transition_constraint measure `Decreasing (TemplateTable.find template_table) transition
 
-  Constraint.Infix.(non_increasing_constraint && bounded && decreasing)
+let find_with measure non_increasing_transitions decreasing_transition =
+  Constraint.Infix.(
+    non_increasing_constraints measure non_increasing_transitions
+    && bounded_constraint measure decreasing_transition
+    && decreasing_constraint measure decreasing_transition)
   |> Formula.mk
   |> SMTSolver.get_model ~coeffs_to_minimise:!fresh_coeffs
   |> Option.map (fun valuation ->
          let rank location =
            location
-           |> template 
+           |> TemplateTable.find template_table
            |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
          in
          Some {
@@ -164,7 +167,7 @@ let cost_ranking_table: t RankingTable.t = RankingTable.create 10
 let ranking_table = function
   | `Time -> time_ranking_table
   | `Cost -> cost_ranking_table
-           
+
 let compute measure (scc: TransitionSet.t): unit =
   let execute () =
     scc

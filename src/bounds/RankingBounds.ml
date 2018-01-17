@@ -44,10 +44,10 @@ let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t)
   
 let compute_bound (appr: Approximation.t) (graph: TransitionGraph.t) (rank: RankingFunction.t): Bound.t =
   let execute () =
-    entry_locations graph (RankingFunction.transitions rank)
+    entry_locations graph (RankingFunction.non_increasing rank)
     |> List.enum
     |> Enum.map (fun location ->
-           transitions_to graph (RankingFunction.transitions rank) location
+           transitions_to graph (RankingFunction.non_increasing rank) location
            |> List.enum
            |> Enum.map (fun transition -> (location,transition)) 
          )
