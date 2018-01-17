@@ -198,10 +198,11 @@ let ranking_table = function
 
 module Solver = SMT.IncrementalZ3Solver
 
-let try_decreasing (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (measure: measure) =
-  scc
-  |> Array.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
-  |> Array.iter (fun decreasing ->
+let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (measure: measure) =
+  non_increasing
+  |> Stack.enum
+  |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
+  |> Enum.iter (fun decreasing ->
          Solver.push opt;
          Solver.add opt (bounded_constraint measure decreasing);
          Solver.add opt (decreasing_constraint measure decreasing);
@@ -215,9 +216,9 @@ let try_decreasing (opt: Solver.t) (scc: Transition.t array) (non_increasing: Tr
        )
            
 let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (measure: measure) =
-  if Solver.satisfiable opt then
+  if Solver.satisfiable opt then (
     if steps_left == 0 then (
-      try_decreasing opt scc non_increasing measure;
+      try_decreasing opt non_increasing measure;
       if Array.for_all (fun t -> RankingTable.mem (ranking_table measure) t) scc then
         raise Exit
     ) else (
@@ -231,6 +232,7 @@ let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transitio
         Solver.pop opt;
       done
     )
+  )
 
 let compute_ measure program =
   program
