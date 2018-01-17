@@ -210,9 +210,13 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
            Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
            Solver.model opt
            |> Option.map (make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
-           |> Option.may (fun t ->
+           |> Option.may (fun ranking_function ->
                   to_be_found := !to_be_found + 1;
-                  RankingTable.add (ranking_table measure) decreasing t
+                  RankingTable.add (ranking_table measure) decreasing ranking_function;
+                  Logger.(log logger DEBUG (fun () -> "added_ranking_function", [
+                                                "measure", show_measure measure;
+                                                "decreasing", Transition.to_id_string decreasing;
+                                                "ranking_function", to_string ranking_function]))
                 )
          );
          Solver.pop opt
