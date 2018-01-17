@@ -238,6 +238,7 @@ let rec simplify bound =
     (* Simplify terms with product head *)
     | Product (b1, b2) -> (
       match (simplify b1, simplify b2) with
+      | (Const c1, Const c2) -> Const (OurInt.(c1 * c2))
       | (Const c, b) when OurInt.(c =~= one) -> b
       | (b, Const c) when OurInt.(c =~= one) -> b
       | (Const c, b) when OurInt.(c =~= zero) -> Const OurInt.zero
