@@ -308,7 +308,7 @@ type kind = [`Lower | `Upper] [@@deriving show, eq]
 
 let find_bound kind var formula =
   let execute () =
-    let solver = Solver.create () in
+    let solver = Solver.create ~model:false () in
     Solver.add solver formula;
     let unscaled_bound =
       formula
