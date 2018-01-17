@@ -107,6 +107,18 @@ let asymptotic_complexity =
     )
     ~inf:Inf
 
+let max_of_occurring_constants bound =
+  fold
+    ~const:identity
+    ~var:(fun _ -> OurInt.one)
+    ~neg:identity
+    ~plus:OurInt.add
+    ~times:OurInt.mul
+    ~exp:(fun _ -> raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
+    ~max:OurInt.max
+    ~inf:(raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
+    bound
+  
 let rec show_bound = function
   | Var v -> Var.to_string v
   | Const c -> OurInt.to_string c

@@ -35,6 +35,8 @@ val minus_infinity : t
 val exp : value -> t -> t
 val abs : t -> t
 
+val max_of_occurring_constants : t -> OurInt.t
+
 val is_infinity : t -> bool
   
 val to_string : t -> string
