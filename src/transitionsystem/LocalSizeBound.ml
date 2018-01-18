@@ -273,9 +273,7 @@ let find_scaled_bound kind solver var vars (s: int) (c: int) =
       let varsets =
         vars
         |> VarSet.sorted_powerset
-        (* If the lsb needs more than three variables, we put instead all variables in the lsb and try to minimize. *)
         |> List.enum
-        |> Enum.filter (fun vars -> VarSet.cardinal vars <= 3)
       in
       Some (
           Enum.find_map (fun vars ->
@@ -288,12 +286,7 @@ let find_scaled_bound kind solver var vars (s: int) (c: int) =
             ) varsets
         )
     with Not_found ->
-      Some (initial_lsb kind s c vars)
-      |> Option.filter is_bounded
-      |> Option.map (minimize_scaledsum_vars (is_bounded_with solver var))
-      |> Option.map (optimize_s 1 s is_bounded)
-      |> Option.map (optimize_c c is_bounded)
-      |> Option.map (unabsify_vars is_bounded)
+      raise (Failure "No lsb found although an update exists!")
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "find scaled bound", ["var", Var.to_string var; "vars", VarSet.to_string vars])
                   ~result:(Util.option_to_string (Bound.to_string % as_bound))
