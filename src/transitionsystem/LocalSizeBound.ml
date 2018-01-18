@@ -265,39 +265,37 @@ let initial_lsb kind factor (constant: int) (vars: VarSet.t) = {
            | (_, `Pure) -> VarSet.empty
   }
   
-  
-(* Check if x <= 1 * (c + [v1,...,vn]). *)
-let find_unscaled_bound kind (var: Var.t) (solver: Solver.t) (range: int) (varsets: VarSet.t Enum.t): t Option.t =
+(* Check if x <= s * (c + [v1,...,vn]). *)
+let find_scaled_bound kind solver var formula (s: int) (c: int) =
   let execute () =
-    try
+    let is_bounded = is_bounded_with solver var in
+    try 
+      let varsets =
+        formula
+        |> Formula.vars
+        |> VarSet.remove var
+        |> VarSet.powerset
+        (* If the lsb needs more than three variables, we put instead all variables in the lsb and try to minimize. *)
+        |> Enum.filter (fun vars -> VarSet.cardinal vars <= 3)
+      in
       Some (
           Enum.find_map (fun vars ->
-              Some (initial_lsb kind 1 range vars)
-              |> Option.filter (is_bounded_with solver var)
-              |> Option.map (optimize_c range (is_bounded_with solver var))
+              Some (initial_lsb kind s c vars)
+              |> Option.filter is_bounded
+              |> Option.map (optimize_s 1 s is_bounded)
+              |> Option.map (optimize_c c is_bounded)
               |> Option.map (minimize_scaledsum_vars (is_bounded_with solver var))
-              |> Option.map (unabsify_vars (is_bounded_with solver var))
+              |> Option.map (unabsify_vars is_bounded)
             ) varsets
         )
-    with Not_found -> None
-  in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "find unscaled bound", ["var", Var.to_string var])
-                  ~result:(Util.option_to_string (Bound.to_string % as_bound))
-                  execute
-  
-(* Check if x <= s * (c + [v1,...,vn]). *)
-let find_scaled_bound kind solver var formula (range: int) =
-  let execute () =
-    let vars = VarSet.remove var (Formula.vars formula)
-    and is_bounded = is_bounded_with solver var in
-    try 
-      Some (initial_lsb kind range range vars)
+    with Not_found ->
+      let vars = VarSet.remove var (Formula.vars formula) in
+      Some (initial_lsb kind s c vars)
       |> Option.filter is_bounded
-      |> Option.map (optimize_s 1 range is_bounded)
-      |> Option.map (optimize_c range is_bounded)
-      |> Option.map (minimize_scaledsum_vars is_bounded)
+      |> Option.map (minimize_scaledsum_vars (is_bounded_with solver var))
+      |> Option.map (optimize_s 1 s is_bounded)
+      |> Option.map (optimize_c c is_bounded)
       |> Option.map (unabsify_vars is_bounded)
-    with Not_found -> None
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "find scaled bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
                   ~result:(Util.option_to_string (Bound.to_string % as_bound))
@@ -315,17 +313,7 @@ let find_bound kind var formula =
   let execute () =
     let solver = Solver.create ~model:false () in
     Solver.add solver formula;
-    let unscaled_bound =
-      formula
-      |> Formula.vars
-      |> VarSet.remove var
-      |> VarSet.powerset
-      |> find_unscaled_bound kind var solver range
-    in
-    if Option.is_some unscaled_bound then
-      unscaled_bound
-    else
-      find_scaled_bound kind solver var formula range
+    find_scaled_bound kind solver var formula range range
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find local size bound", [
                           "kind", show_kind kind;
