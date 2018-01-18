@@ -1,12 +1,12 @@
 Timebounds: 
   Overall timebound: inf [Infinity]
   0: f0->f2: 1 [O(1)]
-  1: f2->f2: max{0, 1+A} [O(n)]
+  1: f2->f2: max{0, A} [O(n)]
 
 Costbounds:
   Overall costbound: inf [Infinity]
   0: f0->f2: 1 [O(1)]
-  1: f2->f2: max{0, 1+A} [O(n)]
+  1: f2->f2: max{0, A} [O(n)]
   2: f2->f2: inf [Infinity]
 
 Sizebounds:

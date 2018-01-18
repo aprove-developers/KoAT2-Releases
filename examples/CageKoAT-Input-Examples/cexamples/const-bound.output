@@ -4,8 +4,8 @@ Timebounds:
   0: start->f: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 200 [O(1)]
-  1: f->f: 199 [O(1)]
+  Overall costbound: 100 [O(1)]
+  1: f->f: 99 [O(1)]
   0: start->f: 1 [O(1)]
 
 Sizebounds:

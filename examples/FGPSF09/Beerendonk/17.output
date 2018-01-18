@@ -1,14 +1,14 @@
 Timebounds: 
-  Overall timebound: 1+max{0, 1+A}+max{0, A}+max{0, B} [O(n)]
+  Overall timebound: 1+max{0, 2*A}+max{0, A}+max{0, B} [O(n)]
   0: eval->eval: max{0, A} [O(n)]
-  1: eval->eval: max{0, 1+A} [O(n)]
+  1: eval->eval: max{0, 2*A} [O(n)]
   2: eval->eval: max{0, B} [O(n)]
   4: start->eval: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 1+max{0, 1+A}+max{0, A}+max{0, B} [O(n)]
+  Overall costbound: 1+max{0, 2*A}+max{0, A}+max{0, B} [O(n)]
   0: eval->eval: max{0, A} [O(n)]
-  1: eval->eval: max{0, 1+A} [O(n)]
+  1: eval->eval: max{0, 2*A} [O(n)]
   2: eval->eval: max{0, B} [O(n)]
   4: start->eval: 1 [O(1)]
 

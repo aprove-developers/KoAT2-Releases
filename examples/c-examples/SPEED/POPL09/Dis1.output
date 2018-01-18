@@ -1,7 +1,7 @@
 Timebounds: 
   Overall timebound: inf [Infinity]
   6: evalDis1bb1in->evalDis1bb3in: max{0, D-C} [O(n)]
-  7: evalDis1bb2in->evalDis1bb3in: max{0, B-A} [O(n)]
+  7: evalDis1bb2in->evalDis1bb3in: max{0, 2*B+-2*A} [O(n)]
   3: evalDis1bb3in->evalDis1returnin: 1 [O(1)]
   4: evalDis1bbin->evalDis1bb1in: max{0, D-C} [O(n)]
   5: evalDis1bbin->evalDis1bb2in: max{0, B-A} [O(n)]
@@ -12,7 +12,7 @@ Timebounds:
 Costbounds:
   Overall costbound: inf [Infinity]
   6: evalDis1bb1in->evalDis1bb3in: max{0, D-C} [O(n)]
-  7: evalDis1bb2in->evalDis1bb3in: max{0, B-A} [O(n)]
+  7: evalDis1bb2in->evalDis1bb3in: max{0, 2*B+-2*A} [O(n)]
   2: evalDis1bb3in->evalDis1bbin: inf [Infinity]
   3: evalDis1bb3in->evalDis1returnin: 1 [O(1)]
   4: evalDis1bbin->evalDis1bb1in: max{0, D-C} [O(n)]

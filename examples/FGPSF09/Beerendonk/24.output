@@ -1,21 +1,21 @@
 Timebounds: 
-  Overall timebound: 1+2*max{0, A}+2*max{0, B}+max{0, B}+max{0, A} [O(n)]
-  0: eval1->eval2: max{0, A} [O(n)]
+  Overall timebound: 1+2*max{0, A}+2*max{0, B}+max{0, 2*B}+max{0, 2*A} [O(n)]
+  0: eval1->eval2: max{0, 2*A} [O(n)]
   1: eval1->eval3: max{0, B} [O(n)]
   2: eval2->eval2: max{0, A} [O(n)]
   3: eval2->eval1: max{0, A} [O(n)]
   4: eval3->eval3: max{0, B} [O(n)]
-  5: eval3->eval1: max{0, B} [O(n)]
+  5: eval3->eval1: max{0, 2*B} [O(n)]
   6: start->eval1: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 1+2*max{0, A}+2*max{0, B}+max{0, B}+max{0, A} [O(n)]
-  0: eval1->eval2: max{0, A} [O(n)]
+  Overall costbound: 1+2*max{0, A}+2*max{0, B}+max{0, 2*B}+max{0, 2*A} [O(n)]
+  0: eval1->eval2: max{0, 2*A} [O(n)]
   1: eval1->eval3: max{0, B} [O(n)]
   2: eval2->eval2: max{0, A} [O(n)]
   3: eval2->eval1: max{0, A} [O(n)]
   4: eval3->eval3: max{0, B} [O(n)]
-  5: eval3->eval1: max{0, B} [O(n)]
+  5: eval3->eval1: max{0, 2*B} [O(n)]
   6: start->eval1: 1 [O(1)]
 
 Sizebounds:

@@ -36,7 +36,6 @@ Sizebounds:
   5: evalcousot9bbin->evalcousot9bb2in, C: -max{0, -C} [O(n)]
   1: evalcousot9entryin->evalcousot9bb3in, B: C [O(n)]
   1: evalcousot9entryin->evalcousot9bb3in, C: C [O(n)]
-  8: evalcousot9returnin->evalcousot9stop, B: -max{0, -C} [O(n)]
   8: evalcousot9returnin->evalcousot9stop, C: -max{0, -C} [O(n)]
   0: evalcousot9start->evalcousot9entryin, A: A [O(n)]
   0: evalcousot9start->evalcousot9entryin, B: B [O(n)]

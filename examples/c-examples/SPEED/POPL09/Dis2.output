@@ -1,9 +1,9 @@
 Timebounds: 
   Overall timebound: inf [Infinity]
-  6: evalDis2bb1in->evalDis2bb3in: max{0, B-A} [O(n)]
+  6: evalDis2bb1in->evalDis2bb3in: max{0, 2*B+-2*A} [O(n)]
   7: evalDis2bb2in->evalDis2bb3in: max{0, B-C} [O(n)]
   3: evalDis2bb3in->evalDis2returnin: 1 [O(1)]
-  4: evalDis2bbin->evalDis2bb1in: max{0, B-A} [O(n)]
+  4: evalDis2bbin->evalDis2bb1in: max{0, 2*B+-2*A} [O(n)]
   5: evalDis2bbin->evalDis2bb2in: max{0, B-C} [O(n)]
   1: evalDis2entryin->evalDis2bb3in: 1 [O(1)]
   8: evalDis2returnin->evalDis2stop: 1 [O(1)]
@@ -11,11 +11,11 @@ Timebounds:
 
 Costbounds:
   Overall costbound: inf [Infinity]
-  6: evalDis2bb1in->evalDis2bb3in: max{0, B-A} [O(n)]
+  6: evalDis2bb1in->evalDis2bb3in: max{0, 2*B+-2*A} [O(n)]
   7: evalDis2bb2in->evalDis2bb3in: max{0, B-C} [O(n)]
   2: evalDis2bb3in->evalDis2bbin: inf [Infinity]
   3: evalDis2bb3in->evalDis2returnin: 1 [O(1)]
-  4: evalDis2bbin->evalDis2bb1in: max{0, B-A} [O(n)]
+  4: evalDis2bbin->evalDis2bb1in: max{0, 2*B+-2*A} [O(n)]
   5: evalDis2bbin->evalDis2bb2in: max{0, B-C} [O(n)]
   1: evalDis2entryin->evalDis2bb3in: 1 [O(1)]
   8: evalDis2returnin->evalDis2stop: 1 [O(1)]

@@ -1,25 +1,3 @@
 koat: internal error, uncaught exception:
       Failure("SMT-Solver does not know a solution due to: (incomplete (theory arithmetic))")
-      Raised at file "SMT.ml", line 46, characters 8-123
-      Called from file "src/batOption.ml", line 54, characters 16-19
-      Called from file "LocalSizeBound.ml", line 270, characters 14-110
-      Called from file "src/batEnum.ml", line 524, characters 10-23
-      Called from file "src/batEnum.ml", line 529, characters 4-11
-      Called from file "LocalSizeBound.ml", line 268, characters 11-426
-      Called from file "LocalSizeBound.ml", line 307, characters 6-133
-      Called from file "LocalSizeBound.ml", line 344, characters 15-18
-      Called from file "Program.ml", line 297, characters 11-92
-      Called from file "src/batEnum.ml", line 639, characters 35-43
-      Called from file "src/batEnum.ml", line 371, characters 18-28
-      Called from file "src/batEnum.ml", line 375, characters 4-10
-      Called from file "set.ml", line 326, characters 37-58
-      Called from file "set.ml", line 326, characters 42-57
-      Called from file "map.ml", line 196, characters 19-42
-      Called from file "map.ml", line 196, characters 26-41
-      Called from file "Program.ml", line 351, characters 37-50
-      Called from file "src/batInnerPervasives.mlv" (inlined), line 92, characters 14-17
-      Called from file "Main.ml", line 99, characters 9-502
-      Called from file "src/batOption.ml", line 38, characters 19-24
-      Called from file "Main.ml", line 96, characters 2-1023
-      Called from file "src/cmdliner_term.ml", line 27, characters 19-24
-      Called from file "src/cmdliner.ml", line 106, characters 32-39
+      

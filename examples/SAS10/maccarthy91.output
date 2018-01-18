@@ -1,6 +1,6 @@
 Timebounds: 
   Overall timebound: inf [Infinity]
-  12: lbl111->lbl111: max{0, 12-A+1110*2+max{91*A, 91*100}+max{-101*(11+A), -101*111}} [O(n)]
+  12: lbl111->lbl111: max{0, 90-A} [O(n)]
   14: lbl111->lbl161: 1 [O(1)]
   15: lbl111->lbl221: 1 [O(1)]
   16: lbl111->lbl221: 1 [O(1)]
@@ -13,7 +13,7 @@ Timebounds:
 
 Costbounds:
   Overall costbound: inf [Infinity]
-  12: lbl111->lbl111: max{0, 101-A} [O(n)]
+  12: lbl111->lbl111: max{0, 90-A} [O(n)]
   14: lbl111->lbl161: 1 [O(1)]
   15: lbl111->lbl221: 1 [O(1)]
   16: lbl111->lbl221: 1 [O(1)]

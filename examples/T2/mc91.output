@@ -1,13 +1,13 @@
 Timebounds: 
-  Overall timebound: max{0, 101-C}+max{2, 2+(101-C)*max{1, 102-C}} [O(n^2)]
+  Overall timebound: max{1, 1+C}+max{0, 111*(101-C)}+max{0, 101-C} [O(n)]
   0: f0->f1: 1 [O(1)]
-  1: f1->f1: max{1, 1+(101-C)*max{1, 102-C}} [O(n^2)]
+  1: f1->f1: max{0, C}+max{0, 111*(101-C)} [O(n)]
   2: f1->f1: max{0, 101-C} [O(n)]
 
 Costbounds:
-  Overall costbound: max{0, 101-C}+max{2, 2+(101-C)*max{1, 102-C}} [O(n^2)]
+  Overall costbound: max{1, 1+C}+max{0, 111*(101-C)}+max{0, 101-C} [O(n)]
   0: f0->f1: 1 [O(1)]
-  1: f1->f1: max{1, 1+(101-C)*max{1, 102-C}} [O(n^2)]
+  1: f1->f1: max{0, C}+max{0, 111*(101-C)} [O(n)]
   2: f1->f1: max{0, 101-C} [O(n)]
 
 Sizebounds:

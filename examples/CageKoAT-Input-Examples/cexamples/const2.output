@@ -11,7 +11,7 @@ Costbounds:
 Sizebounds:
 `Lower:
   0: f->g, x: 0 [O(1)]
-  1: g->g, x: 0 [O(1)]
+  1: g->g, x: 1 [O(1)]
 `Upper:
   0: f->g, x: 0 [O(1)]
-  1: g->g, x: 999999 [O(1)]
+  1: g->g, x: 1000448 [O(1)]

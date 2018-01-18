@@ -1,12 +1,12 @@
 Timebounds: 
-  Overall timebound: max{1, 1+-1000+A} [O(n)]
+  Overall timebound: max{1, 1+A} [O(n)]
   0: f0->f1: 1 [O(1)]
-  1: f1->f1: max{0, -1000+A} [O(n)]
+  1: f1->f1: max{0, A} [O(n)]
 
 Costbounds:
-  Overall costbound: max{1, 1+-1000+A} [O(n)]
+  Overall costbound: max{1, 1+A} [O(n)]
   0: f0->f1: 1 [O(1)]
-  1: f1->f1: max{0, -1000+A} [O(n)]
+  1: f1->f1: max{0, A} [O(n)]
 
 Sizebounds:
 `Lower:

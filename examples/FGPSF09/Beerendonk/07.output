@@ -1,14 +1,16 @@
 Timebounds: 
-  Overall timebound: inf [Infinity]
+  Overall timebound: max{1, 1+A} [O(n)]
+  0: eval->eval: max{0, A} [O(n)]
   1: start->eval: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: inf [Infinity]
-  0: eval->eval: inf [Infinity]
+  Overall costbound: max{1, 1+A} [O(n)]
+  0: eval->eval: max{0, A} [O(n)]
   1: start->eval: 1 [O(1)]
 
 Sizebounds:
 `Lower:
+  0: eval->eval, A: -max{0, -A}-max{0, 2*A} [O(n)]
   1: start->eval, A: A [O(n)]
 `Upper:
   0: eval->eval, A: max{0, A} [O(n)]

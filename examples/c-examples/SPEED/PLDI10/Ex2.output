@@ -1,7 +1,7 @@
 Timebounds: 
   Overall timebound: inf [Infinity]
   8: evalEx2bb2in->evalEx2bb3in: max{0, A} [O(n)]
-  2: evalEx2bb3in->evalEx2bbin: max{0, A} [O(n)]
+  2: evalEx2bb3in->evalEx2bbin: max{0, 1+A} [O(n)]
   3: evalEx2bb3in->evalEx2returnin: 1 [O(1)]
   4: evalEx2bb3in->evalEx2returnin: 1 [O(1)]
   5: evalEx2bbin->evalEx2bb2in: max{0, A} [O(n)]
@@ -15,7 +15,7 @@ Costbounds:
   6: evalEx2bb2in->evalEx2bb1in: inf [Infinity]
   7: evalEx2bb2in->evalEx2bb1in: inf [Infinity]
   8: evalEx2bb2in->evalEx2bb3in: max{0, A} [O(n)]
-  2: evalEx2bb3in->evalEx2bbin: max{0, A} [O(n)]
+  2: evalEx2bb3in->evalEx2bbin: max{0, 1+A} [O(n)]
   3: evalEx2bb3in->evalEx2returnin: 1 [O(1)]
   4: evalEx2bb3in->evalEx2returnin: 1 [O(1)]
   5: evalEx2bbin->evalEx2bb2in: max{0, A} [O(n)]

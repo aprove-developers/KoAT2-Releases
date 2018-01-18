@@ -4,8 +4,8 @@ Timebounds:
   1: start->eval: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: max{1, 1+A-C} [O(n)]
-  0: eval->eval: max{0, A-C} [O(n)]
+  Overall costbound: max{1, 1+A-B} [O(n)]
+  0: eval->eval: max{0, A-B} [O(n)]
   1: start->eval: 1 [O(1)]
 
 Sizebounds:

@@ -1,14 +1,14 @@
 Timebounds: 
-  Overall timebound: 1+2*max{0, i}+max{0, i*max{1, 1+n}}+max{0, 1+n} [O(n^2)]
-  2: bb2->bb2: max{0, i*max{1, 1+n}}+max{0, 1+n} [O(n^2)]
+  Overall timebound: 1+max{0, i}+max{0, i*n}+max{0, i} [O(n^2)]
+  2: bb2->bb2: max{0, i*n} [O(n^2)]
   3: bb2->bb4: max{0, i} [O(n)]
   1: bb4->bb2: max{0, i} [O(n)]
   0: start->bb4: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 1+max{0, i}+max{0, 1+i}+max{0, i*max{1, 1+n}}+max{0, 1+n} [O(n^2)]
-  2: bb2->bb2: max{0, i*max{1, 1+n}}+max{0, 1+n} [O(n^2)]
-  3: bb2->bb4: max{0, 1+i} [O(n)]
+  Overall costbound: 1+max{0, i}+max{0, i*n}+max{0, i} [O(n^2)]
+  2: bb2->bb2: max{0, i*n} [O(n^2)]
+  3: bb2->bb4: max{0, i} [O(n)]
   1: bb4->bb2: max{0, i} [O(n)]
   0: start->bb4: 1 [O(1)]
 

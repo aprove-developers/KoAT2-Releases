@@ -17,7 +17,9 @@ Sizebounds:
   0: f0->f2, B: D [O(n)]
   4: f0->f2, A: 3 [O(1)]
   4: f0->f2, B: C [O(n)]
+  8: f2->f2, A: 0 [O(1)]
   12: f2->f2, A: 3 [O(1)]
+  16: f2->f2, A: 0 [O(1)]
 `Upper:
   0: f0->f2, A: C [O(n)]
   0: f0->f2, B: D [O(n)]

@@ -1,13 +1,13 @@
 Timebounds: 
-  Overall timebound: max{2, 1+1+10+-6*2+5*4} [O(1)]
+  Overall timebound: 38 [O(1)]
   0: f0->f5: 1 [O(1)]
-  1: f5->f5: max{0, 10+-6*2+5*4} [O(1)]
+  1: f5->f5: 36 [O(1)]
   2: f5->f8: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: max{2, 1+1+10+-6*2+5*4} [O(1)]
+  Overall costbound: 38 [O(1)]
   0: f0->f5: 1 [O(1)]
-  1: f5->f5: max{0, 10+-6*2+5*4} [O(1)]
+  1: f5->f5: 36 [O(1)]
   2: f5->f8: 1 [O(1)]
 
 Sizebounds:

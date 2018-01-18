@@ -1,14 +1,14 @@
 Timebounds: 
-  Overall timebound: 1+2*max{0, 1+A}+max{0, (1+A)*max{1, 1+A}} [O(n^2)]
+  Overall timebound: 1+2*max{0, 1+A}+max{0, A*(1+A)}+max{0, A} [O(n^2)]
   0: eval1->eval2: max{0, 1+A} [O(n)]
-  1: eval2->eval2: max{0, (1+A)*max{1, 1+A}} [O(n^2)]
+  1: eval2->eval2: max{0, A*(1+A)}+max{0, A} [O(n^2)]
   2: eval2->eval1: max{0, 1+A} [O(n)]
   3: start->eval1: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 1+2*max{0, 1+A}+max{0, (1+A)*max{1, 1+A}} [O(n^2)]
+  Overall costbound: 1+2*max{0, 1+A}+max{0, A*(1+A)}+max{0, A} [O(n^2)]
   0: eval1->eval2: max{0, 1+A} [O(n)]
-  1: eval2->eval2: max{0, (1+A)*max{1, 1+A}} [O(n^2)]
+  1: eval2->eval2: max{0, A*(1+A)}+max{0, A} [O(n^2)]
   2: eval2->eval1: max{0, 1+A} [O(n)]
   3: start->eval1: 1 [O(1)]
 

@@ -1,6 +1,6 @@
 Timebounds: 
-  Overall timebound: 3+max{0, B}+max{1, 1+B} [O(n)]
-  2: evalSimpleSinglebb3in->evalSimpleSinglebbin: max{0, B} [O(n)]
+  Overall timebound: 3+max{0, B}+max{1, 2+B} [O(n)]
+  2: evalSimpleSinglebb3in->evalSimpleSinglebbin: max{0, 1+B} [O(n)]
   3: evalSimpleSinglebb3in->evalSimpleSinglereturnin: 1 [O(1)]
   4: evalSimpleSinglebbin->evalSimpleSinglebb3in: max{0, B} [O(n)]
   1: evalSimpleSingleentryin->evalSimpleSinglebb3in: 1 [O(1)]
@@ -8,8 +8,8 @@ Timebounds:
   0: evalSimpleSinglestart->evalSimpleSingleentryin: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 3+max{0, B}+max{1, 1+B} [O(n)]
-  2: evalSimpleSinglebb3in->evalSimpleSinglebbin: max{0, B} [O(n)]
+  Overall costbound: 3+max{0, B}+max{1, 2+B} [O(n)]
+  2: evalSimpleSinglebb3in->evalSimpleSinglebbin: max{0, 1+B} [O(n)]
   3: evalSimpleSinglebb3in->evalSimpleSinglereturnin: 1 [O(1)]
   4: evalSimpleSinglebbin->evalSimpleSinglebb3in: max{0, B} [O(n)]
   1: evalSimpleSingleentryin->evalSimpleSinglebb3in: 1 [O(1)]

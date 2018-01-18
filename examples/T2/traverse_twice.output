@@ -1,3 +1,0 @@
-Error: Edge length 83335.000000 larger than maximum 65535 allowed.
-Check for overwide node(s).
-dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.294871 to fit

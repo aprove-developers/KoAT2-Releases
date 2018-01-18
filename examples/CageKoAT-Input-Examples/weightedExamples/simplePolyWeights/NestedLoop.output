@@ -1,15 +1,15 @@
 Timebounds: 
-  Overall timebound: 2+2*max{0, x}+max{0, x*y}+max{0, y} [O(n^2)]
-  2: inner->inner: max{0, x*y}+max{0, y} [O(n^2)]
+  Overall timebound: 2+max{0, x}+max{0, x*y}+max{0, x} [O(n^2)]
+  2: inner->inner: max{0, x*y} [O(n^2)]
   3: inner->outer: max{0, x} [O(n)]
   1: outer->inner: max{0, x} [O(n)]
   4: outer->exit: 1 [O(1)]
   0: start->outer: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 2+z*(max{0, x*y}+max{0, y})+z*max{0, x}+max{0, x} [O(n^3)]
-  2: inner->inner: z*(max{0, x*y}+max{0, y}) [O(n^3)]
-  3: inner->outer: z*max{0, x} [O(n^2)]
+  Overall costbound: 2+z*max{0, x*y}+max{0, x}+max{0, x*y} [O(n^3)]
+  2: inner->inner: z*max{0, x*y} [O(n^3)]
+  3: inner->outer: max{0, x*y} [O(n^2)]
   1: outer->inner: max{0, x} [O(n)]
   4: outer->exit: 1 [O(1)]
   0: start->outer: 1 [O(1)]
