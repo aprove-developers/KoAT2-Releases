@@ -33,3 +33,38 @@ let of_string_list list =
 let powerset set =
   let combine (result: t Enum.t) (x: Var.t) = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
   Enum.fold combine (Enum.singleton empty) (enum set)
+
+
+type outer_t = t
+(** Internal memoization for powersets *)
+module Cache =
+  Hashtbl.Make(
+      struct
+        type t = outer_t
+        let equal = equal
+        let hash = Hashtbl.hash
+      end
+    )
+   
+let table =
+  Cache.create 3
+  
+let memoize f =  
+  let g x = 
+    match Cache.find_option table x with
+    | Some y -> y
+    | None ->
+       let y = f x in
+       Cache.add table x y;
+       y
+  in g
+
+let sorted_powerset set =
+  let f set =
+    set
+    |> powerset
+    |> List.of_enum
+    |> List.sort (fun a b -> Int.compare (cardinal a) (cardinal b))
+  in
+  memoize f set
+

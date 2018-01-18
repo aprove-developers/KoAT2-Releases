@@ -13,3 +13,5 @@ val to_string : t -> string
 val of_string_list : string list -> t
 
 val powerset : t -> t Enum.t
+
+val sorted_powerset : t -> t List.t

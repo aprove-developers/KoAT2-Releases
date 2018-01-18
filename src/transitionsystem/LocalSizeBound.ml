@@ -266,16 +266,15 @@ let initial_lsb kind factor (constant: int) (vars: VarSet.t) = {
   }
   
 (* Check if x <= s * (c + [v1,...,vn]). *)
-let find_scaled_bound kind solver var formula (s: int) (c: int) =
+let find_scaled_bound kind solver var vars (s: int) (c: int) =
   let execute () =
     let is_bounded = is_bounded_with solver var in
     try 
       let varsets =
-        formula
-        |> Formula.vars
-        |> VarSet.remove var
-        |> VarSet.powerset
+        vars
+        |> VarSet.sorted_powerset
         (* If the lsb needs more than three variables, we put instead all variables in the lsb and try to minimize. *)
+        |> List.enum
         |> Enum.filter (fun vars -> VarSet.cardinal vars <= 3)
       in
       Some (
@@ -289,7 +288,6 @@ let find_scaled_bound kind solver var formula (s: int) (c: int) =
             ) varsets
         )
     with Not_found ->
-      let vars = VarSet.remove var (Formula.vars formula) in
       Some (initial_lsb kind s c vars)
       |> Option.filter is_bounded
       |> Option.map (minimize_scaledsum_vars (is_bounded_with solver var))
@@ -297,7 +295,7 @@ let find_scaled_bound kind solver var formula (s: int) (c: int) =
       |> Option.map (optimize_c c is_bounded)
       |> Option.map (unabsify_vars is_bounded)
   in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "find scaled bound", ["var", Var.to_string var; "formula", Formula.to_string formula])
+                  (fun () -> "find scaled bound", ["var", Var.to_string var; "vars", VarSet.to_string vars])
                   ~result:(Util.option_to_string (Bound.to_string % as_bound))
                   execute
 
@@ -313,7 +311,7 @@ let find_bound kind var formula =
   let execute () =
     let solver = Solver.create ~model:false () in
     Solver.add solver formula;
-    find_scaled_bound kind solver var formula range range
+    find_scaled_bound kind solver var (formula |> Formula.vars |> VarSet.remove var) range range
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find local size bound", [
                           "kind", show_kind kind;
