@@ -264,6 +264,20 @@ let initial_lsb kind factor (constant: int) (vars: VarSet.t) = {
            | (_, `Abs) -> vars
            | (_, `Pure) -> VarSet.empty
   }
+
+(* For 's' it is sufficient to only view the max occurring constants of the update polynomial. *)
+let s_range update =
+  update
+  |> Polynomial.max_of_occurring_constants
+  |> OurInt.min (OurInt.of_int 1024) (* TODO We cut it at the moment at 1024, because sometimes the approximation is worse than an integer value. *)
+  |> OurInt.to_int
+
+(* For 'c' we want to view the max occurring constants of the complete formula *)
+let c_range formula =
+  formula
+  |> Formula.max_of_occurring_constants
+  |> OurInt.min (OurInt.of_int 1024) (* TODO We cut it at the moment at 1024, because sometimes the approximation is worse than an integer value. *)
+  |> OurInt.to_int
   
 (* Check if x <= s * (c + [v1,...,vn]). *)
 let find_scaled_bound kind solver var vars (s: int) (c: int) =
@@ -294,23 +308,17 @@ let find_scaled_bound kind solver var vars (s: int) (c: int) =
 
 type kind = [`Lower | `Upper] [@@deriving show, eq]
 
-let find_bound kind var formula =
-  let range =
-    formula
-    |> Formula.max_of_occurring_constants
-    |> OurInt.min (OurInt.of_int 1024) (* TODO We cut it at the moment at 1024, because sometimes the approximation is worse than an integer value. *)
-    |> OurInt.to_int
-  in
+let find_bound kind var formula s_range =
   let execute () =
     let solver = Solver.create ~model:false () in
     Solver.add solver formula;
-    find_scaled_bound kind solver var (formula |> Formula.vars |> VarSet.remove var) range range
+    find_scaled_bound kind solver var (formula |> Formula.vars |> VarSet.remove var) s_range (c_range formula)
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find local size bound", [
                           "kind", show_kind kind;
                           "var", Var.to_string var;
                           "formula", Formula.to_string formula;
-                          "range", string_of_int range])
+                          "s_range", string_of_int s_range])
                      ~result:(Util.option_to_string (Bound.to_string % as_bound))
                      execute
 
@@ -350,7 +358,7 @@ let sizebound_local kind label var =
     (* Introduce a temporary result variable *)
     let v' = Var.fresh_id Var.Int () in
     let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = bound) in
-    find_bound kind v' guard_with_update
+    find_bound kind v' guard_with_update (s_range bound)
   in
   memoize f (kind, label, var)
 

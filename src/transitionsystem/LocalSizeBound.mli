@@ -63,7 +63,7 @@ val default : [`Lower | `Upper] -> Bound.t
 val as_formula : Var.t -> t -> Formula.t
 
 (** Tries to find a templated bound of any of the defined templates. *)
-val find_bound : [`Lower | `Upper] -> Var.t -> Formula.t -> t Option.t
+val find_bound : [`Lower | `Upper] -> Var.t -> Formula.t -> int -> t Option.t
 
 (** Returns a local sizebound of the specified kind for the variable of the transition. 
     A local sizebound is expressed in relation to the values directly before executing the transition. *)

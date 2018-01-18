@@ -11,7 +11,7 @@ let tests =
       ("find upper bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
-               (fun _ -> find_bound `Upper (Var.of_string "x") (Readers.read_formula guard)
+               (fun _ -> find_bound `Upper (Var.of_string "x") (Readers.read_formula guard) 1024
                          |> Option.map (fun bound () -> assert_equal_lsb expected bound)
                          |? (fun () -> assert_failure "No bound")
                          |> fun f -> f () ))
@@ -55,7 +55,7 @@ let tests =
       ("find lower bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
-               (fun _ -> find_bound `Lower (Var.of_string "x") (Readers.read_formula guard)
+               (fun _ -> find_bound `Lower (Var.of_string "x") (Readers.read_formula guard) 1024
                          |> Option.map (fun bound () -> assert_equal_lsb expected bound)
                          |? (fun () -> assert_failure "No bound")
                          |> fun f -> f () ))
