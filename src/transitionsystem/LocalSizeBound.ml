@@ -290,11 +290,11 @@ let find_scaled_bound kind solver var vars (s: int) (c: int) =
         |> Enum.find_map (fun vars ->
                Some (initial_lsb kind s c vars)
                |> Option.filter is_bounded
-               |> Option.map (optimize_s 1 s is_bounded)
-               |> Option.map (optimize_c c is_bounded)
-               |> Option.map (minimize_scaledsum_vars (is_bounded_with solver var))
-               |> Option.map (unabsify_vars is_bounded)
              ) 
+        |> optimize_s 1 s is_bounded
+        |> optimize_c c is_bounded
+        |> minimize_scaledsum_vars is_bounded
+        |> unabsify_vars is_bounded
     with Not_found ->
       raise (Failure "No lsb found although an update exists!")
   in Logger.with_log logger Logger.DEBUG
