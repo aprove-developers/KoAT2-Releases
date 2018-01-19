@@ -24,16 +24,17 @@ For the definition of the method we need to define the terms of entry locations 
 \end{definition}
 This is the same definition as used in the original KoAT paper \cite{koat}.
 
-\input{graphs/entrytransitions}
-
-As an example, consider the programs in Figure \ref{fig:entrytransitions}.
-In each of the programs, a chosen set $\TSet' \subseteq \TSet$ is highlighted with bold arrows.
-Additionally, all entry locations and entry transitions are shown with dashed arrows.
-In the first program, the set of transitions $\TSet' = \braced{t_1, t_3, t_4}$ does have two entry locations $\mathcal{E}_{\TSet'} = \braced{\location_1, \location_2}$.
-These entry locations define the entry transitions $\TSet_{\location_1} = \braced{t_0}$ and $\TSet_{\location_2} = \braced{t_2}$.
-The second program only has one entry location $\mathcal{E}_{\TSet'} = \braced{\location_1}$ and therefore only one entry transition $\TSet_{\location_1} = \braced{t_0}$.
-The third program also has just one entry location, but in this example it is $\mathcal{E}_{\TSet'} = \braced{\location_2}$.
-Its entry transition is $\TSet_{\location_2} = \braced{t_2}$.
+\begin{example}[Entry transitions and entry locations]
+  \input{graphs/entrytransitions}
+  As an example, consider the programs in Figure \ref{fig:entrytransitions}.
+  In each of the programs, a chosen set $\TSet' \subseteq \TSet$ is highlighted with bold arrows.
+  Additionally, all entry locations and entry transitions are shown with dashed arrows.
+  In the first program, the set of transitions $\TSet' = \braced{t_1, t_3, t_4}$ does have two entry locations $\mathcal{E}_{\TSet'} = \braced{\location_1, \location_2}$.
+  These entry locations define the entry transitions $\TSet_{\location_1} = \braced{t_0}$ and $\TSet_{\location_2} = \braced{t_2}$.
+  The second program only has one entry location $\mathcal{E}_{\TSet'} = \braced{\location_1}$ and therefore only one entry transition $\TSet_{\location_1} = \braced{t_0}$.
+  The third program also has just one entry location, but in this example it is $\mathcal{E}_{\TSet'} = \braced{\location_2}$.
+  Its entry transition is $\TSet_{\location_2} = \braced{t_2}$.
+\end{example}
 
 Now it is possible to define the method for the construction of time bounds.
 
@@ -48,23 +49,24 @@ Now, we have to overapproximate the number of evaluations which might enter thro
 The previous time bound $\UTime$ yields such a bound for all entry transitions.
 Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}$ is a time bound for each strictly decreasing transition $t \in \TSet'_>$ depending on the values of the variables from the start.
 
-\input{graphs/motivational_example}
-
-As an example, we consider the motivational program in Figure \ref{fig:motivational_example} from the introduction.
-With the transition set $\TSet' = \braced{t_1}$ it is possible to determine a ranking function $\timerank(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).
-The original KoAT would now apply an operator to $\timerank$, such that the result would be a monotonic function with $\timerank'(\location_1) = \abs{x} + \abs{y}$.
-Then, it is able to substitute each variable by its absolute size bound and therefore lift it to a global context.
-The new method does not use this operator.
-Instead, it substitutes each variable of $\timerank(\location_1)$ by its lower/upper size bound depending on the monotonicity of the variables in the time rank.
-Since $x$ is monotonically increasing in $x-y$ and $y$ is monotonically decreasing in $x-y$, we can substitute $x$ with the upper size bound and $y$ with the lower size bound.
-Lets assume, that we already inferred the size bounds $\USize(t_0,x) = \LSize(t_0,x) = x$ and $\USize(t_0,y) = \LSize(t_0,y) = y$.
-It is now possible to lift the components of the ranking functions to a global level.
-\[ \usubst{\timerank(\location)}{\LSize(t_0)}{\USize(t_0)} = \USize(t_0, x) - \LSize(t_0, y) = x - y \]
-Note that with a state $\valuation$ with $\valuation(x) < \valuation(y)$ the transition $t_1$ will simply not occur in an evaluation instead of occurring a negative number of times.
-To reflect this in the new time bound, we have to ensure the positivity of $x - y$ with the operation $\maxO{x - y}$.
-Then, the only step left is to consider the number of times an evaluation might enter the SCC from $t_0$.
-Since $t_0$ is an initial transition, its time bound is $\UTime(t_0) = 1$.
-Therefore, an evaluation might only enter a single time from $t_0$ and the resulting time bound for $t_1$ is $\maxO{x - y}$.
+\begin{example}[TimeBounds]
+  \input{graphs/motivational_example}
+  As an example, we consider the motivational program in Figure \ref{fig:motivational_example} from the introduction.
+  With the transition set $\TSet' = \braced{t_1}$ it is possible to determine a ranking function $\timerank(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).
+  The original KoAT would now apply an operator to $\timerank$, such that the result would be a monotonic function with $\timerank'(\location_1) = \abs{x} + \abs{y}$.
+  Then, it is able to substitute each variable by its absolute size bound and therefore lift it to a global context.
+  The new method does not use this operator.
+  Instead, it substitutes each variable of $\timerank(\location_1)$ by its lower/upper size bound depending on the monotonicity of the variables in the time rank.
+  Since $x$ is monotonically increasing in $x-y$ and $y$ is monotonically decreasing in $x-y$, we can substitute $x$ with the upper size bound and $y$ with the lower size bound.
+  Lets assume, that we already inferred the size bounds $\USize(t_0,x) = \LSize(t_0,x) = x$ and $\USize(t_0,y) = \LSize(t_0,y) = y$.
+  It is now possible to lift the components of the ranking functions to a global level.
+  \[ \usubst{\timerank(\location)}{\LSize(t_0)}{\USize(t_0)} = \USize(t_0, x) - \LSize(t_0, y) = x - y \]
+  Note that with a state $\valuation$ with $\valuation(x) < \valuation(y)$ the transition $t_1$ will simply not occur in an evaluation instead of occurring a negative number of times.
+  To reflect this in the new time bound, we have to ensure the positivity of $x - y$ with the operation $\maxO{x - y}$.
+  Then, the only step left is to consider the number of times an evaluation might enter the SCC from $t_0$.
+  Since $t_0$ is an initial transition, its time bound is $\UTime(t_0) = 1$.
+  Therefore, an evaluation might only enter a single time from $t_0$ and the resulting time bound for $t_1$ is $\maxO{x - y}$.
+\end{example}
 
 \subsection{Choosing the transition set $\TSet'$}
 

@@ -34,30 +34,33 @@ We now use these local bound sets for the definition of the scaled sum.
 \end{definition}
 
 For the clarification of possible local size bounds we introduce some examples.
-Let $t = (\location,\update,\text{true},\location') \in \TSet$ be a transition for which we want to find an upper scaled sum $b$.
-If $\update(x) = x$, we can represent the bound with $b = 1 \cdot (0 + x)$.
-If $\update(x) = -x$, we can represent the bound with $b = 1 \cdot (0 - x)$.
-This would not be possible, if $N_1$ would not be a part of the template.
-If $\update(x) = 2 \cdot x + 2 \cdot y + 4$, we have a possible bound $b = 2 \cdot (2 + x + y)$.
 
-In the previous examples, it was sufficient to have $P_2 = \emptyset$ and $N_2 = \emptyset$.
-If $\update(x) = 2 \cdot x + 3 \cdot y$, one could suggest the bound $b = 3 \cdot (x + y)$.
-But for a state $\valuation$ with $\exacteval{x}{\valuation} < 0$ and $\exacteval{y}{\valuation} > 0$ this bound is not sound, since with $\exacteval{b}{\valuation}$ we would underapproximate the actual value $\exacteval{2 \cdot x + 3 \cdot y}{\valuation}$.
-For these cases, scaled sums provide the sets $P_2$ and $N_2$.
-For $\update(x) = 2 \cdot x + 3 \cdot y$, we can infer the bound $b = 3 \cdot (\maxO{x} + y)$ with $x \in P_2$, such that the scaled sum $b$ is also sound for negative values of $x$.
-
-For the previous case, we used the set $P_2$.
-The set $N_2$ is provided for the negative counterpart.
-If $\update(x) = -(2 \cdot x) + -(3 \cdot y)$, we can infer the bound $b = 3 \cdot (\maxO{-x} - y)$.
-With this construction, we only consider negative values for $x$ and therefore ensure a sound overapproximation.
-
-The construction of a lower scaled sum is very similar to the construction of an upper scaled sum.
-The components $s$, $e$, $P_1$ and $N_1$ have the same purpose for lower scaled sums and upper scaled sums.
-Consider again the transition $t = (\location,\update,\text{true},\location') \in \TSet$.
-If $\update(x) = x$, we can represent the a lower scaled sum the same way as an upper scaled sum with $b = 1 \cdot (0 + x)$.
-The difference is in the role of the sets $P_2$ and $N_2$.
-While $\sum_{v \in P_2} \maxO{v}$ and $\sum_{v \in N_2} \maxO{-v}$ are added in upper scaled sums, their lower counterparts $\sum_{v \in P_2} \maxO{-v}$ and $\sum_{v \in N_2} \maxO{v}$ are subtracted in lower scaled sums.
-This way the effect of an unscaled variable $v$ is always overapproximated in the upper case and always underapproximated in the lower case.
+\begin{example}[Scaled sum]
+  Let $t = (\location,\update,\text{true},\location') \in \TSet$ be a transition for which we want to find an upper scaled sum $b$.
+  If $\update(x) = x$, we can represent the bound with $b = 1 \cdot (0 + x)$.
+  If $\update(x) = -x$, we can represent the bound with $b = 1 \cdot (0 - x)$.
+  This would not be possible, if $N_1$ would not be a part of the template.
+  If $\update(x) = 2 \cdot x + 2 \cdot y + 4$, we have a possible bound $b = 2 \cdot (2 + x + y)$.
+  
+  In the previous examples, it was sufficient to have $P_2 = \emptyset$ and $N_2 = \emptyset$.
+  If $\update(x) = 2 \cdot x + 3 \cdot y$, one could suggest the bound $b = 3 \cdot (x + y)$.
+  But for a state $\valuation$ with $\exacteval{x}{\valuation} < 0$ and $\exacteval{y}{\valuation} > 0$ this bound is not sound, since with $\exacteval{b}{\valuation}$ we would underapproximate the actual value $\exacteval{2 \cdot x + 3 \cdot y}{\valuation}$.
+  For these cases, scaled sums provide the sets $P_2$ and $N_2$.
+  For $\update(x) = 2 \cdot x + 3 \cdot y$, we can infer the bound $b = 3 \cdot (\maxO{x} + y)$ with $x \in P_2$, such that the scaled sum $b$ is also sound for negative values of $x$.
+  
+  For the previous case, we used the set $P_2$.
+  The set $N_2$ is provided for the negative counterpart.
+  If $\update(x) = -(2 \cdot x) + -(3 \cdot y)$, we can infer the bound $b = 3 \cdot (\maxO{-x} - y)$.
+  With this construction, we only consider negative values for $x$ and therefore ensure a sound overapproximation.
+  
+  The construction of a lower scaled sum is very similar to the construction of an upper scaled sum.
+  The components $s$, $e$, $P_1$ and $N_1$ have the same purpose for lower scaled sums and upper scaled sums.
+  Consider again the transition $t = (\location,\update,\text{true},\location') \in \TSet$.
+  If $\update(x) = x$, we can represent the a lower scaled sum the same way as an upper scaled sum with $b = 1 \cdot (0 + x)$.
+  The difference is in the role of the sets $P_2$ and $N_2$.
+  While $\sum_{v \in P_2} \maxO{v}$ and $\sum_{v \in N_2} \maxO{-v}$ are added in upper scaled sums, their lower counterparts $\sum_{v \in P_2} \maxO{-v}$ and $\sum_{v \in N_2} \maxO{v}$ are subtracted in lower scaled sums.
+  This way the effect of an unscaled variable $v$ is always overapproximated in the upper case and always underapproximated in the lower case.
+\end{example}
 
 We will now present an algorithm for the computation of sound, but minimal local size bounds $b^\sqcap \in \BoundSet^\sqcap_l$ and $b^\sqcup \in \BoundSet^\sqcup_l$.
 We first consider the upper case.
@@ -106,11 +109,14 @@ Now, we can define the trivial lower local size bound and the trivial upper loca
 \input{theorems/trivial_lsb}
 
 We show the construction of a trivial local size bound with an example of a trivial upper local size bound.
-Let $\rv = ((\location,\update,\text{true},\location'),x) \in \RV$ be a result variable with the update $\update(x) = 4 + 2 \cdot y - 3 \cdot z$.
-Thus, the overapproximation of the occurring constants is $\constant(\update(x)) = 4 + 2 \cdot 1 + 3 \cdot 1 = 11$
-Then, by definition of the trivial upper local size bound we can obtain $b^\sqcap = 11 * (11 + \maxO{y} + \maxO{z} + \maxO{-y} + \maxO{-z}$.
-Note that for all variables $v \in \VSet$ we have $\maxO{v} + \maxO{-v} = \abs{v}$, where $\abs{v}$ represents the absolute value of the variable $v$.
-Then, it is easy to see, that $b^\sqcap = 11 * (11 + \abs{y} + \abs{z})$ is a valid trivial upper local size bound.
+
+\begin{example}[Trivial local size bounds]
+  Let $\rv = ((\location,\update,\text{true},\location'),x) \in \RV$ be a result variable with the update $\update(x) = 4 + 2 \cdot y - 3 \cdot z$.
+  Thus, the overapproximation of the occurring constants is $\constant(\update(x)) = 4 + 2 \cdot 1 + 3 \cdot 1 = 11$
+  Then, by definition of the trivial upper local size bound we can obtain $b^\sqcap = 11 * (11 + \maxO{y} + \maxO{z} + \maxO{-y} + \maxO{-z}$.
+  Note that for all variables $v \in \VSet$ we have $\maxO{v} + \maxO{-v} = \abs{v}$, where $\abs{v}$ represents the absolute value of the variable $v$.
+  Then, it is easy to see, that $b^\sqcap = 11 * (11 + \abs{y} + \abs{z})$ is a valid trivial upper local size bound.
+\end{example}
 
 \subsection{Algorithm for local size bounds}
 
