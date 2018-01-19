@@ -1,23 +1,23 @@
 \section{Approximated replacements}
 
 In the preliminaries, a definition for the exact evaluation of bounds from a bound set $\BoundSet(V)$ was given.
-With such an exact evaluation it is possible to evaluate a bound $b \in \BoundSet$ with a state $\valuation \in \Valuation$ to a value $\exacteval{b}{\valuation} \in \ValueSet$.
-But in general, we want to be able to evaluate bounds with arbitrary states $\valuation \in \Valuation$ between a lower bound $\lstate \leq \valuation$ and an upper bound $\ustate \geq \valuation$.
+With such an exact evaluation it is possible to evaluate a bound $b \in \BoundSet$ with respect to a state $\valuation \in \Valuation$ to a value $\exacteval{b}{\valuation} \in \ValueSet$.
+But in general, we would like to be able to evaluate bounds with respect to arbitrary states $\valuation \in \Valuation$ between a lower bound $\lstate \leq \valuation$ and an upper bound $\ustate \geq \valuation$.
 
 Therefore, we introduce approximated evaluations.
 In contrast to an exact evaluation, which replaces variables with a single state $\valuation \in \Valuation$, an approximated evaluation considers two input states $\lstate, \ustate \in \Valuation$.
-Then, the bound is evaluated in a way, that the result is greater than any exact evaluation with a state $\valuation$ with $\lstate \leq \valuation \ustate$.
+Then, the bound is evaluated in a way, that the result is greater than any exact evaluation with a state $\valuation$ with $\lstate \leq \valuation \leq \ustate$.
 
 We define a generalized principle, which is also applicable to substitutions.
 
 \begin{definition}[Approximated replacement]
-  Let $K$ be an arbitrary sets of elements with an addition $+: K \times K \rightarrow K$, a negation $-: K \rightarrow K$, a multiplication $\cdot: K \times K \rightarrow K$ and a max operator $\max: K \times K \rightarrow K$.
+  Let $K$ be an arbitrary set of elements with an addition $+: K \times K \rightarrow K$, a negation $-: K \rightarrow K$, a multiplication $\cdot: K \times K \rightarrow K$ and a max operator $\max: K \times K \rightarrow K$.
   For a bound $b \in \BoundSet(\VSet)$ and two functions $\lsub, \usub: \VSet \rightarrow K$, we denote with $\lsubst{b}{\lsub}{\usub}$ and $\usubst{b}{\lsub}{\usub}$ functions of the type $(\VSet \rightarrow K) \times (\VSet \rightarrow K) \rightarrow K$.
   These functions replace the variables of the bound $b$ with values from the functions $\lsub, \usub$ such that the following equations hold.
   \[ \lsubst{\infty}{\lsub}{\usub} = \usubst{\infty}{\lsub}{\usub} = \infty \text{ for } \infty \in \BoundSet(\VSet) \]
-  \[ \lsubst{k}{\lsub}{\usub} = \usubst{k}{\lsub}{\usub} = k \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet) \] 
-  \[ \lsubst{v}{\lsub}{\usub} = \lsub(v) \text{ for all } v \in \VSet \subset \BoundSet(\VSet) \] 
-  \[ \usubst{v}{\lsub}{\usub} = \usub(v) \text{ for all } v \in \VSet \subset \BoundSet(\VSet) \] 
+  \[ \lsubst{k}{\lsub}{\usub} = \usubst{k}{\lsub}{\usub} = k \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet) \] 
+  \[ \lsubst{v}{\lsub}{\usub} = \lsub(v) \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \] 
+  \[ \usubst{v}{\lsub}{\usub} = \usub(v) \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \] 
   \[ \lsubst{-b}{\lsub}{\usub} = -\usubst{b}{\lsub}{\usub} \text{ for all } b \in \BoundSet(\VSet) \] 
   \[ \usubst{-b}{\lsub}{\usub} = -\lsubst{b}{\lsub}{\usub} \text{ for all } b \in \BoundSet(\VSet) \] 
   \[ \lsubst{b_1 + b_2}{\lsub}{\usub} = \lsubst{b_1}{\lsub}{\usub} + \lsubst{b_2}{\lsub}{\usub} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
@@ -36,9 +36,9 @@ We define a generalized principle, which is also applicable to substitutions.
   } \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
   \[ \lsubst{\max(b_1, b_2)}{\lsub}{\usub} = \maximum{\lsubst{b_1}{\lsub}{\usub}, \lsubst{b_2}{\lsub}{\usub}} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
   \[ \usubst{\max(b_1, b_2)}{\lsub}{\usub} = \maximum{\usubst{b_1}{\lsub}{\usub}, \usubst{b_2}{\lsub}{\usub}} \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
-  \[ \lsubst{k^b}{\lsub}{\usub} = k^{\lsubst{b}{\lsub}{\usub}} \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
-  \[ \usubst{k^b}{\lsub}{\usub} = k^{\usubst{b}{\lsub}{\usub}} \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]
-  We call an expression $\lsubst{b}{\lsub}{\usub}$ an underapproximated replacement and $\usubst{b}{\lsub}{\usub}$ an overapproximated replacement.
+  \[ \lsubst{k^b}{\lsub}{\usub} = k^{\lsubst{b}{\lsub}{\usub}} \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
+  \[ \usubst{k^b}{\lsub}{\usub} = k^{\usubst{b}{\lsub}{\usub}} \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet), b \in \BoundSet(\VSet) \]
+  We call an expression $\lsubst{b}{\lsub}{\usub}$ an \textbf{underapproximated replacement} and $\usubst{b}{\lsub}{\usub}$ an \textbf{overapproximated replacement}.
 \end{definition}
 
 The bound set $\BoundSet(\VSet)$ meets the criteria of $K$.
@@ -54,7 +54,7 @@ We call an approximated replacement with such functions an approximated substitu
   \[ \exacteval{\lsubst{b}{\lsub}{\usub}}{\valuation} \leq \exacteval{b}{\valuation} \leq \exacteval{\usubst{b}{\lsub}{\usub}}{\valuation}. \]
 \end{theorem}
 
-Also, the two functions $\lstate, \ustate: \VSet \rightarrow K$ qualify for an approximated replacement.
-We call an approximated replacement with such functions an approximated evaluation.
+Also, two states $\lstate, \ustate: \VSet \rightarrow \mathbb{Z}$ qualify for an approximated replacement, since $\mathbb{Z}$ meets the criteria of $K$.
+We call an approximated replacement with two states an approximated evaluation.
 
 \input{theorems/approximated_evaluations}
