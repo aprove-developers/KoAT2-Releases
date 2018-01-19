@@ -284,26 +284,22 @@ let find_scaled_bound kind solver var vars (s: int) (c: int) =
   let execute () =
     let is_bounded = is_bounded_with solver var in
     try 
-      let varsets =
         vars
         |> VarSet.sorted_powerset
         |> List.enum
-      in
-      Some (
-          Enum.find_map (fun vars ->
-              Some (initial_lsb kind s c vars)
-              |> Option.filter is_bounded
-              |> Option.map (optimize_s 1 s is_bounded)
-              |> Option.map (optimize_c c is_bounded)
-              |> Option.map (minimize_scaledsum_vars (is_bounded_with solver var))
-              |> Option.map (unabsify_vars is_bounded)
-            ) varsets
-        )
+        |> Enum.find_map (fun vars ->
+               Some (initial_lsb kind s c vars)
+               |> Option.filter is_bounded
+               |> Option.map (optimize_s 1 s is_bounded)
+               |> Option.map (optimize_c c is_bounded)
+               |> Option.map (minimize_scaledsum_vars (is_bounded_with solver var))
+               |> Option.map (unabsify_vars is_bounded)
+             ) 
     with Not_found ->
       raise (Failure "No lsb found although an update exists!")
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "find scaled bound", ["var", Var.to_string var; "vars", VarSet.to_string vars])
-                  ~result:(Util.option_to_string (Bound.to_string % as_bound))
+                  ~result:(Bound.to_string % as_bound)
                   execute
 
 type kind = [`Lower | `Upper] [@@deriving show, eq]
@@ -319,7 +315,7 @@ let find_bound kind var formula s_range =
                           "var", Var.to_string var;
                           "formula", Formula.to_string formula;
                           "s_range", string_of_int s_range])
-                     ~result:(Util.option_to_string (Bound.to_string % as_bound))
+                     ~result:(Bound.to_string % as_bound)
                      execute
 
 (** Internal memoization for local size bounds *)
@@ -354,11 +350,12 @@ let sizebound_local kind label var =
     let open Option.Infix in
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
     TransitionLabel.update label var
-    >>= fun bound ->
-    (* Introduce a temporary result variable *)
-    let v' = Var.fresh_id Var.Int () in
-    let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = bound) in
-    find_bound kind v' guard_with_update (s_range bound)
+    |> Option.map (fun bound ->
+           (* Introduce a temporary result variable *)
+           let v' = Var.fresh_id Var.Int () in
+           let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = bound) in
+           find_bound kind v' guard_with_update (s_range bound)
+         )
   in
   memoize f (kind, label, var)
 

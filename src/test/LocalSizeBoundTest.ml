@@ -12,8 +12,7 @@ let tests =
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
                (fun _ -> find_bound `Upper (Var.of_string "x") (Readers.read_formula guard) 1024
-                         |> Option.map (fun bound () -> assert_equal_lsb expected bound)
-                         |? (fun () -> assert_failure "No bound")
+                         |> (fun bound () -> assert_equal_lsb expected bound)
                          |> fun f -> f () ))
                   [
                     (* Bounded by constants *)
@@ -56,8 +55,7 @@ let tests =
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
                (fun _ -> find_bound `Lower (Var.of_string "x") (Readers.read_formula guard) 1024
-                         |> Option.map (fun bound () -> assert_equal_lsb expected bound)
-                         |? (fun () -> assert_failure "No bound")
+                         |> (fun bound () -> assert_equal_lsb expected bound)
                          |> fun f -> f () ))
                   [
                     (* Bounded by constants *)
