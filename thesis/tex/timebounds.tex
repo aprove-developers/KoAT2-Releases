@@ -7,10 +7,10 @@ This master's thesis only considers the modular approach, since the other approa
 The presented method is based on ranking functions.
 The original KoAT allows the usage of polynomial ranking functions.
 It uses an operator on the polynomials, which considers the absolute values of variables and converts all negative signs in positive signs.
-This is necessary to ensure component-wise monotonicity in the variables.
-Otherwise a substitution of the variables with upper size bounds would not necessarily be a sound overapproximation.
+This is necessary to ensure component-wise monotonicity of the variables in the polynomials.
+Otherwise a substitution of the variables with the size bounds would not necessarily be a sound overapproximation.
 The new method does not use this operator.
-Instead, the presented approximated replacement is used and appropriate upper and lower size bound are chosen respectively to the monotonicity of the variables.
+Instead, the presented approximated replacement is used, which chooses the appropriate upper and lower size bound for the substitution of a variable in respect to its monotonicity in the ranking polynomial.
 This approach is the more effective, the more we know about the monotonicity about the variables.
 Therefore it leads to best results, if we consider affine ranking functions, since in an affine polynomial every variable is either monotonically increasing or monotonically decreasing.
 In practice most existing techniques generate these affine ranking functions (e.g. \cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}).

@@ -58,3 +58,28 @@ Also, two states $\lstate, \ustate: \VSet \rightarrow \mathbb{Z}$ qualify for an
 We call an approximated replacement with two states an approximated evaluation.
 
 \input{theorems/approximated_evaluations}
+
+The definition of approximated replacements uses implicitly the property of component-wise monotonicity of a bound to infer better over- and underapproximations.
+For example for a bound $x$ it is easy to see, that the bound is monotonically increasing in $x$.
+Therefore it is sufficient to substitute the variable $x$ with its over-replacement-function $\usub$ to gain a valid approximation of the value $\exacteval{x}{\valuation}$ for every state $\valuation$ with $\lsub \leq \valuation \leq \usub$.
+Also, for a bound $-x$ it is easy to see, that the bound is monotonically decreasing in $x$.
+Therefore, it is sufficient to substitute the variable $x$ with its under-replacement-function $\lsub$ to gain a valid approximation of the value $\exacteval{x}{\valuation}$ for every state $\valuation$ with $\lsub \leq \valuation \leq \usub$.
+On the other hand, in a bound $x \cdot y$ none of the variables are monotonically increasing or decreasing.
+Therefore, it is necessary to compute all combinations $\usubst{b_1}{\lsub}{\usub} \cdot \usubst{b_2}{\lsub}{\usub}$, $\usubst{b_1}{\lsub}{\usub} \cdot \lsubst{b_2}{\lsub}{\usub}$, $\lsubst{b_1}{\lsub}{\usub} \cdot \usubst{b_2}{\lsub}{\usub}$ and $\lsubst{b_1}{\lsub}{\usub} \cdot \lsubst{b_2}{\lsub}{\usub}$ of the over- and under-replacement-functions.
+
+The following definition formalizes the monotonicity of variables in bounds.
+
+\begin{definition}[Monotonicity of variables in bounds]
+  Let $\VSet$ be a finite set of variables.
+  Let $b \in \BoundSet(\VSet)$ be a bound of the bound set $\BoundSet(\VSet)$.
+  Let $v \in \VSet$ be a variable.
+  We say that two states $\valuation, \valuation' \in \Valuation$ are only different in $v$ if and only if for each variable $v' \in \VSet \setminus \braced{v}$ it holds that $\valuation(v') = \valuation'(v')$ and for the variable $v$ it holds that $\valuation(v) \neq \valuation'(v)$.
+  If it furthermore holds that $\valuation(v) \geq \valuation'(v)$, we call the state $\valuation$ only different and greater or equal in $v$ than the state $\valuation'$.
+  If it instead holds that $\valuation(v) \leq \valuation'(v)$, we call the state $\valuation$ only different and less or equal in $v$ than the state $\valuation'$.
+  We call the variable $v$ monotonically increasing in the bound $b$ if and only if for all states $\valuation$ that are only different and greater or equal in $v$ than a state $\valuation'$ it holds that $\exacteval{b}{\valuation} \geq \exacteval{b}{\valuation'}$.
+  We call the variable $v$ monotonically decreasing in the bound $b$ if and only if for all states $\valuation$ that are only different and less or equal in $v$ than a state $\valuation'$ it holds that $\exacteval{b}{\valuation} \leq \exacteval{b}{\valuation'}$.
+\end{definition}
+
+An approximated replacement yields the better results the more variables are monotonically increasing or decreasing in the bound.
+Note that in an affine polynomial $b \in \BoundSet_a(\VSet)$ all variables are monotonically increasing or decreasing.
+Therefore, the approximated replacement in an affine polynomial yields better over- and underapproximations than the approximated replacement in non-affine polynomials in $\BoundSet_p(\VSet) \setminus \BoundSet_a(\VSet)$ or arbitrary bounds in $\BoundSet(\VSet)$.
