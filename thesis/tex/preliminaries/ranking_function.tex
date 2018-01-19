@@ -5,7 +5,7 @@ Ranking functions are well studied (\cite{bradley2005polyranking}, \cite{podelsk
 
 The new method uses ranking functions for two different purposes:
 For the computation of time bounds and for the computation of cost bounds.
-For the computation of time bounds, we use a definition of the original KoAT.
+For the computation of time bounds, we use a definition of the KoAT paper \cite{koat}.
 
 \begin{definition}[Time Ranking Function] 
   We define $\timerank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as time ranking function for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
@@ -14,7 +14,7 @@ For the computation of time bounds, we use a definition of the original KoAT.
   For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
   \[ \guard \Rightarrow \exacteval{\timerank(\location)}{\valuation} - 1 \geq \exacteval{\timerank(\location')}{\valuation'} \]
   and
-  \[ \guard \Rightarrow \exacteval{\timerank(\location)}{\valuation} > 1. \]
+  \[ \guard \Rightarrow \exacteval{\timerank(\location)}{\valuation} \geq 1. \]
 \end{definition}
 
 A time ranking function $\timerank$ implies that a transition $t \in \TSet_>$ can only be used a limited number of times in an evaluation.
@@ -30,22 +30,22 @@ We can use the same approach for the direct inference of cost bounds.
   For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
   \[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} - \exacteval{\cost((\location, \update, \guard, \location'))}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'} \]
   and
-  \[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} > 1. \]
+  \[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq 1. \]
+  \todo{Is it one or the cost?}{}
 \end{definition}
 
-Since this definition ensures, that each transition $t \in \TSet_>$ decreases in each transition step by its costs, the cost rank $\costrank(\location)$ can be used as a bound on the sum of all occurred costs of the transition $t$ from this location on.
+Since this definition ensures, that each transition $t \in \TSet_>$ decreases in each transition step by its cost, the cost rank $\costrank(\location)$ can be used as a bound on the sum of all occurred costs of the transition $t$ from this location on.
 
 \todo{PRF Examples}{}
 
-For the computation of a ranking function, it is common to use an SMT-Solver.
-Since an SMT-Solver is only capable of finding models for existential formulas, but the definition of ranking functions contains both universal quantifiers and existential quantifiers, it is necessary to perform a transformation step.
-For this purpose, it is common to use a variant of the Farkas' lemma \cite{schrijver1998theory} specialized for polyranking \cite{bradley2005polyranking}.
+For the computation of ranking functions, it is common to use an SMT-Solver.
+An SMT-Solver is capable of proving satisfiability and unsatisfiability of existential formulas.
+The presented definition of time ranking functions and cost ranking functions consists of conditions, which need to be fulfilled for all states $\valuation, \valuation' \in \Valuation$ of all evaluation steps $(\location, \valuation) \rightarrow_t (\location', \valuation')$.
+Such a universal quantified formula can be proven by showing the unsatisfiability of the negation of the formula with an SMT-Solver.
+But for ranking functions it is also necessary to consider, that the coefficients of a timerank polynomial $\timerank(\location)$ are existentially quantified in the conditions of the ranking function definition.
+Therefore, a negation of the condition yields universal quantification of the coefficients of a timerank.
+Thus, the negation of the condition is also not provable by an SMT-Solver.
 
-\begin{definition}[Farkas' Lemma]
-  Let all atoms $\atom \in \guard$ be of the following affine form with $d_\atom \in \mathbb{Z}$ and $d_{\atom,v} \in \mathbb{Z}$ for each variable $v \in \VSet$.
-  \[ d_\atom + \sum_{v \in \VSet} d_{\atom,v} \cdot v \geq 0 \]
-  If there exists a $d_\atom$ for each atom $\atom$ and if there exist $d_{\atom,v}$ for each atom $\atom$ and each variable $v$ such that $d_\atom + \sum_{v \in \VSet} d_{\atom,v} \cdot \valuation(v) \geq 0$ is satisfiable for all states $\valuation \in \Valuation$, then it entails an affine inequality $c + \sum_{v \in \VSet} c_v \cdot v \geq 0$ iff there exist real numbers $\lambda_\atom \geq 0$ for each atom $\atom \in \guard$ such that for the constant part it holds that $c \geq \sum_{\atom \in \guard} \lambda_\atom \cdot d_\atom$ and for all variables $v \in \VSet$ it holds that
-  \[ c_v = \sum_{\atom \in \guard} \lambda_\atom \cdot d_{\atom,v}. \]
-\end{definition}
-With this definition of the Farkas' lemma, we can infer from the satisfiability of the existential formula $\exists \lambda_{\atom_1}, \dots, \lambda_{\atom,n}: \exists c_{v_1}, \dots, c_{v_m}: c_v = \sum_{\atom \in \guard} \lambda_\atom \cdot d_{\atom,v}$ that a satisfiable constraint $\guard \in \ConstraintSet$ with only affine atoms entails an affine inequality $c + \sum_{v \in \VSet} c_v \cdot v \geq 0$.
-Since a ranking function assigns each location an affine polynomial, it is possible to transform the problem of finding a ranking function into a problem solvable with an SMT-Solver.
+For such formulas, which contain both existential and universal quantification, it is common to use a variant of Farkas' lemma \cite{schrijver1998theory} specialized for polyranking \cite{bradley2005polyranking}.
+For this purpose, it is necessary to restrict the domain of timeranks $\timerank(\location)$ and costranks $\costrank(\location)$ to affine polynomials $\BoundSet_a(\PVSet)$.
+Then, it is possible to transform the problem of finding a ranking function into a problem solvable with an SMT-Solver.

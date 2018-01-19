@@ -57,6 +57,8 @@
 
 %%%%% theorem environments
 \newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
+\newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
 \newtheorem{remark}{Remark}
 \newtheorem{Algorithm}{Algorithm}
