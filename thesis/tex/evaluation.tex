@@ -13,8 +13,27 @@ In this section, we use two selected examples to compare the results of the new 
 This selection is chosen to show the benefits of the new method and is by no means representative.
 Nevertheless it is able to show the potentials of the new method.
 
+The first evaluated example is the motivational program from the introduction in Figure \ref{fig:motivational_example}.
+
+\input{graphs/motivational_example}
+
+For this program the new method yields a time complexity $\maxO{x-y}$, while the original KoAT \cite{koat} yields a time complexity $\abs{x}+\abs{y}$.
+In the new method, we assume that we have two input states $\lstate$ and $\ustate$.
+The original KoAT is defined with a single input state $m$ such that $m(v) = \maximum{-\lstate(v),\ustate(v)}$ for each variable $v \in \PVSet$.
+
+Consider the two three-dimensional graphs in Figure \ref{fig:motivational_evaluation}.
+We consider input states $\lstate$ and $\ustate$ with $\lstate(v) = \lstate(v')$ and $\ustate(v) = \ustate(v')$ for all variables $v, v' \in \PVSet$.
+The left graph plots the time complexity $\maxO{x-y}$ of the new method and the right graph plots the time complexity $\abs{x}+\abs{y}$ of the original KoAT.
+These graphs show, that the time complexities are the same, if $-\lstate = \ustate$.
+This is the expected result, as $-\lstate = \ustate$ implies that $m = -\lstate = \ustate$.
+The new method yields a lower time complexity, if the value of $-\lstate$ and $\ustate$ diverges.
+The biggest gain is achieved, when $\lstate = \ustate$.
+That is, when an exact state $\lstate = \valuation = \ustate$ is given.
+
 \todo{Activate picture}{}
-\iffalse\input{evaluations/motivational_example}\fi
+\iffalse
+\input{evaluations/motivational_example}
+\fi
 
 \subsection{Evaluating an example set}
 
