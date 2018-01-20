@@ -4,24 +4,25 @@ This way we are able to use specific characteristics of local size bounds later 
 We define two subsets $\BoundSet^\sqcup_l, \BoundSet^\sqcap_l \subseteq \BoundSet(\PVSet)$, one for lower local size bounds and one for upper local size bounds.
 
 \begin{definition}[Local bound sets]
-  We define $\BoundSet^\sqcup_l \in \BoundSet(\PVSet)$ as 
-  \[ \BoundSet^\sqcup_l = \braced{
+  Let $B$ denote the set of tuples $(s,e,P_1,P_2,N_1,N_2) \in \mathbb{N} \times \mathbb{Z} \times 2^\PVSet \times 2^\PVSet \times 2^\PVSet \times 2^\PVSet$ with $s \geq 1$, $P_1 \cap P_2 = \emptyset$ and $N_1 \cap N_2 = \emptyset$.
+  Then, we define $\BoundSet^\sqcup_l \in \BoundSet(\PVSet)$ as 
+  \[ \BoundSet^\sqcup_l = \left\{
     s \cdot \left(
         e
       + \sum_{v \in P_1} v
       - \sum_{v \in N_1} v
       - \sum_{v \in P_2} \maxO{-v}
       - \sum_{v \in N_2} \maxO{v}
-      \right) \mid \exists s \in \mathbb{N} \text{ with } s \geq 1, e \in \mathbb{Z}, P_1, P_2, N_1, N_2 \subseteq \VSet }\]
+      \right) \mid (s,e,P_1,P_2,N_1,N_2) \in B \right\} \]
   Also, we define $\BoundSet^\sqcap_l \in \BoundSet(\PVSet)$ as 
-  \[ \BoundSet^\sqcap_l = \braced{
+  \[ \BoundSet^\sqcap_l = \left\{
     s \cdot \left(
         e
       + \sum_{v \in P_1} v
       - \sum_{v \in N_1} v
       + \sum_{v \in P_2} \maxO{v}
       + \sum_{v \in N_2} \maxO{-v}
-      \right) \mid \exists s \in \mathbb{N} \text{ with } s \geq 1, e \in \mathbb{Z}, P_1, P_2, N_1, N_2 \subseteq \VSet }\]
+      \right) \mid (s,e,P_1,P_2,N_1,N_2) \in B \right\} \]
 \end{definition}
 
 We now use these local bound sets for the definition of the scaled sum.
