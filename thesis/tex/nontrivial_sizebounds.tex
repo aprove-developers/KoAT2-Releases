@@ -221,8 +221,8 @@ The third component, we consider, is the addition with constant values from outs
   Only additions with outside variables or constants and multiplications with constants can increase the upper size bound.
   In the example, we have with $z$ one variable from outside the SCC for the result variable $(t_1,x)$.
   Again, we can only consider the positive effect of this variable.
-  The result is a result variable effect $\effect^\sqcap_{(t_1,y)} = 0 + \maxO{z} + 0$.
-  Therefore, the loop effect $\effect^\sqcap_\SCC$ equals $\UTime(t_1) \cdot \maxO{z} = \maxO{x} \cdot \maxO{z}$ and as a consequence the inferred upper size bound is $\USize'(t_1,x) = 1 \cdot (\maximum{y,z} + \maxO{x} \cdot \maxO{z})$.
+  The result is a result variable effect $\effect^\sqcap_{(t_1,y)} = \maxO{z}$.
+  Therefore, the loop effect $\effect^\sqcap_\SCC$ equals $\UTime(t_1) \cdot \maxO{z}$ and as a consequence the inferred upper size bound is $\USize'(t_1,x) = \maxO{y,z} + \UTime(t_1) \cdot \maxO{z}$.
 \end{example}
 
 \begin{example}[Lowercase]
