@@ -5,23 +5,27 @@ The algorithm for the computation of time bounds uses the so far computed size b
 In this chapter, we present a cost bound algorithm, which runs after the consecutive executions of the time and size bound algorithms and uses the resulting time and size bounds for the computation of cost bounds.
 
 A trivial approach for the computation of a cost bound $\UCost(t)$ of a transition $t \in \TSet$ is the multiplication of the time bound $\UTime(t)$ with the maximum of the substituted costs $\usubst{\cost(t)}{\LSize(\pret)}{\USize(\pret)}$ for a pre-transition $\pret \in \pre(t)$.
-For the computation of a cost bound $\UCost(t)$ of an initial transition $t \in \TSet_0$ the substitution is not necessary, since an there are no pre-transitions of an initial transition $t \in \TSet_0$ and the variables of the costs $\cost(t)$ are already expressed in dependence on the input variables of the program.
+For the computation of a cost bound $\UCost(t)$ of an initial transition $t \in \TSet_0$ the substitution is not necessary, since there are no pre-transitions of an initial transition $t \in \TSet_0$ and the variables of the costs $\cost(t)$ are already expressed in dependence on the input variables of the program.
 
 \begin{definition}[Trivial Cost Bound]
-  For each transition $t \in \TSet$ we define the cost bound $\UCost: \TSet \rightarrow \BoundSet(\PVSet)$ as trivial if and only if
+  Let $\UCost: \TSet \rightarrow \BoundSet(\PVSet)$ be defined with
   \[ \UCost(t) = \UTime(t) \cdot
   \begin{cases}
-    \maxO{\cost(t)} & \text{if } t \in \TSet_0 \\
-    \maxO{\maximum{\usubst{\cost(t)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)}} & \text{otherwise }
+    \cost(t) & \text{if } t \in \TSet_0 \\
+    \maximum{\usubst{\cost(t)}{\LSize(\pret)}{\USize(\pret)} \mid \pret \in \pre(t)} & \text{otherwise }
   \end{cases}
   \]
+  Then, we call $\UCost$ a \textbf{trivial cost bound}. 
 \end{definition}
 
-The definition uses the $\maxO{\cdot}$ operator to ensure, that the given costs are actually greater than $0$.
+Since the cost $\exacteval{\cost(t)}{\valuation}$ of a single evaluation step with $t \in \TSet$ is defined to be positive for every state $\valuation$, it is not necessary to use an operator $\maxO{\cdot}$ on the cost of a transition.
 
+\begin{example}[Trivial cost bound]
 \todo{Example necessary?}{}
 
-Additionally to this trivial approach, we use ranking functions, to infer better cost bounds for single transitions.
+\end{example}
+
+Additionally to trivial cost bounds, we use ranking functions, to infer better cost bounds for single transitions.
 With a few changes, the TimeBounds algorithm is extendable to the computation of cost bounds.
 
 \input{theorems/costbound}
