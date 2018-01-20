@@ -20,8 +20,6 @@ In related work as well as in this thesis, it is common to consider non-determin
 This is necessary, since the analyzed programs are often abstractions of other programs.
 These programs may depend on user input or may use a dynamic memory.
 
-\todo{Example: Cartesian product with filter of (x,x)?}{}
-
 We now formally define the programs used in this thesis.
 First, we define a program graph.
 
@@ -52,32 +50,50 @@ We define a program as a program graph with an initial location and a function m
 
 These definitions are based on the definition of programs of the KoAT paper \cite{koat} and a definition which distinguishes between guards and updates \cite{lowerruntime}.
 
-For program graphs we use the well-known definition of strongly connected components of a graph (\cite{sccs}).
-We define the strongly connected components of a program $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, c)$ as the strongly connected components of its program graph $(\LSet, \TSet)$.
-
-From this point on, we also use the abbreviation SCC for a strongly connected component.
-
 In a program, every variable is assumed to take an integer value.
 A transition defines a possible move from one location to another location, if certain conditions are met.
 In a transition $(\location,\update,\guard,\location') \in \TSet$, the guard $\guard$ represents the condition, which has to be fulfilled to move to the location $\location'$.
 The update function $\update$ assigns each program variable a value after the transition step.
 
+\begin{example}[Program]
+  \input{graphs/example_program}
+  Consider the program in Figure \ref{fig:example_program}.
+  The set of program variables of this program is $\PVSet = \braced{x,y,z}$.
+  Additionally, a temporary variable $\tvar \in \TVSet$ is used.
+  The program defines the location set $\LSet = \braced{\location_0,\location_1,\location_2}$ and the transition set $\TSet = \braced{t_0,t_1,t_2}$.
+  The location $\location_0$ is always considered to be the initial location of a program.
+  The location set and the transition set form a program graph $(\LSet, \TSet)$.
+  The transition $t_0$ is defined as $(\location_0,\update_0,\guard_0,\location_1)$ with an update $\update_0$ with $\update_0(x)=x$, $\update_0(y)=1$ and $\update_0(z)=\tvar$ and a guard $\guard = \braced{\tvar > 0}$.
+  The $\update_0(z)=\tvar$ and the guard $\guard = \braced{\tvar > 0}$ imply, that the value of the program variable $z$ after an execution of $t_0$ is chosen non-deterministically as an arbitrary positive number.
+  The transition $t_1$ is defined as $(\location_1,\update_1,\guard_1,\location_1)$ with an update $\update_1$ with $\update_1(x)=x-1$, $\update_1(y)=z \cdot y$ and $\update_1(z)=z$ and a guard $\guard = \braced{x > 0}$.
+  Therefore, the transition $t_1$ forms a loop, which can be executed as long as $x > 0$ holds.
+  Since $x$ is decremented, the transition can be executed at most $x$ or $0$ times.
+  The transition $t_2$ is defined as $(\location_1,\update_2,\guard_2,\location_2)$ with an update $\update_2 = \text{id}$ and a guard $\guard = \emptyset$.
+  The function $\text{id}$ symbolizes the identity function where each program variable $v \in \PVSet$ is mapped to itself.
+  The guard $\guard = \emptyset$ is given implicitly and denotes the guard which is always satisfied.
+  Therefore, the loop $t_1$ can always left non-deterministically before the value of the variable $x$ reaches $0$.
+  For the transitions $t_0$ and $t_2$ the costs are defined implicitly as $\cost(t_0) = \cost(t_2) = 1$.
+  The transition $t_1$ has explicit costs $\cost(t_1) = z$.
+  The whole program is defined as a tuple $((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$.
+  This program computes for an integer $x$ non-deterministically all results of an expression $z^{x'}$ with $z > 0$ and $x \geq x' > 0$.  
+\end{example}
+
+For program graphs we use the well-known definition of strongly connected components of a graph (\cite{sccs}).
+We define the strongly connected components of a program $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, c)$ as the strongly connected components of its program graph $(\LSet, \TSet)$.
+From this point on, we also use the abbreviation SCC for a strongly connected component.
+
 We consider non-deterministic programs in this master's thesis.
 Non-determinism can occur in a program due to two reasons.
 First, non-determinism occurs, when a program state fulfills the guard of multiple succeeding transitions. 
 There is no restriction, that only one guard of transitions with the same starting location can be fulfilled.
-
-\input{graphs/non_deterministic_choice}
-
-For example, the program graph in Figure \ref{fig:non_deterministic_choice} is valid, although from the location $\location_0$ it is possible to both move to the locations $\location_1$ and $\location_2$.
+For example, in the program graph in Figure \ref{fig:example_program} it is possible to both move to the locations $\location_1$ and $\location_2$ from the location $\location_1$.
 Such a program is not representable in common software languages.
 
 The second reason for non-determinism is an update $\update$ which assigns a program variable $v \in \PVSet$ an expression depending on one or multiple temporary variables $\tvar_1, \dots, \tvar_n \in \TVSet$.
 The values of these temporary variables are non-deterministic and only restricted by the guard $\guard$.
 Therefore, an update of the value of the variable $v \in \PVSet$ might result in different values.
-Consider the update $\update$ with $\update(x) = \tvar$, where $x \in \PVSet$ is a program variable and $\tvar \in \TVSet$ is a temporary variable.
-Also, consider the guard $\guard = \braced{\tvar > 0, \tvar \leq y}$ with $y \in \PVSet$.
-Then, the update of $x$ might result in a range of values $0 < x \leq y$. 
+Consider the update $\update_0$ of the program in Figure \ref{fig:example_program} with $\update_0(z) = \tvar$.
+Since the guard $\guard$ equals $\braced{\tvar > 0}$, the update of $z$ might result in a range of values $z > 0$. 
 Note that while the set of temporary variables $\TVSet$ is the same for every transition, their value is not carried over to other transitions.
 This is reflected in the update $\update: \PVSet \rightarrow \BoundSet_p(\AllVarsSet)$, which only assigns new values to program variables.
 
