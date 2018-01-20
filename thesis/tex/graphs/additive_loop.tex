@@ -10,7 +10,7 @@
   \node[main node] (1) [right of=0] {$\location_1$};
 
   \path[every node/.style={font=\sffamily\small}]
-    (0) edge[aligned edge] node[above=0.2cm] {$t_0$} node[below=0.2cm] {$\update(x) = x$\\$\update(y) = y$\\$\update(z) = z$} (1)
+    (0) edge[aligned edge] node[above=0.2cm] {$t_0$} node[below=0.2cm] {$\update = \text{id}$} (1)
     (1) edge[aligned edge, loop above] node[left=0.2cm] {$t_1$} node[right=0.2cm] {$\update(x) = x - 1$\\$\update(y) = y + z$\\$\update(z) = z$\\$\guard = \braced{x > 0}$} (1)
     ;
 \end{tikzpicture}
@@ -36,7 +36,34 @@
     ;
 \end{tikzpicture}
 
-\caption{Program which adds a constant value multiple times in a loop}
+\begin{align*}
+  \SCC &= \braced{(t_1,y)}, \TSet_\SCC = \braced{t_1}, \SCC_{t_1} = \braced{(t_1,y)} \\
+  \VSet_{(t_1,y)} &= \braced{y} \\
+  P^\sqcap_{(t_1,y)} &= \braced{y,z}, N^\sqcap_{(t_1,y)} = \emptyset \\
+  \start^\sqcap &= \maximum{\USize(\prerv) \mid \exists \rv \in \SCC: \prerv \in \pre(\rv) \setminus \SCC} \\
+  &= \maximum{\USize(t_0,y), \USize(t_0,z), \USize(t_1,z)} \\
+  &= \maximum{y,z,z} = \maximum{y,z} \\
+  \scale^\sqcap_{t_1} &= \maximum{s^\sqcap_\rv \mid \rv \in \SCC_{t_1}} \cdot \maximum{\abs{\VSet_\rv} \mid \rv \in \SCC_{t_1}} \\
+  &= s^\sqcap_{(t_1,y)} \cdot \abs{\VSet_{(t_1,y)}} \\
+  &= 1 \cdot 1 = 1 \\
+  \scale^\sqcap_\SCC &= \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\UTime(t)} \\
+  &= (\scale^\sqcap_{t_1})^{\UTime(t_1)} = 1^{\UTime(t_1)} = 1 \\
+  \incoming^\sqcap_{(t_1,y)}(z) &= \max \braced{1 \cdot \USize(\pret, v) \mid \exists \pret: (\pret, v) \in \pre(\rv) \setminus C} \\
+  &= \maximum{\USize(t_0, z), \USize(t_1, z)} \\
+  &= \maximum{z,z} = z \\
+  \effect^\sqcap_{(t_1,y)} &= \maxO{e^{\sqcap}_{(t_1,y)}} + \sum_{v \in P_{(t_1,y)}^\sqcap \setminus \VSet_{(t_1,y)}} \maxO{\incoming^\sqcap_{(t_1,y)}(v)} + \sum_{v \in N_{(t_1,y)}^\sqcap} \maxO{\incoming^\sqcup_{(t_1,y)}(v)} \\
+  &= \maxO{0} + \maxO{\incoming^\sqcap_{(t_1,y)}(z)} + 0 \\
+  &= \maxO{z} \\
+  \effect^\sqcap_{t_1} &= \max \braced{\effect^\sqcap_\rv \mid \rv \in \SCC_{t_1} } \\
+  &= \effect^\sqcap_{(t_1,y)} = \maxO{z} \\
+  \effect^\sqcap_\SCC &= \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\sqcap_t \right) \\
+  &= \UTime(t_1) \cdot \effect^\sqcap_{t_1} = \UTime(t_1) \cdot \maxO{z} \\
+  {\mathcal{S}^\sqcap}'(\beta) &= 1 \cdot \scale^\sqcap_\SCC \cdot \left( \maxO{\start^\sqcap} + \effect^\sqcap_\SCC \right) \\
+  &= 1 \cdot 1 \cdot \left( \maxO{y,z} + (\UTime(t_1) \cdot \maxO{z}) \right) \\
+  &= \maxO{y,z} + (\UTime(t_1) \cdot \maxO{z})
+\end{align*}
+
+\caption{Analysis of a program which adds a constant value multiple times in a loop}
 \label{fig:additive_loop}
 \end{figure}
 

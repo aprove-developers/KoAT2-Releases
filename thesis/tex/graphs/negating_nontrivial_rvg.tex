@@ -2,21 +2,22 @@
 \centering
 \begin{tikzpicture}[->,>=stealth',auto,node distance=2cm]
 
-  \node (0x) {$t_0,x$};
-  \node (1x) [above right=1cm and 2cm of 0x] {$t_1,x$};
-  \node (2x) [below right=1cm and 2cm of 0x] {$t_2,x$};
-  \node (3x) [right=5cm of 0x] {$t_3,x$};
+  \node (0x) {$x \leq (t_0,x) \leq x$};
+  \coordinate[right=4cm of 0x] (c);
+  \node (1x) [above=1cm of c] {$-x \leq (t_1,x) \leq -x$};
+  \node (2x) [below=1cm of c] {$x-1 \leq (t_2,x) \leq x-1$};
+  \node (3x) [right=4cm of c] {$x \leq (t_3,x) \leq x$};
 
   \path
-    (0x) edge (1x)
-    (0x) edge (2x)
-    (0x) edge (3x)
-    (1x) edge[loop above, thick] node[left] {\textbf{-}} (1x)
-    (1x) edge[bend left, thick] node[above right] {\textbf{+}} (2x)
-    (1x) edge (3x)
-    (2x) edge[bend left, thick] node[above left] {\textbf{-}} (1x)
-    (2x) edge[loop below, thick] node[right] {\textbf{+}} (2x)
-    (2x) edge (3x)
+    (0x) edge node[above left] {\textbf{-}} (1x)
+    (0x) edge node[below left] {\textbf{+}} (2x)
+    (0x) edge node[below left=0.1cm and 1.5cm] {\textbf{+}} (3x)
+    (1x) edge[loop above, very thick] node[left] {\textbf{-}} (1x)
+    (1x) edge[bend left, very thick] node[above right=0.2cm and 0cm] {\textbf{+}} (2x)
+    (1x) edge node[above right] {\textbf{+}} (3x)
+    (2x) edge[bend left, very thick] node[above left=0.2cm and 0cm] {\textbf{-}} (1x)
+    (2x) edge[loop below, very thick] node[right] {\textbf{+}} (2x)
+    (2x) edge node[below right] {\textbf{+}} (3x)
     ;
 \end{tikzpicture}
 \caption{RVG of a program with a negating nontrivial SCC}
