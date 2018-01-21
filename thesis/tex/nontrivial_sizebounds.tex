@@ -1,5 +1,5 @@
-In the last section, we presented a method for inferring upper and lower size bounds for trivial SCCs $\braced{\rv} \subseteq \RV$.
-In this section, we extend the method to infer upper and lower size bounds for nontrivial SCCs.
+The last section presented a method for inferring upper and lower size bounds for trivial SCCs $\braced{\rv} \subseteq \RV$.
+This section extends the method to infer upper and lower size bounds for nontrivial SCCs.
 These nontrivial SCCs are partitioned into two sets.
 The first set contains all nontrivial SCCs, for which there exists a variable, that is manipulated inside the SCC and that affects another variable or itself with its negated value inside the SCC.
 For such SCCs, we use the SizeBounds methods from the original KoAT paper \cite{koat} to infer upper and lower size bounds with $\USize(\rv) = -\LSize(\rv) = \mathcal{S}_{\text{original}}(\rv)$ for every result variable $\rv \in \RV$.

@@ -1,13 +1,13 @@
 \section{Implementation}
 
-We developed a prototype which implements the search for non-monotonic bounds.
-This implementation is focused on high modularity and maintainability.
+We developed a prototype which implements the search for time, size and cost bounds.
+This implementation focuses on high modularity and maintainability.
 The tool is implemented with the ML-derived language OCaml.
 \todo{Will we?}{In this chapter we give an overview of the modules of the implementation.}
 
 \subsection{Preprocessors}
 
-In the implementation we use several common preprocessors.
+The implementation uses several common preprocessors.
 A preprocessor is a function $p: 2^{\LSet \times \TSet} \rightarrow 2^{\LSet \times \TSet}$ which maps a program to an equivalent program.
 We say that a preprocessor $p$ changes a program $\Program = ((\LSet, \TSet), \location_0, \VSet, \cost)$ iff $p(\Program) \neq \Program$.
 We say that a preprocessor $p_1$ affects another preprocessor $p_2$ iff there are programs $\Program = ((\LSet, \TSet), \location_0, \VSet, \cost)$ such that $p_2(\Program) = \Program$, but $p_2$ changes the preprocessed program $p_1(\Program)$, e.g. $p_2(p_1(\Program)) \neq p_1(\Program)$.
@@ -16,7 +16,7 @@ We provide two different execution strategies.
 The trivial execution strategy executes a given sequence of preprocessors $p_1, \dots, p_n$.
 The second execution strategy is a work-list algorithm, which executes every preprocessor and appends all affected preprocessors to the work-list if a preprocessor changed the program.
 
-We will now define three common preprocessors $p_{\text{reachable}}$, $p_{\text{sat}}$ and $p_{\text{chaining}}$.
+We define three common preprocessors $p_{\text{reachable}}$, $p_{\text{sat}}$ and $p_{\text{chaining}}$.
 
 \subsubsection{Removal of unreachable locations}
 
@@ -79,13 +79,15 @@ Therefore, it is sound to use the initial time bound $\UTime$ with $\UTime(t) = 
 
 \subsection{Algorithm}
 
-In the last two chapters we presented the theorems for the computation of time and size bounds.
-For the computation of a time bound for a whole program, it is necessary to define an algorithm, which uses the time and size bound theorems to infer the global time bound.
-In this chapter we will present such an algorithm and show its execution on a detailed example.
-While the actual code is written in a functional style, we will present the algorithm in an imperative style to make the execution order explicit.
+The last three chapters presented the theorems for the computation of time, size and cost bounds.
+For the computation of a time and a cost bound for a whole program, it is necessary to define an algorithm, which consecutively uses the time and size bound theorems.
+This section presents such an algorithm.
+While the actual code is written in a functional style, the presented algorithm uses an imperative style to make the execution order explicit.
+
+\todo{Check algorithm}
 
 \begin{algorithm}
-\caption{Inferring a global time bound}\label{complete_algorithm}
+\caption{Inferring global time and cost bounds}\label{complete_algorithm}
 \begin{algorithmic}[1]
   \State Input: A program graph $P = (\LSet, \TSet)$
   \State Run preprocessors
@@ -93,13 +95,22 @@ While the actual code is written in a functional style, we will present the algo
   \State Infer time bounds for transitions between SCCs
   \State Construct the result variable graph RVG from $P$
   \State Compute local size bounds $\ULSB$ and $\LLSB$
+  \State Compute a time ranking function for each transition in $\TSet$
   \Repeat
     \ForAll{SCCs $\SCC$ of RVG in topological order}
       \State Run $\text{SizeBounds}(\UTime, \Size, \SCC)$
     \EndFor
     \ForAll{SCCs $\TSet'$ of $P$ in topological order}
-      \State Run $\text{TimeBounds}(\UTime, \Size, \braced{t \in \TSet' \mid \UTime(t) = \infty})$
+      \State Run $\text{TimeBounds}(\UTime, \Size, \TSet)$
     \EndFor
   \Until{all TimeBounds executions did not improve any time bound}
+  \ForAll{transitions $t \in \TSet$}
+    \State Compute a cost ranking function for $t$
+    \If{a cost ranking function exists}
+      \State Infer a non-trivial cost bound for $t$
+    \Else
+      \State Infer a trivial cost bound for $t$
+    \EndIf
+  \EndFor
 \end{algorithmic}
 \end{algorithm}

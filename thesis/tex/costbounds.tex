@@ -1,8 +1,8 @@
 \section{Computing cost bounds}
 
-In the last two chapters, we introduced algorithms for the computation of time bounds and size bounds.
+The last two chapters introduced algorithms for the computation of time bounds and size bounds.
 The algorithm for the computation of time bounds uses the so far computed size bounds and the algorithm for the computation of size bounds uses the so far computed time bounds.
-In this chapter, we present a cost bound algorithm, which runs after the consecutive executions of the time and size bound algorithms and uses the resulting time and size bounds for the computation of cost bounds.
+This chapter presents a cost bound algorithm, which runs after the consecutive executions of the time and size bound algorithms and uses the resulting time and size bounds for the computation of cost bounds.
 
 A trivial approach for the computation of a cost bound $\UCost(t)$ of a transition $t \in \TSet$ is the multiplication of the time bound $\UTime(t)$ with the maximum of the substituted costs $\usubst{\cost(t)}{\LSize(\pret)}{\USize(\pret)}$ for a pre-transition $\pret \in \pre(t)$.
 For the computation of a cost bound $\UCost(t)$ of an initial transition $t \in \TSet_0$ the substitution is not necessary, since there are no pre-transitions of an initial transition $t \in \TSet_0$ and the variables of the costs $\cost(t)$ are already expressed in dependence on the input variables of the program.

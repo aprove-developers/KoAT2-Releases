@@ -1,6 +1,6 @@
 \section{Complexity}
 
-In this section, we define the measures which should be computed with the analysis.
+This section defines the measures which should be computed with the analysis.
 Therefore, we introduce the terms of time, size and cost complexity.
 Time complexity describes how many steps an evaluation of a program will take in a worst-case scenario.
 Size complexity yields for each transition an assignment from each variable to an interval, which defines the range of the value of the variable after the execution of the transition in an arbitrary run.
@@ -88,12 +88,13 @@ These local size bounds can be lifted to global size bounds by the upcoming defi
   We call $\LSB$ a \textbf{local size bound}.
 \end{definition}
 
-\input{graphs/localglobal}
-
-Consider Figure \ref{fig:localglobal}.
-While $\ULSB(t_1, x) = 2 \cdot x$ is a valid upper local size bound for the result variable $(t_1, x)$, it only describes the value of $x$ in terms of the value immediately before the execution of the transition $t_1$.
-An upper global size bound instead expresses the value of $x$ in terms of the initial values of the program.
-Therefore $\USize(t_1, x) = 2 \cdot (x + 1)$ is a valid upper global size bound for the result variable $(t_1, x)$.
+\begin{example}[Local Size Bound]
+  \input{graphs/localglobal}
+  Consider Figure \ref{fig:localglobal}.
+  While $\ULSB(t_1, x) = 2 \cdot x$ is a valid upper local size bound for the result variable $(t_1, x)$, it only describes the value of $x$ in terms of the value immediately before the execution of the transition $t_1$.
+  An upper global size bound instead expresses the value of $x$ in terms of the initial values of the program.
+  Therefore $\USize(t_1, x) = 2 \cdot (x + 1)$ is a valid upper global size bound for the result variable $(t_1, x)$.
+\end{example}
 
 Throughout this master's thesis, we use the application of a global or local size bound as a function for different purposes.
 Let $f: \RV \rightarrow \BoundSet(\PVSet)$ be an arbitrary size bound.
