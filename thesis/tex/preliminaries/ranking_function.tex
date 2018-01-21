@@ -30,8 +30,7 @@ We can use the same approach for the direct inference of cost bounds.
   For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
   \[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} - \exacteval{\cost((\location, \update, \guard, \location'))}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'} \]
   and
-  \[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq 1. \]
-  \todo{Is it one or the cost?}{}
+  \[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\cost((\location, \update, \guard, \location'))}{\valuation} \]
 \end{definition}
 
 Since this definition ensures, that each transition $t \in \TSet_>$ decreases in each transition step by its cost, the cost rank $\costrank(\location)$ can be used as a bound on the sum of all occurred costs of the transition $t$ from this location on.
