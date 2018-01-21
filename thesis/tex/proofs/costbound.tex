@@ -1,0 +1,79 @@
+We want to prove the following claim for all transitions $t \in \TSet$ and all states $\lstate, \ustate \in \Valuation$.
+\begin{align*}
+  \ueval{\UCost'(t)}{\lstate}{\ustate} \geq \sup & \braced{ \sum_{1 \leq i \leq k} \exacteval{\cost(t)}{\valuation_i} \mid \exists \valuation_0, k \geq 1: \lstate \leq \valuation_0 \leq \ustate \\
+    & \wedge (\location_0, \valuation_0) \rightarrow^* (\location_1, \valuation_1) (\rightarrow_t \circ \rightarrow^*) \dots (\location_k, \valuation_k) (\rightarrow_t \circ \rightarrow^*) (\location_{k+1}, \valuation_{k+1}) }
+\end{align*}
+
+This is trivial, if $t \notin \TSet'_>$.
+Therefore, lets consider a transition $t \in \TSet'_>$.
+It suffices to show that for all transitions $t \in \TSet'_>$ and all states $\lstate \leq \ustate$ the following claim holds.
+\begin{align*}
+  & \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \ueval{\UTime(\pret)}{\lstate}{\ustate} \cdot \maxO{\usubst{\costrank(\location)}{\leval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}}} \\
+  \geq \sup & \braced{ \sum_{1 \leq i \leq k} \exacteval{\cost(t)}{\valuation_i} \mid \exists \valuation_0, k \geq 1: \lstate \leq \valuation_0 \leq \ustate \\
+    & \wedge (\location_0, \valuation_0) \rightarrow^* (\location_1, \valuation_1) (\rightarrow_t \circ \rightarrow^*) \dots (\location_k, \valuation_k) (\rightarrow_t \circ \rightarrow^*) (\location_{k+1}, \valuation_{k+1}) }
+\end{align*}
+To this end, let $\valuation_0$ be an initial state with $\lstate \leq \valuation_0 \leq \ustate$ and consider a (finite or infinite) evaluation starting with $\valuation_0$ where $k \in \mathbb{N} \cup \braced{\infty}$ steps are performed with the transition $t$.
+The goal is now to show that
+\[
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \ueval{\UTime(\pret)}{\lstate}{\ustate} \cdot \maxO{\usubst{\costrank(\location)}{\leval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}}} \geq \sum_{1 \leq i \leq k} \exacteval{\cost(t)}{\valuation_i}
+\]
+
+This is trivial for $k = 0$.
+Then it holds that $\sum_{1 \leq i \leq k} \exacteval{\cost(t)}{\valuation_i} = 0$.
+Since the operator $\maxO{\cdot}$ ensures positivity and $\exacteval{\UTime(t)}{\valuation_0} \geq 0$ holds for any transition $t$, the statement holds.
+
+\todo{Adjust proof from this point}{}
+
+We now consider the case $k > 0$.
+Then, we can use the following representation for the considered evaluation.
+\begin{IEEEeqnarray*}{lClC}
+  (\prel_0, \prestate_0) & \rightarrow^{\tilde{k}_0}_{\TSet \setminus \TSet'} & (\actl_{1,0}, \actstate_{1,0}) & \rightarrow^{k_1}_{\TSet'} \\
+  (\prel_1, \prestate_1) & \rightarrow^{\tilde{k}_1}_{\TSet \setminus \TSet'} & (\actl_2, \actstate_2) & \rightarrow^{k_2}_{\TSet'} \\
+  (\prel_2, \prestate_2) & \rightarrow^{\tilde{k}_2}_{\TSet \setminus \TSet'} & \dots
+\end{IEEEeqnarray*}
+In this evaluation, the outgoing transitions of all $(\actl_i, \actstate_i)$ are transitions from $\TSet'$.
+The outgoing transitions of all $(\prel_i, \prestate_i)$ are transitions from $\TSet \setminus \TSet'$.
+
+Now we have to investigate how often the transition $t$ is used in this evaluation.
+Since $t \in \TSet'$, it can only be used in sequences of the following form.
+\[ (\actl_i, \actstate_i) \rightarrow^{k_i}_{\TSet'} (\prel_i, \prestate_i) \]
+
+We can show that $\maxO{\exacteval{\costrank(\location_i)}{\actstate_i}} \geq \sum_{1 \leq j \leq {k_i}} \exacteval{\cost(t)}{\valuation_j}$.
+For $k_i = 0$ this is obvious, since then $\sum_{1 \leq j \leq {k_i}} \exacteval{\cost(t)}{\valuation_j} = 0$ and the operator $\maxO{\cdot}$ ensures positivity.
+Lets consider the case $k_i > 0$.
+Since $\timerank$ is a time ranking function for $\TSet$, for all $j$ it holds that $\maxO{\exacteval{\timerank(\location_j)}{\actstate_j}} \geq \maxO{\exacteval{\timerank(\location_{j+1})}{\actstate_{j+1}}}$.
+Let $j_1 < j_2 < \dots$ be the $k_i$ indices where $t_j = t$.
+Then, for all $j \in \braced{j_1, j_2, \dots}$, $t \in \TSet_>$ implies that $\maxO{\exacteval{\timerank(\location_j)}{\actstate_j}} > \maxO{\exacteval{\timerank(\location_{j+1})}{\actstate_{j+1}}}$ and $\maxO{\exacteval{\timerank(\location_j)}{\actstate_j}} \geq 1$.
+Thus, we obtain
+\begin{align*}
+  & \maxO{\exacteval{\timerank(\location_i)}{\actstate_i}} \\
+  \geq & \maxO{\exacteval{\timerank(\location_{j_1})}{\actstate_{j_1}}} \\
+  > & \maxO{\exacteval{\timerank(\location_{j_2})}{\actstate_{j_2}}} \\
+  > & \dots \\
+  > & \maxO{\exacteval{\timerank(\location_{j_k})}{\actstate_{j_k}}} \\
+  \geq & 1
+\end{align*}
+Therefore $\maxO{\exacteval{\timerank(\location_i)}{\actstate_i}} \geq k_i$ is an upper bound on the number of times the transition $t$ is used in the sequence.
+
+Let the transition in the evaluation reaching $(\actl_i, \actstate_i)$ be $\pret_i$.
+Thus, we have $\actl_i \in \mathcal{E}_{\TSet'}$ and $\pret_i \in \TSet_{\actl_i}$.
+As $(\location_0, \valuation_0) \rightarrow^*_\TSet \circ \rightarrow_{\pret_i} (\actl_i, \actstate_i)$ and $\lstate \leq \valuation_0 \leq \ustate$, we have by definition of the size approximations
+\[ \ueval{\USize(\pret_i, v)}{\lstate}{\ustate} \geq \exacteval{\USize(\pret_i, v)}{\valuation_0} \geq \actstate_i(v) \geq \exacteval{\LSize(\pret_i, v)}{\valuation_0} \geq \leval{\LSize(\pret_i, v)}{\lstate}{\ustate}. \]
+We can conclude that
+\begin{align*}
+   & \maxO{\ueval{\timerank(\actl_i)}{\leval{\LSize(\pret_i)}{\lstate}{\ustate}}{\ueval{\USize(\pret_i)}{\lstate}{\ustate}}} \\
+   \geq & \maxO{\ueval{\timerank(\actl_i)}{\exacteval{\LSize(\pret_i)}{\valuation_0}}{\exacteval{\USize(\pret_i)}{\valuation_0}}} \\
+   \geq & \maxO{\ueval{\timerank(\actl_i)}{\valuation_i}{\valuation_i}} \\
+   \geq & \maxO{\exacteval{\timerank(\actl_i)}{\valuation_i}} \\
+   \geq & k_i \\
+\end{align*}
+Thus, $\maxO{\usubst{\timerank(\actl_i)}{\leval{\LSize(\pret_i)}{\lstate}{\ustate}}{\ueval{\USize(\pret_i)}{\lstate}{\ustate}}}$ is a bound on the number of times $k_i$ the transition $t$ is used in the sequence.
+
+It remains to examine how often a sequence $(\actl_i, \actstate_i) \rightarrow^+_{\TSet'} (\prel_i, \prestate_i)$ can occur in the full evaluation.
+As observed earlier, the transition reaching $(\actl_i, \actstate_i)$ in the evaluation is always some $\pret_i \in \TSet_{\actl_i}$.
+Each $\pret_i$ can occur at most $\ueval{\UTime(\pret_i)}{\lstate}{\ustate}$ times in evaluations.
+We found out, that in every $\TSet'$-sequence the transition $t$ can occur at most $\maxO{\exacteval{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}{\valuation_0}}$ times.
+Thus, we can infer that our initial statement holds.
+\begin{IEEEeqnarray*}{rCl}
+  \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \ueval{\UTime(\pret)}{\lstate}{\ustate} \cdot \maxO{\usubst{\timerank(\location)}{\leval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}}} \geq k
+\end{IEEEeqnarray*}
