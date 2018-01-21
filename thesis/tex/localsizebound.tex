@@ -139,7 +139,7 @@ We show the construction of a trivial local size bound with an example of a triv
 With given trivial local size bounds we can now search the local bound sets $\BoundSet^\sqcup_l$ and $\BoundSet^\sqcap_l$ for better bounds.
 
 \begin{algorithm}
-\caption{Inferring scaled sum}\label{ulsb_algorithm}
+\caption{Inferring a scaled sum}\label{ulsb_algorithm}
 \begin{algorithmic}[1]
   \State Input: A result variable $t = ((\location,\update,\guard,\location'),v) \in \RV$
   \State Set $\bowtie$ to $\geq$ for the lower case and to $\leq$ for the upper case
@@ -174,7 +174,7 @@ Then, the next step is to also minimize the constant $e$.
 With the minimized factor $s$ and the minimized constant $e$, we can now filter the variables, which are not required for the validity of the bound.
 Assume a variable $v \in \VSet$.
 In a trivial local size bound the variable $v$ is both in $P_2$ and $N_2$.
-If the variable is obsolete for the bound, it is removed from both sets, \todo{Explain why}{otherwise it is removed from at least one set.}
+If the variable is obsolete for the bound, it is removed from both sets, otherwise it is removed from at least one set.
 If the variable can not be removed from both sets, it might still be possible to move it to $P_1$ and $N_1$, respectively.
 Note that this might be possible, since for each variable $v \in \VSet$ and each valuation $\valuation \in \Valuation$ it holds that $\exacteval{v}{\valuation} \leq \exacteval{\maxO{v}}{\valuation}$ and also $\exacteval{-v}{\valuation} \leq \exacteval{\maxO{-v}}{\valuation}$.
 
@@ -183,5 +183,3 @@ Note that the order affects the resulting bound, but not its optimality.
 Consider the update $\update(x) = y + z$ and the guard $\guard = \braced{y = z}$.
 Depending on the order it is both possible to receive the bounds $2 \cdot y$ and $2 \cdot z$.
 But since $2 \cdot y \leq 2 \cdot z$ and $2 \cdot z \leq 2 \cdot y$ hold, they are both optimal.
-
-\todo{Proof that the algorithm always finds a valid local size bound}{}

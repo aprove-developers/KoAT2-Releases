@@ -1,9 +1,9 @@
 \section{Implementation}
 
 We developed a prototype which implements the search for time, size and cost bounds.
-This implementation focuses on high modularity and maintainability.
+This implementation focuses on high modularity and maintainability, but uses optimized procedures in performance relevant parts of the program.
 The tool is implemented with the ML-derived language OCaml.
-\todo{Will we?}{In this chapter we give an overview of the modules of the implementation.}
+This chapter gives an overview of the implementation.
 
 \subsection{Preprocessors}
 
@@ -65,7 +65,7 @@ It uses the APRON library \cite{apron}.
 The APRON library is an abstract interpretation framework commonly used for the generation of invariants.
 
 The general idea of the preprocessor $p_{\text{invgen}}$ is the transformation of a program $P = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$ to a program $P' = ((\LSet, \TSet'), \location_0, \PVSet, \TVSet, \cost)$, such that if there is a transition $t = (\location, \update, \guard, \location')$ in $\TSet$, then there is also a transition $t' = (\location, \update, \guard \wedge \guard', \location')$ in $\TSet'$ such that every evaluation in the program $P$ is still an evaluation in the program $P'$.
-\todo{Affects?}{}
+The preprocessor $p_{\text{invgen}}$ affects the preprocessors $p_{\text{sat}}$.
 
 \subsection{Trivial time bounds}
 

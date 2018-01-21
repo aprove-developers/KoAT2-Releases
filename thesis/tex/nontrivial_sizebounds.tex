@@ -97,7 +97,7 @@ A positive effect represents a number, by which the value of a variable increase
 It is easy to see, that in an SCC without negation, it is necessary to capture all positive effects for the computation of an upper size bound, while it is necessary to capture all negative effects for the computation of lower size bounds.
 The capturing of negative effects for the computation of upper size bounds and positive effects for the computation of lower size bounds would lead to better bounds, but in practice this is not achievable.
 For the valid overapproximation of negative effects for upper size bounds, it would be necessary to approximate the accumulation of those negative effects with a multiplication with the lower time bound.
-\todo{Source?}{But related work agrees, that it is impossible to effectively compute lower time bounds.}
+But as we pointed out, there is no known way for the effective computation of lower time bounds.
 Therefore, in any case which could yield a negative effect (or a positive effect for a lower size bound), we ignore it by setting it to $0$.
 
 Now we analyze the new method in multiple steps with different examples to explain the reasoning behind the different components of the method.
