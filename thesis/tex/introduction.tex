@@ -46,13 +46,22 @@ In the appendix all necessary proofs are given.
 
 \subsection{Motivation}
 
-We now take a look at an example to see the benefit of non-monotonic bounds.
-Figure \ref{fig:motivational_example} shows a program, which takes two variables $x$ and $y$ as input and runs a loop, which decrements $x$ in each step with $t_1$ until $x$ is not greater than 0 anymore.
-We can easily see, that the transition $t_1$ will be used at most $\max \braced{0, x-y}$ times.
-However, since the previous method only used monotonic bounds, it only infers the bound $\abs{x}+\abs{y}$ for $t_1$.
+Consider the following program.
 
-\todo{Continue}{}
+\begin{algorithmic}
+  \While{$x > y$}
+    \State $x := x - 1$
+  \EndWhile
+\end{algorithmic}
 
-\input{graphs/motivational_example}
-
-\input{graphs/non_beneficial_example}
+It takes two variables $x$ and $y$ as input and runs a loop, which decrements $x$ in each step with $t_1$ until $x$ is not greater than 0 anymore.
+Intentionally, we can see, that the transition $t_1$ will be used at most $\max \braced{0, x-y}$ times.
+But the method of the KoAT paper \cite{koat} is only able to infer the monotonic bound $\abs{x}+\abs{y}$ for $t_1$, while the new method infers the expected time bound $\maximum{0, x-y}$.
+Both methods determine the rank $x-y$, to represent the maximal possible steps from the location $\location_1$.
+This rank needs to be lifted to a global time bound depending on the size of the input variables.
+For this purpose the KoAT method and the new method substitute the variables in the rank $x-y$ with a corresponding size bound up to the location $\location_1$.
+In this step, it needs to be ensured, that the result is a valid overapproximation.
+The method of KoAT achieves this by transforming $x-y$ into a monotonic bound $\abs{x}+\abs{y}$.
+The presented method instead substitutes the variable $x$ with its upper size bound and the variable $y$ with its lower size bound.
+Since the method is able to determine an upper size bound for $x$ as $x$ and a lower size bound for $y$ as $y$, the substitution then yields $x-y$.
+Then, it is only left to ensure the positivity of the time bound.
