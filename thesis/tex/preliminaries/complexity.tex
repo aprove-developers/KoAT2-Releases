@@ -113,12 +113,16 @@ The cost complexity of a program is defined as the highest sum of the costs of a
 
 \begin{definition}[Worst-Case Cost Complexity]
   We call $\text{cc}: (\Valuation \times \Valuation) \rightarrow \mathbb{N}$ the \textbf{cost complexity} of a program if and only if for all states $\lstate, \ustate \in \Valuation$ it holds that
-  \[ \text{cc}(\lstate, \ustate) = \costcomplexityterm \]
+  \begin{align*}
+    \text{cc}(\lstate, \ustate) &=
+    \braced{ \sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i} \mid \exists \valuation_0, k \geq 1: \lstate \leq \valuation_0 \leq \ustate \\
+      &\wedge (\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location_k, \valuation_k) }
+  \end{align*}
 \end{definition}
 
 The definition of cost complexity is useful for a modular analysis, where a transition is able to describe the whole effect of a subprogram.
 Then, a transition might occur only a specific number of times in the outer program, but in fact every occurrence is not just a link to a single transition usage, but to a complete execution of a subprogram with its own time bound.
-Lifting these time bounds into the context of the outer program, we consider them as cost of the transition of the outer program. \todo{Example or later?}{}
+Lifting these time bounds into the context of the outer program, we consider them as cost of the transition of the outer program.
 For that reason, the cost function $\cost: \TSet \rightarrow \BoundSet(\PVSet)$ is defined for the whole bound set $\BoundSet(\PVSet)$.
 
 Unfortunately, the usefulness of the distinction between upper and lower size bounds is limited for the computation of a cost bound.
