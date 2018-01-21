@@ -23,8 +23,15 @@ For the computation of a cost bound $\UCost(t)$ of an initial transition $t \in 
 Since the cost $\exacteval{\cost(t)}{\valuation}$ of a single evaluation step with $t \in \TSet$ is defined to be positive for every state $\valuation$, it is not necessary to use an operator $\maxO{\cdot}$ on the cost of a transition.
 
 \begin{example}[Trivial cost bound]
-\todo{Example necessary?}{}
-
+  Consider the program in Figure \ref{fig:cost_ranking_function}.
+  \input{graphs/cost_ranking_function}
+  The program takes two variables $x$ and $y$.
+  It decreases the value of $x$ in each step with $t_1$ with the value of $y$.
+  Each step with $t_1$ has a cost of the current value of $y$.
+  Since the value of $y$ never changes, the cost of the transition $t_1$ is constant throughout the execution of the loop.
+  The guard ensures that $x > y > 0$.
+  Therefore, the method TimeBounds can compute a time bound $\UTime(t_1) = \maxO{x}$.
+  Since the size of $y$ is bound with $\USize(t_0) = y$ after the transition $t_0$, a trivial cost bound $\UCost(t_1) = \UTime(t_1) \cdot \usubst{\cost(t_1)}{\LSize(t_0)}{\USize(t_0)} = \maxO{x} \cdot y$ can be inferred.
 \end{example}
 
 \subsection{Computing cost bounds with ranking functions}
@@ -47,20 +54,22 @@ Also, for each transition $t \in \TSet_>$ the decrease of the rank  is bounded b
 Therefore, the cost rank $\costrank(\location)$ can be used as a bound on the sum of all occurred costs of the transition $t$ from this location on.
 
 \begin{example}[Cost ranking function]
-  Consider the program in Figure \ref{fig:cost_ranking_function}.
-  \input{graphs/cost_ranking_function}
+  Consider again the program in Figure \ref{fig:cost_ranking_function}.
   We can show that the function $\costrank$ with $\costrank(\location_1) = x$ is a cost ranking function for the transition set $\TSet = \braced{t_1}$.
   For every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ it holds that $\exacteval{\braced{y > 0, x > y}}{\valuation} \Rightarrow \exacteval{x}{\valuation} - \exacteval{y}{\valuation} > \exacteval{x}{\valuation'}$, since the value of $x$ decreases in every evaluation step with the value of $y$.
   Also, it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ that $\exacteval{\braced{y > 0, x > y}}{\valuation} \Rightarrow \exacteval{x}{\valuation} \geq \exacteval{y}{\valuation}$, since the value of $x$ is greater than $y$ in every evaluation step.
 \end{example}
-
-The example shows the potential of the usage of cost ranking functions.
-The best time ranking function determinable is a function $\timerank$ with $\timerank = \costrank$.
-Therefore, only a time bound of $\UTime(t_1) = \maxO{x}$ can be computed for the transition $t_1$.
-As a consequence, a resulting cost bound of the transition $t_1$ would be $\UCost(t_1) = x*y$, which is significantly worse than a cost bound of $\UCost(t_1) = x$ resulting from an approach with a cost ranking function.
 
 With a few changes, the TimeBounds algorithm is extendable to the computation of cost bounds.
 
 \input{theorems/costbound}
 
 With this definition, it is possible to start with a trivial cost bound, search for cost ranking functions and consecutively refine the cost bounds of single transitions, where a cost ranking function is found.
+
+\begin{example}[CostBounds]
+  Consider again the program in Figure \ref{fig:cost_ranking_function}.
+  We showed that a trivial cost bound can be computed as $\UCost(t_1) = \maxO{x} \cdot y$ and that a cost ranking function $\costrank$ with $\costrank(\location_1) = x$ can be determined.
+  The resulting cost bound of the CostBounds method is $\UCost(t_1) = \maxO{\usubst{\costrank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} = \maxO{x}$.
+  This is significantly better than the trivial cost bound of $\UCost(t_1) = \maxO{x} \cdot y$.
+\end{example}
+
