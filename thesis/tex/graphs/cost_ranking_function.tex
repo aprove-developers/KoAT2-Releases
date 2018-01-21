@@ -1,0 +1,20 @@
+\begin{figure}
+\centering
+
+\begin{tikzpicture}[->,>=stealth',auto,node distance=5cm,
+    thick,
+    main node/.style={circle,draw,font=\sffamily\Large\bfseries},
+    aligned edge/.style={align=left}]
+
+  \node[main node] (0) {$\location_0$};
+  \node[main node] (1) [right of=0] {$\location_1$};
+
+  \path[every node/.style={font=\sffamily\small}]
+    (0) edge[aligned edge] node[above=0.2cm] {$t_0$} node[below=0.2cm] {$\update = \text{id}$} (1)
+    (1) edge[aligned edge, loop above] node[left=0.2cm] {$t_1$} node[below right=0cm and 0.5cm] {$\update(x) = x - y$\\$\update(y) = y$\\$\guard = \braced{y > 0, x > y}$\\$\cost(t_1)=y$} (1)
+    ;
+\end{tikzpicture}
+
+\caption{Program with a computation of a cost ranking function}
+\label{fig:cost_ranking_function}
+\end{figure}
