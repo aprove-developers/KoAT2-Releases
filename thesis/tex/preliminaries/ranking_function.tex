@@ -10,27 +10,39 @@ For the computation of time bounds, we use a definition of the KoAT paper \cite{
 \begin{definition}[Time Ranking Function] 
   We define $\timerank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as time ranking function for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
   For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
-  \[ \guard \Rightarrow \exacteval{\timerank(\location)}{\valuation} \geq \exacteval{\timerank(\location')}{\valuation'}. \]
+  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\timerank(\location)}{\valuation} \geq \exacteval{\timerank(\location')}{\valuation'}. \]
   For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
-  \[ \guard \Rightarrow \exacteval{\timerank(\location)}{\valuation} - 1 \geq \exacteval{\timerank(\location')}{\valuation'} \]
+  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\timerank(\location)}{\valuation} - 1 \geq \exacteval{\timerank(\location')}{\valuation'} \]
   and
-  \[ \guard \Rightarrow \exacteval{\timerank(\location)}{\valuation} \geq 1. \]
+  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\timerank(\location)}{\valuation} \geq 1. \]
 \end{definition}
 
 A time ranking function $\timerank$ implies that a transition $t \in \TSet_>$ can only be used a limited number of times in an evaluation.
 This is ensured, since a transition $t \in \TSet_>$ both decreases the measure and is bounded by $1$, as well as other transitions $t \in \TSet$ do not increase the measure.
 Therefore, for the transitions $t \in \TSet_>$ the rank $\timerank(\location)$ at a location $\location \in \LSet$ can be used as a bound on the number of occurrences of this transition in any evaluation from this location on.
 
+\begin{example}[Time ranking function]
+  Consider the program from the introduction in Figure \ref{fig:motivational_example}
+  \input{graphs/motivational_example}
+  As already pointed out, the polynomial $x-y$ is a time rank for the location $\location_1$.
+  This fact can be formalized in the following way.
+  Consider the function $\timerank: \LSet \rightarrow \BoundSet_p(\PVSet)$ with $\timerank(\location_1) = x-y$.
+  This function is a time ranking function for the transition set $\TSet = \braced{t_1}$, if $\TSet_> = \braced{t_1}$.
+  For the single transition $t_1$ it holds for every evaluation step $(\location_1,\valuation) \rightarrow_t (\location_1,\valuation')$ that $\exacteval{x>y}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} > \exacteval{x-y}{\valuation'}$, since $x$ decreases such an evaluation step.
+  Also, it holds for every evaluation step $(\location_1,\valuation) \rightarrow_t (\location_1,\valuation')$ that $\exacteval{x>y}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} \geq 1$.
+  Note that in this example it would also be possible to consider the transition $t_0$ as part of the set $\TSet$, since it holds for every evaluation step $(\location_1,\valuation) \rightarrow_t (\location_1,\valuation')$ that $\valuation(x)=\valuation'(x)$ and $\valuation(y)=\valuation'(y)$ and therefore $\exacteval{\textbf{true}}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} \geq \exacteval{x-y}{\valuation'}$.
+\end{example}
+
 We can use the same approach for the direct inference of cost bounds.
 
 \begin{definition}[Cost Ranking Function] 
   We define $\costrank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as cost ranking function for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
   For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
-  \[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'}. \]
+  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'}. \]
   For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
-  \[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} - \exacteval{\cost((\location, \update, \guard, \location'))}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'} \]
+  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\costrank(\location)}{\valuation} - \exacteval{\cost((\location, \update, \guard, \location'))}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'} \]
   and
-  \[ \guard \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\cost((\location, \update, \guard, \location'))}{\valuation} \]
+  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\cost((\location, \update, \guard, \location'))}{\valuation} \]
 \end{definition}
 
 Since this definition ensures, that each transition $t \in \TSet_>$ decreases in each transition step by its cost, the cost rank $\costrank(\location)$ can be used as a bound on the sum of all occurred costs of the transition $t$ from this location on.
