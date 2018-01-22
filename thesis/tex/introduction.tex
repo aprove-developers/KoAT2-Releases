@@ -44,7 +44,7 @@ The trivial method is solely based on the inferred time bounds.
 The non-trivial method is based on specialized ranking functions for cost bounds.
 
 The eighth chapter presents details about the implementation of the presented method.
-Then, in the ninth chapter this implementation is evaluated and compared with other tools of the same domain.
+Then, in the ninth chapter, this implementation is evaluated and compared with other tools of the same domain.
 
 The tenth chapter concludes this thesis.
 In the appendix all necessary proofs are given.
@@ -62,9 +62,9 @@ Intentionally, we can see, that the transition $t_1$ will be used at most $\max 
 But the method of the KoAT paper \cite{koat} is only able to infer the monotonic bound $\abs{x}+\abs{y}$ for $t_1$, while the new method infers the expected time bound $\maximum{0, x-y}$.
 Both methods determine the rank $x-y$, to represent the maximal possible steps from the location $\location_1$.
 This rank needs to be lifted to a global time bound depending on the size of the input variables.
-For this purpose the KoAT method and the new method substitute the variables in the rank $x-y$ with a corresponding size bound up to the location $\location_1$.
-In this step one must ensure that the result is a valid overapproximation.
-The method of KoAT achieves this by transforming $x-y$ into a monotonic bound $\abs{x}+\abs{y}$.
+For this purpose, the KoAT method \cite{koat} and the new method substitute the variables in the rank $x-y$ with a corresponding size bound up to the location $\location_1$.
+In this step, one must ensure that the result is a valid overapproximation.
+The method of KoAT \cite{koat} achieves this by transforming $x-y$ into a monotonic bound $\abs{x}+\abs{y}$.
 The presented method instead substitutes the variable $x$ with its upper size bound and the variable $y$ with its lower size bound.
 Since the method is able to determine an upper size bound for $x$ as $x$ and a lower size bound for $y$ as $y$, the substitution then yields $x-y$.
 Then, it is only left to ensure the positivity of the time bound.

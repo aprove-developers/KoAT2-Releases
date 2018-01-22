@@ -9,7 +9,7 @@ Our goal is to show that the defined size bounds are correct lower and upper bou
 \begin{equation} \label{eq:sizebound_target}
   \ueval{\USize'(\actt, v)}{\lstate}{\ustate} \geq \actstate(v) \geq \leval{\LSize'(\actt, v)}{\lstate}{\ustate}
 \end{equation}
-Instead of proving (\ref{eq:sizebound_target}) directly, we proof a simplified hypothesis, which implies the target (\ref{eq:sizebound_target}).
+Instead of proving (\ref{eq:sizebound_target}) directly, we prove a simplified hypothesis, which implies the target (\ref{eq:sizebound_target}).
 For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition t was used in the evaluation.
 Then, we define an upper bound $d^\sqcap \in \BoundSet(\PVSet)$ and a lower bound $d^\sqcup \in \BoundSet(\PVSet)$ for the absolute value of any variable which can be reached in the evaluation.
 For $\square \in \braced{\sqcup, \sqcap}$ we define
@@ -22,7 +22,7 @@ We now show that the goal (\ref{eq:sizebound_target}) indeed follows from the cl
 Note that $\ueval{\UTime(t)}{\lstate}{\ustate} \geq k_t$ holds by definition of $k_t$.
 Additionally, we have $\scale^\sqcap_t \geq 1$ and $\scale^\sqcup_t \geq 1$ by definition of the local size bounds.
 Furthermore, the transition effects are always positive (e.g. $\ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} \geq 0$ and $\ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \geq 0$).
-With those properties, we can conclude that it is sufficient to proof the hypothesis (\ref{eq:sizebound_hypothesis}).
+With those properties, we can conclude that it is sufficient to prove the hypothesis (\ref{eq:sizebound_hypothesis}).
 First, we can show that $\ueval{{\mathcal{S}^\sqcap}'(\actt,v)}{\lstate}{\ustate} \geq \ueval{d^\sqcap}{\lstate}{\ustate}$ holds.
 \begin{align*}
   \ueval{{\mathcal{S}^\sqcap}'(\actt,v)}{\lstate}{\ustate} = &

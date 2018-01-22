@@ -19,7 +19,7 @@ For the computation of cost bounds, a specialized definition is introduced in th
 \end{definition}
 
 A time ranking function $\timerank$ implies that a transition $t \in \TSet_>$ can only be used a limited number of times in an evaluation.
-This is ensured, since a transition $t \in \TSet_>$ both decreases the measure and is bounded by $1$, as well as other transitions $t \in \TSet$ do not increase the measure.
+This is ensured since a transition $t \in \TSet_>$ both decreases the measure and is bounded by $1$, as well as other transitions $t \in \TSet$ do not increase the measure.
 Therefore, for the transitions $t \in \TSet_>$ the rank $\timerank(\location)$ at a location $\location \in \LSet$ can be used as a bound on the number of occurrences of this transition in any evaluation from this location on.
 
 \begin{example}[Time ranking function]
@@ -38,8 +38,8 @@ For the computation of ranking functions, it is common to use an SMT-Solver.
 An SMT-Solver is capable of proving satisfiability and unsatisfiability of existential formulas.
 The presented definition of time ranking functions and cost ranking functions consists of conditions, which need to be fulfilled for all states $\valuation, \valuation' \in \Valuation$ of all evaluation steps $(\location, \valuation) \rightarrow_t (\location', \valuation')$.
 Such a universal quantified formula can be proven by showing the unsatisfiability of the negation of the formula with an SMT-Solver.
-But for ranking functions it is also necessary to consider, that the coefficients of a timerank polynomial $\timerank(\location)$ are existentially quantified in the conditions of the ranking function definition.
-Therefore, a negation of the condition yields universal quantification of the coefficients of a timerank.
+But for ranking functions, it is also necessary to consider that the coefficients of a time rank polynomial $\timerank(\location)$ are existentially quantified in the conditions of the ranking function definition.
+Therefore, a negation of the condition yields universal quantification of the coefficients of a time rank.
 Thus, the negation of the condition is also not provable by an SMT-Solver.
 
 For such formulas, which contain both existential and universal quantification, it is common to use a variant of Farkas' lemma \cite{schrijver1998theory} specialized for poly ranking \cite{bradley2005polyranking}.

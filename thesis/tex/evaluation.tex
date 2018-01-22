@@ -4,14 +4,14 @@ The last chapter presented an implementation of the method to infer time, size a
 This chapter evaluates this implementation against other methods.
 
 For this purpose, two different approaches are used.
-First, some selected examples are presented, where the benefit of the presented method in contrast to method of the original KoAT \cite{koat} is shown.
+First, some selected examples are presented, where the benefit of the presented method in contrast to the method of the original KoAT \cite{koat} is shown.
 Second, the implementation is evaluated on an example set of programs, defined and used by comparable tools with the same objective of inferring time bounds for integer programs.
 
 \subsection{Evaluating selected examples}
 
 This section uses two selected examples to compare the results of the new method with the results of the original KoAT \cite{koat}.
 This selection is chosen to show the benefits of the new method and is by no means representative.
-Nevertheless it is able to show the potentials of the new method.
+Nevertheless, it is able to show the potentials of the new method.
 
 The first evaluated example is the motivational program from the introduction in Figure \ref{fig:motivational_example}.
 
@@ -24,9 +24,9 @@ The original KoAT is defined with a single input state $m$ such that $m(v) = \ma
 Consider the two three-dimensional graphs in Figure \ref{fig:motivational_evaluation}.
 We consider input states $\lstate$ and $\ustate$ with $\lstate(v) = \lstate(v')$ and $\ustate(v) = \ustate(v')$ for all variables $v, v' \in \PVSet$.
 The left graph plots the time complexity $\maxO{x-y}$ of the new method and the right graph plots the time complexity $\abs{x}+\abs{y}$ of KoAT \cite{koat}.
-These graphs show, that the time complexities are the same, if $-\lstate = \ustate$.
+These graphs show that the time complexities are the same if $-\lstate = \ustate$.
 This is the expected result, as $-\lstate = \ustate$ implies that $m = -\lstate = \ustate$.
-The new method yields a lower time complexity, if the value of $-\lstate$ and $\ustate$ diverges.
+The new method yields a lower time complexity if the value of $-\lstate$ and $\ustate$ diverges.
 The biggest gain is achieved, when $\lstate = \ustate$.
 That is, when an exact state $\lstate = \valuation = \ustate$ is given.
 
@@ -55,7 +55,7 @@ The left graph plots the cost complexity $1 + \maxO{x}$ of the new method and th
 
 This section evaluates the presented implementation on an example set, which is a collection of examples introduced by other tools.
 The main focus is a comparison with the method of the original KoAT paper \cite{koat}.
-Besides that we compare the implementation to the tool CoFloCo \cite{cofloco3}.
+Besides that, we compare the implementation to the tool CoFloCo \cite{cofloco3}.
 For both KoAT and CoFloCo the latest development version available at the time of this thesis is used.
 
 For the comparison of the results, it is necessary to project the resulting bounds in $\BoundSet(\PVSet)$ to their asymptotic complexity class.
@@ -79,7 +79,7 @@ Note that this definition projects a bound $x-x$ to a complexity $\complexity(x-
 As already mentioned, the implementation is able to simplify such bounds to an equivalent bound $0$.
 Therefore the better, but still valid complexity $\complexity(0) = \landau(1)$ is determined.
 Nevertheless the implementation is not able to simplify every bound $b$ to an equivalent bound $b'$ with a complexity $\complexity(b')$ better than $complexity(b)$, although such a bound $b'$ exists.
-Such a simplification algorithm has high performance costs for the implementation.
+Such a simplification algorithm has high-performance costs for the implementation.
 Therefore, the implemented simplification algorithm does in general not support the simplification of bounds, where it is necessary to analyze multiple levels of operators like $3 \cdot x^2-(x \cdot x+2 \cdot x^2)$.
 Thus, an optimized simplification algorithm might yield better evaluation results without a change to the presented method.
 

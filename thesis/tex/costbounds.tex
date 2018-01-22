@@ -37,7 +37,7 @@ Since the cost $\exacteval{\cost(t)}{\valuation}$ of a single evaluation step wi
 \subsection{Computing cost bounds with ranking functions}
 
 Additionally to initial cost bounds, we use ranking functions, to infer better cost bounds for single transitions.
-With some changes the definition of time ranking functions is transferable to the context of costs.
+With some changes, the definition of time ranking functions is transferable to the context of costs.
 
 \begin{definition}[Cost Ranking Function] 
   We define $\costrank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as cost ranking function for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
@@ -50,7 +50,7 @@ With some changes the definition of time ranking functions is transferable to th
 \end{definition}
 
 This definition ensures that each transition $t \in \TSet_>$ decreases in each transition step by its cost.
-Also, for each transition $t \in \TSet_>$ the decrease of the rank  is bounded by the costs.
+Also, for each transition $t \in \TSet_>$ the decrease of the rank is bounded by the costs.
 Therefore, the cost rank $\costrank(\location)$ can be used as a bound on the sum of all occurred costs of the transition $t$ from this location on.
 
 \begin{example}[Cost ranking function]

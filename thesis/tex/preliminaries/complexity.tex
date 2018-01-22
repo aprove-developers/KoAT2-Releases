@@ -63,7 +63,7 @@ Therefore, it is sufficient to determine an upper time bound for a program and b
 
 \subsection{Size complexity}
 
-For each variable at a particular transition a size bound defines an interval in which the value ranges in a worst-case evaluation.
+For each variable at a particular transition, a size bound defines an interval in which the value ranges in a worst-case evaluation.
 This interval is defined by a lower size bound and an upper size bound.
 While upper size bounds are always greater than the greatest possible value at a transition, lower size bounds are always smaller than the lowest possible value.
 
@@ -121,8 +121,8 @@ The cost complexity of a program is defined as the highest sum of the costs of a
 \end{definition}
 
 The definition of cost complexity is useful for a modular analysis, where a transition is able to describe the whole effect of a subprogram.
-Then, a transition might occur only a specific number of times in the outer program, but in fact every occurrence is not just a link to a single transition usage, but to a complete execution of a subprogram with its own time bound.
-Lifting these time bounds into the context of the outer program, we consider them as cost of the transition of the outer program.
+Then, a transition might occur only a specific number of times in the outer program, but in fact, every occurrence is not just a link to a single transition usage, but to a complete execution of a subprogram with its own time bound.
+Lifting these time bounds into the context of the outer program, we consider them as the cost of the transition of the outer program.
 For that reason, the cost function $\cost: \TSet \rightarrow \BoundSet(\PVSet)$ is defined for the whole bound set $\BoundSet(\PVSet)$.
 
 Unfortunately, the usefulness of the distinction between upper and lower size bounds is limited for the computation of a cost bound.

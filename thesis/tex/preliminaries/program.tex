@@ -8,16 +8,16 @@ In this master's thesis, we consider programs with the following properties.
 \item Imperative: Program state is changed by statements
 \item Non-recursive: Recursive function calls are not allowed
 \item Mathematical integers: The variables take values in the mathematical integer domain $\mathbb{Z}$
-\item Non-determinism: From a state we can enter non-deterministically multiple other states and non-deterministic values can be assigned to variables
+\item Non-determinism: From a state, we can enter non-deterministically multiple other states and non-deterministic values can be assigned to variables
 \item No heap usage: All values are directly accessed and not referenced
 \end{itemize}
 
 These properties are common in related work.
-Note that using imperative programs is not a restriction, since every functional or logic program can be transformed into an imperative program. \cite{equivalence_of_languages}
+Note that using imperative programs is not a restriction since every functional or logic program can be transformed into an imperative program. \cite{equivalence_of_languages}
 There also exists related work which extends the analysis to bit-vector arithmetic instead of mathematical integers. \cite{bitvectorarithmetic}
 
 In related work as well as in this thesis, it is common to consider non-deterministic programs.
-This is necessary, since the analyzed programs are often abstractions of other programs.
+This is necessary since the analyzed programs are often abstractions of other programs.
 These programs may depend on user input or may use a dynamic memory.
 
 We now formally define the programs used in this thesis.
@@ -71,7 +71,7 @@ The update function $\update$ assigns each program variable a value after the tr
   The transition $t_2$ is defined as $(\location_1,\update_2,\guard_2,\location_2)$ with an update $\update_2 = \text{id}$ and a guard $\guard = \emptyset$.
   The function $\text{id}$ symbolizes the identity function where each program variable $v \in \PVSet$ is mapped to itself.
   The guard $\guard = \emptyset$ is given implicitly and denotes the guard which is always satisfied.
-  Therefore, the loop $t_1$ can always left non-deterministically before the value of the variable $x$ reaches $0$.
+  Therefore, the loop $t_1$ can always leave non-deterministically before the value of the variable $x$ reaches $0$.
   For the transitions $t_0$ and $t_2$ the costs are defined implicitly as $\cost(t_0) = \cost(t_2) = 1$.
   The transition $t_1$ has explicit costs $\cost(t_1) = z$.
   The whole program is defined as a tuple $((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$.

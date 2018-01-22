@@ -11,7 +11,7 @@ This way a non-monotonic rank does not need to be transformed to a monotonic ran
 This change alone does not yield any benefit, if the size bound used for the substitution of a variable is itself an upper size bound and its negation a lower size bound.
 With this property of a size bound, an approximated substitution also transforms each rank into a monotonic rank.
 Therefore, the presented method distinguishes between lower size bounds and upper size bounds.
-It is able to use the difference of the positive and the negative effect of a variable.
+It is able to use the difference between the positive and the negative effect of a variable.
 The positive effect determines the upper size bound and the negative effect determines the lower size bound and the opposite effect can be eliminated, respectively.
 This way the method yields better size bounds than the KoAT paper \cite{koat}, which are then used to infer better time bounds.
 
@@ -21,6 +21,6 @@ While time ranking functions yield a measure on the maximal number of steps poss
 This way the presented method is able to infer a better cost bound than the trivial cost bound resulting from a multiplication of the time bound of a transition with the cost of a transition.
 
 The main benefit of the presented method is a better approximation of the coefficients of time and cost bounds.
-But the method is also able to yield a better asymptotic complexity class, if for example the lower size bound of a variable is approximated to be $0$ instead of the negation of the size bound computed by the method of the KoAT paper \cite{koat}.
+But the method is also able to yield a better asymptotic complexity class if for example the lower size bound of a variable is approximated to be $0$ instead of the negation of the size bound computed by the method of the KoAT paper \cite{koat}.
 
-The described improvements and extensions of the presented method as well as its performance in the evaluation against other comparable methods makes the presented method a powerful tool for the computation of time and cost bounds of integer programs.
+The described improvements and extensions of the presented method as well as its performance in the evaluation against other comparable methods make the presented method a powerful tool for the computation of time and cost bounds of integer programs.
