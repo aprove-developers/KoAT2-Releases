@@ -42,7 +42,7 @@ Second, we can also show that $\leval{{\mathcal{S}^\sqcup}'(\actt,v)}{\lstate}{\
 
 We now \textbf{fix $v$ to an arbitrary variable} and define with $\actrv = (\actt, v)$ the result variable, for which we want to find an upper size bound $\USize'(\actrv)$ and a lower size bound $\LSize'(\actrv)$. If $\actrv \notin \SCC$, then the size bounds stay the same $\USize'(\actrv) = \USize(\actrv)$ and $\LSize'(\actrv) = \LSize(\actrv)$. We will consider from now on a result variable $\actrv \in \SCC$.
 
-We prove the claim (\ref{eq:sizebound_hypothesis}) by induction on the length of the evaluation, using the last transition step $\actt$ as base case.
+We prove the claim (\ref{eq:sizebound_hypothesis}) by induction on the length of the evaluation.
 
 Note that $\actt$ can not be an initial transition, as there are no transitions leading back to the initial location $\location_0$
 (i.e., then $\actrv$ would not be contained in a nontrivial SCC $\SCC$ of the RVG).
@@ -51,8 +51,6 @@ Thus, for some transition $\pret \in \pre(\actt)$ we can expect the evaluation t
 
 We have to estimate the sizes of the input variables of the transition $\actt$.
 That is, we have to find an upper bound $\USize(\pret, v)$ and a lower bound $\LSize(\pret, v)$ for each variable $v \in \PVSet$ after the application of the transition $\pret$ that precedes $\actt$.
-
-We will first consider the base case of the induction.
 
 Consider $(\pret, v) \notin \SCC$.
 We have existing size bounds $\ueval{\USize(\pret, v)}{\lstate}{\ustate} \geq \prestate(v) \geq \leval{\LSize(\pret, v)}{\lstate}{\ustate}$.
@@ -64,7 +62,7 @@ This proves the hypothesis (\ref{eq:sizebound_hypothesis}) for all incoming $(\p
 
 If $(\pret, v) \in \SCC$, then the induction hypothesis implies that $\ueval{d^\sqcap}{\lstate}{\ustate} \geq \maxO{\prestate(v)}$ and $\ueval{d^\sqcup}{\lstate}{\ustate} \geq \maxO{-\prestate(v)}$ also hold for the evaluation from $(\location_0, \valuation_0)$ to $(\prel, \prestate)$.
 
-Now we continue with the inductive step.
+Now we define a bound for the value of the variables computed up to the transition $\actt$.
 \begin{equation} \label{eq:induction_consequence}
   \dpre{\square} = (\scale^\square_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\square_t)^{k_t} \cdot \left( \maxO{\start^\square} + \left( k_\actt - 1 \right) \cdot \effect^\square_\actt + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \effect^\square_t \right) \right)
 \end{equation}
