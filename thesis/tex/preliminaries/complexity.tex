@@ -1,61 +1,63 @@
 \section{Complexity}
 
 This section defines the measures which should be computed with the analysis.
-Therefore, we introduce the terms of time, size and cost complexity.
+These are approximations of time, size and cost complexity.
 Time complexity describes how many steps an evaluation of a program will take in a worst-case scenario.
-Size complexity yields for each transition an assignment from each variable to an interval, which defines the range of the value of the variable after the execution of the transition in an arbitrary run.
+Size complexity yields for each transition an assignment from each variable to an interval.
+This interval defines the range of the value of the variable after the execution of the transition in an arbitrary run.
 The third type is cost complexity.
-While the costs of a transition are not considered in the time complexity, the cost complexity considers the costs of transitions and describes the cost of the sequence of transitions taken in a worst-case run.
+While the cost of a transition is not considered in the time complexity, the cost complexity considers the costs of transitions.
+It describes the cost of the sequence of transitions taken in a worst-case run.
 Time complexity can be seen as a special case of cost complexity, where the cost $c(t)$ of every transition $t \in \TSet$ equals $1$.
 
 \subsection{Time Complexity}
 
-We define the time complexity of a program $\Program$ as the highest possible number of steps in an arbitrary run with an initial state $\valuation_0 \in \Valuation$ between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
+We define the time complexity of a program $\Program$ as the highest possible number of steps in an arbitrary run with an initial state $\valuation_0 \in \Valuation$ that ranges between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
 
-\begin{definition}[Worst-Case Time Complexity]
+\begin{definition}[Worst-case time complexity]
   We call $\text{rc}: (\Valuation \times \Valuation) \rightarrow \mathbb{N}$ the \textbf{time complexity} of a program if and only if for all states $\lstate, \ustate \in \Valuation$ it holds that
   \[ \text{rc}(\lstate, \ustate) = \timecomplexityterm \]
 \end{definition}
 
-An upper time bound of a transition $t \in \TSet$ describes a maximal number of occurrences of that transition in an evaluation starting with an arbitrary initial state $\valuation_0 \in \Valuation$ between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
+An upper time bound of a transition $t \in \TSet$ describes a maximal number of occurrences of that transition in an evaluation starting with an arbitrary initial state $\valuation_0 \in \Valuation$ that ranges between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
 
-\begin{definition}[Upper Time Bound]
+\begin{definition}[Upper time bound]
   We call $\UTime: \TSet \rightarrow \BoundSet(\PVSet)$ an \textbf{upper time bound} if and only if for all $t \in \TSet$ and all states $\lstate, \ustate \in \Valuation$ it holds that
   \[ \ueval{\UTime(t)}{\lstate}{\ustate} \geq \timeboundterm \]
   We also refer to an upper time bound as \textbf{time bound}, since lower time bounds are not considered in this thesis.
 \end{definition}
 
-In the KoAT paper \cite{koat} a different definition of time complexity is used.
+In the KoAT paper \cite{koat}, different definitions of time complexity and time bounds are used.
 Note that while the KoAT paper \cite{koat} uses input vectors in $\mathbb{N}^{\abs{\PVSet}}$, we use an equivalent representation with states in $\Valuation$.
 Then, $\text{rc}'(m) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) }$ is an equivalent representation of the defined time complexity of the KoAT paper \cite{koat}, if the input state $m \in \Valuation$ is defined with $m(v) \geq 0$ for all variables $v \in \PVSet$.
-We can show, that this definition is a special case of the new definition of time complexity.
+This definition is a special case of the new definition of time complexity.
 
-\begin{remark}[Original KoAT time complexity]
+\begin{remark}[KoAT time complexity]
   Let $-\valuation$ denote the negation $(-\valuation)(v) := -\valuation(v)$ of the value of every variable $v \in \PVSet$ for a state $\valuation$.
   Let $\text{rc}'(m) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) }$ be the time complexity definition of the KoAT paper \cite{koat}.
   Then, for every state $m \in \Valuation$ it holds that
   \[ \text{rc}'(m) = \text{rc}(-m,m). \]
 \end{remark}
 
-Therefore, if only the information is given, that for an input state $\valuation \in \Valuation$ it holds that $-m \leq \valuation \leq m$, the time complexity $\text{rc}'(m)$ of the KoAT paper \cite{koat} and the new time complexity $\text{rc}(-m,m)$ yield the same result.
-But if the information is given, that for an input state $\valuation$ it holds that $\lstate \leq \valuation \leq \ustate$, the new time complexity $\text{rc}(\lstate, \ustate)$ can use this information.
-With the original definition it is necessary to define an input state $m$ with $m(v) = \max(\abs{\lstate(v)}, \abs{\ustate(v)})$ for each variable $v \in \PVSet$ to gain a time complexity $\text{rc}'(m)$.
-Therefore, the additional information $\lstate \leq \valuation \leq \ustate$ is not utilized in the original definition, resulting in a time complexity $\text{rc}'(m)$ greater or equal than $\text{rc}(\lstate, \ustate)$.
-Thus, the time complexity $\text{rc}(\lstate, \ustate)$ is closer to the real time complexity of a program than the original time complexity.
+Therefore, if only the information is given, that for an input state $\valuation \in \Valuation$ it holds that $-m \leq \valuation \leq m$, the time complexity $\text{rc}'(m)$ of the KoAT paper \cite{koat} and the new time complexity $\text{rc}(-m,m)$ have the same precision.
+But if the information is given, that for an input state $\valuation$ it holds that $\lstate \leq \valuation \leq \ustate$, the new time complexity $\text{rc}(\lstate, \ustate)$ is more precise.
+With the KoAT definition \cite{koat} it is necessary to define an input state $m$ with $m(v) = \max(\abs{\lstate(v)}, \abs{\ustate(v)})$ for each variable $v \in \PVSet$ to gain a time complexity $\text{rc}'(m)$.
+Therefore, the additional information $\lstate \leq \valuation \leq \ustate$ is not utilized in the KoAT definition \cite{koat}, resulting in a time complexity $\text{rc}'(m)$ greater or equal than $\text{rc}(\lstate, \ustate)$.
+Thus, the time complexity $\text{rc}(\lstate, \ustate)$ is closer to the real time complexity of a program than the time complexity of the KoAT paper \cite{koat}.
 
 \begin{example}[Comparison of time complexity definitions]
-  Consider the program in Figure \ref{fig:motivational_example}.
-  \input{graphs/motivational_example}
+  Consider the program in Figure \ref{fig:motivational_example_complexity}.
+  \input{graphs/motivational_example_complexity}
   This program graph corresponds to the motivational program from the introduction.
   Let $\lstate, \ustate \in \Valuation$ be states with $\ustate(x) = 4$, $\ustate(y) = 2$, $\lstate(x) = -6$ and $\lstate(y) = 0$.
-  An input state for KoAT \cite{koat} would therefore be an $m \in \Valuation$ with $m(x) = \max(\abs{\lstate(x)}, \abs{\ustate(x)}) = \max(\abs{-6}, \abs{4}) = 6$ and $m(y) = \max(\abs{\lstate(y)}, \abs{\ustate(y)}) = \max(\abs{0}, \abs{2}) = 2$.
-  The time complexity of KoAT \cite{koat} would then be $\text{rc}'(m) = 9$, since with a state $\valuation'_0 \in \Valuation$ with $\valuation'_0(x) = 6$ and $\valuation'_0(y) = -2$ (and therefore $-6 \leq \valuation'_0(x) \leq 6$ and $-2 \leq \valuation'_0(y) \leq 2$) we have one occurrence of $t_0$ and eight occurrences of $t_1$.
+  Therefore, an input state for the KoAT time complexity \cite{koat} is an $m \in \Valuation$ with $m(x) = \max(\abs{\lstate(x)}, \abs{\ustate(x)}) = \max(\abs{-6}, \abs{4}) = 6$ and $m(y) = \max(\abs{\lstate(y)}, \abs{\ustate(y)}) = \max(\abs{0}, \abs{2}) = 2$.
+  Then, the KoAT time complexity \cite{koat} is $\text{rc}'(m) = 9$ since with a state $\valuation'_0 \in \Valuation$ with $\valuation'_0(x) = 6$ and $\valuation'_0(y) = -2$ (and therefore $-6 \leq \valuation'_0(x) \leq 6$ and $-2 \leq \valuation'_0(y) \leq 2$) we have one occurrence of $t_0$ and eight occurrences of $t_1$.
   Since $\lstate \nleq \valuation'_0 \nleq \ustate$, the state $\valuation'_0$ is not a possible input state for the time complexity $\text{rc}$.
   Instead, the input state yielding the greatest numbers of evaluation steps is a state $\valuation_0 \in \Valuation$ with $\valuation_0(x) = 4$ and $\valuation_0(y) = 0$.
-  Therefore, the new time complexity $\text{rc}(\lstate, \ustate)$ is $1 + 4$, which is significantly closer to the real time complexity than the time complexity of KoAT \cite{koat} $\text{rc}'(m) = 9$.
+  Therefore, the new time complexity $\text{rc}(\lstate, \ustate)$ is $1 + 4$, which is significantly closer to the real time complexity than the KoAT time complexity \cite{koat} $\text{rc}'(m) = 9$.
 \end{example}
   
-Although we changed the definitions of time complexity and time bounds, the known theorem, that it is possible to approximate the time complexity of a program by the sum of all upper time bounds, is still valid.
+Although we changed the definitions of time complexity and time bounds, the known theorem \cite{koat}, that it is possible to approximate the time complexity of a program by the sum of all upper time bounds, is still valid.
 
 \input{theorems/approximating_rc}
 
@@ -66,9 +68,10 @@ Therefore, it is sufficient to determine an upper time bound for a program and b
 For each variable at a particular transition, a size bound defines an interval in which the value ranges in a worst-case evaluation.
 This interval is defined by a lower size bound and an upper size bound.
 While upper size bounds are always greater than the greatest possible value at a transition, lower size bounds are always smaller than the lowest possible value.
+The following definition is a modification of the size complexity of the KoAT paper \cite{koat}.
 
-\begin{definition}[Worst-Case Size Bound]
-  Let $\RV = \TSet \cup \VSet$ be the set of all result variables.
+\begin{definition}[Worst-case size bound]
+  Let $\RV = \TSet \times \VSet$ be the set of all result variables.
   We call $\USize: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper size bound} if and only if for every result variable $(\actt, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
   \[ \ueval{\USize(\actt, v)}{\lstate}{\ustate} \geq \usizeboundterm. \]
   Furthermore, we call $\LSize: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower size bound} if and only if for every result variable $(\actt, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
@@ -82,9 +85,10 @@ With $\guard = \braced{x \geq 0}$, we can determine $\USize(t,x) = x$ as an uppe
 
 The presented definition of size bounds expresses a bound depending on the values at the start of the program.
 For the definition of the methods for the computation of trivial and nontrivial size bounds, we also need a definition of bounds depending on the values immediately before the execution of a transition.
-These local size bounds can be lifted to global size bounds by the upcoming definitions of trivial and nontrivial size bounds.
+These local size bounds can then be lifted to global size bounds.
 
-\begin{definition}[Local Size Bound]
+\begin{definition}[Local size bound]
+  Let $\RV = \TSet \times \VSet$ be the set of all result variables.
   We call $\ULSB: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper local size bound} if and only if for every result variable $(t, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
   \[ \ueval{\ULSB(t, v)}{\lstate}{\ustate} \geq \ulocalsizeboundterm. \]
   Furthermore, we call $\LLSB: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower local size bound} if and only if for every result variable $(t, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
@@ -92,26 +96,26 @@ These local size bounds can be lifted to global size bounds by the upcoming defi
   We call $\LSB$ a \textbf{local size bound}.
 \end{definition}
 
-\begin{example}[Local Size Bound]
+\begin{example}[Local and global size bounds]
   \input{graphs/localglobal}
-  Consider Figure \ref{fig:localglobal}.
+  Consider the program in Figure \ref{fig:localglobal}.
   While $\ULSB(t_1, x) = 2 \cdot x$ is a valid upper local size bound for the result variable $(t_1, x)$, it only describes the value of $x$ in terms of the value immediately before the execution of the transition $t_1$.
-  An upper global size bound instead expresses the value of $x$ in terms of the initial values of the program.
-  Therefore $\USize(t_1, x) = 2 \cdot (x + 1)$ is a valid upper global size bound for the result variable $(t_1, x)$.
+  Instead, an upper size bound expresses the value of $x$ in terms of the initial values of the program.
+  Therefore, $\USize(t_1, x) = 2 \cdot (x + 1)$ is a valid upper size bound for the result variable $(t_1, x)$.
 \end{example}
 
-Throughout this master's thesis, we use the application of a global or local size bound as a function for different purposes.
+Throughout this thesis, we use the function application of a global or local size bound for different purposes.
 Let $f: \RV \rightarrow \BoundSet(\PVSet)$ be an arbitrary size bound.
-For a result variable $\rv \in \RV$ we denote with $f(\rv)$ the trivial application of the function $f$ to the argument $\rv$ which results in a bound $f(\rv) \in \BoundSet(\PVSet)$.
+For a result variable $\rv \in \RV$, we denote with $f(\rv)$ the trivial application of the function $f$ to the argument $\rv$ which results in a bound $f(\rv) \in \BoundSet(\PVSet)$.
 We use the abbreviation $f(t, v)$ for a transition $t \in \TSet$ and a variable $v \in \VSet$ to denote the application $f((t,v)) \in \BoundSet(\PVSet)$ with $(t,v) \in \RV$.
 If the function $f$ is only applied to a transition $t \in \TSet$, this denotes the partial application of $f$ to $t$ resulting in $f(t): \VSet \rightarrow \BoundSet(\PVSet)$.
 
 \subsection{Cost Complexity}
 
 Additionally to time and size complexity, we consider cost complexity.
-The cost complexity of a program is defined as the highest sum of the costs of a transition sequence of an arbitrary evaluation starting in an input state $\valuation_0 \in \Valuation$.
+The cost complexity of a program is defined as the highest sum of the costs of a transition sequence of an arbitrary evaluation starting in an input state $\valuation_0 \in \Valuation$ that ranges between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
 
-\begin{definition}[Worst-Case Cost Complexity]
+\begin{definition}[Worst-case cost complexity]
   We call $\text{cc}: (\Valuation \times \Valuation) \rightarrow \mathbb{N}$ the \textbf{cost complexity} of a program if and only if for all states $\lstate, \ustate \in \Valuation$ it holds that
   \begin{align*}
     \text{cc}(\lstate, \ustate) &=
@@ -120,20 +124,9 @@ The cost complexity of a program is defined as the highest sum of the costs of a
   \end{align*}
 \end{definition}
 
-The definition of cost complexity is useful for a modular analysis, where a transition is able to describe the whole effect of a subprogram.
-Then, a transition might occur only a specific number of times in the outer program, but in fact, every occurrence is not just a link to a single transition usage, but to a complete execution of a subprogram with its own time bound.
-Lifting these time bounds into the context of the outer program, we consider them as the cost of the transition of the outer program.
-For that reason, the cost function $\cost: \TSet \rightarrow \BoundSet(\PVSet)$ is defined for the whole bound set $\BoundSet(\PVSet)$.
+An upper cost bound of a transition $t \in \TSet$ describes a sum of all costs of the occurrences of that transition in an evaluation starting with an arbitrary initial state $\valuation_0 \in \Valuation$ that ranges between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
 
-Unfortunately, the usefulness of the distinction between upper and lower size bounds is limited for the computation of a cost bound.
-Note that the costs $\cost(t)$ of a transition $t \in \TSet$ are expressed in dependence on the values of the variables immediately before the execution of the transition $t$.
-For the computation of a cost bound, we need to lift them similarly to the local size bounds to a global context.
-Therefore, it is necessary to substitute the variables of the costs $\cost(t)$ with the appropriate size bound computed so far.
-Since $\cost(t) \in \BoundSet(\PVSet)$ is in general not a monotonic function, this substitution is non-trivial.
-In fact, we are only able to use the distinction between upper and lower size bounds for affine costs $\cost(t) \in \BoundSet_a(\PVSet)$.
-For arbitrary costs $\cost(t) \in \BoundSet(\PVSet) \setminus \BoundSet_a(\PVSet)$ it is necessary to consider the monotonic approach from the KoAT paper \cite{koat}.
-
-\begin{definition}[Upper Cost Bound]
+\begin{definition}[Upper cost bound]
   We call $\UCost: \TSet \rightarrow \BoundSet(\PVSet)$ an \textbf{upper cost bound} if and only if for all $t \in \TSet$ and all states $\lstate, \ustate \in \Valuation$ it holds that
   \begin{align*}
     \ueval{\UCost(t)}{\lstate}{\ustate} \geq \sup & \braced{ \sum_{1 \leq i \leq k} \exacteval{\cost(t)}{\valuation_i} \mid \exists \valuation_0, k \geq 1: \lstate \leq \valuation_0 \leq \ustate \\
