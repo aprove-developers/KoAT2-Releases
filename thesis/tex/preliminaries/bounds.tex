@@ -1,7 +1,7 @@
 \subsection{Bounds}
 
-This section introduces a set which contains the syntactic terms that represent the resulting bounds.
-Additionally, we formally define the semantics of those terms.
+This section introduces a set which contains the syntactic terms representing the resulting bounds.
+A definition of the set as well as a definition of the semantics of the terms in this set is provided.
 
 \begin{definition}[Bound set]
   Let $\VSet$ be a finite set of variables.
@@ -23,7 +23,7 @@ This is expressed in the following definition.
 \begin{definition}[Evaluation of bounds]
   Let $\ValueSet$ be the closure $\mathbb{Z} \cup \braced{\infty, -\infty}$ of the set of integers $\mathbb{Z}$.
   Let $b \in \BoundSet(\VSet)$ be a bound and let $\valuation \in \VSet \rightarrow \mathbb{Z}$ be an assignment from variables to values.
-  We define $\exacteval{b}{\valuation}$ to denote the exact evaluation of the bound $b$ to a value in $\ValueSet$, i.e. $\exacteval{\cdot}{\valuation}: \BoundSet \rightarrow \ValueSet$.
+  We define $\exacteval{b}{\valuation}$ to denote the exact evaluation of the bound $b$ to a value in $\ValueSet$, i.e. $\exacteval{\cdot}{\valuation}: \BoundSet(\VSet) \rightarrow \ValueSet$.
   \[ \exacteval{\infty}{\valuation} = \infty \text{ for } \infty \in \BoundSet(\VSet) \]
   \[ \exacteval{k}{\valuation} = k \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet) \] 
   \[ \exacteval{v}{\valuation} = \valuation(v) \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \] 
@@ -33,18 +33,18 @@ This is expressed in the following definition.
   \[ \exacteval{\max(b_1, b_2)}{\valuation} = \max(\exacteval{b_1}{\valuation}, \exacteval{b_2}{\valuation}) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
   \[ \exacteval{k^b}{\valuation} = k^{\exacteval{b}{\valuation}} \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
 \end{definition}
-The symbol $\infty$ is used to represent infinity.
-With the defined negation $-$, we can also represent minus infinity by $-\infty$.
+The symbol $\infty$ represents infinity.
+With the defined negation $-$, minus infinity is represented by $-\infty$.
 This is useful for lower size bounds, where $-\infty$ is a valid lower size bound for every possible evaluation.
 
-Also, the bound set $\BoundSet$ includes all natural numbers $\mathbb{N}$.
-Integers from $\mathbb{Z}$ are implicitly included in the bound set $\BoundSet(\VSet)$, since for each number $n \in \mathbb{N}$ its negation $-n$ is also an element of the bound set $\BoundSet(\VSet)$.
+Also, the bound set $\BoundSet(\VSet)$ includes all natural numbers $\mathbb{N}$.
+Integers from $\mathbb{Z}$ are implicitly included in the bound set $\BoundSet(\VSet)$ since for each number $n \in \mathbb{N}$ its negation $-n$ is also an element of the bound set $\BoundSet(\VSet)$.
 The variable set $\VSet$ itself is included in the bound set $\BoundSet(\VSet)$ as the third base component.
 
 We define the usual addition $+$ and multiplication $\cdot$ between two bounds.
 The maximum operator $\max$ is also included with its common semantics.
 For the representation of exponential bounds, we include $k^b$ for all positive integers $k \in \mathbb{N}$ and all bounds $b \in \BoundSet(\VSet)$.
-Arbitrary exponentiation is not included (e.g. $x^y \notin \BoundSet$).
+Arbitrary exponentiation is not included (e.g. $x^y \notin \BoundSet(\VSet)$).
 
 Note that we allow some additional notations to simplify the representation of some bounds.
 \begin{align*}
@@ -59,7 +59,7 @@ Note that we allow some additional notations to simplify the representation of s
 The minimum operator $\min$, the subtraction $-$, the absolute value $\abs{\cdot}$ and the exponentiation with a natural number have the expected semantics.
 The operator $\maxO{\cdot}$ is used as an abbreviation due to its high usage.
 
-In specific scenarios, we only allow a subset of those bounds.
+In specific scenarios, we only allow a subset of these bounds.
 For this purpose, we define by $\BoundSet_p(\VSet) \subseteq \BoundSet(\VSet)$ the subset of all polynomials in $\BoundSet(\VSet)$.
 This subset can be understood as an equivalent representation of the polynomial ring $\mathbb{Z}[\VSet]$.
 \begin{definition}[Polynomial set]
@@ -80,7 +80,7 @@ Furthermore, we define the set of all affine polynomials as $\BoundSet_a(\VSet) 
   \[ b_1 + b_2 \in \BoundSet_a(\VSet) \text{ for all } b_1, b_2 \in \BoundSet_p(\VSet) \] 
 \end{definition}
 
-To clarify the differences between those sets, the following lines provide some examples of bounds, which are included in the defined sets $\BoundSet(\VSet)$, $\BoundSet_p(\VSet)$ and $\BoundSet_a(\VSet)$.
+To clarify the differences between these sets, the following lines provide some examples of bounds.
 \begin{align*}
   0 \cdot x \in \BoundSet_a(\VSet) \subseteq \BoundSet_p(\VSet) \subseteq \BoundSet(\VSet) \\
   2 \cdot x - 3 \cdot y \in \BoundSet_a(\VSet) \subseteq \BoundSet_p(\VSet) \subseteq \BoundSet(\VSet) \\
@@ -101,7 +101,7 @@ For the subset of polynomials, we define an atom set $\AtomSet$ to express polyn
   Let $\bowtie \in \braced{\leq, \geq, <, >, =}$ be an arbitrary comparator.
   We define $p_1 \bowtie p_2$ as a polynomial inequality between $p_1$ and $p_2$.
   We define the atom set
-  \[ \AtomSet = \braced{p_1 \bowtie p_2 \mid p_1, p_2 \in \BoundSet_p(\VSet), \bowtie \in \braced{\leq, \geq, <, >, =}} \]
+  \[ \AtomSet = \left\{ p_1 \bowtie p_2 \mid p_1, p_2 \in \BoundSet_p(\VSet), \bowtie \in \braced{\leq, \geq, <, >, =} \right\} \]
   as the set of all polynomial inequalities.
   Furthermore, we define the constraint set $\ConstraintSet = 2^\AtomSet$ as the set of conjunctions of polynomial inequalities.
 \end{definition}
