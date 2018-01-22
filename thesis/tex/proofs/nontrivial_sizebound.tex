@@ -16,7 +16,7 @@ For $\square \in \braced{\sqcup, \sqcap}$ we define
 \[ d^\square = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} \cdot \left( \maxO{\start^\square} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \effect^\square_t \right) \right). \]
 This enables us to define the hypothesis.
 \begin{equation} \label{eq:sizebound_hypothesis}
-  \ueval{d^\sqcap}{\lstate}{\ustate} \geq \actstate(v) \wedge \ueval{d^\sqcup}{\lstate}{\ustate} \geq -\actstate(v)
+  \ueval{d^\sqcap}{\lstate}{\ustate} \geq \maxO{\actstate(v)} \wedge \ueval{d^\sqcup}{\lstate}{\ustate} \geq \maxO{-\actstate(v)}
 \end{equation}
 We now show that the goal (\ref{eq:sizebound_target}) indeed follows from the claim (\ref{eq:sizebound_hypothesis}).
 Note that $\ueval{\UTime(t)}{\lstate}{\ustate} \geq k_t$ holds by definition of $k_t$.
@@ -62,7 +62,7 @@ For the lower case, we have $\ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} \geq
 Therefore it holds that $\ueval{d^\sqcup}{\lstate}{\ustate} \geq \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} \geq -\leval{\LSize(\pret, v)}{\lstate}{\ustate} \geq -\prestate(v)$.
 This proves the hypothesis (\ref{eq:sizebound_hypothesis}) for all incoming $(\pret, v) \notin \SCC$.
 
-If $(\pret, v) \in \SCC$, then the induction hypothesis implies that $\ueval{d^\sqcap}{\lstate}{\ustate} \geq \prestate(v)$ and $\ueval{d^\sqcup}{\lstate}{\ustate} \geq -\prestate(v)$ also hold for the evaluation from $(\location_0, \valuation_0)$ to $(\prel, \prestate)$.
+If $(\pret, v) \in \SCC$, then the induction hypothesis implies that $\ueval{d^\sqcap}{\lstate}{\ustate} \geq \maxO{\prestate(v)}$ and $\ueval{d^\sqcup}{\lstate}{\ustate} \geq \maxO{-\prestate(v)}$ also hold for the evaluation from $(\location_0, \valuation_0)$ to $(\prel, \prestate)$.
 
 Now we continue with the inductive step.
 \begin{equation} \label{eq:induction_consequence}
