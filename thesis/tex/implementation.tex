@@ -80,18 +80,20 @@ Therefore, it is sound to use the initial time bound $\UTime$ with $\UTime(t) = 
 \subsection{Algorithm}
 
 The last three chapters presented the theorems for the computation of time, size and cost bounds.
-For the computation of a time and a cost bound for a whole program, it is necessary to define an algorithm, which consecutively uses the time and size bound theorems.
-This section presents such an algorithm.
+For the computation of a time bound of a whole program, it is necessary to define an algorithm, which consecutively uses the time and size bound theorems.
+The computation of the cost bound can then be implemented as a post-processing step.
+
+This section presents the implemented algorithm.
 While the actual code is written in a functional style, the presented algorithm uses an imperative style to make the execution order explicit.
 
 \begin{algorithm}
 \caption{Inferring global time and cost bounds}\label{complete_algorithm}
 \begin{algorithmic}[1]
-  \State Input: A program graph $P = (\LSet, \TSet)$
+  \State Input: A program $P = ((\LSet, \TSet),\location_0,\PVSet,\TVSet)$
   \State Run preprocessors
   \State Create a trivial time bound $\UTime$ and a trivial size bound $\Size$
-  \State Construct the result variable graph RVG from $P$
   \State Compute local size bounds $\ULSB$ and $\LLSB$
+  \State Construct the result variable graph RVG from $P$
   \State Compute a time ranking function for each transition in $\TSet$
   \State Compute a cost ranking function for each transition in $\TSet$
   \Repeat
@@ -105,10 +107,16 @@ While the actual code is written in a functional style, the presented algorithm 
     \EndFor
   \Until{all TimeBounds executions did not improve any time bound}
   \State Create a trivial cost bound $\UCost$
-  \ForAll{SCCs $\TSet'$ of $P$ in topological order}
-    \ForAll{unbounded transitions $t \in \TSet'$}
-      \State Run $\text{CostBounds}(\UTime, \Size, \TSet', \braced{t})$
-    \EndFor
+  \ForAll{transitions $t \in \TSet$}
+    \State Run $\text{CostBounds}(\UTime, \Size, \TSet', \braced{t})$
   \EndFor
 \end{algorithmic}
 \end{algorithm}
+
+\todo{Algorithm}{}
+
+The algorithm takes a program as input and runs a sequence of preprocessors on it.
+Then, it creates trivial time and size bounds, where each value is unbounded (i.e. $\infty, -\infty$).
+For performance reasons, the computation of the local size bounds, the result variable graph, and the time and cost ranking functions is done before the actual computation of time, size and cost bounds.
+Then, as long as the TimeBounds algorithm yields new time bounds, the SizeBounds algorithm and the TimeBounds algorithm are called.
+When no more time bounds can be inferred, a trivial cost bound is created from the inferred time bounds and the CostBounds algorithm is executed for each transition to find a possibly better cost bound.
