@@ -73,4 +73,4 @@ The value of the variable $x$ is completely unaffected by the other variables of
 While this information is not directly available in the program graph, it is shown in the result variable graph, since no edge is leading from a result variable with $y$ or $z$ to a result variable with $x$.
 On the other hand, the variables $y$ and $z$ affect each other in the loop $t_1$.
 This is directly reflected by the fact, that $(t_1,y)$ and $(t_1,z)$ form an SCC in the result variable graph.
-The analysis of this master's thesis, as well as the original KoAT \cite{koat}, use that information about result variables forming an SCC to determine size bounds.
+The analysis of this master's thesis, as well as the method of the KoAT paper \cite{koat}, use that information about result variables forming an SCC to determine size bounds.

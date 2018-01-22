@@ -26,18 +26,18 @@ An upper time bound of a transition $t \in \TSet$ describes a maximal number of 
 \end{definition}
 
 In the KoAT paper \cite{koat} a different definition of time complexity is used.
-Note that while the KoAT paper uses input vectors in $\mathbb{N}^{\abs{\PVSet}}$, we use an equivalent representation with states in $\Valuation$.
-Then, $\text{rc}'(m) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) }$ is an equivalent representation of the defined time complexity of the KoAT paper, if the input state $m \in \Valuation$ is defined with $m(v) \geq 0$ for all variables $v \in \PVSet$.
+Note that while the KoAT paper \cite{koat} uses input vectors in $\mathbb{N}^{\abs{\PVSet}}$, we use an equivalent representation with states in $\Valuation$.
+Then, $\text{rc}'(m) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) }$ is an equivalent representation of the defined time complexity of the KoAT paper \cite{koat}, if the input state $m \in \Valuation$ is defined with $m(v) \geq 0$ for all variables $v \in \PVSet$.
 We can show, that this definition is a special case of the new definition of time complexity.
 
 \begin{remark}[Original KoAT time complexity]
   Let $-\valuation$ denote the negation $(-\valuation)(v) := -\valuation(v)$ of the value of every variable $v \in \PVSet$ for a state $\valuation$.
-  Let $\text{rc}'(m) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) }$ be the time complexity definition of the original KoAT.
+  Let $\text{rc}'(m) = \sup \braced{ k \in \mathbb{N} \mid \exists \valuation_0, \location, \valuation: \abs{\valuation_0} \leq m \wedge (\location_0, \valuation_0) \rightarrow^k (\location, \valuation) }$ be the time complexity definition of the KoAT paper \cite{koat}.
   Then, for every state $m \in \Valuation$ it holds that
   \[ \text{rc}'(m) = \text{rc}(-m,m). \]
 \end{remark}
 
-Therefore, if only the information is given, that for an input state $\valuation \in \Valuation$ it holds that $-m \leq \valuation \leq m$, the time complexity $\text{rc}'(m)$ of the original KoAT paper and the new time complexity $\text{rc}(-m,m)$ yield the same result.
+Therefore, if only the information is given, that for an input state $\valuation \in \Valuation$ it holds that $-m \leq \valuation \leq m$, the time complexity $\text{rc}'(m)$ of the KoAT paper \cite{koat} and the new time complexity $\text{rc}(-m,m)$ yield the same result.
 But if the information is given, that for an input state $\valuation$ it holds that $\lstate \leq \valuation \leq \ustate$, the new time complexity $\text{rc}(\lstate, \ustate)$ can use this information.
 With the original definition it is necessary to define an input state $m$ with $m(v) = \max(\abs{\lstate(v)}, \abs{\ustate(v)})$ for each variable $v \in \PVSet$ to gain a time complexity $\text{rc}'(m)$.
 Therefore, the additional information $\lstate \leq \valuation \leq \ustate$ is not utilized in the original definition, resulting in a time complexity $\text{rc}'(m)$ greater or equal than $\text{rc}(\lstate, \ustate)$.
@@ -48,11 +48,11 @@ Thus, the time complexity $\text{rc}(\lstate, \ustate)$ is closer to the real ti
   \input{graphs/motivational_example}
   This program graph corresponds to the motivational program from the introduction.
   Let $\lstate, \ustate \in \Valuation$ be states with $\ustate(x) = 4$, $\ustate(y) = 2$, $\lstate(x) = -6$ and $\lstate(y) = 0$.
-  An input state for the original KoAT would therefore be an $m \in \Valuation$ with $m(x) = \max(\abs{\lstate(x)}, \abs{\ustate(x)}) = \max(\abs{-6}, \abs{4}) = 6$ and $m(y) = \max(\abs{\lstate(y)}, \abs{\ustate(y)}) = \max(\abs{0}, \abs{2}) = 2$.
-  The time complexity of the original KoAT would then be $\text{rc}'(m) = 9$, since with a state $\valuation'_0 \in \Valuation$ with $\valuation'_0(x) = 6$ and $\valuation'_0(y) = -2$ (and therefore $-6 \leq \valuation'_0(x) \leq 6$ and $-2 \leq \valuation'_0(y) \leq 2$) we have one occurrence of $t_0$ and eight occurrences of $t_1$.
+  An input state for KoAT \cite{koat} would therefore be an $m \in \Valuation$ with $m(x) = \max(\abs{\lstate(x)}, \abs{\ustate(x)}) = \max(\abs{-6}, \abs{4}) = 6$ and $m(y) = \max(\abs{\lstate(y)}, \abs{\ustate(y)}) = \max(\abs{0}, \abs{2}) = 2$.
+  The time complexity of KoAT \cite{koat} would then be $\text{rc}'(m) = 9$, since with a state $\valuation'_0 \in \Valuation$ with $\valuation'_0(x) = 6$ and $\valuation'_0(y) = -2$ (and therefore $-6 \leq \valuation'_0(x) \leq 6$ and $-2 \leq \valuation'_0(y) \leq 2$) we have one occurrence of $t_0$ and eight occurrences of $t_1$.
   Since $\lstate \nleq \valuation'_0 \nleq \ustate$, the state $\valuation'_0$ is not a possible input state for the time complexity $\text{rc}$.
   Instead, the input state yielding the greatest numbers of evaluation steps is a state $\valuation_0 \in \Valuation$ with $\valuation_0(x) = 4$ and $\valuation_0(y) = 0$.
-  Therefore, the new time complexity $\text{rc}(\lstate, \ustate)$ is $1 + 4$, which is significantly closer to the real time complexity than the time complexity of the original KoAT $\text{rc}'(m) = 9$.
+  Therefore, the new time complexity $\text{rc}(\lstate, \ustate)$ is $1 + 4$, which is significantly closer to the real time complexity than the time complexity of KoAT \cite{koat} $\text{rc}'(m) = 9$.
 \end{example}
   
 Although we changed the definitions of time complexity and time bounds, the known theorem, that it is possible to approximate the time complexity of a program by the sum of all upper time bounds, is still valid.
@@ -131,7 +131,7 @@ For the computation of a cost bound, we need to lift them similarly to the local
 Therefore, it is necessary to substitute the variables of the costs $\cost(t)$ with the appropriate size bound computed so far.
 Since $\cost(t) \in \BoundSet(\PVSet)$ is in general not a monotonic function, this substitution is non-trivial.
 In fact, we are only able to use the distinction between upper and lower size bounds for affine costs $\cost(t) \in \BoundSet_a(\PVSet)$.
-For arbitrary costs $\cost(t) \in \BoundSet(\PVSet) \setminus \BoundSet_a(\PVSet)$ it is necessary to consider the monotonic approach from the original KoAT.
+For arbitrary costs $\cost(t) \in \BoundSet(\PVSet) \setminus \BoundSet_a(\PVSet)$ it is necessary to consider the monotonic approach from the KoAT paper \cite{koat}.
 
 \begin{definition}[Upper Cost Bound]
   We call $\UCost: \TSet \rightarrow \BoundSet(\PVSet)$ an \textbf{upper cost bound} if and only if for all $t \in \TSet$ and all states $\lstate, \ustate \in \Valuation$ it holds that

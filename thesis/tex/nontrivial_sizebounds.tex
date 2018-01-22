@@ -2,10 +2,10 @@ The last section presented a method for inferring upper and lower size bounds fo
 This section extends the method to infer upper and lower size bounds for nontrivial SCCs.
 These nontrivial SCCs are partitioned into two sets.
 The first set contains all nontrivial SCCs, for which there exists a variable, that is manipulated inside the SCC and that affects another variable or itself with its negated value inside the SCC.
-For such SCCs, we use the SizeBounds methods from the original KoAT paper \cite{koat} to infer upper and lower size bounds with $\USize(\rv) = -\LSize(\rv) = \mathcal{S}_{\text{original}}(\rv)$ for every result variable $\rv \in \RV$.
+For such SCCs, we use the SizeBounds methods from the KoAT paper \cite{koat} to infer upper and lower size bounds with $\USize(\rv) = -\LSize(\rv) = \mathcal{S}_{\text{original}}(\rv)$ for every result variable $\rv \in \RV$.
 The second set contains all other nontrivial SCCs.
 Negation does not occur in these nontrivial SCCs.
-For such SCCs, we present a method inferring better size bounds than the method of the original KoAT paper \cite{koat}.
+For such SCCs, we present a method inferring better size bounds than the method of the KoAT paper \cite{koat}.
 
 \begin{example}[Nontrivial negating SCCs]
   \input{graphs/negating_nontrivial}
@@ -30,7 +30,7 @@ Otherwise, it is connected with a positive edge.
 From this point on we regard SCCs, that only consists of positive edges.
 For these SCCs, we present an optimized technique.
 
-Prior to the definition of the method, four utility definitions are given, with three of them also used by the original KoAT paper \cite{koat}.
+Prior to the definition of the method, four utility definitions are given, with three of them also used by the KoAT paper \cite{koat}.
 
 First, we define the pre-variables of a result variable $\rv \in \RV$.
 \begin{definition}[Pre-variables]
@@ -89,7 +89,7 @@ Now we are able to extend the method SizeBounds to nontrivial non-negating size 
 
 \input{theorems/nontrivial_sizebound}
 
-The definition extends the method of the original KoAT paper \cite{koat} to a differentiation of upper and lower bounds.
+The definition extends the method of the KoAT paper \cite{koat} to a differentiation of upper and lower bounds.
 The overall idea is, to define a maximal \textbf{starting value} and accumulate the maximal \textbf{effects} of all transitions within the SCC $\SCC$.
 When we refer to an effect of a transition, we mean the change of a value by a single occurrence of the transition in an evaluation.
 We distinguish between positive and negative effects.

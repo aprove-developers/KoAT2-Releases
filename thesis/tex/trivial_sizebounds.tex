@@ -9,7 +9,7 @@ We have to distinguish two cases.
 If the transition $t$ of the result variable $\rv$ is an initial transition $t \in \TSet_0$, then the effect of the local size bound already depends on the start values.
 Thus, the local size bound for the result variable $\rv$ is also a global size bound.
 If the transition $t$ is not an initial transition (e.g. $t \notin \TSet_0$), then we have to substitute the variables of the local size bound by the global size bounds of the predecessors of $t$.
-The original KoAT uses monotonically increasing bounds for the local size bounds.
+The method of the KoAT paper \cite{koat} uses monotonically increasing bounds for the local size bounds.
 Therefore, it is able to substitute every variable with a bound of the maximum absolute value obtained so far.
 The new method uses a definition of scaled sums which is non-monotonic.
 Therefore, additional logic is necessary to ensure that the substituted bounds are valid approximations.

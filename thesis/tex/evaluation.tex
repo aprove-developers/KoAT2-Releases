@@ -4,12 +4,12 @@ The last chapter presented an implementation of the method to infer time, size a
 This chapter evaluates this implementation against other methods.
 
 For this purpose, two different approaches are used.
-First, some selected examples are presented, where the benefit of the presented method in contrast to the method of the original KoAT \cite{koat} is shown.
+First, some selected examples are presented, where the benefit of the presented method in contrast to the method of the KoAT paper \cite{koat} is shown.
 Second, the implementation is evaluated on an example set of programs, defined and used by comparable tools with the same objective of inferring time bounds for integer programs.
 
 \subsection{Evaluating selected examples}
 
-This section uses two selected examples to compare the results of the new method with the results of the original KoAT \cite{koat}.
+This section uses two selected examples to compare the results of the new method with the results of the method of the KoAT paper \cite{koat}.
 This selection is chosen to show the benefits of the new method and is by no means representative.
 Nevertheless, it is able to show the potentials of the new method.
 
@@ -19,7 +19,7 @@ The first evaluated example is the motivational program from the introduction in
 
 For this program the new method yields a time complexity of $\maxO{x-y}$, while KoAT \cite{koat} yields a time complexity of $\abs{x}+\abs{y}$.
 In the new method, we assume that we have two input states $\lstate$ and $\ustate$.
-The original KoAT is defined with a single input state $m$ such that $m(v) = \maximum{-\lstate(v),\ustate(v)}$ for each variable $v \in \PVSet$.
+KoAT \cite{koat} is defined with a single input state $m$ such that $m(v) = \maximum{-\lstate(v),\ustate(v)}$ for each variable $v \in \PVSet$.
 
 Consider the two three-dimensional graphs in Figure \ref{fig:motivational_evaluation}.
 We consider input states $\lstate$ and $\ustate$ with $\lstate(v) = \lstate(v')$ and $\ustate(v) = \ustate(v')$ for all variables $v, v' \in \PVSet$.
@@ -41,10 +41,10 @@ The second evaluated example is the program presented in the cost bound chapter 
 
 As already mentioned, the presented method is able to compute a cost bound $\UCost(t_1) = \maxO{x}$ for the transition $t_1$.
 Therefore $1 + \maxO{x}$ is a cost bound for the whole program.
-Since KoAT \cite{koat} does not consider cost ranking functions, it is only able to compute a cost bound $1 + \abs{x} \cdot \abs{y}$ for the whole program.
+Since the KoAT paper \cite{koat} does not consider cost ranking functions, it is only able to compute a cost bound $1 + \abs{x} \cdot \abs{y}$ for the whole program.
 
 The functions are plotted with the same assumptions as the previous example in Figure \ref{fig:cost_ranking_function}.
-The left graph plots the cost complexity $1 + \maxO{x}$ of the new method and the right graph plots the cost complexity $1 + \abs{x} \cdot \abs{y}$ of the original KoAT \cite{koat}.
+The left graph plots the cost complexity $1 + \maxO{x}$ of the new method and the right graph plots the cost complexity $1 + \abs{x} \cdot \abs{y}$ of the method of the KoAT paper \cite{koat}.
 
 \todo{Activate picture}{}
 \iffalse
@@ -54,7 +54,7 @@ The left graph plots the cost complexity $1 + \maxO{x}$ of the new method and th
 \subsection{Evaluating an example set}
 
 This section evaluates the presented implementation on an example set, which is a collection of examples introduced by other tools.
-The main focus is a comparison with the method of the original KoAT paper \cite{koat}.
+The main focus is a comparison with the method of the KoAT paper \cite{koat}.
 Besides that, we compare the implementation to the tool CoFloCo \cite{cofloco3}.
 For both KoAT and CoFloCo the latest development version available at the time of this thesis is used.
 
