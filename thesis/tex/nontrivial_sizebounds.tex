@@ -101,7 +101,7 @@ But as we pointed out, there is no known way for the effective computation of lo
 Therefore, in any case which could yield a negative effect (or a positive effect for a lower size bound), we ignore it by setting it to $0$.
 
 Now we analyze the new method in multiple steps with different examples to explain the reasoning behind the different components of the method.
-We analyze the upper case in detail and explain the differences of the lower case after that.
+We regard the upper case in detail and explain differences of the lower case where they occur.
 In a first step, we consider a program, that multiplies a single variable in a loop with a factor without depending on other variables.
 The analysis of this program results in an exponential bound for this single variable.
 In a second step, we consider a program which only uses multiplications with $1$, but nevertheless has non-polynomial size complexity.
@@ -224,9 +224,3 @@ The third component, we consider, is the addition with constant values from outs
   The result is a result variable effect $\effect^\sqcap_{(t_1,y)} = \maxO{z}$.
   Therefore, the loop effect $\effect^\sqcap_\SCC$ equals $\UTime(t_1) \cdot \maxO{z}$ and as a consequence the inferred upper size bound is $\USize'(t_1,x) = \maxO{y,z} + \UTime(t_1) \cdot \maxO{z}$.
 \end{example}
-
-\begin{example}[Lowercase]
-
-\end{example}
-
-\todo{Useful?}{If, then use lower case for this}
