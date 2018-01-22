@@ -6,7 +6,7 @@
   \[ \UCost'(t) = 
   \begin{cases}
     \UCost(t) & \text{ if } t \in \TSet \setminus \TSet'_> \\
-    \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \maxO{\usubst{\costrank(\location)}{\LSize(\pret)}{\USize(\pret)}} & \text{ if } t \in \TSet'_>
+    \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\usubst{\costrank(\location)}{\LSize(\pret)}{\USize(\pret)}} & \text{ if } t \in \TSet'_>
   \end{cases}
   \]
   Then, $\text{CostBounds}(\UCost, \Size, \TSet') = \UCost'$ is also a cost approximation.

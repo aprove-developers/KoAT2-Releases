@@ -69,7 +69,7 @@ With this definition, it is possible to start with a trivial cost bound, search 
 \begin{example}[CostBounds]
   Consider again the program in Figure \ref{fig:cost_ranking_function}.
   We showed that a trivial cost bound can be computed as $\UCost(t_1) = \maxO{x} \cdot y$ and that a cost ranking function $\costrank$ with $\costrank(\location_1) = x$ can be determined.
-  The resulting cost bound of the CostBounds method is $\UCost(t_1) = \maxO{\usubst{\costrank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} = \maxO{x}$.
+  The resulting cost bound of the CostBounds method is $\UCost(t_1) = \UTime(t_0) \cdot \maxO{\usubst{\costrank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} = 1 \cdot \maxO{x}$.
   This is significantly better than the trivial cost bound of $\UCost(t_1) = \maxO{x} \cdot y$.
 \end{example}
 
