@@ -47,10 +47,10 @@ The APRON library is an abstract interpretation framework commonly used for the 
 The general idea of the preprocessor $p_{\text{invgen}}$ is the transformation of a program $P = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$ to a program $P' = ((\LSet, \TSet'), \location_0, \PVSet, \TVSet, \cost)$, such that if there is a transition $t = (\location, \update, \guard, \location')$ in $\TSet$, then there is also a transition $t' = (\location, \update, \guard \wedge \guard', \location')$ in $\TSet'$ such that every evaluation in the program $P$ is still an evaluation in the program $P'$.
 The preprocessor $p_{\text{invgen}}$ affects the preprocessors $p_{\text{sat}}$, since an inferred invariant might make a transition guard unsatisfiable.
 
-\subsection{Trivial time bounds}
+\subsection{Initial time bounds}
 
 For a program $\Program = ((\LSet, \TSet), \location_0, \VSet, \cost)$ the algorithm needs an initial time and size bound prior to the execution.
-Obviously a time bound $\UTime$ with $\UTime(t) = \infty$ for all transitions $t \in \TSet$ is sound for all programs $\Program$.
+Obviously a trivial time bound $\UTime$ with $\UTime(t) = \infty$ for all transitions $t \in \TSet$ is sound for all programs $\Program$.
 Also an upper size bound $\USize$ with $\USize(\alpha) = \infty$ for all result variables $\alpha \in \RV$ and a lower size bound $\LSize$ with $\LSize(\alpha) = -\infty$ for all result variables $\alpha \in \RV$ are sound for all programs $\Program$.
 
 For time bounds it is possible to infer a better time bound prior to the execution.
@@ -71,7 +71,7 @@ While the actual code is written in a functional style, the presented algorithm 
 \begin{algorithmic}[1]
   \State Input: A program $P = ((\LSet, \TSet),\location_0,\PVSet,\TVSet)$
   \State Run preprocessors
-  \State Create a trivial time bound $\UTime$ and a trivial size bound $\Size$
+  \State Create an initial time bound $\UTime$ and a trivial size bound $\Size$
   \State Compute local size bounds $\ULSB$ and $\LLSB$
   \State Construct the result variable graph RVG from $P$
   \State Compute a time ranking function for each transition in $\TSet$
