@@ -92,7 +92,6 @@ While the actual code is written in a functional style, the presented algorithm 
   \State Input: A program graph $P = (\LSet, \TSet)$
   \State Run preprocessors
   \State Create a trivial time bound $\UTime$ and a trivial size bound $\Size$
-  \State Infer time bounds for transitions between SCCs
   \State Construct the result variable graph RVG from $P$
   \State Compute local size bounds $\ULSB$ and $\LLSB$
   \State Compute a time ranking function for each transition in $\TSet$
@@ -101,16 +100,12 @@ While the actual code is written in a functional style, the presented algorithm 
       \State Run $\text{SizeBounds}(\UTime, \Size, \SCC)$
     \EndFor
     \ForAll{SCCs $\TSet'$ of $P$ in topological order}
-      \State Run $\text{TimeBounds}(\UTime, \Size, \TSet)$
+      \State Run $\text{TimeBounds}(\UTime, \Size, \TSet')$
     \EndFor
   \Until{all TimeBounds executions did not improve any time bound}
-  \ForAll{transitions $t \in \TSet$}
-    \State Compute a cost ranking function for $t$
-    \If{a cost ranking function exists}
-      \State Infer a non-trivial cost bound for $t$
-    \Else
-      \State Infer a trivial cost bound for $t$
-    \EndIf
+  \State Create a trivial cost bound $\UCost$
+  \ForAll{SCCs $\TSet'$ of $P$ in topological order}
+    \State Run $\text{CostBounds}(\UCost, \Size, \TSet')$
   \EndFor
 \end{algorithmic}
 \end{algorithm}
