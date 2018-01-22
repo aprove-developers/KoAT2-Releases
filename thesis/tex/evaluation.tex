@@ -17,13 +17,13 @@ The first evaluated example is the motivational program from the introduction in
 
 \input{graphs/motivational_example}
 
-For this program the new method yields a time complexity $\maxO{x-y}$, while the original KoAT \cite{koat} yields a time complexity $\abs{x}+\abs{y}$.
+For this program the new method yields a time complexity of $\maxO{x-y}$, while KoAT \cite{koat} yields a time complexity of $\abs{x}+\abs{y}$.
 In the new method, we assume that we have two input states $\lstate$ and $\ustate$.
 The original KoAT is defined with a single input state $m$ such that $m(v) = \maximum{-\lstate(v),\ustate(v)}$ for each variable $v \in \PVSet$.
 
 Consider the two three-dimensional graphs in Figure \ref{fig:motivational_evaluation}.
 We consider input states $\lstate$ and $\ustate$ with $\lstate(v) = \lstate(v')$ and $\ustate(v) = \ustate(v')$ for all variables $v, v' \in \PVSet$.
-The left graph plots the time complexity $\maxO{x-y}$ of the new method and the right graph plots the time complexity $\abs{x}+\abs{y}$ of the original KoAT.
+The left graph plots the time complexity $\maxO{x-y}$ of the new method and the right graph plots the time complexity $\abs{x}+\abs{y}$ of KoAT \cite{koat}.
 These graphs show, that the time complexities are the same, if $-\lstate = \ustate$.
 This is the expected result, as $-\lstate = \ustate$ implies that $m = -\lstate = \ustate$.
 The new method yields a lower time complexity, if the value of $-\lstate$ and $\ustate$ diverges.
@@ -33,6 +33,22 @@ That is, when an exact state $\lstate = \valuation = \ustate$ is given.
 \todo{Activate picture}{}
 \iffalse
 \input{evaluations/motivational_example}
+\fi
+
+The second evaluated example is the program presented in the cost bound chapter \ref{fig:cost_ranking_function}.
+
+\input{graphs/cost_ranking_function}
+
+As already mentioned, the presented method is able to compute a cost bound $\UCost(t_1) = \maxO{x}$ for the transition $t_1$.
+Therefore $1 + \maxO{x}$ is a cost bound for the whole program.
+Since KoAT \cite{koat} does not consider cost ranking functions, it is only able to compute a cost bound $1 + \abs{x} \cdot \abs{y}$ for the whole program.
+
+The functions are plotted with the same assumptions as the previous example in Figure \ref{fig:cost_ranking_function}.
+The left graph plots the cost complexity $1 + \maxO{x}$ of the new method and the right graph plots the cost complexity $1 + \abs{x} \cdot \abs{y}$ of the original KoAT \cite{koat}.
+
+\todo{Activate picture}{}
+\iffalse
+\input{evaluations/cost_ranking_function}
 \fi
 
 \subsection{Evaluating an example set}
