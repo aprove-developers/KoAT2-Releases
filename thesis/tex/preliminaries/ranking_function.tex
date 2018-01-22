@@ -8,7 +8,7 @@ For the computation of time bounds and for the computation of cost bounds.
 For the computation of time bounds, we use a definition of the KoAT paper \cite{koat}.
 For the computation of cost bounds, a specialized definition is introduced in the chapter about cost bounds.
 
-\begin{definition}[Time Ranking Function] 
+\begin{definition}[Time ranking function] 
   We define $\timerank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as time ranking function for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
   For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
   \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\timerank(\location)}{\valuation} \geq \exacteval{\timerank(\location')}{\valuation'}. \]
@@ -42,6 +42,6 @@ But for ranking functions it is also necessary to consider, that the coefficient
 Therefore, a negation of the condition yields universal quantification of the coefficients of a timerank.
 Thus, the negation of the condition is also not provable by an SMT-Solver.
 
-For such formulas, which contain both existential and universal quantification, it is common to use a variant of Farkas' lemma \cite{schrijver1998theory} specialized for polyranking \cite{bradley2005polyranking}.
-For this purpose, it is necessary to restrict the domain of timeranks $\timerank(\location)$ and costranks $\costrank(\location)$ to affine polynomials $\BoundSet_a(\PVSet)$.
+For such formulas, which contain both existential and universal quantification, it is common to use a variant of Farkas' lemma \cite{schrijver1998theory} specialized for poly ranking \cite{bradley2005polyranking}.
+For this purpose, it is necessary to restrict the domain of time ranks $\timerank(\location)$ and cost ranks $\costrank(\location)$ to affine polynomials $\BoundSet_a(\PVSet)$.
 Then, it is possible to transform the problem of finding a ranking function into a problem solvable with an SMT-Solver.

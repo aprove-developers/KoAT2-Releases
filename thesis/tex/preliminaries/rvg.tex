@@ -5,7 +5,7 @@ Such a graph was presented by the original KoAT paper \cite{koat} as a result va
 Before we can define the actual result variable graph, we need to define the terms of pre-transitions and active variables.
 The pre-transitions of a transition $t \in \TSet$ are all transitions, which may occur immediately before an evaluation step with the transition $t$.
 
-\begin{definition}[Pre-Transitions] 
+\begin{definition}[Pre-transitions] 
   We define $\pre: \TSet \rightarrow 2^\TSet$ as
   \[\pre(t) = \braced{\pret \in \TSet \mid \exists \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\pret \circ \rightarrow_{t}) (\location, \valuation)}\]
   to denote the set of all transitions that may precede the transition $t$ in an evaluation.	
@@ -55,7 +55,7 @@ Local size bounds are discussed in detail later in this thesis.
 
 With those definitions, it is possible to define the result variable graph.
 
-\begin{definition}[Result Variable Graph]
+\begin{definition}[Result variable graph]
   Let $\LSB$ be a local size bound.
   We define 
   \[ \text{RVG} = (\TSet \times \VSet, \braced{((t, v), (t', v')) \mid t \in \pre(t'), v \in \actV(\LLSB(t',v')) \cup \actV(\ULSB(t',v'))}) \]

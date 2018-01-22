@@ -129,7 +129,7 @@ The algorithm analyzes the update and the guard of a transition to find overappr
 For each variable $v$ it holds that the upper scaled sum is bigger if $v \in P_2$ instead of $v \in P_1$.
 The same holds for the sets $N_2$ and $N_1$.
 Therefore the algorithm assigns the sets $P_1$ and $N_1$ the empty set in the beginning. 
-Then, it loops through every variable set of the powerset of all program variables.
+Then, it loops through every variable set of the power set of all program variables.
 These are ordered with ascending cardinality, to try variable sets with fewer variables first.
 This ensures that the resulting scaled sum is minimal in regard to the number of occurring variables.
 If it found a valid scaled sum, it optimizes it in four steps.
