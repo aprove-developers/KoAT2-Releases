@@ -123,7 +123,7 @@ It is also possible to propagate the same approach to $\ueval{\effect^\sqcup_\ac
   \end{split}
 \end{equation}
 
-Thus, we have
+Thus, for the upper case we have
 {\allowdisplaybreaks
 \begin{IEEEeqnarray*}{rClr}
   & & \ueval{d^\sqcap}{\lstate}{\ustate} \\
@@ -142,7 +142,7 @@ Thus, we have
     & \text{since } \actrv \in \SCC_\actt \\
   & \geq & s^\sqcap_\actrv \cdot \left( \abs{V_\actrv} \cdot \ueval{\dpre{\sqcap}}{\lstate}{\ustate} + \ueval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right) \\
   & \geq & s^\sqcap_\actrv \cdot \left( \sum_{v \in \VSet_\actrv} \ueval{\dpre{\sqcap}}{\lstate}{\ustate} + \ueval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right) \\
-  & \geq & s^\sqcap_\actrv \cdot \left( \sum_{v \in \VSet_\actrv} \ueval{\prestate(v)}{\lstate}{\ustate} + \ueval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right) \\
+  & \geq & s^\sqcap_\actrv \cdot \left( \sum_{v \in \VSet_\actrv} \maxO{\prestate(v)} + \ueval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right) \\
   & \geq & s^\sqcap_\actrv \cdot \left( \maxO{e^\sqcap_\actrv} + \sum_{v \in P_\actrv^\sqcap} \maxO{\prestate(v)} + \sum_{v \in N_\actrv^\sqcap} \maxO{-\prestate(v)} \right)
     & (\ref{eq:input_rv_reduction_upper}) \\
   & \geq & s^\sqcap_\actrv \cdot (e^\sqcap_\actrv + \sum_{v \in P_{\actrv,1}^\sqcap} \prestate(v) - \sum_{v \in N_{\actrv,1}^\sqcap} \prestate(v) \\
@@ -151,4 +151,32 @@ Thus, we have
   & \geq & \actstate(v)
 \end{IEEEeqnarray*}}
 
-\todo{Copy and modify in the end for the lower case}{}
+Similar, for the lower case we have
+{\allowdisplaybreaks
+\begin{IEEEeqnarray*}{rClr}
+  & & \ueval{d^\sqcup}{\lstate}{\ustate} \\
+  & = & \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \\
+  & = & \left( \scale^\sqcup_\actt \cdot (\scale^\sqcup_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcup_t)^{k_t} \right) \cdot \\
+    && \left( \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} + \left( k_\actt - 1 \right) \cdot \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right)
+    & (\ref{eq:scaling_factor_reduction}), (\ref{eq:input_reduction}) \\
+  & = & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \left( (\scale^\sqcup_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcup_t)^{k_t} \right) \cdot \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \right) & (\ref{eq:induction_consequence}) \\
+  & \geq & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \right) & \text{since } \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \geq 0 \\
+  & \geq & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \max \braced{\ueval{\effect^\sqcup_\rv}{\lstate}{\ustate} \mid \rv \in \SCC_\actt } \right) & \text{by definition} \\
+  & \geq & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actrv}{\lstate}{\ustate} \right) & \text{since } \actrv \in \SCC_\actt \\
+  & = & \left( \maximum{s^\sqcup_{\rv} \mid \rv \in \SCC_\actt} \cdot
+    \maximum{\abs{\VSet_\rv} \mid \rv \in \SCC_\actt} \right) \cdot
+    \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actrv}{\lstate}{\ustate} \right) & \text{substitute } \scale^\sqcup_\actt \\
+  & \geq & s^\sqcup_\actrv \cdot \abs{V_\actrv} \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actrv}{\lstate}{\ustate} \right)
+    & \text{since } \actrv \in \SCC_\actt \\
+  & \geq & s^\sqcup_\actrv \cdot \left( \abs{V_\actrv} \cdot \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actrv}{\lstate}{\ustate} \right) \\
+  & \geq & s^\sqcup_\actrv \cdot \left( \sum_{v \in \VSet_\actrv} \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actrv}{\lstate}{\ustate} \right) \\
+  & \geq & s^\sqcup_\actrv \cdot \left( \sum_{v \in \VSet_\actrv} \maxO{-\prestate(v)} + \ueval{\effect^\sqcup_\actrv}{\lstate}{\ustate} \right) \\
+  & \geq & s^\sqcup_\actrv \cdot \left( \maxO{-e^\sqcup_\actrv} + \sum_{v \in P_\actrv^\sqcup} \maxO{-\prestate(v)} + \sum_{v \in N_\actrv^\sqcup} \maxO{\prestate(v)} \right)
+    & (\ref{eq:input_rv_reduction_lower}) \\
+  & \geq & s^\sqcup_\actrv \cdot (-e^\sqcup_\actrv + \sum_{v \in P_{\actrv,1}^\sqcup} -\prestate(v) + \sum_{v \in N_{\actrv,1}^\sqcup} \prestate(v) \\
+    && + \sum_{v \in P_{\actrv,2}^\sqcup} \maxO{-\prestate(v)} + \sum_{v \in N_{\actrv,2}^\sqcup} \maxO{\prestate(v)} ) \\
+  & = & (-1) \cdot s^\sqcup_\actrv \cdot (e^\sqcup_\actrv + \sum_{v \in P_{\actrv,1}^\sqcup} \prestate(v) - \sum_{v \in N_{\actrv,1}^\sqcup} \prestate(v) \\
+    && - \sum_{v \in P_{\actrv,2}^\sqcup} \maxO{-\prestate(v)} - \sum_{v \in N_{\actrv,2}^\sqcup} \maxO{\prestate(v)} ) \\
+  & = & -\exacteval{\mathcal{S}^\sqcup_l(\actrv)}{\prestate} \\
+  & \geq & \actstate(v)
+\end{IEEEeqnarray*}}
