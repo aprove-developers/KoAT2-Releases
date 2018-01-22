@@ -1,6 +1,6 @@
 \begin{theorem}[Soundness of approximated evaluations]
   Let $\lstate, \valuation, \ustate: \VSet \rightarrow \ValueSet$ be three states with $\lstate \leq \valuation \leq \ustate$.
   Let $b \in \BoundSet(\VSet)$ be a bound.
-  Then, we have
+  Then, it holds that
   \[ \leval{b}{\lstate}{\ustate} \leq \exacteval{b}{\valuation} \leq \ueval{b}{\lstate}{\ustate}. \]
 \end{theorem}
