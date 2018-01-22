@@ -28,21 +28,21 @@ The outgoing transitions of all $(\prel_i, \prestate_i)$ are transitions from $\
 
 Now we have to investigate how often the transition $t$ is used in this evaluation.
 Since $t \in \TSet'$, it can only be used in sequences of the following form.
-\[ (\actl_i, \actstate_i) \rightarrow^{k_i}_{\TSet'} (\prel_i, \prestate_i) \]
+\[ (\actl_i, \actstate_i) \rightarrow_{\TSet'} (\actl_{i,1}, \actstate_{i,1}) \rightarrow_{\TSet'} \dots \rightarrow_{\TSet'} (\actl_{i,k_i}, \actstate_{i,k_i}) \rightarrow_{\TSet'} (\prel_i, \prestate_i) \]
 
 We can show that $\maxO{\exacteval{\timerank(\location_i)}{\actstate_i}} \geq k_i$.
 For $k_i = 0$ this is obvious, since the operator $\maxO{\cdot}$ ensures positivity.
 Lets consider the case $k_i > 0$.
 Since $\timerank$ is a time ranking function for $\TSet$, for all $j$ it holds that $\maxO{\exacteval{\timerank(\location_j)}{\actstate_j}} \geq \maxO{\exacteval{\timerank(\location_{j+1})}{\actstate_{j+1}}}$.
 Let $j_1 < j_2 < \dots$ be the $k_i$ indices where $t_j = t$.
-Then, for all $j \in \braced{j_1, j_2, \dots}$, $t \in \TSet_>$ implies that $\maxO{\exacteval{\timerank(\location_j)}{\actstate_j}} > \maxO{\exacteval{\timerank(\location_{j+1})}{\actstate_{j+1}}}$ and $\maxO{\exacteval{\timerank(\location_j)}{\actstate_j}} \geq 1$.
+Then, for all $j \in \braced{j_1, j_2, \dots}$, $t \in \TSet_>$ implies that $\maxO{\exacteval{\timerank(\location_{i,j})}{\actstate_{i,j}}} > \maxO{\exacteval{\timerank(\location_{i,j+1})}{\actstate_{i,j+1}}}$ and $\maxO{\exacteval{\timerank(\location_{i,j})}{\actstate_{i,j}}} \geq 1$.
 Thus, we obtain
 \begin{align*}
   & \maxO{\exacteval{\timerank(\location_i)}{\actstate_i}} \\
-  \geq & \maxO{\exacteval{\timerank(\location_{j_1})}{\actstate_{j_1}}} \\
-  > & \maxO{\exacteval{\timerank(\location_{j_2})}{\actstate_{j_2}}} \\
-  > & \dots \\
-  > & \maxO{\exacteval{\timerank(\location_{j_k})}{\actstate_{j_k}}} \\
+  \geq & \maxO{\exacteval{\timerank(\location_{i,j_1})}{\actstate_{i,j_1}}} \\
+  \geq & \maxO{\exacteval{\timerank(\location_{i,j_2})}{\actstate_{i,j_2}}} + 1 \\
+  \geq & \dots \\
+  \geq & \maxO{\exacteval{\timerank(\location_{i,j_k})}{\actstate_{i,j_k}}} + 1 \\
   \geq & 1
 \end{align*}
 Therefore $\maxO{\exacteval{\timerank(\location_i)}{\actstate_i}} \geq k_i$ is an upper bound on the number of times the transition $t$ is used in the sequence.
@@ -64,7 +64,7 @@ Thus, $\maxO{\usubst{\timerank(\actl_i)}{\leval{\LSize(\pret_i)}{\lstate}{\ustat
 It remains to examine how often a sequence $(\actl_i, \actstate_i) \rightarrow^+_{\TSet'} (\prel_i, \prestate_i)$ can occur in the full evaluation.
 As observed earlier, the transition reaching $(\actl_i, \actstate_i)$ in the evaluation is always some $\pret_i \in \TSet_{\actl_i}$.
 Each $\pret_i$ can occur at most $\ueval{\UTime(\pret_i)}{\lstate}{\ustate}$ times in evaluations.
-We found out, that in every $\TSet'$-sequence the transition $t$ can occur at most $\maxO{\exacteval{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}{\valuation_0}}$ times.
+We found out, that in every $\TSet'$-sequence the transition $t$ can occur at most $\maxO{\ueval{\timerank(\actl_i)}{\leval{\LSize(\pret_i)}{\lstate}{\ustate}}{\ueval{\USize(\pret_i)}{\lstate}{\ustate}}}$ times.
 Thus, we can infer that our initial statement holds.
 \begin{IEEEeqnarray*}{rCl}
   \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_l} \ueval{\UTime(\pret)}{\lstate}{\ustate} \cdot \maxO{\usubst{\timerank(\location)}{\leval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}}} \geq k
