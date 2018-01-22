@@ -1,6 +1,7 @@
 \begin{theorem}[TimeBounds]
   Let $\UTime$ be a time bound and let $\Size$ be a size bound.
   Let $\TSet' \subseteq \TSet \setminus \TSet_0$ denote a subset of all transitions such that $\TSet'$ contains no initial transitions.
+  Let $\TSet'_>$ be a subset of $\TSet'$.
   Let $\timerank: \LSet \rightarrow \BoundSet(\PVSet)$ be a time ranking function for $\TSet'$.
   For $t \in \TSet'$ let
   \[ \UTime'(t) = 
@@ -9,5 +10,5 @@
     \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}} & \text{ if } t \in \TSet'_>
   \end{cases}
   \]
-  Then, $\text{TimeBounds}(\UTime, (\USize, \LSize), \TSet') = \UTime'$ is also a runtime approximation.
+  Then, $\text{TimeBounds}(\UTime, (\USize, \LSize), \TSet', \TSet'_>) = \UTime'$ is also a runtime approximation.
 \end{theorem}

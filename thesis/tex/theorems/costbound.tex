@@ -1,6 +1,7 @@
 \begin{theorem}[CostBounds]
   Let $\Size$ be a size bound and let $\UCost$ be a cost bound.
   Let $\TSet' \subseteq \TSet \setminus \TSet_0$ denote a subset of all transitions such that $\TSet'$ contains no initial transitions.
+  Let $\TSet'_>$ be a subset of $\TSet'$.
   Let $\costrank: \LSet \rightarrow \BoundSet(\PVSet)$ be a cost ranking function for $\TSet'$.
   For $t \in \TSet'$ let
   \[ \UCost'(t) = 
@@ -9,5 +10,5 @@
     \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\usubst{\costrank(\location)}{\LSize(\pret)}{\USize(\pret)}} & \text{ if } t \in \TSet'_>
   \end{cases}
   \]
-  Then, $\text{CostBounds}(\UCost, \Size, \TSet') = \UCost'$ is also a cost approximation.
+  Then, $\text{CostBounds}(\UCost, \Size, \TSet', \TSet'_>) = \UCost'$ is also a cost approximation.
 \end{theorem}

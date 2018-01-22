@@ -84,8 +84,6 @@ For the computation of a time and a cost bound for a whole program, it is necess
 This section presents such an algorithm.
 While the actual code is written in a functional style, the presented algorithm uses an imperative style to make the execution order explicit.
 
-\todo{Check algorithm}
-
 \begin{algorithm}
 \caption{Inferring global time and cost bounds}\label{complete_algorithm}
 \begin{algorithmic}[1]
@@ -95,17 +93,22 @@ While the actual code is written in a functional style, the presented algorithm 
   \State Construct the result variable graph RVG from $P$
   \State Compute local size bounds $\ULSB$ and $\LLSB$
   \State Compute a time ranking function for each transition in $\TSet$
+  \State Compute a cost ranking function for each transition in $\TSet$
   \Repeat
     \ForAll{SCCs $\SCC$ of RVG in topological order}
       \State Run $\text{SizeBounds}(\UTime, \Size, \SCC)$
     \EndFor
     \ForAll{SCCs $\TSet'$ of $P$ in topological order}
-      \State Run $\text{TimeBounds}(\UTime, \Size, \TSet')$
+      \ForAll{unbounded transitions $t \in \TSet'$}
+        \State Run $\text{TimeBounds}(\UTime, \Size, \TSet', \braced{t})$
+      \EndFor
     \EndFor
   \Until{all TimeBounds executions did not improve any time bound}
   \State Create a trivial cost bound $\UCost$
   \ForAll{SCCs $\TSet'$ of $P$ in topological order}
-    \State Run $\text{CostBounds}(\UCost, \Size, \TSet')$
+    \ForAll{unbounded transitions $t \in \TSet'$}
+      \State Run $\text{CostBounds}(\UTime, \Size, \TSet', \braced{t})$
+    \EndFor
   \EndFor
 \end{algorithmic}
 \end{algorithm}
