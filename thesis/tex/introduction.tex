@@ -1,8 +1,8 @@
 \section{Introduction}
 
 This master's thesis presents a method for the computation of time bounds of integer programs.
-There exist a variety of complexity analysis tools which address the same task.
-These tools use different approaches for the search for time bounds.
+There exists a variety of complexity analysis tools which address the same task.
+These tools use different approaches for the search of time bounds.
 
 The tool PUBS uses a non-modular approach, where a preprocessed program is analyzed at once.
 This tool is discussed in the papers of Albert (\cite{pubs1}, \cite{pubs2}).
@@ -11,7 +11,7 @@ The tool CoFloCo uses an approach with cost relations, discussed in papers of Fl
 This approach classifies program executions into different execution patterns called chains and performs a cost analysis yielding polynomial bounds with max and min operators. 
 While this approach performs well for complex programs, it is not able to infer non-polynomial bounds.
 
-The tool Loopus implements an amortized complexity analysis base on lexicographic ranking functions, discussed in the papers of Sinn and Zuleger (\cite{loopus1}, \cite{loopus2}).
+The tool Loopus implements an amortized complexity analysis based on lexicographic ranking functions, discussed in the papers of Sinn and Zuleger (\cite{loopus1}, \cite{loopus2}).
 
 The tool KoAT uses the computation of size bounds for inferring time bounds, discussed in the paper of Brockschmidt (\cite{koat}).
 The paper presents a modular approach with ranking functions, where parts of the program can be analyzed independently and local ranking functions are lifted into a global time bounds.
