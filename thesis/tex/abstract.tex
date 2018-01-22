@@ -1,9 +1,9 @@
 Complexity analysis tools for integer programs are widely used as a backend for complexity analysis tools of real-world programs.
 There exist several tools that are able to find upper runtime bounds for arbitrary integer programs.
 These tools use different approaches.
-The tool KoAT \cite{koat} uses an approach where size bounds are used for the computation of time bounds.
+The tool KoAT \cite{koat} uses an approach where size bounds are determined for the computation of time bounds.
 These size bounds are approximations of the absolute value of a variable and can therefore only be used to infer monotonic time bounds.
 This thesis presents an extension of the method where lower size bounds and upper size bounds are inferred independently to approximate the actual value of a variable.
 This distinction leads to a new method computing non-monotonic time bounds.
-These time bounds have in many cases better coefficients than the time bounds of the tool KoAT \cite{koat}.
+In many cases these time bounds have better coefficients than the time bounds of the tool KoAT \cite{koat}.
 Furthermore, in some cases the presented method yields time bounds with a better asymptotic complexity class. 
