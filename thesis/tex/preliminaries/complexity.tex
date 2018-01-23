@@ -72,10 +72,10 @@ The following definition is a modification of the size complexity of the KoAT pa
 
 \begin{definition}[Worst-case size bound]
   Let $\RV = \TSet \times \VSet$ be the set of all result variables.
-  We call $\USize: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper size bound} if and only if for every result variable $(\actt, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
-  \[ \ueval{\USize(\actt, v)}{\lstate}{\ustate} \geq \usizeboundterm. \]
-  Furthermore, we call $\LSize: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower size bound} if and only if for every result variable $(\actt, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
-  \[ \leval{\LSize(\actt, v)}{\lstate}{\ustate} \leq \lsizeboundterm. \]
+  We call $\USize: \RV \rightarrow \BoundSet(\PVSet)$ an \textbf{upper size bound} if and only if for every result variable $(t, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
+  \[ \ueval{\USize(t, v)}{\lstate}{\ustate} \geq \sup \braced{ \valuation(v) \mid \exists \valuation_0, (\location, \valuation): \lstate \leq \valuation_0 \leq \ustate \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
+  Furthermore, we call $\LSize: \RV \rightarrow \BoundSet(\PVSet)$ a \textbf{lower size bound} if and only if for every result variable $(t, v) \in \RV$ and all states $\lstate, \ustate \in \Valuation$ it holds that
+  \[ \leval{\LSize(t, v)}{\lstate}{\ustate} \leq \inf \braced{ \valuation(v) \mid \exists \valuation_0, (\location, \valuation): \lstate \leq \valuation_0 \leq \ustate \wedge (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t) (\location, \valuation)}. \]
   We call $\Size$ a \textbf{size bound}.
 \end{definition}
 
