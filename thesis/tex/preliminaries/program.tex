@@ -111,7 +111,7 @@ Now, we formally define the evaluation relation of a program.
   And third, both $\location = \location_t$ and $\location' = \location_t'$ hold.
   We omit the transition and write $(\location, \valuation) \rightarrow (\location', \valuation')$ if and only if there exists a transition $t \in \TSet$ such that $(\location, \valuation) \rightarrow_t (\location', \valuation')$ holds.
   We write $(\location, \valuation) \rightarrow^k (\location', \valuation')$ if and only if there exists a sequence of transitions $t_1, \dots, t_k \in \TSet$ such that $(\location, \valuation) \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location', \valuation')$ holds.
-  We write $(\location, \valuation) \rightarrow^* (\location', \valuation')$ if and only if there exists a $k \in \mathbb{N}$ such that $(\location, \valuation) \rightarrow^k (\location', \valuation')$ holds.
+  We write $(\location, \valuation) \rightarrow^* (\location', \valuation')$ if and only if there exists a $k \geq 0$ such that $(\location, \valuation) \rightarrow^k (\location', \valuation')$ holds.
   We write $(\location, \valuation) \rightarrow_{\TSet'} (\location', \valuation')$ if and only if there exists a transition $t \in \TSet' \subseteq \TSet$ such that $(\location, \valuation) \rightarrow_t (\location', \valuation')$ holds.
 \end{definition}
 

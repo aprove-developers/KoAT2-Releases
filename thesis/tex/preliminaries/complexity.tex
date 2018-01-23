@@ -119,8 +119,8 @@ The cost complexity of a program is defined as the highest sum of the costs of a
   We call $\text{cc}: (\Valuation \times \Valuation) \rightarrow \mathbb{N}$ the \textbf{cost complexity} of a program if and only if for all states $\lstate, \ustate \in \Valuation$ it holds that
   \begin{align*}
     \text{cc}(\lstate, \ustate) &=
-    \braced{ \sum_{1 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i} \mid \exists \valuation_0, k \geq 1: \lstate \leq \valuation_0 \leq \ustate \\
-      &\wedge (\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location_k, \valuation_k) }
+    \braced{ \sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i} \mid \exists \valuation_0, k \geq 1: \lstate \leq \valuation_0 \leq \ustate \\
+      &\wedge (\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_{k-1}} (\location_k, \valuation_k) \rightarrow_{t_k} (\location_{k+1}, \valuation_{k+1}) }
   \end{align*}
 \end{definition}
 
