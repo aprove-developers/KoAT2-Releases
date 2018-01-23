@@ -93,7 +93,7 @@ Therefore, we end up with $\UTime'(t) = \maxO{\usubst{\timerank(\location_2)}{\L
 Note that the subset of transitions $\TSet' \subseteq \TSet$ does not need to be strongly connected.
 Consider the second example in Figure \ref{fig:entrytransitions}.
 A subset consisting of two SCCs $\TSet' = \braced{t_1, t_3, t_4}$ is chosen.
-This choice leads to a time bound $\UTime'(t) = \maxO{\usubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} + \maxO{\usubst{\timerank(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$.
+This choice leads to a time bound \[ \UTime'(t) = \maxO{\usubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} + \maxO{\usubst{\timerank(\location_2)}{\LSize(t_2)}{\USize(t_2)}}. \]
 This is a valid time bound for transitions $t \in \TSet'_>$.
 But two independent analyses for the SCCs $\braced{t_1}$ and $\braced{t_3, t_4}$ could yield time bounds $\UTime'(t) = \maxO{\usubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)}}$ for the first SCC and $\UTime'(t) = \maxO{\usubst{\timerank(\location_2)}{\LSize(t_2)}{\USize(t_2)}}$ for the second SCC, since each analysis would now consider its own entry locations $\location_1$ and $\location_2$.
 

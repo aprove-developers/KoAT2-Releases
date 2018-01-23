@@ -16,7 +16,7 @@ This section presents the implemented algorithm.
 While the actual code is written in a functional style, the presented algorithm uses an imperative style to make the execution order explicit.
 
 \begin{algorithm}
-\caption{Inferring global time and cost bounds}\label{complete_algorithm}
+\caption{Inferring global time, size and cost bounds}\label{complete_algorithm}
 \begin{algorithmic}[1]
   \State Input: A program $P = ((\LSet, \TSet),\location_0,\PVSet,\TVSet,\cost)$
   \State Run preprocessors
@@ -93,7 +93,7 @@ If there is a transition $t = (\location, \update, \guard, \location')$ in $\TSe
 
 The preprocessor $p_{\text{invgen}}$ affects the preprocessor $p_{\text{sat}}$ since an inferred invariant may make a transition guard unsatisfiable.
 
-\subsubsection{Initial time and size bounds}
+\subsection{Initial time and size bounds}
 
 For a program $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$, the algorithm needs an initial time and size bound prior to the execution.
 Obviously a trivial time bound $\UTime$ with $\UTime(t) = \infty$ for all transitions $t \in \TSet$ is sound for all programs $\Program$.

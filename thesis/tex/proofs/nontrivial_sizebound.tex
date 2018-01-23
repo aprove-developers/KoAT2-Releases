@@ -132,7 +132,8 @@ Thus, for the upper case we have
   & & \ueval{d^\sqcap}{\lstate}{\ustate} \\
   & = & \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcap}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \\
   & = & \left( \scale^\sqcap_\actt \cdot (\scale^\sqcap_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcap_t)^{k_t} \right) \cdot \\
-    && \left( \ueval{\maxO{\start^\sqcap}}{\lstate}{\ustate} + \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} + \left( k_\actt - 1 \right) \cdot \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right)
+    && \left( \begin{array}{ll} \ueval{\maxO{\start^\sqcap}}{\lstate}{\ustate} + \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} + \\
+    \left( k_\actt - 1 \right) \cdot \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \end{array} \right)
     & (\ref{eq:scaling_factor_reduction}), (\ref{eq:input_reduction}) \\
   & = & \scale^\sqcap_\actt \cdot \left( \ueval{\dpre{\sqcap}}{\lstate}{\ustate} + \left( (\scale^\sqcap_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcap_t)^{k_t} \right) \cdot \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} \right) & (\ref{eq:induction_consequence}) \\
   & \geq & \scale^\sqcap_\actt \cdot \left( \ueval{\dpre{\sqcap}}{\lstate}{\ustate} + \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} \right) & \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} \geq 0 \\
@@ -160,7 +161,8 @@ The proof for the lower case is analog.
   & & \ueval{d^\sqcup}{\lstate}{\ustate} \\
   & = & \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \\
   & = & \left( \scale^\sqcup_\actt \cdot (\scale^\sqcup_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcup_t)^{k_t} \right) \cdot \\
-    && \left( \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} + \left( k_\actt - 1 \right) \cdot \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right)
+    && \left( \begin{array}{ll} \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} + \\
+    \left( k_\actt - 1 \right) \cdot \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \end{array} \right)
     & (\ref{eq:scaling_factor_reduction}), (\ref{eq:input_reduction}) \\
   & = & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \left( (\scale^\sqcup_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcup_t)^{k_t} \right) \cdot \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \right) & (\ref{eq:induction_consequence}) \\
   & \geq & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \right) & \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \geq 0 \\
