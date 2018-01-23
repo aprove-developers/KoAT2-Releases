@@ -33,7 +33,7 @@ Since $t \in \TSet'$, it can only be used in sequences of the following form.
 We can show that $\maxO{\exacteval{\timerank(\location_i)}{\actstate_i}} \geq k_i$.
 For $k_i = 0$ this is obvious, since the operator $\maxO{\cdot}$ ensures positivity.
 Lets consider the case $k_i > 0$.
-Since $\timerank$ is a time ranking function for $\TSet$, for all $j$ it holds that $\maxO{\exacteval{\timerank(\location_{i,j})}{\actstate_{i,j}}} \geq \maxO{\exacteval{\timerank(\location_{i,j+1})}{\actstate_{i,j+1}}}$.
+Since $\timerank$ is a time ranking function for $\TSet'$, for all $j$ it holds that $\maxO{\exacteval{\timerank(\location_{i,j})}{\actstate_{i,j}}} \geq \maxO{\exacteval{\timerank(\location_{i,j+1})}{\actstate_{i,j+1}}}$.
 Let $j_1 < j_2 < \dots$ be the $k_i$ indices where $t_j = t$.
 Then, for all $j \in \braced{j_1, j_2, \dots}$, $t \in \TSet_>$ implies that $\maxO{\exacteval{\timerank(\location_{i,j})}{\actstate_{i,j}}} \geq \maxO{\exacteval{\timerank(\location_{i,j+1})}{\actstate_{i,j+1}}} + 1$ and $\maxO{\exacteval{\timerank(\location_{i,j})}{\actstate_{i,j}}} \geq 1$.
 Thus, we obtain
@@ -47,11 +47,11 @@ Thus, we obtain
 \end{align*}
 Therefore $\maxO{\exacteval{\timerank(\location_i)}{\actstate_i}} \geq k_i$ is an upper bound on the number of times the transition $t$ is used in the sequence.
 
-Let the transition in the evaluation reaching $(\actl_i, \actstate_i)$ be $\pret_i$.
+Let $\pret_i$ be the transition reaching $(\actl_i, \actstate_i)$ in the evaluation.
 Thus, we have $\actl_i \in \mathcal{E}_{\TSet'}$ and $\pret_i \in \TSet_{\actl_i}$.
 As $(\location_0, \valuation_0) \rightarrow^*_\TSet \circ \rightarrow_{\pret_i} (\actl_i, \actstate_i)$ and $\lstate \leq \valuation_0 \leq \ustate$, we have by definition of size bounds
 \[ \ueval{\USize(\pret_i, v)}{\lstate}{\ustate} \geq \exacteval{\USize(\pret_i, v)}{\valuation_0} \geq \actstate_i(v) \geq \exacteval{\LSize(\pret_i, v)}{\valuation_0} \geq \leval{\LSize(\pret_i, v)}{\lstate}{\ustate}. \]
-We can conclude that
+We can conclude
 \begin{align*}
    & \maxO{\ueval{\timerank(\actl_i)}{\leval{\LSize(\pret_i)}{\lstate}{\ustate}}{\ueval{\USize(\pret_i)}{\lstate}{\ustate}}} \\
    \geq & \maxO{\ueval{\timerank(\actl_i)}{\exacteval{\LSize(\pret_i)}{\valuation_0}}{\exacteval{\USize(\pret_i)}{\valuation_0}}} \\
