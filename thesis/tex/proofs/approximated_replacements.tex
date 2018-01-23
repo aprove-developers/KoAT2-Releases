@@ -1,22 +1,22 @@
-To increase readability, we only regard the specialized case of approximated evaluations.
-The general proof for approximated replacements is analog.
+To increase readability, we only regard the specialized case of approximated evaluations with $K = \bar{\mathbb{Z}}$.
+The proof for arbitrary sets $K$ is analog.
 
 Let $K$ be the set $\bar{\mathbb{Z}}$.
 We have to show that $\exacteval{\lsubst{b}{\lstate}{\ustate}}{\valuation} \leq \exacteval{b}{\valuation} \leq \exacteval{\usubst{b}{\lstate}{\ustate}}{\valuation}$ holds for all states $\valuation, \lstate, \ustate \in \Valuation$ with $\lstate \leq \valuation \leq \ustate$.
 That is, if $\leval{b}{\lstate}{\ustate} \leq \exacteval{b}{\valuation} \leq \ueval{b}{\lstate}{\ustate}$ holds for all states $\valuation, \lstate, \ustate \in \Valuation$ with $\lstate \leq \valuation \leq \ustate$.
-We show that the proposition holds by structural induction.
+We use structural induction to show that the proposition holds.
 
-First, we show that the proposition holds for the minimal structures.
+First, we show that the proposition holds for all minimal structures.
 For $\infty$ it holds that $\leval{\infty}{\lstate}{\ustate} = \ueval{\infty}{\lstate}{\ustate} = \exacteval{\infty}{\valuation} = \infty$.
-Also, for a $k \in \BoundSet(\VSet)$ it holds that $\leval{k}{\lstate}{\ustate} = \ueval{k}{\lstate}{\ustate} = \exacteval{k}{\valuation} = k$.
-For a variable $v \in \BoundSet(\VSet)$ we have $\leval{v}{\lstate}{\ustate} = \exacteval{v}{\lstate} \leq \exacteval{v}{\valuation} \leq \exacteval{v}{\ustate} = \ueval{v}{\lstate}{\ustate}$, since $\exacteval{v}{\lstate} \leq \exacteval{v}{\valuation} \leq \exacteval{v}{\ustate}$ holds by definition of $\lstate$, $\ustate$ and $\valuation$.
+Also, for a $k \in \mathbb{N} \subseteq \BoundSet(\VSet)$ it holds that $\leval{k}{\lstate}{\ustate} = \ueval{k}{\lstate}{\ustate} = \exacteval{k}{\valuation} = k$.
+For a variable $v \in \VSet \subseteq \BoundSet(\VSet)$, we have $\leval{v}{\lstate}{\ustate} = \exacteval{v}{\lstate} \leq \exacteval{v}{\valuation} \leq \exacteval{v}{\ustate} = \ueval{v}{\lstate}{\ustate}$, since $\exacteval{v}{\lstate} \leq \exacteval{v}{\valuation} \leq \exacteval{v}{\ustate}$ holds by definition of $\lstate$, $\ustate$ and $\valuation$.
 
-Now, we show that it also holds for the immediate substructures.
+Now, we show that the proposition also holds for the immediate substructures.
 
 First, we regard negation.
 Lets assume that $\leval{b}{\lstate}{\ustate} \leq \exacteval{b}{\valuation} \leq \ueval{b}{\lstate}{\ustate}$ holds for a bound $b \in \BoundSet(\VSet)$.
-Then, we can conclude $-\leval{b}{\lstate}{\ustate} \geq -\exacteval{b}{\valuation} \geq -\ueval{b}{\lstate}{\ustate}$.
-Then, $\leval{-b}{\lstate}{\ustate} = -\ueval{b}{\lstate}{\ustate} \leq -\exacteval{b}{\valuation} = \exacteval{-b}{\valuation}$ and also $\ueval{-b}{\lstate}{\ustate} = -\leval{b}{\lstate}{\ustate} \geq -\exacteval{b}{\valuation} = \exacteval{-b}{\valuation}$.
+Then, we can conclude that $-\leval{b}{\lstate}{\ustate} \geq -\exacteval{b}{\valuation} \geq -\ueval{b}{\lstate}{\ustate}$.
+Then, $\leval{-b}{\lstate}{\ustate} = -\ueval{b}{\lstate}{\ustate} \leq -\exacteval{b}{\valuation} = \exacteval{-b}{\valuation}$ and also $\ueval{-b}{\lstate}{\ustate} = -\leval{b}{\lstate}{\ustate} \geq -\exacteval{b}{\valuation} = \exacteval{-b}{\valuation}$ hold.
 
 Second, we regard addition.
 Lets assume that $\leval{b}{\lstate}{\ustate} \leq \exacteval{b}{\valuation} \leq \ueval{b}{\lstate}{\ustate}$ holds for two bounds $b \in \braced{b_1,b_2} \subseteq \BoundSet(\VSet)$.
