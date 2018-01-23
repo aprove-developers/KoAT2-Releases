@@ -23,10 +23,10 @@ For the computation of a cost bound $\UCost(t)$ of an initial transition $t \in 
 Since the cost $\exacteval{\cost(t)}{\valuation}$ of a single evaluation step with $t \in \TSet$ is defined to be positive for every state $\valuation$, it is not necessary to use an operator $\maxO{\cdot}$ on the cost of a transition.
 
 \begin{example}[Initial cost bound]
-  Consider the program in Figure \ref{fig:cost_ranking_function}.
-  \input{graphs/cost_ranking_function}
+  Consider the program in Figure \ref{fig:cost_ranking_function_costbounds}.
+  \input{graphs/cost_ranking_function_costbounds}
   The program takes two variables $x$ and $y$.
-  It decreases the value of $x$ in each step with $t_1$ with the value of $y$.
+  It decreases the value of $x$ in each step with $t_1$ by the value of $y$.
   Each step with $t_1$ has a cost of the current value of $y$.
   Since the value of $y$ never changes, the cost of the transition $t_1$ is constant throughout the execution of the loop.
   The guard ensures that $x > y > 0$.
@@ -54,9 +54,10 @@ Also, for each transition $t \in \TSet_>$ the decrease of the rank is bounded by
 Therefore, the cost rank $\costrank(\location)$ can be used as a bound on the sum of all occurred costs of the transition $t$ from this location on.
 
 \begin{example}[Cost ranking function]
-  Consider again the program in Figure \ref{fig:cost_ranking_function}.
+  Consider again the program in Figure \ref{fig:cost_ranking_function_costbounds}.
   We can show that the function $\costrank$ with $\costrank(\location_1) = x$ is a cost ranking function for the transition set $\TSet = \braced{t_1}$.
   For every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ it holds that $\exacteval{\braced{y > 0, x > y}}{\valuation} \Rightarrow \exacteval{x}{\valuation} - \exacteval{y}{\valuation} > \exacteval{x}{\valuation'}$, since the value of $x$ decreases in every evaluation step with the value of $y$.
+  Therefore, also $\exacteval{\braced{y > 0, x > y}}{\valuation} \Rightarrow \exacteval{x}{\valuation} - \exacteval{y}{\valuation} \geq \exacteval{x}{\valuation'}$ holds.
   Also, it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ that $\exacteval{\braced{y > 0, x > y}}{\valuation} \Rightarrow \exacteval{x}{\valuation} \geq \exacteval{y}{\valuation}$, since the value of $x$ is greater than $y$ in every evaluation step.
 \end{example}
 
@@ -67,8 +68,8 @@ With a few changes, the TimeBounds algorithm is extendable to the computation of
 With this definition, it is possible to start with an initial cost bound, search for cost ranking functions and consecutively refine the cost bounds of single transitions, where a cost ranking function is found.
 
 \begin{example}[CostBounds]
-  Consider again the program in Figure \ref{fig:cost_ranking_function}.
-  We showed that an initial cost bound can be computed as $\UCost(t_1) = \maxO{x} \cdot y$ and that a cost ranking function $\costrank$ with $\costrank(\location_1) = x$ can be determined.
+  Consider again the program in Figure \ref{fig:cost_ranking_function_costbounds}.
+  We showed that an initial cost bound can be computed with $\UCost(t_1) = \maxO{x} \cdot y$ and that a cost ranking function $\costrank$ with $\costrank(\location_1) = x$ can be determined.
   The resulting cost bound of the CostBounds method is $\UCost(t_1) = \UTime(t_0) \cdot \maxO{\usubst{\costrank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} = 1 \cdot \maxO{x}$.
   This is significantly better than the initial cost bound of $\UCost(t_1) = \maxO{x} \cdot y$.
 \end{example}
