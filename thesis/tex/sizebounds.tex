@@ -1,10 +1,11 @@
 \section{Computing size bounds}
 
-The last chapter presented an algorithm to infer time bounds based on already inferred size bounds.
-This chapter presents a method, which is able to infer such size bounds for the values of the variables at particular transitions of a program.
-The first section presents an algorithm for the computation of local size bounds.
+The last chapter presented an algorithm to infer non-monotonic time bounds based on lower and upper size bounds.
+This chapter presents a method, which is able to infer such size bounds.
+The first section presents a concrete definition of local size bounds.
 The method of the second section uses these local size bounds to infer global size bounds for trivial SCCs.
-Then, the third section defines a method for the computation of size bounds of non-trivial SCCs, which is based on the so far computed size bounds and time bounds.
+Then, the third section defines a method for the computation of size bounds of non-trivial SCCs.
+This method is based on the so far computed size bounds and time bounds.
 
 \subsection{Computing local size bounds}
 
