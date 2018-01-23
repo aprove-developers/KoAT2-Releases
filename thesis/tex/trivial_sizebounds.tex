@@ -1,16 +1,16 @@
 The last section introduced local size bounds in the form of scaled sums.
-This and the following section present a method to lift those local size bounds to global size bounds.
+This and the following section present a method to lift these local size bounds to global size bounds.
 
-We first provide global size bounds for trivial SCCs of the RVG.
-Note that a node in the RVG is a result variable $\rv = (t,v) \in \RV$.
+First, we provide global size bounds for trivial SCCs of the result variable graph.
+Note that a node in the result variable graph is a result variable $\rv = (t,v) \in \RV$.
 An SCC with a single node without an edge to itself is called trivial.
 
 We have to distinguish two cases.
-If the transition $t$ of the result variable $\rv$ is an initial transition $t \in \TSet_0$, then the effect of the local size bound already depends on the start values.
+If the transition $t$ of the result variable $\rv$ is an initial transition $t \in \TSet_0$, then the local size bound already depends on the start values.
 Thus, the local size bound for the result variable $\rv$ is also a global size bound.
-If the transition $t$ is not an initial transition (e.g. $t \notin \TSet_0$), then we have to substitute the variables of the local size bound by the global size bounds of the predecessors of $t$.
-The method of the KoAT paper \cite{koat} uses monotonically increasing bounds for the local size bounds.
-Therefore, it is able to substitute every variable with a bound of the maximum absolute value obtained so far.
+If the transition $t$ is not an initial transition (i.e. $t \notin \TSet_0$), then we have to substitute the variables of the local size bound by the global size bounds of the predecessors of $t$.
+The method of the KoAT paper \cite{koat} uses monotonically increasing bounds as local size bounds.
+Therefore, it is able to substitute every variable with a bound of the maximum absolute value.
 The new method uses a definition of scaled sums which is non-monotonic.
 Therefore, additional logic is necessary to ensure that the substituted bounds are valid approximations.
 This additional logic is realized by the presented approximated substitutions.
@@ -30,21 +30,22 @@ The result variable graph contains four trivial SCCs, each result variable formi
 We now inspect the SCCs $\braced{(t_0,x)}$ and $\braced{(t_1,x)}$.
   
 \begin{example}[SizeBounds for trivial SCCs with an initial transition]
-  For the SCC $\braced{(t_0,x)}$ the transition $t_0$ is an initial transition.
+  For the SCC $\braced{(t_0,x)}$, the transition $t_0$ is an initial transition.
   We can determine a scaled sum $3 \cdot (1 + \maxO{x} - y)$ as upper local size bound $\ULSB(t_0,x)$ and a scaled sum $2 \cdot x$ as lower local size bound $\LLSB(t_0,x)$.
-  Since we have $\USize'(t_0,x) = \ULSB(t_0,x)$ and $\LSize'(t_0,x) = \LLSB(t_0,x)$, the determined local size bounds are also global size bounds.
+  Since $t_0$ is an initial transition, we have $\USize'(t_0,x) = \ULSB(t_0,x)$ and $\LSize'(t_0,x) = \LLSB(t_0,x)$ and therefore the determined local size bounds are also global size bounds.
 \end{example}
   
 \begin{example}[SizeBounds for trivial SCCs with a non-initial transition]
   For the SCC $\braced{(t_1,x)}$ the transition $t_1$ is not an initial transition.
   Therefore, the local size bound expresses the values of the variables in terms of their value immediately before the execution of $t_1$.
-  For the computation of the global size bounds, we need to substitute these variables with the global size bound obtained so far until the execution of $t_1$.
-  We already inferred those size bounds $\USize(t_0,x)$ and $\LSize(t_0,x)$ for the single transition $t_0$ leading to $t_1$.
+  For the computation of global size bounds, we need to substitute these variables with the global size bound obtained so far until the execution of $t_1$.
+  We already inferred these size bounds $\USize(t_0,x)$ and $\LSize(t_0,x)$ for the single transition $t_0$ leading to $t_1$.
   Additionally, we can trivially infer the size bounds $\USize(t_0,y) = y$ and $\LSize(t_0,y) = y$.
   We can also determine a scaled sum $3 \cdot (\maxO{-x} + y)$ as upper local size bound $\ULSB(t_1,x)$ and a scaled sum $3 \cdot (-1 - \maxO{x} + y)$ as lower local size bound $\LLSB(t_1,x)$.
-  For the result variable $\rv = (t_0,x)$ the parameters of the upper local size bound are $s^\sqcap_\rv = 3$, $e^\sqcap_\rv = 0$, $N^\sqcap_{\rv,2} = \braced{x}$, $P^\sqcap_{\rv,1} = \braced{y}$ and $P^\sqcap_{\rv,2} = N^\sqcap_{\rv,1} = \emptyset$ and the parameters of the lower local size bound are $s^\sqcup_\rv = 3$, $e^\sqcup_\rv = -1$, $N^\sqcup_{\rv,2} = \braced{x}$, $P^\sqcup_{\rv,1} = \braced{y}$ and $P^\sqcup_{\rv,2} = N^\sqcup_{\rv,1} = \emptyset$.
+  For the result variable $\rv = (t_0,x)$, the parameters of the upper local size bound are $s^\sqcap_\rv = 3$, $e^\sqcap_\rv = 0$, $N^\sqcap_{\rv,2} = \braced{x}$, $P^\sqcap_{\rv,1} = \braced{y}$ and $P^\sqcap_{\rv,2} = N^\sqcap_{\rv,1} = \emptyset$.
+  The parameters of the lower local size bound are $s^\sqcup_\rv = 3$, $e^\sqcup_\rv = -1$, $N^\sqcup_{\rv,2} = \braced{x}$, $P^\sqcup_{\rv,1} = \braced{y}$ and $P^\sqcup_{\rv,2} = N^\sqcup_{\rv,1} = \emptyset$.
   For a sound approximation, we need to use the underapproximated substitution and the overapproximated substitution respectively.
-  The resulting global upper size bound $\USize'(t_1,x)$ therefore is 
+  Therefore, the resulting global upper size bound $\USize'(t_1,x)$ is 
   \begin{align*}
     && \usubst{3 \cdot \left( \maxO{-x} + y \right) }{\LSize(t_0)}{\USize(t_0)} \\
     & = & 3 \cdot \left( \maxO{-\LSize(t_0, x)} + \USize(t_0, y) \right) \\
