@@ -42,7 +42,7 @@ We define a program as a program graph with an initial location and a function m
   Let $(\LSet, \TSet)$ be a program graph.
   Let $\cost: \TSet \rightarrow \BoundSet(\PVSet)$ be a function which maps each transition to its cost depending on the values of the variables.
   For each transition $t \in \TSet$ and for each assignment $\valuation: \AllVarsSet \rightarrow \mathbb{Z}$ we require that the cost of the transition $t$ is positive, i.e. $\exacteval{\cost(t)}{\valuation} > 0$.
-  Then, a program is a tuple $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, c)$.
+  Then, a program is a tuple $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$.
   Furthermore, we write $t_0$ to denote an initial transition.
   That is a transition $(\location_0, \tau, \location) \in \TSet$ where the start location is the initial location $\location_0$.
   We write $\TSet_0 \subseteq \TSet$ to denote the set of all initial transitions.
@@ -79,7 +79,7 @@ The update function $\update$ assigns each program variable a value after the tr
 \end{example}
 
 For program graphs we use the well-known definition of strongly connected components of a graph \cite{sccs}.
-We define the strongly connected components of a program $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, c)$ as the strongly connected components of its program graph $(\LSet, \TSet)$.
+We define the strongly connected components of a program $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$ as the strongly connected components of its program graph $(\LSet, \TSet)$.
 From this point on, we also use the abbreviation SCC for a strongly connected component.
 
 As mentioned in the example, this thesis considers non-deterministic programs.

@@ -57,7 +57,7 @@ Local size bounds are discussed later in this thesis in detail.
 With these definitions, it is possible to define the result variable graph.
 
 \begin{definition}[Result variable graph]
-  Let $P = ((\LSet, \TSet), \location_0, \PVSet, \TVSet)$ be a program.
+  Let $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$ be a program.
   Let $\LSB$ be a local size bound.
   We define 
   \[ \text{RVG} = (\TSet \times \PVSet, \braced{((t, v), (t', v')) \mid t \in \pre(t'), v \in \actV(\LLSB(t',v')) \cup \actV(\ULSB(t',v'))}) \]

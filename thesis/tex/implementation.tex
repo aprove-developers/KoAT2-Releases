@@ -18,7 +18,7 @@ While the actual code is written in a functional style, the presented algorithm 
 \begin{algorithm}
 \caption{Inferring global time and cost bounds}\label{complete_algorithm}
 \begin{algorithmic}[1]
-  \State Input: A program $P = ((\LSet, \TSet),\location_0,\PVSet,\TVSet)$
+  \State Input: A program $P = ((\LSet, \TSet),\location_0,\PVSet,\TVSet,\cost)$
   \State Run preprocessors
   \State Create an initial time bound $\UTime$ and an initial size bound $\Size$
   \State Compute local size bounds $\ULSB$ and $\LLSB$
