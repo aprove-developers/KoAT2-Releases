@@ -52,8 +52,8 @@ The previous time bound $\UTime$ yields such a bound for all entry transitions.
 Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}$ is a time bound for each strictly decreasing transition $t \in \TSet'_>$ depending on the values of the variables from the start.
 
 \begin{example}[TimeBounds]
-  \input{graphs/motivational_example}
-  Consider the motivational program in Figure \ref{fig:motivational_example} from the introduction.
+  \input{graphs/motivational_example_timebounds}
+  Consider the motivational program in Figure \ref{fig:motivational_example_timebounds} from the introduction.
   With the transition set $\TSet' = \braced{t_1}$, it is possible to determine a ranking function $\timerank$ with $\timerank(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).
   The method of the KoAT paper \cite{koat} would now apply an operator to $\timerank$, such that the result would be a monotonic function with $\timerank'(\location_1) = \abs{x} + \abs{y}$.
   Then, it is able to substitute each variable by its absolute size bound and therefore lift it to a global context.
