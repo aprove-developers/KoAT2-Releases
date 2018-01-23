@@ -4,11 +4,11 @@ This thesis presents a method for the computation of non-monotonic time, size an
 It is based on the method of the KoAT paper \cite{koat} and extends it in several ways.
 
 The main extension regards the computation of ranking functions for time bounds.
-While the presented method uses the same approach for determining a ranking function as the KoAT paper \cite{koat}, the KoAT paper uses an operator which transforms a non-monotonic rank into a monotonic rank.
+While the presented method uses the same approach to determine a ranking function as the KoAT paper \cite{koat}, the KoAT paper applies an operator which transforms a non-monotonic rank into a monotonic rank.
 The presented method uses an approximated substitution which substitutes each variable in regard to the monotonicity of the rank in this variable.
 This way, a non-monotonic rank does not need to be transformed into a monotonic rank.
 
-This change alone does not yield any benefit, if the size bound used for the substitution of a variable is itself an upper size bound and its negation a lower size bound.
+This change alone does not yield any benefit if the size bound used for the substitution of a variable is itself an upper size bound and its negation a lower size bound.
 With this property of a size bound, an approximated substitution also transforms each non-monotonic rank into a monotonic rank.
 Therefore, the presented method distinguishes between lower size bounds and upper size bounds.
 It is able to use the difference between the positive and the negative effect of a variable.
@@ -17,7 +17,7 @@ The opposite effect can be eliminated, respectively.
 This way, the method yields more precise size bounds than the KoAT paper \cite{koat}.
 These are then used to infer more precise time bounds.
 
-Another improvement regards the computation of cost bounds.
+Another improvement concerns the computation of cost bounds.
 This thesis presents an approach, where ranking functions are also used in the context of the costs of a program.
 While time ranking functions yield a measure on the maximal number of steps possible from a specific location, cost ranking functions yield a measure on the maximal costs possible from a specific location.
 With cost ranking functions, the presented method is able to infer more precise cost bounds.

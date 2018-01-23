@@ -4,7 +4,7 @@ The last chapter presented an implementation of the method to infer time, size a
 This chapter evaluates this implementation against other methods.
 
 For this purpose, two different approaches are used.
-First, some selected examples are presented, where the benefit of the presented method in contrast to the method of the KoAT paper \cite{koat} is shown.
+First, some selected examples are presented that show the benefit of the presented method in contrast to the method of the KoAT paper \cite{koat}.
 Second, the implementation is evaluated on an example set of programs.
 This set of programs is defined and used by comparable tools with the same objective of inferring time bounds for integer programs.
 
@@ -29,7 +29,7 @@ The graphs show that the time complexities are the same if $-\lstate = \ustate$.
 This is the expected result, as $-\lstate = \ustate$ implies that $m = -\lstate = \ustate$.
 The new method yields a lower time complexity if the value of $-\lstate$ and $\ustate$ diverges.
 The biggest gain is achieved, when $\lstate = \ustate$.
-That is, when an exact state $\lstate = \valuation = \ustate$ is given.
+That is if an exact state $\lstate = \valuation = \ustate$ is given.
 
 The second evaluated example is the program presented in the cost bound chapter \ref{fig:cost_ranking_function}.
 
@@ -45,7 +45,7 @@ In this example, the new method yields better results for all input states $\lst
 
 \subsection{Evaluating an example set}
 
-This section evaluates the presented implementation on an example set, which is a collection of examples introduced by other tools.
+This section evaluates the presented implementation on an example set which is a collection of examples introduced by other tools.
 The main focus is a comparison with the method of the KoAT paper \cite{koat}.
 Besides that, we compare the implementation to the tool CoFloCo \cite{cofloco3}.
 For both KoAT and CoFloCo the latest development version available at the time of this thesis is used.
@@ -73,7 +73,7 @@ As already mentioned, the implementation is able to simplify such a bound to an 
 Therefore, the better, but still valid complexity $\complexity(0) = \landau(1)$ is determined.
 Nevertheless, the implementation is not able to simplify every bound $b$ to an equivalent bound $b'$ with a complexity $\complexity(b')$ better than $complexity(b)$, although such a bound $b'$ may exist.
 Such a simplification algorithm has an unreasonable impact on the performance of the implementation.
-Therefore, the implemented simplification algorithm does in general not support the simplification of bounds, where it is necessary to analyze multiple levels of operators like $3 \cdot x^2-(x \cdot x+2 \cdot x^2) = 0$.
+Therefore, the implemented simplification algorithm does in general not support the simplification of bounds, where it is necessary to analyze multiple levels of operators such as $3 \cdot x^2-(x \cdot x+2 \cdot x^2) = 0$.
 Thus, an optimized simplification algorithm might yield better evaluation results without a change to the presented method.
 
 For the parallel execution of the examples, we use the GNU tool 'parallel' \cite{gnuparallel}.
