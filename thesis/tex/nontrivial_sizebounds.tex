@@ -14,20 +14,23 @@ For such SCCs, we present a method inferring better size bounds than the method 
   The transition $t_2$ decrements the value of $x$ in every step and the transition $t_1$ negates the value of $x$ in every step.
   The steps of the transitions $t_1$ and $t_2$ can happen in an arbitrary order due to non-determinism.
   Consider an evaluation defined by the sequence of transitions $t_0, t_1, t_2, t_1, t_3$.
-  If the initial value of $x$ is positive, then its value changes in the sequence $x, -x, -x-1, -(-x-1), -(-x-1)$.
+  If the initial value of $x$ is positive, then its value changes in a sequence $x, -x, -x-1, -(-x-1), -(-x-1)$.
   Then, the value of $x$ after the transition $t_3$ is $-(-x-1) = x+1$.
   Although the upper local size bound of $(t_1,x)$ is $\ULSB(t_1,x) = x-1$, it is impossible to utilize the decrement to conclude, that the transition $t_1$ can not increment the value of $x$, since another transition of the SCC negated its value in a later step.
   Therefore, the new method uses the original method for such cases, where negation occurs inside the SCC.
+
+  \input{graphs/negating_nontrivial_rvg}
+
+  The property is also shown in the annotated result variable graph in Figure \ref{fig:negating_nontrivial_rvg}.
+  This figure only shows the relevant part of the result variable graph regarding the variable $x$.
+  Additionally to the edges between result variables, this annotated result variable graph shows lower and upper local size bounds of the result variables and whether the variables of the result variables occur with a positive or negative sign in these local size bounds.
+  Every result variable, that is negated by a local size bound of another result variable, is connected with a negative edge to this result variable.
+  Otherwise, it is connected with a positive edge.
+  It is shown, that only negative edges lead to $(t_1,x)$.
+  The reason is the negation of $x$ in its local size bound.
 \end{example}
 
-\input{graphs/negating_nontrivial_rvg}
-
-This property is shown in the annotated result variable graph in Figure \ref{fig:negating_nontrivial_rvg}.
-This only figure shows the relevant part of the result variable graph regarding the variable $x$.
-Additionally to the edges between result variables, this annotated result variable graph shows lower and upper local size bounds of the result variables and whether the variables of the result variables occur with a positive or negative sign in these local size bounds.
-Every result variable, that is negated by a local size bound of another result variable, is connected with a negative edge to this result variable.
-Otherwise, it is connected with a positive edge.
-From this point on we regard SCCs, that only consists of positive edges.
+From this point on, we regard SCCs that only consists of positive edges.
 For these SCCs, we present an optimized technique.
 
 Prior to the definition of the method, four utility definitions are given, with three of them also used by the KoAT paper \cite{koat}.
@@ -50,15 +53,15 @@ Additionally, we define the SCC-variables of a result variable $\rv \in \SCC$.
   We call the variable set $\VSet_\rv = \braced{ v \mid \exists (t, v) \in \pre(\rv) \cap \SCC }$ the SCC-variables of the result variable $\rv$.
 \end{definition}
 The SCC-variables of a result variable $\rv$ are those variables, which affect the result variable $\rv$ from within the SCC $\SCC$.
-For those variables we know, that their value is mutated throughout a loop.
-The subset $\VSet^+_\rv \subseteq \VSet_\rv$ contains all variables $v$, that are neither in the set $N^\sqcap_\rv$ nor in the set $N^\sqcup_\rv$.
+For these variables, we know that their value is mutated throughout a loop.
+We define the subset $\VSet^+_\rv \subseteq \VSet_\rv$ to contain all variables $v$, that are neither in the set $N^\sqcap_\rv$ nor in the set $N^\sqcup_\rv$.
 Such variables affect a result variable $\rv$ with a non-negated value.
 \begin{example}[SCC-variables]
   Consider again the program in Figure \ref{fig:negating_nontrivial} and its result variable graph in Figure \ref{fig:negating_nontrivial_rvg}.
   The set $\VSet^+_{(t_2,x)}$ contains the variable $x$, since the variable $x$ has neither a negative factor in the upper local size bound $\ULSB(t_2,x)$ nor in the lower local size bound $\LLSB(t_2,x)$.
   On the other hand, the set $\VSet^+_{(t_1,x)}$ is empty, since the variable $x$ has a negative factor in the upper local size bound $\ULSB(t_1,x)$ and also in the lower local size bound $\LLSB(t_1,x)$.
   Therefore, the variable $x$ is in $\VSet_{(t_1,x)}$, but not in $\VSet^+_{(t_1,x)}$.
-  As mentioned earlier, we exclude those cases from the new analysis.
+  As mentioned earlier, we exclude these cases from the new analysis.
 \end{example}
 
 By $\SCC_t$ we denote those result variables from an SCC $\SCC$, that use a specific transition $t$.
@@ -70,7 +73,7 @@ By $\SCC_t$ we denote those result variables from an SCC $\SCC$, that use a spec
 
 \begin{example}[Result variables with a specific transition]
   Consider again the program in Figure \ref{fig:negating_nontrivial} and its result variable graph in Figure \ref{fig:negating_nontrivial_rvg}.
-  For the SCC $\SCC = \braced{(t_1,x), (t_2,x)}$ we have $\SCC_{t_1} = \braced{(t_1,x)}$ and $\SCC_{t_2} = \braced{(t_2,x)}$, while $\SCC_{t_0} = \SCC_{t_3} = \emptyset$.
+  For the SCC $\SCC = \braced{(t_1,x), (t_2,x)}$, we have $\SCC_{t_1} = \braced{(t_1,x)}$ and $\SCC_{t_2} = \braced{(t_2,x)}$, while $\SCC_{t_0} = \SCC_{t_3} = \emptyset$.
 \end{example}
 
 Additionally, we introduce the SCC-transitions as the set of transitions, which occur in an SCC $\SCC$.
@@ -81,15 +84,15 @@ Additionally, we introduce the SCC-transitions as the set of transitions, which 
 \end{definition}
   
 \begin{example}[SCC-transitions]
-  Consider again the program in Figure \ref{fig:negating_nontrivial}.
+  Consider again the program in Figure \ref{fig:negating_nontrivial} and the SCC $\SCC = \braced{(t_1,x),(t_2,x)}$.
   It defines the SCC-transitions $\TSet_\SCC = \braced{t_1, t_2}$.
 \end{example}
 
-Now we are able to extend the method SizeBounds to nontrivial non-negating size bounds.
+Now we are able to specialize the method SizeBounds of the KoAT paper \cite{koat} for nontrivial non-negating size bounds.
 
 \input{theorems/nontrivial_sizebound}
 
-The definition extends the method of the KoAT paper \cite{koat} to a differentiation of upper and lower bounds.
+This definition extends the method of the KoAT paper \cite{koat} to a differentiation of upper and lower size bounds.
 The overall idea is, to define a maximal \textbf{starting value} and accumulate the maximal \textbf{effects} of all transitions within the SCC $\SCC$.
 When we refer to an effect of a transition, we mean the change of a value by a single occurrence of the transition in an evaluation.
 We distinguish between positive and negative effects.
@@ -97,7 +100,7 @@ A positive effect represents a number, by which the value of a variable increase
 It is easy to see, that in an SCC without negation, it is necessary to capture all positive effects for the computation of an upper size bound, while it is necessary to capture all negative effects for the computation of lower size bounds.
 The capturing of negative effects for the computation of upper size bounds and positive effects for the computation of lower size bounds would lead to better bounds, but in practice, this is not achievable.
 For the valid overapproximation of negative effects for upper size bounds, it would be necessary to approximate the accumulation of those negative effects with a multiplication with the lower time bound.
-But as we pointed out, there is no known way for the effective computation of lower time bounds.
+But as we pointed out, there is no known way for an effective computation of lower time bounds.
 Therefore, in any case which could yield a negative effect (or a positive effect for a lower size bound), we ignore it by setting it to $0$.
 
 Now we analyze the new method in multiple steps with different examples to explain the reasoning behind the different components of the method.
@@ -113,19 +116,19 @@ For the third program this definition will break down to ${\mathcal{S}^\sqcap}'(
 
 \begin{example}[Internal multiplication]
   \input{graphs/nontrivial_nodependency}
-  Consider the program from the introduction in Figure \ref{fig:nontrivial_nodependency}.
-  Additionally, this figure provides the application of the presented method on the program.
+  Consider the program in Figure \ref{fig:nontrivial_nodependency}.
+  This figure provides the application of the presented method on the program.
   The program takes a value for the variable $y$ and multiplies it in a loop $t_1$ with the factor $2$.
   The number of steps of the transition $t_1$ is bounded by the value of $x$.
   The value of $y$ increases in a sequence $y, 2 \cdot y, 4 \cdot y, 8 \cdot y, 16 \cdot y, \dots$.
-  Thus, the value of $y$ after the loop $t_1$ does only depend on the value of $y$ after the transition $t_0$ and the value of $y$ after previous steps of the loop $t_1$.
+  Thus, the value of $y$ after the loop $t_1$ does only depend on the value of $y$ after the transition $t_0$ and on the value of $y$ after previous steps of the loop $t_1$.
   The idea is to start with an overapproximation of the initial value of $y$ before entering the loop and then multiplying it with the maximal factors inside the loop.
   
   The overapproximation of the initial value of $y$ is reflected by the \textbf{starting value}.
   We consider all result variables, which might affect the value of $y$ and select the maximal value among them.
   
   Additionally to the starting value, we have to consider the factors mutating the starting value during the loop $t_1$.
-  Intentionally, we can see, that with each occurrence of the transition $t_1$ the upper size bound increases by the factor $2$.
+  Intentionally, we can see that with each occurrence of the transition $t_1$ the upper size bound increases by the factor $2$.
   After $\UTime(t_1)$ occurrences of $t_1$, the value of $y$ is bounded by $2^{\UTime(t_1)} \cdot \maxO{\start^\sqcap}$.
   This is covered by the \textbf{loop scaling factor} $\scale^\sqcap_\SCC$.
   It consists of all \textbf{transition scaling factors} $\scale^\sqcap_t$ of the transitions $t \in \TSet_\SCC$ of the SCC $\SCC$.
@@ -135,7 +138,7 @@ For the third program this definition will break down to ${\mathcal{S}^\sqcap}'(
   This results in the expected upper size bound $2^{\UTime(t_1)} \cdot \maxO{\start^\sqcap}$ for the result variable $(t_1,y)$.
 \end{example}
 
-There are two parts, which still need to be covered, before we can be sure, that $2^{\UTime(t_1)} \cdot \maxO{\start^\sqcap}$ is actually the result of ${\mathcal{S}^\sqcap}'(t_1,y)$.
+There are two parts, which still need to be covered, before we can be sure that $2^{\UTime(t_1)} \cdot \maxO{\start^\sqcap}$ is actually the result of ${\mathcal{S}^\sqcap}'(t_1,y)$.
 The first part is the \textbf{loop effect} $\effect^\sqcap_\SCC$, which we assumed to be $0$ in the example.
 This is non-obvious, since the loop effect of the analyzed SCC is a sum over the non-empty set $\TSet_\SCC = \braced{t_1}$.
 It needs to be shown that the loop effect $\effect^\sqcap_\SCC = \UTime(t_1) \cdot \effect^\sqcap_{t_1}$ equals $0$.
@@ -159,7 +162,7 @@ To explain this part of the transition scaling factor, we introduce the second e
   Consider the program and its analysis in Figure \ref{fig:exp_with_vars}.  
   The program has three variables $x$, $y$ and $z$.
   The variable $x$ determines the number of runs of the loop $t_1$.
-  With each run of the transition $t_1$ the value of $y$ increases by the value of $z$ (or decreases for $z < 0$).
+  With each run of the transition $t_1$, the value of $y$ increases by the value of $z$ (or decreases for $z < 0$).
   The value of $z$ is set in each step of the loop to the previous value of $y$.
   
   Let $(a,b,c)$ be a notation for a state $\valuation \in \Valuation$ with $\valuation(x) = a$, $\valuation(y) = b$ and $\valuation(z) = c$.
@@ -202,21 +205,23 @@ The third component, we consider, is the addition with constant values from outs
   Now, we have to approximate the effect of the addition of the value of $z$ in each step of the loop $t_1$.
   If $z$ is negative, then each iteration of the loop decreases the value of $y$ and therefore the starting value is already an upper size bound.
   Since we do not consider lower time bounds, it is impossible to utilize this decrease to find a better upper size bound.
-  On the other hand, if $z$ is positive, then each iteration of the loop increases the value of $y$ and therefore we can approximate the increase by the upper time bound $\UTime(t_1)$ multiplied with the effect $z$.
+  On the other hand, if $z$ is positive, then each iteration of the loop increases the value of $y$.
+  Therefore, we can approximate the increase by the upper time bound $\UTime(t_1)$ multiplied with the effect $z$.
   
   For lower size bounds this logic is contrary.
-  If $z$ is negative, then each iteration of the loop decreases the value of $y$ and therefore, in contrast to the definition of upper size bounds, we can approximate the decrease by the upper time bound $\UTime(t_1)$ multiplied with the effect $z$.
+  If $z$ is negative, then each iteration of the loop decreases the value of $y$.
+  Therefore, in contrast to the definition of upper size bounds, we can approximate the decrease by the upper time bound $\UTime(t_1)$ multiplied with the effect $z$.
   If $z$ is positive, we can infer the starting value as lower size bound.
   Note that for an update $\update(y) = y - z$ instead of $\update(y) = y + z$ for the transition $t_1$, the presented logic is inverted.
   
   This is all reflected in the definitions of the \textbf{transition effects} $\effect^\sqcap_t$ and $\effect^\sqcup_t$.
   While the positive transition effect $\effect^\sqcap_t$ describes a bound for the upper case, the negative transition effect $\effect^\sqcup_t$ describes a bound for the lower case.
-  In the example program, for the computation of the upper size bound we have to consider the transition effect $\effect^\sqcap_{t_1}$ of the transition $t_1$.
+  In the example program, for the computation of the upper size bound, we have to consider the transition effect $\effect^\sqcap_{t_1}$ of the transition $t_1$.
   For this purpose, we need to consider the maximal \textbf{result variable effects} of all result variables in the SCC $\SCC$ which use the transition $t_1$.
   We only consider the maximal effect, because in one evaluation step with a transition $t$ only the effect of one result variable $\rv \in \SCC_t$ can occur.
   In the example, there is only one result variable $(t_1,y) \in \SCC$, which uses the transition $t_1$.
   Therefore, we have $\effect^\sqcap_{t_1} = \effect^\sqcap_{(t_1,y)}$ and as a direct consequence $\effect^\sqcap_\SCC = \sum_{t \in \TSet_\SCC} \UTime(t) \cdot \effect^\sqcap_{t} = \UTime(t_1) \cdot \effect^\sqcap_{(t_1,y)}$.
-  The result variable effect $\effect^\sqcap_{(t_1,y)}$ consists of the factor $e^\sqcap_\rv = 0$ of the local size bound of this result variable and the sum of all incoming variables from outside of the SCC.
+  The result variable effect $\effect^\sqcap_{(t_1,y)}$ consists of the factor $e^\sqcap_{(t_1,y)} = 0$ of the local size bound of this result variable and the sum of all incoming variables from outside of the SCC.
   It is not necessary to consider variables from inside the SCC since their value is already covered by the starting value $\start^\sqcap$.
   Only additions with outside variables or constants and multiplications with constants can increase the upper size bound.
   In the example, we have with $z$ one variable from outside the SCC for the result variable $(t_1,x)$.

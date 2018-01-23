@@ -5,16 +5,16 @@
   For each result variable $\beta \in \SCC$, let $\VSet_\beta = \VSet^+_\beta$ and therefore $\VSet^-_\beta = \emptyset$.
   If there is a result variable $\beta \in \SCC$ which is not bounded by an upper scaled sum and a lower scaled sum, then we set $\USize' = \USize$ and $\LSize' = \LSize$.
   Otherwise, for all result variables $\beta \notin \SCC$, let $\USize'(\beta) = \USize(\beta)$ and $\LSize'(\beta) = \LSize(\beta)$.
-  For the definition of $(\LSize', \USize')$ for all other result variables $\beta \in \SCC$, we will use following abbreviations.
+  For the definition of $(\LSize', \USize')$ for all other result variables $\beta \in \SCC$, we use the following abbreviations.
   Let $\sign^\sqcap = 1$ and $\sign^\sqcup = -1$ denote the signs of the corresponding size bounds.
-  By multiplying with this sign, it is possible to define lower size bounds an upper size bounds with the same definitions.
+  By multiplying with this sign, it is possible to define lower size bounds and upper size bounds with the same definitions.
   Let $\start^\sqcap$ denote the \textbf{greatest starting value} and let $\start^\sqcup$ denote the \textbf{lowest starting value} when entering the SCC $\SCC$.
   \[ \start^\square = \maximum{\sign^\square \cdot \GSize(\prerv) \mid \exists \rv \in \SCC: \prerv \in \pre(\rv) \setminus \SCC} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Let $\scale^\sqcap_t$ denote the \textbf{upper transition scaling factor} and let $\scale^\sqcup_t$ denote the \textbf{lower transition scaling factor} of a transition $t \in \TSet$.
   \[ \scale^\square_t = \maximum{s^\square_\rv \mid \rv \in \SCC_t} \cdot \maximum{\abs{V_\rv} \mid \rv \in \SCC_t} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Let $\scale^\sqcap_\SCC$ denote the \textbf{upper loop scaling factor} and let $\scale^\sqcup_\SCC$ denote the \textbf{lower loop scaling factor} of a transition $\SCC \subseteq \RV$.
   \[ \scale^\square_\SCC = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{\UTime(t)} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
-  Let $\incoming^\sqcap_\rv(v)$ denote the \textbf{highest incoming constant} and let $\incoming^\sqcup_\rv(v)$ denote the \textbf{lowest incoming constant} influencing variable $v \in \VSet$ of the local size bound of the result variable $\rv \in \RV$.
+  Let $\incoming^\sqcap_\rv(v)$ denote the \textbf{highest incoming constant} and let $\incoming^\sqcup_\rv(v)$ denote the \textbf{lowest incoming constant} influencing a variable $v \in \PVSet$ of the local size bound of the result variable $\rv \in \RV$.
   \[ \incoming^\square_\rv(v) = \max \braced{\sign^\square \cdot \GSize(\pret, v) \mid \exists \pret: (\pret, v) \in \pre(\rv) \setminus C} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Furthermore, let $\effect^\sqcap_\rv$ denote the \textbf{positive result variable effect} and let $\effect^\sqcup_\rv$ denote the \textbf{negative result variable effect} of a result variable $\rv \in \RV$.
   \[ \effect^\sqcap_\rv = \maxO{e^{\sqcap}_\rv} + \sum_{v \in P_\rv^\sqcap \setminus \VSet_\rv} \maxO{\incoming^\sqcap_\rv(v)} + \sum_{v \in N_\rv^\sqcap} \maxO{\incoming^\sqcup_\rv(v)} \]
@@ -23,7 +23,7 @@
   \[ \effect^\square_t = \max \braced{\effect^\square_\rv \mid \rv \in \SCC_t } \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Let $\effect^\sqcap_\SCC$ denote the \textbf{positive loop effect} and let $\effect^\sqcup_\SCC$ denote the \textbf{negative loop effect} of an SCC $\SCC \subseteq \RV$.
   \[ \effect^\square_\SCC = \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\square_t \right) \text{ with } \square \in \braced{\sqcup, \sqcap} \]
-  With these definitions we define $(\LSize', \USize')$ for all other result variables $\beta \in \SCC$.
+  With these definitions, we define $(\LSize', \USize')$ for all other result variables $\beta \in \SCC$.
   \[ {\mathcal{S}^\square}'(\beta) = \sign^\square \cdot \scale^\square_\SCC \cdot \left( \maxO{\start^\square} + \effect^\square_\SCC \right) \text{ with } \square \in \braced{\sqcup, \sqcap} \]
-  Then, $\text{SizeBounds}(\UTime, \Size, \SCC) = (\LSize', \USize')$ is also a size approximation. 
+  Then, $\text{SizeBounds}(\UTime, \Size, \SCC) = (\LSize', \USize')$ is also a size bound. 
 \end{theorem}
