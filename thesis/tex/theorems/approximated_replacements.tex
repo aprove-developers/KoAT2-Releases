@@ -1,0 +1,6 @@
+\begin{theorem}[Soundness of approximated replacements]
+  Let $\lsub, \usub: \VSet \rightarrow K$ be two functions with $\exacteval{\lsub(v)}{\valuation} \leq \exacteval{\usub(v)}{\valuation}$ for each variable $v \in \VSet$ and each state $\valuation \in \Valuation$.
+  Let $b \in \BoundSet(\VSet)$ be a bound and let $\valuation \in \Valuation$ be a state.
+  Then, it holds that
+  \[ \exacteval{\lsubst{b}{\lsub}{\usub}}{\valuation} \leq \exacteval{b}{\valuation} \leq \exacteval{\usubst{b}{\lsub}{\usub}}{\valuation}. \]
+\end{theorem}

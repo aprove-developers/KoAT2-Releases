@@ -45,17 +45,12 @@ The bound set $\BoundSet(\VSet)$ meets the criteria of $K$.
 Therefore, two functions $\lsub, \usub: \VSet \rightarrow \BoundSet(\VSet)$ qualify for an approximated replacement.
 We call an approximated replacement with such functions an approximated substitution.
 
-\begin{theorem}[Soundness of approximated substitutions]
-  Let $\lsub, \usub: \VSet \rightarrow \BoundSet(\VSet)$ be two substitutions with $\exacteval{\lsub(v)}{\valuation} \leq \exacteval{\usub(v)}{\valuation}$ for each variable $v \in \VSet$ and each state $\valuation \in \Valuation$.
-  Let $b \in \BoundSet(\VSet)$ be a bound and let $\valuation \in \Valuation$ be a state.
-  Then, it holds that
-  \[ \exacteval{\lsubst{b}{\lsub}{\usub}}{\valuation} \leq \exacteval{b}{\valuation} \leq \exacteval{\usubst{b}{\lsub}{\usub}}{\valuation}. \]
-\end{theorem}
-
 Also, two states $\lstate, \ustate: \VSet \rightarrow \mathbb{Z}$ qualify for an approximated replacement, since $\mathbb{Z}$ meets the criteria of $K$.
 We call an approximated replacement with two states an approximated evaluation.
 
-\input{theorems/approximated_evaluations}
+We can show that an overapproximated replacement always results in an overapproximation and that an underapproximated replacement always results in an underapproximation of the actual value.
+
+\input{theorems/approximated_replacements}
 
 The definition of approximated replacements uses implicitly the property of component-wise monotonicity of a bound to infer better over- and underapproximations.
 
