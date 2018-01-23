@@ -5,11 +5,12 @@ This chapter evaluates this implementation against other methods.
 
 For this purpose, two different approaches are used.
 First, some selected examples are presented, where the benefit of the presented method in contrast to the method of the KoAT paper \cite{koat} is shown.
-Second, the implementation is evaluated on an example set of programs, defined and used by comparable tools with the same objective of inferring time bounds for integer programs.
+Second, the implementation is evaluated on an example set of programs.
+This set of programs is defined and used by comparable tools with the same objective of inferring time bounds for integer programs.
 
 \subsection{Evaluating selected examples}
 
-This section uses two selected examples to compare the results of the new method with the results of the method of the KoAT paper \cite{koat}.
+This section presents two selected examples to compare the results of the new method with the results of the method of the KoAT paper \cite{koat}.
 This selection is chosen to show the benefits of the new method and is by no means representative.
 Nevertheless, it is able to show the potentials of the new method.
 
@@ -17,23 +18,18 @@ The first evaluated example is the motivational program from the introduction in
 
 \input{graphs/motivational_example}
 
-For this program the new method yields a time complexity of $\maxO{x-y}$, while KoAT \cite{koat} yields a time complexity of $\abs{x}+\abs{y}$.
+For this program, the new method yields a time complexity of $\maxO{x-y}$, while KoAT \cite{koat} yields a time complexity of $\abs{x}+\abs{y}$.
 In the new method, we assume that we have two input states $\lstate$ and $\ustate$.
 KoAT \cite{koat} is defined with a single input state $m$ such that $m(v) = \maximum{-\lstate(v),\ustate(v)}$ for each variable $v \in \PVSet$.
 
-Consider the two three-dimensional graphs in Figure \ref{fig:motivational_evaluation}.
-We consider input states $\lstate$ and $\ustate$ with $\lstate(v) = \lstate(v')$ and $\ustate(v) = \ustate(v')$ for all variables $v, v' \in \PVSet$.
+Figure \ref{fig:motivational_example} provides two three-dimensional graphs.
 The left graph plots the time complexity $\maxO{x-y}$ of the new method and the right graph plots the time complexity $\abs{x}+\abs{y}$ of KoAT \cite{koat}.
-These graphs show that the time complexities are the same if $-\lstate = \ustate$.
+We consider input states $\lstate$ and $\ustate$ with $\lstate(v) = \lstate(v')$ and $\ustate(v) = \ustate(v')$ for all variables $v, v' \in \PVSet$.
+The graphs show that the time complexities are the same if $-\lstate = \ustate$.
 This is the expected result, as $-\lstate = \ustate$ implies that $m = -\lstate = \ustate$.
 The new method yields a lower time complexity if the value of $-\lstate$ and $\ustate$ diverges.
 The biggest gain is achieved, when $\lstate = \ustate$.
 That is, when an exact state $\lstate = \valuation = \ustate$ is given.
-
-\todo{Activate picture}{}
-\iffalse
-\input{evaluations/motivational_example}
-\fi
 
 The second evaluated example is the program presented in the cost bound chapter \ref{fig:cost_ranking_function}.
 
@@ -43,13 +39,9 @@ As already mentioned, the presented method is able to compute a cost bound $\UCo
 Therefore $1 + \maxO{x}$ is a cost bound for the whole program.
 Since the KoAT paper \cite{koat} does not consider cost ranking functions, it is only able to compute a cost bound $1 + \abs{x} \cdot \abs{y}$ for the whole program.
 
-The functions are plotted with the same assumptions as the previous example in Figure \ref{fig:cost_ranking_function}.
+The functions are plotted with the same assumptions as the previous example.
 The left graph plots the cost complexity $1 + \maxO{x}$ of the new method and the right graph plots the cost complexity $1 + \abs{x} \cdot \abs{y}$ of the method of the KoAT paper \cite{koat}.
-
-\todo{Activate picture}{}
-\iffalse
-\input{evaluations/cost_ranking_function}
-\fi
+In this example, the new method yields better results for all input states $\lstate = \ustate$.
 
 \subsection{Evaluating an example set}
 
@@ -62,12 +54,13 @@ For the comparison of the results, it is necessary to project the resulting boun
 The following definition introduces a projection, such that for every bound $b \in \BoundSet(\PVSet)$ the resulting asymptotic complexity $\complexity(b)$ is a valid overapproximation of the actual complexity.
 
 \begin{definition}[Approximation of the asymptotic complexity]
-  Let $\BoundSet(\VSet)$ be a set of bounds over the variables $\VSet$.
+  Let $\VSet$ be a finite set of variables.
+  Let $\BoundSet(\VSet)$ be the set of bounds over the variables $\VSet$.
   Let $\landau$ be the landau symbol for asymptotic complexity.
   Then, $\complexity$ is a function which assigns each bound an overapproximation of its asymptotic complexity.
   \[ \complexity(\infty) = \landau(\infty) \text{ for } \infty \in \BoundSet(\VSet) \]
-  \[ \complexity(k) = \landau(1) \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet) \] 
-  \[ \complexity(v) = \landau(n) \text{ for all } v \in \VSet \subset \BoundSet(\VSet) \] 
+  \[ \complexity(k) = \landau(1) \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet) \] 
+  \[ \complexity(v) = \landau(n) \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \] 
   \[ \complexity(-b) = \complexity(b) \text{ for all } b \in \BoundSet(\VSet) \] 
   \[ \complexity(b_1 + b_2) = \landau(\complexity(b_1) + \complexity(b_2)) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
   \[ \complexity(b_1 \cdot b_2) = \landau(\complexity(b_1) \cdot \complexity(b_2)) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
@@ -76,11 +69,11 @@ The following definition introduces a projection, such that for every bound $b \
 \end{definition}
 
 Note that this definition projects a bound $x-x$ to a complexity $\complexity(x-x) = \landau(n)$.
-As already mentioned, the implementation is able to simplify such bounds to an equivalent bound $0$.
-Therefore the better, but still valid complexity $\complexity(0) = \landau(1)$ is determined.
-Nevertheless the implementation is not able to simplify every bound $b$ to an equivalent bound $b'$ with a complexity $\complexity(b')$ better than $complexity(b)$, although such a bound $b'$ exists.
-Such a simplification algorithm has high-performance costs for the implementation.
-Therefore, the implemented simplification algorithm does in general not support the simplification of bounds, where it is necessary to analyze multiple levels of operators like $3 \cdot x^2-(x \cdot x+2 \cdot x^2)$.
+As already mentioned, the implementation is able to simplify such a bound to an equivalent bound $0$.
+Therefore, the better, but still valid complexity $\complexity(0) = \landau(1)$ is determined.
+Nevertheless, the implementation is not able to simplify every bound $b$ to an equivalent bound $b'$ with a complexity $\complexity(b')$ better than $complexity(b)$, although such a bound $b'$ may exist.
+Such a simplification algorithm has an unreasonable impact on the performance of the implementation.
+Therefore, the implemented simplification algorithm does in general not support the simplification of bounds, where it is necessary to analyze multiple levels of operators like $3 \cdot x^2-(x \cdot x+2 \cdot x^2) = 0$.
 Thus, an optimized simplification algorithm might yield better evaluation results without a change to the presented method.
 
 For the parallel execution of the examples, we use the GNU tool 'parallel' \cite{gnuparallel}.
@@ -101,3 +94,4 @@ Therefore, the performance of the new implementation is comparable to other tool
   \caption{Evaluation results}
 \end{table}
 
+\todo{Evaluate results}{}

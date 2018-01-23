@@ -13,6 +13,33 @@
     (1) edge[aligned edge, loop above] node[left=0.2cm] {$t_1$} node[right=0.2cm] {$\update(x) = x - 1$\\$\update(y) = y$\\$\guard = \braced{x > y}$} (1)
     ;
 \end{tikzpicture}
-\caption{Motivational program for non-monotonic bounds}
+
+\begin{tikzpicture}
+  \begin{axis}
+    \addplot3 [
+      unbounded coords=jump,
+      mesh,
+      shader=interp,
+      samples at={-5,...,5},
+      samples y={11},
+      only marks,
+    ] {1+max(x-y,0)};
+  \end{axis}
+\end{tikzpicture}
+\hfil
+\begin{tikzpicture}
+  \begin{axis}
+    \addplot3 [
+      unbounded coords=jump,
+      mesh,
+      shader=interp,
+      samples at={-5,...,5},
+      samples y={11},
+      only marks,
+    ] {1+abs(max(x,-y))+abs(max(x,-y))};
+  \end{axis}
+\end{tikzpicture}
+
+\caption{Evaluation of the motivational example}
 \label{fig:motivational_example}
 \end{figure}
