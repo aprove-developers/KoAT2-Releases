@@ -14,7 +14,7 @@ Instead, the presented approximated replacement is used.
 It chooses the appropriate upper and lower size bound for the substitution of a variable with respect to the monotonicity of the ranking polynomial in this variable.
 As already mentioned, this approach is the more effective, the more we know about the monotonicity of the ranking polynomial.
 Considering affine polynomials yields the best results since an affine polynomial is monotonically increasing or decreasing in every variable.
-In practice, most existing techniques generate these affine ranking functions (e.g. \cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}).
+In practice, most existing techniques generate these affine ranking functions (\cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}).
 But in general, the new method is also applicable to polynomial ranking functions.
 
 For the definition of the method, we need to define the terms of entry locations and entry transitions.
@@ -53,7 +53,7 @@ Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location
 
 \begin{example}[Time Bounds]
   \input{graphs/motivational_example_timebounds}
-  Consider the motivational program in Figure \ref{fig:motivational_example_timebounds} from the introduction.
+  Consider the motivational program from the introduction in Figure \ref{fig:motivational_example_timebounds}.
   With the transition set $\TSet' = \braced{t_1}$, it is possible to determine a ranking function $\timerank$ with $\timerank(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).
   The method of the KoAT paper \cite{koat} would now apply an operator to $\timerank$, such that the result would be a monotonic function with $\timerank'(\location_1) = \abs{x} + \abs{y}$.
   Then, it is able to substitute each variable by its absolute size bound and therefore lift it to a global context.
