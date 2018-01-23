@@ -64,7 +64,7 @@ Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location
   It is now possible to lift the time rank $\timerank(\location_1)$ of the ranking function $\timerank$ to a global level.
   \[ \usubst{\timerank(\location_1)}{\LSize(t_0)}{\USize(t_0)} = \USize(t_0, x) - \LSize(t_0, y) = x - y \]
   Note that with a state $\valuation$ with $\valuation(x) < \valuation(y)$ the transition $t_1$ will simply not occur in an evaluation instead of occurring a negative number of times.
-  To reflect this in the new time bound, we have express the positivity of $x - y$ with the operation $\maxO{x - y}$.
+  To reflect this in the new time bound, we express the positivity of $x - y$ with the operation $\maxO{x - y}$.
   Then, the only step left is to consider the number of times an evaluation might enter the SCC from $t_0$.
   Since $t_0$ is an initial transition, its time bound is $\UTime(t_0) = 1$.
   Therefore, an evaluation might only enter a single time from $t_0$ and the resulting time bound for $t_1$ is $\maxO{x - y}$.
