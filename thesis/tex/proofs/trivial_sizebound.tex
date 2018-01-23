@@ -1,6 +1,6 @@
-Let $\rv = (\actt, v) \in \RV$ be the trivial SCC for which the processor was applied.
+Let $\rv = (\actt, v) \in \RV$ be a trivial SCC.
 
-We have to show that for all states $\lstate, \ustate \in \Valuation$ and for all $v \in \PVSet$ two statements hold.
+We have to show that for all states $\lstate, \ustate \in \Valuation$ and for all variables $v \in \PVSet$ two statements hold.
 \[ \ueval{\USize'(\actt, v)}{\lstate}{\ustate} \geq \usizeboundterm \]
 \[ \leval{\LSize'(\actt, v)}{\lstate}{\ustate} \leq \lsizeboundterm \]
 Consider a state $\valuation_0 \in \Valuation$ with $\lstate \leq \valuation_0 \leq \ustate$.
@@ -8,10 +8,10 @@ To this end, we consider an evaluation
 \[ (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\actt) (\location, \valuation). \]
 Now the goal is to show that $\ueval{\USize'(\actt, v)}{\lstate}{\ustate} \geq \valuation(v) \geq \leval{\LSize'(\actt, v)}{\lstate}{\ustate}$ holds.
 
-If $\actt$ is an initial transition $\actt \in \TSet_0$, then the evaluation has the form $(\location_0, \valuation_0) \rightarrow_\actt (\location, \valuation)$, as by definition there are no transitions leading back to the start location $\location_0$ of $\actt$.
-Thus, for initial transitions we obtain $\ueval{\USize'(\actt, v)}{\lstate}{\ustate} = \ueval{\ULSB(\actt, v)}{\lstate}{\ustate} \geq \exacteval{\ULSB(\actt, v)}{\valuation_0} \geq \valuation(v)$ and $\leval{\LSize'(\actt, v)}{\lstate}{\ustate} = \leval{\LLSB(\actt, v)}{\lstate}{\ustate} \leq \exacteval{\LLSB(\actt, v)}{\valuation_0} \leq \valuation(v)$.
+If $\actt$ is an initial transition $\actt \in \TSet_0$, then the evaluation has the form $(\location_0, \valuation_0) \rightarrow_\actt (\location, \valuation)$, as by definition there are no transitions leading back to the start location $\location_0$.
+Thus, for initial transitions, we obtain $\ueval{\USize'(\actt, v)}{\lstate}{\ustate} = \ueval{\ULSB(\actt, v)}{\lstate}{\ustate} \geq \exacteval{\ULSB(\actt, v)}{\valuation_0} \geq \valuation(v)$ and $\leval{\LSize'(\actt, v)}{\lstate}{\ustate} = \leval{\LLSB(\actt, v)}{\lstate}{\ustate} \leq \exacteval{\LLSB(\actt, v)}{\valuation_0} \leq \valuation(v)$.
 
-Lets now assume $\actt \in \TSet \setminus \TSet_0$ is not an initial transition.
+Lets now assume that $\actt \in \TSet \setminus \TSet_0$ is not an initial transition.
 If $\ULSB(\actt,v) \notin \BoundSet^\sqcap_l$, then $\ueval{\USize'(\actt, v)}{\lstate}{\ustate} = \ueval{\USize(\actt, v)}{\lstate}{\ustate} \geq \exacteval{\USize(\actt, v)}{\valuation_0} \geq \valuation(v)$.
 Similar, if $\LLSB(\actt,v) \notin \BoundSet^\sqcup_l$, then $\leval{\LSize'(\actt, v)}{\lstate}{\ustate} = \leval{\LSize(\actt, v)}{\lstate}{\ustate} \leq \exacteval{\LSize(\actt, v)}{\valuation_0} \leq \valuation(v)$.
 
