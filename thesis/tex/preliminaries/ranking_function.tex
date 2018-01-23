@@ -1,4 +1,4 @@
-\subsection{Ranking functions}
+\subsection{Ranking Functions}
 
 This section introduces a definition of ranking functions.
 Ranking functions are well studied (\cite{bradley2005polyranking}, \cite{podelski2004prf}, \cite{bradley2005linear}, \cite{bagnara2012new}, \cite{leike2014ranking}, \cite{ben2013linear}) and widely used in termination and complexity analysis.
@@ -8,7 +8,7 @@ For the computation of time bounds and for the computation of cost bounds.
 For the computation of time bounds, we use a definition of the KoAT paper \cite{koat}.
 For the computation of cost bounds, the chapter about cost bounds introduces a specialized definition.
 
-\begin{definition}[Time ranking function] 
+\begin{definition}[Time Ranking Function] 
   We define $\timerank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as time ranking function for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
   For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
   \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\timerank(\location)}{\valuation} \geq \exacteval{\timerank(\location')}{\valuation'}. \]
@@ -22,7 +22,7 @@ A time ranking function $\timerank$ implies that a transition $t \in \TSet_>$ ca
 This is ensured since a transition $t \in \TSet_>$ both decreases the measure and is bounded by $1$, as well as other transitions $t \in \TSet$ do not increase the measure.
 Therefore, for the transitions $t \in \TSet_>$ the rank $\timerank(\location)$ at a location $\location \in \LSet$ can be used as a bound on the number of occurrences of this transition in any evaluation from this location on.
 
-\begin{example}[Time ranking function]
+\begin{example}[Time Ranking Function]
   Consider the program from the introduction in Figure \ref{fig:motivational_example_ranking}.
   \input{graphs/motivational_example_ranking}
   The function $\timerank$ with $\timerank(\location_1) = x-y$ can be proven to be a time rank for the transition set $\TSet = \braced{t_1}$.

@@ -7,7 +7,7 @@ The second set contains all other nontrivial SCCs.
 Negation does not occur in these nontrivial SCCs.
 For such SCCs, we present a method inferring better size bounds than the method of the KoAT paper \cite{koat}.
 
-\begin{example}[Nontrivial negating SCCs]
+\begin{example}[Non-Trivial Negating SCCs]
   \input{graphs/negating_nontrivial}
   Consider the program in Figure \ref{fig:negating_nontrivial}.
   It consists of two variables $y$ and $z$, that restrict the number of steps with $t_1$ and $t_2$.
@@ -36,19 +36,19 @@ For these SCCs, we present an optimized technique.
 Prior to the definition of the method, four utility definitions are given, with three of them also used by the KoAT paper \cite{koat}.
 
 First, we define the pre-variables of a result variable $\rv \in \RV$.
-\begin{definition}[Pre-variables]
+\begin{definition}[Pre-Variables]
   Let $\rv \in \RV$ be a result variable.
   We define $\pre(\rv) \subseteq \RV$ as an overapproximation of all the result variables that directly affect the value of the result variable $\rv$.
 \end{definition}
 Since the result variable graph represents the connections of result variables, the predecessors of a result variable in a result variable graph are a valid implementation of the function $\pre$.
-\begin{example}[Pre-variables]
+\begin{example}[Pre-Variables]
   Consider again the program in Figure \ref{fig:negating_nontrivial} and its result variable graph in Figure \ref{fig:negating_nontrivial_rvg}.
   The predecessors of $(t_1,x)$ in the result variable graph are $(t_0,x)$, $(t_1,x)$ and $(t_2,x)$.
   Therefore, $\pre(t_1,x) = \braced{(t_0,x), (t_1,x), (t_2,x)}$ are the pre-variables of $(t_1,x)$.
 \end{example}
 
 Additionally, we define the SCC-variables of a result variable $\rv \in \SCC$.
-\begin{definition}[SCC-variables]
+\begin{definition}[SCC-Variables]
   Let $\SCC \subseteq \RV$ be an SCC and let $\rv \in \SCC$ be a result variable of this SCC.
   We call the variable set $\VSet_\rv = \braced{ v \mid \exists (t, v) \in \pre(\rv) \cap \SCC }$ the SCC-variables of the result variable $\rv$.
 \end{definition}
@@ -56,7 +56,7 @@ The SCC-variables of a result variable $\rv$ are those variables, which affect t
 For these variables, we know that their value is mutated throughout a loop.
 We define the subset $\VSet^+_\rv \subseteq \VSet_\rv$ to contain all variables $v$, that are neither in the set $N^\sqcap_\rv$ nor in the set $N^\sqcup_\rv$.
 Such variables affect a result variable $\rv$ with a non-negated value.
-\begin{example}[SCC-variables]
+\begin{example}[SCC-Variables]
   Consider again the program in Figure \ref{fig:negating_nontrivial} and its result variable graph in Figure \ref{fig:negating_nontrivial_rvg}.
   The set $\VSet^+_{(t_2,x)}$ contains the variable $x$, since the variable $x$ has neither a negative factor in the upper local size bound $\ULSB(t_2,x)$ nor in the lower local size bound $\LLSB(t_2,x)$.
   On the other hand, the set $\VSet^+_{(t_1,x)}$ is empty, since the variable $x$ has a negative factor in the upper local size bound $\ULSB(t_1,x)$ and also in the lower local size bound $\LLSB(t_1,x)$.
@@ -66,24 +66,24 @@ Such variables affect a result variable $\rv$ with a non-negated value.
 
 By $\SCC_t$ we denote those result variables from an SCC $\SCC$, that use a specific transition $t$.
 
-\begin{definition}[Result variables with a specific transition]
+\begin{definition}[Result Variables with a Specific Transition]
   Let $t \in \TSet$ be a transition and let $\SCC \subseteq \RV$ be an SCC.
   Then, the result variable set $\SCC_t = \braced{(t,v) \mid \exists v \in \VSet : (t,v) \in \SCC}$ represents all result variables of the SCC $\SCC$, that use the specific transition $t$.
 \end{definition}
 
-\begin{example}[Result variables with a specific transition]
+\begin{example}[Result Variables with a Specific Transition]
   Consider again the program in Figure \ref{fig:negating_nontrivial} and its result variable graph in Figure \ref{fig:negating_nontrivial_rvg}.
   For the SCC $\SCC = \braced{(t_1,x), (t_2,x)}$, we have $\SCC_{t_1} = \braced{(t_1,x)}$ and $\SCC_{t_2} = \braced{(t_2,x)}$, while $\SCC_{t_0} = \SCC_{t_3} = \emptyset$.
 \end{example}
 
 Additionally, we introduce the SCC-transitions as the set of transitions, which occur in an SCC $\SCC$.
 
-\begin{definition}[SCC-transitions]
+\begin{definition}[SCC-Transitions]
   Let $\SCC \subseteq \RV$ be an SCC.
   We call the transition set $\TSet_\SCC = \braced{ t \mid (t,v) \in \SCC}$ the SCC-transitions of the SCC $\SCC$.
 \end{definition}
   
-\begin{example}[SCC-transitions]
+\begin{example}[SCC-Transitions]
   Consider again the program in Figure \ref{fig:negating_nontrivial} and the SCC $\SCC = \braced{(t_1,x),(t_2,x)}$.
   It defines the SCC-transitions $\TSet_\SCC = \braced{t_1, t_2}$.
 \end{example}
@@ -114,7 +114,7 @@ As we will see, those are corner cases of the general size bound definition ${\m
 For the first and the second program this definition will break down to ${\mathcal{S}^\sqcap}'(\beta) = 1 \cdot \scale^\sqcap_\SCC \cdot \left( \maxO{\start^\sqcap} + 0 \right)$.
 For the third program this definition will break down to ${\mathcal{S}^\sqcap}'(\beta) = 1 \cdot 1 \cdot \left( \maxO{\start^\sqcap} + \effect^\sqcap_\SCC \right)$.
 
-\begin{example}[Internal multiplication]
+\begin{example}[Internal Multiplication]
   \input{graphs/nontrivial_nodependency}
   Consider the program in Figure \ref{fig:nontrivial_nodependency}.
   This figure provides the application of the presented method on the program.
@@ -157,7 +157,7 @@ In the example of internal multiplication, this part of the transition scaling f
 This factor reflects, that exponential bounds can not only result from scaling factors which are greater than $1$, but also from variables, which affect each other consecutively in a loop.
 To explain this part of the transition scaling factor, we introduce the second example program.
 
-\begin{example}[Consecutively affecting SCC-variables]
+\begin{example}[Consecutively Affecting SCC-Variables]
   \input{graphs/exp_with_vars}
   Consider the program and its analysis in Figure \ref{fig:exp_with_vars}.  
   The program has three variables $x$, $y$ and $z$.
@@ -190,7 +190,7 @@ To explain this part of the transition scaling factor, we introduce the second e
 
 The third component, we consider, is the addition with constant values from outside of the SCC $\SCC$.
 
-\begin{example}[Dependency on outside variables]
+\begin{example}[Dependency on Outside Variables]
   \input{graphs/additive_loop}
   Consider the program and its analysis in Figure \ref{fig:additive_loop}.
   The program is very similar to the program in Figure \ref{fig:exp_with_vars}.

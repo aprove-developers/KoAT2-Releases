@@ -5,7 +5,7 @@ Such a graph is presented as a result variable graph by the KoAT paper \cite{koa
 Before we can define the actual result variable graph, we need to define the terms of pre-transitions and active variables.
 The pre-transitions of a transition $t \in \TSet$ are all transitions, which may occur immediately before an evaluation step with the transition $t$.
 
-\begin{definition}[Pre-transitions] 
+\begin{definition}[Pre-Transitions] 
   We define $\pre: \TSet \rightarrow 2^\TSet$ as
   \[\pre(t) = \braced{\pret \in \TSet \mid \exists \valuation_0, \location, \valuation: (\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_\pret \circ \rightarrow_{t}) (\location, \valuation)}\]
   to denote the set of all transitions that may precede the transition $t$ in an evaluation.	
@@ -22,7 +22,7 @@ Also, the set of pre-transitions for $t_2$ is $\pre(t_2) = \braced{t_0, t_1}$.
 
 Additionally to pre-transitions, we define the active variables of bounds. 
 
-\begin{definition}[Active variables]
+\begin{definition}[Active Variables]
   Let $\VSet$ be a finite set of variables.  
   A variable $v \in \VSet$ is active in a bound $b \in \BoundSet(\VSet)$ if and only if there are two states $\valuation, \valuation' \in \Valuation$ with $\valuation(v') = \valuation'(v')$ for each $v' \in \VSet \setminus \braced{v}$ and $\valuation(v) \neq \valuation'(v)$ such that $\exacteval{b}{\valuation} \neq \exacteval{b}{\valuation'}$.
   Then, the function $\actV: \BoundSet(\VSet) \rightarrow 2^\VSet$ describes by $\actV(b)$ all variables, which are active in the bound $b \in \BoundSet(\VSet)$.
@@ -33,7 +33,7 @@ The update $\update(y)$ of the transition $t_1$ has the active variables $\actV(
 The update $\update(x)$ of the transition $t_2$ does not have active variables, i.e. $\actV(\update(x)) = \emptyset$.
 
 A valid overapproximation of the active variables of a bound $b \in \BoundSet(\VSet)$ is the set of all occurring variables.
-\begin{definition}[Overapproximation of active variables]
+\begin{definition}[Overapproximation of Active Variables]
   For a bound $b \in \BoundSet(\VSet)$, we define an overapproximation of the active variables $\actV(b)$.
   \[ \actV(\infty) = \emptyset \text{ for } \infty \in \BoundSet(\VSet) \]
   \[ \actV(k) = \emptyset \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet) \] 
@@ -56,7 +56,7 @@ Local size bounds are discussed later in this thesis in detail.
 
 With these definitions, it is possible to define the result variable graph.
 
-\begin{definition}[Result variable graph]
+\begin{definition}[Result Variable Graph]
   Let $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$ be a program.
   Let $\LSB$ be a local size bound.
   We define 
@@ -66,7 +66,7 @@ With these definitions, it is possible to define the result variable graph.
 
 Note that since pre-transitions and active variables are both defined as overapproximations, a result variable graph is an overapproximation of the dependencies between result variables as well.
 
-\begin{example}[Result variable graph]
+\begin{example}[Result Variable Graph]
   Consider the result variable graph in Figure \ref{fig:rvg_example}.
   This result variable graph corresponds to the program in Figure \ref{fig:rvg_example_program}.
   \input{graphs/rvg_example}

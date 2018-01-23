@@ -4,7 +4,7 @@ This enables us to use specific characteristics of local size bounds later in th
 We define two subsets $\BoundSet^\sqcup_l, \BoundSet^\sqcap_l \subseteq \BoundSet(\PVSet)$.
 One set for lower local size bounds and one set for upper local size bounds.
 
-\begin{definition}[Local bound sets]
+\begin{definition}[Local Bound Set]
   Let $B$ denote the set of tuples $(s,e,P_1,P_2,N_1,N_2) \in \mathbb{N} \times \mathbb{Z} \times 2^\PVSet \times 2^\PVSet \times 2^\PVSet \times 2^\PVSet$ with $s \geq 1$, $P_1 \cap P_2 = \emptyset$ and $N_1 \cap N_2 = \emptyset$.
   Then, we define $\BoundSet^\sqcup_l \in \BoundSet(\PVSet)$ as 
   \[ \BoundSet^\sqcup_l = \left\{
@@ -30,7 +30,7 @@ Remember, that a local size bound $\LSB$ is an approximation of the values of va
 A pair $(t,v)$ of a transition and a variable is also writable as a result variable $\rv = (t,v)$.
 We now use the defined local bound sets for the definition of a concrete local size bound, which we call a scaled sum.
 
-\begin{definition}[Scaled sum]
+\begin{definition}[Scaled Sum]
   We say that $\rv \in \RV$ is bounded by an \textbf{upper scaled sum} if and only if there is an upper local size bound $\ULSB(\rv) \in \BoundSet^\sqcap_l$.
   Then, we then denote with $s^\sqcap_\rv$ the scaling factor $s$, with $e^\sqcap_\rv$ the constant $e$ and with the sets $P_{\rv,1}^\sqcap, P_{\rv,2}^\sqcap, N_{\rv,1}^\sqcap, N_{\rv,2}^\sqcap$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
   We say that $\rv \in \RV$ is bounded by a \textbf{lower scaled sum} if and only if there is a lower local size bound $\LLSB(\rv) \in \BoundSet^\sqcup_l$.
@@ -39,7 +39,7 @@ We now use the defined local bound sets for the definition of a concrete local s
 
 To clarify the possible local size bounds, we introduce some examples.
 
-\begin{example}[Upper scaled sum]
+\begin{example}[Upper Scaled Sum]
   \input{graphs/scaled_sum}
   Consider the five transitions in Figure \ref{fig:scaled_sum}.
   For the transition $t_1$, the update is $\update(x) = x$.
@@ -69,7 +69,7 @@ To clarify the possible local size bounds, we introduce some examples.
 The construction of a lower scaled sum is very similar to the construction of an upper scaled sum.
 The components $s$, $e$, $P_1$ and $N_1$ have the same purpose for lower scaled sums and upper scaled sums.
 
-\begin{example}[Lower scaled sum]
+\begin{example}[Lower Scaled Sum]
   Consider again the transition $t_1$ with an update $\update(x) = x$.
   We can represent a lower scaled sum the same way as an upper scaled sum with $\LLSB(t_1,x) = 1 \cdot (0 + x) = x \in \BoundSet^\sqcup_l$.
   The difference is in the role of the sets $P_2$ and $N_2$.

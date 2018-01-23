@@ -1,15 +1,15 @@
-\section{Computing cost bounds}
+\section{Computing Cost Bounds}
 
 The last two chapters introduced algorithms for the computation of time bounds and size bounds.
 The algorithm for the computation of time bounds uses the so far computed size bounds and the algorithm for the computation of size bounds uses the so far computed time bounds.
 This chapter presents a cost bound algorithm, which runs after the consecutive executions of the time and size bound algorithms and uses the resulting time and size bounds for the computation of cost bounds.
 
-\subsection{Computing initial cost bounds}
+\subsection{Computing Initial Cost Bounds}
 
 A trivial initial approach for the computation of a cost bound $\UCost(t)$ of a transition $t \in \TSet$ is the multiplication of the time bound $\UTime(t)$ with the maximum of the substituted costs $\usubst{\cost(t)}{\LSize(\pret)}{\USize(\pret)}$ for a pre-transition $\pret \in \pre(t)$.
 For the computation of a cost bound $\UCost(t)$ of an initial transition $t \in \TSet_0$ the substitution is not necessary, since there are no pre-transitions of an initial transition $t \in \TSet_0$ and the variables of the costs $\cost(t)$ are already expressed in dependence on the input variables of the program.
 
-\begin{definition}[Initial cost bound]
+\begin{definition}[Initial Cost Bound]
   Let $\UCost: \TSet \rightarrow \BoundSet(\PVSet)$ be defined with
   \[ \UCost(t) = \UTime(t) \cdot
   \begin{cases}
@@ -22,7 +22,7 @@ For the computation of a cost bound $\UCost(t)$ of an initial transition $t \in 
 
 Since the cost $\exacteval{\cost(t)}{\valuation}$ of a single evaluation step with $t \in \TSet$ is defined to be positive for every state $\valuation$, it is not necessary to use an operator $\maxO{\cdot}$ on the cost of a transition.
 
-\begin{example}[Initial cost bound]
+\begin{example}[Initial Cost Bound]
   Consider the program in Figure \ref{fig:cost_ranking_function_costbounds}.
   \input{graphs/cost_ranking_function_costbounds}
   The program takes two variables $x$ and $y$.
@@ -34,12 +34,12 @@ Since the cost $\exacteval{\cost(t)}{\valuation}$ of a single evaluation step wi
   Since the size of $y$ is bound with $\USize(t_0) = y$ after the transition $t_0$, an initial cost bound $\UCost(t_1) = \UTime(t_1) \cdot \usubst{\cost(t_1)}{\LSize(t_0)}{\USize(t_0)} = \maxO{x} \cdot y$ can be inferred.
 \end{example}
 
-\subsection{Computing cost bounds with ranking functions}
+\subsection{Computing Cost Bounds with Ranking Functions}
 
 Additionally to initial cost bounds, we use ranking functions, to infer better cost bounds for single transitions.
 With some changes, the definition of time ranking functions is transferable to the context of costs.
 
-\begin{definition}[Cost ranking function] 
+\begin{definition}[Cost Ranking Function] 
   We define $\costrank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as cost ranking function for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
   For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
   \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'}. \]
@@ -53,7 +53,7 @@ This definition ensures that each transition $t \in \TSet_>$ decreases in each t
 Also, for each transition $t \in \TSet_>$ the decrease of the rank is bounded by the costs.
 Therefore, the cost rank $\costrank(\location)$ can be used as a bound on the sum of all occurred costs of the transition $t$ from this location on.
 
-\begin{example}[Cost ranking function]
+\begin{example}[Cost Ranking Function]
   Consider again the program in Figure \ref{fig:cost_ranking_function_costbounds}.
   We can show that the function $\costrank$ with $\costrank(\location_1) = x$ is a cost ranking function for the transition set $\TSet = \braced{t_1}$.
   For every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ it holds that $\exacteval{\braced{y > 0, x > y}}{\valuation} \Rightarrow \exacteval{x}{\valuation} - \exacteval{y}{\valuation} > \exacteval{x}{\valuation'}$, since the value of $x$ decreases in every evaluation step with the value of $y$.
@@ -67,7 +67,7 @@ With a few changes, the TimeBounds algorithm is extendable to the computation of
 
 With this definition, it is possible to start with an initial cost bound, search for cost ranking functions and consecutively refine the cost bounds of single transitions, where a cost ranking function is found.
 
-\begin{example}[CostBounds]
+\begin{example}[Cost Bounds]
   Consider again the program in Figure \ref{fig:cost_ranking_function_costbounds}.
   We showed that an initial cost bound can be computed with $\UCost(t_1) = \maxO{x} \cdot y$ and that a cost ranking function $\costrank$ with $\costrank(\location_1) = x$ can be determined.
   The resulting cost bound of the CostBounds method is $\UCost(t_1) = \UTime(t_0) \cdot \maxO{\usubst{\costrank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} = 1 \cdot \maxO{x}$.

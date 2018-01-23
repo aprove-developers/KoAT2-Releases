@@ -3,7 +3,7 @@
 This section introduces a set which contains the syntactic terms representing the resulting bounds.
 A definition of the set as well as a definition of the semantics of the terms in this set is provided.
 
-\begin{definition}[Bound set]
+\begin{definition}[Bound Set]
   Let $\VSet$ be a finite set of variables.
   Let $\infty$, $-$, $+$, $\cdot$ and $\max$ be symbols.
   The set $\BoundSet(\VSet)$ of possible bounds is the smallest set with
@@ -20,7 +20,7 @@ This definition provides a set of syntactic terms $\BoundSet(\VSet)$ for an arbi
 We assign each symbol $\infty$, $-$, $+$, $\cdot$ and $\max$ its common semantics.
 This is expressed in the following definition.
 
-\begin{definition}[Evaluation of bounds]
+\begin{definition}[Evaluation of Bounds]
   Let $\ValueSet$ be the closure $\mathbb{Z} \cup \braced{\infty, -\infty}$ of the set of integers $\mathbb{Z}$.
   Let $b \in \BoundSet(\VSet)$ be a bound and let $\valuation \in \VSet \rightarrow \mathbb{Z}$ be an assignment from variables to values.
   We define $\exacteval{b}{\valuation}$ to denote the exact evaluation of the bound $b$ to a value in $\ValueSet$, i.e. $\exacteval{\cdot}{\valuation}: \BoundSet(\VSet) \rightarrow \ValueSet$.
@@ -62,7 +62,7 @@ The operator $\maxO{\cdot}$ is used as an abbreviation due to its high usage.
 In specific scenarios, we only allow a subset of these bounds.
 For this purpose, we define by $\BoundSet_p(\VSet) \subseteq \BoundSet(\VSet)$ the subset of all polynomials in $\BoundSet(\VSet)$.
 This subset can be understood as an equivalent representation of the polynomial ring $\mathbb{Z}[\VSet]$.
-\begin{definition}[Polynomial set]
+\begin{definition}[Polynomial Set]
   Let $\VSet$ be a finite set of variables.
   The set $\BoundSet_p(\VSet) \subseteq \BoundSet(\VSet)$ of all polynomials is the smallest set with
   \[ \mathbb{N} \subseteq \BoundSet_p(\VSet) \] 
@@ -72,7 +72,7 @@ This subset can be understood as an equivalent representation of the polynomial 
   \[ b_1 \cdot b_2 \in \BoundSet_p(\VSet) \text{ for all } b_1, b_2 \in \BoundSet_p(\VSet) \] 
 \end{definition}
 Furthermore, we define the set of all affine polynomials as $\BoundSet_a(\VSet) \subseteq \BoundSet_p(\VSet) \subseteq \BoundSet(\VSet)$. 
-\begin{definition}[Affine polynomial set]
+\begin{definition}[Affine Polynomial Set]
   Let $\VSet$ be a finite set of variables.
   The set $\BoundSet_a(\VSet) \subseteq \BoundSet_p(\VSet)$ of all affine polynomials is the smallest set with
   \[ a \cdot v \in \BoundSet_a(\VSet) \text{ for all } a \in \mathbb{N}, v \in \VSet \] 
@@ -96,7 +96,7 @@ The evaluation of the examples yields the expected results.
 \end{align*}
 For the subset of polynomials, we define an atom set $\AtomSet$ to express polynomial inequalities and a constraint set $\ConstraintSet$ to express conjunctions of polynomial inequalities.
 
-\begin{definition}[Atom set and constraint set]
+\begin{definition}[Atom Set and Constraint Set]
   Let $p_1, p_2 \in \BoundSet_p(\VSet)$ be two polynomials.
   Let $\bowtie \in \braced{\leq, \geq, <, >, =}$ be an arbitrary comparator.
   We define $p_1 \bowtie p_2$ as a polynomial inequality between $p_1$ and $p_2$.
@@ -107,7 +107,7 @@ For the subset of polynomials, we define an atom set $\AtomSet$ to express polyn
 \end{definition}
 Also, we extend the definition of the bound evaluation to polynomial inequalities.
 
-\begin{definition}[Evaluation of atoms and constraints]
+\begin{definition}[Evaluation of Atoms and Constraints]
   Let $\valuation \in \VSet \rightarrow \mathbb{Z}$ be an assignment from variables to values.
   For an atom $b_1 \bowtie b_2 \in \AtomSet$, we define $\exacteval{b_1 \bowtie b_2}{\valuation}$ to denote the evaluation of the atom $b_1 \bowtie b_2$ to a value in $\mathbb{B}$.
   \[ \exacteval{b_1 \bowtie b_2}{\valuation} = \exacteval{b_1}{\valuation} \bowtie \exacteval{b_2}{\valuation} \]

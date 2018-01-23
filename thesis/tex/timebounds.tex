@@ -1,4 +1,4 @@
-\section{Computing time bounds}
+\section{Computing Time Bounds}
 
 This chapter presents a method, which is able to infer non-monotonic time bounds for the transitions of a program.
 The KoAT paper \cite{koat} presents two approaches: One basic approach, which considers the whole program at once and a modular approach, which considers a selected subset of the program transitions.
@@ -18,14 +18,14 @@ In practice, most existing techniques generate these affine ranking functions (e
 But in general, the new method is also applicable to polynomial ranking functions.
 
 For the definition of the method, we need to define the terms of entry locations and entry transitions.
-\begin{definition}[Entry transitions and entry locations]
+\begin{definition}[Entry Transitions and Entry Locations]
   Let $\TSet' \subseteq \TSet$ be a nonempty subset of all transitions.
   We define the entry transitions $\TSet_{\location}$ of a location $\location$ as $\braced{(\location', \update, \guard, \location) \mid \exists \location', \update, \guard: (\location', \update, \guard, \location) \in \TSet \setminus \TSet'}$.
   We define the entry locations $\mathcal{E}_{\TSet'}$ of the transition set $\TSet'$ as $\braced{\location_{in} \mid \TSet_{\location_{in}} \neq \emptyset \wedge \exists \location': (\location_{in}, \update, \guard, \location') \in \TSet'}$.
 \end{definition}
 This is the same definition used in the KoAT paper \cite{koat}.
 
-\begin{example}[Entry transitions and entry locations]
+\begin{example}[Entry Transitions and Entry Locations]
   \input{graphs/entrytransitions}
   Consider the programs in Figure \ref{fig:entrytransitions}.
   In each of the programs, a chosen set $\TSet' \subseteq \TSet$ is highlighted with bold edges.
@@ -51,7 +51,7 @@ Now, we have to overapproximate the number of evaluations which might enter thro
 The previous time bound $\UTime$ yields such a bound for all entry transitions.
 Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \UTime(\pret) \cdot \maxO{\usubst{\timerank(\location)}{\LSize(\pret)}{\USize(\pret)}}$ is a time bound for each strictly decreasing transition $t \in \TSet'_>$ depending on the values of the variables from the start.
 
-\begin{example}[TimeBounds]
+\begin{example}[Time Bounds]
   \input{graphs/motivational_example_timebounds}
   Consider the motivational program in Figure \ref{fig:motivational_example_timebounds} from the introduction.
   With the transition set $\TSet' = \braced{t_1}$, it is possible to determine a ranking function $\timerank$ with $\timerank(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).

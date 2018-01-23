@@ -1,4 +1,4 @@
-\section{Approximated replacements}
+\section{Approximated Replacements}
 
 In the preliminaries, a definition for the exact evaluation of bounds from a bound set $\BoundSet(V)$ was given.
 With such an exact evaluation, it is possible to evaluate a bound $b \in \BoundSet(\VSet)$ with respect to a state $\valuation \in \Valuation$ to a value $\exacteval{b}{\valuation} \in \ValueSet$.
@@ -10,7 +10,7 @@ Then, the bound is evaluated in a way that the result is greater than any exact 
 
 We define a generalized principle, which is also applicable to substitutions.
 
-\begin{definition}[Approximated replacement]
+\begin{definition}[Approximated Replacement]
   Let $K$ be an arbitrary set of elements with an addition $+: K \times K \rightarrow K$, a negation $-: K \rightarrow K$, a multiplication $\cdot: K \times K \rightarrow K$ and a max operator $\max: K \times K \rightarrow K$.
   For a bound $b \in \BoundSet(\VSet)$ and two functions $\lsub, \usub: \VSet \rightarrow K$, we denote with $\lsubst{b}{\lsub}{\usub}$ and $\usubst{b}{\lsub}{\usub}$ functions of the type $(\VSet \rightarrow K) \times (\VSet \rightarrow K) \rightarrow K$.
   These functions replace the variables of the bound $b$ with values from the functions $\lsub, \usub$ such that the following equations hold.
@@ -69,7 +69,7 @@ Then, the result can be determined as the maximum of all these combinations.
 
 The following definition formalizes the monotonicity of variables in bounds.
 
-\begin{definition}[Monotonicity of bounds in variables]
+\begin{definition}[Monotonicity of Bounds in Variables]
   Let $\VSet$ be a finite set of variables.
   Let $b$ be a bound of the bound set $\BoundSet(\VSet)$.
   Let $v \in \VSet$ be a variable.

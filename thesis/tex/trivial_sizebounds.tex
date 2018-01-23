@@ -29,13 +29,13 @@ The program takes an arbitrary integer $x$ and an integer $y \leq 0$ and returns
 The result variable graph contains four trivial SCCs, each result variable forming its own SCC.
 We now inspect the SCCs $\braced{(t_0,x)}$ and $\braced{(t_1,x)}$.
   
-\begin{example}[SizeBounds for trivial SCCs with an initial transition]
+\begin{example}[Size Bounds for Trivial SCCs with an Initial Transition]
   For the SCC $\braced{(t_0,x)}$, the transition $t_0$ is an initial transition.
   We can determine a scaled sum $3 \cdot (1 + \maxO{x} - y)$ as upper local size bound $\ULSB(t_0,x)$ and a scaled sum $2 \cdot x$ as lower local size bound $\LLSB(t_0,x)$.
   Since $t_0$ is an initial transition, we have $\USize'(t_0,x) = \ULSB(t_0,x)$ and $\LSize'(t_0,x) = \LLSB(t_0,x)$ and therefore the determined local size bounds are also global size bounds.
 \end{example}
   
-\begin{example}[SizeBounds for trivial SCCs with a non-initial transition]
+\begin{example}[Size Bounds for Trivial SCCs with a Non-Initial Transition]
   For the SCC $\braced{(t_1,x)}$ the transition $t_1$ is not an initial transition.
   Therefore, the local size bound expresses the values of the variables in terms of their value immediately before the execution of $t_1$.
   For the computation of global size bounds, we need to substitute these variables with the global size bound obtained so far until the execution of $t_1$.
