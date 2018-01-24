@@ -58,9 +58,6 @@ let add_all kind bound scc map =
 let print_all_of_kind output kind size =
   size
   |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
-  |> Map.filter (match kind with
-                 | `Upper -> not % Bound.is_infinity
-                 | `Lower -> not % Bound.is_infinity % Bound.neg)
   |> Map.to_list
   |> List.sort (fun ((_,t1,v1),b1) ((_,t2,v2),b2) ->
          if Transition.compare_same t1 t2 != 0 then
