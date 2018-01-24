@@ -56,11 +56,11 @@ let tests =
                      let minimal_sound_costbound = Readers.read_bound minimal_sound_costbound_str in
                      let wanted_costbound = Option.map Readers.read_bound wanted_costbound_str |? minimal_sound_costbound in
                      let costbound = find_costbound program in
+                     reset ();
                      assert_bool (String.concat " " [Bound.to_string costbound; "is not sound, since it is smaller than"; Bound.to_string minimal_sound_costbound])
                                  (smaller_or_equal (Program.vars program) minimal_sound_costbound costbound);
                      assert_bool (String.concat " " [Bound.to_string costbound; "is not as small as wanted, since it is greater than"; Bound.to_string wanted_costbound])
-                                 (smaller_or_equal (Program.vars program) costbound wanted_costbound);
-                     RankingFunction.reset ()))
+                                 (smaller_or_equal (Program.vars program) costbound wanted_costbound)))
                   [
                     (* Constant bound *)
 
@@ -100,7 +100,7 @@ let tests =
 
                     (* TODO Problem with non-determinism: max{0,y}+1 or max{0,x}+1 ("max{0,min{x,y}}+1", Some "max{0,y}+1", "a -> b(x,y), b -> b(x-1,y-1) :|: x>0 && y>0"); *)
 
-                    ("max{0,x}+max{0,max{0,x}+max{0,y}}+2", None,
+                    ("max{0,x}+(max{0,y,y+max{0,x}})+2", None,
                      "a -> b(x,y), b -> b(x-1,y+1) :|: x>0, b -> c(x,y) :|: x<=0, c -> c(x,y-1) :|: y>0");
 
                     (* Quadratic bound *)
@@ -112,8 +112,8 @@ let tests =
          List.map (fun (expected_complexity, program_str) ->
              program_str >:: (fun _ ->
                      let complexity = (asymptotic_complexity % find_costbound % Readers.read_program_simple) program_str in
-                     assert_equal ~cmp:equal_complexity ~printer:show_complexity expected_complexity complexity;
-                     RankingFunction.reset ()))
+                     reset ();
+                     assert_equal ~cmp:equal_complexity ~printer:show_complexity expected_complexity complexity))
                   [
                     (Inf, "a -> b(), b -> b()");                    
                     (Inf, "a -> b(x), b -> b(x-1) :|: x>0, b -> b(x+1) :|: x<=0");                    

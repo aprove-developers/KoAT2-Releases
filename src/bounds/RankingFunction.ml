@@ -281,4 +281,5 @@ let find measure program transition =
 let reset () =
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
-  TemplateTable.clear template_table
+  TemplateTable.clear template_table;
+  TransitionConstraintTable.clear transition_constraint_table

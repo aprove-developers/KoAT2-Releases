@@ -329,6 +329,9 @@ module LSB_Cache =
 let (table: t Option.t LSB_Cache.t) =
   LSB_Cache.create 10
   
+let reset () =
+  LSB_Cache.clear table
+
 let memoize f =  
   let g (kind,label,var) = 
     match LSB_Cache.find_option table (kind,label,var) with

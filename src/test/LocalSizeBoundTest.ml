@@ -11,14 +11,15 @@ let tests =
       ("find upper bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
-               (fun _ -> find_bound `Upper
-                                    (VarSet.of_list [Var.of_string "y"; Var.of_string "z"])
-                                    (Var.of_string "x")
-                                    (Readers.read_formula guard)
-                                    (Readers.read_polynomial "y+z")
-                                    1024
-                         |> (fun bound () -> assert_equal_lsb expected bound)
-                         |> fun f -> f () ))
+               (fun _ -> let bound = find_bound `Upper
+                                                (VarSet.of_list [Var.of_string "y"; Var.of_string "z"])
+                                                (Var.of_string "x")
+                                                (Readers.read_formula guard)
+                                                (Readers.read_polynomial "y+z")
+                                                1024
+                         in
+                         reset ();
+                         assert_equal_lsb expected bound))
                   [
                     (* Bounded by constants *)
                     (mk `Upper, "x <= 0");
@@ -59,14 +60,15 @@ let tests =
       ("find lower bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
-               (fun _ -> find_bound `Lower
-                                    (VarSet.of_list [Var.of_string "y"; Var.of_string "z"])
-                                    (Var.of_string "x")
-                                    (Readers.read_formula guard)
-                                    (Readers.read_polynomial "y+z")
-                                    1024
-                         |> (fun bound () -> assert_equal_lsb expected bound)
-                         |> fun f -> f () ))
+               (fun _ -> let bound = find_bound `Lower
+                                                (VarSet.of_list [Var.of_string "y"; Var.of_string "z"])
+                                                (Var.of_string "x")
+                                                (Readers.read_formula guard)
+                                                (Readers.read_polynomial "y+z")
+                                                1024
+                         in
+                         reset ();
+                         assert_equal_lsb expected bound))
                   [
                     (* Bounded by constants *)
                     (mk `Lower, "x >= 0");
