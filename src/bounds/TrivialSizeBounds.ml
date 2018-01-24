@@ -28,7 +28,7 @@ let incoming_bound kind program get_sizebound lsb t =
 let compute kind program get_sizebound (t,v) =
   let execute () =
     let (lsb: LocalSizeBound.t Option.t) =
-      LocalSizeBound.sizebound_local_rv kind (t, v)
+      LocalSizeBound.sizebound_local_rv kind (Program.vars program) (t, v)
     in
     if Program.is_initial program t then
       LocalSizeBound.(

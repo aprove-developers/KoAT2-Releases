@@ -232,7 +232,7 @@ let compute_
     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
 let compute kind program rvg get_timebound get_sizebound scc =
   let execute () =
-    LocalSizeBound.sizebound_local_scc kind scc
+    LocalSizeBound.sizebound_local_scc kind (Program.vars program) scc
     |> Option.map (fun get_lsb ->
            compute_ kind program rvg (get_lsb kind) get_timebound get_sizebound scc
          )

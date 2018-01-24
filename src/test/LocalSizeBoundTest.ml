@@ -11,7 +11,12 @@ let tests =
       ("find upper bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
-               (fun _ -> find_bound `Upper (Var.of_string "x") (Readers.read_formula guard) (Polynomial.var "x") 1024
+               (fun _ -> find_bound `Upper
+                                    (VarSet.of_list [Var.of_string "y"; Var.of_string "z"])
+                                    (Var.of_string "x")
+                                    (Readers.read_formula guard)
+                                    (Readers.read_polynomial "y+z")
+                                    1024
                          |> (fun bound () -> assert_equal_lsb expected bound)
                          |> fun f -> f () ))
                   [
@@ -54,7 +59,12 @@ let tests =
       ("find lower bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
-               (fun _ -> find_bound `Lower (Var.of_string "x") (Readers.read_formula guard) (Polynomial.var "x") 1024
+               (fun _ -> find_bound `Lower
+                                    (VarSet.of_list [Var.of_string "y"; Var.of_string "z"])
+                                    (Var.of_string "x")
+                                    (Readers.read_formula guard)
+                                    (Readers.read_polynomial "y+z")
+                                    1024
                          |> (fun bound () -> assert_equal_lsb expected bound)
                          |> fun f -> f () ))
                   [

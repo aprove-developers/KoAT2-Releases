@@ -153,10 +153,10 @@ module Types =
         let to_id_string (t,v) =
           "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
-        let to_string ((l,t,l'), v) =
-          Bound.to_string (LocalSizeBound.(sizebound_local `Upper t v |> Option.map as_bound |? default `Upper)) ^ " >= " ^
+        let to_string program_vars ((l,t,l'), v) =
+          Bound.to_string (LocalSizeBound.(sizebound_local `Upper program_vars t v |> Option.map as_bound |? default `Upper)) ^ " >= " ^
             to_id_string ((l,t,l'), v) ^ " >= " ^
-              Bound.to_string (LocalSizeBound.(sizebound_local `Lower t v |> Option.map as_bound |? default `Lower))
+              Bound.to_string (LocalSizeBound.(sizebound_local `Lower program_vars t v |> Option.map as_bound |? default `Lower))
       end
 
     module RVG =
@@ -174,9 +174,9 @@ module Types =
           |> List.map RV.to_id_string
           |> String.concat ","
 
-        let rvs_to_string rvs =
+        let rvs_to_string program_vars rvs =
           rvs
-          |> List.map RV.to_string
+          |> List.map (RV.to_string program_vars)
           |> String.concat ","
 
         let pre rvg rv =
@@ -310,10 +310,10 @@ let rvg program =
       (* TODO We can maybe try to split upper and lower pre variables. *)
       let vars =
         VarSet.union
-          (LocalSizeBound.sizebound_local `Upper (Transition.label post_transition) post_var
+          (LocalSizeBound.sizebound_local `Upper (vars program) (Transition.label post_transition) post_var
            |> Option.map LocalSizeBound.vars
            |? (VarSet.of_list program.vars))
-          (LocalSizeBound.sizebound_local `Upper (Transition.label post_transition) post_var
+          (LocalSizeBound.sizebound_local `Upper (vars program) (Transition.label post_transition) post_var
            |> Option.map LocalSizeBound.vars
            |? (VarSet.of_list program.vars))
       in

@@ -79,12 +79,32 @@ let combinations max set =
   |> enum
   |> Enum.fold combine (Enum.singleton empty)
 
-let sorted_combinations max set =
-  let f (max, set) =
-    set
-    |> combinations max
-    |> List.of_enum
-    |> List.sort (fun a b -> Int.compare (cardinal a) (cardinal b))
+let max set =
+  try
+    Some (max_elt set)
+  with Not_found -> None
+  
+let comb count set =
+  let rec f (count, set) =  
+    if count == 0 then
+      List.singleton empty
+    else
+      f (count - 1, set)
+      |> List.enum
+      |> Enum.map (fun varset ->
+             set
+             |> enum
+             |> Enum.filter (fun var -> varset |> max |> Option.map (fun max -> Var.compare var max > 0) |? true)
+             |> Enum.map (fun var -> add var varset)
+           )
+      |> Enum.flatten
+      |> List.of_enum
   in
-  memoize f (max, set)
-  |> List.enum
+  memoize f (count, set)
+  
+let sorted_combinations max set =
+  Enum.seq 0 ((+) 1) ((>) (max+1))
+  |> Enum.map (fun c -> comb c set)
+  |> Enum.map List.enum
+  |> Enum.flatten
+  

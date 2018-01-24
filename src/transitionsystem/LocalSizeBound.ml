@@ -281,11 +281,11 @@ let c_range formula =
   
 
 (* Check if x <= s * (c + [v1,...,vn]). *)
-let find_scaled_bound kind solver var vars update_vars (s: int) (c: int) =
+let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: int) (c: int) =
   let execute () =
     let is_bounded = is_bounded_with solver var in
     try 
-      vars
+      program_vars
       |> VarSet.sorted_combinations (VarSet.cardinal update_vars)
       |> Enum.find_map (fun vars ->
              Some (initial_lsb kind s c vars)
@@ -298,17 +298,17 @@ let find_scaled_bound kind solver var vars update_vars (s: int) (c: int) =
     with Not_found ->
       raise (Failure "No lsb found although an update exists!")
   in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "find scaled bound", ["var", Var.to_string var; "vars", VarSet.to_string vars])
+                  (fun () -> "find scaled bound", ["var", Var.to_string var; "guard_vars", VarSet.to_string guard_vars])
                   ~result:(Bound.to_string % as_bound)
                   execute
 
 type kind = [`Lower | `Upper] [@@deriving show, eq]
 
-let find_bound kind var formula update s_range =
+let find_bound kind program_vars var formula update s_range =
   let execute () =
     let solver = Solver.create ~model:false () in
     Solver.add solver formula;
-    find_scaled_bound kind solver var (formula |> Formula.vars |> VarSet.remove var) (update |> Polynomial.vars) s_range (c_range formula)
+    find_scaled_bound kind program_vars solver var (formula |> Formula.vars |> VarSet.remove var) (update |> Polynomial.vars) s_range (c_range formula)
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find local size bound", [
                           "kind", show_kind kind;
@@ -345,7 +345,7 @@ let memoize f =
        y
   in g
    
-let sizebound_local kind label var =
+let sizebound_local kind program_vars label var =
   let f (kind, label, var) =
     let open Option.Infix in
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
@@ -354,18 +354,18 @@ let sizebound_local kind label var =
            (* Introduce a temporary result variable *)
            let v' = Var.fresh_id Var.Int () in
            let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = update) in
-           find_bound kind v' guard_with_update update (s_range update)
+           find_bound kind program_vars v' guard_with_update update (s_range update)
          )
   in
   memoize f (kind, label, var)
 
-let sizebound_local_rv kind ((l,t,l'),v) =
-  sizebound_local kind t v
+let sizebound_local_rv kind program_vars ((l,t,l'),v) =
+  sizebound_local kind program_vars t v
   
-let sizebound_local_scc kind scc =
+let sizebound_local_scc kind program_vars scc =
   if scc
-     |> List.map (sizebound_local_rv kind)
+     |> List.map (sizebound_local_rv kind program_vars)
      |> List.for_all Option.is_some
   then
-    Some (fun kind rv -> Option.get (sizebound_local_rv kind rv))
+    Some (fun kind rv -> Option.get (sizebound_local_rv kind program_vars rv))
   else None

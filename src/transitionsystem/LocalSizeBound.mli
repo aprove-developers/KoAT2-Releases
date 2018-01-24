@@ -64,14 +64,14 @@ val default : [`Lower | `Upper] -> Bound.t
 val as_formula : Var.t -> t -> Formula.t
 
 (** Tries to find a templated bound of any of the defined templates. *)
-val find_bound : [`Lower | `Upper] -> Var.t -> Formula.t -> Polynomial.t -> int -> t
+val find_bound : [`Lower | `Upper] -> VarSet.t -> Var.t -> Formula.t -> Polynomial.t -> int -> t
 
 (** Returns a local sizebound of the specified kind for the variable of the transition. 
     A local sizebound is expressed in relation to the values directly before executing the transition. *)
-val sizebound_local : [`Lower | `Upper] -> TransitionLabel.t -> Var.t -> t Option.t
+val sizebound_local : [`Lower | `Upper] -> VarSet.t -> TransitionLabel.t -> Var.t -> t Option.t
   
-val sizebound_local_rv : [`Lower | `Upper] -> RV.t -> t Option.t
+val sizebound_local_rv : [`Lower | `Upper] -> VarSet.t -> RV.t -> t Option.t
 
 (** If for all result variables of the given kind a local sizebound is defined, this function returns a local sizebound function.
     Otherwise it returns None. *)
-val sizebound_local_scc : [`Lower | `Upper] -> RV.t list -> ([`Lower | `Upper] -> RV.t -> t) Option.t
+val sizebound_local_scc : [`Lower | `Upper] -> VarSet.t -> RV.t list -> ([`Lower | `Upper] -> RV.t -> t) Option.t

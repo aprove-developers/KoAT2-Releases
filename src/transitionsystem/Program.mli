@@ -65,7 +65,7 @@ sig
     val compare_same : t -> t -> int
     val compare_equivalent : t -> t -> int
     val to_id_string : t -> string
-    val to_string : t -> string
+    val to_string : VarSet.t -> t -> string
     val hash : t -> int
     val transition : t -> Transition.t
     val variable : t -> Var.t
@@ -81,7 +81,7 @@ sig
 
     val rvs_to_id_string : RV.t list -> string
 
-    val rvs_to_string : RV.t list -> string
+    val rvs_to_string : VarSet.t -> RV.t list -> string
 
     val pre : t -> RV.t -> RV.t Enum.t
 

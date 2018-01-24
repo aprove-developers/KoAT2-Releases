@@ -57,7 +57,7 @@ let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): 
                     "\n";
                     TransitionLabel.to_string label]
 
-let bounded_rv_to_string (appr: Approximation.t) (t,v) =
+let bounded_rv_to_string (program_vars: VarSet.t) (appr: Approximation.t) (t,v) =
   String.concat "" ["Global: ";
                     Approximation.sizebound `Upper appr t v |> Bound.to_string;
                     " >= ";
@@ -66,7 +66,7 @@ let bounded_rv_to_string (appr: Approximation.t) (t,v) =
                     Approximation.sizebound `Lower appr t v |> Bound.to_string;
                     "\n";
                     "Local: ";
-                    RV.to_string (t,v)]
+                    RV.to_string program_vars (t,v)]
 
 let run (params: main_params) =
   let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
@@ -103,7 +103,7 @@ let run (params: main_params) =
                   Program.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then
-                  Program.print_rvg ~label:RV.to_string ~outdir:output_dir ~file:input_filename program)
+                  Program.print_rvg ~label:(RV.to_string (Program.vars program)) ~outdir:output_dir ~file:input_filename program)
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
                      (program, appr)
@@ -116,7 +116,7 @@ let run (params: main_params) =
                   Program.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then
-                  Program.print_rvg ~label:(bounded_rv_to_string appr) ~outdir:output_dir ~file:input_filename program)
+                  Program.print_rvg ~label:(bounded_rv_to_string (Program.vars program) appr) ~outdir:output_dir ~file:input_filename program)
        )
   |> ignore
 

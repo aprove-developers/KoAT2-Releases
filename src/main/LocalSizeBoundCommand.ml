@@ -1,5 +1,6 @@
 open Batteries
 open Polynomials
+open Formulas
    
 let description = "Search for a local size bound"
 
@@ -25,5 +26,5 @@ let run (params: params) =
   let open TransitionLabel in
   let guard = Readers.read_formula params.guard in
   let var = Var.of_string params.var in
-  print_string (Bound.to_string LocalSizeBound.(find_bound params.kind var guard (Polynomial.of_var var) 1024 |> as_bound))
+  print_string (Bound.to_string LocalSizeBound.(find_bound params.kind (Formula.vars guard) var guard (Polynomial.of_var var) 1024 |> as_bound))
 
