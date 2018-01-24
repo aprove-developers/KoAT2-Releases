@@ -6,7 +6,13 @@ type t =
   | CutUnreachableLocations
   | CutUnsatisfiableTransitions
   | Chaining
-  | InvariantGeneration [@@deriving show, ord, eq]
+  | InvariantGeneration [@@deriving ord, eq]
+
+let show = function
+  | CutUnreachableLocations -> "reachable"
+  | CutUnsatisfiableTransitions -> "sat"
+  | Chaining -> "chaining"
+  | InvariantGeneration -> "invgen"  
 
 let affects = function
   | CutUnreachableLocations -> []

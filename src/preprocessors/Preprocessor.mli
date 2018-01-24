@@ -9,8 +9,10 @@ type t =
   | CutUnreachableLocations
   | CutUnsatisfiableTransitions
   | Chaining
-  | InvariantGeneration [@@deriving show, ord, eq]
+  | InvariantGeneration [@@deriving ord, eq]
 
+val show : t -> string
+  
 val all : t list
   
 (** Returns all the preprocessors that might successfully run after a run of the specific preprocessor. *)
