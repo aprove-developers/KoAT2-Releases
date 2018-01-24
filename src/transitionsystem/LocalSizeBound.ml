@@ -326,17 +326,23 @@ module LSB_Cache =
       end
     )
    
-let table =
+let (table: t Option.t LSB_Cache.t) =
   LSB_Cache.create 10
   
 let memoize f =  
-  let g x = 
-    match LSB_Cache.find_option table x with
-    | Some y -> y
+  let g (kind,label,var) = 
+    match LSB_Cache.find_option table (kind,label,var) with
+    | Some lsb -> lsb
     | None ->
-       let y = f x in
-       LSB_Cache.add table x y;
-       y
+       let lsb = f (kind,label,var) in
+       LSB_Cache.add table (kind,label,var) lsb;
+       (Logger.log logger Logger.INFO
+                   (fun () -> "added_local_size_bound", [
+                        "kind", show_kind kind;
+                        "transition", TransitionLabel.to_id_string label;
+                        "var", Var.to_string var;
+                        "lsb", Util.option_to_string to_string lsb]));
+       lsb
   in g
    
 let sizebound_local kind program_vars label var =

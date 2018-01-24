@@ -39,6 +39,9 @@ type main_params = {
     logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default []] [@sep ','] [@aka ["l"]]
     (** The loggers which should be activated. *)
 
+    log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.INFO]
+    (** The general log level of the loggers. *)
+    
     result : (Program.t -> Approximation.t -> unit); [@enum ["all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. *)
     
@@ -69,7 +72,7 @@ let bounded_rv_to_string (program_vars: VarSet.t) (appr: Approximation.t) (t,v) 
                     RV.to_string program_vars (t,v)]
 
 let run (params: main_params) =
-  let logs = List.map (fun log -> (log, Logger.DEBUG)) params.logs in
+  let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
   let input = Option.default_delayed read_line params.input in
   let input_filename =

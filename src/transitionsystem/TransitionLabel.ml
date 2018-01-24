@@ -139,3 +139,6 @@ let update_to_string_list update =
 let to_string label =          
   let guard = if Guard.is_true label.guard then "" else " && " ^ Guard.to_string label.guard in
   "Cost: " ^ Polynomial.to_string label.cost ^ ", " ^ update_to_string_list label.update ^ guard
+
+let to_id_string =          
+  string_of_int % id

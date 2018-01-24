@@ -59,3 +59,5 @@ val vars : t -> VarSet.t
 val cost : t -> polynomial
 
 val to_string : t -> string
+
+val to_id_string : t -> string
