@@ -47,11 +47,12 @@ let add bound transition (name,map) =
 let all_bounded appr =
   List.for_all (fun t -> not (Bound.equal (get appr t) Bound.infinity))
   
-let to_string (name,map) =
+let to_string transitions (name,map) =
   let output = IO.output_string () in
-  map
-  |> Map.to_list
-  |> List.sort (fun (t1,b1) (t2,b2) -> Transition.compare_same t1 t2)
+  transitions
+  |> TransitionSet.to_list
+  |> List.sort Transition.compare_same
+  |> List.map (fun t -> t, Map.find_option map t |? Bound.infinity)
   |> List.print
        ~first:"  "
        ~last:"\n"

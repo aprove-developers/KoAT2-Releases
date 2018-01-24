@@ -16,6 +16,6 @@ val all_bounded : t -> Transition.t list -> bool
 
 val get_between : t -> Location.t -> Location.t -> Bound.t Option.t
 
-val to_string : t -> string
+val to_string : TransitionSet.t -> t -> string
 
 val equivalent : t -> t -> bool
