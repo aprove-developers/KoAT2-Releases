@@ -137,23 +137,17 @@ let is_bounded_with solver var lsb =
 (** Performs a binary search between the lowest and highest value to find the optimal value which satisfies the predicate.
     We assume that the highest value already satisfies the predicate.
     Therefore this method always finds a solution. *)
-let binary_search (lowest: int) (highest: int) (p: int -> bool) =
-  let rec binary_search_ lowest highest p =
-    if lowest >= highest then
-      highest
+let rec binary_search (lowest: int) (highest: int) (p: int -> bool) =
+  if lowest >= highest then
+    highest
+  else
+    (* We need to ensure that the result is always round down to prevent endless loops.
+       Normal integer division rounds towards zero. *)
+    let newBound = Float.to_int (Float.floor (Float.div (Float.of_int (lowest + highest)) 2.)) in
+    if p newBound then
+      binary_search lowest newBound p
     else
-      (* We need to ensure that the result is always round down to prevent endless loops.
-         Normal integer division rounds towards zero. *)
-      let newBound = Float.to_int (Float.floor (Float.div (Float.of_int (lowest + highest)) 2.)) in
-      if p newBound then
-        binary_search_ lowest newBound p
-      else
-        binary_search_ (newBound + 1) highest p
-  in
-  Logger.with_log logger Logger.DEBUG
-                  (fun () -> "binary search optimum", ["lowest", Int.to_string lowest; "highest", Int.to_string highest])
-                  ~result:Int.to_string
-                  (fun () -> binary_search_ lowest highest p)
+      binary_search (newBound + 1) highest p
 
 let unabsify var lsb =
   if VarSet.mem var (lsb.vars (`Pos, `Abs)) then
