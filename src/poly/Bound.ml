@@ -415,9 +415,25 @@ let selector = function
   | `Lower -> minimum
   | `Upper -> maximum
 
+let inf = function
+  | `Lower -> minus_infinity
+  | `Upper -> infinity
+
 let evaluater lower higher = function
   | `Lower -> lower
   | `Upper -> higher
+
+let contains_infinity bound =
+  fold
+    ~const:(fun _ -> false)
+    ~var:(fun _ -> false)
+    ~neg:identity
+    ~plus:(||)
+    ~times:(||)
+    ~exp:(fun _ -> identity)
+    ~max:(||)
+    ~inf:true
+    bound
 
 let rec appr_substitution kind ~lower ~higher = function
   | Infinity -> Infinity
@@ -427,7 +443,13 @@ let rec appr_substitution kind ~lower ~higher = function
   | Sum (b1, b2) -> appr_substitution kind ~lower ~higher b1 + appr_substitution kind ~lower ~higher b2
   | Product (b1, b2) ->
      List.cartesian_product [`Lower; `Upper] [`Lower; `Upper]
-     |> List.map (fun (kind1,kind2) -> appr_substitution kind1 ~lower ~higher b1 * appr_substitution kind2 ~lower ~higher b2)
+     |> List.map (fun (kind1,kind2) ->
+            let multiplication = appr_substitution kind1 ~lower ~higher b1 * appr_substitution kind2 ~lower ~higher b2 in
+            if contains_infinity multiplication then
+              inf kind
+            else
+              multiplication
+          )
      |> List.enum
      |> selector kind
   | Max (b1, b2) -> max (appr_substitution kind ~lower ~higher b1) (appr_substitution kind ~lower ~higher b2)

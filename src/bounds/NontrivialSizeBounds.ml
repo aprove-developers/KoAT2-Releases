@@ -191,7 +191,15 @@ let compute_
     let execute () =
       transitions
       |> List.enum
-      |> Enum.map (fun t -> Bound.(get_timebound t * transition_effect t))
+      |> Enum.map (fun t ->
+             if Bound.is_infinity (get_timebound t) then
+               if Bound.(equal zero (transition_effect t)) then
+                 Bound.zero
+               else
+                 Bound.infinity
+             else
+               Bound.(get_timebound t * transition_effect t)
+           )
       |> Bound.sum
     in Logger.with_log logger Logger.DEBUG
                        (fun () -> "loop_effect", [])

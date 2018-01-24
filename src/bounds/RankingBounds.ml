@@ -53,8 +53,20 @@ let compute_bound (appr: Approximation.t) (graph: TransitionGraph.t) (rank: Rank
          )
     |> Enum.flatten
     |> Enum.map (fun (location,transition) ->
-           Bound.(Approximation.timebound appr transition *
-                    max zero (apply (fun kind -> Approximation.sizebound kind appr) (RankingFunction.rank rank location) transition)))
+           let timebound = Approximation.timebound appr transition in
+           let rhs = Bound.(max zero (apply (fun kind -> Approximation.sizebound kind appr) (RankingFunction.rank rank location) transition)) in
+           Bound.(
+             if is_infinity timebound then
+               if equal zero rhs then
+                 zero
+               else
+                 infinity
+             else
+               if is_infinity rhs then
+                 infinity
+               else
+                 timebound * rhs
+           ))
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute_bound", ["rank", RankingFunction.to_string rank])
