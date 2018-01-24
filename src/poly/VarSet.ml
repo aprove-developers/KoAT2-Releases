@@ -31,17 +31,25 @@ let of_string_list list =
   |> of_list
 
 let powerset set =
-  let combine (result: t Enum.t) (x: Var.t) = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
-  Enum.fold combine (Enum.singleton empty) (enum set)
-
+  let combine (result: t Enum.t) (x: Var.t) =
+    result
+    |> Enum.clone
+    |> Enum.map (fun ys -> add x ys)
+    |> Enum.append result 
+  in
+  set
+  |> enum
+  |> Enum.fold combine (Enum.singleton empty)
 
 type outer_t = t
-(** Internal memoization for powersets *)
+(** Internal memoization for combinations *)
 module Cache =
   Hashtbl.Make(
       struct
-        type t = outer_t
-        let equal = equal
+        type t = int * outer_t
+        let equal (max1, set1) (max2, set2) =
+          Int.equal max1 max2
+          && equal set1 set2
         let hash = Hashtbl.hash
       end
     )
@@ -59,12 +67,24 @@ let memoize f =
        y
   in g
 
-let sorted_powerset set =
-  let f set =
+let combinations max set =
+  let combine (result: t Enum.t) (x: Var.t) =
+    result
+    |> Enum.clone
+    |> Enum.filter (fun ys -> cardinal ys <= max)
+    |> Enum.map (add x)
+    |> Enum.append result
+  in
+  set
+  |> enum
+  |> Enum.fold combine (Enum.singleton empty)
+
+let sorted_combinations max set =
+  let f (max, set) =
     set
-    |> powerset
+    |> combinations max
     |> List.of_enum
     |> List.sort (fun a b -> Int.compare (cardinal a) (cardinal b))
   in
-  memoize f set
-
+  memoize f (max, set)
+  |> List.enum

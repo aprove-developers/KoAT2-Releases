@@ -3,7 +3,7 @@ open OUnit2
 open Helper
 open LocalSizeBound
 open Formulas
-open LocalSizeBound
+open Polynomials
    
 let tests = 
   "LocalSizeBound" >::: [
@@ -11,7 +11,7 @@ let tests =
       ("find upper bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
-               (fun _ -> find_bound `Upper (Var.of_string "x") (Readers.read_formula guard) 1024
+               (fun _ -> find_bound `Upper (Var.of_string "x") (Readers.read_formula guard) (Polynomial.var "x") 1024
                          |> (fun bound () -> assert_equal_lsb expected bound)
                          |> fun f -> f () ))
                   [
@@ -54,7 +54,7 @@ let tests =
       ("find lower bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
-               (fun _ -> find_bound `Lower (Var.of_string "x") (Readers.read_formula guard) 1024
+               (fun _ -> find_bound `Lower (Var.of_string "x") (Readers.read_formula guard) (Polynomial.var "x") 1024
                          |> (fun bound () -> assert_equal_lsb expected bound)
                          |> fun f -> f () ))
                   [

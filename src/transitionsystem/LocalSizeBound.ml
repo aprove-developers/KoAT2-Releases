@@ -203,7 +203,7 @@ let minimize_vars (p: VarSet.t -> bool) (vars: VarSet.t): VarSet.t =
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "minimize vars", ["vars", VarSet.to_string vars])
-                  ~result:(fun result -> VarSet.to_string result)
+                  ~result:VarSet.to_string
                   execute
   
 let minimize_scaledsum_vars (p: t -> bool) (lsb: t): t =
@@ -279,21 +279,22 @@ let c_range formula =
   |> OurInt.min (OurInt.of_int 1024) (* TODO We cut it at the moment at 1024, because sometimes the approximation is worse than an integer value. *)
   |> OurInt.to_int
   
+
 (* Check if x <= s * (c + [v1,...,vn]). *)
-let find_scaled_bound kind solver var vars (s: int) (c: int) =
+let find_scaled_bound kind solver var vars update_vars (s: int) (c: int) =
   let execute () =
     let is_bounded = is_bounded_with solver var in
     try 
-        vars
-        |> VarSet.sorted_powerset
-        |> List.enum
-        |> Enum.find_map (fun vars ->
-               Some (initial_lsb kind s c vars)
-               |> Option.filter is_bounded
-             ) 
-        |> optimize_s 1 s is_bounded
-        |> optimize_c c is_bounded
-        |> unabsify_vars is_bounded
+      vars
+      |> VarSet.sorted_combinations (VarSet.cardinal update_vars)
+      |> Enum.find_map (fun vars ->
+             Some (initial_lsb kind s c vars)
+             |> Option.filter is_bounded
+           ) 
+      |> optimize_s 1 s is_bounded
+      |> optimize_c c is_bounded
+      |> minimize_scaledsum_vars is_bounded
+      |> unabsify_vars is_bounded
     with Not_found ->
       raise (Failure "No lsb found although an update exists!")
   in Logger.with_log logger Logger.DEBUG
@@ -303,11 +304,11 @@ let find_scaled_bound kind solver var vars (s: int) (c: int) =
 
 type kind = [`Lower | `Upper] [@@deriving show, eq]
 
-let find_bound kind var formula s_range =
+let find_bound kind var formula update s_range =
   let execute () =
     let solver = Solver.create ~model:false () in
     Solver.add solver formula;
-    find_scaled_bound kind solver var (formula |> Formula.vars |> VarSet.remove var) s_range (c_range formula)
+    find_scaled_bound kind solver var (formula |> Formula.vars |> VarSet.remove var) (update |> Polynomial.vars) s_range (c_range formula)
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find local size bound", [
                           "kind", show_kind kind;
@@ -349,11 +350,11 @@ let sizebound_local kind label var =
     let open Option.Infix in
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
     TransitionLabel.update label var
-    |> Option.map (fun bound ->
+    |> Option.map (fun update ->
            (* Introduce a temporary result variable *)
            let v' = Var.fresh_id Var.Int () in
-           let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = bound) in
-           find_bound kind v' guard_with_update (s_range bound)
+           let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = update) in
+           find_bound kind v' guard_with_update update (s_range update)
          )
   in
   memoize f (kind, label, var)

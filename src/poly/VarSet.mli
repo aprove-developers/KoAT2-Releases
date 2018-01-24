@@ -14,4 +14,7 @@ val of_string_list : string list -> t
 
 val powerset : t -> t Enum.t
 
-val sorted_powerset : t -> t List.t
+val combinations : int -> t -> t Enum.t
+
+val sorted_combinations : int -> t -> t Enum.t
+
