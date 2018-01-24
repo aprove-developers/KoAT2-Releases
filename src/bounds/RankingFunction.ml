@@ -33,9 +33,12 @@ let rank_to_string (locations: Location.t list) (content_to_string: 'a -> string
   |> List.enum
   |> Util.enum_to_string (fun l -> Location.to_string l ^ ": " ^ content_to_string (pol l))
 
-let to_string {rank; decreasing; non_increasing} =
+let only_rank_to_string {rank; decreasing; non_increasing} =
   let locations = non_increasing |> TransitionSet.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
-  "{rank:" ^ rank_to_string locations Polynomial.to_string rank ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
+  rank_to_string locations Polynomial.to_string rank
+
+let to_string {rank; decreasing; non_increasing} =
+  "{rank:" ^ only_rank_to_string {rank; decreasing; non_increasing} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
 let as_parapoly label var =
   match TransitionLabel.update label var with
@@ -213,10 +216,10 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
            |> Option.may (fun ranking_function ->
                   to_be_found := !to_be_found - 1;
                   RankingTable.add (ranking_table measure) decreasing ranking_function;
-                  Logger.(log logger INFO (fun () -> "added_ranking_function", [
+                  Logger.(log logger INFO (fun () -> "add_ranking_function", [
                                                "measure", show_measure measure;
                                                "decreasing", Transition.to_id_string decreasing;
-                                               "ranking_function", to_string ranking_function]))
+                                               "rank", only_rank_to_string ranking_function]))
                 )
          );
          Solver.pop opt

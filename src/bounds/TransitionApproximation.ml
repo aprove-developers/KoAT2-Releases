@@ -37,14 +37,12 @@ let sum_available (name,map) =
   Map.fold (fun transition bound result -> Bound.(bound + result)) map Bound.zero
   
 let add bound transition (name,map) =
-  let execute () =
-    (try
-       Map.modify transition (Bound.min bound) map
-     with Not_found -> Map.add map transition bound);
-    (name, map)
-  in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "add_" ^ name ^ "bound", ["transition", Transition.to_id_string transition; "bound", Bound.to_string bound])
-                     execute
+  (try
+     Map.modify transition (Bound.min bound) map;
+     Logger.log logger Logger.INFO
+                (fun () -> "add_" ^ name ^ "_bound", ["transition", Transition.to_id_string transition; "bound", Bound.to_string bound])
+   with Not_found -> Map.add map transition bound);
+  (name, map)
 
 let all_bounded appr =
   List.for_all (fun t -> not (Bound.equal (get appr t) Bound.infinity))

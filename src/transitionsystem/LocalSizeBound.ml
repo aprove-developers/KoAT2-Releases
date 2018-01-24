@@ -337,7 +337,7 @@ let memoize f =
        let lsb = f (kind,label,var) in
        LSB_Cache.add table (kind,label,var) lsb;
        (Logger.log logger Logger.INFO
-                   (fun () -> "added_local_size_bound", [
+                   (fun () -> "add_local_size_bound", [
                         "kind", show_kind kind;
                         "transition", TransitionLabel.to_id_string label;
                         "var", Var.to_string var;

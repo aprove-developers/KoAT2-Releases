@@ -45,7 +45,9 @@ let get kind map transition var =
 
 let add kind bound transition var map =
   (try
-     Map.modify (kind, transition, var) (combine_bounds kind bound) map
+     Map.modify (kind, transition, var) (combine_bounds kind bound) map;
+     Logger.log logger Logger.INFO
+                (fun () -> "add_size_bound", ["kind", show_kind kind; "rv", RV.to_id_string (transition, var); "bound", Bound.to_string bound])
    with Not_found -> Map.add map (kind, transition, var) bound);
   map
 
