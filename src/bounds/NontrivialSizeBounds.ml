@@ -157,12 +157,12 @@ let compute_
         )
         + (affecting_vars `Pos
            |> Enum.map (incoming_constant (LocalSizeBound.pre_kind (kind, `Pos)) rv)
-           |> Enum.map (max zero)
+           |> Enum.map Bound.(max zero)
            |> sum
           )
         + (affecting_vars `Neg
            |> Enum.map (incoming_constant (LocalSizeBound.pre_kind (kind, `Neg)) rv)
-           |> Enum.map (max zero)
+           |> Enum.map Bound.(max zero)
            |> sum
           )
       )
@@ -208,8 +208,7 @@ let compute_
     |> Enum.map (uncurry (get_sizebound kind))
     |> Enum.map (sign kind)
     |> Bound.maximum
-    |> Bound.(max zero)
-    (*    |> (if Bound.(equal one loop_scaling_factor) then identity else Bound.(max zero)) *)
+    |> (if Bound.(equal one loop_scaling_factor) then identity else Bound.(max zero))
     |> tap (fun starting_value -> Logger.log logger Logger.DEBUG
                                              (fun () -> "starting_value", ["result", Bound.to_string starting_value]))
   in
