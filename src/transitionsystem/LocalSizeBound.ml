@@ -293,7 +293,6 @@ let find_scaled_bound kind solver var vars (s: int) (c: int) =
              ) 
         |> optimize_s 1 s is_bounded
         |> optimize_c c is_bounded
-        |> minimize_scaledsum_vars is_bounded
         |> unabsify_vars is_bounded
     with Not_found ->
       raise (Failure "No lsb found although an update exists!")
