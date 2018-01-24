@@ -38,10 +38,11 @@ let sum_available (name,map) =
   
 let add bound transition (name,map) =
   (try
-     Map.modify transition (Bound.min bound) map;
-     Logger.log logger Logger.INFO
-                (fun () -> "add_" ^ name ^ "_bound", ["transition", Transition.to_id_string transition; "bound", Bound.to_string bound])
-   with Not_found -> Map.add map transition bound);
+     Map.modify transition (Bound.min bound) map
+   with
+   | Not_found -> Map.add map transition bound);
+  Logger.log logger Logger.INFO
+             (fun () -> "add_" ^ name ^ "_bound", ["transition", Transition.to_id_string transition; "bound", Bound.to_string bound]);
   (name, map)
 
 let all_bounded appr =

@@ -98,6 +98,6 @@ let improve measure program appr =
                   improve_with_rank measure program appr rank
                 ) appr           
          ) appr
-  in Logger.with_log logger Logger.DEBUG
+  in Logger.with_log logger Logger.INFO
                      (fun () -> "improve_bounds", ["measure", show_measure measure])
                      execute

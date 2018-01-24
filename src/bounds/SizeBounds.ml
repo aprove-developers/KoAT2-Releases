@@ -24,6 +24,6 @@ let improve program appr =
     let module C = Graph.Components.Make(RVG) in
     let rvg = Program.rvg program in
     List.fold_left (fun appr scc -> improve_scc program rvg appr scc) appr (List.rev (C.scc_list rvg))
-  in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "improve size bounds", [])
+  in Logger.with_log logger Logger.INFO
+                  (fun () -> "improve_size_bounds", [])
                   execute

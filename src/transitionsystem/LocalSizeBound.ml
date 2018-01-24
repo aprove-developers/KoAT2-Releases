@@ -176,7 +176,7 @@ let unabsify_vars (p: t -> bool) (lsb: t): t =
     VarSet.fold unabsify_with_candidate (vars_of_purity `Abs lsb) lsb
   in
   Logger.with_log logger Logger.DEBUG
-                  (fun () -> "unabsify vars", ["lsb", to_string lsb])
+                  (fun () -> "unabsify_vars", ["lsb", to_string lsb])
                   ~result:to_string
                   execute
   
@@ -196,7 +196,7 @@ let minimize_vars (p: VarSet.t -> bool) (vars: VarSet.t): VarSet.t =
     VarSet.fold minimize_with_candidate vars vars
   in
   Logger.with_log logger Logger.DEBUG
-                  (fun () -> "minimize vars", ["vars", VarSet.to_string vars])
+                  (fun () -> "minimize_vars", ["vars", VarSet.to_string vars])
                   ~result:VarSet.to_string
                   execute
   
@@ -292,7 +292,7 @@ let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: in
     with Not_found ->
       raise (Failure "No lsb found although an update exists!")
   in Logger.with_log logger Logger.DEBUG
-                  (fun () -> "find scaled bound", ["var", Var.to_string var; "guard_vars", VarSet.to_string guard_vars])
+                  (fun () -> "find_scaled_bound", ["var", Var.to_string var; "guard_vars", VarSet.to_string guard_vars])
                   ~result:(Bound.to_string % as_bound)
                   execute
 
@@ -304,7 +304,7 @@ let find_bound kind program_vars var formula update s_range =
     Solver.add solver formula;
     find_scaled_bound kind program_vars solver var (formula |> Formula.vars |> VarSet.remove var) (update |> Polynomial.vars) s_range (c_range formula)
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "find local size bound", [
+                     (fun () -> "find_local_size_bound", [
                           "kind", show_kind kind;
                           "var", Var.to_string var;
                           "formula", Formula.to_string formula;

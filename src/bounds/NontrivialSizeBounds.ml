@@ -90,7 +90,7 @@ let compute_
       OurInt.of_int (extreme_scaling_factor * extreme_affecting_scc_variables)
       
     in Logger.with_log logger Logger.DEBUG
-                       (fun () -> "transition scaling factor", ["transition", Transition.to_id_string t])
+                       (fun () -> "transition_scaling_factor", ["transition", Transition.to_id_string t])
                        ~result:OurInt.to_string
                        execute
   in
@@ -150,7 +150,11 @@ let compute_
     in
     let execute () =
       Bound.(
-        max zero (rv_constant rv)
+        (
+          rv
+          |> rv_constant
+          |> max zero
+        )
         + (affecting_vars `Pos
            |> Enum.map (incoming_constant (LocalSizeBound.pre_kind (kind, `Pos)) rv)
            |> Enum.map (max zero)
@@ -204,7 +208,8 @@ let compute_
     |> Enum.map (uncurry (get_sizebound kind))
     |> Enum.map (sign kind)
     |> Bound.maximum
-    |> (if Bound.(equal one loop_scaling_factor) then identity else Bound.(max zero))
+    |> Bound.(max zero)
+    (*    |> (if Bound.(equal one loop_scaling_factor) then identity else Bound.(max zero)) *)
     |> tap (fun starting_value -> Logger.log logger Logger.DEBUG
                                              (fun () -> "starting_value", ["result", Bound.to_string starting_value]))
   in
@@ -240,7 +245,7 @@ let compute kind program rvg get_timebound get_sizebound scc =
        | `Lower -> Bound.minus_infinity
        | `Upper -> Bound.infinity
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute nontrivial bound", ["kind", show_kind kind;
+                     (fun () -> "compute_nontrivial_bound", ["kind", show_kind kind;
                                                              "scc", RVG.rvs_to_id_string scc])
                      ~result:Bound.to_string
                      execute

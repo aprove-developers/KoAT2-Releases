@@ -307,7 +307,7 @@ let rec simplify bound =
                   (fun () -> "simplify", ["input", to_string bound])
                   ~result:to_string
                   execute
-
+  
 type outer_t = t
 module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
   struct
@@ -358,7 +358,7 @@ let of_var_string str = Var (Var.of_string str)
 
 let infinity = Infinity
 
-let minus_infinity = Neg Infinity
+let minus_infinity = Neg Infinity 
 
 let is_infinity = equal Infinity
                    
