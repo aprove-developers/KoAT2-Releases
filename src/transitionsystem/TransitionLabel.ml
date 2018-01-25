@@ -132,13 +132,14 @@ let update_to_string_list update =
   if VarMap.is_empty update then
     "true"
   else
-    let entry_string var poly = Var.to_string var ^ "' := " ^ Polynomial.to_string poly
+    let entry_string var poly = Var.to_string var ^ "&larr;" ^ Polynomial.to_string poly
     and ((var, poly), without_first) = VarMap.pop update in
-    VarMap.fold (fun var poly result -> result ^ " && " ^ entry_string var poly) without_first (entry_string var poly)
+    VarMap.fold (fun var poly result -> result ^ "," ^ entry_string var poly) without_first (entry_string var poly)
 
 let to_string label =          
-  let guard = if Guard.is_true label.guard then "" else " && " ^ Guard.to_string label.guard in
-  "Cost: " ^ Polynomial.to_string label.cost ^ ", " ^ update_to_string_list label.update ^ guard
+  let guard = if Guard.is_true label.guard then "" else "\n" ^ Guard.to_string ~comp:"&le;" ~conj:"&and;" label.guard in
+  let cost = if Polynomial.is_one label.cost then "" else Polynomial.to_string label.cost ^ "&euro;" ^ ", " in
+  cost ^ update_to_string_list label.update ^ guard
 
 let to_id_string =          
   string_of_int % id
