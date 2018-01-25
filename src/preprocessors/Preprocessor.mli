@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
    
 (** Provides all module types related to preprocessors *)
 

@@ -1,6 +1,6 @@
 open Batteries
 open Polynomials
-open Program.Types
+open ProgramTypes
    
 let logger = Logging.(get Time)
 

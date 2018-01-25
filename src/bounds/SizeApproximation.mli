@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
    
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 

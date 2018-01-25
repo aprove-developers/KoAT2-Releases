@@ -1,7 +1,7 @@
 open Batteries
 open Formulas
 open Polynomials
-open Program.Types
+open ProgramTypes
    
 (* Concept:
    Incoming part:

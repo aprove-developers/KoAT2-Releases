@@ -49,7 +49,7 @@
   open Atoms
   module Poly = Polynomials.Polynomial
   open Formulas
-  open Program.Types
+  open ProgramTypes
 
   let default_vars = List.map Var.of_string ["x"; "y"; "z"; "u"; "v"; "w"; "p"; "q"]
 %}

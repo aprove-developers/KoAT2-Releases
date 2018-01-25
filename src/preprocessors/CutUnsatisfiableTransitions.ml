@@ -1,6 +1,6 @@
 open Batteries
 open Formulas
-open Program.Types
+open ProgramTypes
    
 (** This preprocessor removes all unsatisfiable transitions from the graph. 
     Those transitions can never be part of an evaluation.

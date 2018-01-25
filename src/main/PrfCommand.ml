@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
    
 let description = "Search for a linear ranking function"
 

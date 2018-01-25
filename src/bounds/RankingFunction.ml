@@ -3,7 +3,7 @@ open Formulas
 open Constraints
 open Atoms
 open Polynomials
-open Program.Types
+open ProgramTypes
    
 module SMTSolver = SMT.Z3Solver
 module Valuation = Valuation.Make(OurInt)

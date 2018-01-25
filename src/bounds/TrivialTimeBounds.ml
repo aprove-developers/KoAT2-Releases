@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
    
 module SCC = Graph.Components.Make(TransitionGraph)
 

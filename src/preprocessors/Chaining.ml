@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
    
 (** Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location,
     making the location obsolete. *)

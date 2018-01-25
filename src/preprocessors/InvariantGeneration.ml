@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
 open Polynomials
 open Atoms
 open Constraints

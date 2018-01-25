@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
    
 let unbounded appr transition =
   Bound.is_infinity (Approximation.costbound appr transition)

@@ -1,7 +1,7 @@
 open Batteries
 open OUnit2
 open Helper
-open Program.Types
+open ProgramTypes
 
 (** Returns an overall timebound for the given program. *)
 let find_timebound (program: Program.t): Bound.t =

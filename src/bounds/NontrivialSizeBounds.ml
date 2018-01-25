@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
 
 let logger = Logging.(get Size)
 

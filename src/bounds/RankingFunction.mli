@@ -2,7 +2,7 @@ open Batteries
 open Constraints
 open Atoms
 open Polynomials
-open Program.Types
+open ProgramTypes
    
 (** Provides default implementations of RankingFunctions *)
 

@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
 open Polynomials
    
 let rec find_bounds_ (program: Program.t) (appr: Approximation.t): Approximation.t =

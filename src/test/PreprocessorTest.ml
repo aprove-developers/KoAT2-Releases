@@ -1,7 +1,7 @@
 open Batteries
 open OUnit2
 open Helper
-open Program.Types
+open ProgramTypes
    
 let tests = 
   "Preprocessors" >::: [

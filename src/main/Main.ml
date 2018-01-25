@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
    
 (** Prints the whole resulting approximation to the shell. *)
 let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =

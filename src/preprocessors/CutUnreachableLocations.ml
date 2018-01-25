@@ -1,5 +1,5 @@
 open Batteries
-open Program.Types
+open ProgramTypes
    
 (** This preprocessor cuts all unreachable locations (and all transitions connected to them) from the program. *)
 
