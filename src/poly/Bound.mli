@@ -39,6 +39,8 @@ val max_of_occurring_constants : t -> OurInt.t
 
 val is_infinity : t -> bool
   
+val is_minus_infinity : t -> bool
+
 val to_string : t -> string
 
 (** Functions to classify the quality of the bound *)

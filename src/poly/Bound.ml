@@ -361,7 +361,9 @@ let infinity = Infinity
 let minus_infinity = Neg Infinity 
 
 let is_infinity = equal Infinity
-                   
+
+let is_minus_infinity = equal (Neg Infinity)
+
 let max b1 b2 =
   simplify (Max (b1, b2))
 
