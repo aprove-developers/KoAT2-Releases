@@ -2,6 +2,7 @@ open Batteries
 open Formulas
 open Polynomials
 open ProgramTypes
+open RVGTypes
    
 let logger = Logging.(get LocalSizeBound)
            
@@ -347,8 +348,7 @@ let memoize f =
        (Logger.log logger Logger.INFO
                    (fun () -> "add_local_size_bound", [
                         "kind", show_kind kind;
-                        "transition", Transition.to_id_string t;
-                        "var", Var.to_string var;
+                        "rv", RV.to_id_string (t, var);
                         "lsb", Util.option_to_string (Bound.to_string % as_bound) lsb]));
        lsb
   in g
