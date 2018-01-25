@@ -5,7 +5,8 @@ open Constraints
 (** Provides default modules to create locations, transitions and transitionsystems *)
 
 open ProgramTypes
-     
+open RVGTypes
+   
 type t
 
 val add_locations : Location.t Enum.t -> TransitionGraph.t -> TransitionGraph.t

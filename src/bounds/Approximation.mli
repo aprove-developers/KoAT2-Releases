@@ -1,5 +1,6 @@
 open Batteries
 open ProgramTypes
+open RVGTypes
    
 (** Provides default implementations of an approximation *)
 

@@ -1,5 +1,6 @@
 open Batteries
 open ProgramTypes
+open RVGTypes
    
 (** Prints the whole resulting approximation to the shell. *)
 let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =

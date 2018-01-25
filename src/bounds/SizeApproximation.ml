@@ -1,5 +1,6 @@
 open Batteries
 open ProgramTypes
+open RVGTypes
    
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 

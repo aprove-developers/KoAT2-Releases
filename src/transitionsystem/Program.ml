@@ -2,7 +2,8 @@ open Batteries
 open Constraints
    
 open ProgramTypes
-  
+open RVGTypes
+   
 type t = {
     graph: TransitionGraph.t;
     vars: Var.t list;

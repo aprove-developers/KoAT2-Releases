@@ -1,6 +1,7 @@
 open Batteries
 open ProgramTypes
-
+open RVGTypes
+   
 let logger = Logging.(get Size)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
