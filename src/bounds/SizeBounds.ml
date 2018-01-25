@@ -3,27 +3,22 @@ open Program.Types
    
 let logger = Logging.(get Size)
 
-let improve_scc program rvg appr = function
+let improve_scc kind program rvg appr = function
   | [((l,t,l'),v)] when not (RVG.mem_edge rvg ((l,t,l'),v) ((l,t,l'),v)) ->
-     let add_trivial_bound kind =
-       let new_bound = TrivialSizeBounds.compute kind program (fun kind -> Approximation.sizebound kind appr) ((l,t,l'),v) in
-       Approximation.add_sizebound kind new_bound (l,t,l') v appr
-     in appr
-     |> fun appr -> add_trivial_bound `Upper
-     |> fun appr -> add_trivial_bound `Lower
+     let new_bound = TrivialSizeBounds.compute kind program (fun kind -> Approximation.sizebound kind appr) ((l,t,l'),v) in
+     Approximation.add_sizebound kind new_bound (l,t,l') v appr
   | scc ->
-     let add_nontrivial_bound kind =
-       let new_bound = NontrivialSizeBounds.compute kind program rvg (Approximation.timebound appr) (fun kind -> Approximation.sizebound kind appr) scc in
-       Approximation.add_sizebounds kind new_bound scc appr
-     in appr
-     |> fun appr -> add_nontrivial_bound `Upper
-     |> fun appr -> add_nontrivial_bound `Lower
+     let new_bound = NontrivialSizeBounds.compute kind program rvg (Approximation.timebound appr) (fun kind -> Approximation.sizebound kind appr) scc in
+     Approximation.add_sizebounds kind new_bound scc appr
          
 let improve program appr =
   let execute () =
     let module C = Graph.Components.Make(RVG) in
-    let rvg = Program.rvg program in
-    List.fold_left (fun appr scc -> improve_scc program rvg appr scc) appr (List.rev (C.scc_list rvg))
+    [`Lower; `Upper]
+    |> List.fold_left (fun appr kind ->
+           let rvg = Program.rvg kind program in
+           List.fold_left (fun appr scc -> improve_scc kind program rvg appr scc) appr (List.rev (C.scc_list rvg))
+         ) appr
   in Logger.with_log logger Logger.INFO
                   (fun () -> "improve_size_bounds", [])
                   execute

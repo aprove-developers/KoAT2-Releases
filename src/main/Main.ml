@@ -60,16 +60,18 @@ let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): 
                     "\n";
                     TransitionLabel.to_string label]
 
-let bounded_rv_to_string (program_vars: VarSet.t) (appr: Approximation.t) (t,v) =
+let bounded_rv_to_string (program_vars: VarSet.t) kind (appr: Approximation.t) (t,v) =
+  let comp = function
+    | `Lower -> "<="
+    | `Upper -> ">="
+  in
   String.concat "" ["Global: ";
-                    Approximation.sizebound `Upper appr t v |> Bound.to_string;
-                    " >= ";
-                    RV.to_id_string (t,v);
-                    " >= ";
-                    Approximation.sizebound `Lower appr t v |> Bound.to_string;
+                    String.concat " " [Approximation.sizebound kind appr t v |> Bound.to_string;
+                                       comp kind;
+                                       RV.to_id_string (t, v)];
                     "\n";
                     "Local: ";
-                    RV.to_string program_vars (t,v)]
+                    RV.to_string program_vars kind (t,v)]
 
 let run (params: main_params) =
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
@@ -105,8 +107,11 @@ let run (params: main_params) =
                 if params.print_system then
                   Program.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
-                if params.print_rvg then
-                  Program.print_rvg ~label:(RV.to_string (Program.vars program)) ~outdir:output_dir ~file:input_filename program)
+                if params.print_rvg then (
+                  Program.print_rvg `Lower ~label:(RV.to_string (Program.vars program) `Lower) ~outdir:output_dir ~file:input_filename program;
+                  Program.print_rvg `Upper ~label:(RV.to_string (Program.vars program) `Upper) ~outdir:output_dir ~file:input_filename program
+                )
+              )
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
                      (program, appr)
@@ -118,8 +123,11 @@ let run (params: main_params) =
                 if params.print_system then
                   Program.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
-                if params.print_rvg then
-                  Program.print_rvg ~label:(bounded_rv_to_string (Program.vars program) appr) ~outdir:output_dir ~file:input_filename program)
+                if params.print_rvg then (
+                  Program.print_rvg `Lower ~label:(bounded_rv_to_string (Program.vars program) `Lower appr) ~outdir:output_dir ~file:input_filename program;
+                  Program.print_rvg `Upper ~label:(bounded_rv_to_string (Program.vars program) `Upper appr) ~outdir:output_dir ~file:input_filename program;
+                )
+              )
        )
   |> ignore
 

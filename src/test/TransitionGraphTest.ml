@@ -56,7 +56,9 @@ let suite =
           Program.print_system ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
           "../../examples/KoAT-2013/sect1-lin.koat"
           |> Readers.read_file
-          |> fun program -> Program.print_rvg ~label:(RV.to_string (Program.vars program)) ~outdir:(Fpath.v "output") ~file:"sect1-lin" program
+          |> tap (fun program -> Program.print_rvg `Lower ~label:(RV.to_string (Program.vars program) `Lower) ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> tap (fun program -> Program.print_rvg `Upper ~label:(RV.to_string (Program.vars program) `Upper) ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> ignore
         )
       );
     ]

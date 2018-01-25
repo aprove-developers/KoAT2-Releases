@@ -65,7 +65,7 @@ sig
     val compare_same : t -> t -> int
     val compare_equivalent : t -> t -> int
     val to_id_string : t -> string
-    val to_string : VarSet.t -> t -> string
+    val to_string : VarSet.t -> [`Lower | `Upper] -> t -> string
     val hash : t -> int
     val transition : t -> Transition.t
     val variable : t -> Var.t
@@ -114,7 +114,7 @@ val mk : Transition.t Enum.t -> TransitionGraph.t
 
 val from : TransitionLabel.t list -> Location.t -> t
 
-val rvg : t -> RVG.t
+val rvg : [`Lower | `Upper] -> t -> RVG.t
 
 val graph : t -> TransitionGraph.t
 
@@ -131,7 +131,7 @@ val print_system : label:(TransitionLabel.t -> string) -> outdir:Fpath.t -> file
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program. 
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-val print_rvg : label:(RV.t -> string) -> outdir:Fpath.t -> file:string -> t -> unit
+val print_rvg : [`Lower | `Upper] -> label:(RV.t -> string) -> outdir:Fpath.t -> file:string -> t -> unit
 
 (** Returns if the given transition is an initial transition. *)
 val is_initial : t -> Transition.t -> bool

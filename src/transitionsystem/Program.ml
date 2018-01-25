@@ -153,10 +153,14 @@ module Types =
         let to_id_string (t,v) =
           "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
-        let to_string program_vars ((l,t,l'), v) =
-          Bound.to_string (LocalSizeBound.(sizebound_local `Upper program_vars t v |> Option.map as_bound |? default `Upper)) ^ " >= " ^
-            to_id_string ((l,t,l'), v) ^ " >= " ^
-              Bound.to_string (LocalSizeBound.(sizebound_local `Lower program_vars t v |> Option.map as_bound |? default `Lower))
+        let to_string program_vars kind ((l,t,l'), v) =
+          let comp = function
+            | `Lower -> "<="
+            | `Upper -> ">="
+          in
+          String.concat " " [Bound.to_string LocalSizeBound.(sizebound_local kind program_vars t v |> Option.map as_bound |? default kind);
+                             comp kind;
+                             to_id_string ((l,t,l'), v)]
       end
 
     module RVG =
@@ -176,7 +180,7 @@ module Types =
 
         let rvs_to_string program_vars rvs =
           rvs
-          |> List.map (RV.to_string program_vars)
+          |> List.map (fun rv -> RV.to_string program_vars `Lower rv ^ ", " ^ RV.to_string program_vars `Upper rv)
           |> String.concat ","
 
         let pre rvg rv =
@@ -303,19 +307,14 @@ let non_trivial_transitions =
 let add_invariant location invariant =
   map_graph (TransitionGraph.add_invariant location invariant)
 
-let rvg program =
+let rvg kind program =
   let add_transition (post_transition: Transition.t) (rvg: RVG.t): RVG.t =
     let rvg_with_vertices: RVG.t = add_vertices_to_rvg (List.map (fun var -> (post_transition,var)) program.vars) rvg in
     let pre_nodes (post_transition: Transition.t) (post_var: Var.t) =
-      (* TODO We can maybe try to split upper and lower pre variables. *)
       let vars =
-        VarSet.union
-          (LocalSizeBound.sizebound_local `Upper (vars program) (Transition.label post_transition) post_var
-           |> Option.map LocalSizeBound.vars
-           |? (VarSet.of_list program.vars))
-          (LocalSizeBound.sizebound_local `Upper (vars program) (Transition.label post_transition) post_var
-           |> Option.map LocalSizeBound.vars
-           |? (VarSet.of_list program.vars))
+        LocalSizeBound.sizebound_local kind (vars program) (Transition.label post_transition) post_var
+        |> Option.map LocalSizeBound.vars
+        |? VarSet.of_list program.vars
       in
       vars
       |> VarSet.enum
@@ -355,7 +354,11 @@ let print_system ~label ~outdir ~file program =
                                      end) in
   print_graph outdir (file ^ "_system") (graph program) Dot.output_graph
 
-let print_rvg ~label ~outdir ~file program =
+let print_rvg kind ~label ~outdir ~file program =
+  let show_kind = function
+    | `Lower -> "lower"
+    | `Upper -> "upper"
+  in
   (* Definition of some graphviz options how it should be layout *)
   let module Dot = Graph.Graphviz.Dot(struct
                                        include RVG
@@ -367,7 +370,7 @@ let print_rvg ~label ~outdir ~file program =
                                        let default_vertex_attributes _ = []
                                        let graph_attributes _ = []
                                      end) in
-  print_graph outdir (file ^ "_rvg") (rvg program) Dot.output_graph
+  print_graph outdir (file ^ "_rvg_" ^ show_kind kind) (rvg kind program) Dot.output_graph
 
 let is_initial program trans =
   Location.(equal (program.start) (Transition.src trans))
