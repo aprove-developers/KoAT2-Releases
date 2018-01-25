@@ -348,7 +348,7 @@ let memoize f =
                         "kind", show_kind kind;
                         "transition", TransitionLabel.to_id_string label;
                         "var", Var.to_string var;
-                        "lsb", Util.option_to_string to_string lsb]));
+                        "lsb", Util.option_to_string (Bound.to_string % as_bound) lsb]));
        lsb
   in g
    
