@@ -11,6 +11,8 @@ type logger =
 
 let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor]
 
+let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor]
+            
 let show_logger = function
   | Approximation -> "appr"
   | Size -> "size"
