@@ -37,12 +37,12 @@ module RV =
     let to_id_string (t,v) =
       "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
-    let to_string program_vars kind ((l,t,l'), v) =
+    let to_string get_lsb kind ((l,t,l'), v) =
       let comp = function
         | `Lower -> "<="
         | `Upper -> ">="
       in
-      String.concat " " [Bound.to_string LocalSizeBound.(sizebound_local kind program_vars t v |> Option.map as_bound |? default kind);
+      String.concat " " [Bound.to_string (get_lsb kind t v);
                          comp kind;
                          to_id_string ((l,t,l'), v)]
   end
@@ -62,9 +62,9 @@ module RVG =
       |> List.map RV.to_id_string
       |> String.concat ","
 
-    let rvs_to_string program_vars rvs =
+    let rvs_to_string get_lsb rvs =
       rvs
-      |> List.map (fun rv -> RV.to_string program_vars `Lower rv ^ ", " ^ RV.to_string program_vars `Upper rv)
+      |> List.map (fun rv -> RV.to_string get_lsb `Lower rv ^ ", " ^ RV.to_string get_lsb `Upper rv)
       |> String.concat ","
 
     let pre rvg rv =

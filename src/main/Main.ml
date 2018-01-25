@@ -62,6 +62,9 @@ let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): 
                     TransitionLabel.to_string label]
 
 let bounded_rv_to_string (program_vars: VarSet.t) kind (appr: Approximation.t) (t,v) =
+  let get_lsb kind t v =
+    LocalSizeBound.(sizebound_local kind program_vars t v |> Option.map as_bound |? default kind)
+  in
   let comp = function
     | `Lower -> "<="
     | `Upper -> ">="
@@ -72,7 +75,10 @@ let bounded_rv_to_string (program_vars: VarSet.t) kind (appr: Approximation.t) (
                                        RV.to_id_string (t, v)];
                     "\n";
                     "Local: ";
-                    RV.to_string program_vars kind (t,v)]
+                    RV.to_string get_lsb kind (t,v)]
+
+let get_lsb program kind t v =
+  LocalSizeBound.(sizebound_local kind (Program.vars program) t v |> Option.map as_bound |? default kind)
 
 let run (params: main_params) =
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
@@ -109,8 +115,8 @@ let run (params: main_params) =
                   Program.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
-                  Program.print_rvg `Lower ~label:(RV.to_string (Program.vars program) `Lower) ~outdir:output_dir ~file:input_filename program;
-                  Program.print_rvg `Upper ~label:(RV.to_string (Program.vars program) `Upper) ~outdir:output_dir ~file:input_filename program
+                  Program.print_rvg `Lower ~label:(RV.to_string (get_lsb program) `Lower) ~outdir:output_dir ~file:input_filename program;
+                  Program.print_rvg `Upper ~label:(RV.to_string (get_lsb program) `Upper) ~outdir:output_dir ~file:input_filename program
                 )
               )
          |> (fun (program, appr) ->
