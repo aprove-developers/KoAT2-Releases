@@ -9,5 +9,7 @@ Costbounds:
 Sizebounds:
 `Lower:
   0: f0->f5, A: B [O(n)]
+  0: f0->f5, B: -inf [Infinity]
 `Upper:
   0: f0->f5, A: B [O(n)]
+  0: f0->f5, B: inf [Infinity]

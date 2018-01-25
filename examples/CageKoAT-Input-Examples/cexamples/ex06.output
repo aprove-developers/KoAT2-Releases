@@ -11,7 +11,7 @@ Costbounds:
 Sizebounds:
 `Lower:
   0: f->g, x: x [O(n)]
-  1: g->g, x: -max{0, -x} [O(n)]
+  1: g->g, x: x [O(n)]
 `Upper:
   0: f->g, x: x [O(n)]
-  1: g->g, x: max{0, x} [O(n)]
+  1: g->g, x: x [O(n)]

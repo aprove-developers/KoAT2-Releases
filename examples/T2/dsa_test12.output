@@ -10,6 +10,10 @@ Sizebounds:
 `Lower:
   0: f0->f12, A: C [O(n)]
   0: f0->f12, B: D [O(n)]
+  0: f0->f12, C: -inf [Infinity]
+  0: f0->f12, D: -inf [Infinity]
 `Upper:
   0: f0->f12, A: C [O(n)]
   0: f0->f12, B: D [O(n)]
+  0: f0->f12, C: inf [Infinity]
+  0: f0->f12, D: inf [Infinity]

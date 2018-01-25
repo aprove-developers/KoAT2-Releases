@@ -12,10 +12,14 @@ Sizebounds:
 `Lower:
   1: g->f, x: x [O(n)]
   1: g->f, y: y [O(n)]
+  1: g->f, z: -inf [Infinity]
   0: start->g, x: x [O(n)]
   0: start->g, y: y [O(n)]
+  0: start->g, z: -inf [Infinity]
 `Upper:
   1: g->f, x: x [O(n)]
   1: g->f, y: y [O(n)]
+  1: g->f, z: inf [Infinity]
   0: start->g, x: x [O(n)]
   0: start->g, y: y [O(n)]
+  0: start->g, z: inf [Infinity]

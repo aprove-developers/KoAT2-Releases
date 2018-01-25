@@ -1,5 +1,7 @@
 Timebounds: 
   Overall timebound: inf [Infinity]
+  1: f0->f0: inf [Infinity]
+  2: f0->f0: inf [Infinity]
   0: f3->f0: 1 [O(1)]
 
 Costbounds:
@@ -10,9 +12,22 @@ Costbounds:
 
 Sizebounds:
 `Lower:
+  1: f0->f0, A: -inf [Infinity]
+  1: f0->f0, B: -inf [Infinity]
+  1: f0->f0, C: -inf [Infinity]
+  2: f0->f0, A: -inf [Infinity]
+  2: f0->f0, B: -inf [Infinity]
+  2: f0->f0, C: -inf [Infinity]
   0: f3->f0, A: 2 [O(1)]
   0: f3->f0, B: B [O(n)]
+  0: f3->f0, C: -inf [Infinity]
 `Upper:
+  1: f0->f0, A: inf [Infinity]
+  1: f0->f0, B: inf [Infinity]
+  1: f0->f0, C: inf [Infinity]
+  2: f0->f0, A: inf [Infinity]
   2: f0->f0, B: 0 [O(1)]
+  2: f0->f0, C: inf [Infinity]
   0: f3->f0, A: 2 [O(1)]
   0: f3->f0, B: B [O(n)]
+  0: f3->f0, C: inf [Infinity]

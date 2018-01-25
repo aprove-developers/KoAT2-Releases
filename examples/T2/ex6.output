@@ -13,9 +13,15 @@ Costbounds:
 Sizebounds:
 `Lower:
   0: f0->f8, A: A [O(n)]
+  0: f0->f8, B: -inf [Infinity]
   1: f0->f8, A: A [O(n)]
+  1: f0->f8, B: -inf [Infinity]
   2: f0->f8, A: B [O(n)]
+  2: f0->f8, B: -inf [Infinity]
 `Upper:
   0: f0->f8, A: A [O(n)]
+  0: f0->f8, B: inf [Infinity]
   1: f0->f8, A: A [O(n)]
+  1: f0->f8, B: inf [Infinity]
   2: f0->f8, A: B [O(n)]
+  2: f0->f8, B: inf [Infinity]

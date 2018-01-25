@@ -10,13 +10,15 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  0: eval->eval, B: -max{0, -B}-max{0, 101+B+-C-A} [O(n)]
+  0: eval->eval, A: -inf [Infinity]
+  0: eval->eval, B: B-max{0, 101+B+-C-A} [O(n)]
+  0: eval->eval, C: -inf [Infinity]
   1: start->eval, A: A [O(n)]
   1: start->eval, B: B [O(n)]
   1: start->eval, C: C [O(n)]
 `Upper:
-  0: eval->eval, A: max{0, B} [O(n)]
-  0: eval->eval, B: max{0, B} [O(n)]
+  0: eval->eval, A: B [O(n)]
+  0: eval->eval, B: B [O(n)]
   0: eval->eval, C: 101 [O(1)]
   1: start->eval, A: A [O(n)]
   1: start->eval, B: B [O(n)]

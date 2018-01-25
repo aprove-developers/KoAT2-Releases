@@ -11,11 +11,11 @@ Costbounds:
 Sizebounds:
 `Lower:
   1: g->g, x: 5 [O(1)]
-  1: g->g, y: -max{0, -y} [O(n)]
+  1: g->g, y: y [O(n)]
   0: start->g, x: x [O(n)]
   0: start->g, y: y [O(n)]
 `Upper:
   1: g->g, x: 5 [O(1)]
-  1: g->g, y: max{0, y} [O(n)]
+  1: g->g, y: y [O(n)]
   0: start->g, x: x [O(n)]
   0: start->g, y: y [O(n)]

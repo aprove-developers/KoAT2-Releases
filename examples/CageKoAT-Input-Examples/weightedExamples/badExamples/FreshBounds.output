@@ -8,8 +8,10 @@ Costbounds:
 
 Sizebounds:
 `Lower:
+  0: start->g, a: -inf [Infinity]
   0: start->g, x: x [O(n)]
   0: start->g, y: 0 [O(1)]
 `Upper:
+  0: start->g, a: inf [Infinity]
   0: start->g, x: x [O(n)]
   0: start->g, y: 0 [O(1)]

@@ -18,15 +18,16 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  2: evalndecrbb1in->evalndecrbbin, A: -max{0, 1-A} [O(n)]
-  3: evalndecrbb1in->evalndecrreturnin, A: -max{0, 1-A} [O(n)]
-  4: evalndecrbbin->evalndecrbb1in, A: -max{0, 1-A} [O(n)]
+  2: evalndecrbb1in->evalndecrbbin, A: -1+A [O(n)]
+  3: evalndecrbb1in->evalndecrreturnin, A: -1+A [O(n)]
+  4: evalndecrbbin->evalndecrbb1in, A: -1+A [O(n)]
   1: evalndecrentryin->evalndecrbb1in, A: -1+A [O(n)]
+  5: evalndecrreturnin->evalndecrstop, A: -inf [Infinity]
   0: evalndecrstart->evalndecrentryin, A: A [O(n)]
 `Upper:
-  2: evalndecrbb1in->evalndecrbbin, A: max{0, -1+A} [O(n)]
+  2: evalndecrbb1in->evalndecrbbin, A: -1+A [O(n)]
   3: evalndecrbb1in->evalndecrreturnin, A: 1 [O(1)]
-  4: evalndecrbbin->evalndecrbb1in, A: max{0, -1+A} [O(n)]
+  4: evalndecrbbin->evalndecrbb1in, A: -1+A [O(n)]
   1: evalndecrentryin->evalndecrbb1in, A: -1+A [O(n)]
   5: evalndecrreturnin->evalndecrstop, A: 1 [O(1)]
   0: evalndecrstart->evalndecrentryin, A: A [O(n)]

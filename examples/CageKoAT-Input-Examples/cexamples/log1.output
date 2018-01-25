@@ -10,12 +10,20 @@ Costbounds:
 
 Sizebounds:
 `Lower:
+  0: l0->l1, mod: -inf [Infinity]
   0: l0->l1, r: -1 [O(1)]
   0: l0->l1, x: x [O(n)]
+  0: l0->l1, x': -inf [Infinity]
+  1: l1->l1, mod: -inf [Infinity]
   1: l1->l1, r: -1 [O(1)]
-  1: l1->l1, x: -max{0, -x} [O(n)]
+  1: l1->l1, x: x [O(n)]
+  1: l1->l1, x': -inf [Infinity]
 `Upper:
+  0: l0->l1, mod: inf [Infinity]
   0: l0->l1, r: -1 [O(1)]
   0: l0->l1, x: x [O(n)]
-  1: l1->l1, r: max{0, 4*x} [O(n)]
-  1: l1->l1, x: max{0, x} [O(n)]
+  0: l0->l1, x': inf [Infinity]
+  1: l1->l1, mod: inf [Infinity]
+  1: l1->l1, r: max{-1, -1+4*x} [O(n)]
+  1: l1->l1, x: x [O(n)]
+  1: l1->l1, x': inf [Infinity]

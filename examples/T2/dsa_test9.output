@@ -11,7 +11,13 @@ Sizebounds:
   0: f0->f24, A: D [O(n)]
   0: f0->f24, B: E [O(n)]
   0: f0->f24, C: F [O(n)]
+  0: f0->f24, D: -inf [Infinity]
+  0: f0->f24, E: -inf [Infinity]
+  0: f0->f24, F: -inf [Infinity]
 `Upper:
   0: f0->f24, A: D [O(n)]
   0: f0->f24, B: E [O(n)]
   0: f0->f24, C: F [O(n)]
+  0: f0->f24, D: inf [Infinity]
+  0: f0->f24, E: inf [Infinity]
+  0: f0->f24, F: inf [Infinity]

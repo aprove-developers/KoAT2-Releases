@@ -1,6 +1,7 @@
 Timebounds: 
   Overall timebound: inf [Infinity]
   0: f->g: 1 [O(1)]
+  1: g->g: inf [Infinity]
 
 Costbounds:
   Overall costbound: inf [Infinity]
@@ -9,8 +10,16 @@ Costbounds:
 
 Sizebounds:
 `Lower:
+  0: f->g, x: -inf [Infinity]
+  0: f->g, x': -inf [Infinity]
   0: f->g, y: y [O(n)]
-  1: g->g, y: -max{0, -y} [O(n)]
+  1: g->g, x: -inf [Infinity]
+  1: g->g, x': -inf [Infinity]
+  1: g->g, y: y [O(n)]
 `Upper:
+  0: f->g, x: inf [Infinity]
+  0: f->g, x': inf [Infinity]
   0: f->g, y: y [O(n)]
-  1: g->g, y: max{0, y} [O(n)]
+  1: g->g, x: inf [Infinity]
+  1: g->g, x': inf [Infinity]
+  1: g->g, y: y [O(n)]

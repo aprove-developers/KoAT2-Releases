@@ -10,11 +10,12 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  1: one->one, a: -max{0, -a}-max{0, a-b} [O(n)]
+  1: one->one, a: a-max{0, a-b} [O(n)]
+  1: one->one, b: -inf [Infinity]
   0: start->one, a: a [O(n)]
   0: start->one, b: b [O(n)]
 `Upper:
-  1: one->one, a: max{0, a} [O(n)]
-  1: one->one, b: max{-1, -1+a} [O(n)]
+  1: one->one, a: a [O(n)]
+  1: one->one, b: -1+a [O(n)]
   0: start->one, a: a [O(n)]
   0: start->one, b: b [O(n)]

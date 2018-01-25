@@ -12,16 +12,16 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  0: merge->merge, A: -max{0, -A} [O(n)]
-  0: merge->merge, B: -max{0, -B} [O(n)]
-  1: merge->merge, A: -max{0, -A} [O(n)]
-  1: merge->merge, B: -max{0, -B} [O(n)]
+  0: merge->merge, A: A [O(n)]
+  0: merge->merge, B: B [O(n)]
+  1: merge->merge, A: A [O(n)]
+  1: merge->merge, B: B [O(n)]
   2: start->merge, A: A [O(n)]
   2: start->merge, B: B [O(n)]
 `Upper:
-  0: merge->merge, A: max{0, A} [O(n)]
-  0: merge->merge, B: max{0, B} [O(n)]
-  1: merge->merge, A: max{0, A} [O(n)]
-  1: merge->merge, B: max{0, B} [O(n)]
+  0: merge->merge, A: A [O(n)]
+  0: merge->merge, B: B [O(n)]
+  1: merge->merge, A: A [O(n)]
+  1: merge->merge, B: B [O(n)]
   2: start->merge, A: A [O(n)]
   2: start->merge, B: B [O(n)]
