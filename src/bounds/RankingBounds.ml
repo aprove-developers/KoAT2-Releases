@@ -8,16 +8,14 @@ type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
 (** All transitions outside of the prf transitions that lead to the given location. *)
 let transitions_to (graph: TransitionGraph.t) (rank_transitions: Transition.t list) (location: Location.t): Transition.t List.t =
-  let execute () =
-    TransitionGraph.pred_e graph location
-    |> TransitionSet.of_list
-    |> fun transitions -> TransitionSet.(diff transitions (of_list rank_transitions))
-    |> TransitionSet.to_list
-  in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "transitions to", ["location", Location.to_string location;
-                                                   "T'", String.concat "," (List.map Transition.to_id_string rank_transitions)])
-                     ~result:(fun transitions -> transitions |> List.map Transition.to_id_string |> String.concat ", ")
-                     execute
+  TransitionGraph.pred_e graph location
+  |> TransitionSet.of_list
+  |> (fun transitions -> TransitionSet.diff transitions (TransitionSet.of_list rank_transitions))
+  |> TransitionSet.to_list
+  |> tap (fun transitions ->
+         Logger.log logger Logger.DEBUG
+           (fun () -> "transitions_to", ["location", Location.to_string location;
+                                         "transitions", Util.enum_to_string Transition.to_id_string (List.enum transitions)]))
 
 (** All entry locations of the given transitions.
     Those are such locations, that are the target of any transition outside of the given transitions. *)
@@ -30,8 +28,8 @@ let entry_locations (graph: TransitionGraph.t) (rank_transitions: Transition.t l
     |> Enum.filter (fun location -> not List.(is_empty (transitions_to graph rank_transitions location)))
     |> List.of_enum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "entry locations", ["T'", String.concat "," (List.map Transition.to_id_string rank_transitions)])
-                     ~result:(fun locations -> locations |> List.map Location.to_string |> String.concat ", ")
+                     (fun () -> "entry_locations", [])
+                     ~result:(Util.enum_to_string Location.to_string % List.enum)
                      execute
 
 let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t) (transition: Transition.t): Bound.t =
@@ -69,7 +67,9 @@ let compute_bound (appr: Approximation.t) (graph: TransitionGraph.t) (rank: Rank
            ))
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute_bound", ["rank", RankingFunction.to_string rank])
+       (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (RankingFunction.decreasing rank);
+                                    "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (RankingFunction.non_increasing rank));
+                                    "rank", RankingFunction.only_rank_to_string rank])
                      ~result:Bound.to_string
                      execute
 
