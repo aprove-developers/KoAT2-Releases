@@ -67,24 +67,12 @@ let memoize f =
        y
   in g
 
-let combinations max set =
-  let combine (result: t Enum.t) (x: Var.t) =
-    result
-    |> Enum.clone
-    |> Enum.filter (fun ys -> cardinal ys <= max)
-    |> Enum.map (add x)
-    |> Enum.append result
-  in
-  set
-  |> enum
-  |> Enum.fold combine (Enum.singleton empty)
-
 let max set =
   try
     Some (max_elt set)
   with Not_found -> None
   
-let comb count set =
+let combinations count set =
   let rec f (count, set) =  
     if count == 0 then
       List.singleton empty
@@ -104,7 +92,7 @@ let comb count set =
   
 let sorted_combinations max set =
   Enum.seq 0 ((+) 1) ((>) (max+1))
-  |> Enum.map (fun c -> comb c set)
+  |> Enum.map (fun c -> combinations c set)
   |> Enum.map List.enum
   |> Enum.flatten
   

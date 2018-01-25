@@ -278,19 +278,20 @@ let c_range formula =
 let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: int) (c: int) =
   let execute () =
     let is_bounded = is_bounded_with solver var in
-    try 
-      program_vars
-      |> VarSet.sorted_combinations (VarSet.cardinal update_vars)
-      |> Enum.find_map (fun vars ->
-             Some (initial_lsb kind s c vars)
-             |> Option.filter is_bounded
-           ) 
-      |> optimize_s 1 s is_bounded
-      |> optimize_c c is_bounded
-      |> minimize_scaledsum_vars is_bounded
-      |> unabsify_vars is_bounded
-    with Not_found ->
-      raise (Failure "No lsb found although an update exists!")
+    Enum.seq 0 ((+) 1) ((>) (VarSet.cardinal update_vars + 1))
+    |> Util.find_map (fun count ->
+           VarSet.combinations count program_vars
+           |> List.enum
+           |> Util.find_map (fun vars ->
+                  Some (initial_lsb kind s c vars)
+                  |> Option.filter is_bounded
+                ) 
+           |> Option.map (optimize_s 1 s is_bounded)
+           |> Option.map (optimize_c c is_bounded)
+           |> Option.map (minimize_scaledsum_vars is_bounded)
+           |> Option.map (unabsify_vars is_bounded)
+         )
+    |> (flip Option.get_exn) (Failure "No lsb found although an update exists!")
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "find_scaled_bound", ["var", Var.to_string var; "guard_vars", VarSet.to_string guard_vars])
                   ~result:(Bound.to_string % as_bound)
