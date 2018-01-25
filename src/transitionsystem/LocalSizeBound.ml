@@ -273,7 +273,6 @@ let c_range formula =
   |> OurInt.min (OurInt.of_int 1024) (* TODO We cut it at the moment at 1024, because sometimes the approximation is worse than an integer value. *)
   |> OurInt.to_int
   
-
 (* Check if x <= s * (c + [v1,...,vn]). *)
 let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: int) (c: int) =
   let execute () =
@@ -282,14 +281,18 @@ let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: in
     |> Util.find_map (fun count ->
            VarSet.combinations count program_vars
            |> List.enum
-           |> Util.find_map (fun vars ->
-                  Some (initial_lsb kind s c vars)
-                  |> Option.filter is_bounded
-                ) 
-           |> Option.map (optimize_s 1 s is_bounded)
-           |> Option.map (optimize_c c is_bounded)
-           |> Option.map (minimize_scaledsum_vars is_bounded)
-           |> Option.map (unabsify_vars is_bounded)
+           |> Enum.map (initial_lsb kind s c)
+           |> Enum.filter is_bounded
+           |> Enum.map (optimize_s 1 s is_bounded)
+           |> Enum.map (optimize_c c is_bounded)
+           |> Enum.map (minimize_scaledsum_vars is_bounded)
+           |> Enum.map (unabsify_vars is_bounded)
+           |> Util.min_option (fun lsb1 lsb2 ->
+                  if lsb1.factor == lsb2.factor then
+                    lsb1.constant < lsb2.constant
+                  else
+                    lsb1.factor < lsb2.factor
+                )
          )
     |> (flip Option.get_exn) (Failure "No lsb found although an update exists!")
   in Logger.with_log logger Logger.DEBUG

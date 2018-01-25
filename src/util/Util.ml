@@ -11,6 +11,12 @@ let max_option greater =
     | (Some x, y) -> if greater x y then Some x else Some y in
   Enum.fold (curry f) None
 
+let min_option lesser =
+  let f = function
+    | (None, y) -> Some y
+    | (Some x, y) -> if lesser x y then Some x else Some y in
+  Enum.fold (curry f) None
+
 let intersection p enum1 enum2 =
   Enum.cartesian_product enum1 enum2
   |> Enum.filter (uncurry p)

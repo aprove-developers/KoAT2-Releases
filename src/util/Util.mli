@@ -7,6 +7,9 @@ val get_all : ('a Option.t) list -> ('a list) Option.t
 (** Computes the maximum of the enum if non-empty, else returns None. *)
 val max_option : ('a -> 'a -> bool) -> 'a Enum.t -> 'a Option.t
 
+(** Computes the maximum of the enum if non-empty, else returns None. *)
+val min_option : ('a -> 'a -> bool) -> 'a Enum.t -> 'a Option.t
+
 (** Computes the intersection between both enums with the given equality function. *)
 val intersection : ('a -> 'a -> bool) -> 'a Enum.t -> 'a Enum.t -> 'a Enum.t 
 
