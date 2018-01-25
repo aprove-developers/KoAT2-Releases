@@ -8,8 +8,18 @@ let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
 
 (** Prints the overall timebound of the program to the shell. *)
 let print_overall_timebound (program: Program.t) (appr: Approximation.t): unit =
-  print_string ((Bound.to_string Approximation.(TransitionApproximation.sum (time appr) program))^"\n")
+  program
+  |> Approximation.program_timebound appr
+  |> Bound.to_string
+  |> print_endline
 
+(** Prints the overall timebound of the program to the shell. *)
+let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
+  program
+  |> Approximation.program_costbound appr
+  |> Bound.asymptotic_complexity
+  |> Bound.show_complexity_termcomp
+  |> print_endline
 
 (** The shell arguments which can be defined in the console. *)
 type main_params = {
@@ -43,7 +53,7 @@ type main_params = {
     log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.NONE]
     (** The general log level of the loggers. *)
     
-    result : (Program.t -> Approximation.t -> unit); [@enum ["all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound] [@aka ["r"]]
+    result : (Program.t -> Approximation.t -> unit); [@enum ["all", print_all_bounds; "overall", print_overall_timebound; "termcomp", print_termcomp]] [@default print_overall_timebound] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. *)
     
     preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.all]
@@ -51,7 +61,7 @@ type main_params = {
     
     preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
-    
+
   } [@@deriving cmdliner]
 
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =

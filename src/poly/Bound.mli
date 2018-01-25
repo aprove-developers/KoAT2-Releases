@@ -80,6 +80,8 @@ type complexity =
 val equal_complexity : complexity -> complexity -> bool
 
 val show_complexity : complexity -> string
+
+val show_complexity_termcomp : complexity -> string
   
 (** Returns an overapproximation of the asymptotic complexity of the given bound. *)
 val asymptotic_complexity : t -> complexity

@@ -66,7 +66,13 @@ let rec show_complexity = function
   | Polynomial x -> "O(n^" ^ Int.to_string x ^ ")"
   | Exponential 1 -> "O(2^n)"
   | Exponential x -> "O(2^" ^ show_complexity (Exponential (x-1)) ^ ")"
-                      
+
+let show_complexity_termcomp = function
+  | Inf -> "MAYBE"
+  | Polynomial 0 -> "WORST_CASE(?, O(1)"
+  | Polynomial x -> "WORST_CASE(?, O(n^" ^ Int.to_string x ^ ")"
+  | Exponential _ -> "WORST_CASE(?, O(EXP)"
+
 let asymptotic_complexity =
   fold
     ~const:(fun _ -> Polynomial 0)
