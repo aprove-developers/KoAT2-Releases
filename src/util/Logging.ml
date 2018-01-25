@@ -7,8 +7,9 @@ type logger =
   | PRF
   | Bound
   | LocalSizeBound
+  | Preprocessor
 
-let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound]
+let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor]
 
 let show_logger = function
   | Approximation -> "appr"
@@ -17,6 +18,7 @@ let show_logger = function
   | PRF -> "prf"
   | Bound -> "bound"
   | LocalSizeBound -> "lsb"
+  | Preprocessor -> "preprocessor"
 
 let get =
   Logger.make_log % show_logger

@@ -7,6 +7,8 @@ open Program.Types
     Note that it only removes the specific transitions. 
     After the transformation the graph might contain unreachable locations, and even locations that are not connected to any transition. *)
 
+let logger = Logging.(get Preprocessor)
+   
 let unsatisfiable_transitions graph : TransitionSet.t =
   let combine (l,t,l') set =
     if SMT.Z3Solver.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then
@@ -19,4 +21,8 @@ let transform_program program =
   if TransitionSet.is_empty unsatisfiable_transitions then
     MaybeChanged.same program
   else
-    MaybeChanged.changed (TransitionSet.fold (flip Program.remove_transition) unsatisfiable_transitions program)
+    let remove transition program =
+      Logger.(log logger INFO (fun () -> "cut_unsatisfiable_transitions", ["transition", Transition.to_id_string transition]));
+      Program.remove_transition program transition
+    in
+    MaybeChanged.changed (TransitionSet.fold remove unsatisfiable_transitions program)

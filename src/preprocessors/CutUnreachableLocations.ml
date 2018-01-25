@@ -3,6 +3,8 @@ open Program.Types
    
 (** This preprocessor cuts all unreachable locations (and all transitions connected to them) from the program. *)
 
+let logger = Logging.(get Preprocessor)
+   
 module LocationSet = Set.Make(Location)
 
 (** Returns a set of all locations which are reachable from the given start location. *)
@@ -18,4 +20,8 @@ let transform_program program =
   if LocationSet.is_empty unreachable_locations then
     MaybeChanged.same program
   else
-    MaybeChanged.changed (LocationSet.fold (flip Program.remove_location) unreachable_locations program)
+    let remove location program =
+      Logger.(log logger INFO (fun () -> "cut_unreachable_locations", ["location", Location.to_string location]));
+      Program.remove_location program location
+    in
+    MaybeChanged.changed (LocationSet.fold remove unreachable_locations program)

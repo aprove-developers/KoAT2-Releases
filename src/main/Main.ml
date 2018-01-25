@@ -102,7 +102,7 @@ let run (params: main_params) =
   |> MainUtil.read_input params.simple_input
   |> Option.map (fun program ->
          (program, Approximation.create program)
-         |> params.preprocessing_strategy params.preprocessors
+         |> Preprocessor.process params.preprocessing_strategy params.preprocessors
          |> tap (fun (program, appr) ->
                 if params.print_system then
                   Program.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)

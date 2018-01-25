@@ -1,5 +1,7 @@
 open Batteries
 
+let logger = Logging.(get Preprocessor)
+   
 type subject = Program.t * Approximation.t
 
 type t =
@@ -48,7 +50,12 @@ let all =
 type strategy = t list -> subject -> subject
 
 let process strategy preprocessors subject =
-  strategy preprocessors subject
+  let execute () =
+    strategy preprocessors subject
+  in
+  Logger.(with_log logger INFO
+            (fun () -> "running_preprocessors", ["preprocessors", Util.enum_to_string show (List.enum preprocessors)])
+            execute)
 
 let process_only_once preprocessors =
   PreprocessorSet.fold (fun preprocessor subject -> MaybeChanged.unpack (transform subject preprocessor)) (PreprocessorSet.of_list preprocessors)

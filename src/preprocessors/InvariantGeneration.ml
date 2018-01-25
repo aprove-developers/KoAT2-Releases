@@ -8,6 +8,8 @@ open PolyTypes
 (** This preprocessor generates invariants for a given program and adds them to the transitions of the program.
     This way more restrictive information is available locally in the transitions. *)
 
+let logger = Logging.(get Preprocessor)
+   
 (** A map from program locations to anything. *)
 module LocationMap = Hashtbl.Make(Location)
 
@@ -259,6 +261,10 @@ let transform_program program =
   if LocationMap.is_empty invariants then
     MaybeChanged.same program
   else
+    let add location invariant program =
+      Logger.(log logger INFO (fun () -> "add_invariant", ["location", Location.to_string location; "invariant", Constraint.to_string invariant]));
+      Program.add_invariant location invariant program
+    in
     program
-    |> LocationMap.fold Program.add_invariant invariants
+    |> LocationMap.fold add invariants
     |> MaybeChanged.changed (* TODO Actually, we should check if the new invariant is already implied and only then say, that it is changed. *)
