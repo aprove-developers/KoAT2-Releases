@@ -206,6 +206,9 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
   |> Enum.iter (fun decreasing ->
+         Logger.(log logger DEBUG (fun () -> "try_decreasing", ["measure", show_measure measure;
+                                                                "decreasing", Transition.to_id_string decreasing;
+                                                                "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing)]));
          Solver.push opt;
          Solver.add opt (bounded_constraint measure decreasing);
          Solver.add opt (decreasing_constraint measure decreasing);
@@ -219,6 +222,7 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
                   Logger.(log logger INFO (fun () -> "add_ranking_function", [
                                                "measure", show_measure measure;
                                                "decreasing", Transition.to_id_string decreasing;
+                                               "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
                                                "rank", only_rank_to_string ranking_function]))
                 )
          );
