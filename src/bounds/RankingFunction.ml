@@ -261,7 +261,12 @@ let compute_ measure program =
                      (Array.of_enum (TransitionSet.enum scc))
                      (Stack.create ())
                      (ref (TransitionSet.cardinal scc))
-                     measure           
+                     measure;
+           scc
+           |> TransitionSet.iter (fun t ->
+                  if not (RankingTable.mem (ranking_table measure) t) then
+                    Logger.(log logger WARN (fun () -> "no_ranking_function", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
+                )
          with Exit -> ()
        )
   
