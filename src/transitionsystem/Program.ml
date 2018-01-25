@@ -109,7 +109,7 @@ let rvg kind program =
     let rvg_with_vertices: RVG.t = add_vertices_to_rvg (List.map (fun var -> (post_transition,var)) program.vars) rvg in
     let pre_nodes (post_transition: Transition.t) (post_var: Var.t) =
       let vars =
-        LocalSizeBound.sizebound_local kind (vars program) (Transition.label post_transition) post_var
+        LocalSizeBound.sizebound_local kind (vars program) post_transition post_var
         |> Option.map LocalSizeBound.vars
         |? VarSet.of_list program.vars
       in

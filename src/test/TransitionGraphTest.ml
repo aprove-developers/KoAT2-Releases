@@ -42,7 +42,7 @@ let suite =
         |> List.map (fun (l,l',var,bound) ->
                "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ var ^ " is " ^ bound ^ "?" >:: (fun _ ->
                        let program = Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat" in
-                       let (l,t,l') = TransitionGraph.find_edge (Program.graph program) (Location.of_string l) (Location.of_string l') in
+                       let t = TransitionGraph.find_edge (Program.graph program) (Location.of_string l) (Location.of_string l') in
                        TransitionLabel.(assert_equal_bound
                                                   (Bound.of_poly (Readers.read_polynomial bound))
                                                   LocalSizeBound.(sizebound_local `Upper (Program.vars program) t (Var.of_string var) |> Option.map as_bound |? default `Upper)
@@ -55,8 +55,8 @@ let suite =
       (
         "Print" >:: (fun _ ->
           Program.print_system ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
-          let get_lsb program kind t v =
-            LocalSizeBound.(sizebound_local kind (Program.vars program) t v |> Option.map as_bound |? default kind)
+          let get_lsb program kind (t, v) =
+            LocalSizeBound.(sizebound_local_rv kind (Program.vars program) (t, v) |> Option.map as_bound |? default kind)
           in
           "../../examples/KoAT-2013/sect1-lin.koat"
           |> Readers.read_file

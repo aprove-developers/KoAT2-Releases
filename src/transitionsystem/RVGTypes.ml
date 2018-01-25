@@ -37,14 +37,14 @@ module RV =
     let to_id_string (t,v) =
       "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
-    let to_string get_lsb kind ((l,t,l'), v) =
+    let to_string get_lsb kind (t, v) =
       let comp = function
         | `Lower -> "<="
         | `Upper -> ">="
       in
-      String.concat " " [Bound.to_string (get_lsb kind t v);
+      String.concat " " [Bound.to_string (get_lsb kind (t, v));
                          comp kind;
-                         to_id_string ((l,t,l'), v)]
+                         to_id_string (t, v)]
   end
 
 module RVG =

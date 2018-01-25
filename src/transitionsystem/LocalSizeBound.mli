@@ -69,7 +69,7 @@ val find_bound : [`Lower | `Upper] -> VarSet.t -> Var.t -> Formula.t -> Polynomi
 
 (** Returns a local sizebound of the specified kind for the variable of the transition. 
     A local sizebound is expressed in relation to the values directly before executing the transition. *)
-val sizebound_local : [`Lower | `Upper] -> VarSet.t -> TransitionLabel.t -> Var.t -> t Option.t
+val sizebound_local : [`Lower | `Upper] -> VarSet.t -> Transition.t -> Var.t -> t Option.t
   
 val sizebound_local_rv : [`Lower | `Upper] -> VarSet.t -> RV.t -> t Option.t
 

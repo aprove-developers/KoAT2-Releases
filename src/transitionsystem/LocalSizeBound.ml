@@ -1,6 +1,7 @@
 open Batteries
 open Formulas
 open Polynomials
+open ProgramTypes
    
 let logger = Logging.(get LocalSizeBound)
            
@@ -320,13 +321,13 @@ let find_bound kind program_vars var formula update s_range =
 module LSB_Cache =
   Hashtbl.Make(
       struct
-        type t = kind * TransitionLabel.t * Var.t
+        type t = kind * Transition.t * Var.t
         let equal (k1,t1,v1) (k2,t2,v2) =
           equal_kind k1 k2
-          && TransitionLabel.same t1 t2
+          && Transition.same t1 t2
           && Var.equal v1 v2
         let hash (k,t,v) =
-          Hashtbl.hash (k, TransitionLabel.id t, v)
+          Hashtbl.hash (k, Transition.id t, v)
       end
     )
    
@@ -337,36 +338,36 @@ let reset () =
   LSB_Cache.clear table
 
 let memoize f =  
-  let g (kind,label,var) = 
-    match LSB_Cache.find_option table (kind,label,var) with
+  let g (kind,t,var) = 
+    match LSB_Cache.find_option table (kind,t,var) with
     | Some lsb -> lsb
     | None ->
-       let lsb = f (kind,label,var) in
-       LSB_Cache.add table (kind,label,var) lsb;
+       let lsb = f (kind,t,var) in
+       LSB_Cache.add table (kind,t,var) lsb;
        (Logger.log logger Logger.INFO
                    (fun () -> "add_local_size_bound", [
                         "kind", show_kind kind;
-                        "transition", TransitionLabel.to_id_string label;
+                        "transition", Transition.to_id_string t;
                         "var", Var.to_string var;
                         "lsb", Util.option_to_string (Bound.to_string % as_bound) lsb]));
        lsb
   in g
    
-let sizebound_local kind program_vars label var =
-  let f (kind, label, var) =
+let sizebound_local kind program_vars (l,t,l') var =
+  let f (kind, (l,t,l'), var) =
     let open Option.Infix in
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
-    TransitionLabel.update label var
+    TransitionLabel.update t var
     |> Option.map (fun update ->
            (* Introduce a temporary result variable *)
            let v' = Var.fresh_id Var.Int () in
-           let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard label) && Polynomial.of_var v' = update) in
+           let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && Polynomial.of_var v' = update) in
            find_bound kind program_vars v' guard_with_update update (s_range update)
          )
   in
-  memoize f (kind, label, var)
+  memoize f (kind, (l,t,l'), var)
 
-let sizebound_local_rv kind program_vars ((l,t,l'),v) =
+let sizebound_local_rv kind program_vars (t,v) =
   sizebound_local kind program_vars t v
   
 let sizebound_local_scc kind program_vars scc =

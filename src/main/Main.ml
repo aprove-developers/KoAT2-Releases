@@ -62,7 +62,7 @@ let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): 
                     TransitionLabel.to_string label]
 
 let bounded_rv_to_string (program_vars: VarSet.t) kind (appr: Approximation.t) (t,v) =
-  let get_lsb kind t v =
+  let get_lsb kind (t, v) =
     LocalSizeBound.(sizebound_local kind program_vars t v |> Option.map as_bound |? default kind)
   in
   let comp = function
@@ -77,7 +77,7 @@ let bounded_rv_to_string (program_vars: VarSet.t) kind (appr: Approximation.t) (
                     "Local: ";
                     RV.to_string get_lsb kind (t,v)]
 
-let get_lsb program kind t v =
+let get_lsb program kind (t, v) =
   LocalSizeBound.(sizebound_local kind (Program.vars program) t v |> Option.map as_bound |? default kind)
 
 let run (params: main_params) =
