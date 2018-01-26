@@ -37,12 +37,12 @@ let cost appr = appr.cost
 let timebound =
   TransitionApproximation.get % time
 
+let timebound_id =
+  TransitionApproximation.get_id % time
+
 let program_timebound =
   TransitionApproximation.sum % time
 
-let timebound_between =
-  TransitionApproximation.get_between % time
-                        
 let add_timebound bound transition appr =
   { appr with time = TransitionApproximation.add bound transition appr.time }
 

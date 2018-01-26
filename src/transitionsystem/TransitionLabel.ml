@@ -13,8 +13,6 @@ type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
           
 type t = {
     id : int;
-    start : string;
-    target : string;
     update : Polynomial.t VarMap.t;
     guard : Guard.t;
     cost : Polynomial.t;
@@ -22,20 +20,18 @@ type t = {
   
 let one = Polynomial.one
 
-let make ?(cost=one) com_kind ~start ~target ~update ~guard =
+let make ?(cost=one) com_kind ~update ~guard =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
   {
     id = unique ();
-    start; target; update; guard; cost;
+    update; guard; cost;
   }
 
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
 
 let equivalent lbl1 lbl2 =
-  lbl1.start = lbl2.start
-  && lbl1.target = lbl2.target
-  && VarMap.equal Polynomial.equal lbl1.update lbl2.update
+  VarMap.equal Polynomial.equal lbl1.update lbl2.update
   && Guard.equal lbl1.guard lbl2.guard
   && Polynomial.equal lbl1.cost lbl2.cost
 
@@ -43,11 +39,7 @@ let compare_same lbl1 lbl2 =
   Int.compare lbl1.id lbl2.id
 
 let compare_equivalent lbl1 lbl2 =
-  if String.compare lbl1.start lbl2.start != 0 then
-    String.compare lbl1.start lbl2.start
-  else if String.compare lbl1.target lbl2.target != 0 then
-    String.compare lbl1.target lbl2.target
-  else if VarMap.compare Polynomial.compare lbl1.update lbl2.update != 0 then
+  if VarMap.compare Polynomial.compare lbl1.update lbl2.update != 0 then
     VarMap.compare Polynomial.compare lbl1.update lbl2.update
   else if Guard.compare lbl1.guard lbl2.guard != 0 then
     Guard.compare lbl1.guard lbl2.guard
@@ -57,7 +49,7 @@ let compare_equivalent lbl1 lbl2 =
     0
 
 (* TODO Pattern <-> Assigment relation *)
-let mk ?(cost=one) ~com_kind ~start ~targets ~patterns ~guard ~vars =
+let mk ?(cost=one) ~com_kind ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       let (target, assignments) = List.hd targets in
@@ -67,7 +59,7 @@ let mk ?(cost=one) ~com_kind ~start ~targets ~patterns ~guard ~vars =
       |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
       |> fun update -> { id = unique ();
-                         start; target; update; guard; cost;}
+                         update; guard; cost;}
                    
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
@@ -91,18 +83,12 @@ let append t1 t2 =
   in
   {
     id = unique ();
-    start = t1.start;
-    target = t2.target;
     update = new_update;
     guard = new_guard;
     cost = Polynomial.(t1.cost + t2.cost);
   }
 
 let id t = t.id
-
-let start t = t.start
-            
-let target t = t.target
              
 let update t var = VarMap.Exceptionless.find var t.update                    
                  
@@ -121,8 +107,6 @@ let vars {update; guard; cost; _} =
            
 let default = {
     id = 0;
-    start = "";
-    target = "";
     update = VarMap.empty;
     guard = Guard.mk_true;
     cost = one;

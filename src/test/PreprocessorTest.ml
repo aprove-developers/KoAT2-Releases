@@ -23,6 +23,7 @@ let tests =
                   ]
       );
       
+(* TODO TransitionIDs instead of locations
       ("TrivialTimeBounds" >:::
          List.map (fun (src, target, program) ->
              program >:: (fun _ ->
@@ -42,7 +43,8 @@ let tests =
                     ("l4", "l5", "l1 -> l2(x), l2 -> l3(x), l3 -> l2(x), l3 -> l4(x), l4 -> l4(x), l4 -> l5(x)");
                   ]
       );
-
+ *)
+      
       ("CutUnsatisfiableTransitions" >:::
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->

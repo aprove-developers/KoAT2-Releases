@@ -39,10 +39,6 @@
 
 %type <Var.t list> variables
 
-%type <(vars:Var.t list -> TransitionLabel.t) list> transition
-
-%type <(vars:Var.t list -> TransitionLabel.t) list> transitions
-
 %{
   open BatTuple
   module Constr = Constraints.Constraint
@@ -50,8 +46,6 @@
   module Poly = Polynomials.Polynomial
   open Formulas
   open ProgramTypes
-
-  let default_vars = List.map Var.of_string ["x"; "y"; "z"; "u"; "v"; "w"; "p"; "q"]
 %}
 
 %%
@@ -63,36 +57,21 @@ onlyProgram :
 program :
         |       goal
                 start = start
-                vars = variables
-                trans = transitions
-                  { Program.from (List.map (fun t -> t ~vars) trans) start } ;
+                variables = variables
+                transitions = transitions
+                  { Program.from (transitions variables) start } ;
 
 onlyProgram_simple :
         |       graph = program_simple; EOF
                   { graph } ;
 
 program_simple :
-	|       trans = separated_nonempty_list(COMMA, transition_simple)
-                  {    trans
-                    |> List.flatten
-                    |> List.hd
-	            |> TransitionLabel.start
-	            |> Location.of_string
-                    |> Program.from (List.flatten trans) } ;
+	|       transitions = separated_nonempty_list(COMMA, transition_simple)
+                  { ParserUtil.mk_program_simple (List.flatten transitions) } ;
 
 transition_simple :
 	|	start = ID; cost = cost ; rhs = transition_rhs; formula = withConstraints
-	          {    formula
-          	    |> Formula.constraints
-                    |> List.map (fun constr ->
-                         TransitionLabel.mk
-                           ~com_kind:(Tuple2.first rhs)
-                    	   ~start:start
-                           ~targets:(Tuple2.second rhs)
-                           ~patterns:default_vars
-                           ~guard:constr 
-                           ~cost:cost
-                           ~vars:default_vars)} ;
+	          { ParserUtil.mk_transition_simple start cost rhs formula } ;
 
 goal :		
 	|	LPAR GOAL goal = ID RPAR
@@ -103,8 +82,8 @@ start :
 		  { Location.of_string start } ;
 
 transitions :
-	|	LPAR RULES l = nonempty_list(transition) RPAR
-		  { List.flatten l } ;
+	|	LPAR RULES transition = nonempty_list(transition) RPAR
+		  { fun vars -> List.map (fun t -> t vars) transition |> List.flatten } ;
 
 variables :   
 	|	LPAR VAR vars = list(ID) RPAR
@@ -112,16 +91,8 @@ variables :
 		  
 transition :
 	|	lhs = transition_lhs; cost = cost ; rhs = transition_rhs; formula = withConstraints
-	          {    formula
-          	    |> Formula.constraints
-                    |> List.map (fun constr ->
-                         TransitionLabel.mk
-                           ~com_kind:(Tuple2.first rhs)
-                    	   ~start:(Tuple2.first lhs)
-                           ~targets:(Tuple2.second rhs)
-                           ~patterns:(List.map Var.of_string (Tuple2.second lhs))
-                           ~guard:constr 
-                           ~cost:cost)} ;
+	          { ParserUtil.mk_transition lhs cost rhs formula } ;
+		  
 cost : 
         |       MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
                   { ub };

@@ -65,9 +65,8 @@ type main_params = {
   } [@@deriving cmdliner]
 
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
-  let get accessor = Location.of_string (accessor label) in
   String.concat "" ["Timebound: ";
-                    Approximation.timebound appr (get TransitionLabel.start, label, get TransitionLabel.target) |> Bound.to_string;
+                    Approximation.timebound_id appr (TransitionLabel.id label) |> Bound.to_string;
                     "\n";
                     TransitionLabel.to_string label]
 

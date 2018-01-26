@@ -33,11 +33,11 @@ val equivalent : t -> t -> bool
 (** Returns a timebound for the transition. *)
 val timebound : t -> Transition.t -> Bound.t
 
+(** Returns a timebound for the transition id. *)
+val timebound_id : t -> int -> Bound.t
+
 (** Returns a timebound for the program. *)
 val program_timebound : t -> Program.t -> Bound.t
-
-(** Returns a timebound for the unique transition from the source to the target or None if there isn't such a single transition. *)
-val timebound_between : t -> Location.t -> Location.t -> Bound.t Option.t
 
 (** Adds the information that the specified bound is a valid timebound for the given transition. 
     The resulting approximation is guaranteed to be at least as good as the old approximation. *)

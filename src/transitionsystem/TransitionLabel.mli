@@ -14,11 +14,10 @@ type t
 
 exception RecursionNotSupported
 
-val make : ?cost:polynomial -> string -> start:string -> target:string -> update:polynomial VarMap.t -> guard:Guard.t -> t
+val make : ?cost:polynomial -> string -> update:polynomial VarMap.t -> guard:Guard.t -> t
 
 val mk : ?cost:polynomial ->
          com_kind:string ->
-         start:string ->
          targets:(string * (polynomial list)) list ->
          patterns:Var.t list ->
          guard:Guard.t ->
@@ -40,10 +39,6 @@ val compare_same : t -> t -> int
 val compare_equivalent : t -> t -> int
 
 val id : t -> int
-  
-val start : t -> string
-
-val target : t -> string
 
 val update : t -> Var.t -> polynomial Option.t
 

@@ -2,47 +2,35 @@ open Batteries
 open ProgramTypes
    
 let logger = Logging.(get Approximation) 
-
-module ApproximatedTransition =
-  struct
-    include Transition
-    let equal = same
-  end
-module Map = Hashtbl.Make(ApproximatedTransition)
            
-type t = string * Bound.t Map.t
+type t = string * (int, Bound.t) Hashtbl.t
        
-let empty name size = (name, Map.create size)
-          
-let get (name,map) transition =
+let empty name size = (name, Hashtbl.create size)
+
+let get_id (name,map) id =
   let execute () =
-    Map.find_option map transition |? Bound.infinity
+    Hashtbl.find_option map id |? Bound.infinity
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> name ^ "bound", ["transition", Transition.to_id_string transition])
+                     (fun () -> name ^ "bound", ["transition", string_of_int id])
                      ~result:Bound.to_string
                      execute
-
-let get_between (name,map) src target =
-  map
-  |> Map.filteri (fun (l,_,l') _ -> Location.(equal l src && equal l' target))
-  |> Map.values
-  |> Option.some
-  |> Option.filter (fun values -> Enum.count values = 1)
-  |> fun option -> Option.bind option Enum.get
+                    
+let get (name,map) transition =
+  get_id (name,map) (Transition.id transition)
 
 let sum appr program =
   TransitionGraph.fold_edges_e (fun transition result -> Bound.(get appr transition + result)) (Program.graph program) Bound.zero
 
 let sum_available (name,map) =
-  Map.fold (fun transition bound result -> Bound.(bound + result)) map Bound.zero
+  Hashtbl.fold (fun transition bound result -> Bound.(bound + result)) map Bound.zero
   
 let add bound transition (name,map) =
   (try
-     Map.modify transition (Bound.min bound) map
+     Hashtbl.modify (Transition.id transition) (Bound.min bound) map
    with
-   | Not_found -> Map.add map transition bound);
+   | Not_found -> Hashtbl.add map (Transition.id transition) bound);
   Logger.log logger Logger.INFO
-             (fun () -> "add_" ^ name ^ "_bound", ["transition", Transition.to_id_string transition; "bound", Bound.to_string bound]);
+    (fun () -> "add_" ^ name ^ "_bound", ["transition", Transition.to_id_string transition; "bound", Bound.to_string bound]);
   (name, map)
 
 let all_bounded appr =
@@ -53,7 +41,7 @@ let to_string transitions (name,map) =
   transitions
   |> TransitionSet.to_list
   |> List.sort Transition.compare_same
-  |> List.map (fun t -> t, Map.find_option map t |? Bound.infinity)
+  |> List.map (fun t -> t, Hashtbl.find_option map (Transition.id t) |? Bound.infinity)
   |> List.print
        ~first:"  "
        ~last:"\n"
@@ -65,10 +53,10 @@ let to_string transitions (name,map) =
 (** Very slow equality, only for testing purposes *)
 let equivalent (name1,map1) (name2,map2) =
   let module Set =
-    Set.Make(struct type t = Transition.t * Bound.t
-                    let compare (t1,bound1) (t2,bound2) =
-                      if Transition.compare_same t1 t2 != 0 then
-                        Transition.compare_same t1 t2
+    Set.Make(struct type t = int * Bound.t
+                    let compare (id1,bound1) (id2,bound2) =
+                      if Int.compare id1 id2 != 0 then
+                        Int.compare id1 id2
                       else if Bound.(bound1 < bound2) |? false then
                         -1
                       else if Bound.(bound1 > bound2) |? false then
@@ -77,5 +65,5 @@ let equivalent (name1,map1) (name2,map2) =
                         0
              end)
   in
-  let to_set = Set.of_enum % Map.enum in
+  let to_set = Set.of_enum % Hashtbl.enum in
   Set.equal (to_set map1) (to_set map2)
