@@ -1,6 +1,8 @@
 open Batteries
 open ProgramTypes
    
+let logger = Logging.(get Preprocessor)
+   
 (** Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location,
     making the location obsolete. *)
 let skip_location location graph =
@@ -20,14 +22,18 @@ let chainable graph location : bool =
 
 (** Performs a chaining step removing the location from the graph. *)
 let chain location graph : TransitionGraph.t =
-  TransitionGraph.remove_vertex (skip_location location graph) location
+  let skipped = skip_location location graph in
+  TransitionGraph.succ_e skipped location
+  |> List.enum
+  |> Enum.fold TransitionGraph.remove_edge_e skipped
 
 let transform_graph (graph: TransitionGraph.t): TransitionGraph.t MaybeChanged.t =
   let try_chaining location maybe_changed_graph =
     let open MaybeChanged in
     maybe_changed_graph >>= (fun graph ->
-      if chainable graph location then
+      if chainable graph location then (
+        Logger.(log logger INFO (fun () -> "chaining", ["location", Location.to_string location]));
         changed (chain location graph)
-      else
+      ) else
         same graph)
   in TransitionGraph.fold_vertex try_chaining graph (MaybeChanged.same graph)

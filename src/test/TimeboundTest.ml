@@ -6,7 +6,7 @@ open ProgramTypes
 (** Returns an overall timebound for the given program. *)
 let find_timebound (program: Program.t): Bound.t =
   (program, Approximation.create program)
-  |> Preprocessor.process_til_fixpoint Preprocessor.all
+  |> Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
   |> (fun (program, appr) ->
     Bounds.find_bounds program appr
     |> fun appr -> Approximation.(TransitionApproximation.sum (time appr) program)
@@ -15,7 +15,7 @@ let find_timebound (program: Program.t): Bound.t =
 (** Returns an overall costbound for the given program. *)
 let find_costbound (program: Program.t): Bound.t =
   (program, Approximation.create program)
-  |> Preprocessor.process_til_fixpoint Preprocessor.all
+  |> Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
   |> (fun (program, appr) ->
     Bounds.find_bounds program appr
     |> fun appr -> Approximation.program_costbound appr program

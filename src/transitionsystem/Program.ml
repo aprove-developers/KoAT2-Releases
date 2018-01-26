@@ -6,13 +6,11 @@ open RVGTypes
    
 type t = {
     graph: TransitionGraph.t;
-    vars: Var.t list;
     start: Location.t;
   }
 
 let equal equal_graph program1 program2 =
   equal_graph program1.graph program2.graph
-  && List.eq Var.equal program1.vars program2.vars
   && Location.equal program1.start program2.start
 
 let equivalent =
@@ -57,6 +55,7 @@ let rename program =
            let new_name = ("l" ^ string_of_int !counter) in
            Hashtbl.add map location new_name;
            counter := !counter + 1;
+           Logger.(log Logging.(get Preprocessor) INFO (fun () -> "renaming", ["original", Location.to_string location; "new", new_name]));
            new_name
          )
     |> Location.of_string
@@ -64,18 +63,10 @@ let rename program =
   let new_start = name program.start in
   {
     graph = TransitionGraph.map_vertex name program.graph;
-    vars = program.vars;
     start = new_start;
   }
 
 let from transitions start =
-  let vars =
-    transitions
-    |> List.map Transition.label
-    |> List.map TransitionLabel.vars
-    |> List.fold_left VarSet.union VarSet.empty
-    |> VarSet.to_list
-  in
   transitions
   |> fun transitions ->
      if transitions |> List.map Transition.target |> List.mem_cmp Location.compare start then
@@ -83,12 +74,8 @@ let from transitions start =
      else
        {
          graph = mk (List.enum transitions);
-         vars = vars;
          start = start;
        }
-
-let vars program =
-  VarSet.of_list program.vars
 
 let start program = program.start
   
@@ -102,6 +89,14 @@ let graph g = g.graph
 let transitions =
   TransitionGraph.transitions % graph
   
+let vars program =
+  program
+  |> transitions
+  |> TransitionSet.enum
+  |> Enum.map Transition.label
+  |> Enum.map TransitionLabel.vars
+  |> Enum.fold VarSet.union VarSet.empty
+
 let pre program (l,t,l') =
   List.enum (TransitionGraph.pred_e (graph program) l)
 
@@ -122,12 +117,12 @@ let add_invariant location invariant =
 
 let rvg kind program =
   let add_transition (post_transition: Transition.t) (rvg: RVG.t): RVG.t =
-    let rvg_with_vertices: RVG.t = add_vertices_to_rvg (List.map (fun var -> (post_transition,var)) program.vars) rvg in
+    let rvg_with_vertices: RVG.t = add_vertices_to_rvg (program |> vars |> VarSet.to_list |> List.map (fun var -> (post_transition,var))) rvg in
     let pre_nodes (post_transition: Transition.t) (post_var: Var.t) =
       let vars =
         LocalSizeBound.sizebound_local kind (vars program) post_transition post_var
         |> Option.map LocalSizeBound.vars
-        |? VarSet.of_list program.vars
+        |? vars program
       in
       vars
       |> VarSet.enum
@@ -200,7 +195,12 @@ let is_initial_location program location =
 let to_string program =
   let transitions = TransitionGraph.fold_edges_e (fun t str -> str ^ "; " ^ Transition.to_string t) program.graph ""
   and locations = TransitionGraph.fold_vertex (fun l str -> str ^ "; " ^ Location.to_string l) program.graph "" in
-  String.concat " " ["Start:"; Location.to_string program.start; "Locations:"; locations; "Transitions:"; transitions; "Vars:"; String.concat ", " (List.map Var.to_string program.vars)] 
+  String.concat " " [
+      "Start:"; Location.to_string program.start;
+      "Locations:"; locations;
+      "Transitions:"; transitions;
+      "Vars:"; program |> vars |> VarSet.map_to_list Var.to_string |> String.concat ", "
+    ] 
   
 let to_simple_string program =
   TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph "" 

@@ -69,11 +69,11 @@ let append t1 t2 =
     |? Polynomial.of_var
          (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
          (VarTable.find_option nondet_vars var
-          |? (
-            let nondet_var = Var.fresh_id Var.Int () in
-            VarTable.add nondet_vars var nondet_var;
-            nondet_var
-          )
+          |> Option.default_delayed (fun () ->
+                 let nondet_var = Var.fresh_id Var.Int () in
+                 VarTable.add nondet_vars var nondet_var;
+                 nondet_var
+               )
          )
   in 
   let new_update =

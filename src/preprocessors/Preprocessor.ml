@@ -19,8 +19,8 @@ let show = function
 let affects = function
   | CutUnreachableLocations -> []
   | InvariantGeneration -> [CutUnsatisfiableTransitions]
-  | CutUnsatisfiableTransitions -> [CutUnreachableLocations; (*Chaining*)]
-  | Chaining -> [CutUnsatisfiableTransitions; (*Chaining;*) InvariantGeneration]
+  | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining]
+  | Chaining -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
 
 let lift_to_program transform program =
   MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (fun _ -> graph) program)))
@@ -44,7 +44,7 @@ module PreprocessorSet =
     )
 
 let all =
-  [CutUnreachableLocations; CutUnsatisfiableTransitions; InvariantGeneration]
+  [Chaining; CutUnreachableLocations; CutUnsatisfiableTransitions; InvariantGeneration]
 
   
 type strategy = t list -> subject -> subject
