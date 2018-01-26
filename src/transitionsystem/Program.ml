@@ -168,6 +168,12 @@ let print_system ~label ~outdir ~file program =
   print_graph outdir (file ^ "_system") (graph program) Dot.output_graph
 
 let print_rvg kind ~label ~outdir ~file program =
+  let graph = rvg kind program in
+  let module C = Graph.Components.Make(RVG) in
+  let (_,scc_number) = C.scc graph in
+  let rv_color (rv: RV.t) =
+    scc_number rv * 424242
+  in
   let show_kind = function
     | `Lower -> "lower"
     | `Upper -> "upper"
@@ -178,12 +184,12 @@ let print_rvg kind ~label ~outdir ~file program =
                                        let edge_attributes _ = [`Label ""; `Color 4711]
                                        let default_edge_attributes _ = []
                                        let get_subgraph _ = None
-                                       let vertex_attributes _ = [`Shape `Box]
+                                       let vertex_attributes v = [`Shape `Box; `Color (rv_color v)]
                                        let vertex_name v = "\"" ^ label v ^ "\""
                                        let default_vertex_attributes _ = []
                                        let graph_attributes _ = []
                                      end) in
-  print_graph outdir (file ^ "_rvg_" ^ show_kind kind) (rvg kind program) Dot.output_graph
+  print_graph outdir (file ^ "_rvg_" ^ show_kind kind) graph Dot.output_graph
 
 let is_initial program trans =
   Location.(equal (program.start) (Transition.src trans))
