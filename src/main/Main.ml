@@ -73,9 +73,9 @@ let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): 
                     "\n";
                     TransitionLabel.to_string label]
 
-let bounded_rv_to_string (program_vars: VarSet.t) kind (appr: Approximation.t) (t,v) =
+let bounded_rv_to_string (program: Program.t) kind (appr: Approximation.t) (t,v) =
   let get_lsb kind (t, v) =
-    LocalSizeBound.(sizebound_local kind program_vars t v |> Option.map as_bound |? default kind)
+    LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
   in
   String.concat "" [RV.to_id_string (t, v);
                     "\n";
@@ -87,7 +87,7 @@ let bounded_rv_to_string (program_vars: VarSet.t) kind (appr: Approximation.t) (
     ]
   
 let get_lsb program kind (t, v) =
-  LocalSizeBound.(sizebound_local kind (Program.vars program) t v |> Option.map as_bound |? default kind)
+  LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
 
 let run (params: main_params) =
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
@@ -121,11 +121,11 @@ let run (params: main_params) =
          |> Preprocessor.process params.preprocessing_strategy params.preprocessors
          |> tap (fun (program, appr) ->
                 if params.print_system then
-                  Program.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
+                  GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
-                  Program.print_rvg `Lower ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program;
-                  Program.print_rvg `Upper ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
+                  GraphPrint.print_rvg `Lower ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_rvg `Upper ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
                 )
               )
          |> (fun (program, appr) ->
@@ -137,11 +137,11 @@ let run (params: main_params) =
          |> tap (fun (program, appr) -> params.result program appr)
          |> tap (fun (program, appr) ->
                 if params.print_system then
-                  Program.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
+                  GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
-                  Program.print_rvg `Lower ~label:(bounded_rv_to_string (Program.vars program) `Lower appr) ~outdir:output_dir ~file:input_filename program;
-                  Program.print_rvg `Upper ~label:(bounded_rv_to_string (Program.vars program) `Upper appr) ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_rvg `Lower ~label:(bounded_rv_to_string program `Lower appr) ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_rvg `Upper ~label:(bounded_rv_to_string program `Upper appr) ~outdir:output_dir ~file:input_filename program;
                 )
               )
        )

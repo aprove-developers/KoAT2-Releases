@@ -17,7 +17,7 @@ let improve program appr =
     let module C = Graph.Components.Make(RVG) in
     [`Lower; `Upper]
     |> List.fold_left (fun appr kind ->
-           let rvg = Program.rvg kind program in
+           let rvg = RVG.rvg kind program in
            List.fold_left (fun appr scc -> improve_scc kind program rvg appr scc) appr (List.rev (C.scc_list rvg))
          ) appr
   in Logger.with_log logger Logger.INFO

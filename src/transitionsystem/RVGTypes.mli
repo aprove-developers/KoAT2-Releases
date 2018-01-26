@@ -33,4 +33,6 @@ sig
   (** Returns all transitions that are used in the SCC of the RVG. *)
   val transitions : RV.t list -> Transition.t Enum.t
     
+  val rvg : [`Lower | `Upper] -> Program.t -> t
+
 end

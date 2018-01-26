@@ -2,7 +2,6 @@ open Batteries
 open Formulas
 open Polynomials
 open ProgramTypes
-open RVGTypes
    
 let logger = Logging.(get LocalSizeBound)
            
@@ -348,12 +347,13 @@ let memoize f =
        (Logger.log logger Logger.INFO
                    (fun () -> "add_local_size_bound", [
                         "kind", show_kind kind;
-                        "rv", RV.to_id_string (t, var);
+                        "transition", Transition.to_id_string t;
+                        "variable", Var.to_string var;
                         "lsb", Util.option_to_string (Bound.to_string % as_bound) lsb]));
        lsb
   in g
    
-let sizebound_local kind program_vars (l,t,l') var =
+let sizebound_local program kind (l,t,l') var =
   let f (kind, (l,t,l'), var) =
     let open Option.Infix in
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
@@ -362,18 +362,18 @@ let sizebound_local kind program_vars (l,t,l') var =
            (* Introduce a temporary result variable *)
            let v' = Var.fresh_id Var.Int () in
            let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && Polynomial.of_var v' = update) in
-           find_bound kind program_vars v' guard_with_update update (s_range update)
+           find_bound kind (Program.vars program) v' guard_with_update update (s_range update)
          )
   in
   memoize f (kind, (l,t,l'), var)
 
-let sizebound_local_rv kind program_vars (t,v) =
-  sizebound_local kind program_vars t v
+let sizebound_local_rv program kind (t,v) =
+  sizebound_local program kind t v
   
-let sizebound_local_scc kind program_vars scc =
+let sizebound_local_scc program kind scc =
   if scc
-     |> List.map (sizebound_local_rv kind program_vars)
+     |> List.map (sizebound_local_rv program kind)
      |> List.for_all Option.is_some
   then
-    Some (fun kind rv -> Option.get (sizebound_local_rv kind program_vars rv))
+    Some (fun kind rv -> Option.get (sizebound_local_rv program kind rv))
   else None

@@ -45,7 +45,7 @@ let suite =
                        let t = TransitionGraph.find_edge (Program.graph program) (Location.of_string l) (Location.of_string l') in
                        TransitionLabel.(assert_equal_bound
                                                   (Bound.of_poly (Readers.read_polynomial bound))
-                                                  LocalSizeBound.(sizebound_local `Upper (Program.vars program) t (Var.of_string var) |> Option.map as_bound |? default `Upper)
+                                                  LocalSizeBound.(sizebound_local program `Upper t (Var.of_string var) |> Option.map as_bound |? default `Upper)
                        )
                      )
              )
@@ -54,11 +54,11 @@ let suite =
       );
       (
         "Print" >:: (fun _ ->
-          Program.print_system ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
+          GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
           "../../examples/KoAT-2013/sect1-lin.koat"
           |> Readers.read_file
-          |> tap (fun program -> Program.print_rvg `Lower ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
-          |> tap (fun program -> Program.print_rvg `Upper ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> tap (fun program -> GraphPrint.print_rvg `Lower ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> tap (fun program -> GraphPrint.print_rvg `Upper ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
           |> ignore
         )
       );

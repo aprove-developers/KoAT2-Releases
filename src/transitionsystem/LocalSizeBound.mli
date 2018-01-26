@@ -2,7 +2,6 @@ open Batteries
 open Formulas
 open Polynomials
 open ProgramTypes
-open RVGTypes
    
 (* Concept:
    Incoming part:
@@ -69,13 +68,13 @@ val find_bound : [`Lower | `Upper] -> VarSet.t -> Var.t -> Formula.t -> Polynomi
 
 (** Returns a local sizebound of the specified kind for the variable of the transition. 
     A local sizebound is expressed in relation to the values directly before executing the transition. *)
-val sizebound_local : [`Lower | `Upper] -> VarSet.t -> Transition.t -> Var.t -> t Option.t
+val sizebound_local : Program.t -> [`Lower | `Upper] -> Transition.t -> Var.t -> t Option.t
   
-val sizebound_local_rv : [`Lower | `Upper] -> VarSet.t -> RV.t -> t Option.t
+val sizebound_local_rv : Program.t -> [`Lower | `Upper] -> (Transition.t * Var.t) -> t Option.t
 
 (** If for all result variables of the given kind a local sizebound is defined, this function returns a local sizebound function.
     Otherwise it returns None. *)
-val sizebound_local_scc : [`Lower | `Upper] -> VarSet.t -> RV.t list -> ([`Lower | `Upper] -> RV.t -> t) Option.t
+val sizebound_local_scc : Program.t -> [`Lower | `Upper] -> (Transition.t * Var.t) list -> ([`Lower | `Upper] -> (Transition.t * Var.t) -> t) Option.t
 
 (** Resets all cached data.
     Useful for testing in the same OCaml instance. *)
