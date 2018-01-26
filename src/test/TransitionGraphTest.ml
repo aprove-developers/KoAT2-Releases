@@ -55,13 +55,10 @@ let suite =
       (
         "Print" >:: (fun _ ->
           Program.print_system ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
-          let get_lsb program kind (t, v) =
-            LocalSizeBound.(sizebound_local_rv kind (Program.vars program) (t, v) |> Option.map as_bound |? default kind)
-          in
           "../../examples/KoAT-2013/sect1-lin.koat"
           |> Readers.read_file
-          |> tap (fun program -> Program.print_rvg `Lower ~label:(RV.to_string (get_lsb program) `Lower) ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
-          |> tap (fun program -> Program.print_rvg `Upper ~label:(RV.to_string (get_lsb program) `Upper) ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> tap (fun program -> Program.print_rvg `Lower ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> tap (fun program -> Program.print_rvg `Upper ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
           |> ignore
         )
       );

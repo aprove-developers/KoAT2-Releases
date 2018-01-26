@@ -43,6 +43,8 @@ val is_minus_infinity : t -> bool
 
 val to_string : t -> string
 
+val show : ?complexity:bool -> t -> string
+
 (** Functions to classify the quality of the bound *)
 
   

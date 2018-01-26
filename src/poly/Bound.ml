@@ -146,8 +146,13 @@ let rec show_bound = function
   | Product (b1, Sum (b2, b3)) -> show_bound b1 ^ "*(" ^ show_bound (Sum (b2, b3)) ^ ")"
   | Product (b1, b2) -> show_bound b1 ^ "*" ^ show_bound b2
 
-let to_string bound =
-  show_bound bound ^ " [" ^ (show_complexity % asymptotic_complexity) bound ^ "]"
+let show ?(complexity=true) bound =
+  let complexity_str =
+    if complexity then " [" ^ (show_complexity % asymptotic_complexity) bound ^ "]" else ""
+  in
+  show_bound bound ^ complexity_str
+
+let to_string = show ~complexity:true
                       
 let rec (>) b1 b2 =
   let execute () =

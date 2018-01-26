@@ -37,14 +37,6 @@ module RV =
     let to_id_string (t,v) =
       "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
-    let to_string get_lsb kind (t, v) =
-      let comp = function
-        | `Lower -> "<="
-        | `Upper -> ">="
-      in
-      String.concat " " [Bound.to_string (get_lsb kind (t, v));
-                         comp kind;
-                         to_id_string (t, v)]
   end
 
 module RVG =
@@ -60,11 +52,6 @@ module RVG =
     let rvs_to_id_string rvs =
       rvs
       |> List.map RV.to_id_string
-      |> String.concat ","
-
-    let rvs_to_string get_lsb rvs =
-      rvs
-      |> List.map (fun rv -> RV.to_string get_lsb `Lower rv ^ ", " ^ RV.to_string get_lsb `Upper rv)
       |> String.concat ","
 
     let pre rvg rv =

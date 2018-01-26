@@ -77,18 +77,15 @@ let bounded_rv_to_string (program_vars: VarSet.t) kind (appr: Approximation.t) (
   let get_lsb kind (t, v) =
     LocalSizeBound.(sizebound_local kind program_vars t v |> Option.map as_bound |? default kind)
   in
-  let comp = function
-    | `Lower -> "<="
-    | `Upper -> ">="
-  in
-  String.concat "" ["Global: ";
-                    String.concat " " [Approximation.sizebound kind appr t v |> Bound.to_string;
-                                       comp kind;
-                                       RV.to_id_string (t, v)];
+  String.concat "" [RV.to_id_string (t, v);
+                    "\n";
+                    "Global: ";
+                    Approximation.sizebound kind appr t v |> Bound.to_string;
                     "\n";
                     "Local: ";
-                    RV.to_string get_lsb kind (t,v)]
-
+                    get_lsb kind (t,v) |> Bound.show ~complexity:false
+    ]
+  
 let get_lsb program kind (t, v) =
   LocalSizeBound.(sizebound_local kind (Program.vars program) t v |> Option.map as_bound |? default kind)
 
@@ -127,8 +124,8 @@ let run (params: main_params) =
                   Program.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
-                  Program.print_rvg `Lower ~label:(RV.to_string (get_lsb program) `Lower) ~outdir:output_dir ~file:input_filename program;
-                  Program.print_rvg `Upper ~label:(RV.to_string (get_lsb program) `Upper) ~outdir:output_dir ~file:input_filename program
+                  Program.print_rvg `Lower ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program;
+                  Program.print_rvg `Upper ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
                 )
               )
          |> (fun (program, appr) ->

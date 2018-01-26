@@ -9,7 +9,6 @@ sig
   val compare_same : t -> t -> int
   val compare_equivalent : t -> t -> int
   val to_id_string : t -> string
-  val to_string : ([`Lower | `Upper] -> t -> Bound.t) -> [`Lower | `Upper] -> t -> string
   val hash : t -> int
   val transition : t -> Transition.t
   val variable : t -> Var.t
@@ -24,8 +23,6 @@ sig
                            end)
 
   val rvs_to_id_string : RV.t list -> string
-
-  val rvs_to_string : ([`Lower | `Upper] -> RV.t -> Bound.t) -> RV.t list -> string
 
   val pre : t -> RV.t -> RV.t Enum.t
 
