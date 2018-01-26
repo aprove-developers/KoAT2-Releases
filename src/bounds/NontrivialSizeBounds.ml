@@ -203,9 +203,13 @@ let compute_
            )
       |> Bound.sum
     in Logger.with_log logger Logger.DEBUG
-                       (fun () -> "loop_effect", [])
-                       ~result:Bound.to_string
-                       execute
+         (fun () -> "loop_effect", ["transitions",
+                                    transitions
+                                    |> List.enum
+                                    |> Enum.map (fun t -> Transition.to_id_string t ^ ": " ^ Bound.to_string (get_timebound t))
+                                    |> Util.enum_to_string identity])
+         ~result:Bound.to_string
+         execute
   in
 
   (** Corresponds to the definition of the starting value in the thesis. *)
