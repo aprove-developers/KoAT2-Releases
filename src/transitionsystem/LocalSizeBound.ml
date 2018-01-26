@@ -337,25 +337,8 @@ let (table: t Option.t LSB_Cache.t) =
 let reset () =
   LSB_Cache.clear table
 
-let memoize f =  
-  let g (kind,t,var) = 
-    match LSB_Cache.find_option table (kind,t,var) with
-    | Some lsb -> lsb
-    | None ->
-       let lsb = f (kind,t,var) in
-       LSB_Cache.add table (kind,t,var) lsb;
-       (Logger.log logger Logger.INFO
-                   (fun () -> "add_local_size_bound", [
-                        "kind", show_kind kind;
-                        "transition", Transition.to_id_string t;
-                        "variable", Var.to_string var;
-                        "lsb", Util.option_to_string (Bound.to_string % as_bound) lsb]));
-       lsb
-  in g
-   
-let sizebound_local program kind (l,t,l') var =
-  let f (kind, (l,t,l'), var) =
-    let open Option.Infix in
+let compute_single_local_size_bound program kind (l,t,l') var =
+  let lsb =
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
     TransitionLabel.update t var
     |> Option.map (fun update ->
@@ -365,7 +348,31 @@ let sizebound_local program kind (l,t,l') var =
            find_bound kind (Program.vars program) v' guard_with_update update (s_range update)
          )
   in
-  memoize f (kind, (l,t,l'), var)
+  LSB_Cache.add table (kind,(l,t,l'),var) lsb;
+  (Logger.log logger Logger.INFO
+     (fun () -> "add_local_size_bound", [
+          "kind", show_kind kind;
+          "transition", Transition.to_id_string (l,t,l');
+          "variable", Var.to_string var;
+          "lsb", Util.option_to_string (Bound.to_string % as_bound) lsb]))
+
+let compute_local_size_bounds program =
+  program
+  |> Program.transitions
+  |> TransitionSet.enum
+  |> Enum.cartesian_product (program |> Program.vars |> VarSet.enum)
+  |> Enum.cartesian_product ([`Lower; `Upper] |> List.enum)
+  |> Enum.iter (fun (kind, (v,t)) ->
+         compute_single_local_size_bound program kind t v
+       )
+  
+let sizebound_local program kind t v =
+  if LSB_Cache.is_empty table then
+    compute_local_size_bounds program;
+  try
+    LSB_Cache.find table (kind, t, v)
+  with Not_found ->
+    raise (Failure "Non-existing local size bound requested!")
 
 let sizebound_local_rv program kind (t,v) =
   sizebound_local program kind t v
