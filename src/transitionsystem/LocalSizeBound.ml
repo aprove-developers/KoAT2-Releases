@@ -138,17 +138,17 @@ let is_bounded_with solver var lsb =
 (** Performs a binary search between the lowest and highest value to find the optimal value which satisfies the predicate.
     We assume that the highest value already satisfies the predicate.
     Therefore this method always finds a solution. *)
-let rec binary_search (lowest: int) (highest: int) (p: int -> bool) =
+let rec binary_search ?(divisor=2.) (lowest: int) (highest: int) (p: int -> bool) =
   if lowest >= highest then
-    highest
+    lowest
   else
     (* We need to ensure that the result is always round down to prevent endless loops.
        Normal integer division rounds towards zero. *)
-    let newBound = Float.to_int (Float.floor (Float.div (Float.of_int (lowest + highest)) 2.)) in
+    let newBound = Float.to_int (Float.floor (Float.div (Float.of_int (lowest + highest)) divisor)) in
     if p newBound then
-      binary_search lowest newBound p
+      binary_search ~divisor:(if newBound < 0 then 2. else divisor) lowest newBound p
     else
-      binary_search (newBound + 1) highest p
+      binary_search ~divisor:(if newBound < 0 then divisor else 2.) (newBound + 1) highest p        
 
 let unabsify var lsb =
   if VarSet.mem var (lsb.vars (`Pos, `Abs)) then
@@ -225,8 +225,8 @@ let minimize_scaledsum_vars (p: t -> bool) (lsb: t): t =
 let optimize_c (range: int) (p: t -> bool) (lsb: t): t =
   let execute () = {
       lsb with constant = match lsb.kind with
-                          | `Upper -> binary_search (-range) range (fun c -> p { lsb with constant = c } )
-                          | `Lower -> - (binary_search (-range) range (fun c -> p { lsb with constant = -c } ))
+                          | `Upper -> binary_search ~divisor:64. (-range) range (fun c -> p { lsb with constant = c } )
+                          | `Lower -> - (binary_search ~divisor:64. (-range) range (fun c -> p { lsb with constant = -c } ))
     }
   in
   Logger.with_log logger Logger.DEBUG
@@ -236,7 +236,7 @@ let optimize_c (range: int) (p: t -> bool) (lsb: t): t =
 
 let optimize_s (lowest: int) (highest: int) (p: t -> bool) (lsb: t): t =
   let execute () = {
-      lsb with factor = binary_search
+      lsb with factor = binary_search ~divisor:16.
                           lowest
                           highest
                           (fun s -> p { lsb with factor = s } )
@@ -264,9 +264,10 @@ let initial_lsb kind factor (constant: int) (vars: VarSet.t) = {
 let s_range update =
   update
   |> Polynomial.max_of_occurring_constants
+  |> OurInt.max (OurInt.of_int 1) (* 0 or lower is not allowed *)
   |> OurInt.min (OurInt.of_int 1024) (* TODO We cut it at the moment at 1024, because sometimes the approximation is worse than an integer value. *)
   |> OurInt.to_int
-
+  
 (* For 'c' we want to view the max occurring constants of the complete formula *)
 let c_range formula =
   formula
