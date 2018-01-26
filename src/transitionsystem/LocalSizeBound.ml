@@ -282,6 +282,7 @@ let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: in
     |> Util.find_map (fun count ->
            VarSet.combinations count program_vars
            |> List.enum
+           |> Enum.filter (fun vars -> VarSet.subset vars update_vars)
            |> Enum.map (initial_lsb kind s c)
            |> Enum.filter is_bounded
            |> Enum.map (optimize_s 1 s is_bounded)
