@@ -62,6 +62,9 @@ type main_params = {
     preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
 
+    rename : bool; [@default false]
+    (** If the location names should be normalized to simplified names. *)
+
   } [@@deriving cmdliner]
 
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
@@ -115,7 +118,7 @@ let run (params: main_params) =
     print_string (program_str ^ "\n\n")
   );
   input
-  |> MainUtil.read_input params.simple_input
+  |> MainUtil.read_input ~rename:params.rename params.simple_input
   |> Option.map (fun program ->
          (program, Approximation.create program)
          |> Preprocessor.process params.preprocessing_strategy params.preprocessors

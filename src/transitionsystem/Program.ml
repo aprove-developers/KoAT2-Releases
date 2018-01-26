@@ -48,6 +48,26 @@ let mk transitions =
   |> add_locations locations
   |> add_transitions transitions
   
+let rename program =
+  let counter: int ref = ref 0 in
+  let map = Hashtbl.create 10 in
+  let name location =
+    Hashtbl.find_option map location
+    |> Option.default_delayed (fun () ->
+           let new_name = ("l" ^ string_of_int !counter) in
+           Hashtbl.add map location new_name;
+           counter := !counter + 1;
+           new_name
+         )
+    |> Location.of_string
+  in
+  let new_start = name program.start in
+  {
+    graph = TransitionGraph.map_vertex name program.graph;
+    vars = program.vars;
+    start = new_start;
+  }
+
 let from transitions start =
   let vars =
     transitions

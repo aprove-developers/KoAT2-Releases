@@ -22,6 +22,8 @@ val map_graph : (TransitionGraph.t -> TransitionGraph.t) -> t -> t
   
 val mk : Transition.t Enum.t -> TransitionGraph.t
 
+val rename : t -> t
+  
 val from : Transition.t list -> Location.t -> t
 
 val rvg : [`Lower | `Upper] -> t -> RVG.t
