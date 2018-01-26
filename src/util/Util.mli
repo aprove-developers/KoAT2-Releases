@@ -23,3 +23,5 @@ val enum_to_string : ('a -> string) -> 'a Enum.t -> string
 val powerset : 'a Set.t -> ('a Set.t) Enum.t
 
 val find_map : ('a -> 'b Option.t) -> 'a Enum.t -> 'b Option.t
+
+val memoize : extractor:('a -> 'c) -> ('a -> 'b) -> 'a -> 'b  

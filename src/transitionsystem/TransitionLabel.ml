@@ -99,12 +99,15 @@ let map_guard f label =
 
 let cost t = t.cost
 
-let vars {update; guard; cost; _} =
+let vars_ {update; guard; cost; _} =
   VarMap.fold (fun _ -> VarSet.union % Polynomial.vars) update VarSet.empty
   |> (VarSet.union % VarSet.of_enum % VarMap.keys) update
   |> (VarSet.union % Guard.vars) guard
   |> (VarSet.union % Polynomial.vars) cost
-           
+
+(* TODO May invalidate through invariant generation! *)
+let vars = Util.memoize ~extractor:id vars_
+     
 let default = {
     id = 0;
     update = VarMap.empty;

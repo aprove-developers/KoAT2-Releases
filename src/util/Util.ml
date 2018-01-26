@@ -46,3 +46,15 @@ let enum_to_string content_to_string enum =
   let list = List.of_enum enum in
   List.print (fun output varset -> IO.nwrite output (content_to_string varset)) output list;
   IO.close_out output
+
+let memoize ~extractor f =  
+  let cache = Hashtbl.create 10 in
+  let g x = 
+    match Hashtbl.find_option cache (extractor x) with
+    | Some y -> y
+    | None ->
+       let y = f x in
+       Hashtbl.add cache (extractor x) y;
+       y
+  in g
+           
