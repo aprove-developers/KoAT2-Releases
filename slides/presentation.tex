@@ -86,6 +86,8 @@
 
 \usepackage{listings}
 
+\input{commands}
+
 %----------------------------------------------------------------------------------------
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
@@ -131,22 +133,78 @@ RWTH Aachen \\ % Your institution for the title page
 \end{frame}
 
 \begin{frame}
-  \frametitle{Complexity Analysis}
+  \frametitle{Time Complexity}
+  Transform motivational program to graph
+  Show an evaluation on the program
+\end{frame}
+
+\begin{frame}
+  \frametitle{Ranking Functions}
+  Show an evaluation with the ranking function $x$ for the motivational program
+\end{frame}
+
+\begin{frame}
+  \frametitle{Time Bounds}
+  Extend motivational program with transitions to $\location_0$: $\location_0 \rightarrow \location_0: x'=x+1 \wedge x < 10$
+  Explain need for size bounds
+\end{frame}
+
+\begin{frame}
+  \frametitle{Size Complexity}
+  Define size complexity
+  Example of size to $\location_0$
+\end{frame}
+
+\begin{frame}
+  \frametitle{Size Complexity}
+  Explain difference between lower and upper and old size complexity
+\end{frame}
+
+\begin{frame}
+  \frametitle{Local Size Bounds}
+  Define local size bounds
+\end{frame}
+
+\begin{frame}
+  \frametitle{Time Bounds}
+  Back to the example
+\end{frame}
+
+\begin{frame}
+  \frametitle{Size Bounds}
+  Explain the advantages of good size bounds
+  Present the three size bound examples from the thesis unrelated to the initial example
+\end{frame}
+
+\begin{frame}
+  \frametitle{Size Bounds Caveat}
+  Explain size bounds caveat of negating SCCs
+\end{frame}
+
+\section{Cost Bounds}
+
+\begin{frame}
+  \frametitle{Cost Complexity}
   \begin{block}{Time Complexity}
-    TODO
+    TODO Recap
   \end{block}
   \pause
   \begin{block}{Size Complexity}
-    TODO
+    TODO Recap
   \end{block}
   \pause
   \begin{block}{Cost Complexity}
-    TODO
+    Explain with a call to a function $f$ in the initial example 
   \end{block}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Programs}
+  \frametitle{Cost Complexity}
+  Present the trivial approach of multiplying with the time bounds
+\end{frame}
+
+\begin{frame}
+  \frametitle{Cost Ranking}
 \end{frame}
 
 \section{Conclusion}
