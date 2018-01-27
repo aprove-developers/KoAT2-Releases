@@ -11,3 +11,6 @@ docs
 *.png
 #Ignore txt files
 *.txt
+
+gmon.out
+perf.data*
