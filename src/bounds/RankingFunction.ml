@@ -112,62 +112,35 @@ let decreaser measure t =
   | `Cost -> TransitionLabel.cost t
   | `Time -> Polynomial.one
 
-module TransitionConstraintTable =
-  Hashtbl.Make(
-      struct
-        type t = measure * constraint_type * Transition.t
-        let equal (m1,c1,t1) (m2,c2,t2) =
-          equal_measure m1 m2
-          && equal_constraint_type c1 c2
-          && Transition.same t1 t2
-        let hash (m,c,t) =
-          Hashtbl.hash (m,c,Transition.id t)
-      end
-    )
-
-let transition_constraint_table = TransitionConstraintTable.create 10
-
-let memoize f =  
-  let g x = 
-    match TransitionConstraintTable.find_option transition_constraint_table x with
-    | Some y -> y
-    | None ->
-       let y = f x in
-       TransitionConstraintTable.add transition_constraint_table x y;
-       y
-  in g
-
-let transition_constraint measure (constraint_type: constraint_type) (template: Location.t -> ParameterPolynomial.t) ((l,t,l'): Transition.t): Formula.t =
-  let compute_transition_constraint (measure, constraint_type, (l,t,l')) =
-    let atom =
-      match constraint_type with
-      | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (as_parapoly t) (template l'))
-      | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
-      | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))      
-    in
-    farkas_transform (TransitionLabel.guard t) atom
-    |> Formula.mk  
+let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
+  let template = TemplateTable.find template_table in
+  let atom =
+    match constraint_type with
+    | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (as_parapoly t) (template l'))
+    | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
+    | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))      
   in
-  memoize compute_transition_constraint (measure, constraint_type, (l,t,l'))
+  farkas_transform (TransitionLabel.guard t) atom
+  |> Formula.mk  
+       
+let transition_constraint = Util.memoize ~extractor:(Tuple3.map3 Transition.id) transition_constraint_
   
-let transitions_constraint measure (constraint_type: constraint_type) (template : Location.t -> ParameterPolynomial.t) (transitions : Transition.t list): Formula.t =
+let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
-  |> List.map (transition_constraint measure constraint_type template)
+  |> List.map (fun t -> transition_constraint (measure, constraint_type, t))
   |> Formula.all
   
 let non_increasing_constraint measure transition =
-  transition_constraint measure `Non_Increasing (TemplateTable.find template_table) transition
+  transition_constraint (measure, `Non_Increasing, transition)
 
 let non_increasing_constraints measure transitions =
-  transitions_constraint measure `Non_Increasing
-                         (TemplateTable.find template_table)
-                         (TransitionSet.to_list transitions)
+  transitions_constraint measure `Non_Increasing (TransitionSet.to_list transitions)
   
 let bounded_constraint measure transition =
-  transition_constraint measure `Bounded (TemplateTable.find template_table) transition
+  transition_constraint (measure, `Bounded, transition)
 
 let decreasing_constraint measure transition =
-  transition_constraint measure `Decreasing (TemplateTable.find template_table) transition
+  transition_constraint (measure, `Decreasing, transition)
 
 let rank_from_valuation valuation location =
   location
@@ -290,5 +263,4 @@ let find measure program transition =
 let reset () =
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
-  TemplateTable.clear template_table;
-  TransitionConstraintTable.clear transition_constraint_table
+  TemplateTable.clear template_table
