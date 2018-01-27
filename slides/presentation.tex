@@ -104,6 +104,19 @@ RWTH Aachen \\ % Your institution for the title page
 }
 \date{WS 2017/18} % Date, can be changed to a custom date
 
+\tikzset{
+  transition/.style={align=left,draw},
+  location/.style={circle,draw,font=\sffamily\bfseries},
+  transitions/.style={
+    every edge/.style={transition},
+    every node/.style={font=\sffamily\small}
+  },
+  program/.style={
+    ->,>=stealth',auto,node distance=3cm,thick,
+    every node/.style={location}
+  },  
+}
+
 \begin{document}
 
 \begin{frame}
@@ -134,6 +147,19 @@ RWTH Aachen \\ % Your institution for the title page
 
 \begin{frame}
   \frametitle{Time Complexity}
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}[program]
+      
+      \node (0) {$\location_0$};
+      \node (1) [right of=0] {$\location_1$};
+      
+      \path[transitions]
+      (0) edge node[above] {$t_0$} node[below] {$x'=x$\\$y'=y$} (1)
+      (1) edge[loop above] node[left] {$t_1$} node[right] {$if(x>y)$\\$x'=x-1$\\$y'=y$} (1)
+      ;
+    \end{tikzpicture}
+  \end{figure}
   Transform motivational program to graph
   Show an evaluation on the program
 \end{frame}
