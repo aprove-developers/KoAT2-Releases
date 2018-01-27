@@ -16,7 +16,7 @@ Nevertheless, it is able to show the potentials of the new method.
 
 The first evaluated example is the motivational program from the introduction in Figure \ref{fig:motivational_example}.
 
-\input{graphs/motivational_example}
+\iffalse\input{graphs/motivational_example}\fi
 
 For this program, the new method yields a time complexity of $\maxO{x-y}$, while KoAT \cite{koat} yields a time complexity of $\abs{x}+\abs{y}$.
 In the new method, we assume that we have two input states $\lstate$ and $\ustate$.
@@ -33,7 +33,7 @@ That is if an exact state $\lstate = \valuation = \ustate$ is given.
 
 The second evaluated example is the program presented in the cost bound chapter \ref{fig:cost_ranking_function}.
 
-\input{graphs/cost_ranking_function}
+\iffalse\input{graphs/cost_ranking_function}\fi
 
 As already mentioned, the presented method is able to compute a cost bound $\UCost(t_1) = \maxO{x}$ for the transition $t_1$.
 Therefore $1 + \maxO{x}$ is a cost bound for the whole program.
