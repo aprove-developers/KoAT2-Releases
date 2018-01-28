@@ -63,6 +63,7 @@
 \usepackage[english]{babel}
 % \usepackage[ngerman]{babel}
 
+\usepackage{mathtools}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}
@@ -76,7 +77,7 @@
 \renewcommand{\Return}{\State\oldReturn}
 
 \usepackage{tikz}
-\usetikzlibrary{arrows,decorations.pathmorphing,positioning,fit,trees,shapes,automata,shapes.multipart}
+\usetikzlibrary{arrows,decorations.pathmorphing,positioning,decorations.markings,fit,trees,shapes,automata,shapes.multipart}
 \usepackage{pgf-umlsd}
 \usepgflibrary{arrows} % for pgf-umlsd
 
@@ -119,9 +120,14 @@ RWTH Aachen \\ % Your institution for the title page
     ->,>=stealth',auto,node distance=2cm,
     every text node part/.style={align=center},thick,
     every node/.style={draw,rectangle}
+  },
+  cross/.style={
+    decoration={ markings,
+      mark=at position .5 with {\draw[-,thick] (-2mm,2mm) -- (2mm,-2mm)node[inner sep=1pt,pos=0.5,auto]{#1};}  %% adjust 2mm etc as you wish
+    },
+    postaction={decorate}
   }
 }
-
 \begin{document}
 
 \begin{frame}
@@ -158,8 +164,8 @@ RWTH Aachen \\ % Your institution for the title page
       \node (0) {$\location_0$};
       \node (1) [right of=0] {$\location_1$};
       \path[transitions]
-      (0) edge node[above] {$t_0$} node[below] {$x'=x$\\$y'=y$} (1)
-      (1) edge[loop above] node[left] {$t_1$} node[right] {$if(x>y)$\\$x'=x-1$\\$y'=y$} (1)
+      (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+      (1) edge[loop right] node[above left] {$t_1$} node[right] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
       ;
     \end{tikzpicture}
   \end{figure}
@@ -182,16 +188,59 @@ RWTH Aachen \\ % Your institution for the title page
     \end{tikzpicture}
   \end{figure}
   Transform motivational program to graph
-  Show an evaluation on the program
 \end{frame}
 
 \begin{frame}
   \frametitle{Ranking Functions}
-  Show an evaluation with the ranking function $x$ for the motivational program
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}[program]
+      \node[label={\small x-y}] (0) {$\location_0$};
+      \node[label={\small x-y}] (1) [right of=0] {$\location_1$};
+      \path[transitions]
+      (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+      (1) edge[loop right] node[above left] {$t_1$} node[right] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
+      ;
+    \end{tikzpicture}
+  \end{figure}
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}[evaluation]
+      
+      \node (0) {$8-5$};
+      \node (1) [right of=0] {$8-5$};
+      \node (2) [right of=1] {$7-5$};
+      \node (3) [right of=2] {$6-5$};
+      \node (4) [right of=3] {$5-5$};
+      \node (exit) [right of=4,draw=none] {};
+      
+      \path[transitions]
+      (0) edge node {$t_0$} node[below] {$\geq$} (1)
+      (1) edge node {$t_1$} node[below] {$>$} (2)
+      (2) edge node {$t_1$} node[below] {$>$} (3)
+      (3) edge node {$t_1$} node[below] {$>$} (4)
+      (4) edge[cross] node[below] {} (exit)
+      ;
+    \end{tikzpicture}
+  \end{figure}
 \end{frame}
 
 \begin{frame}
   \frametitle{Time Bounds}
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}[program]
+      \node (0) {$\location_0$};
+      \node (1) [right of=0] {$\location_1$};
+      \node (2) [right of=1] {$\location_2$};
+      \path[transitions]
+      (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+      (1) edge[loop above] node[above left] {$t_2$} node[right] {$if(x<10)$\\$x \coloneqq x+1$\\$y \coloneqq y$} (1)
+      (1) edge node[above] {$t_3$} node[below] {$if(x \geq 10)$\\$x \coloneqq x$\\$y \coloneqq y$} (2)
+      (2) edge[loop right] node[above left] {$t_4$} node[right] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (2)
+      ;
+    \end{tikzpicture}
+  \end{figure}
   Extend motivational program with transitions to $\location_0$: $\location_0 \rightarrow \location_0: x'=x+1 \wedge x < 10$
   Explain need for size bounds
 \end{frame}
