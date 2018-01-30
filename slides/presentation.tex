@@ -112,10 +112,14 @@ RWTH Aachen \\ % Your institution for the title page
     every edge/.style={transition},
     every node/.style={font=\sffamily\small}
   },
+  scc edge/.style={very thick},
   program/.style={
     ->,>=stealth',auto,node distance=3cm,thick,
     every node/.style={location}
-  },  
+  },
+  rvg/.style={
+    ->,>=stealth',auto,node distance=1.5cm
+  },
   evaluation/.style={
     ->,>=stealth',auto,node distance=2cm,
     every text node part/.style={align=center},thick,
@@ -413,11 +417,6 @@ RWTH Aachen \\ % Your institution for the title page
 \end{frame}
 
 \begin{frame}
-  \frametitle{Size Complexity}
-  Explain difference between lower and upper and old size complexity
-\end{frame}
-
-\begin{frame}
   \frametitle{Local Size Bounds}
   Define local size bounds
 \end{frame}
@@ -428,9 +427,113 @@ RWTH Aachen \\ % Your institution for the title page
 \end{frame}
 
 \begin{frame}
-  \frametitle{Size Bounds}
-  Explain the advantages of good size bounds
+  \frametitle{Additive loop}
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}[program]
+      
+      \node (0) {$\location_0$};
+      \node (1) [right of=0] {$\location_1$};
+      
+      \path[transitions]
+      (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$\\$z \coloneqq z$} (1)
+      (1) edge[loop above] node[left] {$t_1$} node[right] {$if(x > 0)$\\$x \coloneqq x - 1$\\$y \coloneqq y + z$\\$z \coloneqq z$} (1)
+      ;
+    \end{tikzpicture}
+    
+    \begin{tikzpicture}[rvg]
+      
+      \node (0x) {$t_0,x$};
+      \node (1x) [right of=0x] {$t_1,x$};
+      \node (0y) [right of=1x] {$t_0,y$};
+      \node (0z) [below of=0y] {$t_0,z$};
+      \node (1y) [right of=0y] {$t_1,y$};
+      \node (1z) [right of=0z] {$t_1,z$};
+      
+      \path
+      (0x) edge[dashed] (1x)
+      (0y) edge (1y)
+      (0z) edge[dashed] (1z)
+      (0z) edge (1y)
+      (1x) edge[loop below, dashed] (1x)
+      (1y) edge[loop right, scc edge] (1y)
+      (1z) edge[loop right, dashed] (1z)
+      (1z) edge (1y)
+      ;
+    \end{tikzpicture}
+  \end{figure}
   Present the three size bound examples from the thesis unrelated to the initial example
+\end{frame}
+
+\begin{frame}
+  \frametitle{Exponential bounds}
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}[program]
+      
+      \node (0) {$\location_0$};
+      \node (1) [right of=0] {$\location_1$};
+      
+      \path[transitions]
+      (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+      (1) edge[loop above] node[left] {$t_1$} node[right] {$if(x > 0)$\\$x \coloneqq x - 1$\\$y \coloneqq 2 \cdot y$} (1)
+      ;
+    \end{tikzpicture}
+    
+    \begin{tikzpicture}[rvg]
+      
+      \node (0x) {$t_0,x$};
+      \node (1x) [right of=0x] {$t_1,x$};
+      \node (0y) [right of=1x] {$t_0,y$};
+      \node (1y) [right of=0y] {$t_1,y$};
+      
+      \path
+      (0x) edge[dashed] (1x)
+      (1x) edge[loop above, dashed] (1x)
+      (0y) edge (1y)
+      (1y) edge[loop above, scc edge] (1y)
+      ;
+    \end{tikzpicture}
+  \end{figure}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Exponential bounds}
+  \begin{figure}
+    \centering
+    
+    \begin{tikzpicture}[program]
+      
+      \node (0) {$\location_0$};
+      \node (1) [right of=0] {$\location_1$};
+
+      \path[transitions]
+      (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$\\$z \coloneqq z$} (1)
+      (1) edge[loop above] node[left] {$t_1$} node[right] {$if(x > 0)$\\$x \coloneqq x - 1$\\$y \coloneqq y + z$\\$z \coloneqq y$} (1)
+      ;
+    \end{tikzpicture}
+    
+    \begin{tikzpicture}[rvg]
+      
+      \node (0x) {$t_0,x$};
+      \node (1x) [right of=0x] {$t_1,x$};
+      \node (0y) [right of=1x] {$t_0,y$};
+      \node (0z) [below of=0y] {$t_0,z$};
+      \node (1y) [right of=0y] {$t_1,y$};
+      \node (1z) [right of=0z] {$t_1,z$};
+      
+      \path
+      (0x) edge[dashed] (1x)
+      (0y) edge (1y)
+      (0y) edge (1z)
+      (0z) edge (1y)
+      (1x) edge[loop below, dashed] (1x)
+      (1y) edge[loop right, scc edge] (1y)
+      (1y) edge[scc edge] (1z)
+      (1z) edge[scc edge] (1y)
+      ;
+    \end{tikzpicture}
+  \end{figure}
 \end{frame}
 
 \begin{frame}
