@@ -1,9 +1,9 @@
 Timebounds: 
-  Overall timebound: 203+max{38, -2+-40*B}+max{0, -42, -2+-40*B}+max{0, -165, -8+157*B}+max{149, -8+157*B} [O(n)]
+  Overall timebound: 203+max{38, -2+-40*B}+max{0, -42, -2+-40*B}+max{0, -146, -2+144*B}+max{142, -2+144*B} [O(n)]
   7: lbl111->stop: 1 [O(1)]
   8: lbl111->lbl91: 1 [O(1)]
   9: lbl111->lbl111: max{38, -2+-40*B}+max{0, -42, -2+-40*B} [O(n)]
-  10: lbl111->lbl111: max{0, -165, -8+157*B}+max{149, -8+157*B} [O(n)]
+  10: lbl111->lbl111: max{0, -146, -2+144*B}+max{142, -2+144*B} [O(n)]
   3: lbl91->stop: 1 [O(1)]
   4: lbl91->lbl91: 196 [O(1)]
   0: start->lbl91: 1 [O(1)]
@@ -12,11 +12,11 @@ Timebounds:
   11: start0->start: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 203+max{38, -2+-40*B}+max{0, -42, -2+-40*B}+max{0, -165, -8+157*B}+max{149, -8+157*B} [O(n)]
+  Overall costbound: 203+max{38, -2+-40*B}+max{0, -42, -2+-40*B}+max{0, -146, -2+144*B}+max{142, -2+144*B} [O(n)]
   7: lbl111->stop: 1 [O(1)]
   8: lbl111->lbl91: 1 [O(1)]
   9: lbl111->lbl111: max{38, -2+-40*B}+max{0, -42, -2+-40*B} [O(n)]
-  10: lbl111->lbl111: max{0, -165, -8+157*B}+max{149, -8+157*B} [O(n)]
+  10: lbl111->lbl111: max{0, -146, -2+144*B}+max{142, -2+144*B} [O(n)]
   3: lbl91->stop: 1 [O(1)]
   4: lbl91->lbl91: 196 [O(1)]
   0: start->lbl91: 1 [O(1)]
@@ -26,8 +26,8 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  7: lbl111->stop, A: -inf [Infinity]
-  7: lbl111->stop, B: -inf [Infinity]
+  7: lbl111->stop, A: -max{-1, -B} [O(n)]
+  7: lbl111->stop, B: -max{-1, -B} [O(n)]
   7: lbl111->stop, C: 100 [O(1)]
   7: lbl111->stop, D: D [O(n)]
   7: lbl111->stop, E: 40 [O(1)]
@@ -38,13 +38,13 @@ Sizebounds:
   8: lbl111->lbl91, D: D [O(n)]
   8: lbl111->lbl91, E: 3 [O(1)]
   8: lbl111->lbl91, F: F [O(n)]
-  9: lbl111->lbl111, A: -inf [Infinity]
-  9: lbl111->lbl111, B: -inf [Infinity]
+  9: lbl111->lbl111, A: -max{-1, -B} [O(n)]
+  9: lbl111->lbl111, B: -max{-1, -B} [O(n)]
   9: lbl111->lbl111, C: 100 [O(1)]
   9: lbl111->lbl111, D: D [O(n)]
   9: lbl111->lbl111, E: 4 [O(1)]
   9: lbl111->lbl111, F: F [O(n)]
-  10: lbl111->lbl111, A: -inf [Infinity]
+  10: lbl111->lbl111, A: 1 [O(1)]
   10: lbl111->lbl111, B: 1 [O(1)]
   10: lbl111->lbl111, C: 100 [O(1)]
   10: lbl111->lbl111, D: D [O(n)]

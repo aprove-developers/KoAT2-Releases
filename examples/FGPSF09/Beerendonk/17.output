@@ -14,20 +14,20 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  0: eval->eval, A: A [O(n)]
-  0: eval->eval, B: 1-A [O(n)]
-  1: eval->eval, A: A [O(n)]
+  0: eval->eval, A: 0 [O(1)]
+  0: eval->eval, B: -max{0, -B} [O(n)]
+  1: eval->eval, A: 0 [O(1)]
   1: eval->eval, B: 1 [O(1)]
-  2: eval->eval, A: A [O(n)]
-  2: eval->eval, B: -max{-1, -B, -1+A} [O(n)]
+  2: eval->eval, A: -max{0, -A} [O(n)]
+  2: eval->eval, B: 0 [O(1)]
   4: start->eval, A: A [O(n)]
   4: start->eval, B: B [O(n)]
 `Upper:
   0: eval->eval, A: A [O(n)]
-  0: eval->eval, B: -1+A [O(n)]
+  0: eval->eval, B: B [O(n)]
   1: eval->eval, A: A [O(n)]
-  1: eval->eval, B: A [O(n)]
+  1: eval->eval, B: B [O(n)]
   2: eval->eval, A: A [O(n)]
-  2: eval->eval, B: max{A, B, -1+A} [O(n)]
+  2: eval->eval, B: B [O(n)]
   4: start->eval, A: A [O(n)]
   4: start->eval, B: B [O(n)]

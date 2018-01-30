@@ -22,6 +22,6 @@ Sizebounds:
   0: f1->f3, A: A [O(n)]
   0: f1->f3, B: A [O(n)]
   1: f3->f3, A: A [O(n)]
-  1: f3->f3, B: -1+A [O(n)]
+  1: f3->f3, B: max{A, -1+A} [O(n)]
   2: f3->f3, A: A [O(n)]
   2: f3->f3, B: -1+A [O(n)]

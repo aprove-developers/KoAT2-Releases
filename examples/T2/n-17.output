@@ -12,8 +12,7 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  1: f3->f3, A: -inf [Infinity]
-  2: f3->f3, A: -inf [Infinity]
+  2: f3->f3, A: 0 [O(1)]
   0: f300->f3, A: A [O(n)]
 `Upper:
   1: f3->f3, A: -1 [O(1)]

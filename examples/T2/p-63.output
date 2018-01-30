@@ -14,15 +14,15 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  0: f4->f4, A: A [O(n)]
-  0: f4->f4, B: -inf [Infinity]
+  0: f4->f4, A: B [O(n)]
+  0: f4->f4, B: B [O(n)]
   0: f4->f4, C: C [O(n)]
   0: f4->f4, D: D [O(n)]
   0: f4->f4, E: E [O(n)]
   0: f4->f4, F: F [O(n)]
   0: f4->f4, G: G [O(n)]
-  1: f4->f6, A: A [O(n)]
-  1: f4->f6, B: -inf [Infinity]
+  1: f4->f6, A: -max{-A, -B} [O(n)]
+  1: f4->f6, B: B [O(n)]
   1: f4->f6, C: 0 [O(1)]
   1: f4->f6, D: 0 [O(1)]
   1: f4->f6, E: 0 [O(1)]

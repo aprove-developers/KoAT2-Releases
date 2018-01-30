@@ -12,7 +12,7 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  2: a->a, A: 1 [O(1)]
+  2: a->a, A: 0 [O(1)]
   0: start->a, A: 1 [O(1)]
   1: start->a, A: 100 [O(1)]
 `Upper:

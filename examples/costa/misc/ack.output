@@ -12,22 +12,13 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  0: ack->ack, A: A [O(n)]
-  0: ack->ack, B: -inf [Infinity]
-  0: ack->ack, C: -inf [Infinity]
-  1: ack->ack, A: A [O(n)]
-  1: ack->ack, B: -inf [Infinity]
-  1: ack->ack, C: -inf [Infinity]
+  0: ack->ack, A: 0 [O(1)]
+  1: ack->ack, A: 1 [O(1)]
+  1: ack->ack, B: 0 [O(1)]
   2: start->ack, A: A [O(n)]
   2: start->ack, B: B [O(n)]
-  2: start->ack, C: -inf [Infinity]
 `Upper:
   0: ack->ack, A: A [O(n)]
-  0: ack->ack, B: inf [Infinity]
-  0: ack->ack, C: inf [Infinity]
   1: ack->ack, A: A [O(n)]
-  1: ack->ack, B: inf [Infinity]
-  1: ack->ack, C: inf [Infinity]
   2: start->ack, A: A [O(n)]
   2: start->ack, B: B [O(n)]
-  2: start->ack, C: inf [Infinity]

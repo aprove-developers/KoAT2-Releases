@@ -10,7 +10,7 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  1: f->f, x: x [O(n)]
+  1: f->f, x: 0 [O(1)]
   1: f->f, y: y [O(n)]
   0: start->f, x: x [O(n)]
   0: start->f, y: y [O(n)]

@@ -10,12 +10,10 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  1: f1->f1, A: 0 [O(1)]
+  1: f1->f1, A: 1 [O(1)]
   1: f1->f1, B: 1 [O(1)]
   0: f20->f1, A: 0 [O(1)]
   0: f20->f1, B: 0 [O(1)]
 `Upper:
-  1: f1->f1, A: inf [Infinity]
-  1: f1->f1, B: inf [Infinity]
   0: f20->f1, A: 0 [O(1)]
   0: f20->f1, B: 0 [O(1)]

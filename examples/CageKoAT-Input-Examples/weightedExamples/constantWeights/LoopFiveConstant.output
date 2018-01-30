@@ -10,7 +10,7 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  1: g->g, x: x-max{0, 4*x} [O(n)]
+  1: g->g, x: -4 [O(1)]
   1: g->g, y: y [O(n)]
   0: start->g, x: x [O(n)]
   0: start->g, y: y [O(n)]

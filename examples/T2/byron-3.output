@@ -12,28 +12,15 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  0: f0->f2, A: -inf [Infinity]
-  0: f0->f2, B: -inf [Infinity]
-  0: f0->f2, C: -inf [Infinity]
-  0: f0->f2, D: -inf [Infinity]
-  1: f0->f0, A: -inf [Infinity]
   1: f0->f0, B: B [O(n)]
-  1: f0->f0, C: -inf [Infinity]
-  1: f0->f0, D: -inf [Infinity]
   2: f1->f0, A: A [O(n)]
   2: f1->f0, B: B [O(n)]
   2: f1->f0, C: C [O(n)]
-  2: f1->f0, D: -inf [Infinity]
 `Upper:
   0: f0->f2, A: 0 [O(1)]
-  0: f0->f2, B: inf [Infinity]
   0: f0->f2, C: C [O(n)]
-  0: f0->f2, D: inf [Infinity]
-  1: f0->f0, A: inf [Infinity]
   1: f0->f0, B: B [O(n)]
   1: f0->f0, C: C [O(n)]
-  1: f0->f0, D: inf [Infinity]
   2: f1->f0, A: A [O(n)]
   2: f1->f0, B: B [O(n)]
   2: f1->f0, C: C [O(n)]
-  2: f1->f0, D: inf [Infinity]

@@ -12,16 +12,12 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  0: eval->eval, A: -inf [Infinity]
-  0: eval->eval, B: -inf [Infinity]
-  1: eval->eval, A: -inf [Infinity]
-  1: eval->eval, B: -inf [Infinity]
+  0: eval->eval, A: 0 [O(1)]
+  0: eval->eval, B: 1 [O(1)]
+  1: eval->eval, A: -1 [O(1)]
+  1: eval->eval, B: 2 [O(1)]
   2: start->eval, A: A [O(n)]
   2: start->eval, B: B [O(n)]
 `Upper:
-  0: eval->eval, A: inf [Infinity]
-  0: eval->eval, B: inf [Infinity]
-  1: eval->eval, A: inf [Infinity]
-  1: eval->eval, B: inf [Infinity]
   2: start->eval, A: A [O(n)]
   2: start->eval, B: B [O(n)]

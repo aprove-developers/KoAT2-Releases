@@ -10,7 +10,7 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  1: f0->f0, A: A-max{0, 1+A} [O(n)]
+  1: f0->f0, A: -1 [O(1)]
   0: f1->f0, A: A [O(n)]
 `Upper:
   1: f0->f0, A: A [O(n)]

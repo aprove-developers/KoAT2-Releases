@@ -12,14 +12,10 @@ Sizebounds:
 `Lower:
   0: f4->f300, A: A [O(n)]
   0: f4->f300, B: C [O(n)]
-  0: f4->f300, C: -inf [Infinity]
   1: f4->f300, A: 1 [O(1)]
   1: f4->f300, B: C [O(n)]
-  1: f4->f300, C: -inf [Infinity]
 `Upper:
   0: f4->f300, A: -1 [O(1)]
   0: f4->f300, B: C [O(n)]
-  0: f4->f300, C: inf [Infinity]
   1: f4->f300, A: 1+A [O(n)]
   1: f4->f300, B: C [O(n)]
-  1: f4->f300, C: inf [Infinity]

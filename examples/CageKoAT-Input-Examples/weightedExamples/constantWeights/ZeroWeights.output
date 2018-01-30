@@ -14,8 +14,8 @@ Sizebounds:
 `Lower:
   1: g->f, x: 0 [O(1)]
   1: g->f, y: 0 [O(1)]
-  2: g->g, x: x [O(n)]
-  2: g->g, y: -max{0, -x} [O(n)]
+  2: g->g, x: 0 [O(1)]
+  2: g->g, y: 1 [O(1)]
   0: start->g, x: x [O(n)]
   0: start->g, y: 0 [O(1)]
 `Upper:

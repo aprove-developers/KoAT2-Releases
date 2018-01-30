@@ -10,16 +10,8 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  0: f->g, x: -inf [Infinity]
-  0: f->g, x': -inf [Infinity]
   0: f->g, y: y [O(n)]
-  1: g->g, x: -inf [Infinity]
-  1: g->g, x': -inf [Infinity]
   1: g->g, y: y [O(n)]
 `Upper:
-  0: f->g, x: inf [Infinity]
-  0: f->g, x': inf [Infinity]
   0: f->g, y: y [O(n)]
-  1: g->g, x: inf [Infinity]
-  1: g->g, x': inf [Infinity]
   1: g->g, y: y [O(n)]
