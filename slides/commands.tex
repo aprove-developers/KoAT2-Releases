@@ -102,3 +102,10 @@
   \braced{ \sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i} \mid \exists \valuation_0, k \geq 1: 
     \lstate \leq \valuation_0 \leq \ustate \wedge (\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_k} (\location_k, \valuation_k) }
 }
+
+\newcommand{\slide}[2]{
+  \begin{frame}
+    \frametitle{#1}
+    \input{frames/#2}
+  \end{frame}
+}

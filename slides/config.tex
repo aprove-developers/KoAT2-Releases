@@ -1,0 +1,66 @@
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+
+\let\oldReturn\Return
+\renewcommand{\Return}{\State\oldReturn}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,decorations.pathmorphing,positioning,decorations.markings,fit,trees,shapes,automata,shapes.multipart}
+\usepackage{pgf-umlsd}
+\usepgflibrary{arrows} % for pgf-umlsd
+
+\usepackage{listings}
+
+\title[Non-Monotonic Bounds for Complexity Analysis of Integer Programs]
+      {Non-Monotonic Bounds for Complexity Analysis of Integer Programs}
+
+\author{Fabian B\"{o}ller}
+
+\institute[i2] {
+  RWTH Aachen \\
+  \medskip
+  \textit{fabian.boeller@rwth-aachen.de}
+}
+
+\date{WS 2017/18}
+
+\tikzset{
+  transition/.style={align=left,draw},
+  location/.style={circle,draw,font=\sffamily\bfseries},
+  transitions/.style={
+    every edge/.style={transition},
+    every node/.style={font=\sffamily\small}
+  },
+  scc edge/.style={very thick},
+  program/.style={
+    ->,>=stealth',auto,node distance=3cm,thick,
+    every node/.style={location}
+  },
+  rvg/.style={
+    ->,>=stealth',auto,node distance=1.5cm
+  },
+  evaluation/.style={
+    ->,>=stealth',auto,node distance=2cm,
+    every text node part/.style={align=center},thick,
+    every node/.style={draw,rectangle}
+  },
+  cross/.style={
+    decoration={ markings,
+      mark=at position .5 with {\draw[-,thick] (-2mm,2mm) -- (2mm,-2mm)node[inner sep=1pt,pos=0.5,auto]{#1};}
+    },
+    postaction={decorate}
+  },
+  highlight/.style={color=blue},
+  onslide/.code args={<#1>#2}{
+    \only<#1>{\pgfkeysalso{#2}}
+  }
+}
