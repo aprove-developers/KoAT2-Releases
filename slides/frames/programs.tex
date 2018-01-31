@@ -7,16 +7,18 @@
     \end{algorithmic}
   \end{column}
   \begin{column}{0.5\textwidth}
-    \begin{figure}
-      \centering
-      \begin{tikzpicture}[program]
-        \node (0) {$\location_0$};
-        \node (1) [right of=0] {$\location_1$};
-        \path[transitions]
-        (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
-        (1) edge[loop above] node[above left] {$t_1$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
-        ;
-      \end{tikzpicture}
-    \end{figure}
+    \onslide<2->{
+      \begin{figure}
+        \centering
+        \begin{tikzpicture}[program]
+          \node (0) {$\location_0$};
+          \node (1) [right of=0] {$\location_1$};
+          \path[transitions]
+          (0) edge node[above, show on=<7->] {$t_0$} node[below, show on=<6->] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+          (1) edge[loop above] node[above left, show on=<7->] {$t_1$} node[above tlabel] {\only<3->{$if(x>y)$}\\\only<4->{$x \coloneqq x-1$}\\\only<5->{$y \coloneqq y$}} (1)
+          ;
+        \end{tikzpicture}
+      \end{figure}
+    }
   \end{column}
 \end{columns}

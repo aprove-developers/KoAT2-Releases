@@ -63,5 +63,10 @@
   highlight/.style={color=blue},
   onslide/.code args={<#1>#2}{
     \only<#1>{\pgfkeysalso{#2}}
-  }
+  },
+  invisible/.style={opacity=0},
+  show on/.style={alt={#1{}{invisible}}},
+  alt/.code args={<#1>#2#3}{%
+    \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}} % \pgfkeysalso doesn't change the path
+  },
 }
