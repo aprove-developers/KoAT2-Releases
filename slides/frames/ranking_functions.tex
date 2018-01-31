@@ -1,31 +1,31 @@
 \begin{figure}
   \centering
   \begin{tikzpicture}[program]
-    \node[label=below:{x-y}] (0) {$\location_0$};
-    \node[label=below:{x-y}] (1) [right of=0] {$\location_1$};
+    \node[label=below:{\only<2->{x-y}}] (0) {$\location_0$};
+    \node[label=below:{\only<2->{x-y}}] (1) [right of=0] {$\location_1$};
     \path[transitions]
-    (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
-    (1) edge[loop above] node[above left] {$t_1$} node[above right=-0.5cm and 0.2cm] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
+    (0) edge[highlight on=<4>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+    (1) edge[loop above, highlight on=<5-8>] node[above left] {$t_1$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
     ;
   \end{tikzpicture}
 \end{figure}
 \begin{figure}
   \centering
-  \begin{tikzpicture}[evaluation]
+  \begin{tikzpicture}[evaluation, node distance=2.4cm, every node/.style={draw,rectangle,font=\footnotesize}]
     
-    \node (0) {$x-y$};
-    \node (1) [right of=0] {$x-y$};
-    \node (2) [right of=1] {$(x-1)-y$};
-    \node (3) [right of=2] {$(y+1)-y$};
-    \node (4) [right of=3] {$y-y$};
-    \node (exit) [right of=4,draw=none] {};
+    \node (0) [show on=<3->] {$x-y$};
+    \node (1) [show on=<4->, right of=0] {$x-y$};
+    \node (2) [show on=<5->, right of=1] {$(x-1)-y$};
+    \node (3) [show on=<6->, right of=2] {$(y+1)-y$};
+    \node (4) [show on=<7->, right of=3] {$y-y$};
+    \node (exit) [show on=<8->, right of=4,draw=none, node distance=1.3cm] {};
     
     \path[transitions]
-    (0) edge node {$t_0$} node[below] {$\geq$} (1)
-    (1) edge node {$t_1$} node[below] {$>$} (2)
-    (2) edge[dotted] node[below] {$>$} (3)
-    (3) edge node {$t_1$} node[below] {$>$} (4)
-    (4) edge[cross] node[below] {} (exit)
+    (0) edge[show on=<4->, highlight on=<4>] node {$t_0$} node[below] {$\geq$} (1)
+    (1) edge[show on=<5->, highlight on=<5>] node {$t_1$} node[below] {$>$} node[show on=<10->, below=0.5cm] {$1$} (2)
+    (2) edge[show on=<6->, highlight on=<6>, dotted] node {$t_1$} node[below] {$>$} node[show on=<10->, below=0.5cm] {$x-y-2$} (3)
+    (3) edge[show on=<7->, highlight on=<7>] node {$t_1$} node[below] {$>$} node[show on=<10->, below=0.5cm] {$1$} (4)
+    (4) edge[show on=<8->, highlight on=<8>, cross] node[below] {} (exit)
     ;
   \end{tikzpicture}
 \end{figure}
