@@ -1,0 +1,18 @@
+\begin{figure}
+  \centering
+  \begin{tikzpicture}[program]
+    \node (0) {$\location_0$};
+    \node (1) [right of=0] {$\location_1$};
+    \node (2) [right of=1] {$\location_2$};
+    \path[transitions]
+    (0) edge[highlight] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} node[below=1cm] {$\USize(t_0,x) = x$\\$\LSize(t_0,y) = y$} (1)
+    (1) edge[highlight, loop above] node[above left] {$t_1$} node[above tlabel] {$if(x<10)$\\$x \coloneqq x+1$\\$y \coloneqq y$} node[above=1cm] {$\USize(t_1,x) = 10$\\$\LSize(t_1,y) = y$} (1)
+    (1) edge node[above] {$t_2$} node[below] {$if(x \geq 10)$\\$x \coloneqq x$\\$y \coloneqq y$} (2)
+    (2) edge[loop above] node[above left] {$t_3$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (2)
+    ;
+  \end{tikzpicture}
+\end{figure}
+\begin{block}{Equation}
+  $\UTime(t_3) = \UTime(t_0) \cdot (\USize(t_0,x)-\LSize(t_0,y)) + \UTime(t_1) \cdot (\USize(t_1,x)-\LSize(t_1,y))$ \\
+  $\UTime(t_3) = \UTime(t_0) \cdot (x-y) + \UTime(t_1) \cdot (10-y)$
+\end{block}

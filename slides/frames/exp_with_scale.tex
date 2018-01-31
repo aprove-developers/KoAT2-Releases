@@ -7,20 +7,16 @@
     
     \path[transitions]
     (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
-    (1) edge[loop above] node[left] {$t_1$} node[right] {$if(x > 0)$\\$x \coloneqq x - 1$\\$y \coloneqq 2 \cdot y$} (1)
+    (1) edge[loop above] node[above left] {$t_1$} node[above tlabel] {$if(x > 0)$\\$x \coloneqq x - 1$\\$y \coloneqq 2 \cdot y$} (1)
     ;
   \end{tikzpicture}
   
   \begin{tikzpicture}[rvg]
     
-    \node (0x) {$t_0,x$};
-    \node (1x) [right of=0x] {$t_1,x$};
-    \node (0y) [right of=1x] {$t_0,y$};
+    \node (0y) {$t_0,y$};
     \node (1y) [right of=0y] {$t_1,y$};
     
     \path
-    (0x) edge[dashed] (1x)
-    (1x) edge[loop above, dashed] (1x)
     (0y) edge (1y)
     (1y) edge[loop above, scc edge] (1y)
     ;

@@ -13,26 +13,6 @@
   \centering
   \begin{tikzpicture}[evaluation]
     
-    \node (0) {$8-5$};
-    \node (1) [right of=0] {$8-5$};
-    \node (2) [right of=1] {$7-5$};
-    \node (3) [right of=2] {$6-5$};
-    \node (4) [right of=3] {$5-5$};
-    \node (exit) [right of=4,draw=none] {};
-    
-    \path[transitions]
-    (0) edge node {$t_0$} node[below] {$\geq$} (1)
-    (1) edge node {$t_1$} node[below] {$>$} (2)
-    (2) edge node {$t_1$} node[below] {$>$} (3)
-    (3) edge node {$t_1$} node[below] {$>$} (4)
-    (4) edge[cross] node[below] {} (exit)
-    ;
-  \end{tikzpicture}
-\end{figure}
-\begin{figure}
-  \centering
-  \begin{tikzpicture}[evaluation]
-    
     \node (0) {$x-y$};
     \node (1) [right of=0] {$x-y$};
     \node (2) [right of=1] {$(x-1)-y$};
@@ -50,4 +30,5 @@
   \end{tikzpicture}
 \end{figure}
 \begin{block}{TODO}
+Animate
 \end{block}
