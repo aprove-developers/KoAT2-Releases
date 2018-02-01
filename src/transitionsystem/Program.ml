@@ -1,5 +1,6 @@
 open Batteries
 open Constraints
+open Formulas
    
 open ProgramTypes
    
@@ -91,8 +92,16 @@ let vars program =
   |> Enum.map TransitionLabel.vars
   |> Enum.fold VarSet.union VarSet.empty
 
-let pre program (l,t,l') =
-  List.enum (TransitionGraph.pred_e (graph program) l)
+let pre program (l,t,_) =
+  l
+  |> TransitionGraph.pred_e (graph program)
+  |> List.enum
+  |> Enum.filter (fun (_,t',_) ->
+         TransitionLabel.append t' t
+         |> TransitionLabel.guard
+         |> Formula.mk
+         |> SMT.Z3Solver.satisfiable
+       )
 
 let sccs program =
   let module SCC = Graph.Components.Make(TransitionGraph) in
