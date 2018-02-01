@@ -64,18 +64,14 @@ let add_bound = function
   | `Cost -> Approximation.add_costbound
    
 let improve_with_rank measure program appr rank =
-  let execute () =
-    let bound = compute_bound appr program rank in
-    if Bound.is_infinity bound then
-      MaybeChanged.same appr
-    else
-      rank
-      |> RankingFunction.decreasing
-      |> (fun t -> add_bound measure bound t appr)
-      |> MaybeChanged.changed
-  in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "improve_with_rank", [])
-                     execute
+  let bound = compute_bound appr program rank in
+  if Bound.is_infinity bound then
+    MaybeChanged.same appr
+  else
+    rank
+    |> RankingFunction.decreasing
+    |> (fun t -> add_bound measure bound t appr)
+    |> MaybeChanged.changed
 
 (** Checks if a transition is bounded *)
 let bounded measure appr transition =
