@@ -5,7 +5,7 @@ The KoAT paper \cite{koat} presents two approaches: One basic approach, which co
 This thesis considers the modular approach since the other approach can be defined as a special case of the modular approach.
 
 The presented method is based on ranking functions.
-The method of KoAT \cite{koat} allows the usage of polynomial ranking functions.
+The method of \cite{koat} allows the usage of polynomial ranking functions.
 It uses an operator on the polynomials, which considers the absolute values of variables and converts all negative signs into positive signs.
 This is necessary to ensure monotonicity of the polynomials in the variables.
 Otherwise, a substitution of the variables with the size bounds would not necessarily be a sound overapproximation.
@@ -18,12 +18,11 @@ In practice, most existing techniques generate these affine ranking functions \c
 But in general, the new method is also applicable to polynomial ranking functions.
 
 For the definition of the method, we need to define the terms of entry locations and entry transitions.
-\begin{definition}[Entry Transitions and Entry Locations]
+\begin{definition}[Entry Transitions and Entry Locations \cite{koat}]
   Let $\TSet' \subseteq \TSet$ be a nonempty subset of all transitions.
   We define the entry transitions $\TSet_{\location}$ of a location $\location$ as $\braced{(\location', \update, \guard, \location) \mid \exists \location', \update, \guard: (\location', \update, \guard, \location) \in \TSet \setminus \TSet'}$.
   We define the entry locations $\mathcal{E}_{\TSet'}$ of the transition set $\TSet'$ as $\braced{\location_{in} \mid \TSet_{\location_{in}} \neq \emptyset \wedge \exists \location': (\location_{in}, \update, \guard, \location') \in \TSet'}$.
 \end{definition}
-This is the same definition used in the KoAT paper \cite{koat}.
 
 \begin{example}[Entry Transitions and Entry Locations]
   \input{graphs/entrytransitions}
@@ -55,7 +54,7 @@ Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location
   \input{graphs/motivational_example_timebounds}
   Consider the motivational program from the introduction in Figure \ref{fig:motivational_example_timebounds}.
   With the transition set $\TSet' = \braced{t_1}$, it is possible to determine a ranking function $\timerank$ with $\timerank(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).
-  The method of the KoAT paper \cite{koat} would now apply an operator to $\timerank$, such that the result would be a monotonic function with $\timerank'(\location_1) = \abs{x} + \abs{y}$.
+  The method of \cite{koat} would now apply an operator to $\timerank$, such that the result would be a monotonic function with $\timerank'(\location_1) = \abs{x} + \abs{y}$.
   Then, it is able to substitute each variable by its absolute size bound and therefore lift it to a global context.
   The new method does not use this operator.
   Instead, it substitutes each variable of the time rank $\timerank(\location_1)$ by its lower/upper size bound depending on the monotonicity of the time rank in the variables.

@@ -4,13 +4,13 @@ The last chapter presented an implementation of the method to infer time, size a
 This chapter evaluates this implementation against other methods.
 
 For this purpose, two different approaches are used.
-First, some selected examples are presented that show the benefit of the presented method in contrast to the method of the KoAT paper \cite{koat}.
+First, some selected examples are presented that show the benefit of the presented method in contrast to the method of \cite{koat}.
 Second, the implementation is evaluated on an example set of programs.
 This set of programs is defined and used by comparable tools with the same objective of inferring time bounds for integer programs.
 
 \subsection{Evaluating Selected Examples}
 
-This section presents two selected examples to compare the results of the new method with the results of the method of the KoAT paper \cite{koat}.
+This section presents two selected examples to compare the results of the new method with the results of the method of \cite{koat}.
 This selection is chosen to show the benefits of the new method and is by no means representative.
 Nevertheless, it is able to show the potentials of the new method.
 
@@ -37,16 +37,16 @@ The second evaluated example is the program presented in the cost bound chapter 
 
 As already mentioned, the presented method is able to compute a cost bound $\UCost(t_1) = \maxO{x}$ for the transition $t_1$.
 Therefore $1 + \maxO{x}$ is a cost bound for the whole program.
-Since the KoAT paper \cite{koat} does not consider cost ranking functions, it is only able to compute a cost bound $1 + \abs{x} \cdot \abs{y}$ for the whole program.
+Since \cite{koat} does not consider cost ranking functions, its method is only able to compute a cost bound $1 + \abs{x} \cdot \abs{y}$ for the whole program.
 
 The functions are plotted with the same assumptions as the previous example.
-The left graph plots the cost complexity $1 + \maxO{x}$ of the new method and the right graph plots the cost complexity $1 + \abs{x} \cdot \abs{y}$ of the method of the KoAT paper \cite{koat}.
+The left graph plots the cost complexity $1 + \maxO{x}$ of the new method and the right graph plots the cost complexity $1 + \abs{x} \cdot \abs{y}$ of the method of \cite{koat}.
 In this example, the new method yields better results for all input states $\lstate = \ustate$.
 
 \subsection{Evaluating an Example Set}
 
 This section evaluates the presented implementation on an example set which is a collection of examples introduced by other tools.
-The main focus is a comparison with the method of the KoAT paper \cite{koat}.
+The main focus is a comparison with the method of \cite{koat}.
 Besides that, we compare the implementation to the tool CoFloCo \cite{cofloco3}.
 For both KoAT and CoFloCo the latest development version available at the time of this thesis is used.
 

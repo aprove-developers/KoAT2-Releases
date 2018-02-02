@@ -4,7 +4,7 @@ This thesis presents a method for the computation of non-monotonic time, size an
 It is based on the method of the KoAT paper \cite{koat} and extends it in several ways.
 
 The main extension regards the computation of ranking functions for time bounds.
-While the presented method uses the same approach to determine a ranking function as the KoAT paper \cite{koat}, the KoAT paper applies an operator which transforms a non-monotonic rank into a monotonic rank.
+While the presented method uses the same approach to determine a ranking function as \cite{koat}, \cite{koat} applies an operator which transforms a non-monotonic rank into a monotonic rank.
 The presented method uses an approximated substitution which substitutes each variable in regard to the monotonicity of the rank in this variable.
 This way, a non-monotonic rank does not need to be transformed into a monotonic rank.
 
@@ -14,7 +14,7 @@ Therefore, the presented method distinguishes between lower size bounds and uppe
 It is able to use the difference between the positive and the negative effect of a variable.
 The positive effect determines the upper size bound and the negative effect determines the lower size bound.
 The opposite effect can be eliminated, respectively.
-This way, the method yields more precise size bounds than the KoAT paper \cite{koat}.
+This way, the method yields more precise size bounds than \cite{koat}.
 These are then used to infer more precise time bounds.
 
 Another improvement concerns the computation of cost bounds.
@@ -24,6 +24,6 @@ With cost ranking functions, the presented method is able to infer more precise 
 
 The main benefit of the presented method is a more precise approximation of the coefficients of time and cost bounds.
 But the method is also able to yield a better asymptotic complexity class.
-This is, for example, the case if the lower size bound of a variable is approximated to be $0$ instead of the negation of the size bound computed by the method of the KoAT paper \cite{koat}.
+This is, for example, the case if the lower size bound of a variable is approximated to be $0$ instead of the negation of the size bound computed by the method of \cite{koat}.
 
 The described improvements and extensions of the presented method and the resulting performance in the evaluation against other comparable methods make the presented method a powerful tool for the computation of time and cost bounds of integer programs.

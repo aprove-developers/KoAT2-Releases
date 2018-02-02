@@ -1,7 +1,7 @@
 \subsection{Result Variable Graph}
 
 For the analysis of size bounds, it is helpful to consider a graph which contains information about which result variables affect each other.
-Such a graph is presented as a result variable graph by the KoAT paper \cite{koat}.
+Such a graph is presented as a result variable graph in \cite{koat}.
 Before we can define the actual result variable graph, we need to define the terms of pre-transitions and active variables.
 The pre-transitions of a transition $t \in \TSet$ are all transitions, which may occur immediately before an evaluation step with the transition $t$.
 
@@ -76,5 +76,5 @@ Note that since pre-transitions and active variables are both defined as overapp
   On the other hand, the variables $y$ and $z$ affect each other in the loop $t_1$.
   This is directly reflected by the fact, that $(t_1,y)$ and $(t_1,z)$ form an SCC in the result variable graph.
   This SCC is highlighted by bold edges.
-  The analysis of this thesis, as well as the method of the KoAT paper \cite{koat}, use SCC information to determine size bounds.
+  The analysis of this thesis, as well as the method of \cite{koat}, use SCC information to determine size bounds.
 \end{example}
