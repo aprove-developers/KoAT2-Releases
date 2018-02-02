@@ -7,11 +7,11 @@ These tools use different approaches for the search of time bounds.
 The tool PUBS works with a non-modular approach, where a preprocessed program is analyzed at once.
 This tool is discussed in the papers of Albert \cite{pubs1, pubs2}.
 
-The tool CoFloCo uses an approach with cost relations, discussed in papers of Flores-Montoya \cite{cofloco1, cofloco2, cofloco4} and finally presented in his thesis \cite{cofloco3}.
+The tool CoFloCo uses an approach with cost relations, discussed in articles of Flores-Montoya \cite{cofloco1, cofloco2, cofloco4} and finally presented in his thesis \cite{cofloco3}.
 This approach classifies program executions into different execution patterns called chains and performs a cost analysis yielding polynomial bounds with maximum and minimum operators. 
 While this approach performs well for complex programs, it is not able to infer non-polynomial bounds.
 
-The tool Loopus implements an amortized complexity analysis based on lexicographic ranking functions, discussed in the papers of Sinn and Zuleger \cite{loopus1, loopus2}.
+The tool Loopus implements an amortized complexity analysis based on lexicographic ranking functions, discussed in the publications of Sinn and Zuleger \cite{loopus1, loopus2}.
 
 The tool KoAT uses the computation of size bounds to infer time bounds, discussed in the paper of Brockschmidt \cite{koat}.
 The paper presents a modular approach with ranking functions.
@@ -20,7 +20,7 @@ These modular analyses can then be lifted into global time bounds.
 Besides polynomial bounds, the tool KoAT \cite{koat} is also able to compute exponential bounds.
 
 The method of this master's thesis is based on the KoAT paper \cite{koat}.
-It changes the methods of the KoAT paper \cite{koat} in such a way, that it can infer non-monotonic bounds instead of only monotonic bounds.
+It changes the methods in such a way, that it can infer non-monotonic bounds instead of only monotonic bounds.
 
 To demonstrate the potentials of the presented method, we provide a motivating example.
 Consider the following program.
@@ -31,24 +31,24 @@ Consider the following program.
   \EndWhile
 \end{algorithmic}
 
-It takes two variables $x$ and $y$ as input and runs a loop which decrements $x$ in each step with $t_1$ until $x$ is not greater than $y$ anymore.
-Intentionally, we can see, that the transition $t_1$ will be used at most $\max \braced{0, x-y}$ times.
-But the method of the KoAT paper \cite{koat} is only able to infer the monotonic bound $\abs{x}+\abs{y}$ for $t_1$.
+It takes two variables $x$ and $y$ as input and runs a loop which decrements $x$ until it is not greater than $y$ anymore.
+Intentionally, we can see, that the loop is executed at most $\max \braced{0, x-y}$ times.
+But the method of \cite{koat} is only able to infer the monotonic bound $\abs{x}+\abs{y}$ for the loop.
 The reason is that it only detects that the value of the variable $y$ is between $-\abs{y}$ and $\abs{y}$.
 The new method infers lower and upper size bounds independently and therefore recognizes a lower bound $y$ and an upper bound $y$ for the value of $y$.
 Therefore, it is able to infer the expected time bound $\maximum{0, x-y}$.
 
 After this introductory chapter, the second chapter introduces the preliminaries necessary for the new method.
-These include a definition of the non-monotonic bound set to represent the set of possible results of the analysis.
-Furthermore, a definition of an integer program and a utility structure called a result variable graph are introduced.
-Additionally, the term of a ranking function is defined.
+These include a definition of the \emph{non-monotonic bound set} to represent the set of possible results of the analysis.
+Furthermore, a definition of an \emph{integer program} and a utility structure called \emph{result variable graph} are introduced.
+Additionally, the term of a \emph{ranking function} is defined.
 
-The third chapter introduces an operator on the non-monotonic bound set called an approximated replacement.
+The third chapter introduces an operator on the non-monotonic bound set called \emph{approximated replacement}.
 Non-monotonic bounds entail the difficulty that a common substitution can yield an unsound overapproximation.
 The approximated replacement solves this problem.
 
-The fourth chapter defines the terms time, size and cost complexity as well as time, size and cost bounds.
-These definitions are more precise than the complexity definitions of the KoAT paper \cite{koat}.
+The fourth chapter defines the terms \emph{time}, \emph{size} and \emph{cost complexity} as well as \emph{time}, \emph{size} and \emph{cost bounds}.
+These definitions are more precise than the complexity definitions of \cite{koat}.
 Otherwise, the results of the new method would not be representable with the complexity definitions.
 
 The fifth and the six chapter present the new approach for the computation of time bounds and size bounds.
