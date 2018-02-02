@@ -74,11 +74,11 @@ The preprocessor $p_{\text{reachable}}$ does not affect any defined preprocessor
 \subsubsection{Removal of Unsatisfiable Transitions}
 
 The preprocessor $p_{\text{sat}}$ removes transitions which conditions are unsatisfiable.
-The result of the preprocessor is a program $((\LSet, \TSet'), \location_0, \PVSet, \TVSet, \cost)$, where $\TSet' = \braced{(\location,\update,\guard,\location') \in \TSet \mid \exists \valuation \in \Valuation: \exacteval{\guard}{\valuation} = \textbf{true}}$ is the set of all satisfiable transitions.
+The result of the preprocessor is a program $((\LSet, \TSet'), \location_0, \PVSet, \TVSet, \cost)$, where $\TSet' = \braced{(\location,\update,\guard,\location') \in \TSet \mid \exists \valuation \in \Valuation: \exacteval{\guard}{\valuation} = \emph{true}}$ is the set of all satisfiable transitions.
 
 The preprocessor $p_{\text{sat}}$ affects the preprocessors $p_{\text{reachable}}$.
-The preprocessor $p_{\text{reachable}}$ is affected in a scenario $\Program = ((\braced{\location_0, \location_1}, \braced{(\location_0,\update,\textbf{false},\location_1)}), \location_0, \emptyset, \emptyset, \cost)$.
-In this example, the transition $(\location_0,\update,\textbf{false},\location_1)$ will be removed by $p_{\text{sat}}$.
+The preprocessor $p_{\text{reachable}}$ is affected in a scenario $\Program = ((\braced{\location_0, \location_1}, \braced{(\location_0,\update,\emph{false},\location_1)}), \location_0, \emptyset, \emptyset, \cost)$.
+In this example, the transition $(\location_0,\update,\emph{false},\location_1)$ will be removed by $p_{\text{sat}}$.
 This leaves the location $\location_1$ unreachable.
 
 \subsubsection{Invariant Generation}

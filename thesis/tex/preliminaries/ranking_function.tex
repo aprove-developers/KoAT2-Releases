@@ -31,7 +31,7 @@ Therefore, for the transitions $t \in \TSet_>$ the rank $\timerank(\location)$ a
   Therefore, also $\exacteval{x>y}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} \geq \exacteval{x-y}{\valuation'}$ holds.
   Furthermore, it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ that $\exacteval{x>y}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} \geq 1$.
 
-  Note that in this example it would also be possible to consider the transition $t_0$ as part of the set $\TSet$, since it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_0} (\location_1,\valuation')$ that $\valuation(x)=\valuation'(x)$ and $\valuation(y)=\valuation'(y)$ and therefore $\exacteval{\textbf{true}}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} \geq \exacteval{x-y}{\valuation'}$.
+  Note that in this example it would also be possible to consider the transition $t_0$ as part of the set $\TSet$, since it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_0} (\location_1,\valuation')$ that $\valuation(x)=\valuation'(x)$ and $\valuation(y)=\valuation'(y)$ and therefore $\exacteval{\emph{true}}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} \geq \exacteval{x-y}{\valuation'}$.
   However, in general an additional transition may increase the measure and therefore violate the time ranking conditions.
 \end{example}
 

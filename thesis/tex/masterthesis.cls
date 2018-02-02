@@ -11,6 +11,7 @@
 \usepackage[english]{babel}
 % \usepackage[ngerman]{babel}
 
+\usepackage{mathtools}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}

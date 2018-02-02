@@ -106,7 +106,7 @@ Now, we formally define the evaluation relation of a program.
   A configuration is a pair $(\location, \valuation) \in \LSet \times \Valuation$ that defines the values of all variables at a specific location.
   For a transition $t \in \TSet$, an evaluation step $\rightarrow_t \in (\LSet \times \Sigma) \times (\LSet \times \Sigma)$ is a relation between two configurations.
   We write $(\location, \valuation) \rightarrow_t (\location', \valuation')$ if and only if the transition $t = (\location_t, \update, \guard, \location_t') \in \TSet$ satisfies three conditions.
-  First, it holds that the state $\valuation$ satisfies the guard, i.e. $\exacteval{\guard}{\valuation} = \textbf{true}$.
+  First, it holds that the state $\valuation$ satisfies the guard, i.e. $\exacteval{\guard}{\valuation} = \emph{true}$.
   Second, for each program variable $v \in \PVSet$, the states $\valuation$ and $\valuation'$ satisfy the equation $\exacteval{\update(v)}{\valuation} = \exacteval{v}{\valuation'}$.
   And third, both $\location = \location_t$ and $\location' = \location_t'$ hold.
   We omit the transition and write $(\location, \valuation) \rightarrow (\location', \valuation')$ if and only if there exists a transition $t \in \TSet$ such that $(\location, \valuation) \rightarrow_t (\location', \valuation')$ holds.
