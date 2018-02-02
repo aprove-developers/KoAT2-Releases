@@ -11,15 +11,15 @@ The pre-transitions of a transition $t \in \TSet$ are all transitions, which may
   to denote the set of all transitions that may precede the transition $t$ in an evaluation.	
 \end{definition}
 
+\begin{example}[Pre-Transitions] 
+  \input{graphs/rvg_example_program}
+  Consider the program in Figure \ref{fig:rvg_example_program}.
+  The set of pre-transitions for $t_0$ is empty, since no transition can occur before an initial transition $t_0 \in \TSet_0$.
+  The set of pre-transitions for $t_1$ is $\pre(t_1) = \braced{t_0, t_1}$, since both $t_0$ and $t_1$ may occur directly before the occurrence of the transition $t_1$.
+  Also, the set of pre-transitions for $t_2$ is $\pre(t_2) = \braced{t_0, t_1}$.
+\end{example}
+
 The function $\pre_{\mathit{trivial}}((\location_1, \update_1, \guard_1, \location_1')) = \braced{(\location_2, \update_2, \guard_2, \location_2') \in \TSet \mid \location_2' = \location_1}$ is a valid over approximation of $\pre(t)$.
-
-\input{graphs/rvg_example_program}
-
-As an example consider the program in Figure \ref{fig:rvg_example_program}.
-The set of pre-transitions for $t_0$ is empty, since no transition can occur before an initial transition $t_0 \in \TSet_0$.
-The set of pre-transitions for $t_1$ is $\pre(t_1) = \braced{t_0, t_1}$, since both $t_0$ and $t_1$ may occur directly before the occurrence of the transition $t_1$.
-Also, the set of pre-transitions for $t_2$ is $\pre(t_2) = \braced{t_0, t_1}$.
-
 Additionally to pre-transitions, we define the active variables of bounds. 
 
 \begin{definition}[Active Variables]
@@ -28,21 +28,23 @@ Additionally to pre-transitions, we define the active variables of bounds.
   Then, the function $\actV: \BoundSet(\VSet) \rightarrow 2^\VSet$ describes by $\actV(b)$ all variables, which are active in the bound $b \in \BoundSet(\VSet)$.
 \end{definition}
 
-Again, consider the program in Figure \ref{fig:rvg_example_program}.
-The update $\update(y)$ of the transition $t_1$ has the active variables $\actV(\update(y)) = \braced{x,y,z}$.
-The update $\update(x)$ of the transition $t_2$ does not have active variables, i.e. $\actV(\update(x)) = \emptyset$.
+\begin{example}[Active Variables] 
+  Again, consider the program in Figure \ref{fig:rvg_example_program}.
+  The $y$-update $\update(y)$ of the transition $t_1$ has the active variables $\actV(\update(y)) = \braced{x,y,z}$.
+  The $x$-update $\update(x)$ of the transition $t_2$ does not have active variables, i.e. $\actV(\update(x)) = \emptyset$.
+\end{example}
 
 A valid overapproximation of the active variables of a bound $b \in \BoundSet(\VSet)$ is the set of all occurring variables.
 \begin{definition}[Overapproximation of Active Variables]
   For a bound $b \in \BoundSet(\VSet)$, we define an overapproximation of the active variables $\actV(b)$.
   \[ \actV(\infty) = \emptyset \text{ for } \infty \in \BoundSet(\VSet) \]
-  \[ \actV(k) = \emptyset \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet) \] 
-  \[ \actV(v) = \braced{v} \text{ for all } v \in \VSet \subset \BoundSet(\VSet) \] 
+  \[ \actV(k) = \emptyset \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet) \] 
+  \[ \actV(v) = \braced{v} \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \] 
   \[ \actV(-b) = \actV(b) \text{ for all } b \in \BoundSet(\VSet) \] 
   \[ \actV(b_1 + b_2) = \actV(b_1) \cup \actV(b_2) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
   \[ \actV(b_1 \cdot b_2) = \actV(b_1) \cup \actV(b_2) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
   \[ \actV(\max(b_1, b_2)) = \actV(b_1) \cup \actV(b_2) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
-  \[ \actV(k^b) = \actV(b) \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
+  \[ \actV(k^b) = \actV(b) \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
 \end{definition}
 
 Note that this overapproximation recognizes the variable $x$ as active in a bound $x - x$.
