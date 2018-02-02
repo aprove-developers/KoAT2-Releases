@@ -35,6 +35,7 @@ Sizebounds:
   2: f300->f1, D: N [O(n)]
   2: f300->f1, E: E [O(n)]
   2: f300->f1, F: F [O(n)]
+  2: f300->f1, I: I [O(n)]
 `Upper:
   0: f2->f300, A: K [O(n)]
   0: f2->f300, B: L [O(n)]
@@ -59,3 +60,4 @@ Sizebounds:
   2: f300->f1, D: N [O(n)]
   2: f300->f1, E: E [O(n)]
   2: f300->f1, F: F [O(n)]
+  2: f300->f1, I: I [O(n)]

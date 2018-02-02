@@ -1,13 +1,13 @@
 Timebounds: 
-  Overall timebound: max{1, 1+A}+max{0, A*(-1+A)}+max{0, A} [O(n^2)]
+  Overall timebound: max{1, 1+A*(-1+A)}+max{0, A}+max{0, A} [O(n^2)]
   0: f1->f3: 1 [O(1)]
-  1: f3->f3: max{0, A}+max{0, A*(-1+A)} [O(n^2)]
+  1: f3->f3: max{0, A*(-1+A)}+max{0, A} [O(n^2)]
   2: f3->f3: max{0, A} [O(n)]
 
 Costbounds:
-  Overall costbound: max{1, 1+A}+max{0, A*(-1+A)}+max{0, A} [O(n^2)]
+  Overall costbound: max{1, 1+A*(-1+A)}+max{0, A}+max{0, A} [O(n^2)]
   0: f1->f3: 1 [O(1)]
-  1: f3->f3: max{0, A}+max{0, A*(-1+A)} [O(n^2)]
+  1: f3->f3: max{0, A*(-1+A)}+max{0, A} [O(n^2)]
   2: f3->f3: max{0, A} [O(n)]
 
 Sizebounds:

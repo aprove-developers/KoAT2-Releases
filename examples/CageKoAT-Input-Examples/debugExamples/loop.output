@@ -32,6 +32,12 @@ Costbounds:
 
 Sizebounds:
 `Lower:
+  1: a->b, b: b [O(n)]
+  3: b->c, b: b [O(n)]
+  5: c->d, b: b [O(n)]
+  7: d->e, b: b [O(n)]
+  9: e->f, b: b [O(n)]
+  11: f->a, b: b [O(n)]
   0: start->a, a: a [O(n)]
   0: start->a, b: b [O(n)]
 `Upper:

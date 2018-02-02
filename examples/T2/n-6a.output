@@ -33,6 +33,7 @@ Sizebounds:
   3: f300->f300, D: D [O(n)]
   4: f300->f1, A: A [O(n)]
   4: f300->f1, B: -max{-B, -B+max{0, B-A}} [O(n)]
+  4: f300->f1, C: -max{0, -C} [O(n)]
 `Upper:
   0: f2->f300, A: A [O(n)]
   0: f2->f300, B: B [O(n)]
@@ -51,3 +52,4 @@ Sizebounds:
   3: f300->f300, D: D [O(n)]
   4: f300->f1, A: A [O(n)]
   4: f300->f1, B: B [O(n)]
+  4: f300->f1, C: max{0, C} [O(n)]

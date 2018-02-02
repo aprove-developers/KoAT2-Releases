@@ -55,6 +55,12 @@ Sizebounds:
   0: evalwisestart->evalwiseentryin, A: A [O(n)]
   0: evalwisestart->evalwiseentryin, B: B [O(n)]
 `Upper:
+  7: evalwisebb3in->evalwisebb4in, A: B [O(n)]
+  8: evalwisebb3in->evalwisebb5in, B: A [O(n)]
+  9: evalwisebb4in->evalwisebb6in, A: B [O(n)]
+  10: evalwisebb5in->evalwisebb6in, B: A [O(n)]
+  4: evalwisebb6in->evalwisebb3in, B: A [O(n)]
+  5: evalwisebb6in->evalwisebb3in, A: B [O(n)]
   1: evalwiseentryin->evalwisereturnin, A: -1 [O(1)]
   1: evalwiseentryin->evalwisereturnin, B: B [O(n)]
   2: evalwiseentryin->evalwisereturnin, A: A [O(n)]

@@ -1,6 +1,6 @@
 Timebounds: 
-  Overall timebound: 5+2*max{0, -1+A}+2*max{0, -1+A}*max{0, -1+A}+max{0, -1+A}+max{0, A}+max{0, -1+C} [O(n^2)]
-  4: lbl52->lbl52: 2*max{0, -1+A}*max{0, -1+A}+max{0, -1+C} [O(n^2)]
+  Overall timebound: 5+2*max{0, -1+A}+2*max{0, -1+A}*max{0, -1+A}+max{0, -1+A}+max{0, A}+max{0, -1+C}+max{0, -1+C} [O(n^2)]
+  4: lbl52->lbl52: 2*max{0, -1+A}*max{0, -1+A}+max{0, -1+C}+max{0, -1+C} [O(n^2)]
   5: lbl52->lbl72: max{0, A}+max{0, -1+A} [O(n)]
   6: lbl72->stop: 1 [O(1)]
   7: lbl72->lbl52: 2*max{0, -1+A} [O(n)]
@@ -10,8 +10,8 @@ Timebounds:
   9: start0->start: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 5+2*max{0, -1+A}+2*max{0, -1+A}*max{0, -1+A}+max{0, -1+A}+max{0, A}+max{0, -1+C} [O(n^2)]
-  4: lbl52->lbl52: 2*max{0, -1+A}*max{0, -1+A}+max{0, -1+C} [O(n^2)]
+  Overall costbound: 5+2*max{0, -1+A}+2*max{0, -1+A}*max{0, -1+A}+max{0, -1+A}+max{0, A}+max{0, -1+C}+max{0, -1+C} [O(n^2)]
+  4: lbl52->lbl52: 2*max{0, -1+A}*max{0, -1+A}+max{0, -1+C}+max{0, -1+C} [O(n^2)]
   5: lbl52->lbl72: max{0, A}+max{0, -1+A} [O(n)]
   6: lbl72->stop: 1 [O(1)]
   7: lbl72->lbl52: 2*max{0, -1+A} [O(n)]

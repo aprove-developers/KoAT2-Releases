@@ -13,7 +13,7 @@ Costbounds:
 Sizebounds:
 `Lower:
   0: f0->f4, A: 10 [O(1)]
-  0: f0->f4, C: -max{0, -C} [O(n)]
+  0: f0->f4, C: 0 [O(1)]
   0: f0->f4, D: D [O(n)]
   1: f0->f0, A: 1 [O(1)]
   1: f0->f0, B: B [O(n)]
@@ -25,7 +25,7 @@ Sizebounds:
   4: f3->f0, D: D [O(n)]
 `Upper:
   0: f0->f4, A: 10 [O(1)]
-  0: f0->f4, C: max{9, C} [O(n)]
+  0: f0->f4, C: 9 [O(1)]
   0: f0->f4, D: D [O(n)]
   1: f0->f0, A: 10 [O(1)]
   1: f0->f0, B: B [O(n)]

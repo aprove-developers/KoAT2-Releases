@@ -1,14 +1,14 @@
 Timebounds: 
-  Overall timebound: 1+max{0, x}+max{0, 1+x}+max{0, 2*x*x}+max{0, 2*x} [O(n^2)]
+  Overall timebound: 1+max{0, x}+max{0, 1+x}+max{0, 2*x}+max{0, 2*x*x} [O(n^2)]
   1: f->g: max{0, 1+x} [O(n)]
-  2: g->g: max{0, 2*x*x}+max{0, 2*x} [O(n^2)]
+  2: g->g: max{0, 2*x}+max{0, 2*x*x} [O(n^2)]
   3: g->f: max{0, x} [O(n)]
   0: start->f: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 1+max{0, x}+max{0, 1+x}+max{0, 2*x*x}+max{0, 2*x} [O(n^2)]
+  Overall costbound: 1+max{0, x}+max{0, 1+x}+max{0, 2*x}+max{0, 2*x*x} [O(n^2)]
   1: f->g: max{0, 1+x} [O(n)]
-  2: g->g: max{0, 2*x*x}+max{0, 2*x} [O(n^2)]
+  2: g->g: max{0, 2*x}+max{0, 2*x*x} [O(n^2)]
   3: g->f: max{0, x} [O(n)]
   0: start->f: 1 [O(1)]
 

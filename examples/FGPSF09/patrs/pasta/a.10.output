@@ -1,13 +1,13 @@
 Timebounds: 
-  Overall timebound: inf [Infinity]
-  0: eval->eval: inf [Infinity]
-  3: eval->eval: inf [Infinity]
+  Overall timebound: 1+max{0, B-A}+max{0, A-B} [O(n)]
+  0: eval->eval: max{0, A-B} [O(n)]
+  3: eval->eval: max{0, B-A} [O(n)]
   4: start->eval: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: inf [Infinity]
-  0: eval->eval: inf [Infinity]
-  3: eval->eval: inf [Infinity]
+  Overall costbound: 1+max{0, B-A}+max{0, A-B} [O(n)]
+  0: eval->eval: max{0, A-B} [O(n)]
+  3: eval->eval: max{0, B-A} [O(n)]
   4: start->eval: 1 [O(1)]
 
 Sizebounds:
@@ -19,5 +19,9 @@ Sizebounds:
   4: start->eval, A: A [O(n)]
   4: start->eval, B: B [O(n)]
 `Upper:
+  0: eval->eval, A: A [O(n)]
+  0: eval->eval, B: B+max{0, A-B} [O(n)]
+  3: eval->eval, A: A+max{0, B-A} [O(n)]
+  3: eval->eval, B: B [O(n)]
   4: start->eval, A: A [O(n)]
   4: start->eval, B: B [O(n)]

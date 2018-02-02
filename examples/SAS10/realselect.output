@@ -1,9 +1,9 @@
 Timebounds: 
-  Overall timebound: 7+2*2*max{0, -1+A} [O(n)]
+  Overall timebound: 6+1+2*max{0, -1+A}+max{0, -1+A}+2*max{0, -1+A}+max{0, -1+A}+max{0, -1+A}+max{0, -1+A} [O(n)]
   7: lbl13->stop: 1 [O(1)]
   4: lbl53->lbl91: 1 [O(1)]
-  5: lbl53->lbl53: 2*max{0, -1+A} [O(n)]
-  6: lbl53->lbl53: 2*max{0, -1+A} [O(n)]
+  5: lbl53->lbl53: 2*max{0, -1+A}+max{0, -1+A}+max{0, -1+A} [O(n)]
+  6: lbl53->lbl53: 2*max{0, -1+A}+max{0, -1+A}+max{0, -1+A} [O(n)]
   3: lbl91->lbl13: 1 [O(1)]
   0: start->stop: 1 [O(1)]
   1: start->lbl53: 1 [O(1)]
@@ -11,11 +11,11 @@ Timebounds:
   10: start0->start: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 7+2*2*max{0, -1+A} [O(n)]
+  Overall costbound: 6+1+2*max{0, -1+A}+max{0, -1+A}+2*max{0, -1+A}+max{0, -1+A}+max{0, -1+A}+max{0, -1+A} [O(n)]
   7: lbl13->stop: 1 [O(1)]
   4: lbl53->lbl91: 1 [O(1)]
-  5: lbl53->lbl53: 2*max{0, -1+A} [O(n)]
-  6: lbl53->lbl53: 2*max{0, -1+A} [O(n)]
+  5: lbl53->lbl53: 2*max{0, -1+A}+max{0, -1+A}+max{0, -1+A} [O(n)]
+  6: lbl53->lbl53: 2*max{0, -1+A}+max{0, -1+A}+max{0, -1+A} [O(n)]
   3: lbl91->lbl13: 1 [O(1)]
   0: start->stop: 1 [O(1)]
   1: start->lbl53: 1 [O(1)]

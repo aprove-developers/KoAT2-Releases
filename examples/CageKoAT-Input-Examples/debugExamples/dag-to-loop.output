@@ -1,6 +1,6 @@
 Timebounds: 
-  Overall timebound: 14+2*max{0, a-b} [O(n)]
-  14: collector->collector: 2*max{0, a-b} [O(n)]
+  Overall timebound: max{14, 1+13+a-b} [O(n)]
+  14: collector->collector: max{0, a-b} [O(n)]
   4: four->leftOne: 1 [O(1)]
   5: four->rightOne: 1 [O(1)]
   13: leftFour->collector: 1 [O(1)]
@@ -17,8 +17,8 @@ Timebounds:
   2: two->three: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 14+2*max{0, a-b} [O(n)]
-  14: collector->collector: 2*max{0, a-b} [O(n)]
+  Overall costbound: max{14, 1+13+a-b} [O(n)]
+  14: collector->collector: max{0, a-b} [O(n)]
   4: four->leftOne: 1 [O(1)]
   5: four->rightOne: 1 [O(1)]
   13: leftFour->collector: 1 [O(1)]
@@ -36,7 +36,7 @@ Costbounds:
 
 Sizebounds:
 `Lower:
-  14: collector->collector, a: a+-2*max{0, a-b} [O(n)]
+  14: collector->collector, a: a-max{0, a-b} [O(n)]
   14: collector->collector, b: b [O(n)]
   4: four->leftOne, a: a [O(n)]
   4: four->leftOne, b: b [O(n)]

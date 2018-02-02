@@ -27,7 +27,7 @@ Sizebounds:
   0: eval0->eval1, C: C [O(n)]
   1: eval1->eval1, A: A [O(n)]
   1: eval1->eval1, B: 2*A [O(n)]
-  1: eval1->eval1, C: max{-1, C} [O(n)]
+  1: eval1->eval1, C: C [O(n)]
   2: eval1->eval1, A: A [O(n)]
   2: eval1->eval1, B: max{B, 2*A} [O(n)]
   2: eval1->eval1, C: -1 [O(1)]

@@ -1,14 +1,14 @@
 Timebounds: 
-  Overall timebound: 1+max{0, A-B}+max{0, 1+A-B}+max{0, A-C}+max{0, A-B}+max{0, (A-C)*(1+A-B)} [O(n^2)]
-  0: eval1->eval2: max{0, (A-C)*(1+A-B)}+max{0, 1+A-B} [O(n^2)]
+  Overall timebound: 1+max{0, A-B}+max{0, (A-C)*(1+A-B)}+max{0, A-C}+max{0, A-B}+max{0, 1+A-B} [O(n^2)]
+  0: eval1->eval2: max{0, 1+A-B}+max{0, (A-C)*(1+A-B)} [O(n^2)]
   1: eval2->eval1: max{0, A-B} [O(n)]
   2: eval2->eval1: max{0, A-C} [O(n)]
   3: eval2->eval1: max{0, A-B} [O(n)]
   4: start->eval1: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 1+max{0, A-B}+max{0, 1+A-B}+max{0, A-C}+max{0, A-B}+max{0, (A-C)*(1+A-B)} [O(n^2)]
-  0: eval1->eval2: max{0, (A-C)*(1+A-B)}+max{0, 1+A-B} [O(n^2)]
+  Overall costbound: 1+max{0, A-B}+max{0, (A-C)*(1+A-B)}+max{0, A-C}+max{0, A-B}+max{0, 1+A-B} [O(n^2)]
+  0: eval1->eval2: max{0, 1+A-B}+max{0, (A-C)*(1+A-B)} [O(n^2)]
   1: eval2->eval1: max{0, A-B} [O(n)]
   2: eval2->eval1: max{0, A-C} [O(n)]
   3: eval2->eval1: max{0, A-B} [O(n)]

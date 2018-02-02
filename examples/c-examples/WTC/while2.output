@@ -1,9 +1,9 @@
 Timebounds: 
-  Overall timebound: 4+2*max{0, B*(1+B)}+max{0, 1+B}+max{0, 3*B}+max{0, B} [O(n^2)]
+  Overall timebound: 4+2*max{0, 2*B}+2*max{0, B*(1+B)}+max{0, 1+B} [O(n^2)]
   6: evalwhile2bb1in->evalwhile2bb2in: max{0, B*(1+B)} [O(n^2)]
   4: evalwhile2bb2in->evalwhile2bb1in: max{0, B*(1+B)} [O(n^2)]
-  5: evalwhile2bb2in->evalwhile2bb3in: max{0, 3*B} [O(n)]
-  7: evalwhile2bb3in->evalwhile2bb4in: max{0, B} [O(n)]
+  5: evalwhile2bb2in->evalwhile2bb3in: max{0, 2*B} [O(n)]
+  7: evalwhile2bb3in->evalwhile2bb4in: max{0, 2*B} [O(n)]
   2: evalwhile2bb4in->evalwhile2bb2in: max{0, 1+B} [O(n)]
   3: evalwhile2bb4in->evalwhile2returnin: 1 [O(1)]
   1: evalwhile2entryin->evalwhile2bb4in: 1 [O(1)]
@@ -11,11 +11,11 @@ Timebounds:
   0: evalwhile2start->evalwhile2entryin: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 4+2*max{0, B*(1+B)}+max{0, 1+B}+max{0, 3*B}+max{0, B} [O(n^2)]
+  Overall costbound: 4+2*max{0, 2*B}+2*max{0, B*(1+B)}+max{0, 1+B} [O(n^2)]
   6: evalwhile2bb1in->evalwhile2bb2in: max{0, B*(1+B)} [O(n^2)]
   4: evalwhile2bb2in->evalwhile2bb1in: max{0, B*(1+B)} [O(n^2)]
-  5: evalwhile2bb2in->evalwhile2bb3in: max{0, 3*B} [O(n)]
-  7: evalwhile2bb3in->evalwhile2bb4in: max{0, B} [O(n)]
+  5: evalwhile2bb2in->evalwhile2bb3in: max{0, 2*B} [O(n)]
+  7: evalwhile2bb3in->evalwhile2bb4in: max{0, 2*B} [O(n)]
   2: evalwhile2bb4in->evalwhile2bb2in: max{0, 1+B} [O(n)]
   3: evalwhile2bb4in->evalwhile2returnin: 1 [O(1)]
   1: evalwhile2entryin->evalwhile2bb4in: 1 [O(1)]

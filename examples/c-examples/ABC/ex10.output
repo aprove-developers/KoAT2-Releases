@@ -1,8 +1,8 @@
 Timebounds: 
-  Overall timebound: 4+2*max{0, (1+2*A)*(-1+max{2*-max{-1, -B}, 2*B})}+max{0, 1+2*A}+max{0, 2*A}+max{0, A} [O(n^2)]
+  Overall timebound: 4+2*max{0, A}+2*max{0, (1+2*A)*(-1+max{2*-max{-1, -B}, 2*B})}+max{0, 1+2*A} [O(n^2)]
   6: evalfbb1in->evalfbb2in: max{0, (1+2*A)*(-1+max{2*-max{-1, -B}, 2*B})} [O(n^2)]
   4: evalfbb2in->evalfbb1in: max{0, (1+2*A)*(-1+max{2*-max{-1, -B}, 2*B})} [O(n^2)]
-  5: evalfbb2in->evalfbb3in: max{0, 2*A} [O(n)]
+  5: evalfbb2in->evalfbb3in: max{0, A} [O(n)]
   7: evalfbb3in->evalfbb4in: max{0, A} [O(n)]
   2: evalfbb4in->evalfbb2in: max{0, 1+2*A} [O(n)]
   3: evalfbb4in->evalfreturnin: 1 [O(1)]
@@ -11,10 +11,10 @@ Timebounds:
   0: evalfstart->evalfentryin: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 4+2*max{0, (1+2*A)*(-1+max{2*-max{-1, -B}, 2*B})}+max{0, 1+2*A}+max{0, 2*A}+max{0, A} [O(n^2)]
+  Overall costbound: 4+2*max{0, A}+2*max{0, (1+2*A)*(-1+max{2*-max{-1, -B}, 2*B})}+max{0, 1+2*A} [O(n^2)]
   6: evalfbb1in->evalfbb2in: max{0, (1+2*A)*(-1+max{2*-max{-1, -B}, 2*B})} [O(n^2)]
   4: evalfbb2in->evalfbb1in: max{0, (1+2*A)*(-1+max{2*-max{-1, -B}, 2*B})} [O(n^2)]
-  5: evalfbb2in->evalfbb3in: max{0, 2*A} [O(n)]
+  5: evalfbb2in->evalfbb3in: max{0, A} [O(n)]
   7: evalfbb3in->evalfbb4in: max{0, A} [O(n)]
   2: evalfbb4in->evalfbb2in: max{0, 1+2*A} [O(n)]
   3: evalfbb4in->evalfreturnin: 1 [O(1)]

@@ -1,15 +1,15 @@
 Timebounds: 
-  Overall timebound: 3+2*(max{2, 2*A}+max{4, 2*A}+max{8, 2*A}) [O(n)]
-  3: a->a: max{2, 2*A}+max{4, 2*A}+max{8, 2*A} [O(n)]
-  4: a->a: max{2, 2*A}+max{4, 2*A}+max{8, 2*A} [O(n)]
+  Overall timebound: 3+2*(max{8, 2*A}+max{4, 2*A}+max{2, 2*A}+max{8, 2*A}+max{4, 2*A}+max{2, 2*A}) [O(n)]
+  3: a->a: max{8, 2*A}+max{4, 2*A}+max{2, 2*A}+max{8, 2*A}+max{4, 2*A}+max{2, 2*A} [O(n)]
+  4: a->a: max{8, 2*A}+max{4, 2*A}+max{2, 2*A}+max{8, 2*A}+max{4, 2*A}+max{2, 2*A} [O(n)]
   0: start->a: 1 [O(1)]
   1: start->a: 1 [O(1)]
   2: start->a: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 3+2*(max{2, 2*A}+max{4, 2*A}+max{8, 2*A}) [O(n)]
-  3: a->a: max{2, 2*A}+max{4, 2*A}+max{8, 2*A} [O(n)]
-  4: a->a: max{2, 2*A}+max{4, 2*A}+max{8, 2*A} [O(n)]
+  Overall costbound: 3+2*(max{8, 2*A}+max{4, 2*A}+max{2, 2*A}+max{8, 2*A}+max{4, 2*A}+max{2, 2*A}) [O(n)]
+  3: a->a: max{8, 2*A}+max{4, 2*A}+max{2, 2*A}+max{8, 2*A}+max{4, 2*A}+max{2, 2*A} [O(n)]
+  4: a->a: max{8, 2*A}+max{4, 2*A}+max{2, 2*A}+max{8, 2*A}+max{4, 2*A}+max{2, 2*A} [O(n)]
   0: start->a: 1 [O(1)]
   1: start->a: 1 [O(1)]
   2: start->a: 1 [O(1)]
