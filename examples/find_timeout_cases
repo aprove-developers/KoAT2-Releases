@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Finds all examples where no output file exists, i.e. where the execution did not finish until the timeout
+
+find . -name '*.koat' | sed -e 's/\.koat/\.output/' | xargs -i sh -c 'test -f {} || echo {}' | sed -e 's/\.output/\.koat/'
