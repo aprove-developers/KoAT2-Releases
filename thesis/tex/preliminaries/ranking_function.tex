@@ -9,13 +9,13 @@ For the computation of time bounds, we use a definition of \cite{koat}.
 For the computation of cost bounds, the chapter about cost bounds introduces a specialized definition.
 
 \begin{definition}[Time Ranking Function] 
-  We define $\timerank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as time ranking function for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
-  For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
-  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\timerank(\location)}{\valuation} \geq \exacteval{\timerank(\location')}{\valuation'}. \]
-  For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
-  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\timerank(\location)}{\valuation} - 1 \geq \exacteval{\timerank(\location')}{\valuation'} \]
+  We define $\timerank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as \textbf{time ranking function} for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\emptyset \neq \TSet_{>} \subseteq \TSet$ such that the following statements hold.
+  For every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ with a transition $t \in \TSet$ it holds that
+  \[ \exacteval{\timerank(\location)}{\valuation} \geq \exacteval{\timerank(\location')}{\valuation'}. \]
+  For every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ with a transition $t \in \TSet_{>}$ it holds that        
+  \[ \exacteval{\timerank(\location)}{\valuation} - 1 \geq \exacteval{\timerank(\location')}{\valuation'} \]
   and
-  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\timerank(\location)}{\valuation} \geq 1. \]
+  \[ \exacteval{\timerank(\location)}{\valuation} \geq 1. \]
 \end{definition}
 
 A time ranking function $\timerank$ implies that a transition $t \in \TSet_>$ can only be used a limited number of times in an evaluation.
@@ -26,12 +26,13 @@ Therefore, for the transitions $t \in \TSet_>$ the rank $\timerank(\location)$ a
   Consider the program from the introduction in Figure \ref{fig:motivational_example_ranking}.
   \input{graphs/motivational_example_ranking}
   The function $\timerank$ with $\timerank(\location_1) = x-y$ can be proven to be a time rank for the transition set $\TSet = \braced{t_1}$.
-  Consider a transition set $\TSet_> = \braced{t_1} \subseteq \TSet$.
-  For the single transition $t_1$ it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ that $\exacteval{x>y}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} > \exacteval{x-y}{\valuation'}$, since $x$ decreases in such an evaluation step.
-  Therefore, also $\exacteval{x>y}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} \geq \exacteval{x-y}{\valuation'}$ holds.
-  Furthermore, it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ that $\exacteval{x>y}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} \geq 1$.
 
-  Note that in this example it would also be possible to consider the transition $t_0$ as part of the set $\TSet$, since it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_0} (\location_1,\valuation')$ that $\valuation(x)=\valuation'(x)$ and $\valuation(y)=\valuation'(y)$ and therefore $\exacteval{\emph{true}}{\valuation} \Rightarrow \exacteval{x-y}{\valuation} \geq \exacteval{x-y}{\valuation'}$.
+  Consider the transition set $\TSet_> = \braced{t_1} \subseteq \TSet$.
+  For the single transition $t_1$ the condition $\exacteval{x-y}{\valuation} - 1 \geq \exacteval{x-y}{\valuation'}$ holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ since $x$ decreases in such an evaluation step.
+  Therefore, also $\exacteval{x-y}{\valuation} \geq \exacteval{x-y}{\valuation'}$ holds.
+  Furthermore, it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ that $\exacteval{x-y}{\valuation} \geq 1$.
+
+  Note that in this example it would also be possible to consider the transition $t_0$ as part of the set $\TSet$, since it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_0} (\location_1,\valuation')$ that $\valuation(x)=\valuation'(x)$ and $\valuation(y)=\valuation'(y)$ and therefore $\exacteval{x-y}{\valuation} \geq \exacteval{x-y}{\valuation'}$.
   However, in general an additional transition may increase the measure and therefore violate the time ranking conditions.
 \end{example}
 
@@ -43,7 +44,8 @@ But for ranking functions, it is also necessary to consider that the coefficient
 Therefore, a negation of the condition yields universal quantification of the coefficients of a time rank.
 Thus, the unsatisfiability of the negation of the condition is not provable by an SMT-Solver.
 
-For such formulas, which contain both existential and universal quantification, it is common to apply a variant of Farkas' lemma \cite{schrijver1998theory}.
+For such formulas, which contain both existential and universal quantification, it is common to apply a variant of Farkas' Lemma \cite{schrijver1998theory}.
 There already exist specialized approaches for ranking functions \cite{bradley2005polyranking}.
 To utilize these approaches, it is necessary to restrict the domain of time ranks $\timerank(\location)$ to affine polynomials $\BoundSet_a(\PVSet)$.
 Then, it is possible to transform the problem of finding a ranking function into a problem solvable with an SMT-Solver.
+The interested reader is referred to \cite{bradley2005polyranking} for more information about the computation of ranking functions.
