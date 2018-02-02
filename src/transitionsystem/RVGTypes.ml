@@ -82,12 +82,9 @@ module RVG =
       let add_transition (post_transition: Transition.t) (rvg: t): t =
         let rvg_with_vertices: t = add_vertices_to_rvg (program |> Program.vars |> VarSet.to_list |> List.map (fun var -> (post_transition,var))) rvg in
         let pre_nodes (post_transition: Transition.t) (post_var: Var.t) =
-          let vars =
-            LocalSizeBound.sizebound_local program kind post_transition post_var
-            |> Option.map LocalSizeBound.vars
-            |? Program.vars program
-          in
-          vars
+          LocalSizeBound.sizebound_local program kind post_transition post_var
+          |> Option.map LocalSizeBound.vars
+          |? Program.vars program
           |> VarSet.enum
           |> Enum.cartesian_product (Program.pre program post_transition)
           |> Enum.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))

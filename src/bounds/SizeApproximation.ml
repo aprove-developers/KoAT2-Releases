@@ -45,8 +45,12 @@ let get kind map transition var =
                      execute
 
 let add kind bound transition var map =
-  (* We do not want to log infinity sizebounds *)
-  if not (Bound.is_infinity bound) && not (Bound.is_minus_infinity bound) then
+  let is_trivial = function
+    | `Lower -> Bound.is_minus_infinity
+    | `Upper -> Bound.is_infinity
+  in
+  (* We do not want to log trivial size bounds *)
+  if not (is_trivial kind bound) then
     ( try
         Map.modify (kind, transition, var) (combine_bounds kind bound) map;
         Logger.log logger Logger.DEBUG
