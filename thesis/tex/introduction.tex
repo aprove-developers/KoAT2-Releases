@@ -1,19 +1,19 @@
 \section{Introduction}
 
 This master's thesis presents a method for the computation of time bounds of integer programs.
-A variety of complexity analysis tools, which address the same task, already exist.
+A variety of complexity analysis tools, which address the same task, already exists.
 These tools use different approaches for the search of time bounds.
 
 The tool PUBS works with a non-modular approach, where a preprocessed program is analyzed at once.
-This tool is discussed in the papers of Albert (\cite{pubs1}, \cite{pubs2}).
+This tool is discussed in the papers of Albert \cite{pubs1, pubs2}.
 
-The tool CoFloCo uses an approach with cost relations, discussed in papers of Flores-Montoya (\cite{cofloco1}, \cite{cofloco2} and \cite{cofloco4}) and finally presented in his thesis \cite{cofloco3}.
+The tool CoFloCo uses an approach with cost relations, discussed in papers of Flores-Montoya \cite{cofloco1, cofloco2, cofloco4} and finally presented in his thesis \cite{cofloco3}.
 This approach classifies program executions into different execution patterns called chains and performs a cost analysis yielding polynomial bounds with maximum and minimum operators. 
 While this approach performs well for complex programs, it is not able to infer non-polynomial bounds.
 
-The tool Loopus implements an amortized complexity analysis based on lexicographic ranking functions, discussed in the papers of Sinn and Zuleger (\cite{loopus1}, \cite{loopus2}).
+The tool Loopus implements an amortized complexity analysis based on lexicographic ranking functions, discussed in the papers of Sinn and Zuleger \cite{loopus1, loopus2}.
 
-The tool KoAT uses the computation of size bounds to infer time bounds, discussed in the paper of Brockschmidt (\cite{koat}).
+The tool KoAT uses the computation of size bounds to infer time bounds, discussed in the paper of Brockschmidt \cite{koat}.
 The paper presents a modular approach with ranking functions.
 With this approach, parts of the program are analyzed independently.
 These modular analyses can then be lifted into global time bounds.
