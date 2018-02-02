@@ -18,6 +18,7 @@ let entry_transitions (program: Program.t) (rank_transitions: Transition.t list)
          |> List.enum
          |> Enum.for_all (not % Transition.same r)
        )
+  |> Enum.uniq_by Transition.same
   |> List.of_enum
   |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                (fun () -> "entry_transitions", ["result", transitions |> List.enum |> Util.enum_to_string Transition.to_id_string]))
