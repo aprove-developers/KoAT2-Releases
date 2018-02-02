@@ -31,6 +31,7 @@ First, we define a program graph.
   Let $\mathcal{W}$ be the set of all labels $(\update, \guard)$.
   Let $\TSet \subseteq \LSet \times \mathcal{W} \times \LSet$ be the set of transitions of the program.
   A transition $t = (\location, w, \location')$ consists of the start location $\location$, the target location $\location'$ and the label $w$.
+  For a single location $\location_0 \in \LSet$ it holds that it is not a target location of any transition $t \in \TSet$.
   Then, a program graph is a tuple $(\LSet, \TSet)$.
 \end{definition}
 
@@ -38,7 +39,7 @@ We also write $t = (\location, \update, \guard, \location')$ to denote a transit
 We define a program as a program graph with an initial location and a function mapping transitions to the cost of their execution.
 
 \begin{definition}[Program] 
-  Let $\location_0 \in \LSet$ be the unique program location which has no entry transitions in the program.
+  Let $\location_0 \in \LSet$ be the unique program location which is not a target location of any transition.
   Let $(\LSet, \TSet)$ be a program graph.
   Let $\cost: \TSet \rightarrow \BoundSet(\PVSet)$ be a function which maps each transition to its cost depending on the values of the variables.
   For each transition $t \in \TSet$ and for each assignment $\valuation: \AllVarsSet \rightarrow \mathbb{Z}$ we require that the cost of the transition $t$ is positive, i.e. $\exacteval{\cost(t)}{\valuation} > 0$.
@@ -60,18 +61,18 @@ The update function $\update$ assigns each program variable a value after the tr
   Consider the program in Figure \ref{fig:example_program}.
   The set of program variables of this program is $\PVSet = \braced{x,y,z}$.
   Additionally, a temporary variable $\tvar \in \TVSet$ is used.
-  The program defines the location set $\LSet = \braced{\location_0,\location_1,\location_2}$ and the transition set $\TSet = \braced{t_0,t_1,t_2}$.
+  The program has the location set $\LSet = \braced{\location_0,\location_1,\location_2}$ and the transition set $\TSet = \braced{t_0,t_1,t_2}$.
   The location $\location_0$ is always considered to be the initial location of a program.
   The location set and the transition set form a program graph $(\LSet, \TSet)$.
   The transition $t_0$ is defined as $(\location_0,\update,\guard,\location_1)$ with an update $\update$ with $\update(x)=x$, $\update(y)=1$ and $\update(z)=\tvar$ and a guard $\guard = \braced{\tvar > 0}$.
   The update $\update(z)=\tvar$ and the guard $\guard = \braced{\tvar > 0}$ imply, that the value of the program variable $z$ after an execution of $t_0$ is chosen non-deterministically as an arbitrary positive number.
   The transition $t_1$ is defined as $(\location_1,\update,\guard,\location_1)$ with an update $\update$ with $\update(x)=x-1$, $\update(y)=z \cdot y$ and $\update(z)=z$ and a guard $\guard = \braced{x > 0}$.
   Therefore, the transition $t_1$ forms a loop, which can be executed as long as $x > 0$ holds.
-  Since $x$ is decremented, the transition can be executed at most $x$ or $0$ times.
+  Since $x$ is decremented, the transition can be executed at most $\max(0,x)$ times.
   The transition $t_2$ is defined as $(\location_1,\update,\guard,\location_2)$ with an update $\update = \text{id}$ and a guard $\guard = \emptyset$.
   The function $\text{id}$ symbolizes the identity function where each program variable $v \in \PVSet$ is mapped to itself.
   The guard $\guard = \emptyset$ is given implicitly and denotes a guard which is always satisfied.
-  Therefore, the loop $t_1$ can always leave non-deterministically before the value of the variable $x$ reaches $0$.
+  Therefore, the loop $t_1$ can always stop non-deterministically before the value of the variable $x$ reaches $0$.
   For the transitions $t_0$ and $t_2$ the costs are defined implicitly as $\cost(t_0) = \cost(t_2) = 1$.
   The transition $t_1$ has explicit costs $\cost(t_1) = z$.
   The whole program is defined as a tuple $((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$.
@@ -118,5 +119,5 @@ Now, we formally define the evaluation relation of a program.
 Note that by definition, in an evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$, the value $\valuation'(v)$ of each temporary variable $v \in \TVSet$ is arbitrary.
 
 Furthermore, for two states $\valuation_1, \valuation_2 \in \Valuation$, we define $\valuation_1 \leq \valuation_2$ if and only if for all variables $v \in \AllVarsSet$ it holds that $\valuation_1(v) \leq \valuation_2(v)$.
-We also define for a state $\valuation \in \Valuation$ the absolute value $\abs{\valuation} \in \Valuation$ as a state with $\abs{\valuation}(v) = \abs{\valuation(v)}$ for each variable $v \in \AllVarsSet$.
+We also define for a state $\valuation \in \Valuation$ the absolute value $\abs{\valuation} \in \Valuation$ as a state with $\abs{\valuation}(v) \coloneqq \abs{\valuation(v)}$ for each variable $v \in \AllVarsSet$.
 
