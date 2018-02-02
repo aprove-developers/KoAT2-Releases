@@ -1,9 +1,4 @@
-To increase readability, we only regard the specialized case of approximated evaluations with $K = \bar{\mathbb{Z}}$.
-The proof for arbitrary sets $K$ is analog.
-
-Let $K$ be the set $\bar{\mathbb{Z}}$.
-We have to show that $\exacteval{\lsubst{b}{\lstate}{\ustate}}{\valuation} \leq \exacteval{b}{\valuation} \leq \exacteval{\usubst{b}{\lstate}{\ustate}}{\valuation}$ holds for all states $\valuation, \lstate, \ustate \in \Valuation$ with $\lstate \leq \valuation \leq \ustate$.
-That is, if $\leval{b}{\lstate}{\ustate} \leq \exacteval{b}{\valuation} \leq \ueval{b}{\lstate}{\ustate}$ holds for all states $\valuation, \lstate, \ustate \in \Valuation$ with $\lstate \leq \valuation \leq \ustate$.
+We have to show that $\leval{b}{\lstate}{\ustate} \leq \exacteval{b}{\valuation} \leq \ueval{b}{\lstate}{\ustate}$ holds for all states $\valuation, \lstate, \ustate \in \Valuation$ with $\lstate \leq \valuation \leq \ustate$.
 We use structural induction to show that the proposition holds.
 
 First, we show that the proposition holds for all minimal structures.

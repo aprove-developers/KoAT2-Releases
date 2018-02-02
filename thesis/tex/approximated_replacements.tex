@@ -48,24 +48,26 @@ We call an approximated replacement with such functions an approximated substitu
 Also, two states $\lstate, \ustate: \VSet \rightarrow \mathbb{Z}$ qualify for an approximated replacement, since $\mathbb{Z}$ meets the criteria of $K$.
 We call an approximated replacement with two states an approximated evaluation.
 
-We can show that an overapproximated replacement always results in an overapproximation and that an underapproximated replacement always results in an underapproximation of the actual value.
+We can show that an overapproximated evaluation always overapproximates the actual value and that an underapproximated evaluation always underapproximates the actual value.
 
 \input{theorems/approximated_replacements}
 
-The definition of approximated replacements uses implicitly the property of component-wise monotonicity of a bound to infer better over- and underapproximations.
+\begin{example}[Approximated Evaluations]
+  The definition of approximated replacements uses implicitly the property of component-wise monotonicity of a bound to infer better over- and underapproximations.
 
-Consider an overapproximated evaluation $\ueval{x}{\lstate}{\ustate}$.
-It is easy to see, that the bound $x$ is monotonically increasing in $x$.
-Therefore, it is sufficient to substitute the variable $x$ with its overapproximation $\ustate$ to gain a valid overapproximation of the value $\exacteval{x}{\valuation}$ for every state $\valuation$ with $\lstate \leq \valuation \leq \ustate$.
-
-Consider an overapproximated evaluation $\ueval{-x}{\lstate}{\ustate}$.
-It is easy to see, that the bound $-x$ is monotonically decreasing in $x$.
-Therefore, it is sufficient to substitute the variable $x$ with its underapproximation $\lstate$ to gain a valid overapproximation of the value $\exacteval{-x}{\valuation}$ for every state $\valuation$ with $\lstate \leq \valuation \leq \ustate$.
-
-Consider an overapproximated evaluation $\ueval{x \cdot y}{\lstate}{\ustate}$.
-The bound $x \cdot y$ is nor monotonically increasing or decreasing in $x$ neither monotonically increasing or decreasing in $y$.
-Therefore, it is necessary to compute all combinations $\usubst{x}{\lstate}{\ustate} \cdot \usubst{y}{\lstate}{\ustate}$, $\usubst{x}{\lstate}{\ustate} \cdot \lsubst{y}{\lstate}{\ustate}$, $\lsubst{x}{\lstate}{\ustate} \cdot \usubst{y}{\lstate}{\ustate}$ and $\lsubst{x}{\lstate}{\ustate} \cdot \lsubst{y}{\lstate}{\ustate}$.
-Then, the result can be determined as the maximum of all these combinations.
+  Consider an overapproximated evaluation $\ueval{x}{\lstate}{\ustate}$ with $\lstate \leq \ustate$.
+  It is easy to see, that the bound $x$ is monotonically increasing in $x$.
+  Therefore, it is sufficient to substitute the variable $x$ with its overapproximation $\ustate$ to gain a valid overapproximation of the value $\exacteval{x}{\valuation}$ for every state $\valuation$ with $\lstate \leq \valuation \leq \ustate$.
+  
+  Consider an overapproximated evaluation $\ueval{-x}{\lstate}{\ustate}$ with $\lstate \leq \ustate$.
+  It is easy to see, that the bound $-x$ is monotonically decreasing in $x$.
+  Therefore, it is sufficient to substitute the variable $x$ with its underapproximation $\lstate$ to gain a valid overapproximation of the value $\exacteval{-x}{\valuation}$ for every state $\valuation$ with $\lstate \leq \valuation \leq \ustate$.
+  
+  Consider an overapproximated evaluation $\ueval{x \cdot y}{\lstate}{\ustate}$ with $\lstate \leq \ustate$.
+  The bound $x \cdot y$ is neither monotonically increasing or decreasing in $x$ nor monotonically increasing or decreasing in $y$.
+  Therefore, it is necessary to compute all combinations $\usubst{x}{\lstate}{\ustate} \cdot \usubst{y}{\lstate}{\ustate}$, $\usubst{x}{\lstate}{\ustate} \cdot \lsubst{y}{\lstate}{\ustate}$, $\lsubst{x}{\lstate}{\ustate} \cdot \usubst{y}{\lstate}{\ustate}$ and $\lsubst{x}{\lstate}{\ustate} \cdot \lsubst{y}{\lstate}{\ustate}$.
+  Then, the result can be determined as the maximum of all these combinations.
+\end{example}
 
 The following definition formalizes the monotonicity of variables in bounds.
 
@@ -75,11 +77,10 @@ The following definition formalizes the monotonicity of variables in bounds.
   Let $v \in \VSet$ be a variable.
   We say that two states $\valuation, \valuation' \in \Valuation$ are only different in $v$ if and only if for each variable $v' \in \VSet \setminus \braced{v}$ it holds that $\valuation(v') = \valuation'(v')$ and for the variable $v$ it holds that $\valuation(v) \neq \valuation'(v)$.
   If it furthermore holds that $\valuation(v) > \valuation'(v)$, we call the state $\valuation$ only different and greater in $v$ than the state $\valuation'$.
-  If it instead holds that $\valuation(v) < \valuation'(v)$, we call the state $\valuation$ only different and less in $v$ than the state $\valuation'$.
   We call the bound $b$ monotonically increasing in the variable $v$ if and only if for all states $\valuation$ that are only different and greater in $v$ than a state $\valuation'$ it holds that $\exacteval{b}{\valuation} \geq \exacteval{b}{\valuation'}$.
-  We call the bound $b$ monotonically decreasing in the variable $v$ if and only if for all states $\valuation$ that are only different and less in $v$ than a state $\valuation'$ it holds that $\exacteval{b}{\valuation} \leq \exacteval{b}{\valuation'}$.
+  We call the bound $b$ monotonically decreasing in the variable $v$ if and only if for all states $\valuation$ that are only different and greater in $v$ than a state $\valuation'$ it holds that $\exacteval{b}{\valuation} \leq \exacteval{b}{\valuation'}$.
 \end{definition}
 
-An approximated replacement yields the better results the more variables a bound is monotonically increasing or decreasing in.
+An approximated replacement yields the better approximations the more variables a bound is monotonically increasing or decreasing in.
 Note that an affine polynomial $b \in \BoundSet_a(\VSet)$ is monotonically increasing or decreasing in all variables.
 Therefore, the approximated replacement in an affine polynomial yields better over- and underapproximations than the approximated replacement in non-affine polynomials in $\BoundSet_p(\VSet) \setminus \BoundSet_a(\VSet)$ or arbitrary bounds in $\BoundSet(\VSet)$.
