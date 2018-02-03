@@ -8,24 +8,26 @@
 
     \path[transitions]
     (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$\\$z \coloneqq z$} (1)
-    (1) edge[loop above] node[above left] {$t_1$} node[above tlabel] {$if(x > 0)$\\$x \coloneqq x - 1$\\$y \coloneqq y + z$\\$z \coloneqq y$} (1)
+    (1) edge[loop above] node[above left] {$t_1$} node[above tlabel] {$if(x > 0)$\\$x \coloneqq x - 1$\\$y \coloneqq \alt<1>{\textcolor{blue}{z}}{z}$\\$z \coloneqq z + y$} (1)
     ;
   \end{tikzpicture}
   
+  \onslide<2->{$\USize(t_1,z)$}
+  
   \begin{tikzpicture}[rvg]
     
-    \node (0y) {$t_0,y$};
-    \node (1y) [right of=0y] {$t_1,y$};
-    \node (0z) [right of=1y] {$t_0,z$};
-    \node (1z) [below of=1y] {$t_1,z$};
+    \node (0z) [show on=<4->] {$t_0,z$};
+    \node (1z) [show on=<3->, right of=0z] {$t_1,z$};
+    \node (0y) [show on=<5->, right of=1z] {$t_0,y$};
+    \node (1y) [show on=<6->, below of=1z] {$t_1,y$};
     
     \path
-    (0y) edge (1y)
-    (0y) edge (1z)
-    (0z) edge (1y)
-    (1y) edge[loop above, scc edge] (1y)
-    (1y) edge[scc edge] (1z)
-    (1z) edge[scc edge] (1y)
+    (0z) edge[show on=<4->, highlight on=<4>] (1z)
+    (0z) edge[show on=<7->, highlight on=<7>] (1y)
+    (0y) edge[show on=<5->, highlight on=<5>] (1z)
+    (1z) edge[show on=<3->, highlight on=<3>, loop above, scc edge] (1z)
+    (1z) edge[show on=<8->, highlight on=<8>, scc edge, bend right] (1y)
+    (1y) edge[show on=<6->, highlight on=<6>, scc edge, bend right] (1z)
     ;
   \end{tikzpicture}
 \end{figure}
