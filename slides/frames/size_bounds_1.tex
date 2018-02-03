@@ -5,13 +5,18 @@
     \node (1) [right of=0] {$\location_1$};
     \node (2) [right of=1] {$\location_2$};
     \path[transitions]
-    (0) edge[highlight on=<2-3>] node[above] {$t_0$} node[below] {\only<4>{\color{blue}}$x \coloneqq x$\\\only<5>{\color{blue}}$y \coloneqq y$} node[below=1cm] {\only<4->{\only<4>{\color{blue}}$\USize(t_0,x) = \LSize(t_0,x) = x$}\\\only<5->{\only<5>{\color{blue}}$\USize(t_0,y) = \LSize(t_0,y) = y$}} (1)
-    (1) edge[highlight on=<2>, highlight on=<6>, loop above] node[above left] {$t_1$} node[above tlabel] {\only<7>{\color{blue}}$if(x<10)$\\\only<7-8>{\color{blue}}$x \coloneqq x+1$\\\only<9>{\color{blue}}$y \coloneqq y$} node[above=1cm] {\only<7->{\only<7>{\color{blue}}$\USize(t_1,x) = \min(10, x+1)$}\\\only<8->{\only<8>{\color{blue}}$\LSize(t_1,x) = x+1$}\\\only<9->{\only<9>{\color{blue}}$\USize(t_1,y) = \LSize(t_1,y) = y$}} (1)
+    (0) edge[highlight on=<2-3>] node[above] {$t_0$} node[below] {\only<4>{\color{blue}}$x \coloneqq x$\\\only<5>{\color{blue}}$y \coloneqq y$} node[below=1cm] {\only<4->{\only<4>{\color{blue}}$\USize(t_0,x) = x$}\\\only<5->{\only<5>{\color{blue}}$\LSize(t_0,y) = y$}} (1)
+    (1) edge[highlight on=<2>, highlight on=<6>, loop above] node[above left] {$t_1$} node[above tlabel] {\only<7-8>{\color{blue}}$if(x<10)$\\\only<7-8>{\color{blue}}$x \coloneqq x+1$\\\only<9>{\color{blue}}$y \coloneqq y$} node[above=1cm] {\only<7>{\only<7>{\color{blue}}$\USize(t_1,x) = \min(10, x+1)$}\only<8->{\only<8>{\color{blue}}$\USize(t_1,x) = 10$}\\\only<9->{\only<9>{\color{blue}}$\LSize(t_1,y) = y$}} (1)
     (1) edge node[above] {$t_2$} node[below] {$if(x \geq 10)$\\$x \coloneqq x$\\$y \coloneqq y$} (2)
     (2) edge[loop above] node[above left] {$t_3$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (2)
     ;
   \end{tikzpicture}
 \end{figure}
-\begin{block}{TODO}
-  Cross min size bound
-\end{block}
+\onslide<10->{
+  \begin{block}{Equation}
+    $\UTime(t_3) = \UTime(t_0) \cdot (\textcolor{blue}{\USize(t_0,x)}-\textcolor{blue}{\LSize(t_0,y)}) + \UTime(t_1) \cdot (\textcolor{blue}{\USize(t_1,x)}-\textcolor{blue}{\LSize(t_1,y)})$ \\
+    \onslide<11->{
+      $\UTime(t_3) = \UTime(t_0) \cdot (\textcolor{blue}{x}-\textcolor{blue}{y}) + \UTime(t_1) \cdot (\textcolor{blue}{10}-\textcolor{blue}{y})$
+    }
+  \end{block}
+}
