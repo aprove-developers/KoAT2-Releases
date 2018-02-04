@@ -1,0 +1,86 @@
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+        axis lines = left,
+        xticklabels={$\leq \landau(1)$,$\leq \landau(n)$,$\leq \landau(n^2)$,$\leq \landau(n^3)$,$\leq \landau(n^k)$,$\leq \landau(2^n)$},
+        xtick={0,...,10},
+        legend style={
+          at={(1.1,0.9)},
+          anchor=north west
+        }
+      ]
+
+      \addplot coordinates {
+        (0,113)
+        (1,285)
+        (2,351)
+        (3,358)
+        (4,362)
+        (5,370)
+      };
+      \addlegendentry{New method}
+
+      \addplot coordinates {
+        (0,131)
+        (1,298)
+        (2,376)
+        (3,383)
+        (4,386)
+        (5,404)
+      };
+      \addlegendentry{KoAT}
+
+      \addplot coordinates {
+        (0,117)
+        (1,270)
+        (2,336)
+        (3,345)
+        (4,347)
+        (5,347)
+      };
+      \addlegendentry{CoFloCo}
+
+      \addplot coordinates {
+        (0,117)
+        (1,247)
+        (2,296)
+        (3,301)
+        (4,306)
+        (5,306)
+      };
+      \addlegendentry{Loopus}
+
+      \addplot coordinates {
+        (0,118)
+        (1,245)
+        (2,295)
+        (3,295)
+        (4,298)
+        (5,298)
+      };
+      \addlegendentry{KoAT-TACAS}
+
+      \addplot coordinates {
+        (0,109)
+        (1,240)
+        (2,270)
+        (3,278)
+        (4,278)
+        (5,285)
+      };
+      \addlegendentry{PUBS}
+
+      \addplot coordinates {
+        (0,56)
+        (1,72)
+        (2,80)
+        (3,81)
+        (4,81)
+        (5,81)
+      };
+      \addlegendentry{Rank}
+
+    \end{axis}
+  \end{tikzpicture}
+\end{figure}

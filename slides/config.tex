@@ -13,6 +13,7 @@
 \let\oldReturn\Return
 \renewcommand{\Return}{\State\oldReturn}
 
+\usepackage{pgfplots}
 \usepackage{tikz}
 \usetikzlibrary{arrows,decorations.pathmorphing,positioning,decorations.markings,fit,trees,shapes,automata,shapes.multipart}
 \usepackage{pgf-umlsd}
@@ -79,3 +80,6 @@
     \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}} % \pgfkeysalso doesn't change the path
   },
 }
+
+\pgfplotsset{xticklabel={\tick},scaled x ticks=false}
+\pgfplotsset{plot coordinates/math parser=false}
