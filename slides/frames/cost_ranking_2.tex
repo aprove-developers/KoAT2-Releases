@@ -1,34 +1,36 @@
 \begin{figure}
   \centering
   \begin{tikzpicture}[program]
-    \node[label=below:{y}] (0) {$\location_0$};
-    \node[label=below:{y}] (1) [right of=0] {$\location_1$};
+    \node[label=below:{\only<2->{x}}] (0) {$\location_0$};
+    \node[label=below:{\only<2->{x}}] (1) [right of=0] {$\location_1$};
     \path[transitions]
-    (0) edge node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
-    (1) edge[loop above] node[above left] {$t_1$} node[above tlabel] {$if(x>y \wedge y>0)$\\$x \coloneqq x-y$\\$y \coloneqq y$\\$\text{cost} = y$} (1)
+    (0) edge node[above] {$t_0$} node[below] {$if(y>0)$\\$x \coloneqq x$\\$y \coloneqq y$} (1)
+    (1) edge[loop above] node[above left] {$t_1$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-y$\\$y \coloneqq y$\\$\text{cost} = y$} (1)
     ;
   \end{tikzpicture}
 \end{figure}
+
 \begin{figure}
   \centering
   \begin{tikzpicture}[evaluation]
     
-    \node (0) {$x$};
-    \node (1) [right of=0] {$x$};
-    \node (2) [right of=1] {$x-y$};
-    \node (3) [right of=2] {$x-2 \cdot y$};
-    \node (4) [right of=3] {$y$};
-    \node (exit) [right of=4,draw=none] {};
+    \node (0) [show on=<3->] {$x$};
+    \node (1) [show on=<4->, right of=0] {$x$};
+    \node (2) [show on=<5->, right of=1] {$x-y$};
+    \node (3) [show on=<6->, right of=2] {$x-2 \cdot y$};
+    \node (4) [show on=<7->, right of=3] {$y$};
+    \node (exit) [show on=<8->, right of=4,draw=none] {};
     
     \path[transitions]
-    (0) edge node {$t_0$} node[below] {$1$} (1)
-    (1) edge node {$t_1$} node[below] {$y$} (2)
-    (2) edge node {$t_1$} node[below] {$y$} (3)
-    (3) edge node {$t_1$} node[below] {$y$} (4)
-    (4) edge[cross] node[below] {} (exit)
+    (0) edge[show on=<4->] node {$t_0$} node[below] {$\geq$} (1)
+    (1) edge[show on=<5->] node {$t_1$} node[below] {$>$} (2)
+    (2) edge[show on=<6->] node {$t_1$} node[below] {$>$} (3)
+    (3) edge[show on=<7->] node {$t_1$} node[below] {$>$} (4)
+    (4) edge[show on=<8->, cross] node[below] {} (exit)
     ;
   \end{tikzpicture}
 \end{figure}
-\begin{block}{TODO}
-  Animate \\
-\end{block}
+
+\begin{equation*}
+  \onslide<9->{\UCost(t_1) = \max(0,y) \onslide<10->{\in \landau(n^2)}}
+\end{equation*}
