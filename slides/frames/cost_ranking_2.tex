@@ -17,14 +17,14 @@
     \node (0) [show on=<3->] {$x$};
     \node (1) [show on=<4->, right of=0] {$x$};
     \node (2) [show on=<5->, right of=1] {$x-y$};
-    \node (3) [show on=<6->, right of=2] {$x-2 \cdot y$};
+    \node (3) [show on=<6->, right of=2] {$x-n \cdot y$};
     \node (4) [show on=<7->, right of=3] {$y$};
     \node (exit) [show on=<8->, right of=4,draw=none] {};
     
     \path[transitions]
     (0) edge[show on=<4->] node {$t_0$} node[below] {$\geq$} (1)
     (1) edge[show on=<5->] node {$t_1$} node[below] {$>$} (2)
-    (2) edge[show on=<6->] node {$t_1$} node[below] {$>$} (3)
+    (2) edge[show on=<6->, dashed] node {$t_1$} node[below] {$>$} (3)
     (3) edge[show on=<7->] node {$t_1$} node[below] {$>$} (4)
     (4) edge[show on=<8->, cross] node[below] {} (exit)
     ;
