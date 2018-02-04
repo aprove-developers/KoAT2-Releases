@@ -1,13 +1,13 @@
 \begin{figure}
   \centering
   \begin{tikzpicture}[program]
-    \node[show on=<2->, highlight on=<2>, highlight on=<10-11>, label=below:{\only<4-5>{x-y}}] (0) {$\location_0$};
-    \node[highlight on=<6>, highlight on=<9-11>, label=below:{\only<4->{\only<5-6>{\color{blue}}x-y}}, right of=0] (1) {$\location_1$};
-    \node[highlight on=<6>, label=below:{\only<4->{\only<6>{\color{blue}}x-y}}, right of=1] (2) {$\location_2$};
+    \node[show on=<2->, highlight on=<2>, highlight on=<10-11>, label=below:{\nodeshow{4-5}{x-y}}] (0) {$\location_0$};
+    \node[highlight on=<6>, highlight on=<9-11>, label=below:{\nodeshow{4-}{\textcolor<5-6>{blue}{x-y}}}, right of=0] (1) {$\location_1$};
+    \node[highlight on=<6>, label=below:{\nodeshow{4-}{\textcolor<6>{blue}{x-y}}}, right of=1] (2) {$\location_2$};
     \path[transitions]
     (0) edge[show on=<2->, highlight on=<2>, highlight on=<7>, highlight on=<10-11>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
-    (1) edge[show on=<3->, highlight on=<3>, highlight on=<8>, highlight on=<11>, loop above] node[above left] {$t_1$} node[above right=-0.5cm and 0.2cm] {$if(x<10)$\\\only<5>{\color{blue}}$x \coloneqq x+1$\\$y \coloneqq y$} (1)
-    (1) edge[highlight on=<6>] node[above] {$t_2$} node[below] {\only<3->{\only<3>{\color{blue}}$if(x \geq 10)$}\\$x \coloneqq x$\\$y \coloneqq y$} (2)
+    (1) edge[show on=<3->, highlight on=<3>, highlight on=<8>, highlight on=<11>, loop above] node[above left] {$t_1$} node[above right=-0.5cm and 0.2cm] {$if(x<10)$\\\textcolor<5>{blue}{$x \coloneqq x+1$}\\$y \coloneqq y$} (1)
+    (1) edge[highlight on=<6>] node[above] {$t_2$} node[below] {\nodeshow{3-}{\textcolor<3>{blue}{$if(x \geq 10)$}}\\$x \coloneqq x$\\$y \coloneqq y$} (2)
     (2) edge[highlight on=<6>, loop above] node[above left] {$t_3$} node[above right=-0.5cm and 0.2cm] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (2)
     ;
   \end{tikzpicture}

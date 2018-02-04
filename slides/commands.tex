@@ -109,3 +109,7 @@
     \input{frames/#2}
   \end{frame}
 }
+
+\newcommand{\nodeshow}[2]{
+  \alt<#1>{#2}{\textcolor{white}{#2}}
+}

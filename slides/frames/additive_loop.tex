@@ -6,8 +6,8 @@
     \node (1) [right of=0] {$\location_1$};
     
     \path[transitions]
-    (0) edge node[highlight on=<7-8>, above] {$t_0$} node[below] {$x \coloneqq x$\\\only<2->{$y \coloneqq y$}\\\only<3->{$z \coloneqq z$}} (1)
-    (1) edge[loop above] node[highlight on=<6>, highlight on=<9>, above left] {$t_1$} node[above tlabel] {$if(x > 0)$\\$x \coloneqq x - 1$\\\only<2->{$y \coloneqq y$}\\\only<3->{$z \coloneqq \alt<6-7>{\textcolor{blue}{z}}{z} + \alt<8-9>{\textcolor{blue}{y}}{y}$}} (1)
+    (0) edge node[highlight on=<7-8>, above] {$t_0$} node[below] {$x \coloneqq x$\\\nodeshow{2-}{$y \coloneqq y$}\\\nodeshow{3-}{$z \coloneqq z$}} (1)
+    (1) edge[loop above] node[highlight on=<6>, highlight on=<9>, above left] {$t_1$} node[above tlabel] {$if(x > 0)$\\$x \coloneqq x - 1$\\\nodeshow{2-}{$y \coloneqq y$}\\\nodeshow{3-}{$z \coloneqq \alt<6-7>{\textcolor{blue}{z}}{z} + \alt<8-9>{\textcolor{blue}{y}}{y}$}} (1)
     ;
   \end{tikzpicture}
 

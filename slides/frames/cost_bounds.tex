@@ -5,7 +5,7 @@
     \node (1) [right of=0] {$\location_1$};
     \path[transitions]
     (0) edge node[above] {$t_0$} node[below] {$if(y>0)$\\$x \coloneqq x$\\$y \coloneqq y$} (1)
-    (1) edge[loop above] node[above left] {$t_1$} node[above tlabel] {\only<2->{$if(x>y)$\\$x \coloneqq x-y$\\$y \coloneqq y$}\\\only<3-4>{$f(x,y)$}\only<4>{;}\only<4-5>{$\text{cost} = y$}} (1)
+    (1) edge[loop above] node[above left] {$t_1$} node[above tlabel] {\nodeshow{2-}{$if(x>y)$}\\\nodeshow{2-}{$x \coloneqq x-y$}\\\nodeshow{2-}{$y \coloneqq y$}\\\nodeshow{4-5}{$\text{cost} = y$}\nodeshow{3-4}{$f(x,y)$}} (1)
     ;
   \end{tikzpicture}
 \end{figure}

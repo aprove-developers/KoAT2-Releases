@@ -1,8 +1,8 @@
 \begin{figure}
   \centering
   \begin{tikzpicture}[program]
-    \node[label=below:{\only<2->{x-y}}] (0) {$\location_0$};
-    \node[label=below:{\only<2->{x-y}}] (1) [right of=0] {$\location_1$};
+    \node[label=below:{\nodeshow{2-}{x-y}}] (0) {$\location_0$};
+    \node[label=below:{\nodeshow{2-}{x-y}}] (1) [right of=0] {$\location_1$};
     \path[transitions]
     (0) edge[highlight on=<4>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
     (1) edge[loop above, highlight on=<5-8>] node[above left] {$t_1$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
