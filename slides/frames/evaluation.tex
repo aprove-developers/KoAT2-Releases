@@ -8,10 +8,11 @@
         legend style={
           at={(1.1,0.9)},
           anchor=north west
-        }
+        },
+        thick,
       ]
 
-      \addplot coordinates {
+      \addplot[color=blue,ultra thick] coordinates {
         (0,113)
         (1,285)
         (2,351)
@@ -21,7 +22,7 @@
       };
       \addlegendentry{New method}
 
-      \addplot coordinates {
+      \addplot[color=black] coordinates {
         (0,131)
         (1,298)
         (2,376)
@@ -31,7 +32,7 @@
       };
       \addlegendentry{KoAT}
 
-      \addplot coordinates {
+      \addplot[color=yellow] coordinates {
         (0,117)
         (1,270)
         (2,336)
@@ -41,7 +42,7 @@
       };
       \addlegendentry{CoFloCo}
 
-      \addplot coordinates {
+      \addplot[color=green] coordinates {
         (0,117)
         (1,247)
         (2,296)
@@ -51,7 +52,7 @@
       };
       \addlegendentry{Loopus}
 
-      \addplot coordinates {
+      \addplot[color=orange] coordinates {
         (0,118)
         (1,245)
         (2,295)
@@ -61,7 +62,7 @@
       };
       \addlegendentry{KoAT-TACAS}
 
-      \addplot coordinates {
+      \addplot[color=brown] coordinates {
         (0,109)
         (1,240)
         (2,270)
@@ -71,7 +72,7 @@
       };
       \addlegendentry{PUBS}
 
-      \addplot coordinates {
+      \addplot[color=gray] coordinates {
         (0,56)
         (1,72)
         (2,80)
