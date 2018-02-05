@@ -7,27 +7,32 @@
     \node (1) [right of=0] {$\location_1$};
 
     \path[transitions]
-    (0) edge node[above] {\textcolor<4,5,7>{blue}{$t_0$}} node[below] {$x \coloneqq x$\\$y \coloneqq y$\\$z \coloneqq z$} (1)
-    (1) edge[loop above] node[above left] {\textcolor<3,6,8>{blue}{$t_1$}} node[above tlabel] {$if(x > 0)$\\$x \coloneqq x - 1$\\$y \coloneqq \textcolor<1,7,8>{blue}{z}$\\$z \coloneqq \textcolor<3,4>{blue}{z} + \textcolor<5,6>{blue}{y}$} (1)
+    (0) edge node[above] {\textcolor<4,5,7,11-12>{blue}{$t_0$}} node[below] {$x \coloneqq x$\\$y \coloneqq y$\\$z \coloneqq z$} (1)
+    (1) edge[loop above] node[above left] {\textcolor<3,6,8,18>{blue}{$t_1$}} node[above tlabel] {$if(x > 0)$\\$x \coloneqq x - 1$\\$\textcolor<14>{blue}{y \coloneqq \textcolor<1,7,8,11>{blue}{z}}$\\$\textcolor<15-17>{blue}{z \coloneqq \textcolor<3,4,11>{blue}{z} + \textcolor<5,6,12>{blue}{y}}$} node[below right=0.3cm and 0.3cm, show on=<16->, highlight on=<16>] {$z \coloneqq 2 \cdot \max(z,y)$} (1)
     ;
   \end{tikzpicture}
-  
-  \onslide<2->{$\USize(t_1,z)$}
-  
+  \qquad  
   \begin{tikzpicture}[rvg]
     
-    \node (0z) [show on=<4->, highlight on=<4>, highlight on=<7>] {$t_0,z$};
+    \node (0z) [show on=<4->, highlight on=<4>, highlight on=<7>, highlight on=<10-11>] {$t_0,z$};
     \node (1z) [show on=<3->, highlight on=<3>, highlight on=<8>, right of=0z] {$t_1,z$};
-    \node (0y) [show on=<5->, highlight on=<5>, right of=1z] {$t_0,y$};
+    \node (0y) [show on=<5->, highlight on=<5>, highlight on=<10>, highlight on=<12>, right of=1z] {$t_0,y$};
     \node (1y) [show on=<6->, highlight on=<6>, below of=1z] {$t_1,y$};
     
     \path
-    (0z) edge[show on=<4->, highlight on=<4>] (1z)
-    (0z) edge[show on=<7->, highlight on=<7>] (1y)
-    (0y) edge[show on=<5->, highlight on=<5>] (1z)
-    (1z) edge[show on=<3->, highlight on=<3>, loop above, scc edge] (1z)
-    (1z) edge[show on=<8->, highlight on=<8>, scc edge, bend right] (1y)
-    (1y) edge[show on=<6->, highlight on=<6>, scc edge, bend right] (1z)
+    (0z) edge[show on=<4->, highlight on=<4>, highlight on=<10-11>] (1z)
+    (0z) edge[show on=<7->, highlight on=<7>, highlight on=<10-11>] (1y)
+    (0y) edge[show on=<5->, highlight on=<5>, highlight on=<10>, highlight on=<12>] (1z)
+    (1z) edge[show on=<3->, highlight on=<3>, highlight on=<13>, loop above, scc edge] (1z)
+    (1z) edge[show on=<8->, highlight on=<8>, highlight on=<13>, scc edge, bend right] (1y)
+    (1y) edge[show on=<6->, highlight on=<6>, highlight on=<13>, scc edge, bend right] (1z)
     ;
   \end{tikzpicture}
+
+  \begin{align*}
+    \onslide<2->{\USize(t_1,z)} \onslide<9->{&= \textcolor<10-12>{blue}{\textbf{highest starting value}} \cdot \textcolor<13>{blue}{\textbf{scaling factor}} \\}
+    \onslide<11->{&= \maximum{\textcolor<11>{blue}{z},\onslide<12->{\textcolor<12>{blue}{y}}}}
+    \onslide<14->{\cdot \onslide<17->{(}\textcolor<14>{blue}{1} \onslide<17->{\cdot \textcolor<17>{blue}{2}}\onslide<17->{)}^{\onslide<18->{\textcolor<18>{blue}{\UTime(t_1)}}}}
+  \end{align*}
+  
 \end{figure}
