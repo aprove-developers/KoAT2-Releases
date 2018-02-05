@@ -6,27 +6,32 @@
     \node (1) [right of=0] {$\location_1$};
     
     \path[transitions]
-    (0) edge node[highlight on=<7-8>, above] {$t_0$} node[below] {$x \coloneqq x$\\\nodeshow{2-}{$y \coloneqq y$}\\\nodeshow{3-}{$z \coloneqq z$}} (1)
-    (1) edge[loop above] node[highlight on=<6>, highlight on=<9>, above left] {$t_1$} node[above tlabel] {$if(x > 0)$\\$x \coloneqq x - 1$\\\nodeshow{2-}{$y \coloneqq y$}\\\nodeshow{3-}{$z \coloneqq \alt<6-7>{\textcolor{blue}{z}}{z} + \alt<8-9>{\textcolor{blue}{y}}{y}$}} (1)
+    (0) edge node[highlight on=<7-8>, highlight on=<12-13>, above] {$t_0$} node[below] {$x \coloneqq x$\\\nodeshow{2-}{$y \coloneqq y$}\\\nodeshow{3-}{$z \coloneqq z$}} (1)
+    (1) edge[highlight on=<17>, loop above] node[highlight on=<6>, highlight on=<9>, highlight on=<14>, above left] {$t_1$} node[above tlabel] {$if(x > 0)$\\$x \coloneqq x - 1$\\\nodeshow{2-}{$y \coloneqq y$}\\\nodeshow{3-}{$z \coloneqq \alt<6-7,12>{\textcolor{blue}{z}}{z} \textcolor<16>{blue}{+ \alt<8-9,13,14>{\textcolor{blue}{y}}{y}}$}} (1)
     ;
   \end{tikzpicture}
-
-  \onslide<4->{$\USize(t_1,z)$}
-  
+  \qquad
   \onslide<5->{
     \begin{tikzpicture}[rvg]
       
-      \node (0z) [show on=<7->, highlight on=<7>] {$t_0,z$};
+      \node (0z) [show on=<7->, highlight on=<7>, highlight on=<11>, highlight on=<12>] {$t_0,z$};
       \node (1z) [show on=<5->, right of=0z] {$t_1,z$};
-      \node (0y) [show on=<8->, highlight on=<8>, right of=1z] {$t_0,y$};
-      \node (1y) [show on=<9->, highlight on=<9>, below of=1z] {$t_1,y$};
+      \node (0y) [show on=<8->, highlight on=<8>, highlight on=<11>, highlight on=<13>, right of=1z] {$t_0,y$};
+      \node (1y) [show on=<9->, highlight on=<9>, highlight on=<11>, highlight on=<14>, below of=1z] {$t_1,y$};
       
       \path
-      (0z) edge[show on=<7->, highlight on=<7>] (1z)
-      (0y) edge[show on=<8->, highlight on=<8>] (1z)
-      (1z) edge[show on=<6->, highlight on=<6>, loop above, scc edge] (1z)
-      (1y) edge[show on=<9->, highlight on=<9>] (1z)
+      (0z) edge[show on=<7->, highlight on=<7>, highlight on=<11>, highlight on=<12>] (1z)
+      (0y) edge[show on=<8->, highlight on=<8>, highlight on=<11>, highlight on=<13>] (1z)
+      (1z) edge[show on=<6->, highlight on=<6>, highlight on=<15->, loop above, scc edge] (1z)
+      (1y) edge[show on=<9->, highlight on=<9>, highlight on=<11>, highlight on=<14>] (1z)
       ;
     \end{tikzpicture}
   }
+
+  \begin{align*}
+    \onslide<4->{\USize(t_1,z)} \onslide<10->{&= \textcolor<11-14>{blue}{\textbf{highest starting value}} + \textcolor<15>{blue}{\textbf{positive effects}} \\}
+    \onslide<12->{&= \maximum{\textcolor<12>{blue}{z},\onslide<13->{\textcolor<13>{blue}{y}},\onslide<14->{\textcolor<14>{blue}{y}}}}
+    \onslide<16->{+ \onslide<17->{\textcolor<17>{blue}{\UTime(t_1)} \cdot} \onslide<18->{\max(0,}\textcolor<16>{blue}{y}\onslide<18->{)}}
+  \end{align*}
+  
 \end{figure}
