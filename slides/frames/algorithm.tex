@@ -1,0 +1,15 @@
+\begin{algorithmic}[1]
+  \State Run preprocessors
+  \onslide<2->{\State Create an initial time bound $\UTime$ and an initial size bound $\Size$}
+  \onslide<3->{\State Compute local size bounds $\ULSB$ and $\LLSB$}
+  \onslide<4->{\State Compute a time ranking function for each transition in $\TSet$}
+  \onslide<5->{\State Compute a cost ranking function for each transition in $\TSet$}
+  \onslide<6->{
+    \Repeat
+    \State Improve size bounds
+    \State Improve time bounds
+    \Until{no time bound is improved}
+  }
+  \onslide<7->{\State Create an initial cost bound $\UCost$}
+  \onslide<8->{\State Improve cost bounds}
+\end{algorithmic}
