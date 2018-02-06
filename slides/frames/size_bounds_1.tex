@@ -6,7 +6,7 @@
     \node (2) [right of=1] {$\location_2$};
     \path[transitions]
     (0) edge[highlight on=<2-3>] node[above] {$t_0$} node[below] {\textcolor<4>{blue}{$x \coloneqq x$}\\\textcolor<5>{blue}{$y \coloneqq y$}} node[below=0.8cm] {\nodeshow{4-}{\textcolor<4>{blue}{$\USize(t_0,x) = x$}}\\\nodeshow{5-}{\textcolor<5>{blue}{$\LSize(t_0,y) = y$}}} (1)
-    (1) edge[highlight on=<2>, highlight on=<6>, loop above] node[above left] {$t_1$} node[above tlabel] {\textcolor<7-8>{blue}{$if(x<10)$}\\\textcolor<7-8>{blue}{$x \coloneqq x+1$}\\\textcolor<9>{blue}{$y \coloneqq y$}} node[above=0.8cm] {\nodeshow{7-}{\textcolor<7-8>{blue}{$\USize(t_1,x) = \only<7>{\min(}10\only<7>{, x+1)}$}}\\\nodeshow{9-}{\textcolor<9>{blue}{$\LSize(t_1,y) = y$}}} (1)
+    (1) edge[highlight on=<2>, highlight on=<6>, loop above] node[above left] {$t_1$} node[above tlabel] {\textcolor<7>{blue}{$if(x<10)$}\\\textcolor<7>{blue}{$x \coloneqq x+1$}\\\textcolor<8>{blue}{$y \coloneqq y$}} node[above left=-0.2cm and 0.5cm] {\nodeshow{7-}{\textcolor<7>{blue}{$\USize(t_1,x) = 10$}}\\\nodeshow{8-}{\textcolor<8>{blue}{$\LSize(t_1,y) = y$}}} (1)
     (1) edge node[above] {$t_2$} node[below] {$if(x \geq 10)$\\$x \coloneqq x$\\$y \coloneqq y$} (2)
     (2) edge[loop above] node[above left] {$t_3$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (2)
     ;
