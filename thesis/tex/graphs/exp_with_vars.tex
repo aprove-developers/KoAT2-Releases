@@ -57,8 +57,8 @@
   \effect^\sqcap_\SCC &= \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\sqcap_t \right) \\
   &= \UTime(t_1) \cdot \effect^\sqcap_{t_1} = \UTime(t_1) \cdot 0 = 0 \\
   {\mathcal{S}^\sqcap}'(\beta) &= 1 \cdot \scale^\sqcap_\SCC \cdot \left( \maxO{\start^\sqcap} + \effect^\sqcap_\SCC \right) \\
-  &= 1 \cdot 2^{\UTime(t_1)} \cdot \left( \maxO{y,z} + 0 \right) \\
-  &= 2^{\UTime(t_1)} \cdot \maxO{y,z}
+  &= 1 \cdot 2^{\UTime(t_1)} \cdot \left( \maxO{\maximum{y,z}} + 0 \right) \\
+  &= 2^{\UTime(t_1)} \cdot \maxO{\maximum{y,z}}
 \end{align*}
 
 \caption{Analysis of a program with an exponential bound due to variables affecting each other}

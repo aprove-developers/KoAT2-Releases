@@ -39,7 +39,7 @@ This definition is a special case of the new definition of time complexity.
   \[ \text{rc}'(m) = \text{rc}(-m,m). \]
 \end{remark}
 
-Therefore, if only the information is given, that for an input state $\valuation \in \Valuation$ it holds that $-m \leq \valuation \leq m$, the time complexity $\text{rc}'(m)$ of \cite{koat} and the new time complexity $\text{rc}(-m,m)$ have the same precision.
+Therefore, if only the information is given, that for an input state $\valuation \in \Valuation$ it holds that $-m \leq \valuation \leq m$, the time complexity $\text{rc}'(m)$ of \cite{koat} and the new time complexity $\text{rc}(-m,m)$ are equal.
 But if the information is given, that for an input state $\valuation$ it holds that $\lstate \leq \valuation \leq \ustate$, the new time complexity $\text{rc}(\lstate, \ustate)$ is more precise.
 With the definition of \cite{koat} it is necessary to define an input state $m$ with $m(v) = \max(\abs{\lstate(v)}, \abs{\ustate(v)})$ for each variable $v \in \PVSet$ to gain a time complexity $\text{rc}'(m)$.
 Therefore, the additional information $\lstate \leq \valuation \leq \ustate$ is not utilized in the definition of \cite{koat}, resulting in a time complexity $\text{rc}'(m)$ greater or equal than $\text{rc}(\lstate, \ustate)$.
@@ -54,7 +54,7 @@ Thus, the time complexity $\text{rc}(\lstate, \ustate)$ is closer to the real ti
   Then, the time complexity of \cite{koat} is $\text{rc}'(m) = 9$ since with a state $\valuation'_0 \in \Valuation$ with $\valuation'_0(x) = 6$ and $\valuation'_0(y) = -2$ (and therefore $-6 \leq \valuation'_0(x) \leq 6$ and $-2 \leq \valuation'_0(y) \leq 2$) we have one occurrence of $t_0$ and eight occurrences of $t_1$.
   Since $\lstate \nleq \valuation'_0 \nleq \ustate$, the state $\valuation'_0$ is not a possible input state for the time complexity $\text{rc}$.
   Instead, the input state yielding the greatest numbers of evaluation steps is a state $\valuation_0 \in \Valuation$ with $\valuation_0(x) = 4$ and $\valuation_0(y) = 0$.
-  Therefore, the new time complexity $\text{rc}(\lstate, \ustate)$ is $1 + 4$, which is significantly closer to the real time complexity than the time complexity of \cite{koat} $\text{rc}'(m) = 9$.
+  Therefore, the new time complexity $\text{rc}(\lstate, \ustate)$ is $1 + 4 = 5$, which is significantly closer to the real time complexity than the time complexity of \cite{koat} $\text{rc}'(m) = 9$.
 \end{example}
   
 Although we changed the definitions of time complexity and time bounds, the known theorem of \cite{koat}, that it is possible to approximate the time complexity of a program by the sum of all upper time bounds, is still valid.
@@ -67,7 +67,7 @@ Therefore, it is sufficient to determine an upper time bound for a program and b
 
 For each variable at a particular transition, a size bound defines an interval in which the value ranges in a worst-case evaluation.
 This interval is defined by a lower size bound and an upper size bound.
-While upper size bounds are always greater than the greatest possible value at a transition, lower size bounds are always smaller than the lowest possible value.
+While upper size bounds are always greater than the greatest possible value at a transition, lower size bounds are always smaller than the smallest possible value.
 The following definition is a modification of the size complexity of \cite{koat}.
 
 \begin{definition}[Worst-Case Size Bound]

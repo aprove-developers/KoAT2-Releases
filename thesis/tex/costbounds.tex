@@ -30,7 +30,7 @@ Since the cost $\exacteval{\cost(t)}{\valuation}$ of a single evaluation step wi
   Each step with $t_1$ has a cost of the current value of $y$.
   Since the value of $y$ never changes, the cost of the transition $t_1$ is constant throughout the execution of the loop.
   The guard ensures that $x > y > 0$.
-  Therefore, the method TimeBounds can compute a time bound $\UTime(t_1) = \maxO{x}$.
+  Therefore, the method \emph{TimeBounds} can compute a time bound $\UTime(t_1) = \maxO{x}$.
   Since the size of $y$ is bound with $\USize(t_0) = y$ after the transition $t_0$, an initial cost bound $\UCost(t_1) = \UTime(t_1) \cdot \usubst{\cost(t_1)}{\LSize(t_0)}{\USize(t_0)} = \maxO{x} \cdot y$ can be inferred.
 \end{example}
 
@@ -40,13 +40,13 @@ Additionally to initial cost bounds, we use ranking functions, to infer better c
 With some changes, the definition of time ranking functions is transferable to the context of costs.
 
 \begin{definition}[Cost Ranking Function] 
-  We define $\costrank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as cost ranking function for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\TSet_{>} \subseteq \TSet$ such that the following statements hold.
-  For all transitions $t = (\location, \update, \guard, \location') \in \TSet$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that
-  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'}. \]
-  For all transitions $(\location, \update, \guard, \location') \in \TSet_{>}$ and every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ it holds that        
-  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\costrank(\location)}{\valuation} - \exacteval{\cost(t)}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'} \]
+  We define $\costrank: \LSet \rightarrow \BoundSet_p(\PVSet)$ as \textbf{cost ranking function} for a transition set $\TSet$ if and only if there is a nonempty set of strictly decreasing transitions $\emptyset \neq \TSet_{>} \subseteq \TSet$ such that the following statements hold.
+  For every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ with a transition $t \in \TSet$ it holds that
+  \[ \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'}. \]
+  For every evaluation step $(\location, \valuation) \rightarrow_t (\location', \valuation')$ with a transition $t \in \TSet$ it holds that        
+  \[ \exacteval{\costrank(\location)}{\valuation} - \exacteval{\cost(t)}{\valuation} \geq \exacteval{\costrank(\location')}{\valuation'} \]
   and
-  \[ \exacteval{\guard}{\valuation} \Rightarrow \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\cost(t)}{\valuation} \]
+  \[ \exacteval{\costrank(\location)}{\valuation} \geq \exacteval{\cost(t)}{\valuation} \]
 \end{definition}
 
 This definition ensures that each transition $t \in \TSet_>$ decreases in each transition step by its cost.
@@ -56,12 +56,12 @@ Therefore, the cost rank $\costrank(\location)$ can be used as a bound on the su
 \begin{example}[Cost Ranking Function]
   Consider again the program in Figure \ref{fig:cost_ranking_function_costbounds}.
   We can show that the function $\costrank$ with $\costrank(\location_1) = x$ is a cost ranking function for the transition set $\TSet = \braced{t_1}$.
-  For every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ it holds that $\exacteval{\braced{y > 0, x > y}}{\valuation} \Rightarrow \exacteval{x}{\valuation} - \exacteval{y}{\valuation} > \exacteval{x}{\valuation'}$, since the value of $x$ decreases in every evaluation step with the value of $y$.
-  Therefore, also $\exacteval{\braced{y > 0, x > y}}{\valuation} \Rightarrow \exacteval{x}{\valuation} - \exacteval{y}{\valuation} \geq \exacteval{x}{\valuation'}$ holds.
-  Also, it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ that $\exacteval{\braced{y > 0, x > y}}{\valuation} \Rightarrow \exacteval{x}{\valuation} \geq \exacteval{y}{\valuation}$, since the value of $x$ is greater than $y$ in every evaluation step.
+  For every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ it holds that $\exacteval{x}{\valuation} - \exacteval{y}{\valuation} > \exacteval{x}{\valuation'}$, since the value of $x$ decreases in every evaluation step with the value of $y$.
+  Therefore, also $\exacteval{x}{\valuation} - \exacteval{y}{\valuation} \geq \exacteval{x}{\valuation'}$ holds.
+  Also, it holds for every evaluation step $(\location_1,\valuation) \rightarrow_{t_1} (\location_1,\valuation')$ that $\exacteval{x}{\valuation} \geq \exacteval{y}{\valuation}$, since the value of $x$ is greater than $y$ in every evaluation step.
 \end{example}
 
-With a few changes, the TimeBounds algorithm is extendable to the computation of cost bounds.
+With a few changes, the \emph{TimeBounds} algorithm is extendable to the computation of cost bounds.
 
 \input{theorems/costbound}
 
@@ -70,7 +70,7 @@ With this definition, it is possible to start with an initial cost bound, search
 \begin{example}[Cost Bounds]
   Consider again the program in Figure \ref{fig:cost_ranking_function_costbounds}.
   We showed that an initial cost bound can be computed with $\UCost(t_1) = \maxO{x} \cdot y$ and that a cost ranking function $\costrank$ with $\costrank(\location_1) = x$ can be determined.
-  The resulting cost bound of the CostBounds method is $\UCost(t_1) = \UTime(t_0) \cdot \maxO{\usubst{\costrank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} = 1 \cdot \maxO{x}$.
+  The resulting cost bound of the \emph{CostBounds} method is $\UCost(t_1) = \UTime(t_0) \cdot \maxO{\usubst{\costrank(\location_1)}{\LSize(t_0)}{\USize(t_0)}} = 1 \cdot \maxO{x}$.
   This is significantly better than the initial cost bound of $\UCost(t_1) = \maxO{x} \cdot y$.
 \end{example}
 

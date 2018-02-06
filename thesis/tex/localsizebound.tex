@@ -32,9 +32,9 @@ We now use the defined local bound sets for the definition of a concrete local s
 
 \begin{definition}[Scaled Sum]
   We say that $\rv \in \RV$ is bounded by an \textbf{upper scaled sum} if and only if there is an upper local size bound $\ULSB(\rv) \in \BoundSet^\sqcap_l$.
-  Then, we then denote with $s^\sqcap_\rv$ the scaling factor $s$, with $e^\sqcap_\rv$ the constant $e$ and with the sets $P_{\rv,1}^\sqcap, P_{\rv,2}^\sqcap, N_{\rv,1}^\sqcap, N_{\rv,2}^\sqcap$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
+  Then, we denote with $s^\sqcap_\rv$ the scaling factor $s$, with $e^\sqcap_\rv$ the constant $e$ and with the sets $P_{\rv,1}^\sqcap, P_{\rv,2}^\sqcap, N_{\rv,1}^\sqcap, N_{\rv,2}^\sqcap$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
   We say that $\rv \in \RV$ is bounded by a \textbf{lower scaled sum} if and only if there is a lower local size bound $\LLSB(\rv) \in \BoundSet^\sqcup_l$.
-  Then, we then denote with $s^\sqcup_\rv$ the scaling factor $s$, with $e^\sqcup_\rv$ the constant $e$ and with the sets $P_{\rv,1}^\sqcup, P_{\rv,2}^\sqcup, N_{\rv,1}^\sqcup, N_{\rv,2}^\sqcup$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
+  Then, we denote with $s^\sqcup_\rv$ the scaling factor $s$, with $e^\sqcup_\rv$ the constant $e$ and with the sets $P_{\rv,1}^\sqcup, P_{\rv,2}^\sqcup, N_{\rv,1}^\sqcup, N_{\rv,2}^\sqcup$ the four variable sets $P_1$, $P_2$, $N_1$ and $N_2$.
 \end{definition}
 
 To clarify the possible local size bounds, we introduce some examples.
@@ -42,26 +42,28 @@ To clarify the possible local size bounds, we introduce some examples.
 \begin{example}[Upper Scaled Sum]
   \input{graphs/scaled_sum}
   Consider the five transitions in Figure \ref{fig:scaled_sum}.
-  For the transition $t_1$, the update is $\update(x) = x$.
+  For transition $t_1$, the update is $\update(x) = x$.
   We can represent an upper scaled sum for $x$ in $t_1$ with $\ULSB(t_1,x) = 1 \cdot (0 + x) = x \in \BoundSet^\sqcap_l$, where $x$ is in $P_1$.
-  For the transition $t_2$, the update is $\update(x) = -x$.
+  For transition $t_2$, the update is $\update(x) = -x$.
   We can represent an upper scaled sum for $x$ in $t_2$ with $\ULSB(t_2,x) = 1 \cdot (0 - x) = -x \in \BoundSet^\sqcap_l$, where $x$ is in $N_1$.
   If $N_1$ was not part of the local bound set $\BoundSet^\sqcap_l$, this bound would not be representable.
-  For the transition $t_3$ the update is $\update(x) = 2 \cdot x + 2 \cdot y + 4$.
+  For transition $t_3$, the update is $\update(x) = 2 \cdot x + 2 \cdot y + 4$.
   We can represent an upper scaled sum for $x$ in $t_3$ with $\ULSB(t_3,x) = 2 \cdot (2 + x + y) \in \BoundSet^\sqcap_l$, where $x$ and $y$ are in $P_1$.
   
   In the previous three examples, it was sufficient to have $P_2 = \emptyset$ and $N_2 = \emptyset$.
-  For the transition $t_4$, the update is $\update(x) = 2 \cdot x + 3 \cdot y$.
+  For transition $t_4$, the update is $\update(x) = 2 \cdot x + 3 \cdot y$.
   One could suggest the upper scaled sum $b = 3 \cdot (x + y)$.
   But for a state $\valuation$ with $\exacteval{x}{\valuation} < 0$ and $\exacteval{y}{\valuation} > 0$ this bound is not sound.
   The bound $\exacteval{3 \cdot (x + y)}{\valuation}$ would underapproximate the actual value $\exacteval{2 \cdot x + 3 \cdot y}{\valuation}$.
+  Note that this is not a problem in an update $\update(x) = 3 \cdot x + 3 \cdot y$, since the factors are equal.
+  Only if the factors are not equal, further logic is necessary.
   For these cases, scaled sums provide the sets $P_2$ and $N_2$.
   We can represent an upper scaled sum for $x$ in $t_4$ with $\ULSB(t_4,x) = 3 \cdot (\maxO{x} + y) \in \BoundSet^\sqcap_l$, where $x$ is in $P_2$ and $y$ is in $P_1$.
   This way the upper scaled sum is also sound for negative values of $x$.
   
   For the previous case, we used the set $P_2$.
   The set $N_2$ is provided for the negative counterpart.
-  For the transition $t_5$, the update is $\update(x) = -2 \cdot x - 3 \cdot y$.
+  For transition $t_5$, the update is $\update(x) = -2 \cdot x - 3 \cdot y$.
   We can represent an upper scaled sum for $x$ in $t_5$ with $\ULSB(t_5,x) = 3 \cdot (\maxO{-x} - y) \in \BoundSet^\sqcap_l$, where $x$ is in $N_2$ and $y$ is in $N_1$.
   With this construction, we only consider negative values of $x$ and therefore ensure a sound overapproximation.
 \end{example}

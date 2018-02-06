@@ -11,8 +11,8 @@ Our goal is to show that the defined size bounds are correct lower and upper bou
 \end{equation}
 Instead of proving (\ref{eq:sizebound_target}) directly, we prove a simplified hypothesis.
 For any transition $t \in \TSet$, let $k_t$ be the number of times that the transition $t$ is used in the evaluation.
-Then, we define an upper bound $d^\sqcap \in \BoundSet(\PVSet)$ and a lower bound $d^\sqcup \in \BoundSet(\PVSet)$ for the biggest and the lowest value of any variable.
-We define the lower bound $d^\sqcup$ to denote the inverted lowest value, such that $d^\sqcup$ is positive.
+Then, we define an upper bound $d^\sqcap \in \BoundSet(\PVSet)$ and a lower bound $d^\sqcup \in \BoundSet(\PVSet)$ for the greatest and the smallest value of any variable.
+We define the lower bound $d^\sqcup$ to denote the inverted smallest value, such that $d^\sqcup$ is positive.
 For $\square \in \braced{\sqcup, \sqcap}$ we define
 \[ d^\square = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} \cdot \left( \maxO{\start^\square} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \effect^\square_t \right) \right). \]
 This enables us to define the hypothesis.

@@ -27,17 +27,17 @@ While the actual code is written in a functional style, the presented algorithm 
   \State Compute a cost ranking function for each transition in $\TSet$
   \Repeat
     \ForAll{SCCs $\SCC$ of RVG in topological order}
-      \State Run $\text{SizeBounds}(\UTime, \Size, \SCC)$
+      \State Run $\emph{SizeBounds}(\UTime, \Size, \SCC)$
     \EndFor
     \ForAll{SCCs $\TSet'$ of $P$ in topological order}
       \ForAll{unbounded transitions $t \in \TSet'$}
-        \State Run $\text{TimeBounds}(\UTime, \Size, \TSet', \braced{t})$
+        \State Run $\emph{TimeBounds}(\UTime, \Size, \TSet', \braced{t})$
       \EndFor
     \EndFor
-  \Until{all TimeBounds executions did not improve any time bound}
+  \Until{all \emph{TimeBounds} executions did not improve any time bound}
   \State Create an initial cost bound $\UCost$
   \ForAll{transitions $t \in \TSet$}
-    \State Run $\text{CostBounds}(\UTime, \Size, \TSet', \braced{t})$
+    \State Run $\emph{CostBounds}(\UTime, \Size, \TSet', \braced{t})$
   \EndFor
 \end{algorithmic}
 \end{algorithm}
@@ -45,9 +45,9 @@ While the actual code is written in a functional style, the presented algorithm 
 The algorithm takes a program as input and runs a sequence of preprocessors on it.
 Then, it creates initial time and size bounds, where each value is unbounded (i.e. $\infty, -\infty$).
 For performance reasons, the computation of the local size bounds, the result variable graph and the time and cost ranking functions is done before the actual computation of time, size and cost bounds.
-After this pre-computation, the SizeBounds algorithm and the TimeBounds algorithm are called as long as the TimeBounds algorithm yields new time bounds.
+After this pre-computation, the \emph{SizeBounds} algorithm and the \emph{TimeBounds} algorithm are called as long as the \emph{TimeBounds} algorithm yields new time bounds.
 When no more time bounds can be inferred, an initial cost bound is created from the inferred time bounds.
-Then, the CostBounds algorithm is executed for each transition to find a possibly better cost bound.
+Then, the \emph{CostBounds} algorithm is executed for each transition to find a possibly better cost bound.
 
 \subsection{Preprocessors}
 
@@ -101,7 +101,7 @@ Also an upper size bound $\USize$ with $\USize(\alpha) = \infty$ for all result 
 
 For time bounds, it is possible to infer a better time bound prior to the execution.
 For all transitions $t \in \TSet$ which are not part of an SCC, we know, that they can only occur once in every evaluation.
-Therefore, it is sound to use the initial time bound $\UTime$ with $\UTime(t) = 1$ for all transitions which does not occur in an SCC of the program $\Program$ and $\UTime(t) = \infty$ for all transitions which does occur in an SCC of the program $\Program$.
+Therefore, it is sound to use the initial time bound $\UTime$ with $\UTime(t) = 1$ for all transitions which are not contained in an SCC of the program $\Program$ and $\UTime(t) = \infty$ for all transitions which are contained in an SCC of the program $\Program$.
 
 \subsection{Local Size Bound Algorithm}
 
@@ -118,7 +118,7 @@ Therefore, we use the SMT-Solver to prove the unsatisfiability of the negation o
 \[ \exists \valuation \in \Valuation: \exacteval{\guard}{\valuation} \wedge \exacteval{\update(v)}{\valuation} > \exacteval{b}{\valuation} \]
 If the SMT-Solver proves unsatisfiability, the upper scaled sum is a sound overapproximation of the actual value of the variable $v$.
 
-It remains to be shown, how to choose a candidate for an upper scaled sum.
+It remains to explain, how to choose a candidate for an upper scaled sum.
 Consider an upper scaled sum $b^\sqcap$.
 \[ b^\sqcap = s \cdot \left(
 e

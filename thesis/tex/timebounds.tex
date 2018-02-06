@@ -54,7 +54,7 @@ Then, $\sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location
   \input{graphs/motivational_example_timebounds}
   Consider the motivational program from the introduction in Figure \ref{fig:motivational_example_timebounds}.
   With the transition set $\TSet' = \braced{t_1}$, it is possible to determine a ranking function $\timerank$ with $\timerank(\location_1) = x - y$, since the transition $t_1$ decreases the measure and no transition increases the measure (since no other transition exists in $\TSet'$).
-  The method of \cite{koat} would now apply an operator to $\timerank$, such that the result would be a monotonic function with $\timerank'(\location_1) = \abs{x} + \abs{y}$.
+  The method of \cite{koat} would now apply an operator to $\timerank$, such that the result would be monotonic in the variables with $\timerank'(\location_1) = \abs{x} + \abs{y}$.
   Then, it is able to substitute each variable by its absolute size bound and therefore lift it to a global context.
   The new method does not use this operator.
   Instead, it substitutes each variable of the time rank $\timerank(\location_1)$ by its lower/upper size bound depending on the monotonicity of the time rank in the variables.
@@ -102,4 +102,4 @@ Even if there is a time bound $\UTime(t_3) < \infty$, the consideration of the t
 If the found ranking function guarantees that $t_3$ is a non-increasing transition, it would not be necessary to consider it as an entry transition and therefore a time bound $\UTime(t_4)$ would be better.
 
 These examples show, that the best choice of a transition set $\TSet'$ is non-trivial.
-The implementation uses a backtracking algorithm, which analyses each SCC independently, and considers multiple combinations of transitions to reduce the number of entry transitions.
+The implementation uses a backtracking algorithm, which analyzes each SCC independently, and considers multiple combinations of transitions to reduce the number of entry transitions.

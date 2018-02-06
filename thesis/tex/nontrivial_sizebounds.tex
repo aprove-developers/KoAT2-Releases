@@ -2,10 +2,10 @@ The last section presented a method for inferring upper and lower size bounds fo
 This section extends the method to infer upper and lower size bounds for nontrivial SCCs.
 These nontrivial SCCs are partitioned into two sets.
 The first set contains all nontrivial SCCs, for which there exists a variable, that is manipulated inside the SCC and that affects another variable or itself with its negated value inside the SCC.
-For such SCCs, we use the SizeBounds methods of \cite{koat} to infer upper and lower size bounds with $\USize(\rv) = -\LSize(\rv) = \mathcal{S}_{\text{original}}(\rv)$ for every result variable $\rv \in \RV$.
+For such SCCs, we use the \emph{SizeBounds} methods of \cite{koat} to infer upper and lower size bounds with $\USize(\rv) = -\LSize(\rv) = \mathcal{S}_{\text{original}}(\rv)$ for every result variable $\rv \in \RV$.
 The second set contains all other nontrivial SCCs.
 Negation does not occur in these nontrivial SCCs.
-For such SCCs, we present a method inferring better size bounds than the method of \cite{koat}.
+For such SCCs, we present a method for inferring better size bounds than the method of \cite{koat}.
 
 \begin{example}[Non-Trivial Negating SCCs]
   \input{graphs/negating_nontrivial}
@@ -30,7 +30,7 @@ For such SCCs, we present a method inferring better size bounds than the method 
   The reason is the negation of $x$ in its local size bound.
 \end{example}
 
-From this point on, we regard SCCs that only consists of positive edges.
+From this point on, we regard SCCs that only consist of positive edges.
 For these SCCs, we present an optimized technique.
 
 Prior to the definition of the method, four utility definitions are given, with three of them also used in \cite{koat}.
@@ -40,7 +40,7 @@ First, we define the pre-variables of a result variable $\rv \in \RV$.
   Let $\rv \in \RV$ be a result variable.
   We define $\pre(\rv) \subseteq \RV$ as an overapproximation of all the result variables that directly affect the value of the result variable $\rv$.
 \end{definition}
-Since the result variable graph represents the connections of result variables, the predecessors of a result variable in a result variable graph are a valid implementation of the function $\pre$.
+Since the result variable graph represents the connections of result variables, the predecessors of a result variable in a result variable graph are a valid overapproximation of the function $\pre$.
 \begin{example}[Pre-Variables]
   Consider again the program in Figure \ref{fig:negating_nontrivial} and its result variable graph in Figure \ref{fig:negating_nontrivial_rvg}.
   The predecessors of $(t_1,x)$ in the result variable graph are $(t_0,x)$, $(t_1,x)$ and $(t_2,x)$.
@@ -88,7 +88,7 @@ Additionally, we introduce the SCC-transitions as the set of transitions, which 
   It defines the SCC-transitions $\TSet_\SCC = \braced{t_1, t_2}$.
 \end{example}
 
-Now we are able to specialize the method SizeBounds of \cite{koat} for nontrivial non-negating size bounds.
+Now we are able to specialize the method \emph{SizeBounds} of \cite{koat} for nontrivial non-negating size bounds.
 
 \input{theorems/nontrivial_sizebound}
 
@@ -105,7 +105,7 @@ Therefore, in any case which could yield a negative effect (or a positive effect
 
 Now we analyze the new method in multiple steps with different examples to explain the reasoning behind the different components of the method.
 We regard the upper case in detail and explain differences of the lower case where they occur.
-In a first step, we consider a program that multiplies a single variable in a loop with a factor, without depending on other variables.
+In a first step, we consider a program that multiplies a single variable in a loop with a factor independent of other variables.
 The analysis of this program results in an exponential bound for this single variable.
 In a second step, we consider a program which only uses multiplications with $1$, but nevertheless has non-polynomial size complexity.
 In a third step, we consider a program, that adds iteratively another variable to a variable, but does not use a multiplication with a factor.
