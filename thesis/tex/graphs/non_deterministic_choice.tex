@@ -10,8 +10,8 @@
   \node[main node] (2) [right of=0] {$\location_2$};
 
   \path[every node/.style={font=\sffamily\small}]
-    (0) edge[aligned edge] node[above=0.2cm] {$t_0$} node[below=0.2cm] {$\update = \text{id}$\\$\guard = \emptyset$} (1)
-    (0) edge[aligned edge] node[above=0.2cm] {$t_1$} node[below=0.2cm] {$\update = \text{id}$\\$\guard = \emptyset$} (2)
+    (0) edge[aligned edge] node[above=0.2cm] {$t_0$} node[below=0.2cm] {$\update = \emph{id}$\\$\guard = \emptyset$} (1)
+    (0) edge[aligned edge] node[above=0.2cm] {$t_1$} node[below=0.2cm] {$\update = \emph{id}$\\$\guard = \emptyset$} (2)
     ;
 \end{tikzpicture}
 \caption{Program with a non-deterministic choice}

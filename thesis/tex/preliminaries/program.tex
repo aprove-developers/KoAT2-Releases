@@ -57,24 +57,27 @@ In a transition $(\location,\update,\guard,\location') \in \TSet$, the guard $\g
 The update function $\update$ assigns each program variable a value after the transition step.
 
 \begin{example}[Program]
+  Consider the code snippet and its corresponding program graph in Figure \ref{fig:example_program}.
   \input{graphs/example_program}
-  Consider the program in Figure \ref{fig:example_program}.
   The set of program variables of this program is $\PVSet = \braced{x,y,z}$.
   Additionally, a temporary variable $\tvar \in \TVSet$ is used.
   The program has the location set $\LSet = \braced{\location_0,\location_1,\location_2}$ and the transition set $\TSet = \braced{t_0,t_1,t_2}$.
   The location $\location_0$ is always considered to be the initial location of a program.
   The location set and the transition set form a program graph $(\LSet, \TSet)$.
   The transition $t_0$ is defined as $(\location_0,\update,\guard,\location_1)$ with an update $\update$ with $\update(x)=x$, $\update(y)=1$ and $\update(z)=\tvar$ and a guard $\guard = \braced{\tvar > 0}$.
-  The update $\update(z)=\tvar$ and the guard $\guard = \braced{\tvar > 0}$ imply, that the value of the program variable $z$ after an execution of $t_0$ is chosen non-deterministically as an arbitrary positive number.
+  This transition reflects the lines 1 to 4 of the code snippet.
+  The update $\update(z)=\tvar$ and the guard $\guard = \braced{\tvar > 0}$ imply, that the value of the program variable $z$ after an execution of $t_0$ is chosen non-deterministically as an arbitrary positive number entered by the user.
   The transition $t_1$ is defined as $(\location_1,\update,\guard,\location_1)$ with an update $\update$ with $\update(x)=x-1$, $\update(y)=z \cdot y$ and $\update(z)=z$ and a guard $\guard = \braced{x > 0}$.
-  Therefore, the transition $t_1$ forms a loop, which can be executed as long as $x > 0$ holds.
+  It represents the while loop in the lines 5 to 8 of the code snippet.
+  This loop can be executed as long as $x > 0$ holds.
   Since $x$ is decremented, the transition can be executed at most $\max(0,x)$ times.
-  The transition $t_2$ is defined as $(\location_1,\update,\guard,\location_2)$ with an update $\update = \text{id}$ and a guard $\guard = \emptyset$.
-  The function $\text{id}$ symbolizes the identity function where each program variable $v \in \PVSet$ is mapped to itself.
+  The transition $t_2$ is defined as $(\location_1,\update,\guard,\location_2)$ with an update $\update = \emph{id}$ and a guard $\guard = \emptyset$.
+  The function $\emph{id}$ symbolizes the identity function where each program variable $v \in \PVSet$ is mapped to itself.
   The guard $\guard = \emptyset$ is given implicitly and denotes a guard which is always satisfied.
   Therefore, the loop $t_1$ can always stop non-deterministically before the value of the variable $x$ reaches $0$.
   For the transitions $t_0$ and $t_2$ the costs are defined implicitly as $\cost(t_0) = \cost(t_2) = 1$.
-  The transition $t_1$ has explicit costs $\cost(t_1) = z$.
+  The transition $t_1$ has explicit costs $\cost(t_1) = z$ to represent the cost of the execution of the function $f$.
+  We assume that this function performs at most $z$ steps before returning and that it does not mutate any variables.
   The whole program is defined as a tuple $((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$.
   It computes for an integer $x$ non-deterministically all results of an expression $z^{x'}$ with $z > 0$ and $x \geq x' > 0$.  
 \end{example}
