@@ -16,7 +16,17 @@
 \end{tikzpicture}
 
 \begin{tikzpicture}
-  \begin{axis}[zmax=26]
+  \begin{axis}[
+      zmax=26,
+      extra x ticks={-4,-2,0,2,4},
+      extra y ticks={-4,-2,0,2,4},
+      extra z ticks={5,10,15,20},
+      extra tick style={grid=major},
+      legend style={
+        at={(0,1.1)},
+        anchor=south west
+      },
+    ]
     \addplot3 [
       unbounded coords=jump,
       mesh,
@@ -25,11 +35,22 @@
       samples y={11},
       only marks,
     ] {1+max(x,0)};
+    \addlegendentry{$1+\maxO{\ustate(x)}$}
   \end{axis}
 \end{tikzpicture}
 \hfil
 \begin{tikzpicture}
-  \begin{axis}[zmax=26]
+  \begin{axis}[
+      zmax=26,
+      extra x ticks={-4,-2,0,2,4},
+      extra y ticks={-4,-2,0,2,4},
+      extra z ticks={5,10,15,20},
+      extra tick style={grid=major},
+      legend style={
+        at={(0,1.1)},
+        anchor=south west
+      },
+    ]
     \addplot3 [
       unbounded coords=jump,
       mesh,
@@ -38,6 +59,7 @@
       samples y={11},
       only marks,
     ] {1+abs(max(x,-y))*abs(max(x,-y))};
+    \addlegendentry{$1+\abs{m(x)} \cdot \abs{m(y)}$}
   \end{axis}
 \end{tikzpicture}
 

@@ -1,7 +1,11 @@
 \begin{figure}
   \centering
   \begin{tikzpicture}
-    \begin{axis}[zmax=26]
+    \begin{axis}[
+        zmax=26,
+        extra x ticks={0},
+        extra tick style={grid=major},
+      ]
       \addplot3 [
         unbounded coords=jump,
         mesh,
