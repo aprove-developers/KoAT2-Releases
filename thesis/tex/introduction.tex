@@ -32,7 +32,7 @@ Consider the following program.
 \end{algorithmic}
 
 It takes two variables $x$ and $y$ as input and runs a loop which decrements $x$ until it is not greater than $y$ anymore.
-Intentionally, we can see, that the loop is executed at most $\max \braced{0, x-y}$ times.
+Intentionally, we can see, that the loop is executed at most $\maximum{0, x-y}$ times.
 But the method of \cite{koat} is only able to infer the monotonic bound $\abs{x}+\abs{y}$ for the loop.
 The reason is that it only detects that the value of the variable $y$ is between $-\abs{y}$ and $\abs{y}$.
 The new method infers lower and upper size bounds independently and therefore recognizes a lower bound $y$ and an upper bound $y$ for the value of $y$.

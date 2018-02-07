@@ -185,7 +185,7 @@ To explain this part of the transition scaling factor, we introduce the second e
   For this reason they are by definition part of the set $\VSet_{(t_1,y)} = \braced{y,z}$.
   The idea of the factor $\maximum{\abs{\VSet_\rv} \mid \rv \in \SCC_t}$ is, that we can overapproximate the effect of $\update(y)$ with a scaling factor of $2$ in a bound $2 \cdot \max(y,z)$.
   Such a bound is representable in the bound set $\BoundSet(\PVSet)$.
-  If the update $\update(y)$ would be a sum of $n$ variables $v_1, \dots, v_n$ of the set $\VSet_{(t_1,y)}$, then the effect of $\update(y)$ could be overapproximated with a bound $n \cdot \max \braced{v_1, \dots, v_n}$.
+  If the update $\update(y)$ would be a sum of $n$ variables $v_1, \dots, v_n$ of the set $\VSet_{(t_1,y)}$, then the effect of $\update(y)$ could be overapproximated with a bound $n \cdot \maximum{v_1, \dots, v_n}$.
 \end{example}
 
 The third component, we consider, is the addition with constant values from outside of the SCC $\SCC$.

@@ -13,7 +13,7 @@ It suffices to show that for all transitions $t \in \TSet'_>$ and all states $\l
     & \wedge (\location_0, \valuation_0) \rightarrow^* (\location_1, \valuation_1) (\rightarrow_t \circ \rightarrow^*) \dots (\location_k, \valuation_k) (\rightarrow_t \circ \rightarrow^*) (\location_{k+1}, \valuation_{k+1}) }
 \end{align*}
 To this end, let $\valuation_0$ be an initial state with $\lstate \leq \valuation_0 \leq \ustate$ and consider a (finite or infinite) evaluation starting with $\valuation_0$ where $k \in \mathbb{N} \cup \braced{\infty}$ steps are performed with the transition $t$.
-The goal is now to show that
+The goal is to show that
 \[
   \sum_{\location \in \mathcal{E}_{\TSet'}} \sum_{\pret \in \TSet_\location} \ueval{\UTime(\pret)}{\lstate}{\ustate} \cdot \maxO{\usubst{\costrank(\location)}{\leval{\LSize(\pret)}{\lstate}{\ustate}}{\ueval{\USize(\pret)}{\lstate}{\ustate}}} \geq \sum_{1 \leq i \leq k} \exacteval{\cost(t)}{\valuation_i}
 \]
@@ -47,11 +47,12 @@ Thus, we obtain
   & \exacteval{\costrank(\location_{i,1})}{\actstate_{i,1}} \\
   \geq & \exacteval{\costrank(\location_{i,j_1})}{\actstate_{i,j_1}} \\
   \geq & \exacteval{\costrank(\location_{i,j_2})}{\actstate_{i,j_2}} + \exacteval{\cost(t)}{\actstate_{i,j_1}} \\
+  \geq & \exacteval{\costrank(\location_{i,j_3})}{\actstate_{i,j_3}} + \sum_{1 \leq h < 3} \exacteval{\cost(t)}{\actstate_{i,j_h}} \\
   \geq & \dots \\
-  \geq & \exacteval{\costrank(\location_{i,j_{k_i}})}{\actstate_{i,j_{k_i}}} + \exacteval{\cost(t)}{\actstate_{i,j_{k_i-1}}} \\
-  \geq & \exacteval{\cost(t)}{\actstate_{i,j_{k_i}}}
+  \geq & \exacteval{\costrank(\location_{i,j_{k_i}})}{\actstate_{i,j_{k_i}}} + \sum_{1 \leq h < k_i} \exacteval{\cost(t)}{\actstate_{i,j_h}} \\
+  \geq & \sum_{1 \leq h \leq k_i} \exacteval{\cost(t)}{\actstate_{i,j_h}}
 \end{align*}
-Therefore, $\maxO{\exacteval{\costrank(\location_{i,1})}{\actstate_{i,1}}} \geq \sum_{1 \leq h \leq {k_i}} \exacteval{\cost(t)}{\valuation_{i,h}}$ is an upper bound on the costs of the transition $t$ in the sequence.
+Therefore, $\maxO{\exacteval{\costrank(\location_{i,1})}{\actstate_{i,1}}} \geq \sum_{1 \leq h \leq {k_i}} \exacteval{\cost(t)}{\valuation_{i,j_h}}$ is an upper bound on the costs of the transition $t$ in the sequence.
 
 Let $\pret_i$ be the transition reaching $(\actl_{i,1}, \actstate_{i,1})$ in the evaluation.
 Thus, we have $\actl_{i,1} \in \mathcal{E}_{\TSet'}$ and $\pret_i \in \TSet_{\actl_{i,1}}$.
@@ -63,9 +64,9 @@ We can conclude
    \geq & \maxO{\ueval{\costrank(\actl_{i,1})}{\exacteval{\LSize(\pret_i)}{\valuation_0}}{\exacteval{\USize(\pret_i)}{\valuation_0}}} \\
    \geq & \maxO{\ueval{\costrank(\actl_{i,1})}{\valuation_{i,1}}{\valuation_{i,1}}} \\
    \geq & \maxO{\exacteval{\costrank(\actl_{i,1})}{\valuation_{i,1}}} \\
-   \geq & \sum_{1 \leq h \leq {k_i}} \exacteval{\cost(t)}{\valuation_{i,h}} \\
+   \geq & \sum_{1 \leq h \leq {k_i}} \exacteval{\cost(t)}{\valuation_{i,j_h}} \\
 \end{align*}
-Thus, $\maxO{\usubst{\costrank(\actl_{i,1})}{\leval{\LSize(\pret_i)}{\lstate}{\ustate}}{\ueval{\USize(\pret_i)}{\lstate}{\ustate}}}$ is a bound on the cost $\sum_{1 \leq h \leq {k_i}} \exacteval{\cost(t)}{\valuation_{i,h}}$ of the transition $t$ in the sequence.
+Thus, $\maxO{\usubst{\costrank(\actl_{i,1})}{\leval{\LSize(\pret_i)}{\lstate}{\ustate}}{\ueval{\USize(\pret_i)}{\lstate}{\ustate}}}$ is a bound on the cost $\sum_{1 \leq h \leq {k_i}} \exacteval{\cost(t)}{\valuation_{i,j_h}}$ of the transition $t$ in the sequence.
 
 It remains to examine how often a sequence $(\actl_{i,1}, \actstate_{i,1}) \rightarrow^*_{\TSet'} (\prel_i, \prestate_i)$ can occur in the full evaluation.
 As observed earlier, the transition reaching $(\actl_{i,1}, \actstate_{i,1})$ in the evaluation is always some $\pret_i \in \TSet_{\actl_{i,1}}$.

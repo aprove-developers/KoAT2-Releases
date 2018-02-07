@@ -48,13 +48,13 @@
   &= 1 \cdot 1 = 1 \\
   \scale^\sqcap_\SCC &= \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\UTime(t)} \\
   &= (\scale^\sqcap_{t_1})^{\UTime(t_1)} = 1^{\UTime(t_1)} = 1 \\
-  \incoming^\sqcap_{(t_1,y)}(z) &= \max \braced{1 \cdot \USize(\pret, v) \mid \exists \pret: (\pret, v) \in \pre(\rv) \setminus C} \\
+  \incoming^\sqcap_{(t_1,y)}(z) &= \maximum{1 \cdot \USize(\pret, v) \mid \exists \pret: (\pret, v) \in \pre(\rv) \setminus C} \\
   &= \maximum{\USize(t_0, z), \USize(t_1, z)} \\
   &= \maximum{z,z} = z \\
   \effect^\sqcap_{(t_1,y)} &= \maxO{e^{\sqcap}_{(t_1,y)}} + \sum_{v \in P_{(t_1,y)}^\sqcap \setminus \VSet_{(t_1,y)}} \maxO{\incoming^\sqcap_{(t_1,y)}(v)} + \sum_{v \in N_{(t_1,y)}^\sqcap} \maxO{\incoming^\sqcup_{(t_1,y)}(v)} \\
   &= \maxO{0} + \maxO{\incoming^\sqcap_{(t_1,y)}(z)} + 0 \\
   &= \maxO{z} \\
-  \effect^\sqcap_{t_1} &= \max \braced{\effect^\sqcap_\rv \mid \rv \in \SCC_{t_1} } \\
+  \effect^\sqcap_{t_1} &= \maximum{\effect^\sqcap_\rv \mid \rv \in \SCC_{t_1} } \\
   &= \effect^\sqcap_{(t_1,y)} = \maxO{z} \\
   \effect^\sqcap_\SCC &= \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\sqcap_t \right) \\
   &= \UTime(t_1) \cdot \effect^\sqcap_{t_1} = \UTime(t_1) \cdot \maxO{z} \\

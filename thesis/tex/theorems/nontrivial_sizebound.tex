@@ -11,16 +11,16 @@
   Let $\start^\sqcap$ denote the \textbf{greatest starting value} and let $\start^\sqcup$ denote the \textbf{smallest starting value} when entering the SCC $\SCC$.
   \[ \start^\square = \maximum{\sign^\square \cdot \GSize(\prerv) \mid \exists \rv \in \SCC: \prerv \in \pre(\rv) \setminus \SCC} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Let $\scale^\sqcap_t$ denote the \textbf{upper transition scaling factor} and let $\scale^\sqcup_t$ denote the \textbf{lower transition scaling factor} of a transition $t \in \TSet$.
-  \[ \scale^\square_t = \maximum{s^\square_\rv \mid \rv \in \SCC_t} \cdot \maximum{\abs{V_\rv} \mid \rv \in \SCC_t} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
+  \[ \scale^\square_t = \maximum{s^\square_\rv \mid \rv \in \SCC_t} \cdot \maximum{\abs{\VSet_\rv} \mid \rv \in \SCC_t} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Let $\scale^\sqcap_\SCC$ denote the \textbf{upper loop scaling factor} and let $\scale^\sqcup_\SCC$ denote the \textbf{lower loop scaling factor} of a transition $\SCC \subseteq \RV$.
   \[ \scale^\square_\SCC = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{\UTime(t)} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Let $\incoming^\sqcap_\rv(v)$ denote the \textbf{greatest incoming constant} and let $\incoming^\sqcup_\rv(v)$ denote the \textbf{smallest incoming constant} influencing a variable $v \in \PVSet$ of the local size bound of the result variable $\rv \in \RV$.
-  \[ \incoming^\square_\rv(v) = \max \braced{\sign^\square \cdot \GSize(\pret, v) \mid \exists \pret: (\pret, v) \in \pre(\rv) \setminus C} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
+  \[ \incoming^\square_\rv(v) = \maximum{\sign^\square \cdot \GSize(\pret, v) \mid \exists \pret: (\pret, v) \in \pre(\rv) \setminus C} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Furthermore, let $\effect^\sqcap_\rv$ denote the \textbf{positive result variable effect} and let $\effect^\sqcup_\rv$ denote the \textbf{negative result variable effect} of a result variable $\rv \in \RV$.
   \[ \effect^\sqcap_\rv = \maxO{e^{\sqcap}_\rv} + \sum_{v \in P_\rv^\sqcap \setminus \VSet_\rv} \maxO{\incoming^\sqcap_\rv(v)} + \sum_{v \in N_\rv^\sqcap} \maxO{\incoming^\sqcup_\rv(v)} \]
   \[ \effect^\sqcup_\rv = \maxO{-e^{\sqcup}_\rv} + \sum_{v \in P_\rv^\sqcup \setminus \VSet_\rv} \maxO{\incoming^\sqcup_\rv(v)} + \sum_{v \in N_\rv^\sqcup} \maxO{\incoming^\sqcap_\rv(v)} \]
   Let $\effect^\sqcap_t$ denote the \textbf{positive transition effect} and let $\effect^\sqcup_t$ denote the \textbf{negative transition effect} of a transition $t \in \TSet$.
-  \[ \effect^\square_t = \max \braced{\effect^\square_\rv \mid \rv \in \SCC_t } \text{ with } \square \in \braced{\sqcup, \sqcap} \]
+  \[ \effect^\square_t = \maximum{\effect^\square_\rv \mid \rv \in \SCC_t } \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Let $\effect^\sqcap_\SCC$ denote the \textbf{positive loop effect} and let $\effect^\sqcup_\SCC$ denote the \textbf{negative loop effect} of an SCC $\SCC \subseteq \RV$.
   \[ \effect^\square_\SCC = \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\square_t \right) \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   With these definitions, we define $(\LSize', \USize')$ for all other result variables $\beta \in \SCC$.

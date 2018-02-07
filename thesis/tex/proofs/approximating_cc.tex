@@ -8,12 +8,12 @@ Then, we have $\sum_{t \in \TSet} \ueval{\UCost(t)}{\lstate}{\ustate} = \infty$ 
 
 Otherwise, for every state $\valuation_0 \in \Valuation$ with $\lstate \leq \valuation_0 \leq \ustate$ every evaluation $(\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_{k-1}} (\location_k, \valuation_k) \rightarrow_{t_k} (\location_{k+1}, \valuation_{k+1})$ is finite.
 Lets fix such a state $\valuation_0$.
-Since the cost complexity $\text{cc}$ is defined as the maximal cost $\sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i}$ of all those evaluations and it also holds that $\exacteval{\UCost(t)}{\valuation_0} \leq \ueval{\UCost(t)}{\lstate}{\ustate}$, it suffices to prove that for any such evaluation \[ \exacteval{\UCost(t)}{\valuation_0} \geq \sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i} \] holds.
+Since the cost complexity $\text{cc}$ is defined as the maximal cost $\sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i}$ of all those evaluations, it suffices to prove that for any such evaluation \[ \ueval{\UCost(t)}{\lstate}{\ustate} \geq \sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i} \] holds.
 Lets consider a fixed evaluation.
 \[ (\location_0, \valuation_0) \rightarrow_{t_0} (\location_1, \valuation_1) \rightarrow_{t_1} \dots \rightarrow_{t_{k_1-1}} (\location_k, \valuation_k) \rightarrow_{t_k} (\location_{k+1}, \valuation_{k+1}) \]
 Let $k_t \in \mathbb{N}$ be the number of times a transition $t \in \TSet$ occurs in this evaluation.
 Then, for each $t \in \TSet$ the evaluation must be of the form
 \[ (\location_0, \valuation_0) \rightarrow^* (\location^t_1, \valuation^t_1) (\rightarrow_t \circ \rightarrow^*)^{k_t-1} (\location^t_{k_t}, \valuation^t_{k_t}) (\rightarrow_t \circ \rightarrow^*) (\location_{k+1}, \valuation_{k+1}). \]
 Then, we have \[ \sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i} = \sum_{t \in \TSet} \sum_{1 \leq i \leq k_t} \exacteval{\cost(t)}{\valuation^t_i}. \]
-Since by definition of $\UCost$ it holds that $\exacteval{\UCost(t)}{\valuation_0} \geq \sum_{1 \leq i \leq k_t} \exacteval{\cost(t)}{\valuation^t_i}$, we have \[ \sum_{t \in \TSet} \exacteval{\UCost(t)}{\valuation_0} \geq \sum_{t \in \TSet} \sum_{1 \leq i \leq k_t} \exacteval{\cost(t)}{\valuation^t_i} = \sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i}. \]
+Since by definition of $\UCost$ it holds that $\ueval{\UCost(t)}{\lstate}{\ustate} \geq \sum_{1 \leq i \leq k_t} \exacteval{\cost(t)}{\valuation^t_i}$, we have \[ \sum_{t \in \TSet} \ueval{\UCost(t)}{\lstate}{\ustate} \geq \sum_{t \in \TSet} \sum_{1 \leq i \leq k_t} \exacteval{\cost(t)}{\valuation^t_i} = \sum_{0 \leq i \leq k} \exacteval{\cost(t_i)}{\valuation_i}. \]
 

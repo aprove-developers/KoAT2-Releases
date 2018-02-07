@@ -7,9 +7,9 @@ Thus, $\ueval{\UTime(t)}{\lstate}{\ustate} = \infty$ and therefore we have $\sum
 
 Otherwise, for every state $\valuation_0 \in \Valuation$ with $\lstate \leq \valuation_0 \leq \ustate$ every evaluation $(\location_0, \valuation_0) \rightarrow^k_T (\location, \valuation)$ is finite.
 Lets fix such a state $\valuation_0$.
-Since the time complexity $\text{rc}$ is defined as the maximal $k$ of all those evaluations and it also holds that $\exacteval{\UTime(t)}{\valuation_0} \leq \ueval{\UTime(t)}{\lstate}{\ustate}$, it suffices to prove that for any such evaluation $\sum_{t \in \TSet} \exacteval{\UTime(t)}{\valuation_0} \geq k$ holds.
+Since the time complexity $\text{rc}$ is defined as the maximal $k$ of all those evaluations, it suffices to prove that for any such evaluation $\sum_{t \in \TSet} \ueval{\UTime(t)}{\lstate}{\ustate} \geq k$ holds.
 Lets consider a fixed evaluation $(\location_0, \valuation_0) \rightarrow^k_T (\location, \valuation)$.
 Let $k_t \in \mathbb{N}$ be the number of times a transition $t \in \TSet$ occurs in this evaluation.
 Then, we have $k = \sum_{t \in \TSet} k_t$.
 Also, for each transition $t \in \TSet$ the evaluation must be of the form $(\location_0, \valuation_0) (\rightarrow^* \circ \rightarrow_t)^{k_t} (\location_t, \valuation_t) \rightarrow^* (\location, \valuation)$.
-Since by definition of $\UTime$ it holds that $\exacteval{\UTime(t)}{\valuation_0} \geq k_t$, we have $\sum_{t \in \TSet} \exacteval{\UTime(t)}{\valuation_0} \geq \sum_{t \in \TSet} k_t = k$.
+Since by definition of $\UTime$ it holds that $\ueval{\UTime(t)}{\lstate}{\ustate} \geq k_t$, we have $\sum_{t \in \TSet} \ueval{\UTime(t)}{\lstate}{\ustate} \geq \sum_{t \in \TSet} k_t = k$.
