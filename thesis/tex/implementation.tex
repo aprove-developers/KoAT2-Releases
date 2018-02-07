@@ -146,11 +146,11 @@ The other two steps try to move variables from the sets $P_2$ and $N_2$ to their
 \begin{algorithmic}[1]
   \State Input: A result variable $t = ((\location,\update,\guard,\location'),v) \in \RV$
   \State Set $s$ and $e$ to sufficiently high values
-  \State Set $P_1 := \emptyset$
-  \State Set $N_1 := \emptyset$
+  \State Set $P_1 \coloneqq \emptyset$
+  \State Set $N_1 \coloneqq \emptyset$
   \ForAll {variable sets $\VSet \in 2^\PVSet$}
-    \State Set $P_2 := \VSet$
-    \State Set $N_2 := \VSet$
+    \State Set $P_2 \coloneqq \VSet$
+    \State Set $N_2 \coloneqq \VSet$
     \If {$\guard \Rightarrow \update(v) \leq b$ is valid}
       \State \textbf{break}
     \EndIf
