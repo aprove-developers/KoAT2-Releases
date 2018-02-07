@@ -89,7 +89,9 @@ It uses the APRON library \cite{apron}.
 The APRON library is an abstract interpretation framework commonly used for the generation of invariants.
 
 The general idea of the preprocessor $p_{\text{invgen}}$ is the transformation of a program $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$ to a program $\Program' = ((\LSet, \TSet'), \location_0, \PVSet, \TVSet, \cost)$.
-If there is a transition $t = (\location, \update, \guard, \location')$ in $\TSet$, then there is also a transition $t' = (\location, \update, \guard \wedge \guard', \location')$ in $\TSet'$ such that every evaluation in the program $\Program$ is still an evaluation in the program $\Program'$.
+Let $t = (\location, \update, \guard, \location')$ be a transition in $\TSet$.
+Let $\guard' \in \ConstraintSet \AllVarsSet$ be an invariant at the transition $t$.
+If the preprocessor $p_{\text{invgen}}$ is able to find such an invariant, then it replaces the transition $t$ by the transition $t' = (\location, \update, \guard \cup \guard', \location')$ in $\TSet'$.
 
 The preprocessor $p_{\text{invgen}}$ affects the preprocessor $p_{\text{sat}}$ since an inferred invariant may make a transition guard unsatisfiable.
 
