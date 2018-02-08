@@ -14,3 +14,4 @@ docs
 
 gmon.out
 perf.data*
+*.output
