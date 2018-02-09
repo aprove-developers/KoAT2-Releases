@@ -110,4 +110,22 @@ Therefore, the performance of the new implementation is comparable to other tool
   \caption{Evaluation results}
 \end{table}
 
-\todo{Evaluate results}{}
+Table \ref{tab:evaluation} shows the results of the presented implementation compared to the results of the other implementations.
+The first column contains the name of the implementation.
+The other columns display the number of examples with an inferred asymptotic complexity smaller than the specific asymptotic complexity of the column.
+It is assumed that all implementations are sound.
+That is, no implementation yields a better asymptotic complexity than the actual asymptotic complexity of the example.
+
+The reason for the difference between KoAT \cite{koat} and the implementation of the new method is fine-tuning of the established implementation of KoAT \cite{koat}.
+For example, KoAT \cite{koat} uses a technique for the chaining of transitions if the current setup does not yield new time bounds.
+While chaining is also implemented in the presented implementation, it needs further configuration when to apply to yield the same benefits.
+Another example is the unrolling of loops which are executed only a constant number of times.
+This technique is implemented within KoAT \cite{koat} and might result in a constant time bound where otherwise no ranking function is found.
+It can also be implemented within the new method.
+Also, the choice of local size bounds and ranking functions leads to a difference in the results.
+While a transition $t = (\location, \update, \braced{y=z}, \location')$ with an update $\update$ with $\update(x)=y$ implies two upper local size bounds $\ULSB(t,x)=y$ and $\ULSB(t,x)=z$, the choice among them leads to different result variable graphs and therefore a different setup of SCCs.
+Since the size bound method is applied to whole SCCs and a single different result variable in such an SCC might lead to no inferred size bounds, the choice of a local size bound has a huge impact on the size bound method.
+The same holds for the choice of ranking functions.
+While a ranking function might imply fewer entry transitions than another ranking function, it might nevertheless result in worse time bounds.
+That is, if there does not exist a time bound for a single entry transition of the former ranking function, while the entry transitions of the latter ranking function are all bounded.
+Such considerations can still be implemented within the new method and would then lift the results of the new method to the level of the results of KoAT \cite{koat}.
