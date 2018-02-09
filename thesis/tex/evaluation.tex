@@ -45,10 +45,10 @@ In this example, the new method yields better results for all input states $\lst
 
 \subsection{Evaluating an Example Set}
 
-This section evaluates the presented implementation on an example set which is a collection of examples introduced by other tools.
-The main focus is a comparison with the method of \cite{koat}.
-Besides that, we compare the implementation to the tool CoFloCo \cite{cofloco3}.
-For both KoAT and CoFloCo the latest development version available at the time of this thesis is used.
+This section evaluates the presented implementation on an example set.
+This set is a collection of 689 examples introduced by other tools.
+We compare the presented method to the results presented in \cite{koat}.
+These results include the results of the tool KoAT itself as well as the results of the tools CoFloCo \cite{cofloco1, cofloco2}, Loopus \cite{loopus1, loopus2}, KoAT-TACAS \cite{leike2014ranking}, PUBS \cite{pubs1, pubs2} and Rank \cite{rank}.
 
 For the comparison of the results, it is necessary to project the resulting bounds in $\BoundSet(\PVSet)$ to their asymptotic complexity class.
 The following definition introduces a projection, such that for every bound $b \in \BoundSet(\PVSet)$ the resulting asymptotic complexity $\complexity(b)$ is a valid overapproximation of the actual complexity.
@@ -58,15 +58,27 @@ The following definition introduces a projection, such that for every bound $b \
   Let $\BoundSet(\VSet)$ be the set of bounds over the variables $\VSet$.
   Let $\landau$ be the landau symbol for asymptotic complexity.
   Then, $\complexity$ is a function which assigns each bound an overapproximation of its asymptotic complexity.
-  \[ \complexity(\infty) = \landau(\infty) \text{ for } \infty \in \BoundSet(\VSet) \]
-  \[ \complexity(k) = \landau(1) \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet) \] 
-  \[ \complexity(v) = \landau(n) \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \] 
-  \[ \complexity(-b) = \complexity(b) \text{ for all } b \in \BoundSet(\VSet) \] 
-  \[ \complexity(b_1 + b_2) = \landau(\complexity(b_1) + \complexity(b_2)) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
-  \[ \complexity(b_1 \cdot b_2) = \landau(\complexity(b_1) \cdot \complexity(b_2)) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \] 
-  \[ \complexity(\max(b_1, b_2)) = \landau(\max(\complexity(b_1), \complexity(b_2))) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \]
-  \[ \complexity(k^b) = k^{\complexity(b)} \text{ for all } k \in \mathbb{N} \subset \BoundSet(\VSet), b \in \BoundSet(\VSet) \]  
+  \begin{align*}
+    \complexity(\infty) &= \landau(\infty) \text{ for } \infty \in \BoundSet(\VSet) \\
+    \complexity(k) &= \landau(1) \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet) \\
+    \complexity(v) &= \landau(n) \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \\
+    \complexity(-b) &= \complexity(b) \text{ for all } b \in \BoundSet(\VSet) \\
+    \complexity(b_1 + b_2) &= \landau(f_1 + f_2) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ with } \complexity(b_1)=\landau(f_1) \text{ and } \complexity(b_2)=\landau(f_2) \\
+    \complexity(b_1 \cdot b_2) &= \landau(f_1 \cdot f_2) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ with } \complexity(b_1)=\landau(f_1) \text{ and } \complexity(b_2)=\landau(f_2) \\
+    \complexity(\max(b_1, b_2)) &=
+    \begin{cases}
+      \complexity(b_1) & \text{ if } b_1 \geq b_2 \\
+      \complexity(b_2) & \text{ otherwise }
+    \end{cases} \\
+    & \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    \complexity(k^b) &= \landau(k^f) \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet), b \in \BoundSet(\VSet) \\
+    & \text{ with } \complexity(b)=\landau(f)
+  \end{align*}
 \end{definition}
+
+The correctness of this approximation is given by definition of the Landau notation.
 
 Note that this definition projects a bound $x-x$ to a complexity $\complexity(x-x) = \landau(n)$.
 As already mentioned, the implementation is able to simplify such a bound to an equivalent bound $0$.
