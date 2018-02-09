@@ -43,6 +43,7 @@
 \lstset{language=C++}
 
 \usepackage{todonotes}
+\usepackage[final]{pdfpages}
 
 \pgfplotsset{
   width=200pt,
