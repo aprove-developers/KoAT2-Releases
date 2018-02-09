@@ -47,7 +47,7 @@
   \scale^\sqcap_{t_1} &= \maximum{s^\sqcap_\rv \mid \rv \in \SCC_{t_1}} \cdot \maximum{\abs{\VSet_\rv} \mid \rv \in \SCC_{t_1}} \\
   &= \maximum{s^\sqcap_{(t_1,y)}, s^\sqcap_{(t_1,z)}} \cdot \maximum{\abs{\VSet_{(t_1,y)}}, \abs{\VSet_{(t_1,z)}}} \\
   &= \maximum{1,1} \cdot \maximum{2,1} = 2 \\
-  \scale^\sqcap_\SCC &= \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\UTime(t)} = (\scale^\sqcap_{t_1})^{\UTime(t_1)} = 2^{\UTime(t_1)} \\
+  \scale^\sqcap_\SCC &= \prod_{t \in \TSet_\SCC} \left( \scale^\sqcap_t \right) ^{\UTime(t)} = \left( \scale^\sqcap_{t_1} \right) ^{\UTime(t_1)} = 2^{\UTime(t_1)} \\
   \effect^\sqcap_{(t_1,y)} &= \maxO{e^{\sqcap}_{(t_1,y)}} + \sum_{v \in P_{(t_1,y)}^\sqcap \setminus \VSet_{(t_1,y)}} \maxO{\incoming^\sqcap_{(t_1,y)}(v)} + \sum_{v \in N_{(t_1,y)}^\sqcap} \maxO{\incoming^\sqcup_{(t_1,y)}(v)} \\
   &= \maxO{0} + 0 + 0 = 0 \\
   \effect^\sqcap_{(t_1,z)} &= \maxO{e^{\sqcap}_{(t_1,z)}} + \sum_{v \in P_{(t_1,z)}^\sqcap \setminus \VSet_{(t_1,z)}} \maxO{\incoming^\sqcap_{(t_1,z)}(v)} + \sum_{v \in N_{(t_1,z)}^\sqcap} \maxO{\incoming^\sqcup_{(t_1,z)}(v)} \\

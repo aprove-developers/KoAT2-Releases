@@ -13,7 +13,7 @@
   Let $\scale^\sqcap_t$ denote the \textbf{upper transition scaling factor} and let $\scale^\sqcup_t$ denote the \textbf{lower transition scaling factor} of a transition $t \in \TSet$.
   \[ \scale^\square_t = \maximum{s^\square_\rv \mid \rv \in \SCC_t} \cdot \maximum{\abs{\VSet_\rv} \mid \rv \in \SCC_t} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Let $\scale^\sqcap_\SCC$ denote the \textbf{upper loop scaling factor} and let $\scale^\sqcup_\SCC$ denote the \textbf{lower loop scaling factor} of a transition $\SCC \subseteq \RV$.
-  \[ \scale^\square_\SCC = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{\UTime(t)} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
+  \[ \scale^\square_\SCC = \prod_{t \in \TSet_\SCC} \left( \scale^\square_t \right) ^{\UTime(t)} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Let $\incoming^\sqcap_\rv(v)$ denote the \textbf{greatest incoming constant} and let $\incoming^\sqcup_\rv(v)$ denote the \textbf{smallest incoming constant} influencing a variable $v \in \PVSet$ of the local size bound of the result variable $\rv \in \RV$.
   \[ \incoming^\square_\rv(v) = \maximum{\sign^\square \cdot \GSize(\pret, v) \mid \exists \pret: (\pret, v) \in \pre(\rv) \setminus C} \text{ with } \square \in \braced{\sqcup, \sqcap} \]
   Furthermore, let $\effect^\sqcap_\rv$ denote the \textbf{positive result variable effect} and let $\effect^\sqcup_\rv$ denote the \textbf{negative result variable effect} of a result variable $\rv \in \RV$.
