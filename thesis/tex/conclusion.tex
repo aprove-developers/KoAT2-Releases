@@ -32,25 +32,28 @@ The described improvements and extensions of the presented method and the result
 
 While the presented method already produces acceptable results, there is still much room for further improvements.
 
-One issue is the determination of the asymptotic complexity of the resulting non-monotonic bound.
-The current implementation does not take into account, that a polynomial may only have a negative effect on a time bound.
-Therefore, this polynomial may lead to a worse asymptotic complexity than the time bound actually is in.
-The publication \cite{albert2009asymptotic} presents an approach to determine the asymptotic complexity of monotonic bounds which contain minimum and maximum operators.
+One issue is the computation of the asymptotic complexity of the resulting non-monotonic bound.
+Assume that the new method inferred a time bound $x-y^2$.
+The longest evaluation might imply that $y$ is positive at the start of the program.
+Then, the asymptotic complexity of the program is linear instead of quadratic.
+But since this information is not captured, the complexity of the program is determined as quadratic.
+Further work might focus on acquiring more information on the value of the variables at the start of the program to infer a better approximation of the asymptotic complexity.
+Also, the publication \cite{albert2009asymptotic} presents an approach to determine the asymptotic complexity of monotonic bounds which contain minimum and maximum operators.
 Further work might extend this method to non-monotonic bounds, such that a better approximation of the asymptotic complexity of non-monotonic bounds might be found.
 Besides that, an improvement of the used simplification algorithm of the presented implementation might also lead to a better approximation of the asymptotic complexity.
 
 Another issue regards some common preprocessors.
-While the cutting of unsatisfiable transitions and unreachable locations is beneficial for the performance and the results in all cases, other preprocessors need further configuration to be beneficial.
+While the cutting of unsatisfiable transitions and unreachable locations is both beneficial for the performance and the results in every case, other preprocessors need further configuration to be beneficial.
 
-The implementation of the invariant generation produces all invariants of a specific domain.
-While the analysis of the modified program certainly yields better or equal approximations, the performance may be heavily affected.
-Furthermore, a different choice for the domain might lead to invariants resulting in a better approximation.
-To improve the ratio between the effect on the result and the loss in performance, it might be interesting to consider an approach which only searches for specific invariants in cases where they are needed.
+The current implementation of the invariant generation produces invariants of a specific domain.
+While an analysis of the program with added invariants always yields better or equal approximations, the performance might be heavily affected.
+Furthermore, a different choice for the domain might result in invariants leading to a better approximation.
+Also, to improve the ratio between the effect on the result and the loss in performance, it might be interesting to consider an approach which only searches for specific invariants in cases where they are needed.
 
 Another preprocessor which needs further configuration regards the chaining of transitions.
 In some cases, a transition might be chained with all of its pre-transitions.
 This way, new transitions leading from the starts of the pre-transitions to the target of the transition are created to replace the transition.
-While chaining can lead to better approximations, in many cases it also leads to more transitions and though a loss in performance.
+While chaining can lead to better approximations, in many cases it also leads to more transitions and therefore a loss in performance.
 Further work might focus on a balanced configuration of chaining.
 
 KoAT \cite{koat} implements a technique which unrolls single evaluation steps in a loop into own transitions in cases where no ranking function is found.
@@ -58,11 +61,11 @@ In general, this technique may not terminate since an infinite loop leads to an 
 Nevertheless, an unrolling of a finite number of steps can lead to the computation of an otherwise not discovered ranking function.
 Therefore, the application of this technique in the implementation might be beneficial.
 
-Besides the possible implementation of these additional techniques, the actual method opens new possibilities.
+Besides the possible implementation of these additional techniques, the new method opens new possibilities.
 Currently, the suitable ranking functions are chosen by the number of non-increasing transitions.
 This is a heuristic to reduce the number of entry transitions and therefore to improve the quality of the approximations.
 Further work might focus on improving this heuristic.
-Furthermore, this method and \cite{koat} concentrate on the computation of a single local size bound for each result variable.
+Furthermore, this method concentrates on the computation of a single local size bound for each result variable.
 A heuristic is applied to reduce the constants and the number of variables, but the choice of local size bounds with the same number of variables is arbitrary.
 This affects the SCCs of the result variable graph and therefore the method for the computation of size bounds.
 Further work might want to study the effect of the choice of local size bounds on the resulting size bounds.
