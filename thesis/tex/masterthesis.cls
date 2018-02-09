@@ -1,7 +1,7 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{masterthesis}
 
-\LoadClass[a4paper,11pt]{article}
+\LoadClass[a4paper,11pt]{book}
 
 %%%%% packages
 \usepackage{geometry}

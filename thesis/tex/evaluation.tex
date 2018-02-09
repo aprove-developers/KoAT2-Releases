@@ -1,4 +1,4 @@
-\section{Evaluation}
+\chapter{Evaluation}
 
 The last chapter presented an implementation of the method to infer time, size and cost bounds.
 This chapter evaluates this implementation against other methods.
@@ -8,7 +8,7 @@ First, some selected examples are presented that show the benefit of the present
 Second, the implementation is evaluated on an example set of programs.
 This set of programs is defined and used by comparable tools with the same objective of inferring time bounds for integer programs.
 
-\subsection{Evaluating Selected Examples}
+\section{Evaluating Selected Examples}
 
 This section presents two selected examples to compare the results of the new method with the results of the method of \cite{koat}.
 This selection is chosen to show the benefits of the new method and is by no means representative.
@@ -43,7 +43,7 @@ The functions are plotted with the same assumptions as the previous example.
 The left graph plots the cost complexity $1 + \maxO{x}$ of the new method and the right graph plots the cost complexity $1 + \abs{x} \cdot \abs{y}$ of the method of \cite{koat}.
 In this example, the new method yields better results for all input states $\lstate = \ustate$.
 
-\subsection{Evaluating an Example Set}
+\section{Evaluating an Example Set}
 
 This section evaluates the presented implementation on an example set.
 This set is a collection of 689 examples introduced by other tools.

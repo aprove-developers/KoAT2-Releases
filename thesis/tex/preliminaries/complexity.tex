@@ -1,4 +1,4 @@
-\section{Complexity}
+\chapter{Complexity}
 
 This section defines the measures which should be computed with the analysis.
 These are approximations of time, size and cost complexity.
@@ -10,7 +10,7 @@ While the cost of a transition is not considered in the time complexity, the cos
 It describes the cost of the sequence of transitions taken in a worst-case run.
 Time complexity can be seen as a special case of cost complexity, where the cost $c(t)$ of every transition $t \in \TSet$ equals $1$.
 
-\subsection{Time Complexity}
+\section{Time Complexity}
 
 We define the time complexity of a program $\Program$ as the highest possible number of steps in an arbitrary run with an initial state $\valuation_0 \in \Valuation$ that ranges between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.
 
@@ -63,7 +63,7 @@ Although we changed the definitions of time complexity and time bounds, the know
 
 Therefore, it is sufficient to determine an upper time bound for a program and build the sum over all transitions $\TSet$ of the program, to approximate the time complexity. 
 
-\subsection{Size Complexity}
+\section{Size Complexity}
 
 For each variable at a particular transition, a size bound defines an interval in which the value ranges in a worst-case evaluation.
 This interval is defined by a lower size bound and an upper size bound.
@@ -110,7 +110,7 @@ For a result variable $\rv \in \RV$, we denote with $f(\rv)$ the trivial applica
 We use the abbreviation $f(t, v)$ for a transition $t \in \TSet$ and a variable $v \in \VSet$ to denote the application $f((t,v)) \in \BoundSet(\PVSet)$ with $(t,v) \in \RV$.
 If the function $f$ is only applied to a transition $t \in \TSet$, this denotes the partial application of $f$ to $t$ resulting in $f(t): \VSet \rightarrow \BoundSet(\PVSet)$.
 
-\subsection{Cost Complexity}
+\section{Cost Complexity}
 
 Additionally to time and size complexity, we consider cost complexity.
 The cost complexity of a program is defined as the highest sum of the costs of a transition sequence of an arbitrary evaluation starting in an input state $\valuation_0 \in \Valuation$ that ranges between a lower and an upper bound $\lstate \leq \valuation_0 \leq \ustate$.

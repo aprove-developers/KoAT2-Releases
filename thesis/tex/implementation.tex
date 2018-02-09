@@ -1,4 +1,4 @@
-\section{Implementation}
+\chapter{Implementation}
 
 We developed a prototype which implements the search for time, size and cost bounds.
 This implementation focuses on high modularity and maintainability.
@@ -6,7 +6,7 @@ It uses optimized procedures only in performance relevant parts of the program.
 The tool is implemented with the ML-derived language OCaml.
 It uses the SMT-Solver Z3 \cite{z3}, but provides an abstraction layer, such that other SMT-Solvers can be integrated.
 
-\subsection{Overall Algorithm}
+\section{Overall Algorithm}
 
 The last three chapters presented the theorems for the computation of time, size and cost bounds.
 For the computation of a time bound of a whole program, it is necessary to define an algorithm, which consecutively uses the time and size bound theorems.
@@ -49,7 +49,7 @@ After this pre-computation, the \emph{SizeBounds} algorithm and the \emph{TimeBo
 When no more time bounds can be inferred, an initial cost bound is created from the inferred time bounds.
 Then, the \emph{CostBounds} algorithm is executed for each transition to find a possibly better cost bound.
 
-\subsection{Preprocessors}
+\section{Preprocessors}
 
 The implementation uses several common preprocessors.
 A preprocessor is a function $p$ which maps a program to an equivalent program.
@@ -62,7 +62,7 @@ The second execution strategy is a work-list algorithm, which executes every pre
 
 We define three common preprocessors $p_{\text{reachable}}$, $p_{\text{sat}}$ and $p_{\text{invgen}}$.
 
-\subsubsection{Removal of Unreachable Locations}
+\subsection{Removal of Unreachable Locations}
 
 The preprocessor $p_{\text{reachable}}$ removes all locations, which are unreachable from the start location.
 To achieve that, the preprocessor follows the transitions of the graph and marks each visited location, adding them to a set $\LSet'$.
@@ -71,7 +71,7 @@ The result of the preprocessor is a program $((\LSet', \TSet'), \location_0, \PV
 
 The preprocessor $p_{\text{reachable}}$ does not affect any defined preprocessor.
 
-\subsubsection{Removal of Unsatisfiable Transitions}
+\subsection{Removal of Unsatisfiable Transitions}
 
 The preprocessor $p_{\text{sat}}$ removes transitions which conditions are unsatisfiable.
 The result of the preprocessor is a program $((\LSet, \TSet'), \location_0, \PVSet, \TVSet, \cost)$, where $\TSet' = \braced{(\location,\update,\guard,\location') \in \TSet \mid \exists \valuation \in \Valuation: \exacteval{\guard}{\valuation} = \emph{true}}$ is the set of all satisfiable transitions.
@@ -81,7 +81,7 @@ The preprocessor $p_{\text{reachable}}$ is affected in a scenario $\Program = ((
 In this example, the transition $(\location_0,\update,\emph{false},\location_1)$ will be removed by $p_{\text{sat}}$.
 This leaves the location $\location_1$ unreachable.
 
-\subsubsection{Invariant Generation}
+\subsection{Invariant Generation}
 
 The preprocessor $p_{\text{invgen}}$ generates invariants and adds them to the designated transitions.
 This way, it makes implicit information explicit and available for local analyses.
@@ -95,7 +95,7 @@ If the preprocessor $p_{\text{invgen}}$ is able to find such an invariant, then 
 
 The preprocessor $p_{\text{invgen}}$ affects the preprocessor $p_{\text{sat}}$ since an inferred invariant may make a transition guard unsatisfiable.
 
-\subsection{Initial Time and Size Bounds}
+\section{Initial Time and Size Bounds}
 
 For a program $\Program = ((\LSet, \TSet), \location_0, \PVSet, \TVSet, \cost)$, the algorithm needs an initial time and size bound prior to the execution.
 Obviously a trivial time bound $\UTime$ with $\UTime(t) = \infty$ for all transitions $t \in \TSet$ is sound for all programs $\Program$.
@@ -105,7 +105,7 @@ For time bounds, it is possible to infer a better time bound prior to the execut
 For all transitions $t \in \TSet$ which are not part of an SCC, we know, that they can only occur once in every evaluation.
 Therefore, it is sound to use the initial time bound $\UTime$ with $\UTime(t) = 1$ for all transitions which are not contained in an SCC of the program $\Program$ and $\UTime(t) = \infty$ for all transitions which are contained in an SCC of the program $\Program$.
 
-\subsection{Local Size Bound Algorithm}
+\section{Local Size Bound Algorithm}
 
 For the computation of size bounds, we presented a definition of local size bounds in chapter six.
 The implementation of an algorithm for the computation of local size bounds needs to yield good local size bounds in a reasonable amount of time.
