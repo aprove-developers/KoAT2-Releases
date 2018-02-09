@@ -14,7 +14,7 @@ For any transition $t \in \TSet$, let $k_t \in \mathbb{N}$ be the number of time
 Then, we define an upper bound $d^\sqcap \in \BoundSet(\PVSet)$ and a lower bound $d^\sqcup \in \BoundSet(\PVSet)$ for the greatest and the smallest value of any variable.
 We define the lower bound $d^\sqcup$ to denote the \emph{inverted} smallest value, such that $d^\sqcup$ is positive.
 For $\square \in \braced{\sqcup, \sqcap}$ we define
-\[ d^\square = \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} \cdot \left( \maxO{\start^\square} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \effect^\square_t \right) \right). \]
+\[ d^\square = \prod_{t \in \TSet_\SCC} \left( \scale^\square_t \right)^{k_t} \cdot \left( \maxO{\start^\square} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \effect^\square_t \right) \right). \]
 This enables us to define the hypothesis.
 \begin{equation} \label{eq:sizebound_hypothesis}
   \ueval{d^\sqcap}{\lstate}{\ustate} \geq \maxO{\actstate(v)} \wedge \ueval{d^\sqcup}{\lstate}{\ustate} \geq \maxO{-\actstate(v)}
@@ -26,17 +26,17 @@ Furthermore, the transition effects are always positive (i.e. $\ueval{\effect^\s
 First, we can show that $\ueval{{\mathcal{S}^\sqcap}'(\actt,v)}{\lstate}{\ustate} \geq \ueval{d^\sqcap}{\lstate}{\ustate}$ holds.
 \begin{align*}
   \ueval{{\mathcal{S}^\sqcap}'(\actt,v)}{\lstate}{\ustate} = &
-   1 \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{\ueval{\UTime(t)}{\lstate}{\ustate}} \cdot \left( \ueval{\maxO{\start^\sqcap}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( \ueval{\UTime(t)}{\lstate}{\ustate} \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \\
-   \geq & 1 \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcap}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \\
+   1 \cdot \prod_{t \in \TSet_\SCC} \left( \scale^\sqcap_t \right) ^{\ueval{\UTime(t)}{\lstate}{\ustate}} \cdot \left( \ueval{\maxO{\start^\sqcap}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( \ueval{\UTime(t)}{\lstate}{\ustate} \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \\
+   \geq & 1 \cdot \prod_{t \in \TSet_\SCC} \left( \scale^\sqcap_t \right)^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcap}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \\
    = & \ueval{d^\sqcap}{\lstate}{\ustate}
 \end{align*}
 Second, we can show that $\leval{{\mathcal{S}^\sqcup}'(\actt,v)}{\lstate}{\ustate} \leq -\ueval{d^\sqcup}{\lstate}{\ustate}$ holds.
 \begin{align*}
   \leval{{\mathcal{S}^\sqcup}'(\actt,v)}{\lstate}{\ustate} = &
-   \leval{(-1) \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{\UTime(t)} \cdot \left( \maxO{\start^\sqcup} + \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\sqcup_t \right) \right)}{\lstate}{\ustate} \\
-   = & (-1) \cdot \ueval{\prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{\UTime(t)} \cdot \left( \maxO{\start^\sqcup} + \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\sqcup_t \right) \right)}{\lstate}{\ustate} \\
-   = & (-1) \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{\ueval{\UTime(t)}{\lstate}{\ustate}} \cdot \left( \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( \ueval{\UTime(t)}{\lstate}{\ustate} \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \\
-   \leq & (-1) \cdot \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \\
+   \leval{(-1) \cdot \prod_{t \in \TSet_\SCC} \left( \scale^\sqcup_t \right) ^{\UTime(t)} \cdot \left( \maxO{\start^\sqcup} + \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\sqcup_t \right) \right)}{\lstate}{\ustate} \\
+   = & (-1) \cdot \ueval{\prod_{t \in \TSet_\SCC} \left( \scale^\sqcup_t \right) ^{\UTime(t)} \cdot \left( \maxO{\start^\sqcup} + \sum_{t \in \TSet_\SCC} \left( \UTime(t) \cdot \effect^\sqcup_t \right) \right)}{\lstate}{\ustate} \\
+   = & (-1) \cdot \prod_{t \in \TSet_\SCC} \left( \scale^\sqcup_t \right) ^{\ueval{\UTime(t)}{\lstate}{\ustate}} \cdot \left( \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( \ueval{\UTime(t)}{\lstate}{\ustate} \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \\
+   \leq & (-1) \cdot \prod_{t \in \TSet_\SCC} \left( \scale^\sqcup_t \right) ^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \\
    = & -\ueval{d^\sqcup}{\lstate}{\ustate}
 \end{align*}   
 
@@ -64,7 +64,7 @@ If $(\pret, v) \in \SCC$, then the induction hypothesis implies that $\ueval{d^\
 Furthermore, we can define the following bound for the value of the variables computed up to the transition $\actt$.
 \begin{equation} \label{eq:induction_consequence}
   \begin{split}
-  \dpre{\square} = (\scale^\square_\actt)^{k_\actt - 1} &\cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\square_t)^{k_t} \cdot \\
+  \dpre{\square} = \left( \scale^\square_\actt \right) ^{k_\actt - 1} &\cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( \scale^\square_t \right) ^{k_t} \cdot \\
   & \left( \maxO{\start^\square} + \left( k_\actt - 1 \right) \cdot \effect^\square_\actt + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \effect^\square_t \right) \right)
   \end{split}
 \end{equation}
@@ -75,18 +75,18 @@ We now combine these bounds to prove that the induction hypothesis indeed holds.
 Note that the transition scaling factor of the transition $\actt$ can be extracted from the loop scaling factor.
 \begin{equation} \label{eq:scaling_factor_reduction}
   \begin{split}
-  \prod_{t \in \TSet_\SCC} (\scale^\square_t)^{k_t} &= (\scale^\square_\actt)^{k_\actt} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\square_t)^{k_t} \\
-  &= \scale^\square_\actt \cdot (\scale^\square_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\square_t)^{k_t}
+  \prod_{t \in \TSet_\SCC} \left( \scale^\square_t \right) ^{k_t} &= \left( \scale^\square_\actt \right) ^{k_\actt} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( \scale^\square_t \right)^{k_t} \\
+  &= \scale^\square_\actt \cdot \left( \scale^\square_\actt \right) ^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( \scale^\square_t \right) ^{k_t}
   \end{split}
 \end{equation}
 Also the transition effect of the transition $\actt$ can be extracted from the loop effect.
 \begin{equation} \label{eq:input_reduction}
   \begin{split}
-  \sum_{t \in \TSet_\SCC} (k_t \cdot \effect^\square_t)
-  & = k_\actt \cdot \effect^\square_\actt + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} (k_t \cdot \effect^\square_t) \\
+  \sum_{t \in \TSet_\SCC} \left( k_t \cdot \effect^\square_t \right)
+  & = k_\actt \cdot \effect^\square_\actt + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \effect^\square_t \right) \\
   & = \effect^\square_\actt
-    + (k_\actt - 1) \cdot \effect^\square_\actt
-    + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} (k_t \cdot \effect^\square_t)
+    + \left( k_\actt - 1 \right) \cdot \effect^\square_\actt
+    + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left(k_t \cdot \effect^\square_t \right)
   \end{split}
 \end{equation}
 Note that by definition of the \textbf{incoming constants}, for all variables $v \in P^\square_\actrv \setminus \VSet_\actrv$ we have $\ueval{\incoming^\sqcap_\actrv(v)}{\lstate}{\ustate} \geq \ueval{\USize(\pret, v)}{\lstate}{\ustate}$.
@@ -130,12 +130,12 @@ Thus, for the upper case we have
 {\allowdisplaybreaks
 \begin{IEEEeqnarray*}{rClr}
   & & \ueval{d^\sqcap}{\lstate}{\ustate} \\
-  & = & \prod_{t \in \TSet_\SCC} (\scale^\sqcap_t)^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcap}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \\
-  & = & \left( \scale^\sqcap_\actt \cdot (\scale^\sqcap_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcap_t)^{k_t} \right) \cdot \\
+  & = & \prod_{t \in \TSet_\SCC} \left( \scale^\sqcap_t \right) ^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcap}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \right) \\
+  & = & \left( \scale^\sqcap_\actt \cdot \left( \scale^\sqcap_\actt \right) ^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( \scale^\sqcap_t \right) ^{k_t} \right) \cdot \\
     && \left( \begin{array}{ll} \ueval{\maxO{\start^\sqcap}}{\lstate}{\ustate} + \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} + \\
     \left( k_\actt - 1 \right) \cdot \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \ueval{\effect^\sqcap_t}{\lstate}{\ustate} \right) \end{array} \right)
     & (\ref{eq:scaling_factor_reduction}), (\ref{eq:input_reduction}) \\
-  & = & \scale^\sqcap_\actt \cdot \left( \ueval{\dpre{\sqcap}}{\lstate}{\ustate} + \left( (\scale^\sqcap_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcap_t)^{k_t} \right) \cdot \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} \right) & (\ref{eq:induction_consequence}) \\
+  & = & \scale^\sqcap_\actt \cdot \left( \ueval{\dpre{\sqcap}}{\lstate}{\ustate} + \left( \left( \scale^\sqcap_\actt \right) ^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( \scale^\sqcap_t \right) ^{k_t} \right) \cdot \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} \right) & (\ref{eq:induction_consequence}) \\
   & \geq & \scale^\sqcap_\actt \cdot \left( \ueval{\dpre{\sqcap}}{\lstate}{\ustate} + \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} \right) & \ueval{\effect^\sqcap_\actt}{\lstate}{\ustate} \geq 0 \\
   & = & \scale^\sqcap_\actt \cdot \left( \ueval{\dpre{\sqcap}}{\lstate}{\ustate} + \maximum{\ueval{\effect^\sqcap_\gamma}{\lstate}{\ustate} \mid \gamma \in \SCC_\actt } \right) & \text{by definition} \\
   & \geq & \scale^\sqcap_\actt \cdot \left( \ueval{\dpre{\sqcap}}{\lstate}{\ustate} + \ueval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right) & \text{for } \actrv \in \SCC_\actt \\
@@ -149,8 +149,8 @@ Thus, for the upper case we have
   & \geq & s^\sqcap_\actrv \cdot \left( \sum_{v \in \VSet_\actrv} \maxO{\prestate(v)} + \ueval{\effect^\sqcap_\actrv}{\lstate}{\ustate} \right) \\
   & \geq & s^\sqcap_\actrv \cdot \left( \maxO{e^\sqcap_\actrv} + \sum_{v \in P_\actrv^\sqcap} \maxO{\prestate(v)} + \sum_{v \in N_\actrv^\sqcap} \maxO{-\prestate(v)} \right)
     & (\ref{eq:input_rv_reduction_upper}) \\
-  & \geq & s^\sqcap_\actrv \cdot (e^\sqcap_\actrv + \sum_{v \in P_{\actrv,1}^\sqcap} \prestate(v) - \sum_{v \in N_{\actrv,1}^\sqcap} \prestate(v) \\
-    && + \sum_{v \in P_{\actrv,2}^\sqcap} \maxO{\prestate(v)} + \sum_{v \in N_{\actrv,2}^\sqcap} \maxO{-\prestate(v)} ) \\
+  & \geq & s^\sqcap_\actrv \cdot \left( e^\sqcap_\actrv + \sum_{v \in P_{\actrv,1}^\sqcap} \prestate(v) - \sum_{v \in N_{\actrv,1}^\sqcap} \prestate(v) \right. \\
+    && \left. + \sum_{v \in P_{\actrv,2}^\sqcap} \maxO{\prestate(v)} + \sum_{v \in N_{\actrv,2}^\sqcap} \maxO{-\prestate(v)} \right) \\
   & = & \exacteval{\mathcal{S}^\sqcap_l(\actrv)}{\prestate} \\
   & \geq & \actstate(v)
 \end{IEEEeqnarray*}}
@@ -159,12 +159,12 @@ The proof for the lower case is analog.
 {\allowdisplaybreaks
 \begin{IEEEeqnarray*}{rClr}
   & & \ueval{d^\sqcup}{\lstate}{\ustate} \\
-  & = & \prod_{t \in \TSet_\SCC} (\scale^\sqcup_t)^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \\
-  & = & \left( \scale^\sqcup_\actt \cdot (\scale^\sqcup_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcup_t)^{k_t} \right) \cdot \\
+  & = & \prod_{t \in \TSet_\SCC} \left( \scale^\sqcup_t \right) ^{k_t} \cdot \left( \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \right) \\
+  & = & \left( \scale^\sqcup_\actt \cdot \left( \scale^\sqcup_\actt \right) ^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( \scale^\sqcup_t \right) ^{k_t} \right) \cdot \\
     && \left( \begin{array}{ll} \ueval{\maxO{\start^\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} + \\
     \left( k_\actt - 1 \right) \cdot \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} + \sum_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( k_t \cdot \ueval{\effect^\sqcup_t}{\lstate}{\ustate} \right) \end{array} \right)
     & (\ref{eq:scaling_factor_reduction}), (\ref{eq:input_reduction}) \\
-  & = & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \left( (\scale^\sqcup_\actt)^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} (\scale^\sqcup_t)^{k_t} \right) \cdot \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \right) & (\ref{eq:induction_consequence}) \\
+  & = & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \left( \left( \scale^\sqcup_\actt \right) ^{k_\actt - 1} \cdot \prod_{t \in \TSet_\SCC \setminus \braced{\actt}} \left( \scale^\sqcup_t \right) ^{k_t} \right) \cdot \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \right) & (\ref{eq:induction_consequence}) \\
   & \geq & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \right) & \ueval{\effect^\sqcup_\actt}{\lstate}{\ustate} \geq 0 \\
   & = & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \maximum{\ueval{\effect^\sqcup_\gamma}{\lstate}{\ustate} \mid \gamma \in \SCC_\actt } \right) & \text{by definition} \\
   & \geq & \scale^\sqcup_\actt \cdot \left( \ueval{\dpre{\sqcup}}{\lstate}{\ustate} + \ueval{\effect^\sqcup_\actrv}{\lstate}{\ustate} \right) & \text{for } \actrv \in \SCC_\actt \\
@@ -178,10 +178,10 @@ The proof for the lower case is analog.
   & \geq & s^\sqcup_\actrv \cdot \left( \sum_{v \in \VSet_\actrv} \maxO{-\prestate(v)} + \ueval{\effect^\sqcup_\actrv}{\lstate}{\ustate} \right) \\
   & \geq & s^\sqcup_\actrv \cdot \left( \maxO{-e^\sqcup_\actrv} + \sum_{v \in P_\actrv^\sqcup} \maxO{-\prestate(v)} + \sum_{v \in N_\actrv^\sqcup} \maxO{\prestate(v)} \right)
     & (\ref{eq:input_rv_reduction_lower}) \\
-  & \geq & s^\sqcup_\actrv \cdot (-e^\sqcup_\actrv + \sum_{v \in P_{\actrv,1}^\sqcup} -\prestate(v) + \sum_{v \in N_{\actrv,1}^\sqcup} \prestate(v) \\
-    && + \sum_{v \in P_{\actrv,2}^\sqcup} \maxO{-\prestate(v)} + \sum_{v \in N_{\actrv,2}^\sqcup} \maxO{\prestate(v)} ) \\
-  & = & (-1) \cdot s^\sqcup_\actrv \cdot (e^\sqcup_\actrv + \sum_{v \in P_{\actrv,1}^\sqcup} \prestate(v) - \sum_{v \in N_{\actrv,1}^\sqcup} \prestate(v) \\
-    && - \sum_{v \in P_{\actrv,2}^\sqcup} \maxO{-\prestate(v)} - \sum_{v \in N_{\actrv,2}^\sqcup} \maxO{\prestate(v)} ) \\
+  & \geq & s^\sqcup_\actrv \cdot \left( -e^\sqcup_\actrv + \sum_{v \in P_{\actrv,1}^\sqcup} -\prestate(v) + \sum_{v \in N_{\actrv,1}^\sqcup} \prestate(v) \right. \\
+    && \left. + \sum_{v \in P_{\actrv,2}^\sqcup} \maxO{-\prestate(v)} + \sum_{v \in N_{\actrv,2}^\sqcup} \maxO{\prestate(v)} \right) \\
+  & = & (-1) \cdot s^\sqcup_\actrv \cdot \left( e^\sqcup_\actrv + \sum_{v \in P_{\actrv,1}^\sqcup} \prestate(v) - \sum_{v \in N_{\actrv,1}^\sqcup} \prestate(v) \right. \\
+    && \left. - \sum_{v \in P_{\actrv,2}^\sqcup} \maxO{-\prestate(v)} - \sum_{v \in N_{\actrv,2}^\sqcup} \maxO{\prestate(v)} \right) \\
   & = & -\exacteval{\mathcal{S}^\sqcup_l(\actrv)}{\prestate} \\
   & \geq & -\actstate(v)
 \end{IEEEeqnarray*}}
