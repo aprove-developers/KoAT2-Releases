@@ -1,24 +1,19 @@
-\begin{figure}
-  \centering
+\begin{center}
   \begin{tikzpicture}[program]
     \node (0) {$\location_0$};
     \node (1) [right of=0] {$\location_1$};
     \node (2) [right of=1] {$\location_2$};
+
     \path[transitions]
-    (0) edge[highlight on=<2-3>] node[above] {$t_0$} node[below] {\textcolor<4>{blue}{$x \coloneqq x$}\\\textcolor<5>{blue}{$y \coloneqq y$}} node[below=0.8cm] {\nodeshow{4-}{\textcolor<4>{blue}{$\USize(t_0,x) = x$}}\\\nodeshow{5-}{\textcolor<5>{blue}{$\LSize(t_0,y) = y$}}} (1)
-    (1) edge[highlight on=<2>, highlight on=<6>, loop above] node[above left] {$t_1$} node[above tlabel] {\textcolor<7>{blue}{$if(x<10)$}\\\textcolor<7>{blue}{$x \coloneqq x+1$}\\\textcolor<8>{blue}{$y \coloneqq y$}} node[above left=-0.2cm and 0.5cm] {\nodeshow{7-}{\textcolor<7>{blue}{$\USize(t_1,x) = 10$}}\\\nodeshow{8-}{\textcolor<8>{blue}{$\LSize(t_1,y) = y$}}} (1)
+    (0) edge[highlight on=<3-4>] node[highlight on=<13-14>, above] {$t_0$} node[below] {\textcolor<5>{blue}{$x \coloneqq x$}\\\textcolor<7>{blue}{$y \coloneqq y$}} node[below=0.8cm] {\nodeshow{5-}{\textcolor<5-6>{blue}{$\USize(t_0,x) = x$}}\\\nodeshow{7-}{\textcolor<7-8>{blue}{$\LSize(t_0,y) = y$}}} (1)
+    (1) edge[highlight on=<3>, highlight on=<9>, loop above] node[highlight on=<15-16>, above left] {$t_1$} node[above tlabel] {\textcolor<9>{blue}{$if(x<10)$}\\\textcolor<9>{blue}{$x \coloneqq x+1$}\\\textcolor<11>{blue}{$y \coloneqq y$}} node[above left=-0.2cm and 0.5cm] {\nodeshow{9-}{\textcolor<9-10>{blue}{$\USize(t_1,x) = 10$}}\\\nodeshow{11-}{\textcolor<11-12>{blue}{$\LSize(t_1,y) = y$}}} (1)
     (1) edge node[above] {$t_2$} node[below] {$if(x \geq 10)$\\$x \coloneqq x$\\$y \coloneqq y$} (2)
     (2) edge[loop above] node[above left] {$t_3$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (2)
     ;
   \end{tikzpicture}
-\end{figure}
-\onslide<10->{
-  \begin{align*}
-    \UTime(t_3) &= \UTime(t_0) \cdot (\textcolor{blue}{\USize(t_0,x)}-\textcolor{blue}{\LSize(t_0,y)}) \\
-    &+ \UTime(t_1) \cdot (\textcolor{blue}{\USize(t_1,x)}-\textcolor{blue}{\LSize(t_1,y)}) \\
-    \onslide<11->{
-      &= \UTime(t_0) \cdot (\textcolor{blue}{x}-\textcolor{blue}{y}) \\
-      &+ \UTime(t_1) \cdot (\textcolor{blue}{10}-\textcolor{blue}{y})
-    }
-  \end{align*}
-}
+\end{center}
+
+\begin{align*}
+  \UTime(t_3) &= \alt<14->{\textcolor<14>{blue}{1}}{\textcolor<13>{blue}{\UTime(t_0)}} \cdot \max (0,\alt<-5>{\textcolor<2,5>{blue}{\USize(t_0,x)}}{\textcolor<6>{blue}{x}}-\alt<-7>{\textcolor<2,7>{blue}{\LSize(t_0,y)}}{\textcolor<8>{blue}{y}}) \\
+  &+ \alt<16->{\textcolor<16>{blue}{\max(0,10-x)}}{\textcolor<15>{blue}{\UTime(t_1)}} \cdot \max (0,\alt<-9>{\textcolor<2,9>{blue}{\USize(t_1,x)}}{\textcolor<10>{blue}{10}}-\alt<-11>{\textcolor<2,11>{blue}{\LSize(t_1,y)}}{\textcolor<12>{blue}{y}}) \\
+\end{align*}
