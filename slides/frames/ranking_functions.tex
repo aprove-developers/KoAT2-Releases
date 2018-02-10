@@ -1,18 +1,17 @@
-\begin{figure}
-  \centering
+\begin{center}
   \begin{tikzpicture}[program]
     \node[label=below:{\nodeshow{2-}{x-y}}, highlight on=<3>] (0) {$\location_0$};
     \node[label=below:{\nodeshow{2-}{x-y}}, highlight on=<5>, highlight on=<7>, highlight on=<9>, highlight on=<11>] (1) [right of=0] {$\location_1$};
+
     \path[transitions]
     (0) edge[highlight on=<4>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
     (1) edge[loop above, highlight on=<6>, highlight on=<8>, highlight on=<10>] node[above left] {$t_1$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
     ;
   \end{tikzpicture}
-\end{figure}
-\begin{figure}
-  \centering
-  \begin{tikzpicture}[evaluation, node distance=2.4cm, every node/.style={draw,rectangle,font=\footnotesize}]
-    
+\end{center}
+
+\begin{center}
+  \begin{tikzpicture}[evaluation, node distance=2.4cm, every node/.style={draw,rectangle,font=\footnotesize}]    
     \node (0) [show on=<3->, highlight on=<3>] {$x-y$};
     \node (1) [show on=<5->, highlight on=<5>, right of=0] {$x-y$};
     \node (2) [show on=<7->, highlight on=<7>, right of=1] {$(x-1)-y$};
@@ -28,4 +27,14 @@
     (4) edge[show on=<12->, cross] node[below] {} (exit)
     ;
   \end{tikzpicture}
-\end{figure}
+\end{center}
+
+\onslide<14->{
+  \begin{block}{Definition}
+    Assignment of polynomials to locations such that
+    \begin{itemize}
+    \item at least one transition decreases a finite number of times
+    \item all other transitions do not increase
+    \end{itemize}
+  \end{block}
+}
