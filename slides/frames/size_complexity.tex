@@ -1,46 +1,37 @@
-\begin{figure}
-  \centering
+\begin{center}
   \begin{tikzpicture}[program]
-    \node (0) [highlight on=<2>, highlight on=<6>] {$\location_0$};
-    \node (1) [highlight on=<4>, highlight on=<8>, highlight on=<10>, highlight on=<12>, highlight on=<14>, right of=0] {$\location_1$};
+    \node (0) [highlight on=<2>] {$\location_0$};
+    \node (1) [highlight on=<4>, highlight on=<6>, highlight on=<8>, highlight on=<10>, right of=0] {$\location_1$};
     \node (2) [right of=1] {$\location_2$};
+
     \path[transitions]
-    (0) edge[highlight on=<3>, highlight on=<7>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
-    (1) edge[highlight on=<9>, highlight on=<11>, highlight on=<13>, loop above] node[above left] {$t_1$} node[above tlabel] {$if(x<10)$\\$x \coloneqq x+1$\\$y \coloneqq y$} (1)
+    (0) edge[highlight on=<3>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+    (1) edge[highlight on=<5>, highlight on=<7>, highlight on=<9>, loop above] node[above left] {$t_1$} node[above tlabel] {$if(x<10)$\\$x \coloneqq x+1$\\$y \coloneqq y$} (1)
     (1) edge node[above] {$t_2$} node[below] {$if(x \geq 10)$\\$x \coloneqq x$\\$y \coloneqq y$} (2)
     (2) edge[loop above] node[above left] {$t_3$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (2)
     ;
   \end{tikzpicture}
-\end{figure}
+\end{center}
 
-\begin{figure}
-  \centering
+\begin{center}
   \begin{tikzpicture}[evaluation]
-    
     \node (0) [show on=<2->, highlight on=<2>] {$x$};
-    \node (1) [show on=<4->, highlight on=<4>, right of=0, label=below:{\nodeshow{5-}{$\leq \USize(t_0,x)$}}] {$x$};
+    \node (1) [show on=<4->, highlight on=<4>, right of=0, label=below:{\nodeshow{11-}{$\leq \USize(t_0,x)$}}] {$x$};
+    \node (2) [show on=<6->, highlight on=<6>, right of=1, label=below:{\nodeshow{12-}{$\leq \USize(t_1,x)$}}] {$x+1$};
+    \node (3) [show on=<8->, highlight on=<8>, right of=2, label=below:{\nodeshow{13-}{$\leq \USize(t_1,x)$}}] {$9$};
+    \node (4) [show on=<10->, highlight on=<10>, right of=3, label=below:{\nodeshow{14-}{$\leq \USize(t_1,x)$}}] {$10$};
     
     \path[transitions]
     (0) edge[show on=<3->, highlight on=<3>] node {$t_0$} (1)
+    (1) edge[show on=<5->, highlight on=<5>] node {$t_1$} (2)
+    (2) edge[show on=<7->, highlight on=<7>, dotted] node {$t_1$} (3)
+    (3) edge[show on=<9->, highlight on=<9>] node {$t_1$} (4)
     ;
   \end{tikzpicture}
-\end{figure}
+\end{center}
 
-\begin{figure}
-  \centering
-  \begin{tikzpicture}[evaluation]
-    
-    \node (0) [show on=<6->, highlight on=<6>] {$x$};
-    \node (1) [show on=<8->, highlight on=<8>, right of=0] {$x$};
-    \node (2) [show on=<10->, highlight on=<10>, right of=1, label=below:{\nodeshow{15-}{$\leq \USize(t_1,x)$}}] {$x+1$};
-    \node (3) [show on=<12->, highlight on=<12>, right of=2, label=below:{\nodeshow{16-}{$\leq \USize(t_1,x)$}}] {$9$};
-    \node (4) [show on=<14->, highlight on=<14>, right of=3, label=below:{\nodeshow{17-}{$\leq \USize(t_1,x)$}}] {$10$};
-    
-    \path[transitions]
-    (0) edge[show on=<7->, highlight on=<7>] node {$t_0$} (1)
-    (1) edge[show on=<9->, highlight on=<9>] node {$t_1$} (2)
-    (2) edge[show on=<11->, highlight on=<11>, dotted] node {$t_1$} (3)
-    (3) edge[show on=<13->, highlight on=<13>] node {$t_1$} (4)
-    ;
-  \end{tikzpicture}
-\end{figure}
+\onslide<15->{
+  \begin{block}{Definition}
+    Greatest/Lowest value of a variable immediately after an execution of a specific transition in an (arbitrary) run
+  \end{block}
+}
