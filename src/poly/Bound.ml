@@ -241,14 +241,14 @@ let rec simplify bound =
       | (Const c, b) when OurInt.(c =~= zero) -> b
       | (b, Const c) when OurInt.(c =~= zero) -> b
       | (Const c1, Const c2) -> Const OurInt.(c1 + c2)
-      | (Const c1, Sum (Const c2, b)) -> Sum (Const OurInt.(c1 + c2), b)
+      | (Const c1, Sum (Const c2, b)) -> simplify (Sum (Const OurInt.(c1 + c2), b))
       | (Neg Infinity, Infinity) -> Const OurInt.zero
       | (Infinity, Neg Infinity) -> Const OurInt.zero
       | (_, Infinity) -> Infinity
       | (Infinity, _) -> Infinity
       | (_, Neg Infinity) -> Neg Infinity
       | (Neg Infinity, _) -> Neg Infinity
-      | (Const c1, Max (Const c2, b)) -> Max (Const OurInt.(c1 + c2), Sum (Const c1, b))
+      | (Const c1, Max (Const c2, b)) -> simplify (Max (Const OurInt.(c1 + c2), Sum (Const c1, b)))
       | (b1, Neg b2) when equal b1 b2 -> Const OurInt.zero
       | (Neg b1, b2) when equal b1 b2 -> Const OurInt.zero
       | (b1, b2) when equal b1 b2 -> simplify (Product (Const (OurInt.of_int 2), b1))
@@ -295,7 +295,7 @@ let rec simplify bound =
        | Neg Infinity when OurInt.Compare.(value >= OurInt.of_int 2) -> Const OurInt.zero
        | Const c -> Const OurInt.(pow value (to_int c))
        (* TODO Do not use OurInt.to_int *)
-       | Max (Const c, b) -> Max (Const (OurInt.pow value (OurInt.to_int c)), Pow (value, b))
+       | Max (Const c, b) -> simplify (Max (Const (OurInt.pow value (OurInt.to_int c)), Pow (value, b)))
        | exponent -> Pow (value, exponent)
     )
 
@@ -404,8 +404,10 @@ let is_var = function
   | Var _ -> true
   | _ -> false
 
-let substitute_f substitution =
-  fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~exp:exp ~max:max ~inf:infinity
+let substitute_f substitution bound =
+  bound
+  |> fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~exp:exp ~max:max ~inf:infinity
+  |> simplify
   
 let substitute var ~replacement =
   substitute_f (fun target_var ->
