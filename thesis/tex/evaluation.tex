@@ -53,41 +53,57 @@ We compare the presented method to the results presented in \cite{koat}.
 These results include the results of the tool KoAT itself as well as the results of the tools CoFloCo \cite{cofloco1, cofloco2}, Loopus \cite{loopus1, loopus2}, KoAT-TACAS \cite{leike2014ranking}, PUBS \cite{pubs1, pubs2} and Rank \cite{rank}.
 
 For the comparison of the results, it is necessary to project the resulting bounds in $\BoundSet(\PVSet)$ to their asymptotic complexity class.
+We use the Big-O-Notation $\landau$ \cite{bigo} to denote the worst-case asymptotic complexity.
+We distinguish between constant complexity $\landau(1)$, polynomial complexity of a certain degree $\landau(n^k)$, exponential complexity $\landau(2^n)$ and infinite complexity $\landau(\infty)$.
+We use the expected order between these complexity classes (i.e. $\landau(1) \leq \landau(n^k) \leq \landau(2^n) \leq \landau(\infty)$).
 The following definition introduces a projection, such that for every bound $b \in \BoundSet(\PVSet)$ the resulting asymptotic complexity $\complexity(b)$ is a valid overapproximation of the actual complexity.
 
 \begin{definition}[Approximation of the Asymptotic Complexity]
+  \allowdisplaybreaks
   Let $\VSet$ be a finite set of variables.
   Let $\BoundSet(\VSet)$ be the set of bounds over the variables $\VSet$.
-  Let $\landau$ be the landau symbol for asymptotic complexity.
   Then, $\complexity$ is a function which assigns each bound an overapproximation of its asymptotic complexity.
   \begin{align*}
     \complexity(\infty) &= \landau(\infty) \text{ for } \infty \in \BoundSet(\VSet) \\
-    \complexity(k) &= \landau(1) \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet) \\
-    \complexity(v) &= \landau(n) \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \\
+    \complexity(k) &= \landau(n^0) = \landau(1) \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet) \\
+    \complexity(v) &= \landau(n^1) = \landau(n) \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \\
     \complexity(-b) &= \complexity(b) \text{ for all } b \in \BoundSet(\VSet) \\
-    \complexity(b_1 + b_2) &= \landau(f_1 + f_2) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
-    & \text{ with } \complexity(b_1)=\landau(f_1) \text{ and } \complexity(b_2)=\landau(f_2) \\
-    \complexity(b_1 \cdot b_2) &= \landau(f_1 \cdot f_2) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
-    & \text{ with } \complexity(b_1)=\landau(f_1) \text{ and } \complexity(b_2)=\landau(f_2) \\
+    \complexity(b_1 + b_2) &= \landau(n^{\maximum{k_1, k_2}}) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(n^{k_1}) \text{ and } \complexity(b_2)=\landau(n^{k_2}) \\
+    \complexity(b_1 + b_2) &= \landau(2^n) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(2^n) \text{ and } \complexity(b_2)<\landau(\infty) \\
+    & \text{ or } \complexity(b_1)<\landau(\infty) \text{ and } \complexity(b_2)=\landau(2^n) \\
+    \complexity(b_1 + b_2) &= \landau(\infty) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(\infty) \text{ or } \complexity(b_2)=\landau(\infty) \\
+    \complexity(b_1 \cdot b_2) &= \landau(n^{k_1 + k_2}) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(n^{k_1}) \text{ and } \complexity(b_2)=\landau(n^{k_2}) \\
+    \complexity(b_1 \cdot b_2) &= \landau(2^n) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(2^n) \text{ and } \complexity(b_2)<\landau(\infty) \\
+    & \text{ or } \complexity(b_1)<\landau(\infty) \text{ and } \complexity(b_2)=\landau(2^n) \\
+    \complexity(b_1 \cdot b_2) &= \landau(\infty) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(\infty) \text{ or } \complexity(b_2)=\landau(\infty) \\
     \complexity(\max(b_1, b_2)) &=
     \begin{cases}
-      \complexity(b_1) & \text{ if } b_1 \geq b_2 \\
+      \complexity(b_1) & \text{ if } \complexity(b_1) \geq \complexity(b_2) \\
       \complexity(b_2) & \text{ otherwise }
     \end{cases} \\
     & \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
-    \complexity(k^b) &= \landau(k^f) \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet), b \in \BoundSet(\VSet) \\
-    & \text{ with } \complexity(b)=\landau(f)
+    \complexity(k^b) &=
+    \begin{cases}
+      \landau(\infty) & \text{ if } \complexity(b)=\landau(\infty) \\
+      \landau(2^n) & \text{ otherwise }
+    \end{cases} \\
+    & \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet), b \in \BoundSet(\VSet) \\
   \end{align*}
 \end{definition}
-
-The correctness of this approximation is given by definition of the Landau notation.
 
 Note that this definition projects a bound $x-x$ to a complexity $\complexity(x-x) = \landau(n)$.
 As already mentioned, the implementation is able to simplify such a bound to an equivalent bound $0$.
 Therefore, the better, but still valid complexity $\complexity(0) = \landau(1)$ is determined.
 Nevertheless, the implementation is not able to simplify every bound $b$ to an equivalent bound $b'$ with a complexity $\complexity(b')$ better than $complexity(b)$, although such a bound $b'$ may exist.
 Such a simplification algorithm has an unreasonable impact on the performance of the implementation.
-Therefore, the implemented simplification algorithm does in general not support the simplification of bounds, where it is necessary to analyze multiple levels of operators such as $3 \cdot x^2-(x \cdot x+2 \cdot x^2) = 0$.
+Therefore, the implemented simplification algorithm does not support the simplification of bounds in general.
+It does not consider cases, where it is necessary to analyze multiple levels of operators such as $3 \cdot x^2-(x \cdot x+2 \cdot x^2) = 0$.
 Thus, an optimized simplification algorithm might yield better evaluation results without a change to the presented method.
 
 For the parallel execution of the examples, we use the GNU tool 'parallel' \cite{gnuparallel}.
@@ -116,13 +132,13 @@ Table \ref{tab:evaluation} shows the results of the presented implementation com
 The first column contains the name of the implementation.
 The other columns display the number of examples with an inferred asymptotic complexity smaller than the specific asymptotic complexity of the column.
 It is assumed that all implementations are sound.
-That is, no implementation yields a better asymptotic complexity than the actual asymptotic complexity of the example.
+That is, no implementation yields a lower asymptotic complexity than the actual asymptotic complexity of the example.
 
 The reason for the difference between KoAT \cite{koat} and the implementation of the new method is fine-tuning of the established implementation of KoAT \cite{koat}.
 For example, KoAT \cite{koat} uses a technique for the chaining of transitions if the current setup does not yield new time bounds.
-While chaining is also implemented in the presented implementation, it needs further configuration when to apply to yield the same benefits.
+While chaining is also implemented in the presented implementation, it needs further configuration when it is to apply to yield the same benefits.
 Another example is the unrolling of loops which are executed only a constant number of times.
-This technique is implemented within KoAT \cite{koat} and might result in a constant time bound where otherwise no ranking function is found.
+This technique is implemented within KoAT \cite{koat} and might result in a constant time bound where no ranking function is found otherwise.
 It can also be implemented within the new method.
 Also, the choice of local size bounds and ranking functions leads to a difference in the results.
 While a transition $t = (\location, \update, \braced{y=z}, \location')$ with an update $\update$ with $\update(x)=y$ implies two upper local size bounds $\ULSB(t,x)=y$ and $\ULSB(t,x)=z$, the choice among them leads to different result variable graphs and therefore a different setup of SCCs.
