@@ -14,6 +14,54 @@
 \end{center}
 
 \begin{align*}
-  \UTime(t_3) &= \alt<14->{\textcolor<14>{blue}{1}}{\textcolor<13>{blue}{\UTime(t_0)}} \cdot \max (0,\alt<-5>{\textcolor<2,5>{blue}{\USize(t_0,x)}}{\textcolor<6>{blue}{x}}-\alt<-7>{\textcolor<2,7>{blue}{\LSize(t_0,y)}}{\textcolor<8>{blue}{y}}) \\
-  &+ \alt<16->{\textcolor<16>{blue}{\max(0,10-x)}}{\textcolor<15>{blue}{\UTime(t_1)}} \cdot \max (0,\alt<-9>{\textcolor<2,9>{blue}{\USize(t_1,x)}}{\textcolor<10>{blue}{10}}-\alt<-11>{\textcolor<2,11>{blue}{\LSize(t_1,y)}}{\textcolor<12>{blue}{y}}) \\
+  \UTime(t_3) &
+  \makebox[0.5cm][c]{
+    $=$
+  }
+  \makebox[2.5cm][l]{
+    $\alt<14->{\textcolor<14>{blue}{1}}{\textcolor<13>{blue}{\UTime(t_0)}}$
+  }
+  \makebox[0.5cm][c]{
+    $\cdot$
+  }
+  \makebox[5cm][l]{
+    $
+    \max (0,
+    \makebox[1.5cm][l]{
+      $\alt<-5>{\textcolor<2,5>{blue}{\USize(t_0,x)}}{\textcolor<6>{blue}{x}}$
+    }
+    \makebox[0.5cm][c]{
+      $-$
+    }
+    \makebox[1.5cm][l]{
+      $\alt<-7>{\textcolor<2,7>{blue}{\LSize(t_0,y)}}{\textcolor<8>{blue}{y}})$
+    }
+    $
+  }
+  \\
+  &
+  \makebox[0.5cm][c]{
+    $+$
+  }
+  \makebox[2.5cm][l]{
+    $\alt<16->{\textcolor<16>{blue}{\max(0,10-x)}}{\textcolor<15>{blue}{\UTime(t_1)}}$
+  }
+  \makebox[0.5cm][c]{
+    $\cdot$
+  }
+  \makebox[4cm][l]{
+    $
+    \max (0,
+    \makebox[1.5cm][l]{
+      $\alt<-9>{\textcolor<2,9>{blue}{\USize(t_1,x)}}{\textcolor<10>{blue}{10}}$
+    }
+    \makebox[0.5cm][c]{
+      $-$
+    }
+    \makebox[1.5cm][l]{
+      $\alt<-11>{\textcolor<2,11>{blue}{\LSize(t_1,y)}}{\textcolor<12>{blue}{y}})$
+    }
+    $
+  }
+  \\
 \end{align*}
