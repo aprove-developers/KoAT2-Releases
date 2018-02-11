@@ -19,8 +19,10 @@ The first evaluated example is the motivational program from the introduction in
 \input{graphs/motivational_example}
 
 For this program, the new method derives a time complexity of $\maxO{x-y}$, while KoAT \cite{koat} infers a time complexity of $\abs{x}+\abs{y}$.
-In the new method, we assume that we have two input states $\lstate$ and $\ustate$.
-KoAT \cite{koat} is defined with a single input state $m$ such that $m(v) = \maximum{-\lstate(v),\ustate(v)}$ for each variable $v \in \PVSet$.
+In the new method, the input state $\valuation_0$ is bounded by two states $\lstate$ and $\ustate$ such that $\lstate \leq \valuation_0 \leq \ustate$ holds.
+In the method of KoAT \cite{koat}, the input state $\valuation_0$ is bounded by a single state $m$ such that $-m \leq \valuation_0 \leq m$ holds.
+If the states $\lstate$ and $\ustate$ are given, the state $m$ can be defined with $m(v) = \maximum{-\lstate(v),\ustate(v)}$ for each variable $v \in \PVSet$.
+Then, it is sufficient to consider the states $\lstate$ and $\ustate$ as parameters for both definitions of time complexity.
 
 Figure \ref{fig:motivational_example} provides two three-dimensional graphs.
 The left graph plots the time complexity $\maxO{x-y}$ of the new method and the right graph plots the time complexity $\abs{x}+\abs{y}$ of KoAT \cite{koat}.
@@ -29,7 +31,7 @@ The graphs show that the time complexities are the same if $-\lstate = \ustate$.
 This is the expected result, as $-\lstate = \ustate$ implies that $m = -\lstate = \ustate$.
 The new method infers a lower time complexity if the value of $-\lstate$ and $\ustate$ diverges.
 The biggest gain is achieved, when $\lstate = \ustate$.
-That is if an exact state $\lstate = \valuation = \ustate$ is given.
+That is if an exact state $\lstate = \valuation_0 = \ustate$ is given as input state for the program.
 
 The second evaluated example is the program presented in the cost bound chapter \ref{fig:cost_ranking_function}.
 
