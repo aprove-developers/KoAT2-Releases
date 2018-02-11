@@ -6,8 +6,17 @@
       \node (1) [right of=0] {$\location_1$};
       
       \path[transitions]
-      (0) edge node[above] {\textcolor<6-7,11-12>{blue}{$t_0$}} node[below] {$x \coloneqq x$\\$y \coloneqq y$\\\nodeshow{2-}{\textcolor<2>{blue}{$z \coloneqq z$}}} (1)
-      (1) edge[loop above] node[above left] {\textcolor<5,8,13,16>{blue}{$t_1$}} node[above tlabel] {$if(x > y)$\\$x \coloneqq x - 1$\\$y \coloneqq y$\\\nodeshow{2-}{\textcolor<2>{blue}{$z \coloneqq \textcolor<5-6,11>{blue}{z} + \textcolor<7-8,12,13,15>{blue}{y}$}}} node[above right=-1cm and 0.4cm] {\phantom{$\leq 2 \cdot \max(z,y)$}} (1)
+      (0)
+      edge
+      node[above] {\textcolor<6-7,11-12>{blue}{$t_0$}}
+      node[below] {$x \coloneqq x$\\$y \coloneqq y$\\\nodeshow{2-}{\textcolor<2>{blue}{$z \coloneqq z$}}}
+      (1)
+      (1)
+      edge[loop above]
+      node[above left] {\textcolor<5,8,13,16>{blue}{$t_1$}}
+      node[above tlabel] {$if(x > y)$\\$x \coloneqq x - 1$\\$y \coloneqq \alt<-18>{\textcolor<18>{blue}{y}}{\textcolor<19-23>{blue}{z}}$\\\nodeshow{2-}{\textcolor<2,24-25>{blue}{$z \coloneqq \textcolor<5-6,11>{blue}{z} + \textcolor<7-8,12,13,15>{blue}{y}$}}}
+      node[show on=<25->, highlight on=<25>, above right=-1cm and 0.4cm] {$\leq \textcolor<29>{blue}{2} \cdot \max(z,y)$}
+      (1)
       ;
     \end{tikzpicture}
   \end{column}
@@ -22,16 +31,23 @@
       \path
       (0z) edge[show on=<6->, highlight on=<6>, highlight on=<10>, highlight on=<11>] (1z)
       (0y) edge[show on=<7->, highlight on=<7>, highlight on=<10>, highlight on=<12>] (1z)
-      (1z) edge[show on=<5->, highlight on=<5>, highlight on=<14->, loop above, scc edge] (1z)
-      (1y) edge[show on=<8->, highlight on=<8>, highlight on=<10>, highlight on=<13>] (1z)
+      (1z) edge[show on=<5->, highlight on=<5>, highlight on=<14-16>, loop above, scc edge] (1z)
+      (1y) edge[show on=<8->, highlight on=<8>, highlight on=<10>, highlight on=<13>, onslide=<20->bend right, onslide=<22->scc edge] (1z)
+      (1z) edge[show on=<21->, highlight on=<21>, bend right, onslide=<22->scc edge] (1y)
+      (0z) edge[show on=<23->, highlight on=<23>] (1y)
       ;
     \end{tikzpicture}
   \end{column}
 \end{columns}
 
 \begin{align*}
-  \onslide<3->{\textcolor<3>{blue}{\USize(t_1,z)}} \onslide<9->{&= \textcolor<10-13>{blue}{\textbf{highest starting value}} + \textcolor<14>{blue}{\textbf{positive effects}} \\}
+  \onslide<3->{\textcolor<3>{blue}{\USize(t_1,z)}}
+  \onslide<9->{&= \textcolor<10-13>{blue}{\textbf{highest starting value}}
+    \alt<-26>{+}{\cdot}
+    \alt<-26>{\textcolor<14,26>{blue}{\textbf{positive effects}}}
+             {\textcolor<27>{blue}{\textbf{scaling factor}}}
+             \\}
   \onslide<11->{&= \maximum{0,\textcolor<11>{blue}{z},\onslide<12->{\textcolor<12>{blue}{y}},\onslide<13->{\textcolor<13>{blue}{y}}}}
-  \onslide<15->{+ \onslide<16->{\textcolor<16>{blue}{\UTime(t_1)} \cdot} \onslide<17->{\max(0,}\textcolor<15>{blue}{y}\onslide<17->{)}}
+  \alt<29->{\cdot \textcolor<29>{blue}{2^{\UTime(t_1)}}}
+           {\onslide<15->{+ \textcolor<28>{blue}{\onslide<16->{\textcolor<16>{blue}{\UTime(t_1)} \cdot} \onslide<17->{\max(0,}\textcolor<15>{blue}{y}\onslide<17->{)}}}}  
 \end{align*}
-
