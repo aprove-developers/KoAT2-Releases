@@ -4,13 +4,10 @@
     \node[label=below:{\nodeshow{2-}{x-y}}, highlight on=<5>, highlight on=<7>, highlight on=<9>, highlight on=<11>] (1) [right of=0] {$\location_1$};
 
     \path[transitions]
-    (0) edge[highlight on=<4>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
-    (1) edge[loop above, highlight on=<6>, highlight on=<8>, highlight on=<10>] node[above left] {$t_1$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
+    (0) edge[highlight on=<4>, highlight on=<17>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+    (1) edge[loop above, highlight on=<6>, highlight on=<8>, highlight on=<10>, highlight on=<12>, highlight on=<15>] node[above left] {$t_1$} node[above right=-1cm and 0.4cm] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
     ;
   \end{tikzpicture}
-\end{center}
-
-\begin{center}
   \begin{tikzpicture}[evaluation, node distance=2.4cm, every node/.style={draw,rectangle,font=\footnotesize}]    
     \node (0) [show on=<3->, highlight on=<3>] {$x-y$};
     \node (1) [show on=<5->, highlight on=<5>, right of=0] {$x-y$};
@@ -20,21 +17,22 @@
     \node (exit) [show on=<12->, right of=4, draw=none, node distance=1.3cm] {};
     
     \path[transitions]
-    (0) edge[show on=<4->, highlight on=<4>] node {$t_0$} node[below] {$\geq$} (1)
-    (1) edge[show on=<6->, highlight on=<6>] node {$t_1$} node[below] {$>$} node[show on=<13->, highlight on=<13>, below=0.5cm] {$1$} (2)
-    (2) edge[show on=<8->, highlight on=<8>, dotted] node {$t_1$} node[below] {$>$} node[show on=<13->, highlight on=<13>, below=0.5cm] {$x-y-2$} (3)
-    (3) edge[show on=<10->, highlight on=<10>] node {$t_1$} node[below] {$>$} node[show on=<13->, highlight on=<13>, below=0.5cm] {$1$} (4)
-    (4) edge[show on=<12->, cross] node[below] {} (exit)
+    (0) edge[show on=<4->, highlight on=<4>, highlight on=<17>] node {$t_0$} node[below] {$\geq$} (1)
+    (1) edge[show on=<6->, highlight on=<6>, highlight on=<15>] node {$t_1$} node[below] {$>$} node[show on=<13->, highlight on=<13>, below=0.3cm] {$1$} (2)
+    (2) edge[show on=<8->, highlight on=<8>, highlight on=<15>, dotted] node {$t_1$} node[below] {$>$} node[show on=<13->, highlight on=<13>, below=0.3cm] {$x-y-2$} (3)
+    (3) edge[show on=<10->, highlight on=<10>, highlight on=<15>] node {$t_1$} node[below] {$>$} node[show on=<13->, highlight on=<13>, below=0.3cm] {$1$} (4)
+    (4) edge[show on=<12->, highlight on=<12>, highlight on=<16>, cross] node {$t_1$} node[below] {} (exit)
     ;
   \end{tikzpicture}
 \end{center}
 
 \onslide<14->{
-  \begin{block}{Definition}
+  \begin{block}{Ranking Function}
     Assignment of polynomials to locations such that
     \begin{itemize}
-    \item at least one transition decreases a finite number of times
-    \item all other transitions do not increase
+    \item<15-> at least one transition decreases the measure
+    \item<16-> this transition does not decrease the measure to a negative number
+    \item<17-> all other transitions do not increase the measure
     \end{itemize}
   \end{block}
 }
