@@ -113,3 +113,11 @@
 \newcommand{\nodeshow}[2]{
   \alt<#1>{#2}{\textcolor{white}{#2}}
 }
+
+\newcommand*\circled[1]{
+  \FPeval\index{#1-1}
+  \FPclip\index\index
+  \tikz[baseline=(char.base)]{
+    \node[shape=circle,draw,inner sep=1pt] (char) {$\location_\index$};
+  }
+}

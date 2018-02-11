@@ -1,20 +1,26 @@
 \begin{columns}
   \begin{column}{0.3\textwidth}
-    \begin{algorithmic}
-      \While{\textcolor<3>{blue}{$x > y$}}
-      \State \textcolor<4>{blue}{$x \coloneqq x - 1$}
+    \algrenewcommand{\alglinenumber}[1]{\scriptsize\circled{#1}}% circled line numbers
+    \begin{algorithmic}[1]
+      \onslide<2->{\State \textcolor<2,4-5>{blue}{$x \coloneqq x; y \coloneqq y$}}
+      \While{\textcolor<6-7>{blue}{$x > y$}}
+      \State \textcolor<8-9>{blue}{$x \coloneqq x - 1$}
       \EndWhile
     \end{algorithmic}
   \end{column}
   \begin{column}{0.5\textwidth}
     \begin{figure}
       \centering
-      \begin{tikzpicture}[program]
-        \node (0) [show on=<6->, highlight on=<6>] {$\location_0$};
-        \node (1) [show on=<2->, highlight on=<2>, right of=0] {$\location_1$};
+      \begin{tikzpicture}[program, node distance=2cm]
+        \node (0) [show on=<3->, highlight on=<3>] {$\location_0$};
+        \node (1) [show on=<3->, highlight on=<3>, highlight on=<10>, below of=0] {$\location_1$};
+        \node (2) [show on=<3-10>, highlight on=<3>, highlight on=<10>, below of=1] {$\location_2$};
+        
         \path[transitions]
-        (0) edge[show on=<6->, highlight on=<6>] node[above, show on=<8->, highlight on=<8>] {$t_0$} node[below, show on=<7->, highlight on=<7>] {$x \coloneqq x$\\$y \coloneqq y$} (1)
-        (1) edge[loop above, show on=<2->, highlight on=<2>] node[above left, show on=<8->, highlight on=<8>] {$t_1$} node[above tlabel] {\nodeshow{3-}{\textcolor<3>{blue}{$if(x>y)$}}\\\nodeshow{4-}{\textcolor<4>{blue}{$x \coloneqq x-1$}}\\\nodeshow{5-}{\textcolor<5>{blue}{$y \coloneqq y$}}} (1)
+        (0) edge[show on=<5->, highlight on=<5>] node[left, show on=<13->, highlight on=<13>] {$t_0$} node[right] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+        (1) edge[show on=<7-10>, highlight on=<7>, highlight on=<10>, bend right] node[left] {$if(x>y)$} (2)
+        (2) edge[show on=<9-10>, highlight on=<9>, highlight on=<10>, bend right] node[right] {$x \coloneqq x-1$} (1)
+        (1) edge[loop below, show on=<11->, highlight on=<11>] node[below left, show on=<13->, highlight on=<13>] {$t_1$} node[below right] {$if(x>y)$\\$x \coloneqq x-1$\\\nodeshow{12-}{\textcolor<12>{blue}{$y \coloneqq y$}}} (1)
         ;
       \end{tikzpicture}
     \end{figure}
