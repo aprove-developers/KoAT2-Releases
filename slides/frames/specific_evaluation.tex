@@ -1,0 +1,15 @@
+\begin{algorithmic}
+  \centering
+  \While{$x > y$}
+  \State $x \coloneqq x - 1$
+  \EndWhile
+\end{algorithmic}
+
+\begin{align*}
+  \onslide<2->{\text{Non-monotonic bound: } & \maximum{0,x-y} \onslide<4->{& \in \landau(n)} \\}
+  \onslide<3->{\text{Monotonic bound: } & \abs{x}+\abs{y}} \onslide<4->{& \in \landau(n)}
+\end{align*}
+
+\begin{align*}
+  \onslide<5->{x \cdot y - y \cdot x} \onslide<6->{\in \landau(n^2)}
+\end{align*}
