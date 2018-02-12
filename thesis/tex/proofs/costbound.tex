@@ -33,7 +33,7 @@ In this evaluation, the outgoing transitions of all $(\actl_{i,h}, \actstate_{i,
 The outgoing transitions of all $(\prel_i, \prestate_i)$ are transitions from $\TSet \setminus \TSet'$.
 
 Now we have to investigate how often the transition $t$ is used in this evaluation.
-Since $t \in \TSet'$, it can only be used in sequences of the following form.
+Since $t \in \TSet'$, it can only be used in finite sequences of the following form.
 \[ (\actl_{i,1}, \actstate_{i,1}) \rightarrow_{\TSet'} \dots \rightarrow_{\TSet'} (\actl_{i,k_i}, \actstate_{i,k_i}) \rightarrow_{\TSet'} (\prel_i, \prestate_i) \]
 
 We can show that $\maxO{\exacteval{\costrank(\location_{i,1})}{\actstate_{i,1}}} \geq \sum_{1 \leq h \leq {k_i}} \exacteval{\cost(t)}{\valuation_{i,h}}$.
