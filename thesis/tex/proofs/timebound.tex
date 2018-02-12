@@ -27,7 +27,7 @@ In this evaluation, the outgoing transitions of all $(\actl_i, \actstate_i)$ are
 The outgoing transitions of all $(\prel_i, \prestate_i)$ are transitions from $\TSet \setminus \TSet'$.
 
 Now, we have to investigate how often the transition $t$ is used in this evaluation.
-Since $t \in \TSet'$, it can only be used in finite or infinite sequences of the following form with $k_i \in \mathbb{N} \cup \braced{\infty}$.
+Since $t \in \TSet'$, it can only be used in finite sequences of the following form with $k_i \in \mathbb{N}$.
 \[ (\actl_i, \actstate_i) \rightarrow_{\TSet'} (\actl_{i,1}, \actstate_{i,1}) \rightarrow_{\TSet'} \dots \rightarrow_{\TSet'} (\actl_{i,k_i-1}, \actstate_{i,k_i-1}) \rightarrow_{\TSet'} (\prel_i, \prestate_i) \]
 
 We now show that $\maxO{\exacteval{\timerank(\location_i)}{\actstate_i}} \geq k_i$.
@@ -46,7 +46,6 @@ Thus, we obtain
   \geq & \maxO{\exacteval{\timerank(\location_{i,j_k})}{\actstate_{i,j_k}}} + (k_i-1) \\
   \geq & k_i
 \end{align*}
-Note that $k_i \in \mathbb{N} \cup \braced{\infty}$.
 Then, $\maxO{\exacteval{\timerank(\location_i)}{\actstate_i}} \geq k_i$ is an upper bound on the number of times the transition $t$ is used in the sequence.
 
 Let $\pret_i$ be the transition reaching $(\actl_i, \actstate_i)$ in the evaluation.
