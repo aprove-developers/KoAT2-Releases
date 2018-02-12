@@ -8,17 +8,24 @@
 
 \begin{document}
 
+\frontmatter
+
 \begin{titlepage}
   \input{title}
 \end{titlepage}
 
 \begin{titlepage}
-  \includepdf[pages=-]{oathstatement}
+  \includepdf{oathstatement}
 \end{titlepage}
+\setcounter{page}{4}
 
 \input{abstract}
 
 \tableofcontents
+
+\listoffigures
+
+\mainmatter
 
 \input{introduction}
 
@@ -40,10 +47,10 @@
 
 \input{conclusion}
 
+\backmatter
+
 \bibliography{literature}{}
 \bibliographystyle{plain}
-
-\listoffigures
 
 \begin{appendix}
   \input{appendix}
