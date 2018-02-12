@@ -1,0 +1,35 @@
+We have to show that for each bound $b \in \BoundSet(\VSet)$ with $b \in \landau(f)$ it holds that $\complexity(b) \geq \landau(f)$.
+For $\infty$, it holds that $\infty \in \landau(\infty)$ and therefore the approximated complexity is $\complexity(\infty) = \landau(\infty) \geq \landau(\infty)$.
+A bound $k \in \mathbb{N}$ is of constant complexity $k \in \landau(1)$.
+The approximated complexity is $\complexity(k) = \landau(1) \geq \landau(1)$.
+A bound $v \in \VSet$ is of linear complexity $v \in \landau(n)$.
+The approximated complexity is $\complexity(v) = \landau(n) \geq \landau(n)$.
+
+Let $b \in \landau(f)$.
+Then, a bound $-b \in \BoundSet(\VSet)$ is of the same complexity $-b \in \landau(f)$, since the Big-O-Notation considers the asymptotic complexity of the absolute values.
+The approximated complexity is $\complexity(-b) = \complexity(b) \geq \landau(f)$.
+
+Let $b_1, b_2 \in \BoundSet(\VSet)$ be two bounds and let $b_1 + b_2$ be an addition between these bounds.
+The only interesting case is if $b_1 \in \landau(n^{k_1})$ and $b_2 \in \landau(n^{k_2})$.
+Then, $b_1$ must be a polynomial with a degree of $k_1$ and $b_2$ must be a polynomial with a degree of $k_2$.
+Therefore, $b_1 + b_2$ must be a polynomial with a degree of at most $\maximum{k_1,k_2}$.
+Let $b_1 + b_2 \in \landau(f)$.
+Then, the approximated complexity is $\complexity(b_1 + b_2) = \landau(n^{\maximum{k_1,k_2}}) \geq \landau(f)$.
+
+Let $b_1, b_2 \in \BoundSet(\VSet)$ be two bounds and let $b_1 \cdot b_2$ be a multiplication between these bounds.
+The only interesting case is if $b_1 \in \landau(n^{k_1})$ and $b_2 \in \landau(n^{k_2})$.
+Then, $b_1$ must be a polynomial with a degree of $k_1$ and $b_2$ must be a polynomial with a degree of $k_2$.
+Therefore, $b_1 \cdot b_2$ must be a polynomial with a degree of at most $k_1 + k_2$.
+Let $b_1 \cdot b_2 \in \landau(f)$.
+Then, the approximated complexity is $\complexity(b_1 \cdot b_2) = \landau(n^{k_1 + k_2}) \geq \landau(f)$.
+
+Let $b_1, b_2 \in \BoundSet(\VSet)$ be two bounds and let $\max(b_1,b_2)$ be the maximum of these bounds.
+Let $b_1 \in \landau(f_1)$ and let $b_2 \in \landau(f_2)$.
+The actual complexity $\landau(f)$ of $\max(b_1,b_2)$ must be the maximal complexity among $\landau(f_1)$ and $\landau(f_2)$.
+Since the approximated complexity is defined as this maximum, $\complexity(\max(b_1,b_2)) \geq \landau(f)$ holds.
+
+Let $b \in \BoundSet(\VSet)$ be a bound and let $k \in \mathbb{N}$ be a number.
+Let $b \in \landau(g)$ and let $k^b \in \landau(f)$.
+If $g$ is not $\infty$, then $k^b$ is at most of exponential complexity $f = 2^n$.
+If $g$ is $\infty$, then the actual complexity of $k^b$ is $f = \infty$. 
+Therefore, the approximated complexity $\complexity(k^b)$ is greater than the actual complexity $\landau(f)$.
