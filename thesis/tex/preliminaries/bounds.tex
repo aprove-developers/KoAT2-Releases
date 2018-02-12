@@ -94,23 +94,24 @@ The evaluation of the examples yields the expected results.
   \exacteval{2 \cdot x^2 + 4 \cdot z}{\valuation} &= 2 \cdot \valuation(x)^2 + 4 \cdot \valuation(z) \\
   \exacteval{2^{\max(x,3 \cdot y^2)} \cdot 7 \cdot x^3}{\valuation} &= 2^{\max(\valuation(x),3 \cdot \valuation(y)^2)} \cdot 7 \cdot \valuation(x)^3
 \end{align*}
-For the subset of polynomials, we define an atom set $\AtomSet$ to express polynomial inequalities and a constraint set $\ConstraintSet$ to express conjunctions of polynomial inequalities.
+For the subset of polynomials, we define an atom set $\AtomSet(\VSet)$ to express polynomial inequalities and a constraint set $\ConstraintSet(\VSet)$ to express conjunctions of polynomial inequalities.
 
 \begin{definition}[Atom Set and Constraint Set]
+  Let $\VSet$ be a finite set of variables.
   Let $p_1, p_2 \in \BoundSet_p(\VSet)$ be two polynomials.
   Let $\bowtie \in \braced{\leq, \geq, <, >, =}$ be an arbitrary comparator.
   We define $p_1 \bowtie p_2$ as a polynomial inequality between $p_1$ and $p_2$.
   We define the atom set
-  \[ \AtomSet = \left\{ p_1 \bowtie p_2 \mid p_1, p_2 \in \BoundSet_p(\VSet), \bowtie \in \braced{\leq, \geq, <, >, =} \right\} \]
+  \[ \AtomSet(\VSet) = \left\{ p_1 \bowtie p_2 \mid p_1, p_2 \in \BoundSet_p(\VSet), \bowtie \in \braced{\leq, \geq, <, >, =} \right\} \]
   as the set of all polynomial inequalities.
-  Furthermore, we define the constraint set $\ConstraintSet = 2^\AtomSet$ as the set of conjunctions of polynomial inequalities.
+  Furthermore, we define the constraint set $\ConstraintSet(\VSet) = 2^{\AtomSet(\VSet)}$ as the set of conjunctions of polynomial inequalities.
 \end{definition}
 Also, we extend the definition of the bound evaluation to polynomial inequalities.
 
 \begin{definition}[Evaluation of Atoms and Constraints]
   Let $\valuation: \VSet \rightarrow \mathbb{Z}$ be an assignment from variables to values.
-  For an atom $b_1 \bowtie b_2 \in \AtomSet$, we define $\exacteval{b_1 \bowtie b_2}{\valuation}$ to denote the evaluation of the atom $b_1 \bowtie b_2$ to a boolean value in $\braced{\emph{true}, \emph{false}}$.
+  For an atom $b_1 \bowtie b_2 \in \AtomSet(\VSet)$, we define $\exacteval{b_1 \bowtie b_2}{\valuation}$ to denote the evaluation of the atom $b_1 \bowtie b_2$ to a boolean value in $\braced{\emph{true}, \emph{false}}$.
   \[ \exacteval{b_1 \bowtie b_2}{\valuation} = \exacteval{b_1}{\valuation} \bowtie \exacteval{b_2}{\valuation} \]
-  For a constraint $\guard \in \ConstraintSet$, we define $\exacteval{\guard}{\valuation}$ to denote the evaluation of the constraint $\guard$ to a boolean value in $\braced{\emph{true}, \emph{false}}$.
+  For a constraint $\guard \in \ConstraintSet(\VSet)$, we define $\exacteval{\guard}{\valuation}$ to denote the evaluation of the constraint $\guard$ to a boolean value in $\braced{\emph{true}, \emph{false}}$.
   \[ \exacteval{\guard}{\valuation} = \bigwedge_{\atom \in \guard} \exacteval{\atom}{\valuation} \]
 \end{definition}
