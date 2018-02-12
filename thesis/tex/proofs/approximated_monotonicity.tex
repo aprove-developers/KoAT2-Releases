@@ -1,0 +1,40 @@
+We have to show that $\ueval{b}{\lstate}{\ustate} \geq \ueval{b}{\lstate}{\ustate'}$ and $\leval{b}{\lstate}{\ustate} \leq \leval{b}{\lstate}{\ustate'}$ hold for each bound $b \in \BoundSet(\VSet)$ and all states $\lstate, \ustate, \ustate' \in \Valuation$ with $\lstate \leq \ustate$ and $\ustate \geq \ustate'$.
+Furthermore, we have to show that $\ueval{b}{\lstate}{\ustate} \leq \ueval{b}{\lstate'}{\ustate}$ and $\leval{b}{\lstate}{\ustate} \geq \leval{b}{\lstate'}{\ustate}$ hold for each bound $b \in \BoundSet(\VSet)$ and all states $\lstate, \ustate, \lstate' \in \Valuation$ with $\lstate \leq \ustate$ and $\lstate \geq \lstate'$.
+
+We prove the first claim by structural induction, the second claim can be proven analogously.
+
+If $b = \infty$, then $\ueval{\infty}{\lstate}{\ustate} = \infty = \ueval{\infty}{\lstate}{\ustate'}$ and $\leval{\infty}{\lstate}{\ustate} = \infty = \leval{\infty}{\lstate}{\ustate'}$.
+
+If $b = k \in \mathbb{N}$, then $\ueval{k}{\lstate}{\ustate} = k = \ueval{k}{\lstate}{\ustate'}$ and $\leval{k}{\lstate}{\ustate} = k = \leval{k}{\lstate}{\ustate'}$.
+
+If $b = v \in \VSet$, then $\ueval{v}{\lstate}{\ustate} = \ustate(v) \geq \ustate'(v) = \ueval{v}{\lstate}{\ustate'}$ and $\leval{v}{\lstate}{\ustate} = \lstate(v) = \leval{v}{\lstate}{\ustate'}$.
+
+Let $b = -b' \in \BoundSet(\VSet)$.
+By the induction hypothesis it holds that $\ueval{b'}{\lstate}{\ustate} \geq \ueval{b'}{\lstate}{\ustate'}$ and $\leval{b'}{\lstate}{\ustate} \leq \leval{b'}{\lstate}{\ustate'}$.
+Then, $\ueval{-b'}{\lstate}{\ustate} = -\leval{b'}{\lstate}{\ustate} \geq -\leval{b'}{\lstate}{\ustate'} = \ueval{-b'}{\lstate}{\ustate'}$ and $\leval{-b'}{\lstate}{\ustate} = -\ueval{b'}{\lstate}{\ustate} \leq -\ueval{b'}{\lstate}{\ustate'} = \leval{-b'}{\lstate}{\ustate'}$.
+
+Let $b = b_1 + b_2 \in \BoundSet(\VSet)$.
+By the induction hypothesis it holds that $\ueval{b_1}{\lstate}{\ustate} \geq \ueval{b_1}{\lstate}{\ustate'}$ and $\ueval{b_2}{\lstate}{\ustate} \geq \ueval{b_2}{\lstate}{\ustate'}$.
+Then, \[ \ueval{b_1 + b_2}{\lstate}{\ustate} = \ueval{b_1}{\lstate}{\ustate} + \ueval{b_2}{\lstate}{\ustate} \geq \ueval{b_1}{\lstate}{\ustate'} + \ueval{b_2}{\lstate}{\ustate'} = \ueval{b_1 + b_2}{\lstate}{\ustate'} \] also holds.
+By the induction hypothesis it also holds that $\leval{b_1}{\lstate}{\ustate} \leq \leval{b_1}{\lstate}{\ustate'}$ and $\leval{b_2}{\lstate}{\ustate} \leq \leval{b_2}{\lstate}{\ustate'}$.
+Then, \[ \leval{b_1 + b_2}{\lstate}{\ustate} = \leval{b_1}{\lstate}{\ustate} + \leval{b_2}{\lstate}{\ustate} \leq \leval{b_1}{\lstate}{\ustate'} + \leval{b_2}{\lstate}{\ustate'} = \leval{b_1 + b_2}{\lstate}{\ustate'} \] also holds.
+
+Let $b = b_1 \cdot b_2 \in \BoundSet(\VSet)$.
+By the induction hypothesis it holds that $\ueval{b_1}{\lstate}{\ustate} \geq \ueval{b_1}{\lstate}{\ustate'}$ and $\ueval{b_2}{\lstate}{\ustate} \geq \ueval{b_2}{\lstate}{\ustate'}$.
+It also holds that $\leval{b_1}{\lstate}{\ustate} \leq \leval{b_1}{\lstate}{\ustate'}$ and $\leval{b_2}{\lstate}{\ustate} \leq \leval{b_2}{\lstate}{\ustate'}$.
+The idea of proving $\ueval{b_1 \cdot b_2}{\lstate}{\ustate} \geq \ueval{b_1 \cdot b_2}{\lstate}{\ustate'}$ and $\leval{b_1 \cdot b_2}{\lstate}{\ustate} \leq \leval{b_1 \cdot b_2}{\lstate}{\ustate'}$ is as follows.
+By the soundness of approximated evaluations we know that $\ueval{b}{\lstate}{\ustate} \geq \leval{b}{\lstate}{\ustate}$ and $\ueval{b}{\lstate}{\ustate'} \geq \leval{b}{\lstate}{\ustate'}$ hold for every bound $b \in \BoundSet(\VSet)$.
+In combination with the induction hypothesis this guarantees, that $\ueval{b_1 \cdot b_2}{\lstate}{\ustate'}$ can not be greater than $\ueval{b_1 \cdot b_2}{\lstate}{\ustate}$, since otherwise either the soundness of approximated evaluations or the induction hypothesis would be violated.
+This property can be seen by a full enumeration of all cases.
+
+Let $b = \max(b_1,b_2) \in \BoundSet(\VSet)$.
+By the induction hypothesis it holds that $\ueval{b_1}{\lstate}{\ustate} \geq \ueval{b_1}{\lstate}{\ustate'}$ and $\ueval{b_2}{\lstate}{\ustate} \geq \ueval{b_2}{\lstate}{\ustate'}$.
+Then, \[ \ueval{\max(b_1,b_2)}{\lstate}{\ustate} = \maximum{\ueval{b_1}{\lstate}{\ustate}, \ueval{b_2}{\lstate}{\ustate}} \geq \maximum{\ueval{b_1}{\lstate}{\ustate'}, \ueval{b_2}{\lstate}{\ustate'}} = \ueval{\max(b_1, b_2)}{\lstate}{\ustate'} \] also holds.
+By the induction hypothesis it also holds that $\leval{b_1}{\lstate}{\ustate} \leq \leval{b_1}{\lstate}{\ustate'}$ and $\leval{b_2}{\lstate}{\ustate} \leq \leval{b_2}{\lstate}{\ustate'}$.
+Then, \[\leval{\max(b_1,b_2)}{\lstate}{\ustate} = \maximum{\leval{b_1}{\lstate}{\ustate}, \leval{b_2}{\lstate}{\ustate}} \leq \maximum{\leval{b_1}{\lstate}{\ustate'}, \leval{b_2}{\lstate}{\ustate'}} = \leval{\max(b_1, b_2)}{\lstate}{\ustate'}\] also holds.
+
+Let $b = k^{b'} \in \BoundSet(\VSet)$.
+By the induction hypothesis it holds that $\ueval{b'}{\lstate}{\ustate} \geq \ueval{b'}{\lstate}{\ustate'}$.
+Then, $\ueval{k^{b'}}{\lstate}{\ustate} = k^{\ueval{b'}{\lstate}{\ustate}} \geq k^{\ueval{b'}{\lstate}{\ustate'}} = \ueval{k^{b'}}{\lstate}{\ustate'}$ also holds.
+By the induction hypothesis it also holds that $\leval{b'}{\lstate}{\ustate} \leq \leval{b'}{\lstate}{\ustate'}$.
+Then, $\leval{k^{b'}}{\lstate}{\ustate} = k^{\leval{b'}{\lstate}{\ustate}} \leq k^{\leval{b'}{\lstate}{\ustate'}} = \leval{k^{b'}}{\lstate}{\ustate'}$ also holds.

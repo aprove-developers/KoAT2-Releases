@@ -74,7 +74,7 @@ We can show that an overapproximated evaluation always overapproximates the actu
 
 The following definition formalizes the monotonicity of variables in bounds.
 
-\begin{definition}[Monotonicity of Bounds in Variables]
+\begin{definition}[Monotonicity of Exact Evaluations in Variables]
   Let $\VSet$ be a finite set of variables.
   Let $b$ be a bound of the bound set $\BoundSet(\VSet)$.
   Let $v \in \VSet$ be a variable.
@@ -87,3 +87,17 @@ The following definition formalizes the monotonicity of variables in bounds.
 An approximated replacement yields the better approximations the more variables a bound is monotonically increasing or decreasing in.
 Note that an affine polynomial $b \in \BoundSet_a(\VSet)$ is monotonically increasing or decreasing in all variables.
 Therefore, the approximated replacement in an affine polynomial yields better over- and underapproximations than the approximated replacement in non-affine polynomials in $\BoundSet_p(\VSet) \setminus \BoundSet_a(\VSet)$ or arbitrary bounds in $\BoundSet(\VSet)$.
+
+Additionally to the monotonicity of exact evaluations, we can observe monotonicity properties of approximated evaluations.
+
+\input{theorems/approximated_monotonicity}
+
+\begin{example}[Monotonicity of Approximated Evaluations]
+  Consider an overapproximated evaluation $\ueval{x}{\lstate}{\ustate}$ with $\lstate \leq \ustate$.
+  Also consider a state $\ustate'$ with $\ustate'(x) \leq \ustate(x)$.
+  Since $\ueval{x}{\lstate}{\ustate} = \ustate(x)$ and $\ueval{x}{\lstate}{\ustate'} = \ustate'(x)$, we can conclude that $\ueval{x}{\lstate}{\ustate} \geq \ueval{x}{\lstate}{\ustate'}$ holds.
+
+  Consider an overapproximated evaluation $\ueval{-x}{\lstate}{\ustate}$ with $\lstate \leq \ustate$.
+  Also consider a state $\ustate'$ with $\ustate'(x) \leq \ustate(x)$.
+  Since $\ueval{-x}{\lstate}{\ustate} = -\leval{x}{\lstate}{\ustate} = \lstate(x)$, it is easy to see that $\ueval{-x}{\lstate}{\ustate} \geq \ueval{-x}{\lstate}{\ustate'}$ holds.
+\end{example}
