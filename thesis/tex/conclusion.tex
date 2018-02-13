@@ -35,7 +35,7 @@ The described improvements and extensions of the presented method and the result
 While the presented method already produces acceptable results, there is still much space for further improvements.
 
 One issue is the computation of the asymptotic complexity of the resulting non-monotonic bound.
-Assume that the new method inferred a time bound $x-y^2$.
+Assume that the new method inferred a time bound $\max(0,x-y^2)$.
 The longest evaluation might imply that $y$ is positive at the start of the program.
 Then, the asymptotic complexity of the program is linear instead of quadratic.
 But since this information is not captured, the complexity of the program is determined as quadratic.
@@ -50,7 +50,7 @@ While the cutting of unsatisfiable transitions and unreachable locations is both
 The current implementation of the invariant generation produces invariants of a specific domain.
 While an analysis of the program with added invariants always yields better or equal approximations, the performance might be heavily affected.
 Furthermore, a different choice for the domain might result in invariants leading to a better approximation.
-Also, to improve the ratio between the effect on the result and the loss in performance, it might be interesting to consider an approach which only searches for specific invariants in cases where they are needed.
+Also, to improve the ratio between the effect on the result and the loss in performance, it might be interesting to consider an approach which only searches for specific invariants when they are needed.
 
 Another preprocessor which needs further configuration regards the chaining of transitions.
 In some cases, a transition might be chained with all of its pre-transitions.
@@ -64,10 +64,10 @@ Nevertheless, an unrolling of a finite number of steps can lead to the computati
 Therefore, the application of this technique in the implementation might be beneficial.
 
 Besides the possible implementation of these additional techniques, the new method opens new possibilities.
-Currently, the suitable ranking functions are chosen by the number of non-increasing transitions.
+Currently, ranking functions are chosen by the number of non-increasing transitions.
 This is a heuristic to reduce the number of entry transitions and therefore to improve the quality of the approximations.
-Further work might focus on improving this heuristic.
-Furthermore, this method concentrates on the computation of a single local size bound for each result variable.
+Further work might focus on implementing other heuristics to obtain better approximations.
+Furthermore, the new method computes a single local size bound for each result variable.
 A heuristic is applied to reduce the constants and the number of variables, but the choice of local size bounds with the same number of variables is arbitrary.
-This affects the SCCs of the result variable graph and therefore the method for the computation of size bounds.
-Further work might want to study the effect of the choice of local size bounds on the resulting size bounds.
+The choice affects the SCCs of the result variable graph and therefore the method for the computation of size bounds.
+Further work might study the effect of the choice of local size bounds on the resulting size bounds.
