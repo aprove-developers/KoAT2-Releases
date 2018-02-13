@@ -1,5 +1,5 @@
 Timebounds: 
-  Overall timebound: max{6, 1+-1+3*R} [O(n)]
+  Overall timebound: max{6, 3*R} [O(n)]
   0: f1->f1: max{2, -4+3*R} [O(n)]
   1: f1->f4: 1 [O(1)]
   2: f3->f4: 1 [O(1)]
@@ -7,7 +7,7 @@ Timebounds:
   4: f3->f4: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: max{6, 1+-1+3*R} [O(n)]
+  Overall costbound: max{6, 3*R} [O(n)]
   0: f1->f1: max{2, -4+3*R} [O(n)]
   1: f1->f4: 1 [O(1)]
   2: f3->f4: 1 [O(1)]

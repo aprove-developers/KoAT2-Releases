@@ -1,7 +1,7 @@
 Timebounds: 
-  Overall timebound: 8+max{0, A}+max{2, 2*(-1+A)}+max{0, -1+A}+max{0, A*A}+max{0, -1+A}+max{1, 1+A*A*max{18, 9*A}}+max{0, -1+A} [O(n^3)]
+  Overall timebound: 8+max{0, A}+max{2, 2*(-1+A)}+max{0, -1+A}+max{0, A*A}+max{0, -1+A}+max{1, 1+A*A*max{6, 3*A}}+max{0, -1+A} [O(n^3)]
   3: evalperfectbb1in->evalperfectbb8in: 1 [O(1)]
-  8: evalperfectbb3in->evalperfectbb4in: max{0, A*A*max{18, 9*A}} [O(n^3)]
+  8: evalperfectbb3in->evalperfectbb4in: max{0, A*A*max{6, 3*A}} [O(n^3)]
   6: evalperfectbb4in->evalperfectbb3in: max{0, A*A} [O(n^2)]
   7: evalperfectbb4in->evalperfectbb5in: max{2, 2*(-1+A)} [O(n)]
   9: evalperfectbb5in->evalperfectbb8in: max{0, -1+A} [O(n)]
@@ -18,9 +18,9 @@ Timebounds:
   0: evalperfectstart->evalperfectentryin: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 8+max{0, A}+max{2, 2*(-1+A)}+max{0, -1+A}+max{0, A*A}+max{0, -1+A}+max{1, 1+A*A*max{18, 9*A}}+max{0, -1+A} [O(n^3)]
+  Overall costbound: 8+max{0, A}+max{2, 2*(-1+A)}+max{0, -1+A}+max{0, A*A}+max{0, -1+A}+max{1, 1+A*A*max{6, 3*A}}+max{0, -1+A} [O(n^3)]
   3: evalperfectbb1in->evalperfectbb8in: 1 [O(1)]
-  8: evalperfectbb3in->evalperfectbb4in: max{0, A*A*max{18, 9*A}} [O(n^3)]
+  8: evalperfectbb3in->evalperfectbb4in: max{0, A*A*max{6, 3*A}} [O(n^3)]
   6: evalperfectbb4in->evalperfectbb3in: max{0, A*A} [O(n^2)]
   7: evalperfectbb4in->evalperfectbb5in: max{2, 2*(-1+A)} [O(n)]
   9: evalperfectbb5in->evalperfectbb8in: max{0, -1+A} [O(n)]

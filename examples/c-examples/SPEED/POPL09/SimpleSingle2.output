@@ -1,7 +1,7 @@
 Timebounds: 
   Overall timebound: inf [Infinity]
   7: evalSimpleSingle2bb1in->evalSimpleSingle2bb4in: max{0, 3*C} [O(n)]
-  8: evalSimpleSingle2bb2in->evalSimpleSingle2bb3in: max{0, 5*D} [O(n)]
+  8: evalSimpleSingle2bb2in->evalSimpleSingle2bb3in: max{0, 3*D} [O(n)]
   9: evalSimpleSingle2bb2in->evalSimpleSingle2returnin: 1 [O(1)]
   10: evalSimpleSingle2bb3in->evalSimpleSingle2bb4in: max{0, D} [O(n)]
   2: evalSimpleSingle2bb4in->evalSimpleSingle2bbin: inf [Infinity]
@@ -16,7 +16,7 @@ Timebounds:
 Costbounds:
   Overall costbound: inf [Infinity]
   7: evalSimpleSingle2bb1in->evalSimpleSingle2bb4in: max{0, 3*C} [O(n)]
-  8: evalSimpleSingle2bb2in->evalSimpleSingle2bb3in: max{0, 5*D} [O(n)]
+  8: evalSimpleSingle2bb2in->evalSimpleSingle2bb3in: max{0, 3*D} [O(n)]
   9: evalSimpleSingle2bb2in->evalSimpleSingle2returnin: 1 [O(1)]
   10: evalSimpleSingle2bb3in->evalSimpleSingle2bb4in: max{0, D} [O(n)]
   2: evalSimpleSingle2bb4in->evalSimpleSingle2bbin: inf [Infinity]

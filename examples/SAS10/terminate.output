@@ -1,5 +1,5 @@
 Timebounds: 
-  Overall timebound: max{6, 1+5+-1+-E-A+2*C} [O(n)]
+  Overall timebound: max{6, 6+-1+-E-A+2*C} [O(n)]
   3: lbl72->stop: 1 [O(1)]
   4: lbl72->stop: 1 [O(1)]
   5: lbl72->lbl72: max{0, -1+-E-A+2*C} [O(n)]
@@ -9,7 +9,7 @@ Timebounds:
   6: start0->start: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: max{6, 1+5+-1+-E-A+2*C} [O(n)]
+  Overall costbound: max{6, 6+-1+-E-A+2*C} [O(n)]
   3: lbl72->stop: 1 [O(1)]
   4: lbl72->stop: 1 [O(1)]
   5: lbl72->lbl72: max{0, -1+-E-A+2*C} [O(n)]

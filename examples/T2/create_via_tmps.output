@@ -159,7 +159,7 @@ Sizebounds:
   17: f3->f1, X: G1 [O(n)]
 `Upper:
   0: f1->f1, A: A [O(n)]
-  0: f1->f1, B: max{2, 0+A} [O(n)]
+  0: f1->f1, B: max{2, A} [O(n)]
   0: f1->f1, M: max{2, 2, A} [O(n)]
   0: f1->f1, N: N [O(n)]
   0: f1->f1, O: O [O(n)]

@@ -290,7 +290,7 @@ Sizebounds:
   13: f9->f10, Y: D2 [O(n)]
   13: f9->f10, Z: Z [O(n)]
 `Upper:
-  3: f1->f1, A: max{8, 0+4*M1} [O(n)]
+  3: f1->f1, A: max{8, 4*M1} [O(n)]
   3: f1->f1, A1: A1 [O(n)]
   3: f1->f1, B: B [O(n)]
   3: f1->f1, B1: B1 [O(n)]

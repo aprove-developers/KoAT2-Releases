@@ -113,7 +113,7 @@ Sizebounds:
   2: f16->f16, D: D [O(n)]
   2: f16->f16, E: E [O(n)]
   2: f16->f16, F: F [O(n)]
-  2: f16->f16, G: max{1, 0+F} [O(n)]
+  2: f16->f16, G: max{1, F} [O(n)]
   2: f16->f16, K: K [O(n)]
   2: f16->f16, L: L [O(n)]
   2: f16->f16, M: M [O(n)]

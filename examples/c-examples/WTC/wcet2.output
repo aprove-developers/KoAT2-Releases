@@ -1,8 +1,8 @@
 Timebounds: 
-  Overall timebound: 4+max{0, 5-A}+max{0, 28*(5-A)}+max{0, 5-A}+max{0, 112*(5-A)}+max{0, 5-A}+max{0, 3-A} [O(n)]
+  Overall timebound: 4+2*max{0, 5-A}+max{0, 5-A}+max{0, 28*(5-A)}+max{0, 5-A}+max{0, 112*(5-A)} [O(n)]
   7: evalwcet2bb1in->evalwcet2bb2in: max{0, 112*(5-A)} [O(n)]
   4: evalwcet2bb2in->evalwcet2bb1in: max{0, 28*(5-A)} [O(n)]
-  5: evalwcet2bb2in->evalwcet2bb4in: max{0, 3-A} [O(n)]
+  5: evalwcet2bb2in->evalwcet2bb4in: max{0, 5-A} [O(n)]
   6: evalwcet2bb2in->evalwcet2bb4in: max{0, 5-A} [O(n)]
   8: evalwcet2bb4in->evalwcet2bb5in: max{0, 5-A} [O(n)]
   2: evalwcet2bb5in->evalwcet2bb2in: max{0, 5-A} [O(n)]
@@ -12,10 +12,10 @@ Timebounds:
   0: evalwcet2start->evalwcet2entryin: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 4+max{0, 5-A}+max{0, 28*(5-A)}+max{0, 5-A}+max{0, 112*(5-A)}+max{0, 5-A}+max{0, 3-A} [O(n)]
+  Overall costbound: 4+2*max{0, 5-A}+max{0, 5-A}+max{0, 28*(5-A)}+max{0, 5-A}+max{0, 112*(5-A)} [O(n)]
   7: evalwcet2bb1in->evalwcet2bb2in: max{0, 112*(5-A)} [O(n)]
   4: evalwcet2bb2in->evalwcet2bb1in: max{0, 28*(5-A)} [O(n)]
-  5: evalwcet2bb2in->evalwcet2bb4in: max{0, 3-A} [O(n)]
+  5: evalwcet2bb2in->evalwcet2bb4in: max{0, 5-A} [O(n)]
   6: evalwcet2bb2in->evalwcet2bb4in: max{0, 5-A} [O(n)]
   8: evalwcet2bb4in->evalwcet2bb5in: max{0, 5-A} [O(n)]
   2: evalwcet2bb5in->evalwcet2bb2in: max{0, 5-A} [O(n)]

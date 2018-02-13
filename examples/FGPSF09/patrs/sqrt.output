@@ -1,11 +1,11 @@
 Timebounds: 
-  Overall timebound: max{2, 1+1+D} [O(n)]
+  Overall timebound: max{2, 2+D} [O(n)]
   1: f->f: max{0, D} [O(n)]
   2: f->end: 1 [O(1)]
   0: sqrt->f: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: max{2, 1+1+D} [O(n)]
+  Overall costbound: max{2, 2+D} [O(n)]
   1: f->f: max{0, D} [O(n)]
   2: f->end: 1 [O(1)]
   0: sqrt->f: 1 [O(1)]

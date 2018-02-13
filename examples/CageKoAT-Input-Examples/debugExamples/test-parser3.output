@@ -1,11 +1,11 @@
 Timebounds: 
-  Overall timebound: max{2, 1+1+x} [O(n)]
+  Overall timebound: max{2, 2+x} [O(n)]
   1: g->f: 1 [O(1)]
   2: g->g: max{0, x} [O(n)]
   0: start->g: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: max{2, 1+1+x} [O(n)]
+  Overall costbound: max{2, 2+x} [O(n)]
   1: g->f: 1 [O(1)]
   2: g->g: max{0, x} [O(n)]
   0: start->g: 1 [O(1)]

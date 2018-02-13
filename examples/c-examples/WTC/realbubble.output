@@ -1,8 +1,8 @@
 Timebounds: 
-  Overall timebound: 5+2*max{0, A*(-1+A)}+2*max{0, A*max{3, 3*(-1+A)}}+max{0, A}+max{0, A*max{3, 1+2*(-1+A)}}+max{0, -1+A}+max{0, 2*(-1+A)}+max{0, 2*(-1+A)} [O(n^2)]
-  6: evalrealbubblebb1in->evalrealbubblebb2in: max{0, A*max{3, 3*(-1+A)}} [O(n^2)]
+  Overall timebound: 5+max{0, A}+max{0, A*max{6, 3+3*(-1+A)}}+max{0, -1+A}+max{0, A*(-1+A)}+max{0, 2*(-1+A)}+max{0, A*max{2, 2*(-1+A)}}+max{0, 2*(-1+A)}+max{0, A*max{3, 3*(-1+A)}}+max{0, A*max{3, 1+2*(-1+A)}} [O(n^2)]
+  6: evalrealbubblebb1in->evalrealbubblebb2in: max{0, A*max{6, 3+3*(-1+A)}} [O(n^2)]
   7: evalrealbubblebb1in->evalrealbubblebb3in: max{0, A*max{3, 3*(-1+A)}} [O(n^2)]
-  8: evalrealbubblebb2in->evalrealbubblebb3in: max{0, A*(-1+A)} [O(n^2)]
+  8: evalrealbubblebb2in->evalrealbubblebb3in: max{0, A*max{2, 2*(-1+A)}} [O(n^2)]
   9: evalrealbubblebb3in->evalrealbubblebb4in: max{0, A*(-1+A)} [O(n^2)]
   4: evalrealbubblebb4in->evalrealbubblebb1in: max{0, A*max{3, 1+2*(-1+A)}} [O(n^2)]
   5: evalrealbubblebb4in->evalrealbubblebb5in: max{0, 2*(-1+A)} [O(n)]
@@ -16,10 +16,10 @@ Timebounds:
   0: evalrealbubblestart->evalrealbubbleentryin: 1 [O(1)]
 
 Costbounds:
-  Overall costbound: 5+2*max{0, A*(-1+A)}+2*max{0, A*max{3, 3*(-1+A)}}+max{0, A}+max{0, A*max{3, 1+2*(-1+A)}}+max{0, -1+A}+max{0, 2*(-1+A)}+max{0, 2*(-1+A)} [O(n^2)]
-  6: evalrealbubblebb1in->evalrealbubblebb2in: max{0, A*max{3, 3*(-1+A)}} [O(n^2)]
+  Overall costbound: 5+max{0, A}+max{0, A*max{6, 3+3*(-1+A)}}+max{0, -1+A}+max{0, A*(-1+A)}+max{0, 2*(-1+A)}+max{0, A*max{2, 2*(-1+A)}}+max{0, 2*(-1+A)}+max{0, A*max{3, 3*(-1+A)}}+max{0, A*max{3, 1+2*(-1+A)}} [O(n^2)]
+  6: evalrealbubblebb1in->evalrealbubblebb2in: max{0, A*max{6, 3+3*(-1+A)}} [O(n^2)]
   7: evalrealbubblebb1in->evalrealbubblebb3in: max{0, A*max{3, 3*(-1+A)}} [O(n^2)]
-  8: evalrealbubblebb2in->evalrealbubblebb3in: max{0, A*(-1+A)} [O(n^2)]
+  8: evalrealbubblebb2in->evalrealbubblebb3in: max{0, A*max{2, 2*(-1+A)}} [O(n^2)]
   9: evalrealbubblebb3in->evalrealbubblebb4in: max{0, A*(-1+A)} [O(n^2)]
   4: evalrealbubblebb4in->evalrealbubblebb1in: max{0, A*max{3, 1+2*(-1+A)}} [O(n^2)]
   5: evalrealbubblebb4in->evalrealbubblebb5in: max{0, 2*(-1+A)} [O(n)]

@@ -188,7 +188,7 @@ Sizebounds:
   1: f1->f1, G: G [O(n)]
   1: f1->f1, H: H [O(n)]
   1: f1->f1, I: C1 [O(n)]
-  1: f1->f1, J: max{8, 0+4*C1} [O(n)]
+  1: f1->f1, J: max{8, 4*C1} [O(n)]
   1: f1->f1, O: max{2, 8, 4*C1} [O(n)]
   1: f1->f1, P: D1 [O(n)]
   1: f1->f1, Q: E1 [O(n)]
