@@ -57,11 +57,52 @@ We use the Big-O-Notation $\landau$ \cite{bigo} to denote the worst-case asympto
 We distinguish between constant complexity $\landau(1)$, polynomial complexity of a certain degree $\landau(n^k)$ and exponential complexity $\landau(2^n)$.
 We write $\landau(\infty)$ to denote a complexity that is not bounded by any function.
 We use the expected order between these complexity classes (i.e. $\landau(1) \leq \landau(n^k) \leq \landau(2^n) \leq \landau(\infty)$).
-The following definition introduces a projection, such that for every bound $b \in \BoundSet(\PVSet)$ the resulting asymptotic complexity $\complexity(b)$ is a valid overapproximation of the actual complexity.
+The following definition introduces a projection to overapproximate the actual asymptotic complexity of a bound.
+
+\begin{definition}[Approximation of the Asymptotic Complexity]
+  \allowdisplaybreaks
+  Let $\VSet$ be a finite set of variables.
+  Let $\BoundSet(\VSet)$ be the set of bounds over the variables $\VSet$.
+  We define $\complexity$ as a function such that the following statements hold.
+  \begin{align*}
+    \complexity(\infty) &= \landau(\infty) \text{ for } \infty \in \BoundSet(\VSet) \\
+    \complexity(k) &= \landau(n^0) = \landau(1) \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet) \\
+    \complexity(v) &= \landau(n^1) = \landau(n) \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \\
+    \complexity(-b) &= \complexity(b) \text{ for all } b \in \BoundSet(\VSet) \\
+    \complexity(b_1 + b_2) &= \landau(n^{\maximum{k_1, k_2}}) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(n^{k_1}) \text{ and } \complexity(b_2)=\landau(n^{k_2}) \\
+    \complexity(b_1 + b_2) &= \landau(2^n) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(2^n) \text{ and } \complexity(b_2)<\landau(\infty) \\
+    & \text{ or } \complexity(b_1)<\landau(\infty) \text{ and } \complexity(b_2)=\landau(2^n) \\
+    \complexity(b_1 + b_2) &= \landau(\infty) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(\infty) \text{ or } \complexity(b_2)=\landau(\infty) \\
+    \complexity(b_1 \cdot b_2) &= \landau(n^{k_1 + k_2}) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(n^{k_1}) \text{ and } \complexity(b_2)=\landau(n^{k_2}) \\
+    \complexity(b_1 \cdot b_2) &= \landau(2^n) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(2^n) \text{ and } \complexity(b_2)<\landau(\infty) \\
+    & \text{ or } \complexity(b_1)<\landau(\infty) \text{ and } \complexity(b_2)=\landau(2^n) \\
+    \complexity(b_1 \cdot b_2) &= \landau(\infty) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    & \text{ if } \complexity(b_1)=\landau(\infty) \text{ or } \complexity(b_2)=\landau(\infty) \\
+    \complexity(\max(b_1, b_2)) &=
+    \begin{cases}
+      \complexity(b_1) & \text{ if } \complexity(b_1) \geq \complexity(b_2) \\
+      \complexity(b_2) & \text{ otherwise }
+    \end{cases} \\
+    & \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
+    \complexity(k^b) &=
+    \begin{cases}
+      \landau(\infty) & \text{ if } \complexity(b)=\landau(\infty) \\
+      \landau(2^n) & \text{ otherwise }
+    \end{cases} \\
+    & \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet), b \in \BoundSet(\VSet)
+  \end{align*}
+\end{definition}
+
+We can prove that for every bound $b \in \BoundSet(\VSet)$ the resulting asymptotic complexity $\complexity(b)$ is a valid overapproximation of the actual complexity.
 
 \input{theorems/asymptotic_complexity}
 
-Note that this definition projects a bound $x-x$ to a complexity $\complexity(x-x) = \landau(n)$.
+Note that with this definition a bound $x-x$ is projected to a complexity $\complexity(x-x) = \landau(n)$.
 As already mentioned, the implementation is able to simplify such a bound to an equivalent bound $0$.
 Therefore, the better, but still valid complexity $\complexity(0) = \landau(1)$ is determined.
 Nevertheless, the implementation is not able to simplify every bound $b$ to an equivalent bound $b'$ with a complexity $\complexity(b')$ better than $complexity(b)$, although such a bound $b'$ may exist.

@@ -1,40 +1,6 @@
-\begin{theorem}[Approximation of the Asymptotic Complexity]
-  \allowdisplaybreaks
+\begin{theorem}[Soundness of the Approximation of the Asymptotic Complexity]
   Let $\VSet$ be a finite set of variables.
   Let $\BoundSet(\VSet)$ be the set of bounds over the variables $\VSet$.
-  We define $\complexity$ as a function such that the following statements hold.
-  \begin{align*}
-    \complexity(\infty) &= \landau(\infty) \text{ for } \infty \in \BoundSet(\VSet) \\
-    \complexity(k) &= \landau(n^0) = \landau(1) \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet) \\
-    \complexity(v) &= \landau(n^1) = \landau(n) \text{ for all } v \in \VSet \subseteq \BoundSet(\VSet) \\
-    \complexity(-b) &= \complexity(b) \text{ for all } b \in \BoundSet(\VSet) \\
-    \complexity(b_1 + b_2) &= \landau(n^{\maximum{k_1, k_2}}) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
-    & \text{ if } \complexity(b_1)=\landau(n^{k_1}) \text{ and } \complexity(b_2)=\landau(n^{k_2}) \\
-    \complexity(b_1 + b_2) &= \landau(2^n) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
-    & \text{ if } \complexity(b_1)=\landau(2^n) \text{ and } \complexity(b_2)<\landau(\infty) \\
-    & \text{ or } \complexity(b_1)<\landau(\infty) \text{ and } \complexity(b_2)=\landau(2^n) \\
-    \complexity(b_1 + b_2) &= \landau(\infty) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
-    & \text{ if } \complexity(b_1)=\landau(\infty) \text{ or } \complexity(b_2)=\landau(\infty) \\
-    \complexity(b_1 \cdot b_2) &= \landau(n^{k_1 + k_2}) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
-    & \text{ if } \complexity(b_1)=\landau(n^{k_1}) \text{ and } \complexity(b_2)=\landau(n^{k_2}) \\
-    \complexity(b_1 \cdot b_2) &= \landau(2^n) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
-    & \text{ if } \complexity(b_1)=\landau(2^n) \text{ and } \complexity(b_2)<\landau(\infty) \\
-    & \text{ or } \complexity(b_1)<\landau(\infty) \text{ and } \complexity(b_2)=\landau(2^n) \\
-    \complexity(b_1 \cdot b_2) &= \landau(\infty) \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
-    & \text{ if } \complexity(b_1)=\landau(\infty) \text{ or } \complexity(b_2)=\landau(\infty) \\
-    \complexity(\max(b_1, b_2)) &=
-    \begin{cases}
-      \complexity(b_1) & \text{ if } \complexity(b_1) \geq \complexity(b_2) \\
-      \complexity(b_2) & \text{ otherwise }
-    \end{cases} \\
-    & \text{ for all } b_1, b_2 \in \BoundSet(\VSet) \\
-    \complexity(k^b) &=
-    \begin{cases}
-      \landau(\infty) & \text{ if } \complexity(b)=\landau(\infty) \\
-      \landau(2^n) & \text{ otherwise }
-    \end{cases} \\
-    & \text{ for all } k \in \mathbb{N} \subseteq \BoundSet(\VSet), b \in \BoundSet(\VSet)
-  \end{align*}
   We denote with $b \in \landau(f)$ the actual asymptotic complexity of a bound $b \in \BoundSet(\VSet)$.
   Let $b \in \BoundSet(\VSet)$ be a bound of the complexity $b \in \landau(f)$.
   Then, it holds that $\complexity(b) \geq \landau(f)$.
