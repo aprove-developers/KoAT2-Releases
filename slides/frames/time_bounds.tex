@@ -1,12 +1,12 @@
 \begin{center}
   \begin{tikzpicture}[program]
-    \node[show on=<4->, highlight on=<4>, highlight on=<13-14>, label=below:{\nodeshow{7-8}{x-y}}] (0) {$\location_0$};
-    \node[highlight on=<9>, highlight on=<12-14>, label=below:{\nodeshow{7-}{\textcolor<8-9>{blue}{x-y}}}, right of=0] (1) {\alt<1>{$\location_0$}{$\location_{\textcolor<2>{blue}{1}}$}};
+    \node[show on=<4->, highlight on=<4>, highlight on=<13>, label=below:{\nodeshow{7-8}{x-y}}] (0) {$\location_0$};
+    \node[highlight on=<9>, highlight on=<12-13>, label=below:{\nodeshow{7-}{\textcolor<8-9>{blue}{x-y}}}, right of=0] (1) {\alt<1>{$\location_0$}{$\location_{\textcolor<2>{blue}{1}}$}};
     \node[highlight on=<9>, label=below:{\nodeshow{7-}{\textcolor<9>{blue}{x-y}}}, right of=1] (2) {\alt<1>{$\location_1$}{$\location_{\textcolor<2>{blue}{2}}$}};
 
     \path[transitions]
-    (0) edge[show on=<4->, highlight on=<4>, highlight on=<10>, highlight on=<13-14>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
-    (1) edge[show on=<5->, highlight on=<5>, highlight on=<11>, highlight on=<14>, loop above] node[above left] {$t_1$} node[above right=-0.5cm and 0.2cm] {$if(x<10)$\\\textcolor<8>{blue}{$x \coloneqq x+1$}\\$y \coloneqq y$} (1)
+    (0) edge[show on=<4->, highlight on=<4>, highlight on=<10>, highlight on=<13>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+    (1) edge[show on=<5->, highlight on=<5>, highlight on=<11>, highlight on=<13>, loop above] node[above left] {$t_1$} node[above right=-0.5cm and 0.2cm] {$if(x<10)$\\\textcolor<8>{blue}{$x \coloneqq x+1$}\\$y \coloneqq y$} (1)
     (1) edge[highlight on=<9>] node[above] {\alt<1-2>{$t_0$}{$t_{\textcolor<3>{blue}{2}}$}} node[below] {\nodeshow{5-}{\textcolor<5>{blue}{$if(x \geq 10)$}}\\$x \coloneqq x$\\$y \coloneqq y$} (2)
     (2) edge[highlight on=<6>, highlight on=<9>, loop above] node[above left] {\alt<1-2>{$t_1$}{$t_{\textcolor<3>{blue}{3}}$}} node[above right=-0.5cm and 0.2cm] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (2)
     ;
@@ -17,5 +17,5 @@
   \onslide<6->{\textcolor<6>{blue}{\UTime(t_3)}} \onslide<9->{=}&
   \onslide<10->{\textcolor<10>{blue}{\UTime(t_0)} \cdot}
   \onslide<9->{\max(0,}\textcolor<13>{blue}{\onslide<13->{\USize(t_0,}\onslide<9->{\textcolor<12>{blue}{x}}\onslide<13->{)}\onslide<9->{-}\onslide<13->{\LSize(t_0,}\onslide<9->{\textcolor<12>{blue}{y}}\onslide<13->{)}}\onslide<9->{)}\\
-  \onslide<11->{+& \textcolor<11>{blue}{\UTime(t_1)} \cdot} \onslide<11->{\max(0,}\textcolor<14>{blue}{\onslide<14->{\USize(t_1,}\onslide<11->{\textcolor<12>{blue}{x}}\onslide<14->{)}\onslide<11->{-}\onslide<14->{\LSize(t_1,}\onslide<11->{\textcolor<12>{blue}{y}}\onslide<14->{)}}\onslide<11->{)}
+  \onslide<11->{+& \textcolor<11>{blue}{\UTime(t_1)} \cdot} \onslide<11->{\max(0,}\textcolor<13>{blue}{\onslide<13->{\USize(t_1,}\onslide<11->{\textcolor<12>{blue}{x}}\onslide<13->{)}\onslide<11->{-}\onslide<13->{\LSize(t_1,}\onslide<11->{\textcolor<12>{blue}{y}}\onslide<13->{)}}\onslide<11->{)}
 \end{align*}
