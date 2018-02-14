@@ -1,32 +1,32 @@
 \begin{center}
   \begin{tikzpicture}[program]
     \node[label=below:{\nodeshow{3-}{\textcolor<4>{blue}{x-y}}}, highlight on=<4>] (0) {$\location_0$};
-    \node[label=below:{\nodeshow{3-}{x-y}}, highlight on=<6>, highlight on=<8>, highlight on=<10>, highlight on=<12>] (1) [right of=0] {$\location_1$};
+    \node[label=below:{\nodeshow{3-}{x-y}}, highlight on=<7>, highlight on=<9>, highlight on=<11>, highlight on=<13>] (1) [right of=0] {$\location_1$};
 
     \path[transitions]
-    (0) edge[highlight on=<5>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
-    (1) edge[loop above, highlight on=<2>, highlight on=<7>, highlight on=<9>, highlight on=<11>, highlight on=<13>] node[above left] {$t_1$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
+    (0) edge[highlight on=<6>] node[above] {$t_0$} node[below] {$x \coloneqq x$\\$y \coloneqq y$} (1)
+    (1) edge[loop above, highlight on=<2>, highlight on=<8>, highlight on=<10>, highlight on=<12>, highlight on=<14>] node[above left] {$t_1$} node[above tlabel] {$if(x>y)$\\$x \coloneqq x-1$\\$y \coloneqq y$} (1)
     ;
   \end{tikzpicture}
   \begin{tikzpicture}[evaluation, node distance=2.4cm, every node/.style={draw,rectangle,font=\footnotesize}]    
-    \node (0) [show on=<4->, highlight on=<4>, highlight on=<15>, label=below:{\nodeshow{4-}{\textcolor<16>{blue}{$x>y$}}}] {$x-y$};
-    \node (1) [show on=<6->, highlight on=<6>, right of=0] {$x-y$};
-    \node (2) [show on=<8->, highlight on=<8>, right of=1] {$(x-1)-y$};
-    \node (3) [show on=<10->, highlight on=<10>, right of=2] {$(y+1)-y$};
-    \node (4) [show on=<12->, highlight on=<12>, right of=3] {$y-y$};
-    \node (exit) [show on=<13->, right of=4, draw=none, node distance=1.3cm] {};
+    \node (0) [show on=<5->, highlight on=<5>, highlight on=<16>, label=below:{\nodeshow{5-}{\textcolor<17>{blue}{$x>y$}}}] {$x-y$};
+    \node (1) [show on=<7->, highlight on=<7>, right of=0] {$x-y$};
+    \node (2) [show on=<9->, highlight on=<9>, right of=1] {$(x-1)-y$};
+    \node (3) [show on=<11->, highlight on=<11>, right of=2] {$(y+1)-y$};
+    \node (4) [show on=<13->, highlight on=<13>, right of=3] {$y-y$};
+    \node (exit) [show on=<14->, right of=4, draw=none, node distance=1.3cm] {};
     
     \path[transitions]
-    (0) edge[show on=<5->, highlight on=<5>] node {$t_0$} node[below] {$\geq$} (1)
-    (1) edge[show on=<7->, highlight on=<7>] node {$t_1$} node[below] {$>$} node[show on=<14->, highlight on=<14>, below=0.3cm] {$1$} (2)
-    (2) edge[show on=<9->, highlight on=<9>, dotted] node {$t_1$} node[below] {$>$} node[show on=<14->, highlight on=<14>, below=0.3cm] {$x-y-2$} (3)
-    (3) edge[show on=<11->, highlight on=<11>] node {$t_1$} node[below] {$>$} node[show on=<14->, highlight on=<14>, below=0.3cm] {$1$} (4)
-    (4) edge[show on=<13->, highlight on=<13>, cross] node {$t_1$} node[below] {} (exit)
+    (0) edge[show on=<6->, highlight on=<6>] node {$t_0$} node[below] {$\geq$} (1)
+    (1) edge[show on=<8->, highlight on=<8>] node {$t_1$} node[below] {$>$} node[show on=<15->, highlight on=<15>, below=0.3cm] {$1$} (2)
+    (2) edge[show on=<10->, highlight on=<10>, dotted] node {$t_1$} node[below] {$>$} node[show on=<15->, highlight on=<15>, below=0.3cm] {$x-y-2$} (3)
+    (3) edge[show on=<12->, highlight on=<12>] node {$t_1$} node[below] {$>$} node[show on=<15->, highlight on=<15>, below=0.3cm] {$1$} (4)
+    (4) edge[show on=<14->, highlight on=<14>, cross] node {$t_1$} node[below] {} (exit)
     ;
   \end{tikzpicture}
 \end{center}
 
 \onslide<2->{
   \centering
-  $\textcolor<2>{blue}{\UTime(t_1)} \onslide<15-16>{=} \onslide<16>{\max(\textcolor{blue}{0},}\textcolor<15>{blue}{\onslide<15-16>{x-y}}\onslide<16>{)}$
+  $\textcolor<2>{blue}{\UTime(t_1)} \onslide<16-17>{=} \onslide<17>{\max(\textcolor{blue}{0},}\textcolor<16>{blue}{\onslide<16-17>{x-y}}\onslide<17>{)}$
 }
