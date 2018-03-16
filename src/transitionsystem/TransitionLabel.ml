@@ -8,7 +8,8 @@ module VarMap = Map.Make(Var)
            
 exception RecursionNotSupported
 exception OnlyCom1Supported
-        
+exception ProbabilityMustBeBetweenZeroAndOne
+
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
           
 type t = {
@@ -22,11 +23,12 @@ type t = {
 let one = Polynomial.one
 
 let make ?(cost=one) ?(probability=1.) com_kind ~update ~guard =
-  if com_kind <> "Com_1" then raise OnlyCom1Supported else
-  {
-    id = unique ();
-    update; guard; cost; probability;
-  }
+  if (probability > 1. || probability < 0.) then raise ProbabilityMustBeBetweenZeroAndOne else 
+    if com_kind <> "Com_1" then raise OnlyCom1Supported else
+    {
+      id = unique ();
+      update; guard; cost; probability;
+    }
 
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
@@ -54,16 +56,17 @@ let compare_equivalent lbl1 lbl2 =
 
 (* TODO Pattern <-> Assigment relation *)
 let mk ?(cost=one) ?(probability=1.) ~com_kind ~targets ~patterns ~guard ~vars =
-  if List.length targets != 1 then raise RecursionNotSupported else
-    if com_kind <> "Com_1" then raise OnlyCom1Supported else
-      let (target, assignments) = List.hd targets in
-      (* TODO Better error handling in case the sizes differ *)
-      (List.enum patterns, List.enum assignments)
-      |> Enum.combine
-      |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
-      |> Enum.fold (fun map adder -> adder map) VarMap.empty 
-      |> fun update -> { id = unique ();
-                         update; guard; cost; probability;}
+  if (probability > 1. || probability < 0.) then raise ProbabilityMustBeBetweenZeroAndOne else
+    if List.length targets != 1 then raise RecursionNotSupported else
+      if com_kind <> "Com_1" then raise OnlyCom1Supported else
+        let (target, assignments) = List.hd targets in
+        (* TODO Better error handling in case the sizes differ *)
+        (List.enum patterns, List.enum assignments)
+        |> Enum.combine
+        |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
+        |> Enum.fold (fun map adder -> adder map) VarMap.empty 
+        |> fun update -> { id = unique ();
+                          update; guard; cost; probability;}
                    
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
