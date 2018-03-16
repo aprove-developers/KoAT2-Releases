@@ -16,15 +16,16 @@ type t = {
     update : Polynomial.t VarMap.t;
     guard : Guard.t;
     cost : Polynomial.t;
+    probability : Float.t
   }
   
 let one = Polynomial.one
 
-let make ?(cost=one) com_kind ~update ~guard =
+let make ?(cost=one) ?(probability=1.) com_kind ~update ~guard =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
   {
     id = unique ();
-    update; guard; cost;
+    update; guard; cost; probability;
   }
 
 let same lbl1 lbl2 =
@@ -34,6 +35,7 @@ let equivalent lbl1 lbl2 =
   VarMap.equal Polynomial.equal lbl1.update lbl2.update
   && Guard.equal lbl1.guard lbl2.guard
   && Polynomial.equal lbl1.cost lbl2.cost
+  && Float.equal lbl1.probability lbl2.probability
 
 let compare_same lbl1 lbl2 =
   Int.compare lbl1.id lbl2.id
@@ -45,11 +47,13 @@ let compare_equivalent lbl1 lbl2 =
     Guard.compare lbl1.guard lbl2.guard
   else if Polynomial.compare lbl1.cost lbl2.cost != 0 then
     Polynomial.compare lbl1.cost lbl2.cost
+  else if Float.compare lbl1.probability lbl2.probability != 0 then
+    Float.compare lbl1.probability lbl2.probability
   else
     0
 
 (* TODO Pattern <-> Assigment relation *)
-let mk ?(cost=one) ~com_kind ~targets ~patterns ~guard ~vars =
+let mk ?(cost=one) ?(probability=1.) ~com_kind ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       let (target, assignments) = List.hd targets in
@@ -59,7 +63,7 @@ let mk ?(cost=one) ~com_kind ~targets ~patterns ~guard ~vars =
       |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
       |> fun update -> { id = unique ();
-                         update; guard; cost;}
+                         update; guard; cost; probability;}
                    
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
@@ -86,6 +90,7 @@ let append t1 t2 =
     update = new_update;
     guard = new_guard;
     cost = Polynomial.(t1.cost + t2.cost);
+    probability = Float.(t1.probability * t2.probability);
   }
 
 let id t = t.id
@@ -113,6 +118,7 @@ let default = {
     update = VarMap.empty;
     guard = Guard.mk_true;
     cost = one;
+    probability = 1.
   }
             
 let update_to_string_list update =
