@@ -104,6 +104,8 @@ let map_guard f label =
 
 let cost t = t.cost
 
+let probability t = t.probability
+
 let vars_ {update; guard; cost; _} =
   VarMap.fold (fun _ -> VarSet.union % Polynomial.vars) update VarSet.empty
   |> (VarSet.union % VarSet.of_enum % VarMap.keys) update
