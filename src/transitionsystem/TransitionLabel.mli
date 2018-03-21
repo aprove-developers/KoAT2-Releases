@@ -14,16 +14,26 @@ type t
 
 exception RecursionNotSupported
 
-val make : ?cost:polynomial -> ?probability:float -> string -> update:polynomial VarMap.t -> guard:Guard.t -> t
+val make : ?cost:polynomial -> string -> update:polynomial VarMap.t -> guard:Guard.t -> t
 
 val mk : ?cost:polynomial ->
-         ?probability:float ->
          com_kind:string ->
          targets:(string * (polynomial list)) list ->
          patterns:Var.t list ->
          guard:Guard.t ->
          vars:Var.t list ->
          t
+         
+val make_prob : ?cost:polynomial -> string -> updates:(polynomial VarMap.t) list -> guard:Guard.t -> probabilities:(float list) -> t list
+
+(*val mk_prob : ?cost:polynomial ->
+         probabilities:float ->
+         com_kind:string ->
+         targets:(string * (polynomial list)) list ->
+         patterns:Var.t list ->
+         guard:Guard.t ->
+         vars:Var.t list ->
+         [t]*)
 
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)

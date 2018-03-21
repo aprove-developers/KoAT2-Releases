@@ -8,7 +8,8 @@ module VarMap = Map.Make(Var)
            
 exception RecursionNotSupported
 exception OnlyCom1Supported
-exception ProbabilityMustBeBetweenZeroAndOne
+exception ProubabilitiesSumUpToOne
+exception DifferentUpdatesAndProbabilities
 
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
           
@@ -22,13 +23,22 @@ type t = {
   
 let one = Polynomial.one
 
-let make ?(cost=one) ?(probability=1.) com_kind ~update ~guard =
-  if (probability > 1. || probability < 0.) then raise ProbabilityMustBeBetweenZeroAndOne else 
-    if com_kind <> "Com_1" then raise OnlyCom1Supported else
-    {
-      id = unique ();
-      update; guard; cost; probability;
-    }
+(* Generates a nonprobabilistic label and sets the probability to one *)
+let make ?(cost = one)  com_kind ~update ~guard = 
+  if com_kind <> "Com_1" then raise OnlyCom1Supported else
+  {
+    id = unique ();
+    update; guard; cost; probability=1.;
+  }
+
+(* Generates a list of probabilistic labels *)
+let make_prob ?(cost = one) com_kind ~updates ~guard ~probabilities =
+  if com_kind <> "Com_1" then raise OnlyCom1Supported else
+    if List.fsum probabilities > 1.  then raise ProubabilitiesSumUpToOne else
+      if (List.length probabilities) <> (List.length updates) then raise DifferentUpdatesAndProbabilities else
+      let id = unique () in
+      let comb_updates = (List.combine updates probabilities) in
+        List.map (fun (update, probability) -> { id; update; guard; cost; probability; }) comb_updates
 
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
@@ -55,18 +65,17 @@ let compare_equivalent lbl1 lbl2 =
     0
 
 (* TODO Pattern <-> Assigment relation *)
-let mk ?(cost=one) ?(probability=1.) ~com_kind ~targets ~patterns ~guard ~vars =
-  if (probability > 1. || probability < 0.) then raise ProbabilityMustBeBetweenZeroAndOne else
-    if List.length targets != 1 then raise RecursionNotSupported else
-      if com_kind <> "Com_1" then raise OnlyCom1Supported else
-        let (target, assignments) = List.hd targets in
-        (* TODO Better error handling in case the sizes differ *)
-        (List.enum patterns, List.enum assignments)
-        |> Enum.combine
-        |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
-        |> Enum.fold (fun map adder -> adder map) VarMap.empty 
-        |> fun update -> { id = unique ();
-                          update; guard; cost; probability;}
+let mk ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars =
+  if List.length targets != 1 then raise RecursionNotSupported else
+    if com_kind <> "Com_1" then raise OnlyCom1Supported else
+      let (target, assignments) = List.hd targets in
+      (* TODO Better error handling in case the sizes differ *)
+      (List.enum patterns, List.enum assignments)
+      |> Enum.combine
+      |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
+      |> Enum.fold (fun map adder -> adder map) VarMap.empty 
+      |> fun update -> { id = unique ();
+                        update; guard; cost; probability=1.;}
                    
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
