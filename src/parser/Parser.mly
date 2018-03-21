@@ -1,5 +1,6 @@
 %token	<string>	ID
 %token	<int>		UINT
+%token  <float>         UFLOAT
 %token			PLUS MINUS TIMES POW
 %token			EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
 %token			LPAR RPAR
