@@ -26,9 +26,9 @@ val mk : ?cost:polynomial ->
          
 val make_prob : string -> updates:(polynomial VarMap.t) list -> ?costs:polynomial list -> guard:Guard.t -> probabilities:(float list) -> t list
 
-val mk_prob :comkinds:string list ->
+val mk_prob :com_kinds:string list ->
          targets_list:((string * (polynomial list)) list) list ->
-         patterns_list:(Var.t list) list ->
+         patterns:Var.t list ->
          ?costs:polynomial list ->
          guard:Guard.t ->
          vars:Var.t list ->

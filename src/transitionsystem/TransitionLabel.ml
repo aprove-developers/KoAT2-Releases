@@ -36,7 +36,7 @@ let make ?(cost = one)  com_kind ~update ~guard =
   }
 
 (* Generates a list of probabilistic labels *)
-let make_prob  com_kind ~updates ?(costs = List.make (List.length updates) one) ~guard ~probabilities =
+let make_prob com_kind ~updates ?(costs = List.make (List.length updates) one) ~guard ~probabilities =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
     if List.fsum probabilities > 1. then raise ProbabilitiesShouldSumUpToOne else
       if (List.length probabilities) <> (List.length updates) then raise DifferentUpdatesAndProbabilities else
@@ -81,8 +81,8 @@ let mk ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars =
       |> fun update -> { id = unique ();
                         update; guard; cost; probability=1.;}
 
-let check_comkinds (comkinds : string list) : bool =
-  comkinds
+let check_com_kinds (com_kinds : string list) : bool =
+  com_kinds
   |> List.map (fun x -> x <> "Com_1" ) 
   |> List.fold_left (||) false
   
@@ -102,12 +102,12 @@ let mk_prob_help name guard (patterns, targets, cost, probability) =
                         update; guard; cost; probability;}
   
                         
-let mk_prob ~comkinds ~targets_list ~patterns_list ?(costs = List.make (List.length comkinds) one) ~guard ~vars ~probabilities =
+let mk_prob ~com_kinds ~targets_list ~patterns ?(costs = List.make (List.length com_kinds) one) ~guard ~vars ~probabilities =
   if (check_targets targets_list) then raise RecursionNotSupported else
-    if (check_comkinds comkinds) then raise OnlyCom1Supported else
+    if (check_com_kinds com_kinds) then raise OnlyCom1Supported else
       if List.fsum probabilities > 1. then raise ProbabilitiesShouldSumUpToOne else
         let label_name = unique() in
-        let label_information = quatruples patterns_list targets_list costs probabilities in
+        let label_information = quatruples (List.make (List.length com_kinds) patterns) targets_list costs probabilities in
           List.map (mk_prob_help label_name guard) label_information
                    
 let append t1 t2 =
