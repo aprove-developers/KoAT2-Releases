@@ -31,8 +31,8 @@ val mk_prob :com_kinds:string list ->
          patterns:Var.t list ->
          ?costs:polynomial list ->
          guard:Guard.t ->
-         vars:Var.t list ->
          probabilities:(float list) ->
+         vars:Var.t list ->
          t list
 
 (** Appends the second label to the first label.

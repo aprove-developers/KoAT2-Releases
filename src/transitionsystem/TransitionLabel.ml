@@ -102,7 +102,7 @@ let mk_prob_help name guard (patterns, targets, cost, probability) =
                         update; guard; cost; probability;}
   
                         
-let mk_prob ~com_kinds ~targets_list ~patterns ?(costs = List.make (List.length com_kinds) one) ~guard ~vars ~probabilities =
+let mk_prob ~com_kinds ~targets_list ~patterns ?(costs = List.make (List.length com_kinds) one) ~guard ~probabilities ~vars =
   if (check_targets targets_list) then raise RecursionNotSupported else
     if (check_com_kinds com_kinds) then raise OnlyCom1Supported else
       if List.fsum probabilities > 1. then raise ProbabilitiesShouldSumUpToOne else
