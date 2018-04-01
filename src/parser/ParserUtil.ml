@@ -9,29 +9,33 @@ let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t 
   |> List.map (fun constr ->
 	 (Location.of_string (Tuple2.first lhs),
           TransitionLabel.mk
-            ~com_kind:(Tuple2.first rhs)
-            ~targets:(Tuple2.second rhs)
-            ~patterns:(List.map Var.of_string (Tuple2.second lhs))
-            ~guard:constr 
             ~cost:cost
-            ~probability:1.0,
-          (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))))
+            ~com_kind:(Tuple2.first rhs)
+            ~targets:(Tuple2.second (Tuple2.second rhs))
+            ~patterns:(List.map Var.of_string (Tuple2.second lhs))
+            ~guard:constr,
+          (Location.of_string (List.hd (Tuple2.first (Tuple2.second rhs)))))
        )
   |> List.map (fun (l,t,l') -> (l,t ~vars,l'))
+
+let cartesian l l' = 
+  List.concat (List.map (fun e -> List.map (fun e' -> (e,e')) l') l)
   
-let mk_transition_prob lhs (cost: Polynomial.t) (probability: float) rhs (formula: Formula.t) (vars:Var.t list): Transition.t list =
+  
+let mk_transition_prob lhs (costs: Polynomial.t list) (probabilities: float list) rhs (formula: Formula.t) (vars:Var.t list): Transition.t list =
   formula
   |> Formula.constraints
-  |> List.map (fun constr ->
+  |> fun constraint_list -> cartesian constraint_list (Tuple2.first (Tuple2.second rhs))
+  |> List.map (fun (constr,goal) ->
 	 (Location.of_string (Tuple2.first lhs),
-          TransitionLabel.mk
-            ~com_kind:(Tuple2.first rhs)
-            ~targets:(Tuple2.second rhs)
+          TransitionLabel.mk_prob
+            ~costs:costs
+            ~com_kinds:(Tuple2.first rhs)
+            ~targets_list:(Tuple2.second (Tuple2.second rhs))
             ~patterns:(List.map Var.of_string (Tuple2.second lhs))
             ~guard:constr 
-            ~cost:cost
-            ~probability:probability,
-          (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))))
+            ~probabilities:probabilities,
+          (Location.of_string goal))
        )
   |> List.map (fun (l,t,l') -> (l,t ~vars,l'))
 
