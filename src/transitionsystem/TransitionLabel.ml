@@ -8,7 +8,7 @@ module VarMap = Map.Make(Var)
            
 exception RecursionNotSupported
 exception OnlyCom1Supported
-exception ProbabilitiesShouldSumUpToOne
+exception ProbabilitiesNotBetweenZeroAndOne
 exception DifferentUpdatesAndProbabilities
 
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
@@ -35,14 +35,14 @@ let make ?(cost = one)  com_kind ~update ~guard =
     update; guard; cost; probability=1.;
   }
 
-(* Generates a list of probabilistic labels *)
-let make_prob com_kind ~updates ?(costs = List.make (List.length updates) one) ~guard ~probabilities =
+(* Generates a probabilistic label, needs a name to distinguish different labels belonging to the same transition *)
+let make_prob ?(cost = one)  com_kind ~update ~guard ~id ~probability = 
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
-    if List.fsum probabilities > 1. then raise ProbabilitiesShouldSumUpToOne else
-      if (List.length probabilities) <> (List.length updates) then raise DifferentUpdatesAndProbabilities else
-      let id = unique () in
-      let comb_updates = (triples updates probabilities costs) in
-        List.map (fun (update, probability, cost) -> { id; update; guard; cost; probability; }) comb_updates
+    if (probability > 1. || probability < 0.) then raise ProbabilitiesNotBetweenZeroAndOne else
+  {
+    id = id;
+    update; guard; cost; probability=probability;
+  }
 
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
@@ -80,6 +80,19 @@ let mk ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars =
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
       |> fun update -> { id = unique ();
                         update; guard; cost; probability=1.;}
+                        
+let mk_prob ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars ~id ~probability =
+  if List.length targets != 1 then raise RecursionNotSupported else
+    if com_kind <> "Com_1" then raise OnlyCom1Supported else
+      if (probability > 1. || probability < 0.) then raise ProbabilitiesNotBetweenZeroAndOne else
+        let (target, assignments) = List.hd targets in
+        (* TODO Better error handling in case the sizes differ *)
+        (List.enum patterns, List.enum assignments)
+        |> Enum.combine
+        |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
+        |> Enum.fold (fun map adder -> adder map) VarMap.empty 
+        |> fun update -> { id = id;
+                          update; guard; cost; probability=probability;}
 
 let check_com_kinds (com_kinds : string list) : bool =
   com_kinds
@@ -90,26 +103,7 @@ let check_targets targets =
   targets
   |> List.map (fun x -> (List.length x) <> 1)
   |> List.fold_left (||) false
-  
-let mk_prob_help name guard (patterns, targets, cost, probability) =
-  let (target, assignments) = List.hd targets in
-      (* TODO Better error handling in case the sizes differ *)
-      (List.enum patterns, List.enum assignments)
-      |> Enum.combine
-      |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
-      |> Enum.fold (fun map adder -> adder map) VarMap.empty 
-      |> fun update -> { id = name;
-                        update; guard; cost; probability;}
-  
-                        
-let mk_prob ~com_kinds ~targets_list ~patterns ?(costs = List.make (List.length com_kinds) one) ~guard ~probabilities ~vars =
-  if (check_targets targets_list) then raise RecursionNotSupported else
-    if (check_com_kinds com_kinds) then raise OnlyCom1Supported else
-      if List.fsum probabilities > 1. then raise ProbabilitiesShouldSumUpToOne else
-        let label_name = unique() in
-        let label_information = quatruples (List.make (List.length com_kinds) patterns) targets_list costs probabilities in
-          List.map (mk_prob_help label_name guard) label_information
-                   
+                    
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
   let nondet_vars = VarTable.create 3 in

@@ -24,16 +24,17 @@ val mk : ?cost:polynomial ->
          vars:Var.t list ->
          t
          
-val make_prob : string -> updates:(polynomial VarMap.t) list -> ?costs:polynomial list -> guard:Guard.t -> probabilities:(float list) -> t list
+val make_prob : ?cost:polynomial -> string -> update:polynomial VarMap.t -> guard:Guard.t -> id:int -> probability:float -> t
 
-val mk_prob :com_kinds:string list ->
-         targets_list:((string * (polynomial list)) list) list ->
+val mk_prob : ?cost:polynomial ->
+         com_kind:string ->
+         targets:(string * (polynomial list)) list ->
          patterns:Var.t list ->
-         ?costs:polynomial list ->
          guard:Guard.t ->
-         probabilities:(float list) ->
          vars:Var.t list ->
-         t list
+         id:int ->
+         probability:float ->
+         t
 
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
