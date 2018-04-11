@@ -25,17 +25,17 @@ let mk_transition lhs (cost: Polynomial.t) (rhs: string * ((string * (Polynomial
   |> List.map (fun constr ->
           let id = unique() in
           List.map (fun (prob, comkind, targets) ->
-          (Location.of_string (Tuple2.first lhs),
-            TransitionLabel.mk_prob
-              ~cost:cost
-              ~com_kind:comkind
-              ~targets:targets
-              ~patterns:(List.map Var.of_string (Tuple2.second lhs))
-              ~guard:constr
-              ~id:id
-              ~probability:prob,
-            (Location.of_string (Tuple2.first (List.hd targets))))
-       ) rhs)
+            (Location.of_string (Tuple2.first lhs),
+              TransitionLabel.mk_prob
+                ~cost:cost
+                ~com_kind:comkind
+                ~targets:targets
+                ~patterns:(List.map Var.of_string (Tuple2.second lhs))
+                ~guard:constr
+                ~id:id
+                ~probability:prob,
+              (Location.of_string (Tuple2.first (List.hd targets))))
+        ) rhs)
   |> List.concat
   |> List.map (fun (l,t,l') -> (l,t ~vars,l'))
   
