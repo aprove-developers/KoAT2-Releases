@@ -63,6 +63,7 @@ rule read =
   | "/\\"             { P.AND }
   | "||"              { P.OR }
   | ":|:"             { P.WITH }
+  | ":+:"             { P.PROBDIV }
   | ','               { P.COMMA }
   | eof               { P.EOF }
   | float          { raise (SyntaxError ("Probabilities are positive floating point numbers.")) }
