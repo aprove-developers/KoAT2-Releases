@@ -23,8 +23,8 @@ let mk_transition lhs (cost: Polynomial.t) (rhs: string * ((string * (Polynomial
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
-          List.map (fun (prob, comkind, targets) ->
           let id = unique() in
+          List.map (fun (prob, comkind, targets) ->
           (Location.of_string (Tuple2.first lhs),
             TransitionLabel.mk_prob
               ~cost:cost
