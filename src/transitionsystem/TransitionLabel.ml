@@ -93,16 +93,6 @@ let mk_prob ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars ~id ~probabi
         |> Enum.fold (fun map adder -> adder map) VarMap.empty 
         |> fun update -> { id = id;
                           update; guard; cost; probability=probability;}
-
-let check_com_kinds (com_kinds : string list) : bool =
-  com_kinds
-  |> List.map (fun x -> x <> "Com_1" ) 
-  |> List.fold_left (||) false
-  
-let check_targets targets =
-  targets
-  |> List.map (fun x -> (List.length x) <> 1)
-  |> List.fold_left (||) false
                     
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
@@ -173,7 +163,8 @@ let update_to_string_list update =
 let to_string label =          
   let guard = if Guard.is_true label.guard then "" else "\n" ^ Guard.to_string ~comp:"&le;" ~conj:"&and;" label.guard in
   let cost = if Polynomial.is_one label.cost then "" else Polynomial.to_string label.cost ^ "&euro;" ^ ", " in
-  "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ update_to_string_list label.update ^ guard
+  let probability = if (label.probability = 1.) then "" else "\n p:" ^ Float.to_string label.probability in
+  "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ update_to_string_list label.update ^ guard ^ probability
 
 let to_id_string =          
   string_of_int % id
