@@ -67,10 +67,11 @@ module Transition =
     let to_string (l,t,l') =
       to_id_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
   end
-  
+
+(*The equivalence test is needed in the probabilistic case, as we have transitions with branching degree >=2*)
 module TransitionSet =
   struct
-    include Set.Make(struct include Transition let compare = Transition.compare_same end)
+    include Set.Make(struct include Transition let compare = Transition.compare_equivalent end)
 
     let powerset set =
       let combine (result: t Enum.t) (x: Transition.t) = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
@@ -80,10 +81,11 @@ module TransitionSet =
       Util.enum_to_string Transition.to_id_string % enum
       
   end
-
+  
+(*The equivalence test is needed in the probabilistic case, as we have transitions with branching degree >=2*)
 module TransitionGraph =
   struct
-    include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_same end)
+    include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_equivalent end)
 
     let locations graph =
       fold_vertex LocationSet.add graph LocationSet.empty
