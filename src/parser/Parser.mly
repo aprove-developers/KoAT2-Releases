@@ -133,7 +133,7 @@ withConstraints :
 	|       WITH constr = separated_nonempty_list(AND, formula_atom) { Formula.all constr } ;
 	
 withProbabilities :
-        |       COLON prob = UFLOAT
+        |        prob = UFLOAT COLON
                 { Batteries.Float.of_float prob };
 	
 
