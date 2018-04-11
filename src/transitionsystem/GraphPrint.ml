@@ -19,7 +19,7 @@ let print_system ~label ~outdir ~file program =
   (* Definition of some graphviz options how it should be layout *)
   let module Dot = Graph.Graphviz.Dot(struct
                                        include TransitionGraph
-                                       let edge_attributes (a, e, b) = [`Label (label e); `Color 4711]
+                                       let edge_attributes (a, e, b) = [`Label (label e); `Labelfontcolor 16711680; `Color 1234]
                                        let default_edge_attributes _ = []
                                        let get_subgraph _ = None
                                        let vertex_attributes _ = [`Shape `Box]
@@ -45,7 +45,7 @@ let print_rvg kind ~label ~outdir ~file program =
   (* Definition of some graphviz options how it should be layout *)
   let module Dot = Graph.Graphviz.Dot(struct
                        include RVG
-                       let edge_attributes _ = [`Label ""; `Color 4711]
+                       let edge_attributes _ = [`Label ""; `Color 4711; `Labelfontcolor 16711680]
                        let default_edge_attributes _ = []
                        let get_subgraph _ = None
                        let vertex_attributes v = [`Shape `Box; `Color (rv_color v)]
