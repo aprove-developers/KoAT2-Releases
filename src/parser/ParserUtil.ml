@@ -3,7 +3,7 @@ open Formulas
 open Polynomials
 open ProgramTypes
    
-let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t list): Transition.t list =
+let mk_transition lhs (cost: Polynomial.t) (rhs: string * ((string * (Polynomial.t list)) list)) (formula: Formula.t) (vars:Var.t list): Transition.t list =
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
@@ -11,10 +11,10 @@ let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t 
           TransitionLabel.mk
             ~cost:cost
             ~com_kind:(Tuple2.first rhs)
-            ~targets:(Tuple2.second (Tuple2.second rhs))
+            ~targets:(Tuple2.second rhs)
             ~patterns:(List.map Var.of_string (Tuple2.second lhs))
             ~guard:constr,
-          (Location.of_string (List.hd (Tuple2.first (Tuple2.second rhs)))))
+          (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))))
        )
   |> List.map (fun (l,t,l') -> (l,t ~vars,l'))
 
