@@ -19,7 +19,7 @@ let mk_transition lhs (cost: Polynomial.t) (rhs: string * ((string * (Polynomial
   |> List.map (fun (l,t,l') -> (l,t ~vars,l'))
 
   (*So far recursion cannot be parsed, therefore the location is taken as the head of the list as non singleton lists yield an exception*)
-  let mk_transition_prob lhs (cost: Polynomial.t) (rhs: (float * string * (string * (Polynomial.t list)) list) list) (formula: Formula.t) (vars:Var.t list): Transition.t list =
+  let mk_transition_prob lhs (cost: Polynomial.t) (rhs: (float * string * ((string * (Polynomial.t list)) list)) list) (formula: Formula.t) (vars:Var.t list): Transition.t list =
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
