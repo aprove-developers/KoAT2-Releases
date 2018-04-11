@@ -119,7 +119,7 @@ transition_target :
 withConstraints :
 	|	{ Formula.mk_true }
 	|       WITH constr = separated_nonempty_list(AND, formula_atom) { Formula.all constr } ;
-	|       LBRACK constr = separated_nonempty_list(AND, formula_atom) RBRACK { Formula.all constr } ;
+	
 
 onlyFormula :
         |       f = formula EOF { f } ;
