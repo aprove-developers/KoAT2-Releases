@@ -8,9 +8,9 @@
 %token			EOF
 %token                  OR
 %token                  AND
-%token 			ARROW WITH LBRACK RBRACK
+%token 			ARROW WITH PROBDIV LBRACK RBRACK
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
-%token                  COMMA
+%token                  COMMA COLON
 %token                  MIN MAX INFINITY ABS
 
 %left			PLUS MINUS
@@ -71,8 +71,10 @@ program_simple :
                   { ParserUtil.mk_program_simple (List.flatten transitions) } ;
 
 transition_simple :
-	|	start = ID; cost = cost ; rhs = transition_rhs; formula = withConstraints
+	|	start = ID; cost = cost ; rhs = non_prob_transition_rhs; formula = withConstraints
 	          { ParserUtil.mk_transition_simple start cost rhs formula } ;
+        |	start = ID; cost = cost ; rhs = prob_transition_rhs; formula = withConstraints
+	          { ParserUtil.mk_transition_simple_prob start cost rhs formula } ;
 
 goal :		
 	|	LPAR GOAL goal = ID RPAR
@@ -91,8 +93,10 @@ variables :
 		  { List.map Var.of_string vars } ;
 		  
 transition :
-	|	lhs = transition_lhs; cost = cost ; rhs = transition_rhs; formula = withConstraints
+	|	lhs = transition_lhs; cost = cost ; rhs = non_prob_transition_rhs; formula = withConstraints
 	          { ParserUtil.mk_transition lhs cost rhs formula } ;
+        |       lhs = transition_lhs; cost = cost ; rhs = prob_transition_rhs; formula = withConstraints
+	          { ParserUtil.mk_transition_prob lhs cost rhs formula } ;
 		  
 cost : 
         |       MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
@@ -106,8 +110,15 @@ cost :
 transition_lhs :
 	|	start = ID; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR)
 	          { (start, patterns) } ;
-
-transition_rhs :
+prob_transition_rhs :
+        |       rhs = separated_nonempty_list(PROBDIV, non_prob_transition_rhs_with_prob)
+                  { rhs };
+                  
+non_prob_transition_rhs_with_prob :
+        |       prob = withProbabilities; old_rhs = non_prob_transition_rhs
+                  { (prob, Batteries.Tuple2.first old_rhs, Batteries.Tuple2.second old_rhs) };
+	          
+non_prob_transition_rhs :
 	|       com_kind = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
  	          { (com_kind, targets) } ;
         |       target = transition_target
@@ -118,7 +129,12 @@ transition_target :
 
 withConstraints :
 	|	{ Formula.mk_true }
+	|       LBRACK constr = separated_nonempty_list(AND, formula_atom) RBRACK { Formula.all constr } 
 	|       WITH constr = separated_nonempty_list(AND, formula_atom) { Formula.all constr } ;
+	
+withProbabilities :
+        |       COLON prob = UFLOAT
+                { Batteries.Float.of_float prob };
 	
 
 onlyFormula :
