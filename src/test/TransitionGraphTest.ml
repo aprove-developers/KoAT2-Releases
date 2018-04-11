@@ -14,7 +14,7 @@ let suite =
                                              | Readers.Error msg -> failwith msg
                                              | TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported" in
             Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
-        "Examples" >::: List.map test_folder ["KoAT-2013"; "KoAT-2014"; "SAS10"; "T2"]
+        "Examples" >::: List.map test_folder ["KoAT-2013"; "KoAT-2014"; "SAS10"; "T2"; "ProbabilisticExamples"]
       );
       (
         let test_folder folder =
@@ -24,7 +24,7 @@ let suite =
                                              | Readers.Error msg -> failwith msg
                                              | TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported" in
             Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
-        "Examples" >::: List.map test_folder ["CageKoAT-Input-Examples/weightedExamples/badExamples" ;"CageKoAT-Input-Examples/weightedExamples/constantWeights"; "CageKoAT-Input-Examples/weightedExamples/simplePolyWeights"; "CageKoAT-Input-Examples/debugExamples"; "CageKoAT-Input-Examples/cexamples"]
+        "Examples" >::: List.map test_folder ["CageKoAT-Input-Examples/weightedExamples/badExamples" ;"CageKoAT-Input-Examples/weightedExamples/constantWeights"; "CageKoAT-Input-Examples/weightedExamples/simplePolyWeights"; "CageKoAT-Input-Examples/debugExamples"; "CageKoAT-Input-Examples/cexamples"; "ProbabilisticExamples"]
       );
       (
         "pre(t)" >:: (fun _ ->
