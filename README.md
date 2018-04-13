@@ -9,7 +9,9 @@ Reimplementation of cage Koat
   3. `opam remote add termite https://github.com/termite-analyser/opam-termite.git`
   4. `opam install Z3`
       * this builds the OCaml bindings and the _libz3.so_ library (in `~/.opam/system/lib/Z3` if the Opam configuration files were installed in the default location)
-  5. update the `LD_LIBRARY_PATH` such that _libz3.so_ can be found _eg_ `export LD_LIBRARY_PATH=~/.opam/system/lib/Z3:$LD_LIBRARY_PA `
+  5. update the `LD_LIBRARY_PATH` such that _libz3.so_ can be found. To be on the safe side write "eval `opam config env`" and "
+export LD_LIBRARY_PATH="$(ocamlfind printconf destdir)/stublibs:${LD_LIBRARY_PATH}"" into your .bashrc file. If this still does not work add "
+export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}"" 
   6. `opam install menhir ounit apron cmdliner ppx_deriving ppx_deriving_cmdliner batteries`
   7. `opam install omake`
   8. `omake`
