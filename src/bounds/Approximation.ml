@@ -76,13 +76,18 @@ let add_sizebounds kind bound scc appr =
   { appr with size = SizeApproximation.add_all kind bound scc appr.size }
 
 let to_string program appr =
+  let overall_timebound = program_timebound appr program in 
   let output = IO.output_string () in
-  IO.nwrite output "Timebounds: \n";
-  IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (program_timebound appr program) ^ "\n");
-  appr.time |> TransitionApproximation.to_string (Program.transitions program) |> IO.nwrite output;
-  IO.nwrite output "\nCostbounds:\n";
-  IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
-  appr.cost |> TransitionApproximation.to_string (Program.transitions program) |> IO.nwrite output;
-  IO.nwrite output "\nSizebounds:\n";
-  appr.size |> SizeApproximation.to_string |> IO.nwrite output;
-  IO.close_out output
+    if (not (Bound.is_infinity overall_timebound)) then
+      IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_timebound) ^ ")\n")
+    else
+      IO.nwrite output "MAYBE";
+    IO.nwrite output "Timebounds: \n";
+    IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
+    appr.time |> TransitionApproximation.to_string (Program.transitions program) |> IO.nwrite output;
+    IO.nwrite output "\nCostbounds:\n";
+    IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
+    appr.cost |> TransitionApproximation.to_string (Program.transitions program) |> IO.nwrite output;
+    IO.nwrite output "\nSizebounds:\n";
+    appr.size |> SizeApproximation.to_string |> IO.nwrite output;
+    IO.close_out output
