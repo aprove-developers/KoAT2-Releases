@@ -13,5 +13,5 @@ let read_input ?(rename=false) simple program_str =
       |> (if rename then Program.rename else identity)
       |> Option.some
     with TransitionLabel.RecursionNotSupported ->
-      prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat. The program will exit now."; None
+      prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now."; None
 
