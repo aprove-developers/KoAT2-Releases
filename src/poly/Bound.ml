@@ -64,8 +64,8 @@ let rec show_complexity = function
   | Polynomial 0 -> "O(1)"
   | Polynomial 1 -> "O(n)"
   | Polynomial x -> "O(n^" ^ Int.to_string x ^ ")"
-  | Exponential 1 -> "O(2^n)"
-  | Exponential x -> "O(2^" ^ show_complexity (Exponential (x-1)) ^ ")"
+  | Exponential 1 -> "O(EXP)"
+  | Exponential x -> "O(EXP^" ^ show_complexity (Exponential (x-1)) ^ ")"
 
 let show_complexity_termcomp = function
   | Inf -> "MAYBE"

@@ -42,7 +42,7 @@ DOC_DIR = ../docs
 doc: $(IDOCS)
     mkdir -p $(DOC_DIR)
     rm -rf $(DOC_DIR)/*
-    ocamlfind ocamldoc -hide-warnings -d $(DOC_DIR) -stars -t "Koat" -html \
+    ocamlfind ocamldoc -hide-warnings -d $(DOC_DIR) -stars -t "Koat2" -html \
         $(mapprefix -load, $(IDOCS))
 
 .DEFAULT: doc install
