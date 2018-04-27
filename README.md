@@ -1,5 +1,5 @@
 # KoatReimplementation
-Reimplementation of cage Koat
+Reimplementation of KoAT with componentwise monotonic bounds
 
 ## Build
 
@@ -27,3 +27,11 @@ export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 - Menhir: http://gallium.inria.fr/~fpottier/menhir/
 - Ocamlgraph: http://ocamlgraph.lri.fr/doc/
 - Cmdliner: http://erratique.ch/software/cmdliner/doc/Cmdliner
+
+
+## Run
+
+1. After compiling the testprogram "test" is run, it can be found in the subdirectory test.
+2. Run ./koat2 in main to get the help page of koat2
+  For further information run ./koat2 commandname --help
+  The main command proceeding a full analysis is the "analyse" command.
