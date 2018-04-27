@@ -81,7 +81,7 @@ let to_string program appr =
     if (not (Bound.is_infinity overall_timebound)) then
       IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_timebound) ^ ")\n")
     else
-      IO.nwrite output "MAYBE";
+      IO.nwrite output "MAYBE\n";
     IO.nwrite output "Timebounds: \n";
     IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
     appr.time |> TransitionApproximation.to_string (Program.transitions program) |> IO.nwrite output;
