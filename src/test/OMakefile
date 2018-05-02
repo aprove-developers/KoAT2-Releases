@@ -1,7 +1,7 @@
 USE_OCAMLFIND = true
 
 OCAMLPACKS[] =
-    Z3
+    z3
     batteries
     apron
     apron.octD
