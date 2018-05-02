@@ -8,7 +8,7 @@ OCAMLPACKS[] =
     apron.boxD
     ppx_deriving_cmdliner
     ppx_deriving.show
-    Z3
+    z3
     ocamlgraph
     fpath
 
