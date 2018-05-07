@@ -91,6 +91,14 @@ let vars program =
   |> Enum.map Transition.label
   |> Enum.map TransitionLabel.vars
   |> Enum.fold VarSet.union VarSet.empty
+  
+let input_vars program =
+  program
+  |> transitions
+  |> TransitionSet.enum
+  |> Enum.map Transition.label
+  |> Enum.map TransitionLabel.input_vars
+  |> Enum.fold VarSet.union VarSet.empty
 
 let pre program (l,t,_) =
   l

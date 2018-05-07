@@ -48,6 +48,9 @@ val to_simple_string : t -> string
   
 val vars : t -> VarSet.t
 
+val input_vars : t -> VarSet.t
+
+
 val transitions : t -> TransitionSet.t
   
 (** Returns all locations which occur in the transitions, but each location only once. *)
