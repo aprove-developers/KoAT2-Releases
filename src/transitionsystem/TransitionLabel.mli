@@ -50,9 +50,16 @@ val map_guard : (Guard.t -> Guard.t) -> t -> t
 val default : t
 
 val vars : t -> VarSet.t
+
+(** Returns the set of input variables of the transition, i.e. the non temporary variables  *)
+val input_vars : t -> VarSet.t
+
+val input_size : t -> int
   
 val cost : t -> polynomial
 
 val to_string : t -> string
 
 val to_id_string : t -> string
+
+val rename : Var.t list -> t -> t

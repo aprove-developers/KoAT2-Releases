@@ -47,14 +47,23 @@ let compare_equivalent lbl1 lbl2 =
     Polynomial.compare lbl1.cost lbl2.cost
   else
     0
-
+let take_last n xs =
+  xs
+  |> List.rev
+  |> List.take n
+  |> List.rev
+    
 (* TODO Pattern <-> Assigment relation *)
 let mk ?(cost=one) ~com_kind ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       let (target, assignments) = List.hd targets in
+      let assignments_with_trivial =
+          assignments @ List.map Polynomial.of_var (take_last ((List.length patterns) - (List.length assignments)) patterns) in
+      let appended_patterns =
+          patterns @ Var.fresh_id_list Var.Int ((List.length assignments) - (List.length patterns)) in
       (* TODO Better error handling in case the sizes differ *)
-      (List.enum patterns, List.enum assignments)
+      (List.enum appended_patterns, List.enum assignments_with_trivial)
       |> Enum.combine
       |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
@@ -107,7 +116,8 @@ let vars_ {update; guard; cost; _} =
 
 (* TODO May invalidate through invariant generation! *)
 let vars = Util.memoize ~extractor:id vars_
-     
+
+
 let default = {
     id = 0;
     update = VarMap.empty;
@@ -130,3 +140,37 @@ let to_string label =
 
 let to_id_string =          
   string_of_int % id
+
+let input_vars t = 
+  t.update
+  |> VarMap.keys
+  |> VarSet.of_enum  
+
+let input_size t =
+  t
+  |> input_vars
+  |> VarSet.cardinal 
+
+(** Whenever this function is invoked it is ensured that there are enough standard variables  *)
+let standard_renaming standard_vars t =
+  standard_vars
+  |> List.take (input_size t)
+  |> List.combine ((VarSet.elements % input_vars) t)
+  |> RenameMap.from
+  
+let rename_update update rename_map =
+  update
+  |> VarMap.enum 
+  |> Enum.map (fun (key, value) -> (RenameMap.find key rename_map ~default:key), Polynomial.rename rename_map value)
+  |> VarMap.of_enum
+  
+  
+let rename standard_vars t =
+  let rename_map = standard_renaming standard_vars t in
+  {
+    id = t.id;
+    update = rename_update t.update rename_map;
+    guard = Guard.rename t.guard rename_map;
+    cost = Polynomial.rename rename_map t.cost;
+  }
+       
