@@ -66,6 +66,9 @@ module Transition =
 
     let to_string (l,t,l') =
       to_id_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
+    
+    let rename vars (l,t,l') =
+      (l, (TransitionLabel.rename vars t),l')
   end
   
 module TransitionSet =
