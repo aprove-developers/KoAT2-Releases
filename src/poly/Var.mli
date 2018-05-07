@@ -11,7 +11,8 @@ type sort =
 type t =
   | Var of String.t
   (**Helpers are fresh variables generated via the computation. They represent a real or an integer value.*)
-  | Helper of sort*int [@@deriving eq, ord]
+  | Helper of sort*int
+  | Argument of int [@@deriving eq, ord]
  
   
 val equal : t -> t -> bool
@@ -25,6 +26,7 @@ val fresh_id : sort -> unit -> t
     (** Returns a bunch of fresh ids. *)
 val fresh_ids : sort -> int -> t Enum.t
 val fresh_id_list : sort -> int -> t list
+val fresh_arg_list : int -> t list
 val is_helper : t -> bool
 val mk_helper : sort -> int -> t
 val is_real : t -> bool
