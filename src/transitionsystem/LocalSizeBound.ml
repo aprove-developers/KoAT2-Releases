@@ -283,7 +283,7 @@ let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: in
     |> Util.find_map (fun count ->
            VarSet.combinations count program_vars
            |> List.enum
-           |> Enum.filter (fun vars -> VarSet.subset vars update_vars)
+           (*|> Enum.filter (fun vars -> VarSet.subset vars update_vars)*)
            |> Enum.map (initial_lsb kind s c)
            |> Enum.filter is_bounded
            |> Enum.map (optimize_s 1 s is_bounded)
@@ -347,7 +347,7 @@ let compute_single_local_size_bound program kind (l,t,l') var =
            (* Introduce a temporary result variable *)
            let v' = Var.fresh_id Var.Int () in
            let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && Polynomial.of_var v' = update) in
-           find_bound kind (Program.vars program) v' guard_with_update update (s_range update)
+           find_bound kind (Program.input_vars program) v' guard_with_update update (s_range update)
          )
   in
   LSB_Cache.add table (kind,(l,t,l'),var) lsb;
