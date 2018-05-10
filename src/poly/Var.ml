@@ -44,8 +44,8 @@ let to_string = function
   
 let counter = ref 0
 
-(* We have special variables which are arguments of the transition system *)
-let arg_counter = ref 0
+(* We have special variables which are arguments of the transition system. Counting starts with 0 to be with KoAT *)
+let arg_counter = ref (-1)
 
 (* TODO Use unique from batteries because of thread safety *)
 let fresh_id domain () =
