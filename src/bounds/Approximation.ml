@@ -59,7 +59,6 @@ let add_timebound bound transition appr =
   let temp_vars = VarSet.diff (TransitionLabel.vars label) (TransitionLabel.input_vars label) in
   let temp_bound = fun kind var -> if (VarSet.mem var temp_vars) then sizebound kind appr transition var else Bound.of_var var in
   let replaced_bound = Bound.appr_substitution `Upper ~lower:(temp_bound `Lower) ~higher:(temp_bound `Upper) bound in
-  print_string ("Approximated_bound=" ^ (Bound.to_string replaced_bound) ^"\n");
   { appr with time = TransitionApproximation.add replaced_bound transition appr.time }
 
 let all_times_bounded =
