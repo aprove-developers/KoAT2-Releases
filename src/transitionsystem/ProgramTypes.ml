@@ -65,7 +65,7 @@ module Transition =
       (Int.to_string % TransitionLabel.id) label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
 
     let to_string (l,t,l') =
-      to_id_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
+      (Location.to_string l) ^ TransitionLabel.(update_to_string_lhs t)^ " -> " ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t) ^":|:" ^ TransitionLabel.(guard_to_string t)
     
     let rename vars (l,t,l') =
       (l, (TransitionLabel.rename vars t),l')

@@ -134,8 +134,9 @@ let as_bound =
   as_substituted_bound (fun _ -> Bound.of_var)
   
 let default = function
-  | `Lower -> Bound.minus_infinity
   | `Upper -> Bound.infinity
+  | `Lower -> Bound.minus_infinity
+  
   
 let to_string t =
   match t with
@@ -358,7 +359,7 @@ let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: in
     |> Util.find_map (fun count ->
            VarSet.combinations count program_vars
            |> List.enum
-           (*|> Enum.filter (fun vars -> VarSet.subset vars update_vars)*)
+           |> Enum.filter (fun vars -> VarSet.subset vars update_vars)
            |> Enum.map (initial_lsb kind s c)
            |> Enum.filter is_bounded
            |> Enum.map (optimize_s 1 s is_bounded)
@@ -376,14 +377,16 @@ let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: in
 let find_bound kind program_vars var formula update s_range =
   let execute () =
     let solver = Solver.create ~model:false () in
+    let c_range_ = (c_range formula) in
     Solver.add solver formula;
-    find_scaled_bound kind program_vars solver var (formula |> Formula.vars |> VarSet.remove var) (update |> Polynomial.vars) s_range (c_range formula)
+    find_scaled_bound kind program_vars solver var (formula |> Formula.vars |> VarSet.remove var) (update |> Polynomial.vars) s_range c_range_
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find_local_size_bound", [
                           "kind", show_kind kind;
                           "var", Var.to_string var;
                           "formula", Formula.to_string formula;
-                          "s_range", string_of_int s_range])
+                          "s_range", string_of_int s_range;
+                          "c_range", string_of_int (c_range formula)])
                      ~result:(Bound.to_string % as_bound)
                      execute
 
@@ -415,6 +418,7 @@ let compute_single_local_size_bound program kind (l,t,l') var =
            (* Introduce a temporary result variable *)
            let v' = Var.fresh_id Var.Int () in
            let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && Polynomial.of_var v' = update) in
+(*         A local size bound must not depend on temporary variables    *)
            find_bound kind (Program.input_vars program) v' guard_with_update update (s_range update)
          )
   in

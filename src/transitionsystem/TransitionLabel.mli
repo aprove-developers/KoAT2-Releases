@@ -60,6 +60,12 @@ val cost : t -> polynomial
 
 val to_string : t -> string
 
+val update_to_string_lhs : t -> string
+
+val update_to_string_rhs : t -> string
+
+val guard_to_string : t -> string
+
 val to_id_string : t -> string
 
 val rename : Var.t list -> t -> t
