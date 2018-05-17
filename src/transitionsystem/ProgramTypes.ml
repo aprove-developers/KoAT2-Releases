@@ -65,7 +65,12 @@ module Transition =
       (Int.to_string % TransitionLabel.id) label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
 
     let to_string (l,t,l') =
-      to_id_string (l,t,l') ^ ", " ^ TransitionLabel.to_string t
+      let probability = if (TransitionLabel.probability t) = 1. then "" else "p:"^(Float.to_string (TransitionLabel.probability t))^":" 
+      and cost = if (Polynomials.Polynomial.is_one (TransitionLabel.cost t)) then "->" else "-{"^(Polynomials.Polynomial.to_string (TransitionLabel.cost t))^"}>" in
+      String.concat "" [(Location.to_string l); TransitionLabel.(update_to_string_lhs t); probability ; cost ; (Location.to_string l') ; TransitionLabel.(update_to_string_rhs t) ;" :|: " ;TransitionLabel.(guard_to_string t)]
+    
+    let rename vars (l,t,l') =
+      (l, (TransitionLabel.rename vars t),l')
   end
 
 (*The equivalence test is needed in the probabilistic case, as we have transitions with branching degree >=2*)
