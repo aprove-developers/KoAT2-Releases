@@ -50,5 +50,5 @@ clean:
      *.cmo \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
-     koat2 koat2.opt \
+     koat2 koat2.opt koatP koatP.opt \
      *~
