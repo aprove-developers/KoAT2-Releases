@@ -91,6 +91,17 @@ let vars program =
   |> Enum.map Transition.label
   |> Enum.map TransitionLabel.vars
   |> Enum.fold VarSet.union VarSet.empty
+  
+let input_vars program =
+  program
+  |> transitions
+  |> TransitionSet.enum
+  |> Enum.map Transition.label
+  |> Enum.map TransitionLabel.input_vars
+  |> Enum.fold VarSet.union VarSet.empty
+  
+let temp_vars =
+  fun program -> VarSet.diff (vars program) (input_vars program)
 
 let pre program (l,t,_) =
   l
@@ -125,13 +136,14 @@ let is_initial_location program location =
   Location.(equal (program.start) location)
 
 let to_string program =
-  let transitions = TransitionGraph.fold_edges_e (fun t str -> str ^ "; " ^ Transition.to_string t) program.graph ""
-  and locations = TransitionGraph.fold_vertex (fun l str -> str ^ "; " ^ Location.to_string l) program.graph "" in
-  String.concat " " [
-      "Start:"; Location.to_string program.start;
-      "Locations:"; locations;
-      "Transitions:"; transitions;
-      "Vars:"; program |> vars |> VarSet.map_to_list Var.to_string |> String.concat ", "
+  let transitions = String.concat "\n  " (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string t)]) program.graph [])
+  and locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
+  String.concat "  " [
+      "  Start:"; Location.to_string program.start;"\n";
+      "Program_Vars:"; program |> input_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n";
+      "Temp_Vars:"; program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n"; 
+      "Locations:"; locations;"\n";
+      "Transitions:\n"; transitions;"\n";
     ] 
   
 let to_simple_string program =

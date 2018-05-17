@@ -64,8 +64,8 @@ let rec show_complexity = function
   | Polynomial 0 -> "O(1)"
   | Polynomial 1 -> "O(n)"
   | Polynomial x -> "O(n^" ^ Int.to_string x ^ ")"
-  | Exponential 1 -> "O(2^n)"
-  | Exponential x -> "O(2^" ^ show_complexity (Exponential (x-1)) ^ ")"
+  | Exponential 1 -> "O(EXP)"
+  | Exponential x -> "O(EXP^" ^ show_complexity (Exponential (x-1)) ^ ")"
 
 let show_complexity_termcomp = function
   | Inf -> "MAYBE"
@@ -129,13 +129,16 @@ let rec show_bound = function
   | Var v -> Var.to_string v
   | Const c -> OurInt.to_string c
   | Infinity -> "inf"
-  | Max (b1, Max (b2, b3)) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ ", " ^ show_bound b3 ^ "}"
-  | Max (b1, b2) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ "}"
-  | Neg b -> "-" ^ (
+  (*| Max (b1, Max (b2, b3)) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ ", " ^ show_bound b3 ^ "}"*)
+  | Max (b1, b2) -> "max([" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ "])"
+  | Neg b ->( 
       match b with
-      | Sum (b1, b2) -> "(" ^ show_bound (Sum (b1, b2)) ^ ")"
-      | Product (b1, b2) -> "(" ^ show_bound (Product (b1, b2)) ^ ")"
-      | b -> show_bound b
+      | Const c -> (OurInt.to_string ( OurInt.neg c))
+      | Neg d -> show_bound d
+      | Sum (b1, b2) -> "-(" ^ show_bound (Sum (b1, b2)) ^ ")"
+      | Product (b1, b2) -> "-(" ^ show_bound (Product (b1, b2)) ^ ")"
+      | Max (b1, b2) -> "min([" ^ show_bound (Neg b1) ^ ", " ^ show_bound (Neg b2) ^ "])"
+      | b -> "-(" ^ (show_bound b) ^")"
     )
   | Pow (v, b) -> OurInt.to_string v ^ "^(" ^ show_bound b ^ ")"
   | Sum (b1, Neg b2) -> show_bound b1 ^ "-" ^ show_bound b2
@@ -148,7 +151,7 @@ let rec show_bound = function
 
 let show ?(complexity=true) bound =
   let complexity_str =
-    if complexity then " [" ^ (show_complexity % asymptotic_complexity) bound ^ "]" else ""
+    if complexity then " {" ^ (show_complexity % asymptotic_complexity) bound ^ "}" else ""
   in
   show_bound bound ^ complexity_str
 

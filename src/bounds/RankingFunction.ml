@@ -246,7 +246,7 @@ let compute_ measure program =
 let find measure program transition =
   let execute () =
     if TemplateTable.is_empty template_table then
-      compute_ranking_templates (Program.vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
+      compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
     if RankingTable.is_empty (ranking_table measure) then
       compute_ measure program;
     (try

@@ -32,6 +32,8 @@ test/Test
 test/output
 output
 main/koatP
+main/koat2
+
 
 #Ignore auto generated parser files
 parser/Parser.mli

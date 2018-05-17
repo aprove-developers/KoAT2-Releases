@@ -28,13 +28,16 @@ type t
 (** Creates a templated bound from the template and a string list which represents the variable set. *)
 val mk : ?s:int -> ?c:int -> ?pos_abs:(string list) -> ?pos_pure:(string list) -> ?neg_abs:(string list) -> ?neg_pure:(string list) -> [`Lower | `Upper] -> t
 
+(** Returns true if the given local size bound is an actual bound and false, if the local size bound is infinity or -infinity  *)
+val is_finite_bound : t -> bool
+
 (** Returns if the templated bounds represent the same bound. *)
 val equal : t -> t -> bool
 
-(** Returns the factor of the local sizebound. *)
+(** Returns the factor of the local sizebound. Raises unbounded, if the local size bound is unbounded*)
 val factor : t -> int
 
-(** Returns the constant of the local sizebound. *)
+(** Returns the constant of the local sizebound. Raises unbounded, if the local size bound is unbounded*)
 val constant : t -> int
   
 (** Returns a set of of variables which affect the local sizebound *)

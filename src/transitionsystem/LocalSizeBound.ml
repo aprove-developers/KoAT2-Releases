@@ -6,16 +6,42 @@ open ProgramTypes
 let logger = Logging.(get LocalSizeBound)
            
 module Solver = SMT.IncrementalZ3Solver
-          
-type t = {
-    kind: [`Lower | `Upper];
+
+type kind = [`Lower | `Upper] [@@deriving show, eq]
+
+type bound = {
+    kind: kind;
     factor: int;
     constant: int;
     vars: ([`Pos | `Neg] * [`Pure | `Abs]) -> VarSet.t
     [@equal fun a b -> List.cartesian_product [`Pos; `Neg] [`Pure; `Abs] |> List.for_all (fun arg -> VarSet.equal (a arg) (b arg))];
   } [@@deriving eq]
+  
+type t = 
+    [
+      `Unbounded of kind
+    | `Bounded of bound
+  ] [@@deriving eq]
+  
+let compare_bounds t1 t2 =
+  match (t1, t2) with
+  | (`Unbounded `Lower, _) -> true
+  | (`Unbounded `Upper, _) -> false
+  | (_, `Unbounded `Lower) -> false
+  | (_, `Unbounded `Upper) -> true
+  | (`Bounded lsb1, `Bounded lsb2) ->
+    if lsb1.factor == lsb2.factor then
+      lsb1.constant < lsb2.constant
+    else
+      lsb1.factor < lsb2.factor
+  
+let is_finite_bound t =
+  match t with
+  | `Unbounded _ -> false
+  | `Bounded _ -> true
 
-let mk ?(s=1) ?(c=0) ?(pos_abs=[]) ?(pos_pure=[]) ?(neg_abs=[]) ?(neg_pure=[]) kind = {
+let mk ?(s=1) ?(c=0) ?(pos_abs=[]) ?(pos_pure=[]) ?(neg_abs=[]) ?(neg_pure=[]) kind = 
+  `Bounded {
     kind;
     factor = s;
     constant = c;
@@ -27,24 +53,43 @@ let mk ?(s=1) ?(c=0) ?(pos_abs=[]) ?(pos_pure=[]) ?(neg_abs=[]) ?(neg_pure=[]) k
       | (`Neg, `Abs) -> VarSet.of_string_list neg_abs
   }
        
-let factor lsb =
+let factor_bound lsb =
   lsb.factor
   
-let constant lsb =
+let factor bound =
+  match bound with
+  | `Unbounded _ -> raise (Failure "Unbounded, no factor exists")
+  | `Bounded lsb -> factor_bound lsb
+  
+let constant_bound lsb =
   lsb.constant
   
-let vars_of_sign sign { vars; _ } =
-  match sign with
-  | `Pos -> VarSet.union (vars (`Pos, `Pure)) (vars (`Pos, `Abs))
-  | `Neg -> VarSet.union (vars (`Neg, `Pure)) (vars (`Neg, `Abs))
+let constant lsb =
+  match lsb with
+  | `Unbounded _ -> raise (Failure "Unbounded, no constant exists")
+  | `Bounded b -> constant_bound b
+  
+let vars_of_sign sign t =
+  match t with
+  | `Unbounded _ -> VarSet.empty
+  | `Bounded { vars; _ } ->
+    match sign with
+    | `Pos -> VarSet.union (vars (`Pos, `Pure)) (vars (`Pos, `Abs))
+    | `Neg -> VarSet.union (vars (`Neg, `Pure)) (vars (`Neg, `Abs))
 
-let vars_of_purity purity { vars; _ } =
-  match purity with
-  | `Pure -> VarSet.union (vars (`Pos, `Pure)) (vars (`Neg, `Pure))
-  | `Abs -> VarSet.union (vars (`Pos, `Abs)) (vars (`Neg, `Abs))
+let vars_of_purity purity t =
+  match t with
+  | `Unbounded _ -> VarSet.empty
+  | `Bounded { vars; _ } ->
+    match purity with
+    | `Pure -> VarSet.union (vars (`Pos, `Pure)) (vars (`Neg, `Pure))
+    | `Abs -> VarSet.union (vars (`Pos, `Abs)) (vars (`Neg, `Abs))
 
-let vars lsb =
-  VarSet.union (vars_of_sign `Pos lsb) (vars_of_sign `Neg lsb)
+let vars t =
+  match t with
+  | `Unbounded _ -> VarSet.empty
+  | bounded ->
+    VarSet.union (vars_of_sign `Pos bounded) (vars_of_sign `Neg bounded)
           
 let multiplier = function
   | `Pos -> identity
@@ -72,30 +117,39 @@ let sum_vars substitution (vars: VarSet.t) (kind, sign, purity): Bound.t =
   |> Bound.sum
   |> ((kind, sign) |> pre_kind |> substitution |> Bound.substitute_f)
   
-let as_substituted_bound substitution lsb =
-  let variables =
-    List.cartesian_product [`Pos; `Neg] [`Pure; `Abs]
-    |> List.map (fun (sign, purifier) -> sum_vars substitution (lsb.vars (sign, purifier)) (lsb.kind, sign, purifier))
-    |> List.enum
-    |> Bound.sum
-  in
-  Bound.(of_int lsb.factor * (of_int lsb.constant + variables))
+let as_substituted_bound substitution t =
+  match t with
+  | `Unbounded `Upper -> Bound.infinity
+  | `Unbounded `Lower -> Bound.minus_infinity
+  | `Bounded lsb ->
+    let variables =
+      List.cartesian_product [`Pos; `Neg] [`Pure; `Abs]
+      |> List.map (fun (sign, purifier) -> sum_vars substitution (lsb.vars (sign, purifier)) (lsb.kind, sign, purifier))
+      |> List.enum
+      |> Bound.sum
+    in
+    Bound.(of_int lsb.factor * (of_int lsb.constant + variables))
 
 let as_bound =
   as_substituted_bound (fun _ -> Bound.of_var)
   
 let default = function
-  | `Lower -> Bound.minus_infinity
   | `Upper -> Bound.infinity
+  | `Lower -> Bound.minus_infinity
   
-let to_string lsb =
-  String.concat " " ["ScaledSum";
-                     String.of_int lsb.factor;
-                     String.of_int lsb.constant;
-                     VarSet.to_string (lsb.vars (`Pos, `Pure));
-                     VarSet.to_string (lsb.vars (`Pos, `Abs));
-                     VarSet.to_string (lsb.vars (`Neg, `Pure));
-                     VarSet.to_string (lsb.vars (`Neg, `Abs))]
+  
+let to_string t =
+  match t with
+  | `Unbounded `Lower -> "-infinity"
+  | `Unbounded `Upper -> "infinity"
+  | `Bounded lsb ->
+    String.concat " " ["ScaledSum";
+                      String.of_int lsb.factor;
+                      String.of_int lsb.constant;
+                      VarSet.to_string (lsb.vars (`Pos, `Pure));
+                      VarSet.to_string (lsb.vars (`Pos, `Abs));
+                      VarSet.to_string (lsb.vars (`Neg, `Pure));
+                      VarSet.to_string (lsb.vars (`Neg, `Abs))]
 
 (* [x;y] -> [x+y; x+0; 0+y; 0+0] *)
 let abs_vars_combinations vars =
@@ -105,28 +159,34 @@ let abs_vars_combinations vars =
   |> List.n_cartesian_product  
   |> List.map (Polynomial.sum % List.enum)
 
-let pure_vars_sum lsb =
-  let sum_up vars =
-    vars
-    |> VarSet.map_to_list Polynomial.of_var
-    |> List.enum
-    |> Polynomial.sum
-  in Polynomial.(sum_up (lsb.vars (`Pos, `Pure)) - sum_up (lsb.vars (`Neg, `Pure)))
+let pure_vars_sum t =
+  match t with
+  | `Unbounded _ -> Polynomial.zero
+  | `Bounded lsb ->
+    let sum_up vars =
+      vars
+      |> VarSet.map_to_list Polynomial.of_var
+      |> List.enum
+      |> Polynomial.sum
+    in Polynomial.(sum_up (lsb.vars (`Pos, `Pure)) - sum_up (lsb.vars (`Neg, `Pure)))
 
-let as_formula in_v lsb =
-  let v = Polynomial.of_var in_v in
-  abs_vars_combinations (lsb.vars (`Pos, `Abs))
-  |> List.map (fun pos_var_combination ->
-         abs_vars_combinations (lsb.vars (`Neg, `Abs))
-         |> List.map (fun neg_var_combination ->
-                let comp = match lsb.kind with
-                  | `Upper -> Formula.Infix.(<=)
-                  | `Lower -> Formula.Infix.(>=)
-                in Polynomial.(comp v (of_int lsb.factor * (of_int lsb.constant + pure_vars_sum lsb + pos_var_combination - neg_var_combination)))
-              )
-         |> Formula.any
-       )
-  |> Formula.any
+let as_formula in_v t =
+  match t with
+  | `Unbounded _ -> Formula.mk_true
+  | `Bounded lsb ->
+    let v = Polynomial.of_var in_v in
+    abs_vars_combinations (lsb.vars (`Pos, `Abs))
+    |> List.map (fun pos_var_combination ->
+          abs_vars_combinations (lsb.vars (`Neg, `Abs))
+          |> List.map (fun neg_var_combination ->
+                  let comp = match lsb.kind with
+                    | `Upper -> Formula.Infix.(<=)
+                    | `Lower -> Formula.Infix.(>=)
+                  in Polynomial.(comp v (of_int lsb.factor * (of_int lsb.constant + pure_vars_sum t + pos_var_combination - neg_var_combination)))
+                )
+          |> Formula.any
+        )
+    |> Formula.any
 
 let is_bounded_with solver var lsb =
   Solver.push solver;
@@ -150,34 +210,41 @@ let rec binary_search ?(divisor=2.) (lowest: int) (highest: int) (p: int -> bool
     else
       binary_search ~divisor:(if newBound < 0 then divisor else 2.) (newBound + 1) highest p        
 
-let unabsify var lsb =
-  if VarSet.mem var (lsb.vars (`Pos, `Abs)) then
-    { lsb with vars = function
-                      | (`Pos, `Abs) -> VarSet.remove var (lsb.vars (`Pos, `Abs))
-                      | (`Pos, `Pure) -> VarSet.add var (lsb.vars (`Pos, `Pure))
-                      | arg -> lsb.vars arg
-    }
-  else
-    { lsb with vars = function
-                      | (`Neg, `Abs) -> VarSet.remove var (lsb.vars (`Neg, `Abs))
-                      | (`Neg, `Pure) -> VarSet.add var (lsb.vars (`Neg, `Pure))
-                      | arg -> lsb.vars arg
-    }
+let unabsify var t =
+  match t with
+  | `Bounded lsb -> 
+    if VarSet.mem var (lsb.vars (`Pos, `Abs)) then
+      `Bounded { lsb with vars = function
+                        | (`Pos, `Abs) -> VarSet.remove var (lsb.vars (`Pos, `Abs))
+                        | (`Pos, `Pure) -> VarSet.add var (lsb.vars (`Pos, `Pure))
+                        | arg -> lsb.vars arg
+      }
+    else
+      `Bounded { lsb with vars = function
+                        | (`Neg, `Abs) -> VarSet.remove var (lsb.vars (`Neg, `Abs))
+                        | (`Neg, `Pure) -> VarSet.add var (lsb.vars (`Neg, `Pure))
+                        | arg -> lsb.vars arg
+      }
+  (* if the local size bound is unbounded, than nothing happens *)
+  | t -> t
  
 (** Tries to convert conservatively choosed absolute values of variables by the variables themself. *)
-let unabsify_vars (p: t -> bool) (lsb: t): t =
+let unabsify_vars (p: t -> bool) (bound: t): t =
   let execute () =
-    let unabsify_with_candidate var current_lsb =
-      let possible_better_lsb = unabsify var current_lsb in
-      if p possible_better_lsb then
-        possible_better_lsb
-      else
-        current_lsb
-    in
-    VarSet.fold unabsify_with_candidate (vars_of_purity `Abs lsb) lsb
+    match bound with
+    | `Bounded lsb ->
+      let unabsify_with_candidate var current_lsb =
+        let possible_better_lsb = unabsify var current_lsb in
+        if p possible_better_lsb then
+          possible_better_lsb
+        else
+          current_lsb
+      in
+      VarSet.fold unabsify_with_candidate (vars_of_purity `Abs bound) bound
+    | bound -> bound
   in
   Logger.with_log logger Logger.DEBUG
-                  (fun () -> "unabsify_vars", ["lsb", to_string lsb])
+                  (fun () -> "unabsify_vars", ["lsb", to_string bound])
                   ~result:to_string
                   execute
   
@@ -201,53 +268,62 @@ let minimize_vars (p: VarSet.t -> bool) (vars: VarSet.t): VarSet.t =
                   ~result:VarSet.to_string
                   execute
   
-let minimize_scaledsum_vars (p: t -> bool) (lsb: t): t =
-  let minimize_vars sign =
-    minimize_vars
-      (fun vars ->
-        p { lsb with
-            vars = function
-                   | (s, `Abs) when s = sign -> vars
-                   | arg -> lsb.vars arg
-          }
-      ) (lsb.vars (sign, `Abs))
-  in
-  (* For Performance *)
-  let minimized_pos_vars = minimize_vars `Pos
-  and minimized_neg_vars = minimize_vars `Neg in
-  { lsb with vars = function
-                    (* TODO Maybe we have to do first one sign, then the other instead of do it parallel. *)
-                    | (`Pos, `Abs) -> minimized_pos_vars
-                    | (`Neg, `Abs) -> minimized_neg_vars
-                    | (sign, `Pure) -> lsb.vars (sign, `Pure)
-  }
-
-let optimize_c (range: int) (p: t -> bool) (lsb: t): t =
-  let execute () = {
-      lsb with constant = match lsb.kind with
-                          | `Upper -> binary_search ~divisor:64. (-range) range (fun c -> p { lsb with constant = c } )
-                          | `Lower -> - (binary_search ~divisor:64. (-range) range (fun c -> p { lsb with constant = -c } ))
+let minimize_scaledsum_vars (p: t -> bool) (bound: t): t =
+  match bound with
+  | `Bounded lsb ->
+    let minimize_vars sign =
+      minimize_vars
+        (fun vars ->
+          p (`Bounded { lsb with
+              vars = function
+                    | (s, `Abs) when s = sign -> vars
+                    | arg -> lsb.vars arg
+            })
+        ) (lsb.vars (sign, `Abs))
+    in
+    (* For Performance *)
+    let minimized_pos_vars = minimize_vars `Pos
+    and minimized_neg_vars = minimize_vars `Neg in
+    `Bounded { lsb with vars = function
+                      (* TODO Maybe we have to do first one sign, then the other instead of do it parallel. *)
+                      | (`Pos, `Abs) -> minimized_pos_vars
+                      | (`Neg, `Abs) -> minimized_neg_vars
+                      | (sign, `Pure) -> lsb.vars (sign, `Pure)
     }
+  | bound -> bound
+
+let optimize_c (range: int) (p: t -> bool) (bound: t): t =
+  let execute () = 
+    match bound with 
+    | `Bounded lsb ->
+      `Bounded { lsb with constant = match lsb.kind with
+                          | `Upper -> binary_search ~divisor:64. (-range) range (fun c -> p (`Bounded { lsb with constant = c }))
+                          | `Lower -> - (binary_search ~divisor:64. (-range) range (fun c -> p (`Bounded { lsb with constant = -c })))
+      }
+    | bound -> bound
   in
   Logger.with_log logger Logger.DEBUG
-                  (fun () -> "optimize_c", ["lowest", Int.to_string (-range); "highest", Int.to_string range; "lsb", to_string lsb])
+                  (fun () -> "optimize_c", ["lowest", Int.to_string (-range); "highest", Int.to_string range; "lsb", to_string bound])
                   ~result:to_string
                   execute
 
-let optimize_s (lowest: int) (highest: int) (p: t -> bool) (lsb: t): t =
-  let execute () = {
-      lsb with factor = binary_search ~divisor:16.
+let optimize_s (lowest: int) (highest: int) (p: t -> bool) (bound: t): t =
+  let execute () = 
+    match bound with 
+    | `Bounded lsb ->
+      `Bounded {lsb with factor = binary_search ~divisor:16.
                           lowest
                           highest
-                          (fun s -> p { lsb with factor = s } )
-    }
+                          (fun s -> p (`Bounded { lsb with factor = s }) )
+      }
+    | bound -> bound
   in
   Logger.with_log logger Logger.DEBUG
-                  (fun () -> "optimize_s", ["lowest", Int.to_string lowest; "highest", Int.to_string highest; "lsb", to_string lsb])
+                  (fun () -> "optimize_s", ["lowest", Int.to_string lowest; "highest", Int.to_string highest; "lsb", to_string bound])
                   ~result:to_string
                   execute
 
-let initial_lsb kind factor (constant: int) (vars: VarSet.t) = {
+let initial_lsb kind factor (constant: int) (vars: VarSet.t) = `Bounded {
     kind;
     factor;
     constant = (
@@ -290,32 +366,27 @@ let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: in
            |> Enum.map (optimize_c c is_bounded)
            |> Enum.map (minimize_scaledsum_vars is_bounded)
            |> Enum.map (unabsify_vars is_bounded)
-           |> Util.min_option (fun lsb1 lsb2 ->
-                  if lsb1.factor == lsb2.factor then
-                    lsb1.constant < lsb2.constant
-                  else
-                    lsb1.factor < lsb2.factor
-                )
+           |> Util.min_option compare_bounds
          )
-    |> (flip Option.get_exn) (Failure "No lsb found although an update exists!")
+    |>  Option.default (`Unbounded kind)
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "find_scaled_bound", ["var", Var.to_string var; "guard_vars", VarSet.to_string guard_vars])
                   ~result:(Bound.to_string % as_bound)
                   execute
 
-type kind = [`Lower | `Upper] [@@deriving show, eq]
-
 let find_bound kind program_vars var formula update s_range =
   let execute () =
     let solver = Solver.create ~model:false () in
+    let c_range_ = (c_range formula) in
     Solver.add solver formula;
-    find_scaled_bound kind program_vars solver var (formula |> Formula.vars |> VarSet.remove var) (update |> Polynomial.vars) s_range (c_range formula)
+    find_scaled_bound kind program_vars solver var (formula |> Formula.vars |> VarSet.remove var) (update |> Polynomial.vars) s_range c_range_
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find_local_size_bound", [
                           "kind", show_kind kind;
                           "var", Var.to_string var;
                           "formula", Formula.to_string formula;
-                          "s_range", string_of_int s_range])
+                          "s_range", string_of_int s_range;
+                          "c_range", string_of_int (c_range formula)])
                      ~result:(Bound.to_string % as_bound)
                      execute
 
@@ -347,7 +418,8 @@ let compute_single_local_size_bound program kind (l,t,l') var =
            (* Introduce a temporary result variable *)
            let v' = Var.fresh_id Var.Int () in
            let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && Polynomial.of_var v' = update) in
-           find_bound kind (Program.vars program) v' guard_with_update update (s_range update)
+(*         A local size bound must not depend on temporary variables    *)
+           find_bound kind (Program.input_vars program) v' guard_with_update update (s_range update)
          )
   in
   LSB_Cache.add table (kind,(l,t,l'),var) lsb;

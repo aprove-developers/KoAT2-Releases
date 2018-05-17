@@ -67,14 +67,23 @@ let compare_equivalent lbl1 lbl2 =
     Float.compare lbl1.probability lbl2.probability
   else
     0
-
+let take_last n xs =
+  xs
+  |> List.rev
+  |> List.take n
+  |> List.rev
+    
 (* TODO Pattern <-> Assigment relation *)
 let mk ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       let (target, assignments) = List.hd targets in
+      let assignments_with_trivial =
+          assignments @ List.map Polynomial.of_var (take_last ((List.length patterns) - (List.length assignments)) patterns) in
+      let appended_patterns =
+          patterns @ Var.fresh_id_list Var.Int ((List.length assignments) - (List.length patterns)) in
       (* TODO Better error handling in case the sizes differ *)
-      (List.enum patterns, List.enum assignments)
+      (List.enum appended_patterns, List.enum assignments_with_trivial)
       |> Enum.combine
       |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
@@ -143,7 +152,8 @@ let vars_ {update; guard; cost; _} =
 
 (* TODO May invalidate through invariant generation! *)
 let vars = Util.memoize ~extractor:id vars_
-     
+
+
 let default = {
     id = 0;
     update = VarMap.empty;
@@ -152,19 +162,89 @@ let default = {
     probability = 1.
   }
             
-let update_to_string_list update =
+let update_to_string update =
   if VarMap.is_empty update then
     "true"
   else
-    let entry_string var poly = Var.to_string var ^ "&larr;" ^ Polynomial.to_string poly
-    and ((var, poly), without_first) = VarMap.pop update in
-    VarMap.fold (fun var poly result -> result ^ "," ^ entry_string var poly) without_first (entry_string var poly)
+    update
+    |> VarMap.bindings
+    |> List.map (fun (var,poly) -> (Var.to_string var, Polynomial.to_string poly))
+    |> List.split
+    |> fun (xs,ys) -> "("^(String.concat "," xs)^") -> ("^(String.concat "," ys)^")"
 
-let to_string label =          
-  let guard = if Guard.is_true label.guard then "" else "\n" ^ Guard.to_string ~comp:"&le;" ~conj:"&and;" label.guard in
-  let cost = if Polynomial.is_one label.cost then "" else Polynomial.to_string label.cost ^ "&euro;" ^ ", " in
+let guard_to_string label =
+  if 
+    Guard.is_true label.guard then "" 
+  else
+    Guard.to_string label.guard
+
+
+  
+let update_to_string_lhs t =
+  let update = t.update in
+    if VarMap.is_empty update then
+      ""
+    else
+      update
+      |> VarMap.bindings
+      |> List.map (fun (var,poly) -> (Var.to_string var, Polynomial.to_string poly))
+      |> List.split
+      |> Tuple2.first
+      |> fun xs -> "("^(String.concat "," xs)^")"
+
+let update_to_string_rhs t =
+  let update = t.update in
+    if VarMap.is_empty update then
+      ""
+    else
+      update
+      |> VarMap.bindings
+      |> List.map (fun (var,poly) -> (Var.to_string var, Polynomial.to_string poly))
+      |> List.split
+      |> Tuple2.second
+      |> fun xs -> "("^(String.concat "," xs)^")"
+      
+ let to_string label =          
+  let guard = if Guard.is_true label.guard then "" else ":|:" ^ Guard.to_string label.guard in
+  let cost = if Polynomial.is_one label.cost then "->" else "-{"^ Polynomial.to_string label.cost ^ "}>" ^ ", " in
   let probability = if (label.probability = 1.) then "" else "\n p:" ^ Float.to_string label.probability in
-  "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ update_to_string_list label.update ^ guard ^ probability
+  "ID: " ^ string_of_int label.id ^ ", " ^ (update_to_string_lhs label)^ probability ^ cost ^ update_to_string_rhs label ^ guard 
+  
 
 let to_id_string =          
   string_of_int % id
+
+let input_vars t = 
+  t.update
+  |> VarMap.keys
+  |> VarSet.of_enum  
+
+let input_size t =
+  t
+  |> input_vars
+  |> VarSet.cardinal 
+
+(** Whenever this function is invoked it is ensured that there are enough standard variables  *)
+let standard_renaming standard_vars t =
+  standard_vars
+  |> List.take (input_size t)
+  |> List.combine ((VarSet.elements % input_vars) t)
+  |> RenameMap.from
+  
+let rename_update update rename_map =
+  update
+  |> VarMap.enum 
+  |> Enum.map (fun (key, value) -> (RenameMap.find key rename_map ~default:key), Polynomial.rename rename_map value)
+  |> VarMap.of_enum
+  
+  
+let rename standard_vars t =
+  let rename_map = standard_renaming standard_vars t in
+  {
+    id = t.id;
+    update = rename_update t.update rename_map;
+    guard = Guard.rename t.guard rename_map;
+    cost = Polynomial.rename rename_map t.cost;
+    probability = t.probability;
+  }
+       

@@ -84,9 +84,6 @@ module Z3Solver =
       let z3_expr = from_formula !context formula in
       let optimisation_goal = Z3.Optimize.mk_opt !context in
       Z3.Optimize.add optimisation_goal [z3_expr];
-      let handle =
-        Z3.Optimize.minimize optimisation_goal (minimisation_goal formula coeffs_to_minimise)
-      in
       let status = Z3.Optimize.check optimisation_goal in
       if status == Z3.Solver.SATISFIABLE then
         optimisation_goal

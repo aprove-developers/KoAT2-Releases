@@ -41,6 +41,7 @@ OCamlProgram(koatP, $(FILES))
 
 install: koatP
 
+
 InterfaceDoc($(LIB), $(FILES))
 
 clean:
@@ -51,4 +52,4 @@ clean:
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
      koatP koatP.opt \
-     *~
+     
