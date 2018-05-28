@@ -68,7 +68,7 @@ module Transition =
       let probability = if (TransitionLabel.probability t) = 1. then "" else "p:"^(Float.to_string (TransitionLabel.probability t))^":" 
       and cost = if (Polynomials.Polynomial.is_one (TransitionLabel.cost t)) then "->" else "-{"^(Polynomials.Polynomial.to_string (TransitionLabel.cost t))^"}>" in
       String.concat "" [(Location.to_string l); TransitionLabel.(update_to_string_lhs t); probability ; cost ; (Location.to_string l') ; TransitionLabel.(update_to_string_rhs t) ;" :|: " ;TransitionLabel.(guard_to_string t)]
-    
+
     let rename vars (l,t,l') =
       (l, (TransitionLabel.rename vars t),l')
   end
@@ -121,4 +121,48 @@ module TransitionGraph =
              replace_edge_e transition (Transition.add_invariant invariant transition) result
            ) graph          
       
+  end
+
+module GeneralTransition = 
+  struct
+    type t = {
+      id: int;
+      transitions: TransitionSet.t;
+      start: Location.t;
+      guard: TransitionLabel.Guard.t;
+    }
+
+    let transitions gtrans = gtrans.transitions
+    let guard gtrans = gtrans.guard
+    let id gtrans = gtrans.id
+    let start gtrans = gtrans.start
+    let compare gtrans1 gtrans2 = Int.compare gtrans1.id gtrans2.id
+
+    let from_transitionset transset (l,t,l') = 
+      let new_trans = TransitionSet.filter (Transition.same (l,t,l')) transset in
+      {
+        id = TransitionLabel.id t; start = l; guard = TransitionLabel.guard t; transitions = new_trans
+      }
+
+    let to_string_helper (l,t,l') = 
+      let probability = if (TransitionLabel.probability t) = 1. then "" else (Float.to_string (TransitionLabel.probability t))^":" 
+      in
+      probability ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t)
+
+    let to_string gtrans = 
+      let any_label = gtrans |> transitions |> TransitionSet.any |> Transition.label in
+      let trans_str = String.concat " :+: " (gtrans |> transitions |> TransitionSet.to_list |> List.map to_string_helper) 
+      and guard_str = if TransitionLabel.Guard.is_true (guard gtrans) then "" else ":|: " ^ (gtrans |> guard |> TransitionLabel.Guard.to_string)
+      (*TODO Is this correct? every branch has same cost?*)
+      and cost_str = if (Polynomials.Polynomial.is_one (TransitionLabel.cost any_label)) then "->" else "-{"^(Polynomials.Polynomial.to_string (TransitionLabel.cost any_label))^"}>"
+      and start_str = (gtrans |> start |> Location.to_string) ^ (TransitionLabel.(update_to_string_lhs any_label))
+      in
+      String.concat " " [start_str; cost_str; trans_str; guard_str]
+  end
+
+module GeneralTransitionSet = 
+  struct
+    include Set.Make(struct include GeneralTransition let compare = GeneralTransition.compare end)
+    let to_string =
+      Util.enum_to_string GeneralTransition.to_string % enum
   end

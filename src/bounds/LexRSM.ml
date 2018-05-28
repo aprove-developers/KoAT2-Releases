@@ -1,2 +1,5 @@
+open ProgramTypes
+
 let test program = 
-    print_string("test")
+    print_string(program |> Program.generalized_transitions |> GeneralTransitionSet.to_string);
+    print_string("\n")

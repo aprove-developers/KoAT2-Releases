@@ -148,3 +148,11 @@ let to_string program =
   
 let to_simple_string program =
   TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph "" 
+
+let test program trans g_set =
+  GeneralTransitionSet.add (GeneralTransition.from_transitionset (program |> transitions) trans) g_set
+
+let generalized_transitions program =
+      TransitionSet.fold (fun trans g_set -> GeneralTransitionSet.add (GeneralTransition.from_transitionset (program |> transitions) trans) g_set)
+                (program |> transitions)
+                GeneralTransitionSet.empty

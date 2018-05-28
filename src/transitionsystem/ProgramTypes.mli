@@ -53,3 +53,17 @@ sig
   (** Adds the invariant to the location of the graph. *)
   val add_invariant : Location.t -> Constraint.t -> t -> t
 end
+
+module GeneralTransition :
+sig
+  type t
+  val from_transitionset: TransitionSet.t -> Transition.t -> t
+  val compare: t -> t -> int
+  val to_string: t -> string
+end
+
+module GeneralTransitionSet :
+sig
+  include module type of Set.Make(struct include GeneralTransition let compare = GeneralTransition.compare end)
+  val to_string: t -> string
+end
