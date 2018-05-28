@@ -15,6 +15,7 @@ let subcommands =
     SizeCommand.(subcommand run params_cmdliner_term description command);
     SMTCommand.(subcommand run params_cmdliner_term description command);
     NormalizeCommand.(subcommand run params_cmdliner_term description command);
+    LexRSMCommand.(subcommand run params_cmdliner_term description command);
   ]
   
 let default_cmd =
