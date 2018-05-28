@@ -126,3 +126,19 @@ module ParameterFormula =
   struct
     include FormulaOver(ParameterConstraint)
   end
+
+module RealFormula =
+  struct
+    include FormulaOver(RealConstraint)
+
+    let max_of_occurring_constants constraints =
+      constraints
+      |> List.map RealConstraint.max_of_occurring_constants
+      |> List.fold_left OurFloat.mul OurFloat.one
+
+  end
+
+module RealParameterFormula =
+  struct
+    include FormulaOver(RealParameterConstraint)
+  end

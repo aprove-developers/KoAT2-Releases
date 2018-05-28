@@ -294,3 +294,47 @@ module Polynomial =
         ~pow:OurInt.pow
       
   end
+
+module RealParameterPolynomial =
+  struct
+    module Outer = PolynomialOver(PolynomialOver(OurFloat))
+    module Inner = PolynomialOver(OurFloat)
+                 
+    include Outer
+          
+    let eval_coefficients (f: Var.t -> OurFloat.t) =
+      Outer.fold ~const:(fun inner -> Inner.of_constant (Inner.eval_f inner f))
+                 ~var:Inner.of_var
+                 ~neg:Inner.neg
+                 ~plus:Inner.add
+                 ~times:Inner.mul
+                 ~pow:Inner.pow
+ 
+    (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
+    (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
+    let flatten (templatepoly : Outer.t): Inner.t =
+      Outer.fold ~const:identity ~var:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
+      
+    (** Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
+    (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
+    let of_polynomial (poly : Inner.t): t =
+      Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
+  end
+
+module RealPolynomial =
+  struct
+    include PolynomialOver(OurFloat)
+
+    let separate_by_sign poly =
+      partition (fun scaled -> OurFloat.Compare.(ScaledMonomial_.coeff scaled >= OurFloat.zero)) poly
+
+    let max_of_occurring_constants =
+      fold
+        ~const:OurFloat.abs
+        ~var:(fun _ -> OurFloat.one)
+        ~neg:identity
+        ~plus:OurFloat.add
+        ~times:OurFloat.mul
+        ~pow:OurFloat.pow
+      
+  end

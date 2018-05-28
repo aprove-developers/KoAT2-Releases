@@ -30,3 +30,24 @@ sig
   
   val of_polynomial : PolynomialOver(OurInt).t -> t
 end
+
+module RealPolynomial :
+sig
+  include module type of PolynomialOver(OurFloat)
+
+  val separate_by_sign : t -> (t * t)
+
+  val max_of_occurring_constants : t -> OurFloat.t
+
+end
+     
+module RealParameterPolynomial :
+sig
+  include module type of PolynomialOver(PolynomialOver(OurFloat))
+
+  val eval_coefficients : (Var.t -> OurFloat.t) -> PolynomialOver(PolynomialOver(OurFloat)).t -> PolynomialOver(OurFloat).t
+
+  val flatten : t -> PolynomialOver(OurFloat).t
+  
+  val of_polynomial : PolynomialOver(OurFloat).t -> t
+end
