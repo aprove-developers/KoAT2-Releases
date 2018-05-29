@@ -60,6 +60,10 @@ sig
   val from_transitionset: TransitionSet.t -> Transition.t -> t
   val compare: t -> t -> int
   val to_string: t -> string
+  val transitions: t -> TransitionSet.t
+  val start: t -> Location.t
+  val id: t -> int
+  val guard: t -> TransitionLabel.Guard.t
 end
 
 module GeneralTransitionSet :
