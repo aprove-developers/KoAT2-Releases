@@ -189,6 +189,9 @@ module RealConstraint =
       |> List.map RealAtom.max_of_occurring_constants
       |> List.fold_left OurFloat.mul OurFloat.one
 
+    let of_intconstraint intconstraint =
+      mk (List.map (fun atom -> RealAtom.of_intatom atom) intconstraint)
+
   end
 
 module RealParameterConstraint =

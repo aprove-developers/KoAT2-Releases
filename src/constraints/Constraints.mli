@@ -78,6 +78,7 @@ sig
   val max_of_occurring_constants : t -> OurFloat.t
 
   (* Add operations specific to polynomial constraints here if needed *)
+  val of_intconstraint : Constraint.t -> t
 end
 
 module RealParameterConstraint :

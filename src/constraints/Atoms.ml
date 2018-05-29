@@ -151,6 +151,9 @@ module RealAtom =
     let max_of_occurring_constants =
       RealPolynomial.max_of_occurring_constants
 
+    let of_intatom atom =
+      mk Comparator.LE (RealPolynomial.of_intpoly atom) RealPolynomial.zero
+     
   end
 
 module RealParameterAtom =

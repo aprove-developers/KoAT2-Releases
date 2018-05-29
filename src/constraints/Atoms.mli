@@ -56,6 +56,7 @@ sig
   val max_of_occurring_constants : t -> OurFloat.t
 
   (* Add operations specific to polynomial atoms here if needed *)
+  val of_intatom : Atom.t -> t
 end
 
 module RealParameterAtom :
