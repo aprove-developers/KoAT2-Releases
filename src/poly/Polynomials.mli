@@ -38,7 +38,7 @@ sig
   val separate_by_sign : t -> (t * t)
 
   val max_of_occurring_constants : t -> OurFloat.t
-
+  val of_intpoly : Polynomial.t -> t
 end
      
 module RealParameterPolynomial :

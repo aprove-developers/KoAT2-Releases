@@ -336,5 +336,15 @@ module RealPolynomial =
         ~plus:OurFloat.add
         ~times:OurFloat.mul
         ~pow:OurFloat.pow
+    
+    let of_intmonom intmonom =
+      List.map (fun var -> (var, Polynomial.Monomial_.degree_variable var intmonom)) (intmonom |> Polynomial.Monomial_.vars |> VarSet.to_list)
+      |> Monomial_.make
+
+    let of_intscaled intscaled =
+      ScaledMonomial_.make (intscaled |> Polynomial.ScaledMonomial_.coeff |> OurFloat.of_ourint) (intscaled |> Polynomial.ScaledMonomial_.monomial |> of_intmonom)
+
+    let of_intpoly intpoly =
+      List.map of_intscaled intpoly
       
   end
