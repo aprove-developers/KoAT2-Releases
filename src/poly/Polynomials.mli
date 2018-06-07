@@ -50,4 +50,6 @@ sig
   val flatten : t -> PolynomialOver(OurFloat).t
   
   val of_polynomial : PolynomialOver(OurFloat).t -> t
+
+  val of_int_para_poly : PolynomialOver(PolynomialOver(OurInt)).t -> t
 end

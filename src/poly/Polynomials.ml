@@ -251,31 +251,6 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       
   end
 
-module ParameterPolynomial =
-  struct
-    module Outer = PolynomialOver(PolynomialOver(OurInt))
-    module Inner = PolynomialOver(OurInt)
-                 
-    include Outer
-          
-    let eval_coefficients (f: Var.t -> OurInt.t) =
-      Outer.fold ~const:(fun inner -> Inner.of_constant (Inner.eval_f inner f))
-                 ~var:Inner.of_var
-                 ~neg:Inner.neg
-                 ~plus:Inner.add
-                 ~times:Inner.mul
-                 ~pow:Inner.pow
- 
-    (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
-    (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
-    let flatten (templatepoly : Outer.t): Inner.t =
-      Outer.fold ~const:identity ~var:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
-      
-    (** Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
-    (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
-    let of_polynomial (poly : Inner.t): t =
-      Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
-  end
 
 module Polynomial =
   struct
@@ -293,32 +268,6 @@ module Polynomial =
         ~times:OurInt.mul
         ~pow:OurInt.pow
       
-  end
-
-module RealParameterPolynomial =
-  struct
-    module Outer = PolynomialOver(PolynomialOver(OurFloat))
-    module Inner = PolynomialOver(OurFloat)
-                 
-    include Outer
-          
-    let eval_coefficients (f: Var.t -> OurFloat.t) =
-      Outer.fold ~const:(fun inner -> Inner.of_constant (Inner.eval_f inner f))
-                 ~var:Inner.of_var
-                 ~neg:Inner.neg
-                 ~plus:Inner.add
-                 ~times:Inner.mul
-                 ~pow:Inner.pow
- 
-    (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
-    (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
-    let flatten (templatepoly : Outer.t): Inner.t =
-      Outer.fold ~const:identity ~var:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
-      
-    (** Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
-    (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
-    let of_polynomial (poly : Inner.t): t =
-      Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
   end
 
 module RealPolynomial =
@@ -348,3 +297,71 @@ module RealPolynomial =
       List.map of_intscaled intpoly
       
   end
+
+
+module ParameterPolynomial =
+  struct
+    module Outer = PolynomialOver(PolynomialOver(OurInt))
+    module Inner = PolynomialOver(OurInt)
+                 
+    include Outer
+          
+    let eval_coefficients (f: Var.t -> OurInt.t) =
+      Outer.fold ~const:(fun inner -> Inner.of_constant (Inner.eval_f inner f))
+                 ~var:Inner.of_var
+                 ~neg:Inner.neg
+                 ~plus:Inner.add
+                 ~times:Inner.mul
+                 ~pow:Inner.pow
+ 
+    (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
+    (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
+    let flatten (templatepoly : Outer.t): Inner.t =
+      Outer.fold ~const:identity ~var:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
+      
+    (** Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
+    (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
+    let of_polynomial (poly : Inner.t): t =
+      Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
+  end
+
+module RealParameterPolynomial =
+  struct
+    module Outer = PolynomialOver(PolynomialOver(OurFloat))
+    module Inner = PolynomialOver(OurFloat)
+                 
+    include Outer
+          
+    let eval_coefficients (f: Var.t -> OurFloat.t) =
+      Outer.fold ~const:(fun inner -> Inner.of_constant (Inner.eval_f inner f))
+                 ~var:Inner.of_var
+                 ~neg:Inner.neg
+                 ~plus:Inner.add
+                 ~times:Inner.mul
+                 ~pow:Inner.pow
+ 
+    (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
+    (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
+    let flatten (templatepoly : Outer.t): Inner.t =
+      Outer.fold ~const:identity ~var:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
+      
+    (** Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
+    (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
+    let of_polynomial (poly : Inner.t): t =
+      Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
+
+    let of_intmonom intmonom =
+      List.map (fun var -> (var, ParameterPolynomial.Monomial_.degree_variable var intmonom)) (intmonom |> ParameterPolynomial.Monomial_.vars |> VarSet.to_list)
+      |> Monomial_.make
+
+    let of_intscaled intscaled =
+      ScaledMonomial_.make (intscaled |> ParameterPolynomial.ScaledMonomial_.coeff |> RealPolynomial.of_intpoly) (intscaled |> ParameterPolynomial.ScaledMonomial_.monomial |> of_intmonom)
+
+    let of_intpoly intpoly =
+      List.map of_intscaled intpoly
+
+    let of_int_para_poly (poly : ParameterPolynomial.t): t =
+      (*poly |> ParameterPolynomial.flatten |> RealPolynomial.of_intpoly |> of_polynomial*)
+      of_intpoly poly
+  end
+
