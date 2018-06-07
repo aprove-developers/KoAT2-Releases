@@ -17,7 +17,7 @@ type params = {
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
-  Logging.(use_loggers [PRF, Logger.DEBUG]);
+  Logging.(use_loggers [LexRSM, Logger.DEBUG]);
   params.input
   |> MainUtil.read_input params.simple_input
   |> Option.may (fun program ->
