@@ -8,10 +8,11 @@ type logger =
   | Bound
   | LocalSizeBound
   | Preprocessor
+  | LexRSM
 
-let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor]
+let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM]
 
-let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor]
+let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM]
             
 let show_logger = function
   | Approximation -> "appr"
@@ -21,6 +22,7 @@ let show_logger = function
   | Bound -> "bound"
   | LocalSizeBound -> "lsb"
   | Preprocessor -> "preprocessor"
+  | LexRSM -> "lexrsmMap"
 
 let get =
   Logger.make_log % show_logger
