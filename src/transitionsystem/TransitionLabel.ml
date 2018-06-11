@@ -8,7 +8,9 @@ module VarMap = Map.Make(Var)
            
 exception RecursionNotSupported
 exception OnlyCom1Supported
-        
+exception ProbabilitiesNotBetweenZeroAndOne
+exception DifferentUpdatesAndProbabilities
+
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
           
 type t = {
@@ -16,15 +18,30 @@ type t = {
     update : Polynomial.t VarMap.t;
     guard : Guard.t;
     cost : Polynomial.t;
+    probability : Float.t
   }
+
+let triples (list1) (list2) (list3) = List.map (fun ((x,y),z) -> (x,y,z)) (List.combine (List.combine list1 list2) list3)
+
+let quatruples (list1) (list2) (list3) (list4) = List.map (fun ((x,y),(z,w)) -> (x,y,z,w)) (List.combine (List.combine list1 list2) (List.combine list3 list4))
   
 let one = Polynomial.one
 
-let make ?(cost=one) com_kind ~update ~guard =
+(* Generates a nonprobabilistic label and sets the probability to one *)
+let make ?(cost = one)  com_kind ~update ~guard = 
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
   {
     id = unique ();
-    update; guard; cost;
+    update; guard; cost; probability=1.;
+  }
+
+(* Generates a probabilistic label, needs a name to distinguish different labels belonging to the same transition *)
+let make_prob ?(cost = one)  com_kind ~update ~guard ~id ~probability = 
+  if com_kind <> "Com_1" then raise OnlyCom1Supported else
+    if (probability > 1. || probability < 0.) then raise ProbabilitiesNotBetweenZeroAndOne else
+  {
+    id = id;
+    update; guard; cost; probability=probability;
   }
 
 let same lbl1 lbl2 =
@@ -34,6 +51,7 @@ let equivalent lbl1 lbl2 =
   VarMap.equal Polynomial.equal lbl1.update lbl2.update
   && Guard.equal lbl1.guard lbl2.guard
   && Polynomial.equal lbl1.cost lbl2.cost
+  && Float.equal lbl1.probability lbl2.probability
 
 let compare_same lbl1 lbl2 =
   Int.compare lbl1.id lbl2.id
@@ -45,6 +63,8 @@ let compare_equivalent lbl1 lbl2 =
     Guard.compare lbl1.guard lbl2.guard
   else if Polynomial.compare lbl1.cost lbl2.cost != 0 then
     Polynomial.compare lbl1.cost lbl2.cost
+  else if Float.compare lbl1.probability lbl2.probability != 0 then
+    Float.compare lbl1.probability lbl2.probability
   else
     0
 let take_last n xs =
@@ -54,7 +74,7 @@ let take_last n xs =
   |> List.rev
     
 (* TODO Pattern <-> Assigment relation *)
-let mk ?(cost=one) ~com_kind ~targets ~patterns ~guard ~vars =
+let mk ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       let (target, assignments) = List.hd targets in
@@ -68,8 +88,21 @@ let mk ?(cost=one) ~com_kind ~targets ~patterns ~guard ~vars =
       |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
       |> fun update -> { id = unique ();
-                         update; guard; cost;}
-                   
+                        update; guard; cost; probability=1.;}
+                        
+let mk_prob ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars ~id ~probability =
+  if List.length targets != 1 then raise RecursionNotSupported else
+    if com_kind <> "Com_1" then raise OnlyCom1Supported else
+      if (probability > 1. || probability < 0.) then raise ProbabilitiesNotBetweenZeroAndOne else
+        let (target, assignments) = List.hd targets in
+        (* TODO Better error handling in case the sizes differ *)
+        (List.enum patterns, List.enum assignments)
+        |> Enum.combine
+        |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
+        |> Enum.fold (fun map adder -> adder map) VarMap.empty 
+        |> fun update -> { id = id;
+                          update; guard; cost; probability=probability;}
+                    
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
   let nondet_vars = VarTable.create 3 in
@@ -95,6 +128,7 @@ let append t1 t2 =
     update = new_update;
     guard = new_guard;
     cost = Polynomial.(t1.cost + t2.cost);
+    probability = Float.(t1.probability * t2.probability);
   }
 
 let id t = t.id
@@ -107,6 +141,8 @@ let map_guard f label =
   { label with guard = f label.guard }
 
 let cost t = t.cost
+
+let probability t = t.probability
 
 let vars_ {update; guard; cost; _} =
   VarMap.fold (fun _ -> VarSet.union % Polynomial.vars) update VarSet.empty
@@ -123,6 +159,7 @@ let default = {
     update = VarMap.empty;
     guard = Guard.mk_true;
     cost = one;
+    probability = 1.
   }
             
 let update_to_string update =
@@ -141,10 +178,7 @@ let guard_to_string label =
   else
     Guard.to_string label.guard
 
-let to_string label =          
-  let guard = if Guard.is_true label.guard then "" else "\n" ^ Guard.to_string ~comp:"&le;" ~conj:"&and;" label.guard in
-  let cost = if Polynomial.is_one label.cost then "" else Polynomial.to_string label.cost ^ "&euro;" ^ ", " in
-  "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ update_to_string label.update ^ guard
+
   
 let update_to_string_lhs t =
   let update = t.update in
@@ -169,7 +203,13 @@ let update_to_string_rhs t =
       |> List.split
       |> Tuple2.second
       |> fun xs -> "("^(String.concat "," xs)^")"
-    
+      
+ let to_string label =          
+  let guard = if Guard.is_true label.guard then "" else ":|:" ^ Guard.to_string label.guard in
+  let cost = if Polynomial.is_one label.cost then "->" else "-{"^ Polynomial.to_string label.cost ^ "}>" ^ ", " in
+  let probability = if (label.probability = 1.) then "" else "\n p:" ^ Float.to_string label.probability in
+  "ID: " ^ string_of_int label.id ^ ", " ^ (update_to_string_lhs label)^ probability ^ cost ^ update_to_string_rhs label ^ guard 
+  
 
 let to_id_string =          
   string_of_int % id
@@ -205,5 +245,6 @@ let rename standard_vars t =
     update = rename_update t.update rename_map;
     guard = Guard.rename t.guard rename_map;
     cost = Polynomial.rename rename_map t.cost;
+    probability = t.probability;
   }
        

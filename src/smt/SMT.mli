@@ -44,6 +44,8 @@ sig
   (** Asserts the formula. *)
   val add : t -> Formula.t -> unit
 
+  val  add_real : t -> RealFormula.t -> unit
+
   (** Minimizes the variable. *)
   val minimize : t -> Var.t -> unit
 

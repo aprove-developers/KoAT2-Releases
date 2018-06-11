@@ -23,6 +23,18 @@ val mk : ?cost:polynomial ->
          guard:Guard.t ->
          vars:Var.t list ->
          t
+         
+val make_prob : ?cost:polynomial -> string -> update:polynomial VarMap.t -> guard:Guard.t -> id:int -> probability:float -> t
+
+val mk_prob : ?cost:polynomial ->
+         com_kind:string ->
+         targets:(string * (polynomial list)) list ->
+         patterns:Var.t list ->
+         guard:Guard.t ->
+         vars:Var.t list ->
+         id:int ->
+         probability:float ->
+         t
 
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
@@ -43,6 +55,8 @@ val id : t -> int
 val update : t -> Var.t -> polynomial Option.t
 
 val guard : t -> Guard.t
+
+val probability : t -> float
 
 (** Returns a new transition label with the guard changed. *)
 val map_guard : (Guard.t -> Guard.t) -> t -> t

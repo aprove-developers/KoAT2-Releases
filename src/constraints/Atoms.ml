@@ -131,3 +131,39 @@ module BoundAtom =
   struct
     include AtomOver(Bound)
   end
+
+module RealAtom =
+  struct
+    include AtomOver(RealPolynomial)
+        
+    let is_linear = RealPolynomial.is_linear 
+        
+    let get_coefficient var atom =
+      RealPolynomial.coeff_of_var var (normalised_lhs atom)
+      
+    let get_constant atom =
+      RealPolynomial.constant (RealPolynomial.neg atom)
+
+    let to_string ?(comp=" <= ") atom =
+      RealPolynomial.separate_by_sign atom
+      |> (fun (positive, negative) -> RealPolynomial.to_string positive ^ comp ^ RealPolynomial.to_string (RealPolynomial.neg negative))
+      
+    let max_of_occurring_constants =
+      RealPolynomial.max_of_occurring_constants
+
+    let of_intatom atom =
+      mk Comparator.LE (RealPolynomial.of_intpoly atom) RealPolynomial.zero
+     
+  end
+
+module RealParameterAtom =
+  struct
+    include AtomOver(RealParameterPolynomial)
+
+    let get_coefficient var atom =
+      RealParameterPolynomial.coeff_of_var var (normalised_lhs atom)
+      
+    let get_constant atom =
+      RealParameterPolynomial.constant (RealParameterPolynomial.neg atom)
+
+  end

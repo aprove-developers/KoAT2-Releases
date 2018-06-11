@@ -1,7 +1,7 @@
 open Batteries
 open Formulas
 open Polynomials
-   
+                   
 let from_poly context = 
   Polynomial.fold
     ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i context (OurInt.to_int value))
@@ -13,10 +13,31 @@ let from_poly context =
     ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [p1; p2])
     ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2])
     ~pow:(fun b e -> Z3.Arithmetic.mk_power context b (Z3.Arithmetic.Integer.mk_numeral_i context e))
-  
+
+let from_real_poly context =
+  RealPolynomial.fold
+    ~const:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string value))
+    ~var:(fun var -> if Var.is_real var then
+                       Z3.Arithmetic.Real.mk_const_s context (Var.to_string var)
+                     else
+                       Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))
+    ~neg:(Z3.Arithmetic.mk_unary_minus context)
+    ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [p1; p2])
+    ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2])
+    ~pow:(fun b e -> Z3.Arithmetic.mk_power context b (Z3.Arithmetic.Integer.mk_numeral_i context e))
+
 let from_formula context =
   Formula.fold 
     ~subject:(from_poly context)
+    ~le:(Z3.Arithmetic.mk_le context)
+    ~correct:(Z3.Boolean.mk_true context)
+    ~conj:(fun a1 a2 -> Z3.Boolean.mk_and context [a1; a2])
+    ~wrong:(Z3.Boolean.mk_false context)
+    ~disj:(fun a1 a2 -> Z3.Boolean.mk_or context [a1; a2])
+
+let from_real_formula context = 
+  RealFormula.fold 
+    ~subject:(from_real_poly context)
     ~le:(Z3.Arithmetic.mk_le context)
     ~correct:(Z3.Boolean.mk_true context)
     ~conj:(fun a1 a2 -> Z3.Boolean.mk_and context [a1; a2])
@@ -128,7 +149,9 @@ module IncrementalZ3Solver =
   struct
     type t = Z3.Optimize.optimize * Z3.context
     
+    module RealValuation = Valuation.Make(OurFloat)
     module Valuation = Valuation.Make(OurInt)
+    
 
     let create ?(model=true) () =
       let context =
@@ -165,6 +188,11 @@ module IncrementalZ3Solver =
     let add (opt,context) formula =
       formula
       |> from_formula context
+      |> fun formula -> Z3.Optimize.add opt [formula]
+
+    let add_real (opt,context) formula =
+      formula
+      |> from_real_formula context
       |> fun formula -> Z3.Optimize.add opt [formula]
 
     (** Returns true iff the formula implies the positivity of the variable. *)

@@ -62,3 +62,5 @@ val sccs : t -> TransitionSet.t Enum.t
 
 (** Returns all transitions, that belong to an SCC. *)
 val non_trivial_transitions : t -> TransitionSet.t
+
+val generalized_transitions : t -> GeneralTransitionSet.t

@@ -22,6 +22,9 @@ let int = ['0'-'9'] ['0'-'9']*
 let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']* '\''?
+let probfloat = ['+']?(['0'-'1']*)?['.']['0'-'9']+ | '1''.''0'*
+let float = ['+' '-']?(['0'-'9']*)?['.']['0'-'9']+
+(*let negfloat = ['-'](['0'-'9']*['.'])?['0'-'9']+*)
 
 rule read =
   parse
@@ -36,6 +39,7 @@ rule read =
   | "max"             { P.MAX }
   | "inf"             { P.INFINITY }
   | int               { P.UINT (int_of_string (Lexing.lexeme lexbuf)) }
+  | probfloat         { P.UFLOAT (float_of_string (Lexing.lexeme lexbuf))}
   | id                { P.ID (Lexing.lexeme lexbuf) }
   | '|'               { P.ABS }
   | '('               { P.LPAR }
@@ -59,8 +63,11 @@ rule read =
   | "/\\"             { P.AND }
   | "||"              { P.OR }
   | ":|:"             { P.WITH }
+  | ":+:"             { P.PROBDIV }
+  | ":"               { P.COLON }
   | ','               { P.COMMA }
   | eof               { P.EOF }
+  | float          { raise (SyntaxError ("Probabilities are positive floating point numbers.")) }
   | _                 { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
 
 (*{

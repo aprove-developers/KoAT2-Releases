@@ -16,12 +16,12 @@ let suite =
       TransitionGraphTest.suite;
       SMTTest.suite;
       IDTest.tests;
-      LocalSizeBoundTest.tests;
+      (*LocalSizeBoundTest.tests;
       FormulaTest.tests;
       PreprocessorTest.tests;
       BoundTest.tests;
       TimeboundTest.tests;
-      InvariantGenerationTest.tests;
+      InvariantGenerationTest.tests;*)
     ]
                      
 let () =

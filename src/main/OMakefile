@@ -37,9 +37,10 @@ FILES[] = $(removesuffix .ml, $(glob *.ml))
 
 LIB = main
 
-OCamlProgram(koat2, $(FILES))
+OCamlProgram(koatP, $(FILES))
 
-install: koat2
+install: koatP
+
 
 InterfaceDoc($(LIB), $(FILES))
 
@@ -50,5 +51,4 @@ clean:
      *.cmo \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
-     koat2 koat2.opt koatP koatP.opt \
-     *~
+     koatP koatP.opt \
