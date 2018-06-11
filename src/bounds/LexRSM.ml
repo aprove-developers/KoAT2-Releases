@@ -163,6 +163,7 @@ let find_1d_lexrsm transitions remaining_transitions =
   and transition_list = transitions |> GeneralTransitionSet.to_list
   in
   (*Correct? Everything must be non increasing and bounded by 0?*)
+  (*TODO: replace remaining with all for 0-bounded lexrsm map*)
   ignore(remaining_list |> List.map (fun gtrans -> 
                               Solver.add_real solver (non_increasing_constraint gtrans);
                               Solver.add_real solver (bounded_constraint gtrans)));
