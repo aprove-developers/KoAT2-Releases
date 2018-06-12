@@ -84,7 +84,7 @@ let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): uni
                   execute
 
 let prob_branch_poly (l,t,l') =
-    let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_para_poly) in
+    let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
     let prob = (l,t,l') |> Transition.label |> TransitionLabel.probability |> OurFloat.of_float in
     RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
 
@@ -92,7 +92,7 @@ let expected_poly gtrans =
     TransitionSet.fold (fun trans poly -> RealParameterPolynomial.add (prob_branch_poly trans) poly) (gtrans |> GeneralTransition.transitions) RealParameterPolynomial.zero
 
 let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
-  let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_para_poly) in
+  let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
   let atom =
     match constraint_type with
     | `Non_Increasing ->  RealParameterAtom.Infix.((gtrans |> GeneralTransition.start |> template) >= (expected_poly gtrans))
@@ -217,4 +217,3 @@ let test program =
     |> (function |[] -> print_string("no lexrsm map found")
                  |xs -> xs |> lexrsmmap_to_string |> print_string);
     print_string("\n");
-    

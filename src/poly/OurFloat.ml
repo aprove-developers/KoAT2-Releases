@@ -3,7 +3,6 @@ open Batteries
 include Number.MakeNumeric(Float)
 let (=~=) = equal
 
-(* TODO Make it possible to pow with Big_int *)
 let pow i (n: int) = pow i (of_int n)  
 
 let max a b =
@@ -19,4 +18,6 @@ let min a b =
     b
 
 let of_ourint f =
-  f |> OurInt.to_float |> of_float
+  f 
+  |> OurInt.to_float 
+  |> of_float
