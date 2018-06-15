@@ -165,4 +165,7 @@ module GeneralTransitionSet =
     include Set.Make(struct include GeneralTransition let compare = GeneralTransition.compare end)
     let to_string =
       Util.enum_to_string GeneralTransition.to_string % enum
+
+    let start_locations transitions =
+      fold (fun transition loc_set -> LocationSet.add (GeneralTransition.start transition) loc_set ) transitions LocationSet.empty
   end

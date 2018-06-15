@@ -123,15 +123,15 @@ let decreasing_constraint transition =
 
 let make_LexRSM1DMap transitions valuation =
   let return_map = LexRSM1DMap.create 10 in
-  ignore(
   transitions
-  |> GeneralTransitionSet.to_list
-  |> List.map GeneralTransition.start
+  |> GeneralTransitionSet.start_locations
+  |> LocationSet.to_list
   |> List.map (fun location -> 
       TemplateTable.find template_table location
       |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
       |> LexRSM1DMap.add return_map location
-  ));
+  )
+  |> ignore;
   return_map
 
 

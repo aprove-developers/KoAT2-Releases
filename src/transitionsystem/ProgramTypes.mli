@@ -70,4 +70,5 @@ module GeneralTransitionSet :
 sig
   include module type of Set.Make(struct include GeneralTransition let compare = GeneralTransition.compare end)
   val to_string: t -> string
+  val start_locations: t -> LocationSet.t
 end
