@@ -142,7 +142,6 @@ let rec backtrack_1d = function
   | (x::xs,n,ys,solver) -> 
           Solver.push solver;
           let decr = decreasing_constraint x in
-          Logger.(log logger INFO (fun () -> "add constraint", ["Constraint:",  RealFormula.to_string decr]));
           Solver.add_real solver decr;
           if Solver.satisfiable solver then (
             let (n1, ys1) = backtrack_1d (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
