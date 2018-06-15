@@ -1,0 +1,12 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR X C)
+(RULES
+  f(X,C) -> g(1,1)
+  g(X,C) -> h(X,C) :|: C>=1
+  h(X,C) -> 0.5:j(X,C) :+: 0.5:k(X,C)
+  j(X,C) -> g(2*X,C)
+  k(X,C) -> g(X,0)
+  g(X,C) -> i(X,C) :|: C=0
+  i(X,C) -> i(X-1,C) :|: X>=0
+)
