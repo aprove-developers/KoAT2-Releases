@@ -139,7 +139,7 @@ module GeneralTransition =
     let compare gtrans1 gtrans2 = Int.compare gtrans1.id gtrans2.id
 
     let from_transitionset transset (l,t,l') = 
-      let new_trans = TransitionSet.filter (Transition.same (l,t,l')) transset in
+      let new_trans = TransitionSet.filter (fun (l2, t2, l2') -> TransitionLabel.same t t2 && Location.equal l l2) transset in
       {
         id = TransitionLabel.id t; start = l; guard = TransitionLabel.guard t; transitions = new_trans
       }
