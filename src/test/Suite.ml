@@ -13,15 +13,15 @@ let suite =
           AtomTest.Methods.tests;
           ConstraintsTest.Methods.tests;
         ];
-      TransitionGraphTest.suite;
+      (*TransitionGraphTest.suite;*)
       SMTTest.suite;
       IDTest.tests;
-      (*LocalSizeBoundTest.tests;
-      FormulaTest.tests;
-      PreprocessorTest.tests;
-      BoundTest.tests;
-      TimeboundTest.tests;
-      InvariantGenerationTest.tests;*)
+      (*LocalSizeBoundTest.tests;*)
+      (*FormulaTest.tests;
+      PreprocessorTest.tests;*)
+      (*BoundTest.tests;
+      TimeboundTest.tests;*)
+      InvariantGenerationTest.tests;
     ]
                      
 let () =
