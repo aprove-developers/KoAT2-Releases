@@ -1,38 +1,42 @@
 open Batteries
 
 let logger = Logging.(get Preprocessor)
-   
+
 type subject = Program.t * Approximation.t
 
 type t =
   | CutUnreachableLocations
   | CutUnsatisfiableTransitions
   | Chaining
+  | CutZeroProbTransitions
   | InvariantGeneration[@@deriving ord, eq]
 
 let show = function
   | CutUnreachableLocations -> "reachable"
   | CutUnsatisfiableTransitions -> "sat"
   | Chaining -> "chaining"
-  | InvariantGeneration -> "invgen" 
+  | InvariantGeneration -> "invgen"
+  | CutZeroProbTransitions -> "zerotransitions"
 
 let affects = function
-  | CutUnreachableLocations -> []
-  | InvariantGeneration -> [CutUnsatisfiableTransitions]
+  | CutUnreachableLocations     -> []
+  | InvariantGeneration         -> [CutUnsatisfiableTransitions]
   | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining]
-  | Chaining -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
+  | Chaining                    -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
+  | CutZeroProbTransitions      -> [CutUnreachableLocations; Chaining]
 
 let lift_to_program transform program =
-  MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (fun _ -> graph) program)))
+  MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (const graph) program)))
 
 let lift_to_tuple transform tuple =
-  MaybeChanged.(transform (Tuple2.first tuple) >>= (fun program -> same (Tuple2.map1 (fun _ -> program) tuple)))
-              
+  MaybeChanged.(transform (Tuple2.first tuple) >>= (fun program -> same (Tuple2.map1 (const program) tuple)))
+
 let transform subject = function
-  | CutUnreachableLocations -> lift_to_tuple CutUnreachableLocations.transform_program subject
+  | CutUnreachableLocations     -> lift_to_tuple CutUnreachableLocations.transform_program subject
   | CutUnsatisfiableTransitions -> lift_to_tuple CutUnsatisfiableTransitions.transform_program subject
-  | Chaining -> lift_to_tuple (lift_to_program Chaining.transform_graph) subject
-  | InvariantGeneration -> lift_to_tuple InvariantGeneration.transform_program subject
+  | Chaining                    -> lift_to_tuple (lift_to_program Chaining.transform_graph) subject
+  | InvariantGeneration         -> lift_to_tuple InvariantGeneration.transform_program subject
+  | CutZeroProbTransitions      -> lift_to_tuple CutZeroProbTransitions.transform_program subject
 
 type outer_t = t
 module PreprocessorSet =
@@ -44,9 +48,9 @@ module PreprocessorSet =
     )
 
 let all =
-  [Chaining; CutUnreachableLocations; CutUnsatisfiableTransitions; InvariantGeneration]
+  [Chaining; CutUnreachableLocations; CutUnsatisfiableTransitions; CutZeroProbTransitions; InvariantGeneration]
 
-  
+
 type strategy = t list -> subject -> subject
 
 let process strategy preprocessors subject =
@@ -75,6 +79,6 @@ let rec process_til_fixpoint_ ?(wanted=PreprocessorSet.of_list all) (todos: Prep
 let process_til_fixpoint preprocessors =
   let set = PreprocessorSet.of_list preprocessors in
   process_til_fixpoint_ ~wanted:set set
-  
+
 let all_strategies = [process_only_once; process_til_fixpoint]
-  
+
