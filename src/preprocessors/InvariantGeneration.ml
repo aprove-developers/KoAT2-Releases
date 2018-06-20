@@ -235,7 +235,8 @@ let transform_program program =
         LocationMap.modify l' (fun old_abstract -> Apron.Abstract1.widening manager old_abstract transfered_l_abstract) program_abstract;
         TransitionGraph.succ_e (Program.graph program) l'
         |> List.iter (fun transition ->
-               if not (Enum.exists (Transition.same transition) (Stack.enum worklist)) then
+              (*TODO comparison faster with 2 component transition id*)
+               if not (Enum.exists (Transition.equivalent transition) (Stack.enum worklist)) then
                  Stack.push transition worklist
              )
       )
