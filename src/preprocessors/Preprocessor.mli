@@ -1,6 +1,6 @@
 open Batteries
 open ProgramTypes
-   
+
 (** Provides all module types related to preprocessors *)
 
 type subject = Program.t * Approximation.t
@@ -9,12 +9,13 @@ type t =
   | CutUnreachableLocations
   | CutUnsatisfiableTransitions
   | Chaining
+  | CutZeroProbTransitions
   | InvariantGeneration [@@deriving ord, eq]
 
 val show : t -> string
-  
+
 val all : t list
-  
+
 (** Returns all the preprocessors that might successfully run after a run of the specific preprocessor. *)
 val affects : t -> t list
 
@@ -25,10 +26,10 @@ val transform : subject -> t -> subject MaybeChanged.t
 type strategy = t list -> subject -> subject
 
 val all_strategies : strategy list
-              
+
 (** Uses the strategy to preprocess the given subject with the specified preprocessors. *)
 val process : strategy -> t list -> subject -> subject
-              
+
 (** Applies each preprocessor exactly one time on the subject. *)
 val process_only_once : strategy
 
@@ -36,5 +37,5 @@ val process_only_once : strategy
 val process_til_fixpoint : strategy
 
 val lift_to_program : (TransitionGraph.t -> TransitionGraph.t MaybeChanged.t) -> Program.t -> Program.t MaybeChanged.t
-  
+
 val lift_to_tuple : ('b -> 'c MaybeChanged.t) -> ('b * 'a) -> ('c * 'a) MaybeChanged.t
