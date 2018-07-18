@@ -1,3 +1,3 @@
 open ProgramTypes
 
-val test : Program.t -> unit
+val test : Program.t -> bool -> unit

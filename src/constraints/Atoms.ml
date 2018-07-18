@@ -166,4 +166,7 @@ module RealParameterAtom =
     let get_constant atom =
       RealParameterPolynomial.constant (RealParameterPolynomial.neg atom)
 
+    let of_int_para_atom atom =
+      mk Comparator.LE (RealParameterPolynomial.of_int_para_poly atom) RealParameterPolynomial.zero
+
   end

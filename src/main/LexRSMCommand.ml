@@ -24,4 +24,4 @@ let run (params: params) =
         (program, Approximation.create program)
         |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration])
         |> tap(fun (prog, appr) -> Approximation.to_string prog appr |> print_string)
-        |> (fun (prog, appr) -> LexRSM.test prog))
+        |> (fun (prog, appr) -> LexRSM.test prog true))
