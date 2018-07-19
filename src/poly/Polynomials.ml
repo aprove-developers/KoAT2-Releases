@@ -285,9 +285,16 @@ module RealPolynomial =
         ~plus:OurFloat.add
         ~times:OurFloat.mul
         ~pow:OurFloat.pow
+<<<<<<< HEAD
 
     let of_intpoly  =
       Polynomial.fold ~const:(of_constant % OurFloat.of_ourint) ~var:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
+=======
+    
+    let of_intpoly =
+      Polynomial.fold ~const: (of_constant % OurFloat.of_ourint) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow
+      
+>>>>>>> 195853f58876cf5ea968d1bd243d70e04843548a
   end
 
 
@@ -342,14 +349,10 @@ module RealParameterPolynomial =
     let of_polynomial (poly : Inner.t): t =
       Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
 
-    let of_intmonom intmonom =
-      List.map (fun var -> (var, ParameterPolynomial.Monomial_.degree_variable var intmonom)) (intmonom |> ParameterPolynomial.Monomial_.vars |> VarSet.to_list)
-      |> Monomial_.make
-
     let of_intpoly =
-      Polynomial.fold ~const:(Inner.of_constant % OurFloat.of_ourint) ~var:(Inner.of_var) ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow
+      Polynomial.fold ~const: (Inner.of_constant % OurFloat.of_ourint) ~var:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow
 
     let of_int_parapoly =
-      ParameterPolynomial.fold ~const:(of_constant % of_intpoly) ~var:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
+      ParameterPolynomial.fold ~const:(of_constant % of_intpoly) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow
   end
 
