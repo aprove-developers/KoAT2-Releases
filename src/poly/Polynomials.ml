@@ -349,7 +349,7 @@ module RealParameterPolynomial =
     let of_intpoly =
       Polynomial.fold ~const:(Inner.of_constant % OurFloat.of_ourint) ~var:(Inner.of_var) ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow
 
-    let of_int_para_poly =
+    let of_int_parapoly =
       ParameterPolynomial.fold ~const:(of_constant % of_intpoly) ~var:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
   end
 

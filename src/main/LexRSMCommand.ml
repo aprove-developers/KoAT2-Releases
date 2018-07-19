@@ -21,6 +21,4 @@ let run (params: params) =
   params.input
   |> MainUtil.read_input params.simple_input
   |> Option.may (fun program ->
-        (program, Approximation.create program)
-        |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration])
-        |> (fun (prog, appr) -> LexRSM.find prog true))
+        LexRSM.test program)

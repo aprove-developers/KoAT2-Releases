@@ -47,7 +47,7 @@ type params = {
 
     simple_input : bool; [@default false] [@aka ["s"]]
     (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
-
+    
     output_dir : string option; [@aka ["o"]]
     (** An absolute or relative path to the output directory, where all generated files should end up. *)
 
@@ -56,14 +56,13 @@ type params = {
 
     log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.NONE]
     (** The general log level of the loggers. *)
-
+    
     result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
-
-    preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default
-    Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutZeroProbTransitions; CutUnreachableLocations])]
+    
+    preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])]
     (** The preprocessors which should be applied before running the actual algorithm. *)
-
+    
     preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
 
@@ -90,16 +89,16 @@ let bounded_rv_to_string (program: Program.t) kind (appr: Approximation.t) (t,v)
                     "Local: ";
                     get_lsb kind (t,v) |> Bound.show ~complexity:false
     ]
-
+  
 let get_lsb program kind (t, v) =
   LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
-
+  
 let standard_vars program =
   let open Program in
   0
   |> TransitionGraph.fold_edges_e (fun edge size -> Int.max (TransitionLabel.input_size (Transition.label edge)) size) (graph program)
   |> Var.fresh_arg_list
-
+  
 (* For each transition rename standard_vars transition *)
 
 let rename_graph standard_vars graph =
