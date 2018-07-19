@@ -85,10 +85,16 @@ let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): uni
                   )
                   execute
 
-let compute_cbound_template (vars: VarSet.t) =
-  vars
-  |> ranking_template
-  |> fun (poly, vars) -> cbound_template := Option.some poly
+let compute_cbound_template (vars: VarSet.t): unit =
+  let execute () =
+    vars
+    |> ranking_template
+    |> fun (poly, vars) -> cbound_template := Option.some poly
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "compute_cbound_template", [])
+                  ~result:(fun () -> !cbound_template |> Option.get |> ParameterPolynomial.to_string)
+                  execute
 
 let prob_branch_poly (l,t,l') =
     let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_para_poly) in
@@ -216,13 +222,12 @@ let lexrsmmap_to_string map =
   map
   |> LexRSMMap.to_list
   |> List.map (fun (loc, poly_list) -> String.concat ": " [loc |> Location.to_string; poly_list |> List.map (Polynomial.to_string) |> String.concat ", "])
-  |> String.concat "\n"
+  |> String.concat "; "
 
 let cbound_to_string cbound =
   cbound
   |> List.map Polynomial.to_string
   |> String.concat ", "
-  |> (fun x -> String.concat "" ["cbound: "; x])
 
 let rec find_lexrsm map transitions remaining cbound =
   if GeneralTransitionSet.is_empty remaining then
@@ -251,6 +256,9 @@ let rec make_ranking_function start_poly c_bound exp =
     | ([],[]) -> Polynomial.zero
     | (x::xs, y::ys) -> Polynomial.add (Polynomial.mul x (Polynomial.pow (Polynomial. add y Polynomial.one) exp)) (make_ranking_function xs ys (exp-1))
 
+let reset () =
+  cbound_template := None;
+  TemplateTable.clear template_table
 
 let test program cbounded = 
     print_string("\n");
@@ -259,7 +267,8 @@ let test program cbounded =
     print_string("\n");
     if TemplateTable.is_empty template_table then
       compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-    compute_cbound_template (Program.input_vars program);
+    if Option.is_none !cbound_template then
+      compute_cbound_template (Program.input_vars program);
     let transitions = Program.generalized_transitions program in 
     let lexmap = LexRSMMap.create 10 in
     find_lexrsm lexmap transitions transitions cbounded
@@ -269,4 +278,34 @@ let test program cbounded =
           make_ranking_function start_poly cbound (List.length start_poly - 1)
         )
     |> Option.map (Polynomial.to_string) |? "still no ranking function found\n"
-    |> print_string;
+    |> print_string
+
+let compute_map program cbounded =
+  let transitions = Program.generalized_transitions program 
+  and lexmap = LexRSMMap.create 10 in
+  let execute () =
+    find_lexrsm lexmap transitions transitions cbounded
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "find_map", [])
+                  ~result:(fun option -> Option.map (fun (lexmap, cbound) -> (lexrsmmap_to_string lexmap) ^ "; c: " ^ (cbound_to_string cbound)) option |? "no ranking function found")
+                  execute
+
+let compute_ranking_function program cbounded =
+  let (lexmap, c_vector) = compute_map program cbounded |> Option.get in
+  let start_poly = LexRSMMap.find lexmap (Program.start program) in
+  make_ranking_function start_poly c_vector (List.length start_poly - 1)
+
+let find program cbounded =
+  let execute () =
+    if TemplateTable.is_empty template_table then
+      compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+    if Option.is_none !cbound_template then
+      compute_cbound_template (Program.input_vars program);
+    compute_ranking_function program cbounded
+  in
+  Logger.with_log logger Logger.DEBUG 
+                  (fun () -> "find_ranking_function", ["transitions", program |> Program.generalized_transitions |> GeneralTransitionSet.to_string;"cbounded", Bool.to_string cbounded])
+                  ~result:(Polynomial.to_string)
+                  execute 
+  |> ignore
