@@ -26,6 +26,17 @@ let of_var v = Var v
 
 let of_constant c = Const c
 
+let rec get_constant t =
+  match t with
+  | Infinity -> OurInt.zero
+  | Const c -> c
+  | Var var -> OurInt.zero
+  | Neg b -> OurInt.neg (get_constant b)
+  | Pow (n, b) -> OurInt.pow (get_constant b) (OurInt.to_int n)
+  | Sum (b1, b2) -> OurInt.add (get_constant b1) (get_constant b2)
+  | Product (b1, b2) -> OurInt.mul (get_constant b1) (get_constant b2)
+  | Max (b1, b2) -> OurInt.max (get_constant b1) (get_constant b2) 
+
 module Constructor =
   struct
     let number = function
@@ -112,6 +123,12 @@ let asymptotic_complexity =
       | (Exponential x, Polynomial y) -> Exponential x
     )
     ~inf:Inf
+    
+let is_linear bound =
+  let cplx = asymptotic_complexity bound in
+    match cplx with
+    | (Polynomial n) -> (n == 1)
+    | _ -> false
 
 let max_of_occurring_constants bound =
   fold
@@ -488,3 +505,5 @@ let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implement
 let eval p valuation = raise (Failure "eval for MinMaxPolynomial not yet implemented")
 let eval_f p valuation = raise (Failure "eval_f for MinMaxPolynomial not yet implemented")
 let of_string p = raise (Failure "of_string for MinMaxPolynomial not yet implemented")
+let coeff_of_var = raise (Failure "coeff_of_var for MinMaxPolynomial not yet implemented")
+let of_coeff_list = raise (Failure "of_coeff_list for MinMaxPolynomial not yet implemented")

@@ -102,7 +102,7 @@ module PolynomialOver(Value : PolyTypes.Ring) =
     let to_int poly = raise (Failure "TODO: Not possible")
                 
     (* Gets the constant *)
-    let constant poly = coeff Monomial_.one (simplify poly)
+    let get_constant poly = coeff Monomial_.one (simplify poly)
 
     let vars poly =
          poly

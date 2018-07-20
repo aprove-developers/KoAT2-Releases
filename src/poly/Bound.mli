@@ -87,3 +87,15 @@ val show_complexity_termcomp : complexity -> string
   
 (** Returns an overapproximation of the asymptotic complexity of the given bound. *)
 val asymptotic_complexity : t -> complexity
+
+(** Returns true iff the asymptotic complexity is n^1. *)
+val is_linear : t -> bool
+
+(** Needed for Atomizable but not yet implemented. *)
+val coeff_of_var : Var.t -> t -> value
+
+(** Needed for Atomizable but not yet implemented. *)
+val of_coeff_list : value list -> Var.t list -> t
+
+(** returns the constant of a bound *)
+val get_constant : t -> value
