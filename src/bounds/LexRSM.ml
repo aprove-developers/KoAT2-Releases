@@ -14,32 +14,13 @@ module LexRSMMap = Hashtbl.Make(Location)
 
 let logger = Logging.(get LexRSM) 
 
-type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded | `F_ranked ] [@@deriving show, eq]
+type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded | `C_ranked ] [@@deriving show, eq]
 
 let as_realparapoly label var =
   match TransitionLabel.update label var with
   (** Correct? In the nondeterministic case we just make it deterministic? *)
   | None -> RealParameterPolynomial.of_var var
   | Some p -> p |> RealPolynomial.of_intpoly |> RealParameterPolynomial.of_polynomial
-
-(** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
-let real_apply_farkas a_matrix b_right c_left d_right =
-  let num_of_fresh = List.length b_right in
-  let fresh_vars = Var.fresh_id_list Var.Real num_of_fresh in
-  let dual_constr = RealConstraint.dualise fresh_vars a_matrix c_left in
-  let cost_constr = RealPolynomial.of_coeff_list b_right fresh_vars in
-  RealConstraint.Infix.(dual_constr && cost_constr <= d_right)
-  
-(** Invokes farkas quantifier elimination. Uses apply_farkas*)
-let real_farkas_transform constr param_atom =
-  let vars = VarSet.union (RealConstraint.vars constr) (RealParameterAtom.vars param_atom) in
-  let costfunction = RealParameterConstraint.lift param_atom in
-  let a_matrix = RealConstraint.get_matrix vars constr in
-  let b_right = RealConstraint.get_constant_vector constr in
-  let c_left = List.flatten (RealParameterConstraint.get_matrix vars costfunction) in
-  (* TODO What, if the list is empty? *)
-  let (d_right :: _) = RealParameterConstraint.get_constant_vector costfunction in
-  real_apply_farkas a_matrix b_right c_left d_right
 
 (** Given a list of variables an affine template-polynomial is generated*)            
 let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
@@ -98,7 +79,7 @@ let compute_cbound_template (vars: VarSet.t): unit =
 
 let prob_branch_poly (l,t,l') =
     let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
-    let prob = (l,t,l') |> Transition.label |> TransitionLabel.probability |> OurFloat.of_float in
+    let prob = t |> TransitionLabel.probability |> OurFloat.of_float in
     RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
 
 let expected_poly gtrans =
@@ -112,9 +93,9 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
     | `Non_Increasing ->  RealParameterAtom.Infix.((template gtrans) >= (expected_poly gtrans))
     | `Decreasing ->      RealParameterAtom.Infix.((template gtrans) >= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.of_polynomial RealPolynomial.one)))
     | `Bounded ->         RealParameterAtom.Infix.((template gtrans) >= RealParameterPolynomial.of_polynomial RealPolynomial.zero)
-    | `F_ranked ->        RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly gtrans))
+    | `C_ranked ->        RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly gtrans))
   in
-  real_farkas_transform (gtrans |> GeneralTransition.guard |> RealConstraint.of_intconstraint) atom
+  RealParameterConstraint.farkas_transform (gtrans |> GeneralTransition.guard |> RealConstraint.of_intconstraint) atom
   |> RealFormula.mk
 
 let general_transition_constraint = Util.memoize ~extractor:(Tuple2.map2 GeneralTransition.id) general_transition_constraint_
@@ -128,8 +109,8 @@ let bounded_constraint transition =
 let decreasing_constraint transition =
   general_transition_constraint (`Decreasing, transition)
 
-let f_ranked_constraint transition = 
-  general_transition_constraint (`F_ranked, transition)
+let c_ranked_constraint transition = 
+  general_transition_constraint (`C_ranked, transition)
 
 let add_to_LexRSMMap map transitions valuation =
   transitions 
@@ -161,17 +142,17 @@ let evaluate_cbound valuation =
 
 module Solver = SMT.IncrementalZ3Solver
 
-let add_f_ranked_constraints solver transitions = 
+let add_c_ranked_constraints solver transitions = 
   let c_template = !cbound_template |> Option.get |> RealParameterPolynomial.of_int_parapoly
   in
   Solver.push solver;
   (*C has to be positive for all initial values*)
   RealParameterAtom.Infix.(c_template >= RealParameterPolynomial.of_polynomial RealPolynomial.zero)
-  |> real_farkas_transform RealConstraint.mk_true 
+  |> RealParameterConstraint.farkas_transform RealConstraint.mk_true 
   |> RealFormula.mk
   |> Solver.add_real solver; 
   transitions
-  |> List.map (f_ranked_constraint)
+  |> List.map (c_ranked_constraint)
   |> List.map (Solver.add_real solver)
 
 let rec backtrack_1d = function
@@ -204,7 +185,7 @@ let find_1d_lexrsm transitions remaining_transitions cbound =
                               Solver.add_real solver (bounded_constraint gtrans)));
   (*add c bound constraints*)
   if cbound then
-    add_f_ranked_constraints solver ranked_list
+    add_c_ranked_constraints solver ranked_list
     |> ignore;
   if Solver.satisfiable solver then
     let (n, ranked) = backtrack_1d (remaining_list, 0, GeneralTransitionSet.empty, solver) in
