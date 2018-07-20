@@ -505,5 +505,5 @@ let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implement
 let eval p valuation = raise (Failure "eval for MinMaxPolynomial not yet implemented")
 let eval_f p valuation = raise (Failure "eval_f for MinMaxPolynomial not yet implemented")
 let of_string p = raise (Failure "of_string for MinMaxPolynomial not yet implemented")
-let coeff_of_var = raise (Failure "coeff_of_var for MinMaxPolynomial not yet implemented")
-let of_coeff_list = raise (Failure "of_coeff_list for MinMaxPolynomial not yet implemented")
+let coeff_of_var p= raise (Failure "coeff_of_var for MinMaxPolynomial not yet implemented")
+let of_coeff_list p= raise (Failure "of_coeff_list for MinMaxPolynomial not yet implemented")
