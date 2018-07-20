@@ -168,7 +168,7 @@ module Methods =
                             ([[1; 1; -1; 0];[1; 0; 0; -1]],["x";"y"],"x + y <= 4 && x <= 3 && x >= 0 && y>=0");
                         ]);
                         
-            ("farkas_transform" >:::
+            (*("farkas_transform" >:::
                 let open Polynomial in
                 let open Constraint in
                 let open Constraint.Infix in
@@ -194,7 +194,7 @@ module Methods =
                             (all ([mk_eq ((value (-1))*(real_helper 1))(value (-1));mk_ge (real_helper 1) (value 0);mk_le (value 0) (value 0)]), 
                             (all [mk_ge (var "x") (value 0)]),
                             Atom.mk_ge (var "x") (value 0)); 
-                        ]);
+                        ]);*)
         ]
 
       end
