@@ -249,7 +249,7 @@ module type Polynomial =
     val monomials : t -> monomial list
 
     (** Returns the constant of the polynomial. *)
-    val constant : t -> value
+    val get_constant : t -> value
 
       (*
     (** Returns a maybe not equivalent polynom where all factors of polynomials are minized but stay in same proportion. *)
@@ -325,4 +325,4 @@ module type Polynomial =
                pow:('b -> int -> 'b) ->
                t -> 'b 
 
-  end
+end

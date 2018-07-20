@@ -8,6 +8,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) : ConstraintTypes.Constraint
        with type polynomial = A.polynomial
         and type value = A.value
         and type atom = A.t
+        and type t = A.t list
 
 module Constraint :
 sig
@@ -29,9 +30,7 @@ sig
   val get_constant_vector : t -> value list
     
   val dualise : Var.t list -> value list list -> polynomial list -> t
-    
-  val farkas_transform : t -> atom -> t    
-    
+        
   val max_of_occurring_constants : t -> OurInt.t
 
   (* Add operations specific to polynomial constraints here if needed *)
@@ -48,6 +47,8 @@ sig
     
   (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
   val get_constant_vector : t -> value list
+  
+  val farkas_transform : Constraint.t -> Atoms.ParameterAtom.t -> Constraint.t
     
   (* Add operations specific to parameter constraints here if needed *)
 end

@@ -37,7 +37,7 @@ let suite =
                     
                     ]
         );
-        "Satisfiable_Farkas" >::: (
+        (*"Satisfiable_Farkas" >::: (
         List.map (fun (expected,constr,atom) ->
             constr >:: (fun _ -> assert_equal_bool expected (Z3Solver.satisfiable (Formula.mk (Constraint.farkas_transform (Readers.read_constraint constr) (Readers.read_atom atom))))))
                     [
@@ -47,7 +47,7 @@ let suite =
                         (false,"x+y<=24 && x + y <= 25 && x<= 14 && y <= 20 && x >= 0 && y>= 0","2660 * x + 1700 * y < 54240 ");
                         (true,"x+y<=24 && x + y <= 25 && x<= 14 && y <= 20 && x >= 0 && y>= 0","2660 * x + 1700 * y <= 54240 ");
                     ]
-        );
+        );*)
         
         "get_model_valuation" >::: (
         List.map (fun (testname, expected, constr, poly) ->
@@ -70,4 +70,4 @@ let suite =
                         ("","x+y<=24 && x + y <= 25 && x<= 14 && y <= 20 && x >= 0 && y>= 0","2660 * x + 1700 * y <=54240 ");
                     ]
         );*)
-  ]
+]

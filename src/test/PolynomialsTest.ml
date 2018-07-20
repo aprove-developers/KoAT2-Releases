@@ -166,7 +166,7 @@ module Methods =
                 "one" >:: (fun _ -> assert_equal_value (OurInt.of_int 1) (Polynomial.eval Polynomial.one example_valuation));
                 "constant" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal_value (OurInt.of_int expected) (Polynomial.constant (Readers.read_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_value (OurInt.of_int expected) (Polynomial.get_constant (Readers.read_polynomial expression))))
                            [
                              (5, " 5 ");
                              (0, " x ");
@@ -298,4 +298,4 @@ module Methods =
               
         ]
 
-  end
+end

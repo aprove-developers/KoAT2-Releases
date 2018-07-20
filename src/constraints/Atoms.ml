@@ -91,20 +91,18 @@ struct
     let models atom valuation =
       P.Value.Compare.((P.eval atom valuation) <= P.Value.zero)
                                 *)
-
+    let is_linear = P.is_linear 
+        
+    let get_coefficient var atom =
+      P.coeff_of_var var (normalised_lhs atom)
+      
+    let get_constant atom =
+      P.get_constant (P.neg atom)
 end
 
 module Atom =
   struct
     include AtomOver(Polynomial)
-        
-    let is_linear = Polynomial.is_linear 
-        
-    let get_coefficient var atom =
-      Polynomial.coeff_of_var var (normalised_lhs atom)
-      
-    let get_constant atom =
-      Polynomial.constant (Polynomial.neg atom)
 
     let to_string ?(comp=" <= ") atom =
       Polynomial.separate_by_sign atom
@@ -118,12 +116,6 @@ module Atom =
 module ParameterAtom =
   struct
     include AtomOver(ParameterPolynomial)
-
-    let get_coefficient var atom =
-      ParameterPolynomial.coeff_of_var var (normalised_lhs atom)
-      
-    let get_constant atom =
-      ParameterPolynomial.constant (ParameterPolynomial.neg atom)
 
   end
 

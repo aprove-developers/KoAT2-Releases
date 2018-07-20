@@ -45,26 +45,7 @@ let as_parapoly label var =
   (** Correct? In the nondeterministic case we just make it deterministic? *)
   | None -> ParameterPolynomial.of_var var
   | Some p -> ParameterPolynomial.of_polynomial p
-
-(** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
-let apply_farkas a_matrix b_right c_left d_right =
-  let num_of_fresh = List.length b_right in
-  let fresh_vars = Var.fresh_id_list Var.Real num_of_fresh in
-  let dual_constr = Constraint.dualise fresh_vars a_matrix c_left in
-  let cost_constr = Polynomial.of_coeff_list b_right fresh_vars in
-  Constraint.Infix.(dual_constr && cost_constr <= d_right)
-  
-(** Invokes farkas quantifier elimination. Uses apply_farkas*)
-let farkas_transform constr param_atom =
-  let vars = VarSet.union (Constraint.vars constr) (ParameterAtom.vars param_atom) in
-  let costfunction = ParameterConstraint.lift param_atom in
-  let a_matrix = Constraint.get_matrix vars constr in
-  let b_right = Constraint.get_constant_vector constr in
-  let c_left = List.flatten (ParameterConstraint.get_matrix vars costfunction) in
-  (* TODO What, if the list is empty? *)
-  let (d_right :: _) = ParameterConstraint.get_constant_vector costfunction in
-  apply_farkas a_matrix b_right c_left d_right
-  
+ 
 (** Given a list of variables an affine template-polynomial is generated*)            
 let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
   let vars = VarSet.elements vars in
@@ -120,7 +101,7 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
     | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
     | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))      
   in
-  farkas_transform (TransitionLabel.guard t) atom
+  ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk  
        
 let transition_constraint = Util.memoize ~extractor:(Tuple3.map3 Transition.id) transition_constraint_
@@ -263,4 +244,4 @@ let find measure program transition =
 let reset () =
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
-  TemplateTable.clear template_table
+TemplateTable.clear template_table

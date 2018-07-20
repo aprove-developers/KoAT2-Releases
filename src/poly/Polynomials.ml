@@ -102,7 +102,7 @@ module PolynomialOver(Value : PolyTypes.Ring) =
     let to_int poly = raise (Failure "TODO: Not possible")
                 
     (* Gets the constant *)
-    let constant poly = coeff Monomial_.one (simplify poly)
+    let get_constant poly = coeff Monomial_.one (simplify poly)
 
     let vars poly =
          poly
@@ -251,6 +251,26 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       
   end
 
+
+module Polynomial =
+  struct
+    include PolynomialOver(OurInt)
+
+    let separate_by_sign poly =
+      partition (fun scaled -> OurInt.Compare.(ScaledMonomial_.coeff scaled >= OurInt.zero)) poly
+
+    let max_of_occurring_constants =
+      fold
+        ~const:OurInt.abs
+        ~var:(fun _ -> OurInt.one)
+        ~neg:identity
+        ~plus:OurInt.add
+        ~times:OurInt.mul
+        ~pow:OurInt.pow
+      
+  end
+
+
 module ParameterPolynomial =
   struct
     module Outer = PolynomialOver(PolynomialOver(OurInt))
@@ -275,22 +295,4 @@ module ParameterPolynomial =
     (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
     let of_polynomial (poly : Inner.t): t =
       Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
-  end
-
-module Polynomial =
-  struct
-    include PolynomialOver(OurInt)
-
-    let separate_by_sign poly =
-      partition (fun scaled -> OurInt.Compare.(ScaledMonomial_.coeff scaled >= OurInt.zero)) poly
-
-    let max_of_occurring_constants =
-      fold
-        ~const:OurInt.abs
-        ~var:(fun _ -> OurInt.one)
-        ~neg:identity
-        ~plus:OurInt.add
-        ~times:OurInt.mul
-        ~pow:OurInt.pow
-      
   end

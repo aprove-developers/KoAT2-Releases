@@ -13,15 +13,6 @@ module Atom :
 sig
   include module type of AtomOver(Polynomial)
 
-  (** Returns if both polynomials are linear. *)
-  val is_linear : t -> bool
-    
-  (** Returns the coefficient of a variable which is normalised to the lhs. *)
-  val get_coefficient : Var.t -> t -> value
-          
-  (** Returns the single right hand side constant of the atom. *)
-  val get_constant : t -> value
-
   val max_of_occurring_constants : t -> OurInt.t
 
   (* Add operations specific to polynomial atoms here if needed *)

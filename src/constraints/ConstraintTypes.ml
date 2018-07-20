@@ -14,6 +14,10 @@ module type Atomizable =
     val of_var : Var.t -> t
     val vars : t -> VarSet.t
     val rename : RenameMap.t -> t -> t
+    val is_linear : t -> bool
+    val coeff_of_var : Var.t -> t -> value
+    val get_constant : t -> value
+    val of_coeff_list : value list -> Var.t list -> t
   end
    
 (** An atom is a comparison between two polynomials *)
@@ -95,6 +99,15 @@ module type Atom =
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
                    t -> 'c
+                   
+        (** Returns if both polynomials are linear. *)
+        val is_linear : t -> bool
+    
+        (** Returns the coefficient of a variable which is normalised to the lhs. *)
+        val get_coefficient : Var.t -> t -> value
+          
+        (** Returns the single right hand side constant of the atom. *)
+        val get_constant : t -> value
 
   end
 
@@ -175,6 +188,20 @@ module type Constraint =
                    correct:('d) ->
                    conj:('d -> 'c -> 'd) ->
                    t -> 'd
+                   
+        (** Drops all nonlinear atoms from the constraints. 
+          Example: (a > 0 && b^2 < 2) gets transformed to (a > 0) *)
+        val drop_nonlinear : t -> t
+        
+          (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
+        val get_coefficient_vector : Var.t -> t -> value list
+          
+        val get_matrix : VarSet.t -> t -> value list list
+          
+        (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
+        val get_constant_vector : t -> value list
+          
+        val dualise : Var.t list -> value list list -> polynomial list -> t
           
   end
 
@@ -251,4 +278,4 @@ module type Formula =
                    wrong:('e) ->
                    disj:('e -> 'd -> 'e) ->
                    t -> 'e
-  end
+end
