@@ -9,6 +9,7 @@ type t =
   | CutUnsatisfiableTransitions
   | Chaining
   | CutZeroProbTransitions
+  | ProbabilityGreaterOne
   | InvariantGeneration[@@deriving ord, eq]
 
 let show = function
@@ -17,6 +18,7 @@ let show = function
   | Chaining -> "chaining"
   | InvariantGeneration -> "invgen"
   | CutZeroProbTransitions -> "zerotransitions"
+  | ProbabilityGreaterOne -> "greateroneprobability"
 
 let affects = function
   | CutUnreachableLocations     -> []
@@ -24,6 +26,7 @@ let affects = function
   | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining]
   | Chaining                    -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
   | CutZeroProbTransitions      -> [CutUnreachableLocations; Chaining]
+  | ProbabilityGreaterOne       -> []
 
 let lift_to_program transform program =
   MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (const graph) program)))
@@ -37,6 +40,7 @@ let transform subject = function
   | Chaining                    -> lift_to_tuple (lift_to_program Chaining.transform_graph) subject
   | InvariantGeneration         -> lift_to_tuple InvariantGeneration.transform_program subject
   | CutZeroProbTransitions      -> lift_to_tuple CutZeroProbTransitions.transform_program subject
+  | ProbabilityGreaterOne       -> lift_to_tuple ProbabilityGreaterOne.check_program subject
 
 type outer_t = t
 module PreprocessorSet =

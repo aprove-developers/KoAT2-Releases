@@ -10,6 +10,7 @@ type t =
   | CutUnsatisfiableTransitions
   | Chaining
   | CutZeroProbTransitions
+  | ProbabilityGreaterOne
   | InvariantGeneration [@@deriving ord, eq]
 
 val show : t -> string
