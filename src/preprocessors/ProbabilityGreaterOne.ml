@@ -9,8 +9,7 @@ let check_program program =
   let trans_prob_greater_1 =
     program
     |> Program.generalized_transitions
-    |> GeneralTransitionSet.filter (fun gen_trans -> 
-      (TransitionSet.fold (fun trans rest -> (trans |> Transition.label |> TransitionLabel.probability) +. rest) (GeneralTransition.transitions gen_trans) 0.)> 1.)
+    |> GeneralTransitionSet.filter (fun gen_trans -> GeneralTransition.total_probability gen_trans > 1.)
   in 
   if GeneralTransitionSet.is_empty trans_prob_greater_1 then
     MaybeChanged.same program

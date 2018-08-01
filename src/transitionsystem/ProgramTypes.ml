@@ -158,6 +158,9 @@ module GeneralTransition =
       and start_str = (gtrans |> start |> Location.to_string) ^ (TransitionLabel.(update_to_string_lhs any_label))
       in
       String.concat " " [start_str; cost_str; trans_str; guard_str]
+    
+    let total_probability transition =
+    TransitionSet.fold (fun trans rest -> (trans |> Transition.label |> TransitionLabel.probability) +. rest) (transitions transition) 0.
   end
 
 module GeneralTransitionSet = 

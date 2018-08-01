@@ -64,6 +64,7 @@ sig
   val start: t -> Location.t
   val id: t -> int
   val guard: t -> TransitionLabel.Guard.t
+  val total_probability: t -> float
 end
 
 module GeneralTransitionSet :
