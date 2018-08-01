@@ -19,8 +19,8 @@ type params = {
 let run (params: params) =
   Logging.(use_loggers [LexRSM, Logger.DEBUG]);
   params.input
-  |> MainUtil.read_input params.simple_input
-  |> Option.may (fun program ->
+  |> MainUtil.read_input_goal
+  |> Option.may (fun (program, goal) ->
         (program, Approximation.create program)
-        |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration])
-        |> (fun (prog, appr) -> LexRSM.find prog true))
+        |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne])
+        |> (fun (prog, appr) -> LexRSM.find prog goal))

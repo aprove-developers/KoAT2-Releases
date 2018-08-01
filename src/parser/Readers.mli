@@ -22,3 +22,5 @@ val read_atom : string -> Atoms.Atom.t
 val read_polynomial : string -> Polynomials.Polynomial.t
 
 val read_bound : string -> Bound.t
+
+val read_prog_goal_file : string -> (Program.t * string)

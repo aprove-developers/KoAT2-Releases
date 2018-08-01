@@ -32,6 +32,8 @@
 
 %start <Bound.t> onlyBound
 
+%start <(Program.t * string)> programAndGoal
+
 %type <Program.t> program
 
 %type <Formulas.Formula.t> formula
@@ -39,6 +41,8 @@
 %type <Polynomials.Polynomial.t> polynomial
 
 %type <Var.t list> variables
+
+%type <string> goal
 
 %{
   open BatTuple
@@ -61,6 +65,13 @@ program :
                 variables = variables
                 transitions = transitions
                   { Program.from (transitions variables) start } ;
+
+programAndGoal :
+	|	g = goal
+		start = start
+		variables = variables
+                transitions = transitions ;EOF
+                  { (Program.from (transitions variables) start, g) } ;
 
 onlyProgram_simple :
         |       graph = program_simple; EOF
