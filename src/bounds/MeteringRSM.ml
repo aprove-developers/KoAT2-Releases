@@ -64,10 +64,10 @@ let compute_metering_templates (vars: VarSet.t) (locations: Location.t list): un
                   )
                   execute
 
-let prob_branch_poly (l,t,l') =
+let prob_branch_poly ?(diff = RealParameterPolynomial.zero) (l,t,l') =
     let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
     let prob = t |> TransitionLabel.probability |> OurFloat.of_float in
-    RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
+    RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.( add (substitute_f (as_realparapoly t) (template l')) (neg diff)))
 
 let expected_poly gtrans =
     TransitionSet.fold (fun trans poly -> RealParameterPolynomial.add (prob_branch_poly trans) poly) (gtrans |> GeneralTransition.transitions) RealParameterPolynomial.zero
@@ -77,7 +77,7 @@ let diff_poly start_template gtrans=
     gtrans
     |> GeneralTransition.transitions
     |> TransitionSet.to_list
-    |> List.map (fun trans -> RealParameterPolynomial.(add (prob_branch_poly trans) (neg start_template)))
+    |> List.map (prob_branch_poly ~diff:start_template)
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "diff_poly", [])
                     ~result:(fun polylist ->
@@ -241,8 +241,8 @@ let test program =
     find_metering_rsm metering_map transitions 
     |> fun option -> Option.map (fun metering_map -> (metering_rsmmap_to_string metering_map) ^ "\n") option |? "no metering function found\n" |> print_string
 
-let compute_map program =
-  let transitions = Program.generalized_transitions program 
+let compute_map gtrans =
+  let transitions = gtrans |> GeneralTransitionSet.singleton 
   and metering_map = MeteringRSMMap.create 10 in
   let execute () =
     find_metering_rsm metering_map transitions 
@@ -253,13 +253,13 @@ let compute_map program =
                   execute
 
 
-let compute_metering_function program  =
+let compute_metering_function gtrans =
   let execute () =
-    let metering_map = compute_map program |> Option.get in
-    MeteringRSMMap.find metering_map (Program.start program)
+    let metering_map = compute_map gtrans |> Option.get in
+    MeteringRSMMap.find metering_map (GeneralTransition.start gtrans)
   in
   Logger.with_log logger Logger.DEBUG
-                  (fun () -> "compute_metering_function", ["transitions", program |> Program.generalized_transitions |> GeneralTransitionSet.to_string;])
+                  (fun () -> "compute_metering_function", ["transition:", gtrans |> GeneralTransition.to_string;])
                   ~result:(Polynomial.to_string)
                   execute
 
@@ -267,10 +267,14 @@ let find program =
   let execute () =
     if TemplateTable.is_empty template_table then
       compute_metering_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-    compute_metering_function program
+    program 
+    |> Program.generalized_transitions 
+    |> GeneralTransitionSet.filter GeneralTransition.is_loop 
+    |> GeneralTransitionSet.elements
+    |> List.map compute_metering_function
   in
   Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find_metering_function", ["transitions", program |> Program.generalized_transitions |> GeneralTransitionSet.to_string;])
-                  ~result:(Polynomial.to_string)
+                  (fun () -> "find_metering_function", ["transitions", program |> Program.generalized_transitions |> GeneralTransitionSet.filter GeneralTransition.is_loop |> GeneralTransitionSet.to_string;])
+                  ~result: (fun polylist -> polylist |> List.map (Polynomial.to_string) |> String.concat ",")
                   execute 
   |> ignore
