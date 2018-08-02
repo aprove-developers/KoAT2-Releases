@@ -137,6 +137,13 @@ module GeneralTransition =
     let id gtrans = gtrans.id
     let start gtrans = gtrans.start
     let compare gtrans1 gtrans2 = Int.compare gtrans1.id gtrans2.id
+    let targets gtrans = 
+      gtrans
+      |> transitions
+      |> TransitionSet.elements
+      |> List.map Transition.target
+      |> LocationSet.of_list
+      
 
     let from_transitionset transset (l,t,l') = 
       let new_trans = TransitionSet.filter (fun (l2, t2, l2') -> TransitionLabel.same t t2 && Location.equal l l2) transset in
@@ -161,6 +168,12 @@ module GeneralTransition =
     
     let total_probability transition =
     TransitionSet.fold (fun trans rest -> (trans |> Transition.label |> TransitionLabel.probability) +. rest) (transitions transition) 0.
+    
+    let is_loop gtrans =
+      gtrans
+      |> targets
+      |> LocationSet.elements
+      |> List.for_all (fun loc -> Location.equal loc (start gtrans))      
   end
 
 module GeneralTransitionSet = 
