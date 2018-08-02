@@ -16,6 +16,7 @@ let subcommands =
     SMTCommand.(subcommand run params_cmdliner_term description command);
     NormalizeCommand.(subcommand run params_cmdliner_term description command);
     LexRSMCommand.(subcommand run params_cmdliner_term description command);
+    MeteringRSMCommand.(subcommand run params_cmdliner_term description command);
   ]
   
 let default_cmd =

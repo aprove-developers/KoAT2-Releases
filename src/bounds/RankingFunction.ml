@@ -135,13 +135,13 @@ let make decreasing_transition non_increasing_transitions valuation =
     non_increasing = non_increasing_transitions;
   }
 
-let find_with measure non_increasing_transitions decreasing_transition =
+(*let find_with measure non_increasing_transitions decreasing_transition =
   Formula.Infix.(
     non_increasing_constraints measure non_increasing_transitions
     && bounded_constraint measure decreasing_transition
     && decreasing_constraint measure decreasing_transition)
   |> SMTSolver.get_model ~coeffs_to_minimise:!fresh_coeffs
-  |> Option.map (make decreasing_transition non_increasing_transitions)
+  |> Option.map (make decreasing_transition non_increasing_transitions)*)
   
 module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
                     
