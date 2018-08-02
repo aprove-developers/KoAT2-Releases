@@ -18,7 +18,6 @@ let check_program program =
     let loc_name_list = program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list |> List.map (Location.to_string) in
     let i = ref 0 in
     while List.mem ("s_" ^ (Int.to_string !i)) loc_name_list do i := (!i+1) done;
-    let new_graph = Program.graph program in
     let new_sink = "s_" ^ (Int.to_string !i) |> Location.of_string in
     let identity_update = 
     (*get the update for all new transitions*)
