@@ -14,7 +14,7 @@ module MeteringRSMMap = Hashtbl.Make(Location)
 
 let logger = Logging.(get MeteringRSM) 
 
-type constraint_type = [ `Metering | `Bounded | `Cond_Diff_Bound ] [@@deriving show, eq]
+type constraint_type = [ `Metering | `Bounded | `Cond_Diff_Bound | `Inactive] [@@deriving show, eq]
 
 let as_realparapoly label var =
   match TransitionLabel.update label var with
@@ -105,17 +105,28 @@ let bound_absolute poly =
 let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
   let start_template = (gtrans |> GeneralTransition.start |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
   let int_guard = (gtrans |> GeneralTransition.guard |> RealConstraint.of_intconstraint) in
-  let atoms =
+  match constraint_type with
+  | `Inactive ->
+    let atom = RealParameterAtom.Infix.(start_template  <= RealParameterPolynomial.zero) in
+    let neg_guard = int_guard |> RealFormula.mk |> RealFormula.neg |> RealFormula.constraints in
+    neg_guard
+    |> List.map (fun constr -> RealParameterConstraint.farkas_transform constr atom)
+    |> List.map RealFormula.mk
+    |> List.fold_left RealFormula.mk_or RealFormula.mk_false
+    (*|> RealFormula.mk*)
+    
+  | _ ->
+  let atoms = 
     match constraint_type with
-    | `Metering ->      [RealParameterAtom.Infix.(start_template <= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.one)))]
-    | `Bounded ->         [RealParameterAtom.Infix.(start_template  >= RealParameterPolynomial.one)]
+    | `Metering ->  [RealParameterAtom.Infix.(start_template <= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.one)))]
+    | `Bounded -> [RealParameterAtom.Infix.(start_template  >= RealParameterPolynomial.one)]
+    | `Inactive ->  [RealParameterAtom.Infix.(start_template  <= RealParameterPolynomial.zero)]
     | `Cond_Diff_Bound ->  
         gtrans
       |> diff_poly start_template
       |> List.map bound_absolute
       |> List.flatten
   in
-(*  print_string ((String.concat "," (List.map RealParameterAtom.to_string atoms))^"\n");*)
   atoms
   |> List.map (RealParameterConstraint.farkas_transform int_guard)
   |> List.fold_left (RealConstraint.mk_and) (RealConstraint.mk_true)
@@ -139,6 +150,15 @@ let metering_constraint transition =
   in
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> ("metering_constraint of "^(GeneralTransition.to_string transition)), [])
+                  ~result:RealFormula.to_string
+                  execute
+                  
+let inactive_constraint transition =
+  let execute () =
+    general_transition_constraint (`Inactive, transition)
+  in
+  Logger.with_log logger Logger.DEBUG 
+                  (fun () -> ("inactive_constraint of "^(GeneralTransition.to_string transition)), [])
                   ~result:RealFormula.to_string
                   execute
   
@@ -182,6 +202,7 @@ let find_metering_rsm_model transitions (*remaining_transitions*) =
   ignore(remaining_list |> List.map (fun gtrans -> 
                               Solver.add_real solver (metering_constraint gtrans);
                               Solver.add_real solver (bounded_constraint gtrans);
+                              Solver.add_real solver (inactive_constraint gtrans);
                               Solver.add_real solver (cond_diff_bounded_constraint gtrans)));
   if Solver.satisfiable solver then(
     (*Solver.maximize_vars solver !fresh_coeffs;*)
@@ -233,8 +254,14 @@ let compute_map program =
 
 
 let compute_metering_function program  =
-  let metering_map = compute_map program |> Option.get in
-  MeteringRSMMap.find metering_map (Program.start program)
+  let execute () =
+    let metering_map = compute_map program |> Option.get in
+    MeteringRSMMap.find metering_map (Program.start program)
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "compute_metering_function", ["transitions", program |> Program.generalized_transitions |> GeneralTransitionSet.to_string;])
+                  ~result:(Polynomial.to_string)
+                  execute
 
 let find program =
   let execute () =
