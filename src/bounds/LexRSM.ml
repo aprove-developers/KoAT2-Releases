@@ -87,13 +87,12 @@ let expected_poly gtrans =
 
 let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
   let template = (fun gtrans -> gtrans |> GeneralTransition.start |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
-  let c_template = !cbound_template |> Option.get |> RealParameterPolynomial.of_int_parapoly in
   let atom =
     match constraint_type with
     | `Non_Increasing ->  RealParameterAtom.Infix.((template gtrans) >= (expected_poly gtrans))
     | `Decreasing ->      RealParameterAtom.Infix.((template gtrans) >= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.of_polynomial RealPolynomial.one)))
     | `Bounded ->         RealParameterAtom.Infix.((template gtrans) >= RealParameterPolynomial.of_polynomial RealPolynomial.zero)
-    | `C_ranked ->        RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly gtrans))
+    | `C_ranked ->        let c_template = !cbound_template |> Option.get |> RealParameterPolynomial.of_int_parapoly in RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly gtrans))
   in
   RealParameterConstraint.farkas_transform (gtrans |> GeneralTransition.guard |> RealConstraint.of_intconstraint) atom
   |> RealFormula.mk
@@ -140,6 +139,7 @@ let evaluate_cbound valuation =
   |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
 
 
+
 module Solver = SMT.IncrementalZ3Solver
 
 let add_c_ranked_constraints solver transitions = 
@@ -154,6 +154,7 @@ let add_c_ranked_constraints solver transitions =
   transitions
   |> List.map (c_ranked_constraint)
   |> List.map (Solver.add_real solver)
+  |> ignore
 
 let rec backtrack_1d = function
   | ([],n,ys,solver) -> (n,ys)
@@ -174,7 +175,7 @@ let rec backtrack_1d = function
             backtrack_1d (xs, n, ys, solver)
           )
 
-let find_1d_lexrsm transitions remaining_transitions cbound =
+let find_1d_lexrsm transitions remaining_transitions cbounded =
   let solver = Solver.create () 
   and remaining_list = remaining_transitions |> GeneralTransitionSet.to_list
   and ranked_list = GeneralTransitionSet.diff transitions remaining_transitions |> GeneralTransitionSet.to_list
@@ -184,9 +185,8 @@ let find_1d_lexrsm transitions remaining_transitions cbound =
                               Solver.add_real solver (non_increasing_constraint gtrans);
                               Solver.add_real solver (bounded_constraint gtrans)));
   (*add c bound constraints*)
-  if cbound then
-    add_c_ranked_constraints solver ranked_list
-    |> ignore;
+  if cbounded then
+    add_c_ranked_constraints solver ranked_list;
   if Solver.satisfiable solver then
     let (n, ranked) = backtrack_1d (remaining_list, 0, GeneralTransitionSet.empty, solver) in
     ranked |> GeneralTransitionSet.to_list |> List.map (fun gtrans -> Solver.add_real solver (decreasing_constraint gtrans)) |> ignore;
@@ -210,27 +210,22 @@ let cbound_to_string cbound =
   |> List.map Polynomial.to_string
   |> String.concat ", "
 
-let rec find_lexrsm map transitions remaining cbound =
+let rec find_lexrsm map transitions remaining cbounded =
   if GeneralTransitionSet.is_empty remaining then
     Some (map, [])
   else
-    let (eval, ranked) = find_1d_lexrsm transitions remaining cbound in
+    let (eval, ranked) = find_1d_lexrsm transitions remaining cbounded in
     if Option.is_none eval then
       None
     else
-      let eval = Option.get eval in
-      let c_poly = evaluate_cbound eval in
-      add_to_LexRSMMap map transitions eval;
-      find_lexrsm map transitions (GeneralTransitionSet.diff remaining ranked) cbound
-      |> (fun option -> 
-          if Option.is_some option then
-            option 
-            |> Option.get 
-            |> (fun (map, c_list) -> (map, c_poly :: c_list))
-            |> Option.some
-          else
-            None
-        )
+      (Option.may (add_to_LexRSMMap map transitions) eval;
+      find_lexrsm map transitions (GeneralTransitionSet.diff remaining ranked) cbounded
+      |> Option.map (fun (map, c_list) -> 
+                              let new_c_list = if cbounded then 
+                                ((Option.map (evaluate_cbound) eval |? Polynomial.zero) :: c_list)
+                                else []
+                              in
+                              (map, new_c_list)))
 
 let rec make_ranking_function start_poly c_bound exp =
   match (start_poly, c_bound) with
@@ -241,26 +236,6 @@ let reset () =
   cbound_template := None;
   TemplateTable.clear template_table
 
-let test program cbounded = 
-    print_string("\n");
-    print_string("Generalized Transitions:\n");
-    print_string(program |> Program.generalized_transitions |> GeneralTransitionSet.to_string);
-    print_string("\n");
-    if TemplateTable.is_empty template_table then
-      compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-    if Option.is_none !cbound_template then
-      compute_cbound_template (Program.input_vars program);
-    let transitions = Program.generalized_transitions program in 
-    let lexmap = LexRSMMap.create 10 in
-    find_lexrsm lexmap transitions transitions cbounded
-    |> tap (fun option -> Option.map (fun (lexmap, cbound) -> (lexrsmmap_to_string lexmap) ^ "\n" ^ (cbound_to_string cbound) ^ "\n") option |? "no ranking function found\n" |> print_string)
-    |> Option.map (fun (lexmap, cbound) -> 
-          let start_poly = LexRSMMap.find lexmap (Program.start program) in
-          make_ranking_function start_poly cbound (List.length start_poly - 1)
-        )
-    |> Option.map (Polynomial.to_string) |? "still no ranking function found\n"
-    |> print_string
-
 let compute_map program cbounded =
   let transitions = Program.generalized_transitions program 
   and lexmap = LexRSMMap.create 10 in
@@ -269,24 +244,40 @@ let compute_map program cbounded =
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "find_map", [])
-                  ~result:(fun option -> Option.map (fun (lexmap, cbound) -> (lexrsmmap_to_string lexmap) ^ "; c: " ^ (cbound_to_string cbound)) option |? "no ranking function found")
+                  ~result:(fun option -> Option.map (fun (lexmap, cbound) -> 
+                    let cbound_string = if cbound = [] then "" else "; c: " ^ (cbound_to_string cbound) in
+                    (lexrsmmap_to_string lexmap) ^ cbound_string) option |? "no lexRSMMap found")
                   execute
 
-let compute_ranking_function program cbounded =
-  let (lexmap, c_vector) = compute_map program cbounded |> Option.get in
-  let start_poly = LexRSMMap.find lexmap (Program.start program) in
-  make_ranking_function start_poly c_vector (List.length start_poly - 1)
+let compute_as_termination program =
+  let execute () =
+    if TemplateTable.is_empty template_table then
+      compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+    compute_map program false
+    |> Option.is_some
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "compute_ast", [])
+                  ~result:(fun bool -> if bool then "The program terminates almost surely." else "The program does not terminate almost surely.")
+                  execute
 
-let find program cbounded =
+let compute_expected_complexity program =
   let execute () =
     if TemplateTable.is_empty template_table then
       compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
     if Option.is_none !cbound_template then
       compute_cbound_template (Program.input_vars program);
-    compute_ranking_function program cbounded
+    compute_map program true 
+    |> Option.map (fun (lexmap, c_vector) -> 
+                      let start_poly = LexRSMMap.find lexmap (Program.start program) in
+                      make_ranking_function start_poly c_vector (List.length start_poly -1))
   in
   Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find_ranking_function", ["transitions", program |> Program.generalized_transitions |> GeneralTransitionSet.to_string;"cbounded", Bool.to_string cbounded])
-                  ~result:(Polynomial.to_string)
-                  execute 
-  |> ignore
+                  (fun () -> "find_ranking_function", ["transitions", program |> Program.generalized_transitions |> GeneralTransitionSet.to_string])
+                  ~result:(fun option -> Option.map Polynomial.to_string option |? "no ranking function could be found")
+                  execute
+
+let find program goal =
+  if goal = "EXPECTEDCOMPLEXITY" then compute_expected_complexity program |> ignore
+  else if goal = "ASTERMINATION" then compute_as_termination program |> ignore
+    else raise (Failure ("Unexpected Goal"))

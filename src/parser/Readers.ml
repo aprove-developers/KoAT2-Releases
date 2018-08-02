@@ -44,3 +44,6 @@ let read_polynomial =
 
 let read_bound =
   read Parser.onlyBound
+
+let read_prog_goal_file path =
+  read_ Parser.programAndGoal (Lexing.from_input (File.open_in path))
