@@ -10,6 +10,7 @@ type logger =
   | Preprocessor
   | LexRSM
   | MeteringRSM
+  | Roots
 
 let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM; MeteringRSM]
 
