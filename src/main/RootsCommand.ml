@@ -3,8 +3,6 @@ open ProgramTypes
 open Sys
 open Unix
 open Polynomials
-open Monomials
-open ScaledMonomials
 
 let description = "Testing for finding roots of a polynomial"
 
@@ -47,7 +45,13 @@ let rec make_deg_list = function
 
 let poly_coeffs poly =
   let var = poly |> Polynomial.vars |> VarSet.any in
-  let monos = poly |> Polynomial.degree |> make_deg_list |> List.rev |> List.map (Polynomial.of_power var) |> List.map Polynomial.monomials |> List.map List.hd in 
+  let monos = poly 
+              |> Polynomial.degree 
+              |> make_deg_list 
+              |> List.rev 
+              |> List.map (Polynomial.of_power var) 
+              |> List.map Polynomial.monomials 
+              |> List.map List.hd in 
   List.map (fun mono -> Polynomial.coeff mono poly) monos
 
 let coeff_list_to_string list =
@@ -68,9 +72,18 @@ let get_roots poly =
 
 let run (params: params) =
   Logging.(use_loggers [Roots, Logger.DEBUG]);
-  params.input
-  |> make_test_polynomial
-  |> get_roots
-  |> List.map OurFloat.to_string
-  |> List.map print_string
+  let logger = Logging.(get Roots) in
+  let execute () =
+    params.input
+    |> make_test_polynomial
+    |> get_roots
+  in 
+  Logger.with_log logger Logger.DEBUG 
+                  (fun () -> "find roots", [])
+                  ~result:(fun roots ->
+                    roots
+                    |> List.map OurFloat.to_string
+                    |> String.concat ", "
+                  )
+                  execute
   |> ignore
