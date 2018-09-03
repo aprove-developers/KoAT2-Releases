@@ -18,6 +18,8 @@ sig
 
   val max_of_occurring_constants : t -> OurInt.t
 
+  val degree_coeff_list : t -> value list
+
 end
      
 module ParameterPolynomial :
