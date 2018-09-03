@@ -22,7 +22,9 @@ let read_process_lines command =
       while true do
         lines := input_line in_channel :: !lines
       done;
-    with BatInnerIO.Input_closed -> ()
+    with 
+      | BatInnerIO.Input_closed -> ()
+      | End_of_file -> ()
   end;
   List.rev !lines
 
@@ -33,42 +35,43 @@ let rec filter_roots = function
 let make_test_polynomial coeff_string =
   coeff_string
   |> String.split_on_char ' '
+  |> List.rev
   |> List.map int_of_string
   |> List.mapi (fun c x -> (Polynomial.of_power (Var.of_string "X") c, Polynomial.of_int x))
   |> List.map (fun (x,c) -> Polynomial.mul x c)
   |> List.fold_left Polynomial.add Polynomial.zero
   |> Polynomial.simplify
 
-let rec make_deg_list = function
-  | 0 -> 0::[]
-  | x -> if x<0 then [] else (x)::make_deg_list (x-1)
-
-let poly_coeffs poly =
-  let var = poly |> Polynomial.vars |> VarSet.any in
-  let monos = poly 
-              |> Polynomial.degree 
-              |> make_deg_list 
-              |> List.rev 
-              |> List.map (Polynomial.of_power var) 
-              |> List.map Polynomial.monomials 
-              |> List.map List.hd in 
-  List.map (fun mono -> Polynomial.coeff mono poly) monos
-
-let coeff_list_to_string list =
+let coeff_list_to_string_matlab list =
   list
+  |> List.rev
   |> List.map OurInt.to_string
   |> String.concat " "
   |> fun s -> "[" ^ s ^ "]"
 
-let get_roots poly =
+let get_roots_matlab poly =
   poly
-  |> poly_coeffs
-  |> coeff_list_to_string
+  |> Polynomial.degree_coeff_list
+  |> coeff_list_to_string_matlab
   |> fun s -> read_process_lines ("matlab -nodesktop -nojvm -r 'format compact; format long; r=roots(" ^ s ^ ");r=r(~imag(r)),exit'")
   |> fun list -> filter_roots ("r =", list)
   |> fun list -> List.take (List.length list - 1) list
   |> List.map String.trim
   |> List.map OurFloat.of_string
+
+let coeff_list_to_string_sage list =
+  list
+  |> List.mapi (fun n k -> (OurInt.to_string k) ^ "*x^" ^ (string_of_int n))
+  |> String.concat "+"
+let get_roots_sage poly =
+  poly
+  |> Polynomial.degree_coeff_list
+  |> coeff_list_to_string_sage
+  |> fun s -> read_process_lines ("sage -c 'x = polygen(ZZ); print((" ^ s ^ ").real_roots())'")
+  |> List.hd 
+  |> BatString.chop
+  |> (fun rootstr -> BatString.nsplit rootstr ", ")
+  |> List.map float_of_string
 
 let run (params: params) =
   Logging.(use_loggers [Roots, Logger.DEBUG]);
@@ -76,7 +79,7 @@ let run (params: params) =
   let execute () =
     params.input
     |> make_test_polynomial
-    |> get_roots
+    |> get_roots_sage
   in 
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> "find roots", [])
