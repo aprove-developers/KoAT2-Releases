@@ -80,12 +80,9 @@ module PolynomialOver(Value : PolyTypes.Ring) =
 
     let of_var var = of_power var 1
     
-    let rec of_coeff_list coeffs vars =
+    let of_coeff_list coeffs vars =
         if (List.length coeffs) == (List.length vars) then
-            match (coeffs, vars) with
-                |([],[])-> []
-                |(c::coefftail, v::varstail)-> (ScaledMonomial_.make c (Monomial_.lift v 1)) :: (of_coeff_list coefftail varstail)
-                |_ -> []
+          List.map2 (fun c v -> ScaledMonomial_.make c (Monomial_.lift v 1)) coeffs vars
         else []
             
 
