@@ -12,6 +12,7 @@
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
 %token                  COMMA COLON
 %token                  MIN MAX INFINITY ABS
+%token                  UNIFORM
 
 %left			PLUS MINUS
 %left			TIMES
@@ -39,6 +40,12 @@
 %type <Formulas.Formula.t> formula
 
 %type <Polynomials.Polynomial.t> polynomial
+
+%type <(string * TransitionLabel.UpdateElement.t list)> transition_target
+
+%type <ProbDistribution.t> dist
+
+%type <TransitionLabel.UpdateElement.t> update_element
 
 %type <Var.t list> variables
 
@@ -135,7 +142,7 @@ non_prob_transition_rhs :
         |       target = transition_target
                   { ("Com_1", [target]) } ;
 transition_target :
-	|       target = ID; LPAR assignments = separated_list(COMMA, polynomial) RPAR
+	|       target = ID; LPAR assignments = separated_list(COMMA, update_element) RPAR
 	          { (target, assignments) } ;
 
 withConstraints :
@@ -217,6 +224,16 @@ polynomial :
 	          { op p1 p2 }
 	|       v = variable; POW; c = UINT
 	          { Poly.pow v c } ;
+
+dist:
+        |       UNIFORM; p1 = polynomial; p2 = polynomial
+                  { ProbDistribution.Uniform (p1,p2) };
+
+update_element: 
+        |       p = polynomial
+                  { TransitionLabel.UpdateElement.Poly p }
+        |       d = dist
+                  { TransitionLabel.UpdateElement.Dist d }
 
 onlyBound :
         |       b = bound EOF { b } ;

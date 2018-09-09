@@ -15,7 +15,8 @@ let tests =
                                                 (VarSet.of_list [Var.of_string "y"; Var.of_string "z"])
                                                 (Var.of_string "x")
                                                 (Readers.read_formula guard)
-                                                (Readers.read_polynomial "y+z")
+                                                (Readers.read_polynomial "y+z"
+                                                 |> Polynomial.vars)
                                                 1024
                          in
                          reset ();
@@ -64,7 +65,7 @@ let tests =
                                                 (VarSet.of_list [Var.of_string "y"; Var.of_string "z"])
                                                 (Var.of_string "x")
                                                 (Readers.read_formula guard)
-                                                (Readers.read_polynomial "y+z")
+                                                (Readers.read_polynomial "y+z" |> Polynomial.vars)
                                                 1024
                          in
                          reset ();

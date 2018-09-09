@@ -20,7 +20,9 @@ let as_realparapoly label var =
   match TransitionLabel.update label var with
   (** Correct? In the nondeterministic case we just make it deterministic? *)
   | None -> RealParameterPolynomial.of_var var
-  | Some p -> p |> RealPolynomial.of_intpoly |> RealParameterPolynomial.of_polynomial
+  | Some (TransitionLabel.UpdateElement.Poly p) -> p |> RealPolynomial.of_intpoly |> RealParameterPolynomial.of_polynomial
+  (** TODO *)
+  | Some (TransitionLabel.UpdateElement.Dist d) -> RealParameterPolynomial.of_var var
 
 (** Given a list of variables an affine template-polynomial is generated*)            
 let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =

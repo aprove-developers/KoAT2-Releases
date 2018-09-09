@@ -44,7 +44,9 @@ let as_parapoly label var =
   match TransitionLabel.update label var with
   (** Correct? In the nondeterministic case we just make it deterministic? *)
   | None -> ParameterPolynomial.of_var var
-  | Some p -> ParameterPolynomial.of_polynomial p
+  | Some (TransitionLabel.UpdateElement.Poly p) -> ParameterPolynomial.of_polynomial p
+  (** TODO is there a better way in the probabilistic case ? *)
+  | Some (TransitionLabel.UpdateElement.Dist _) -> ParameterPolynomial.of_var var
  
 (** Given a list of variables an affine template-polynomial is generated*)            
 let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =

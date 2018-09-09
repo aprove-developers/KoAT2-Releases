@@ -374,12 +374,12 @@ let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: in
                   ~result:(Bound.to_string % as_bound)
                   execute
 
-let find_bound kind program_vars var formula update s_range =
+let find_bound kind program_vars var formula update_vars s_range =
   let execute () =
     let solver = Solver.create ~model:false () in
     let c_range_ = (c_range formula) in
     Solver.add solver formula;
-    find_scaled_bound kind program_vars solver var (formula |> Formula.vars |> VarSet.remove var) (update |> Polynomial.vars) s_range c_range_
+    find_scaled_bound kind program_vars solver var (formula |> Formula.vars |> VarSet.remove var) update_vars s_range c_range_
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find_local_size_bound", [
                           "kind", show_kind kind;
@@ -415,11 +415,26 @@ let compute_single_local_size_bound program kind (l,t,l') var =
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
     TransitionLabel.update t var
     |> Option.map (fun update ->
+           let updateformula var = 
+             match update with
+              | TransitionLabel.UpdateElement.Poly p ->
+                  Formula.Infix.(Polynomial.of_var var = p)
+              | TransitionLabel.UpdateElement.Dist d ->
+                  Formula.mk (ProbDistribution.guard d var)
+            in
            (* Introduce a temporary result variable *)
            let v' = Var.fresh_id Var.Int () in
-           let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && Polynomial.of_var v' = update) in
+           let update_vars = TransitionLabel.UpdateElement.vars update in
+           let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && updateformula var) in
+           let update_fun_for_s_range = 
+             match update with 
+              | TransitionLabel.UpdateElement.Poly p -> p
+              | TransitionLabel.UpdateElement.Dist d ->
+                  (ProbDistribution.deterministic_upper_polynomial d
+                   |? Polynomial.of_int 1024)
+           in
 (*         A local size bound must not depend on temporary variables    *)
-           find_bound kind (Program.input_vars program) v' guard_with_update update (s_range update)
+           find_bound kind (Program.input_vars program) v' guard_with_update update_vars (s_range update_fun_for_s_range)
          )
   in
   LSB_Cache.add table (kind,(l,t,l'),var) lsb;

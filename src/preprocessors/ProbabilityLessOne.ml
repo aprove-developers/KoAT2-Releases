@@ -2,7 +2,7 @@ open Batteries
 open ProgramTypes
 open Polynomials
 
-(** This preprocessor throws an error if the total Probability of a Generalized Transition is greater than one. *)
+(** This preprocessor throws an error if the total Probability of a Generalized Transition is less than one. *)
 
 let logger = Logging.(get Preprocessor)
 
@@ -24,7 +24,9 @@ let check_program program =
       program
       |> Program.vars
       |> VarSet.to_list
-      |> List.fold_left (fun varmap var -> TransitionLabel.VarMap.add var (Polynomial.of_var var) varmap) TransitionLabel.VarMap.empty
+      |> List.fold_left (fun varmap var -> TransitionLabel.VarMap.add var 
+                          (TransitionLabel.UpdateElement.Poly (Polynomial.of_var var)) varmap) 
+         TransitionLabel.VarMap.empty
     in
     
     let new_transitions =

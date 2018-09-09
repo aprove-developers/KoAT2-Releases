@@ -108,8 +108,7 @@ let pre program (l,t,_) =
   |> TransitionGraph.pred_e (graph program)
   |> List.enum
   |> Enum.filter (fun (_,t',_) ->
-         TransitionLabel.append t' t
-         |> TransitionLabel.guard
+         TransitionLabel.append_guard t' t
          |> Formula.mk
          |> SMT.Z3Solver.satisfiable
        )

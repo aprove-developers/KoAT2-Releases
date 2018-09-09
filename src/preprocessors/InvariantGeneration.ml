@@ -179,14 +179,26 @@ let transform_program program =
   in
 
   (** Applies the update to the abstract value. *)
-  let apply_update (vars: VarSet.t) (update: Var.t -> Polynomial.t Option.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
+  let apply_update (vars: VarSet.t) (update: Var.t -> TransitionLabel.UpdateElement.t Option.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
     (* A completely unbound (non-deterministic) choice *)
     let any_value = Apron.(Texpr1.cst environment (Coeff.Interval Interval.top)) in
+    (* TODO Perhaps there may be a better way to do this *)
+    let dist_value d = 
+      Apron.(Texpr1.cst environment (Coeff.Interval (Interval.of_scalar
+        ((ProbDistribution.lower_det_const d |> Option.map (Scalar.of_int % OurInt.to_int)) |? Scalar.of_infty 1)
+        ((ProbDistribution.upper_det_const d |> Option.map (Scalar.of_int % OurInt.to_int)) |? Scalar.of_infty (-1))
+      )))
+    in 
+    let update_element_map_fun u = 
+      match u with 
+        | TransitionLabel.UpdateElement.Poly p -> poly_to_apron environment p
+        | TransitionLabel.UpdateElement.Dist d -> dist_value d
+    in
     let assignments =
       vars
       |> VarSet.to_array
       |> Array.map update
-      |> Array.map (Option.map_default (poly_to_apron environment) any_value)
+      |> Array.map (Option.map_default (update_element_map_fun) any_value)
     in
     Apron.Abstract1.assign_texpr_array manager abstract (vars_to_apron vars) assignments None
   in
