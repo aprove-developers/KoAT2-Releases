@@ -42,6 +42,16 @@ let make_test_polynomial coeff_string =
   |> List.fold_left Polynomial.add Polynomial.zero
   |> Polynomial.simplify
 
+let make_real_polynomial coeff_string =
+  coeff_string
+  |> String.split_on_char ' '
+  |> List.rev
+  |> List.map OurFloat.of_string
+  |> List.mapi (fun c x -> (RealPolynomial.of_power (Var.of_string "X") c, RealPolynomial.of_constant x))
+  |> List.map (fun (x,c) -> RealPolynomial.mul x c)
+  |> List.fold_left RealPolynomial.add RealPolynomial.zero
+  |> RealPolynomial.simplify
+
 let coeff_list_to_string_matlab list =
   list
   |> List.rev
@@ -63,20 +73,77 @@ let coeff_list_to_string_sage list =
   list
   |> List.mapi (fun n k -> (OurInt.to_string k) ^ "*x^" ^ (string_of_int n))
   |> String.concat "+"
+
+let real_coeff_list_to_string_sage list =
+  list
+  |> List.mapi (fun n k -> (OurFloat.to_string k) ^ "*x^" ^ (string_of_int n))
+  |> String.concat "+"
+
 let get_roots_sage poly =
+  let real_roots = 
   poly
   |> Polynomial.degree_coeff_list
   |> coeff_list_to_string_sage
   |> fun s -> read_process_lines ("sage -c 'x = polygen(ZZ); print((" ^ s ^ ").real_roots())'")
   |> List.hd 
-  |> BatString.chop
-  |> (fun rootstr -> BatString.nsplit rootstr ", ")
+  |> String.chop
+  |> (fun rootstr -> String.nsplit rootstr ", ")
   |> List.map float_of_string
+  in
+  real_roots
+
+let create_script c poly_string =
+  ["x = polygen(ZZ)";
+  "poly = (" ^ poly_string ^ ")";
+  "drift = -0.6";
+  "c = " ^ string_of_float c ;
+  "roots = sage.rings.polynomial.complex_roots.complex_roots(poly)";
+  "# this is super dirty, since we just cast the approximation to a float.";
+  "# maybe there is a cleaner solution, but this will have to do for now.";
+  "roots = [CC(x[0]) for x in roots if RR(abs(x[0])) <= 1.]";
+  "real_roots = []";
+  "for root in roots:";
+  "    if root.imag() != 0:";
+  "        real_roots.append(root.real())";
+  "        real_roots.append(root.imag())";
+  "        if conjugate(root) in roots:";
+  "            roots.remove(conjugate(root))";
+  "    else:";
+  "        real_roots.append(RR(root))";
+  "k = len(real_roots)";
+  "A = matrix([[x^(-i) for x in real_roots] for i in range(k)])";
+  "B = vector([c*i for i in range(k)])";
+  "solution = A.solve_right(B)";
+  "for sol in solution:";
+  "    print(sol)"]
+
+
+let test c poly =
+  let script = 
+  poly
+  |> RealPolynomial.degree_coeff_list
+  |> real_coeff_list_to_string_sage
+  |> create_script c
+  in
+  script
+  |> List.enum
+  |> File.write_lines "tmp_sage_script.sage"
+
+
 
 let run (params: params) =
   Logging.(use_loggers [Roots, Logger.DEBUG]);
   let logger = Logging.(get Roots) in
   let execute () =
+    "0.2 0 0.4 0 0.2 0.2"
+    |> make_real_polynomial
+    |> test 1.6666666666666667;
+    read_process_lines "sage tmp_sage_script.sage"
+    |> List.map float_of_string
+    |> List.map print_float
+    |> ignore;
+    Unix.unlink "tmp_sage_script.sage";
+    Unix.unlink "tmp_sage_script.sage.py";
     params.input
     |> make_test_polynomial
     |> get_roots_sage
