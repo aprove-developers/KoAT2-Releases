@@ -41,6 +41,7 @@ sig
 
   val max_of_occurring_constants : t -> OurFloat.t
   val of_intpoly : Polynomial.t -> t
+  val degree_coeff_list : t -> value list
 end
      
 module RealParameterPolynomial :

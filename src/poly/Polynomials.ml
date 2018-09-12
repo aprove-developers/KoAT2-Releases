@@ -147,17 +147,17 @@ module PolynomialOver(Value : PolyTypes.Ring) =
     let degree_coeff_list (poly:t) =
       if VarSet.cardinal (vars poly) <= 1 then
         let default_map = 
-          BatEnum.init (degree poly) (fun i -> (i,Value.zero))
-          |> BatMap.of_enum
+          Enum.init (degree poly) (fun i -> (i,Value.zero))
+          |> Map.of_enum
         in
         poly 
         |> List.enum 
-        |> BatEnum.map (fun s_monom -> 
+        |> Enum.map (fun s_monom -> 
                           (ScaledMonomial_.degree s_monom, 
                           ScaledMonomial_.coeff s_monom)) 
-        |> BatMap.of_enum 
-        |> fun map -> BatMap.union map default_map
-        |> BatMap.bindings
+        |> Map.of_enum 
+        |> fun map -> Map.union map default_map
+        |> Map.bindings
         |> List.map (fun (k,v) -> v)
       else []
 
