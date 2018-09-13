@@ -62,9 +62,12 @@ sig
   val to_string: t -> string
   val transitions: t -> TransitionSet.t
   val start: t -> Location.t
+  val targets : t-> LocationSet.t
   val id: t -> int
   val guard: t -> TransitionLabel.Guard.t
   val total_probability: t -> float
+  (** returns true iff all transitions in the general transition are loops *)
+  val is_loop: t -> bool
 end
 
 module GeneralTransitionSet :

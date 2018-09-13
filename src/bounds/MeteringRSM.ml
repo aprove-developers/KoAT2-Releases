@@ -14,7 +14,7 @@ module MeteringRSMMap = Hashtbl.Make(Location)
 
 let logger = Logging.(get MeteringRSM) 
 
-type constraint_type = [ `Metering | `Bounded | `Cond_Diff_Bound ] [@@deriving show, eq]
+type constraint_type = [ `Metering | `Bounded | `Cond_Diff_Bound | `Inactive] [@@deriving show, eq]
 
 let as_realparapoly label var =
   match TransitionLabel.update label var with
@@ -64,10 +64,10 @@ let compute_metering_templates (vars: VarSet.t) (locations: Location.t list): un
                   )
                   execute
 
-let prob_branch_poly (l,t,l') =
+let prob_branch_poly ?(diff = RealParameterPolynomial.zero) (l,t,l') =
     let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
     let prob = t |> TransitionLabel.probability |> OurFloat.of_float in
-    RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
+    RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.( add (substitute_f (as_realparapoly t) (template l')) (neg diff)))
 
 let expected_poly gtrans =
     TransitionSet.fold (fun trans poly -> RealParameterPolynomial.add (prob_branch_poly trans) poly) (gtrans |> GeneralTransition.transitions) RealParameterPolynomial.zero
@@ -77,7 +77,7 @@ let diff_poly start_template gtrans=
     gtrans
     |> GeneralTransition.transitions
     |> TransitionSet.to_list
-    |> List.map (fun trans -> RealParameterPolynomial.(add (prob_branch_poly trans) (neg start_template)))
+    |> List.map (prob_branch_poly ~diff:start_template)
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "diff_poly", [])
                     ~result:(fun polylist ->
@@ -105,17 +105,28 @@ let bound_absolute poly =
 let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
   let start_template = (gtrans |> GeneralTransition.start |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
   let int_guard = (gtrans |> GeneralTransition.guard |> RealConstraint.of_intconstraint) in
-  let atoms =
+  match constraint_type with
+  | `Inactive ->
+    let atom = RealParameterAtom.Infix.(start_template  <= RealParameterPolynomial.zero) in
+    let neg_guard = int_guard |> RealFormula.mk |> RealFormula.neg |> RealFormula.constraints in
+    neg_guard
+    |> List.map (fun constr -> RealParameterConstraint.farkas_transform constr atom)
+    |> List.map RealFormula.mk
+    |> List.fold_left RealFormula.mk_or RealFormula.mk_false
+    (*|> RealFormula.mk*)
+    
+  | _ ->
+  let atoms = 
     match constraint_type with
-    | `Metering ->      [RealParameterAtom.Infix.(start_template <= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.one)))]
-    | `Bounded ->         [RealParameterAtom.Infix.(start_template  >= RealParameterPolynomial.one)]
+    | `Metering ->  [RealParameterAtom.Infix.(start_template <= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.one)))]
+    | `Bounded -> [RealParameterAtom.Infix.(start_template  >= RealParameterPolynomial.one)]
+    | `Inactive ->  [RealParameterAtom.Infix.(start_template  <= RealParameterPolynomial.zero)]
     | `Cond_Diff_Bound ->  
         gtrans
       |> diff_poly start_template
       |> List.map bound_absolute
       |> List.flatten
   in
-(*  print_string ((String.concat "," (List.map RealParameterAtom.to_string atoms))^"\n");*)
   atoms
   |> List.map (RealParameterConstraint.farkas_transform int_guard)
   |> List.fold_left (RealConstraint.mk_and) (RealConstraint.mk_true)
@@ -139,6 +150,15 @@ let metering_constraint transition =
   in
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> ("metering_constraint of "^(GeneralTransition.to_string transition)), [])
+                  ~result:RealFormula.to_string
+                  execute
+                  
+let inactive_constraint transition =
+  let execute () =
+    general_transition_constraint (`Inactive, transition)
+  in
+  Logger.with_log logger Logger.DEBUG 
+                  (fun () -> ("inactive_constraint of "^(GeneralTransition.to_string transition)), [])
                   ~result:RealFormula.to_string
                   execute
   
@@ -182,6 +202,7 @@ let find_metering_rsm_model transitions (*remaining_transitions*) =
   ignore(remaining_list |> List.map (fun gtrans -> 
                               Solver.add_real solver (metering_constraint gtrans);
                               Solver.add_real solver (bounded_constraint gtrans);
+                              Solver.add_real solver (inactive_constraint gtrans);
                               Solver.add_real solver (cond_diff_bounded_constraint gtrans)));
   if Solver.satisfiable solver then(
     (*Solver.maximize_vars solver !fresh_coeffs;*)
@@ -220,8 +241,8 @@ let test program =
     find_metering_rsm metering_map transitions 
     |> fun option -> Option.map (fun metering_map -> (metering_rsmmap_to_string metering_map) ^ "\n") option |? "no metering function found\n" |> print_string
 
-let compute_map program =
-  let transitions = Program.generalized_transitions program 
+let compute_map gtrans =
+  let transitions = gtrans |> GeneralTransitionSet.singleton 
   and metering_map = MeteringRSMMap.create 10 in
   let execute () =
     find_metering_rsm metering_map transitions 
@@ -232,18 +253,28 @@ let compute_map program =
                   execute
 
 
-let compute_metering_function program  =
-  let metering_map = compute_map program |> Option.get in
-  MeteringRSMMap.find metering_map (Program.start program)
+let compute_metering_function gtrans =
+  let execute () =
+    let metering_map = compute_map gtrans |> Option.get in
+    MeteringRSMMap.find metering_map (GeneralTransition.start gtrans)
+  in
+  Logger.with_log logger Logger.DEBUG
+                  (fun () -> "compute_metering_function", ["transition:", gtrans |> GeneralTransition.to_string;])
+                  ~result:(Polynomial.to_string)
+                  execute
 
 let find program =
   let execute () =
     if TemplateTable.is_empty template_table then
       compute_metering_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-    compute_metering_function program
+    program 
+    |> Program.generalized_transitions 
+    |> GeneralTransitionSet.filter GeneralTransition.is_loop 
+    |> GeneralTransitionSet.elements
+    |> List.map compute_metering_function
   in
   Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find_metering_function", ["transitions", program |> Program.generalized_transitions |> GeneralTransitionSet.to_string;])
-                  ~result:(Polynomial.to_string)
+                  (fun () -> "find_metering_function", ["transitions", program |> Program.generalized_transitions |> GeneralTransitionSet.filter GeneralTransition.is_loop |> GeneralTransitionSet.to_string;])
+                  ~result: (fun polylist -> polylist |> List.map (Polynomial.to_string) |> String.concat ",")
                   execute 
   |> ignore

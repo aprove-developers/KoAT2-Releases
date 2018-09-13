@@ -221,6 +221,7 @@ module type Formula =
         val lift : atom -> t      
         val mk : constr -> t      
         val mk_true : t
+        val mk_false : t
         val mk_and : t -> t -> t
         val mk_or : t -> t -> t
         val neg : t -> t
