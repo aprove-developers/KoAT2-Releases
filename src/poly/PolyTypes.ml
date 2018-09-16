@@ -4,6 +4,16 @@ open Batteries
 
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
     They can be typeclass-like extended by MakePartialOrder. *)
+module type OurNumber = 
+  sig
+    include Number.Numeric
+
+    val (=~=) : t -> t -> bool
+    val pow : t -> int -> t
+    val max : t -> t -> t
+    val min : t -> t -> t
+  end
+
 module type BasePartialOrder =
   sig
     type t
