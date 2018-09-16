@@ -57,4 +57,10 @@ let memoize ~extractor f =
        Hashtbl.add cache (extractor x) y;
        y
   in g
-           
+
+let rec option_sequence (options : 'a option list) : 'a list option =
+  match options with
+    | [] -> Option.Monad.return []
+    | (m::ms) -> Option.Monad.bind m 
+                  (fun x -> Option.Monad.bind (option_sequence ms) 
+                    (fun xs -> Option.Monad.return (x::xs)))
