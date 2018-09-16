@@ -63,6 +63,7 @@ sig
   val transitions: t -> TransitionSet.t
   val start: t -> Location.t
   val targets : t-> LocationSet.t
+  val same : t -> t -> bool
   val id: t -> int
   val guard: t -> TransitionLabel.Guard.t
   val total_probability: t -> float

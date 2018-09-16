@@ -145,6 +145,8 @@ module GeneralTransition =
       |> LocationSet.of_list
       
 
+    let same gt1 gt2 = gt1.id = gt2.id
+
     let from_transitionset transset (l,t,l') = 
       let new_trans = TransitionSet.filter (fun (l2, t2, l2') -> TransitionLabel.same t t2 && Location.equal l l2) transset in
       {
