@@ -7,11 +7,12 @@ type logger =
   | PRF
   | Bound
   | LocalSizeBound
+  | ExpLocalSizeBound
   | Preprocessor
   | LexRSM
   | MeteringRSM
 
-let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM; MeteringRSM]
+let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; ExpLocalSizeBound; Preprocessor; LexRSM; MeteringRSM]
 
 let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM; MeteringRSM]
             
@@ -22,6 +23,7 @@ let show_logger = function
   | PRF -> "prf"
   | Bound -> "bound"
   | LocalSizeBound -> "lsb"
+  | ExpLocalSizeBound -> "elsb"
   | Preprocessor -> "preprocessor"
   | LexRSM -> "lexrsmMap"
   | MeteringRSM -> "metrsmMap"
