@@ -13,6 +13,17 @@ sig
   val transition : t -> Transition.t
   val variable : t -> Var.t
 end
+
+module GTRV :
+sig
+  type t = GeneralTransition.t * Var.t * Location.t
+  val same : t -> t -> bool
+  val to_string : t -> string
+  val hash : t -> int
+  val transition : t -> GeneralTransition.t
+  val variable : t -> Var.t
+  val location : t -> Location.t
+end
      
 module RVG :
 sig

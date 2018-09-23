@@ -131,6 +131,9 @@ let add_invariant location invariant =
 let is_initial program trans =
   Location.(equal (program.start) (Transition.src trans))
 
+let is_initial_gt program trans =
+  Location.(equal (program.start) (GeneralTransition.start trans))
+
 let is_initial_location program location =
   Location.(equal (program.start) location)
 

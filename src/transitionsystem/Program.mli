@@ -37,6 +37,9 @@ val pre : t -> Transition.t -> Transition.t Enum.t
 (** Returns if the given transition is an initial transition. *)
 val is_initial : t -> Transition.t -> bool
 
+(** Returns if the given general transition is an initial transition *)
+val is_initial_gt : t -> GeneralTransition.t -> bool
+
 (** Returns if the given transition is an initial transition. *)
 val is_initial_location : t -> Location.t -> bool
 

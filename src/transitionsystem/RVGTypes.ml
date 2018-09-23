@@ -39,6 +39,29 @@ module RV =
 
   end
 
+module GTRV = 
+  struct
+    type t = GeneralTransition.t * Var.t * Location.t
+
+    let same (gt1,v1,l1) (gt2,v2,l2) =
+      GeneralTransition.same gt1 gt2
+      && Var.equal v1 v2
+      && Location.equal l1 l2
+
+    let hash (gt,v,l) =
+      Hashtbl.hash (GeneralTransition.to_string gt ^ Var.to_string v ^ Location.to_string l)
+      
+    let transition (gt,_,_) = gt
+                         
+    let variable (_,v,_) = v
+
+    let location (_,_,l) = l
+                       
+    let to_string (gt,v,l) =
+      "|" ^ GeneralTransition.to_string gt ^ "," ^ Var.to_string v ^ "," ^ Location.to_string l ^ "|"
+
+  end
+
 module RVG =
   struct
     include Graph.Persistent.Digraph.ConcreteBidirectional(struct
