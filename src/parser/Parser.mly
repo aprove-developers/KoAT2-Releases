@@ -31,7 +31,7 @@
 
 %start <Polynomials.Polynomial.t> onlyPolynomial
 
-%start <Bound.t> onlyBound
+%start <BoundsInst.Bound.t> onlyBound
 
 %start <(Program.t * string)> programAndGoal
 
@@ -55,6 +55,7 @@
   open BatTuple
   module Constr = Constraints.Constraint
   open Atoms
+  open BoundsInst
   module Poly = Polynomials.Polynomial
   open Formulas
   open ProgramTypes

@@ -1,5 +1,6 @@
 open Polynomials
 module Guard = Constraints.Constraint
+open BoundsInst
 
 type t = Uniform of Polynomial.t * Polynomial.t [@@deriving eq,ord]
 

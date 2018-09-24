@@ -1,4 +1,5 @@
 open Batteries
+open BoundsInst
 open ProgramTypes
    
 type t

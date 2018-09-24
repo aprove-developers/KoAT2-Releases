@@ -2,6 +2,7 @@ open Batteries
 open Formulas
 open Polynomials
 open ProgramTypes
+open BoundsInst
    
 let logger = Logging.(get LocalSizeBound)
            

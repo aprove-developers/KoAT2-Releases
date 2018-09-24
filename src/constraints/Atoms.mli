@@ -1,4 +1,5 @@
 open Batteries
+open BoundsInst
 open Polynomials
    
 (** Provides default implementations of an atom *)

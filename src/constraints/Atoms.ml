@@ -1,4 +1,5 @@
 open Batteries
+open BoundsInst
 open Polynomials
    
 module AtomOver(P : ConstraintTypes.Atomizable) =
