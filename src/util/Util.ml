@@ -64,3 +64,8 @@ let rec option_sequence (options : 'a option list) : 'a list option =
     | (m::ms) -> Option.Monad.bind m 
                   (fun x -> Option.Monad.bind (option_sequence ms) 
                     (fun xs -> Option.Monad.return (x::xs)))
+
+let safe_head l = 
+  match l with
+  | [] -> None
+  | (a :: _) -> Some a
