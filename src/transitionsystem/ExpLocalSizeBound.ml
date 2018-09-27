@@ -167,8 +167,8 @@ let as_bound =
   as_substituted_bound (fun _ -> RealBound.of_var)
   
 let default = function
-  | `Upper -> Bound.infinity
-  | `Lower -> Bound.minus_infinity
+  | `Upper -> RealBound.infinity
+  | `Lower -> RealBound.minus_infinity
   
   
 let to_string t =
