@@ -122,14 +122,14 @@ let vars t =
           
 let multiplier = function
   | `Pos -> identity
-  | `Neg -> Bound.neg
+  | `Neg -> RealBound.neg
 
 let absifier = function
   | _, _, `Pure -> identity
-  | `Upper, `Pos, `Abs -> Bound.(max zero)
-  | `Upper, `Neg, `Abs -> Bound.(min zero)
-  | `Lower, `Pos, `Abs -> Bound.(min zero)
-  | `Lower, `Neg, `Abs -> Bound.(max zero)
+  | `Upper, `Pos, `Abs -> RealBound.(max zero)
+  | `Upper, `Neg, `Abs -> RealBound.(min zero)
+  | `Lower, `Pos, `Abs -> RealBound.(min zero)
+  | `Lower, `Neg, `Abs -> RealBound.(max zero)
 
 let pre_kind = function
   | `Upper, `Pos -> `Upper
@@ -137,34 +137,34 @@ let pre_kind = function
   | `Lower, `Pos -> `Lower
   | `Lower, `Neg -> `Upper
   
-let sum_vars substitution (vars: VarSet.t) (kind, sign, purity): Bound.t =
+let sum_vars substitution (vars: VarSet.t) (kind, sign, purity) =
   vars
   |> VarSet.enum
-  |> Enum.map Bound.of_var
+  |> Enum.map RealBound.of_var
   |> Enum.map (absifier (kind, sign, purity))
   |> Enum.map (multiplier sign)
-  |> Bound.sum
-  |> ((kind, sign) |> pre_kind |> substitution |> Bound.substitute_f)
+  |> RealBound.sum
+  |> ((kind, sign) |> pre_kind |> substitution |> RealBound.substitute_f)
   
 let as_substituted_bound substitution t =
   match t with
-  | `Unbounded `Upper -> Bound.infinity
-  | `Unbounded `Lower -> Bound.minus_infinity
+  | `Unbounded `Upper -> RealBound.infinity
+  | `Unbounded `Lower -> RealBound.minus_infinity
   | `Bounded lsb ->
     let variables scale =
       List.cartesian_product [`Pos; `Neg] [`Pure; `Abs]
       |> List.map (fun (sign, purifier) -> sum_vars substitution (lsb.vars (scale,sign, purifier)) (lsb.kind, sign, purifier))
       |> List.enum
-      |> Bound.sum
+      |> RealBound.sum
     in
-    let one_scaled_part = Bound.(variables `OneScaled + (of_int lsb.constant)) in
+    let one_scaled_part = RealBound.(variables `OneScaled + (of_int lsb.constant)) in
     match lsb.factor with
       | None -> one_scaled_part
       | Some factor ->
-          Bound.(one_scaled_part + (of_int factor) * (variables `ArbScaled))
+          RealBound.(one_scaled_part + (of_int factor) * (variables `ArbScaled))
 
 let as_bound =
-  as_substituted_bound (fun _ -> Bound.of_var)
+  as_substituted_bound (fun _ -> RealBound.of_var)
   
 let default = function
   | `Upper -> Bound.infinity
@@ -440,7 +440,7 @@ let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: in
     |>  Option.default (`Unbounded kind)
   in Logger.with_log logger Logger.DEBUG
                   (fun () -> "find_scaled_bound", ["var", Var.to_string var; "guard_vars", VarSet.to_string guard_vars])
-                  ~result:(Bound.to_string % as_bound)
+                  ~result:(RealBound.to_string % as_bound)
                   execute
 
 let find_bound kind program_vars var formula update_vars s_range =
@@ -456,7 +456,7 @@ let find_bound kind program_vars var formula update_vars s_range =
                           "formula", Form.to_string formula;
                           "s_range", string_of_int s_range;
                           "c_range", string_of_int (HelperFuns.c_range formula)])
-                     ~result:(Bound.to_string % as_bound)
+                     ~result:(RealBound.to_string % as_bound)
                      execute
 
 (** Internal memoization for local size bounds *)
@@ -527,7 +527,7 @@ let compute_single_local_size_bound program kind gt var l =
           "kind", show_kind kind;
           "transition", GeneralTransition.to_string gt;
           "variable", Var.to_string var;
-          "lsb", Util.option_to_string (Bound.to_string % as_bound) lsb]))
+          "lsb", Util.option_to_string (RealBound.to_string % as_bound) lsb]))
 
 let compute_local_size_bounds program =
   program
