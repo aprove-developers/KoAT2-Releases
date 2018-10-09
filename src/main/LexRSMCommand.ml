@@ -22,5 +22,6 @@ let run (params: params) =
   |> MainUtil.read_input_goal
   |> Option.may (fun (program, goal) ->
         (program, Approximation.create program)
-        |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne])
-        |> (fun (prog, appr) -> LexRSM.find prog goal))
+        (* TODO Fix Invariant Generation and add it *)
+        |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([ProbabilityLessOne])
+        |> (fun (prog, appr) -> LexRSM.find_whole_prog prog goal))
