@@ -60,6 +60,7 @@ sig
   val from_transitionset: TransitionSet.t -> Transition.t -> t
   val compare: t -> t -> int
   val to_string: t -> string
+  val to_id_string : t -> string
   val transitions: t -> TransitionSet.t
   val start: t -> Location.t
   val targets : t-> LocationSet.t
@@ -75,6 +76,7 @@ module GeneralTransitionSet :
 sig
   include module type of Set.Make(struct include GeneralTransition let compare = GeneralTransition.compare end)
   val to_string: t -> string
+  val to_id_string : t -> string
   val start_locations: t -> LocationSet.t
   val from_transitionset: TransitionSet.t -> t
 end

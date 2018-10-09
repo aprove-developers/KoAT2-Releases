@@ -343,12 +343,12 @@ let compute_expected_complexity program =
 let ranking_table_to_string rtable = 
   RankingTable.to_list rtable
   |> List.map (fun (_,t) -> 
-       "decreasing: " ^ GeneralTransition.to_string t.decreasing ^
-       " non_incr: " ^ GeneralTransitionSet.to_string t.non_increasing ^ 
+       "{decreasing: " ^ GeneralTransition.to_id_string t.decreasing ^
+       " non_incr: " ^ GeneralTransitionSet.to_id_string t.non_increasing ^ 
        " rank: [" ^ (GeneralTransitionSet.start_locations t.non_increasing |> LocationSet.to_list
                      |> List.map (fun loc -> Location.to_string loc ^ ": " ^ (t.rank loc |> Polynomial.to_string)) |> String.concat "; ")
-       ^ "]")
-  |> String.concat "\n"
+       ^ "]}")
+  |> String.concat "; "
 
 let compute_ranking_table program =
   Program.sccs program

@@ -158,6 +158,14 @@ module GeneralTransition =
       in
       probability ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t)
 
+    let to_id_string gt =
+      let locationset_to_string lset = 
+        LocationSet.to_list lset
+        |> List.map Location.to_string |> String.concat "; "
+        |> fun str -> "[" ^ str ^ "]"
+      in
+      (Int.to_string % id) gt ^ ": " ^ (Location.to_string % start) gt ^ "->" ^ (locationset_to_string % targets) gt
+
     let to_string gtrans = 
       let any_label = gtrans |> transitions |> TransitionSet.any |> Transition.label in
       let trans_str = String.concat " :+: " (gtrans |> transitions |> TransitionSet.to_list |> List.map to_string_helper) 
@@ -183,6 +191,9 @@ module GeneralTransitionSet =
     include Set.Make(struct include GeneralTransition let compare = GeneralTransition.compare end)
     let to_string =
       Util.enum_to_string GeneralTransition.to_string % enum
+
+    let to_id_string = 
+      Util.enum_to_string GeneralTransition.to_id_string % enum
 
     let start_locations transitions =
       fold (fun transition loc_set -> LocationSet.add (GeneralTransition.start transition) loc_set ) transitions LocationSet.empty
