@@ -1,32 +1,32 @@
 open Batteries
 open ProgramTypes
 
-module RV :
-sig
-  type t = Transition.t * Var.t
-  val same : t -> t -> bool
-  val equivalent : t -> t -> bool
-  val compare_same : t -> t -> int
-  val compare_equivalent : t -> t -> int
-  val to_id_string : t -> string
-  val hash : t -> int
-  val transition : t -> Transition.t
-  val variable : t -> Var.t
-end
+module Make_RV :
+  functor (Trans : 
+                  sig
+                    type t
+                    val same: t -> t -> bool
+                    val equivalent: t -> t -> bool
+                    val compare_same: t -> t -> int
+                    val compare_equivalent: t -> t -> int
+                    val to_string: t -> string
+                    val to_id_string: t -> string
+                  end) ->
+    sig
+      type t = Trans.t * Var.t
+      val same : t -> t -> bool
+      val equivalent : t -> t -> bool
+      val compare_same : t -> t -> int
+      val compare_equivalent : t -> t -> int
+      val to_id_string : t -> string
+      val hash : t -> int
+      val transition : t -> Trans.t
+      val variable : t -> Var.t
+    end
 
-module GTRV :
-sig
-  type t = GeneralTransition.t * Var.t * Location.t
-  val same : t -> t -> bool
-  val to_string : t -> string
-  val hash : t -> int
-  val transition : t -> GeneralTransition.t
-  val variable : t -> Var.t
-  val location : t -> Location.t
-end
-     
 module RVG :
 sig
+  module RV : sig include module type of Make_RV (Transition) end
   include module type of Graph.Persistent.Digraph.ConcreteBidirectional(struct
                              include RV
                              let equal = same

@@ -1,16 +1,25 @@
 open Batteries
 open ProgramTypes
 
-module RV =
+module Make_RV (Trans : 
+                  sig
+                    type t
+                    val same: t -> t -> bool
+                    val equivalent: t -> t -> bool
+                    val compare_same: t -> t -> int
+                    val compare_equivalent: t -> t -> int
+                    val to_string: t -> string
+                    val to_id_string: t -> string
+                  end) =
   struct
-    type t = Transition.t * Var.t
+    type t = Trans.t * Var.t
 
     let same (t1,v1) (t2,v2) =
-      Transition.same t1 t2
+      Trans.same t1 t2
       && Var.equal v1 v2
 
     let equivalent (t1,v1) (t2,v2) =
-      Transition.equivalent t1 t2
+      Trans.equivalent t1 t2
       && Var.equal v1 v2
 
     let compare compare_transition (t1,v1) (t2,v2) =
@@ -22,48 +31,27 @@ module RV =
         0
 
     let compare_same =
-      compare Transition.compare_same
+      compare Trans.compare_same
       
     let compare_equivalent =
-      compare Transition.compare_equivalent
+      compare Trans.compare_equivalent
 
     let hash (t,v) =
-      Hashtbl.hash (Transition.to_string t ^ Var.to_string v)
+      Hashtbl.hash (Trans.to_string t ^ Var.to_string v)
       
     let transition (t,_) = t
                          
     let variable (_,v) = v
                        
     let to_id_string (t,v) =
-      "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
-
-  end
-
-module GTRV = 
-  struct
-    type t = GeneralTransition.t * Var.t * Location.t
-
-    let same (gt1,v1,l1) (gt2,v2,l2) =
-      GeneralTransition.same gt1 gt2
-      && Var.equal v1 v2
-      && Location.equal l1 l2
-
-    let hash (gt,v,l) =
-      Hashtbl.hash (GeneralTransition.to_string gt ^ Var.to_string v ^ Location.to_string l)
-      
-    let transition (gt,_,_) = gt
-                         
-    let variable (_,v,_) = v
-
-    let location (_,_,l) = l
-                       
-    let to_string (gt,v,l) =
-      "|" ^ GeneralTransition.to_string gt ^ "," ^ Var.to_string v ^ "," ^ Location.to_string l ^ "|"
+      "|" ^ Trans.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
   end
 
 module RVG =
   struct
+    module RV = Make_RV(Transition)
+    
     include Graph.Persistent.Digraph.ConcreteBidirectional(struct
                 include RV
                 let equal = same

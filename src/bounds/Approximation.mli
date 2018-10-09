@@ -1,17 +1,18 @@
 open Batteries
 open BoundsInst
 open ProgramTypes
-open RVGTypes
    
 module TransitionApproximation : 
   sig
-    include module type of TransitionApproximationType.Make_BoundOver(OurInt)(Polynomials.Polynomial)
-                                                                     (struct 
-                                                                       include Transition
-                                                                       let fold_transset = TransitionSet.fold
-                                                                      end)
+    include module type of TransitionApproximationType.Make_TransitionApproximation(OurInt)(Polynomials.Polynomial)
+                                                                                   (struct 
+                                                                                     include Transition
+                                                                                     let fold_transset = TransitionSet.fold
+                                                                                    end)
 
   end
+
+module RV : sig include module type of RVGTypes.Make_RV(Transition) end
 
 (** Provides default implementations of an approximation *)
 

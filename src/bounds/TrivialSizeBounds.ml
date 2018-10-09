@@ -1,9 +1,10 @@
 open Batteries
 open BoundsInst
 open ProgramTypes
-open RVGTypes
    
 let logger = Logging.(get Size)
+
+module RV = RVGTypes.Make_RV(Transition)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
            

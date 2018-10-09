@@ -2,13 +2,18 @@ open Batteries
 open BoundsInst
 open Formulas
 open ProgramTypes
-open RVGTypes
    
 let logger = Logging.(get Size)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
 
 module Traverse = Graph.Traverse.Bfs(TransitionGraph)
+module GTRV = RVGTypes.Make_RV(struct
+                                 include GeneralTransition
+                                 let compare_equivalent = GeneralTransition.compare
+                                 let compare_same = GeneralTransition.compare
+                                 let equivalent = GeneralTransition.same
+                               end)
            
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
@@ -280,7 +285,7 @@ let compute kind program get_sizebound get_timebound (gt,var,loc) =
       
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute trivial bound", ["kind", show_kind kind;
-                                                          "rv", GTRV.to_string (gt,var,loc)])
+                                                          "rv", GTRV.to_id_string (gt,var)])
                      ~result:RealBound.to_string
                      execute
 

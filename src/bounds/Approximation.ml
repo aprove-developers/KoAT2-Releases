@@ -6,20 +6,23 @@ type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
 let logger = Logging.(get Approximation) 
 
-module TransitionApproximation = TransitionApproximationType.Make_BoundOver(OurInt)(Polynomials.Polynomial)
-                                   (struct 
-                                     include Transition
-                                     let fold_transset = TransitionSet.fold
-                                    end)
+module RV = RVGTypes.Make_RV(Transition)
 
-module GeneralTransitionApproximation = TransitionApproximationType.Make_BoundOver(OurFloat)(Polynomials.RealPolynomial)
-                                        (struct 
-                                          include GeneralTransition
-                                          let fold_transset fold_func tset start_val = 
-                                            GeneralTransitionSet.from_transitionset tset
-                                            |> fun gtset -> GeneralTransitionSet.fold fold_func gtset start_val
-                                          let compare_same = compare
-                                         end)
+module TransitionApproximation = TransitionApproximationType.Make_TransitionApproximation(OurInt)(Polynomials.Polynomial)
+                                                                                         (struct 
+                                                                                           include Transition
+                                                                                           let fold_transset = TransitionSet.fold
+                                                                                          end)
+
+module GeneralTransitionApproximation = 
+  TransitionApproximationType.Make_TransitionApproximation(OurFloat)(Polynomials.RealPolynomial)
+                                                          (struct 
+                                                            include GeneralTransition
+                                                            let fold_transset fold_func tset start_val = 
+                                                              GeneralTransitionSet.from_transitionset tset
+                                                              |> fun gtset -> GeneralTransitionSet.fold fold_func gtset start_val
+                                                            let compare_same = compare
+                                                           end)
 
 type t = {
     time: TransitionApproximation.t;

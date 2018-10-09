@@ -1,7 +1,9 @@
 open Batteries
 open ProgramTypes
 open RVGTypes
-   
+
+module RV = Make_RV(Transition) 
+
 let print_graph out_dir name graph output_graph =
   let full_path ext =
     Fpath.(to_string (out_dir // (v name |> add_ext ext)))

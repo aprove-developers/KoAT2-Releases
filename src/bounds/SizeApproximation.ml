@@ -1,11 +1,12 @@
 open Batteries
 open BoundsInst
 open ProgramTypes
-open RVGTypes
    
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
 let logger = Logging.(get Approximation) 
+
+module RV = RVGTypes.Make_RV (Transition) 
 
 module Map =
   Hashtbl.Make(

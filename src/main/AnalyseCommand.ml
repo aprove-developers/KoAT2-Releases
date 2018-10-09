@@ -5,6 +5,8 @@ open RVGTypes
 
 let command = "analyse"
 
+module RV = Make_RV(Transition)
+
 let description = "Proceed a full time, cost and size analysis on a given integer transition system"
 
 (** Prints the whole resulting approximation to the shell. *)

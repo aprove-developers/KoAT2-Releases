@@ -4,6 +4,8 @@ open RVGTypes
    
 let logger = Logging.(get Size)
 
+module RV = Make_RV(Transition)
+
 let improve_scc kind program rvg appr = function
   | [((l,t,l'),v)] when not (RVG.mem_edge rvg ((l,t,l'),v) ((l,t,l'),v)) ->
      let new_bound = TrivialSizeBounds.compute kind program (fun kind -> Approximation.sizebound kind appr) ((l,t,l'),v) in

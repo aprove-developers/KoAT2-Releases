@@ -5,6 +5,8 @@ open RVGTypes
    
 let logger = Logging.(get Size)
 
+module RV = Make_RV(Transition) 
+
 type kind = [ `Lower | `Upper ] [@@deriving show]
 type sign = [ `Pos | `Neg ] [@@deriving show]
 

@@ -3,6 +3,8 @@ open BoundsInst
 open ProgramTypes
 open RVGTypes
    
+module RV : sig include module type of RVGTypes.Make_RV(Transition) end
+
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
 type t
