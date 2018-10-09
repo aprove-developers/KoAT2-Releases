@@ -17,11 +17,10 @@ type params = {
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
-  Logging.(use_loggers [LexRSM, Logger.DEBUG]);
+  Logging.(use_loggers [LexRSM, Logger.DEBUG; Preprocessor, Logger.DEBUG]);
   params.input
   |> MainUtil.read_input_goal
   |> Option.may (fun (program, goal) ->
         (program, Approximation.create program)
-        (* TODO Fix Invariant Generation and add it *)
-        |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([ProbabilityLessOne])
+        |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne])
         |> (fun (prog, appr) -> LexRSM.find_whole_prog prog goal))
