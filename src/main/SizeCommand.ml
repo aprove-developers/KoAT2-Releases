@@ -13,7 +13,7 @@ type params = {
 
 let run (params: params) =
   Logging.(use_loggers [Size, Logger.DEBUG]);
-  let appr = Approximation.empty 10 3
+  let appr = Approximation.empty 10 3 10
   and program = Readers.read_file params.program in
   SizeBounds.improve program appr
   |> Approximation.to_string program

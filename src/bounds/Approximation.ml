@@ -6,8 +6,24 @@ type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
 let logger = Logging.(get Approximation) 
 
+module TransitionApproximation = TransitionApproximationType.Make_BoundOver(OurInt)(Polynomials.Polynomial)
+                                   (struct 
+                                     include Transition
+                                     let fold_transset = TransitionSet.fold
+                                    end)
+
+module GeneralTransitionApproximation = TransitionApproximationType.Make_BoundOver(OurFloat)(Polynomials.RealPolynomial)
+                                        (struct 
+                                          include GeneralTransition
+                                          let fold_transset fold_func tset start_val = 
+                                            GeneralTransitionSet.from_transitionset tset
+                                            |> fun gtset -> GeneralTransitionSet.fold fold_func gtset start_val
+                                          let compare_same = compare
+                                         end)
+
 type t = {
     time: TransitionApproximation.t;
+    exptime: GeneralTransitionApproximation.t;
     size: SizeApproximation.t;
     cost: TransitionApproximation.t;
   }
@@ -16,8 +32,9 @@ let equivalent appr1 appr2 =
   TransitionApproximation.equivalent appr1.time appr2.time
   && SizeApproximation.equivalent appr1.size appr2.size
   
-let empty transitioncount varcount = {
+let empty transitioncount varcount gtcount = {
     time = TransitionApproximation.empty "time" transitioncount;
+    exptime = GeneralTransitionApproximation.empty "exptime" gtcount;
     size = SizeApproximation.empty (2 * transitioncount * varcount);
     cost = TransitionApproximation.empty "cost" transitioncount;
   }
@@ -25,6 +42,7 @@ let empty transitioncount varcount = {
 let create program =
   empty (TransitionGraph.nb_edges (Program.graph program))
         (VarSet.cardinal (Program.vars program))
+        (Program.transitions program |> GeneralTransitionSet.from_transitionset |> GeneralTransitionSet.cardinal)
 
 let time appr = appr.time
 
@@ -90,10 +108,10 @@ let to_string program appr =
     IO.nwrite output (Program.to_string program^"\n");
     IO.nwrite output "Timebounds: \n";
     IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
-    appr.time |> TransitionApproximation.to_string (Program.transitions program) |> IO.nwrite output;
+    appr.time |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
     IO.nwrite output "\nCostbounds:\n";
     IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
-    appr.cost |> TransitionApproximation.to_string (Program.transitions program) |> IO.nwrite output;
+    appr.cost |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
     IO.nwrite output "\nSizebounds:\n";
     appr.size |> SizeApproximation.to_string |> IO.nwrite output;
     IO.close_out output

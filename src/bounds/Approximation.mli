@@ -3,6 +3,16 @@ open BoundsInst
 open ProgramTypes
 open RVGTypes
    
+module TransitionApproximation : 
+  sig
+    include module type of TransitionApproximationType.Make_BoundOver(OurInt)(Polynomials.Polynomial)
+                                                                     (struct 
+                                                                       include Transition
+                                                                       let fold_transset = TransitionSet.fold
+                                                                      end)
+
+  end
+
 (** Provides default implementations of an approximation *)
 
 type t 
@@ -14,7 +24,7 @@ type kind = [ `Lower | `Upper ]
     That means, that every upper bound is infinite and every lower bound is minus infinite.
     The first parameter should be the count of transitions in the program.
     The second parameter should be the count of program variables. *)
-val empty : int -> int -> t
+val empty : int -> int -> int -> t
 
 val create : Program.t -> t
 
