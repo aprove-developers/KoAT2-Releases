@@ -1,6 +1,6 @@
 open Batteries
 open ProgramTypes
-   
+
 let description = "Search for a linear ranking function"
 
 let command = "prf"
@@ -13,9 +13,9 @@ type params = {
 
     simple_input : bool; [@default false] [@aka ["s"]]
     (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
-    
+
   } [@@deriving cmdliner, show]
-  
+
 let run (params: params) =
   Logging.(use_loggers [PRF, Logger.DEBUG]);
   params.input
@@ -30,9 +30,12 @@ let run (params: params) =
                      |> TransitionGraph.transitions
                      |> TransitionSet.filter (not % Approximation.is_time_bounded appr)
                    in
-                   (** TODO Fix *)
                    transitions
-                   |> TransitionSet.any
-                   |> RankingFunction.find `Time program
-                   |> List.hd
-                   |> (fun prf -> print_string (RankingFunction.to_string prf ^ "\n"))))
+                   |> TransitionSet.to_list
+                   |> List.map (RankingFunction.find `Time program)
+                   |> List.flatten
+                   |> List.map (RankingFunction.to_string)
+                   |> String.concat "\n"
+                   |> (flip (^)) "\n"
+                   |> print_string
+                   ))
