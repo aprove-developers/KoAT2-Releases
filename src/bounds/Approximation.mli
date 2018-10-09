@@ -12,6 +12,17 @@ module TransitionApproximation :
 
   end
 
+module SizeApproximation : 
+  sig
+    include module type of SizeApproximationType.Make_SizeApproximation(OurInt)(Polynomials.Polynomial)
+                                                                       (struct 
+                                                                         include Transition
+                                                                         let target_string = 
+                                                                           Location.to_string % Transition.target
+                                                                        end)
+                                                                       (RVGTypes.Make_RV (Transition))
+  end
+
 module RV : sig include module type of RVGTypes.Make_RV(Transition) end
 
 (** Provides default implementations of an approximation *)

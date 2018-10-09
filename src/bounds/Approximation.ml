@@ -24,6 +24,14 @@ module GeneralTransitionApproximation =
                                                             let compare_same = compare
                                                            end)
 
+module SizeApproximation = 
+  SizeApproximationType.Make_SizeApproximation(OurInt)(Polynomials.Polynomial)
+                                              (struct 
+                                                include Transition
+                                                let target_string = 
+                                                  Location.to_string % Transition.target
+                                               end)
+                                              (RVGTypes.Make_RV (Transition))
 type t = {
     time: TransitionApproximation.t;
     exptime: GeneralTransitionApproximation.t;
