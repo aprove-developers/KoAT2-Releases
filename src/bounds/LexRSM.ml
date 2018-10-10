@@ -340,14 +340,16 @@ let compute_expected_complexity program =
                   ~result:(fun option -> Option.map Polynomial.to_string option |? "no ranking function could be found")
                   execute
 
+let pprf_to_string t = 
+  "{decreasing: " ^ GeneralTransition.to_id_string t.decreasing ^
+  " non_incr: " ^ GeneralTransitionSet.to_id_string t.non_increasing ^ 
+  " rank: [" ^ (GeneralTransitionSet.start_locations t.non_increasing |> LocationSet.to_list
+                |> List.map (fun loc -> Location.to_string loc ^ ": " ^ (t.rank loc |> Polynomial.to_string)) |> String.concat "; ")
+  ^ "]}"
+
 let ranking_table_to_string rtable = 
   RankingTable.to_list rtable
-  |> List.map (fun (_,t) -> 
-       "{decreasing: " ^ GeneralTransition.to_id_string t.decreasing ^
-       " non_incr: " ^ GeneralTransitionSet.to_id_string t.non_increasing ^ 
-       " rank: [" ^ (GeneralTransitionSet.start_locations t.non_increasing |> LocationSet.to_list
-                     |> List.map (fun loc -> Location.to_string loc ^ ": " ^ (t.rank loc |> Polynomial.to_string)) |> String.concat "; ")
-       ^ "]}")
+  |> List.map (pprf_to_string % Tuple2.second)
   |> String.concat "; "
 
 let compute_ranking_table program =
