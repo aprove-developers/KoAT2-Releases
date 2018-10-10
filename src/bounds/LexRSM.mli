@@ -9,3 +9,5 @@ type t = {
   }
 
 val find : Program.t -> GeneralTransition.t -> t option
+
+val pprf_to_string: t -> string
