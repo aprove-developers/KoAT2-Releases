@@ -25,6 +25,20 @@ module GeneralTransitionApproximation :
 
   end
 
+module TransitionForExpectedSize : 
+  sig
+    type t = GeneralTransition.t * Location.t
+    val compare: t -> t -> int
+    val compare_same: t -> t -> int
+    val compare_equivalent: t -> t -> int
+    val to_id_string: t -> string
+    val target_string: t -> string
+    val src: t -> Location.t
+    val same: t -> t -> bool
+    val equivalent: t -> t -> bool
+    val to_string: t -> string
+  end
+
 module SizeApproximation : 
   sig
     include module type of SizeApproximationType.Make_SizeApproximation(OurInt)(Polynomials.Polynomial)
@@ -110,6 +124,10 @@ val add_costbound : Bound.t -> Transition.t -> t -> t
 (** Returns a sizebound of the specified kind for the var of the transition. 
         A sizebound is expressed in relation to the input variable values of the program. *)
 val sizebound : kind -> t -> Transition.t -> Var.t -> Bound.t
+
+(** Returns an expected sizebound of the specified kind for the var of the transition. 
+        A sizebound is expressed in relation to the input variable values of the program. *)
+val expsizebound : kind -> t -> (GeneralTransition.t * Location.t)-> Var.t -> RealBound.t
 
 (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)

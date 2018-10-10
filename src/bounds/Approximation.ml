@@ -33,25 +33,44 @@ module SizeApproximation =
                                                end)
                                               (RVGTypes.Make_RV (Transition))
 
+module TransitionForExpectedSize = 
+  struct
+    type t = GeneralTransition.t * Location.t
+
+    let compare (gt1,l1) (gt2,l2) = 
+      if GeneralTransition.compare gt1 gt2 = 0 then
+        Location.compare l1 l2
+      else 
+        GeneralTransition.compare gt1 gt2
+
+    let src = GeneralTransition.start % Tuple2.first
+
+    let same (gt1,l1) (gt2,l2) = 
+      GeneralTransition.same gt1 gt2 &&
+      Location.equal l1 l2
+
+    let target_string = Location.to_string % Tuple2.second
+
+    let to_id_string (gt,l)= 
+      "(" ^ GeneralTransition.to_id_string gt ^ ", " ^
+      Location.to_string l ^ ")"
+
+    let to_string (gt,l)= 
+      "(" ^ GeneralTransition.to_string gt ^ ", " ^
+      Location.to_string l ^ ")"
+
+    let compare_same = compare
+    let compare_equivalent = compare
+    let equivalent = same
+
+  end
+
+
 module ExpectedSizeApproximation = 
   SizeApproximationType.Make_SizeApproximation(OurFloat)(Polynomials.RealPolynomial)
-                                              (struct 
-                                                include GeneralTransition
-                                                let compare_same = 
-                                                  compare
-                                                let src = 
-                                                  start
-                                               end)
+                                              (TransitionForExpectedSize)
                                               (RVGTypes.Make_RV 
-                                                (struct
-                                                    include GeneralTransition
-                                                    let compare_same = 
-                                                      compare
-                                                    let compare_equivalent = 
-                                                      compare
-                                                    let equivalent = 
-                                                      same
-                                                  end))
+                                                (TransitionForExpectedSize))
 type t = {
     time: TransitionApproximation.t;
     exptime: GeneralTransitionApproximation.t;
@@ -96,9 +115,6 @@ let sizebound kind =
 let expsizebound kind =
   ExpectedSizeApproximation.get kind % expsize
 
-let expsizebound kind =
-  ExpectedSizeApproximation.get kind % expsize
-
 let add_sizebound kind bound transition var appr =
   { appr with size = SizeApproximation.add kind bound transition var appr.size }
 
@@ -129,9 +145,12 @@ let add_timebound bound transition appr =
 let add_exptimebound bound gt appr =
   (* TODO: Correct? Union on both sides? *)
   let temp_vars = VarSet.diff (GeneralTransition.vars gt) (GeneralTransition.input_vars gt) in
+  failwith ""
+(*
   let temp_bound = fun kind var -> if (VarSet.mem var temp_vars) then expsizebound kind appr gt var else RealBound.of_var var in
   let replaced_bound = RealBound.appr_substitution `Upper ~lower:(temp_bound `Lower) ~higher:(temp_bound `Upper) bound in
   { appr with exptime = GeneralTransitionApproximation.add replaced_bound gt appr.exptime }
+*)
 
 
 let all_times_bounded =
