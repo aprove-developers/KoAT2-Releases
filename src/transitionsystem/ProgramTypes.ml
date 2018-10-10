@@ -158,16 +158,16 @@ module GeneralTransition =
       in
       probability ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t)
 
+    let target_string gt = 
+      transitions gt
+      |> TransitionSet.to_list
+      |> List.map (fun t -> (Transition.label t |> TransitionLabel.probability, Transition.target t))
+      |> List.map (fun (p,l) -> (Float.to_string p) ^ ":" ^ (Location.to_string l))
+      |> String.concat "; "
+      |> fun str -> "[" ^ str ^ "]"
+
     let to_id_string gt =
-      let target_locations_to_string = 
-        gt.transitions 
-        |> TransitionSet.to_list
-        |> List.map (fun t -> (Transition.label t |> TransitionLabel.probability, Transition.target t))
-        |> List.map (fun (p,target) -> (Float.to_string p) ^ ":" ^ (Location.to_string target))
-        |> String.concat "; "
-        |> fun str -> "[" ^ str ^ "]"
-      in
-      (Int.to_string % id) gt ^ ": " ^ (Location.to_string % start) gt ^ "->" ^ target_locations_to_string
+      (Int.to_string % id) gt ^ ": " ^ (Location.to_string % start) gt ^ "->" ^ (target_string gt)
 
     let to_string gtrans = 
       let any_label = gtrans |> transitions |> TransitionSet.any |> Transition.label in
@@ -181,6 +181,18 @@ module GeneralTransition =
     
     let total_probability transition =
     TransitionSet.fold (fun trans rest -> (trans |> Transition.label |> TransitionLabel.probability) +. rest) (transitions transition) 0.
+
+    let input_vars t = 
+      t.transitions
+      |> TransitionSet.to_list
+      |> List.map (VarSet.to_list % TransitionLabel.input_vars % Transition.label)
+      |> List.flatten |> VarSet.of_list
+    
+    let vars t = 
+      t.transitions
+      |> TransitionSet.to_list
+      |> List.map (VarSet.to_list % TransitionLabel.vars % Transition.label)
+      |> List.flatten |> VarSet.of_list
     
     let is_loop gtrans =
       gtrans

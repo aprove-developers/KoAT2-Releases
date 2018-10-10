@@ -12,6 +12,19 @@ module TransitionApproximation :
 
   end
 
+module GeneralTransitionApproximation : 
+  sig
+    include module type of TransitionApproximationType.Make_TransitionApproximation(OurFloat)(Polynomials.RealPolynomial)
+                                                                                   (struct 
+                                                                                     include GeneralTransition
+                                                                                     let fold_transset fold_func tset start_val = 
+                                                                                       GeneralTransitionSet.from_transitionset tset
+                                                                                       |> fun gtset -> GeneralTransitionSet.fold fold_func gtset start_val
+                                                                                     let compare_same = compare
+                                                                                    end)
+
+  end
+
 module SizeApproximation : 
   sig
     include module type of SizeApproximationType.Make_SizeApproximation(OurInt)(Polynomials.Polynomial)
@@ -42,6 +55,8 @@ val create : Program.t -> t
 
 val time : t -> TransitionApproximation.t
 
+val exptime : t -> GeneralTransitionApproximation.t
+
 val size : t -> SizeApproximation.t
 
 val cost : t -> TransitionApproximation.t
@@ -56,6 +71,9 @@ val equivalent : t -> t -> bool
 (** Returns a timebound for the transition. *)
 val timebound : t -> Transition.t -> Bound.t
 
+(** Returns an expected timebound for the transition. *)
+val exptimebound : t -> GeneralTransition.t -> RealBound.t
+
 (** Returns a timebound for the transition id. *)
 val timebound_id : t -> int -> Bound.t
 
@@ -66,10 +84,15 @@ val program_timebound : t -> Program.t -> Bound.t
     The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 val add_timebound : Bound.t -> Transition.t -> t -> t
 
+(** Adds the information that the specified bound is a valid expected timebound for the given general transition. 
+    The resulting approximation is guaranteed to be at least as good as the old approximation. *)
+val add_exptimebound : RealBound.t -> GeneralTransition.t -> t -> t
+
 val all_times_bounded : t -> Transition.t list -> bool
   
 val is_time_bounded : t -> Transition.t -> bool
-  
+
+val is_exptime_bounded : t -> GeneralTransition.t -> bool
 
 (** Costbound related methods *)
 

@@ -32,10 +32,31 @@ module SizeApproximation =
                                                   Location.to_string % Transition.target
                                                end)
                                               (RVGTypes.Make_RV (Transition))
+
+module ExpectedSizeApproximation = 
+  SizeApproximationType.Make_SizeApproximation(OurFloat)(Polynomials.RealPolynomial)
+                                              (struct 
+                                                include GeneralTransition
+                                                let compare_same = 
+                                                  compare
+                                                let src = 
+                                                  start
+                                               end)
+                                              (RVGTypes.Make_RV 
+                                                (struct
+                                                    include GeneralTransition
+                                                    let compare_same = 
+                                                      compare
+                                                    let compare_equivalent = 
+                                                      compare
+                                                    let equivalent = 
+                                                      same
+                                                  end))
 type t = {
     time: TransitionApproximation.t;
     exptime: GeneralTransitionApproximation.t;
     size: SizeApproximation.t;
+    expsize: ExpectedSizeApproximation.t;
     cost: TransitionApproximation.t;
   }
 
@@ -47,6 +68,7 @@ let empty transitioncount varcount gtcount = {
     time = TransitionApproximation.empty "time" transitioncount;
     exptime = GeneralTransitionApproximation.empty "exptime" gtcount;
     size = SizeApproximation.empty (2 * transitioncount * varcount);
+    expsize = ExpectedSizeApproximation.empty (2 * gtcount * varcount);
     cost = TransitionApproximation.empty "cost" transitioncount;
   }
 
@@ -57,7 +79,11 @@ let create program =
 
 let time appr = appr.time
 
+let exptime appr = appr.exptime
+
 let size appr = appr.size
+
+let expsize appr = appr.expsize
 
 let cost appr = appr.cost
 
@@ -66,6 +92,12 @@ let cost appr = appr.cost
 
 let sizebound kind =
   SizeApproximation.get kind % size
+
+let expsizebound kind =
+  ExpectedSizeApproximation.get kind % expsize
+
+let expsizebound kind =
+  ExpectedSizeApproximation.get kind % expsize
 
 let add_sizebound kind bound transition var appr =
   { appr with size = SizeApproximation.add kind bound transition var appr.size }
@@ -77,6 +109,9 @@ let add_sizebounds kind bound scc appr =
 
 let timebound =
   TransitionApproximation.get % time
+
+let exptimebound =
+  GeneralTransitionApproximation.get % exptime
 
 let timebound_id =
   TransitionApproximation.get_id % time
@@ -91,11 +126,22 @@ let add_timebound bound transition appr =
   let replaced_bound = Bound.appr_substitution `Upper ~lower:(temp_bound `Lower) ~higher:(temp_bound `Upper) bound in
   { appr with time = TransitionApproximation.add replaced_bound transition appr.time }
 
+let add_exptimebound bound gt appr =
+  (* TODO: Correct? Union on both sides? *)
+  let temp_vars = VarSet.diff (GeneralTransition.vars gt) (GeneralTransition.input_vars gt) in
+  let temp_bound = fun kind var -> if (VarSet.mem var temp_vars) then expsizebound kind appr gt var else RealBound.of_var var in
+  let replaced_bound = RealBound.appr_substitution `Upper ~lower:(temp_bound `Lower) ~higher:(temp_bound `Upper) bound in
+  { appr with exptime = GeneralTransitionApproximation.add replaced_bound gt appr.exptime }
+
+
 let all_times_bounded =
   TransitionApproximation.all_bounded % time
 
 let is_time_bounded appr =
   not % Bound.is_infinity % timebound appr
+
+let is_exptime_bounded appr =
+  not % RealBound.is_infinity % exptimebound appr
 
 (** Costbound related methods *)
 
