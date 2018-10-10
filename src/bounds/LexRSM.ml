@@ -21,6 +21,10 @@ type t = {
     non_increasing : GeneralTransitionSet.t;
   }
 
+let rank t = t.rank
+let decreasing t = t.decreasing
+let non_increasing t = t.non_increasing
+
 let time_ranking_table: t RankingTable.t = RankingTable.create 10
 
 let logger = Logging.(get LexRSM)

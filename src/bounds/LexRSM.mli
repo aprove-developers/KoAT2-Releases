@@ -8,6 +8,10 @@ type t = {
     non_increasing : GeneralTransitionSet.t;
   }
 
+val rank: t -> (Location.t -> Polynomials.Polynomial.t)
+val decreasing: t -> GeneralTransition.t
+val non_increasing: t -> GeneralTransitionSet.t
+
 val find : Program.t -> GeneralTransition.t -> t option
 
 val pprf_to_string: t -> string
