@@ -159,12 +159,15 @@ module GeneralTransition =
       probability ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t)
 
     let to_id_string gt =
-      let locationset_to_string lset = 
-        LocationSet.to_list lset
-        |> List.map Location.to_string |> String.concat "; "
+      let target_locations_to_string = 
+        gt.transitions 
+        |> TransitionSet.to_list
+        |> List.map (fun t -> (Transition.label t |> TransitionLabel.probability, Transition.target t))
+        |> List.map (fun (p,target) -> (Float.to_string p) ^ ":" ^ (Location.to_string target))
+        |> String.concat "; "
         |> fun str -> "[" ^ str ^ "]"
       in
-      (Int.to_string % id) gt ^ ": " ^ (Location.to_string % start) gt ^ "->" ^ (locationset_to_string % targets) gt
+      (Int.to_string % id) gt ^ ": " ^ (Location.to_string % start) gt ^ "->" ^ target_locations_to_string
 
     let to_string gtrans = 
       let any_label = gtrans |> transitions |> TransitionSet.any |> Transition.label in
