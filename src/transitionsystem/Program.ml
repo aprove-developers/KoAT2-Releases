@@ -1,9 +1,9 @@
 open Batteries
 open Constraints
 open Formulas
-   
+
 open ProgramTypes
-   
+
 type t = {
     graph: TransitionGraph.t;
     start: Location.t;
@@ -20,7 +20,7 @@ let add_locations locations graph =
   locations
   |> Enum.map (fun l -> fun gr -> TransitionGraph.add_vertex gr l)
   |> Enum.fold (fun gr adder -> adder gr) graph
-  
+
 let add_transitions transitions graph =
   transitions
   |> Enum.map (fun t -> fun gr -> TransitionGraph.add_edge_e gr t)
@@ -39,13 +39,13 @@ let locations transitions =
   transitions
   |> Enum.concat_map (fun (l,_,l') -> List.enum [l; l'])
   |> Enum.uniq_by Location.equal
-  
+
 let mk transitions =
   let locations = locations (Enum.clone transitions) in
   TransitionGraph.empty
   |> add_locations locations
   |> add_transitions transitions
-  
+
 let rename program =
   let counter: int ref = ref 0 in
   let map = Hashtbl.create 10 in
@@ -78,12 +78,12 @@ let from transitions start =
        }
 
 let start program = program.start
-  
+
 let graph g = g.graph
-            
+
 let transitions =
   TransitionGraph.transitions % graph
-  
+
 let vars program =
   program
   |> transitions
@@ -91,7 +91,7 @@ let vars program =
   |> Enum.map Transition.label
   |> Enum.map TransitionLabel.vars
   |> Enum.fold VarSet.union VarSet.empty
-  
+
 let input_vars program =
   program
   |> transitions
@@ -99,7 +99,7 @@ let input_vars program =
   |> Enum.map Transition.label
   |> Enum.map TransitionLabel.input_vars
   |> Enum.fold VarSet.union VarSet.empty
-  
+
 let temp_vars =
   fun program -> VarSet.diff (vars program) (input_vars program)
 
@@ -113,15 +113,21 @@ let pre program (l,t,_) =
          |> SMT.Z3Solver.satisfiable
        )
 
+let pre_gt program gt =
+  let gts = transitions program |> GeneralTransitionSet.from_transitionset in
+  let pre_ts = pre program (GeneralTransition.transitions gt |> TransitionSet.any) |> TransitionSet.of_enum in
+  gts
+  |> GeneralTransitionSet.filter (TransitionSet.exists (fun t -> TransitionSet.mem t pre_ts) % GeneralTransition.transitions)
+
 let sccs program =
   let module SCC = Graph.Components.Make(TransitionGraph) in
   program.graph
   |> SCC.scc_list
   |> List.rev
-  |> List.enum  
+  |> List.enum
   |> Enum.map (TransitionGraph.loc_transitions program.graph)
   |> Enum.filter (not % TransitionSet.is_empty)
-  
+
 let non_trivial_transitions =
   Enum.fold TransitionSet.union TransitionSet.empty % sccs
 
@@ -143,13 +149,13 @@ let to_string program =
   String.concat "  " [
       "  Start:"; Location.to_string program.start;"\n";
       "Program_Vars:"; program |> input_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n";
-      "Temp_Vars:"; program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n"; 
+      "Temp_Vars:"; program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n";
       "Locations:"; locations;"\n";
       "Transitions:\n"; transitions;"\n";
-    ] 
-  
+    ]
+
 let to_simple_string program =
-  TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph "" 
+  TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph ""
 
 let test program trans g_set =
   GeneralTransitionSet.add (GeneralTransition.from_transitionset (program |> transitions) trans) g_set
