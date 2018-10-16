@@ -1,56 +1,8 @@
 open Batteries
 open BoundsInst
 open ProgramTypes
+open ApproximationModules
    
-module TransitionApproximation : 
-  sig
-    include module type of TransitionApproximationType.Make_TransitionApproximation(OurInt)(Polynomials.Polynomial)
-                                                                                   (struct 
-                                                                                     include Transition
-                                                                                     let fold_transset = TransitionSet.fold
-                                                                                    end)
-
-  end
-
-module GeneralTransitionApproximation : 
-  sig
-    include module type of TransitionApproximationType.Make_TransitionApproximation(OurFloat)(Polynomials.RealPolynomial)
-                                                                                   (struct 
-                                                                                     include GeneralTransition
-                                                                                     let fold_transset fold_func tset start_val = 
-                                                                                       GeneralTransitionSet.from_transitionset tset
-                                                                                       |> fun gtset -> GeneralTransitionSet.fold fold_func gtset start_val
-                                                                                     let compare_same = compare
-                                                                                    end)
-
-  end
-
-module TransitionForExpectedSize : 
-  sig
-    type t = GeneralTransition.t * Location.t
-    val compare: t -> t -> int
-    val compare_same: t -> t -> int
-    val compare_equivalent: t -> t -> int
-    val to_id_string: t -> string
-    val target_string: t -> string
-    val src: t -> Location.t
-    val same: t -> t -> bool
-    val equivalent: t -> t -> bool
-    val to_string: t -> string
-  end
-
-module SizeApproximation : 
-  sig
-    include module type of SizeApproximationType.Make_SizeApproximation(OurInt)(Polynomials.Polynomial)
-                                                                       (struct 
-                                                                         include Transition
-                                                                         let target_string = 
-                                                                           Location.to_string % Transition.target
-                                                                        end)
-                                                                       (RVGTypes.Make_RV (Transition))
-  end
-
-module RV : sig include module type of RVGTypes.Make_RV(Transition) end
 
 (** Provides default implementations of an approximation *)
 

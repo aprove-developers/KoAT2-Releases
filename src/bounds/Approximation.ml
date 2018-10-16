@@ -1,76 +1,12 @@
 open Batteries
 open BoundsInst
 open ProgramTypes
-   
+open ApproximationModules
+
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
-let logger = Logging.(get Approximation) 
+let logger = Logging.(get Approximation)
 
-module RV = RVGTypes.Make_RV(Transition)
-
-module TransitionApproximation = TransitionApproximationType.Make_TransitionApproximation(OurInt)(Polynomials.Polynomial)
-                                                                                         (struct 
-                                                                                           include Transition
-                                                                                           let fold_transset = TransitionSet.fold
-                                                                                          end)
-
-module GeneralTransitionApproximation = 
-  TransitionApproximationType.Make_TransitionApproximation(OurFloat)(Polynomials.RealPolynomial)
-                                                          (struct 
-                                                            include GeneralTransition
-                                                            let fold_transset fold_func tset start_val = 
-                                                              GeneralTransitionSet.from_transitionset tset
-                                                              |> fun gtset -> GeneralTransitionSet.fold fold_func gtset start_val
-                                                            let compare_same = compare
-                                                           end)
-
-module SizeApproximation = 
-  SizeApproximationType.Make_SizeApproximation(OurInt)(Polynomials.Polynomial)
-                                              (struct 
-                                                include Transition
-                                                let target_string = 
-                                                  Location.to_string % Transition.target
-                                               end)
-                                              (RVGTypes.Make_RV (Transition))
-
-module TransitionForExpectedSize = 
-  struct
-    type t = GeneralTransition.t * Location.t
-
-    let compare (gt1,l1) (gt2,l2) = 
-      if GeneralTransition.compare gt1 gt2 = 0 then
-        Location.compare l1 l2
-      else 
-        GeneralTransition.compare gt1 gt2
-
-    let src = GeneralTransition.start % Tuple2.first
-
-    let same (gt1,l1) (gt2,l2) = 
-      GeneralTransition.same gt1 gt2 &&
-      Location.equal l1 l2
-
-    let target_string = Location.to_string % Tuple2.second
-
-    let to_id_string (gt,l)= 
-      "(" ^ GeneralTransition.to_id_string gt ^ ", " ^
-      Location.to_string l ^ ")"
-
-    let to_string (gt,l)= 
-      "(" ^ GeneralTransition.to_string gt ^ ", " ^
-      Location.to_string l ^ ")"
-
-    let compare_same = compare
-    let compare_equivalent = compare
-    let equivalent = same
-
-  end
-
-
-module ExpectedSizeApproximation = 
-  SizeApproximationType.Make_SizeApproximation(OurFloat)(Polynomials.RealPolynomial)
-                                              (TransitionForExpectedSize)
-                                              (RVGTypes.Make_RV 
-                                                (TransitionForExpectedSize))
 type t = {
     time: TransitionApproximation.t;
     exptime: GeneralTransitionApproximation.t;
@@ -82,7 +18,7 @@ type t = {
 let equivalent appr1 appr2 =
   TransitionApproximation.equivalent appr1.time appr2.time
   && SizeApproximation.equivalent appr1.size appr2.size
-  
+
 let empty transitioncount varcount gtcount = {
     time = TransitionApproximation.empty "time" transitioncount;
     exptime = GeneralTransitionApproximation.empty "exptime" gtcount;
@@ -145,12 +81,10 @@ let add_timebound bound transition appr =
 let add_exptimebound bound gt appr =
   (* TODO: Correct? Union on both sides? *)
   let temp_vars = VarSet.diff (GeneralTransition.vars gt) (GeneralTransition.input_vars gt) in
-  failwith ""
-(*
-  let temp_bound = fun kind var -> if (VarSet.mem var temp_vars) then expsizebound kind appr gt var else RealBound.of_var var in
+  let l = GeneralTransition.start gt in
+  let temp_bound kind var = if (VarSet.mem var temp_vars) then expsizebound kind appr (gt,l) var else RealBound.of_var var in
   let replaced_bound = RealBound.appr_substitution `Upper ~lower:(temp_bound `Lower) ~higher:(temp_bound `Upper) bound in
   { appr with exptime = GeneralTransitionApproximation.add replaced_bound gt appr.exptime }
-*)
 
 
 let all_times_bounded =
@@ -171,10 +105,10 @@ let program_costbound =
   TransitionApproximation.sum % cost
 
 let add_costbound bound transition appr =
-  { appr with cost = TransitionApproximation.add bound transition appr.cost }  
-  
+  { appr with cost = TransitionApproximation.add bound transition appr.cost }
+
 let to_string program appr =
-  let overall_timebound = program_timebound appr program in 
+  let overall_timebound = program_timebound appr program in
   let output = IO.output_string () in
     if (not (Bound.is_infinity overall_timebound)) then
       IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_timebound) ^ ")\n\n")
