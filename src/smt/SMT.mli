@@ -58,4 +58,6 @@ sig
   (** Returns a model of the current state, if the state is satisfiable. *)
   val model : t -> Polynomial.valuation Option.t
 
+  (** Returns a real model of the current state, if the state is satisfiable. *)
+  val model_real : t -> RealPolynomial.valuation Option.t
 end

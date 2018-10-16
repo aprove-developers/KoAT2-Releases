@@ -277,4 +277,42 @@ module IncrementalZ3Solver =
         |> Option.some
       else None
 
+    let model_real (opt,_) =
+      if Z3.Optimize.check opt == Z3.Solver.SATISFIABLE then
+        opt
+        |> Z3.Optimize.get_model
+        |> Option.map (fun model ->
+               model
+               |> Z3.Model.get_const_decls
+               |> List.map (fun func_decl ->
+                      let var =
+                        func_decl
+                        |> Z3.FuncDecl.get_name
+                        |> Z3.Symbol.get_string
+                        |> Var.of_string
+                      in
+                      let value =
+                        func_decl
+                        |> Z3.Model.get_const_interp model                        
+                        |> Option.get (* Should be fine here *)
+                        |> (fun expr ->
+                          if Z3.Arithmetic.is_int expr then
+                            expr
+                            |> Z3.Arithmetic.Integer.get_int
+                            |> OurFloat.of_int
+                          else
+                            expr
+                            |> Z3.Arithmetic.Real.get_ratio
+                            (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
+                            |> Ratio.float_of_ratio
+                        )
+                      in
+                      (var, value)
+                    )
+             )
+        |? []
+        |> RealValuation.from
+        |> Option.some
+      else None
+
   end
