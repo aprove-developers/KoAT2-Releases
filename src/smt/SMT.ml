@@ -305,8 +305,7 @@ module IncrementalZ3Solver =
                           else
                             expr
                             |> Z3.Arithmetic.Real.get_ratio
-                            (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
-                            |> Ratio.float_of_ratio
+                            |> Num.num_of_ratio
                         )
                       in
                       (var, value)

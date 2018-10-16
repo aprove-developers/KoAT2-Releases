@@ -507,7 +507,7 @@ let compute_single_local_size_bound program kind gt var l =
     |> Util.option_sequence
     |> Option.map 
          (fun labelsus -> List.map (fun (label,ue) -> Poly.mul (Poly.of_constant ((TransitionLabel.probability label) /.
-                                      prob_reaching_l)) (handle_update_element ue)) labelsus
+                                      prob_reaching_l |> Num.of_float)) (handle_update_element ue)) labelsus
                           |> List.fold_left Poly.add Poly.zero)
     |> Option.map (fun update ->
            (* Introduce a temporary result variable *)

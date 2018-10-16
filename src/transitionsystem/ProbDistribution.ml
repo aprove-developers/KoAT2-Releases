@@ -1,3 +1,4 @@
+open Batteries
 open Polynomials
 module Guard = Constraints.Constraint
 open BoundsInst
@@ -18,7 +19,7 @@ let deterministic_upper_polynomial dist =
 
 let expected_value dist = 
   match dist with
-    | Uniform (a,b) -> RealPolynomial.((of_constant 0.5) * ((of_intpoly a) + (of_intpoly b)))
+    | Uniform (a,b) -> RealPolynomial.((of_constant (Num.of_float 0.5)) * ((of_intpoly a) + (of_intpoly b)))
 
 let vars dist = 
   match dist with 

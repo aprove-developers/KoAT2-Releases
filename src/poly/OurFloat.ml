@@ -1,6 +1,6 @@
 open Batteries
 
-include Number.MakeNumeric(Float)
+include Number.MakeNumeric(Num)
 let (=~=) = equal
 
 let pow i (n: int) = pow i (of_int n)  
