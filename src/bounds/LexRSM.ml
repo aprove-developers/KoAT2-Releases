@@ -8,7 +8,7 @@ open Valuation
 
 module SMTSolver = SMT.Z3Solver
 
-module Valuation = Valuation.Make(OurInt)
+module Valuation = Valuation.Make(OurFloat)
 
 module LexRSMMap = Hashtbl.Make(Location)
 
@@ -16,7 +16,7 @@ module RankingTable = Hashtbl.Make(struct include GeneralTransition let equal = 
                                                                     let hash = Hashtbl.hash % GeneralTransition.id end)
 
 type t = {
-    rank : Location.t -> Polynomial.t;
+    rank : Location.t -> RealPolynomial.t;
     decreasing : GeneralTransition.t;
     non_increasing : GeneralTransitionSet.t;
   }
@@ -40,22 +40,22 @@ let as_realparapoly label var =
   | Some (TransitionLabel.UpdateElement.Dist d) -> ProbDistribution.expected_value d |> RealParameterPolynomial.of_polynomial
 
 (** Given a list of variables an affine template-polynomial is generated*)
-let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
+let ranking_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
   let vars = VarSet.elements vars in
   let num_vars = List.length vars in
-  let fresh_vars = Var.fresh_id_list Var.Int num_vars in
-  let fresh_coeffs = List.map Polynomial.of_var fresh_vars in
-  let linear_poly = ParameterPolynomial.of_coeff_list fresh_coeffs vars in
+  let fresh_vars = Var.fresh_id_list Var.Real num_vars in
+  let fresh_coeffs = List.map RealPolynomial.of_var fresh_vars in
+  let linear_poly = RealParameterPolynomial.of_coeff_list fresh_coeffs vars in
   let constant_var = Var.fresh_id Var.Int () in
-  let constant_poly = ParameterPolynomial.of_constant (Polynomial.of_var constant_var) in
-  ParameterPolynomial.(linear_poly + constant_poly),
+  let constant_poly = RealParameterPolynomial.of_constant (RealPolynomial.of_var constant_var) in
+  RealParameterPolynomial.(linear_poly + constant_poly),
   List.append fresh_vars [constant_var]
 
 module TemplateTable = Hashtbl.Make(Location)
 
-let template_table: ParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
+let template_table: RealParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
 
-let cbound_template: ParameterPolynomial.t Option.t ref = ref None
+let cbound_template: RealParameterPolynomial.t Option.t ref = ref None
 
 let fresh_coeffs: Var.t list ref = ref []
 
@@ -79,7 +79,7 @@ let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): uni
                   ~result:(fun () ->
                     template_table
                     |> TemplateTable.enum
-                    |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial)
+                    |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ RealParameterPolynomial.to_string polynomial)
                   )
                   execute
 
@@ -91,11 +91,11 @@ let compute_cbound_template (vars: VarSet.t): unit =
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "compute_cbound_template", [])
-                  ~result:(fun () -> !cbound_template |> Option.get |> ParameterPolynomial.to_string)
+                  ~result:(fun () -> !cbound_template |> Option.get |> RealParameterPolynomial.to_string)
                   execute
 
 let prob_branch_poly (l,t,l') =
-    let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
+    let template = (fun key -> key |> TemplateTable.find template_table) in
     let prob = t |> TransitionLabel.probability |> OurFloat.of_float in
     RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
 
@@ -103,13 +103,13 @@ let expected_poly gtrans =
     TransitionSet.fold (fun trans poly -> RealParameterPolynomial.add (prob_branch_poly trans) poly) (gtrans |> GeneralTransition.transitions) RealParameterPolynomial.zero
 
 let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
-  let template gtrans = gtrans |> GeneralTransition.start |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly in
+  let template gtrans = gtrans |> GeneralTransition.start |> TemplateTable.find template_table in
   let atom =
     match constraint_type with
     | `Non_Increasing ->  RealParameterAtom.Infix.((template gtrans) >= (expected_poly gtrans))
     | `Decreasing ->      RealParameterAtom.Infix.((template gtrans) >= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.of_polynomial RealPolynomial.one)))
     | `Bounded ->         RealParameterAtom.Infix.((template gtrans) >= RealParameterPolynomial.of_polynomial RealPolynomial.one)
-    | `C_ranked ->        let c_template = !cbound_template |> Option.get |> RealParameterPolynomial.of_int_parapoly in RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly gtrans))
+    | `C_ranked ->        let c_template = !cbound_template |> Option.get in RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly gtrans))
   in
   RealParameterConstraint.farkas_transform (gtrans |> GeneralTransition.guard |> RealConstraint.of_intconstraint) atom
   |> RealFormula.mk
@@ -134,7 +134,7 @@ let add_to_LexRSMMap map transitions valuation =
   |> LocationSet.to_list
   |> List.map (fun location ->
       TemplateTable.find template_table location
-      |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
+      |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero)
       |> (fun poly ->
         let opt_list = LexRSMMap.find_option map location in
         if Option.is_some (opt_list) then
@@ -153,14 +153,14 @@ let add_to_LexRSMMap map transitions valuation =
 let evaluate_cbound valuation =
   !cbound_template
   |> Option.get
-  |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
+  |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero)
 
 
 
 module Solver = SMT.IncrementalZ3Solver
 
 let add_c_ranked_constraints solver transitions =
-  let c_template = !cbound_template |> Option.get |> RealParameterPolynomial.of_int_parapoly
+  let c_template = !cbound_template |> Option.get
   in
   Solver.push solver;
   (*C has to be positive for all initial values*)
@@ -222,7 +222,7 @@ let find_1d_lexrsm_non_increasing transitions decreasing =
     in
     non_incr |> GeneralTransitionSet.to_list |> List.map (Solver.add_real solver % non_increasing_constraint) |> ignore;
     Solver.minimize_absolute solver !fresh_coeffs; 
-    Solver.model solver
+    Solver.model_real solver
     |> fun eval -> (eval, GeneralTransitionSet.add decreasing non_incr)
   else
     (None, GeneralTransitionSet.empty)
@@ -244,9 +244,9 @@ let find_1d_lexrsm transitions remaining_transitions cbounded =
     ranked |> GeneralTransitionSet.to_list |> List.map (fun gtrans -> Solver.add_real solver (decreasing_constraint gtrans)) |> ignore;
     Solver.minimize_absolute solver !fresh_coeffs; (* Check if minimization is forgotten. *)
     if n = 0 then
-      (Solver.model solver, GeneralTransitionSet.empty)
+      (Solver.model_real solver, GeneralTransitionSet.empty)
     else
-      Solver.model solver
+      Solver.model_real solver
       |> fun eval -> (eval, ranked)
   else
     (None, GeneralTransitionSet.empty)
@@ -254,12 +254,12 @@ let find_1d_lexrsm transitions remaining_transitions cbounded =
 let lexrsmmap_to_string map =
   map
   |> LexRSMMap.to_list
-  |> List.map (fun (loc, poly_list) -> String.concat ": " [loc |> Location.to_string; poly_list |> List.map (Polynomial.to_string) |> String.concat ", "])
+  |> List.map (fun (loc, poly_list) -> String.concat ": " [loc |> Location.to_string; poly_list |> List.map (RealPolynomial.to_string) |> String.concat ", "])
   |> String.concat "; "
 
 let cbound_to_string cbound =
   cbound
-  |> List.map Polynomial.to_string
+  |> List.map RealPolynomial.to_string
   |> String.concat ", "
 
 let rec find_lexrsm map transitions remaining cbounded =
@@ -275,7 +275,7 @@ let rec find_lexrsm map transitions remaining cbounded =
         find_lexrsm map transitions (GeneralTransitionSet.diff remaining ranked) cbounded
         |> Option.map (fun (map, c_list, non_increasing) ->
                                 let new_c_list = if cbounded then
-                                  ((Option.map (evaluate_cbound) eval |? Polynomial.zero) :: c_list)
+                                  ((Option.map (evaluate_cbound) eval |? RealPolynomial.zero) :: c_list)
                                   else []
                                 in
                                 (map, new_c_list, non_increasing)))
@@ -285,8 +285,8 @@ let rec find_lexrsm map transitions remaining cbounded =
 
 let rec make_ranking_function start_poly c_bound exp =
   match (start_poly, c_bound) with
-    | ([],[]) -> Polynomial.zero
-    | (x::xs, y::ys) -> Polynomial.add (Polynomial.mul x (Polynomial.pow (Polynomial. add y Polynomial.one) exp)) (make_ranking_function xs ys (exp-1))
+    | ([],[]) -> RealPolynomial.zero
+    | (x::xs, y::ys) -> RealPolynomial.add (RealPolynomial.mul x (RealPolynomial.pow (RealPolynomial. add y RealPolynomial.one) exp)) (make_ranking_function xs ys (exp-1))
     | _ -> failwith "impossible"
 
 let reset () =
@@ -341,14 +341,14 @@ let compute_expected_complexity program =
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "find_ranking_function", ["transitions", program |> Program.generalized_transitions |> GeneralTransitionSet.to_string])
-                  ~result:(fun option -> Option.map Polynomial.to_string option |? "no ranking function could be found")
+                  ~result:(fun option -> Option.map RealPolynomial.to_string option |? "no ranking function could be found")
                   execute
 
 let pprf_to_string t = 
   "{decreasing: " ^ GeneralTransition.to_id_string t.decreasing ^
   " non_incr: " ^ GeneralTransitionSet.to_id_string t.non_increasing ^ 
   " rank: [" ^ (GeneralTransitionSet.start_locations t.non_increasing |> LocationSet.to_list
-                |> List.map (fun loc -> Location.to_string loc ^ ": " ^ (t.rank loc |> Polynomial.to_string)) |> String.concat "; ")
+                |> List.map (fun loc -> Location.to_string loc ^ ": " ^ (t.rank loc |> RealPolynomial.to_string)) |> String.concat "; ")
   ^ "]}"
 
 let ranking_table_to_string rtable = 
@@ -369,7 +369,7 @@ let compute_ranking_table program =
                   | None -> failwith ""
                   | (Some valuation) -> 
                       TemplateTable.find template_table loc
-                      |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
+                      |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero)
               in
               let ranking = {
                               decreasing = decr;
