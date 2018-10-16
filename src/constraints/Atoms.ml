@@ -44,15 +44,17 @@ struct
       end
 
     (* Always in normalised form: polynomial <= 0 *)
-    type t = P.t [@@deriving eq, ord]
+    type compkind = LE | LT [@@deriving eq, ord]
+
+    type t = P.t * compkind [@@deriving eq, ord]
 
 
     (* Helper function *)
     let normalise poly1 poly2 = function
-      | Comparator.LE -> P.sub poly1 poly2
-      | Comparator.GE -> P.sub poly2 poly1
-      | Comparator.LT -> P.sub (P.add poly1 P.one) poly2
-      | Comparator.GT -> P.sub (P.add poly2 P.one) poly1
+      | Comparator.LE -> (P.sub poly1 poly2, LE)
+      | Comparator.GE -> (P.sub poly2 poly1, LE)
+      | Comparator.LT -> (P.sub poly1 poly2, LT)
+      | Comparator.GT -> (P.sub poly2 poly1, LT)
 
     let mk comp poly1 poly2 =
       (*P.scale_coefficients*) (normalise poly1 poly2 comp)
@@ -71,20 +73,28 @@ struct
 
     (* TODO We can not decide all equalities right now because of some integer arithmetic *)
     (* Maybe use SMT-solver here *)
-    let (=~=) = P.(=~=)
+    let (=~=) (poly1,comp1) (poly2,comp2) = P.(poly1 =~= poly2) && equal_compkind comp1 comp2
 
-    let neg = P.neg
+    let neg (poly,comp) = (P.neg poly,comp)
+
+    let comp_to_string = 
+      function
+      | LE -> "<="
+      | LT -> "<"
               
-    let to_string ?(comp=" <= ") atom = (P.to_string atom) ^ comp ^ "0"
+    let to_string ?(compfunc=comp_to_string) (poly,comp) = (P.to_string poly) ^ (compfunc comp) ^ "0"
         
-    let vars = P.vars
+    let vars (poly,_) = P.vars poly
 
-    let normalised_lhs atom = atom
+    let normalised_lhs (poly,_) = poly
              
-    let rename atom varmapping = P.rename varmapping atom
+    let rename (poly,comp) varmapping = (P.rename varmapping poly, comp)
 
-    let fold ~subject ~le poly =
-      le (subject poly) (subject P.zero)
+    let fold ~subject ~le ~lt (poly,comp) =
+      if comp = LE then
+        le (subject poly) (subject P.zero)
+      else
+        lt (subject poly) (subject P.zero)
       
                                (*
     (* TODO It's maybe possible to compare polynomials without full evaluation *)
@@ -92,25 +102,25 @@ struct
     let models atom valuation =
       P.Value.Compare.((P.eval atom valuation) <= P.Value.zero)
                                 *)
-    let is_linear = P.is_linear 
+    let is_linear (poly,_) = P.is_linear poly
         
     let get_coefficient var atom =
       P.coeff_of_var var (normalised_lhs atom)
       
-    let get_constant atom =
-      P.get_constant (P.neg atom)
+    let get_constant (poly,_) =
+      P.get_constant (P.neg poly)
 end
 
 module Atom =
   struct
     include AtomOver(Polynomial)
 
-    let to_string ?(comp=" <= ") atom =
-      Polynomial.separate_by_sign atom
-      |> (fun (positive, negative) -> Polynomial.to_string positive ^ comp ^ Polynomial.to_string (Polynomial.neg negative))
+    let to_string ?(compfunc=comp_to_string) (poly,comp) =
+      Polynomial.separate_by_sign poly
+      |> (fun (positive, negative) -> Polynomial.to_string positive ^ (compfunc comp) ^ Polynomial.to_string (Polynomial.neg negative))
       
-    let max_of_occurring_constants =
-      Polynomial.max_of_occurring_constants
+    let max_of_occurring_constants (poly,_) =
+      Polynomial.max_of_occurring_constants poly
 
   end
 
@@ -129,15 +139,17 @@ module RealAtom =
   struct
     include AtomOver(RealPolynomial)
 
-    let to_string ?(comp=" <= ") atom =
-      RealPolynomial.separate_by_sign atom
-      |> (fun (positive, negative) -> RealPolynomial.to_string positive ^ comp ^ RealPolynomial.to_string (RealPolynomial.neg negative))
+    let to_string ?(compfunc=comp_to_string) (poly,comp) =
+      RealPolynomial.separate_by_sign poly
+      |> (fun (positive, negative) -> RealPolynomial.to_string positive ^ (compfunc comp) ^ RealPolynomial.to_string (RealPolynomial.neg negative))
       
-    let max_of_occurring_constants =
-      RealPolynomial.max_of_occurring_constants
+    let max_of_occurring_constants (poly,_) =
+      RealPolynomial.max_of_occurring_constants poly
 
-    let of_intatom atom =
-      mk Comparator.LE (RealPolynomial.of_intpoly atom) RealPolynomial.zero
+    let of_intatom ((poly,comp):Atom.t): t =
+      match comp with
+      | LE -> mk Comparator.LE (RealPolynomial.of_intpoly poly) RealPolynomial.zero
+      | LT -> mk Comparator.LT (RealPolynomial.of_intpoly poly) RealPolynomial.zero
      
   end
 

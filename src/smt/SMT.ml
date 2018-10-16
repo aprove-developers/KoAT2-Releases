@@ -30,6 +30,7 @@ let from_formula context =
   Formula.fold 
     ~subject:(from_poly context)
     ~le:(Z3.Arithmetic.mk_le context)
+    ~lt:(Z3.Arithmetic.mk_lt context)
     ~correct:(Z3.Boolean.mk_true context)
     ~conj:(fun a1 a2 -> Z3.Boolean.mk_and context [a1; a2])
     ~wrong:(Z3.Boolean.mk_false context)
@@ -39,6 +40,7 @@ let from_real_formula context =
   RealFormula.fold 
     ~subject:(from_real_poly context)
     ~le:(Z3.Arithmetic.mk_le context)
+    ~lt:(Z3.Arithmetic.mk_lt context)
     ~correct:(Z3.Boolean.mk_true context)
     ~conj:(fun a1 a2 -> Z3.Boolean.mk_and context [a1; a2])
     ~wrong:(Z3.Boolean.mk_false context)
