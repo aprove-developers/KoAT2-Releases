@@ -45,6 +45,11 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Product (b1, b2) -> Num.mul (get_constant b1) (get_constant b2)
       | Max (b1, b2) -> Num.max (get_constant b1) (get_constant b2) 
     
+    let get_constant_option t = 
+      match t with
+      | Const x -> Some x
+      | _  -> None
+
     module Constructor =
       struct
         let number = function

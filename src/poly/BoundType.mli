@@ -110,4 +110,7 @@ module Make_BoundOver :
       
       (** returns the constant of a bound *)
       val get_constant : t -> value
+
+      (** if the bound is a constant it retuns this constant *)
+      val get_constant_option: t -> value option
     end
