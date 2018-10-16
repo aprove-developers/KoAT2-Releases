@@ -18,6 +18,5 @@ let min a b =
     b
 
 let of_ourint f =
-  f 
-  |> OurInt.to_float 
-  |> of_float
+  f  
+  |> Num.num_of_big_int
