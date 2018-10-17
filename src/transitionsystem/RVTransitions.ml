@@ -5,6 +5,10 @@ module TransitionForExpectedSize =
   struct
     type t = GeneralTransition.t * Location.t
 
+    let gt (gt, _) = gt
+
+    let loc (_,l) = l
+
     let compare (gt1,l1) (gt2,l2) =
       if GeneralTransition.compare gt1 gt2 = 0 then
         Location.compare l1 l2
