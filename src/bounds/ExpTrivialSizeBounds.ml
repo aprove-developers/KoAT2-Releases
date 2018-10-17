@@ -18,7 +18,7 @@ module GTRV = RVGTypes.Make_RV(struct
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
-let incoming_bound kind program get_sizebound lsb gt (pr_func: Location.t -> float option) =
+let incoming_bound kind program get_sizebound lsb gt (pr_func: Location.t -> OurFloat.t option) =
   let execute () =
     let substitute_with_prevalues gt' = 
       ExpLocalSizeBound.as_substituted_bound (fun kind v -> get_sizebound kind gt' v (GeneralTransition.start gt')) lsb
@@ -32,7 +32,7 @@ let incoming_bound kind program get_sizebound lsb gt (pr_func: Location.t -> flo
       |> TransitionSet.of_enum
       |> GeneralTransitionSet.from_transitionset
     in
-    let substitute_with_pr_prevalues gtset (pr_func_unboxed: Location.t -> float option) = 
+    let substitute_with_pr_prevalues gtset (pr_func_unboxed: Location.t -> OurFloat.t option) = 
       let pre_with_pr =
         GeneralTransitionSet.to_list gtset
         |> List.map (fun gt' -> pr_func_unboxed (GeneralTransition.start gt')
@@ -45,7 +45,7 @@ let incoming_bound kind program get_sizebound lsb gt (pr_func: Location.t -> flo
             Some (ExpLocalSizeBound.as_substituted_bound 
               (fun kind v -> pres_with_prs
                              |> (List.fold_left 
-                                     (fun b (pr,gt') -> RealBound.( b + ((of_constant (OurFloat.of_float pr)) * (get_sizebound kind gt' v
+                                     (fun b (pr,gt') -> RealBound.( b + ((of_constant pr) * (get_sizebound kind gt' v
                                      (GeneralTransition.start gt'))) ) ) 
                                      RealBound.zero
                                   )
@@ -187,8 +187,8 @@ let graph_connected_with_orig_graph (orig_graph: TransitionGraph.t) (subgraph: T
   |> TransitionSet.filter (fun (_,_,l) -> Location.equal l loc)
   |> (<) 0 % TransitionSet.cardinal
 
-let rec get_pr (graph: TransitionGraph.t) (start: Location.t) (locs: LocationSet.t) (loc: Location.t) get_timebound: (Location.t->float
-option) = 
+let rec get_pr (graph: TransitionGraph.t) (start: Location.t) (locs: LocationSet.t) (loc: Location.t) get_timebound:
+  (Location.t->OurFloat.t option) = 
   let subgraph_cardinals_combined transitions_and_graphs_list = 
     List.fold_left (fun ctr (_,g) -> ctr + (LocationSet.cardinal (TransitionGraph.locations g) )) 0 transitions_and_graphs_list
   in
@@ -247,16 +247,17 @@ option) =
             |> TransitionSet.filter (fun t -> List.exists (Location.equal (Transition.target t) % Tuple2.first) subs)
           in
           let total_probability = 
-            rel_trans_outgoing |> TransitionSet.to_list |> List.map (TransitionLabel.probability % Transition.label) |> List.fsum
+            rel_trans_outgoing |> TransitionSet.to_list |> List.map (TransitionLabel.probability % Transition.label) 
+            |> List.fold_left (OurFloat.(+)) (OurFloat.of_float 0.0)
           in
           let probability_reaching_loc l =
             rel_trans_outgoing |> TransitionSet.filter (Location.equal l % Transition.target) 
             |> TransitionSet.to_list |> List.map (TransitionLabel.probability % Transition.label)
-            |> List.fsum 
+            |> List.fold_left (OurFloat.(+)) (OurFloat.of_float 0.0)
           in
           match rec_result with
-          | None -> Some (probability_reaching_loc sub_start /. total_probability)
-          | Some p -> Some ((probability_reaching_loc sub_start /. total_probability) *. p)
+          | None -> Some (OurFloat.(/) (probability_reaching_loc sub_start) (total_probability))
+          | Some p -> Some OurFloat.((probability_reaching_loc sub_start / total_probability) * p)
       )
 
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.

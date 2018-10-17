@@ -68,7 +68,7 @@ let compute_metering_templates (vars: VarSet.t) (locations: Location.t list): un
 
 let prob_branch_poly ?(diff = RealParameterPolynomial.zero) (l,t,l') =
     let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
-    let prob = t |> TransitionLabel.probability |> OurFloat.of_float in
+    let prob = t |> TransitionLabel.probability in
     RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.( add (substitute_f (as_realparapoly t) (template l')) (neg diff)))
 
 let expected_poly gtrans =

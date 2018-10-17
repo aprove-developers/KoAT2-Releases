@@ -487,7 +487,7 @@ let compute_single_local_size_bound program kind gt var l =
   in
   let prob_reaching_l = 
     trans_reaching_l
-    |> (fun ts -> TransitionSet.fold ((+.) % TransitionLabel.probability % Transition.label) ts 0.0)
+    |> (fun ts -> TransitionSet.fold (OurFloat.(+) % TransitionLabel.probability % Transition.label) ts (0.0 |> OurFloat.of_float))
   in
   let handle_update_element ue =
     match (ue) with
@@ -506,8 +506,8 @@ let compute_single_local_size_bound program kind gt var l =
            |> Option.map (fun u -> (Transition.label t,u)))
     |> Util.option_sequence
     |> Option.map 
-         (fun labelsus -> List.map (fun (label,ue) -> Poly.mul (Poly.of_constant ((TransitionLabel.probability label) /.
-                                      prob_reaching_l |> Num.of_float)) (handle_update_element ue)) labelsus
+         (fun labelsus -> List.map (fun (label,ue) -> Poly.mul (Poly.of_constant (OurFloat.(/) (TransitionLabel.probability label) 
+                                      prob_reaching_l)) (handle_update_element ue)) labelsus
                           |> List.fold_left Poly.add Poly.zero)
     |> Option.map (fun update ->
            (* Introduce a temporary result variable *)

@@ -67,7 +67,7 @@ sig
   val same : t -> t -> bool
   val id: t -> int
   val guard: t -> TransitionLabel.Guard.t
-  val total_probability: t -> float
+  val total_probability: t -> OurFloat.t
   val input_vars: t -> VarSet.t
   val vars: t -> VarSet.t
   (** returns true iff all transitions in the general transition are loops *)

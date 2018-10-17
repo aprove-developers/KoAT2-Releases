@@ -1,6 +1,6 @@
 %token	<string>	ID
 %token	<int>		UINT
-%token  <float>         UFLOAT
+%token  <string>        UFLOAT
 %token			PLUS MINUS TIMES POW
 %token			EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
 %token			LPAR RPAR
@@ -153,7 +153,7 @@ withConstraints :
 	
 withProbabilities :
         |        prob = UFLOAT COLON
-                { Batteries.Float.of_float prob };
+                { OurFloat.of_string prob };
 	
 
 onlyFormula :

@@ -96,7 +96,7 @@ let compute_cbound_template (vars: VarSet.t): unit =
 
 let prob_branch_poly (l,t,l') =
     let template = (fun key -> key |> TemplateTable.find template_table) in
-    let prob = t |> TransitionLabel.probability |> OurFloat.of_float in
+    let prob = t |> TransitionLabel.probability in
     RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
 
 let expected_poly gtrans =

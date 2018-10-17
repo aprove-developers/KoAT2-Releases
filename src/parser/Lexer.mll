@@ -39,7 +39,7 @@ rule read =
   | "max"             { P.MAX }
   | "inf"             { P.INFINITY }
   | int               { P.UINT (int_of_string (Lexing.lexeme lexbuf)) }
-  | probfloat         { P.UFLOAT (float_of_string (Lexing.lexeme lexbuf))}
+  | probfloat         { P.UFLOAT (Lexing.lexeme lexbuf)}
   | id                { P.ID (Lexing.lexeme lexbuf) }
   | '|'               { P.ABS }
   | '('               { P.LPAR }

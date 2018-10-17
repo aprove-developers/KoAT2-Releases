@@ -48,7 +48,7 @@ type t = {
     update : UpdateElement.t VarMap.t;
     guard : Guard.t;
     cost : Polynomial.t;
-    probability : Float.t;
+    probability : OurFloat.t;
   }
 
 let triples (list1) (list2) (list3) = List.map (fun ((x,y),z) -> (x,y,z)) (List.combine (List.combine list1 list2) list3)
@@ -62,13 +62,13 @@ let make ?(cost = one)  com_kind ~update ~guard =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
   {
     id = unique ();
-    update; guard; cost; probability=1.;
+    update; guard; cost; probability=1. |> OurFloat.of_float;
   }
 
 (* Generates a probabilistic label, needs a name to distinguish different labels belonging to the same transition *)
-let make_prob ?(cost = one)  com_kind ~update ~guard ~id ~probability = 
+let make_prob ?(cost = one)  com_kind ~update ~guard ~id ~(probability: OurFloat.t) = 
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
-    if (probability > 1. || probability < 0.) then raise ProbabilitiesNotBetweenZeroAndOne else
+    if (probability > (1. |> OurFloat.of_float) || probability < (0. |> OurFloat.of_float)) then raise ProbabilitiesNotBetweenZeroAndOne else
   {
     id = id;
     update; guard; cost; probability=probability;
@@ -81,7 +81,7 @@ let equivalent lbl1 lbl2 =
   VarMap.equal UpdateElement.equal lbl1.update lbl2.update
   && Guard.equal lbl1.guard lbl2.guard
   && Polynomial.equal lbl1.cost lbl2.cost
-  && Float.equal lbl1.probability lbl2.probability
+  && OurFloat.equal lbl1.probability lbl2.probability
 
 let compare_same lbl1 lbl2 =
   Int.compare lbl1.id lbl2.id
@@ -93,8 +93,8 @@ let compare_equivalent lbl1 lbl2 =
     Guard.compare lbl1.guard lbl2.guard
   else if Polynomial.compare lbl1.cost lbl2.cost != 0 then
     Polynomial.compare lbl1.cost lbl2.cost
-  else if Float.compare lbl1.probability lbl2.probability != 0 then
-    Float.compare lbl1.probability lbl2.probability
+  else if OurFloat.compare lbl1.probability lbl2.probability != 0 then
+    OurFloat.compare lbl1.probability lbl2.probability
   else
     0
 let take_last n xs =
@@ -118,12 +118,12 @@ let mk ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars =
       |> Enum.map (fun (var, assignment) -> VarMap.add var (assignment))
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
       |> fun update -> { id = unique ();
-                        update; guard; cost; probability=1.;}
+                        update; guard; cost; probability=1. |> OurFloat.of_float;}
                         
 let mk_prob ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars ~id ~probability =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
-      if (probability > 1. || probability < 0.) then raise ProbabilitiesNotBetweenZeroAndOne else
+      if (probability > (1. |> OurFloat.of_float) || probability < (0. |> OurFloat.of_float)) then raise ProbabilitiesNotBetweenZeroAndOne else
         let (target, assignments) = List.hd targets in
         (* TODO Better error handling in case the sizes differ *)
         (List.enum patterns, List.enum assignments)
@@ -167,7 +167,7 @@ let append t1 t2 =
     update = new_update;
     guard = new_guard;
     cost = Polynomial.(t1.cost + t2.cost);
-    probability = Float.(t1.probability * t2.probability);
+    probability = OurFloat.(t1.probability * t2.probability);
   }
 
 let append_guard t1 t2 =
@@ -241,7 +241,7 @@ let default = {
     update = VarMap.empty;
     guard = Guard.mk_true;
     cost = one;
-    probability = 1.
+    probability = 1. |> OurFloat.of_float
   }
             
 let update_to_string update =
@@ -289,7 +289,7 @@ let update_to_string_rhs t =
  let to_string label =          
   let guard = if Guard.is_true label.guard then "" else ":|:" ^ Guard.to_string label.guard in
   let cost = if Polynomial.is_one label.cost then "->" else "-{"^ Polynomial.to_string label.cost ^ "}>" ^ ", " in
-  let probability = if (label.probability = 1.) then "" else "\n p:" ^ Float.to_string label.probability in
+  let probability = if (label.probability = (1. |> OurFloat.of_float)) then "" else "\n p:" ^ OurFloat.to_string label.probability in
   "ID: " ^ string_of_int label.id ^ ", " ^ (update_to_string_lhs label)^ probability ^ cost ^ update_to_string_rhs label ^ guard 
   
 

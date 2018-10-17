@@ -65,7 +65,7 @@ module Transition =
       (Int.to_string % TransitionLabel.id) label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
 
     let to_string (l,t,l') =
-      let probability = if (TransitionLabel.probability t) = 1. then "" else "p:"^(Float.to_string (TransitionLabel.probability t))^":" 
+      let probability = if (TransitionLabel.probability t) = (1. |> OurFloat.of_float) then "" else "p:"^(OurFloat.to_string (TransitionLabel.probability t))^":" 
       and cost = if (Polynomials.Polynomial.is_one (TransitionLabel.cost t)) then "->" else "-{"^(Polynomials.Polynomial.to_string (TransitionLabel.cost t))^"}>" in
       String.concat "" [(Location.to_string l); TransitionLabel.(update_to_string_lhs t); probability ; cost ; (Location.to_string l') ; TransitionLabel.(update_to_string_rhs t) ;" :|: " ;TransitionLabel.(guard_to_string t)]
 
@@ -154,7 +154,7 @@ module GeneralTransition =
       }
 
     let to_string_helper (l,t,l') = 
-      let probability = if (TransitionLabel.probability t) = 1. then "" else (Float.to_string (TransitionLabel.probability t))^":" 
+      let probability = if (TransitionLabel.probability t) = (1. |> OurFloat.of_float) then "" else (OurFloat.to_string (TransitionLabel.probability t))^":" 
       in
       probability ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t)
 
@@ -162,7 +162,7 @@ module GeneralTransition =
       transitions gt
       |> TransitionSet.to_list
       |> List.map (fun t -> (Transition.label t |> TransitionLabel.probability, Transition.target t))
-      |> List.map (fun (p,l) -> (Float.to_string p) ^ ":" ^ (Location.to_string l))
+      |> List.map (fun (p,l) -> (OurFloat.to_string p) ^ ":" ^ (Location.to_string l))
       |> String.concat "; "
       |> fun str -> "[" ^ str ^ "]"
 
@@ -180,7 +180,8 @@ module GeneralTransition =
       String.concat " " [start_str; cost_str; trans_str; guard_str]
     
     let total_probability transition =
-    TransitionSet.fold (fun trans rest -> (trans |> Transition.label |> TransitionLabel.probability) +. rest) (transitions transition) 0.
+      TransitionSet.fold (fun trans rest -> Num.(+) (trans |> Transition.label |> TransitionLabel.probability) rest) (transitions transition) 
+        (0. |> OurFloat.of_float)
 
     let input_vars t = 
       t.transitions
