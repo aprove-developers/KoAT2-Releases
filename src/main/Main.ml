@@ -18,6 +18,7 @@ let subcommands =
     LexRSMCommand.(subcommand run params_cmdliner_term description command);
     MeteringRSMCommand.(subcommand run params_cmdliner_term description command);
     RootsCommand.(subcommand run params_cmdliner_term description command);
+    ExactCommand.(subcommand run params_cmdliner_term description command);
   ]
   
 let default_cmd =
