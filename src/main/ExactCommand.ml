@@ -28,15 +28,16 @@ let read_process_lines command =
 
 let run (params: params) =
   Logging.(use_loggers [ExactRuntime, Logger.DEBUG]); 
-  let logger = Logging.(get Roots) in
+  let logger = Logging.(get ExactRuntime) in
   let execute () =
     params.input
     |> fun input -> read_process_lines ("sage src/exact_runtime/exact_runtime.sage " ^ input)
     |> String.concat ""
   in 
   Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find roots", [])
+                  (fun () -> "exact runtime", [])
                   ~result:(fun bound ->
+                    print_string (bound ^ "\n");
                     bound
                   )
                   execute
