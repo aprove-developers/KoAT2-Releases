@@ -322,6 +322,9 @@ module type Polynomial =
         Subsequent calls to simplify will not lead to a further simplification. *)
     val simplify : t -> t
 
+    (** Derives the polynomial with respect to the given variable *)
+    val derivative: Var.t -> t -> t
+
     (** Multiplies the polynomial with a constant value.
         The result is always a polynomial. *)
     val mult_with_const : value -> t -> t

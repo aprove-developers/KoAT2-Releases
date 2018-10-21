@@ -72,6 +72,23 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       |> List.map ScaledMonomial_.monomial
       |> List.filter ((<>) Monomial_.one)
 
+    let derivative var poly = 
+      let derive_scaled_monomial smonom = 
+        let monom = ScaledMonomial_.monomial smonom in
+        let degree_var = Monomial_.degree_variable var monom in
+        if degree_var <= 1 then
+          None
+        else
+          Monomial_.delete_var var monom
+          |> Monomial_.mul (Monomial_.make [var, degree_var - 1])
+          |> ScaledMonomial_.make (Value.mul (ScaledMonomial_.coeff smonom) (Value.of_int degree_var))
+          |> fun res -> Some res
+      in
+      List.map derive_scaled_monomial poly 
+      |> List.filter Option.is_some
+      |> List.map Option.get
+      |> simplify
+
     let of_monomial mon = lift Value.one mon
 
     let of_power var n = of_monomial (Monomial_.lift var n)
