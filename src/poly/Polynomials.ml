@@ -76,13 +76,18 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       let derive_scaled_monomial smonom = 
         let monom = ScaledMonomial_.monomial smonom in
         let degree_var = Monomial_.degree_variable var monom in
-        if degree_var <= 1 then
+        if degree_var <= 0 then
           None
         else
-          Monomial_.delete_var var monom
-          |> Monomial_.mul (Monomial_.make [var, degree_var - 1])
-          |> ScaledMonomial_.make (Value.mul (ScaledMonomial_.coeff smonom) (Value.of_int degree_var))
-          |> fun res -> Some res
+          if degree_var = 1 then
+            Monomial_.delete_var var monom
+            |> ScaledMonomial_.make (Value.mul (ScaledMonomial_.coeff smonom) (Value.of_int degree_var))
+            |> fun res -> Some res
+          else
+            Monomial_.delete_var var monom
+            |> Monomial_.mul (Monomial_.make [var, degree_var - 1])
+            |> ScaledMonomial_.make (Value.mul (ScaledMonomial_.coeff smonom) (Value.of_int degree_var))
+            |> fun res -> Some res
       in
       List.map derive_scaled_monomial poly 
       |> List.filter Option.is_some
