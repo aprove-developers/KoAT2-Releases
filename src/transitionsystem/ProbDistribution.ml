@@ -17,6 +17,10 @@ let deterministic_upper_polynomial dist =
   match dist with 
     | Uniform (a,b) -> Some b
 
+let deterministic_lower_polynomial dist = 
+  match dist with 
+    | Uniform (a,b) -> Some b
+
 let expected_value dist = 
   match dist with
     | Uniform (a,b) -> RealPolynomial.((of_constant (Num.of_float 0.5)) * ((of_intpoly a) + (of_intpoly b)))

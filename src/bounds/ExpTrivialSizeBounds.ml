@@ -1,4 +1,5 @@
 open Batteries
+open Polynomials
 open BoundsInst
 open Formulas
 open ProgramTypes
@@ -18,20 +19,18 @@ module GTRV = RVGTypes.Make_RV(struct
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
-let incoming_bound kind program get_sizebound lsb gt (pr_func: Location.t -> OurFloat.t option) =
+let incoming_bound kind program get_expsizebound (exp_poly: RealPolynomial.t) gt (pr_func: Location.t -> OurFloat.t option) =
   let execute () =
-    let substitute_with_prevalues gt' = 
-      ExpLocalSizeBound.as_substituted_bound (fun kind v -> get_sizebound kind gt' v (GeneralTransition.start gt')) lsb
+    let substitute_with_prevalues gtset = 
+      let prevalues kind var = 
+        GeneralTransitionSet.to_list gtset
+        |> List.map (fun gt' -> get_expsizebound kind ((gt',GeneralTransition.start gt),var)) 
+        |> List.enum
+        |> RealBound.maximum
+      in
+      RealBound.appr_substitution kind ~lower:(prevalues `Lower) ~higher:(prevalues `Upper) (RealBound.of_poly exp_poly)
     in
-    let pre_gts = 
-      gt
-      |> GeneralTransition.transitions
-      |> TransitionSet.to_list
-      |> List.hd
-      |> Program.pre program
-      |> TransitionSet.of_enum
-      |> GeneralTransitionSet.from_transitionset
-    in
+    let pre_gts = Program.pre_gt program gt in
     let substitute_with_pr_prevalues gtset (pr_func_unboxed: Location.t -> OurFloat.t option) = 
       let pre_with_pr =
         GeneralTransitionSet.to_list gtset
@@ -42,28 +41,27 @@ let incoming_bound kind program get_sizebound lsb gt (pr_func: Location.t -> Our
       match pre_with_pr with
         | None -> None
         | Some pres_with_prs ->
-            Some (ExpLocalSizeBound.as_substituted_bound 
-              (fun kind v -> pres_with_prs
-                             |> (List.fold_left 
-                                     (fun b (pr,gt') -> RealBound.( b + ((of_constant pr) * (get_sizebound kind gt' v
-                                     (GeneralTransition.start gt'))) ) ) 
-                                     RealBound.zero
-                                  )
-                                ) lsb)
+            let substitution kind var = 
+              pres_with_prs
+              |> List.fold_left
+                   (fun b (pr,gt') -> RealBound.( b + ((of_constant pr) * (get_expsizebound kind ((gt',GeneralTransition.start gt),var) )) ))
+                   RealBound.zero 
+            in
+            Some (RealBound.of_poly exp_poly
+                  |> RealBound.appr_substitution  
+                       kind
+                       ~lower:(substitution `Lower)
+                       ~higher:(substitution `Upper) )
     in
     let pr_prevalues = substitute_with_pr_prevalues pre_gts pr_func in
     match pr_prevalues with
       | None -> 
           pre_gts
-          |> GeneralTransitionSet.enum
-          |> Enum.map substitute_with_prevalues
-          |> (match kind with
-              | `Lower -> RealBound.minimum
-              | `Upper -> RealBound.maximum)
+          |> substitute_with_prevalues
       | Some (bound) ->
           bound
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute highest incoming bound", ["lsb", (RealBound.to_string % ExpLocalSizeBound.as_bound) lsb;
+                     (fun () -> "compute highest incoming bound", ["exp_poly", (RealBound.to_string % RealBound.of_poly) exp_poly;
                                                                    "transition", GeneralTransition.to_string gt])
                   ~result:RealBound.to_string
                   execute
@@ -262,28 +260,18 @@ let rec get_pr (graph: TransitionGraph.t) (start: Location.t) (locs: LocationSet
 
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
-let compute kind program get_sizebound get_timebound (gt,var,loc) =
+let compute kind program get_expsizebound get_timebound (gt,var,loc) =
   let execute () =
     let graph = Program.graph program in
     let start_loc = Program.start program in
     let locations = TransitionGraph.locations graph in 
     let transition_location = GeneralTransition.start gt in
     let pr_func = get_pr graph start_loc locations transition_location get_timebound in
-    let (lsb: ExpLocalSizeBound.t Option.t) =
-      ExpLocalSizeBound.sizebound_local_rv program kind (gt,var,loc)
-    in
+    let exp_poly = ExpLocalSizeBound.exp_poly ((gt,loc),var) in
     if Program.is_initial_gt program gt then
-      ExpLocalSizeBound.(
-      lsb
-      |> Option.map as_bound
-      |? default kind)
+      RealBound.of_poly exp_poly
     else
-      ExpLocalSizeBound.(
-      lsb
-      (* TODO *)
-      |> Option.map (fun lsb -> incoming_bound kind program get_sizebound lsb gt pr_func)
-      |? default kind)
-      
+      incoming_bound kind program get_expsizebound exp_poly gt pr_func
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute trivial bound", ["kind", show_kind kind;
                                                           "rv", GTRV.to_id_string (gt,var)])
