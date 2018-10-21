@@ -260,7 +260,7 @@ let rec get_pr (graph: TransitionGraph.t) (start: Location.t) (locs: LocationSet
 
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
-let compute kind program get_expsizebound get_timebound (gt,var,loc) =
+let compute kind program get_expsizebound get_timebound ((gt,loc),var) =
   let execute () =
     let graph = Program.graph program in
     let start_loc = Program.start program in
@@ -271,7 +271,7 @@ let compute kind program get_expsizebound get_timebound (gt,var,loc) =
     if Program.is_initial_gt program gt then
       RealBound.of_poly exp_poly
     else
-      incoming_bound kind program get_expsizebound exp_poly gt pr_func
+      incoming_bound kind program (fun kind ((gt,l),var) -> get_expsizebound kind (gt,l) var)  exp_poly gt pr_func
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute trivial bound", ["kind", show_kind kind;
                                                           "rv", GTRV.to_id_string (gt,var)])

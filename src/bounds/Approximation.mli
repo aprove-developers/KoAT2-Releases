@@ -84,5 +84,7 @@ val expsizebound : kind -> t -> (GeneralTransition.t * Location.t)-> Var.t -> Re
 (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition. 
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 val add_sizebound : kind -> Bound.t -> Transition.t -> Var.t -> t -> t
+val add_expsizebound : kind -> RealBound.t -> GeneralTransition.t * Location.t -> Var.t -> t -> t
   
 val add_sizebounds : kind -> Bound.t -> RV.t list -> t -> t
+val add_expsizebounds : kind -> RealBound.t -> ERV.t list -> t -> t

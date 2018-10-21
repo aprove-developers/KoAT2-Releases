@@ -5,8 +5,6 @@ open ProgramTypes
 
 let logger = Logging.(get Time)
 
-type measure = [ `Cost | `Time ] [@@deriving show, eq]
-
 (** All entry transitions of the given transitions.
     These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
 let entry_transitions (program: Program.t) (rank_transitions: GeneralTransition.t list): ((GeneralTransition.t * Location.t) Enum.t) =
@@ -120,22 +118,18 @@ let improve_with_rank program appr (rank: LexRSM.t) =
     |> MaybeChanged.changed
 
 (** Checks if a transition is bounded *)
-let exp_bounded measure appr transition =
+let exp_bounded appr transition =
   Approximation.is_exptime_bounded appr transition
 
-let improve measure program appr =
-  let execute () =
-    program
-    |> Program.non_trivial_transitions
-    |> GeneralTransitionSet.from_transitionset
-    |> GeneralTransitionSet.filter (fun t -> not (exp_bounded measure appr t))
-    |> GeneralTransitionSet.enum
-    |> MaybeChanged.fold_enum (fun appr gt ->
-           LexRSM.find program gt
-           |> Option.map_default (fun rank ->
-                improve_with_rank program appr rank
-              ) (MaybeChanged.return appr)
-         ) appr
-  in Logger.with_log logger Logger.INFO
-                     (fun () -> "improve_bounds", ["measure", show_measure measure])
-                     execute
+let improve program appr =
+  program
+  |> Program.non_trivial_transitions
+  |> GeneralTransitionSet.from_transitionset
+  |> GeneralTransitionSet.filter (fun t -> not (exp_bounded appr t))
+  |> GeneralTransitionSet.enum
+  |> MaybeChanged.fold_enum (fun appr gt ->
+         LexRSM.find program gt
+         |> Option.map_default (fun rank ->
+              improve_with_rank program appr rank
+            ) (MaybeChanged.return appr)
+       ) appr

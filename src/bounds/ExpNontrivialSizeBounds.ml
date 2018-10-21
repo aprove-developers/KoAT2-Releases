@@ -196,7 +196,7 @@ let compute_
     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
 let compute kind program rvg get_timebound get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) =
   let execute () =
-    compute_ kind program rvg get_timebound get_exptimebound get_sizebound get_expsizebound scc
+    compute_ kind program rvg (RealBound.of_intbound % get_timebound) get_exptimebound get_sizebound get_expsizebound scc
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute_nontrivial_bound", ["kind", show_kind kind;
                                                              "scc", ERVG.rvs_to_id_string scc])

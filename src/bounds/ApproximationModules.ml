@@ -2,6 +2,7 @@ open Batteries
 open ProgramTypes
 
 module RV = RVGTypes.Make_RV(Transition)
+module ERV = RVGTypes.Make_RV(RVTransitions.TransitionForExpectedSize)
 
 module TransitionApproximation = TransitionApproximationType.Make_TransitionApproximation(OurInt)(Polynomials.Polynomial)
                                                                                          (struct

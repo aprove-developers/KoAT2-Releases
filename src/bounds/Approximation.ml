@@ -54,8 +54,14 @@ let expsizebound kind =
 let add_sizebound kind bound transition var appr =
   { appr with size = SizeApproximation.add kind bound transition var appr.size }
 
+let add_expsizebound kind bound (gt,l) var appr =
+  { appr with expsize = ExpectedSizeApproximation.add kind bound (gt,l) var appr.expsize }
+
 let add_sizebounds kind bound scc appr =
   { appr with size = SizeApproximation.add_all kind bound scc appr.size }
+
+let add_expsizebounds kind bound scc appr =
+  { appr with expsize = ExpectedSizeApproximation.add_all kind bound scc appr.expsize }
 
 (** Timebound related methods *)
 
