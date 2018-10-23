@@ -235,6 +235,19 @@ module IncrementalZ3Solver =
              ignore (Z3.Optimize.add_soft opt (from_formula context Formula.Infix.(Polynomial.of_var var >= Polynomial.zero)) (Var.to_string var) (Z3.Symbol.mk_int context 1))
            )
 
+    let minimize_absolute_v2 (opt,context) vars =
+      let absolute_value (var: Var.t) = 
+        Z3.Boolean.mk_ite context
+          (from_real_formula context RealFormula.Infix.((RealPolynomial.of_var var) <= RealPolynomial.zero))
+          (from_real_poly context (RealPolynomial.of_var var))
+          (from_real_poly context (RealPolynomial.sub RealPolynomial.zero (RealPolynomial.of_var var)) )
+      in
+      vars
+      |> List.map (absolute_value)
+      |> Z3.Arithmetic.mk_add context
+      |> Z3.Optimize.minimize opt
+      |> ignore
+
     let minimize (opt,context) var =
       ignore (Z3.Optimize.minimize opt (from_poly context (Polynomial.of_var var)))
       

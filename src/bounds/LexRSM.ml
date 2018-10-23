@@ -46,7 +46,7 @@ let ranking_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
   let fresh_vars = Var.fresh_id_list Var.Real num_vars in
   let fresh_coeffs = List.map RealPolynomial.of_var fresh_vars in
   let linear_poly = RealParameterPolynomial.of_coeff_list fresh_coeffs vars in
-  let constant_var = Var.fresh_id Var.Int () in
+  let constant_var = Var.fresh_id Var.Real () in
   let constant_poly = RealParameterPolynomial.of_constant (RealPolynomial.of_var constant_var) in
   RealParameterPolynomial.(linear_poly + constant_poly),
   List.append fresh_vars [constant_var]
@@ -104,15 +104,38 @@ let expected_poly gtrans =
 
 let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
   let template gtrans = gtrans |> GeneralTransition.start |> TemplateTable.find template_table in
-  let atom =
+  let atoms =
     match constraint_type with
-    | `Non_Increasing ->  RealParameterAtom.Infix.((template gtrans) >= (expected_poly gtrans))
-    | `Decreasing ->      RealParameterAtom.Infix.((template gtrans) >= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.of_polynomial RealPolynomial.one)))
-    | `Bounded ->         RealParameterAtom.Infix.((template gtrans) >= RealParameterPolynomial.of_polynomial RealPolynomial.one)
-    | `C_ranked ->        let c_template = !cbound_template |> Option.get in RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly gtrans))
+    | `Non_Increasing ->  RealParameterAtom.Infix.((template gtrans) >= (expected_poly gtrans)) |> List.singleton
+    | `Decreasing ->      
+        RealParameterAtom.Infix.((template gtrans) >= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.of_polynomial RealPolynomial.one))) 
+        |> List.singleton
+    | `Bounded ->     
+        (* for every transition the guard needs to imply that after the guard is passed and the update is evaluated the template
+         * evaluated at the corresponding location is non-negative*)
+        let handle_update_element ue = 
+          match ue with
+          | TransitionLabel.UpdateElement.Dist d -> ProbDistribution.expected_value d
+          | TransitionLabel.UpdateElement.Poly p -> p |> RealPolynomial.of_intpoly
+        in 
+        let templatebounds = 
+          GeneralTransition.transitions gtrans 
+          |> TransitionSet.to_list
+          |> List.map (fun t v -> Transition.label t |> flip TransitionLabel.update v |> Option.get |> handle_update_element |> RealParameterPolynomial.of_polynomial)
+        in
+        let template = template gtrans in
+        templatebounds
+        |> List.map (fun eval_v -> template |> RealParameterPolynomial.substitute_f eval_v)
+        |> List.map (fun tbound -> RealParameterAtom.Infix.(tbound >= RealParameterPolynomial.zero))
+        |> tap (Printf.printf "listatoms: %s\n" % (fun s -> "[" ^ s ^ "]") % String.concat "; " % List.map RealParameterAtom.to_string)
+      | `C_ranked ->        
+        let c_template = !cbound_template |> Option.get in 
+        RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly gtrans))
+        |> List.singleton
   in
-  RealParameterConstraint.farkas_transform (gtrans |> GeneralTransition.guard |> RealConstraint.of_intconstraint) atom
-  |> RealFormula.mk
+  List.map (RealParameterConstraint.farkas_transform (gtrans |> GeneralTransition.guard |> RealConstraint.of_intconstraint)) atoms
+  |> List.map RealFormula.mk
+  |> List.fold_left (RealFormula.mk_and) RealFormula.mk_true 
 
 let general_transition_constraint = Util.memoize ~extractor:(Tuple2.map2 GeneralTransition.id) general_transition_constraint_
 
@@ -120,10 +143,14 @@ let non_increasing_constraint transition =
   general_transition_constraint (`Non_Increasing, transition)
 
 let bounded_constraint transition =
-  general_transition_constraint (`Bounded, transition)
+  let constr = general_transition_constraint (`Bounded, transition) in
+  Printf.printf "bounded_constraint: %s\n" (RealFormula.to_string constr);
+  constr
 
 let decreasing_constraint transition =
-  general_transition_constraint (`Decreasing, transition)
+  let constr = general_transition_constraint (`Decreasing, transition) in
+  Printf.printf "decr_constraint: %s\n" (RealFormula.to_string constr);
+  constr
 
 let c_ranked_constraint transition =
   general_transition_constraint (`C_ranked, transition)
@@ -197,6 +224,7 @@ let rec backtrack_1d_non_increasing = function
   | (x::xs,n,ys,solver) ->
           Solver.push solver;
           Solver.add_real solver (non_increasing_constraint x);
+          Solver.add_real solver (bounded_constraint x);
           if Solver.satisfiable solver then (
             let (n1, ys1) = backtrack_1d (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
             Solver.pop solver;
@@ -221,7 +249,11 @@ let find_1d_lexrsm_non_increasing transitions decreasing =
                                    0, GeneralTransitionSet.empty, solver)
     in
     non_incr |> GeneralTransitionSet.to_list |> List.map (Solver.add_real solver % non_increasing_constraint) |> ignore;
+    Solver.minimize_absolute_v2 solver !fresh_coeffs;
+(*
     Solver.minimize_absolute solver !fresh_coeffs; 
+*)
+    Printf.printf "fresh_coeffs: %s\n" (!fresh_coeffs |> List.map Var.to_string |> String.concat "; "|> fun s -> "[" ^ s ^ "]"); 
     Solver.model_real solver
     |> fun eval -> (eval, GeneralTransitionSet.add decreasing non_incr)
   else
@@ -294,6 +326,7 @@ let reset () =
   TemplateTable.clear template_table
 
 let compute_map program transitions cbounded =
+  (* TODO max lexmap global for better performance *)
   let lexmap = LexRSMMap.create 10 in
   let execute () =
     find_lexrsm lexmap transitions transitions cbounded
@@ -377,6 +410,7 @@ let compute_ranking_table program =
                               rank = rankfunc;
                             }
               in
+              Printf.printf ("Valuation: %s\n") (Option.get eval |> Valuation.to_string);
               RankingTable.add time_ranking_table decr ranking
             )
             scc
@@ -391,7 +425,8 @@ let find program gt =
     compute_ranking_templates vars locations;
   if RankingTable.is_empty time_ranking_table then
     compute_ranking_table program;
- RankingTable.find_option time_ranking_table gt
+  Printf.printf ("find gt: %s\n\n") (GeneralTransition.to_string gt); 
+  RankingTable.find_option time_ranking_table gt
 
 let find_whole_prog program goal =
   if goal = "EXPECTEDCOMPLEXITY" then compute_expected_complexity program |> ignore
