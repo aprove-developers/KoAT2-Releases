@@ -68,7 +68,8 @@ let make ?(cost = one)  com_kind ~update ~guard =
 (* Generates a probabilistic label, needs a name to distinguish different labels belonging to the same transition *)
 let make_prob ?(cost = one)  com_kind ~update ~guard ~id ~(probability: OurFloat.t) = 
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
-    if (probability > (1. |> OurFloat.of_float) || probability < (0. |> OurFloat.of_float)) then raise ProbabilitiesNotBetweenZeroAndOne else
+    if (OurFloat.(probability > (1. |> of_float)) || OurFloat.(probability < (0. |> of_float))) then raise ProbabilitiesNotBetweenZeroAndOne 
+  else
   {
     id = id;
     update; guard; cost; probability=probability;
@@ -118,12 +119,13 @@ let mk ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars =
       |> Enum.map (fun (var, assignment) -> VarMap.add var (assignment))
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
       |> fun update -> { id = unique ();
-                        update; guard; cost; probability=1. |> OurFloat.of_float;}
+                        update; guard; cost; probability=1 |> OurFloat.of_int;}
                         
 let mk_prob ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars ~id ~probability =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
-      if (probability > (1. |> OurFloat.of_float) || probability < (0. |> OurFloat.of_float)) then raise ProbabilitiesNotBetweenZeroAndOne else
+      if (OurFloat.(probability > (1 |> of_int)) || OurFloat.(probability < (0 |> of_int))) then raise ProbabilitiesNotBetweenZeroAndOne 
+    else
         let (target, assignments) = List.hd targets in
         (* TODO Better error handling in case the sizes differ *)
         (List.enum patterns, List.enum assignments)

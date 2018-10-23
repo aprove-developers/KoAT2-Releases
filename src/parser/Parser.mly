@@ -153,7 +153,7 @@ withConstraints :
 	
 withProbabilities :
         |        prob = UFLOAT COLON
-                { OurFloat.of_string prob };
+                { ParserUtil.ourfloat_of_decimal_string prob};
 	
 
 onlyFormula :
