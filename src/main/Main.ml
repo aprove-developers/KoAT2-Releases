@@ -17,7 +17,6 @@ let subcommands =
     NormalizeCommand.(subcommand run params_cmdliner_term description command);
     LexRSMCommand.(subcommand run params_cmdliner_term description command);
     MeteringRSMCommand.(subcommand run params_cmdliner_term description command);
-    RootsCommand.(subcommand run params_cmdliner_term description command);
     ExactCommand.(subcommand run params_cmdliner_term description command);
   ]
   

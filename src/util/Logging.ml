@@ -10,12 +10,11 @@ type logger =
   | Preprocessor
   | LexRSM
   | MeteringRSM
-  | Roots
   | ExactRuntime
 
-let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM; MeteringRSM; Roots; ExactRuntime]
+let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM; MeteringRSM; ExactRuntime]
 
-let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM; MeteringRSM; Roots; ExactRuntime]
+let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM; MeteringRSM; ExactRuntime]
             
 let show_logger = function
   | Approximation -> "appr"
@@ -27,7 +26,6 @@ let show_logger = function
   | Preprocessor -> "preprocessor"
   | LexRSM -> "lexrsmMap"
   | MeteringRSM -> "metrsmMap"
-  | Roots -> "roots"
   | ExactRuntime -> "exactruntime"
 
 let get =
