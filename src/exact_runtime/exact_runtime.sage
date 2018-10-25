@@ -1,9 +1,12 @@
 import argparse
 
+# TODO vorkompilieren hm
+# TODO Drift an den Anfang stellen
 
 parser = argparse.ArgumentParser(description='Calculate Polynomial from ')
 
 
+parser.add_argument('prec', metavar='prec', type=int, help="precision")
 parser.add_argument('m', metavar='m', type=int, help='m')
 parser.add_argument('k', metavar='k', type=int, help='k')
 parser.add_argument('p', metavar='p', type=str, help="p'")
@@ -12,6 +15,8 @@ parser.add_argument('probs', metavar='probs', type=str, nargs='+',
                     help='probabilities in descending order')
 
 args = parser.parse_args()
+
+precision = args.prec
 
 str_probs = args.probs
 probs = []
@@ -54,11 +59,11 @@ c_lin = -1/drift
 if not p_const == 0:
     c_const = 1/p_const
 # Precision Problem
-roots = sage.rings.polynomial.complex_roots.complex_roots(poly, min_prec=100)
+roots = sage.rings.polynomial.complex_roots.complex_roots(poly, min_prec=precision)
 
 # print("roots: " + str(roots))
-CC = ComplexField(100)
-RR = RealField(100)
+CC = ComplexField(precision)
+RR = RealField(precision)
 roots = [(CC(root), mult) for root,mult in roots if RR(abs(root)) <= 1.]
 roots = dict(roots)
 
