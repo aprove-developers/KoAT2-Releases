@@ -139,7 +139,7 @@ non_prob_transition_rhs_with_prob :
 	          
 non_prob_transition_rhs :
 	|       com_kind = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
- 	          { (com_kind, targets) } ;
+                  { (com_kind, targets)} ;
         |       target = transition_target
                   { ("Com_1", [target]) } ;
 transition_target :
@@ -227,7 +227,7 @@ polynomial :
 	          { Poly.pow v c } ;
 
 dist:
-        |       UNIFORM; p1 = polynomial; p2 = polynomial
+        |       UNIFORM; LPAR; p1 = polynomial; RPAR; LPAR; p2 = polynomial; RPAR
                   { ProbDistribution.Uniform (p1,p2) };
 
 update_element: 

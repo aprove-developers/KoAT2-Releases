@@ -30,6 +30,7 @@ rule read =
   parse
   | white             { read lexbuf }
   | newline           { next_line lexbuf; read lexbuf }
+  | "UNIFORM"         { P.UNIFORM }
   | "GOAL"            { P.GOAL }
   | "STARTTERM"       { P.STARTTERM }
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
@@ -66,7 +67,6 @@ rule read =
   | ":+:"             { P.PROBDIV }
   | ":"               { P.COLON }
   | ','               { P.COMMA }
-  | "UNIFORM"         { P.UNIFORM }
   | eof               { P.EOF }
   | float          { raise (SyntaxError ("Probabilities are positive floating point numbers.")) }
   | _                 { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }

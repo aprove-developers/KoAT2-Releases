@@ -30,6 +30,7 @@ let run (params: params) =
           |> GeneralTransitionSet.to_list
         in 
         gts
+        |> List.filter (not % Program.is_initial_gt program)
         |> List.map (LexRSM.find program)
         |> List.filter (Option.is_some)
         |> Util.option_sequence
