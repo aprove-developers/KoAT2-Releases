@@ -1,7 +1,8 @@
 import argparse
+import time
 
-# TODO vorkompilieren hm
-# TODO Drift an den Anfang stellen
+
+start_time = time.clock()
 
 parser = argparse.ArgumentParser(description='Calculate Polynomial from ')
 
@@ -26,7 +27,7 @@ for p in str_probs:
     except:
         probs.append(p)
 
-# can't do irrationals atm
+# can't do irrationals at the moment
 probs = [Rational(p) for p in probs]
 
 m = args.m
@@ -37,8 +38,6 @@ except:
     p_const = Rational(args.p)
 
 # check validity of the input
-
-
 if not m+k+1 == len(probs):
     print("list length does not match given values")
     quit()
@@ -53,7 +52,6 @@ char_coeffs = [(i+k, j-1) if i == 0 else (i+k,j) for (i,j) in zip_list]
 x = polygen(ZZ)
 monoms = [j * x^i for i,j in char_coeffs]
 poly = sum(monoms)
-# print("characteristic polynomial: " + str(poly))
 
 c_lin = -1/drift
 if not p_const == 0:
@@ -61,7 +59,6 @@ if not p_const == 0:
 # Precision Problem
 roots = sage.rings.polynomial.complex_roots.complex_roots(poly, min_prec=precision)
 
-# print("roots: " + str(roots))
 CC = ComplexField(precision)
 RR = RealField(precision)
 roots = [(CC(root), mult) for root,mult in roots if RR(abs(root)) <= 1.]
@@ -85,7 +82,7 @@ for root in filtered_roots:
     else:
         for u in range(filtered_roots[root]):
             if root.real() == RR(1):
-                # For some reason 1.000^x creates a div by zero error?
+                # For some reason 1.000^x creates a div by zero error?!
                 r_monoms.append(x^u)
             else:
                 r_monoms.append(x^u*root.real()^x)
@@ -101,7 +98,11 @@ else:
     r = c_const
 for sol,monom in zip(solution, r_monoms):
     r += sol*monom
+
+total_time = time.clock() - start_time
+
 print("r(x) = " + str(r))
+print("time elapsed: " + str(total_time))
 
 
 
