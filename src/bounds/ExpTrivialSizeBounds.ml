@@ -49,6 +49,10 @@ module GTRV = RVGTypes.Make_RV(struct
                                  let equivalent = GeneralTransition.same
                                end)
 
+
+(* (start_location, target_location, l) *)
+let pr_cache: (Location.t * Location.t * Location.t, OurFloat.t option) Hashtbl.t = Hashtbl.create 10
+
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
@@ -182,8 +186,8 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
    * transitionsystem doesn't get stuck in the subgraphs *)
   let all_guards_tautology_in_invariants =
     let for_subgraph sub = 
-      let gts_from_loc_in_sub l= 
-        sub
+      let gts_from_loc l= 
+        orig_graph
         |> TransitionGraph.transitions
         |> GeneralTransitionSet.from_transitionset
         |> GeneralTransitionSet.filter (Location.equal l % GeneralTransition.start)
@@ -191,7 +195,7 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
       sub
       |> TransitionGraph.locations
       |> LocationSet.to_list
-      |> List.map (fun l -> (l,gts_from_loc_in_sub l))
+      |> List.map (fun l -> (l,gts_from_loc l))
       |> List.map (Tuple2.map2 (List.map 
                                  (Formula.mk % GeneralTransition.guard_without_invariants) % GeneralTransitionSet.to_list))
       |> List.map (Tuple2.map2 (List.fold_left Formula.mk_or Formula.mk_false))
@@ -203,19 +207,7 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
     subs |> List.for_all for_subgraph
   in
 
-  let transitions_going_to_loc_guard_tautology = 
-    let check_for_sub sub = 
-      let locations = TransitionGraph.locations sub in
-      let transitions = 
-        TransitionGraph.transitions orig_graph
-        |> TransitionSet.filter (fun (l,_,l') -> LocationSet.mem l locations && Location.equal l' target_loc)
-      in
-      TransitionSet.for_all guard_holds_by_invariants transitions
-
-    in
-    List.for_all check_for_sub subs
-  in
-
+  (* Check if all transitions in the subgraphs have finite runtime. This also prevents getting stuck in the subgraph *)
   let termination =
     subs
     |> List.for_all
@@ -225,7 +217,9 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
         )
   in
 
-  let no_interleaving =
+  (* Check that all subgraphs are pairwise disjoint *)
+  let disjoint =
+    (* Checks if p is disjoint to all others graphs in rest *)
     let helper_fun g rest =
       ListMonad.(rest >>= (fun g2 ->
                              let lset1 = TransitionGraph.locations g in
@@ -243,6 +237,8 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
     rec_procedure subs
   in
 
+  (* if a general transitions contains a transition leaving the subgraph towards the target location then the set of targets of
+   * this general transition only contains the target location*)
   let all_trans_of_gt_going_to_loc =
     let for_subgraph subgraph =
       TransitionGraph.transitions subgraph
@@ -294,8 +290,8 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
   in
 
   let criteria =
-    [all_guards_tautology_in_invariants;termination;no_interleaving;only_enter_through_entry_loc;
-     all_trans_of_gt_going_to_loc; transitions_going_to_loc_guard_tautology; target_loc_from_all_sub_locations_reachable]
+    [all_guards_tautology_in_invariants;termination;disjoint;only_enter_through_entry_loc;
+     all_trans_of_gt_going_to_loc; target_loc_from_all_sub_locations_reachable]
   in
   Printf.printf "criteria: %s\n" (Util.enum_to_string Bool.to_string (List.enum criteria));
   List.for_all identity criteria
@@ -308,6 +304,17 @@ let subgraph_connected_with_loc (orig_graph: TransitionGraph.t) (subgraph: Trans
   outgoing_trans
   |> TransitionSet.filter (fun (_,_,l) -> Location.equal l loc)
   |> (<) 0 % TransitionSet.cardinal
+
+
+(* Memorizes the already computed pr function values *)
+let lookup_cache graph ((start_location, target_loc, l): Location.t * Location.t * Location.t)  (f: unit -> Location.t -> OurFloat.t option) = 
+  match Hashtbl.find_option pr_cache (start_location, target_loc,l) with
+  | Some p -> p
+  | None ->
+      TransitionGraph.locations graph
+      |> LocationSet.iter (fun l' -> Hashtbl.add pr_cache (start_location, target_loc,l') (f () l'));
+      Hashtbl.find pr_cache (start_location, target_loc,l)
+      
 
 
 let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.t) (locs: LocationSet.t) (loc: Location.t) get_timebound:
@@ -375,7 +382,29 @@ let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.
         | None -> None
         | Some (sub_start,subgraph) ->
             (* Starting the recursive call on the subgraph l is contained in *)
-            let rec_result = Printf.printf "Recurse\n"; (get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound) l in
+
+            let rec_result = 
+              lookup_cache graph (start,loc,l) (fun () -> get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound)
+            in
+
+
+(*
+            let rec_result = 
+              memoize_pr_res 
+                (loc, l, 
+                fun () -> l |> get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound)
+            in
+*)
+(*
+            let rec_func_result = 
+              Printf.printf "Recurse\n"; 
+              memoize_pr_res (loc, fun () -> get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound)  
+            in
+            let rec_result = rec_func_result l in
+*)
+(*
+            let rec_result = l |> get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound in
+*)
             let rel_trans_outgoing =
               graph
               |> TransitionGraph.transitions
@@ -412,10 +441,6 @@ let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.
             | (None,true) -> Some (OurFloat.(/) (probability_reaching_loc sub_start) (total_probability))
             | (Some p, true) -> Some OurFloat.((probability_reaching_loc sub_start / total_probability) * p) )
 
-(* Memorize the calculated pr-functions to improve performance. *)
-let memoize_pr_func = 
-  Util.memoize ~extractor:identity (get_pr)
-
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
 let compute kind program get_sizebound get_expsizebound get_timebound ((gt,loc),var) =
@@ -424,7 +449,10 @@ let compute kind program get_sizebound get_expsizebound get_timebound ((gt,loc),
     let start_loc = Program.start program in
     let locations = TransitionGraph.locations graph in
     let transition_location = GeneralTransition.start gt in
-    let pr_func = memoize_pr_func program graph start_loc locations transition_location get_timebound in
+    let pr_func = fun l -> lookup_cache graph 
+                             (start_loc,transition_location,l) 
+                             (fun () -> get_pr program graph start_loc locations transition_location get_timebound)
+    in
     let exp_poly = ExpLocalSizeBound.exp_poly ((gt,loc),var) in
     let print_pr_func = 
       TransitionGraph.locations graph |> LocationSet.to_list 
@@ -446,3 +474,5 @@ let compute kind program get_sizebound get_expsizebound get_timebound ((gt,loc),
                      ~result:RealBound.to_string
                      execute
 
+let reset_cache = 
+  Hashtbl.clear pr_cache
