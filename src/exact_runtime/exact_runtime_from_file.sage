@@ -15,7 +15,7 @@ def is_probability (in_string):
         return False
 
 def check_label (in_string, label):
-    if in_string[0:len(label)+1] == "(" + label:
+    if in_string[0:len(label)+2] == "(" + label + " ":
         if in_string[-1] == ")":
             return True
     else:
