@@ -37,7 +37,7 @@ if len(lines) < 5 or len(lines) > 6:
     print("Invalid file, wrong length.")
     quit()
 
-if lines[0] != "(GOAL EXACT_RUNTIME)":
+if lines[0] != "(GOAL EXACTRUNTIME)":
     print("Invalid File in line 1: " + lines[0])
     quit()
 
