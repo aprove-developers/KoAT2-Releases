@@ -26,16 +26,20 @@ let max_detsizebound kind ((gt,l),var) get_sizebound =
   |> List.enum
   |> get_bound_from_enum kind
 
+let formula_implied_by_formula formula1 formula2 = 
+  formula2
+  (* Does formula1 always imply formula2 ? *)
+  |> Formula.implies formula1
+  |> Formula.neg
+  (* Try to find a contra *)
+  |> SMT.Z3Solver.unsatisfiable
+
 let guard_holds_by_invariants t = 
   let label = Transition.label t in
   label
   |> TransitionLabel.guard_without_invariants
   |> Formula.mk
-  (* Do the invariants always imply the guard to be true? *)
-  |> Formula.implies (TransitionLabel.invariants label |> Formula.mk)
-  |> Formula.neg
-  (* Try to find a contra *)
-  |> SMT.Z3Solver.unsatisfiable
+  |> formula_implied_by_formula (TransitionLabel.invariants label |> Formula.mk)
 
 module Traverse = Graph.Traverse.Bfs(TransitionGraph)
 module GTRV = RVGTypes.Make_RV(struct
@@ -172,14 +176,31 @@ let only_one_gt_going_to_loc orig_graph target_loc sub =
   GeneralTransitionSet.for_all ((=) 1 % LocationSet.cardinal % GeneralTransition.targets) transitions &&
   GeneralTransitionSet.cardinal transitions = 1
 
-let check_subgraphs_criteria get_timebound orig_graph entry_loc target_loc subs =
+let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_loc subs =
+
+  (* Check if for each location the disjunction of the outgoing transitions guard is always implied by the invariants. I.e. the
+   * transitionsystem doesn't get stuck in the subgraphs *)
   let all_guards_tautology_in_invariants =
-    subs
-    |> List.for_all
-         (TransitionSet.for_all 
-           (guard_holds_by_invariants)
-             
-            % TransitionGraph.transitions)
+    let for_subgraph sub = 
+      let gts_from_loc_in_sub l= 
+        sub
+        |> TransitionGraph.transitions
+        |> GeneralTransitionSet.from_transitionset
+        |> GeneralTransitionSet.filter (Location.equal l % GeneralTransition.start)
+      in
+      sub
+      |> TransitionGraph.locations
+      |> LocationSet.to_list
+      |> List.map (fun l -> (l,gts_from_loc_in_sub l))
+      |> List.map (Tuple2.map2 (List.map 
+                                 (Formula.mk % GeneralTransition.guard_without_invariants) % GeneralTransitionSet.to_list))
+      |> List.map (Tuple2.map2 (List.fold_left Formula.mk_or Formula.mk_false))
+      (* Is the disjunction of the invariants implied by the guard at the given location? *)
+      |> List.map (fun (l, formula) -> formula_implied_by_formula (Program.invariant l program |> Formula.mk) formula)
+      |> List.for_all identity
+    in
+
+    subs |> List.for_all for_subgraph
   in
 
   let transitions_going_to_loc_guard_tautology = 
@@ -289,7 +310,7 @@ let subgraph_connected_with_loc (orig_graph: TransitionGraph.t) (subgraph: Trans
   |> (<) 0 % TransitionSet.cardinal
 
 
-let rec get_pr (graph: TransitionGraph.t) (start: Location.t) (locs: LocationSet.t) (loc: Location.t) get_timebound:
+let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.t) (locs: LocationSet.t) (loc: Location.t) get_timebound:
   (Location.t-> OurFloat.t option) =
   let subgraph_cardinals_combined transitions_and_graphs_list =
     List.fold_left (fun ctr (_,g) -> ctr + (LocationSet.cardinal (TransitionGraph.locations g) )) 0 transitions_and_graphs_list
@@ -330,7 +351,7 @@ let rec get_pr (graph: TransitionGraph.t) (start: Location.t) (locs: LocationSet
     |> List.filter (fun (_,sub_graph_list) -> (List.length sub_graph_list) > 0)
     (* Sort by cardinality of all subgraphs combined *)
     |> List.sort (fun (_,a) (_,b) -> (flip Int.compare) (subgraph_cardinals_combined a) (subgraph_cardinals_combined b))
-    |> List.filter (fun (lentry,subs) -> List.map Tuple2.second subs |> check_subgraphs_criteria get_timebound graph lentry loc)
+    |> List.filter (fun (lentry,subs) -> List.map Tuple2.second subs |> check_subgraphs_criteria program get_timebound graph lentry loc)
     |> tap (Printf.printf "final_length: %i\n" % List.length)
     |> tap (fun l -> let lenum = List.enum l in
                      Printf.printf "subgraphs: %s\n" (Util.enum_to_string (fun (candidate, sublist) -> Location.to_string
@@ -354,7 +375,7 @@ let rec get_pr (graph: TransitionGraph.t) (start: Location.t) (locs: LocationSet
         | None -> None
         | Some (sub_start,subgraph) ->
             (* Starting the recursive call on the subgraph l is contained in *)
-            let rec_result = Printf.printf "Recurse\n"; (get_pr graph sub_start (TransitionGraph.locations subgraph) loc get_timebound) l in
+            let rec_result = Printf.printf "Recurse\n"; (get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound) l in
             let rel_trans_outgoing =
               graph
               |> TransitionGraph.transitions
@@ -403,7 +424,7 @@ let compute kind program get_sizebound get_expsizebound get_timebound ((gt,loc),
     let start_loc = Program.start program in
     let locations = TransitionGraph.locations graph in
     let transition_location = GeneralTransition.start gt in
-    let pr_func = memoize_pr_func graph start_loc locations transition_location get_timebound in
+    let pr_func = memoize_pr_func program graph start_loc locations transition_location get_timebound in
     let exp_poly = ExpLocalSizeBound.exp_poly ((gt,loc),var) in
     let print_pr_func = 
       TransitionGraph.locations graph |> LocationSet.to_list 
