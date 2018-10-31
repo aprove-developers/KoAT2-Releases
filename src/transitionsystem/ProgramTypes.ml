@@ -12,7 +12,14 @@ module Location =
     let of_string name = name               
   end
 
-module LocationSet = Set.Make(Location)
+module LocationSet = 
+  struct
+    include Set.Make(Location)
+
+    let to_string = 
+      Util.enum_to_string Location.to_string % enum
+
+  end
 
 module Transition =
   struct
@@ -46,7 +53,7 @@ module Transition =
       compare TransitionLabel.compare_equivalent
 
     let add_invariant invariant (l,t,l') =
-      (l, TransitionLabel.map_guard (Constraint.mk_and invariant) t, l')
+      (l, TransitionLabel.add_invariant invariant t, l')
       
     let src (src, _, _) = src
                         
@@ -120,6 +127,15 @@ module TransitionGraph =
       |> List.fold_left (fun result transition ->
              replace_edge_e transition (Transition.add_invariant invariant transition) result
            ) graph          
+
+    let to_string graph = 
+      let transition_str = 
+        transitions graph |> TransitionSet.enum |> Util.enum_to_string (Transition.to_id_string)
+      in
+      let location_str = 
+        locations graph |> LocationSet.enum |> Util.enum_to_string (Location.to_string)
+      in
+      "transitions: " ^ transition_str ^ " locations: " ^ location_str
       
   end
 

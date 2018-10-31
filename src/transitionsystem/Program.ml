@@ -4,10 +4,16 @@ open Formulas
 
 open ProgramTypes
 
+module LocationMap = Map.Make (Location)
+
 type t = {
     graph: TransitionGraph.t;
     start: Location.t;
+    invariants: Constraint.t LocationMap.t;
   }
+
+let empty_inv_map locations =
+  LocationSet.fold (fun loc inv_map -> LocationMap.add loc Constraint.mk_true inv_map) locations (LocationMap.empty)
 
 let equal equal_graph program1 program2 =
   equal_graph program1.graph program2.graph
@@ -35,6 +41,9 @@ let remove_transition program transition =
 let map_graph f program =
   { program with graph = f program.graph }
 
+let map_invariants f program =
+  { program with invariants = f program.invariants }
+
 let locations transitions =
   transitions
   |> Enum.concat_map (fun (l,_,l') -> List.enum [l; l'])
@@ -61,9 +70,11 @@ let rename program =
     |> Location.of_string
   in
   let new_start = name program.start in
+  let new_graph = TransitionGraph.map_vertex name program.graph in
   {
-    graph = TransitionGraph.map_vertex name program.graph;
+    graph = new_graph;
     start = new_start;
+    invariants = empty_inv_map (TransitionGraph.locations new_graph)
   }
 
 let from transitions start =
@@ -72,14 +83,18 @@ let from transitions start =
      if transitions |> List.map Transition.target |> List.mem_cmp Location.compare start then
        raise (Failure "Transition leading back to the initial location.")
      else
+       let new_graph = mk (List.enum transitions) in
        {
-         graph = mk (List.enum transitions);
+         graph = new_graph;
          start = start;
+         invariants = empty_inv_map (TransitionGraph.locations new_graph)
        }
 
 let start program = program.start
 
 let graph g = g.graph
+
+let invariant location program = LocationMap.find location (program.invariants)
 
 let transitions =
   TransitionGraph.transitions % graph
@@ -131,8 +146,9 @@ let sccs program =
 let non_trivial_transitions =
   Enum.fold TransitionSet.union TransitionSet.empty % sccs
 
-let add_invariant location invariant =
-  map_graph (TransitionGraph.add_invariant location invariant)
+let add_invariant location invariant program =
+  map_graph (TransitionGraph.add_invariant location invariant) program
+  |> map_invariants (LocationMap.modify location (Constraint.mk_and invariant))
 
 let is_initial program trans =
   Location.(equal (program.start) (Transition.src trans))

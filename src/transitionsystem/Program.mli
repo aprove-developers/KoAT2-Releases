@@ -27,6 +27,8 @@ val from : Transition.t list -> Location.t -> t
 
 val graph : t -> TransitionGraph.t
 
+val invariant: Location.t -> t -> Constraint.t
+
 (** Adds the invariant to the location of the program. *)
 val add_invariant : Location.t -> Constraint.t -> t -> t
 
