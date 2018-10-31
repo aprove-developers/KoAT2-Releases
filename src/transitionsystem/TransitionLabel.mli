@@ -68,11 +68,13 @@ val update : t -> Var.t -> UpdateElement.t Option.t
 val update_map : t -> UpdateElement.t VarMap.t
 
 val guard : t -> Guard.t
+val guard_without_invariants: t -> Guard.t
+val invariants: t -> Guard.t
 
 val probability : t -> OurFloat.t
 
-(** Returns a new transition label with the guard changed. *)
-val map_guard : (Guard.t -> Guard.t) -> t -> t
+(* Adds an invariant to a transition Label *)
+val add_invariant: Guard.t -> t -> t
 
 val default : t
 

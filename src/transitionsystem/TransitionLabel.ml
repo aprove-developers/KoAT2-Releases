@@ -47,6 +47,8 @@ type t = {
     id : int;
     update : UpdateElement.t VarMap.t;
     guard : Guard.t;
+    guard_without_invariants: Guard.t;
+    invariants: Guard.t;
     cost : Polynomial.t;
     probability : OurFloat.t;
   }
@@ -63,6 +65,7 @@ let make ?(cost = one)  com_kind ~update ~guard =
   {
     id = unique ();
     update; guard; cost; probability=1. |> OurFloat.of_float;
+    guard_without_invariants = guard; invariants = Guard.mk_true;
   }
 
 (* Generates a probabilistic label, needs a name to distinguish different labels belonging to the same transition *)
@@ -73,6 +76,7 @@ let make_prob ?(cost = one)  com_kind ~update ~guard ~id ~(probability: OurFloat
   {
     id = id;
     update; guard; cost; probability=probability;
+    guard_without_invariants = guard; invariants = Guard.mk_true;
   }
 
 let same lbl1 lbl2 =
@@ -119,7 +123,8 @@ let mk ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars =
       |> Enum.map (fun (var, assignment) -> VarMap.add var (assignment))
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
       |> fun update -> { id = unique ();
-                        update; guard; cost; probability=1 |> OurFloat.of_int;}
+                        update; guard; cost; probability=1 |> OurFloat.of_int; guard_without_invariants = guard; 
+                        invariants = Guard.mk_true;}
                         
 let mk_prob ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars ~id ~probability =
   if List.length targets != 1 then raise RecursionNotSupported else
@@ -133,7 +138,8 @@ let mk_prob ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars ~id ~probabi
         |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
         |> Enum.fold (fun map adder -> adder map) VarMap.empty 
         |> fun update -> { id = id;
-                          update; guard; cost; probability=probability;}
+                          update; guard; cost; probability=probability; guard_without_invariants = guard; 
+                          invariants = Guard.mk_true;}
                     
 (*
 Chaining can not be represented in the probabilistic update case 
@@ -163,6 +169,9 @@ let append t1 t2 =
     VarMap.map (UpdateElement.substitute (substitution (get_update_polynomials t1.update))) t2.update
   and new_guard =
     Guard.Infix.(t1.guard && Guard.map_polynomial (Polynomial.substitute_f (substitution (get_update_polynomials t1.update))) t2.guard)
+  and new_guard_without_invariants =
+    Guard.Infix.(t1.guard_without_invariants && Guard.map_polynomial (Polynomial.substitute_f (substitution
+      (get_update_polynomials t1.update))) t2.guard_without_invariants)
   in
   {
     id = unique ();
@@ -170,6 +179,8 @@ let append t1 t2 =
     guard = new_guard;
     cost = Polynomial.(t1.cost + t2.cost);
     probability = OurFloat.(t1.probability * t2.probability);
+    guard_without_invariants = new_guard_without_invariants;
+    invariants = t2.invariants;
   }
 
 let append_guard t1 t2 =
@@ -215,9 +226,14 @@ let update t var = VarMap.Exceptionless.find var t.update
 let update_map t = t.update
                  
 let guard t = t.guard
+let guard_without_invariants t = t.guard_without_invariants
+let invariants t = t.invariants
 
-let map_guard f label =
-  { label with guard = f label.guard }
+let add_invariant inv label = 
+  let new_guard = Guard.mk_and label.guard inv in
+  let new_invariants = Guard.mk_and label.invariants inv in
+  {label with guard = new_guard; invariants = new_invariants}
+
 
 let cost t = t.cost
 
@@ -242,6 +258,8 @@ let default = {
     id = 0;
     update = VarMap.empty;
     guard = Guard.mk_true;
+    guard_without_invariants = Guard.mk_true;
+    invariants = Guard.mk_true;
     cost = one;
     probability = 1. |> OurFloat.of_float
   }
@@ -328,6 +346,8 @@ let rename standard_vars t =
     id = t.id;
     update = rename_update t.update rename_map;
     guard = Guard.rename t.guard rename_map;
+    guard_without_invariants = Guard.rename t.guard_without_invariants rename_map;
+    invariants = Guard.rename t.invariants rename_map;
     cost = Polynomial.rename rename_map t.cost;
     probability = t.probability;
   }
