@@ -1,41 +1,74 @@
 import argparse
 import time
 
+def make_probability (in_string):
+    try: 
+        return Rational(float(in_string))
+    except:
+        return Rational(in_string)
+
+def is_probability (in_string):
+    try:
+        make_probability(in_string)
+        return True
+    except:
+        return False
+
+def check_label (in_string, label):
+    if in_string[0:len(label)+1] == "(" + label:
+        if in_string[-1] == ")":
+            return True
+    else:
+        return False
+
 
 start_time = time.clock()
 
-parser = argparse.ArgumentParser(description='Calculate exact runtime from parameters')
-
-
-parser.add_argument('prec', metavar='prec', type=int, help="precision")
-parser.add_argument('m', metavar='m', type=int, help='m')
-parser.add_argument('k', metavar='k', type=int, help='k')
-parser.add_argument('p', metavar='p', type=str, help="p'")
-
-parser.add_argument('probs', metavar='probs', type=str, nargs='+',
-                    help='probabilities in descending order')
-
+parser = argparse.ArgumentParser(description='Calculate exact runtime from file')
+parser.add_argument('filepath', metavar='f', type=str, help="path to file to read from")
 args = parser.parse_args()
 
-precision = args.prec
+with open(args.filepath) as f:
+    lines = [e.strip() for e in f.readlines()]
 
-str_probs = args.probs
-probs = []
-for p in str_probs:
-    try:
-        probs.append(float(p))
-    except:
-        probs.append(p)
 
-# can't do irrationals at the moment
-probs = [Rational(p) for p in probs]
+# check file validity and assign variables
+if len(lines) < 5 or len(lines) > 6:
+    print("Invalid file, wrong length.")
+    quit()
 
-m = args.m
-k = args.k
-try:
-    p_const = Rational(float(args.p))
-except:
-    p_const = Rational(args.p)
+if lines[0] != "(GOAL EXACT_RUNTIME)":
+    print("Invalid File in line 1: " + lines[0])
+    quit()
+
+if not check_label(lines[1], "M") or not lines[1][3:-1].isdigit():
+    print("Invalid File in line 2: " + lines[1])
+    quit()
+m = int(lines[1][3:-1])
+
+if not check_label(lines[2], "K") or not lines[2][3:-1].isdigit():
+    print("Invalid File in line 3: " + lines[2])
+    quit()
+k = int(lines[2][3:-1])
+
+if not check_label(lines[3], "P'") or not is_probability(lines[3][4:-1]):
+    print("Invalid File in line 4: " + lines[3])
+    quit()
+p_const = make_probability(lines[3][4:-1])
+
+str_probs = lines[4][15:-1].split(" ")
+if not check_label(lines[4], "PROBABILITIES") or not all([is_probability(e) for e in str_probs]):
+    print("Invalid File in line 5: " + lines[4])
+    quit()
+probs = [make_probability(e) for e in str_probs]
+
+if len(lines) == 6:
+    if not check_label(lines[5], "PRECISION") or not lines[5][11:-1].isdigit():
+        print("Invalid File in line 6: " + lines[5])
+        quit()
+    precision = int(lines[5][11:-1])
+else:
+    precision = 100
 
 # check validity of the input
 if not m+k+1 == len(probs):
