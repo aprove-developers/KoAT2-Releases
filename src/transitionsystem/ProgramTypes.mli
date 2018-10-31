@@ -12,7 +12,11 @@ sig
   val to_string : t -> string
   val of_string : string -> t
 end
-module LocationSet : module type of Set.Make(Location)
+module LocationSet : 
+sig
+  include module type of Set.Make(Location)
+  val to_string: t -> string
+end
 
 module Transition :
 sig
@@ -52,6 +56,7 @@ sig
   val replace_edge_e : Transition.t -> Transition.t -> t -> t
   (** Adds the invariant to the location of the graph. *)
   val add_invariant : Location.t -> Constraint.t -> t -> t
+  val to_string: t -> string
 end
 
 module GeneralTransition :
