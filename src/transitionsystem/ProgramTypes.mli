@@ -72,6 +72,8 @@ sig
   val same : t -> t -> bool
   val id: t -> int
   val guard: t -> TransitionLabel.Guard.t
+  val invariants: t -> TransitionLabel.Guard.t
+  val guard_without_invariants: t -> TransitionLabel.Guard.t
   val total_probability: t -> OurFloat.t
   val input_vars: t -> VarSet.t
   val vars: t -> VarSet.t
