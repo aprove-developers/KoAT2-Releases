@@ -238,7 +238,8 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
   in
 
   (* if a general transitions contains a transition leaving the subgraph towards the target location then the set of targets of
-   * this general transition only contains the target location*)
+   * this general transition only contains the target location. Also there is only on gt leaving each subgraph and entering the
+   * target location*)
   let all_trans_of_gt_going_to_loc =
     let for_subgraph subgraph =
       TransitionGraph.transitions subgraph
@@ -250,48 +251,9 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
     List.for_all for_subgraph subs
   in
 
-  let only_enter_through_entry_loc =
-    let cut_graph = TransitionGraph.remove_vertex orig_graph entry_loc in
-    let for_subgraph subgraph =
-      let locations_in_sub = TransitionGraph.locations subgraph in
-      let locations_notin_sub = LocationSet.diff (TransitionGraph.locations orig_graph) locations_in_sub
-      in
-      TransitionGraph.transitions cut_graph
-      |> TransitionSet.filter (fun (l,_,l') -> LocationSet.mem l  locations_in_sub &&
-                                               LocationSet.mem l' locations_notin_sub && not (Location.equal target_loc l'))
-      |> TransitionSet.cardinal
-      |> (=) 0
-    in
-    List.for_all for_subgraph subs
-  in
-
-  let target_loc_from_all_sub_locations_reachable = 
-    let subgraph_with_added_target subgraph = 
-      let subgraph_locs = TransitionGraph.locations subgraph in
-      let transitions_to_add = 
-        TransitionGraph.transitions orig_graph 
-        |> TransitionSet.filter (fun (l,_,l') -> Location.equal l' target_loc && 
-                                                 LocationSet.mem l subgraph_locs)
-      in
-      TransitionSet.fold (flip TransitionGraph.add_edge_e) transitions_to_add subgraph
-    in
-
-    let for_subgraph subgraph =
-      let graph_check = subgraph_with_added_target subgraph in
-      let reachable_locs start = 
-        Traverse.fold_component LocationSet.add LocationSet.empty graph_check start
-      in
-
-      TransitionGraph.locations graph_check
-      |> LocationSet.for_all (LocationSet.mem target_loc % reachable_locs)
-    in
-
-    List.for_all for_subgraph subs
-  in
-
   let criteria =
-    [all_guards_tautology_in_invariants;termination;disjoint;only_enter_through_entry_loc;
-     all_trans_of_gt_going_to_loc; target_loc_from_all_sub_locations_reachable]
+    [all_guards_tautology_in_invariants;termination;disjoint;
+     all_trans_of_gt_going_to_loc]
   in
   Printf.printf "criteria: %s\n" (Util.enum_to_string Bool.to_string (List.enum criteria));
   List.for_all identity criteria
@@ -307,13 +269,16 @@ let subgraph_connected_with_loc (orig_graph: TransitionGraph.t) (subgraph: Trans
 
 
 (* Memorizes the already computed pr function values *)
-let lookup_cache graph ((start_location, target_loc, l): Location.t * Location.t * Location.t)  (f: unit -> Location.t -> OurFloat.t option) = 
-  match Hashtbl.find_option pr_cache (start_location, target_loc,l) with
+let lookup_cache graph ((start_location, target_location, l): Location.t * Location.t * Location.t)  (f: unit -> Location.t -> OurFloat.t option) = 
+  match Hashtbl.find_option pr_cache (start_location, target_location,l) with
   | Some p -> p
   | None ->
+      let pr_function = f () in 
       TransitionGraph.locations graph
-      |> LocationSet.iter (fun l' -> Hashtbl.add pr_cache (start_location, target_loc,l') (f () l'));
-      Hashtbl.find pr_cache (start_location, target_loc,l)
+      |> LocationSet.iter (fun l' -> Hashtbl.add pr_cache (start_location, target_location,l') (pr_function l'));
+      Printf.printf "add_to_cache: start_location: %s target_location: %s\n" (Location.to_string start_location) (Location.to_string
+      target_location);
+      Hashtbl.find pr_cache (start_location, target_location,l)
       
 
 
@@ -329,7 +294,7 @@ let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.
     |> tap (fun _ -> if Location.to_string loc = "k" then Printf.printf "\n\n\n\n")
     |> tap (Printf.printf "start candidates start: %s     loc: %s \n" (Location.to_string start) (Location.to_string loc) |> const)
     |> LocationSet.to_list
-    (* We don't want to branch on locations that are the same as target locations. We can handle these without a pr func *)
+    (* We don't want to branch on locations that are the same as target locations. *)
     |> List.filter (not % Location.equal loc)
     |> List.filter (fun ml -> every_path_enters_loc graph start ml loc)
     |> tap (Printf.printf "every_path_enters: %s\n" % Util.enum_to_string Location.to_string % List.enum)
@@ -381,65 +346,51 @@ let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.
         match is_contained_in_sub with
         | None -> None
         | Some (sub_start,subgraph) ->
-            (* Starting the recursive call on the subgraph l is contained in *)
+            (* Starting the recursive call on the subgraph l is contained in 
+             * but first check if it was already memoized*)
 
-            let rec_result = 
-              lookup_cache graph (start,loc,l) (fun () -> get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound)
-            in
+            match Hashtbl.find_option pr_cache (start,loc,l) with
+            | Some p -> p
+            | None -> 
+                let rec_result = 
+                  lookup_cache graph (sub_start,loc,l) (fun () -> get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound)
+                in
 
+                let rel_trans_outgoing =
+                  graph
+                  |> TransitionGraph.transitions
+                  |> GeneralTransitionSet.from_transitionset
+                  |> GeneralTransitionSet.filter (Location.equal lentry % GeneralTransition.start)
+                  |> GeneralTransitionSet.to_list
+                  (* There is always exactly one outgoing gt *)
+                  |> List.hd
+                  |> GeneralTransition.transitions
+                  |> TransitionSet.filter (fun t -> List.exists (Location.equal (Transition.target t) % Tuple2.first) subs)
+                in
+                let total_probability =
+                  rel_trans_outgoing |> TransitionSet.to_list |> List.map (TransitionLabel.probability % Transition.label)
+                  |> List.fold_left OurFloat.(+) OurFloat.zero
+                in
+                let probability_reaching_loc l =
+                  rel_trans_outgoing |> TransitionSet.filter (Location.equal l % Transition.target)
+                  |> TransitionSet.to_list |> List.map (TransitionLabel.probability % Transition.label)
+                  |> List.fold_left (OurFloat.(+)) (OurFloat.of_float 0.0)
+                in
 
-(*
-            let rec_result = 
-              memoize_pr_res 
-                (loc, l, 
-                fun () -> l |> get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound)
-            in
-*)
-(*
-            let rec_func_result = 
-              Printf.printf "Recurse\n"; 
-              memoize_pr_res (loc, fun () -> get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound)  
-            in
-            let rec_result = rec_func_result l in
-*)
-(*
-            let rec_result = l |> get_pr program graph sub_start (TransitionGraph.locations subgraph) loc get_timebound in
-*)
-            let rel_trans_outgoing =
-              graph
-              |> TransitionGraph.transitions
-              |> GeneralTransitionSet.from_transitionset
-              |> GeneralTransitionSet.filter (Location.equal lentry % GeneralTransition.start)
-              |> GeneralTransitionSet.to_list
-              (* There is always exactly one outgoing gt *)
-              |> List.hd
-              |> GeneralTransition.transitions
-              |> TransitionSet.filter (fun t -> List.exists (Location.equal (Transition.target t) % Tuple2.first) subs)
-            in
-            let total_probability =
-              rel_trans_outgoing |> TransitionSet.to_list |> List.map (TransitionLabel.probability % Transition.label)
-              |> List.fold_left OurFloat.(+) OurFloat.zero
-            in
-            let probability_reaching_loc l =
-              rel_trans_outgoing |> TransitionSet.filter (Location.equal l % Transition.target)
-              |> TransitionSet.to_list |> List.map (TransitionLabel.probability % Transition.label)
-              |> List.fold_left (OurFloat.(+)) (OurFloat.of_float 0.0)
-            in
+                (* if the recursive call to get_pr returns None, then no subgraphs exists such that the pr function can be refined.
+                 * Therefore we check here if there is only outgoing gt to the target location in the current subgraph*)
+                let is_valid = 
+                  match rec_result with
+                  | None -> only_one_gt_going_to_loc graph loc subgraph 
+                  | Some _ -> true 
+                in
+                Printf.printf "Recursion done: is_valid = %b, loc = %s, l_entry = %s\n" is_valid (Location.to_string loc)
+                (Location.to_string lentry);
 
-            (* if the recursive call to get_pr returns None, then no subgraphs exists such that the pr function can be refined.
-             * Therefore we check here if there is only outgoing gt to the target location in the current subgraph*)
-            let is_valid = 
-              match rec_result with
-              | None -> only_one_gt_going_to_loc graph loc subgraph 
-              | Some _ -> true 
-            in
-            Printf.printf "Recursion done: is_valid = %b, loc = %s, l_entry = %s\n" is_valid (Location.to_string loc)
-            (Location.to_string lentry);
-
-            match (rec_result, is_valid) with
-            | (_, false) -> None
-            | (None,true) -> Some (OurFloat.(/) (probability_reaching_loc sub_start) (total_probability))
-            | (Some p, true) -> Some OurFloat.((probability_reaching_loc sub_start / total_probability) * p) )
+                match (rec_result, is_valid) with
+                | (_, false) -> None
+                | (None,true) -> Some (OurFloat.(/) (probability_reaching_loc sub_start) (total_probability))
+                | (Some p, true) -> Some OurFloat.((probability_reaching_loc sub_start / total_probability) * p) )
 
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
