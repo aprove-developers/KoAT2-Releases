@@ -128,7 +128,7 @@ module GeneralTransition =
     let of_transitionset transset (l,t,l') = 
       let new_trans = TransitionSet.filter (fun (l2, t2, l2') -> TransitionLabel.same_gt t t2 && Location.equal l l2) transset in
       {
-        id = TransitionLabel.id t; start = l; guard = TransitionLabel.guard t; transitions = new_trans;
+        id = TransitionLabel.gt_id t; start = l; guard = TransitionLabel.guard t; transitions = new_trans;
         guard_without_invariants = TransitionLabel.guard_without_invariants t; invariants = TransitionLabel.invariants t;
       }
 
