@@ -10,6 +10,7 @@ let subcommand run params_cmdliner_term description command =
 let subcommands =
   [
     AnalyseCommand.(subcommand run params_cmdliner_term description command);
+    PAnalyseCommand.(subcommand run params_cmdliner_term description command);
     PrfCommand.(subcommand run params_cmdliner_term description command);
     LocalSizeBoundCommand.(subcommand run params_cmdliner_term description command);
     SizeCommand.(subcommand run params_cmdliner_term description command);
