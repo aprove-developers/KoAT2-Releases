@@ -98,6 +98,9 @@ let make_prob ?(cost = one)  com_kind ~update ~guard ~gt_id ~(probability: OurFl
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
 
+let same_gt lbl1 lbl2 = 
+  lbl1.gt_id = lbl2.gt_id
+
 let equivalent lbl1 lbl2 =
   VarMap.equal UpdateElement.equal lbl1.update lbl2.update
   && Guard.equal lbl1.guard lbl2.guard

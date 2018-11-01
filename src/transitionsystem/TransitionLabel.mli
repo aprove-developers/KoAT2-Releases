@@ -54,8 +54,11 @@ val append : t -> t -> t
 (** Returns a guard which constraints the possibility for the second label beeing evaluated in sequence with the first one *)
 val append_guard : t -> t -> Guard.t
 
-(** Returns if the two labels are the same entity. *)
+(** Returns true iff the two labels are the same entity. *)
 val same : t -> t -> bool
+
+(** Returns true iff the two labels belong to the same general transition *)
+val same_gt : t -> t -> bool
 
 (** Returns if the two labels describe the same transition *)
 val equivalent : t -> t -> bool

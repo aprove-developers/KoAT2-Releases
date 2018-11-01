@@ -32,6 +32,9 @@ module Transition =
       
     let same =
       equal TransitionLabel.same
+
+    let same_gt =
+      equal TransitionLabel.same_gt
       
     let equivalent =
       equal TransitionLabel.equivalent
@@ -123,7 +126,7 @@ module GeneralTransition =
     let same gt1 gt2 = gt1.id = gt2.id
 
     let of_transitionset transset (l,t,l') = 
-      let new_trans = TransitionSet.filter (fun (l2, t2, l2') -> TransitionLabel.same t t2 && Location.equal l l2) transset in
+      let new_trans = TransitionSet.filter (fun (l2, t2, l2') -> TransitionLabel.same_gt t t2 && Location.equal l l2) transset in
       {
         id = TransitionLabel.id t; start = l; guard = TransitionLabel.guard t; transitions = new_trans;
         guard_without_invariants = TransitionLabel.guard_without_invariants t; invariants = TransitionLabel.invariants t;
