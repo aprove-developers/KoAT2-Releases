@@ -18,8 +18,8 @@ let default kind =
 
 module Solver = SMT.IncrementalZ3Solver
 
-(* a function f is concave in a variable var iff for all a b it holds 
- * f (t*a + (1-t) * b) <= t*f(a) + (1-t) * f(b) *)
+(* a polynom f is concave (convexe) in a variable var iff for all a b it holds 
+ * f'' (a) < 0 ( f'' (a) > 0) *)
 let concave_convex_check comp_operator guard poly var = 
   let solver = Solver.create () in
   let poly = 
@@ -27,7 +27,6 @@ let concave_convex_check comp_operator guard poly var =
     |> RealPolynomial.derivative var
   in
   let formula = comp_operator poly (OurFloat.of_int 0 |> RealPolynomial.of_constant) in
-  Printf.printf "Formula: %s\n" (RealFormula.neg formula |> RealFormula.to_string);
   Solver.add_real solver guard;
   Solver.add_real solver (RealFormula.neg formula);
   Solver.unsatisfiable solver 
