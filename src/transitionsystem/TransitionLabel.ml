@@ -238,6 +238,7 @@ let append_guard t1 t2 =
   new_guard
 
 let id t = t.id
+let gt_id t = t.gt_id
              
 let update t var = VarMap.Exceptionless.find var t.update                    
 let update_map t = t.update
@@ -331,8 +332,8 @@ let update_to_string_rhs t =
   "ID: " ^ string_of_int label.id ^ ", " ^ (update_to_string_lhs label)^ probability ^ cost ^ update_to_string_rhs label ^ guard 
   
 
-let to_id_string =          
-  string_of_int % id
+let to_id_string t =          
+  (id t |> string_of_int) ^ "," ^ (gt_id t |> string_of_int)
 
 let input_vars t = 
   t.update

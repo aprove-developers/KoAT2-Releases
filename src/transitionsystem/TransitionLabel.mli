@@ -65,6 +65,7 @@ val compare_same : t -> t -> int
 val compare_equivalent : t -> t -> int
 
 val id : t -> int
+val gt_id : t -> int
 
 val update : t -> Var.t -> UpdateElement.t Option.t
 val update_map : t -> UpdateElement.t VarMap.t

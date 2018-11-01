@@ -69,7 +69,7 @@ module Transition =
     let hash = Hashtbl.hash % id
 
     let to_id_string (l,label,l') =
-      (Int.to_string % TransitionLabel.id) label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
+      TransitionLabel.to_id_string label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
 
     let to_string (l,t,l') =
       let probability = if (TransitionLabel.probability t) = (1. |> OurFloat.of_float) then "" else "p:"^(OurFloat.to_string (TransitionLabel.probability t))^":" 
