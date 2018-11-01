@@ -26,7 +26,7 @@ let run (params: params) =
           |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne])
           (* get program *)
           |> Tuple2.first
-          |> Program.transitions |> GeneralTransitionSet.from_transitionset
+          |> Program.generalized_transitions
           |> GeneralTransitionSet.to_list
         in 
         gts

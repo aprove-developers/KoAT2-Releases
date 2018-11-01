@@ -9,7 +9,7 @@ let logger = Logging.(get Time)
     These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
 let entry_transitions (program: Program.t) (rank_transitions: GeneralTransition.t list): ((GeneralTransition.t * Location.t) Enum.t) =
   let gts =
-    Program.transitions program |> GeneralTransitionSet.from_transitionset |> GeneralTransitionSet.to_list
+    Program.generalized_transitions program |> GeneralTransitionSet.to_list
   in
   let single_entry_transitions =
     rank_transitions
@@ -124,7 +124,7 @@ let exp_bounded appr transition =
 let improve program appr =
   program
   |> Program.non_trivial_transitions
-  |> GeneralTransitionSet.from_transitionset
+  |> GeneralTransitionSet.of_transitionset
   |> GeneralTransitionSet.filter (fun t -> not (exp_bounded appr t))
   |> GeneralTransitionSet.enum
   |> MaybeChanged.fold_enum (fun appr gt ->

@@ -129,7 +129,7 @@ let pre program (l,t,_) =
        )
 
 let pre_gt program gt =
-  let gts = transitions program |> GeneralTransitionSet.from_transitionset in
+  let gts = transitions program |> GeneralTransitionSet.of_transitionset in
   let pre_ts = pre program (GeneralTransition.transitions gt |> TransitionSet.any) |> TransitionSet.of_enum in
   gts
   |> GeneralTransitionSet.filter (TransitionSet.exists (fun t -> TransitionSet.mem t pre_ts) % GeneralTransition.transitions)
@@ -174,9 +174,7 @@ let to_simple_string program =
   TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph ""
 
 let test program trans g_set =
-  GeneralTransitionSet.add (GeneralTransition.from_transitionset (program |> transitions) trans) g_set
+  GeneralTransitionSet.add (GeneralTransition.of_transitionset (program |> transitions) trans) g_set
 
 let generalized_transitions program =
-      TransitionSet.fold (fun trans g_set -> GeneralTransitionSet.add (GeneralTransition.from_transitionset (program |> transitions) trans) g_set)
-                (program |> transitions)
-                GeneralTransitionSet.empty
+  GeneralTransitionSet.of_transitionset (transitions program)

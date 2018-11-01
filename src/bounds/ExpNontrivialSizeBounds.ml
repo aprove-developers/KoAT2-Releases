@@ -5,7 +5,7 @@ open RVGTypes
 open Polynomials
 open Formulas
 
-let logger = Logging.(get Size)
+let logger = Logging.(get ExpNontrivialSize)
 
 module RV = Make_RV(RVTransitions.TransitionForExpectedSize)
 module Solver = SMT.IncrementalZ3Solver
@@ -54,6 +54,7 @@ let compute_
   let result_variable_effect_exp rv: RealBound.t =
     let gt = RV.transition rv |> RVTransitions.TransitionForExpectedSize.gt in
     let target_loc = RV.transition rv |> RVTransitions.TransitionForExpectedSize.loc in
+
     let polynomial_exp_var_change: RealPolynomial.t option =
       let update_exp_poly = ExpLocalSizeBound.exp_poly rv in
       let update_scc_vars = 
@@ -61,13 +62,15 @@ let compute_
         |> RealPolynomial.vars
         |> VarSet.inter (scc_variables rv |> VarSet.of_enum) 
       in
-      if VarSet.cardinal update_scc_vars = 1 then 
+      if VarSet.cardinal update_scc_vars >= 1 then 
         RealPolynomial.sub update_exp_poly (VarSet.any update_scc_vars |> RealPolynomial.of_var)
         |> ExpLocalSizeBound.simplify_poly_with_guard gt
+        |> tap (Printf.printf "exp_poly: %s\n" % RealPolynomial.to_string)
         |> fun x -> Some x
       else
         None
     in
+
     let var_bounds sign v =
       let bounds =
         ERVG.pre rvg rv
@@ -81,6 +84,7 @@ let compute_
       | `Upper -> RealBound.maximum bounds |> RealBound.(max zero)
       | `Lower -> RealBound.minimum bounds |> RealBound.(min zero)
     in
+
     let exp_var_bounds sign v =
       let bounds =
         ERVG.pre rvg rv
@@ -142,7 +146,7 @@ let compute_
     in
 
     let calc_bound (timebound,sizebound) = 
-      if RealBound.is_infinity (timebound) then
+      if RealBound.is_infinity timebound then
         if RealBound.(equal zero sizebound) then
           RealBound.zero
         else
@@ -159,6 +163,9 @@ let compute_
 
     let sizebound1 = var_change_bound in
     let sizebound2 = exp_var_change_bound in
+
+    Printf.printf "timebound1: %s  sizebound1: %s\n" (RealBound.to_string timebound1) (RealBound.to_string sizebound1);
+    Printf.printf "timebound2: %s  sizebound2: %s\n" (RealBound.to_string timebound2) (RealBound.to_string sizebound2);
 
     let bounds = [timebound1, sizebound1; timebound2, sizebound2] |> List.map (calc_bound) |> List.enum in
     
@@ -189,6 +196,8 @@ let compute_
   in
 
   loop_effect
+  |> tap (fun _ -> Printf.printf "starting_value: %s\n" (RealBound.to_string starting_value_exp))
+  |> tap (fun _ -> Printf.printf "loop_effect %s\n" (RealBound.to_string loop_effect))
   |> fun loop_effect -> 
        RealBound.(starting_value_exp + loop_effect)
 

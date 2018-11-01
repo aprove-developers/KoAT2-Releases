@@ -30,7 +30,7 @@ let empty transitioncount varcount gtcount = {
 let create program =
   empty (TransitionGraph.nb_edges (Program.graph program))
         (VarSet.cardinal (Program.vars program))
-        (Program.transitions program |> GeneralTransitionSet.from_transitionset |> GeneralTransitionSet.cardinal)
+        (Program.generalized_transitions program |> GeneralTransitionSet.cardinal)
 
 let time appr = appr.time
 
@@ -133,7 +133,7 @@ let to_string program appr =
     IO.nwrite output ("  Overall expected timebound: " ^ RealBound.to_string (overall_exptimebound) ^ "\n");
     appr.exptime 
     |> GeneralTransitionApproximation.to_string 
-         (Program.transitions program |> GeneralTransitionSet.from_transitionset |> GeneralTransitionSet.to_list) |> IO.nwrite output;
+         (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output;
     IO.nwrite output "\nCostbounds:\n";
     IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
     appr.cost |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;

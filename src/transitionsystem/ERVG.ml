@@ -65,6 +65,5 @@ let rvg kind (program: Program.t) =
          (fun rvg ((pre_gt,pre_l, post_l),pre_var,post_var) -> add_edge rvg ((pre_gt,pre_l),pre_var) ((post_gt,post_l),post_var)) 
          rvg_with_vertices
   in
-  Program.transitions program
-  |> GeneralTransitionSet.from_transitionset
+  Program.generalized_transitions program
   |> fun gtset -> GeneralTransitionSet.fold add_gt gtset empty

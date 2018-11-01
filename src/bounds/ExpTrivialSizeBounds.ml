@@ -141,7 +141,7 @@ let every_path_enters_loc graph start_location middle_location target_location :
     not (LocationSet.mem target_location reachable_locations)
 
 let gts_outgoing tset loc =
-  GeneralTransitionSet.from_transitionset tset
+  GeneralTransitionSet.of_transitionset tset
   |> GeneralTransitionSet.filter (Location.equal loc % GeneralTransition.start)
 
 let build_subgraph (graph : TransitionGraph.t) (loc : Location.t) (cut_location : Location.t): TransitionGraph.t =
@@ -168,8 +168,7 @@ let build_subgraph (graph : TransitionGraph.t) (loc : Location.t) (cut_location 
 let only_one_gt_going_to_loc orig_graph target_loc sub =
   let locations = TransitionGraph.locations sub in
   let transitions =
-    TransitionGraph.transitions orig_graph
-    |> GeneralTransitionSet.from_transitionset 
+    TransitionGraph.generalized_transitions orig_graph
     |> GeneralTransitionSet.filter (fun gt -> LocationSet.mem (GeneralTransition.start gt) locations &&
                                               LocationSet.exists (Location.equal target_loc) (GeneralTransition.targets gt))
   in
@@ -183,9 +182,7 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
   let all_guards_tautology_in_invariants =
     let for_subgraph sub = 
       let gts_from_loc l= 
-        orig_graph
-        |> TransitionGraph.transitions
-        |> GeneralTransitionSet.from_transitionset
+        TransitionGraph.generalized_transitions orig_graph
         |> GeneralTransitionSet.filter (Location.equal l % GeneralTransition.start)
       in
       sub
@@ -238,8 +235,7 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
    * target location*)
   let all_trans_of_gt_going_to_loc =
     let for_subgraph subgraph =
-      TransitionGraph.transitions subgraph
-      |> GeneralTransitionSet.from_transitionset
+      TransitionGraph.generalized_transitions subgraph
       |> GeneralTransitionSet.filter
            (TransitionSet.exists (fun (_,_,l') -> Location.equal l' target_loc) % GeneralTransition.transitions)
       |> GeneralTransitionSet.for_all ((=) 1 % LocationSet.cardinal % GeneralTransition.targets)
@@ -367,9 +363,7 @@ let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.
                 in
 
                 let rel_trans_outgoing =
-                  graph
-                  |> TransitionGraph.transitions
-                  |> GeneralTransitionSet.from_transitionset
+                  TransitionGraph.generalized_transitions graph
                   |> GeneralTransitionSet.filter (Location.equal lentry % GeneralTransition.start)
                   |> GeneralTransitionSet.to_list
                   (* There is always exactly one outgoing gt *)

@@ -4,7 +4,7 @@ open RVGTypes
 
 let logger = Logging.(get Size)
 
-module RV = Make_RV(RVTransitions.TransitionForExpectedSize)
+module ERV = Make_RV(RVTransitions.TransitionForExpectedSize)
 
 let improve_scc kind program ervg appr = function
   | [((gt,l),v)] when not (ERVG.mem_edge ervg ((gt,l),v) ((gt,l),v)) ->
@@ -17,6 +17,7 @@ let improve_scc kind program ervg appr = function
      let new_bound = ExpNontrivialSizeBounds.compute kind program ervg (Approximation.timebound appr) (Approximation.exptimebound appr)
                                                                        (fun kind -> Approximation.sizebound kind appr)
                                                                        (fun kind -> Approximation.expsizebound kind appr) scc in
+     Printf.printf "scc expsize\n";
      Approximation.add_expsizebounds kind new_bound scc appr
 
 let improve program appr =

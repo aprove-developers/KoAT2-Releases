@@ -15,7 +15,7 @@ module GeneralTransitionApproximation =
                                                           (struct
                                                             include GeneralTransition
                                                             let fold_transset fold_func tset start_val =
-                                                              GeneralTransitionSet.from_transitionset tset
+                                                              GeneralTransitionSet.of_transitionset tset
                                                               |> fun gtset -> GeneralTransitionSet.fold fold_func gtset start_val
                                                             let compare_same = compare
                                                            end)

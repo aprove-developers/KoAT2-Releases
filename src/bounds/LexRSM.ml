@@ -424,8 +424,7 @@ let ranking_table_to_string rtable =
 
 let compute_ranking_table program =
   let gts =
-    Program.transitions program
-    |> GeneralTransitionSet.from_transitionset
+    Program.generalized_transitions program
   in
   let scc_transitions = Program.sccs program in
   scc_transitions

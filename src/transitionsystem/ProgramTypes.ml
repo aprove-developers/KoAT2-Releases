@@ -94,51 +94,6 @@ module TransitionSet =
       
   end
   
-(*The equivalence test is needed in the probabilistic case, as we have transitions with branching degree >=2*)
-module TransitionGraph =
-  struct
-    include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_equivalent end)
-
-    let locations graph =
-      fold_vertex LocationSet.add graph LocationSet.empty
-
-    let transitions graph =
-      fold_edges_e TransitionSet.add graph TransitionSet.empty
-
-    let loc_transitions graph locations =
-      transitions graph
-      |> TransitionSet.filter (fun (l,_,l') ->
-             List.mem_cmp Location.compare l locations
-             && List.mem_cmp Location.compare l' locations)
-      
-    module Equivalence_TransitionSet = Set.Make(struct include Transition let compare = Transition.compare_equivalent end)
-                                     
-    let equivalent graph1 graph2 =
-      LocationSet.equal (locations graph1) (locations graph2)
-      && Equivalence_TransitionSet.equal (graph1 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
-           (graph2 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
-
-    let replace_edge_e old_transition new_transition graph =
-      add_edge_e (remove_edge_e graph old_transition) new_transition
-      
-    let add_invariant location invariant graph =
-      location
-      |> succ_e graph (* An invariant holds before the execution of the successor transitions *)
-      |> List.fold_left (fun result transition ->
-             replace_edge_e transition (Transition.add_invariant invariant transition) result
-           ) graph          
-
-    let to_string graph = 
-      let transition_str = 
-        transitions graph |> TransitionSet.enum |> Util.enum_to_string (Transition.to_id_string)
-      in
-      let location_str = 
-        locations graph |> LocationSet.enum |> Util.enum_to_string (Location.to_string)
-      in
-      "transitions: " ^ transition_str ^ " locations: " ^ location_str
-      
-  end
-
 module GeneralTransition = 
   struct
     type t = {
@@ -167,7 +122,7 @@ module GeneralTransition =
 
     let same gt1 gt2 = gt1.id = gt2.id
 
-    let from_transitionset transset (l,t,l') = 
+    let of_transitionset transset (l,t,l') = 
       let new_trans = TransitionSet.filter (fun (l2, t2, l2') -> TransitionLabel.same t t2 && Location.equal l l2) transset in
       {
         id = TransitionLabel.id t; start = l; guard = TransitionLabel.guard t; transitions = new_trans;
@@ -235,8 +190,57 @@ module GeneralTransitionSet =
     let start_locations transitions =
       fold (fun transition loc_set -> LocationSet.add (GeneralTransition.start transition) loc_set ) transitions LocationSet.empty
 
-    let from_transitionset transitionset = 
+    let of_transitionset transitionset = 
       TransitionSet.to_list transitionset
-      |> List.map (GeneralTransition.from_transitionset transitionset) 
+      |> List.map (GeneralTransition.of_transitionset transitionset) 
       |> of_list 
   end
+
+(*The equivalence test is needed in the probabilistic case, as we have transitions with branching degree >=2*)
+module TransitionGraph =
+  struct
+    include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_equivalent end)
+
+    let locations graph =
+      fold_vertex LocationSet.add graph LocationSet.empty
+
+    let transitions graph =
+      fold_edges_e TransitionSet.add graph TransitionSet.empty
+
+    let loc_transitions graph locations =
+      transitions graph
+      |> TransitionSet.filter (fun (l,_,l') ->
+             List.mem_cmp Location.compare l locations
+             && List.mem_cmp Location.compare l' locations)
+
+    let generalized_transitions graph = 
+      transitions graph |> GeneralTransitionSet.of_transitionset
+      
+    module Equivalence_TransitionSet = Set.Make(struct include Transition let compare = Transition.compare_equivalent end)
+                                     
+    let equivalent graph1 graph2 =
+      LocationSet.equal (locations graph1) (locations graph2)
+      && Equivalence_TransitionSet.equal (graph1 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
+           (graph2 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
+
+    let replace_edge_e old_transition new_transition graph =
+      add_edge_e (remove_edge_e graph old_transition) new_transition
+      
+    let add_invariant location invariant graph =
+      location
+      |> succ_e graph (* An invariant holds before the execution of the successor transitions *)
+      |> List.fold_left (fun result transition ->
+             replace_edge_e transition (Transition.add_invariant invariant transition) result
+           ) graph          
+
+    let to_string graph = 
+      let transition_str = 
+        transitions graph |> TransitionSet.enum |> Util.enum_to_string (Transition.to_id_string)
+      in
+      let location_str = 
+        locations graph |> LocationSet.enum |> Util.enum_to_string (Location.to_string)
+      in
+      "transitions: " ^ transition_str ^ " locations: " ^ location_str
+      
+  end
+
