@@ -39,15 +39,16 @@ let lift_nonprob_timebounds program appr =
        gtset
        appr
 
-(* lifts nonprobabilistic sizebounds of result variables to expected size bounds for the corresponding expected result variables.
- * Not that we can only lift upper bounds but not lower ones*)
+(* lifts nonprobabilistic sizebounds of result variables to expected size bounds for the corresponding expected result variables.*)
 let lift_nonprob_sizebounds program appr = 
-  let get_gtl_sizebound ((gt,l),v) = 
+  let get_gtl_sizebound kind ((gt,l),v) = 
     GeneralTransition.transitions gt
     |> TransitionSet.filter (Location.equal l % Transition.target)
     |> TransitionSet.enum
-    |> Enum.map (fun t -> Approximation.sizebound `Upper appr t v)
-    |> Bound.maximum
+    |> Enum.map (fun t -> Approximation.sizebound kind appr t v)
+    |> (match kind with 
+       | `Upper -> Bound.maximum
+       | `Lower -> Bound.minimum)
     |> RealBound.of_intbound
   in
 
@@ -57,15 +58,17 @@ let lift_nonprob_sizebounds program appr =
   |> List.flatten
   |> List.map (flip List.cartesian_product (Program.vars program |> VarSet.to_list) % List.singleton)
   |> List.flatten
+  |> List.cartesian_product [`Upper; `Lower]
   |> List.fold_left 
-       (fun appr ((gt,l),var) -> Approximation.add_expsizebound `Upper (get_gtl_sizebound ((gt,l),var)) (gt,l) var appr) 
+       (fun appr (kind,((gt,l),var)) -> Approximation.add_expsizebound kind (get_gtl_sizebound kind ((gt,l),var)) (gt,l) var appr) 
        appr
   
 let rec find_exp_bounds_ (program: Program.t) (appr: Approximation.t): Approximation.t =
-  Printf.printf "%s\n" (Approximation.to_string program appr);
   ExpSizeBounds.improve program appr
-  |> failwith "testfail1"
   |> ExpRankingBounds.improve program
+(*
+  |> tap (Printf.printf "final appr: %s\n" % Approximation.to_string program % MaybeChanged.unpack)
+*)
   |> failwith "testfailsu"
 (*
   |> MaybeChanged.if_changed (find_bounds_ program)

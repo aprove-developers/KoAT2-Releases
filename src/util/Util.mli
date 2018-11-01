@@ -29,3 +29,9 @@ val memoize : extractor:('a -> 'c) -> ('a -> 'b) -> 'a -> 'b
 val option_sequence : 'a option list -> 'a list option
 
 val safe_head : 'a list -> 'a option
+
+module Make_SafeAny:
+  functor (S: Set.S) ->
+    sig
+      val safe_any: S.t -> S.elt option
+    end
