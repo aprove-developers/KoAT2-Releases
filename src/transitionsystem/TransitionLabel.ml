@@ -25,7 +25,7 @@ let get_unique_id =
   get_unique_by_ref id_counter
 
 let get_unique_gt_id = 
-  get_unique_by_ref id_counter
+  get_unique_by_ref gt_id_counter
 
 module UpdateElement = 
   struct
