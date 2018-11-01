@@ -59,11 +59,11 @@ let appr_substitution_is_valid kind gt poly =
   | `Lower -> poly_is_convex_in_all_vars gt poly
 
 
-let simplify_poly_with_guard gt (poly: RealPolynomial.t) = 
+let simplify_poly_with_guard guard (poly: RealPolynomial.t) = 
   let check_var var = 
     let var_var = Var.fresh_id Var.Int () in 
-    let guard_formula = GeneralTransition.guard gt |> Formula.mk in
-    let guard_formula_var_var = GeneralTransition.guard gt 
+    let guard_formula = guard |> Formula.mk in
+    let guard_formula_var_var = guard
                                 |> Constraints.Constraint.map_polynomial 
                                      (Polynomial.substitute var ~replacement:(Polynomial.of_var var_var)) 
                                 |> Formula.mk 
@@ -138,7 +138,7 @@ let exp_poly (((gt, l), var): RV.t): RealPolynomial.t =
   |> List.map (fun (p,up) -> RealPolynomial.(of_constant p * up))
   |> List.enum
   |> RealPolynomial.sum
-  |> simplify_poly_with_guard gt
+  |> simplify_poly_with_guard (GeneralTransition.guard gt)
 
 let det_update kind gt (transition,var): RealPolynomial.t option = 
   let handle_update_element ue = 
@@ -150,7 +150,7 @@ let det_update kind gt (transition,var): RealPolynomial.t option =
   Transition.label transition
   |> flip TransitionLabel.update var
   |> flip Option.bind handle_update_element
-  |> Option.map (simplify_poly_with_guard gt)
+  |> Option.map (simplify_poly_with_guard (GeneralTransition.guard gt))
 
 let vars rv = 
   let var = RV.variable rv in 
@@ -161,7 +161,10 @@ let vars rv =
     |> TransitionSet.to_list
     |> List.map (fun t -> det_update kind gt (t,var))
     |> List.fold_left
-         (fun varset poly_opt -> VarSet.union (Option.map (RealPolynomial.vars % simplify_poly_with_guard gt) poly_opt |? VarSet.empty) varset)
+         (fun varset poly_opt ->
+           VarSet.union (Option.map (RealPolynomial.vars % simplify_poly_with_guard (GeneralTransition.guard gt))
+                          poly_opt
+                         |? VarSet.empty) varset)
           VarSet.empty
   in
   VarSet.union (update_vars `Lower) (update_vars `Upper)
