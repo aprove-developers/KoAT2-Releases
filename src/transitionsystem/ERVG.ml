@@ -41,7 +41,7 @@ let add_vertices_to_rvg vertices rvg =
   |> List.map (flip add_vertex)
   |> List.fold_left (fun rvg adder -> adder rvg) rvg
 
-let rvg kind (program: Program.t) =
+let rvg (program: Program.t) =
   let add_gt (post_gt: GeneralTransition.t) (rvg: t): t =
     let rvg_with_vertices: t =
       add_vertices_to_rvg
