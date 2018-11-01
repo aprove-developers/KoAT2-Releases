@@ -144,7 +144,6 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
           let template_substituted =
             template
             |> RealParameterPolynomial.rename (TransitionLabel.VarMap.bindings new_var_map |> RenameMap.from)
-            |> tap (Printf.printf "template substituted: %s\n" % RealParameterPolynomial.to_string)
           in
 
           (RealConstraint.mk_and (GeneralTransition.guard gtrans |> RealConstraint.of_intconstraint) update_constraints, 
@@ -160,13 +159,6 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
         RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly gtrans))
         |> lift_paraatom
   in
-  (tap
-    (fun l ->
-       Printf.printf "template: %s\n" (template gtrans |> RealParameterPolynomial.to_string);
-       Printf.printf "constrs: %s\nlistatoms: %s\n"
-       (List.map (RealConstraint.to_string % Tuple2.first) l |> String.concat "; " |> fun s -> "[" ^ s ^ "]")
-       (List.map (RealParameterAtom.to_string % Tuple2.second) l |> String.concat "; " |> fun s -> "[" ^ s ^ "]") )
-    constraints_and_atoms) |> ignore;
   List.map
     (uncurry RealParameterConstraint.farkas_transform)
     constraints_and_atoms
@@ -180,12 +172,10 @@ let non_increasing_constraint transition =
 
 let bounded_constraint transition =
   let constr = general_transition_constraint (`Bounded, transition) in
-  Printf.printf "bounded_constraint: %s\n" (RealFormula.to_string constr);
   constr
 
 let decreasing_constraint transition =
   let constr = general_transition_constraint (`Decreasing, transition) in
-  Printf.printf "decr_constraint: %s\n" (RealFormula.to_string constr);
   constr
 
 let c_ranked_constraint transition =
@@ -286,7 +276,6 @@ let find_1d_lexrsm_non_increasing transitions decreasing =
     in
     non_incr |> GeneralTransitionSet.to_list |> List.map (Solver.add_real solver % non_increasing_constraint) |> ignore;
     Solver.minimize_absolute solver !fresh_coeffs;
-    Printf.printf "fresh_coeffs: %s\n" (!fresh_coeffs |> List.map Var.to_string |> String.concat "; "|> fun s -> "[" ^ s ^ "]");
     Solver.model_real solver
     |> fun eval -> (eval, GeneralTransitionSet.add decreasing non_incr)
   else
@@ -447,7 +436,6 @@ let compute_ranking_table program =
                               rank = rankfunc;
                             }
               in
-              Printf.printf ("Valuation: %s\n") (Option.get eval |> Valuation.to_string);
               RankingTable.add time_ranking_table decr ranking
             )
             scc
@@ -462,7 +450,6 @@ let find program gt =
     compute_ranking_templates vars locations;
   if RankingTable.is_empty time_ranking_table then
     compute_ranking_table program;
-  Printf.printf ("find gt: %s\n\n") (GeneralTransition.to_string gt);
   RankingTable.find_option time_ranking_table gt
 
 let find_whole_prog program goal =
