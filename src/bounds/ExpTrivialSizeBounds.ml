@@ -399,8 +399,18 @@ let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.
                 | (Some p, true) -> Some OurFloat.((probability_reaching_loc sub_start / total_probability) * p) )
 
 let print_pr_func graph pr_func = 
+  let print_option_float oflaot = 
+    match oflaot with
+    | None   -> "None"
+    | Some s -> s
+  in
   TransitionGraph.locations graph |> LocationSet.to_list 
-  |> List.map (fun l -> (Location.to_string l, (Option.default (-1 |> OurFloat.of_int) (pr_func l)) |> OurFloat.to_string)) 
+  |> List.map 
+       (fun l -> 
+          (Location.to_string l, pr_func l |> Option.map (OurFloat.to_string) |> print_option_float)) 
+(*
+          (Location.to_string l, (Option.default (-1 |> OurFloat.of_int) (pr_func l)) |> OurFloat.to_string)) 
+*)
   |> List.enum
   |> Util.enum_to_string (fun (l,p) -> l ^ ", " ^ p)
 
