@@ -161,6 +161,25 @@ module PolynomialOver(Value : PolyTypes.Ring) =
     let mult_with_const const poly =
       List.map (ScaledMonomial_.mult_with_const const) poly
 
+    (*Should throw an error if polynom is not univariate*)
+    (*Seems like I should be able to make it more efficient*)
+    let degree_coeff_list (poly:t) =
+      if VarSet.cardinal (vars poly) <= 1 then
+        let default_map =
+          Enum.init (degree poly) (fun i -> (i,Value.zero))
+          |> Map.of_enum
+        in
+        poly
+        |> List.enum
+        |> Enum.map (fun s_monom ->
+                          (ScaledMonomial_.degree s_monom,
+                          ScaledMonomial_.coeff s_monom))
+        |> Map.of_enum
+        |> fun map -> Map.union map default_map
+        |> Map.bindings
+        |> List.map (fun (k,v) -> v)
+      else []
+
     type outer_t = t
     module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
       struct

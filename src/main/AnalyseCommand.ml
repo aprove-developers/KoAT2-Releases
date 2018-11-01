@@ -142,8 +142,7 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
-  input
-  |> MainUtil.read_input ~rename:params.rename params.simple_input
+  MainUtil.read_input ~rename:params.rename params.simple_input input
   |> rename_program_option
   |> Option.map (fun program ->
          (program, Approximation.create program)

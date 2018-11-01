@@ -19,7 +19,7 @@ type params = {
 let run (params: params) =
   Logging.(use_loggers [LexRSM, Logger.DEBUG; Preprocessor, Logger.DEBUG]);
   params.input
-  |> MainUtil.read_input_goal
+  |> MainUtil.read_input_goal false
   |> Option.may (fun (program, _) ->
         let gts = 
           (program, Approximation.create program)

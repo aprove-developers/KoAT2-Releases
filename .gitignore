@@ -17,3 +17,6 @@ perf.data*
 *.output
 
 .vscode
+
+#sage file
+*.sage.py
