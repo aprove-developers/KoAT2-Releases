@@ -3,27 +3,29 @@ open Batteries
 type logger =
   | Approximation
   | Size
+  | ExpTrivialSize
+  | ExpNontrivialSize
   | Time
   | PRF
   | Bound
   | LocalSizeBound
-  | ExpLocalSizeBound
   | Preprocessor
   | LexRSM
   | MeteringRSM
 
-let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; ExpLocalSizeBound; Preprocessor; LexRSM; MeteringRSM]
+let loggers = [Approximation; Size; ExpTrivialSize; ExpNontrivialSize; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM; MeteringRSM]
 
-let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM; MeteringRSM]
+let all = [Approximation; Size; ExpTrivialSize; ExpNontrivialSize; Time; PRF; Bound; LocalSizeBound; Preprocessor; LexRSM; MeteringRSM]
             
 let show_logger = function
   | Approximation -> "appr"
   | Size -> "size"
+  | ExpTrivialSize -> "ExpTrivialSize"
+  | ExpNontrivialSize -> "ExpNontrivialSize"
   | Time -> "time"
   | PRF -> "prf"
   | Bound -> "bound"
   | LocalSizeBound -> "lsb"
-  | ExpLocalSizeBound -> "elsb"
   | Preprocessor -> "preprocessor"
   | LexRSM -> "lexrsmMap"
   | MeteringRSM -> "metrsmMap"
