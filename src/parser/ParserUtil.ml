@@ -23,7 +23,7 @@ let mk_transition lhs (cost: Polynomial.t) (rhs: string * ((string * (Transition
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
-          let id = unique() in
+          let id = TransitionLabel.get_unique_gt_id () in
           List.map (fun (prob, comkind, targets) ->
             (Location.of_string (Tuple2.first lhs),
               TransitionLabel.mk_prob
@@ -32,7 +32,7 @@ let mk_transition lhs (cost: Polynomial.t) (rhs: string * ((string * (Transition
                 ~targets:targets
                 ~patterns:(List.map Var.of_string (Tuple2.second lhs))
                 ~guard:constr
-                ~id:id
+                ~gt_id:id
                 ~probability:prob,
               (Location.of_string (Tuple2.first (List.hd targets))))
         ) rhs)
@@ -65,7 +65,7 @@ let mk_transition_simple_prob (start: string) (cost: Polynomial.t) (rhs: (OurFlo
   |> Formula.constraints
   |> List.map (fun constr ->
           List.map (fun (prob, comkind, targets) ->
-          let id = unique() in
+          let id = TransitionLabel.get_unique_gt_id () in
           (Location.of_string start,
             TransitionLabel.mk_prob
               ~cost:cost
@@ -74,7 +74,7 @@ let mk_transition_simple_prob (start: string) (cost: Polynomial.t) (rhs: (OurFlo
               ~patterns:default_vars
               ~guard:constr
               ~vars:default_vars
-              ~id:id
+              ~gt_id:id
               ~probability:prob,
             (Location.of_string (Tuple2.first (List.hd targets))))
        ) rhs)

@@ -13,6 +13,20 @@ exception DifferentUpdatesAndProbabilities
 
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
 
+let id_counter: int ref = ref 0
+let gt_id_counter: int ref = ref 0
+
+let get_unique_by_ref r () = 
+  let value = !r in
+  r := !r + 1;
+  value
+
+let get_unique_id = 
+  get_unique_by_ref id_counter
+
+let get_unique_gt_id = 
+  get_unique_by_ref id_counter
+
 module UpdateElement = 
   struct
     type t = Poly of Polynomial.t | Dist of ProbDistribution.t [@@deriving eq,ord]
@@ -45,6 +59,7 @@ module UpdateElement =
           
 type t = {
     id : int;
+    gt_id: int; 
     update : UpdateElement.t VarMap.t;
     guard : Guard.t;
     guard_without_invariants: Guard.t;
@@ -63,18 +78,19 @@ let one = Polynomial.one
 let make ?(cost = one)  com_kind ~update ~guard = 
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
   {
-    id = unique ();
+    id = get_unique_id (); gt_id = get_unique_gt_id ();
     update; guard; cost; probability=1. |> OurFloat.of_float;
     guard_without_invariants = guard; invariants = Guard.mk_true;
   }
 
 (* Generates a probabilistic label, needs a name to distinguish different labels belonging to the same transition *)
-let make_prob ?(cost = one)  com_kind ~update ~guard ~id ~(probability: OurFloat.t) = 
+let make_prob ?(cost = one)  com_kind ~update ~guard ~gt_id ~(probability: OurFloat.t) = 
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
     if (OurFloat.(probability > (1. |> of_float)) || OurFloat.(probability < (0. |> of_float))) then raise ProbabilitiesNotBetweenZeroAndOne 
   else
   {
-    id = id;
+    id = get_unique_id ();
+    gt_id;
     update; guard; cost; probability=probability;
     guard_without_invariants = guard; invariants = Guard.mk_true;
   }
@@ -122,11 +138,11 @@ let mk ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars =
       |> Enum.combine
       |> Enum.map (fun (var, assignment) -> VarMap.add var (assignment))
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
-      |> fun update -> { id = unique ();
+      |> fun update -> { id = get_unique_id (); gt_id = get_unique_gt_id ();
                         update; guard; cost; probability=1 |> OurFloat.of_int; guard_without_invariants = guard; 
                         invariants = Guard.mk_true;}
                         
-let mk_prob ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars ~id ~probability =
+let mk_prob ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars ~gt_id ~probability =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       if (OurFloat.(probability > (1 |> of_int)) || OurFloat.(probability < (0 |> of_int))) then raise ProbabilitiesNotBetweenZeroAndOne 
@@ -137,7 +153,7 @@ let mk_prob ?(cost = one) ~com_kind ~targets ~patterns ~guard ~vars ~id ~probabi
         |> Enum.combine
         |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
         |> Enum.fold (fun map adder -> adder map) VarMap.empty 
-        |> fun update -> { id = id;
+        |> fun update -> { id = get_unique_id (); gt_id;
                           update; guard; cost; probability=probability; guard_without_invariants = guard; 
                           invariants = Guard.mk_true;}
                     
@@ -174,7 +190,8 @@ let append t1 t2 =
       (get_update_polynomials t1.update))) t2.guard_without_invariants)
   in
   {
-    id = unique ();
+    id = get_unique_id ();
+    gt_id = get_unique_gt_id ();
     update = new_update;
     guard = new_guard;
     cost = Polynomial.(t1.cost + t2.cost);
@@ -255,7 +272,8 @@ let vars = Util.memoize ~extractor:id vars_
 
 
 let default = {
-    id = 0;
+    id = -1;
+    gt_id = -1;
     update = VarMap.empty;
     guard = Guard.mk_true;
     guard_without_invariants = Guard.mk_true;
@@ -344,6 +362,7 @@ let rename standard_vars t =
   let rename_map = standard_renaming standard_vars t in
   {
     id = t.id;
+    gt_id = t.gt_id;
     update = rename_update t.update rename_map;
     guard = Guard.rename t.guard rename_map;
     guard_without_invariants = Guard.rename t.guard_without_invariants rename_map;

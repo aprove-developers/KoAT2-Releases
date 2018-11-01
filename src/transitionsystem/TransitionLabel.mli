@@ -12,6 +12,8 @@ type kind = [ `Lower | `Upper ]  [@@deriving eq, ord]
 
 type t
 
+val get_unique_gt_id: unit -> int
+
 exception RecursionNotSupported
 
 module UpdateElement :
@@ -32,7 +34,7 @@ val mk : ?cost:polynomial ->
          vars:Var.t list ->
          t
          
-val make_prob : ?cost:polynomial -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> id:int -> probability:OurFloat.t -> t
+val make_prob : ?cost:polynomial -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> gt_id:int -> probability:OurFloat.t -> t
 
 val mk_prob : ?cost:polynomial ->
          com_kind:string ->
@@ -40,7 +42,7 @@ val mk_prob : ?cost:polynomial ->
          patterns:Var.t list ->
          guard:Guard.t ->
          vars:Var.t list ->
-         id:int ->
+         gt_id:int ->
          probability:OurFloat.t ->
          t
 

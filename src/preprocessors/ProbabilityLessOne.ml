@@ -36,7 +36,7 @@ let check_program program =
                                   TransitionLabel.make_prob 
                                       "Com_1"
                                       ~guard:(Constraints.Constraint.mk_true)
-                                      ~id:(GeneralTransition.id trans) 
+                                      ~gt_id:(GeneralTransition.id trans) 
                                       ~update:(identity_update)
                                       ~probability:(OurFloat.(-) (OurFloat.of_float 1.) (GeneralTransition.total_probability trans)),
                                   new_sink))
