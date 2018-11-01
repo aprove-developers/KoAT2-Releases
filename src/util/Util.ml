@@ -69,11 +69,3 @@ let safe_head l =
   match l with
   | [] -> None
   | (a :: _) -> Some a
-
-module Make_SafeAny (S : Set.S) = 
-  struct
-    let safe_any set = 
-      match S.cardinal set with
-      | 0 -> None
-      | _ -> Some (S.any set)
-  end
