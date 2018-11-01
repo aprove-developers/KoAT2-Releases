@@ -4,7 +4,7 @@ open BoundsInst
 open Formulas
 open ProgramTypes
 
-let logger = Logging.(get ExpTrivialSize)
+let logger = Logging.(get ExpSize)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
 
