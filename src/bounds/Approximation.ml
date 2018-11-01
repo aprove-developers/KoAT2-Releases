@@ -129,7 +129,7 @@ let to_string program appr =
     IO.nwrite output "Timebounds: \n";
     IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
     appr.time |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
-    IO.nwrite output "Expected Timebounds: \n";
+    IO.nwrite output "\nExpected Timebounds: \n";
     IO.nwrite output ("  Overall expected timebound: " ^ RealBound.to_string (overall_exptimebound) ^ "\n");
     appr.exptime 
     |> GeneralTransitionApproximation.to_string 

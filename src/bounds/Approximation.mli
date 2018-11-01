@@ -46,6 +46,9 @@ val timebound_id : t -> int -> Bound.t
 (** Returns a timebound for the program. *)
 val program_timebound : t -> Program.t -> Bound.t
 
+(** Returns the expected timebound for the whole program. *)
+val program_exptimebound : t -> Program.t -> RealBound.t
+
 (** Adds the information that the specified bound is a valid timebound for the given transition. 
     The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 val add_timebound : Bound.t -> Transition.t -> t -> t
