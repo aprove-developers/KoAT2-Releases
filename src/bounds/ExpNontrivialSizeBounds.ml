@@ -5,14 +5,12 @@ open RVGTypes
 open Polynomials
 open Formulas
 
-let logger = Logging.(get ExpNontrivialSize)
+let logger = Logging.(get ExpSize)
 
 module RV = Make_RV(RVTransitions.TransitionForExpectedSize)
 module Solver = SMT.IncrementalZ3Solver
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
-type sign = [ `Pos | `Neg ] [@@deriving show]
-type boundtype = [`ConstChange | `SetToConst]
 
 let sign = function
   | `Lower -> Bound.neg
@@ -28,13 +26,6 @@ let compute_
       (get_expsizebound: kind -> (GeneralTransition.t * Location.t) -> Var.t -> RealBound.t)
       (scc: RV.t list) =
 
-  (** Returns all result variables that may influence the given result variable and that are part of the scc. *)
-  let pre_in_scc rv =
-    rv
-    |> ERVG.pre rvg
-    |> Util.intersection RV.same (List.enum scc)
-  in
-
   (** Returns all result variables that may influence the given result variable and that are not part of the scc. *)
   let pre_out_scc rv =
     rv
@@ -42,33 +33,15 @@ let compute_
     |> Util.without RV.same (List.enum scc)
   in
 
-  (** Returns all result variables that may influence the given result variable from within the scc.
-      Corresponds to V_rv in the thesis. *)
-  let scc_variables rv =
-    rv
-    |> pre_in_scc
-    |> Enum.map (fun (t,v) -> v)
-    |> Enum.uniq_by Var.equal
-  in
-
   let result_variable_effect_exp rv: RealBound.t =
     let gt = RV.transition rv |> RVTransitions.TransitionForExpectedSize.gt in
     let target_loc = RV.transition rv |> RVTransitions.TransitionForExpectedSize.loc in
+    let var = RV.variable rv in
 
-    let polynomial_exp_var_change: RealPolynomial.t option =
-      let update_exp_poly = ExpLocalSizeBound.exp_poly rv in
-      let update_scc_vars = 
-        RealPolynomial.simplify update_exp_poly 
-        |> RealPolynomial.vars
-        |> VarSet.inter (scc_variables rv |> VarSet.of_enum) 
-      in
-      if VarSet.cardinal update_scc_vars >= 1 then 
-        RealPolynomial.sub update_exp_poly (VarSet.any update_scc_vars |> RealPolynomial.of_var)
-        |> ExpLocalSizeBound.simplify_poly_with_guard gt
-        |> tap (Printf.printf "exp_poly: %s\n" % RealPolynomial.to_string)
-        |> fun x -> Some x
-      else
-        None
+    let polynomial_exp_var_change: RealPolynomial.t =
+    let update_exp_poly = ExpLocalSizeBound.exp_poly rv in
+      RealPolynomial.sub update_exp_poly (RealPolynomial.of_var var)
+      |> ExpLocalSizeBound.simplify_poly_with_guard (GeneralTransition.guard gt)
     in
 
     let var_bounds sign v =
@@ -100,12 +73,14 @@ let compute_
       |> TransitionSet.filter (Location.equal target_loc % Transition.target)
       |> TransitionSet.to_list
       |> List.map (fun t -> ExpLocalSizeBound.det_update kind gt (t,RV.variable rv))
-      |> List.map (Option.map RealBound.of_poly)
       |> Util.option_sequence
+      |> Option.map (List.map (RealPolynomial.of_var var |> flip RealPolynomial.sub))
+      |> Option.map (List.map (GeneralTransition.guard gt |> ExpLocalSizeBound.simplify_poly_with_guard))
+      |> Option.map (List.map RealBound.of_poly)
       |> Option.map List.enum
       |> Option.map (fun en -> match kind with
                        | `Upper -> RealBound.maximum en
-                       | `Lower -> RealBound.maximum en )
+                       | `Lower -> RealBound.minimum en )
       |> Option.map
           (RealBound.appr_substitution kind ~lower:(var_bounds `Lower) ~higher:(var_bounds `Upper))
       |? match kind with
@@ -114,23 +89,17 @@ let compute_
     in
 
     let exp_var_change_bound =
-      Option.map 
-        (fun poly ->
-           if ExpLocalSizeBound.appr_substitution_is_valid kind gt poly then
-             poly
-             |> ExpLocalSizeBound.simplify_poly_with_guard gt
-             |> RealBound.of_poly
-             |> RealBound.appr_substitution kind ~lower:(exp_var_bounds `Lower) ~higher:(exp_var_bounds `Upper)
-           else 
-             poly
-             |> ExpLocalSizeBound.simplify_poly_with_guard gt
-             |> RealBound.of_poly
-             |> RealBound.appr_substitution kind ~lower:(exp_var_bounds `Lower) ~higher:(var_bounds `Upper)
-      )
-      polynomial_exp_var_change
-      |? match kind with
-         | `Lower -> RealBound.minus_infinity
-         | `Upper -> RealBound.infinity
+      let simplified_poly = 
+        polynomial_exp_var_change
+        |> ExpLocalSizeBound.simplify_poly_with_guard (GeneralTransition.guard gt)
+      in
+      if ExpLocalSizeBound.appr_substitution_is_valid kind gt polynomial_exp_var_change then
+        RealBound.of_poly simplified_poly
+        |> RealBound.appr_substitution kind ~lower:(exp_var_bounds `Lower) ~higher:(exp_var_bounds `Upper)
+      else 
+        RealBound.of_poly simplified_poly
+        |> RealBound.appr_substitution kind ~lower:(var_bounds `Lower) ~higher:(var_bounds `Upper)
+
     in
 
     let exp_gt_timebound = 
@@ -146,13 +115,19 @@ let compute_
     in
 
     let calc_bound (timebound,sizebound) = 
+      let sizebound_min_max = 
+        match kind with
+        | `Upper -> RealBound.max RealBound.zero sizebound
+        | `Lower -> RealBound.min RealBound.zero sizebound
+      in
+
       if RealBound.is_infinity timebound then
-        if RealBound.(equal zero sizebound) then
+        if RealBound.(equal zero sizebound_min_max) then
           RealBound.zero
         else
-          RealBound.infinity
+          RealBound.(infinity * sizebound_min_max)
       else
-        RealBound.(timebound * sizebound) 
+        RealBound.(timebound * sizebound_min_max) 
     in
 
     let timebound1 = RealBound.(exp_gt_timebound * of_poly (RealPolynomial.of_constant prob_gtl_of_gt)) in
@@ -163,11 +138,8 @@ let compute_
 
     let sizebound1 = var_change_bound in
     let sizebound2 = exp_var_change_bound in
-
-    Printf.printf "timebound1: %s  sizebound1: %s\n" (RealBound.to_string timebound1) (RealBound.to_string sizebound1);
-    Printf.printf "timebound2: %s  sizebound2: %s\n" (RealBound.to_string timebound2) (RealBound.to_string sizebound2);
-
-    let bounds = [timebound1, sizebound1; timebound2, sizebound2] |> List.map (calc_bound) |> List.enum in
+    
+    let bounds = [timebound1, sizebound1; timebound2, sizebound2] |> List.map calc_bound |> List.enum in
     
     match kind with
     | `Upper -> RealBound.minimum bounds
@@ -196,8 +168,6 @@ let compute_
   in
 
   loop_effect
-  |> tap (fun _ -> Printf.printf "starting_value: %s\n" (RealBound.to_string starting_value_exp))
-  |> tap (fun _ -> Printf.printf "loop_effect %s\n" (RealBound.to_string loop_effect))
   |> fun loop_effect -> 
        RealBound.(starting_value_exp + loop_effect)
 
