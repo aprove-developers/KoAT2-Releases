@@ -77,6 +77,9 @@ let timebound_id =
 let program_timebound =
   TransitionApproximation.sum % time
 
+let program_exptimebound =
+  GeneralTransitionApproximation.sum % exptime
+
 let add_timebound bound transition appr =
   let label = Transition.label transition in
   let temp_vars = VarSet.diff (TransitionLabel.vars label) (TransitionLabel.input_vars label) in
@@ -115,6 +118,7 @@ let add_costbound bound transition appr =
 
 let to_string program appr =
   let overall_timebound = program_timebound appr program in
+  let overall_exptimebound = program_exptimebound appr program in
   let output = IO.output_string () in
     if (not (Bound.is_infinity overall_timebound)) then
       IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_timebound) ^ ")\n\n")
@@ -125,9 +129,16 @@ let to_string program appr =
     IO.nwrite output "Timebounds: \n";
     IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
     appr.time |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
+    IO.nwrite output "Expected Timebounds: \n";
+    IO.nwrite output ("  Overall expected timebound: " ^ RealBound.to_string (overall_exptimebound) ^ "\n");
+    appr.exptime 
+    |> GeneralTransitionApproximation.to_string 
+         (Program.transitions program |> GeneralTransitionSet.from_transitionset |> GeneralTransitionSet.to_list) |> IO.nwrite output;
     IO.nwrite output "\nCostbounds:\n";
     IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
     appr.cost |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
     IO.nwrite output "\nSizebounds:\n";
     appr.size |> SizeApproximation.to_string |> IO.nwrite output;
+    IO.nwrite output "\nExpSizebounds:\n";
+    appr.expsize |> ExpectedSizeApproximation.to_string |> IO.nwrite output;
     IO.close_out output
