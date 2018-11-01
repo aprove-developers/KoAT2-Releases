@@ -66,15 +66,8 @@ let lift_nonprob_sizebounds program appr =
 let rec find_exp_bounds_ (program: Program.t) (appr: Approximation.t): Approximation.t =
   ExpSizeBounds.improve program appr
   |> ExpRankingBounds.improve program
-(*
-  |> tap (Printf.printf "final appr: %s\n" % Approximation.to_string program % MaybeChanged.unpack)
-*)
-  |> failwith "testfailsu"
-(*
-  |> MaybeChanged.if_changed (find_bounds_ program)
+  |> MaybeChanged.if_changed (find_exp_bounds_ program)
   |> MaybeChanged.unpack
-*)
-  |> failwith "done"
 
 let find_exp_bounds (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
