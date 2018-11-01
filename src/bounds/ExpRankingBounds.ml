@@ -3,7 +3,7 @@ open BoundsInst
 open Polynomials
 open ProgramTypes
 
-let logger = Logging.(get Time)
+let logger = Logging.(get ExpTime)
 
 (** All entry transitions of the given transitions.
     These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
@@ -31,8 +31,8 @@ let entry_transitions (program: Program.t) (rank_transitions: GeneralTransition.
   |> Enum.uniq_by (fun (gt1,l1) (gt2,l2) -> GeneralTransition.same gt1 gt2 && Location.equal l1 l2)
   |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                (fun () -> "entry_transitions", ["result", transitions
-                                  |> Util.enum_to_string
-                                       (fun (gt,l) -> "(" ^ GeneralTransition.to_id_string gt ^ ", " ^ Location.to_string l ^ ")")]))
+                                          |> Enum.clone |> Util.enum_to_string
+                                          (fun (gt,l) -> "(" ^ GeneralTransition.to_id_string gt ^ ", " ^ Location.to_string l ^ ")")]))
 
 let apply_exp
   (get_expsizebound: [`Lower | `Upper] -> (GeneralTransition.t * Location.t) -> Var.t -> RealBound.t)
@@ -98,9 +98,7 @@ let compute_bound (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t):
     |> entry_transitions program
     |> fun incoming_list -> get_best_bound incoming_list appr rank
   in Logger.with_log logger Logger.DEBUG
-       (fun () -> "compute_bound", ["decreasing", GeneralTransition.to_id_string (LexRSM.decreasing rank);
-                                    "non_increasing", Util.enum_to_string GeneralTransition.to_id_string (GeneralTransitionSet.enum (LexRSM.non_increasing rank));
-                                    "rank", LexRSM.pprf_to_string rank])
+       (fun () -> "compute_bound", ["rank", ""])
                      ~result:RealBound.to_string
                      execute
 
