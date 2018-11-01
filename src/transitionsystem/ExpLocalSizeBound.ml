@@ -62,30 +62,40 @@ let appr_substitution_is_valid kind gt poly =
 
 let simplify_poly_with_guard gt (poly: RealPolynomial.t) = 
   let check_var var = 
+    let var_var = Var.fresh_id Var.Int () in 
     let guard_formula = GeneralTransition.guard gt |> Formula.mk in
-    let guard_impls_var var' = 
-      Formula.implies guard_formula 
-        (Formula.mk_eq (Polynomial.of_var var) (Polynomial.of_var var'))
+    let guard_formula_var_var = GeneralTransition.guard gt 
+                                |> Constraints.Constraint.map_polynomial 
+                                     (Polynomial.substitute var ~replacement:(Polynomial.of_var var_var)) 
+                                |> Formula.mk 
     in
     let solver = Solver.create () in
     let var1 = Var.fresh_id Var.Int () in
+    let guard_impls_var1 = 
+      Formula.implies (guard_formula)
+        (Formula.mk_eq (Polynomial.of_var var) (Polynomial.of_var var1))
+    in
     let var2 = Var.fresh_id Var.Int () in
+    let guard_impls_var2 = 
+      Formula.implies (guard_formula_var_var)
+        (Formula.mk_eq (Polynomial.of_var var_var) (Polynomial.of_var var2))
+    in
     let exists_two_different_impls = 
       let vars_uneq_form = Polynomial.(Formula.mk_uneq (of_var var1) (of_var var2)) in
-      Solver.add solver (guard_impls_var var1);
+      Solver.add solver (guard_impls_var1);
       Solver.push solver;
-      Solver.add solver (guard_impls_var var2);
+      Solver.add solver (guard_impls_var2);
       Solver.add solver (vars_uneq_form);
       Solver.satisfiable solver
     in
-  if not exists_two_different_impls then
-    begin
-      Solver.pop solver;
-      Solver.model_real solver
-      |> Option.map (Valuation.eval var1)
-    end
-  else
-    None
+    if not exists_two_different_impls then
+      begin
+        Solver.pop solver;
+        Solver.model_real solver
+        |> Option.map (Valuation.eval var1)
+      end
+    else
+      None
 
   in
   RealPolynomial.vars poly
@@ -98,11 +108,16 @@ let simplify_poly_with_guard gt (poly: RealPolynomial.t) =
   |>  RealPolynomial.simplify
 
 let exp_poly (((gt, l), var): RV.t): RealPolynomial.t =
-  let transitions_with_prob = 
+  let transitions = 
     GeneralTransition.transitions gt
     |> TransitionSet.filter (Location.equal l % Transition.target)
-    |> TransitionSet.to_list
-    |> List.map (fun t -> (t, Transition.label t |> TransitionLabel.probability))
+  in
+  let total_probability = 
+    TransitionSet.fold (fun t -> OurFloat.(+) (Transition.label t |> TransitionLabel.probability) ) transitions OurFloat.zero
+  in
+  let transitions_with_prob = 
+    TransitionSet.to_list transitions
+    |> List.map (fun t -> (t, Transition.label t |> fun label -> OurFloat.(TransitionLabel.probability label / total_probability)))
   in
 
   let handle_update_element ue = 
