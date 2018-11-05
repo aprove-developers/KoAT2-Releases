@@ -1,8 +1,11 @@
 open Batteries
+open BoundsInst
 open OUnit2
 open Helper
 open ProgramTypes
 open RVGTypes
+
+module RV = Make_RV(Transition)
    
 let suite =
   "Graphs" >::: [

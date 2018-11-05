@@ -1,6 +1,7 @@
 open Batteries
+open BoundsInst
 open Polynomials
-   
+
 module AtomOver(P : ConstraintTypes.Atomizable) =
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
 struct
@@ -29,7 +30,7 @@ struct
           | GE -> ">="
           | LT -> "<"
           | LE -> "<="
-               
+
         let str_values = List.map to_string values
 
                        (*
@@ -43,15 +44,17 @@ struct
       end
 
     (* Always in normalised form: polynomial <= 0 *)
-    type t = P.t [@@deriving eq, ord]
+    type compkind = LE | LT [@@deriving eq, ord]
+
+    type t = P.t * compkind [@@deriving eq, ord]
 
 
     (* Helper function *)
     let normalise poly1 poly2 = function
-      | Comparator.LE -> P.sub poly1 poly2
-      | Comparator.GE -> P.sub poly2 poly1
-      | Comparator.LT -> P.sub (P.add poly1 P.one) poly2
-      | Comparator.GT -> P.sub (P.add poly2 P.one) poly1
+      | Comparator.LE -> (P.sub poly1 poly2, LE)
+      | Comparator.GE -> (P.sub poly2 poly1, LE)
+      | Comparator.LT -> (P.sub poly1 poly2, LT)
+      | Comparator.GT -> (P.sub poly2 poly1, LT)
 
     let mk comp poly1 poly2 =
       (*P.scale_coefficients*) (normalise poly1 poly2 comp)
@@ -63,53 +66,61 @@ struct
 
     module Infix = struct
       let (>) = mk_gt
-      let (>=) = mk_ge 
-      let (<) = mk_lt 
-      let (<=) = mk_le      
+      let (>=) = mk_ge
+      let (<) = mk_lt
+      let (<=) = mk_le
     end
 
     (* TODO We can not decide all equalities right now because of some integer arithmetic *)
     (* Maybe use SMT-solver here *)
-    let (=~=) = P.(=~=)
+    let (=~=) (poly1,comp1) (poly2,comp2) = P.(poly1 =~= poly2) && equal_compkind comp1 comp2
 
-    let neg = P.neg
-              
-    let to_string ?(comp=" <= ") atom = (P.to_string atom) ^ comp ^ "0"
-        
-    let vars = P.vars
+    let neg (poly,comp) = (P.neg poly,comp)
 
-    let normalised_lhs atom = atom
-             
-    let rename atom varmapping = P.rename varmapping atom
+    let comp_to_string =
+      function
+      | LE -> "<="
+      | LT -> "<"
 
-    let fold ~subject ~le poly =
-      le (subject poly) (subject P.zero)
-      
+    let to_string ?(compfunc=comp_to_string) (poly,comp) = (P.to_string poly) ^ (compfunc comp) ^ "0"
+
+    let vars (poly,_) = P.vars poly
+
+    let normalised_lhs (poly,_) = poly
+
+    let rename (poly,comp) varmapping = (P.rename varmapping poly, comp)
+
+    let fold ~subject ~le ~lt (poly,comp) =
+      if comp = LE then
+        le (subject poly) (subject P.zero)
+      else
+        lt (subject poly) (subject P.zero)
+
                                (*
     (* TODO It's maybe possible to compare polynomials without full evaluation *)
     (* However, there are probably more expensive operations *)
     let models atom valuation =
       P.Value.Compare.((P.eval atom valuation) <= P.Value.zero)
                                 *)
-    let is_linear = P.is_linear 
-        
+    let is_linear (poly,_) = P.is_linear poly
+
     let get_coefficient var atom =
       P.coeff_of_var var (normalised_lhs atom)
-      
-    let get_constant atom =
-      P.get_constant (P.neg atom)
+
+    let get_constant (poly,_) =
+      P.get_constant (P.neg poly)
 end
 
 module Atom =
   struct
     include AtomOver(Polynomial)
 
-    let to_string ?(comp=" <= ") atom =
-      Polynomial.separate_by_sign atom
-      |> (fun (positive, negative) -> Polynomial.to_string positive ^ comp ^ Polynomial.to_string (Polynomial.neg negative))
-      
-    let max_of_occurring_constants =
-      Polynomial.max_of_occurring_constants
+    let to_string ?(compfunc=comp_to_string) (poly,comp) =
+      Polynomial.separate_by_sign poly
+      |> (fun (positive, negative) -> Polynomial.to_string positive ^ (compfunc comp) ^ Polynomial.to_string (Polynomial.neg negative))
+
+    let max_of_occurring_constants (poly,_) =
+      Polynomial.max_of_occurring_constants poly
 
   end
 
@@ -128,16 +139,20 @@ module RealAtom =
   struct
     include AtomOver(RealPolynomial)
 
-    let to_string ?(comp=" <= ") atom =
-      RealPolynomial.separate_by_sign atom
-      |> (fun (positive, negative) -> RealPolynomial.to_string positive ^ comp ^ RealPolynomial.to_string (RealPolynomial.neg negative))
-      
-    let max_of_occurring_constants =
-      RealPolynomial.max_of_occurring_constants
+    let to_string ?(compfunc=comp_to_string) (poly,comp) =
+      RealPolynomial.separate_by_sign poly
+      |> (fun (positive, negative) -> RealPolynomial.to_string positive ^ (compfunc comp) ^ RealPolynomial.to_string (RealPolynomial.neg negative))
 
-    let of_intatom atom =
-      mk Comparator.LE (RealPolynomial.of_intpoly atom) RealPolynomial.zero
-     
+    let max_of_occurring_constants (poly,_) =
+      RealPolynomial.max_of_occurring_constants poly
+
+    let of_intatom ((poly,comp):Atom.t): t =
+      let realpoly_minus_1 = RealPolynomial.sub RealPolynomial.zero RealPolynomial.one in
+      match comp with
+      (* This is necessary because for example x<0 is equivalent to x<-1 in the deterministic case*)
+      | LE -> mk Comparator.LE (RealPolynomial.of_intpoly poly) RealPolynomial.zero
+      | LT -> mk Comparator.LE (RealPolynomial.of_intpoly poly) realpoly_minus_1
+
   end
 
 module RealParameterAtom =

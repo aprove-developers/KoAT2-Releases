@@ -30,6 +30,7 @@ let from_formula context =
   Formula.fold 
     ~subject:(from_poly context)
     ~le:(Z3.Arithmetic.mk_le context)
+    ~lt:(Z3.Arithmetic.mk_lt context)
     ~correct:(Z3.Boolean.mk_true context)
     ~conj:(fun a1 a2 -> Z3.Boolean.mk_and context [a1; a2])
     ~wrong:(Z3.Boolean.mk_false context)
@@ -39,6 +40,7 @@ let from_real_formula context =
   RealFormula.fold 
     ~subject:(from_real_poly context)
     ~le:(Z3.Arithmetic.mk_le context)
+    ~lt:(Z3.Arithmetic.mk_lt context)
     ~correct:(Z3.Boolean.mk_true context)
     ~conj:(fun a1 a2 -> Z3.Boolean.mk_and context [a1; a2])
     ~wrong:(Z3.Boolean.mk_false context)
@@ -233,6 +235,19 @@ module IncrementalZ3Solver =
              ignore (Z3.Optimize.add_soft opt (from_formula context Formula.Infix.(Polynomial.of_var var >= Polynomial.zero)) (Var.to_string var) (Z3.Symbol.mk_int context 1))
            )
 
+    let minimize_absolute_v2 (opt,context) vars =
+      let absolute_value (var: Var.t) = 
+        Z3.Boolean.mk_ite context
+          (from_real_formula context RealFormula.Infix.((RealPolynomial.of_var var) <= RealPolynomial.zero))
+          (from_real_poly context (RealPolynomial.of_var var))
+          (from_real_poly context (RealPolynomial.sub RealPolynomial.zero (RealPolynomial.of_var var)) )
+      in
+      vars
+      |> List.map (absolute_value)
+      |> Z3.Arithmetic.mk_add context
+      |> Z3.Optimize.minimize opt
+      |> ignore
+
     let minimize (opt,context) var =
       ignore (Z3.Optimize.minimize opt (from_poly context (Polynomial.of_var var)))
       
@@ -274,6 +289,43 @@ module IncrementalZ3Solver =
              )
         |? []
         |> Valuation.from
+        |> Option.some
+      else None
+
+    let model_real (opt,_) =
+      if Z3.Optimize.check opt == Z3.Solver.SATISFIABLE then
+        opt
+        |> Z3.Optimize.get_model
+        |> Option.map (fun model ->
+               model
+               |> Z3.Model.get_const_decls
+               |> List.map (fun func_decl ->
+                      let var =
+                        func_decl
+                        |> Z3.FuncDecl.get_name
+                        |> Z3.Symbol.get_string
+                        |> Var.of_string
+                      in
+                      let value =
+                        func_decl
+                        |> Z3.Model.get_const_interp model                        
+                        |> Option.get (* Should be fine here *)
+                        |> (fun expr ->
+                          if Z3.Arithmetic.is_int expr then
+                            expr
+                            |> Z3.Arithmetic.Integer.get_int
+                            |> OurFloat.of_int
+                          else
+                            expr
+                            |> Z3.Arithmetic.Real.get_ratio
+                            |> Num.num_of_ratio
+                        )
+                      in
+                      (var, value)
+                    )
+             )
+        |? []
+        |> RealValuation.from
         |> Option.some
       else None
 

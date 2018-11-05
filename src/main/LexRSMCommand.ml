@@ -17,13 +17,13 @@ type params = {
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
-  Logging.(use_loggers [LexRSM, Logger.DEBUG]);
+  Logging.(use_loggers [LexRSM, Logger.DEBUG; Preprocessor, Logger.DEBUG]);
   params.input
   |> MainUtil.read_input_goal false
-  |> (fun (program, goal) ->
-        if Option.is_some goal then
-        program
-        |> Option.map (fun program -> (program, Approximation.create program))
-        |> Option.map (Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne]))
-        |> Option.map (fun (prog, appr) -> LexRSM.find prog (Option.get goal))
-        |> ignore)
+  |> Option.map 
+       (fun (program, goal) ->
+          program
+          |> fun program -> (program, Approximation.create program)
+          |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne])
+          |> fun (prog, appr) -> LexRSM.find_whole_prog prog goal)
+  |> ignore

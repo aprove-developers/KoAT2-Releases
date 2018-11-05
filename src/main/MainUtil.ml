@@ -20,14 +20,14 @@ let read_input_goal ?(rename=false) simple program_str =
       program_str
       |> Readers.read_program_simple
       |> (if rename then Program.rename else identity)
-      |> fun program -> (Option.some program, Option.some "UNKNOWN")
+      |> fun program -> Some (program, "UNKNOWN")
   else
     try
       program_str
       |> Readers.read_prog_goal_file
       |> (if rename then Tuple2.map1 (Program.rename) else identity)
-      |> Tuple2.map Option.some Option.some
+      |> Option.some
       with TransitionLabel.RecursionNotSupported ->
-        prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now."; 
-        (None,None)
+        prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now.";
+        None
 

@@ -72,6 +72,28 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       |> List.map ScaledMonomial_.monomial
       |> List.filter ((<>) Monomial_.one)
 
+    let derivative var poly = 
+      let derive_scaled_monomial smonom = 
+        let monom = ScaledMonomial_.monomial smonom in
+        let degree_var = Monomial_.degree_variable var monom in
+        if degree_var <= 0 then
+          None
+        else
+          if degree_var = 1 then
+            Monomial_.delete_var var monom
+            |> ScaledMonomial_.make (Value.mul (ScaledMonomial_.coeff smonom) (Value.of_int degree_var))
+            |> fun res -> Some res
+          else
+            Monomial_.delete_var var monom
+            |> Monomial_.mul (Monomial_.make [var, degree_var - 1])
+            |> ScaledMonomial_.make (Value.mul (ScaledMonomial_.coeff smonom) (Value.of_int degree_var))
+            |> fun res -> Some res
+      in
+      List.map derive_scaled_monomial poly 
+      |> List.filter Option.is_some
+      |> List.map Option.get
+      |> simplify
+
     let of_monomial mon = lift Value.one mon
 
     let of_power var n = of_monomial (Monomial_.lift var n)
@@ -80,12 +102,9 @@ module PolynomialOver(Value : PolyTypes.Ring) =
 
     let of_var var = of_power var 1
     
-    let rec of_coeff_list coeffs vars =
+    let of_coeff_list coeffs vars =
         if (List.length coeffs) == (List.length vars) then
-            match (coeffs, vars) with
-                |([],[])-> []
-                |(c::coefftail, v::varstail)-> (ScaledMonomial_.make c (Monomial_.lift v 1)) :: (of_coeff_list coefftail varstail)
-                |_ -> []
+          List.map2 (fun c v -> ScaledMonomial_.make c (Monomial_.lift v 1)) coeffs vars
         else []
             
 
@@ -146,16 +165,16 @@ module PolynomialOver(Value : PolyTypes.Ring) =
     (*Seems like I should be able to make it more efficient*)
     let degree_coeff_list (poly:t) =
       if VarSet.cardinal (vars poly) <= 1 then
-        let default_map = 
+        let default_map =
           Enum.init (degree poly) (fun i -> (i,Value.zero))
           |> Map.of_enum
         in
-        poly 
-        |> List.enum 
-        |> Enum.map (fun s_monom -> 
-                          (ScaledMonomial_.degree s_monom, 
-                          ScaledMonomial_.coeff s_monom)) 
-        |> Map.of_enum 
+        poly
+        |> List.enum
+        |> Enum.map (fun s_monom ->
+                          (ScaledMonomial_.degree s_monom,
+                          ScaledMonomial_.coeff s_monom))
+        |> Map.of_enum
         |> fun map -> Map.union map default_map
         |> Map.bindings
         |> List.map (fun (k,v) -> v)

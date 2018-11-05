@@ -1,7 +1,10 @@
 open Batteries
 open ProgramTypes
 open RVGTypes
-   
+
+module RV = Make_RV(Transition) 
+module ERV = Make_RV(RVTransitions.TransitionForExpectedSize) 
+
 let print_graph out_dir name graph output_graph =
   let full_path ext =
     Fpath.(to_string (out_dir // (v name |> add_ext ext)))
@@ -54,4 +57,26 @@ let print_rvg kind ~label ~outdir ~file program =
                        let graph_attributes _ = []
                      end) in
   print_graph outdir (file ^ "_rvg_" ^ show_kind kind) graph Dot.output_graph
+    
+(** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program. 
+        For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
+let print_ervg ~label ~outdir ~file program =
+  let graph = ERVG.rvg program in
+  let module C = Graph.Components.Make(ERVG) in
+  let (_,scc_number) = C.scc graph in
+  let rv_color (rv: ERV.t) =
+    scc_number rv * 424242
+  in
+  (* Definition of some graphviz options how it should be layout *)
+  let module Dot = Graph.Graphviz.Dot(struct
+                       include ERVG
+                       let edge_attributes _ = [`Label ""; `Color 4711; `Labelfontcolor 16711680]
+                       let default_edge_attributes _ = []
+                       let get_subgraph _ = None
+                       let vertex_attributes v = [`Shape `Box; `Color (rv_color v)]
+                       let vertex_name v = "\"" ^ label v ^ "\""
+                       let default_vertex_attributes _ = []
+                       let graph_attributes _ = []
+                     end) in
+  print_graph outdir (file ^ "_ervg") graph Dot.output_graph
     

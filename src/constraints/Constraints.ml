@@ -9,6 +9,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
     
     type value = A.value
     type polynomial = A.polynomial
+    type compkind = A.compkind
     type atom = A.t
        
     type t = A.t list [@@deriving eq, ord]
@@ -59,7 +60,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
       |> List.map (A.vars)
       |> List.fold_left VarSet.union VarSet.empty
         
-    let to_string ?(comp=" <= ") ?(conj=" && ") constr = String.concat conj (List.map (A.to_string ~comp) constr)
+    let to_string ?(compfunc=A.comp_to_string) ?(conj=" && ") constr = String.concat conj (List.map (A.to_string ~compfunc) constr)
         
     let rename constr varmapping = List.map (fun atom -> A.rename atom varmapping) constr
 
@@ -68,11 +69,11 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
 
     let atom_list = identity
       
-    let fold ~subject ~le ~correct ~conj =
-      List.fold_left (fun c atom -> conj c (A.fold ~subject ~le atom)) correct
+    let fold ~subject ~le ~lt ~correct ~conj =
+      List.fold_left (fun c atom -> conj c (A.fold ~subject ~le ~lt atom)) correct
       
     let map_polynomial f =
-      fold ~subject:f ~le:mk_le ~correct:mk_true ~conj:mk_and
+      fold ~subject:f ~le:mk_le ~lt:mk_lt ~correct:mk_true ~conj:mk_and
       
     let drop_nonlinear constr =
       List.filter A.is_linear constr

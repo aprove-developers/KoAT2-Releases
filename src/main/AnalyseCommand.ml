@@ -1,8 +1,11 @@
 open Batteries
+open BoundsInst
 open ProgramTypes
 open RVGTypes
 
 let command = "analyse"
+
+module RV = Make_RV(Transition)
 
 let description = "Proceed a full time, cost and size analysis on a given integer transition system"
 
@@ -139,8 +142,7 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
-  let (prog,goal) = MainUtil.read_input_goal ~rename:params.rename params.simple_input input in
-  prog
+  MainUtil.read_input ~rename:params.rename params.simple_input input
   |> rename_program_option
   |> Option.map (fun program ->
          (program, Approximation.create program)

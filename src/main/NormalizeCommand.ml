@@ -2,6 +2,8 @@ open Batteries
 open Polynomials
 open Atoms
 
+open BoundsInst
+
 let description = "Find a normalform for an input"
 
 let command = "normalize"

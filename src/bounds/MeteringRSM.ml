@@ -20,7 +20,9 @@ let as_realparapoly label var =
   match TransitionLabel.update label var with
   (** Correct? In the nondeterministic case we just make it deterministic? *)
   | None -> RealParameterPolynomial.of_var var
-  | Some p -> p |> RealPolynomial.of_intpoly |> RealParameterPolynomial.of_polynomial
+  | Some (TransitionLabel.UpdateElement.Poly p) -> p |> RealPolynomial.of_intpoly |> RealParameterPolynomial.of_polynomial
+  (** TODO In the probabilistic case we make it nondeterminstic? *)
+  | Some (TransitionLabel.UpdateElement.Dist d) -> RealParameterPolynomial.of_var var
 
 (** Given a list of variables an affine template-polynomial is generated*)            
 let metering_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
@@ -66,7 +68,7 @@ let compute_metering_templates (vars: VarSet.t) (locations: Location.t list): un
 
 let prob_branch_poly ?(diff = RealParameterPolynomial.zero) (l,t,l') =
     let template = (fun key -> key |> TemplateTable.find template_table |> RealParameterPolynomial.of_int_parapoly) in
-    let prob = t |> TransitionLabel.probability |> OurFloat.of_float in
+    let prob = t |> TransitionLabel.probability in
     RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.( add (substitute_f (as_realparapoly t) (template l')) (neg diff)))
 
 let expected_poly gtrans =

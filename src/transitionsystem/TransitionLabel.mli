@@ -12,36 +12,53 @@ type kind = [ `Lower | `Upper ]  [@@deriving eq, ord]
 
 type t
 
+val get_unique_gt_id: unit -> int
+
 exception RecursionNotSupported
 
-val make : ?cost:polynomial -> string -> update:polynomial VarMap.t -> guard:Guard.t -> t
+module UpdateElement :
+  sig
+    type t = Poly of Polynomials.Polynomial.t | Dist of ProbDistribution.t [@@deriving eq,ord]
+    val to_string : t -> string
+    val vars : t -> VarSet.t
+    val is_polynomial : t -> bool
+  end
+
+val make : ?cost:polynomial -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> t
 
 val mk : ?cost:polynomial ->
          com_kind:string ->
-         targets:(string * (polynomial list)) list ->
+         targets:(string * (UpdateElement.t list)) list ->
          patterns:Var.t list ->
          guard:Guard.t ->
          vars:Var.t list ->
          t
          
-val make_prob : ?cost:polynomial -> string -> update:polynomial VarMap.t -> guard:Guard.t -> id:int -> probability:float -> t
+val make_prob : ?cost:polynomial -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> gt_id:int -> probability:OurFloat.t -> t
 
 val mk_prob : ?cost:polynomial ->
          com_kind:string ->
-         targets:(string * (polynomial list)) list ->
+         targets:(string * (UpdateElement.t list)) list ->
          patterns:Var.t list ->
          guard:Guard.t ->
          vars:Var.t list ->
-         id:int ->
-         probability:float ->
+         gt_id:int ->
+         probability:OurFloat.t ->
          t
 
 (** Appends the second label to the first label.
-    An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
-val append : t -> t -> t
+    An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. 
+    Only works when no variable get sampled from a distribution during the update of the first transition *)
+val append : t -> t -> t 
 
-(** Returns if the two labels are the same entity. *)
+(** Returns a guard which constraints the possibility for the second label beeing evaluated in sequence with the first one *)
+val append_guard : t -> t -> Guard.t
+
+(** Returns true iff the two labels are the same entity. *)
 val same : t -> t -> bool
+
+(** Returns true iff the two labels belong to the same general transition *)
+val same_gt : t -> t -> bool
 
 (** Returns if the two labels describe the same transition *)
 val equivalent : t -> t -> bool
@@ -51,15 +68,19 @@ val compare_same : t -> t -> int
 val compare_equivalent : t -> t -> int
 
 val id : t -> int
+val gt_id : t -> int
 
-val update : t -> Var.t -> polynomial Option.t
+val update : t -> Var.t -> UpdateElement.t Option.t
+val update_map : t -> UpdateElement.t VarMap.t
 
 val guard : t -> Guard.t
+val guard_without_invariants: t -> Guard.t
+val invariants: t -> Guard.t
 
-val probability : t -> float
+val probability : t -> OurFloat.t
 
-(** Returns a new transition label with the guard changed. *)
-val map_guard : (Guard.t -> Guard.t) -> t -> t
+(* Adds an invariant to a transition Label *)
+val add_invariant: Guard.t -> t -> t
 
 val default : t
 

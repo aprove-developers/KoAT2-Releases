@@ -2,10 +2,12 @@ open Batteries
 open Formulas
 open Polynomials
 open ProgramTypes
+open BoundsInst
    
 let logger = Logging.(get LocalSizeBound)
            
 module Solver = SMT.IncrementalZ3Solver
+module HelperFuns = LocalSizeBoundHelperFunctions.Make_LocalSizeBoundHelperFunctions(OurInt) (Polynomial) (Formula)
 
 type kind = [`Lower | `Upper] [@@deriving show, eq]
 
@@ -336,21 +338,7 @@ let initial_lsb kind factor (constant: int) (vars: VarSet.t) = `Bounded {
            | (_, `Pure) -> VarSet.empty
   }
 
-(* For 's' it is sufficient to only view the max occurring constants of the update polynomial. *)
-let s_range update =
-  update
-  |> Polynomial.max_of_occurring_constants
-  |> OurInt.max (OurInt.of_int 1) (* 0 or lower is not allowed *)
-  |> OurInt.min (OurInt.of_int 1024) (* TODO We cut it at the moment at 1024, because sometimes the approximation is worse than an integer value. *)
-  |> OurInt.to_int
-  
-(* For 'c' we want to view the max occurring constants of the complete formula *)
-let c_range formula =
-  formula
-  |> Formula.max_of_occurring_constants
-  |> OurInt.min (OurInt.of_int 1024) (* TODO We cut it at the moment at 1024, because sometimes the approximation is worse than an integer value. *)
-  |> OurInt.to_int
-  
+
 (* Check if x <= s * (c + [v1,...,vn]). *)
 let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: int) (c: int) =
   let execute () =
@@ -374,19 +362,19 @@ let find_scaled_bound kind program_vars solver var guard_vars update_vars (s: in
                   ~result:(Bound.to_string % as_bound)
                   execute
 
-let find_bound kind program_vars var formula update s_range =
+let find_bound kind program_vars var formula update_vars s_range =
   let execute () =
     let solver = Solver.create ~model:false () in
-    let c_range_ = (c_range formula) in
+    let c_range_ = (HelperFuns.c_range formula) in
     Solver.add solver formula;
-    find_scaled_bound kind program_vars solver var (formula |> Formula.vars |> VarSet.remove var) (update |> Polynomial.vars) s_range c_range_
+    find_scaled_bound kind program_vars solver var (formula |> Formula.vars |> VarSet.remove var) update_vars s_range c_range_
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "find_local_size_bound", [
                           "kind", show_kind kind;
                           "var", Var.to_string var;
                           "formula", Formula.to_string formula;
                           "s_range", string_of_int s_range;
-                          "c_range", string_of_int (c_range formula)])
+                          "c_range", string_of_int (HelperFuns.c_range formula)])
                      ~result:(Bound.to_string % as_bound)
                      execute
 
@@ -415,11 +403,27 @@ let compute_single_local_size_bound program kind (l,t,l') var =
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
     TransitionLabel.update t var
     |> Option.map (fun update ->
+           let updateformula v' = 
+             match update with
+              | TransitionLabel.UpdateElement.Poly p ->
+                  Formula.Infix.(Polynomial.of_var v' = p)
+              | TransitionLabel.UpdateElement.Dist d ->
+                  Formula.mk (ProbDistribution.guard d v')
+            in
            (* Introduce a temporary result variable *)
            let v' = Var.fresh_id Var.Int () in
-           let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && Polynomial.of_var v' = update) in
+           let update_vars = TransitionLabel.UpdateElement.vars update in
+           let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && updateformula v') in
+           let update_fun_for_s_range = 
+             match update with 
+              | TransitionLabel.UpdateElement.Poly p -> p
+              | TransitionLabel.UpdateElement.Dist d ->
+                  (ProbDistribution.deterministic_upper_polynomial d
+                   |? Polynomial.of_int 1024)
+           in
 (*         A local size bound must not depend on temporary variables    *)
-           find_bound kind (Program.input_vars program) v' guard_with_update update (s_range update)
+           find_bound kind (Program.input_vars program) v' guard_with_update update_vars 
+                      (HelperFuns.s_range update_fun_for_s_range)
          )
   in
   LSB_Cache.add table (kind,(l,t,l'),var) lsb;

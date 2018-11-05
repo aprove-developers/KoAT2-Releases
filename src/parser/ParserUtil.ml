@@ -3,7 +3,7 @@ open Formulas
 open Polynomials
 open ProgramTypes
    
-let mk_transition lhs (cost: Polynomial.t) (rhs: string * ((string * (Polynomial.t list)) list)) (formula: Formula.t) (vars:Var.t list): Transition.t list =
+let mk_transition lhs (cost: Polynomial.t) (rhs: string * ((string * (TransitionLabel.UpdateElement.t list)) list)) (formula: Formula.t) (vars:Var.t list): Transition.t list =
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
@@ -19,11 +19,11 @@ let mk_transition lhs (cost: Polynomial.t) (rhs: string * ((string * (Polynomial
   |> List.map (fun (l,t,l') -> (l,t ~vars,l'))
 
   (*So far recursion cannot be parsed, therefore the location is taken as the head of the list as non singleton lists yield an exception*)
-  let mk_transition_prob lhs (cost: Polynomial.t) (rhs: (float * string * ((string * (Polynomial.t list)) list)) list) (formula: Formula.t) (vars:Var.t list): Transition.t list =
+  let mk_transition_prob lhs (cost: Polynomial.t) (rhs: (OurFloat.t * string * ((string * (TransitionLabel.UpdateElement.t list)) list)) list) (formula: Formula.t) (vars:Var.t list): Transition.t list =
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
-          let id = unique() in
+          let id = TransitionLabel.get_unique_gt_id () in
           List.map (fun (prob, comkind, targets) ->
             (Location.of_string (Tuple2.first lhs),
               TransitionLabel.mk_prob
@@ -32,7 +32,7 @@ let mk_transition lhs (cost: Polynomial.t) (rhs: string * ((string * (Polynomial
                 ~targets:targets
                 ~patterns:(List.map Var.of_string (Tuple2.second lhs))
                 ~guard:constr
-                ~id:id
+                ~gt_id:id
                 ~probability:prob,
               (Location.of_string (Tuple2.first (List.hd targets))))
         ) rhs)
@@ -46,7 +46,7 @@ let default_vars =
   ["x"; "y"; "z"; "u"; "v"; "w"; "p"; "q"]
   |> List.map Var.of_string
 
-let mk_transition_simple (start: string) (cost: Polynomial.t) (rhs: string * (string * Polynomial.t list) list) (formula: Formula.t): Transition.t list =
+let mk_transition_simple (start: string) (cost: Polynomial.t) (rhs: string * (string * TransitionLabel.UpdateElement.t list) list) (formula: Formula.t): Transition.t list =
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
@@ -60,12 +60,12 @@ let mk_transition_simple (start: string) (cost: Polynomial.t) (rhs: string * (st
             ~vars:default_vars, (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))))
        )
        
-let mk_transition_simple_prob (start: string) (cost: Polynomial.t) (rhs: (float * string * (string * Polynomial.t list) list) list) (formula: Formula.t): Transition.t list =
+let mk_transition_simple_prob (start: string) (cost: Polynomial.t) (rhs: (OurFloat.t * string * (string * TransitionLabel.UpdateElement.t list) list) list) (formula: Formula.t): Transition.t list =
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
           List.map (fun (prob, comkind, targets) ->
-          let id = unique() in
+          let id = TransitionLabel.get_unique_gt_id () in
           (Location.of_string start,
             TransitionLabel.mk_prob
               ~cost:cost
@@ -74,7 +74,7 @@ let mk_transition_simple_prob (start: string) (cost: Polynomial.t) (rhs: (float 
               ~patterns:default_vars
               ~guard:constr
               ~vars:default_vars
-              ~id:id
+              ~gt_id:id
               ~probability:prob,
             (Location.of_string (Tuple2.first (List.hd targets))))
        ) rhs)
@@ -89,3 +89,14 @@ let mk_program_simple (transitions: Transition.t list): Program.t =
 
 let mk_program goal start vars (transitions: Transition.t list): Program.t =
   Program.from transitions start
+
+let ourfloat_of_decimal_string (str: string): OurFloat.t = 
+  let str_after_point = String.split str ~by:(".") |> Tuple2.second in
+  let numerator = 
+    OurFloat.of_string str_after_point
+  in
+  let denominator = 
+    OurFloat.pow (OurFloat.of_int 10) (String.length str_after_point)
+  in
+  OurFloat.( numerator/denominator )
+

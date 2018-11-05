@@ -1,6 +1,6 @@
 %token	<string>	ID
 %token	<int>		UINT
-%token  <float>         UFLOAT
+%token  <string>        UFLOAT
 %token			PLUS MINUS TIMES POW
 %token			EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
 %token			LPAR RPAR
@@ -12,6 +12,7 @@
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
 %token                  COMMA COLON
 %token                  MIN MAX INFINITY ABS
+%token                  UNIFORM
 
 %left			PLUS MINUS
 %left			TIMES
@@ -30,7 +31,7 @@
 
 %start <Polynomials.Polynomial.t> onlyPolynomial
 
-%start <Bound.t> onlyBound
+%start <BoundsInst.Bound.t> onlyBound
 
 %start <(Program.t * string)> programAndGoal
 
@@ -40,6 +41,12 @@
 
 %type <Polynomials.Polynomial.t> polynomial
 
+%type <(string * TransitionLabel.UpdateElement.t list)> transition_target
+
+%type <ProbDistribution.t> dist
+
+%type <TransitionLabel.UpdateElement.t> update_element
+
 %type <Var.t list> variables
 
 %type <string> goal
@@ -48,6 +55,7 @@
   open BatTuple
   module Constr = Constraints.Constraint
   open Atoms
+  open BoundsInst
   module Poly = Polynomials.Polynomial
   open Formulas
   open ProgramTypes
@@ -131,11 +139,11 @@ non_prob_transition_rhs_with_prob :
 	          
 non_prob_transition_rhs :
 	|       com_kind = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
- 	          { (com_kind, targets) } ;
+                  { (com_kind, targets)} ;
         |       target = transition_target
                   { ("Com_1", [target]) } ;
 transition_target :
-	|       target = ID; LPAR assignments = separated_list(COMMA, polynomial) RPAR
+	|       target = ID; LPAR assignments = separated_list(COMMA, update_element) RPAR
 	          { (target, assignments) } ;
 
 withConstraints :
@@ -145,7 +153,7 @@ withConstraints :
 	
 withProbabilities :
         |        prob = UFLOAT COLON
-                { Batteries.Float.of_float prob };
+                { ParserUtil.ourfloat_of_decimal_string prob};
 	
 
 onlyFormula :
@@ -217,6 +225,16 @@ polynomial :
 	          { op p1 p2 }
 	|       v = variable; POW; c = UINT
 	          { Poly.pow v c } ;
+
+dist:
+        |       UNIFORM; LPAR; p1 = polynomial; RPAR; LPAR; p2 = polynomial; RPAR
+                  { ProbDistribution.Uniform (p1,p2) };
+
+update_element: 
+        |       p = polynomial
+                  { TransitionLabel.UpdateElement.Poly p }
+        |       d = dist
+                  { TransitionLabel.UpdateElement.Dist d }
 
 onlyBound :
         |       b = bound EOF { b } ;

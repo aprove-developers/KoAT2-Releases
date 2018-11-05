@@ -1,16 +1,25 @@
 open Batteries
 open ProgramTypes
 
-module RV =
+module Make_RV (Trans :
+                  sig
+                    type t
+                    val same: t -> t -> bool
+                    val equivalent: t -> t -> bool
+                    val compare_same: t -> t -> int
+                    val compare_equivalent: t -> t -> int
+                    val to_string: t -> string
+                    val to_id_string: t -> string
+                  end) =
   struct
-    type t = Transition.t * Var.t
+    type t = Trans.t * Var.t
 
     let same (t1,v1) (t2,v2) =
-      Transition.same t1 t2
+      Trans.same t1 t2
       && Var.equal v1 v2
 
     let equivalent (t1,v1) (t2,v2) =
-      Transition.equivalent t1 t2
+      Trans.equivalent t1 t2
       && Var.equal v1 v2
 
     let compare compare_transition (t1,v1) (t2,v2) =
@@ -22,25 +31,27 @@ module RV =
         0
 
     let compare_same =
-      compare Transition.compare_same
-      
+      compare Trans.compare_same
+
     let compare_equivalent =
-      compare Transition.compare_equivalent
+      compare Trans.compare_equivalent
 
     let hash (t,v) =
-      Hashtbl.hash (Transition.to_string t ^ Var.to_string v)
-      
+      Hashtbl.hash (Trans.to_string t ^ Var.to_string v)
+
     let transition (t,_) = t
-                         
+
     let variable (_,v) = v
-                       
+
     let to_id_string (t,v) =
-      "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
+      "|" ^ Trans.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
   end
 
 module RVG =
   struct
+    module RV = Make_RV(Transition)
+
     include Graph.Persistent.Digraph.ConcreteBidirectional(struct
                 include RV
                 let equal = same
@@ -97,4 +108,4 @@ module RVG =
       in
       TransitionGraph.fold_edges_e add_transition (Program.graph program) empty
 
-  end  
+  end

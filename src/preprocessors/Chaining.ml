@@ -16,9 +16,18 @@ let skip_location location graph =
 (** Returns if the specific location is chainable in the graph. *)
 let chainable graph location : bool =
   let open TransitionGraph in
+  let module VarMap = Map.Make(Var) in
+  let check_update_nonprobabilistic tlist =
+    tlist
+    |> List.for_all (fun t -> TransitionLabel.update_map (Transition.label t)
+                              |> VarMap.for_all (fun _ -> TransitionLabel.UpdateElement.is_polynomial))
+  in
   not (mem_edge graph location location)
   && out_degree graph location >= 1
   && in_degree graph location >= 1
+  (* Check if the update function is not probabilistic *)
+  && (pred_e graph location
+      |> check_update_nonprobabilistic)
 
 (** Performs a chaining step removing the location from the graph. *)
 let chain location graph : TransitionGraph.t =

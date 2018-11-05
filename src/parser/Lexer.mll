@@ -30,6 +30,7 @@ rule read =
   parse
   | white             { read lexbuf }
   | newline           { next_line lexbuf; read lexbuf }
+  | "UNIFORM"         { P.UNIFORM }
   | "GOAL"            { P.GOAL }
   | "STARTTERM"       { P.STARTTERM }
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
@@ -39,7 +40,7 @@ rule read =
   | "max"             { P.MAX }
   | "inf"             { P.INFINITY }
   | int               { P.UINT (int_of_string (Lexing.lexeme lexbuf)) }
-  | probfloat         { P.UFLOAT (float_of_string (Lexing.lexeme lexbuf))}
+  | probfloat         { P.UFLOAT (Lexing.lexeme lexbuf)}
   | id                { P.ID (Lexing.lexeme lexbuf) }
   | '|'               { P.ABS }
   | '('               { P.LPAR }

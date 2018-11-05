@@ -84,7 +84,7 @@ let tests =
                      let result =
                        Tuple2.first (Preprocessor.process_til_fixpoint
                                        Preprocessor.[CutUnreachableLocations; CutUnsatisfiableTransitions]
-                                       (Readers.read_program_simple program, Approximation.empty 0 0))
+                                       (Readers.read_program_simple program, Approximation.empty 0 0 0))
                      in
                      reset ();
                      assert_equal_program (Readers.read_program_simple expected_program) result))

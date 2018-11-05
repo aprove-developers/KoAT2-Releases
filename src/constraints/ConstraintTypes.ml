@@ -52,6 +52,7 @@ module type Atom =
                 and type value = value
 
         type t
+        type compkind = LE | LT
              
 
         (** Following methods are convenience methods for the creation of atoms. *)
@@ -81,7 +82,9 @@ module type Atom =
           
         val neg : t -> t
           
-        val to_string : ?comp:string -> t -> string
+        val comp_to_string: compkind -> string
+
+        val to_string : ?compfunc:(compkind -> string) -> t -> string
 
         (** Returns the set of variables which are active in the atom.
             A variable is active, if it's value has an effect on the evaluation of the atom. *)
@@ -98,6 +101,7 @@ module type Atom =
         (** Replaces all operations by new constructors. *)
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
+                   lt:('b -> 'b -> 'c) -> 
                    t -> 'c
                    
         (** Returns if both polynomials are linear. *)
@@ -116,6 +120,7 @@ module type Constraint =
   sig
         type value
         type polynomial
+        type compkind
         type atom
         type t
         
@@ -172,7 +177,7 @@ module type Constraint =
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
         val vars : t -> VarSet.t
 
-        val to_string : ?comp:string -> ?conj:string -> t -> string
+        val to_string : ?compfunc:(compkind -> string) -> ?conj:string -> t -> string
 
 
         (** Following methods manipulate atoms and return the manipulated versions. *)
@@ -185,6 +190,7 @@ module type Constraint =
         (** Replaces all operations by new constructors. *)
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
+                   lt:('b -> 'b -> 'c) ->
                    correct:('d) ->
                    conj:('d -> 'c -> 'd) ->
                    t -> 'd
@@ -274,6 +280,7 @@ module type Formula =
         (** Replaces all operations by new constructors. *)
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
+                   lt:('b -> 'b -> 'c) ->
                    correct:('d) ->
                    conj:('d -> 'c -> 'd) ->
                    wrong:('e) ->

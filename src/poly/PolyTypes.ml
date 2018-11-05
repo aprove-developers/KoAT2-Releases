@@ -4,6 +4,16 @@ open Batteries
 
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
     They can be typeclass-like extended by MakePartialOrder. *)
+module type OurNumber = 
+  sig
+    include Number.Numeric
+
+    val (=~=) : t -> t -> bool
+    val pow : t -> int -> t
+    val max : t -> t -> t
+    val min : t -> t -> t
+  end
+
 module type BasePartialOrder =
   sig
     type t
@@ -311,6 +321,9 @@ module type Polynomial =
     (** Returns a simplified version of the polynomial.
         Subsequent calls to simplify will not lead to a further simplification. *)
     val simplify : t -> t
+
+    (** Derives the polynomial with respect to the given variable *)
+    val derivative: Var.t -> t -> t
 
     (** Multiplies the polynomial with a constant value.
         The result is always a polynomial. *)

@@ -1,4 +1,5 @@
 open Batteries
+open BoundsInst
 open OUnit2
 open Formulas
 open Constraints

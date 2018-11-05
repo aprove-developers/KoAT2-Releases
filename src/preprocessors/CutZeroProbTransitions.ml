@@ -9,7 +9,7 @@ let transform_program program =
   let trans_prob_0 =
     TransitionGraph.transitions (Program.graph program)
     |> TransitionSet.filter
-         ((=) 0.0 % TransitionLabel.probability % Transition.label) in
+         ((=) (OurFloat.of_float 0.0) % TransitionLabel.probability % Transition.label) in
   if TransitionSet.is_empty trans_prob_0 then
     MaybeChanged.same program
   else

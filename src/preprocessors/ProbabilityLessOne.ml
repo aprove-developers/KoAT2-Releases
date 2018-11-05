@@ -2,7 +2,7 @@ open Batteries
 open ProgramTypes
 open Polynomials
 
-(** This preprocessor throws an error if the total Probability of a Generalized Transition is greater than one. *)
+(** This preprocessor throws an error if the total Probability of a Generalized Transition is less than one. *)
 
 let logger = Logging.(get Preprocessor)
 
@@ -10,7 +10,7 @@ let check_program program =
   let trans_prob_less_1 =
     program
     |> Program.generalized_transitions
-    |> GeneralTransitionSet.filter (fun gen_trans -> GeneralTransition.total_probability gen_trans < 1.)
+    |> GeneralTransitionSet.filter (fun gen_trans -> GeneralTransition.total_probability gen_trans < (1. |> OurFloat.of_float))
   in 
   if GeneralTransitionSet.is_empty trans_prob_less_1 then
     MaybeChanged.same program
@@ -24,7 +24,9 @@ let check_program program =
       program
       |> Program.vars
       |> VarSet.to_list
-      |> List.fold_left (fun varmap var -> TransitionLabel.VarMap.add var (Polynomial.of_var var) varmap) TransitionLabel.VarMap.empty
+      |> List.fold_left (fun varmap var -> TransitionLabel.VarMap.add var 
+                          (TransitionLabel.UpdateElement.Poly (Polynomial.of_var var)) varmap) 
+         TransitionLabel.VarMap.empty
     in
     
     let new_transitions =
@@ -34,9 +36,9 @@ let check_program program =
                                   TransitionLabel.make_prob 
                                       "Com_1"
                                       ~guard:(Constraints.Constraint.mk_true)
-                                      ~id:(GeneralTransition.id trans) 
+                                      ~gt_id:(GeneralTransition.id trans) 
                                       ~update:(identity_update)
-                                      ~probability:(Float.of_float (1. -. GeneralTransition.total_probability trans)),
+                                      ~probability:(OurFloat.(-) (OurFloat.of_float 1.) (GeneralTransition.total_probability trans)),
                                   new_sink))
     in
 

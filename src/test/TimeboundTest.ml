@@ -1,4 +1,5 @@
 open Batteries
+open BoundsInst
 open OUnit2
 open Helper
 open ProgramTypes
@@ -9,7 +10,7 @@ let find_timebound (program: Program.t): Bound.t =
   |> Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
   |> (fun (program, appr) ->
     Bounds.find_bounds program appr
-    |> fun appr -> Approximation.(TransitionApproximation.sum (time appr) program)
+    |> fun appr -> Approximation.(ApproximationModules.TransitionApproximation.sum (time appr) program)
   )
 
 (** Returns an overall costbound for the given program. *)
