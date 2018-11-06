@@ -79,15 +79,16 @@ COPY --from=koat2_build --chown=koat2_user:koat2_user /home/opam_user/.opam/4.06
 
 COPY --from=koat2_build --chown=koat2_user:koat2_user /home/opam_user/.opam/4.06.1/share /home/koat2_user/.opam/4.06.1/share
 
-COPY --from=koat2_build --chown=koat2_user:koat2_user /home/opam_user/src/exact_runtime /home/koat2_user/src/exact_runtime
+COPY --from=koat2_build --chown=koat2_user:koat2_user /home/opam_user/src/exact_runtime/exact_runtime_from_file.sage /home/koat2_user/src/exact_runtime/exact_runtime_from_file.sage
 
-COPY --from=koat2_build --chown=koat2_user:koat2_user /home/opam_user/src/main /home/koat2_user/src/main
+COPY --from=koat2_build --chown=koat2_user:koat2_user /home/opam_user/src/main /home/koat2_user/src/main/koat2.opt
+COPY --from=koat2_build --chown=koat2_user:koat2_user /home/opam_user/src/main /home/koat2_user/src/main/koat2
 
 ENV LD_LIBRARY_PATH=/home/koat2_user/.opam/4.06.1/lib:/home/koat2_user/.opam/4.06.1/lib/stublibs:/home/koat2_user/.opam/4.06.1/lib/z3:/home/koat2_user/.opam/4.06.1/share/apron/lib
 
 ENV PATH=/home/koat2_user/.opam/4.06.1/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/koat2_user/src/main
 
-ENTRYPOINT ["koat2", "exact"]
+# ENTRYPOINT ["koat2", "exact"]
 
 #docker tag koatp aprove/exact_runtime
 #docker push aprove/exact_runtime
