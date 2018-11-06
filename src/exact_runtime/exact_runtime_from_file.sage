@@ -122,8 +122,12 @@ for root in filtered_roots:
 
 # Create set of linear equations
 A = matrix([[monom(x=-i).real() for monom in r_monoms] for i in range(k)])
-B = vector([c_lin*i for i in range(k)])
-solution = A.solve_right(B)
+if p_const == 0: 
+  B = vector([c_lin*i for i in range(k)])
+else:
+  B = vector([c_const for i in range(k)])
+# We must have AX + B = 0, i.e. AX = -B has to be solved
+solution = A.solve_right(-B)
 
 if p_const == 0:
     r = c_lin*x

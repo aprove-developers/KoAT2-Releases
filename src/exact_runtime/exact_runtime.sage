@@ -53,6 +53,7 @@ x = polygen(ZZ)
 monoms = [j * x^i for i,j in char_coeffs]
 poly = sum(monoms)
 
+
 c_lin = -1/drift
 if not p_const == 0:
     c_const = 1/p_const
@@ -89,8 +90,13 @@ for root in filtered_roots:
 
 # Create set of linear equations
 A = matrix([[monom(x=-i).real() for monom in r_monoms] for i in range(k)])
-B = vector([c_lin*i for i in range(k)])
-solution = A.solve_right(B)
+
+if p_const == 0
+  B = vector([c_lin*i for i in range(k)])
+else
+  B = vector([c_const for i in range(k)])
+  
+solution = A.solve_right(-B)
 
 if p_const == 0:
     r = c_lin*x
