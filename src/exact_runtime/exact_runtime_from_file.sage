@@ -103,8 +103,6 @@ for root in roots:
     if conjugate(root) not in filtered_roots and root.imag()>= 0:
         filtered_roots[root] = roots[root]
 
-print("filtered_roots = "+ str(filtered_roots))
-
 x = var('x')
 r_monoms = []
 
