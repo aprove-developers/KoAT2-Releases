@@ -65,6 +65,8 @@ RR = RealField(precision)
 roots = [(CC(root), mult) for root,mult in roots if RR(abs(root)) <= 1.]
 roots = dict(roots)
 
+print("roots = "+ str(roots))
+
 filtered_roots = {}
 for root in roots:
     if conjugate(root) not in filtered_roots:

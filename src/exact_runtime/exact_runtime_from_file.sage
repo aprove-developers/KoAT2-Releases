@@ -97,10 +97,13 @@ RR = RealField(precision)
 roots = [(CC(root), mult) for root,mult in roots if RR(abs(root)) <= 1.]
 roots = dict(roots)
 
+
 filtered_roots = {}
 for root in roots:
-    if conjugate(root) not in filtered_roots:
+    if conjugate(root) not in filtered_roots and root.imag()>= 0:
         filtered_roots[root] = roots[root]
+
+print("filtered_roots = "+ str(filtered_roots))
 
 x = var('x')
 r_monoms = []
@@ -123,11 +126,11 @@ for root in filtered_roots:
 # Create set of linear equations
 A = matrix([[monom(x=-i).real() for monom in r_monoms] for i in range(k)])
 if p_const == 0: 
-  B = vector([c_lin*i for i in range(k)])
+  B = vector([c_lin*(-i) for i in range(k)])
 else:
   B = vector([c_const for i in range(k)])
 # We must have AX + B = 0, i.e. AX = -B has to be solved
-solution = A.solve_right(-B)
+solution = A.solve_right(B)
 
 if p_const == 0:
     r = c_lin*x
