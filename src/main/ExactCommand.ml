@@ -7,8 +7,10 @@ let description = "Testing for exactRuntime"
 let command = "exact"
 
 type params = {
-  in_file : string; [@pos 0] [@aka ["f"]]
+  in_file : string; [@aka ["i"]]
   (** path to input file *)
+  logging : bool; [@default false] [@aka ["l"]]
+  (** enable logging *)
 } [@@deriving cmdliner, show]
 
 let read_process_lines command =
@@ -38,7 +40,10 @@ let get_koat_path (command: String.t) =
   else Filename.dirname which_output
 
 let run (params: params) =
-  Logging.(use_loggers [ExactRuntime, Logger.DEBUG]); 
+  if(params.logging) then
+    Logging.(use_loggers [ExactRuntime, Logger.DEBUG])
+  else
+    Logging.(use_loggers []);
   let logger = Logging.(get ExactRuntime) in
   let execute () =
     (* No idea if this actaully works, may need adjustment in the future *)
