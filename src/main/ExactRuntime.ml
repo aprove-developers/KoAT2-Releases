@@ -2,7 +2,8 @@ open Batteries
 open ProgramTypes
 open Sys
 open Unix
-let description = "Testing for exactRuntime"
+open Parameter
+(*let description = "Testing for exactRuntime"
 
 let command = "exact"
 
@@ -11,7 +12,7 @@ type params = {
   (** path to input file *)
   logging : bool; [@default false] [@aka ["l"]]
   (** enable logging *)
-} [@@deriving cmdliner, show]
+} [@@deriving cmdliner, show]*)
 
 let read_process_lines command =
   let lines = ref [] in
@@ -40,19 +41,23 @@ let get_koat_path (command: String.t) =
   else Filename.dirname which_output
 
 let run (params: params) =
-  if(params.logging) then
-    Logging.(use_loggers [ExactRuntime, Logger.DEBUG])
-  else
-    Logging.(use_loggers []);
+  let logs = List.map (fun log -> (log, params.log_level)) params.logs in
+    Logging.use_loggers logs;
   let logger = Logging.(get ExactRuntime) in
+  
+  let input = Option.default_delayed read_line params.input in
+  let input_filename =
+      input |> Fpath.v |> Fpath.normalize |> Fpath.filename 
+  in
+      
   let execute () =
     (* No idea if this actaully works, may need adjustment in the future *)
     let sage_path = 
     get_koat_path Sys.argv.(0)
     |> fun koat_path -> koat_path ^ "/../exact_runtime/exact_runtime_from_file.sage"
     in
-    params.in_file
-    |> fun input -> "sage " ^ sage_path ^ " " ^ input
+    input_filename
+    |> fun input -> "sage " ^ sage_path ^ " " ^ input_filename
     |> read_process_lines
     (* Printed here for output reasons only *)
     |> tap(fun output -> output |> String.concat "\n" |> print_string; print_string "\n")

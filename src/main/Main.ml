@@ -2,15 +2,14 @@ open Batteries
 open ProgramTypes
 open RVGTypes
 
-type main_params = {koatP: string[@default ""]} [@@deriving cmdliner]
+type main_params = {koat2: string[@default ""]} [@@deriving cmdliner]
 
 let subcommand run params_cmdliner_term description command =
   Cmdliner.Term.(const run $ params_cmdliner_term (), info ~doc:description command)
   
 let subcommands =
   [
-    AnalyseCommand.(subcommand run params_cmdliner_term description command);
-    PAnalyseCommand.(subcommand run params_cmdliner_term description command);
+    AnalyseCommand.(subcommand run Parameter.params_cmdliner_term description command);
     PrfCommand.(subcommand run params_cmdliner_term description command);
     LocalSizeBoundCommand.(subcommand run params_cmdliner_term description command);
     SizeCommand.(subcommand run params_cmdliner_term description command);
@@ -19,7 +18,6 @@ let subcommands =
     LexRSMCommand.(subcommand run params_cmdliner_term description command);
     PprfCommand.(subcommand run params_cmdliner_term description command);
     MeteringRSMCommand.(subcommand run params_cmdliner_term description command);
-    ExactCommand.(subcommand run params_cmdliner_term description command);
   ]
   
 let default_cmd =

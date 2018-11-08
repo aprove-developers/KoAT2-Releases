@@ -3,30 +3,49 @@ open BoundsInst
 open ProgramTypes
 open RVGTypes
 
-let command = "panalyse"
+(*let command = "panalyse"*)
 
 module RV = Make_RV(Transition)
 module ERV = Make_RV(RVTransitions.TransitionForExpectedSize)
 
-let description = "Proceed a full expected time and expected size analysis on a given probabilistic integer transition system"
+(*let description = "Proceed a full expected time and expected size analysis on a given probabilistic integer transition system"*)
 
-(** Prints the whole resulting approximation to the shell. *)
-let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
-  print_string (Approximation.to_string program appr)
+(** Prints the whole resulting approximation with the expected timebounds to the shell. *)
+let print_all_expected_bounds (program: Program.t) (appr: Approximation.t): unit =
+  print_string (Approximation.to_string program true appr)
+
+(** Prints the only the deterministic bounds of the resulting approximation to the shell. *) 
+let print_all_deterministic_bounds (program: Program.t) (appr: Approximation.t): unit =
+  print_string (Approximation.to_string program false appr)
 
 (** Prints the overall timebound of the program to the shell. *)
-let print_overall_timebound (program: Program.t) (appr: Approximation.t): unit =
+let print_overall_expected_timebound (program: Program.t) (appr: Approximation.t): unit =
   program
   |> Approximation.program_exptimebound appr
   |> RealBound.to_string
   |> print_endline
-
+  
 (** Prints the overall timebound of the program to the shell. *)
-let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
+let print_overall_deterministic_timebound (program: Program.t) (appr: Approximation.t): unit =
+  program
+  |> Approximation.program_timebound appr
+  |> Bound.to_string
+  |> print_endline
+
+(** Prints the overall deterministic timebound of the program to the shell. *)
+let print_termcomp_deterministic (program: Program.t) (appr: Approximation.t): unit =
   program
   |> Approximation.program_costbound appr
   |> Bound.asymptotic_complexity
   |> Bound.show_complexity_termcomp
+  |> print_endline
+  
+(** Prints the overall expected timebound of the program to the shell. *)
+let print_termcomp_expected (program: Program.t) (appr: Approximation.t): unit =
+  program
+  |> Approximation.program_exptimebound appr
+  |> RealBound.asymptotic_complexity
+  |> RealBound.show_complexity_termcomp
   |> print_endline
 
 (** The shell arguments which can be defined in the console. *)
@@ -64,7 +83,7 @@ type params = {
     log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.NONE]
     (** The general log level of the loggers. *)
     
-    result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound] [@aka ["r"]]
+    result : string; [@default "overall"] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
     
     preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])]
@@ -130,68 +149,3 @@ let rename_program_option opt =
   match opt with
     |Some program -> Some (rename_program program)
     |None -> None
-
-let run (params: params) =
-  let logs = List.map (fun log -> (log, params.log_level)) params.logs in
-  Logging.use_loggers logs;
-  let input = Option.default_delayed read_line params.input in
-  let input_filename =
-    if params.simple_input then
-      "dummyname"
-    else
-      input |> Fpath.v |> Fpath.normalize |> Fpath.rem_ext |> Fpath.filename
-  and output_dir =
-    Option.map Fpath.v params.output_dir
-    |? (if params.simple_input then
-          Fpath.v "."
-        else
-          input |> Fpath.v |> Fpath.parent)
-  in
-  if params.print_input then (
-    let program_str =
-      if params.simple_input then
-        input
-      else
-        input |> File.lines_of |> List.of_enum |> String.concat "\n"
-    in
-    print_string (program_str ^ "\n\n")
-  );
-  input
-  |> MainUtil.read_input ~rename:params.rename params.simple_input
-  |> rename_program_option
-  |> Option.map (fun program ->
-         (program, Approximation.create program)
-         |> Preprocessor.process params.preprocessing_strategy params.preprocessors
-         |> tap (fun (program, appr) ->
-                if params.print_system then
-                  GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
-         |> tap (fun (program, appr) ->
-                if params.print_rvg then (
-                  GraphPrint.print_rvg `Lower ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program;
-                  GraphPrint.print_rvg `Upper ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
-                )
-              )
-         |> (fun (program, appr) ->
-                   if not params.no_boundsearch then
-                     (program, appr)
-                     |> uncurry Bounds.find_exp_bounds
-                     |> fun appr -> (program, appr)
-                   else (program, appr))
-         |> tap (fun (program, appr) -> params.result program appr)
-         |> tap (fun (program, appr) ->
-                if params.print_system then
-                  GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
-         |> tap (fun (program, appr) ->
-                if params.print_rvg then (
-                  GraphPrint.print_rvg `Lower ~label:(bounded_rv_to_string program `Lower appr) ~outdir:output_dir ~file:input_filename program;
-                  GraphPrint.print_rvg `Upper ~label:(bounded_rv_to_string program `Upper appr) ~outdir:output_dir ~file:input_filename program;
-                )
-              )
-         |> tap (fun (program, appr) ->
-                if params.print_ervg then (
-                  GraphPrint.print_rvg `Lower ~label:(bounded_rv_to_string program `Lower appr) ~outdir:output_dir ~file:input_filename program;
-                  GraphPrint.print_rvg `Upper ~label:(bounded_rv_to_string program `Upper appr) ~outdir:output_dir ~file:input_filename program;
-                )
-              )
-       )
-  |> ignore

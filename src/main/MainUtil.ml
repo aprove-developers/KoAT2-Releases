@@ -31,3 +31,9 @@ let read_input_goal ?(rename=false) simple program_str =
         prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now.";
         None
 
+let read_goal simple program_str =
+  if simple then "COMPLEXITY"
+  else
+  program_str
+  |> Readers.read_goal_file
+

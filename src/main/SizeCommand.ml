@@ -16,6 +16,6 @@ let run (params: params) =
   let appr = Approximation.empty 10 3 10
   and program = Readers.read_file params.program in
   SizeBounds.improve program appr
-  |> Approximation.to_string program
+  |> Approximation.to_string program false
   |> print_string
 
