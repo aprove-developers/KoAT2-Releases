@@ -35,6 +35,8 @@
 
 %start <(Program.t * string)> programAndGoal
 
+%start <string> onlyGoal
+
 %type <Program.t> program
 
 %type <Formulas.Formula.t> formula
@@ -62,6 +64,10 @@
 %}
 
 %%
+
+onlyGoal :
+        |       g = goal;
+                { g };
 
 onlyProgram :
         |       p = program; EOF

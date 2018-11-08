@@ -10,6 +10,8 @@ exception Error of string
                  
 val read_file : string -> Program.t
 
+val read_goal_file : string -> string
+
 val read_program : string -> Program.t
 
 val read_program_simple : string -> Program.t
