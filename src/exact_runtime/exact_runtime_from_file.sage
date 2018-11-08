@@ -240,14 +240,11 @@ else:
 for sol,monom in zip(solution, r_monoms):
     r += sol*monom
 # substitute x by the original variables
-v = vector([var('v{id}'.format(id=i)) for i in range(vec_length)])
-v = v.dot_product(guardvec)-guardval
+v_vars = vector([var('v{id}'.format(id=i)) for i in range(vec_length)])
+v = v_vars.dot_product(guardvec)-guardval
 r = r.subs(x=v)
 
 total_time = time.clock() - start_time
 
-print("r(x) = " + str(r))
-print("time elapsed: " + str(total_time))
-
-
-
+print("r{vars} = {res}".format(vars=v_vars,res=r))
+print("time elapsed: {t}".format(t=total_time))
