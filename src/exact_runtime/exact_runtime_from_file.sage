@@ -7,12 +7,6 @@ def make_probability (in_string):
     except:
         return Rational(in_string)
 
-def is_probability (in_string):
-    try:
-        make_probability(in_string)
-        return True
-    except:
-        return False
 
 def check_label (in_string, label):
     if in_string[0:len(label)+2] == "(" + label + " ":
@@ -24,44 +18,14 @@ def check_label (in_string, label):
 def make_vector (in_string):
     return vector([int(e) for e in in_string[1:-1].split(",")])
 
-def check_vector (in_string):
-    try:
-        make_vector(in_string)
-        return True
-    except:
-        return False
-
 def make_prob_tuple (in_string):
     ret = in_string.split(":")
     ret[0] = make_probability(ret[0])
     ret[1] = make_vector(ret[1])
     return ret
 
-def is_prob_tuple (in_string):
-    try:
-        make_prob_tuple(in_string)
-        return True
-    except:
-        return False
-
 def make_prob_list (in_string):
     return [make_prob_tuple(e) for e in in_string.split(" :+: ")]
-
-def is_prob_list (in_string):
-    try:
-        make_prob_list(in_string)
-        return True
-    except:
-        return False
-
-
-def is_int (in_string):
-    try:
-        int(in_string)
-        return True
-    except:
-        return False
-
 
 start_time = time.clock()
 
@@ -82,28 +46,32 @@ if not check_label(lines[1], "GUARDVEC"):
     print("ERROR: Invalid label in line 2: " + lines[1])
     quit()
 val = lines[1][10:-1]
-if not check_vector(val):
+try:
+    guardvec = make_vector(val)
+except:
     print("ERROR: Invalid input in line 2: " + lines[1])
     quit()
-guardvec = make_vector(val)
+
 
 if not check_label(lines[2], "GUARDVAL"):
     print("ERROR: Invalid label in line 3: " + lines[2])
     quit()
 val = lines[2][10:-1]
-if not is_int(val):
+try:
+    guardval = int(val)
+except:
     print("ERROR: Invalid input in line 3: " + lines[2])
     quit()
-guardval = int(val)
 
 if not check_label(lines[3], "UPDATES"):
     print("ERROR: Invalid label in line 5: " + lines[3])
     quit()
 val = lines[3][9:-1]
-if not is_prob_list(val):
+try:
+    updates = make_prob_list(val)
+except:
     print("ERROR: Invalid input in line 5: " + lines[3])
     quit()
-updates = make_prob_list(val)
 
 # check if all probabilities are greater than 0
 if not all([e[0] > 0 for e in updates]):
@@ -129,19 +97,23 @@ for line in lines[4:]:
             print("ERROR: Direct Termination given twice")
             quit()
         val = lines[4][19:-1]
-        if not is_prob_tuple(val):
+        try:
+            const_update = make_prob_tuple(val)
+        except:
             print("ERROR: Invalid optional input: " + val)
             quit()
-        const_update = make_prob_tuple(val)
         if not len(const_update[1]) == vec_length:
             print("ERROR: Direct Termination vector has the wrong length")
+            quit()
         direct_flag = True
     elif check_label(line, "PRECISION"):
         if prec_flag:
             print("ERROR: Precision given twice")
             quit()
         val = line[11:-1]
-        if not val.isdigit():
+        try:
+            precision = int(val)
+        except:
             print("ERROR: Invalid precision given: " + val)
             quit()
         precision = int(val)
