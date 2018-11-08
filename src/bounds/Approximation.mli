@@ -27,7 +27,7 @@ val size : t -> SizeApproximation.t
 
 val cost : t -> TransitionApproximation.t
   
-val to_string : Program.t -> t -> string
+val to_string : Program.t -> bool -> t -> string
 
 val equivalent : t -> t -> bool
 

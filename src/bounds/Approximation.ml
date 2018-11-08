@@ -116,29 +116,37 @@ let program_costbound =
 let add_costbound bound transition appr =
   { appr with cost = TransitionApproximation.add bound transition appr.cost }
 
-let to_string program appr =
+let to_string program expected appr=
   let overall_timebound = program_timebound appr program in
   let overall_exptimebound = program_exptimebound appr program in
   let output = IO.output_string () in
-    if (not (Bound.is_infinity overall_timebound)) then
-      IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_timebound) ^ ")\n\n")
-    else
-      IO.nwrite output "MAYBE\n\n";
+    if expected then
+      if (not (RealBound.is_infinity overall_exptimebound)) then
+        IO.nwrite output ("YES( ?, " ^ RealBound.to_string (overall_exptimebound) ^ ")\n\n")
+      else
+        IO.nwrite output "MAYBE\n\n"
+    else 
+      if (not (Bound.is_infinity overall_timebound)) then
+        IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_timebound) ^ ")\n\n")
+      else
+        IO.nwrite output "MAYBE\n\n";
     IO.nwrite output "Initial Complexity Problem:\n";
     IO.nwrite output (Program.to_string program^"\n");
     IO.nwrite output "Timebounds: \n";
     IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
     appr.time |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
-    IO.nwrite output "\nExpected Timebounds: \n";
-    IO.nwrite output ("  Overall expected timebound: " ^ RealBound.to_string (overall_exptimebound) ^ "\n");
-    appr.exptime 
-    |> GeneralTransitionApproximation.to_string 
-         (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output;
+    if expected then
+      IO.nwrite output "\nExpected Timebounds: \n";
+      IO.nwrite output ("  Overall expected timebound: " ^ RealBound.to_string (overall_exptimebound) ^ "\n");
+      appr.exptime 
+      |> GeneralTransitionApproximation.to_string 
+          (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output;
     IO.nwrite output "\nCostbounds:\n";
     IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
     appr.cost |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
     IO.nwrite output "\nSizebounds:\n";
     appr.size |> SizeApproximation.to_string |> IO.nwrite output;
-    IO.nwrite output "\nExpSizebounds:\n";
-    appr.expsize |> ExpectedSizeApproximation.to_string |> IO.nwrite output;
+    if expected then
+      IO.nwrite output "\nExpSizebounds:\n";
+      appr.expsize |> ExpectedSizeApproximation.to_string |> IO.nwrite output;
     IO.close_out output
