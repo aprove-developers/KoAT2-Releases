@@ -128,9 +128,15 @@ for u in tmp_updates:
     if u[1] not in scalar_updates:
         scalar_updates[u[1]] = 0
     scalar_updates[u[1]] += u[0]
-
-m = max(scalar_updates.keys())
+print(scalar_updates)
+#m has to be positive, so if only negative values are inside the scalar_keys, m is set to 0
+m = max(max(scalar_updates.keys()),0)
 k = -min(scalar_updates.keys())
+
+#Define all other probabilities to be zero
+for ind in range(-k,1,m+1):
+  if ind not in scalar_updates:
+    scalar_updates[ind] = 0
 
 scalar_const = (const_update[0], const_update[1].dot_product(guardvec) - guardval)
 
@@ -147,11 +153,12 @@ if not sum(scalar_updates.values()) + scalar_const[0] == 1:
 drift = sum([i*j for i,j in scalar_updates.iteritems()])
 
 # check if the runtime can be computed
-if drift == 0:
+if drift >= 0:
     if drift > 0:
         print("The given program is not AST. Expected runtime cannot be computed.")
         quit()
-    print("The given program is AST, but not PAST. The expected runtime is infinite.")
+    else: 
+      print("The given program is AST, but not PAST. The expected runtime is infinite.")
     quit()
 
 
@@ -195,6 +202,7 @@ for root in filtered_roots:
                 r_monoms.append(x^u*root.real()^x)
 
 # Create set of linear equations
+
 A = matrix([[monom(x=-i).real() for monom in r_monoms] for i in range(k)])
 if scalar_const[0] == 0: 
   B = vector([c_lin*(-i) for i in range(k)])
@@ -212,7 +220,7 @@ else:
 for sol,monom in zip(solution, r_monoms):
     r += sol*monom
 # substitute x by the original variables
-v_vars = vector([var('v{id}'.format(id=i)) for i in range(vec_length)])
+v_vars = vector([var('x{id}'.format(id=i+1)) for i in range(vec_length)])
 v = v_vars.dot_product(guardvec)-guardval
 r = r.subs(x=v)
 
