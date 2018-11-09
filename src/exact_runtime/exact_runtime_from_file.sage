@@ -128,7 +128,6 @@ for u in tmp_updates:
     if u[1] not in scalar_updates:
         scalar_updates[u[1]] = 0
     scalar_updates[u[1]] += u[0]
-print(scalar_updates)
 #m has to be positive, so if only negative values are inside the scalar_keys, m is set to 0
 m = max(max(scalar_updates.keys()),0)
 k = -min(scalar_updates.keys())
