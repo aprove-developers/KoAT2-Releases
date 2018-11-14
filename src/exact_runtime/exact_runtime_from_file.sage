@@ -64,13 +64,13 @@ except:
     quit()
 
 if not check_label(lines[3], "UPDATES"):
-    print("ERROR: Invalid label in line 5: " + lines[3])
+    print("ERROR: Invalid label in line 4: " + lines[3])
     quit()
 val = lines[3][9:-1]
 try:
     updates = make_prob_list(val)
 except:
-    print("ERROR: Invalid input in line 5: " + lines[3])
+    print("ERROR: Invalid input in line 4: " + lines[3])
     quit()
 
 # check if all probabilities are greater than 0
@@ -140,7 +140,7 @@ for ind in range(-k,1,m+1):
 scalar_const = (const_update[0], const_update[1].dot_product(guardvec) - guardval)
 
 # check if direct termination actually terminates
-if scalar_const[0] > 0 and scalar_const[1] > guardval:
+if scalar_const[0] > 0 and scalar_const[1] > 0:
     print("ERROR: Direct Termination Vector does not terminate the program")
     quit()
 
@@ -152,13 +152,13 @@ if not sum(scalar_updates.values()) + scalar_const[0] == 1:
 drift = sum([i*j for i,j in scalar_updates.iteritems()])
 
 # check if the runtime can be computed
-if drift >= 0:
+if (scalar_const[0] == 0):
     if drift > 0:
-        print("The given program is not AST. Expected runtime cannot be computed.")
+        print("The given program is not AST. The expected runtime is infinite.")
         quit()
-    else: 
+    elif drift == 0: 
       print("The given program is AST, but not PAST. The expected runtime is infinite.")
-    quit()
+      quit()
 
 
 char_coeffs = [(i+k, j-1) if i == 0 else (i+k,j) for i,j in scalar_updates.iteritems()]
@@ -166,9 +166,13 @@ x = polygen(ZZ)
 monoms = [j * x^i for i,j in char_coeffs]
 poly = sum(monoms)
 
-c_lin = -1/drift
+if not drift == 0:
+  c_val = -1/drift
+  
 if not scalar_const[0] == 0:
-    c_const = 1/scalar_const[0]
+  c_val = 1/scalar_const[0]
+
+  
 # Precision Problem
 roots = sage.rings.polynomial.complex_roots.complex_roots(poly, min_prec=precision)
 
@@ -184,6 +188,7 @@ for root in roots:
 
 x = var('x')
 r_monoms = []
+
 
 for root in filtered_roots:
     if root.imag() != 0:
@@ -204,18 +209,18 @@ for root in filtered_roots:
 
 A = matrix([[monom(x=-i).real() for monom in r_monoms] for i in range(k)])
 if scalar_const[0] == 0: 
-  B = vector([c_lin*(-i) for i in range(k)])
-else:
-  B = vector([c_const for i in range(k)])
+  B = vector([c_val*(-i) for i in range(k)])
+elif scalar_const > 0:
+  B = vector([c_val for i in range(k)])
 # We must have AX + B = 0, i.e. AX = -B has to be solved
 solution = A.solve_right(-B)
 
 
 # Construct the resulting formula
 if scalar_const[0] == 0:
-    r = c_lin*x
+    r = c_val*x
 else:
-    r = c_const
+    r = c_val
 for sol,monom in zip(solution, r_monoms):
     r += sol*monom
 # substitute x by the original variables
