@@ -5,7 +5,7 @@
 %token			EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
 %token			LPAR RPAR
 %token                  LBRACE RBRACE
-%token			EOF
+%token			EOF 
 %token                  OR
 %token                  AND
 %token 			ARROW WITH PROBDIV LBRACK RBRACK
@@ -66,7 +66,7 @@
 %%
 
 onlyGoal :
-        |       g = goal;
+        |       g = goal; 
                 { g };
 
 onlyProgram :

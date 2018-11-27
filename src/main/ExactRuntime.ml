@@ -47,7 +47,7 @@ let run (params: params) =
   
   let input = Option.default_delayed read_line params.input in
   let input_filename =
-      input |> Fpath.v |> Fpath.normalize |> Fpath.filename 
+      input |> Fpath.v |> Fpath.normalize |> Fpath.to_string 
   in
       
   let execute () =
