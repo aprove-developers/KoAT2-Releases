@@ -17,7 +17,8 @@ let run (params: params) =
     if params.simple_input then
       "dummyname"
     else
-      input |> Fpath.v |> Fpath.normalize (*|> Fpath.rem_ext*) |> Fpath.filename
+      input |> Fpath.v |> Fpath.normalize (*|> Fpath.rem_ext*) |> Fpath.to_string
+      
   in
   let goal = MainUtil.read_goal params.simple_input input_filename in
   

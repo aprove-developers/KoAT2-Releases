@@ -46,21 +46,23 @@ let run (params: params) =
   let logger = Logging.(get ExactRuntime) in
   
   let input = Option.default_delayed read_line params.input in
-  let input_filename =
-      input |> Fpath.v |> Fpath.normalize |> Fpath.filename 
-  in
+  let input_filename = input |> Fpath.v |> Fpath.normalize |> Fpath.to_string in
+  let output_dir = params.output_dir in
       
   let execute () =
     (* No idea if this actaully works, may need adjustment in the future *)
-    let sage_path = 
-    get_koat_path Sys.argv.(0)
-    |> fun koat_path -> koat_path ^ "/../exact_runtime/exact_runtime_from_file.sage"
-    in
+    let sage_path = get_koat_path Sys.argv.(0) ^ "/../exact_runtime/exact_runtime_from_file.sage" in
     input_filename
     |> fun input -> "sage " ^ sage_path ^ " " ^ input_filename
+    |> tap(print_string)
     |> read_process_lines
     (* Printed here for output reasons only *)
     |> tap(fun output -> output |> String.concat "\n" |> print_string; print_string "\n")
+    |> tap(fun output -> 
+                let out_name = (input |> Fpath.v |> Fpath.rem_ext |> Fpath.filename) ^ ".result" in
+                Option.map (fun out_dir -> File.write_lines (out_dir ^ out_name) (List.enum output)) output_dir
+                |> ignore
+          )
   in 
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> "exact runtime", [])
