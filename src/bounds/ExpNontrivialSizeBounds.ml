@@ -56,7 +56,7 @@ let compute_
       GeneralTransition.transitions gt
       |> TransitionSet.filter (Location.equal target_loc % Transition.target)
       |> TransitionSet.to_list
-      |> List.map (fun t -> ExpLocalSizeBound.det_update kind gt (t,RV.variable rv))
+      |> List.map (fun t -> ExpLocalSizeBound.det_update kind (t,RV.variable rv))
       |> Util.option_sequence
       |> Option.map (List.map (RealPolynomial.of_var var |> flip RealPolynomial.sub))
       |> Option.map (List.map (GeneralTransition.guard gt |> ExpLocalSizeBound.simplify_poly_with_guard))

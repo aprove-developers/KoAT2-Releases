@@ -258,7 +258,7 @@ let elsb_memo =
 
 let elsb p k rv = elsb_memo (p,k,rv)
 
-let det_update kind gt (transition,var): RealPolynomial.t option =
+let det_update kind (transition,var): RealPolynomial.t option =
   let handle_update_element ue =
     match (ue,kind) with
     | (TransitionLabel.UpdateElement.Poly p,_) -> Some (RealPolynomial.of_intpoly p)
