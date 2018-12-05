@@ -18,6 +18,11 @@ let get_bound_from_enum kind =
   | `Upper -> RealBound.maximum
   | `Lower -> RealBound.minimum
 
+let default kind =
+  match kind with
+  |`Upper -> RealBound.infinity
+  |`Lower -> RealBound.minus_infinity
+
 let max_detsizebound kind ((gt,l),var) get_sizebound =
   GeneralTransition.transitions gt
   |> TransitionSet.filter (Location.equal l % Transition.target)
@@ -47,6 +52,15 @@ module ERV = ApproximationModules.ERV
 
 (* (start_location, target_location, l) *)
 let pr_cache: (Location.t * Location.t * Location.t, OurFloat.t option) Hashtbl.t = Hashtbl.create 10
+
+let guard_enabled gt =
+  let module Solver = SMT.Z3Opt in
+  GeneralTransition.invariants gt
+  |> Formula.mk
+  |> Formula.implies (GeneralTransition.guard gt |> Formula.mk)
+  |> fun f ->
+      try Solver.tautology f
+      with (Failure _) -> false
 
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
@@ -247,9 +261,6 @@ let check_subgraphs_criteria program get_timebound orig_graph entry_loc target_l
     [all_guards_tautology_in_invariants;termination;disjoint;
      all_trans_of_gt_going_to_loc]
   in
-(*
-  Printf.printf "criteria: %s\n" (Util.enum_to_string Bool.to_string (List.enum criteria));
-*)
   List.for_all identity criteria
 
 let subgraph_connected_with_loc (orig_graph: TransitionGraph.t) (subgraph: TransitionGraph.t) (loc : Location.t): bool =
@@ -270,12 +281,20 @@ let lookup_cache graph ((start_location, target_location, l): Location.t * Locat
       let pr_function = f () in
       TransitionGraph.locations graph
       |> LocationSet.iter (fun l' -> Hashtbl.add pr_cache (start_location, target_location,l') (pr_function l'));
-(*
-      Printf.printf "add_to_cache: start_location: %s target_location: %s\n" (Location.to_string start_location) (Location.to_string
-      target_location);
-*)
       Hashtbl.find pr_cache (start_location, target_location,l)
 
+
+let runtime_at_most_one get_timebound program l =
+  Program.transitions program
+  |> TransitionSet.filter (Location.equal l % Transition.target)
+  |> TransitionSet.enum
+  |> Enum.map get_timebound
+  |> Bound.sum
+  |> Bound.get_constant_option
+  |> fun co ->
+      match co with
+      | Some a -> (OurInt.compare a (OurInt.of_int 2)) < 0
+      | None -> false
 
 
 let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.t) (locs: LocationSet.t) (loc: Location.t) get_timebound:
@@ -287,26 +306,18 @@ let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.
   (*Search for candidates of subgraphs *)
   let candidates =
     locs
-(*
-    |> tap (fun _ -> if Location.to_string loc = "k" then Printf.printf "\n\n\n\n")
-    |> tap (Printf.printf "start candidates start: %s     loc: %s \n" (Location.to_string start) (Location.to_string loc) |> const)
-*)
     |> LocationSet.to_list
     (* We don't want to branch on locations that are the same as target locations. *)
     |> List.filter (not % Location.equal loc)
+    (* Check if all incoming transitions non-prob time bound sum up to at most 1, i.e. Ct_g,l < 2 *)
+    |> List.filter (runtime_at_most_one get_timebound program)
     |> List.filter (fun ml -> every_path_enters_loc graph start ml loc)
-(*
-    |> tap (Printf.printf "every_path_enters: %s\n" % Util.enum_to_string Location.to_string % List.enum)
-*)
     |> List.map (fun l -> (l,gts_outgoing (TransitionGraph.transitions graph) l))
     (* only one outgoing transition supported *)
     |> List.filter (fun (_,gtset) -> GeneralTransitionSet.cardinal gtset = 1)
     (* more than one target for non-linear branching *)
     |> List.filter (fun (_,gtset) -> GeneralTransitionSet.to_list gtset |> List.hd |> GeneralTransition.targets |> ((<) 1 % LocationSet.cardinal) )
     (* Build subgraphs *)
-(*
-    |> tap (Printf.printf "lset: %s\n" % LocationSet.to_string % LocationSet.of_list % List.map Tuple2.first)
-*)
     |> List.map (fun (l,gt_from_l) ->
         gt_from_l
         (* Exactly one outgoing gt as filtered above *)
@@ -326,15 +337,6 @@ let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.
     (* Sort by cardinality of all subgraphs combined *)
     |> List.sort (fun (_,a) (_,b) -> (flip Int.compare) (subgraph_cardinals_combined a) (subgraph_cardinals_combined b))
     |> List.filter (fun (lentry,subs) -> List.map Tuple2.second subs |> check_subgraphs_criteria program get_timebound graph lentry loc)
-(*
-    |> tap (Printf.printf "final_length: %i\n" % List.length)
-*)
-(*
-    |> tap (fun l -> let lenum = List.enum l in
-                     Printf.printf "subgraphs: %s\n" (Util.enum_to_string (fun (candidate, sublist) -> Location.to_string
-                     candidate ^ " " ^ Util.enum_to_string (fun (brl,sub) -> Location.to_string brl ^ ", " ^
-                     TransitionGraph.to_string sub) (List.enum sublist)) lenum))
-*)
   in
 
   (* Construction of the pr function *)
@@ -388,10 +390,6 @@ let rec get_pr (program: Program.t) (graph: TransitionGraph.t) (start: Location.
                   | None -> only_one_gt_going_to_loc graph loc subgraph
                   | Some _ -> true
                 in
-(*
-                Printf.printf "Recursion done: is_valid = %b, loc = %s, l_entry = %s\n" is_valid (Location.to_string loc)
-                (Location.to_string lentry);
-*)
 
                 match (rec_result, is_valid) with
                 | (_, false) -> None
@@ -408,24 +406,24 @@ let print_pr_func graph pr_func =
   |> List.map
        (fun l ->
           (Location.to_string l, pr_func l |> Option.map (OurFloat.to_string) |> print_option_float))
-(*
-          (Location.to_string l, (Option.default (-1 |> OurFloat.of_int) (pr_func l)) |> OurFloat.to_string))
-*)
   |> List.enum
   |> Util.enum_to_string (fun (l,p) -> l ^ ", " ^ p)
 
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
 let compute kind program get_sizebound get_expsizebound get_timebound ((gt,loc),var) =
-  let graph = Program.graph program in
-  let start_loc = Program.start program in
-  let locations = TransitionGraph.locations graph in
-  let transition_location = GeneralTransition.start gt in
-  let pr_func = fun l -> lookup_cache graph
-                           (start_loc,transition_location,l)
-                           (fun () -> get_pr program graph start_loc locations transition_location get_timebound)
-  in
-  let exp_poly = ExpLocalSizeBound.elsb program kind ((gt,loc),var) in
+  if not (guard_enabled gt) then
+    default kind
+  else
+    let graph = Program.graph program in
+    let start_loc = Program.start program in
+    let locations = TransitionGraph.locations graph in
+    let transition_location = GeneralTransition.start gt in
+    let pr_func = fun l -> lookup_cache graph
+                             (start_loc,transition_location,l)
+                             (fun () -> get_pr program graph start_loc locations transition_location get_timebound)
+    in
+    let exp_poly = ExpLocalSizeBound.elsb program kind ((gt,loc),var) in
 
     let execute () =
       if Program.is_initial_gt program gt then
@@ -436,10 +434,10 @@ let compute kind program get_sizebound get_expsizebound get_timebound ((gt,loc),
           (fun kind (t,v) -> get_sizebound kind t v)
           (fun kind ((gt,l),var) -> get_expsizebound kind (gt,l) var) exp_poly gt pr_func
     in Logger.with_log logger Logger.DEBUG
-                       (fun () -> "compute expected trivial bound", ["kind", show_kind kind;
-                                                            "rv", ERV.to_id_string ((gt,loc),var); "pr_func", print_pr_func graph pr_func])
-                       ~result:RealBound.to_string
-                       execute
+                         (fun () -> "compute expected trivial bound", ["kind", show_kind kind;
+                                                              "rv", ERV.to_id_string ((gt,loc),var); "pr_func", print_pr_func graph pr_func])
+                         ~result:RealBound.to_string
+                         execute
 
 let reset_cache =
   Hashtbl.clear pr_cache
