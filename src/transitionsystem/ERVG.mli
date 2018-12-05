@@ -20,4 +20,4 @@ val entry_points : t -> RV.t list -> RV.t Enum.t
 (** Returns all transitions that are used in the SCC of the RVG. *)
 val transitions : RV.t list -> RVTransitions.TransitionForExpectedSize.t Enum.t
 
-val rvg : Program.t -> t
+val rvg : [`Lower | `Upper] -> Program.t -> t

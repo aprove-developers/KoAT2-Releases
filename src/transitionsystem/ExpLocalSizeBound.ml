@@ -7,6 +7,7 @@ open RVTransitions
 
 module RV = RVGTypes.Make_RV (TransitionForExpectedSize)
 
+module IntValuation = Valuation.Make (OurInt)
 module Valuation = Valuation.Make (OurFloat)
 
 type kind = [`Upper | `Lower]
@@ -26,7 +27,8 @@ module SolverNonOpt = SMT.Z3Solver
 let print_matrix =
   Util.enum_to_string (Util.enum_to_string RealPolynomial.to_string) % List.enum % List.map (List.enum)
 
-let concave_convex_check_v2 (comp_operator: hessian_check) bound: bool =
+  (* Using the standard definition of convexity/concavity to handle bounds instead of polynomials *)
+let concave_convex_check_v2_ (comp_operator: hessian_check) bound: bool =
   let module VarMap = Map.Make(Var) in
   let vars = RealBound.vars bound in
   (* vector a *)
@@ -59,11 +61,15 @@ let concave_convex_check_v2 (comp_operator: hessian_check) bound: bool =
   (* find contra *)
   let bound' = RealBound.(lefthand - righthand) in
   let res =
-    match comp_operator with
-    | Positivesemidefinite ->
-        SolverNonOpt.bound_gt_zero constr bound'
-    | Negativesemidefinite ->
-        SolverNonOpt.bound_lt_zero constr bound'
+    try
+      match comp_operator with
+      | Positivesemidefinite ->
+          SolverNonOpt.bound_gt_zero constr bound'
+      | Negativesemidefinite ->
+          SolverNonOpt.bound_lt_zero constr bound'
+    with
+      (* TODO *)
+      Failure _ -> true
   in
   Bool.neg res
 
@@ -107,16 +113,19 @@ let poly_is_concave =
 let poly_is_convexe =
   concave_convex_check Positivesemidefinite
 
+let concave_convex_check_v2 =
+  Util.memoize ~extractor:identity (uncurry concave_convex_check_v2_)
+
 let bound_is_concave =
-  concave_convex_check_v2 Negativesemidefinite
+  (curry concave_convex_check_v2) Negativesemidefinite
 
 let bound_is_convexe =
-  concave_convex_check_v2 Positivesemidefinite
+  (curry concave_convex_check_v2) Positivesemidefinite
 
-let appr_substitution_is_valid kind poly =
+let appr_substitution_is_valid kind bound =
   match kind with
-  | `Upper -> poly_is_concave poly
-  | `Lower -> poly_is_convexe poly
+  | `Upper -> bound_is_concave bound
+  | `Lower -> bound_is_convexe bound
 
 
 let simplify_poly_with_guard guard (poly: RealPolynomial.t) =
@@ -166,7 +175,38 @@ let simplify_poly_with_guard guard (poly: RealPolynomial.t) =
   |>  RealPolynomial.eval_partial poly
   |>  RealPolynomial.simplify
 
-let exp_poly (((gt, l), var): RV.t): RealPolynomial.t =
+let bound_nondet_var kind program inv var =
+  let prog_vars = Program.input_vars program in
+  let vars =
+    Var.fresh_id_list Var.Int (VarSet.cardinal prog_vars)
+  in
+  let coeffs = vars |> List.map (Polynomial.of_var) in
+  let constant_var = Var.fresh_id Var.Int () in
+  let constant = constant_var |> Polynomial.of_var in
+  let para_poly =
+    ParameterPolynomial.of_coeff_list coeffs (VarSet.to_list prog_vars)
+    |> ParameterPolynomial.(add (of_constant constant))
+  in
+  let nondet_var = ParameterPolynomial.of_var var in
+  let comp_operator =
+    match kind with
+    | `Upper -> Atoms.ParameterAtom.mk_ge
+    | `Lower -> Atoms.ParameterAtom.mk_le
+  in
+  let solver = Solver.create () in
+  let formula =
+    Constraints.ParameterConstraint.farkas_transform inv (comp_operator para_poly nondet_var)
+    |> Formula.mk
+  in
+  Solver.add solver formula;
+  Solver.minimize_absolute solver (constant_var :: vars);
+  match Solver.model solver with
+  | Some model ->
+      ParameterPolynomial.eval_coefficients (flip IntValuation.eval model) para_poly
+      |> Bound.of_poly |> RealBound.of_intbound
+  | None -> default kind
+
+let elsb_ program kind (((gt, l), var): RV.t): RealBound.t =
   let transitions =
     GeneralTransition.transitions gt
     |> TransitionSet.filter (Location.equal l % Transition.target)
@@ -178,7 +218,6 @@ let exp_poly (((gt, l), var): RV.t): RealPolynomial.t =
     TransitionSet.to_list transitions
     |> List.map (fun t -> (t, Transition.label t |> fun label -> OurFloat.(TransitionLabel.probability label / total_probability)))
   in
-
   let handle_update_element ue =
     match ue with
     | TransitionLabel.UpdateElement.Poly p ->
@@ -186,19 +225,38 @@ let exp_poly (((gt, l), var): RV.t): RealPolynomial.t =
     | TransitionLabel.UpdateElement.Dist d ->
         ProbDistribution.expected_value d
   in
-
   let handle_transition trans =
     Transition.label trans
     |> flip TransitionLabel.update var
     |? TransitionLabel.UpdateElement.Poly (Polynomial.of_var var)
     |> handle_update_element
   in
+  let substitute_nondet_var kind =
+    bound_nondet_var kind program (GeneralTransition.invariants gt)
+  in
+
   transitions_with_prob
   |> List.map (fun (t,p) -> (p, handle_transition t))
   |> List.map (fun (p,up) -> RealPolynomial.(of_constant p * up))
   |> List.enum
   |> RealPolynomial.sum
   |> simplify_poly_with_guard (GeneralTransition.guard gt)
+  |> RealBound.of_poly
+  |> RealBound.appr_substitution
+       kind
+       ~lower:(substitute_nondet_var `Lower)
+       ~higher:(substitute_nondet_var `Upper)
+  |> fun bound ->
+      match appr_substitution_is_valid kind bound with
+      | true -> bound
+      | false -> default kind
+
+let elsb_memo =
+  Util.memoize
+    ~extractor:(fun (program,kind,((gt,l),var)) -> (kind,GeneralTransition.id gt, Location.to_string l, Var.to_string var))
+    (fun (program,kind,rv) -> elsb_ program kind rv)
+
+let elsb p k rv = elsb_memo (p,k,rv)
 
 let det_update kind gt (transition,var): RealPolynomial.t option =
   let handle_update_element ue =
@@ -210,22 +268,6 @@ let det_update kind gt (transition,var): RealPolynomial.t option =
   Transition.label transition
   |> flip TransitionLabel.update var
   |> flip Option.bind handle_update_element
-  |> Option.map (simplify_poly_with_guard (GeneralTransition.guard gt))
 
-let vars rv =
-  let var = RV.variable rv in
-  let gt = RV.transition rv |> RVTransitions.TransitionForExpectedSize.gt in
-  let exp_vars = exp_poly rv |> RealPolynomial.vars in
-  let update_vars kind =
-    GeneralTransition.transitions gt
-    |> TransitionSet.to_list
-    |> List.map (fun t -> det_update kind gt (t,var))
-    |> List.fold_left
-         (fun varset poly_opt ->
-           VarSet.union (Option.map (RealPolynomial.vars % simplify_poly_with_guard (GeneralTransition.guard gt))
-                          poly_opt
-                         |? VarSet.empty) varset)
-          VarSet.empty
-  in
-  VarSet.union (update_vars `Lower) (update_vars `Upper)
-  |> VarSet.union (exp_vars)
+let vars program kind rv =
+  elsb program kind rv |> RealBound.vars

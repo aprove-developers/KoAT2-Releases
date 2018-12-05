@@ -10,8 +10,8 @@ type kind = [ `Lower | `Upper ] [@@deriving show]
 
 let get_expected_value_propagation kind =
   match kind with
-  | `Upper -> ExpLocalSizeBound.poly_is_concave
-  | `Lower -> ExpLocalSizeBound.poly_is_convexe
+  | `Upper -> ExpLocalSizeBound.bound_is_concave
+  | `Lower -> ExpLocalSizeBound.bound_is_convexe
 
 let get_bound_from_enum kind =
   match kind with
@@ -51,7 +51,7 @@ let pr_cache: (Location.t * Location.t * Location.t, OurFloat.t option) Hashtbl.
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
-let incoming_bound kind program get_sizebound get_expsizebound (exp_poly: RealPolynomial.t) gt (pr_func: Location.t -> OurFloat.t option) =
+let incoming_bound kind program get_sizebound get_expsizebound (exp_poly: RealBound.t) gt (pr_func: Location.t -> OurFloat.t option) =
   let execute () =
     let substitute_with_prevalues gtset =
       let prevalues_exp kind var =
@@ -66,9 +66,9 @@ let incoming_bound kind program get_sizebound get_expsizebound (exp_poly: RealPo
         |> List.enum |> get_bound_from_enum kind
       in
       if get_expected_value_propagation kind exp_poly then
-        RealBound.appr_substitution kind ~lower:(prevalues_exp `Lower) ~higher:(prevalues_exp `Upper) (RealBound.of_poly exp_poly)
+        RealBound.appr_substitution kind ~lower:(prevalues_exp `Lower) ~higher:(prevalues_exp `Upper) exp_poly
       else
-        RealBound.appr_substitution kind ~lower:(prevalues `Lower) ~higher:(prevalues `Upper) (RealBound.of_poly exp_poly)
+        RealBound.appr_substitution kind ~lower:(prevalues `Lower) ~higher:(prevalues `Upper) exp_poly
     in
     let pre_gts = Program.pre_gt program gt in
     let substitute_with_pr_prevalues gtset (pr_func_unboxed: Location.t -> OurFloat.t option) =
@@ -96,13 +96,13 @@ let incoming_bound kind program get_sizebound get_expsizebound (exp_poly: RealPo
                    RealBound.zero
             in
             if get_expected_value_propagation kind exp_poly then
-              Some (RealBound.of_poly exp_poly
+              Some (exp_poly
                     |> RealBound.appr_substitution
                          kind
                          ~lower:(substitution_exp `Lower)
                          ~higher:(substitution_exp `Upper) )
             else
-              Some (RealBound.of_poly exp_poly
+              Some (exp_poly
                     |> RealBound.appr_substitution
                          kind
                          ~lower:(substitution `Lower)
@@ -117,7 +117,7 @@ let incoming_bound kind program get_sizebound get_expsizebound (exp_poly: RealPo
           bound
 
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute highest incoming bound", ["exp_poly", (RealBound.to_string % RealBound.of_poly) exp_poly;
+                     (fun () -> "compute highest incoming bound", ["exp_poly", RealBound.to_string exp_poly;
                                                                    "transition", GeneralTransition.to_string gt])
                   ~result:RealBound.to_string
                   execute
@@ -425,11 +425,11 @@ let compute kind program get_sizebound get_expsizebound get_timebound ((gt,loc),
                            (start_loc,transition_location,l)
                            (fun () -> get_pr program graph start_loc locations transition_location get_timebound)
   in
-  let exp_poly = ExpLocalSizeBound.exp_poly ((gt,loc),var) in
+  let exp_poly = ExpLocalSizeBound.elsb program kind ((gt,loc),var) in
 
     let execute () =
       if Program.is_initial_gt program gt then
-        RealBound.of_poly exp_poly
+        exp_poly
       else
         incoming_bound
           kind program

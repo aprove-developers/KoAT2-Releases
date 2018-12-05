@@ -33,16 +33,10 @@ let compute_
     |> Util.without RV.same (List.enum scc)
   in
 
-  let result_variable_effect_exp rv: RealBound.t =
+  let result_variable_effect_exp kind rv: RealBound.t =
     let gt = RV.transition rv |> RVTransitions.TransitionForExpectedSize.gt in
     let target_loc = RV.transition rv |> RVTransitions.TransitionForExpectedSize.loc in
     let var = RV.variable rv in
-
-    let polynomial_exp_var_change: RealPolynomial.t =
-    let update_exp_poly = ExpLocalSizeBound.exp_poly rv in
-      RealPolynomial.sub update_exp_poly (RealPolynomial.of_var var)
-      |> ExpLocalSizeBound.simplify_poly_with_guard (GeneralTransition.guard gt)
-    in
 
     let var_bounds sign v =
       let bounds =
@@ -52,16 +46,6 @@ let compute_
             |> TransitionSet.filter (Location.equal l % Transition.target) |> TransitionSet.enum)
         |> Enum.flatten
         |> Enum.map (fun t -> get_sizebound kind t v |> RealBound.of_intbound)
-      in
-      match sign with
-      | `Upper -> RealBound.maximum bounds |> RealBound.(max zero)
-      | `Lower -> RealBound.minimum bounds |> RealBound.(min zero)
-    in
-
-    let exp_var_bounds sign v =
-      let bounds =
-        ERVG.pre rvg rv
-        |> Enum.map (fun ((gt,l),var) -> get_expsizebound kind (gt,l) var)
       in
       match sign with
       | `Upper -> RealBound.maximum bounds |> RealBound.(max zero)
@@ -86,20 +70,6 @@ let compute_
       |? match kind with
          | `Lower -> RealBound.minus_infinity
          | `Upper -> RealBound.infinity
-    in
-
-    let exp_var_change_bound =
-      let simplified_poly =
-        polynomial_exp_var_change
-        |> ExpLocalSizeBound.simplify_poly_with_guard (GeneralTransition.guard gt)
-      in
-      if ExpLocalSizeBound.appr_substitution_is_valid kind polynomial_exp_var_change then
-        RealBound.of_poly simplified_poly
-        |> RealBound.appr_substitution kind ~lower:(exp_var_bounds `Lower) ~higher:(exp_var_bounds `Upper)
-      else
-        RealBound.of_poly simplified_poly
-        |> RealBound.appr_substitution kind ~lower:(var_bounds `Lower) ~higher:(var_bounds `Upper)
-
     in
 
     let exp_gt_timebound =
@@ -131,15 +101,10 @@ let compute_
     in
 
     let timebound1 = RealBound.(exp_gt_timebound * of_poly (RealPolynomial.of_constant prob_gtl_of_gt)) in
-    let timebound2 =
-      GeneralTransition.transitions gt |> TransitionSet.filter (Location.equal target_loc % Transition.target)
-      |> fun tset -> TransitionSet.fold (fun t -> RealBound.(+) (get_timebound t)) tset RealBound.zero
-    in
 
     let sizebound1 = var_change_bound in
-    let sizebound2 = exp_var_change_bound in
 
-    let bounds = [timebound1, sizebound1; timebound2, sizebound2] |> List.map calc_bound |> List.enum in
+    let bounds = [timebound1, sizebound1] |> List.map calc_bound |> List.enum in
 
     match kind with
     | `Upper -> RealBound.minimum bounds
@@ -148,7 +113,7 @@ let compute_
 
   let loop_effect =
     scc
-    |> List.map result_variable_effect_exp
+    |> List.map (result_variable_effect_exp kind)
     |> List.enum
     |> RealBound.sum
   in
