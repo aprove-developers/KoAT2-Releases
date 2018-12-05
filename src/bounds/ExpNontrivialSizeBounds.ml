@@ -68,7 +68,7 @@ let compute_
       | `Lower -> RealBound.minimum bounds |> RealBound.(min zero)
     in
 
-    let var_change_bound = 
+    let var_change_bound =
       GeneralTransition.transitions gt
       |> TransitionSet.filter (Location.equal target_loc % Transition.target)
       |> TransitionSet.to_list
@@ -89,33 +89,33 @@ let compute_
     in
 
     let exp_var_change_bound =
-      let simplified_poly = 
+      let simplified_poly =
         polynomial_exp_var_change
         |> ExpLocalSizeBound.simplify_poly_with_guard (GeneralTransition.guard gt)
       in
-      if ExpLocalSizeBound.appr_substitution_is_valid kind gt polynomial_exp_var_change then
+      if ExpLocalSizeBound.appr_substitution_is_valid kind polynomial_exp_var_change then
         RealBound.of_poly simplified_poly
         |> RealBound.appr_substitution kind ~lower:(exp_var_bounds `Lower) ~higher:(exp_var_bounds `Upper)
-      else 
+      else
         RealBound.of_poly simplified_poly
         |> RealBound.appr_substitution kind ~lower:(var_bounds `Lower) ~higher:(var_bounds `Upper)
 
     in
 
-    let exp_gt_timebound = 
+    let exp_gt_timebound =
       get_exptimebound gt
     in
-    let prob_gtl_of_gt = 
+    let prob_gtl_of_gt =
       let targetl = RV.transition rv |> RVTransitions.TransitionForExpectedSize.loc in
       RV.transition rv
       |> RVTransitions.TransitionForExpectedSize.gt
-      |> GeneralTransition.transitions 
+      |> GeneralTransition.transitions
       |> TransitionSet.filter (Location.equal targetl % Transition.target)
       |> fun tset -> TransitionSet.fold OurFloat.(fun t p -> (TransitionLabel.probability (Transition.label t)) + p) tset (OurFloat.zero)
     in
 
-    let calc_bound (timebound,sizebound) = 
-      let sizebound_min_max = 
+    let calc_bound (timebound,sizebound) =
+      let sizebound_min_max =
         match kind with
         | `Upper -> RealBound.max RealBound.zero sizebound
         | `Lower -> RealBound.min RealBound.zero sizebound
@@ -127,26 +127,26 @@ let compute_
         else
           RealBound.(infinity * sizebound_min_max)
       else
-        RealBound.(timebound * sizebound_min_max) 
+        RealBound.(timebound * sizebound_min_max)
     in
 
     let timebound1 = RealBound.(exp_gt_timebound * of_poly (RealPolynomial.of_constant prob_gtl_of_gt)) in
-    let timebound2 = 
+    let timebound2 =
       GeneralTransition.transitions gt |> TransitionSet.filter (Location.equal target_loc % Transition.target)
       |> fun tset -> TransitionSet.fold (fun t -> RealBound.(+) (get_timebound t)) tset RealBound.zero
     in
 
     let sizebound1 = var_change_bound in
     let sizebound2 = exp_var_change_bound in
-    
+
     let bounds = [timebound1, sizebound1; timebound2, sizebound2] |> List.map calc_bound |> List.enum in
-    
+
     match kind with
     | `Upper -> RealBound.minimum bounds
     | `Lower -> RealBound.maximum bounds
   in
 
-  let loop_effect = 
+  let loop_effect =
     scc
     |> List.map result_variable_effect_exp
     |> List.enum
@@ -160,7 +160,7 @@ let compute_
     |> Enum.map pre_out_scc
     |> Enum.flatten
     |> Enum.map (uncurry (get_expsizebound kind))
-    |> (match kind with 
+    |> (match kind with
        | `Upper -> RealBound.maximum
        | `Lower -> RealBound.minimum)
     |> tap (fun starting_value -> Logger.log logger Logger.DEBUG
@@ -168,7 +168,7 @@ let compute_
   in
 
   loop_effect
-  |> fun loop_effect -> 
+  |> fun loop_effect ->
        RealBound.(starting_value_exp + loop_effect)
 
 (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.

@@ -4,7 +4,7 @@ open Batteries
 
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
     They can be typeclass-like extended by MakePartialOrder. *)
-module type OurNumber = 
+module type OurNumber =
   sig
     include Number.Numeric
 
@@ -26,7 +26,7 @@ module type PartialOrder =
   sig
     include BasePartialOrder
     val (<) : t -> t -> bool Option.t
-    val (>=) : t -> t -> bool Option.t      
+    val (>=) : t -> t -> bool Option.t
     val (<=) : t -> t -> bool Option.t
   end
 
@@ -71,9 +71,9 @@ module type Valuation =
 
     (** Returns the var to value bindings. *)
     val bindings : t -> (var * value) Enum.t
-    
+
     (** Converts the valuation into a string using the print function*)
-    val to_string : t -> string 
+    val to_string : t -> string
   end
 
 (** Evaluable is a unified interface of all parts of a polynomial *)
@@ -83,8 +83,8 @@ module type Evaluable =
     type value
     type valuation
 
-    val (=~=) : t -> t -> bool       
-       
+    val (=~=) : t -> t -> bool
+
     (** Stable structural equality, but not actual equality *)
     val equal : t -> t -> bool
 
@@ -96,7 +96,7 @@ module type Evaluable =
     (** Returns a set of the variables which occur in the evaluable *)
     val vars : t -> VarSet.t
 
-    (** Assigns each variable inside the polynomial the value of the valuation and returns the arithmetically computed result. 
+    (** Assigns each variable inside the polynomial the value of the valuation and returns the arithmetically computed result.
         !! If the valuation does not provide a value for a variable, an exception is raised. !! *)
     val eval : t -> valuation -> value
 
@@ -137,7 +137,7 @@ module type Monomial =
                var:(Var.t -> 'b) ->
                times:('b -> 'b -> 'b) ->
                pow:('b -> int -> 'b) ->
-               t -> 'b 
+               t -> 'b
   end
 
 (** A scaled monomial is a monomial multiplied with a coefficient *)
@@ -160,7 +160,7 @@ module type ScaledMonomial =
                var:(Var.t -> 'b) ->
                times:('b -> 'b -> 'b) ->
                pow:('b -> int -> 'b) ->
-               t -> 'b 
+               t -> 'b
   end
 
 (** Modules including BaseMath define basic math operations.
@@ -209,18 +209,18 @@ module type Ring =
     type t [@@deriving eq]
 
     include BaseMath with type t := t
-       
+
     val equal : t -> t -> bool
     val (=~=) : t -> t -> bool
     (** Stable structural compare, but not an actual compare *)
-    val compare : t -> t -> int      
+    val compare : t -> t -> int
 
     val of_int : int -> t
     val to_int : t -> int
 
     val to_string : t -> string
   end
-  
+
 (** A Polynomial represents a mathematical polynomial *)
 module type Polynomial =
   sig
@@ -233,7 +233,7 @@ module type Polynomial =
 
     type monomial
     type scaled_monomial
-                  
+
     (** Following methods are convenience methods for the creation of polynomials. *)
 
     val make : (value * monomial) list -> t
@@ -248,13 +248,13 @@ module type Polynomial =
     val of_power : Var.t -> int -> t
     val of_monomial : monomial -> t
     val of_coeff_list : value list -> Var.t list -> t
-      
+
     (** Following methods return information over the polynomial. *)
 
     (** Returns the coefficient of the monomial. *)
     val coeff : monomial -> t -> value
     val coeff_of_var : Var.t -> t -> value
-      
+
     (** Returns the monomials of the polynomial without the empty monomial. *)
     val monomials : t -> monomial list
 
@@ -265,18 +265,18 @@ module type Polynomial =
     (** Returns a maybe not equivalent polynom where all factors of polynomials are minized but stay in same proportion. *)
     val scale_coefficients : t -> t
        *)
-      
+
     val to_string : t -> string
-      
+
     (** Following methods return if the atom has certain properties. *)
 
     (** Returns if the polynomial is equivalent to a term x^1 for any variable x. *)
     val is_var : t -> bool
 
-    (** Returns if the polynomial is equivalent to a term x^1 + c for any variable x and any constant c. *)      
+    (** Returns if the polynomial is equivalent to a term x^1 + c for any variable x and any constant c. *)
     val is_var_plus_constant : t -> bool
 
-    (** Returns if the polynomial is equivalent to a term x_1^1 + ... + x_n^1 + c for any variables x_1, ..., x_n and any constant c. *)      
+    (** Returns if the polynomial is equivalent to a term x_1^1 + ... + x_n^1 + c for any variables x_1, ..., x_n and any constant c. *)
     val is_sum_of_vars_plus_constant : t -> bool
 
     (** Returns if the polyomial is linear and contains at most one active variable. *)
@@ -302,14 +302,14 @@ module type Polynomial =
 
     (** Maps all coefficients to elements from the polynomial. *)
     val instantiate : (value -> t) -> t -> t
-      
+
     (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
         Ignores naming equalities. *)
     val substitute : Var.t -> replacement:t -> t -> t
-    
+
     (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
     val substitute_f : (Var.t -> t) -> t -> t
-    
+
     (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
         Leaves all variables unchanged which are not in the replacement map.  *)
     val substitute_all : t Map.Make(Var).t -> t -> t
@@ -323,7 +323,7 @@ module type Polynomial =
     val simplify : t -> t
 
     (** Derives the polynomial with respect to the given variable *)
-    val derivative: Var.t -> t -> t
+    val derivative: t -> Var.t -> t
 
     (** Multiplies the polynomial with a constant value.
         The result is always a polynomial. *)
@@ -332,10 +332,10 @@ module type Polynomial =
     (** Replaces all arithmetical operations by new constructors. *)
     val fold : const:(value -> 'b) ->
                var:(Var.t -> 'b) ->
-               neg:('b -> 'b) ->               
+               neg:('b -> 'b) ->
                plus:('b -> 'b -> 'b) ->
                times:('b -> 'b -> 'b) ->
                pow:('b -> int -> 'b) ->
-               t -> 'b 
+               t -> 'b
 
   end

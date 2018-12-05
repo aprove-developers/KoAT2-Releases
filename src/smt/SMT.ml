@@ -1,6 +1,7 @@
 open Batteries
 open Formulas
 open Polynomials
+open BoundsInst
 
 let from_poly context =
   Polynomial.fold
@@ -24,7 +25,34 @@ let from_real_poly context =
     ~neg:(Z3.Arithmetic.mk_unary_minus context)
     ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [p1; p2])
     ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2])
-    ~pow:(fun b e -> Z3.Arithmetic.mk_power context b (Z3.Arithmetic.Integer.mk_numeral_i context e))
+    ~pow:(fun b e -> Z3.Arithmetic.mk_power context b (Z3.Arithmetic.Real.mk_numeral_i context e))
+
+let from_real_bound context bound =
+  let liftA2 f x x' =
+    let f1 = Option.map f x in
+    match f1 with
+    | (Some f2) -> Option.map f2 x'
+    | None -> None
+  in
+
+  let boundm =
+    RealBound.fold
+      ~const:(fun value -> Some (Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string value)))
+      ~var:(fun var -> if Var.is_real var then
+                         Some (Z3.Arithmetic.Real.mk_const_s context (Var.to_string var))
+                       else
+                         Some (Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var)))
+      ~neg:(Option.map (Z3.Arithmetic.mk_unary_minus context))
+      ~plus:(liftA2 (fun p1 p2 -> Z3.Arithmetic.mk_add context [p1; p2]))
+      ~times:(liftA2 (fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2]))
+      ~exp:(fun b -> Option.map (fun e -> Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string b)) e))
+      ~max:(liftA2 (fun a b -> Z3.Boolean.mk_ite context (Z3.Arithmetic.mk_gt context a b) (a) (b)))
+      ~inf:(None)
+      bound
+  in
+  match boundm with
+  | Some b -> b
+  | None -> raise (Failure "inf not supported in SMT-Solving")
 
 let from_formula context =
   Formula.fold
@@ -46,8 +74,53 @@ let from_real_formula context =
     ~wrong:(Z3.Boolean.mk_false context)
     ~disj:(fun a1 a2 -> Z3.Boolean.mk_or context [a1; a2])
 
-(** SMT solver which uses the microsoft project Z3 *)
 module Z3Solver =
+  struct
+    let init formula =
+      let ctx = (Z3.mk_context [("model", "true"); ("proof", "false")]) in
+      let z3formula = from_real_formula ctx formula in
+      let solver = (Z3.Solver.mk_solver ctx None) in
+      (Z3.Solver.add solver [z3formula]) ;
+      solver
+
+    let satisfiable formula =
+      let solver = init formula in
+      let res = (Z3.Solver.check solver []) in
+      match res with
+        | SATISFIABLE -> true
+        | UNSATISFIABLE -> false
+        | UNKNOWN -> raise (Failure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
+
+    (* TODO sinnvoll in formulas integrieren *)
+    let bound_gt_zero formula bound =
+      let ctx = (Z3.mk_context [("model", "true"); ("proof", "false")]) in
+      let bound_gt_zero = Z3.Arithmetic.mk_gt ctx (from_real_bound ctx bound) (from_real_poly ctx RealPolynomial.zero) in
+      let solver = (Z3.Solver.mk_solver ctx None) in
+      (Z3.Solver.add solver [from_real_formula ctx formula;bound_gt_zero]) ;
+      let res = (Z3.Solver.check solver []) in
+      match res with
+        | SATISFIABLE -> true
+        | UNSATISFIABLE -> false
+        | UNKNOWN -> raise (Failure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
+
+    let bound_lt_zero formula bound =
+      let ctx = (Z3.mk_context [("model", "true"); ("proof", "false")]) in
+      let bound_lt_zero = Z3.Arithmetic.mk_lt ctx (from_real_bound ctx bound) (from_real_poly ctx RealPolynomial.zero) in
+      let solver = (Z3.Solver.mk_solver ctx None) in
+      (Z3.Solver.add solver [from_real_formula ctx formula;bound_lt_zero]) ;
+      let res = (Z3.Solver.check solver []) in
+      match res with
+        | SATISFIABLE -> true
+        | UNSATISFIABLE -> false
+        | UNKNOWN -> raise (Failure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
+
+    let to_string formula =
+      Z3.Solver.to_string (init formula)
+
+  end
+
+(** SMT solver which uses the microsoft project Z3 *)
+module Z3Opt =
   struct
     module Valuation = Valuation.Make(OurInt)
 
