@@ -6,8 +6,6 @@ open Polynomials
 open ProgramTypes
 open Valuation
 
-module SMTSolver = SMT.Z3Solver
-
 module Valuation = Valuation.Make(OurFloat)
 
 module LexRSMMap = Hashtbl.Make(Location)
@@ -134,7 +132,7 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
             let update_guard old_var ue =
               let new_var = get_new_var old_var new_var_map in
               match ue with
-              | TransitionLabel.UpdateElement.Poly p -> 
+              | TransitionLabel.UpdateElement.Poly p ->
                   Constraint.mk_eq (Polynomial.of_var new_var) p |> RealConstraint.of_intconstraint
               | TransitionLabel.UpdateElement.Dist d -> ProbDistribution.guard d new_var |> RealConstraint.of_intconstraint
             in
@@ -146,7 +144,7 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
             |> RealParameterPolynomial.rename (TransitionLabel.VarMap.bindings new_var_map |> RenameMap.from)
           in
 
-          (RealConstraint.mk_and (GeneralTransition.guard gtrans |> RealConstraint.of_intconstraint) update_constraints, 
+          (RealConstraint.mk_and (GeneralTransition.guard gtrans |> RealConstraint.of_intconstraint) update_constraints,
            RealParameterAtom.Infix.(template_substituted >= RealParameterPolynomial.zero))
         in
 

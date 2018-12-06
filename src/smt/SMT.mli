@@ -1,24 +1,34 @@
 open Batteries
 open Formulas
 open Polynomials
-   
+open BoundsInst
+
 (** Provides different implementations of SMT solvers *)
-   
-(** A unified interface for SMT solvers (currently supported: Z3) *)
+
+(* Z3Solver without optimization *)
 module Z3Solver :
+  sig
+    val satisfiable : RealFormula.t -> bool
+    val to_string : RealFormula.t -> string
+    val bound_gt_zero : RealFormula.t -> RealBound.t -> bool
+    val bound_lt_zero : RealFormula.t -> RealBound.t -> bool
+  end
+
+(** A unified interface for SMT solvers (currently supported: Z3) *)
+module Z3Opt :
 sig
     val satisfiable : Formula.t -> bool
 
     val unsatisfiable : Formula.t -> bool
 
     val tautology : Formula.t -> bool
-      
+
     val equivalent : Formula.t -> Formula.t -> bool
-      
+
     val get_model : ?coeffs_to_minimise:Var.t list -> Formula.t -> Polynomial.valuation Option.t
-    
+
     val check_positivity : Formula.t -> Polynomial.t -> bool
-    
+
     val check_negativity : Formula.t -> Polynomial.t -> bool
   end
 
@@ -26,9 +36,11 @@ module IncrementalZ3Solver :
 sig
   type t
 
+  (* Outputs a string with smt2 format for testing *)
+  val to_string : t -> string
   (** Creates a new incremental smt solver. *)
   val create : ?model:bool -> unit -> t
-     
+
   (** Creates a backtracking point. *)
   val push : t -> unit
 

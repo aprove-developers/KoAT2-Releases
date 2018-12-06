@@ -2,6 +2,7 @@ open Batteries
 open BoundsInst
 open Polynomials
 open ProgramTypes
+open Formulas
 
 let logger = Logging.(get ExpTime)
 
@@ -34,30 +35,24 @@ let entry_transitions (program: Program.t) (rank_transitions: GeneralTransition.
                                           |> Enum.clone |> Util.enum_to_string
                                           (fun (gt,l) -> "(" ^ GeneralTransition.to_id_string gt ^ ", " ^ Location.to_string l ^ ")")]))
 
-let apply_exp
-  (get_expsizebound: [`Lower | `Upper] -> (GeneralTransition.t * Location.t) -> Var.t -> RealBound.t)
-  (rank: RealPolynomial.t)
-  ((gt,l): GeneralTransition.t * Location.t): RealBound.t =
-    rank
-    |> RealBound.of_poly
-    |> RealBound.appr_substitution
-         `Upper
-         ~lower:(get_expsizebound `Lower (gt,l))
-         ~higher:(get_expsizebound `Upper (gt,l))
+let check_if_rank_nonnegative program incoming_list (rank: Location.t -> RealPolynomial.t) =
+  let module Solver = SMT.Z3Solver in
+  let locs =
+    Enum.map (Tuple2.second) incoming_list
+    |> LocationSet.of_enum |> LocationSet.enum
+  in
+  let check_if_rank_geq_0 inv (rank_eval: RealPolynomial.t) =
+    let formula = RealFormula.implies (RealFormula.mk inv) RealFormula.Infix.(rank_eval >= RealPolynomial.zero) in
+    try RealFormula.neg formula |> Solver.satisfiable |> Bool.neg
+    with (Failure _ ) -> false
+  in
 
-let apply
-  (get_sizebound: [`Lower | `Upper] -> (Transition.t) -> Var.t -> Bound.t)
-  (rank: Polynomial.t)
-  (transition: Transition.t): RealBound.t =
-    rank
-    |> RealPolynomial.of_intpoly
-    |> RealBound.of_poly
-    |> RealBound.appr_substitution
-         `Upper
-         ~lower:(RealBound.of_intbound % get_sizebound `Lower transition)
-         ~higher:(RealBound.of_intbound % get_sizebound `Upper transition)
+  Enum.for_all
+    (fun l ->
+      check_if_rank_geq_0 (Program.invariant l program |> Constraints.RealConstraint.of_intconstraint) (rank l))
+    locs
 
-let get_best_bound incoming_enum appr rankfunc : RealBound.t =
+let get_best_bound program incoming_enum appr rankfunc : RealBound.t =
   incoming_enum
   |> Enum.map (fun (gt,l) ->
        let trans_to_l =
@@ -65,12 +60,26 @@ let get_best_bound incoming_enum appr rankfunc : RealBound.t =
          |> TransitionSet.filter (fun (_,t,l') -> Location.equal l' l)
          |> TransitionSet.enum
        in
+       let gtrans_to_l =
+         Enum.filter (Location.equal l % Tuple2.second) incoming_enum
+       in
+
+       let up_of_l var =
+         gtrans_to_l
+         |> Enum.map (fun (gt',l') -> Approximation.expsizebound `Upper appr (gt',l') var)
+         |> RealBound.maximum
+       in
+       let lo_of_l var =
+         gtrans_to_l
+         |> Enum.map (fun (gt',l') -> Approximation.expsizebound `Lower appr (gt',l') var)
+         |> RealBound.minimum
+       in
        let timebound = Enum.map (Approximation.timebound appr) trans_to_l |> Bound.sum |> RealBound.of_intbound in
 
        let rank = LexRSM.rank rankfunc l in
 
        let inctime = timebound in
-       let rhs = RealBound.(max zero (apply_exp (fun kind -> Approximation.expsizebound kind appr) rank (gt,l))) in
+       let rhs = RealBound.( appr_substitution `Upper ~lower:(lo_of_l) ~higher:(up_of_l) (RealBound.of_poly rank)) in
 
        let mul_inctime_and_rhs (inctime, rhs) = RealBound.(
          if is_infinity inctime then
@@ -96,7 +105,10 @@ let compute_bound (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t):
     |> LexRSM.non_increasing
     |> GeneralTransitionSet.to_list
     |> entry_transitions program
-    |> fun incoming_list -> get_best_bound incoming_list appr rank
+    |> fun incoming_list ->
+        match check_if_rank_nonnegative program incoming_list (LexRSM.rank rank) with
+        | true -> get_best_bound program incoming_list appr rank
+        | false -> RealBound.infinity
   in Logger.with_log logger Logger.DEBUG
        (fun () -> "compute_bound", ["rank", ""])
                      ~result:RealBound.to_string

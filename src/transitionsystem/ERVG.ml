@@ -41,7 +41,7 @@ let add_vertices_to_rvg vertices rvg =
   |> List.map (flip add_vertex)
   |> List.fold_left (fun rvg adder -> adder rvg) rvg
 
-let rvg (program: Program.t) =
+let rvg kind (program: Program.t) =
   let add_gt (post_gt: GeneralTransition.t) (rvg: t): t =
     let rvg_with_vertices: t =
       add_vertices_to_rvg
@@ -50,7 +50,7 @@ let rvg (program: Program.t) =
          |> List.map (fun (l,(gt,v)) -> ((gt,l),v) ) ) rvg
     in
     let pre_nodes (post_transition: GeneralTransition.t) (post_l: Location.t) (post_var: Var.t) =
-      ExpLocalSizeBound.vars ((post_transition,post_l),post_var)
+      ExpLocalSizeBound.vars program kind ((post_transition,post_l),post_var)
       |> VarSet.enum
       |> Enum.cartesian_product (Program.pre_gt program post_transition
                                  |> GeneralTransitionSet.enum)
@@ -61,8 +61,8 @@ let rvg (program: Program.t) =
     |> Enum.cartesian_product (GeneralTransition.targets post_gt |> LocationSet.enum)
     |> Enum.map (fun (l,v) -> pre_nodes post_gt l v)
     |> Enum.flatten
-    |> Enum.fold 
-         (fun rvg ((pre_gt,pre_l, post_l),pre_var,post_var) -> add_edge rvg ((pre_gt,pre_l),pre_var) ((post_gt,post_l),post_var)) 
+    |> Enum.fold
+         (fun rvg ((pre_gt,pre_l, post_l),pre_var,post_var) -> add_edge rvg ((pre_gt,pre_l),pre_var) ((post_gt,post_l),post_var))
          rvg_with_vertices
   in
   Program.generalized_transitions program

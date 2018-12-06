@@ -24,7 +24,7 @@ let assert_equal_value =
 
 let assert_equal_varset =
   assert_equal ~cmp:VarSet.equal ~printer:VarSet.to_string
-  
+
 let assert_equal_poly =
   assert_equal ~cmp:Polynomial.(=~=) ~printer:Polynomial.to_string
 
@@ -40,7 +40,7 @@ let assert_equal_bound_option =
 let assert_equal_atom =
   assert_equal ~cmp:Atom.(=~=) ~printer:Atom.to_string
 
-let assert_equal_constr =     
+let assert_equal_constr =
   assert_equal ~cmp:Constraint.(=~=) ~printer:Constraint.to_string
 
 let assert_equal_lsb =
@@ -48,14 +48,14 @@ let assert_equal_lsb =
 
 let assert_equal_formula =
   assert_equal
-    ~cmp:(fun f1 f2 -> SMT.Z3Solver.unsatisfiable Formula.Infix.(f1 && Formula.neg f2))
+    ~cmp:(fun f1 f2 -> SMT.Z3Opt.unsatisfiable Formula.Infix.(f1 && Formula.neg f2))
     ~printer:Formula.to_string
 
-let assert_equal_program =     
+let assert_equal_program =
   assert_equal ~cmp:Program.equivalent ~printer:Program.to_string
-  
+
 let assert_true = assert_bool ""
-                
+
 let assert_false b = assert_true (not b)
 
 let assert_exception f =

@@ -125,7 +125,7 @@ let pre program (l,t,_) =
   |> Enum.filter (fun (_,t',_) ->
          TransitionLabel.append_guard t' t
          |> Formula.mk
-         |> SMT.Z3Solver.satisfiable
+         |> SMT.Z3Opt.satisfiable
        )
 
 let pre_gt program gt =

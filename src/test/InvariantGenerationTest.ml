@@ -3,10 +3,10 @@ open OUnit2
 open Helper
 open ProgramTypes
 open Formulas
-   
-let tests = 
+
+let tests =
   "Invariant Generation" >::: [
-      
+
       ("Simple" >:::
          List.map (fun (l, l', invariant, program_str) ->
              program_str >:: (fun _ ->
@@ -20,7 +20,7 @@ let tests =
                        result_program
                        |> Program.graph
                        |> (fun graph -> TransitionGraph.find_all_edges graph (Location.of_string l) (Location.of_string l'))
-                       |> List.exists (fun (l,t,l') -> SMT.Z3Solver.tautology (Formula.Infix.(Formula.mk (TransitionLabel.guard t) => Readers.read_formula invariant)))
+                       |> List.exists (fun (l,t,l') -> SMT.Z3Opt.tautology (Formula.Infix.(Formula.mk (TransitionLabel.guard t) => Readers.read_formula invariant)))
                      in
                      reset ();
                      assert_bool (String.concat " " [invariant; "was not generated for a transition from location"; l; "to"; l'; "in a result program"; Program.to_simple_string result_program]) fulfiled))

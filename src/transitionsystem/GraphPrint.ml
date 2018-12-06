@@ -2,8 +2,8 @@ open Batteries
 open ProgramTypes
 open RVGTypes
 
-module RV = Make_RV(Transition) 
-module ERV = Make_RV(RVTransitions.TransitionForExpectedSize) 
+module RV = Make_RV(Transition)
+module ERV = Make_RV(RVTransitions.TransitionForExpectedSize)
 
 let print_graph out_dir name graph output_graph =
   let full_path ext =
@@ -15,8 +15,8 @@ let print_graph out_dir name graph output_graph =
   output_graph (Pervasives.open_out_bin (full_path "dot")) graph;
   (* Generate a png from the dot file with an external call to graphviz *)
   ignore (Sys.command ("dot -T png -o " ^ full_path "png" ^ " " ^ full_path "dot"))
-  
-(** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program. 
+
+(** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
 let print_system ~label ~outdir ~file program =
   (* Definition of some graphviz options how it should be layout *)
@@ -32,7 +32,7 @@ let print_system ~label ~outdir ~file program =
                                      end) in
   print_graph outdir (file ^ "_system") (Program.graph program) Dot.output_graph
 
-(** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program. 
+(** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
 let print_rvg kind ~label ~outdir ~file program =
   let graph = RVG.rvg kind program in
@@ -57,11 +57,11 @@ let print_rvg kind ~label ~outdir ~file program =
                        let graph_attributes _ = []
                      end) in
   print_graph outdir (file ^ "_rvg_" ^ show_kind kind) graph Dot.output_graph
-    
-(** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program. 
+
+(** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-let print_ervg ~label ~outdir ~file program =
-  let graph = ERVG.rvg program in
+let print_ervg kind ~label ~outdir ~file program =
+  let graph = ERVG.rvg kind program in
   let module C = Graph.Components.Make(ERVG) in
   let (_,scc_number) = C.scc graph in
   let rv_color (rv: ERV.t) =
@@ -79,4 +79,4 @@ let print_ervg ~label ~outdir ~file program =
                        let graph_attributes _ = []
                      end) in
   print_graph outdir (file ^ "_ervg") graph Dot.output_graph
-    
+
