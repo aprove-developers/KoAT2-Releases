@@ -14,7 +14,7 @@ module ERV = Make_RV(RVTransitions.TransitionForExpectedSize)
 let print_all_expected_bounds (program: Program.t) (appr: Approximation.t): unit =
   print_string (Approximation.to_string program true appr)
 
-(** Prints the only the deterministic bounds of the resulting approximation to the shell. *) 
+(** Prints the only the deterministic bounds of the resulting approximation to the shell. *)
 let print_all_deterministic_bounds (program: Program.t) (appr: Approximation.t): unit =
   print_string (Approximation.to_string program false appr)
 
@@ -24,7 +24,7 @@ let print_overall_expected_timebound (program: Program.t) (appr: Approximation.t
   |> Approximation.program_exptimebound appr
   |> RealBound.to_string
   |> print_endline
-  
+
 (** Prints the overall timebound of the program to the shell. *)
 let print_overall_deterministic_timebound (program: Program.t) (appr: Approximation.t): unit =
   program
@@ -39,7 +39,7 @@ let print_termcomp_deterministic (program: Program.t) (appr: Approximation.t): u
   |> Bound.asymptotic_complexity
   |> Bound.show_complexity_termcomp
   |> print_endline
-  
+
 (** Prints the overall expected timebound of the program to the shell. *)
 let print_termcomp_expected (program: Program.t) (appr: Approximation.t): unit =
   program
@@ -73,7 +73,7 @@ type params = {
 
     simple_input : bool; [@default false] [@aka ["s"]]
     (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
-    
+
     output_dir : string option; [@aka ["o"]]
     (** An absolute or relative path to the output directory, where all generated files should end up. *)
 
@@ -82,13 +82,13 @@ type params = {
 
     log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.NONE]
     (** The general log level of the loggers. *)
-    
+
     result : string; [@default "overall"] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
-    
+
     preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])]
     (** The preprocessors which should be applied before running the actual algorithm. *)
-    
+
     preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
 
@@ -123,18 +123,18 @@ let bounded_erv_to_string (program: Program.t) kind (appr: Approximation.t) ((gt
                     Approximation.expsizebound kind appr (gt,l) v |> RealBound.to_string;
                     "\n";
                     "Local: ";
-                    ExpLocalSizeBound.exp_poly ((gt,l),v) |> Polynomials.RealPolynomial.to_string
+                    ExpLocalSizeBound.elsb program kind ((gt,l),v) |> RealBound.to_string
     ]
-  
+
 let get_lsb program kind (t, v) =
   LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
-  
+
 let standard_vars program =
   let open Program in
   0
   |> TransitionGraph.fold_edges_e (fun edge size -> Int.max (TransitionLabel.input_size (Transition.label edge)) size) (graph program)
   |> Var.fresh_arg_list
-  
+
 (* For each transition rename standard_vars transition *)
 
 let rename_graph standard_vars graph =
