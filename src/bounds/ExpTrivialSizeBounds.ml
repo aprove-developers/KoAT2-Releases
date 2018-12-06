@@ -62,6 +62,14 @@ let guard_enabled gt =
       try Solver.tautology f
       with (Failure _) -> false
 
+let only_one_gt_outgoing program gt =
+  let start_loc = GeneralTransition.start gt in
+  let gts = Program.generalized_transitions program in
+  gts
+  |> GeneralTransitionSet.filter (Location.equal start_loc % GeneralTransition.start)
+  |> GeneralTransitionSet.cardinal
+  |> (>) 2
+
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
@@ -412,7 +420,7 @@ let print_pr_func graph pr_func =
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
 let compute kind program get_sizebound get_expsizebound get_timebound ((gt,loc),var) =
-  if not (guard_enabled gt) then
+  if not (guard_enabled gt && only_one_gt_outgoing program gt) then
     default kind
   else
     let graph = Program.graph program in
