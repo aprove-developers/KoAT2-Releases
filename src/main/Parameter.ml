@@ -3,12 +3,10 @@ open BoundsInst
 open ProgramTypes
 open RVGTypes
 
-(*let command = "panalyse"*)
 
 module RV = Make_RV(Transition)
 module ERV = Make_RV(RVTransitions.TransitionForExpectedSize)
 
-(*let description = "Proceed a full expected time and expected size analysis on a given probabilistic integer transition system"*)
 
 (** Prints the whole resulting approximation with the expected timebounds to the shell. *)
 let print_all_expected_bounds (program: Program.t) (appr: Approximation.t): unit =

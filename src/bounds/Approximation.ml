@@ -136,17 +136,17 @@ let to_string program expected appr=
     IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
     appr.time |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
     if expected then
-      IO.nwrite output "\nExpected Timebounds: \n";
+      (IO.nwrite output "\nExpected Timebounds: \n";
       IO.nwrite output ("  Overall expected timebound: " ^ RealBound.to_string (overall_exptimebound) ^ "\n");
       appr.exptime 
       |> GeneralTransitionApproximation.to_string 
-          (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output;
+          (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output);
     IO.nwrite output "\nCostbounds:\n";
     IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
     appr.cost |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
     IO.nwrite output "\nSizebounds:\n";
     appr.size |> SizeApproximation.to_string |> IO.nwrite output;
     if expected then
-      IO.nwrite output "\nExpSizebounds:\n";
-      appr.expsize |> ExpectedSizeApproximation.to_string |> IO.nwrite output;
+      (IO.nwrite output "\nExpSizebounds:\n";
+      appr.expsize |> ExpectedSizeApproximation.to_string |> IO.nwrite output);
     IO.close_out output
