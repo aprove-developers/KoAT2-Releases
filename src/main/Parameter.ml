@@ -143,7 +143,7 @@ let rename_program program =
   let standard_vars = standard_vars program in
     Program.map_graph (rename_graph standard_vars) program
 
-let rename_program_option opt =
+let rename_program_option =
   Option.map rename_program
   (*match opt with
     |Some program -> Some (rename_program program)
