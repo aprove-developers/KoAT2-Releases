@@ -5,6 +5,7 @@ S test
 S smt
 S parser
 S transitionsystem
+S exactruntime
 S bounds
 S preprocessors
 S main
@@ -16,6 +17,7 @@ B test
 B smt
 B parser
 B transitionsystem
+B exactruntime
 B bounds
 B preprocessors
 B main

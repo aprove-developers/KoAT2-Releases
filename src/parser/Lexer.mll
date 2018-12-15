@@ -24,6 +24,7 @@ let newline = '\r' | '\n' | "\r\n"
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']* '\''?
 let probfloat = ['+']?(['0'-'1']*)?['.']['0'-'9']+ | '1''.''0'*
 let float = ['+' '-']?(['0'-'9']*)?['.']['0'-'9']+
+let fraction = ['-']?['0'-'9']+['/']['1'-'9']['0'-'9']*
 (*let negfloat = ['-'](['0'-'9']*['.'])?['0'-'9']+*)
 
 rule read =
@@ -36,10 +37,16 @@ rule read =
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
   | "RULES"           { P.RULES }
   | "VAR"             { P.VAR }
+  | "GUARDVEC"        { P.GUARDVEC }
+  | "GUARDVAL"        { P.GUARDVAL }
+  | "UPDATES"         { P.UPDATES }
+  | "DIRECTTERMINATION" {P.DIRECTTERMINATION }
+  | "PRECISION"       { P.PRECISION }
   | "min"             { P.MIN }
   | "max"             { P.MAX }
   | "inf"             { P.INFINITY }
   | int               { P.UINT (int_of_string (Lexing.lexeme lexbuf)) }
+  | fraction          { P.FRACTION (Lexing.lexeme lexbuf)}
   | probfloat         { P.UFLOAT (Lexing.lexeme lexbuf)}
   | id                { P.ID (Lexing.lexeme lexbuf) }
   | '|'               { P.ABS }

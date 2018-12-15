@@ -2,6 +2,7 @@ open Batteries
 open BoundsInst
 open ConstraintTypes
 open Lexing
+open ExactProgramTypes
 
 exception Error of string
                  
@@ -51,3 +52,6 @@ let read_goal_file path =
 
 let read_prog_goal_file path =
   read_ Parser.programAndGoal (Lexing.from_input (File.open_in path))
+
+let read_exact_file path =
+  read_ Parser.exactProgram (Lexing.from_input (File.open_in path))

@@ -1,0 +1,28 @@
+USE_OCAMLFIND = true
+
+OCAMLPACKS[] =
+    batteries
+
+OCAMLINCLUDES[] =
+    ../poly
+    ../util
+
+OCAML_LIBS[] =
+    ../poly/poly
+    ../util/util
+
+# Include all .ml files
+FILES[] = $(removesuffix .ml, $(glob *.ml))
+
+LIB = exactruntime
+
+OCamlLibrary($(LIB), $(FILES))
+InterfaceDoc($(LIB), $(FILES))
+
+clean:
+  rm -f \
+     *.omc \
+     *.idoc \
+     $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
+     $(LIB).a $(LIB).cmxa $(LIB).cma \
+     *~

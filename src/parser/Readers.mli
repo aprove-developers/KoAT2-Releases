@@ -1,5 +1,6 @@
 open Batteries
 open BoundsInst
+open ExactProgramTypes
    
 (** Provides a unified interface of the parser and lexer for transition graphs.
     With this module it is possible to abstract from the details of parsing and lexing *)
@@ -27,3 +28,5 @@ val read_polynomial : string -> Polynomials.Polynomial.t
 val read_bound : string -> Bound.t
 
 val read_prog_goal_file : string -> (Program.t * string)
+
+val read_exact_file : string -> ExactProgram.t

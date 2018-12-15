@@ -1,22 +1,24 @@
 %token	<string>	ID
 %token	<int>		UINT
-%token  <string>        UFLOAT
-%token			PLUS MINUS TIMES POW
-%token			EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
-%token			LPAR RPAR
-%token                  LBRACE RBRACE
-%token			EOF
-%token                  OR
-%token                  AND
-%token 			ARROW WITH PROBDIV LBRACK RBRACK
-%token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
-%token                  COMMA COLON
-%token                  MIN MAX INFINITY ABS
-%token                  UNIFORM
+%token  <string>	UFLOAT
+%token				PLUS MINUS TIMES POW
+%token				EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
+%token				LPAR RPAR
+%token				LBRACE RBRACE
+%token				EOF
+%token          	OR
+%token              AND
+%token 				ARROW WITH PROBDIV LBRACK RBRACK
+%token				GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
+%token              COMMA COLON
+%token              MIN MAX INFINITY ABS
+%token              UNIFORM
+%token				GUARDVEC GUARDVAL UPDATES PRECISION DIRECTTERMINATION
+%token <string>		FRACTION
 
-%left			PLUS MINUS
-%left			TIMES
-%left			POW
+%left				PLUS MINUS
+%left				TIMES
+%left				POW
                   
 			
 %start <Program.t> onlyProgram
@@ -36,6 +38,8 @@
 %start <(Program.t * string)> programAndGoal
 
 %start <string> onlyGoal
+
+%start <ExactProgramTypes.ExactProgram.t> exactProgram
 
 %type <Program.t> program
 
@@ -61,6 +65,8 @@
   module Poly = Polynomials.Polynomial
   open Formulas
   open ProgramTypes
+  open BatNum 
+  open ExactProgramTypes
 %}
 
 %%
@@ -276,3 +282,71 @@ bound :
 	|	PLUS { Poly.add }
 	|	TIMES { Poly.mul }
 	|       MINUS { Poly.sub } ;
+
+
+exactProgram :
+	|	g = goal;
+		guard_vec = guard_vector
+		guard_val = guard_value
+		updates = exact_updates
+		d_term = direct_termination
+		precision = precision; EOF
+		{ ExactProgram.from guard_vec guard_val updates d_term precision } ;
+
+	|	g = goal;
+		guard_vec = guard_vector
+		guard_val = guard_value
+		updates = exact_updates
+		precision = precision; EOF
+		{ ExactProgram.from guard_vec guard_val updates None precision } ;
+
+	|	g = goal;
+		guard_vec = guard_vector
+		guard_val = guard_value
+		updates = exact_updates
+		d_term = direct_termination; EOF
+		{ ExactProgram.from guard_vec guard_val updates d_term None } ;
+
+	|	g = goal;
+		guard_vec = guard_vector
+		guard_val = guard_value
+		updates = exact_updates; EOF
+		{ ExactProgram.from guard_vec guard_val updates None None } ;
+
+guard_vector :
+	|	LPAR GUARDVEC guard_vec = vector RPAR
+		{ guard_vec } ;
+
+guard_value :
+	|	LPAR GUARDVAL guard_val = int_val RPAR
+		{ guard_val } ;
+
+exact_updates :
+	|	LPAR UPDATES updates = separated_nonempty_list(PROBDIV, prob_update) RPAR
+		{ updates } ;
+
+direct_termination :
+	|	LPAR DIRECTTERMINATION; update = prob_update RPAR
+		{ Some update } ;
+
+precision :
+	|	LPAR PRECISION prec = int_val RPAR
+		{ Some prec } ;
+
+prob_update :
+	|	prob = UINT COLON update = vector
+		{ ProbUpdate.from (Batteries.Num.of_int prob) update };
+	|	prob = UFLOAT COLON update = vector
+		{ ProbUpdate.from (Batteries.Num.of_float_string prob) update };
+	|	prob = FRACTION COLON update = vector
+		{ ProbUpdate.from (Batteries.Num.of_string prob) update };
+
+vector :
+	|	LPAR values = separated_nonempty_list(COMMA, int_val) RPAR
+		{ values } ;
+int_val :
+	|	value = UINT
+		{ OurInt.of_int value } ;
+	|	MINUS value = UINT
+		{ OurInt.of_int (-value) } ;
+

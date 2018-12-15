@@ -10,12 +10,14 @@ OCAMLINCLUDES[] =
     ../util
     ../poly
     ../constraints
+    ../exactruntime
     ../transitionsystem
 
 OCAML_LIBS[] =
     ../util/util
     ../poly/poly
     ../constraints/constraints
+    ../exactruntime/exactruntime
     ../transitionsystem/transitionsystem
 
 GEN_FILES[] =

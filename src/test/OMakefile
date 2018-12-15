@@ -20,6 +20,7 @@ OCAMLINCLUDES[] =
     ../constraints
     ../smt
     ../transitionsystem
+    ../exactruntime
     ../parser
     ../bounds
     ../preprocessors
@@ -30,6 +31,7 @@ OCAML_LIBS[] =
     ../constraints/constraints
     ../smt/smt
     ../transitionsystem/transitionsystem
+    ../exactruntime/exactruntime
     ../parser/parser
     ../bounds/bounds
     ../preprocessors/preprocessors

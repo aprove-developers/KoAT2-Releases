@@ -3,6 +3,7 @@ open ProgramTypes
 open Sys
 open Unix
 open Parameter
+open ExactProgramTypes
 (*let description = "Testing for exactRuntime"
 
 let command = "exact"
@@ -41,17 +42,17 @@ let get_koat_path (command: String.t) =
   else Filename.dirname which_output
 
 let run (params: params) =
-  let logs = List.map (fun log -> (log, params.log_level)) params.logs in
-    Logging.use_loggers logs;
+  (* let logs = List.map (fun log -> (log, params.log_level)) params.logs in
+    Logging.use_loggers logs; *)
   let logger = Logging.(get ExactRuntime) in
   
   let input = Option.default_delayed read_line params.input in
   let input_filename = input |> Fpath.v |> Fpath.normalize |> Fpath.to_string in
   let output_dir = params.output_dir in
       
-  let execute () =
+  let execute_old () =
     (* No idea if this actaully works, may need adjustment in the future *)
-    let sage_path = get_koat_path Sys.argv.(0) ^ "/../exact_runtime/exact_runtime_from_file.sage" in
+    let sage_path = get_koat_path Sys.argv.(0) ^ "/../exactruntime/exact_runtime_from_file.sage" in
     input_filename
     |> fun input -> "sage " ^ sage_path ^ " " ^ input_filename
     |> tap(print_string)
@@ -63,11 +64,28 @@ let run (params: params) =
                 Option.map (fun out_dir -> File.write_lines (out_dir ^ out_name) (List.enum output)) output_dir
                 |> ignore
           )
+    |> String.concat "; "
+    |> Option.some
   in 
+  let execute () =
+    (* just to have the old version as a point of reference *)
+    (* No idea if this actaully works, may need adjustment in the future *)
+    let sage_path = get_koat_path Sys.argv.(0) ^ "/../exactruntime/exact_runtime_from_koat.sage" in
+    input_filename
+    |> Readers.read_exact_file
+    |> (fun ep -> if ExactProgram.is_valid ~logger:logger ep then Some ep else None)
+    |> Option.map (fun ep -> 
+                      ep
+                      |> ExactProgram.to_sage
+                      |> fun args -> "sage " ^ sage_path ^ " " ^ args
+                      |> read_process_lines
+                      |> String.concat "; "
+                  )
+  in
   Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "exact runtime", [])
-                  ~result:(fun bound ->
-                    String.concat "; " bound
+                  (fun () -> "Calculating exact runtime.", [])
+                  ~result:(fun res ->
+                    res |? "Runtime could not be calculated"
                   )
                   execute
   |> ignore
