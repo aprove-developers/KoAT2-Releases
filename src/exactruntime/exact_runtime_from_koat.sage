@@ -83,11 +83,6 @@ if scalar_const[0] > 0 and scalar_const[1] > 0:
     print("ERROR: Direct Termination Vector does not terminate the program")
     quit()
 
-# check if all the probabilities add up to 1
-if not sum(scalar_updates.values()) + scalar_const[0] == 1:
-    print("ERROR: probabilities do not add up to 1 (" + str(sum(scalar_updates.values()) + scalar_const[0]) + ")")
-    quit()
-
 drift = sum([i*j for i,j in scalar_updates.iteritems()])
 
 # check if the runtime can be computed
