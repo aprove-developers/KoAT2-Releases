@@ -65,7 +65,7 @@
   module Poly = Polynomials.Polynomial
   open Formulas
   open ProgramTypes
-  open BatNum 
+  open OurNum
   open ExactProgramTypes
 %}
 
@@ -335,11 +335,11 @@ precision :
 
 prob_update :
 	|	prob = UINT COLON update = vector
-		{ ProbUpdate.from (Batteries.Num.of_int prob) update };
+		{ ProbUpdate.from (OurNum.of_int prob) update };
 	|	prob = UFLOAT COLON update = vector
-		{ ProbUpdate.from (Batteries.Num.of_float_string prob) update };
+		{ ProbUpdate.from (OurNum.of_float_string prob) update };
 	|	prob = FRACTION COLON update = vector
-		{ ProbUpdate.from (Batteries.Num.of_string prob) update };
+		{ ProbUpdate.from (OurNum.of_string prob) update };
 
 vector :
 	|	LPAR values = separated_nonempty_list(COMMA, int_val) RPAR

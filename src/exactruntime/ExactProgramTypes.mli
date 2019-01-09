@@ -5,9 +5,9 @@ open Polynomials
 module ProbUpdate :
   sig
     type t
-    val from: Num.t -> OurInt.t list -> t
+    val from: OurNum.t -> OurInt.t list -> t
     val to_string: t -> string
-    val probability: t -> Num.t
+    val probability: t -> OurNum.t
     val update: t -> OurInt.t list
   end
 

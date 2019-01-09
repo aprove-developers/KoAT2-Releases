@@ -1,6 +1,6 @@
 open Batteries
 open Polynomials
-
+open OurNum
 
 let list_string vec = 
   vec
@@ -12,7 +12,7 @@ let make_string str = "\"" ^ str ^ "\""
 module ProbUpdate =
   struct
     type t = {
-      probability: Num.t;
+      probability: OurNum.t;
       update: OurInt.t list;
     }
     let from prob up = 
@@ -28,7 +28,7 @@ module ProbUpdate =
       u.update
 
     let to_string pu =
-      Num.to_string pu.probability ^ ":(" ^ list_string pu.update ^ ")"
+      OurNum.to_string pu.probability ^ ":(" ^ list_string pu.update ^ ")"
   end
 
 module ExactProgram =
@@ -82,16 +82,16 @@ module ExactProgram =
           |> ignore
         in
         let prob_greater_zero = 
-          ((ep |> directtermination |> Option.map ProbUpdate.probability |> Option.map (Num.(<=/) Num.zero)) |? true) &&
-          (ep |> updates |> List.map ProbUpdate.probability |> List.for_all (Num.(<=/) Num.zero))
+          ((ep |> directtermination |> Option.map ProbUpdate.probability |> Option.map (Num.(<=/) OurNum.zero)) |? true) &&
+          (ep |> updates |> List.map ProbUpdate.probability |> List.for_all (Num.(<=/) OurNum.zero))
           |> tap (fun res ->  if Bool.neg res then
                                 log_str "Not all Probabilities are greater than zero.")
         in
         let equals_one = 
-          Num.(+) 
-          ((ep |> directtermination |> Option.map ProbUpdate.probability) |? Num.zero)
-          (ep |> updates |> List.map ProbUpdate.probability |> List.fold_left Num.(+) Num.zero)
-          |> Num.equal Num.one
+          OurNum.(+) 
+          ((ep |> directtermination |> Option.map ProbUpdate.probability) |? OurNum.zero)
+          (ep |> updates |> List.map ProbUpdate.probability |> List.fold_left OurNum.(+) OurNum.zero)
+          |> OurNum.equal OurNum.one
           |> tap (fun res ->  if Bool.neg res then
                                 log_str "Probabilities do not add up to one.")
         in
