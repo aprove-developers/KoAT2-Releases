@@ -62,18 +62,6 @@ let run (params: params) =
     output |> String.concat "\n" |> print_string; print_string "\n"
   in
 
-  let execute_old () =
-    let sage_path = get_koat_path Sys.argv.(0) ^ "/../exactruntime/exact_runtime_from_file.sage" in
-    input_filename
-    |> fun input -> "sage " ^ sage_path ^ " " ^ input_filename
-    |> tap(print_string)
-    |> read_process_lines
-    (* Printed here for output reasons only *)
-    |> tap print_output
-    |> tap write_to_file
-    |> String.concat "; "
-    |> Option.some
-  in 
   let execute () =
     let sage_path = get_koat_path Sys.argv.(0) ^ "/../exactruntime/exact_runtime_from_koat.sage" in
     input_filename
