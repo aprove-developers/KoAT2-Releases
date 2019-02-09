@@ -76,6 +76,10 @@ let run (params: params) =
                       |> tap write_to_file
                       |> String.concat "; "
                   )
+    |> tap (fun bound_string ->
+                bound_string
+                |> Option.map ExactReader.read_bound
+                |> ignore)
   in
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> "Calculating exact runtime.", [])

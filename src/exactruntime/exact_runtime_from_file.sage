@@ -230,5 +230,5 @@ r = r.subs(x=v)
 
 total_time = time.clock() - start_time
 
-print("r{vars} = {res}".format(vars=v_vars,res=r))
+print("{res}".format(vars=v_vars,res=r))
 print("time elapsed: {t}".format(t=total_time))

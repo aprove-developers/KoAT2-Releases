@@ -1,0 +1,4 @@
+# exclude automatically generated files
+ExactLexer.ml
+ExactParser.ml
+ExactParser.mli

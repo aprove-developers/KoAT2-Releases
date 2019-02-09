@@ -1,5 +1,8 @@
 USE_OCAMLFIND = true
 
+MENHIR_ENABLED = true
+MENHIR_FLAGS += --infer
+
 OCAMLPACKS[] =
     batteries
 
@@ -10,6 +13,13 @@ OCAMLINCLUDES[] =
 OCAML_LIBS[] =
     ../poly/poly
     ../util/util
+
+GEN_FILES[] =
+    ExactParser.ml
+    ExactParser.mli
+    ExactLexer.ml
+
+OCamlGeneratedFiles($(GEN_FILES))
 
 # Include all .ml files
 FILES[] = $(removesuffix .ml, $(glob *.ml))
@@ -25,4 +35,5 @@ clean:
      *.idoc \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
+     $(GEN_FILES) \
      *~

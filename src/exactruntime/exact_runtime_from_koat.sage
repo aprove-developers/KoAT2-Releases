@@ -123,7 +123,6 @@ for root in roots:
 x = var('x')
 r_monoms = []
 
-
 for root in filtered_roots:
     if root.imag() != 0:
         r = abs(root)
@@ -153,16 +152,22 @@ solution = A.solve_right(-B)
 # Construct the resulting formula
 if scalar_const[0] == 0:
     r = c_val*x
+    r_list = [c_val*x]
 else:
     r = c_val
-for sol,monom in zip(solution, r_monoms):
-    r += sol*monom
+    r_list = [c_val]
+for sol, monom in zip(solution, r_monoms):
+    r += sol * monom
+    r_list.append(sol*monom)
 # substitute x by the original variables
 v_vars = vector([var('x{id}'.format(id=i+1)) for i in range(vec_length)])
 v = v_vars.dot_product(guardvec)-guardval
 r = r.subs(x=v)
+r_list = [monom.subs(x=v) for monom in r_list]
+r_list = [monom.simplify() for monom in r_list]
 
 total_time = time.clock() - start_time
 
-print("r{vars} = {res}".format(vars=v_vars,res=r))
-print("time elapsed: {t}".format(t=total_time))
+print("{res}").format(res=r_list)
+#print("{res}".format(vars=v_vars,res=r))
+#print("time elapsed: {t}".format(t=total_time))
