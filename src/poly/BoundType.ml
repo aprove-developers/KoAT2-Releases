@@ -119,11 +119,14 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | (Polynomial x, Exponential y) -> Exponential y
           | (Exponential x, Polynomial y) -> Exponential x
         )
-        ~exp:(fun _ b ->
+        ~exp:(fun v b ->
+          if (Num.abs v) <= Num.one then
+            Polynomial 1
+          else
           match b with
-          | Inf -> Inf
-          | Polynomial x -> Exponential 1
-          | Exponential x -> Exponential (Int.succ x)
+            | Inf -> Inf
+            | Polynomial x -> Exponential 1
+            | Exponential x -> Exponential (Int.succ x)
         )
         ~max:(fun x y ->
           match (x,y) with
