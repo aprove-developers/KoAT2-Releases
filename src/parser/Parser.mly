@@ -289,29 +289,9 @@ exactProgram :
 		guard_vec = guard_vector
 		guard_val = guard_value
 		updates = exact_updates
-		d_term = direct_termination
-		precision = precision; EOF
+		d_term = ioption(direct_termination)
+		precision = ioption(precision); EOF
 		{ ExactProgram.from guard_vec guard_val updates d_term precision } ;
-
-	|	g = goal;
-		guard_vec = guard_vector
-		guard_val = guard_value
-		updates = exact_updates
-		precision = precision; EOF
-		{ ExactProgram.from guard_vec guard_val updates None precision } ;
-
-	|	g = goal;
-		guard_vec = guard_vector
-		guard_val = guard_value
-		updates = exact_updates
-		d_term = direct_termination; EOF
-		{ ExactProgram.from guard_vec guard_val updates d_term None } ;
-
-	|	g = goal;
-		guard_vec = guard_vector
-		guard_val = guard_value
-		updates = exact_updates; EOF
-		{ ExactProgram.from guard_vec guard_val updates None None } ;
 
 guard_vector :
 	|	LPAR GUARDVEC guard_vec = vector RPAR
@@ -327,11 +307,11 @@ exact_updates :
 
 direct_termination :
 	|	LPAR DIRECTTERMINATION; update = prob_update RPAR
-		{ Some update } ;
+		{ update } ;
 
 precision :
-	|	LPAR PRECISION prec = int_val RPAR
-		{ Some prec } ;
+	|	LPAR PRECISION; prec = UINT RPAR
+		{ OurInt.of_int prec } ;
 
 prob_update :
 	|	prob = UINT COLON update = vector
