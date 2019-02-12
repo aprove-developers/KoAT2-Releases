@@ -19,7 +19,7 @@ module ExactProgram :
     val updates: t -> ProbUpdate.t list
     val directtermination: t -> ProbUpdate.t option
     val precision: t -> OurInt.t option
-    val from: OurInt.t list -> OurInt.t -> ProbUpdate.t list -> ProbUpdate.t option -> OurInt.t option -> t
+    val from: OurInt.t list -> OurInt.t -> ProbUpdate.t list -> ProbUpdate.t option -> OurInt.t option -> (OurInt.t list) option -> t
     val to_string: t -> string
     val is_valid: ?logger:Logger.log -> t -> bool
     val to_sage: t -> string

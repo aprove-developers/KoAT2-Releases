@@ -42,6 +42,7 @@ rule read =
   | "UPDATES"         { P.UPDATES }
   | "DIRECTTERMINATION" {P.DIRECTTERMINATION }
   | "PRECISION"       { P.PRECISION }
+  | "INITIAL"         { P.INITIAL }
   | "min"             { P.MIN }
   | "max"             { P.MAX }
   | "inf"             { P.INFINITY }

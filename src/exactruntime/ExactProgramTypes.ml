@@ -39,14 +39,16 @@ module ExactProgram =
       updates: ProbUpdate.t list;
       directtermination: ProbUpdate.t option;
       precision: OurInt.t option;
+      initial: (OurInt.t list) option;
     }
-    let from guardvec guardval up dirterm prec =
+    let from guardvec guardval up dirterm prec initial =
       {
         guardvector = guardvec;
         guardvalue = guardval;
         updates = up;
         directtermination = dirterm;
         precision = prec;
+        initial = initial;
       }
       let guardvector ep =
         ep.guardvector
@@ -62,6 +64,9 @@ module ExactProgram =
       
       let precision ep =
         ep.precision
+
+      let initial ep =
+        ep.initial
       
       let updates_to_string ups =
         ups
@@ -72,9 +77,10 @@ module ExactProgram =
         let guard_vec_str = "(GUARDVEC " ^ list_string ep.guardvector ^ ")\n" in
         let guard_val_str = "(GUARDVEC " ^ OurInt.to_string ep.guardvalue ^ ")\n" in
         let update_str = "(UPDATES " ^ updates_to_string ep.updates ^ ")\n" in
-        let dir_term_str = Option.map (fun dterm -> "(DIRECTTERMINATION " ^ ProbUpdate.to_string dterm ^ ")\n") (ep |> directtermination) in
-        let prec_str = Option.map (fun prec -> "(PRECISION " ^ OurInt.to_string prec ^ ")\n") (ep |> precision) in
-        guard_vec_str ^ guard_val_str ^ update_str ^ (dir_term_str |? "") ^ (prec_str |? "")
+        let dir_term_str = Option.map (fun dterm -> "(DIRECTTERMINATION " ^ ProbUpdate.to_string dterm ^ ")\n") (directtermination ep) in
+        let prec_str = Option.map (fun prec -> "(PRECISION " ^ OurInt.to_string prec ^ ")\n") (precision ep) in
+        let init_str = Option.map (fun init -> "(INITIAL " ^ list_string init ^ ")\n") (initial ep ) in
+        guard_vec_str ^ guard_val_str ^ update_str ^ (dir_term_str |? "") ^ (prec_str |? "") ^ (init_str |? "")
       
       let is_valid ?logger ep =
         let log_str str =
@@ -112,6 +118,7 @@ module ExactProgram =
             |> tap (fun res ->  if Bool.neg res then
                                 log_str "Termination vector has the wrong length.")
           in
+          (* TODO: add check for guard vec length and initial value *)
           same_update_len && same_term_len
         in
         prob_greater_zero && equals_one && same_vec_len
@@ -128,7 +135,8 @@ module ExactProgram =
         let optional =
           [
             ep |> directtermination |> Option.map ProbUpdate.to_string |> Option.map make_string |> Option.map (fun str -> "--dirterm " ^ str);
-            ep |> precision |> Option.map OurInt.to_string |> Option.map make_string |> Option.map (fun str -> "--prec " ^ str)
+            ep |> precision |> Option.map OurInt.to_string |> Option.map make_string |> Option.map (fun str -> "--prec " ^ str);
+            ep |> initial |> Option.map list_string |> Option.map (fun str -> "--init \"(" ^ str ^ ")\"")
           ]
           |> List.filter Option.is_some
           |> List.map Option.get

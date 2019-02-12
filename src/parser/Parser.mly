@@ -13,7 +13,7 @@
 %token              COMMA COLON
 %token              MIN MAX INFINITY ABS
 %token              UNIFORM
-%token				GUARDVEC GUARDVAL UPDATES PRECISION DIRECTTERMINATION
+%token				GUARDVEC GUARDVAL UPDATES PRECISION DIRECTTERMINATION INITIAL
 %token <string>		FRACTION
 
 %left				PLUS MINUS
@@ -290,8 +290,9 @@ exactProgram :
 		guard_val = guard_value
 		updates = exact_updates
 		d_term = ioption(direct_termination)
-		precision = ioption(precision); EOF
-		{ ExactProgram.from guard_vec guard_val updates d_term precision } ;
+		precision = ioption(precision); 
+		initial = ioption(initial); EOF
+		{ ExactProgram.from guard_vec guard_val updates d_term precision initial} ;
 
 guard_vector :
 	|	LPAR GUARDVEC guard_vec = vector RPAR
@@ -312,6 +313,10 @@ direct_termination :
 precision :
 	|	LPAR PRECISION; prec = UINT RPAR
 		{ OurInt.of_int prec } ;
+
+initial :
+	|	LPAR; INITIAL; init_vec = vector; RPAR
+		{ init_vec } ;
 
 prob_update :
 	|	prob = UINT COLON update = vector

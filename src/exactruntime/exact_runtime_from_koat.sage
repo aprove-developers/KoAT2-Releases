@@ -35,6 +35,7 @@ parser.add_argument('guardval', type=str, help="The value of the guard.")
 parser.add_argument('updates', type=str, help="The updates of the loop")
 parser.add_argument('--dirterm', dest='directtermination', type=str, default=None, help="The direct termination update")
 parser.add_argument('--prec', dest='precision', type=str, default=None, help="The precision for the calculations")
+parser.add_argument('--init', dest='initial', type=str, default=None, help="The initial values of the variables")
 args = parser.parse_args()
 
 # assign variables
@@ -47,6 +48,7 @@ vec_length = len(guardvec)
 # Optional arguments
 direct_flag = False
 prec_flag = False
+init_flag = False
 
 # initialize empty direct termination
 const_update = [Rational(0), vector(vec_length * [0])]
@@ -59,6 +61,10 @@ if not args.directtermination == None:
 if not args.precision == None:
     prec_flag = True
     precision = int(args.precision)
+
+if not args.initial == None:
+    init_flag = True
+    initial_vector = make_vector(args.initial)
 
 # transform program into a simple program
 tmp_updates = [[e[0], e[1].dot_product(guardvec)] for e in updates]
@@ -80,7 +86,7 @@ scalar_const = (const_update[0], const_update[1].dot_product(guardvec) - guardva
 
 # check if direct termination actually terminates
 if scalar_const[0] > 0 and scalar_const[1] > 0:
-    print("ERROR: Direct Termination Vector does not terminate the program")
+    print("ERROR\nDirect Termination Vector does not terminate the program")
     quit()
 
 drift = sum([i*j for i,j in scalar_updates.iteritems()])
@@ -88,10 +94,10 @@ drift = sum([i*j for i,j in scalar_updates.iteritems()])
 # check if the runtime can be computed
 if (scalar_const[0] == 0):
     if drift > 0:
-        print("The given program is not AST. The expected runtime is infinite.")
+        print("WARNING\nthe given program is not AST. the expected runtime is infinite.")
         quit()
     elif drift == 0: 
-      print("The given program is AST, but not PAST. The expected runtime is infinite.")
+      print("WARNING\nthe given program is AST, but not PAST. The expected runtime is infinite.")
       quit()
 
 
@@ -164,10 +170,13 @@ v_vars = vector([var('x{id}'.format(id=i+1)) for i in range(vec_length)])
 v = v_vars.dot_product(guardvec)-guardval
 r = r.subs(x=v)
 r_list = [monom.subs(x=v) for monom in r_list]
-r_list = [monom.simplify() for monom in r_list]
+# r_list = [monom.simplify_full() for monom in r_list]
 
 total_time = time.clock() - start_time
 
-print("{res}").format(res=r_list)
-#print("{res}".format(vars=v_vars,res=r))
-#print("time elapsed: {t}".format(t=total_time))
+# print("BOUND\n{res}").format(res=r_list)
+print("STRING\n{res}".format(res=r))
+if init_flag:
+    var_values = dict(zip(v_vars, initial_vector))
+    print("EVALUATION\n{init}".format(init=r.subs(var_values)))
+print("TIME\n{t}".format(t=total_time))
