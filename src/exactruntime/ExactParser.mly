@@ -1,17 +1,14 @@
 %token  <string>	FLOAT
 %token  <string>	FRACTION
 %token  <string>	VAR
-%token				PLUS MINUS TIMES POW
-%token				LPAR RPAR LBRK RBRK
+%token	<int>		INT
+%token				SUM LISTSUM PROD LISTPROD POW
+%token				COS SIN
+%token				LPAR RPAR
 %token              COMMA
 %token				EOF
-%token				COS SIN
 
-%left				PLUS
-%left				TIMES
-%left				POW
-
-%start <ExactBound.t list> exactBoundList
+%start <ExactBound.t> from_tree
 
 
 %{
@@ -21,49 +18,51 @@
 
 %%
 
-exactBoundList :
-    |   LBRK; bound_list = separated_nonempty_list(COMMA, exactBound) RBRK; EOF
-		{ bound_list } ;
 
-exactBound :
-	|	factors = separated_nonempty_list(TIMES, factor)
-		{ ExactBound.list_prod factors } 
+from_tree :
+    |	e = expression_bound; EOF
+		{ e }
 
-factor :
-	|	b = signedConstBound
-		{ b }
-	|	b = var
-		{ b }
-	|	base = powBase; POW; exp = powExp
-		{ ExactBound.pow base exp }
-
-powBase :
-	|	v = const
-		{ v }
-	|	LPAR; MINUS; v = const; RPAR
-		{ OurNum.neg v }
-
-powExp :
-	|	b = var
-		{ b }
-
-
-signedConstBound :
-	|	MINUS; b = constBound
-		{ ExactBound.neg b }
-	|	b = constBound
-		{ b }
-
-constBound :
+expression_bound :
 	|	c = const
-		{ ExactBound.const c } ;
+		{ ExactBound.const c }
+	|	v = var
+		{ ExactBound.var v }
+	|	LPAR;o = list_op; operands = separated_nonempty_list(COMMA, expression_bound); RPAR
+		{ o operands }
+	|	LPAR; POW ; base = const; COMMA; exp = expression_bound; RPAR
+		{ ExactBound.pow base exp }
+	|	LPAR; o = dual_op; e = expression_bound; COMMA; f = expression_bound; RPAR
+		{ o e f }
+	|	LPAR; o = single_op; e = expression_bound; RPAR
+		{ o e }
+
+%inline list_op :
+	|	LISTSUM
+		{ ExactBound.list_sum }
+	|	LISTPROD
+		{ExactBound.list_prod }
+
+%inline dual_op :
+	|	SUM
+		{ ExactBound.sum }
+	|	PROD	
+		{ ExactBound.prod }
+
+%inline single_op :
+	|	COS
+		{ ExactBound.cos }
+	|	SIN
+		{ ExactBound.sin }
 
 const :
 	|	v = FLOAT
 		{ OurNum.of_float_string v } ;
 	|	v = FRACTION
 		{ OurNum.of_string v } ;
+	|	v = INT
+		{ OurNum.of_int v } ; 
 
 var :
 	|   var = VAR
-		{ ExactBound.var (Var.of_string var)} ;
+		{ Var.of_string var } ;

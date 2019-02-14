@@ -4,6 +4,7 @@ open Sys
 open Unix
 open Parameter
 open ExactProgramTypes
+open BoundsInst
 (*let description = "Testing for exactRuntime"
 
 let command = "exact"
@@ -47,6 +48,7 @@ type result = {
   error: string option;
   time: string option;
   evaluation: string option;
+  bound: ExactBound.t option;
 }
 
 let rec get_from_list_ = function
@@ -63,7 +65,12 @@ let result_from_list list = {
     error = get_from_list "ERROR" list;
     time = list |> get_from_list "TIME" ;
     evaluation = list |> get_from_list "EVALUATION" ;
+    bound = list |> get_from_list "TREE" |> Option.map ExactReader.from_tree ;
   }
+
+let bound_from_result res = 
+  res.bound
+
 
 let result_to_string_list (res:result) =
   let string_res = 
@@ -83,6 +90,10 @@ let result_to_string_list (res:result) =
   in
   string_res @ warning @ error @ evaluation @ time
 
+let tap_option (f: 'a -> unit) (a: 'a option) : 'a option =
+  Option.may f a;
+  a
+
 let run (params: params) =
   (* let logs = List.map (fun log -> (log, params.log_level)) params.logs in
     Logging.use_loggers logs; *)
@@ -91,7 +102,6 @@ let run (params: params) =
   let input = Option.default_delayed read_line params.input in
   let input_filename = input |> Fpath.v |> Fpath.normalize |> Fpath.to_string in
   let output_dir = params.output_dir in
-  
   let write_to_file output =
     let out_name = (input |> Fpath.v |> Fpath.rem_ext |> Fpath.filename) ^ ".result" in
     Option.map (fun out_dir -> File.write_lines (out_dir ^ out_name) (List.enum output)) output_dir
@@ -113,22 +123,29 @@ let run (params: params) =
                       |> fun args -> "sage " ^ sage_path ^ " " ^ args
                       |> read_process_lines
                       |> result_from_list
-                      |> result_to_string_list
-                      |> tap print_output
-                      |> tap write_to_file
-                      |> String.concat "; "
                   )
-    (* |> tap (fun bound_string ->
-                bound_string
-                |> Option.map ExactReader.read_bound_from_list
-                |> Option.map ExactBound.to_string
-                |> Option.map print_string
-                |> ignore) *)
+    |> tap_option (fun res ->
+                        res
+                        |> result_to_string_list
+                        |> tap print_output
+                        |> tap write_to_file
+                        |> ignore
+                      )
+    |> Option.map bound_from_result
+    |> Option.map Option.get
+    |> tap_option (fun res ->
+                        res
+                        |> ExactBound.get_lower_bound
+                        |> RealBound.to_string
+                        |> fun str -> "LOWER: " ^ str ^ "\n"
+                        |> print_string
+                  )
   in
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> "Calculating exact runtime.", [])
                   ~result:(fun res ->
-                    res |? "Runtime could not be calculated"
+                    res |? ExactBound.infinity
+                    |> ExactBound.to_string
                   )
                   execute
   |> ignore

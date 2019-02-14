@@ -23,7 +23,12 @@ let of_ourint f =
   |> Num.num_of_big_int
 
 let of_float_string fs =
-  fs |> Num.of_float_string
+  let res = if (String.get fs 0) == '-' then
+              fs |> Num.of_float_string |> Num.abs |> Num.neg
+            else
+              fs |> Num.of_float_string
+  in  
+  res
 
 let (>) = Num.(>/)
 let (<) = Num.(</)

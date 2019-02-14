@@ -19,5 +19,5 @@ let read_ rule lexbuf =
 let read rule str =
   read_ rule (Lexing.from_string str)
 
-let read_bound =
-  read ExactParser.exactBoundList
+let from_tree =
+  read ExactParser.from_tree

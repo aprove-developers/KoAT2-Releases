@@ -180,3 +180,26 @@ if init_flag:
     var_values = dict(zip(v_vars, initial_vector))
     print("EVALUATION\n{init}".format(init=r.subs(var_values)))
 print("TIME\n{t}".format(t=total_time))
+
+operator_translation = {
+    operator.add: "SUM",
+    operator.pow: "POW",
+    sage.symbolic.operators.mul_vararg: "LISTPROD",
+    sage.symbolic.operators.add_vararg: "LISTSUM"
+}
+
+def translate_op(op):
+    if op in operator_translation:
+        return operator_translation[op]
+    else:
+        return repr(op).upper()
+
+def tree(expr): 
+    if expr.operator() is None: 
+        return str(expr)
+    else: 
+        return "(" + translate_op(expr.operator()) + " " + ",".join(map(tree, expr.operands())) + ")"
+
+test_res = tree(r)
+
+print("TREE\n{test}".format(test=test_res))

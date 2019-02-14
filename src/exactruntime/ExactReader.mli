@@ -1,1 +1,1 @@
-val read_bound : string -> ExactBound.t list
+val from_tree : string -> ExactBound.t

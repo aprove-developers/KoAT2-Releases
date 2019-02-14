@@ -1,5 +1,6 @@
 open Batteries
 open Polynomials
+open BoundsInst
 
 type t =
   | Infinity
@@ -24,7 +25,7 @@ let rec to_string = function
   | Sin x -> "sin(" ^ (to_string x) ^ ")"
 let one = Const OurNum.one
 let zero = Const OurNum.zero
-let infintiy = Infinity
+let infinity = Infinity
 let const v = Const v
 let var v = Var v
 let neg b = Neg b
@@ -55,3 +56,19 @@ let rec list_prod = function
 let cos b = Cos b
 
 let sin b = Sin b
+
+let rec get_lower_bound = function
+| Infinity -> RealBound.infinity
+| Const x -> RealBound.of_constant x
+| Var x -> RealBound.of_var x
+| Neg x -> RealBound.neg (get_lower_bound x)
+| Pow (x,y) -> if OurNum.(Compare.((abs x) < one)) then 
+                  RealBound.zero 
+                else if (OurNum.abs x) == OurNum.one then 
+                  RealBound.one 
+                else 
+                  RealBound.exp x (get_lower_bound y)
+| Sum (x,y) -> RealBound.add (get_lower_bound x) (get_lower_bound y)
+| Product (x,y) -> RealBound.mul (get_lower_bound x) (get_lower_bound y)
+| Cos x -> RealBound.of_constant OurFloat.one
+| Sin y -> RealBound.of_constant OurFloat.one

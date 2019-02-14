@@ -18,10 +18,11 @@
 
 }
 
-let float = (['0'-'9']*)?['.']['0'-'9']+
+let float = ['-']?(['0'-'9']*)?['.']['0'-'9']+
 let variable = 'x'['0'-'9']*
-let fraction = ['0'-'9']+['/']['1'-'9']['0'-'9']*
+let fraction = ['-']?['0'-'9']+['/']['1'-'9']['0'-'9']*
 let white = [' ' '\t']+
+let int = ['-']?['1'-'9']['0'-'9']*
 
 rule read =
   parse
@@ -29,18 +30,19 @@ rule read =
   | fraction          { P.FRACTION (Lexing.lexeme lexbuf) }
   | variable          { P.VAR (Lexing.lexeme lexbuf) }
   | float             { P.FLOAT (Lexing.lexeme lexbuf) }
+  | int               { P.INT (int_of_string (Lexing.lexeme lexbuf)) }
   | '('               { P.LPAR }
   | ')'               { P.RPAR }
-  | '['               { P.LBRK }
-  | ']'               { P.RBRK }
-  | '+'               { P.PLUS }
-  | '*'               { P.TIMES }
-  | '-'               { P.MINUS }
-  | '^'               { P.POW }
-  | "cos"             { P.COS }
-  | "sin"             { P.SIN }
   | ','               { P.COMMA }
+  | "COS"             { P.COS }
+  | "SIN"             { P.SIN }
+  | "SUM"             { P.SUM }
+  | "LISTSUM"         { P.LISTSUM }
+  | "PROD"            { P.PROD }
+  | "LISTPROD"        { P.LISTPROD }
+  | "POW"             { P.POW }
   | eof               { P.EOF }
+  
 
 (*{
   end

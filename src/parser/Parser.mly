@@ -289,7 +289,7 @@ exactProgram :
 		guard_vec = guard_vector
 		guard_val = guard_value
 		updates = exact_updates
-		d_term = ioption(direct_termination)
+		d_term = ioption(direct_termination);
 		precision = ioption(precision); 
 		initial = ioption(initial); EOF
 		{ ExactProgram.from guard_vec guard_val updates d_term precision initial} ;
