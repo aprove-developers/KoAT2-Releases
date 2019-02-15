@@ -3,7 +3,7 @@ Reimplementation of KoAT with componentwise monotonic bounds
 
 ## Build
 
-1. use `opam init` and follow the instructions to set up Opam and install OCaml 4.04.2 if necessary
+1. use `opam init` and follow the instructions to set up Opam and install OCaml 4.06.1 if necessary
   2. `opam install ocamlfind ocamlgraph`
       * requires the _gmp_ and _mpfr_ libraries
   3. `opam install z3`
