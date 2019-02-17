@@ -70,5 +70,16 @@ let rec get_lower_bound = function
                   RealBound.exp x (get_lower_bound y)
 | Sum (x,y) -> RealBound.add (get_lower_bound x) (get_lower_bound y)
 | Product (x,y) -> RealBound.mul (get_lower_bound x) (get_lower_bound y)
-| Cos x -> RealBound.of_constant OurFloat.one
-| Sin y -> RealBound.of_constant OurFloat.one
+| Cos x -> RealBound.one
+| Sin y -> RealBound.one
+
+let rec force_bound = function
+| Infinity -> RealBound.infinity
+| Const x -> RealBound.of_constant x
+| Var x -> RealBound.of_var x
+| Neg x -> RealBound.neg (force_bound x)
+| Pow (x,y) -> RealBound.exp x (force_bound y)
+| Sum (x,y) -> RealBound.add (force_bound x) (force_bound y)
+| Product (x,y) -> RealBound.mul (force_bound x) (force_bound y)
+| Cos x -> RealBound.one
+| Sin y -> RealBound.one

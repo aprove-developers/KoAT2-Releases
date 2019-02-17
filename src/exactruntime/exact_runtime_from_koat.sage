@@ -66,13 +66,14 @@ if not args.initial == None:
     init_flag = True
     initial_vector = make_vector(args.initial)
 
-# transform program into a simple program
+# Transform simple program
 tmp_updates = [[e[0], e[1].dot_product(guardvec)] for e in updates]
 scalar_updates = {}
 for u in tmp_updates:
     if u[1] not in scalar_updates:
         scalar_updates[u[1]] = 0
     scalar_updates[u[1]] += u[0]
+
 #m has to be positive, so if only negative values are inside the scalar_keys, m is set to 0
 m = max(max(scalar_updates.keys()),0)
 k = -min(scalar_updates.keys())
@@ -89,6 +90,7 @@ if scalar_const[0] > 0 and scalar_const[1] > 0:
     print("ERROR\nDirect Termination Vector does not terminate the program")
     quit()
 
+# Calculate the drift of the program
 drift = sum([i*j for i,j in scalar_updates.iteritems()])
 
 # check if the runtime can be computed
@@ -101,8 +103,12 @@ if (scalar_const[0] == 0):
       quit()
 
 
-char_coeffs = [(i+k, j-1) if i == 0 else (i+k,j) for i,j in scalar_updates.iteritems()]
+
+
+
+# Construct characteristic Polynomial
 x = polygen(ZZ)
+char_coeffs = [(i+k, j-1) if i == 0 else (i+k,j) for i,j in scalar_updates.iteritems()]
 monoms = [j * x^i for i,j in char_coeffs]
 poly = sum(monoms)
 
@@ -112,8 +118,8 @@ if not drift == 0:
 if not scalar_const[0] == 0:
   c_val = 1/scalar_const[0]
 
-  
-# Precision Problem
+
+# Calculate the roots of the characteristic polynomial
 roots = sage.rings.polynomial.complex_roots.complex_roots(poly, min_prec=precision)
 
 CC = ComplexField(precision)
@@ -125,7 +131,6 @@ filtered_roots = {}
 for root in roots:
     if conjugate(root) not in filtered_roots:
         filtered_roots[root] = roots[root]
-
 x = var('x')
 r_monoms = []
 
@@ -158,23 +163,17 @@ solution = A.solve_right(-B)
 # Construct the resulting formula
 if scalar_const[0] == 0:
     r = c_val*x
-    r_list = [c_val*x]
 else:
     r = c_val
-    r_list = [c_val]
 for sol, monom in zip(solution, r_monoms):
     r += sol * monom
-    r_list.append(sol*monom)
 # substitute x by the original variables
 v_vars = vector([var('x{id}'.format(id=i+1)) for i in range(vec_length)])
 v = v_vars.dot_product(guardvec)-guardval
 r = r.subs(x=v)
-r_list = [monom.subs(x=v) for monom in r_list]
-# r_list = [monom.simplify_full() for monom in r_list]
 
 total_time = time.clock() - start_time
 
-# print("BOUND\n{res}").format(res=r_list)
 print("STRING\n{res}".format(res=r))
 if init_flag:
     var_values = dict(zip(v_vars, initial_vector))
@@ -202,4 +201,14 @@ def tree(expr):
 
 test_res = tree(r)
 
-print("TREE\n{test}".format(test=test_res))
+print("TREE\n{tree}".format(tree=test_res))
+
+# Calculate Bounds for the program
+if drift < 0:
+    lower = tree(-1/drift * v)
+    upper = tree(-1/drift * v + (1-k)/drift)
+
+print("LOWER\n{lower}".format(lower=lower))
+print("UPPER\n{upper}".format(upper=upper))
+
+print(" ")

@@ -18,3 +18,4 @@ val list_prod : t list -> t
 val cos : t -> t
 val sin : t -> t
 val get_lower_bound : t -> RealBound.t
+val force_bound : t -> RealBound.t
