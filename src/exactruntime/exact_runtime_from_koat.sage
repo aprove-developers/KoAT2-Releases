@@ -96,14 +96,11 @@ drift = sum([i*j for i,j in scalar_updates.iteritems()])
 # check if the runtime can be computed
 if (scalar_const[0] == 0):
     if drift > 0:
-        print("WARNING\nthe given program is not AST. the expected runtime is infinite.")
+        print("WARNING\nThe given program is not AST. the expected runtime is infinite.")
         quit()
     elif drift == 0: 
-      print("WARNING\nthe given program is AST, but not PAST. The expected runtime is infinite.")
+      print("WARNING\nThe given program is AST, but not PAST. The expected runtime is infinite.")
       quit()
-
-
-
 
 
 # Construct characteristic Polynomial
@@ -172,13 +169,18 @@ v_vars = vector([var('x{id}'.format(id=i+1)) for i in range(vec_length)])
 v = v_vars.dot_product(guardvec)-guardval
 r = r.subs(x=v)
 
-total_time = time.clock() - start_time
 
 print("STRING\n{res}".format(res=r))
+
+
 if init_flag:
     var_values = dict(zip(v_vars, initial_vector))
-    print("EVALUATION\n{init}".format(init=r.subs(var_values)))
-print("TIME\n{t}".format(t=total_time))
+    if v.subs(var_values) <= 0:
+        eval_res = 0
+        print("WARNING\nFor the given initial values the program is not executed at all.")
+    else:
+        eval_res = r.subs(var_values)
+    print("EVALUATION\n{init}".format(init=eval_res))
 
 operator_translation = {
     operator.add: "SUM",
@@ -211,4 +213,5 @@ if drift < 0:
 print("LOWER\n{lower}".format(lower=lower))
 print("UPPER\n{upper}".format(upper=upper))
 
-print(" ")
+total_time = time.clock() - start_time
+print("TIME\n{t}".format(t=total_time))

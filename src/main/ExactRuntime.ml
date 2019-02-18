@@ -106,11 +106,6 @@ let run (params: params) =
   let input = Option.default_delayed read_line params.input in
   let input_filename = input |> Fpath.v |> Fpath.normalize |> Fpath.to_string in
   let output_dir = params.output_dir in
-  let write_to_file output =
-    let out_name = (input |> Fpath.v |> Fpath.rem_ext |> Fpath.filename) ^ ".result" in
-    Option.map (fun out_dir -> File.write_lines (out_dir ^ out_name) (List.enum output)) output_dir
-    |> ignore
-  in
 
   let print_result result =
     result |> ExactResult.to_string |> print_string; print_string "\n"
