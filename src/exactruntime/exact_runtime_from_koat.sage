@@ -210,8 +210,14 @@ if drift < 0:
     lower = tree(-1/drift * v)
     upper = tree(-1/drift * v + (1-k)/drift)
 
-print("LOWER\n{lower}".format(lower=lower))
-print("UPPER\n{upper}".format(upper=upper))
+    print("LOWER\n{lower}".format(lower=lower))
+    print("UPPER\n{upper}".format(upper=upper))
+# we know the only way to have a drift larger or equal to 0 is
+# to have direct termination
+else:
+    upper = tree(1/scalar_const[0])
+    print("UPPER\n{upper}".format(upper=upper))
+
 
 total_time = time.clock() - start_time
 print("TIME\n{t}".format(t=total_time))
