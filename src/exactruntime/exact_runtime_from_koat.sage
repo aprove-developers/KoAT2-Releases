@@ -196,7 +196,9 @@ def translate_op(op):
         return repr(op).upper()
 
 def tree(expr): 
-    if expr.operator() is None: 
+    if not type(expr) == sage.symbolic.expression.Expression :
+        return str(expr)
+    elif expr.operator() is None: 
         return str(expr)
     else: 
         return "(" + translate_op(expr.operator()) + " " + ",".join(map(tree, expr.operands())) + ")"
