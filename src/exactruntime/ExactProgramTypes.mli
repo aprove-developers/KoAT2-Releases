@@ -1,6 +1,7 @@
 open Batteries
 open Polynomials
 
+exception Invalid_input of String.t
 
 module ProbUpdate :
   sig

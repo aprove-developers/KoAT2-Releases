@@ -2,6 +2,7 @@ open Batteries
 open Polynomials
 open OurNum
 
+exception Invalid_input of String.t
 let list_string vec = 
   vec
   |> List.map OurInt.to_string
@@ -83,23 +84,22 @@ module ExactProgram =
         guard_vec_str ^ guard_val_str ^ update_str ^ (dir_term_str |? "") ^ (prec_str |? "") ^ (init_str |? "")
       
       let is_valid ?logger ep =
-        let log_str str =
-          Option.map (fun logger -> Logger.log logger Logger.DEBUG (fun () -> str, [])) logger
-          |> ignore
+        let report_error str =
+          Option.map (fun logger -> Logger.log logger Logger.DEBUG (fun () -> str, [])) logger |> ignore;
+          raise (Invalid_input str);
         in
         let prob_greater_zero = 
           ((ep |> directtermination |> Option.map ProbUpdate.probability |> Option.map (Num.(<=/) OurNum.zero)) |? true) &&
           (ep |> updates |> List.map ProbUpdate.probability |> List.for_all (Num.(<=/) OurNum.zero))
           |> tap (fun res ->  if Bool.neg res then
-                                log_str "Not all Probabilities are greater than zero.")
+                                report_error "Not all Probabilities are greater than zero.")
         in
-        let equals_one = 
+        let equals_one =
           OurNum.(+) 
           ((ep |> directtermination |> Option.map ProbUpdate.probability) |? OurNum.zero)
           (ep |> updates |> List.map ProbUpdate.probability |> List.fold_left OurNum.(+) OurNum.zero)
           |> OurNum.equal OurNum.one
-          |> tap (fun res ->  if Bool.neg res then
-                                log_str "Probabilities do not add up to one.")
+          |> tap (fun res ->  if Bool.neg res then report_error "Probabilities do not add up to one.")
         in
         let same_vec_len =
           let update_len =
@@ -109,14 +109,14 @@ module ExactProgram =
           ep |> updates |> List.map ProbUpdate.update |> List.map List.length
           |> List.for_all (Int.equal update_len)
           |> tap (fun res ->  if Bool.neg res then
-                                log_str "Not all update vectors have the same length.")
+                                report_error "Not all update vectors have the same length.")
           in
           let same_term_len = 
             ep |> directtermination 
             |> Option.map (fun dterm -> dterm |> ProbUpdate.update |> List.length)
             |> Option.map_default (Int.equal update_len) true
             |> tap (fun res ->  if Bool.neg res then
-                                log_str "Termination vector has the wrong length.")
+                                report_error "Termination vector has the wrong length.")
           in
           (* TODO: add check for guard vec length and initial value *)
           same_update_len && same_term_len

@@ -62,6 +62,10 @@ struct
   let lower res = res.lower
   let upper res = res.upper
 
+  let check_exn res =
+    Option.map (fun str -> raise (ExactProgramTypes.Invalid_input str)) res.error
+    |> ignore
+  
   let rec get_from_list_ = function
     | (search, key :: value :: tail) -> if String.equal search key then Some value else get_from_list_ (search, tail)
     | (_, x :: []) -> None
@@ -76,7 +80,7 @@ struct
       error = get_from_list "ERROR" list;
       time = list |> get_from_list "TIME" ;
       evaluation = list |> get_from_list "EVALUATION" ;
-      bound = list |> get_from_list "TREE" |> Option.map ExactReader.from_tree ;
+      bound = list |> get_from_list "TREE" |> Option.map ExactReader.from_tree;
       lower = list |> get_from_list "LOWER" |> Option.map ExactReader.from_tree |> Option.map ExactBound.force_bound;
       upper = list |> get_from_list "UPPER" |> Option.map ExactReader.from_tree |> Option.map ExactBound.force_bound;
     }
@@ -102,7 +106,6 @@ let run (params: params) =
   (* let logs = List.map (fun log -> (log, params.log_level)) params.logs in
     Logging.use_loggers logs; *)
   let logger = Logging.(get ExactRuntime) in
-  
   let input = Option.default_delayed read_line params.input in
   let input_filename = input |> Fpath.v |> Fpath.normalize |> Fpath.to_string in
   let output_dir = params.output_dir in
@@ -136,11 +139,12 @@ let run (params: params) =
                       |> fun args -> "sage " ^ sage_path ^ " " ^ args
                       |> read_process_lines
                       |> ExactResult.from_list
+                      |> tap(ExactResult.check_exn)
                   )
     |> tap_option print_result
     |> tap_option write_result
     |> Option.map ExactResult.bound
-    |> Option.map Option.get
+    |> fun bound_o -> if Option.is_some bound_o then Option.get bound_o else None
   in
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> "Calculating exact runtime.", [])
