@@ -95,11 +95,11 @@ transition :
 		  
 cost : 
         |       MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
-                  { ub };
+                  { ub }
         |       MINUS ub = polynomial GREATERTHAN
-                  { ub };
+                  { ub }
         |       MINUS LBRACE ub = polynomial RBRACE GREATERTHAN
-                  { ub };
+                  { ub }
         |       ARROW
                   { Poly.one };
 transition_lhs :
@@ -108,7 +108,7 @@ transition_lhs :
 
 transition_rhs :
 	|       com_kind = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
- 	          { (com_kind, targets) } ;
+ 	          { (com_kind, targets) } 
         |       target = transition_target
                   { ("Com_1", [target]) } ;
 transition_target :
@@ -117,7 +117,7 @@ transition_target :
 
 withConstraints :
 	|	{ Formula.mk_true }
-	|       WITH constr = separated_nonempty_list(AND, formula_atom) { Formula.all constr } ;
+	|       WITH constr = separated_nonempty_list(AND, formula_atom) { Formula.all constr } 
 	|       LBRACK constr = separated_nonempty_list(AND, formula_atom) RBRACK { Formula.all constr } ;
 
 onlyFormula :
