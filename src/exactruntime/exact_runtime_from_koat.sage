@@ -147,11 +147,10 @@ for root in filtered_roots:
                 r_monoms.append(x^u*root.real()^x)
 
 # Create set of linear equations
-
 A = matrix([[monom(x=-i).real() for monom in r_monoms] for i in range(k)])
 if scalar_const[0] == 0: 
   B = vector([c_val*(-i) for i in range(k)])
-elif scalar_const > 0:
+else:
   B = vector([c_val for i in range(k)])
 # We must have AX + B = 0, i.e. AX = -B has to be solved
 solution = A.solve_right(-B)
