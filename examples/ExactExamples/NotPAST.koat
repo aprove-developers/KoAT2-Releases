@@ -1,0 +1,5 @@
+(GOAL EXACTRUNTIME)
+(GUARDVEC (1))
+(GUARDVAL 0)
+(UPDATES 6/11:(1) :+: 3/11:(0) :+: 1/11:(-2) :+: 1/11:(-4))
+(PRECISION 10)
