@@ -208,7 +208,7 @@ test_res = tree(r)
 print("TREE\n{tree}".format(tree=test_res))
 
 # Calculate Bounds for the program
-if drift < 0:
+if scalar_const[0] == 0:
     lower = tree(-1/drift * v)
     upper = tree(-1/drift * v + (1-k)/drift)
 
