@@ -103,7 +103,7 @@ program_simple :
 
 transition_simple :
 	|	start = ID; cost = cost ; rhs = non_prob_transition_rhs; formula = withConstraints
-	          { ParserUtil.mk_transition_simple start cost rhs formula } ;
+	          { ParserUtil.mk_transition_simple start cost rhs formula } 
         |	start = ID; cost = cost ; rhs = prob_transition_rhs; formula = withConstraints
 	          { ParserUtil.mk_transition_simple_prob start cost rhs formula } ;
 
@@ -125,17 +125,17 @@ variables :
 		  
 transition :
 	|	lhs = transition_lhs; cost = cost ; rhs = non_prob_transition_rhs; formula = withConstraints
-	          { ParserUtil.mk_transition lhs cost rhs formula } ;
+	          { ParserUtil.mk_transition lhs cost rhs formula } 
         |       lhs = transition_lhs; cost = cost ; rhs = prob_transition_rhs; formula = withConstraints
 	          { ParserUtil.mk_transition_prob lhs cost rhs formula } ;
 		  
 cost : 
         |       MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
-                  { ub };
+                  { ub }
         |       MINUS ub = polynomial GREATERTHAN
-                  { ub };
+                  { ub }
         |       MINUS LBRACE ub = polynomial RBRACE GREATERTHAN
-                  { ub };
+                  { ub }
         |       ARROW
                   { Poly.one };
 transition_lhs :
@@ -151,7 +151,7 @@ non_prob_transition_rhs_with_prob :
 	          
 non_prob_transition_rhs :
 	|       com_kind = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
-                  { (com_kind, targets)} ;
+                  { (com_kind, targets)} 
         |       target = transition_target
                   { ("Com_1", [target]) } ;
 transition_target :
@@ -320,9 +320,9 @@ initial :
 
 prob_update :
 	|	prob = UINT COLON update = vector
-		{ ProbUpdate.from (OurNum.of_int prob) update };
+		{ ProbUpdate.from (OurNum.of_int prob) update }
 	|	prob = UFLOAT COLON update = vector
-		{ ProbUpdate.from (OurNum.of_float_string prob) update };
+		{ ProbUpdate.from (OurNum.of_float_string prob) update }
 	|	prob = FRACTION COLON update = vector
 		{ ProbUpdate.from (OurNum.of_string prob) update };
 
@@ -331,7 +331,7 @@ vector :
 		{ values } ;
 int_val :
 	|	value = UINT
-		{ OurInt.of_int value } ;
+		{ OurInt.of_int value } 
 	|	MINUS value = UINT
 		{ OurInt.of_int (-value) } ;
 

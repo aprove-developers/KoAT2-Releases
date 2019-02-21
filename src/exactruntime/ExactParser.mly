@@ -57,9 +57,9 @@ expression_bound :
 
 const :
 	|	v = FLOAT
-		{ OurNum.of_float_string v } ;
+		{ OurNum.of_float_string v }
 	|	v = FRACTION
-		{ OurNum.of_string v } ;
+		{ OurNum.of_string v }
 	|	v = INT
 		{ OurNum.of_int v } ; 
 

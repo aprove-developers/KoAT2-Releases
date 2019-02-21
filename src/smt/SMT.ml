@@ -201,8 +201,8 @@ module Z3Opt =
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
                             expr
-                            |> Z3.Arithmetic.Integer.get_int
-                            |> OurInt.of_int
+                            |> Z3.Arithmetic.Integer.get_big_int
+                            (*|> OurInt.of_int*)
                           else
                             expr
                             |> Z3.Arithmetic.Real.get_ratio
@@ -349,8 +349,8 @@ module IncrementalZ3Solver =
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
                             expr
-                            |> Z3.Arithmetic.Integer.get_int
-                            |> OurInt.of_int
+                            |> Z3.Arithmetic.Integer.get_big_int
+                            (*|> OurInt.of_int*)
                           else
                             expr
                             |> Z3.Arithmetic.Real.get_ratio
@@ -387,8 +387,8 @@ module IncrementalZ3Solver =
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
                             expr
-                            |> Z3.Arithmetic.Integer.get_int
-                            |> OurFloat.of_int
+                            |> Z3.Arithmetic.Integer.get_big_int
+                            |> OurFloat.of_ourint
                           else
                             expr
                             |> Z3.Arithmetic.Real.get_ratio
