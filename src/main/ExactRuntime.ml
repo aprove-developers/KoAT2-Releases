@@ -93,8 +93,8 @@ struct
     @ to_string_ "ERROR" res.error
     @ to_string_ "TIME" res.time
     @ to_string_ "EVALUATION" res.evaluation
-    @ to_string_ "LOWER BOUND" (Option.map RealBound.to_string res.lower)
-    @ to_string_ "UPPER BOUND" (Option.map RealBound.to_string res.upper)
+    @ to_string_ "LOWER BOUND" (Option.map (RealBound.show ~complexity:false) res.lower)
+    @ to_string_ "UPPER BOUND" (Option.map (RealBound.show ~complexity:false) res.upper)
 
   let to_string res =
     res |> to_string_list |> String.concat "\n"

@@ -96,7 +96,7 @@ drift = sum([i*j for i,j in scalar_updates.iteritems()])
 # check if the runtime can be computed
 if (scalar_const[0] == 0):
     if drift > 0:
-        print("WARNING\nThe given program is not AST. the expected runtime is infinite.")
+        print("WARNING\nThe given program is not AST. The expected runtime is infinite.")
         quit()
     elif drift == 0: 
       print("WARNING\nThe given program is AST, but not PAST. The expected runtime is infinite.")

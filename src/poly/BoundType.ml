@@ -159,13 +159,13 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       
     let rec show_bound = function
       | Var v -> Var.to_string v
-      | Const c -> Num.to_string c
+      | Const c -> if Num.Compare.(c < Num.zero) then "("^Num.to_string c^")" else Num.to_string c
       | Infinity -> "inf"
       (*| Max (b1, Max (b2, b3)) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ ", " ^ show_bound b3 ^ "}"*)
       | Max (b1, b2) -> "max([" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ "])"
       | Neg b ->( 
           match b with
-          | Const c -> (Num.to_string ( Num.neg c))
+          | Const c -> "("^(Num.to_string ( Num.neg c))^")"
           | Neg d -> show_bound d
           | Sum (b1, b2) -> "-(" ^ show_bound (Sum (b1, b2)) ^ ")"
           | Product (b1, b2) -> "-(" ^ show_bound (Product (b1, b2)) ^ ")"

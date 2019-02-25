@@ -15,9 +15,9 @@ type t =
 
 let rec to_string = function
   | Infinity -> "inf"
-  | Const x -> OurNum.to_string x
+  | Const x -> if OurNum.Compare.(x < Num.zero) then "("^OurNum.to_string x^")" else OurNum.to_string x
   | Var x -> Var.to_string x
-  | Neg x -> "-" ^ (to_string x)
+  | Neg x -> "-(" ^ (to_string x) ^")"
   | Pow (x,y) -> "(" ^ (OurNum.to_string) x ^ ")^(" ^ (to_string y) ^ ")"
   | Sum (x,y) -> "(" ^ (to_string x) ^ ")+(" ^ (to_string y) ^ ")"
   | Product (x,y) -> "(" ^ (to_string x) ^ ")*(" ^ (to_string y) ^ ")"
