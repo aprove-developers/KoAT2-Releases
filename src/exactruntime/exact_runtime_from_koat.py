@@ -1,6 +1,6 @@
 # "(1, -1)" "2" "1/5:(1, 2) :+: 4/5:(-3, 0)" --dirterm "0:(0, 0)" --prec "10" --init "(4, 1)"
 # "(1)" "0" "1/8:(1) :+: 1/2:(0) :+: 1/4:(-1)" --dirterm "1/8:(0)" --prec "20"
-
+# "(1, -1)" "-1" "6/11:(1, 0) :+: 1/22:(1, 1) :+: 1/22:(1, 2) :+: 1/22:(1, 3) :+: 1/22:(1, 4) :+: 1/22:(1, 5) :+: 1/22:(1, 6) :+: 1/22:(1, 7) :+: 1/22:(1, 8) :+: 1/22:(1, 9) :+: 1/22:(1, 10)" --prec "10" --init "(1000, 0)"
 import argparse
 import time
 
@@ -43,10 +43,9 @@ def get_filtered_roots (poly: sympy.Poly, precision):
   """
   Takes a polynomial and the precision, returns a dictionatry of the form {root: multiplicity}
   """
-  roots = poly.all_roots()
+  roots = poly.nroots(n=precision)
   ret = {}
-  for root in roots:
-    r = root.evalf(precision)
+  for r in roots:
     if sympy.conjugate(r) not in ret and abs(r) <= 1:
       if r not in ret:
         ret[r] = 1
