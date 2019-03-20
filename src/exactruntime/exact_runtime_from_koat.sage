@@ -184,8 +184,8 @@ if init_flag:
 operator_translation = {
     operator.add: "SUM",
     operator.pow: "POW",
-    sage.symbolic.operators.mul_vararg: "LISTPROD",
-    sage.symbolic.operators.add_vararg: "LISTSUM"
+    sage.symbolic.operators.mul_vararg: "PROD",
+    sage.symbolic.operators.add_vararg: "SUM"
 }
 
 def translate_op(op):

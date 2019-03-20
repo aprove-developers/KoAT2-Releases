@@ -2,7 +2,7 @@
 %token  <string>	FRACTION
 %token  <string>	VAR
 %token	<int>		INT
-%token				SUM LISTSUM PROD LISTPROD POW
+%token				SUM PROD POW
 %token				COS SIN
 %token				LPAR RPAR
 %token              COMMA
@@ -32,22 +32,14 @@ expression_bound :
 		{ o operands }
 	|	LPAR; POW ; base = const; COMMA; exp = expression_bound; RPAR
 		{ ExactBound.pow base exp }
-	|	LPAR; o = dual_op; e = expression_bound; COMMA; f = expression_bound; RPAR
-		{ o e f }
 	|	LPAR; o = single_op; e = expression_bound; RPAR
 		{ o e }
 
 %inline list_op :
-	|	LISTSUM
-		{ ExactBound.list_sum }
-	|	LISTPROD
-		{ExactBound.list_prod }
-
-%inline dual_op :
 	|	SUM
-		{ ExactBound.sum }
-	|	PROD	
-		{ ExactBound.prod }
+		{ ExactBound.list_sum }
+	|	PROD
+		{ExactBound.list_prod }
 
 %inline single_op :
 	|	COS

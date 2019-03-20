@@ -37,9 +37,7 @@ rule read =
   | "COS"             { P.COS }
   | "SIN"             { P.SIN }
   | "SUM"             { P.SUM }
-  | "LISTSUM"         { P.LISTSUM }
   | "PROD"            { P.PROD }
-  | "LISTPROD"        { P.LISTPROD }
   | "POW"             { P.POW }
   | eof               { P.EOF }
   

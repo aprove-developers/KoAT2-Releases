@@ -129,14 +129,14 @@ let run (params: params) =
   in
 
   let execute () =
-    let sage_path = get_koat_path Sys.argv.(0) ^ "/../exactruntime/exact_runtime_from_koat.sage" in
+    let sage_path = get_koat_path Sys.argv.(0) ^ "/../exactruntime/exact_runtime_from_koat.py" in
     input_filename
     |> Readers.read_exact_file
     |> (fun ep -> if ExactProgram.is_valid ~logger:logger ep then Some ep else None)
     |> Option.map (fun ep -> 
                       ep
                       |> ExactProgram.to_sage
-                      |> fun args -> "sage " ^ sage_path ^ " " ^ args
+                      |> fun args -> "python3 " ^ sage_path ^ " " ^ args
                       |> read_process_lines
                       |> ExactResult.from_list
                       |> tap(ExactResult.check_exn)

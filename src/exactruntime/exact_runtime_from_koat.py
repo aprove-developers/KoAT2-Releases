@@ -231,9 +231,7 @@ program = SimpleProgram(updates, dterm, guardvec, guardval)
 
 char_poly = program.get_characteristic_poly()
 roots = get_filtered_roots(char_poly, precision)
-print(roots)
 r_monoms = construct_result_monoms(roots, precision)
-print(r_monoms)
 
 
 # Construct system of linear equations
@@ -243,7 +241,6 @@ if program.dterm_p == 0:
   b = matrix([program.c_val*(-i) for i in range(program.k)])
 else:
   b = matrix([program.c_val for i in range(program.k)])
-print(A, -b)
 solution = lu_solve(A,-b)
 
 
@@ -273,8 +270,8 @@ if init_flag:
     print("EVALUATION\n{init}".format(init=eval_res))
 
 op_translation = {
-  sympy.Add: "LISTSUM",
-  sympy.Mul: "LISTPROD",
+  sympy.Add: "SUM",
+  sympy.Mul: "PROD",
   sympy.sin: "SIN",
   sympy.cos: "COS",
   sympy.Pow: "POW"
