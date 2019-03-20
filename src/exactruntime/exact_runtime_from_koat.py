@@ -1,6 +1,4 @@
-# "(1, -1)" "2" "1/5:(1, 2) :+: 4/5:(-3, 0)" --dirterm "0:(0, 0)" --prec "10" --init "(4, 1)"
-# "(1)" "0" "1/8:(1) :+: 1/2:(0) :+: 1/4:(-1)" --dirterm "1/8:(0)" --prec "20"
-# "(1, -1)" "-1" "6/11:(1, 0) :+: 1/22:(1, 1) :+: 1/22:(1, 2) :+: 1/22:(1, 3) :+: 1/22:(1, 4) :+: 1/22:(1, 5) :+: 1/22:(1, 6) :+: 1/22:(1, 7) :+: 1/22:(1, 8) :+: 1/22:(1, 9) :+: 1/22:(1, 10)" --prec "10" --init "(1000, 0)"
+# "(1, -1)" "-1" "9/10:(1, 0)" --dirterm "1/10:(1, 2)" --prec "10"
 import argparse
 import time
 
@@ -139,7 +137,7 @@ class SimpleProgram:
     #Calculate m,k
     #m has to be positive, if negative values are inside the scalar_keys, m is set to 0
     self.m = max(max(self.updates.keys()),0)
-    self.k = -min(self.updates.keys())
+    self.k = max(0,-min(self.updates.keys()))
 
     #Define all other probabilities to be zero
     for i in range(-self.k,self.m+1):
@@ -221,8 +219,8 @@ if not args.precision == None:
     mp.dps = precision
 
 if not args.initial == None:
-    init_flag = True
-    initial_vector = array_from_string(args.initial)
+  init_flag = True
+  initial_vector = array_from_string(args.initial)
 
 # Transform to simple program
 
@@ -230,25 +228,28 @@ program = SimpleProgram(updates, dterm, guardvec, guardval)
 
 char_poly = program.get_characteristic_poly()
 roots = get_filtered_roots(char_poly, precision)
-r_monoms = construct_result_monoms(roots, precision)
 
+if roots:
+  r_monoms = construct_result_monoms(roots, precision)
 
-# Construct system of linear equations
-A = matrix([[sympy.re(monom.subs(sympy.symbols('x'), -i)) for monom in r_monoms] for i in range(program.k)])
+  # Construct system of linear equations
+  A = matrix([[sympy.re(monom.subs(sympy.symbols('x'), -i)) for monom in r_monoms] for i in range(program.k)])
 
-if program.dterm_p == 0: 
-  b = matrix([program.c_val*(-i) for i in range(program.k)])
-else:
-  b = matrix([program.c_val for i in range(program.k)])
-solution = lu_solve(A,-b)
+  if program.dterm_p == 0: 
+    b = matrix([program.c_val*(-i) for i in range(program.k)])
+  else:
+    b = matrix([program.c_val for i in range(program.k)])
+  solution = lu_solve(A,-b)
 
 
 # Construct result  
 if program.dterm_p == 0:
-    r = program.c_val*sympy.symbols('x')
+  r = program.c_val*sympy.symbols('x')
 else:
-    r = program.c_val
-for sol, monom in zip(solution, r_monoms):
+  r = program.c_val
+
+if roots:
+  for sol, monom in zip(solution, r_monoms):
     r += sol * monom
 
 v_vars = sympy.Array([sympy.symbols('x{id}'.format(id=i+1)) for i in range(vec_length)])
