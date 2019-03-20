@@ -13,8 +13,7 @@ from mpmath import matrix, lu_solve, mp, fp
 
 def array_dot_product(a: sympy.Array, b: sympy.Array):
     if len(a) != len(b):
-      print("ERROR\nDot product with vectors of different length.")
-      quit()
+        raise RuntimeError("Dot product with vectors of different length.")
     ret = 0
     for i,j in zip(a,b):
         ret += i*j
@@ -264,15 +263,15 @@ print("STRING\n{res}".format(res=r))
 if init_flag:
     var_values = [(key, value) for key, value in zip(v_vars, initial_vector)]
     if v.subs(var_values) <= 0:
-        eval_res = 0
-        print("WARNING\nFor the given initial values the program is not executed at all.")
+      eval_res = 0
+      print("WARNING\nFor the given initial values the program is not executed at all.")
     else:
-        eval_res = r.subs(var_values)
+      eval_res = r.subs(var_values)
     print("EVALUATION\n{init}".format(init=eval_res))
 
 op_translation = {
   sympy.Add: "SUM",
-  sympy.Mul: "PROD",
+  sympy.Mul: "LISTPROD",
   sympy.sin: "SIN",
   sympy.cos: "COS",
   sympy.Pow: "POW"
