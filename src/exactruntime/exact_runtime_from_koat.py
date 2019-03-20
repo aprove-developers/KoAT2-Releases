@@ -18,11 +18,14 @@
 import argparse
 import time
 
-import sympy as sp
-from sympy import Rational, Array, Matrix, symbols, solve, Poly
+import sympy
+from sympy.core.symbol import Symbol
+
+# from sympy import Rational, Array, Matrix, symbols, solve, Poly, linsolve, Abs
+from mpmath import matrix, lu_solve, mp, fp
 
 
-def array_dot_product(a: Array, b: Array):
+def array_dot_product(a: sympy.Array, b: sympy.Array):
     if len(a) != len(b):
         raise RuntimeError("Dot product with vectors of different length.")
     ret = 0
@@ -44,28 +47,51 @@ def updates_from_string (s):
 
 
 def array_from_string (s):
-    return Array([Rational(e) for e in s[1:-1].split(",")])
+  """
+  Takes a string of the form "(x,y,...)" and returns the according sympy array
+  """
+  return sympy.Array([sympy.Rational(e) for e in s[1:-1].split(",")])
 
 
-def get_filtered_roots (poly: Poly, precision):
+def get_filtered_roots (poly: sympy.Poly, precision):
+  """
+  Takes a polynomial and the precision, returns a dictionatry of the form {root: multiplicity}
+  """
   roots = poly.all_roots()
   ret = {}
   for root in roots:
     r = root.evalf(precision)
-    if sp.conjugate(r) not in ret and abs(r) <= 1:
+    if sympy.conjugate(r) not in ret and abs(r) <= 1:
       if r not in ret:
         ret[r] = 1
       else:
         ret[r] += 1
-  print(ret)
   return ret
 
-    
+
+def construct_result_monoms (roots, precision):
+  ret = []
+  x = sympy.symbols('x')
+  for r in roots:
+    if not sympy.im(r) == 0:
+      a = sympy.Abs(r)
+      theta = sympy.arg(r).evalf(precision)
+      for u in range(roots[r]):
+        ret.append(a**x * sympy.cos(x*theta))
+        ret.append(a**x * sympy.sin(x*theta))
+    else:
+      for u in range(roots[r]):
+        if sympy.re(r) == 1:
+          # For some reason 1.000^x creates a div by zero error?!
+          ret.append(x**u)
+        else:
+          ret.append(x^u*sympy.re(r)**x)
+  return ret
 
 
 class Update:
-    probability = Rational(0)
-    uupdate = Array([], 0)
+    probability = sympy.Rational(0)
+    uupdate = sympy.Array([], 0)
 
     def __init__(self, probability, update):
         self.probability = probability
@@ -78,7 +104,7 @@ class Update:
     @staticmethod
     def from_string(s):
         p_string, u_string = s.split(":")
-        probability = Rational(p_string)
+        probability = sympy.Rational(p_string)
         update = array_from_string(u_string)
         return Update(probability, update)
 
@@ -98,6 +124,7 @@ class SimpleProgram:
   dterm_u = 0
   guard = 0
   drift = 0
+  c_val = 0
   k = 0
   m = 0
 
@@ -138,7 +165,15 @@ class SimpleProgram:
     self.dterm_u = dterm.to_scalar(guardvector)-guardvalue
 
     self.drift = sum([i*j for i,j in self.updates.items()])
+
     self.__check_program()
+
+    if not self.drift == 0:
+      self.c_val = -1/self.drift
+  
+    if not self.dterm_p == 0:
+      self.c_val = 1/self.dterm_p
+
 
   def __str__(self):
     ret = "while(x > 0){\n"
@@ -151,17 +186,17 @@ class SimpleProgram:
     ret += "}"
     return ret
 
-  def get_characteristic_poly(self) -> Poly:
-    x = symbols('x')
+  def get_characteristic_poly(self) -> sympy.Poly:
+    x = sympy.symbols('x')
     ret = 0
     for u,p in self.updates.items():
       exponent = u + self.k
       if u == 0:
-        coefficient = 1-p
+        coefficient = p - 1
       else:
         coefficient = p
       ret += coefficient * x ** exponent
-    return Poly(ret)
+    return sympy.Poly(ret)
 
 
 start_time = time.clock()
@@ -177,7 +212,7 @@ args = parser.parse_args()
 
 # assign variables
 guardvec = array_from_string(args.guardvec)
-guardval = Rational(args.guardval)
+guardval = sympy.Rational(args.guardval)
 updates = updates_from_string(args.updates)
 
 vec_length = len(guardvec)
@@ -198,6 +233,7 @@ if not args.directtermination == None:
 if not args.precision == None:
     prec_flag = True
     precision = int(args.precision)
+    mp.dps = precision
 
 if not args.initial == None:
     init_flag = True
@@ -206,10 +242,85 @@ if not args.initial == None:
 # Transform to simple program
 
 program = SimpleProgram(updates, dterm, guardvec, guardval)
-print(program)
 
 char_poly = program.get_characteristic_poly()
 roots = get_filtered_roots(char_poly, precision)
+
+r_monoms = construct_result_monoms(roots, precision)
+
+
+# Construct system of linear equations
+A = matrix([[sympy.re(monom.subs(sympy.symbols('x'), -i)) for monom in r_monoms] for i in range(program.k)])
+
+if program.dterm_p == 0: 
+  b = matrix([program.c_val*(-i) for i in range(program.k)])
+else:
+  b = matrix([program.c_val for i in range(program.k)])
+
+solution = lu_solve(A,-b)
+
+
+# Construct result  
+if program.dterm_p == 0:
+    r = program.c_val*sympy.symbols('x')
+else:
+    r = program.c_val
+for sol, monom in zip(solution, r_monoms):
+    r += sol * monom
+
+v_vars = sympy.Array([sympy.symbols('x{id}'.format(id=i+1)) for i in range(vec_length)])
+v = array_dot_product(v_vars,guardvec)-guardval
+r = r.subs(sympy.symbols('x'), v)
+
+
+print("STRING\n{res}".format(res=r))
+
+
+if init_flag:
+    var_values = [(key, value) for key, value in zip(v_vars, initial_vector)]
+    if v.subs(var_values) <= 0:
+        eval_res = 0
+        print("WARNING\nFor the given initial values the program is not executed at all.")
+    else:
+        eval_res = r.subs(var_values)
+    print("EVALUATION\n{init}".format(init=eval_res))
+
+op_translation = {
+  sympy.Add: "LISTSUM",
+  sympy.Mul: "LISTPROD",
+  sympy.sin: "SIN",
+  sympy.cos: "COS",
+  sympy.Pow: "POW"
+}
+
+def translate_op(op):
+    if op in op_translation:
+        return op_translation[op]
+    else:
+      print("ERROR\nUnkown operator in result: {o}".format(o=op))
+      quit()
+
+def tree(expr):
+  if expr.is_Number or expr.is_Symbol:
+    return str(expr)
+  else:
+    return "(" + translate_op(expr.func) + " " + ",".join(map(tree, expr.args)) + ")"
+
+print("TREE\n{tree}".format(tree=tree(r)))
+
+
+if program.dterm_p == 0:
+    lower = tree(-1/program.drift * v)
+    upper = tree(-1/program.drift * v + (1-program.k)/program.drift)
+
+    print("LOWER\n{lower}".format(lower=lower))
+    print("UPPER\n{upper}".format(upper=upper))
+# we know the only way to have a drift larger or equal to 0 is
+# to have direct termination
+else:
+    upper = tree(1/program.dterm_p)
+    print("UPPER\n{upper}".format(upper=upper))
+
 
 
 total_time = time.clock() - start_time
