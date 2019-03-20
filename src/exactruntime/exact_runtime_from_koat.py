@@ -1,19 +1,5 @@
-# The input format
-# "(1, -1)"
-# "2"
-# "1/5:(1, 2) :+: 4/5:(-3, 0)"
-# --dirterm "0:(0, 0)"
-# --prec "10"
-# --init "(4, 1)"
-
 # "(1, -1)" "2" "1/5:(1, 2) :+: 4/5:(-3, 0)" --dirterm "0:(0, 0)" --prec "10" --init "(4, 1)"
-
-# This is what the result is supposed to be
-# RESULT: -0.36*0.89^(x1 - x2 - 2)*cos(-2.0*x1 + 2.0*x2 + 4.1) - 0.15*0.89^(x1 - x2 - 2)*sin(-2.0*x1 + 2.0*x2 + 4.1) + 5/13*x1 - 5/13*x2 - 0.41
-# TIME: 1.159899
-# EVALUATION: 1.0
-# LOWER BOUND: (-10/13)+5/13*x1+(-5/13)*x2
-# UPPER BOUND: 5/13*x1+(-5/13)*x2
+# "(1)" "0" "1/8:(1) :+: 1/2:(0) :+: 1/4:(-1)" --dirterm "1/8:(0)" --prec "20"
 
 import argparse
 import time
@@ -85,7 +71,7 @@ def construct_result_monoms (roots, precision):
           # For some reason 1.000^x creates a div by zero error?!
           ret.append(x**u)
         else:
-          ret.append(x^u*sympy.re(r)**x)
+          ret.append(x**u*sympy.re(r)**x)
   return ret
 
 
@@ -245,8 +231,9 @@ program = SimpleProgram(updates, dterm, guardvec, guardval)
 
 char_poly = program.get_characteristic_poly()
 roots = get_filtered_roots(char_poly, precision)
-
+print(roots)
 r_monoms = construct_result_monoms(roots, precision)
+print(r_monoms)
 
 
 # Construct system of linear equations
@@ -256,7 +243,7 @@ if program.dterm_p == 0:
   b = matrix([program.c_val*(-i) for i in range(program.k)])
 else:
   b = matrix([program.c_val for i in range(program.k)])
-
+print(A, -b)
 solution = lu_solve(A,-b)
 
 
