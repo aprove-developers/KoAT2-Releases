@@ -271,7 +271,7 @@ if init_flag:
 
 op_translation = {
   sympy.Add: "SUM",
-  sympy.Mul: "LISTPROD",
+  sympy.Mul: "PROD",
   sympy.sin: "SIN",
   sympy.cos: "COS",
   sympy.Pow: "POW"
