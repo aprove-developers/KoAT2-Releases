@@ -13,7 +13,8 @@ from mpmath import matrix, lu_solve, mp, fp
 
 def array_dot_product(a: sympy.Array, b: sympy.Array):
     if len(a) != len(b):
-        raise RuntimeError("Dot product with vectors of different length.")
+      print("ERROR\nDot product with vectors of different length.")
+      quit()
     ret = 0
     for i,j in zip(a,b):
         ret += i*j
