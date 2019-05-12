@@ -12,7 +12,7 @@ sig
   val to_string : t -> string
   val of_string : string -> t
 end
-module LocationSet : 
+module LocationSet :
 sig
   include module type of Set.Make(Location)
   val to_string: t -> string
@@ -43,6 +43,7 @@ sig
   include module type of Set.Make(struct include Transition let compare = Transition.compare_same end)
   val powerset : t -> t Enum.t
   val to_string : t -> string
+  val total_probability : t -> OurFloat.t
 end
 
 module GeneralTransition :

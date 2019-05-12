@@ -42,13 +42,17 @@ let lift_nonprob_timebounds program appr =
 (* lifts nonprobabilistic sizebounds of result variables to expected size bounds for the corresponding expected result variables.*)
 let lift_nonprob_sizebounds program appr =
   let get_gtl_sizebound ((gt,l),v) =
-    GeneralTransition.transitions gt
-    |> TransitionSet.filter (Location.equal l % Transition.target)
+    let transitions =
+      GeneralTransition.transitions gt
+      |> TransitionSet.filter (Location.equal l % Transition.target)
+    in
+    transitions
     |> TransitionSet.enum
     |> Enum.map (fun t kind -> Approximation.sizebound kind appr t v)
     |> Enum.map Bound.abs_bound
     |> Bound.maximum
     |> RealBound.of_intbound
+    |> fun b -> RealBound.(b * (of_constant @@ TransitionSet.total_probability transitions))
   in
 
   Program.generalized_transitions program
