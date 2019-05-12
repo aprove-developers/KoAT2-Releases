@@ -4,8 +4,7 @@ open RVGTypes
    
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
-module Make_SizeApproximation (Num : PolyTypes.OurNumber)
-                              (Poly : 
+module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly : 
                                  sig
                                    include PolyTypes.Polynomial with type value = Num.t 
                                                                  and type valuation = Valuation.Make(Num).t
@@ -89,6 +88,10 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber)
     
     let add_all kind bound scc map =
       List.iter (fun (t,v) -> ignore (add kind bound t v map)) scc;
+      map
+
+    let add_all_abs bound scc map =
+      List.iter (fun (t,v) -> ignore (add `Lower (B.neg bound) t v map); ignore (add `Upper bound t v map)) scc;
       map
     
     let print_all_of_kind output kind size =

@@ -51,17 +51,22 @@ let sizebound kind =
 let expsizebound kind =
   ExpectedSizeApproximation.get kind % expsize
 
+let expsizebound_abs appr trans v =
+  RealBound.abs_bound (fun k -> ExpectedSizeApproximation.get k (expsize appr) trans v)
+
 let add_sizebound kind bound transition var appr =
   { appr with size = SizeApproximation.add kind bound transition var appr.size }
 
-let add_expsizebound kind bound (gt,l) var appr =
-  { appr with expsize = ExpectedSizeApproximation.add kind bound (gt,l) var appr.expsize }
+let add_expsizebound bound (gt,l) var appr =
+  { appr with expsize =
+      ExpectedSizeApproximation.add `Lower (RealBound.neg bound) (gt,l) var appr.expsize
+      |> ExpectedSizeApproximation.add `Upper bound (gt,l) var }
 
 let add_sizebounds kind bound scc appr =
   { appr with size = SizeApproximation.add_all kind bound scc appr.size }
 
-let add_expsizebounds kind bound scc appr =
-  { appr with expsize = ExpectedSizeApproximation.add_all kind bound scc appr.expsize }
+let add_expsizebounds bound scc appr =
+  { appr with expsize = ExpectedSizeApproximation.add_all_abs bound scc appr.expsize }
 
 (** Timebound related methods *)
 
@@ -125,7 +130,7 @@ let to_string program expected appr=
         IO.nwrite output ("YES( ?, " ^ RealBound.to_string (overall_exptimebound) ^ ")\n\n")
       else
         IO.nwrite output "MAYBE\n\n"
-    else 
+    else
       if (not (Bound.is_infinity overall_timebound)) then
         IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_timebound) ^ ")\n\n")
       else
@@ -138,8 +143,8 @@ let to_string program expected appr=
     if expected then
       (IO.nwrite output "\nExpected Timebounds: \n";
       IO.nwrite output ("  Overall expected timebound: " ^ RealBound.to_string (overall_exptimebound) ^ "\n");
-      appr.exptime 
-      |> GeneralTransitionApproximation.to_string 
+      appr.exptime
+      |> GeneralTransitionApproximation.to_string
           (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output);
     IO.nwrite output "\nCostbounds:\n";
     IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");

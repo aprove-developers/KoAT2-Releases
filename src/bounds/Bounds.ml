@@ -2,7 +2,7 @@ open Batteries
 open BoundsInst
 open ProgramTypes
 open Polynomials
-   
+
 let rec find_bounds_ (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
   |> SizeBounds.improve program
@@ -25,7 +25,7 @@ let find_bounds (program: Program.t) (appr: Approximation.t): Approximation.t =
 
 (* lifts nonprobabilistic timebounds to expected time bounds for general transitions *)
 let lift_nonprob_timebounds program appr =
-  let get_gt_timebound gt = 
+  let get_gt_timebound gt =
     GeneralTransition.transitions gt
     |> TransitionSet.enum
     |> Enum.map (Approximation.timebound appr)
@@ -40,15 +40,14 @@ let lift_nonprob_timebounds program appr =
        appr
 
 (* lifts nonprobabilistic sizebounds of result variables to expected size bounds for the corresponding expected result variables.*)
-let lift_nonprob_sizebounds program appr = 
-  let get_gtl_sizebound kind ((gt,l),v) = 
+let lift_nonprob_sizebounds program appr =
+  let get_gtl_sizebound ((gt,l),v) =
     GeneralTransition.transitions gt
     |> TransitionSet.filter (Location.equal l % Transition.target)
     |> TransitionSet.enum
-    |> Enum.map (fun t -> Approximation.sizebound kind appr t v)
-    |> (match kind with 
-       | `Upper -> Bound.maximum
-       | `Lower -> Bound.minimum)
+    |> Enum.map (fun t kind -> Approximation.sizebound kind appr t v)
+    |> Enum.map Bound.abs_bound
+    |> Bound.maximum
     |> RealBound.of_intbound
   in
 
@@ -58,11 +57,10 @@ let lift_nonprob_sizebounds program appr =
   |> List.flatten
   |> List.map (flip List.cartesian_product (Program.vars program |> VarSet.to_list) % List.singleton)
   |> List.flatten
-  |> List.cartesian_product [`Upper; `Lower]
-  |> List.fold_left 
-       (fun appr (kind,((gt,l),var)) -> Approximation.add_expsizebound kind (get_gtl_sizebound kind ((gt,l),var)) (gt,l) var appr) 
+  |> List.fold_left
+       (fun appr ((gt,l),var) -> Approximation.add_expsizebound (get_gtl_sizebound ((gt,l),var)) (gt,l) var appr)
        appr
-  
+
 let rec find_exp_bounds_ (program: Program.t) (appr: Approximation.t): Approximation.t =
   ExpSizeBounds.improve program appr
   |> ExpRankingBounds.improve program
@@ -72,7 +70,7 @@ let rec find_exp_bounds_ (program: Program.t) (appr: Approximation.t): Approxima
 let find_exp_bounds (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
   |> TrivialTimeBounds.compute program
-  |> find_bounds_ program 
-  |> lift_nonprob_timebounds program 
-  |> lift_nonprob_sizebounds program 
+  |> find_bounds_ program
+  |> lift_nonprob_timebounds program
+  |> lift_nonprob_sizebounds program
   |> find_exp_bounds_ program

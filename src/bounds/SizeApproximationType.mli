@@ -40,6 +40,8 @@ module Make_SizeApproximation :
     val add : kind -> B.t -> Trans.t -> Var.t -> t -> t
     
     val add_all : kind -> B.t -> RV.t list -> t -> t
+
+    val add_all_abs : B.t -> RV.t list -> t -> t
     
     val to_string : t -> string
     

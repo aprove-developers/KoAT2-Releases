@@ -2,13 +2,13 @@ open Batteries
 open Polynomials
 open Formulas
 open BoundsInst
-   
+
 let description = "Search for a local size bound"
 
 let command = "lsb"
-   
+
 type params = {
-    
+
     kind : [`Lower | `Upper]; [@enum ["upper", `Upper; "lower", `Lower]] [@pos 0] [@default `Upper]
     (** Which type of bound is requested. Available options: upper and lower. *)
 

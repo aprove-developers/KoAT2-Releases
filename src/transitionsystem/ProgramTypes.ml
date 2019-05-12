@@ -162,7 +162,7 @@ module GeneralTransition =
       TransitionSet.fold (fun trans rest -> Num.(+) (trans |> Transition.label |> TransitionLabel.probability) rest) (transitions transition) 
         (0. |> OurFloat.of_float)
 
-    let input_vars t = 
+    let input_vars t =
       t.transitions
       |> TransitionSet.to_list
       |> List.map (VarSet.to_list % TransitionLabel.input_vars % Transition.label)

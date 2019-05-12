@@ -10,16 +10,11 @@ module RV = RVGTypes.Make_RV (TransitionForExpectedSize)
 module IntValuation = Valuation.Make (OurInt)
 module Valuation = Valuation.Make (OurFloat)
 
-type kind = [`Upper | `Lower]
 type hessian_check = Positivesemidefinite | Negativesemidefinite
 
 type poly_matrix = RealPolynomial.t list list
 
-let default kind =
-  match kind with
-  | `Upper -> RealBound.infinity
-  | `Lower -> RealBound.minus_infinity
-
+let default = RealBound.infinity
 
 module Solver = SMT.IncrementalZ3Solver
 module SolverNonOpt = SMT.Z3Solver
@@ -27,7 +22,7 @@ module SolverNonOpt = SMT.Z3Solver
 let print_matrix =
   Util.enum_to_string (Util.enum_to_string RealPolynomial.to_string) % List.enum % List.map (List.enum)
 
-  (* Using the standard definition of convexity/concavity to handle bounds instead of polynomials *)
+(* Using the standard definition of convexity/concavity to handle bounds instead of polynomials *)
 let concave_convex_check_v2_ (comp_operator: hessian_check) bound: bool =
   let module VarMap = Map.Make(Var) in
   let vars = RealBound.vars bound in
@@ -73,7 +68,7 @@ let concave_convex_check_v2_ (comp_operator: hessian_check) bound: bool =
   in
   Bool.neg res
 
-(* a multivarita polynome f is concave (convexe) iff
+(* a multivariate polynome f is concave (convexe) iff
  * its hessian matrix is negative semi-definite (positive semi-definite) *)
 let concave_convex_check (comp_operator: hessian_check) (poly: RealPolynomial.t) : bool =
   let varlist = RealPolynomial.vars poly |> VarSet.to_list in
@@ -122,11 +117,8 @@ let bound_is_concave =
 let bound_is_convexe =
   (curry concave_convex_check_v2) Positivesemidefinite
 
-let appr_substitution_is_valid kind bound =
-  match kind with
-  | `Upper -> bound_is_concave bound
-  | `Lower -> bound_is_convexe bound
-
+(* TODO avoid invocation of Z3 for linearity check  *)
+let appr_substitution_is_valid bound = bound_is_concave bound && bound_is_convexe bound
 
 let simplify_poly_with_guard guard (poly: RealPolynomial.t) =
   let check_var var =
@@ -175,38 +167,45 @@ let simplify_poly_with_guard guard (poly: RealPolynomial.t) =
   |>  RealPolynomial.eval_partial poly
   |>  RealPolynomial.simplify
 
-let bound_nondet_var kind program inv var =
-  let prog_vars = Program.input_vars program in
+let bound_nondet_var prog_vars inv var =
   let vars =
-    Var.fresh_id_list Var.Int (VarSet.cardinal prog_vars)
+    Var.fresh_id_list Var.Real (VarSet.cardinal prog_vars)
   in
-  let coeffs = vars |> List.map (Polynomial.of_var) in
-  let constant_var = Var.fresh_id Var.Int () in
-  let constant = constant_var |> Polynomial.of_var in
+  let coeffs = vars |> List.map (RealPolynomial.of_var) in
+  let constant_var = Var.fresh_id Var.Real () in
+  let constant = constant_var |> RealPolynomial.of_var in
   let para_poly =
-    ParameterPolynomial.of_coeff_list coeffs (VarSet.to_list prog_vars)
-    |> ParameterPolynomial.(add (of_constant constant))
+    RealParameterPolynomial.of_coeff_list coeffs (VarSet.to_list prog_vars)
+    |> RealParameterPolynomial.(add (of_constant constant))
   in
-  let nondet_var = ParameterPolynomial.of_var var in
-  let comp_operator =
+  let nondet_var = RealParameterPolynomial.of_var var in
+  let comp_operator kind =
     match kind with
-    | `Upper -> Atoms.ParameterAtom.mk_ge
-    | `Lower -> Atoms.ParameterAtom.mk_le
+    | `Upper -> Atoms.RealParameterAtom.mk_ge
+    | `Lower -> Atoms.RealParameterAtom.mk_le
+  in
+  let kind_coeff = function
+    | `Upper -> RealParameterPolynomial.of_constant (RealPolynomial.of_constant @@ OurNum.of_int 1)
+    | `Lower -> RealParameterPolynomial.of_constant (RealPolynomial.of_constant @@ OurNum.of_int (-1))
   in
   let solver = Solver.create () in
-  let formula =
-    Constraints.ParameterConstraint.farkas_transform inv (comp_operator para_poly nondet_var)
-    |> Formula.mk
+  let formula kind =
+    Constraints.RealParameterConstraint.farkas_transform inv ((comp_operator kind) RealParameterPolynomial.((kind_coeff kind) * para_poly) nondet_var)
+    |> RealFormula.mk
   in
-  Solver.add solver formula;
+  Solver.add_real solver (formula `Upper);
+  Solver.add_real solver (formula `Lower);
   Solver.minimize_absolute solver (constant_var :: vars);
-  match Solver.model solver with
+  match Solver.model_real solver with
   | Some model ->
-      ParameterPolynomial.eval_coefficients (flip IntValuation.eval model) para_poly
-      |> Bound.of_poly |> RealBound.of_intbound
-  | None -> default kind
+      RealParameterPolynomial.eval_coefficients (flip Valuation.eval model) para_poly
+      |> RealBound.of_poly |> RealBound.abs
+  | None -> default
 
-let elsb_ program kind (((gt, l), var): RV.t): RealBound.t =
+let substitute_nondet_var prog_vars temp_vars inv b =
+  VarSet.fold (fun v -> RealBound.appr_substitute_abs v @@ bound_nondet_var prog_vars inv v) temp_vars b
+
+let elsb_ program (((gt, l), var): RV.t): RealBound.t =
   let transitions =
     GeneralTransition.transitions gt
     |> TransitionSet.filter (Location.equal l % Transition.target)
@@ -231,9 +230,6 @@ let elsb_ program kind (((gt, l), var): RV.t): RealBound.t =
     |? TransitionLabel.UpdateElement.Poly (Polynomial.of_var var)
     |> handle_update_element
   in
-  let substitute_nondet_var kind =
-    bound_nondet_var kind program (GeneralTransition.invariants gt)
-  in
 
   transitions_with_prob
   |> List.map (fun (t,p) -> (p, handle_transition t))
@@ -242,32 +238,18 @@ let elsb_ program kind (((gt, l), var): RV.t): RealBound.t =
   |> RealPolynomial.sum
   |> simplify_poly_with_guard (GeneralTransition.guard gt)
   |> RealBound.of_poly
-  |> RealBound.appr_substitution
-       kind
-       ~lower:(substitute_nondet_var `Lower)
-       ~higher:(substitute_nondet_var `Upper)
-  |> fun bound ->
-      match appr_substitution_is_valid kind bound with
-      | true -> bound
-      | false -> default kind
+  |> substitute_nondet_var
+      (Program.input_vars program)
+      (VarSet.diff (Program.vars program) (Program.input_vars program))
+      (GeneralTransition.invariants gt |> Constraints.RealConstraint.of_intconstraint)
+  |> RealBound.set_linear_vars_to_probabilistic_and_rest_to_nonprobabilistic
 
 let elsb_memo =
   Util.memoize
-    ~extractor:(fun (program,kind,((gt,l),var)) -> (kind,GeneralTransition.id gt, Location.to_string l, Var.to_string var))
-    (fun (program,kind,rv) -> elsb_ program kind rv)
+    ~extractor:(fun (program,((gt,l),var)) -> (GeneralTransition.id gt, Location.to_string l, Var.to_string var))
+    (fun (program,rv) -> elsb_ program rv)
 
-let elsb p k rv = elsb_memo (p,k,rv)
+let elsb p rv = elsb_memo (p,rv)
 
-let det_update kind (transition,var): RealPolynomial.t option =
-  let handle_update_element ue =
-    match (ue,kind) with
-    | (TransitionLabel.UpdateElement.Poly p,_) -> Some (RealPolynomial.of_intpoly p)
-    | (TransitionLabel.UpdateElement.Dist d, `Upper) -> ProbDistribution.deterministic_upper_polynomial d |> Option.map RealPolynomial.of_intpoly
-    | (TransitionLabel.UpdateElement.Dist d, `Lower) -> ProbDistribution.deterministic_lower_polynomial d |> Option.map RealPolynomial.of_intpoly
-  in
-  Transition.label transition
-  |> flip TransitionLabel.update var
-  |> flip Option.bind handle_update_element
-
-let vars program kind rv =
-  elsb program kind rv |> RealBound.vars
+let vars program rv =
+  elsb program rv |> RealBound.vars

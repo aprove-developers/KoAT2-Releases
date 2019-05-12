@@ -1,7 +1,7 @@
 open Batteries
 open BoundsInst
 open ProgramTypes
-   
+
 module SCC = Graph.Components.Make(TransitionGraph)
 
 (** This preprocessor infers for all transitions which are not part of an scc a time bound of one.

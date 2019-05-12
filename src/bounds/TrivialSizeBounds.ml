@@ -1,13 +1,13 @@
 open Batteries
 open BoundsInst
 open ProgramTypes
-   
+
 let logger = Logging.(get Size)
 
 module RV = RVGTypes.Make_RV(Transition)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
-           
+
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
@@ -43,7 +43,7 @@ let compute kind program get_sizebound (t,v) =
       lsb
       |> Option.map (fun lsb -> incoming_bound kind program get_sizebound lsb t)
       |? default kind)
-      
+
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute trivial bound", ["kind", show_kind kind;
                                                           "rv", RV.to_id_string (t,v)])

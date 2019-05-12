@@ -2,10 +2,10 @@ open Batteries
 open BoundsInst
 open ProgramTypes
 open RVGTypes
-   
+
 let logger = Logging.(get Size)
 
-module RV = Make_RV(Transition) 
+module RV = Make_RV(Transition)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
 type sign = [ `Pos | `Neg ] [@@deriving show]
@@ -40,8 +40,8 @@ let compute_
     |> List.unique ~eq:Var.equal
     |> tap (fun scc_vars -> Logger.log logger Logger.DEBUG (fun () -> "scc_vars", ["result", Util.enum_to_string Var.to_string (List.enum scc_vars)]))
     |> List.enum
-  in  
-    
+  in
+
   (** Returns all result variables that may influence the given result variable and that are part of the scc. *)
   let pre_in_scc rv =
     rv
@@ -56,7 +56,7 @@ let compute_
     |> Util.without RV.same (List.enum scc)
   in
 
-  (** Returns all result variables that may influence the given result variable from within the scc. 
+  (** Returns all result variables that may influence the given result variable from within the scc.
       Corresponds to V_rv in the thesis. *)
   let scc_variables rv =
     rv
@@ -64,7 +64,7 @@ let compute_
     |> Enum.map (fun (t,v) -> v)
     |> Enum.uniq_by Var.equal
   in
-    
+
   (** Corresponds to the definition of the transition scaling factor in the thesis. *)
   let transition_scaling_factor t =
     let execute () =
@@ -79,7 +79,7 @@ let compute_
         |? 1
         |> tap (fun result -> Logger.log logger Logger.DEBUG (fun () -> "extreme_affecting_scc_variables", ["result", Int.to_string result]))
       in
-      
+
       (** Computes for each transition max(s_alpha for all alpha in C_t) and multiplies the results. *)
       let extreme_scaling_factor =
         t
@@ -90,15 +90,15 @@ let compute_
         |? 1
         |> tap (fun result -> Logger.log logger Logger.DEBUG (fun () -> "extreme_scaling_factor", ["result", Int.to_string result]))
       in
-  
+
       OurInt.of_int (extreme_scaling_factor * extreme_affecting_scc_variables)
-      
+
     in Logger.with_log logger Logger.DEBUG
                        (fun () -> "transition_scaling_factor", ["transition", Transition.to_id_string t])
                        ~result:OurInt.to_string
                        execute
   in
-  
+
   (** Corresponds to the definition of the loop scaling factor in the thesis. *)
   let loop_scaling_factor =
     let execute () =
@@ -128,7 +128,7 @@ let compute_
                        ~result:Bound.to_string
                        execute
   in
-  
+
   (** Returns the constant of the local sizebound of the given result variable in a positive way. *)
   let rv_constant (t,v) =
     let execute () =
@@ -142,7 +142,7 @@ let compute_
                        ~result:Bound.to_string
                        execute
   in
-  
+
   (** Corresponds to the definition of the result variable effect in the thesis. *)
   let result_variable_effect rv =
     let affecting_vars sign =
@@ -247,7 +247,7 @@ let compute_
   else
     Bound.(sign kind (loop_scaling_factor * (starting_value kind + loop_effect)))
 
-            
+
 (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
 let compute kind program rvg get_timebound get_sizebound scc =

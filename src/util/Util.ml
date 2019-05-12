@@ -47,9 +47,9 @@ let enum_to_string content_to_string enum =
   List.print (fun output varset -> IO.nwrite output (content_to_string varset)) output list;
   IO.close_out output
 
-let memoize ~extractor f =  
+let memoize ~extractor f =
   let cache = Hashtbl.create 10 in
-  let g x = 
+  let g x =
     match Hashtbl.find_option cache (extractor x) with
     | Some y -> y
     | None ->
@@ -61,11 +61,15 @@ let memoize ~extractor f =
 let rec option_sequence (options : 'a option list) : 'a list option =
   match options with
     | [] -> Option.Monad.return []
-    | (m::ms) -> Option.Monad.bind m 
-                  (fun x -> Option.Monad.bind (option_sequence ms) 
+    | (m::ms) -> Option.Monad.bind m
+                  (fun x -> Option.Monad.bind (option_sequence ms)
                     (fun xs -> Option.Monad.return (x::xs)))
 
-let safe_head l = 
+let safe_head l =
   match l with
   | [] -> None
   | (a :: _) -> Some a
+
+let unpack_option_tuple = function
+  | (Some a, Some b) -> Some (a,b)
+  | _                -> None

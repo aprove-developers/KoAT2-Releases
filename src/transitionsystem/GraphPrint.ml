@@ -60,8 +60,8 @@ let print_rvg kind ~label ~outdir ~file program =
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-let print_ervg kind ~label ~outdir ~file program =
-  let graph = ERVG.rvg kind program in
+let print_ervg ~label ~outdir ~file program =
+  let graph = ERVG.rvg program in
   let module C = Graph.Components.Make(ERVG) in
   let (_,scc_number) = C.scc graph in
   let rv_color (rv: ERV.t) =

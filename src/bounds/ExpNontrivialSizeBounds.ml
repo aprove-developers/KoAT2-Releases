@@ -18,23 +18,7 @@ let logger = Logging.(get ExpSize)
 module RV = Make_RV(RVTransitions.TransitionForExpectedSize)
 module Solver = SMT.IncrementalZ3Solver
 
-type kind = [ `Lower | `Upper ] [@@deriving show]
-
-let sign = function
-  | `Lower -> Bound.neg
-  | `Upper -> identity
-
-let compute_
-      (kind: kind)
-      (program: Program.t)
-      (rvg: ERVG.t)
-      (get_timebound: Transition.t -> RealBound.t)
-      (get_exptimebound: GeneralTransition.t -> RealBound.t)
-      (get_sizebound: kind -> Transition.t -> Var.t -> Bound.t)
-      (get_expsizebound: kind -> (GeneralTransition.t * Location.t) -> Var.t -> RealBound.t)
-      (scc: RV.t list)
-      (v: Var.t)
-      =
+let compute_ program rvg get_timebound get_exptimebound get_sizebound get_expsizebound scc v =
 
   (** Returns all result variables that may influence the given result variable and that are not part of the scc. *)
   let incoming_transitions =
@@ -53,12 +37,6 @@ let compute_
   in
 
   let result_variable_effect_exp (gt,target_loc) var: RealBound.t =
-    let bound_change_with_0 bound =
-      match kind with
-      | `Upper -> RealBound.max bound RealBound.zero
-      | `Lower -> RealBound.min bound RealBound.zero
-    in
-
     let appr_substitution_pre_size bound =
       let pre_trans =
         GeneralTransition.transitions gt
@@ -70,35 +48,30 @@ let compute_
       in
       pre_trans
       |> List.map
-          (fun pret -> RealBound.appr_substitution kind
-             ~lower:(RealBound.of_intbound % get_sizebound `Lower pret)
-             ~higher:(RealBound.of_intbound % get_sizebound `Upper pret) bound)
+          (fun pret -> RealBound.appr_substition_abs_all
+             (RealBound.of_intbound % get_sizebound pret) bound)
       |> List.enum
-      |> match kind with
-         | `Upper -> RealBound.maximum
-         | `Lower -> RealBound.minimum
+      |> RealBound.maximum
+
     in
 
     let var_change_bound =
       GeneralTransition.transitions gt
       |> TransitionSet.filter (Location.equal target_loc % Transition.target)
       |> TransitionSet.to_list
-      |> List.map (fun t -> ExpLocalSizeBound.det_update kind (t,var))
+      |> List.map (fun t -> LocalSizeBound.sizebound_local_abs_bound program t var)
       |> Util.option_sequence
-      |> Option.map (List.map (RealPolynomial.of_var var |> flip RealPolynomial.sub))
-      |> Option.map (List.map (GeneralTransition.guard gt |> ExpLocalSizeBound.simplify_poly_with_guard))
-      |> Option.map (List.map RealBound.of_poly)
-      (* innermost max/min against 0 *)
-      |> Option.map (List.map bound_change_with_0)
-      (* perform appr_substitution with all pre size bounds *)
-      |> Option.map (List.map appr_substitution_pre_size)
-      |> Option.map List.enum
-      |> Option.map (fun en -> match kind with
-                       | `Upper -> RealBound.maximum en
-                       | `Lower -> RealBound.minimum en )
-      |? match kind with
-         | `Lower -> RealBound.minus_infinity
-         | `Upper -> RealBound.infinity
+      |> Option.map
+          (fun l ->
+            List.map (RealBound.of_var var |> flip RealBound.sub) l
+            (* innermost max/min against 0 *)
+            |> (List.map RealBound.abs)
+            (* perform appr_substitution with all pre size bounds *)
+            |> (List.map appr_substitution_pre_size)
+            |> List.enum
+            |> RealBound.maximum
+          )
+      |? RealBound.infinity
     in
 
     var_change_bound
@@ -106,19 +79,13 @@ let compute_
 
   let loop_effect var =
     let calc_bound (timebound,sizebound) =
-      let sizebound_min_max =
-        match kind with
-        | `Upper -> RealBound.max RealBound.zero sizebound
-        | `Lower -> RealBound.min RealBound.zero sizebound
-      in
-
       if RealBound.is_infinity timebound then
-        if RealBound.(equal zero sizebound_min_max) then
+        if RealBound.(equal zero sizebound) then
           RealBound.zero
         else
-          RealBound.(infinity * sizebound_min_max)
+          RealBound.(infinity * sizebound)
       else
-        RealBound.(timebound * sizebound_min_max)
+        RealBound.(timebound * sizebound)
     in
 
     let module TransExpSize = Set.Make2 (GeneralTransition) (Location) in
@@ -135,7 +102,7 @@ let compute_
   let starting_value v =
     incoming_transitions
     |> TransitionSet.to_list
-    |> List.map (fun t -> get_sizebound kind t v)
+    |> List.map (fun t -> get_sizebound t v)
     |> List.enum
     |> Bound.maximum
     |> RealBound.of_intbound
@@ -147,11 +114,10 @@ let compute_
 
 (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
-let compute kind program rvg get_timebound get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) v =
+let compute program rvg get_timebound get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) v =
   let execute () =
-    compute_ kind program rvg (RealBound.of_intbound % get_timebound) get_exptimebound get_sizebound get_expsizebound scc v
+    compute_ program rvg (RealBound.of_intbound % get_timebound) get_exptimebound get_sizebound get_expsizebound scc v
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute_nontrivial_bound", ["kind", show_kind kind;
-                                                             "scc", ERVG.rvs_to_id_string scc])
+                     (fun () -> "compute_nontrivial_bound", ["scc", ERVG.rvs_to_id_string scc])
                      ~result:RealBound.to_string
                      execute

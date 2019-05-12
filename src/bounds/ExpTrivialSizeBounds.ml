@@ -8,28 +8,15 @@ let logger = Logging.(get ExpSize)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
 
-let get_expected_value_propagation kind =
-  match kind with
-  | `Upper -> ExpLocalSizeBound.bound_is_concave
-  | `Lower -> ExpLocalSizeBound.bound_is_convexe
+let default_bound = RealBound.infinity
 
-let get_bound_from_enum kind =
-  match kind with
-  | `Upper -> RealBound.maximum
-  | `Lower -> RealBound.minimum
-
-let default kind =
-  match kind with
-  |`Upper -> RealBound.infinity
-  |`Lower -> RealBound.minus_infinity
-
-let max_detsizebound kind ((gt,l),var) get_sizebound =
+let max_detsizebound ((gt,l),var) get_sizebound =
   GeneralTransition.transitions gt
   |> TransitionSet.filter (Location.equal l % Transition.target)
   |> TransitionSet.to_list
-  |> List.map (fun t -> get_sizebound kind (t,var) |> RealBound.of_intbound)
+  |> List.map (fun t -> get_sizebound (t,var) |> RealBound.of_intbound)
   |> List.enum
-  |> get_bound_from_enum kind
+  |> RealBound.maximum
 
 let formula_implied_by_formula formula1 formula2 =
   formula2
@@ -72,25 +59,25 @@ let only_one_gt_outgoing program gt =
 
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
-    S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
-let incoming_bound kind program get_sizebound get_expsizebound (exp_poly: RealBound.t) gt (pr_func: Location.t -> OurFloat.t option) =
+    Here we add all incomin bounds on absolute values *)
+let incoming_bound program get_sizebound_abs get_expsizebound (exp_upd_poly: RealBound.t) gt (pr_func: Location.t -> OurFloat.t option) =
   let execute () =
     let substitute_with_prevalues gtset =
-      let prevalues_exp kind var =
+      let prevalues_exp var =
         GeneralTransitionSet.to_list gtset
-        |> List.map (fun gt' -> get_expsizebound kind ((gt',GeneralTransition.start gt),var))
+        |> List.map (fun gt' -> get_expsizebound ((gt',GeneralTransition.start gt),var))
         |> List.enum
-        |> get_bound_from_enum kind
+        |> RealBound.maximum
       in
-      let prevalues kind var =
+      let prevalues var =
         GeneralTransitionSet.to_list gtset
-        |> List.map (fun gt' -> max_detsizebound kind ((gt', GeneralTransition.start gt), var) get_sizebound)
-        |> List.enum |> get_bound_from_enum kind
+        |> List.map (fun gt' -> max_detsizebound ((gt', GeneralTransition.start gt), var) get_sizebound_abs)
+        |> List.enum |> RealBound.maximum
       in
-      if get_expected_value_propagation kind exp_poly then
-        RealBound.appr_substitution kind ~lower:(prevalues_exp `Lower) ~higher:(prevalues_exp `Upper) exp_poly
-      else
-        RealBound.appr_substitution kind ~lower:(prevalues `Lower) ~higher:(prevalues `Upper) exp_poly
+      RealBound.appr_substitution_probabilistic_and_nonprobabilistic
+        (* Propagate expected values if possible *)
+        ~probabilistic:(prevalues_exp)
+        ~nonprobabilistic:(prevalues) exp_upd_poly
     in
     let pre_gts = Program.pre_gt program gt in
     let substitute_with_pr_prevalues gtset (pr_func_unboxed: Location.t -> OurFloat.t option) =
@@ -103,32 +90,24 @@ let incoming_bound kind program get_sizebound get_expsizebound (exp_poly: RealBo
       match pre_with_pr with
         | None -> None
         | Some pres_with_prs ->
-            (* Check if we can subsitute the variables in the bounds due to concavity/convexity. If this is not possible
+            (* Check if we can subsitute the variables in the bounds due to linearity. If this is not possible
              * substitute the bound with deterministic upper size bounds *)
-            let substitution_exp kind var =
+            let substitution_exp var =
               pres_with_prs
               |> List.fold_left
-                   (fun b (pr,gt') -> RealBound.( b + ((of_constant pr) * (get_expsizebound kind ((gt',GeneralTransition.start gt),var) )) ))
+                   (fun b (pr,gt') -> RealBound.( b + ((of_constant pr) * (get_expsizebound ((gt',GeneralTransition.start gt),var) )) ))
                    RealBound.zero
             in
-            let substitution kind var =
+            let substitution var =
               pres_with_prs
               |> List.fold_left
-                   (fun b (pr,gt') -> RealBound.( b + ((of_constant pr) * max_detsizebound kind ((gt',GeneralTransition.start gt),var) get_sizebound) ))
+                   (fun b (pr,gt') -> RealBound.( b + ((of_constant pr) * max_detsizebound ((gt',GeneralTransition.start gt),var) get_sizebound_abs) ))
                    RealBound.zero
             in
-            if get_expected_value_propagation kind exp_poly then
-              Some (exp_poly
-                    |> RealBound.appr_substitution
-                         kind
-                         ~lower:(substitution_exp `Lower)
-                         ~higher:(substitution_exp `Upper) )
-            else
-              Some (exp_poly
-                    |> RealBound.appr_substitution
-                         kind
-                         ~lower:(substitution `Lower)
-                         ~higher:(substitution `Upper) )
+            Some (RealBound.appr_substitution_probabilistic_and_nonprobabilistic
+              (* Propagate expected values if possible *)
+              ~probabilistic:(substitution_exp)
+              ~nonprobabilistic:(substitution) exp_upd_poly )
     in
     let pr_prevalues = substitute_with_pr_prevalues pre_gts pr_func in
     match pr_prevalues with
@@ -139,7 +118,7 @@ let incoming_bound kind program get_sizebound get_expsizebound (exp_poly: RealBo
           bound
 
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute highest incoming bound", ["exp_poly", RealBound.to_string exp_poly;
+                     (fun () -> "compute highest incoming bound", ["exp_upd_poly", RealBound.to_string exp_upd_poly;
                                                                    "transition", GeneralTransition.to_string gt])
                   ~result:RealBound.to_string
                   execute
@@ -419,9 +398,9 @@ let print_pr_func graph pr_func =
 
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
-let compute kind program get_sizebound get_expsizebound get_timebound ((gt,loc),var) =
+let compute program get_sizebound (get_expsizebound: (GeneralTransition.t * Location.t) -> Var.t -> RealBound.t) get_timebound ((gt,loc),var) =
   if not (guard_enabled gt && only_one_gt_outgoing program gt) then
-    default kind
+    default_bound
   else
     let graph = Program.graph program in
     let start_loc = Program.start program in
@@ -431,19 +410,20 @@ let compute kind program get_sizebound get_expsizebound get_timebound ((gt,loc),
                              (start_loc,transition_location,l)
                              (fun () -> get_pr program graph start_loc locations transition_location get_timebound)
     in
-    let exp_poly = ExpLocalSizeBound.elsb program kind ((gt,loc),var) in
+    let exp_upd_poly = ExpLocalSizeBound.elsb program ((gt,loc),var) in
 
     let execute () =
       if Program.is_initial_gt program gt then
-        exp_poly
+        exp_upd_poly
       else
         incoming_bound
-          kind program
-          (fun kind (t,v) -> get_sizebound kind t v)
-          (fun kind ((gt,l),var) -> get_expsizebound kind (gt,l) var) exp_poly gt pr_func
+          program
+          get_sizebound
+          (* (fun (t,v) -> Bound.abs_bound (fun k -> get_sizebound k t v)) *)
+          (uncurry get_expsizebound) exp_upd_poly gt pr_func
     in Logger.with_log logger Logger.DEBUG
-                         (fun () -> "compute expected trivial bound", ["kind", show_kind kind;
-                                                              "rv", ERV.to_id_string ((gt,loc),var); "pr_func", print_pr_func graph pr_func])
+                         (fun () -> "compute expected trivial bound",
+                                    ["rv", ERV.to_id_string ((gt,loc),var); "pr_func", print_pr_func graph pr_func])
                          ~result:RealBound.to_string
                          execute
 

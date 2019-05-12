@@ -1,24 +1,24 @@
 open Batteries
 open Polynomials
 open Util
-   
+
 let logger = Logging.(get Bound)
-           
+
 module Make_BoundOver (Num : PolyTypes.OurNumber)
-                      (Poly : 
+                      (Poly :
                         sig
-                          include PolyTypes.Polynomial with type value = Num.t 
+                          include PolyTypes.Polynomial with type value = Num.t
                                                         and type valuation = Valuation.Make(Num).t
                                                         and type monomial = Monomials.Make(Num).t
                           val max_of_occurring_constants : t -> Num.t
-                        end ) = 
+                        end ) =
   struct
     module Valuation_ = Valuation.Make(Num)
     type valuation = Valuation.Make(Num).t
-                      
+
     type polynomial = Poly.t
     type value = Num.t
-                    
+
     (* Minus Infinity is max of an empty list *)
     (* Infinity is min of an empty list *)
     type t =
@@ -28,11 +28,11 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Neg of t
       | Pow of Num.t * t
       | Sum of t * t
-      | Product of t * t 
+      | Product of t * t
       | Max of t * t [@@deriving eq, ord]
-    
+
     let of_var v = Var v
-    
+
     let of_constant c = Const c
     let rec get_constant t =
       match t with
@@ -43,9 +43,9 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Pow (n, b) -> Num.pow (get_constant b) (Num.to_int n)
       | Sum (b1, b2) -> Num.add (get_constant b1) (get_constant b2)
       | Product (b1, b2) -> Num.mul (get_constant b1) (get_constant b2)
-      | Max (b1, b2) -> Num.max (get_constant b1) (get_constant b2) 
-    
-    let get_constant_option t = 
+      | Max (b1, b2) -> Num.max (get_constant b1) (get_constant b2)
+
+    let get_constant_option t =
       match t with
       | Const x -> Some x
       | _  -> None
@@ -61,11 +61,11 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | Sum _ -> 5
           | Product _ -> 6
           | Max _ -> 7
-            
+
         let (<) b1 b2 =
           number b1 < number b2
       end
-              
+
     let rec fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf p =
       let fold_ = fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf in
       match p with
@@ -81,7 +81,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Inf
       | Polynomial of int
       | Exponential of int [@@deriving eq]
-    
+
     let rec show_complexity = function
       | Inf -> "Infinity"
       | Polynomial 0 -> "O(1)"
@@ -89,13 +89,13 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Polynomial x -> "O(n^" ^ Int.to_string x ^ ")"
       | Exponential 1 -> "O(EXP)"
       | Exponential x -> "O(EXP^" ^ show_complexity (Exponential (x-1)) ^ ")"
-    
+
     let show_complexity_termcomp = function
       | Inf -> "MAYBE"
       | Polynomial 0 -> "WORST_CASE(?, O(1))"
       | Polynomial x -> "WORST_CASE(?, O(n^" ^ Int.to_string x ^ "))"
       | Exponential _ -> "WORST_CASE(?, O(EXP))"
-    
+
     let asymptotic_complexity =
       fold
         ~const:(fun _ -> Polynomial 0)
@@ -138,13 +138,39 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | (Exponential x, Polynomial y) -> Exponential x
         )
         ~inf:Inf
-      
+
+    let rec vars = function
+      | Infinity -> VarSet.empty
+      | Var v -> VarSet.singleton v
+      | Const _ -> VarSet.empty
+      | Max (b1, b2) -> VarSet.union (vars b1) (vars b2)
+      | Neg b -> vars b
+      | Pow (v,b) -> vars b
+      | Sum (b1, b2) -> VarSet.union (vars b1) (vars b2)
+      | Product (b1, b2) -> VarSet.union (vars b1) (vars b2)
+
     let is_linear bound =
       let cplx = asymptotic_complexity bound in
         match cplx with
         | (Polynomial n) -> (n == 1)
         | _ -> false
-    
+
+    let is_linear_in_var var bound =
+      let maybeOrder =
+        fold
+          ~const:(const (Some 0))
+          ~var:(fun v -> if var = v then (Some 1) else (Some 0))
+          ~neg:(identity)
+          ~plus:(fun l l' -> Option.Monad.( bind l (fun f -> bind l' (fun s -> return @@ Int.max f s)) ))
+          ~times:(fun l l' -> Option.Monad.( bind l (fun f -> bind l' (fun s -> return @@ f + s)) ))
+          ~exp:(const @@ const None)
+          ~max:(const @@ const None)
+          ~inf:(Some 0) @@  bound
+      in
+      match maybeOrder with
+        | Some o -> 1 = o
+        | None   -> false
+
     let max_of_occurring_constants bound =
       fold
         ~const:Num.abs
@@ -156,14 +182,14 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         ~max:Num.max
         ~inf:(raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
         bound
-      
+
     let rec show_bound = function
       | Var v -> Var.to_string v
       | Const c -> if Num.Compare.(c < Num.zero) then "("^Num.to_string c^")" else Num.to_string c
       | Infinity -> "inf"
       (*| Max (b1, Max (b2, b3)) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ ", " ^ show_bound b3 ^ "}"*)
       | Max (b1, b2) -> "max([" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ "])"
-      | Neg b ->( 
+      | Neg b ->(
           match b with
           | Const c -> "("^(Num.to_string ( Num.neg c))^")"
           | Neg d -> show_bound d
@@ -180,15 +206,15 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Product (Sum (b1, b2), b3) -> "(" ^ show_bound (Sum (b1, b2)) ^ ")*" ^ show_bound b3
       | Product (b1, Sum (b2, b3)) -> show_bound b1 ^ "*(" ^ show_bound (Sum (b2, b3)) ^ ")"
       | Product (b1, b2) -> show_bound b1 ^ "*" ^ show_bound b2
-    
+
     let show ?(complexity=true) bound =
       let complexity_str =
         if complexity then " {" ^ (show_complexity % asymptotic_complexity) bound ^ "}" else ""
       in
       show_bound bound ^ complexity_str
-    
+
     let to_string = show ~complexity:true
-                          
+
     let rec (>) b1 b2 =
       let execute () =
         match (b1, b2) with
@@ -242,23 +268,23 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                       (fun () -> ">=", ["condition", to_string b1 ^ ">=" ^ to_string b2])
                       ~result:(Util.option_to_string Bool.to_string)
                       execute
-    
+
     let (<) = flip (>)
-    
+
     let (<=) = flip (>=)
-    
+
     let (=~=) = equal
-    
+
     let rec simplify bound =
       let execute () =
         match bound with
-          
+
         | Infinity -> Infinity
-    
+
         | Var v -> Var v
-    
+
         | Const c -> Const c
-    
+
         (* Simplify terms with negation head *)
         | Neg b -> (
           match simplify b with
@@ -268,7 +294,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | Product (b1, b2) -> simplify (Product (Neg b1, b2))
           | b -> Neg b
         )
-    
+
         (* Simplify terms with sum head *)
         | Sum (b1, b2) -> (
           match (simplify b1, simplify b2) with
@@ -291,7 +317,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | (b1, b2) when Constructor.(b2 < b1) -> simplify (Sum (b2, b1))
           | (b1, b2) -> Sum (b1, b2)
         )
-    
+
         (* Simplify terms with product head *)
         | Product (b1, b2) -> (
           match (simplify b1, simplify b2) with
@@ -319,7 +345,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | (b1, b2) when Constructor.(b2 < b1) -> simplify (Product (b2, b1))
           | (b1, b2) -> Product (b1, b2)
         )
-                            
+
         (* Simplify terms with pow head *)
         | Pow (value, exponent) -> (
            match simplify exponent with
@@ -332,7 +358,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
            | Max (Const c, b) -> simplify (Max (Const (Num.pow value (Num.to_int c)), Pow (value, b)))
            | exponent -> Pow (value, exponent)
         )
-    
+
         (* Simplify terms with max head *)
         | Max (b1, b2) ->
            let (b1, b2) = (simplify b1, simplify b2) in
@@ -357,121 +383,136 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
     module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
       struct
         type t = outer_t
-               
+
         let zero = Const (Num.zero)
-                 
+
         let one = Const (Num.one)
-                
+
         let neg bound = simplify (Neg bound)
-                  
+
         let add b1 b2 =
           simplify (Sum (b1, b2))
-          
+
         let mul b1 b2 =
           simplify (Product (b1, b2))
-          
+
         let pow bound n =
           bound
           |> Enum.repeat ~times:n
           |> Enum.fold mul one
           |> simplify
-          
+
       end
     include PolyTypes.MakeMath(BaseMathImpl)
-    
+
     let sum bounds =
       try
         bounds |> Enum.reduce add |> simplify
       with Not_found -> zero
-      
+
     let product bounds =
       try
         bounds |> Enum.reduce mul |> simplify
       with Not_found -> one
-      
+
     let sub t1 t2 =
       simplify (add t1 (neg t2))
-          
+
     let of_poly =
       Poly.fold ~const:of_constant ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow
-                  
+
     let of_int i = Const (Num.of_int i)
-                      
+
     let to_int poly = raise (Failure "TODO: Not possible")
-                    
+
     let of_var_string str = Var (Var.of_string str)
-    
+
     let infinity = Infinity
-    
-    let minus_infinity = Neg Infinity 
-    
+
+    let minus_infinity = Neg Infinity
+
     let is_infinity = equal Infinity
-    
+
     let is_minus_infinity = equal (Neg Infinity)
-    
+
     let max b1 b2 =
       simplify (Max (b1, b2))
-    
+
     let min b1 b2 =
       simplify (Neg (Max (neg b1, neg b2)))
-    
+
     let maximum bounds =
       try
         bounds |> Enum.reduce max |> simplify
       with Not_found -> minus_infinity
-    
+
     let minimum bounds =
       try
         bounds |> Enum.reduce min |> simplify
       with Not_found -> infinity
-    
+
     let exp value b =
       if Num.(Compare.(value < zero)) then
         raise (Failure "Zero not allowed in bound pow")
       else
         simplify (Pow (value, b))
-    
+
     let abs bound =
       simplify (Max (zero, bound) + Max (zero, Neg bound))
-    
+
+    let abs_bound get_bound =
+      max (abs @@ get_bound `Lower) (abs @@ get_bound `Upper)
+
     let is_var = function
       | Var _ -> true
       | _ -> false
-    
+
     let substitute_f substitution bound =
       bound
       |> fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~exp:exp ~max:max ~inf:infinity
       |> simplify
-      
+
+    let set_linear_vars_to_probabilistic_and_rest_to_nonprobabilistic b =
+      let all_vars        = vars b in
+      let linear_vars     = VarSet.filter (flip is_linear_in_var b) all_vars in
+
+      let setvar v =
+        if VarSet.mem v linear_vars then
+          Var.set_substitution_kind Var.Probabilistic v
+        else
+          Var.set_substitution_kind Var.NonProbabilistic v
+      in
+      substitute_f (of_var % setvar) b
+
     let substitute var ~replacement =
       substitute_f (fun target_var ->
           if Var.(var =~= target_var) then replacement else of_var target_var
         )
-    
+
     let substitute_all substitution =
       let module VarMap = Map.Make(Var) in
       substitute_f (fun var ->
           VarMap.find_default (of_var var) var substitution
         )
-    
+
     type kind = [ `Lower | `Upper ]
 
     let reverse = function
       | `Lower -> `Upper
       | `Upper -> `Lower
-    
+
     let selector = function
       | `Lower -> minimum
       | `Upper -> maximum
-    
+
     let inf = function
       | `Lower -> minus_infinity
       | `Upper -> infinity
-    
+
     let evaluater lower higher = function
       | `Lower -> lower
       | `Upper -> higher
-    
+
     let contains_infinity bound =
       fold
         ~const:(fun _ -> false)
@@ -483,7 +524,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         ~max:(||)
         ~inf:true
         bound
-    
+
     let rec appr_substitution kind ~lower ~higher = function
       | Infinity -> Infinity
       | Var v -> evaluater lower higher kind v
@@ -503,17 +544,45 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
          |> selector kind
       | Max (b1, b2) -> max (appr_substitution kind ~lower ~higher b1) (appr_substitution kind ~lower ~higher b2)
       | Pow (k,b) -> Pow (k, appr_substitution kind ~lower ~higher b)
-    
-    let rec vars = function
-      | Infinity -> VarSet.empty
-      | Var v -> VarSet.singleton v
-      | Const _ -> VarSet.empty
-      | Max (b1, b2) -> VarSet.union (vars b1) (vars b2)
-      | Neg b -> vars b
-      | Pow (v,b) -> vars b
-      | Sum (b1, b2) -> VarSet.union (vars b1) (vars b2)
-      | Product (b1, b2) -> VarSet.union (vars b1) (vars b2)
-    
+
+    let rec appr_substitution_abs_maybe subf = simplify % function
+      | Infinity         -> Infinity
+      | Var v            -> (match subf v with
+        | Some b -> b
+        | None   -> of_var v)
+      | Const k          -> Const k
+      | Neg b            -> appr_substitution_abs_maybe subf b
+      | Sum (b1, b2)     -> appr_substitution_abs_maybe subf b1 + appr_substitution_abs_maybe subf b2
+      | Product (b1, b2) -> appr_substitution_abs_maybe subf b1 * appr_substitution_abs_maybe subf b2
+      | Max (b1,b2)      -> max (appr_substitution_abs_maybe subf b1)
+                                (appr_substitution_abs_maybe subf b2)
+      | Pow (k,b)        -> Pow (k, appr_substitution_abs_maybe subf b)
+
+    let replace_if_subst_kind sub_kind b var =
+      if Var.get_substitution_kind var = sub_kind then
+        Some b
+      else
+        None
+
+    let appr_substitution_with_sub_kind sub_kind subf =
+      appr_substitution_abs_maybe (fun v -> replace_if_subst_kind sub_kind (subf v) v)
+
+    let appr_substition_abs_probabilistic =
+      appr_substitution_with_sub_kind Var.Probabilistic
+
+    let appr_substition_abs_nonprobabilistic =
+      appr_substitution_with_sub_kind Var.NonProbabilistic
+
+    let appr_substition_abs_all subf =
+      appr_substitution_abs_maybe (Option.Monad.return % subf)
+
+    let appr_substitution_probabilistic_and_nonprobabilistic ~probabilistic ~nonprobabilistic =
+      appr_substitution_abs_maybe
+        (fun v -> if Var.get_substitution_kind v = Var.Probabilistic then Some (probabilistic v) else Some (nonprobabilistic v))
+
+    let appr_substitute_abs v b' =
+      appr_substitution_abs_maybe (fun v' -> if v' = v then Some b' else None)
+
     let degree n = raise (Failure "degree for MinMaxPolynomial not yet implemented")
     let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implemented")
     let eval p valuation = raise (Failure "eval for MinMaxPolynomial not yet implemented")
@@ -521,6 +590,6 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
     let of_string p = raise (Failure "of_string for MinMaxPolynomial not yet implemented")
     let coeff_of_var p= raise (Failure "coeff_of_var for MinMaxPolynomial not yet implemented")
     let of_coeff_list p= raise (Failure "of_coeff_list for MinMaxPolynomial not yet implemented")
-    
+
 
   end

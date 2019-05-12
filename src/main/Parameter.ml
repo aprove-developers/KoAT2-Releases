@@ -114,14 +114,14 @@ let bounded_rv_to_string (program: Program.t) kind (appr: Approximation.t) (t,v)
                     get_lsb kind (t,v) |> Bound.show ~complexity:false
     ]
 
-let bounded_erv_to_string (program: Program.t) kind (appr: Approximation.t) ((gt,l),v) =
+let bounded_erv_to_string (program: Program.t) (appr: Approximation.t) ((gt,l),v) =
   String.concat "" [ERV.to_id_string ((gt,l), v);
                     "\n";
                     "Global: ";
-                    Approximation.expsizebound kind appr (gt,l) v |> RealBound.to_string;
+                    Approximation.expsizebound_abs appr (gt,l) v |> RealBound.to_string;
                     "\n";
                     "Local: ";
-                    ExpLocalSizeBound.elsb program kind ((gt,l),v) |> RealBound.to_string
+                    ExpLocalSizeBound.elsb program ((gt,l),v) |> RealBound.to_string
     ]
 
 let get_lsb program kind (t, v) =

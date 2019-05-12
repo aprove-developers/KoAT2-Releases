@@ -2,7 +2,7 @@ open Batteries
 open BoundsInst
 open Polynomials
 open ProgramTypes
-   
+
 let logger = Logging.(get Time)
 
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
@@ -31,7 +31,7 @@ let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t)
        `Upper
        ~lower:(get_sizebound `Lower transition)
        ~higher:(get_sizebound `Upper transition)
-  
+
 let compute_bound (appr: Approximation.t) (program: Program.t) (rank: RankingFunction.t): Bound.t =
   let execute () =
     rank
@@ -64,7 +64,7 @@ let compute_bound (appr: Approximation.t) (program: Program.t) (rank: RankingFun
 let add_bound = function
   | `Time -> Approximation.add_timebound
   | `Cost -> Approximation.add_costbound
-   
+
 let improve_with_rank measure program appr rank =
   let bound = compute_bound appr program rank in
   if Bound.is_infinity bound then
@@ -80,7 +80,7 @@ let bounded measure appr transition =
   match measure with
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> false
-  
+
 let improve measure program appr =
   let execute () =
     program
@@ -92,7 +92,7 @@ let improve measure program appr =
            |> List.enum
            |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank measure program appr rank
-                ) appr           
+                ) appr
          ) appr
   in Logger.with_log logger Logger.INFO
                      (fun () -> "improve_bounds", ["measure", show_measure measure])

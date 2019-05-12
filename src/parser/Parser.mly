@@ -9,7 +9,7 @@
 %token          	OR
 %token              AND
 %token 				ARROW WITH PROBDIV LBRACK RBRACK
-%token				GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
+%token				GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
 %token              COMMA COLON
 %token              MIN MAX INFINITY ABS
 %token              UNIFORM
@@ -19,8 +19,8 @@
 %left				PLUS MINUS
 %left				TIMES
 %left				POW
-                  
-			
+
+
 %start <Program.t> onlyProgram
 
 %start <Program.t> onlyProgram_simple
@@ -103,11 +103,11 @@ program_simple :
 
 transition_simple :
 	|	start = ID; cost = cost ; rhs = non_prob_transition_rhs; formula = withConstraints
-	          { ParserUtil.mk_transition_simple start cost rhs formula } 
+	          { ParserUtil.mk_transition_simple start cost rhs formula }
         |	start = ID; cost = cost ; rhs = prob_transition_rhs; formula = withConstraints
 	          { ParserUtil.mk_transition_simple_prob start cost rhs formula } ;
 
-goal :		
+goal :
 	|	LPAR GOAL goal = ID RPAR
                   { goal } ;
 
@@ -119,17 +119,17 @@ transitions :
 	|	LPAR RULES transition = nonempty_list(transition) RPAR
 		  { fun vars -> List.map (fun t -> t vars) transition |> List.flatten } ;
 
-variables :   
+variables :
 	|	LPAR VAR vars = list(ID) RPAR
 		  { List.map Var.of_string vars } ;
-		  
+
 transition :
 	|	lhs = transition_lhs; cost = cost ; rhs = non_prob_transition_rhs; formula = withConstraints
-	          { ParserUtil.mk_transition lhs cost rhs formula } 
+	          { ParserUtil.mk_transition lhs cost rhs formula }
         |       lhs = transition_lhs; cost = cost ; rhs = prob_transition_rhs; formula = withConstraints
 	          { ParserUtil.mk_transition_prob lhs cost rhs formula } ;
-		  
-cost : 
+
+cost :
         |       MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
                   { ub }
         |       MINUS ub = polynomial GREATERTHAN
@@ -144,14 +144,14 @@ transition_lhs :
 prob_transition_rhs :
         |       rhs = separated_nonempty_list(PROBDIV, non_prob_transition_rhs_with_prob)
                   { rhs };
-                  
+
 non_prob_transition_rhs_with_prob :
         |       prob = withProbabilities; old_rhs = non_prob_transition_rhs
                   { (prob, Batteries.Tuple2.first old_rhs, Batteries.Tuple2.second old_rhs) };
-	          
+
 non_prob_transition_rhs :
 	|       com_kind = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
-                  { (com_kind, targets)} 
+                  { (com_kind, targets)}
         |       target = transition_target
                   { ("Com_1", [target]) } ;
 transition_target :
@@ -160,13 +160,13 @@ transition_target :
 
 withConstraints :
 	|	{ Formula.mk_true }
-	|       LBRACK constr = separated_nonempty_list(AND, formula_atom) RBRACK { Formula.all constr } 
+	|       LBRACK constr = separated_nonempty_list(AND, formula_atom) RBRACK { Formula.all constr }
 	|       WITH constr = separated_nonempty_list(AND, formula_atom) { Formula.all constr } ;
-	
+
 withProbabilities :
         |        prob = UFLOAT COLON
                 { ParserUtil.ourfloat_of_decimal_string prob};
-	
+
 
 onlyFormula :
         |       f = formula EOF { f } ;
@@ -178,7 +178,7 @@ formula :
 onlyConstraints :
         |       constr = separated_list(AND, constraint_atom) EOF
                   { Constr.all constr } ;
-        
+
 formula_constraint :
         |       constr = separated_list(AND, formula_atom)
                   { Formula.all constr } ;
@@ -216,7 +216,7 @@ formula_atom :
   	| 	LESSTHAN { Formula.mk_lt }
   	| 	LESSEQUAL { Formula.mk_le } ;
 
-              
+
 onlyPolynomial :
         |       poly = polynomial EOF { poly } ;
 
@@ -242,7 +242,7 @@ dist:
         |       UNIFORM; LPAR; p1 = polynomial; RPAR; LPAR; p2 = polynomial; RPAR
                   { ProbDistribution.Uniform (p1,p2) };
 
-update_element: 
+update_element:
         |       p = polynomial
                   { TransitionLabel.UpdateElement.Poly p }
         |       d = dist
@@ -290,7 +290,7 @@ exactProgram :
 		guard_val = guard_value
 		updates = exact_updates
 		d_term = ioption(direct_termination);
-		precision = ioption(precision); 
+		precision = ioption(precision);
 		initial = ioption(initial); EOF
 		{ ExactProgram.from guard_vec guard_val updates d_term precision initial} ;
 
@@ -331,7 +331,7 @@ vector :
 		{ values } ;
 int_val :
 	|	value = UINT
-		{ OurInt.of_int value } 
+		{ OurInt.of_int value }
 	|	MINUS value = UINT
 		{ OurInt.of_int (-value) } ;
 

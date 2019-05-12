@@ -3,7 +3,7 @@ open Formulas
 open Polynomials
 open ProgramTypes
 open BoundsInst
-   
+
 (* Concept:
    Incoming part:
    For UPPER bounds the MAXIMUM of all incoming variables leading to the SCC or a constant bound anywhere in the SCC.
@@ -17,12 +17,12 @@ open BoundsInst
    If all added constants are POSITIVE for all of its result variables, then we multiply the LOWEST constant (next toward zero) with the lower runtime bound of the transition.
    Scaled sums: upcoming
  *)
-             
+
 (** A templated bound is a bound of a certain templated form.
     The different templates are not disjunctive.
     The upcoming template set always includes the previous one. *)
 (* TODO We can not use the sum of all variables, if the value of a variable might be negative and not actually used in the transition.  *)
-(** Always smaller or equal to a scaling factor multiplied with the sum of all prevariables and a constant. Examples: x'=x+y , x'=2*(x+y+z) 
+(** Always smaller or equal to a scaling factor multiplied with the sum of all prevariables and a constant. Examples: x'=x+y , x'=2*(x+y+z)
     s * (e + sum [x1;...;xn]) *)
 type t
 
@@ -40,18 +40,18 @@ val factor : t -> int
 
 (** Returns the constant of the local sizebound. Raises unbounded, if the local size bound is unbounded*)
 val constant : t -> int
-  
+
 (** Returns a set of of variables which affect the local sizebound *)
 val vars : t -> VarSet.t
 
 (** Returns a set of all variables which monotonical increasingly or monotonical decreasingly affect the local sizebound *)
 (** Those are variables with a positive coefficient or a negative coefficient. *)
 val vars_of_sign : [`Pos | `Neg] -> t -> VarSet.t
-  
+
 val vars_of_purity : [`Pure | `Abs] -> t -> VarSet.t
 
 val pre_kind : ([`Upper | `Lower] * [`Pos | `Neg]) -> [`Upper | `Lower]
-  
+
 (** Converts the templated bound to a string. *)
 val to_string : t -> string
 
@@ -60,20 +60,23 @@ val to_string : t -> string
 val as_substituted_bound : ([`Lower | `Upper] -> Var.t -> Bound.t) -> t -> Bound.t
 
 (** Converts the templated bound to an actual bound. *)
-val as_bound : t -> Bound.t 
+val as_bound : t -> Bound.t
 
 val default : [`Lower | `Upper] -> Bound.t
-  
+
 (** Returns a formula which expresses that the variable is smaller or equal to the bound, e.g. x <= b. *)
 val as_formula : Var.t -> t -> Formula.t
 
 (** Tries to find a templated bound of any of the defined templates. *)
 val find_bound : [`Lower | `Upper] -> VarSet.t -> Var.t -> Formula.t -> VarSet.t -> int -> t
 
-(** Returns a local sizebound of the specified kind for the variable of the transition. 
+(** Returns a local sizebound of the specified kind for the variable of the transition.
     A local sizebound is expressed in relation to the values directly before executing the transition. *)
 val sizebound_local : Program.t -> [`Lower | `Upper] -> Transition.t -> Var.t -> t Option.t
-  
+
+(** Returns a real bound corresponding to a local sizebound limiting the absolute value after execution of a given transition *)
+val sizebound_local_abs_bound : Program.t -> Transition.t -> Var.t -> RealBound.t Option.t
+
 val sizebound_local_rv : Program.t -> [`Lower | `Upper] -> (Transition.t * Var.t) -> t Option.t
 
 (** If for all result variables of the given kind a local sizebound is defined, this function returns a local sizebound function.

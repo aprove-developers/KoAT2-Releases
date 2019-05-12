@@ -3,9 +3,9 @@ open Formulas
 open Polynomials
 open ProgramTypes
 open BoundsInst
-   
+
 let logger = Logging.(get LocalSizeBound)
-           
+
 module Solver = SMT.IncrementalZ3Solver
 module HelperFuns = LocalSizeBoundHelperFunctions.Make_LocalSizeBoundHelperFunctions(OurInt) (Polynomial) (Formula)
 
@@ -18,13 +18,13 @@ type bound = {
     vars: ([`Pos | `Neg] * [`Pure | `Abs]) -> VarSet.t
     [@equal fun a b -> List.cartesian_product [`Pos; `Neg] [`Pure; `Abs] |> List.for_all (fun arg -> VarSet.equal (a arg) (b arg))];
   } [@@deriving eq]
-  
-type t = 
+
+type t =
     [
       `Unbounded of kind
     | `Bounded of bound
   ] [@@deriving eq]
-  
+
 let compare_bounds t1 t2 =
   match (t1, t2) with
   | (`Unbounded `Lower, _) -> true
@@ -36,13 +36,13 @@ let compare_bounds t1 t2 =
       lsb1.constant < lsb2.constant
     else
       lsb1.factor < lsb2.factor
-  
+
 let is_finite_bound t =
   match t with
   | `Unbounded _ -> false
   | `Bounded _ -> true
 
-let mk ?(s=1) ?(c=0) ?(pos_abs=[]) ?(pos_pure=[]) ?(neg_abs=[]) ?(neg_pure=[]) kind = 
+let mk ?(s=1) ?(c=0) ?(pos_abs=[]) ?(pos_pure=[]) ?(neg_abs=[]) ?(neg_pure=[]) kind =
   `Bounded {
     kind;
     factor = s;
@@ -54,23 +54,23 @@ let mk ?(s=1) ?(c=0) ?(pos_abs=[]) ?(pos_pure=[]) ?(neg_abs=[]) ?(neg_pure=[]) k
       | (`Neg, `Pure) -> VarSet.of_string_list neg_pure
       | (`Neg, `Abs) -> VarSet.of_string_list neg_abs
   }
-       
+
 let factor_bound lsb =
   lsb.factor
-  
+
 let factor bound =
   match bound with
   | `Unbounded _ -> raise (Failure "Unbounded, no factor exists")
   | `Bounded lsb -> factor_bound lsb
-  
+
 let constant_bound lsb =
   lsb.constant
-  
+
 let constant lsb =
   match lsb with
   | `Unbounded _ -> raise (Failure "Unbounded, no constant exists")
   | `Bounded b -> constant_bound b
-  
+
 let vars_of_sign sign t =
   match t with
   | `Unbounded _ -> VarSet.empty
@@ -92,7 +92,7 @@ let vars t =
   | `Unbounded _ -> VarSet.empty
   | bounded ->
     VarSet.union (vars_of_sign `Pos bounded) (vars_of_sign `Neg bounded)
-          
+
 let multiplier = function
   | `Pos -> identity
   | `Neg -> Bound.neg
@@ -109,7 +109,7 @@ let pre_kind = function
   | `Upper, `Neg -> `Lower
   | `Lower, `Pos -> `Lower
   | `Lower, `Neg -> `Upper
-  
+
 let sum_vars substitution (vars: VarSet.t) (kind, sign, purity): Bound.t =
   vars
   |> VarSet.enum
@@ -118,7 +118,7 @@ let sum_vars substitution (vars: VarSet.t) (kind, sign, purity): Bound.t =
   |> Enum.map (multiplier sign)
   |> Bound.sum
   |> ((kind, sign) |> pre_kind |> substitution |> Bound.substitute_f)
-  
+
 let as_substituted_bound substitution t =
   match t with
   | `Unbounded `Upper -> Bound.infinity
@@ -134,12 +134,12 @@ let as_substituted_bound substitution t =
 
 let as_bound =
   as_substituted_bound (fun _ -> Bound.of_var)
-  
+
 let default = function
   | `Upper -> Bound.infinity
   | `Lower -> Bound.minus_infinity
-  
-  
+
+
 let to_string t =
   match t with
   | `Unbounded `Lower -> "-infinity"
@@ -158,7 +158,7 @@ let abs_vars_combinations vars =
   vars
   |> VarSet.map_to_list Polynomial.of_var
   |> List.map (fun v -> [v; Polynomial.zero])
-  |> List.n_cartesian_product  
+  |> List.n_cartesian_product
   |> List.map (Polynomial.sum % List.enum)
 
 let pure_vars_sum t =
@@ -210,11 +210,11 @@ let rec binary_search ?(divisor=2.) (lowest: int) (highest: int) (p: int -> bool
     if p newBound then
       binary_search ~divisor:(if newBound < 0 then 2. else divisor) lowest newBound p
     else
-      binary_search ~divisor:(if newBound < 0 then divisor else 2.) (newBound + 1) highest p        
+      binary_search ~divisor:(if newBound < 0 then divisor else 2.) (newBound + 1) highest p
 
 let unabsify var t =
   match t with
-  | `Bounded lsb -> 
+  | `Bounded lsb ->
     if VarSet.mem var (lsb.vars (`Pos, `Abs)) then
       `Bounded { lsb with vars = function
                         | (`Pos, `Abs) -> VarSet.remove var (lsb.vars (`Pos, `Abs))
@@ -229,7 +229,7 @@ let unabsify var t =
       }
   (* if the local size bound is unbounded, than nothing happens *)
   | t -> t
- 
+
 (** Tries to convert conservatively choosed absolute values of variables by the variables themself. *)
 let unabsify_vars (p: t -> bool) (bound: t): t =
   let execute () =
@@ -249,7 +249,7 @@ let unabsify_vars (p: t -> bool) (bound: t): t =
                   (fun () -> "unabsify_vars", ["lsb", to_string bound])
                   ~result:to_string
                   execute
-  
+
 (** Minimizes the given variable set, such that the predicate p is still satisfied.
     We assume that the given variable set satisfies the predicate p.
     TODO Currently we use an arbitrary order. This is sound, however for "x <= y && y <= z" we may return z although y would be definitely better. *)
@@ -269,7 +269,7 @@ let minimize_vars (p: VarSet.t -> bool) (vars: VarSet.t): VarSet.t =
                   (fun () -> "minimize_vars", ["vars", VarSet.to_string vars])
                   ~result:VarSet.to_string
                   execute
-  
+
 let minimize_scaledsum_vars (p: t -> bool) (bound: t): t =
   match bound with
   | `Bounded lsb ->
@@ -295,8 +295,8 @@ let minimize_scaledsum_vars (p: t -> bool) (bound: t): t =
   | bound -> bound
 
 let optimize_c (range: int) (p: t -> bool) (bound: t): t =
-  let execute () = 
-    match bound with 
+  let execute () =
+    match bound with
     | `Bounded lsb ->
       `Bounded { lsb with constant = match lsb.kind with
                           | `Upper -> binary_search ~divisor:64. (-range) range (fun c -> p (`Bounded { lsb with constant = c }))
@@ -310,8 +310,8 @@ let optimize_c (range: int) (p: t -> bool) (bound: t): t =
                   execute
 
 let optimize_s (lowest: int) (highest: int) (p: t -> bool) (bound: t): t =
-  let execute () = 
-    match bound with 
+  let execute () =
+    match bound with
     | `Bounded lsb ->
       `Bounded {lsb with factor = binary_search ~divisor:16.
                           lowest
@@ -391,10 +391,10 @@ module LSB_Cache =
           Hashtbl.hash (k, Transition.id t, v)
       end
     )
-   
+
 let (table: t Option.t LSB_Cache.t) =
   LSB_Cache.create 10
-  
+
 let reset () =
   LSB_Cache.clear table
 
@@ -403,7 +403,7 @@ let compute_single_local_size_bound program kind (l,t,l') var =
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
     TransitionLabel.update t var
     |> Option.map (fun update ->
-           let updateformula v' = 
+           let updateformula v' =
              match update with
               | TransitionLabel.UpdateElement.Poly p ->
                   Formula.Infix.(Polynomial.of_var v' = p)
@@ -414,15 +414,15 @@ let compute_single_local_size_bound program kind (l,t,l') var =
            let v' = Var.fresh_id Var.Int () in
            let update_vars = TransitionLabel.UpdateElement.vars update in
            let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && updateformula v') in
-           let update_fun_for_s_range = 
-             match update with 
+           let update_fun_for_s_range =
+             match update with
               | TransitionLabel.UpdateElement.Poly p -> p
               | TransitionLabel.UpdateElement.Dist d ->
                   (ProbDistribution.deterministic_upper_polynomial d
                    |? Polynomial.of_int 1024)
            in
 (*         A local size bound must not depend on temporary variables    *)
-           find_bound kind (Program.input_vars program) v' guard_with_update update_vars 
+           find_bound kind (Program.input_vars program) v' guard_with_update update_vars
                       (HelperFuns.s_range update_fun_for_s_range)
          )
   in
@@ -443,7 +443,7 @@ let compute_local_size_bounds program =
   |> Enum.iter (fun (kind, (v,t)) ->
          compute_single_local_size_bound program kind t v
        )
-  
+
 let sizebound_local program kind t v =
   if LSB_Cache.is_empty table then
     compute_local_size_bounds program;
@@ -452,9 +452,18 @@ let sizebound_local program kind t v =
   with Not_found ->
     raise (Failure "Non-existing local size bound requested!")
 
+let sizebound_local_abs_bound program t v =
+  let lsb k = sizebound_local program k t v |> Option.map (RealBound.of_intbound % as_bound) in
+  let bounds = Util.unpack_option_tuple (lsb `Lower, lsb `Upper) in
+  let choose_bound (a,b) = function
+    | `Lower ->  a
+    | `Upper ->  b
+  in
+  Option.map (RealBound.abs_bound % choose_bound) bounds
+
 let sizebound_local_rv program kind (t,v) =
   sizebound_local program kind t v
-  
+
 let sizebound_local_scc program kind scc =
   if scc
      |> List.map (sizebound_local_rv program kind)

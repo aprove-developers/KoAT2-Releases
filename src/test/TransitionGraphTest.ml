@@ -6,7 +6,7 @@ open ProgramTypes
 open RVGTypes
 
 module RV = Make_RV(Transition)
-   
+
 let suite =
   "Graphs" >::: [
       (
@@ -53,7 +53,7 @@ let suite =
                      )
              )
         )
-                
+
       );
       (
         "Print" >:: (fun _ ->
