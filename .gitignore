@@ -20,3 +20,4 @@ perf.data*
 
 #sage file
 *.sage.py
+core
