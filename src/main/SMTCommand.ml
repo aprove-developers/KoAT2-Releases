@@ -25,5 +25,4 @@ let run (params: params) =
   |> Option.map (fun solution ->
          Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n")) (Valuation.bindings solution)
        )
-  |? print_string "unsatisfiable\n"
-
+  |> fun op -> if Option.is_none op then print_string "unsatisfiable\n"
