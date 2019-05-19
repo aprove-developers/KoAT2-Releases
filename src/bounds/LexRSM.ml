@@ -21,7 +21,7 @@ type t = {
 
 let rank t = t.rank
 let decreasing t = t.decreasing
-let non_increasing t = t.non_increasing
+let non_increasing t = GeneralTransitionSet.union t.non_increasing (GeneralTransitionSet.singleton t.decreasing)
 
 let time_ranking_table: t RankingTable.t = RankingTable.create 10
 
@@ -421,20 +421,20 @@ let compute_ranking_table program =
           GeneralTransitionSet.iter
             (fun decr ->
               let (eval, non_incr) = find_1d_lexrsm_non_increasing scc decr in
-              let rankfunc loc =
+              let rankfunc =
                 match eval with
-                  | None -> failwith ""
-                  | (Some valuation) ->
+                  | None -> None
+                  | (Some valuation) -> Some (fun loc ->
                       TemplateTable.find template_table loc
-                      |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero)
+                      |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero) )
               in
-              let ranking = {
-                              decreasing = decr;
-                              non_increasing = non_incr;
-                              rank = rankfunc;
-                            }
+              let ranking rfunc = {
+                                    decreasing = decr;
+                                    non_increasing = non_incr;
+                                    rank = rfunc;
+                                  }
               in
-              RankingTable.add time_ranking_table decr ranking
+              Option.may (RankingTable.add time_ranking_table decr % ranking) rankfunc
             )
             scc
        );
