@@ -20,9 +20,9 @@ let improve_scc program ervg appr = function
      let module TrExpSize = Set.Make2 (GeneralTransition) (Location) in
      let scc_vars = scc |> List.map ERV.variable |> VarSet.of_list in
      let trexpsize = scc |> List.map (fun ((gt,l),_) -> (gt,l)) |> TrExpSize.Product.of_list in
-     let new_bound var = ExpNontrivialSizeBounds.compute program ervg (Approximation.timebound appr) (Approximation.exptimebound appr)
-                                                                      (fun t v -> Bound.abs_bound @@ fun kind -> Approximation.sizebound kind appr t v)
-                                                                      (Approximation.expsizebound_abs appr) scc var in
+     let new_bound var = ExpNontrivialSizeBounds.compute program (Approximation.timebound appr) (Approximation.exptimebound appr)
+                                                                 (fun t v -> Bound.abs_bound @@ fun kind -> Approximation.sizebound kind appr t v)
+                                                                 (Approximation.expsizebound_abs appr) scc var in
      (* Add all corresponding expected size bounds *)
      TrExpSize.Product.fold
       (fun (gt,l) appr' ->

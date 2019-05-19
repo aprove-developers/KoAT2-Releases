@@ -73,3 +73,5 @@ let safe_head l =
 let unpack_option_tuple = function
   | (Some a, Some b) -> Some (a,b)
   | _                -> None
+
+let show_debug_log logger ~resultprint descr elem = Logger.with_log logger Logger.DEBUG (fun () -> descr, []) ~result:resultprint (fun () -> elem)

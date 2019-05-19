@@ -67,7 +67,7 @@ let incoming_bound program get_sizebound_abs get_expsizebound (exp_upd_poly: Rea
         GeneralTransitionSet.to_list gtset
         |> List.map (fun gt' -> get_expsizebound ((gt',GeneralTransition.start gt),var))
         |> List.enum
-        |> RealBound.maximum
+        |> RealBound.sum
       in
       let prevalues var =
         GeneralTransitionSet.to_list gtset
@@ -419,7 +419,6 @@ let compute program get_sizebound (get_expsizebound: (GeneralTransition.t * Loca
         incoming_bound
           program
           get_sizebound
-          (* (fun (t,v) -> Bound.abs_bound (fun k -> get_sizebound k t v)) *)
           (uncurry get_expsizebound) exp_upd_poly gt pr_func
     in Logger.with_log logger Logger.DEBUG
                          (fun () -> "compute expected trivial bound",

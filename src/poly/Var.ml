@@ -38,12 +38,12 @@ let of_string str =
         |> String.lchop ~n:4
         |> Int.of_string)
   else
-    if String.contains str ' ' then
-      let info = String.split_on_char ' ' str in
+    if String.contains str '_' then
+      let info = String.split_on_char '_' str in
       if (List.nth info 0) = "Probabilistic" then
-        Var (Probabilistic, str)
+        Var (Probabilistic, List.nth info 1)
       else
-        Var (NonProbabilistic, str)
+        Var (NonProbabilistic, List.nth info 1)
     else
       Var (NonProbabilistic, str)
 
@@ -52,7 +52,7 @@ let hash = Hashtbl.hash
 let mk_helper domain n = Helper (domain, n)
 
 let to_string = function
-  | Var (kind, str) -> (show_substitution_kind kind)
+  | Var (kind, str) -> show_substitution_kind kind ^ "_" ^ str
   | Helper (Real,i) -> "@_" ^ (String.of_int i)
   | Helper (Int,i) -> "$_" ^ (String.of_int i)
   | Argument i -> "Arg_" ^ (String.of_int i)
