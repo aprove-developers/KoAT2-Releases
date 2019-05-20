@@ -99,6 +99,7 @@ module Make_BoundOver :
                  times:('b -> 'b -> 'b) ->
                  exp:(value -> 'b -> 'b) ->
                  max:('b -> 'b -> 'b) ->
+                 abs:('b -> 'b) ->
                  inf:'b ->
                  t -> 'b
 

@@ -29,7 +29,8 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Pow of Num.t * t
       | Sum of t * t
       | Product of t * t
-      | Max of t * t [@@deriving eq, ord]
+      | Max of t * t
+      | Abs of t [@@deriving eq, ord]
 
     let of_var v = Var v
 
@@ -44,6 +45,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Sum (b1, b2) -> Num.add (get_constant b1) (get_constant b2)
       | Product (b1, b2) -> Num.mul (get_constant b1) (get_constant b2)
       | Max (b1, b2) -> Num.max (get_constant b1) (get_constant b2)
+      | Abs b -> Num.abs @@ get_constant b
 
     let get_constant_option t =
       match t with
@@ -61,18 +63,20 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | Sum _ -> 5
           | Product _ -> 6
           | Max _ -> 7
+          | Abs _ -> 7
 
         let (<) b1 b2 =
           number b1 < number b2
       end
 
-    let rec fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf p =
-      let fold_ = fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf in
+    let rec fold ~const ~var ~neg ~plus ~times ~exp ~max ~abs ~inf p =
+      let fold_ = fold ~const ~var ~neg ~plus ~times ~exp ~max ~abs ~inf in
       match p with
       | Infinity -> inf
       | Var v -> var v
       | Const c -> const c
       | Max (b1, b2) -> max (fold_ b1) (fold_ b2)
+      | Abs b -> abs (fold_ b)
       | Neg b -> neg (fold_ b)
       | Pow (value, n) -> exp value (fold_ n)
       | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
@@ -101,6 +105,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         ~const:(fun _ -> Polynomial 0)
         ~var:(fun _ -> Polynomial 1)
         ~neg:identity
+        ~abs:identity
         ~plus:(fun x y ->
           match (x,y) with
           | (Inf,_) -> Inf
@@ -148,6 +153,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Pow (v,b) -> vars b
       | Sum (b1, b2) -> VarSet.union (vars b1) (vars b2)
       | Product (b1, b2) -> VarSet.union (vars b1) (vars b2)
+      | Abs b -> vars b
 
     let is_linear bound =
       let cplx = asymptotic_complexity bound in
@@ -165,6 +171,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           ~times:(fun l l' -> Option.Monad.( bind l (fun f -> bind l' (fun s -> return @@ f + s)) ))
           ~exp:(const @@ const None)
           ~max:(const @@ const None)
+          ~abs:(const None)
           ~inf:(Some 0) @@  bound
       in
       match maybeOrder with
@@ -180,6 +187,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         ~times:Num.mul
         ~exp:(fun _ -> raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
         ~max:Num.max
+        ~abs:(Num.abs)
         ~inf:(raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
         bound
 
@@ -189,6 +197,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Infinity -> "inf"
       (*| Max (b1, Max (b2, b3)) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ ", " ^ show_bound b3 ^ "}"*)
       | Max (b1, b2) -> "max([" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ "])"
+      | Abs b -> "abs(" ^ show_bound b ^ ")"
       | Neg b ->(
           match b with
           | Const c -> "("^(Num.to_string ( Num.neg c))^")"
@@ -373,6 +382,11 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
              | (b1, b2) when Constructor.(b2 < b1) -> simplify (Max (b2, b1))
              | (b1, b2) -> Max (b1, b2)
            )
+           
+        | Abs b -> match b >= (Const Num.zero) with
+                     | Some true -> b
+                     | Some false -> Neg b
+                     | None -> Abs b
       in
       Logger.with_log logger Logger.DEBUG
                       (fun () -> "simplify", ["input", to_string bound])
@@ -458,7 +472,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         simplify (Pow (value, b))
 
     let abs bound =
-      simplify (Max (zero, bound) + Max (zero, Neg bound))
+      simplify (Abs bound)
 
     let abs_bound get_bound =
       max (abs @@ get_bound `Lower) (abs @@ get_bound `Upper)
@@ -469,7 +483,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let substitute_f substitution bound =
       bound
-      |> fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~exp:exp ~max:max ~inf:infinity
+      |> fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~exp:exp ~max:max ~abs:abs ~inf:infinity
       |> simplify
 
     let set_linear_vars_to_probabilistic_and_rest_to_nonprobabilistic b =
@@ -522,6 +536,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         ~times:(||)
         ~exp:(fun _ -> identity)
         ~max:(||)
+        ~abs:(identity)
         ~inf:true
         bound
 
@@ -543,6 +558,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
          |> List.enum
          |> selector kind
       | Max (b1, b2) -> max (appr_substitution kind ~lower ~higher b1) (appr_substitution kind ~lower ~higher b2)
+      | Abs b -> abs (appr_substitution kind ~lower ~higher b)
       | Pow (k,b) -> Pow (k, appr_substitution kind ~lower ~higher b)
 
     let rec appr_substitution_abs_maybe subf = simplify % function
@@ -556,6 +572,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Product (b1, b2) -> appr_substitution_abs_maybe subf b1 * appr_substitution_abs_maybe subf b2
       | Max (b1,b2)      -> max (appr_substitution_abs_maybe subf b1)
                                 (appr_substitution_abs_maybe subf b2)
+      | Abs b            -> abs (appr_substitution_abs_maybe subf b)
       | Pow (k,b)        -> Pow (k, appr_substitution_abs_maybe subf b)
 
     let replace_if_subst_kind sub_kind b var =

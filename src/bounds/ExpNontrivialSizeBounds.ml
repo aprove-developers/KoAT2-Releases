@@ -81,7 +81,6 @@ let compute_ program get_timebound get_exptimebound get_sizebound get_expsizebou
   (** Corresponds to the definition of the starting value in the thesis. *)
   let starting_value v =
     incoming_transitions
-    |> tap (Printf.printf "incoming_transitions: %s\n" % Util.enum_to_string (GeneralTransition.to_string % fst) % Enum.clone)
     |> Enum.map (fun (gt,l) -> get_expsizebound (gt,l) v)
     |> RealBound.sum
     |> tap (fun starting_value -> Logger.log logger Logger.DEBUG

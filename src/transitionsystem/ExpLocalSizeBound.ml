@@ -238,6 +238,7 @@ let elsb_ program (((gt, l), var): RV.t): RealBound.t =
   |> RealPolynomial.sum
   |> simplify_poly_with_guard (GeneralTransition.guard gt)
   |> RealBound.of_poly
+  |> RealBound.abs
   |> substitute_nondet_var
       (Program.input_vars program)
       (VarSet.diff (Program.vars program) (Program.input_vars program))

@@ -15,5 +15,6 @@ module RealBound =
         ~times:(mul)
         ~exp:(fun value -> exp (OurFloat.of_ourint value))
         ~max:(max)
+        ~abs:(abs)
         ~inf:(infinity)
   end
