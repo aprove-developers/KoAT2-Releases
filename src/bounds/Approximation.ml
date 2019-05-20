@@ -52,7 +52,7 @@ let expsizebound kind =
   ExpectedSizeApproximation.get kind % expsize
 
 let expsizebound_abs appr trans v =
-  RealBound.abs_bound (fun k -> ExpectedSizeApproximation.get k (expsize appr) trans v)
+  ExpectedSizeApproximation.get `Upper (expsize appr) trans v
 
 let add_sizebound kind bound transition var appr =
   { appr with size = SizeApproximation.add kind bound transition var appr.size }
@@ -97,7 +97,7 @@ let add_exptimebound bound gt appr =
   let temp_vars = VarSet.diff (GeneralTransition.vars gt) (GeneralTransition.input_vars gt) in
   let l = GeneralTransition.start gt in
   let temp_bound kind var = if (VarSet.mem var temp_vars) then expsizebound kind appr (gt,l) var else RealBound.of_var var in
-  let replaced_bound = RealBound.appr_substitution `Upper ~lower:(temp_bound `Lower) ~higher:(temp_bound `Upper) bound in
+  let replaced_bound = RealBound.appr_substition_abs_all (fun v -> RealBound.abs_bound @@ fun k -> temp_bound k v) bound in
   { appr with exptime = GeneralTransitionApproximation.add replaced_bound gt appr.exptime }
 
 
