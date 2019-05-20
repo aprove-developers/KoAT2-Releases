@@ -422,7 +422,8 @@ let compute program get_sizebound (get_expsizebound: (GeneralTransition.t * Loca
           (uncurry get_expsizebound) exp_upd_poly gt pr_func
     in Logger.with_log logger Logger.DEBUG
                          (fun () -> "compute expected trivial bound",
-                                    ["rv", ERV.to_id_string ((gt,loc),var); "pr_func", print_pr_func graph pr_func])
+                                    [ "rv", ERV.to_id_string ((gt,loc),var); "pr_func", print_pr_func graph pr_func
+                                    ; "elsb", RealBound.to_string exp_upd_poly])
                          ~result:RealBound.to_string
                          execute
 
