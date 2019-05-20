@@ -230,6 +230,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         | (_, Infinity) -> Some false
         | (Infinity, _) -> Some true
         | (Neg Infinity, _) -> Some false
+        | (_, Neg Infinity) -> Some true
         | (Const c1, Const c2) when Num.Compare.(c1 > c2) -> Some true
         | (b, Const z1) when Num.(equal z1 zero) -> (
           match b with
@@ -369,20 +370,26 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         )
 
         (* Simplify terms with max head *)
-        | Max (b1, b2) ->
-           let (b1, b2) = (simplify b1, simplify b2) in
-           if b1 >= b2 |? false then
-             b1
-           else if b2 >= b1 |? false then
-             b2
-           else (
-             match (b1, b2) with
-             | (b1, Max (b2, b3)) when Constructor.(b2 < b1) -> simplify (Max (b2, Max (b1, b3)))
-             | (Max (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Max (Max (b1, b3), b2))
-             | (b1, b2) when Constructor.(b2 < b1) -> simplify (Max (b2, b1))
-             | (b1, b2) -> Max (b1, b2)
-           )
+        | Max (b1, b2) -> 
+          let rec get_max_chain b = match b with
+            | Max (b1,b2) -> get_max_chain b1 @ get_max_chain b2
+            | b           -> [simplify b]
+          in
+          let contains_bigger_bound l b = 
+            List.exists
+              (fun b' -> 
+                match b' > b with 
+                  | Some true  -> true
+                  | Some false -> false
+                  | None       -> false)
+              l
+          in 
+          (get_max_chain b1 @ get_max_chain b2)
+          |> List.unique ~eq:equal
+          |> fun l -> List.fold_left (fun l' b -> if contains_bigger_bound l b then l' else [b]@l') [] l
+          |> List.reduce (fun a b -> Max (a,b))
            
+        | Abs (Abs b) -> simplify (Abs b)
         | Abs b -> match b >= (Const Num.zero) with
                      | Some true -> b
                      | Some false -> Neg b
