@@ -47,6 +47,7 @@ let from_real_bound context bound =
       ~times:(liftA2 (fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2]))
       ~exp:(fun b -> Option.map (fun e -> Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string b)) e))
       ~max:(liftA2 (fun a b -> Z3.Boolean.mk_ite context (Z3.Arithmetic.mk_gt context a b) a b))
+      ~min:(liftA2 (fun a b -> Z3.Boolean.mk_ite context (Z3.Arithmetic.mk_lt context a b) a b))
       ~abs:(Option.map (fun a -> Z3.Boolean.mk_ite context (Z3.Arithmetic.mk_gt context a 
                                                              (Z3.Arithmetic.Real.mk_numeral_s context 
                                                                 @@ OurFloat.to_string OurFloat.zero))
