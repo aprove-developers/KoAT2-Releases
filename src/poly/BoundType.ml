@@ -234,55 +234,70 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let to_string = show ~complexity:true
 
+    let opt_bool_to_bool = function
+      | Some true -> true
+      | _         -> false
+
     let rec (>) b1 b2 =
       let execute () =
-        match (b1, b2) with
-        | (_, Infinity) -> Some false
-        | (Infinity, _) -> Some true
-        | (Neg Infinity, _) -> Some false
-        | (_, Neg Infinity) -> Some true
-        | (Const c1, Const c2) when Num.Compare.(c1 > c2) -> Some true
-        | (b, Const z1) when Num.(equal z1 zero) -> (
-          match b with
-          | Max (b, _) when b > (Const Num.zero) |? false -> Some true
-          | Max (_, b) when b > (Const Num.zero) |? false -> Some true
-          | _ -> None
-        )
-        | (Const z1, b) when Num.(equal z1 zero) -> (
-          match b with
-          | Neg (Max (b, _)) when b > (Const Num.zero) |? false -> Some true
-          | Neg (Max (_, b)) when b > (Const Num.zero) |? false -> Some true
-          | _ -> None
-        )
-        | (b1, b2) -> None
+        let helper b1 b2 = 
+          match (b1, b2) with
+          | (Infinity, _) -> Some true
+          | (_, Neg Infinity) -> Some true
+          | (Const c1, Const c2) when Num.Compare.(c1 > c2) -> Some true
+          | (Abs b, Const c) when (Num.Compare.(c < Num.zero) || opt_bool_to_bool (b>(Const c))
+                                                              || opt_bool_to_bool ((Neg (Const c))>b)) -> Some true
+          | (b, Const z1) when Num.(equal z1 zero) -> (
+            match b with
+            | Max (b, _) when b > (Const Num.zero) |? false -> Some true
+            | Max (_, b) when b > (Const Num.zero) |? false -> Some true
+            | _ -> None
+          )
+          | (Const z1, b) when Num.(equal z1 zero) -> (
+            match b with
+            | Neg (Max (b, _)) when b > (Const Num.zero) |? false -> Some true
+            | Neg (Max (_, b)) when b > (Const Num.zero) |? false -> Some true
+            | _ -> None
+          )
+          | (b1, b2) -> None
+        in
+        match helper b1 b2 with
+          | Some b -> Some b
+          | None   -> helper b2 b1 |> Option.map not
       in
       Logger.with_log logger Logger.DEBUG
                       (fun () -> ">", ["condition", to_string b1 ^ ">" ^ to_string b2])
                       ~result:(Util.option_to_string Bool.to_string)
                       execute
+
     let rec (>=) b1 b2 =
       let execute () =
-        if equal b1 b2 then
-          Some true
-        else (
-          match (b1, b2) with
-          | (Infinity, _) -> Some true
-          | (_, Neg Infinity) -> Some true
-          | (Const c1, Const c2) when Num.Compare.(c1 >= c2) -> Some true
-          | (b, Const z1) when Num.(equal z1 zero) -> (
-            match b with
-            | Max (b, _) when b >= (Const Num.zero) |? false -> Some true
-            | Max (_, b) when b >= (Const Num.zero) |? false -> Some true
-            | _ -> None
+        let helper = 
+          if equal b1 b2 then
+            Some true
+          else (
+            match (b1, b2) with
+            | (Infinity, _) -> Some true
+            | (_, Neg Infinity) -> Some true
+            | (Const c1, Const c2) when Num.Compare.(c1 >= c2) -> Some true
+            | (b, Const z1) when Num.(equal z1 zero) -> (
+              match b with
+              | Max (b, _) when b >= (Const Num.zero) |? false -> Some true
+              | Max (_, b) when b >= (Const Num.zero) |? false -> Some true
+              | _ -> None
+            )
+            | (b, Const z1) when Num.(equal z1 zero) -> (
+              match b with
+              | Neg (Max (b, _)) when b >= (Const Num.zero) |? false -> Some true
+              | Neg (Max (_, b)) when b >= (Const Num.zero) |? false -> Some true
+              | _ -> None
+            )
+            | (b1, b2) -> None
           )
-          | (b, Const z1) when Num.(equal z1 zero) -> (
-            match b with
-            | Neg (Max (b, _)) when b >= (Const Num.zero) |? false -> Some true
-            | Neg (Max (_, b)) when b >= (Const Num.zero) |? false -> Some true
-            | _ -> None
-          )
-          | (b1, b2) -> None
-        )
+        in
+        let gt = b1>b2 in
+        if Option.is_some gt then gt else helper
+
       in
       Logger.with_log logger Logger.DEBUG
                       (fun () -> ">=", ["condition", to_string b1 ^ ">=" ^ to_string b2])
@@ -302,9 +317,13 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             | `Max -> "`Max"
           in
           let rec get_type_chain t' b = match (t',b) with
-            | (`Max,Max (b1,b2)) -> get_type_chain t' b1 @ get_type_chain t' b2
-            | (`Min,Min (b1,b2)) -> get_type_chain t' b1 @ get_type_chain t' b2
-            | (_,b)              -> [simplify b]
+            | (`Max,Max (b1,b2))        -> get_type_chain t' b1 @ get_type_chain t' b2
+            | (`Min,Min (b1,b2))        -> get_type_chain t' b1 @ get_type_chain t' b2
+            | (`Min, Neg (Max (b1,b2))) -> get_type_chain t' (Neg b1) @ get_type_chain t' (Neg b2)
+            | (`Max, Neg (Min (b1,b2))) -> get_type_chain t' (Neg b1) @ get_type_chain t' (Neg b2)
+            | (`Min, Neg (Min (b1,b2))) -> [simplify @@ Max(Neg b1, Neg b2)]
+            | (`Max, Neg (Max (b1,b2))) -> [simplify @@ Max(Neg b1, Neg b2)]
+            | (_,b)                     -> [simplify b]
           in
           let apply_chain_tuple t' (b1,b2) = 
             get_type_chain t' b1 @ get_type_chain t' b2
