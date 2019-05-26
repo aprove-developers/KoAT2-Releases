@@ -43,12 +43,13 @@ let compute_ program get_timebound get_exptimebound get_sizebound get_expsizebou
       |> List.map (fun t -> LocalSizeBound.sizebound_local_abs_bound program t var)
       |> Util.option_sequence
       |> Option.map
-          (fun l ->
-            List.map (RealBound.of_var var |> flip RealBound.sub) l
+          (fun lsbs ->
+            List.map (RealBound.of_var var |> RealBound.abs |> flip RealBound.sub) lsbs
+            |> List.map RealBound.overestimate
             (* innermost max/min against 0 *)
-            |> (List.map RealBound.abs)
+            |> List.map RealBound.abs
             (* perform appr_substitution with all pre size bounds *)
-            |> (List.map appr_substitution_pre_size)
+            |> List.map appr_substitution_pre_size
             |> List.enum
             |> RealBound.maximum
           )
