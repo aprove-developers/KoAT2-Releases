@@ -371,22 +371,17 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           in
           let simplify_alt_minmax bs = 
             List.filter (is_type (inverse_type t)) bs
-            |> tap (Printf.printf "inv_filtered: %s\n" % Util.enum_to_string (show_bound) % List.enum)
             |> List.map (apply_chain_tuple (inverse_type t) % extract_bounds)
             |> List.filter (not % List.exists (fun b -> List.mem b bs))
             |> List.map (construct_chain (inverse_type t))
             |> List.append (List.filter (not % is_type (inverse_type t)) bs)
             |> List.unique ~eq:equal
           in
-          Printf.printf "Simplify type: %s b1: %s b2: %s\n" (show_type t) (show_bound b1) (show_bound b2);
           (get_type_chain t b1 @ get_type_chain t b2)
           |> List.unique ~eq:equal
           |> fun l -> List.fold_left (fun l' b -> if contains_smaller_bigger_bound t l b then l' else [b]@l') [] l
-          |> tap (Printf.printf "simplify_chain: %s\n" % Util.enum_to_string show_bound % List.enum)
           |> simplify_alt_minmax
-          |> tap (Printf.printf "simplify_alt_minmax: %s\n" % Util.enum_to_string show_bound % List.enum)
           |> construct_chain t
-          |> tap (Printf.printf "simplified: %s\n\n\n" % show_bound)
       in
       let execute () =
         match bound with
