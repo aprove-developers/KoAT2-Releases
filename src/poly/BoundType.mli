@@ -58,6 +58,9 @@ module Make_BoundOver :
 
       val show : ?complexity:bool -> t -> string
 
+      (** Overestimates a bound. At the moment it simplifies terms of the form min/max (a,b) - abs(a) to min/max(0,b)*)
+      val overestimate : t -> t
+
       (** Functions to classify the quality of the bound *)
 
 

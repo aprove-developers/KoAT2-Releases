@@ -169,6 +169,14 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         | (Polynomial n) -> (n == 1)
         | _ -> false
 
+    let neg_head = function
+      | Neg b -> true
+      | _     -> false
+
+    let remove_neg_head = function
+      | Neg b -> b
+      | b     -> b
+
     let is_linear_in_var var bound =
       let maybeOrder =
         fold
@@ -240,7 +248,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let rec (>) b1 b2 =
       let execute () =
-        let helper b1 b2 = 
+        let helper b1 b2 =
           match (b1, b2) with
           | (Infinity, _) -> Some true
           | (_, Neg Infinity) -> Some true
@@ -272,12 +280,13 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let rec (>=) b1 b2 =
       let execute () =
-        let helper = 
+        let helper =
           if equal b1 b2 then
             Some true
           else (
             match (b1, b2) with
             | (Infinity, _) -> Some true
+            | (Sum (Abs _, b), b2) when equal b b2 -> Some true
             | (_, Neg Infinity) -> Some true
             | (Const c1, Const c2) when Num.Compare.(c1 >= c2) -> Some true
             | (b, Const z1) when Num.(equal z1 zero) -> (
@@ -310,56 +319,60 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let (=~=) = equal
 
-    let rec simplify bound =
-      let min_max_helper t (b1,b2) = 
-          let show_type = function
-            | `Min -> "`Min"
-            | `Max -> "`Max"
-          in
-          let rec get_type_chain t' b = match (t',b) with
-            | (`Max,Max (b1,b2))        -> get_type_chain t' b1 @ get_type_chain t' b2
-            | (`Min,Min (b1,b2))        -> get_type_chain t' b1 @ get_type_chain t' b2
-            | (`Min, Neg (Max (b1,b2))) -> get_type_chain t' (Neg b1) @ get_type_chain t' (Neg b2)
-            | (`Max, Neg (Min (b1,b2))) -> get_type_chain t' (Neg b1) @ get_type_chain t' (Neg b2)
-            | (`Min, Neg (Min (b1,b2))) -> [simplify @@ Max(Neg b1, Neg b2)]
-            | (`Max, Neg (Max (b1,b2))) -> [simplify @@ Max(Neg b1, Neg b2)]
-            | (_,b)                     -> [simplify b]
-          in
-          let apply_chain_tuple t' (b1,b2) = 
-            get_type_chain t' b1 @ get_type_chain t' b2
-          in
-          let contains_smaller_bigger_bound t' l b = 
-            let comperator = 
-              match t with 
+    let rec get_type_chain t' b = match (t',b) with
+      | (`Max,Max (b1,b2))        -> get_type_chain t' b1 @ get_type_chain t' b2
+      | (`Min,Min (b1,b2))        -> get_type_chain t' b1 @ get_type_chain t' b2
+      | (`Min, Neg (Max (b1,b2))) -> get_type_chain t' (Neg b1) @ get_type_chain t' (Neg b2)
+      | (`Max, Neg (Min (b1,b2))) -> get_type_chain t' (Neg b1) @ get_type_chain t' (Neg b2)
+      | (`Min, Neg (Min (b1,b2))) -> [simplify @@ Max(Neg b1, Neg b2)]
+      | (`Max, Neg (Max (b1,b2))) -> [simplify @@ Max(Neg b1, Neg b2)]
+      | (_,b)                     -> [simplify b]
+
+    and get_sum_chain b = match b with
+      | Sum (b1,b2) -> get_sum_chain b1 @ get_sum_chain b2
+      | b           -> [simplify b]
+
+    and apply_chain_tuple t' (b1,b2) =
+      get_type_chain t' b1 @ get_type_chain t' b2
+
+    and construct_chain t' bs =
+      let default_min_max = function
+        | `Max -> Neg Infinity
+        | `Min -> Infinity
+      in
+      try
+        List.reduce
+          (match t' with
+            | `Min -> fun b1 b2 -> Min (b1,b2)
+            | `Max -> fun b1 b2 -> Max (b1,b2)) bs
+      with Invalid_argument _ -> default_min_max t'
+
+    and construct_sum_chain bs =
+      try List.reduce (fun b1 b2 -> Sum (b1,b2)) bs
+      with Invalid_argument _  -> of_constant (Num.zero)
+
+    and simplify bound =
+      let min_max_helper t (b1,b2) =
+          let contains_smaller_bigger_bound t' l b =
+            let comperator =
+              match t with
                 | `Min -> (<)
                 | `Max -> (>)
             in
             List.exists
-              (fun b' -> 
-                match comperator b' b with 
+              (fun b' ->
+                match comperator b' b with
                   | Some true  -> true
                   | Some false -> false
                   | None       -> false)
               l
-          in 
+          in
           let inverse_type = function
             | `Min -> `Max
             | `Max -> `Min
           in
-          let default_min_max = function
-            | `Max -> Neg Infinity
-            | `Min -> Infinity
-          in
-          let construct_chain t' bs = 
-            try
-              List.reduce 
-                (match t' with
-                  | `Min -> fun b1 b2 -> Min (b1,b2)
-                  | `Max -> fun b1 b2 -> Max (b1,b2)) bs
-            with Invalid_argument _ -> default_min_max t'
-          in
           let is_type t' b =
-            match (t',b) with 
+            match (t',b) with
               | (`Max, Max _) -> true
               | (`Min, Min _) -> true
               | _             -> false
@@ -369,7 +382,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             | Max (b1,b2) -> (b1,b2)
             | _           -> raise (Failure "Bound head should either be Min or Max")
           in
-          let simplify_alt_minmax bs = 
+          let simplify_alt_minmax bs =
             List.filter (is_type (inverse_type t)) bs
             |> List.map (apply_chain_tuple (inverse_type t) % extract_bounds)
             |> List.filter (not % List.exists (fun b -> List.mem b bs))
@@ -404,25 +417,34 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
         (* Simplify terms with sum head *)
         | Sum (b1, b2) -> (
-          match (simplify b1, simplify b2) with
-          | (Const c, b) when Num.(c =~= zero) -> b
-          | (b, Const c) when Num.(c =~= zero) -> b
-          | (Const c1, Const c2) -> Const Num.(c1 + c2)
-          | (Const c1, Sum (Const c2, b)) -> simplify (Sum (Const Num.(c1 + c2), b))
-          | (Neg Infinity, Infinity) -> Const Num.zero
-          | (Infinity, Neg Infinity) -> Const Num.zero
-          | (_, Infinity) -> Infinity
-          | (Infinity, _) -> Infinity
-          | (_, Neg Infinity) -> Neg Infinity
-          | (Neg Infinity, _) -> Neg Infinity
-          | (Const c1, Max (Const c2, b)) -> simplify (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
-          | (b1, Neg b2) when equal b1 b2 -> Const Num.zero
-          | (Neg b1, b2) when equal b1 b2 -> Const Num.zero
-          | (b1, b2) when equal b1 b2 -> simplify (Product (Const (Num.of_int 2), b1))
-          | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify (Sum (b2, Sum (b1, b3)))
-          | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Sum (Sum (b1, b3), b2))
-          | (b1, b2) when Constructor.(b2 < b1) -> simplify (Sum (b2, b1))
-          | (b1, b2) -> Sum (b1, b2)
+          let simplify_bi b1 b2 =
+            match (simplify b1, simplify b2) with
+            | (Const c, b) when Num.(c =~= zero) -> b
+            | (b, Const c) when Num.(c =~= zero) -> b
+            | (Const c1, Const c2) -> Const Num.(c1 + c2)
+            | (Const c1, Sum (Const c2, b)) -> simplify (Sum (Const Num.(c1 + c2), b))
+            | (Neg Infinity, Infinity) -> Const Num.zero
+            | (Infinity, Neg Infinity) -> Const Num.zero
+            | (_, Infinity) -> Infinity
+            | (Infinity, _) -> Infinity
+            | (_, Neg Infinity) -> Neg Infinity
+            | (Neg Infinity, _) -> Neg Infinity
+            | (Const c1, Max (Const c2, b)) -> simplify (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
+            | (b1, Neg b2) when equal b1 b2 -> Const Num.zero
+            | (Neg b1, b2) when equal b1 b2 -> Const Num.zero
+            | (b1, b2) when equal b1 b2 -> simplify (Product (Const (Num.of_int 2), b1))
+            | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify (Sum (b2, Sum (b1, b3)))
+            | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Sum (Sum (b1, b3), b2))
+            | (b1, b2) when Constructor.(b2 < b1) -> simplify (Sum (b2, b1))
+            | (b1, b2) -> Sum (b1, b2)
+          in
+          let sum_chain   = get_sum_chain b1 @ get_sum_chain b2 in
+          let negated     = List.filter neg_head sum_chain |> List.map remove_neg_head |> List.filter (flip List.mem sum_chain) in
+          List.fold_left (fun s n -> List.remove s n |> flip List.remove (Neg n)) sum_chain negated
+          |> construct_sum_chain
+          |> function
+              | Sum (b1,b2) -> simplify_bi b1 b2
+              | b -> b
         )
 
         (* Simplify terms with product head *)
@@ -470,17 +492,46 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         | Max (b1, b2) -> min_max_helper `Max (b1,b2)
 
         | Min (b1,b2) -> min_max_helper `Min (b1,b2)
-           
+
         | Abs (Abs b) -> simplify (Abs b)
         | Abs b -> match b >= (Const Num.zero) with
                      | Some true -> b
-                     | Some false -> Neg b
+                     | Some false -> Neg b |> simplify
                      | None -> Abs b
       in
       Logger.with_log logger Logger.DEBUG
                       (fun () -> "simplify", ["input", to_string bound])
                       ~result:to_string
                       execute
+
+    let rec overestimate =
+      let helper t (b1,b2) a=
+          let chain = apply_chain_tuple t (b1,b2) in
+          let eq = List.filter (equal a) chain in
+          if List.is_empty eq then
+            List.map (fun b' -> if (overestimate b' >= a) = Some true then Sum(b', Neg a) else b') chain
+            |> List.map overestimate
+            |> construct_chain t
+            |> simplify
+          else
+            chain |> List.filter (not % equal a) |> construct_chain t |> simplify
+      in
+      function
+        | Sum(Neg a, Max (b1,b2)) -> helper `Max (b1,b2) a
+        | Sum(Max (b1,b2), Neg a) -> overestimate @@ Sum (Neg a, Max (b1,b2))
+        | Sum(Neg a, Min (b1,b2)) -> helper `Min (b1,b2) a
+        | Sum(Min (b1,b2), Neg a) -> overestimate @@ Sum (Neg a, Min (b1,b2))
+        | Sum(b1,b2)              -> Sum (overestimate b1, overestimate b2)
+        | Neg b                   -> Neg (overestimate b)
+        | Max(b1,b2)              -> Max (overestimate b1, overestimate b2)
+        | Min(b1,b2)              -> Min(overestimate b1, overestimate b2)
+        | Product(b1,b2)          -> Product (overestimate b1, overestimate b2)
+        | Pow(k,b)                -> Pow(k, overestimate b)
+        | Abs (Sum (b1,b2))       -> Sum (Abs b1, Abs b2)
+        | Abs b                   -> Abs (overestimate b)
+        | Var v                   -> Var v
+        | Const c                 -> Const c
+        | Infinity                -> Infinity
 
     type outer_t = t
     module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
