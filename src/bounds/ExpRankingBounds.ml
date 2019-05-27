@@ -8,7 +8,7 @@ open ExpBoundsHelper
 let logger = Logging.(get ExpTime)
 
 let get_best_bound program incoming_enum appr rankfunc : RealBound.t =
-  let entry_locations = 
+  let entry_locations =
     incoming_enum
     |> Enum.clone
     |> Enum.map snd
@@ -19,7 +19,7 @@ let get_best_bound program incoming_enum appr rankfunc : RealBound.t =
   entry_locations
   |> Util.show_debug_log logger ~resultprint:(Util.enum_to_string Location.to_string % List.enum) "entry_locations"
   |> List.map (fun entry_location ->
-       let entry_trans_to_location = 
+       let entry_trans_to_location =
          incoming_list
          |> List.filter (Location.equal entry_location % snd)
          |> List.map fst
@@ -32,7 +32,7 @@ let get_best_bound program incoming_enum appr rankfunc : RealBound.t =
          |> List.flatten
        in
 
-       let rank_size_subst_bound v = 
+       let rank_size_subst_bound v =
          entry_trans_to_location
          |> List.map (fun gt -> Approximation.expsizebound_abs appr (gt,entry_location) v )
          |> List.enum
@@ -93,7 +93,7 @@ let improve program appr =
   program
   |> Program.non_trivial_transitions
   |> GeneralTransitionSet.of_transitionset
-  |> GeneralTransitionSet.filter (fun t -> not (exp_bounded appr t))
+  |> GeneralTransitionSet.filter (not % exp_bounded appr)
   |> GeneralTransitionSet.enum
   |> MaybeChanged.fold_enum (fun appr gt ->
          LexRSM.find program gt
