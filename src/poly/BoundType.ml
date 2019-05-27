@@ -158,7 +158,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | (Exponential x, Polynomial y) -> Exponential x
         )
         ~exp:(fun v b ->
-          if (Num.abs v) <= Num.one then
+          if Num.Compare.(Num.abs v <= Num.one) then
             Polynomial 1
           else
           match b with
