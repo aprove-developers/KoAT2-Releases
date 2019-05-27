@@ -4,18 +4,10 @@ type sort =
   | Real
   | Int [@@deriving eq, ord]
 
-type substitution_kind =
-  NonProbabilistic
-  | Probabilistic [@@deriving eq, ord]
-
-let show_substitution_kind = function
-  | NonProbabilistic -> "NonProbabilistic"
-  | Probabilistic    -> "Probabilistic"
-
 type t =
-  | Var of substitution_kind*String.t
+  | Var of String.t
   | Helper of sort*int
-  | Argument of substitution_kind*int [@@deriving eq, ord]
+  | Argument of int [@@deriving eq, ord]
 
 let (=~=) = equal
 
@@ -34,33 +26,21 @@ let of_string str =
       ))
   else if String.starts_with str "Arg_" then
     Argument
-        (NonProbabilistic, str
+        (str
         |> String.lchop ~n:4
         |> fun s -> Int.of_string s)
   else
-    if String.contains str '_' then
-      let info = String.split_on_char '_' str in
-      if (List.nth info 0) = "Probabilistic" then
-        Var (Probabilistic, List.nth info 1)
-      else
-        Var (NonProbabilistic, List.nth info 1)
-    else
-      Var (NonProbabilistic, str)
+    Var str
 
 let hash = Hashtbl.hash
 
 let mk_helper domain n = Helper (domain, n)
 
 let to_string = function
-  | Var (kind, str) -> str
+  | Var str -> str
   | Helper (Real,i) -> "@_" ^ (String.of_int i)
   | Helper (Int,i) -> "$_" ^ (String.of_int i)
-  | Argument (kind, i) -> "Arg_" ^ (String.of_int i)
-
-let to_string_with_kind = function
-  | Var (kind, str) -> show_substitution_kind kind ^ "_" ^ str
-  | Argument (kind, i) -> show_substitution_kind kind ^ "_Arg_" ^ (String.of_int i)
-  | v -> to_string v
+  | Argument i -> "Arg_" ^ (String.of_int i)
 
 let counter = ref 0
 
@@ -74,7 +54,7 @@ let fresh_id domain () =
 
 let fresh_arg () =
   incr arg_counter;
-  Argument (NonProbabilistic, !arg_counter)
+  Argument !arg_counter
 
 let fresh_ids domain n =
   Enum.take n (Enum.from (fresh_id domain))
@@ -100,13 +80,3 @@ let is_helper var =
   |Var _ -> false
   |Argument _ -> false
   |Helper _ -> true
-
-let get_substitution_kind = function
-  | Var (Probabilistic, _) -> Probabilistic
-  | Helper (Real, _)       -> Probabilistic
-  | _                      -> NonProbabilistic
-
-let set_substitution_kind sub_kind = function
-  | Var      (_, v) -> Var (sub_kind, v)
-  | Argument (_, i) -> Argument (sub_kind, i)
-  | h               -> h

@@ -19,12 +19,14 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
     type polynomial = Poly.t
     type value = Num.t
 
+    type substitution_kind = [ `Probabilistic | `NonProbabilistic ] [@@deriving eq, ord]
+
     (* Minus Infinity is max of an empty list *)
     (* Infinity is min of an empty list *)
     type t =
       | Infinity
       | Const of Num.t
-      | Var of Var.t
+      | Var of substitution_kind*Var.t
       | Neg of t
       | Pow of Num.t * t
       | Sum of t * t
@@ -33,14 +35,31 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Min of t * t
       | Abs of t [@@deriving eq, ord]
 
-    let of_var v = Var v
+    let rec equal_without_substitution_kind b1 b2 = match (b1,b2) with
+      | (Infinity, Infinity) -> true
+      | (Const c, Const c') -> Num.equal c c'
+      | (Var (_,v), Var (_,v')) -> Var.equal v v'
+      | (Neg b, Neg b') -> equal_without_substitution_kind b b'
+      | (Abs b, Abs b') -> equal_without_substitution_kind b b'
+      | (Pow (n,b), Pow (n',b')) -> Num.equal n n' && equal_without_substitution_kind b b'
+      | (Sum (b,d), Sum (b',d')) -> equal_without_substitution_kind b b' && equal_without_substitution_kind d d'
+                                 || equal_without_substitution_kind b d' && equal_without_substitution_kind d b'
+      | (Max (b,d), Max (b',d')) -> equal_without_substitution_kind b b' && equal_without_substitution_kind d d'
+                                 || equal_without_substitution_kind b d' && equal_without_substitution_kind d b'
+      | (Min (b,d), Min (b',d')) -> equal_without_substitution_kind b b' && equal_without_substitution_kind d d'
+                                 || equal_without_substitution_kind b d' && equal_without_substitution_kind d b'
+      | (Product (b,d), Product (b',d')) -> equal_without_substitution_kind b b' && equal_without_substitution_kind d d'
+                                         || equal_without_substitution_kind b d' && equal_without_substitution_kind d b'
+      | _ -> false
+
+    let of_var v = Var (`NonProbabilistic, v)
 
     let of_constant c = Const c
     let rec get_constant t =
       match t with
       | Infinity -> Num.zero
       | Const c -> c
-      | Var var -> Num.zero
+      | Var (_,var) -> Num.zero
       | Neg b -> Num.neg (get_constant b)
       | Pow (n, b) -> Num.pow (get_constant b) (Num.to_int n)
       | Sum (b1, b2) -> Num.add (get_constant b1) (get_constant b2)
@@ -76,7 +95,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       let fold_ = fold ~const ~var ~neg ~plus ~times ~exp ~max ~min ~abs ~inf in
       match p with
       | Infinity -> inf
-      | Var v -> var v
+      | Var (_,v) -> var v
       | Const c -> const c
       | Max (b1, b2) -> max (fold_ b1) (fold_ b2)
       | Min (b1, b2) -> min (fold_ b1) (fold_ b2)
@@ -153,7 +172,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let rec vars = function
       | Infinity -> VarSet.empty
-      | Var v -> VarSet.singleton v
+      | Var (_,v) -> VarSet.singleton v
       | Const _ -> VarSet.empty
       | Max (b1, b2) -> VarSet.union (vars b1) (vars b2)
       | Min (b1, b2) -> VarSet.union (vars b1) (vars b2)
@@ -210,7 +229,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         bound
 
     let rec show_bound = function
-      | Var v -> Var.to_string v
+      | Var (_,v) -> Var.to_string v
       | Const c -> if Num.Compare.(c < Num.zero) then "("^Num.to_string c^")" else Num.to_string c
       | Infinity -> "inf"
       (*| Max (b1, Max (b2, b3)) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ ", " ^ show_bound b3 ^ "}"*)
@@ -281,12 +300,12 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
     let rec (>=) b1 b2 =
       let execute () =
         let helper =
-          if equal b1 b2 then
+          if equal_without_substitution_kind b1 b2 then
             Some true
           else (
             match (b1, b2) with
             | (Infinity, _) -> Some true
-            | (Sum (Abs _, b), b2) when equal b b2 -> Some true
+            | (Sum (Abs _, b), b2) when equal_without_substitution_kind b b2 -> Some true
             | (_, Neg Infinity) -> Some true
             | (Const c1, Const c2) when Num.Compare.(c1 >= c2) -> Some true
             | (b, Const z1) when Num.(equal z1 zero) -> (
@@ -363,7 +382,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                 ListMonad.pure selected
               else
                 ListMonad.(
-                  List.filter (fun b -> not @@ List.exists (equal b) selected) bs
+                  List.filter (fun b -> not @@ List.exists (equal_without_substitution_kind b) selected) bs
                   >>= fun s -> helper @@ [s]@selected
                 )
             in
@@ -388,13 +407,13 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           let simplify_alt_minmax bs =
             List.filter (is_type (inverse_type t)) bs
             |> List.map (apply_chain_tuple (inverse_type t) % extract_bounds)
-            |> List.filter (not % List.exists (fun b -> List.mem b bs))
+            |> List.filter (not % List.exists (fun b -> List.exists (equal_without_substitution_kind b) bs))
             |> List.map (construct_chain (inverse_type t))
             |> List.append (List.filter (not % is_type (inverse_type t)) bs)
-            |> List.unique ~eq:equal
+            |> List.unique ~eq:equal_without_substitution_kind
           in
           (get_type_chain t b1 @ get_type_chain t b2)
-          |> List.unique ~eq:equal
+          |> List.unique ~eq:equal_without_substitution_kind
           |> keep_smallest_biggest_bounds t
           |> simplify_alt_minmax
           |> construct_chain t
@@ -404,7 +423,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
         | Infinity -> Infinity
 
-        | Var v -> Var v
+        | Var (k,v) -> Var (k,v)
 
         | Const c -> Const c
 
@@ -433,17 +452,30 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             | (_, Neg Infinity) -> Neg Infinity
             | (Neg Infinity, _) -> Neg Infinity
             | (Const c1, Max (Const c2, b)) -> simplify (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
-            | (b1, Neg b2) when equal b1 b2 -> Const Num.zero
-            | (Neg b1, b2) when equal b1 b2 -> Const Num.zero
-            | (b1, b2) when equal b1 b2 -> simplify (Product (Const (Num.of_int 2), b1))
+            | (b1, Neg b2) when equal_without_substitution_kind b1 b2 -> Const Num.zero
+            | (Neg b1, b2) when equal_without_substitution_kind b1 b2 -> Const Num.zero
+            | (b1, b2) when equal_without_substitution_kind b1 b2 -> simplify (Product (Const (Num.of_int 2), b1))
             | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify (Sum (b2, Sum (b1, b3)))
             | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Sum (Sum (b1, b3), b2))
             | (b1, b2) when Constructor.(b2 < b1) -> simplify (Sum (b2, b1))
             | (b1, b2) -> Sum (b1, b2)
           in
           let sum_chain   = get_sum_chain b1 @ get_sum_chain b2 in
-          let negated     = List.filter neg_head sum_chain |> List.map remove_neg_head |> List.filter (flip List.mem sum_chain) in
-          List.fold_left (fun s n -> List.remove s n |> flip List.remove (Neg n)) sum_chain negated
+          let negated     =
+            List.filter neg_head sum_chain
+            |> List.map remove_neg_head
+            |> List.filter (fun b -> List.exists (equal_without_substitution_kind b) sum_chain)
+          in
+          List.fold_left
+            (fun s n ->
+              (* Check if both terms still exist. This is important if the same terms occur multiple times e.g. a - a + a =/= 0*)
+              if List.exists (equal_without_substitution_kind n) s && List.exists (equal_without_substitution_kind (Neg n)) s then
+                List.remove_if (equal_without_substitution_kind n) s
+                |> List.remove_if (equal_without_substitution_kind (Neg n))
+              else
+                failwith ""
+            )
+            sum_chain negated
           |> construct_sum_chain
           |> function
               | Sum (b1,b2) -> simplify_bi b1 b2
@@ -496,11 +528,20 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
         | Min (b1,b2) -> min_max_helper `Min (b1,b2)
 
+        (* Simplify terms with abs head *)
         | Abs (Abs b) -> simplify (Abs b)
+        | Abs (Product (b1,b2)) -> (
+            let  (b1,b2) = (simplify b1, simplify b2) in
+            match (b1 >= Const Num.zero, b2 >= Const Num.zero) with
+            | (Some true, Some true) -> Product (b1,b2)
+            | (Some true, _) -> Product (b1, Abs b2)
+            | (_, Some true) -> Product (b2, Abs b1)
+            | _ -> Abs (simplify (Product (b1,b2)))
+        )
         | Abs b -> match b >= (Const Num.zero) with
-                     | Some true -> b
+                     | Some true -> simplify b
                      | Some false -> Neg b |> simplify
-                     | None -> Abs b
+                     | None -> Abs (simplify b)
       in
       Logger.with_log logger Logger.DEBUG
                       (fun () -> "simplify", ["input", to_string bound])
@@ -510,14 +551,14 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
     let rec overestimate =
       let helper t (b1,b2) a=
           let chain = apply_chain_tuple t (b1,b2) in
-          let eq = List.filter (equal a) chain in
+          let eq = List.filter (equal_without_substitution_kind a) chain in
           if List.is_empty eq then
             List.map (fun b' -> if (overestimate b' >= a) = Some true then Sum(b', Neg a) else b') chain
             |> List.map overestimate
             |> construct_chain t
             |> simplify
           else
-            chain |> List.filter (not % equal a) |> construct_chain t |> simplify
+            chain |> List.filter (not % equal_without_substitution_kind a) |> construct_chain t |> simplify
       in
       function
         | Sum(Neg a, Max (b1,b2)) -> helper `Max (b1,b2) a
@@ -532,7 +573,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         | Pow(k,b)                -> Pow(k, overestimate b)
         | Abs (Sum (b1,b2))       -> Sum (Abs b1, Abs b2)
         | Abs b                   -> Abs (overestimate b)
-        | Var v                   -> Var v
+        | Var (k,v)               -> Var (k,v)
         | Const c                 -> Const c
         | Infinity                -> Infinity
 
@@ -582,15 +623,15 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let to_int poly = raise (Failure "TODO: Not possible")
 
-    let of_var_string str = Var (Var.of_string str)
+    let of_var_string str = Var (`NonProbabilistic, Var.of_string str)
 
     let infinity = Infinity
 
     let minus_infinity = Neg Infinity
 
-    let is_infinity = equal Infinity
+    let is_infinity = equal_without_substitution_kind Infinity
 
-    let is_minus_infinity = equal (Neg Infinity)
+    let is_minus_infinity = equal_without_substitution_kind (Neg Infinity)
 
     let max b1 b2 =
       simplify (Max (b1, b2))
@@ -629,20 +670,33 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       |> fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~exp:exp ~max:max ~min:min ~abs:abs ~inf:infinity
       |> simplify
 
+    let rec substitute_with_kind f = function
+      | Var (k',v) -> f v
+      | Infinity -> Infinity
+      | Const c -> Const c
+      | Neg b -> Neg (substitute_with_kind f b)
+      | Abs b -> Abs (substitute_with_kind f b)
+      | Max (b1,b2) -> Max (substitute_with_kind f b1, substitute_with_kind f b2)
+      | Min (b1,b2) -> Min (substitute_with_kind f b1, substitute_with_kind f b2)
+      | Sum (b1,b2) -> Sum (substitute_with_kind f b1, substitute_with_kind f b2)
+      | Product (b1,b2) -> Product (substitute_with_kind f b1, substitute_with_kind f b2)
+      | Pow (n,b) -> Pow (n, substitute_with_kind f b)
+
     let set_linear_vars_to_probabilistic_and_rest_to_nonprobabilistic b =
       let all_vars        = vars b in
-      let linear_vars     = VarSet.filter (flip is_linear_in_var b) all_vars in
+      let linear_vars     = VarSet.filter (flip is_linear_in_var b) all_vars |> tap (Printf.printf "linear_vars: %s\n" % VarSet.to_string) in
 
       let setvar v =
         if VarSet.mem v linear_vars then
-          Var.set_substitution_kind Var.Probabilistic v
+          Var (`Probabilistic, v)
         else
-          Var.set_substitution_kind Var.NonProbabilistic v
+          Var (`NonProbabilistic, v)
       in
-      substitute_f (of_var % setvar) b
 
-    let set_all_vars_to_substitution_kind t b =
-      substitute_f (of_var % Var.set_substitution_kind t) b
+      substitute_with_kind setvar b
+
+    let set_all_vars_to_substitution_kind k b =
+      substitute_with_kind (fun v -> Var (k,v)) b
 
     let substitute var ~replacement =
       substitute_f (fun target_var ->
@@ -689,7 +743,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let rec appr_substitution kind ~lower ~higher = function
       | Infinity -> Infinity
-      | Var v -> evaluater lower higher kind v
+      | Var (_,v) -> evaluater lower higher kind v
       | Const k -> Const k
       | Neg b -> neg (appr_substitution (reverse kind) ~lower ~higher b)
       | Sum (b1, b2) -> appr_substitution kind ~lower ~higher b1 + appr_substitution kind ~lower ~higher b2
@@ -711,7 +765,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let rec appr_substitution_abs_maybe subf = simplify % function
       | Infinity         -> Infinity
-      | Var v            -> (match subf v with
+      | Var (k,v)        -> (match subf k v with
         | Some b -> b
         | None   -> of_var v)
       | Const k          -> Const k
@@ -725,30 +779,30 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Abs b            -> abs (appr_substitution_abs_maybe subf b)
       | Pow (k,b)        -> Pow (k, appr_substitution_abs_maybe subf b)
 
-    let replace_if_subst_kind sub_kind b var =
-      if Var.get_substitution_kind var = sub_kind then
+    let replace_if_subst_kind sub_kind b k =
+      if equal_substitution_kind sub_kind k then
         Some b
       else
         None
 
     let appr_substitution_with_sub_kind sub_kind subf =
-      appr_substitution_abs_maybe (fun v -> replace_if_subst_kind sub_kind (subf v) v)
+      appr_substitution_abs_maybe (fun k v -> replace_if_subst_kind sub_kind (subf v) k)
 
     let appr_substition_abs_probabilistic =
-      appr_substitution_with_sub_kind Var.Probabilistic
+      appr_substitution_with_sub_kind `Probabilistic
 
     let appr_substition_abs_nonprobabilistic =
-      appr_substitution_with_sub_kind Var.NonProbabilistic
+      appr_substitution_with_sub_kind `NonProbabilistic
 
     let appr_substition_abs_all subf =
-      appr_substitution_abs_maybe (Option.Monad.return % subf)
+      appr_substitution_abs_maybe (fun _ -> Option.Monad.return % subf)
 
     let appr_substitution_probabilistic_and_nonprobabilistic ~probabilistic ~nonprobabilistic =
       appr_substitution_abs_maybe
-        (fun v -> if Var.get_substitution_kind v = Var.Probabilistic then Some (probabilistic v) else Some (nonprobabilistic v))
+        (fun k v -> if equal_substitution_kind k `Probabilistic then Some (probabilistic v) else Some (nonprobabilistic v))
 
     let appr_substitute_abs v b' =
-      appr_substitution_abs_maybe (fun v' -> if v' = v then Some b' else None)
+      appr_substitution_abs_maybe (fun k v' -> if v' = v then Some b' else None)
 
     let degree n = raise (Failure "degree for MinMaxPolynomial not yet implemented")
     let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implemented")
