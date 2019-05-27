@@ -84,8 +84,8 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | Sum _ -> 5
           | Product _ -> 6
           | Max _ -> 7
-          | Min _ -> 7
-          | Abs _ -> 7
+          | Min _ -> 8
+          | Abs _ -> 9
 
         let (<) b1 b2 =
           number b1 < number b2
@@ -347,9 +347,10 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | (`Max, Neg (Max (b1,b2))) -> [simplify @@ Max(Neg b1, Neg b2)]
       | (_,b)                     -> [simplify b]
 
-    and get_sum_chain b = match b with
-      | Sum (b1,b2) -> get_sum_chain b1 @ get_sum_chain b2
-      | b           -> [simplify b]
+    and get_op_chain t b = match (t,b) with
+      | (`Sum, Sum (b1,b2))         -> get_op_chain t b1 @ get_op_chain t b2
+      | (`Product, Product (b1,b2)) -> get_op_chain t b1 @ get_op_chain t b2
+      | (_,b)                       -> [simplify b]
 
     and apply_chain_tuple t' (b1,b2) =
       get_type_chain t' b1 @ get_type_chain t' b2
@@ -366,9 +367,13 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             | `Max -> fun b1 b2 -> Max (b1,b2)) bs
       with Invalid_argument _ -> default_min_max t'
 
-    and construct_sum_chain bs =
-      try List.reduce (fun b1 b2 -> Sum (b1,b2)) bs
-      with Invalid_argument _  -> of_constant (Num.zero)
+    and construct_op_chain t bs = match t with
+      | `Sum ->
+          (try List.reduce (fun b1 b2 -> Sum (b1,b2)) bs
+          with Invalid_argument _  -> of_constant (Num.zero))
+      | `Product ->
+          (try List.reduce (fun b1 b2 -> Product (b1,b2)) bs
+          with Invalid_argument _  -> of_constant (Num.one))
 
     and simplify bound =
       let min_max_helper t (b1,b2) =
@@ -452,15 +457,17 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             | (_, Neg Infinity) -> Neg Infinity
             | (Neg Infinity, _) -> Neg Infinity
             | (Const c1, Max (Const c2, b)) -> simplify (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
+            | (Max (Const c2, b), Const c1) -> simplify (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
+            | (Const c1, Min (Const c2, b)) -> simplify (Min (Const Num.(c1 + c2), Sum (Const c1, b)))
+            | (Min (Const c2, b), Const c1) -> simplify (Min (Const Num.(c1 + c2), Sum (Const c1, b)))
             | (b1, Neg b2) when equal_without_substitution_kind b1 b2 -> Const Num.zero
             | (Neg b1, b2) when equal_without_substitution_kind b1 b2 -> Const Num.zero
             | (b1, b2) when equal_without_substitution_kind b1 b2 -> simplify (Product (Const (Num.of_int 2), b1))
             | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify (Sum (b2, Sum (b1, b3)))
             | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Sum (Sum (b1, b3), b2))
-            | (b1, b2) when Constructor.(b2 < b1) -> simplify (Sum (b2, b1))
             | (b1, b2) -> Sum (b1, b2)
           in
-          let sum_chain   = get_sum_chain b1 @ get_sum_chain b2 in
+          let sum_chain   = get_op_chain `Sum b1 @ get_op_chain `Sum b2 in
           let negated     =
             List.filter neg_head sum_chain
             |> List.map remove_neg_head
@@ -476,7 +483,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                 failwith ""
             )
             sum_chain negated
-          |> construct_sum_chain
+          |> construct_op_chain `Sum
           |> function
               | Sum (b1,b2) -> simplify_bi b1 b2
               | b -> b
@@ -530,14 +537,12 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
         (* Simplify terms with abs head *)
         | Abs (Abs b) -> simplify (Abs b)
-        | Abs (Product (b1,b2)) -> (
-            let  (b1,b2) = (simplify b1, simplify b2) in
-            match (b1 >= Const Num.zero, b2 >= Const Num.zero) with
-            | (Some true, Some true) -> Product (b1,b2)
-            | (Some true, _) -> Product (b1, Abs b2)
-            | (_, Some true) -> Product (b2, Abs b1)
-            | _ -> Abs (simplify (Product (b1,b2)))
-        )
+        | Abs (Product (b1,b2)) ->
+            let chain   = get_op_chain `Product b1 @ get_op_chain `Product b2 in
+            let all_ge0 = List.filter (fun e -> (e >= Const (Num.zero)) = Some true) chain in
+            let all_other = List.filter (fun e -> (e >= Const (Num.zero)) <> Some true) chain in
+            Product (construct_op_chain `Product all_ge0, Abs (construct_op_chain `Product all_other))
+            |> simplify
         | Abs b -> match b >= (Const Num.zero) with
                      | Some true -> simplify b
                      | Some false -> Neg b |> simplify
@@ -684,7 +689,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let set_linear_vars_to_probabilistic_and_rest_to_nonprobabilistic b =
       let all_vars        = vars b in
-      let linear_vars     = VarSet.filter (flip is_linear_in_var b) all_vars |> tap (Printf.printf "linear_vars: %s\n" % VarSet.to_string) in
+      let linear_vars     = VarSet.filter (flip is_linear_in_var b) all_vars in
 
       let setvar v =
         if VarSet.mem v linear_vars then
