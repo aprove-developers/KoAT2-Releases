@@ -491,30 +491,44 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
         (* Simplify terms with product head *)
         | Product (b1, b2) -> (
-          match (simplify b1, simplify b2) with
-          | (Const c1, Const c2) -> Const (Num.(c1 * c2))
-          | (Const c, b) when Num.(c =~= one) -> b
-          | (b, Const c) when Num.(c =~= one) -> b
-          | (Const c, b) when Num.(c =~= zero) -> Const Num.zero
-          | (b, Const c) when Num.(c =~= zero) -> Const Num.zero
-          | (Const c, b) when Num.(c =~= neg one) -> simplify (Neg b)
-          | (b, Const c) when Num.(c =~= neg one) -> simplify (Neg b)
-          | (Infinity, b) when b >= Const Num.zero |? false -> Infinity
-          | (b, Infinity) when b >= Const Num.zero |? false -> Infinity
-          | (Infinity, b) when b <= Const Num.zero |? false -> Neg Infinity
-          | (b, Infinity) when b <= Const Num.zero |? false -> Neg Infinity
-          | (Neg Infinity, b) when b >= Const Num.zero |? false -> Neg Infinity
-          | (b, Neg Infinity) when b >= Const Num.zero |? false -> Neg Infinity
-          | (Neg Infinity, b) when b <= Const Num.zero |? false -> Infinity
-          | (b, Neg Infinity) when b <= Const Num.zero |? false -> Infinity
-          | (Max (Const zero1, b1), Max (Const zero2, b2)) when Num.(zero1 =~= zero) && Num.(zero2 =~= zero) ->
-             simplify (Max (Const Num.zero, Product (b1, b2)))
-          | (Max (Const zero1, b1), b2) when Num.(zero1 =~= zero) ->
-             simplify (Max (Const Num.zero, Product (b1, b2)))
-          | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify (Product (b2, Product (b1, b3)))
-          | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Product (Product (b1, b3), b2))
-          | (b1, b2) when Constructor.(b2 < b1) -> simplify (Product (b2, b1))
-          | (b1, b2) -> Product (b1, b2)
+          let helper (b1,b2) =
+            match (simplify b1, simplify b2) with
+            | (Const c1, Const c2) -> Const (Num.(c1 * c2))
+            | (Const c, b) when Num.(c =~= one) -> b
+            | (b, Const c) when Num.(c =~= one) -> b
+            | (Const c, b) when Num.(c =~= zero) -> Const Num.zero
+            | (b, Const c) when Num.(c =~= zero) -> Const Num.zero
+            | (Const c, b) when Num.(c =~= neg one) -> simplify (Neg b)
+            | (b, Const c) when Num.(c =~= neg one) -> simplify (Neg b)
+            | (Infinity, b) when b >= Const Num.zero |? false -> Infinity
+            | (b, Infinity) when b >= Const Num.zero |? false -> Infinity
+            | (Infinity, b) when b <= Const Num.zero |? false -> Neg Infinity
+            | (b, Infinity) when b <= Const Num.zero |? false -> Neg Infinity
+            | (Neg Infinity, b) when b >= Const Num.zero |? false -> Neg Infinity
+            | (b, Neg Infinity) when b >= Const Num.zero |? false -> Neg Infinity
+            | (Neg Infinity, b) when b <= Const Num.zero |? false -> Infinity
+            | (b, Neg Infinity) when b <= Const Num.zero |? false -> Infinity
+            | (Max (Const zero1, b1), Max (Const zero2, b2)) when Num.(zero1 =~= zero) && Num.(zero2 =~= zero) ->
+               simplify (Max (Const Num.zero, Product (b1, b2)))
+            | (Max (Const zero1, b1), b2) when Num.(zero1 =~= zero) ->
+               simplify (Max (Const Num.zero, Product (b1, b2)))
+            | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify (Product (b2, Product (b1, b3)))
+            | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Product (Product (b1, b3), b2))
+            | (b1, b2) when Constructor.(b2 < b1) -> simplify (Product (b2, b1))
+            | (b1, b2) -> Product (b1, b2)
+          in
+          let chain = get_op_chain `Product b1 @ get_op_chain `Product b2 in
+          let get_const = function
+            | Const c -> Some c
+            | _       -> None
+          in
+          let all_consts     = List.map Option.get @@ List.filter Option.is_some @@ List.map get_const chain in
+          let all_non_consts = List.filter (Option.is_none % get_const) chain in
+          let const = List.fold_left Num.mul Num.one all_consts in
+          if (not @@ Num.equal const Num.one)
+            then helper (Const const, construct_op_chain `Product all_non_consts)
+          else
+            helper (b1,b2)
         )
 
         (* Simplify terms with pow head *)
