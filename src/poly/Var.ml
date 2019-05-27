@@ -107,6 +107,6 @@ let get_substitution_kind = function
   | _                      -> NonProbabilistic
 
 let set_substitution_kind sub_kind = function
-  | Var (_, v)      -> Var (sub_kind, v)
-  | Argument (_, v) -> Var (sub_kind, v)
+  | Var      (_, v) -> Var (sub_kind, v)
+  | Argument (_, i) -> Argument (sub_kind, i)
   | h               -> h
