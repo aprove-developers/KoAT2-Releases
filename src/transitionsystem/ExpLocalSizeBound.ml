@@ -265,7 +265,6 @@ let exact_lsb_abs_ program ((t, var): NPRV.t): RealBound.t =
     |> handle_update_element
   in
 
-  Printf.printf "hello:\n";
   t
   |> handle_transition
   |> substitute_nondet_var
