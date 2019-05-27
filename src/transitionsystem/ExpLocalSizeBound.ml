@@ -7,6 +7,8 @@ open RVTransitions
 
 module RV = RVGTypes.Make_RV (TransitionForExpectedSize)
 
+module NPRV = RVGTypes.Make_RV (Transition)
+
 module IntValuation = Valuation.Make (OurInt)
 module Valuation = Valuation.Make (OurFloat)
 
@@ -238,12 +240,39 @@ let elsb_ program (((gt, l), var): RV.t): RealBound.t =
   |> RealPolynomial.sum
   |> simplify_poly_with_guard (GeneralTransition.guard gt)
   |> RealBound.of_poly
-  |> RealBound.abs
   |> substitute_nondet_var
       (Program.input_vars program)
       (VarSet.diff (Program.vars program) (Program.input_vars program))
       (GeneralTransition.invariants gt |> Constraints.RealConstraint.of_intconstraint)
   |> RealBound.set_linear_vars_to_probabilistic_and_rest_to_nonprobabilistic
+  |> RealBound.abs
+
+
+let exact_lsb_abs_ program ((t, var): NPRV.t): RealBound.t =
+  let handle_update_element ue =
+    match ue with
+    | TransitionLabel.UpdateElement.Poly p ->
+        RealPolynomial.of_intpoly p |> RealBound.of_poly
+    | TransitionLabel.UpdateElement.Dist d ->
+        RealBound.max
+          (RealBound.abs (ProbDistribution.deterministic_upper_bound d |> RealBound.of_intbound))
+          (RealBound.abs (ProbDistribution.deterministic_lower_bound d |> RealBound.of_intbound))
+  in
+  let handle_transition trans =
+    Transition.label trans
+    |> flip TransitionLabel.update var
+    |? TransitionLabel.UpdateElement.Poly (Polynomial.of_var var)
+    |> handle_update_element
+  in
+
+  Printf.printf "hello:\n";
+  t
+  |> handle_transition
+  |> substitute_nondet_var
+      (Program.input_vars program)
+      (VarSet.diff (Program.vars program) (Program.input_vars program))
+      (TransitionLabel.guard (Transition.label t) |> Constraints.RealConstraint.of_intconstraint)
+  |> RealBound.abs
 
 let elsb_memo =
   Util.memoize
@@ -251,6 +280,15 @@ let elsb_memo =
     (fun (program,rv) -> elsb_ program rv)
 
 let elsb p rv = elsb_memo (p,rv)
+
+let exact_lsb_abs program rv =
+  let exact_lsb_abs_memo =
+    Util.memoize
+      ~extractor:(fun (program,(t,var)) -> (Transition.id t, Var.to_string var))
+      (fun (program,rv) -> exact_lsb_abs_ program rv)
+  in
+  exact_lsb_abs_ program rv
+(*   curry exact_lsb_abs_memo *)
 
 let vars program rv =
   elsb program rv |> RealBound.vars

@@ -40,20 +40,15 @@ let compute_ program get_timebound get_exptimebound get_sizebound get_expsizebou
       GeneralTransition.transitions gt
       |> TransitionSet.filter (Location.equal target_loc % Transition.target)
       |> TransitionSet.to_list
-      |> List.map (fun t -> LocalSizeBound.sizebound_local_abs_bound program t var)
-      |> Util.option_sequence
-      |> Option.map
-          (fun lsbs ->
-            List.map (RealBound.of_var var |> RealBound.abs |> flip RealBound.sub) lsbs
-            |> List.map RealBound.overestimate
-            (* innermost max/min against 0 *)
-            |> List.map RealBound.abs
-            (* perform appr_substitution with all pre size bounds *)
-            |> List.map appr_substitution_pre_size
-            |> List.enum
-            |> RealBound.maximum
-          )
-      |? RealBound.infinity
+      |> List.map (fun t -> ExpLocalSizeBound.exact_lsb_abs program (t,var))
+      |> List.map (RealBound.of_var var |> RealBound.abs |> flip RealBound.sub)
+      |> List.map RealBound.overestimate
+      (* innermost max/min against 0 *)
+      |> List.map RealBound.abs
+      (* perform appr_substitution with all pre size bounds *)
+      |> List.map appr_substitution_pre_size
+      |> List.enum
+      |> RealBound.maximum
     in
 
     var_change_bound
@@ -81,7 +76,7 @@ let compute_ program get_timebound get_exptimebound get_sizebound get_expsizebou
 
   (** Corresponds to the definition of the starting value in the thesis. *)
   let starting_value v =
-    incoming_transitions
+  incoming_transitions
     |> Enum.map (fun (gt,l) -> get_expsizebound (gt,l) v)
     |> RealBound.sum
     |> tap (fun starting_value -> Logger.log logger Logger.DEBUG

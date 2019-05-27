@@ -4,11 +4,13 @@ open Polynomials
 open BoundsInst
 
 module RV : sig include module type of Make_RV (RVTransitions.TransitionForExpectedSize) end
+module NPRV : sig include module type of Make_RV (Transition) end
 
 val vars : Program.t -> RV.t -> VarSet.t
 
 (** Computes an expected local size bound *)
 val elsb : Program.t -> RV.t -> RealBound.t
+val exact_lsb_abs: Program.t -> NPRV.t -> RealBound.t
 
 (** Checks whether a given (possibly multivariate) bound is concave using SMT-Solving *)
 val bound_is_concave : RealBound.t -> bool
