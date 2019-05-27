@@ -126,6 +126,8 @@ module Make_BoundOver :
 
       val set_linear_vars_to_probabilistic_and_rest_to_nonprobabilistic : t -> t
 
+      val set_all_vars_to_substitution_kind : Var.substitution_kind -> t -> t
+
       (** When bound b is linear in variable v is_linear_in_var v b returns true.  Note that max(v,v') is neither linear in v nor v'. *)
       val is_linear_in_var : Var.t -> t -> bool
 

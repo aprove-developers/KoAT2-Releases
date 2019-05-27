@@ -353,19 +353,22 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     and simplify bound =
       let min_max_helper t (b1,b2) =
-          let contains_smaller_bigger_bound t' l b =
-            let comperator =
-              match t with
-                | `Min -> (<)
-                | `Max -> (>)
+          let keep_smallest_biggest_bounds t bs =
+            let comperator = match t with
+              | `Max  -> (>=)
+              | `Min  -> (<=)
             in
-            List.exists
-              (fun b' ->
-                match comperator b' b with
-                  | Some true  -> true
-                  | Some false -> false
-                  | None       -> false)
-              l
+            let rec helper selected =
+              if List.for_all (fun b -> List.exists (fun b' -> (comperator b' b) = Some true) selected) bs then
+                ListMonad.pure selected
+              else
+                ListMonad.(
+                  List.filter (fun b -> not @@ List.exists (equal b) selected) bs
+                  >>= fun s -> helper @@ [s]@selected
+                )
+            in
+            List.sort (fun a b -> Int.compare (List.length a) (List.length b)) (helper [])
+            |> List.hd
           in
           let inverse_type = function
             | `Min -> `Max
@@ -392,7 +395,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           in
           (get_type_chain t b1 @ get_type_chain t b2)
           |> List.unique ~eq:equal
-          |> fun l -> List.fold_left (fun l' b -> if contains_smaller_bigger_bound t l b then l' else [b]@l') [] l
+          |> keep_smallest_biggest_bounds t
           |> simplify_alt_minmax
           |> construct_chain t
       in
@@ -637,6 +640,9 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           Var.set_substitution_kind Var.NonProbabilistic v
       in
       substitute_f (of_var % setvar) b
+
+    let set_all_vars_to_substitution_kind t b =
+      substitute_f (of_var % Var.set_substitution_kind t) b
 
     let substitute var ~replacement =
       substitute_f (fun target_var ->
