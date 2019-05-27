@@ -17,7 +17,7 @@ type t =
   | Var of substitution_kind*String.t
   (**Helpers are fresh variables generated via the computation. They represent a real or an integer value.*)
   | Helper of sort*int
-  | Argument of int [@@deriving eq, ord]
+  | Argument of substitution_kind*int [@@deriving eq, ord]
 
 
 val equal : t -> t -> bool
@@ -26,6 +26,7 @@ val hash : t -> int
 val (=~=) : t -> t -> bool
 val of_string : string -> t
 val to_string : t -> string
+val to_string_with_kind : t -> string
 (** Returns a not yet used id, which is guaranteed to be distinct from any yet existing ids. *)
 val fresh_id : sort -> unit -> t
     (** Returns a bunch of fresh ids. *)
