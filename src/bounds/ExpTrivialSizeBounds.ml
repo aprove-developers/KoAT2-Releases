@@ -54,8 +54,16 @@ let only_one_gt_outgoing program gt =
   let gts = Program.generalized_transitions program in
   gts
   |> GeneralTransitionSet.filter (Location.equal start_loc % GeneralTransition.start)
-  |> GeneralTransitionSet.cardinal
-  |> (>) 2
+  |> fun gtset -> GeneralTransitionSet.for_all
+       ( fun gt ->
+          let gtset_without_gt = GeneralTransitionSet.remove gt gtset in
+          let rhs              =
+            GeneralTransitionSet.fold
+              (fun gtselem f -> Formula.mk_or f (GeneralTransition.guard gtselem |> Formula.mk))
+              gtset_without_gt Formula.mk_false
+          in
+          formula_implied_by_formula (GeneralTransition.guard gt |> Formula.mk) (Formula.neg rhs)
+       ) gtset
 
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
@@ -399,7 +407,7 @@ let print_pr_func graph pr_func =
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
 let compute program get_sizebound (get_expsizebound: (GeneralTransition.t * Location.t) -> Var.t -> RealBound.t) get_timebound ((gt,loc),var) =
-  if not (guard_enabled gt && only_one_gt_outgoing program gt) then
+  if not (only_one_gt_outgoing program gt) then
     default_bound
   else
     let graph = Program.graph program in
