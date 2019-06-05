@@ -43,7 +43,7 @@ struct
                         *)
       end
 
-    (* Always in normalised form: polynomial <= 0 *)
+    (* Always in normalised form: polynomial <= 0 / polynomial < 0*)
     type compkind = LE | LT [@@deriving eq, ord]
 
     type t = P.t * compkind [@@deriving eq, ord]
@@ -121,6 +121,13 @@ module Atom =
 
     let max_of_occurring_constants (poly,_) =
       Polynomial.max_of_occurring_constants poly
+
+    (* Specialized Equality for integer Atoms *)
+    let rec (=~=) (poly1,comp1) (poly2,comp2) = match (comp1,comp2) with
+      | (LE,LT) -> (Polynomial.(poly1-one), LT) =~= (poly2,LT)
+      | (LT,LE) -> (poly1,LT) =~= (Polynomial.(poly2 - one),LT)
+      | (LT,LT) -> Polynomial.(poly1 =~= poly2)
+      | (LE,LE) -> Polynomial.(poly1 =~= poly2)
 
   end
 
