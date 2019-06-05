@@ -1,6 +1,7 @@
 open Batteries
 open OUnit2
 open Helper
+open BoundsInst
    
 let tests = 
   "Bound" >::: [
@@ -117,6 +118,41 @@ let tests =
                     ("0", "max{0, 0}+max{0, 0}");
                   ]
       );
-      
+
+      "linearity" >::: 
+        List.map 
+          (fun (linear, v, bound_string) -> 
+            let bound = Readers.read_bound bound_string in
+            let var = Var.of_string v in
+            let error_string = 
+              "Linearity Mismatch Expected " ^ bound_string ^ " to " ^
+              (if linear then " be linear " else " not be linear ") ^
+              " in " ^ v ^ " but the opposite is the case"
+            in
+            bound_string >:: (fun _ -> assert_bool error_string (Bound.is_linear_in_var var bound = linear))
+          )
+          [
+            (true,  "x", "x");
+            (true,  "x", "2*x");
+            (true,  "x", "2*x+y");
+            (true,  "y", "2*x+y");
+            (true,  "y", "2*x+y + 0");
+            (true,  "y", "2*x+y + 0 * y * y");
+
+            (true,  "y", "|0|");
+            (true,  "y", "|x|");
+            (false, "x", "|x|");
+
+            (true,  "x", "max {y,z}");
+            (false, "y", "max {y,z}");
+            (false, "z", "max {y,z}");
+
+            (true,  "x", "min {y,z}");
+            (false, "y", "min {y,z}");
+            (false, "z", "min {y,z}");
+
+            (false, "x", "x^2");
+            (true,  "y", "x^2");
+          ]
     ]
 
