@@ -100,7 +100,7 @@ let prob_branch_poly (l,t,l') =
 let expected_poly gtrans =
     TransitionSet.fold (fun trans poly -> RealParameterPolynomial.add (prob_branch_poly trans) poly) (gtrans |> GeneralTransition.transitions) RealParameterPolynomial.zero
 
-let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
+let general_transition_constraint (constraint_type, gtrans): RealFormula.t =
   let template gtrans = gtrans |> GeneralTransition.start |> TemplateTable.find template_table in
   let lift_paraatom pa = (GeneralTransition.guard gtrans |> RealConstraint.of_intconstraint,pa) |> List.singleton in
   let constraints_and_atoms =
@@ -108,7 +108,6 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
     | `Non_Increasing ->  RealParameterAtom.Infix.((template gtrans) >= (expected_poly gtrans)) |> lift_paraatom
 
     | `Decreasing ->
-        Printf.printf "Decreasing gtrans: %s\n" (GeneralTransition.to_id_string gtrans);
         RealParameterAtom.Infix.((template gtrans) >= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.of_polynomial RealPolynomial.one)))
         |> lift_paraatom
 
@@ -141,7 +140,7 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
           in
 
           let template_substituted =
-            template
+            TemplateTable.find template_table (Transition.target t)
             |> RealParameterPolynomial.rename (TransitionLabel.VarMap.bindings new_var_map |> RenameMap.from)
           in
 
@@ -163,8 +162,6 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
     constraints_and_atoms
   |> List.map RealFormula.mk
   |> List.fold_left RealFormula.mk_and RealFormula.mk_true
-
-let general_transition_constraint = general_transition_constraint_
 
 let non_increasing_constraint transition =
   general_transition_constraint (`Non_Increasing, transition)
