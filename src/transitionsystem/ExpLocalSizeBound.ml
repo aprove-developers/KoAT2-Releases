@@ -280,14 +280,13 @@ let elsb_memo =
 
 let elsb p rv = elsb_memo (p,rv)
 
-let exact_lsb_abs program rv =
+let exact_lsb_abs =
   let exact_lsb_abs_memo =
     Util.memoize
       ~extractor:(fun (program,(t,var)) -> (Transition.id t, Var.to_string var))
       (fun (program,rv) -> exact_lsb_abs_ program rv)
   in
-  exact_lsb_abs_ program rv
-(*   curry exact_lsb_abs_memo *)
+  curry exact_lsb_abs_memo
 
 let vars program rv =
   elsb program rv |> RealBound.vars
