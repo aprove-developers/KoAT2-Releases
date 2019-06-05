@@ -24,7 +24,8 @@ let suite =
       InvariantGenerationTest.tests;
 
       (* Probabilistic *)
-      LexRSMTest.tests
+      LexRSMTest.tests;
+      ELSBTest.tests
     ]
                      
 let () =
