@@ -205,13 +205,13 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           ~plus:(fun l l' -> Option.Monad.( bind l (fun f -> bind l' (fun s -> return @@ Int.max f s)) ))
           ~times:(fun l l' -> Option.Monad.( bind l (fun f -> bind l' (fun s -> return @@ f + s)) ))
           ~exp:(const @@ const None)
-          ~max:(const @@ const None)
-          ~min:(const @@ const None)
-          ~abs:(const None)
+          ~max:(fun l l' -> if l = Some 0 && l' = Some 0 then Some 0 else None)
+          ~min:(fun l l' -> if l = Some 0 && l' = Some 0 then Some 0 else None)
+          ~abs:(fun l -> if l = Some 0 then Some 0 else None)
           ~inf:(Some 0) @@  bound
       in
       match maybeOrder with
-        | Some o -> 1 = o
+        | Some o -> 1 = o || 0 = o
         | None   -> false
 
     let max_of_occurring_constants bound =
