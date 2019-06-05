@@ -13,6 +13,7 @@ type kind = [ `Lower | `Upper ]  [@@deriving eq, ord]
 type t
 
 val get_unique_gt_id: unit -> int
+val reset_unique_gt_counter: unit -> unit
 
 exception RecursionNotSupported
 

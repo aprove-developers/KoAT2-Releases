@@ -27,6 +27,9 @@ let get_unique_id =
 let get_unique_gt_id =
   get_unique_by_ref gt_id_counter
 
+let reset_unique_gt_counter () = 
+  gt_id_counter := 0
+
 module UpdateElement =
   struct
     type t = Poly of Polynomial.t | Dist of ProbDistribution.t [@@deriving eq,ord]
