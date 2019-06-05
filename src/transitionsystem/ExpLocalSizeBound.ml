@@ -243,7 +243,7 @@ let elsb_ program (((gt, l), var): RV.t): RealBound.t =
   |> substitute_nondet_var
       (Program.input_vars program)
       (VarSet.diff (Program.vars program) (Program.input_vars program))
-      (GeneralTransition.invariants gt |> Constraints.RealConstraint.of_intconstraint)
+      (GeneralTransition.guard gt |> Constraints.RealConstraint.of_intconstraint)
   |> RealBound.set_linear_vars_to_probabilistic_and_rest_to_nonprobabilistic
   |> RealBound.abs
 
