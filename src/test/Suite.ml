@@ -22,6 +22,9 @@ let suite =
       BoundTest.tests;
       (*TimeboundTest.tests;*)
       InvariantGenerationTest.tests;
+
+      (* Probabilistic *)
+      LexRSMTest.tests
     ]
                      
 let () =
