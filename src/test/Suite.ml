@@ -16,14 +16,13 @@ let suite =
       (*TransitionGraphTest.suite;*)
       SMTTest.suite;
       IDTest.tests;
-      (*LocalSizeBoundTest.tests;*)
-      (*FormulaTest.tests;
-      PreprocessorTest.tests;*)
-      (*BoundTest.tests;
-      TimeboundTest.tests;*)
+      LocalSizeBoundTest.tests;
+      FormulaTest.tests;
+      PreprocessorTest.tests;
+      BoundTest.tests;
+      (*TimeboundTest.tests;*)
       InvariantGenerationTest.tests;
     ]
                      
 let () =
   run_test_tt_main suite
-  
