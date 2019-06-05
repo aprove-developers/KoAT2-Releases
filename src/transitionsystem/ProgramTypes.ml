@@ -196,6 +196,9 @@ module GeneralTransitionSet =
     let start_locations transitions =
       fold (fun transition loc_set -> LocationSet.add (GeneralTransition.start transition) loc_set ) transitions LocationSet.empty
 
+    let target_locations transitions =
+      fold (fun transition loc_set -> LocationSet.union (GeneralTransition.targets transition) loc_set ) transitions LocationSet.empty
+
     let of_transitionset transitionset =
       TransitionSet.to_list transitionset
       |> List.map (GeneralTransition.of_transitionset transitionset)

@@ -108,6 +108,7 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
     | `Non_Increasing ->  RealParameterAtom.Infix.((template gtrans) >= (expected_poly gtrans)) |> lift_paraatom
 
     | `Decreasing ->
+        Printf.printf "Decreasing gtrans: %s\n" (GeneralTransition.to_id_string gtrans);
         RealParameterAtom.Infix.((template gtrans) >= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.of_polynomial RealPolynomial.one)))
         |> lift_paraatom
 
@@ -163,7 +164,7 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
   |> List.map RealFormula.mk
   |> List.fold_left RealFormula.mk_and RealFormula.mk_true
 
-let general_transition_constraint = Util.memoize ~extractor:(Tuple2.map2 GeneralTransition.id) general_transition_constraint_
+let general_transition_constraint = general_transition_constraint_
 
 let non_increasing_constraint transition =
   general_transition_constraint (`Non_Increasing, transition)
@@ -343,7 +344,8 @@ let rec make_ranking_function start_poly c_bound exp =
 
 let reset () =
   cbound_template := None;
-  TemplateTable.clear template_table
+  TemplateTable.clear template_table;
+  RankingTable.clear time_ranking_table
 
 let compute_map program transitions cbounded =
   (* TODO max lexmap global for better performance *)
@@ -400,8 +402,11 @@ let compute_expected_complexity program =
 let pprf_to_string t =
   "{decreasing: " ^ GeneralTransition.to_id_string t.decreasing ^
   " non_incr: " ^ GeneralTransitionSet.to_id_string t.non_increasing ^
-  " rank: [" ^ (GeneralTransitionSet.start_locations t.non_increasing |> LocationSet.to_list
-                |> List.map (fun loc -> Location.to_string loc ^ ": " ^ (t.rank loc |> RealPolynomial.to_string)) |> String.concat "; ")
+  " rank: [" ^ (
+                 LocationSet.union (GeneralTransitionSet.start_locations t.non_increasing) (GeneralTransitionSet.target_locations t.non_increasing)
+                 |> LocationSet.to_list
+                 |> List.map (fun loc -> Location.to_string loc ^ ": " ^ (t.rank loc |> RealPolynomial.to_string)) |> String.concat "; "
+               )
   ^ "]}"
 
 let ranking_table_to_string rtable =

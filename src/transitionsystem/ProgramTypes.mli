@@ -75,6 +75,7 @@ sig
   val to_string: t -> string
   val to_id_string : t -> string
   val start_locations: t -> LocationSet.t
+  val target_locations: t -> LocationSet.t
   val of_transitionset: TransitionSet.t -> t
 end
 

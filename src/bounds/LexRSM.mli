@@ -12,3 +12,6 @@ val non_increasing: t -> GeneralTransitionSet.t
 val find : Program.t -> GeneralTransition.t -> t option
 
 val pprf_to_string: t -> string
+
+(* Resets already computed information. Useful for testing purposes *)
+val reset: unit -> unit
