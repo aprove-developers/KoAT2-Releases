@@ -555,8 +555,11 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             let chain   = get_op_chain `Product b1 @ get_op_chain `Product b2 in
             let all_ge0 = List.filter (fun e -> (e >= Const (Num.zero)) = Some true) chain in
             let all_other = List.filter (fun e -> (e >= Const (Num.zero)) <> Some true) chain in
-            Product (construct_op_chain `Product all_ge0, Abs (construct_op_chain `Product all_other))
-            |> simplify
+            if List.is_empty all_ge0 then
+              Abs (construct_op_chain `Product all_other)
+            else
+              Product (construct_op_chain `Product all_ge0, Abs (construct_op_chain `Product all_other))
+
         | Abs b -> match b >= (Const Num.zero) with
                      | Some true -> simplify b
                      | Some false -> Neg b |> simplify
