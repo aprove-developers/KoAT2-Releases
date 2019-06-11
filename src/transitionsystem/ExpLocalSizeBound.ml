@@ -110,8 +110,11 @@ let poly_is_concave =
 let poly_is_convexe =
   concave_convex_check Positivesemidefinite
 
-let concave_convex_check_v2 =
+let concave_convex_check_v2_memo =
   Util.memoize ~extractor:identity (uncurry concave_convex_check_v2_)
+
+let concave_convex_check_v2 =
+  fst concave_convex_check_v2_memo
 
 let bound_is_concave =
   (curry concave_convex_check_v2) Negativesemidefinite
@@ -278,15 +281,20 @@ let elsb_memo =
     ~extractor:(fun (program,((gt,l),var)) -> (GeneralTransition.id gt, Location.to_string l, Var.to_string var))
     (fun (program,rv) -> elsb_ program rv)
 
-let elsb p rv = elsb_memo (p,rv)
+let elsb p rv = (fst elsb_memo) (p,rv)
 
-let exact_lsb_abs =
-  let exact_lsb_abs_memo =
-    Util.memoize
-      ~extractor:(fun (program,(t,var)) -> (Transition.id t, Var.to_string var))
-      (fun (program,rv) -> exact_lsb_abs_ program rv)
-  in
-  curry exact_lsb_abs_memo
+let exact_lsb_abs_memo =
+  Util.memoize
+    ~extractor:(fun (program,(t,var)) -> (Transition.id t, Var.to_string var))
+    (fun (program,rv) -> exact_lsb_abs_ program rv)
+
+let exact_lsb_abs = 
+  curry @@ fst exact_lsb_abs_memo
 
 let vars program rv =
   elsb program rv |> RealBound.vars
+
+let reset () = 
+  ((snd elsb_memo) ());
+  ((snd exact_lsb_abs_memo) ());
+  ((snd concave_convex_check_v2_memo) ())

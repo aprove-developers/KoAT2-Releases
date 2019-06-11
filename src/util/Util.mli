@@ -24,7 +24,7 @@ val powerset : 'a Set.t -> ('a Set.t) Enum.t
 
 val find_map : ('a -> 'b Option.t) -> 'a Enum.t -> 'b Option.t
 
-val memoize : extractor:('a -> 'c) -> ('a -> 'b) -> 'a -> 'b
+val memoize : extractor:('a -> 'c) -> ('a -> 'b) -> ('a -> 'b) * (unit -> unit)
 
 val option_sequence : 'a option list -> 'a list option
 

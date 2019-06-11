@@ -135,7 +135,7 @@ let general_transition_constraint_ (constraint_type, gtrans): RealFormula.t =
   |> RealFormula.mk
 
 
-let general_transition_constraint = Util.memoize ~extractor:(Tuple2.map2 GeneralTransition.id) general_transition_constraint_
+let general_transition_constraint = fst @@ Util.memoize ~extractor:(Tuple2.map2 GeneralTransition.id) general_transition_constraint_
 
 let bounded_constraint transition =
   let execute () =

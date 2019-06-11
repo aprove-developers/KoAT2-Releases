@@ -106,7 +106,9 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk
 
-let transition_constraint = Util.memoize ~extractor:(Tuple3.map3 Transition.id) transition_constraint_
+let transition_constraint_memoizer = Util.memoize ~extractor:(Tuple3.map3 Transition.id) transition_constraint_
+
+let transition_constraint = fst transition_constraint_memoizer
 
 let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
@@ -246,4 +248,5 @@ let find measure program transition =
 let reset () =
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
+  ((snd transition_constraint_memoizer) ());
   TemplateTable.clear template_table

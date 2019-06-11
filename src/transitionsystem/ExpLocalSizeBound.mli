@@ -20,3 +20,6 @@ val bound_is_convexe : RealBound.t -> bool
 
 (** If the guards encode x = a for a variable x and a constant a then substitute x by a*)
 val simplify_poly_with_guard : TransitionLabel.Guard.t -> RealPolynomial.t -> RealPolynomial.t
+
+(** resets internal caches. Can be used for testing purposes *)
+val reset: unit -> unit

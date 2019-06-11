@@ -275,7 +275,7 @@ let vars_ {update; guard; cost; _} =
   |> (VarSet.union % Polynomial.vars) cost
 
 (* TODO May invalidate through invariant generation! *)
-let vars = Util.memoize ~extractor:id vars_
+let vars = (fst @@ Util.memoize ~extractor:id vars_)
 
 
 let default = {

@@ -56,7 +56,7 @@ let memoize ~extractor f =
        let y = f x in
        Hashtbl.add cache (extractor x) y;
        y
-  in g
+  in (g, fun () -> Hashtbl.clear cache)
 
 let rec option_sequence (options : 'a option list) : 'a list option =
   match options with
