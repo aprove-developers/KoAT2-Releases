@@ -1,6 +1,6 @@
 open Batteries
 open OUnit2
-                             
+
 let suite =
   "Suite" >::: [
       VarSetTest.tests;
@@ -27,7 +27,8 @@ let suite =
       LexRSMTest.tests;
       ELSBTest.tests;
       ExpTrivSizeBoundTest.tests;
+      ExpTimeBoundTest.tests;
     ]
-                     
+
 let () =
   run_test_tt_main suite
