@@ -490,7 +490,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                   List.remove_if (equal_without_substitution_kind n) s
                   |> List.remove_if (equal_without_substitution_kind (Neg n))
                 else
-                  failwith ""
+                  s
               )
               sum_chain negated
           in
