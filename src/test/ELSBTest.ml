@@ -139,4 +139,22 @@ let tests =
         ^ "  f(X) -> g(X+Z*Y) :|: Z<=5 && Z>=-10 && Y=10 \n"
         ^ ")                                             \n"
         );
+
+        (0, "X", "g", RealBound.(one * abs varx), 
+          "(GOAL EXPECTEDCOMPLEXITY)            \n"
+        ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
+        ^ "(VAR X)                              \n"
+        ^ "(RULES                               \n"
+        ^ "  f(X) -> 0.5:g(X) :+: 0.5:h(3*X)    \n"
+        ^ ")                                    \n"
+        );
+
+        (0, "X", "h", RealBound.((of_constant @@ OurFloat.of_int 3) * abs varx), 
+          "(GOAL EXPECTEDCOMPLEXITY)            \n"
+        ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
+        ^ "(VAR X)                              \n"
+        ^ "(RULES                               \n"
+        ^ "  f(X) -> 0.5:g(X) :+: 0.5:h(3*X)    \n"
+        ^ ")                                    \n"
+        );
       ]
