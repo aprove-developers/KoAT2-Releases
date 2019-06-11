@@ -477,30 +477,14 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             | (b1, b2) -> Sum (b1, b2)
           in
           let sum_chain   = get_op_chain `Sum b1 @ get_op_chain `Sum b2 in
-          let negated     =
-            List.filter neg_head sum_chain
-            |> List.map remove_neg_head
-            |> List.filter (fun b -> List.exists (equal_without_substitution_kind b) sum_chain)
-          in
-          let sum_chain_no_complements =
-            List.fold_left
-              (fun s n ->
-                (* Check if both terms still exist. This is important if the same terms occur multiple times e.g. a - a + a =/= 0*)
-                if List.exists (equal_without_substitution_kind n) s && List.exists (equal_without_substitution_kind (Neg n)) s then
-                  List.remove_if (equal_without_substitution_kind n) s
-                  |> List.remove_if (equal_without_substitution_kind (Neg n))
-                else
-                  s
-              )
-              sum_chain negated
-          in
           let combine_chain_elements_with_coeffs =
             let get_coeff_elem = function
               | Product (Const c, b) -> (b,c)
               | Product (b, Const c) -> (b,c)
+              | Neg b                -> (b, Num.neg Num.one)
               | b                    -> (b,Num.one)
             in
-            sum_chain_no_complements
+            sum_chain
             |> List.map get_coeff_elem
             |> List.fold_left
                 (fun list (b,c) ->
