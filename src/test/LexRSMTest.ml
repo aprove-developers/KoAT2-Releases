@@ -3,11 +3,11 @@ open ProgramTypes
 open Polynomials
 open OUnit2
 
-let tests = 
+let tests =
   let varx = RealPolynomial.of_var @@ Var.of_string "X" in
   let vary = RealPolynomial.of_var @@ Var.of_string "Y" in
   "LexRSM" >::: [(
-    "exists" >::: (List.map 
+    "exists" >::: (List.map
       (fun (name,l,gt_id,exp,prog_path) -> 
         TransitionLabel.reset_unique_gt_counter ();
         LexRSM.reset ();
@@ -15,17 +15,17 @@ let tests =
         let gtset = Program.generalized_transitions prog in
         let decr = GeneralTransitionSet.any @@ GeneralTransitionSet.filter ((=) gt_id % GeneralTransition.id) gtset in
         let rankfunc = LexRSM.find prog decr |> Option.get |> LexRSM.rank in
-        let loc = 
-            Program.graph prog |> TransitionGraph.locations 
+        let loc =
+            Program.graph prog |> TransitionGraph.locations
             |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
         in
-        let rank = rankfunc loc in 
-        let error_str = 
+        let rank = rankfunc loc in
+        let error_str =
             "Mismatch: Expected " ^ (RealPolynomial.to_string exp) ^ " got " ^ (RealPolynomial.to_string rank)
             ^ " with decr " ^ (GeneralTransition.to_id_string decr) ^ " and loc " ^ (Location.to_string loc) ^ " in prog\n" ^ (Program.to_string prog)
         in
         name >:: (fun _ -> assert_bool error_str (RealPolynomial.(rank =~= exp)) )
-      ) 
+      )
       [
         ("trivial_loop", "g", 1, RealPolynomial.(of_constant (OurFloat.of_int 2) * varx), "examples/ProbabilisticExamples/trivial_loop.koat");
         ("trivial_loop2", "g", 1, RealPolynomial.(of_constant OurFloat.(of_int 2 / of_int 5) * varx + of_constant OurFloat.(of_int 8 / of_int 5)), 
@@ -36,20 +36,20 @@ let tests =
         ("double_trivial_loop_decr_2", "g", 2, RealPolynomial.(of_constant (OurFloat.of_int 2) * varx), "examples/ProbabilisticExamples/double_trivial_loop.koat");
       ]));
 
-    "does_not_exist" >::: (List.map 
-      (fun (name,gt_id,prog_path) -> 
+    "does_not_exist" >::: (List.map
+      (fun (name,gt_id,prog_path) ->
         TransitionLabel.reset_unique_gt_counter ();
         LexRSM.reset ();
         let prog = Readers.read_file ("../../" ^ prog_path) in
         let gtset = Program.generalized_transitions prog in
         let decr = GeneralTransitionSet.any @@ GeneralTransitionSet.filter ((=) gt_id % GeneralTransition.id) gtset in
         let rank = LexRSM.find prog decr in
-        let error_str r = 
+        let error_str r =
           "Found LexRSM for decr: " ^ (GeneralTransition.to_id_string decr) ^ " with " ^ (LexRSM.pprf_to_string r)
           ^ " where none should exist. Program: \n" ^ (Program.to_string prog)
         in
         name >:: (fun _ -> if Option.is_some rank then assert_string (error_str @@ Option.get rank) else ())
-      ) 
+      )
       [
         ("trivial_loop", 0, "examples/ProbabilisticExamples/trivial_loop.koat");
         ("trivial_loop2", 0, "examples/ProbabilisticExamples/trivial_loop2.koat");
@@ -60,5 +60,5 @@ let tests =
         ("increasing_nondet_loop", 1, "examples/ProbabilisticExamples/NoLexRSM/increasing_nondet_loop.koat");
         ("exp_increase", 1, "examples/ProbabilisticExamples/NoLexRSM/exp_increase.koat");
       ])
-      
+
       ]
