@@ -43,7 +43,7 @@ let only_one_gt_outgoing program gt =
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     Here we add all incomin bounds on absolute values *)
-let incoming_bound program get_sizebound_abs get_expsizebound (exp_upd_poly: RealBound.t) gt =
+let incoming_bound program get_sizebound_abs get_expsizebound (elsb_with_prob: RealBound.t) (gt,l) =
   let execute () =
     let substitute_with_prevalues gtset =
       let prevalues_exp var =
@@ -57,17 +57,18 @@ let incoming_bound program get_sizebound_abs get_expsizebound (exp_upd_poly: Rea
         |> List.map (fun gt' -> max_detsizebound ((gt', GeneralTransition.start gt), var) get_sizebound_abs)
         |> List.enum |> RealBound.maximum
       in
-      RealBound.appr_substitution_probabilistic_and_nonprobabilistic
-        (* Propagate expected values if possible *)
-        ~probabilistic:(prevalues_exp)
-        ~nonprobabilistic:(prevalues) exp_upd_poly
+      elsb_with_prob
+      |> RealBound.appr_substitution_probabilistic_and_nonprobabilistic
+          (* Propagate expected values if possible *)
+          ~probabilistic:(prevalues_exp)
+          ~nonprobabilistic:(prevalues)
     in
     let pre_gts = Program.pre_gt program gt in
     pre_gts
     |> substitute_with_prevalues
 
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute highest incoming bound", ["exp_upd_poly", RealBound.to_string exp_upd_poly;
+                     (fun () -> "compute highest incoming bound", ["exp_upd_poly", RealBound.to_string elsb_with_prob;
                                                                    "transition", GeneralTransition.to_string gt])
                   ~result:RealBound.to_string
                   execute
@@ -93,13 +94,19 @@ let compute program get_sizebound (get_expsizebound: (GeneralTransition.t * Loca
     let elsb = ExpLocalSizeBound.elsb program ((gt,loc),var) in
 
     let execute () =
+      let probability_of_rv =
+        GeneralTransition.transitions gt
+        |> TransitionSet.filter (Location.equal loc % Transition.target)
+        |> TransitionSet.total_probability
+      in
+      let elsb_with_prob = RealBound.(elsb * (of_constant probability_of_rv)) in
       if Program.is_initial_gt program gt then
-        elsb
+        elsb_with_prob
       else
         incoming_bound
           program
           get_sizebound
-          (uncurry get_expsizebound) elsb gt
+          (uncurry get_expsizebound) elsb_with_prob (gt,loc)
     in Logger.with_log logger Logger.DEBUG
                          (fun () -> "compute expected trivial bound",
                                     [ "rv", ERV.to_id_string ((gt,loc),var)
