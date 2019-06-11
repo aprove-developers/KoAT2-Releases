@@ -482,16 +482,36 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             |> List.map remove_neg_head
             |> List.filter (fun b -> List.exists (equal_without_substitution_kind b) sum_chain)
           in
-          List.fold_left
-            (fun s n ->
-              (* Check if both terms still exist. This is important if the same terms occur multiple times e.g. a - a + a =/= 0*)
-              if List.exists (equal_without_substitution_kind n) s && List.exists (equal_without_substitution_kind (Neg n)) s then
-                List.remove_if (equal_without_substitution_kind n) s
-                |> List.remove_if (equal_without_substitution_kind (Neg n))
-              else
-                failwith ""
-            )
-            sum_chain negated
+          let sum_chain_no_complements =
+            List.fold_left
+              (fun s n ->
+                (* Check if both terms still exist. This is important if the same terms occur multiple times e.g. a - a + a =/= 0*)
+                if List.exists (equal_without_substitution_kind n) s && List.exists (equal_without_substitution_kind (Neg n)) s then
+                  List.remove_if (equal_without_substitution_kind n) s
+                  |> List.remove_if (equal_without_substitution_kind (Neg n))
+                else
+                  failwith ""
+              )
+              sum_chain negated
+          in
+          let combine_chain_elements_with_coeffs =
+            let get_coeff_elem = function
+              | Product (Const c, b) -> (b,c)
+              | Product (b, Const c) -> (b,c)
+              | b                    -> (b,Num.one)
+            in
+            sum_chain_no_complements
+            |> List.map get_coeff_elem
+            |> List.fold_left
+                (fun list (b,c) ->
+                  try
+                    let i = fst @@ List.findi (fun i -> equal_without_substitution_kind b % fst) list in
+                    List.modify_at i (fun (b,c') -> (b,Num.(c + c'))) list
+                  with Not_found -> List.cons (b,c) list)
+                []
+            |> List.map (fun (b,c) -> Product (Const c, b) |> simplify)
+          in
+          combine_chain_elements_with_coeffs
           |> construct_op_chain `Sum
           |> function
               | Sum (b1,b2) -> simplify_bi b1 b2
