@@ -307,6 +307,18 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             | (Infinity, _) -> Some true
             | (Sum (Abs _, b), b2) when equal_without_substitution_kind b b2 -> Some true
             | (_, Neg Infinity) -> Some true
+            | (Product (Const c1, b1), Product (Const c2,b2)) 
+                when (b1 >= Product (Const Num.(c2/c1), b2) = Some true) 
+                  || (Product (Const Num.(c1/c2), b1) >= b2 = Some true) -> Some true
+            | (Product (Const c1, b1), Product (b2,Const c2)) 
+                when (b1 >= Product (Const Num.(c2/c1), b2) = Some true) 
+                  || (Product (Const Num.(c1/c2), b1) >= b2 = Some true) -> Some true
+            | (Product (b1, Const c1), Product (Const c2,b2)) 
+                when (b1 >= Product (Const Num.(c2/c1), b2) = Some true) 
+                  || (Product (Const Num.(c1/c2), b1) >= b2 = Some true) -> Some true
+            | (Product (b1, Const c1), Product (b2,Const c2)) 
+                when (b1 >= Product (Const Num.(c2/c1), b2) = Some true) 
+                  || (Product (Const Num.(c1/c2), b1) >= b2 = Some true) -> Some true
             | (Product (Const c1, b2), b) when Num.Compare.(c1 >= Num.one) && (b2 >= b = Some true) -> Some true
             | (b,Product (Const c1, b2)) when Num.Compare.(Num.one >= c1 && c1 >= Num.zero) && (b >= b2 = Some true) -> Some true
             | (Const c1, Const c2) when Num.Compare.(c1 >= c2) -> Some true
