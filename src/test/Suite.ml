@@ -25,7 +25,8 @@ let suite =
 
       (* Probabilistic *)
       LexRSMTest.tests;
-      ELSBTest.tests
+      ELSBTest.tests;
+      ExpTrivSizeBoundTest.tests;
     ]
                      
 let () =
