@@ -49,8 +49,6 @@ let only_rank_to_string {rank; decreasing; non_increasing; degree} =
 let to_string {rank; decreasing; non_increasing; degree} =
   "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; degree} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
-
-
 (* Methoden überarbeiten *)
 
 
@@ -76,19 +74,16 @@ let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
 
 module TemplateTable = Hashtbl.Make(Location)
 
-let template_table1: ParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
-let template_table2: ParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
-let template_table3: ParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
-let template_table4: ParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
-let template_table5: ParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
+(**let template_tables = [template_table1; template_table2; template_table3; template_table4; template_table5]*)
 
-let template_tables = [template_table1; template_table2; template_table3; template_table4; template_table5]
+let template_tables =
+  List.init 5 (fun i -> TemplateTable.create 10)
 
 let fresh_coeffs: Var.t list ref = ref []
 
 let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): unit =
   let execute () =
-  for i = 1 to 5 do
+    for i = 0 to 4 do
     let ins_loc_prf location =
       (* Each location needs its own ranking template with different fresh variables *)
       let (parameter_poly, fresh_vars) = ranking_template vars in
@@ -103,15 +98,15 @@ let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): uni
     |> (fun fresh_vars -> fresh_coeffs := fresh_vars)
   done
   in
-  for i = 1 to 5 do
+  for i = 0 to 4 do
     Logger.with_log logger Logger.DEBUG
-                  (fun () -> "compute_ranking_templates" ^ string_of_int i, [])
-                  ~result:(fun () ->
-                    (List.nth template_tables i)
-                    |> TemplateTable.enum
-                    |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial)
-                  )
-                  execute
+      (fun () -> "compute_ranking_templates_" ^ string_of_int i, [])
+      ~result:(fun () ->
+        (List.nth template_tables i)
+        |> TemplateTable.enum
+        |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial)
+        )
+      execute;
   done
 
 let decreaser measure t =
@@ -153,81 +148,79 @@ let transition_constraint_ (template_table0,template_table1, measure, constraint
 
 let transition_constraints_ (measure, constraint_type, (l,t,l')): Formula.t =
   let res = ref Formula.mk_true in
-    for i = 2 to 5 do
+    for i = 1 to 4 do
       res := ((List.nth template_tables (i-1)),(List.nth template_tables i), measure, constraint_type, (l,t,l'))
              |> transition_constraint_
              |> Formula.mk_and !res
     done;
-      res := ((List.nth template_tables 1), measure, constraint_type, (l,t,l'))
+      res := ((List.nth template_tables 0), measure, constraint_type, (l,t,l'))
              |> transition_constraint_1
              |> Formula.mk_and !res;
 
-      res := ((List.nth template_tables 5), measure, constraint_type, (l,t,l'))
+      res := ((List.nth template_tables 4), measure, constraint_type, (l,t,l'))
              |> transition_constraint_d
              |> Formula.mk_and !res;
     !res
 
-
 let transition_constraint = Util.memoize ~extractor:(Tuple3.map3 Transition.id) transition_constraints_
 
-let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
-  transitions
-  |> List.map (fun t -> transition_constraint (measure, constraint_type, t))
-  |> Formula.all
+    let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
+    transitions
+    |> List.map (fun t -> transition_constraint (measure, constraint_type, t))
+    |> Formula.all
 
-let non_increasing_constraint measure transition =
-  transition_constraint (measure, `Non_Increasing, transition)
+    let non_increasing_constraint measure transition =
+    transition_constraint (measure, `Non_Increasing, transition)
 
-let non_increasing_constraints measure transitions =
-  transitions_constraint measure `Non_Increasing (TransitionSet.to_list transitions)
+    let non_increasing_constraints measure transitions =
+    transitions_constraint measure `Non_Increasing (TransitionSet.to_list transitions)
 
-let bounded_constraint measure transition =
-  transition_constraint (measure, `Bounded, transition)
+    let bounded_constraint measure transition =
+    transition_constraint (measure, `Bounded, transition)
 
-let decreasing_constraint measure transition =
-  transition_constraint (measure, `Decreasing, transition)
+    let decreasing_constraint measure transition =
+    transition_constraint (measure, `Decreasing, transition)
 
-(** A valuation is a function which maps from a finite set of variables to values *)
+    (** A valuation is a function which maps from a finite set of variables to values *)
 
-let rank_from_valuation valuation location =
-  List.init 5 (fun i ->
-  location
-  |> TemplateTable.find (List.nth template_tables i)
-  |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero))
+    let rank_from_valuation i valuation location =
+    location
+    |> TemplateTable.find (List.nth template_tables i)
+    |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
 
-let make decreasing_transition non_increasing_transitions valuation degree =
-  {
-    rank = rank_from_valuation valuation;
-    decreasing = decreasing_transition;
-    non_increasing = non_increasing_transitions;
-    degree = degree;
-  }
+    let make degree decreasing_transition non_increasing_transitions valuation  =
+    {
+      rank = List.init 5 (fun i -> rank_from_valuation i valuation);
+      decreasing = decreasing_transition;
+      non_increasing = non_increasing_transitions;
+      degree = degree;
+    }
 
-let find_with measure non_increasing_transitions decreasing_transition =
-  Formula.Infix.(
-    non_increasing_constraints measure non_increasing_transitions
-    && bounded_constraint measure decreasing_transition
-    && decreasing_constraint measure decreasing_transition)
-  |> SMTSolver.get_model ~coeffs_to_minimise:!fresh_coeffs
-  |> Option.map (make decreasing_transition non_increasing_transitions)
+    let find_with measure non_increasing_transitions decreasing_transition degree =
+    Formula.Infix.(
+      non_increasing_constraints measure non_increasing_transitions
+      && bounded_constraint measure decreasing_transition
+      && decreasing_constraint measure decreasing_transition)
+      |> SMTSolver.get_model ~coeffs_to_minimise:!fresh_coeffs
+      |> Option.map (make degree decreasing_transition non_increasing_transitions)
 
-module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
+    module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
 
-let time_ranking_table: t RankingTable.t = RankingTable.create 10
+    let time_ranking_table: t RankingTable.t = RankingTable.create 10
 
-let cost_ranking_table: t RankingTable.t = RankingTable.create 10
+    let cost_ranking_table: t RankingTable.t = RankingTable.create 10
 
-let ranking_table = function
-  | `Time -> time_ranking_table
-  | `Cost -> cost_ranking_table
+    let ranking_table = function
+    | `Time -> time_ranking_table
+    | `Cost -> cost_ranking_table
 
-module Solver = SMT.IncrementalZ3Solver
+    module Solver = SMT.IncrementalZ3Solver
 
-let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
-  non_increasing
-  |> Stack.enum
-  |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
-  |> Enum.iter (fun decreasing ->
+    let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
+    non_increasing
+    |> Stack.enum
+    |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
+    |> Enum.iter (fun decreasing ->
          Logger.(log logger DEBUG (fun () -> "try_decreasing", ["measure", show_measure measure;
                                                                 "decreasing", Transition.to_id_string decreasing;
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing)]));
@@ -237,26 +230,25 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
          if Solver.satisfiable opt then (
            Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
            Solver.model opt
-           |> Option.map (make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+           |> Option.map (make 5 decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
            |> Option.may (fun ranking_function ->
                   to_be_found := !to_be_found - 1;
                   RankingTable.add (ranking_table measure) decreasing ranking_function;
-                  (*Logger.(log logger INFO (fun () -> "add_ranking_function", [
+                  Logger.(log logger INFO (fun () -> "add_ranking_function", [
                                                "measure", show_measure measure;
                                                "decreasing", Transition.to_id_string decreasing;
                                                "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
-                                               "rank", only_rank_to_string ranking_function;
-                                               (*"degree" string_of_int degree*)];)*)
+                                               "rank", only_rank_to_string ranking_function];))
                 )
          );
          Solver.pop opt
        );
-  if !to_be_found <= 0 then
+    if !to_be_found <= 0 then
     raise Exit
 
 
-let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
-  if Solver.satisfiable opt then (
+    let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
+    if Solver.satisfiable opt then (
     if steps_left == 0 then (
       try_decreasing opt non_increasing to_be_found measure
     ) else (
@@ -271,12 +263,12 @@ let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transitio
       done;
       try_decreasing opt non_increasing to_be_found measure
     )
-  )
+    )
 
-let compute_ measure program =
-  program
-  |> Program.sccs
-  |> Enum.iter (fun scc ->
+    let compute_ measure program =
+    program
+    |> Program.sccs
+    |> Enum.iter (fun scc ->
          try
            backtrack (TransitionSet.cardinal scc)
                      0
@@ -293,10 +285,10 @@ let compute_ measure program =
          with Exit -> ()
        )
 
-let find measure program transition =
-  let execute () =
+    let find measure program transition =
+    let execute () =
     (* or 2 or 3 or ... d*)
-    if TemplateTable.is_empty template_table1 then
+    if TemplateTable.is_empty (List.nth template_tables 1) then
       compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
     if RankingTable.is_empty (ranking_table measure) then
       compute_ measure program;
@@ -304,14 +296,16 @@ let find measure program transition =
       RankingTable.find_all (ranking_table measure) transition
     with Not_found -> [])
     |> List.rev
-  in
-  Logger.with_log logger Logger.DEBUG
+    in
+    Logger.with_log logger Logger.DEBUG
                   (fun () -> "find_ranking_functions", ["measure", show_measure measure;
                                                         "transition", Transition.to_id_string transition])
                   ~result:(Util.enum_to_string to_string % List.enum)
                   execute
 
-let reset () =
-  RankingTable.clear time_ranking_table;
-  RankingTable.clear cost_ranking_table;
-  TemplateTable.clear template_table1
+    let reset () =
+    RankingTable.clear time_ranking_table;
+    RankingTable.clear cost_ranking_table;
+    for i = 1 to List.length template_tables do
+      TemplateTable.clear (List.nth template_tables i)
+    done

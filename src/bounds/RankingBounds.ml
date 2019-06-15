@@ -1,7 +1,7 @@
 open Batteries
 open Polynomials
 open ProgramTypes
-   
+
 let logger = Logging.(get Time)
 
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
@@ -30,16 +30,16 @@ let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t)
        `Upper
        ~lower:(get_sizebound `Lower transition)
        ~higher:(get_sizebound `Upper transition)
-  
-let compute_bound (appr: Approximation.t) (program: Program.t) (rank: RankingFunction.t): Bound.t =
+
+let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: MultiphaseRankingFunction.t): Bound.t =
   let execute () =
     rank
-    |> RankingFunction.non_increasing
+    |> MultiphaseRankingFunction.non_increasing
     |> entry_transitions program
     |> List.enum
     |> Enum.map (fun (l,t,l') ->
            let timebound = Approximation.timebound appr (l,t,l') in
-           let rhs = Bound.(max zero (apply (fun kind -> Approximation.sizebound kind appr) (RankingFunction.rank rank l') (l,t,l'))) in
+           let rhs = Bound.(max zero (apply (fun kind -> Approximation.sizebound kind appr) ((List.hd (MultiphaseRankingFunction.rank rank)) l') (l,t,l'))) in
            Bound.(
              if is_infinity timebound then
                if equal zero rhs then
@@ -54,16 +54,46 @@ let compute_bound (appr: Approximation.t) (program: Program.t) (rank: RankingFun
            ))
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
-       (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (RankingFunction.decreasing rank);
-                                    "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (RankingFunction.non_increasing rank));
-                                    "rank", RankingFunction.only_rank_to_string rank])
+       (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
+                                    "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (MultiphaseRankingFunction.non_increasing rank));
+                                    "rank", MultiphaseRankingFunction.only_rank_to_string rank])
                      ~result:Bound.to_string
                      execute
+
+
+ let compute_bound (appr: Approximation.t) (program: Program.t) (rank: RankingFunction.t): Bound.t =
+   let execute () =
+     rank
+     |> RankingFunction.non_increasing
+     |> entry_transitions program
+     |> List.enum
+     |> Enum.map (fun (l,t,l') ->
+            let timebound = Approximation.timebound appr (l,t,l') in
+            let rhs = Bound.(max zero (apply (fun kind -> Approximation.sizebound kind appr) (RankingFunction.rank rank l') (l,t,l'))) in
+            Bound.(
+              if is_infinity timebound then
+                if equal zero rhs then
+                  zero
+                else
+                  infinity
+              else
+                if is_infinity rhs then
+                  infinity
+                else
+                  timebound * rhs
+            ))
+     |> Bound.sum
+   in Logger.with_log logger Logger.DEBUG
+        (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (RankingFunction.decreasing rank);
+                                     "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (RankingFunction.non_increasing rank));
+                                     "rank", RankingFunction.only_rank_to_string rank])
+                      ~result:Bound.to_string
+                      execute
 
 let add_bound = function
   | `Time -> Approximation.add_timebound
   | `Cost -> Approximation.add_costbound
-   
+
 let improve_with_rank measure program appr rank =
   let bound = compute_bound appr program rank in
   if Bound.is_infinity bound then
@@ -74,24 +104,44 @@ let improve_with_rank measure program appr rank =
     |> (fun t -> add_bound measure bound t appr)
     |> MaybeChanged.changed
 
+  let improve_with_rank_mrf measure program appr rank =
+    let bound = compute_bound_mrf appr program rank in
+    if Bound.is_infinity bound then
+      MaybeChanged.same appr
+    else
+      rank
+      |> MultiphaseRankingFunction.decreasing
+      |> (fun t -> add_bound measure bound t appr)
+      |> MaybeChanged.changed
+
 (** Checks if a transition is bounded *)
 let bounded measure appr transition =
   match measure with
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> false
-  
+
 let improve measure program appr =
   let execute () =
     program
     |> Program.non_trivial_transitions
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
     |> TransitionSet.enum
-    |> MaybeChanged.fold_enum (fun appr transition ->
+    |> MaybeChanged.fold_enum (
+      if not false then
+      (fun appr transition ->
+           MultiphaseRankingFunction.find measure program transition
+           |> List.enum
+           |> MaybeChanged.fold_enum (fun appr rank ->
+                  improve_with_rank_mrf measure program appr rank
+             ) appr)
+      else
+      (fun appr transition ->
            RankingFunction.find measure program transition
            |> List.enum
            |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank measure program appr rank
-                ) appr           
+             ) appr)
+
          ) appr
   in Logger.with_log logger Logger.INFO
                      (fun () -> "improve_bounds", ["measure", show_measure measure])
