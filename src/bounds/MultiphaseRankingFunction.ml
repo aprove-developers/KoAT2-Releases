@@ -76,21 +76,19 @@ let template_tables =
 let fresh_coeffs: Var.t list ref = ref []
 
 let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location.t list): unit =
-  let execute () =
-    for i = 0 to degree - 1 do
-      let ins_loc_prf location =
-        (* Each location needs its own ranking template with different fresh variables *)
-        let (parameter_poly, fresh_vars) = ranking_template vars in
-        (location, parameter_poly, fresh_vars)
-      in
-      let templates = List.map ins_loc_prf locations in
-      templates
-      |> List.iter (fun (location,polynomial,_) -> TemplateTable.add (List.nth template_tables i) location polynomial);
-      templates
-      |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
-      |> List.flatten
-      |> (fun fresh_vars -> fresh_coeffs := fresh_vars)
-    done
+  let execute (i:int) =
+    let ins_loc_prf location =
+      (* Each location needs its own ranking template with different fresh variables *)
+      let (parameter_poly, fresh_vars) = ranking_template vars in
+      (location, parameter_poly, fresh_vars)
+    in
+    let templates = List.map ins_loc_prf locations in
+    templates
+    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add (List.nth template_tables i) location polynomial);
+    templates
+    |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
+    |> List.flatten
+    |> (fun fresh_vars -> fresh_coeffs := fresh_vars)
   in
   for i = 0 to degree - 1 do
     Logger.with_log logger Logger.DEBUG
@@ -100,7 +98,7 @@ let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location
           |> TemplateTable.enum
           |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial)
         )
-      execute;
+      (fun () -> execute i);
   done
 
 let decreaser measure t =
@@ -109,7 +107,9 @@ let decreaser measure t =
   | `Time -> Polynomial.one
 
 
-(** atom entspricht Def. 14 Ranking function *)
+(** methods define properties of mrf *)
+
+(* method for mrf and functions f_2 to f_d*)
 let transition_constraint_ (template_table0,template_table1, measure, constraint_type, (l,t,l')): Formula.t =
   let template0 = TemplateTable.find template_table0 in
   let template1 = TemplateTable.find template_table1 in
@@ -123,6 +123,7 @@ let transition_constraint_ (template_table0,template_table1, measure, constraint
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk
 
+(* method for mrf and function f_1*)
 let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')): Formula.t =
   let template1 = TemplateTable.find template_table1 in
   let atom =
@@ -134,12 +135,14 @@ let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk
 
+(* method for mrf and function f_d*)
 let transition_constraint_d (template_table1, measure, constraint_type, (l,t,l')): Formula.t =
   let template1 = TemplateTable.find template_table1 in
   let atom = ParameterAtom.Infix.((template1 l)  >= ParameterPolynomial.zero) in
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk
 
+(* use all three functions above combined*)
 let transition_constraints_ (degree:int) (measure, constraint_type, (l,t,l')): Formula.t =
   let res = ref Formula.mk_true in
   for i = 1 to (degree - 1) do
@@ -154,6 +157,7 @@ let transition_constraints_ (degree:int) (measure, constraint_type, (l,t,l')): F
   res := ((List.nth template_tables (degree - 1)), measure, constraint_type, (l,t,l'))
          |> transition_constraint_d
          |> Formula.mk_and !res;
+  Printf.printf "degree %i %s\n" degree (Formula.to_string !res);
   !res
 
 let transition_constraint (degree:int) = Util.memoize ~extractor:(Tuple3.map3 Transition.id) (transition_constraints_ degree)
@@ -212,6 +216,10 @@ let ranking_table = function
 module Solver = SMT.IncrementalZ3Solver
 
 let try_decreasing (degree:int) (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
+  (**for i = 0 to degree - 1 do
+    let s = Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial) (TemplateTable.enum (List.nth template_tables i)) in
+    Printf.printf "Anzahl in i %i : %i mit : %s \n" i (TemplateTable.length (List.nth template_tables i)) s
+     done;*)
   non_increasing
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
@@ -284,9 +292,9 @@ let compute_ measure program =
 
 let find measure program transition =
   let execute () =
-    (* or 2 or 3 or ... d*)
+    (** or 2 or 3 or ... d *)
     if TemplateTable.is_empty (List.nth template_tables 0) then
-      compute_ranking_templates 5 (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+        compute_ranking_templates 5 (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
     if RankingTable.is_empty (ranking_table measure) then
       compute_ measure program;
     (try
@@ -303,6 +311,6 @@ let find measure program transition =
 let reset () =
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
-  for i = 1 to List.length template_tables do
+  for i = 0 to List.length template_tables - 1 do
     TemplateTable.clear (List.nth template_tables i)
   done
