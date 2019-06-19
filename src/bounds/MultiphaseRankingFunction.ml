@@ -5,6 +5,8 @@ open Atoms
 open Polynomials
 open ProgramTypes
 
+(** Class is derived from RankingFunction.ml*)
+
 module SMTSolver = SMT.Z3Solver
 module Valuation = Valuation.Make(OurInt)
 
@@ -138,7 +140,11 @@ let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')
 (* method for mrf and function f_d*)
 let transition_constraint_d (template_table1, measure, constraint_type, (l,t,l')): Formula.t =
   let template1 = TemplateTable.find template_table1 in
-  let atom = ParameterAtom.Infix.((template1 l)  >= ParameterPolynomial.zero) in
+  let atom =
+    match constraint_type with
+    | `Bounded -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.of_polynomial (decreaser measure t))
+    | _ -> ParameterAtom.Infix.((template1 l)  >= ParameterPolynomial.zero)
+  in
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk
 
@@ -157,7 +163,6 @@ let transition_constraints_ (degree:int) (measure, constraint_type, (l,t,l')): F
   res := ((List.nth template_tables (degree - 1)), measure, constraint_type, (l,t,l'))
          |> transition_constraint_d
          |> Formula.mk_and !res;
-  Printf.printf "degree %i %s\n" degree (Formula.to_string !res);
   !res
 
 let transition_constraint (degree:int) = Util.memoize ~extractor:(Tuple3.map3 Transition.id) (transition_constraints_ degree)
@@ -195,6 +200,7 @@ let make degree decreasing_transition non_increasing_transitions valuation  =
   degree = degree;
 }
 
+  (** wird nie benutzt *)
 let find_with measure non_increasing_transitions decreasing_transition degree =
   Formula.Infix.(
     non_increasing_constraints degree measure non_increasing_transitions
@@ -216,19 +222,16 @@ let ranking_table = function
 module Solver = SMT.IncrementalZ3Solver
 
 let try_decreasing (degree:int) (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
-  (**for i = 0 to degree - 1 do
-    let s = Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial) (TemplateTable.enum (List.nth template_tables i)) in
-    Printf.printf "Anzahl in i %i : %i mit : %s \n" i (TemplateTable.length (List.nth template_tables i)) s
-     done;*)
   non_increasing
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
   |> Enum.iter (fun decreasing ->
           Logger.(log logger DEBUG (fun () -> "try_decreasing", ["measure", show_measure measure;
                                                                  "decreasing", Transition.to_id_string decreasing;
-                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing)]));
+                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
+                                                                 "degree", string_of_int degree]));
           Solver.push opt;
-          Solver.add opt (bounded_constraint degree measure decreasing);
+          (** Solver.add opt (bounded_constraint degree measure decreasing);*)
           Solver.add opt (decreasing_constraint degree measure decreasing);
           if Solver.satisfiable opt then (
             Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
@@ -308,6 +311,8 @@ let find measure program transition =
     ~result:(Util.enum_to_string to_string % List.enum)
     execute
 
+
+(* only for testing*)
 let reset () =
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
