@@ -14,8 +14,10 @@ type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
 type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ] [@@deriving show, eq]
 
+type mrf = (Location.t -> Polynomial.t) list
+
 type t = {
-  rank : (Location.t -> Polynomial.t) list;
+  rank : mrf;
   decreasing : Transition.t;
   non_increasing : TransitionSet.t;
   degree : int;
