@@ -21,8 +21,6 @@ type t = {
   degree : int;
 }
 
-let one = ParameterPolynomial.one
-
 let logger = Logging.(get PRF)
 
 let rank f = f.rank
@@ -30,6 +28,8 @@ let rank f = f.rank
 let decreasing f = f.decreasing
 
 let non_increasing f = TransitionSet.to_list f.non_increasing
+
+let degree f = f.degree
 
 (* output methods *)
 let rank_to_string (locations: Location.t list) (content_to_string: ((Location.t -> 'a) list) * Location.t -> string) (rank: (Location.t -> 'a) list) =
@@ -199,15 +199,6 @@ let make degree decreasing_transition non_increasing_transitions valuation  =
   non_increasing = non_increasing_transitions;
   degree = degree;
 }
-
-  (** wird nie benutzt *)
-let find_with measure non_increasing_transitions decreasing_transition degree =
-  Formula.Infix.(
-    non_increasing_constraints degree measure non_increasing_transitions
-    && bounded_constraint degree measure decreasing_transition
-    && decreasing_constraint degree measure decreasing_transition)
-  |> SMTSolver.get_model ~coeffs_to_minimise:!fresh_coeffs
-  |> Option.map (make degree decreasing_transition non_increasing_transitions)
 
 module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
 
