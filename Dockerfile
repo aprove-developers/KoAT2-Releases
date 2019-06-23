@@ -1,6 +1,6 @@
 #############################################################
 # Dockerfile to build KoAT2 Probabilistic
-# Based on Ocaml 4.06.1
+# Based on Ocaml 4.07.1
 #############################################################
 
 ###################################################################
@@ -11,36 +11,54 @@
 FROM ocaml/opam2:alpine as koat2_build
 LABEL author="Fabian Meyer"
 
-RUN sudo apk add m4
-
 RUN opam switch create -y 4.07.1
 RUN opam update
 RUN opam upgrade
 RUN eval $(opam env)
 
-# Needed to compile Z3
-RUN sudo apk add python2 --no-cache
-RUN sudo apk add gmp-dev --no-cache
+# Auxiliary libraries which are needed to build the opam packages
+RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev --no-cache
 
-# Test
-RUN sudo apk add libgcc libgomp libstdc++ musl
+RUN opam install z3 ocamlfind menhir cmdliner ppx_deriving batteries ppx_deriving_cmdliner fpath omake apron ocamlgraph ounit
 
-# Go and grab a cub of coffee, or two..
-RUN opam install z3
-RUN opam install ocamlfind menhir cmdliner ppx_deriving batteries ppx_deriving_cmdliner fpath omake
+RUN eval $(opam env)
 
-RUN sudo apk add perl --no-cache
-RUN sudo apk add mpfr-dev --no-cache
-
-RUN opam install apron ocamlgraph
-RUN opam install ounit
-
-# Set environment variables to include added libraries
+# Set environment variables to include libraries added through opam
 ENV PATH=/home/opam/.opam/4.07.1/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
-ENV LD_LIBRARY_PATH=/home/opam/.opam/4.07.1/lib:/home/opam/.opam/4.07.1/lib/stublibs:/home/opam/.opam/4.07.1/lib/z3
+ENV LD_LIBRARY_PATH=/home/opam/.opam/4.07.1/lib:/home/opam/.opam/4.07.1/lib/stublibs
 
 WORKDIR /home/opam/build
-COPY src ./src
-COPY OMakeroot .
-COPY OMakefile .
-RUN sudo chown -R opam:nogroup .
+RUN sudo chown opam:nogroup /home/opam/build
+
+COPY --chown=opam:nogroup src ./src
+COPY --chown=opam:nogroup OMakeroot .
+COPY --chown=opam:nogroup OMakefile .
+
+RUN omake --depend
+
+###################################################################
+######################## EXECUTABLE IMAGE #########################
+###################################################################
+
+# Use alpine because it is super small
+FROM alpine:3.9 as koat2_probabilistic
+LABEL author="Fabian Meyer"
+
+RUN adduser -D koat2
+WORKDIR /home/koat2
+
+# Install necessary packages
+RUN apk add libstdc++ mpfr3 libgomp --no-cache
+
+# Add executables and dynamically linked apron files
+COPY --from=koat2_build --chown=koat2:koat2 /home/opam/build/src/main/koat2 app/src/main/koat2
+COPY --from=koat2_build --chown=koat2:koat2 /home/opam/.opam/4.07.1/share/apron/lib share/apron/lib
+
+# Add Probabilistic Examples
+COPY --chown=koat2:koat2 examples/ProbabilisticExamples examples
+
+USER koat2
+WORKDIR /home/koat2/examples
+ENV LD_LIBRARY_PATH=/home/koat2/share/apron/lib
+ENV PATH=/home/koat2/app/src/main:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENTRYPOINT ["koat2", "analyse", "-i"]
