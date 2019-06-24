@@ -29,6 +29,7 @@
 # Any of these can be deleted if you are not using them,
 # but you probably want to keep the Common file.
 #
+open build/C
 open build/OCaml.om
 
 #
