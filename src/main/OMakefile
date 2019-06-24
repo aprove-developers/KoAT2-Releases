@@ -1,5 +1,5 @@
 USE_OCAMLFIND = true
-OCAMLOPTFLAGS += -p -g
+OCAMLOPTFLAGS += -p -g -thread
 
 OCAMLPACKS[] =
     batteries
@@ -41,6 +41,7 @@ OCamlProgram(koat2, $(FILES))
 
 install: koat2
 
+
 InterfaceDoc($(LIB), $(FILES))
 
 clean:
@@ -50,5 +51,4 @@ clean:
      *.cmo \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
-     koat2 koat2.opt koatP koatP.opt \
-     *~
+     koat2 koat2.opt \
