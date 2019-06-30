@@ -77,7 +77,7 @@ let rec maxBound_of_list list =
  match list with
  | [] -> Bound.zero
  | [x] -> x
- | x::xs -> Bound.max x (maxBound_of_list xs)
+ | x::xs -> Bound.add x (maxBound_of_list xs)
 
 (* computes new bounds*)
 let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: MultiphaseRankingFunction.t): Bound.t =
@@ -184,7 +184,7 @@ let improve measure program appr =
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
     |> TransitionSet.enum
     |> MaybeChanged.fold_enum (
-      if not false then
+      if true then
       (fun appr transition ->
            MultiphaseRankingFunction.find measure program transition
            |> List.enum
