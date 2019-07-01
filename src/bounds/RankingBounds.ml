@@ -177,14 +177,14 @@ let bounded measure appr transition =
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> false
 
-let improve ?(degree = 5) ?(mrf = true) measure program appr  =
+let improve ?(degree = 5) ?(mrf = false) measure program appr  =
   let execute () =
     program
     |> Program.non_trivial_transitions
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
     |> TransitionSet.enum
     |> MaybeChanged.fold_enum (
-      if mrf then
+      if (mrf && measure <> `Cost) then
       (fun appr transition ->
            MultiphaseRankingFunction.find ~degree:degree measure program transition
            |> List.enum
