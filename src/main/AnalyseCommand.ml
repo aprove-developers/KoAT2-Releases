@@ -121,10 +121,7 @@ let rename_program_option opt =
     |Some program -> Some (rename_program program)
     |None -> None
 
-let xy = ref None
-
 let run (params: params) =
-  xy := Some params;
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
   let input = Option.default_delayed read_line params.input in
@@ -167,7 +164,7 @@ let run (params: params) =
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
                      (program, appr)
-                     |> uncurry Bounds.find_bounds
+                     |> uncurry (Bounds.find_bounds ~degree:(params.degree) ~mrf:(params.multiphaserankingfunctions))
                      |> fun appr -> (program, appr)
                    else (program, appr))
          |> tap (fun (program, appr) -> params.result program appr)
