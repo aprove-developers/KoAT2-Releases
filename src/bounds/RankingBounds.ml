@@ -77,7 +77,7 @@ let rec maxBound_of_list list =
  match list with
  | [] -> Bound.zero
  | [x] -> x
- | x::xs -> Bound.add x (maxBound_of_list xs)
+ | x::xs -> Bound.max x (maxBound_of_list xs)
 
 (* computes new bounds*)
 let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: MultiphaseRankingFunction.t): Bound.t =
@@ -177,7 +177,7 @@ let bounded measure appr transition =
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> false
 
-let improve ?(degree = 5) ?(mrf = false) measure program appr  =
+let improve  ?(mrf = false) measure program appr  =
   let execute () =
     program
     |> Program.non_trivial_transitions
@@ -186,7 +186,7 @@ let improve ?(degree = 5) ?(mrf = false) measure program appr  =
     |> MaybeChanged.fold_enum (
       if (mrf && measure <> `Cost) then
       (fun appr transition ->
-           MultiphaseRankingFunction.find ~degree:degree measure program transition
+           MultiphaseRankingFunction.find  measure program transition
            |> List.enum
            |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank_mrf measure program appr rank

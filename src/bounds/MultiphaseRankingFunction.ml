@@ -9,6 +9,8 @@ open ProgramTypes
 
 module DummyRank = DummyRF.Make
 
+type constraint_type = [ `Non_Increasing | `Decreasing] [@@deriving show, eq]
+
 let maxDegree = ref 5
 
 type mrf = (Location.t -> Polynomial.t) list
@@ -48,9 +50,10 @@ let to_string {rank; decreasing; non_increasing; degree} =
 
 
 
-let template_tables =
-  (*Printf.printf "maxDegree: %i \n" !maxDegree;*)
-  List.init !maxDegree (fun i -> DummyRank.TemplateTable.create 10)
+let template_tables: ((ParameterPolynomial.t DummyRank.TemplateTable.t) list) ref= ref []
+
+let list_init degree = 
+  template_tables := (List.init degree (fun i -> DummyRank.TemplateTable.create 10))
 
 let fresh_coeffs: Var.t list ref = ref []
 
@@ -63,7 +66,7 @@ let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location
     in
     let templates = List.map ins_loc_prf locations in
     templates
-    |> List.iter (fun (location,polynomial,_) -> DummyRank.TemplateTable.add (List.nth template_tables i) location polynomial);
+    |> List.iter (fun (location,polynomial,_) -> DummyRank.TemplateTable.add (List.nth !template_tables i) location polynomial);
     templates
     |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
     |> List.flatten
@@ -73,7 +76,7 @@ let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location
     Logger.with_log DummyRank.logger Logger.DEBUG
       (fun () -> "compute_ranking_templates_" ^ string_of_int i, [])
       ~result:(fun () ->
-          (List.nth template_tables i)
+          (List.nth !template_tables i)
           |> DummyRank.TemplateTable.enum
           |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial)
         )
@@ -96,8 +99,7 @@ let transition_constraint_ (template_table0,template_table1, measure, constraint
   let atom =
     match constraint_type with
     | `Non_Increasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.substitute_f (DummyRank.as_parapoly t) (template1 l'))
-    | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (DummyRank.as_parapoly t) (template1 l')))
-    | `Bounded -> ParameterAtom.Infix.(poly >= ParameterPolynomial.of_polynomial (decreaser measure t))
+    | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(ParameterPolynomial.one  + substitute_f (DummyRank.as_parapoly t) (template1 l')))
   in
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk
@@ -107,9 +109,8 @@ let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')
   let template1 = DummyRank.TemplateTable.find template_table1 in
   let atom =
     match constraint_type with
-    | `Non_Increasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.substitute_f (DummyRank.as_parapoly t) (template1 l'))
-    | `Decreasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (DummyRank.as_parapoly t) (template1 l')))
-    | `Bounded -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.of_polynomial (decreaser measure t))
+      | `Non_Increasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.substitute_f (DummyRank.as_parapoly t) (template1 l'))
+      | `Decreasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.(ParameterPolynomial.one + substitute_f (DummyRank.as_parapoly t) (template1 l')))
   in
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk
@@ -117,34 +118,33 @@ let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')
 (* method for mrf and function f_d*)
 let transition_constraint_d (template_table1, measure, constraint_type, (l,t,l')): Formula.t =
   let template1 = DummyRank.TemplateTable.find template_table1 in
-  let atom =
     match constraint_type with
-    | `Bounded -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.of_polynomial (decreaser measure t))
-    | _ -> ParameterAtom.Infix.((template1 l)  >= ParameterPolynomial.zero)
-  in
-  ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
-  |> Formula.mk
+    | `Non_Increasing -> Formula.mk_true
+    | `Decreasing  -> (
+      let atom = ParameterAtom.Infix.((template1 l)  >= ParameterPolynomial.zero) in
+        ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
+        |> Formula.mk)
 
 (* use all three functions above combined*)
 let transition_constraints_ degree (measure, constraint_type, (l,t,l')): Formula.t =
   let res = ref Formula.mk_true in
   for i = 1 to (degree - 1) do
-    res := ((List.nth template_tables (i - 1)), (List.nth template_tables i), measure, constraint_type, (l,t,l'))
+    res := ((List.nth !template_tables (i - 1)), (List.nth !template_tables i), measure, constraint_type, (l,t,l'))
            |> transition_constraint_
            |> Formula.mk_and !res
   done;
-  res := ((List.nth template_tables 0), measure, constraint_type, (l,t,l'))
+  res := ((List.nth !template_tables 0), measure, constraint_type, (l,t,l'))
          |> transition_constraint_1
          |> Formula.mk_and !res;
 
-  res := ((List.nth template_tables (degree - 1)), measure, constraint_type, (l,t,l'))
+  res := ((List.nth !template_tables (degree - 1)), measure, constraint_type, (l,t,l'))
          |> transition_constraint_d
          |> Formula.mk_and !res;
   !res
 
 let transition_constraint degree = Util.memoize ~extractor:(Tuple3.map3 Transition.id) (transition_constraints_ degree)
 
-let transitions_constraint degree measure (constraint_type: DummyRank.constraint_type) (transitions : Transition.t list): Formula.t =
+let transitions_constraint degree measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
   |> List.map (fun t -> transition_constraint degree (measure, constraint_type, t))
   |> Formula.all
@@ -156,9 +156,6 @@ let non_increasing_constraint degree measure transition =
 let non_increasing_constraints degree measure transitions =
   transitions_constraint degree measure `Non_Increasing (TransitionSet.to_list transitions)
 
-let bounded_constraint degree measure transition =
-  transition_constraint degree (measure, `Bounded, transition)
-
 let decreasing_constraint degree measure  transition =
   transition_constraint degree (measure, `Decreasing, transition)
 
@@ -166,7 +163,7 @@ let decreasing_constraint degree measure  transition =
 
 let rank_from_valuation degree (i:int) valuation location =
   location
-  |> DummyRank.TemplateTable.find (List.nth template_tables i)
+  |> DummyRank.TemplateTable.find (List.nth !template_tables i)
   |> ParameterPolynomial.eval_coefficients (fun var -> DummyRank.Valuation.eval_opt var valuation |? OurInt.zero)
 
 let make degree decreasing_transition non_increasing_transitions valuation  =
@@ -192,35 +189,35 @@ let try_decreasing degree (opt: DummyRank.Solver.t) (non_increasing: Transition.
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
   |> Enum.iter (fun decreasing ->
-          Logger.(log DummyRank.logger DEBUG (fun () -> "try_decreasing", ["measure", DummyRank.show_measure measure;
-                                                                 "decreasing", Transition.to_id_string decreasing;
-                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
-                                                                 "degree", string_of_int degree]));
-          DummyRank.Solver.push opt;
-          (** Solver.add opt (bounded_constraint degree measure decreasing);*)
-          DummyRank.Solver.add opt (decreasing_constraint degree measure decreasing);
-          if DummyRank.Solver.satisfiable opt then (
-            DummyRank.Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
-            DummyRank.Solver.model opt
-            |> Option.map (make degree decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
-            |> Option.may (fun ranking_function ->
-                to_be_found := !to_be_found - 1;
-                RankingTable.add (ranking_table measure) decreasing ranking_function;
-                Logger.(log DummyRank.logger INFO (fun () -> "add_ranking_function", [
-                    "measure", DummyRank.show_measure measure;
-                    "decreasing", Transition.to_id_string decreasing;
-                    "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
-                    "rank", only_rank_to_string ranking_function];))
-              )
-          );
-          DummyRank.Solver.pop opt;
+        Logger.(log DummyRank.logger DEBUG (fun () -> "try_decreasing", ["measure", DummyRank.show_measure measure;
+                                                                "decreasing", Transition.to_id_string decreasing;
+                                                                "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
+                                                                "degree", string_of_int degree]));
+        DummyRank.Solver.push opt;
+        DummyRank.Solver.add opt (decreasing_constraint degree measure decreasing);
+        
+        if DummyRank.Solver.satisfiable opt then (
+          DummyRank.Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
+          DummyRank.Solver.model opt
+          |> Option.map (make degree decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+          |> Option.may (fun ranking_function ->
+              to_be_found := !to_be_found - 1;
+              RankingTable.add (ranking_table measure) decreasing ranking_function;
+              Logger.(log DummyRank.logger INFO (fun () -> "add_ranking_function", [
+                  "measure", DummyRank.show_measure measure;
+                  "decreasing", Transition.to_id_string decreasing;
+                  "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
+                  "rank", only_rank_to_string ranking_function];))
+            )
+        );
+        DummyRank.Solver.pop opt;
     );
   if !to_be_found <= 0 then
     raise Exit
 
 
 let rec backtrack (steps_left: int) (index: int) (opt: DummyRank.Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: DummyRank.measure) =
-  for degree = 1 to !maxDegree do
+    for degree = 1 to !maxDegree do
     if DummyRank.Solver.satisfiable opt then (
       if steps_left == 0 then (
         try_decreasing degree opt non_increasing to_be_found measure
@@ -260,11 +257,9 @@ let compute_ measure program =
     )
 
 let find ?(degree = 5) measure program transition =
-  maxDegree := degree;
-  (*Printf.printf "in find maxDegree: %i\n" !maxDegree;*)
   let execute () =
     (** or 2 or 3 or ... d *)
-    if DummyRank.TemplateTable.is_empty (List.nth template_tables 0) then
+    if DummyRank.TemplateTable.is_empty (List.nth !template_tables 0) then
         compute_ranking_templates !maxDegree (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
     if RankingTable.is_empty (ranking_table measure) then
       compute_ measure program;
@@ -284,6 +279,6 @@ let find ?(degree = 5) measure program transition =
 let reset () =
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
-  for i = 0 to List.length template_tables - 1 do
-    DummyRank.TemplateTable.clear (List.nth template_tables i)
+  for i = 0 to List.length !template_tables - 1 do
+    DummyRank.TemplateTable.clear (List.nth !template_tables i)
   done

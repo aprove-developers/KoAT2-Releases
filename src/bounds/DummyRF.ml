@@ -11,7 +11,6 @@ module Make =
         module Valuation = Valuation.Make(OurInt)
 
         type measure = [ `Cost | `Time ] [@@deriving show, eq]
-        type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ] [@@deriving show, eq]
 
         let logger = Logging.(get PRF)
 

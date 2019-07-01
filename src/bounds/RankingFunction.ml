@@ -7,6 +7,8 @@ open ProgramTypes
 
 module DummyRank = DummyRF.Make
 
+type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ] [@@deriving show, eq]
+
 type t = {
     rank : Location.t -> Polynomial.t;
     decreasing : Transition.t;
@@ -80,7 +82,7 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
        
 let transition_constraint = Util.memoize ~extractor:(Tuple3.map3 Transition.id) transition_constraint_
   
-let transitions_constraint measure (constraint_type: DummyRank.constraint_type) (transitions : Transition.t list): Formula.t =
+let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
   |> List.map (fun t -> transition_constraint (measure, constraint_type, t))
   |> Formula.all
