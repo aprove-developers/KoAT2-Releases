@@ -75,8 +75,8 @@ let rec maximum_coefficients list =
 (* Constructs the nested max bounds of all functions of the mrf*)
 let rec maxBound_of_list list =
  match list with
- | [] -> Bound.zero
- | [x] -> x
+ | [] -> Bound.one
+ | [x] -> Bound.max x (maxBound_of_list [])
  | x::xs -> Bound.max x (maxBound_of_list xs)
 
 (* computes new bounds*)
