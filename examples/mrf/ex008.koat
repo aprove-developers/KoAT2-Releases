@@ -3,5 +3,4 @@
 (VAR A B C D)
 (RULES
   l0(A,B,C,D) -> Com_1(l1(A,B,C,D))
-  l1(A,B,C,D) -> Com_1(l1(2*A + B, C,C + 1, D)) :|: (A >= B + 1 && D + 1>= A)
-)
+  l1(A,B,C,D) -> Com_1(l1(A + A + B, C,C + 1, D)) :|: A >= B + 1 && D + 1 >= A)
