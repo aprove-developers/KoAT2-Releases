@@ -96,6 +96,11 @@ let rec compute_coefficients (degree:int) (rank : (Location.t -> Polynomial.t) l
        let sum_mues = (List.fold_left (fun a b -> a +. b) 0. mues) in
        let ck = (1. +. sum_mues) +. (sumProduct (list, mues)) /. (float k) +. (List.nth mues (k - 1)) *.   (snd (List.nth list (k - 1))) in
        let dk = (List.nth mues (k - 1)) *. (snd (List.nth list (k - 1))) /. (float (k + 1)) in
+       (Logger.log logger Logger.DEBUG (fun () -> "coef.: ", ["k" , string_of_int k;
+                                                            "mues", (List.fold_left (fun a b -> a ^ " " ^ string_of_float b) "" mues);
+                                                            ("c_" ^ string_of_int k) , string_of_float ck;
+                                                            ("d_" ^ string_of_int k), string_of_float dk;
+                                                            ("c_" ^ string_of_int k ^ "/d_" ^ string_of_int k), string_of_int(int_of_float (ceil  (ck /. dk)))]));
        compute_coefficients (degree:int) rank (l,t,l') (List.append list [(ck,dk)])
 
 (* Returns max_i c_i /. d_i *)
