@@ -121,7 +121,7 @@ let transition_constraint_d (template_table1, measure, constraint_type, (l,t,l')
     match constraint_type with
     | `Non_Increasing -> Formula.mk_true
     | `Decreasing  -> (
-      let atom = ParameterAtom.Infix.((template1 l)  >= ParameterPolynomial.of_polynomial (decreaser measure t)) in
+      let atom = ParameterAtom.Infix.((template1 l)  >= ParameterPolynomial.zero) in
         ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
         |> Formula.mk)
 
@@ -189,6 +189,7 @@ let try_decreasing degree (opt: DummyRank.Solver.t) (non_increasing: Transition.
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
   |> Enum.iter (fun decreasing ->
+        if not (RankingTable.mem (ranking_table measure) decreasing) then (
         Logger.(log DummyRank.logger DEBUG (fun () -> "try_decreasing", ["measure", DummyRank.show_measure measure;
                                                                 "decreasing", Transition.to_id_string decreasing;
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
@@ -210,14 +211,13 @@ let try_decreasing degree (opt: DummyRank.Solver.t) (non_increasing: Transition.
                   "rank", only_rank_to_string ranking_function];))
             )
         );
-        DummyRank.Solver.pop opt;
+        DummyRank.Solver.pop opt; )
     );
   if !to_be_found <= 0 then
     raise Exit
 
 
-let rec backtrack (steps_left: int) (index: int) (opt: DummyRank.Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: DummyRank.measure) =
-    for degree = 1 to !maxDegree do
+let rec backtrack degree (steps_left: int) (index: int) (opt: DummyRank.Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: DummyRank.measure) =
     if DummyRank.Solver.satisfiable opt then (
       if steps_left == 0 then (
         try_decreasing degree opt non_increasing to_be_found measure
@@ -227,36 +227,41 @@ let rec backtrack (steps_left: int) (index: int) (opt: DummyRank.Solver.t) (scc:
           DummyRank.Solver.push opt;
           DummyRank.Solver.add opt (non_increasing_constraint degree measure transition);
           Stack.push transition non_increasing;
-          backtrack (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure;
+          backtrack degree (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure;
           ignore (Stack.pop non_increasing);
           DummyRank.Solver.pop opt;
-          try_decreasing degree opt non_increasing to_be_found measure;
         done;
+       try_decreasing degree opt non_increasing to_be_found measure;
       )
     )
-  done
 
 let compute_ measure program =
   program
   |> Program.sccs
   |> Enum.iter (fun scc ->
-      try
-        backtrack (TransitionSet.cardinal scc)
-          0
-          (DummyRank.Solver.create ())
-          (Array.of_enum (TransitionSet.enum scc))
-          (Stack.create ())
-          (ref (TransitionSet.cardinal scc))
-          measure;
-        scc
-        |> TransitionSet.iter (fun t ->
-            if not (RankingTable.mem (ranking_table measure) t) then
-              Logger.(log DummyRank.logger WARN (fun () -> "no_ranking_function", ["measure", DummyRank.show_measure measure; "transition", Transition.to_id_string t]))
-          )
-      with Exit -> ()
-    )
+         try
+           for degree = 1 to !maxDegree do
+           backtrack degree (TransitionSet.cardinal scc)
+                     0
+                     (DummyRank.Solver.create ())
+                     (Array.of_enum (TransitionSet.enum scc))
+                     (Stack.create ())
+                     (ref (TransitionSet.cardinal scc))
+                     measure;
+           done; 
 
-let find ?(degree = 5) measure program transition =
+           scc
+           |> TransitionSet.iter (fun t ->
+                  if not (RankingTable.mem (ranking_table measure) t) then
+                    Logger.(log DummyRank.logger WARN (fun () -> "no_ranking_function", ["measure", DummyRank.show_measure measure; "transition", Transition.to_id_string t]))
+                )
+              
+         with Exit -> ()
+        
+        )
+      
+
+let find measure program transition =
   let execute () =
     (** or 2 or 3 or ... d *)
     if DummyRank.TemplateTable.is_empty (List.nth !template_tables 0) then
