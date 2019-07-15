@@ -3,5 +3,5 @@
 (VAR A B)
 (RULES
   l0(A,B) -> Com_1(l1(A,B))
-  l1(A,B) -> Com_1(l1(A + B,B - 1)) :|: A >= -42
+  l1(A,B) -> Com_1(l1(A - 1, -B - B)) :|: A + B >= 1
 )
