@@ -64,18 +64,13 @@ let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): uni
                   )
                   execute
 
-let decreaser measure t =
-  match measure with
-  | `Cost -> TransitionLabel.cost t
-  | `Time -> Polynomial.one
-
 let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
   let template = DummyRank.TemplateTable.find template_table in
   let atom =
     match constraint_type with
     | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (DummyRank.as_parapoly t) (template l'))
-    | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (DummyRank.as_parapoly t) (template l')))
-    | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))      
+    | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (DummyRank.decreaser measure t) + substitute_f (DummyRank.as_parapoly t) (template l')))
+    | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (DummyRank.decreaser measure t))      
   in
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk  

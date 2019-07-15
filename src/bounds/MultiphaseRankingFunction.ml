@@ -83,10 +83,6 @@ let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location
       (fun () -> execute i);
   done
 
-let decreaser measure t =
-  match measure with
-  | `Cost -> TransitionLabel.cost t
-  | `Time -> Polynomial.one
 
 
 (** methods define properties of mrf *)
@@ -99,7 +95,7 @@ let transition_constraint_ (template_table0,template_table1, measure, constraint
   let atom =
     match constraint_type with
     | `Non_Increasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.substitute_f (DummyRank.as_parapoly t) (template1 l'))
-    | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (DummyRank.as_parapoly t) (template1 l')))
+    | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (DummyRank.decreaser measure t) + substitute_f (DummyRank.as_parapoly t) (template1 l')))
   in
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk
@@ -110,7 +106,7 @@ let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')
   let atom =
     match constraint_type with
       | `Non_Increasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.substitute_f (DummyRank.as_parapoly t) (template1 l'))
-      | `Decreasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (DummyRank.as_parapoly t) (template1 l')))
+      | `Decreasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (DummyRank.decreaser measure t) + substitute_f (DummyRank.as_parapoly t) (template1 l')))
   in
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk

@@ -14,6 +14,11 @@ module Make =
 
         let logger = Logging.(get PRF)
 
+        let decreaser measure t =
+            match measure with
+            | `Cost -> TransitionLabel.cost t
+            | `Time -> Polynomial.one
+
 
         (* method transforms polynome to parapolynom*)
         let as_parapoly label var =
