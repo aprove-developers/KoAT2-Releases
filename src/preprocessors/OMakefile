@@ -1,4 +1,5 @@
 USE_OCAMLFIND = true
+OCAMLOPTFLAGS += -p -g -thread -ccopt -static
 
 OCAMLPACKS[] =
     batteries
@@ -42,3 +43,4 @@ clean:
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
      *~
+
