@@ -237,6 +237,8 @@ let compute_ measure program =
   |> Enum.iter (fun scc ->
          try
            for degree = 1 to !maxDegree do
+           list_init degree;
+           compute_ranking_templates degree (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
            backtrack degree (TransitionSet.cardinal scc)
                      0
                      (DummyRank.Solver.create ())
@@ -244,14 +246,15 @@ let compute_ measure program =
                      (Stack.create ())
                      (ref (TransitionSet.cardinal scc))
                      measure;
-           done; 
 
            scc
            |> TransitionSet.iter (fun t ->
                   if not (RankingTable.mem (ranking_table measure) t) then
                     Logger.(log DummyRank.logger WARN (fun () -> "no_ranking_function", ["measure", DummyRank.show_measure measure; "transition", Transition.to_id_string t]))
                 )
-              
+
+          done; 
+ 
          with Exit -> ()
         
         )
@@ -260,8 +263,7 @@ let compute_ measure program =
 let find measure program transition =
   let execute () =
     (** or 2 or 3 or ... d *)
-    if DummyRank.TemplateTable.is_empty (List.nth !template_tables 0) then
-        compute_ranking_templates !maxDegree (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+        
     if RankingTable.is_empty (ranking_table measure) then
       compute_ measure program;
     (try
