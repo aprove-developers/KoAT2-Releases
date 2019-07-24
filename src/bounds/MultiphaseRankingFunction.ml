@@ -92,6 +92,8 @@ let list_init degree =
 
 let fresh_coeffs: Var.t list ref = ref []
 
+let numberOfGeneratedTemplates = ref 0
+
 let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location.t list): unit =
   let execute (i:int) =
     let ins_loc_prf location =
@@ -107,7 +109,7 @@ let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location
     |> List.flatten
     |> (fun fresh_vars -> fresh_coeffs := fresh_vars)
   in
-  for i = 0 to degree - 1 do
+  for i = !numberOfGeneratedTemplates to degree - 1 do
     Logger.with_log logger Logger.DEBUG
       (fun () -> "compute_ranking_templates_" ^ string_of_int i, [])
       ~result:(fun () ->
@@ -273,8 +275,9 @@ let compute_ measure program =
   |> Enum.iter (fun scc ->
          try
            for degree = 1 to !maxDegree do
-           list_init degree;
+           if !numberOfGeneratedTemplates < degree then (
            compute_ranking_templates degree (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+           numberOfGeneratedTemplates := degree);
            backtrack degree (TransitionSet.cardinal scc)
                      0
                      (Solver.create ())
@@ -295,7 +298,6 @@ let compute_ measure program =
 let find measure program transition =
   let execute () =
     (** or 2 or 3 or ... d *)
-        
     if RankingTable.is_empty (ranking_table measure) then
       compute_ measure program;
     (try

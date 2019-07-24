@@ -11,7 +11,8 @@ let rec find_bounds_ ?(mrf = false) (program: Program.t) (appr: Approximation.t)
 
 let find_bounds ?(degree = 5) ?(mrf = false) (program: Program.t) (appr: Approximation.t): Approximation.t =
   if mrf then( 
-    MultiphaseRankingFunction.maxDegree := degree;);
+    MultiphaseRankingFunction.maxDegree := degree;
+    MultiphaseRankingFunction.list_init degree);
   appr
   |> TrivialTimeBounds.compute program
   |> find_bounds_ ~mrf:mrf program
