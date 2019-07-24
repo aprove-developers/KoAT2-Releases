@@ -8,7 +8,7 @@ open ProgramTypes
 
 type t
 
-module DummyRank = DummyRF.Make
+type measure = [ `Cost | `Time ] [@@deriving show]
 
 (** Returns the ranking polynomial for the specific location. *)
 val rank : t -> Location.t -> Polynomial.t
@@ -22,7 +22,7 @@ val decreasing : t -> Transition.t
 val non_increasing : t -> Transition.t list
 
 (** Finds a suitable ranking function for the given transitions T'. *)
-val find : DummyRank.measure -> Program.t -> Transition.t -> t list
+val find : measure -> Program.t -> Transition.t -> t list
 
 (** Converts a ranking function into a string*)
 val to_string : t -> string
