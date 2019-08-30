@@ -151,11 +151,12 @@ let run (params: params) =
   );
   let input_cfr =
   if(params.cfr) then 
-    (ignore (Sys.command ("../Koat2/src/irankfinder/CFRefinement -cfr-it 2 -cfr-call -cfr-call-var -cfr-john --output-format koat dot --output-destination ./tmp --file " ^ (Option.get params.input)));
-    ("../Koat2/tmp/" ^ input_filename ^ "_cfr2.koat"))
+    (ignore (Sys.command ("../Koat2/external_tools/irankfinder/CFRefinement -cfr-it 1 -cfr-call -cfr-call-var -cfr-john --output-format koat dot --output-destination ./tmp --file " ^ (Option.get params.input)));
+    ("../Koat2/tmp/" ^ input_filename ^ "_cfr1.koat"))
   else 
     input
   in 
+  Printf.printf "%s\n" input_cfr;
   input_cfr
   |> MainUtil.read_input ~rename:params.rename params.simple_input 
   |> rename_program_option
@@ -188,4 +189,5 @@ let run (params: params) =
                 )
               )
        )
-  |> ignore
+  |> ignore;
+  (ignore (Sys.command ("rm ../Koat2/tmp/*")))
