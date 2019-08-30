@@ -28,7 +28,7 @@ let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
 (** The shell arguments which can be defined in the console. *)
 type params = {
 
-   print_system : bool;
+    print_system : bool;
     (** Prints the integer transition system at the start as png *)
 
     print_rvg : bool;
@@ -69,11 +69,14 @@ type params = {
     rename : bool; [@default false]
     (** If the location names should be normalized to simplified names. *)
 
-    (** Has to be set to true if multiphaserankingfunctions should be used. *)
     multiphaserankingfunctions : bool; [@default false] [@aka ["mrf"]]
+    (** Has to be set to true if multiphaserankingfunctions should be used. *)
 
     degree : int; [@default 5] [@aka ["d"]]
     (** The maximum degree a multiphase-ranking function is searched.*)
+
+    cfr : bool; [@default false]
+    (** True iff controlflow refinement should be applied *)
 
   } [@@deriving cmdliner]
 
@@ -141,17 +144,24 @@ let run (params: params) =
     let program_str =
       if params.simple_input then
         input
-      else
+      else 
         input |> File.lines_of |> List.of_enum |> String.concat "\n"
     in
     print_string (program_str ^ "\n\n")
   );
-  input
-  |> MainUtil.read_input ~rename:params.rename params.simple_input
+  let input_cfr =
+  if(params.cfr) then 
+    (ignore (Sys.command ("../Koat2/src/irankfinder/CFRefinement -cfr-it 2 -cfr-call -cfr-call-var -cfr-john --output-format koat dot --output-destination ./tmp --file " ^ (Option.get params.input)));
+    ("../Koat2/tmp/" ^ input_filename ^ "_cfr2.koat"))
+  else 
+    input
+  in 
+  input_cfr
+  |> MainUtil.read_input ~rename:params.rename params.simple_input 
   |> rename_program_option
   |> Option.map (fun program ->
          (program, Approximation.create program)
-         |> Preprocessor.process params.preprocessing_strategy params.preprocessors
+         |> Preprocessor.process params.preprocessing_strategy params.preprocessors 
          |> tap (fun (program, appr) ->
                 if params.print_system then
                   GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)

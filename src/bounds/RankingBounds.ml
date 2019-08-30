@@ -113,8 +113,8 @@ let rec maximum_coefficients list =
 (* Constructs the nested max bounds of all functions of the mrf*)
 let rec maxBound_of_list list =
  match list with
- | [] -> Bound.zero
- | [x] -> x
+ | [] -> Bound.one
+ | [x] ->  Bound.max x (Bound.one)
  | x::xs -> Bound.max x (maxBound_of_list xs)
 
 (* computes new bounds*)
@@ -130,8 +130,11 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
        let coefficients = (compute_coefficients (MultiphaseRankingFunction.degree rank) (MultiphaseRankingFunction.rank rank) decreasing  []) in
          let maximum_coefficient = (maximum_coefficients coefficients) in
          let evaluate = (fun rank -> (apply (fun kind -> Approximation.sizebound kind appr) rank) (l,t,l')) in
-         let var = (List.init (MultiphaseRankingFunction.degree rank) (fun i -> (evaluate ((List.nth (MultiphaseRankingFunction.rank rank) i) l')))) in
-         let rhs = Bound.(add one (max one (mul (of_int maximum_coefficient)  (maxBound_of_list var)))) in
+         let list_evaluated = (List.init (MultiphaseRankingFunction.degree rank) (fun i -> (evaluate ((List.nth (MultiphaseRankingFunction.rank rank) i) l')))) in
+         let rhs = if rank.degree = 1 then
+            Bound. (add Bound.one (max Bound.zero (List.nth list_evaluated 0)))
+            else 
+            Bound. (add Bound.one (mul (of_int maximum_coefficient)  (maxBound_of_list list_evaluated))) in 
           Bound.(
             if is_infinity timebound then
               if equal zero rhs then
