@@ -132,7 +132,7 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
          let evaluate = (fun rank -> (apply (fun kind -> Approximation.sizebound kind appr) rank) (l,t,l')) in
          let list_evaluated = (List.init (MultiphaseRankingFunction.degree rank) (fun i -> (evaluate ((List.nth (MultiphaseRankingFunction.rank rank) i) l')))) in
          let rhs = if rank.degree = 1 then
-            Bound. (add Bound.one (max Bound.zero (List.nth list_evaluated 0)))
+            Bound. (max Bound.zero (add Bound.one (List.nth list_evaluated 0)))
             else 
             Bound. (add Bound.one (mul (of_int maximum_coefficient)  (maxBound_of_list list_evaluated))) in 
           Bound.(
