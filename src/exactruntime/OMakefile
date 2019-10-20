@@ -21,8 +21,17 @@ GEN_FILES[] =
 
 OCamlGeneratedFiles($(GEN_FILES))
 
-# Include all .ml files
-FILES[] = $(removesuffix .ml, $(glob *.ml))
+# All .ml files have to be listed here explicitly, in an ordering of their dependencies
+# Otherwise with the two automatically generated files ExactLexer & ExactParser
+# multiple compilation passes might be necessary
+FILES[] =
+  ExactLexer
+  ExactParser
+  ExactBound
+  ExactReader
+  ExactLexer
+  ExactProgramTypes
+
 
 LIB = exactruntime
 
