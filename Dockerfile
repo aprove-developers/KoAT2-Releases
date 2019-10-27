@@ -53,7 +53,6 @@ RUN apk add libstdc++ mpfr3 libgomp --no-cache
 
 # Add executables and dynamically linked apron files
 COPY --from=koat2_build --chown=koat2:koat2 /home/opam/build/src/main/koat2 app/src/main/koat2
-COPY --from=koat2_build --chown=koat2:koat2 /home/opam/.opam/4.07.1+flambda/share/apron/lib share/apron/lib
 
 # Add Probabilistic Examples
 COPY --chown=koat2:koat2 examples/ProbabilisticExamples examples
