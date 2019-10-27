@@ -34,7 +34,8 @@ COPY --chown=opam:nogroup src ./src
 COPY --chown=opam:nogroup OMakeroot .
 COPY --chown=opam:nogroup OMakefile .
 
-RUN omake clean && omake --depend
+RUN omake clean
+RUN RELEASE=1 omake --depend
 
 ###################################################################
 ######################## EXECUTABLE IMAGE #########################
