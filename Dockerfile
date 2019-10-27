@@ -11,7 +11,7 @@
 FROM ocaml/opam2:alpine as koat2_build
 LABEL author="Fabian Meyer"
 
-RUN opam switch create -y 4.07.1
+RUN opam switch create -y 4.07.1+flambda
 RUN opam update
 RUN opam upgrade
 RUN eval $(opam env)
@@ -24,8 +24,8 @@ RUN opam install z3 ocamlfind menhir cmdliner ppx_deriving batteries ppx_derivin
 RUN eval $(opam env)
 
 # Set environment variables to include libraries added through opam
-ENV PATH=/home/opam/.opam/4.07.1/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
-ENV LD_LIBRARY_PATH=/home/opam/.opam/4.07.1/lib:/home/opam/.opam/4.07.1/lib/stublibs
+ENV PATH=/home/opam/.opam/4.07.1+flambda/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
+ENV LD_LIBRARY_PATH=/home/opam/.opam/4.07.1+flambda/lib:/home/opam/.opam/4.07.1+flambda/lib/stublibs
 
 WORKDIR /home/opam/build
 RUN sudo chown opam:nogroup /home/opam/build
@@ -53,7 +53,7 @@ RUN apk add libstdc++ mpfr3 libgomp --no-cache
 
 # Add executables and dynamically linked apron files
 COPY --from=koat2_build --chown=koat2:koat2 /home/opam/build/src/main/koat2 app/src/main/koat2
-COPY --from=koat2_build --chown=koat2:koat2 /home/opam/.opam/4.07.1/share/apron/lib share/apron/lib
+COPY --from=koat2_build --chown=koat2:koat2 /home/opam/.opam/4.07.1+flambda/share/apron/lib share/apron/lib
 
 # Add Probabilistic Examples
 COPY --chown=koat2:koat2 examples/ProbabilisticExamples examples
