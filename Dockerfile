@@ -33,9 +33,12 @@ RUN sudo chown opam:nogroup /home/opam/build
 COPY --chown=opam:nogroup src ./src
 COPY --chown=opam:nogroup OMakeroot .
 COPY --chown=opam:nogroup OMakefile .
+# Needed for tests
+COPY --chown=opam:nogroup examples ./examples
 
 RUN omake clean
 RUN RELEASE=1 omake --depend
+RUN cd src/test && ./Test
 
 ###################################################################
 ######################## EXECUTABLE IMAGE #########################
@@ -51,7 +54,7 @@ WORKDIR /home/koat2
 # Install necessary packages
 RUN apk add libstdc++ mpfr3 libgomp --no-cache
 
-# Add executables and dynamically linked apron files
+# Add executables
 COPY --from=koat2_build --chown=koat2:koat2 /home/opam/build/src/main/koat2 app/src/main/koat2
 
 # Add Probabilistic Examples
@@ -59,6 +62,5 @@ COPY --chown=koat2:koat2 examples/ProbabilisticExamples examples
 
 USER koat2
 WORKDIR /home/koat2/examples
-ENV LD_LIBRARY_PATH=/home/koat2/share/apron/lib
 ENV PATH=/home/koat2/app/src/main:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENTRYPOINT ["koat2", "analyse", "-i"]
