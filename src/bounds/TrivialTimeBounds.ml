@@ -18,3 +18,17 @@ let compute program appr =
   in
   TransitionSet.fold (Approximation.add_timebound Bound.one) one_bounded_transitions appr
 
+(** This function is similar to TrivialTimeBounds, and derives time bounds of 1 for general transitions.
+    However when considering general transitions is has to be ensured that the start location can not be reached from any target location,
+    i.e. no target location is in the same scc as the start location*)
+let compute_generaltransitions program appr =
+  let graph = Program.graph program in
+  let (_, scc_number) = SCC.scc graph in
+  let same_scc l1 l2 =
+    scc_number l1 = scc_number l2
+  in
+  let one_bounded_gts =
+  TransitionGraph.generalized_transitions graph
+  |> GeneralTransitionSet.filter (fun gt -> GeneralTransition.targets gt |> LocationSet.for_all (not % same_scc (GeneralTransition.start gt)))
+  in
+  GeneralTransitionSet.fold (fun gt appr -> Approximation.add_timebound_gt Bound.one gt (Approximation.add_exptimebound RealBound.one gt appr)) one_bounded_gts appr

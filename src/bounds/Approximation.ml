@@ -7,8 +7,10 @@ type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
 let logger = Logging.(get Approximation)
 
+(* time_gt bounds the (non-probailistic) time for general transitions. It is more precise then the sum of time for all transitions in a general transition*)
 type t = {
     time: TransitionApproximation.t;
+    time_gt: GeneralTransitionNonProbApproximation.t;
     exptime: GeneralTransitionApproximation.t;
     size: SizeApproximation.t;
     expsize: ExpectedSizeApproximation.t;
@@ -21,6 +23,7 @@ let equivalent appr1 appr2 =
 
 let empty transitioncount varcount gtcount = {
     time = TransitionApproximation.empty "time" transitioncount;
+    time_gt = GeneralTransitionNonProbApproximation.empty "time" gtcount;
     exptime = GeneralTransitionApproximation.empty "exptime" gtcount;
     size = SizeApproximation.empty (2 * transitioncount * varcount);
     expsize = ExpectedSizeApproximation.empty (2 * gtcount * varcount);
@@ -33,6 +36,8 @@ let create program =
         (Program.generalized_transitions program |> GeneralTransitionSet.cardinal)
 
 let time appr = appr.time
+
+let time_gt appr = appr.time_gt
 
 let exptime appr = appr.exptime
 
@@ -73,6 +78,9 @@ let add_expsizebounds bound scc appr =
 let timebound =
   TransitionApproximation.get % time
 
+let timebound_gt =
+  GeneralTransitionNonProbApproximation.get % time_gt
+
 let exptimebound =
   GeneralTransitionApproximation.get % exptime
 
@@ -86,19 +94,30 @@ let program_exptimebound =
   GeneralTransitionApproximation.sum % exptime
 
 let add_timebound bound transition appr =
-  let label = Transition.label transition in
+(*   let label = Transition.label transition in
   let temp_vars = VarSet.diff (TransitionLabel.vars label) (TransitionLabel.input_vars label) in
   let temp_bound = fun kind var -> if (VarSet.mem var temp_vars) then sizebound kind appr transition var else Bound.of_var var in
   let replaced_bound = Bound.appr_substitution `Upper ~lower:(temp_bound `Lower) ~higher:(temp_bound `Upper) bound in
-  { appr with time = TransitionApproximation.add replaced_bound transition appr.time }
+  { appr with time = TransitionApproximation.add replaced_bound transition appr.time } *)
+  { appr with time = TransitionApproximation.add bound transition appr.time }
+
+let add_timebound_gt bound gt appr =
+(*   (* TODO: Correct? Union on both sides? *)
+  let temp_vars = VarSet.diff (GeneralTransition.vars gt) (GeneralTransition.input_vars gt) in
+  let l = GeneralTransition.start gt in
+  let temp_bound kind var = if (VarSet.mem var temp_vars) then expsizebound kind appr (gt,l) var else Bound.of_var var in
+  let replaced_bound = Bound.appr_substition_abs_all (fun v -> Bound.abs_bound @@ fun k -> temp_bound k v) bound in
+  { appr with time_gt = GeneralTransitionNonProbApproximation.add replaced_bound gt appr.exptime } *)
+  { appr with time_gt = GeneralTransitionNonProbApproximation.add bound gt appr.time_gt }
 
 let add_exptimebound bound gt appr =
-  (* TODO: Correct? Union on both sides? *)
+(*   (* TODO: Correct? Union on both sides? *)
   let temp_vars = VarSet.diff (GeneralTransition.vars gt) (GeneralTransition.input_vars gt) in
   let l = GeneralTransition.start gt in
   let temp_bound kind var = if (VarSet.mem var temp_vars) then expsizebound kind appr (gt,l) var else RealBound.of_var var in
   let replaced_bound = RealBound.appr_substition_abs_all (fun v -> RealBound.abs_bound @@ fun k -> temp_bound k v) bound in
-  { appr with exptime = GeneralTransitionApproximation.add replaced_bound gt appr.exptime }
+  { appr with exptime = GeneralTransitionApproximation.add replaced_bound gt appr.exptime } *)
+  { appr with exptime = GeneralTransitionApproximation.add bound gt appr.exptime }
 
 
 let all_times_bounded =

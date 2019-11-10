@@ -96,7 +96,7 @@ module TransitionSet =
       Util.enum_to_string Transition.to_id_string % enum
 
     let total_probability tset =
-      fold OurFloat.(fun t p -> p + (TransitionLabel.probability @@ Transition.label t)) tset (OurFloat.zero)
+      fold (fun t -> OurFloat.(+) (Transition.label t |> TransitionLabel.probability)) tset OurFloat.zero
 
   end
 

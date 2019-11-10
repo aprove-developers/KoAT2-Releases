@@ -37,6 +37,10 @@ val equivalent : t -> t -> bool
 (** Returns a timebound for the transition. *)
 val timebound : t -> Transition.t -> Bound.t
 
+
+(** Returns a (Nonprobabilistic) timebound for the transition. *)
+val timebound_gt : t -> GeneralTransition.t -> Bound.t
+
 (** Returns an expected timebound for the transition. *)
 val exptimebound : t -> GeneralTransition.t -> RealBound.t
 
@@ -52,6 +56,12 @@ val program_exptimebound : t -> Program.t -> RealBound.t
 (** Adds the information that the specified bound is a valid timebound for the given transition.
     The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 val add_timebound : Bound.t -> Transition.t -> t -> t
+
+(** Adds the information that the specified bound is a valid (Nonprobabilistic!) timebound for the given general transition.
+    This is useful since sometimes we require that a general transition is executed at most once. Hence
+    this bound is more accurate then summing up the 'normal' timebounds.
+    The resulting approximation is guaranteed to be at least as good as the old approximation. *)
+val add_timebound_gt : Bound.t -> GeneralTransition.t -> t -> t
 
 (** Adds the information that the specified bound is a valid expected timebound for the given general transition.
     The resulting approximation is guaranteed to be at least as good as the old approximation. *)

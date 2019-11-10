@@ -2,10 +2,10 @@ open Batteries
 open OUnit2
 open Helper
 open BoundsInst
-   
-let tests = 
+
+let tests =
   "Bound" >::: [
-                        
+
       ("simplify" >:::
          List.map (fun (expected_bound, bound) ->
              bound >::
@@ -54,25 +54,24 @@ let tests =
                     ("3", "3^max{0,1}");
 
                     (* Sum *)
-                    ("x", "0+x");                   
-                    ("11", "7+4");                   
-                    ("2*|x|", "|x|+|x|");                   
-                    ("inf", "7+inf");                   
-                    ("inf", "inf+8");                   
-                    ("inf", "inf+inf");                   
-                    ("-inf", "-inf+8");                   
+                    ("x", "0+x");
+                    ("11", "7+4");
+                    ("2*|x|", "|x|+|x|");
+                    ("inf", "7+inf");
+                    ("inf", "inf+8");
+                    ("inf", "inf+inf");
+                    ("-inf", "-inf+8");
                     (* Not supported ("3+2*x", "3+x+x"); *)
 
                     (* Minus *)
-                    ("-x", "0-x");                   
-                    ("3", "7-4");                   
+                    ("-x", "0-x");
+                    ("3", "7-4");
                     (* Not supported ("0", "|x|-|x|"); *)
-                    ("-inf", "7-inf");                   
-                    ("inf", "inf-8");                   
-                    ("0", "inf-inf");                   
-                    ("-inf", "-inf-8");                   
+                    ("-inf", "7-inf");
+                    ("inf", "inf-8");
+                    ("-inf", "-inf-8");
                     (* Not supported ("3-2*x", "3-x-x"); *)
-                    
+
                     (* Product *)
                     ("0", "0*x");
                     ("0", "|x|*0");
@@ -89,6 +88,7 @@ let tests =
                     ("-inf", "-inf*inf");
                     ("-inf", "inf*-inf");
                     ("inf", "-inf*-inf");
+                    ("-2*|x|*inf", "-|x|*inf");
                     (* Not supported ("x*x", "|x|*|x|"); *)
 
                     (* Max *)
@@ -98,6 +98,7 @@ let tests =
                     ("0", "max {0, 0}");
                     ("0", "max{0, 0, -inf}");
                     ("inf", "max{0, 1, inf}");
+                    ("2*|X|", "max{0,2*|X|}");
 
                     (* Min *)
                     ("inf", "min {inf, inf}");
@@ -106,11 +107,12 @@ let tests =
                     ("0", "min {0, 0}");
                     ("-inf", "min{0, 0, -inf}");
                     ("0", "min{0, 1, inf}");
+                    ("0","min{0,2*|X|}");
 
                     (* Combinations *)
 
                     (* Sum over Product *)
-                    (*("5*|x|", "3*|x|+2*|x|");                   
+                    (*("5*|x|", "3*|x|+2*|x|");
                     ("|x|", "3*|x|-2*|x|"); *)
 
                     ("4", "max {min {3,7}, min{4,5}}");
@@ -134,12 +136,12 @@ let tests =
                   ]
       );
 
-      "linearity" >::: 
-        List.map 
-          (fun (linear, v, bound_string) -> 
+      "linearity" >:::
+        List.map
+          (fun (linear, v, bound_string) ->
             let bound = Readers.read_bound bound_string in
             let var = Var.of_string v in
-            let error_string = 
+            let error_string =
               "Linearity Mismatch Expected " ^ bound_string ^ " to " ^
               (if linear then " be linear " else " not be linear ") ^
               " in " ^ v ^ " but the opposite is the case"

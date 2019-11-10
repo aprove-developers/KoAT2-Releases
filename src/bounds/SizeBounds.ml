@@ -1,7 +1,7 @@
 open Batteries
 open ProgramTypes
 open RVGTypes
-   
+
 let logger = Logging.(get Size)
 
 module RV = Make_RV(Transition)
@@ -13,7 +13,7 @@ let improve_scc kind program rvg appr = function
   | scc ->
      let new_bound = NontrivialSizeBounds.compute kind program rvg (Approximation.timebound appr) (fun kind -> Approximation.sizebound kind appr) scc in
      Approximation.add_sizebounds kind new_bound scc appr
-         
+
 let improve program appr =
   let execute () =
     let module C = Graph.Components.Make(RVG) in

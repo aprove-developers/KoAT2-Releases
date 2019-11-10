@@ -12,7 +12,9 @@ module NPRV = RVGTypes.Make_RV (Transition)
 module IntValuation = Valuation.Make (OurInt)
 module Valuation = Valuation.Make (OurFloat)
 
-type hessian_check = Positivesemidefinite | Negativesemidefinite
+let logger = Logging.(get ELSB)
+
+type concave_convexe_op = Convexe | Concave
 
 type poly_matrix = RealPolynomial.t list list
 
@@ -24,55 +26,95 @@ module SolverNonOpt = SMT.Z3Solver
 let print_matrix =
   Util.enum_to_string (Util.enum_to_string RealPolynomial.to_string) % List.enum % List.map (List.enum)
 
-(* Using the standard definition of convexity/concavity to handle bounds instead of polynomials *)
-let concave_convex_check_v2_ (comp_operator: hessian_check) bound: bool =
+(** Using the standard definition of convexity/concavity to handle bounds instead of polynomials.
+   Note that our bounds constist of non-concave terms like abs(X). However our bounds bound exactly theses terms.
+   Therefore we substitute all terms like abs(X) by fresh variables v' and then check if the bound is concave
+   w.r.t. these newly generated variables. Furthermore  the concavity/convexity needs only to be checked for a,b geq 0
+   in f(lambda * a + (1-lambda) * b) op lambda * f(a) + (1-lambda) * f(b)
+*)
+let concave_convex_check_v2_ (comp_operator: concave_convexe_op) bound: bool =
   let module VarMap = Map.Make(Var) in
+  let check_substituted bound_substituted =
+    let vars = RealBound.vars bound_substituted in
+    (* vector a *)
+    let a =
+      VarSet.fold (fun v -> VarMap.add v (Var.fresh_id Var.Real () |> RealPolynomial.of_var))
+        vars VarMap.empty
+    in
+    let b =
+      VarSet.fold (fun v -> VarMap.add v (Var.fresh_id Var.Real () |> RealPolynomial.of_var))
+        vars VarMap.empty
+    in
+    let lambda = Var.fresh_id Var.Real () |> RealPolynomial.of_var in
+    let lefthand =
+      RealBound.substitute_f
+        (fun v ->
+          let vara = VarMap.find v a in
+          let varb = VarMap.find v b in
+          RealPolynomial.( lambda * vara + (one-lambda) * varb) |> RealBound.of_poly)
+        bound_substituted
+    in
+    let righthand =
+      RealBound.(
+        (lambda |> RealBound.of_poly) * (RealBound.substitute_f (RealBound.of_poly % flip VarMap.find a) bound_substituted) +
+        (RealPolynomial.(one - lambda) |> RealBound.of_poly) * (RealBound.substitute_f (RealBound.of_poly % flip VarMap.find b) bound_substituted)
+      )
+    in
+    let constr =
+      RealFormula.Infix.(lambda <= RealPolynomial.one && lambda>=RealPolynomial.zero)
+      (* add constraints that require a,b => 0*)
+      |> VarMap.fold (fun _ poly -> RealFormula.mk_and (RealFormula.Infix.(poly >= RealPolynomial.zero))) a
+      |> VarMap.fold (fun _ poly -> RealFormula.mk_and (RealFormula.Infix.(poly >= RealPolynomial.zero))) b
+    in
+    (* find contra *)
+    let bound' = RealBound.(lefthand - righthand) in
+    let res =
+      try
+        match comp_operator with
+        | Convexe ->
+            SolverNonOpt.bound_gt_zero constr bound'
+        | Concave ->
+            SolverNonOpt.bound_lt_zero constr bound'
+      with
+        Failure _ -> false
+    in
+    Bool.neg res
+  in
+
   let vars = RealBound.vars bound in
-  (* vector a *)
-  let a =
-    VarMap.empty
-    |> VarSet.fold (fun v -> VarMap.add v (Var.fresh_id Var.Real () |> RealPolynomial.of_var)) vars
-  in
-  let b =
-    VarMap.empty
-    |> VarSet.fold (fun v -> VarMap.add v (Var.fresh_id Var.Real () |> RealPolynomial.of_var)) vars
-  in
-  let lambda = Var.fresh_id Var.Real () |> RealPolynomial.of_var in
-  let lefthand =
-    RealBound.substitute_f
-      (fun v ->
-        let vara = VarMap.find v a in
-        let varb = VarMap.find v b in
-        RealPolynomial.( lambda * vara + (one-lambda) * varb) |> RealBound.of_poly)
+  let new_vars = VarSet.fold (fun v -> Map.add v (Var.fresh_id Var.Real ())) vars Map.empty in
+  let bound_with_abs_replaced =
+    RealBound.fold
+      ~const:RealBound.of_constant
+      ~var:RealBound.of_var
+      ~neg:RealBound.neg
+      ~plus:RealBound.add
+      ~times:RealBound.mul
+      ~exp:RealBound.exp
+      ~max:RealBound.max
+      ~min:RealBound.min
+      ~inf:RealBound.infinity
+      ~abs:(
+        fun b ->
+          let ovar = RealBound.get_var b in
+          if Option.is_some ovar then
+            RealBound.of_var (Map.find (Option.get ovar) new_vars)
+          else b
+          )
       bound
   in
-  let righthand =
-    RealBound.(
-      (lambda |> RealBound.of_poly) * (RealBound.substitute_f (RealBound.of_poly % flip VarMap.find a) bound) +
-      (RealPolynomial.(one - lambda) |> RealBound.of_poly) * (RealBound.substitute_f (RealBound.of_poly % flip VarMap.find b) bound)
-    )
-  in
-  let constr =
-    RealFormula.Infix.(lambda <= RealPolynomial.one && lambda>=RealPolynomial.zero)
-  in
-  (* find contra *)
-  let bound' = RealBound.(lefthand - righthand) in
-  let res =
-    try
-      match comp_operator with
-      | Positivesemidefinite ->
-          SolverNonOpt.bound_gt_zero constr bound'
-      | Negativesemidefinite ->
-          SolverNonOpt.bound_lt_zero constr bound'
-    with
-      (* TODO *)
-      Failure _ -> true
-  in
-  Bool.neg res
+  let non_substituted_vars = VarSet.diff (Map.keys new_vars |> VarSet.of_enum) (RealBound.vars bound_with_abs_replaced) in
+  if VarSet.is_empty non_substituted_vars then
+    (Logger.log logger Logger.DEBUG
+      (fun () -> "concave_convexity_check could not substitute all vars",
+        ["bound",RealBound.to_string bound]);
+    false)
+  else
+    check_substituted bound_with_abs_replaced
 
 (* a multivariate polynome f is concave (convexe) iff
  * its hessian matrix is negative semi-definite (positive semi-definite) *)
-let concave_convex_check (comp_operator: hessian_check) (poly: RealPolynomial.t) : bool =
+let concave_convex_check (comp_operator: concave_convexe_op) (poly: RealPolynomial.t) : bool =
   let varlist = RealPolynomial.vars poly |> VarSet.to_list in
   let hessian =
     varlist
@@ -97,18 +139,18 @@ let concave_convex_check (comp_operator: hessian_check) (poly: RealPolynomial.t)
   let solver = Solver.create () in
   let constr =
     match comp_operator with
-    | Positivesemidefinite -> RealFormula.mk_ge term_complete (RealPolynomial.of_constant (OurFloat.zero))
-    | Negativesemidefinite -> RealFormula.mk_le term_complete (RealPolynomial.of_constant (OurFloat.zero))
+    | Convexe -> RealFormula.mk_ge term_complete (RealPolynomial.of_constant (OurFloat.zero))
+    | Concave -> RealFormula.mk_le term_complete (RealPolynomial.of_constant (OurFloat.zero))
   in
 
   Solver.add_real solver (RealFormula.neg constr);
   Solver.unsatisfiable solver
 
 let poly_is_concave =
-  concave_convex_check Negativesemidefinite
+  concave_convex_check Concave
 
 let poly_is_convexe =
-  concave_convex_check Positivesemidefinite
+  concave_convex_check Convexe
 
 let concave_convex_check_v2_memo =
   Util.memoize ~extractor:identity (uncurry concave_convex_check_v2_)
@@ -117,10 +159,10 @@ let concave_convex_check_v2 =
   fst concave_convex_check_v2_memo
 
 let bound_is_concave =
-  (curry concave_convex_check_v2) Negativesemidefinite
+  (curry concave_convex_check_v2) Concave
 
 let bound_is_convexe =
-  (curry concave_convex_check_v2) Positivesemidefinite
+  (curry concave_convex_check_v2) Convexe
 
 (* TODO avoid invocation of Z3 for linearity check  *)
 let appr_substitution_is_valid bound = bound_is_concave bound && bound_is_convexe bound
@@ -208,73 +250,49 @@ let bound_nondet_var prog_vars inv var =
   | None -> default
 
 let substitute_nondet_var prog_vars temp_vars inv b =
-  VarSet.fold (fun v -> RealBound.appr_substitute_abs v @@ bound_nondet_var prog_vars inv v) temp_vars b
+  VarSet.fold (fun v -> RealBound.appr_substitution_abs_one v @@ bound_nondet_var prog_vars inv v) temp_vars b
 
-let elsb_ program (((gt, l), var): RV.t): RealBound.t =
-  let transitions =
-    GeneralTransition.transitions gt
-    |> TransitionSet.filter (Location.equal l % Transition.target)
-  in
-  let total_probability =
-    TransitionSet.fold (fun t -> OurFloat.(+) (Transition.label t |> TransitionLabel.probability) ) transitions OurFloat.zero
-  in
-  let transitions_with_prob =
-    TransitionSet.to_list transitions
-    |> List.map (fun t -> (t, Transition.label t |> fun label -> OurFloat.(TransitionLabel.probability label / total_probability)))
-  in
-  let handle_update_element ue =
-    match ue with
-    | TransitionLabel.UpdateElement.Poly p ->
-        RealPolynomial.of_intpoly p
-    | TransitionLabel.UpdateElement.Dist d ->
-        ProbDistribution.expected_value d
-  in
-  let handle_transition trans =
-    Transition.label trans
-    |> flip TransitionLabel.update var
-    |? TransitionLabel.UpdateElement.Poly (Polynomial.of_var var)
-    |> handle_update_element
-  in
+let elsb_ program (((gt, l), v): RV.t): RealBound.t =
+  let execute () =
+    let transitions =
+      GeneralTransition.transitions gt
+      |> TransitionSet.filter (Location.equal l % Transition.target)
+    in
+    let transitions_with_prob =
+      TransitionSet.to_list transitions
+      |> List.map (fun t -> (t, Transition.label t |> fun label -> OurFloat.(TransitionLabel.probability label)))
+    in
+    let handle_update_element ue =
+      match ue with
+      | TransitionLabel.UpdateElement.Poly p ->
+          RealPolynomial.of_intpoly p
+      | TransitionLabel.UpdateElement.Dist d ->
+          ProbDistribution.expected_value d
+    in
+    let handle_transition trans =
+      Transition.label trans
+      |> flip TransitionLabel.update v
+      |? TransitionLabel.UpdateElement.Poly (Polynomial.of_var v)
+      |> handle_update_element
+    in
 
-  transitions_with_prob
-  |> List.map (fun (t,p) -> (p, handle_transition t))
-  |> List.map (fun (p,up) -> RealPolynomial.(of_constant p * up))
-  |> List.enum
-  |> RealPolynomial.sum
-  |> simplify_poly_with_guard (GeneralTransition.guard gt)
-  |> RealBound.of_poly
-  |> substitute_nondet_var
-      (Program.input_vars program)
-      (VarSet.diff (Program.vars program) (Program.input_vars program))
-      (GeneralTransition.guard gt |> Constraints.RealConstraint.of_intconstraint)
-  |> RealBound.set_linear_vars_to_probabilistic_and_rest_to_nonprobabilistic
-  |> RealBound.abs
-
-
-let exact_lsb_abs_ program ((t, var): NPRV.t): RealBound.t =
-  let handle_update_element ue =
-    match ue with
-    | TransitionLabel.UpdateElement.Poly p ->
-        RealPolynomial.of_intpoly p |> RealBound.of_poly
-    | TransitionLabel.UpdateElement.Dist d ->
-        RealBound.max
-          (RealBound.abs (ProbDistribution.deterministic_upper_bound d |> RealBound.of_intbound))
-          (RealBound.abs (ProbDistribution.deterministic_lower_bound d |> RealBound.of_intbound))
+    transitions_with_prob
+    |> List.enum
+    |> Enum.map (fun (t,p) -> (p, handle_transition t))
+    |> Enum.map ( fun (p,up) -> p, RealPolynomial.((up - (of_var v))) )
+    |> Enum.map (fun (p,poly) -> p, simplify_poly_with_guard (GeneralTransition.guard gt) poly)
+    |> Enum.map RealBound.(fun (p,poly) -> of_constant p * abs (of_poly poly))
+    |> RealBound.sum
+    |> substitute_nondet_var
+        (Program.input_vars program)
+        (VarSet.diff (Program.vars program) (Program.input_vars program))
+        (GeneralTransition.guard gt |> Constraints.RealConstraint.of_intconstraint)
   in
-  let handle_transition trans =
-    Transition.label trans
-    |> flip TransitionLabel.update var
-    |? TransitionLabel.UpdateElement.Poly (Polynomial.of_var var)
-    |> handle_update_element
-  in
-
-  t
-  |> handle_transition
-  |> substitute_nondet_var
-      (Program.input_vars program)
-      (VarSet.diff (Program.vars program) (Program.input_vars program))
-      (TransitionLabel.guard (Transition.label t) |> Constraints.RealConstraint.of_intconstraint)
-  |> RealBound.abs
+  Logger.with_log
+    logger Logger.DEBUG
+    (fun () -> "elsb",["gt", GeneralTransition.to_id_string gt; "l", Location.to_string l; "var", Var.to_string v])
+    ~result:RealBound.to_string
+    execute
 
 let elsb_memo =
   Util.memoize
@@ -283,18 +301,8 @@ let elsb_memo =
 
 let elsb p rv = (fst elsb_memo) (p,rv)
 
-let exact_lsb_abs_memo =
-  Util.memoize
-    ~extractor:(fun (program,(t,var)) -> (Transition.id t, Var.to_string var))
-    (fun (program,rv) -> exact_lsb_abs_ program rv)
-
-let exact_lsb_abs = 
-  curry @@ fst exact_lsb_abs_memo
-
 let vars program rv =
-  elsb program rv |> RealBound.vars
+  RealBound.(elsb program rv + abs (of_var (RV.variable rv))) |> RealBound.vars
 
-let reset () = 
-  ((snd elsb_memo) ());
-  ((snd exact_lsb_abs_memo) ());
-  ((snd concave_convex_check_v2_memo) ())
+let reset () =
+  ((snd elsb_memo) ())

@@ -30,12 +30,15 @@ let lift_nonprob_timebounds program appr =
     |> TransitionSet.enum
     |> Enum.map (Approximation.timebound appr)
     |> Bound.sum
-    |> RealBound.of_intbound
   in
 
   Program.generalized_transitions program
   |> fun gtset -> GeneralTransitionSet.fold
-       (fun gt appr -> Approximation.add_exptimebound (get_gt_timebound gt) gt appr)
+       (fun gt appr ->
+          let timebound = get_gt_timebound gt in
+          Approximation.add_exptimebound (RealBound.of_intbound timebound) gt appr
+          |> Approximation.add_timebound_gt timebound gt
+       )
        gtset
        appr
 
@@ -65,16 +68,23 @@ let lift_nonprob_sizebounds program appr =
        (fun appr ((gt,l),var) -> Approximation.add_expsizebound (get_gtl_sizebound ((gt,l),var)) (gt,l) var appr)
        appr
 
-let rec find_exp_bounds_ (program: Program.t) (appr: Approximation.t): Approximation.t =
-  ExpSizeBounds.improve program appr
+let rec find_exp_bounds_ ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
+  ExpSizeBounds.improve ervg sccs program appr
   |> ExpRankingBounds.improve program
-  |> MaybeChanged.if_changed (find_exp_bounds_ program)
+  |> MaybeChanged.if_changed (find_exp_bounds_ ervg sccs program)
   |> MaybeChanged.unpack
 
 let find_exp_bounds (program: Program.t) (appr: Approximation.t): Approximation.t =
+  let ervg = ERVG.rvg program in
+  let sccs =
+    let module C = Graph.Components.Make(ERVG) in
+    List.rev @@ C.scc_list ervg
+  in
+
   appr
   |> TrivialTimeBounds.compute program
+  |> TrivialTimeBounds.compute_generaltransitions program
   |> find_bounds_ program
   |> lift_nonprob_timebounds program
   |> lift_nonprob_sizebounds program
-  |> find_exp_bounds_ program
+  |> find_exp_bounds_ ervg sccs program
