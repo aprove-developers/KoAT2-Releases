@@ -1,14 +1,14 @@
 {
   (** Provides an lexer generated with ocamllex to lex transition graphs, its constraints and polynomials *)
-  
+
   (** Constructs a lexer for transition graphs as well as its used constraints and polynomials *)
 (*  module Make(G : Parseable.Program) =
     struct*)
       open Lexing
       module P = Parser(*.Make(G)*)
-         
+
       exception SyntaxError of string
-                             
+
       let next_line lexbuf =
         let pos = lexbuf.lex_curr_p in
         lexbuf.lex_curr_p <-
@@ -21,6 +21,7 @@
 let int = ['0'-'9'] ['0'-'9']*
 let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
+let comment = '#'[^ '\n' '\r']*newline
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']* '\''?
 let probfloat = ['+']?(['0'-'1']*)?['.']['0'-'9']+ | '1''.''0'*
 let float = ['+' '-']?(['0'-'9']*)?['.']['0'-'9']+
@@ -29,6 +30,7 @@ let fraction = ['-']?['0'-'9']+['/']['1'-'9']['0'-'9']*
 
 rule read =
   parse
+  | comment           { read lexbuf }
   | white             { read lexbuf }
   | newline           { next_line lexbuf; read lexbuf }
   | "UNIFORM"         { P.UNIFORM }
