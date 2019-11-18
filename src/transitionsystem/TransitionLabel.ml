@@ -27,7 +27,7 @@ let get_unique_id =
 let get_unique_gt_id =
   get_unique_by_ref gt_id_counter
 
-let reset_unique_gt_counter () = 
+let reset_unique_gt_counter () =
   gt_id_counter := 0
 
 module UpdateElement =
@@ -335,7 +335,7 @@ let update_to_string_rhs t =
   let guard = if Guard.is_true label.guard then "" else ":|:" ^ Guard.to_string label.guard in
   let cost = if Polynomial.is_one label.cost then "->" else "-{"^ Polynomial.to_string label.cost ^ "}>" ^ ", " in
   let probability = if (label.probability = (1. |> OurFloat.of_float)) then "" else "\n p:" ^ OurFloat.to_string label.probability in
-  "ID: " ^ string_of_int label.id ^ ", " ^ (update_to_string_lhs label)^ probability ^ cost ^ update_to_string_rhs label ^ guard
+  "ID: " ^ string_of_int label.id ^ ", " ^ "GTID: " ^ string_of_int label.gt_id ^ ", " ^ (update_to_string_lhs label)^ probability ^ cost ^ update_to_string_rhs label ^ guard
 
 
 let to_id_string t =
