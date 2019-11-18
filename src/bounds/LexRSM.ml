@@ -443,14 +443,23 @@ let compute_ranking_table program =
   Logger.log logger Logger.DEBUG
                   (fun () -> "compute_ranking_table", ["ranking_table", ranking_table_to_string time_ranking_table])
 
+let print_pprf_option = function
+  | Some a -> pprf_to_string a
+  | None   -> "None"
+
 let find program gt =
-  let vars = Program.input_vars program in
-  let locations = (Program.graph program |> TransitionGraph.locations |> LocationSet.to_list) in
-  if TemplateTable.is_empty template_table then
-    compute_ranking_templates vars locations;
-  if RankingTable.is_empty time_ranking_table then
-    compute_ranking_table program;
-  RankingTable.find_option time_ranking_table gt
+  let execute () =
+    let vars = Program.input_vars program in
+    let locations = (Program.graph program |> TransitionGraph.locations |> LocationSet.to_list) in
+    if TemplateTable.is_empty template_table then
+      compute_ranking_templates vars locations;
+    if RankingTable.is_empty time_ranking_table then
+      compute_ranking_table program;
+    RankingTable.find_option time_ranking_table gt
+  in
+  Logger.with_log logger Logger.DEBUG
+    (fun () -> "LexRSM.find", ["gt", GeneralTransition.to_id_string gt])
+    ~result:(print_pprf_option) execute
 
 let find_whole_prog program goal =
   if goal = "EXPECTEDCOMPLEXITY" then compute_expected_complexity program |> ignore
