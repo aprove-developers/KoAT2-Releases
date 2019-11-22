@@ -7,14 +7,20 @@ open ExpBoundsHelper
 
 let logger = Logging.(get ExpTime)
 
-let get_best_bound program incoming_enum appr rankfunc : RealBound.t =
-  let entry_locations =
-    incoming_enum
-    |> Enum.clone
-    |> Enum.map snd
-    |> Enum.uniq_by Location.equal
-    |> List.of_enum
-  in
+let mul_inctime_and_rhs (inctime, rhs) = RealBound.(
+  if is_infinity inctime then
+    if equal zero rhs then
+      zero
+    else
+      infinity
+  else
+    if is_infinity rhs then
+      infinity
+    else
+      inctime * rhs
+)
+
+let get_best_bound entry_locations incoming_enum appr rankfunc : RealBound.t =
   let incoming_list = List.of_enum incoming_enum in
   entry_locations
   |> Util.show_debug_log logger ~resultprint:(Util.enum_to_string Location.to_string % List.enum) "entry_locations"
@@ -45,45 +51,72 @@ let get_best_bound program incoming_enum appr rankfunc : RealBound.t =
 
        let rank_bounded = (RealBound.appr_substition_abs_all rank_size_subst_bound (RealBound.of_poly rank)) in
 
-       let mul_inctime_and_rhs (inctime, rhs) = RealBound.(
-         if is_infinity inctime then
-           if equal zero rhs then
-             zero
-           else
-             infinity
-         else
-           if is_infinity rhs then
-             infinity
-           else
-             inctime * rhs
-       )
-       in
        mul_inctime_and_rhs (det_timebound,rank_bounded)
      )
   |> List.enum
   |> RealBound.sum
 
-let compute_bound (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t): RealBound.t =
+let compute_bounds (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t): RealBound.t * RealBound.t =
   let execute () =
-    rank
-    |> LexRSM.non_increasing
-    |> GeneralTransitionSet.to_list
-    |> entry_transitions logger program
-    |> fun incoming_list -> get_best_bound program incoming_list appr rank
+    let incoming_enum =
+      rank |> LexRSM.non_increasing |> GeneralTransitionSet.to_list |> entry_transitions logger program
+    in
+    let entry_locations =
+      incoming_enum
+      |> Enum.clone
+      |> Enum.map snd
+      |> Enum.uniq_by Location.equal
+      |> List.of_enum
+    in
+
+    let time = get_best_bound entry_locations (Enum.clone incoming_enum) appr rank in
+
+    let entry_ts =
+      incoming_enum |> Enum.clone
+      |> Enum.map (fun (gt,l) -> GeneralTransition.transitions gt |> TransitionSet.filter ((=) l % Transition.target) |> TransitionSet.enum)
+      |> Enum.flatten
+    in
+
+    let inc_det_sizebound v =
+      entry_ts |> Enum.clone
+      |> Enum.map (fun t -> Bound.abs_bound (fun k -> Approximation.sizebound k appr t v))
+      |> Bound.maximum
+      |> RealBound.of_intbound
+    in
+
+    let substituted_cost =
+      GeneralTransition.cost (LexRSM.decreasing rank)
+      |> RealBound.appr_substition_abs_all inc_det_sizebound
+    in
+
+    let incoming_expected_time =
+      incoming_enum |> Enum.clone
+      |> Enum.map (Approximation.exptimebound appr % Tuple2.first)
+      |> RealBound.sum
+    in
+
+    let cost = mul_inctime_and_rhs (incoming_expected_time,substituted_cost) in
+
+    (time, cost)
+
   in Logger.with_log logger Logger.DEBUG
        (fun () -> "compute_bound", ["rank", LexRSM.pprf_to_string rank])
-                     ~result:RealBound.to_string
+                     ~result:(fun (time,cost) -> "time: "^RealBound.to_string time^" cost: "^RealBound.to_string cost)
                      execute
 
 let improve_with_rank program appr (rank: LexRSM.t) =
-  let bound = compute_bound appr program rank in
-  if RealBound.is_infinity bound then
-    MaybeChanged.same appr
-  else
-    rank
-    |> LexRSM.decreasing
-    |> (fun t -> Approximation.add_exptimebound bound t appr)
-    |> MaybeChanged.changed
+  let (time,cost) = compute_bounds appr program rank in
+  (if RealBound.is_infinity time then
+     MaybeChanged.same appr
+   else
+     MaybeChanged.changed (Approximation.add_exptimebound time (LexRSM.decreasing rank) appr)
+  )
+  |> (fun mca ->
+        if RealBound.is_infinity cost then
+          mca
+        else
+          MaybeChanged.(mca >>= (changed % Approximation.add_expcostbound cost (LexRSM.decreasing rank)))
+     )
 
 (** Checks if a transition is bounded *)
 let exp_bounded appr transition =
