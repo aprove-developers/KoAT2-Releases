@@ -1,6 +1,7 @@
 open Batteries
 open Polynomials
 open Formulas
+open BoundsInst
 
 module Guard = Constraints.Constraint
 type polynomial = Polynomial.t
@@ -68,7 +69,7 @@ type t = {
     guard_without_invariants: Guard.t;
     invariants: Guard.t;
     cost : Polynomial.t;
-    gtcost : RealPolynomial.t;
+    gtcost : RealBound.t;
     probability : OurFloat.t;
   }
 
@@ -77,7 +78,7 @@ let triples (list1) (list2) (list3) = List.map (fun ((x,y),z) -> (x,y,z)) (List.
 let quatruples (list1) (list2) (list3) (list4) = List.map (fun ((x,y),(z,w)) -> (x,y,z,w)) (List.combine (List.combine list1 list2) (List.combine list3 list4))
 
 (* Generates a nonprobabilistic label and sets the probability to one *)
-let make ?(cvect = (Polynomial.one, RealPolynomial.one)) com_kind ~update ~guard =
+let make ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~update ~guard =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
   {
     id = get_unique_id (); gt_id = get_unique_gt_id ();
@@ -88,7 +89,7 @@ let make ?(cvect = (Polynomial.one, RealPolynomial.one)) com_kind ~update ~guard
   }
 
 (* Generates a probabilistic label, needs a name to distinguish different labels belonging to the same transition *)
-let make_prob ?(cvect = (Polynomial.one, RealPolynomial.one)) com_kind ~update ~guard ~gt_id ~(probability: OurFloat.t) =
+let make_prob ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~update ~guard ~gt_id ~(probability: OurFloat.t) =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
     if (OurFloat.(probability > (1. |> of_float)) || OurFloat.(probability < (0. |> of_float))) then raise ProbabilitiesNotBetweenZeroAndOne
   else
@@ -135,7 +136,7 @@ let take_last n xs =
   |> List.rev
 
 (* TODO Pattern <-> Assigment relation *)
-let mk ?(cvect = (Polynomial.one, RealPolynomial.one)) ~com_kind ~targets ~patterns ~guard ~vars =
+let mk ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       let (target, assignments) = List.hd targets in
@@ -153,7 +154,7 @@ let mk ?(cvect = (Polynomial.one, RealPolynomial.one)) ~com_kind ~targets ~patte
                         probability=1 |> OurFloat.of_int; guard_without_invariants = guard;
                         invariants = Guard.mk_true;}
 
-let mk_prob ?(cvect = (Polynomial.one, RealPolynomial.one)) ~com_kind ~targets ~patterns ~guard ~vars ~gt_id ~probability =
+let mk_prob ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patterns ~guard ~vars ~gt_id ~probability =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       if (OurFloat.(probability > (1 |> of_int)) || OurFloat.(probability < (0 |> of_int))) then raise ProbabilitiesNotBetweenZeroAndOne
@@ -207,7 +208,7 @@ let append t1 t2 =
     update = new_update;
     guard = new_guard;
     cost = Polynomial.(t1.cost + t2.cost);
-    gtcost = RealPolynomial.(t1.gtcost + t2.gtcost);
+    gtcost = RealBound.(t1.gtcost + t2.gtcost);
     probability = OurFloat.(t1.probability * t2.probability);
     guard_without_invariants = new_guard_without_invariants;
     invariants = t2.invariants;
@@ -295,7 +296,7 @@ let default = {
     guard_without_invariants = Guard.mk_true;
     invariants = Guard.mk_true;
     cost = Polynomial.one;
-    gtcost = RealPolynomial.one;
+    gtcost = RealBound.one;
     probability = 1. |> OurFloat.of_float
   }
 
@@ -385,7 +386,7 @@ let rename standard_vars t =
     guard_without_invariants = Guard.rename t.guard_without_invariants rename_map;
     invariants = Guard.rename t.invariants rename_map;
     cost = Polynomial.rename rename_map t.cost;
-    gtcost = RealPolynomial.rename rename_map t.gtcost;
+    gtcost = RealBound.rename rename_map t.gtcost;
     probability = t.probability;
   }
 

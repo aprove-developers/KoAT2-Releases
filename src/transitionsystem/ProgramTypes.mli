@@ -59,7 +59,7 @@ sig
   val same : t -> t -> bool
   val id: t -> int
   val guard: t -> TransitionLabel.Guard.t
-  val cost: t -> Polynomials.RealPolynomial.t
+  val cost: t -> BoundsInst.RealBound.t
   val invariants: t -> TransitionLabel.Guard.t
   val guard_without_invariants: t -> TransitionLabel.Guard.t
   val total_probability: t -> OurFloat.t

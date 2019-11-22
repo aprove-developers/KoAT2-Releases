@@ -105,7 +105,7 @@ module GeneralTransition =
     type t = {
       id: int;
       transitions: TransitionSet.t;
-      cost: Polynomials.RealPolynomial.t;
+      cost: BoundsInst.RealBound.t;
       start: Location.t;
       guard: TransitionLabel.Guard.t;
       guard_without_invariants: TransitionLabel.Guard.t;

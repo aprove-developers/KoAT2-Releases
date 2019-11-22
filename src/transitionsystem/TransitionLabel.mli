@@ -1,5 +1,6 @@
 open Batteries
 open Polynomials
+open BoundsInst
 
 (** A transition is an edge of a transition system.
     It connects two locations and is annotated with a guard and an update
@@ -25,9 +26,9 @@ module UpdateElement :
     val is_polynomial : t -> bool
   end
 
-val make : ?cvect:(Polynomial.t * RealPolynomial.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> t
+val make : ?cvect:(Polynomial.t * RealBound.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> t
 
-val mk : ?cvect:(Polynomial.t * RealPolynomial.t) ->
+val mk : ?cvect:(Polynomial.t * RealBound.t) ->
          com_kind:string ->
          targets:(string * (UpdateElement.t list)) list ->
          patterns:Var.t list ->
@@ -35,9 +36,9 @@ val mk : ?cvect:(Polynomial.t * RealPolynomial.t) ->
          vars:Var.t list ->
          t
 
-val make_prob : ?cvect:(Polynomial.t * RealPolynomial.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> gt_id:int -> probability:OurFloat.t -> t
+val make_prob : ?cvect:(Polynomial.t * RealBound.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> gt_id:int -> probability:OurFloat.t -> t
 
-val mk_prob : ?cvect:(Polynomial.t * RealPolynomial.t) ->
+val mk_prob : ?cvect:(Polynomial.t * RealBound.t) ->
          com_kind:string ->
          targets:(string * (UpdateElement.t list)) list ->
          patterns:Var.t list ->
@@ -94,7 +95,7 @@ val input_size : t -> int
 
 val cost : t -> Polynomial.t
 
-val gtcost : t -> RealPolynomial.t
+val gtcost : t -> RealBound.t
 
 val to_string : t -> string
 

@@ -1,6 +1,7 @@
 open Batteries
 open Formulas
 open Polynomials
+open BoundsInst
 open ProgramTypes
 
 let mk_transition lhs (cost: Polynomial.t) gtcost (rhs: string * ((string * (TransitionLabel.UpdateElement.t list)) list)) (formula: Formula.t) (vars:Var.t list): Transition.t list =
@@ -9,7 +10,7 @@ let mk_transition lhs (cost: Polynomial.t) gtcost (rhs: string * ((string * (Tra
   |> List.map (fun constr ->
 	 (Location.of_string (Tuple2.first lhs),
           TransitionLabel.mk
-            ~cvect:(cost, RealPolynomial.of_intpoly gtcost)
+            ~cvect:(cost, gtcost |> RealPolynomial.of_intpoly |> RealBound.of_poly)
             ~com_kind:(Tuple2.first rhs)
             ~targets:(Tuple2.second rhs)
             ~patterns:(List.map Var.of_string (Tuple2.second lhs))
@@ -27,7 +28,7 @@ let mk_transition lhs (cost: Polynomial.t) gtcost (rhs: string * ((string * (Tra
           List.map (fun (prob, comkind, targets) ->
             (Location.of_string (Tuple2.first lhs),
               TransitionLabel.mk_prob
-                ~cvect:(cost, RealPolynomial.of_intpoly gtcost)
+                ~cvect:(cost, gtcost |> RealPolynomial.of_intpoly |> RealBound.of_poly)
                 ~com_kind:comkind
                 ~targets:targets
                 ~patterns:(List.map Var.of_string (Tuple2.second lhs))
@@ -56,7 +57,7 @@ let mk_transition_simple (start: string) (cost: Polynomial.t) gtcost (rhs: strin
             ~targets:(Tuple2.second rhs)
             ~patterns:default_vars
             ~guard:constr
-            ~cvect:(cost, RealPolynomial.of_intpoly gtcost)
+            ~cvect:(cost, RealPolynomial.of_intpoly gtcost |> RealBound.of_poly)
             ~vars:default_vars, (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))))
        )
 
@@ -68,7 +69,7 @@ let mk_transition_simple_prob (start: string) (cost: Polynomial.t) gtcost (rhs: 
           let id = TransitionLabel.get_unique_gt_id () in
           (Location.of_string start,
             TransitionLabel.mk_prob
-              ~cvect:(cost, RealPolynomial.of_intpoly gtcost)
+              ~cvect:(cost, RealPolynomial.of_intpoly gtcost |> RealBound.of_poly)
               ~com_kind:comkind
               ~targets:targets
               ~patterns:default_vars
