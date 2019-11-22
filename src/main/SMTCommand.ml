@@ -17,13 +17,12 @@ type params = {
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
-  let input = "test.koat" in
-  Logging.use_loggers [Logging.Preprocessor, Logger.DEBUG];
-  MainUtil.read_input ~rename:false false "test.koat"
-  |> Option.map (fun program ->
-       (program, Approximation.create program)
-       |> Preprocessor.process Preprocessor.process_only_once [Preprocessor.InvariantGeneration]
-       |> tap (fun (program, appr) ->
-            GraphPrint.print_system ~label:TransitionLabel.to_string
-            ~outdir:(input |> Fpath.v |> Fpath.parent) ~file:"test" program))
-  |> const @@ Printf.printf "Ende\n"
+  let module Z3 = SMT.Z3Opt in
+  let solve = match params.solver with
+    | `Z3 -> Z3.get_model
+  and constr = Readers.read_formula params.constr in
+  solve constr
+  |> Option.map (fun solution ->
+         Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n")) (Valuation.bindings solution)
+       )
+  |> fun op -> if Option.is_none op then print_string "unsatisfiable\n"
