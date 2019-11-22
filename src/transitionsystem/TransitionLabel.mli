@@ -1,13 +1,13 @@
 open Batteries
+open Polynomials
 
 (** A transition is an edge of a transition system.
     It connects two locations and is annotated with a guard and an update
     A guard has to be fulfiled for a state to reach another state via the transition
     An update assigns variables a new value as a linear combination of the old values *)
 module Guard = Constraints.Constraint
-type polynomial = Polynomials.Polynomial.t
 module VarMap : module type of Map.Make(Var)
-                          
+
 type kind = [ `Lower | `Upper ]  [@@deriving eq, ord]
 
 type t
@@ -25,19 +25,19 @@ module UpdateElement :
     val is_polynomial : t -> bool
   end
 
-val make : ?cost:polynomial -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> t
+val make : ?cvect:(Polynomial.t * RealPolynomial.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> t
 
-val mk : ?cost:polynomial ->
+val mk : ?cvect:(Polynomial.t * RealPolynomial.t) ->
          com_kind:string ->
          targets:(string * (UpdateElement.t list)) list ->
          patterns:Var.t list ->
          guard:Guard.t ->
          vars:Var.t list ->
          t
-         
-val make_prob : ?cost:polynomial -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> gt_id:int -> probability:OurFloat.t -> t
 
-val mk_prob : ?cost:polynomial ->
+val make_prob : ?cvect:(Polynomial.t * RealPolynomial.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> gt_id:int -> probability:OurFloat.t -> t
+
+val mk_prob : ?cvect:(Polynomial.t * RealPolynomial.t) ->
          com_kind:string ->
          targets:(string * (UpdateElement.t list)) list ->
          patterns:Var.t list ->
@@ -48,9 +48,9 @@ val mk_prob : ?cost:polynomial ->
          t
 
 (** Appends the second label to the first label.
-    An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. 
+    An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label.
     Only works when no variable get sampled from a distribution during the update of the first transition *)
-val append : t -> t -> t 
+val append : t -> t -> t
 
 (** Returns a guard which constraints the possibility for the second label beeing evaluated in sequence with the first one *)
 val append_guard : t -> t -> Guard.t
@@ -63,7 +63,7 @@ val same_gt : t -> t -> bool
 
 (** Returns if the two labels describe the same transition *)
 val equivalent : t -> t -> bool
-  
+
 val compare_same : t -> t -> int
 
 val compare_equivalent : t -> t -> int
@@ -91,8 +91,10 @@ val vars : t -> VarSet.t
 val input_vars : t -> VarSet.t
 
 val input_size : t -> int
-  
-val cost : t -> polynomial
+
+val cost : t -> Polynomial.t
+
+val gtcost : t -> RealPolynomial.t
 
 val to_string : t -> string
 

@@ -10,7 +10,7 @@
 %token              AND
 %token 				ARROW WITH PROBDIV LBRACK RBRACK
 %token				GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
-%token              COMMA COLON
+%token              COMMA COLON SEMICOLON
 %token              MIN MAX INFINITY ABS
 %token              UNIFORM
 %token				GUARDVEC GUARDVAL UPDATES PRECISION DIRECTTERMINATION INITIAL
@@ -62,7 +62,7 @@
   module Constr = Constraints.Constraint
   open Atoms
   open BoundsInst
-  module Poly = Polynomials.Polynomial
+	open Polynomials
   open Formulas
   open ProgramTypes
   open OurNum
@@ -102,10 +102,10 @@ program_simple :
                   { ParserUtil.mk_program_simple (List.flatten transitions) } ;
 
 transition_simple :
-	|	start = ID; cost = cost ; rhs = non_prob_transition_rhs; formula = withConstraints
-	          { ParserUtil.mk_transition_simple start cost rhs formula }
-        |	start = ID; cost = cost ; rhs = prob_transition_rhs; formula = withConstraints
-	          { ParserUtil.mk_transition_simple_prob start cost rhs formula } ;
+	|	start = ID; cv = cvect; rhs = non_prob_transition_rhs; formula = withConstraints
+	          { ParserUtil.mk_transition_simple start (Tuple2.first cv) (Tuple2.second cv) rhs formula }
+  |	start = ID; cv = cvect ; rhs = prob_transition_rhs; formula = withConstraints
+	    			{ ParserUtil.mk_transition_simple_prob start (Tuple2.first cv) (Tuple2.second cv) rhs formula } ;
 
 goal :
 	|	LPAR GOAL goal = ID RPAR
@@ -124,20 +124,26 @@ variables :
 		  { List.map Var.of_string vars } ;
 
 transition :
-	|	lhs = transition_lhs; cost = cost ; rhs = non_prob_transition_rhs; formula = withConstraints
-	          { ParserUtil.mk_transition lhs cost rhs formula }
-        |       lhs = transition_lhs; cost = cost ; rhs = prob_transition_rhs; formula = withConstraints
-	          { ParserUtil.mk_transition_prob lhs cost rhs formula } ;
+	|	lhs = transition_lhs; cv = cvect ; rhs = non_prob_transition_rhs; formula = withConstraints
+	          { ParserUtil.mk_transition lhs (Tuple2.first cv) (Tuple2.second cv) rhs formula }
+  | lhs = transition_lhs; cv = cvect ; rhs = prob_transition_rhs; formula = withConstraints
+	    			{ ParserUtil.mk_transition_prob lhs (Tuple2.first cv) (Tuple2.second cv) rhs formula } ;
 
-cost :
+cvect :
+        |       MINUS LBRACE ub = polynomial COMMA lb = polynomial SEMICOLON gtb = polynomial RBRACE GREATERTHAN
+                  { (ub, gtb) }
         |       MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
-                  { ub }
+                  { (ub, Polynomial.one) }
+        |       MINUS ub = polynomial SEMICOLON gtb = polynomial GREATERTHAN
+                  { (ub, gtb) }
         |       MINUS ub = polynomial GREATERTHAN
-                  { ub }
+                  { (ub, Polynomial.one) }
+        |       MINUS LBRACE ub = polynomial SEMICOLON gtb = polynomial RBRACE GREATERTHAN
+                  { (ub, gtb) }
         |       MINUS LBRACE ub = polynomial RBRACE GREATERTHAN
-                  { ub }
+                  { (ub, Polynomial.one) }
         |       ARROW
-                  { Poly.one };
+                  { (Polynomial.one, Polynomial.one) };
 transition_lhs :
 	|	start = ID; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR)
 	          { (start, patterns) } ;
@@ -222,21 +228,21 @@ onlyPolynomial :
 
 variable :
 	|	v = ID
-                  { Poly.var v } ;
+                  { Polynomial.var v } ;
 
 polynomial :
 	|       v = variable
                   { v }
 	| 	c = UINT
-                  { Poly.value c }
+                  { Polynomial.value c }
 	|	LPAR; ex = polynomial; RPAR
                   { ex }
 	|       MINUS; ex = polynomial
-	          { Poly.neg ex }
+	          { Polynomial.neg ex }
 	|       p1 = polynomial; op = bioperator; p2 = polynomial
 	          { op p1 p2 }
 	|       v = variable; POW; c = UINT
-	          { Poly.pow v c } ;
+	          { Polynomial.pow v c } ;
 
 dist:
         |       UNIFORM; LPAR; p1 = polynomial; RPAR; LPAR; p2 = polynomial; RPAR
@@ -279,9 +285,9 @@ bound :
 	|       MINUS { Bound.sub } ;
 
 %inline bioperator :
-	|	PLUS { Poly.add }
-	|	TIMES { Poly.mul }
-	|       MINUS { Poly.sub } ;
+	|	PLUS { Polynomial.add }
+	|	TIMES { Polynomial.mul }
+	|       MINUS { Polynomial.sub } ;
 
 
 exactProgram :
