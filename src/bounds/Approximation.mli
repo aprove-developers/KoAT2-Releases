@@ -27,6 +27,8 @@ val size : t -> SizeApproximation.t
 
 val cost : t -> TransitionApproximation.t
 
+val expcost : t -> GeneralTransitionApproximation.t
+
 val to_string : Program.t -> bool -> t -> string
 
 val equivalent : t -> t -> bool
@@ -78,10 +80,18 @@ val is_exptime_bounded : t -> GeneralTransition.t -> bool
 (** Returns a costbound for the transition. *)
 val costbound : t -> Transition.t -> Bound.t
 
+(** Returns an expected costbound for the given general transition. *)
+val expcostbound : t -> GeneralTransition.t -> RealBound.t
+
 (** Returns a costbound for the program. *)
 val program_costbound : t -> Program.t -> Bound.t
 
+(** Returns an expected costbound for the program. *)
+val program_expcostbound : t -> Program.t -> RealBound.t
+
 val add_costbound : Bound.t -> Transition.t -> t -> t
+
+val add_expcostbound : RealBound.t -> GeneralTransition.t -> t -> t
 
 
 (** Sizebound related methods *)

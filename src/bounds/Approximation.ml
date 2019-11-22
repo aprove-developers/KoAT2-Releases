@@ -15,6 +15,7 @@ type t = {
     size: SizeApproximation.t;
     expsize: ExpectedSizeApproximation.t;
     cost: TransitionApproximation.t;
+    expcost: GeneralTransitionApproximation.t;
   }
 
 let equivalent appr1 appr2 =
@@ -28,6 +29,7 @@ let empty transitioncount varcount gtcount = {
     size = SizeApproximation.empty (2 * transitioncount * varcount);
     expsize = ExpectedSizeApproximation.empty (2 * gtcount * varcount);
     cost = TransitionApproximation.empty "cost" transitioncount;
+    expcost = GeneralTransitionApproximation.empty "exptime" gtcount;
   }
 
 let create program =
@@ -47,6 +49,7 @@ let expsize appr = appr.expsize
 
 let cost appr = appr.cost
 
+let expcost appr = appr.expcost
 
 (** Sizebound related methods *)
 
@@ -134,11 +137,20 @@ let is_exptime_bounded appr =
 let costbound =
   TransitionApproximation.get % cost
 
+let expcostbound =
+  GeneralTransitionApproximation.get % expcost
+
 let program_costbound =
   TransitionApproximation.sum % cost
 
+let program_expcostbound =
+  GeneralTransitionApproximation.sum % expcost
+
 let add_costbound bound transition appr =
   { appr with cost = TransitionApproximation.add bound transition appr.cost }
+
+let add_expcostbound bound gt appr =
+  { appr with expcost = GeneralTransitionApproximation.add bound gt appr.expcost}
 
 let to_string program expected appr=
   let overall_timebound = program_timebound appr program in
@@ -168,6 +180,9 @@ let to_string program expected appr=
     IO.nwrite output "\nCostbounds:\n";
     IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
     appr.cost |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
+    if expected then
+      IO.nwrite output ("  Overall expected costbound: " ^ RealBound.to_string (program_expcostbound appr program) ^ "\n");
+      appr.expcost |> GeneralTransitionApproximation.to_string (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output;
     IO.nwrite output "\nSizebounds:\n";
     appr.size |> SizeApproximation.to_string |> IO.nwrite output;
     if expected then
