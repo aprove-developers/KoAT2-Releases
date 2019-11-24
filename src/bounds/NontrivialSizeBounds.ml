@@ -250,9 +250,9 @@ let compute_
 
 (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
-let compute kind program rvg get_timebound get_sizebound scc =
+let compute lsb_cache kind program rvg get_timebound get_sizebound scc =
   let execute () =
-    LocalSizeBound.sizebound_local_scc program kind scc
+    LocalSizeBound.sizebound_local_scc lsb_cache program kind scc
     |> Option.map (fun get_lsb ->
            compute_ kind program rvg (get_lsb kind) get_timebound get_sizebound scc
          )

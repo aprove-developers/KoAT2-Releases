@@ -13,6 +13,8 @@ module LexRSMMap = Hashtbl.Make(Location)
 module RankingTable = Hashtbl.Make(struct include GeneralTransition let equal = GeneralTransition.same
                                                                     let hash = Hashtbl.hash % GeneralTransition.id end)
 
+module TemplateTable = Hashtbl.Make(Location)
+
 type t = {
     rank : Location.t -> RealPolynomial.t;
     decreasing : GeneralTransition.t;
@@ -23,7 +25,15 @@ let rank t = t.rank
 let decreasing t = t.decreasing
 let non_increasing t = GeneralTransitionSet.union t.non_increasing (GeneralTransitionSet.singleton t.decreasing)
 
-let time_ranking_table: t RankingTable.t = RankingTable.create 10
+type lrsm_cache = (t RankingTable.t * RealParameterPolynomial.t TemplateTable.t * RealPolynomial.t list LexRSMMap.t * RealParameterPolynomial.t Option.t ref)
+
+let get_ranking_table   (cache: lrsm_cache) = Tuple4.first cache
+let get_template_table  (cache: lrsm_cache) = Tuple4.second cache
+let get_lexrsmmap       (cache: lrsm_cache) = Tuple4.third cache
+let get_cbound_template (cache: lrsm_cache) = Tuple4.fourth cache
+
+let new_cache: unit -> lrsm_cache = fun () -> (RankingTable.create 10, TemplateTable.create 10, LexRSMMap.create 10, ref None)
+
 
 let logger = Logging.(get LexRSM)
 
@@ -49,15 +59,9 @@ let ranking_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
   RealParameterPolynomial.(linear_poly + constant_poly),
   List.append fresh_vars [constant_var]
 
-module TemplateTable = Hashtbl.Make(Location)
-
-let template_table: RealParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
-
-let cbound_template: RealParameterPolynomial.t Option.t ref = ref None
-
 let fresh_coeffs: Var.t list ref = ref []
 
-let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): unit =
+let compute_ranking_templates cache (vars: VarSet.t) (locations: Location.t list): unit =
   let execute () =
     let ins_loc_prf location =
       (* Each location needs its own ranking template with different fresh variables *)
@@ -66,7 +70,7 @@ let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): uni
     in
     let templates = List.map ins_loc_prf locations in
     templates
-    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add template_table location polynomial);
+    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add (get_template_table cache) location polynomial);
     templates
     |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
     |> List.flatten
@@ -75,40 +79,40 @@ let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): uni
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "compute_ranking_templates", [])
                   ~result:(fun () ->
-                    template_table
+                    get_template_table cache
                     |> TemplateTable.enum
                     |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ RealParameterPolynomial.to_string polynomial)
                   )
                   execute
 
-let compute_cbound_template (vars: VarSet.t): unit =
+let compute_cbound_template cache (vars: VarSet.t): unit =
   let execute () =
     vars
     |> ranking_template
-    |> fun (poly, vars) -> cbound_template := Option.some poly
+    |> fun (poly, vars) -> get_cbound_template cache := Option.some poly
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "compute_cbound_template", [])
-                  ~result:(fun () -> !cbound_template |> Option.get |> RealParameterPolynomial.to_string)
+                  ~result:(fun () -> !(get_cbound_template cache) |> Option.get |> RealParameterPolynomial.to_string)
                   execute
 
-let prob_branch_poly (l,t,l') =
-    let template = (fun key -> key |> TemplateTable.find template_table) in
+let prob_branch_poly cache (l,t,l') =
+    let template = (fun key -> key |> TemplateTable.find (get_template_table cache)) in
     let prob = t |> TransitionLabel.probability in
     RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
 
-let expected_poly gtrans =
-    TransitionSet.fold (fun trans poly -> RealParameterPolynomial.add (prob_branch_poly trans) poly) (gtrans |> GeneralTransition.transitions) RealParameterPolynomial.zero
+let expected_poly cache gtrans =
+    TransitionSet.fold (fun trans poly -> RealParameterPolynomial.add (prob_branch_poly cache trans) poly) (gtrans |> GeneralTransition.transitions) RealParameterPolynomial.zero
 
-let general_transition_constraint (constraint_type, gtrans): RealFormula.t =
-  let template gtrans = gtrans |> GeneralTransition.start |> TemplateTable.find template_table in
+let general_transition_constraint cache (constraint_type, gtrans): RealFormula.t =
+  let template gtrans = gtrans |> GeneralTransition.start |> TemplateTable.find (get_template_table cache) in
   let lift_paraatom pa = (GeneralTransition.guard gtrans |> RealConstraint.of_intconstraint,pa) |> List.singleton in
   let constraints_and_atoms =
     match constraint_type with
-    | `Non_Increasing ->  RealParameterAtom.Infix.((template gtrans) >= (expected_poly gtrans)) |> lift_paraatom
+    | `Non_Increasing ->  RealParameterAtom.Infix.((template gtrans) >= (expected_poly cache gtrans)) |> lift_paraatom
 
     | `Decreasing ->
-        RealParameterAtom.Infix.((template gtrans) >= (RealParameterPolynomial.add (expected_poly gtrans) (RealParameterPolynomial.of_polynomial RealPolynomial.one)))
+        RealParameterAtom.Infix.((template gtrans) >= (RealParameterPolynomial.add (expected_poly cache gtrans) (RealParameterPolynomial.of_polynomial RealPolynomial.one)))
         |> lift_paraatom
 
     | `Bounded ->
@@ -140,7 +144,7 @@ let general_transition_constraint (constraint_type, gtrans): RealFormula.t =
           in
 
           let template_substituted =
-            TemplateTable.find template_table (Transition.target t)
+            TemplateTable.find (get_template_table cache) (Transition.target t)
             |> RealParameterPolynomial.rename (TransitionLabel.VarMap.bindings new_var_map |> RenameMap.from)
           in
 
@@ -153,8 +157,8 @@ let general_transition_constraint (constraint_type, gtrans): RealFormula.t =
         |> List.map (transition_bound)
 
       | `C_ranked ->
-        let c_template = !cbound_template |> Option.get in
-        RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly gtrans))
+        let c_template = !(get_cbound_template cache) |> Option.get in
+        RealParameterAtom.Infix.((RealParameterPolynomial.add (template gtrans) c_template) >= (expected_poly cache gtrans))
         |> lift_paraatom
   in
   List.map
@@ -163,26 +167,26 @@ let general_transition_constraint (constraint_type, gtrans): RealFormula.t =
   |> List.map RealFormula.mk
   |> List.fold_left RealFormula.mk_and RealFormula.mk_true
 
-let non_increasing_constraint transition =
-  general_transition_constraint (`Non_Increasing, transition)
+let non_increasing_constraint cache transition =
+  general_transition_constraint cache (`Non_Increasing, transition)
 
-let bounded_constraint transition =
-  let constr = general_transition_constraint (`Bounded, transition) in
+let bounded_constraint cache transition =
+  let constr = general_transition_constraint cache (`Bounded, transition) in
   constr
 
-let decreasing_constraint transition =
-  let constr = general_transition_constraint (`Decreasing, transition) in
+let decreasing_constraint cache transition =
+  let constr = general_transition_constraint cache (`Decreasing, transition) in
   constr
 
-let c_ranked_constraint transition =
-  general_transition_constraint (`C_ranked, transition)
+let c_ranked_constraint cache transition =
+  general_transition_constraint cache (`C_ranked, transition)
 
-let add_to_LexRSMMap map transitions valuation =
+let add_to_LexRSMMap cache map transitions valuation =
   transitions
   |> GeneralTransitionSet.start_locations
   |> LocationSet.to_list
   |> List.map (fun location ->
-      TemplateTable.find template_table location
+      TemplateTable.find (get_template_table cache) location
       |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero)
       |> (fun poly ->
         let opt_list = LexRSMMap.find_option map location in
@@ -199,8 +203,8 @@ let add_to_LexRSMMap map transitions valuation =
     )
   |> ignore
 
-let evaluate_cbound valuation =
-  !cbound_template
+let evaluate_cbound cache valuation =
+  !(get_cbound_template cache)
   |> Option.get
   |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero)
 
@@ -208,8 +212,8 @@ let evaluate_cbound valuation =
 
 module Solver = SMT.IncrementalZ3Solver
 
-let add_c_ranked_constraints solver transitions =
-  let c_template = !cbound_template |> Option.get
+let add_c_ranked_constraints cache solver transitions =
+  let c_template = !(get_cbound_template cache) |> Option.get
   in
   Solver.push solver;
   (*C has to be positive for all initial values*)
@@ -218,80 +222,80 @@ let add_c_ranked_constraints solver transitions =
   |> RealFormula.mk
   |> Solver.add_real solver;
   transitions
-  |> List.map (c_ranked_constraint)
+  |> List.map (c_ranked_constraint cache)
   |> List.map (Solver.add_real solver)
   |> ignore
 
-let rec backtrack_1d = function
+let rec backtrack_1d cache = function
   | ([],n,ys,solver) -> (n,ys)
   | (x::xs,n,ys,solver) ->
           Solver.push solver;
-          let decr = decreasing_constraint x in
+          let decr = decreasing_constraint cache x in
           Solver.add_real solver decr;
           if Solver.satisfiable solver then (
-            let (n1, ys1) = backtrack_1d (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
+            let (n1, ys1) = backtrack_1d cache (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
             Solver.pop solver;
-            let (n2, ys2) = backtrack_1d (xs, n, ys, solver) in
+            let (n2, ys2) = backtrack_1d cache (xs, n, ys, solver) in
             if n1 >= n2 then
               (n1, ys1)
             else
               (n2, ys2)
           ) else (
             Solver.pop solver;
-            backtrack_1d (xs, n, ys, solver)
+            backtrack_1d cache (xs, n, ys, solver)
           )
 
-let rec backtrack_1d_non_increasing = function
+let rec backtrack_1d_non_increasing cache = function
   | ([],n,ys,solver) -> (n,ys)
   | (x::xs,n,ys,solver) ->
           Solver.push solver;
-          Solver.add_real solver (non_increasing_constraint x);
-          Solver.add_real solver (bounded_constraint x);
+          Solver.add_real solver (non_increasing_constraint cache x);
+          Solver.add_real solver (bounded_constraint cache x);
           if Solver.satisfiable solver then (
-            let (n1, ys1) = backtrack_1d (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
+            let (n1, ys1) = backtrack_1d cache (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
             Solver.pop solver;
-            let (n2, ys2) = backtrack_1d (xs, n, ys, solver) in
+            let (n2, ys2) = backtrack_1d cache (xs, n, ys, solver) in
             if n1 >= n2 then
               (n1, ys1)
             else
               (n2, ys2)
           ) else (
             Solver.pop solver;
-            backtrack_1d (xs, n, ys, solver)
+            backtrack_1d cache (xs, n, ys, solver)
           )
 
-let find_1d_lexrsm_non_increasing transitions decreasing =
+let find_1d_lexrsm_non_increasing cache transitions decreasing =
   let solver = Solver.create ()
   in
-  Solver.add_real solver (decreasing_constraint decreasing);
-  Solver.add_real solver (bounded_constraint decreasing);
+  Solver.add_real solver (decreasing_constraint cache decreasing);
+  Solver.add_real solver (bounded_constraint cache decreasing);
   if Solver.satisfiable solver then
     let (n, non_incr) =
-      backtrack_1d_non_increasing (GeneralTransitionSet.remove decreasing transitions |> GeneralTransitionSet.to_list,
-                                   0, GeneralTransitionSet.empty, solver)
+      backtrack_1d_non_increasing cache (GeneralTransitionSet.remove decreasing transitions |> GeneralTransitionSet.to_list,
+                                         0, GeneralTransitionSet.empty, solver)
     in
-    non_incr |> GeneralTransitionSet.to_list |> List.map (Solver.add_real solver % non_increasing_constraint) |> ignore;
+    non_incr |> GeneralTransitionSet.to_list |> List.map (Solver.add_real solver % non_increasing_constraint cache) |> ignore;
     Solver.minimize_absolute solver !fresh_coeffs;
     Solver.model_real solver
     |> fun eval -> (eval, GeneralTransitionSet.add decreasing non_incr)
   else
     (None, GeneralTransitionSet.empty)
 
-let find_1d_lexrsm transitions remaining_transitions cbounded =
+let find_1d_lexrsm cache transitions remaining_transitions cbounded =
   let solver = Solver.create ()
   and remaining_list = remaining_transitions |> GeneralTransitionSet.to_list
   and ranked_list = GeneralTransitionSet.diff transitions remaining_transitions |> GeneralTransitionSet.to_list
   in
   (*Correct? Everything must be non increasing and bounded by 0?*)
   ignore(remaining_list |> List.map (fun gtrans ->
-                              Solver.add_real solver (non_increasing_constraint gtrans);
-                              Solver.add_real solver (bounded_constraint gtrans)));
+                              Solver.add_real solver (non_increasing_constraint cache gtrans);
+                              Solver.add_real solver (bounded_constraint cache gtrans)));
   (*add c bound constraints*)
   if cbounded then
-    add_c_ranked_constraints solver ranked_list;
+    add_c_ranked_constraints cache solver ranked_list;
   if Solver.satisfiable solver then
-    let (n, ranked) = backtrack_1d (remaining_list, 0, GeneralTransitionSet.empty, solver) in
-    ranked |> GeneralTransitionSet.to_list |> List.map (fun gtrans -> Solver.add_real solver (decreasing_constraint gtrans)) |> ignore;
+    let (n, ranked) = backtrack_1d cache (remaining_list, 0, GeneralTransitionSet.empty, solver) in
+    ranked |> GeneralTransitionSet.to_list |> List.map (fun gtrans -> Solver.add_real solver (decreasing_constraint cache gtrans)) |> ignore;
     Solver.minimize_absolute solver !fresh_coeffs; (* Check if minimization is forgotten. *)
     if n = 0 then
       (Solver.model_real solver, GeneralTransitionSet.empty)
@@ -312,20 +316,20 @@ let cbound_to_string cbound =
   |> List.map RealPolynomial.to_string
   |> String.concat ", "
 
-let rec find_lexrsm map transitions remaining cbounded =
+let rec find_lexrsm cache map transitions remaining cbounded =
   if GeneralTransitionSet.is_empty remaining then
     Some (map, [], GeneralTransitionSet.empty)
   else
-    let (eval, ranked) = find_1d_lexrsm transitions remaining cbounded in
+    let (eval, ranked) = find_1d_lexrsm cache transitions remaining cbounded in
     if Option.is_none eval then
       None
     else
       if not (GeneralTransitionSet.is_empty ranked) then
-        (Option.may (add_to_LexRSMMap map transitions) eval;
-        find_lexrsm map transitions (GeneralTransitionSet.diff remaining ranked) cbounded
+        (Option.may (add_to_LexRSMMap cache map transitions) eval;
+        find_lexrsm cache map transitions (GeneralTransitionSet.diff remaining ranked) cbounded
         |> Option.map (fun (map, c_list, non_increasing) ->
                                 let new_c_list = if cbounded then
-                                  ((Option.map (evaluate_cbound) eval |? RealPolynomial.zero) :: c_list)
+                                  ((Option.map (evaluate_cbound cache) eval |? RealPolynomial.zero) :: c_list)
                                   else []
                                 in
                                 (map, new_c_list, non_increasing)))
@@ -339,16 +343,11 @@ let rec make_ranking_function start_poly c_bound exp =
     | (x::xs, y::ys) -> RealPolynomial.add (RealPolynomial.mul x (RealPolynomial.pow (RealPolynomial. add y RealPolynomial.one) exp)) (make_ranking_function xs ys (exp-1))
     | _ -> failwith "impossible"
 
-let reset () =
-  cbound_template := None;
-  TemplateTable.clear template_table;
-  RankingTable.clear time_ranking_table
-
-let compute_map program transitions cbounded =
+let compute_map cache program transitions cbounded =
   (* TODO max lexmap global for better performance *)
   let lexmap = LexRSMMap.create 10 in
   let execute () =
-    find_lexrsm lexmap transitions transitions cbounded
+    find_lexrsm cache lexmap transitions transitions cbounded
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "find_map", [])
@@ -360,17 +359,18 @@ let compute_map program transitions cbounded =
                     (lexrsmmap_to_string lexmap) ^ cbound_string ^ non_inc_string) option |? "no lexRSMMap found")
                   execute
 
-let init_computation vars locations transitions program cbounded =
-  if TemplateTable.is_empty template_table then
-    compute_ranking_templates vars locations;
+let init_computation cache vars locations transitions program cbounded =
+  if TemplateTable.is_empty (get_template_table cache) then
+    compute_ranking_templates cache vars locations;
   if cbounded then
-    if Option.is_none !cbound_template then
-      compute_cbound_template vars;
-  compute_map program transitions cbounded
+    if Option.is_none !(get_cbound_template cache) then
+      compute_cbound_template cache vars;
+  compute_map cache program transitions cbounded
 
-let compute_as_termination program =
+let compute_as_termination cache program =
   let execute () =
     init_computation
+      cache
       (Program.input_vars program)
       (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list)
       (Program.generalized_transitions program) program false
@@ -381,9 +381,10 @@ let compute_as_termination program =
                   ~result:(fun bool -> if bool then "The program terminates almost surely." else "The program does not terminate almost surely.")
                   execute
 
-let compute_expected_complexity program =
+let compute_expected_complexity cache program =
   let execute () =
     init_computation
+      cache
       (Program.input_vars program)
       (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list)
       (Program.generalized_transitions program) program true
@@ -411,7 +412,7 @@ let ranking_table_to_string rtable =
   |> List.map (pprf_to_string % Tuple2.second)
   |> String.concat "; "
 
-let compute_ranking_table program =
+let compute_ranking_table cache program =
   let gts =
     Program.generalized_transitions program
   in
@@ -422,12 +423,12 @@ let compute_ranking_table program =
        (fun scc ->
           GeneralTransitionSet.iter
             (fun decr ->
-              let (eval, non_incr) = find_1d_lexrsm_non_increasing scc decr in
+              let (eval, non_incr) = find_1d_lexrsm_non_increasing cache scc decr in
               let rankfunc =
                 match eval with
                   | None -> None
                   | (Some valuation) -> Some (fun loc ->
-                      TemplateTable.find template_table loc
+                      TemplateTable.find (get_template_table cache) loc
                       |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero) )
               in
               let ranking rfunc = {
@@ -436,32 +437,32 @@ let compute_ranking_table program =
                                     rank = rfunc;
                                   }
               in
-              Option.may (RankingTable.add time_ranking_table decr % ranking) rankfunc
+              Option.may (RankingTable.add (get_ranking_table cache) decr % ranking) rankfunc
             )
             scc
        );
   Logger.log logger Logger.DEBUG
-                  (fun () -> "compute_ranking_table", ["ranking_table", ranking_table_to_string time_ranking_table])
+                  (fun () -> "compute_ranking_table", ["ranking_table", ranking_table_to_string (get_ranking_table cache)])
 
 let print_pprf_option = function
   | Some a -> pprf_to_string a
   | None   -> "None"
 
-let find program gt =
+let find cache program gt =
   let execute () =
     let vars = Program.input_vars program in
     let locations = (Program.graph program |> TransitionGraph.locations |> LocationSet.to_list) in
-    if TemplateTable.is_empty template_table then
-      compute_ranking_templates vars locations;
-    if RankingTable.is_empty time_ranking_table then
-      compute_ranking_table program;
-    RankingTable.find_option time_ranking_table gt
+    if TemplateTable.is_empty (get_template_table cache) then
+      compute_ranking_templates cache vars locations;
+    if RankingTable.is_empty (get_ranking_table cache) then
+      compute_ranking_table cache program;
+    RankingTable.find_option (get_ranking_table cache) gt
   in
   Logger.with_log logger Logger.DEBUG
     (fun () -> "LexRSM.find", ["gt", GeneralTransition.to_id_string gt])
     ~result:(print_pprf_option) execute
 
-let find_whole_prog program goal =
-  if goal = "EXPECTEDCOMPLEXITY" then compute_expected_complexity program |> ignore
-  else if goal = "ASTERMINATION" then compute_as_termination program |> ignore
+let find_whole_prog cache program goal =
+  if goal = "EXPECTEDCOMPLEXITY" then compute_expected_complexity cache program |> ignore
+  else if goal = "ASTERMINATION" then compute_as_termination cache program |> ignore
     else raise (Failure ("Unexpected Goal"))

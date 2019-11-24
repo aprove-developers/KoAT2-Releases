@@ -23,14 +23,14 @@ val affects : t -> t list
 
 (** Transforms a preprocessing step with the specific preprocessor on the subject.
     Results in a subject that might be changed. *)
-val transform : subject -> t -> subject MaybeChanged.t
+val transform : TransitionLabel.trans_id_counter -> subject -> t -> subject MaybeChanged.t
 
-type strategy = t list -> subject -> subject
+type strategy = TransitionLabel.trans_id_counter -> t list -> subject -> subject
 
 val all_strategies : strategy list
 
 (** Uses the strategy to preprocess the given subject with the specified preprocessors. *)
-val process : strategy -> t list -> subject -> subject
+val process : TransitionLabel.trans_id_counter -> strategy -> t list -> subject -> subject
 
 (** Applies each preprocessor exactly one time on the subject. *)
 val process_only_once : strategy

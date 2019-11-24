@@ -14,22 +14,23 @@ exception DifferentUpdatesAndProbabilities
 
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
 
-let id_counter: int ref = ref 0
-let gt_id_counter: int ref = ref 0
+type trans_id_counter = (int ref * int ref)
+
+let new_trans_id_counter = fun () -> (ref 0, ref 0)
+
+let get_id_counter = Tuple2.first
+let get_gt_id_counter = Tuple2.second
 
 let get_unique_by_ref r () =
   let value = !r in
   r := !r + 1;
   value
 
-let get_unique_id =
-  get_unique_by_ref id_counter
+let get_unique_id counter =
+  get_unique_by_ref (get_id_counter counter)
 
-let get_unique_gt_id =
-  get_unique_by_ref gt_id_counter
-
-let reset_unique_gt_counter () =
-  gt_id_counter := 0
+let get_unique_gt_id counter =
+  get_unique_by_ref (get_gt_id_counter counter)
 
 module UpdateElement =
   struct
@@ -78,10 +79,10 @@ let triples (list1) (list2) (list3) = List.map (fun ((x,y),z) -> (x,y,z)) (List.
 let quatruples (list1) (list2) (list3) (list4) = List.map (fun ((x,y),(z,w)) -> (x,y,z,w)) (List.combine (List.combine list1 list2) (List.combine list3 list4))
 
 (* Generates a nonprobabilistic label and sets the probability to one *)
-let make ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~update ~guard =
+let make id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~update ~guard =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
   {
-    id = get_unique_id (); gt_id = get_unique_gt_id ();
+    id = get_unique_id id_counter (); gt_id = get_unique_gt_id id_counter ();
     update; guard;
     cost = Tuple2.first cvect; gtcost = Tuple2.second cvect;
     probability=1. |> OurFloat.of_float;
@@ -89,12 +90,12 @@ let make ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~update ~guard =
   }
 
 (* Generates a probabilistic label, needs a name to distinguish different labels belonging to the same transition *)
-let make_prob ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~update ~guard ~gt_id ~(probability: OurFloat.t) =
+let make_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~update ~guard ~gt_id ~(probability: OurFloat.t) =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
     if (OurFloat.(probability > (1. |> of_float)) || OurFloat.(probability < (0. |> of_float))) then raise ProbabilitiesNotBetweenZeroAndOne
   else
   {
-    id = get_unique_id ();
+    id = get_unique_id id_counter ();
     gt_id;
     update; guard;
     cost = Tuple2.first cvect;
@@ -136,7 +137,7 @@ let take_last n xs =
   |> List.rev
 
 (* TODO Pattern <-> Assigment relation *)
-let mk ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patterns ~guard ~vars =
+let mk id_counter ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       let (target, assignments) = List.hd targets in
@@ -149,12 +150,12 @@ let mk ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patterns ~
       |> Enum.combine
       |> Enum.map (fun (var, assignment) -> VarMap.add var (assignment))
       |> Enum.fold (fun map adder -> adder map) VarMap.empty
-      |> fun update -> { id = get_unique_id (); gt_id = get_unique_gt_id ();
+      |> fun update -> { id = get_unique_id id_counter (); gt_id = get_unique_gt_id id_counter ();
                         update; guard; cost = Tuple2.first cvect; gtcost = Tuple2.second cvect;
                         probability=1 |> OurFloat.of_int; guard_without_invariants = guard;
                         invariants = Guard.mk_true;}
 
-let mk_prob ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patterns ~guard ~vars ~gt_id ~probability =
+let mk_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patterns ~guard ~vars ~gt_id ~probability =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       if (OurFloat.(probability > (1 |> of_int)) || OurFloat.(probability < (0 |> of_int))) then raise ProbabilitiesNotBetweenZeroAndOne
@@ -165,7 +166,7 @@ let mk_prob ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patte
         |> Enum.combine
         |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
         |> Enum.fold (fun map adder -> adder map) VarMap.empty
-        |> fun update -> { id = get_unique_id (); gt_id;
+        |> fun update -> { id = get_unique_id id_counter (); gt_id;
                           update; guard; cost = Tuple2.first cvect; gtcost = Tuple2.second cvect;
                           probability=probability; guard_without_invariants = guard;
                           invariants = Guard.mk_true;}
@@ -173,7 +174,7 @@ let mk_prob ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patte
 (*
 Chaining can not be represented in the probabilistic update case due to probability distributions
 *)
-let append t1 t2 =
+let append id_counter t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
   let nondet_vars = VarTable.create 3 in
   let substitution update_map var =
@@ -203,8 +204,8 @@ let append t1 t2 =
       (get_update_polynomials t1.update))) t2.guard_without_invariants)
   in
   {
-    id = get_unique_id ();
-    gt_id = get_unique_gt_id ();
+    id = get_unique_id id_counter ();
+    gt_id = get_unique_gt_id id_counter ();
     update = new_update;
     guard = new_guard;
     cost = Polynomial.(t1.cost + t2.cost);
@@ -285,8 +286,7 @@ let vars_ {update; guard; cost; _} =
   |> (VarSet.union % Polynomial.vars) cost
 
 (* TODO May invalidate through invariant generation! *)
-let vars = (fst @@ Util.memoize ~extractor:id vars_)
-
+let vars = vars_
 
 let default = {
     id = -1;

@@ -11,7 +11,7 @@ let logger = Logging.(get ExpSize)
 module RV = Make_RV(RVTransitions.TransitionForExpectedSize)
 module Solver = SMT.IncrementalZ3Solver
 
-let compute_ program get_timebound_gt get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) v =
+let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) v =
   let incoming_transitions =
     ExpBoundsHelper.entry_transitions logger program (List.map (fst % fst) scc)
   in
@@ -37,7 +37,7 @@ let compute_ program get_timebound_gt get_exptimebound get_sizebound get_expsize
     in
 
     let var_change_bound =
-      ExpLocalSizeBound.elsb program ((gt,target_loc),var)
+      ExpLocalSizeBound.elsb elsb_cache program ((gt,target_loc),var)
       (* perform appr_substitution with all pre size bounds *)
       |> fun b -> Enum.map (appr_substitution_pre_size b) pre_trans
       |> RealBound.maximum
@@ -83,9 +83,9 @@ let compute_ program get_timebound_gt get_exptimebound get_sizebound get_expsize
 
 (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
-let compute program get_timebound_gt get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) v =
+let compute elsb_cache program get_timebound_gt get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) v =
   let execute () =
-    compute_ program get_timebound_gt get_exptimebound get_sizebound get_expsizebound scc v
+    compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound get_expsizebound scc v
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute_nontrivial_bound", ["scc", ERVG.rvs_to_id_string scc])
                      ~result:RealBound.to_string

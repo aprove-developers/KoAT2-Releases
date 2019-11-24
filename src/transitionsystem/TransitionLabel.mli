@@ -11,10 +11,13 @@ module VarMap : module type of Map.Make(Var)
 
 type kind = [ `Lower | `Upper ]  [@@deriving eq, ord]
 
+type trans_id_counter
+
+val new_trans_id_counter: unit -> trans_id_counter
+
 type t
 
-val get_unique_gt_id: unit -> int
-val reset_unique_gt_counter: unit -> unit
+val get_unique_gt_id: trans_id_counter -> unit -> int
 
 exception RecursionNotSupported
 
@@ -26,9 +29,9 @@ module UpdateElement :
     val is_polynomial : t -> bool
   end
 
-val make : ?cvect:(Polynomial.t * RealBound.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> t
+val make : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> t
 
-val mk : ?cvect:(Polynomial.t * RealBound.t) ->
+val mk : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) ->
          com_kind:string ->
          targets:(string * (UpdateElement.t list)) list ->
          patterns:Var.t list ->
@@ -36,9 +39,9 @@ val mk : ?cvect:(Polynomial.t * RealBound.t) ->
          vars:Var.t list ->
          t
 
-val make_prob : ?cvect:(Polynomial.t * RealBound.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> gt_id:int -> probability:OurFloat.t -> t
+val make_prob : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> gt_id:int -> probability:OurFloat.t -> t
 
-val mk_prob : ?cvect:(Polynomial.t * RealBound.t) ->
+val mk_prob : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) ->
          com_kind:string ->
          targets:(string * (UpdateElement.t list)) list ->
          patterns:Var.t list ->
@@ -51,7 +54,7 @@ val mk_prob : ?cvect:(Polynomial.t * RealBound.t) ->
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label.
     Only works when no variable get sampled from a distribution during the update of the first transition *)
-val append : t -> t -> t
+val append : trans_id_counter -> t -> t -> t
 
 (** Returns a guard which constraints the possibility for the second label beeing evaluated in sequence with the first one *)
 val append_guard : t -> t -> Guard.t

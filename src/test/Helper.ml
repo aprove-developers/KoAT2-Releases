@@ -6,10 +6,6 @@ open Constraints
 open Atoms
 open Polynomials
 
-let reset () =
-  RankingFunction.reset ();
-  LocalSizeBound.reset ()
-
 let assert_equal_bool = assert_equal ~printer:Bool.to_string ~cmp:Bool.equal
 
 let assert_equal_string = assert_equal ~printer:identity ~cmp:String.equal

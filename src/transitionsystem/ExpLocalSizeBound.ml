@@ -26,6 +26,15 @@ module SolverNonOpt = SMT.Z3Solver
 let print_matrix =
   Util.enum_to_string (Util.enum_to_string RealPolynomial.to_string) % List.enum % List.map (List.enum)
 
+
+type concave_convexe_cache = (concave_convexe_op * BoundsInst.RealBound.t, bool) Hashtbl.t
+type elsb_bound_cache = (int * string * string, BoundsInst.RealBound.t) Hashtbl.t
+type elsb_cache = (concave_convexe_cache * elsb_bound_cache)
+
+let new_cache: unit -> elsb_cache = fun () -> (Hashtbl.create 10, Hashtbl.create 10)
+let get_concave_convexe (cache: elsb_cache) = Tuple2.first cache
+let get_elsb_bound (cache: elsb_cache) = Tuple2.second cache
+
 (** Using the standard definition of convexity/concavity to handle bounds instead of polynomials.
    Note that our bounds constist of non-concave terms like abs(X). However our bounds bound exactly theses terms.
    Therefore we substitute all terms like abs(X) by fresh variables v' and then check if the bound is concave
@@ -152,20 +161,17 @@ let poly_is_concave =
 let poly_is_convexe =
   concave_convex_check Convexe
 
-let concave_convex_check_v2_memo =
-  Util.memoize ~extractor:identity (uncurry concave_convex_check_v2_)
+let concave_convex_check_v2 cache =
+  Util.memoize (get_concave_convexe cache) ~extractor:identity (uncurry concave_convex_check_v2_)
 
-let concave_convex_check_v2 =
-  fst concave_convex_check_v2_memo
+let bound_is_concave cache =
+  (curry (concave_convex_check_v2 cache)) Concave
 
-let bound_is_concave =
-  (curry concave_convex_check_v2) Concave
-
-let bound_is_convexe =
-  (curry concave_convex_check_v2) Convexe
+let bound_is_convexe cache =
+  (curry (concave_convex_check_v2 cache)) Convexe
 
 (* TODO avoid invocation of Z3 for linearity check  *)
-let appr_substitution_is_valid bound = bound_is_concave bound && bound_is_convexe bound
+let appr_substitution_is_valid cache bound = (bound_is_concave cache bound) && (bound_is_convexe cache bound)
 
 let simplify_poly_with_guard guard (poly: RealPolynomial.t) =
   let check_var var =
@@ -294,15 +300,10 @@ let elsb_ program (((gt, l), v): RV.t): RealBound.t =
     ~result:RealBound.to_string
     execute
 
-let elsb_memo =
-  Util.memoize
+let elsb cache =
+  curry @@ Util.memoize (get_elsb_bound cache)
     ~extractor:(fun (program,((gt,l),var)) -> (GeneralTransition.id gt, Location.to_string l, Var.to_string var))
     (fun (program,rv) -> elsb_ program rv)
 
-let elsb p rv = (fst elsb_memo) (p,rv)
-
-let vars program rv =
-  RealBound.(elsb program rv + abs (of_var (RV.variable rv))) |> RealBound.vars
-
-let reset () =
-  ((snd elsb_memo) ())
+let vars cache program rv =
+  RealBound.(elsb cache program rv + abs (of_var (RV.variable rv))) |> RealBound.vars

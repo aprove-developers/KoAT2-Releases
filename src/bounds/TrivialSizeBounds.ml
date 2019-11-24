@@ -28,10 +28,10 @@ let incoming_bound kind program get_sizebound lsb t =
 
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
-let compute kind program get_sizebound (t,v) =
+let compute lsb_cache kind program get_sizebound (t,v) =
   let execute () =
     let (lsb: LocalSizeBound.t Option.t) =
-      LocalSizeBound.sizebound_local_rv program kind (t, v)
+      LocalSizeBound.sizebound_local_rv lsb_cache program kind (t, v)
     in
     if Program.is_initial program t then
       LocalSizeBound.(

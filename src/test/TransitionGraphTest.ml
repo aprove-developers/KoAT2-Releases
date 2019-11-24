@@ -10,10 +10,12 @@ module RV = Make_RV(Transition)
 let suite =
   "Graphs" >::: [
       (
+        let cache = CacheManager.new_cache () in
+        let trans_id_counter = CacheManager.trans_id_counter cache in
         let test_folder folder =
           ("examples_old_input/" ^ folder ^ "/") >::: (
             let files = Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir ("../../examples/" ^ folder))
-            and test (file : string): unit = try ignore (Readers.read_file ("../../examples/" ^ folder ^ "/" ^ file)) with
+            and test (file : string): unit = try ignore (Readers.read_file trans_id_counter ("../../examples/" ^ folder ^ "/" ^ file)) with
                                              | Readers.Error msg -> failwith msg
                                              | TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported" in
             Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
@@ -22,8 +24,10 @@ let suite =
       (
         let test_folder folder =
           ("examples_new_input/" ^ folder ^ "/") >::: (
+            let cache = CacheManager.new_cache () in
+            let trans_id_counter = CacheManager.trans_id_counter cache in
             let files = Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir ("../../examples/" ^ folder))
-            and test (file : string): unit = try ignore (Readers.read_file ("../../examples/" ^ folder ^ "/" ^ file)) with
+            and test (file : string): unit = try ignore (Readers.read_file trans_id_counter ("../../examples/" ^ folder ^ "/" ^ file)) with
                                              | Readers.Error msg -> failwith msg
                                              | TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported" in
             Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
@@ -31,7 +35,9 @@ let suite =
       );
       (
         "pre(t)" >:: (fun _ ->
-          let program = Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat" in
+          let cache = CacheManager.new_cache () in
+          let trans_id_counter = CacheManager.trans_id_counter cache in
+          let program = Readers.read_file trans_id_counter "../../examples/KoAT-2013/sect1-lin.koat" in
           let transition = TransitionGraph.find_edge (Program.graph program) (Location.of_string "l1") (Location.of_string "l2") in
           assert_equal_int 2 (Enum.count (Program.pre program transition))
         )
@@ -44,11 +50,14 @@ let suite =
           ]
         |> List.map (fun (l,l',var,bound) ->
                "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ var ^ " is " ^ bound ^ "?" >:: (fun _ ->
-                       let program = Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat" in
+                       let cache = CacheManager.new_cache () in
+                       let trans_id_counter = CacheManager.trans_id_counter cache in
+
+                       let program = Readers.read_file trans_id_counter "../../examples/KoAT-2013/sect1-lin.koat" in
                        let t = TransitionGraph.find_edge (Program.graph program) (Location.of_string l) (Location.of_string l') in
                        TransitionLabel.(assert_equal_bound
                                                   (Bound.of_poly (Readers.read_polynomial bound))
-                                                  LocalSizeBound.(sizebound_local program `Upper t (Var.of_string var) |> Option.map as_bound |? default `Upper)
+                                                  LocalSizeBound.(sizebound_local (CacheManager.lsb_cache cache) program `Upper t (Var.of_string var) |> Option.map as_bound |? default `Upper)
                        )
                      )
              )
@@ -56,12 +65,15 @@ let suite =
 
       );
       (
+        let cache = CacheManager.new_cache () in
+        let trans_id_counter = CacheManager.trans_id_counter cache in
+
         "Print" >:: (fun _ ->
-          GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
+          GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file trans_id_counter "../../examples/KoAT-2013/sect1-lin.koat");
           "../../examples/KoAT-2013/sect1-lin.koat"
-          |> Readers.read_file
-          |> tap (fun program -> GraphPrint.print_rvg `Lower ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
-          |> tap (fun program -> GraphPrint.print_rvg `Upper ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> Readers.read_file trans_id_counter
+          |> tap (fun program -> GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Lower ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> tap (fun program -> GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Upper ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
           |> ignore
         )
       );

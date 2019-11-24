@@ -392,13 +392,11 @@ module LSB_Cache =
       end
     )
 
-let (table: t Option.t LSB_Cache.t) =
-  LSB_Cache.create 10
+type lsb_cache = t Option.t LSB_Cache.t
 
-let reset () =
-  LSB_Cache.clear table
+let new_cache = fun () -> LSB_Cache.create 10
 
-let compute_single_local_size_bound program kind (l,t,l') var =
+let compute_single_local_size_bound cache program kind (l,t,l') var =
   let lsb =
     (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
     TransitionLabel.update t var
@@ -426,7 +424,7 @@ let compute_single_local_size_bound program kind (l,t,l') var =
                       (HelperFuns.s_range update_fun_for_s_range)
          )
   in
-  LSB_Cache.add table (kind,(l,t,l'),var) lsb;
+  LSB_Cache.add cache (kind,(l,t,l'),var) lsb;
   (Logger.log logger Logger.INFO
      (fun () -> "add_local_size_bound", [
           "kind", show_kind kind;
@@ -434,26 +432,26 @@ let compute_single_local_size_bound program kind (l,t,l') var =
           "variable", Var.to_string var;
           "lsb", Util.option_to_string (Bound.to_string % as_bound) lsb]))
 
-let compute_local_size_bounds program =
+let compute_local_size_bounds cache program =
   program
   |> Program.transitions
   |> TransitionSet.enum
   |> Enum.cartesian_product (program |> Program.vars |> VarSet.enum)
   |> Enum.cartesian_product ([`Lower; `Upper] |> List.enum)
   |> Enum.iter (fun (kind, (v,t)) ->
-         compute_single_local_size_bound program kind t v
+         compute_single_local_size_bound cache program kind t v
        )
 
-let sizebound_local program kind t v =
-  if LSB_Cache.is_empty table then
-    compute_local_size_bounds program;
+let sizebound_local cache program kind t v =
+  if LSB_Cache.is_empty cache then
+    compute_local_size_bounds cache program;
   try
-    LSB_Cache.find table (kind, t, v)
+    LSB_Cache.find cache (kind, t, v)
   with Not_found ->
     raise (Failure "Non-existing local size bound requested!")
 
-let sizebound_local_abs_bound program t v =
-  let lsb k = sizebound_local program k t v |> Option.map (RealBound.of_intbound % as_bound) in
+let sizebound_local_abs_bound cache program t v =
+  let lsb k = sizebound_local cache program k t v |> Option.map (RealBound.of_intbound % as_bound) in
   let bounds = Util.unpack_option_tuple (lsb `Lower, lsb `Upper) in
   let choose_bound (a,b) = function
     | `Lower ->  a
@@ -461,13 +459,13 @@ let sizebound_local_abs_bound program t v =
   in
   Option.map (RealBound.abs_bound % choose_bound) bounds
 
-let sizebound_local_rv program kind (t,v) =
-  sizebound_local program kind t v
+let sizebound_local_rv cache program kind (t,v) =
+  sizebound_local cache program kind t v
 
-let sizebound_local_scc program kind scc =
+let sizebound_local_scc cache program kind scc =
   if scc
-     |> List.map (sizebound_local_rv program kind)
+     |> List.map (sizebound_local_rv cache program kind)
      |> List.for_all Option.is_some
   then
-    Some (fun kind rv -> Option.get (sizebound_local_rv program kind rv))
+    Some (fun kind rv -> Option.get (sizebound_local_rv cache program kind rv))
   else None

@@ -7,9 +7,9 @@ let logger = Logging.(get ExpSize)
 
 module ERV = Make_RV(RVTransitions.TransitionForExpectedSize)
 
-let improve_scc program ervg appr = function
+let improve_scc elsb_cache program ervg appr = function
   | [((gt,l),v)] when not (ERVG.mem_edge ervg ((gt,l),v) ((gt,l),v)) ->
-     let new_bound = ExpTrivialSizeBounds.compute program
+     let new_bound = ExpTrivialSizeBounds.compute elsb_cache program
                       (fun (t,v) -> Bound.abs_bound (fun k -> Approximation.sizebound k appr t v))
                       (Approximation.expsizebound_abs appr)
                       (Approximation.timebound_gt appr) ((gt,l),v) in
@@ -20,18 +20,18 @@ let improve_scc program ervg appr = function
      let module TrExpSize = Set.Make2 (GeneralTransition) (Location) in
      let scc_vars = scc |> List.map ERV.variable |> VarSet.of_list in
      let trexpsize = scc |> List.map (fun ((gt,l),_) -> (gt,l)) |> TrExpSize.Product.of_list in
-     let new_bound var = ExpNontrivialSizeBounds.compute program (Approximation.timebound_gt appr) (Approximation.exptimebound appr)
-                                                                 (fun t v -> Bound.abs_bound @@ fun kind -> Approximation.sizebound kind appr t v)
-                                                                 (Approximation.expsizebound_abs appr) scc var in
+     let new_bound var = ExpNontrivialSizeBounds.compute elsb_cache program (Approximation.timebound_gt appr) (Approximation.exptimebound appr)
+                                                                            (fun t v -> Bound.abs_bound @@ fun kind -> Approximation.sizebound kind appr t v)
+                                                                            (Approximation.expsizebound_abs appr) scc var in
      (* Add all corresponding expected size bounds *)
      TrExpSize.Product.fold
       (fun (gt,l) appr' ->
         VarSet.fold (fun v appr'' -> Approximation.add_expsizebound (new_bound v) (gt,l) v appr'') scc_vars appr')
       trexpsize appr
 
-let improve ervg sccs program appr =
+let improve elsb_cache ervg sccs program appr =
   let execute () =
-    List.fold_left (fun appr scc -> improve_scc program ervg appr scc) appr sccs
+    List.fold_left (fun appr scc -> improve_scc elsb_cache program ervg appr scc) appr sccs
 
   in Logger.with_log logger Logger.INFO
                   (fun () -> "improve_size_bounds", [])

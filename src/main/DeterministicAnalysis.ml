@@ -29,32 +29,33 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
  ) ;
-  let result_print = 
+  let result_print =
     match params.result with
     |"termcomp" -> print_termcomp_deterministic
     |"all" -> print_all_deterministic_bounds
     |_ -> print_overall_deterministic_timebound
   in
-  
+  let cache = CacheManager.new_cache () in
+
   input
-  |>MainUtil.read_input ~rename:params.rename params.simple_input
+  |>MainUtil.read_input (CacheManager.trans_id_counter cache) ~rename:params.rename params.simple_input
   |> rename_program_option
   |> Option.map (fun program ->
          (program, Approximation.create program)
-         |> Preprocessor.process params.preprocessing_strategy params.preprocessors
+         |> Preprocessor.process (CacheManager.trans_id_counter cache) params.preprocessing_strategy params.preprocessors
          |> tap (fun (program, appr) ->
                 if params.print_system then
                   GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
-                  GraphPrint.print_rvg `Lower ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program;
-                  GraphPrint.print_rvg `Upper ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
+                  GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Lower ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Upper ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
                 )
               )
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
                      (program, appr)
-                     |> uncurry Bounds.find_bounds
+                     |> uncurry (Bounds.find_bounds cache)
                      |> fun appr -> (program, appr)
                    else (program, appr))
          |> tap (fun (program, appr) -> result_print program appr)
@@ -63,8 +64,8 @@ let run (params: params) =
                   GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
-                  GraphPrint.print_rvg `Lower ~label:(bounded_rv_to_string program `Lower appr) ~outdir:output_dir ~file:input_filename program;
-                  GraphPrint.print_rvg `Upper ~label:(bounded_rv_to_string program `Upper appr) ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Lower ~label:(bounded_rv_to_string (CacheManager.lsb_cache cache) program `Lower appr) ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Upper ~label:(bounded_rv_to_string (CacheManager.lsb_cache cache) program `Upper appr) ~outdir:output_dir ~file:input_filename program;
                 )
               )
        )

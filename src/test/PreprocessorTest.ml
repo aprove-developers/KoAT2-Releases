@@ -2,17 +2,18 @@ open Batteries
 open OUnit2
 open Helper
 open ProgramTypes
-   
-let tests = 
+
+let tests =
   "Preprocessors" >::: [
-      
+
       ("CutUnreachableLocations" >:::
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->
-                     let result = MaybeChanged.unpack (CutUnreachableLocations.transform_program (Readers.read_program_simple program)) in
-                     reset ();
+                     let trans_id_counter = CacheManager.new_cache () |> CacheManager.trans_id_counter in
+                     let result = MaybeChanged.unpack (CutUnreachableLocations.transform_program (Readers.read_program_simple trans_id_counter program)) in
+                     let trans_id_counter' = CacheManager.new_cache () |> CacheManager.trans_id_counter in
                      assert_equal_program
-                                     (Readers.read_program_simple expected_program)
+                                     (Readers.read_program_simple trans_id_counter' expected_program)
                                      result))
                   [
                     ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l4(x)");
@@ -22,7 +23,7 @@ let tests =
                     ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l4(x), l4 -> l5(x)");
                   ]
       );
-      
+
 (* TODO TransitionIDs instead of locations
       ("TrivialTimeBounds" >:::
          List.map (fun (src, target, program) ->
@@ -44,15 +45,16 @@ let tests =
                   ]
       );
  *)
-      
+
       ("CutUnsatisfiableTransitions" >:::
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->
+                     let trans_id_counter = CacheManager.new_cache () |> CacheManager.trans_id_counter in
                      let result =
-                       MaybeChanged.unpack (CutUnsatisfiableTransitions.transform_program (Readers.read_program_simple program))
+                       MaybeChanged.unpack (CutUnsatisfiableTransitions.transform_program (Readers.read_program_simple trans_id_counter program))
                      in
-                     reset ();
-                     assert_equal_program (Readers.read_program_simple expected_program) result))
+                     let trans_id_counter' = CacheManager.new_cache () |> CacheManager.trans_id_counter in
+                     assert_equal_program (Readers.read_program_simple trans_id_counter' expected_program) result))
                   [
                     ("l1 -> l2(x), l2 -> l3(x)", "l1 -> l3(x) :|: 2 > 3, l1 -> l2(x), l2 -> l3(x)");
                   ]
@@ -61,11 +63,12 @@ let tests =
       ("Chaining" >:::
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->
+                     let trans_id_counter = CacheManager.new_cache () |> CacheManager.trans_id_counter in
                      let result =
-                       MaybeChanged.unpack (Preprocessor.lift_to_program Chaining.transform_graph (Readers.read_program_simple program))
+                       MaybeChanged.unpack (Preprocessor.lift_to_program (Chaining.transform_graph trans_id_counter) (Readers.read_program_simple trans_id_counter program))
                      in
-                     reset ();
-                     assert_equal_program (Readers.read_program_simple expected_program) result))
+                     let trans_id_counter' = CacheManager.new_cache () |> CacheManager.trans_id_counter in
+                     assert_equal_program (Readers.read_program_simple trans_id_counter' expected_program) result))
                   [
                     ("l1 -> l2(x)", "l1 -> l2(x)");
                     ("l1 -{2}> l3(x), l1 -> l2(x)", "l1 -> l2(x), l2 -> l3(x)");
@@ -81,19 +84,19 @@ let tests =
       ("process_til_fixpoint" >:::
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->
+                     let trans_id_counter = CacheManager.new_cache () |> CacheManager.trans_id_counter in
                      let result =
-                       Tuple2.first (Preprocessor.process_til_fixpoint
+                       Tuple2.first (Preprocessor.process_til_fixpoint trans_id_counter
                                        Preprocessor.[CutUnreachableLocations; CutUnsatisfiableTransitions]
-                                       (Readers.read_program_simple program, Approximation.empty 0 0 0))
+                                       (Readers.read_program_simple trans_id_counter program, Approximation.empty 0 0 0))
                      in
-                     reset ();
-                     assert_equal_program (Readers.read_program_simple expected_program) result))
+                     let trans_id_counter' = CacheManager.new_cache () |> CacheManager.trans_id_counter in
+                     assert_equal_program (Readers.read_program_simple trans_id_counter' expected_program) result))
                   [
                     ("l1 -> l2(x)", "l1 -> l2(x)");
                     ("l1 -> l2(x)", "l1 -> l2(x), l2 -> l3(x) :|: 2 > 3");
                   ]
-      );      
+      );
 
     ]
 
-    

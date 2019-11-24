@@ -3,20 +3,20 @@ open BoundsInst
 open ProgramTypes
 open Polynomials
 
-let rec find_bounds_ (program: Program.t) (appr: Approximation.t): Approximation.t =
+let rec find_bounds_ (cache: CacheManager.t) (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
-  |> SizeBounds.improve program
-  |> RankingBounds.improve `Time program
-  |> MaybeChanged.if_changed (find_bounds_ program)
+  |> SizeBounds.improve (CacheManager.lsb_cache cache) program
+  |> RankingBounds.improve (CacheManager.ranking_cache cache) `Time program
+  |> MaybeChanged.if_changed (find_bounds_ cache program)
   |> MaybeChanged.unpack
 
-let find_bounds (program: Program.t) (appr: Approximation.t): Approximation.t =
+let find_bounds (cache: CacheManager.t) (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
   |> TrivialTimeBounds.compute program
-  |> find_bounds_ program
+  |> find_bounds_ cache program
   |> (fun appr ->
     if program |> Program.transitions |> TransitionSet.exists (fun t -> not (Polynomial.is_one (Transition.cost t))) then
-      RankingBounds.improve `Cost program appr
+      RankingBounds.improve (CacheManager.ranking_cache cache) `Cost program appr
     else
       MaybeChanged.same appr
   )
@@ -68,14 +68,14 @@ let lift_nonprob_sizebounds program appr =
        (fun appr ((gt,l),var) -> Approximation.add_expsizebound (get_gtl_sizebound ((gt,l),var)) (gt,l) var appr)
        appr
 
-let rec find_exp_bounds_ ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
-  ExpSizeBounds.improve ervg sccs program appr
-  |> ExpRankingBounds.improve program
-  |> MaybeChanged.if_changed (find_exp_bounds_ ervg sccs program)
+let rec find_exp_bounds_ cache ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
+  ExpSizeBounds.improve (CacheManager.elsb_cache cache) ervg sccs program appr
+  |> ExpRankingBounds.improve (CacheManager.lrsm_cache cache) program
+  |> MaybeChanged.if_changed (find_exp_bounds_ cache ervg sccs program)
   |> MaybeChanged.unpack
 
-let find_exp_bounds (program: Program.t) (appr: Approximation.t): Approximation.t =
-  let ervg = ERVG.rvg program in
+let find_exp_bounds (cache: CacheManager.t) (program: Program.t) (appr: Approximation.t): Approximation.t =
+  let ervg = ERVG.rvg (CacheManager.elsb_cache cache) program in
   let sccs =
     let module C = Graph.Components.Make(ERVG) in
     List.rev @@ C.scc_list ervg
@@ -84,7 +84,7 @@ let find_exp_bounds (program: Program.t) (appr: Approximation.t): Approximation.
   appr
   |> TrivialTimeBounds.compute program
   |> TrivialTimeBounds.compute_generaltransitions program
-  |> find_bounds_ program
+  |> find_bounds_ cache program
   |> lift_nonprob_timebounds program
   |> lift_nonprob_sizebounds program
-  |> find_exp_bounds_ ervg sccs program
+  |> find_exp_bounds_ cache ervg sccs program

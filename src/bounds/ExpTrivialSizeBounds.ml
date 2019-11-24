@@ -8,7 +8,7 @@ let logger = Logging.(get ExpSize)
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
 
-let max_detsizebound ((gt,l),var) get_sizebound =
+let max_detsizebound elsb_cache ((gt,l),var) get_sizebound =
   GeneralTransition.transitions gt
   |> TransitionSet.filter (Location.equal l % Transition.target)
   |> TransitionSet.to_list
@@ -19,7 +19,7 @@ let max_detsizebound ((gt,l),var) get_sizebound =
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     Here we add all incomin bounds on absolute values *)
-let incoming_bound program get_sizebound_abs get_expsizebound (elsb_with_prob: RealBound.t) (gt,l) =
+let incoming_bound elsb_cache program get_sizebound_abs get_expsizebound (elsb_with_prob: RealBound.t) (gt,l) =
   let execute () =
     let substitute_with_prevalues gtset =
       let prevalues_exp var =
@@ -30,11 +30,11 @@ let incoming_bound program get_sizebound_abs get_expsizebound (elsb_with_prob: R
       in
       let prevalues var =
         GeneralTransitionSet.to_list gtset
-        |> List.map (fun gt' -> max_detsizebound ((gt', GeneralTransition.start gt), var) get_sizebound_abs)
+        |> List.map (fun gt' -> max_detsizebound elsb_cache ((gt', GeneralTransition.start gt), var) get_sizebound_abs)
         |> List.enum |> RealBound.maximum
       in
       (* Propagate expected values if possible *)
-      if ExpLocalSizeBound.bound_is_concave elsb_with_prob then
+      if ExpLocalSizeBound.bound_is_concave elsb_cache elsb_with_prob then
         elsb_with_prob
         |> RealBound.appr_substition_abs_all (prevalues_exp)
       else
@@ -55,17 +55,18 @@ module ERV = ApproximationModules.ERV
 
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
-let compute program get_sizebound (get_expsizebound: (GeneralTransition.t * Location.t) -> Var.t -> RealBound.t) get_timebound_gt ((gt,loc),var) =
+let compute elsb_cache program get_sizebound (get_expsizebound: (GeneralTransition.t * Location.t) -> Var.t -> RealBound.t) get_timebound_gt ((gt,loc),var) =
   if not (Bound.(get_timebound_gt gt <= Bound.one) = Some true) then
     RealBound.infinity
   else
-    let elsb          = ExpLocalSizeBound.elsb program ((gt,loc),var) in
+    let elsb          = ExpLocalSizeBound.elsb elsb_cache program ((gt,loc),var) in
     let elsb_plus_var = RealBound.(elsb + abs (of_var var)) in
     let execute () =
       if Program.is_initial_gt program gt then
         elsb_plus_var
       else
         incoming_bound
+          elsb_cache
           program
           get_sizebound
           (uncurry get_expsizebound) elsb_plus_var (gt,loc)

@@ -8,13 +8,14 @@ let tests =
   let vary = RealPolynomial.of_var @@ Var.of_string "Y" in
   "LexRSM" >::: [(
     "exists" >::: (List.map
-      (fun (name,l,gt_id,exp,prog_path) -> 
-        TransitionLabel.reset_unique_gt_counter ();
-        LexRSM.reset ();
-        let prog = Readers.read_file ("../../" ^ prog_path) in
+      (fun (name,l,gt_id,exp,prog_path) ->
+        let cache = CacheManager.new_cache () in
+        let lrsm_cache = CacheManager.lrsm_cache cache in
+
+        let prog = Readers.read_file (CacheManager.trans_id_counter cache) ("../../" ^ prog_path) in
         let gtset = Program.generalized_transitions prog in
         let decr = GeneralTransitionSet.any @@ GeneralTransitionSet.filter ((=) gt_id % GeneralTransition.id) gtset in
-        let rankfunc = LexRSM.find prog decr |> Option.get |> LexRSM.rank in
+        let rankfunc = LexRSM.find lrsm_cache prog decr |> Option.get |> LexRSM.rank in
         let loc =
             Program.graph prog |> TransitionGraph.locations
             |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
@@ -28,7 +29,7 @@ let tests =
       )
       [
         ("trivial_loop", "g", 1, RealPolynomial.(of_constant (OurFloat.of_int 2) * varx), "examples/ProbabilisticExamples/trivial_loop.koat");
-        ("trivial_loop2", "g", 1, RealPolynomial.(of_constant OurFloat.(of_int 2 / of_int 5) * varx + of_constant OurFloat.(of_int 8 / of_int 5)), 
+        ("trivial_loop2", "g", 1, RealPolynomial.(of_constant OurFloat.(of_int 2 / of_int 5) * varx + of_constant OurFloat.(of_int 8 / of_int 5)),
          "examples/ProbabilisticExamples/trivial_loop2.koat");
         ("simple_quadratic_loc_g", "g", 1, RealPolynomial.(of_constant (OurFloat.of_int 2) * varx), "examples/ProbabilisticExamples/simple_quadratic.koat");
         ("simple_quadratic_loc_h", "h", 3, vary, "examples/ProbabilisticExamples/simple_quadratic.koat");
@@ -38,12 +39,13 @@ let tests =
 
     "does_not_exist" >::: (List.map
       (fun (name,gt_id,prog_path) ->
-        TransitionLabel.reset_unique_gt_counter ();
-        LexRSM.reset ();
-        let prog = Readers.read_file ("../../" ^ prog_path) in
+        let cache = CacheManager.new_cache () in
+        let lrsm_cache = CacheManager.lrsm_cache cache in
+
+        let prog = Readers.read_file (CacheManager.trans_id_counter cache) ("../../" ^ prog_path) in
         let gtset = Program.generalized_transitions prog in
         let decr = GeneralTransitionSet.any @@ GeneralTransitionSet.filter ((=) gt_id % GeneralTransition.id) gtset in
-        let rank = LexRSM.find prog decr in
+        let rank = LexRSM.find lrsm_cache prog decr in
         let error_str r =
           "Found LexRSM for decr: " ^ (GeneralTransition.to_id_string decr) ^ " with " ^ (LexRSM.pprf_to_string r)
           ^ " where none should exist. Program: \n" ^ (Program.to_string prog)

@@ -3,7 +3,12 @@ open Constraints
 open Atoms
 open Polynomials
 open ProgramTypes
-   
+
+(** Caching related *)
+type ranking_cache
+
+val new_cache : unit -> ranking_cache
+
 (** Provides default implementations of RankingFunctions *)
 
 type t
@@ -16,19 +21,15 @@ val rank : t -> Location.t -> Polynomial.t
 (** Returns a non-empty list of all transitions which are strictly decreasing and at the same time bounded with one.
     Corresponds to T_> . *)
 val decreasing : t -> Transition.t
-  
+
 (** Returns a list of all transitions for which the prf is defined.
     Corresponds to T'. *)
 val non_increasing : t -> Transition.t list
 
 (** Finds a suitable ranking function for the given transitions T'. *)
-val find : measure -> Program.t -> Transition.t -> t list
+val find : ranking_cache -> measure -> Program.t -> Transition.t -> t list
 
 (** Converts a ranking function into a string*)
 val to_string : t -> string
 
 val only_rank_to_string : t -> string
-  
-(** Resets all cached data.
-    Useful for testing in the same OCaml instance. *)
-val reset : unit -> unit

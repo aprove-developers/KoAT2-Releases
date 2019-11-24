@@ -21,9 +21,9 @@
 %left				POW
 
 
-%start <Program.t> onlyProgram
+%start <TransitionLabel.trans_id_counter -> Program.t> onlyProgram
 
-%start <Program.t> onlyProgram_simple
+%start <TransitionLabel.trans_id_counter -> Program.t> onlyProgram_simple
 
 %start <Formulas.Formula.t> onlyFormula
 
@@ -35,13 +35,13 @@
 
 %start <BoundsInst.Bound.t> onlyBound
 
-%start <(Program.t * string)> programAndGoal
+%start <TransitionLabel.trans_id_counter -> (Program.t * string)> programAndGoal
 
 %start <string> onlyGoal
 
 %start <ExactProgramTypes.ExactProgram.t> exactProgram
 
-%type <Program.t> program
+%type <TransitionLabel.trans_id_counter -> Program.t> program
 
 %type <Formulas.Formula.t> formula
 
@@ -84,28 +84,28 @@ program :
                 start = start
                 variables = variables
                 transitions = transitions
-                  { Program.from (transitions variables) start } ;
+                  { fun trans_id_counter -> Program.from (transitions trans_id_counter variables) start } ;
 
 programAndGoal :
 	|	g = goal
 		start = start
 		variables = variables
                 transitions = transitions ;EOF
-                  { (Program.from (transitions variables) start, g) } ;
+                  { fun trans_id_counter -> (Program.from (transitions trans_id_counter variables) start, g) } ;
 
-onlyProgram_simple :
+onlyProgram_simple:
         |       graph = program_simple; EOF
-                  { graph } ;
+                  { fun trans_id_counter -> graph trans_id_counter } ;
 
-program_simple :
+program_simple:
 	|       transitions = separated_nonempty_list(COMMA, transition_simple)
-                  { ParserUtil.mk_program_simple (List.flatten transitions) } ;
+                  { fun trans_id_counter -> ParserUtil.mk_program_simple (transitions |> List.map (fun f -> f trans_id_counter) |> List.flatten) } ;
 
-transition_simple :
+transition_simple:
 	|	start = ID; cv = cvect; rhs = non_prob_transition_rhs; formula = withConstraints
-	          { ParserUtil.mk_transition_simple start (Tuple2.first cv) (Tuple2.second cv) rhs formula }
+	          { fun trans_id_counter -> ParserUtil.mk_transition_simple trans_id_counter start (Tuple2.first cv) (Tuple2.second cv) rhs formula }
   |	start = ID; cv = cvect ; rhs = prob_transition_rhs; formula = withConstraints
-	    			{ ParserUtil.mk_transition_simple_prob start (Tuple2.first cv) (Tuple2.second cv) rhs formula } ;
+	    			{ fun trans_id_counter -> ParserUtil.mk_transition_simple_prob trans_id_counter start (Tuple2.first cv) (Tuple2.second cv) rhs formula } ;
 
 goal :
 	|	LPAR GOAL goal = ID RPAR
@@ -117,7 +117,7 @@ start :
 
 transitions :
 	|	LPAR RULES transition = nonempty_list(transition) RPAR
-		  { fun vars -> List.map (fun t -> t vars) transition |> List.flatten } ;
+		  { fun trans_id_counter vars -> List.map (fun t -> t trans_id_counter vars) transition |> List.flatten } ;
 
 variables :
 	|	LPAR VAR vars = list(ID) RPAR
@@ -125,9 +125,9 @@ variables :
 
 transition :
 	|	lhs = transition_lhs; cv = cvect ; rhs = non_prob_transition_rhs; formula = withConstraints
-	          { ParserUtil.mk_transition lhs (Tuple2.first cv) (Tuple2.second cv) rhs formula }
+	          { fun trans_id_counter -> ParserUtil.mk_transition trans_id_counter lhs (Tuple2.first cv) (Tuple2.second cv) rhs formula }
   | lhs = transition_lhs; cv = cvect ; rhs = prob_transition_rhs; formula = withConstraints
-	    			{ ParserUtil.mk_transition_prob lhs (Tuple2.first cv) (Tuple2.second cv) rhs formula } ;
+	    			{ fun trans_id_counter -> ParserUtil.mk_transition_prob trans_id_counter lhs (Tuple2.first cv) (Tuple2.second cv) rhs formula } ;
 
 cvect :
         |       MINUS LBRACE ub = polynomial COMMA lb = polynomial SEMICOLON gtb = polynomial RBRACE GREATERTHAN

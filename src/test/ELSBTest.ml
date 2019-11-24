@@ -13,7 +13,9 @@ let tests =
   "ELSB" >::: [
     "elsb" >::: List.map
       (fun (gt,v,l,lower_bound, program_string) ->
-        let prog = Readers.read_program program_string in
+        let cache = CacheManager.new_cache () in
+        let elsb_cache = CacheManager.elsb_cache cache in
+        let prog = Readers.read_program (CacheManager.trans_id_counter cache) program_string in
         let gt_id_offset =
           Program.generalized_transitions prog
           |> GeneralTransitionSet.to_list
@@ -32,7 +34,7 @@ let tests =
             |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
         in
         let rv = ((gt,loc),var) in
-        let elsb = ExpLocalSizeBound.elsb prog rv in
+        let elsb = ExpLocalSizeBound.elsb elsb_cache prog rv in
         let error_string =
           "elsb_mismatch elsb: " ^ (RealBound.show ~complexity:false elsb)
           ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
@@ -179,15 +181,17 @@ let tests =
     "concave_convexe_check" >::: List.map
       (
         fun (bstr,conc_conv) ->
+          let cache = CacheManager.new_cache () in
+          let elsb_cache = CacheManager.elsb_cache cache in
           let bound = Readers.read_bound bstr |> RealBound.of_intbound in
           let (valid,err_string) =
             match conc_conv with
             | Concave ->
-              (ExpLocalSizeBound.bound_is_concave bound, "Bound " ^ bstr ^ " is not concave as expected!")
+              (ExpLocalSizeBound.bound_is_concave elsb_cache bound, "Bound " ^ bstr ^ " is not concave as expected!")
             | Convexe ->
-              (ExpLocalSizeBound.bound_is_convexe bound, "Bound " ^ bstr ^ " is not convexe as expected!")
+              (ExpLocalSizeBound.bound_is_convexe elsb_cache bound, "Bound " ^ bstr ^ " is not convexe as expected!")
             | None    ->
-              match (ExpLocalSizeBound.bound_is_concave bound, ExpLocalSizeBound.bound_is_convexe bound) with
+              match (ExpLocalSizeBound.bound_is_concave elsb_cache bound, ExpLocalSizeBound.bound_is_convexe elsb_cache bound) with
               | (true,true)   -> (false, "Bound " ^ bstr ^ "is convexe and concave!")
               | (true,false)  -> (false, "Bound " ^ bstr ^ "is concave!")
               | (false,true)  -> (false, "Bound " ^ bstr ^ "is convexe!")

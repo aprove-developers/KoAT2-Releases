@@ -10,14 +10,11 @@ let tests =
   "ExpTimeBound" >:::
     List.map
       (fun (name,gt_id,lower_bound,prog_path) ->
-        TransitionLabel.reset_unique_gt_counter ();
-        LexRSM.reset ();
-        ExpLocalSizeBound.reset ();
-        LocalSizeBound.reset ();
-        let prog = Readers.read_file ("../../" ^ prog_path) in
+        let cache = CacheManager.new_cache () in
+        let prog = Readers.read_file (CacheManager.trans_id_counter cache) ("../../" ^ prog_path) in
         let gtset = Program.generalized_transitions prog in
         let gt = GeneralTransitionSet.any @@ GeneralTransitionSet.filter ((=) gt_id % GeneralTransition.id) gtset in
-        let approx = Approximation.create prog |> Bounds.find_exp_bounds prog in
+        let approx = Approximation.create prog |> Bounds.find_exp_bounds cache prog in
         let exptime = Approximation.exptimebound approx gt in
         let error_str =
             "Mismatch: Expected " ^ (RealBound.to_string lower_bound) ^ " got " ^ (RealBound.to_string exptime)

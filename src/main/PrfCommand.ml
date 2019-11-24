@@ -17,9 +17,11 @@ type params = {
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
+  let cache = CacheManager.new_cache () in
+
   Logging.(use_loggers [PRF, Logger.DEBUG]);
   params.input
-  |> MainUtil.read_input params.simple_input
+  |> MainUtil.read_input (CacheManager.trans_id_counter cache) params.simple_input
   |> Option.may (fun program ->
          Approximation.create program
          |> TrivialTimeBounds.compute program
@@ -32,7 +34,7 @@ let run (params: params) =
                    in
                    transitions
                    |> TransitionSet.to_list
-                   |> List.map (RankingFunction.find `Time program)
+                   |> List.map (RankingFunction.find (CacheManager.ranking_cache cache) `Time program)
                    |> List.flatten
                    |> List.map (RankingFunction.to_string)
                    |> String.concat "\n"

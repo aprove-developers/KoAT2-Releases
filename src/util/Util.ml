@@ -47,16 +47,14 @@ let enum_to_string content_to_string enum =
   List.print (fun output varset -> IO.nwrite output (content_to_string varset)) output list;
   IO.close_out output
 
-let memoize ~extractor f =
-  let cache = Hashtbl.create 10 in
-  let g x =
+let memoize cache ~extractor f =
+  fun x ->
     match Hashtbl.find_option cache (extractor x) with
     | Some y -> y
     | None ->
        let y = f x in
        Hashtbl.add cache (extractor x) y;
        y
-  in (g, fun () -> Hashtbl.clear cache)
 
 let rec option_sequence (options : 'a option list) : 'a list option =
   match options with

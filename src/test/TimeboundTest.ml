@@ -5,20 +5,20 @@ open Helper
 open ProgramTypes
 
 (** Returns an overall timebound for the given program. *)
-let find_timebound (program: Program.t): Bound.t =
+let find_timebound cache (program: Program.t): Bound.t =
   (program, Approximation.create program)
-  |> Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
+  |> Preprocessor.process_til_fixpoint (CacheManager.trans_id_counter cache) Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
   |> (fun (program, appr) ->
-    Bounds.find_bounds program appr
+    Bounds.find_bounds cache program appr
     |> fun appr -> Approximation.(ApproximationModules.TransitionApproximation.sum (time appr) program)
   )
 
 (** Returns an overall costbound for the given program. *)
-let find_costbound (program: Program.t): Bound.t =
+let find_costbound cache (program: Program.t): Bound.t =
   (program, Approximation.create program)
-  |> Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
+  |> Preprocessor.process_til_fixpoint (CacheManager.trans_id_counter cache) Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
   |> (fun (program, appr) ->
-    Bounds.find_bounds program appr
+    Bounds.find_bounds cache program appr
     |> fun appr -> Approximation.program_costbound appr program
   )
 
@@ -53,11 +53,11 @@ let tests =
       ("Simple" >:::
          List.map (fun (minimal_sound_costbound_str, wanted_costbound_str, program_str) ->
              program_str >:: (fun _ ->
-                     let program = Readers.read_program_simple program_str in
+                     let cache = CacheManager.new_cache () in
+                     let program = Readers.read_program_simple (CacheManager.trans_id_counter cache) program_str in
                      let minimal_sound_costbound = Readers.read_bound minimal_sound_costbound_str in
                      let wanted_costbound = Option.map Readers.read_bound wanted_costbound_str |? minimal_sound_costbound in
-                     let costbound = find_costbound program in
-                     reset ();
+                     let costbound = find_costbound cache program in
                      assert_bool (String.concat " " [Bound.to_string costbound; "is not sound, since it is smaller than"; Bound.to_string minimal_sound_costbound])
                                  (smaller_or_equal (Program.vars program) minimal_sound_costbound costbound);
                      assert_bool (String.concat " " [Bound.to_string costbound; "is not as small as wanted, since it is greater than"; Bound.to_string wanted_costbound])
@@ -112,8 +112,8 @@ let tests =
          let open Bound in
          List.map (fun (expected_complexity, program_str) ->
              program_str >:: (fun _ ->
-                     let complexity = (asymptotic_complexity % find_costbound % Readers.read_program_simple) program_str in
-                     reset ();
+                     let cache = CacheManager.new_cache () in
+                     let complexity = (asymptotic_complexity % find_costbound cache % Readers.read_program_simple (CacheManager.trans_id_counter cache)) program_str in
                      assert_equal ~cmp:equal_complexity ~printer:show_complexity expected_complexity complexity))
                   [
                     (Inf, "a -> b(), b -> b()");

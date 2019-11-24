@@ -9,13 +9,13 @@ open ExactProgramTypes
 
 exception Error of string
 
-val read_file : string -> Program.t
+val read_file : TransitionLabel.trans_id_counter -> string -> Program.t
 
 val read_goal_file : string -> string
 
-val read_program : string -> Program.t
+val read_program : TransitionLabel.trans_id_counter -> string -> Program.t
 
-val read_program_simple : string -> Program.t
+val read_program_simple : TransitionLabel.trans_id_counter -> string -> Program.t
 
 val read_formula : string -> Formulas.Formula.t
 
@@ -27,6 +27,6 @@ val read_polynomial : string -> Polynomials.Polynomial.t
 
 val read_bound : string -> Bound.t
 
-val read_prog_goal_file : string -> (Program.t * string)
+val read_prog_goal_file : TransitionLabel.trans_id_counter -> string -> (Program.t * string)
 
 val read_exact_file : string -> ExactProgram.t

@@ -4,6 +4,14 @@ open Polynomials
 open ProgramTypes
 open BoundsInst
 
+(** Caching related functions *)
+
+(** A Hashtbl caching LSB queries *)
+type lsb_cache
+
+(** Create a cache*)
+val new_cache: unit -> lsb_cache
+
 (* Concept:
    Incoming part:
    For UPPER bounds the MAXIMUM of all incoming variables leading to the SCC or a constant bound anywhere in the SCC.
@@ -72,17 +80,13 @@ val find_bound : [`Lower | `Upper] -> VarSet.t -> Var.t -> Formula.t -> VarSet.t
 
 (** Returns a local sizebound of the specified kind for the variable of the transition.
     A local sizebound is expressed in relation to the values directly before executing the transition. *)
-val sizebound_local : Program.t -> [`Lower | `Upper] -> Transition.t -> Var.t -> t Option.t
+val sizebound_local : lsb_cache -> Program.t -> [`Lower | `Upper] -> Transition.t -> Var.t -> t Option.t
 
 (** Returns a real bound corresponding to a local sizebound limiting the absolute value after execution of a given transition *)
-val sizebound_local_abs_bound : Program.t -> Transition.t -> Var.t -> RealBound.t Option.t
+val sizebound_local_abs_bound : lsb_cache -> Program.t -> Transition.t -> Var.t -> RealBound.t Option.t
 
-val sizebound_local_rv : Program.t -> [`Lower | `Upper] -> (Transition.t * Var.t) -> t Option.t
+val sizebound_local_rv : lsb_cache -> Program.t -> [`Lower | `Upper] -> (Transition.t * Var.t) -> t Option.t
 
 (** If for all result variables of the given kind a local sizebound is defined, this function returns a local sizebound function.
     Otherwise it returns None. *)
-val sizebound_local_scc : Program.t -> [`Lower | `Upper] -> (Transition.t * Var.t) list -> ([`Lower | `Upper] -> (Transition.t * Var.t) -> t) Option.t
-
-(** Resets all cached data.
-    Useful for testing in the same OCaml instance. *)
-val reset : unit -> unit
+val sizebound_local_scc : lsb_cache -> Program.t -> [`Lower | `Upper] -> (Transition.t * Var.t) list -> ([`Lower | `Upper] -> (Transition.t * Var.t) -> t) Option.t

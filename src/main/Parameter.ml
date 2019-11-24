@@ -101,9 +101,9 @@ let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): 
                     "\n";
                     TransitionLabel.to_string label]
 
-let bounded_rv_to_string (program: Program.t) kind (appr: Approximation.t) (t,v) =
+let bounded_rv_to_string cache (program: Program.t) kind (appr: Approximation.t) (t,v) =
   let get_lsb kind (t, v) =
-    LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
+    LocalSizeBound.(sizebound_local cache program kind t v |> Option.map as_bound |? default kind)
   in
   String.concat "" [RV.to_id_string (t, v);
                     "\n";
@@ -114,18 +114,18 @@ let bounded_rv_to_string (program: Program.t) kind (appr: Approximation.t) (t,v)
                     get_lsb kind (t,v) |> Bound.show ~complexity:false
     ]
 
-let bounded_erv_to_string (program: Program.t) (appr: Approximation.t) ((gt,l),v) =
+let bounded_erv_to_string elsb_cache (program: Program.t) (appr: Approximation.t) ((gt,l),v) =
   String.concat "" [ERV.to_id_string ((gt,l), v);
                     "\n";
                     "Global: ";
                     Approximation.expsizebound_abs appr (gt,l) v |> RealBound.to_string;
                     "\n";
                     "Local: ";
-                    ExpLocalSizeBound.elsb program ((gt,l),v) |> RealBound.to_string
+                    ExpLocalSizeBound.elsb elsb_cache program ((gt,l),v) |> RealBound.to_string
     ]
 
-let get_lsb program kind (t, v) =
-  LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
+let get_lsb cache program kind (t, v) =
+  LocalSizeBound.(sizebound_local program cache kind t v |> Option.map as_bound |? default kind)
 
 let standard_vars program =
   let open Program in

@@ -13,11 +13,9 @@ let tests =
   "ELSB" >:::
     List.map
       (fun (gt,v,l,lower_bound, program_string) ->
-        LocalSizeBound.reset ();
-        LexRSM.reset ();
-        ExpLocalSizeBound.reset ();
+        let cache = CacheManager.new_cache () in
 
-        let prog = Readers.read_program program_string in
+        let prog = Readers.read_program (CacheManager.trans_id_counter cache) program_string in
         let gt_id_offset =
           Program.generalized_transitions prog
           |> GeneralTransitionSet.to_list
@@ -35,7 +33,7 @@ let tests =
             Program.graph prog |> TransitionGraph.locations
             |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
         in
-        let approx = Approximation.create prog |> Bounds.find_exp_bounds prog in
+        let approx = Approximation.create prog |> Bounds.find_exp_bounds cache prog in
         let expsize = Approximation.expsizebound `Upper approx (gt,loc) var in
         let error_string =
           "exptrivsize_mismatch exp_size: " ^ (RealBound.show ~complexity:false expsize)

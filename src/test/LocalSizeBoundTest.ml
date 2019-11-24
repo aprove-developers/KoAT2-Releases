@@ -4,10 +4,10 @@ open Helper
 open LocalSizeBound
 open Formulas
 open Polynomials
-   
-let tests = 
+
+let tests =
   "LocalSizeBound" >::: [
-                        
+
       ("find upper bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::
@@ -19,7 +19,6 @@ let tests =
                                                  |> Polynomial.vars)
                                                 1024
                          in
-                         reset ();
                          assert_equal_lsb expected bound))
                   [
                     (* Bounded by constants *)
@@ -68,7 +67,6 @@ let tests =
                                                 (Readers.read_polynomial "y+z" |> Polynomial.vars)
                                                 1024
                          in
-                         reset ();
                          assert_equal_lsb expected bound))
                   [
                     (* Bounded by constants *)

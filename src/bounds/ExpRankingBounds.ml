@@ -122,14 +122,14 @@ let improve_with_rank program appr (rank: LexRSM.t) =
 let exp_bounded appr transition =
   Approximation.is_exptime_bounded appr transition
 
-let improve program appr =
+let improve cache program appr =
   program
   |> Program.non_trivial_transitions
   |> GeneralTransitionSet.of_transitionset
   |> GeneralTransitionSet.filter (not % exp_bounded appr)
   |> GeneralTransitionSet.enum
   |> MaybeChanged.fold_enum (fun appr gt ->
-         LexRSM.find program gt
+         LexRSM.find cache program gt
          |> Option.map_default (fun rank ->
               improve_with_rank program appr rank
             ) (MaybeChanged.return appr)

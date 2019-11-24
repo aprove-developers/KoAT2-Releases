@@ -1,6 +1,6 @@
 open Batteries
 open ProgramTypes
-   
+
 let description = "Search for linear probabilistic ranking function"
 
 let command = "pprf"
@@ -13,29 +13,31 @@ type params = {
 
     simple_input : bool; [@default false] [@aka ["s"]]
     (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
-    
+
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
+  let cache = CacheManager.new_cache () in
+
   Logging.(use_loggers [LexRSM, Logger.DEBUG; Preprocessor, Logger.DEBUG]);
   params.input
-  |> MainUtil.read_input_goal false
+  |> MainUtil.read_input_goal (CacheManager.trans_id_counter cache) false
   |> Option.may (fun (program, _) ->
-        let gts = 
+        let gts =
           (program, Approximation.create program)
-          |> Preprocessor.process Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne])
+          |> Preprocessor.process (CacheManager.trans_id_counter cache) Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne])
           (* get program *)
           |> Tuple2.first
           |> Program.generalized_transitions
           |> GeneralTransitionSet.to_list
-        in 
+        in
         gts
         |> List.filter (not % Program.is_initial_gt program)
-        |> List.map (LexRSM.find program)
+        |> List.map (LexRSM.find (CacheManager.lrsm_cache cache) program)
         |> List.filter (Option.is_some)
         |> Util.option_sequence
-        |> Option.may (fun pprflist -> 
+        |> Option.may (fun pprflist ->
              List.map LexRSM.pprf_to_string pprflist
-             |> String.concat "\n" 
+             |> String.concat "\n"
              |> flip (^) "\n"
              |> print_string) )
