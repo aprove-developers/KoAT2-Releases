@@ -817,8 +817,21 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
     let appr_substitution_abs_one v b' =
       appr_substitution_abs_maybe (fun v' -> if v' = v then Some b' else None)
 
+    let rec rename map =
+      fold
+        ~const:(fun c -> Const c)
+        ~var:(fun v -> Var (RenameMap.find v map v))
+        ~neg:(fun b -> Neg (rename map b))
+        ~plus:(fun b1 b2 -> Sum (rename map b1, rename map b2))
+        ~times:(fun b1 b2 -> Product (rename map b1, rename map b2))
+        ~exp:(fun e b -> Pow(e, rename map b))
+        ~max:(fun b1 b2 -> Max (rename map b1, rename map b2))
+        ~min:(fun b1 b2 -> Min (rename map b1, rename map b2))
+        ~abs:(fun b -> Abs (rename map b))
+        ~inf:(Infinity)
+
     let degree n = raise (Failure "degree for MinMaxPolynomial not yet implemented")
-    let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implemented")
+
     let eval p valuation = raise (Failure "eval for MinMaxPolynomial not yet implemented")
     let eval_f p valuation = raise (Failure "eval_f for MinMaxPolynomial not yet implemented")
     let of_string p = raise (Failure "of_string for MinMaxPolynomial not yet implemented")
