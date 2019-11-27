@@ -81,7 +81,7 @@ module type Evaluable =
     (** Stable structural compare, but not an actual compare *)
     val compare : t -> t -> int
 
-    val to_string : t -> string
+    val to_string : ?to_file:bool -> t -> string
 
     (** Returns a set of the variables which occur in the evaluable *)
     val vars : t -> VarSet.t
@@ -257,6 +257,9 @@ module type Polynomial =
        *)
       
     val to_string : t -> string
+
+    val to_string_to_file : t -> string
+
       
     (** Following methods return if the atom has certain properties. *)
 

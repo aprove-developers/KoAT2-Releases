@@ -39,7 +39,7 @@ module type Atom =
           (** Returns a list of all possible comparators with their string representation *)
           val str_values : string list
 
-          val to_string : t -> string
+          val to_string : ?to_file:bool -> t -> string
 
         end
                                                   
@@ -81,7 +81,7 @@ module type Atom =
           
         val neg : t -> t
           
-        val to_string : ?comp:string -> t -> string
+        val to_string : ?to_file:bool -> ?comp:string -> t -> string
 
         (** Returns the set of variables which are active in the atom.
             A variable is active, if it's value has an effect on the evaluation of the atom. *)
@@ -172,7 +172,7 @@ module type Constraint =
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
         val vars : t -> VarSet.t
 
-        val to_string : ?comp:string -> ?conj:string -> t -> string
+        val to_string : ?to_file:bool -> ?comp:string -> ?conj:string -> t -> string
 
 
         (** Following methods manipulate atoms and return the manipulated versions. *)

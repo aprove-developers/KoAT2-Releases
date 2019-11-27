@@ -23,7 +23,7 @@ sig
   val compare_equivalent : t -> t -> int
   val hash : t -> int
   val to_id_string : t -> string
-  val to_string : t -> string
+  val to_string : ?to_file:bool -> t -> string
   val src : t -> Location.t
   val label : t -> TransitionLabel.t
   val target : t -> Location.t
@@ -53,3 +53,13 @@ sig
   (** Adds the invariant to the location of the graph. *)
   val add_invariant : Location.t -> Constraint.t -> t -> t
 end
+
+module TransitionGraphWeight (Value : PolyTypes.Ring) :
+  sig
+    type t = Value.t
+    type edge = TransitionGraph.E.t
+    val weight : edge -> Value.t
+    val compare : 'a -> 'b -> int
+    val add : Value.t -> Value.t -> Value.t
+    val zero : Value.t
+  end

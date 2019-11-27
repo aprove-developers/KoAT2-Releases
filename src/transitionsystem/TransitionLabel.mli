@@ -60,11 +60,11 @@ val cost : t -> polynomial
 
 val to_string : t -> string
 
-val update_to_string_lhs : t -> string
+val update_to_string_lhs : ?to_file:bool -> t -> string
 
-val update_to_string_rhs : t -> string
+val update_to_string_rhs : ?to_file:bool -> t -> string
 
-val guard_to_string : t -> string
+val guard_to_string : ?to_file:bool -> t -> string
 
 val to_id_string : t -> string
 

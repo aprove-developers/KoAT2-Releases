@@ -31,12 +31,12 @@ module Make(Value : PolyTypes.Ring) =
     let delete_var = Map.remove
 
     (* Probably inefficient but not important in to_string *)
-    let to_string mon =
+    let to_string ?(to_file = false) mon =
       if Map.is_empty mon then
         "1"
       else
         let entry_string key n =
-          Var.to_string key ^ (if n != 1 then "^" ^ string_of_int n else "")
+          Var.to_string ~to_file key ^ (if n != 1 then "^" ^ string_of_int n else "")
         and ((var, n), without_first) = Map.pop mon in
         Map.fold (fun key n str -> str ^ (entry_string key n)) without_first (entry_string var n)
 

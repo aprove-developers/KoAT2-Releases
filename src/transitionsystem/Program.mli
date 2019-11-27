@@ -60,5 +60,9 @@ val start : t -> Location.t
   
 val sccs : t -> TransitionSet.t Enum.t
 
+val parallelTransitions : t -> Location.t * TransitionLabel.t * Location.t -> TransitionSet.t
+
 (** Returns all transitions, that belong to an SCC. *)
 val non_trivial_transitions : t -> TransitionSet.t
+
+val to_file : t -> string -> unit

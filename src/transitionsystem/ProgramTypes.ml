@@ -64,9 +64,24 @@ module Transition =
     let to_id_string (l,label,l') =
       (Int.to_string % TransitionLabel.id) label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
 
-    let to_string (l,t,l') =
-      (Location.to_string l) ^ TransitionLabel.(update_to_string_lhs t)^ " -> " ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t) ^":|:" ^ TransitionLabel.(guard_to_string t)
-    
+    let to_string ?(to_file = false) (l,t,l') =
+      if to_file then
+        (
+          if (Constraint.is_true (TransitionLabel.guard t)) then
+            ((Location.to_string l) 
+            ^ TransitionLabel.(update_to_string_lhs ~to_file t) 
+            ^ " -> Com_1(" ^ (Location.to_string l') 
+            ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ")")
+          else
+            (Location.to_string l) 
+            ^ TransitionLabel.(update_to_string_lhs ~to_file t) 
+            ^ " -> Com_1(" ^ (Location.to_string l') 
+            ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ") :|: " 
+            ^ TransitionLabel.(guard_to_string ~to_file t)
+        )
+      else
+        (Location.to_string l) ^ TransitionLabel.(update_to_string_lhs t)^ " -> " ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t) ^":|:" ^ TransitionLabel.(guard_to_string t)      
+
     let rename vars (l,t,l') =
       (l, (TransitionLabel.rename vars t),l')
   end
@@ -99,7 +114,7 @@ module TransitionGraph =
       |> TransitionSet.filter (fun (l,_,l') ->
              List.mem_cmp Location.compare l locations
              && List.mem_cmp Location.compare l' locations)
-      
+                
     module Equivalence_TransitionSet = Set.Make(struct include Transition let compare = Transition.compare_equivalent end)
                                      
     let equivalent graph1 graph2 =
@@ -117,4 +132,14 @@ module TransitionGraph =
              replace_edge_e transition (Transition.add_invariant invariant transition) result
            ) graph          
       
+  end
+
+module TransitionGraphWeight(Value : PolyTypes.Ring) = 
+  struct
+    type t = Value.t
+    type edge = TransitionGraph.E.t
+    let weight (x : edge) = Value.one
+    let compare x y = 0
+    let add x y = Value.add x y
+    let zero = Value.zero
   end

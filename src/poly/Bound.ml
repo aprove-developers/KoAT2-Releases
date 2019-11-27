@@ -84,6 +84,11 @@ let show_complexity_termcomp = function
   | Polynomial x -> "WORST_CASE(?, O(n^" ^ Int.to_string x ^ "))"
   | Exponential _ -> "WORST_CASE(?, O(EXP))"
 
+let is_linear = function
+  | Polynomial 0 -> true
+  | Polynomial 1 -> true
+  | _ -> false
+
 let asymptotic_complexity =
   fold
     ~const:(fun _ -> Polynomial 0)

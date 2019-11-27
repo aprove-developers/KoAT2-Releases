@@ -122,7 +122,11 @@ let sccs program =
   |> List.enum  
   |> Enum.map (TransitionGraph.loc_transitions program.graph)
   |> Enum.filter (not % TransitionSet.is_empty)
-  
+
+let parallelTransitions graph (l,_,l') =
+  transitions graph
+    |> TransitionSet.filter (fun (l1,_,l1') ->  Location.equal l l1 && Location.equal l' l1')
+
 let non_trivial_transitions =
   Enum.fold TransitionSet.union TransitionSet.empty % sccs
 
@@ -148,3 +152,12 @@ let to_string program =
   
 let to_simple_string program =
   TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph "" 
+
+(* Prints the program to the file "file.koat" *)
+let to_file program file = 
+  let oc = open_out (file ^ ".koat") in  
+    Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)" 
+                    (Location.to_string (start program))
+                    (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) "")
+                    (TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "");
+    close_out oc;              

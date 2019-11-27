@@ -117,7 +117,10 @@ let rec maxBound_of_list list =
  | [x] ->  Bound.max x (Bound.one)
  | x::xs -> Bound.max x (maxBound_of_list xs)
 
-(* computes new bounds*)
+(* Collect all non-linear bounds *)
+let nonLinearTransitions = ref TransitionSet.empty
+
+(* Computes new bounds*)
 let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: MultiphaseRankingFunction.t): Bound.t =
  let execute () =
    rank
@@ -128,33 +131,37 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
        let decreasing = MultiphaseRankingFunction.decreasing rank in
        let timebound = Approximation.timebound appr (l,t,l') in 
        let coefficients = (compute_coefficients (MultiphaseRankingFunction.degree rank) (MultiphaseRankingFunction.rank rank) decreasing  []) in
-         let maximum_coefficient = (maximum_coefficients coefficients) in
-         let evaluate = (fun rank -> (apply (fun kind -> Approximation.sizebound kind appr) rank) (l,t,l')) in
-         let list_evaluated = (List.init (MultiphaseRankingFunction.degree rank) (fun i -> (evaluate ((List.nth (MultiphaseRankingFunction.rank rank) i) l')))) in
-         let rhs = if rank.degree = 1 then
-            Bound. (max Bound.zero (add Bound.one (List.nth list_evaluated 0)))
-            else 
-            Bound. (add Bound.one (mul (of_int maximum_coefficient)  (maxBound_of_list list_evaluated))) in 
-          Bound.(
-            if is_infinity timebound then
-              if equal zero rhs then
-                zero
-              else
-                infinity
+       let maximum_coefficient = (maximum_coefficients coefficients) in
+       let evaluate = (fun rank -> (apply (fun kind -> Approximation.sizebound kind appr) rank) (l,t,l')) in
+       let list_evaluated = (List.init (MultiphaseRankingFunction.degree rank) (fun i -> (evaluate ((List.nth (MultiphaseRankingFunction.rank rank) i) l')))) in
+       let rhs = if rank.degree = 1 then
+          Bound. (max Bound.zero (add Bound.one (List.nth list_evaluated 0)))
+          else 
+          Bound. (add Bound.one (mul (of_int maximum_coefficient)  (maxBound_of_list list_evaluated))) in 
+        Bound.(
+          if is_infinity timebound then
+            if equal zero rhs then
+              zero
             else
-              if is_infinity rhs then
-                infinity
-              else
-                timebound * rhs
-          ))
-   |> Bound.sum
- in Logger.with_log logger Logger.DEBUG
+              infinity
+          else
+            if is_infinity rhs then
+              infinity
+            else
+              timebound * rhs
+        ))
+   |> Bound.sum    
+ in 
+    let bound = execute () in
+    if Bound.is_linear bound then 
+      nonLinearTransitions := TransitionSet.remove (MultiphaseRankingFunction.decreasing rank) !nonLinearTransitions
+    else
+      nonLinearTransitions := TransitionSet.add (MultiphaseRankingFunction.decreasing rank) !nonLinearTransitions;
+    Logger.with_log logger Logger.DEBUG
       (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
                                    "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (MultiphaseRankingFunction.non_increasing rank));
                                    "rank", MultiphaseRankingFunction.only_rank_to_string rank;])
-                    ~result:Bound.to_string
-                    execute
-
+                    ~result:Bound.to_string (fun () -> bound)
 
  let compute_bound (appr: Approximation.t) (program: Program.t) (rank: RankingFunction.t): Bound.t =
    let execute () =
@@ -178,12 +185,17 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
                   timebound * rhs
             ))
      |> Bound.sum
-   in Logger.with_log logger Logger.DEBUG
+   in 
+    let bound = execute () in
+    if Bound.is_linear bound then 
+      nonLinearTransitions := TransitionSet.remove (RankingFunction.decreasing rank) !nonLinearTransitions
+    else
+      nonLinearTransitions := TransitionSet.add (RankingFunction.decreasing rank) !nonLinearTransitions;
+   Logger.with_log logger Logger.DEBUG
         (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (RankingFunction.decreasing rank);
                                      "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (RankingFunction.non_increasing rank));
                                      "rank", RankingFunction.only_rank_to_string rank])
-                      ~result:Bound.to_string
-                      execute
+                      ~result:Bound.to_string (fun () -> bound)
 
 let add_bound = function
   | `Time -> Approximation.add_timebound
@@ -215,7 +227,7 @@ let bounded measure appr transition =
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> false
 
-let improve  ?(mrf = false) measure program appr  =
+let improve  ?(mrf = false)  measure program appr  =
   let execute () =
     program
     |> Program.non_trivial_transitions

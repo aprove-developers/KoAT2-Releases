@@ -20,7 +20,7 @@ val compare : t -> t -> int
 val hash : t -> int
 val (=~=) : t -> t -> bool
 val of_string : string -> t
-val to_string : t -> string
+val to_string : ?to_file:bool -> t -> Batteries.String.t
 (** Returns a not yet used id, which is guaranteed to be distinct from any yet existing ids. *)
 val fresh_id : sort -> unit -> t
     (** Returns a bunch of fresh ids. *)

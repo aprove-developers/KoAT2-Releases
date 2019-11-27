@@ -1,11 +1,11 @@
 open Batteries
 open ProgramTypes
 open Polynomials
-   
+
 let rec find_bounds_ ?(mrf = false) (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
   |> SizeBounds.improve program
-  |> RankingBounds.improve  ~mrf:mrf `Time program
+  |> RankingBounds.improve  ~mrf:mrf `Time program 
   |> MaybeChanged.if_changed (find_bounds_  ~mrf:mrf program)
   |> MaybeChanged.unpack
 

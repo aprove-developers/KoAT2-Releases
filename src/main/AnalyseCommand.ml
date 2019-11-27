@@ -81,6 +81,70 @@ type params = {
   } [@@deriving cmdliner]
 
 
+(* ----------------------------------- *)
+
+(*Add this to separate file*) 
+module DjikstraTransitionGraph = Graph.Path.Dijkstra(TransitionGraph)(TransitionGraphWeight(OurInt))
+
+module SetOfTransitionSetsCompare = struct
+  type t = TransitionSet.t
+  let compare t1 t2 = TransitionSet.compare t1 t2
+end
+
+module SetOfTransitionSets = Set.Make(SetOfTransitionSetsCompare)
+
+(*Those SCCs are not minimal containing transition u -> v *)
+let nonLinearSCCs (program: Program.t) =
+  Program.sccs program
+  |> Enum.filter (fun scc -> (TransitionSet.exists (fun nonLinearTransition -> TransitionSet.mem nonLinearTransition scc) !RankingBounds.nonLinearTransitions))
+
+(*Transform (non-minimal) TransitionSets (i.e. our SCCs) to a ProgramGraph*)
+let getTransitionGraph (nonLinearSCCs: TransitionSet.t list) (l1,x,l2)  =
+  TransitionGraph.empty
+  |> TransitionSet.fold (fun t graph -> TransitionGraph.add_edge_e graph t) (List.find (fun scc -> TransitionSet.mem (l1,x,l2) scc) nonLinearSCCs)
+
+(* Apply Dijkstra on ProgramGraph and get shortest v -> u path and add transition v -> u (thus, we get a circle, a minimal SCC)*)
+let applyDijkstra (program: Program.t) =
+  let nonLinearSCCs = List.of_enum (nonLinearSCCs program) in
+  let nonLinearTransitions =  TransitionSet.to_list !RankingBounds.nonLinearTransitions in
+  List.map (fun (l1,x,l2) -> let (path, _) = DjikstraTransitionGraph.shortest_path (getTransitionGraph nonLinearSCCs (l1,x,l2)) l2 l1 in
+                              List.append [(l1,x,l2)] path) nonLinearTransitions
+
+(* Add parallel transitions for one scc*)
+let parallelTransitions (program: Program.t) (scc: ProgramTypes.TransitionGraph.E.t list) = 
+  TransitionSet.empty
+  |> List.fold_right (fun transition x -> TransitionSet.fold (fun parallelTransition x1 -> TransitionSet.add parallelTransition x1) (Program.parallelTransitions program transition) x) scc
+
+let minimalSCCs (program: Program.t) = 
+  (applyDijkstra program)
+  |> List.map (fun scc -> parallelTransitions program scc)
+
+let minimalDisjointSCCs (origin_sccs: ProgramTypes.TransitionSet.t list) =
+  SetOfTransitionSets.of_list (List.map (fun origin_scc -> List.fold_right (fun origin_scc1 new_scc -> if (TransitionSet.disjoint origin_scc1 new_scc) then new_scc else (TransitionSet.union origin_scc1 new_scc)) origin_sccs origin_scc) origin_sccs)
+
+let counter = ref 0 
+
+(* TODO add parallel edges and add edge l1 -> l2 *)
+let apply_cfr ?(degree = 5) ?(mrf = false) (program: Program.t) (appr: Approximation.t) = 
+  let initial_location = Program.start program in
+  let minimalDisjointSCCs = minimalDisjointSCCs (minimalSCCs program) in
+    SetOfTransitionSets.iter (fun scc -> Printf.printf "%s\n------------------------------------------------\n" (TransitionSet.to_string scc)) minimalDisjointSCCs;
+    Printf.printf "%s\n" (Program.to_string program);
+    minimalDisjointSCCs
+    |> SetOfTransitionSets.iter (fun scc ->  
+      let scc_list = TransitionSet.to_list scc in
+      let entry_transitions = List.map (fun (l,t,l') -> (initial_location,t,l')) (RankingBounds.entry_transitions program scc_list) in
+      let scc_program = Program.from (List.append entry_transitions scc_list) initial_location in
+        ignore (try Unix.mkdir "tmp" 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
+        Program.to_file scc_program ("./tmp/tmp_scc" ^ (string_of_int !counter));
+        ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp/tmp --file ./tmp/tmp_scc" ^ (string_of_int !counter) ^ ".koat"));
+        ignore ("./tmp/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
+          |> MainUtil.read_input ~rename:false false 
+          |> Option.map (fun program_scc -> (program_scc, Approximation.create program_scc)));
+        counter := !counter + 1)
+
+(* ----------------------------------- *)
+
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
   String.concat "" ["Timebound: ";
                     Approximation.timebound_id appr (TransitionLabel.id label) |> Bound.to_string;
@@ -124,6 +188,14 @@ let rename_program_option opt =
     |Some program -> Some (rename_program program)
     |None -> None
 
+(*Returns true iff. s2 is a substring of s1 TODO Move this methode into a separate file  *)
+let contains s1 s2 =
+    let re = Str.regexp_string s2
+    in
+        try ignore (Str.search_forward re s1 0); true
+        with Not_found -> false
+
+
 let run (params: params) =
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
@@ -150,13 +222,12 @@ let run (params: params) =
     print_string (program_str ^ "\n\n")
   );
   let input_cfr =
-  if(params.cfr) then 
-    (ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-call-var -cfr-john --output-format koat dot --output-destination ./tmp --file " ^ (Option.get params.input)));
+  if (false) then
+    (ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat dot --output-destination ./tmp --file " ^ (Option.get params.input)));
     ("./tmp/" ^ input_filename ^ "_cfr1.koat"))
-  else 
+  else
     input
   in 
-(*  Printf.printf "%s\n" input_cfr;*)
   input_cfr
   |> MainUtil.read_input ~rename:params.rename params.simple_input 
   |> rename_program_option
@@ -175,9 +246,11 @@ let run (params: params) =
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
                      (program, appr)
-                     |> uncurry (Bounds.find_bounds ~degree:(params.degree) ~mrf:(params.multiphaserankingfunctions))
+                     |> uncurry Bounds.find_bounds
                      |> fun appr -> (program, appr)
                    else (program, appr))
+         |> tap (fun (program, appr) -> if params.cfr then
+                              ignore (apply_cfr ~degree:(params.degree) ~mrf:(params.multiphaserankingfunctions) program appr))
          |> tap (fun (program, appr) -> params.result program appr)
          |> tap (fun (program, appr) ->
                 if params.print_system then
@@ -189,5 +262,5 @@ let run (params: params) =
                 )
               )
        )
-  |> ignore;
-  (ignore (Sys.command ("rm -f -r ./tmp")))
+      |> ignore;
+    (* ignore (Sys.command ("rm -f -r ./tmp")) *)
