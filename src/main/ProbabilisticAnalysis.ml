@@ -30,7 +30,7 @@ let run (params: params) =
     match params.result with
     |"termcomp" -> print_termcomp_expected
     |"all" -> print_all_expected_bounds
-    |_ -> print_overall_expected_timebound
+    |_ -> print_overall_expected_costbound
   in
   let cache = CacheManager.new_cache () in
 

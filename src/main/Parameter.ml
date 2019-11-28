@@ -16,10 +16,17 @@ let print_all_expected_bounds (program: Program.t) (appr: Approximation.t): unit
 let print_all_deterministic_bounds (program: Program.t) (appr: Approximation.t): unit =
   print_string (Approximation.to_string program false appr)
 
-(** Prints the overall timebound of the program to the shell. *)
+(** Prints the overall expected timebound of the program to the shell. *)
 let print_overall_expected_timebound (program: Program.t) (appr: Approximation.t): unit =
   program
   |> Approximation.program_exptimebound appr
+  |> RealBound.to_string
+  |> print_endline
+
+(** Prints the overall expected costbound of the program to the shell. *)
+let print_overall_expected_costbound (program: Program.t) (appr: Approximation.t): unit =
+  program
+  |> Approximation.program_expcostbound appr
   |> RealBound.to_string
   |> print_endline
 
