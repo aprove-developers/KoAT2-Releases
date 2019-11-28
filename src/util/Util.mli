@@ -33,3 +33,5 @@ val safe_head : 'a list -> 'a option
 val unpack_option_tuple : 'a option * 'b option -> ('a * 'b) option
 
 val show_debug_log : Logger.log -> resultprint:('a -> string) -> string -> 'a -> 'a
+
+val flat_option : 'a option option -> 'a option

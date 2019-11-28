@@ -63,6 +63,9 @@ let rec option_sequence (options : 'a option list) : 'a list option =
                   (fun x -> Option.Monad.bind (option_sequence ms)
                     (fun xs -> Option.Monad.return (x::xs)))
 
+let flat_option (op: 'a option option) =
+  Option.Monad.bind op identity
+
 let safe_head l =
   match l with
   | [] -> None
