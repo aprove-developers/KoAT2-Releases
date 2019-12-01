@@ -4,7 +4,7 @@ open RVGTypes
 
 let logger = Logging.(get Size)
 
-module RV = Make_RV(Transition)
+module RV = RVG.RV
 
 let improve_scc lsb_cache kind program rvg appr = function
   | [((l,t,l'),v)] when not (RVG.mem_edge rvg ((l,t,l'),v) ((l,t,l'),v)) ->

@@ -4,7 +4,7 @@ open ProgramTypes
 
 let logger = Logging.(get Size)
 
-module RV = RVGTypes.Make_RV(Transition)
+module RV = RVGTypes.RVG.RV
 
 type kind = [ `Lower | `Upper ] [@@deriving show]
 

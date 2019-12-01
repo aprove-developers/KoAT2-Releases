@@ -22,10 +22,16 @@ let equal equal_graph program1 program2 =
 let equivalent =
   equal TransitionGraph.equivalent
 
-let add_locations locations graph =
+let add_locations_to_graph locations graph =
   locations
   |> Enum.map (fun l -> fun gr -> TransitionGraph.add_vertex gr l)
   |> Enum.fold (fun gr adder -> adder gr) graph
+
+let add_location location p =
+  {p with invariants = LocationMap.add location Constraint.mk_true p.invariants; graph = TransitionGraph.add_vertex p.graph location}
+
+let add_locations locations p =
+  Enum.fold (fun p l -> add_location l p) p locations
 
 let add_transitions transitions graph =
   transitions
@@ -52,7 +58,7 @@ let locations transitions =
 let mk transitions =
   let locations = locations (Enum.clone transitions) in
   TransitionGraph.empty
-  |> add_locations locations
+  |> add_locations_to_graph locations
   |> add_transitions transitions
 
 let rename program =
@@ -134,12 +140,45 @@ let pre_gt program gt =
   gts
   |> GeneralTransitionSet.filter (TransitionSet.exists (fun t -> TransitionSet.mem t pre_ts) % GeneralTransition.transitions)
 
-let sccs program =
+let sccs_locs program =
   let module SCC = Graph.Components.Make(TransitionGraph) in
   program.graph
   |> SCC.scc_list
   |> List.rev
+
+let all_sccs_locs program =
+  let module SCC = Graph.Components.Make(TransitionGraph) in
+
+  let is_scc lset =
+    let gr = graph program in
+    let gr' =
+      TransitionGraph.fold_edges_e
+      (fun (l,t,l') gr -> if LocationSet.mem l lset && LocationSet.mem l' lset then gr else TransitionGraph.remove_edge_e gr (l,t,l')) gr gr
+      |> TransitionGraph.fold_vertex (fun l gr -> if not (LocationSet.mem l lset) then TransitionGraph.remove_vertex gr l else gr) gr
+    in
+    SCC.scc_list gr'
+    |> List.enum
+    |> Enum.map List.enum
+    |> List.of_enum
+    |> Int.equal 1 % List.length
+  in
+
+  sccs_locs program
   |> List.enum
+  |> Enum.map LocationSet.of_list
+  |> Enum.map (LocationSet.powerset)
+  |> Enum.flatten
+  |> Enum.filter is_scc
+  |> Enum.map (LocationSet.to_list)
+
+let sccs program =
+  sccs_locs program
+  |> List.enum
+  |> Enum.map (TransitionGraph.loc_transitions program.graph)
+  |> Enum.filter (not % TransitionSet.is_empty)
+
+let all_sccs program =
+  all_sccs_locs program
   |> Enum.map (TransitionGraph.loc_transitions program.graph)
   |> Enum.filter (not % TransitionSet.is_empty)
 
@@ -159,8 +198,8 @@ let is_initial_gt program trans =
 let is_initial_location program location =
   Location.(equal (program.start) location)
 
-let to_string program =
-  let transitions = String.concat "\n  " (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string t)]) program.graph [])
+let to_string ~show_gtcost program =
+  let transitions = String.concat "\n  " (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string ~show_gtcost:show_gtcost t)]) program.graph [])
   and locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
   String.concat "  " [
       "  Start:"; Location.to_string program.start;"\n";
@@ -170,8 +209,8 @@ let to_string program =
       "Transitions:\n"; transitions;"\n";
     ]
 
-let to_simple_string program =
-  TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph ""
+let to_simple_string ~show_gtcost program =
+  TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string ~show_gtcost:show_gtcost t) program.graph ""
 
 let test program trans g_set =
   GeneralTransitionSet.add (GeneralTransition.of_transitionset (program |> transitions) trans) g_set

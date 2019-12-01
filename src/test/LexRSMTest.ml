@@ -23,7 +23,7 @@ let tests =
         let rank = rankfunc loc in
         let error_str =
             "Mismatch: Expected " ^ (RealPolynomial.to_string exp) ^ " got " ^ (RealPolynomial.to_string rank)
-            ^ " with decr " ^ (GeneralTransition.to_id_string decr) ^ " and loc " ^ (Location.to_string loc) ^ " in prog\n" ^ (Program.to_string prog)
+            ^ " with decr " ^ (GeneralTransition.to_id_string decr) ^ " and loc " ^ (Location.to_string loc) ^ " in prog\n" ^ (Program.to_string ~show_gtcost:true prog)
         in
         name >:: (fun _ -> assert_bool error_str (RealPolynomial.(rank =~= exp)) )
       )
@@ -48,7 +48,7 @@ let tests =
         let rank = LexRSM.find lrsm_cache prog decr in
         let error_str r =
           "Found LexRSM for decr: " ^ (GeneralTransition.to_id_string decr) ^ " with " ^ (LexRSM.pprf_to_string r)
-          ^ " where none should exist. Program: \n" ^ (Program.to_string prog)
+          ^ " where none should exist. Program: \n" ^ (Program.to_string ~show_gtcost:true prog)
         in
         name >:: (fun _ -> if Option.is_some rank then assert_string (error_str @@ Option.get rank) else ())
       )

@@ -8,7 +8,7 @@ open Formulas
 
 let logger = Logging.(get ExpSize)
 
-module RV = Make_RV(RVTransitions.TransitionForExpectedSize)
+module RV = ERVG.RV
 module Solver = SMT.IncrementalZ3Solver
 
 let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) v =

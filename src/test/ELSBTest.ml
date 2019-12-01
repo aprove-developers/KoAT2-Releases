@@ -38,7 +38,7 @@ let tests =
         let error_string =
           "elsb_mismatch elsb: " ^ (RealBound.show ~complexity:false elsb)
           ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
-          ^ " in program " ^ (Program.to_string prog)
+          ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
         in
         (GeneralTransition.to_string gt) >:: fun _ -> assert_bool error_string (bounds lower_bound elsb)
       )

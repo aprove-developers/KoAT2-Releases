@@ -6,7 +6,7 @@ open OUnit2
 open TestHelper
 open RVGTypes
 
-module RV = Make_RV (RVTransitions.TransitionForExpectedSize)
+module RV = ERVG.RV
 
 let tests =
   let varx = RealBound.of_var @@ Var.of_string "X" in
@@ -33,13 +33,13 @@ let tests =
             Program.graph prog |> TransitionGraph.locations
             |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
         in
-        let approx = Approximation.create prog |> Bounds.find_exp_bounds cache prog in
+        let approx = Approximation.create prog |> Bounds.find_exp_bounds ~generate_invariants:Preprocessor.generate_invariants false cache prog |> Tuple2.second in
         let expsize = Approximation.expsizebound `Upper approx (gt,loc) var in
         let error_string =
           "exptrivsize_mismatch exp_size: " ^ (RealBound.show ~complexity:false expsize)
           ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
           ^ " in grv" ^ (RV.to_id_string ((gt,loc),var))
-          ^ " in program " ^ (Program.to_string prog)
+          ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
         in
         (GeneralTransition.to_string gt) >:: fun _ -> assert_bool error_string (bounds lower_bound expsize)
       )

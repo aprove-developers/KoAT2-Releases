@@ -14,6 +14,8 @@ type t =
   | ProbabilityLessOne
   | InvariantGeneration [@@deriving ord, eq]
 
+val generate_invariants : Program.t -> Program.t
+
 val show : t -> string
 
 val all : t list

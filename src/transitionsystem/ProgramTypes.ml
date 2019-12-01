@@ -19,6 +19,9 @@ module LocationSet =
     let to_string =
       Util.enum_to_string Location.to_string % enum
 
+    let powerset set =
+      let combine (result: t Enum.t) (l: Location.t) = Enum.append result (Enum.map (fun ys -> add l ys) (Enum.clone result)) in
+      Enum.fold combine (Enum.singleton empty) (enum set)
   end
 
 module Transition =
@@ -69,14 +72,26 @@ module Transition =
 
     let cost t = TransitionLabel.cost (label t)
 
+    let update_cost cvect (l,t,l') = (l,TransitionLabel.update_cost cvect t,l')
     let hash = Hashtbl.hash % id
 
     let to_id_string (l,label,l') =
       TransitionLabel.to_id_string label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
 
-    let to_string (l,t,l') =
-      let probability = if (TransitionLabel.probability t) = (1. |> OurFloat.of_float) then "" else "p:"^(OurFloat.to_string (TransitionLabel.probability t))^":"
-      and cost = if (Polynomials.Polynomial.is_one (TransitionLabel.cost t)) then "->" else "-{"^(Polynomials.Polynomial.to_string (TransitionLabel.cost t))^"}>" in
+    let to_string ~show_gtcost:bool (l,t,l') =
+      let probability =
+        if (TransitionLabel.probability t) = (1. |> OurFloat.of_float) then
+          ""
+        else
+          "p:"^(OurFloat.to_string (TransitionLabel.probability t))^":"
+      in
+      let cost =
+        match (Polynomials.Polynomial.is_one (TransitionLabel.cost t)), (BoundsInst.RealBound.is_one (TransitionLabel.gtcost t)) with
+        | (true , true) -> "->"
+        | (false, true) -> "-{" ^ (Polynomials.Polynomial.to_string (TransitionLabel.cost t)) ^ ";}>"
+        | (true, false) -> "-{;" ^ (BoundsInst.RealBound.show ~complexity:false (TransitionLabel.gtcost t)) ^ "}>"
+        | (false, false) -> "-{" ^ (Polynomials.Polynomial.to_string (TransitionLabel.cost t)) ^ "; " ^ (BoundsInst.RealBound.show ~complexity:false (TransitionLabel.gtcost t)) ^ "}>"
+      in
       String.concat "" [(Location.to_string l); TransitionLabel.(update_to_string_lhs t); probability ; cost ; (Location.to_string l') ; TransitionLabel.(update_to_string_rhs t) ;" :|: " ;TransitionLabel.(guard_to_string t)]
 
     let rename vars (l,t,l') =

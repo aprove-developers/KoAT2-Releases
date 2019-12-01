@@ -16,6 +16,7 @@ module LocationSet :
 sig
   include module type of Set.Make(Location)
   val to_string: t -> string
+  val powerset: t -> t Batteries.Enum.t
 end
 
 module Transition :
@@ -25,9 +26,10 @@ sig
   val equivalent : t -> t -> bool
   val compare_same : t -> t -> int
   val compare_equivalent : t -> t -> int
+  val update_cost: (Polynomial.t * BoundsInst.RealBound.t) -> t -> t
   val hash : t -> int
   val to_id_string : t -> string
-  val to_string : t -> string
+  val to_string : show_gtcost:bool -> t -> string
   val src : t -> Location.t
   val label : t -> TransitionLabel.t
   val target : t -> Location.t

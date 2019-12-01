@@ -5,7 +5,7 @@ open Helper
 open ProgramTypes
 open RVGTypes
 
-module RV = Make_RV(Transition)
+module RV = RVG.RV
 
 let suite =
   "Graphs" >::: [

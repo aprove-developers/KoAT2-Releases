@@ -15,7 +15,7 @@ let transform_program program =
   else
     let remove transition program =
       Logger.(log logger INFO (fun () -> "cut_zero_prob_transitions",
-        ["transition",Transition.to_string transition]));
+        ["transition",Transition.to_string ~show_gtcost:false transition]));
       Program.remove_transition program transition
     in
     MaybeChanged.changed (TransitionSet.fold remove trans_prob_0 program)

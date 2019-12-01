@@ -3,6 +3,7 @@ open Batteries
 type logger =
   | Approximation
   | Bound
+  | BottomUp
   | ELSB
   | ExactRuntime
   | ExpSize
@@ -15,14 +16,30 @@ type logger =
   | Size
   | Time
 
-let loggers = [Approximation; Size; ExpSize; ELSB; Time; ExpTime; PRF; Bound;
-               LocalSizeBound; Preprocessor; LexRSM; MeteringRSM; ExactRuntime]
+let loggers =
+  [
+    Approximation;
+    BottomUp;
+    Bound;
+    ELSB;
+    ExactRuntime;
+    ExpSize;
+    ExpTime;
+    LexRSM;
+    LocalSizeBound;
+    MeteringRSM;
+    PRF;
+    Preprocessor;
+    Size;
+    Time;
+  ]
 
 let all = loggers
 
 let show_logger = function
   | Approximation  -> "appr"
   | Bound          -> "bound"
+  | BottomUp       -> "bottomUp"
   | ELSB           -> "elsb"
   | ExactRuntime   -> "exactruntime"
   | ExpSize        -> "expSize"

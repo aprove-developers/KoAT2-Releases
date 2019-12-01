@@ -38,6 +38,9 @@ let lift_nonprob_timebounds program appr =
           let timebound = get_gt_timebound gt in
           Approximation.add_exptimebound (RealBound.of_intbound timebound) gt appr
           |> Approximation.add_timebound_gt timebound gt
+          |> Approximation.add_expcostbound
+              RealBound.(of_intbound timebound * appr_substition_abs_all (BoundsHelper.nonprob_incoming_size program appr gt) (GeneralTransition.cost gt))
+              gt
        )
        gtset
        appr
@@ -74,7 +77,14 @@ let rec find_exp_bounds_ cache ervg sccs (program: Program.t) (appr: Approximati
   |> MaybeChanged.if_changed (find_exp_bounds_ cache ervg sccs program)
   |> MaybeChanged.unpack
 
-let find_exp_bounds (cache: CacheManager.t) (program: Program.t) (appr: Approximation.t): Approximation.t =
+(* add costbounds of 0 for all general transitions with cost 0 *)
+let add_trivial_expcostbounds program appr =
+  Program.generalized_transitions program
+  |> GeneralTransitionSet.enum
+  |> Enum.filter (RealBound.equal RealBound.zero % GeneralTransition.cost)
+  |> Enum.fold (flip (Approximation.add_expcostbound RealBound.zero)) appr
+
+let rec find_exp_bounds ~generate_invariants (use_bottom_up: bool) (cache: CacheManager.t) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
   let ervg = ERVG.rvg (CacheManager.elsb_cache cache) program in
   let sccs =
     let module C = Graph.Components.Make(ERVG) in
@@ -84,7 +94,31 @@ let find_exp_bounds (cache: CacheManager.t) (program: Program.t) (appr: Approxim
   appr
   |> TrivialTimeBounds.compute program
   |> TrivialTimeBounds.compute_generaltransitions program
+  |> add_trivial_expcostbounds program
   |> find_bounds_ cache program
   |> lift_nonprob_timebounds program
   |> lift_nonprob_sizebounds program
   |> find_exp_bounds_ cache ervg sccs program
+  (* Now apply bottom-up if there is an SCC without an expected cost bound *)
+  |> fun appr ->
+    if use_bottom_up then
+      continue_with_bottom_up ~generate_invariants:generate_invariants (CacheManager.trans_id_counter cache) program appr
+    else
+      (program, appr)
+
+and continue_with_bottom_up ~generate_invariants trans_id_counter program appr =
+  let logger        = Logging.(get BottomUp) in
+  let new_cache     = CacheManager.new_cache_with_counter trans_id_counter () in
+  let bottom_up_res =
+    BottomUpHelper.perform_bottom_up
+      ~generate_invariants:generate_invariants
+      ~find_exp_bounds:(find_exp_bounds ~generate_invariants:generate_invariants false)
+      (CacheManager.trans_id_counter new_cache)
+      program appr
+  in
+
+  Option.map_default
+    (fun (new_prog, new_appr) ->
+      Logger.log logger Logger.DEBUG (fun () -> "continue recursively", ["new_prog", Program.to_string ~show_gtcost:true new_prog]);
+      find_exp_bounds ~generate_invariants:generate_invariants true new_cache new_prog new_appr)
+    (program,appr) bottom_up_res

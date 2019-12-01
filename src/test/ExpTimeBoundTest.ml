@@ -14,11 +14,11 @@ let tests =
         let prog = Readers.read_file (CacheManager.trans_id_counter cache) ("../../" ^ prog_path) in
         let gtset = Program.generalized_transitions prog in
         let gt = GeneralTransitionSet.any @@ GeneralTransitionSet.filter ((=) gt_id % GeneralTransition.id) gtset in
-        let approx = Approximation.create prog |> Bounds.find_exp_bounds cache prog in
+        let approx = Approximation.create prog |> Bounds.find_exp_bounds ~generate_invariants:Preprocessor.generate_invariants true cache prog |> Tuple2.second in
         let exptime = Approximation.exptimebound approx gt in
         let error_str =
             "Mismatch: Expected " ^ (RealBound.to_string lower_bound) ^ " got " ^ (RealBound.to_string exptime)
-            ^ " for gt " ^ (GeneralTransition.to_id_string gt) ^ " in prog\n" ^ (Program.to_string prog)
+            ^ " for gt " ^ (GeneralTransition.to_id_string gt) ^ " in prog\n" ^ (Program.to_string ~show_gtcost:true prog)
         in
         name >:: (fun _ -> assert_bool error_str (bounds lower_bound exptime) )
       )

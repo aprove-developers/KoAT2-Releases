@@ -23,7 +23,7 @@ let tests =
                        |> (fun graph -> TransitionGraph.find_all_edges graph (Location.of_string l) (Location.of_string l'))
                        |> List.exists (fun (l,t,l') -> SMT.Z3Opt.tautology (Formula.Infix.(Formula.mk (TransitionLabel.guard t) => Readers.read_formula invariant)))
                      in
-                     assert_bool (String.concat " " [invariant; "was not generated for a transition from location"; l; "to"; l'; "in a result program"; Program.to_simple_string result_program; "program_str"; program_str]) fulfiled))
+                     assert_bool (String.concat " " [invariant; "was not generated for a transition from location"; l; "to"; l'; "in a result program"; Program.to_simple_string ~show_gtcost:false result_program; "program_str"; program_str]) fulfiled))
                   [
                     (* Simple propagation to next transition *)
                     ("b", "c", "x > 0",

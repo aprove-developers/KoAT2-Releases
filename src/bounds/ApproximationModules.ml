@@ -1,8 +1,8 @@
 open Batteries
 open ProgramTypes
 
-module RV = RVGTypes.Make_RV(Transition)
-module ERV = RVGTypes.Make_RV(RVTransitions.TransitionForExpectedSize)
+module RV = RVGTypes.RVG.RV
+module ERV = ERVG.RV
 
 module TransitionApproximation = TransitionApproximationType.Make_TransitionApproximation(OurInt)(Polynomials.Polynomial)
                                                                                          (struct
@@ -36,7 +36,7 @@ module SizeApproximation =
                                                 let target_string =
                                                   Location.to_string % Transition.target
                                                end)
-                                              (RVGTypes.Make_RV (Transition))
+                                              (RVGTypes.RVG.RV)
 
 
 module ExpectedSizeApproximation =

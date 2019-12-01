@@ -7,7 +7,7 @@ open RVTransitions
 
 module RV = RVGTypes.Make_RV (TransitionForExpectedSize)
 
-module NPRV = RVGTypes.Make_RV (Transition)
+module NPRV = RVGTypes.RVG.RV
 
 module IntValuation = Valuation.Make (OurInt)
 module Valuation = Valuation.Make (OurFloat)

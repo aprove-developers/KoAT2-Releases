@@ -89,13 +89,7 @@ let compute_bounds (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t)
       |> RealBound.appr_substition_abs_all inc_det_sizebound
     in
 
-    let incoming_expected_time =
-      incoming_enum |> Enum.clone
-      |> Enum.map (Approximation.exptimebound appr % Tuple2.first)
-      |> RealBound.sum
-    in
-
-    let cost = mul_inctime_and_rhs (incoming_expected_time,substituted_cost) in
+    let cost = mul_inctime_and_rhs (time,substituted_cost) in
 
     (time, cost)
 

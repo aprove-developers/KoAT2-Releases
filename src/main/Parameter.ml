@@ -4,8 +4,8 @@ open ProgramTypes
 open RVGTypes
 
 
-module RV = Make_RV(Transition)
-module ERV = Make_RV(RVTransitions.TransitionForExpectedSize)
+module RV = RVGTypes.RVG.RV
+module ERV = ERVG.RV
 
 
 (** Prints the whole resulting approximation with the expected timebounds to the shell. *)
@@ -99,6 +99,9 @@ type params = {
 
     rename : bool; [@default false]
     (** If the location names should be normalized to simplified names. *)
+
+    bottom_up : bool; [@default false]
+    (** If the bottom-up approach should be used in probabilistic analysis*)
 
   } [@@deriving cmdliner]
 

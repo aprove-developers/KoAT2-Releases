@@ -181,6 +181,10 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Neg b -> b
       | b     -> b
 
+    let is_one = function
+      | Const k -> Num.equal k Num.one
+      | _       -> false
+
     let is_linear_in_var var bound =
       let maybeOrder =
         fold

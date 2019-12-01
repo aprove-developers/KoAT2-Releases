@@ -50,7 +50,10 @@ module Make_RV (Trans :
 
 module RVG =
   struct
-    module RV = Make_RV(Transition)
+    module RV = Make_RV(struct
+                          include Transition
+                          let to_string = to_string ~show_gtcost:false
+                        end)
 
     include Graph.Persistent.Digraph.ConcreteBidirectional(struct
                 include RV

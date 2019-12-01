@@ -28,7 +28,17 @@ let compute_generaltransitions program appr =
     scc_number l1 = scc_number l2
   in
   let one_bounded_gts =
-  TransitionGraph.generalized_transitions graph
-  |> GeneralTransitionSet.filter (fun gt -> GeneralTransition.targets gt |> LocationSet.for_all (not % same_scc (GeneralTransition.start gt)))
+    TransitionGraph.generalized_transitions graph
+    |> GeneralTransitionSet.filter (fun gt -> GeneralTransition.targets gt |> LocationSet.for_all (not % same_scc (GeneralTransition.start gt)))
   in
+
   GeneralTransitionSet.fold (fun gt appr -> Approximation.add_timebound_gt Bound.one gt (Approximation.add_exptimebound RealBound.one gt appr)) one_bounded_gts appr
+  (* add corresponding costbounds *)
+  |> GeneralTransitionSet.fold
+      (
+        fun gt ->
+          Approximation.add_expcostbound
+            (RealBound.appr_substition_abs_all (BoundsHelper.nonprob_incoming_size program appr gt) (GeneralTransition.cost gt))
+            gt
+      )
+      one_bounded_gts

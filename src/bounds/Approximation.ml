@@ -167,7 +167,7 @@ let to_string program expected appr=
       else
         IO.nwrite output "MAYBE\n\n";
     IO.nwrite output "Initial Complexity Problem:\n";
-    IO.nwrite output (Program.to_string program^"\n");
+    IO.nwrite output (Program.to_string ~show_gtcost:expected program^"\n");
     IO.nwrite output "Timebounds: \n";
     IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
     appr.time |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
@@ -181,6 +181,7 @@ let to_string program expected appr=
     IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
     appr.cost |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
     if expected then
+      IO.nwrite output "\nExpected Costbounds:\n";
       IO.nwrite output ("  Overall expected costbound: " ^ RealBound.to_string (program_expcostbound appr program) ^ "\n");
       appr.expcost |> GeneralTransitionApproximation.to_string (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output;
     IO.nwrite output "\nSizebounds:\n";

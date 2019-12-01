@@ -65,6 +65,8 @@ val same : t -> t -> bool
 (** Returns true iff the two labels belong to the same general transition *)
 val same_gt : t -> t -> bool
 
+val update_cost : (Polynomial.t * RealBound.t) -> t -> t
+
 (** Returns if the two labels describe the same transition *)
 val equivalent : t -> t -> bool
 

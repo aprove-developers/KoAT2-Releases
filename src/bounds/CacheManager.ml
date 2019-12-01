@@ -21,12 +21,14 @@ let metring_cache t = t.metering_cache
 
 let lrsm_cache t = t.lrsm_cache
 
-let new_cache = fun () ->
+let new_cache_with_counter trans_id_counter = fun () ->
     {
       lsb_cache = LocalSizeBound.new_cache ();
       elsb_cache = ExpLocalSizeBound.new_cache ();
-      trans_id_counter = TransitionLabel.new_trans_id_counter ();
+      trans_id_counter;
       ranking_cache = RankingFunction.new_cache ();
       metering_cache = MeteringRSM.new_cache ();
       lrsm_cache = LexRSM.new_cache ();
     }
+
+let new_cache = fun () -> new_cache_with_counter (TransitionLabel.new_trans_id_counter ()) ()

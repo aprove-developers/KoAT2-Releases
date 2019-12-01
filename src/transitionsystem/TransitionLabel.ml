@@ -104,6 +104,8 @@ let make_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~up
     guard_without_invariants = guard; invariants = Guard.mk_true;
   }
 
+let update_cost cvect t = {t with cost = Tuple2.first cvect; gtcost = Tuple2.second cvect}
+
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
 

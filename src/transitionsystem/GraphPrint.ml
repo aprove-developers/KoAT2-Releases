@@ -2,7 +2,7 @@ open Batteries
 open ProgramTypes
 open RVGTypes
 
-module RV = Make_RV(Transition)
+module RV = RVG.RV
 module ERV = Make_RV(RVTransitions.TransitionForExpectedSize)
 
 let print_graph out_dir name graph output_graph =

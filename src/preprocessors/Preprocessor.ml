@@ -13,6 +13,9 @@ type t =
   | ProbabilityLessOne
   | InvariantGeneration[@@deriving ord, eq]
 
+let generate_invariants =
+  Tuple2.second % InvariantGeneration.transform_program
+
 let show = function
   | CutUnreachableLocations -> "reachable"
   | CutUnsatisfiableTransitions -> "sat"

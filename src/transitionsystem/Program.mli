@@ -8,7 +8,7 @@ open ProgramTypes
 
 type t
 
-val add_locations : Location.t Enum.t -> TransitionGraph.t -> TransitionGraph.t
+val add_locations : Location.t Enum.t -> t -> t
 
 val add_transitions : Transition.t Enum.t -> TransitionGraph.t -> TransitionGraph.t
 
@@ -51,9 +51,9 @@ val is_initial_location : t -> Location.t -> bool
 
 val equivalent : t -> t -> bool
 
-val to_string : t -> string
+val to_string : show_gtcost:bool -> t -> string
 
-val to_simple_string : t -> string
+val to_simple_string : show_gtcost:bool -> t -> string
 
 val vars : t -> VarSet.t
 
@@ -68,6 +68,10 @@ val locations : Transition.t Enum.t -> Location.t Enum.t
 val start : t -> Location.t
 
 val sccs : t -> TransitionSet.t Enum.t
+
+(**  Similar to sccs but returns all sccs not only the biggest sccs. I.e. the powerset of every element of [sccs prog] is it self a
+     a subset of [all_sccs prog] *)
+val all_sccs : t -> TransitionSet.t Enum.t
 
 (** Returns all transitions, that belong to an SCC. *)
 val non_trivial_transitions : t -> TransitionSet.t

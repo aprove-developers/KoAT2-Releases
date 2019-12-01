@@ -52,6 +52,8 @@ module Make_BoundOver :
 
       val is_infinity : t -> bool
 
+      val is_one : t -> bool
+
       val is_minus_infinity : t -> bool
 
       val to_string : t -> string

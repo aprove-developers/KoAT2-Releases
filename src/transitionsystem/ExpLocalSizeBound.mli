@@ -7,7 +7,7 @@ type elsb_cache
 val new_cache: unit -> elsb_cache
 
 module RV : sig include module type of Make_RV (RVTransitions.TransitionForExpectedSize) end
-module NPRV : sig include module type of Make_RV (Transition) end
+module NPRV : sig include module type of RVGTypes.RVG.RV end
 
 (* This computes the variables occuring in an expected update. Note that
    var program rv = var(elsb(rv) + v) where v is the variable of rv.
