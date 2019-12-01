@@ -263,6 +263,13 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | (Const c1, Const c2) when Num.Compare.(c1 > c2) -> Some true
           | (Abs b, Const c) when (Num.Compare.(c < Num.zero) || opt_bool_to_bool (b>(Const c))
                                                               || opt_bool_to_bool ((Neg (Const c))>b)) -> Some true
+
+          | (Sum (b1,b2), b3) when (b1 > b3 = Some true && b2 >= b3 = Some true) -> Some true
+          | (Sum (b1,b2), b3) when (b2 > b3 = Some true && b1 >= b3 = Some true) -> Some true
+
+          | (Max (b1,b2), b3) when (b1 > b3 = Some true || b2 > b3 = Some true) -> Some true
+          | (Min (b1,b2), b3) when (b1 > b3 = Some true && b2 > b3 = Some true) -> Some true
+
           | (b, Const z1) when Num.(equal z1 zero) -> (
             match b with
             | Max (b, _) when b > (Const Num.zero) |? false -> Some true
@@ -286,7 +293,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                       ~result:(Util.option_to_string Bool.to_string)
                       execute
 
-    let rec (>=) b1 b2 =
+    and (>=) b1 b2 =
       let execute () =
         let helper =
           if equal b1 b2 then
@@ -531,8 +538,16 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             let chain = List.concat % List.map (get_op_chain `Product % avoid_neg) @@ get_op_chain `Product b1 @ get_op_chain `Product b2 in
             if List.exists (fun b -> is_infinity b || is_minus_infinity b) chain then
               chain
-              |> List.filter (not % is_infinity)
-              |> List.map (fun b -> if is_minus_infinity b then Const (Num.(neg one)) else b)
+              |> List.enum
+              |> Enum.filter (not % is_infinity)
+              |> Enum.map
+                  (fun b ->
+                    match (b < Const Num.zero, b > Const Num.zero)  with
+                    | (Some true, _) -> Const (Num.(neg one))
+                    | (_, Some true) -> Const (Num.one)
+                    | _              -> b
+                  )
+              |> List.of_enum
               |> fun l -> List.cons Infinity l
             else
               chain
