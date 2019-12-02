@@ -80,9 +80,7 @@ type params = {
 
   } [@@deriving cmdliner]
 
-
-(* ----------------------------------- *)
-
+(* 
 (*Add this to separate file*) 
 module DjikstraTransitionGraph = Graph.Path.Dijkstra(TransitionGraph)(TransitionGraphWeight(OurInt))
 
@@ -124,12 +122,9 @@ let minimalDisjointSCCs (origin_sccs: ProgramTypes.TransitionSet.t list) =
 
 let counter = ref 0 
 
-(* TODO add parallel edges and add edge l1 -> l2 *)
 let apply_cfr ?(degree = 5) ?(mrf = false) (program: Program.t) (appr: Approximation.t) = 
   let initial_location = Program.start program in
   let minimalDisjointSCCs = minimalDisjointSCCs (minimalSCCs program) in
-    SetOfTransitionSets.iter (fun scc -> Printf.printf "%s\n------------------------------------------------\n" (TransitionSet.to_string scc)) minimalDisjointSCCs;
-    Printf.printf "%s\n" (Program.to_string program);
     minimalDisjointSCCs
     |> SetOfTransitionSets.iter (fun scc ->  
       let scc_list = TransitionSet.to_list scc in
@@ -141,9 +136,7 @@ let apply_cfr ?(degree = 5) ?(mrf = false) (program: Program.t) (appr: Approxima
         ignore ("./tmp/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
           |> MainUtil.read_input ~rename:false false 
           |> Option.map (fun program_scc -> (program_scc, Approximation.create program_scc)));
-        counter := !counter + 1)
-
-(* ----------------------------------- *)
+        counter := !counter + 1) *)
 
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
   String.concat "" ["Timebound: ";
@@ -221,14 +214,16 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
+  (* TODO remove this 
   let input_cfr =
   if (false) then
     (ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat dot --output-destination ./tmp --file " ^ (Option.get params.input)));
     ("./tmp/" ^ input_filename ^ "_cfr1.koat"))
   else
     input
-  in 
-  input_cfr
+  in  
+  input_cfr*)
+  input
   |> MainUtil.read_input ~rename:params.rename params.simple_input 
   |> rename_program_option
   |> Option.map (fun program ->
@@ -245,12 +240,11 @@ let run (params: params) =
               )
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
-                     (program, appr)
-                     |> uncurry Bounds.find_bounds
+                     Bounds.find_bounds ~degree:(params.degree) ~mrf:(params.multiphaserankingfunctions) ~cfr:(params.cfr) program appr
                      |> fun appr -> (program, appr)
                    else (program, appr))
-         |> tap (fun (program, appr) -> if params.cfr then
-                              ignore (apply_cfr ~degree:(params.degree) ~mrf:(params.multiphaserankingfunctions) program appr))
+         (* |> tap (fun (program, appr) -> if params.cfr then
+                              ignore (apply_cfr ~degree:(params.degree) ~mrf:(params.multiphaserankingfunctions) program appr)) *)
          |> tap (fun (program, appr) -> params.result program appr)
          |> tap (fun (program, appr) ->
                 if params.print_system then
@@ -263,4 +257,5 @@ let run (params: params) =
               )
        )
       |> ignore;
-    (* ignore (Sys.command ("rm -f -r ./tmp")) *)
+    if params.log_level == NONE then
+      ignore (Sys.command ("rm -f -r ./tmp"))

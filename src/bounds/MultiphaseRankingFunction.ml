@@ -111,7 +111,7 @@ let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location
   in
   for i = !numberOfGeneratedTemplates to degree - 1 do
     Logger.with_log logger Logger.DEBUG
-      (fun () -> "compute_ranking_templates_" ^ string_of_int i, [])
+      (fun () -> "compute_mrf_templates_" ^ string_of_int i, [])
       ~result:(fun () ->
           (List.nth !template_tables i)
           |> TemplateTable.enum
@@ -237,7 +237,7 @@ let try_decreasing degree (opt: Solver.t) (non_increasing: Transition.t Stack.t)
           |> Option.may (fun ranking_function ->
               to_be_found := !to_be_found - 1;
               RankingTable.add (ranking_table measure) decreasing ranking_function;
-              Logger.(log logger INFO (fun () -> "add_ranking_function", [
+              Logger.(log logger INFO (fun () -> "add_mrf", [
                   "measure", show_measure measure;
                   "decreasing", Transition.to_id_string decreasing;
                   "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
@@ -289,7 +289,7 @@ let compute_ measure program =
            scc
            |> TransitionSet.iter (fun t ->
                   if not (RankingTable.mem (ranking_table measure) t) then
-                    Logger.(log logger WARN (fun () -> "no_ranking_function", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
+                    Logger.(log logger WARN (fun () -> "no_mrf", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
                 ) 
          with Exit -> ()
         )
@@ -306,7 +306,7 @@ let find measure program transition =
     |> List.rev
   in
   Logger.with_log logger Logger.DEBUG
-    (fun () -> "find_ranking_functions", ["measure", show_measure measure;
+    (fun () -> "find_mrfs", ["measure", show_measure measure;
                                           "transition", Transition.to_id_string transition])
     ~result:(Util.enum_to_string to_string % List.enum)
     execute
