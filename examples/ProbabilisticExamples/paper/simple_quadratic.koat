@@ -2,7 +2,7 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR X Y)
 (RULES
-  f(X,Y) -> g(X,Y) :|: X>0
+  f(X,Y) -> g(X,Y)
   g(X,Y) -> 0.5:g(X-1,Y+X) :+: 0.5:g(X,Y+X) :|: X>0
   g(X,Y) -> h(0,Y) :|: X=0
   h(X,Y) -> h(X,Y-1) :|: Y>0
