@@ -195,20 +195,3 @@ let improve ?(mrf = false) ?(cfr = false) measure program appr  =
     |> fold_until (fun updated_appr scc -> improve_scc ~mrf:mrf ~cfr:cfr scc measure program (MaybeChanged.unpack updated_appr)) 
                   (fun updated_appr -> MaybeChanged.has_changed updated_appr) 
                   (MaybeChanged.return appr)
-(* 
-let improve ?(mrf = false) ?(cfr = false) measure program appr =
-  let execute () =
-    program
-    |> Program.non_trivial_transitions
-    |> TransitionSet.filter (fun t -> not (bounded measure appr t))
-    |> TransitionSet.enum
-    |> MaybeChanged.fold_enum (fun appr transition ->
-           RankingFunction.find measure program transition
-           |> List.enum
-           |> MaybeChanged.fold_enum (fun appr rank ->
-                  improve_with_rank measure program appr rank
-                ) appr           
-         ) appr
-  in Logger.with_log logger Logger.INFO
-                     (fun () -> "improve_bounds", ["measure", show_measure measure])
-                     execute *)

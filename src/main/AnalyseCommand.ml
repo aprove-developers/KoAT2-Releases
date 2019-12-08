@@ -1,6 +1,7 @@
 open Batteries
 open ProgramTypes
 open RVGTypes
+open Readers
 
 let command = "analyse"
 
@@ -134,7 +135,7 @@ let apply_cfr ?(degree = 5) ?(mrf = false) (program: Program.t) (appr: Approxima
         Program.to_file scc_program ("./tmp/tmp_scc" ^ (string_of_int !counter));
         ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp/tmp --file ./tmp/tmp_scc" ^ (string_of_int !counter) ^ ".koat"));
         ignore ("./tmp/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
-          |> MainUtil.read_input ~rename:false false 
+          |> Readers.read_input ~rename:false false 
           |> Option.map (fun program_scc -> (program_scc, Approximation.create program_scc)));
         counter := !counter + 1) *)
 
@@ -224,7 +225,7 @@ let run (params: params) =
   in  
   input_cfr*)
   input
-  |> MainUtil.read_input ~rename:params.rename params.simple_input 
+  |> Readers.read_input ~rename:params.rename params.simple_input 
   |> rename_program_option
   |> Option.map (fun program ->
          (program, Approximation.create program)

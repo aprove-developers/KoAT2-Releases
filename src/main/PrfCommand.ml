@@ -1,5 +1,6 @@
 open Batteries
 open ProgramTypes
+open Readers
    
 let description = "Search for a linear ranking function"
 
@@ -19,7 +20,7 @@ type params = {
 let run (params: params) =
   Logging.(use_loggers [PRF, Logger.DEBUG]);
   params.input
-  |> MainUtil.read_input params.simple_input
+  |> Readers.read_input params.simple_input
   |> Option.may (fun program ->
          Approximation.create program
          |> TrivialTimeBounds.compute program
