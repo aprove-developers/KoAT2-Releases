@@ -148,10 +148,9 @@ let bounded measure appr transition =
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> false
 
-let improve  ?(mrf = false) ?(cfr = false) measure program appr  =
+let improve_scc ?(mrf = false) ?(cfr = false) (scc: TransitionSet.t)  measure program appr =
   let execute () =
-    program
-    |> Program.non_trivial_transitions
+    scc
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
     |> TransitionSet.enum
     |> MaybeChanged.fold_enum (
@@ -170,19 +169,46 @@ let improve  ?(mrf = false) ?(cfr = false) measure program appr  =
                   improve_with_rank measure program appr rank
              ) appr)
          ) appr 
-    in ignore(Logger.with_log logger Logger.INFO
+      in if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then (
+        ignore(Logger.with_log logger Logger.INFO
+            (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc ;"measure", show_measure measure])
+            execute);
+            CFR.apply_cfr program;
+            nonLinearTransitions := TransitionSet.empty;
+            Logger.with_log logger Logger.INFO
+              (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
+              execute)
+        else (Logger.with_log logger Logger.INFO
+            (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
+            execute)
+
+(* Stops if we something has changed (and we compute new sizebounds)*)
+let rec fold_until f p pre = function
+    | x :: xs when p pre -> pre
+    | x :: xs -> fold_until f p (f pre x) xs
+    | [] -> pre
+
+let improve ?(mrf = false) ?(cfr = false) measure program appr  =
+  program
+    |> Program.sccs
+    |> List.of_enum 
+    |> fold_until (fun updated_appr scc -> improve_scc ~mrf:mrf ~cfr:cfr scc measure program (MaybeChanged.unpack updated_appr)) 
+                  (fun updated_appr -> MaybeChanged.has_changed updated_appr) 
+                  (MaybeChanged.return appr)
+(* 
+let improve ?(mrf = false) ?(cfr = false) measure program appr =
+  let execute () =
+    program
+    |> Program.non_trivial_transitions
+    |> TransitionSet.filter (fun t -> not (bounded measure appr t))
+    |> TransitionSet.enum
+    |> MaybeChanged.fold_enum (fun appr transition ->
+           RankingFunction.find measure program transition
+           |> List.enum
+           |> MaybeChanged.fold_enum (fun appr rank ->
+                  improve_with_rank measure program appr rank
+                ) appr           
+         ) appr
+  in Logger.with_log logger Logger.INFO
                      (fun () -> "improve_bounds", ["measure", show_measure measure])
-                     execute);
-    if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then (
-      ignore(Logger.with_log logger Logger.INFO
-                     (fun () -> "improve_bounds", ["measure", show_measure measure])
-                     execute);
-      CFR.apply_cfr program;
-      nonLinearTransitions := TransitionSet.empty;
-      execute())
-    else (
-      Logger.with_log logger Logger.INFO
-                     (fun () -> "improve_bounds", ["measure", show_measure measure])
-                     execute
-    )
-        
+                     execute *)
