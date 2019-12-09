@@ -3,6 +3,8 @@ open OUnit2
 open Helper
 open BoundsInst
 
+type comperator = [`GT | `GE]
+
 let tests =
   "Bound" >::: [
 
@@ -170,6 +172,52 @@ let tests =
 
             (false, "x", "x^2");
             (true,  "y", "x^2");
-          ]
+          ];
+
+          "comparison" >:::
+            List.map
+              (
+                fun (b1,cmp,b2,expres) ->
+                  let op_bool_eq = curry @@ function
+                    | (Some b1, Some b2) -> Bool.equal b1 b2
+                    | (None, None)       -> true
+                    | _                  -> false
+                  in
+                  let print_op_bool = function
+                    | Some b -> "Some " ^ Bool.to_string b
+                    | None   -> "None"
+                  in
+                  let cmp_function = match cmp with
+                    | `GT -> Bound.(>)
+                    | `GE -> Bound.(>=)
+                  in
+                  let cmp_string = match cmp with
+                    | `GT -> ">"
+                    | `GE -> ">="
+                  in
+                  let res = cmp_function (Readers.read_bound b1) (Readers.read_bound b2) in
+                  let descr = b1 ^ " " ^ cmp_string ^ " " ^ b2 in
+                  let error_string =
+                    descr ^ " Expected: " ^ print_op_bool expres ^ " got: " ^ print_op_bool res
+                  in
+
+                  descr >:: (fun _ -> assert_bool error_string (op_bool_eq res expres))
+
+              )
+              [
+                "1", `GT,"0", Some true;
+                "-2 + -2", `GE,"-3", Some false;
+                "|X|", `GT,"0", None;
+                "|X|", `GE,"0", Some true;
+
+                "max{|X|,-1}", `GE, "0", Some true;
+                "max{|X|,-1}", `GT, "0", None;
+                "min{|X|,-1}", `GE, "-1", Some true;
+                "min{|X|,-1}", `GT, "-1", Some false;
+
+                "0", `GT, "min{|X|,-1}", Some true;
+                "0", `GT, "min{|X|,-1}", Some true;
+
+              ]
     ]
 

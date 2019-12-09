@@ -54,10 +54,14 @@ let lift_nonprob_sizebounds program appr =
     in
     transitions
     |> TransitionSet.enum
-    |> Enum.map (fun t kind -> Approximation.sizebound kind appr t v)
-    |> Enum.map Bound.abs_bound
-    |> Bound.maximum
-    |> RealBound.of_intbound
+    |> Enum.map
+        (fun t ->
+          Bound.abs_bound (fun kind -> Approximation.sizebound kind appr t v)
+          |> RealBound.of_intbound
+          |> BoundsHelper.simplify_bound_with_smt Logging.(get ExpSize)
+              (Transition.label t |> TransitionLabel.guard |> Constraints.RealConstraint.of_intconstraint |> Formulas.RealFormula.mk)
+       )
+    |> RealBound.maximum
     |> fun b -> RealBound.(b * (of_constant @@ TransitionSet.total_probability transitions))
   in
 

@@ -188,5 +188,5 @@ let to_string program expected appr=
     appr.size |> SizeApproximation.to_string |> IO.nwrite output;
     if expected then
       (IO.nwrite output "\nExpSizebounds:\n";
-      appr.expsize |> ExpectedSizeApproximation.to_string |> IO.nwrite output);
+      appr.expsize |> ExpectedSizeApproximation.to_string ~print_lower:false |> IO.nwrite output);
     IO.close_out output

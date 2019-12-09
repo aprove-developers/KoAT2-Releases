@@ -12,6 +12,7 @@ module Z3Solver :
     val to_string : RealFormula.t -> string
     val bound_gt_zero : RealFormula.t -> RealBound.t -> bool
     val bound_lt_zero : RealFormula.t -> RealBound.t -> bool
+    val cmp_bounds: RealFormula.t -> [`GE | `GT] -> RealBound.t -> RealBound.t -> bool
   end
 
 (** A unified interface for SMT solvers (currently supported: Z3) *)

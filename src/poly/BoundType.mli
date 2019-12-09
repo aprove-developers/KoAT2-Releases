@@ -20,6 +20,14 @@ module Make_BoundOver :
       include PolyTypes.Math with type t := t
       include PolyTypes.PartialOrder with type t := t
 
+      (** This function simplifies bounds under the assumption that every variable can only take non-negative values. This for example allows the simplification of |X| = X *)
+      val simplify_vars_nonnegative : t -> t
+
+      (** This function simplifies bounds using the bound comparison hints given by its first argument*)
+      val simplify_opt_invariants : ([`GE | `GT] -> t -> t -> bool option) -> t -> t
+
+      val simplify_vars_nonnegative : t -> t
+
       (** Following methods are convenience methods for the creation of polynomials. *)
 
       val of_poly : Poly.t -> t
@@ -59,9 +67,6 @@ module Make_BoundOver :
       val to_string : t -> string
 
       val show : ?complexity:bool -> t -> string
-
-      (** Overestimates a bound. At the moment it simplifies terms of the form min/max (a,b) - abs(a) to min/max(0,b)*)
-      val overestimate : t -> t
 
       (** Functions to classify the quality of the bound *)
 

@@ -48,8 +48,8 @@ let from_real_bound context bound =
       ~exp:(fun b -> Option.map (fun e -> Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string b)) e))
       ~max:(liftA2 (fun a b -> Z3.Boolean.mk_ite context (Z3.Arithmetic.mk_gt context a b) a b))
       ~min:(liftA2 (fun a b -> Z3.Boolean.mk_ite context (Z3.Arithmetic.mk_lt context a b) a b))
-      ~abs:(Option.map (fun a -> Z3.Boolean.mk_ite context (Z3.Arithmetic.mk_gt context a 
-                                                             (Z3.Arithmetic.Real.mk_numeral_s context 
+      ~abs:(Option.map (fun a -> Z3.Boolean.mk_ite context (Z3.Arithmetic.mk_gt context a
+                                                             (Z3.Arithmetic.Real.mk_numeral_s context
                                                                 @@ OurFloat.to_string OurFloat.zero))
                          a (Z3.Arithmetic.Real.mk_numeral_s context @@ OurFloat.to_string OurFloat.zero)))
       ~inf:(None)
@@ -117,6 +117,20 @@ module Z3Solver =
       match res with
         | SATISFIABLE -> true
         | UNSATISFIABLE -> false
+        | UNKNOWN -> raise (Failure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
+
+    let cmp_bounds inv comperator b1 b2 =
+      let ctx = (Z3.mk_context [("model", "true"); ("proof", "false")]) in
+      let expr = match comperator with
+        | `GT -> Z3.Arithmetic.mk_le ctx (from_real_bound ctx b1) (from_real_bound ctx b2)
+        | `GE -> Z3.Arithmetic.mk_lt ctx (from_real_bound ctx b1) (from_real_bound ctx b2)
+      in
+      let solver = (Z3.Solver.mk_solver ctx None) in
+      (Z3.Solver.add solver [from_real_formula ctx inv; expr]);
+      let res = Z3.Solver.check solver [] in
+      match res with
+        | SATISFIABLE -> false
+        | UNSATISFIABLE -> true
         | UNKNOWN -> raise (Failure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
 
     let to_string formula =

@@ -21,16 +21,26 @@ let max_detsizebound elsb_cache ((gt,l),var) get_sizebound =
     Here we add all incomin bounds on absolute values *)
 let incoming_bound elsb_cache program get_sizebound_abs get_expsizebound (elsb_with_prob: RealBound.t) (gt,l) =
   let execute () =
+    let l_invariants = Program.invariant l program in
     let substitute_with_prevalues gtset =
       let prevalues_exp var =
         GeneralTransitionSet.to_list gtset
-        |> List.map (fun gt' -> get_expsizebound ((gt',GeneralTransition.start gt),var))
+        |> List.map
+            (fun gt' ->
+              get_expsizebound ((gt',GeneralTransition.start gt),var)
+              |> BoundsHelper.simplify_bound_with_smt logger
+                  Constraints.(Constraint.mk_and l_invariants (GeneralTransition.guard gt') |> RealConstraint.of_intconstraint |> Formulas.RealFormula.mk)
+            )
         |> List.enum
         |> RealBound.sum
       in
       let prevalues var =
         GeneralTransitionSet.to_list gtset
-        |> List.map (fun gt' -> max_detsizebound elsb_cache ((gt', GeneralTransition.start gt), var) get_sizebound_abs)
+        |> List.map (fun gt' ->
+          max_detsizebound elsb_cache ((gt', GeneralTransition.start gt), var) get_sizebound_abs
+          |> BoundsHelper.simplify_bound_with_smt logger
+              Constraints.(Constraint.mk_and l_invariants (GeneralTransition.guard gt') |> RealConstraint.of_intconstraint |> Formulas.RealFormula.mk)
+        )
         |> List.enum |> RealBound.maximum
       in
       (* Propagate expected values if possible *)

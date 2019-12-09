@@ -1,17 +1,17 @@
 open Batteries
 open ProgramTypes
 open RVGTypes
-   
+
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
-module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly : 
+module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
                                  sig
-                                   include PolyTypes.Polynomial with type value = Num.t 
+                                   include PolyTypes.Polynomial with type value = Num.t
                                                                  and type valuation = Valuation.Make(Num).t
                                                                  and type monomial = Monomials.Make(Num).t
                                    val max_of_occurring_constants : t -> Num.t
-                                 end ) 
-                              (Trans : 
+                                 end )
+                              (Trans :
                                  sig
                                    type t
                                    val same: t -> t -> bool
@@ -19,54 +19,54 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
                                    val target_string: t -> string
                                    val to_id_string: t -> string
                                    val compare_same: t -> t -> int
-                                 end) 
+                                 end)
                               (RV :
                                  sig
                                    type t = Trans.t * Var.t
                                    val to_id_string: t -> string
-                                 end)= 
+                                 end)=
   struct
     module B = BoundType.Make_BoundOver (Num) (Poly)
-    let logger = Logging.(get Approximation) 
-    
+    let logger = Logging.(get Approximation)
+
     module Map =
       Hashtbl.Make(
           struct
             type t = kind * Trans.t * Var.t
-                   
+
             let equal (kind1, t1, v1) (kind2, t2, v2) =
               equal_kind kind1 kind2
               && Trans.same t1 t2
               && Var.equal v1 v2
-              
+
             let hash (kind, t, v) =
               Hashtbl.hash (show_kind kind
                             ^ Location.to_string (Trans.src t) ^ Trans.target_string t
                             ^ Var.to_string v)
           end
         )
-      
+
     type t = B.t Map.t
-    
+
     let empty = Map.create
-              
+
     (* Returns the operator to combine two bounds with the best result. *)
     let combine_bounds = function
       | `Lower -> B.max
       | `Upper -> B.min
-                
+
     let get kind map transition var =
       let execute () =
         Map.find_option map (kind, transition, var)
         |? match kind with
            | `Lower -> B.minus_infinity
-           | `Upper -> B.infinity       
+           | `Upper -> B.infinity
       in Logger.with_log logger Logger.DEBUG
                          (fun () -> "sizebound", ["kind", show_kind kind;
                                                   "rv", RV.to_id_string (transition, var)])
                          ~result:B.to_string
                          execute
-    
+
     let add kind bound transition var map =
       let is_trivial = function
         | `Lower -> B.is_minus_infinity
@@ -85,7 +85,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
               (fun () -> "add_size_bound", ["kind", show_kind kind; "rv", RV.to_id_string (transition, var); "bound", B.to_string bound])
         ));
       map
-    
+
     let add_all kind bound scc map =
       List.iter (fun (t,v) -> ignore (add kind bound t v map)) scc;
       map
@@ -93,8 +93,8 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
     let add_all_abs bound scc map =
       List.iter (fun (t,v) -> ignore (add `Lower (B.neg bound) t v map); ignore (add `Upper bound t v map)) scc;
       map
-    
-    let print_all_of_kind output kind size =
+
+    let print_all_of_kind ~show_kind_in_header output kind size =
       size
       |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
       |> Map.to_list
@@ -105,18 +105,18 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
                Var.compare v1 v2
            )
       |> List.print
-           ~first:(show_kind kind ^ ":\n  ")
+           ~first:(if show_kind_in_header then "  " else show_kind kind ^ ":\n  ")
            ~last:"\n"
            ~sep:"\n  "
            (fun output ((_, transition, var), bound) -> IO.nwrite output (Trans.to_id_string transition ^ ", " ^ Var.to_string var ^ ": " ^ B.to_string bound))
            output
-      
-    let to_string size =
+
+    let to_string ?(print_lower=true) size =
       let output = IO.output_string () in
-      print_all_of_kind output `Lower size;
-      print_all_of_kind output `Upper size;
+      if print_lower then print_all_of_kind ~show_kind_in_header:(not print_lower) output `Lower size;
+      print_all_of_kind output ~show_kind_in_header:(not print_lower) `Upper size;
       IO.close_out output
-    
+
     (** Very slow equality, only for testing purposes *)
     let equivalent size1 size2 =
       let module Set =
@@ -138,5 +138,5 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
       in
       let to_set time = time |> Map.enum |> Set.of_enum in
       Set.equal (to_set size1) (to_set size2)
-      
+
   end

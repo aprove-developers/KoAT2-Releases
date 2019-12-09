@@ -34,6 +34,8 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
     let appr_substitution_pre_size bound pret =
       RealBound.appr_substition_abs_all
         (RealBound.of_intbound % get_sizebound pret) bound
+        |> BoundsHelper.simplify_bound_with_smt logger
+            (Transition.label pret |> TransitionLabel.guard |> Constraints.RealConstraint.of_intconstraint |> RealFormula.mk)
     in
 
     let var_change_bound =
@@ -47,24 +49,35 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
   in
 
   let loop_effect var =
-    let calc_bound (timebound,sizebound) =
-      if RealBound.is_infinity timebound then
-        if RealBound.(equal zero sizebound) then
-          RealBound.zero
+    let execute = fun () ->
+      let calc_bound (timebound,sizebound) =
+        if RealBound.is_infinity timebound then
+          if RealBound.(equal zero sizebound) then
+            RealBound.zero
+          else
+            RealBound.infinity
         else
-          RealBound.infinity
-      else
-        RealBound.(timebound * sizebound)
-    in
+          RealBound.(timebound * sizebound)
+      in
 
-    let module TransExpSize = Set.Make2 (GeneralTransition) (Location) in
-    scc
-    |> List.filter (Var.equal var % snd)
-    |> List.map (fun ((gt,l),v) -> (gt,l))
-    |> TransExpSize.Product.of_list
-    |> TransExpSize.Product.enum
-    |> Enum.map (fun (gt,l) -> calc_bound (get_exptimebound gt, result_variable_effect_exp (gt,l) var))
-    |> RealBound.sum
+      let module TransExpSize = Set.Make2 (GeneralTransition) (Location) in
+      scc
+      |> List.filter (Var.equal var % snd)
+      |> List.map (fun ((gt,l),v) -> (gt,l))
+      |> TransExpSize.Product.of_list
+      |> TransExpSize.Product.enum
+      |> Enum.map (fun (gt,l) ->
+          calc_bound (get_exptimebound gt, result_variable_effect_exp (gt,l) var)
+          |> tap (fun eff -> Logger.log logger Logger.DEBUG
+              (fun () -> "rv effect",
+                [ "rv", RV.to_id_string ((gt,l),var);
+                  "tbound", RealBound.to_string (get_exptimebound gt);
+                  "sbound", RealBound.to_string (result_variable_effect_exp (gt,l) var);
+                  "eff", RealBound.to_string eff ]))
+         )
+      |> RealBound.sum
+    in
+    Logger.with_log logger Logger.DEBUG (fun () -> "loop_effect", []) ~result:RealBound.to_string execute
   in
 
   (** Corresponds to the definition of the starting value in the thesis. *)
