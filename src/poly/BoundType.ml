@@ -790,7 +790,14 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       simplify (Abs bound)
 
     let abs_bound get_bound =
-      max (abs @@ get_bound `Lower) (abs @@ get_bound `Upper)
+      let worst_case_estimation = max (abs @@ get_bound `Lower) (abs @@ get_bound `Upper) in
+
+      match (get_bound `Lower >= (Const Num.zero), get_bound `Upper >= (Const Num.zero)) with
+      | (Some true, _) -> abs @@ get_bound `Upper
+      | _ ->
+          match (get_bound `Lower <= zero, get_bound `Upper <= zero) with
+          | (_, Some true) -> abs @@ get_bound `Lower
+          | _                      -> worst_case_estimation
 
     let is_var = function
       | Var _ -> true
