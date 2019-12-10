@@ -14,6 +14,7 @@ OCAMLINCLUDES[] =
     ../constraints
     ../transitionsystem
     ../smt
+    ../parser
 
 OCAML_LIBS[] =
     ../util/util
@@ -21,6 +22,7 @@ OCAML_LIBS[] =
     ../constraints/constraints
     ../transitionsystem/transitionsystem
     ../smt/smt
+    ../parser/parser
 
 # Include all .ml files
 FILES[] = $(removesuffix .ml, $(glob *.ml))

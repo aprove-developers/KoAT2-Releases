@@ -81,7 +81,7 @@ let apply_cfr (program: Program.t) =
         ignore (try Unix.mkdir "tmp" 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
         Program.to_file scc_program ("./tmp/tmp_scc" ^ (string_of_int !counter));
         ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp/tmp --file ./tmp/tmp_scc" ^ (string_of_int !counter) ^ ".koat"));
-        (* ignore ("./tmp/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
+         ignore ("./tmp/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
           |> Readers.read_input ~rename:false false 
-          |> Option.map (fun program_scc -> (program_scc, Approximation.create program_scc))); *)
+          |> Option.map (fun program_scc -> (program_scc, Approximation.create program_scc))); 
         counter := !counter + 1;)
