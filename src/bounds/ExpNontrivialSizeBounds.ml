@@ -34,8 +34,6 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
     let appr_substitution_pre_size bound pret =
       RealBound.appr_substition_abs_all
         (RealBound.of_intbound % get_sizebound pret) bound
-        |> BoundsHelper.simplify_bound_with_smt logger
-            (Transition.label pret |> TransitionLabel.guard |> Constraints.RealConstraint.of_intconstraint |> RealFormula.mk)
     in
 
     let var_change_bound =
