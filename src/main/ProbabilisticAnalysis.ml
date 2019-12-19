@@ -66,8 +66,7 @@ let run (params: params) =
               )
          |> tap (fun (program, appr) ->
                 if params.print_ervg then (
-                  GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Lower ~label:(bounded_rv_to_string (CacheManager.lsb_cache cache) program `Lower appr) ~outdir:output_dir ~file:input_filename program;
-                  GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Upper ~label:(bounded_rv_to_string (CacheManager.lsb_cache cache) program `Upper appr) ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_ervg (CacheManager.elsb_cache cache) ~label:(bounded_erv_to_string (CacheManager.elsb_cache cache) program appr) ~outdir:output_dir ~file:input_filename program;
                 )
               )
        )
