@@ -417,6 +417,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         get_type_chain t' b1 @ get_type_chain t' b2
 
       and construct_chain t' bs =
+        let sorted = List.sort (fun b1 b2 -> String.compare (show_bound b1) (show_bound b2)) bs in
         let default_min_max = function
           | `Max -> Neg Infinity
           | `Min -> Infinity
@@ -425,7 +426,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           List.reduce
             (match t' with
               | `Min -> fun b1 b2 -> Min (b1,b2)
-              | `Max -> fun b1 b2 -> Max (b1,b2)) bs
+              | `Max -> fun b1 b2 -> Max (b1,b2)) sorted
         with Invalid_argument _ -> default_min_max t'
 
       and construct_op_chain t bs =
