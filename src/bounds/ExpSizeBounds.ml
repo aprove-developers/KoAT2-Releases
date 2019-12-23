@@ -17,17 +17,11 @@ let improve_scc elsb_cache program ervg appr = function
      Approximation.add_expsizebound new_bound (gt,l) v appr
 
   | scc ->
-     let module TrExpSize = Set.Make2 (GeneralTransition) (Location) in
-     let scc_vars = scc |> List.map ERV.variable |> VarSet.of_list in
-     let trexpsize = scc |> List.map (fun ((gt,l),_) -> (gt,l)) |> TrExpSize.Product.of_list in
-     let new_bound var = ExpNontrivialSizeBounds.compute elsb_cache program (Approximation.timebound_gt appr) (Approximation.exptimebound appr)
+     let new_bound = ExpNontrivialSizeBounds.compute elsb_cache program (Approximation.timebound_gt appr) (Approximation.exptimebound appr)
                                                                             (fun t v -> Bound.abs_bound @@ fun kind -> Approximation.sizebound kind appr t v)
-                                                                            (Approximation.expsizebound_abs appr) scc var in
-     (* Add all corresponding expected size bounds *)
-     TrExpSize.Product.fold
-      (fun (gt,l) appr' ->
-        VarSet.fold (fun v appr'' -> Approximation.add_expsizebound (new_bound v) (gt,l) v appr'') scc_vars appr')
-      trexpsize appr
+                                                                            (Approximation.expsizebound_abs appr) scc in
+     (* Add all new bound to all general result variables *)
+     Approximation.add_expsizebounds new_bound scc appr
 
 let improve elsb_cache ervg sccs program appr =
   let execute () =

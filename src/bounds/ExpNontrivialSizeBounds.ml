@@ -11,10 +11,12 @@ let logger = Logging.(get ExpSize)
 module RV = ERVG.RV
 module Solver = SMT.IncrementalZ3Solver
 
-let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) v =
+let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) =
   let incoming_transitions =
     ExpBoundsHelper.entry_transitions logger program (List.map (fst % fst) scc)
   in
+
+  let scc_vars = List.unique ~eq:Var.equal @@ List.map RV.variable scc in
 
   let time_check =
     Enum.clone incoming_transitions
@@ -46,7 +48,7 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
     var_change_bound
   in
 
-  let loop_effect var =
+  let loop_effect =
     let execute = fun () ->
       let calc_bound (timebound,sizebound) =
         if RealBound.is_infinity timebound then
@@ -58,19 +60,15 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
           RealBound.(timebound * sizebound)
       in
 
-      let module TransExpSize = Set.Make2 (GeneralTransition) (Location) in
       scc
-      |> List.filter (Var.equal var % snd)
-      |> List.map (fun ((gt,l),v) -> (gt,l))
-      |> TransExpSize.Product.of_list
-      |> TransExpSize.Product.enum
-      |> Enum.map (fun (gt,l) ->
-          calc_bound (get_exptimebound gt, result_variable_effect_exp (gt,l) var)
+      |> List.enum
+      |> Enum.map (fun ((gt,l),v) ->
+          calc_bound (get_exptimebound gt, result_variable_effect_exp (gt,l) v)
           |> tap (fun eff -> Logger.log logger Logger.DEBUG
               (fun () -> "rv effect",
-                [ "rv", RV.to_id_string ((gt,l),var);
+                [ "rv", RV.to_id_string ((gt,l),v);
                   "tbound", RealBound.to_string (get_exptimebound gt);
-                  "sbound", RealBound.to_string (result_variable_effect_exp (gt,l) var);
+                  "sbound", RealBound.to_string (result_variable_effect_exp (gt,l) v);
                   "eff", RealBound.to_string eff ]))
          )
       |> RealBound.sum
@@ -79,24 +77,25 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
   in
 
   (** Corresponds to the definition of the starting value in the thesis. *)
-  let starting_value v =
+  let starting_value =
     incoming_transitions
-    |> Enum.map (fun (gt,l) -> get_expsizebound (gt,l) v)
+    |> (flip Enum.cartesian_product) (List.enum scc_vars)
+    |> Enum.map (fun ((gt,l),v) -> get_expsizebound (gt,l) v)
     |> RealBound.sum
     |> tap (fun starting_value -> Logger.log logger Logger.DEBUG
                                              (fun () -> "starting_value", ["result", RealBound.to_string starting_value]))
   in
 
   if time_check then
-    RealBound.(starting_value v + loop_effect v)
+    RealBound.(starting_value + loop_effect)
   else
     RealBound.infinity
 
 (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
-let compute elsb_cache program get_timebound_gt get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) v =
+let compute elsb_cache program get_timebound_gt get_exptimebound get_sizebound get_expsizebound (scc: RV.t list) =
   let execute () =
-    compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound get_expsizebound scc v
+    compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound get_expsizebound scc
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute_nontrivial_bound", ["scc", ERVG.rvs_to_id_string scc])
                      ~result:RealBound.to_string
