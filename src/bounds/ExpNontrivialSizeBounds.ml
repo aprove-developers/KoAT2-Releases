@@ -79,8 +79,8 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
   (** Corresponds to the definition of the starting value in the thesis. *)
   let starting_value =
     incoming_transitions
-    |> (flip Enum.cartesian_product) (List.enum scc_vars)
-    |> Enum.map (fun ((gt,l),v) -> get_expsizebound (gt,l) v)
+    |> Enum.map (fun (gt,l) -> Enum.map (fun v -> get_expsizebound (gt,l) v) (List.enum scc_vars))
+    |> Enum.map RealBound.maximum
     |> RealBound.sum
     |> tap (fun starting_value -> Logger.log logger Logger.DEBUG
                                              (fun () -> "starting_value", ["result", RealBound.to_string starting_value]))
