@@ -67,4 +67,4 @@ USER koat2
 WORKDIR /home/koat2/examples
 ENV LD_LIBRARY_PATH=/home/koat2/share/apron/lib
 ENV PATH=/home/koat2/app/src/main:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENTRYPOINT ["koat2", "analyse", "-i"]
+ENTRYPOINT ["time", "koat2", "analyse", "-i"]
