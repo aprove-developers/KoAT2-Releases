@@ -57,10 +57,14 @@ RUN apk add libstdc++ mpfr3 libgomp --no-cache
 # Add executables
 COPY --from=koat2_build --chown=koat2:koat2 /home/opam/build/src/main/koat2 app/src/main/koat2
 
+# Add apron lib
+COPY --from=koat2_build --chown=koat2:koat2 /home/opam/.opam/4.07.1+flambda/share/apron/lib share/apron/lib
+
 # Add Probabilistic Examples
 COPY --chown=koat2:koat2 examples/ProbabilisticExamples/paper examples
 
 USER koat2
 WORKDIR /home/koat2/examples
+ENV LD_LIBRARY_PATH=/home/koat2/share/apron/lib
 ENV PATH=/home/koat2/app/src/main:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENTRYPOINT ["koat2", "analyse", "-i"]
