@@ -58,7 +58,7 @@ RUN apk add libstdc++ mpfr3 libgomp --no-cache
 COPY --from=koat2_build --chown=koat2:koat2 /home/opam/build/src/main/koat2 app/src/main/koat2
 
 # Add Probabilistic Examples
-COPY --chown=koat2:koat2 examples/ProbabilisticExamples examples
+COPY --chown=koat2:koat2 examples/ProbabilisticExamples/paper examples
 
 USER koat2
 WORKDIR /home/koat2/examples
