@@ -19,7 +19,7 @@ let max_detsizebound elsb_cache ((gt,l),var) get_sizebound =
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     Here we add all incomin bounds on absolute values *)
-let incoming_bound elsb_cache program get_sizebound_abs get_expsizebound (elsb_with_prob: RealBound.t) (gt,l) =
+let incoming_bound elsb_cache program get_sizebound_abs get_expsizebound (elsb_without_var: RealBound.t) (elsb_with_var: RealBound.t) (gt,l,var) =
   let execute () =
     let substitute_with_prevalues gtset =
       let prevalues_exp var =
@@ -35,19 +35,20 @@ let incoming_bound elsb_cache program get_sizebound_abs get_expsizebound (elsb_w
         |> List.enum |> RealBound.maximum
       in
       (* Propagate expected values if possible *)
-      if ExpLocalSizeBound.bound_is_concave elsb_cache elsb_with_prob then
-        elsb_with_prob
+      if ExpLocalSizeBound.bound_is_concave elsb_cache elsb_without_var then
+        elsb_with_var
         |> RealBound.appr_substition_abs_all (prevalues_exp)
       else
-        elsb_with_prob
+        elsb_without_var
         |> RealBound.appr_substition_abs_all prevalues
+        |> RealBound.add (RealBound.appr_substition_abs_all (prevalues_exp) (RealBound.abs @@ RealBound.of_var var))
     in
     let pre_gts = Program.pre_gt program gt in
     pre_gts
     |> substitute_with_prevalues
 
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute highest incoming bound", ["exp_upd_poly", RealBound.to_string elsb_with_prob;
+                     (fun () -> "compute highest incoming bound", ["exp_upd_poly", RealBound.to_string elsb_with_var;
                                                                    "transition", GeneralTransition.to_string gt])
                   ~result:RealBound.to_string
                   execute
@@ -70,7 +71,7 @@ let compute elsb_cache program get_sizebound (get_expsizebound: (GeneralTransiti
           elsb_cache
           program
           get_sizebound
-          (uncurry get_expsizebound) elsb_plus_var (gt,loc)
+          (uncurry get_expsizebound) elsb elsb_plus_var (gt,loc,var)
     in Logger.with_log logger Logger.DEBUG
                          (fun () -> "compute expected trivial bound",
                                     [ "rv", ERV.to_id_string ((gt,loc),var)
