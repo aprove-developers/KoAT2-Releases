@@ -1,4 +1,5 @@
 open Batteries
+open BoundsInst
 
 module Valuation = Valuation.Make(OurInt)
 
@@ -17,12 +18,8 @@ type params = {
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
-  let module Z3 = SMT.Z3Opt in
-  let solve = match params.solver with
-    | `Z3 -> Z3.get_model
-  and constr = Readers.read_formula params.constr in
-  solve constr
-  |> Option.map (fun solution ->
-         Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n")) (Valuation.bindings solution)
-       )
-  |> fun op -> if Option.is_none op then print_string "unsatisfiable\n"
+  let b =
+    Readers.read_bound "inf * X"
+  in
+  Logging.use_loggers [Logging.Bound, Logger.DEBUG];
+  Printf.printf "Hello World %s\n" (Bound.to_string (Bound.simplify_vars_nonnegative b))

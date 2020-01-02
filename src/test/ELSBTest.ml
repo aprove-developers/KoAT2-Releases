@@ -40,7 +40,7 @@ let tests =
           ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
           ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
         in
-        (GeneralTransition.to_string gt) >:: fun _ -> assert_bool error_string (bounds lower_bound elsb)
+        (GeneralTransition.to_string gt) >:: fun _ -> assert_bool error_string (bounds_pos_vars lower_bound elsb)
       )
       [
         (0, "X", "g", RealBound.zero,

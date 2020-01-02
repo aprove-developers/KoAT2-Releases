@@ -796,12 +796,13 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
     let abs_bound get_bound =
       let worst_case_estimation = max (abs @@ get_bound `Lower) (abs @@ get_bound `Upper) in
 
-      match (get_bound `Lower >= (Const Num.zero), get_bound `Upper >= (Const Num.zero)) with
+      (match (get_bound `Lower >= (Const Num.zero), get_bound `Upper >= (Const Num.zero)) with
       | (Some true, _) -> abs @@ get_bound `Upper
       | _ ->
           match (get_bound `Lower <= zero, get_bound `Upper <= zero) with
           | (_, Some true) -> abs @@ get_bound `Lower
-          | _                      -> worst_case_estimation
+          | _                      -> worst_case_estimation)
+      |> simplify_vars_nonnegative
 
     let is_var = function
       | Var _ -> true
@@ -877,7 +878,8 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Abs b -> abs (appr_substitution kind ~lower ~higher b)
       | Pow (k,b) -> Pow (k, appr_substitution kind ~lower ~higher b)
 
-    let rec appr_substitution_abs_maybe subf = function
+    let rec appr_substitution_abs_maybe subf b =
+      (match b with
       | Infinity         -> Infinity
       | Var v            -> (match subf v with
         | Some b -> b
@@ -891,7 +893,8 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Min (b1,b2)      -> min (appr_substitution_abs_maybe subf b1)
                                 (appr_substitution_abs_maybe subf b2)
       | Abs b            -> abs (appr_substitution_abs_maybe subf b)
-      | Pow (k,b)        -> Pow (k, appr_substitution_abs_maybe subf b)
+      | Pow (k,b)        -> Pow (k, appr_substitution_abs_maybe subf b))
+      |> simplify_vars_nonnegative
 
     let appr_substition_abs_all subf =
       appr_substitution_abs_maybe (Option.Monad.return % subf)

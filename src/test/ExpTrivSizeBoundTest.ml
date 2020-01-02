@@ -41,7 +41,7 @@ let tests =
           ^ " in grv" ^ (RV.to_id_string ((gt,loc),var))
           ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
         in
-        (GeneralTransition.to_string gt) >:: fun _ -> assert_bool error_string (bounds lower_bound expsize)
+        (GeneralTransition.to_string gt) >:: fun _ -> assert_bool error_string (bounds_pos_vars lower_bound expsize)
       )
       [
         (0, "X", "g", RealBound.(abs varx),

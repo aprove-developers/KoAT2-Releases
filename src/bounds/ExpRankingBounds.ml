@@ -69,7 +69,7 @@ let compute_bounds (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t)
       |> List.of_enum
     in
 
-    let time = get_best_bound entry_locations (Enum.clone incoming_enum) appr rank in
+    let time = get_best_bound entry_locations (Enum.clone incoming_enum) appr rank |> RealBound.simplify_vars_nonnegative in
 
     let entry_ts =
       incoming_enum |> Enum.clone
@@ -89,7 +89,7 @@ let compute_bounds (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t)
       |> RealBound.appr_substition_abs_all inc_det_sizebound
     in
 
-    let cost = mul_inctime_and_rhs (time,substituted_cost) in
+    let cost = mul_inctime_and_rhs (time,substituted_cost) |> RealBound.simplify_vars_nonnegative in
 
     (time, cost)
 

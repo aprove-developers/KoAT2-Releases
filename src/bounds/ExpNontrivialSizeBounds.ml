@@ -57,7 +57,13 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
           else
             RealBound.infinity
         else
-          RealBound.(timebound * sizebound)
+          if RealBound.is_infinity sizebound then
+            if RealBound.(equal zero timebound) then
+              RealBound.zero
+            else
+              RealBound.infinity
+          else
+            RealBound.(timebound * sizebound)
       in
 
       scc
@@ -88,6 +94,7 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
 
   if time_check then
     RealBound.(starting_value + loop_effect)
+    |> RealBound.simplify_vars_nonnegative
   else
     RealBound.infinity
 
