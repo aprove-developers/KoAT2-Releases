@@ -30,6 +30,7 @@ let lift_nonprob_timebounds program appr =
     |> TransitionSet.enum
     |> Enum.map (Approximation.timebound appr)
     |> Bound.sum
+    |> Bound.simplify_vars_nonnegative
   in
 
   Program.generalized_transitions program
@@ -39,7 +40,8 @@ let lift_nonprob_timebounds program appr =
           Approximation.add_exptimebound (RealBound.of_intbound timebound) gt appr
           |> Approximation.add_timebound_gt timebound gt
           |> Approximation.add_expcostbound
-              RealBound.(of_intbound timebound * appr_substition_abs_all (BoundsHelper.nonprob_incoming_size program appr gt) (GeneralTransition.cost gt))
+              ( RealBound.(of_intbound timebound * appr_substition_abs_all (BoundsHelper.nonprob_incoming_size program appr gt) (GeneralTransition.cost gt))
+              |> RealBound.simplify_vars_nonnegative)
               gt
        )
        gtset
@@ -61,6 +63,7 @@ let lift_nonprob_sizebounds program appr =
        )
     |> RealBound.maximum
     |> fun b -> RealBound.(b * (of_constant @@ TransitionSet.total_probability transitions))
+    |> RealBound.simplify_vars_nonnegative
   in
 
   Program.generalized_transitions program

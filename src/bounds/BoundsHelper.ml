@@ -62,7 +62,6 @@ let simplify_bound_with_smt logger invariants b =
       b
     else
       RealBound.simplify_opt_invariants helper b)
-    |> RealBound.substitute_f RealBound.(abs % of_var)
   in
   Logger.with_log logger Logger.DEBUG
     (fun () -> "simplify_bound_with_smt", ["invariants", Formulas.RealFormula.to_string invariants;"bound", RealBound.to_string b])

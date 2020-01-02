@@ -288,6 +288,7 @@ let elsb_ program (((gt, l), v): RV.t): RealBound.t =
     |> Enum.map ( fun (p,up) -> p, RealPolynomial.((up - (of_var v))) )
     |> Enum.map (fun (p,poly) -> p, simplify_poly_with_guard (GeneralTransition.guard gt) poly)
     |> Enum.map RealBound.(fun (p,poly) -> of_constant p * abs (of_poly poly))
+    |> Enum.map RealBound.simplify_vars_nonnegative
     |> RealBound.sum
     |> substitute_nondet_var
         (Program.input_vars program)

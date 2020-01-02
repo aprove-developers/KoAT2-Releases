@@ -41,11 +41,12 @@ let incoming_bound elsb_cache program get_sizebound_abs get_expsizebound (elsb_w
       else
         elsb_without_var
         |> RealBound.appr_substition_abs_all prevalues
-        |> RealBound.add (RealBound.appr_substition_abs_all (prevalues_exp) (RealBound.abs @@ RealBound.of_var var))
+        |> RealBound.add (RealBound.appr_substition_abs_all (prevalues_exp) (RealBound.of_var var))
     in
     let pre_gts = Program.pre_gt program gt in
     pre_gts
     |> substitute_with_prevalues
+    |> RealBound.simplify_vars_nonnegative
 
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute highest incoming bound", ["exp_upd_poly", RealBound.to_string elsb_with_var;
@@ -62,7 +63,7 @@ let compute elsb_cache program get_sizebound (get_expsizebound: (GeneralTransiti
     RealBound.infinity
   else
     let elsb          = ExpLocalSizeBound.elsb elsb_cache program ((gt,loc),var) in
-    let elsb_plus_var = RealBound.(elsb + abs (of_var var)) in
+    let elsb_plus_var = RealBound.(elsb + of_var var) in
     let execute () =
       if Program.is_initial_gt program gt then
         elsb_plus_var
