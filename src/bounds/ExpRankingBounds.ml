@@ -98,25 +98,25 @@ let compute_bounds (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t)
                      ~result:(fun (time,cost) -> "time: "^RealBound.to_string time^" cost: "^RealBound.to_string cost)
                      execute
 
-let improve_with_rank program appr (rank: LexRSM.t) =
+let improve_with_rank add_exptimebound add_expcostbound program appr (rank: LexRSM.t) =
   let (time,cost) = compute_bounds appr program rank in
   (if RealBound.is_infinity time then
      MaybeChanged.same appr
    else
-     MaybeChanged.changed (Approximation.add_exptimebound time (LexRSM.decreasing rank) appr)
+     MaybeChanged.changed (add_exptimebound time (LexRSM.decreasing rank) appr)
   )
   |> (fun mca ->
         if RealBound.is_infinity cost then
           mca
         else
-          MaybeChanged.(mca >>= (changed % Approximation.add_expcostbound cost (LexRSM.decreasing rank)))
+          MaybeChanged.(mca >>= (changed % add_expcostbound cost (LexRSM.decreasing rank)))
      )
 
 (** Checks if a transition is bounded *)
 let exp_bounded appr transition =
   Approximation.is_exptime_bounded appr transition
 
-let improve cache program appr =
+let improve add_exptimebound add_expcostbound cache program appr =
   program
   |> Program.non_trivial_transitions
   |> GeneralTransitionSet.of_transitionset
@@ -125,6 +125,6 @@ let improve cache program appr =
   |> MaybeChanged.fold_enum (fun appr gt ->
          LexRSM.find cache program gt
          |> Option.map_default (fun rank ->
-              improve_with_rank program appr rank
+              improve_with_rank add_exptimebound add_expcostbound program appr rank
             ) (MaybeChanged.return appr)
        ) appr

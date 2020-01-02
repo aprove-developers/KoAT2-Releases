@@ -37,11 +37,11 @@ module Make_SizeApproximation :
 
     val get : kind -> t -> Trans.t -> Var.t -> B.t
 
-    val add : kind -> B.t -> Trans.t -> Var.t -> t -> t
+    val add : ?simplifyfunc:(B.t -> B.t) -> kind -> B.t -> Trans.t -> Var.t -> t -> t
 
-    val add_all : kind -> B.t -> RV.t list -> t -> t
+    val add_all : ?simplifyfunc:(B.t -> B.t) -> kind -> B.t -> RV.t list -> t -> t
 
-    val add_all_abs : B.t -> RV.t list -> t -> t
+    val add_all_abs : ?simplifyfunc:(B.t -> B.t) -> B.t -> RV.t list -> t -> t
 
     val to_string : ?print_lower:bool -> t -> string
 

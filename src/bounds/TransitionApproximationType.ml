@@ -2,29 +2,29 @@ open Batteries
 open ProgramTypes
 
 module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
-                                    (Poly : 
+                                    (Poly :
                                        sig
-                                         include PolyTypes.Polynomial with type value = Num.t 
+                                         include PolyTypes.Polynomial with type value = Num.t
                                                                        and type valuation = Valuation.Make(Num).t
                                                                        and type monomial = Monomials.Make(Num).t
                                          val max_of_occurring_constants : t -> Num.t
-                                       end ) 
-                                    (Trans : 
+                                       end )
+                                    (Trans :
                                        sig
                                          type t
                                          val id: t -> int
                                          val to_id_string: t -> string
                                          val compare_same: t -> t -> int
                                          val fold_transset: (t -> 'a -> 'a) -> TransitionSet.t -> 'a -> 'a
-                                       end) = 
+                                       end) =
   struct
     module B = BoundType.Make_BoundOver (Num) (Poly)
-    let logger = Logging.(get Approximation) 
+    let logger = Logging.(get Approximation)
 
     type t = string * (int, B.t) Hashtbl.t
-           
+
     let empty name size = (name, Hashtbl.create size)
-    
+
     let get_id (name,map) id =
       let execute () =
         Hashtbl.find_option map id |? B.infinity
@@ -32,28 +32,28 @@ module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
                          (fun () -> name ^ "bound", ["transition", string_of_int id])
                          ~result:B.to_string
                          execute
-                        
+
     let get (name,map) transition =
       get_id (name,map) (Trans.id transition)
-    
+
     let sum appr program =
       Trans.fold_transset (fun transition result -> B.(get appr transition + result)) (Program.transitions program) B.zero
-    
+
     let sum_available (name,map) =
       Hashtbl.fold (fun transition bound result -> B.(bound + result)) map B.zero
-      
-    let add bound transition (name,map) =
+
+    let add ?(simplifyfunc=identity) bound transition (name,map) =
       (try
-         Hashtbl.modify (Trans.id transition) (B.min bound) map
+         Hashtbl.modify (Trans.id transition) (simplifyfunc % B.min bound) map
        with
-       | Not_found -> Hashtbl.add map (Trans.id transition) bound);
+       | Not_found -> Hashtbl.add map (Trans.id transition) (simplifyfunc bound));
       Logger.log logger Logger.INFO
         (fun () -> "add_" ^ name ^ "_bound", ["transition", Trans.to_id_string transition; "bound", B.to_string bound]);
       (name, map)
-    
+
     let all_bounded appr =
       List.for_all (fun t -> not (B.equal (get appr t) B.infinity))
-      
+
     let to_string transitions (name,map) =
       let output = IO.output_string () in
       transitions
@@ -64,9 +64,9 @@ module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
            ~last:"\n"
            ~sep:"\n  "
            (fun output (t,b) -> IO.nwrite output (Trans.to_id_string t ^ ": " ^ B.to_string b))
-           output;  
+           output;
       IO.close_out output
-    
+
     (** Very slow equality, only for testing purposes *)
     let equivalent (name1,map1) (name2,map2) =
       let module Set =

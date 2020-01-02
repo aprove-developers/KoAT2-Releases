@@ -24,7 +24,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
                                  sig
                                    type t = Trans.t * Var.t
                                    val to_id_string: t -> string
-                                 end)=
+                                 end) =
   struct
     module B = BoundType.Make_BoundOver (Num) (Poly)
     let logger = Logging.(get Approximation)
@@ -51,9 +51,9 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
     let empty = Map.create
 
     (* Returns the operator to combine two bounds with the best result. *)
-    let combine_bounds = function
-      | `Lower -> B.max
-      | `Upper -> B.min
+    let combine_bounds ?(simplifyfunc = identity) kind b1 b2 = match kind with
+      | `Lower -> simplifyfunc (B.max b1 b2)
+      | `Upper -> simplifyfunc (B.min b1 b2)
 
     let get kind map transition var =
       let execute () =
@@ -67,7 +67,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
                          ~result:B.to_string
                          execute
 
-    let add kind bound transition var map =
+    let add ?(simplifyfunc=identity) kind bound transition var map =
       let is_trivial = function
         | `Lower -> B.is_minus_infinity
         | `Upper -> B.is_infinity
@@ -75,23 +75,23 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
       (* We do not want to log trivial size bounds *)
       if not (is_trivial kind bound) then
         ( try
-            Map.modify (kind, transition, var) (combine_bounds kind bound) map;
+            Map.modify (kind, transition, var) (combine_bounds ~simplifyfunc:simplifyfunc kind bound) map;
             Logger.log logger Logger.DEBUG
               (fun () -> "modified_size_bound", ["kind", show_kind kind; "rv", RV.to_id_string (transition, var); "bound", B.to_string bound])
           with
           | Not_found -> (
-            Map.add map (kind, transition, var) bound;
+            Map.add map (kind, transition, var) (simplifyfunc bound);
             Logger.log logger Logger.INFO
               (fun () -> "add_size_bound", ["kind", show_kind kind; "rv", RV.to_id_string (transition, var); "bound", B.to_string bound])
         ));
       map
 
-    let add_all kind bound scc map =
-      List.iter (fun (t,v) -> ignore (add kind bound t v map)) scc;
+    let add_all ?(simplifyfunc=identity) kind bound scc map =
+      List.iter (fun (t,v) -> ignore (add ~simplifyfunc:simplifyfunc kind bound t v map)) scc;
       map
 
-    let add_all_abs bound scc map =
-      List.iter (fun (t,v) -> ignore (add `Lower (B.neg bound) t v map); ignore (add `Upper bound t v map)) scc;
+    let add_all_abs ?(simplifyfunc=identity) bound scc map =
+      List.iter (fun (t,v) -> ignore (add ~simplifyfunc:simplifyfunc `Lower (B.zero) t v map); ignore (add ~simplifyfunc:simplifyfunc `Upper bound t v map)) scc;
       map
 
     let print_all_of_kind ~show_kind_in_header output kind size =

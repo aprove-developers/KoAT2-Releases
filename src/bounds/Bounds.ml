@@ -24,7 +24,7 @@ let find_bounds (cache: CacheManager.t) (program: Program.t) (appr: Approximatio
   |> CostBounds.infer_from_timebounds program
 
 (* lifts nonprobabilistic timebounds to expected time bounds for general transitions *)
-let lift_nonprob_timebounds program appr =
+let lift_nonprob_timebounds simplify_smt program appr =
   let get_gt_timebound gt =
     GeneralTransition.transitions gt
     |> TransitionSet.enum
@@ -37,9 +37,9 @@ let lift_nonprob_timebounds program appr =
   |> fun gtset -> GeneralTransitionSet.fold
        (fun gt appr ->
           let timebound = get_gt_timebound gt in
-          Approximation.add_exptimebound (RealBound.of_intbound timebound) gt appr
+          Approximation.add_exptimebound simplify_smt (RealBound.of_intbound timebound) gt appr
           |> Approximation.add_timebound_gt timebound gt
-          |> Approximation.add_expcostbound
+          |> Approximation.add_expcostbound simplify_smt
               ( RealBound.(of_intbound timebound * appr_substition_abs_all (BoundsHelper.nonprob_incoming_size program appr gt) (GeneralTransition.cost gt))
               |> RealBound.simplify_vars_nonnegative)
               gt
@@ -48,7 +48,7 @@ let lift_nonprob_timebounds program appr =
        appr
 
 (* lifts nonprobabilistic sizebounds of result variables to expected size bounds for the corresponding expected result variables.*)
-let lift_nonprob_sizebounds program appr =
+let lift_nonprob_sizebounds simplify_smt program appr =
   let get_gtl_sizebound ((gt,l),v) =
     let transitions =
       GeneralTransition.transitions gt
@@ -73,13 +73,13 @@ let lift_nonprob_sizebounds program appr =
   |> List.map (flip List.cartesian_product (Program.vars program |> VarSet.to_list) % List.singleton)
   |> List.flatten
   |> List.fold_left
-       (fun appr ((gt,l),var) -> Approximation.add_expsizebound (get_gtl_sizebound ((gt,l),var)) (gt,l) var appr)
+       (fun appr ((gt,l),var) -> Approximation.add_expsizebound simplify_smt (get_gtl_sizebound ((gt,l),var)) (gt,l) var appr)
        appr
 
-let rec find_exp_bounds_ cache ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
-  ExpSizeBounds.improve (CacheManager.elsb_cache cache) ervg sccs program appr
-  |> ExpRankingBounds.improve (CacheManager.lrsm_cache cache) program
-  |> MaybeChanged.if_changed (find_exp_bounds_ cache ervg sccs program)
+let rec find_exp_bounds_ simplify_smt cache ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
+  ExpSizeBounds.improve simplify_smt (CacheManager.elsb_cache cache) ervg sccs program appr
+  |> ExpRankingBounds.improve (Approximation.add_exptimebound simplify_smt) (Approximation.add_expcostbound simplify_smt) (CacheManager.lrsm_cache cache) program
+  |> MaybeChanged.if_changed (find_exp_bounds_ simplify_smt cache ervg sccs program)
   |> MaybeChanged.unpack
 
 (* add costbounds of 0 for all general transitions with cost 0 *)
@@ -87,9 +87,10 @@ let add_trivial_expcostbounds program appr =
   Program.generalized_transitions program
   |> GeneralTransitionSet.enum
   |> Enum.filter (RealBound.equal RealBound.zero % GeneralTransition.cost)
-  |> Enum.fold (flip (Approximation.add_expcostbound RealBound.zero)) appr
+  |> Enum.fold (flip (Approximation.add_expcostbound false RealBound.zero)) appr
 
-let rec find_exp_bounds ~generate_invariants (use_bottom_up: bool) (cache: CacheManager.t) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
+let rec find_exp_bounds simplify_smt ~generate_invariants_bottom_up (use_bottom_up: bool) (cache: CacheManager.t)
+(program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
   let ervg = ERVG.rvg (CacheManager.elsb_cache cache) program in
   let sccs =
     let module C = Graph.Components.Make(ERVG) in
@@ -101,23 +102,23 @@ let rec find_exp_bounds ~generate_invariants (use_bottom_up: bool) (cache: Cache
   |> TrivialTimeBounds.compute_generaltransitions program
   |> add_trivial_expcostbounds program
   |> find_bounds_ cache program
-  |> lift_nonprob_timebounds program
-  |> lift_nonprob_sizebounds program
-  |> find_exp_bounds_ cache ervg sccs program
+  |> lift_nonprob_timebounds simplify_smt program
+  |> lift_nonprob_sizebounds simplify_smt program
+  |> find_exp_bounds_ simplify_smt cache ervg sccs program
   (* Now apply bottom-up if there is an SCC without an expected cost bound *)
   |> fun appr ->
     if use_bottom_up then
-      continue_with_bottom_up ~generate_invariants:generate_invariants (CacheManager.trans_id_counter cache) program appr
+      continue_with_bottom_up simplify_smt ~generate_invariants_bottom_up:generate_invariants_bottom_up (CacheManager.trans_id_counter cache) program appr
     else
       (program, appr)
 
-and continue_with_bottom_up ~generate_invariants trans_id_counter program appr =
+and continue_with_bottom_up simplify_smt ~generate_invariants_bottom_up trans_id_counter program appr =
   let logger        = Logging.(get BottomUp) in
   let new_cache     = CacheManager.new_cache_with_counter trans_id_counter () in
   let bottom_up_res =
     BottomUpHelper.perform_bottom_up
-      ~generate_invariants:generate_invariants
-      ~find_exp_bounds:(find_exp_bounds ~generate_invariants:generate_invariants false)
+      ~generate_invariants:generate_invariants_bottom_up
+      ~find_exp_bounds:(find_exp_bounds simplify_smt ~generate_invariants_bottom_up:generate_invariants_bottom_up false)
       (CacheManager.trans_id_counter new_cache)
       program appr
   in
@@ -125,5 +126,5 @@ and continue_with_bottom_up ~generate_invariants trans_id_counter program appr =
   Option.map_default
     (fun (new_prog, new_appr) ->
       Logger.log logger Logger.DEBUG (fun () -> "continue recursively", ["new_prog", Program.to_string ~show_gtcost:true new_prog]);
-      find_exp_bounds ~generate_invariants:generate_invariants true new_cache new_prog new_appr)
+      find_exp_bounds simplify_smt ~generate_invariants_bottom_up:generate_invariants_bottom_up true new_cache new_prog new_appr)
     (program,appr) bottom_up_res

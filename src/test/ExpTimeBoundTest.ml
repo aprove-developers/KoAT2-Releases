@@ -15,7 +15,7 @@ let tests =
           let prog = Readers.read_file (CacheManager.trans_id_counter cache) ("../../" ^ prog_path) in
           let gtset = Program.generalized_transitions prog in
           let gt = GeneralTransitionSet.any @@ GeneralTransitionSet.filter ((=) gt_id % GeneralTransition.id) gtset in
-          let approx = Approximation.create prog |> Bounds.find_exp_bounds ~generate_invariants:Preprocessor.generate_invariants true cache prog |> Tuple2.second in
+          let approx = Approximation.create prog |> Bounds.find_exp_bounds false ~generate_invariants_bottom_up:Preprocessor.generate_invariants true cache prog |> Tuple2.second in
           let exptime = Approximation.exptimebound approx gt in
           let error_str =
               "Mismatch: Expected " ^ (RealBound.to_string lower_bound) ^ " got " ^ (RealBound.to_string exptime)
@@ -42,7 +42,7 @@ let tests =
           let prog = Readers.read_file (CacheManager.trans_id_counter cache) ("../../" ^ prog_path) in
           let gtset = Program.generalized_transitions prog in
           let gt = GeneralTransitionSet.any @@ GeneralTransitionSet.filter ((=) gt_id % GeneralTransition.id) gtset in
-          let approx = Approximation.create prog |> Bounds.find_exp_bounds ~generate_invariants:Preprocessor.generate_invariants true cache prog |> Tuple2.second in
+          let approx = Approximation.create prog |> Bounds.find_exp_bounds false ~generate_invariants_bottom_up:Preprocessor.generate_invariants true cache prog |> Tuple2.second in
           let exptime_compl = Approximation.exptimebound approx gt |> RealBound.asymptotic_complexity in
           let error_str =
               "Mismatch: Expected " ^ (RealBound.show_complexity exp_complexity) ^ " got " ^ (RealBound.show_complexity exptime_compl)

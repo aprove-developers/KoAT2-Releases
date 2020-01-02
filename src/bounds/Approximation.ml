@@ -65,16 +65,25 @@ let expsizebound_abs appr trans v =
 let add_sizebound kind bound transition var appr =
   { appr with size = SizeApproximation.add kind bound transition var appr.size }
 
-let add_expsizebound bound (gt,l) var appr =
+let add_expsizebound simplify_smt bound (gt,l) var appr =
   { appr with expsize =
-      ExpectedSizeApproximation.add `Lower (RealBound.neg bound) (gt,l) var appr.expsize
-      |> ExpectedSizeApproximation.add `Upper bound (gt,l) var }
+      ExpectedSizeApproximation.add `Lower (RealBound.zero) (gt,l) var appr.expsize
+      |> (fun appr -> if simplify_smt then
+           ExpectedSizeApproximation.add ~simplifyfunc:(SimplifySMT.simplify_bound_with_smt_all_positive logger) `Upper bound (gt,l) var appr
+         else
+           ExpectedSizeApproximation.add `Upper bound (gt,l) var appr )
+         }
 
 let add_sizebounds kind bound scc appr =
   { appr with size = SizeApproximation.add_all kind bound scc appr.size }
 
-let add_expsizebounds bound scc appr =
-  { appr with expsize = ExpectedSizeApproximation.add_all_abs bound scc appr.expsize }
+let add_expsizebounds simplify_smt bound scc appr =
+  { appr with expsize =
+      if simplify_smt then
+        ExpectedSizeApproximation.add_all_abs ~simplifyfunc:(SimplifySMT.simplify_bound_with_smt_all_positive logger) bound scc appr.expsize
+      else
+        ExpectedSizeApproximation.add_all_abs bound scc appr.expsize
+  }
 
 (** Timebound related methods *)
 
@@ -113,14 +122,19 @@ let add_timebound_gt bound gt appr =
   { appr with time_gt = GeneralTransitionNonProbApproximation.add replaced_bound gt appr.exptime } *)
   { appr with time_gt = GeneralTransitionNonProbApproximation.add bound gt appr.time_gt }
 
-let add_exptimebound bound gt appr =
+let add_exptimebound simplify_smt bound gt appr =
 (*   (* TODO: Correct? Union on both sides? *)
   let temp_vars = VarSet.diff (GeneralTransition.vars gt) (GeneralTransition.input_vars gt) in
   let l = GeneralTransition.start gt in
   let temp_bound kind var = if (VarSet.mem var temp_vars) then expsizebound kind appr (gt,l) var else RealBound.of_var var in
   let replaced_bound = RealBound.appr_substition_abs_all (fun v -> RealBound.abs_bound @@ fun k -> temp_bound k v) bound in
   { appr with exptime = GeneralTransitionApproximation.add replaced_bound gt appr.exptime } *)
-  { appr with exptime = GeneralTransitionApproximation.add bound gt appr.exptime }
+  { appr with exptime =
+      if simplify_smt then
+        GeneralTransitionApproximation.add ~simplifyfunc:(SimplifySMT.simplify_bound_with_smt_all_positive logger) bound gt appr.exptime
+      else
+        GeneralTransitionApproximation.add bound gt appr.exptime
+  }
 
 
 let all_times_bounded =
@@ -149,8 +163,13 @@ let program_expcostbound =
 let add_costbound bound transition appr =
   { appr with cost = TransitionApproximation.add bound transition appr.cost }
 
-let add_expcostbound bound gt appr =
-  { appr with expcost = GeneralTransitionApproximation.add bound gt appr.expcost}
+let add_expcostbound simplify_smt bound gt appr =
+  { appr with expcost =
+      if simplify_smt then
+        GeneralTransitionApproximation.add ~simplifyfunc:(SimplifySMT.simplify_bound_with_smt_all_positive logger) bound gt appr.expcost
+      else
+        GeneralTransitionApproximation.add bound gt appr.expcost
+  }
 
 let to_string program expected appr=
   let overall_timebound = program_timebound appr program in

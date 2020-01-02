@@ -66,8 +66,9 @@ val add_timebound : Bound.t -> Transition.t -> t -> t
 val add_timebound_gt : Bound.t -> GeneralTransition.t -> t -> t
 
 (** Adds the information that the specified bound is a valid expected timebound for the given general transition.
-    The resulting approximation is guaranteed to be at least as good as the old approximation. *)
-val add_exptimebound : RealBound.t -> GeneralTransition.t -> t -> t
+    The resulting approximation is guaranteed to be at least as good as the old approximation.
+    The first parameter describes if the bound should be simplified using the SMT Solver*)
+val add_exptimebound : bool -> RealBound.t -> GeneralTransition.t -> t -> t
 
 val all_times_bounded : t -> Transition.t list -> bool
 
@@ -91,7 +92,8 @@ val program_expcostbound : t -> Program.t -> RealBound.t
 
 val add_costbound : Bound.t -> Transition.t -> t -> t
 
-val add_expcostbound : RealBound.t -> GeneralTransition.t -> t -> t
+(** The first parameter describes if the bound should be simplified using the SMT Solver *)
+val add_expcostbound : bool -> RealBound.t -> GeneralTransition.t -> t -> t
 
 
 (** Sizebound related methods *)
@@ -111,7 +113,11 @@ val expsizebound_abs : t -> (GeneralTransition.t * Location.t)-> Var.t -> RealBo
 (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition.
         The resulting approximation is guaranteed to be at least as good as the old approximation. *)
 val add_sizebound : kind -> Bound.t -> Transition.t -> Var.t -> t -> t
-val add_expsizebound : RealBound.t -> GeneralTransition.t * Location.t -> Var.t -> t -> t
+
+(** The first parameter describes if the bound should be simplified using the SMT Solver *)
+val add_expsizebound : bool -> RealBound.t -> GeneralTransition.t * Location.t -> Var.t -> t -> t
 
 val add_sizebounds : kind -> Bound.t -> RV.t list -> t -> t
-val add_expsizebounds : RealBound.t -> ERV.t list -> t -> t
+
+(** The first parameter describes if the bound should be simplified using the SMT Solver *)
+val add_expsizebounds : bool -> RealBound.t -> ERV.t list -> t -> t

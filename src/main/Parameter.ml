@@ -103,6 +103,9 @@ type params = {
     bottom_up : bool; [@default false]
     (** If the bottom-up approach should be used in probabilistic analysis*)
 
+    simplify_prob_smt : bool; [@default false]
+    (** Should the probabilistic bounds be simplified using the SMT Solver *)
+
   } [@@deriving cmdliner]
 
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =

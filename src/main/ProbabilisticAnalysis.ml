@@ -52,7 +52,7 @@ let run (params: params) =
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
                      (program, appr)
-                     |> uncurry (Bounds.find_exp_bounds ~generate_invariants:Preprocessor.generate_invariants params.bottom_up cache)
+                     |> uncurry (Bounds.find_exp_bounds params.simplify_prob_smt ~generate_invariants_bottom_up:Preprocessor.generate_invariants params.bottom_up cache)
                    else (program, appr))
          |> tap (fun (program, appr) -> result_print program appr)
          |> tap (fun (program, appr) ->

@@ -32,12 +32,12 @@ let compute_generaltransitions program appr =
     |> GeneralTransitionSet.filter (fun gt -> GeneralTransition.targets gt |> LocationSet.for_all (not % same_scc (GeneralTransition.start gt)))
   in
 
-  GeneralTransitionSet.fold (fun gt appr -> Approximation.add_timebound_gt Bound.one gt (Approximation.add_exptimebound RealBound.one gt appr)) one_bounded_gts appr
+  GeneralTransitionSet.fold (fun gt appr -> Approximation.add_timebound_gt Bound.one gt (Approximation.add_exptimebound false RealBound.one gt appr)) one_bounded_gts appr
   (* add corresponding costbounds *)
   |> GeneralTransitionSet.fold
       (
         fun gt ->
-          Approximation.add_expcostbound
+          Approximation.add_expcostbound false
             (RealBound.appr_substition_abs_all (BoundsHelper.nonprob_incoming_size program appr gt) (GeneralTransition.cost gt))
             gt
       )
