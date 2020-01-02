@@ -535,7 +535,10 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                | (b1, b2) -> Sum (b1, b2))
             | b -> b
           in
-          let sum_chain = get_op_chain `Sum b1 @ get_op_chain `Sum b2 in
+          let sum_chain =
+            get_op_chain `Sum b1 @ get_op_chain `Sum b2
+            |> List.filter (not % equal (Const Num.zero))
+          in
           let combine_chain_elements_with_coeffs =
             let get_coeff_elem = function
               | Product (Const c, b) -> (b,c)
