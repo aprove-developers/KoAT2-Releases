@@ -43,83 +43,50 @@ let get_elsb_bound (cache: elsb_cache) = Tuple2.second cache
 *)
 let concave_convex_check_v2_ (comp_operator: concave_convexe_op) bound: bool =
   let module VarMap = Map.Make(Var) in
-  let check_substituted bound_substituted =
-    let vars = RealBound.vars bound_substituted in
-    (* vector a *)
-    let a =
-      VarSet.fold (fun v -> VarMap.add v (Var.fresh_id Var.Real () |> RealPolynomial.of_var))
-        vars VarMap.empty
-    in
-    let b =
-      VarSet.fold (fun v -> VarMap.add v (Var.fresh_id Var.Real () |> RealPolynomial.of_var))
-        vars VarMap.empty
-    in
-    let lambda = Var.fresh_id Var.Real () |> RealPolynomial.of_var in
-    let lefthand =
-      RealBound.substitute_f
-        (fun v ->
-          let vara = VarMap.find v a in
-          let varb = VarMap.find v b in
-          RealPolynomial.( lambda * vara + (one-lambda) * varb) |> RealBound.of_poly)
-        bound_substituted
-    in
-    let righthand =
-      RealBound.(
-        (lambda |> RealBound.of_poly) * (RealBound.substitute_f (RealBound.of_poly % flip VarMap.find a) bound_substituted) +
-        (RealPolynomial.(one - lambda) |> RealBound.of_poly) * (RealBound.substitute_f (RealBound.of_poly % flip VarMap.find b) bound_substituted)
-      )
-    in
-    let constr =
-      RealFormula.Infix.(lambda <= RealPolynomial.one && lambda>=RealPolynomial.zero)
-      (* add constraints that require a,b => 0*)
-      |> VarMap.fold (fun _ poly -> RealFormula.mk_and (RealFormula.Infix.(poly >= RealPolynomial.zero))) a
-      |> VarMap.fold (fun _ poly -> RealFormula.mk_and (RealFormula.Infix.(poly >= RealPolynomial.zero))) b
-    in
-    (* find contra *)
-    let bound' = RealBound.(lefthand - righthand) in
-    let res =
-      try
-        match comp_operator with
-        | Convexe ->
-            SolverNonOpt.bound_gt_zero constr bound'
-        | Concave ->
-            SolverNonOpt.bound_lt_zero constr bound'
-      with
-        Failure _ -> false
-    in
-    Bool.neg res
-  in
-
   let vars = RealBound.vars bound in
-  let new_vars = VarSet.fold (fun v -> Map.add v (Var.fresh_id Var.Real ())) vars Map.empty in
-  let bound_with_abs_replaced =
-    RealBound.fold
-      ~const:RealBound.of_constant
-      ~var:RealBound.of_var
-      ~neg:RealBound.neg
-      ~plus:RealBound.add
-      ~times:RealBound.mul
-      ~exp:RealBound.exp
-      ~max:RealBound.max
-      ~min:RealBound.min
-      ~inf:RealBound.infinity
-      ~abs:(
-        fun b ->
-          let ovar = RealBound.get_var b in
-          if Option.is_some ovar then
-            RealBound.of_var (Map.find (Option.get ovar) new_vars)
-          else b
-          )
+  (* vector a *)
+  let a =
+    VarSet.fold (fun v -> VarMap.add v (Var.fresh_id Var.Real () |> RealPolynomial.of_var))
+      vars VarMap.empty
+  in
+  let b =
+    VarSet.fold (fun v -> VarMap.add v (Var.fresh_id Var.Real () |> RealPolynomial.of_var))
+      vars VarMap.empty
+  in
+  let lambda = Var.fresh_id Var.Real () |> RealPolynomial.of_var in
+  let lefthand =
+    RealBound.substitute_f
+      (fun v ->
+        let vara = VarMap.find v a in
+        let varb = VarMap.find v b in
+        RealPolynomial.( lambda * vara + (one-lambda) * varb) |> RealBound.of_poly)
       bound
   in
-  let non_substituted_vars = VarSet.diff (Map.keys new_vars |> VarSet.of_enum) (RealBound.vars bound_with_abs_replaced) in
-  if VarSet.is_empty non_substituted_vars then
-    (Logger.log logger Logger.DEBUG
-      (fun () -> "concave_convexity_check could not substitute all vars",
-        ["bound",RealBound.to_string bound]);
-    false)
-  else
-    check_substituted bound_with_abs_replaced
+  let righthand =
+    RealBound.(
+      (lambda |> RealBound.of_poly) * (RealBound.substitute_f (RealBound.of_poly % flip VarMap.find a) bound) +
+      (RealPolynomial.(one - lambda) |> RealBound.of_poly) * (RealBound.substitute_f (RealBound.of_poly % flip VarMap.find b) bound)
+    )
+  in
+  let constr =
+    RealFormula.Infix.(lambda <= RealPolynomial.one && lambda>=RealPolynomial.zero)
+    (* add constraints that require a,b => 0*)
+    |> VarMap.fold (fun _ poly -> RealFormula.mk_and (RealFormula.Infix.(poly >= RealPolynomial.zero))) a
+    |> VarMap.fold (fun _ poly -> RealFormula.mk_and (RealFormula.Infix.(poly >= RealPolynomial.zero))) b
+  in
+  (* find contra *)
+  let bound' = RealBound.(lefthand - righthand) in
+  let res =
+    try
+      match comp_operator with
+      | Convexe ->
+          SolverNonOpt.bound_gt_zero constr bound'
+      | Concave ->
+          SolverNonOpt.bound_lt_zero constr bound'
+    with
+      Failure _ -> false
+  in
+  Bool.neg res
 
 (* a multivariate polynome f is concave (convexe) iff
  * its hessian matrix is negative semi-definite (positive semi-definite) *)

@@ -202,31 +202,48 @@ let tests =
       )
       [
         ("|A|", Concave);
+        ("A", Concave);
         ("|A|", Convexe);
 
         ("|A| + |B|", Concave);
+        ("A + B", Concave);
         ("|A| + |B|", Convexe);
+        ("A + B", Convexe);
 
         ("|A| + |B| + |C|", Concave);
+        ("A + B + C", Concave);
         ("|A| + |B| + |C|", Convexe);
+        ("A + B + C", Convexe);
 
         ("|A| + |B| + |C| + |D|", Concave);
+        ("A + B + C + D", Concave);
         ("|A| + |B| + |C| + |D|", Convexe);
+        ("A + B + C + D", Convexe);
 
         ("|A| * |B|", None);
+        ("A * B", None);
 
         ("|A| * |B| * |C|", None);
+        ("A * B * C", None);
 
         ("max {1,|A|}", Convexe);
+        ("max {1,A}", Convexe);
         ("min {1,|A|}", Concave);
+        ("min {1,A}", Concave);
 
         ("max {|A|,|B|}", Convexe);
+        ("max {A,B}", Convexe);
         ("min {|A|,|B|}", Concave);
+        ("min {A,B}", Concave);
 
         ("max {1,|A|,|B|}", Convexe);
+        ("max {1,A,B}", Convexe);
         ("min {1,|A|,|B|}", Concave);
+        ("min {1,A,B}", Concave);
 
         ("max {1,|A|,|B|, |A|*|B|}", None);
+        ("max {1,A,B, A*B}", None);
         ("min {1,|A|,|B|, |A|*|B|}", None);
+        ("min {1,A,B, A*B}", None);
       ]
   ]
