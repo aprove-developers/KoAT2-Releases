@@ -245,7 +245,7 @@ polynomial :
 	          { Polynomial.pow v c } ;
 
 dist:
-        |       UNIFORM; LPAR; p1 = polynomial; RPAR; LPAR; p2 = polynomial; RPAR
+        |       UNIFORM; LPAR; p1 = polynomial; COMMA; p2 = polynomial; RPAR
                   { ProbDistribution.Uniform (p1,p2) };
 
 update_element:
