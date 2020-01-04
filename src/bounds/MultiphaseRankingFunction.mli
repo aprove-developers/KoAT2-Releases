@@ -7,8 +7,10 @@ open ProgramTypes
   
 (** Implementation of multiphase ranking function based on Linear Ranking Functions, flag --mrf has to be set to use multiphase ranking function. *)
 
+(** Type of ranking function consisting of a function mapping from locations to lists of polynomials, a decreasing transition, a set of non-increasing transitions and the depth of the ranking function. *)
 type t
 
+(** Type of measurement of ranking function, i.e., cost or time. *)
 type measure = [ `Cost | `Time ] [@@deriving show]
 
 (** Returns a list of polynomials representing a multiphase ranking function. *)

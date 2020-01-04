@@ -331,7 +331,10 @@ module type Polynomial =
     include PartialOrder with type t := t
     include Ring with type t := t
 
+    (** Type of monomial in polynomial *)
     type monomial
+
+    (** Type of scaled monomial in polynomial *)
     type scaled_monomial
                   
     (** {1 {L Following methods are convenience methods for the creation of polynomials.}} *)
@@ -351,20 +354,33 @@ module type Polynomial =
     (** Lifts a constant to a polynomial. *)
     val of_constant : value -> t
 
-
-    
+    (** Lifts a variable to a polynomial. *)
     val var : string -> t
+
+    (** Lifts an integer value to a polynomial. *)
     val value : int -> t
+
+    (** TODO doc *)
     val real_helper : int -> t
+
+    (** TODO doc *)
     val int_helper : int -> t
+
+    (** Lifts a variable to the power of an intger value to a polynomial. *)
     val of_power : Var.t -> int -> t
+
+    (** Lifts a monomial to a polynomial *)
     val of_monomial : monomial -> t
+
+    (** Creates a polynomial from a coefficient list and a corresponding variable list. *)
     val of_coeff_list : value list -> Var.t list -> t
       
     (** {1 {L Following methods return information over the polynomial.}} *)
 
     (** Returns the coefficient of the monomial. *)
     val coeff : monomial -> t -> value
+
+    (** Returns the coefficient of the term where only the given variable occurs. *)
     val coeff_of_var : Var.t -> t -> value
       
     (** Returns the monomials of the polynomial without the empty monomial. *)
@@ -378,8 +394,10 @@ module type Polynomial =
     val scale_coefficients : t -> t
        *)
       
+    (** Returns a string representing the polynomial. *)
     val to_string : t -> string
 
+    (** Returns a string representing polynomial with less special characters. *)
     val to_string_to_file : t -> string
 
       

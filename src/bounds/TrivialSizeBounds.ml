@@ -1,14 +1,19 @@
+(** Modules used to infer size-bounds for trivial components. *)
 open Batteries
 open ProgramTypes
 open RVGTypes
+(** Modules used to infer size-bounds for trivial components. That is an scc which consists only of one result variable without a loop to itself.
+    Corresponds to 'SizeBounds for trivial SCCs'.*)
    
+(** Logger Size *)
 let logger = Logging.(get Size)
 
+(** Kind of size-bound, i.e., lower or upper.*)
 type kind = [ `Lower | `Upper ] [@@deriving show]
            
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
-    S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)) *)
+    S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)). *)
 let incoming_bound kind program get_sizebound lsb t =
   let execute () =
     let substitute_with_prevalues t' = LocalSizeBound.as_substituted_bound (fun kind v -> get_sizebound kind t' v) lsb in

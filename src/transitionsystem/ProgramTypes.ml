@@ -1,3 +1,4 @@
+(** Provides default modules to create locations, transitions and transitionsystems. *)
 open Batteries
 open Constraints
 

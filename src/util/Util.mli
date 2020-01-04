@@ -1,3 +1,4 @@
+(** Util *)
 open Batteries
 
 (** Returns None if one of the optionals evaluates to None.

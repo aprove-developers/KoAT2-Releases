@@ -1,3 +1,4 @@
+(** Provides different implementations of SMT solvers *)
 open Batteries
 open Formulas
 open Polynomials
@@ -7,21 +8,29 @@ open Polynomials
 (** A unified interface for SMT solvers (currently supported: Z3) *)
 module Z3Solver :
 sig
+    (** Checks if there exists a satisfying assignment for a given formula. *)
     val satisfiable : Formula.t -> bool
 
+    (** Checks if there exists no satisfying assignment for a given formula. *)
     val unsatisfiable : Formula.t -> bool
 
+    (** Checks if every assignment is satisfying for a given formula. *)
     val tautology : Formula.t -> bool
       
+    (** Checks if two formulas are equivalent. *)
     val equivalent : Formula.t -> Formula.t -> bool
       
+    (** Returns a model of a formula. TODO doc  ?coeffs_to_minimise: *)
     val get_model : ?coeffs_to_minimise:Var.t list -> Formula.t -> Polynomial.valuation Option.t
     
+    (** Returns true iff the formula implies the positivity of the polynomial. *)
     val check_positivity : Formula.t -> Polynomial.t -> bool
     
+    (** Returns true iff the formula implies the negativity of the polynomial. *)
     val check_negativity : Formula.t -> Polynomial.t -> bool
   end
 
+(** A unified interface for incremental SMT solvers (currently supported: Z3) *)
 module IncrementalZ3Solver :
 sig
   type t

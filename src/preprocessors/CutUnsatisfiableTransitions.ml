@@ -8,6 +8,7 @@ open ProgramTypes
     Note that it only removes the specific transitions. 
     After the transformation the graph might contain unreachable locations, and even locations that are not connected to any transition. *)
 
+(** Logger Preprocessor *)
 let logger = Logging.(get Preprocessor)
    
 (** Returns a set of transistions which have a conflicting guard (e.g. 0 > 0). *)

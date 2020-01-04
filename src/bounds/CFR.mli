@@ -1,5 +1,8 @@
 (** Provides control flow refinement on minimal SCCs containing non-linear transitions. *)
 
+(** Logger CFR *)
+val logger : Batteries.Logger.log
+
 (** Unrolls all transitions listed in nonLinearTransitions.starrt  *)
 val apply_cfr : Program.t -> unit
 

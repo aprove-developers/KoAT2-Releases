@@ -4,6 +4,7 @@ open ProgramTypes
    
 (** This preprocessor cuts all unreachable locations (and all transitions connected to them) from the program. *)
 
+(** Logger Preprocessor *)
 let logger = Logging.(get Preprocessor)
    
 module LocationSet = Set.Make(Location)

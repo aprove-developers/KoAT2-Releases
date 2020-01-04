@@ -1,3 +1,4 @@
+(** Provides a unified interface of the parser and lexer for transition graphs. *)
 open Batteries
    
 (** Provides a unified interface of the parser and lexer for transition graphs.
@@ -7,6 +8,7 @@ open Batteries
 
 exception Error of string
                  
+(** Reads a file associated to the given path and returns a program. *)
 val read_file : string -> Program.t
 
 val read_program : string -> Program.t

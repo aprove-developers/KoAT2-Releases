@@ -1,6 +1,8 @@
-(** Updates all time-bounds and triggers control flow refinement if needed. *)
+(** Performs a single improvement step for a whole program to find better time-bounds. *)
 open Batteries
 open ProgramTypes
+
+(** Performs a single improvement step for a whole program to find better time-bounds and triggers control flow refinement if needed. *)
 
 
 (** Performs a single improvement step to find better timebounds for the approximation and updates the approximation. *)

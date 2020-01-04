@@ -1,10 +1,15 @@
+(** Module provides mapping from variables to other variables. *)
 open Batteries
 
 (** A rename map is a function which maps from a finite set of variables to another finite set of variables *)
 
+(** Type of map. *)
 type t
+
+(** Type of variables. *)
 type var = Var.t
-         
+
+(** Creates a rename map from a two variable association list *)
 val from : (var * var) list -> t
   
 (** Creates a rename map from a two strings (vars) association list *)

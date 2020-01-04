@@ -9,6 +9,7 @@ open PolyTypes
 (** This preprocessor generates invariants for a given program and adds them to the transitions of the program.
     This way more restrictive information is available locally in the transitions. *)
 
+(** Logger Preprocessor *)
 let logger = Logging.(get Preprocessor)
    
 (** A map from program locations to anything. *)

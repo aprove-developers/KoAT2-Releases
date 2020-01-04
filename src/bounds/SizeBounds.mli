@@ -1,6 +1,9 @@
+(** Performs a single improvement step for a whole program to find better size-bounds. *)
+
 open Batteries
 open ProgramTypes
 open RVGTypes
+(** Performs a single improvement step for a whole program to find better size-bounds. *)
    
 (** Performs a single improvement step for a whole program to find better sizebounds for the approximation and updates the approximation. *)
 val improve : Program.t -> Approximation.t -> Approximation.t
