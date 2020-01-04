@@ -1,3 +1,4 @@
+(** Handles shell arguments and computes for a guard and a specified variable a lower/upper local size-bound. *)
 open Batteries
 open Polynomials
 open Formulas

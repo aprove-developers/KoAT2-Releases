@@ -1,8 +1,10 @@
+(** Implementation of local size-bounds. *)
 open Batteries
 open Formulas
 open Polynomials
 open ProgramTypes
-   
+(* TODO doc *)   
+
 (* Concept:
    Incoming part:
    For UPPER bounds the MAXIMUM of all incoming variables leading to the SCC or a constant bound anywhere in the SCC.

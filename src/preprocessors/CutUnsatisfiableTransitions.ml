@@ -1,3 +1,4 @@
+(** Implemenation of a preprocessor which removes all unsatisfiable transitions. *)
 open Batteries
 open Formulas
 open ProgramTypes
@@ -9,13 +10,15 @@ open ProgramTypes
 
 let logger = Logging.(get Preprocessor)
    
+(** Returns a set of transistions which have a conflicting guard (e.g. 0 > 0). *)
 let unsatisfiable_transitions graph : TransitionSet.t =
   let combine (l,t,l') set =
     if SMT.Z3Solver.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then
       TransitionSet.add (l,t,l') set
     else set in
   TransitionGraph.fold_edges_e combine graph TransitionSet.empty
-  
+
+(** Returns program without unsatisfiable transitions. *)
 let transform_program program =
   let unsatisfiable_transitions = unsatisfiable_transitions (Program.graph program) in
   if TransitionSet.is_empty unsatisfiable_transitions then

@@ -1,3 +1,4 @@
+(** Handles shell arguments and computes ranking functions for a program. *)
 open Batteries
 open ProgramTypes
 open Readers

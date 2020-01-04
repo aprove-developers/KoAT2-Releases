@@ -1,3 +1,5 @@
+(** Handles shell arguments and computes a normalform for an input. *)
+
 open Batteries
 open Polynomials
 open Atoms

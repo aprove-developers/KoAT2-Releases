@@ -1,7 +1,9 @@
+(** Updates size and time-bounds until a fixed point is reached. *)
 open Batteries
 open ProgramTypes
 open Polynomials
 
+(** Updates size and time-bounds until a fixed point is reached and uses, if necessary, MRFs or CFR. *)
 let rec find_bounds_ ?(mrf = false) ?(cfr = false) (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
   |> SizeBounds.improve program
@@ -9,10 +11,11 @@ let rec find_bounds_ ?(mrf = false) ?(cfr = false) (program: Program.t) (appr: A
   |> MaybeChanged.if_changed (find_bounds_  ~mrf:mrf program)
   |> MaybeChanged.unpack
 
-let find_bounds ?(degree = 5) ?(mrf = false) ?(cfr = false) (program: Program.t) (appr: Approximation.t): Approximation.t =
+(** Triggers size and time-bounds computation and, if necessary, sets maximal depth of MRFs. *)
+let find_bounds ?(depth = 5) ?(mrf = false) ?(cfr = false) (program: Program.t) (appr: Approximation.t): Approximation.t =
   if mrf then( 
-    MultiphaseRankingFunction.maxDegree := degree;
-    MultiphaseRankingFunction.list_init degree);
+    MultiphaseRankingFunction.maxDepth := depth;
+    MultiphaseRankingFunction.list_init depth);
   appr
   |> TrivialTimeBounds.compute program
   |> find_bounds_ ~mrf:mrf ~cfr:cfr program

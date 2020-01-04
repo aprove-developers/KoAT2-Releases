@@ -1,6 +1,7 @@
+(** Implemenation of a preprocessor which performs chaining on the TransitionGraph. *) 
 open Batteries
 open ProgramTypes
-   
+
 let logger = Logging.(get Preprocessor)
    
 (** Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location,
@@ -13,7 +14,7 @@ let skip_location location graph =
   |> Enum.map (fun ((l,t,_), (_,t',l')) -> (l, TransitionLabel.append t t', l'))
   |> (flip Program.add_transitions) graph
 
-(** Returns if the specific location is chainable in the graph. *)
+(** Returns true if the specific location is chainable in the graph. *)
 let chainable graph location : bool =
   let open TransitionGraph in
   not (mem_edge graph location location)
@@ -27,6 +28,7 @@ let chain location graph : TransitionGraph.t =
   |> List.enum
   |> Enum.fold TransitionGraph.remove_edge_e skipped
 
+(** Performs chaining on the TransitionGraph. *)
 let transform_graph (graph: TransitionGraph.t): TransitionGraph.t MaybeChanged.t =
   let try_chaining location maybe_changed_graph =
     let open MaybeChanged in

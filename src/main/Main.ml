@@ -1,3 +1,4 @@
+(** Main Module *)
 open Batteries
 open ProgramTypes
 open RVGTypes

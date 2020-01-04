@@ -1,3 +1,4 @@
+(** Module provides methods to print a program or a result variable graph to png file. *)
 open Batteries
 open ProgramTypes
 open RVGTypes

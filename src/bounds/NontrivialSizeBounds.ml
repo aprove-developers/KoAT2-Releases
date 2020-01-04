@@ -1,16 +1,24 @@
+(** Module is used to compute (nontrivial) size-bounds. *)
 open Batteries
 open ProgramTypes
 open RVGTypes
    
 let logger = Logging.(get Size)
 
+(** Module is used to compute (nontrivial) size-bounds, i.e., size-bounds for transitions which do not occur in a scc and thus not in a loop. *)
+
+(** Differentiate between lower and upper size-bounds. *)
 type kind = [ `Lower | `Upper ] [@@deriving show]
+
+(** TODO doc *)
 type sign = [ `Pos | `Neg ] [@@deriving show]
 
+(** TODO doc *)
 let sign = function
   | `Lower -> Bound.neg
   | `Upper -> identity
 
+(** TODO doc *)
 let compute_
       (kind: kind)
       (program: Program.t)

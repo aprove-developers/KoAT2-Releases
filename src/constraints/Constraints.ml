@@ -13,7 +13,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
        
     type t = A.t list [@@deriving eq, ord]
     
-    (** Same as List.length but outside of this module the list structure of constraints is invisible*)
+    (** Same as List.length but outside of this module the list structure of constraints is invisible *)
     let num_of_atoms = List.length
     
     let lift atom = [ atom ]

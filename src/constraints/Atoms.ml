@@ -24,7 +24,7 @@ struct
           | (LE, GE) -> true
           | (_,_) -> false
 
-        let to_string ?(to_file=false) = function
+        let to_string = function
           | GT -> ">"
           | GE -> ">="
           | LT -> "<"
@@ -116,7 +116,6 @@ module Atom =
 module ParameterAtom =
   struct
     include AtomOver(ParameterPolynomial)
-
   end
 
 module BoundAtom =

@@ -1,3 +1,4 @@
+(** Implemenation of a preprocessor which adds invariants to transitions.*)
 open Batteries
 open ProgramTypes
 open Polynomials

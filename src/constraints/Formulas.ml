@@ -101,7 +101,7 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
       |> List.fold_left VarSet.union VarSet.empty
         
     let to_string constr =
-      String.concat " || " (List.map C.to_string constr)
+      String.concat " || " (List.map C.to_string  constr)
         
     let rename formula varmapping =
       List.map (fun constr -> C.rename constr varmapping) formula

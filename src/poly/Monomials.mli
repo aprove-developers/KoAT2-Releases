@@ -1,6 +1,6 @@
+(** Provides default implementations of a monomial. *)
 open Batteries
-
-(** Provides default implementations of a monomial *)
+(** Provides default implementations of a monomial, i.e.,  a finite product of powers without a constant (e.g.: xy^2, y but not 5xy^2 + 7) *)
 
 (** Constructs a default monomial using a list of pairs of variables and their exponents *)
 module Make

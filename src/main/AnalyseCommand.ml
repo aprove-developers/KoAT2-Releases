@@ -1,3 +1,4 @@
+(** Handles shell arguments and computes an upper time-bound. *)
 open Batteries
 open ProgramTypes
 open RVGTypes
@@ -18,7 +19,7 @@ let print_overall_timebound (program: Program.t) (appr: Approximation.t): unit =
   |> Bound.to_string
   |> print_endline
 
-(** Prints the overall timebound of the program to the shell. *)
+(** Prints the overall timebound of the program to the shell in the TermComp fashion. *)
 let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
   program
   |> Approximation.program_costbound appr
@@ -73,78 +74,22 @@ type params = {
     multiphaserankingfunctions : bool; [@default false] [@aka ["mrf"]]
     (** Has to be set to true if multiphaserankingfunctions should be used. *)
 
-    degree : int; [@default 5] [@aka ["d"]]
-    (** The maximum degree a multiphase-ranking function is searched.*)
+    depth : int; [@default 5] [@aka ["d"]]
+    (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
 
     cfr : bool; [@default false]
-    (** True iff controlflow refinement should be applied *)
+    (** True iff control flow refinement should be applied *)
 
   } [@@deriving cmdliner]
 
-(* 
-(*Add this to separate file*) 
-module DjikstraTransitionGraph = Graph.Path.Dijkstra(TransitionGraph)(TransitionGraphWeight(OurInt))
-
-module SetOfTransitionSetsCompare = struct
-  type t = TransitionSet.t
-  let compare t1 t2 = TransitionSet.compare t1 t2
-end
-
-module SetOfTransitionSets = Set.Make(SetOfTransitionSetsCompare)
-
-(*Those SCCs are not minimal containing transition u -> v *)
-let nonLinearSCCs (program: Program.t) =
-  Program.sccs program
-  |> Enum.filter (fun scc -> (TransitionSet.exists (fun nonLinearTransition -> TransitionSet.mem nonLinearTransition scc) !RankingBounds.nonLinearTransitions))
-
-(*Transform (non-minimal) TransitionSets (i.e. our SCCs) to a ProgramGraph*)
-let getTransitionGraph (nonLinearSCCs: TransitionSet.t list) (l1,x,l2)  =
-  TransitionGraph.empty
-  |> TransitionSet.fold (fun t graph -> TransitionGraph.add_edge_e graph t) (List.find (fun scc -> TransitionSet.mem (l1,x,l2) scc) nonLinearSCCs)
-
-(* Apply Dijkstra on ProgramGraph and get shortest v -> u path and add transition v -> u (thus, we get a circle, a minimal SCC)*)
-let applyDijkstra (program: Program.t) =
-  let nonLinearSCCs = List.of_enum (nonLinearSCCs program) in
-  let nonLinearTransitions =  TransitionSet.to_list !RankingBounds.nonLinearTransitions in
-  List.map (fun (l1,x,l2) -> let (path, _) = DjikstraTransitionGraph.shortest_path (getTransitionGraph nonLinearSCCs (l1,x,l2)) l2 l1 in
-                              List.append [(l1,x,l2)] path) nonLinearTransitions
-
-(* Add parallel transitions for one scc*)
-let parallelTransitions (program: Program.t) (scc: ProgramTypes.TransitionGraph.E.t list) = 
-  TransitionSet.empty
-  |> List.fold_right (fun transition x -> TransitionSet.fold (fun parallelTransition x1 -> TransitionSet.add parallelTransition x1) (Program.parallelTransitions program transition) x) scc
-
-let minimalSCCs (program: Program.t) = 
-  (applyDijkstra program)
-  |> List.map (fun scc -> parallelTransitions program scc)
-
-let minimalDisjointSCCs (origin_sccs: ProgramTypes.TransitionSet.t list) =
-  SetOfTransitionSets.of_list (List.map (fun origin_scc -> List.fold_right (fun origin_scc1 new_scc -> if (TransitionSet.disjoint origin_scc1 new_scc) then new_scc else (TransitionSet.union origin_scc1 new_scc)) origin_sccs origin_scc) origin_sccs)
-
-let counter = ref 0 
-
-let apply_cfr ?(degree = 5) ?(mrf = false) (program: Program.t) (appr: Approximation.t) = 
-  let initial_location = Program.start program in
-  let minimalDisjointSCCs = minimalDisjointSCCs (minimalSCCs program) in
-    minimalDisjointSCCs
-    |> SetOfTransitionSets.iter (fun scc ->  
-      let scc_list = TransitionSet.to_list scc in
-      let entry_transitions = List.map (fun (l,t,l') -> (initial_location,t,l')) (RankingBounds.entry_transitions program scc_list) in
-      let scc_program = Program.from (List.append entry_transitions scc_list) initial_location in
-        ignore (try Unix.mkdir "tmp" 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
-        Program.to_file scc_program ("./tmp/tmp_scc" ^ (string_of_int !counter));
-        ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp/tmp --file ./tmp/tmp_scc" ^ (string_of_int !counter) ^ ".koat"));
-        ignore ("./tmp/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
-          |> Readers.read_input ~rename:false false 
-          |> Option.map (fun program_scc -> (program_scc, Approximation.create program_scc)));
-        counter := !counter + 1) *)
-
+(** Returns a string containing a time-bound and the label of a transition for a specified approximation. *)
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
   String.concat "" ["Timebound: ";
                     Approximation.timebound_id appr (TransitionLabel.id label) |> Bound.to_string;
                     "\n";
                     TransitionLabel.to_string label]
 
+(** Returns a string containing a size-bound transition and a result variable for a specified approximation. *)
 let bounded_rv_to_string (program: Program.t) kind (appr: Approximation.t) (t,v) =
   let get_lsb kind (t, v) =
     LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
@@ -158,38 +103,35 @@ let bounded_rv_to_string (program: Program.t) kind (appr: Approximation.t) (t,v)
                     get_lsb kind (t,v) |> Bound.show ~complexity:false
     ]
 
+(** Returns a local size-bound for a specified transition and a specified variable. *)
 let get_lsb program kind (t, v) =
   LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
 
+(** Returns a list of special variables which are arguments of the transition system. *)
 let standard_vars program =
   let open Program in
   0
   |> TransitionGraph.fold_edges_e (fun edge size -> Int.max (TransitionLabel.input_size (Transition.label edge)) size) (graph program)
   |> Var.fresh_arg_list
 
-(* For each transition rename standard_vars transition *)
-
+(** For each transition rename standard_vars transition. *)
 let rename_graph standard_vars graph =
   let transitions = (TransitionSet.enum % TransitionGraph.transitions) graph in
     Enum.fold (fun program_graph transition -> TransitionGraph.replace_edge_e transition (Transition.rename standard_vars transition) program_graph) graph transitions
 
+(** Provides renamed program *)
 let rename_program program =
   let standard_vars = standard_vars program in
     Program.map_graph (rename_graph standard_vars) program
 
+(** Provides renamed program if program is set, else None is returned. *)
 let rename_program_option opt =
   match opt with
     |Some program -> Some (rename_program program)
     |None -> None
 
-(*Returns true iff. s2 is a substring of s1 TODO Move this methode into a separate file  *)
-let contains s1 s2 =
-    let re = Str.regexp_string s2
-    in
-        try ignore (Str.search_forward re s1 0); true
-        with Not_found -> false
 
-
+(** Runs KoAT2 on provided parameters. *)
 let run (params: params) =
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
@@ -215,15 +157,6 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
-  (* TODO remove this 
-  let input_cfr =
-  if (false) then
-    (ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat dot --output-destination ./tmp --file " ^ (Option.get params.input)));
-    ("./tmp/" ^ input_filename ^ "_cfr1.koat"))
-  else
-    input
-  in  
-  input_cfr*)
   input
   |> Readers.read_input ~rename:params.rename params.simple_input 
   |> rename_program_option
@@ -241,11 +174,9 @@ let run (params: params) =
               )
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
-                     Bounds.find_bounds ~degree:(params.degree) ~mrf:(params.multiphaserankingfunctions) ~cfr:(params.cfr) program appr
+                     Bounds.find_bounds ~depth:(params.depth) ~mrf:(params.multiphaserankingfunctions) ~cfr:(params.cfr) program appr
                      |> fun appr -> (program, appr)
                    else (program, appr))
-         (* |> tap (fun (program, appr) -> if params.cfr then
-                              ignore (apply_cfr ~degree:(params.degree) ~mrf:(params.multiphaserankingfunctions) program appr)) *)
          |> tap (fun (program, appr) -> params.result program appr)
          |> tap (fun (program, appr) ->
                 if params.print_system then

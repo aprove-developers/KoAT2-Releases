@@ -1,10 +1,11 @@
+(** Implementation of (linear) Ranking Functions. *)
 open Batteries
 open Constraints
 open Atoms
 open Polynomials
 open ProgramTypes
    
-(** Provides default implementations of RankingFunctions *)
+(** Provides default implementations of RankingFunctions. KoAT uses this as a default function if the user does not specify any requirements by setting parameters (e.g. --mrf). *)
 
 type t
 
@@ -27,6 +28,7 @@ val find : measure -> Program.t -> Transition.t -> t list
 (** Converts a ranking function into a string*)
 val to_string : t -> string
 
+(** Converts a ranking function into a string without any further information. *)
 val only_rank_to_string : t -> string
   
 (** Resets all cached data.

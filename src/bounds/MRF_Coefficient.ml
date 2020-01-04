@@ -9,7 +9,7 @@ let logger = Logging.(get Time)
 
 module Valuation = Valuation.Make(OurInt)
 
-(* method transforms polynome to parapolynom*)
+(* Method transforms polynome to parapolynom*)
 let as_parapoly label var =
     match TransitionLabel.update label var with
     (** Correct? In the nondeterministic case we just make it deterministic? *)
@@ -55,11 +55,11 @@ let rec sumProduct (list1, list2) =
     | _ -> 0.
 
 (* Calculates recursive all coefficient c_k,d_k*)
-let rec compute_coefficients (degree:int) (rank : (Location.t -> Polynomial.t) list) (l,t,l') list =
+let rec compute_coefficients (depth:int) (rank : (Location.t -> Polynomial.t) list) (l,t,l') list =
   match list with
-  | [] -> compute_coefficients degree rank (l,t,l') [(1.,1.)]
+  | [] -> compute_coefficients depth rank (l,t,l') [(1.,1.)]
   | _  ->
-    if degree == List.length list then list
+    if depth == List.length list then list
      else
        let k = List.length list in
        let mues = compute_mue_k rank k (l,t,l') in
@@ -71,7 +71,7 @@ let rec compute_coefficients (degree:int) (rank : (Location.t -> Polynomial.t) l
                                                             ("c_" ^ string_of_int k) , string_of_float ck;
                                                             ("d_" ^ string_of_int k), string_of_float dk;
                                                             ("c_" ^ string_of_int k ^ "/d_" ^ string_of_int k), string_of_int(int_of_float (ceil  (ck /. dk)))]);
-       compute_coefficients (degree:int) rank (l,t,l') (List.append list [(ck,dk)])
+       compute_coefficients (depth:int) rank (l,t,l') (List.append list [(ck,dk)])
 
 (* Returns max_i c_i /. d_i *)
 let rec maximum_coefficients list =
@@ -80,7 +80,7 @@ let rec maximum_coefficients list =
   | (x,y) :: rest -> max (int_of_float (ceil  (x /. y))) (maximum_coefficients rest)
   | _ -> 0
 
-(* Constructs the nested max bounds of all functions of the mrf*)
+(* Constructs the nested max bounds of all functions of the MRF*)
 let rec maxBound_of_list list =
  match list with
  | [] -> Bound.one
@@ -89,5 +89,5 @@ let rec maxBound_of_list list =
 
 let coefficient (rank: MultiphaseRankingFunction.t) = 
   let decreasing = MultiphaseRankingFunction.decreasing rank in
-  let coefficients = (compute_coefficients (MultiphaseRankingFunction.degree rank) (MultiphaseRankingFunction.rank rank) decreasing  []) in
+  let coefficients = (compute_coefficients (MultiphaseRankingFunction.depth rank) (MultiphaseRankingFunction.rank rank) decreasing  []) in
   maximum_coefficients coefficients

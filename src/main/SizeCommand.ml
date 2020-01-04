@@ -1,3 +1,4 @@
+(** Handles shell arguments and computes a size-bounds for a program. *)
 open Batteries
 
 let description = "Run a size bound improvement step"

@@ -54,8 +54,8 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
    |> Enum.map (fun (l,t,l') ->
        let timebound = Approximation.timebound appr (l,t,l') in 
        let evaluate = (fun rank -> (apply (fun kind -> Approximation.sizebound kind appr) rank) (l,t,l')) in
-       let evaluated_rankingFunctions = (List.init (MultiphaseRankingFunction.degree rank) (fun i -> (evaluate ((List.nth (MultiphaseRankingFunction.rank rank) i) l')))) in
-       let rhs = if rank.degree = 1 then
+       let evaluated_rankingFunctions = (List.init (MultiphaseRankingFunction.depth rank) (fun i -> (evaluate ((List.nth (MultiphaseRankingFunction.rank rank) i) l')))) in
+       let rhs = if MultiphaseRankingFunction.depth rank = 1 then
           Bound. (max Bound.zero (add Bound.one (List.nth evaluated_rankingFunctions 0)))
           else 
           Bound. (add Bound.one (mul (of_int (MRF_Coefficient.coefficient rank))  (MRF_Coefficient.maxBound_of_list evaluated_rankingFunctions))) in 

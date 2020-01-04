@@ -1,9 +1,9 @@
+(** Provides default implementations of formulas.*)
 open Batteries
 open Constraints
    
-(** Provides default implementations of a constraint *)
 
-(** Constructs a default constraint using a list of atoms each comparing two polynomials *)
+(** Constructs a default formula using a list of atoms each comparing two polynomials *)
 module FormulaOver(C : ConstraintTypes.Constraint) : ConstraintTypes.Formula
        with type constr = C.t
         and type atom = C.atom
@@ -14,6 +14,7 @@ module Formula :
 sig
   include module type of FormulaOver(Constraint)
 
+  (** TODO doc *)
   val max_of_occurring_constants : t -> OurInt.t
 
   (* Add operations specific to polynomial formula here if needed *)

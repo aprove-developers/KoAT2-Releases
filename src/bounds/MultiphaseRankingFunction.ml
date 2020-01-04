@@ -46,7 +46,7 @@ module Solver = SMT.IncrementalZ3Solver
 
 type constraint_type = [ `Non_Increasing | `Decreasing] [@@deriving show, eq]
 
-let maxDegree = ref 5
+let maxDepth = ref 5
 
 type mrf = (Location.t -> Polynomial.t) list
 
@@ -54,7 +54,7 @@ type t = {
   rank : mrf;
   decreasing : Transition.t;
   non_increasing : TransitionSet.t;
-  degree : int;
+  depth : int;
 }
 
 let rank f = f.rank
@@ -63,7 +63,7 @@ let decreasing f = f.decreasing
 
 let non_increasing f = TransitionSet.to_list f.non_increasing
 
-let degree f = f.degree
+let depth f = f.depth
 
 (* output methods *)
 let rank_to_string (locations: Location.t list) (content_to_string: ((Location.t -> 'a) list) * Location.t -> string) (rank: (Location.t -> 'a) list) =
@@ -76,25 +76,25 @@ let polyList_to_string ((rank: (Location.t -> 'a) list) , (l : Location.t)) =
   |> List.enum
   |> Util.enum_to_string (fun p -> Polynomial.to_string(p l) ^ " ")
 
-let only_rank_to_string {rank; decreasing; non_increasing; degree} =
+let only_rank_to_string {rank; decreasing; non_increasing; depth} =
   let locations = non_increasing |> TransitionSet.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
   rank_to_string locations polyList_to_string rank
 
-let to_string {rank; decreasing; non_increasing; degree} =
-  "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; degree} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
+let to_string {rank; decreasing; non_increasing; depth} =
+  "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; depth} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
 
 
 let template_tables: ((ParameterPolynomial.t TemplateTable.t) list) ref= ref []
 
-let list_init degree = 
-  template_tables := (List.init degree (fun i -> TemplateTable.create 10))
+let list_init depth = 
+  template_tables := (List.init depth (fun i -> TemplateTable.create 10))
 
 let fresh_coeffs: Var.t list ref = ref []
 
 let numberOfGeneratedTemplates = ref 0
 
-let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location.t list): unit =
+let compute_ranking_templates (depth:int) (vars: VarSet.t) (locations: Location.t list): unit =
   let execute (i:int) =
     let ins_loc_prf location =
       (* Each location needs its own ranking template with different fresh variables *)
@@ -109,7 +109,7 @@ let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location
     |> List.flatten
     |> (fun fresh_vars -> fresh_coeffs := fresh_vars)
   in
-  for i = !numberOfGeneratedTemplates to degree - 1 do
+  for i = !numberOfGeneratedTemplates to depth - 1 do
     Logger.with_log logger Logger.DEBUG
       (fun () -> "compute_mrf_templates_" ^ string_of_int i, [])
       ~result:(fun () ->
@@ -122,7 +122,7 @@ let compute_ranking_templates (degree:int) (vars: VarSet.t) (locations: Location
 
 
 
-(** methods define properties of mrf *)
+(* Methods define properties of mrf *)
 
 (* method for mrf and functions f_2 to f_d*)
 let transition_constraint_ (template_table0,template_table1, measure, constraint_type, (l,t,l')): Formula.t =
@@ -159,9 +159,9 @@ let transition_constraint_d (template_table1, measure, constraint_type, (l,t,l')
         |> Formula.mk)
 
 (* use all three functions above combined*)
-let transition_constraints_ degree (measure, constraint_type, (l,t,l')): Formula.t =
+let transition_constraints_ depth (measure, constraint_type, (l,t,l')): Formula.t =
   let res = ref Formula.mk_true in
-  for i = 1 to (degree - 1) do
+  for i = 1 to (depth - 1) do
     res := ((List.nth !template_tables (i - 1)), (List.nth !template_tables i), measure, constraint_type, (l,t,l'))
            |> transition_constraint_
            |> Formula.mk_and !res
@@ -170,41 +170,41 @@ let transition_constraints_ degree (measure, constraint_type, (l,t,l')): Formula
          |> transition_constraint_1
          |> Formula.mk_and !res;
 
-  res := ((List.nth !template_tables (degree - 1)), measure, constraint_type, (l,t,l'))
+  res := ((List.nth !template_tables (depth - 1)), measure, constraint_type, (l,t,l'))
          |> transition_constraint_d
          |> Formula.mk_and !res;
   !res
 
-let transition_constraint degree = Util.memoize ~extractor:(Tuple3.map3 Transition.id) (transition_constraints_ degree)
+let transition_constraint depth = Util.memoize ~extractor:(Tuple3.map3 Transition.id) (transition_constraints_ depth)
 
-let transitions_constraint degree measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
+let transitions_constraint depth measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
-  |> List.map (fun t -> transition_constraint degree (measure, constraint_type, t))
+  |> List.map (fun t -> transition_constraint depth (measure, constraint_type, t))
   |> Formula.all
 
 
-let non_increasing_constraint degree measure transition =
-  transition_constraint degree (measure, `Non_Increasing, transition)
+let non_increasing_constraint depth measure transition =
+  transition_constraint depth (measure, `Non_Increasing, transition)
 
-let non_increasing_constraints degree measure transitions =
-  transitions_constraint degree measure `Non_Increasing (TransitionSet.to_list transitions)
+let non_increasing_constraints depth measure transitions =
+  transitions_constraint depth measure `Non_Increasing (TransitionSet.to_list transitions)
 
-let decreasing_constraint degree measure  transition =
-  transition_constraint degree (measure, `Decreasing, transition)
+let decreasing_constraint depth measure  transition =
+  transition_constraint depth (measure, `Decreasing, transition)
 
 (** A valuation is a function which maps from a finite set of variables to values *)
 
-let rank_from_valuation degree (i:int) valuation location =
+let rank_from_valuation depth (i:int) valuation location =
   location
   |> TemplateTable.find (List.nth !template_tables i)
   |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
 
-let make degree decreasing_transition non_increasing_transitions valuation  =
+let make depth decreasing_transition non_increasing_transitions valuation  =
 {
-  rank = List.init degree (fun i -> rank_from_valuation degree i valuation);
+  rank = List.init depth (fun i -> rank_from_valuation depth i valuation);
   decreasing = decreasing_transition;
   non_increasing = non_increasing_transitions;
-  degree = degree;
+  depth = depth;
 }
 
 module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
@@ -217,7 +217,7 @@ let ranking_table = function
   | `Time -> time_ranking_table
   | `Cost -> cost_ranking_table
 
-let try_decreasing degree (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
+let try_decreasing depth (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
   non_increasing
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
@@ -226,14 +226,14 @@ let try_decreasing degree (opt: Solver.t) (non_increasing: Transition.t Stack.t)
         Logger.(log logger DEBUG (fun () -> "try_decreasing", ["measure", show_measure measure;
                                                                 "decreasing", Transition.to_id_string decreasing;
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
-                                                                "degree", string_of_int degree]));
+                                                                "depth", string_of_int depth]));
         Solver.push opt;
-        Solver.add opt (decreasing_constraint degree measure decreasing);
+        Solver.add opt (decreasing_constraint depth measure decreasing);
         
         if Solver.satisfiable opt then (
           Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
           Solver.model opt
-          |> Option.map (make degree decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+          |> Option.map (make depth decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
           |> Option.may (fun ranking_function ->
               to_be_found := !to_be_found - 1;
               RankingTable.add (ranking_table measure) decreasing ranking_function;
@@ -251,21 +251,21 @@ let try_decreasing degree (opt: Solver.t) (non_increasing: Transition.t Stack.t)
     raise Exit
 
 
-let rec backtrack degree (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
+let rec backtrack depth (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
     if Solver.satisfiable opt then (
       if steps_left == 0 then (
-        try_decreasing degree opt non_increasing to_be_found measure
+        try_decreasing depth opt non_increasing to_be_found measure
       ) else (
         for i=index to Array.length scc - 1 do
           let transition = Array.get scc i in
           Solver.push opt;
-          Solver.add opt (non_increasing_constraint degree measure transition);
+          Solver.add opt (non_increasing_constraint depth measure transition);
           Stack.push transition non_increasing;
-          backtrack degree (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure;
+          backtrack depth (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure;
           ignore (Stack.pop non_increasing);
           Solver.pop opt;
         done;
-        try_decreasing degree opt non_increasing to_be_found measure;
+        try_decreasing depth opt non_increasing to_be_found measure;
       )
     )
 
@@ -274,11 +274,11 @@ let compute_ measure program =
   |> Program.sccs
   |> Enum.iter (fun scc ->
          try
-           for degree = 1 to !maxDegree do
-           if !numberOfGeneratedTemplates < degree then (
-           compute_ranking_templates degree (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-           numberOfGeneratedTemplates := degree);
-           backtrack degree (TransitionSet.cardinal scc)
+           for depth = 1 to !maxDepth do
+           if !numberOfGeneratedTemplates < depth then (
+           compute_ranking_templates depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+           numberOfGeneratedTemplates := depth);
+           backtrack depth (TransitionSet.cardinal scc)
                      0
                      (Solver.create ())
                      (Array.of_enum (TransitionSet.enum scc))
