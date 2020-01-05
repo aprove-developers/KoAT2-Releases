@@ -238,9 +238,11 @@ let elsb_ program (((gt, l), v): RV.t): RealBound.t =
     let handle_update_element ue =
       match ue with
       | TransitionLabel.UpdateElement.Poly p ->
-          RealPolynomial.of_intpoly p
+          RealPolynomial.(of_intpoly p - of_var v)
+          |> simplify_poly_with_guard (GeneralTransition.guard gt)
+          |> RealBound.of_poly
       | TransitionLabel.UpdateElement.Dist d ->
-          ProbDistribution.expected_value d
+          ProbDistribution.expected_value_abs d
     in
     let handle_transition trans =
       Transition.label trans
@@ -252,9 +254,7 @@ let elsb_ program (((gt, l), v): RV.t): RealBound.t =
     transitions_with_prob
     |> List.enum
     |> Enum.map (fun (t,p) -> (p, handle_transition t))
-    |> Enum.map ( fun (p,up) -> p, RealPolynomial.((up - (of_var v))) )
-    |> Enum.map (fun (p,poly) -> p, simplify_poly_with_guard (GeneralTransition.guard gt) poly)
-    |> Enum.map RealBound.(fun (p,poly) -> of_constant p * abs (of_poly poly))
+    |> Enum.map RealBound.(fun (p,bound) -> of_constant p * abs bound)
     |> Enum.map RealBound.simplify_vars_nonnegative
     |> RealBound.sum
     |> substitute_nondet_var

@@ -45,7 +45,10 @@ let as_realparapoly label var =
   | None -> RealParameterPolynomial.of_var var
   | Some (TransitionLabel.UpdateElement.Poly p) -> p |> RealPolynomial.of_intpoly |> RealParameterPolynomial.of_polynomial
   (** TODO Is this the real life? Is this just fantasy?*)
-  | Some (TransitionLabel.UpdateElement.Dist d) -> ProbDistribution.expected_value d |> RealParameterPolynomial.of_polynomial
+  | Some (TransitionLabel.UpdateElement.Dist d) ->
+      ProbDistribution.expected_value d
+      |> RealPolynomial.add (RealPolynomial.of_var var)
+      |> RealParameterPolynomial.of_polynomial
 
 (** Given a list of variables an affine template-polynomial is generated*)
 let ranking_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
@@ -138,7 +141,9 @@ let general_transition_constraint cache (constraint_type, gtrans): RealFormula.t
               match ue with
               | TransitionLabel.UpdateElement.Poly p ->
                   Constraint.mk_eq (Polynomial.of_var new_var) p |> RealConstraint.of_intconstraint
-              | TransitionLabel.UpdateElement.Dist d -> ProbDistribution.guard d new_var |> RealConstraint.of_intconstraint
+              | TransitionLabel.UpdateElement.Dist d ->
+                ProbDistribution.guard d old_var new_var |> RealConstraint.of_intconstraint
+                |> tap (Printf.printf "Guard old_var %s new_var %s constr: %s\n" (Var.to_string old_var) (Var.to_string new_var)% RealConstraint.to_string)
             in
             TransitionLabel.VarMap.fold (fun old_var ue -> RealConstraint.mk_and (update_guard old_var ue)) update_map RealConstraint.mk_true
           in

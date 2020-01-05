@@ -3,6 +3,8 @@ open Polynomials
 module Guard = Constraints.Constraint
 open BoundsInst
 
+(* Note the sampled value always gets added onto the current variable value *)
+
 type t = Uniform of Polynomial.t * Polynomial.t
        | Geometric of OurFloat.t [@@deriving eq,ord]
 
@@ -31,6 +33,13 @@ let expected_value dist =
     | Uniform (a,b) -> RealPolynomial.((of_constant (Num.of_float 0.5)) * ((of_intpoly a) + (of_intpoly b)))
     | Geometric a   -> RealPolynomial.of_constant( OurFloat.(div one a) )
 
+let expected_value_abs dist =
+  match dist with
+    | Uniform (a,b) ->
+        RealBound.((of_constant (Num.of_float 0.5)) *
+          (abs (of_poly @@ RealPolynomial.of_intpoly a) + abs (of_poly @@ RealPolynomial.of_intpoly b)))
+    | Geometric a   -> RealBound.of_constant( OurFloat.(div one a) )
+
 let vars dist =
   match dist with
     | Uniform (a,b) ->
@@ -47,11 +56,11 @@ let rename rename_map dist =
     | Uniform (a,b) -> Uniform ((Polynomial.rename rename_map a), (Polynomial.rename rename_map b))
     | Geometric p   -> Geometric p
 
-let guard dist var =
+let guard dist v v' =
   match dist with
-    | Uniform (a,b) -> Guard.Infix.(((Polynomial.of_var var) <= b) &&
-                                    ((Polynomial.of_var var) >= a)     )
-    | Geometric p   -> Guard.Infix.((Polynomial.of_var var) > Polynomial.zero)
+    | Uniform (a,b) -> Guard.Infix.((Polynomial.of_var v' <= Polynomial.(b + of_var v)) &&
+                                    (Polynomial.of_var v' >= Polynomial.(a + of_var v))     )
+    | Geometric p   -> Guard.Infix.(Polynomial.of_var v' > Polynomial.of_var v)
 
 let upper_det_const d =
   match d with

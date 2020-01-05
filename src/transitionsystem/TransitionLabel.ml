@@ -46,10 +46,10 @@ module UpdateElement =
         | Poly p -> Poly (Polynomial.rename rename_map p)
         | Dist d -> Dist (ProbDistribution.rename rename_map d)
 
-    let vars u =
+    let vars v u =
       match u with
         | Poly p -> Polynomial.vars p
-        | Dist d -> ProbDistribution.vars d
+        | Dist d -> VarSet.union (VarSet.singleton v) (ProbDistribution.vars d)
 
     let is_polynomial u =
       match u with
@@ -247,7 +247,7 @@ let append_guard t1 t2 =
          )
   in
   let dist_guard =
-    VarTable.fold (fun _ (var,d) g -> Guard.Infix.(g && (ProbDistribution.guard d var)) ) dist_vars Guard.mk_true
+    VarTable.fold (fun var (var',d) g -> Guard.Infix.(g && (ProbDistribution.guard d var var')) ) dist_vars Guard.mk_true
   in
   let new_guard =
     Guard.Infix.(t1.guard && dist_guard && Guard.map_polynomial (Polynomial.substitute_f (substitution t1.update)) t2.guard)
@@ -276,13 +276,8 @@ let gtcost t = t.gtcost
 
 let probability t = t.probability
 
-let vars_ {update; guard; cost; _} =
-  let update_element_vars u =
-    match u with
-      | UpdateElement.Poly p -> Polynomial.vars p
-      | UpdateElement.Dist d -> ProbDistribution.vars d
-  in
-  VarMap.fold (fun _ -> VarSet.union % update_element_vars) update VarSet.empty
+let vars_  {update; guard; cost; _} =
+  VarMap.fold (fun v -> VarSet.union % UpdateElement.vars v) update VarSet.empty
   |> (VarSet.union % VarSet.of_enum % VarMap.keys) update
   |> (VarSet.union % Guard.vars) guard
   |> (VarSet.union % Polynomial.vars) cost

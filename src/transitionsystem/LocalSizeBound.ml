@@ -406,11 +406,11 @@ let compute_single_local_size_bound cache program kind (l,t,l') var =
               | TransitionLabel.UpdateElement.Poly p ->
                   Formula.Infix.(Polynomial.of_var v' = p)
               | TransitionLabel.UpdateElement.Dist d ->
-                  Formula.mk (ProbDistribution.guard d v')
+                  Formula.mk (ProbDistribution.guard d var v')
             in
            (* Introduce a temporary result variable *)
            let v' = Var.fresh_id Var.Int () in
-           let update_vars = TransitionLabel.UpdateElement.vars update in
+           let update_vars = TransitionLabel.UpdateElement.vars var update in
            let guard_with_update = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && updateformula v') in
            let update_fun_for_s_range =
              match update with

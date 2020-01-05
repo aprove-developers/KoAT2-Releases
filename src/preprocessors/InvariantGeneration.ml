@@ -183,28 +183,63 @@ let transform_program program =
   in
 
   (** Applies the update to the abstract value. *)
-  let apply_update (vars: VarSet.t) (update: Var.t -> TransitionLabel.UpdateElement.t Option.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
+  let apply_updates (vars: VarSet.t) (update: Var.t -> TransitionLabel.UpdateElement.t Option.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
+
+    (* To model the distribution updates we introduce new temporar variables *)
+    let dist_update_temp_map =
+      VarSet.fold
+        (fun v map ->
+          match update v with
+          | Some (TransitionLabel.UpdateElement.Dist d) -> TransitionLabel.VarMap.add v (Var.fresh_id Int (),d) map
+          | _ -> map)
+        vars
+        TransitionLabel.VarMap.empty
+    in
+    let dist_temp_vars =
+      TransitionLabel.VarMap.values dist_update_temp_map
+      |> Enum.map Tuple2.first
+      |> VarSet.of_enum
+    in
+    let all_vars = VarSet.union dist_temp_vars vars in
+    let extended_environment =
+      Apron.Environment.add environment (Array.of_enum % Enum.map (var_to_apron % Tuple2.first) @@ TransitionLabel.VarMap.values dist_update_temp_map) [||]
+    in
+    let abstr_temp_values =
+      let constr =
+        TransitionLabel.VarMap.fold
+          (fun v (v',d) -> Constraint.mk_and (ProbDistribution.guard d v v')) dist_update_temp_map Constraint.mk_true
+        |> constraint_to_apron extended_environment
+      in
+      Apron.Abstract1.to_tcons_array manager abstract
+      |> Apron.Abstract1.of_tcons_array manager extended_environment
+      |> fun abstr -> Apron.Abstract1.meet_tcons_array manager abstr constr
+    in
+
     (* A completely unbound (non-deterministic) choice *)
     let any_value = Apron.(Texpr1.cst environment (Coeff.Interval Interval.top)) in
-    (* TODO Perhaps there may be a better way to do this *)
-    let dist_value d =
-      Apron.(Texpr1.cst environment (Coeff.Interval (Interval.of_scalar
-        ((ProbDistribution.lower_det_const d |> Option.map (Scalar.of_int % OurInt.to_int)) |? Scalar.of_infty 1)
-        ((ProbDistribution.upper_det_const d |> Option.map (Scalar.of_int % OurInt.to_int)) |? Scalar.of_infty (-1))
-      )))
-    in
-    let update_element_map_fun u =
-      match u with
+    let update_element_map_fun v u =
+      if VarSet.mem v dist_temp_vars then
+        any_value
+      else
+        match u with
         | TransitionLabel.UpdateElement.Poly p -> poly_to_apron environment p
-        | TransitionLabel.UpdateElement.Dist d -> dist_value d
+        | TransitionLabel.UpdateElement.Dist d ->
+            TransitionLabel.VarMap.find v dist_update_temp_map
+            |> Tuple2.first
+            |> Polynomial.of_var
+            |> poly_to_apron extended_environment
     in
     let assignments =
-      vars
+      all_vars
       |> VarSet.to_array
-      |> Array.map update
-      |> Array.map (Option.map_default (update_element_map_fun) any_value)
+      |> Array.map (fun v -> v, update v)
+      |> Array.map (fun (v,ue) -> Option.map_default (update_element_map_fun v) any_value ue)
     in
-    Apron.Abstract1.assign_texpr_array manager abstract (vars_to_apron vars) assignments None
+    Apron.Abstract1.assign_texpr_array manager abstr_temp_values (vars_to_apron all_vars) assignments None
+    |> Apron.Abstract1.to_tcons_array manager
+    |> constraint_from_apron
+    |> constraint_to_apron environment
+    |> Apron.Abstract1.of_tcons_array manager environment
   in
 
   (** Applies the transition to the abstract value.
@@ -212,7 +247,7 @@ let transform_program program =
   let apply_transition ((l,t,l'): Transition.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
     abstract
     |> apply_guard (TransitionLabel.guard t)
-    |> apply_update (Program.vars program) (TransitionLabel.update t)
+    |> apply_updates (Program.vars program) (TransitionLabel.update t)
   in
 
   (** The bottom element of the static analysis for the whole program.
