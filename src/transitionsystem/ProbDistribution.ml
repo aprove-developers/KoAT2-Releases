@@ -8,16 +8,6 @@ open BoundsInst
 type t = Uniform of Polynomial.t * Polynomial.t
        | Geometric of OurFloat.t [@@deriving eq,ord]
 
-let deterministic_upper_bound dist =
-  match dist with
-    | Uniform (a,b) -> Bound.of_poly b
-    | Geometric _   -> Bound.infinity
-
-let deterministic_lower_bound dist =
-  match dist with
-    | Uniform (a,b) -> Bound.of_poly a
-    | Geometric _   -> Bound.one
-
 let deterministic_upper_polynomial dist =
   match dist with
     | Uniform (a,b) -> Some b
@@ -61,17 +51,6 @@ let guard dist v v' =
     | Uniform (a,b) -> Guard.Infix.((Polynomial.of_var v' <= Polynomial.(b + of_var v)) &&
                                     (Polynomial.of_var v' >= Polynomial.(a + of_var v))     )
     | Geometric p   -> Guard.Infix.(Polynomial.of_var v' > Polynomial.of_var v)
-
-let upper_det_const d =
-  match d with
-    | Uniform (a,b) -> if Polynomial.is_const b then Some (Polynomial.get_constant b)
-                       else None
-    | Geometric p   -> None
-let lower_det_const d =
-  match d with
-    | Uniform (a,b) -> if Polynomial.is_const b then Some (Polynomial.get_constant a)
-                       else None
-    | Geometric p   -> Some OurInt.one
 
 let substitute sub d =
   match d with
