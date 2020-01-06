@@ -1,12 +1,7 @@
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
-# (VAR H T Z)
-(VAR X)
+(VAR H T Z)
 (RULES
-  # f(H,T,Z) -> g(H,T,Z)
-  # g(H,T,Z) -> 0.5:g(H,T+1,Z+1) :+: 0.5:g(UNIFORM(0,10),T+1,Z+1)  :|: H<=T
-  #f(X) -> g(UNIFORM(2,3)) :|: X > 0
-  f(X) -> g(UNIFORM(3,4)) :|: X > -3 && X<10
-  #g(X) -> g(UNIFORM(0,1)) :|: X<10
-  #g(X) -> 0.5:g(X) :+: 0.5:g(X+1):|: X<10
+  f(H,T,Z) -> g(H,T,Z)
+  g(H,T,Z) -> 0.5:g(H,T+1,Z+1) :+: 0.5:g(UNIFORM(0,10),T+1,Z+1)  :|: H<=T
 )
