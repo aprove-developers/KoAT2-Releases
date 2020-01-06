@@ -143,7 +143,6 @@ let general_transition_constraint cache (constraint_type, gtrans): RealFormula.t
                   Constraint.mk_eq (Polynomial.of_var new_var) p |> RealConstraint.of_intconstraint
               | TransitionLabel.UpdateElement.Dist d ->
                 ProbDistribution.guard d old_var new_var |> RealConstraint.of_intconstraint
-                |> tap (Printf.printf "Guard old_var %s new_var %s constr: %s\n" (Var.to_string old_var) (Var.to_string new_var)% RealConstraint.to_string)
             in
             TransitionLabel.VarMap.fold (fun old_var ue -> RealConstraint.mk_and (update_guard old_var ue)) update_map RealConstraint.mk_true
           in
