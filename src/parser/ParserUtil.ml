@@ -96,12 +96,14 @@ let mk_program goal start vars (transitions: Transition.t list): Program.t =
   Program.from transitions start
 
 let ourfloat_of_decimal_string (str: string): OurFloat.t =
+  let str_before_point = String.split str ~by:(".") |> Tuple2.first in
   let str_after_point = String.split str ~by:(".") |> Tuple2.second in
   let numerator =
-    OurFloat.of_string str_after_point
+    if str_after_point = "" then OurFloat.zero else OurFloat.of_string str_after_point
   in
   let denominator =
     OurFloat.pow (OurFloat.of_int 10) (String.length str_after_point)
   in
-  OurFloat.( numerator/denominator )
-
+  let fractional = if str_after_point = "" then OurFloat.zero else OurFloat.( numerator/denominator ) in
+  let leading = if str_before_point = "" then OurFloat.zero else OurFloat.of_string str_before_point in
+  OurFloat.(leading + fractional)
