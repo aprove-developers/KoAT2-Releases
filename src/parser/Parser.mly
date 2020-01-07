@@ -12,7 +12,7 @@
 %token				GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
 %token              COMMA COLON SEMICOLON
 %token              MIN MAX INFINITY ABS
-%token              UNIFORM BINOMIAL
+%token              BINOMIAL GEOMETRIC UNIFORM
 %token				GUARDVEC GUARDVAL UPDATES PRECISION DIRECTTERMINATION INITIAL
 %token <string>		FRACTION
 
@@ -248,10 +248,12 @@ polynomial :
 	          { Polynomial.pow v c } ;
 
 dist:
-        |       UNIFORM; LPAR; p1 = polynomial; COMMA; p2 = polynomial; RPAR
-                  { ProbDistribution.Uniform (p1,p2) }
         |       BINOMIAL; LPAR; n = polynomial; COMMA; p = onlyOurFloat; RPAR
-                  { ProbDistribution.Binomial (n,p) };
+                  { ProbDistribution.Binomial (n,p) }
+        |       GEOMETRIC; LPAR; p = onlyOurFloat; RPAR
+                  { ProbDistribution.Geometric (p) }
+        |       UNIFORM; LPAR; p1 = polynomial; COMMA; p2 = polynomial; RPAR
+                  { ProbDistribution.Uniform (p1,p2) };
 
 update_element:
         |       p = polynomial

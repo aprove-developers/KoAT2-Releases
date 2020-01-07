@@ -33,8 +33,9 @@ rule read =
   | comment           { read lexbuf }
   | white             { read lexbuf }
   | newline           { next_line lexbuf; read lexbuf }
-  | "UNIFORM"         { P.UNIFORM }
   | "BINOMIAL"        { P.BINOMIAL }
+  | "GEOMETRIC"       { P.GEOMETRIC }
+  | "UNIFORM"         { P.UNIFORM }
   | "GOAL"            { P.GOAL }
   | "STARTTERM"       { P.STARTTERM }
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
