@@ -12,7 +12,7 @@
 %token				GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
 %token              COMMA COLON SEMICOLON
 %token              MIN MAX INFINITY ABS
-%token              UNIFORM
+%token              UNIFORM BINOMIAL
 %token				GUARDVEC GUARDVAL UPDATES PRECISION DIRECTTERMINATION INITIAL
 %token <string>		FRACTION
 
@@ -222,6 +222,9 @@ formula_atom :
   	| 	LESSTHAN { Formula.mk_lt }
   	| 	LESSEQUAL { Formula.mk_le } ;
 
+onlyOurFloat :
+        |        floatStr = UFLOAT
+                { ParserUtil.ourfloat_of_decimal_string floatStr};
 
 onlyPolynomial :
         |       poly = polynomial EOF { poly } ;
@@ -246,7 +249,9 @@ polynomial :
 
 dist:
         |       UNIFORM; LPAR; p1 = polynomial; COMMA; p2 = polynomial; RPAR
-                  { ProbDistribution.Uniform (p1,p2) };
+                  { ProbDistribution.Uniform (p1,p2) }
+        |       BINOMIAL; LPAR; n = polynomial; COMMA; p = onlyOurFloat; RPAR
+                  { ProbDistribution.Binomial (n,p) };
 
 update_element:
         |       p = polynomial

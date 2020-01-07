@@ -34,6 +34,7 @@ rule read =
   | white             { read lexbuf }
   | newline           { next_line lexbuf; read lexbuf }
   | "UNIFORM"         { P.UNIFORM }
+  | "BINOMIAL"        { P.BINOMIAL }
   | "GOAL"            { P.GOAL }
   | "STARTTERM"       { P.STARTTERM }
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
