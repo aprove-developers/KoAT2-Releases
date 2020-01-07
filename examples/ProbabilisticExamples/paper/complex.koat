@@ -1,0 +1,12 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+#(VAR X Y W N M)
+(VAR C B A)
+(RULES
+  #f(X,Y,W,N,M) -> g(0,Y,W,N,M)
+  #f(X,Y,W,N,M) -> h(0,1,2,3,4)
+  f(C,B,A) -> g(0,1,2)
+  #g(X,Y,W,N,M) -> h(UNIFORM(-1,2),Y+3*M,W,N,M) :|: X<N
+  #h(X,Y,W,N,M) -> i(X,BINOMIAL(3,0.5),W,N,M)
+  #i(X,Y,W,N,M) -> g(X,Y,W,N,M)
+)
