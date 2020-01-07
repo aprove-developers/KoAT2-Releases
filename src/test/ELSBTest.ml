@@ -34,7 +34,7 @@ let tests =
             |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
         in
         let rv = ((gt,loc),var) in
-        let elsb = ExpLocalSizeBound.elsb elsb_cache prog rv in
+        let elsb = Tuple2.first @@ ExpLocalSizeBound.elsb elsb_cache prog rv in
         let error_string =
           "elsb_mismatch elsb: " ^ (RealBound.show ~complexity:false elsb)
           ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)

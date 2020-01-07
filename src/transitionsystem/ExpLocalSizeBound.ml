@@ -28,7 +28,7 @@ let print_matrix =
 
 
 type concave_convexe_cache = (concave_convexe_op * BoundsInst.RealBound.t, bool) Hashtbl.t
-type elsb_bound_cache = (int * string * string, BoundsInst.RealBound.t) Hashtbl.t
+type elsb_bound_cache = (int * string * string, BoundsInst.RealBound.t * BoundsInst.RealBound.t) Hashtbl.t
 type elsb_cache = (concave_convexe_cache * elsb_bound_cache)
 
 let new_cache: unit -> elsb_cache = fun () -> (Hashtbl.create 10, Hashtbl.create 10)
@@ -140,67 +140,18 @@ let bound_is_convexe cache =
 (* TODO avoid invocation of Z3 for linearity check  *)
 let appr_substitution_is_valid cache bound = (bound_is_concave cache bound) && (bound_is_convexe cache bound)
 
-let simplify_poly_with_guard guard (poly: RealPolynomial.t) =
-  let check_var var =
-    let var_var = Var.fresh_id Var.Int () in
-    let guard_formula = guard |> Formula.mk in
-    let guard_formula_var_var = guard
-                                |> Constraints.Constraint.map_polynomial
-                                     (Polynomial.substitute var ~replacement:(Polynomial.of_var var_var))
-                                |> Formula.mk
-    in
-    let solver = Solver.create () in
-    let var1 = Var.fresh_id Var.Int () in
-    let guard_impls_var1 =
-      Formula.implies (guard_formula)
-        (Formula.mk_eq (Polynomial.of_var var) (Polynomial.of_var var1))
-    in
-    let var2 = Var.fresh_id Var.Int () in
-    let guard_impls_var2 =
-      Formula.implies (guard_formula_var_var)
-        (Formula.mk_eq (Polynomial.of_var var_var) (Polynomial.of_var var2))
-    in
-    let exists_two_different_impls =
-      let vars_uneq_form = Polynomial.(Formula.mk_uneq (of_var var1) (of_var var2)) in
-      Solver.add solver (guard_impls_var1);
-      Solver.push solver;
-      Solver.add solver (guard_impls_var2);
-      Solver.add solver (vars_uneq_form);
-      Solver.satisfiable solver
-    in
-    if not exists_two_different_impls then
-      begin
-        Solver.pop solver;
-        Solver.model_real solver
-        |> Option.map (Valuation.eval var1)
-      end
-    else
-      None
-
+let eliminate_var other_vars inv var =
+  let new_vars =
+    Var.fresh_id_list Var.Real (VarSet.cardinal other_vars)
   in
-  RealPolynomial.vars poly
-  |> VarSet.to_list
-  |> List.map (fun v -> (v, check_var v))
-  |> List.filter (Option.is_some % Tuple2.second)
-  |> List.map (fun (v,valuation) -> (v,Option.get valuation))
-  |> Valuation.from
-  |>  RealPolynomial.eval_partial poly
-  |>  RealPolynomial.simplify
-
-let bound_nondet_var prog_vars inv var =
-  let vars =
-    Var.fresh_id_list Var.Real (VarSet.cardinal prog_vars)
-  in
-  let coeffs = vars |> List.map (RealPolynomial.of_var) in
+  let coeffs = new_vars |> List.map (RealPolynomial.of_var) in
   let constant_var = Var.fresh_id Var.Real () in
   let constant = constant_var |> RealPolynomial.of_var in
   let para_poly =
-    RealParameterPolynomial.of_coeff_list coeffs (VarSet.to_list prog_vars)
+    RealParameterPolynomial.of_coeff_list coeffs (VarSet.to_list other_vars)
     |> RealParameterPolynomial.(add (of_constant constant))
   in
-  let nondet_var = RealParameterPolynomial.of_var var in
-  let comp_operator kind =
-    match kind with
+  let comp_operator = function
     | `Upper -> Atoms.RealParameterAtom.mk_ge
     | `Lower -> Atoms.RealParameterAtom.mk_le
   in
@@ -208,24 +159,22 @@ let bound_nondet_var prog_vars inv var =
     | `Upper -> RealParameterPolynomial.of_constant (RealPolynomial.of_constant @@ OurNum.of_int 1)
     | `Lower -> RealParameterPolynomial.of_constant (RealPolynomial.of_constant @@ OurNum.of_int (-1))
   in
+  let var_poly = RealParameterPolynomial.of_var var in
   let solver = Solver.create () in
   let formula kind =
-    Constraints.RealParameterConstraint.farkas_transform inv ((comp_operator kind) RealParameterPolynomial.((kind_coeff kind) * para_poly) nondet_var)
+    Constraints.RealParameterConstraint.farkas_transform inv ((comp_operator kind) RealParameterPolynomial.((kind_coeff kind) * para_poly) var_poly)
     |> RealFormula.mk
   in
-  Solver.add_real solver (formula `Upper);
-  Solver.add_real solver (formula `Lower);
-  Solver.minimize_absolute solver (constant_var :: vars);
+  Solver.add_real solver @@ formula `Upper;
+  Solver.add_real solver @@ formula `Lower;
+  Solver.minimize_absolute_with_weight solver ((constant_var,1) :: List.map (fun v -> v,2) new_vars);
   match Solver.model_real solver with
   | Some model ->
       RealParameterPolynomial.eval_coefficients (flip Valuation.eval model) para_poly
-      |> RealBound.of_poly |> RealBound.abs
-  | None -> default
+      |> fun p -> Some (RealBound.of_poly p)
+  | None -> None
 
-let substitute_nondet_var prog_vars temp_vars inv b =
-  VarSet.fold (fun v -> RealBound.appr_substitution_abs_one v @@ bound_nondet_var prog_vars inv v) temp_vars b
-
-let elsb_ program (((gt, l), v): RV.t): RealBound.t =
+let elsb_ program (((gt, l), v): RV.t): RealBound.t * RealBound.t =
   let execute () =
     let transitions =
       GeneralTransition.transitions gt
@@ -238,11 +187,9 @@ let elsb_ program (((gt, l), v): RV.t): RealBound.t =
     let handle_update_element ue =
       match ue with
       | TransitionLabel.UpdateElement.Poly p ->
-          RealPolynomial.(of_intpoly p - of_var v)
-          |> simplify_poly_with_guard (GeneralTransition.guard gt)
-          |> RealBound.of_poly
+          (RealBound.of_poly RealPolynomial.(of_intpoly p - of_var v), RealBound.of_poly @@ RealPolynomial.of_intpoly p)
       | TransitionLabel.UpdateElement.Dist d ->
-          ProbDistribution.expected_value_abs d
+          (ProbDistribution.expected_value_abs d, RealBound.(of_var v + ProbDistribution.expected_value_abs d))
     in
     let handle_transition trans =
       Transition.label trans
@@ -250,22 +197,41 @@ let elsb_ program (((gt, l), v): RV.t): RealBound.t =
       |? TransitionLabel.UpdateElement.Poly (Polynomial.of_var v)
       |> handle_update_element
     in
-
+    let bound_nondet_vars =
+      VarSet.fold
+        (fun v b ->
+          let upper_bound =
+            Option.default RealBound.infinity
+              (eliminate_var
+                (Program.input_vars program)
+                (Constraints.RealConstraint.of_intconstraint @@ GeneralTransition.guard gt) v)
+          in
+          RealBound.appr_substitution_abs_one v upper_bound b)
+        (VarSet.diff (Program.vars program) (Program.input_vars program))
+    in
+    let simplify_with_guard b =
+      VarSet.fold
+        (fun v b' ->
+          let other_vars = VarSet.remove v (RealBound.vars b') in
+          let inv = Constraints.RealConstraint.of_intconstraint (GeneralTransition.guard gt) in
+          let v_subst = Option.default (RealBound.of_var v) (eliminate_var other_vars inv v) in
+          RealBound.appr_substitution_abs_one v v_subst b')
+        (RealBound.vars b) b
+    in
     transitions_with_prob
     |> List.enum
     |> Enum.map (fun (t,p) -> (p, handle_transition t))
-    |> Enum.map RealBound.(fun (p,bound) -> of_constant p * abs bound)
-    |> Enum.map RealBound.simplify_vars_nonnegative
-    |> RealBound.sum
-    |> substitute_nondet_var
-        (Program.input_vars program)
-        (VarSet.diff (Program.vars program) (Program.input_vars program))
-        (GeneralTransition.guard gt |> Constraints.RealConstraint.of_intconstraint)
+    |> Enum.map (fun (p,(bound,bound_plus_var)) -> RealBound.(of_constant p * abs bound, of_constant p * abs bound_plus_var))
+    |> Enum.map (fun (b,b_p_v) -> RealBound.simplify_vars_nonnegative b, RealBound.simplify_vars_nonnegative b_p_v)
+    |> fun en -> (RealBound.sum % Enum.map Tuple2.first @@ Enum.clone en, RealBound.sum % Enum.map Tuple2.second @@ Enum.clone en)
+    |> fun (b,b_v_p) -> (bound_nondet_vars b, bound_nondet_vars b_v_p)
+    |> fun (b,b_v_p) -> (simplify_with_guard b, simplify_with_guard b_v_p)
+    |> fun (b,b_v_p) -> (RealBound.simplify_vars_nonnegative b, RealBound.simplify_vars_nonnegative b_v_p)
   in
   Logger.with_log
     logger Logger.DEBUG
     (fun () -> "elsb",["gt", GeneralTransition.to_id_string gt; "l", Location.to_string l; "var", Var.to_string v])
-    ~result:RealBound.to_string
+    ~result:(fun (elsb, elsb_plus_var) -> "elsb: "^ RealBound.to_string elsb ^ " elsb_plus_var: "^ RealBound.to_string elsb_plus_var)
     execute
 
 let elsb cache =
@@ -274,4 +240,4 @@ let elsb cache =
     (fun (program,rv) -> elsb_ program rv)
 
 let vars cache program rv =
-  RealBound.(elsb cache program rv + abs (of_var (RV.variable rv))) |> RealBound.vars
+  Tuple2.second RealBound.(elsb cache program rv) |> RealBound.vars

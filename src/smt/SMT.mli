@@ -66,6 +66,8 @@ sig
   val maximize : t -> Var.t -> unit
 
   (** Sets the variables, which absolute value should be minimized. Does not work as intended? *)
+  val minimize_absolute_with_weight : t -> (Var.t*int) list -> unit
+
   val minimize_absolute : t -> Var.t list -> unit
 
   (** Sets the variables, which absolute value should be minimized. Another try*)

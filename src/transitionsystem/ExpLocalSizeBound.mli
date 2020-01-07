@@ -15,14 +15,12 @@ module NPRV : sig include module type of RVGTypes.RVG.RV end
    the (expected) next value (for example using the nontrivial sizebounds method)  *)
 val vars : elsb_cache -> Program.t -> RV.t -> VarSet.t
 
-(** Computes an expected local size bound *)
-val elsb : elsb_cache -> Program.t -> RV.t -> RealBound.t
+(** Computes an expected local size bound. The first returned element is the expected change bound, whereas
+    the second returned element is an expected local size bound*)
+val elsb : elsb_cache -> Program.t -> RV.t -> RealBound.t * RealBound.t
 
 (** Checks whether a given (possibly multivariate) bound is concave using SMT-Solving *)
 val bound_is_concave : elsb_cache -> RealBound.t -> bool
 
 (** Checks whether a given (possibly multivariate) bound is convexe using SMT-Solving *)
 val bound_is_convexe : elsb_cache -> RealBound.t -> bool
-
-(** If the guards encode x = a for a variable x and a constant a then substitute x by a*)
-val simplify_poly_with_guard : TransitionLabel.Guard.t -> RealPolynomial.t -> RealPolynomial.t
