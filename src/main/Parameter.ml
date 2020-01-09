@@ -158,6 +158,3 @@ let rename_program program =
 
 let rename_program_option =
   Option.map rename_program
-  (*match opt with
-    |Some program -> Some (rename_program program)
-    |None -> None*)

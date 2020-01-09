@@ -29,7 +29,8 @@ module UpdateElement :
     val is_polynomial : t -> bool
   end
 
-val make : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> t
+val make : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t)
+        -> string -> input_vars_ordered:Var.t list -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> t
 
 val mk : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) ->
          com_kind:string ->
@@ -39,7 +40,8 @@ val mk : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) ->
          vars:Var.t list ->
          t
 
-val make_prob : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) -> string -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> gt_id:int -> probability:OurFloat.t -> t
+val make_prob : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) -> string
+             -> input_vars_ordered:Var.t list -> update:UpdateElement.t VarMap.t -> guard:Guard.t -> gt_id:int -> probability:OurFloat.t -> t
 
 val mk_prob : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) ->
          com_kind:string ->

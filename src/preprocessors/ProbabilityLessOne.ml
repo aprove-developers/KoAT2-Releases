@@ -2,7 +2,7 @@ open Batteries
 open ProgramTypes
 open Polynomials
 
-(** This preprocessor throws an error if the total Probability of a Generalized Transition is less than one. *)
+(** This preprocessor creates additional transitions leading to a sink in order to ensure that the total probability of a general tranistion is 1*)
 
 let logger = Logging.(get Preprocessor)
 
@@ -37,6 +37,7 @@ let check_program trans_id_counter program =
                                       "Com_1"
                                       ~guard:(Constraints.Constraint.mk_true)
                                       ~gt_id:(GeneralTransition.id trans)
+                                      ~input_vars_ordered:(Program.input_vars program |> VarSet.to_list)
                                       ~update:(identity_update)
                                       ~probability:(OurFloat.(-) (OurFloat.of_float 1.) (GeneralTransition.total_probability trans)),
                                   new_sink))
