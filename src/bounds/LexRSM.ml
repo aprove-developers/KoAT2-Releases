@@ -256,9 +256,9 @@ let rec backtrack_1d_non_increasing cache = function
           Solver.add_real solver (non_increasing_constraint cache x);
           Solver.add_real solver (bounded_constraint cache x);
           if Solver.satisfiable solver then (
-            let (n1, ys1) = backtrack_1d cache (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
+            let (n1, ys1) = backtrack_1d_non_increasing cache (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
             Solver.pop solver;
-            let (n2, ys2) = backtrack_1d cache (xs, n, ys, solver) in
+            let (n2, ys2) = backtrack_1d_non_increasing cache (xs, n, ys, solver) in
             if n1 >= n2 then
               (n1, ys1)
             else
