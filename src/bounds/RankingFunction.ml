@@ -62,7 +62,7 @@ let as_parapoly label var =
   | Some (TransitionLabel.UpdateElement.Dist _) -> ParameterPolynomial.of_var var
 
 (** Given a list of variables an affine template-polynomial is generated*)
-let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
+let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list * Var.t =
   let vars = VarSet.elements vars in
   let num_vars = List.length vars in
   let fresh_vars = Var.fresh_id_list Var.Int num_vars in
@@ -71,24 +71,26 @@ let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
   let constant_var = Var.fresh_id Var.Int () in
   let constant_poly = ParameterPolynomial.of_constant (Polynomial.of_var constant_var) in
   ParameterPolynomial.(linear_poly + constant_poly),
-  List.append fresh_vars [constant_var]
+  List.append fresh_vars [constant_var],
+  constant_var
 
 let fresh_coeffs: Var.t list ref = ref []
+let fresh_constants: Var.t list ref = ref []
 
 let compute_ranking_templates cache (vars: VarSet.t) (locations: Location.t list): unit =
   let execute () =
     let ins_loc_prf location =
       (* Each location needs its own ranking template with different fresh variables *)
-      let (parameter_poly, fresh_vars) = ranking_template vars in
-      (location, parameter_poly, fresh_vars)
+      let (parameter_poly, fresh_vars,fresh_constant) = ranking_template vars in
+      (location, parameter_poly, fresh_vars, fresh_constant)
     in
     let templates = List.map ins_loc_prf locations in
     templates
-    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add (get_template_table cache) location polynomial);
+    |> List.iter (fun (location,polynomial,_,_) -> TemplateTable.add (get_template_table cache) location polynomial);
     templates
-    |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
-    |> List.flatten
-    |> (fun fresh_vars -> fresh_coeffs := fresh_vars)
+    |> List.map (fun (_,_,fresh_vars,fresh_constant)-> fresh_vars, fresh_constant)
+    |> List.fold_left (fun (f_vs,f_cs) (f_v,f_c) -> List.append f_v f_vs, f_c::f_cs) ([],[])
+    |> (fun (fresh_vars,fresh_consts) -> fresh_coeffs := fresh_vars; fresh_constants := fresh_consts)
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "compute_ranking_templates", [])
@@ -173,7 +175,13 @@ let try_decreasing cache (opt: Solver.t) (non_increasing: Transition.t Stack.t) 
          Solver.add opt (bounded_constraint cache measure decreasing);
          Solver.add opt (decreasing_constraint cache measure decreasing);
          if Solver.satisfiable opt then (
-           Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
+           let fresh_coeffs_weighted =
+            !fresh_coeffs
+            |> List.filter (fun c -> not @@ List.mem c !fresh_constants)
+            |> List.map (fun c -> c,2)
+           in
+           let fresh_constants_weighted = List.map (fun c -> c,1) !fresh_constants in
+           Solver.minimize_absolute_with_weight opt @@ List.append fresh_coeffs_weighted fresh_constants_weighted;
            Solver.model opt
            |> Option.map (make cache decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
            |> Option.may (fun ranking_function ->
