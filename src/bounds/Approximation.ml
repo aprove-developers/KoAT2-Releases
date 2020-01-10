@@ -71,7 +71,7 @@ let add_expsizebound simplify_smt bound (gt,l) var appr =
       |> (fun appr -> if simplify_smt then
            ExpectedSizeApproximation.add ~simplifyfunc:(SimplifySMT.simplify_bound_with_smt_all_positive logger) `Upper bound (gt,l) var appr
          else
-           ExpectedSizeApproximation.add `Upper bound (gt,l) var appr )
+           ExpectedSizeApproximation.add ~simplifyfunc:RealBound.simplify_vars_nonnegative `Upper bound (gt,l) var appr )
          }
 
 let add_sizebounds kind bound scc appr =
@@ -82,7 +82,7 @@ let add_expsizebounds simplify_smt bound scc appr =
       if simplify_smt then
         ExpectedSizeApproximation.add_all_abs ~simplifyfunc:(SimplifySMT.simplify_bound_with_smt_all_positive logger) bound scc appr.expsize
       else
-        ExpectedSizeApproximation.add_all_abs bound scc appr.expsize
+        ExpectedSizeApproximation.add_all_abs ~simplifyfunc:RealBound.simplify_vars_nonnegative bound scc appr.expsize
   }
 
 (** Timebound related methods *)
@@ -133,7 +133,7 @@ let add_exptimebound simplify_smt bound gt appr =
       if simplify_smt then
         GeneralTransitionApproximation.add ~simplifyfunc:(SimplifySMT.simplify_bound_with_smt_all_positive logger) bound gt appr.exptime
       else
-        GeneralTransitionApproximation.add bound gt appr.exptime
+        GeneralTransitionApproximation.add ~simplifyfunc:RealBound.simplify_vars_nonnegative bound gt appr.exptime
   }
 
 
@@ -168,7 +168,7 @@ let add_expcostbound simplify_smt bound gt appr =
       if simplify_smt then
         GeneralTransitionApproximation.add ~simplifyfunc:(SimplifySMT.simplify_bound_with_smt_all_positive logger) bound gt appr.expcost
       else
-        GeneralTransitionApproximation.add bound gt appr.expcost
+        GeneralTransitionApproximation.add ~simplifyfunc:RealBound.simplify_vars_nonnegative bound gt appr.expcost
   }
 
 let to_string program expected appr=

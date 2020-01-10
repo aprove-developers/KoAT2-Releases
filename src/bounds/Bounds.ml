@@ -37,12 +37,15 @@ let lift_nonprob_timebounds simplify_smt program appr =
   |> fun gtset -> GeneralTransitionSet.fold
        (fun gt appr ->
           let timebound = get_gt_timebound gt in
-          Approximation.add_exptimebound simplify_smt (RealBound.of_intbound timebound) gt appr
-          |> Approximation.add_timebound_gt timebound gt
-          |> Approximation.add_expcostbound simplify_smt
-              ( RealBound.(of_intbound timebound * appr_substition_abs_all (BoundsHelper.nonprob_incoming_size program appr gt) (GeneralTransition.cost gt))
-              |> RealBound.simplify_vars_nonnegative)
-              gt
+          if Bound.is_infinity timebound then
+            appr
+          else
+            Approximation.add_exptimebound simplify_smt (RealBound.of_intbound timebound) gt appr
+            |> Approximation.add_timebound_gt timebound gt
+            |> Approximation.add_expcostbound simplify_smt
+                ( RealBound.(of_intbound timebound * appr_substition_abs_all (BoundsHelper.nonprob_incoming_size program appr gt) (GeneralTransition.cost gt))
+                |> RealBound.simplify_vars_nonnegative)
+                gt
        )
        gtset
        appr
