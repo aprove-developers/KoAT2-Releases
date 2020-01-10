@@ -543,6 +543,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             let get_coeff_elem = function
               | Product (Const c, b) -> (b,c)
               | Product (b, Const c) -> (b,c)
+              | Const k              -> (Const Num.one, k)
               | Neg b                -> (b, Num.neg Num.one)
               | b                    -> (b,Num.one)
             in
