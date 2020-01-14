@@ -36,6 +36,8 @@ val mk : ?cost:polynomial ->
          vars:Var.t list ->
          t
 
+val trival : VarSet.t -> t
+
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
 val append : t -> t -> t

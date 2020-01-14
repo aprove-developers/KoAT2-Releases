@@ -58,3 +58,4 @@ let memoize ~extractor f =
        y
   in g
            
+let flip f x y = f y x

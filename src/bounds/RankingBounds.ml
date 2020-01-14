@@ -8,6 +8,8 @@ open CFR
 
 let logger = Logging.(get Time)
 
+let logger_cfr = Logging.(get CFR)
+
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
 (** All entry transitions of the given transitions.
@@ -168,12 +170,12 @@ let improve_scc ?(mrf = false) ?(cfr = false) (scc: TransitionSet.t)  measure pr
            |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank measure program appr rank
              ) appr)
-         ) appr 
+         ) appr
       in if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then (
         ignore(Logger.with_log logger Logger.INFO
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc ;"measure", show_measure measure])
             execute);
-            CFR.apply_cfr program;
+            ignore (CFR.apply_cfr program);
             nonLinearTransitions := TransitionSet.empty;
             Logger.with_log logger Logger.INFO
               (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
@@ -182,13 +184,15 @@ let improve_scc ?(mrf = false) ?(cfr = false) (scc: TransitionSet.t)  measure pr
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
             execute)
 
-(* Stops if we something has changed (and we compute new sizebounds)*)
-let rec fold_until f p pre = function
+(* Stops if something has changed (and we compute new sizebounds) Not Working ??? TODO *)
+let rec fold_until (f: Approximation.t MaybeChanged.t -> ProgramTypes.TransitionSet.t -> Approximation.t MaybeChanged.t)
+                   (p: Approximation.t MaybeChanged.t -> bool) pre = function
     | x :: xs when p pre -> pre
     | x :: xs -> fold_until f p (f pre x) xs
     | [] -> pre
 
 let improve ?(mrf = false) ?(cfr = false) measure program appr  =
+Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions)]);
   program
     |> Program.sccs
     |> List.of_enum 

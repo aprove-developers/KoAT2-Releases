@@ -15,11 +15,21 @@ val add_locations : Location.t Enum.t -> TransitionGraph.t -> TransitionGraph.t
 (** Adds all transitions from an enum to a transtion graph. *)
 val add_transitions : Transition.t Enum.t -> TransitionGraph.t -> TransitionGraph.t
 
+(* Adds the transitions from a certain transitionset to a program *)
+val add_TransitionSet : ProgramTypes.TransitionSet.t -> t -> t
+
 (** Removes the location from the program and all edges to it. *)
 val remove_location : t -> Location.t -> t
 
 (** Removes a transition from a program. *)
 val remove_transition : t -> Transition.t -> t
+
+(** Adds a transition from a program. *)
+val add_transition : t -> Transition.t -> t
+
+(* Removes the transitions from a certain transitionset to a program *)
+val remove_TransitionSet: ProgramTypes.TransitionSet.t -> t -> t
+
 
 (** TODO doc *)
 val map_graph : (TransitionGraph.t -> TransitionGraph.t) -> t -> t
@@ -33,10 +43,10 @@ val rename : t -> t
 (** Creates a program from a list of transitions and a (start) location. *)
 val from : Transition.t list -> Location.t -> t
 
-(** Returns for a program the transition graph. *)
+(** Returns transition graph of a program. *)
 val graph : t -> TransitionGraph.t
 
-(** Adds the invariant to the location of the program. *)
+(** Adds the invariant to a location of the program. *)
 val add_invariant : Location.t -> Constraint.t -> t -> t
 
 (** Returns a set of all transitions which occur directly before the given transition in the graph. 
@@ -76,7 +86,7 @@ val start : t -> Location.t
 (** Returns the (biggest) strongly connected components of the transiton graph. *)  
 val sccs : t -> TransitionSet.t Enum.t
 
-(** Returns a transitions which are parallel to a given transition. Thus, all transitions start in the same location and end in the same location. *)
+(** Returns all transitions which are parallel to a given transition. Thus, all transitions start in the same location and end in the same location. *)
 val parallelTransitions : t -> Location.t * TransitionLabel.t * Location.t -> TransitionSet.t
 
 (** Returns all transitions, that belong to an SCC. *)

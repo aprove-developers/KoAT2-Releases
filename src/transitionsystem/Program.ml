@@ -9,6 +9,10 @@ type t = {
     start: Location.t;
   }
 
+let start program = program.start
+  
+let graph g = g.graph
+
 let equal equal_graph program1 program2 =
   equal_graph program1.graph program2.graph
   && Location.equal program1.start program2.start
@@ -31,6 +35,20 @@ let remove_location program location =
 
 let remove_transition program transition =
   { program with graph = TransitionGraph.remove_edge_e program.graph transition }
+
+let add_transition program transition =
+  { program with graph = TransitionGraph.add_edge_e program.graph transition }
+
+(* Removes the transitions from a certain transitionset to a program *)
+let remove_TransitionSet (transitions:  TransitionSet.t) (program: t)  =
+  program
+  |> TransitionSet.fold (fun transition resulting_program  -> 
+                                transition
+                                |> remove_transition resulting_program) transitions
+
+(* Adds the transitions from a certain transitionset to a program *)
+let add_TransitionSet  (transitions:  TransitionSet.t) (program: t) =
+  { program with graph = add_transitions (TransitionSet.enum transitions) (graph program)}
 
 let map_graph f program =
   { program with graph = f program.graph }
@@ -76,10 +94,6 @@ let from transitions start =
          graph = mk (List.enum transitions);
          start = start;
        }
-
-let start program = program.start
-  
-let graph g = g.graph
             
 let transitions =
   TransitionGraph.transitions % graph

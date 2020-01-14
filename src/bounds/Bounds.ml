@@ -8,7 +8,7 @@ let rec find_bounds_ ?(mrf = false) ?(cfr = false) (program: Program.t) (appr: A
   appr
   |> SizeBounds.improve program
   |> RankingBounds.improve  ~mrf:mrf ~cfr:cfr `Time program 
-  |> MaybeChanged.if_changed (find_bounds_  ~mrf:mrf program)
+  |> MaybeChanged.if_changed (find_bounds_  ~mrf:mrf ~cfr:cfr program)
   |> MaybeChanged.unpack
 
 (** Triggers size and time-bounds computation and, if necessary, sets maximal depth of MRFs. *)

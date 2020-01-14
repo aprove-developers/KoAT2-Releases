@@ -27,6 +27,11 @@ let make ?(cost=one) com_kind ~update ~guard =
     update; guard; cost;
   }
 
+let trival variables =
+  let var_map = 
+    VarSet.fold (fun var map -> VarMap.add var (Polynomial.of_var var) map) variables VarMap.empty in
+  make "Com_1" ~update:var_map ~guard:Guard.mk_true
+  
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
 
