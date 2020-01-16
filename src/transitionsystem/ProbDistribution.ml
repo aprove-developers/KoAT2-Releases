@@ -58,7 +58,7 @@ let guard dist v v' =
   match dist with
     | Binomial (n,p) -> Guard.Infix.(Polynomial.of_var v' <= Polynomial.(n+ of_var v) &&
                                      Polynomial.of_var v' >= Polynomial.of_var v)
-    | Geometric p   -> Guard.Infix.(Polynomial.of_var v' > Polynomial.of_var v)
+    | Geometric p   -> Guard.Infix.(Polynomial.of_var v' >= Polynomial.of_var v)
     | Uniform (a,b) -> Guard.Infix.(Polynomial.of_var v' <= Polynomial.(b + of_var v) &&
                                     Polynomial.of_var v' >= Polynomial.(a + of_var v) )
 
