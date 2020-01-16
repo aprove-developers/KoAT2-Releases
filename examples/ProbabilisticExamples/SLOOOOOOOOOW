@@ -1,0 +1,8 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR X N)
+(RULES
+  f(X,N) -{0;0}> g(X,N) :|: N>0
+  g(X,N) -{0;0}> h(X,N) :|: X<N # start loop
+  h(X,N) -> 0.5:g(X+2,N) :+: 0.5:g(X+1,N)
+)
