@@ -27,8 +27,8 @@ let print_matrix =
   Util.enum_to_string (Util.enum_to_string RealPolynomial.to_string) % List.enum % List.map (List.enum)
 
 
-type concave_convexe_cache = (concave_convexe_op * BoundsInst.RealBound.t, bool) Hashtbl.t
-type elsb_bound_cache = (int * string * string, BoundsInst.RealBound.t * BoundsInst.RealBound.t) Hashtbl.t
+type concave_convexe_cache = (concave_convexe_op * String.t, bool) Hashtbl.t
+type elsb_bound_cache = (int * string * string, RealBound.t * RealBound.t) Hashtbl.t
 type elsb_cache = (concave_convexe_cache * elsb_bound_cache)
 
 let new_cache: unit -> elsb_cache = fun () -> (Hashtbl.create 10, Hashtbl.create 10)
@@ -129,7 +129,7 @@ let poly_is_convexe =
   concave_convex_check Convexe
 
 let concave_convex_check_v2 cache =
-  Util.memoize (get_concave_convexe cache) ~extractor:identity (uncurry concave_convex_check_v2_)
+  Util.memoize (get_concave_convexe cache) ~extractor:(fun (op,b) -> (op,RealBound.to_string b)) (uncurry concave_convex_check_v2_)
 
 let bound_is_concave cache =
   (curry (concave_convex_check_v2 cache)) Concave
