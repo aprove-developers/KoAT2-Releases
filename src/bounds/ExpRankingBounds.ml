@@ -106,7 +106,8 @@ let improve_with_rank add_exptimebound add_expcostbound program appr (rank: LexR
      MaybeChanged.changed (add_exptimebound time (LexRSM.decreasing rank) appr)
   )
   |> (fun mca ->
-        if RealBound.is_infinity cost then
+        (* Has a new expcostbound been found? *)
+        if RealBound.is_infinity cost || not (RealBound.is_infinity (Approximation.expcostbound appr (LexRSM.decreasing rank))) then
           mca
         else
           MaybeChanged.(mca >>= (changed % add_expcostbound cost (LexRSM.decreasing rank)))

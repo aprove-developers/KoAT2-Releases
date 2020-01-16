@@ -27,8 +27,8 @@ let entry_transitions (logger: Logger.log) (program: Program.t) (rank_transition
                  (List.find (TransitionSet.mem transition % GeneralTransition.transitions) gts, Transition.target transition) )
   |> Enum.uniq_by (fun (gt1,l1) (gt2,l2) -> GeneralTransition.same gt1 gt2 && Location.equal l1 l2)
   |> tap (fun transitions -> Logger.log logger Logger.DEBUG
-                               (fun () -> "entry_transitions", 
+                               (fun () -> "entry_transitions",
                                [ "result", transitions
                                            |> Enum.clone |> Util.enum_to_string
                                            (fun (gt,l) -> "(" ^ GeneralTransition.to_id_string gt ^ ", " ^ Location.to_string l ^ ")")
-                               ; "transitions", rank_transitions |> List.enum |> Util.enum_to_string GeneralTransition.to_string]))
+                               ; "transitions", rank_transitions |> List.enum |> Util.enum_to_string GeneralTransition.to_id_string]))

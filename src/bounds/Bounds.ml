@@ -79,18 +79,18 @@ let lift_nonprob_sizebounds simplify_smt program appr =
        (fun appr ((gt,l),var) -> Approximation.add_expsizebound simplify_smt (get_gtl_sizebound ((gt,l),var)) (gt,l) var appr)
        appr
 
-let rec find_exp_bounds_ simplify_smt cache ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
-  ExpSizeBounds.improve simplify_smt (CacheManager.elsb_cache cache) ervg sccs program appr
-  |> ExpRankingBounds.improve (Approximation.add_exptimebound simplify_smt) (Approximation.add_expcostbound simplify_smt) (CacheManager.lrsm_cache cache) program
-  |> MaybeChanged.if_changed (find_exp_bounds_ simplify_smt cache ervg sccs program)
-  |> MaybeChanged.unpack
-
 (* add costbounds of 0 for all general transitions with cost 0 *)
 let add_trivial_expcostbounds program appr =
   Program.generalized_transitions program
   |> GeneralTransitionSet.enum
   |> Enum.filter (RealBound.equal RealBound.zero % GeneralTransition.cost)
   |> Enum.fold (flip (Approximation.add_expcostbound false RealBound.zero)) appr
+
+let rec find_exp_bounds_ simplify_smt cache ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
+  ExpSizeBounds.improve simplify_smt (CacheManager.elsb_cache cache) ervg sccs program appr
+  |> ExpRankingBounds.improve (Approximation.add_exptimebound simplify_smt) (Approximation.add_expcostbound simplify_smt) (CacheManager.lrsm_cache cache) program
+  |> MaybeChanged.if_changed (find_exp_bounds_ simplify_smt cache ervg sccs program)
+  |> MaybeChanged.unpack
 
 let rec find_exp_bounds simplify_smt ~generate_invariants_bottom_up (use_bottom_up: bool) (cache: CacheManager.t)
 (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
