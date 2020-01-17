@@ -112,6 +112,8 @@ module Make_BoundOver :
 
       val equal_complexity : complexity -> complexity -> bool
 
+      val compare_complexity : complexity -> complexity -> int
+
       val show_complexity : complexity -> string
 
       val show_complexity_termcomp : complexity -> string

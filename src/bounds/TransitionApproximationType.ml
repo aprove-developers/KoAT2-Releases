@@ -42,9 +42,15 @@ module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
     let sum_available (name,map) =
       Hashtbl.fold (fun transition bound result -> B.(bound + result)) map B.zero
 
+    let keep_minimum_degree_bound b1 b2 =
+      if B.compare_complexity (B.asymptotic_complexity b1) (B.asymptotic_complexity b2) = -1 then
+        b1
+      else
+        b2
+
     let add ?(simplifyfunc=identity) bound transition (name,map) =
       (try
-         Hashtbl.modify (Trans.id transition) (simplifyfunc % B.min bound) map
+         Hashtbl.modify (Trans.id transition) (simplifyfunc % keep_minimum_degree_bound bound) map
        with
        | Not_found -> Hashtbl.add map (Trans.id transition) (simplifyfunc bound));
       Logger.log logger Logger.INFO

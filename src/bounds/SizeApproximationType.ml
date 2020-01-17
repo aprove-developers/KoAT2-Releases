@@ -50,6 +50,12 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
 
     let empty = Map.create
 
+    let keep_minimum_degree_bound b1 b2 =
+      if B.compare_complexity (B.asymptotic_complexity b1) (B.asymptotic_complexity b2) = -1 then
+        b1
+      else
+        b2
+
     (* Returns the operator to combine two bounds with the best result. *)
     let combine_bounds ?(simplifyfunc = identity) kind b1 b2 = match kind with
       | `Lower -> simplifyfunc (B.max b1 b2)

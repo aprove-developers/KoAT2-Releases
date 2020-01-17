@@ -94,6 +94,18 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Polynomial of int
       | Exponential of int [@@deriving eq]
 
+    let compare_complexity b1 b2 =
+      match (b1,b2) with
+      | (Inf, Inf) -> 0
+      | (Exponential k1, Exponential k2) -> Int.compare k1 k2
+      | (Polynomial k1, Polynomial k2) -> Int.compare k1 k2
+      | (Polynomial _, Inf) -> -1
+      | (Exponential _, Inf) -> -1
+      | (Inf, Polynomial _) -> 1
+      | (Inf, Exponential _) -> 1
+      | (Polynomial _, Exponential _) -> -1
+      | (Exponential _, Polynomial _) -> 1
+
     let rec show_complexity = function
       | Inf -> "Infinity"
       | Polynomial 0 -> "O(1)"
