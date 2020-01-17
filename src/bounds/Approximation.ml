@@ -154,6 +154,9 @@ let costbound =
 let expcostbound =
   GeneralTransitionApproximation.get % expcost
 
+let is_expcost_bounded appr =
+  not % RealBound.is_infinity % expcostbound appr
+
 let program_costbound =
   TransitionApproximation.sum % cost
 

@@ -76,6 +76,8 @@ val is_time_bounded : t -> Transition.t -> bool
 
 val is_exptime_bounded : t -> GeneralTransition.t -> bool
 
+val is_expcost_bounded : t -> GeneralTransition.t -> bool
+
 (** Costbound related methods *)
 
 (** Returns a costbound for the transition. *)
