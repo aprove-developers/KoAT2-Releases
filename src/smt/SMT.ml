@@ -220,13 +220,15 @@ module Z3Opt =
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
                             expr
-                            |> Z3.Arithmetic.Integer.get_big_int
-                            (*|> OurInt.of_int*)
+                            |> Z3.Arithmetic.Integer.numeral_to_string
+                            |> OurInt.of_string
                           else
                             expr
                             |> Z3.Arithmetic.Real.get_ratio
                             (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
-                            |> Ratio.round_ratio
+                            |> Q.to_bigint
+                            |> Z.to_string
+                            |> OurInt.of_string
                         )
                       in
                       (var, value)
@@ -370,13 +372,15 @@ module IncrementalZ3Solver =
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
                             expr
-                            |> Z3.Arithmetic.Integer.get_big_int
-                            (*|> OurInt.of_int*)
+                            |> Z3.Arithmetic.Integer.numeral_to_string
+                            |> OurInt.of_string
                           else
                             expr
                             |> Z3.Arithmetic.Real.get_ratio
                             (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
-                            |> Ratio.round_ratio
+                            |> Q.to_bigint
+                            |> Z.to_string
+                            |> OurInt.of_string
                         )
                       in
                       (var, value)
@@ -408,12 +412,14 @@ module IncrementalZ3Solver =
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
                             expr
-                            |> Z3.Arithmetic.Integer.get_big_int
+                            |> Z3.Arithmetic.Integer.numeral_to_string
+                            |> OurInt.of_string
                             |> OurFloat.of_ourint
                           else
                             expr
                             |> Z3.Arithmetic.Real.get_ratio
-                            |> Num.num_of_ratio
+                            |> Q.to_string
+                            |> OurFloat.of_string
                         )
                       in
                       (var, value)
