@@ -142,8 +142,8 @@ let compute_bounds (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t)
 
 let improve_with_rank add_exptimebound add_expcostbound program appr (rank: LexRSM.t) =
   let (time,cost,cost_nonprob_size) = compute_bounds appr program rank in
-  (if RealBound.is_infinity time then
-     MaybeChanged.same appr
+  (if RealBound.is_infinity time || Approximation.is_exptime_bounded appr (LexRSM.decreasing rank) then
+      MaybeChanged.same appr
    else
      MaybeChanged.changed (add_exptimebound time (LexRSM.decreasing rank) appr)
   )
