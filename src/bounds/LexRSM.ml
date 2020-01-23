@@ -51,7 +51,7 @@ let as_realparapoly label var =
       |> RealParameterPolynomial.of_polynomial
 
 (** Given a list of variables an affine template-polynomial is generated*)
-let ranking_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
+let ranking_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list * Var.t =
   let vars = VarSet.elements vars in
   let num_vars = List.length vars in
   let fresh_vars = Var.fresh_id_list Var.Real num_vars in
@@ -59,25 +59,25 @@ let ranking_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
   let linear_poly = RealParameterPolynomial.of_coeff_list fresh_coeffs vars in
   let constant_var = Var.fresh_id Var.Real () in
   let constant_poly = RealParameterPolynomial.of_constant (RealPolynomial.of_var constant_var) in
-  RealParameterPolynomial.(linear_poly + constant_poly),
-  List.append fresh_vars [constant_var]
+  RealParameterPolynomial.(linear_poly + constant_poly), fresh_vars,constant_var
 
 let fresh_coeffs: Var.t list ref = ref []
+let fresh_consts: Var.t list ref = ref []
 
 let compute_ranking_templates cache (vars: VarSet.t) (locations: Location.t list): unit =
   let execute () =
     let ins_loc_prf location =
       (* Each location needs its own ranking template with different fresh variables *)
-      let (parameter_poly, fresh_vars) = ranking_template vars in
-      (location, parameter_poly, fresh_vars)
+      let (parameter_poly, fresh_vars, fresh_const) = ranking_template vars in
+      (location, parameter_poly, fresh_vars, fresh_const)
     in
     let templates = List.map ins_loc_prf locations in
     templates
-    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add (get_template_table cache) location polynomial);
+    |> List.iter (fun (location,polynomial,_,_) -> TemplateTable.add (get_template_table cache) location polynomial);
     templates
-    |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
-    |> List.flatten
-    |> (fun fresh_vars -> fresh_coeffs := fresh_vars)
+    |> List.fold_left (fun (l_vars,l_consts) (_,_,fresh_vars,fresh_const) -> (List.cons fresh_vars l_vars,List.cons fresh_const l_consts)) ([],[])
+    |> Tuple2.map1 List.flatten
+    |> (fun (fresh_vars, fresh_cs) -> fresh_coeffs := fresh_vars; fresh_consts := fresh_cs)
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "compute_ranking_templates", [])
@@ -92,7 +92,7 @@ let compute_cbound_template cache (vars: VarSet.t): unit =
   let execute () =
     vars
     |> ranking_template
-    |> fun (poly, vars) -> get_cbound_template cache := Option.some poly
+    |> fun (poly, _,_) -> get_cbound_template cache := Option.some poly
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> "compute_cbound_template", [])
@@ -278,7 +278,13 @@ let find_1d_lexrsm_non_increasing cache transitions decreasing =
                                          0, GeneralTransitionSet.empty, solver)
     in
     non_incr |> GeneralTransitionSet.to_list |> List.map (Solver.add_real solver % non_increasing_constraint cache) |> ignore;
-    Solver.minimize_absolute solver !fresh_coeffs;
+    let fresh_coeffs_weighted =
+     !fresh_coeffs
+     |> List.filter (fun c -> not @@ List.mem c !fresh_consts)
+     |> List.map (fun c -> c,2)
+    in
+    let fresh_constants_weighted = List.map (fun c -> c,1) !fresh_consts in
+    Solver.minimize_absolute_with_weight solver @@ List.append fresh_coeffs_weighted fresh_constants_weighted;
     Solver.model_real solver
     |> fun eval -> (eval, GeneralTransitionSet.add decreasing non_incr)
   else
@@ -299,7 +305,13 @@ let find_1d_lexrsm cache transitions remaining_transitions cbounded =
   if Solver.satisfiable solver then
     let (n, ranked) = backtrack_1d cache (remaining_list, 0, GeneralTransitionSet.empty, solver) in
     ranked |> GeneralTransitionSet.to_list |> List.map (fun gtrans -> Solver.add_real solver (decreasing_constraint cache gtrans)) |> ignore;
-    Solver.minimize_absolute solver !fresh_coeffs; (* Check if minimization is forgotten. *)
+    let fresh_coeffs_weighted =
+     !fresh_coeffs
+     |> List.filter (fun c -> not @@ List.mem c !fresh_consts)
+     |> List.map (fun c -> c,2)
+    in
+    let fresh_constants_weighted = List.map (fun c -> c,1) !fresh_consts in
+    Solver.minimize_absolute_with_weight solver @@ List.append fresh_coeffs_weighted fresh_constants_weighted;
     if n = 0 then
       (Solver.model_real solver, GeneralTransitionSet.empty)
     else
