@@ -40,56 +40,59 @@ let bottom_up_candidates program appr =
     execute
 
 let create_sub_program trans_id_counter scc scc_locs program: Program.t =
-  let new_start_location = Location.of_string @@ Printf.sprintf "loc_start_bu_%i" (Batteries.unique ()) in
+  let execute () =
+    let new_start_location = Location.of_string @@ Printf.sprintf "loc_start_bu_%i" (Batteries.unique ()) in
 
-  let modified_outgoing_of_scc: TransitionSet.t =
-    Program.transitions program
-    |> TransitionSet.filter (fun t -> (LocationSet.mem (Transition.src t) scc_locs) && (not @@ LocationSet.mem (Transition.target t) scc_locs))
-    |> TransitionSet.map (Transition.update_cost (Polynomials.Polynomial.zero, RealBound.zero))
-  in
-  let new_start_transitions =
-    Program.transitions program
-    |> TransitionSet.enum
-    (* get incoming transitions *)
-    |> Enum.filter (fun t -> (not @@ LocationSet.mem (Transition.src t) scc_locs) && (LocationSet.mem (Transition.target t) scc_locs))
-    |> Enum.map Transition.target
-    |> Enum.uniq_by (Location.equal)
-    |> Enum.filter ((flip LocationSet.mem) scc_locs)
-    |> Enum.map
+    let modified_outgoing_of_scc: TransitionSet.t =
+      Program.transitions program
+      |> TransitionSet.filter (fun t -> (LocationSet.mem (Transition.src t) scc_locs) && (not @@ LocationSet.mem (Transition.target t) scc_locs))
+      |> TransitionSet.map (Transition.update_cost (Polynomials.Polynomial.zero, RealBound.zero))
+    in
+    let new_start_transitions =
+      Program.transitions program
+      |> TransitionSet.enum
+      (* get incoming transitions *)
+      |> Enum.filter (fun t -> (not @@ LocationSet.mem (Transition.src t) scc_locs) && (LocationSet.mem (Transition.target t) scc_locs))
+      |> Enum.map Transition.target
+      |> Enum.uniq_by (Location.equal)
+      |> Enum.filter ((flip LocationSet.mem) scc_locs)
+      |> Enum.map
+        (
+          fun l' ->
+            let new_label =
+              TransitionLabel.make_prob
+                trans_id_counter
+                ~cvect:(Polynomials.Polynomial.zero, RealBound.zero)
+                ~input_vars_ordered:(Program.input_vars program |> VarSet.to_list)
+                ~update:(
+                  Program.input_vars program
+                  |> VarSet.enum
+                  |> Enum.map (fun v -> (v, TransitionLabel.UpdateElement.Poly (Polynomials.Polynomial.of_var v)))
+                  |> TransitionLabel.VarMap.of_enum
+                )
+                ~guard:(TransitionLabel.Guard.mk_true)
+                ~gt_id:(TransitionLabel.get_unique_gt_id trans_id_counter ())
+                ~probability:(OurFloat.one)
+                "Com_1"
+            in
+            (new_start_location,new_label,l')
+        )
+      (*  Append original outgoing transitions to obtain sizebounds *)
+      |> TransitionSet.of_enum
+    in
+    let all_new_transitions = TransitionSet.union modified_outgoing_of_scc new_start_transitions in
+
+    Program.from
       (
-        fun l' ->
-          let new_label =
-            TransitionLabel.make_prob
-              trans_id_counter
-              ~cvect:(Polynomials.Polynomial.zero, RealBound.zero)
-              ~input_vars_ordered:(Program.input_vars program |> VarSet.to_list)
-              ~update:(
-                 Program.input_vars program
-                 |> VarSet.enum
-                 |> Enum.map (fun v -> (v, TransitionLabel.UpdateElement.Poly (Polynomials.Polynomial.of_var v)))
-                 |> TransitionLabel.VarMap.of_enum
-              )
-              ~guard:(TransitionLabel.Guard.mk_true)
-              ~gt_id:(TransitionLabel.get_unique_gt_id trans_id_counter ())
-              ~probability:(OurFloat.one)
-              "Com_1"
-          in
-          (new_start_location,new_label,l')
+        TransitionSet.union
+          (* scc transitions *)
+          (GeneralTransitionSet.enum scc |> Enum.map GeneralTransition.transitions |> Enum.fold TransitionSet.union TransitionSet.empty)
+          (all_new_transitions)
+        |> TransitionSet.to_list
       )
-    (*  Append original outgoing transitions to obtain sizebounds *)
-    |> TransitionSet.of_enum
+      new_start_location
   in
-  let all_new_transitions = TransitionSet.union modified_outgoing_of_scc new_start_transitions in
-
-  Program.from
-    (
-      TransitionSet.union
-         (* scc transitions *)
-        (GeneralTransitionSet.enum scc |> Enum.map GeneralTransition.transitions |> Enum.fold TransitionSet.union TransitionSet.empty)
-        (all_new_transitions)
-      |> TransitionSet.to_list
-    )
-    new_start_location
+  Logger.with_log logger Logger.DEBUG (fun () -> "create_sub_program", []) ~result:(Program.to_string ~show_gtcost:true) execute
 
 let untouched_scc_vars scc program =
   let execute = fun () ->
