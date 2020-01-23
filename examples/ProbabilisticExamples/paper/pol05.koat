@@ -1,9 +1,9 @@
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR X Y Z)
+(VAR X Y)
 (RULES
-  f(X,Y,Z) -> g(X,Y,Z)
-  g(X,Y,Z) -> 0.25:h(X+1,Y,Z) :+: 0.75:h(X-1,Y,Z) :|: X>0
-  h(X,Y,Z) -> h(X,UNIFORM(-4,0),Z) :|: Y>0
-  h(X,Y,Z) -> g(X,Y,Z)
+  f(X,Y) -> g(X,Y)
+  g(X,Y) -> 0.25:h(X+1,X) :+: 0.75:h(X-1,X-2) :|: X>0
+  h(X,Y) -> h(X,UNIFORM(-4,0)) :|: Y>0
+  h(X,Y) -> g(X,Y)
 )
