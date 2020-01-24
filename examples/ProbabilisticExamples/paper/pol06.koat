@@ -1,0 +1,12 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR M S N)
+(RULES
+  f(M,S,N) -{0;0}> g(M,S,N) :|: M >= 0
+  g(M,S,N) -{0;0}> 0.25:h(M,S+1,N) :+: 0.75:h(M,S-1,N) :|: M<S
+  h(M,S,N) -{0;0}> [1/6]:i(M,S,-2) :+: [1/6]:i(M,S,-1) :+: [1/6]:i(M,S,0) :+: [1/6]:i(M,S,1) :+: [1/6]:i(M,S,2) :+: [1/6]:i(M,S,3)
+  i(M,S,N) -{S;S}> i(M,S,N-1) :|: N>0
+  i(M,S,N) -{0;0}> j(M,S,N-1)
+  j(M,S,N) -{-S;-S}> j(M,S,N-1) :|: N<0
+  j(M,S,N) -{0;0}> g(M,S,N)
+)
