@@ -36,19 +36,12 @@ let remove_location program location =
 let remove_transition program transition =
   { program with graph = TransitionGraph.remove_edge_e program.graph transition }
 
-let add_transition program transition =
-  { program with graph = TransitionGraph.add_edge_e program.graph transition }
-
 (* Removes the transitions from a certain transitionset to a program *)
 let remove_TransitionSet (transitions:  TransitionSet.t) (program: t)  =
   program
   |> TransitionSet.fold (fun transition resulting_program  -> 
                                 transition
                                 |> remove_transition resulting_program) transitions
-
-(* Adds the transitions from a certain transitionset to a program *)
-let add_TransitionSet  (transitions:  TransitionSet.t) (program: t) =
-  { program with graph = add_transitions (TransitionSet.enum transitions) (graph program)}
 
 let map_graph f program =
   { program with graph = f program.graph }
@@ -116,6 +109,9 @@ let input_vars program =
   
 let temp_vars =
   fun program -> VarSet.diff (vars program) (input_vars program)
+
+let cardinal_vars program = 
+  VarSet.cardinal (vars program)
 
 let pre program (l,t,_) =
   l

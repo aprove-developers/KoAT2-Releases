@@ -109,6 +109,8 @@ let counter = ref 0
 let applyIrankFinder (scc_program: Program.t) = 
   ignore (try Unix.mkdir "tmp" 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
   counter := !counter + 1;
+        Printf.printf "counter: %i \n" !counter;
+        Printf.printf "program %s \n" (Program.to_string scc_program);
   Program.to_file scc_program ("./tmp/tmp_scc" ^ (string_of_int !counter));
   ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp/tmp --file ./tmp/tmp_scc" ^ (string_of_int !counter) ^ ".koat"));
   "./tmp/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
@@ -129,48 +131,61 @@ let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitio
                                     else 
                                      (l,g,l')) 
 
+let contains s1 s2 =
+    let re = Str.regexp_string s2
+    in
+        try ignore (Str.search_forward re s1 0); true
+        with Not_found -> false
+
 (** Finds first location which matches to the entry-location l ->  l' from the original program. 
     We assume that we only get transitions starting in the initial location of cfr program*)
 let find_matching_location (l': Location.t) (entry_transitions_cfr: TransitionSet.t) =
   entry_transitions_cfr
   |> TransitionSet.to_list
   |> List.find (fun (_,_,l'_cfr) -> 
-                                 BatString.equal (Location.to_string l') (BatString.cut_on_char '_' 1 (Location.to_string l'_cfr))
+                                contains (Location.to_string l'_cfr) ("_" ^ (Location.to_string l') ^ "__")
   )
   |> Tuple3.third
 
 
-let rename_entry_transition (locations: LocationSet.t) (entry_transitions_cfr: TransitionSet.t) =
-  entry_transitions_cfr
-  |> LocationSet.fold (fun location transitions -> let l' = find_matching_location location transitions in
-                                                   rename_matching_trans location l' transitions) locations 
-                                                  
-
-
+let rename_entry_transition (locations: LocationSet.t) (transitions: TransitionSet.t) =
+  transitions
+  |> LocationSet.fold (fun location merged_trans -> let l' = find_matching_location location (TransitionSet.filter (fun (l,_,_) ->  Location.equal l (Location.of_string "n_l0" )) transitions) in
+                                                             rename_matching_trans location l' transitions) locations 
 
 let apply_cfr (program: Program.t) = 
-  let initial_location = Program.start program in
-  let minimalDisjointSCCs = program
+  let copy_nonLinearTransitions = !nonLinearTransitions
+  and initial_location = Program.start program
+  and minimalDisjointSCCs = program
                             |> minimalSCCs
-                            |> minimalDisjointSCCs in
+                            |> minimalDisjointSCCs 
+                            |> SCCSet.filter (fun scc -> (TransitionSet.cardinal scc) > 1)  in
+  nonLinearTransitions := TransitionSet.empty;
     program
     |> SCCSet.fold (fun scc merged_program ->  
-      (fun sccs -> Logger.log logger Logger.INFO
-                               (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter !nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
+      (fun sccs -> 
+      Logger.log logger Logger.INFO
+                               (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter copy_nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
+
       let scc_list = TransitionSet.to_list scc in
       let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (entry_transitions program scc_list)) in
       let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.vars program),l)) (LocationSet.to_list entry_locations) in
       let scc_program = Program.from (entry_transitions@scc_list) initial_location in
       let program_cfr  = applyIrankFinder scc_program in
-      Printf.printf "program: %s \n" (Program.to_string program_cfr);
       (** Prepares transitions created by irankfinder to merge. *)
+      let map = RenameMap.from_native ((List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i))) @
+                                      (List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i)))) in      
       let transitions_cfr = program_cfr
       |> Program.transitions
-      |> rename_entry_transition entry_locations 
-      |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l))) in
+      |> rename_entry_transition entry_locations
+      |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
+      |> TransitionSet.map (fun t -> Transition.rename2 map t) in
       (** Merges irankfinder and original program. *)
-      let p = merged_program
-      |> Program.add_TransitionSet transitions_cfr
-      |> Program.remove_TransitionSet scc in
-      Printf.printf "%s \n" (Program.to_string p);
-      p) minimalDisjointSCCs
+
+      merged_program
+      |> Program.transitions
+      |> TransitionSet.union transitions_cfr
+      |> flip TransitionSet.diff scc
+      |> TransitionSet.to_list
+      |> flip Program.from initial_location) minimalDisjointSCCs
+      |> Program.rename

@@ -212,3 +212,11 @@ let rename standard_vars t =
     cost = Polynomial.rename rename_map t.cost;
   }
        
+
+let rename2 rename_map t =
+  {
+    id = t.id;
+    update = rename_update t.update rename_map;
+    guard = Guard.rename t.guard rename_map;
+    cost = Polynomial.rename rename_map t.cost;
+  }

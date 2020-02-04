@@ -35,7 +35,8 @@ let of_string str =
 let hash = Hashtbl.hash
       
 let mk_helper domain n = Helper (domain, n)
-                
+
+(** TODO fix this. *)                
 let to_string ?(to_file = false) = 
   if to_file then
   function

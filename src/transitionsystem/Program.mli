@@ -15,17 +15,11 @@ val add_locations : Location.t Enum.t -> TransitionGraph.t -> TransitionGraph.t
 (** Adds all transitions from an enum to a transtion graph. *)
 val add_transitions : Transition.t Enum.t -> TransitionGraph.t -> TransitionGraph.t
 
-(* Adds the transitions from a certain transitionset to a program *)
-val add_TransitionSet : ProgramTypes.TransitionSet.t -> t -> t
-
 (** Removes the location from the program and all edges to it. *)
 val remove_location : t -> Location.t -> t
 
 (** Removes a transition from a program. *)
 val remove_transition : t -> Transition.t -> t
-
-(** Adds a transition from a program. *)
-val add_transition : t -> Transition.t -> t
 
 (* Removes the transitions from a certain transitionset to a program *)
 val remove_TransitionSet: ProgramTypes.TransitionSet.t -> t -> t
@@ -73,6 +67,9 @@ val vars : t -> VarSet.t
 
 (** Returns all input variables of the program. *)
 val input_vars : t -> VarSet.t
+
+(** Returns the number of variables. *)
+val cardinal_vars : t -> int
 
 (** Returns a set of all transitions which occur in the program graph of the program. *)
 val transitions : t -> TransitionSet.t

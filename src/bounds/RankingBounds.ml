@@ -110,6 +110,7 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
      |> Bound.sum
    in 
     let bound = execute () in
+    (* TODO necessary? *)
     if Bound.is_linear bound then 
       CFR.nonLinearTransitions := TransitionSet.remove (RankingFunction.decreasing rank) !CFR.nonLinearTransitions
     else
@@ -171,22 +172,25 @@ let improve_scc ?(mrf = false) ?(cfr = false) (scc: TransitionSet.t)  measure pr
                   improve_with_rank measure program appr rank
              ) appr)
          ) appr
-      in if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then (
-        ignore(Logger.with_log logger Logger.INFO
-            (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc ;"measure", show_measure measure])
-            execute);
-            ignore (CFR.apply_cfr program);
-            nonLinearTransitions := TransitionSet.empty;
-            Logger.with_log logger Logger.INFO
-              (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
-              execute)
-        else (Logger.with_log logger Logger.INFO
+      in let updated_appr =  (Logger.with_log logger Logger.INFO
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
-            execute)
+            execute) in
+      
+      let program_cfr = if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then (
+            (* Ranking Function *)
+            RankingFunction.reset ();
+            MaybeChanged.changed (CFR.apply_cfr program))
+        else 
+            MaybeChanged.same program; in
+        (updated_appr, program_cfr)
+          
+
+
+type appr_program = Approximation.t MaybeChanged.t * Program.t MaybeChanged.t 
 
 (* Stops if something has changed (and we compute new sizebounds) Not Working ??? TODO *)
-let rec fold_until (f: Approximation.t MaybeChanged.t -> ProgramTypes.TransitionSet.t -> Approximation.t MaybeChanged.t)
-                   (p: Approximation.t MaybeChanged.t -> bool) pre = function
+let rec fold_until (f: appr_program -> ProgramTypes.TransitionSet.t -> appr_program )
+                   (p: appr_program -> bool) pre = function
     | x :: xs when p pre -> pre
     | x :: xs -> fold_until f p (f pre x) xs
     | [] -> pre
@@ -196,6 +200,6 @@ Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans
   program
     |> Program.sccs
     |> List.of_enum 
-    |> fold_until (fun updated_appr scc -> improve_scc ~mrf:mrf ~cfr:cfr scc measure program (MaybeChanged.unpack updated_appr)) 
-                  (fun updated_appr -> MaybeChanged.has_changed updated_appr) 
-                  (MaybeChanged.return appr)
+    |> fold_until (fun (updated_appr, program_cfr) scc -> improve_scc ~mrf:mrf ~cfr:cfr scc measure program (MaybeChanged.unpack updated_appr)) 
+                  (fun (updated_appr, program_cfr) -> (MaybeChanged.has_changed updated_appr) || (MaybeChanged.has_changed program_cfr)) 
+                  (MaybeChanged.return appr, MaybeChanged.return program)

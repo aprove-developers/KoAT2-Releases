@@ -98,3 +98,5 @@ val to_id_string : t -> string
 
 (** TODO doc *)
 val rename : Var.t list -> t -> t
+
+val rename2 : RenameMap.t -> t -> t

@@ -19,6 +19,8 @@ module Transition =
   struct
     type t = Location.t * TransitionLabel.t * Location.t
 
+    type cfr_level = int
+
     let equal equal_lbl (l1,t1,l1') (l2,t2,l2') =
       Location.equal l1 l2
       && equal_lbl t1 t2
@@ -85,6 +87,9 @@ module Transition =
 
     let rename vars (l,t,l') =
       (l, (TransitionLabel.rename vars t),l')
+
+    let rename2 rename_map (l,t,l') =
+      (l, (TransitionLabel.rename2 rename_map t),l')
   end
   
 module TransitionSet =
