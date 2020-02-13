@@ -6,7 +6,7 @@ open ProgramTypes
 
 
 (** Performs a single improvement step to find better timebounds for the approximation and updates the approximation. *)
-val improve :  ?mrf:bool -> ?cfr:bool -> [ `Cost | `Time ] -> Program.t -> Approximation.t ->  Approximation.t MaybeChanged.t * Program.t MaybeChanged.t
+val improve :  ?mrf:bool -> ?cfr:bool -> [ `Cost | `Time ] -> Program.t -> Approximation.t ->  Program.t * Approximation.t
 
 (** Computes all entry transitions of the given transitions.
     These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. TODO Move to Program module? *)

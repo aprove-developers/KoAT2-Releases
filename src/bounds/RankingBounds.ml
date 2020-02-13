@@ -76,10 +76,10 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
    |> Bound.sum    
  in 
     let bound = execute () in
-    if Bound.is_linear bound then 
-      CFR.nonLinearTransitions := TransitionSet.remove (MultiphaseRankingFunction.decreasing rank) !CFR.nonLinearTransitions
+    if not (Bound.is_linear bound) && CFR.getLevel (MultiphaseRankingFunction.decreasing rank) < 1 then
+      CFR.nonLinearTransitions := TransitionSet.add (MultiphaseRankingFunction.decreasing rank) !CFR.nonLinearTransitions
     else
-      CFR.nonLinearTransitions := TransitionSet.add (MultiphaseRankingFunction.decreasing rank) !CFR.nonLinearTransitions;
+      CFR.nonLinearTransitions := TransitionSet.remove (MultiphaseRankingFunction.decreasing rank) !CFR.nonLinearTransitions; 
     Logger.with_log logger Logger.DEBUG
       (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
                                    "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (MultiphaseRankingFunction.non_increasing rank));
@@ -95,6 +95,7 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
      |> Enum.map (fun (l,t,l') ->
             let timebound = Approximation.timebound appr (l,t,l') in
             let rhs = Bound.(max zero (apply (fun kind -> Approximation.sizebound kind appr) (RankingFunction.rank rank l') (l,t,l'))) in
+            (* Printf.printf "tran: %s rhs: %s timebound %s \n" (Transition.to_id_string (RankingFunction.decreasing rank)) (Bound.to_string rhs) (Bound.to_string timebound); *)
             Bound.(
               if is_infinity timebound then
                 if equal zero rhs then
@@ -110,11 +111,10 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
      |> Bound.sum
    in 
     let bound = execute () in
-    (* TODO necessary? *)
-    if Bound.is_linear bound then 
-      CFR.nonLinearTransitions := TransitionSet.remove (RankingFunction.decreasing rank) !CFR.nonLinearTransitions
+    if not (Bound.is_linear bound) && CFR.getLevel (RankingFunction.decreasing rank) < 1 then 
+      CFR.nonLinearTransitions := TransitionSet.add (RankingFunction.decreasing rank) !CFR.nonLinearTransitions
     else
-      CFR.nonLinearTransitions := TransitionSet.add (RankingFunction.decreasing rank) !CFR.nonLinearTransitions;
+      CFR.nonLinearTransitions := TransitionSet.remove (RankingFunction.decreasing rank) !CFR.nonLinearTransitions; 
    Logger.with_log logger Logger.DEBUG
         (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (RankingFunction.decreasing rank);
                                      "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (RankingFunction.non_increasing rank));
@@ -151,55 +151,62 @@ let bounded measure appr transition =
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> false
 
-let improve_scc ?(mrf = false) ?(cfr = false) (scc: TransitionSet.t)  measure program appr =
+(** We try to improve a single scc until we reach a fixed point. *)
+let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr =
   let execute () =
     scc
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
     |> TransitionSet.enum
     |> MaybeChanged.fold_enum (
-      if mrf then
       (fun appr transition ->
-           MultiphaseRankingFunction.find  measure program transition
-           |> List.enum
-           |> MaybeChanged.fold_enum (fun appr rank ->
-                  improve_with_rank_mrf measure program appr rank
-             ) appr)
-      else
-      (fun appr transition ->
-           RankingFunction.find measure program transition
-           |> List.enum
-           |> MaybeChanged.fold_enum (fun appr rank ->
-                  improve_with_rank measure program appr rank
-             ) appr)
-         ) appr
-      in let updated_appr =  (Logger.with_log logger Logger.INFO
+          if mrf then
+            MultiphaseRankingFunction.find  measure program transition
+            |> List.enum
+            |> MaybeChanged.fold_enum (fun appr rank ->
+                  improve_with_rank_mrf measure program appr rank) appr
+          else RankingFunction.find measure program transition
+            |> List.enum
+            |> MaybeChanged.fold_enum (fun appr rank ->
+                  improve_with_rank measure program appr rank) appr)
+      ) appr in 
+      (Logger.with_log logger Logger.INFO
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
-            execute) in
-      
-      let program_cfr = if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then (
-            (* Ranking Function *)
-            RankingFunction.reset ();
-            MaybeChanged.changed (CFR.apply_cfr program))
-        else 
-            MaybeChanged.same program; in
-        (updated_appr, program_cfr)
-          
+             execute)
+      |> MaybeChanged.if_changed ((improve_scc ~mrf:mrf scc measure program) % (SizeBounds.improve program))
+      |> MaybeChanged.unpack
 
+let apply_cfr ?(cfr = false) (scc: TransitionSet.t)  measure program appr =
+  if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then
+      let program_cfr = CFR.apply_cfr program in
+      RankingFunction.reset (); 
+      LocalSizeBound.reset ();  
+      let appr_cfr =
+      program_cfr
+      |> Approximation.create
+      |> TrivialTimeBounds.compute program_cfr 
+      |> SizeBounds.improve program_cfr in
+      MaybeChanged.changed (program_cfr,appr_cfr)
+    else 
+      MaybeChanged.same (program,appr)
 
-type appr_program = Approximation.t MaybeChanged.t * Program.t MaybeChanged.t 
+(* https://stackoverflow.com/questions/6749956/how-to-quit-an-iteration-in-ocaml *)
+(** Fold left on a list with function [f] until predicate [p] is satisfied **)
+(** In our case we restart iff a scc is unrolled and start again *)
+let rec fold_until f p acc = function
+    | x :: xs when p acc -> acc
+    | x :: xs -> fold_until f p (f acc x) xs
+    | [] -> acc
 
-(* Stops if something has changed (and we compute new sizebounds) Not Working ??? TODO *)
-let rec fold_until (f: appr_program -> ProgramTypes.TransitionSet.t -> appr_program )
-                   (p: appr_program -> bool) pre = function
-    | x :: xs when p pre -> pre
-    | x :: xs -> fold_until f p (f pre x) xs
-    | [] -> pre
-
-let improve ?(mrf = false) ?(cfr = false) measure program appr  =
+let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
 Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions)]);
   program
     |> Program.sccs
-    |> List.of_enum 
-    |> fold_until (fun (updated_appr, program_cfr) scc -> improve_scc ~mrf:mrf ~cfr:cfr scc measure program (MaybeChanged.unpack updated_appr)) 
-                  (fun (updated_appr, program_cfr) -> (MaybeChanged.has_changed updated_appr) || (MaybeChanged.has_changed program_cfr)) 
-                  (MaybeChanged.return appr, MaybeChanged.return program)
+    |> List.of_enum
+    |> fold_until (fun monad scc -> 
+                            appr
+                            |> SizeBounds.improve program
+                            |> improve_scc ~mrf:mrf scc measure program
+                            |> apply_cfr ~cfr:cfr scc measure program) 
+                  (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
+    |> MaybeChanged.if_changed (fun (a,b) -> (improve ~cfr:cfr ~mrf:mrf measure a b))
+    |> MaybeChanged.unpack

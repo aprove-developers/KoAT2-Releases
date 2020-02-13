@@ -14,6 +14,14 @@ end
 
 module SCCSet = Set.Make(SCCSetCompare)
 
+let time = ref 0.0
+
+let levelOfCFR = Hashtbl.create 123456;;
+
+let getLevel (t: Transition.t): int = 
+  try Hashtbl.find levelOfCFR (Transition.id t)
+  with Not_found -> 0
+
 (* TODO *)
 let logger = Logging.(get CFR)
 
@@ -109,11 +117,11 @@ let counter = ref 0
 let applyIrankFinder (scc_program: Program.t) = 
   ignore (try Unix.mkdir "tmp" 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
   counter := !counter + 1;
-        Printf.printf "counter: %i \n" !counter;
-        Printf.printf "program %s \n" (Program.to_string scc_program);
   Program.to_file scc_program ("./tmp/tmp_scc" ^ (string_of_int !counter));
+  let delta = Unix.gettimeofday() in
   ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp/tmp --file ./tmp/tmp_scc" ^ (string_of_int !counter) ^ ".koat"));
   "./tmp/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
+      |> tap (fun _ -> time := !time +.  (Unix.gettimeofday() -. delta))
       |> Readers.read_input ~rename:false false 
       |> Option.get
 
@@ -164,6 +172,7 @@ let apply_cfr (program: Program.t) =
     program
     |> SCCSet.fold (fun scc merged_program ->  
       (fun sccs -> 
+      (* Printf.printf "original program: %s \n" (Program.to_string merged_program); *)
       Logger.log logger Logger.INFO
                                (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter copy_nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
 
@@ -181,6 +190,10 @@ let apply_cfr (program: Program.t) =
       |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
       |> TransitionSet.map (fun t -> Transition.rename2 map t) in
       (** Merges irankfinder and original program. *)
+
+      let max_level = TransitionSet.fold (fun t max -> let level = getLevel t in if level > max then level else max) scc 0 in
+      TransitionSet.iter (fun t -> Hashtbl.add levelOfCFR (Transition.id t) (max_level + 1)) transitions_cfr;
+      TransitionSet.iter (fun t -> Hashtbl.remove levelOfCFR (Transition.id t)) scc;
 
       merged_program
       |> Program.transitions

@@ -84,11 +84,7 @@ let show_complexity_termcomp = function
   | Polynomial x -> "WORST_CASE(?, O(n^" ^ Int.to_string x ^ "))"
   | Exponential _ -> "WORST_CASE(?, O(EXP))"
 
-(** Returns true iff. the bound is in complexity class O(n) *)
-let is_linear = function
-  | Polynomial 0 -> true
-  | Polynomial 1 -> true
-  | _ -> false
+
 
 let asymptotic_complexity =
   fold
@@ -130,11 +126,19 @@ let asymptotic_complexity =
     )
     ~inf:Inf
     
-let is_linear bound =
+(** Returns true iff. the bound is in complexity class O(n) *)
+let is_linear bound = 
+match (asymptotic_complexity bound) with
+  | Polynomial 0 -> true
+  | Polynomial 1 -> true
+  | _ -> false 
+
+
+(* let is_linear bound =
   let cplx = asymptotic_complexity bound in
     match cplx with
     | (Polynomial n) -> (n == 1)
-    | _ -> false
+    | _ -> false *)
 
 let max_of_occurring_constants bound =
   fold
