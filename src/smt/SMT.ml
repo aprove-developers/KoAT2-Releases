@@ -106,12 +106,14 @@ module Z3Solver =
                           if Z3.Arithmetic.is_int expr then
                             expr
                             |> Z3.Arithmetic.Integer.get_big_int
-                            (*|> OurInt.of_int*)
+                            |> Z.to_string
+                            |> OurInt.of_string
                           else
                             expr
                             |> Z3.Arithmetic.Real.get_ratio
-                            (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
-                            |> Ratio.round_ratio
+                            |> Q.to_bigint
+                            |> Z.to_string
+                            |> OurInt.of_string
                         )
                       in
                       (var, value)
@@ -233,12 +235,14 @@ module IncrementalZ3Solver =
                           if Z3.Arithmetic.is_int expr then
                             expr
                             |> Z3.Arithmetic.Integer.get_big_int
-                            (*|> OurInt.of_int*)
+                            |> Z.to_string
+                            |> OurInt.of_string
                           else
                             expr
                             |> Z3.Arithmetic.Real.get_ratio
-                            (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
-                            |> Ratio.round_ratio
+                            |> Q.to_bigint
+                            |> Z.to_string
+                            |> OurInt.of_string
                         )
                       in
                       (var, value)
