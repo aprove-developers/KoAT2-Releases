@@ -64,7 +64,7 @@ let mk ?(cost=one) ~com_kind ~targets ~patterns ~guard ~vars =
           patterns @ Var.fresh_id_list Var.Int ((List.length assignments) - (List.length patterns)) in
       (* TODO Better error handling in case the sizes differ *)
       (List.enum appended_patterns, List.enum assignments_with_trivial)
-      |> Enum.combine
+      |> (uncurry Enum.combine)
       |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
       |> Enum.fold (fun map adder -> adder map) VarMap.empty 
       |> fun update -> { id = unique ();
