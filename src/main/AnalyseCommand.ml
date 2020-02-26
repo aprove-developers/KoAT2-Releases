@@ -188,5 +188,5 @@ let run (params: params) =
               )
        )
       |> ignore;
-    if params.log_level == NONE then
-      ignore (Sys.command ("rm -f -r ./tmp"))
+    if params.log_level == NONE && params.cfr then
+      ignore (Sys.command ("rm -f  -r ./tmp_" ^ (string_of_int !CFR.random)))

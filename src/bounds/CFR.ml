@@ -113,14 +113,19 @@ let minimalDisjointSCCs (original_sccs: ProgramTypes.TransitionSet.t list) =
 (** Counts file and creates always a new file usefull for debugging. *)
 let counter = ref 0 
 
+let random = ref 0
+
 (** Creates a file containing irankfinder, applies irankfinder and returns the resulting program. *)
 let applyIrankFinder (scc_program: Program.t) = 
-  ignore (try Unix.mkdir "tmp" 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
+  Random.self_init();
+  if !random == 0 then (
+    random := Random.int 1000000000;
+    try Unix.mkdir ("./tmp_" ^ (string_of_int !random)) 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
   counter := !counter + 1;
-  Program.to_file scc_program ("./tmp/tmp_scc" ^ (string_of_int !counter));
+  Program.to_file scc_program ("./tmp_" ^ (string_of_int !random) ^ "/tmp_scc" ^ (string_of_int !counter));
   let delta = Unix.gettimeofday() in
-  ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp/tmp --file ./tmp/tmp_scc" ^ (string_of_int !counter) ^ ".koat"));
-  "./tmp/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
+  ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp_" ^ (string_of_int !random) ^ "/tmp --file ./tmp_" ^ (string_of_int !random) ^ "/tmp_scc" ^ (string_of_int !counter) ^ ".koat"));
+  "./tmp_" ^ (string_of_int !random) ^ "/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
       |> tap (fun _ -> time := !time +.  (Unix.gettimeofday() -. delta))
       |> Readers.read_input ~rename:false false 
       |> Option.get
