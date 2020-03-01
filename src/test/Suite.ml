@@ -31,4 +31,5 @@ let suite =
     ]
 
 let () =
+  Printf.printf "Some tests may take a rather long time (1-5 min)\n";
   run_test_tt_main suite
