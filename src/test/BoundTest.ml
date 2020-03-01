@@ -141,14 +141,17 @@ let tests =
       "linearity" >:::
         List.map
           (fun (linear, v, bound_string) ->
-            let bound = Readers.read_bound bound_string in
-            let var = Var.of_string v in
-            let error_string =
-              "Linearity Mismatch Expected " ^ bound_string ^ " to " ^
-              (if linear then " be linear " else " not be linear ") ^
-              " in " ^ v ^ " but the opposite is the case"
-            in
-            bound_string >:: (fun _ -> assert_bool error_string (Bound.is_linear_in_var var bound = linear))
+            bound_string >::
+              (fun _ ->
+                let bound = Readers.read_bound bound_string in
+                let var = Var.of_string v in
+                let error_string =
+                  "Linearity Mismatch Expected " ^ bound_string ^ " to " ^
+                  (if linear then " be linear " else " not be linear ") ^
+                  " in " ^ v ^ " but the opposite is the case"
+                in
+                assert_bool error_string (Bound.is_linear_in_var var bound = linear)
+              )
           )
           [
             (true,  "x", "x");
@@ -197,11 +200,13 @@ let tests =
                   in
                   let res = cmp_function (Readers.read_bound b1) (Readers.read_bound b2) in
                   let descr = b1 ^ " " ^ cmp_string ^ " " ^ b2 in
-                  let error_string =
-                    descr ^ " Expected: " ^ print_op_bool expres ^ " got: " ^ print_op_bool res
-                  in
-
-                  descr >:: (fun _ -> assert_bool error_string (op_bool_eq res expres))
+                  descr >::
+                    (fun _ ->
+                      let error_string =
+                        descr ^ " Expected: " ^ print_op_bool expres ^ " got: " ^ print_op_bool res
+                      in
+                      assert_bool error_string (op_bool_eq res expres)
+                    )
 
               )
               [

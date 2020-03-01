@@ -13,35 +13,38 @@ let tests =
   "ELSB" >:::
     List.map
       (fun (gt,v,l,lower_bound, program_string) ->
-        let cache = CacheManager.new_cache () in
+        (Int.to_string gt) >::
+          (fun _ ->
+            let cache = CacheManager.new_cache () in
 
-        let prog = Readers.read_program (CacheManager.trans_id_counter cache) program_string in
-        let gt_id_offset =
-          Program.generalized_transitions prog
-          |> GeneralTransitionSet.to_list
-          |> List.map GeneralTransition.id
-          |> List.sort compare
-          |> List.hd
-        in
-        let gt =
-          Program.generalized_transitions prog
-          |> GeneralTransitionSet.filter ((=) (gt + gt_id_offset) % GeneralTransition.id)
-          |> GeneralTransitionSet.any
-        in
-        let var = Var.of_string v in
-        let loc =
-            Program.graph prog |> TransitionGraph.locations
-            |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
-        in
-        let approx = Approximation.create prog |> Bounds.find_exp_bounds false ~generate_invariants_bottom_up:Preprocessor.generate_invariants false cache prog |> Tuple2.second in
-        let expsize = Approximation.expsizebound `Upper approx (gt,loc) var in
-        let error_string =
-          "exptrivsize_mismatch exp_size: " ^ (RealBound.show ~complexity:false expsize)
-          ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
-          ^ " in grv" ^ (RV.to_id_string ((gt,loc),var))
-          ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
-        in
-        (GeneralTransition.to_string gt) >:: fun _ -> assert_bool error_string (bounds_pos_vars lower_bound expsize)
+            let prog = Readers.read_program (CacheManager.trans_id_counter cache) program_string in
+            let gt_id_offset =
+              Program.generalized_transitions prog
+              |> GeneralTransitionSet.to_list
+              |> List.map GeneralTransition.id
+              |> List.sort compare
+              |> List.hd
+            in
+            let gt =
+              Program.generalized_transitions prog
+              |> GeneralTransitionSet.filter ((=) (gt + gt_id_offset) % GeneralTransition.id)
+              |> GeneralTransitionSet.any
+            in
+            let var = Var.of_string v in
+            let loc =
+                Program.graph prog |> TransitionGraph.locations
+                |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
+            in
+            let approx = Approximation.create prog |> Bounds.find_exp_bounds false ~generate_invariants_bottom_up:Preprocessor.generate_invariants false cache prog |> Tuple2.second in
+            let expsize = Approximation.expsizebound `Upper approx (gt,loc) var in
+            let error_string =
+              "exptrivsize_mismatch exp_size: " ^ (RealBound.show ~complexity:false expsize)
+              ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
+              ^ " in grv" ^ (RV.to_id_string ((gt,loc),var))
+              ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
+            in
+            assert_bool error_string (bounds_pos_vars lower_bound expsize)
+          )
       )
       [
         (0, "X", "g", RealBound.(abs varx),

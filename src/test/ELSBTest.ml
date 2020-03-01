@@ -13,34 +13,37 @@ let tests =
   "ELSB" >::: [
     "elsb" >::: List.map
       (fun (gt,v,l,lower_bound, program_string) ->
-        let cache = CacheManager.new_cache () in
-        let elsb_cache = CacheManager.elsb_cache cache in
-        let prog = Readers.read_program (CacheManager.trans_id_counter cache) program_string in
-        let gt_id_offset =
-          Program.generalized_transitions prog
-          |> GeneralTransitionSet.to_list
-          |> List.map GeneralTransition.id
-          |> List.sort compare
-          |> List.hd
-        in
-        let gt =
-          Program.generalized_transitions prog
-          |> GeneralTransitionSet.filter ((=) (gt + gt_id_offset) % GeneralTransition.id)
-          |> GeneralTransitionSet.any
-        in
-        let var = Var.of_string v in
-        let loc =
-            Program.graph prog |> TransitionGraph.locations
-            |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
-        in
-        let rv = ((gt,loc),var) in
-        let elsb = Tuple2.first @@ ExpLocalSizeBound.elsb elsb_cache prog rv in
-        let error_string =
-          "elsb_mismatch elsb: " ^ (RealBound.show ~complexity:false elsb)
-          ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
-          ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
-        in
-        (GeneralTransition.to_string gt) >:: fun _ -> assert_bool error_string (bounds_pos_vars lower_bound elsb)
+        (Int.to_string gt) >::
+          (fun _ ->
+            let cache = CacheManager.new_cache () in
+            let elsb_cache = CacheManager.elsb_cache cache in
+            let prog = Readers.read_program (CacheManager.trans_id_counter cache) program_string in
+            let gt_id_offset =
+              Program.generalized_transitions prog
+              |> GeneralTransitionSet.to_list
+              |> List.map GeneralTransition.id
+              |> List.sort compare
+              |> List.hd
+            in
+            let gt =
+              Program.generalized_transitions prog
+              |> GeneralTransitionSet.filter ((=) (gt + gt_id_offset) % GeneralTransition.id)
+              |> GeneralTransitionSet.any
+            in
+            let var = Var.of_string v in
+            let loc =
+                Program.graph prog |> TransitionGraph.locations
+                |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
+            in
+            let rv = ((gt,loc),var) in
+            let elsb = Tuple2.first @@ ExpLocalSizeBound.elsb elsb_cache prog rv in
+            let error_string =
+              "elsb_mismatch elsb: " ^ (RealBound.show ~complexity:false elsb)
+              ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
+              ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
+            in
+            assert_bool error_string (bounds_pos_vars lower_bound elsb)
+          )
       )
       [
         (0, "X", "g", RealBound.zero,
