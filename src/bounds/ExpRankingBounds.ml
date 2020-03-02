@@ -71,7 +71,6 @@ let compute_bounds (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t)
 
     let time =
       get_best_bound entry_locations (Enum.clone incoming_enum) appr rank
-      |> RealBound.(max zero)
       |> RealBound.simplify_vars_nonnegative
     in
 

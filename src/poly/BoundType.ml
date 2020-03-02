@@ -897,7 +897,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Var v            -> (match subf v with
         | Some b -> b
         | None   -> of_var v)
-      | Const k          -> Const k
+      | Const k          -> Const (Num.abs k)
       | Neg b            -> appr_substitution_abs_maybe subf b
       | Sum (b1, b2)     -> appr_substitution_abs_maybe subf b1 + appr_substitution_abs_maybe subf b2
       | Product (b1, b2) -> appr_substitution_abs_maybe subf b1 * appr_substitution_abs_maybe subf b2
