@@ -56,10 +56,29 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
       else
         b2
 
+    let keep_simplest_bound b1 b2 =
+      let compl_comp = B.compare_complexity (B.asymptotic_complexity b1) (B.asymptotic_complexity b2)  in
+      let comp_comp_1 = B.(b1 < b2) in
+      let comp_comp_2 = B.(b2 < b1) in
+      let str_length_comp = (String.length @@ B.to_string b1) <= (String.length @@ B.to_string b2) in
+      match (compl_comp, comp_comp_1, comp_comp_2, str_length_comp) with
+      (* b1 < b2 *)
+      | (_, Some true,_, _) -> b1
+      (* b2 < b1 *)
+      | (_, _, Some true, _) -> b2
+      (* compl b1 < compl_b2 *)
+      | (-1,_,_,_) -> b1
+      (* compl b2 < compl_b1 *)
+      | (1,_,_,_) -> b2
+      (* length b1 < length b2 *)
+      | (_,_,_,true) -> b1
+      (* length b2 < length b1 *)
+      | (_,_,_,false) -> b2
+
     (* Returns the operator to combine two bounds with the best result. *)
     let combine_bounds ?(simplifyfunc = identity) kind b1 b2 = match kind with
-      | `Lower -> simplifyfunc (B.max b1 b2)
-      | `Upper -> simplifyfunc (B.min b1 b2)
+      | `Lower -> simplifyfunc (keep_simplest_bound b1 b2)
+      | `Upper -> simplifyfunc (keep_simplest_bound b1 b2)
 
     let get kind map transition var =
       let execute () =
@@ -81,9 +100,11 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
       (* We do not want to log trivial size bounds *)
       if not (is_trivial kind bound) then
         ( try
+            let old_bound =  Map.find map (kind,transition,var) in
             Map.modify (kind, transition, var) (combine_bounds ~simplifyfunc:simplifyfunc kind bound) map;
+            let new_bound =  Map.find map (kind,transition,var) in
             Logger.log logger Logger.DEBUG
-              (fun () -> "modified_size_bound", ["kind", show_kind kind; "rv", RV.to_id_string (transition, var); "bound", B.to_string bound])
+              (fun () -> "modified_size_bound", ["kind", show_kind kind; "rv", RV.to_id_string (transition, var); "bound", B.to_string bound; "old_bound", B.to_string old_bound; "new_bound", B.to_string new_bound])
           with
           | Not_found -> (
             Map.add map (kind, transition, var) (simplifyfunc bound);
