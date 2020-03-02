@@ -421,9 +421,11 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         | (_,b)                     -> [simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b]
 
       and get_op_chain t b = match (t,b) with
-        | (`Sum, Sum (b1,b2))         -> get_op_chain t b1 @ get_op_chain t b2
-        | (`Product, Product (b1,b2)) -> get_op_chain t b1 @ get_op_chain t b2
-        | (_,b)                       -> [simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b]
+        | (`Sum, Sum (b1,b2))             -> get_op_chain t b1 @ get_op_chain t b2
+        | (`Product, Product (Neg b1,b2)) -> [Const (Num.sub Num.zero Num.one)] @ get_op_chain t b1 @ get_op_chain t b2
+        | (`Product, Product (b1,Neg b2)) -> [Const (Num.sub Num.zero Num.one)] @ get_op_chain t b1 @ get_op_chain t b2
+        | (`Product, Product (b1,b2))     -> get_op_chain t b1 @ get_op_chain t b2
+        | (_,b)                           -> [simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b]
 
       and apply_chain_tuple t' (b1,b2) =
         get_type_chain t' b1 @ get_type_chain t' b2
@@ -579,27 +581,23 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
         (* Simplify terms with product head *)
         | Product (b1, b2) ->  (
-          let rec helper = function
+          let rec simplify_bi = function
             | Product (b1,b2) ->
               (
-                match (simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1, simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2) with
+                match (simplify_bi b1, simplify_bi b2) with
                 | (Max (Const zero1, b1), Max (Const zero2, b2)) when Num.(zero1 =~= zero) && Num.(zero2 =~= zero) ->
-                   simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Max (Const Num.zero, Product (b1, b2)))
+                   simplify_bi (Max (Const Num.zero, Product (b1, b2)))
                 | (Max (Const zero1, b1), b2) when Num.(zero1 =~= zero) ->
-                   simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Max (Const Num.zero, Product (b1, b2)))
-                | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> helper @@ Product (b2, Product (b1, b3))
-                | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> helper @@ Product (Product (b1, b3), b2)
-                | (b1, b2) when Constructor.(b2 < b1) -> helper @@ Product (b2, b1)
+                   simplify_bi (Max (Const Num.zero, Product (b1, b2)))
+                | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify_bi @@ Product (b2, Product (b1, b3))
+                | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bi @@ Product (Product (b1, b3), b2)
+                | (b1, b2) when Constructor.(b2 < b1) -> simplify_bi @@ Product (b2, b1)
                 | (b1, b2) -> Product (b1, b2)
               )
             | b -> b
           in
-          let avoid_neg = function
-            | (Neg b) -> Product (Neg (Const Num.one), b)
-            | b       -> b
-          in
           let chain_eliminate_redundant_infinity =
-            let chain = List.concat % List.map (get_op_chain `Product % avoid_neg) @@ get_op_chain `Product b1 @ get_op_chain `Product b2 in
+            let chain = get_op_chain `Product b1 @ get_op_chain `Product b2 in
             if List.exists (fun b -> is_infinity b || is_minus_infinity b) chain then
               chain
               |> List.enum
@@ -622,8 +620,9 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             | _             -> None
           in
           let all_non_consts = List.filter (Option.is_none % get_const) chain_eliminate_redundant_infinity in
+          let all_consts = List.map Option.get @@ List.filter Option.is_some @@ List.map get_const chain_eliminate_redundant_infinity in
+
           let const =
-            let all_consts = List.map Option.get @@ List.filter Option.is_some @@ List.map get_const chain_eliminate_redundant_infinity in
             let c = List.fold_left Num.mul Num.one all_consts in
             if List.exists (fun b -> is_infinity b || is_minus_infinity b) all_non_consts then
               (* eliminate constants if product contains infinity *)
@@ -637,7 +636,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
               c
           in
 
-          let non_const_chain = helper @@ construct_op_chain `Product all_non_consts in
+          let non_const_chain = simplify_bi @@ construct_op_chain `Product all_non_consts in
           if Num.(equal const zero) then
             Const const
           else if Num.(equal const one) then
@@ -697,7 +696,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
               let chain = get_op_chain  `Max b1 @ get_op_chain `Max b2 in
               construct_chain `Max (List.map (fun b -> Abs b) chain)
 
-        | Abs b -> match greater_or_equal~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) with
+        | Abs b -> match greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) with
                      | Some true -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b
                      | Some false -> Neg b |> simplify_~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
                      | None -> Abs (simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b)
