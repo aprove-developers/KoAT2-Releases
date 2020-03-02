@@ -391,12 +391,20 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         match opt_invariants `GE b1 b2 with
         | Some b -> Some b
         | None   ->
-          match (gt b1 b2,lt b1 b2,helper b1 b2) with
-          | (Some true, _,_)   -> Some true
-          | (_, Some true, _) -> Some false
-          | (_,_, Some true)   -> Some true
-          | (_,_, Some false)  -> Some false
-          | _                  -> None
+            if gt b1 b2 = Some true then
+              Some true
+            else
+              (
+                if lt b1 b2 = Some true then
+                  Some false
+                else
+                  (
+                    match helper b1 b2 with
+                    | Some true  -> Some true
+                    | Some false -> Some false
+                    | _          -> None
+                  )
+              )
       in
       Logger.with_log logger Logger.DEBUG
                       (fun () -> ">=", ["condition", to_string b1 ^ ">=" ^ to_string b2])
