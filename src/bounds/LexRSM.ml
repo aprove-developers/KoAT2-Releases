@@ -281,9 +281,9 @@ let find_1d_lexrsm_non_increasing cache transitions decreasing =
     let fresh_coeffs_weighted =
      !fresh_coeffs
      |> List.filter (fun c -> not @@ List.mem c !fresh_consts)
-     |> List.map (fun c -> c,2)
+     |> List.map (fun c -> c,OurFloat.of_int 2)
     in
-    let fresh_constants_weighted = List.map (fun c -> c,1) !fresh_consts in
+    let fresh_constants_weighted = List.map (fun c -> c,OurFloat.one) !fresh_consts in
     Solver.minimize_absolute_with_weight solver @@ List.append fresh_coeffs_weighted fresh_constants_weighted;
     Solver.model_real solver
     |> fun eval -> (eval, GeneralTransitionSet.add decreasing non_incr)
@@ -308,9 +308,9 @@ let find_1d_lexrsm cache transitions remaining_transitions cbounded =
     let fresh_coeffs_weighted =
      !fresh_coeffs
      |> List.filter (fun c -> not @@ List.mem c !fresh_consts)
-     |> List.map (fun c -> c,2)
+     |> List.map (fun c -> c,OurFloat.of_int 2)
     in
-    let fresh_constants_weighted = List.map (fun c -> c,1) !fresh_consts in
+    let fresh_constants_weighted = List.map (fun c -> c,OurFloat.one) !fresh_consts in
     Solver.minimize_absolute_with_weight solver @@ List.append fresh_coeffs_weighted fresh_constants_weighted;
     if n = 0 then
       (Solver.model_real solver, GeneralTransitionSet.empty)

@@ -323,26 +323,26 @@ module IncrementalZ3Solver =
       ignore (Z3.Optimize.minimize opt (minimisation_goal opt vars))
  *)
     (* Different try *)
+    let absolute_value context (var: Var.t) =
+      Z3.Boolean.mk_ite context
+        (from_real_formula context RealFormula.Infix.((RealPolynomial.of_var var) <= RealPolynomial.zero))
+        (from_real_poly context (RealPolynomial.sub RealPolynomial.zero (RealPolynomial.of_var var)) )
+        (from_real_poly context (RealPolynomial.of_var var))
+
     let minimize_absolute_with_weight (opt,context) vars_with_weight =
       vars_with_weight
-      |> List.iter (fun (var,weight) ->
-             ignore (Z3.Optimize.add_soft opt (from_formula context Formula.Infix.(Polynomial.of_var var <= Polynomial.zero)) (Var.to_string var) (Z3.Symbol.mk_int context weight));
-             ignore (Z3.Optimize.add_soft opt (from_formula context Formula.Infix.(Polynomial.of_var var >= Polynomial.zero)) (Var.to_string var) (Z3.Symbol.mk_int context weight))
-           )
-    let minimize_absolute (opt,context) vars =
-      minimize_absolute_with_weight (opt,context) (List.map (fun v -> v,1) vars)
-
-    let minimize_absolute_v2 (opt,context) vars =
-      let absolute_value (var: Var.t) =
-        Z3.Boolean.mk_ite context
-          (from_real_formula context RealFormula.Infix.((RealPolynomial.of_var var) <= RealPolynomial.zero))
-          (from_real_poly context (RealPolynomial.of_var var))
-          (from_real_poly context (RealPolynomial.sub RealPolynomial.zero (RealPolynomial.of_var var)) )
-      in
-      vars
-      |> List.map (absolute_value)
+      |> List.map (fun (v,w) -> Z3.Arithmetic.mk_mul context [Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string w); absolute_value context v])
       |> Z3.Arithmetic.mk_add context
       |> Z3.Optimize.minimize opt
+      |> ignore
+
+    let minimize_absolute (opt,context) vars =
+      minimize_absolute_with_weight (opt,context) (List.map (fun v -> v, OurFloat.one) vars)
+
+    let minimize_absolute_iteratively (opt,context) vars =
+      vars
+      |> List.map (absolute_value context)
+      |> List.iter (fun expr -> ignore @@ Z3.Optimize.minimize opt expr)
       |> ignore
 
     let minimize (opt,context) var =

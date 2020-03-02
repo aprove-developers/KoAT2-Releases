@@ -175,13 +175,11 @@ let try_decreasing cache (opt: Solver.t) (non_increasing: Transition.t Stack.t) 
          Solver.add opt (bounded_constraint cache measure decreasing);
          Solver.add opt (decreasing_constraint cache measure decreasing);
          if Solver.satisfiable opt then (
-           let fresh_coeffs_weighted =
+           let fresh_coeffs =
             !fresh_coeffs
             |> List.filter (fun c -> not @@ List.mem c !fresh_constants)
-            |> List.map (fun c -> c,2)
            in
-           let fresh_constants_weighted = List.map (fun c -> c,1) !fresh_constants in
-           Solver.minimize_absolute_with_weight opt @@ List.append fresh_coeffs_weighted fresh_constants_weighted;
+           Solver.minimize_absolute_iteratively opt @@ List.append fresh_coeffs !fresh_constants;
            Solver.model opt
            |> Option.map (make cache decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
            |> Option.may (fun ranking_function ->

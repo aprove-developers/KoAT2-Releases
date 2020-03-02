@@ -66,12 +66,12 @@ sig
   val maximize : t -> Var.t -> unit
 
   (** Sets the variables, which absolute value should be minimized. Does not work as intended? *)
-  val minimize_absolute_with_weight : t -> (Var.t*int) list -> unit
+  val minimize_absolute_with_weight : t -> (Var.t*OurFloat.t) list -> unit
 
   val minimize_absolute : t -> Var.t list -> unit
 
   (** Sets the variables, which absolute value should be minimized. Another try*)
-  val minimize_absolute_v2 : t -> Var.t list -> unit
+  val minimize_absolute_iteratively : t -> Var.t list -> unit
 
   (** Returns a model of the current state, if the state is satisfiable. *)
   val model : t -> Polynomial.valuation Option.t
