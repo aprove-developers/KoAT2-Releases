@@ -2,8 +2,6 @@ open Batteries
 open Parameter
 
 let run (params: params) =
-  let logs = List.map (fun log -> (log, params.log_level)) params.logs in
-  Logging.use_loggers logs;
   let input = Option.default_delayed read_line params.input in
   let input_filename =
     if params.simple_input then
