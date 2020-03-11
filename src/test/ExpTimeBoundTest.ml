@@ -83,5 +83,7 @@ let tests =
           ("simple_recursive", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/simple_recursive.koat");
           ("trader", RealBound.Inf, "examples/ProbabilisticExamples/paper/trader.koat");
           ("trapped_miner", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/trapped_miner.koat");
+          ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Nonprob-KoAT/SelectSort.koat");
+          ("TruncSelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Nonprob-KoAT/TruncSelectSort.koat");
         ];
   ]
