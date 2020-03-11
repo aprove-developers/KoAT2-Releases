@@ -37,6 +37,9 @@ let run (params: params) =
   |> rename_program_option
   |> Option.map (fun program ->
          (program, Approximation.create program)
+         |> tap (fun (program, appr) ->
+                if params.print_system_id then
+                  GraphPrint.print_system ~label:TransitionLabel.to_id_string ~outdir:output_dir ~file:(input_filename ^ "_id") program)
          |> Preprocessor.process (CacheManager.trans_id_counter cache) params.preprocessing_strategy params.preprocessors
          |> tap (fun (program, appr) ->
                 if params.print_system then
@@ -55,7 +58,7 @@ let run (params: params) =
          |> tap (fun (program, appr) -> result_print program appr)
          |> tap (fun (program, appr) ->
                 if params.print_system then
-                  GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
+                  GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:(input_filename ^ "_bounded" ) program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
                   GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Lower ~label:(bounded_rv_to_string (CacheManager.lsb_cache cache) program `Lower appr) ~outdir:output_dir ~file:input_filename program;
