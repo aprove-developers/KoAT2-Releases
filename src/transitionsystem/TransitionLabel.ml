@@ -152,7 +152,7 @@ let mk id_counter ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets 
           patterns @ Var.fresh_id_list Var.Int ((List.length assignments) - (List.length patterns)) in
       (* TODO Better error handling in case the sizes differ *)
       (List.enum appended_patterns, List.enum assignments_with_trivial)
-      |> Enum.combine
+      |> uncurry Enum.combine
       |> Enum.fold (fun (i_v_o,map) (var, assignment) -> List.append i_v_o [var], VarMap.add var (assignment) map) ([] ,VarMap.empty)
       |> fun (i_v_o,update) -> { id = get_unique_id id_counter (); gt_id = get_unique_gt_id id_counter ();
                         input_vars_ordered = i_v_o;
@@ -168,7 +168,7 @@ let mk_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~tar
         let (target, assignments) = List.hd targets in
         (* TODO Better error handling in case the sizes differ *)
         (List.enum patterns, List.enum assignments)
-        |> Enum.combine
+        |> uncurry Enum.combine
         |> Enum.fold (fun (i_v_o,map) (var, assignment) -> List.append i_v_o [var], VarMap.add var assignment map) ([], VarMap.empty)
         |> fun (i_v_o,update) -> { id = get_unique_id id_counter (); gt_id;
                           input_vars_ordered = i_v_o;
