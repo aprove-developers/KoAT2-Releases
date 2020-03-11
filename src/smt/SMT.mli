@@ -70,6 +70,8 @@ sig
 
   val minimize_absolute : t -> Var.t list -> unit
 
+  val minimize_absolute_old : t -> Var.t list -> unit
+
   (** Sets the variables, which absolute value should be minimized. Another try*)
   val minimize_absolute_iteratively : t -> Var.t list -> unit
 
