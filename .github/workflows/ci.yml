@@ -1,0 +1,55 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+
+# change branch to probabilistic later on
+on:
+  push:
+    branches: [ probabilistic ]
+  pull_request:
+    branches: [ probabilistic ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    - uses: actions/cache@v1
+      name: Cache ~/.opam
+      with:
+        path: ~/.opam
+        key: ${{ runner.os }}-opam-4.07.1
+
+    - name: install dependencies
+      run: |
+        # install opam dependencies
+        sudo apt-get install bubblewrap libmpfr-dev -y
+        echo "/usr/local/bin" | sh <(curl -sL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
+        opam init
+        if [ ! -d ~/.opam/4.07.1 ]; then opam switch create -y 4.07.1; fi
+        opam list
+        opam install -y apron batteries cmdliner fpath menhir ocamlfind ocamlgraph omake ounit ppx_deriving ppx_deriving_cmdliner
+        opam install -y z3
+
+    # Runs a set of commands using the runners shell
+    - name: build
+      run: |
+        eval $(opam config env)
+        omake clean
+        omake --depend
+
+    # Run tests
+    - name: test
+      run: |
+        cd src/test
+        ./Test
