@@ -2,4 +2,4 @@
 
 # Before viewing the results, you should run `build`.
 
-find . -name *.output | xargs tail -vn +1 | less
+find . -name "*.output" | xargs tail -vn +1 | less

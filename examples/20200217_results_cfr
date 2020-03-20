@@ -1,0 +1,138 @@
+==> ./mrf/test1.output <==
+
+==> ./mrf/loop22.output <==
+MAYBE
+
+Initial Complexity Problem:
+  Start:  l0  
+  Program_Vars:  Arg_0, Arg_1  
+  Temp_Vars:    
+  Locations:  l0, l1  
+  Transitions:
+  l0(Arg_0,Arg_1) -> l1(Arg_0,Arg_1):|:
+  l1(Arg_0,Arg_1) -> l1((2)*Arg_0,Arg_1+1):|:1 <= -Arg_0 && Arg_0 <= -Arg_1-1  
+
+Timebounds: 
+  Overall timebound: inf {Infinity}
+  0: l0->l1: 1 {O(1)}
+  1: l1->l1: inf {Infinity}
+
+Costbounds:
+  Overall costbound: inf {Infinity}
+  0: l0->l1: 1 {O(1)}
+  1: l1->l1: inf {Infinity}
+
+Sizebounds:
+`Lower:
+  0: l0->l1, Arg_0: Arg_0 {O(n)}
+  0: l0->l1, Arg_1: Arg_1 {O(n)}
+  1: l1->l1, Arg_0: 2 {O(1)}
+  1: l1->l1, Arg_1: 1 {O(1)}
+`Upper:
+  0: l0->l1, Arg_0: Arg_0 {O(n)}
+  0: l0->l1, Arg_1: Arg_1 {O(n)}
+
+==> ./mrf/loop27.output <==
+MAYBE
+
+Initial Complexity Problem:
+  Start:  l0  
+  Program_Vars:  Arg_0, Arg_1  
+  Temp_Vars:    
+  Locations:  l0, l1  
+  Transitions:
+  l0(Arg_0,Arg_1) -> l1(Arg_0,Arg_1):|:
+  l1(Arg_0,Arg_1) -> l1(Arg_1,Arg_1-1):|:1 <= -Arg_0  
+
+Timebounds: 
+  Overall timebound: inf {Infinity}
+  0: l0->l1: 1 {O(1)}
+  1: l1->l1: inf {Infinity}
+
+Costbounds:
+  Overall costbound: inf {Infinity}
+  0: l0->l1: 1 {O(1)}
+  1: l1->l1: inf {Infinity}
+
+Sizebounds:
+`Lower:
+  0: l0->l1, Arg_0: Arg_0 {O(n)}
+  0: l0->l1, Arg_1: Arg_1 {O(n)}
+`Upper:
+  0: l0->l1, Arg_0: Arg_0 {O(n)}
+  0: l0->l1, Arg_1: Arg_1 {O(n)}
+  1: l1->l1, Arg_0: Arg_1 {O(n)}
+  1: l1->l1, Arg_1: Arg_1 {O(n)}
+
+==> ./mrf/ex005.output <==
+
+==> ./mrf/cfr.output <==
+
+==> ./mrf/test3.output <==
+
+==> ./mrf/ex003.output <==
+MAYBE
+
+Initial Complexity Problem:
+  Start:  l0  
+  Program_Vars:  Arg_0, Arg_1  
+  Temp_Vars:    
+  Locations:  l0, l1  
+  Transitions:
+  l0(Arg_0,Arg_1) -> l1(Arg_0,Arg_1):|:
+  l1(Arg_0,Arg_1) -> l1(Arg_0+Arg_1,Arg_1-1):|:0 <= -40-Arg_0  
+
+Timebounds: 
+  Overall timebound: inf {Infinity}
+  0: l0->l1: 1 {O(1)}
+  1: l1->l1: inf {Infinity}
+
+Costbounds:
+  Overall costbound: inf {Infinity}
+  0: l0->l1: 1 {O(1)}
+  1: l1->l1: inf {Infinity}
+
+Sizebounds:
+`Lower:
+  0: l0->l1, Arg_0: Arg_0 {O(n)}
+  0: l0->l1, Arg_1: Arg_1 {O(n)}
+`Upper:
+  0: l0->l1, Arg_0: Arg_0 {O(n)}
+  0: l0->l1, Arg_1: Arg_1 {O(n)}
+  1: l1->l1, Arg_1: Arg_1 {O(n)}
+
+==> ./mrf/loop36.output <==
+MAYBE
+
+Initial Complexity Problem:
+  Start:  l0  
+  Program_Vars:  Arg_0, Arg_1, Arg_2  
+  Temp_Vars:    
+  Locations:  l0, l1  
+  Transitions:
+  l0(Arg_0,Arg_1,Arg_2) -> l1(Arg_0,Arg_1,Arg_2):|:
+  l1(Arg_0,Arg_1,Arg_2) -> l1((2)*Arg_0+Arg_1,Arg_1+1,Arg_2):|:1 <= -Arg_0 && Arg_0 <= -Arg_2  
+
+Timebounds: 
+  Overall timebound: inf {Infinity}
+  0: l0->l1: 1 {O(1)}
+  1: l1->l1: inf {Infinity}
+
+Costbounds:
+  Overall costbound: inf {Infinity}
+  0: l0->l1: 1 {O(1)}
+  1: l1->l1: inf {Infinity}
+
+Sizebounds:
+`Lower:
+  0: l0->l1, Arg_0: Arg_0 {O(n)}
+  0: l0->l1, Arg_1: Arg_1 {O(n)}
+  0: l0->l1, Arg_2: Arg_2 {O(n)}
+  1: l1->l1, Arg_0: 2+Arg_1 {O(n)}
+  1: l1->l1, Arg_1: Arg_1 {O(n)}
+  1: l1->l1, Arg_2: 1 {O(1)}
+`Upper:
+  0: l0->l1, Arg_0: Arg_0 {O(n)}
+  0: l0->l1, Arg_1: Arg_1 {O(n)}
+  0: l0->l1, Arg_2: Arg_2 {O(n)}
+  1: l1->l1, Arg_2: Arg_2 {O(n)}

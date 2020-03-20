@@ -1,0 +1,35 @@
+cfr1.koat:
+ - If A > 0, we increase B until B > C and then decrease A. If now A < 0, we decrease C.
+ - best: n
+ - normal: n^2
+ - cfr without timelimits: inf time ~5s
+
+cfr2.koat:
+ - default example: We first increase B until B > C  and decrease A by 1 afterwards until A < 0.
+ - best: n
+ - normal: n^2
+ - cfr wt: inf time ~4s
+
+cfr3.koat:
+ - default example with C := 0 and decrease A by B
+ - best: n
+ - normal: n^2
+ - cfr wt: n time ~8s
+
+cfr4.koat:
+ - two independent parallel SCCs with a bad transition as in cfr3.koat
+ - best: n
+ - normal: n^2
+ - cfr wt: n time ~10s
+
+cfr5.koat:
+ - two parallel SCCs with a bad transition and which share a transition
+ - best: n
+ - normal: n^2
+ - cfr wt: n time >10m
+
+cfr6.koat: 
+ - first example cfr5.koat and afterwards cfr.3 with fresh values
+ - best: n
+ - normal n^2
+ - cfr wt: n time >10m
