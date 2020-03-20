@@ -103,7 +103,18 @@ module Z3Solver =
                         |> Z3.Model.get_const_interp model                        
                         |> Option.get (* Should be fine here *)
                         |> (fun expr ->
-                          if Z3.Arithmetic.is_int expr then
+                          (*if Z3.Arithmetic.is_int expr then
+                            expr
+                            |> Z3.Arithmetic.Integer.get_big_int
+                            |> Z.to_string
+                            |> OurInt.of_string
+                          else
+                            expr
+                            |> Z3.Arithmetic.Real.get_ratio
+                            |> Q.to_bigint
+                            |> Z.to_string
+                            |> OurInt.of_string*)
+													  if Z3.Arithmetic.is_int expr then
                             expr
                             |> Z3.Arithmetic.Integer.get_big_int
                             (*|> OurInt.of_int*)
@@ -230,7 +241,18 @@ module IncrementalZ3Solver =
                         |> Z3.Model.get_const_interp model                        
                         |> Option.get (* Should be fine here *)
                         |> (fun expr ->
-                          if Z3.Arithmetic.is_int expr then
+                            (*if Z3.Arithmetic.is_int expr then
+                              expr
+                              |> Z3.Arithmetic.Integer.get_big_int
+                              |> Z.to_string
+                              |> OurInt.of_string
+                             else
+                            expr
+                              |> Z3.Arithmetic.Real.get_ratio
+                              |> Q.to_bigint
+                              |> Z.to_string
+                              |> OurInt.of_string*)
+														 if Z3.Arithmetic.is_int expr then
                             expr
                             |> Z3.Arithmetic.Integer.get_big_int
                             (*|> OurInt.of_int*)
