@@ -35,6 +35,6 @@ let run (params: params) =
                    (** TODO Fix *)
                    transitions
                    |> TransitionSet.any
-                   |> RankingFunction.find `Time program
+                   |> RankingFunction.find `Time false program
                    |> List.hd
                    |> (fun prf -> print_string (RankingFunction.to_string prf ^ "\n"))))

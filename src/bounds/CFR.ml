@@ -14,9 +14,13 @@ end
 
 module SCCSet = Set.Make(SCCSetCompare)
 
-let time = ref 0.0
+(** We use this to measure the amount of time spend solving on this part of cfr.*) 
+let delta_current_cfr = ref 0.
 
-let levelOfCFR = Hashtbl.create 123456;;
+exception TIMEOUT
+
+(** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
+let levelOfCFR = Hashtbl.create 200;;
 
 let getLevel (t: Transition.t): int = 
   try Hashtbl.find levelOfCFR (Transition.id t)
@@ -123,10 +127,8 @@ let applyIrankFinder (scc_program: Program.t) =
     try Unix.mkdir ("./tmp_" ^ (string_of_int !random)) 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
   counter := !counter + 1;
   Program.to_file scc_program ("./tmp_" ^ (string_of_int !random) ^ "/tmp_scc" ^ (string_of_int !counter));
-  let delta = Unix.gettimeofday() in
   ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp_" ^ (string_of_int !random) ^ "/tmp --file ./tmp_" ^ (string_of_int !random) ^ "/tmp_scc" ^ (string_of_int !counter) ^ ".koat"));
   "./tmp_" ^ (string_of_int !random) ^ "/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
-      |> tap (fun _ -> time := !time +.  (Unix.gettimeofday() -. delta))
       |> Readers.read_input ~rename:false false 
       |> Option.get
 
@@ -167,6 +169,7 @@ let rename_entry_transition (locations: LocationSet.t) (transitions: TransitionS
                                                              rename_matching_trans location l' transitions) locations 
 
 let apply_cfr (program: Program.t) = 
+  delta_current_cfr := 0.;
   let copy_nonLinearTransitions = !nonLinearTransitions
   and initial_location = Program.start program
   and minimalDisjointSCCs = program
@@ -180,15 +183,17 @@ let apply_cfr (program: Program.t) =
       (* Printf.printf "original program: %s \n" (Program.to_string merged_program); *)
       Logger.log logger Logger.INFO
                                (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter copy_nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
-
-      let scc_list = TransitionSet.to_list scc in
+      let time_current = Unix.time()
+      and scc_list = TransitionSet.to_list scc in
       let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (entry_transitions program scc_list)) in
+
       let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.vars program),l)) (LocationSet.to_list entry_locations) in
       let scc_program = Program.from (entry_transitions@scc_list) initial_location in
-      let program_cfr  = applyIrankFinder scc_program in
-      (** Prepares transitions created by irankfinder to merge. *)
-      let map = RenameMap.from_native ((List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i))) @
+      let program_cfr  = applyIrankFinder scc_program
+      (** Prepares transitions created by irankfinder to merge. Das momentan noch Quatsch*)
+      and map = RenameMap.from_native ((List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i))) @
                                       (List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i)))) in      
+
       let transitions_cfr = program_cfr
       |> Program.transitions
       |> rename_entry_transition entry_locations
@@ -200,10 +205,12 @@ let apply_cfr (program: Program.t) =
       TransitionSet.iter (fun t -> Hashtbl.add levelOfCFR (Transition.id t) (max_level + 1)) transitions_cfr;
       TransitionSet.iter (fun t -> Hashtbl.remove levelOfCFR (Transition.id t)) scc;
 
+
       merged_program
       |> Program.transitions
       |> TransitionSet.union transitions_cfr
       |> flip TransitionSet.diff scc
       |> TransitionSet.to_list
-      |> flip Program.from initial_location) minimalDisjointSCCs
+      |> flip Program.from initial_location
+      |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current))) minimalDisjointSCCs
       |> Program.rename

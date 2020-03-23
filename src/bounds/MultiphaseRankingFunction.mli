@@ -34,7 +34,7 @@ val maxDepth : int Batteries.ref
 val list_init : int -> unit
 
 (** Finds a suitable multiphase ranking function for the given transitions T'. *)
-val find : measure -> Program.t -> Transition.t -> t list
+val find : measure -> bool -> Program.t -> Transition.t -> t list
 
 (** Converts a multiphase ranking function into a string*)
 val to_string : t -> string

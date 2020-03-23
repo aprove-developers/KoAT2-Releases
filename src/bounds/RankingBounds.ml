@@ -10,6 +10,10 @@ let logger = Logging.(get Time)
 
 let logger_cfr = Logging.(get CFR)
 
+let max_delta = 60
+
+let backtrack_point = ref None
+
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
 (** All entry transitions of the given transitions.
@@ -160,11 +164,11 @@ let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr 
     |> MaybeChanged.fold_enum (
       (fun appr transition ->
           if mrf then
-            MultiphaseRankingFunction.find  measure program transition
+            MultiphaseRankingFunction.find measure (Option.is_some !backtrack_point) program transition
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank_mrf measure program appr rank) appr
-          else RankingFunction.find measure program transition
+          else RankingFunction.find measure (Option.is_some !backtrack_point) program transition
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank measure program appr rank) appr)
@@ -175,10 +179,14 @@ let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr 
       |> MaybeChanged.if_changed ((improve_scc ~mrf:mrf scc measure program) % (SizeBounds.improve program))
       |> MaybeChanged.unpack
 
-let apply_cfr ?(cfr = false) (scc: TransitionSet.t)  measure program appr =
+let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t)  measure program appr =
   if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then
       let program_cfr = CFR.apply_cfr program in
-      RankingFunction.reset (); 
+      backtrack_point := Option.some (program,appr);
+      if mrf then 
+        MultiphaseRankingFunction.reset()
+      else
+        RankingFunction.reset(); 
       LocalSizeBound.reset ();  
       let appr_cfr =
       program_cfr
@@ -203,10 +211,20 @@ Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc -> 
-                            appr
-                            |> SizeBounds.improve program
-                            |> improve_scc ~mrf:mrf scc measure program
-                            |> apply_cfr ~cfr:cfr scc measure program) 
+                        try 
+                          appr
+                          |> SizeBounds.improve program
+                          |> improve_scc ~mrf:mrf scc measure program
+                          |> apply_cfr ~cfr:cfr ~mrf:mrf scc measure program
+                        with TIMEOUT ->
+                          if mrf then 
+                            MultiphaseRankingFunction.reset()
+                          else
+                            RankingFunction.reset (); 
+                          LocalSizeBound.reset ();  
+                          let (program,appr) = Option.get !backtrack_point in
+                          backtrack_point := None;
+                          MaybeChanged.changed (program,appr)) 
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
     |> MaybeChanged.if_changed (fun (a,b) -> (improve ~cfr:cfr ~mrf:mrf measure a b))
     |> MaybeChanged.unpack

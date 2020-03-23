@@ -14,6 +14,7 @@ OCAMLINCLUDES[] =
     ../poly
     ../constraints
     ../smt
+    ../util
 
 NATIVE_ENABLED = true
 BYTE_ENABLED = true
@@ -23,6 +24,7 @@ OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
     ../smt/smt
+    ../util/util
 
 # Include all .ml files
 FILES[] = $(removesuffix .ml, $(glob *.ml))

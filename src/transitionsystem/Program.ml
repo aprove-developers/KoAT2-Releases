@@ -1,8 +1,8 @@
 open Batteries
 open Constraints
 open Formulas
-   
 open ProgramTypes
+open Util
    
 type t = {
     graph: TransitionGraph.t;
@@ -148,6 +148,9 @@ let is_initial program trans =
 
 let is_initial_location program location =
   Location.(equal (program.start) location)
+(* 
+let hash program = 
+  TransitionGraph.hash Program.graph  *)
 
 let to_string program =
   let transitions = String.concat "\n  " (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string t)]) program.graph [])
@@ -170,4 +173,7 @@ let to_file program file =
                     (Location.to_string (start program))
                     (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) "")
                     (TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "");
-    close_out oc;              
+    close_out oc
+
+let hash program = 
+  Util.hash (to_simple_string program)

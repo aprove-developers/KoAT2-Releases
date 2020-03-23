@@ -403,7 +403,9 @@ module LSB_Cache =
           Hashtbl.hash (k, Transition.id t, v)
       end
     )
-   
+
+(* let tbl_cache = Hashtbl.create 5 *)
+
 let (table: t Option.t LSB_Cache.t) =
   LSB_Cache.create 10
   

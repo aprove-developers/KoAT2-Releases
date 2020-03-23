@@ -91,3 +91,6 @@ val non_trivial_transitions : t -> TransitionSet.t
 
 (** Creates a file (if it does not already exist) and writes the program into it. *)
 val to_file : t -> string -> unit
+
+(** Generates a hash integer value of a program by hashing its simple_string representation. *)
+val hash : t -> int

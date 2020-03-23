@@ -3,10 +3,11 @@
 (** Logger CFR *)
 val logger : Batteries.Logger.log
 
-val time : float Batteries.ref
+val delta_current_cfr : float Batteries.ref
+
+exception TIMEOUT
 
 val random : int Batteries.ref
-
 
 (** Returns the number of times a transition was unrolled. This ensures termination. *)
 val getLevel : ProgramTypes.Transition.t -> int

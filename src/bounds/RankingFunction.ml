@@ -4,6 +4,7 @@ open Constraints
 open Atoms
 open Polynomials
 open ProgramTypes
+open CFR 
    
 module SMTSolver = SMT.Z3Solver
 module Valuation = Valuation.Make(OurInt)
@@ -155,11 +156,12 @@ let ranking_table = function
 
 module Solver = SMT.IncrementalZ3Solver
 
-let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
+let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
   non_increasing
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
   |> Enum.iter (fun decreasing ->
+         let current_time = Unix.time() in
          Logger.(log logger DEBUG (fun () -> "try_decreasing", ["measure", show_measure measure;
                                                                 "decreasing", Transition.to_id_string decreasing;
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing)]));
@@ -180,31 +182,34 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
                                                "rank", only_rank_to_string ranking_function]))
                 )
          );
-         Solver.pop opt
+         Solver.pop opt;
+         CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
+         if applied_cfr && !CFR.delta_current_cfr > 20. then
+          raise CFR.TIMEOUT 
        );
   if !to_be_found <= 0 then
     raise Exit
 
            
-let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
+let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
   if Solver.satisfiable opt then (
     if steps_left == 0 then (
-      try_decreasing opt non_increasing to_be_found measure
+      try_decreasing opt non_increasing to_be_found measure applied_cfr
     ) else (
       for i=index to Array.length scc - 1 do
         let transition = Array.get scc i in
         Solver.push opt;
         Solver.add opt (non_increasing_constraint measure transition);
         Stack.push transition non_increasing;
-        backtrack (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure;
+        backtrack (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure applied_cfr; 
         ignore (Stack.pop non_increasing);
         Solver.pop opt;
       done;
-      try_decreasing opt non_increasing to_be_found measure
+      try_decreasing opt non_increasing to_be_found measure applied_cfr
     )
   )
 
-let compute_ measure program =
+let compute_ measure applied_cfr program =
   program
   |> Program.sccs
   |> Enum.iter (fun scc ->
@@ -215,7 +220,8 @@ let compute_ measure program =
                      (Array.of_enum (TransitionSet.enum scc))
                      (Stack.create ())
                      (ref (TransitionSet.cardinal scc))
-                     measure;
+                     measure
+                     applied_cfr;
            scc
            |> TransitionSet.iter (fun t ->
                   if not (RankingTable.mem (ranking_table measure) t) then
@@ -224,12 +230,12 @@ let compute_ measure program =
          with Exit -> ()
        )
   
-let find measure program transition =
+let find measure applied_cfr program transition =
   let execute () =
     if TemplateTable.is_empty template_table then
       compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
     if RankingTable.is_empty (ranking_table measure) then
-      compute_ measure program;
+      compute_ measure applied_cfr program;
     (try
       RankingTable.find_all (ranking_table measure) transition
     with Not_found -> [])
@@ -244,4 +250,4 @@ let find measure program transition =
 let reset () =
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
-TemplateTable.clear template_table
+  TemplateTable.clear template_table
