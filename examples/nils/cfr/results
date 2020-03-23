@@ -33,3 +33,8 @@ cfr6.koat:
  - best: n
  - normal n^2
  - cfr wt: n time >10m
+
+cfr7.koat:
+ - cfr3 two time sequentiel
+ - best: n
+ - normal n^2
