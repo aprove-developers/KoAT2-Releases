@@ -16,7 +16,7 @@ let run (params: params) =
   Logging.(use_loggers [Size, Logger.DEBUG]);
   let appr = Approximation.empty 10 3
   and program = Readers.read_file params.program in
-  SizeBounds.improve program appr
+  SizeBounds.improve program false appr
   |> Approximation.to_string program
   |> print_string
 

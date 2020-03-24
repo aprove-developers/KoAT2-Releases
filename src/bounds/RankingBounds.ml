@@ -176,10 +176,10 @@ let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr 
       (Logger.with_log logger Logger.INFO
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
              execute)
-      |> MaybeChanged.if_changed ((improve_scc ~mrf:mrf scc measure program) % (SizeBounds.improve program))
+      |> MaybeChanged.if_changed ((improve_scc ~mrf:mrf scc measure program) % (SizeBounds.improve program (Option.is_some !backtrack_point)))
       |> MaybeChanged.unpack
 
-let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t)  measure program appr =
+let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure program appr =
   if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then
       let program_cfr = CFR.apply_cfr program in
       backtrack_point := Option.some (program,appr);
@@ -192,7 +192,7 @@ let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t)  measure pro
       program_cfr
       |> Approximation.create
       |> TrivialTimeBounds.compute program_cfr 
-      |> SizeBounds.improve program_cfr in
+      |> SizeBounds.improve program_cfr (Option.is_some !backtrack_point) in
       MaybeChanged.changed (program_cfr,appr_cfr)
     else 
       MaybeChanged.same (program,appr)
@@ -213,7 +213,7 @@ Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans
     |> fold_until (fun monad scc -> 
                         try 
                           appr
-                          |> SizeBounds.improve program
+                          |> SizeBounds.improve program (Option.is_some !backtrack_point)
                           |> improve_scc ~mrf:mrf scc measure program
                           |> apply_cfr ~cfr:cfr ~mrf:mrf scc measure program
                         with TIMEOUT ->
