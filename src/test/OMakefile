@@ -1,5 +1,5 @@
 USE_OCAMLFIND = true
-OCAMLOPTFLAGS += -p -g -thread -ccopt -static
+OCAMLOPTFLAGS += -p -g -thread 
 
 OCAMLPACKS[] =
     z3
