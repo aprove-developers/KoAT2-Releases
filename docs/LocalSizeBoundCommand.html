@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="SizeCommand.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Util" rel="Chapter" href="Util.html">
+<link title="Logging" rel="Chapter" href="Logging.html">
+<link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
+<link title="ScaledMonomials" rel="Chapter" href="ScaledMonomials.html">
+<link title="Var" rel="Chapter" href="Var.html">
+<link title="Bound" rel="Chapter" href="Bound.html">
+<link title="VarSet" rel="Chapter" href="VarSet.html">
+<link title="RenameMap" rel="Chapter" href="RenameMap.html">
+<link title="Valuation" rel="Chapter" href="Valuation.html">
+<link title="Monomials" rel="Chapter" href="Monomials.html">
+<link title="Polynomials" rel="Chapter" href="Polynomials.html">
+<link title="OurInt" rel="Chapter" href="OurInt.html">
+<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
+<link title="Atoms" rel="Chapter" href="Atoms.html">
+<link title="Formulas" rel="Chapter" href="Formulas.html">
+<link title="Constraints" rel="Chapter" href="Constraints.html">
+<link title="ConstraintTypes" rel="Chapter" href="ConstraintTypes.html">
+<link title="SMT" rel="Chapter" href="SMT.html">
+<link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
+<link title="Program" rel="Chapter" href="Program.html">
+<link title="RVGTypes" rel="Chapter" href="RVGTypes.html">
+<link title="ProgramTypes" rel="Chapter" href="ProgramTypes.html">
+<link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
+<link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Readers" rel="Chapter" href="Readers.html">
+<link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
+<link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
+<link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
+<link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
+<link title="RankingFunction" rel="Chapter" href="RankingFunction.html">
+<link title="Approximation" rel="Chapter" href="Approximation.html">
+<link title="RankingBounds" rel="Chapter" href="RankingBounds.html">
+<link title="Bounds" rel="Chapter" href="Bounds.html">
+<link title="CostBounds" rel="Chapter" href="CostBounds.html">
+<link title="TrivialTimeBounds" rel="Chapter" href="TrivialTimeBounds.html">
+<link title="TrivialSizeBounds" rel="Chapter" href="TrivialSizeBounds.html">
+<link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
+<link title="Preprocessor" rel="Chapter" href="Preprocessor.html">
+<link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
+<link title="Chaining" rel="Chapter" href="Chaining.html">
+<link title="CutUnsatisfiableTransitions" rel="Chapter" href="CutUnsatisfiableTransitions.html">
+<link title="CutUnreachableLocations" rel="Chapter" href="CutUnreachableLocations.html">
+<link title="AnalyseCommand" rel="Chapter" href="AnalyseCommand.html">
+<link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
+<link title="Main" rel="Chapter" href="Main.html">
+<link title="MainUtil" rel="Chapter" href="MainUtil.html">
+<link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
+<link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
+<link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : LocalSizeBoundCommand</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="SizeCommand.html" title="SizeCommand">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Module <a href="type_LocalSizeBoundCommand.html">LocalSizeBoundCommand</a></h1>
+
+<pre><span id="MODULELocalSizeBoundCommand"><span class="keyword">module</span> LocalSizeBoundCommand</span>: <code class="code">sig</code> <a href="LocalSizeBoundCommand.html">..</a> <code class="code">end</code></pre><hr width="100%">
+
+<pre><span id="VALdescription"><span class="keyword">val</span> description</span> : <code class="type">string</code></pre>
+<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">string</code></pre>
+<pre><code><span id="TYPEparams"><span class="keyword">type</span> <code class="type"></code>params</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.kind">kind</span>&nbsp;: <code class="type">[ `Lower | `Upper ]</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Which type of bound is requested. Available options: upper and lower.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.guard">guard</span>&nbsp;: <code class="type">string</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>The guard of the transition in the form of a constraint.
+        That is a formula with and-separators (&amp;&amp;) and or-separators (||).
+        Atoms are two polynomials in a relation with &lt;, &gt;, &lt;=, &gt;= or =.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.var">var</span>&nbsp;: <code class="type">string</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>The variable for which a local size bound should be found.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+}
+
+
+
+<pre><span id="VALparams_cmdliner_term"><span class="keyword">val</span> params_cmdliner_term</span> : <code class="type">unit -> <a href="LocalSizeBoundCommand.html#TYPEparams">params</a> Cmdliner.Term.t</code></pre>
+<pre><span id="VALpp_params"><span class="keyword">val</span> pp_params</span> : <code class="type">Ppx_deriving_runtime.Format.formatter -><br>       <a href="LocalSizeBoundCommand.html#TYPEparams">params</a> -> Ppx_deriving_runtime.unit</code></pre>
+<pre><span id="VALshow_params"><span class="keyword">val</span> show_params</span> : <code class="type"><a href="LocalSizeBoundCommand.html#TYPEparams">params</a> -> Ppx_deriving_runtime.string</code></pre>
+<pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type"><a href="LocalSizeBoundCommand.html#TYPEparams">params</a> -> unit</code></pre></body></html>

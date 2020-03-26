@@ -1,0 +1,188 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="ProgramTypes.html">
+<link rel="next" href="GraphPrint.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Util" rel="Chapter" href="Util.html">
+<link title="Logging" rel="Chapter" href="Logging.html">
+<link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
+<link title="ScaledMonomials" rel="Chapter" href="ScaledMonomials.html">
+<link title="Var" rel="Chapter" href="Var.html">
+<link title="Bound" rel="Chapter" href="Bound.html">
+<link title="VarSet" rel="Chapter" href="VarSet.html">
+<link title="RenameMap" rel="Chapter" href="RenameMap.html">
+<link title="Valuation" rel="Chapter" href="Valuation.html">
+<link title="Monomials" rel="Chapter" href="Monomials.html">
+<link title="Polynomials" rel="Chapter" href="Polynomials.html">
+<link title="OurInt" rel="Chapter" href="OurInt.html">
+<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
+<link title="Atoms" rel="Chapter" href="Atoms.html">
+<link title="Formulas" rel="Chapter" href="Formulas.html">
+<link title="Constraints" rel="Chapter" href="Constraints.html">
+<link title="ConstraintTypes" rel="Chapter" href="ConstraintTypes.html">
+<link title="SMT" rel="Chapter" href="SMT.html">
+<link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
+<link title="Program" rel="Chapter" href="Program.html">
+<link title="RVGTypes" rel="Chapter" href="RVGTypes.html">
+<link title="ProgramTypes" rel="Chapter" href="ProgramTypes.html">
+<link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
+<link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Readers" rel="Chapter" href="Readers.html">
+<link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
+<link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
+<link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
+<link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
+<link title="RankingFunction" rel="Chapter" href="RankingFunction.html">
+<link title="Approximation" rel="Chapter" href="Approximation.html">
+<link title="RankingBounds" rel="Chapter" href="RankingBounds.html">
+<link title="Bounds" rel="Chapter" href="Bounds.html">
+<link title="CostBounds" rel="Chapter" href="CostBounds.html">
+<link title="TrivialTimeBounds" rel="Chapter" href="TrivialTimeBounds.html">
+<link title="TrivialSizeBounds" rel="Chapter" href="TrivialSizeBounds.html">
+<link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
+<link title="Preprocessor" rel="Chapter" href="Preprocessor.html">
+<link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
+<link title="Chaining" rel="Chapter" href="Chaining.html">
+<link title="CutUnsatisfiableTransitions" rel="Chapter" href="CutUnsatisfiableTransitions.html">
+<link title="CutUnreachableLocations" rel="Chapter" href="CutUnreachableLocations.html">
+<link title="AnalyseCommand" rel="Chapter" href="AnalyseCommand.html">
+<link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
+<link title="Main" rel="Chapter" href="Main.html">
+<link title="MainUtil" rel="Chapter" href="MainUtil.html">
+<link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
+<link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
+<link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : LocalSizeBound</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="ProgramTypes.html" title="ProgramTypes">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="GraphPrint.html" title="GraphPrint">Next</a>
+</div>
+<h1>Module <a href="type_LocalSizeBound.html">LocalSizeBound</a></h1>
+
+<pre><span id="MODULELocalSizeBound"><span class="keyword">module</span> LocalSizeBound</span>: <code class="code">sig</code> <a href="LocalSizeBound.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<p>A templated bound is a bound of a certain templated form.
+    The different templates are not disjunctive.
+    The upcoming template set always includes the previous one.</p>
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>Always smaller or equal to a scaling factor multiplied with the sum of all prevariables and a constant. Examples: x'=x+y , x'=2*(x+y+z) 
+    s * (e + sum <code class="code">x1;...;xn</code>)</p>
+</div>
+</div>
+
+
+<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type">?s:int -><br>       ?c:int -><br>       ?pos_abs:string list -><br>       ?pos_pure:string list -><br>       ?neg_abs:string list -><br>       ?neg_pure:string list -> [ `Lower | `Upper ] -> <a href="LocalSizeBound.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a templated bound from the template and a string list which represents the variable set.</p>
+</div>
+</div>
+
+<pre><span id="VALis_finite_bound"><span class="keyword">val</span> is_finite_bound</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns true if the given local size bound is an actual bound and false, if the local size bound is infinity or -infinity</p>
+</div>
+</div>
+
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> <a href="LocalSizeBound.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns if the templated bounds represent the same bound.</p>
+</div>
+</div>
+
+<pre><span id="VALfactor"><span class="keyword">val</span> factor</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> int</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the factor of the local sizebound. Raises unbounded, if the local size bound is unbounded</p>
+</div>
+</div>
+
+<pre><span id="VALconstant"><span class="keyword">val</span> constant</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> int</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the constant of the local sizebound. Raises unbounded, if the local size bound is unbounded</p>
+</div>
+</div>
+
+<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> VarSet.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a set of of variables which affect the local sizebound</p>
+</div>
+</div>
+<p>Returns a set of all variables which monotonical increasingly or monotonical decreasingly affect the local sizebound</p>
+
+<pre><span id="VALvars_of_sign"><span class="keyword">val</span> vars_of_sign</span> : <code class="type">[ `Neg | `Pos ] -> <a href="LocalSizeBound.html#TYPEt">t</a> -> VarSet.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Those are variables with a positive coefficient or a negative coefficient.</p>
+</div>
+</div>
+
+<pre><span id="VALvars_of_purity"><span class="keyword">val</span> vars_of_purity</span> : <code class="type">[ `Abs | `Pure ] -> <a href="LocalSizeBound.html#TYPEt">t</a> -> VarSet.t</code></pre>
+<pre><span id="VALpre_kind"><span class="keyword">val</span> pre_kind</span> : <code class="type">[ `Lower | `Upper ] * [ `Neg | `Pos ] -> [ `Lower | `Upper ]</code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Converts the templated bound to a string.</p>
+</div>
+</div>
+
+<pre><span id="VALas_substituted_bound"><span class="keyword">val</span> as_substituted_bound</span> : <code class="type">([ `Lower | `Upper ] -> <a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">Bound.t</a>) -> <a href="LocalSizeBound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">Bound.t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Takes a function that returns sizebounds for each variable and a local sizebound.
+    Returns a bound representing the local sizebound with each variable substituted in a way that the bound is valid.</p>
+</div>
+</div>
+
+<pre><span id="VALas_bound"><span class="keyword">val</span> as_bound</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">Bound.t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Converts the templated bound to an actual bound.</p>
+</div>
+</div>
+
+<pre><span id="VALdefault"><span class="keyword">val</span> default</span> : <code class="type">[ `Lower | `Upper ] -> <a href="Bound.html#TYPEt">Bound.t</a></code></pre>
+<pre><span id="VALas_formula"><span class="keyword">val</span> as_formula</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="LocalSizeBound.html#TYPEt">t</a> -> Formulas.Formula.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a formula which expresses that the variable is smaller or equal to the bound, e.g. x &lt;= b.</p>
+</div>
+</div>
+
+<pre><span id="VALfind_bound"><span class="keyword">val</span> find_bound</span> : <code class="type">[ `Lower | `Upper ] -><br>       VarSet.t -><br>       <a href="Var.html#TYPEt">Var.t</a> -><br>       Formulas.Formula.t -> Polynomials.Polynomial.t -> int -> <a href="LocalSizeBound.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Tries to find a templated bound of any of the defined templates.</p>
+</div>
+</div>
+
+<pre><span id="VALsizebound_local"><span class="keyword">val</span> sizebound_local</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       [ `Lower | `Upper ] -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> <a href="LocalSizeBound.html#TYPEt">t</a> Batteries.Option.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a local sizebound of the specified kind for the variable of the transition. 
+    A local sizebound is expressed in relation to the values directly before executing the transition.</p>
+</div>
+</div>
+
+<pre><span id="VALsizebound_local_rv"><span class="keyword">val</span> sizebound_local_rv</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       [ `Lower | `Upper ] -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> <a href="LocalSizeBound.html#TYPEt">t</a> Batteries.Option.t</code></pre>
+<pre><span id="VALsizebound_local_scc"><span class="keyword">val</span> sizebound_local_scc</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       [ `Lower | `Upper ] -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a>) list -><br>       ([ `Lower | `Upper ] -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> <a href="LocalSizeBound.html#TYPEt">t</a>)<br>       Batteries.Option.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>If for all result variables of the given kind a local sizebound is defined, this function returns a local sizebound function.
+    Otherwise it returns None.</p>
+</div>
+</div>
+
+<pre><span id="VALreset"><span class="keyword">val</span> reset</span> : <code class="type">unit -> unit</code></pre><div class="info ">
+<div class="info-desc">
+<p>Resets all cached data.
+    Useful for testing in the same OCaml instance.</p>
+</div>
+</div>
+</body></html>

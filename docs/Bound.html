@@ -1,0 +1,205 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Var.html">
+<link rel="next" href="VarSet.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Util" rel="Chapter" href="Util.html">
+<link title="Logging" rel="Chapter" href="Logging.html">
+<link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
+<link title="ScaledMonomials" rel="Chapter" href="ScaledMonomials.html">
+<link title="Var" rel="Chapter" href="Var.html">
+<link title="Bound" rel="Chapter" href="Bound.html">
+<link title="VarSet" rel="Chapter" href="VarSet.html">
+<link title="RenameMap" rel="Chapter" href="RenameMap.html">
+<link title="Valuation" rel="Chapter" href="Valuation.html">
+<link title="Monomials" rel="Chapter" href="Monomials.html">
+<link title="Polynomials" rel="Chapter" href="Polynomials.html">
+<link title="OurInt" rel="Chapter" href="OurInt.html">
+<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
+<link title="Atoms" rel="Chapter" href="Atoms.html">
+<link title="Formulas" rel="Chapter" href="Formulas.html">
+<link title="Constraints" rel="Chapter" href="Constraints.html">
+<link title="ConstraintTypes" rel="Chapter" href="ConstraintTypes.html">
+<link title="SMT" rel="Chapter" href="SMT.html">
+<link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
+<link title="Program" rel="Chapter" href="Program.html">
+<link title="RVGTypes" rel="Chapter" href="RVGTypes.html">
+<link title="ProgramTypes" rel="Chapter" href="ProgramTypes.html">
+<link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
+<link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Readers" rel="Chapter" href="Readers.html">
+<link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
+<link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
+<link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
+<link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
+<link title="RankingFunction" rel="Chapter" href="RankingFunction.html">
+<link title="Approximation" rel="Chapter" href="Approximation.html">
+<link title="RankingBounds" rel="Chapter" href="RankingBounds.html">
+<link title="Bounds" rel="Chapter" href="Bounds.html">
+<link title="CostBounds" rel="Chapter" href="CostBounds.html">
+<link title="TrivialTimeBounds" rel="Chapter" href="TrivialTimeBounds.html">
+<link title="TrivialSizeBounds" rel="Chapter" href="TrivialSizeBounds.html">
+<link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
+<link title="Preprocessor" rel="Chapter" href="Preprocessor.html">
+<link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
+<link title="Chaining" rel="Chapter" href="Chaining.html">
+<link title="CutUnsatisfiableTransitions" rel="Chapter" href="CutUnsatisfiableTransitions.html">
+<link title="CutUnreachableLocations" rel="Chapter" href="CutUnreachableLocations.html">
+<link title="AnalyseCommand" rel="Chapter" href="AnalyseCommand.html">
+<link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
+<link title="Main" rel="Chapter" href="Main.html">
+<link title="MainUtil" rel="Chapter" href="MainUtil.html">
+<link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
+<link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
+<link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : Bound</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Var.html" title="Var">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="VarSet.html" title="VarSet">Next</a>
+</div>
+<h1>Module <a href="type_Bound.html">Bound</a></h1>
+
+<pre><span id="MODULEBound"><span class="keyword">module</span> Bound</span>: <code class="code">sig</code> <a href="Bound.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<p>A MinMaxPolynomial is a polynomial which allows the usage of min and max functions</p>
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+
+
+<pre><span class="keyword">include</span> <a href="PolyTypes.Evaluable.html">PolyTypes.Evaluable</a></pre>
+
+<pre><span class="keyword">include</span> <a href="PolyTypes.Math.html">PolyTypes.Math</a></pre>
+
+<pre><span class="keyword">include</span> <a href="PolyTypes.PartialOrder.html">PolyTypes.PartialOrder</a></pre>
+<p>Following methods are convenience methods for the creation of polynomials.</p>
+
+<pre><span id="VALof_poly"><span class="keyword">val</span> of_poly</span> : <code class="type">Polynomials.Polynomial.t -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_constant"><span class="keyword">val</span> of_constant</span> : <code class="type">value -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_int"><span class="keyword">val</span> of_int</span> : <code class="type">int -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALto_int"><span class="keyword">val</span> to_int</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> int</code></pre>
+<pre><span id="VALof_var"><span class="keyword">val</span> of_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_var_string"><span class="keyword">val</span> of_var_string</span> : <code class="type">string -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmin"><span class="keyword">val</span> min</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmax"><span class="keyword">val</span> max</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALminimum"><span class="keyword">val</span> minimum</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> Batteries.Enum.t -> <a href="Bound.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a bound representing the minimum of all the values.
+    Raises an exception, if the enum is empty.
+    Use the function infinity for those cases.</p>
+
+<p>Returns a bound representing the maximum of all the values.
+    Raises an exception, if the enum is empty.
+    Use the function minus_infinity for those cases.</p>
+</div>
+</div>
+
+<pre><span id="VALmaximum"><span class="keyword">val</span> maximum</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> Batteries.Enum.t -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALinfinity"><span class="keyword">val</span> infinity</span> : <code class="type"><a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALminus_infinity"><span class="keyword">val</span> minus_infinity</span> : <code class="type"><a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALexp"><span class="keyword">val</span> exp</span> : <code class="type">value -> <a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALabs"><span class="keyword">val</span> abs</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmax_of_occurring_constants"><span class="keyword">val</span> max_of_occurring_constants</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> OurInt.t</code></pre>
+<pre><span id="VALis_infinity"><span class="keyword">val</span> is_infinity</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_minus_infinity"><span class="keyword">val</span> is_minus_infinity</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALshow"><span class="keyword">val</span> show</span> : <code class="type">?complexity:bool -> <a href="Bound.html#TYPEt">t</a> -> string</code></pre><p>Functions to classify the quality of the bound</p>
+<p>Following methods can be used to classify the type of the polynomial.</p>
+
+<pre><span id="VALsubstitute"><span class="keyword">val</span> substitute</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> replacement:<a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
+        Ignores naming equalities.</p>
+</div>
+</div>
+
+<pre><span id="VALsubstitute_all"><span class="keyword">val</span> substitute_all</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> Batteries.Map.Make(Var).t -> <a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
+        Leaves all variables unchanged which are not in the replacement map.</p>
+</div>
+</div>
+
+<pre><span id="VALsubstitute_f"><span class="keyword">val</span> substitute_f</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">t</a>) -> <a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALappr_substitution"><span class="keyword">val</span> appr_substitution</span> : <code class="type">[ `Lower | `Upper ] -><br>       lower:(<a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">t</a>) -> higher:(<a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">t</a>) -> <a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEt">t</a></code></pre>
+<pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">const:(value -> 'b) -><br>       var:(<a href="Var.html#TYPEt">Var.t</a> -> 'b) -><br>       neg:('b -> 'b) -><br>       plus:('b -> 'b -> 'b) -><br>       times:('b -> 'b -> 'b) -><br>       exp:(value -> 'b -> 'b) -> max:('b -> 'b -> 'b) -> inf:'b -> <a href="Bound.html#TYPEt">t</a> -> 'b</code></pre><div class="info ">
+<div class="info-desc">
+<p>Replaces all arithmetical operations by new constructors.</p>
+</div>
+</div>
+
+<pre><code><span id="TYPEcomplexity"><span class="keyword">type</span> <code class="type"></code>complexity</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcomplexity.Inf"><span class="constructor">Inf</span></span></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcomplexity.Polynomial"><span class="constructor">Polynomial</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcomplexity.Exponential"><span class="constructor">Exponential</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+
+</tr></table>
+
+
+
+<pre><span id="VALequal_complexity"><span class="keyword">val</span> equal_complexity</span> : <code class="type"><a href="Bound.html#TYPEcomplexity">complexity</a> -> <a href="Bound.html#TYPEcomplexity">complexity</a> -> bool</code></pre>
+<pre><span id="VALshow_complexity"><span class="keyword">val</span> show_complexity</span> : <code class="type"><a href="Bound.html#TYPEcomplexity">complexity</a> -> string</code></pre>
+<pre><span id="VALshow_complexity_termcomp"><span class="keyword">val</span> show_complexity_termcomp</span> : <code class="type"><a href="Bound.html#TYPEcomplexity">complexity</a> -> string</code></pre>
+<pre><span id="VALasymptotic_complexity"><span class="keyword">val</span> asymptotic_complexity</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> <a href="Bound.html#TYPEcomplexity">complexity</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns an overapproximation of the asymptotic complexity of the given bound.</p>
+</div>
+</div>
+
+<pre><span id="VALis_linear"><span class="keyword">val</span> is_linear</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns true iff the asymptotic complexity is n^1.</p>
+</div>
+</div>
+
+<pre><span id="VALcoeff_of_var"><span class="keyword">val</span> coeff_of_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">t</a> -> value</code></pre><div class="info ">
+<div class="info-desc">
+<p>Needed for Atomizable but not yet implemented.</p>
+</div>
+</div>
+
+<pre><span id="VALof_coeff_list"><span class="keyword">val</span> of_coeff_list</span> : <code class="type">value list -> <a href="Var.html#TYPEt">Var.t</a> list -> <a href="Bound.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Needed for Atomizable but not yet implemented.</p>
+</div>
+</div>
+
+<pre><span id="VALget_constant"><span class="keyword">val</span> get_constant</span> : <code class="type"><a href="Bound.html#TYPEt">t</a> -> value</code></pre><div class="info ">
+<div class="info-desc">
+<p>returns the constant of a bound</p>
+</div>
+</div>
+</body></html>

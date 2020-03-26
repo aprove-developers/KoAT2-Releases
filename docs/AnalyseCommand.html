@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="CutUnreachableLocations.html">
+<link rel="next" href="NormalizeCommand.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Util" rel="Chapter" href="Util.html">
+<link title="Logging" rel="Chapter" href="Logging.html">
+<link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
+<link title="ScaledMonomials" rel="Chapter" href="ScaledMonomials.html">
+<link title="Var" rel="Chapter" href="Var.html">
+<link title="Bound" rel="Chapter" href="Bound.html">
+<link title="VarSet" rel="Chapter" href="VarSet.html">
+<link title="RenameMap" rel="Chapter" href="RenameMap.html">
+<link title="Valuation" rel="Chapter" href="Valuation.html">
+<link title="Monomials" rel="Chapter" href="Monomials.html">
+<link title="Polynomials" rel="Chapter" href="Polynomials.html">
+<link title="OurInt" rel="Chapter" href="OurInt.html">
+<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
+<link title="Atoms" rel="Chapter" href="Atoms.html">
+<link title="Formulas" rel="Chapter" href="Formulas.html">
+<link title="Constraints" rel="Chapter" href="Constraints.html">
+<link title="ConstraintTypes" rel="Chapter" href="ConstraintTypes.html">
+<link title="SMT" rel="Chapter" href="SMT.html">
+<link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
+<link title="Program" rel="Chapter" href="Program.html">
+<link title="RVGTypes" rel="Chapter" href="RVGTypes.html">
+<link title="ProgramTypes" rel="Chapter" href="ProgramTypes.html">
+<link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
+<link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Readers" rel="Chapter" href="Readers.html">
+<link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
+<link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
+<link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
+<link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
+<link title="RankingFunction" rel="Chapter" href="RankingFunction.html">
+<link title="Approximation" rel="Chapter" href="Approximation.html">
+<link title="RankingBounds" rel="Chapter" href="RankingBounds.html">
+<link title="Bounds" rel="Chapter" href="Bounds.html">
+<link title="CostBounds" rel="Chapter" href="CostBounds.html">
+<link title="TrivialTimeBounds" rel="Chapter" href="TrivialTimeBounds.html">
+<link title="TrivialSizeBounds" rel="Chapter" href="TrivialSizeBounds.html">
+<link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
+<link title="Preprocessor" rel="Chapter" href="Preprocessor.html">
+<link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
+<link title="Chaining" rel="Chapter" href="Chaining.html">
+<link title="CutUnsatisfiableTransitions" rel="Chapter" href="CutUnsatisfiableTransitions.html">
+<link title="CutUnreachableLocations" rel="Chapter" href="CutUnreachableLocations.html">
+<link title="AnalyseCommand" rel="Chapter" href="AnalyseCommand.html">
+<link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
+<link title="Main" rel="Chapter" href="Main.html">
+<link title="MainUtil" rel="Chapter" href="MainUtil.html">
+<link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
+<link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
+<link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : AnalyseCommand</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="CutUnreachableLocations.html" title="CutUnreachableLocations">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="NormalizeCommand.html" title="NormalizeCommand">Next</a>
+</div>
+<h1>Module <a href="type_AnalyseCommand.html">AnalyseCommand</a></h1>
+
+<pre><span id="MODULEAnalyseCommand"><span class="keyword">module</span> AnalyseCommand</span>: <code class="code">sig</code> <a href="AnalyseCommand.html">..</a> <code class="code">end</code></pre><hr width="100%">
+
+<pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">string</code></pre>
+<pre><span id="VALdescription"><span class="keyword">val</span> description</span> : <code class="type">string</code></pre>
+<pre><span id="VALprint_all_bounds"><span class="keyword">val</span> print_all_bounds</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> unit</code></pre><div class="info ">
+<div class="info-desc">
+<p>Prints the whole resulting approximation to the shell.</p>
+</div>
+</div>
+
+<pre><span id="VALprint_overall_timebound"><span class="keyword">val</span> print_overall_timebound</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> unit</code></pre><div class="info ">
+<div class="info-desc">
+<p>Prints the overall timebound of the program to the shell.</p>
+</div>
+</div>
+
+<pre><span id="VALprint_termcomp"><span class="keyword">val</span> print_termcomp</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> unit</code></pre><div class="info ">
+<div class="info-desc">
+<p>Prints the overall timebound of the program to the shell.</p>
+</div>
+</div>
+
+<pre><code><span id="TYPEparams"><span class="keyword">type</span> <code class="type"></code>params</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.print_system">print_system</span>&nbsp;: <code class="type">bool</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Prints the integer transition system at the start as png</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.print_rvg">print_rvg</span>&nbsp;: <code class="type">bool</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Prints the input result variable graph at the start as png</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.print_input">print_input</span>&nbsp;: <code class="type">bool</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Prints the raw unmodified input before the start</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.no_boundsearch">no_boundsearch</span>&nbsp;: <code class="type">bool</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Disables the search for bounds. Useful if you just want information about the integer transition system via the other options or for debugging purposes.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.input">input</span>&nbsp;: <code class="type">string option</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Either an absolute or relative path to the koat input file which defines the integer transition system.
+        Or the program defined in simple mode.
+        How this string is interpreted is defined by the simple-input flag</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.simple_input">simple_input</span>&nbsp;: <code class="type">bool</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.output_dir">output_dir</span>&nbsp;: <code class="type">string option</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>An absolute or relative path to the output directory, where all generated files should end up.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.logs">logs</span>&nbsp;: <code class="type"><a href="Logging.html#TYPElogger">Logging.logger</a> list</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>The loggers which should be activated.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.log_level">log_level</span>&nbsp;: <code class="type">Batteries.Logger.level</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>The general log level of the loggers.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.result">result</span>&nbsp;: <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> unit</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.preprocessors">preprocessors</span>&nbsp;: <code class="type"><a href="Preprocessor.html#TYPEt">Preprocessor.t</a> list</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>The preprocessors which should be applied before running the actual algorithm.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.preprocessing_strategy">preprocessing_strategy</span>&nbsp;: <code class="type"><a href="Preprocessor.html#TYPEstrategy">Preprocessor.strategy</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>The strategy which should be used to apply the preprocessors.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTparams.rename">rename</span>&nbsp;: <code class="type">bool</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>If the location names should be normalized to simplified names.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+}
+
+<div class="info ">
+<div class="info-desc">
+<p>The shell arguments which can be defined in the console.</p>
+</div>
+</div>
+
+
+<pre><span id="VALparams_cmdliner_term"><span class="keyword">val</span> params_cmdliner_term</span> : <code class="type">unit -> <a href="AnalyseCommand.html#TYPEparams">params</a> Cmdliner.Term.t</code></pre>
+<pre><span id="VALbounded_label_to_string"><span class="keyword">val</span> bounded_label_to_string</span> : <code class="type"><a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> string</code></pre>
+<pre><span id="VALbounded_rv_to_string"><span class="keyword">val</span> bounded_rv_to_string</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       <a href="Approximation.html#TYPEkind">Approximation.kind</a> -><br>       <a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> string</code></pre>
+<pre><span id="VALget_lsb"><span class="keyword">val</span> get_lsb</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       [ `Lower | `Upper ] -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">Bound.t</a></code></pre>
+<pre><span id="VALstandard_vars"><span class="keyword">val</span> standard_vars</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Var.html#TYPEt">Var.t</a> list</code></pre>
+<pre><span id="VALrename_graph"><span class="keyword">val</span> rename_graph</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -><br>       ProgramTypes.TransitionGraph.t -> ProgramTypes.TransitionGraph.t</code></pre>
+<pre><span id="VALrename_program"><span class="keyword">val</span> rename_program</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a></code></pre>
+<pre><span id="VALrename_program_option"><span class="keyword">val</span> rename_program_option</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> option -> <a href="Program.html#TYPEt">Program.t</a> option</code></pre>
+<pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type"><a href="AnalyseCommand.html#TYPEparams">params</a> -> unit</code></pre></body></html>

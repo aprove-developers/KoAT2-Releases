@@ -1,0 +1,150 @@
+<html><head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Util" rel="Chapter" href="Util.html">
+<link title="Logging" rel="Chapter" href="Logging.html">
+<link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
+<link title="ScaledMonomials" rel="Chapter" href="ScaledMonomials.html">
+<link title="Var" rel="Chapter" href="Var.html">
+<link title="Bound" rel="Chapter" href="Bound.html">
+<link title="VarSet" rel="Chapter" href="VarSet.html">
+<link title="RenameMap" rel="Chapter" href="RenameMap.html">
+<link title="Valuation" rel="Chapter" href="Valuation.html">
+<link title="Monomials" rel="Chapter" href="Monomials.html">
+<link title="Polynomials" rel="Chapter" href="Polynomials.html">
+<link title="OurInt" rel="Chapter" href="OurInt.html">
+<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
+<link title="Atoms" rel="Chapter" href="Atoms.html">
+<link title="Formulas" rel="Chapter" href="Formulas.html">
+<link title="Constraints" rel="Chapter" href="Constraints.html">
+<link title="ConstraintTypes" rel="Chapter" href="ConstraintTypes.html">
+<link title="SMT" rel="Chapter" href="SMT.html">
+<link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
+<link title="Program" rel="Chapter" href="Program.html">
+<link title="RVGTypes" rel="Chapter" href="RVGTypes.html">
+<link title="ProgramTypes" rel="Chapter" href="ProgramTypes.html">
+<link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
+<link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Readers" rel="Chapter" href="Readers.html">
+<link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
+<link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
+<link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
+<link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
+<link title="RankingFunction" rel="Chapter" href="RankingFunction.html">
+<link title="Approximation" rel="Chapter" href="Approximation.html">
+<link title="RankingBounds" rel="Chapter" href="RankingBounds.html">
+<link title="Bounds" rel="Chapter" href="Bounds.html">
+<link title="CostBounds" rel="Chapter" href="CostBounds.html">
+<link title="TrivialTimeBounds" rel="Chapter" href="TrivialTimeBounds.html">
+<link title="TrivialSizeBounds" rel="Chapter" href="TrivialSizeBounds.html">
+<link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
+<link title="Preprocessor" rel="Chapter" href="Preprocessor.html">
+<link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
+<link title="Chaining" rel="Chapter" href="Chaining.html">
+<link title="CutUnsatisfiableTransitions" rel="Chapter" href="CutUnsatisfiableTransitions.html">
+<link title="CutUnreachableLocations" rel="Chapter" href="CutUnreachableLocations.html">
+<link title="AnalyseCommand" rel="Chapter" href="AnalyseCommand.html">
+<link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
+<link title="Main" rel="Chapter" href="Main.html">
+<link title="MainUtil" rel="Chapter" href="MainUtil.html">
+<link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
+<link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
+<link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : ConstraintTypes.Atom</title>
+</head>
+<body>
+<code class="code"><span class="keyword">sig</span><br>
+&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Comparator</span>&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t&nbsp;=&nbsp;<span class="constructor">GT</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">GE</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">LT</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">LE</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;values&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.<span class="constructor">Comparator</span>.t&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;str_values&nbsp;:&nbsp;string&nbsp;list<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.<span class="constructor">Comparator</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;polynomial<br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;value<br>
+&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">P</span>&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t&nbsp;=&nbsp;polynomial<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;value&nbsp;=&nbsp;value<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;zero&nbsp;:&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;one&nbsp;:&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;neg&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;add&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mul&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;pow&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;equal&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;(&nbsp;=~=&nbsp;)&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compare&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_int&nbsp;:&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_int&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;sub&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_constant&nbsp;:&nbsp;value&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_var&nbsp;:&nbsp;<span class="constructor">Var</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;vars&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;rename&nbsp;:&nbsp;<span class="constructor">RenameMap</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_linear&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;coeff_of_var&nbsp;:&nbsp;<span class="constructor">Var</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;value<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;get_constant&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;value<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;of_coeff_list&nbsp;:&nbsp;value&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Var</span>.t&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.<span class="constructor">Comparator</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_gt&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_ge&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_lt&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_le&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Infix</span>&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;(&nbsp;&gt;&nbsp;)&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;(&nbsp;&gt;=&nbsp;)&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;(&nbsp;&lt;&nbsp;)&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;(&nbsp;&lt;=&nbsp;)&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;(&nbsp;=~=&nbsp;)&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;equal&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compare&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;neg&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;?comp:string&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;vars&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;normalised_lhs&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;rename&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">RenameMap</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fold&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;subject:(<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.polynomial&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b)&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;le:(<span class="keywordsign">'</span>b&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>b&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>c)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="keywordsign">'</span>c<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_linear&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;get_coefficient&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Var</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.value<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;get_constant&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Atom</span>.value<br>
+<span class="keyword">end</span></code></body></html>

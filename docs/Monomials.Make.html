@@ -1,0 +1,136 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="Up" href="Monomials.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Util" rel="Chapter" href="Util.html">
+<link title="Logging" rel="Chapter" href="Logging.html">
+<link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
+<link title="ScaledMonomials" rel="Chapter" href="ScaledMonomials.html">
+<link title="Var" rel="Chapter" href="Var.html">
+<link title="Bound" rel="Chapter" href="Bound.html">
+<link title="VarSet" rel="Chapter" href="VarSet.html">
+<link title="RenameMap" rel="Chapter" href="RenameMap.html">
+<link title="Valuation" rel="Chapter" href="Valuation.html">
+<link title="Monomials" rel="Chapter" href="Monomials.html">
+<link title="Polynomials" rel="Chapter" href="Polynomials.html">
+<link title="OurInt" rel="Chapter" href="OurInt.html">
+<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
+<link title="Atoms" rel="Chapter" href="Atoms.html">
+<link title="Formulas" rel="Chapter" href="Formulas.html">
+<link title="Constraints" rel="Chapter" href="Constraints.html">
+<link title="ConstraintTypes" rel="Chapter" href="ConstraintTypes.html">
+<link title="SMT" rel="Chapter" href="SMT.html">
+<link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
+<link title="Program" rel="Chapter" href="Program.html">
+<link title="RVGTypes" rel="Chapter" href="RVGTypes.html">
+<link title="ProgramTypes" rel="Chapter" href="ProgramTypes.html">
+<link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
+<link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Readers" rel="Chapter" href="Readers.html">
+<link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
+<link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
+<link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
+<link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
+<link title="RankingFunction" rel="Chapter" href="RankingFunction.html">
+<link title="Approximation" rel="Chapter" href="Approximation.html">
+<link title="RankingBounds" rel="Chapter" href="RankingBounds.html">
+<link title="Bounds" rel="Chapter" href="Bounds.html">
+<link title="CostBounds" rel="Chapter" href="CostBounds.html">
+<link title="TrivialTimeBounds" rel="Chapter" href="TrivialTimeBounds.html">
+<link title="TrivialSizeBounds" rel="Chapter" href="TrivialSizeBounds.html">
+<link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
+<link title="Preprocessor" rel="Chapter" href="Preprocessor.html">
+<link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
+<link title="Chaining" rel="Chapter" href="Chaining.html">
+<link title="CutUnsatisfiableTransitions" rel="Chapter" href="CutUnsatisfiableTransitions.html">
+<link title="CutUnreachableLocations" rel="Chapter" href="CutUnreachableLocations.html">
+<link title="AnalyseCommand" rel="Chapter" href="AnalyseCommand.html">
+<link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
+<link title="Main" rel="Chapter" href="Main.html">
+<link title="MainUtil" rel="Chapter" href="MainUtil.html">
+<link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
+<link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
+<link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : Monomials.Make</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="Monomials.html" title="Monomials">Up</a>
+&nbsp;</div>
+<h1>Functor <a href="type_Monomials.Make.html">Monomials.Make</a></h1>
+
+<pre><span id="MODULEMake"><span class="keyword">module</span> Make</span>: <div class="sig_block"><code class="code">functor (</code><code class="code">Value</code><code class="code"> : </code><code class="type"><a href="PolyTypes.Ring.html">PolyTypes.Ring</a></code><code class="code">) -&gt; </code><code class="type"><a href="PolyTypes.Monomial.html">PolyTypes.Monomial</a></code><code class="type">  with type value = Value.t
+                             and type valuation = <a href="Valuation.Make.html">Valuation.Make</a>(Value).t</code></div></pre><div class="info module top">
+<div class="info-desc">
+<p>Constructs a default monomial using a list of pairs of variables and their exponents</p>
+</div>
+</div>
+<table border="0" cellpadding="3" width="100%">
+<tr>
+<td align="left" valign="top" width="1%%"><b>Parameters: </b></td>
+<td>
+<table class="paramstable">
+<tr>
+<td align="center" valign="top" width="15%">
+<code>Value</code></td>
+<td align="center" valign="top">:</td>
+<td><code class="type"><a href="PolyTypes.Ring.html">PolyTypes.Ring</a></code>
+</table>
+</td>
+</tr>
+</table>
+<hr width="100%">
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+
+
+<pre><span class="keyword">include</span> <a href="PolyTypes.Evaluable.html">PolyTypes.Evaluable</a></pre>
+
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> * int) list -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> int -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALdegree_variable"><span class="keyword">val</span> degree_variable</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Monomial.html#TYPEt">t</a> -> int</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the degree of the given variable.</p>
+</div>
+</div>
+
+<pre><span id="VALdelete_var"><span class="keyword">val</span> delete_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Monomial.html#TYPEt">t</a> -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Deletes all occurences of the given variable.</p>
+</div>
+</div>
+
+<pre><span id="VALis_univariate_linear"><span class="keyword">val</span> is_univariate_linear</span> : <code class="type"><a href="PolyTypes.Monomial.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns if the monomial is of the simplified form x^1 for any variable x.</p>
+</div>
+</div>
+
+<pre><span id="VALmul"><span class="keyword">val</span> mul</span> : <code class="type"><a href="PolyTypes.Monomial.html#TYPEt">t</a> -> <a href="PolyTypes.Monomial.html#TYPEt">t</a> -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Multiplies two monomials. The result is always a monomial.</p>
+</div>
+</div>
+
+<pre><span id="VALone"><span class="keyword">val</span> one</span> : <code class="type"><a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a monomial representing the numeric value one (1).</p>
+</div>
+</div>
+
+<pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">const:(value -> 'b) -><br>       var:(<a href="Var.html#TYPEt">Var.t</a> -> 'b) -><br>       times:('b -> 'b -> 'b) -> pow:('b -> int -> 'b) -> <a href="PolyTypes.Monomial.html#TYPEt">t</a> -> 'b</code></pre><div class="info ">
+<div class="info-desc">
+<p>Replaces all arithmetical operations by new constructors.</p>
+</div>
+</div>
+</body></html>

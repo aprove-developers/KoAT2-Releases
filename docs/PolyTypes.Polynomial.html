@@ -1,0 +1,239 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="PolyTypes.Ring.html">
+<link rel="Up" href="PolyTypes.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Util" rel="Chapter" href="Util.html">
+<link title="Logging" rel="Chapter" href="Logging.html">
+<link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
+<link title="ScaledMonomials" rel="Chapter" href="ScaledMonomials.html">
+<link title="Var" rel="Chapter" href="Var.html">
+<link title="Bound" rel="Chapter" href="Bound.html">
+<link title="VarSet" rel="Chapter" href="VarSet.html">
+<link title="RenameMap" rel="Chapter" href="RenameMap.html">
+<link title="Valuation" rel="Chapter" href="Valuation.html">
+<link title="Monomials" rel="Chapter" href="Monomials.html">
+<link title="Polynomials" rel="Chapter" href="Polynomials.html">
+<link title="OurInt" rel="Chapter" href="OurInt.html">
+<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
+<link title="Atoms" rel="Chapter" href="Atoms.html">
+<link title="Formulas" rel="Chapter" href="Formulas.html">
+<link title="Constraints" rel="Chapter" href="Constraints.html">
+<link title="ConstraintTypes" rel="Chapter" href="ConstraintTypes.html">
+<link title="SMT" rel="Chapter" href="SMT.html">
+<link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
+<link title="Program" rel="Chapter" href="Program.html">
+<link title="RVGTypes" rel="Chapter" href="RVGTypes.html">
+<link title="ProgramTypes" rel="Chapter" href="ProgramTypes.html">
+<link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
+<link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Readers" rel="Chapter" href="Readers.html">
+<link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
+<link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
+<link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
+<link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
+<link title="RankingFunction" rel="Chapter" href="RankingFunction.html">
+<link title="Approximation" rel="Chapter" href="Approximation.html">
+<link title="RankingBounds" rel="Chapter" href="RankingBounds.html">
+<link title="Bounds" rel="Chapter" href="Bounds.html">
+<link title="CostBounds" rel="Chapter" href="CostBounds.html">
+<link title="TrivialTimeBounds" rel="Chapter" href="TrivialTimeBounds.html">
+<link title="TrivialSizeBounds" rel="Chapter" href="TrivialSizeBounds.html">
+<link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
+<link title="Preprocessor" rel="Chapter" href="Preprocessor.html">
+<link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
+<link title="Chaining" rel="Chapter" href="Chaining.html">
+<link title="CutUnsatisfiableTransitions" rel="Chapter" href="CutUnsatisfiableTransitions.html">
+<link title="CutUnreachableLocations" rel="Chapter" href="CutUnreachableLocations.html">
+<link title="AnalyseCommand" rel="Chapter" href="AnalyseCommand.html">
+<link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
+<link title="Main" rel="Chapter" href="Main.html">
+<link title="MainUtil" rel="Chapter" href="MainUtil.html">
+<link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
+<link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
+<link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : PolyTypes.Polynomial</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="PolyTypes.Ring.html" title="PolyTypes.Ring">Previous</a>
+&nbsp;<a class="up" href="PolyTypes.html" title="PolyTypes">Up</a>
+&nbsp;</div>
+<h1>Module type <a href="type_PolyTypes.Polynomial.html">PolyTypes.Polynomial</a></h1>
+
+<pre><span id="MODULETYPEPolynomial"><span class="keyword">module type</span> Polynomial</span> = <code class="code">sig</code> <a href="PolyTypes.Polynomial.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
+<div class="info-desc">
+<p>A Polynomial represents a mathematical polynomial</p>
+</div>
+</div>
+<hr width="100%">
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+
+
+<pre><span class="keyword">include</span> <a href="PolyTypes.Evaluable.html">PolyTypes.Evaluable</a></pre>
+
+<pre><span class="keyword">include</span> <a href="PolyTypes.Math.html">PolyTypes.Math</a></pre>
+
+<pre><span class="keyword">include</span> <a href="PolyTypes.PartialOrder.html">PolyTypes.PartialOrder</a></pre>
+
+<pre><span class="keyword">include</span> <a href="PolyTypes.Ring.html">PolyTypes.Ring</a></pre>
+
+<pre><span id="TYPEmonomial"><span class="keyword">type</span> <code class="type"></code>monomial</span> </pre>
+
+
+<pre><span id="TYPEscaled_monomial"><span class="keyword">type</span> <code class="type"></code>scaled_monomial</span> </pre>
+
+<p>Following methods are convenience methods for the creation of polynomials.</p>
+
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">(value * <a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a>) list -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type">value -> <a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_scaled"><span class="keyword">val</span> of_scaled</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEscaled_monomial">scaled_monomial</a> list -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_var"><span class="keyword">val</span> of_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_constant"><span class="keyword">val</span> of_constant</span> : <code class="type">value -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALvar"><span class="keyword">val</span> var</span> : <code class="type">string -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALvalue"><span class="keyword">val</span> value</span> : <code class="type">int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALreal_helper"><span class="keyword">val</span> real_helper</span> : <code class="type">int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALint_helper"><span class="keyword">val</span> int_helper</span> : <code class="type">int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_power"><span class="keyword">val</span> of_power</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_monomial"><span class="keyword">val</span> of_monomial</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_coeff_list"><span class="keyword">val</span> of_coeff_list</span> : <code class="type">value list -> <a href="Var.html#TYPEt">Var.t</a> list -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><p>Following methods return information over the polynomial.</p>
+
+<pre><span id="VALcoeff"><span class="keyword">val</span> coeff</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> value</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the coefficient of the monomial.</p>
+</div>
+</div>
+
+<pre><span id="VALcoeff_of_var"><span class="keyword">val</span> coeff_of_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> value</code></pre>
+<pre><span id="VALmonomials"><span class="keyword">val</span> monomials</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> <a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> list</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the monomials of the polynomial without the empty monomial.</p>
+</div>
+</div>
+
+<pre><span id="VALget_constant"><span class="keyword">val</span> get_constant</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> value</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the constant of the polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> string</code></pre><p>Following methods return if the atom has certain properties.</p>
+
+<pre><span id="VALis_var"><span class="keyword">val</span> is_var</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns if the polynomial is equivalent to a term x^1 for any variable x.</p>
+</div>
+</div>
+
+<pre><span id="VALis_var_plus_constant"><span class="keyword">val</span> is_var_plus_constant</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns if the polynomial is equivalent to a term x^1 + c for any variable x and any constant c.</p>
+</div>
+</div>
+
+<pre><span id="VALis_sum_of_vars_plus_constant"><span class="keyword">val</span> is_sum_of_vars_plus_constant</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns if the polynomial is equivalent to a term x_1^1 + ... + x_n^1 + c for any variables x_1, ..., x_n and any constant c.</p>
+</div>
+</div>
+
+<pre><span id="VALis_univariate_linear"><span class="keyword">val</span> is_univariate_linear</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns if the polyomial is linear and contains at most one active variable.</p>
+</div>
+</div>
+
+<pre><span id="VALis_const"><span class="keyword">val</span> is_const</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns if the value of the polynomial is not be affected by any variable.</p>
+</div>
+</div>
+
+<pre><span id="VALis_linear"><span class="keyword">val</span> is_linear</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns if the polynomial is linear.</p>
+</div>
+</div>
+
+<pre><span id="VALis_zero"><span class="keyword">val</span> is_zero</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns if the value of the polynomial is the constant value zero (0).</p>
+</div>
+</div>
+
+<pre><span id="VALis_one"><span class="keyword">val</span> is_one</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns if the value of the polynomial is the constant value one (1).</p>
+</div>
+</div>
+<p>Misc</p>
+
+<pre><span id="VALeval_partial"><span class="keyword">val</span> eval_partial</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> valuation -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a polynomial where every variable for which a value is assigned by the valuation is replaced by this value.</p>
+</div>
+</div>
+
+<pre><span id="VALinstantiate"><span class="keyword">val</span> instantiate</span> : <code class="type">(value -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a>) -><br>       <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Maps all coefficients to elements from the polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALsubstitute"><span class="keyword">val</span> substitute</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -><br>       replacement:<a href="PolyTypes.Polynomial.html#TYPEt">t</a> -><br>       <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
+        Ignores naming equalities.</p>
+</div>
+</div>
+
+<pre><span id="VALsubstitute_f"><span class="keyword">val</span> substitute_f</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a>) -><br>       <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALsubstitute_all"><span class="keyword">val</span> substitute_all</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> Batteries.Map.Make(Var).t -><br>       <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
+        Leaves all variables unchanged which are not in the replacement map.</p>
+</div>
+</div>
+
+<pre><span id="VALdelete_monomial"><span class="keyword">val</span> delete_monomial</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> -><br>       <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Removes all summands from the polynomial which are equivalent to the monomial.</p>
+</div>
+</div>
+
+<pre><span id="VALsimplify"><span class="keyword">val</span> simplify</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a simplified version of the polynomial.
+        Subsequent calls to simplify will not lead to a further simplification.</p>
+</div>
+</div>
+
+<pre><span id="VALmult_with_const"><span class="keyword">val</span> mult_with_const</span> : <code class="type">value -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Multiplies the polynomial with a constant value.
+        The result is always a polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">const:(value -> 'b) -><br>       var:(<a href="Var.html#TYPEt">Var.t</a> -> 'b) -><br>       neg:('b -> 'b) -><br>       plus:('b -> 'b -> 'b) -><br>       times:('b -> 'b -> 'b) -><br>       pow:('b -> int -> 'b) -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> 'b</code></pre><div class="info ">
+<div class="info-desc">
+<p>Replaces all arithmetical operations by new constructors.</p>
+</div>
+</div>
+</body></html>
