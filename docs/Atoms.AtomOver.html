@@ -63,7 +63,10 @@
 <link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
 <link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
-<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : Atoms.AtomOver</title>
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><link title=" Following methods are convenience methods for the creation of atoms." rel="Section" href="#1_Followingmethodsareconveniencemethodsforthecreationofatoms">
+<link title=" Following methods return certain properties of the atom. " rel="Section" href="#1_Followingmethodsreturncertainpropertiesoftheatom">
+<link title=" Following methods manipulate atoms and return the manipulated versions." rel="Section" href="#1_Followingmethodsmanipulateatomsandreturnthemanipulatedversions">
+<title>Koat2 : Atoms.AtomOver</title>
 </head>
 <body>
 <div class="navbar">&nbsp;<a class="up" href="Atoms.html" title="Atoms">Up</a>
@@ -72,11 +75,13 @@
 <h1>Functor <a href="type_Atoms.AtomOver.html">Atoms.AtomOver</a></h1>
 
 <pre><span id="MODULEAtomOver"><span class="keyword">module</span> AtomOver</span>: <div class="sig_block"><code class="code">functor (</code><code class="code">P</code><code class="code"> : </code><code class="type"><a href="ConstraintTypes.Atomizable.html">ConstraintTypes.Atomizable</a></code><code class="code">) -&gt; </code><code class="type"><a href="ConstraintTypes.Atom.html">ConstraintTypes.Atom</a></code><code class="type"> 
-       with type polynomial = P.t
+       with type polynomial = P.t 
         and type value = P.value
         and module P = P</code></div></pre><div class="info module top">
 <div class="info-desc">
 <p>Constructs a default constraint using a simple record</p>
+
+<p>Provides default implementations of atoms, i.e., for two objects q and p (e.g. polynomials, bounds), and a comparator ~, the expression q ~ p is an atom.</p>
 </div>
 </div>
 <table border="0" cellpadding="3" width="100%">
@@ -111,15 +116,38 @@
                 and type value = value</code></pre>
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
-<p>Following methods are convenience methods for the creation of atoms.</p>
+<h2 id="1_Followingmethodsareconveniencemethodsforthecreationofatoms"> <div align=left>Following methods are convenience methods for the creation of atoms.</div></h2>
+<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type"><a href="ConstraintTypes.Atom.Comparator.html#TYPEt">Comparator.t</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Makes an atom out of two objects and a comparator.</p>
+</div>
+</div>
 
-<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type"><a href="ConstraintTypes.Atom.Comparator.html#TYPEt">Comparator.t</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_gt"><span class="keyword">val</span> mk_gt</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_ge"><span class="keyword">val</span> mk_ge</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_lt"><span class="keyword">val</span> mk_lt</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_le"><span class="keyword">val</span> mk_le</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre>
-<pre><span id="MODULEInfix"><span class="keyword">module</span> <a href="ConstraintTypes.Atom.Infix.html">Infix</a></span>: <code class="code">sig</code> <a href="ConstraintTypes.Atom.Infix.html">..</a> <code class="code">end</code></pre><p>Following methods return certain properties of the atom.</p>
+<pre><span id="VALmk_gt"><span class="keyword">val</span> mk_gt</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Makes an atom out of two objects using <b>&gt;</b> as the comparator.</p>
+</div>
+</div>
 
+<pre><span id="VALmk_ge"><span class="keyword">val</span> mk_ge</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Makes an atom out of two objects using <b>&gt;=</b> as the comparator.</p>
+</div>
+</div>
+
+<pre><span id="VALmk_lt"><span class="keyword">val</span> mk_lt</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Makes an atom out of two objects using <b>&lt;</b> as the comparator.</p>
+</div>
+</div>
+
+<pre><span id="VALmk_le"><span class="keyword">val</span> mk_le</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Makes an atom out of two objects using <b>&lt;=</b> as the comparator.</p>
+</div>
+</div>
+
+<pre><span id="MODULEInfix"><span class="keyword">module</span> <a href="ConstraintTypes.Atom.Infix.html">Infix</a></span>: <code class="code">sig</code> <a href="ConstraintTypes.Atom.Infix.html">..</a> <code class="code">end</code></pre><h2 id="1_Followingmethodsreturncertainpropertiesoftheatom"> <div align=left>Following methods return certain properties of the atom. </div></h2>
 <pre><span id="VAL(=~=)"><span class="keyword">val</span> (=~=)</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> bool</code></pre>
 <pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
@@ -133,8 +161,18 @@
 </div>
 </div>
 
-<pre><span id="VALneg"><span class="keyword">val</span> neg</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?comp:string -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALneg"><span class="keyword">val</span> neg</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the negation of an atom.</p>
+</div>
+</div>
+
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?to_file:bool -> ?comp:string -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a string representing the atom. Parameter <i>to_file</i> is used to get a representation with less special characters.</p>
+</div>
+</div>
+
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> VarSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the set of variables which are active in the atom.
@@ -144,11 +182,10 @@
 
 <pre><span id="VALnormalised_lhs"><span class="keyword">val</span> normalised_lhs</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> <a href="ConstraintTypes.Atom.html#TYPEpolynomial">polynomial</a></code></pre><div class="info ">
 <div class="info-desc">
-<p>Returns a normalised form of the atom, where the returned polynomial represents the atom in the form p &lt;= 0.</p>
+<p>Returns a normalised form of the atom, where the returned polynomial represents the atom in the form <i>p &lt;= 0</i>.</p>
 </div>
 </div>
-<p>Following methods manipulate atoms and return the manipulated versions.</p>
-
+<h2 id="1_Followingmethodsmanipulateatomsandreturnthemanipulatedversions"> <div align=left>Following methods manipulate atoms and return the manipulated versions.</div></h2>
 <pre><span id="VALrename"><span class="keyword">val</span> rename</span> : <code class="type"><a href="ConstraintTypes.Atom.html#TYPEt">t</a> -> <a href="RenameMap.html#TYPEt">RenameMap.t</a> -> <a href="ConstraintTypes.Atom.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Assigns the variables of the atom new names based on the rename map.</p>

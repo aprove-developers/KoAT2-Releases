@@ -76,17 +76,54 @@
 <pre><span id="MODULETYPEBaseMath"><span class="keyword">module type</span> BaseMath</span> = <code class="code">sig</code> <a href="PolyTypes.BaseMath.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
 <div class="info-desc">
 <p>Modules including BaseMath define basic math operations.
-    They can be typeclass-like extended by MakeMath</p>
+    They can be typeclass-like extended by MakeMath.</p>
 </div>
 </div>
 <hr width="100%">
+<p>Modules including BaseMath define basic math operations.
+    They can be typeclass-like extended by MakeMath.</p>
 
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>Type of elements.</p>
+</div>
+</div>
 
 
-<pre><span id="VALzero"><span class="keyword">val</span> zero</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre>
-<pre><span id="VALone"><span class="keyword">val</span> one</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre>
-<pre><span id="VALneg"><span class="keyword">val</span> neg</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre>
-<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmul"><span class="keyword">val</span> mul</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre>
-<pre><span id="VALpow"><span class="keyword">val</span> pow</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> int -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre></body></html>
+<pre><span id="VALzero"><span class="keyword">val</span> zero</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns zero element.</p>
+</div>
+</div>
+
+<pre><span id="VALone"><span class="keyword">val</span> one</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns one element.</p>
+</div>
+</div>
+
+<pre><span id="VALneg"><span class="keyword">val</span> neg</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns negated element.</p>
+</div>
+</div>
+
+<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns sum of two element.</p>
+</div>
+</div>
+
+<pre><span id="VALmul"><span class="keyword">val</span> mul</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns product of two element.</p>
+</div>
+</div>
+
+<pre><span id="VALpow"><span class="keyword">val</span> pow</span> : <code class="type"><a href="PolyTypes.BaseMath.html#TYPEt">t</a> -> int -> <a href="PolyTypes.BaseMath.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns element to the power of some provided integer value.</p>
+</div>
+</div>
+</body></html>

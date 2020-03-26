@@ -73,15 +73,31 @@
 </div>
 <h1>Module type <a href="type_PolyTypes.Ring.html">PolyTypes.Ring</a></h1>
 
-<pre><span id="MODULETYPERing"><span class="keyword">module type</span> Ring</span> = <code class="code">sig</code> <a href="PolyTypes.Ring.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="MODULETYPERing"><span class="keyword">module type</span> Ring</span> = <code class="code">sig</code> <a href="PolyTypes.Ring.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
+<div class="info-desc">
+<p>Providing the construct for the algebraic structure of a ring.</p>
+</div>
+</div>
+<hr width="100%">
+<p>Providing the construct for the algebraic structure of a ring.</p>
 
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>Type of its elements.</p>
+</div>
+</div>
 
 
 <pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="PolyTypes.Ring.html#TYPEt">t</a> -> <a href="PolyTypes.Ring.html#TYPEt">t</a> -> bool</code></pre>
 <pre><span class="keyword">include</span> <a href="PolyTypes.BaseMath.html">PolyTypes.BaseMath</a></pre>
 
-<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="PolyTypes.Ring.html#TYPEt">t</a> -> <a href="PolyTypes.Ring.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="PolyTypes.Ring.html#TYPEt">t</a> -> <a href="PolyTypes.Ring.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>TODO doc</p>
+</div>
+</div>
+
 <pre><span id="VAL(=~=)"><span class="keyword">val</span> (=~=)</span> : <code class="type"><a href="PolyTypes.Ring.html#TYPEt">t</a> -> <a href="PolyTypes.Ring.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Stable structural compare, but not an actual compare</p>
@@ -89,6 +105,21 @@
 </div>
 
 <pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="PolyTypes.Ring.html#TYPEt">t</a> -> <a href="PolyTypes.Ring.html#TYPEt">t</a> -> int</code></pre>
-<pre><span id="VALof_int"><span class="keyword">val</span> of_int</span> : <code class="type">int -> <a href="PolyTypes.Ring.html#TYPEt">t</a></code></pre>
-<pre><span id="VALto_int"><span class="keyword">val</span> to_int</span> : <code class="type"><a href="PolyTypes.Ring.html#TYPEt">t</a> -> int</code></pre>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="PolyTypes.Ring.html#TYPEt">t</a> -> string</code></pre></body></html>
+<pre><span id="VALof_int"><span class="keyword">val</span> of_int</span> : <code class="type">int -> <a href="PolyTypes.Ring.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates an element of the ring from an integer value.</p>
+</div>
+</div>
+
+<pre><span id="VALto_int"><span class="keyword">val</span> to_int</span> : <code class="type"><a href="PolyTypes.Ring.html#TYPEt">t</a> -> int</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a ring element interpreted as an integer value.</p>
+</div>
+</div>
+
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="PolyTypes.Ring.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a string representing an element.</p>
+</div>
+</div>
+</body></html>

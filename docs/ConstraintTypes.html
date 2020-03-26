@@ -73,22 +73,30 @@
 </div>
 <h1>Module <a href="type_ConstraintTypes.html">ConstraintTypes</a></h1>
 
-<pre><span id="MODULEConstraintTypes"><span class="keyword">module</span> ConstraintTypes</span>: <code class="code">sig</code> <a href="ConstraintTypes.html">..</a> <code class="code">end</code></pre><hr width="100%">
-<p>Provides all module types related to constraints</p>
+<pre><span id="MODULEConstraintTypes"><span class="keyword">module</span> ConstraintTypes</span>: <code class="code">sig</code> <a href="ConstraintTypes.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Provides all modules related to constraints, i.e., atoms, constraints and formulas.</p>
+</div>
+</div>
+<hr width="100%">
 
-<pre><span id="MODULETYPEAtomizable"><span class="keyword">module type</span> <a href="ConstraintTypes.Atomizable.html">Atomizable</a></span> = <code class="code">sig</code> <a href="ConstraintTypes.Atomizable.html">..</a> <code class="code">end</code></pre>
+<pre><span id="MODULETYPEAtomizable"><span class="keyword">module type</span> <a href="ConstraintTypes.Atomizable.html">Atomizable</a></span> = <code class="code">sig</code> <a href="ConstraintTypes.Atomizable.html">..</a> <code class="code">end</code></pre><div class="info">
+<p>A default atom module.</p>
+
+</div>
+
 <pre><span id="MODULETYPEAtom"><span class="keyword">module type</span> <a href="ConstraintTypes.Atom.html">Atom</a></span> = <code class="code">sig</code> <a href="ConstraintTypes.Atom.html">..</a> <code class="code">end</code></pre><div class="info">
-<p>An atom is a comparison between two polynomials</p>
+<p>An atom is a comparison between two polynomials.</p>
 
 </div>
 
 <pre><span id="MODULETYPEConstraint"><span class="keyword">module type</span> <a href="ConstraintTypes.Constraint.html">Constraint</a></span> = <code class="code">sig</code> <a href="ConstraintTypes.Constraint.html">..</a> <code class="code">end</code></pre><div class="info">
-<p>A constraint is a conjunction of atoms</p>
+<p>A constraint is a conjunction of atoms, i.e., we store those atoms in a list.</p>
 
 </div>
 
 <pre><span id="MODULETYPEFormula"><span class="keyword">module type</span> <a href="ConstraintTypes.Formula.html">Formula</a></span> = <code class="code">sig</code> <a href="ConstraintTypes.Formula.html">..</a> <code class="code">end</code></pre><div class="info">
-<p>A formula is a propositional formula</p>
+<p>A formula is a propositional formula, a disjunction of constraints, i.e., a list of constraints or more precisely a list of atom lists.</p>
 
 </div>
 </body></html>

@@ -73,8 +73,12 @@
 </div>
 <h1>Module <a href="type_PolyTypes.html">PolyTypes</a></h1>
 
-<pre><span id="MODULEPolyTypes"><span class="keyword">module</span> PolyTypes</span>: <code class="code">sig</code> <a href="PolyTypes.html">..</a> <code class="code">end</code></pre><hr width="100%">
-<p>Provides all module types related to polynomials</p>
+<pre><span id="MODULEPolyTypes"><span class="keyword">module</span> PolyTypes</span>: <code class="code">sig</code> <a href="PolyTypes.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Provides all modules related to polynomials.</p>
+</div>
+</div>
+<hr width="100%">
 
 <pre><span id="MODULETYPEBasePartialOrder"><span class="keyword">module type</span> <a href="PolyTypes.BasePartialOrder.html">BasePartialOrder</a></span> = <code class="code">sig</code> <a href="PolyTypes.BasePartialOrder.html">..</a> <code class="code">end</code></pre><div class="info">
 <p>Modules including BasePartialOrder fulfil all requirements to become a partial order.</p>
@@ -82,32 +86,32 @@
 </div>
 
 <pre><span id="MODULETYPEPartialOrder"><span class="keyword">module type</span> <a href="PolyTypes.PartialOrder.html">PartialOrder</a></span> = <code class="code">sig</code> <a href="PolyTypes.PartialOrder.html">..</a> <code class="code">end</code></pre><div class="info">
-<p>Modules including PartialOrder hold a type that defines a partial order on its elements</p>
+<p>Modules including PartialOrder hold a type that defines a partial order on its elements.</p>
 
 </div>
 
 <pre><span id="MODULEMakePartialOrder"><span class="keyword">module</span> <a href="PolyTypes.MakePartialOrder.html">MakePartialOrder</a></span>: <div class="sig_block"><code class="code">functor (</code><code class="code">Base</code><code class="code"> : </code><code class="type"><a href="PolyTypes.BasePartialOrder.html">BasePartialOrder</a></code><code class="code">) -&gt; </code><code class="code">sig</code> <a href="PolyTypes.MakePartialOrder.html">..</a> <code class="code">end</code></div></pre><div class="info">
-<p>Extends a BasePartialOrder to get all the methods of a partial order</p>
+<p>Extends a BasePartialOrder to get all the methods of a partial order.</p>
 
 </div>
 
 <pre><span id="MODULETYPEValuation"><span class="keyword">module type</span> <a href="PolyTypes.Valuation.html">Valuation</a></span> = <code class="code">sig</code> <a href="PolyTypes.Valuation.html">..</a> <code class="code">end</code></pre><div class="info">
-<p>A valuation is a function which maps from a finite set of variables to values</p>
+<p>A valuation is a function which maps from a finite set of variables to values.</p>
 
 </div>
 
 <pre><span id="MODULETYPEEvaluable"><span class="keyword">module type</span> <a href="PolyTypes.Evaluable.html">Evaluable</a></span> = <code class="code">sig</code> <a href="PolyTypes.Evaluable.html">..</a> <code class="code">end</code></pre><div class="info">
-<p>Evaluable is a unified interface of all parts of a polynomial</p>
+<p>Evaluable is a unified interface of all parts of a polynomial.</p>
 
 </div>
 
 <pre><span id="MODULETYPEMonomial"><span class="keyword">module type</span> <a href="PolyTypes.Monomial.html">Monomial</a></span> = <code class="code">sig</code> <a href="PolyTypes.Monomial.html">..</a> <code class="code">end</code></pre><div class="info">
-<p>A monomial is a finite product of powers</p>
+<p>A monomial is a a finite product of powers without a constant factor.</p>
 
 </div>
 
 <pre><span id="MODULETYPEScaledMonomial"><span class="keyword">module type</span> <a href="PolyTypes.ScaledMonomial.html">ScaledMonomial</a></span> = <code class="code">sig</code> <a href="PolyTypes.ScaledMonomial.html">..</a> <code class="code">end</code></pre><div class="info">
-<p>A scaled monomial is a monomial multiplied with a coefficient</p>
+<p>A scaled monomial is a monomial multiplied with a coefficient.</p>
 
 </div>
 
@@ -117,7 +121,7 @@
 </div>
 
 <pre><span id="MODULETYPEMath"><span class="keyword">module type</span> <a href="PolyTypes.Math.html">Math</a></span> = <code class="code">sig</code> <a href="PolyTypes.Math.html">..</a> <code class="code">end</code></pre><div class="info">
-<p>Modules including Math hold a type that defines basic math operations on its elements</p>
+<p>Modules including Math hold a type that defines basic math operations on its elements.</p>
 
 </div>
 
@@ -126,7 +130,11 @@
 
 </div>
 
-<pre><span id="MODULETYPERing"><span class="keyword">module type</span> <a href="PolyTypes.Ring.html">Ring</a></span> = <code class="code">sig</code> <a href="PolyTypes.Ring.html">..</a> <code class="code">end</code></pre>
+<pre><span id="MODULETYPERing"><span class="keyword">module type</span> <a href="PolyTypes.Ring.html">Ring</a></span> = <code class="code">sig</code> <a href="PolyTypes.Ring.html">..</a> <code class="code">end</code></pre><div class="info">
+<p>Providing the construct for the algebraic structure of a ring.</p>
+
+</div>
+
 <pre><span id="MODULETYPEPolynomial"><span class="keyword">module type</span> <a href="PolyTypes.Polynomial.html">Polynomial</a></span> = <code class="code">sig</code> <a href="PolyTypes.Polynomial.html">..</a> <code class="code">end</code></pre><div class="info">
 <p>A Polynomial represents a mathematical polynomial</p>
 

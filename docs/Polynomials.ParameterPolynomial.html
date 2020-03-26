@@ -71,10 +71,33 @@
 &nbsp;</div>
 <h1>Module <a href="type_Polynomials.ParameterPolynomial.html">Polynomials.ParameterPolynomial</a></h1>
 
-<pre><span id="MODULEParameterPolynomial"><span class="keyword">module</span> ParameterPolynomial</span>: <code class="code">sig</code> <a href="Polynomials.ParameterPolynomial.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="MODULEParameterPolynomial"><span class="keyword">module</span> ParameterPolynomial</span>: <code class="code">sig</code> <a href="Polynomials.ParameterPolynomial.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Provides default implementation of polynomials where the coefficients are polynomials over <code class="code">OurInt</code>.</p>
+</div>
+</div>
+<hr width="100%">
+<p>Provides default implementation of polynomials where the coefficients are polynomials over <code class="code">OurInt</code>.</p>
 
 <pre><span class="keyword">include</span> ??</pre>
 
-<pre><span id="VALeval_coefficients"><span class="keyword">val</span> eval_coefficients</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> -> OurInt.t) -><br>       PolynomialOver(PolynomialOver(OurInt)).t -> PolynomialOver(OurInt).t</code></pre>
-<pre><span id="VALflatten"><span class="keyword">val</span> flatten</span> : <code class="type">t -> PolynomialOver(OurInt).t</code></pre>
-<pre><span id="VALof_polynomial"><span class="keyword">val</span> of_polynomial</span> : <code class="type">PolynomialOver(OurInt).t -> t</code></pre></body></html>
+<pre><span id="VALeval_coefficients"><span class="keyword">val</span> eval_coefficients</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> -> OurInt.t) -><br>       PolynomialOver(PolynomialOver(OurInt)).t -> PolynomialOver(OurInt).t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Evaluates coefficients (which are polynomials over <code class="code">OurInt</code>) and returns the resulting polynomial over <code class="code">OurInt</code>.</p>
+</div>
+</div>
+
+<pre><span id="VALflatten"><span class="keyword">val</span> flatten</span> : <code class="type">t -> PolynomialOver(OurInt).t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Transforms the template polynomial such that all inner values get lifted to the outer polynomial.
+  Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1</p>
+</div>
+</div>
+
+<pre><span id="VALof_polynomial"><span class="keyword">val</span> of_polynomial</span> : <code class="type">PolynomialOver(OurInt).t -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Lifts a polynomial to a parameter polynomial such that the inner structure is kept.
+  Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)</p>
+</div>
+</div>
+</body></html>

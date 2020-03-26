@@ -72,7 +72,7 @@
 <pre><span id="MODULEMake"><span class="keyword">module</span> Make</span>: <div class="sig_block"><code class="code">functor (</code><code class="code">Value</code><code class="code"> : </code><code class="type"><a href="PolyTypes.Ring.html">PolyTypes.Ring</a></code><code class="code">) -&gt; </code><code class="type"><a href="PolyTypes.Monomial.html">PolyTypes.Monomial</a></code><code class="type">  with type value = Value.t
                              and type valuation = <a href="Valuation.Make.html">Valuation.Make</a>(Value).t</code></div></pre><div class="info module top">
 <div class="info-desc">
-<p>Constructs a default monomial using a list of pairs of variables and their exponents</p>
+<p>Constructs a default monomial using a list of pairs of variables and their exponents.</p>
 </div>
 </div>
 <table border="0" cellpadding="3" width="100%">
@@ -90,14 +90,25 @@
 </tr>
 </table>
 <hr width="100%">
+<p>Provides default implementations of a monomial, i.e.,  a finite product of powers without a constant (e.g.: xy^2, y but not 5xy^2 + 7).</p>
 
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
 
 <pre><span class="keyword">include</span> <a href="PolyTypes.Evaluable.html">PolyTypes.Evaluable</a></pre>
 
-<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> * int) list -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> int -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> * int) list -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a monomial from a list of variables and their exponents.</p>
+</div>
+</div>
+
+<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> int -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a monomial from a variable and a exponent.</p>
+</div>
+</div>
+
 <pre><span id="VALdegree_variable"><span class="keyword">val</span> degree_variable</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Monomial.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the degree of the given variable.</p>

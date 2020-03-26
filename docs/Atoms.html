@@ -73,17 +73,34 @@
 </div>
 <h1>Module <a href="type_Atoms.html">Atoms</a></h1>
 
-<pre><span id="MODULEAtoms"><span class="keyword">module</span> Atoms</span>: <code class="code">sig</code> <a href="Atoms.html">..</a> <code class="code">end</code></pre><hr width="100%">
-<p>Provides default implementations of an atom</p>
+<pre><span id="MODULEAtoms"><span class="keyword">module</span> Atoms</span>: <code class="code">sig</code> <a href="Atoms.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Provides default implementations of atoms.</p>
+</div>
+</div>
+<hr width="100%">
+<p>Provides default implementations of atoms, i.e., for two objects q and p (e.g. polynomials, bounds), and a comparator ~, the expression  q ~ p is an atom.</p>
 
 <pre><span id="MODULEAtomOver"><span class="keyword">module</span> <a href="Atoms.AtomOver.html">AtomOver</a></span>: <div class="sig_block"><code class="code">functor (</code><code class="code">P</code><code class="code"> : </code><code class="type"><a href="ConstraintTypes.Atomizable.html">ConstraintTypes.Atomizable</a></code><code class="code">) -&gt; </code><code class="type"><a href="ConstraintTypes.Atom.html">ConstraintTypes.Atom</a></code><code class="type"> 
-       with type polynomial = P.t
+       with type polynomial = P.t 
         and type value = P.value
         and module P = P</code></div></pre><div class="info">
 <p>Constructs a default constraint using a simple record</p>
 
 </div>
 
-<pre><span id="MODULEAtom"><span class="keyword">module</span> <a href="Atoms.Atom.html">Atom</a></span>: <code class="code">sig</code> <a href="Atoms.Atom.html">..</a> <code class="code">end</code></pre>
-<pre><span id="MODULEParameterAtom"><span class="keyword">module</span> <a href="Atoms.ParameterAtom.html">ParameterAtom</a></span>: <code class="code">sig</code> <a href="Atoms.ParameterAtom.html">..</a> <code class="code">end</code></pre>
-<pre><span id="MODULEBoundAtom"><span class="keyword">module</span> <a href="Atoms.BoundAtom.html">BoundAtom</a></span>: <code class="code">sig</code> <a href="Atoms.BoundAtom.html">..</a> <code class="code">end</code></pre></body></html>
+<pre><span id="MODULEAtom"><span class="keyword">module</span> <a href="Atoms.Atom.html">Atom</a></span>: <code class="code">sig</code> <a href="Atoms.Atom.html">..</a> <code class="code">end</code></pre><div class="info">
+<p>Provides an implementation of atoms over polynomials.</p>
+
+</div>
+
+<pre><span id="MODULEParameterAtom"><span class="keyword">module</span> <a href="Atoms.ParameterAtom.html">ParameterAtom</a></span>: <code class="code">sig</code> <a href="Atoms.ParameterAtom.html">..</a> <code class="code">end</code></pre><div class="info">
+<p>Provides an implementation of atoms over parameter polynomials.</p>
+
+</div>
+
+<pre><span id="MODULEBoundAtom"><span class="keyword">module</span> <a href="Atoms.BoundAtom.html">BoundAtom</a></span>: <code class="code">sig</code> <a href="Atoms.BoundAtom.html">..</a> <code class="code">end</code></pre><div class="info">
+<p>Provides an implementation of atoms over bounds.</p>
+
+</div>
+</body></html>

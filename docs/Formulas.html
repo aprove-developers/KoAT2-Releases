@@ -73,15 +73,19 @@
 </div>
 <h1>Module <a href="type_Formulas.html">Formulas</a></h1>
 
-<pre><span id="MODULEFormulas"><span class="keyword">module</span> Formulas</span>: <code class="code">sig</code> <a href="Formulas.html">..</a> <code class="code">end</code></pre><hr width="100%">
-<p>Provides default implementations of a constraint</p>
+<pre><span id="MODULEFormulas"><span class="keyword">module</span> Formulas</span>: <code class="code">sig</code> <a href="Formulas.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Provides default implementations of formulas.</p>
+</div>
+</div>
+<hr width="100%">
 
 <pre><span id="MODULEFormulaOver"><span class="keyword">module</span> <a href="Formulas.FormulaOver.html">FormulaOver</a></span>: <div class="sig_block"><code class="code">functor (</code><code class="code">C</code><code class="code"> : </code><code class="type"><a href="ConstraintTypes.Constraint.html">ConstraintTypes.Constraint</a></code><code class="code">) -&gt; </code><code class="type"><a href="ConstraintTypes.Formula.html">ConstraintTypes.Formula</a></code><code class="type"> 
        with type constr = C.t
         and type atom = C.atom
         and type polynomial = C.polynomial
         and type value = C.value</code></div></pre><div class="info">
-<p>Constructs a default constraint using a list of atoms each comparing two polynomials</p>
+<p>Constructs a default formula using a list of atoms each comparing two polynomials</p>
 
 </div>
 

@@ -73,18 +73,29 @@
 </div>
 <h1>Module <a href="type_Readers.html">Readers</a></h1>
 
-<pre><span id="MODULEReaders"><span class="keyword">module</span> Readers</span>: <code class="code">sig</code> <a href="Readers.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="MODULEReaders"><span class="keyword">module</span> Readers</span>: <code class="code">sig</code> <a href="Readers.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Provides a unified interface of the parser and lexer for transition graphs.</p>
+</div>
+</div>
+<hr width="100%">
 <p>Provides a unified interface of the parser and lexer for transition graphs.
     With this module it is possible to abstract from the details of parsing and lexing</p>
 <p>Constructs a reader for the given transition graph</p>
 
 <pre><span id="EXCEPTIONError"><span class="keyword">exception</span> Error</span> <span class="keyword">of</span> <code class="type">string</code></pre>
 
-<pre><span id="VALread_file"><span class="keyword">val</span> read_file</span> : <code class="type">string -> <a href="Program.html#TYPEt">Program.t</a></code></pre>
+<pre><span id="VALread_file"><span class="keyword">val</span> read_file</span> : <code class="type">string -> <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Reads a file associated to the given path and returns a program.</p>
+</div>
+</div>
+
 <pre><span id="VALread_program"><span class="keyword">val</span> read_program</span> : <code class="type">string -> <a href="Program.html#TYPEt">Program.t</a></code></pre>
 <pre><span id="VALread_program_simple"><span class="keyword">val</span> read_program_simple</span> : <code class="type">string -> <a href="Program.html#TYPEt">Program.t</a></code></pre>
 <pre><span id="VALread_formula"><span class="keyword">val</span> read_formula</span> : <code class="type">string -> Formulas.Formula.t</code></pre>
 <pre><span id="VALread_constraint"><span class="keyword">val</span> read_constraint</span> : <code class="type">string -> Constraints.Constraint.t</code></pre>
 <pre><span id="VALread_atom"><span class="keyword">val</span> read_atom</span> : <code class="type">string -> Atoms.Atom.t</code></pre>
 <pre><span id="VALread_polynomial"><span class="keyword">val</span> read_polynomial</span> : <code class="type">string -> Polynomials.Polynomial.t</code></pre>
-<pre><span id="VALread_bound"><span class="keyword">val</span> read_bound</span> : <code class="type">string -> <a href="Bound.html#TYPEt">Bound.t</a></code></pre></body></html>
+<pre><span id="VALread_bound"><span class="keyword">val</span> read_bound</span> : <code class="type">string -> <a href="Bound.html#TYPEt">Bound.t</a></code></pre>
+<pre><span id="VALread_input"><span class="keyword">val</span> read_input</span> : <code class="type">?rename:bool -> bool -> string -> <a href="Program.html#TYPEt">Program.t</a> option</code></pre></body></html>

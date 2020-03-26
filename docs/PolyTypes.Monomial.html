@@ -75,18 +75,29 @@
 
 <pre><span id="MODULETYPEMonomial"><span class="keyword">module type</span> Monomial</span> = <code class="code">sig</code> <a href="PolyTypes.Monomial.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
 <div class="info-desc">
-<p>A monomial is a finite product of powers</p>
+<p>A monomial is a a finite product of powers without a constant factor.</p>
 </div>
 </div>
 <hr width="100%">
+<p>Provides default implementations of a monomial, i.e.,  a finite product of powers without a constant (e.g.: xy^2, y but not 5xy^2 + 7).</p>
 
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
 
 <pre><span class="keyword">include</span> <a href="PolyTypes.Evaluable.html">PolyTypes.Evaluable</a></pre>
 
-<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> * int) list -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> int -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> * int) list -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a monomial from a list of variables and their exponents.</p>
+</div>
+</div>
+
+<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> int -> <a href="PolyTypes.Monomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a monomial from a variable and a exponent.</p>
+</div>
+</div>
+
 <pre><span id="VALdegree_variable"><span class="keyword">val</span> degree_variable</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Monomial.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the degree of the given variable.</p>

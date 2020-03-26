@@ -75,10 +75,11 @@
 
 <pre><span id="MODULETYPEEvaluable"><span class="keyword">module type</span> Evaluable</span> = <code class="code">sig</code> <a href="PolyTypes.Evaluable.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
 <div class="info-desc">
-<p>Evaluable is a unified interface of all parts of a polynomial</p>
+<p>Evaluable is a unified interface of all parts of a polynomial.</p>
 </div>
 </div>
 <hr width="100%">
+<p>Evaluable is a unified interface of all parts of a polynomial.</p>
 
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
@@ -102,7 +103,12 @@
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="PolyTypes.Evaluable.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?to_file:bool -> <a href="PolyTypes.Evaluable.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a string representing the evaluation. Parameter <i>to_file</i> is used to get a representation with less special characters.</p>
+</div>
+</div>
+
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="PolyTypes.Evaluable.html#TYPEt">t</a> -> VarSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a set of the variables which occur in the evaluable</p>
@@ -116,11 +122,21 @@
 </div>
 </div>
 
-<pre><span id="VALeval_f"><span class="keyword">val</span> eval_f</span> : <code class="type"><a href="PolyTypes.Evaluable.html#TYPEt">t</a> -><br>       (<a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Evaluable.html#TYPEvalue">value</a>) -> <a href="PolyTypes.Evaluable.html#TYPEvalue">value</a></code></pre>
+<pre><span id="VALeval_f"><span class="keyword">val</span> eval_f</span> : <code class="type"><a href="PolyTypes.Evaluable.html#TYPEt">t</a> -><br>       (<a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Evaluable.html#TYPEvalue">value</a>) -> <a href="PolyTypes.Evaluable.html#TYPEvalue">value</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Assigns each variable inside the polynomial the value of the evaluated function and returns the arithmetically computed result.</p>
+</div>
+</div>
+
 <pre><span id="VALrename"><span class="keyword">val</span> rename</span> : <code class="type"><a href="RenameMap.html#TYPEt">RenameMap.t</a> -> <a href="PolyTypes.Evaluable.html#TYPEt">t</a> -> <a href="PolyTypes.Evaluable.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Assigns the variables of the evaluable new names based on the rename map.</p>
 </div>
 </div>
 
-<pre><span id="VALdegree"><span class="keyword">val</span> degree</span> : <code class="type"><a href="PolyTypes.Evaluable.html#TYPEt">t</a> -> int</code></pre></body></html>
+<pre><span id="VALdegree"><span class="keyword">val</span> degree</span> : <code class="type"><a href="PolyTypes.Evaluable.html#TYPEt">t</a> -> int</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the degree of a polynomial.</p>
+</div>
+</div>
+</body></html>

@@ -75,10 +75,11 @@
 
 <pre><span id="MODULETYPEScaledMonomial"><span class="keyword">module type</span> ScaledMonomial</span> = <code class="code">sig</code> <a href="PolyTypes.ScaledMonomial.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
 <div class="info-desc">
-<p>A scaled monomial is a monomial multiplied with a coefficient</p>
+<p>A scaled monomial is a monomial multiplied with a coefficient.</p>
 </div>
 </div>
 <hr width="100%">
+<p>A scaled monomial is a monomial multiplied with a coefficient.</p>
 
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
@@ -90,11 +91,51 @@
 
 <pre><span class="keyword">include</span> <a href="PolyTypes.PartialOrder.html">PolyTypes.PartialOrder</a></pre>
 
-<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">value -> <a href="PolyTypes.ScaledMonomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="PolyTypes.ScaledMonomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmul"><span class="keyword">val</span> mul</span> : <code class="type"><a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -><br>       <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmult_with_const"><span class="keyword">val</span> mult_with_const</span> : <code class="type">value -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALone"><span class="keyword">val</span> one</span> : <code class="type"><a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALcoeff"><span class="keyword">val</span> coeff</span> : <code class="type"><a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -> value</code></pre>
-<pre><span id="VALmonomial"><span class="keyword">val</span> monomial</span> : <code class="type"><a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -> <a href="PolyTypes.ScaledMonomial.html#TYPEmonomial">monomial</a></code></pre>
-<pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">const:(value -> 'b) -><br>       var:(<a href="Var.html#TYPEt">Var.t</a> -> 'b) -><br>       times:('b -> 'b -> 'b) -><br>       pow:('b -> int -> 'b) -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -> 'b</code></pre></body></html>
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">value -> <a href="PolyTypes.ScaledMonomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a scaled monomial from a monomial and constant factor.</p>
+</div>
+</div>
+
+<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="PolyTypes.ScaledMonomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Lifts a monomial to a scaled monomial with the constant factor one.</p>
+</div>
+</div>
+
+<pre><span id="VALmul"><span class="keyword">val</span> mul</span> : <code class="type"><a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -><br>       <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Multiplies two scaled monomials. The result is always a scaled monomial.</p>
+</div>
+</div>
+
+<pre><span id="VALmult_with_const"><span class="keyword">val</span> mult_with_const</span> : <code class="type">value -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Multiplies a scaled monomial with a constant factor.</p>
+</div>
+</div>
+
+<pre><span id="VALone"><span class="keyword">val</span> one</span> : <code class="type"><a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the constant (and neutral with multiplication) scaled monomial one.</p>
+</div>
+</div>
+
+<pre><span id="VALcoeff"><span class="keyword">val</span> coeff</span> : <code class="type"><a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -> value</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the constant factor of the scaled monomial.</p>
+</div>
+</div>
+
+<pre><span id="VALmonomial"><span class="keyword">val</span> monomial</span> : <code class="type"><a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -> <a href="PolyTypes.ScaledMonomial.html#TYPEmonomial">monomial</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the normalized scaled monomial, i.e., the monomial part of the scaled monomial.</p>
+</div>
+</div>
+
+<pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">const:(value -> 'b) -><br>       var:(<a href="Var.html#TYPEt">Var.t</a> -> 'b) -><br>       times:('b -> 'b -> 'b) -><br>       pow:('b -> int -> 'b) -> <a href="PolyTypes.ScaledMonomial.html#TYPEt">t</a> -> 'b</code></pre><div class="info ">
+<div class="info-desc">
+<p>Replaces all arithmetical operations by new constructors.</p>
+</div>
+</div>
+</body></html>

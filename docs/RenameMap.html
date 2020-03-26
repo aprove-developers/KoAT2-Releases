@@ -73,16 +73,36 @@
 </div>
 <h1>Module <a href="type_RenameMap.html">RenameMap</a></h1>
 
-<pre><span id="MODULERenameMap"><span class="keyword">module</span> RenameMap</span>: <code class="code">sig</code> <a href="RenameMap.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="MODULERenameMap"><span class="keyword">module</span> RenameMap</span>: <code class="code">sig</code> <a href="RenameMap.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Module provides mapping from variables to other variables.</p>
+</div>
+</div>
+<hr width="100%">
 <p>A rename map is a function which maps from a finite set of variables to another finite set of variables</p>
 
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>Type of map.</p>
+</div>
+</div>
 
 
 <pre><span id="TYPEvar"><span class="keyword">type</span> <code class="type"></code>var</span> = <code class="type"><a href="Var.html#TYPEt">Var.t</a></code> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>Type of variables.</p>
+</div>
+</div>
 
 
-<pre><span id="VALfrom"><span class="keyword">val</span> from</span> : <code class="type">(<a href="RenameMap.html#TYPEvar">var</a> * <a href="RenameMap.html#TYPEvar">var</a>) list -> <a href="RenameMap.html#TYPEt">t</a></code></pre>
+<pre><span id="VALfrom"><span class="keyword">val</span> from</span> : <code class="type">(<a href="RenameMap.html#TYPEvar">var</a> * <a href="RenameMap.html#TYPEvar">var</a>) list -> <a href="RenameMap.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a rename map from a two variable association list</p>
+</div>
+</div>
+
 <pre><span id="VALfrom_native"><span class="keyword">val</span> from_native</span> : <code class="type">(string * string) list -> <a href="RenameMap.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a rename map from a two strings (vars) association list</p>

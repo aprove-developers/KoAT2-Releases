@@ -85,8 +85,7 @@
 
 <pre><span id="VALdrop_nonlinear"><span class="keyword">val</span> drop_nonlinear</span> : <code class="type">t -> t</code></pre><div class="info ">
 <div class="info-desc">
-<p>Drops all nonlinear atoms from the constraints. 
-      Example: (a &gt; 0 &amp;&amp; b^2 &lt; 2) gets transformed to (a &gt; 0)</p>
+<p>Drops all nonlinear atoms from the constraints. Example: (a &gt; 0 &amp;&amp; b^2 &lt; 2) gets transformed to (a &gt; 0)</p>
 </div>
 </div>
 <p>The result of the following drop methods is not equivalent to the input constraint. 
@@ -94,16 +93,31 @@
 
 <pre><span id="VALget_coefficient_vector"><span class="keyword">val</span> get_coefficient_vector</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> t -> value list</code></pre><div class="info ">
 <div class="info-desc">
-<p>Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination</p>
+<p>Returns the row of all coefficients of a variable in a constraint, i.e., used for farkas quantor elimination.</p>
 </div>
 </div>
 
-<pre><span id="VALget_matrix"><span class="keyword">val</span> get_matrix</span> : <code class="type">VarSet.t -> t -> value list list</code></pre>
+<pre><span id="VALget_matrix"><span class="keyword">val</span> get_matrix</span> : <code class="type">VarSet.t -> t -> value list list</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination.</p>
+</div>
+</div>
+
 <pre><span id="VALget_constant_vector"><span class="keyword">val</span> get_constant_vector</span> : <code class="type">t -> value list</code></pre><div class="info ">
 <div class="info-desc">
-<p>Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination</p>
+<p>Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination.</p>
 </div>
 </div>
 
-<pre><span id="VALdualise"><span class="keyword">val</span> dualise</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -> value list list -> polynomial list -> t</code></pre>
-<pre><span id="VALmax_of_occurring_constants"><span class="keyword">val</span> max_of_occurring_constants</span> : <code class="type">t -> OurInt.t</code></pre></body></html>
+<pre><span id="VALdualise"><span class="keyword">val</span> dualise</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -> value list list -> polynomial list -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>TODO doc</p>
+</div>
+</div>
+
+<pre><span id="VALmax_of_occurring_constants"><span class="keyword">val</span> max_of_occurring_constants</span> : <code class="type">t -> OurInt.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>TODO doc</p>
+</div>
+</div>
+</body></html>

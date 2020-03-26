@@ -63,7 +63,10 @@
 <link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
 <link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
-<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : Formulas.FormulaOver</title>
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><link title=" Following methods are convenience methods for the creation of formulas." rel="Section" href="#1_Followingmethodsareconveniencemethodsforthecreationofformulas">
+<link title=" Following methods return certain properties of the formula." rel="Section" href="#1_Followingmethodsreturncertainpropertiesoftheformula">
+<link title="  Following methods manipulate atoms and return the manipulated versions. " rel="Section" href="#1_Followingmethodsmanipulateatomsandreturnthemanipulatedversions">
+<title>Koat2 : Formulas.FormulaOver</title>
 </head>
 <body>
 <div class="navbar">&nbsp;<a class="up" href="Formulas.html" title="Formulas">Up</a>
@@ -77,7 +80,7 @@
         and type polynomial = C.polynomial
         and type value = C.value</code></div></pre><div class="info module top">
 <div class="info-desc">
-<p>Constructs a default constraint using a list of atoms each comparing two polynomials</p>
+<p>Constructs a default formula using a list of atoms each comparing two polynomials</p>
 </div>
 </div>
 <table border="0" cellpadding="3" width="100%">
@@ -110,35 +113,128 @@
 
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
-<p>Following methods are convenience methods for the creation of atoms.</p>
+<h2 id="1_Followingmethodsareconveniencemethodsforthecreationofformulas"> <div align=left>Following methods are convenience methods for the creation of formulas.</div></h2>
+<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEatom">atom</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Lifts an atom to a formula, i.e., a single atom <i>a</i> is a formula [[a]] as a formula is a disjunction over constraints.</p>
+</div>
+</div>
 
-<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEatom">atom</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEconstr">constr</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_true"><span class="keyword">val</span> mk_true</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_and"><span class="keyword">val</span> mk_and</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_or"><span class="keyword">val</span> mk_or</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALneg"><span class="keyword">val</span> neg</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALimplies"><span class="keyword">val</span> implies</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALconstraints"><span class="keyword">val</span> constraints</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEconstr">constr</a> list</code></pre>
-<pre><span id="VALmap_polynomial"><span class="keyword">val</span> map_polynomial</span> : <code class="type">(<a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a>) -><br>       <a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEconstr">constr</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a formula from a set of constraints.</p>
+</div>
+</div>
+
+<pre><span id="VALmk_true"><span class="keyword">val</span> mk_true</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates the trivial formula <i>true</i>, i.e., <code class="code">true</code>.</p>
+</div>
+</div>
+
+<pre><span id="VALmk_and"><span class="keyword">val</span> mk_and</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the (normalized) conjunction of two formulas.</p>
+</div>
+</div>
+
+<pre><span id="VALmk_or"><span class="keyword">val</span> mk_or</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the disjunction of two formulas.</p>
+</div>
+</div>
+
+<pre><span id="VALneg"><span class="keyword">val</span> neg</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the negated formula.</p>
+</div>
+</div>
+
+<pre><span id="VALimplies"><span class="keyword">val</span> implies</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns for two formulas <i>f,g</i> the the formula <i>f -&gt; g</i></p>
+</div>
+</div>
+
+<pre><span id="VALconstraints"><span class="keyword">val</span> constraints</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEconstr">constr</a> list</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a list of all constraints occuring in the disjunction.</p>
+</div>
+</div>
+
+<pre><span id="VALmap_polynomial"><span class="keyword">val</span> map_polynomial</span> : <code class="type">(<a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a>) -><br>       <a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>TODO doc</p>
+</div>
+</div>
+
 <pre><span id="VALmk_eq"><span class="keyword">val</span> mk_eq</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
-<p>Creates a constraint that expresses the equality of the two polynomials.</p>
+<p>Creates a formula that expresses the equality of the two polynomials.</p>
 </div>
 </div>
 
-<pre><span id="VALmk_gt"><span class="keyword">val</span> mk_gt</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_ge"><span class="keyword">val</span> mk_ge</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_lt"><span class="keyword">val</span> mk_lt</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_le"><span class="keyword">val</span> mk_le</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmk_uneq"><span class="keyword">val</span> mk_uneq</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALle_than_any"><span class="keyword">val</span> le_than_any</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> list -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALle_than_all"><span class="keyword">val</span> le_than_all</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> list -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> list -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALany"><span class="keyword">val</span> any</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> list -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="VALturn"><span class="keyword">val</span> turn</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
-<pre><span id="MODULEInfix"><span class="keyword">module</span> <a href="ConstraintTypes.Formula.Infix.html">Infix</a></span>: <code class="code">sig</code> <a href="ConstraintTypes.Formula.Infix.html">..</a> <code class="code">end</code></pre><p>Following methods return certain properties of the formula.</p>
+<pre><span id="VALmk_gt"><span class="keyword">val</span> mk_gt</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a formula that expresses for two polynomials <i>p</i> and <i>q</i> the comparision <i>p &gt; q</i>.</p>
+</div>
+</div>
 
+<pre><span id="VALmk_ge"><span class="keyword">val</span> mk_ge</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a formula that expresses for two polynomials <i>p</i> and <i>q</i> the comparision <i>p &gt;= q</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALmk_lt"><span class="keyword">val</span> mk_lt</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a formula that expresses for two polynomials <i>p</i> and <i>q</i> the comparision <i>p &lt; q</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALmk_le"><span class="keyword">val</span> mk_le</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a formula that expresses for two polynomials <i>p</i> and <i>q</i> the comparision <i>p &lt;= q</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALmk_uneq"><span class="keyword">val</span> mk_uneq</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a formula that expresses the unequality of the two polynomials.</p>
+</div>
+</div>
+
+<pre><span id="VALle_than_any"><span class="keyword">val</span> le_than_any</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> list -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the formula <i>(p &lt;= p1 || ... || p &lt;= pn) </i> for a polynomial <i>p</i> and a set of polynomials <i>p1,...,pn</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALle_than_all"><span class="keyword">val</span> le_than_all</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> -><br>       <a href="ConstraintTypes.Formula.html#TYPEpolynomial">polynomial</a> list -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the formula <i>(p &lt;= p1 &amp;&amp; ... &amp;&amp; p &lt;= pn) </i> for a polynomial <i>p</i> and a set of polynomials <i>p1,...,pn</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> list -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a formula <i>(f1 &amp;&amp; ... &amp;&amp; fn)</i>  of a list of constraints <i>f1,...,fn</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALany"><span class="keyword">val</span> any</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> list -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a formula <i>(f1 || ... || fn)</i>  of a list of constraints <i>f1,...,fn</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALturn"><span class="keyword">val</span> turn</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Negates every atom of every constraint of the formula.</p>
+</div>
+</div>
+
+<pre><span id="MODULEInfix"><span class="keyword">module</span> <a href="ConstraintTypes.Formula.Infix.html">Infix</a></span>: <code class="code">sig</code> <a href="ConstraintTypes.Formula.Infix.html">..</a> <code class="code">end</code></pre><h2 id="1_Followingmethodsreturncertainpropertiesoftheformula"> <div align=left>Following methods return certain properties of the formula.</div></h2>
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> VarSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the set of variables which are active in the formula.
@@ -146,8 +242,12 @@
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> string</code></pre><p>Following methods manipulate atoms and return the manipulated versions.</p>
-
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a string representing the constraint.</p>
+</div>
+</div>
+<h2 id="1_Followingmethodsmanipulateatomsandreturnthemanipulatedversions"> <div align=left> Following methods manipulate atoms and return the manipulated versions. </div></h2>
 <pre><span id="VALrename"><span class="keyword">val</span> rename</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="RenameMap.html#TYPEt">RenameMap.t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Assigns the variables of the constraint new names based on the rename map</p>

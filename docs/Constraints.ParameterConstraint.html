@@ -73,21 +73,36 @@
 </div>
 <h1>Module <a href="type_Constraints.ParameterConstraint.html">Constraints.ParameterConstraint</a></h1>
 
-<pre><span id="MODULEParameterConstraint"><span class="keyword">module</span> ParameterConstraint</span>: <code class="code">sig</code> <a href="Constraints.ParameterConstraint.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="MODULEParameterConstraint"><span class="keyword">module</span> ParameterConstraint</span>: <code class="code">sig</code> <a href="Constraints.ParameterConstraint.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Provides an implementation of constraints consisting of atoms over parameter polynomials.</p>
+</div>
+</div>
+<hr width="100%">
 
 <pre><span class="keyword">include</span> ??</pre>
 
 <pre><span id="VALget_coefficient_vector"><span class="keyword">val</span> get_coefficient_vector</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> t -> value list</code></pre><div class="info ">
 <div class="info-desc">
-<p>Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination</p>
+<p>Returns the row of all coefficients of a variable in a constraint, i.e., used for farkas quantor elimination.</p>
 </div>
 </div>
 
-<pre><span id="VALget_matrix"><span class="keyword">val</span> get_matrix</span> : <code class="type">VarSet.t -> t -> value list list</code></pre>
+<pre><span id="VALget_matrix"><span class="keyword">val</span> get_matrix</span> : <code class="type">VarSet.t -> t -> value list list</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination.</p>
+</div>
+</div>
+
 <pre><span id="VALget_constant_vector"><span class="keyword">val</span> get_constant_vector</span> : <code class="type">t -> value list</code></pre><div class="info ">
 <div class="info-desc">
-<p>Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination</p>
+<p>Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination.</p>
 </div>
 </div>
 
-<pre><span id="VALfarkas_transform"><span class="keyword">val</span> farkas_transform</span> : <code class="type">Constraints.Constraint.t -> Atoms.ParameterAtom.t -> Constraints.Constraint.t</code></pre></body></html>
+<pre><span id="VALfarkas_transform"><span class="keyword">val</span> farkas_transform</span> : <code class="type">Constraints.Constraint.t -> Atoms.ParameterAtom.t -> Constraints.Constraint.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Applies Farkas-Transformation on a Constraint and a ParameterAtom.</p>
+</div>
+</div>
+</body></html>

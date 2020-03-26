@@ -75,18 +75,59 @@
 
 <pre><span id="MODULETYPEMath"><span class="keyword">module type</span> Math</span> = <code class="code">sig</code> <a href="PolyTypes.Math.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
 <div class="info-desc">
-<p>Modules including Math hold a type that defines basic math operations on its elements</p>
+<p>Modules including Math hold a type that defines basic math operations on its elements.</p>
 </div>
 </div>
 <hr width="100%">
+<p>Modules including Math hold a type that defines basic math operations on its elements.</p>
 
 <pre><span class="keyword">include</span> <a href="PolyTypes.BaseMath.html">PolyTypes.BaseMath</a></pre>
 
-<pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type">t Batteries.Enum.t -> t</code></pre>
-<pre><span id="VALproduct"><span class="keyword">val</span> product</span> : <code class="type">t Batteries.Enum.t -> t</code></pre>
-<pre><span id="VALsub"><span class="keyword">val</span> sub</span> : <code class="type">t -> t -> t</code></pre>
-<pre><span id="VAL(+)"><span class="keyword">val</span> (+)</span> : <code class="type">t -> t -> t</code></pre>
-<pre><span id="VAL(-)"><span class="keyword">val</span> (-)</span> : <code class="type">t -> t -> t</code></pre>
-<pre><span id="VAL( * )"><span class="keyword">val</span> ( * )</span> : <code class="type">t -> t -> t</code></pre>
-<pre><span id="VAL( ** )"><span class="keyword">val</span> ( ** )</span> : <code class="type">t -> int -> t</code></pre>
-<pre><span id="VAL(~-)"><span class="keyword">val</span> (~-)</span> : <code class="type">t -> t</code></pre></body></html>
+<pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type">t Batteries.Enum.t -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the sum of all enums elements.</p>
+</div>
+</div>
+
+<pre><span id="VALproduct"><span class="keyword">val</span> product</span> : <code class="type">t Batteries.Enum.t -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the product of all enums elements.</p>
+</div>
+</div>
+
+<pre><span id="VALsub"><span class="keyword">val</span> sub</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Subtracts the second element from the first one.</p>
+</div>
+</div>
+
+<pre><span id="VAL(+)"><span class="keyword">val</span> (+)</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Addition of two elements.</p>
+</div>
+</div>
+
+<pre><span id="VAL(-)"><span class="keyword">val</span> (-)</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Subtraction of two elements.</p>
+</div>
+</div>
+
+<pre><span id="VAL( * )"><span class="keyword">val</span> ( * )</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Multiplication of two elements</p>
+</div>
+</div>
+
+<pre><span id="VAL( ** )"><span class="keyword">val</span> ( ** )</span> : <code class="type">t -> int -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Raises an element to the power of an integer value.</p>
+</div>
+</div>
+
+<pre><span id="VAL(~-)"><span class="keyword">val</span> (~-)</span> : <code class="type">t -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Negates element.</p>
+</div>
+</div>
+</body></html>

@@ -75,13 +75,29 @@
 
 <pre><span id="MODULETYPEPartialOrder"><span class="keyword">module type</span> PartialOrder</span> = <code class="code">sig</code> <a href="PolyTypes.PartialOrder.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
 <div class="info-desc">
-<p>Modules including PartialOrder hold a type that defines a partial order on its elements</p>
+<p>Modules including PartialOrder hold a type that defines a partial order on its elements.</p>
 </div>
 </div>
 <hr width="100%">
+<p>Modules including PartialOrder hold a type <i>t</i> that defines a partial order on its elements.</p>
 
 <pre><span class="keyword">include</span> <a href="PolyTypes.BasePartialOrder.html">PolyTypes.BasePartialOrder</a></pre>
 
-<pre><span id="VAL(<)"><span class="keyword">val</span> (&lt;)</span> : <code class="type">t -> t -> bool Batteries.Option.t</code></pre>
-<pre><span id="VAL(>=)"><span class="keyword">val</span> (&gt;=)</span> : <code class="type">t -> t -> bool Batteries.Option.t</code></pre>
-<pre><span id="VAL(<=)"><span class="keyword">val</span> (&lt;=)</span> : <code class="type">t -> t -> bool Batteries.Option.t</code></pre></body></html>
+<pre><span id="VAL(<)"><span class="keyword">val</span> (&lt;)</span> : <code class="type">t -> t -> bool Batteries.Option.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Less than comparison of two elements of type <i>t</i>.</p>
+</div>
+</div>
+
+<pre><span id="VAL(>=)"><span class="keyword">val</span> (&gt;=)</span> : <code class="type">t -> t -> bool Batteries.Option.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Greater or equal comparison of two elements of type <i>t</i>.</p>
+</div>
+</div>
+
+<pre><span id="VAL(<=)"><span class="keyword">val</span> (&lt;=)</span> : <code class="type">t -> t -> bool Batteries.Option.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Less or equal comparison of two elements of type <i>t</i>.</p>
+</div>
+</div>
+</body></html>

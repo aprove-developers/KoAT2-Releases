@@ -73,11 +73,36 @@
 </div>
 <h1>Module <a href="type_OurInt.html">OurInt</a></h1>
 
-<pre><span id="MODULEOurInt"><span class="keyword">module</span> OurInt</span>: <code class="code">sig</code> <a href="OurInt.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="MODULEOurInt"><span class="keyword">module</span> OurInt</span>: <code class="code">sig</code> <a href="OurInt.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Implementation of an integer-ring using Big_int.</p>
+</div>
+</div>
+<hr width="100%">
 
 <pre><span class="keyword">include</span> struct ... end</pre>
 
-<pre><span id="VAL(=~=)"><span class="keyword">val</span> (=~=)</span> : <code class="type">t -> t -> bool</code></pre>
-<pre><span id="VALpow"><span class="keyword">val</span> pow</span> : <code class="type">t -> int -> t</code></pre>
-<pre><span id="VALmax"><span class="keyword">val</span> max</span> : <code class="type">Compare.bat__compare_t -> Compare.bat__compare_t -> Compare.bat__compare_t</code></pre>
-<pre><span id="VALmin"><span class="keyword">val</span> min</span> : <code class="type">Compare.bat__compare_t -> Compare.bat__compare_t -> Compare.bat__compare_t</code></pre></body></html>
+<pre><span id="VAL(=~=)"><span class="keyword">val</span> (=~=)</span> : <code class="type">t -> t -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Comparator for two integers.</p>
+</div>
+</div>
+
+<pre><span id="VALpow"><span class="keyword">val</span> pow</span> : <code class="type">t -> int -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Calculates i^n.</p>
+</div>
+</div>
+
+<pre><span id="VALmax"><span class="keyword">val</span> max</span> : <code class="type">Compare.bat__compare_t -> Compare.bat__compare_t -> Compare.bat__compare_t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns maximum of first and second integer.</p>
+</div>
+</div>
+
+<pre><span id="VALmin"><span class="keyword">val</span> min</span> : <code class="type">Compare.bat__compare_t -> Compare.bat__compare_t -> Compare.bat__compare_t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns minimum of first and second integer.</p>
+</div>
+</div>
+</body></html>

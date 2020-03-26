@@ -73,18 +73,35 @@
 </div>
 <h1>Module <a href="type_Constraints.html">Constraints</a></h1>
 
-<pre><span id="MODULEConstraints"><span class="keyword">module</span> Constraints</span>: <code class="code">sig</code> <a href="Constraints.html">..</a> <code class="code">end</code></pre><hr width="100%">
-<p>Provides default implementations of a constraint</p>
+<pre><span id="MODULEConstraints"><span class="keyword">module</span> Constraints</span>: <code class="code">sig</code> <a href="Constraints.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Provides default implementations of constraints.</p>
+</div>
+</div>
+<hr width="100%">
+<p>Provides default implementations of constraints, i.e., a conjunction of atoms.</p>
 
 <pre><span id="MODULEConstraintOver"><span class="keyword">module</span> <a href="Constraints.ConstraintOver.html">ConstraintOver</a></span>: <div class="sig_block"><code class="code">functor (</code><code class="code">A</code><code class="code"> : </code><code class="type"><a href="ConstraintTypes.Atom.html">ConstraintTypes.Atom</a></code><code class="code">) -&gt; </code><code class="type"><a href="ConstraintTypes.Constraint.html">ConstraintTypes.Constraint</a></code><code class="type"> 
        with type polynomial = A.polynomial
         and type value = A.value
         and type atom = A.t
         and type t = A.t list</code></div></pre><div class="info">
-<p>Constructs a default constraint using a list of atoms each comparing two polynomials</p>
+<p>Constructs a default constraint using a list of atoms each comparing two polynomials.</p>
 
 </div>
 
-<pre><span id="MODULEConstraint"><span class="keyword">module</span> <a href="Constraints.Constraint.html">Constraint</a></span>: <code class="code">sig</code> <a href="Constraints.Constraint.html">..</a> <code class="code">end</code></pre>
-<pre><span id="MODULEParameterConstraint"><span class="keyword">module</span> <a href="Constraints.ParameterConstraint.html">ParameterConstraint</a></span>: <code class="code">sig</code> <a href="Constraints.ParameterConstraint.html">..</a> <code class="code">end</code></pre>
-<pre><span id="MODULEBoundConstraint"><span class="keyword">module</span> <a href="Constraints.BoundConstraint.html">BoundConstraint</a></span>: <code class="code">sig</code> <a href="Constraints.BoundConstraint.html">..</a> <code class="code">end</code></pre></body></html>
+<pre><span id="MODULEConstraint"><span class="keyword">module</span> <a href="Constraints.Constraint.html">Constraint</a></span>: <code class="code">sig</code> <a href="Constraints.Constraint.html">..</a> <code class="code">end</code></pre><div class="info">
+<p>Provides an implementation of constraints consisting of atoms over polynomials.</p>
+
+</div>
+
+<pre><span id="MODULEParameterConstraint"><span class="keyword">module</span> <a href="Constraints.ParameterConstraint.html">ParameterConstraint</a></span>: <code class="code">sig</code> <a href="Constraints.ParameterConstraint.html">..</a> <code class="code">end</code></pre><div class="info">
+<p>Provides an implementation of constraints consisting of atoms over parameter polynomials.</p>
+
+</div>
+
+<pre><span id="MODULEBoundConstraint"><span class="keyword">module</span> <a href="Constraints.BoundConstraint.html">BoundConstraint</a></span>: <code class="code">sig</code> <a href="Constraints.BoundConstraint.html">..</a> <code class="code">end</code></pre><div class="info">
+<p>Provides an implementation of constraints consisting of atoms over bounds.</p>
+
+</div>
+</body></html>

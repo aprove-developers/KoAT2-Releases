@@ -73,8 +73,13 @@
 </div>
 <h1>Module <a href="type_Polynomials.html">Polynomials</a></h1>
 
-<pre><span id="MODULEPolynomials"><span class="keyword">module</span> Polynomials</span>: <code class="code">sig</code> <a href="Polynomials.html">..</a> <code class="code">end</code></pre><hr width="100%">
-<p>Provides default implementations of a polynomial</p>
+<pre><span id="MODULEPolynomials"><span class="keyword">module</span> Polynomials</span>: <code class="code">sig</code> <a href="Polynomials.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Provides default implementations of polynomials.</p>
+</div>
+</div>
+<hr width="100%">
+<p>Provides default implementations of polynomials.</p>
 
 <pre><span id="MODULEPolynomialOver"><span class="keyword">module</span> <a href="Polynomials.PolynomialOver.html">PolynomialOver</a></span>: <div class="sig_block"><code class="code">functor (</code><code class="code">Value</code><code class="code"> : </code><code class="type"><a href="PolyTypes.Ring.html">PolyTypes.Ring</a></code><code class="code">) -&gt; </code><code class="type">Polynomial</code><code class="type">  with type value = Value.t
                      and type valuation = <a href="Valuation.Make.html">Valuation.Make</a>(Value).t
@@ -83,5 +88,13 @@
 
 </div>
 
-<pre><span id="MODULEPolynomial"><span class="keyword">module</span> <a href="Polynomials.Polynomial.html">Polynomial</a></span>: <code class="code">sig</code> <a href="Polynomials.Polynomial.html">..</a> <code class="code">end</code></pre>
-<pre><span id="MODULEParameterPolynomial"><span class="keyword">module</span> <a href="Polynomials.ParameterPolynomial.html">ParameterPolynomial</a></span>: <code class="code">sig</code> <a href="Polynomials.ParameterPolynomial.html">..</a> <code class="code">end</code></pre></body></html>
+<pre><span id="MODULEPolynomial"><span class="keyword">module</span> <a href="Polynomials.Polynomial.html">Polynomial</a></span>: <code class="code">sig</code> <a href="Polynomials.Polynomial.html">..</a> <code class="code">end</code></pre><div class="info">
+<p>Provides default implementation of polynomials ranged over <code class="code">OurInt</code>.</p>
+
+</div>
+
+<pre><span id="MODULEParameterPolynomial"><span class="keyword">module</span> <a href="Polynomials.ParameterPolynomial.html">ParameterPolynomial</a></span>: <code class="code">sig</code> <a href="Polynomials.ParameterPolynomial.html">..</a> <code class="code">end</code></pre><div class="info">
+<p>Provides default implementation of polynomials where the coefficients are polynomials over <code class="code">OurInt</code>.</p>
+
+</div>
+</body></html>

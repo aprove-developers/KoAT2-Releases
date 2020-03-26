@@ -63,7 +63,11 @@
 <link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
 <link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
-<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : PolyTypes.Polynomial</title>
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><link title="Following methods are convenience methods for the creation of polynomials." rel="Section" href="#1_Followingmethodsareconveniencemethodsforthecreationofpolynomials">
+<link title="Following methods return information over the polynomial." rel="Section" href="#1_Followingmethodsreturninformationoverthepolynomial">
+<link title="Following methods return if the atom has certain properties." rel="Section" href="#1_Followingmethodsreturniftheatomhascertainproperties">
+<link title="Misc" rel="Section" href="#1_Misc">
+<title>Koat2 : PolyTypes.Polynomial</title>
 </head>
 <body>
 <div class="navbar"><a class="pre" href="PolyTypes.Ring.html" title="PolyTypes.Ring">Previous</a>
@@ -90,32 +94,105 @@
 <pre><span class="keyword">include</span> <a href="PolyTypes.Ring.html">PolyTypes.Ring</a></pre>
 
 <pre><span id="TYPEmonomial"><span class="keyword">type</span> <code class="type"></code>monomial</span> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>Type of monomial in polynomial</p>
+</div>
+</div>
 
 
 <pre><span id="TYPEscaled_monomial"><span class="keyword">type</span> <code class="type"></code>scaled_monomial</span> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>Type of scaled monomial in polynomial</p>
+</div>
+</div>
 
-<p>Following methods are convenience methods for the creation of polynomials.</p>
+<h2 id="1_Followingmethodsareconveniencemethodsforthecreationofpolynomials"><div align=left>Following methods are convenience methods for the creation of polynomials.</div></h2>
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">(value * <a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a>) list -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a polynomial as the sum of a list of monomials and integer coefficients.</p>
+</div>
+</div>
 
-<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">(value * <a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a>) list -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type">value -> <a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALof_scaled"><span class="keyword">val</span> of_scaled</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEscaled_monomial">scaled_monomial</a> list -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALof_var"><span class="keyword">val</span> of_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALof_constant"><span class="keyword">val</span> of_constant</span> : <code class="type">value -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALvar"><span class="keyword">val</span> var</span> : <code class="type">string -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALvalue"><span class="keyword">val</span> value</span> : <code class="type">int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALreal_helper"><span class="keyword">val</span> real_helper</span> : <code class="type">int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALint_helper"><span class="keyword">val</span> int_helper</span> : <code class="type">int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALof_power"><span class="keyword">val</span> of_power</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALof_monomial"><span class="keyword">val</span> of_monomial</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre>
-<pre><span id="VALof_coeff_list"><span class="keyword">val</span> of_coeff_list</span> : <code class="type">value list -> <a href="Var.html#TYPEt">Var.t</a> list -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><p>Following methods return information over the polynomial.</p>
+<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type">value -> <a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Lifts a monomial and an integer coefficient to a polynomial.</p>
+</div>
+</div>
 
+<pre><span id="VALof_scaled"><span class="keyword">val</span> of_scaled</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEscaled_monomial">scaled_monomial</a> list -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a polynomial as the sum of a list of scaled monomials.</p>
+</div>
+</div>
+
+<pre><span id="VALof_var"><span class="keyword">val</span> of_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Lifts a variable to a polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALof_constant"><span class="keyword">val</span> of_constant</span> : <code class="type">value -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Lifts a constant to a polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALvar"><span class="keyword">val</span> var</span> : <code class="type">string -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Lifts a variable to a polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALvalue"><span class="keyword">val</span> value</span> : <code class="type">int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Lifts an integer value to a polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALreal_helper"><span class="keyword">val</span> real_helper</span> : <code class="type">int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>TODO doc</p>
+</div>
+</div>
+
+<pre><span id="VALint_helper"><span class="keyword">val</span> int_helper</span> : <code class="type">int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>TODO doc</p>
+</div>
+</div>
+
+<pre><span id="VALof_power"><span class="keyword">val</span> of_power</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> int -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Lifts a variable to the power of an intger value to a polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALof_monomial"><span class="keyword">val</span> of_monomial</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Lifts a monomial to a polynomial</p>
+</div>
+</div>
+
+<pre><span id="VALof_coeff_list"><span class="keyword">val</span> of_coeff_list</span> : <code class="type">value list -> <a href="Var.html#TYPEt">Var.t</a> list -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a polynomial from a coefficient list and a corresponding variable list.</p>
+</div>
+</div>
+<h2 id="1_Followingmethodsreturninformationoverthepolynomial"><div align=left>Following methods return information over the polynomial.</div></h2>
 <pre><span id="VALcoeff"><span class="keyword">val</span> coeff</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> value</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the coefficient of the monomial.</p>
 </div>
 </div>
 
-<pre><span id="VALcoeff_of_var"><span class="keyword">val</span> coeff_of_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> value</code></pre>
+<pre><span id="VALcoeff_of_var"><span class="keyword">val</span> coeff_of_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> value</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the coefficient of the term where only the given variable occurs.</p>
+</div>
+</div>
+
 <pre><span id="VALmonomials"><span class="keyword">val</span> monomials</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> <a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the monomials of the polynomial without the empty monomial.</p>
@@ -128,8 +205,18 @@
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> string</code></pre><p>Following methods return if the atom has certain properties.</p>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a string representing the polynomial.</p>
+</div>
+</div>
 
+<pre><span id="VALto_string_to_file"><span class="keyword">val</span> to_string_to_file</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a string representing polynomial with less special characters.</p>
+</div>
+</div>
+<h2 id="1_Followingmethodsreturniftheatomhascertainproperties"><div align=left>Following methods return if the atom has certain properties.</div></h2>
 <pre><span id="VALis_var"><span class="keyword">val</span> is_var</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns if the polynomial is equivalent to a term x^1 for any variable x.</p>
@@ -177,8 +264,7 @@
 <p>Returns if the value of the polynomial is the constant value one (1).</p>
 </div>
 </div>
-<p>Misc</p>
-
+<h2 id="1_Misc"><div align=left>Misc</div></h2>
 <pre><span id="VALeval_partial"><span class="keyword">val</span> eval_partial</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> valuation -> <a href="PolyTypes.Polynomial.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a polynomial where every variable for which a value is assigned by the valuation is replaced by this value.</p>

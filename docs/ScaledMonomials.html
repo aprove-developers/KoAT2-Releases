@@ -73,7 +73,13 @@
 </div>
 <h1>Module <a href="type_ScaledMonomials.html">ScaledMonomials</a></h1>
 
-<pre><span id="MODULEScaledMonomials"><span class="keyword">module</span> ScaledMonomials</span>: <code class="code">sig</code> <a href="ScaledMonomials.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="MODULEScaledMonomials"><span class="keyword">module</span> ScaledMonomials</span>: <code class="code">sig</code> <a href="ScaledMonomials.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Provides default implementation of a scaled monomial.</p>
+</div>
+</div>
+<hr width="100%">
+<p>Provides default implementation of a scaled monomial, i.e., a finite product of powers (e.g.: 5xy^2, y but not 5xy^2 + 7).</p>
 
 <pre><span id="MODULEMake"><span class="keyword">module</span> <a href="ScaledMonomials.Make.html">Make</a></span>: <div class="sig_block"><code class="code">functor (</code><code class="code">Value</code><code class="code"> : </code><code class="type"><a href="PolyTypes.Ring.html">PolyTypes.Ring</a></code><code class="code">) -&gt; </code><code class="type"><a href="PolyTypes.ScaledMonomial.html">PolyTypes.ScaledMonomial</a></code><code class="type">  with type value = Value.t
                                    and type valuation = <a href="Valuation.Make.html">Valuation.Make</a>(Value).t

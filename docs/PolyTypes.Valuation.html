@@ -75,30 +75,46 @@
 
 <pre><span id="MODULETYPEValuation"><span class="keyword">module type</span> Valuation</span> = <code class="code">sig</code> <a href="PolyTypes.Valuation.html">..</a> <code class="code">end</code></pre><div class="info modtype top">
 <div class="info-desc">
-<p>A valuation is a function which maps from a finite set of variables to values</p>
+<p>A valuation is a function which maps from a finite set of variables to values.</p>
 </div>
 </div>
 <hr width="100%">
+<p>A valuation is a function which maps from a finite set of variables to values.</p>
 
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
 
 <pre><span id="TYPEvar"><span class="keyword">type</span> <code class="type"></code>var</span> = <code class="type"><a href="Var.html#TYPEt">Var.t</a></code> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>Type of variables.</p>
+</div>
+</div>
 
 
 <pre><span id="TYPEvalue"><span class="keyword">type</span> <code class="type"></code>value</span> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>Type of values.</p>
+</div>
+</div>
 
 
-<pre><span id="VALfrom"><span class="keyword">val</span> from</span> : <code class="type">(<a href="PolyTypes.Valuation.html#TYPEvar">var</a> * <a href="PolyTypes.Valuation.html#TYPEvalue">value</a>) list -><br>       <a href="PolyTypes.Valuation.html#TYPEt">t</a></code></pre>
+<pre><span id="VALfrom"><span class="keyword">val</span> from</span> : <code class="type">(<a href="PolyTypes.Valuation.html#TYPEvar">var</a> * <a href="PolyTypes.Valuation.html#TYPEvalue">value</a>) list -><br>       <a href="PolyTypes.Valuation.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a valuation from variables to values.</p>
+</div>
+</div>
+
 <pre><span id="VALfrom_native"><span class="keyword">val</span> from_native</span> : <code class="type">(string * int) list -> <a href="PolyTypes.Valuation.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
-<p>Creates a valuation from a string (var) to int (value) association list</p>
+<p>Creates a valuation from a string (var) to int (value) association list.</p>
 </div>
 </div>
 
 <pre><span id="VALzero"><span class="keyword">val</span> zero</span> : <code class="type"><a href="PolyTypes.Valuation.html#TYPEvar">var</a> list -> <a href="PolyTypes.Valuation.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
-<p>Creates a valuation where every variable is assigned the value zero</p>
+<p>Creates a valuation where every variable is assigned the value zero.</p>
 </div>
 </div>
 
@@ -115,10 +131,15 @@
 </div>
 </div>
 
-<pre><span id="VALis_defined"><span class="keyword">val</span> is_defined</span> : <code class="type"><a href="PolyTypes.Valuation.html#TYPEt">t</a> -> <a href="PolyTypes.Valuation.html#TYPEvar">var</a> -> bool</code></pre>
+<pre><span id="VALis_defined"><span class="keyword">val</span> is_defined</span> : <code class="type"><a href="PolyTypes.Valuation.html#TYPEt">t</a> -> <a href="PolyTypes.Valuation.html#TYPEvar">var</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns true if variable is defined.</p>
+</div>
+</div>
+
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="PolyTypes.Valuation.html#TYPEt">t</a> -> <a href="PolyTypes.Valuation.html#TYPEvar">var</a> list</code></pre><div class="info ">
 <div class="info-desc">
-<p>Returns a list of the variables for which the valuation is defined</p>
+<p>Returns a list of the variables for which the valuation is defined.</p>
 </div>
 </div>
 
@@ -130,7 +151,7 @@
 
 <pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="PolyTypes.Valuation.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
-<p>Converts the valuation into a string using the print function</p>
+<p>Converts the valuation into a string using the print function.</p>
 </div>
 </div>
 </body></html>
