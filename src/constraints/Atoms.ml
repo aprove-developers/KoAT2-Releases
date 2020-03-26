@@ -74,7 +74,7 @@ struct
 
     let neg = P.neg
               
-    let to_string ?(comp=" <= ") atom = (P.to_string atom) ^ comp ^ "0"
+    let to_string ?(to_file=false) ?(comp=" <= ") atom = (P.to_string atom) ^ comp ^ "0"
         
     let vars = P.vars
 
@@ -104,9 +104,9 @@ module Atom =
   struct
     include AtomOver(Polynomial)
 
-    let to_string ?(comp=" <= ") atom =
+    let to_string ?(to_file=false) ?(comp=" <= ") atom =
       Polynomial.separate_by_sign atom
-      |> (fun (positive, negative) -> Polynomial.to_string positive ^ comp ^ Polynomial.to_string (Polynomial.neg negative))
+      |> (fun (positive, negative) -> (if to_file then (Polynomial.to_string_to_file positive) else (Polynomial.to_string positive)) ^ comp ^ (if to_file then (Polynomial.to_string_to_file negative) else (Polynomial.to_string negative)))
       
     let max_of_occurring_constants =
       Polynomial.max_of_occurring_constants
@@ -116,7 +116,6 @@ module Atom =
 module ParameterAtom =
   struct
     include AtomOver(ParameterPolynomial)
-
   end
 
 module BoundAtom =

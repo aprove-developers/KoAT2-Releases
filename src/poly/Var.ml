@@ -35,13 +35,21 @@ let of_string str =
 let hash = Hashtbl.hash
       
 let mk_helper domain n = Helper (domain, n)
-                
-let to_string = function
-  | Var str -> str
-  | Helper (Real,i) -> "@_" ^ (String.of_int i)
-  | Helper (Int,i) -> "$_" ^ (String.of_int i)
-  | Argument i -> "Arg_" ^ (String.of_int i)
-  
+
+(** TODO fix this. *)                
+let to_string ?(to_file = false) = 
+  if to_file then
+  function
+    | Var str -> str
+    | Helper (Real,i) -> "@" ^ (String.of_int i)
+    | Helper (Int,i) -> "$" ^ (String.of_int i)
+    | Argument i -> "Arg" ^ (String.of_int i)
+  else 
+  function
+    | Var str -> str
+    | Helper (Real,i) -> "@_" ^ (String.of_int i)
+    | Helper (Int,i) -> "$_" ^ (String.of_int i)
+    | Argument i -> "Arg_" ^ (String.of_int i)  
 let counter = ref 0
 
 (* We have special variables which are arguments of the transition system. Counting starts with 0 to be with KoAT *)

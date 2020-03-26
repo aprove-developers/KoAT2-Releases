@@ -13,7 +13,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
        
     type t = A.t list [@@deriving eq, ord]
     
-    (** Same as List.length but outside of this module the list structure of constraints is invisible*)
+    (** Same as List.length but outside of this module the list structure of constraints is invisible *)
     let num_of_atoms = List.length
     
     let lift atom = [ atom ]
@@ -59,7 +59,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
       |> List.map (A.vars)
       |> List.fold_left VarSet.union VarSet.empty
         
-    let to_string ?(comp=" <= ") ?(conj=" && ") constr = String.concat conj (List.map (A.to_string ~comp) constr)
+    let to_string ?(to_file=false) ?(comp=" <= ") ?(conj=" && ") constr = String.concat conj (List.map (A.to_string ~to_file ~comp) constr)
         
     let rename constr varmapping = List.map (fun atom -> A.rename atom varmapping) constr
 

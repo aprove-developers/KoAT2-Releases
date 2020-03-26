@@ -66,9 +66,9 @@ let rec fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf p =
   | Product (b1, b2) -> times (fold_ b1) (fold_ b2)
                     
 type complexity =
-  | Inf
-  | Polynomial of int
-  | Exponential of int [@@deriving eq]
+  | Inf (** Bound is infinite. *)
+  | Polynomial of int (** Bound is in asymptotic class O(n^i) *)
+  | Exponential of int [@@deriving eq] (** Bound is in corresponding asymptotic class O(2^2^...^n) where the integer value denotes the amount of powers.*)
 
 let rec show_complexity = function
   | Inf -> "Infinity"
@@ -83,6 +83,8 @@ let show_complexity_termcomp = function
   | Polynomial 0 -> "WORST_CASE(?, O(1))"
   | Polynomial x -> "WORST_CASE(?, O(n^" ^ Int.to_string x ^ "))"
   | Exponential _ -> "WORST_CASE(?, O(EXP))"
+
+
 
 let asymptotic_complexity =
   fold
@@ -124,11 +126,19 @@ let asymptotic_complexity =
     )
     ~inf:Inf
     
-let is_linear bound =
+(** Returns true iff. the bound is in complexity class O(n) *)
+let is_linear bound = 
+match (asymptotic_complexity bound) with
+  | Polynomial 0 -> true
+  | Polynomial 1 -> true
+  | _ -> false 
+
+
+(* let is_linear bound =
   let cplx = asymptotic_complexity bound in
     match cplx with
     | (Polynomial n) -> (n == 1)
-    | _ -> false
+    | _ -> false *)
 
 let max_of_occurring_constants bound =
   fold

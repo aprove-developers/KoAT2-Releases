@@ -47,14 +47,15 @@ module PolynomialOver(Value : PolyTypes.Ring) =
          if Value.(curr_coeff =~= zero) then (simplify (delete_monomial curr_monom tail))
          else (ScaledMonomial_.make curr_coeff curr_monom) :: (simplify (delete_monomial curr_monom tail) )
 
-    let to_string_simplified = function 
+    let to_string_simplified ?(to_file=false) = function 
       | [] -> "0"
-      | poly -> let str = String.concat "" (List.map ScaledMonomial_.to_string poly) in
+      | poly -> let str = String.concat "" (List.map (ScaledMonomial_.to_string ~to_file) poly) in
                 if String.starts_with str "+" then
                   String.lchop str else str
 
     let to_string poly = to_string_simplified (simplify poly)
 
+    let to_string_to_file poly = to_string_simplified ~to_file:true (simplify poly)
 
     let rec equal_simplified poly1 poly2 =
       List.length poly1 == List.length poly2 &&

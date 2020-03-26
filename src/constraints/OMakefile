@@ -26,6 +26,8 @@ clean:
   rm -f \
      *.omc \
      *.cmo \
+     *.cmi \
+     *.cmx \
      *.idoc \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
