@@ -29,45 +29,45 @@ let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
 type params = {
 
     print_system : bool;
-    (* Prints the integer transition system at the start as png *)
+    (** Prints the integer transition system at the start as png *)
 
     print_rvg : bool;
-    (* Prints the input result variable graph at the start as png *)
+    (** Prints the input result variable graph at the start as png *)
 
     print_input : bool;
-    (* Prints the raw unmodified input before the start *)
+    (** Prints the raw unmodified input before the start *)
 
     no_boundsearch : bool; [@aka ["n"]]
-    (* Disables the search for bounds. Useful if you just want information about the integer transition system via the other options or for debugging purposes. *)
+    (** Disables the search for bounds. Useful if you just want information about the integer transition system via the other options or for debugging purposes. *)
 
     input : string option; [@aka ["i"]]
-    (* Either an absolute or relative path to the koat input file which defines the integer transition system.
+    (** Either an absolute or relative path to the koat input file which defines the integer transition system.
         Or the program defined in simple mode.
         How this string is interpreted is defined by the simple-input flag *)
 
     simple_input : bool; [@default false] [@aka ["s"]]
-    (* If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
+    (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
     
     output_dir : string option; [@aka ["o"]]
-    (* An absolute or relative path to the output directory, where all generated files should end up. *)
+    (** An absolute or relative path to the output directory, where all generated files should end up. *)
 
     logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default Logging.all] [@sep ','] [@aka ["l"]]
-    (* The loggers which should be activated. *)
+    (** The loggers which should be activated. *)
 
     log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.NONE]
-    (* The general log level of the loggers. *)
+    (** The general log level of the loggers. *)
     
     result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound] [@aka ["r"]]
-    (* The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
+    (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
     
     preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])]
-    (* The preprocessors which should be applied before running the actual algorithm. *)
+    (** The preprocessors which should be applied before running the actual algorithm. *)
     
     preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
-    (* The strategy which should be used to apply the preprocessors. *)
+    (** The strategy which should be used to apply the preprocessors. *)
 
     rename : bool; [@default false]
-    (* If the location names should be normalized to simplified names. *)
+    (** If the location names should be normalized to simplified names. *)
 
   } [@@deriving cmdliner]
 
