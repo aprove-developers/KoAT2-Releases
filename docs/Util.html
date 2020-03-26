@@ -71,7 +71,12 @@
 </div>
 <h1>Module <a href="type_Util.html">Util</a></h1>
 
-<pre><span id="MODULEUtil"><span class="keyword">module</span> Util</span>: <code class="code">sig</code> <a href="Util.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="MODULEUtil"><span class="keyword">module</span> Util</span>: <code class="code">sig</code> <a href="Util.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Util</p>
+</div>
+</div>
+<hr width="100%">
 
 <pre><span id="VALget_all"><span class="keyword">val</span> get_all</span> : <code class="type">'a Batteries.Option.t list -> 'a list Batteries.Option.t</code></pre><div class="info ">
 <div class="info-desc">
@@ -108,4 +113,10 @@
 <pre><span id="VALenum_to_string"><span class="keyword">val</span> enum_to_string</span> : <code class="type">('a -> string) -> 'a Batteries.Enum.t -> string</code></pre>
 <pre><span id="VALpowerset"><span class="keyword">val</span> powerset</span> : <code class="type">'a Batteries.Set.t -> 'a Batteries.Set.t Batteries.Enum.t</code></pre>
 <pre><span id="VALfind_map"><span class="keyword">val</span> find_map</span> : <code class="type">('a -> 'b Batteries.Option.t) -> 'a Batteries.Enum.t -> 'b Batteries.Option.t</code></pre>
-<pre><span id="VALmemoize"><span class="keyword">val</span> memoize</span> : <code class="type">extractor:('a -> 'c) -> ('a -> 'b) -> 'a -> 'b</code></pre></body></html>
+<pre><span id="VALmemoize"><span class="keyword">val</span> memoize</span> : <code class="type">extractor:('a -> 'c) -> ('a -> 'b) -> 'a -> 'b</code></pre>
+<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type">string -> int</code></pre><div class="info ">
+<div class="info-desc">
+<p>Generates a hash interger value of a given string.</p>
+</div>
+</div>
+</body></html>

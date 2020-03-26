@@ -73,7 +73,12 @@
 </div>
 <h1>Module <a href="type_Logging.html">Logging</a></h1>
 
-<pre><span id="MODULELogging"><span class="keyword">module</span> Logging</span>: <code class="code">sig</code> <a href="Logging.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="MODULELogging"><span class="keyword">module</span> Logging</span>: <code class="code">sig</code> <a href="Logging.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>Implemenation of different loggers.</p>
+</div>
+</div>
+<hr width="100%">
 
 <pre><code><span id="TYPElogger"><span class="keyword">type</span> <code class="type"></code>logger</span> = </code></pre><table class="typetable">
 <tr>
@@ -81,56 +86,118 @@
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTlogger.Approximation"><span class="constructor">Approximation</span></span></code></td>
-
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Logger handling approximations</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTlogger.Size"><span class="constructor">Size</span></span></code></td>
-
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Logger handling size-bounds</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTlogger.Time"><span class="constructor">Time</span></span></code></td>
-
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Logger handling time-bounds</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTlogger.PRF"><span class="constructor">PRF</span></span></code></td>
-
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Logger handling (multiphase) ranking function creation</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTlogger.Bound"><span class="constructor">Bound</span></span></code></td>
-
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Logger handling  simplification of bounds</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTlogger.LocalSizeBound"><span class="constructor">LocalSizeBound</span></span></code></td>
-
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Logger handling local size-bounds</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code><span class="keyword">|</span></code></td>
 <td align="left" valign="top" >
 <code><span id="TYPEELTlogger.Preprocessor"><span class="constructor">Preprocessor</span></span></code></td>
-
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Logger handling preprocessors</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTlogger.CFR"><span class="constructor">CFR</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Logger handling control flow refinement</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
 
 
 
-<pre><span id="VALloggers"><span class="keyword">val</span> loggers</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> list</code></pre>
-<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> list</code></pre>
-<pre><span id="VALshow_logger"><span class="keyword">val</span> show_logger</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> -> string</code></pre>
+<pre><span id="VALloggers"><span class="keyword">val</span> loggers</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> list</code></pre><div class="info ">
+<div class="info-desc">
+<p>List of all available loggers</p>
+</div>
+</div>
+
+<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> list</code></pre><div class="info ">
+<div class="info-desc">
+<p>List of all available loggers</p>
+</div>
+</div>
+
+<pre><span id="VALshow_logger"><span class="keyword">val</span> show_logger</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns a string matching to the given logger.</p>
+</div>
+</div>
+
 <pre><span id="VALget"><span class="keyword">val</span> get</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> -> Batteries.Logger.log</code></pre>
 <pre><span id="VALwith_disabled_loggers"><span class="keyword">val</span> with_disabled_loggers</span> : <code class="type">(<a href="Logging.html#TYPElogger">logger</a> * Batteries.Logger.level) list -><br>       (string * Batteries.Logger.level) list</code></pre>
 <pre><span id="VALuse_loggers"><span class="keyword">val</span> use_loggers</span> : <code class="type">(<a href="Logging.html#TYPElogger">logger</a> * Batteries.Logger.level) list -> unit</code></pre></body></html>

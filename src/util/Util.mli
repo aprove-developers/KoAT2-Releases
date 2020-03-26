@@ -1,3 +1,4 @@
+(** Util *)
 open Batteries
 
 (** Returns None if one of the optionals evaluates to None.
@@ -25,3 +26,6 @@ val powerset : 'a Set.t -> ('a Set.t) Enum.t
 val find_map : ('a -> 'b Option.t) -> 'a Enum.t -> 'b Option.t
 
 val memoize : extractor:('a -> 'c) -> ('a -> 'b) -> 'a -> 'b  
+
+(**  Generates a hash interger value of a given string. *)
+val hash: string -> int

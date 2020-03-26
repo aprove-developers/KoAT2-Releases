@@ -1,18 +1,23 @@
+(** Implemenation of different loggers. *)
 open Batteries
 
 type logger =
-  | Approximation
-  | Size
-  | Time
-  | PRF
-  | Bound
-  | LocalSizeBound
-  | Preprocessor
+  | Approximation (**  Logger handling approximations *)
+  | Size (** Logger handling size-bounds *)
+  | Time (** Logger handling time-bounds *)
+  | PRF (** Logger handling (multiphase) ranking function creation *)
+  | Bound (**  Logger handling  simplification of bounds *)
+  | LocalSizeBound (**  Logger handling local size-bounds  *)
+  | Preprocessor (**  Logger handling preprocessors  *)
+  | CFR (**  Logger handling control flow refinement  *)
 
-let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor]
+(** List of all available loggers *)
+let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; CFR]
 
-let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor]
-            
+(** List of all available loggers *)
+let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; CFR]
+
+(** Returns a string matching to the given logger. *)          
 let show_logger = function
   | Approximation -> "appr"
   | Size -> "size"
@@ -21,6 +26,7 @@ let show_logger = function
   | Bound -> "bound"
   | LocalSizeBound -> "lsb"
   | Preprocessor -> "preprocessor"
+  | CFR -> "cfr"
 
 let get =
   Logger.make_log % show_logger

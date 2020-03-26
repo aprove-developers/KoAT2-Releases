@@ -73,7 +73,12 @@
 </div>
 <h1>Module <a href="type_MaybeChanged.html">MaybeChanged</a></h1>
 
-<pre><span id="MODULEMaybeChanged"><span class="keyword">module</span> MaybeChanged</span>: <code class="code">sig</code> <a href="MaybeChanged.html">..</a> <code class="code">end</code></pre><hr width="100%">
+<pre><span id="MODULEMaybeChanged"><span class="keyword">module</span> MaybeChanged</span>: <code class="code">sig</code> <a href="MaybeChanged.html">..</a> <code class="code">end</code></pre><div class="info module top">
+<div class="info-desc">
+<p>MaybeChanged monad represents a value that might change during a computation.</p>
+</div>
+</div>
+<hr width="100%">
 <p>A type that is wrapped by the MaybeChanged monad represents a value that might change during a computation.
     Once it has changed it will be forever marked as changed, but can also be further be manipulated.</p>
 
@@ -93,18 +98,78 @@
 
 </tr></table>
 
+<div class="info ">
+<div class="info-desc">
+<p>Status of an object.</p>
+</div>
+</div>
 
 
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type">'a</code> t</span> = <code class="type"><a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code> </pre>
+<div class="info ">
+<div class="info-desc">
+<p>Type of an object.</p>
+</div>
+</div>
 
 
-<pre><span id="VALreturn"><span class="keyword">val</span> return</span> : <code class="type">'a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre>
-<pre><span id="VAL(>>=)"><span class="keyword">val</span> (&gt;&gt;=)</span> : <code class="type"><a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -><br>       ('a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b) -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b</code></pre>
-<pre><span id="VALflat_map"><span class="keyword">val</span> flat_map</span> : <code class="type">('a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b) -><br>       <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b</code></pre>
-<pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">('a -> 'b) -> 'c * 'a -> 'c * 'b</code></pre>
-<pre><span id="VALunpack"><span class="keyword">val</span> unpack</span> : <code class="type">'a * 'b -> 'b</code></pre>
-<pre><span id="VALhas_changed"><span class="keyword">val</span> has_changed</span> : <code class="type"><a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -> bool</code></pre>
-<pre><span id="VALif_changed"><span class="keyword">val</span> if_changed</span> : <code class="type">('a -> 'a) -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre>
-<pre><span id="VALchanged"><span class="keyword">val</span> changed</span> : <code class="type">'a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre>
-<pre><span id="VALsame"><span class="keyword">val</span> same</span> : <code class="type">'a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre>
-<pre><span id="VALfold_enum"><span class="keyword">val</span> fold_enum</span> : <code class="type">('a -> 'b -> 'a <a href="MaybeChanged.html#TYPEt">t</a>) -><br>       'a -> 'b Batteries.Enum.t -> 'a <a href="MaybeChanged.html#TYPEt">t</a></code></pre></body></html>
+<pre><span id="VALreturn"><span class="keyword">val</span> return</span> : <code class="type">'a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the monad <i>(<code class="code">Same</code>, o)</i> for an object <i>o</i>.</p>
+</div>
+</div>
+
+<pre><span id="VAL(>>=)"><span class="keyword">val</span> (&gt;&gt;=)</span> : <code class="type"><a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -><br>       ('a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b) -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b</code></pre><div class="info ">
+<div class="info-desc">
+<p>Applies function <i>f</i> on the monad <i>(<code class="code">status</code>, o)</i> and changes status iff status is <code class="code">Same</code> to status of <i>f(o)</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALflat_map"><span class="keyword">val</span> flat_map</span> : <code class="type">('a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b) -><br>       <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b</code></pre><div class="info ">
+<div class="info-desc">
+<p>Applies function <i>f</i> on the monad <i>(<code class="code">status</code>, o)</i> and changes status iff status is <code class="code">Same</code> to status of <i>f(o)</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">('a -> 'b) -> 'c * 'a -> 'c * 'b</code></pre><div class="info ">
+<div class="info-desc">
+<p>Applies function <i>f</i> on the monad <i>(<code class="code">status</code>, o)</i> and returns the resulting monad <i>(<code class="code">status</code>, f(o))</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALunpack"><span class="keyword">val</span> unpack</span> : <code class="type">'a * 'b -> 'b</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the object itself without the monad structure.</p>
+</div>
+</div>
+
+<pre><span id="VALhas_changed"><span class="keyword">val</span> has_changed</span> : <code class="type"><a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns true iff. the object has changed.</p>
+</div>
+</div>
+
+<pre><span id="VALif_changed"><span class="keyword">val</span> if_changed</span> : <code class="type">('a -> 'a) -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre><div class="info ">
+<div class="info-desc">
+<p>Applies function <i>f</i> on the monad <i>(<code class="code">status</code>, o)</i> iff <code class="code">status</code> is <code class="code">Changed</code> and returns the resulting monad <i>(<code class="code">Changed</code>, f(o))</i> or the original iff <code class="code">status</code> equals <code class="code">Same</code>.</p>
+</div>
+</div>
+
+<pre><span id="VALchanged"><span class="keyword">val</span> changed</span> : <code class="type">'a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the monad <i>(<code class="code">Changed</code>, o)</i> for an object <i>o</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALsame"><span class="keyword">val</span> same</span> : <code class="type">'a -> <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the monad <i>(<code class="code">Same</code>, o)</i> for an object <i>o</i>.</p>
+</div>
+</div>
+
+<pre><span id="VALfold_enum"><span class="keyword">val</span> fold_enum</span> : <code class="type">('a -> 'b -> 'a <a href="MaybeChanged.html#TYPEt">t</a>) -><br>       'a -> 'b Batteries.Enum.t -> 'a <a href="MaybeChanged.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>TODO doc</p>
+</div>
+</div>
+</body></html>

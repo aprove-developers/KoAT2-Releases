@@ -179,7 +179,11 @@
 </div>
 </td></tr>
 <tr><td><a href="MaybeChanged.html#VAL(>>=)">(&gt;&gt;=)</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Applies function <i>f</i> on the monad <i>(<code class="code">status</code>, o)</i> and changes status iff status is <code class="code">Same</code> to status of <i>f(o)</i>.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="ConstraintTypes.Formula.Infix.html#VAL(||)">(||)</a> [<a href="ConstraintTypes.Formula.Infix.html">ConstraintTypes.Formula.Infix</a>]</td>
 <td></td></tr>
 <tr><td><a href="PolyTypes.Math.html#VAL(~-)">(~-)</a> [<a href="PolyTypes.Math.html">PolyTypes.Math</a>]</td>
@@ -268,7 +272,11 @@
 </div>
 </td></tr>
 <tr><td><a href="Logging.html#VALall">all</a> [<a href="Logging.html">Logging</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>List of all available loggers</p>
+
+</div>
+</td></tr>
 <tr><td><a href="TransitionApproximation.html#VALall_bounded">all_bounded</a> [<a href="TransitionApproximation.html">TransitionApproximation</a>]</td>
 <td></td></tr>
 <tr><td><a href="Preprocessor.html#VALall_strategies">all_strategies</a> [<a href="Preprocessor.html">Preprocessor</a>]</td>
@@ -360,7 +368,11 @@
 </div>
 </td></tr>
 <tr><td><a href="MaybeChanged.html#VALchanged">changed</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Returns the monad <i>(<code class="code">Changed</code>, o)</i> for an object <i>o</i>.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="SMT.Z3Solver.html#VALcheck_negativity">check_negativity</a> [<a href="SMT.Z3Solver.html">SMT.Z3Solver</a>]</td>
 <td></td></tr>
 <tr><td><a href="SMT.Z3Solver.html#VALcheck_positivity">check_positivity</a> [<a href="SMT.Z3Solver.html">SMT.Z3Solver</a>]</td>
@@ -781,7 +793,11 @@
 <tr><td><a href="Util.html#VALfind_map">find_map</a> [<a href="Util.html">Util</a>]</td>
 <td></td></tr>
 <tr><td><a href="MaybeChanged.html#VALflat_map">flat_map</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Applies function <i>f</i> on the monad <i>(<code class="code">status</code>, o)</i> and changes status iff status is <code class="code">Same</code> to status of <i>f(o)</i>.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="Polynomials.ParameterPolynomial.html#VALflatten">flatten</a> [<a href="Polynomials.ParameterPolynomial.html">Polynomials.ParameterPolynomial</a>]</td>
 <td><div class="info">
 <p>Transforms the template polynomial such that all inner values get lifted to the outer polynomial.</p>
@@ -831,7 +847,11 @@
 </div>
 </td></tr>
 <tr><td><a href="MaybeChanged.html#VALfold_enum">fold_enum</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>TODO doc</p>
+
+</div>
+</td></tr>
 <tr><td><a href="Var.html#VALfresh_arg_list">fresh_arg_list</a> [<a href="Var.html">Var</a>]</td>
 <td><div class="info">
 <p>Returns a bunch of fresh arg ids.</p>
@@ -1001,7 +1021,11 @@
 <td></td></tr>
 <tr><td align="left"><div>H</div></td></tr>
 <tr><td><a href="MaybeChanged.html#VALhas_changed">has_changed</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Returns true iff.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="ProgramTypes.Transition.html#VALhash">hash</a> [<a href="ProgramTypes.Transition.html">ProgramTypes.Transition</a>]</td>
 <td></td></tr>
 <tr><td><a href="ProgramTypes.Location.html#VALhash">hash</a> [<a href="ProgramTypes.Location.html">ProgramTypes.Location</a>]</td>
@@ -1011,6 +1035,12 @@
 <tr><td><a href="Var.html#VALhash">hash</a> [<a href="Var.html">Var</a>]</td>
 <td><div class="info">
 <p>TODO doc</p>
+
+</div>
+</td></tr>
+<tr><td><a href="Util.html#VALhash">hash</a> [<a href="Util.html">Util</a>]</td>
+<td><div class="info">
+<p>Generates a hash interger value of a given string.</p>
 
 </div>
 </td></tr>
@@ -1026,7 +1056,11 @@
 </div>
 </td></tr>
 <tr><td><a href="MaybeChanged.html#VALif_changed">if_changed</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Applies function <i>f</i> on the monad <i>(<code class="code">status</code>, o)</i> iff <code class="code">status</code> is <code class="code">Changed</code> and returns the resulting monad <i>(<code class="code">Changed</code>, f(o))</i> or the original iff <code class="code">status</code> equals <code class="code">Same</code>.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="ConstraintTypes.Formula.html#VALimplies">implies</a> [<a href="ConstraintTypes.Formula.html">ConstraintTypes.Formula</a>]</td>
 <td><div class="info">
 <p>Returns for two formulas <i>f,g</i> the the formula <i>f -&gt; g</i></p>
@@ -1289,7 +1323,11 @@
 <tr><td><a href="TrivialSizeBounds.html#VALlogger">logger</a> [<a href="TrivialSizeBounds.html">TrivialSizeBounds</a>]</td>
 <td></td></tr>
 <tr><td><a href="Logging.html#VALloggers">loggers</a> [<a href="Logging.html">Logging</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>List of all available loggers</p>
+
+</div>
+</td></tr>
 <tr><td align="left"><div>M</div></td></tr>
 <tr><td><a href="Main.html#VALmain_params_cmdliner_term">main_params_cmdliner_term</a> [<a href="Main.html">Main</a>]</td>
 <td></td></tr>
@@ -1314,7 +1352,11 @@
 </div>
 </td></tr>
 <tr><td><a href="MaybeChanged.html#VALmap">map</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Applies function <i>f</i> on the monad <i>(<code class="code">status</code>, o)</i> and returns the resulting monad <i>(<code class="code">status</code>, f(o))</i>.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="Program.html#VALmap_graph">map_graph</a> [<a href="Program.html">Program</a>]</td>
 <td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALmap_guard">map_guard</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
@@ -2134,7 +2176,11 @@
 </div>
 </td></tr>
 <tr><td><a href="MaybeChanged.html#VALreturn">return</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Returns the monad <i>(<code class="code">Same</code>, o)</i> for an object <i>o</i>.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="LocalSizeBoundCommand.html#VALrun">run</a> [<a href="LocalSizeBoundCommand.html">LocalSizeBoundCommand</a>]</td>
 <td></td></tr>
 <tr><td><a href="SizeCommand.html#VALrun">run</a> [<a href="SizeCommand.html">SizeCommand</a>]</td>
@@ -2163,7 +2209,11 @@
 </div>
 </td></tr>
 <tr><td><a href="MaybeChanged.html#VALsame">same</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Returns the monad <i>(<code class="code">Same</code>, o)</i> for an object <i>o</i>.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="SMT.IncrementalZ3Solver.html#VALsatisfiable">satisfiable</a> [<a href="SMT.IncrementalZ3Solver.html">SMT.IncrementalZ3Solver</a>]</td>
 <td><div class="info">
 <p>Checks if the current state is satisfiable.</p>
@@ -2207,7 +2257,11 @@
 <tr><td><a href="SizeApproximation.html#VALshow_kind">show_kind</a> [<a href="SizeApproximation.html">SizeApproximation</a>]</td>
 <td></td></tr>
 <tr><td><a href="Logging.html#VALshow_logger">show_logger</a> [<a href="Logging.html">Logging</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Returns a string matching to the given logger.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="RankingFunction.html#VALshow_measure">show_measure</a> [<a href="RankingFunction.html">RankingFunction</a>]</td>
 <td></td></tr>
 <tr><td><a href="LocalSizeBoundCommand.html#VALshow_params">show_params</a> [<a href="LocalSizeBoundCommand.html">LocalSizeBoundCommand</a>]</td>
@@ -2528,7 +2582,11 @@
 <tr><td><a href="CostBounds.html#VALunbounded">unbounded</a> [<a href="CostBounds.html">CostBounds</a>]</td>
 <td></td></tr>
 <tr><td><a href="MaybeChanged.html#VALunpack">unpack</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Returns the object itself without the monad structure.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="CutUnreachableLocations.html#VALunreachable_locations">unreachable_locations</a> [<a href="CutUnreachableLocations.html">CutUnreachableLocations</a>]</td>
 <td></td></tr>
 <tr><td><a href="SMT.IncrementalZ3Solver.html#VALunsatisfiable">unsatisfiable</a> [<a href="SMT.IncrementalZ3Solver.html">SMT.IncrementalZ3Solver</a>]</td>
