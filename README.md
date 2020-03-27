@@ -65,3 +65,6 @@ At the moment, we do not support recursion, i.e., we only support `Com_1`, which
 
 ## API
 You can find our [API](<https://aprove-developers.github.io/KoAT2-Releases/index.html>) on GitHub Pages. We are still improving the documentation.
+
+## Contact
+If you encounter any difficulties either use GitHub issues or contact mhark [at] i2.informatik.rwth-aachen.de
