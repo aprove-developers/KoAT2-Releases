@@ -64,4 +64,4 @@ At the moment, we do not support recursion, i.e., we only support `Com_1`, which
   The main command proceeding a full analysis is the "analyse" command.
 
 ## API
-You can fand our [API](<https://aprove-developers.github.io/KoAT2-Releases/index.html>) on GitHub Pages. We are still improving the documentation.
+You can find our [API](<https://aprove-developers.github.io/KoAT2-Releases/index.html>) on GitHub Pages. We are still improving the documentation.
