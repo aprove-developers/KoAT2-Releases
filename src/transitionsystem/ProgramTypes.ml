@@ -101,7 +101,7 @@ module Transition =
 (*The equivalence test is needed in the probabilistic case, as we have transitions with branching degree >=2*)
 module TransitionSet =
   struct
-    include Set.Make(struct include Transition let compare = Transition.compare_equivalent end)
+    include Set.Make(struct include Transition let compare = Transition.compare_same end)
 
     let powerset set =
       let combine (result: t Enum.t) (x: Transition.t) = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
@@ -226,7 +226,7 @@ module GeneralTransitionSet =
 (*The equivalence test is needed in the probabilistic case, as we have transitions with branching degree >=2*)
 module TransitionGraph =
   struct
-    include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_equivalent end)
+    include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_same end)
 
     let locations graph =
       fold_vertex LocationSet.add graph LocationSet.empty
