@@ -39,8 +39,7 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
     in
 
     let var_change_bound =
-      ExpLocalSizeBound.elsb elsb_cache program ((gt,target_loc),var)
-      |> Tuple2.first
+      ExpLocalSizeBound.(reduced_elsb @@ compute_elsb elsb_cache program ((gt,target_loc),var))
       (* perform appr_substitution with all pre size bounds *)
       |> fun b -> Enum.map (appr_substitution_pre_size b) pre_trans
       |> RealBound.maximum

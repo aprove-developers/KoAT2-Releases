@@ -27,8 +27,18 @@ let print_matrix =
   Util.enum_to_string (Util.enum_to_string RealPolynomial.to_string) % List.enum % List.map (List.enum)
 
 
+type t = {
+  elsb : RealBound.t;
+  elsb_plus_var : RealBound.t;
+  reduced_elsb : RealBound.t;
+}
+
+let elsb t = t.elsb
+let elsb_plus_var t = t.elsb_plus_var
+let reduced_elsb t = t.reduced_elsb
+
 type concave_convexe_cache = (concave_convexe_op * String.t, bool) Hashtbl.t
-type elsb_bound_cache = (int * string * string, RealBound.t * RealBound.t) Hashtbl.t
+type elsb_bound_cache = (int * string * string, t) Hashtbl.t
 type elsb_cache = (concave_convexe_cache * elsb_bound_cache)
 
 let new_cache: unit -> elsb_cache = fun () -> (Hashtbl.create 10, Hashtbl.create 10)
@@ -174,7 +184,7 @@ let eliminate_var other_vars inv var =
       |> fun p -> Some (RealBound.of_poly p)
   | None -> None
 
-let elsb_ program (((gt, l), v): RV.t): RealBound.t * RealBound.t =
+let elsb_ program (((gt, l), v): RV.t): t =
   let execute () =
     let transitions =
       GeneralTransition.transitions gt
@@ -218,26 +228,43 @@ let elsb_ program (((gt, l), v): RV.t): RealBound.t * RealBound.t =
           RealBound.appr_substitution_abs_one v v_subst b')
         (RealBound.vars b) b
     in
+    let total_probability =
+      transitions_with_prob
+      |> List.map Tuple2.second
+      |> List.fold_left (OurFloat.add) OurFloat.zero
+    in
     transitions_with_prob
     |> List.enum
     |> Enum.map (fun (t,p) -> (p, handle_transition t))
-    |> Enum.map (fun (p,(bound,bound_plus_var)) -> RealBound.(of_constant p * abs bound, of_constant p * abs bound_plus_var))
-    |> Enum.map (fun (b,b_p_v) -> RealBound.simplify_vars_nonnegative b, RealBound.simplify_vars_nonnegative b_p_v)
-    |> fun en -> (RealBound.sum % Enum.map Tuple2.first @@ Enum.clone en, RealBound.sum % Enum.map Tuple2.second @@ Enum.clone en)
-    |> fun (b,b_v_p) -> (bound_nondet_vars b, bound_nondet_vars b_v_p)
-    |> fun (b,b_v_p) -> (simplify_with_guard b, simplify_with_guard b_v_p)
-    |> fun (b,b_v_p) -> (RealBound.simplify_vars_nonnegative b, RealBound.simplify_vars_nonnegative b_v_p)
+    |> Enum.map
+        (fun (p,(bound,bound_plus_var)) ->
+          RealBound.(
+              of_constant p * abs bound,
+              of_constant p * abs bound_plus_var,
+              of_constant (OurFloat.(p/total_probability)) * abs bound
+          )
+        )
+    |> Enum.map (fun (b,b_p_v,red_b) -> RealBound.simplify_vars_nonnegative b, RealBound.simplify_vars_nonnegative b_p_v, RealBound.simplify_vars_nonnegative red_b)
+    |> fun en -> (RealBound.sum % Enum.map Tuple3.first @@ Enum.clone en, RealBound.sum % Enum.map Tuple3.second @@ Enum.clone en, RealBound.sum % Enum.map Tuple3.third @@ Enum.clone en)
+    |> fun (b,b_v_p,red_b) -> (bound_nondet_vars b, bound_nondet_vars b_v_p, bound_nondet_vars red_b)
+    |> fun (b,b_v_p,red_b) -> (simplify_with_guard b, simplify_with_guard b_v_p, simplify_with_guard red_b)
+    |> fun (b,b_v_p,red_b) ->
+        {
+          elsb = RealBound.simplify_vars_nonnegative b;
+          elsb_plus_var = RealBound.simplify_vars_nonnegative b_v_p;
+          reduced_elsb = RealBound.simplify_vars_nonnegative red_b;
+        }
   in
   Logger.with_log
     logger Logger.DEBUG
-    (fun () -> "elsb",["gt", GeneralTransition.to_id_string gt; "l", Location.to_string l; "var", Var.to_string v])
-    ~result:(fun (elsb, elsb_plus_var) -> "elsb: "^ RealBound.to_string elsb ^ " elsb_plus_var: "^ RealBound.to_string elsb_plus_var)
+    (fun () -> "elsb_",["gt", GeneralTransition.to_id_string gt; "l", Location.to_string l; "var", Var.to_string v])
+    ~result:(fun t -> "elsb: "^ RealBound.to_string t.elsb ^ " elsb_plus_var: "^ RealBound.to_string t.elsb_plus_var ^ " reduced_elsb: " ^ RealBound.to_string t.reduced_elsb)
     execute
 
-let elsb cache =
+let compute_elsb cache =
   curry @@ Util.memoize (get_elsb_bound cache)
     ~extractor:(fun (program,((gt,l),var)) -> (GeneralTransition.id gt, Location.to_string l, Var.to_string var))
     (fun (program,rv) -> elsb_ program rv)
 
 let vars cache program rv =
-  Tuple2.second RealBound.(elsb cache program rv) |> RealBound.vars
+  (compute_elsb cache program rv).elsb_plus_var |> RealBound.vars

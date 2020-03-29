@@ -62,8 +62,8 @@ let compute elsb_cache program get_sizebound (get_expsizebound: (GeneralTransiti
   if not (Bound.(get_timebound_gt gt <= Bound.one) = Some true) then
     RealBound.infinity
   else
-    let elsb          = Tuple2.first  @@ ExpLocalSizeBound.elsb elsb_cache program ((gt,loc),var) in
-    let elsb_plus_var = Tuple2.second @@ ExpLocalSizeBound.elsb elsb_cache program ((gt,loc),var) in
+    let elsb          = ExpLocalSizeBound.(elsb          @@ compute_elsb elsb_cache program ((gt,loc),var)) in
+    let elsb_plus_var = ExpLocalSizeBound.(elsb_plus_var @@ compute_elsb elsb_cache program ((gt,loc),var)) in
     let execute () =
       if Program.is_initial_gt program gt then
         elsb_plus_var

@@ -137,7 +137,7 @@ let bounded_erv_to_string elsb_cache (program: Program.t) (appr: Approximation.t
                     Approximation.expsizebound_abs appr (gt,l) v |> RealBound.to_string;
                     "\n";
                     "Local: ";
-                    ExpLocalSizeBound.elsb elsb_cache program ((gt,l),v) |> Tuple2.first |> RealBound.to_string
+                    ExpLocalSizeBound.(elsb @@ compute_elsb elsb_cache program ((gt,l),v)) |> RealBound.to_string
     ]
 
 let get_lsb cache program kind (t, v) =
