@@ -181,7 +181,8 @@ let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr 
 
 let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure program appr =
   if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then
-      let program_cfr = CFR.apply_cfr program in
+      let (program_cfr, appr_cfr2) = CFR.apply_cfr program appr in
+            (* Printf.printf "Appr. before cfr: %s \n" (Approximation.to_string program appr);      *)
       backtrack_point := Option.some (program,appr);
       if mrf then 
         MultiphaseRankingFunction.reset()

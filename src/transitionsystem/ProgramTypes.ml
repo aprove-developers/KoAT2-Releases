@@ -61,6 +61,9 @@ module Transition =
     let id =
       TransitionLabel.id % label
 
+    (* let compare_same trans1 trans2 =
+      Int.compare (id trans1) (id trans2)  *)
+
     let cost t = TransitionLabel.cost (label t)
 
     let hash = Hashtbl.hash % id
@@ -105,6 +108,8 @@ module TransitionSet =
       Util.enum_to_string Transition.to_id_string % enum
       
   end
+
+
 
 module TransitionGraph =
   struct

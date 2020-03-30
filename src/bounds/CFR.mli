@@ -13,7 +13,7 @@ val random : int Batteries.ref
 val getLevel : ProgramTypes.Transition.t -> int
 
 (** Unrolls all transitions listed in nonLinearTransitions.starrt  *)
-val apply_cfr : Program.t -> Program.t
+val apply_cfr : Program.t -> Approximation.t -> (Program.t * Approximation.t)
 
 (** Reference is used to store non-linear transitions. *)
 val nonLinearTransitions : ProgramTypes.TransitionSet.t Batteries.ref

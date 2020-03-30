@@ -168,7 +168,33 @@ let rename_entry_transition (locations: LocationSet.t) (transitions: TransitionS
   |> LocationSet.fold (fun location merged_trans -> let l' = find_matching_location location (TransitionSet.filter (fun (l,_,_) ->  Location.equal l (Location.of_string "n_l0" )) transitions) in
                                                              rename_matching_trans location l' transitions) locations 
 
-let apply_cfr (program: Program.t) = 
+
+(** Generates the approximation for the new program_cfr from the one of the original program. *)
+let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr = 
+  let unchangend_trans = TransitionSet.inter (Program.transitions program) (Program.transitions program_cfr) in
+  (* Printf.printf "TS: \n %s" (TransitionSet.to_string unchangend_trans); *)
+  program_cfr
+  |> Approximation.create
+  |> TrivialTimeBounds.compute program_cfr 
+  |> TransitionSet.fold (fun trans appr_cfr ->
+                                      let timebound = appr
+                                      |> Approximation.time
+                                      |> flip TransitionApproximation.get trans and 
+                                        costbound = appr
+                                      |> Approximation.cost
+                                      |> flip TransitionApproximation.get trans in 
+                                      VarSet.fold (fun x appr_cfr -> 
+                                              let lower_sizebound_x = SizeApproximation.get `Lower (Approximation.size appr) trans x and 
+                                                  upper_sizebound_x = SizeApproximation.get `Upper (Approximation.size appr) trans x in
+                                                appr_cfr
+                                                |> Approximation.add_sizebound `Lower lower_sizebound_x trans x
+                                                |> Approximation.add_sizebound `Upper upper_sizebound_x trans x) (Program.vars program) appr_cfr
+                                              
+                                      |> Approximation.add_timebound timebound trans
+                                      |> Approximation.add_costbound costbound trans) unchangend_trans
+
+
+let apply_cfr (program: Program.t) appr = 
   delta_current_cfr := 0.;
   let copy_nonLinearTransitions = !nonLinearTransitions
   and initial_location = Program.start program
@@ -177,6 +203,7 @@ let apply_cfr (program: Program.t) =
                             |> minimalDisjointSCCs 
                             |> SCCSet.filter (fun scc -> (TransitionSet.cardinal scc) > 1)  in
   nonLinearTransitions := TransitionSet.empty;
+    let program_res = 
     program
     |> SCCSet.fold (fun scc merged_program ->  
       (fun sccs -> 
@@ -188,29 +215,36 @@ let apply_cfr (program: Program.t) =
       let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (entry_transitions program scc_list)) in
 
       let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.vars program),l)) (LocationSet.to_list entry_locations) in
-      let scc_program = Program.from (entry_transitions@scc_list) initial_location in
-      let program_cfr  = applyIrankFinder scc_program
-      (** Prepares transitions created by irankfinder to merge. Das momentan noch Quatsch*)
-      and map = RenameMap.from_native ((List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i))) @
-                                      (List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i)))) in      
+      let program_cfr = 
+      initial_location
+      |> Program.from (entry_transitions@scc_list)
+      |> applyIrankFinder
 
+      (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
+      and map = RenameMap.from_native ((List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i)))) in      
       let transitions_cfr = program_cfr
       |> Program.transitions
       |> rename_entry_transition entry_locations
       |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
       |> TransitionSet.map (fun t -> Transition.rename2 map t) in
-      (** Merges irankfinder and original program. *)
 
+      (* Printf.printf "transitions_cfr: %s" (TransitionSet.to_string transitions_cfr); *)
+
+      (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
       let max_level = TransitionSet.fold (fun t max -> let level = getLevel t in if level > max then level else max) scc 0 in
       TransitionSet.iter (fun t -> Hashtbl.add levelOfCFR (Transition.id t) (max_level + 1)) transitions_cfr;
       TransitionSet.iter (fun t -> Hashtbl.remove levelOfCFR (Transition.id t)) scc;
 
-
+      (** Merges irankfinder and original program. *)
       merged_program
       |> Program.transitions
       |> TransitionSet.union transitions_cfr
       |> flip TransitionSet.diff scc
       |> TransitionSet.to_list
       |> flip Program.from initial_location
+      (* |> tap (fun x -> Printf.printf "Ist bei diesem Program schon was falsch?\ %s " (Program.to_string x)) *)
       |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current))) minimalDisjointSCCs
+            (* |> tap (fun x -> Printf.printf "Appr: %s \n " (Approximation.to_string x (get_appr_cfr program x appr))) *)
       |> Program.rename
+      |> tap (fun x -> Program.to_file x "program_cfr.koat") in
+      (program_res, get_appr_cfr program program_res appr)
