@@ -21,9 +21,11 @@ let run (params: params) =
   let solve = match params.solver with
     | `Z3 -> Z3.get_model
   and constr = Readers.read_formula params.constr in
-  solve constr
+  constr
+  |> solve
   |> Option.map (fun solution -> 
-         Enum.iter (fun (var,value) -> print_string (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n")) (Valuation.bindings solution)
+         Enum.fold (fun str -> (fun (var,value) -> str ^ (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n"))) "" (Valuation.bindings solution)
        )
-  |? print_string "unsatisfiable\n"
+  |? "unsatisfiable\n"
+  |> print_string
   
