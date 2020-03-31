@@ -1,0 +1,19 @@
+(GOAL COMPLEXITY) 
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR Arg0 Arg1)
+(RULES 
+ l0(Arg0,Arg1) -> Com_1(l1(Arg0,Arg1))
+ l1(Arg0,Arg1) -> Com_1(l2(Arg0,Arg1)) :|: Arg0+1 <= 0
+ l1(Arg0,Arg1) -> Com_1(l3(Arg0,Arg1)) :|: Arg0 <= 0
+ l3(Arg0,Arg1) -> Com_1(l8(Arg0-Arg1,Arg1)) :|: Arg0 <= 0 && 1+Arg1 <= 0 && Arg0 <= 0
+ l3(Arg0,Arg1) -> Com_1(l9(Arg0,Arg1+1)) :|: Arg0 <= 0 && Arg1 <= 0 && Arg0 <= 0
+ l4(Arg0,Arg1) -> Com_1(l8(Arg0-Arg1,Arg1)) :|: Arg0 <= 0 && Arg1 <= 0 && 1+Arg1 <= 0 && Arg0 <= 0
+ l4(Arg0,Arg1) -> Com_1(l9(Arg0,Arg1+1)) :|: Arg0 <= 0 && Arg1 <= 0 && Arg1 <= 0 && Arg0 <= 0
+ l5(Arg0,Arg1) -> Com_1(l6(Arg0,Arg1+1)) :|: Arg0 <= 0 && 1+Arg1 <= 0 && Arg1 <= 0 && Arg0 <= 0
+ l5(Arg0,Arg1) -> Com_1(l8(Arg0-Arg1,Arg1)) :|: Arg0 <= 0 && 1+Arg1 <= 0 && 1+Arg1 <= 0 && Arg0 <= 0
+ l6(Arg0,Arg1) -> Com_1(l4(Arg0,Arg1)) :|: Arg0 <= 0 && Arg1 <= 0 && Arg0 <= 0 && Arg1 <= -1 && Arg0 <= 0 && Arg0 <= 0
+ l7(Arg0,Arg1) -> Com_1(l8(Arg0-Arg1,Arg1)) :|: Arg0 <= 0 && Arg1 <= -1 && 1+Arg1 <= 0 && Arg0 <= 0
+ l7(Arg0,Arg1) -> Com_1(l9(Arg0,Arg1+1)) :|: Arg0 <= 0 && Arg1 <= -1 && Arg1 <= 0 && Arg0 <= 0
+ l8(Arg0,Arg1) -> Com_1(l5(Arg0,Arg1)) :|: Arg1 <= 0 && 1+Arg1 <= 0 && 1+Arg1 <= 0 && Arg0+Arg1 <= 0 && Arg0 <= 0
+ l9(Arg0,Arg1) -> Com_1(l7(Arg0,Arg1)) :|: Arg0 <= 0 && Arg0 <= 0 && Arg1 <= -1 && Arg0 <= 0 && Arg0 <= 0
+)
