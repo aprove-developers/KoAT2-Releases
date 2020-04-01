@@ -1,5 +1,3 @@
-(** Handles shell arguments and computes a solution for an SMT instance. *)
-
 open Batteries
 
 module Valuation = Valuation.Make(OurInt)

@@ -246,5 +246,5 @@ let apply_cfr (program: Program.t) appr =
       |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current))) minimalDisjointSCCs
             (* |> tap (fun x -> Printf.printf "Appr: %s \n " (Approximation.to_string x (get_appr_cfr program x appr))) *)
       |> Program.rename
-      |> tap (fun x -> Program.to_file x "program_cfr.koat") in
+      |> tap (fun x -> Program.to_file x "program_cfr.koat")  in
       (program_res, get_appr_cfr program program_res appr)
