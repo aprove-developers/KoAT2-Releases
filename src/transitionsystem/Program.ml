@@ -175,5 +175,19 @@ let to_file program file =
                     (TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "");
     close_out oc
 
-let hash program = 
-  Util.hash (to_simple_string program)  
+(** All entry transitions of the given transitions.
+    These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
+let entry_transitions logger (program: t) (rank_transitions: Transition.t list): Transition.t List.t =
+  rank_transitions
+  |> List.enum
+  |> Enum.map (pre program)
+  |> Enum.flatten
+  |> Enum.filter (fun r ->
+         rank_transitions
+         |> List.enum
+         |> Enum.for_all (not % Transition.same r)
+       )
+  |> Enum.uniq_by Transition.same
+  |> List.of_enum
+  |> tap (fun transitions -> Logger.log logger Logger.DEBUG
+                               (fun () -> "entry_transitions", ["result", transitions |> List.enum |> Util.enum_to_string Transition.to_id_string]))

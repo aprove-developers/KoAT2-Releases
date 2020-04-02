@@ -28,22 +28,6 @@ let logger = Logging.(get CFR)
 (* Collect all non-linear bounds *)
 let nonLinearTransitions = ref TransitionSet.empty
 
-(** TODO move to program, All entry transitions of the given transitions.
-    These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
-let entry_transitions (program: Program.t) (rank_transitions: Transition.t list): Transition.t List.t =
-  rank_transitions
-  |> List.enum
-  |> Enum.map (Program.pre program)
-  |> Enum.flatten
-  |> Enum.filter (fun r ->
-         rank_transitions
-         |> List.enum
-         |> Enum.for_all (not % Transition.same r)
-       )
-  |> Enum.uniq_by Transition.same
-  |> List.of_enum
-  
-
 (* SCCs that contain a non-linear transition, its not guaranteed that they are minimal *)
 let nonLinearSCCs (program: Program.t) =
   Program.sccs program
@@ -208,7 +192,7 @@ let apply_cfr (program: Program.t) appr =
                                (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter copy_nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
       let time_current = Unix.time()
       and scc_list = TransitionSet.to_list scc in
-      let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (entry_transitions program scc_list)) in
+      let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
 
       let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.vars program),l)) (LocationSet.to_list entry_locations) in
       let program_cfr = 

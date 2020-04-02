@@ -16,23 +16,6 @@ let backtrack_point = ref None
 
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
-(** All entry transitions of the given transitions.
-    These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
-let entry_transitions (program: Program.t) (rank_transitions: Transition.t list): Transition.t List.t =
-  rank_transitions
-  |> List.enum
-  |> Enum.map (Program.pre program)
-  |> Enum.flatten
-  |> Enum.filter (fun r ->
-         rank_transitions
-         |> List.enum
-         |> Enum.for_all (not % Transition.same r)
-       )
-  |> Enum.uniq_by Transition.same
-  |> List.of_enum
-  |> tap (fun transitions -> Logger.log logger Logger.DEBUG
-                               (fun () -> "entry_transitions", ["result", transitions |> List.enum |> Util.enum_to_string Transition.to_id_string]))
-
 let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t) (transition: Transition.t): Bound.t =
   rank
   |> Bound.of_poly
@@ -55,7 +38,7 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
  let execute () =
    rank
    |> MultiphaseRankingFunction.non_increasing
-   |> entry_transitions program
+   |> Program.entry_transitions logger program
    |> List.enum
    |> Enum.map (fun (l,t,l') ->
        let timebound = Approximation.timebound appr (l,t,l') in 
@@ -94,7 +77,7 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
    let execute () =
      rank
      |> RankingFunction.non_increasing
-     |> entry_transitions program
+     |> Program.entry_transitions logger program
      |> List.enum
      |> Enum.map (fun (l,t,l') ->
             let timebound = Approximation.timebound appr (l,t,l') in

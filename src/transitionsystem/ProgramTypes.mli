@@ -34,8 +34,6 @@ module Transition :
 sig
   (** Type of a transition, i.e., two connected locations and a label. *)
   type t = Location.t * TransitionLabel.t * Location.t
-
-  type cfr_level = int
   
   (** TODO doc *)
   val same : t -> t -> bool

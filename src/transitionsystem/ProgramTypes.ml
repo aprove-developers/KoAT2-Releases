@@ -17,8 +17,6 @@ module LocationSet = Set.Make(Location)
 
 module Transition =
   struct
-    type cfr_level = int
-
     type t = Location.t * TransitionLabel.t * Location.t
 
 

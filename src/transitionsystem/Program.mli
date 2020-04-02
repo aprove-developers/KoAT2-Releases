@@ -92,5 +92,6 @@ val non_trivial_transitions : t -> TransitionSet.t
 (** Creates a file (if it does not already exist) and writes the program into it. *)
 val to_file : t -> string -> unit
 
-(** Generates a hash integer value of a program by hashing its simple_string representation. *)
-val hash : t -> int
+(** Computes all entry transitions of the given transitions.
+    These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
+val entry_transitions : Batteries.Logger.log -> t -> ProgramTypes.Transition.t list -> ProgramTypes.Transition.t Batteries.List.t
