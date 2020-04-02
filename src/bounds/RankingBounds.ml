@@ -80,7 +80,7 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
    |> Bound.sum    
  in 
     let bound = execute () in
-    if not (Bound.is_linear bound) && CFR.getLevel (MultiphaseRankingFunction.decreasing rank) < 1 then
+    if not (Bound.is_linear bound) && not (TransitionSet.mem (MultiphaseRankingFunction.decreasing rank) !CFR.already_used_cfr) then
       CFR.nonLinearTransitions := TransitionSet.add (MultiphaseRankingFunction.decreasing rank) !CFR.nonLinearTransitions
     else
       CFR.nonLinearTransitions := TransitionSet.remove (MultiphaseRankingFunction.decreasing rank) !CFR.nonLinearTransitions; 
@@ -115,7 +115,7 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
      |> Bound.sum
    in 
     let bound = execute () in
-    if not (Bound.is_linear bound) && CFR.getLevel (RankingFunction.decreasing rank) < 1 then 
+    if not (Bound.is_linear bound) && not (TransitionSet.mem (RankingFunction.decreasing rank) !CFR.already_used_cfr)  then 
       CFR.nonLinearTransitions := TransitionSet.add (RankingFunction.decreasing rank) !CFR.nonLinearTransitions
     else
       CFR.nonLinearTransitions := TransitionSet.remove (RankingFunction.decreasing rank) !CFR.nonLinearTransitions; 

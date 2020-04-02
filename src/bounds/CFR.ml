@@ -20,11 +20,7 @@ let delta_current_cfr = ref 0.
 exception TIMEOUT
 
 (** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
-let levelOfCFR = Hashtbl.create 200;;
-
-let getLevel (t: Transition.t): int = 
-  try Hashtbl.find levelOfCFR (Transition.id t)
-  with Not_found -> 0
+let already_used_cfr = ref TransitionSet.empty
 
 (* TODO *)
 let logger = Logging.(get CFR)
@@ -231,9 +227,8 @@ let apply_cfr (program: Program.t) appr =
       (* Printf.printf "transitions_cfr: %s" (TransitionSet.to_string transitions_cfr); *)
 
       (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
-      let max_level = TransitionSet.fold (fun t max -> let level = getLevel t in if level > max then level else max) scc 0 in
-      TransitionSet.iter (fun t -> Hashtbl.add levelOfCFR (Transition.id t) (max_level + 1)) transitions_cfr;
-      TransitionSet.iter (fun t -> Hashtbl.remove levelOfCFR (Transition.id t)) scc;
+      already_used_cfr := TransitionSet.filter (fun trans -> TransitionSet.mem trans scc) !already_used_cfr;
+      already_used_cfr := TransitionSet.union !already_used_cfr transitions_cfr;
 
       (** Merges irankfinder and original program. *)
       merged_program
@@ -245,6 +240,7 @@ let apply_cfr (program: Program.t) appr =
       (* |> tap (fun x -> Printf.printf "Ist bei diesem Program schon was falsch?\ %s " (Program.to_string x)) *)
       |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current))) minimalDisjointSCCs
             (* |> tap (fun x -> Printf.printf "Appr: %s \n " (Approximation.to_string x (get_appr_cfr program x appr))) *)
-      |> Program.rename
-      |> tap (fun x -> Program.to_file x "program_cfr.koat")  in
+            |> tap (fun x -> Program.to_file x "program_cfr.koat") 
+                  |> Program.rename
+       in
       (program_res, get_appr_cfr program program_res appr)
