@@ -95,3 +95,7 @@ val to_file : t -> string -> unit
 (** Computes all entry transitions of the given transitions.
     These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
 val entry_transitions : Batteries.Logger.log -> t -> ProgramTypes.Transition.t list -> ProgramTypes.Transition.t Batteries.List.t
+
+(** Computes all outgoing transitions of the given transitions.
+    These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
+val outgoing_transitions : Batteries.Logger.log -> t -> ProgramTypes.Transition.t list -> ProgramTypes.Transition.t Batteries.List.t

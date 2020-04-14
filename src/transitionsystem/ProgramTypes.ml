@@ -104,6 +104,11 @@ module TransitionSet =
 
     let to_string =
       Util.enum_to_string Transition.to_id_string % enum
+
+    let create f enum =
+      enum
+      |> Enum.map f
+      |> of_enum
       
   end
 

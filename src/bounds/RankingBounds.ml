@@ -115,6 +115,7 @@ let add_bound = function
 let improve_with_rank  measure program appr rank =
   let bound = compute_bound appr program rank in
   if Bound.is_infinity bound then
+    
     MaybeChanged.same appr
   else
     rank
@@ -140,6 +141,7 @@ let bounded measure appr transition =
 
 (** We try to improve a single scc until we reach a fixed point. *)
 let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr =
+  RankingFunction.reset();
   let execute () =
     scc
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
@@ -151,7 +153,8 @@ let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr 
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank_mrf measure program appr rank) appr
-          else RankingFunction.find measure (Option.is_some !backtrack_point) program transition
+          else 
+            RankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank measure program appr rank) appr)
@@ -164,19 +167,15 @@ let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr 
 
 let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure program appr =
   if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then
-      let (program_cfr, appr_cfr2) = CFR.apply_cfr program appr in
-            (* Printf.printf "Appr. before cfr: %s \n" (Approximation.to_string program appr);      *)
+      let (program_cfr, appr_cfr) = Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions)]);
+                                    CFR.apply_cfr program appr in
       backtrack_point := Option.some (program,appr);
+      Printf.printf "Appr: %s \n" (Approximation.to_string program_cfr appr_cfr);
       if mrf then 
         MultiphaseRankingFunction.reset()
       else
         RankingFunction.reset(); 
       LocalSizeBound.reset ();  
-      let appr_cfr =
-      program_cfr
-      |> Approximation.create
-      |> TrivialTimeBounds.compute program_cfr 
-      |> SizeBounds.improve program_cfr (Option.is_some !backtrack_point) in
       MaybeChanged.changed (program_cfr,appr_cfr)
     else 
       MaybeChanged.same (program,appr)
@@ -190,7 +189,6 @@ let rec fold_until f p acc = function
     | [] -> acc
 
 let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
-Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions)]);
   program
     |> Program.sccs
     |> List.of_enum

@@ -124,6 +124,17 @@ let pre program (l,t,_) =
          |> SMT.Z3Solver.satisfiable
        )
 
+let succ program (_,t,l') =
+  l'
+  |> TransitionGraph.succ_e (graph program)
+  |> List.enum
+  |> Enum.filter (fun (_,t',_) ->
+         TransitionLabel.append t t'
+         |> TransitionLabel.guard
+         |> Formula.mk
+         |> SMT.Z3Solver.satisfiable
+       )
+
 let sccs program =
   let module SCC = Graph.Components.Make(TransitionGraph) in
   program.graph
@@ -191,3 +202,23 @@ let entry_transitions logger (program: t) (rank_transitions: Transition.t list):
   |> List.of_enum
   |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                (fun () -> "entry_transitions", ["result", transitions |> List.enum |> Util.enum_to_string Transition.to_id_string]))
+
+let list_string list = 
+  List.fold_right (fun x str -> str ^ " " ^ (Transition.to_string x)) list ""
+
+(** All outgoing transitions of the given transitions.
+    These are such transitions, that can occur immediately after one of the transitions, but are not themselves part of the given transitions. *)
+let outgoing_transitions logger (program: t) (rank_transitions: Transition.t list): Transition.t List.t =
+  rank_transitions
+  |> List.enum
+  |> Enum.map (succ program)
+  |> Enum.flatten
+  |> Enum.filter (fun r ->
+         rank_transitions
+         |> List.enum
+         |> Enum.for_all (not % Transition.same r)
+       )
+  |> Enum.uniq_by Transition.same
+  |> List.of_enum
+  |> tap (fun transitions -> Logger.log logger Logger.DEBUG
+                               (fun () -> "outgoing_transitions", ["result", transitions |> List.enum |> Util.enum_to_string Transition.to_id_string]))

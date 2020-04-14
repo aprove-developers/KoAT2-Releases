@@ -27,6 +27,14 @@ let make ?(cost=one) com_kind ~update ~guard =
     update; guard; cost;
   }
 
+let fresh_id t = 
+  {
+    id = unique ();
+    update = t.update;
+    guard = t.guard; 
+    cost = t.cost;
+  }
+
 let trival variables =
   let var_map = 
     VarSet.fold (fun var map -> VarMap.add var (Polynomial.of_var var) map) variables VarMap.empty in

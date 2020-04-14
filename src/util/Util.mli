@@ -29,3 +29,6 @@ val memoize : extractor:('a -> 'c) -> ('a -> 'b) -> 'a -> 'b
 
 (**  Generates a hash interger value of a given string. *)
 val hash: string -> int
+
+(** Returns true iff s2 is contained in s1. *)
+val contains : string -> string -> bool

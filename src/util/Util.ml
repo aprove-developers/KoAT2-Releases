@@ -62,4 +62,9 @@ let memoize ~extractor f =
 let hash str = 
  String.fold_right (fun char res -> res * 31 + (int_of_char char)) str 1
 
-           
+(** Returns true iff s2 is contained in s1. *)
+let contains s1 s2 =
+    let re = Str.regexp_string s2
+    in
+        try ignore (Str.search_forward re s1 0); true
+        with Not_found -> false

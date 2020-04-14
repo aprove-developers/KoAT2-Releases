@@ -36,6 +36,8 @@ val mk : ?cost:polynomial ->
          vars:Var.t list ->
          t
 
+val fresh_id : t -> t
+
 val trival : VarSet.t -> t
 
 (** Appends the second label to the first label.

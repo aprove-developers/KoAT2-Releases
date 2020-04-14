@@ -229,6 +229,25 @@ let compute_ measure applied_cfr program =
                 )
          with Exit -> ()
        )
+
+let compute_scc measure applied_cfr program scc =
+  try
+    backtrack (TransitionSet.cardinal scc)
+              0
+              (Solver.create ())
+              (Array.of_enum (TransitionSet.enum scc))
+              (Stack.create ())
+              (ref (TransitionSet.cardinal scc))
+              measure
+              applied_cfr;
+    scc
+    |> TransitionSet.iter (fun t ->
+          if not (RankingTable.mem (ranking_table measure) t) then
+            Logger.(log logger WARN (fun () -> "no_ranking_function", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
+        )
+  with Exit -> ()
+       
+
   
 let find measure applied_cfr program transition =
   let execute () =
@@ -236,6 +255,23 @@ let find measure applied_cfr program transition =
       compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
     if RankingTable.is_empty (ranking_table measure) then
       compute_ measure applied_cfr program;
+    (try
+      RankingTable.find_all (ranking_table measure) transition
+    with Not_found -> [])
+    |> List.rev
+  in
+  Logger.with_log logger Logger.DEBUG 
+                  (fun () -> "find_ranking_functions", ["measure", show_measure measure;
+                                                        "transition", Transition.to_id_string transition])
+                  ~result:(Util.enum_to_string to_string % List.enum)
+                  execute
+
+let find_scc measure applied_cfr program transition scc =
+    let execute () =
+    if TemplateTable.is_empty template_table then
+      compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
+    if RankingTable.is_empty (ranking_table measure) then
+      compute_scc measure applied_cfr program scc;
     (try
       RankingTable.find_all (ranking_table measure) transition
     with Not_found -> [])

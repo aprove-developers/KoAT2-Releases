@@ -92,6 +92,9 @@ sig
 
   (** Returns a string representing the transition set. *)
   val to_string : t -> string
+
+  val create : ('a -> elt) -> 'a Batteries.Enum.t -> t
+
 end
 
 (** This module represents a transition graph. *)
