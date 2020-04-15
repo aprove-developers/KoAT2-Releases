@@ -56,7 +56,7 @@ let get_best_bound entry_locations incoming_enum appr rankfunc: RealBound.t =
   |> List.enum
   |> RealBound.sum
 
-let compute_bounds (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t): RealBound.t * RealBound.t =
+let compute_bounds ~refined (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t): RealBound.t * RealBound.t =
   let execute () =
     let incoming_enum =
       rank |> LexRSM.non_increasing |> GeneralTransitionSet.to_list |> entry_transitions logger program
@@ -98,12 +98,12 @@ let compute_bounds (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t)
     (time, cost)
 
   in Logger.with_log logger Logger.DEBUG
-       (fun () -> "compute_bound", ["rank", LexRSM.pprf_to_string rank])
+       (fun () -> "compute_bound", ["rank", LexRSM.pprf_to_string rank ^ (if refined then " (refined)" else "")])
                      ~result:(fun (time,cost) -> "time: "^RealBound.to_string time ^ " cost: " ^ (RealBound.to_string cost))
                      execute
 
-let improve_with_rank add_exptimebound add_expcostbound program appr (rank: LexRSM.t) =
-  let (time,cost) = compute_bounds appr program rank in
+let improve_with_rank ~refined add_exptimebound add_expcostbound program appr (rank: LexRSM.t) =
+  let (time,cost) = compute_bounds ~refined:refined appr program rank in
   (if RealBound.is_infinity time || Approximation.is_exptime_bounded appr (LexRSM.decreasing rank) then
       MaybeChanged.same appr
    else
@@ -120,15 +120,15 @@ let improve_with_rank add_exptimebound add_expcostbound program appr (rank: LexR
 let exp_bounded appr transition =
   Approximation.is_expcost_bounded appr transition && Approximation.is_exptime_bounded appr transition
 
-let improve add_exptimebound add_expcostbound cache program appr =
+let improve ~refined ~refined_smt_timeout add_exptimebound add_expcostbound cache program appr =
   program
   |> Program.non_trivial_transitions
   |> GeneralTransitionSet.of_transitionset
   |> GeneralTransitionSet.filter (not % exp_bounded appr)
   |> GeneralTransitionSet.enum
   |> MaybeChanged.fold_enum (fun appr gt ->
-         LexRSM.find cache program gt
+         LexRSM.find ~refined:refined ~timeout:(if refined then refined_smt_timeout else None) cache program gt
          |> Option.map_default (fun rank ->
-              improve_with_rank add_exptimebound add_expcostbound program appr rank
+              improve_with_rank ~refined:refined add_exptimebound add_expcostbound program appr rank
             ) (MaybeChanged.return appr)
        ) appr

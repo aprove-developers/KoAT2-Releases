@@ -1,6 +1,6 @@
 open Batteries
 open Constraints
-   
+
 (** Provides default implementations of a constraint *)
 
 (** Constructs a default constraint using a list of atoms each comparing two polynomials *)
@@ -29,6 +29,8 @@ end
 module RealFormula :
 sig
   include module type of FormulaOver(RealConstraint)
+
+  val of_intformula : Formula.t -> t
 
   val max_of_occurring_constants : t -> OurFloat.t
 

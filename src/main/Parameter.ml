@@ -109,6 +109,8 @@ type params = {
     simplify_prob_smt : bool; [@default false]
     (** Should the probabilistic bounds be simplified using the SMT Solver *)
 
+    refined_smt_timeout : int; [@default 1]
+
   } [@@deriving cmdliner]
 
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =

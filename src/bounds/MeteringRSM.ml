@@ -119,7 +119,7 @@ let general_transition_constraint_ cache (constraint_type, gtrans): RealFormula.
     let atom = RealParameterAtom.Infix.(start_template  <= RealParameterPolynomial.zero) in
     let neg_guard = int_guard |> RealFormula.mk |> RealFormula.neg |> RealFormula.constraints in
     neg_guard
-    |> List.map (fun constr -> RealParameterConstraint.farkas_transform constr atom)
+    |> List.map (fun constr -> RealParameterConstraint.(farkas_transform (of_realconstraint constr) atom))
     |> List.map RealFormula.mk
     |> List.fold_left RealFormula.mk_or RealFormula.mk_false
     (*|> RealFormula.mk*)
@@ -137,7 +137,7 @@ let general_transition_constraint_ cache (constraint_type, gtrans): RealFormula.
       |> List.flatten
   in
   atoms
-  |> List.map (RealParameterConstraint.farkas_transform int_guard)
+  |> List.map (RealParameterConstraint.(farkas_transform @@ of_realconstraint int_guard))
   |> List.fold_left (RealConstraint.mk_and) (RealConstraint.mk_true)
   |> RealFormula.mk
 

@@ -35,7 +35,7 @@ let tests =
                 Program.graph prog |> TransitionGraph.locations
                 |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
             in
-            let approx = Approximation.create prog |> Bounds.find_exp_bounds false ~generate_invariants_bottom_up:Preprocessor.generate_invariants false cache prog |> Tuple2.second in
+            let approx = Approximation.create prog |> Bounds.find_exp_bounds false ~refined_smt_timeout:(Some 1.0) ~generate_invariants_bottom_up:Preprocessor.generate_invariants false cache prog |> Tuple2.second in
             let expsize = Approximation.expsizebound `Upper approx (gt,loc) var in
             let error_string =
               "exptrivsize_mismatch exp_size: " ^ (RealBound.show ~complexity:false expsize)

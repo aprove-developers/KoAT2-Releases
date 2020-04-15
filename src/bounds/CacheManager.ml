@@ -32,3 +32,5 @@ let new_cache_with_counter trans_id_counter = fun () ->
     }
 
 let new_cache = fun () -> new_cache_with_counter (TransitionLabel.new_trans_id_counter ()) ()
+
+let clear_lrsm_cache cache = fun () -> {cache with lrsm_cache = LexRSM.new_cache ()}

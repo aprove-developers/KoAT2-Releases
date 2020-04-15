@@ -243,91 +243,83 @@ module Z3Opt =
 
 module IncrementalZ3Solver =
   struct
-    type t = Z3.Optimize.optimize * Z3.context
+    type t = Z3.context * Z3.Solver.solver * Z3.Optimize.optimize
 
     module RealValuation = Valuation.Make(OurFloat)
     module Valuation = Valuation.Make(OurInt)
 
-    let to_string (opt,_) = Z3.Optimize.to_string opt
+    let to_string (ctx,slv,opt) = Z3.Optimize.to_string opt
 
-    let create ?(model=true) () =
+    let create ?(model=true) ?(timeout=None) () =
       let context =
-        Z3.mk_context [
+        Z3.mk_context @@
+          (if Option.is_none timeout then [] else [("timeout", Int.to_string @@ Float.to_int @@ 1000. *. Option.get timeout)])
+          @
+          [
             ("model", if model then "true" else "false");
             ("proof", "false");
           ]
       in
-      Z3.Optimize.mk_opt context, context
+      context, Z3.Solver.mk_solver context None, Z3.Optimize.mk_opt context
 
-    let opt (opt,_) = opt
+    let opt (_,_,opt) = opt
+    let slv (_,slv,_) = slv
 
-    let push =
-      Z3.Optimize.push % opt
+    let push t =
+      Z3.Optimize.push (opt t);
+      Z3.Solver.push (slv t)
 
-    let pop =
-      Z3.Optimize.pop % opt
+    let pop t =
+      Z3.Optimize.pop (opt t);
+      Z3.Solver.pop (slv t) 1
 
-    let result_is expected (opt,_) =
-      opt
-      |> Z3.Optimize.check
+    let result_is_not_unknown = function
+      | Z3.Solver.UNKNOWN -> false
+      | _                 -> true
+
+    let result_is expected (_,slv,_) =
+      Z3.Solver.check slv []
       |> fun result ->
-         if result == Z3.Solver.UNKNOWN then
-           raise (Failure ("SMT-Solver does not know a solution due to: " ^ Z3.Optimize.get_reason_unknown opt))
+         if result = Z3.Solver.UNKNOWN then
+           raise (Failure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown slv))
          else
-           result == expected
+           result = expected
 
     let satisfiable =
       result_is Z3.Solver.SATISFIABLE
 
+    let satisfiable_option t =
+      try
+        Some (result_is Z3.Solver.SATISFIABLE t)
+      with
+        (Failure _) -> None
+
     let unsatisfiable =
       result_is Z3.Solver.UNSATISFIABLE
 
-    let add (opt,context) formula =
+    let unsatisfiable_option t =
+      try
+        Some (result_is Z3.Solver.UNSATISFIABLE t)
+      with
+        (Failure _) -> None
+
+    let add (ctx,slv,opt) formula =
       formula
-      |> from_formula context
-      |> fun formula -> Z3.Optimize.add opt [formula]
+      |> from_formula ctx
+      |> fun formula -> (Z3.Solver.add slv [formula]; Z3.Optimize.add opt [formula])
 
-    let add_real (opt,context) formula =
+    let add_real (ctx,slv,opt) formula =
       formula
-      |> from_real_formula context
-      |> fun formula -> Z3.Optimize.add opt [formula]
+      |> from_real_formula ctx
+      |> fun formula -> (Z3.Solver.add slv [formula]; Z3.Optimize.add opt [formula])
 
-    (** Returns true iff the formula implies the positivity of the variable. *)
-    let is_positive (opt,_) (var: Var.t) =
-      push opt;
-      add opt Formula.Infix.(Polynomial.of_var var >= Polynomial.zero);
-      let result = unsatisfiable opt in
-      pop opt;
-      result
-
-    (** Returns true iff the formula implies the negativity of the variable. *)
-    let is_negative (opt,_) (var: Var.t) =
-      push opt;
-      add opt Formula.Infix.(Polynomial.of_var var <= Polynomial.zero);
-      let result = unsatisfiable opt in
-      pop opt;
-      result
-
-    let minimisation_goal (opt,context) (vars: Var.t list): Z3.Expr.expr =
-      let generator poly v =
-        if is_positive opt v then
-          Polynomial.(poly + of_var v)
-        else if is_negative opt v then
-          Polynomial.(poly - of_var v)
-        else
-          poly
-      in
-      from_poly context (List.fold_left generator Polynomial.zero vars)
-
-(*    let minimize opt vars =
-      ignore (Z3.Optimize.minimize opt (minimisation_goal opt vars))
- *)
+    (* Optimisation functions *)
     (* Different try *)
-    let minimize_absolute_old (opt,context) vars =
+    let minimize_absolute_old (ctx,slv,opt) vars =
       vars
       |> List.iter (fun var ->
-             ignore (Z3.Optimize.add_soft opt (from_formula context Formula.Infix.(Polynomial.of_var var <= Polynomial.zero)) (Var.to_string var) (Z3.Symbol.mk_int context 1));
-             ignore (Z3.Optimize.add_soft opt (from_formula context Formula.Infix.(Polynomial.of_var var >= Polynomial.zero)) (Var.to_string var) (Z3.Symbol.mk_int context 1))
+             ignore (Z3.Optimize.add_soft opt (from_formula ctx Formula.Infix.(Polynomial.of_var var <= Polynomial.zero)) (Var.to_string var) (Z3.Symbol.mk_int ctx 1));
+             ignore (Z3.Optimize.add_soft opt (from_formula ctx Formula.Infix.(Polynomial.of_var var >= Polynomial.zero)) (Var.to_string var) (Z3.Symbol.mk_int ctx 1))
            )
 
     let absolute_value context (var: Var.t) =
@@ -336,105 +328,85 @@ module IncrementalZ3Solver =
         (from_real_poly context (RealPolynomial.sub RealPolynomial.zero (RealPolynomial.of_var var)) )
         (from_real_poly context (RealPolynomial.of_var var))
 
-    let minimize_absolute_with_weight (opt,context) vars_with_weight =
+    let minimize_absolute_with_weight (ctx,slv,opt) vars_with_weight =
       vars_with_weight
-      |> List.map (fun (v,w) -> Z3.Arithmetic.mk_mul context [Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string w); absolute_value context v])
-      |> Z3.Arithmetic.mk_add context
+      |> List.map (fun (v,w) -> Z3.Arithmetic.mk_mul ctx [Z3.Arithmetic.Real.mk_numeral_s ctx (OurFloat.to_string w); absolute_value ctx v])
+      |> Z3.Arithmetic.mk_add ctx
       |> Z3.Optimize.minimize opt
       |> ignore
 
-    let minimize_absolute (opt,context) vars =
-      minimize_absolute_with_weight (opt,context) (List.map (fun v -> v, OurFloat.one) vars)
+    let minimize_absolute t vars =
+      minimize_absolute_with_weight t (List.map (fun v -> v, OurFloat.one) vars)
 
-    let minimize_absolute_iteratively (opt,context) vars =
+    let minimize_absolute_iteratively (ctx,slv,opt) vars =
       vars
-      |> List.map (absolute_value context)
+      |> List.map (absolute_value ctx)
       |> List.iter (fun expr -> ignore @@ Z3.Optimize.minimize opt expr)
       |> ignore
 
-    let minimize (opt,context) var =
-      ignore (Z3.Optimize.minimize opt (from_poly context (Polynomial.of_var var)))
+    let minimize (ctx,slv,opt) var =
+      ignore (Z3.Optimize.minimize opt (from_poly ctx (Polynomial.of_var var)))
 
-    let maximize (opt,context) var =
-      ignore (Z3.Optimize.maximize opt (from_poly context (Polynomial.of_var var)))
+    let maximize (ctx,slv,opt) var =
+      ignore (Z3.Optimize.maximize opt (from_poly ctx (Polynomial.of_var var)))
 
-    let model (opt,_) =
-      if Z3.Optimize.check opt == Z3.Solver.SATISFIABLE then
-        opt
-        |> Z3.Optimize.get_model
-        |> Option.map (fun model ->
-               model
-               |> Z3.Model.get_const_decls
-               |> List.map (fun func_decl ->
-                      let var =
-                        func_decl
-                        |> Z3.FuncDecl.get_name
-                        |> Z3.Symbol.get_string
-                        |> Var.of_string
-                      in
-                      let value =
-                        func_decl
-                        |> Z3.Model.get_const_interp model
-                        |> Option.get (* Should be fine here *)
-                        |> (fun expr ->
-                          if Z3.Arithmetic.is_int expr then
-                            expr
-                            |> Z3.Arithmetic.Integer.numeral_to_string
-                            |> OurInt.of_string
-                          else
-                            expr
-                            |> Z3.Arithmetic.Real.get_ratio
-                            (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
-                            |> Q.to_bigint
-                            |> Z.to_string
-                            |> OurInt.of_string
-                        )
-                      in
-                      (var, value)
-                    )
-             )
-        |? []
-        |> Valuation.from
-        |> Option.some
-      else None
+    let extract_values optimized (ctx,slv,opt) ~val_of_intstr ~val_of_ratio =
+      let extract_from_model model =
+        model
+        |> Z3.Model.get_const_decls
+        |> List.map (fun func_decl ->
+              let var =
+                func_decl
+                |> Z3.FuncDecl.get_name
+                |> Z3.Symbol.get_string
+                |> Var.of_string
+              in
+              let value =
+                func_decl
+                |> Z3.Model.get_const_interp model
+                |> Option.get (* Should be fine here *)
+                |> (fun expr ->
+                  if Z3.Arithmetic.is_int expr then
+                    expr
+                    |> Z3.Arithmetic.Integer.numeral_to_string
+                    |> val_of_intstr
+                  else
+                    expr
+                    |> Z3.Arithmetic.Real.get_ratio
+                    (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
+                    |> val_of_ratio
+                )
+              in
+              (var, value))
+      in
+      let model =
+        if not optimized then
+          if Z3.Solver.check slv [] == Z3.Solver.SATISFIABLE then
+            Z3.Solver.get_model slv
+          else
+            None
+        else
+          let opt_res = Z3.Optimize.check opt in
+          match opt_res with
+          | Z3.Solver.SATISFIABLE ->
+              Z3.Optimize.get_model opt
+          | Z3.Solver.UNSATISFIABLE ->
+              None
+          | Z3.Solver.UNKNOWN ->
+              if Z3.Solver.check slv [] == Z3.Solver.SATISFIABLE then
+                Z3.Solver.get_model slv
+              else
+                None
+      in
+      model
+      |> Option.map extract_from_model
 
-    let model_real (opt,_) =
-      if Z3.Optimize.check opt == Z3.Solver.SATISFIABLE then
-        opt
-        |> Z3.Optimize.get_model
-        |> Option.map (fun model ->
-               model
-               |> Z3.Model.get_const_decls
-               |> List.map (fun func_decl ->
-                      let var =
-                        func_decl
-                        |> Z3.FuncDecl.get_name
-                        |> Z3.Symbol.get_string
-                        |> Var.of_string
-                      in
-                      let value =
-                        func_decl
-                        |> Z3.Model.get_const_interp model
-                        |> Option.get (* Should be fine here *)
-                        |> (fun expr ->
-                          if Z3.Arithmetic.is_int expr then
-                            expr
-                            |> Z3.Arithmetic.Integer.numeral_to_string
-                            |> OurInt.of_string
-                            |> OurFloat.of_ourint
-                          else
-                            expr
-                            |> Z3.Arithmetic.Real.get_ratio
-                            |> Q.to_string
-                            |> OurFloat.of_string
-                        )
-                      in
-                      (var, value)
-                    )
-             )
-        |? []
-        |> RealValuation.from
-        |> Option.some
-      else None
+    let model ?(optimized=true) (ctx,slv,opt) =
+      extract_values optimized (ctx,slv,opt) ~val_of_intstr:OurInt.of_string ~val_of_ratio:(OurInt.of_string % Z.to_string % Q.to_bigint)
+      |> Option.map Valuation.from
+
+    let model_real ?(optimized=true) (ctx,slv,opt) =
+      extract_values optimized (ctx,slv,opt) ~val_of_intstr:(OurFloat.of_ourint % OurInt.of_string) ~val_of_ratio:(OurFloat.of_string % Q.to_string)
+      |> Option.map RealValuation.from
 
   end

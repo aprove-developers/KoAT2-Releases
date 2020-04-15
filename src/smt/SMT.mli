@@ -39,8 +39,10 @@ sig
 
   (* Outputs a string with smt2 format for testing *)
   val to_string : t -> string
-  (** Creates a new incremental smt solver. *)
-  val create : ?model:bool -> unit -> t
+  (** Creates a new incremental smt solver.
+      The first entry of the timeout argument specifies the timeout in s for the Z3 Solver used in
+      the satisfiable and unsatisfiable function whereas the second argument determines the timeout for the Z3Optimizer in s*)
+  val create : ?model:bool -> ?timeout:float option -> unit -> t
 
   (** Creates a backtracking point. *)
   val push : t -> unit
@@ -51,8 +53,14 @@ sig
   (** Checks if the current state is satisfiable. *)
   val satisfiable : t -> bool
 
+  (** Checks if the current state is satisfiable. Return None if unknown (e.g. due to incomplete theory or timeout) *)
+  val satisfiable_option : t -> bool option
+
   (** Checks if the current state is satisfiable. *)
   val unsatisfiable : t -> bool
+
+  (** Checks if the current state is unsatisfiable. Return None if unknown (e.g. due to incomplete theory or timeout) *)
+  val unsatisfiable_option : t -> bool option
 
   (** Asserts the formula. *)
   val add : t -> Formula.t -> unit
@@ -76,8 +84,8 @@ sig
   val minimize_absolute_iteratively : t -> Var.t list -> unit
 
   (** Returns a model of the current state, if the state is satisfiable. *)
-  val model : t -> Polynomial.valuation Option.t
+  val model : ?optimized:bool -> t -> Polynomial.valuation Option.t
 
   (** Returns a real model of the current state, if the state is satisfiable. *)
-  val model_real : t -> RealPolynomial.valuation Option.t
+  val model_real : ?optimized:bool -> t -> RealPolynomial.valuation Option.t
 end

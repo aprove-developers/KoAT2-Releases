@@ -214,7 +214,7 @@ let elsb_ program (((gt, l), v): RV.t): t =
             Option.default RealBound.infinity
               (eliminate_var
                 (Program.input_vars program)
-                (Constraints.RealConstraint.of_intconstraint @@ GeneralTransition.guard gt) v)
+                (Constraints.RealParameterConstraint.of_intconstraint @@ GeneralTransition.guard gt) v)
           in
           RealBound.appr_substitution_abs_one v upper_bound b)
         (VarSet.diff (Program.vars program) (Program.input_vars program))
@@ -223,7 +223,7 @@ let elsb_ program (((gt, l), v): RV.t): t =
       VarSet.fold
         (fun v b' ->
           let other_vars = VarSet.remove v (RealBound.vars b') in
-          let inv = Constraints.RealConstraint.of_intconstraint (GeneralTransition.guard gt) in
+          let inv = Constraints.RealParameterConstraint.of_intconstraint (GeneralTransition.guard gt) in
           let v_subst = Option.default (RealBound.of_var v) (eliminate_var other_vars inv v) in
           RealBound.appr_substitution_abs_one v v_subst b')
         (RealBound.vars b) b

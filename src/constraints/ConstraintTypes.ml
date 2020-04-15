@@ -18,8 +18,9 @@ module type Atomizable =
     val coeff_of_var : Var.t -> t -> value
     val get_constant : t -> value
     val of_coeff_list : value list -> Var.t list -> t
+    val sum : t Enum.t -> t
   end
-   
+
 (** An atom is a comparison between two polynomials *)
 module type Atom =
   sig
@@ -42,7 +43,7 @@ module type Atom =
           val to_string : t -> string
 
         end
-                                                  
+
         type polynomial
         type value
 
@@ -53,10 +54,10 @@ module type Atom =
 
         type t
         type compkind = LE | LT
-             
+
 
         (** Following methods are convenience methods for the creation of atoms. *)
-          
+
         val mk : Comparator.t -> polynomial -> polynomial -> t
         val mk_gt : polynomial -> polynomial -> t
         val mk_ge : polynomial -> polynomial -> t
@@ -71,17 +72,17 @@ module type Atom =
         end
 
         (** Following methods return certain properties of the atom. *)
-          
+
         val (=~=) : t -> t -> bool
 
         (** Stable structural equality, but not an actual equality *)
         val equal : t -> t -> bool
-          
+
         (** Stable structural compare, but not an actual compare *)
         val compare : t -> t -> int
-          
+
         val neg : t -> t
-          
+
         val comp_to_string: compkind -> string
 
         val to_string : ?compfunc:(compkind -> string) -> t -> string
@@ -101,15 +102,15 @@ module type Atom =
         (** Replaces all operations by new constructors. *)
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
-                   lt:('b -> 'b -> 'c) -> 
+                   lt:('b -> 'b -> 'c) ->
                    t -> 'c
-                   
+
         (** Returns if both polynomials are linear. *)
         val is_linear : t -> bool
-    
+
         (** Returns the coefficient of a variable which is normalised to the lhs. *)
         val get_coefficient : Var.t -> t -> value
-          
+
         (** Returns the single right hand side constant of the atom. *)
         val get_constant : t -> value
 
@@ -123,7 +124,7 @@ module type Constraint =
         type compkind
         type atom
         type t
-        
+
         (* TODO Shouldn't be exposed *)
         module A : Atom
                with type t = atom
@@ -131,8 +132,8 @@ module type Constraint =
                 and type value = value
 
         (** Following methods are convenience methods for the creation of atoms. *)
-          
-        val lift : atom -> t      
+
+        val lift : atom -> t
         val mk : atom list -> t
         val mk_true : t
         val mk_and : t -> t -> t
@@ -157,16 +158,16 @@ module type Constraint =
         end
 
         val all : t list -> t
-          
+
         val turn : t -> t
 
         (** Following methods return certain properties of the constraint. *)
-          
+
         (** Returns if the constraint is a tautology *)
         val is_true : t -> bool
-          
+
         val (=~=) : t -> t -> bool
-        
+
         (** Stable structural equality, but not an actual equality *)
         val equal : t -> t -> bool
 
@@ -186,7 +187,7 @@ module type Constraint =
         val rename : t -> RenameMap.t -> t
 
         val atom_list : t -> atom list
-          
+
         (** Replaces all operations by new constructors. *)
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
@@ -194,21 +195,21 @@ module type Constraint =
                    correct:('d) ->
                    conj:('d -> 'c -> 'd) ->
                    t -> 'd
-                   
-        (** Drops all nonlinear atoms from the constraints. 
+
+        (** Drops all nonlinear atoms from the constraints.
           Example: (a > 0 && b^2 < 2) gets transformed to (a > 0) *)
         val drop_nonlinear : t -> t
-        
+
           (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
         val get_coefficient_vector : Var.t -> t -> value list
-          
-        val get_matrix : VarSet.t -> t -> value list list
-          
+
+        val get_matrix : Var.t list -> t -> value list list
+
         (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
         val get_constant_vector : t -> value list
-          
-        val dualise : Var.t list -> value list list -> polynomial list -> t
-          
+
+        val dualise : Var.t list -> polynomial list list -> polynomial list -> t
+
   end
 
 (** A formula is a propositional formula *)
@@ -218,14 +219,14 @@ module type Formula =
         type constr
         type polynomial
         type value
-       
+
         type t
-        
+
 
         (** Following methods are convenience methods for the creation of atoms. *)
-          
-        val lift : atom -> t      
-        val mk : constr -> t      
+
+        val lift : atom -> t
+        val mk : constr -> t
         val mk_true : t
         val mk_false : t
         val mk_and : t -> t -> t
@@ -235,7 +236,7 @@ module type Formula =
         val constraints : t -> constr list
 
         val map_polynomial : (polynomial -> polynomial) -> t -> t
-          
+
         (** Creates a constraint that expresses the equality of the two polynomials. *)
         val mk_eq : polynomial -> polynomial -> t
         val mk_gt : polynomial -> polynomial -> t
@@ -245,12 +246,12 @@ module type Formula =
         val mk_uneq : polynomial -> polynomial -> t
         val le_than_any : polynomial -> polynomial list -> t
         val le_than_all : polynomial -> polynomial list -> t
-          
+
         val all : t list -> t
         val any : t list -> t
 
         val turn : t -> t
-          
+
         module Infix : sig
           val (=) : polynomial -> polynomial -> t
           val (>) : polynomial -> polynomial -> t
@@ -264,7 +265,7 @@ module type Formula =
         end
 
         (** Following methods return certain properties of the formula. *)
-          
+
         (** Returns the set of variables which are active in the formula.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
         val vars : t -> VarSet.t

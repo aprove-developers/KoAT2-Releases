@@ -33,7 +33,7 @@ let run (params: params) =
         in
         gts
         |> List.filter (not % Program.is_initial_gt program)
-        |> List.map (LexRSM.find (CacheManager.lrsm_cache cache) program)
+        |> List.map (LexRSM.find ~refined:true (CacheManager.lrsm_cache cache) program)
         |> List.filter (Option.is_some)
         |> Util.option_sequence
         |> Option.may (fun pprflist ->

@@ -86,13 +86,13 @@ let add_trivial_expcostbounds program appr =
   |> Enum.filter (RealBound.equal RealBound.zero % GeneralTransition.cost)
   |> Enum.fold (flip (Approximation.add_expcostbound false RealBound.zero)) appr
 
-let rec find_exp_bounds_ simplify_smt cache ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
+let rec find_exp_bounds_ ~refined ~refined_smt_timeout simplify_smt cache ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
   ExpSizeBounds.improve simplify_smt (CacheManager.elsb_cache cache) ervg sccs program appr
-  |> ExpRankingBounds.improve (Approximation.add_exptimebound simplify_smt) (Approximation.add_expcostbound simplify_smt) (CacheManager.lrsm_cache cache) program
-  |> MaybeChanged.if_changed (find_exp_bounds_ simplify_smt cache ervg sccs program)
+  |> ExpRankingBounds.improve ~refined:refined ~refined_smt_timeout (Approximation.add_exptimebound simplify_smt) (Approximation.add_expcostbound simplify_smt) (CacheManager.lrsm_cache cache) program
+  |> MaybeChanged.if_changed (find_exp_bounds_ ~refined:refined ~refined_smt_timeout:refined_smt_timeout simplify_smt cache ervg sccs program)
   |> MaybeChanged.unpack
 
-let rec find_exp_bounds simplify_smt ~generate_invariants_bottom_up (use_bottom_up: bool) (cache: CacheManager.t)
+let rec find_exp_bounds simplify_smt ~refined_smt_timeout ~generate_invariants_bottom_up (use_bottom_up: bool) (cache: CacheManager.t)
 (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
   let ervg = ERVG.rvg (CacheManager.elsb_cache cache) program in
   let sccs =
@@ -100,28 +100,36 @@ let rec find_exp_bounds simplify_smt ~generate_invariants_bottom_up (use_bottom_
     List.rev @@ C.scc_list ervg
   in
 
-  appr
-  |> TrivialTimeBounds.compute program
-  |> TrivialTimeBounds.compute_generaltransitions program
-  |> add_trivial_expcostbounds program
-  |> find_bounds_ cache program
-  |> lift_nonprob_timebounds simplify_smt program
-  |> lift_nonprob_sizebounds simplify_smt program
-  |> find_exp_bounds_ simplify_smt cache ervg sccs program
+  let appr_after_initial_comutation =
+    appr
+    |> TrivialTimeBounds.compute program
+    |> TrivialTimeBounds.compute_generaltransitions program
+    |> add_trivial_expcostbounds program
+    |> find_bounds_ cache program
+    |> lift_nonprob_timebounds simplify_smt program
+    |> lift_nonprob_sizebounds simplify_smt program
+    |> find_exp_bounds_ ~refined:false ~refined_smt_timeout:refined_smt_timeout simplify_smt cache ervg sccs program
+  in
+
+  let cache_with_lexrsm_resetted =  CacheManager.clear_lrsm_cache cache () in
+  (* Continue Computation *)
+  appr_after_initial_comutation
+  (* Use refined LexRSMs *)
+  |> find_exp_bounds_ ~refined:true ~refined_smt_timeout:refined_smt_timeout simplify_smt cache_with_lexrsm_resetted ervg sccs program
   (* Now apply bottom-up if there is an SCC without an expected cost bound *)
   |> fun appr ->
     if use_bottom_up then
-      continue_with_bottom_up simplify_smt ~generate_invariants_bottom_up:generate_invariants_bottom_up (CacheManager.trans_id_counter cache) program appr
+      continue_with_bottom_up simplify_smt ~refined_smt_timeout:refined_smt_timeout ~generate_invariants_bottom_up:generate_invariants_bottom_up (CacheManager.trans_id_counter cache) program appr
     else
       (program, appr)
 
-and continue_with_bottom_up simplify_smt ~generate_invariants_bottom_up trans_id_counter program appr =
+and continue_with_bottom_up simplify_smt ~refined_smt_timeout ~generate_invariants_bottom_up trans_id_counter program appr =
   let logger        = Logging.(get BottomUp) in
   let new_cache     = CacheManager.new_cache_with_counter trans_id_counter () in
   let bottom_up_res =
     BottomUpHelper.perform_bottom_up
       ~generate_invariants:generate_invariants_bottom_up
-      ~find_exp_bounds:(find_exp_bounds simplify_smt ~generate_invariants_bottom_up:generate_invariants_bottom_up false)
+      ~find_exp_bounds:(find_exp_bounds simplify_smt ~refined_smt_timeout:refined_smt_timeout ~generate_invariants_bottom_up:generate_invariants_bottom_up false)
       (CacheManager.trans_id_counter new_cache)
       program appr
   in
@@ -129,5 +137,5 @@ and continue_with_bottom_up simplify_smt ~generate_invariants_bottom_up trans_id
   Option.map_default
     (fun (new_prog, new_appr) ->
       Logger.log logger Logger.DEBUG (fun () -> "continue recursively", ["new_prog", Program.to_string ~show_gtcost:true new_prog]);
-      find_exp_bounds simplify_smt ~generate_invariants_bottom_up:generate_invariants_bottom_up true new_cache new_prog new_appr)
+      find_exp_bounds simplify_smt ~refined_smt_timeout:refined_smt_timeout ~generate_invariants_bottom_up:generate_invariants_bottom_up true new_cache new_prog new_appr)
     (program,appr) bottom_up_res

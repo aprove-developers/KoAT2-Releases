@@ -17,17 +17,17 @@ let tests =
             let prog = Readers.read_file (CacheManager.trans_id_counter cache) ("../../" ^ prog_path) in
             let gtset = Program.generalized_transitions prog in
             let decr = GeneralTransitionSet.any @@ GeneralTransitionSet.filter ((=) gt_id % GeneralTransition.id) gtset in
-            let rankfunc = LexRSM.find lrsm_cache prog decr |> Option.get |> LexRSM.rank in
+            let rankfunc = LexRSM.find lrsm_cache prog decr |> Option.map LexRSM.rank in
             let loc =
                 Program.graph prog |> TransitionGraph.locations
                 |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
             in
-            let rank = rankfunc loc in
+            let rank = Option.map (fun r -> r loc) rankfunc in
             let error_str =
-                "Mismatch: Expected " ^ (RealPolynomial.to_string exp) ^ " got " ^ (RealPolynomial.to_string rank)
+                "Mismatch: Expected " ^ (RealPolynomial.to_string exp) ^ " got " ^ (Option.default "None" @@ Option.map RealPolynomial.to_string rank)
                 ^ " with decr " ^ (GeneralTransition.to_id_string decr) ^ " and loc " ^ (Location.to_string loc) ^ " in prog\n" ^ (Program.to_string ~show_gtcost:true prog)
             in
-            assert_bool error_str (RealPolynomial.(rank =~= exp))
+            assert_bool error_str (if Option.is_some rank then RealPolynomial.(Option.get rank =~= exp) else false)
           )
       )
       [
@@ -56,11 +56,6 @@ let tests =
         name >:: (fun _ -> if Option.is_some rank then assert_string (error_str @@ Option.get rank) else ())
       )
       [
-        ("trivial_loop", 0, "examples/ProbabilisticExamples/trivial_loop.koat");
-        ("trivial_loop2", 0, "examples/ProbabilisticExamples/trivial_loop2.koat");
-        ("simple_quadratic_gt_0", 0, "examples/ProbabilisticExamples/simple_quadratic.koat");
-        ("simple_quadratic_gt_2", 2, "examples/ProbabilisticExamples/simple_quadratic.koat");
-        ("double_trivial_loop", 0, "examples/ProbabilisticExamples/double_trivial_loop.koat");
         ("increasing_loop", 1, "examples/ProbabilisticExamples/NoLexRSM/increasing_loop.koat");
         ("increasing_nondet_loop", 1, "examples/ProbabilisticExamples/NoLexRSM/increasing_nondet_loop.koat");
         ("exp_increase", 1, "examples/ProbabilisticExamples/NoLexRSM/exp_increase.koat");
