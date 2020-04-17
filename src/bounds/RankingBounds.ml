@@ -141,7 +141,6 @@ let bounded measure appr transition =
 
 (** We try to improve a single scc until we reach a fixed point. *)
 let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr =
-  RankingFunction.reset();
   let execute () =
     scc
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
@@ -194,6 +193,7 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
     |> List.of_enum
     |> fold_until (fun monad scc -> 
                         try 
+                          RankingFunction.reset();
                           appr
                           |> SizeBounds.improve program (Option.is_some !backtrack_point)
                           |> improve_scc ~mrf:mrf scc measure program
