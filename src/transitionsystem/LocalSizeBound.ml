@@ -404,7 +404,15 @@ module LSB_Cache =
       end
     )
 
-(* let tbl_cache = Hashtbl.create 5 *)
+module LSB_Cache_tbl = 
+  struct
+    type t = int * int
+    type cfr_currently = bool
+
+    (* let is_empty t = LSB_Cache.is_empty (fst t)  *)
+
+
+  end
 
 let (table: t Option.t LSB_Cache.t) =
   LSB_Cache.create 10
