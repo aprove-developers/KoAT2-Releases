@@ -82,7 +82,6 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
      |> Enum.map (fun (l,t,l') ->
             let timebound = Approximation.timebound appr (l,t,l') in
             let rhs = Bound.(max zero (apply (fun kind -> Approximation.sizebound kind appr) (RankingFunction.rank rank l') (l,t,l'))) in
-            (* Printf.printf "tran: %s rhs: %s timebound %s \n" (Transition.to_id_string (RankingFunction.decreasing rank)) (Bound.to_string rhs) (Bound.to_string timebound); *)
             Bound.(
               if is_infinity timebound then
                 if equal zero rhs then
@@ -123,15 +122,15 @@ let improve_with_rank  measure program appr rank =
     |> (fun t -> add_bound measure bound t appr)
     |> MaybeChanged.changed
 
-  let improve_with_rank_mrf measure program appr rank =
-    let bound = compute_bound_mrf appr program rank in
-    if Bound.is_infinity bound then
-      MaybeChanged.same appr
-    else
-      rank
-      |> MultiphaseRankingFunction.decreasing
-      |> (fun t -> add_bound measure bound t appr)
-      |> MaybeChanged.changed
+let improve_with_rank_mrf measure program appr rank =
+  let bound = compute_bound_mrf appr program rank in
+  if Bound.is_infinity bound then
+    MaybeChanged.same appr
+  else
+    rank
+    |> MultiphaseRankingFunction.decreasing
+    |> (fun t -> add_bound measure bound t appr)
+    |> MaybeChanged.changed
 
 (** Checks if a transition is bounded *)
 let bounded measure appr transition =
@@ -191,7 +190,6 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc -> 
-                        LocalSizeBound.switch_cache(); 
                         try 
                           RankingFunction.reset();
                           appr
@@ -208,5 +206,6 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
                           backtrack_point := None;
                           MaybeChanged.changed (program,appr)) 
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
+    |> tap (fun _ -> LocalSizeBound.switch_cache())
     |> MaybeChanged.if_changed (fun (a,b) -> (improve ~cfr:cfr ~mrf:mrf measure a b))
     |> MaybeChanged.unpack

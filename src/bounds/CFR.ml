@@ -225,7 +225,6 @@ let apply_cfr (program: Program.t) appr =
       |> flip Program.from initial_location
       |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current))) minimalDisjointSCCs
       |> tap (fun _ -> nonLinearTransitions := TransitionSet.empty)
-      |> tap (fun x -> Printf.printf "Program: \n%s\n" (Program.to_string x))
       |> Program.rename
       in
       (program_res, get_appr_cfr program program_res appr)
