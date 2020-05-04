@@ -36,6 +36,9 @@ val list_init : int -> unit
 (** Finds a suitable multiphase ranking function for the given transitions T'. *)
 val find : measure -> bool -> Program.t -> Transition.t -> t list
 
+val find_scc : measure -> bool ->  Program.t -> Transition.t -> TransitionSet.t ->  t list
+
+
 (** Converts a multiphase ranking function into a string*)
 val to_string : t -> string
 
@@ -45,3 +48,5 @@ val only_rank_to_string : t -> string
 (** Resets all cached data.
     Useful for testing in the same OCaml instance. *)
 val reset : unit -> unit
+
+val test : measure -> bool

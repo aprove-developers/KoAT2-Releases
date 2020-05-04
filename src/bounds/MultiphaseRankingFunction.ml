@@ -299,7 +299,29 @@ let compute_ measure applied_cfr program =
                 ) 
          with Exit -> ()
         )
-      
+
+let compute_scc measure applied_cfr program scc =
+  try
+    for depth = 1 to !maxDepth do
+    if !numberOfGeneratedTemplates < depth then (
+    compute_ranking_templates depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+    numberOfGeneratedTemplates := depth);
+    backtrack depth (TransitionSet.cardinal scc)
+              0
+              (Solver.create ())
+              (Array.of_enum (TransitionSet.enum scc))
+              (Stack.create ())
+              (ref (TransitionSet.cardinal scc))
+              measure
+              applied_cfr;
+  done; 
+    scc
+    |> TransitionSet.iter (fun t ->
+          if not (RankingTable.mem (ranking_table measure) t) then
+            Logger.(log logger WARN (fun () -> "no_mrf", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
+        ) 
+  with Exit -> ()
+        
 
 let find measure applied_cfr program transition =
   let execute () =
@@ -312,16 +334,35 @@ let find measure applied_cfr program transition =
     |> List.rev
   in
   Logger.with_log logger Logger.DEBUG
-    (fun () -> "find_mrfs", ["measure", show_measure measure;
+    (fun () -> "find_mrf", ["measure", show_measure measure;
                                           "transition", Transition.to_id_string transition])
     ~result:(Util.enum_to_string to_string % List.enum)
     execute
 
+let find_scc measure applied_cfr program transition scc =
+    let execute () =
+    if RankingTable.is_empty (ranking_table measure) then
+      compute_scc measure applied_cfr program scc;
+    (try
+      RankingTable.find_all (ranking_table measure) transition
+    with Not_found -> [])
+    |> List.rev
+  in
+  Logger.with_log logger Logger.DEBUG 
+                  (fun () -> "find_mrf_scc", ["measure", show_measure measure;
+                                                        "transition", Transition.to_id_string transition])
+                  ~result:(Util.enum_to_string to_string % List.enum)
+                  execute
 
-(* only for testing*)
+(* Useful for testing*)
 let reset () =
+  numberOfGeneratedTemplates := 0;
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
   for i = 0 to List.length !template_tables - 1 do
     TemplateTable.clear (List.nth !template_tables i)
   done
+
+
+  let test measure =
+     RankingTable.is_empty (ranking_table measure)

@@ -84,3 +84,12 @@ val sizebound_local_scc : Program.t -> [`Lower | `Upper] -> (Transition.t * Var.
 (** Resets all cached data.
     Useful for testing in the same OCaml instance. *)
 val reset : unit -> unit
+
+(** Resets all cached data used in the cfr computation.
+    Useful for testing in the same OCaml instance. *)
+val reset_cfr : unit -> unit
+
+val switch_cache : unit -> unit
+
+(** Enables cfr. *)
+val enable_cfr : unit -> unit

@@ -278,7 +278,7 @@ let find_scc measure applied_cfr program transition scc =
     |> List.rev
   in
   Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find_ranking_functions", ["measure", show_measure measure;
+                  (fun () -> "find_ranking_functions_scc", ["measure", show_measure measure;
                                                         "transition", Transition.to_id_string transition])
                   ~result:(Util.enum_to_string to_string % List.enum)
                   execute
