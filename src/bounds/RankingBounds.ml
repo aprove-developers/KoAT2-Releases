@@ -169,12 +169,11 @@ let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure prog
       let (program_cfr, appr_cfr) = Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions)]);
                                     CFR.apply_cfr program appr in
       backtrack_point := Option.some (program,appr);
-      Printf.printf "Appr: %s \n" (Approximation.to_string program_cfr appr_cfr);
       if mrf then 
         MultiphaseRankingFunction.reset()
       else
         RankingFunction.reset(); 
-      LocalSizeBound.reset ();  
+      LocalSizeBound.enable_cfr();  
       MaybeChanged.changed (program_cfr,appr_cfr)
     else 
       MaybeChanged.same (program,appr)
@@ -192,6 +191,7 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc -> 
+                        LocalSizeBound.switch_cache(); 
                         try 
                           RankingFunction.reset();
                           appr
@@ -203,7 +203,7 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
                             MultiphaseRankingFunction.reset()
                           else
                             RankingFunction.reset (); 
-                          LocalSizeBound.reset ();  
+                          LocalSizeBound.reset_cfr ();  
                           let (program,appr) = Option.get !backtrack_point in
                           backtrack_point := None;
                           MaybeChanged.changed (program,appr)) 

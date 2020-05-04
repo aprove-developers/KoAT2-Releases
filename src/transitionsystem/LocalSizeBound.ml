@@ -404,21 +404,48 @@ module LSB_Cache =
       end
     )
 
-module LSB_Cache_tbl = 
-  struct
-    type t = int * int
-    type cfr_currently = bool
-
-    (* let is_empty t = LSB_Cache.is_empty (fst t)  *)
-
-
-  end
-
 let (table: t Option.t LSB_Cache.t) =
   LSB_Cache.create 10
   
 let reset () =
   LSB_Cache.clear table
+
+(** Internal memoization for local size bounds. 
+  The idea is to use this cache if we applied cfr and 
+    1) delete it and use the original cache if we get a timeout or
+    2) if the analysis of the unrolled scc is completed successfully use this cache as the main memory. *)
+let currently_cfr = ref false
+
+module LSB_Cache_cfr =
+  Hashtbl.Make(
+      struct
+        type t = kind * Transition.t * Var.t
+        let equal (k1,t1,v1) (k2,t2,v2) =
+          equal_kind k1 k2
+          && Transition.same t1 t2
+          && Var.equal v1 v2
+        let hash (k,t,v) =
+          Hashtbl.hash (k, Transition.id t, v)
+      end
+    )
+
+let  (table_cfr: t Option.t LSB_Cache_cfr.t) =
+  LSB_Cache_cfr.create 10
+
+let reset_cfr () =
+  currently_cfr := false;
+  LSB_Cache_cfr.clear table_cfr
+
+let switch_cache () =
+  if !currently_cfr then (
+    reset();
+    Enum.fold (fun a b -> LSB_Cache.add table (fst b) (snd b)) () (LSB_Cache_cfr.enum table_cfr);
+    reset_cfr())
+
+let enable_cfr () = 
+  currently_cfr := true
+
+
 
 let compute_single_local_size_bound program kind (l,t,l') var =
   let lsb =
@@ -432,7 +459,10 @@ let compute_single_local_size_bound program kind (l,t,l') var =
            find_bound kind (Program.input_vars program) v' guard_with_update update (s_range update)
          )
   in
-  LSB_Cache.add table (kind,(l,t,l'),var) lsb;
+  if !currently_cfr then
+    LSB_Cache_cfr.add table_cfr (kind,(l,t,l'),var) lsb
+  else
+    LSB_Cache.add table (kind,(l,t,l'),var) lsb;
   (Logger.log logger Logger.INFO
      (fun () -> "add_local_size_bound", [
           "kind", show_kind kind;
@@ -451,10 +481,15 @@ let compute_local_size_bounds program =
        )
   
 let sizebound_local program kind t v =
-  if LSB_Cache.is_empty table then
-    compute_local_size_bounds program;
+  if !currently_cfr && LSB_Cache_cfr.is_empty table_cfr then
+    compute_local_size_bounds program
+  else if LSB_Cache.is_empty table then
+    compute_local_size_bounds program; 
   try
-    LSB_Cache.find table (kind, t, v)
+    if !currently_cfr then 
+      LSB_Cache_cfr.find table_cfr (kind, t, v)
+    else
+      LSB_Cache.find table (kind, t, v)
   with Not_found ->
     raise (Failure "Non-existing local size bound requested!")
 
