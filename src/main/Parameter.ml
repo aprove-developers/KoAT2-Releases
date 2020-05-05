@@ -59,6 +59,8 @@ type params = {
     print_system : bool;
     (** Prints the integer transition system at the start as png *)
 
+    print_system_for_paper : bool;
+
     print_system_id : bool;
     (** Prints the integer transition system at the start as png with ids as transition labels *)
 
