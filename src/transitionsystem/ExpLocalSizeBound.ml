@@ -46,7 +46,7 @@ let get_concave_convex (cache: elsb_cache) = Tuple2.first cache
 let get_elsb_bound (cache: elsb_cache) = Tuple2.second cache
 
 (** Using the standard definition of convexity/concavity to handle bounds instead of polynomials.
-   Note that our bounds constist of non-concave terms like abs(X). However our bounds bound exactly theses terms.
+   Note that our bounds consist of non-concave terms like abs(X). However our bounds bound exactly theses terms.
    Therefore we substitute all terms like abs(X) by fresh variables v' and then check if the bound is concave
    w.r.t. these newly generated variables. Furthermore  the concavity/convexity needs only to be checked for a,b geq 0
    in f(lambda * a + (1-lambda) * b) op lambda * f(a) + (1-lambda) * f(b)
