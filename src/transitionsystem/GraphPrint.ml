@@ -62,13 +62,7 @@ let print_rvg cache kind ~label ~outdir ~file program =
 let print_system_for_paper ~outdir ~file program =
   let label l =
     let get_subscript_str i =
-      i
-      |> Int.to_string
-      |> String.to_list
-      (* get all digits as list*)
-      |> List.map (Int.of_string % String.of_char)
-      |> List.map (fun i -> "&#832" ^ Int.to_string i ^ ";")
-      |> String.concat ""
+      "_{" ^ Int.to_string i ^ "}"
     in
     let gt_id =
       TransitionLabel.gt_id l
@@ -93,7 +87,7 @@ let print_system_for_paper ~outdir ~file program =
           | TransitionLabel.UpdateElement.Dist d -> false
         in
         if is_identity then "" else
-          "&eta;(" ^ Var.to_string v ^ ") = " ^ TransitionLabel.UpdateElement.to_short_string ue
+          "\\eta(" ^ Var.to_string v ^ ") = " ^ TransitionLabel.UpdateElement.to_short_string ue
       in
       TransitionLabel.update_map l
       |> VarMap.bindings
@@ -104,7 +98,7 @@ let print_system_for_paper ~outdir ~file program =
     let guard =
       let g = TransitionLabel.guard_without_invariants l in
       if TransitionLabel.Guard.is_true g then "" else
-      "&tau; = " ^ TransitionLabel.Guard.to_string g
+      "\\tau = " ^ TransitionLabel.Guard.to_string g
     in
 
     let cost =
@@ -120,11 +114,11 @@ let print_system_for_paper ~outdir ~file program =
       in
       if String.is_empty (tcost ^ gtcost) then ""
       else
-        "{" ^ tcost ^ "; " ^ gtcost ^ "}"
+        "\\{" ^ tcost ^ "; " ^ gtcost ^ "\\}"
     in
 
 
-    [ t_id ^ "&isin;" ^ gt_id;
+    [ t_id ^ "\\in " ^ gt_id;
       prob;
       updates;
       guard;
@@ -135,7 +129,7 @@ let print_system_for_paper ~outdir ~file program =
   in
   let module Dot = Graph.Graphviz.Dot(struct
                                        include TransitionGraph
-                                       let edge_attributes (a, e, b) = [`Label (label e); `Labelfontcolor 16711680; `Color 1234]
+                                       let edge_attributes (a, e, b) = [`Label (label e)]
                                        let default_edge_attributes _ = []
                                        let get_subgraph _ = None
                                        let vertex_attributes _ = [`Shape `Circle]
