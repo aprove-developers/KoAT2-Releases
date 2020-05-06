@@ -19,7 +19,10 @@ RUN eval $(opam env)
 # Auxiliary libraries which are needed to build the opam packages
 RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev --no-cache
 
-RUN opam install z3 ocamlfind menhir cmdliner ppx_deriving batteries ppx_deriving_cmdliner fpath omake apron ocamlgraph ounit
+RUN opam install ocamlfind menhir cmdliner ppx_deriving batteries ppx_deriving_cmdliner fpath omake apron ocamlgraph ounit
+
+# If you have enough threads/memory available increase the job count
+RUN opam install z3 -j 4
 
 RUN eval $(opam env)
 
