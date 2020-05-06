@@ -5,7 +5,7 @@ open BoundsInst
 open OUnit2
 open TestHelper
 
-type concave_convexe = Convexe | Concave | None [@@deriving show]
+type concave_convex = Convex | Concave | None [@@deriving show]
 
 let tests =
   let varx = RealBound.of_var @@ Var.of_string "X" in
@@ -215,7 +215,7 @@ let tests =
         ^ ")                                    \n"
         );
       ];
-    "concave_convexe_check" >::: List.map
+    "concave_convex_check" >::: List.map
       (
         fun (bstr,conc_conv) ->
           let cache = CacheManager.new_cache () in
@@ -225,13 +225,13 @@ let tests =
             match conc_conv with
             | Concave ->
               (ExpLocalSizeBound.bound_is_concave elsb_cache bound, "Bound " ^ bstr ^ " is not concave as expected!")
-            | Convexe ->
-              (ExpLocalSizeBound.bound_is_convexe elsb_cache bound, "Bound " ^ bstr ^ " is not convexe as expected!")
+            | Convex ->
+              (ExpLocalSizeBound.bound_is_convex elsb_cache bound, "Bound " ^ bstr ^ " is not convex as expected!")
             | None    ->
-              match (ExpLocalSizeBound.bound_is_concave elsb_cache bound, ExpLocalSizeBound.bound_is_convexe elsb_cache bound) with
-              | (true,true)   -> (false, "Bound " ^ bstr ^ "is convexe and concave!")
+              match (ExpLocalSizeBound.bound_is_concave elsb_cache bound, ExpLocalSizeBound.bound_is_convex elsb_cache bound) with
+              | (true,true)   -> (false, "Bound " ^ bstr ^ "is convex and concave!")
               | (true,false)  -> (false, "Bound " ^ bstr ^ "is concave!")
-              | (false,true)  -> (false, "Bound " ^ bstr ^ "is convexe!")
+              | (false,true)  -> (false, "Bound " ^ bstr ^ "is convex!")
               | (false,false) -> (true, "")
 
           in
@@ -240,22 +240,22 @@ let tests =
       [
         ("|A|", Concave);
         ("A", Concave);
-        ("|A|", Convexe);
+        ("|A|", Convex);
 
         ("|A| + |B|", Concave);
         ("A + B", Concave);
-        ("|A| + |B|", Convexe);
-        ("A + B", Convexe);
+        ("|A| + |B|", Convex);
+        ("A + B", Convex);
 
         ("|A| + |B| + |C|", Concave);
         ("A + B + C", Concave);
-        ("|A| + |B| + |C|", Convexe);
-        ("A + B + C", Convexe);
+        ("|A| + |B| + |C|", Convex);
+        ("A + B + C", Convex);
 
         ("|A| + |B| + |C| + |D|", Concave);
         ("A + B + C + D", Concave);
-        ("|A| + |B| + |C| + |D|", Convexe);
-        ("A + B + C + D", Convexe);
+        ("|A| + |B| + |C| + |D|", Convex);
+        ("A + B + C + D", Convex);
 
         ("|A| * |B|", None);
         ("A * B", None);
@@ -263,18 +263,18 @@ let tests =
         ("|A| * |B| * |C|", None);
         ("A * B * C", None);
 
-        ("max {1,|A|}", Convexe);
-        ("max {1,A}", Convexe);
+        ("max {1,|A|}", Convex);
+        ("max {1,A}", Convex);
         ("min {1,|A|}", Concave);
         ("min {1,A}", Concave);
 
-        ("max {|A|,|B|}", Convexe);
-        ("max {A,B}", Convexe);
+        ("max {|A|,|B|}", Convex);
+        ("max {A,B}", Convex);
         ("min {|A|,|B|}", Concave);
         ("min {A,B}", Concave);
 
-        ("max {1,|A|,|B|}", Convexe);
-        ("max {1,A,B}", Convexe);
+        ("max {1,|A|,|B|}", Convex);
+        ("max {1,A,B}", Convex);
         ("min {1,|A|,|B|}", Concave);
         ("min {1,A,B}", Concave);
 

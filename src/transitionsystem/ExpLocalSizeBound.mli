@@ -28,5 +28,5 @@ val compute_elsb : elsb_cache -> Program.t -> RV.t -> t
 (** Checks whether a given (possibly multivariate) bound is concave using SMT-Solving *)
 val bound_is_concave : elsb_cache -> RealBound.t -> bool
 
-(** Checks whether a given (possibly multivariate) bound is convexe using SMT-Solving *)
-val bound_is_convexe : elsb_cache -> RealBound.t -> bool
+(** Checks whether a given (possibly multivariate) bound is convex using SMT-Solving *)
+val bound_is_convex : elsb_cache -> RealBound.t -> bool

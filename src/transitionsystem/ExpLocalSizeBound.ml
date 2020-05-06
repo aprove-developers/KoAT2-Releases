@@ -14,7 +14,7 @@ module Valuation = Valuation.Make (OurFloat)
 
 let logger = Logging.(get ELSB)
 
-type concave_convexe_op = Convexe | Concave
+type concave_convex_op = Convex | Concave
 
 type poly_matrix = RealPolynomial.t list list
 
@@ -37,12 +37,12 @@ let elsb t = t.elsb
 let elsb_plus_var t = t.elsb_plus_var
 let reduced_elsb t = t.reduced_elsb
 
-type concave_convexe_cache = (concave_convexe_op * String.t, bool) Hashtbl.t
+type concave_convex_cache = (concave_convex_op * String.t, bool) Hashtbl.t
 type elsb_bound_cache = (int * string * string, t) Hashtbl.t
-type elsb_cache = (concave_convexe_cache * elsb_bound_cache)
+type elsb_cache = (concave_convex_cache * elsb_bound_cache)
 
 let new_cache: unit -> elsb_cache = fun () -> (Hashtbl.create 10, Hashtbl.create 10)
-let get_concave_convexe (cache: elsb_cache) = Tuple2.first cache
+let get_concave_convex (cache: elsb_cache) = Tuple2.first cache
 let get_elsb_bound (cache: elsb_cache) = Tuple2.second cache
 
 (** Using the standard definition of convexity/concavity to handle bounds instead of polynomials.
@@ -51,7 +51,7 @@ let get_elsb_bound (cache: elsb_cache) = Tuple2.second cache
    w.r.t. these newly generated variables. Furthermore  the concavity/convexity needs only to be checked for a,b geq 0
    in f(lambda * a + (1-lambda) * b) op lambda * f(a) + (1-lambda) * f(b)
 *)
-let concave_convex_check_v2_ (comp_operator: concave_convexe_op) bound: bool =
+let concave_convex_check_v2_ (comp_operator: concave_convex_op) bound: bool =
   let module VarMap = Map.Make(Var) in
   let vars = RealBound.vars bound in
   (* vector a *)
@@ -89,7 +89,7 @@ let concave_convex_check_v2_ (comp_operator: concave_convexe_op) bound: bool =
   let res =
     try
       match comp_operator with
-      | Convexe ->
+      | Convex ->
           SolverNonOpt.bound_gt_zero constr bound'
       | Concave ->
           SolverNonOpt.bound_lt_zero constr bound'
@@ -98,9 +98,9 @@ let concave_convex_check_v2_ (comp_operator: concave_convexe_op) bound: bool =
   in
   Bool.neg res
 
-(* a multivariate polynome f is concave (convexe) iff
+(* a multivariate polynomial f is concave (convex) iff
  * its hessian matrix is negative semi-definite (positive semi-definite) *)
-let concave_convex_check (comp_operator: concave_convexe_op) (poly: RealPolynomial.t) : bool =
+let concave_convex_check (comp_operator: concave_convex_op) (poly: RealPolynomial.t) : bool =
   let varlist = RealPolynomial.vars poly |> VarSet.to_list in
   let hessian =
     varlist
@@ -113,7 +113,7 @@ let concave_convex_check (comp_operator: concave_convexe_op) (poly: RealPolynomi
     List.init (List.length varlist) (fun _ -> Var.fresh_id Var.Real () |> RealPolynomial.of_var)
   in
 
-  (* Due to symmetry we can multiplicate from the right side *)
+  (* Due to symmetry we can multiply from the right side *)
   let term_left =
     List.map (RealPolynomial.sum % List.enum % List.map2 RealPolynomial.mul vectx) hessian
   in
@@ -125,7 +125,7 @@ let concave_convex_check (comp_operator: concave_convexe_op) (poly: RealPolynomi
   let solver = Solver.create () in
   let constr =
     match comp_operator with
-    | Convexe -> RealFormula.mk_ge term_complete (RealPolynomial.of_constant (OurFloat.zero))
+    | Convex -> RealFormula.mk_ge term_complete (RealPolynomial.of_constant (OurFloat.zero))
     | Concave -> RealFormula.mk_le term_complete (RealPolynomial.of_constant (OurFloat.zero))
   in
 
@@ -135,20 +135,20 @@ let concave_convex_check (comp_operator: concave_convexe_op) (poly: RealPolynomi
 let poly_is_concave =
   concave_convex_check Concave
 
-let poly_is_convexe =
-  concave_convex_check Convexe
+let poly_is_convex =
+  concave_convex_check Convex
 
 let concave_convex_check_v2 cache =
-  Util.memoize (get_concave_convexe cache) ~extractor:(fun (op,b) -> (op,RealBound.to_string b)) (uncurry concave_convex_check_v2_)
+  Util.memoize (get_concave_convex cache) ~extractor:(fun (op,b) -> (op,RealBound.to_string b)) (uncurry concave_convex_check_v2_)
 
 let bound_is_concave cache =
   (curry (concave_convex_check_v2 cache)) Concave
 
-let bound_is_convexe cache =
-  (curry (concave_convex_check_v2 cache)) Convexe
+let bound_is_convex cache =
+  (curry (concave_convex_check_v2 cache)) Convex
 
 (* TODO avoid invocation of Z3 for linearity check  *)
-let appr_substitution_is_valid cache bound = (bound_is_concave cache bound) && (bound_is_convexe cache bound)
+let appr_substitution_is_valid cache bound = (bound_is_concave cache bound) && (bound_is_convex cache bound)
 
 let eliminate_var other_vars inv var =
   let new_vars =
