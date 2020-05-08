@@ -144,6 +144,9 @@ let sccs program =
   |> Enum.map (TransitionGraph.loc_transitions program.graph)
   |> Enum.filter (not % TransitionSet.is_empty)
 
+let cardinal_trans_scc program =
+  Enum.fold (fun counter scc -> let cardinal = (TransitionSet.cardinal scc) in counter + if cardinal > 1 then cardinal else 0) 0 (sccs program) 
+
 let parallelTransitions graph (l,_,l') =
   transitions graph
     |> TransitionSet.filter (fun (l1,_,l1') ->  Location.equal l l1 && Location.equal l' l1')

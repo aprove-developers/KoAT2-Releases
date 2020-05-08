@@ -48,13 +48,14 @@ open LocalSizeBound
   (program_cfr,appr_cost) *)
 
   let find_bounds ?(depth = 5) ?(mrf = false) ?(cfr = false) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
-  if mrf then( 
-    MultiphaseRankingFunction.maxDepth := depth;
-    MultiphaseRankingFunction.list_init depth);
+    if cfr then
+      CFR.number_unsolved_trans := (Program.cardinal_trans_scc program);
+    if mrf then( 
+      MultiphaseRankingFunction.maxDepth := depth;
+      MultiphaseRankingFunction.list_init depth);
   let (program_cfr,updated_appr) = appr
   |> TrivialTimeBounds.compute program
   |> RankingBounds.improve ~mrf:mrf ~cfr:cfr `Time program in
-  (* Printf.printf "time: %f s \n" (!CFR.time);  *)
   let appr_cost =
   updated_appr
   |> (fun appr ->

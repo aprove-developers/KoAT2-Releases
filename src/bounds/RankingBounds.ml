@@ -165,14 +165,18 @@ let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr 
 
 let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure program appr =
   if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then
-      let (program_cfr, appr_cfr) = Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions)]);
-                                    CFR.apply_cfr program appr in
+      let (program_cfr, appr_cfr) = 
+            CFR.set_time_current_cfr scc;
+            CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
+            Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions); "time: ", string_of_float !CFR.time_current_cfr]);
+            CFR.apply_cfr program appr in
       backtrack_point := Option.some (program,appr);
       if mrf then 
         MultiphaseRankingFunction.reset()
       else
         RankingFunction.reset(); 
-      LocalSizeBound.enable_cfr();  
+      LocalSizeBound.switch_cache();  
+      LocalSizeBound.enable_cfr();
       MaybeChanged.changed (program_cfr,appr_cfr)
     else 
       MaybeChanged.same (program,appr)
@@ -209,6 +213,5 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
                           backtrack_point := None;
                           MaybeChanged.changed (program,appr)) 
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
-    |> tap (fun _ -> LocalSizeBound.switch_cache())
     |> MaybeChanged.if_changed (fun (a,b) -> (improve ~cfr:cfr ~mrf:mrf measure a b))
     |> MaybeChanged.unpack

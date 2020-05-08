@@ -24,7 +24,7 @@ let improve program applied_cfr appr =
                 improve_scc kind program rvg appr scc
                 |> tap (fun _ -> 
                         CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
-                        if applied_cfr && !CFR.delta_current_cfr > 20. then 
+                        if applied_cfr && !time_current_cfr < !delta_current_cfr then 
                           raise CFR.TIMEOUT)
             ) appr (List.rev (C.scc_list rvg))
          ) appr

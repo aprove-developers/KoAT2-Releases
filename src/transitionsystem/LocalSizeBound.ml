@@ -492,8 +492,8 @@ let sizebound_local program kind t v =
       LSB_Cache.find table (kind, t, v)
   with Not_found -> ( 
     Printf.printf "%B \n" (!currently_cfr);
-    (* Printf.printf "%s \n %s \n" (Program.to_string program) (Transition.to_id_string t); *)
-    Printf.printf "%B \n" (LSB_Cache_cfr.is_empty table_cfr);
+    Printf.printf "%s \n %s \n" (Program.to_string program) (Transition.to_id_string t);
+    Printf.printf "%s \n" (List.fold_right (fun ((kind,x,var),y) str -> str ^ " \n" ^ Transition.to_id_string x) (LSB_Cache.to_list table) "");
 
     raise (Failure "Non-existing local size bound requested!"))
 

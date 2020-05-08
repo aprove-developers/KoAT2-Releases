@@ -83,6 +83,9 @@ val start : t -> Location.t
 (** Returns the (biggest) strongly connected components of the transiton graph. *)  
 val sccs : t -> TransitionSet.t Enum.t
 
+(** Returns the number of transition involved in a scc. *)
+val cardinal_trans_scc : t -> int
+
 (** Returns all transitions which are parallel to a given transition. Thus, all transitions start in the same location and end in the same location. *)
 val parallelTransitions : t -> Location.t * TransitionLabel.t * Location.t -> TransitionSet.t
 

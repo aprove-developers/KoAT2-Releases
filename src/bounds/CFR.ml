@@ -17,6 +17,12 @@ module SCCSet = Set.Make(SCCSetCompare)
 (** We use this to measure the amount of time spend solving on the current cfr instance. *) 
 let delta_current_cfr = ref 0.
 
+let time_current_cfr = ref 0.
+
+let time_cfr = ref 180.
+
+let number_unsolved_trans = ref 0
+
 exception TIMEOUT
 
 (** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
@@ -27,6 +33,12 @@ let logger = Logging.(get CFR)
 
 (* Collect all non-linear bounds *)
 let nonLinearTransitions = ref TransitionSet.empty
+
+(** Set the time which is reserved for this scc: time_left_cfr * #trans_scc/#trans_left *)
+let set_time_current_cfr (scc: TransitionSet.t) = 
+  time_cfr := !time_cfr -. !delta_current_cfr;
+  delta_current_cfr := 0.;
+  time_current_cfr := (float_of_int (TransitionSet.cardinal scc)) /. (float_of_int !number_unsolved_trans) *.  !time_cfr
 
 (* SCCs that contain a non-linear transition, its not guaranteed that they are minimal *)
 let nonLinearSCCs (program: Program.t) =

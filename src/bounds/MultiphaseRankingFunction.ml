@@ -248,7 +248,7 @@ let try_decreasing depth (opt: Solver.t) (non_increasing: Transition.t Stack.t) 
         );
         Solver.pop opt; 
         CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
-        if applied_cfr && !CFR.delta_current_cfr > 20. then
+        if applied_cfr && !time_current_cfr < !delta_current_cfr then
           raise CFR.TIMEOUT 
         )
     );
