@@ -47,9 +47,10 @@ open LocalSizeBound
   |> CostBounds.infer_from_timebounds program_cfr in
   (program_cfr,appr_cost) *)
 
-  let find_bounds ?(depth = 5) ?(mrf = false) ?(cfr = false) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
+  let find_bounds ?(depth = 5) ?(mrf = false) ?(cfr = false) ?(time_cfr = 180) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
     if cfr then
       CFR.number_unsolved_trans := (Program.cardinal_trans_scc program);
+      CFR.time_cfr := float_of_int time_cfr;
     if mrf then( 
       MultiphaseRankingFunction.maxDepth := depth;
       MultiphaseRankingFunction.list_init depth);

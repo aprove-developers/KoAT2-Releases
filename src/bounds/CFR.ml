@@ -14,6 +14,17 @@ end
 
 module SCCSet = Set.Make(SCCSetCompare)
 
+(** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
+let already_used_cfr = ref TransitionSet.empty
+
+(* TODO *)
+let logger = Logging.(get CFR)
+
+(* Collect all non-linear bounds *)
+let nonLinearTransitions = ref TransitionSet.empty
+
+
+(** Timeouts *)
 (** We use this to measure the amount of time spend solving on the current cfr instance. *) 
 let delta_current_cfr = ref 0.
 
@@ -25,20 +36,23 @@ let number_unsolved_trans = ref 0
 
 exception TIMEOUT
 
-(** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
-let already_used_cfr = ref TransitionSet.empty
-
-(* TODO *)
-let logger = Logging.(get CFR)
-
-(* Collect all non-linear bounds *)
-let nonLinearTransitions = ref TransitionSet.empty
-
 (** Set the time which is reserved for this scc: time_left_cfr * #trans_scc/#trans_left *)
-let set_time_current_cfr (scc: TransitionSet.t) = 
-  time_cfr := !time_cfr -. !delta_current_cfr;
-  delta_current_cfr := 0.;
-  time_current_cfr := (float_of_int (TransitionSet.cardinal scc)) /. (float_of_int !number_unsolved_trans) *.  !time_cfr
+let set_time_current_cfr (scc: TransitionSet.t) appr = 
+  if !time_cfr >= 0. && (TransitionSet.for_all (fun t -> Approximation.is_time_bounded appr t) scc) then (
+    Printf.printf "hi\n";
+    time_cfr := max (!time_cfr -. !delta_current_cfr) 0.;
+    delta_current_cfr := 0.;
+    time_current_cfr := (float_of_int (TransitionSet.cardinal scc)) /. (float_of_int !number_unsolved_trans) *.  !time_cfr;)
+  else (
+    Printf.printf "hi\n";
+    delta_current_cfr := 0.;
+    time_current_cfr := -1.)
+
+let poll_timeout ?(applied_cfr = true) =
+  if applied_cfr && !time_current_cfr < !delta_current_cfr  && !time_current_cfr > 0. then
+    raise TIMEOUT 
+
+
 
 (* SCCs that contain a non-linear transition, its not guaranteed that they are minimal *)
 let nonLinearSCCs (program: Program.t) =
@@ -235,7 +249,8 @@ let apply_cfr (program: Program.t) appr =
       |> flip TransitionSet.diff scc
       |> TransitionSet.to_list
       |> flip Program.from initial_location
-      |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current))) minimalDisjointSCCs
+      |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current)
+      |> tap (fun _ -> poll_timeout ~applied_cfr:true))) minimalDisjointSCCs
       |> tap (fun _ -> nonLinearTransitions := TransitionSet.empty)
       |> Program.rename
       in

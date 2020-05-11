@@ -166,7 +166,7 @@ let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr 
 let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure program appr =
   if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then
       let (program_cfr, appr_cfr) = 
-            CFR.set_time_current_cfr scc;
+            CFR.set_time_current_cfr scc appr;
             CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
             Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions); "time: ", string_of_float !CFR.time_current_cfr]);
             CFR.apply_cfr program appr in

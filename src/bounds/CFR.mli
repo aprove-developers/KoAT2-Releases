@@ -7,7 +7,12 @@ val delta_current_cfr : float Batteries.ref
 
 val time_current_cfr : float Batteries.ref
 
-val set_time_current_cfr : ProgramTypes.TransitionSet.t -> unit
+val time_cfr : float Batteries.ref
+
+val set_time_current_cfr : ProgramTypes.TransitionSet.t -> Approximation.t -> unit
+
+val poll_timeout : ?applied_cfr:bool -> unit
+
 
 val number_unsolved_trans : int Batteries.ref
 
