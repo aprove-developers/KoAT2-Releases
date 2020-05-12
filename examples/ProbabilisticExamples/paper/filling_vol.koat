@@ -1,0 +1,13 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR volToFill fast medium slow vol volMeasured)
+(RULES
+  f(volToFill,fast,medium,slow,vol,volMeasured) -{0;0}> g(volToFill,10,3,1,vol,0)
+  g(volToFill,fast,medium,slow,vol,volMeasured) -{0;0}> h(volToFill,fast,medium,slow,vol,UNIFORM(0,1))
+  # Start Loop
+  h(volToFill,fast,medium,slow,vol,volMeasured) -{0;0}> i(volToFill,fast,medium,slow,vol,volMeasured) :|: volMeasured<=volToFill
+  i(volToFill,fast,medium,slow,vol,volMeasured) -{0;0}> j(volToFill,fast,medium,slow,vol,UNIFORM(9,10)) :|: valToFill<(volMeasured+fast)
+  i(volToFill,fast,medium,slow,vol,volMeasured) -{0;0}> j(volToFill,fast,medium,slow,vol,UNIFORM(2,4)) :|: valToFill<(volMeasured+medium) && volToFill>=(volMeasured+fast)
+  i(volToFill,fast,medium,slow,vol,volMeasured) -{0;0}> j(volToFill,fast,medium,slow,vol,UNIFORM(0,4)) :|: valToFill>=(volMeasured+medium) && volToFill>=(volMeasured+fast)
+  j(volToFill,fast,medium,slow,vol,volMeasured) -> h(volToFill,fast,medium,slow,vol,UNIFORM(0,1))
+)
