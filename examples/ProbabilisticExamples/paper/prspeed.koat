@@ -1,9 +1,10 @@
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR X Y M N)
+(VAR x y m n)
 (RULES
-  f(X,Y,M,N) -{0;0}> g(X,Y,M,N)
-  g(X,Y,M,N) -{0;0}> h(X,Y,M,N) :|: X+3<=N
-  h(X,Y,M,N) -{1;1}> 0.5:g(X,Y+1,M,N) :+: 0.5:g(X,Y,M,N) :|: Y<M
-  h(X,Y,M,N) -{1;1}> g(BINOMIAL(3,0.5),Y,M,N) :|: M>=Y
+  f(x,y,m,n) -{0;0}> g(x,y,m,n)
+  # Start loop
+  g(x,y,m,n) -{0;0}> h(x,y,m,n) :|: x+3<=n
+  h(x,y,m,n) -> 0.5:g(x,y+1,m,n) :+: 0.5:g(x,y,m,n) :|: y<m
+  h(x,y,m,n) -> 0.25:g(x,y,m,n) :+: 0.25:g(x+1,y,m,n) :+: 0.25:g(x+2,y,m,n) :+: 0.25:g(x+3,y,m,n) :|: y>=m
 )
