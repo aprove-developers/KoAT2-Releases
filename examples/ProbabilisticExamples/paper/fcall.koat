@@ -1,0 +1,10 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x n lx)
+(RULES
+  f(x,n,lx) -{0;0}> g(x,n,0)
+  # g is the entrypoint to the recursive function call
+  g(x,n,lx) -> h(x,n,x)
+  h(x,n,lx) -> i(x,n,UNIFORM(0,1)) :|: lx<n
+  i(x,n,lx) -> g(lx,n,0)
+)
