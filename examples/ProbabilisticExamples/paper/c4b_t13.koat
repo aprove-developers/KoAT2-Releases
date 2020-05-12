@@ -1,0 +1,13 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y t)
+(RULES
+  f(x,y,t) -{0;0}> g(x,y,t)                               :|: y>=0
+  # Start loop
+  g(x,y,t) -{0;0}> 0.25:h(x-1,y,t) :+: 0.75:i(x-1,y,t)    :|: x>0
+  # First branch
+  h(x,y,t) -> g(x,y,t)
+  # inner loop
+  i(x,y,t) -> i(x,y-1,t)                                  :|: y>0
+  i(x,y,t) -> g(x,y,t)                                    :|: y<1
+)
