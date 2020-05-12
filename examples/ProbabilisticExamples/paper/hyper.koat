@@ -1,0 +1,7 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x n)
+(RULES
+  f(x,n) -{0;0}> g(x,n)
+  g(x,n) -> g(HYPER(30,3,2),n) :|: x+2<=n
+)
