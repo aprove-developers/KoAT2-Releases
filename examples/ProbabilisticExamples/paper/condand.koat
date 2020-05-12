@@ -1,0 +1,7 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR n m)
+(RULES
+  f(n,m) -{0;0}> g(n,m)
+  g(n,m) -> 0.5:g(n-1,m) :+: 0.5:g(n,m-1) :|: n>0 && m>0
+)
