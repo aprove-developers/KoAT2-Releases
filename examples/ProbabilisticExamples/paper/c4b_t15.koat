@@ -2,11 +2,11 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x y t)
 (RULES
-  f(x,y,t) -{0;0}> g(x,y,t)             :|: y>=0
+  f(x,y,t) -{0;0}> g(x,y,t)           :|: y>=0
   # Start loop
-  g(x,y,t) -{0;0}> h(x-y-1,y,y)         :|: x>y
+  g(x,y,t) -{0;0}> h(x-y-1,y,y)       :|: x>y
   # inner loop
-  h(x,y,t) -> h(x,y-1,UNIFORM(-2,-1))   :|: t>0
+  h(x,y,t) -> h(x,y,UNIFORM(-2,-1))   :|: t>0
   # exit loop body
-  h(x,y,t) -> g(x,y,t)                  :|: t<=0
+  h(x,y,t) -> g(x,y,t)                :|: t<=0
 )
