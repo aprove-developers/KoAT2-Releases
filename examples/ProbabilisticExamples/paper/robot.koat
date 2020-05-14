@@ -1,0 +1,27 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y eX eY dx dy dxc dyc N cmd)
+(RULES
+  f(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> g(0,0,0,0,0,0,0,0,N,cmd)
+  # Start loop
+  g(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> 0.1:h(x,y,eX,eY,dx,dy,dxc,dyc,N,0)
+                                       :+: 0.1:h(x,y,eX,eY,dx,dy,dxc,dyc,N,1)
+                                       :+: 0.1:h(x,y,eX,eY,dx,dy,dxc,dyc,N,2)
+                                       :+: 0.1:h(x,y,eX,eY,dx,dy,dxc,dyc,N,3)
+                                       :+: 0.1:h(x,y,eX,eY,dx,dy,dxc,dyc,N,4)
+                                       :+: 0.1:h(x,y,eX,eY,dx,dy,dxc,dyc,N,5)
+                                       :+: 0.1:h(x,y,eX,eY,dx,dy,dxc,dyc,N,6)
+                                       :+: 0.1:h(x,y,eX,eY,dx,dy,dxc,dyc,N,7)
+                                       :+: 0.2:h(x,y,eX,eY,dx,dy,dxc,dyc,N,8) :|: N>0
+
+  # Exit loop
+  h(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> g(x,y,eX,eY,dx,dy,dxc,dyc,N-1,cmd) :|: cmd=0
+  h(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> g(x,y,eX,eY,dx,dy,dxc,dyc,N-2,cmd) :|: cmd=1
+  h(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> g(x,y,eX,eY,dx,dy,dxc,dyc,N-3,cmd) :|: cmd=2
+  h(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> g(x,y,eX,eY,dx,dy,dxc,dyc,N-4,cmd) :|: cmd=3
+  h(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> g(x,y,eX,eY,dx,dy,dxc,dyc,N-5,cmd) :|: cmd=4
+  h(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> g(x,y,eX,eY,dx,dy,dxc,dyc,N-6,cmd) :|: cmd=5
+  h(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> g(x,y,eX,eY,dx,dy,dxc,dyc,N-7,cmd) :|: cmd=6
+  h(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> g(x,y,eX,eY,dx,dy,dxc,dyc,N-8,cmd) :|: cmd=7
+  h(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) -{0;0}> g(x,y,eX,eY,dx,dy,dxc,dyc,N,cmd) :|: cmd=8
+)
