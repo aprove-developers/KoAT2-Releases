@@ -33,8 +33,10 @@ rule read =
   | comment           { read lexbuf }
   | white             { read lexbuf }
   | newline           { next_line lexbuf; read lexbuf }
+  | "BERNOULLI"       { P.BERNOULLI }
   | "BINOMIAL"        { P.BINOMIAL }
   | "GEOMETRIC"       { P.GEOMETRIC }
+  | "HYPERGEOMETRIC"  { P.HYPERGEOMETRIC }
   | "UNIFORM"         { P.UNIFORM }
   | "GOAL"            { P.GOAL }
   | "STARTTERM"       { P.STARTTERM }
