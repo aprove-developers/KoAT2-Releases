@@ -4,5 +4,5 @@
 (RULES
   # first loop
   f(x,n) -{0;0}> g(0,n)
-  g(x,n) -> h(BERNOULLI(10,0.5),n)        :|: x<n
+  g(x,n) -> g(BINOMIAL(10,0.5),n)        :|: x<n
 )
