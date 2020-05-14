@@ -61,29 +61,46 @@ let tests =
           ))]
         )
         [
+          ("ber", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/ber.koat");
+          ("bin", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/bin.koat");
+          ("c4b_t09", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t09.koat");
+          ("c4b_t13", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t13.koat");
+          ("c4b_t15", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t15.koat");
+          ("c4b_t19", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t19.koat");
+          ("c4b_t61", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t61.koat");
+          ("complex", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/complex.koat");
+          ("condand", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/condand.koat");
+          ("fcall", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/fcall.koat");
           ("fib_exp_size", RealBound.Exponential 1, "examples/ProbabilisticExamples/paper/fib_exp_size.koat");
+          ("filling_vol", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/filling_vol.koat");
+          ("hyper", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/hyper.koat");
           ("leading", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/leading.koat");
+          ("linear01", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/linear01.koat");
+          ("linear01", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/linear01.koat");
+          ("multirace", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/multirace.koat");
           ("multirace2", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/multirace2.koat");
           ("nestedwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/nested_rwalk.koat");
-          ("probloop", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prob_loop.koat");
-          ("prnes2", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prnes2.koat");
-          ("simple_nested", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/simple_nested.koat");
-          ("complex", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/complex.koat");
-          ("multirace", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/multirace.koat");
           ("no_loop", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/no_loop.koat");
           ("pol04", RealBound.Inf, "examples/ProbabilisticExamples/paper/pol04.koat");
           ("pol05", RealBound.Inf, "examples/ProbabilisticExamples/paper/pol05.koat");
           ("pol06", RealBound.Inf, "examples/ProbabilisticExamples/paper/pol06.koat");
           ("pol07", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/pol07.koat");
           ("prnes", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prnes.koat");
+          ("prnes2", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prnes2.koat");
+          ("probloop", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prob_loop.koat");
           ("prseq", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prseq.koat");
+          ("prspeed", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prspeed.koat");
           ("race", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/race.koat");
           ("rdbub", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/rdbub.koat");
+          ("rdseql", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdseql.koat");
+          ("rdspeed", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdspeed.koat");
           ("rdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdwalk.koat");
+          ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Nonprob-KoAT/SelectSort.koat");
+          ("simple_nested", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/simple_nested.koat");
           ("simple_recursive", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/simple_recursive.koat");
+          ("sprdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/sprdwalk.koat");
           ("trader", RealBound.Inf, "examples/ProbabilisticExamples/paper/trader.koat");
           ("trapped_miner", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/trapped_miner.koat");
-          ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Nonprob-KoAT/SelectSort.koat");
           ("TruncSelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Nonprob-KoAT/TruncSelectSort.koat");
         ];
   ]
