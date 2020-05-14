@@ -4,7 +4,7 @@
 (RULES
   f(x,y,m,n) -{0;0}> g(x,y,m,n)
   # Start loop
-  g(x,y,,n) -{0;0}> h(x,y,m,n)         :|: x+3<=n
-  h(x,y,,n) -> g(x,UNIFORM(0,1),m,n)   :|: y<m
-  h(x,y,,n) -> g(x,UNIFORM(0,3),m,n)   :|: y>=m
+  g(x,y,m,n) -{0;0}> h(x,y,m,n)         :|: x+3<=n
+  h(x,y,m,n) -> g(UNIFORM(0,1),y,m,n)   :|: y<m
+  h(x,y,m,n) -> g(UNIFORM(0,3),y,m,n)   :|: y>=m
 )
