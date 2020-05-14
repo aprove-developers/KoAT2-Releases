@@ -4,5 +4,5 @@
 (RULES
   f(x,n) -{0;0}> g(x,n)
   # Start loop
-  g(x,n) -> g(x,UNIFORM(0,1)) :|: x<n
+  g(x,n) -> g(UNIFORM(0,1),n) :|: x<n
 )
