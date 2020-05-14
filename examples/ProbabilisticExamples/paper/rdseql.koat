@@ -1,6 +1,6 @@
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR x n)
+(VAR x y)
 (RULES
   f(x,y) -{0;0}> g(x,y)                              :|: y>=0
   # Start Outer loop
