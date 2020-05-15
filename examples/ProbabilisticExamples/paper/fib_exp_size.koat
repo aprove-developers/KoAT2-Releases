@@ -1,9 +1,9 @@
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR X1 X2 I Y)
+(VAR x1 x2 i y)
 (RULES
-  f(X1,X2,I,Y) -{0;0}> g(0,1,0,Y)
-  g(X1,X2,I,Y) -{0;0}> g(X2,X1+X2,I+1,Y)                     :|: I < Y
-  g(X1,X2,I,Y) -{0;0}> h(X1,X2,I,Y)
-  h(X1,X2,I,Y) -> 0.5:h(X1,X2-2,I,Y) :+: 0.5:h(X1,X2+1,I,Y)  :|: X2 > 0
+  f(x1,x2,i,y) -{0;0}> g(0,1,0,y)
+  g(x1,x2,i,y) -{0;0}> g(x2,x1+x2,i+1,y)                     :|: i < y
+  g(x1,x2,i,y) -{0;0}> h(x1,x2,i,y)
+  h(x1,x2,i,y) -> 0.5:h(x1,x2-2,i,y) :+: 0.5:h(x1,x2+1,i,y)  :|: x2 > 0
 )

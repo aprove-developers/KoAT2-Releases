@@ -1,0 +1,13 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR money n)
+(RULES
+  f(money,n) -{0;0}> g(10,n)
+  #  Start loop
+  # Probability of first two cases: 36/37 * 1/3 * 1/2 = 6/37
+  # Probability third case: 36/37 * 2/3 * 1/2 * 1/3 = 4/37
+  # Probability fourth case: 36/37 * 2/3 * 1/2 * 2/3 = 8/37
+  # Probability fifth case: 36/37 * 2/3 * 1/2 * 2/3 = 8/37
+  # Probability sixth case: 36/37 * 2/3 * 1/2 * 1/3 = 4/37
+  g(money,n) -> [6/37]:g(UNIFORM(3,6),n) :+: [6/37]:g(UNIFORM(1,2),n) :+: [4/37]:g(UNIFORM(3,6),n) :+: [8/37]:g(UNIFORM(1,2),n) :+: [8/37]:g(UNIFORM(-6,-3),n) :+: [4/37]:g(UNIFORM(-10,-5),n) :+: [1/37]:g(UNIFORM(-10,-5),n)       :|: money>=n
+)

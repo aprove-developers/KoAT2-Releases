@@ -1,0 +1,27 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR n i d s l g)
+(RULES
+  # first loop
+  f(n,i,d,s,l,g) -{0;0}> g(n,i,d,s,l,g)
+  # Start loop
+  # i and d both 1: 0.4 * 0.3 = 0.12
+  # i=1 and d=0: 0.3*0.6 = 0.18
+  # i=0 and d=1: 0.7 * 0.4 = 0.28
+  # i=0 and d=0: 0.7 * 0.6 = 0.42
+  g(n,i,d,s,l,g) -> 0.12:h(n,1,1,s,l,g) :+: 0.18:h(n,1,0,s,l,g) :+: 0.28:h(n,0,1,s,l,g) :+: 0.42:h(n,0,0,s,l,g) :|: n>0
+  h(n,i,d,s,l,g) -> 0.7:j(n,i,d,s,l,1) :+: 0.3:j(n,i,d,s,l,0)                                                   :|: i<1 && d<1
+  # For the next guard we have:
+  # not (i<1 and d<1) and (i<1 and d>0)
+  # which is equivalent to
+  # d>0 and i<1
+  h(n,i,d,s,l,g) -> 0.95:j(n,i,d,s,l,1) :+: 0.05:j(n,i,d,s,l,0)                                                 :|: d>0 && i<1
+  # Similarly the next guard is given by
+  # i>0 and d<1
+  h(n,i,d,s,l,g) -> 0.1:j(n,i,d,s,l,1) :+: 0.9:j(n,i,d,s,l,0)                                                   :|: i>0 && d<1
+  h(n,i,d,s,l,g) -> 0.5:j(n,i,d,s,l,1) :+: 0.5:j(n,i,d,s,l,0)                                                   :|: i>0 && d>0
+  j(n,i,d,s,l,g) -> 0.05:k(n,i,d,1,l,g) :+: 0.95:k(n,i,d,0,l,g)                                                 :|: i<1
+  j(n,i,d,s,l,g) -> 0.8:k(n,i,d,1,l,g) :+: 0.2:k(n,i,d,0,l,g)                                                   :|: i>0
+  k(n,i,d,s,l,g) -> 0.1:g(n,i,d,s,1,g) :+: 0.9:g(n,i,d,s,0,g)                                                   :|: g<1
+  k(n,i,d,s,l,g) -> 0.6:g(n,i,d,s,1,g) :+: 0.4:g(n,i,d,s,0,g)                                                   :|: g>0
+)

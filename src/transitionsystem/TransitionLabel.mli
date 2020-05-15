@@ -25,6 +25,7 @@ module UpdateElement :
   sig
     type t = Poly of Polynomials.Polynomial.t | Dist of ProbDistribution.t [@@deriving eq,ord]
     val to_string : t -> string
+    val to_short_string : t -> string
     val vars : Var.t -> t -> VarSet.t
     val is_polynomial : t -> bool
   end

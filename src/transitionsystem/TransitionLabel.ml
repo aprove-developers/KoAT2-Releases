@@ -41,6 +41,11 @@ module UpdateElement =
         | Poly p -> "(Polynomial: " ^ (Polynomial.to_string p)  ^ ")"
         | Dist d -> "(Distribution: " ^ (ProbDistribution.to_string d) ^ ")"
 
+    let to_short_string u =
+      match u with
+        | Poly p -> Polynomial.to_string p
+        | Dist d -> ProbDistribution.to_string d
+
     let rename rename_map u =
       match u with
         | Poly p -> Poly (Polynomial.rename rename_map p)

@@ -1,0 +1,10 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y m n)
+(RULES
+  f(x,y,m,n) -{0;0}> g(x,y,m,n)
+  # Start loop
+  g(x,y,m,n) -{0;0}> h(x,y,m,n)         :|: x+3<=n
+  h(x,y,m,n) -> g(UNIFORM(0,1),y,m,n)   :|: y<m
+  h(x,y,m,n) -> g(UNIFORM(0,3),y,m,n)   :|: y>=m
+)

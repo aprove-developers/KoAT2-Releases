@@ -1,0 +1,30 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y d n z)
+(RULES
+  f(x,y,d,n,z) -{0;0}> g(x,y,d,n,z)
+  # Start loop
+  g(x,y,d,n,z) -{0;0}> h(x,y,d,n,z)                                                                                      :|: d<n
+  # First case x>0 && y>0
+  # First t's probability 0.25 = 1/4
+  # Second t's probability (3/4)*(1/3) = 3/12 = 1/4
+  # Third t's probability (3/4)*(2/3)*(1/2) = 1/12 = 1/4
+  # Fourth t's probability (3/4)*(2/3)*
+  h(x,y,d,n,z) -> 0.25:g(x+2,y,d+2,n,z) :+: 0.25:g(x,y+2,d+2,n,z) :+: 0.25:g(x-1,y,d-1,n,z) :+: 0.25:g(x,y-1,d-1,n,z)    :|: x>0 && y>0
+  # # Second case x>0 && y<0
+  h(x,y,d,n,z) -> 0.25:g(x+2,y,d+2,n,z) :+: 0.25:g(x,y+1,d-1,n,z) :+: 0.25:g(x-1,y,d-1,n,z) :+: 0.25:g(x,y-2,d+2,n,z)    :|: x>0 && y<0
+  # # Third case x>0 && y=0
+  h(x,y,d,n,z) -> 0.25:g(x+2,y,d+2,n,z) :+: 0.25:g(x,y+1,d+1,n,z) :+: 0.25:g(x-1,y,d-1,n,z) :+: 0.25:g(x,y-1,d+1,n,z)    :|: x>0 && y=0
+  # Fourth Case x<0 && y>0
+  h(x,y,d,n,z) -> 0.25:g(x+1,y,d-1,n,z) :+: 0.25:g(x,y+2,d+2,n,z) :+: 0.25:g(x-2,y,d+2,n,z) :+: 0.25:g(x,y-2,d+2,n,z)    :|: x<0 && y>0
+  # Fifth case x<0 && y<0
+  h(x,y,d,n,z) -> 0.25:g(x+1,y,d-1,n,z) :+: 0.25:g(x,y+1,d-1,n,z) :+: 0.25:g(x-2,y,d+2,n,z) :+: 0.25:g(x,y-2,d+2,n,z)    :|: x<0 && y<0
+  # Sixth case x<0 && y=0
+  h(x,y,d,n,z) -> 0.25:g(x+1,y,d-1,n,z) :+: 0.25:g(x,y+1,d+1,n,z) :+: 0.25:g(x-2,y,d+2,n,z) :+: 0.25:g(x,y-1,d+1,n,z)    :|: x<0 && y=0
+  # Seventh case
+  h(x,y,d,n,z) -> 0.25:g(x+1,y,d+1,n,z) :+: 0.25:g(x,y+2,d+2,n,z) :+: 0.25:g(x-1,y,d+1,n,z) :+: g(x,y-1,d-1,n,z)         :|: x=0 && y>0
+  # Eighth case
+  h(x,y,d,n,z) -> 0.25:g(x+1,y,d+1,n,z) :+: 0.25:g(x,y+1,d-1,n,z) :+: 0.25:g(x-1,y,d+1,n,z) :+: g(x,y-1,d+1,n,z)         :|: x=0 && y<0
+)
+
+

@@ -1,11 +1,11 @@
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR H T M N)
+(VAR h t m n)
 (RULES
-  f(H,T,M,N) -{0;0}> g(H,T,M,N)                                     :|: M>=0
-  g(H,T,M,N) -{0;0}> h(0,M,M,N)                                     :|: N>0
+  f(h,t,m,n) -{0;0}> g(h,t,m,n)                                     :|: m>=0
+  g(h,t,m,n) -{0;0}> h(0,m,m,n)                                     :|: n>0
   # Single Races
-  h(H,T,M,N) -> 0.25:h(H,T+1,M,N) :+: 0.75:h(UNIFORM(1,3),T+1,M,N)  :|: H<=T
+  h(h,t,m,n) -> 0.25:h(h,t+1,m,n) :+: 0.75:h(UNIFORM(1,3),t+1,m,n)  :|: h<=t
   # Exit Race
-  h(H,T,M,N) -> g(H,T,M,N-1)
+  h(h,t,m,n) -{0;0}> g(h,t,m,n-1)
 )

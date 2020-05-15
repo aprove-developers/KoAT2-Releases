@@ -1,0 +1,7 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x n)
+(RULES
+  f(x,n) -{0;0}> g(x,n)
+  g(x,n) -{2;2}> 0.5:g(UNIFORM(0,2),n) :+: 0.5:g(UNIFORM(0,5),n) :|: x<n
+)

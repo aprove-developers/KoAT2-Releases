@@ -12,7 +12,7 @@
 %token				GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
 %token              COMMA COLON SEMICOLON
 %token              MIN MAX INFINITY ABS
-%token              BINOMIAL GEOMETRIC UNIFORM
+%token              BERNOULLI BINOMIAL GEOMETRIC HYPERGEOMETRIC UNIFORM
 %token				GUARDVEC GUARDVAL UPDATES PRECISION DIRECTTERMINATION INITIAL
 %token <string>		FRACTION
 
@@ -226,6 +226,10 @@ onlyOurFloat :
         |        floatStr = UFLOAT
                 { ParserUtil.ourfloat_of_decimal_string floatStr};
 
+onlyOurInt:
+        |        i = UINT
+                { OurInt.of_int i };
+
 onlyPolynomial :
         |       poly = polynomial EOF { poly } ;
 
@@ -248,10 +252,14 @@ polynomial :
 	          { Polynomial.pow v c } ;
 
 dist:
+        |       BERNOULLI; LPAR; p = onlyOurFloat; RPAR
+                  { ProbDistribution.Binomial (Polynomial.one,p) }
         |       BINOMIAL; LPAR; n = polynomial; COMMA; p = onlyOurFloat; RPAR
                   { ProbDistribution.Binomial (n,p) }
         |       GEOMETRIC; LPAR; p = onlyOurFloat; RPAR
                   { ProbDistribution.Geometric (p) }
+        |       HYPERGEOMETRIC; LPAR; bigN = onlyOurInt; COMMA; k = polynomial; COMMA; n = polynomial; RPAR
+                  { ProbDistribution.Hypergeometric (bigN,k,n) }
         |       UNIFORM; LPAR; p1 = polynomial; COMMA; p2 = polynomial; RPAR
                   { ProbDistribution.Uniform (p1,p2) };
 
