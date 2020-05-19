@@ -3,6 +3,7 @@ open Polynomials
 open Util
 
 let logger = Logging.(get Bound)
+let loggerWrapper = Logging.(get BoundWrapper)
 
 module Make_BoundOver (Num : PolyTypes.OurNumber)
                       (Poly :
@@ -266,7 +267,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Some true -> true
       | _         -> false
 
-    let rec greater ~opt_invariants ~assume_vars_nonnegative b1 b2 =
+    let rec greater ~(opt_invariants:([`GE | `GT] -> t -> t -> bool option) option) ~assume_vars_nonnegative b1 b2 =
       let execute () =
         let helper b1 b2 =
           match (b1, b2) with
@@ -311,7 +312,8 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           )
           | (b1, b2) -> None
         in
-        match opt_invariants `GT b1 b2 with
+        let inv = Option.Monad.bind opt_invariants (fun f -> f `GT b1 b2) in
+        match inv with
         | Some b -> Some b
         | None ->
           match equal b1 b2 with
@@ -325,7 +327,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                       ~result:(Util.option_to_string Bool.to_string)
                       execute
 
-    and greater_or_equal ~opt_invariants ~assume_vars_nonnegative b1 b2 =
+    and greater_or_equal ~(opt_invariants: ([`GE | `GT] -> t -> t -> bool option) option) ~assume_vars_nonnegative b1 b2 =
       let execute () =
         let helper b1 b2 =
           if equal b1 b2 then
@@ -388,7 +390,8 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         in
         let gt b1 b2 = greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b2 in
         let lt b1 b2 = greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b1 in
-        match opt_invariants `GE b1 b2 with
+        let inv = Option.Monad.bind opt_invariants (fun f -> f `GE b1 b2) in
+        match inv with
         | Some b -> Some b
         | None   ->
             if gt b1 b2 = Some true then
@@ -417,6 +420,15 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let is_minus_infinity = equal (Neg Infinity)
 
+    type boundtype = t
+    module SimplifyCacheTable =
+      Hashtbl.Make
+        (struct
+          type t = bool * boundtype
+          let hash (b,t) = Hashtbl.hash (b,to_string t)
+          let equal (b1,t1) (b2,t2) = Bool.equal b1 b2 && equal t1 t2
+        end)
+    let simplify_cache: t SimplifyCacheTable.t = SimplifyCacheTable.create 1000
 
     let rec simplify_ ~opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative bound =
       let rec get_type_chain t' b = match (t',b) with
@@ -512,202 +524,207 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           |> construct_chain t
       in
       let execute () =
-        match bound with
+        let cache_entry = SimplifyCacheTable.find_option simplify_cache (assume_vars_nonnegative, bound) in
+        if Option.is_none opt_invariants && Option.is_some cache_entry then
+           Option.get cache_entry
+        else
+          match bound with
 
-        | Infinity -> Infinity
+          | Infinity -> Infinity
 
-        | Var v    -> Var v
+          | Var v    -> Var v
 
-        | Const c  -> Const c
+          | Const c  -> Const c
 
-        (* Simplify terms with negation head *)
-        | Neg b -> (
-          match simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b with
-          | Const c -> Const (Num.neg c)
-          | Sum (b1, b2) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Sum (Neg b1, Neg b2))
-          | Neg b -> b
-          | Product (b1, b2) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Product (Neg b1, b2))
-          | b -> Neg b
-        )
+          (* Simplify terms with negation head *)
+          | Neg b -> (
+            match simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b with
+            | Const c -> Const (Num.neg c)
+            | Sum (b1, b2) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Sum (Neg b1, Neg b2))
+            | Neg b -> b
+            | Product (b1, b2) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Product (Neg b1, b2))
+            | b -> Neg b
+          )
 
-        (* Simplify terms with sum head *)
-        | Sum (b1, b2) -> (
-          let rec simplify_bi = function
-            | Sum (b1,b2) ->
-              (match (b1, b2) with
-               | (Const c, b) when Num.(c =~= zero) -> b
-               | (b, Const c) when Num.(c =~= zero) -> b
-               | (Const c1, Const c2) -> Const Num.(c1 + c2)
-               | (Const c1, Sum (Const c2, b)) -> simplify_bi @@ (Sum (Const Num.(c1 + c2), b))
-               | (Neg Infinity, Infinity) -> Const Num.zero
-               | (Infinity, Neg Infinity) -> Const Num.zero
-               | (_, Infinity) -> Infinity
-               | (Infinity, _) -> Infinity
-               | (_, Neg Infinity) -> Neg Infinity
-               | (Neg Infinity, _) -> Neg Infinity
-               | (Const c1, Max (Const c2, b)) -> simplify_bi (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
-               | (Max (Const c2, b), Const c1) -> simplify_bi (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
-               | (Const c1, Min (Const c2, b)) -> simplify_bi (Min (Const Num.(c1 + c2), Sum (Const c1, b)))
-               | (Min (Const c2, b), Const c1) -> simplify_bi (Min (Const Num.(c1 + c2), Sum (Const c1, b)))
-               | (b1, Neg b2) when equal b1 b2 -> Const Num.zero
-               | (Neg b1, b2) when equal b1 b2 -> Const Num.zero
-               | (b1, b2) when equal b1 b2 -> simplify_bi (Product (Const (Num.of_int 2), b1))
-               | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify_bi (Sum (b2, Sum (b1, b3)))
-               | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bi (Sum (Sum (b1, b3), b2))
-               | (b1, b2) -> Sum (b1, b2))
-            | b -> b
-          in
-          let sum_chain =
-            get_op_chain `Sum b1 @ get_op_chain `Sum b2
-            |> List.filter (not % equal (Const Num.zero))
-          in
-          let combine_chain_elements_with_coeffs =
-            let get_coeff_elem = function
-              | Product (Const c, b) -> (b,c)
-              | Product (b, Const c) -> (b,c)
-              | Const k              -> (Const Num.one, k)
-              | Neg b                -> (b, Num.neg Num.one)
-              | b                    -> (b,Num.one)
-            in
-            sum_chain
-            |> List.map get_coeff_elem
-            |> List.fold_left
-                (fun list (b,c) ->
-                  try
-                    let i = fst @@ List.findi (fun i -> equal b % fst) list in
-                    List.modify_at i (fun (b,c') -> (b,Num.(c + c'))) list
-                  with Not_found -> List.cons (b,c) list)
-                []
-            |> List.map (fun (b,c) -> Product (Const c, b) |> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative)
-          in
-          combine_chain_elements_with_coeffs
-          |> construct_op_chain `Sum
-          |> function
-              | Sum (b1,b2) -> simplify_bi @@ Sum (b1,b2)
+          (* Simplify terms with sum head *)
+          | Sum (b1, b2) -> (
+            let rec simplify_bi = function
+              | Sum (b1,b2) ->
+                (match (b1, b2) with
+                | (Const c, b) when Num.(c =~= zero) -> b
+                | (b, Const c) when Num.(c =~= zero) -> b
+                | (Const c1, Const c2) -> Const Num.(c1 + c2)
+                | (Const c1, Sum (Const c2, b)) -> simplify_bi @@ (Sum (Const Num.(c1 + c2), b))
+                | (Neg Infinity, Infinity) -> Const Num.zero
+                | (Infinity, Neg Infinity) -> Const Num.zero
+                | (_, Infinity) -> Infinity
+                | (Infinity, _) -> Infinity
+                | (_, Neg Infinity) -> Neg Infinity
+                | (Neg Infinity, _) -> Neg Infinity
+                | (Const c1, Max (Const c2, b)) -> simplify_bi (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
+                | (Max (Const c2, b), Const c1) -> simplify_bi (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
+                | (Const c1, Min (Const c2, b)) -> simplify_bi (Min (Const Num.(c1 + c2), Sum (Const c1, b)))
+                | (Min (Const c2, b), Const c1) -> simplify_bi (Min (Const Num.(c1 + c2), Sum (Const c1, b)))
+                | (b1, Neg b2) when equal b1 b2 -> Const Num.zero
+                | (Neg b1, b2) when equal b1 b2 -> Const Num.zero
+                | (b1, b2) when equal b1 b2 -> simplify_bi (Product (Const (Num.of_int 2), b1))
+                | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify_bi (Sum (b2, Sum (b1, b3)))
+                | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bi (Sum (Sum (b1, b3), b2))
+                | (b1, b2) -> Sum (b1, b2))
               | b -> b
-        )
+            in
+            let sum_chain =
+              get_op_chain `Sum b1 @ get_op_chain `Sum b2
+              |> List.filter (not % equal (Const Num.zero))
+            in
+            let combine_chain_elements_with_coeffs =
+              let get_coeff_elem = function
+                | Product (Const c, b) -> (b,c)
+                | Product (b, Const c) -> (b,c)
+                | Const k              -> (Const Num.one, k)
+                | Neg b                -> (b, Num.neg Num.one)
+                | b                    -> (b,Num.one)
+              in
+              sum_chain
+              |> List.map get_coeff_elem
+              |> List.fold_left
+                  (fun list (b,c) ->
+                    try
+                      let i = fst @@ List.findi (fun i -> equal b % fst) list in
+                      List.modify_at i (fun (b,c') -> (b,Num.(c + c'))) list
+                    with Not_found -> List.cons (b,c) list)
+                  []
+              |> List.map (fun (b,c) -> Product (Const c, b) |> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative)
+            in
+            combine_chain_elements_with_coeffs
+            |> construct_op_chain `Sum
+            |> function
+                | Sum (b1,b2) -> simplify_bi @@ Sum (b1,b2)
+                | b -> b
+          )
 
-        (* Simplify terms with product head *)
-        | Product (b1, b2) ->  (
-          let rec simplify_bi = function
-            | Product (b1,b2) ->
-              (
-                match (simplify_bi b1, simplify_bi b2) with
-                | (Max (Const zero1, b1), Max (Const zero2, b2)) when Num.(zero1 =~= zero) && Num.(zero2 =~= zero) ->
-                   simplify_bi (Max (Const Num.zero, Product (b1, b2)))
-                | (Max (Const zero1, b1), b2) when Num.(zero1 =~= zero) ->
-                   simplify_bi (Max (Const Num.zero, Product (b1, b2)))
-                | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify_bi @@ Product (b2, Product (b1, b3))
-                | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bi @@ Product (Product (b1, b3), b2)
-                | (b1, b2) when Constructor.(b2 < b1) -> simplify_bi @@ Product (b2, b1)
-                | (b1, b2) -> Product (b1, b2)
-              )
-            | b -> b
-          in
-          let chain_eliminate_redundant_infinity =
-            let chain = get_op_chain `Product b1 @ get_op_chain `Product b2 in
-            if List.exists (fun b -> is_infinity b || is_minus_infinity b) chain then
-              chain
-              |> List.enum
-              |> Enum.filter (not % is_infinity)
-              |> Enum.map
-                  (fun b ->
-                    match (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Const Num.zero) b, greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero))  with
-                    | (Some true, _) -> Const (Num.(neg one))
-                    | (_, Some true) -> Const (Num.one)
-                    | _              -> b
-                  )
-              |> List.of_enum
-              |> fun l -> List.cons Infinity l
-            else
-              chain
-          in
-          let get_const = function
-            | Const c       -> Some c
-            | Neg (Const c) -> Some (Num.neg c)
-            | _             -> None
-          in
-          let all_non_consts = List.filter (Option.is_none % get_const) chain_eliminate_redundant_infinity in
-          let all_consts = List.map Option.get @@ List.filter Option.is_some @@ List.map get_const chain_eliminate_redundant_infinity in
+          (* Simplify terms with product head *)
+          | Product (b1, b2) ->  (
+            let rec simplify_bi = function
+              | Product (b1,b2) ->
+                (
+                  match (simplify_bi b1, simplify_bi b2) with
+                  | (Max (Const zero1, b1), Max (Const zero2, b2)) when Num.(zero1 =~= zero) && Num.(zero2 =~= zero) ->
+                    simplify_bi (Max (Const Num.zero, Product (b1, b2)))
+                  | (Max (Const zero1, b1), b2) when Num.(zero1 =~= zero) ->
+                    simplify_bi (Max (Const Num.zero, Product (b1, b2)))
+                  | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify_bi @@ Product (b2, Product (b1, b3))
+                  | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bi @@ Product (Product (b1, b3), b2)
+                  | (b1, b2) when Constructor.(b2 < b1) -> simplify_bi @@ Product (b2, b1)
+                  | (b1, b2) -> Product (b1, b2)
+                )
+              | b -> b
+            in
+            let chain_eliminate_redundant_infinity =
+              let chain = get_op_chain `Product b1 @ get_op_chain `Product b2 in
+              if List.exists (fun b -> is_infinity b || is_minus_infinity b) chain then
+                chain
+                |> List.enum
+                |> Enum.filter (not % is_infinity)
+                |> Enum.map
+                    (fun b ->
+                      match (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Const Num.zero) b, greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero))  with
+                      | (Some true, _) -> Const (Num.(neg one))
+                      | (_, Some true) -> Const (Num.one)
+                      | _              -> b
+                    )
+                |> List.of_enum
+                |> fun l -> List.cons Infinity l
+              else
+                chain
+            in
+            let get_const = function
+              | Const c       -> Some c
+              | Neg (Const c) -> Some (Num.neg c)
+              | _             -> None
+            in
+            let all_non_consts = List.filter (Option.is_none % get_const) chain_eliminate_redundant_infinity in
+            let all_consts = List.map Option.get @@ List.filter Option.is_some @@ List.map get_const chain_eliminate_redundant_infinity in
 
-          let const =
-            let c = List.fold_left Num.mul Num.one all_consts in
-            if List.exists (fun b -> is_infinity b || is_minus_infinity b) all_non_consts then
-              (* eliminate constants if product contains infinity *)
-              if Num.Compare.(c = Num.zero) then
+            let const =
+              let c = List.fold_left Num.mul Num.one all_consts in
+              if List.exists (fun b -> is_infinity b || is_minus_infinity b) all_non_consts then
+                (* eliminate constants if product contains infinity *)
+                if Num.Compare.(c = Num.zero) then
+                  c
+                else if Num.Compare.(c > Num.zero) then
+                  Num.one
+                else
+                  Num.(neg one)
+              else
                 c
-              else if Num.Compare.(c > Num.zero) then
-                Num.one
+            in
+
+            let non_const_chain = simplify_bi @@ construct_op_chain `Product all_non_consts in
+            if Num.(equal const zero) then
+              Const const
+            else if Num.(equal const one) then
+              non_const_chain
+            else if Num.(equal const (neg one)) then
+              (Neg non_const_chain)
+            else if List.is_empty all_non_consts then
+              Const const
+            else
+              Product (Const const, non_const_chain)
+          )
+
+          (* Simplify terms with pow head *)
+          | Pow (value, exponent) -> (
+            match simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative exponent with
+            | exponent when Num.(equal value zero) && (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative exponent (Const Num.zero) |? false) -> Const Num.zero
+            | _ when Num.(equal value one) -> Const Num.one
+            | Infinity when Num.Compare.(value >= Num.of_int 2) -> Infinity
+            | Neg Infinity when Num.Compare.(value >= Num.of_int 2) -> Const Num.zero
+            | Const c -> Const Num.(pow value (to_int c))
+            (* TODO Do not use Num.to_int *)
+            | Max (Const c, b) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Max (Const (Num.pow value (Num.to_int c)), Pow (value, b)))
+            | exponent -> Pow (value, exponent)
+          )
+
+          (* Simplify terms with max head *)
+          | Max (b1, b2) -> min_max_helper `Max (b1,b2)
+
+          | Min (b1,b2) -> min_max_helper `Min (b1,b2)
+
+          (* Simplify terms with abs head *)
+          | Abs (Neg b) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Abs b)
+          | Abs (Abs b) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Abs b)
+          | Abs (Product (b1,b2)) ->
+              let chain   = get_op_chain `Product b1 @ get_op_chain `Product b2 in
+              let all_ge0   = List.filter (fun e -> greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative e (Const Num.zero) =  Some true) chain in
+              let all_other = List.filter (fun e -> greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative e (Const Num.zero) <> Some true) chain in
+              if List.is_empty all_ge0 then
+                Abs (construct_op_chain `Product all_other)
               else
-                Num.(neg one)
-            else
-              c
-          in
+                if List.is_empty all_other then
+                  construct_op_chain `Product all_ge0
+                else
+                  Product (construct_op_chain `Product all_ge0, (construct_op_chain `Product @@ List.map (fun b -> Abs b) all_other))
 
-          let non_const_chain = simplify_bi @@ construct_op_chain `Product all_non_consts in
-          if Num.(equal const zero) then
-            Const const
-          else if Num.(equal const one) then
-            non_const_chain
-          else if Num.(equal const (neg one)) then
-            (Neg non_const_chain)
-          else if List.is_empty all_non_consts then
-            Const const
-          else
-            Product (Const const, non_const_chain)
-        )
-
-        (* Simplify terms with pow head *)
-        | Pow (value, exponent) -> (
-           match simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative exponent with
-           | exponent when Num.(equal value zero) && (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative exponent (Const Num.zero) |? false) -> Const Num.zero
-           | _ when Num.(equal value one) -> Const Num.one
-           | Infinity when Num.Compare.(value >= Num.of_int 2) -> Infinity
-           | Neg Infinity when Num.Compare.(value >= Num.of_int 2) -> Const Num.zero
-           | Const c -> Const Num.(pow value (to_int c))
-           (* TODO Do not use Num.to_int *)
-           | Max (Const c, b) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Max (Const (Num.pow value (Num.to_int c)), Pow (value, b)))
-           | exponent -> Pow (value, exponent)
-        )
-
-        (* Simplify terms with max head *)
-        | Max (b1, b2) -> min_max_helper `Max (b1,b2)
-
-        | Min (b1,b2) -> min_max_helper `Min (b1,b2)
-
-        (* Simplify terms with abs head *)
-        | Abs (Neg b) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Abs b)
-        | Abs (Abs b) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Abs b)
-        | Abs (Product (b1,b2)) ->
-            let chain   = get_op_chain `Product b1 @ get_op_chain `Product b2 in
-            let all_ge0   = List.filter (fun e -> greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative e (Const Num.zero) =  Some true) chain in
-            let all_other = List.filter (fun e -> greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative e (Const Num.zero) <> Some true) chain in
-            if List.is_empty all_ge0 then
-              Abs (construct_op_chain `Product all_other)
-            else
-              if List.is_empty all_other then
-                construct_op_chain `Product all_ge0
+          | Abs (Max (b1,b2)) ->
+              if (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Max (b1,b2)) (Const Num.zero) = Some true) then
+                Max (b1,b2) |> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
               else
-                Product (construct_op_chain `Product all_ge0, (construct_op_chain `Product @@ List.map (fun b -> Abs b) all_other))
+                let chain = get_op_chain  `Max b1 @ get_op_chain `Max b2 in
+                construct_chain `Max (List.map (fun b -> Abs b) chain)
 
-        | Abs (Max (b1,b2)) ->
-            if (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Max (b1,b2)) (Const Num.zero) = Some true) then
-              Max (b1,b2) |> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
-            else
-              let chain = get_op_chain  `Max b1 @ get_op_chain `Max b2 in
-              construct_chain `Max (List.map (fun b -> Abs b) chain)
+          | Abs (Min (b1,b2)) ->
+              if (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Max (b1,b2)) (Const Num.zero) = Some true) then
+                Max (b1,b2) |> simplify_~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
+              else
+                let chain = get_op_chain  `Max b1 @ get_op_chain `Max b2 in
+                construct_chain `Max (List.map (fun b -> Abs b) chain)
 
-        | Abs (Min (b1,b2)) ->
-            if (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Max (b1,b2)) (Const Num.zero) = Some true) then
-              Max (b1,b2) |> simplify_~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
-            else
-              let chain = get_op_chain  `Max b1 @ get_op_chain `Max b2 in
-              construct_chain `Max (List.map (fun b -> Abs b) chain)
-
-        | Abs b -> match greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) with
-                     | Some true -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b
-                     | Some false -> Neg b |> simplify_~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
-                     | None -> Abs (simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b)
+          | Abs b -> match greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) with
+                      | Some true -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b
+                      | Some false -> Neg b |> simplify_~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
+                      | None -> Abs (simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b)
+        |> tap (fun t -> if Option.is_none opt_invariants then SimplifyCacheTable.add simplify_cache (assume_vars_nonnegative, bound) t)
       in
       Logger.with_log logger Logger.DEBUG
                       (fun () -> "simplify_", ["input", to_string bound])
@@ -716,20 +733,20 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     (* Wrapper for simplify to improve logging *)
     let simplify b =
-      Logger.log logger Logger.DEBUG (fun () -> "simplifywrapper " , ["b",to_string b]);
-      simplify_ ~opt_invariants:(fun _ _ _ -> None) ~assume_vars_nonnegative:false b
+      Logger.log loggerWrapper Logger.DEBUG (fun () -> "simplifywrapper " , ["b",to_string b]);
+      simplify_ ~opt_invariants:None ~assume_vars_nonnegative:false b
 
     let simplify_vars_nonnegative b =
-      Logger.log logger Logger.DEBUG (fun () -> "simplifyabswrapper " , ["b",to_string b]);
-      simplify_ ~opt_invariants:(fun _ _ _ -> None) ~assume_vars_nonnegative:true b
+      Logger.log loggerWrapper Logger.DEBUG (fun () -> "simplifyabswrapper " , ["b",to_string b]);
+      simplify_ ~opt_invariants:None ~assume_vars_nonnegative:true b
 
     let simplify_opt_invariants opt_invariants b =
-      Logger.log logger Logger.DEBUG (fun () -> "simplifyoptinvariantswrapper " , ["b",to_string b]);
-      simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:true b
+      Logger.log loggerWrapper Logger.DEBUG (fun () -> "simplifyoptinvariantswrapper " , ["b",to_string b]);
+      simplify_ ~opt_invariants:(Some opt_invariants) ~assume_vars_nonnegative:true b
 
 
-    let (>)  = greater          ~opt_invariants:(fun _ _ _ -> None) ~assume_vars_nonnegative:false
-    let (>=) = greater_or_equal ~opt_invariants:(fun _ _ _ -> None) ~assume_vars_nonnegative:false
+    let (>)  = greater          ~opt_invariants:None ~assume_vars_nonnegative:false
+    let (>=) = greater_or_equal ~opt_invariants:None ~assume_vars_nonnegative:false
 
     let (<)  = flip (>)
     let (<=) = flip (>=)

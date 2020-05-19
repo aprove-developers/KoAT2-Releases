@@ -3,6 +3,7 @@ open Batteries
 type logger =
   | Approximation
   | Bound
+  | BoundWrapper
   | BottomUp
   | ELSB
   | ExactRuntime
@@ -21,6 +22,7 @@ let loggers =
     Approximation;
     BottomUp;
     Bound;
+    BoundWrapper;
     ELSB;
     ExactRuntime;
     ExpSize;
@@ -39,6 +41,7 @@ let all = loggers
 let show_logger = function
   | Approximation  -> "appr"
   | Bound          -> "bound"
+  | BoundWrapper   -> "boundWrapper"
   | BottomUp       -> "bottomUp"
   | ELSB           -> "elsb"
   | ExactRuntime   -> "exactruntime"
