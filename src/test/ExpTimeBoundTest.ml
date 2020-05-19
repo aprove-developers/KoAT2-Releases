@@ -41,7 +41,7 @@ let tests =
       List.map
         (fun (name,exp_complexity,prog_path) ->
           name >:::
-            [OUnitTest.TestCase (OUnitTest.Custom_length 300., (fun _ ->
+            [OUnitTest.TestCase (OUnitTest.Custom_length 1200., (fun _ ->
               let cache = CacheManager.new_cache () in
               let prog = Readers.read_file (CacheManager.trans_id_counter cache) ("../../" ^ prog_path) in
               let (processed_prog,approx) =
@@ -70,7 +70,7 @@ let tests =
           ("c4b_t61", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t61.koat");
           ("complex", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/complex.koat");
           ("condand", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/condand.koat");
-(*           ("cooling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/cooling.koat"); *)
+          ("cooling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/cooling.koat");
           ("fcall", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/fcall.koat");
           ("fib_exp_size", RealBound.Exponential 1, "examples/ProbabilisticExamples/paper/fib_exp_size.koat");
           ("filling_vol", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/filling_vol.koat");
