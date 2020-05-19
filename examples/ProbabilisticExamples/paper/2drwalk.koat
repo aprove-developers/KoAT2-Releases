@@ -16,15 +16,17 @@
   # # Third case x>0 && y=0
   h(x,y,d,n,z) -> 0.25:g(x+2,y,d+2,n,z) :+: 0.25:g(x,y+1,d+1,n,z) :+: 0.25:g(x-1,y,d-1,n,z) :+: 0.25:g(x,y-1,d+1,n,z)    :|: x>0 && y=0
   # Fourth Case x<0 && y>0
-  h(x,y,d,n,z) -> 0.25:g(x+1,y,d-1,n,z) :+: 0.25:g(x,y+2,d+2,n,z) :+: 0.25:g(x-2,y,d+2,n,z) :+: 0.25:g(x,y-2,d+2,n,z)    :|: x<0 && y>0
+  h(x,y,d,n,z) -> 0.25:g(x+1,y,d-1,n,z) :+: 0.25:g(x,y+2,d+2,n,z) :+: 0.25:g(x-2,y,d+2,n,z) :+: 0.25:g(x,y-1,d-1,n,z)    :|: x<0 && y>0
   # Fifth case x<0 && y<0
   h(x,y,d,n,z) -> 0.25:g(x+1,y,d-1,n,z) :+: 0.25:g(x,y+1,d-1,n,z) :+: 0.25:g(x-2,y,d+2,n,z) :+: 0.25:g(x,y-2,d+2,n,z)    :|: x<0 && y<0
   # Sixth case x<0 && y=0
   h(x,y,d,n,z) -> 0.25:g(x+1,y,d-1,n,z) :+: 0.25:g(x,y+1,d+1,n,z) :+: 0.25:g(x-2,y,d+2,n,z) :+: 0.25:g(x,y-1,d+1,n,z)    :|: x<0 && y=0
   # Seventh case
-  h(x,y,d,n,z) -> 0.25:g(x+1,y,d+1,n,z) :+: 0.25:g(x,y+2,d+2,n,z) :+: 0.25:g(x-1,y,d+1,n,z) :+: g(x,y-1,d-1,n,z)         :|: x=0 && y>0
+  h(x,y,d,n,z) -> 0.25:g(x+1,y,d+1,n,z) :+: 0.25:g(x,y+2,d+2,n,z) :+: 0.25:g(x-1,y,d+1,n,z) :+: 0.25:g(x,y-1,d-1,n,z)    :|: x=0 && y>0
   # Eighth case
-  h(x,y,d,n,z) -> 0.25:g(x+1,y,d+1,n,z) :+: 0.25:g(x,y+1,d-1,n,z) :+: 0.25:g(x-1,y,d+1,n,z) :+: g(x,y-1,d+1,n,z)         :|: x=0 && y<0
+  h(x,y,d,n,z) -> 0.25:g(x+1,y,d+1,n,z) :+: 0.25:g(x,y+1,d-1,n,z) :+: 0.25:g(x-1,y,d+1,n,z) :+: 0.25:g(x,y-2,d+2,n,z)    :|: x=0 && y<0
+  # Ninth case
+  h(x,y,d,n,z) -> 0.25:g(x+1,y,d+1,n,z) :+: 0.25:g(x,y+1,d+1,n,z) :+: 0.25:g(x-1,y,d+1,n,z) :+: 0.25:g(x,y-1,d+1,n,z)    :|: x=0 && y=0
 )
 
 
