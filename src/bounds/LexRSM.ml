@@ -315,7 +315,7 @@ let rec backtrack_1d_non_increasing ~refined cache = function
               (n2, ys2)
           ) else (
             Solver.pop solver;
-            backtrack_1d cache (xs, n, ys, solver)
+            (n,ys)
           )
 
 let find_1d_lexrsm_non_increasing ~refined ~timeout cache transitions decreasing =
