@@ -70,6 +70,7 @@ let tests =
           ("c4b_t61", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t61.koat");
           ("complex", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/complex.koat");
           ("condand", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/condand.koat");
+(*           ("cooling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/cooling.koat"); *)
           ("fcall", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/fcall.koat");
           ("fib_exp_size", RealBound.Exponential 1, "examples/ProbabilisticExamples/paper/fib_exp_size.koat");
           ("filling_vol", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/filling_vol.koat");
@@ -89,12 +90,15 @@ let tests =
           ("prnes2", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prnes2.koat");
           ("probloop", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prob_loop.koat");
           ("prseq", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prseq.koat");
+          ("cooling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/cooling.koat");
           ("prspeed", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prspeed.koat");
           ("race", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/race.koat");
           ("rdbub", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/rdbub.koat");
           ("rdseql", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdseql.koat");
           ("rdspeed", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdspeed.koat");
           ("rdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdwalk.koat");
+          ("rejection_sampling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rejection_sampling.koat");
+          ("roulette", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/roulette.koat");
           ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Nonprob-KoAT/SelectSort.koat");
           ("simple_nested", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/simple_nested.koat");
           ("simple_recursive", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/simple_recursive.koat");
