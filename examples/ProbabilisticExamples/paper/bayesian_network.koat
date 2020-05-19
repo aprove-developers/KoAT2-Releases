@@ -22,6 +22,6 @@
   h(n,i,d,s,l,g) -> 0.5:j(n,i,d,s,l,1) :+: 0.5:j(n,i,d,s,l,0)                                                   :|: i>0 && d>0
   j(n,i,d,s,l,g) -> 0.05:k(n,i,d,1,l,g) :+: 0.95:k(n,i,d,0,l,g)                                                 :|: i<1
   j(n,i,d,s,l,g) -> 0.8:k(n,i,d,1,l,g) :+: 0.2:k(n,i,d,0,l,g)                                                   :|: i>0
-  k(n,i,d,s,l,g) -> 0.1:g(n,i,d,s,1,g) :+: 0.9:g(n,i,d,s,0,g)                                                   :|: g<1
-  k(n,i,d,s,l,g) -> 0.6:g(n,i,d,s,1,g) :+: 0.4:g(n,i,d,s,0,g)                                                   :|: g>0
+  k(n,i,d,s,l,g) -> 0.1:g(n-1,i,d,s,1,g) :+: 0.9:g(n-1,i,d,s,0,g)                                               :|: g<1
+  k(n,i,d,s,l,g) -> 0.6:g(n-1,i,d,s,1,g) :+: 0.4:g(n-1,i,d,s,0,g)                                               :|: g>0
 )
