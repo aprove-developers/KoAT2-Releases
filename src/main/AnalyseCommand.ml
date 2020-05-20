@@ -92,7 +92,8 @@ let bounded_rv_to_string (program: Program.t) kind (appr: Approximation.t) (t,v)
   
 let get_lsb program kind (t, v) =
   LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
-  
+
+(* Creates the standardized variables representing the input of the program (arguments)*)  
 let standard_vars program =
   let open Program in
   0
