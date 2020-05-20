@@ -106,7 +106,10 @@ module Atom =
 
     let to_string ?(to_file=false) ?(comp=" <= ") atom =
       Polynomial.separate_by_sign atom
-      |> (fun (positive, negative) -> (if to_file then (Polynomial.to_string_to_file positive) else (Polynomial.to_string positive)) ^ comp ^ (if to_file then (Polynomial.to_string_to_file negative) else (Polynomial.to_string negative)))
+      |> (fun (positive, negative) -> (if to_file then (Polynomial.to_string_to_file positive) 
+                                       else (Polynomial.to_string positive)) ^ comp ^ 
+                                       (if to_file then (Polynomial.to_string_to_file (Polynomial.neg negative)) 
+                                       else (Polynomial.to_string (Polynomial.neg negative))))
       
     let max_of_occurring_constants =
       Polynomial.max_of_occurring_constants
