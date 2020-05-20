@@ -12,11 +12,15 @@ let position_string lexbuf =
                  (lexeme lexbuf)
 
 let read_ rule lexbuf =
-  try rule Lexer.read lexbuf with
-  | Lexer.SyntaxError msg ->
-     raise (Error (Printf.sprintf "%s at %s" msg (position_string lexbuf)))
-  | Parser.Error ->
-     raise (Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
+  let result =
+    try rule Lexer.read lexbuf with
+    | Lexer.SyntaxError msg ->
+      raise (Error (Printf.sprintf "%s at %s" msg (position_string lexbuf)))
+    | Parser.Error ->
+      raise (Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
+  in
+  ParserUtil.clear_stored_arities;
+  result
     
 let read_file path =
   read_ Parser.onlyProgram (Lexing.from_input (File.open_in path))

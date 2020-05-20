@@ -3,9 +3,26 @@ open Batteries
 open Formulas
 open Polynomials
 open ProgramTypes
+
+module LocationTable = Hashtbl.Make(Location)
+
+let location_table: int LocationTable.t = LocationTable.create 20
+
+let clear_stored_arities = LocationTable.clear location_table
+
+let check_arity (loc: Location.t) (arity: int): unit = 
+  let stored_arity = LocationTable.find_option location_table loc in
+  let string_of_stored_arities = location_table
+                    |> LocationTable.enum
+                    |> Util.enum_to_string (fun (location, arity) -> Location.to_string location ^ ": " ^ string_of_int arity) in
+  match stored_arity with
+    |None -> LocationTable.add location_table loc arity
+    |(Some m) -> if (m == arity) then () else raise (Failure ("Location " ^ (Location.to_string loc) ^" occurs with different arities of variables "^ (string_of_int m) ^ "<>" ^ (string_of_int arity) ^ " !" ^ "\n Stored " ^ string_of_stored_arities))
    
 (** Generates transitions from given parameters *)
 let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t list): Transition.t list =
+  check_arity (Location.of_string (Tuple2.first lhs)) (List.length (Tuple2.second lhs));
+  check_arity (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))) (List.length (Tuple2.second (List.hd (Tuple2.second rhs))));  
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
