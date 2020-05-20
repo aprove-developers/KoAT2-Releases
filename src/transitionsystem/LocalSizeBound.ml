@@ -412,7 +412,7 @@ let reset () =
 
 let compute_single_local_size_bound program kind (l,t,l') var =
   let lsb =
-    (* If we have an update pattern, it's like x'=b and therefore x'<=b and x >=b and b is a bound for both kinds. *)
+    (* If we have an update pattern, it's like x'=b and therefore x'<=b and x' >=b and b is a bound for both kinds. *)
     TransitionLabel.update t var
     |> Option.map (fun update ->
            (* Introduce a temporary result variable *)
