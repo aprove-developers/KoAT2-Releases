@@ -12,6 +12,7 @@ let position_string lexbuf =
                  (lexeme lexbuf)
 
 let read_ rule lexbuf =
+  ParserUtil.LocationTable.clear ParserUtil.location_table;
   let result =
     try rule Lexer.read lexbuf with
     | Lexer.SyntaxError msg ->
@@ -19,7 +20,6 @@ let read_ rule lexbuf =
     | Parser.Error ->
       raise (Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
   in
-  ParserUtil.clear_stored_arities;
   result
     
 let read_file path =

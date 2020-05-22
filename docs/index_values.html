@@ -33,10 +33,8 @@
 <link title="ProgramTypes" rel="Chapter" href="ProgramTypes.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="Readers" rel="Chapter" href="Readers.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
 <link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
@@ -192,10 +190,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Lexer.html#VAL__ocaml_lex_read_rec">__ocaml_lex_read_rec</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
-<tr><td><a href="Lexer.html#VAL__ocaml_lex_tables">__ocaml_lex_tables</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
 <tr><td align="left"><div>A</div></td></tr>
 <tr><td><a href="Bound.html#VALabs">abs</a> [<a href="Bound.html">Bound</a>]</td>
 <td><div class="info">
@@ -373,6 +367,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="ParserUtil.html#VALcheck_arity">check_arity</a> [<a href="ParserUtil.html">ParserUtil</a>]</td>
+<td></td></tr>
 <tr><td><a href="SMT.Z3Solver.html#VALcheck_negativity">check_negativity</a> [<a href="SMT.Z3Solver.html">SMT.Z3Solver</a>]</td>
 <td></td></tr>
 <tr><td><a href="SMT.Z3Solver.html#VALcheck_positivity">check_positivity</a> [<a href="SMT.Z3Solver.html">SMT.Z3Solver</a>]</td>
@@ -1302,6 +1298,8 @@
 <td></td></tr>
 <tr><td><a href="ProgramTypes.TransitionGraph.html#VALloc_transitions">loc_transitions</a> [<a href="ProgramTypes.TransitionGraph.html">ProgramTypes.TransitionGraph</a>]</td>
 <td></td></tr>
+<tr><td><a href="ParserUtil.html#VALlocation_table">location_table</a> [<a href="ParserUtil.html">ParserUtil</a>]</td>
+<td></td></tr>
 <tr><td><a href="ProgramTypes.TransitionGraph.html#VALlocations">locations</a> [<a href="ProgramTypes.TransitionGraph.html">ProgramTypes.TransitionGraph</a>]</td>
 <td></td></tr>
 <tr><td><a href="Program.html#VALlocations">locations</a> [<a href="Program.html">Program</a>]</td>
@@ -1744,8 +1742,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Lexer.html#VALnext_line">next_line</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
 <tr><td><a href="RankingFunction.html#VALnon_increasing">non_increasing</a> [<a href="RankingFunction.html">RankingFunction</a>]</td>
 <td><div class="info">
 <p>Returns a list of all transitions for which the prf is defined.</p>
@@ -1887,20 +1883,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Parser.html#VALonlyAtom">onlyAtom</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyBound">onlyBound</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyConstraints">onlyConstraints</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyFormula">onlyFormula</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyPolynomial">onlyPolynomial</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyProgram">onlyProgram</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyProgram_simple">onlyProgram_simple</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
 <tr><td><a href="RankingFunction.html#VALonly_rank_to_string">only_rank_to_string</a> [<a href="RankingFunction.html">RankingFunction</a>]</td>
 <td></td></tr>
 <tr><td><a href="Util.html#VALoption_to_string">option_to_string</a> [<a href="Util.html">Util</a>]</td>
@@ -2079,8 +2061,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Lexer.html#VALread">read</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
 <tr><td><a href="Readers.html#VALread_atom">read_atom</a> [<a href="Readers.html">Readers</a>]</td>
 <td></td></tr>
 <tr><td><a href="Readers.html#VALread_bound">read_bound</a> [<a href="Readers.html">Readers</a>]</td>
