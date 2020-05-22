@@ -5,8 +5,6 @@ open Batteries
     With this module it is possible to abstract from the details of parsing and lexing *)
 
 (** Constructs a reader for the given transition graph *)
-
-exception Error of string
                  
 (** Reads a file associated to the given path and returns a program. *)
 val read_file : string -> Program.t

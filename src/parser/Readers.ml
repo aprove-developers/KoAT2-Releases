@@ -1,9 +1,7 @@
 open Batteries
 open ConstraintTypes
 open Lexing
-
-exception Error of string
-                 
+              
 let position_string lexbuf =
   let pos = lexbuf.lex_curr_p in
   Printf.sprintf "line %d at char number %d which is directly after %s"
@@ -16,9 +14,9 @@ let read_ rule lexbuf =
   let result =
     try rule Lexer.read lexbuf with
     | Lexer.SyntaxError msg ->
-      raise (Error (Printf.sprintf "%s at %s" msg (position_string lexbuf)))
+      raise (ParserUtil.Error (Printf.sprintf "%s at %s" msg (position_string lexbuf)))
     | Parser.Error ->
-      raise (Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
+      raise (ParserUtil.Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
   in
   result
     
