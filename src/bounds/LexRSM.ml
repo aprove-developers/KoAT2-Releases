@@ -303,17 +303,21 @@ let rec backtrack_1d_non_increasing ~refined cache = function
   | ([],n,ys,solver) -> (n,ys)
   | (x::xs,n,ys,solver) ->
           Solver.push solver;
+          (* How many non-increasing transitions when skipping the current candidate? *)
+          let (n1, ys1) = backtrack_1d_non_increasing ~refined:refined cache (xs, n, ys, solver) in
           Solver.add_real solver (non_increasing_constraint cache x);
           add_bounding_constraint ~refined:refined cache solver x;
           if Solver.satisfiable_option solver = Some true then (
-            let (n1, ys1) = backtrack_1d_non_increasing ~refined:refined cache (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
-            Solver.pop solver;
-            let (n2, ys2) = backtrack_1d_non_increasing ~refined:refined cache (xs, n, ys, solver) in
+            (* How many non-increasing transitions when keeping the candidate? *)
+            let (n2, ys2) = backtrack_1d_non_increasing ~refined:refined cache (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
             if n1 >= n2 then
-              (n1, ys1)
+              (* When ignoring the current candidate we yield better results. Hence remove the corresponding constraints from the solver*)
+              (Solver.pop solver; (n1, ys1))
             else
+              (* Keep the current candidate and its constraints *)
               (n2, ys2)
           ) else (
+            (* The last added constraints render all constraints unsat. Hence we backtrack *)
             Solver.pop solver;
             (n,ys)
           )
@@ -326,7 +330,7 @@ let find_1d_lexrsm_non_increasing ~refined ~timeout cache transitions decreasing
     Here the non-refined bounded constraint is needed since otherwise the ranking function could become negative after the evaluation of
     a decreasing transition
   *)
-  Solver.add_real solver (bounded_constraint cache decreasing);
+  add_bounding_constraint ~refined:false cache solver decreasing;
   if Solver.satisfiable_option solver = Some true then
     let (n, non_incr) =
       backtrack_1d_non_increasing ~refined:refined
