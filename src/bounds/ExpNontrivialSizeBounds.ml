@@ -89,7 +89,7 @@ let compute_ elsb_cache program get_timebound_gt get_exptimebound get_sizebound 
     |> Enum.map RealBound.maximum
     |> RealBound.sum
     |> tap (fun starting_value -> Logger.log logger Logger.DEBUG
-                                             (fun () -> "starting_value", ["result", RealBound.to_string starting_value]))
+                                             (fun () -> "starting_value", ["result", RealBound.to_string starting_value; "scc_vars", Util.enum_to_string Var.to_string @@ List.enum scc_vars]))
   in
 
   if time_check then
