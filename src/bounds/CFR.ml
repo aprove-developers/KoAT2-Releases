@@ -39,12 +39,10 @@ exception TIMEOUT
 (** Set the time which is reserved for this scc: time_left_cfr * #trans_scc/#trans_left *)
 let set_time_current_cfr (scc: TransitionSet.t) appr = 
   if !time_cfr >= 0. && (TransitionSet.for_all (fun t -> Approximation.is_time_bounded appr t) scc) then (
-    Printf.printf "hi\n";
     time_cfr := max (!time_cfr -. !delta_current_cfr) 0.;
     delta_current_cfr := 0.;
     time_current_cfr := (float_of_int (TransitionSet.cardinal scc)) /. (float_of_int !number_unsolved_trans) *.  !time_cfr;)
   else (
-    Printf.printf "hi\n";
     delta_current_cfr := 0.;
     time_current_cfr := -1.)
 
