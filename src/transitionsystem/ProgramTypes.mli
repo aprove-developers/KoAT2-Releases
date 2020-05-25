@@ -146,3 +146,10 @@ module TransitionGraphWeight (Value : PolyTypes.Ring) :
     (** Returns the zero value of our weight type. *)
     val zero : Value.t
   end
+
+module IDSet :
+sig
+  include module type of Set.Make(Batteries.Int)
+
+  val to_string : t -> string
+end
