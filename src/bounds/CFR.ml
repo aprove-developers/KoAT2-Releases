@@ -15,7 +15,7 @@ end
 module SCCSet = Set.Make(SCCSetCompare)
 
 (** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
-let already_used_cfr = ref TransitionSet.empty
+let already_used_cfr = ref IDSet.empty
 
 (* TODO *)
 let logger = Logging.(get CFR)
@@ -236,8 +236,7 @@ let apply_cfr (program: Program.t) appr =
       |> TransitionSet.map (fun t -> Transition.rename2 map t) in
 
       (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
-      already_used_cfr := TransitionSet.filter (fun trans -> TransitionSet.mem trans scc) !already_used_cfr;
-      already_used_cfr := TransitionSet.union !already_used_cfr transitions_cfr;
+      already_used_cfr := IDSet.union !already_used_cfr (IDSet.of_enum (Enum.map (fun trans -> Transition.id trans) (TransitionSet.enum transitions_cfr)));
 
       (** Merges irankfinder and original program. *)
       merged_program
@@ -251,5 +250,6 @@ let apply_cfr (program: Program.t) appr =
       |> tap (fun _ -> poll_timeout ~applied_cfr:true))) minimalDisjointSCCs
       |> tap (fun _ -> nonLinearTransitions := TransitionSet.empty)
       |> Program.rename
+
       in
       (program_res, get_appr_cfr program program_res appr)
