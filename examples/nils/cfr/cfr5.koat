@@ -2,15 +2,16 @@
 (STARTTERM (FUNCTIONSYMBOLS l0))
 (VAR A B C D)
 (RULES
-  l0(A,B,C,D) -> Com_1(l1a(A,B,C,D))
-  l1b(A,B,C,D) -> Com_1(l3(A,B,C,D)) :|: A < 0 && C < 0
+  l0(A,B,C,D) -> Com_1(l1(A,B,C,D))
+  l2(A,B,C,D) -> Com_1(l3(A,B,C,D)) :|: A < 0 && C < 0
   
-  l1a(A,B,C,D) -> Com_1(l1b(A,B,C,D))
-  l1b(A,B,C,D) -> Com_1(l2a(A,B,C,D)) :|: A >= 0
-  l2a(A,B,C,D) -> Com_1(l1a(A,B + 1,C,D)) :|: B <= 0
-  l2a(A,B,C,D) -> Com_1(l1a(A - B,B,C,D)) :|: B > 0
+  l1(A,B,C,D) -> Com_1(l2(A,B,C,D))
   
-  l1b(A,B,C,D) -> Com_1(l2b(A,B,C,D)) :|: C >= 0
-  l2b(A,B,C,D) -> Com_1(l1a(A,B,C,D + 1)) :|: D <= 0
-  l2b(A,B,C,D) -> Com_1(l1a(A,B,C - D,D)) :|: D > 0
+  l2(A,B,C,D) -> Com_1(l2a(A,B,C,D)) :|: A >= 0
+  l2a(A,B,C,D) -> Com_1(l1(A,B + 1,C,D)) :|: B <= 0
+  l2a(A,B,C,D) -> Com_1(l1(A - B,B,C,D)) :|: B > 0
+  
+  l2(A,B,C,D) -> Com_1(l2b(A,B,C,D)) :|: C >= 0
+  l2b(A,B,C,D) -> Com_1(l1(A,B,C,D + 1)) :|: D <= 0
+  l2b(A,B,C,D) -> Com_1(l1(A,B,C - D,D)) :|: D > 0
 )
