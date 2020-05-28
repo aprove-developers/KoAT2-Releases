@@ -57,7 +57,7 @@ val is_initial_location : t -> Location.t -> bool
 val equivalent : t -> t -> bool
   
 (** Returns a string representing the program. *)
-val to_string : t -> string
+val to_string : ?to_file:bool -> t -> string
 
 (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns a string representation of a program from such an input. *)
 val to_simple_string : t -> string

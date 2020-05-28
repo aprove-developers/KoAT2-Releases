@@ -12,13 +12,13 @@ let improve_scc kind program rvg appr = function
   | scc ->
      let new_bound = NontrivialSizeBounds.compute kind program rvg (Approximation.timebound appr) (fun kind -> Approximation.sizebound kind appr) scc in
      Approximation.add_sizebounds kind new_bound scc appr
-         
+
 let improve program applied_cfr appr =
   let execute () =
     let module C = Graph.Components.Make(RVG) in
     [`Lower; `Upper]
     |> List.fold_left (fun appr kind ->
-           let rvg = RVG.rvg kind program in
+           let rvg = RVG.rvg kind program  in
            List.fold_left (fun appr scc -> 
                 let current_time = Unix.time() in
                 improve_scc kind program rvg appr scc

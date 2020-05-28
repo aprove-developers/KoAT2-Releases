@@ -249,7 +249,7 @@ let apply_cfr (program: Program.t) appr =
       |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current)
       |> tap (fun _ -> poll_timeout ~applied_cfr:true))) minimalDisjointSCCs
       |> tap (fun _ -> nonLinearTransitions := TransitionSet.empty)
-      |> Program.rename
+      (* |> Program.rename *)
 
       in
       (program_res, get_appr_cfr program program_res appr)
