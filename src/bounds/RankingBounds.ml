@@ -230,7 +230,6 @@ let rec fold_until f p acc = function
 
 let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
   program
-    |> tap (fun p -> Printf.printf "prog: %s \n" (Program.to_string p))
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc -> 
