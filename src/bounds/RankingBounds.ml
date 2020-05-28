@@ -165,7 +165,7 @@ let rec improve_timebound_rec ?(mrf = false) (scc: TransitionSet.t)  measure pro
       (Logger.with_log logger Logger.INFO
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
              execute)
-      |> MaybeChanged.if_changed (improve_scc_rec ~mrf:mrf scc measure program)
+      |> MaybeChanged.if_changed (improve_timebound_rec ~mrf:mrf scc measure program)
       |> MaybeChanged.unpack
 
   let improve_timebound ?(mrf = false) (scc: TransitionSet.t)  measure program appr =
