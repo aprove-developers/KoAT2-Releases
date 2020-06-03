@@ -45,13 +45,15 @@ let get_best_bound entry_locations incoming_enum appr rankfunc: RealBound.t =
          |> RealBound.sum
        in
 
-       let det_timebound = List.map (Approximation.timebound appr) trans_to_entry_location |> List.enum |> Bound.sum |> RealBound.of_intbound in
-
        let rank = LexRSM.rank rankfunc entry_location in
 
        let rank_bounded = (RealBound.appr_substition_abs_all rank_size_subst_bound (RealBound.of_poly rank)) in
-
-       mul_inctime_and_rhs (det_timebound,rank_bounded)
+       if RealPolynomial.is_const rank then
+         let inc_prob_timebound = List.map (Approximation.exptimebound appr) entry_trans_to_location |> List.enum |> RealBound.sum in
+         mul_inctime_and_rhs (inc_prob_timebound, rank_bounded)
+      else
+        let inc_det_timebound = List.map (Approximation.timebound appr) trans_to_entry_location |> List.enum |> Bound.sum |> RealBound.of_intbound in
+        mul_inctime_and_rhs (inc_det_timebound, rank_bounded)
      )
   |> List.enum
   |> RealBound.sum
