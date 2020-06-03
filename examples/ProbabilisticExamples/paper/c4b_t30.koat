@@ -6,6 +6,5 @@
   # Start loop
   g(x,y,t) -{0;0}> h(UNIFORM(-3,-1),y,t)   :|: x>0
   h(x,y,t) -{0;0}> i(y,y,x)
-  j(x,y,t) -> g(x,t,t)
-
+  i(x,y,t) -> g(x,t,t)
 )
