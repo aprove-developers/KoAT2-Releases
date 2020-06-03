@@ -1,5 +1,5 @@
 USE_OCAMLFIND = true
-OCAMLOPTFLAGS += -p -g -thread 
+OCAMLOPTFLAGS += -p -g -thread -ccopt -static
 
 OCAMLPACKS[] =
     batteries

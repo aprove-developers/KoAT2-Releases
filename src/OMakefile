@@ -1,5 +1,5 @@
 USE_OCAMLFIND = true
-OCAMLOPTFLAGS += -p -g -thread -cc $(CXX) 
+OCAMLOPTFLAGS += -p -g -thread -cc $(CXX) -ccopt -static
 
 .PHONY: clean doc install
 
