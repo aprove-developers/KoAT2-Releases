@@ -42,9 +42,9 @@ type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded | `Bounded_Ref
 let as_realparapoly label var =
   match TransitionLabel.update label var with
   (** Correct? In the nondeterministic case we just make it deterministic? *)
+  (** TODO This is not the correct encoding a nondeterministic update, but rather of an identity update *)
   | None -> RealParameterPolynomial.of_var var
   | Some (TransitionLabel.UpdateElement.Poly p) -> p |> RealPolynomial.of_intpoly |> RealParameterPolynomial.of_polynomial
-  (** TODO Is this the real life? Is this just fantasy?*)
   | Some (TransitionLabel.UpdateElement.Dist d) ->
       ProbDistribution.expected_value d
       |> RealPolynomial.add (RealPolynomial.of_var var)
