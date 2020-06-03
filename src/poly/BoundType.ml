@@ -267,60 +267,79 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Some true -> true
       | _         -> false
 
+    type boundtype = t
+    module CompCacheTable =
+      Hashtbl.Make
+        (struct
+          type t = bool * boundtype * boundtype
+          let hash (b,t,t') = Hashtbl.hash (b,to_string t, to_string t')
+          let equal (b1,t1,t1') (b2,t2,t2') = Bool.equal b1 b2 && equal t1 t2 && equal t1' t2'
+        end)
+
+    let gt_cache: (bool option) CompCacheTable.t = CompCacheTable.create 1000
+    let gte_cache: (bool option) CompCacheTable.t = CompCacheTable.create 1000
+
     let rec greater ~(opt_invariants:([`GE | `GT] -> t -> t -> bool option) option) ~assume_vars_nonnegative b1 b2 =
       let execute () =
-        let helper b1 b2 =
-          match (b1, b2) with
-          | (Var v, Const c) when Num.Compare.(c < Num.zero) && assume_vars_nonnegative ->  Some true
-          | (Infinity, _) -> Some true
-          | (_, Neg Infinity) -> Some true
-          | (Const c1, Const c2) when Num.Compare.(c1 > c2) -> Some true
-          | (Abs b, Const c) when (Num.Compare.(c < Num.zero) || opt_bool_to_bool (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const c))
-                                                              || opt_bool_to_bool (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Neg (Const c)) b)) -> Some true
+        let cache_entry = CompCacheTable.find_option gt_cache (assume_vars_nonnegative, b1, b2) in
+        if Option.is_none opt_invariants && Option.is_some cache_entry then
+             Option.get cache_entry
+        else
+          let helper b1 b2 =
+            match (b1, b2) with
+            | (Var v, Const c) when Num.Compare.(c < Num.zero) && assume_vars_nonnegative ->  Some true
+            | (Infinity, _) -> Some true
+            | (_, Neg Infinity) -> Some true
+            | (Const c1, Const c2) when Num.Compare.(c1 > c2) -> Some true
+            | (Abs b, Const c) when (Num.Compare.(c < Num.zero) || opt_bool_to_bool (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const c))
+                                                                || opt_bool_to_bool (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Neg (Const c)) b)) -> Some true
 
-          | (Sum (b1,b2), b3) when
-              (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
-                && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true
-                && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
-                && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true) -> Some true
-          | (Sum (b1,b2), b3) when
-              (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
-                && greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true
-                && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
-                && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true) -> Some true
+            | (Sum (b1,b2), b3) when
+                (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
+                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true
+                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
+                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true) -> Some true
+            | (Sum (b1,b2), b3) when
+                (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
+                  && greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true
+                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
+                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true) -> Some true
 
-          | (Sum (b1,b2),b3) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true && equal b1 b3-> Some true
-          | (Sum (b1,b2),b3) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true && equal b2 b3-> Some true
+            | (Sum (b1,b2),b3) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true && equal b1 b3-> Some true
+            | (Sum (b1,b2),b3) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true && equal b2 b3-> Some true
 
-          | (Max (b1,b2), b3) when (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true || greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true) -> Some true
-          | (Max (b1,b2), b3) when (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b3 b1 = Some true && greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b3 b2 = Some true) -> Some false
+            | (Max (b1,b2), b3) when (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true || greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true) -> Some true
+            | (Max (b1,b2), b3) when (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b3 b1 = Some true && greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b3 b2 = Some true) -> Some false
 
-          | (Min (b1,b2), b3) when (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true && greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true) -> Some true
-          | (Min (b1,b2), b3) when (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b3 b1 = Some true || greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b3 b2 = Some true) -> Some false
+            | (Min (b1,b2), b3) when (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true && greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true) -> Some true
+            | (Min (b1,b2), b3) when (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b3 b1 = Some true || greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b3 b2 = Some true) -> Some false
 
-          | (b, Const z1) when Num.(equal z1 zero) -> (
-            match b with
-            | Max (b, _) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
-            | Max (_, b) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
-            | _ -> None
-          )
-          | (Const z1, b) when Num.(equal z1 zero) -> (
-            match b with
-            | Neg (Max (b, _)) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
-            | Neg (Max (_, b)) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
-            | _ -> None
-          )
-          | (b1, b2) -> None
-        in
-        let inv = Option.Monad.bind opt_invariants (fun f -> f `GT b1 b2) in
-        match inv with
-        | Some b -> Some b
-        | None ->
-          match equal b1 b2 with
-           | true  -> Some false
-           | false -> match helper b1 b2 with
+            | (b, Const z1) when Num.(equal z1 zero) -> (
+              match b with
+              | Max (b, _) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
+              | Max (_, b) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
+              | _ -> None
+            )
+            | (Const z1, b) when Num.(equal z1 zero) -> (
+              match b with
+              | Neg (Max (b, _)) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
+              | Neg (Max (_, b)) when greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
+              | _ -> None
+            )
+            | (b1, b2) -> None
+          in
+          let inv = Option.Monad.bind opt_invariants (fun f -> f `GT b1 b2) in
+          (
+            match inv with
               | Some b -> Some b
-              | None   -> helper b2 b1 |> Option.map not
+              | None ->
+                match equal b1 b2 with
+                | true  -> Some false
+                | false -> match helper b1 b2 with
+                    | Some b -> Some b
+                    | None   -> helper b2 b1 |> Option.map not
+          )
+          |> tap (fun r ->  if Option.is_none opt_invariants then CompCacheTable.add gt_cache (assume_vars_nonnegative, b1, b2) r)
       in
       Logger.with_log logger Logger.DEBUG
                       (fun () -> ">", ["condition", to_string b1 ^ ">" ^ to_string b2])
@@ -329,85 +348,92 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     and greater_or_equal ~(opt_invariants: ([`GE | `GT] -> t -> t -> bool option) option) ~assume_vars_nonnegative b1 b2 =
       let execute () =
-        let helper b1 b2 =
-          if equal b1 b2 then
-            Some true
-          else (
-            match (b1, b2) with
-            | (Var v, Const c) when Num.Compare.(c <= Num.zero) && assume_vars_nonnegative -> Some true
-            | (Const c, Var v) when Num.Compare.(c < Num.zero) && assume_vars_nonnegative -> Some false
+        let cache_entry = CompCacheTable.find_option gte_cache (assume_vars_nonnegative, b1, b2) in
+        if Option.is_none opt_invariants && Option.is_some cache_entry then
+             Option.get cache_entry
+        else
+          let helper b1 b2 =
+            if equal b1 b2 then
+              Some true
+            else (
+              match (b1, b2) with
+              | (Var v, Const c) when Num.Compare.(c <= Num.zero) && assume_vars_nonnegative -> Some true
+              | (Const c, Var v) when Num.Compare.(c < Num.zero) && assume_vars_nonnegative -> Some false
 
-            | (Abs _, Const c) when Num.equal c Num.zero -> Some true
-            | (Abs b1, b2) when equal b1 b2 -> Some true
+              | (Abs _, Const c) when Num.equal c Num.zero -> Some true
+              | (Abs b1, b2) when equal b1 b2 -> Some true
 
-            | (Const c, Abs _) when Num.equal c Num.zero -> Some false
-            | (Infinity, _) -> Some true
-            | (Sum (Abs _, b), b2) when equal b b2 -> Some true
-            | (Sum (b1,b2), b3) when
-                (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
-                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true
-                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
-                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true) -> Some true
-            | (_, Neg Infinity) -> Some true
+              | (Const c, Abs _) when Num.equal c Num.zero -> Some false
+              | (Infinity, _) -> Some true
+              | (Sum (Abs _, b), b2) when equal b b2 -> Some true
+              | (Sum (b1,b2), b3) when
+                  (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
+                    && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true
+                    && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
+                    && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true) -> Some true
+              | (_, Neg Infinity) -> Some true
 
-            | (Max (b1,b2), b3) when (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
-                || greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true) -> Some true
+              | (Max (b1,b2), b3) when (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
+                  || greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true) -> Some true
 
-            | (Min (b1,b2), b3) when (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
-                && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true) -> Some true
+              | (Min (b1,b2), b3) when (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
+                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true) -> Some true
 
-            | ((Product (Const c1,b1)),Product (Const c2, b2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
-            | ((Product (Const c1,b1)),Product (b2, Const c2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
-            | ((Product (b1,Const c1)),Product (Const c2, b2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
-            | ((Product (b1,Const c1)),Product (b2, Const c2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
+              | ((Product (Const c1,b1)),Product (Const c2, b2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
+              | ((Product (Const c1,b1)),Product (b2, Const c2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
+              | ((Product (b1,Const c1)),Product (Const c2, b2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
+              | ((Product (b1,Const c1)),Product (b2, Const c2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
 
-            | (Product (Const c1, b2), b) when Num.Compare.(c1 >= Num.one) && (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b = Some true) -> Some true
-            | (b,Product (Const c1, b2)) when Num.Compare.(Num.one >= c1 && c1 >= Num.zero) && (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b b2 = Some true) -> Some true
+              | (Product (Const c1, b2), b) when Num.Compare.(c1 >= Num.one) && (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b = Some true) -> Some true
+              | (b,Product (Const c1, b2)) when Num.Compare.(Num.one >= c1 && c1 >= Num.zero) && (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b b2 = Some true) -> Some true
 
-            (* Check Positivity *)
-            | (Product (b1,b2), Const c) when
-                Num.Compare.(c <= Num.zero) && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
-                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true -> Some true
-            | (Const c, Product (b1,b2)) when
-                Num.Compare.(c < Num.zero) && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
-                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true -> Some false
+              (* Check Positivity *)
+              | (Product (b1,b2), Const c) when
+                  Num.Compare.(c <= Num.zero) && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
+                    && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true -> Some true
+              | (Const c, Product (b1,b2)) when
+                  Num.Compare.(c < Num.zero) && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
+                    && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true -> Some false
 
-            | (Const c1, Const c2) when Num.Compare.(c1 >= c2) -> Some true
-            | (b, Const z1) when Num.(equal z1 zero) -> (
-              match b with
-              | Max (b, _) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
-              | Max (_, b) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
-              | _ -> None
+              | (Const c1, Const c2) when Num.Compare.(c1 >= c2) -> Some true
+              | (b, Const z1) when Num.(equal z1 zero) -> (
+                match b with
+                | Max (b, _) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
+                | Max (_, b) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
+                | _ -> None
+              )
+              | (b, Const z1) when Num.(equal z1 zero) -> (
+                match b with
+                | Neg (Max (b, _)) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
+                | Neg (Max (_, b)) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative  b (Const Num.zero) |? false -> Some true
+                | _ -> None
+              )
+              | (b1, b2) -> None
             )
-            | (b, Const z1) when Num.(equal z1 zero) -> (
-              match b with
-              | Neg (Max (b, _)) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
-              | Neg (Max (_, b)) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative  b (Const Num.zero) |? false -> Some true
-              | _ -> None
-            )
-            | (b1, b2) -> None
-          )
         in
         let gt b1 b2 = greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b2 in
         let lt b1 b2 = greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b1 in
         let inv = Option.Monad.bind opt_invariants (fun f -> f `GE b1 b2) in
-        match inv with
-        | Some b -> Some b
-        | None   ->
-            if gt b1 b2 = Some true then
-              Some true
-            else
-              (
-                if lt b1 b2 = Some true then
-                  Some false
+        (
+          match inv with
+            | Some b -> Some b
+            | None   ->
+                if gt b1 b2 = Some true then
+                  Some true
                 else
                   (
-                    match helper b1 b2 with
-                    | Some true  -> Some true
-                    | Some false -> Some false
-                    | _          -> None
+                    if lt b1 b2 = Some true then
+                      Some false
+                    else
+                      (
+                        match helper b1 b2 with
+                        | Some true  -> Some true
+                        | Some false -> Some false
+                        | _          -> None
+                      )
                   )
-              )
+        )
+        |> tap (fun r -> if Option.is_none opt_invariants then CompCacheTable.add gte_cache (assume_vars_nonnegative, b1, b2) r)
       in
       Logger.with_log logger Logger.DEBUG
                       (fun () -> ">=", ["condition", to_string b1 ^ ">=" ^ to_string b2])
@@ -420,7 +446,6 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let is_minus_infinity = equal (Neg Infinity)
 
-    type boundtype = t
     module SimplifyCacheTable =
       Hashtbl.Make
         (struct

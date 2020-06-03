@@ -41,7 +41,7 @@ let tests =
       List.map
         (fun (name,exp_complexity,prog_path) ->
           name >:::
-            [OUnitTest.TestCase (OUnitTest.Custom_length 1200., (fun _ ->
+            [OUnitTest.TestCase (OUnitTest.Custom_length 600., (fun _ ->
               let cache = CacheManager.new_cache () in
               let prog = Readers.read_file (CacheManager.trans_id_counter cache) ("../../" ^ prog_path) in
               let (processed_prog,approx) =
@@ -49,7 +49,7 @@ let tests =
                 |> Preprocessor.process (CacheManager.trans_id_counter cache)
                     Preprocessor.process_til_fixpoint
                     Preprocessor.[InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations; CutZeroProbTransitions]
-                |> (fun (p,appr) -> Bounds.find_exp_bounds false ~refined_smt_timeout:(Some 1.0) ~generate_invariants_bottom_up:Preprocessor.generate_invariants true cache p appr)
+                |> (fun (p,appr) -> Bounds.find_exp_bounds false ~refined_smt_timeout:(Some 5.0) ~generate_invariants_bottom_up:Preprocessor.generate_invariants true cache p appr)
               in
               let expcost_bound = Approximation.program_expcostbound approx processed_prog in
               let expcost_compl = expcost_bound |> RealBound.asymptotic_complexity in
@@ -90,7 +90,6 @@ let tests =
           ("prnes2", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prnes2.koat");
           ("probloop", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prob_loop.koat");
           ("prseq", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prseq.koat");
-          ("cooling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/cooling.koat");
           ("prspeed", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prspeed.koat");
           ("race", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/race.koat");
           ("rdbub", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/rdbub.koat");
