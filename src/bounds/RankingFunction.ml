@@ -53,13 +53,20 @@ let only_rank_to_string {rank; decreasing; non_increasing} =
 let to_string {rank; decreasing; non_increasing} =
   "{rank:" ^ only_rank_to_string {rank; decreasing; non_increasing} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
-let as_parapoly label var =
+(*
+  Return the update parameter polynomial and a set of constraints on this update.
+  The constraints can for example encode the support of probability distributions.
+*)
+let as_parapoly label var: ParameterPolynomial.t * Constraint.t =
   match TransitionLabel.update label var with
   (** Correct? In the nondeterministic case we just make it deterministic? *)
-  | None -> ParameterPolynomial.of_var var
-  | Some (TransitionLabel.UpdateElement.Poly p) -> ParameterPolynomial.of_polynomial p
+  (** TODO This is not the correct encoding a nondeterministic update, but rather of an identity update *)
+  | None -> ParameterPolynomial.of_var var, Constraint.mk_true
+  | Some (TransitionLabel.UpdateElement.Poly p) -> ParameterPolynomial.of_polynomial p, Constraint.mk_true
   (** TODO is there a better way in the probabilistic case ? *)
-  | Some (TransitionLabel.UpdateElement.Dist _) -> ParameterPolynomial.of_var var
+  | Some (TransitionLabel.UpdateElement.Dist d) ->
+      let var' = Var.fresh_id Var.Int () in
+      ParameterPolynomial.of_var var', ProbDistribution.guard d var var'
 
 (** Given a list of variables an affine template-polynomial is generated*)
 let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list * Var.t =
@@ -106,15 +113,29 @@ let decreaser measure t =
   | `Cost -> TransitionLabel.cost t
   | `Time -> Polynomial.one
 
+module VarMap = Map.Make(Var)
 let transition_constraint_ cache (measure, constraint_type, (l,t,l')): Formula.t =
   let template = TemplateTable.find (get_template_table cache) in
+  let para_polys_with_constrs =
+    ParameterPolynomial.vars (template l')
+    |> fun vset ->
+        VarSet.fold
+          (fun v (vmap,cs) -> let (para_poly, c) = as_parapoly t v in VarMap.add v para_poly vmap, Constraint.mk_and c cs)
+          vset (VarMap.empty, Constraint.mk_true)
+  in
   let atom =
     match constraint_type with
-    | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (as_parapoly t) (template l'))
-    | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
-    | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))
+    | `Non_Increasing ->
+        ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (flip VarMap.find (Tuple2.first para_polys_with_constrs)) (template l')),
+        Constraint.mk_and (TransitionLabel.guard t) (Tuple2.second para_polys_with_constrs)
+    | `Decreasing ->
+        ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (flip VarMap.find (Tuple2.first para_polys_with_constrs)) (template l'))),
+        Constraint.mk_and (TransitionLabel.guard t) (Tuple2.second para_polys_with_constrs)
+    | `Bounded ->
+        ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t)), TransitionLabel.guard t
   in
-  ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
+  atom
+  |> fun (a,c) -> ParameterConstraint.farkas_transform c a
   |> Formula.mk
 
 let transition_constraint cache =
@@ -148,14 +169,6 @@ let make cache decreasing_transition non_increasing_transitions valuation =
     decreasing = decreasing_transition;
     non_increasing = non_increasing_transitions;
   }
-
-(*let find_with measure non_increasing_transitions decreasing_transition =
-  Formula.Infix.(
-    non_increasing_constraints measure non_increasing_transitions
-    && bounded_constraint measure decreasing_transition
-    && decreasing_constraint measure decreasing_transition)
-  |> SMTSolver.get_model ~coeffs_to_minimise:!fresh_coeffs
-  |> Option.map (make decreasing_transition non_increasing_transitions)*)
 
 let get_ranking_table = function
   | `Time -> get_time_ranking_table
