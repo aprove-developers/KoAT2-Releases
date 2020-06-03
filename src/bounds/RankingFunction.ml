@@ -51,7 +51,7 @@ let only_rank_to_string {rank; decreasing; non_increasing} =
   rank_to_string locations Polynomial.to_string rank
 
 let to_string {rank; decreasing; non_increasing} =
-  "{rank:" ^ only_rank_to_string {rank; decreasing; non_increasing} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
+  "{rank:" ^ only_rank_to_string {rank; decreasing; non_increasing} ^ "; decreasing:" ^ Transition.to_id_string decreasing ^ "; non_increasing: " ^ TransitionSet.to_string non_increasing ^ "}"
 
 (*
   Return the update parameter polynomial and a set of constraints on this update.
