@@ -360,7 +360,3 @@ let reset () =
   for i = 0 to List.length !template_tables - 1 do
     TemplateTable.clear (List.nth !template_tables i)
   done
-
-
-  let test measure =
-     RankingTable.is_empty (ranking_table measure)

@@ -116,7 +116,6 @@ let add_bound = function
 let improve_with_rank  measure program appr rank =
   let bound = compute_bound appr program rank in
   if Bound.is_infinity bound then
-    
     MaybeChanged.same appr
   else
     rank
@@ -184,7 +183,7 @@ let rec improve_timebound_rec ?(mrf = false) (scc: TransitionSet.t)  measure pro
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank_mrf measure program appr rank) appr
           else 
-            RankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc                     
+            RankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc                    
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank measure program appr rank) appr)
@@ -196,27 +195,27 @@ let rec improve_timebound_rec ?(mrf = false) (scc: TransitionSet.t)  measure pro
   let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr = 
     appr
     |> improve_timebound_rec ~mrf:mrf scc measure program
-    |> SizeBounds.improve program (Option.is_some !backtrack_point)
+    |> SizeBounds.improve program ~scc:(Option.some scc) (Option.is_some !backtrack_point)
     |> improve_timebound ~mrf:mrf scc measure program
     |> MaybeChanged.if_changed (improve_scc ~mrf:mrf scc measure program)
     |> MaybeChanged.unpack
 
 
 let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure program appr =
-  if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions) then
-      let (program_cfr, appr_cfr) = 
+  if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions)  then
+      let opt = 
             CFR.set_time_current_cfr scc appr;
             CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
             Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions); "time: ", string_of_float !CFR.time_current_cfr]);
             CFR.apply_cfr program appr in
+      if Option.is_some opt then (
+      let (program_cfr,appr_cfr) = Option.get opt in
       backtrack_point := Option.some (program,appr);
-      if mrf then 
-        MultiphaseRankingFunction.reset()
-      else
-        RankingFunction.reset(); 
       LocalSizeBound.switch_cache();  
       LocalSizeBound.enable_cfr();
-      MaybeChanged.changed (program_cfr,appr_cfr)
+      MaybeChanged.changed (program_cfr,appr_cfr))
+      else 
+      MaybeChanged.same (program,appr)
     else 
       MaybeChanged.same (program,appr)
 
@@ -233,24 +232,23 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc -> 
-                        try 
-                          if mrf then 
-                            MultiphaseRankingFunction.reset()
-                          else
-                            RankingFunction.reset(); 
-                          appr               
-                          (* |> SizeBounds.improve program (Option.is_some !backtrack_point) *)
-                          |> improve_scc ~mrf:mrf scc measure program
-                          |> apply_cfr ~cfr:cfr ~mrf:mrf scc measure program
-                        with TIMEOUT ->
+                        if (TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc) then (
                           if mrf then 
                             MultiphaseRankingFunction.reset()
                           else
                             RankingFunction.reset (); 
-                          LocalSizeBound.reset_cfr ();  
-                          let (program,appr) = Option.get !backtrack_point in
-                          backtrack_point := None;
-                          MaybeChanged.changed (program,appr)) 
+                          try 
+                            appr               
+                            |> SizeBounds.improve ~scc:(Option.some scc) program  (Option.is_some !backtrack_point)
+                            |> improve_scc ~mrf:mrf scc measure program
+                            |> apply_cfr ~cfr:cfr ~mrf:mrf scc measure program
+                          with TIMEOUT ->
+                            LocalSizeBound.reset_cfr ();  
+                            let (program,appr) = Option.get !backtrack_point in
+                            backtrack_point := None;
+                            MaybeChanged.changed (program,appr)
+                            )
+                          else monad) 
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
     |> MaybeChanged.if_changed (fun (a,b) -> (improve ~cfr:cfr ~mrf:mrf measure a b))
     |> MaybeChanged.unpack

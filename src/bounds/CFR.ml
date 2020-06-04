@@ -209,14 +209,21 @@ let apply_cfr (program: Program.t) appr =
   and minimalDisjointSCCs = program
                             |> minimalSCCs
                             |> minimalDisjointSCCs 
-                            |> SCCSet.filter (fun scc -> (TransitionSet.cardinal scc) > 1)  in
-
+                            |> SCCSet.filter (fun scc -> 
+                              if (TransitionSet.cardinal scc) = 1 then (
+                                already_used_cfr := IDSet.add (Transition.id (TransitionSet.any scc)) !already_used_cfr;
+                                false)
+                              else 
+                                true)  in
+  if SCCSet.is_empty minimalDisjointSCCs then
+    None
+  else (
     let program_res = 
     program
     |> SCCSet.fold (fun scc merged_program ->  
       (fun sccs -> 
       Logger.log logger Logger.INFO
-                               (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter !nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
+                                (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter !nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
       let time_current = Unix.time()
       and scc_list = TransitionSet.to_list scc in
       let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
@@ -250,6 +257,5 @@ let apply_cfr (program: Program.t) appr =
       |> tap (fun _ -> poll_timeout ~applied_cfr:true))) minimalDisjointSCCs
       |> tap (fun _ -> nonLinearTransitions := TransitionSet.empty)
       (* |> Program.rename *)
-
       in
-      (program_res, get_appr_cfr program program_res appr)
+      Option.some (program_res, get_appr_cfr program program_res appr))

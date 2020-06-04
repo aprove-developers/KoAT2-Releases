@@ -13,7 +13,8 @@ let improve_scc kind program rvg appr = function
      let new_bound = NontrivialSizeBounds.compute kind program rvg (Approximation.timebound appr) (fun kind -> Approximation.sizebound kind appr) scc in
      Approximation.add_sizebounds kind new_bound scc appr
 
-let improve program applied_cfr appr =
+
+let improve program ?(scc = None) applied_cfr appr =
   let execute () =
     let module C = Graph.Components.Make(RVG) in
     [`Lower; `Upper]
@@ -25,7 +26,11 @@ let improve program applied_cfr appr =
                 |> tap (fun _ -> 
                         CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
                         CFR.poll_timeout ~applied_cfr:applied_cfr)
-            ) appr (List.rev (C.scc_list rvg))
+            ) appr ( 
+            if Option.is_none scc then
+             (List.rev (C.scc_list rvg))
+            else 
+             (List.rev (List.filter (fun rvg_scc -> List.exists (fun (t,x) -> TransitionSet.mem t (Option.get scc)) rvg_scc) (C.scc_list rvg))))
          ) appr
   in Logger.with_log logger Logger.INFO
                   (fun () -> "improve_size_bounds", [])

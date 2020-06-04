@@ -48,5 +48,3 @@ val only_rank_to_string : t -> string
 (** Resets all cached data.
     Useful for testing in the same OCaml instance. *)
 val reset : unit -> unit
-
-val test : measure -> bool
