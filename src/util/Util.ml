@@ -76,3 +76,9 @@ let unpack_option_tuple = function
   | _                -> None
 
 let show_debug_log logger ~resultprint descr elem = Logger.with_log logger Logger.DEBUG (fun () -> descr, []) ~result:resultprint (fun () -> elem)
+
+let cat_maybes l=
+  List.map Option.get (List.filter Option.is_some l)
+
+let cat_maybes_enum e =
+  Enum.map Option.get (Enum.filter Option.is_some e)

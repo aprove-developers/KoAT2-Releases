@@ -188,12 +188,6 @@ let try_decreasing cache (opt: Solver.t) (non_increasing: Transition.t Stack.t) 
          Solver.add opt (bounded_constraint cache measure decreasing);
          Solver.add opt (decreasing_constraint cache measure decreasing);
          if Solver.satisfiable opt then (
-(*            let fresh_coeffs =
-            !fresh_coeffs
-            |> List.filter (fun c -> not @@ List.mem c !fresh_constants)
-           in
-           Solver.minimize_absolute_iteratively opt @@ List.append fresh_coeffs !fresh_constants; *)
-(*            A Million times faster, but less precise *)
            Solver.minimize_absolute_old opt !fresh_coeffs;
            Solver.model opt
            |> Option.map (make cache decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
@@ -212,7 +206,11 @@ let try_decreasing cache (opt: Solver.t) (non_increasing: Transition.t Stack.t) 
   if !to_be_found <= 0 then
     raise Exit
 
-
+(*
+  For now we use the heuristic implementation below.
+  It may be less accurate (although they perform similar on many examples) but is MASSIVELY faster,
+  especially on graph with many general transitions where each of them consist of many non-general transitions
+*)
 let rec backtrack cache (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) =
   if Solver.satisfiable opt then (
     if steps_left == 0 then (
@@ -231,26 +229,171 @@ let rec backtrack cache (steps_left: int) (index: int) (opt: Solver.t) (scc: Tra
     )
   )
 
+module Dijkstra =
+  Graph.Path.Dijkstra
+    (TransitionGraph)
+    (struct
+      type edge = Transition.t
+      type t = int
+      let weight = const 1
+      let compare = compare
+      let add = (+)
+      let zero = 0
+    end)
+
+module TransitionMap = Map.Make(
+  struct
+    type t = Transition.t
+    let compare = Transition.compare_same
+  end)
+
+(* Compute the shortest path from a node to itself while not considering self-loops *)
+let shortest_self_path_no_loop graph l =
+  TransitionGraph.locations graph
+  |> LocationSet.enum
+  |> Enum.filter (not % Location.equal l)
+  |> Enum.map
+      (* Intermediate node not equal to l *)
+      (fun v ->
+          let composed_path () =
+            let (p1, l1) = Dijkstra.shortest_path graph l v in
+            let (p2, l2) = Dijkstra.shortest_path graph v l in
+            Some (p1@p2, l1+l2)
+          in
+          try
+            composed_path ()
+          with Not_found -> None
+      )
+  |> Util.cat_maybes_enum
+  |> List.of_enum
+
+let next_candidates not_added_graph graph =
+  let already_connected_locations = TransitionGraph.locations graph |> LocationSet.enum in
+  (*
+    We want to close circles as fast as possible. Hence for all pairs of already added locations
+    l1 and l2, check how many transitions of the non added transitions must be added to obtain
+    a path l1 -> l2.
+  *)
+  Enum.cartesian_product (Enum.clone already_connected_locations) (Enum.clone already_connected_locations)
+  |> Enum.map
+      (fun (l1,l2) ->
+(*         Dijkstra does not deal with self-loops *)
+        if not (Location.equal l1 l2) then
+          try
+            Some (Dijkstra.shortest_path not_added_graph l1 l2)
+          with Not_found -> None
+        else
+          TransitionGraph.find_all_edges not_added_graph l1 l2
+          |> fun ts ->  List.nth_opt ts 0
+          |> fun o -> if Option.is_none o then List.nth_opt (shortest_self_path_no_loop not_added_graph l1) 0 else o
+          |> Option.map (fun t -> List.singleton t, 1)
+      )
+  |> Util.cat_maybes_enum
+  (* Which transition now is the begin of a path l1->l2? How long is a shortest such path? How many exist there?*)
+  |> Enum.fold
+      (fun tmap (path,length) ->
+        let first_trans = List.hd path in
+        TransitionMap.modify_def
+          ([], Int.max_num) first_trans
+          (fun (paths,length_shortest) -> path::paths, Int.min length length_shortest) tmap
+      )
+      TransitionMap.empty
+  |> TransitionMap.enum
+  |> List.of_enum
+  |> List.sort
+      (fun (gt1,(paths1,min_length1)) (gt,(paths2,min_length2))->
+        compare (min_length1, List.length paths1) (min_length2, List.length paths2))
+  |> List.map (fst % snd)
+  |> List.flatten
+  |> tap (fun l ->
+        Logger.log logger Logger.DEBUG
+        (fun () -> "next_candidates",
+          ["candidates", Util.enum_to_string (Util.enum_to_string Transition.to_id_string) % List.enum @@ List.map List.enum l]
+        )
+      )
+
+let close_next_cycle cache measure solver not_added_graph graph: TransitionSet.t =
+  let all_paths = next_candidates not_added_graph graph in
+  let rec close_circle path: bool * TransitionSet.t = match path with
+    | []    -> true, TransitionSet.empty
+    | e::es ->
+        Solver.push solver;
+        Solver.add solver (non_increasing_constraint cache measure e);
+        if Solver.satisfiable solver then
+          let (closed, non_inc_set) = close_circle es in
+          Solver.pop solver;
+          closed, TransitionSet.add e non_inc_set
+        else
+          (Solver.pop solver; false, TransitionSet.empty)
+  in
+  let rec choose_circle paths tset = match paths with
+    | []    -> tset
+    | p::ps ->
+        let (closed_curr, tset_curr) = close_circle p in
+        if closed_curr then
+          tset_curr
+        else
+          let best_tset =
+            if TransitionSet.cardinal tset >= TransitionSet.cardinal tset_curr then
+              tset
+            else
+              tset_curr
+          in
+          choose_circle ps best_tset
+  in
+  choose_circle all_paths TransitionSet.empty
+  |> tap (fun tset -> Logger.log logger Logger.DEBUG (fun () -> "close_next_cycle", ["add to non_inc_tset", TransitionSet.to_string tset]))
+  (* Add Constraints to the Solver *)
+  |> tap (
+      TransitionSet.iter (Solver.add solver % non_increasing_constraint cache measure)
+      )
+
+
+let find_non_inc_set cache measure solver decreasing try_non_inc_set =
+  let decr_graph =
+    TransitionGraph.empty
+    |> flip TransitionGraph.add_edge_e decreasing
+  in
+  let not_added_graph =
+    TransitionGraph.empty
+    |> TransitionSet.fold (flip TransitionGraph.add_edge_e) try_non_inc_set
+  in
+  let rec try_close_cycles n_a_g g =
+    let next_non_inc_set = close_next_cycle cache measure solver n_a_g g in
+    if TransitionSet.is_empty next_non_inc_set then
+      TransitionGraph.transitions g
+    else
+      let n_a_g' = TransitionSet.fold (flip TransitionGraph.remove_edge_e) next_non_inc_set n_a_g in
+      let g' = TransitionSet.fold (flip TransitionGraph.add_edge_e) next_non_inc_set g in
+      try_close_cycles n_a_g' g'
+  in
+
+  try_close_cycles not_added_graph decr_graph
+
+let compute_and_add_ranking_function cache measure all_trans decreasing: unit =
+  let try_non_inc_set = TransitionSet.remove decreasing all_trans in
+  let solver = Solver.create () in
+  Solver.add solver (decreasing_constraint cache measure decreasing);
+  Solver.add solver (bounded_constraint cache measure decreasing);
+  let satinit = Solver.satisfiable solver in
+  if Solver.satisfiable solver then
+    let non_inc = find_non_inc_set cache measure solver decreasing try_non_inc_set in
+    Solver.minimize_absolute_old solver !fresh_coeffs;
+    Solver.model solver
+    |> Option.map (make cache decreasing non_inc)
+    |> Option.may (fun rank_func ->
+      RankingTable.add (get_ranking_table measure cache) decreasing rank_func;
+      Logger.(log logger INFO (fun () -> "add_ranking_function", [
+                                    "measure", show_measure measure;
+                                    "decreasing", Transition.to_id_string decreasing;
+                                    "non_increasing", TransitionSet.to_string non_inc;
+                                    "rank", only_rank_to_string rank_func]))
+    )
+
 let compute_ cache measure program =
   program
   |> Program.sccs
-  |> Enum.iter (fun scc ->
-         try
-           backtrack cache
-                     (TransitionSet.cardinal scc)
-                     0
-                     (Solver.create ())
-                     (Array.of_enum (TransitionSet.enum scc))
-                     (Stack.create ())
-                     (ref (TransitionSet.cardinal scc))
-                     measure;
-           scc
-           |> TransitionSet.iter (fun t ->
-                  if not (RankingTable.mem (get_ranking_table measure cache) t) then
-                    Logger.(log logger WARN (fun () -> "no_ranking_function", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
-                )
-         with Exit -> ()
-       )
+  |> Enum.iter (fun scc -> TransitionSet.iter (compute_and_add_ranking_function cache measure scc) scc)
 
 let find cache measure program transition =
   let execute () =
