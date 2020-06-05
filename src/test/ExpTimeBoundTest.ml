@@ -41,7 +41,7 @@ let tests =
       List.map
         (fun (name,exp_complexity,prog_path) ->
           name >:::
-            [OUnitTest.TestCase (OUnitTest.Custom_length 600., (fun _ ->
+            [OUnitTest.TestCase (OUnitTest.Custom_length 1200., (fun _ ->
               let cache = CacheManager.new_cache () in
               let prog = Readers.read_file (CacheManager.trans_id_counter cache) ("../../" ^ prog_path) in
               let (processed_prog,approx) =
@@ -61,6 +61,7 @@ let tests =
           ))]
         )
         [
+          ("2drwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/2drwalk.koat");
           ("ber", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/ber.koat");
           ("bin", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/bin.koat");
           ("c4b_t09", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t09.koat");
@@ -97,6 +98,7 @@ let tests =
           ("rdspeed", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdspeed.koat");
           ("rdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdwalk.koat");
           ("rejection_sampling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rejection_sampling.koat");
+          ("robot", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/robot.koat");
           ("roulette", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/roulette.koat");
           ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Nonprob-KoAT/SelectSort.koat");
           ("simple_nested", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/simple_nested.koat");
