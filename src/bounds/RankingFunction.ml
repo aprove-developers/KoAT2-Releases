@@ -375,7 +375,6 @@ let compute_and_add_ranking_function cache measure all_trans decreasing: unit =
   let solver = Solver.create () in
   Solver.add solver (decreasing_constraint cache measure decreasing);
   Solver.add solver (bounded_constraint cache measure decreasing);
-  let satinit = Solver.satisfiable solver in
   if Solver.satisfiable solver then
     let non_inc = find_non_inc_set cache measure solver decreasing try_non_inc_set in
     Solver.minimize_absolute_old solver !fresh_coeffs;
