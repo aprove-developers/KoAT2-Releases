@@ -21,7 +21,7 @@ let read_ rule lexbuf =
      raise (Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
 
 let read_file trans_id_counter path =
-  read_ Parser.onlyProgram (Lexing.from_input (File.open_in path)) trans_id_counter
+  read_ Parser.onlyProgram (Lexing.from_channel @@ File.open_in path) trans_id_counter
 
 let read rule str =
   read_ rule (Lexing.from_string str)
@@ -48,10 +48,10 @@ let read_bound =
   read Parser.onlyBound
 
 let read_goal_file path =
-  read_ Parser.onlyGoal (Lexing.from_input (File.open_in path))
+  read_ Parser.onlyGoal (Lexing.from_channel @@ File.open_in path)
 
 let read_prog_goal_file trans_id_counter path =
-  read_ Parser.programAndGoal (Lexing.from_input (File.open_in path)) @@ trans_id_counter
+  read_ Parser.programAndGoal (Lexing.from_channel @@ File.open_in path) @@ trans_id_counter
 
 let read_exact_file path =
-  read_ Parser.exactProgram (Lexing.from_input (File.open_in path))
+  read_ Parser.exactProgram (Lexing.from_channel @@ File.open_in path)
