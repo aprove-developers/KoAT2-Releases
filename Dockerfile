@@ -48,14 +48,14 @@ RUN cd src/test && ./Test
 ###################################################################
 
 # Use alpine because it is super small
-FROM alpine:3.9 as koat2_probabilistic
+FROM alpine:3.12 as koat2_probabilistic
 LABEL author="Fabian Meyer"
 
 RUN adduser -D koat2
 WORKDIR /home/koat2
 
 # Install necessary packages
-RUN apk add libstdc++ mpfr3 libgomp --no-cache
+RUN apk add libstdc++ mpfr-dev libgomp --no-cache
 
 # Add executables
 COPY --from=koat2_build --chown=koat2:koat2 /home/opam/build/src/main/koat2 app/src/main/koat2
@@ -66,8 +66,12 @@ COPY --from=koat2_build --chown=koat2:koat2 /home/opam/.opam/4.07.1+flambda/shar
 # Add Probabilistic Examples
 COPY --chown=koat2:koat2 examples/ProbabilisticExamples/paper examples
 
+# Add scripts
+COPY --chown=koat2:koat2 docker_entry.sh app/src/main/docker_entry.sh
+
 USER koat2
 WORKDIR /home/koat2/examples
 ENV LD_LIBRARY_PATH=/home/koat2/share/apron/lib
 ENV PATH=/home/koat2/app/src/main:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENTRYPOINT ["time", "koat2", "analyse", "-i"]
+RUN koat2 analyse -i rdwalk.koat
+ENTRYPOINT [ "docker_entry.sh" ]
