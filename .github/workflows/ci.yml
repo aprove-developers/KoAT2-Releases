@@ -36,7 +36,7 @@ jobs:
         sudo apt-get install bubblewrap libmpfr-dev -y
         echo "/usr/local/bin" | sh <(curl -sL https://raw.githubusercontent.com/ocaml/opam/master/shell/install.sh)
         opam init
-        if [ ! -d ~/.opam/4.07.1 ]; then opam switch create -y 4.07.1; fi
+        if [ ! -d ~/.opam/4.09.1 ]; then opam switch create -y 4.09.1; fi
         opam list
         opam install -y apron batteries cmdliner fpath menhir ocamlfind ocamlgraph omake ounit ppx_deriving ppx_deriving_cmdliner
         opam install -y z3
