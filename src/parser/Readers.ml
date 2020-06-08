@@ -21,7 +21,7 @@ let read_ rule lexbuf =
   result
     
 let read_file path =
-  read_ Parser.onlyProgram (Lexing.from_input (File.open_in path))
+  read_ Parser.onlyProgram (Lexing.from_channel @@ File.open_in path)
 
 let read rule str =
   read_ rule (Lexing.from_string str)

@@ -9,7 +9,7 @@ let print_graph out_dir name graph output_graph =
   (* Create output directory if not existing *)
   ignore (Sys.command ("mkdir -p " ^ Fpath.to_string out_dir));
   (* Write a graphviz dot file *)
-  output_graph (Pervasives.open_out_bin (full_path "dot")) graph;
+  output_graph (Stdlib.open_out_bin (full_path "dot")) graph;
   (* Generate a png from the dot file with an external call to graphviz *)
   ignore (Sys.command ("dot -T png -o " ^ full_path "png" ^ " " ^ full_path "dot"))
   
