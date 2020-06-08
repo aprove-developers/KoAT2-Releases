@@ -1,17 +1,3 @@
-USE_OCAMLFIND = true
-OCAMLOPTFLAGS += -p -g -thread 
-
-OCAMLPACKS[] =
-    batteries
-    apron
-    apron.octD
-    apron.boxD
-    ppx_deriving_cmdliner
-    ppx_deriving.show
-    z3
-    ocamlgraph
-    fpath
-
 OCAMLINCLUDES[] =
     ../util
     ../poly

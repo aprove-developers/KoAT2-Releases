@@ -1,13 +1,6 @@
-USE_OCAMLFIND = true
-OCAMLOPTFLAGS += -p -g -thread 
-
-OCAMLPACKS[] =
-    z3
-    batteries
-
 OCAMLINCLUDES[] =
     ../util
-    ../poly 
+    ../poly
     ../constraints
 
 OCAML_LIBS[] =

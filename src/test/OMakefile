@@ -1,23 +1,6 @@
-USE_OCAMLFIND = true
-OCAMLOPTFLAGS += -p -g -thread 
-
-OCAMLPACKS[] =
-    z3
-    batteries
-    apron
-    apron.octD
-    apron.boxD
-    ocamlgraph
-    fpath
-    oUnit
-    ppx_deriving
-    ppx_deriving.eq
-    ppx_deriving.ord
-    ppx_deriving.show
-
 OCAMLINCLUDES[] =
-    ../util 
-    ../poly 
+    ../util
+    ../poly
     ../constraints
     ../smt
     ../transitionsystem
@@ -41,7 +24,7 @@ FILES[] = $(removesuffix .ml, $(glob *.ml))
 OCamlProgram(Test, $(FILES))
 
 install: Test
-    ./Test
+     ./Test
 
 clean:
   rm -f \
@@ -51,3 +34,4 @@ clean:
      *~ \
      *.log \
      *.cache
+

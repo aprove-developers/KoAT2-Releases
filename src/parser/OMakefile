@@ -1,10 +1,5 @@
-USE_OCAMLFIND = true
-
 MENHIR_ENABLED = true
 MENHIR_FLAGS += --infer
-
-OCAMLPACKS[] =
-    batteries
 
 OCAMLINCLUDES[] =
     ../util
