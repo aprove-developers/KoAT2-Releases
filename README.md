@@ -2,7 +2,7 @@
 Reimplementation of [KoAT](<https://github.com/s-falke/kittel-koat/>) with componentwise monotonic bounds
 
 ## Build
-1. Use `opam init` and follow the instructions to set up Opam and install OCaml 4.07.1 if necessary
+1. Use `opam init` and follow the instructions to set up Opam and install OCaml 4.09.1 if necessary
 
 2. Execute `opam install ocamlfind ocamlgraph`
       * requires the _gmp_ and _mpfr_ libraries
