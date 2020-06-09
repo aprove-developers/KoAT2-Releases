@@ -38,11 +38,12 @@ RUN adduser -D koat2
 WORKDIR /home/koat2
 
 COPY --chown=koat2:koat2 --from=koat2_build /home/opam/src/main/koat2.opt bin/koat2
+COPY --chown=koat2:koat2 examples/ ./examples
 
 # Update PATH to include the added executables
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/koat2/bin
 
 # Setup working environment, switch off of super user
 USER koat2
-ENTRYPOINT ["koat2 analyse"]
-# ENTRYPOINT ["/bin/bash"]
+# ENTRYPOINT ["koat2 analyse"]
+ENTRYPOINT ["/bin/bash"]
