@@ -24,8 +24,6 @@ FILES[] = $(removesuffix .ml, $(glob *.ml))
 OCamlProgram(Test, $(FILES))
 
 install: Test
-if $(defined-env RELEASE)
-else
      ./Test
 
 clean:

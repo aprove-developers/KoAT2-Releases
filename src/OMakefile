@@ -52,7 +52,6 @@ CUSTOM_LIBS[] =
     constraints
     smt
     transitionsystem
-    exactruntime
     parser
     bounds
     preprocessors
@@ -64,7 +63,10 @@ IDOCS[] = $(foreach $(fun x => $(x)/$(x).idoc), $(CUSTOM_LIBS))
 # The directory where the documentation should be stored
 DOC_DIR = ../docs
 
-.SUBDIRS: $(CUSTOM_LIBS) test
+if $(defined-env RELEASE)
+    .SUBDIRS: $(CUSTOM_LIBS)
+else
+    .SUBDIRS: $(CUSTOM_LIBS) test
 
 # Target how the whole documentation should be build
 doc: $(IDOCS)
