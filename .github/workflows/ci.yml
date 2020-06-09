@@ -32,7 +32,7 @@ jobs:
 
     - name: restore docker cache
       run: |
-        if [ -e ~/cache/image.tar.xz ]; then xz -dc ~/cache/image.tar | docker load; fi
+        if [ -e ~/cache/image.tar.xz ]; then xz -dc ~/cache/image.tar.xz | docker load; fi
 
     # Build the binary using docker and run all tests
     - name: build and test
