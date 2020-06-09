@@ -1,13 +1,13 @@
 (GOAL COMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS l0))
-(VAR A B C D)
+(VAR A B C)
 (RULES
-  l0(A,B,C,D) -> Com_1(l0a(A,B,C))
-  l0a(A,B,C,D) -> Com_1(l0b(A,B,C))
-  l0b(A,B,C,D) -> Com_1(l1(A,B,C)) 
-  l1(A,B,C,D) -> Com_1(l3(A,B,C)) :|: A < 0
-  l1(A,B,C,D) -> Com_1(l2(A,B,C)) :|: A >= 0
-  l2(A,B,C,D) -> Com_1(l1(A,B + 1,C)) :|: B <= C
-  l2(A,B,C,D) -> Com_1(l1(A - 1,B,C)) :|: B > C
-  l3(A,B,C,D) -> Com_1(l3(A,B,C - 1)) :|: C > 0
+  l0(A,B,C) -> Com_1(l0a(A,B,C))
+  l0a(A,B,C) -> Com_1(l0b(A,B,C))
+  l0b(A,B,C) -> Com_1(l1(A,B,C)) 
+  l1(A,B,C) -> Com_1(l3(A,B,C)) :|: A < 0
+  l1(A,B,C) -> Com_1(l2(A,B,C)) :|: A >= 0
+  l2(A,B,C) -> Com_1(l1(A,B + 1,C)) :|: B <= C
+  l2(A,B,C) -> Com_1(l1(A - 1,B,C)) :|: B > C
+  l3(A,B,C) -> Com_1(l3(A,B,C - 1)) :|: C > 0
 )

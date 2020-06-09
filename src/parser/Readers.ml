@@ -19,7 +19,7 @@ let read_ rule lexbuf =
      raise (Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
     
 let read_file path =
-  read_ Parser.onlyProgram (Lexing.from_input (File.open_in path))
+  read_ Parser.onlyProgram (Lexing.from_channel @@ File.open_in path)
 
 let read rule str =
   read_ rule (Lexing.from_string str)
