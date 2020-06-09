@@ -1,5 +1,3 @@
-USE_OCAMLFIND = true
-
 OCAMLPACKS[] =
     batteries
     ocamlgraph

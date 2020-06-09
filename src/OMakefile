@@ -1,5 +1,18 @@
 USE_OCAMLFIND = true
-OCAMLOPTFLAGS += -p -g -thread -cc $(CXX) -ccopt -static
+
+if $(defined-env RELEASE)
+    OCAMLOPTFLAGS = -thread -O3 -cc $(CXX) -ccopt -static
+    OCAMLCFLAGS = -thread -ccopt -static
+    BYTE_ENABLED = false
+    NATIVE_ENABLED = true
+    export
+else
+    OCAMLOPTFLAGS = -thread -g -cc $(CXX)
+    OCAMLCFLAGS = -thread
+    BYTE_ENABLED = false
+    NATIVE_ENABLED = true
+    export
+
 
 .PHONY: clean doc install
 
