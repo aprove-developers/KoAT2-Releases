@@ -42,7 +42,7 @@ RUN eval $(opam env)
 
 RUN omake clean
 RUN RELEASE=1 omake --depend
-RUN cd src/test && ./Test
+RUN RELEASE=1 omake test
 
 ###################################################################
 ######################## EXECUTABLE IMAGE #########################

@@ -13,7 +13,7 @@ else
     NATIVE_ENABLED = true
     export
 
-.PHONY: clean doc install
+.PHONY: clean doc install test
 
 # Function that creates an intermediate format for a documentation
 # Has to be called from each package which should occur in the documentation
