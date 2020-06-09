@@ -38,3 +38,6 @@ cfr7.koat:
  - cfr3 two time sequentiel
  - best: n
  - normal n^2
+ 
+cfr9.koat: 
+ - as cfr6 but first 3 than 5
