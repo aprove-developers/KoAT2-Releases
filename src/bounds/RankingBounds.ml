@@ -10,13 +10,11 @@ let logger = Logging.(get Time)
 
 let logger_cfr = Logging.(get CFR)
 
-let max_delta = 60
-
 let backtrack_point = ref None
 
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
-let counter = ref 0
+exception NOT_IMPROVED
 
 let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t) (transition: Transition.t): Bound.t =
   rank
@@ -195,25 +193,38 @@ let rec improve_timebound_rec ?(mrf = false) (scc: TransitionSet.t)  measure pro
   let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr = 
     appr
     |> improve_timebound_rec ~mrf:mrf scc measure program
-    |> SizeBounds.improve program ~scc:(Option.some scc) (Option.is_some !backtrack_point)
+    |> SizeBounds.improve program (Option.is_some !backtrack_point)
     |> improve_timebound ~mrf:mrf scc measure program
     |> MaybeChanged.if_changed (improve_scc ~mrf:mrf scc measure program)
     |> MaybeChanged.unpack
 
 
 let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure program appr =
+  if Option.is_some !backtrack_point then (
+    (** Done with orginial component and set backtrack_point *)
+    let (org_program,_,_) = Option.get !backtrack_point in
+    if not (TransitionSet.disjoint (Program.transitions org_program) scc) then 
+      backtrack_point := None
+  );
+  if Option.is_some !backtrack_point then (
+    let (_,_,org_bound) = Option.get !backtrack_point in
+    let new_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
+    if (Bound.compare_asy org_bound new_bound) < 1 then
+      raise NOT_IMPROVED
+  ); 
   if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions)  then
       let opt = 
-            CFR.set_time_current_cfr scc appr;
-            CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
-            Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions); "time: ", string_of_float !CFR.time_current_cfr]);
-            CFR.apply_cfr program appr in
+        CFR.set_time_current_cfr scc appr;
+        CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
+        Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions); "time: ", string_of_float !CFR.time_current_cfr]);
+        CFR.apply_cfr program appr in
       if Option.is_some opt then (
       let (program_cfr,appr_cfr) = Option.get opt in
-      backtrack_point := Option.some (program,appr);
+      let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
+      backtrack_point := Option.some (program,appr,org_bound);
       LocalSizeBound.switch_cache();  
       LocalSizeBound.enable_cfr();
-      MaybeChanged.changed (program_cfr,appr_cfr))
+      MaybeChanged.changed (program_cfr, appr_cfr))
       else 
       MaybeChanged.same (program,appr)
     else 
@@ -239,15 +250,14 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
                             RankingFunction.reset (); 
                           try 
                             appr               
-                            |> SizeBounds.improve ~scc:(Option.some scc) program  (Option.is_some !backtrack_point)
+                            |> SizeBounds.improve  program (Option.is_some !backtrack_point)
                             |> improve_scc ~mrf:mrf scc measure program
                             |> apply_cfr ~cfr:cfr ~mrf:mrf scc measure program
-                          with TIMEOUT ->
+                          with TIMEOUT | NOT_IMPROVED ->
                             LocalSizeBound.reset_cfr ();  
-                            let (program,appr) = Option.get !backtrack_point in
+                            let (program,appr,_) = Option.get !backtrack_point in
                             backtrack_point := None;
-                            MaybeChanged.changed (program,appr)
-                            )
+                            MaybeChanged.changed (program,appr))
                           else monad) 
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
     |> MaybeChanged.if_changed (fun (a,b) -> (improve ~cfr:cfr ~mrf:mrf measure a b))

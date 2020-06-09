@@ -85,7 +85,6 @@ let show_complexity_termcomp = function
   | Exponential _ -> "WORST_CASE(?, O(EXP))"
 
 
-
 let asymptotic_complexity =
   fold
     ~const:(fun _ -> Polynomial 0)
@@ -133,6 +132,15 @@ match (asymptotic_complexity bound) with
   | Polynomial 1 -> true
   | _ -> false 
 
+let compare_asy b1 b2 = 
+  match (asymptotic_complexity b1,asymptotic_complexity b2) with
+  | (Inf,Inf) -> 0
+  | (Inf,_) -> 1
+  | (_,Inf) -> -1
+  | (Exponential x, Exponential y) -> Int.compare x y
+  | (Exponential x, _) -> 1
+  | (_, Exponential y) -> -1
+  | (Polynomial x, Polynomial y) -> Int.compare x y
 
 (* let is_linear bound =
   let cplx = asymptotic_complexity bound in

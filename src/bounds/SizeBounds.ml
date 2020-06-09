@@ -20,14 +20,14 @@ let improve program ?(scc = None) applied_cfr appr =
     [`Lower; `Upper]
     |> List.fold_left (fun appr kind ->
            let rvg = RVG.rvg kind program  in
-           List.fold_left (fun appr scc -> 
-                let current_time = Unix.time() in
-                improve_scc kind program rvg appr scc
-                |> tap (fun _ -> 
-                        CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
-                        CFR.poll_timeout ~applied_cfr:applied_cfr)
+           List.fold_left (fun appr rvg_scc -> 
+              let current_time = Unix.time() in
+              improve_scc kind program rvg appr rvg_scc
+              |> tap (fun _ -> 
+                      CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
+                      CFR.poll_timeout ~applied_cfr:applied_cfr)
             ) appr ( 
-            if Option.is_none scc then
+            if not (Option.is_some scc) then
              (List.rev (C.scc_list rvg))
             else 
              (List.rev (List.filter (fun rvg_scc -> List.exists (fun (t,x) -> TransitionSet.mem t (Option.get scc)) rvg_scc) (C.scc_list rvg))))
