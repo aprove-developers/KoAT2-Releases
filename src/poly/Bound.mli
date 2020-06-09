@@ -127,6 +127,9 @@ val asymptotic_complexity : t -> complexity
 (** Returns true iff the asymptotic complexity is n^1. *)
 val is_linear : t -> bool
 
+(** -1 if first bound asy. lower, 0 if both are asym. equal, 1 otherwise *)
+val compare_asy : t -> t -> int
+
 (** Needed for Atomizable but not yet implemented. *)
 val coeff_of_var : Var.t -> t -> value
 

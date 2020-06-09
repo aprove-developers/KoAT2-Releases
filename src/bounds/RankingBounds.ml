@@ -208,15 +208,17 @@ let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure prog
   );
   if Option.is_some !backtrack_point then (
     let (_,_,org_bound) = Option.get !backtrack_point in
-    let new_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
-    if (Bound.compare_asy org_bound new_bound) < 1 then
+    let cfr_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
+    if (Bound.compare_asy org_bound cfr_bound) < 1 then (
+      Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED", ["orginial bound", (Bound.to_string org_bound); "cfr bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
       raise NOT_IMPROVED
+    )
   ); 
   if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions)  then
       let opt = 
         CFR.set_time_current_cfr scc appr;
         CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
-        Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans: ", (TransitionSet.to_string !nonLinearTransitions); "time: ", string_of_float !CFR.time_current_cfr]);
+        Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions); "time", string_of_float !CFR.time_current_cfr]);
         CFR.apply_cfr program appr in
       if Option.is_some opt then (
       let (program_cfr,appr_cfr) = Option.get opt in
