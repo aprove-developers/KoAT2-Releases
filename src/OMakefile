@@ -52,6 +52,7 @@ CUSTOM_LIBS[] =
     constraints
     smt
     transitionsystem
+    exactruntime
     parser
     bounds
     preprocessors
