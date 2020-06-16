@@ -1,0 +1,14 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR Arg_0 Arg_1 Arg_2 Arg_3)
+(RULES
+  l0(Arg_0, Arg_1, Arg_2, Arg_3) -> Com_1(l1(Arg_0, Arg_1, Arg_2, Arg_3))
+  l1(Arg_0, Arg_1, Arg_2, Arg_3) -> Com_1(l2(Arg_0, Arg_1, 1, Arg_3)) :|: Arg_1 <= Arg_3
+  l1(Arg_0, Arg_1, Arg_2, Arg_3) -> Com_1(l3(Arg_0, Arg_1, Arg_2, Arg_3)) :|: Arg_1 > Arg_3
+  l2(Arg_0, Arg_1, Arg_2, Arg_3) -> Com_1(l4(Arg_0, Arg_1, Arg_2, Arg_3)) :|: Arg_2 <= Arg_3
+  l2(Arg_0, Arg_1, Arg_2, Arg_3) -> Com_1(l5(Arg_0, Arg_1, Arg_2, Arg_3)) :|: Arg_2 > Arg_3
+  l4(Arg_0, Arg_1, Arg_2, Arg_3) -> Com_1(l2(Arg_0, Arg_1, Arg_2 + 1, Arg_3))
+  l5(Arg_0, Arg_1, Arg_2, Arg_3) -> Com_1(l6(Arg_1 + 1, Arg_1, Arg_2, Arg_3))
+  l6(Arg_0, Arg_1, Arg_2, Arg_3) -> Com_1(l1(Arg_0, Arg_1, Arg_2, Arg_3))
+  l3(Arg_0, Arg_1, Arg_2, Arg_3) -> Com_1(l8(Arg_0, Arg_1, Arg_2, Arg_3))
+)

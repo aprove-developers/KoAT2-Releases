@@ -1,0 +1,41 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR  Arg0 Arg1 Arg2 Arg3 Arg4)
+(RULES 
+ l0(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l1(Arg0,Arg1,Arg2,Arg3,Arg4))
+ l0(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l1(Arg0+1,Arg1,Arg2,Arg3,Arg4))
+ l0(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l1(Arg0+4,Arg1,Arg2,Arg3,Arg4))
+ l0(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l1a(Arg0,Arg1,Arg2,Arg3,Arg4))
+ l1(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l3(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: Arg0+1 <= 0
+ l1(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l2___7(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: 0 <= Arg0
+ l1a(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l3a(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: Arg0+1 <= 0
+ l1a(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l2a___7(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: 0 <= Arg0
+ l3(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l1a(Arg3,Arg4,Arg2,Arg3,Arg4)) :|: Arg2 <= 0
+ l3(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l1a(Arg4,Arg3,Arg2,Arg3,Arg4)) :|: Arg2 <= 0
+ l3(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l3(Arg0,Arg1,Arg2-1,Arg3,Arg4)) :|: 1 <= Arg2
+ n_l1___3(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l3(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: Arg0+1 <= 0
+ n_l1___3(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l2___2(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: 1+Arg2 <= Arg1 && Arg1 <= 1+Arg2 && 1+Arg2 <= Arg1 && 0 <= Arg0
+ n_l1___5(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l3(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: Arg0+1 <= 0
+ n_l1___5(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l2___1(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: 1+Arg2 <= Arg1 && 1+Arg2 <= Arg1 && 0 <= Arg0
+ n_l1___6(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l3(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: Arg0+1 <= 0
+ n_l1___6(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l2___4(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: 0 <= Arg0 && 0 <= Arg0 && Arg1 <= 1+Arg2 && 0 <= Arg0
+ n_l1a___3(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l3a(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: Arg0+1 <= 0
+ n_l1a___3(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l2a___2(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: 1+Arg2 <= Arg1 && Arg1 <= 1+Arg2 && 1+Arg2 <= Arg1 && 0 <= Arg0
+ n_l1a___5(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l3a(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: Arg0+1 <= 0
+ n_l1a___5(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l2a___1(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: 1+Arg2 <= Arg1 && 1+Arg2 <= Arg1 && 0 <= Arg0
+ n_l1a___6(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(l3a(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: Arg0+1 <= 0
+ n_l1a___6(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l2a___4(Arg0,Arg1,Arg2,Arg3,Arg4)) :|: 0 <= Arg0 && 0 <= Arg0 && Arg1 <= 1+Arg2 && 0 <= Arg0
+ n_l2___1(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1___5(Arg0-1,Arg1,Arg2,Arg3,Arg4)) :|: 1+Arg2 <= Arg1 && 0 <= Arg0 && 1+Arg2 <= Arg1
+ n_l2___2(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1___3(Arg0-1,Arg1,Arg2,Arg3,Arg4)) :|: 0 <= Arg0 && Arg1 <= Arg2+1 && 1+Arg2 <= Arg1 && 1+Arg2 <= Arg1
+ n_l2___4(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1___3(Arg0-1,Arg1,Arg2,Arg3,Arg4)) :|: Arg1 <= 1+Arg2 && 0 <= Arg0 && 1+Arg2 <= Arg1
+ n_l2___4(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1___6(Arg0,Arg1+1,Arg2,Arg3,Arg4)) :|: Arg1 <= 1+Arg2 && 0 <= Arg0 && Arg1 <= Arg2
+ n_l2___7(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1___5(Arg0-1,Arg1,Arg2,Arg3,Arg4)) :|: 0 <= Arg0 && 1+Arg2 <= Arg1
+ n_l2___7(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1___6(Arg0,Arg1+1,Arg2,Arg3,Arg4)) :|: 0 <= Arg0 && Arg1 <= Arg2
+ n_l2a___1(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1a___5(Arg0-1,Arg1,Arg2,Arg3,Arg4)) :|: 1+Arg2 <= Arg1 && 0 <= Arg0 && 1+Arg2 <= Arg1
+ n_l2a___2(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1a___3(Arg0-1,Arg1,Arg2,Arg3,Arg4)) :|: 0 <= Arg0 && Arg1 <= Arg2+1 && 1+Arg2 <= Arg1 && 1+Arg2 <= Arg1
+ n_l2a___4(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1a___3(Arg0-1,Arg1,Arg2,Arg3,Arg4)) :|: Arg1 <= 1+Arg2 && 0 <= Arg0 && 1+Arg2 <= Arg1
+ n_l2a___4(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1a___6(Arg0,Arg1+1,Arg2,Arg3,Arg4)) :|: Arg1 <= 1+Arg2 && 0 <= Arg0 && Arg1 <= Arg2
+ n_l2a___7(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1a___5(Arg0-1,Arg1,Arg2,Arg3,Arg4)) :|: 0 <= Arg0 && 1+Arg2 <= Arg1
+ n_l2a___7(Arg0,Arg1,Arg2,Arg3,Arg4) -> Com_1(n_l1a___6(Arg0,Arg1+1,Arg2,Arg3,Arg4)) :|: 0 <= Arg0 && Arg1 <= Arg2
+)
+

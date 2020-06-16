@@ -129,7 +129,13 @@ let applyIrankFinder (scc_program: Program.t) =
     try Unix.mkdir ("./tmp_" ^ (string_of_int !random)) 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
   counter := !counter + 1;
   Program.to_file scc_program ("./tmp_" ^ (string_of_int !random) ^ "/tmp_scc" ^ (string_of_int !counter));
-  ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp_" ^ (string_of_int !random) ^ "/tmp --file ./tmp_" ^ (string_of_int !random) ^ "/tmp_scc" ^ (string_of_int !counter) ^ ".koat"));
+  let err_code = Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-john --output-format koat --output-destination ./tmp_" 
+   ^ (string_of_int !random) 
+   ^ "/tmp --file ./tmp_" 
+   ^ (string_of_int !random) 
+   ^ "/tmp_scc" 
+   ^ (string_of_int !counter) 
+   ^ ".koat") in
   "./tmp_" ^ (string_of_int !random) ^ "/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
       |> Readers.read_input ~rename:false false 
       |> Option.get
@@ -150,20 +156,27 @@ let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitio
 
 (** Finds first location which matches to the entry-location l ->  l' from the original program. 
     We assume that we only get transitions starting in the initial location of cfr program*)
-let find_matching_location (l': Location.t) (entry_transitions_cfr: TransitionSet.t) =
+let find_matching_locations (l': Location.t) (entry_transitions_cfr: TransitionSet.t) =
   entry_transitions_cfr
   |> TransitionSet.enum
-  |> Enum.find (fun (_,_,l'_cfr) -> 
-                                Util.contains (Location.to_string l'_cfr) ("_" ^ (Location.to_string l') ^ "__")
-  )
-  |> Tuple3.third
+  |> Enum.filter (fun (_,_,l'_cfr) -> 
+                            Util.contains (Location.to_string l'_cfr) ("n_" ^ (Location.to_string l') ^ "__")
+  )     
+  |> Enum.map (fun (_,_,l') -> l')  
+  |> LocationSet.of_enum
 
 
-let rename_entry_transition (locations: LocationSet.t) (transitions: TransitionSet.t) =
+
+let rename_entry_transition (entry_locations: LocationSet.t) (initial_location: Location.t) (transitions: TransitionSet.t) =
   transitions
-  |> LocationSet.fold (fun location merged_trans -> let l' = find_matching_location location (TransitionSet.filter (fun (l,_,_) ->  Location.equal l (Location.of_string "n_l0" )) transitions) in
-                                                             rename_matching_trans location l' transitions) locations 
-
+  |> LocationSet.fold (fun location merged_trans -> 
+    let all_l' = find_matching_locations location 
+        (TransitionSet.filter 
+          (fun (l,_,_) -> 
+            Location.equal l (Location.of_string ("n_" ^ (Location.to_string initial_location)))) 
+            transitions) in
+          merged_trans
+          |> LocationSet.fold (fun l' -> rename_matching_trans location l') all_l') entry_locations 
 (* ------------------------------------- *)
 
 (** Adds original outgoing transitions, i.e.,  program and program_cfr are path equivalent. *)
@@ -203,18 +216,15 @@ let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
                                       |> Approximation.add_costbound costbound trans) unchangend_trans
 
 let apply_cfr (program: Program.t) appr = 
-
   delta_current_cfr := 0.;
   let initial_location = Program.start program
   and minimalDisjointSCCs = program
                             |> minimalSCCs
                             |> minimalDisjointSCCs 
-                            |> SCCSet.filter (fun scc -> 
-                              if (TransitionSet.cardinal scc) = 1 then (
-                                already_used_cfr := IDSet.add (Transition.id (TransitionSet.any scc)) !already_used_cfr;
-                                false)
-                              else 
-                                true)  in
+                            |> SCCSet.filter (fun scc -> (TransitionSet.cardinal scc) <> 1 )
+                            |> SCCSet.filter (fun scc -> TransitionSet.exists (fun t -> 
+                            (VarSet.cardinal (Program.vars program)) =
+                            (VarSet.cardinal (TransitionLabel.vars_update (Transition.label t))))  scc)  in
   if SCCSet.is_empty minimalDisjointSCCs then
     None
   else (
@@ -238,7 +248,7 @@ let apply_cfr (program: Program.t) appr =
       and map = RenameMap.from_native ((List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i)))) in      
       let transitions_cfr = program_cfr
       |> Program.transitions
-      |> rename_entry_transition entry_locations
+      |> rename_entry_transition entry_locations initial_location
       |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
       |> TransitionSet.map (fun t -> Transition.rename2 map t) in
 
@@ -253,8 +263,8 @@ let apply_cfr (program: Program.t) appr =
       |> flip TransitionSet.diff scc
       |> TransitionSet.to_list
       |> flip Program.from initial_location
-      |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current)
-      |> tap (fun _ -> poll_timeout ~applied_cfr:true))) minimalDisjointSCCs
+      |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current))
+      |> tap (fun _ -> poll_timeout ~applied_cfr:true)) minimalDisjointSCCs
       |> tap (fun _ -> nonLinearTransitions := TransitionSet.empty)
       (* |> Program.rename *)
       in

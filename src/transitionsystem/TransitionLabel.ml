@@ -130,6 +130,7 @@ let vars_ {update; guard; cost; _} =
 (* TODO May invalidate through invariant generation! *)
 let vars = Util.memoize ~extractor:id vars_
 
+let vars_update t = (VarSet.of_enum % VarMap.keys) t.update
 
 let default = {
     id = 0;

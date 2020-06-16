@@ -32,7 +32,6 @@ let as_parapoly label var =
     | None -> ParameterPolynomial.of_var var
     | Some p -> ParameterPolynomial.of_polynomial p
 
-
 (* Computes new bounds*)
 let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: MultiphaseRankingFunction.t): Bound.t =
  let execute () =
@@ -199,7 +198,7 @@ let rec improve_timebound_rec ?(mrf = false) (scc: TransitionSet.t)  measure pro
     |> MaybeChanged.unpack
 
 
-let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure program appr =
+let apply_cfr ?(cfr = false) ?(mrf = false) (scc: TransitionSet.t) measure program appr =
   if Option.is_some !backtrack_point then (
     (** Done with orginial component and set backtrack_point *)
     let (org_program,_,_) = Option.get !backtrack_point in
@@ -215,6 +214,9 @@ let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure prog
     )
   ); 
   if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions)  then
+      let org_bound = Bound.sum
+       (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
+        backtrack_point := Option.some (program,appr,org_bound);
       let opt = 
         CFR.set_time_current_cfr scc appr;
         CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
@@ -222,7 +224,6 @@ let apply_cfr ?(cfr = false) ?(mrf = false)  (scc: TransitionSet.t) measure prog
         CFR.apply_cfr program appr in
       if Option.is_some opt then (
       let (program_cfr,appr_cfr) = Option.get opt in
-      let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
       backtrack_point := Option.some (program,appr,org_bound);
       LocalSizeBound.switch_cache();  
       LocalSizeBound.enable_cfr();
@@ -259,8 +260,9 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
                             LocalSizeBound.reset_cfr ();  
                             let (program,appr,_) = Option.get !backtrack_point in
                             backtrack_point := None;
+                            Printf.printf "%s" (Program.to_string ~to_file:true program);
                             MaybeChanged.changed (program,appr))
-                          else monad) 
+                        else monad) 
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
     |> MaybeChanged.if_changed (fun (a,b) -> (improve ~cfr:cfr ~mrf:mrf measure a b))
     |> MaybeChanged.unpack
