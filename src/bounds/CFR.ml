@@ -253,7 +253,9 @@ let apply_cfr (program: Program.t) appr =
       |> TransitionSet.map (fun t -> Transition.rename2 map t) in
 
       (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
-      already_used_cfr := IDSet.union !already_used_cfr (IDSet.of_enum (Enum.map (fun trans -> Transition.id trans) (TransitionSet.enum transitions_cfr)));
+      already_used_cfr := IDSet.union 
+        (IDSet.union !already_used_cfr (IDSet.of_enum (Enum.map (fun trans -> Transition.id trans) (TransitionSet.enum transitions_cfr))))
+        (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum !nonLinearTransitions)));
 
       (** Merges irankfinder and original program. *)
       merged_program

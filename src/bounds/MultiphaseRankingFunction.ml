@@ -180,18 +180,18 @@ let transition_constraint depth = Util.memoize ~extractor:(Tuple3.map3 Transitio
 
 let transitions_constraint depth measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
-  |> List.map (fun t -> transition_constraint depth (measure, constraint_type, t))
+  |> List.map (fun t -> transition_constraints_ depth (measure, constraint_type, t)) (** hier *)
   |> Formula.all
 
 
-let non_increasing_constraint depth measure transition =
-  transition_constraint depth (measure, `Non_Increasing, transition)
+let non_increasing_constraint depth measure transition = 
+  transition_constraints_ depth (measure, `Non_Increasing, transition) (** hier *)
 
 let non_increasing_constraints depth measure transitions =
   transitions_constraint depth measure `Non_Increasing (TransitionSet.to_list transitions)
 
 let decreasing_constraint depth measure  transition =
-  transition_constraint depth (measure, `Decreasing, transition)
+  transition_constraints_ depth (measure, `Decreasing, transition) (** hier *)
 
 (** A valuation is a function which maps from a finite set of variables to values *)
 
@@ -231,7 +231,7 @@ let try_decreasing depth (opt: Solver.t) (non_increasing: Transition.t Stack.t) 
                                                                 "depth", string_of_int depth]));
         Solver.push opt;
         Solver.add opt (decreasing_constraint depth measure decreasing);
-        
+
         if Solver.satisfiable opt then (
           Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
           Solver.model opt

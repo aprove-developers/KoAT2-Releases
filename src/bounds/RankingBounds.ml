@@ -226,7 +226,7 @@ let apply_cfr ?(cfr = false) ?(mrf = false) (scc: TransitionSet.t) measure progr
       let (program_cfr,appr_cfr) = Option.get opt in
       backtrack_point := Option.some (program,appr,org_bound);
       LocalSizeBound.switch_cache();  
-      LocalSizeBound.enable_cfr();
+      LocalSizeBound.enable_cfr();  
       MaybeChanged.changed (program_cfr, appr_cfr))
       else 
       MaybeChanged.same (program,appr)
@@ -250,7 +250,7 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
                           if mrf then 
                             MultiphaseRankingFunction.reset()
                           else
-                            RankingFunction.reset (); 
+                            RankingFunction.reset(); 
                           try 
                             appr               
                             |> SizeBounds.improve  program (Option.is_some !backtrack_point)
@@ -260,7 +260,6 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
                             LocalSizeBound.reset_cfr ();  
                             let (program,appr,_) = Option.get !backtrack_point in
                             backtrack_point := None;
-                            Printf.printf "%s" (Program.to_string ~to_file:true program);
                             MaybeChanged.changed (program,appr))
                         else monad) 
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))

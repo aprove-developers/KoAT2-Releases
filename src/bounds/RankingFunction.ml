@@ -100,7 +100,7 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
     match constraint_type with
     | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (as_parapoly t) (template l'))
     | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
-    | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))      
+    | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))  
   in
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk  
@@ -109,20 +109,20 @@ let transition_constraint = Util.memoize ~extractor:(Tuple3.map3 Transition.id) 
   
 let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
-  |> List.map (fun t -> transition_constraint (measure, constraint_type, t))
+  |> List.map (fun t -> transition_constraint_ (measure, constraint_type, t)) (** hier *)
   |> Formula.all
   
 let non_increasing_constraint measure transition =
-  transition_constraint (measure, `Non_Increasing, transition)
+  transition_constraint_ (measure, `Non_Increasing, transition) (** hier *)
 
 let non_increasing_constraints measure transitions =
   transitions_constraint measure `Non_Increasing (TransitionSet.to_list transitions)
   
 let bounded_constraint measure transition =
-  transition_constraint (measure, `Bounded, transition)
+  transition_constraint_ (measure, `Bounded, transition) (** hier *)
 
 let decreasing_constraint measure transition =
-  transition_constraint (measure, `Decreasing, transition)
+  transition_constraint_ (measure, `Decreasing, transition) (** hier *)
 
 let rank_from_valuation valuation location =
   location
@@ -168,7 +168,8 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
          Solver.push opt;
          Solver.add opt (bounded_constraint measure decreasing);
          Solver.add opt (decreasing_constraint measure decreasing);
-         if Solver.satisfiable opt then (           
+         
+         if Solver.satisfiable opt then (   
            Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
            Solver.model opt
            |> Option.map (make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
@@ -266,7 +267,7 @@ let find measure applied_cfr program transition =
                   execute
 
 let find_scc measure applied_cfr program transition scc =
-    let execute () =
+  let execute () =
     if TemplateTable.is_empty template_table then
       compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
     if RankingTable.is_empty (ranking_table measure) then
@@ -281,7 +282,8 @@ let find_scc measure applied_cfr program transition scc =
                                                         "transition", Transition.to_id_string transition])
                   ~result:(Util.enum_to_string to_string % List.enum)
                   execute
-  
+
+
 let reset () =
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;

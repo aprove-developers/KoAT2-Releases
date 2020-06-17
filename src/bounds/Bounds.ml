@@ -10,7 +10,6 @@ open LocalSizeBound
   |> SizeBounds.improve program
   |> RankingBounds.improve  ~mrf:mrf ~cfr:cfr `Time program 
   in 
-  ignore(Printf.printf "hi :) \n");
     if MaybeChanged.has_changed program_cfr then 
         let unpacked_program_cfr = MaybeChanged.unpack program_cfr in
           LocalSizeBound.reset ();
