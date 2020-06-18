@@ -31,7 +31,6 @@ test :  Test
 
 install: Test
 #     ./Test
-     echo here
 
 clean:
   rm -f \
