@@ -60,6 +60,7 @@ type params = {
     (** Prints the integer transition system at the start as png *)
 
     print_system_for_paper : bool;
+    (* Prints the integer transition system at the start as pdf and notation consistent to the paper *)
 
     print_system_id : bool;
     (** Prints the integer transition system at the start as png with ids as transition labels *)

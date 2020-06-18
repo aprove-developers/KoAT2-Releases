@@ -60,9 +60,16 @@ let print_rvg cache kind ~label ~outdir ~file program =
   print_graph outdir (file ^ "_rvg_" ^ show_kind kind) graph Dot.output_graph
 
 let print_system_for_paper ~outdir ~file program =
+  (*
+    Compute an edge label from a TransitionLabel
+    Whenever possible we use unicode representations of mathematic symbols.
+  *)
   let label l =
     let get_subscript_str i =
-      "_{" ^ Int.to_string i ^ "}"
+      Int.to_string i
+      |> String.to_list
+      |> List.map (fun c -> "&#832" ^ String.of_char c ^ ";")
+      |> String.concat ""
     in
     let gt_id =
       TransitionLabel.gt_id l
@@ -87,7 +94,7 @@ let print_system_for_paper ~outdir ~file program =
           | TransitionLabel.UpdateElement.Dist d -> false
         in
         if is_identity then "" else
-          "\\eta(" ^ Var.to_string v ^ ") = " ^ TransitionLabel.UpdateElement.to_short_string ue
+          "&eta; (" ^ Var.to_string v ^ ") = " ^ TransitionLabel.UpdateElement.to_short_string ue
       in
       TransitionLabel.update_map l
       |> VarMap.bindings
@@ -98,7 +105,7 @@ let print_system_for_paper ~outdir ~file program =
     let guard =
       let g = TransitionLabel.guard_without_invariants l in
       if TransitionLabel.Guard.is_true g then "" else
-      "\\tau = " ^ TransitionLabel.Guard.to_string g
+      "&tau; = " ^ TransitionLabel.Guard.to_string g
     in
 
     let cost =
@@ -118,7 +125,7 @@ let print_system_for_paper ~outdir ~file program =
     in
 
 
-    [ t_id ^ "\\in " ^ gt_id;
+    [ t_id ^ " &#8712; " ^ gt_id;
       prob;
       updates;
       guard;
@@ -127,6 +134,7 @@ let print_system_for_paper ~outdir ~file program =
     |> List.filter (not % String.is_empty)
     |> String.concat "\n"
   in
+  (* Dot configuration *)
   let module Dot = Graph.Graphviz.Dot(struct
                                        include TransitionGraph
                                        let edge_attributes (a, e, b) = [`Label (label e)]
