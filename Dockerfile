@@ -11,9 +11,10 @@
 FROM ocaml/opam2:alpine as koat2_build
 LABEL author="Fabian Meyer"
 
-# Ugly Hack since z3.4.8.8-1 is not yet contained
-# in the local repository
-RUN cd /home/opam/opam-repository; git pull
+# Pin the used opam packages
+ENV OPAM_PKGS_VERSION=e258e1424a5f4054abf6508395c56c324808f789
+
+RUN cd /home/opam/opam-repository; git pull; git checkout ${OPAM_PKGS_VERSION} .
 RUN opam update
 RUN opam upgrade
 RUN opam switch create -y 4.09.1+musl+static+flambda
