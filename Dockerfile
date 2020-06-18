@@ -40,10 +40,18 @@ WORKDIR /home/koat2
 COPY --chown=koat2:koat2 --from=koat2_build /home/opam/src/main/koat2.opt bin/koat2
 COPY --chown=koat2:koat2 examples/ ./examples
 
-# Update PATH to include the added executables
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/koat2/bin
-
 # Setup working environment, switch off of super user
 USER koat2
+
+RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/download/v1.2.1/irankfinder_1.2.1_linux_x86_64.zip
+RUN mkdir irankfinder
+RUN unzip irankfinder.zip -d irankfinder
+RUN rm irankfinder.zip
+RUN chmod +x /home/koat2/irankfinder/1.2.1/irankfinder/CFRefinement
+
+
+# Update PATH to include the added executables
+ENV PATH=/home/koat2/irankfinder/1.2.1/irankfinder:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/koat2/bin
+
 # ENTRYPOINT ["koat2 analyse"]
 ENTRYPOINT ["/bin/bash"]
