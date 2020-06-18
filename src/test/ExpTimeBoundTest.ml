@@ -81,7 +81,7 @@ let tests =
           ("linear01", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/linear01.koat");
           ("multirace", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/multirace.koat");
           ("multirace2", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/multirace2.koat");
-          ("nestedwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/nested_rwalk.koat");
+          ("nestedrdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/nested_rdwalk.koat");
           ("no_loop", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/no_loop.koat");
           ("pol04", RealBound.Inf, "examples/ProbabilisticExamples/paper/pol04.koat");
           ("pol05", RealBound.Inf, "examples/ProbabilisticExamples/paper/pol05.koat");
