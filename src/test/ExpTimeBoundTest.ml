@@ -100,12 +100,12 @@ let tests =
           ("rejection_sampling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rejection_sampling.koat");
           ("robot", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/robot.koat");
           ("roulette", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/roulette.koat");
-          ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Nonprob-KoAT/SelectSort.koat");
+          ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/SelectSort.koat");
           ("simple_nested", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/simple_nested.koat");
           ("simple_recursive", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/simple_recursive.koat");
           ("sprdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/sprdwalk.koat");
           ("trader", RealBound.Inf, "examples/ProbabilisticExamples/paper/trader.koat");
           ("trapped_miner", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/trapped_miner.koat");
-          ("TruncSelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Nonprob-KoAT/TruncSelectSort.koat");
+          ("TruncSelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/TruncSelectSort.koat");
         ];
   ]
