@@ -37,8 +37,8 @@ jobs:
     # Build the binary using docker and run all tests
     - name: build and test
       run: |
-        docker build . -t koat2build --target koat2_build
-        docker build . -t koat2
+        docker build . -t koatbuild --target koat2_build
+        docker build . -t koat
 
     - name: export docker cache
       run: |
@@ -46,27 +46,27 @@ jobs:
         # Export all cached steps if no cache was present
         if [ ! -e ~/cache ]; then
           mkdir ~/cache
-          docker save $(docker history koat2build -q | grep -v missing) | xz -T4 -z -1 - > ~/cache/image.tar.xz
+          docker save $(docker history koatbuild -q | grep -v missing) | xz -T4 -z -1 - > ~/cache/image.tar.xz
         fi
         df -h
 
     - name: export artifacts
       run: |
         cd ~
-        docker container create --name temp koat2build
-        docker container cp temp:/home/opam/build/src/main/koat2.opt koat2
+        docker container create --name temp koatbuild
+        docker container cp temp:/home/opam/build/src/main/koat2.opt koat-static
         docker container rm temp
-        xz -1 -T4 koat2
+        xz -1 -T4 koat_docker
         ls -lh
-        docker save koat2 | xz -T4 -z -1 - > ~/koat2-docker.tar.xz
+        docker save koat | xz -T4 -z -1 - > ~/koat-docker.tar.xz
 
     - uses: actions/upload-artifact@v2
       with:
         name: static-binary
-        path: ~/koat2.xz
+        path: ~/koat-static.xz
 
     - uses: actions/upload-artifact@v2
       with:
         name: docker-img
-        path: ~/koat2-docker.tar.xz
+        path: ~/koat-docker.tar.xz
 
