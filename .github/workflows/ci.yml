@@ -56,7 +56,8 @@ jobs:
         docker container create --name temp koatbuild
         docker container cp temp:/home/opam/build/src/main/koat2.opt koat-static
         docker container rm temp
-        xz -1 -T4 koat_docker
+        chmod +x koat-static
+        xz -1 -T4 koat-static
         ls -lh
         docker save koat | xz -T4 -z -1 - > ~/koat-docker.tar.xz
 
