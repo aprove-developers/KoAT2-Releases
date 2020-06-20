@@ -45,12 +45,12 @@ COPY --chown=koat2:koat2 examples/ ./examples
 # Setup working environment, switch off of super user
 USER koat2
 
-RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/download/v1.3/irankfinder_v1.3_rhel7.zip
+RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.1/irankfinder_v1.3.1_rhel7.zip
 RUN mkdir irankfinder
 RUN unzip irankfinder.zip -d irankfinder
 RUN rm irankfinder.zip
-RUN chmod +x /home/koat2/irankfinder/1.2.1/irankfinder/CFRefinement
+RUN chmod +x /home/koat2/irankfinder/1.3.1/irankfinder/CFRefinement
 #Update PATH to include the added executables
-ENV PATH=/home/koat2/irankfinder/1.2.1/irankfinder/partialevaluation/bin:/home/koat2/irankfinder/1.2.1/irankfinder/ppl:/home/koat2/irankfinder/1.2.1/irankfinder:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/koat2/bin
-ENV LD_LIBRARY_PATH=/home/koat2/irankfinder/1.2.1/irankfinder/ppl:/home/koat2/irankfinder/1.2.1/irankfinder/partialevaluation/bin:/home/koat2/irankfinder/1.2.1/irankfinder:/usr/local/lib:/usr/lib
+ENV PATH=/home/koat2/irankfinder/1.3.1/irankfinder/partialevaluation/bin:/home/koat2/irankfinder/1.3.1/irankfinder/ppl:/home/koat2/irankfinder/1.3.1/irankfinder:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/koat2/bin
+ENV LD_LIBRARY_PATH=/home/koat2/irankfinder/1.3.1/irankfinder/ppl:/home/koat2/irankfinder/1.3.1/irankfinder/partialevaluation/bin:/home/koat2/irankfinder/1.3.1/irankfinder:/usr/local/lib:/usr/lib
 ENTRYPOINT ["/bin/bash"]
