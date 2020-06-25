@@ -17,6 +17,9 @@ export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 5. Execute `opam install menhir ounit apron cmdliner ppx_deriving ppx_deriving_cmdliner batteries fpath omake`
   
 6. Use the command `omake` to build koat2.
+
+## Static Binary
+To get a statically linked binary, please execute the script `compile_static_binary.sh`. This will set up a docker container in which OCaml 4.09.1 for compiling static binaries using musl is installed with all required packages to compile KoAT2. Please note that in this case, the used libraries (see below) are linked _statically_ into the resulting binary. The code of these libraries can be found when following the given links below.
   
 ## Links
 
@@ -26,6 +29,7 @@ export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 - Omake Recipes: http://www.camlcity.org/knowledge/kb_001_omake_recipes.html
 - OUnit: http://ounit.forge.ocamlcore.org/api-ounit/index.html
 - Menhir: http://gallium.inria.fr/~fpottier/menhir/
+- Musl: https://www.musl-libc.org/
 
 ## Used Libraries
 KoAT2 makes use of the following external tools and libraries.
