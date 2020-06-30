@@ -21,6 +21,7 @@ let suite =
           ("examples_new_input/" ^ folder ^ "/") >::: (
             let files = Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir ("../../examples/" ^ folder))
             and test (file : string): unit = try ignore (Readers.read_file ("../../examples/" ^ folder ^ "/" ^ file)) with
+                                             | Failure "Transition leading back to the initial location." -> if (String.compare file "start_incoming.koat") = 0 then () else (failwith "Transition leading back to the initial location.")
                                              | ParserUtil.Error msg -> failwith msg
                                              | TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported" in
             Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
