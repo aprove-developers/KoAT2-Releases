@@ -611,8 +611,6 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                 | (b, Const c) when Num.(c =~= zero) -> b
                 | (Const c1, Const c2) -> Const Num.(c1 + c2)
                 | (Const c1, Sum (Const c2, b)) -> simplify_bi @@ (Sum (Const Num.(c1 + c2), b))
-                | (Neg Infinity, Infinity) -> Const Num.zero
-                | (Infinity, Neg Infinity) -> Const Num.zero
                 | (_, Infinity) -> Infinity
                 | (Infinity, _) -> Infinity
                 | (_, Neg Infinity) -> Neg Infinity
