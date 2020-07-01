@@ -110,10 +110,6 @@ module type Atom =
 
         (** Returns the coefficient of a variable which is normalised to the lhs. *)
         val get_coefficient : Var.t -> t -> value
-
-        (** Returns the single right hand side constant of the atom. *)
-        val get_constant : t -> value
-
   end
 
 (** A constraint is a conjunction of atoms *)
@@ -204,9 +200,6 @@ module type Constraint =
         val get_coefficient_vector : Var.t -> t -> value list
 
         val get_matrix : Var.t list -> t -> value list list
-
-        (** Returns the row of all coefficients of a variable in a constraint...used for farkas quantor elimination*)
-        val get_constant_vector : t -> value list
 
         val dualise : Var.t list -> polynomial list list -> polynomial list -> t
 

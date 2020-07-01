@@ -3,7 +3,8 @@ open BoundsInst
 open Polynomials
 
 module AtomOver(P : ConstraintTypes.Atomizable) =
-(*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
+(*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the constraints*)
+(* Internally an atom consists of a polynomial p and a compkind. It corresponds then to p compkind 0 where compkind is either < or <=*)
 struct
     module P = P
 
@@ -107,8 +108,6 @@ struct
     let get_coefficient var atom =
       P.coeff_of_var var (normalised_lhs atom)
 
-    let get_constant (poly,_) =
-      P.get_constant (P.neg poly)
 end
 
 module Atom =
@@ -129,12 +128,19 @@ module Atom =
       | (LT,LT) -> Polynomial.(poly1 =~= poly2)
       | (LE,LE) -> Polynomial.(poly1 =~= poly2)
 
+    let get_constant (poly, compkind) =
+      match compkind with
+      | LE -> P.get_constant (P.neg poly)
+      (* Implicitly convert from < to <=*)
+      | LT -> (P.get_constant (P.neg @@ P.add P.one poly))
   end
 
 module ParameterAtom =
   struct
     include AtomOver(ParameterPolynomial)
 
+    let get_constant (poly,_) =
+      P.get_constant (P.neg poly)
   end
 
 module BoundAtom =
@@ -169,4 +175,6 @@ module RealParameterAtom =
     let of_int_para_atom atom =
       mk Comparator.LE (RealParameterPolynomial.of_int_parapoly atom) RealParameterPolynomial.zero
 
+    let get_constant (poly,_) =
+      P.get_constant (P.neg poly)
   end

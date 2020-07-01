@@ -82,10 +82,6 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
     let get_coefficient_vector var constr =
         List.map (A.get_coefficient var) constr
 
-    (**returns a list of the constants of the constraints*)
-    let get_constant_vector constr =
-        List.map A.get_constant constr
-
     (** returns a list of lists of the coefficients of the constraint*)
     let get_matrix vars constr =
         List.map (fun var -> get_coefficient_vector var constr) vars
@@ -112,6 +108,10 @@ module Constraint =
       |> List.map Atom.max_of_occurring_constants
       |> List.fold_left OurInt.mul OurInt.one
 
+    (**returns a list of the constants of the constraints*)
+    let get_constant_vector constr =
+        List.map Atom.get_constant constr
+
   end
 
 module ParameterConstraint =
@@ -125,6 +125,10 @@ module ParameterConstraint =
         ~lt:mk_lt
         ~correct:mk_true
         ~conj:mk_and
+
+    (**returns a list of the constants of the constraints*)
+    let get_constant_vector constr =
+        List.map ParameterAtom.get_constant constr
 
     (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
     let apply_farkas a_matrix b_right c_left d_right =
@@ -160,7 +164,6 @@ module RealConstraint =
 
     let of_intconstraint intconstraint =
       mk (List.map (fun atom -> RealAtom.of_intatom atom) intconstraint)
-
   end
 
 module RealParameterConstraint =
@@ -185,6 +188,10 @@ module RealParameterConstraint =
         ~lt:RealConstraint.mk_lt
         ~correct:RealConstraint.mk_true
         ~conj:RealConstraint.mk_and
+
+    (**returns a list of the constants of the constraints*)
+    let get_constant_vector constr =
+        List.map RealParameterAtom.get_constant constr
 
     (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
     let apply_farkas (a_matrix: RealPolynomial.t list list) b_right c_left d_right =

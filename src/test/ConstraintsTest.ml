@@ -151,7 +151,7 @@ module Methods =
                                                       (Constraint.get_constant_vector (Readers.read_constraint constr))))
                         [
                             ([5; -2; 0], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
-                            ([8; -3; 1; -1], "3*x + 2 * y + 4 * z <= 8 && (-1) * x - 3*y > 3 && 7 * x + 3 * z = 1");
+                            ([8; -4; 1; -1], "3*x + 2 * y + 4 * z <= 8 && (-1) * x - 3*y > 3 && 7 * x + 3 * z = 1");
                             ([0],"2 *x + y <= 0");
                         ]);
 

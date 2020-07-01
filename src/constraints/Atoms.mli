@@ -16,6 +16,9 @@ sig
 
   val max_of_occurring_constants : t -> OurInt.t
 
+  (** Returns the single right hand side constant of the atom. *)
+  val get_constant : t -> value
+
   (* Add operations specific to polynomial atoms here if needed *)
 end
 
@@ -26,7 +29,10 @@ sig
   (** Returns the coefficient of a variable which is normalised to the lhs. *)
   val get_coefficient : Var.t -> t -> value
 
-  (** Returns the single right hand side constant of the atom. *)
+  (** Returns the single right hand side constant of the atom.
+      Note that if the comparison is > then 1 is subtracted from the constant.
+      I.e. the constant corresponds to a comparison with >=
+  *)
   val get_constant : t -> value
 
   (* Add operations specific to parameter atoms here if needed *)
@@ -41,9 +47,6 @@ sig
 
   (** Returns the coefficient of a variable which is normalised to the lhs. *)
   val get_coefficient : Var.t -> t -> value
-
-  (** Returns the single right hand side constant of the atom. *)
-  val get_constant : t -> value
 
   val max_of_occurring_constants : t -> OurFloat.t
 
