@@ -455,27 +455,32 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
         end)
     let simplify_cache: t SimplifyCacheTable.t = SimplifyCacheTable.create 1000
 
+    (*  Simplify a given bound. Use assume-vars_nonnegative = true to simplify bounds with absolute values. opt_invariants may contain a function that may provide additional,
+        e.g. by using an SMT solving backend *)
     let rec simplify_ ~opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative bound =
-      let rec get_type_chain t' b = match (t',b) with
-        | (`Max,Max (b1,b2))        -> get_type_chain t' b1       @ get_type_chain t' b2
-        | (`Min,Min (b1,b2))        -> get_type_chain t' b1       @ get_type_chain t' b2
-        | (`Min, Neg (Max (b1,b2))) -> get_type_chain t' (Neg b1) @ get_type_chain t' (Neg b2)
-        | (`Max, Neg (Min (b1,b2))) -> get_type_chain t' (Neg b1) @ get_type_chain t' (Neg b2)
+      (* Get chains of max or min expressions. E.g. Max(Max(b1,b2), b3) should be represented as [b1, b2, b3] *)
+      let rec get_minmax_chain t' b = match (t',b) with
+        | (`Max,Max (b1,b2))        -> get_minmax_chain t' b1       @ get_minmax_chain t' b2
+        | (`Min,Min (b1,b2))        -> get_minmax_chain t' b1       @ get_minmax_chain t' b2
+        | (`Min, Neg (Max (b1,b2))) -> get_minmax_chain t' (Neg b1) @ get_minmax_chain t' (Neg b2)
+        | (`Max, Neg (Min (b1,b2))) -> get_minmax_chain t' (Neg b1) @ get_minmax_chain t' (Neg b2)
         | (`Min, Neg (Min (b1,b2))) -> [simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative @@ Max(Neg b1, Neg b2)]
         | (`Max, Neg (Max (b1,b2))) -> [simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative @@ Max(Neg b1, Neg b2)]
         | (_,b)                     -> [simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b]
 
+      (* Similar to get_minmax_chain but for sums and products*)
       and get_op_chain t b = match (t,b) with
         | (`Sum, Sum (b1,b2))             -> get_op_chain t b1 @ get_op_chain t b2
-        | (`Product, Product (Neg b1,b2)) -> [Const (Num.sub Num.zero Num.one)] @ get_op_chain t b1 @ get_op_chain t b2
-        | (`Product, Product (b1,Neg b2)) -> [Const (Num.sub Num.zero Num.one)] @ get_op_chain t b1 @ get_op_chain t b2
+        | (`Product, Product (Neg b1,b2)) -> [Const Num.minus_one] @ get_op_chain t b1 @ get_op_chain t b2
+        | (`Product, Product (b1,Neg b2)) -> [Const Num.minus_one] @ get_op_chain t b1 @ get_op_chain t b2
         | (`Product, Product (b1,b2))     -> get_op_chain t b1 @ get_op_chain t b2
         | (_,b)                           -> [simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b]
 
-      and apply_chain_tuple t' (b1,b2) =
-        get_type_chain t' b1 @ get_type_chain t' b2
+      and get_minmax_chain_tuple t' (b1,b2) =
+        get_minmax_chain t' b1 @ get_minmax_chain t' b2
 
-      and construct_chain t' bs =
+      (* Reverse operation to get_minmax_chain, e.g. construct a chain *)
+      and construct_minmax_chain t' bs =
         let sorted = List.sort (fun b1 b2 -> String.compare (show_bound b1) (show_bound b2)) bs in
         let default_min_max = function
           | `Max -> Neg Infinity
@@ -488,6 +493,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
               | `Max -> fun b1 b2 -> Max (b1,b2)) sorted
         with Invalid_argument _ -> default_min_max t'
 
+      (* Reverse to get_op_chain, e.g. construct a chain *)
       and construct_op_chain t bs =
         (* Sort terms to allow for better equality checking of similar terms. String comparison is kind of arbitrary *)
         let sorted = List.sort (fun b1 b2 -> String.compare (show_bound b1) (show_bound b2)) bs in
@@ -500,19 +506,31 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
               with Invalid_argument _  -> of_constant (Num.one))
       in
 
+      (* This function simplifies bounds with both min and max heads.
+        This is convenient since in both cases the same reasoning can be applied with marginal differences.
+      *)
       let min_max_helper t (b1,b2) =
           let keep_least_greatest_bounds t bs =
+            (* for a chain [b1, b2,..] find a subset [b'_1, b'_2, ...] such that
+                max[b1, b2,..] = max [b'_1, ..] (in the case of t=`Max)
+                , or min[b1, b2,..] = min[b'_1,..]
+            *)
             let comperator = match t with
               | `Max  -> greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
               | `Min  -> flip (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative)
             in
             let rec helper selected =
-              if List.for_all (fun b -> List.exists (fun b' -> (comperator b' b) = Some true) selected) bs then
+              let is_bounded = List.map (fun b -> b, List.exists (fun b' -> comperator b' b = Some true) selected) bs in
+              if List.for_all Tuple2.second is_bounded then
+                (* if all bounds are bounded by the selected subset return the subset into the monad *)
                 ListMonad.pure selected
               else
+                (* Otherwise, nondeterministically choose a bound that is not-bounded by the selected bounds,
+                  and add it to the selected
+                *)
                 ListMonad.(
-                  List.filter (fun b -> not @@ List.exists (equal b) selected) bs
-                  >>= (fun s -> helper @@ [s]@selected)
+                  List.filter (not % Tuple2.second) is_bounded
+                  >>= (helper % flip List.cons selected % Tuple2.first)
                 )
             in
             helper []
@@ -534,22 +552,31 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             | Max (b1,b2) -> (b1,b2)
             | _           -> raise (Failure "Bound head should either be Min or Max")
           in
+          (* Simplify alternating min max bounds, e.g. max[min[., c], c] = c *)
           let simplify_alt_minmax bs =
-            List.filter (is_type (inverse_type t)) bs
-            |> List.map (apply_chain_tuple (inverse_type t) % extract_bounds)
-            |> List.filter (not % List.exists (fun b -> List.exists (equal b) bs))
-            |> List.map (construct_chain (inverse_type t))
-            |> List.append (List.filter (not % is_type (inverse_type t)) bs)
+            let inverse_types = List.filter (is_type (inverse_type t)) bs in
+            let not_inverse_types = List.filter (not % is_type (inverse_type t)) bs in
+
+            let removed_doubles_in_inverse_types =
+              inverse_types
+              |> List.map (get_minmax_chain_tuple (inverse_type t) % extract_bounds)
+              |> List.filter (not % List.exists (fun b -> List.exists (equal b) bs))
+              |> List.map (construct_minmax_chain (inverse_type t))
+            in
+
+            List.append not_inverse_types removed_doubles_in_inverse_types
             |> List.unique ~eq:equal
           in
-          (get_type_chain t b1 @ get_type_chain t b2)
+
+          (get_minmax_chain t b1 @ get_minmax_chain t b2)
           |> List.unique ~eq:equal
           |> keep_least_greatest_bounds t
           |> simplify_alt_minmax
-          |> construct_chain t
+          |> construct_minmax_chain t
       in
       let execute () =
         let cache_entry = SimplifyCacheTable.find_option simplify_cache (assume_vars_nonnegative, bound) in
+        (* Use cache only when not using opt_invariants since this hint giving function is a black box *)
         if Option.is_none opt_invariants && Option.is_some cache_entry then
            Option.get cache_entry
         else
@@ -573,6 +600,9 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
           (* Simplify terms with sum head *)
           | Sum (b1, b2) -> (
+            (* This function is taken from the original simplify method.
+                Todo: Seamlessly integrate with the 'new' version
+            *)
             let rec simplify_bi = function
               | Sum (b1,b2) ->
                 (match (b1, b2) with
@@ -602,6 +632,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
               get_op_chain `Sum b1 @ get_op_chain `Sum b2
               |> List.filter (not % equal (Const Num.zero))
             in
+            (* Merge addends that are a product of the same bound with different coefficients *)
             let combine_chain_elements_with_coeffs =
               let get_coeff_elem = function
                 | Product (Const c, b) -> (b,c)
@@ -621,6 +652,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                   []
               |> List.map (fun (b,c) -> Product (Const c, b) |> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative)
             in
+            (* Finally take the chain with possibly merged addends and construct a bound before applying the 'old' approach to it *)
             combine_chain_elements_with_coeffs
             |> construct_op_chain `Sum
             |> function
@@ -630,14 +662,15 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
           (* Simplify terms with product head *)
           | Product (b1, b2) ->  (
+            (* 'Old' version of simplify for product heads *)
             let rec simplify_bi = function
               | Product (b1,b2) ->
                 (
                   match (simplify_bi b1, simplify_bi b2) with
                   | (Max (Const zero1, b1), Max (Const zero2, b2)) when Num.(zero1 =~= zero) && Num.(zero2 =~= zero) ->
-                    simplify_bi (Max (Const Num.zero, Product (b1, b2)))
+                      simplify_bi (Max (Const Num.zero, Product (b1, b2)))
                   | (Max (Const zero1, b1), b2) when Num.(zero1 =~= zero) ->
-                    simplify_bi (Max (Const Num.zero, Product (b1, b2)))
+                      simplify_bi (Max (Const Num.zero, Product (b1, b2)))
                   | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify_bi @@ Product (b2, Product (b1, b3))
                   | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bi @@ Product (Product (b1, b3), b2)
                   | (b1, b2) when Constructor.(b2 < b1) -> simplify_bi @@ Product (b2, b1)
@@ -645,6 +678,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                 )
               | b -> b
             in
+            (* In the case of infinity remove all factors of the product chain while maintaining the sign *)
             let chain_eliminate_redundant_infinity =
               let chain = get_op_chain `Product b1 @ get_op_chain `Product b2 in
               if List.exists (fun b -> is_infinity b || is_minus_infinity b) chain then
@@ -653,7 +687,9 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                 |> Enum.filter (not % is_infinity)
                 |> Enum.map
                     (fun b ->
-                      match (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Const Num.zero) b, greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero))  with
+                      match (greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Const Num.zero) b,
+                             greater ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero))
+                      with
                       | (Some true, _) -> Const (Num.(neg one))
                       | (_, Some true) -> Const (Num.one)
                       | _              -> b
@@ -663,6 +699,8 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
               else
                 chain
             in
+
+            (* Partition the chain in sets of constants and non-constant factors *)
             let get_const = function
               | Const c       -> Some c
               | Neg (Const c) -> Some (Num.neg c)
@@ -671,6 +709,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             let all_non_consts = List.filter (Option.is_none % get_const) chain_eliminate_redundant_infinity in
             let all_consts = List.map Option.get @@ List.filter Option.is_some @@ List.map get_const chain_eliminate_redundant_infinity in
 
+            (* Get the coefficient of the complete chain by multiplying all of its constant values *)
             let const =
               let c = List.fold_left Num.mul Num.one all_consts in
               if List.exists (fun b -> is_infinity b || is_minus_infinity b) all_non_consts then
@@ -685,7 +724,9 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                 c
             in
 
+            (* Call the old simplifcation method *)
             let non_const_chain = simplify_bi @@ construct_op_chain `Product all_non_consts in
+
             if Num.(equal const zero) then
               Const const
             else if Num.(equal const one) then
@@ -720,35 +761,34 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           | Abs (Neg b) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Abs b)
           | Abs (Abs b) -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Abs b)
           | Abs (Product (b1,b2)) ->
+              (* Partition the product chain into factors X_i which are greater or equal 0, i.e. |X_i| = X_i,
+                 factors Y_i which are less or equal than 0, i.e. |Y_i| = -Y_i
+                 , and factors Z_i for which none of this is provable.
+                 Then the the original bound can be represented as X_1 * X_2 * (-Y_1) * (Y_2) * .. * abs(Z_1) * abs(Z_2) * ... *)
               let chain   = get_op_chain `Product b1 @ get_op_chain `Product b2 in
-              let all_ge0   = List.filter (fun e -> greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative e (Const Num.zero) =  Some true) chain in
-              let all_other = List.filter (fun e -> greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative e (Const Num.zero) <> Some true) chain in
-              if List.is_empty all_ge0 then
-                Abs (construct_op_chain `Product all_other)
-              else
-                if List.is_empty all_other then
-                  construct_op_chain `Product all_ge0
-                else
-                  Product (construct_op_chain `Product all_ge0, (construct_op_chain `Product @@ List.map (fun b -> Abs b) all_other))
+              let (all_geq0, all_leq0, all_others) =
+                List.fold_left
+                  (fun (geq0, leq0, others) e ->
+                      if greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative e (Const Num.zero) =  Some true then
+                        (e::geq0, leq0, others)
+                      else if greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Const Num.zero) e =  Some true then
+                        (geq0, e::leq0, others)
+                      else
+                        (geq0, leq0, e::others)
+                  ) ([], [], []) chain
+              in
 
-          | Abs (Max (b1,b2)) ->
-              if (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Max (b1,b2)) (Const Num.zero) = Some true) then
-                Max (b1,b2) |> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
-              else
-                let chain = get_op_chain  `Max b1 @ get_op_chain `Max b2 in
-                construct_chain `Max (List.map (fun b -> Abs b) chain)
+              simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative @@
+                (* Construct Chains *)
+                Product(Product(construct_op_chain `Product all_geq0, construct_op_chain `Product @@ List.map (fun b -> Neg b) all_leq0),
+                        construct_op_chain `Product @@ List.map (fun b -> Abs b) all_others)
 
-          | Abs (Min (b1,b2)) ->
-              if (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative (Max (b1,b2)) (Const Num.zero) = Some true) then
-                Max (b1,b2) |> simplify_~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
-              else
-                let chain = get_op_chain  `Max b1 @ get_op_chain `Max b2 in
-                construct_chain `Max (List.map (fun b -> Abs b) chain)
-
+          (* Check if a bound is provably >=0 or <=0. If this is the case elimnate Abs accordingly *)
           | Abs b -> match greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) with
                       | Some true -> simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b
                       | Some false -> Neg b |> simplify_~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
                       | None -> Abs (simplify_ ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b)
+        (* Add to cache *)
         |> tap (fun t -> if Option.is_none opt_invariants then SimplifyCacheTable.add simplify_cache (assume_vars_nonnegative, bound) t)
       in
       Logger.with_log logger Logger.DEBUG
@@ -761,10 +801,12 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       Logger.log loggerWrapper Logger.DEBUG (fun () -> "simplifywrapper " , ["b",to_string b]);
       simplify_ ~opt_invariants:None ~assume_vars_nonnegative:false b
 
+    (* Wrapper for simplify to improve logging but assumes that all variables are elements of a nonnegative domain *)
     let simplify_vars_nonnegative b =
       Logger.log loggerWrapper Logger.DEBUG (fun () -> "simplifyabswrapper " , ["b",to_string b]);
       simplify_ ~opt_invariants:None ~assume_vars_nonnegative:true b
 
+    (* Wrapper for simplify to improve logging but uses the provided hints *)
     let simplify_opt_invariants opt_invariants b =
       Logger.log loggerWrapper Logger.DEBUG (fun () -> "simplifyoptinvariantswrapper " , ["b",to_string b]);
       simplify_ ~opt_invariants:(Some opt_invariants) ~assume_vars_nonnegative:true b

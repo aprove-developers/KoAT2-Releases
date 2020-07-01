@@ -12,6 +12,10 @@ module type OurNumber =
     val pow : t -> int -> t
     val max : t -> t -> t
     val min : t -> t -> t
+
+    (** The constant representing -1.
+      This is not provided by Number.Numeric but is quite useful *)
+    val minus_one: t
   end
 
 module type BasePartialOrder =
