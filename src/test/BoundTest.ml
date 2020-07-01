@@ -63,16 +63,16 @@ let tests =
                     ("inf", "inf+8");
                     ("inf", "inf+inf");
                     ("-inf", "-inf+8");
-                    (* Not supported ("3+2*x", "3+x+x"); *)
+                    ("3+2*x", "3+x+x");
 
                     (* Minus *)
                     ("-x", "0-x");
                     ("3", "7-4");
-                    (* Not supported ("0", "|x|-|x|"); *)
+                    ("0", "|x|-|x|");
                     ("-inf", "7-inf");
                     ("inf", "inf-8");
                     ("-inf", "-inf-8");
-                    (* Not supported ("3-2*x", "3-x-x"); *)
+                    ("3-2*x", "3-x-x");
 
                     (* Product *)
                     ("0", "0*x");
@@ -114,8 +114,8 @@ let tests =
                     (* Combinations *)
 
                     (* Sum over Product *)
-                    (*("5*|x|", "3*|x|+2*|x|");
-                    ("|x|", "3*|x|-2*|x|"); *)
+                    ("5*|x|", "3*|x|+2*|x|");
+                    ("|x|", "3*|x|-2*|x|");
 
                     ("4", "max {min {3,7}, min{4,5}}");
                     ("inf", "1 + max {0, 0} + inf + 1 + max {0, 0} + inf");
