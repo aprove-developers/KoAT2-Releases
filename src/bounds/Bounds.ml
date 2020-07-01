@@ -100,7 +100,7 @@ let rec find_exp_bounds simplify_smt ~refined_smt_timeout ~generate_invariants_b
     List.rev @@ C.scc_list ervg
   in
 
-  let appr_after_initial_comutation =
+  let appr_after_initial_computation =
     appr
     |> TrivialTimeBounds.compute program
     |> TrivialTimeBounds.compute_generaltransitions program
@@ -113,7 +113,7 @@ let rec find_exp_bounds simplify_smt ~refined_smt_timeout ~generate_invariants_b
 
   let cache_with_lexrsm_resetted =  CacheManager.clear_lrsm_cache cache () in
   (* Continue Computation *)
-  appr_after_initial_comutation
+  appr_after_initial_computation
   (* Use refined LexRSMs *)
   |> find_exp_bounds_ ~refined:true ~refined_smt_timeout:refined_smt_timeout simplify_smt cache_with_lexrsm_resetted ervg sccs program
   (* Now apply bottom-up if there is an SCC without an expected cost bound *)
