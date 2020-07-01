@@ -554,8 +554,9 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
           in
           (* Simplify alternating min max bounds, e.g. max[min[., c], c] = c *)
           let simplify_alt_minmax bs =
-            let inverse_types = List.filter (is_type (inverse_type t)) bs in
-            let not_inverse_types = List.filter (not % is_type (inverse_type t)) bs in
+            let (inverse_types, not_inverse_types) = List.partition (is_type (inverse_type t)) bs in
+
+
 
             let removed_doubles_in_inverse_types =
               inverse_types
