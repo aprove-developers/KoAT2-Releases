@@ -212,6 +212,7 @@ let tests =
               [
                 "1", `GT,"0", Some true;
                 "-2 + -2", `GE,"-3", Some false;
+                "-2 + -5", `GE,"-10", Some true;
                 "|X|", `GT,"0", None;
                 "|X|", `GE,"0", Some true;
 
