@@ -7,7 +7,7 @@ open RVGTypes
 
 module RV = RVG.RV
 
-let suite =
+let tests =
   "Graphs" >::: [
       (
         let cache = CacheManager.new_cache () in
@@ -26,11 +26,21 @@ let suite =
           ("examples_new_input/" ^ folder ^ "/") >::: (
             let cache = CacheManager.new_cache () in
             let trans_id_counter = CacheManager.trans_id_counter cache in
-            let files = Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir ("../../examples/" ^ folder))
-            and test (file : string): unit = try ignore (Readers.read_file trans_id_counter ("../../examples/" ^ folder ^ "/" ^ file)) with
-                                             | Readers.Error msg -> failwith msg
-                                             | TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported" in
-            Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
+            let files = Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir ("../../examples/" ^ folder)) in
+            let test (file : string): unit =
+              try
+                let read_function () = ignore (Readers.read_file trans_id_counter ("../../examples/" ^ folder ^ "/" ^ file)) in
+                (* Check if an exception is raised when transitions lead back to the initial location *)
+                if file = "start_incoming.koat" then
+                  assert_raises (Failure "Transition leading back to the initial location.") read_function
+                else
+                  read_function ()
+              with
+                | Readers.Error msg -> failwith msg
+                | TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported"
+            in
+            Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files))
+        in
         "Examples" >::: List.map test_folder ["CageKoAT-Input-Examples/weightedExamples/badExamples" ;"CageKoAT-Input-Examples/weightedExamples/constantWeights"; "CageKoAT-Input-Examples/weightedExamples/simplePolyWeights"; "CageKoAT-Input-Examples/debugExamples"; "CageKoAT-Input-Examples/cexamples"; "ProbabilisticExamples"]
       );
       (
