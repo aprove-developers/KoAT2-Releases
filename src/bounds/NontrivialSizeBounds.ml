@@ -244,8 +244,10 @@ let compute_
 
   if contains_negation then
     raise (Failure "Negation not yet supported!")
-  else
+  else if not (Bound.is_infinity loop_scaling_factor) then
     Bound.(sign kind (loop_scaling_factor * (starting_value kind + loop_effect)))
+  else
+    Bound.infinity
 
 
 (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
