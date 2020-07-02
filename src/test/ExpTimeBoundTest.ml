@@ -68,6 +68,7 @@ let tests =
           ("c4b_t13", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t13.koat");
           ("c4b_t15", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t15.koat");
           ("c4b_t19", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t19.koat");
+          ("c4b_t30", RealBound.Inf, "examples/ProbabilisticExamples/paper/c4b_t30.koat");
           ("c4b_t61", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t61.koat");
           ("complex", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/complex.koat");
           ("condand", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/condand.koat");
