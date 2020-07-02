@@ -607,10 +607,6 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             let rec simplify_bi = function
               | Sum (b1,b2) ->
                 (match (b1, b2) with
-                | (Const c, b) when Num.(c =~= zero) -> b
-                | (b, Const c) when Num.(c =~= zero) -> b
-                | (Const c1, Const c2) -> Const Num.(c1 + c2)
-                | (Const c1, Sum (Const c2, b)) -> simplify_bi @@ (Sum (Const Num.(c1 + c2), b))
                 | (_, Infinity) -> Infinity
                 | (Infinity, _) -> Infinity
                 | (_, Neg Infinity) -> Neg Infinity
@@ -619,9 +615,6 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                 | (Max (Const c2, b), Const c1) -> simplify_bi (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
                 | (Const c1, Min (Const c2, b)) -> simplify_bi (Min (Const Num.(c1 + c2), Sum (Const c1, b)))
                 | (Min (Const c2, b), Const c1) -> simplify_bi (Min (Const Num.(c1 + c2), Sum (Const c1, b)))
-                | (b1, Neg b2) when equal b1 b2 -> Const Num.zero
-                | (Neg b1, b2) when equal b1 b2 -> Const Num.zero
-                | (b1, b2) when equal b1 b2 -> simplify_bi (Product (Const (Num.of_int 2), b1))
                 | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify_bi (Sum (b2, Sum (b1, b3)))
                 | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bi (Sum (Sum (b1, b3), b2))
                 | (b1, b2) -> Sum (b1, b2))
