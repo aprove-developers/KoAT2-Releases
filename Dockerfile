@@ -21,7 +21,7 @@ RUN opam switch create -y 4.09.1+musl+static+flambda
 RUN eval $(opam env)
 
 # Auxiliary libraries which are needed to build the opam packages
-RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev --no-cache
+RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev graphviz --no-cache
 
 # If you have enough threads/memory available increase the job count
 RUN opam install -j8 z3 ocamlfind menhir cmdliner ppx_deriving batteries ppx_deriving_cmdliner fpath omake apron ocamlgraph ounit
