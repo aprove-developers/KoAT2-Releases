@@ -263,6 +263,19 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     let to_string = show ~complexity:true
 
+    let to_constructor_string =
+      fold
+        ~const:(fun c -> "Const (" ^ Num.to_string c ^ ")")
+        ~var:(fun v -> "Var (" ^ Var.to_string v ^ ")")
+        ~neg:(fun s -> "Neg (" ^ s ^ ")")
+        ~abs:(fun s -> "abs (" ^ s ^ ")")
+        ~plus:(fun s1 s2 -> "Plus (" ^ s1 ^ ", " ^ s2 ^ ")")
+        ~times:(fun s1 s2 -> "times (" ^ s1 ^ ", " ^ s2 ^ ")")
+        ~max:(fun s1 s2 -> "max (" ^ s1 ^ ", " ^ s2 ^ ")")
+        ~min:(fun s1 s2 -> "min (" ^ s1 ^ ", " ^ s2 ^ ")")
+        ~exp:(fun b s -> "Exp (" ^ Num.to_string b ^ ", " ^ s ^ ")")
+        ~inf:("Inf")
+
     let opt_bool_to_bool = function
       | Some true -> true
       | _         -> false

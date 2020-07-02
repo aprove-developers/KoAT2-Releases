@@ -66,6 +66,8 @@ module Make_BoundOver :
 
       val to_string : t -> string
 
+      val to_constructor_string : t -> string
+
       val show : ?complexity:bool -> t -> string
 
       (** Functions to classify the quality of the bound *)
