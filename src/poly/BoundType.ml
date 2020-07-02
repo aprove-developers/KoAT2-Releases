@@ -360,6 +360,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                       execute
 
     and greater_or_equal ~(opt_invariants: ([`GE | `GT] -> t -> t -> bool option) option) ~assume_vars_nonnegative b1 b2 =
+      let rec_call = greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative in
       let execute () =
         let cache_entry = CompCacheTable.find_option gte_cache (assume_vars_nonnegative, b1, b2) in
         if Option.is_none opt_invariants && Option.is_some cache_entry then
@@ -380,45 +381,48 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
               | (Infinity, _) -> Some true
               | (Sum (Abs _, b), b2) when equal b b2 -> Some true
               | (Sum (b1,b2), b3) when
-                  (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
-                    && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true
-                    && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
-                    && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true) -> Some true
+                  (rec_call b1 b3 = Some true && rec_call b2 b3 = Some true
+                    && rec_call b1 (Const Num.zero) = Some true && rec_call b2 (Const Num.zero) = Some true) -> Some true
+              | (Sum (b1,b2), b3) when
+                  (rec_call b1 b3 = Some true && rec_call b2 (Const Num.zero) = Some true)-> Some true
+              | (Sum (b2,b1), b3) when
+                  (rec_call b1 b3 = Some true && rec_call b2 (Const Num.zero) = Some true)-> Some true
+
               | (_, Neg Infinity) -> Some true
 
-              | (Max (b1,b2), b3) when (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
-                  || greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true) -> Some true
+              | (Max (b1,b2), b3) when (rec_call b1 b3 = Some true
+                  || rec_call b2 b3 = Some true) -> Some true
 
-              | (Min (b1,b2), b3) when (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 b3 = Some true
-                  && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b3 = Some true) -> Some true
+              | (Min (b1,b2), b3) when (rec_call b1 b3 = Some true
+                  && rec_call b2 b3 = Some true) -> Some true
 
               | ((Product (Const c1,b1)),Product (Const c2, b2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
               | ((Product (Const c1,b1)),Product (b2, Const c2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
               | ((Product (b1,Const c1)),Product (Const c2, b2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
               | ((Product (b1,Const c1)),Product (b2, Const c2)) when Num.Compare.(c1 >= c2) && (equal b1 b2) -> Some true
 
-              | (Product (Const c1, b2), b) when Num.Compare.(c1 >= Num.one) && (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 b = Some true) -> Some true
-              | (b,Product (Const c1, b2)) when Num.Compare.(Num.one >= c1 && c1 >= Num.zero) && (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b b2 = Some true) -> Some true
+              | (Product (Const c1, b2), b) when Num.Compare.(c1 >= Num.one) && (rec_call b2 b = Some true) -> Some true
+              | (b,Product (Const c1, b2)) when Num.Compare.(Num.one >= c1 && c1 >= Num.zero) && (rec_call b b2 = Some true) -> Some true
 
               (* Check Positivity *)
               | (Product (b1,b2), Const c) when
-                  Num.Compare.(c <= Num.zero) && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
-                    && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true -> Some true
+                  Num.Compare.(c <= Num.zero) && rec_call b1 (Const Num.zero) = Some true
+                    && rec_call b2 (Const Num.zero) = Some true -> Some true
               | (Const c, Product (b1,b2)) when
-                  Num.Compare.(c < Num.zero) && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b1 (Const Num.zero) = Some true
-                    && greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b2 (Const Num.zero) = Some true -> Some false
+                  Num.Compare.(c < Num.zero) && rec_call b1 (Const Num.zero) = Some true
+                    && rec_call b2 (Const Num.zero) = Some true -> Some false
 
               | (Const c1, Const c2) when Num.Compare.(c1 >= c2) -> Some true
               | (b, Const z1) when Num.(equal z1 zero) -> (
                 match b with
-                | Max (b, _) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
-                | Max (_, b) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
+                | Max (b, _) when rec_call b (Const Num.zero) |? false -> Some true
+                | Max (_, b) when rec_call b (Const Num.zero) |? false -> Some true
                 | _ -> None
               )
               | (b, Const z1) when Num.(equal z1 zero) -> (
                 match b with
-                | Neg (Max (b, _)) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative b (Const Num.zero) |? false -> Some true
-                | Neg (Max (_, b)) when greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative  b (Const Num.zero) |? false -> Some true
+                | Neg (Max (b, _)) when rec_call b (Const Num.zero) |? false -> Some true
+                | Neg (Max (_, b)) when rec_call  b (Const Num.zero) |? false -> Some true
                 | _ -> None
               )
               | (b1, b2) -> None
@@ -486,7 +490,6 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       and get_op_chain t b =
         match (t,b) with
         | (`Sum, Sum (b1,b2))             -> get_op_chain t b1 @ get_op_chain t b2
-        | (`Sum, Neg b)                   -> [Product (Const Num.minus_one, simplify_rec_call b)]
         | (`Product, Product (b1,b2))     -> get_op_chain t b1 @ get_op_chain t b2
         | (`Product, Neg b)               -> Const Num.minus_one :: [simplify_rec_call b]
         | (_, b)                          -> [simplify_rec_call b]
@@ -620,10 +623,6 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
             let rec simplify_bi = function
               | Sum (b1,b2) ->
                 (match (b1, b2) with
-                | (_, Infinity) -> Infinity
-                | (Infinity, _) -> Infinity
-                | (_, Neg Infinity) -> Neg Infinity
-                | (Neg Infinity, _) -> Neg Infinity
                 | (Const c1, Max (Const c2, b)) -> simplify_bi (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
                 | (Max (Const c2, b), Const c1) -> simplify_bi (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
                 | (Const c1, Min (Const c2, b)) -> simplify_bi (Min (Const Num.(c1 + c2), Sum (Const c1, b)))
@@ -637,52 +636,40 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
               get_op_chain `Sum b1 @ get_op_chain `Sum b2
               |> List.filter (not % equal (Const Num.zero))
             in
-            (* Merge addends that are a product of the same bound with different coefficients *)
-            let combine_chain_elements_with_coeffs =
-              let get_coeff_elem = function
-                | Product (Const c, b) -> (b,c)
-                | Product (b, Const c) -> (b,c)
-                | Const k              -> (Const Num.one, k)
-                | Neg b                -> (b, Num.neg Num.one)
-                | b                    -> (b,Num.one)
+            match (List.exists is_infinity sum_chain, List.exists is_minus_infinity sum_chain) with
+            | (true, false) -> Infinity
+            | (false, true) -> Neg Infinity
+            | _             ->
+              (* Merge addends that are a product of the same bound with different coefficients *)
+              let combine_chain_elements_with_coeffs =
+                let get_coeff_elem = function
+                  | Product (Const c, b) -> (b,c)
+                  | Product (b, Const c) -> (b,c)
+                  | Const k              -> (Const Num.one, k)
+                  | Neg b                -> (b, Num.neg Num.one)
+                  | b                    -> (b,Num.one)
+                in
+                sum_chain
+                |> List.map get_coeff_elem
+                |> List.fold_left
+                    (fun list (b,c) ->
+                      try
+                        let i = fst @@ List.findi (fun i -> equal b % fst) list in
+                        List.modify_at i (fun (b,c') -> (b,Num.(c + c'))) list
+                      with Not_found -> List.cons (b,c) list)
+                    []
+                |> List.map (fun (b,c) -> Product (Const c, b) |> simplify_rec_call)
               in
-              sum_chain
-              |> List.map get_coeff_elem
-              |> List.fold_left
-                  (fun list (b,c) ->
-                    try
-                      let i = fst @@ List.findi (fun i -> equal b % fst) list in
-                      List.modify_at i (fun (b,c') -> (b,Num.(c + c'))) list
-                    with Not_found -> List.cons (b,c) list)
-                  []
-              |> List.map (fun (b,c) -> Product (Const c, b) |> simplify_rec_call)
-            in
-            (* Finally take the chain with possibly merged addends and construct a bound before applying the 'old' approach to it *)
-            combine_chain_elements_with_coeffs
-            |> construct_op_chain `Sum
-            |> function
-                | Sum (b1,b2) -> simplify_bi @@ Sum (b1,b2)
-                | b -> b
-          )
+              (* Finally take the chain with possibly merged addends and construct a bound before applying the 'old' approach to it *)
+              combine_chain_elements_with_coeffs
+              |> construct_op_chain `Sum
+              |> function
+                  | Sum (b1,b2) -> simplify_bi @@ Sum (b1,b2)
+                  | b -> b
+            )
 
           (* Simplify terms with product head *)
           | Product (b1, b2) ->  (
-            (* 'Old' version of simplify for product heads *)
-            let rec simplify_bi = function
-              | Product (b1,b2) ->
-                (
-                  match (simplify_bi b1, simplify_bi b2) with
-                  | (Max (Const zero1, b1), Max (Const zero2, b2)) when Num.(zero1 =~= zero) && Num.(zero2 =~= zero) ->
-                      simplify_bi (Max (Const Num.zero, Product (b1, b2)))
-                  | (Max (Const zero1, b1), b2) when Num.(zero1 =~= zero) ->
-                      simplify_bi (Max (Const Num.zero, Product (b1, b2)))
-                  | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify_bi @@ Product (b2, Product (b1, b3))
-                  | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bi @@ Product (Product (b1, b3), b2)
-                  | (b1, b2) when Constructor.(b2 < b1) -> simplify_bi @@ Product (b2, b1)
-                  | (b1, b2) -> Product (b1, b2)
-                )
-              | b -> b
-            in
             (* In the case of infinity remove all factors of the product chain while maintaining the sign *)
             let chain_eliminate_redundant_infinity =
               let chain = get_op_chain `Product b1 @ get_op_chain `Product b2 in
@@ -729,8 +716,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                 c
             in
 
-            (* Call the old simplifcation method *)
-            let non_const_chain = simplify_bi @@ construct_op_chain `Product all_non_consts in
+            let non_const_chain = construct_op_chain `Product all_non_consts in
 
             if Num.(equal const zero) then
               Const const

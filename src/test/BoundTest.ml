@@ -101,6 +101,7 @@ let tests =
                     ("0", "max{0, 0, -inf}");
                     ("inf", "max{0, 1, inf}");
                     ("2*|X|", "max{0,2*|X|}");
+                    ("Y + max{0,X}", "max{Y, Y+max{0, X}}");
 
                     (* Min *)
                     ("inf", "min {inf, inf}");
