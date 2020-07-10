@@ -62,6 +62,7 @@ let tests =
         )
         [
           ("2drwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/2drwalk.koat");
+          ("alain.c", RealBound.Polynomial 3, "examples/ProbabilisticExamples/paper/alain.c.koat");
           ("ber", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/ber.koat");
           ("bin", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/bin.koat");
           ("c4b_t09", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/c4b_t09.koat");
