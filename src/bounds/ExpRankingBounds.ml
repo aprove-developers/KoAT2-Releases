@@ -52,7 +52,11 @@ let get_best_bound entry_locations incoming_enum appr rankfunc: RealBound.t =
          let inc_prob_timebound = List.map (Approximation.exptimebound appr) entry_trans_to_location |> List.enum |> RealBound.sum in
          mul_inctime_and_rhs (inc_prob_timebound, rank_bounded)
       else
-        let inc_det_timebound = List.map (Approximation.timebound appr) trans_to_entry_location |> List.enum |> Bound.sum |> RealBound.of_intbound in
+        let inc_det_timebound =
+          List.map (Approximation.timebound appr) trans_to_entry_location
+          |> List.enum |> Bound.sum
+          |> Bound.appr_substition_abs_all Bound.of_var |> RealBound.of_intbound
+        in
         mul_inctime_and_rhs (inc_det_timebound, rank_bounded)
      )
   |> List.enum
