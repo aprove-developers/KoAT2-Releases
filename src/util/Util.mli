@@ -39,3 +39,6 @@ val flat_option : 'a option option -> 'a option
 val cat_maybes : 'a option list -> 'a list
 
 val cat_maybes_enum : 'a option Enum.t -> 'a Enum.t
+
+(* Execute a function and measure its execution time. The time used by the function is then printed to stdout *)
+val measure_execution_time : (unit -> 'a) -> 'a

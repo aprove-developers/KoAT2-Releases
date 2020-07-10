@@ -82,3 +82,9 @@ let cat_maybes l=
 
 let cat_maybes_enum e =
   Enum.map Option.get (Enum.filter Option.is_some e)
+
+let measure_execution_time f =
+  let t0 = Unix.gettimeofday () in
+  let res = f () in
+  Printf.printf "Time %.2fs\n" (Unix.gettimeofday () -. t0);
+  res
