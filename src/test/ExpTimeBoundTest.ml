@@ -73,6 +73,7 @@ let tests =
           ("complex", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/complex.koat");
           ("condand", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/condand.koat");
           ("cooling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/cooling.koat");
+          ("cousot9", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/cousot9.koat");
           ("fcall", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/fcall.koat");
           ("fib_exp_size", RealBound.Exponential 1, "examples/ProbabilisticExamples/paper/fib_exp_size.koat");
           ("filling_vol", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/filling_vol.koat");
