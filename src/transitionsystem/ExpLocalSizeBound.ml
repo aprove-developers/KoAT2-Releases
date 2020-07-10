@@ -150,6 +150,7 @@ let bound_is_convex cache =
 (* TODO avoid invocation of Z3 for linearity check  *)
 let appr_substitution_is_valid cache bound = (bound_is_concave cache bound) && (bound_is_convex cache bound)
 
+(* Try to bound the variable var by variables of the set other_vars *)
 let eliminate_var other_vars inv var =
   let new_vars =
     Var.fresh_id_list Var.Real (VarSet.cardinal other_vars)
@@ -207,7 +208,8 @@ let elsb_ program (((gt, l), v): RV.t): t =
       |? TransitionLabel.UpdateElement.Poly (Polynomial.of_var v)
       |> handle_update_element
     in
-    let bound_nondet_vars =
+    let bound_nondet_vars b =
+      let nondet_vars = VarSet.diff (Program.vars program) (Program.input_vars program) in
       VarSet.fold
         (fun v b ->
           let upper_bound =
@@ -217,7 +219,7 @@ let elsb_ program (((gt, l), v): RV.t): t =
                 (Constraints.RealParameterConstraint.of_intconstraint @@ GeneralTransition.guard gt) v)
           in
           RealBound.appr_substitution_abs_one v upper_bound b)
-        (VarSet.diff (Program.vars program) (Program.input_vars program))
+        (VarSet.inter nondet_vars (RealBound.vars b)) b
     in
     let simplify_with_guard b =
       VarSet.fold
