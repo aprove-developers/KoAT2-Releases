@@ -111,5 +111,6 @@ let tests =
           ("trader", RealBound.Inf, "examples/ProbabilisticExamples/paper/trader.koat");
           ("trapped_miner", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/trapped_miner.koat");
           ("TruncSelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/TruncSelectSort.koat");
+          ("two_arrays2", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/two_arrays2.koat");
         ];
   ]
