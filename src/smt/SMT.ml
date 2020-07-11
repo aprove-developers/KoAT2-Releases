@@ -3,6 +3,8 @@ open Formulas
 open Polynomials
 open BoundsInst
 
+module VarMap = Map.Make(Var)
+
 let from_poly context =
   Polynomial.fold
     ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i context (OurInt.to_int value))
@@ -308,10 +310,33 @@ module IncrementalZ3Solver =
       |> from_formula ctx
       |> fun formula -> (Z3.Solver.add slv [formula]; Z3.Optimize.add opt [formula])
 
+    let add_real_z3 (ctx,slv,opt) formula =
+      Z3.Solver.add slv [formula]; Z3.Optimize.add opt [formula]
+
     let add_real (ctx,slv,opt) formula =
       formula
       |> from_real_formula ctx
-      |> fun formula -> (Z3.Solver.add slv [formula]; Z3.Optimize.add opt [formula])
+      |> add_real_z3 (ctx,slv,opt)
+
+
+    (* Get the value of a constant Z3 expression *)
+    let get_expr_value ~val_of_intstr ~val_of_ratio expr =
+      if Z3.Arithmetic.is_int expr then
+        expr
+        |> Z3.Arithmetic.Integer.numeral_to_string
+        |> val_of_intstr
+      else
+        expr
+        |> Z3.Arithmetic.Real.get_ratio
+        (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
+        |> val_of_ratio
+
+
+    let get_int_expr_value =
+       get_expr_value ~val_of_intstr:OurInt.of_string ~val_of_ratio:(OurInt.of_string % Z.to_string % Q.to_bigint)
+
+    let get_real_expr_value =
+      get_expr_value ~val_of_intstr:(OurFloat.of_ourint % OurInt.of_string) ~val_of_ratio:(OurFloat.of_string % Q.to_string)
 
     (* Optimisation functions *)
     (* Different try *)
@@ -350,7 +375,7 @@ module IncrementalZ3Solver =
     let maximize (ctx,slv,opt) var =
       ignore (Z3.Optimize.maximize opt (from_poly ctx (Polynomial.of_var var)))
 
-    let extract_values optimized (ctx,slv,opt) ~val_of_intstr ~val_of_ratio =
+    let extract_values optimized (ctx,slv,opt) ~get_z3_value =
       let extract_from_model model =
         model
         |> Z3.Model.get_const_decls
@@ -365,17 +390,7 @@ module IncrementalZ3Solver =
                 func_decl
                 |> Z3.Model.get_const_interp model
                 |> Option.get (* Should be fine here *)
-                |> (fun expr ->
-                  if Z3.Arithmetic.is_int expr then
-                    expr
-                    |> Z3.Arithmetic.Integer.numeral_to_string
-                    |> val_of_intstr
-                  else
-                    expr
-                    |> Z3.Arithmetic.Real.get_ratio
-                    (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
-                    |> val_of_ratio
-                )
+                |> get_z3_value
               in
               (var, value))
       in
@@ -402,11 +417,52 @@ module IncrementalZ3Solver =
       |> Option.map extract_from_model
 
     let model ?(optimized=true) (ctx,slv,opt) =
-      extract_values optimized (ctx,slv,opt) ~val_of_intstr:OurInt.of_string ~val_of_ratio:(OurInt.of_string % Z.to_string % Q.to_bigint)
+      extract_values optimized (ctx,slv,opt) ~get_z3_value:get_int_expr_value
       |> Option.map Valuation.from
 
     let model_real ?(optimized=true) (ctx,slv,opt) =
-      extract_values optimized (ctx,slv,opt) ~val_of_intstr:(OurFloat.of_ourint % OurInt.of_string) ~val_of_ratio:(OurFloat.of_string % Q.to_string)
+      extract_values optimized (ctx,slv,opt) ~get_z3_value:get_real_expr_value
       |> Option.map RealValuation.from
+
+    let is_zero ctx (var: Var.t) =
+      Z3.Boolean.mk_ite ctx
+        (from_real_formula ctx RealFormula.Infix.(RealPolynomial.of_var var = RealPolynomial.zero))
+        (from_real_poly ctx RealPolynomial.zero)
+        (from_real_poly ctx RealPolynomial.one)
+
+    let minimize_set_vars (ctx,slv,opt) ?(add_as_constraint=false) vars =
+      let varformulas = VarMap.of_enum @@ Enum.map (fun v -> v,is_zero ctx v) @@ List.enum vars in
+      let formula = Z3.Arithmetic.mk_add ctx @@ List.map Tuple2.second @@ VarMap.bindings varformulas in
+      if add_as_constraint then
+        (* We will not need the optimizers resulting state since we are adding a new constraint anyway *)
+        Z3.Optimize.push opt;
+
+      let handle = Z3.Optimize.minimize opt formula in
+      if add_as_constraint then
+        (
+          ignore (Z3.Optimize.check opt);
+          let model = model_real (ctx, slv, opt) |> Option.get in
+
+          Z3.Optimize.pop opt;
+
+          let enforce_formulas =
+            VarMap.bindings varformulas
+            |> List.map (
+                  fun (v, f) ->
+                    if OurFloat.equal (RealValuation.eval v model) OurFloat.zero then
+                      [ from_real_formula ctx RealFormula.Infix.(RealPolynomial.of_var v =  RealPolynomial.zero)]
+                    else
+                      []
+                )
+            |> List.flatten
+            |> Z3.Boolean.mk_and ctx
+          in
+
+          (* Add enforcing formula and push the new state *)
+          push (ctx,slv,opt);
+          add_real_z3 (ctx,slv,opt) enforce_formulas
+        )
+      else
+        ignore handle
 
   end

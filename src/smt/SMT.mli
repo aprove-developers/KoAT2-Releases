@@ -73,6 +73,11 @@ sig
   (** Maximizes the variable. *)
   val maximize : t -> Var.t -> unit
 
+  (* maximizes the number of variables set to 0. If add_as_constraint (defaulting to false) is true
+    a backtracking point is created before enforcing the minimal number of set variables *)
+  val minimize_set_vars : t -> ?add_as_constraint:bool -> Var.t list -> unit
+
+
   (** Sets the variables, which absolute value should be minimized. Does not work as intended? *)
   val minimize_absolute_with_weight : t -> (Var.t*OurFloat.t) list -> unit
 

@@ -346,15 +346,20 @@ let find_1d_lexrsm_non_increasing ~refined ~timeout cache transitions decreasing
       (* Readd constraints *)
       |> tap (GeneralTransitionSet.iter (fun gt -> Solver.add_real solver (non_increasing_constraint cache gt); add_bounding_constraint ~refined:refined cache solver gt) % snd)
     in
-    let fresh_coeffs_weighted =
-     !fresh_coeffs
-     |> List.filter (fun c -> not @@ List.mem c !fresh_consts)
-     |> List.map (fun c -> c,OurFloat.of_int 2)
-    in
-    let fresh_constants_weighted = List.map (fun c -> c,OurFloat.one) !fresh_consts in
 
-    (if not refined then
-    Solver.minimize_absolute_with_weight solver @@ List.append fresh_coeffs_weighted fresh_constants_weighted);
+    (* minimize the ranking function if possible (ATM Z3 does *not* support non-linear optimization as occuring in the refined case)*)
+    if not refined then (
+      let fresh_coeffs =
+        !fresh_coeffs
+        |> List.filter (fun c -> not @@ List.mem c !fresh_consts)
+        |> List.map (fun c -> c,OurFloat.of_int 2)
+      in
+      let fresh_constants = List.map (fun c -> c, OurFloat.one) !fresh_consts in
+
+      Solver.minimize_set_vars solver ~add_as_constraint:true @@ List.map Tuple2.first fresh_coeffs;
+      Solver.minimize_absolute solver @@ List.map Tuple2.first fresh_coeffs;
+      Solver.minimize_absolute solver @@ List.map Tuple2.first fresh_constants
+    );
 
     Solver.model_real ~optimized:(not refined) solver
     |> fun eval -> (eval, GeneralTransitionSet.add decreasing non_incr)
