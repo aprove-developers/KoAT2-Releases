@@ -178,7 +178,15 @@ let eliminate_var other_vars inv var =
   in
   Solver.add_real solver @@ formula `Upper;
   Solver.add_real solver @@ formula `Lower;
-  Solver.minimize_absolute_with_weight solver ((constant_var,OurFloat.one) :: List.map (fun v -> v,OurFloat.of_int 2) new_vars);
+
+(*   Solver.minimize_absolute solver new_vars;
+  Solver.minimize_absolute solver [constant_var] *)
+  if not (List.is_empty new_vars) then (
+    Solver.minimize_set_vars solver new_vars;
+    Solver.minimize_absolute solver new_vars
+  );
+  Solver.minimize_absolute solver [constant_var];
+(*   Solver.minimize_absolute_with_weight solver ((constant_var,OurFloat.one) :: List.map (fun v -> v,OurFloat.of_int 2) new_vars); *)
   match Solver.model_real solver with
   | Some model ->
       RealParameterPolynomial.eval_coefficients (flip Valuation.eval model) para_poly
