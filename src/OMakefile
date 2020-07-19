@@ -1,13 +1,18 @@
 USE_OCAMLFIND = true
 
 if $(defined-env RELEASE)
-    OCAMLOPTFLAGS = -thread -O3 -cc $(CXX) -ccopt -static
+    # For now only use -O2 optimization flags since -O3 does seem to
+    # change the compiled programs behaviour.
+    # E.g. the filling_vol probabilistic example runs fine with -O2 enabled
+    # but does not terminate with -O3
+    # (Strangely koat does terminate if the size or time loggers are enabled).
+    OCAMLOPTFLAGS = -thread -O2 -cc $(CXX) -ccopt -static
     OCAMLCFLAGS = -thread -ccopt -static
     BYTE_ENABLED = false
     NATIVE_ENABLED = true
     export
 else
-    OCAMLOPTFLAGS = -thread -g -cc $(CXX)
+    OCAMLOPTFLAGS = -thread -cc $(CXX)
     OCAMLCFLAGS = -thread
     BYTE_ENABLED = false
     NATIVE_ENABLED = true
