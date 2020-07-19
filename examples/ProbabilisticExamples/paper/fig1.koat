@@ -1,0 +1,8 @@
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR X)
+(RULES
+  f(X) -> h(T) :|: T>0
+  f(X) -> 0.75:g(X) :+: 0.25:g(X-1)
+  g(X) -> g(GEOMETRIC(0.5)) :|: X<10
+)
