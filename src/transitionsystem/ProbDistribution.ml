@@ -27,7 +27,7 @@ let deterministic_lower_polynomial dist =
 let expected_value dist =
   match dist with
     | Binomial (n,p)            -> RealPolynomial.(of_intpoly n * of_constant p)
-    | Geometric a               -> RealPolynomial.of_constant( OurFloat.(div (of_float 0.5) a) )
+    | Geometric a               -> RealPolynomial.of_constant( OurFloat.(div (of_int 1) a) )
     | Hypergeometric (bigN,k,n) -> RealPolynomial.(of_intpoly k * of_intpoly n * of_constant OurFloat.(one/of_ourint bigN))
     | Uniform (a,b)             -> RealPolynomial.((of_constant (Num.of_float 0.5)) * ((of_intpoly a) + (of_intpoly b)))
 
@@ -76,7 +76,7 @@ let guard dist v v' =
           else
             Guard.Infix.(Polynomial.of_var v' <= Polynomial.(n+ of_var v) &&
                         Polynomial.of_var v' >= Polynomial.of_var v)
-    | Geometric p   -> Guard.Infix.(Polynomial.of_var v' >= Polynomial.of_var v)
+    | Geometric p   -> Guard.Infix.(Polynomial.of_var v' > Polynomial.of_var v)
     | Hypergeometric (bigN,k,n) ->
         Guard.Infix.(Polynomial.of_var v' <= Polynomial.(n + of_var v) &&
                      Polynomial.of_var v' >= Polynomial.of_var v)
