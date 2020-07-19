@@ -22,7 +22,7 @@ let deterministic_lower_polynomial dist =
     | Binomial (n,p)            -> if OurFloat.(equal one p) then Some n else Some Polynomial.zero
     | Geometric _               -> Some Polynomial.zero
     | Hypergeometric (bigN,k,n) -> Some Polynomial.zero
-    | Uniform (a,b)             -> Some b
+    | Uniform (a,b)             -> Some a
 
 let expected_value dist =
   match dist with
