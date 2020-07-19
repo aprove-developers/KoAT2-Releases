@@ -77,7 +77,8 @@ let tests =
           ("cousot9", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/cousot9.koat");
           ("fcall", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/fcall.koat");
           ("fib_exp_size", RealBound.Exponential 1, "examples/ProbabilisticExamples/paper/fib_exp_size.koat");
-          ("fig1", RealBound.Exponential 1, "examples/ProbabilisticExamples/paper/fig1.koat");
+          ("fig1", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/fig1.koat");
+          ("fig5", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/fig5.koat");
           ("filling_vol", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/filling_vol.koat");
           ("hyper", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/hyper.koat");
           ("knuth_morris_pratt.c", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/knuth_morris_pratt.c.koat");
