@@ -6,5 +6,5 @@
   g(X,Y,Z) -> h(X,Y,X)
   h(X,Y,Z) -> i(X,Z,Z) :|: X>0
   i(X,Y,Z) -> i(X,Y-1,Z) :|: Y>0
-  i(X,Y,Z) -> i(X-1,Y,Z) :|: Y<=0
+  i(X,Y,Z) -> h(X-1,Y,Z) :|: Y<=0
 )
