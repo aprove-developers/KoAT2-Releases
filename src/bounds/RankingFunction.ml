@@ -19,6 +19,8 @@ type t = {
     non_increasing : TransitionSet.t;
   }
 
+let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id)
+
 let one = ParameterPolynomial.one
         
 let logger = Logging.(get PRF)  
@@ -58,7 +60,7 @@ let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
   let constant_poly = ParameterPolynomial.of_constant (Polynomial.of_var constant_var) in
   ParameterPolynomial.(linear_poly + constant_poly),
   List.append fresh_vars [constant_var]
-  
+   
 module TemplateTable = Hashtbl.Make(Location)
 
 let template_table: ParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
@@ -105,25 +107,25 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk  
        
-let transition_constraint = Util.memoize ~extractor:(Tuple3.map3 Transition.id) transition_constraint_
+let transition_constraint = cache#add transition_constraint_
   
 let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
-  |> List.map (fun t -> transition_constraint_ (measure, constraint_type, t)) (** hier *)
+  |> List.map (fun t -> transition_constraint (measure, constraint_type, t))
   |> Formula.all
   
 let non_increasing_constraint measure transition =
-  transition_constraint_ (measure, `Non_Increasing, transition) (** hier *)
+  transition_constraint (measure, `Non_Increasing, transition)
 
 let non_increasing_constraints measure transitions =
   transitions_constraint measure `Non_Increasing (TransitionSet.to_list transitions)
   
 let bounded_constraint measure transition =
-  transition_constraint_ (measure, `Bounded, transition) (** hier *)
+  transition_constraint (measure, `Bounded, transition)
 
 let decreasing_constraint measure transition =
-  transition_constraint_ (measure, `Decreasing, transition) (** hier *)
-
+  transition_constraint (measure, `Decreasing, transition)
+  
 let rank_from_valuation valuation location =
   location
   |> TemplateTable.find template_table
@@ -285,6 +287,7 @@ let find_scc measure applied_cfr program transition scc =
 
 
 let reset () =
+  cache#clear;
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
   TemplateTable.clear template_table

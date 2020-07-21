@@ -253,7 +253,7 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
                             RankingFunction.reset(); 
                           try 
                             appr               
-                            |> SizeBounds.improve  program (Option.is_some !backtrack_point)
+                            |> SizeBounds.improve program (Option.is_some !backtrack_point)
                             |> improve_scc ~mrf:mrf scc measure program
                             |> apply_cfr ~cfr:cfr ~mrf:mrf scc measure program
                           with TIMEOUT | NOT_IMPROVED ->

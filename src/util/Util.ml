@@ -58,6 +58,20 @@ let memoize ~extractor f =
        y
   in g
 
+let cache ~extractor = object
+  val cache = Hashtbl.create 10
+
+  method add f x = 
+    match Hashtbl.find_option cache (extractor x) with
+    | Some y -> y
+    | None ->
+       let y = f x in
+       Hashtbl.add cache (extractor x) y;
+       y
+
+  method clear = Hashtbl.clear cache
+  end
+
 (* TODO: Hash a string into an integer. https://stackoverflow.com/questions/2624192/good-hash-function-for-strings *)
 let hash str = 
  String.fold_right (fun char res -> res * 31 + (int_of_char char)) str 1

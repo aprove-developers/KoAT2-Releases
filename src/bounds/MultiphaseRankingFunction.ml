@@ -58,6 +58,8 @@ type t = {
   depth : int;
 }
 
+let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id)
+
 let rank f = f.rank
 
 let decreasing f = f.decreasing
@@ -83,7 +85,6 @@ let only_rank_to_string {rank; decreasing; non_increasing; depth} =
 
 let to_string {rank; decreasing; non_increasing; depth} =
   "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; depth} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
-
 
 
 let template_tables: ((ParameterPolynomial.t TemplateTable.t) list) ref = ref []
@@ -176,22 +177,22 @@ let transition_constraints_ depth (measure, constraint_type, (l,t,l')): Formula.
          |> Formula.mk_and !res;
   !res
 
-let transition_constraint depth = Util.memoize ~extractor:(Tuple3.map3 Transition.id) (transition_constraints_ depth)
+let transition_constraint depth = cache#add  (transition_constraints_ depth)
 
 let transitions_constraint depth measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
-  |> List.map (fun t -> transition_constraints_ depth (measure, constraint_type, t)) (** hier *)
+  |> List.map (fun t -> transition_constraint depth (measure, constraint_type, t))
   |> Formula.all
 
 
 let non_increasing_constraint depth measure transition = 
-  transition_constraints_ depth (measure, `Non_Increasing, transition) (** hier *)
+  transition_constraint depth (measure, `Non_Increasing, transition)
 
 let non_increasing_constraints depth measure transitions =
   transitions_constraint depth measure `Non_Increasing (TransitionSet.to_list transitions)
 
 let decreasing_constraint depth measure  transition =
-  transition_constraints_ depth (measure, `Decreasing, transition) (** hier *)
+  transition_constraint depth (measure, `Decreasing, transition)
 
 (** A valuation is a function which maps from a finite set of variables to values *)
 
@@ -354,6 +355,7 @@ let find_scc measure applied_cfr program transition scc =
 
 (* Useful for testing*)
 let reset () =
+  cache#clear;
   numberOfGeneratedTemplates := 0;
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;

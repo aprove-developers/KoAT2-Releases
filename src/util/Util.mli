@@ -27,6 +27,8 @@ val find_map : ('a -> 'b Option.t) -> 'a Enum.t -> 'b Option.t
 
 val memoize : extractor:('a -> 'c) -> ('a -> 'b) -> 'a -> 'b  
 
+val cache : extractor:('a -> 'b) -> < add : ('a -> 'c) -> 'a -> 'c; clear : unit >
+
 (**  Generates a hash interger value of a given string. *)
 val hash: string -> int
 
