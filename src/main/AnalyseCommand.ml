@@ -164,7 +164,7 @@ let run (params: params) =
   |> Readers.read_input ~rename:params.rename params.simple_input 
   |> rename_program_option
   |> Option.map (fun program ->
-         (program, Approximation.create program)
+         ((if (params.cfr) then program |> Normalise.normalise else program) , Approximation.create program)
          |> Preprocessor.process params.preprocessing_strategy params.preprocessors 
          |> tap (fun (program, appr) ->
                 if params.print_system then

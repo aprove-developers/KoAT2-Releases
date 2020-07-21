@@ -38,6 +38,8 @@ val mk : ?cost:polynomial ->
 
 val fresh_id : t -> t
 
+val normalise : t -> VarSet.t -> t
+
 val trival : VarSet.t -> t
 
 (** Appends the second label to the first label.

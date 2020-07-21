@@ -1,0 +1,9 @@
+(GOAL COMPLEITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR x z y v)
+(RULES
+  l0(x, y) -> Com_1(l1(x, v, y, v)) 
+  l1(x, z, y, v) -> Com_1(l2(x, z, 1, v)) :|: z <= v
+  l2(x, z, y, v) -> Com_1(l3(x, z)) :|: z > v
+  l3(x, z) -> Com_1(l4(x, y))
+)

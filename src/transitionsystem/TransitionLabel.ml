@@ -27,13 +27,14 @@ let make ?(cost=one) com_kind ~update ~guard =
     update; guard; cost;
   }
 
-let fresh_id t = 
-  {
+let fresh_id t = {
     id = unique ();
     update = t.update;
     guard = t.guard; 
     cost = t.cost;
   }
+
+
 
 let trival variables =
   let var_map = 
@@ -159,6 +160,15 @@ let to_string label =
   let guard = if Guard.is_true label.guard then "" else "\n" ^ Guard.to_string ~comp:"&le;" ~conj:"&and;" label.guard in
   let cost = if Polynomial.is_one label.cost then "" else Polynomial.to_string label.cost ^ "&euro;" ^ ", " in
   "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ update_to_string label.update ^ guard
+
+let normalise t (input_vars:VarSet.t) = {
+    id = t.id;
+    update = VarSet.fold (fun var fold_update -> if (VarMap.mem var fold_update) 
+                                            then fold_update
+                                            else VarMap.add var (Polynomial.of_var var) fold_update) input_vars t.update;
+    guard = t.guard; 
+    cost = t.cost;
+  }
   
 let update_to_string_lhs ?(to_file = false) t =
   let update = t.update in
