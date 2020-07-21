@@ -28,13 +28,15 @@ COPY --chown=opam:opam OMakefile .
 # Run Build command
 RUN RELEASE=1 omake --depend
 
-FROM alpine:3.12
+FROM ubuntu:20.04
 
-RUN apk update
-RUN apk upgrade
-RUN apk add --no-cache bash
+RUN apt update
+RUN apt upgrade
+RUN apt install -y bash
+RUN apt install -y wget
+RUN apt install -y zip
 
-RUN adduser -D koat2
+RUN adduser koat2
 WORKDIR /home/koat2
 
 COPY --chown=koat2:koat2 --from=koat2_build /home/opam/src/main/koat2.opt bin/koat2
@@ -43,15 +45,12 @@ COPY --chown=koat2:koat2 examples/ ./examples
 # Setup working environment, switch off of super user
 USER koat2
 
-RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/download/v1.2.1/irankfinder_1.2.1_linux_x86_64.zip
+RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.1/irankfinder_v1.3.1_rhel7.zip
 RUN mkdir irankfinder
 RUN unzip irankfinder.zip -d irankfinder
 RUN rm irankfinder.zip
-RUN chmod +x /home/koat2/irankfinder/1.2.1/irankfinder/CFRefinement
-
-
-# Update PATH to include the added executables
-ENV PATH=/home/koat2/irankfinder/1.2.1/irankfinder:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/koat2/bin
-
-# ENTRYPOINT ["koat2 analyse"]
+RUN chmod +x /home/koat2/irankfinder/1.3.1/irankfinder/CFRefinement
+#Update PATH to include the added executables
+ENV PATH=/home/koat2/irankfinder/1.3.1/irankfinder/partialevaluation/bin:/home/koat2/irankfinder/1.3.1/irankfinder/ppl:/home/koat2/irankfinder/1.3.1/irankfinder:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/koat2/bin
+ENV LD_LIBRARY_PATH=/home/koat2/irankfinder/1.3.1/irankfinder/ppl:/home/koat2/irankfinder/1.3.1/irankfinder/partialevaluation/bin:/home/koat2/irankfinder/1.3.1/irankfinder:/usr/local/lib:/usr/lib
 ENTRYPOINT ["/bin/bash"]
