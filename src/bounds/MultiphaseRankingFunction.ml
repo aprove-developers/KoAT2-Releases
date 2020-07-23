@@ -58,7 +58,7 @@ type t = {
   depth : int;
 }
 
-let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id)
+let cache = Util.cache ~extractor:(Tuple4.map4 Transition.id)
 
 let rank f = f.rank
 
@@ -161,7 +161,7 @@ let transition_constraint_d (template_table1, measure, constraint_type, (l,t,l')
         |> Formula.mk)
 
 (* use all three functions above combined*)
-let transition_constraints_ depth (measure, constraint_type, (l,t,l')): Formula.t =
+let transition_constraints_ (depth, measure, constraint_type, (l,t,l')): Formula.t =
   let res = ref Formula.mk_true in
   for i = 1 to (depth - 1) do
     res := ((List.nth !template_tables (i - 1)), (List.nth !template_tables i), measure, constraint_type, (l,t,l'))
@@ -177,22 +177,22 @@ let transition_constraints_ depth (measure, constraint_type, (l,t,l')): Formula.
          |> Formula.mk_and !res;
   !res
 
-let transition_constraint depth = cache#add  (transition_constraints_ depth)
+let transition_constraint = cache#add  (transition_constraints_)
 
 let transitions_constraint depth measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
-  |> List.map (fun t -> transition_constraint depth (measure, constraint_type, t))
+  |> List.map (fun t -> transition_constraint (depth, measure, constraint_type, t))
   |> Formula.all
 
 
 let non_increasing_constraint depth measure transition = 
-  transition_constraint depth (measure, `Non_Increasing, transition)
+  transition_constraint (depth, measure, `Non_Increasing, transition)
 
 let non_increasing_constraints depth measure transitions =
   transitions_constraint depth measure `Non_Increasing (TransitionSet.to_list transitions)
 
 let decreasing_constraint depth measure  transition =
-  transition_constraint depth (measure, `Decreasing, transition)
+  transition_constraint (depth, measure, `Decreasing, transition)
 
 (** A valuation is a function which maps from a finite set of variables to values *)
 
