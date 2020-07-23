@@ -33,7 +33,7 @@ let as_parapoly label var =
     | Some p -> ParameterPolynomial.of_polynomial p
 
 (* Computes new bounds*)
-let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: MultiphaseRankingFunction.t): Bound.t =
+let compute_bound_mprf (appr: Approximation.t) (program: Program.t) (rank: MultiphaseRankingFunction.t): Bound.t =
  let execute () =
    rank
    |> MultiphaseRankingFunction.non_increasing
@@ -46,7 +46,7 @@ let compute_bound_mrf (appr: Approximation.t) (program: Program.t) (rank: Multip
        let rhs = if MultiphaseRankingFunction.depth rank = 1 then
           Bound. (max Bound.zero (add Bound.one (List.nth evaluated_rankingFunctions 0)))
           else 
-          Bound. (add Bound.one (mul (of_int (MRF_Coefficient.coefficient rank))  (MRF_Coefficient.maxBound_of_list evaluated_rankingFunctions))) in 
+          Bound. (add Bound.one (mul (of_int (MPRF_Coefficient.coefficient rank))  (MPRF_Coefficient.maxBound_of_list evaluated_rankingFunctions))) in 
         Bound.(
           if is_infinity timebound then
             if equal zero rhs then
@@ -120,8 +120,8 @@ let improve_with_rank  measure program appr rank =
     |> (fun t -> add_bound measure bound t appr)
     |> MaybeChanged.changed
 
-let improve_with_rank_mrf measure program appr rank =
-  let bound = compute_bound_mrf appr program rank in
+let improve_with_rank_mprf measure program appr rank =
+  let bound = compute_bound_mprf appr program rank in
   if Bound.is_infinity bound then
     MaybeChanged.same appr
   else
@@ -137,7 +137,7 @@ let bounded measure appr transition =
   | `Cost -> false
 
 (** We try to improve a single scc until we reach a fixed point. *)
-let rec improve_timebound_rec ?(mrf = false) (scc: TransitionSet.t)  measure program appr =
+let rec improve_timebound_rec ?(mprf = false) (scc: TransitionSet.t)  measure program appr =
   let execute () =
     scc
     |> tap (fun scc -> (Logger.with_log logger_cfr Logger.INFO
@@ -147,11 +147,11 @@ let rec improve_timebound_rec ?(mrf = false) (scc: TransitionSet.t)  measure pro
     |> TransitionSet.enum
     |> MaybeChanged.fold_enum (
       (fun appr transition ->
-          if mrf then
+          if mprf then
             MultiphaseRankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
-                  improve_with_rank_mrf measure program appr rank) appr
+                  improve_with_rank_mprf measure program appr rank) appr
           else 
             RankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc                     
             |> List.enum
@@ -161,10 +161,10 @@ let rec improve_timebound_rec ?(mrf = false) (scc: TransitionSet.t)  measure pro
       (Logger.with_log logger Logger.INFO
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
              execute)
-      |> MaybeChanged.if_changed (improve_timebound_rec ~mrf:mrf scc measure program)
+      |> MaybeChanged.if_changed (improve_timebound_rec ~mprf:mprf scc measure program)
       |> MaybeChanged.unpack
 
-  let improve_timebound ?(mrf = false) (scc: TransitionSet.t)  measure program appr =
+  let improve_timebound ?(mprf = false) (scc: TransitionSet.t)  measure program appr =
   let execute () =
     scc
     |> tap (fun scc -> (Logger.with_log logger_cfr Logger.INFO
@@ -174,11 +174,11 @@ let rec improve_timebound_rec ?(mrf = false) (scc: TransitionSet.t)  measure pro
     |> TransitionSet.enum
     |> MaybeChanged.fold_enum (
       (fun appr transition ->
-          if mrf then
+          if mprf then
             MultiphaseRankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
-                  improve_with_rank_mrf measure program appr rank) appr
+                  improve_with_rank_mprf measure program appr rank) appr
           else 
             RankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc                    
             |> List.enum
@@ -189,16 +189,16 @@ let rec improve_timebound_rec ?(mrf = false) (scc: TransitionSet.t)  measure pro
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
              execute)
 
-  let rec improve_scc ?(mrf = false) (scc: TransitionSet.t)  measure program appr = 
+  let rec improve_scc ?(mprf = false) (scc: TransitionSet.t)  measure program appr = 
     appr
-    |> improve_timebound_rec ~mrf:mrf scc measure program
+    |> improve_timebound_rec ~mprf:mprf scc measure program
     |> SizeBounds.improve program (Option.is_some !backtrack_point)
-    |> improve_timebound ~mrf:mrf scc measure program
-    |> MaybeChanged.if_changed (improve_scc ~mrf:mrf scc measure program)
+    |> improve_timebound ~mprf:mprf scc measure program
+    |> MaybeChanged.if_changed (improve_scc ~mprf:mprf scc measure program)
     |> MaybeChanged.unpack
 
 
-let apply_cfr ?(cfr = false) ?(mrf = false) (scc: TransitionSet.t) measure program appr =
+let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) measure program appr =
   if Option.is_some !backtrack_point then (
     (** Done with orginial component and set backtrack_point *)
     let (org_program,_,_) = Option.get !backtrack_point in
@@ -241,21 +241,21 @@ let rec fold_until f p acc = function
     | x :: xs -> fold_until f p (f acc x) xs
     | [] -> acc
 
-let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
+let rec improve ?(mprf = false) ?(cfr = false) measure program appr =
   program
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc -> 
                         if (TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc) then (
-                          if mrf then 
+                          if mprf then 
                             MultiphaseRankingFunction.reset()
                           else
                             RankingFunction.reset(); 
                           try 
                             appr               
                             |> SizeBounds.improve program (Option.is_some !backtrack_point)
-                            |> improve_scc ~mrf:mrf scc measure program
-                            |> apply_cfr ~cfr:cfr ~mrf:mrf scc measure program
+                            |> improve_scc ~mprf:mprf scc measure program
+                            |> apply_cfr ~cfr:cfr ~mprf:mprf scc measure program
                           with TIMEOUT | NOT_IMPROVED ->
                             LocalSizeBound.reset_cfr ();  
                             let (program,appr,_) = Option.get !backtrack_point in
@@ -263,5 +263,5 @@ let rec improve ?(mrf = false) ?(cfr = false) measure program appr =
                             MaybeChanged.changed (program,appr))
                         else monad) 
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
-    |> MaybeChanged.if_changed (fun (a,b) -> (improve ~cfr:cfr ~mrf:mrf measure a b))
+    |> MaybeChanged.if_changed (fun (a,b) -> (improve ~cfr:cfr ~mprf:mprf measure a b))
     |> MaybeChanged.unpack

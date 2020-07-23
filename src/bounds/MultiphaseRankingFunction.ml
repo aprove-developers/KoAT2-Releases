@@ -49,10 +49,10 @@ type constraint_type = [ `Non_Increasing | `Decreasing] [@@deriving show, eq]
 
 let maxDepth = ref 5
 
-type mrf = (Location.t -> Polynomial.t) list
+type mprf = (Location.t -> Polynomial.t) list
 
 type t = {
-  rank : mrf;
+  rank : mprf;
   decreasing : Transition.t;
   non_increasing : TransitionSet.t;
   depth : int;
@@ -113,7 +113,7 @@ let compute_ranking_templates (depth:int) (vars: VarSet.t) (locations: Location.
   in
   for i = !numberOfGeneratedTemplates to depth - 1 do
     Logger.with_log logger Logger.DEBUG
-      (fun () -> "compute_mrf_templates_" ^ string_of_int i, [])
+      (fun () -> "compute_mprf_templates_" ^ string_of_int i, [])
       ~result:(fun () ->
           (List.nth !template_tables i)
           |> TemplateTable.enum

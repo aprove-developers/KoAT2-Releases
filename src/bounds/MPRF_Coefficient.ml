@@ -80,7 +80,7 @@ let rec maximum_coefficients list =
   | (x,y) :: rest -> max (int_of_float (ceil  (x /. y))) (maximum_coefficients rest)
   | _ -> 0
 
-(* Constructs the nested max bounds of all functions of the MRF*)
+(* Constructs the nested max bounds of all functions of the MPRF*)
 let rec maxBound_of_list list =
  match list with
  | [] -> Bound.one

@@ -4,11 +4,11 @@ open Helper
 open ProgramTypes
 
 (** Returns an overall timebound for the given program.*)
-let find_timebound ?(depth = 5) ?(mrf = false) (program: Program.t): Bound.t =
+let find_timebound ?(depth = 5) ?(mprf = false) (program: Program.t): Bound.t =
   (program, Approximation.create program)
   |> Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
   |> (fun (program, appr) ->
-    Bounds.find_bounds ~depth:depth ~mrf:mrf program appr
+    Bounds.find_bounds ~depth:depth ~mprf:mprf program appr
     |> fun (program,appr) -> Approximation.(TransitionApproximation.sum (time appr) program)
   )
 
