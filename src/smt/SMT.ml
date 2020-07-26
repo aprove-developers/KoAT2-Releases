@@ -310,13 +310,13 @@ module IncrementalZ3Solver =
       |> from_formula ctx
       |> fun formula -> (Z3.Solver.add slv [formula]; Z3.Optimize.add opt [formula])
 
-    let add_real_z3 (ctx,slv,opt) formula =
+    let add_z3 (ctx,slv,opt) formula =
       Z3.Solver.add slv [formula]; Z3.Optimize.add opt [formula]
 
     let add_real (ctx,slv,opt) formula =
       formula
       |> from_real_formula ctx
-      |> add_real_z3 (ctx,slv,opt)
+      |> add_z3 (ctx,slv,opt)
 
 
     (* Get the value of a constant Z3 expression *)
@@ -460,7 +460,7 @@ module IncrementalZ3Solver =
 
           (* Add enforcing formula and push the new state *)
           push (ctx,slv,opt);
-          add_real_z3 (ctx,slv,opt) enforce_formulas
+          add_z3 (ctx,slv,opt) enforce_formulas
         )
       else
         ignore handle
