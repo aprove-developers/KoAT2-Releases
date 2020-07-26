@@ -424,6 +424,31 @@ module IncrementalZ3Solver =
       extract_values optimized (ctx,slv,opt) ~get_z3_value:get_real_expr_value
       |> Option.map RealValuation.from
 
+    let minimise_absolute_with_int_binary_search (ctx,slv,opt) var =
+      let add_constraint middle  = add_z3 (ctx,slv,opt) @@ Z3.Arithmetic.mk_le ctx (absolute_value ctx var) (from_poly ctx @@ Polynomial.of_constant middle) in
+      let rec binsearch low high =
+        if OurInt.compare low high >= 0 then
+          ()
+        else
+          let middle = OurInt.div (OurInt.add low high) (OurInt.of_int 2) in
+          push (ctx,slv,opt);
+          add_constraint middle;
+          let satisfiable = satisfiable (ctx,slv,opt) in
+          if satisfiable then
+            binsearch low middle
+          else
+            (pop (ctx,slv,opt); binsearch (OurInt.add middle OurInt.one) high)
+      in
+
+      let curr_model = model (ctx,slv,opt) in
+      if List.exists (Var.equal var) (Valuation.vars @@ Option.get curr_model) then
+        let initial = OurInt.abs (Valuation.eval var @@ Option.get @@ model (ctx,slv,opt)) in
+        add_constraint initial;
+        binsearch OurInt.zero initial
+
+    let minimise_absolute_ints_binary_search_iteratively t vars =
+      List.iter (minimise_absolute_with_int_binary_search t) vars
+
     let is_zero ctx (var: Var.t) =
       Z3.Boolean.mk_ite ctx
         (from_real_formula ctx RealFormula.Infix.(RealPolynomial.of_var var = RealPolynomial.zero))
