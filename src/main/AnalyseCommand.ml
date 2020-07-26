@@ -16,7 +16,8 @@ let goal_support (goal:string) =
     |> List.enum
     |> Map.of_enum
   in
-    Map.find goal goal_map
+    Map.find_opt goal goal_map
+
 
 
 let run (params: params) =
@@ -31,7 +32,6 @@ let run (params: params) =
       input |> Fpath.v |> Fpath.normalize |> Fpath.to_string
   in
   let goal = MainUtil.read_goal params.simple_input input_filename in
-    try
-      goal_support goal params
-    with
-      Not_found -> print_string ("The GOAL: " ^ goal ^ " you entered is not supported.\nKoAT2 supports\n" ^ (String.concat "\n" supported_goals) ^ "\n")
+    match goal_support goal with
+    | Some f -> f params
+    | None -> print_string ("The GOAL: " ^ goal ^ " you entered is not supported.\nKoAT2 supports\n" ^ (String.concat "\n" supported_goals) ^ "\n")
