@@ -36,7 +36,7 @@ let run (params: params) =
   |> MainUtil.read_input (CacheManager.trans_id_counter cache) ~rename:params.rename params.simple_input
   |> tap (Option.may (fun program ->
       if params.print_system_for_paper then
-        GraphPrint.print_system_for_paper ~outdir:output_dir ~file:input_filename program))
+        GraphPrint.print_system_for_paper ~format:params.print_system_for_paper_format ~outdir:output_dir ~file:input_filename program))
   |> rename_program_option
   |> Option.map (fun program ->
          (program, Approximation.create program)

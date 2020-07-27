@@ -59,7 +59,7 @@ let print_rvg cache kind ~label ~outdir ~file program =
                      end) in
   print_graph outdir (file ^ "_rvg_" ^ show_kind kind) graph Dot.output_graph
 
-let print_system_for_paper ~outdir ~file program =
+let print_system_for_paper ?(format="pdf") ~outdir ~file program =
   (*
     Compute an edge label from a TransitionLabel
     Whenever possible we use unicode representations of mathematic symbols.
@@ -145,7 +145,7 @@ let print_system_for_paper ~outdir ~file program =
                                        let default_vertex_attributes _ = []
                                        let graph_attributes _ = []
                                      end) in
-  print_graph ~format:"pdf" outdir (file ^ "_graph") (Program.graph program) Dot.output_graph
+  print_graph ~format:format outdir (file ^ "_graph") (Program.graph program) Dot.output_graph
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
