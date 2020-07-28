@@ -88,6 +88,11 @@ sig
   (** Sets the variables, which absolute value should be minimized. Another try*)
   val minimize_absolute_iteratively : t -> Var.t list -> unit
 
+  (** Similarly to minimise_absolute_iteratively but only works on ints.
+      Additionally a manually implemented binary search is employed which leads to significantly improved performance
+      but is still very slow compared to minimize_absolute_old *)
+  val minimise_absolute_ints_binary_search_iteratively: t -> Var.t list -> unit
+
   (** Returns a model of the current state, if the state is satisfiable. *)
   val model : ?optimized:bool -> t -> Polynomial.valuation Option.t
 

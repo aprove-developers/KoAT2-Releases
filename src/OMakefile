@@ -12,7 +12,7 @@ if $(defined-env RELEASE)
     NATIVE_ENABLED = true
     export
 else
-    OCAMLOPTFLAGS = -thread -cc $(CXX)
+    OCAMLOPTFLAGS = -thread -g -cc $(CXX)
     OCAMLCFLAGS = -thread
     BYTE_ENABLED = false
     NATIVE_ENABLED = true
