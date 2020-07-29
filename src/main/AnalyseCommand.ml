@@ -1,29 +1,11 @@
 open Batteries
 open ProgramTypes
 open RVGTypes
+open ProofOutput
 
 let command = "analyse"
 
 let description = "Proceed a full time, cost and size analysis on a given integer transition system"
-
-(** Prints the whole resulting approximation to the shell. *)
-let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
-  print_string (Approximation.to_string program appr)
-
-(** Prints the overall timebound of the program to the shell. *)
-let print_overall_timebound (program: Program.t) (appr: Approximation.t): unit =
-  program
-  |> Approximation.program_timebound appr
-  |> Bound.to_string
-  |> print_endline
-
-(** Prints the overall timebound of the program to the shell. *)
-let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
-  program
-  |> Approximation.program_costbound appr
-  |> Bound.asymptotic_complexity
-  |> Bound.show_complexity_termcomp
-  |> print_endline
 
 (** The shell arguments which can be defined in the console. *)
 type params = {
@@ -47,6 +29,9 @@ type params = {
 
     simple_input : bool; [@default false] [@aka ["s"]]
     (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
+
+    html : bool; [@default false] [@aka ["h"]]
+    (** Enabling printing the result in html format or not *)
     
     output_dir : string option; [@aka ["o"]]
     (** An absolute or relative path to the output directory, where all generated files should end up. *)
@@ -57,7 +42,7 @@ type params = {
     log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.NONE]
     (** The general log level of the loggers. *)
     
-    result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound] [@aka ["r"]]
+    result : (?html:bool -> Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
     
     preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])]
@@ -161,7 +146,7 @@ let run (params: params) =
                      |> uncurry Bounds.find_bounds
                      |> fun appr -> (program, appr)
                    else (program, appr))
-         |> tap (fun (program, appr) -> params.result program appr)
+         |> tap (fun (program, appr) -> params.result ~html:params.html program appr)
          |> tap (fun (program, appr) ->
                 if params.print_system then
                   GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)

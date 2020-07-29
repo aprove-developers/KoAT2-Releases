@@ -67,27 +67,28 @@ let add_all kind bound scc map =
   List.iter (fun (t,v) -> ignore (add kind bound t v map)) scc;
   map
 
-let print_all_of_kind output kind size =
-  size
-  |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
-  |> Map.to_list
-  |> List.sort (fun ((_,t1,v1),b1) ((_,t2,v2),b2) ->
-         if Transition.compare_same t1 t2 != 0 then
-           Transition.compare_same t1 t2
-         else
-           Var.compare v1 v2
-       )
-  |> List.print
-       ~first:(show_kind kind ^ ":\n  ")
-       ~last:"\n"
-       ~sep:"\n  "
-       (fun output ((_, transition, var), bound) -> IO.nwrite output (Transition.to_id_string transition ^ ", " ^ Var.to_string var ^ ": " ^ Bound.to_string bound))
-       output
+let print_all_of_kind html output kind size =
+  let sep = if html then "<br>" else "\n" in
+    size
+    |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
+    |> Map.to_list
+    |> List.sort (fun ((_,t1,v1),b1) ((_,t2,v2),b2) ->
+          if Transition.compare_same t1 t2 != 0 then
+            Transition.compare_same t1 t2
+          else
+            Var.compare v1 v2
+        )
+    |> List.print
+        ~first:(show_kind kind ^ ":" ^ sep)
+        ~last:sep
+        ~sep:(sep^"  ")
+        (fun output ((_, transition, var), bound) -> IO.nwrite output (Transition.to_id_string transition ^ ", " ^ Var.to_string var ^ ": " ^ Bound.to_string bound))
+        output
   
-let to_string size =
+let to_string ?(html=false) size =
   let output = IO.output_string () in
-  print_all_of_kind output `Lower size;
-  print_all_of_kind output `Upper size;
+  print_all_of_kind html output `Lower size;
+  print_all_of_kind html output `Upper size;
   IO.close_out output
 
 (** Very slow equality, only for testing purposes *)

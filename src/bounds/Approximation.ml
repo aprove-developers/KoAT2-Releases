@@ -78,21 +78,23 @@ let program_costbound =
 let add_costbound bound transition appr =
   { appr with cost = TransitionApproximation.add bound transition appr.cost }  
   
-let to_string program appr =
+let to_string ?(html=false) program appr =
+  let begin_head = if html then "<h3>" else "" in
+  let end_head = if html then "</h3>" else "" in
+
+  let endline = if html then "<br>" else "\n" in
   let overall_timebound = program_timebound appr program in 
   let output = IO.output_string () in
-    if (not (Bound.is_infinity overall_timebound)) then
-      IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_timebound) ^ ")\n\n")
-    else
-      IO.nwrite output "MAYBE\n\n";
-    IO.nwrite output "Initial Complexity Problem:\n";
-    IO.nwrite output (Program.to_string program^"\n");
-    IO.nwrite output "Timebounds: \n";
-    IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
-    appr.time |> TransitionApproximation.to_string (Program.transitions program) |> IO.nwrite output;
-    IO.nwrite output "\nCostbounds:\n";
-    IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
-    appr.cost |> TransitionApproximation.to_string (Program.transitions program) |> IO.nwrite output;
-    IO.nwrite output "\nSizebounds:\n";
-    appr.size |> SizeApproximation.to_string |> IO.nwrite output;
-    IO.close_out output
+    let asym_timebound = Bound.asymptotic_complexity overall_timebound in
+      IO.nwrite output ((Bound.show_complexity_termcomp asym_timebound) ^ endline ^ endline);
+      IO.nwrite output (begin_head ^ "Initial Complexity Problem:" ^ end_head ^ endline);
+      IO.nwrite output (Program.to_string ~html:html program ^ endline);
+      IO.nwrite output (begin_head ^ "Timebounds:" ^ end_head ^ endline);
+      IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ endline);
+      appr.time |> TransitionApproximation.to_string ~html:html (Program.transitions program) |> IO.nwrite output;
+      IO.nwrite output (endline ^ begin_head ^ "Costbounds:" ^ end_head ^ endline);
+      IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ endline);
+      appr.cost |> TransitionApproximation.to_string ~html:html (Program.transitions program) |> IO.nwrite output;
+      IO.nwrite output (endline ^ begin_head ^ "Sizebounds:" ^ end_head ^ endline);
+      appr.size |> SizeApproximation.to_string ~html:html |> IO.nwrite output;
+      IO.close_out output

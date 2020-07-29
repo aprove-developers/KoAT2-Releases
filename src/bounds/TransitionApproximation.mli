@@ -16,6 +16,6 @@ val add : Bound.t -> Transition.t -> t -> t
 
 val all_bounded : t -> Transition.t list -> bool
 
-val to_string : TransitionSet.t -> t -> string
+val to_string : ?html:bool -> TransitionSet.t -> t -> string
 
 val equivalent : t -> t -> bool

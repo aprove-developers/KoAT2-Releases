@@ -42,7 +42,7 @@ val is_initial_location : t -> Location.t -> bool
 
 val equivalent : t -> t -> bool
   
-val to_string : t -> string
+val to_string : ?html:bool -> t -> string
 
 val to_simple_string : t -> string
   

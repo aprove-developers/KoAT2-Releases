@@ -36,7 +36,8 @@ let add bound transition (name,map) =
 let all_bounded appr =
   List.for_all (fun t -> not (Bound.equal (get appr t) Bound.infinity))
   
-let to_string transitions (name,map) =
+let to_string ?(html=false) transitions (name,map) =
+  let sep = if html then "<br>" else "\n" in
   let output = IO.output_string () in
   transitions
   |> TransitionSet.to_list
@@ -44,8 +45,8 @@ let to_string transitions (name,map) =
   |> List.map (fun t -> t, Hashtbl.find_option map (Transition.id t) |? Bound.infinity)
   |> List.print
        ~first:"  "
-       ~last:"\n"
-       ~sep:"\n  "
+       ~last:sep
+       ~sep:(sep ^ "  ")
        (fun output (t,b) -> IO.nwrite output (Transition.to_id_string t ^ ": " ^ Bound.to_string b))
        output;  
   IO.close_out output
