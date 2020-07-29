@@ -29,7 +29,7 @@ val cost : t -> TransitionApproximation.t
 
 val expcost : t -> GeneralTransitionApproximation.t
 
-val to_string : Program.t -> bool -> t -> string
+val to_string : ?html:bool -> Program.t -> bool -> t -> string
 
 val equivalent : t -> t -> bool
 

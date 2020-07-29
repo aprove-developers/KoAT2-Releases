@@ -174,41 +174,44 @@ let add_expcostbound simplify_smt bound gt appr =
         GeneralTransitionApproximation.add ~simplifyfunc:RealBound.simplify_vars_nonnegative bound gt appr.expcost
   }
 
-let to_string program expected appr=
+let to_string ?(html=false) program expected appr=
+  let begin_head = if html then "<h3>" else "" in
+  let end_head = if html then "</h3>" else "" in
+  let endline = if html then "<br>" else "\n" in
   let overall_timebound = program_timebound appr program in
   let overall_exptimebound = program_exptimebound appr program in
   let output = IO.output_string () in
     if expected then
       if (not (RealBound.is_infinity overall_exptimebound)) then
-        IO.nwrite output ("YES( ?, " ^ RealBound.to_string (overall_exptimebound) ^ ")\n\n")
+        IO.nwrite output ("WORST_CASE( ?, " ^ RealBound.to_string (overall_exptimebound) ^ ")" ^ endline ^ endline)
       else
-        IO.nwrite output "MAYBE\n\n"
+        IO.nwrite output ("MAYBE" ^ endline ^ endline)
     else
       if (not (Bound.is_infinity overall_timebound)) then
-        IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_timebound) ^ ")\n\n")
+        IO.nwrite output ("WORST_CASE( ?, " ^ Bound.to_string (overall_timebound) ^ ")" ^ endline ^ endline)
       else
-        IO.nwrite output "MAYBE\n\n";
-    IO.nwrite output "Initial Complexity Problem:\n";
-    IO.nwrite output (Program.to_string ~show_gtcost:expected program^"\n");
-    IO.nwrite output "Timebounds: \n";
-    IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
-    appr.time |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
+        IO.nwrite output ("MAYBE" ^ endline ^ endline);
+    IO.nwrite output (begin_head ^ "Initial Complexity Problem:" ^ end_head ^ endline);
+    IO.nwrite output (Program.to_string ~html:html ~show_gtcost:expected program ^ endline);
+    IO.nwrite output (begin_head ^ "Timebounds:" ^ end_head ^ endline);
+    IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ endline);
+    appr.time |> TransitionApproximation.to_string ~html:html  (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
     if expected then
-      (IO.nwrite output "\nExpected Timebounds: \n";
-      IO.nwrite output ("  Overall expected timebound: " ^ RealBound.to_string (overall_exptimebound) ^ "\n");
+      (IO.nwrite output (endline ^ begin_head ^ "Expected Timebounds: " ^ end_head ^ endline);
+      IO.nwrite output ("  Overall expected timebound: " ^ RealBound.to_string (overall_exptimebound) ^ endline);
       appr.exptime
-      |> GeneralTransitionApproximation.to_string
+      |> GeneralTransitionApproximation.to_string ~html:html
           (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output);
-    IO.nwrite output "\nCostbounds:\n";
-    IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
-    appr.cost |> TransitionApproximation.to_string (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
+    IO.nwrite output (endline ^ begin_head ^ "Costbounds:" ^ end_head ^ endline);
+    IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ endline);
+    appr.cost |> TransitionApproximation.to_string ~html:html (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
     if expected then
-      IO.nwrite output "\nExpected Costbounds:\n";
-      IO.nwrite output ("  Overall expected costbound: " ^ RealBound.to_string (program_expcostbound appr program) ^ "\n");
-      appr.expcost |> GeneralTransitionApproximation.to_string (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output;
-    IO.nwrite output "\nSizebounds:\n";
-    appr.size |> SizeApproximation.to_string |> IO.nwrite output;
+      IO.nwrite output (endline ^ begin_head ^ "Expected Costbounds:" ^ end_head ^ endline);
+      IO.nwrite output ("  Overall expected costbound: " ^ RealBound.to_string (program_expcostbound appr program) ^ endline);
+      appr.expcost |> GeneralTransitionApproximation.to_string ~html:html (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output;
+    IO.nwrite output (endline ^ begin_head ^ "Sizebounds:" ^ end_head ^ endline);
+    appr.size |> SizeApproximation.to_string ~html:html |> IO.nwrite output;
     if expected then
-      (IO.nwrite output "\nExpSizebounds:\n";
-      appr.expsize |> ExpectedSizeApproximation.to_string ~print_lower:false |> IO.nwrite output);
+      (IO.nwrite output (endline ^ begin_head ^ "ExpSizebounds:" ^ end_head ^ endline);
+      appr.expsize |> ExpectedSizeApproximation.to_string ~html:html ~print_lower:false |> IO.nwrite output);
     IO.close_out output

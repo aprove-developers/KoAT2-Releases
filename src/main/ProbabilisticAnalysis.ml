@@ -1,5 +1,6 @@
 open Batteries
 open Parameter
+open ProofOutput
 
 let run (params: params) =
   let input = Option.default_delayed read_line params.input in
@@ -26,9 +27,9 @@ let run (params: params) =
   );
   let result_print =
     match params.result with
-    |"termcomp" -> print_termcomp_expected
-    |"all" -> print_all_expected_bounds
-    |_ -> print_overall_expected_costbound
+    |"termcomp" -> print_termcomp_expected ~html:params.html
+    |"all" -> print_all_expected_bounds ~html:params.html
+    |_ -> print_overall_expected_costbound ~html:params.html
   in
   let cache = CacheManager.new_cache () in
 

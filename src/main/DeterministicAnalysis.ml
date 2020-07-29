@@ -3,6 +3,7 @@ open BoundsInst
 open ProgramTypes
 open RVGTypes
 open Parameter
+open ProofOutput
 
 let run (params: params) =
   let input = Option.default_delayed read_line params.input in
@@ -29,9 +30,9 @@ let run (params: params) =
  ) ;
   let result_print =
     match params.result with
-    |"termcomp" -> print_termcomp_deterministic
-    |"all" -> print_all_deterministic_bounds
-    |_ -> print_overall_deterministic_timebound
+    |"termcomp" -> print_termcomp_deterministic ~html:params.html
+    |"all" -> print_all_deterministic_bounds ~html:params.html
+    |_ -> print_overall_deterministic_timebound ~html:params.html
   in
   let cache = CacheManager.new_cache () in
 

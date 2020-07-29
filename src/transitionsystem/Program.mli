@@ -51,14 +51,13 @@ val is_initial_location : t -> Location.t -> bool
 
 val equivalent : t -> t -> bool
 
-val to_string : show_gtcost:bool -> t -> string
+val to_string : ?html:bool -> show_gtcost:bool -> t -> string
 
 val to_simple_string : show_gtcost:bool -> t -> string
 
 val vars : t -> VarSet.t
 
 val input_vars : t -> VarSet.t
-
 
 val transitions : t -> TransitionSet.t
 

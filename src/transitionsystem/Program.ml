@@ -198,15 +198,16 @@ let is_initial_gt program trans =
 let is_initial_location program location =
   Location.(equal (program.start) location)
 
-let to_string ~show_gtcost program =
-  let transitions = String.concat "\n  " (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string ~show_gtcost:show_gtcost t)]) program.graph [])
+let to_string ?(html=false) ~show_gtcost program =
+  let sep = if html then "<br>" else "\n" in
+  let transitions = String.concat (sep ^ "  ") (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string ~html:html ~show_gtcost:show_gtcost t)]) program.graph [])
   and locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
   String.concat "  " [
-      "  Start:"; Location.to_string program.start;"\n";
-      "Program_Vars:"; program |> input_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n";
-      "Temp_Vars:"; program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n";
-      "Locations:"; locations;"\n";
-      "Transitions:\n"; transitions;"\n";
+      "  Start:"; Location.to_string program.start; sep;
+      "Program_Vars:"; program |> input_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; sep;
+      "Temp_Vars:"; program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; sep;
+      "Locations:"; locations;sep;
+      ("Transitions:" ^ sep); transitions;sep;
     ]
 
 let to_simple_string ~show_gtcost program =

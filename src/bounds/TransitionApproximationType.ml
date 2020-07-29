@@ -60,15 +60,16 @@ module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
     let all_bounded appr =
       List.for_all (fun t -> not (B.equal (get appr t) B.infinity))
 
-    let to_string transitions (name,map) =
+    let to_string ?(html=false) transitions (name,map) =
       let output = IO.output_string () in
+        let sep = if html then "<br>" else "\n" in
       transitions
       |> List.sort Trans.compare_same
       |> List.map (fun t -> t, Hashtbl.find_option map (Trans.id t) |? B.infinity)
       |> List.print
            ~first:"  "
-           ~last:"\n"
-           ~sep:"\n  "
+           ~last:sep
+           ~sep:(sep ^ "  ")
            (fun output (t,b) -> IO.nwrite output (Trans.to_id_string t ^ ": " ^ B.to_string b))
            output;
       IO.close_out output

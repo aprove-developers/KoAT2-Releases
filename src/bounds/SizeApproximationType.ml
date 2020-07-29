@@ -121,7 +121,8 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
       List.iter (fun (t,v) -> ignore (add ~simplifyfunc:simplifyfunc `Lower (B.zero) t v map); ignore (add ~simplifyfunc:simplifyfunc `Upper bound t v map)) scc;
       map
 
-    let print_all_of_kind ~show_kind_in_header output kind size =
+    let print_all_of_kind ?(html=false) ~show_kind_in_header output kind size =
+      let sep = if html then "<br>" else "\n" in
       size
       |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
       |> Map.to_list
@@ -132,16 +133,16 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
                Var.compare v1 v2
            )
       |> List.print
-           ~first:(if show_kind_in_header then "  " else show_kind kind ^ ":\n  ")
-           ~last:"\n"
-           ~sep:"\n  "
+           ~first:(if show_kind_in_header then "  " else (show_kind kind ^ ":" ^ sep ^ "  "))
+           ~last:sep
+           ~sep:(sep ^ "  ")
            (fun output ((_, transition, var), bound) -> IO.nwrite output (Trans.to_id_string transition ^ ", " ^ Var.to_string var ^ ": " ^ B.to_string bound))
            output
 
-    let to_string ?(print_lower=true) size =
+    let to_string ?(html=false) ?(print_lower=true) size =
       let output = IO.output_string () in
       if print_lower then print_all_of_kind ~show_kind_in_header:(not print_lower) output `Lower size;
-      print_all_of_kind output ~show_kind_in_header:(not print_lower) `Upper size;
+      print_all_of_kind ~html:html output ~show_kind_in_header:(not print_lower) `Upper size;
       IO.close_out output
 
     (** Very slow equality, only for testing purposes *)

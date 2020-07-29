@@ -2,56 +2,12 @@ open Batteries
 open BoundsInst
 open ProgramTypes
 open RVGTypes
+open ProofOutput
 
 
 module RV = RVGTypes.RVG.RV
 module ERV = ERVG.RV
 
-
-(** Prints the whole resulting approximation with the expected timebounds to the shell. *)
-let print_all_expected_bounds (program: Program.t) (appr: Approximation.t): unit =
-  print_string (Approximation.to_string program true appr)
-
-(** Prints the only the deterministic bounds of the resulting approximation to the shell. *)
-let print_all_deterministic_bounds (program: Program.t) (appr: Approximation.t): unit =
-  print_string (Approximation.to_string program false appr)
-
-(** Prints the overall expected timebound of the program to the shell. *)
-let print_overall_expected_timebound (program: Program.t) (appr: Approximation.t): unit =
-  program
-  |> Approximation.program_exptimebound appr
-  |> RealBound.to_string
-  |> print_endline
-
-(** Prints the overall expected costbound of the program to the shell. *)
-let print_overall_expected_costbound (program: Program.t) (appr: Approximation.t): unit =
-  program
-  |> Approximation.program_expcostbound appr
-  |> RealBound.to_string
-  |> print_endline
-
-(** Prints the overall timebound of the program to the shell. *)
-let print_overall_deterministic_timebound (program: Program.t) (appr: Approximation.t): unit =
-  program
-  |> Approximation.program_timebound appr
-  |> Bound.to_string
-  |> print_endline
-
-(** Prints the overall deterministic timebound of the program to the shell. *)
-let print_termcomp_deterministic (program: Program.t) (appr: Approximation.t): unit =
-  program
-  |> Approximation.program_costbound appr
-  |> Bound.asymptotic_complexity
-  |> Bound.show_complexity_termcomp
-  |> print_endline
-
-(** Prints the overall expected timebound of the program to the shell. *)
-let print_termcomp_expected (program: Program.t) (appr: Approximation.t): unit =
-  program
-  |> Approximation.program_exptimebound appr
-  |> RealBound.asymptotic_complexity
-  |> RealBound.show_complexity_termcomp
-  |> print_endline
 
 (** The shell arguments which can be defined in the console. *)
 type params = {
@@ -87,6 +43,9 @@ type params = {
 
     simple_input : bool; [@default false] [@aka ["s"]]
     (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
+
+     html : bool; [@default false] [@aka ["h"]]
+    (** Enabling printing the result in html format or not *)
 
     output_dir : string option; [@aka ["o"]]
     (** An absolute or relative path to the output directory, where all generated files should end up. *)
