@@ -34,7 +34,7 @@ output
 main/koatP
 main/koat2
 main/koatP
-
+main/koat2_static
 
 #Ignore auto generated parser files
 parser/Parser.mli
