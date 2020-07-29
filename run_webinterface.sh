@@ -31,9 +31,6 @@ do
   esac
 done
 
-echo "INPUT  = ${INPUT}"
-echo "RESULT     = ${RESULT}"
-echo "TIMEOUT    = ${TIMEOUT}"
 if [ -z ${RESULT} ]; then timeout ${TIMEOUT} koat2 analyse -i ${INPUT}; else timeout ${TIMEOUT} koat2 analyse -i ${INPUT} -r ${RESULT}; fi
 
 
