@@ -537,16 +537,16 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
               | `Max  -> greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative
               | `Min  -> flip (greater_or_equal ~opt_invariants:opt_invariants ~assume_vars_nonnegative:assume_vars_nonnegative)
             in
-            let rec helper selected =
+            let rec helper selected : boundtype list list =
               let is_bounded = List.map (fun b -> b, List.exists (fun b' -> comperator b' b = Some true) selected) bs in
               if List.for_all Tuple2.second is_bounded then
                 (* if all bounds are bounded by the selected subset return the subset into the monad *)
-                ListMonad.pure selected
+                ListMonad.Monad.pure selected
               else
                 (* Otherwise, nondeterministically choose a bound that is not-bounded by the selected bounds,
                   and add it to the selected
                 *)
-                ListMonad.(
+                ListMonad.Monad.(
                   List.filter (not % Tuple2.second) is_bounded
                   >>= (helper % flip List.cons selected % Tuple2.first)
                 )
