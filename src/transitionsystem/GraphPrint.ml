@@ -17,6 +17,28 @@ let print_graph ?(format="png") out_dir name graph output_graph =
   (* Generate a png from the dot file with an external call to graphviz *)
   ignore (Sys.command ("dot -T " ^ format ^ " -o " ^ full_path format ^ " " ^ full_path "dot"))
 
+let graph_to_string ?(format="svg") graph output_graph = 
+  Random.self_init ();
+  let rd = Random.int 1000000 in
+  let dir_name = "tmp" ^ (string_of_int rd) in
+  let full_path ext =
+    Fpath.(to_string ((Fpath.v dir_name) // (v "system_output" |> add_ext ext)))
+  in
+  (* Create output directory if not existing *)
+  ignore (Sys.command ("mkdir -p " ^ dir_name));
+  (* Write a graphviz dot file *)
+  output_graph (Stdlib.open_out_bin (full_path "dot")) graph;
+  (* Generate a svg from the dot file with an external call to graphviz *)
+  ignore (Sys.command ("dot -T " ^ format ^ " -o " ^ full_path format ^ " " ^ full_path "dot"));
+
+  let graph_string = 
+    (full_path format)
+    |> Stdlib.open_in_bin
+    |> BatPervasives.input_all
+  in
+  ignore (Sys.command ("rm -r " ^ dir_name));
+  graph_string
+
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
 let print_system ~label ~outdir ~file program =
@@ -59,12 +81,11 @@ let print_rvg cache kind ~label ~outdir ~file program =
                      end) in
   print_graph outdir (file ^ "_rvg_" ^ show_kind kind) graph Dot.output_graph
 
-let print_system_for_paper ?(format="pdf") ~outdir ~file program =
-  (*
+(*
     Compute an edge label from a TransitionLabel
     Whenever possible we use unicode representations of mathematic symbols.
   *)
-  let label l =
+let label l =
     let get_subscript_str i =
       Int.to_string i
       |> String.to_list
@@ -133,9 +154,9 @@ let print_system_for_paper ?(format="pdf") ~outdir ~file program =
     ]
     |> List.filter (not % String.is_empty)
     |> String.concat "\n"
-  in
+  
   (* Dot configuration *)
-  let module Dot = Graph.Graphviz.Dot(struct
+  module DotPaper = Graph.Graphviz.Dot(struct
                                        include TransitionGraph
                                        let edge_attributes (a, e, b) = [`Label (label e)]
                                        let default_edge_attributes _ = []
@@ -144,8 +165,14 @@ let print_system_for_paper ?(format="pdf") ~outdir ~file program =
                                        let vertex_name v = Location.to_string v
                                        let default_vertex_attributes _ = []
                                        let graph_attributes _ = []
-                                     end) in
-  print_graph ~format:format outdir (file ^ "_graph") (Program.graph program) Dot.output_graph
+                                     end) 
+
+let print_system_for_paper ?(format="pdf") ~outdir ~file program =
+  print_graph ~format:format outdir (file ^ "_graph") (Program.graph program) DotPaper.output_graph
+
+let get_system_for_paper ?(format="svg") program=
+  graph_to_string ~format:format (Program.graph program) DotPaper.output_graph
+
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
@@ -168,4 +195,3 @@ let print_ervg elsb_cache ~label ~outdir ~file program =
                        let graph_attributes _ = []
                      end) in
   print_graph outdir (file ^ "_ervg") graph Dot.output_graph
-

@@ -201,6 +201,8 @@ let to_string ?(html=false) program expected appr=
 
     IO.nwrite output (begin_head ^ "Initial Complexity Problem:" ^ end_head ^ endline);
     IO.nwrite output (Program.to_string ~html:html ~show_gtcost:expected program ^ endline);
+    if html then
+      IO.nwrite output (GraphPrint.get_system_for_paper ~format:"svg" program); 
     IO.nwrite output (begin_head ^ "Timebounds:" ^ end_head ^ endline);
     IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ endline);
     appr.time |> TransitionApproximation.to_string ~html:html  (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
@@ -223,7 +225,5 @@ let to_string ?(html=false) program expected appr=
       (IO.nwrite output (endline ^ begin_head ^ "ExpSizebounds:" ^ end_head ^ endline);
       appr.expsize |> ExpectedSizeApproximation.to_string ~html:html ~print_lower:false |> IO.nwrite output);
     if html then
-      IO.nwrite output (String.concat "\n" (html_body_end))
-    else
-      ();
-    IO.close_out output
+      IO.nwrite output (String.concat "\n" (html_body_end));
+    IO.close_out output;

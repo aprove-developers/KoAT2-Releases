@@ -123,6 +123,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
 
     let print_all_of_kind ?(html=false) ~show_kind_in_header output kind size =
       let sep = if html then "<br>\n" else "\n" in
+      let kind_output kind = if html then "<h4>" ^ (show_kind kind) ^ ":" ^ "</h4>" else (show_kind kind)  ^ ":" in
       size
       |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
       |> Map.to_list
@@ -133,7 +134,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
                Var.compare v1 v2
            )
       |> List.print
-           ~first:(if show_kind_in_header then "  " else (show_kind kind ^ ":" ^ sep ^ "  "))
+           ~first:(if show_kind_in_header then "  " else (kind_output kind ^ sep ^ "  "))
            ~last:sep
            ~sep:(sep ^ "  ")
            (fun output ((_, transition, var), bound) -> IO.nwrite output (Trans.to_id_string transition ^ ", " ^ Var.to_string var ^ ": " ^ B.to_string bound))
