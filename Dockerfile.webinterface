@@ -55,6 +55,7 @@ LABEL author="Fabian Meyer"
 LABEL author="Marcel Hark"
 
 RUN apk add --no-cache --upgrade bash
+RUN apk add --no-cache --upgrade graphviz
 
 WORKDIR /home/koat2
 
