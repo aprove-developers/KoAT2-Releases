@@ -199,7 +199,7 @@ let is_initial_location program location =
   Location.(equal (program.start) location)
 
 let to_string ?(html=false) ~show_gtcost program =
-  let sep = if html then "<br>" else "\n" in
+  let sep = if html then "<br>\n" else "\n" in
   let transitions = String.concat (sep ^ "  ") (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string ~html:html ~show_gtcost:show_gtcost t)]) program.graph [])
   and locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
   String.concat "  " [

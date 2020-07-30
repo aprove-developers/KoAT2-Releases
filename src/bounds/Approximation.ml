@@ -175,22 +175,30 @@ let add_expcostbound simplify_smt bound gt appr =
   }
 
 let to_string ?(html=false) program expected appr=
+  let html_header = ["<!DOCTYPE html>";"<html>";"<head>";"<title> KoAT2 Proof </title>";"</head>"] in
+  let html_body_begin = ["<body>";"<p>";] in
+  let html_body_end = ["</p>";"</body>";"</html>"] in
   let begin_head = if html then "<h3>" else "" in
   let end_head = if html then "</h3>" else "" in
-  let endline = if html then "<br>" else "\n" in
+  let endline = if html then "<br>\n" else "\n" in
   let overall_timebound = program_timebound appr program in
   let overall_exptimebound = program_exptimebound appr program in
   let output = IO.output_string () in
     if expected then
       if (not (RealBound.is_infinity overall_exptimebound)) then
-        IO.nwrite output ("WORST_CASE( ?, " ^ RealBound.to_string (overall_exptimebound) ^ ")" ^ endline ^ endline)
+        IO.nwrite output ("WORST_CASE( ?, " ^ RealBound.to_string (overall_exptimebound) ^ ")" ^ "\n")
       else
-        IO.nwrite output ("MAYBE" ^ endline ^ endline)
+        IO.nwrite output ("MAYBE" ^ "\n")
     else
       if (not (Bound.is_infinity overall_timebound)) then
-        IO.nwrite output ("WORST_CASE( ?, " ^ Bound.to_string (overall_timebound) ^ ")" ^ endline ^ endline)
+        IO.nwrite output ("WORST_CASE( ?, " ^ Bound.to_string (overall_timebound) ^ ")" ^ "\n")
       else
-        IO.nwrite output ("MAYBE" ^ endline ^ endline);
+        IO.nwrite output ("MAYBE" ^ "\n");
+    if html then
+      IO.nwrite output (String.concat "\n" (html_header @ html_body_begin))
+    else
+      ();
+
     IO.nwrite output (begin_head ^ "Initial Complexity Problem:" ^ end_head ^ endline);
     IO.nwrite output (Program.to_string ~html:html ~show_gtcost:expected program ^ endline);
     IO.nwrite output (begin_head ^ "Timebounds:" ^ end_head ^ endline);
@@ -214,4 +222,8 @@ let to_string ?(html=false) program expected appr=
     if expected then
       (IO.nwrite output (endline ^ begin_head ^ "ExpSizebounds:" ^ end_head ^ endline);
       appr.expsize |> ExpectedSizeApproximation.to_string ~html:html ~print_lower:false |> IO.nwrite output);
+    if html then
+      IO.nwrite output (String.concat "\n" (html_body_end))
+    else
+      ();
     IO.close_out output

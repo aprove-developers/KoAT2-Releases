@@ -122,7 +122,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
       map
 
     let print_all_of_kind ?(html=false) ~show_kind_in_header output kind size =
-      let sep = if html then "<br>" else "\n" in
+      let sep = if html then "<br>\n" else "\n" in
       size
       |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
       |> Map.to_list
@@ -141,7 +141,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
 
     let to_string ?(html=false) ?(print_lower=true) size =
       let output = IO.output_string () in
-      if print_lower then print_all_of_kind ~show_kind_in_header:(not print_lower) output `Lower size;
+      if print_lower then print_all_of_kind ~html:html ~show_kind_in_header:(not print_lower) output `Lower size;
       print_all_of_kind ~html:html output ~show_kind_in_header:(not print_lower) `Upper size;
       IO.close_out output
 
