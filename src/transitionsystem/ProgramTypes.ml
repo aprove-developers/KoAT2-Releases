@@ -78,21 +78,7 @@ module Transition =
     let to_id_string (l,label,l') =
       TransitionLabel.to_id_string label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
 
-    let to_string ?(html=false) ~show_gtcost:bool (l,t,l') =
-      let html_adapter =
-        if html then
-          let adapter = 
-            fun c -> 
-            match c with
-              | '>' -> "&gt"
-              | '<' -> "&lt;"
-              | _  -> (String.make 1 c)
-          in 
-          (String.replace_chars adapter)
-        else 
-          identity
-      in
-          
+    let to_string ~show_gtcost:bool (l,t,l') =
       let probability =
         if (TransitionLabel.probability t) = (1. |> OurFloat.of_float) then
           ""
@@ -107,7 +93,6 @@ module Transition =
         | (false, false) -> "-{" ^ (Polynomials.Polynomial.to_string (TransitionLabel.cost t)) ^ "; " ^ (BoundsInst.RealBound.show ~complexity:false (TransitionLabel.gtcost t)) ^ "}>"
       in
       (String.concat "" [(Location.to_string l); TransitionLabel.(update_to_string_lhs t); probability ; cost ; (Location.to_string l') ; TransitionLabel.(update_to_string_rhs t) ;" :|: " ;TransitionLabel.(guard_to_string t)])
-      |> html_adapter
 
     let rename vars (l,t,l') =
       (l, (TransitionLabel.rename vars t),l')

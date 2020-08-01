@@ -15,4 +15,11 @@ module Make
     let return = M.pure
     let pure = M.pure
     let bind = M.bind
+
+    let when_m b f =
+      if b then
+        f
+      else
+        pure ()
+
   end

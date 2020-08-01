@@ -27,7 +27,7 @@ let run (params: params) =
   );
   let result_print =
     match params.result with
-    |"termcomp" -> print_termcomp_expected ~html:params.html
+    |"termcomp" -> print_termcomp_expected
     |"all" -> print_all_expected_bounds ~html:params.html
     |_ -> print_overall_expected_costbound ~html:params.html
   in

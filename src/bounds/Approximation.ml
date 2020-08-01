@@ -2,6 +2,9 @@ open Batteries
 open BoundsInst
 open ProgramTypes
 open ApproximationModules
+open Formatter
+open FormatMonad.Monad
+open FormatMonad
 
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord, show]
 
@@ -174,56 +177,66 @@ let add_expcostbound simplify_smt bound gt appr =
         GeneralTransitionApproximation.add ~simplifyfunc:RealBound.simplify_vars_nonnegative bound gt appr.expcost
   }
 
-let to_string ?(html=false) program expected appr=
-  let html_header = ["<!DOCTYPE html>";"<html>";"<head>";"<title> KoAT2 Proof </title>";"</head>"] in
-  let html_body_begin = ["<body>";"<p>";] in
-  let html_body_end = ["</p>";"</body>";"</html>"] in
-  let begin_head = if html then "<h3>" else "" in
-  let end_head = if html then "</h3>" else "" in
-  let endline = if html then "<br>\n" else "\n" in
+let overall_result_string program expected appr =
+    if expected then
+      let overall_expcostbound = program_expcostbound appr program in
+      if (RealBound.is_infinity overall_expcostbound) then
+        "MAYBE"
+      else
+        "WORST_CASE( ?, " ^ RealBound.to_string (overall_expcostbound) ^ ")"
+
+    else
+      let overall_costbound = program_costbound appr program in
+      if Bound.is_infinity overall_costbound then
+        "MAYBE"
+      else
+        "WORST_CASE( ?, " ^ Bound.to_string overall_costbound ^ ")"
+
+let output_formatted ?(embed_raw_svg=false) program expected appr =
   let overall_timebound = program_timebound appr program in
   let overall_exptimebound = program_exptimebound appr program in
-  let output = IO.output_string () in
-    if expected then
-      if (not (RealBound.is_infinity overall_exptimebound)) then
-        IO.nwrite output ("WORST_CASE( ?, " ^ RealBound.to_string (overall_exptimebound) ^ ")" ^ "\n")
-      else
-        IO.nwrite output ("MAYBE" ^ "\n")
-    else
-      if (not (Bound.is_infinity overall_timebound)) then
-        IO.nwrite output ("WORST_CASE( ?, " ^ Bound.to_string (overall_timebound) ^ ")" ^ "\n")
-      else
-        IO.nwrite output ("MAYBE" ^ "\n");
-    if html then
-      IO.nwrite output (String.concat "\n" (html_header @ html_body_begin))
-    else
-      ();
 
-    IO.nwrite output (begin_head ^ "Initial Complexity Problem:" ^ end_head ^ endline);
-    IO.nwrite output (Program.to_string ~html:html ~show_gtcost:expected program ^ endline);
-    if html then
-      IO.nwrite output (GraphPrint.get_system_for_paper ~format:"svg" program); 
-    IO.nwrite output (begin_head ^ "Timebounds:" ^ end_head ^ endline);
-    IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ endline);
-    appr.time |> TransitionApproximation.to_string ~html:html  (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
-    if expected then
-      (IO.nwrite output (endline ^ begin_head ^ "Expected Timebounds: " ^ end_head ^ endline);
-      IO.nwrite output ("  Overall expected timebound: " ^ RealBound.to_string (overall_exptimebound) ^ endline);
-      appr.exptime
-      |> GeneralTransitionApproximation.to_string ~html:html
-          (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output);
-    IO.nwrite output (endline ^ begin_head ^ "Costbounds:" ^ end_head ^ endline);
-    IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ endline);
-    appr.cost |> TransitionApproximation.to_string ~html:html (Program.transitions program |> TransitionSet.to_list) |> IO.nwrite output;
-    if expected then
-      IO.nwrite output (endline ^ begin_head ^ "Expected Costbounds:" ^ end_head ^ endline);
-      IO.nwrite output ("  Overall expected costbound: " ^ RealBound.to_string (program_expcostbound appr program) ^ endline);
-      appr.expcost |> GeneralTransitionApproximation.to_string ~html:html (Program.generalized_transitions program |> GeneralTransitionSet.to_list) |> IO.nwrite output;
-    IO.nwrite output (endline ^ begin_head ^ "Sizebounds:" ^ end_head ^ endline);
-    appr.size |> SizeApproximation.to_string ~html:html |> IO.nwrite output;
-    if expected then
-      (IO.nwrite output (endline ^ begin_head ^ "ExpSizebounds:" ^ end_head ^ endline);
-      appr.expsize |> ExpectedSizeApproximation.to_string ~html:html ~print_lower:false |> IO.nwrite output);
-    if html then
-      IO.nwrite output (String.concat "\n" (html_body_end));
-    IO.close_out output;
+  paragraph (
+   (str_header_big "Initial Complexity Problem"
+      >> (write_format @@ Program.to_formatted_string ~show_gtcost:expected program) >> newline
+      (* only include graph in html output *)
+      >> when_m embed_raw_svg (raw_str @@ GraphPrint.get_system_for_paper ~format:"svg" program)))
+
+  >> paragraph
+      (str_header_big "Timebounds: "
+        >> str_line ("  Overall timebound:" ^ Bound.to_string overall_timebound)
+        >> write_format (TransitionApproximation.to_formatted (Program.transitions program |> TransitionSet.to_list) appr.time))
+
+  (* Additionally write expected timebounds if requested *)
+  >> when_m expected
+       (paragraph (
+          str_header_big "Expected Timebounds:"
+          >> str_line ("  Overall expected timebound: " ^ RealBound.to_string overall_exptimebound)
+          >> write_format
+            (GeneralTransitionApproximation.to_formatted
+              (Program.generalized_transitions program |> GeneralTransitionSet.to_list) appr.exptime) ))
+
+  >> paragraph
+      (str_header_big "Costbounds:"
+        >> str_line ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program))
+        >> write_format (TransitionApproximation.to_formatted (Program.transitions program |> TransitionSet.to_list) appr.cost) )
+
+  >> when_m expected
+      (paragraph (
+        str_header_big "Expected Costbounds:"
+        >> str_line ("  Overall expected costbound: " ^ RealBound.to_string (program_expcostbound appr program))
+        >> write_format
+          (GeneralTransitionApproximation.to_formatted
+            (Program.generalized_transitions program |> GeneralTransitionSet.to_list) appr.expcost)))
+
+  >> paragraph(
+      str_header_big "Sizebounds:"
+      >> write_format (SizeApproximation.to_formatted appr.size))
+
+  >> when_m expected
+      (paragraph (
+        str_header_big "ExpSizeBounds:"
+        >> write_format (ExpectedSizeApproximation.to_formatted ~print_lower:false appr.expsize)))
+
+let output prog exp appr =
+  render_default ~format:Plain @@ output_formatted ~embed_raw_svg:false prog exp appr

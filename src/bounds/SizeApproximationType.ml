@@ -121,9 +121,8 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
       List.iter (fun (t,v) -> ignore (add ~simplifyfunc:simplifyfunc `Lower (B.zero) t v map); ignore (add ~simplifyfunc:simplifyfunc `Upper bound t v map)) scc;
       map
 
-    let print_all_of_kind ?(html=false) ~show_kind_in_header output kind size =
-      let sep = if html then "<br>\n" else "\n" in
-      let kind_output kind = if html then "<h4>" ^ (show_kind kind) ^ ":" ^ "</h4>" else (show_kind kind)  ^ ":" in
+    let all_of_kind_formatted ~show_kind_in_header kind size =
+      let kind_output kind = FormattedString.mk_header_small (FormattedString.mk_str @@ show_kind kind) in
       size
       |> Map.filteri (fun (k, _, _) _ -> equal_kind k kind)
       |> Map.to_list
@@ -133,18 +132,26 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
              else
                Var.compare v1 v2
            )
-      |> List.print
-           ~first:(if show_kind_in_header then "  " else (kind_output kind ^ sep ^ "  "))
-           ~last:sep
-           ~sep:(sep ^ "  ")
-           (fun output ((_, transition, var), bound) -> IO.nwrite output (Trans.to_id_string transition ^ ", " ^ Var.to_string var ^ ": " ^ B.to_string bound))
-           output
+      |> List.map
+           (fun ((_, transition, var), bound) ->
+            FormattedString.mk_str_line @@ "  "  ^ Trans.to_id_string transition ^ ", " ^ Var.to_string var ^ ": " ^ B.to_string bound)
+      |> fun s -> FormattedString.mappend @@
+          (if show_kind_in_header then kind_output kind else Empty) :: s
 
-    let to_string ?(html=false) ?(print_lower=true) size =
-      let output = IO.output_string () in
-      if print_lower then print_all_of_kind ~html:html ~show_kind_in_header:(not print_lower) output `Lower size;
-      print_all_of_kind ~html:html output ~show_kind_in_header:(not print_lower) `Upper size;
-      IO.close_out output
+    let all_of_kind_to_string ~show_kind_in_header kind size =
+      FormattedString.render_string @@ all_of_kind_formatted ~show_kind_in_header kind size
+
+    let to_formatted ?(print_lower=true) size =
+      FormattedString.mappend @@
+        (
+          if print_lower then all_of_kind_formatted ~show_kind_in_header:print_lower `Lower size
+          else FormattedString.Empty
+        ) :: [all_of_kind_formatted ~show_kind_in_header:print_lower `Upper size;]
+
+
+    let to_string ?(print_lower=true) size =
+      (if print_lower then all_of_kind_to_string ~show_kind_in_header:(not print_lower) `Lower size else "")
+      ^ (all_of_kind_to_string ~show_kind_in_header:(not print_lower) `Upper size)
 
     (** Very slow equality, only for testing purposes *)
     let equivalent size1 size2 =

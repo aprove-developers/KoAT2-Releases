@@ -29,7 +29,12 @@ val cost : t -> TransitionApproximation.t
 
 val expcost : t -> GeneralTransitionApproximation.t
 
-val to_string : ?html:bool -> Program.t -> bool -> t -> string
+val overall_result_string : Program.t -> bool -> t -> string
+
+val output_formatted : ?embed_raw_svg:bool -> Program.t -> bool -> t -> unit FormatMonad.Monad.t
+
+(* Output as plain text*)
+val output : Program.t -> bool -> t -> String.t
 
 val equivalent : t -> t -> bool
 

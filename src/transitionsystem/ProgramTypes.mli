@@ -29,7 +29,7 @@ sig
   val update_cost: (Polynomial.t * BoundsInst.RealBound.t) -> t -> t
   val hash : t -> int
   val to_id_string : t -> string
-  val to_string : ?html:bool -> show_gtcost:bool -> t -> string
+  val to_string : show_gtcost:bool -> t -> string
   val src : t -> Location.t
   val label : t -> TransitionLabel.t
   val target : t -> Location.t

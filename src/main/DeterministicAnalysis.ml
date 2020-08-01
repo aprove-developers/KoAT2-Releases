@@ -30,7 +30,7 @@ let run (params: params) =
  ) ;
   let result_print =
     match params.result with
-    |"termcomp" -> print_termcomp_deterministic ~html:params.html
+    |"termcomp" -> print_termcomp_deterministic
     |"all" -> print_all_deterministic_bounds ~html:params.html
     |_ -> print_overall_deterministic_timebound ~html:params.html
   in

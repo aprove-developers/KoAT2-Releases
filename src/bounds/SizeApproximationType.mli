@@ -43,7 +43,9 @@ module Make_SizeApproximation :
 
     val add_all_abs : ?simplifyfunc:(B.t -> B.t) -> B.t -> RV.t list -> t -> t
 
-    val to_string : ?html:bool -> ?print_lower:bool -> t -> string
+    val to_formatted : ?print_lower:bool -> t -> FormattedString.t
+
+    val to_string : ?print_lower:bool -> t -> string
 
     val equivalent : t -> t -> bool
   end

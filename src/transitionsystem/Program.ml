@@ -198,17 +198,26 @@ let is_initial_gt program trans =
 let is_initial_location program location =
   Location.(equal (program.start) location)
 
-let to_string ?(html=false) ~show_gtcost program =
-  let sep = if html then "<br>\n" else "\n" in
-  let transitions = String.concat (sep ^ "  ") (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string ~html:html ~show_gtcost:show_gtcost t)]) program.graph [])
-  and locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
-  String.concat "  " [
-      "  Start:"; Location.to_string program.start; sep;
-      "Program_Vars:"; program |> input_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; sep;
-      "Temp_Vars:"; program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; sep;
-      "Locations:"; locations;sep;
-      ("Transitions:" ^ sep); transitions;sep;
-    ]
+let to_formatted_string ~show_gtcost program =
+  let transitions =
+    TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string ~show_gtcost:show_gtcost t)]) program.graph []
+    |> List.map FormattedString.mk_str_line
+    |> FormattedString.mappend
+  in
+  let locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
+  FormattedString.format_append
+    ([
+        "  Start:" ^ Location.to_string program.start;
+        "Program_Vars:" ^ (program |> input_vars |> VarSet.map_to_list Var.to_string |> String.concat ", ");
+        "Temp_Vars:" ^ (program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", ");
+        "Locations:" ^ locations;
+        "Transitions:"
+      ]
+    |> List.map FormattedString.mk_str_line |> FormattedString.mappend)
+    transitions
+
+let to_string ~show_gtcost program =
+  FormattedString.render_string @@ to_formatted_string ~show_gtcost:show_gtcost program
 
 let to_simple_string ~show_gtcost program =
   TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string ~show_gtcost:show_gtcost t) program.graph ""

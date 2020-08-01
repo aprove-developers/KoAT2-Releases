@@ -14,4 +14,7 @@ module Make :
 
     val bind: 'a t -> ('a -> 'b t) -> 'b t
     val (>>=): 'a t -> ('a -> 'b t) -> 'b t
+    val (>>): 'a t -> 'b t -> 'b t
+
+    val when_m: bool -> unit t -> unit t
   end

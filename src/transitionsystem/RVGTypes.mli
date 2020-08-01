@@ -28,7 +28,7 @@ module RVG :
 sig
   module RV : sig include module type of Make_RV (struct
                                                     include Transition
-                                                    let to_string = to_string ~html:false ~show_gtcost:false
+                                                    let to_string = to_string ~show_gtcost:false
                                                   end) end
   include module type of Graph.Persistent.Digraph.ConcreteBidirectional(struct
                              include RV
