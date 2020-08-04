@@ -166,8 +166,8 @@ transition_target :
 
 withConstraints :
 	|	{ Formula.mk_true }
-	|       LBRACK constr = separated_nonempty_list(AND, formula_atom) RBRACK { Formula.all constr }
-	|       WITH constr = separated_nonempty_list(AND, formula_atom) { Formula.all constr } ;
+	|       LBRACK f = formula RBRACK { f }
+	|       WITH f = formula { f } ;
 
 withProbabilities :
         |        prob = UFLOAT COLON
@@ -198,7 +198,9 @@ constraint_atom :
                   { comp p1 p2 } ;
 
 formula_atom :
-        |   	p1 = polynomial; comp = formula_comparator; p2 = polynomial
+        |       LPAR f = formula RPAR
+                  { f }
+        |       p1 = polynomial; comp = formula_comparator; p2 = polynomial
                   { comp p1 p2 } ;
 
 %inline atom_comparator :
