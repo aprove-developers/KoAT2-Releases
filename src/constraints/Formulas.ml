@@ -11,6 +11,7 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     type constr = C.t
     type atom = C.atom
 
+    (* A list of constraints whose disjunction represent a formula. *)
     type t = C.t list
 
     let mk constr =

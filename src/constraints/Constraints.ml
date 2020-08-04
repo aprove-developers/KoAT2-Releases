@@ -12,6 +12,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
     type compkind = A.compkind
     type atom = A.t
 
+    (* A list of atoms. The constraint is equivalent to the conjunction of these atoms *)
     type t = A.t list [@@deriving eq, ord]
 
     (** Same as List.length but outside of this module the list structure of constraints is invisible*)

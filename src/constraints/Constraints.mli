@@ -1,7 +1,7 @@
 open Batteries
 open Atoms
 
-(** Provides default implementations of a constraint *)
+(** Provides default implementations of a constraint. A constraint is a conjunction of atoms *)
 
 (** Constructs a default constraint using a list of atoms each comparing two polynomials *)
 module ConstraintOver(A : ConstraintTypes.Atom) : ConstraintTypes.Constraint
