@@ -11,7 +11,7 @@ Reimplementation of KoAT with componentwise monotonic bounds
   4. update the `LD_LIBRARY_PATH` such that _libz3.so_ can be found. To be on the safe side write "eval `opam config env`" and "
 export LD_LIBRARY_PATH="$(ocamlfind printconf destdir)/stublibs:${LD_LIBRARY_PATH}"" into your .bashrc file. If this still does not work add "
 export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}"" 
-  5. `opam install menhir ounit apron cmdliner ppx_deriving ppx_deriving_cmdliner batteries`
+  5. `opam install menhir ounit apron cmdliner ppx_deriving ppx_deriving_cmdliner batteries ocamlnet`
   6. `opam install omake`
   7. `omake`
   
@@ -26,6 +26,7 @@ export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 - Menhir: http://gallium.inria.fr/~fpottier/menhir/
 - Ocamlgraph: http://ocamlgraph.lri.fr/doc/
 - Cmdliner: http://erratique.ch/software/cmdliner/doc/Cmdliner
+- Ocamlnet: http://projects.camlcity.org/projects/ocamlnet.html
 
 
 ## Run
