@@ -20,7 +20,7 @@ let deterministic_upper_polynomial dist =
 let deterministic_lower_polynomial dist =
   match dist with
     | Binomial (n,p)            -> if OurFloat.(equal one p) then Some n else Some Polynomial.zero
-    | Geometric _               -> Some Polynomial.zero
+    | Geometric _               -> Some Polynomial.one
     | Hypergeometric (bigN,k,n) -> Some Polynomial.zero
     | Uniform (a,b)             -> Some a
 
