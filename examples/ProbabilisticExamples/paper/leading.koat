@@ -1,3 +1,7 @@
+# The leading example from the probabilistic_koat paper
+# In the first loop a quadratic size bound for y is computed
+# which is then used to infer the overall quadratic expected runtime
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x y)

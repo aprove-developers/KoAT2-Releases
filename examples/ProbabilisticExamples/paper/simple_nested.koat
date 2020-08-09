@@ -1,18 +1,4 @@
-# KoAT equivalent to the following absynth program
-# (01) def f():
-# (02)    var x, y, z
-# (03)
-# (04)    while x > 0:
-# (05)        z = y
-# (06)        prob(1,1):
-# (07)            x = x
-# (08)        else:
-# (09)            x = x - 1
-# (10)
-# (11)        while (y > x): # corresponds to location l
-# (12)            y = y-1
-# (13)
-# (14)        y = z
+# A simple program of nested loops
 
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))

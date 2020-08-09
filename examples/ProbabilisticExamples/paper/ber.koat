@@ -1,3 +1,7 @@
+# A simple loop in which a variable is incremented
+# according to a bernoulli distribution.
+# Taken from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x n)

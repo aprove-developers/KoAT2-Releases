@@ -1,3 +1,7 @@
+# A complex program with sequential and nested loops and polynomial expected complexity.
+# This shows how runtime bounds are computed form size bounds
+# Taken from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR X Y W N M)

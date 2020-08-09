@@ -1,3 +1,5 @@
+# Measure the temperature (mt) and if it is above a certain setting (st) reduce it
+# Taken from absynth
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR mt st t)

@@ -1,3 +1,13 @@
+# Computes the (y+1)-th fibonaci number
+# then count down the resulting value (x2)
+# using a probabilistic loop
+# This results in exponential expected cost
+#
+# The probabilistic KoAT version is not able to infer non-polynomial bounds
+# but the original version can infer probabilistic bounds.
+# This example illustrates how the nonprobabilistic bounds
+# are incooperated to compute the expected cost
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x1 x2 i y)

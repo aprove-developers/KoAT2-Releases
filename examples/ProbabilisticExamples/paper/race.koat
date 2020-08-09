@@ -1,3 +1,6 @@
+# A race between a tortoise and a hare
+# Taken from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR H T)

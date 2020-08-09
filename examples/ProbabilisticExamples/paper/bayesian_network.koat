@@ -1,3 +1,7 @@
+# The bayesian network example taken from the absynth examples
+#
+# To improve the readability of the program the bernoulli choices are expressed as the choice of a transition
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR n i d s l g)

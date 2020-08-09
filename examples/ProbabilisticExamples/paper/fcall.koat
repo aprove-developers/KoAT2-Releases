@@ -1,3 +1,6 @@
+# A simple (tail-) recursive program taken from absynth
+# The tail recursion was eliminated using a simple loop
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x n lx)

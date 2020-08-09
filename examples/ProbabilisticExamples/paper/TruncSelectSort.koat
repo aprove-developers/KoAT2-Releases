@@ -1,3 +1,7 @@
+# Similar to SelectSort but one loop is omitted.
+# This makes the analysis easier for KoAT but renders this problem
+# unsolvable for absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f0))
 (VAR A B C D E F G H I)

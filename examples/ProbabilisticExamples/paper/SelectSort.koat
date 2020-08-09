@@ -1,3 +1,6 @@
+# An integer abstraction of the quadratic time
+# selection sort algorithm taken from the TPDB (Complexity_ITS/Brockschmidt_16/T2/selectSort.koat).
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f0))
 (VAR A B C D E F G H I)

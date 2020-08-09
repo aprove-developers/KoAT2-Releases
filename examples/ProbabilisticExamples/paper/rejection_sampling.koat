@@ -1,3 +1,5 @@
+# Taken from absynth 
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x y k n)

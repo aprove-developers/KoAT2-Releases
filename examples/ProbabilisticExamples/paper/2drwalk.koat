@@ -1,3 +1,5 @@
+# A 2-d random walk corresponding to the absynth example 2drwalk.imp
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x y d n z)

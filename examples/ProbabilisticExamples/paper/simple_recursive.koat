@@ -1,3 +1,7 @@
+# This is a simple tail-recursive program.
+# The recursion is substituted by a normal loop
+
+# Taken from absynth
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR N)

@@ -1,3 +1,9 @@
+# A number of sequential probabilistic loops.
+# Taken from the TPDB (Complexity_ITS/Brockschmidt_16/T2/two_arrays2.koat).
+# Every loop of the original version is substituted by a probabilistic loop
+# that with probabilit 3/4 performs the statement of the original loop
+# and with probability 1/4 performs the inverse update
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f0))
 (VAR A B C D E F G H I J K L)

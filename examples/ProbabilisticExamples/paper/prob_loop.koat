@@ -1,3 +1,7 @@
+# A program consisting of an outer loop stopping with probability 0.5
+# and an inner loop that in every iteration of the outer loop
+# counts down the variable z
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR X Y Z)

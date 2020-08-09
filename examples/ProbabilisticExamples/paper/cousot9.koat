@@ -1,3 +1,6 @@
+# Taken from the TPDB (Complexity_ITS/Brockschmidt_16/SAS10/cousot9.koat)
+# We replaced a deterministic update by an update according to a uniform distribution.
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS start0))
 (VAR A B C D E F)

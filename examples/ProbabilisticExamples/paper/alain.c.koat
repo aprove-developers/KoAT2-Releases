@@ -1,3 +1,7 @@
+# This example is taken from the TPDB (Complexity_ITS/Flores-Montoya_16/alain.c.koat)
+# and one loop is substituted with a probabilistic loop that in each iteration with probability 0.5
+# performs an identity update or with probability 0.5 performs the original update.
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS eval_alain_start))
 (VAR v__01 v__02 v__03 v__1 v__14 v_15 v_9 v_n1 v_n2 v_x v_y v_z)

@@ -1,3 +1,5 @@
+# A program performing a simple random walk using nested loops
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR X)

@@ -1,3 +1,5 @@
+# Tkaen from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR i k)

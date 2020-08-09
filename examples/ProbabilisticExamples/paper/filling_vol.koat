@@ -1,3 +1,6 @@
+# Probabilistically fill a container
+# Taken from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR volToFill fast medium slow vol volMeasured)

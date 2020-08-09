@@ -1,3 +1,7 @@
+# A polynomial expected time example
+#
+# Taken from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR X Y N)

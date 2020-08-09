@@ -1,3 +1,6 @@
+# A program with two nested loops but linear expected runtime
+# Taken from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR N Y)

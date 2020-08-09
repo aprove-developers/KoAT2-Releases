@@ -1,3 +1,8 @@
+# In the second general transition sample a command parameter and then depending
+# on the parameter perform an action until N<=0
+#
+# Taken from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x y eX eY dx dy dxc dyc N cmd)

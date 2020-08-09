@@ -1,3 +1,6 @@
+# A simple loop where a variable is incremented according to a binomial distribution.
+# Taken from absynth.
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x n)

@@ -1,3 +1,6 @@
+# Multiple races between a tortoise and a hare
+# Taken from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR h t m n)

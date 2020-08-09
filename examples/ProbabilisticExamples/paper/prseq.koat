@@ -1,3 +1,9 @@
+# Two sequential loops
+# where the expected runtime of the second depends
+# on the variable values after the first
+#
+# Taken from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR X Y)

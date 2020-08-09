@@ -1,3 +1,6 @@
+# Two nested probabilistic loops that model a probabilistic insertion sort
+# Taken from absynth
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR N)
