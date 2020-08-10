@@ -21,8 +21,8 @@ let run (params: params) =
 
   Logging.(use_loggers [LexRSM, Logger.DEBUG; Preprocessor, Logger.DEBUG]);
   params.input
-  |> MainUtil.read_input_goal (CacheManager.trans_id_counter cache) false
-  |> Option.may (fun (program, _) ->
+  |> MainUtil.read_input (CacheManager.trans_id_counter cache) false
+  |> Option.may (fun program ->
         let gts =
           (program, Approximation.create program)
           |> Preprocessor.process (CacheManager.trans_id_counter cache) Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne])

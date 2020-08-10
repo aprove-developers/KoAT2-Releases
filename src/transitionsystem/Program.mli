@@ -21,9 +21,13 @@ val map_graph : (TransitionGraph.t -> TransitionGraph.t) -> t -> t
 
 val mk : Transition.t Enum.t -> TransitionGraph.t
 
-val rename : t -> t
+(** Rename locations to l0,l1,... *)
+val rename_locations : t -> t
 
-val from : Transition.t list -> Location.t -> t
+(** Rename program vars according to the map *)
+val rename_program_vars : RenameMap.t -> t -> t
+
+val from : Transition.t list -> Location.t -> Var.t list -> t
 
 val graph : t -> TransitionGraph.t
 
@@ -58,6 +62,9 @@ val to_string : show_gtcost:bool -> t -> string
 val to_simple_string : show_gtcost:bool -> t -> string
 
 val vars : t -> VarSet.t
+
+(* Respects the order given in Program.from *)
+val program_vars_ordered: t -> Var.t list
 
 val input_vars : t -> VarSet.t
 

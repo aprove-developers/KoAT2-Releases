@@ -37,7 +37,7 @@ sig
   val cost : t -> Polynomial.t
   (** Adds the invariant to this transition. *)
   val add_invariant : Constraint.t -> t -> t
-  val rename : Var.t list -> t -> t
+  val rename : RenameMap.t -> t -> t
 end
 
 module TransitionSet :

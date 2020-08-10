@@ -87,13 +87,19 @@ let mk_transition_simple_prob trans_id_counter (start: string) (cost: Polynomial
 
 
 let mk_program_simple (transitions: Transition.t list): Program.t =
+  let variables =
+    transitions
+    |> List.map (TransitionLabel.vars % Transition.label)
+    |> List.fold_left VarSet.union VarSet.empty
+    |> VarSet.to_list
+  in
   transitions
   |> List.hd
   |> Transition.src
-  |> Program.from transitions
+  |> fun start -> Program.from transitions start variables
 
 let mk_program goal start vars (transitions: Transition.t list): Program.t =
-  Program.from transitions start
+  Program.from transitions start vars
 
 let ourfloat_of_decimal_string (str: string): OurFloat.t =
   (* Check if fraction *)
