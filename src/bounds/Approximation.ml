@@ -62,6 +62,17 @@ let sizebound kind =
 let expsizebound kind =
   ExpectedSizeApproximation.get kind % expsize
 
+let program_expsizebound appr program var =
+  Program.generalized_transitions program
+  |> GeneralTransitionSet.enum
+  |> Enum.map (fun gt ->
+      GeneralTransition.targets gt
+      |> LocationSet.enum
+      |> Enum.map (fun l -> expsizebound `Upper appr (gt,l) var)
+     )
+  |> Enum.flatten
+  |> RealBound.sum
+
 let expsizebound_abs appr trans v =
   ExpectedSizeApproximation.get `Upper (expsize appr) trans v
 
@@ -177,9 +188,16 @@ let add_expcostbound simplify_smt bound gt appr =
         GeneralTransitionApproximation.add ~simplifyfunc:RealBound.simplify_vars_nonnegative bound gt appr.expcost
   }
 
-let overall_result_string program expected appr =
+(* use the cost bounds as overall if no other bounds are provided *)
+let overall_result_string ?(overall_expbound=None) program expected appr =
     if expected then
-      let overall_expcostbound = program_expcostbound appr program in
+      let overall_expcostbound =
+        if Option.is_some overall_expbound then Option.get
+          overall_expbound
+        else
+          program_expcostbound appr program
+      in
+
       if (RealBound.is_infinity overall_expcostbound) then
         "MAYBE"
       else

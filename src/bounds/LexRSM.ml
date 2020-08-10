@@ -548,6 +548,10 @@ let find ?(refined=false) ?(timeout=None) cache program gt =
     ~result:(print_pprf_option) execute
 
 let find_whole_prog cache program goal =
-  if goal = "EXPECTEDCOMPLEXITY" then compute_expected_complexity cache program |> ignore
-  else if goal = "ASTERMINATION" then compute_as_termination cache program |> ignore
-    else raise (Failure ("Unexpected Goal"))
+  match goal with
+  | Goal.ProbabilisticGoal Goal.ExpectedComplexity
+      -> compute_expected_complexity cache program |> ignore
+  | Goal.ASTermination
+      -> compute_as_termination cache program |> ignore
+  | _
+      -> raise (Failure ("Unexpected Goal"))

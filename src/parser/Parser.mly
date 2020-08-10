@@ -12,6 +12,7 @@
 %token				GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
 %token              COMMA COLON SEMICOLON
 %token              MIN MAX INFINITY ABS
+%token              EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE ASTERMINATION
 %token              BERNOULLI BINOMIAL GEOMETRIC HYPERGEOMETRIC UNIFORM
 %token				GUARDVEC GUARDVAL UPDATES PRECISION DIRECTTERMINATION INITIAL
 %token <string>		FRACTION
@@ -35,9 +36,9 @@
 
 %start <BoundsInst.Bound.t> onlyBound
 
-%start <TransitionLabel.trans_id_counter -> (Program.t * string)> programAndGoal
+%start <TransitionLabel.trans_id_counter -> (Program.t * Goal.goal)> programAndGoal
 
-%start <string> onlyGoal
+%start <Goal.goal> onlyGoal
 
 %start <ExactProgramTypes.ExactProgram.t> exactProgram
 
@@ -55,12 +56,13 @@
 
 %type <Var.t list> variables
 
-%type <string> goal
+%type <Goal.goal> goal
 
 %{
   open BatTuple
   module Constr = Constraints.Constraint
   open Atoms
+	open Goal
   open BoundsInst
 	open Polynomials
   open Formulas
@@ -108,8 +110,16 @@ transition_simple:
 	    			{ fun trans_id_counter -> ParserUtil.mk_transition_simple_prob trans_id_counter start (Tuple2.first cv) (Tuple2.second cv) rhs formula } ;
 
 goal :
-	|	LPAR GOAL goal = ID RPAR
-                  { goal } ;
+	|	LPAR GOAL COMPLEXITY RPAR
+                  { Complexity }
+	|	LPAR GOAL EXACTRUNTIME RPAR
+                  { ExactRuntime }
+	|	LPAR GOAL EXPECTEDCOMPLEXITY RPAR
+                  { ProbabilisticGoal ExpectedComplexity }
+	|	LPAR GOAL EXPECTEDSIZE var=ID RPAR
+                  { ProbabilisticGoal (ExpectedSize (Var.of_string var)) }
+	|	LPAR GOAL ASTERMINATION RPAR
+                  { ASTermination } ;
 
 start :
 	|	LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR

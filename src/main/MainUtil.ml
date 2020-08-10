@@ -17,7 +17,7 @@ let read_input_goal trans_id_counter simple program_str =
   if simple then
       program_str
       |> Readers.read_program_simple trans_id_counter
-      |> fun program -> Some (program, "UNKNOWN")
+      |> fun program -> Some (program, Goal.Unknown)
   else
     try
       program_str
@@ -28,7 +28,7 @@ let read_input_goal trans_id_counter simple program_str =
         None
 
 let read_goal simple program_str =
-  if simple then "COMPLEXITY"
+  if simple then Goal.Complexity
   else
   program_str
   |> Readers.read_goal_file

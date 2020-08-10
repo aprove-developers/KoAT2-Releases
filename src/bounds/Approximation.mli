@@ -29,7 +29,12 @@ val cost : t -> TransitionApproximation.t
 
 val expcost : t -> GeneralTransitionApproximation.t
 
-val overall_result_string : Program.t -> bool -> t -> string
+(* The second argument determines whether an expected bound
+    or non-expected bound should be pritned
+    If overall_expbound is Some bound then and an expected bound is requested
+    then it is assumed that the given bound captures the overall bound.
+    *)
+val overall_result_string : ?overall_expbound:(RealBound.t option) -> Program.t -> bool -> t -> string
 
 val output_formatted : ?embed_raw_svg:bool -> Program.t -> bool -> t -> unit FormatMonad.Monad.t
 
@@ -56,6 +61,11 @@ val timebound_id : t -> int -> Bound.t
 
 (** Returns a timebound for the program. *)
 val program_timebound : t -> Program.t -> Bound.t
+
+(** Returns an expected sizebound for the given variable for the whole program.
+    This is computed by summing up *all* expected sizebounds for the given variable
+    *)
+val program_expsizebound : t -> Program.t -> Var.t -> RealBound.t
 
 (** Returns the expected timebound for the whole program. *)
 val program_exptimebound : t -> Program.t -> RealBound.t
@@ -112,6 +122,7 @@ val sizebound : kind -> t -> Transition.t -> Var.t -> Bound.t
 (** Returns an expected sizebound of the specified kind for the var of the transition.
         A sizebound is expressed in relation to the input variable values of the program. *)
 val expsizebound : kind -> t -> (GeneralTransition.t * Location.t)-> Var.t -> RealBound.t
+
 
 (** Returns an expected sizebound that bounds the absolute value of the given variable.
         A sizebound is expressed in relation to the input variable values of the program. *)

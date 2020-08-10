@@ -11,7 +11,7 @@ exception Error of string
 
 val read_file : TransitionLabel.trans_id_counter -> string -> Program.t
 
-val read_goal_file : string -> string
+val read_goal_file : string -> Goal.goal
 
 val read_program : TransitionLabel.trans_id_counter -> string -> Program.t
 
@@ -27,6 +27,6 @@ val read_polynomial : string -> Polynomials.Polynomial.t
 
 val read_bound : string -> Bound.t
 
-val read_prog_goal_file : TransitionLabel.trans_id_counter -> string -> (Program.t * string)
+val read_prog_goal_file : TransitionLabel.trans_id_counter -> string -> (Program.t * Goal.goal)
 
 val read_exact_file : string -> ExactProgram.t

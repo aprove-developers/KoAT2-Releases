@@ -30,61 +30,66 @@ let float = ['+' '-']?(['0'-'9']*)?['.']['0'-'9']+
 
 rule read =
   parse
-  | comment           { read lexbuf }
-  | white             { read lexbuf }
-  | newline           { next_line lexbuf; read lexbuf }
-  | "BERNOULLI"       { P.BERNOULLI }
-  | "BINOMIAL"        { P.BINOMIAL }
-  | "GEOMETRIC"       { P.GEOMETRIC }
-  | "HYPERGEOMETRIC"  { P.HYPERGEOMETRIC }
-  | "UNIFORM"         { P.UNIFORM }
-  | "GOAL"            { P.GOAL }
-  | "STARTTERM"       { P.STARTTERM }
-  | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
-  | "RULES"           { P.RULES }
-  | "VAR"             { P.VAR }
-  | "GUARDVEC"        { P.GUARDVEC }
-  | "GUARDVAL"        { P.GUARDVAL }
-  | "UPDATES"         { P.UPDATES }
-  | "DIRECTTERMINATION" {P.DIRECTTERMINATION }
-  | "PRECISION"       { P.PRECISION }
-  | "INITIAL"         { P.INITIAL }
-  | "min"             { P.MIN }
-  | "max"             { P.MAX }
-  | "inf"             { P.INFINITY }
-  | int               { P.UINT (int_of_string (Lexing.lexeme lexbuf)) }
-  | fraction          { P.FRACTION (Lexing.lexeme lexbuf)}
-  | probfloat         { P.UFLOAT (Lexing.lexeme lexbuf)}
-  | id                { P.ID (Lexing.lexeme lexbuf) }
-  | '|'               { P.ABS }
-  | '('               { P.LPAR }
-  | ')'               { P.RPAR }
-  | '{'               { P.LBRACE }
-  | '}'               { P.RBRACE }
-  | '['               { P.LBRACK }
-  | ']'               { P.RBRACK }
-  | '+'               { P.PLUS }
-  | '*'               { P.TIMES }
-  | '-'               { P.MINUS }
-  | '^'               { P.POW }
-  | "->"              { P.ARROW }
-  | "="               { P.EQUAL }
-  | "!="              { P.UNEQUAL }
-  | "<="              { P.LESSEQUAL }
-  | ">="              { P.GREATEREQUAL }
-  | '<'               { P.LESSTHAN }
-  | '>'               { P.GREATERTHAN }
-  | "&&"              { P.AND }
-  | "/\\"             { P.AND }
-  | "||"              { P.OR }
-  | ":|:"             { P.WITH }
-  | ":+:"             { P.PROBDIV }
-  | ":"               { P.COLON }
-  | ";"               { P.SEMICOLON }
-  | ','               { P.COMMA }
-  | eof               { P.EOF }
-  | float          { raise (SyntaxError ("Probabilities are positive floating point numbers.")) }
-  | _                 { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
+  | comment                { read lexbuf }
+  | white                  { read lexbuf }
+  | newline                { next_line lexbuf; read lexbuf }
+  | "COMPLEXITY"           { P.COMPLEXITY }
+  | "EXPECTEDCOMPLEXITY"   { P.EXPECTEDCOMPLEXITY }
+  | "ASTERMINATION"        { P.ASTERMINATION }
+  | "EXACTRUNTIME"         { P.EXACTRUNTIME }
+  | "EXPECTEDSIZE"         { P.EXPECTEDSIZE }
+  | "BERNOULLI"            { P.BERNOULLI }
+  | "BINOMIAL"             { P.BINOMIAL }
+  | "GEOMETRIC"            { P.GEOMETRIC }
+  | "HYPERGEOMETRIC"       { P.HYPERGEOMETRIC }
+  | "UNIFORM"              { P.UNIFORM }
+  | "GOAL"                 { P.GOAL }
+  | "STARTTERM"            { P.STARTTERM }
+  | "FUNCTIONSYMBOLS"      { P.FUNCTIONSYMBOLS }
+  | "RULES"                { P.RULES }
+  | "VAR"                  { P.VAR }
+  | "GUARDVEC"             { P.GUARDVEC }
+  | "GUARDVAL"             { P.GUARDVAL }
+  | "UPDATES"              { P.UPDATES }
+  | "DIRECTTERMINATION   " {P.DIRECTTERMINATION }
+  | "PRECISION"            { P.PRECISION }
+  | "INITIAL"              { P.INITIAL }
+  | "min"                  { P.MIN }
+  | "max"                  { P.MAX }
+  | "inf"                  { P.INFINITY }
+  | int                    { P.UINT (int_of_string (Lexing.lexeme lexbuf)) }
+  | fraction               { P.FRACTION (Lexing.lexeme lexbuf)}
+  | probfloat              { P.UFLOAT (Lexing.lexeme lexbuf)}
+  | id                     { P.ID (Lexing.lexeme lexbuf) }
+  | '|'                    { P.ABS }
+  | '('                    { P.LPAR }
+  | ')'                    { P.RPAR }
+  | '{'                    { P.LBRACE }
+  | '}'                    { P.RBRACE }
+  | '['                    { P.LBRACK }
+  | ']'                    { P.RBRACK }
+  | '+'                    { P.PLUS }
+  | '*'                    { P.TIMES }
+  | '-'                    { P.MINUS }
+  | '^'                    { P.POW }
+  | "->"                   { P.ARROW }
+  | "="                    { P.EQUAL }
+  | "!="                   { P.UNEQUAL }
+  | "<="                   { P.LESSEQUAL }
+  | ">="                   { P.GREATEREQUAL }
+  | '<'                    { P.LESSTHAN }
+  | '>'                    { P.GREATERTHAN }
+  | "&&"                   { P.AND }
+  | "/\\"                  { P.AND }
+  | "||"                   { P.OR }
+  | ":|:"                  { P.WITH }
+  | ":+:"                  { P.PROBDIV }
+  | ":"                    { P.COLON }
+  | ";"                    { P.SEMICOLON }
+  | ','                    { P.COMMA }
+  | eof                    { P.EOF }
+  | float                  { raise (SyntaxError ("Probabilities are positive floating point numbers.")) }
+  | _                      { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
 
 (*{
   end

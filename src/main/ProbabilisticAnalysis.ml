@@ -2,7 +2,7 @@ open Batteries
 open Parameter
 open ProofOutput
 
-let run (params: params) =
+let run probabilistic_goal (params: params) =
   let input = Option.default_delayed read_line params.input in
   let input_filename =
     if params.simple_input then
@@ -25,12 +25,24 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
-  let result_print =
-    match params.result with
-    |"termcomp" -> print_termcomp_expected
-    |"all" -> print_all_expected_bounds ~html:params.html
-    |_ -> print_overall_expected_costbound ~html:params.html
+
+  let result_print probabilistic_goal =
+    match probabilistic_goal with
+    | Goal.ExpectedComplexity -> (
+      match params.result with
+      |"termcomp" -> print_termcomp_expected
+      |"all" -> print_all_expected_bounds ~html:params.html
+      |_ -> print_overall_expected_costbound ~html:params.html
+    )
+
+    | Goal.ExpectedSize v -> (
+      match params.result with
+      |"termcomp" -> print_termcomp_expected_size v
+      |"all" -> print_all_expected_bounds_expected_size v ~html:params.html
+      |_ -> print_overall_expected_costbound ~html:params.html
+    )
   in
+
   let cache = CacheManager.new_cache () in
 
   input
@@ -65,7 +77,7 @@ let run (params: params) =
                           ~generate_invariants_bottom_up:Preprocessor.generate_invariants params.bottom_up cache
                         )
                    else (program, appr))
-         |> tap (fun (program, appr) -> result_print program appr)
+         |> tap (fun (program, appr) -> result_print probabilistic_goal program appr)
          |> tap (fun (program, appr) ->
                 if params.print_system then
                   GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:(input_filename ^ "_bounded" ) program)

@@ -3,22 +3,11 @@ open BoundsInst
 open ProgramTypes
 open RVGTypes
 open Parameter
+open Goal
 
 let command = "analyse"
 
 let description = "Proceed a full time, cost and size analysis on a given integer transition system. Probabilistic and Nonprobabilistic Methods are supported."
-
-let supported_goals = ["COMPLEXITY"; "EXPECTEDCOMPLEXITY"; "EXACTRUNTIME"]
-
-let goal_support (goal:string) =
-  let goal_map =
-    [("COMPLEXITY", DeterministicAnalysis.run); ("EXPECTEDCOMPLEXITY", ProbabilisticAnalysis.run); ("EXACTRUNTIME", ExactRuntime.run);]
-    |> List.enum
-    |> Map.of_enum
-  in
-    Map.find_opt goal goal_map
-
-
 
 let run (params: params) =
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
@@ -32,6 +21,11 @@ let run (params: params) =
       input |> Fpath.v |> Fpath.normalize |> Fpath.to_string
   in
   let goal = MainUtil.read_goal params.simple_input input_filename in
-    match goal_support goal with
-    | Some f -> f params
-    | None -> print_string ("The GOAL: " ^ goal ^ " you entered is not supported.\nKoAT2 supports\n" ^ (String.concat "\n" supported_goals) ^ "\n")
+  match goal with
+  | Complexity          -> DeterministicAnalysis.run params
+  | ProbabilisticGoal g -> ProbabilisticAnalysis.run g params
+  | ExactRuntime        -> ExactRuntime.run params
+  | _                   ->
+      print_string
+        ("The GOAL: " ^ Goal.to_string goal ^ " you entered is not supported.\nKoAT2 supports\n"
+        ^ (String.concat "\n" supported_analyse_goals) ^ "\n")
