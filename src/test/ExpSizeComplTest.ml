@@ -32,4 +32,5 @@ let tests =
         )
         [
           ("pol06", Var.of_string "Z", RealBound.Inf, "examples/ProbabilisticExamples/paper/pol06.koat");
+          ("trader", Var.of_string "Z", RealBound.Inf, "examples/ProbabilisticExamples/paper/trader.koat");
         ];

@@ -1,12 +1,14 @@
 # Taken from absynth
+# The original example contains no ticks but a variable z which seems to capture the expected costs
+# Hence, here we ask for an upper bound on the expected size of variable Z upon termination.
 
-(GOAL EXPECTEDCOMPLEXITY)
+(GOAL EXPECTEDSIZE Z)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR M S N)
+(VAR M S N Z)
 (RULES
-  f(M,S,N) -{0;0}> g(M,S,N) :|: M >= 0
-  g(M,S,N) -{0;0}> 0.25:h(M,S+1,N) :+: 0.75:h(M,S-1,N) :|: M<S
-  h(M,S,N) -{0;0}> 0.25:i(M,S,0) :+: 0.25:i(M,S,1) :+: 0.25:i(M,S,2) :+: 0.25:i(M,S,3)
-  i(M,S,N) -{S;S}> i(M,S,N-1) :|: N>0
-  i(M,S,N) -{0;0}> g(M,S,N)
+  f(M,S,N,Z) -> g(M,S,N,0) :|: M >= 0
+  g(M,S,N,Z) -> 0.25:h(M,S+1,N,Z) :+: 0.75:h(M,S-1,N,Z) :|: M<S
+  h(M,S,N,Z) -> i(M,S,UNIFORM(0,3),Z)
+  i(M,S,N,Z) -> i(M,S,N-1,Z+S) :|: N>0
+  i(M,S,N,Z) -> g(M,S,N,Z)
 )
