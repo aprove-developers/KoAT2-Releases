@@ -28,6 +28,7 @@ let suite =
       ELSBTest.tests;
       ExpTrivSizeBoundTest.tests;
       ExpTimeBoundTest.tests;
+      ExpSizeComplTest.tests;
     ]
 
 let () =

@@ -92,7 +92,6 @@ let tests =
           ("no_loop", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/no_loop.koat");
           ("pol04", RealBound.Inf, "examples/ProbabilisticExamples/paper/pol04.koat");
           ("pol05", RealBound.Inf, "examples/ProbabilisticExamples/paper/pol05.koat");
-          ("pol06", RealBound.Inf, "examples/ProbabilisticExamples/paper/pol06.koat");
           ("pol07", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/pol07.koat");
           ("prnes", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prnes.koat");
           ("prnes2", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prnes2.koat");
