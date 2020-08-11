@@ -73,9 +73,6 @@ let run probabilistic_goal (params: params) =
         )
   in
   program_and_goal
-  |> tap (Option.may (fun (program, goal) ->
-      if params.print_system_for_paper then
-        GraphPrint.print_system_for_paper ~format:params.print_system_for_paper_format ~outdir:output_dir ~file:input_filename program))
   |> Option.map (fun (program, goal) ->
          (program, Approximation.create program)
          |> tap (fun (program, appr) ->
