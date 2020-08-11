@@ -48,21 +48,29 @@ let run probabilistic_goal (params: params) =
 
   let program_and_goal =
     input
-    |> MainUtil.read_input (CacheManager.trans_id_counter cache) params.simple_input
-    |> Option.map (if params.rename_locations then Program.rename_locations else identity)
-    (* Optionally rename program and the target variable of goal EXPECTEDSIZE *)
-    |> Option.map (fun prog ->
-        if params.rename_program_vars then
-          let (renamed_prog, rename_map) = rename_program_vars prog in
-          match probabilistic_goal with
-          | ExpectedSize v ->
-              let new_goal = ExpectedSize (RenameMap.find v rename_map ~default:v) in
-              renamed_prog, new_goal
-          | _ ->
-              renamed_prog, probabilistic_goal
-        else
-          prog, probabilistic_goal
-    )
+    |> MainUtil.read_input_varlist (CacheManager.trans_id_counter cache) ~rename:params.rename
+    (* Print system before renaming *)
+    |> tap (Option.may (fun (program,_) ->
+        if params.print_system_for_paper then
+          GraphPrint.print_system_for_paper ~format:params.print_system_for_paper_format ~outdir:output_dir ~file:input_filename program))
+    (* Rename program and the target variable of goal EXPECTEDSIZE *)
+    |> flip Option.Monad.bind (
+        fun (p, vs) -> match probabilistic_goal with
+          | ExpectedSize v -> (
+            let renamed_program, arg_vars = rename_program p in
+            let i = List.index_of v vs in
+            match i with
+            | Some i ->
+                Some (renamed_program, ExpectedSize (Var.mk_arg i))
+            | None ->
+                prerr_string @@
+                  "The variable " ^ Var.to_string v
+                  ^ " in goal "^Goal.to_string (ProbabilisticGoal probabilistic_goal)
+                  ^ " does not exist. Possible values include " ^ Util.enum_to_string Var.to_string (List.enum vs);
+                None
+          )
+          | g -> Some (Tuple2.first @@ rename_program p, g)
+        )
   in
   program_and_goal
   |> tap (Option.may (fun (program, goal) ->

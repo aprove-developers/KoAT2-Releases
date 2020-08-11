@@ -37,6 +37,7 @@ let check_program trans_id_counter program =
                                       "Com_1"
                                       ~guard:(Constraints.Constraint.mk_true)
                                       ~gt_id:(GeneralTransition.id trans)
+                                      ~input_vars_ordered:(Program.input_vars program |> VarSet.to_list)
                                       ~update:(identity_update)
                                       ~probability:(OurFloat.(-) (OurFloat.of_float 1.) (GeneralTransition.total_probability trans)),
                                   new_sink))
@@ -47,6 +48,6 @@ let check_program trans_id_counter program =
     |> TransitionSet.to_list
     |> fun list -> [list; new_transitions]
     |> List.concat
-    |> fun transitions -> Program.from transitions (Program.start program) (Program.program_vars_ordered program)
+    |> fun transitions -> Program.from transitions (Program.start program)
     |> MaybeChanged.changed
 

@@ -26,6 +26,9 @@ val fresh_id : sort -> unit -> t
     (** Returns a bunch of fresh ids. *)
 val fresh_ids : sort -> int -> t Enum.t
 val fresh_id_list : sort -> int -> t list
+
+(** Make an argument variable referring to the position specified in i *)
+val mk_arg: int -> t
 val fresh_arg_list : int -> t list
 val is_helper : t -> bool
 val mk_helper : sort -> int -> t

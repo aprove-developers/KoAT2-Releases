@@ -20,14 +20,17 @@ let read_ rule lexbuf =
   | Parser.Error ->
      raise (Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
 
-let read_file trans_id_counter path =
+let read_file_varlist trans_id_counter path =
   read_ Parser.onlyProgram (Lexing.from_channel @@ File.open_in path) trans_id_counter
+
+let read_file trans_id_counter path =
+  Tuple2.first @@ read_file_varlist trans_id_counter path
 
 let read rule str =
   read_ rule (Lexing.from_string str)
 
 let read_program trans_id_counter str =
-  (read Parser.onlyProgram) str trans_id_counter
+  Tuple2.first @@ (read Parser.onlyProgram) str trans_id_counter
 
 let read_program_simple =
   flip (read Parser.onlyProgram_simple)

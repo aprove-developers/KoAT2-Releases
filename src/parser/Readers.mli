@@ -9,6 +9,10 @@ open ExactProgramTypes
 
 exception Error of string
 
+
+(* Returns the program and the order of the variables as specified in the variable string *)
+val read_file_varlist : TransitionLabel.trans_id_counter -> string -> Program.t * Var.t list
+
 val read_file : TransitionLabel.trans_id_counter -> string -> Program.t
 
 val read_goal_file : string -> Goal.goal

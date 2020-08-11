@@ -70,6 +70,7 @@ module UpdateElement =
 type t = {
     id : int;
     gt_id: int;
+    input_vars_ordered: Var.t List.t;
     update : UpdateElement.t VarMap.t;
     guard : Guard.t;
     guard_without_invariants: Guard.t;
@@ -84,10 +85,11 @@ let triples (list1) (list2) (list3) = List.map (fun ((x,y),z) -> (x,y,z)) (List.
 let quatruples (list1) (list2) (list3) (list4) = List.map (fun ((x,y),(z,w)) -> (x,y,z,w)) (List.combine (List.combine list1 list2) (List.combine list3 list4))
 
 (* Generates a nonprobabilistic label and sets the probability to one *)
-let make id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~update ~guard =
+let make id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~input_vars_ordered ~update ~guard =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
   {
     id = get_unique_id id_counter (); gt_id = get_unique_gt_id id_counter ();
+    input_vars_ordered;
     update; guard;
     cost = Tuple2.first cvect; gtcost = Tuple2.second cvect;
     probability=1. |> OurFloat.of_float;
@@ -95,13 +97,14 @@ let make id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~update 
   }
 
 (* Generates a probabilistic label, needs a name to distinguish different labels belonging to the same transition *)
-let make_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~update ~guard ~gt_id ~(probability: OurFloat.t) =
+let make_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~input_vars_ordered ~update ~guard ~gt_id ~(probability: OurFloat.t) =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
     if (OurFloat.(probability > (1. |> of_float)) || OurFloat.(probability < (0. |> of_float))) then raise ProbabilitiesNotBetweenZeroAndOne
   else
   {
     id = get_unique_id id_counter ();
     gt_id;
+    input_vars_ordered;
     update; guard;
     cost = Tuple2.first cvect;
     gtcost = Tuple2.second cvect;
@@ -155,11 +158,12 @@ let mk id_counter ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets 
       (* TODO Better error handling in case the sizes differ *)
       (List.enum appended_patterns, List.enum assignments_with_trivial)
       |> uncurry Enum.combine
-      |> Enum.fold (fun map (var, assignment) -> VarMap.add var (assignment) map) VarMap.empty
-      |> fun update -> { id = get_unique_id id_counter (); gt_id = get_unique_gt_id id_counter ();
-                         update; guard; cost = Tuple2.first cvect; gtcost = Tuple2.second cvect;
-                         probability=1 |> OurFloat.of_int; guard_without_invariants = guard;
-                         invariants = Guard.mk_true;}
+      |> Enum.fold (fun (i_v_o,map) (var, assignment) -> List.append i_v_o [var], VarMap.add var (assignment) map) ([] ,VarMap.empty)
+      |> fun (i_v_o,update) -> { id = get_unique_id id_counter (); gt_id = get_unique_gt_id id_counter ();
+                        input_vars_ordered = i_v_o;
+                        update; guard; cost = Tuple2.first cvect; gtcost = Tuple2.second cvect;
+                        probability=1 |> OurFloat.of_int; guard_without_invariants = guard;
+                        invariants = Guard.mk_true;}
 
 let mk_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patterns ~guard ~vars ~gt_id ~probability =
   if List.length targets != 1 then raise RecursionNotSupported else
@@ -170,8 +174,9 @@ let mk_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~tar
         (* TODO Better error handling in case the sizes differ *)
         (List.enum patterns, List.enum assignments)
         |> uncurry Enum.combine
-        |> Enum.fold (fun map (var, assignment) -> VarMap.add var assignment map) VarMap.empty
-        |> fun update -> { id = get_unique_id id_counter (); gt_id;
+        |> Enum.fold (fun (i_v_o,map) (var, assignment) -> List.append i_v_o [var], VarMap.add var assignment map) ([], VarMap.empty)
+        |> fun (i_v_o,update) -> { id = get_unique_id id_counter (); gt_id;
+                          input_vars_ordered = i_v_o;
                           update; guard; cost = Tuple2.first cvect; gtcost = Tuple2.second cvect;
                           probability=probability; guard_without_invariants = guard;
                           invariants = Guard.mk_true;}
@@ -211,6 +216,7 @@ let append id_counter t1 t2 =
   {
     id = get_unique_id id_counter ();
     gt_id = get_unique_gt_id id_counter ();
+    input_vars_ordered = t1.input_vars_ordered;
     update = new_update;
     guard = new_guard;
     cost = Polynomial.(t1.cost + t2.cost);
@@ -291,6 +297,7 @@ let vars = vars_
 let default = {
     id = -1;
     gt_id = -1;
+    input_vars_ordered = [];
     update = VarMap.empty;
     guard = Guard.mk_true;
     guard_without_invariants = Guard.mk_true;
@@ -362,16 +369,28 @@ let input_size t =
   |> input_vars
   |> VarSet.cardinal
 
+(** Whenever this function is invoked it is ensured that there are enough standard variables  *)
+let standard_renaming standard_vars t =
+  standard_vars
+  |> List.take (input_size t)
+  |> List.combine t.input_vars_ordered
+  |> RenameMap.from
+
 let rename_update update rename_map =
   update
   |> VarMap.enum
   |> Enum.map (fun (key, value) -> (RenameMap.find key rename_map ~default:key), UpdateElement.rename rename_map value)
   |> VarMap.of_enum
 
-let rename rename_map t =
+let rename_list l rename_map =
+  List.map (fun v -> RenameMap.find v rename_map ~default:v) l
+
+let rename standard_vars t =
+  let rename_map = standard_renaming standard_vars t in
   {
     id = t.id;
     gt_id = t.gt_id;
+    input_vars_ordered = rename_list t.input_vars_ordered rename_map;
     update = rename_update t.update rename_map;
     guard = Guard.rename t.guard rename_map;
     guard_without_invariants = Guard.rename t.guard_without_invariants rename_map;

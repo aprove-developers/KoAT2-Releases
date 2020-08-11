@@ -65,11 +65,8 @@ type params = {
     preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
 
-    rename_locations : bool; [@default false]
+    rename : bool; [@default false]
     (** If the location names should be normalized to simplified names. *)
-
-    rename_program_vars : bool; [@default false]
-    (** If the program variables identifiers should be normalized to simplified names. *)
 
     bottom_up : bool; [@default false]
     (** If the bottom-up approach should be used in probabilistic analysis*)
@@ -113,10 +110,21 @@ let bounded_erv_to_string elsb_cache (program: Program.t) (appr: Approximation.t
 let get_lsb cache program kind (t, v) =
   LocalSizeBound.(sizebound_local program cache kind t v |> Option.map as_bound |? default kind)
 
-let standard_rename_map program =
-  let vars_count = List.length (Program.program_vars_ordered program) in
-  List.combine (Program.program_vars_ordered program) (Var.fresh_arg_list vars_count)
+let standard_vars program =
+  let open Program in
+  0
+  |> TransitionGraph.fold_edges_e (fun edge size -> Int.max (TransitionLabel.input_size (Transition.label edge)) size) (graph program)
+  |> Var.fresh_arg_list
 
-let rename_program_vars program =
-  let rename_map = RenameMap.from (standard_rename_map program) in
-  Program.rename_program_vars rename_map program, rename_map
+(* For each transition rename standard_vars transition *)
+
+let rename_graph standard_vars graph =
+  let transitions = (TransitionSet.enum % TransitionGraph.transitions) graph in
+    Enum.fold (fun program_graph transition -> TransitionGraph.replace_edge_e transition (Transition.rename standard_vars transition) program_graph) graph transitions
+
+let rename_program program =
+  let standard_vars = standard_vars program in
+  Program.map_graph (rename_graph standard_vars) program, standard_vars
+
+let rename_program_option =
+  Option.map (Tuple2.first % rename_program)

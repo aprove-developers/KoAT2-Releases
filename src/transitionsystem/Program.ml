@@ -8,8 +8,6 @@ module LocationMap = Map.Make (Location)
 
 type t = {
     graph: TransitionGraph.t;
-    (* Variables as ordered in the original input file*)
-    program_vars_ordered: Var.t list;
     start: Location.t;
     invariants: Constraint.t LocationMap.t;
   }
@@ -63,23 +61,7 @@ let mk transitions =
   |> add_locations_to_graph locations
   |> add_transitions transitions
 
-let rename_program_vars rename_map program =
-  let rename_graph graph =
-    let transitions = (TransitionSet.enum % TransitionGraph.transitions) graph in
-    Enum.fold
-      (fun program_graph transition -> TransitionGraph.replace_edge_e transition (Transition.rename rename_map transition) program_graph)
-      graph transitions
-  in
-  {
-    graph = rename_graph program.graph;
-    program_vars_ordered = List.map (fun v -> RenameMap.find v rename_map ~default:v) program.program_vars_ordered;
-    start = program.start;
-    invariants = program.invariants;
-  }
-  |> tap (fun p -> Printf.printf "vars %s" @@ (VarSet.to_string % VarSet.of_list @@ p.program_vars_ordered))
-
-
-let rename_locations program =
+let rename program =
   let counter: int ref = ref 0 in
   let map = Hashtbl.create 10 in
   let name location =
@@ -97,12 +79,11 @@ let rename_locations program =
   let new_graph = TransitionGraph.map_vertex name program.graph in
   {
     graph = new_graph;
-    program_vars_ordered = program.program_vars_ordered;
     start = new_start;
     invariants = empty_inv_map (TransitionGraph.locations new_graph)
   }
 
-let from transitions start program_vars_ordered =
+let from transitions start =
   transitions
   |> fun transitions ->
      if transitions |> List.map Transition.target |> List.mem_cmp Location.compare start then
@@ -111,7 +92,6 @@ let from transitions start program_vars_ordered =
        let new_graph = mk (List.enum transitions) in
        {
          graph = new_graph;
-         program_vars_ordered;
          start = start;
          invariants = empty_inv_map (TransitionGraph.locations new_graph)
        }
@@ -124,9 +104,6 @@ let invariant location program = LocationMap.find location (program.invariants)
 
 let transitions =
   TransitionGraph.transitions % graph
-
-let program_vars_ordered program =
-  program.program_vars_ordered
 
 let vars program =
   program

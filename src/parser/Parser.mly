@@ -22,7 +22,7 @@
 %left				POW
 
 
-%start <TransitionLabel.trans_id_counter -> Program.t> onlyProgram
+%start <TransitionLabel.trans_id_counter -> Program.t * Var.t list> onlyProgram
 
 %start <TransitionLabel.trans_id_counter -> Program.t> onlyProgram_simple
 
@@ -42,7 +42,7 @@
 
 %start <ExactProgramTypes.ExactProgram.t> exactProgram
 
-%type <TransitionLabel.trans_id_counter -> Program.t> program
+%type <TransitionLabel.trans_id_counter -> Program.t * Var.t list> programAndVariables
 
 %type <Formulas.Formula.t> formula
 
@@ -78,22 +78,22 @@ onlyGoal :
                 { g };
 
 onlyProgram :
-        |       p = program; EOF
+        |       p = programAndVariables; EOF
                   { p } ;
 
-program :
+programAndVariables :
         |       goal
                 start = start
                 variables = variables
                 transitions = transitions
-                  { fun trans_id_counter -> Program.from (transitions trans_id_counter variables) start variables } ;
+                  { fun trans_id_counter -> Program.from (transitions trans_id_counter variables) start, variables } ;
 
 programAndGoal :
 	|	g = goal
 		start = start
 		variables = variables
                 transitions = transitions ;EOF
-                  { fun trans_id_counter -> (Program.from (transitions trans_id_counter variables) start variables, g) } ;
+                  { fun trans_id_counter -> (Program.from (transitions trans_id_counter variables) start, g) } ;
 
 onlyProgram_simple:
         |       graph = program_simple; EOF

@@ -63,6 +63,7 @@ let create_sub_program trans_id_counter scc scc_locs program: Program.t =
               TransitionLabel.make_prob
                 trans_id_counter
                 ~cvect:(Polynomials.Polynomial.zero, RealBound.zero)
+                ~input_vars_ordered:(Program.input_vars program |> VarSet.to_list)
                 ~update:(
                   Program.input_vars program
                   |> VarSet.enum
@@ -89,7 +90,7 @@ let create_sub_program trans_id_counter scc scc_locs program: Program.t =
           (all_new_transitions)
         |> TransitionSet.to_list
       )
-      new_start_location (Program.program_vars_ordered program)
+      new_start_location
   in
   Logger.with_log logger Logger.DEBUG (fun () -> "create_sub_program", []) ~result:(Program.to_string ~show_gtcost:true) execute
 
@@ -131,6 +132,7 @@ let cut_scc trans_id_counter scc scc_locs program cvect:  (Program.t * GeneralTr
         TransitionLabel.(make_prob
             trans_id_counter
             ~cvect:cvect
+            ~input_vars_ordered:(Program.input_vars program |> VarSet.to_list)
             ~update:(
                 VarSet.fold
                   (fun v ->

@@ -36,6 +36,9 @@ let hash = Hashtbl.hash
 
 let mk_helper domain n = Helper (domain, n)
 
+(* Make an argument variable referring to the position specified in i *)
+let mk_arg i = Argument i
+
 let to_string = function
   | Var str -> str
   | Helper (Real,i) -> "@_" ^ (String.of_int i)
