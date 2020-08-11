@@ -35,7 +35,7 @@ let print_all_deterministic_bounds: ?html:bool -> Program.t -> Approximation.t -
 (** Prints overall expected bounds of the program to the shell. *)
 let print_overall_expected_bound ?(html=false) bound: unit =
   let r_termcomp = RealBound.show_complexity_termcomp @@ RealBound.asymptotic_complexity bound in
-  let r_bound    = str_header_big "Overall Timebound:" >> str (RealBound.show ~complexity:false bound) in
+  let r_bound    = str_header_big "Overall Bound:" >> str (RealBound.show ~complexity:false bound) in
   let output_body = title doc_title >> r_bound in
   print_string @@ r_termcomp ^  "\n\n" ^ Formatter.render_default ~format:(if html then Html else Plain) output_body
 
