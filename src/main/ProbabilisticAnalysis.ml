@@ -1,6 +1,7 @@
 open Batteries
 open Parameter
 open ProofOutput
+open Goal
 
 let run probabilistic_goal (params: params) =
   let input = Option.default_delayed read_line params.input in
@@ -26,8 +27,8 @@ let run probabilistic_goal (params: params) =
     print_string (program_str ^ "\n\n")
   );
 
-  let result_print probabilistic_goal =
-    match probabilistic_goal with
+  let result_print goal =
+    match goal with
     | Goal.ExpectedComplexity -> (
       match params.result with
       |"termcomp" -> print_termcomp_expected
@@ -39,20 +40,35 @@ let run probabilistic_goal (params: params) =
       match params.result with
       |"termcomp" -> print_termcomp_expected_size v
       |"all" -> print_all_expected_bounds_expected_size v ~html:params.html
-      |_ -> print_overall_expected_costbound ~html:params.html
+      |_ -> print_overall_expected_sizebound ~html:params.html v
     )
   in
 
   let cache = CacheManager.new_cache () in
 
-  input
-  |> MainUtil.read_input (CacheManager.trans_id_counter cache) params.simple_input
-  |> Option.map (if params.rename_locations then Program.rename_locations else identity)
-  |> Option.map (if params.rename_program_vars then rename_program_vars else identity)
-  |> tap (Option.may (fun program ->
+  let program_and_goal =
+    input
+    |> MainUtil.read_input (CacheManager.trans_id_counter cache) params.simple_input
+    |> Option.map (if params.rename_locations then Program.rename_locations else identity)
+    (* Optionally rename program and the target variable of goal EXPECTEDSIZE *)
+    |> Option.map (fun prog ->
+        if params.rename_program_vars then
+          let (renamed_prog, rename_map) = rename_program_vars prog in
+          match probabilistic_goal with
+          | ExpectedSize v ->
+              let new_goal = ExpectedSize (RenameMap.find v rename_map ~default:v) in
+              renamed_prog, new_goal
+          | _ ->
+              renamed_prog, probabilistic_goal
+        else
+          prog, probabilistic_goal
+    )
+  in
+  program_and_goal
+  |> tap (Option.may (fun (program, goal) ->
       if params.print_system_for_paper then
         GraphPrint.print_system_for_paper ~format:params.print_system_for_paper_format ~outdir:output_dir ~file:input_filename program))
-  |> Option.map (fun program ->
+  |> Option.map (fun (program, goal) ->
          (program, Approximation.create program)
          |> tap (fun (program, appr) ->
                 if params.print_system_id then
@@ -77,7 +93,7 @@ let run probabilistic_goal (params: params) =
                           ~generate_invariants_bottom_up:Preprocessor.generate_invariants params.bottom_up cache
                         )
                    else (program, appr))
-         |> tap (fun (program, appr) -> result_print probabilistic_goal program appr)
+         |> tap (fun (program, appr) -> result_print goal program appr)
          |> tap (fun (program, appr) ->
                 if params.print_system then
                   GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:(input_filename ^ "_bounded" ) program)

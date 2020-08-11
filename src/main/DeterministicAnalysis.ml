@@ -39,7 +39,7 @@ let run (params: params) =
   input
   |> MainUtil.read_input (CacheManager.trans_id_counter cache) params.simple_input
   |> Option.map (if params.rename_locations then Program.rename_locations else identity)
-  |> Option.map (if params.rename_program_vars then rename_program_vars else identity)
+  |> Option.map (if params.rename_program_vars then Tuple2.first % rename_program_vars else identity)
   |> Option.map (fun program ->
          (program, Approximation.create program)
          |> Preprocessor.process (CacheManager.trans_id_counter cache) params.preprocessing_strategy params.preprocessors

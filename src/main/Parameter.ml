@@ -118,4 +118,5 @@ let standard_rename_map program =
   List.combine (Program.program_vars_ordered program) (Var.fresh_arg_list vars_count)
 
 let rename_program_vars program =
-  Program.rename_program_vars (RenameMap.from @@ standard_rename_map program) program
+  let rename_map = RenameMap.from (standard_rename_map program) in
+  Program.rename_program_vars rename_map program, rename_map

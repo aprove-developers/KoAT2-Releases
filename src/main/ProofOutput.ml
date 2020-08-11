@@ -40,13 +40,18 @@ let print_overall_expected_bound ?(html=false) bound: unit =
   print_string @@ r_termcomp ^  "\n\n" ^ Formatter.render_default ~format:(if html then Html else Plain) output_body
 
 (** Prints the overall expected timebound of the program to the shell. *)
-let print_overall_expected_costbound ?(html=false) (program: Program.t) (appr: Approximation.t): unit =
+let print_overall_expected_timebound ?(html=false) (program: Program.t) (appr: Approximation.t): unit =
   let bound = Approximation.program_exptimebound appr program in
   print_overall_expected_bound ~html:html bound
 
-(** Prints the overall expected costbound of the program to the shell. *)
+(** Prints the overall expected sizebound of the program for a given variable to the shell. *)
 let print_overall_expected_costbound ?(html=false) (program: Program.t) (appr: Approximation.t): unit =
   let bound = Approximation.program_expcostbound appr program in
+  print_overall_expected_bound ~html:html bound
+
+(** Prints the overall expected sizebound of the program for a given variable to the shell. *)
+let print_overall_expected_sizebound ?(html=false) (var: Var.t) (program: Program.t) (appr: Approximation.t): unit =
+  let bound = Approximation.program_expsizebound appr program var in
   print_overall_expected_bound ~html:html bound
 
 
