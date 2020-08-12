@@ -25,6 +25,10 @@ val rename : t -> t
 
 val from : Transition.t list -> Location.t -> t
 
+(**  Like from but expects a string for the start location. This function will then automatically
+     determine the start location's arity *)
+val from_startstr: Transition.t list -> string -> t
+
 val graph : t -> TransitionGraph.t
 
 val invariant: Location.t -> t -> Constraint.t
@@ -65,6 +69,8 @@ val transitions : t -> TransitionSet.t
 
 (** Returns all locations which occur in the transitions, but each location only once. *)
 val locations : Transition.t Enum.t -> Location.t Enum.t
+
+val locations_of_program: t -> LocationSet.t
 
 val start : t -> Location.t
 

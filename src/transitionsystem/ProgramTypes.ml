@@ -3,13 +3,17 @@ open Constraints
 
 module Location =
   struct
-    type t = string [@@deriving eq, ord]
+    (* name of the location and the locations arity *)
+    type t = string * int [@@deriving eq, ord]
 
-    let to_string l = l
+    let to_string (name,arity) = name
+
+    let name (name,_) = name
+    let arity (_,arity) = arity
 
     let hash l = Hashtbl.hash l
 
-    let of_string name = name
+    let of_string_and_arity name arity = (name,arity)
   end
 
 module LocationSet =

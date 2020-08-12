@@ -8,7 +8,7 @@ let mk_transition trans_id_counter lhs (cost: Polynomial.t) gtcost (rhs: string 
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
-	 (Location.of_string (Tuple2.first lhs),
+	 (Location.of_string_and_arity (Tuple2.first lhs) (List.length @@ Tuple2.second lhs),
           TransitionLabel.mk
             trans_id_counter
             ~cvect:(cost, gtcost |> RealPolynomial.of_intpoly |> RealBound.of_poly)
@@ -16,7 +16,7 @@ let mk_transition trans_id_counter lhs (cost: Polynomial.t) gtcost (rhs: string 
             ~targets:(Tuple2.second rhs)
             ~patterns:(List.map Var.of_string (Tuple2.second lhs))
             ~guard:constr,
-          (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))))
+          (Location.of_string_and_arity (Tuple2.first (List.hd (Tuple2.second rhs))) (List.length @@ Tuple2.second @@ List.hd @@ Tuple2.second rhs)))
        )
   |> List.map (fun (l,t,l') -> (l,t ~vars,l'))
 
@@ -27,7 +27,7 @@ let mk_transition trans_id_counter lhs (cost: Polynomial.t) gtcost (rhs: string 
   |> List.map (fun constr ->
           let id = TransitionLabel.get_unique_gt_id trans_id_counter () in
           List.map (fun (prob, comkind, targets) ->
-            (Location.of_string (Tuple2.first lhs),
+            (Location.of_string_and_arity (Tuple2.first lhs) (List.length @@ Tuple2.second lhs),
               TransitionLabel.mk_prob
                 trans_id_counter
                 ~cvect:(cost, gtcost |> RealPolynomial.of_intpoly |> RealBound.of_poly)
@@ -37,7 +37,7 @@ let mk_transition trans_id_counter lhs (cost: Polynomial.t) gtcost (rhs: string 
                 ~guard:constr
                 ~gt_id:id
                 ~probability:prob,
-              (Location.of_string (Tuple2.first (List.hd targets))))
+              (Location.of_string_and_arity (Tuple2.first (List.hd targets)) (List.length @@ Tuple2.second @@ List.hd targets)))
         ) rhs)
   |> List.concat
   |> List.map (fun (l,t,l') -> (l,t ~vars,l'))
@@ -53,7 +53,7 @@ let mk_transition_simple trans_id_counter (start: string) (cost: Polynomial.t) g
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
-	 (Location.of_string start,
+	 (Location.of_string_and_arity start (List.length default_vars),
           TransitionLabel.mk
             trans_id_counter
             ~com_kind:(Tuple2.first rhs)
@@ -61,7 +61,7 @@ let mk_transition_simple trans_id_counter (start: string) (cost: Polynomial.t) g
             ~patterns:default_vars
             ~guard:constr
             ~cvect:(cost, RealPolynomial.of_intpoly gtcost |> RealBound.of_poly)
-            ~vars:default_vars, (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))))
+            ~vars:default_vars, (Location.of_string_and_arity (Tuple2.first (List.hd (Tuple2.second rhs))) (List.length default_vars)))
        )
 
 let mk_transition_simple_prob trans_id_counter (start: string) (cost: Polynomial.t) gtcost (rhs: (OurFloat.t * string * (string * TransitionLabel.UpdateElement.t list) list) list) (formula: Formula.t): Transition.t list =
@@ -70,7 +70,7 @@ let mk_transition_simple_prob trans_id_counter (start: string) (cost: Polynomial
   |> List.map (fun constr ->
           List.map (fun (prob, comkind, targets) ->
           let id = TransitionLabel.get_unique_gt_id trans_id_counter () in
-          (Location.of_string start,
+          (Location.of_string_and_arity start (List.length default_vars),
             TransitionLabel.mk_prob
               trans_id_counter
               ~cvect:(cost, RealPolynomial.of_intpoly gtcost |> RealBound.of_poly)
@@ -81,7 +81,7 @@ let mk_transition_simple_prob trans_id_counter (start: string) (cost: Polynomial
               ~vars:default_vars
               ~gt_id:id
               ~probability:prob,
-            (Location.of_string (Tuple2.first (List.hd targets))))
+            (Location.of_string_and_arity (Tuple2.first (List.hd targets)) (List.length default_vars)))
        ) rhs)
   |> List.concat
 

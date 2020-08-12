@@ -9,8 +9,10 @@ sig
   val equal : t -> t -> bool
   val compare : t -> t -> int
   val hash : t -> int
+  val name: t -> string
+  val arity: t -> int
   val to_string : t -> string
-  val of_string : string -> t
+  val of_string_and_arity : string -> int -> t
 end
 module LocationSet :
 sig

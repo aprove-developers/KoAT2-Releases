@@ -86,14 +86,14 @@ programAndVariables :
                 start = start
                 variables = variables
                 transitions = transitions
-                  { fun trans_id_counter -> Program.from (transitions trans_id_counter variables) start, variables } ;
+                  { fun trans_id_counter -> Program.from_startstr (transitions trans_id_counter variables) start, variables } ;
 
 programAndGoal :
 	|	g = goal
 		start = start
 		variables = variables
                 transitions = transitions ;EOF
-                  { fun trans_id_counter -> (Program.from (transitions trans_id_counter variables) start, g) } ;
+                  { fun trans_id_counter -> (Program.from_startstr (transitions trans_id_counter variables) start, g) } ;
 
 onlyProgram_simple:
         |       graph = program_simple; EOF
@@ -123,7 +123,7 @@ goal :
 
 start :
 	|	LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
-		  { Location.of_string start } ;
+		  { start } ;
 
 transitions :
 	|	LPAR RULES transition = nonempty_list(transition) RPAR

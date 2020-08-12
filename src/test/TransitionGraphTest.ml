@@ -48,7 +48,11 @@ let tests =
           let cache = CacheManager.new_cache () in
           let trans_id_counter = CacheManager.trans_id_counter cache in
           let program = Readers.read_file trans_id_counter "../../examples/KoAT-2013/sect1-lin.koat" in
-          let transition = TransitionGraph.find_edge (Program.graph program) (Location.of_string "l1") (Location.of_string "l2") in
+          let transition =
+            TransitionGraph.transitions (Program.graph program)
+            |> TransitionSet.filter (fun (l,_,l') -> Location.(name l = "l1" && name l' = "l2"))
+            |> TransitionSet.any
+          in
           assert_equal_int 2 (Enum.count (Program.pre program transition))
         )
       );
@@ -64,7 +68,11 @@ let tests =
                        let trans_id_counter = CacheManager.trans_id_counter cache in
 
                        let program = Readers.read_file trans_id_counter "../../examples/KoAT-2013/sect1-lin.koat" in
-                       let t = TransitionGraph.find_edge (Program.graph program) (Location.of_string l) (Location.of_string l') in
+                       let t =
+                         TransitionGraph.transitions (Program.graph program)
+                         |> TransitionSet.filter (fun (l2,_,l2') -> Location.(name l2 = l && name l2' = l'))
+                         |> TransitionSet.any
+                       in
                        TransitionLabel.(assert_equal_bound
                                                   (Bound.of_poly (Readers.read_polynomial bound))
                                                   LocalSizeBound.(sizebound_local (CacheManager.lsb_cache cache) program `Upper t (Var.of_string var) |> Option.map as_bound |? default `Upper)

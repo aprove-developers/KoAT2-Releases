@@ -35,11 +35,14 @@ let locations transitions =
   |> Enum.concat_map (fun (l,_,l') -> List.enum [l; l'])
   |> Enum.uniq_by Location.equal
 
+let locations_of_program =
+  LocationSet.of_enum % locations % TransitionSet.enum % transitions
+
 (* raises an exception if the program is not well formed *)
 let raise_if_not_well_formed t =
   let gts = generalized_transitions t in
 
-  let check_probability =
+  let check_probability () =
     GeneralTransitionSet.iter ( fun gt ->
       if not (OurFloat.(GeneralTransition.total_probability gt = one)) then
         raise  @@ NotWellFormed ("General Transition " ^ GeneralTransition.to_id_string gt
@@ -47,13 +50,30 @@ let raise_if_not_well_formed t =
     ) gts
   in
 
-  let check_transition_leading_back =
+  let check_transition_leading_back () =
     if TransitionSet.exists (Location.equal t.start % Transition.target) (transitions t) then
       raise (Failure "Transition leading back to the initial location.")
   in
 
-  check_probability;
-  check_transition_leading_back;
+  let check_arity () =
+    ignore @@ LocationSet.fold
+      (fun loc map ->
+        let name = Location.name loc in
+        let arity = Location.arity loc in
+        let prev_arity = Map.find_opt name map in
+        match prev_arity with
+        | None -> Map.add name arity map
+        | Some prev_arity ->
+            if not (prev_arity = arity) then (
+              raise @@ NotWellFormed ("Location " ^ name ^ " has arities " ^ Int.to_string prev_arity ^ ", and " ^ Int.to_string arity)
+            ) else map
+      )
+      (locations_of_program t) Map.empty
+  in
+
+  check_probability ();
+  check_transition_leading_back ();
+  check_arity ();
   t
 
 let add_locations_to_graph locations graph =
@@ -107,7 +127,7 @@ let rename program =
            Logger.(log Logging.(get Preprocessor) INFO (fun () -> "renaming", ["original", Location.to_string location; "new", new_name]));
            new_name
          )
-    |> Location.of_string
+    |> fun name -> Location.of_string_and_arity name (Location.arity location)
   in
   let new_start = name program.start in
   let new_graph = TransitionGraph.map_vertex name program.graph in
@@ -125,6 +145,18 @@ let from transitions start =
       invariants = empty_inv_map (TransitionGraph.locations new_graph)
     }
     |> raise_if_not_well_formed
+
+let from_startstr transitions start =
+  let start_trans =
+    transitions
+    |> List.filter ((=) start % Location.name % Transition.src)
+  in
+  let start_loc_arity = match start_trans with
+    | [] -> 0
+    | (t::ts) -> Location.arity (Transition.src t)
+  in
+
+  from transitions (Location.of_string_and_arity start start_loc_arity)
 
 let start program = program.start
 

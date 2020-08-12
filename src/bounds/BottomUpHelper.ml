@@ -41,7 +41,9 @@ let bottom_up_candidates program appr =
 
 let create_sub_program trans_id_counter scc scc_locs program: Program.t =
   let execute () =
-    let new_start_location = Location.of_string @@ Printf.sprintf "loc_start_bu_%i" (Batteries.unique ()) in
+    let new_start_location =
+      Location.of_string_and_arity (Printf.sprintf "loc_start_bu_%i" (Batteries.unique ())) (VarSet.cardinal @@ Program.input_vars program)
+    in
 
     let modified_outgoing_of_scc: TransitionSet.t =
       Program.transitions program
@@ -125,8 +127,12 @@ let untouched_scc_vars scc program =
 (* Cuts the given SCC out of the program and inserts a newly created general transition which is then returned
    together with the modified program *)
 let cut_scc trans_id_counter scc scc_locs program cvect:  (Program.t * GeneralTransition.t) =
-    let new_location1 = Location.of_string @@ Printf.sprintf "loc_bu_%i" (Batteries.unique ()) in
-    let new_location2 = Location.of_string @@ Printf.sprintf "loc_bu_%i" (Batteries.unique ()) in
+    let new_location1 =
+      Location.of_string_and_arity (Printf.sprintf "loc_bu_%i" (Batteries.unique ())) (VarSet.cardinal @@ Program.vars program)
+    in
+    let new_location2 =
+      Location.of_string_and_arity (Printf.sprintf "loc_bu_%i" (Batteries.unique ())) (VarSet.cardinal @@ Program.vars program)
+    in
     let untouched_vars = untouched_scc_vars scc program in
     let new_label =
         TransitionLabel.(make_prob
