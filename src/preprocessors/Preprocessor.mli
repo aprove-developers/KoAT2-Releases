@@ -10,7 +10,6 @@ type t =
   | CutUnsatisfiableTransitions
   | Chaining
   | CutZeroProbTransitions
-  | ProbabilityGreaterOne
   | ProbabilityLessOne
   | InvariantGeneration [@@deriving ord, eq]
 

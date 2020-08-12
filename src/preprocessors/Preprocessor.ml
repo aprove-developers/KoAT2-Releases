@@ -9,7 +9,6 @@ type t =
   | CutUnsatisfiableTransitions
   | Chaining
   | CutZeroProbTransitions
-  | ProbabilityGreaterOne
   | ProbabilityLessOne
   | InvariantGeneration[@@deriving ord, eq]
 
@@ -22,7 +21,6 @@ let show = function
   | Chaining -> "chaining"
   | InvariantGeneration -> "invgen"
   | CutZeroProbTransitions -> "zerotransitions"
-  | ProbabilityGreaterOne -> "greateroneprobability"
   | ProbabilityLessOne -> "lessoneprobability"
 
 let affects = function
@@ -31,7 +29,6 @@ let affects = function
   | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining]
   | Chaining                    -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
   | CutZeroProbTransitions      -> [CutUnreachableLocations; Chaining]
-  | ProbabilityGreaterOne       -> []
   | ProbabilityLessOne          -> [InvariantGeneration; CutUnsatisfiableTransitions]
 
 let lift_to_program transform program =
@@ -46,7 +43,6 @@ let transform trans_id_counter subject = function
   | Chaining                    -> lift_to_tuple (lift_to_program @@ Chaining.transform_graph trans_id_counter) subject
   | InvariantGeneration         -> lift_to_tuple InvariantGeneration.transform_program subject
   | CutZeroProbTransitions      -> lift_to_tuple CutZeroProbTransitions.transform_program subject
-  | ProbabilityGreaterOne       -> lift_to_tuple ProbabilityGreaterOne.check_program subject
   | ProbabilityLessOne          -> lift_to_tuple (ProbabilityLessOne.check_program trans_id_counter) subject
 
 type outer_t = t
