@@ -4,9 +4,9 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR l)
 (RULES
-  f(l) -{0;0}> g(l)
+  f(l) -{0}> g(l)
   # Loop 1
-  g(l) -{10;10}> g(UNIFORM(-8,-6))   :|: l >= 8
+  g(l) -{10}> g(UNIFORM(-8,-6))   :|: l >= 8
   g(l) -> h(l)                       :|: l<8
   # Loop 2
   h(l) -> h(l-1)                     :|: l>0

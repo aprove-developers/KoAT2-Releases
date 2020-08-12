@@ -3,9 +3,9 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x y m n)
 (RULES
-  f(x,y,m,n) -{0;0}> g(x,y,m,n)
+  f(x,y,m,n) -{0}> g(x,y,m,n)
   # Start loop
-  g(x,y,m,n) -{0;0}> h(x,y,m,n) :|: x+3<=n
+  g(x,y,m,n) -{0}> h(x,y,m,n) :|: x+3<=n
   h(x,y,m,n) -> 0.5:g(x,y+1,m,n) :+: 0.5:g(x,y,m,n) :|: y<m
   h(x,y,m,n) -> 0.25:g(x,y,m,n) :+: 0.25:g(x+1,y,m,n) :+: 0.25:g(x+2,y,m,n) :+: 0.25:g(x+3,y,m,n) :|: y>=m
 )

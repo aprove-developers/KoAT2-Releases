@@ -6,8 +6,8 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR N)
 (RULES
-  f(N) -{0;0}> g(N)                        # additional entrance transition
-  g(N) -{0;0}> h(N) :|: N>0                # procedure start
-  h(N) -{0;0}> i(N)                        # the key is found
-  h(N) -{1;1}> [2/3]:g(N-1) :+: [1/3]:g(N) # recursive calls
+  f(N) -{0}> g(N)                        # additional entrance transition
+  g(N) -{0}> h(N) :|: N>0                # procedure start
+  h(N) -{0}> i(N)                        # the key is found
+  h(N) -{1}> [2/3]:g(N-1) :+: [1/3]:g(N) # recursive calls
 )

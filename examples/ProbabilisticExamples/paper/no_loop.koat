@@ -5,9 +5,9 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR F)
 (RULES
-  f(F) -{0;0}> [1/3]:g(0) :+: [2/3]:h(F) # do not generate costs
-  g(F) -{3;3}> i(F) # generate costs of 3
-  h(F) -{0;0}> [1/2]:j(1) :+: [1/2]:k(1) # do not generate costs
-  j(F) -{5;5}> l(F) # generate costs of 5
-  k(F) -{7;7}> m(F) # generate costs of 7
+  f(F) -{0}> [1/3]:g(0) :+: [2/3]:h(F) # do not generate costs
+  g(F) -{3}> i(F) # generate costs of 3
+  h(F) -{0}> [1/2]:j(1) :+: [1/2]:k(1) # do not generate costs
+  j(F) -{5}> l(F) # generate costs of 5
+  k(F) -{7}> m(F) # generate costs of 7
 )

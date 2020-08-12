@@ -12,8 +12,8 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x1 x2 i y)
 (RULES
-  f(x1,x2,i,y) -{0;0}> g(0,1,0,y)
-  g(x1,x2,i,y) -{0;0}> g(x2,x1+x2,i+1,y)                     :|: i < y
-  g(x1,x2,i,y) -{0;0}> h(x1,x2,i,y)
+  f(x1,x2,i,y) -{0}> g(0,1,0,y)
+  g(x1,x2,i,y) -{0}> g(x2,x1+x2,i+1,y)                     :|: i < y
+  g(x1,x2,i,y) -{0}> h(x1,x2,i,y)
   h(x1,x2,i,y) -> 0.5:h(x1,x2-2,i,y) :+: 0.5:h(x1,x2+1,i,y)  :|: x2 > 0
 )

@@ -7,6 +7,6 @@
 (VAR x n)
 (RULES
   # first loop
-  f(x,n) -{0;0}> g(x,n)
+  f(x,n) -{0}> g(x,n)
   g(x,n) -> g(BERNOULLI([1/2]),n)        :|: x<n
 )

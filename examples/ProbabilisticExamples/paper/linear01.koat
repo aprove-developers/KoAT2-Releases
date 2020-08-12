@@ -6,6 +6,6 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x)
 (RULES
-  f(x) -{0;0}> g(x)
+  f(x) -{0}> g(x)
   g(x) -> 0.5:g(x-1) :+: 0.5:g(x-2) :|: x>=2
 )

@@ -3,10 +3,10 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x y)
 (RULES
-  f(x,y) -{0;0}> g(x,y)                              :|: y>=0
+  f(x,y) -{0}> g(x,y)                              :|: y>=0
   # Start Outer loop
-  g(x,y) -{0;0}> 0.25:h(x-1,y+1) :+: 0.25:h(x-1,y)   :|: x>0
+  g(x,y) -{0}> 0.25:h(x-1,y+1) :+: 0.25:h(x-1,y)   :|: x>0
   # Inner loop
   h(x,y) -> h(x,y-1)                                 :|: y>0
-  h(x,y) -{2;2}> g(x,y)                              :|: y<=0
+  h(x,y) -{2}> g(x,y)                              :|: y<=0
 )

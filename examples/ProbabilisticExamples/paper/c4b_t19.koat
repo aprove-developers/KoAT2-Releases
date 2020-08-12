@@ -4,10 +4,10 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR i k)
 (RULES
-  f(i,k) -{0;0}> g(i,k)
+  f(i,k) -{0}> g(i,k)
   # Loop 1
   g(i,k) -> 0.5:g(i-1,k) :+: 0.5:g(i,k)   :|: i>100
-  g(i,k) -{0;0}> h(i+k+50,k)              :|: i<=100
+  g(i,k) -{0}> h(i+k+50,k)              :|: i<=100
   # Loop 2
   h(i,k) -> h(i-1,k)                      :|: i>=0
 

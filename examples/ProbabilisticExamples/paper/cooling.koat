@@ -4,12 +4,12 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR mt st t)
 (RULES
-  f(mt,st,t) -{0;0}> g(mt,st,t)
+  f(mt,st,t) -{0}> g(mt,st,t)
   # Start outer loop
-  g(mt,st,t) -{0;0}> h(mt,st,t)                                                :|: t>=0
+  g(mt,st,t) -{0}> h(mt,st,t)                                                :|: t>=0
   # inner loop
   h(mt,st,t) -> h(mt-1,st,t)                                                   :|: mt>st
   # exit inner loop
-  h(mt,st,t) -{0;0}> 0.1:i(mt+1,st,t) :+: 0.7:i(mt+2,st,t) :+: 0.2:i(mt+3,st,t)     :|: mt=st
-  i(mt,st,t) -{0;0}> g(UNIFORM(-1,1),st,t-5)
+  h(mt,st,t) -{0}> 0.1:i(mt+1,st,t) :+: 0.7:i(mt+2,st,t) :+: 0.2:i(mt+3,st,t)     :|: mt=st
+  i(mt,st,t) -{0}> g(UNIFORM(-1,1),st,t-5)
 )

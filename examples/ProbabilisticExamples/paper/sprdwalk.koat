@@ -5,7 +5,7 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x n)
 (RULES
-  f(x,n) -{0;0}> g(x,n)
+  f(x,n) -{0}> g(x,n)
   # Start loop
   g(x,n) -> g(UNIFORM(0,1),n) :|: x<n
 )

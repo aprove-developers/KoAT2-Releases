@@ -104,9 +104,9 @@ program_simple:
                   { fun trans_id_counter -> ParserUtil.mk_program_simple (transitions |> List.map (fun f -> f trans_id_counter) |> List.flatten) } ;
 
 transition_simple:
-	|	start = ID; cv = cvect; rhs = non_prob_transition_rhs; formula = withConstraints
+	|	start = ID; cv = const_probabilistic_cost_only; rhs = non_prob_transition_rhs; formula = withConstraints
 	          { fun trans_id_counter -> ParserUtil.mk_transition_simple trans_id_counter start (Tuple2.first cv) (Tuple2.second cv) rhs formula }
-  |	start = ID; cv = cvect ; rhs = prob_transition_rhs; formula = withConstraints
+  |	start = ID; cv = const_probabilistic_cost_only ; rhs = prob_transition_rhs; formula = withConstraints
 	    			{ fun trans_id_counter -> ParserUtil.mk_transition_simple_prob trans_id_counter start (Tuple2.first cv) (Tuple2.second cv) rhs formula } ;
 
 goal :
@@ -134,12 +134,13 @@ variables :
 		  { List.map Var.of_string vars } ;
 
 transition :
-	|	lhs = transition_lhs; cv = cvect ; rhs = non_prob_transition_rhs; formula = withConstraints
+	|	lhs = transition_lhs; cv = const_probabilistic_cost_only ; rhs = non_prob_transition_rhs; formula = withConstraints
 	          { fun trans_id_counter -> ParserUtil.mk_transition trans_id_counter lhs (Tuple2.first cv) (Tuple2.second cv) rhs formula }
-  | lhs = transition_lhs; cv = cvect ; rhs = prob_transition_rhs; formula = withConstraints
+  | lhs = transition_lhs; cv = const_probabilistic_cost_only ; rhs = prob_transition_rhs; formula = withConstraints
 	    			{ fun trans_id_counter -> ParserUtil.mk_transition_prob trans_id_counter lhs (Tuple2.first cv) (Tuple2.second cv) rhs formula } ;
 
-cvect :
+(* general cost parsing symbol *)
+/* cvect :
         |       MINUS LBRACE ub = polynomial COMMA lb = polynomial SEMICOLON gtb = polynomial RBRACE GREATERTHAN
                   { (ub, gtb) }
         |       MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
@@ -153,7 +154,16 @@ cvect :
         |       MINUS LBRACE ub = polynomial RBRACE GREATERTHAN
                   { (ub, Polynomial.one) }
         |       ARROW
-                  { (Polynomial.one, Polynomial.one) };
+                  { (Polynomial.one, Polynomial.one) }; */
+
+(* for now only parse constant non-expected costs *)
+const_probabilistic_cost_only :
+        | MINUS LBRACE i = UINT RBRACE GREATERTHAN
+						{ (Polynomial.of_int i, Polynomial.of_int i) }
+				| ARROW
+				    { (Polynomial.one, Polynomial.one) }
+
+
 transition_lhs :
 	|	start = ID; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR)
 	          { (start, patterns) } ;

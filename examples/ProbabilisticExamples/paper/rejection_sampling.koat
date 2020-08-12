@@ -1,15 +1,15 @@
-# Taken from absynth 
+# Taken from absynth
 
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR x y k n)
 (RULES
-  f(x,y,k,n) -{0;0}> g(x,y,k,n)
+  f(x,y,k,n) -{0}> g(x,y,k,n)
   # Start outer loop
-  g(x,y,k,n) -{0;0}> 0.5:h(x,y,1,n) :|: n>0
+  g(x,y,k,n) -{0}> 0.5:h(x,y,1,n) :|: n>0
   # Inner loop
-  h(x,y,k,n) -{0;0}> 0.5:i(1,y,k,n) :+: 0.5:i(1,y,k,n) :|: k>0
-  i(x,y,k,n) -{0;0}> 0.5:j(x,0,k,n) :+: 0.5:j(x,1,k,n) :|: k>0
+  h(x,y,k,n) -{0}> 0.5:i(1,y,k,n) :+: 0.5:i(1,y,k,n) :|: k>0
+  i(x,y,k,n) -{0}> 0.5:j(x,0,k,n) :+: 0.5:j(x,1,k,n) :|: k>0
   # Exit inner loop
   j(x,y,k,n) -> h(x,y,1,n) :|: x=y
   # Since we only allow conjunctions of constraints the guard not(x=y) is represented

@@ -7,7 +7,7 @@
 (VAR n i d s l g)
 (RULES
   # first loop
-  f(n,i,d,s,l,g) -{0;0}> g(n,i,d,s,l,g)
+  f(n,i,d,s,l,g) -{0}> g(n,i,d,s,l,g)
   # Start loop
   # i and d both 1: 0.4 * 0.3 = 0.12
   # i=1 and d=0: 0.3*0.6 = 0.18
