@@ -12,7 +12,9 @@ let print_all_bounds_with_overall_result exp ?(html=false) ?(overall_expbound=No
       >> str (Approximation.overall_result_string ~overall_expbound:overall_expbound program exp appr)
       >> newline
       >> newline
-      >> Approximation.output_formatted ~embed_raw_svg:html program exp appr
+      >> Approximation.output_formatted
+        ~embeddings:(if html then [FormattedString.mk_raw_str (GraphPrint.get_system_for_paper ~format:"svg" program)] else [])
+        program exp appr
   in
 
   print_string @@

@@ -210,7 +210,7 @@ let overall_result_string ?(overall_expbound=None) program expected appr =
       else
         "WORST_CASE( ?, " ^ Bound.to_string overall_costbound ^ ")"
 
-let output_formatted ?(embed_raw_svg=false) program expected appr =
+let output_formatted ?(embeddings=[]) program expected appr =
   let overall_timebound = program_timebound appr program in
   let overall_exptimebound = program_exptimebound appr program in
 
@@ -218,7 +218,7 @@ let output_formatted ?(embed_raw_svg=false) program expected appr =
    (str_header_big "Initial Complexity Problem"
       >> (write_format @@ Program.to_formatted_string ~show_gtcost:expected program) >> newline
       (* only include graph in html output *)
-      >> when_m embed_raw_svg (raw_str @@ GraphPrint.get_system_for_paper ~format:"svg" program)))
+      >> mapM write_format embeddings ) )
 
   >> paragraph
       (str_header_big "Timebounds: "
@@ -257,4 +257,4 @@ let output_formatted ?(embed_raw_svg=false) program expected appr =
         >> write_format (ExpectedSizeApproximation.to_formatted ~print_lower:false appr.expsize)))
 
 let output prog exp appr =
-  render_default ~format:Plain @@ output_formatted ~embed_raw_svg:false prog exp appr
+  render_default ~format:Plain @@ output_formatted ~embeddings:[] prog exp appr

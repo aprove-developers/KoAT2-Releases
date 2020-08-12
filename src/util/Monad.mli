@@ -17,4 +17,8 @@ module Make :
     val (>>): 'a t -> 'b t -> 'b t
 
     val when_m: bool -> unit t -> unit t
+
+    val sequence: 'a t list -> 'a list t
+
+    val mapM: ('a -> 'b t) -> 'a list -> 'b list t
   end

@@ -1,3 +1,5 @@
+open Batteries
+
 module Make
   (M :
     sig
@@ -21,5 +23,15 @@ module Make
         f
       else
         pure ()
+
+    let rec sequence = function
+      | [] -> pure []
+      | (m::ms) ->
+          m
+          >>= fun v -> sequence ms
+          >>= fun vs -> pure (v::vs)
+
+    let mapM f =
+      sequence % List.map f
 
   end

@@ -36,7 +36,7 @@ val expcost : t -> GeneralTransitionApproximation.t
     *)
 val overall_result_string : ?overall_expbound:(RealBound.t option) -> Program.t -> bool -> t -> string
 
-val output_formatted : ?embed_raw_svg:bool -> Program.t -> bool -> t -> unit FormatMonad.Monad.t
+val output_formatted : ?embeddings:FormattedString.t list -> Program.t -> bool -> t -> unit FormatMonad.Monad.t
 
 (* Output as plain text*)
 val output : Program.t -> bool -> t -> String.t
