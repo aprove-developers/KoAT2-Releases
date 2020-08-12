@@ -26,6 +26,6 @@ let run (params: params) =
        (fun (program, goal) ->
           program
           |> fun program -> (program, Approximation.create program)
-          |> Preprocessor.process (CacheManager.trans_id_counter cache) Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne])
+          |> Preprocessor.process (CacheManager.trans_id_counter cache) Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration])
           |> fun (prog, appr) -> LexRSM.find_whole_prog (CacheManager.lrsm_cache cache) prog goal)
   |> ignore

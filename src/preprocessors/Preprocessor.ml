@@ -9,7 +9,6 @@ type t =
   | CutUnsatisfiableTransitions
   | Chaining
   | CutZeroProbTransitions
-  | ProbabilityLessOne
   | InvariantGeneration[@@deriving ord, eq]
 
 let generate_invariants =
@@ -21,7 +20,6 @@ let show = function
   | Chaining -> "chaining"
   | InvariantGeneration -> "invgen"
   | CutZeroProbTransitions -> "zerotransitions"
-  | ProbabilityLessOne -> "lessoneprobability"
 
 let affects = function
   | CutUnreachableLocations     -> []
@@ -29,7 +27,6 @@ let affects = function
   | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining]
   | Chaining                    -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
   | CutZeroProbTransitions      -> [CutUnreachableLocations; Chaining]
-  | ProbabilityLessOne          -> [InvariantGeneration; CutUnsatisfiableTransitions]
 
 let lift_to_program transform program =
   MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (const graph) program)))
@@ -43,7 +40,6 @@ let transform trans_id_counter subject = function
   | Chaining                    -> lift_to_tuple (lift_to_program @@ Chaining.transform_graph trans_id_counter) subject
   | InvariantGeneration         -> lift_to_tuple InvariantGeneration.transform_program subject
   | CutZeroProbTransitions      -> lift_to_tuple CutZeroProbTransitions.transform_program subject
-  | ProbabilityLessOne          -> lift_to_tuple (ProbabilityLessOne.check_program trans_id_counter) subject
 
 type outer_t = t
 module PreprocessorSet =

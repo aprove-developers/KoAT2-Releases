@@ -10,7 +10,6 @@ type t =
   | CutUnsatisfiableTransitions
   | Chaining
   | CutZeroProbTransitions
-  | ProbabilityLessOne
   | InvariantGeneration [@@deriving ord, eq]
 
 val generate_invariants : Program.t -> Program.t

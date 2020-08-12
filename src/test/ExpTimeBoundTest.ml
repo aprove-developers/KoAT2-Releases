@@ -48,7 +48,7 @@ let tests =
                 (prog, Approximation.create prog )
                 |> Preprocessor.process (CacheManager.trans_id_counter cache)
                     Preprocessor.process_til_fixpoint
-                    Preprocessor.[InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations; CutZeroProbTransitions; ProbabilityLessOne]
+                    Preprocessor.[InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations; CutZeroProbTransitions]
                 |> (fun (p,appr) -> Bounds.find_exp_bounds false ~refined_smt_timeout:(Some 5.0) ~generate_invariants_bottom_up:Preprocessor.generate_invariants true cache p appr)
               in
               let expcost_bound = Approximation.program_expcostbound approx processed_prog in

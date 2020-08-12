@@ -25,7 +25,7 @@ let run (params: params) =
   |> Option.may (fun (program, _) ->
         let gts =
           (program, Approximation.create program)
-          |> Preprocessor.process (CacheManager.trans_id_counter cache) Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; ProbabilityLessOne])
+          |> Preprocessor.process (CacheManager.trans_id_counter cache) Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration])
           (* get program *)
           |> Tuple2.first
           |> Program.generalized_transitions
