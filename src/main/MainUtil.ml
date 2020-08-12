@@ -19,7 +19,7 @@ let read_input_varlist trans_id_counter ?(rename=false) program_str =
   try
     program_str
     |> Readers.read_file_varlist trans_id_counter
-    |> fun (p,vs) -> (if rename then Program.rename p, vs else Program.rename p,vs)
+    |> fun (p,vs) -> (if rename then Program.rename p, vs else p,vs)
     |> Option.some
   with TransitionLabel.RecursionNotSupported ->
     prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now."; None
