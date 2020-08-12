@@ -10,7 +10,7 @@ let check_program trans_id_counter program =
   let trans_prob_less_1 =
     program
     |> Program.generalized_transitions
-    |> GeneralTransitionSet.filter (fun gen_trans -> GeneralTransition.total_probability gen_trans < (1. |> OurFloat.of_float))
+    |> GeneralTransitionSet.filter (fun gt -> OurFloat.(GeneralTransition.total_probability gt < one))
   in
   if GeneralTransitionSet.is_empty trans_prob_less_1 then
     MaybeChanged.same program
@@ -42,6 +42,12 @@ let check_program trans_id_counter program =
                                       ~probability:(OurFloat.(-) (OurFloat.of_float 1.) (GeneralTransition.total_probability trans)),
                                   new_sink))
     in
+
+    Logger.log logger Logger.DEBUG (fun () -> "Probability less one",
+      [ "trans_prob_less_1", GeneralTransitionSet.to_id_string trans_prob_less_1
+      ; "new_sink", Location.to_string new_sink
+      ]
+    ) ;
 
     program
     |> Program.transitions

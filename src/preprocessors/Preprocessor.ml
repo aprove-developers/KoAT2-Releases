@@ -32,7 +32,7 @@ let affects = function
   | Chaining                    -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
   | CutZeroProbTransitions      -> [CutUnreachableLocations; Chaining]
   | ProbabilityGreaterOne       -> []
-  | ProbabilityLessOne          -> []
+  | ProbabilityLessOne          -> [InvariantGeneration; CutUnsatisfiableTransitions]
 
 let lift_to_program transform program =
   MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (const graph) program)))
