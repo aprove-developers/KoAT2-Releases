@@ -17,7 +17,7 @@ let print_graph ?(format="png") out_dir name graph output_graph =
   (* Generate a png from the dot file with an external call to graphviz *)
   ignore (Sys.command ("dot -T " ^ format ^ " -o " ^ full_path format ^ " " ^ full_path "dot"))
 
-let graph_to_string ?(format="svg") graph output_graph = 
+let graph_to_string ?(format="svg") graph output_graph =
   Random.self_init ();
   let rd = Random.int 1000000 in
   let dir_name = "tmp" ^ (string_of_int rd) in
@@ -31,7 +31,7 @@ let graph_to_string ?(format="svg") graph output_graph =
   (* Generate a svg from the dot file with an external call to graphviz *)
   ignore (Sys.command ("dot -T " ^ format ^ " -o " ^ full_path format ^ " " ^ full_path "dot"));
 
-  let graph_string = 
+  let graph_string =
     (full_path format)
     |> Stdlib.open_in_bin
     |> BatPervasives.input_all
@@ -130,19 +130,14 @@ let label l =
     in
 
     let cost =
-      let tcost =
-        if Polynomials.Polynomial.(equal (TransitionLabel.cost l) one) then ""
-        else
-          Polynomials.Polynomial.to_string @@ TransitionLabel.cost l
-      in
       let gtcost =
         if BoundsInst.RealBound.(equal (TransitionLabel.gtcost l) one) then ""
         else
           BoundsInst.RealBound.show ~complexity:false @@ TransitionLabel.gtcost l
       in
-      if String.is_empty (tcost ^ gtcost) then ""
+      if String.is_empty (gtcost) then ""
       else
-        "\\{" ^ tcost ^ "; " ^ gtcost ^ "\\}"
+        "\\{" ^ gtcost ^ "\\}"
     in
 
 
@@ -154,7 +149,7 @@ let label l =
     ]
     |> List.filter (not % String.is_empty)
     |> String.concat "\n"
-  
+
   (* Dot configuration *)
   module DotPaper = Graph.Graphviz.Dot(struct
                                        include TransitionGraph
@@ -165,7 +160,7 @@ let label l =
                                        let vertex_name v = Location.to_string v
                                        let default_vertex_attributes _ = []
                                        let graph_attributes _ = []
-                                     end) 
+                                     end)
 
 let print_system_for_paper ?(format="pdf") ~outdir ~file program =
   print_graph ~format:format outdir (file ^ "_graph") (Program.graph program) DotPaper.output_graph
