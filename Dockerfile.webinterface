@@ -14,7 +14,7 @@ LABEL author="Fabian Meyer"
 # Pin the used opam packages
 ENV OPAM_PKGS_VERSION=e258e1424a5f4054abf6508395c56c324808f789
 
-RUN cd /home/opam/opam-repository; git pull; git checkout ${OPAM_PKGS_VERSION} .
+RUN cd /home/opam/opam-repository; git pull; git reset --hard ${OPAM_PKGS_VERSION}
 RUN opam update
 RUN opam upgrade
 RUN opam switch create -y 4.09.1+musl+static+flambda
