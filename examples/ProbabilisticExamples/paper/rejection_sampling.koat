@@ -6,16 +6,14 @@
 (RULES
   f(x,y,k,n) -{0}> g(x,y,k,n)
   # Start outer loop
-  g(x,y,k,n) -{0}> 0.5:h(x,y,1,n) :|: n>0
+  g(x,y,k,n) -{0}> h(x,y,1,n) :|: n>0
   # Inner loop
   h(x,y,k,n) -{0}> 0.5:i(1,y,k,n) :+: 0.5:i(1,y,k,n) :|: k>0
   i(x,y,k,n) -{0}> 0.5:j(x,0,k,n) :+: 0.5:j(x,1,k,n) :|: k>0
   # Exit inner loop
   j(x,y,k,n) -> h(x,y,1,n) :|: x=y
-  # Since we only allow conjunctions of constraints the guard not(x=y) is represented
-  # as two different transitions
-  j(x,y,k,n) -> h(x,y,0,n) :|: x>y
-  j(x,y,k,n) -> h(x,y,0,n) :|: x<y
+  j(x,y,k,n) -> h(x,y,0,n) :|: x>y || x<y
+
   # Exit outer loop
-  h(x,y,k,n) -> g(x,y,k,n-1) :|: k<=0
+  h(x,y,k,n) -> g(x,y,k,n-1)
 )

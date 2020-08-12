@@ -6,6 +6,8 @@ open ProgramTypes
 
 module LocationMap = Map.Make (Location)
 
+exception NotWellFormed of string
+
 type t = {
     graph: TransitionGraph.t;
     start: Location.t;
@@ -21,6 +23,38 @@ let equal equal_graph program1 program2 =
 
 let equivalent =
   equal TransitionGraph.equivalent
+
+let transitions t =
+  TransitionGraph.transitions t.graph
+
+let generalized_transitions program =
+  GeneralTransitionSet.of_transitionset (transitions program)
+
+let locations transitions =
+  transitions
+  |> Enum.concat_map (fun (l,_,l') -> List.enum [l; l'])
+  |> Enum.uniq_by Location.equal
+
+(* raises an exception if the program is not well formed *)
+let raise_if_not_well_formed t =
+  let gts = generalized_transitions t in
+
+  let check_probability =
+    GeneralTransitionSet.iter ( fun gt ->
+      if not (OurFloat.(GeneralTransition.total_probability gt = one)) then
+        raise  @@ NotWellFormed ("General Transition " ^ GeneralTransition.to_id_string gt
+          ^ " has total probability " ^ OurFloat.to_string (GeneralTransition.total_probability gt))
+    ) gts
+  in
+
+  let check_transition_leading_back =
+    if TransitionSet.exists (Location.equal t.start % Transition.target) (transitions t) then
+      raise (Failure "Transition leading back to the initial location.")
+  in
+
+  check_probability;
+  check_transition_leading_back;
+  t
 
 let add_locations_to_graph locations graph =
   locations
@@ -84,26 +118,19 @@ let rename program =
   }
 
 let from transitions start =
-  transitions
-  |> fun transitions ->
-     if transitions |> List.map Transition.target |> List.mem_cmp Location.compare start then
-       raise (Failure "Transition leading back to the initial location.")
-     else
-       let new_graph = mk (List.enum transitions) in
-       {
-         graph = new_graph;
-         start = start;
-         invariants = empty_inv_map (TransitionGraph.locations new_graph)
-       }
+    let new_graph = mk (List.enum transitions) in
+    {
+      graph = new_graph;
+      start = start;
+      invariants = empty_inv_map (TransitionGraph.locations new_graph)
+    }
+    |> raise_if_not_well_formed
 
 let start program = program.start
 
 let graph g = g.graph
 
 let invariant location program = LocationMap.find location (program.invariants)
-
-let transitions =
-  TransitionGraph.transitions % graph
 
 let vars program =
   program
@@ -224,6 +251,3 @@ let to_simple_string ~show_gtcost program =
 
 let test program trans g_set =
   GeneralTransitionSet.add (GeneralTransition.of_transitionset (program |> transitions) trans) g_set
-
-let generalized_transitions program =
-  GeneralTransitionSet.of_transitionset (transitions program)
