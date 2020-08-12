@@ -50,9 +50,6 @@ let run probabilistic_goal (params: params) =
     input
     |> MainUtil.read_input_varlist (CacheManager.trans_id_counter cache) ~rename:params.rename
     (* Print system before renaming *)
-    |> tap (Option.may (fun (program,_) ->
-        if params.print_system_for_paper then
-          GraphPrint.print_system_for_paper ~format:params.print_system_for_paper_format ~outdir:output_dir ~file:input_filename program))
     (* Rename program and the target variable of goal EXPECTEDSIZE *)
     |> flip Option.Monad.bind (
         fun (p, vs) -> match probabilistic_goal with
@@ -73,6 +70,9 @@ let run probabilistic_goal (params: params) =
         )
   in
   program_and_goal
+  |> tap (Option.may (fun (program,_) ->
+      if params.print_system_for_paper then
+        GraphPrint.print_system_for_paper ~format:params.print_system_for_paper_format ~outdir:output_dir ~file:input_filename program))
   |> Option.map (fun (program, goal) ->
          (program, Approximation.create program)
          |> tap (fun (program, appr) ->
