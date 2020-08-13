@@ -6,7 +6,7 @@ open TestHelper
 open BoundsInst
 
 let tests =
-  let varx = RealBound.of_var @@ Var.of_string "X" in
+  let varx = RealBound.of_var @@ Var.mk_arg 0 in
   "ExpTimeBound" >::: [
     "ExactBound" >:::
       List.map

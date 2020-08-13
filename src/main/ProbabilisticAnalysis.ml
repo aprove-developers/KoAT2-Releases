@@ -54,11 +54,10 @@ let run probabilistic_goal (params: params) =
     |> flip Option.Monad.bind (
         fun (p, vs) -> match probabilistic_goal with
           | ExpectedSize v -> (
-            let renamed_program, arg_vars = rename_program p in
             let i = List.index_of v vs in
             match i with
             | Some i ->
-                Some (renamed_program, ExpectedSize (Var.mk_arg i))
+                Some (p, ExpectedSize (Var.mk_arg i))
             | None ->
                 prerr_string @@
                   "The variable " ^ Var.to_string v
@@ -66,7 +65,7 @@ let run probabilistic_goal (params: params) =
                   ^ " does not exist. Possible values include " ^ Util.enum_to_string Var.to_string (List.enum vs);
                 None
           )
-          | g -> Some (Tuple2.first @@ rename_program p, g)
+          | g -> Some (p, g)
         )
   in
   program_and_goal

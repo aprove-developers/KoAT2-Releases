@@ -49,19 +49,32 @@ let default_vars =
   ["x"; "y"; "z"; "u"; "v"; "w"; "p"; "q"]
   |> List.map Var.of_string
 
+
+module VarMap = Map.Make(Var)
+
 let mk_transition_simple trans_id_counter (start: string) (cost: Polynomial.t) gtcost (rhs: string * (string * TransitionLabel.UpdateElement.t list) list) (formula: Formula.t): Transition.t list =
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
 	 (Location.of_string_and_arity start (List.length default_vars),
-          TransitionLabel.mk
+          TransitionLabel.make
             trans_id_counter
-            ~com_kind:(Tuple2.first rhs)
-            ~targets:(Tuple2.second rhs)
-            ~patterns:default_vars
-            ~guard:constr
             ~cvect:(cost, RealPolynomial.of_intpoly gtcost |> RealBound.of_poly)
-            ~vars:default_vars, (Location.of_string_and_arity (Tuple2.first (List.hd (Tuple2.second rhs))) (List.length default_vars)))
+            (Tuple2.first rhs)
+            ~input_vars_ordered:default_vars
+            ~update:(
+              let target = Tuple2.second @@ List.hd @@ Tuple2.second rhs in
+              let (given_vars, remaining_vars) =
+                List.split_at (List.length target) default_vars
+              in
+              VarMap.of_enum @@ Enum.combine
+                (List.enum given_vars) (List.enum target)
+              |> List.fold_right (fun v -> VarMap.add v (TransitionLabel.UpdateElement.Poly (Polynomial.of_var v))) remaining_vars
+            )
+            ~update_vars_ordered:default_vars
+            ~guard:constr
+          , (Location.of_string_and_arity (Tuple2.first (List.hd (Tuple2.second rhs))) (List.length default_vars))
+         )
        )
 
 let mk_transition_simple_prob trans_id_counter (start: string) (cost: Polynomial.t) gtcost (rhs: (OurFloat.t * string * (string * TransitionLabel.UpdateElement.t list) list) list) (formula: Formula.t): Transition.t list =
@@ -69,16 +82,26 @@ let mk_transition_simple_prob trans_id_counter (start: string) (cost: Polynomial
   |> Formula.constraints
   |> List.map (fun constr ->
           List.map (fun (prob, comkind, targets) ->
+          let target = List.hd targets in
           let id = TransitionLabel.get_unique_gt_id trans_id_counter () in
           (Location.of_string_and_arity start (List.length default_vars),
-            TransitionLabel.mk_prob
+            TransitionLabel.make_prob
               trans_id_counter
               ~cvect:(cost, RealPolynomial.of_intpoly gtcost |> RealBound.of_poly)
-              ~com_kind:comkind
-              ~targets:targets
-              ~patterns:default_vars
+              comkind
+              ~input_vars_ordered:default_vars
+              ~update:(
+                let (given_vars, remaining_vars) =
+                  List.split_at (List.length @@ Tuple2.second target) default_vars
+                in
+                VarMap.of_enum @@ Enum.combine
+                  (List.enum given_vars) (List.enum (Tuple2.second target))
+                |> List.fold_right
+                    (fun v -> VarMap.add v (TransitionLabel.UpdateElement.Poly (Polynomial.of_var v)))
+                    remaining_vars
+              )
+              ~update_vars_ordered:default_vars
               ~guard:constr
-              ~vars:default_vars
               ~gt_id:id
               ~probability:prob,
             (Location.of_string_and_arity (Tuple2.first (List.hd targets)) (List.length default_vars)))

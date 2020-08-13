@@ -4,8 +4,8 @@ open Polynomials
 open OUnit2
 
 let tests =
-  let varx = RealPolynomial.of_var @@ Var.of_string "X" in
-  let vary = RealPolynomial.of_var @@ Var.of_string "Y" in
+  let varx = RealPolynomial.of_var @@ Var.mk_arg 0 in
+  let vary = RealPolynomial.of_var @@ Var.mk_arg 1 in
   "LexRSM" >::: [(
     "exists" >::: (List.map
       (fun (name,l,gt_id,exp,prog_path) ->

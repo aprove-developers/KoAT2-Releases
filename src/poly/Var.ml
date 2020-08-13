@@ -62,6 +62,9 @@ let fresh_arg () =
 let fresh_ids domain n =
   Enum.take n (Enum.from (fresh_id domain))
 
+let standard_arg_list =
+  LazyList.map mk_arg @@ LazyList.seq 0 ((+) 1) (const true)
+
 let fresh_args n =
   Enum.take n (Enum.from (fresh_arg))
 

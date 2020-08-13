@@ -97,9 +97,6 @@ module Transition =
         | (false, false) -> "-{" ^ (Polynomials.Polynomial.to_string (TransitionLabel.cost t)) ^ "; " ^ (BoundsInst.RealBound.show ~complexity:false (TransitionLabel.gtcost t)) ^ "}>"
       in
       (String.concat "" [(Location.to_string l); TransitionLabel.(update_to_string_lhs t); probability ; cost ; (Location.to_string l') ; TransitionLabel.(update_to_string_rhs t) ;" :|: " ;TransitionLabel.(guard_to_string t)])
-
-    let rename vars (l,t,l') =
-      (l, (TransitionLabel.rename vars t),l')
   end
 
 (*The equivalence test is needed in the probabilistic case, as we have transitions with branching degree >=2*)

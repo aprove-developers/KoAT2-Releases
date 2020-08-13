@@ -61,17 +61,18 @@ let create_sub_program trans_id_counter scc scc_locs program: Program.t =
       |> Enum.map
         (
           fun l' ->
+            let input_vars_ordered = Program.input_vars program |> VarSet.to_list in
             let new_label =
               TransitionLabel.make_prob
                 trans_id_counter
                 ~cvect:(Polynomials.Polynomial.zero, RealBound.zero)
-                ~input_vars_ordered:(Program.input_vars program |> VarSet.to_list)
+                ~input_vars_ordered:input_vars_ordered
                 ~update:(
-                  Program.input_vars program
-                  |> VarSet.enum
+                  List.enum input_vars_ordered
                   |> Enum.map (fun v -> (v, TransitionLabel.UpdateElement.Poly (Polynomials.Polynomial.of_var v)))
                   |> TransitionLabel.VarMap.of_enum
                 )
+                ~update_vars_ordered:input_vars_ordered
                 ~guard:(TransitionLabel.Guard.mk_true)
                 ~gt_id:(TransitionLabel.get_unique_gt_id trans_id_counter ())
                 ~probability:(OurFloat.one)
@@ -134,22 +135,24 @@ let cut_scc trans_id_counter scc scc_locs program cvect:  (Program.t * GeneralTr
       Location.of_string_and_arity (Printf.sprintf "loc_bu_%i" (Batteries.unique ())) (VarSet.cardinal @@ Program.vars program)
     in
     let untouched_vars = untouched_scc_vars scc program in
+    let input_vars_ordered = Program.input_vars program |> VarSet.to_list in
     let new_label =
         TransitionLabel.(make_prob
             trans_id_counter
             ~cvect:cvect
-            ~input_vars_ordered:(Program.input_vars program |> VarSet.to_list)
+            ~input_vars_ordered:input_vars_ordered
             ~update:(
-                VarSet.fold
+                List.fold_right
                   (fun v ->
                     if VarSet.mem v untouched_vars then
                       VarMap.add v (UpdateElement.Poly (Polynomials.Polynomial.of_var v))
                     else
                       VarMap.add v (Var.fresh_id Var.Int () |> Polynomials.Polynomial.of_var |> fun p -> UpdateElement.Poly p)
                   )
-                  (Program.vars program)
+                  input_vars_ordered
                   VarMap.empty
             )
+            ~update_vars_ordered:input_vars_ordered
             ~guard:(Guard.mk_true)
             ~gt_id:(get_unique_gt_id trans_id_counter ())
             ~probability:OurFloat.one

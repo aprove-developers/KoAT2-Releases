@@ -38,7 +38,6 @@ let run (params: params) =
 
   input
   |> MainUtil.read_input (CacheManager.trans_id_counter cache) ~rename:params.rename params.simple_input
-  |> rename_program_option
   |> Option.map (fun program ->
          (program, Approximation.create program)
          |> Preprocessor.process (CacheManager.trans_id_counter cache) params.preprocessing_strategy params.preprocessors

@@ -9,6 +9,9 @@ let from entries =
     | (key, value) -> M.add key value in
   List.fold_left (fun map keyadder -> keyadder map) M.empty (List.map addEntry entries)
 
+let of_enum =
+  M.of_enum
+
 let from_native entries =
   from (List.map (fun (var, value) -> (Var.of_string var, Var.of_string value)) entries)
 

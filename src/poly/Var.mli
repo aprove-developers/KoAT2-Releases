@@ -29,6 +29,10 @@ val fresh_id_list : sort -> int -> t list
 
 (** Make an argument variable referring to the position specified in i *)
 val mk_arg: int -> t
+
+(** An infinite LazyList of Variables Arg_0, Arg_1, ...*)
+val standard_arg_list: t LazyList.t
+
 val fresh_arg_list : int -> t list
 val is_helper : t -> bool
 val mk_helper : sort -> int -> t

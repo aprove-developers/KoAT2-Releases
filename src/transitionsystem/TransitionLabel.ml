@@ -67,11 +67,18 @@ module UpdateElement =
       | Dist d -> Dist (ProbDistribution.substitute sub d)
   end
 
+(*
+  Note that while an argument is uniquely determined by a place in its term
+  our variables will in general be named (achievable for example using the simple input).
+  Thus, to maintain the relation between an variables name and its place we have two lists
+  inputs_vars_ordered and output_vars_ordered
+*)
 type t = {
     id : int;
     gt_id: int;
     input_vars_ordered: Var.t List.t;
     update : UpdateElement.t VarMap.t;
+    update_vars_ordered : Var.t List.t;
     guard : Guard.t;
     guard_without_invariants: Guard.t;
     invariants: Guard.t;
@@ -84,20 +91,8 @@ let triples (list1) (list2) (list3) = List.map (fun ((x,y),z) -> (x,y,z)) (List.
 
 let quatruples (list1) (list2) (list3) (list4) = List.map (fun ((x,y),(z,w)) -> (x,y,z,w)) (List.combine (List.combine list1 list2) (List.combine list3 list4))
 
-(* Generates a nonprobabilistic label and sets the probability to one *)
-let make id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~input_vars_ordered ~update ~guard =
-  if com_kind <> "Com_1" then raise OnlyCom1Supported else
-  {
-    id = get_unique_id id_counter (); gt_id = get_unique_gt_id id_counter ();
-    input_vars_ordered;
-    update; guard;
-    cost = Tuple2.first cvect; gtcost = Tuple2.second cvect;
-    probability=1. |> OurFloat.of_float;
-    guard_without_invariants = guard; invariants = Guard.mk_true;
-  }
-
 (* Generates a probabilistic label, needs a name to distinguish different labels belonging to the same transition *)
-let make_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~input_vars_ordered ~update ~guard ~gt_id ~(probability: OurFloat.t) =
+let make_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~input_vars_ordered ~update ~update_vars_ordered ~guard ~gt_id ~(probability: OurFloat.t) =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
     if (OurFloat.(probability > (1. |> of_float)) || OurFloat.(probability < (0. |> of_float))) then raise ProbabilitiesNotBetweenZeroAndOne
   else
@@ -105,12 +100,18 @@ let make_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) com_kind ~in
     id = get_unique_id id_counter ();
     gt_id;
     input_vars_ordered;
-    update; guard;
+    update;
+    update_vars_ordered;
+    guard;
     cost = Tuple2.first cvect;
     gtcost = Tuple2.second cvect;
     probability=probability;
     guard_without_invariants = guard; invariants = Guard.mk_true;
   }
+
+(* Generates a nonprobabilistic label and sets the probability to one *)
+let make id_counter =
+  make_prob id_counter ~gt_id:(get_unique_gt_id id_counter ()) ~probability:OurFloat.one
 
 let update_cost cvect t = {t with cost = Tuple2.first cvect; gtcost = Tuple2.second cvect}
 
@@ -146,40 +147,52 @@ let take_last n xs =
   |> List.take n
   |> List.rev
 
-(* TODO Pattern <-> Assigment relation *)
-let mk id_counter ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patterns ~guard ~vars =
-  if List.length targets != 1 then raise RecursionNotSupported else
-    if com_kind <> "Com_1" then raise OnlyCom1Supported else
-      let (target, assignments) = List.hd targets in
-      let assignments_with_trivial =
-          assignments @ List.map (fun v -> UpdateElement.Poly (Polynomial.of_var v)) (take_last ((List.length patterns) - (List.length assignments)) patterns) in
-      let appended_patterns =
-          patterns @ Var.fresh_id_list Var.Int ((List.length assignments) - (List.length patterns)) in
-      (* TODO Better error handling in case the sizes differ *)
-      (List.enum appended_patterns, List.enum assignments_with_trivial)
-      |> uncurry Enum.combine
-      |> Enum.fold (fun (i_v_o,map) (var, assignment) -> List.append i_v_o [var], VarMap.add var (assignment) map) ([] ,VarMap.empty)
-      |> fun (i_v_o,update) -> { id = get_unique_id id_counter (); gt_id = get_unique_gt_id id_counter ();
-                        input_vars_ordered = i_v_o;
-                        update; guard; cost = Tuple2.first cvect; gtcost = Tuple2.second cvect;
-                        probability=1 |> OurFloat.of_int; guard_without_invariants = guard;
-                        invariants = Guard.mk_true;}
-
 let mk_prob id_counter ?(cvect = (Polynomial.one, RealBound.one)) ~com_kind ~targets ~patterns ~guard ~vars ~gt_id ~probability =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       if (OurFloat.(probability > (1 |> of_int)) || OurFloat.(probability < (0 |> of_int))) then raise ProbabilitiesNotBetweenZeroAndOne
     else
-        let (target, assignments) = List.hd targets in
-        (* TODO Better error handling in case the sizes differ *)
-        (List.enum patterns, List.enum assignments)
-        |> uncurry Enum.combine
-        |> Enum.fold (fun (i_v_o,map) (var, assignment) -> List.append i_v_o [var], VarMap.add var assignment map) ([], VarMap.empty)
-        |> fun (i_v_o,update) -> { id = get_unique_id id_counter (); gt_id;
-                          input_vars_ordered = i_v_o;
-                          update; guard; cost = Tuple2.first cvect; gtcost = Tuple2.second cvect;
-                          probability=probability; guard_without_invariants = guard;
-                          invariants = Guard.mk_true;}
+        let (_, assignments) = List.hd targets in
+
+        (* Substitute variables by canonical form, i.e. Arg_0, Arg_1, ...*)
+        let arity = List.length patterns in
+
+        (* The substituted input vars, i.e. the arguments to the start location *)
+        let input_vars_ordered = LazyList.to_list @@ LazyList.take arity Var.standard_arg_list in
+
+        let substitution_map =
+          Enum.combine (List.enum patterns) (List.enum input_vars_ordered)
+          |> RenameMap.of_enum
+        in
+
+        let substituted_patterns =
+          Enum.map (UpdateElement.rename substitution_map) (List.enum assignments)
+        in
+
+        let target_vars = LazyList.take (List.length assignments) (Var.standard_arg_list) in
+
+        let update =
+          Enum.combine (LazyList.enum target_vars) substituted_patterns
+          |> VarMap.of_enum
+        in
+
+        {
+          probability;
+          id = get_unique_id id_counter ();
+          gt_id;
+          input_vars_ordered;
+          update;
+          update_vars_ordered = LazyList.to_list target_vars;
+          guard = Guard.rename guard substitution_map;
+          guard_without_invariants = Guard.rename guard substitution_map;
+          invariants = Guard.mk_true;
+          cost = Polynomial.rename substitution_map (Tuple2.first cvect);
+          gtcost = RealBound.rename substitution_map (Tuple2.second cvect);
+        }
+
+
+let mk id_counter =
+  mk_prob id_counter ~gt_id:(get_unique_gt_id id_counter ()) ~probability:OurFloat.one
 
 (*
 Chaining can not be represented in the probabilistic update case due to probability distributions
@@ -218,6 +231,7 @@ let append id_counter t1 t2 =
     gt_id = get_unique_gt_id id_counter ();
     input_vars_ordered = t1.input_vars_ordered;
     update = new_update;
+    update_vars_ordered = t2.update_vars_ordered;
     guard = new_guard;
     cost = Polynomial.(t1.cost + t2.cost);
     gtcost = RealBound.(t1.gtcost + t2.gtcost);
@@ -285,20 +299,19 @@ let gtcost t = t.gtcost
 
 let probability t = t.probability
 
-let vars_  {update; guard; cost; _} =
-  VarMap.fold (fun v -> VarSet.union % UpdateElement.vars v) update VarSet.empty
-  |> (VarSet.union % VarSet.of_enum % VarMap.keys) update
-  |> (VarSet.union % Guard.vars) guard
-  |> (VarSet.union % Polynomial.vars) cost
-
-(* TODO May invalidate through invariant generation! *)
-let vars = vars_
+let vars  t =
+  VarSet.of_list t.input_vars_ordered
+  |> VarSet.union (VarMap.fold (fun v -> VarSet.union % UpdateElement.vars v) t.update VarSet.empty)
+  |> VarSet.union (Guard.vars t.guard)
+  |> VarSet.union (Polynomial.vars t.cost)
+  |> VarSet.union (RealBound.vars t.gtcost)
 
 let default = {
     id = -1;
     gt_id = -1;
     input_vars_ordered = [];
     update = VarMap.empty;
+    update_vars_ordered = [];
     guard = Guard.mk_true;
     guard_without_invariants = Guard.mk_true;
     invariants = Guard.mk_true;
@@ -323,19 +336,14 @@ let guard_to_string label =
   else
     Guard.to_string label.guard
 
-
-
 let update_to_string_lhs t =
-  let update = t.update in
-    if VarMap.is_empty update then
-      ""
-    else
-      update
-      |> VarMap.bindings
-      |> List.map (fun (var,poly) -> (Var.to_string var, UpdateElement.to_string poly))
-      |> List.split
-      |> Tuple2.first
-      |> fun xs -> "("^(String.concat "," xs)^")"
+  let i_v_o = t.input_vars_ordered in
+  if List.is_empty i_v_o then
+    ""
+  else
+    i_v_o
+    |> List.map Var.to_string
+    |> fun xs -> "("^(String.concat "," xs)^")"
 
 let update_to_string_rhs t =
   let update = t.update in
@@ -363,40 +371,7 @@ let input_vars t =
   t.update
   |> VarMap.keys
   |> VarSet.of_enum
+(*   VarSet.of_list (t.input_vars_ordered) *)
 
 let input_size t =
-  t
-  |> input_vars
-  |> VarSet.cardinal
-
-(** Whenever this function is invoked it is ensured that there are enough standard variables  *)
-let standard_renaming standard_vars t =
-  standard_vars
-  |> List.take (input_size t)
-  |> List.combine t.input_vars_ordered
-  |> RenameMap.from
-
-let rename_update update rename_map =
-  update
-  |> VarMap.enum
-  |> Enum.map (fun (key, value) -> (RenameMap.find key rename_map ~default:key), UpdateElement.rename rename_map value)
-  |> VarMap.of_enum
-
-let rename_list l rename_map =
-  List.map (fun v -> RenameMap.find v rename_map ~default:v) l
-
-let rename standard_vars t =
-  let rename_map = standard_renaming standard_vars t in
-  {
-    id = t.id;
-    gt_id = t.gt_id;
-    input_vars_ordered = rename_list t.input_vars_ordered rename_map;
-    update = rename_update t.update rename_map;
-    guard = Guard.rename t.guard rename_map;
-    guard_without_invariants = Guard.rename t.guard_without_invariants rename_map;
-    invariants = Guard.rename t.invariants rename_map;
-    cost = Polynomial.rename rename_map t.cost;
-    gtcost = RealBound.rename rename_map t.gtcost;
-    probability = t.probability;
-  }
-
+  VarSet.cardinal (input_vars t)
