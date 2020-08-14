@@ -6,7 +6,7 @@
 (RULES
   f(x,y,t) -{0}> g(x,y,t)
   # Start loop
-  g(x,y,t) -{0}> h(UNIFORM(-3,-1),y,t)   :|: x>0
+  g(x,y,t) -{0}> [1/3]:h(x-3,y,t) :+: [1/3]:h(x-2,y,t) :+: [1/3]:h(x-1,y,t) :|: x>0
   h(x,y,t) -{0}> i(y,y,x)
   i(x,y,t) -> g(x,t,t)
 )
