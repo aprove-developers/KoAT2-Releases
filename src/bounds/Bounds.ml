@@ -136,6 +136,6 @@ and continue_with_bottom_up simplify_smt ~refined_smt_timeout ~generate_invarian
 
   Option.map_default
     (fun (new_prog, new_appr) ->
-      Logger.log logger Logger.DEBUG (fun () -> "continue recursively", ["new_prog", Program.to_string ~show_gtcost:true new_prog]);
+      Logger.log logger Logger.DEBUG (fun () -> "continue recursively", ["new_prog", Program.to_string new_prog]);
       find_exp_bounds simplify_smt ~refined_smt_timeout:refined_smt_timeout ~generate_invariants_bottom_up:generate_invariants_bottom_up true new_cache new_prog new_appr)
     (program,appr) bottom_up_res

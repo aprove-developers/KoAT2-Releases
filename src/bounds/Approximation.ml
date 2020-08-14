@@ -216,7 +216,7 @@ let output_formatted ?(embeddings=[]) program expected appr =
 
   paragraph (
    (str_header_big "Initial Complexity Problem"
-      >> (write_format @@ Program.to_formatted_string ~show_gtcost:expected program) >> newline
+      >> (write_format @@ Program.to_formatted_string program) >> newline
       (* only include graph in html output *)
       >> mapM write_format embeddings ) )
 

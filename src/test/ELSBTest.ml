@@ -41,12 +41,12 @@ let tests =
             let error_string =
               "elsb_mismatch elsb: " ^ (RealBound.show ~complexity:false elsb)
               ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
-              ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
+              ^ " in program " ^ (Program.to_string prog)
             in
             let error_string_red =
               "elsb_mismatch reduced_elsb: " ^ (RealBound.show ~complexity:false elsb_red)
               ^ " expected " ^ (RealBound.show ~complexity:false lower_bound_red)
-              ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
+              ^ " in program " ^ (Program.to_string prog)
             in
             assert_bool error_string (bounds_pos_vars lower_bound elsb);
             assert_bool error_string_red (bounds_pos_vars lower_bound_red elsb_red)

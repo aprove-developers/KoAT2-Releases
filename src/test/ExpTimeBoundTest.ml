@@ -20,7 +20,7 @@ let tests =
             let exptime = Approximation.exptimebound approx gt in
             let error_str =
                 "Mismatch: Expected " ^ (RealBound.to_string lower_bound) ^ " got " ^ (RealBound.to_string exptime)
-                ^ " for gt " ^ (GeneralTransition.to_id_string gt) ^ " in prog\n" ^ (Program.to_string ~show_gtcost:true prog)
+                ^ " for gt " ^ (GeneralTransition.to_id_string gt) ^ " in prog\n" ^ (Program.to_string prog)
             in
             assert_bool error_str (bounds_pos_vars lower_bound exptime)
           )
@@ -55,7 +55,7 @@ let tests =
               let expcost_compl = expcost_bound |> RealBound.asymptotic_complexity in
               let error_str =
                   "Mismatch: Expected " ^ (RealBound.show_complexity exp_complexity) ^ " got " ^ (RealBound.to_string expcost_bound)
-                  ^ " for prog\n" ^ (Program.to_string ~show_gtcost:true processed_prog)
+                  ^ " for prog\n" ^ (Program.to_string processed_prog)
               in
               assert_bool error_str RealBound.(equal_complexity exp_complexity expcost_compl)
           ))]

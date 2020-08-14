@@ -95,7 +95,7 @@ let create_sub_program trans_id_counter scc scc_locs program: Program.t =
       )
       new_start_location
   in
-  Logger.with_log logger Logger.DEBUG (fun () -> "create_sub_program", []) ~result:(Program.to_string ~show_gtcost:true) execute
+  Logger.with_log logger Logger.DEBUG (fun () -> "create_sub_program", []) ~result:(Program.to_string) execute
 
 let untouched_scc_vars scc program =
   let execute = fun () ->

@@ -25,7 +25,7 @@ let tests =
               let expsize_compl = expsize_bound |> RealBound.asymptotic_complexity in
               let error_str =
                   "Mismatch: Expected " ^ (RealBound.show_complexity exp_complexity) ^ " got " ^ (RealBound.to_string expsize_bound)
-                  ^ " for prog\n" ^ (Program.to_string ~show_gtcost:true processed_prog)
+                  ^ " for prog\n" ^ (Program.to_string processed_prog)
               in
               assert_bool error_str RealBound.(equal_complexity exp_complexity expsize_compl)
           ))]

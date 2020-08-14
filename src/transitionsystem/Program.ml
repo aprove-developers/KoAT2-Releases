@@ -257,9 +257,10 @@ let is_initial_gt program trans =
 let is_initial_location program location =
   Location.(equal (program.start) location)
 
-let to_formatted_string ~show_gtcost program =
+let to_formatted_string program =
+  let gts = GeneralTransitionSet.of_transitionset (transitions program) in
   let transitions =
-    TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string ~show_gtcost:show_gtcost t)]) program.graph []
+    GeneralTransitionSet.fold (fun gt str -> str @ [GeneralTransition.to_string gt]) gts []
     |> List.map FormattedString.mk_str_line
     |> FormattedString.mappend
   in
@@ -275,8 +276,8 @@ let to_formatted_string ~show_gtcost program =
     |> List.map FormattedString.mk_str_line |> FormattedString.mappend)
     transitions
 
-let to_string ~show_gtcost program =
-  FormattedString.render_string @@ to_formatted_string ~show_gtcost:show_gtcost program
+let to_string program =
+  FormattedString.render_string @@ to_formatted_string program
 
 let to_simple_string ~show_gtcost program =
   TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string ~show_gtcost:show_gtcost t) program.graph ""

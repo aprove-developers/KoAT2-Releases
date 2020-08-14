@@ -41,7 +41,7 @@ let tests =
               "exptrivsize_mismatch exp_size: " ^ (RealBound.show ~complexity:false expsize)
               ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
               ^ " in grv" ^ (RV.to_id_string ((gt,loc),var))
-              ^ " in program " ^ (Program.to_string ~show_gtcost:true prog)
+              ^ " in program " ^ (Program.to_string prog)
             in
             assert_bool error_string (bounds_pos_vars lower_bound expsize)
           )

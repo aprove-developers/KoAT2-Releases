@@ -55,9 +55,9 @@ val is_initial_location : t -> Location.t -> bool
 
 val equivalent : t -> t -> bool
 
-val to_formatted_string: show_gtcost:bool -> t -> FormattedString.t
+val to_formatted_string: t -> FormattedString.t
 
-val to_string : show_gtcost:bool -> t -> string
+val to_string : t -> string
 
 val to_simple_string : show_gtcost:bool -> t -> string
 
