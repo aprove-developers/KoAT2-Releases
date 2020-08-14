@@ -197,7 +197,7 @@ let mk id_counter =
 (*
 Chaining can not be represented in the probabilistic update case due to probability distributions
 *)
-let append id_counter t1 t2 =
+let append id_counter ~new_gt_id t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
   let nondet_vars = VarTable.create 3 in
   let substitution update_map var =
@@ -228,7 +228,7 @@ let append id_counter t1 t2 =
   in
   {
     id = get_unique_id id_counter ();
-    gt_id = get_unique_gt_id id_counter ();
+    gt_id = new_gt_id;
     input_vars_ordered = t1.input_vars_ordered;
     update = new_update;
     update_vars_ordered = t2.update_vars_ordered;

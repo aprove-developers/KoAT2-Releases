@@ -58,7 +58,7 @@ val mk_prob : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t) ->
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label.
     Only works when no variable get sampled from a distribution during the update of the first transition *)
-val append : trans_id_counter -> t -> t -> t
+val append : trans_id_counter -> new_gt_id:int -> t -> t -> t
 
 (** Returns a guard which constraints the possibility for the second label beeing evaluated in sequence with the first one *)
 val append_guard : t -> t -> Guard.t

@@ -37,7 +37,7 @@ let lift_to_tuple transform tuple =
 let transform trans_id_counter subject = function
   | CutUnreachableLocations     -> lift_to_tuple CutUnreachableLocations.transform_program subject
   | CutUnsatisfiableTransitions -> lift_to_tuple CutUnsatisfiableTransitions.transform_program subject
-  | Chaining                    -> lift_to_tuple (lift_to_program @@ Chaining.transform_graph trans_id_counter) subject
+  | Chaining                    -> lift_to_tuple (lift_to_program @@ Chaining.transform_graph ~conservative:true trans_id_counter) subject
   | InvariantGeneration         -> lift_to_tuple InvariantGeneration.transform_program subject
   | CutZeroProbTransitions      -> lift_to_tuple CutZeroProbTransitions.transform_program subject
 

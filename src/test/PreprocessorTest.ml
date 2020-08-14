@@ -65,7 +65,7 @@ let tests =
              program >:: (fun _ ->
                      let trans_id_counter = CacheManager.new_cache () |> CacheManager.trans_id_counter in
                      let result =
-                       MaybeChanged.unpack (Preprocessor.lift_to_program (Chaining.transform_graph trans_id_counter) (Readers.read_program_simple trans_id_counter program))
+                       MaybeChanged.unpack (Preprocessor.lift_to_program (Chaining.transform_graph ~conservative:false trans_id_counter) (Readers.read_program_simple trans_id_counter program))
                      in
                      let trans_id_counter' = CacheManager.new_cache () |> CacheManager.trans_id_counter in
                      assert_equal_program (Readers.read_program_simple trans_id_counter' expected_program) result))
@@ -74,6 +74,27 @@ let tests =
                     ("l1 -{2}> l3(x), l1 -> l2(x)", "l1 -> l2(x), l2 -> l3(x)");
                     ("l1 -> l2(x), l1 -{2}> l3(x), l1 -{3}> l4(x)", "l1 -> l2(x), l2 -> l3(x), l3 -> l4(x)");
                     ("l1 -> l2(x), l3 -> l2(x), l1 -{2}> l3(x), l3 -{2}> l3(x)", "l1 -> l2(x), l2 -> l3(x), l3 -> l2(x)");
+                    ("l1 -> l2(2*x), l1 -{2}> l3(6*x)", "l1 -> l2(2*x), l2 -> l3(3*x)");
+                    ("l1 -> l2(2*y,3), l1 -{2}> l3(6*y,15)", "l1 -> l2(2*y,3), l2 -> l3(3*x,5*y)");
+                    ("l1 -> l2(x) :|: x > 2, l1 -{2}> l3(x) :|: x > 2", "l1 -> l2(x) :|: x > 2, l2 -> l3(x)");
+                    ("l1 -> l2(y), l1 -{2}> l3(y) :|: y > 2", "l1 -> l2(y), l2 -> l3(x) :|: x > 2");
+                  ]
+      );
+
+      ("Conservative Chaining" >:::
+         List.map (fun (expected_program, program) ->
+             program >:: (fun _ ->
+                     let trans_id_counter = CacheManager.new_cache () |> CacheManager.trans_id_counter in
+                     let result =
+                       MaybeChanged.unpack (Preprocessor.lift_to_program (Chaining.transform_graph ~conservative:true trans_id_counter) (Readers.read_program_simple trans_id_counter program))
+                     in
+                     let trans_id_counter' = CacheManager.new_cache () |> CacheManager.trans_id_counter in
+                     assert_equal_program (Readers.read_program_simple trans_id_counter' expected_program) result))
+                  [
+                    ("l1 -> l2(x)", "l1 -> l2(x)");
+                    ("l1 -{2}> l3(x), l1 -> l2(x)", "l1 -> l2(x), l2 -> l3(x)");
+                    ("l1 -> l2(x), l1 -{2}> l3(x), l1 -{3}> l4(x)", "l1 -> l2(x), l2 -> l3(x), l3 -> l4(x)");
+                    ("l1 -> l2(x), l3 -> l2(x), l1 -{2}> l3(x), l3 -{2}> l3(x)", "l1 -> l2(x), l3 -> l2(x), l1 -{2}> l3(x), l3 -{2}> l3(x)");
                     ("l1 -> l2(2*x), l1 -{2}> l3(6*x)", "l1 -> l2(2*x), l2 -> l3(3*x)");
                     ("l1 -> l2(2*y,3), l1 -{2}> l3(6*y,15)", "l1 -> l2(2*y,3), l2 -> l3(3*x,5*y)");
                     ("l1 -> l2(x) :|: x > 2, l1 -{2}> l3(x) :|: x > 2", "l1 -> l2(x) :|: x > 2, l2 -> l3(x)");
