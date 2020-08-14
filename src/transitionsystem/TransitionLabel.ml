@@ -352,7 +352,7 @@ let update_to_string_rhs t =
     else
       update
       |> VarMap.bindings
-      |> List.map (fun (var,poly) -> (Var.to_string var, UpdateElement.to_string poly))
+      |> List.map (fun (var,poly) -> (Var.to_string var, UpdateElement.to_short_string poly))
       |> List.split
       |> Tuple2.second
       |> fun xs -> "("^(String.concat "," xs)^")"
