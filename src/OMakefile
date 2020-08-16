@@ -16,6 +16,9 @@ else
     OCAMLCFLAGS = -thread
     BYTE_ENABLED = false
     NATIVE_ENABLED = true
+
+    OCAMLPARAM="_,bin-annot=1"
+
     export
 
 .PHONY: clean doc install test

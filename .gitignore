@@ -24,3 +24,5 @@ perf.data*
 core
 koat-static
 *.svg
+*.cmt
+*.cmti
