@@ -59,11 +59,11 @@ let tests =
       (
         "sizebound_local" >::: (
           [
-            ("l1", "l2", "A", "0");
+            ("l1", "l2", Var.mk_arg 0, "0");
             (* TODO We have to redefine good bounds here: ("l1", "l1", "A", "A-1"); *)
           ]
         |> List.map (fun (l,l',var,bound) ->
-               "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ var ^ " is " ^ bound ^ "?" >:: (fun _ ->
+               "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ Var.to_string var ^ " is " ^ bound ^ "?" >:: (fun _ ->
                        let cache = CacheManager.new_cache () in
                        let trans_id_counter = CacheManager.trans_id_counter cache in
 
@@ -71,11 +71,12 @@ let tests =
                        let t =
                          TransitionGraph.transitions (Program.graph program)
                          |> TransitionSet.filter (fun (l2,_,l2') -> Location.(name l2 = l && name l2' = l'))
+        |> tap (Printf.printf "%s\n" % TransitionSet.to_string)
                          |> TransitionSet.any
                        in
                        TransitionLabel.(assert_equal_bound
                                                   (Bound.of_poly (Readers.read_polynomial bound))
-                                                  LocalSizeBound.(sizebound_local (CacheManager.lsb_cache cache) program `Upper t (Var.of_string var) |> Option.map as_bound |? default `Upper)
+                                                  LocalSizeBound.(sizebound_local (CacheManager.lsb_cache cache) program `Upper t var |> Option.map as_bound |? default `Upper)
                        )
                      )
              )

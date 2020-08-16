@@ -1,4 +1,5 @@
 open Batteries
+
 open OUnit2
 
 let suite =
@@ -13,8 +14,8 @@ let suite =
           AtomTest.Methods.tests;
           ConstraintsTest.Methods.tests;
         ];
-        (* Disable for now since we enforce constant costs *)
-(*       TransitionGraphTest.tests; *)
+
+      TransitionGraphTest.tests;
       SMTTest.suite;
       IDTest.tests;
       LocalSizeBoundTest.tests;
