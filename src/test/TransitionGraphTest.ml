@@ -71,7 +71,6 @@ let tests =
                        let t =
                          TransitionGraph.transitions (Program.graph program)
                          |> TransitionSet.filter (fun (l2,_,l2') -> Location.(name l2 = l && name l2' = l'))
-        |> tap (Printf.printf "%s\n" % TransitionSet.to_string)
                          |> TransitionSet.any
                        in
                        TransitionLabel.(assert_equal_bound
