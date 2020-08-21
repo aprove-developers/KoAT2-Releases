@@ -11,8 +11,7 @@ let improve_scc kind program rvg appr = function
      Approximation.add_sizebound kind new_bound (l,t,l') v appr
   | scc ->
      let new_bound = NontrivialSizeBounds.compute kind program rvg (Approximation.timebound appr) (fun kind -> Approximation.sizebound kind appr) scc in
-     Approximation.add_sizebounds kind new_bound scc appr
-
+     Approximation.add_sizebounds kind new_bound scc appr 
 
 let improve program ?(scc = None) applied_cfr appr =
   let execute () =
@@ -29,9 +28,12 @@ let improve program ?(scc = None) applied_cfr appr =
             ) appr ( 
             if not (Option.is_some scc) then
              (List.rev (C.scc_list rvg))
-            else 
-             (List.rev (List.filter (fun rvg_scc -> List.exists (fun (t,x) -> TransitionSet.mem t (Option.get scc)) rvg_scc) (C.scc_list rvg))))
-         ) appr
+            else ( 
+             List.rev (List.filter (fun rvg_scc -> 
+                (List.exists (fun (t,x) -> TransitionSet.mem t (Option.get scc)) rvg_scc)
+               || ((List.length rvg_scc) == 1)) (C.scc_list rvg))
+             )
+    )) appr
   in Logger.with_log logger Logger.INFO
                   (fun () -> "improve_size_bounds", [])
                   execute

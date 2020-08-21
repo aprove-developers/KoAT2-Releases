@@ -192,7 +192,7 @@ let rec improve_timebound_rec ?(mprf = false) (scc: TransitionSet.t)  measure pr
   let rec improve_scc ?(mprf = false) (scc: TransitionSet.t)  measure program appr = 
     appr
     |> improve_timebound_rec ~mprf:mprf scc measure program
-    |> SizeBounds.improve program (Option.is_some !backtrack_point)
+    |> SizeBounds.improve program ~scc:(Option.some scc) (Option.is_some !backtrack_point)
     |> improve_timebound ~mprf:mprf scc measure program
     |> MaybeChanged.if_changed (improve_scc ~mprf:mprf scc measure program)
     |> MaybeChanged.unpack
@@ -253,7 +253,7 @@ let rec improve ?(mprf = false) ?(cfr = false) measure program appr =
                             RankingFunction.reset(); 
                           try 
                             appr               
-                            |> SizeBounds.improve program (Option.is_some !backtrack_point)
+                            |> SizeBounds.improve program ~scc:(Option.some scc) (Option.is_some !backtrack_point)
                             |> improve_scc ~mprf:mprf scc measure program
                             |> apply_cfr ~cfr:cfr ~mprf:mprf scc measure program
                           with TIMEOUT | NOT_IMPROVED ->
