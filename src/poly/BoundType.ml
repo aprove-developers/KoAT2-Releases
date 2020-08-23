@@ -854,6 +854,9 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
     let of_poly =
       Poly.fold ~const:of_constant ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow
 
+    let of_intpoly =
+      Polynomial.fold ~const:(of_constant % Num.of_ourint) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow
+
     let of_int i = Const (Num.of_int i)
 
     let to_int poly = raise (Failure "TODO: Not possible")

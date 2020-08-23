@@ -31,6 +31,7 @@ module Make_BoundOver :
       (** Following methods are convenience methods for the creation of polynomials. *)
 
       val of_poly : Poly.t -> t
+      val of_intpoly : Polynomial.t -> t
       val of_constant : value -> t
       val of_int : int -> t
       val to_int : t -> int

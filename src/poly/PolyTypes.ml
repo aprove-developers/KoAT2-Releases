@@ -13,6 +13,8 @@ module type OurNumber =
     val max : t -> t -> t
     val min : t -> t -> t
 
+    val of_ourint : OurInt.t -> t
+
     (** The constant representing -1.
       This is not provided by Number.Numeric but is quite useful *)
     val minus_one: t

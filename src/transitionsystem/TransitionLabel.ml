@@ -198,7 +198,7 @@ let mk id_counter =
   mk_prob id_counter ~gt_id:(get_unique_gt_id id_counter ()) ~probability:OurFloat.one
 
 (*
-Chaining can not be represented in the probabilistic update case due to probability distributions
+  Chaining can not be represented in the probabilistic update case due to probability distributions
 *)
 let append id_counter ~new_gt_id t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
@@ -221,14 +221,20 @@ let append id_counter ~new_gt_id t1 t2 =
                                 | otherwise -> failwith "This case should be impossible"
                ) u_map
   in
+
+  let subst_t1_update = substitution (get_update_polynomials t1.update) in
+
   let new_update =
-    VarMap.map (UpdateElement.substitute (substitution (get_update_polynomials t1.update))) t2.update
+    VarMap.map (UpdateElement.substitute subst_t1_update) t2.update
   and new_guard =
     Guard.Infix.(t1.guard && Guard.map_polynomial (Polynomial.substitute_f (substitution (get_update_polynomials t1.update))) t2.guard)
   and new_guard_without_invariants =
     Guard.Infix.(t1.guard_without_invariants && Guard.map_polynomial (Polynomial.substitute_f (substitution
       (get_update_polynomials t1.update))) t2.guard_without_invariants)
   in
+
+  let t2_cost_subst = Polynomial.substitute_f subst_t1_update t2.cost in
+  let t2_gtcost_subst = RealBound.substitute_f (RealBound.of_intpoly % subst_t1_update) t2.gtcost in
   {
     id = get_unique_id id_counter ();
     gt_id = new_gt_id;
@@ -236,8 +242,8 @@ let append id_counter ~new_gt_id t1 t2 =
     update = new_update;
     update_vars_ordered = t2.update_vars_ordered;
     guard = new_guard;
-    cost = Polynomial.(t1.cost + t2.cost);
-    gtcost = RealBound.(t1.gtcost + t2.gtcost);
+    cost = Polynomial.(t1.cost + t2_cost_subst);
+    gtcost = RealBound.(t1.gtcost + t2_gtcost_subst);
     probability = OurFloat.(t1.probability * t2.probability);
     guard_without_invariants = new_guard_without_invariants;
     invariants = t2.invariants;

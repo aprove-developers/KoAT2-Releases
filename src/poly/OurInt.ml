@@ -18,4 +18,7 @@ let min a b =
   else
     b
 
+let of_ourint =
+  identity
+
 let minus_one = sub zero one
