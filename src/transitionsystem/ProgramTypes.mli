@@ -81,6 +81,7 @@ sig
   val start_locations: t -> LocationSet.t
   val target_locations: t -> LocationSet.t
   val of_transitionset: TransitionSet.t -> t
+  val to_transitionset: t -> TransitionSet.t
 end
 
 module TransitionGraph :

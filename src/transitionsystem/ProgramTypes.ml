@@ -222,6 +222,12 @@ module GeneralTransitionSet =
       TransitionSet.to_list transitionset
       |> List.map (GeneralTransition.of_transitionset transitionset)
       |> of_list
+
+    let to_transitionset gtsset =
+      enum gtsset
+      |> Enum.map GeneralTransition.transitions
+      |> Enum.fold TransitionSet.union TransitionSet.empty
+
   end
 
 (*The equivalence test is needed in the probabilistic case, as we have transitions with branching degree >=2*)

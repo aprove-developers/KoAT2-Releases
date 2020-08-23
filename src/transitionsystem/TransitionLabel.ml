@@ -36,6 +36,9 @@ module UpdateElement =
   struct
     type t = Poly of Polynomial.t | Dist of ProbDistribution.t [@@deriving eq,ord]
 
+    let mk_identity v =
+      Poly (Polynomial.of_var v)
+
     let to_string u =
       match u with
         | Poly p -> "(Polynomial: " ^ (Polynomial.to_string p)  ^ ")"

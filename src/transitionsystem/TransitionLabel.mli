@@ -28,6 +28,8 @@ module UpdateElement :
     val to_short_string : t -> string
     val vars : Var.t -> t -> VarSet.t
     val is_polynomial : t -> bool
+
+    val mk_identity : Var.t -> t
   end
 
 val make : trans_id_counter -> ?cvect:(Polynomial.t * RealBound.t)
