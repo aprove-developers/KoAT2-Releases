@@ -17,6 +17,7 @@ module TemplateTable = Hashtbl.Make(Location)
 
 type t = {
     rank : Location.t -> RealPolynomial.t;
+    (* The ranked transition itself *)
     decreasing : GeneralTransition.t;
     non_increasing : GeneralTransitionSet.t;
   }
@@ -32,17 +33,17 @@ let get_template_table  (cache: lrsm_cache) = Tuple4.second cache
 let get_lexrsmmap       (cache: lrsm_cache) = Tuple4.third cache
 let get_cbound_template (cache: lrsm_cache) = Tuple4.fourth cache
 
-let new_cache: unit -> lrsm_cache = fun () -> (RankingTable.create 10, TemplateTable.create 10, LexRSMMap.create 10, ref None)
+let new_cache () : lrsm_cache =
+  RankingTable.create 10, TemplateTable.create 10, LexRSMMap.create 10, ref None
 
 
 let logger = Logging.(get LexRSM)
 
 type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded | `Bounded_Refined | `C_ranked ] [@@deriving show, eq]
 
+(* Encode the update as parameter polynomial *)
 let as_realparapoly label var =
   match TransitionLabel.update label var with
-  (** Correct? In the nondeterministic case we just make it deterministic? *)
-  (** TODO This is not the correct encoding a nondeterministic update, but rather of an identity update *)
   | None -> RealParameterPolynomial.of_var var
   | Some (TransitionLabel.UpdateElement.Poly p) -> p |> RealPolynomial.of_intpoly |> RealParameterPolynomial.of_polynomial
   | Some (TransitionLabel.UpdateElement.Dist d) ->
@@ -50,7 +51,7 @@ let as_realparapoly label var =
       |> RealPolynomial.add (RealPolynomial.of_var var)
       |> RealParameterPolynomial.of_polynomial
 
-(** Given a list of variables an affine template-polynomial is generated*)
+(** Given a list of variables an affine template-parameter-polynomial is generated*)
 let ranking_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list * Var.t =
   let vars = VarSet.elements vars in
   let num_vars = List.length vars in
@@ -61,9 +62,11 @@ let ranking_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list * 
   let constant_poly = RealParameterPolynomial.of_constant (RealPolynomial.of_var constant_var) in
   RealParameterPolynomial.(linear_poly + constant_poly), fresh_vars,constant_var
 
+(* This will store the added coefficients and constants for later optimisation *)
 let fresh_coeffs: Var.t list ref = ref []
 let fresh_consts: Var.t list ref = ref []
 
+(* use ranking_template to compute ranking_templates for every location *)
 let compute_ranking_templates cache (vars: VarSet.t) (locations: Location.t list): unit =
   let execute () =
     let ins_loc_prf location =
@@ -88,6 +91,7 @@ let compute_ranking_templates cache (vars: VarSet.t) (locations: Location.t list
                   )
                   execute
 
+(* This function is described in the underlying paper by Chaterjee but not needed in KoAT *)
 let compute_cbound_template cache (vars: VarSet.t): unit =
   let execute () =
     vars
@@ -99,55 +103,70 @@ let compute_cbound_template cache (vars: VarSet.t): unit =
                   ~result:(fun () -> !(get_cbound_template cache) |> Option.get |> RealParameterPolynomial.to_string)
                   execute
 
-let prob_branch_poly cache (l,t,l') =
-    let template = (fun key -> key |> TemplateTable.find (get_template_table cache)) in
-    let prob = t |> TransitionLabel.probability in
-    RealParameterPolynomial.mul (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial) (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
-
+(* Combine the update templates with probabilistic branching *)
 let expected_poly cache gtrans =
-    TransitionSet.fold (fun trans poly -> RealParameterPolynomial.add (prob_branch_poly cache trans) poly) (gtrans |> GeneralTransition.transitions) RealParameterPolynomial.zero
+  (* parapoly for one branch *)
+  let prob_branch_poly cache (l,t,l') =
+      let template = (fun key -> key |> TemplateTable.find (get_template_table cache)) in
+      let prob = t |> TransitionLabel.probability in
+      RealParameterPolynomial.mul
+        (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial)
+        (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
+  in
+  TransitionSet.fold
+    (fun trans poly -> RealParameterPolynomial.add (prob_branch_poly cache trans) poly)
+    (gtrans |> GeneralTransition.transitions) RealParameterPolynomial.zero
 
-let general_transition_constraint cache (constraint_type, gtrans): RealFormula.t =
+(* Logically encode the update applied to templates of a single transition t.
+ * New Variables representing the updates values are introduced and substituted into the template.
+ * The update constraints are then encoded by corresponding constraints on the fresh variables *)
+let encode_update cache t =
+  let start_template =
+    TemplateTable.find (get_template_table cache) (Transition.target t)
+  in
+  let new_var_map =
+    let vars = RealParameterPolynomial.vars start_template in
+    VarSet.fold (fun old_var var_map -> TransitionLabel.VarMap.add old_var (Var.fresh_id Var.Int ()) var_map) vars TransitionLabel.VarMap.empty
+  in
+  let update_map = Transition.label t |> TransitionLabel.update_map in
+  let update_guard old_var ue =
+    let new_var = TransitionLabel.VarMap.find old_var new_var_map in
+    match ue with
+    | TransitionLabel.UpdateElement.Poly p ->
+        Constraint.mk_eq (Polynomial.of_var new_var) p |> RealConstraint.of_intconstraint
+    | TransitionLabel.UpdateElement.Dist d ->
+      ProbDistribution.guard d old_var new_var |> RealConstraint.of_intconstraint
+  in
+  let template_substituted =
+    TemplateTable.find (get_template_table cache) (Transition.target t)
+    |> RealParameterPolynomial.rename (TransitionLabel.VarMap.bindings new_var_map |> RenameMap.from)
+  in
+  let constrs =
+    TransitionLabel.VarMap.fold (fun old_var ue -> RealConstraint.mk_and (update_guard old_var ue)) update_map RealConstraint.mk_true
+  in
+  constrs, template_substituted
+
+
+(* generate a RSM constraint of the specified type for a general transition *)
+let general_transition_constraint cache constraint_type gtrans: RealFormula.t =
   let template = gtrans |> GeneralTransition.start |> TemplateTable.find (get_template_table cache) in
   let lift_paraatom pa = (GeneralTransition.guard gtrans |> RealParameterConstraint.of_intconstraint,pa) |> List.singleton in
   let guard = GeneralTransition.guard gtrans |> Constraint.mk |> RealConstraint.of_intconstraint in
   let constraints_and_atoms =
     match constraint_type with
-    | `Non_Increasing ->  RealParameterAtom.Infix.(template >= (expected_poly cache gtrans)) |> lift_paraatom
+    | `Non_Increasing ->  RealParameterAtom.Infix.(template >= expected_poly cache gtrans) |> lift_paraatom
 
     | `Decreasing ->
         RealParameterAtom.Infix.(template >= (RealParameterPolynomial.add (expected_poly cache gtrans) (RealParameterPolynomial.of_polynomial RealPolynomial.one)))
         |> lift_paraatom
 
     | `Bounded ->
-    (* for every transition the guard needs to imply that after the guard is passed and the update is evaluated the template
-      * evaluated at the corresponding location is non-negative*)
+      (* for every transition the guard needs to imply that after the guard is passed and the update is evaluated the template
+       * evaluated at the corresponding location is non-negative *)
       let transition_bound t =
-        let new_var_map =
-          let vars = RealParameterPolynomial.vars template in
-          VarSet.fold (fun old_var var_map -> TransitionLabel.VarMap.add old_var (Var.fresh_id Var.Int ()) var_map) vars TransitionLabel.VarMap.empty
-        in
-
-        let update_constraints =
-          let update_map = Transition.label t |> TransitionLabel.update_map in
-          let update_guard old_var ue =
-            let new_var = TransitionLabel.VarMap.find old_var new_var_map in
-            match ue with
-            | TransitionLabel.UpdateElement.Poly p ->
-                Constraint.mk_eq (Polynomial.of_var new_var) p |> RealConstraint.of_intconstraint
-            | TransitionLabel.UpdateElement.Dist d ->
-              ProbDistribution.guard d old_var new_var |> RealConstraint.of_intconstraint
-          in
-          TransitionLabel.VarMap.fold (fun old_var ue -> RealConstraint.mk_and (update_guard old_var ue)) update_map RealConstraint.mk_true
-        in
-
-        let template_substituted =
-          TemplateTable.find (get_template_table cache) (Transition.target t)
-          |> RealParameterPolynomial.rename (TransitionLabel.VarMap.bindings new_var_map |> RenameMap.from)
-        in
-
-        (RealParameterConstraint.of_realconstraint @@ RealConstraint.mk_and (GeneralTransition.guard gtrans |> RealConstraint.of_intconstraint) update_constraints,
-          RealParameterAtom.Infix.(template_substituted >= RealParameterPolynomial.zero))
+        let upd_constrs, templ_subst = encode_update cache t in
+        (RealParameterConstraint.of_realconstraint @@ RealConstraint.mk_and (GeneralTransition.guard gtrans |> RealConstraint.of_intconstraint) upd_constrs,
+          RealParameterAtom.Infix.(templ_subst >= RealParameterPolynomial.zero))
       in
 
       GeneralTransition.transitions gtrans
@@ -155,35 +174,13 @@ let general_transition_constraint cache (constraint_type, gtrans): RealFormula.t
       |> List.map (transition_bound)
 
     | `Bounded_Refined ->
-        (* for every transition the guard needs to imply that after the guard is passed and the update is evaluated the template
-         * evaluated at the corresponding location is non-negative*)
+        (* for every transition the guard needs to imply that all possible successor states have the same sign of the evaluated template *)
         let tlist = GeneralTransition.transitions gtrans |> TransitionSet.to_list in
-        let t1_pos_implies_t2_pos t1 t2: RealParameterConstraint.t * (RealParameterAtom.t) =
-          let upd_constraints_and_temp_subst t =
-            let new_var_map =
-              let vars = RealParameterPolynomial.vars template in
-              VarSet.fold (fun old_var -> TransitionLabel.VarMap.add old_var (Var.fresh_id Var.Int ())) vars TransitionLabel.VarMap.empty
-            in
-            let update_constraints =
-              let update_map = TransitionLabel.update_map (Transition.label t) in
-              let update_guard old_var ue =
-                let new_var = TransitionLabel.VarMap.find old_var new_var_map in
-                match ue with
-                | TransitionLabel.UpdateElement.Poly p ->
-                    Constraint.mk_eq (Polynomial.of_var new_var) p |> RealConstraint.of_intconstraint
-                | TransitionLabel.UpdateElement.Dist d ->
-                  ProbDistribution.guard d old_var new_var |> RealConstraint.of_intconstraint
-              in
-              TransitionLabel.VarMap.fold (fun old_var ue -> RealConstraint.mk_and (update_guard old_var ue)) update_map RealConstraint.mk_true
-            in
-            let template_substituted =
-              TemplateTable.find (get_template_table cache) (Transition.target t)
-              |> RealParameterPolynomial.rename (TransitionLabel.VarMap.bindings new_var_map |> RenameMap.from)
-            in
-            update_constraints, template_substituted
-          in
-          let (upd_constraints_t1,template_subst_t1) = upd_constraints_and_temp_subst t1 in
-          let (upd_constraints_t2,template_subst_t2) = upd_constraints_and_temp_subst t2 in
+        let t1_nonneg_implies_t2_nonneg t1 t2: RealParameterConstraint.t * (RealParameterAtom.t) =
+          (* Under the condition that transition t1 leads to a state where the template is non-negative then transition t2
+           * also leads to a succesor state such that the corresponding template is non-negative*)
+          let (upd_constraints_t1,template_subst_t1) = encode_update cache t1 in
+          let (upd_constraints_t2,template_subst_t2) = encode_update cache t2 in
           let t1_pos = RealParameterConstraint.mk_ge template_subst_t1 RealParameterPolynomial.zero in
           let t2_pos = RealParameterAtom.mk_ge template_subst_t1 RealParameterPolynomial.zero in
           let extended_guard =
@@ -197,8 +194,9 @@ let general_transition_constraint cache (constraint_type, gtrans): RealFormula.t
         in
 
         List.cartesian_product tlist tlist
-        |> List.map (uncurry t1_pos_implies_t2_pos)
+        |> List.map (uncurry t1_nonneg_implies_t2_nonneg)
 
+      (* From the original paper but not needed in KoAT *)
       | `C_ranked ->
         let c_template = !(get_cbound_template cache) |> Option.get in
         RealParameterAtom.Infix.((RealParameterPolynomial.add template c_template) >= (expected_poly cache gtrans))
@@ -211,23 +209,25 @@ let general_transition_constraint cache (constraint_type, gtrans): RealFormula.t
   |> List.fold_left RealFormula.mk_and RealFormula.mk_true
 
 let non_increasing_constraint cache transition =
-  general_transition_constraint cache (`Non_Increasing, transition)
+  general_transition_constraint cache `Non_Increasing transition
 
 let bounded_constraint cache transition =
-  let constr = general_transition_constraint cache (`Bounded, transition) in
+  let constr = general_transition_constraint cache `Bounded transition in
   constr
 
 let bounded_refined_constraint cache transition =
-  let constr = general_transition_constraint cache (`Bounded_Refined, transition) in
+  let constr = general_transition_constraint cache `Bounded_Refined transition in
   constr
 
 let decreasing_constraint cache transition =
-  let constr = general_transition_constraint cache (`Decreasing, transition) in
+  let constr = general_transition_constraint cache `Decreasing transition in
   constr
 
 let c_ranked_constraint cache transition =
-  general_transition_constraint cache (`C_ranked, transition)
+  general_transition_constraint cache `C_ranked transition
 
+
+(* Not used by KoAT *)
 let add_to_LexRSMMap cache map transitions valuation =
   transitions
   |> GeneralTransitionSet.start_locations
@@ -250,6 +250,7 @@ let add_to_LexRSMMap cache map transitions valuation =
     )
   |> ignore
 
+(* From the paper but not used in KoAT *)
 let evaluate_cbound cache valuation =
   !(get_cbound_template cache)
   |> Option.get
@@ -259,6 +260,7 @@ let evaluate_cbound cache valuation =
 
 module Solver = SMT.IncrementalZ3Solver
 
+(* From the paper but not used in KoAT *)
 let add_c_ranked_constraints cache solver transitions =
   let c_template = !(get_cbound_template cache) |> Option.get
   in
@@ -273,6 +275,7 @@ let add_c_ranked_constraints cache solver transitions =
   |> List.map (Solver.add_real solver)
   |> ignore
 
+(* Not used in KoAT*)
 let rec backtrack_1d cache = function
   | ([],n,ys,solver) -> (n,ys)
   | (x::xs,n,ys,solver) ->
@@ -292,6 +295,7 @@ let rec backtrack_1d cache = function
             backtrack_1d cache (xs, n, ys, solver)
           )
 
+(* Add the corresponding bounding constrained depending whether we perform a refind analysis*)
 let add_bounding_constraint ~refined cache solver gt =
   (* Try to add the normal bound constraint *)
   if refined then
@@ -299,21 +303,24 @@ let add_bounding_constraint ~refined cache solver gt =
   else
     Solver.add_real solver (bounded_constraint cache gt)
 
+(* Backtrack the set of non_increasing general transitions.SMT
+ * The Tuple's first element is the list of not non-increasing transitions, the second
+ * the number of non-increasing transitions, and the third is the list of non-increasing transitions *)
 let rec backtrack_1d_non_increasing ~refined cache = function
   | ([],n,ys,solver) -> (n,ys)
   | (x::xs,n,ys,solver) ->
           Solver.push solver;
-          (* How many non-increasing transitions when skipping the current candidate? *)
           Solver.add_real solver (non_increasing_constraint cache x);
           add_bounding_constraint ~refined:refined cache solver x;
           if Solver.satisfiable_option solver = Some true then (
             (* How many non-increasing transitions when keeping the candidate? *)
             let (n2, ys2) = backtrack_1d_non_increasing ~refined:refined cache (xs, n+1, (GeneralTransitionSet.add x ys), solver) in
             if n2-n == List.length (x::xs) then
-              (* all remaining transitions ranked *)
+              (* all remaining transitions are shown to be non-increasing -> we are done *)
               (Solver.pop solver; (n2, ys2))
             else(
               Solver.pop solver;
+              (* How many non-increasing transitions when skipping the current candidate? *)
               let (n1, ys1) = backtrack_1d_non_increasing ~refined:refined cache (xs, n, ys, solver) in
               if n1 >= n2 then
                 (* When ignoring the current candidate we yield better results. Hence remove the corresponding constraints from the solver*)
@@ -323,19 +330,18 @@ let rec backtrack_1d_non_increasing ~refined cache = function
                 (n2, ys2)
             )
           ) else (
-            (* The last added constraints render all constraints unsat. Hence we backtrack *)
+            (* The last added constraint renders all constraints unsat. Hence we backtrack *)
             Solver.pop solver;
             backtrack_1d_non_increasing ~refined:refined cache (xs,n,ys,solver)
           )
 
+(* Compute a RSM as needed by KoAT. Optionally we can specify a timeout for the SMT Solver *)
 let find_1d_lexrsm_non_increasing ~refined ~timeout cache transitions decreasing =
   let solver = Solver.create ~timeout:timeout ()
   in
   Solver.add_real solver (decreasing_constraint cache decreasing);
-  (*
-    Here the non-refined bounded constraint is needed since otherwise the ranking function could become negative after the evaluation of
-    a decreasing transition
-  *)
+  (* Here the non-refined bounded constraint is needed since otherwise the ranking function could become negative after the evaluation of
+   * a decreasing transition *)
   add_bounding_constraint ~refined:false cache solver decreasing;
   if Solver.satisfiable_option solver = Some true then
     let (n, non_incr) =
@@ -366,6 +372,7 @@ let find_1d_lexrsm_non_increasing ~refined ~timeout cache transitions decreasing
   else
     (None, GeneralTransitionSet.empty)
 
+(* Described in the underlying paper but not needed by KoAT *)
 let find_1d_lexrsm cache transitions remaining_transitions cbounded =
   let solver = Solver.create ()
   and remaining_list = remaining_transitions |> GeneralTransitionSet.to_list
@@ -434,7 +441,8 @@ let rec make_ranking_function start_poly c_bound exp =
     | (x::xs, y::ys) -> RealPolynomial.add (RealPolynomial.mul x (RealPolynomial.pow (RealPolynomial. add y RealPolynomial.one) exp)) (make_ranking_function xs ys (exp-1))
     | _ -> failwith "impossible"
 
-let compute_map cache program transitions cbounded =
+(* From the underlying paper but not used in KoAT *)
+let compute_map_paper cache program transitions cbounded =
   (* TODO max lexmap global for better performance *)
   let lexmap = LexRSMMap.create 10 in
   let execute () =
@@ -450,17 +458,19 @@ let compute_map cache program transitions cbounded =
                     (lexrsmmap_to_string lexmap) ^ cbound_string ^ non_inc_string) option |? "no lexRSMMap found")
                   execute
 
-let init_computation cache vars locations transitions program cbounded =
+(* From the underlying paper but not used in KoAT *)
+let init_computation_paper cache vars locations transitions program cbounded =
   if TemplateTable.is_empty (get_template_table cache) then
     compute_ranking_templates cache vars locations;
   if cbounded then
     if Option.is_none !(get_cbound_template cache) then
       compute_cbound_template cache vars;
-  compute_map cache program transitions cbounded
+  compute_map_paper cache program transitions cbounded
 
+(* From the underlying paper but not used in KoAT *)
 let compute_as_termination cache program =
   let execute () =
-    init_computation
+    init_computation_paper
       cache
       (Program.input_vars program)
       (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list)
@@ -472,9 +482,10 @@ let compute_as_termination cache program =
                   ~result:(fun bool -> if bool then "The program terminates almost surely." else "The program does not terminate almost surely.")
                   execute
 
+(* From the underlying paper but not used in KoAT *)
 let compute_expected_complexity cache program =
   let execute () =
-    init_computation
+    init_computation_paper
       cache
       (Program.input_vars program)
       (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list)
@@ -503,14 +514,17 @@ let ranking_table_to_string rtable =
   |> List.map (Option.default "None" % Option.map pprf_to_string % Tuple2.second)
   |> String.concat "; "
 
+(* Compute a ranking function as a side effect such that the given transition is decreasing.decreasing
+ * The computed ranking function is subsequently added to the RankingTable cache *)
 let compute_ranking_function ~refined ~timeout cache program gt =
-  let gts =
-    Program.generalized_transitions program
-  in
+  let gts = Program.generalized_transitions program in
+
+  (* Limit possible non-increasing transitions to those in the same SCC as the given transition *)
   let scc_transitions = Program.sccs program in
   scc_transitions
   |> Enum.filter (not % TransitionSet.is_empty % TransitionSet.inter (GeneralTransition.transitions gt))
   |> Enum.fold TransitionSet.union TransitionSet.empty
+  (* Complete the previous transitionset, such that every gt containing a t of the previous set is contained in the resulting gt set *)
   |> fun tset -> TransitionSet.fold
       (fun t -> GeneralTransitionSet.union (GeneralTransitionSet.filter (TransitionSet.mem t % GeneralTransition.transitions) gts))
       tset GeneralTransitionSet.empty
@@ -533,6 +547,8 @@ let print_pprf_option = function
   | Some a -> pprf_to_string a
   | None   -> "None"
 
+(* Coompute a ranking function such that the given gt is decreasing and return it.non_increasing
+ * Once a ranking function is computed it is stored in the given cache *)
 let find ?(refined=false) ?(timeout=None) cache program gt =
   let execute () =
     let vars = Program.input_vars program in
