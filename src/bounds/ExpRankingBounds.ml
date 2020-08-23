@@ -20,34 +20,42 @@ let mul_inctime_and_rhs (inctime, rhs) = RealBound.(
       inctime * rhs
 )
 
-let get_best_bound entry_locations incoming_enum appr rankfunc: RealBound.t =
+(* computes a time bound for a given ranking function *)
+let get_bound entry_locations incoming_enum appr rankfunc: RealBound.t =
   let incoming_list = List.of_enum incoming_enum in
   entry_locations
   |> Util.show_debug_log logger ~resultprint:(Util.enum_to_string Location.to_string % List.enum) "entry_locations"
+    (* Independently process every entry location *)
   |> List.map (fun entry_location ->
        let entry_trans_to_location =
          incoming_list
          |> List.filter (Location.equal entry_location % snd)
          |> List.map fst
        in
+       (* The 'normal' transitions contained in entry_trans_to_location *)
        let trans_to_entry_location =
          entry_trans_to_location
          |> List.map GeneralTransition.transitions
-         |> List.map @@ TransitionSet.filter (fun (_,t,l') -> Location.equal l' entry_location)
-         |> List.map (TransitionSet.to_list)
+         |> List.map @@ TransitionSet.filter (fun (_,_,l') -> Location.equal l' entry_location)
+         |> List.map TransitionSet.to_list
          |> List.flatten
        in
 
        let rank_size_subst_bound v =
-         entry_trans_to_location
-         |> List.map (fun gt -> Approximation.expsizebound_abs appr (gt,entry_location) v )
-         |> List.enum
+         List.enum entry_trans_to_location
+         |> Enum.map (fun gt -> Approximation.expsizebound_abs appr (gt, entry_location) v )
          |> RealBound.sum
        in
 
        let rank = LexRSM.rank rankfunc entry_location in
 
-       let rank_bounded = (RealBound.appr_substition_abs_all rank_size_subst_bound (RealBound.of_poly rank)) in
+       (* Initial ranking function value *)
+       let rank_bounded = RealBound.appr_substition_abs_all rank_size_subst_bound (RealBound.of_poly rank) in
+
+       (* Multiply the value of the ranking function and the number of times the entry location can be visited
+          Both are in general bounds on the expected values of random variables.
+          Hence it is in general not possible to multiply those values and we have to ressort to the nonprobabilistic counterparts
+       *)
        if RealPolynomial.is_const rank then
          let inc_prob_timebound = List.map (Approximation.exptimebound appr) entry_trans_to_location |> List.enum |> RealBound.sum in
          mul_inctime_and_rhs (inc_prob_timebound, rank_bounded)
@@ -62,6 +70,7 @@ let get_best_bound entry_locations incoming_enum appr rankfunc: RealBound.t =
   |> List.enum
   |> RealBound.sum
 
+(* Use get_bound to compute a timebound and then additionally computes a costbound *)
 let compute_bounds ~refined (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t): RealBound.t * RealBound.t =
   let execute () =
     let incoming_enum =
@@ -76,7 +85,7 @@ let compute_bounds ~refined (appr: Approximation.t) (program: Program.t) (rank: 
     in
 
     let time =
-      get_best_bound entry_locations (Enum.clone incoming_enum) appr rank
+      get_bound entry_locations (Enum.clone incoming_enum) appr rank
       |> RealBound.simplify_vars_nonnegative
     in
 
@@ -87,6 +96,7 @@ let compute_bounds ~refined (appr: Approximation.t) (program: Program.t) (rank: 
       |> Enum.flatten
     in
 
+    (* nonprobabilistic sizebounds on incoming values, used to overaproximate the costs generated *)
     let inc_det_sizebound v =
       entry_ts_to_decreasing |> Enum.clone
       |> Enum.map (fun t -> Bound.abs_bound (fun k -> Approximation.sizebound k appr t v))
@@ -99,7 +109,7 @@ let compute_bounds ~refined (appr: Approximation.t) (program: Program.t) (rank: 
       |> RealBound.appr_substition_abs_all inc_det_sizebound
     in
 
-    let cost = mul_inctime_and_rhs (time,substituted_cost) |> RealBound.simplify_vars_nonnegative in
+    let cost = mul_inctime_and_rhs (time, substituted_cost) |> RealBound.simplify_vars_nonnegative in
 
     (time, cost)
 
@@ -108,8 +118,12 @@ let compute_bounds ~refined (appr: Approximation.t) (program: Program.t) (rank: 
                      ~result:(fun (time,cost) -> "time: "^RealBound.to_string time ^ " cost: " ^ (RealBound.to_string cost))
                      execute
 
+
+(* Try to improve the computed cost/timebounds for the decreasing transition of the ranking function
+  * using the given ranking function *)
 let improve_with_rank ~refined add_exptimebound add_expcostbound program appr (rank: LexRSM.t) =
   let (time,cost) = compute_bounds ~refined:refined appr program rank in
+  (* If a new non-infinity time/cost bound has been computed update the approximation and return MaybeChanged.changed * approximation *)
   (if RealBound.is_infinity time || Approximation.is_exptime_bounded appr (LexRSM.decreasing rank) then
       MaybeChanged.same appr
    else
@@ -122,10 +136,11 @@ let improve_with_rank ~refined add_exptimebound add_expcostbound program appr (r
           MaybeChanged.(mca >>= (changed % add_expcostbound cost (LexRSM.decreasing rank)))
      )
 
-(** Checks if a transition is bounded *)
+(** Checks if the costs and time of a transition is bounded *)
 let exp_bounded appr transition =
   Approximation.is_expcost_bounded appr transition && Approximation.is_exptime_bounded appr transition
 
+  (* Try to improve the time/cost bounds for all not-already bounded transitions *)
 let improve ~refined ~refined_smt_timeout add_exptimebound add_expcostbound cache program appr =
   program
   |> Program.non_trivial_transitions
