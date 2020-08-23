@@ -50,24 +50,27 @@ jobs:
         fi
         df -h
 
-    - name: export artifacts
-      run: |
-        cd ~
-        docker container create --name temp koatbuild
-        docker container cp temp:/home/opam/build/src/main/koat2.opt koat-static
-        docker container rm temp
-        chmod +x koat-static
-        xz -1 -T4 koat-static
-        ls -lh
-        docker save koat | xz -T4 -z -1 - > ~/koat-docker.tar.xz
+    # Do not export the artifacts to save on storage capacity.
+    # Uncommont the following to export them nevertheless.
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: static-binary
-        path: ~/koat-static.xz
+        # - name: export artifacts
+        #   run: |
+        #     cd ~
+        #     docker container create --name temp koatbuild
+        #     docker container cp temp:/home/opam/build/src/main/koat2.opt koat-static
+        #     docker container rm temp
+        #     chmod +x koat-static
+        #     xz -1 -T4 koat-static
+        #     ls -lh
+        #     docker save koat | xz -T4 -z -1 - > ~/koat-docker.tar.xz
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: docker-img
-        path: ~/koat-docker.tar.xz
+        # - uses: actions/upload-artifact@v2
+        #   with:
+        #     name: static-binary
+        #     path: ~/koat-static.xz
+
+        # - uses: actions/upload-artifact@v2
+        #   with:
+        #     name: docker-img
+        #     path: ~/koat-docker.tar.xz
 
