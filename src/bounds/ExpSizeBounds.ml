@@ -8,6 +8,7 @@ let logger = Logging.(get ExpSize)
 module ERV = Make_RV(RVTransitions.TransitionForExpectedSize)
 
 let improve_scc simplify_smt elsb_cache program ervg appr = function
+  (* trivial SCCs of the RVG (without self-loop) *)
   | [((gt,l),v)] when not (ERVG.mem_edge ervg ((gt,l),v) ((gt,l),v)) ->
      let new_bound = ExpTrivialSizeBounds.compute elsb_cache program
                       (fun (t,v) -> Bound.abs_bound (fun k -> Approximation.sizebound k appr t v))
@@ -20,7 +21,7 @@ let improve_scc simplify_smt elsb_cache program ervg appr = function
      let new_bound = ExpNontrivialSizeBounds.compute elsb_cache program (Approximation.timebound_gt appr) (Approximation.exptimebound appr)
                                                                             (fun t v -> Bound.abs_bound @@ fun kind -> Approximation.sizebound kind appr t v)
                                                                             (Approximation.expsizebound_abs appr) scc in
-     (* Add all new bound to all general result variables *)
+     (* Add new bound to all general result variables *)
      Approximation.add_expsizebounds simplify_smt new_bound scc appr
 
 let improve simplify_smt elsb_cache ervg sccs program appr =
