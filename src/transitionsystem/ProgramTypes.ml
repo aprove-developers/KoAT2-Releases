@@ -79,6 +79,15 @@ module Transition =
     let update_cost cvect (l,t,l') = (l,TransitionLabel.update_cost cvect t,l')
     let hash = Hashtbl.hash % id
 
+    let input_vars =
+      TransitionLabel.input_vars % label
+
+    let vars =
+      TransitionLabel.vars % label
+
+    let temp_vars t =
+      VarSet.diff (vars t) (input_vars t)
+
     let to_id_string (l,label,l') =
       TransitionLabel.to_id_string label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
 

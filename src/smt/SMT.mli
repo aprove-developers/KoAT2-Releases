@@ -74,7 +74,9 @@ sig
   val maximize : t -> Var.t -> unit
 
   (* maximizes the number of variables set to 0. If add_as_constraint (defaulting to false) is true
-    a backtracking point is created before enforcing the minimal number of set variables *)
+    a backtracking point is created before enforcing the minimal number of set variables.
+    Note that we assume that the supplied list of variables is not empty.
+    *)
   val minimize_set_vars : t -> ?add_as_constraint:bool -> Var.t list -> unit
 
 

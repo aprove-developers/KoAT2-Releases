@@ -28,22 +28,18 @@ let print_matrix =
 
 
 type t = {
-  elsb : RealBound.t;
-  elsb_plus_var : RealBound.t;
-  reduced_elsb : RealBound.t;
+  elcb : RealBound.t; (** The expected local change bound *)
+  var : Var.t;
+  reduced_coeff : OurFloat.t; (** The reduced expected local size bound as used in the computation of expected nontrivial size bounds*)
 }
 
-let elsb t = t.elsb
-let elsb_plus_var t = t.elsb_plus_var
-let reduced_elsb t = t.reduced_elsb
-
 type concave_convex_cache = (concave_convex_op * String.t, bool) Hashtbl.t
-type elsb_bound_cache = (int * string * string, t) Hashtbl.t
-type elsb_cache = (concave_convex_cache * elsb_bound_cache)
+type elcb_bound_cache = (int * string * string, t) Hashtbl.t
+type elcb_cache = (concave_convex_cache * elcb_bound_cache)
 
-let new_cache: unit -> elsb_cache = fun () -> (Hashtbl.create 10, Hashtbl.create 10)
-let get_concave_convex (cache: elsb_cache) = Tuple2.first cache
-let get_elsb_bound (cache: elsb_cache) = Tuple2.second cache
+let new_cache: unit -> elcb_cache = fun () -> (Hashtbl.create 10, Hashtbl.create 10)
+let get_concave_convex (cache: elcb_cache) = Tuple2.first cache
+let get_elcb_bound (cache: elcb_cache) = Tuple2.second cache
 
 (** Using the standard definition of convexity/concavity to handle bounds instead of polynomials.
    Note that our bounds consist of non-concave terms like abs(X). However our bounds bound exactly theses terms.
@@ -125,8 +121,8 @@ let concave_convex_check (comp_operator: concave_convex_op) (poly: RealPolynomia
   let solver = Solver.create () in
   let constr =
     match comp_operator with
-    | Convex -> RealFormula.mk_ge term_complete (RealPolynomial.of_constant (OurFloat.zero))
-    | Concave -> RealFormula.mk_le term_complete (RealPolynomial.of_constant (OurFloat.zero))
+    | Convex -> RealFormula.mk_ge term_complete (RealPolynomial.of_constant OurFloat.zero)
+    | Concave -> RealFormula.mk_le term_complete (RealPolynomial.of_constant OurFloat.zero)
   in
 
   Solver.add_real solver (RealFormula.neg constr);
@@ -150,7 +146,7 @@ let bound_is_convex cache =
 (* TODO avoid invocation of Z3 for linearity check  *)
 let appr_substitution_is_valid cache bound = (bound_is_concave cache bound) && (bound_is_convex cache bound)
 
-(* Try to bound the variable var by variables of the set other_vars *)
+(* Try to bound the variable var by by a linear expression in variables of the set other_vars *)
 let eliminate_var other_vars inv var =
   let new_vars =
     Var.fresh_id_list Var.Real (VarSet.cardinal other_vars)
@@ -158,6 +154,7 @@ let eliminate_var other_vars inv var =
   let coeffs = new_vars |> List.map (RealPolynomial.of_var) in
   let constant_var = Var.fresh_id Var.Real () in
   let constant = constant_var |> RealPolynomial.of_var in
+  (* the linear template *)
   let para_poly =
     RealParameterPolynomial.of_coeff_list coeffs (VarSet.to_list other_vars)
     |> RealParameterPolynomial.(add (of_constant constant))
@@ -179,56 +176,64 @@ let eliminate_var other_vars inv var =
   Solver.add_real solver @@ formula `Upper;
   Solver.add_real solver @@ formula `Lower;
 
-(*   Solver.minimize_absolute solver new_vars;
-  Solver.minimize_absolute solver [constant_var] *)
   if not (List.is_empty new_vars) then (
     Solver.minimize_set_vars solver new_vars;
     Solver.minimize_absolute solver new_vars
   );
   Solver.minimize_absolute solver [constant_var];
-(*   Solver.minimize_absolute_with_weight solver ((constant_var,OurFloat.one) :: List.map (fun v -> v,OurFloat.of_int 2) new_vars); *)
-  match Solver.model_real solver with
-  | Some model ->
-      RealParameterPolynomial.eval_coefficients (flip Valuation.eval model) para_poly
-      |> fun p -> Some (RealBound.of_poly p)
-  | None -> None
 
-let elsb_ program (((gt, l), v): RV.t): t =
+  Solver.model_real solver
+  (* evaluate the template *)
+  |> Option.map (fun model -> RealParameterPolynomial.eval_coefficients (flip Valuation.eval model) para_poly)
+  |> Option.map RealBound.of_poly
+
+let elcb_ (((gt, l), v): RV.t): t =
   let execute () =
-    let transitions =
+    let transitions_with_prob =
       GeneralTransition.transitions gt
       |> TransitionSet.filter (Location.equal l % Transition.target)
+      |> TransitionSet.enum
+      |> Enum.map (fun t -> (t, Transition.label t |> fun label -> OurFloat.(TransitionLabel.probability label)))
     in
-    let transitions_with_prob =
-      TransitionSet.to_list transitions
-      |> List.map (fun t -> (t, Transition.label t |> fun label -> OurFloat.(TransitionLabel.probability label)))
+
+    (* All transitions of a general transition share the same input vars *)
+    let input_vars = GeneralTransition.input_vars gt in
+    let nondet_vars =
+      Enum.clone transitions_with_prob
+      |> Enum.map (Transition.temp_vars % Tuple2.first)
+      |> Enum.fold VarSet.union VarSet.empty
     in
+
+
+    (* compute a local change bound for a single update elemnent *)
     let handle_update_element ue =
       match ue with
       | TransitionLabel.UpdateElement.Poly p ->
-          (RealBound.of_poly RealPolynomial.(of_intpoly p - of_var v), RealBound.of_poly @@ RealPolynomial.of_intpoly p)
+          RealBound.abs @@ RealBound.of_poly RealPolynomial.(of_intpoly p - of_var v)
       | TransitionLabel.UpdateElement.Dist d ->
-          (ProbDistribution.expected_value_abs d, RealBound.(of_var v + ProbDistribution.expected_value_abs d))
+          ProbDistribution.expected_value_abs d
     in
+    (* compute a local change bound for a single transition elemnent *)
     let handle_transition trans =
       Transition.label trans
       |> flip TransitionLabel.update v
       |? TransitionLabel.UpdateElement.Poly (Polynomial.of_var v)
       |> handle_update_element
     in
+
     let bound_nondet_vars b =
-      let nondet_vars = VarSet.diff (Program.vars program) (Program.input_vars program) in
       VarSet.fold
         (fun v b ->
           let upper_bound =
             Option.default RealBound.infinity
               (eliminate_var
-                (Program.input_vars program)
+                input_vars
                 (Constraints.RealParameterConstraint.of_intconstraint @@ GeneralTransition.guard gt) v)
           in
           RealBound.appr_substitution_abs_one v upper_bound b)
-        (VarSet.inter nondet_vars (RealBound.vars b)) b
+        nondet_vars b
     in
+    (* try to eliminate aliased variables *)
     let simplify_with_guard b =
       VarSet.fold
         (fun v b' ->
@@ -238,43 +243,55 @@ let elsb_ program (((gt, l), v): RV.t): t =
           RealBound.appr_substitution_abs_one v v_subst b')
         (RealBound.vars b) b
     in
+
+    (* necessary to normalise reduced elcbs *)
     let total_probability =
-      transitions_with_prob
-      |> List.map Tuple2.second
-      |> List.fold_left (OurFloat.add) OurFloat.zero
+      Enum.clone transitions_with_prob
+      |> Enum.map Tuple2.second
+      |> Enum.fold OurFloat.add OurFloat.zero
     in
-    transitions_with_prob
-    |> List.enum
+    Enum.clone transitions_with_prob
     |> Enum.map (fun (t,p) -> (p, handle_transition t))
     |> Enum.map
-        (fun (p,(bound,bound_plus_var)) ->
+        (fun (p,bound) ->
           RealBound.(
               of_constant p * abs bound,
-              of_constant p * abs bound_plus_var,
               of_constant (OurFloat.(p/total_probability)) * abs bound
           )
         )
-    |> Enum.map (fun (b,b_p_v,red_b) -> RealBound.simplify_vars_nonnegative b, RealBound.simplify_vars_nonnegative b_p_v, RealBound.simplify_vars_nonnegative red_b)
-    |> fun en -> (RealBound.sum % Enum.map Tuple3.first @@ Enum.clone en, RealBound.sum % Enum.map Tuple3.second @@ Enum.clone en, RealBound.sum % Enum.map Tuple3.third @@ Enum.clone en)
-    |> fun (b,b_v_p,red_b) -> (bound_nondet_vars b, bound_nondet_vars b_v_p, bound_nondet_vars red_b)
-    |> fun (b,b_v_p,red_b) -> (simplify_with_guard b, simplify_with_guard b_v_p, simplify_with_guard red_b)
-    |> fun (b,b_v_p,red_b) ->
+    |> Enum.map (fun (b,red_b) -> RealBound.simplify_vars_nonnegative b, RealBound.simplify_vars_nonnegative red_b)
+    |> fun en -> (RealBound.sum % Enum.map Tuple2.first @@ Enum.clone en)
+    |> bound_nondet_vars
+    |> simplify_with_guard
+    |> fun b ->
         {
-          elsb = RealBound.simplify_vars_nonnegative b;
-          elsb_plus_var = RealBound.simplify_vars_nonnegative b_v_p;
-          reduced_elsb = RealBound.simplify_vars_nonnegative red_b;
+          var = v;
+          elcb = RealBound.simplify_vars_nonnegative b;
+          reduced_coeff = OurFloat.(one/total_probability);
         }
   in
   Logger.with_log
     logger Logger.DEBUG
-    (fun () -> "elsb_",["gt", GeneralTransition.to_id_string gt; "l", Location.to_string l; "var", Var.to_string v])
-    ~result:(fun t -> "elsb: "^ RealBound.to_string t.elsb ^ " elsb_plus_var: "^ RealBound.to_string t.elsb_plus_var ^ " reduced_elsb: " ^ RealBound.to_string t.reduced_elsb)
+    (fun () -> "elcb_",["gt", GeneralTransition.to_id_string gt; "l", Location.to_string l; "var", Var.to_string v])
+    ~result:(fun t -> "elcb: "^ RealBound.to_string t.elcb ^ " reduced_coeff: " ^ OurFloat.to_string t.reduced_coeff)
     execute
 
-let compute_elsb cache =
-  curry @@ Util.memoize (get_elsb_bound cache)
-    ~extractor:(fun (program,((gt,l),var)) -> (GeneralTransition.id gt, Location.to_string l, Var.to_string var))
-    (fun (program,rv) -> elsb_ program rv)
+let compute_elcb cache =
+  Util.memoize (get_elcb_bound cache)
+    ~extractor:(fun (((gt,l),var)) -> (GeneralTransition.id gt, Location.to_string l, Var.to_string var))
+    (fun rv -> elcb_ rv)
 
-let vars cache program rv =
-  (compute_elsb cache program rv).elsb_plus_var |> RealBound.vars
+let elcb cache erv =
+  let t = compute_elcb cache erv in
+  t.elcb
+
+let elcb_plus_var cache erv =
+  let t = compute_elcb cache erv in
+  RealBound.(abs (of_var t.var) + t.elcb)
+
+let reduced_elcb cache erv =
+  let t = compute_elcb cache erv in
+  RealBound.(of_constant t.reduced_coeff * t.elcb)
+
+let vars cache =
+  RealBound.vars % elcb_plus_var cache

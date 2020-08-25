@@ -11,13 +11,13 @@ let tests =
   let varx = RealBound.of_var @@ Var.mk_arg 0 in
   let vary = RealBound.of_var @@ Var.mk_arg 1 in
   "ELSB" >::: [
-    "elsb" >::: List.map
+    "elcb" >::: List.map
       (fun (gt,argnum,l,lower_bound, lower_bound_red, program_string) ->
         (Int.to_string gt) >::
           (fun _ ->
             let var = Var.mk_arg argnum in
             let cache = CacheManager.new_cache () in
-            let elsb_cache = CacheManager.elsb_cache cache in
+            let elcb_cache = CacheManager.elcb_cache cache in
             let prog = Readers.read_program (CacheManager.trans_id_counter cache) program_string in
             let gt_id_offset =
               Program.generalized_transitions prog
@@ -36,20 +36,20 @@ let tests =
                 |> LocationSet.filter ((=) l % Location.to_string) |> LocationSet.any
             in
             let rv = ((gt,loc),var) in
-            let elsb     = ExpLocalSizeBound.(elsb         @@ compute_elsb elsb_cache prog rv) in
-            let elsb_red = ExpLocalSizeBound.(reduced_elsb @@ compute_elsb elsb_cache prog rv) in
+            let elcb     = ExpLocalChangeBound.(elcb elcb_cache rv) in
+            let elcb_red = ExpLocalChangeBound.(reduced_elcb elcb_cache rv) in
             let error_string =
-              "elsb_mismatch elsb: " ^ (RealBound.show ~complexity:false elsb)
+              "elcb_mismatch elcb: " ^ (RealBound.show ~complexity:false elcb)
               ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
               ^ " in program " ^ (Program.to_string prog)
             in
             let error_string_red =
-              "elsb_mismatch reduced_elsb: " ^ (RealBound.show ~complexity:false elsb_red)
+              "elcb_mismatch reduced_elcb: " ^ (RealBound.show ~complexity:false elcb_red)
               ^ " expected " ^ (RealBound.show ~complexity:false lower_bound_red)
               ^ " in program " ^ (Program.to_string prog)
             in
-            assert_bool error_string (bounds_pos_vars lower_bound elsb);
-            assert_bool error_string_red (bounds_pos_vars lower_bound_red elsb_red)
+            assert_bool error_string (bounds_pos_vars lower_bound elcb);
+            assert_bool error_string_red (bounds_pos_vars lower_bound_red elcb_red)
           )
       )
       [
@@ -219,16 +219,16 @@ let tests =
       (
         fun (bstr,conc_conv) ->
           let cache = CacheManager.new_cache () in
-          let elsb_cache = CacheManager.elsb_cache cache in
+          let elcb_cache = CacheManager.elcb_cache cache in
           let bound = Readers.read_bound bstr |> RealBound.of_intbound in
           let (valid,err_string) =
             match conc_conv with
             | Concave ->
-              (ExpLocalSizeBound.bound_is_concave elsb_cache bound, "Bound " ^ bstr ^ " is not concave as expected!")
+              (ExpLocalChangeBound.bound_is_concave elcb_cache bound, "Bound " ^ bstr ^ " is not concave as expected!")
             | Convex ->
-              (ExpLocalSizeBound.bound_is_convex elsb_cache bound, "Bound " ^ bstr ^ " is not convex as expected!")
+              (ExpLocalChangeBound.bound_is_convex elcb_cache bound, "Bound " ^ bstr ^ " is not convex as expected!")
             | None    ->
-              match (ExpLocalSizeBound.bound_is_concave elsb_cache bound, ExpLocalSizeBound.bound_is_convex elsb_cache bound) with
+              match (ExpLocalChangeBound.bound_is_concave elcb_cache bound, ExpLocalChangeBound.bound_is_convex elcb_cache bound) with
               | (true,true)   -> (false, "Bound " ^ bstr ^ "is convex and concave!")
               | (true,false)  -> (false, "Bound " ^ bstr ^ "is concave!")
               | (false,true)  -> (false, "Bound " ^ bstr ^ "is convex!")

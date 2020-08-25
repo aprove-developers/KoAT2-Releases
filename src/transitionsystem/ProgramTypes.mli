@@ -35,6 +35,9 @@ sig
   val src : t -> Location.t
   val label : t -> TransitionLabel.t
   val target : t -> Location.t
+  val input_vars: t -> VarSet.t
+  val temp_vars: t -> VarSet.t
+  val vars: t -> VarSet.t
   val id : t -> int
   val cost : t -> Polynomial.t
   (** Adds the invariant to this transition. *)

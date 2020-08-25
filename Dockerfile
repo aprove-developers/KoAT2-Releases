@@ -24,7 +24,7 @@ RUN eval $(opam env)
 RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev graphviz musl-dev --no-cache
 
 # If you have enough threads/memory available increase the job count
-RUN opam install -j8 z3 ocamlfind menhir cmdliner ppx_deriving batteries ppx_deriving_cmdliner fpath omake apron ocamlgraph ounit ocamlnet
+RUN opam install -j16 z3 ocamlfind menhir cmdliner ppx_deriving batteries ppx_deriving_cmdliner fpath omake apron ocamlgraph ounit ocamlnet
 
 # Set environment variables to include libraries added through opam
 ENV PATH=/home/opam/.opam/4.09.1+musl+static+flambda/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main

@@ -43,7 +43,7 @@ let show_logger = function
   | Bound          -> "bound"
   | BoundWrapper   -> "boundWrapper"
   | BottomUp       -> "bottomUp"
-  | ELSB           -> "elsb"
+  | ELSB           -> "elcb"
   | ExactRuntime   -> "exactruntime"
   | ExpSize        -> "expSize"
   | ExpTime        -> "expTime"

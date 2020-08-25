@@ -41,7 +41,7 @@ let add_vertices_to_rvg vertices rvg =
   |> List.map (flip add_vertex)
   |> List.fold_left (fun rvg adder -> adder rvg) rvg
 
-let rvg elsb_cache (program: Program.t) =
+let rvg elcb_cache (program: Program.t) =
   let add_gt (post_gt: GeneralTransition.t) (rvg: t): t =
     let rvg_with_vertices: t =
       add_vertices_to_rvg
@@ -50,7 +50,7 @@ let rvg elsb_cache (program: Program.t) =
          |> List.map (fun (l,(gt,v)) -> ((gt,l),v) ) ) rvg
     in
     let pre_nodes (post_transition: GeneralTransition.t) (post_l: Location.t) (post_var: Var.t) =
-      ExpLocalSizeBound.vars elsb_cache program ((post_transition,post_l),post_var)
+      ExpLocalChangeBound.vars elcb_cache ((post_transition,post_l),post_var)
       |> VarSet.enum
       |> Enum.cartesian_product (Program.pre_gt program post_transition
                                  |> GeneralTransitionSet.enum)

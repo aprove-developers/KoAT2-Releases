@@ -3,30 +3,31 @@ open RVGTypes
 open Polynomials
 open BoundsInst
 
-type elsb_cache
-val new_cache: unit -> elsb_cache
-
-type t
-
-val elsb : t -> RealBound.t
-val elsb_plus_var : t -> RealBound.t
-val reduced_elsb : t -> RealBound.t
 
 module RV : sig include module type of Make_RV (RVTransitions.TransitionForExpectedSize) end
 module NPRV : sig include module type of RVGTypes.RVG.RV end
 
+type elcb_cache
+val new_cache: unit -> elcb_cache
+
+(* Computes an expected local change bound *)
+val elcb : elcb_cache -> RV.t -> RealBound.t
+
+(* Computes an expected local size bound by inferring it from an expected local change bound by
+ * adding the considered variables absolute value to the change bound *)
+val elcb_plus_var : elcb_cache -> RV.t -> RealBound.t
+
+(* Infers a reduced elcb *)
+val reduced_elcb : elcb_cache -> RV.t -> RealBound.t
+
 (* This computes the variables occuring in an expected update. Note that
-   var program rv = var(elsb(rv) + v) where v is the variable of rv.
+   var program rv = var(elcb(rv) + v) where v is the variable of rv.
    Hence when considering the vars of a rv we get the variables necessary to compute
    the (expected) next value (for example using the nontrivial sizebounds method)  *)
-val vars : elsb_cache -> Program.t -> RV.t -> VarSet.t
-
-(** Computes an expected local size bound. The first returned element is the expected change bound, whereas
-    the second returned element is an expected local size bound*)
-val compute_elsb : elsb_cache -> Program.t -> RV.t -> t
+val vars : elcb_cache -> RV.t -> VarSet.t
 
 (** Checks whether a given (possibly multivariate) bound is concave using SMT-Solving *)
-val bound_is_concave : elsb_cache -> RealBound.t -> bool
+val bound_is_concave : elcb_cache -> RealBound.t -> bool
 
 (** Checks whether a given (possibly multivariate) bound is convex using SMT-Solving *)
-val bound_is_convex : elsb_cache -> RealBound.t -> bool
+val bound_is_convex : elcb_cache -> RealBound.t -> bool

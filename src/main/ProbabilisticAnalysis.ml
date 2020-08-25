@@ -109,7 +109,7 @@ let run probabilistic_goal (params: params) =
               )
          |> tap (fun (program, appr) ->
                 if params.print_ervg then (
-                  GraphPrint.print_ervg (CacheManager.elsb_cache cache) ~label:(bounded_erv_to_string (CacheManager.elsb_cache cache) program appr) ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_ervg (CacheManager.elcb_cache cache) ~label:(bounded_erv_to_string (CacheManager.elcb_cache cache) program appr) ~outdir:output_dir ~file:input_filename program;
                 )
               )
        )

@@ -97,14 +97,14 @@ let bounded_rv_to_string cache (program: Program.t) kind (appr: Approximation.t)
                     get_lsb kind (t,v) |> Bound.show ~complexity:false
     ]
 
-let bounded_erv_to_string elsb_cache (program: Program.t) (appr: Approximation.t) ((gt,l),v) =
+let bounded_erv_to_string elcb_cache (program: Program.t) (appr: Approximation.t) ((gt,l),v) =
   String.concat "" [ERV.to_id_string ((gt,l), v);
                     "\n";
                     "Global: ";
                     Approximation.expsizebound_abs appr (gt,l) v |> RealBound.to_string;
                     "\n";
                     "Local: ";
-                    ExpLocalSizeBound.(elsb @@ compute_elsb elsb_cache program ((gt,l),v)) |> RealBound.to_string
+                    ExpLocalChangeBound.(elcb elcb_cache ((gt,l),v)) |> RealBound.to_string
     ]
 
 let get_lsb cache program kind (t, v) =

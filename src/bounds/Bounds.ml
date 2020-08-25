@@ -87,14 +87,14 @@ let add_trivial_expcostbounds program appr =
   |> Enum.fold (flip (Approximation.add_expcostbound false RealBound.zero)) appr
 
 let rec find_exp_bounds_ ~refined ~refined_smt_timeout simplify_smt cache ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
-  ExpSizeBounds.improve simplify_smt (CacheManager.elsb_cache cache) ervg sccs program appr
+  ExpSizeBounds.improve simplify_smt (CacheManager.elcb_cache cache) ervg sccs program appr
   |> ExpRankingBounds.improve ~refined:refined ~refined_smt_timeout (Approximation.add_exptimebound simplify_smt) (Approximation.add_expcostbound simplify_smt) (CacheManager.lrsm_cache cache) program
   |> MaybeChanged.if_changed (find_exp_bounds_ ~refined:refined ~refined_smt_timeout:refined_smt_timeout simplify_smt cache ervg sccs program)
   |> MaybeChanged.unpack
 
 let rec find_exp_bounds simplify_smt ~refined_smt_timeout ~generate_invariants_bottom_up (use_bottom_up: bool) (cache: CacheManager.t)
 (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
-  let ervg = ERVG.rvg (CacheManager.elsb_cache cache) program in
+  let ervg = ERVG.rvg (CacheManager.elcb_cache cache) program in
   let sccs =
     let module C = Graph.Components.Make(ERVG) in
     List.rev @@ C.scc_list ervg
