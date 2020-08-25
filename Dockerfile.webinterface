@@ -12,7 +12,7 @@ FROM ocaml/opam2:alpine as koat2_build
 LABEL author="Fabian Meyer"
 
 # Pin the used opam packages
-ENV OPAM_PKGS_VERSION=e258e1424a5f4054abf6508395c56c324808f789
+ENV OPAM_PKGS_VERSION=c332c82dc33e39c4d23fd4c8179d953ac2fddcc6
 
 RUN cd /home/opam/opam-repository; git pull; git reset --hard ${OPAM_PKGS_VERSION}
 RUN opam update
@@ -21,7 +21,7 @@ RUN opam switch create -y 4.09.1+musl+static+flambda
 RUN eval $(opam env)
 
 # Auxiliary libraries which are needed to build the opam packages
-RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev graphviz --no-cache
+RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev graphviz musl-dev --no-cache
 
 # If you have enough threads/memory available increase the job count
 RUN opam install -j8 z3 ocamlfind menhir cmdliner ppx_deriving batteries ppx_deriving_cmdliner fpath omake apron ocamlgraph ounit ocamlnet
