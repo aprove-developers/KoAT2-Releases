@@ -11,7 +11,7 @@ let logger = Logging.(get Preprocessor)
 
 let unsatisfiable_transitions graph : TransitionSet.t =
   let combine (l,t,l') set =
-    if SMT.Z3Opt.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then
+    if SMT.Z3Solver.unsatisfiable_int (Formula.mk @@ TransitionLabel.guard t) then
       TransitionSet.add (l,t,l') set
     else set in
   TransitionGraph.fold_edges_e combine graph TransitionSet.empty

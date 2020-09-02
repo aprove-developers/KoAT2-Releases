@@ -9,7 +9,14 @@ open BoundsInst
 module Z3Solver :
   sig
     val satisfiable : RealFormula.t -> bool
+    val unsatisfiable : RealFormula.t -> bool
+
+    val satisfiable_int : Formula.t -> bool
+    val unsatisfiable_int : Formula.t -> bool
+
+    (* Shows the internal representation of Z3 *)
     val to_string : RealFormula.t -> string
+
     val bound_gt_zero : RealFormula.t -> RealBound.t -> bool
     val bound_lt_zero : RealFormula.t -> RealBound.t -> bool
     val cmp_bounds: RealFormula.t -> [`GE | `GT] -> RealBound.t -> RealBound.t -> bool
