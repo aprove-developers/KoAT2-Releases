@@ -104,6 +104,7 @@ let tests =
           ("rdseql", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdseql.koat");
           ("rdspeed", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdspeed.koat");
           ("rdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdwalk.koat");
+          ("realheapsort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/realheapsort.koat");
           ("rejection_sampling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rejection_sampling.koat");
           ("robot", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/robot.koat");
           ("roulette", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/roulette.koat");
