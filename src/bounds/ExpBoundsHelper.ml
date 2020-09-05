@@ -4,14 +4,14 @@ open Logger
 
 (** All entry transitions of the given transitions.
     These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
-let entry_transitions (logger: Logger.log) (program: Program.t) (rank_transitions: GeneralTransition.t list): ((GeneralTransition.t * Location.t) Enum.t) =
+let entry_transitions pre_cache (logger: Logger.log) (program: Program.t) (rank_transitions: GeneralTransition.t list): ((GeneralTransition.t * Location.t) Enum.t) =
   let gts =
     Program.generalized_transitions program |> GeneralTransitionSet.to_list
   in
   let single_entry_transitions =
     rank_transitions
     |> List.enum
-    |> Enum.map (Program.pre program % TransitionSet.any % GeneralTransition.transitions)
+    |> Enum.map (Program.pre pre_cache program % TransitionSet.any % GeneralTransition.transitions)
     |> Enum.flatten
     |> Enum.filter (fun r ->
            rank_transitions

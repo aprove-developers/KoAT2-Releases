@@ -9,10 +9,10 @@ type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
 (** All entry transitions of the given transitions.
     These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
-let entry_transitions (program: Program.t) (rank_transitions: Transition.t list): Transition.t List.t =
+let entry_transitions pre_cache (program: Program.t) (rank_transitions: Transition.t list): Transition.t List.t =
   rank_transitions
   |> List.enum
-  |> Enum.map (Program.pre program)
+  |> Enum.map (Program.pre pre_cache program)
   |> Enum.flatten
   |> Enum.filter (fun r ->
          rank_transitions
@@ -32,11 +32,11 @@ let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t)
        ~lower:(get_sizebound `Lower transition)
        ~higher:(get_sizebound `Upper transition)
 
-let compute_bound (appr: Approximation.t) (program: Program.t) (rank: RankingFunction.t): Bound.t =
+let compute_bound pre_cache (appr: Approximation.t) (program: Program.t) (rank: RankingFunction.t): Bound.t =
   let execute () =
     rank
     |> RankingFunction.non_increasing
-    |> entry_transitions program
+    |> entry_transitions pre_cache program
     |> List.enum
     |> Enum.map (fun (l,t,l') ->
            let timebound = Approximation.timebound appr (l,t,l') in
@@ -65,8 +65,8 @@ let add_bound = function
   | `Time -> Approximation.add_timebound
   | `Cost -> Approximation.add_costbound
 
-let improve_with_rank measure program appr rank =
-  let bound = compute_bound appr program rank in
+let improve_with_rank pre_cache measure program appr rank =
+  let bound = compute_bound pre_cache appr program rank in
   if Bound.is_infinity bound then
     MaybeChanged.same appr
   else
@@ -81,8 +81,9 @@ let bounded measure appr transition =
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> false
 
-let improve ranking_cache measure program appr =
+let improve cache measure program appr =
   let execute () =
+    let (ranking_cache, pre_cache) = (CacheManager.ranking_cache cache, CacheManager.pre_cache cache) in
     program
     |> Program.non_trivial_transitions
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
@@ -91,7 +92,7 @@ let improve ranking_cache measure program appr =
            RankingFunction.find ranking_cache measure program transition
            |> List.enum
            |> MaybeChanged.fold_enum (fun appr rank ->
-                  improve_with_rank measure program appr rank
+                  improve_with_rank pre_cache measure program appr rank
                 ) appr
          ) appr
   in Logger.with_log logger Logger.INFO

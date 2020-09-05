@@ -36,13 +36,15 @@ val invariant: Location.t -> t -> Constraint.t
 (** Adds the invariant to the location of the program. *)
 val add_invariant : Location.t -> Constraint.t -> t -> t
 
+type pre_cache
+val new_cache : unit -> pre_cache
 (** Returns a set of all transitions which occur directly before the given transition in the graph.
-       Corresponds to pre(t). *)
-val pre : t -> Transition.t -> Transition.t Enum.t
+       Corresponds to pre(t). Makes use of Caching, since it has to call the SMT solver and is hence ressource intensive *)
+val pre : pre_cache -> t -> Transition.t -> Transition.t Enum.t
 
 (** Returns a set of all general transitions which contain a transition occuring directly before the given transition in the graph
  *)
-val pre_gt : t -> GeneralTransition.t -> GeneralTransitionSet.t
+val pre_gt : pre_cache -> t -> GeneralTransition.t -> GeneralTransitionSet.t
 
 (** Returns if the given transition is an initial transition. *)
 val is_initial : t -> Transition.t -> bool

@@ -57,8 +57,8 @@ let print_system ~label ~outdir ~file program =
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-let print_rvg cache kind ~label ~outdir ~file program =
-  let graph = RVG.rvg cache kind program in
+let print_rvg pre_cache lsb_cache kind ~label ~outdir ~file program =
+  let graph = RVG.rvg pre_cache lsb_cache kind program in
   let module C = Graph.Components.Make(RVG) in
   let (_,scc_number) = C.scc graph in
   let rv_color (rv: RV.t) =
@@ -171,8 +171,8 @@ let get_system_for_paper ?(format="svg") program=
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-let print_ervg elcb_cache ~label ~outdir ~file program =
-  let graph = ERVG.rvg elcb_cache program in
+let print_ervg pre_cache elcb_cache ~label ~outdir ~file program =
+  let graph = ERVG.rvg pre_cache elcb_cache program in
   let module C = Graph.Components.Make(ERVG) in
   let (_,scc_number) = C.scc graph in
   let rv_color (rv: ERV.t) =

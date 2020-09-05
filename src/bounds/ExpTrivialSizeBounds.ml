@@ -19,7 +19,7 @@ let max_detsizebound elcb_cache ((gt,l),var) get_sizebound =
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     Here we add all incomin bounds on absolute values *)
-let propagate_bound elcb_cache program get_sizebound_abs get_expsizebound (elcb_without_var: RealBound.t) (elcb_with_var: RealBound.t) (gt,l,var) =
+let propagate_bound pre_cache elcb_cache program get_sizebound_abs get_expsizebound (elcb_without_var: RealBound.t) (elcb_with_var: RealBound.t) (gt,l,var) =
   let execute () =
     let substitute_with_prevalues gtset =
       let prevalues_exp var =
@@ -46,7 +46,7 @@ let propagate_bound elcb_cache program get_sizebound_abs get_expsizebound (elcb_
         (* and add it to the previous expected value *)
         |> RealBound.add (RealBound.appr_substition_abs_all prevalues_exp (RealBound.of_var var))
     in
-    let pre_gts = Program.pre_gt program gt in
+    let pre_gts = Program.pre_gt pre_cache program gt in
     pre_gts
     |> substitute_with_prevalues
     |> RealBound.simplify_vars_nonnegative
@@ -59,10 +59,11 @@ let propagate_bound elcb_cache program get_sizebound_abs get_expsizebound (elcb_
 
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
-let compute elcb_cache program get_sizebound (get_expsizebound: (GeneralTransition.t * Location.t) -> Var.t -> RealBound.t) get_timebound_gt ((gt,loc),var) =
+let compute cache program get_sizebound (get_expsizebound: (GeneralTransition.t * Location.t) -> Var.t -> RealBound.t) get_timebound_gt ((gt,loc),var) =
   if not (Bound.(get_timebound_gt gt <= Bound.one) = Some true) then
     RealBound.infinity
   else
+    let (pre_cache, elcb_cache) = (CacheManager.pre_cache cache, CacheManager.elcb_cache cache) in
     let elcb          = ExpLocalChangeBound.(elcb elcb_cache ((gt,loc),var)) in
     let elcb_plus_var = ExpLocalChangeBound.(elcb_plus_var elcb_cache ((gt,loc),var)) in
     let execute () =
@@ -70,6 +71,7 @@ let compute elcb_cache program get_sizebound (get_expsizebound: (GeneralTransiti
         elcb_plus_var
       else
         propagate_bound
+          pre_cache
           elcb_cache
           program
           get_sizebound

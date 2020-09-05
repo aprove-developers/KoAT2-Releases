@@ -20,4 +20,4 @@ val entry_points : t -> RV.t list -> RV.t Enum.t
 (** Returns all transitions that are used in the SCC of the RVG. *)
 val transitions : RV.t list -> RVTransitions.TransitionForExpectedSize.t Enum.t
 
-val rvg : ExpLocalChangeBound.elcb_cache -> Program.t -> t
+val rvg : Program.pre_cache -> ExpLocalChangeBound.elcb_cache -> Program.t -> t

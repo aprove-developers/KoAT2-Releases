@@ -5,8 +5,8 @@ open Polynomials
 
 let rec find_bounds_ (cache: CacheManager.t) (program: Program.t) (appr: Approximation.t): Approximation.t =
   appr
-  |> SizeBounds.improve (CacheManager.lsb_cache cache) program
-  |> RankingBounds.improve (CacheManager.ranking_cache cache) `Time program
+  |> SizeBounds.improve cache program
+  |> RankingBounds.improve cache `Time program
   |> MaybeChanged.if_changed (find_bounds_ cache program)
   |> MaybeChanged.unpack
 
@@ -16,7 +16,7 @@ let find_bounds (cache: CacheManager.t) (program: Program.t) (appr: Approximatio
   |> find_bounds_ cache program
   |> (fun appr ->
     if program |> Program.transitions |> TransitionSet.exists (fun t -> not (Polynomial.is_one (Transition.cost t))) then
-      RankingBounds.improve (CacheManager.ranking_cache cache) `Cost program appr
+      RankingBounds.improve cache `Cost program appr
     else
       MaybeChanged.same appr
   )
@@ -24,7 +24,7 @@ let find_bounds (cache: CacheManager.t) (program: Program.t) (appr: Approximatio
   |> CostBounds.infer_from_timebounds program
 
 (* lifts nonprobabilistic timebounds to expected time bounds for general transitions *)
-let lift_nonprob_timebounds simplify_smt program appr =
+let lift_nonprob_timebounds cache simplify_smt program appr =
   let get_gt_timebound gt =
     GeneralTransition.transitions gt
     |> TransitionSet.enum
@@ -43,7 +43,8 @@ let lift_nonprob_timebounds simplify_smt program appr =
             Approximation.add_exptimebound simplify_smt (RealBound.of_intbound timebound) gt appr
             |> Approximation.add_timebound_gt timebound gt
             |> Approximation.add_expcostbound simplify_smt
-                ( RealBound.(of_intbound timebound * appr_substition_abs_all (BoundsHelper.nonprob_incoming_size program appr gt) (GeneralTransition.cost gt))
+                ( RealBound.(of_intbound timebound * appr_substition_abs_all
+                  (BoundsHelper.nonprob_incoming_size (CacheManager.pre_cache cache) program appr gt) (GeneralTransition.cost gt))
                 |> RealBound.simplify_vars_nonnegative)
                 gt
        )
@@ -87,14 +88,15 @@ let add_trivial_expcostbounds program appr =
   |> Enum.fold (flip (Approximation.add_expcostbound false RealBound.zero)) appr
 
 let rec find_exp_bounds_ ~refined ~refined_smt_timeout simplify_smt cache ervg sccs (program: Program.t) (appr: Approximation.t): Approximation.t =
-  ExpSizeBounds.improve simplify_smt (CacheManager.elcb_cache cache) ervg sccs program appr
-  |> ExpRankingBounds.improve ~refined:refined ~refined_smt_timeout (Approximation.add_exptimebound simplify_smt) (Approximation.add_expcostbound simplify_smt) (CacheManager.lrsm_cache cache) program
+  ExpSizeBounds.improve simplify_smt cache ervg sccs program appr
+  |> ExpRankingBounds.improve ~refined:refined ~refined_smt_timeout (Approximation.add_exptimebound simplify_smt)
+    (Approximation.add_expcostbound simplify_smt) cache program
   |> MaybeChanged.if_changed (find_exp_bounds_ ~refined:refined ~refined_smt_timeout:refined_smt_timeout simplify_smt cache ervg sccs program)
   |> MaybeChanged.unpack
 
 let rec find_exp_bounds simplify_smt ~refined_smt_timeout ~generate_invariants_bottom_up (use_bottom_up: bool) (cache: CacheManager.t)
 (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
-  let ervg = ERVG.rvg (CacheManager.elcb_cache cache) program in
+  let ervg = ERVG.rvg (CacheManager.pre_cache cache) (CacheManager.elcb_cache cache) program in
   let sccs =
     let module C = Graph.Components.Make(ERVG) in
     List.rev @@ C.scc_list ervg
@@ -103,10 +105,10 @@ let rec find_exp_bounds simplify_smt ~refined_smt_timeout ~generate_invariants_b
   let appr_after_initial_computation =
     appr
     |> TrivialTimeBounds.compute program
-    |> TrivialTimeBounds.compute_generaltransitions program
+    |> TrivialTimeBounds.compute_generaltransitions (CacheManager.pre_cache cache) program
     |> add_trivial_expcostbounds program
     |> find_bounds_ cache program
-    |> lift_nonprob_timebounds simplify_smt program
+    |> lift_nonprob_timebounds cache simplify_smt program
     |> lift_nonprob_sizebounds simplify_smt program
     |> find_exp_bounds_ ~refined:false ~refined_smt_timeout:refined_smt_timeout simplify_smt cache ervg sccs program
   in

@@ -47,6 +47,6 @@ sig
   (** Returns all transitions that are used in the SCC of the RVG. *)
   val transitions : RV.t list -> Transition.t Enum.t
 
-  val rvg : LocalSizeBound.lsb_cache -> [`Lower | `Upper] -> Program.t -> t
+  val rvg : Program.pre_cache -> LocalSizeBound.lsb_cache -> [`Lower | `Upper] -> Program.t -> t
 
 end

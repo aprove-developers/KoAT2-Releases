@@ -46,8 +46,8 @@ let run (params: params) =
                   GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
-                  GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Lower ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program;
-                  GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Upper ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
+                  GraphPrint.print_rvg (CacheManager.pre_cache cache) (CacheManager.lsb_cache cache) `Lower ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_rvg (CacheManager.pre_cache cache) (CacheManager.lsb_cache cache) `Upper ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
                 )
               )
          |> (fun (program, appr) ->
@@ -62,8 +62,8 @@ let run (params: params) =
                   GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
-                  GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Lower ~label:(bounded_rv_to_string (CacheManager.lsb_cache cache) program `Lower appr) ~outdir:output_dir ~file:input_filename program;
-                  GraphPrint.print_rvg (CacheManager.lsb_cache cache) `Upper ~label:(bounded_rv_to_string (CacheManager.lsb_cache cache) program `Upper appr) ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_rvg (CacheManager.pre_cache cache) (CacheManager.lsb_cache cache) `Lower ~label:(bounded_rv_to_string (CacheManager.lsb_cache cache) program `Lower appr) ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_rvg (CacheManager.pre_cache cache) (CacheManager.lsb_cache cache) `Upper ~label:(bounded_rv_to_string (CacheManager.lsb_cache cache) program `Upper appr) ~outdir:output_dir ~file:input_filename program;
                 )
               )
        )

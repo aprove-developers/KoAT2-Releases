@@ -25,8 +25,8 @@ module BoundTable = Hashtbl.Make (struct
 
 let cacheTable: bool BoundTable.t = BoundTable.create 20
 
-let nonprob_incoming_size program appr gt v =
-  Program.pre_gt program gt
+let nonprob_incoming_size pre_cache program appr gt v =
+  Program.pre_gt pre_cache program gt
   |> GeneralTransitionSet.enum
   |> Enum.map (TransitionSet.enum % GeneralTransition.transitions)
   |> Enum.flatten

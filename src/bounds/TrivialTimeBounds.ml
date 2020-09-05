@@ -21,7 +21,7 @@ let compute program appr =
 (** This function is similar to TrivialTimeBounds, and derives time bounds of 1 for general transitions.
     However when considering general transitions is has to be ensured that the start location can not be reached from any target location,
     i.e. no target location is in the same scc as the start location*)
-let compute_generaltransitions program appr =
+let compute_generaltransitions pre_cache program appr =
   let graph = Program.graph program in
   let (_, scc_number) = SCC.scc graph in
   let same_scc l1 l2 =
@@ -38,7 +38,7 @@ let compute_generaltransitions program appr =
       (
         fun gt ->
           Approximation.add_expcostbound false
-            (RealBound.appr_substition_abs_all (BoundsHelper.nonprob_incoming_size program appr gt) (GeneralTransition.cost gt))
+            (RealBound.appr_substition_abs_all (BoundsHelper.nonprob_incoming_size pre_cache program appr gt) (GeneralTransition.cost gt))
             gt
       )
       one_bounded_gts

@@ -16,7 +16,7 @@ let run (params: params) =
   let cache = CacheManager.new_cache () in
   let appr = Approximation.empty 10 3 10
   and program = Readers.read_file (CacheManager.trans_id_counter cache) params.program in
-  SizeBounds.improve (CacheManager.lsb_cache cache) program appr
+  SizeBounds.improve cache program appr
   |> Approximation.output program false
   |> print_string
 

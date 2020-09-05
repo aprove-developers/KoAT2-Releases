@@ -71,10 +71,10 @@ let get_bound entry_locations incoming_enum appr rankfunc: RealBound.t =
   |> RealBound.sum
 
 (* Use get_bound to compute a timebound and then additionally computes a costbound *)
-let compute_bounds ~refined (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t): RealBound.t * RealBound.t =
+let compute_bounds pre_cache ~refined (appr: Approximation.t) (program: Program.t) (rank: LexRSM.t): RealBound.t * RealBound.t =
   let execute () =
     let incoming_enum =
-      rank |> LexRSM.non_increasing |> GeneralTransitionSet.to_list |> entry_transitions logger program
+      rank |> LexRSM.non_increasing |> GeneralTransitionSet.to_list |> entry_transitions pre_cache logger program
     in
     let entry_locations =
       incoming_enum
@@ -92,7 +92,7 @@ let compute_bounds ~refined (appr: Approximation.t) (program: Program.t) (rank: 
     let entry_ts_to_decreasing =
       GeneralTransition.transitions (LexRSM.decreasing rank)
       |> TransitionSet.enum
-      |> Enum.map (Program.pre program)
+      |> Enum.map (Program.pre pre_cache program)
       |> Enum.flatten
     in
 
@@ -121,8 +121,8 @@ let compute_bounds ~refined (appr: Approximation.t) (program: Program.t) (rank: 
 
 (* Try to improve the computed cost/timebounds for the decreasing transition of the ranking function
   * using the given ranking function *)
-let improve_with_rank ~refined add_exptimebound add_expcostbound program appr (rank: LexRSM.t) =
-  let (time,cost) = compute_bounds ~refined:refined appr program rank in
+let improve_with_rank pre_cache ~refined add_exptimebound add_expcostbound program appr (rank: LexRSM.t) =
+  let (time,cost) = compute_bounds pre_cache ~refined:refined appr program rank in
   (* If a new non-infinity time/cost bound has been computed update the approximation and return MaybeChanged.changed * approximation *)
   (if RealBound.is_infinity time || Approximation.is_exptime_bounded appr (LexRSM.decreasing rank) then
       MaybeChanged.same appr
@@ -142,14 +142,15 @@ let exp_bounded appr transition =
 
   (* Try to improve the time/cost bounds for all not-already bounded transitions *)
 let improve ~refined ~refined_smt_timeout add_exptimebound add_expcostbound cache program appr =
+  let (lrsm_cache, pre_cache) = (CacheManager.lrsm_cache cache, CacheManager.pre_cache cache) in
   program
   |> Program.non_trivial_transitions
   |> GeneralTransitionSet.of_transitionset
   |> GeneralTransitionSet.filter (not % exp_bounded appr)
   |> GeneralTransitionSet.enum
   |> MaybeChanged.fold_enum (fun appr gt ->
-         LexRSM.find ~refined:refined ~timeout:(if refined then refined_smt_timeout else None) cache program gt
+         LexRSM.find ~refined:refined ~timeout:(if refined then refined_smt_timeout else None) lrsm_cache program gt
          |> Option.map_default (fun rank ->
-              improve_with_rank ~refined:refined add_exptimebound add_expcostbound program appr rank
+              improve_with_rank pre_cache ~refined:refined add_exptimebound add_expcostbound program appr rank
             ) (MaybeChanged.return appr)
        ) appr
