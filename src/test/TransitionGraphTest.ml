@@ -53,7 +53,7 @@ let tests =
             |> TransitionSet.filter (fun (l,_,l') -> Location.(name l = "l1" && name l' = "l2"))
             |> TransitionSet.any
           in
-          assert_equal_int 2 (Enum.count (Program.pre (CacheManager.pre_cache cache) program transition))
+          assert_equal_int 2 (List.length (Program.pre (CacheManager.pre_cache cache) program transition))
         )
       );
       (

@@ -40,7 +40,7 @@ type pre_cache
 val new_cache : unit -> pre_cache
 (** Returns a set of all transitions which occur directly before the given transition in the graph.
        Corresponds to pre(t). Makes use of Caching, since it has to call the SMT solver and is hence ressource intensive *)
-val pre : pre_cache -> t -> Transition.t -> Transition.t Enum.t
+val pre : pre_cache -> t -> Transition.t -> Transition.t List.t
 
 (** Returns a set of all general transitions which contain a transition occuring directly before the given transition in the graph
  *)

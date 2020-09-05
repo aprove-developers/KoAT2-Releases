@@ -31,6 +31,7 @@ let compute_ pre_cache elcb_cache program get_timebound_gt get_exptimebound get_
       |> TransitionSet.filter (Location.equal target_loc % Transition.target)
       |> TransitionSet.any
       |> Program.pre pre_cache program
+      |> List.enum
     in
 
     let appr_substitution_pre_size bound pret =

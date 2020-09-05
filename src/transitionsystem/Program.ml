@@ -184,7 +184,7 @@ let temp_vars =
   fun program -> VarSet.diff (vars program) (input_vars program)
 
 (* map transition ids to pretransitions *)
-type pre_cache = (int, Transition.t Enum.t) Hashtbl.t
+type pre_cache = (int, Transition.t List.t) Hashtbl.t
 let new_cache = fun () -> Hashtbl.create 10
 
 let pre_ program (l,t,_) =
@@ -196,13 +196,14 @@ let pre_ program (l,t,_) =
          |> Formula.mk
          |> SMT.Z3Solver.satisfiable_int
        )
+  |> List.of_enum
 
 let pre cache =
-  curry @@ Enum.clone % Util.memoize cache ~extractor:(fun (_, t) -> Transition.id t) (uncurry pre_)
+  curry @@ Util.memoize cache ~extractor:(fun (_, t) -> Transition.id t) (uncurry pre_)
 
 let pre_gt cache program gt =
   let gts = transitions program |> GeneralTransitionSet.of_transitionset in
-  let pre_ts = pre cache program (GeneralTransition.transitions gt |> TransitionSet.any) |> TransitionSet.of_enum in
+  let pre_ts = pre cache program (GeneralTransition.transitions gt |> TransitionSet.any) |> TransitionSet.of_list in
   gts
   |> GeneralTransitionSet.filter (TransitionSet.exists (fun t -> TransitionSet.mem t pre_ts) % GeneralTransition.transitions)
 

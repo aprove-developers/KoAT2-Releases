@@ -17,12 +17,11 @@ let improve_scc cache kind program rvg appr = function
 
 let improve cache program appr =
   let (pre_cache, lsb_cache) = (CacheManager.pre_cache cache, CacheManager.lsb_cache cache) in
-  let rvg_cache = CacheManager.rvg_cache cache in
   let execute () =
     let module C = Graph.Components.Make(RVG) in
     [`Lower; `Upper]
     |> List.fold_left (fun appr kind ->
-           let rvg = RVG.rvg rvg_cache pre_cache lsb_cache kind program in
+           let rvg = RVG.rvg pre_cache lsb_cache kind program in
            List.fold_left (fun appr scc -> improve_scc cache kind program rvg appr scc) appr (List.rev (C.scc_list rvg))
          ) appr
   in Logger.with_log logger Logger.INFO

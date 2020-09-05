@@ -92,7 +92,7 @@ let compute_bounds pre_cache ~refined (appr: Approximation.t) (program: Program.
     let entry_ts_to_decreasing =
       GeneralTransition.transitions (LexRSM.decreasing rank)
       |> TransitionSet.enum
-      |> Enum.map (Program.pre pre_cache program)
+      |> Enum.map (List.enum % Program.pre pre_cache program)
       |> Enum.flatten
     in
 

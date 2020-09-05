@@ -11,7 +11,7 @@ let entry_transitions pre_cache (logger: Logger.log) (program: Program.t) (rank_
   let single_entry_transitions =
     rank_transitions
     |> List.enum
-    |> Enum.map (Program.pre pre_cache program % TransitionSet.any % GeneralTransition.transitions)
+    |> Enum.map (List.enum % Program.pre pre_cache program % TransitionSet.any % GeneralTransition.transitions)
     |> Enum.flatten
     |> Enum.filter (fun r ->
            rank_transitions

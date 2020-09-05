@@ -12,7 +12,7 @@ type measure = [ `Cost | `Time ] [@@deriving show, eq]
 let entry_transitions pre_cache (program: Program.t) (rank_transitions: Transition.t list): Transition.t List.t =
   rank_transitions
   |> List.enum
-  |> Enum.map (Program.pre pre_cache program)
+  |> Enum.map (List.enum % Program.pre pre_cache program)
   |> Enum.flatten
   |> Enum.filter (fun r ->
          rank_transitions

@@ -16,6 +16,7 @@ let incoming_bound pre_cache kind program get_sizebound lsb t =
     let substitute_with_prevalues t' = LocalSizeBound.as_substituted_bound (fun kind v -> get_sizebound kind t' v) lsb in
     t
     |> Program.pre pre_cache program
+    |> List.enum
     |> Enum.map substitute_with_prevalues
     |> match kind with
         | `Lower -> Bound.minimum
