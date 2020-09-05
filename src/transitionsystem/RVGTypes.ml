@@ -92,7 +92,11 @@ module RVG =
       |> List.map (flip add_vertex)
       |> List.fold_left (fun rvg adder -> adder rvg) rvg
 
-    let rvg pre_cache lsb_cache kind (program: Program.t) =
+    type kind = [`Lower | `Upper]
+    type rvg_cache = (kind, t) Hashtbl.t
+    let new_cache = fun () -> Hashtbl.create 2
+
+    let rvg_ pre_cache lsb_cache kind (program: Program.t) =
       let add_transition (post_transition: Transition.t) (rvg: t): t =
         let pre_trans = Program.pre pre_cache program post_transition in
 
@@ -112,5 +116,10 @@ module RVG =
         |> List.fold_left (fun rvg (pre_transition,pre_var,post_var) -> add_edge rvg (pre_transition,pre_var) (post_transition,post_var)) rvg_with_vertices
       in
       TransitionGraph.fold_edges_e add_transition (Program.graph program) empty
+
+    let rvg rvg_cache pre_cache lsb_cache kind program =
+      Util.memoize rvg_cache ~extractor:(fun (_,_,kind,_) -> kind)
+        (fun (pre_cache, lsb_cache, kind, program) -> rvg_ pre_cache lsb_cache kind program)
+      (pre_cache, lsb_cache, kind, program)
 
   end

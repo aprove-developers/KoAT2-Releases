@@ -90,8 +90,8 @@ let tests =
           GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file trans_id_counter "../../examples/KoAT-2013/sect1-lin.koat");
           "../../examples/KoAT-2013/sect1-lin.koat"
           |> Readers.read_file trans_id_counter
-          |> tap (fun program -> GraphPrint.print_rvg (CacheManager.pre_cache cache) (CacheManager.lsb_cache cache) `Lower ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
-          |> tap (fun program -> GraphPrint.print_rvg (CacheManager.pre_cache cache) (CacheManager.lsb_cache cache) `Upper ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> tap (fun program -> GraphPrint.print_rvg (CacheManager.rvg_cache cache) (CacheManager.pre_cache cache) (CacheManager.lsb_cache cache) `Lower ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> tap (fun program -> GraphPrint.print_rvg (CacheManager.rvg_cache cache) (CacheManager.pre_cache cache) (CacheManager.lsb_cache cache) `Upper ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
           |> ignore
         )
       );

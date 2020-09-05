@@ -2,6 +2,7 @@ open Batteries
 
 type t = {
     lsb_cache: LocalSizeBound.lsb_cache;
+    rvg_cache: RVGTypes.RVG.rvg_cache;
     elcb_cache: ExpLocalChangeBound.elcb_cache;
     pre_cache: Program.pre_cache;
     trans_id_counter: TransitionLabel.trans_id_counter;
@@ -11,6 +12,8 @@ type t = {
 }
 
 let lsb_cache t = t.lsb_cache
+
+let rvg_cache t = t.rvg_cache
 
 let elcb_cache t = t.elcb_cache
 
@@ -27,6 +30,7 @@ let lrsm_cache t = t.lrsm_cache
 let new_cache_with_counter trans_id_counter = fun () ->
     {
       lsb_cache = LocalSizeBound.new_cache ();
+      rvg_cache = RVGTypes.RVG.new_cache ();
       elcb_cache = ExpLocalChangeBound.new_cache ();
       pre_cache = Program.new_cache ();
       trans_id_counter;

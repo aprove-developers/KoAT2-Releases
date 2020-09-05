@@ -57,8 +57,8 @@ let print_system ~label ~outdir ~file program =
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
-let print_rvg pre_cache lsb_cache kind ~label ~outdir ~file program =
-  let graph = RVG.rvg pre_cache lsb_cache kind program in
+let print_rvg rvg_cache pre_cache lsb_cache kind ~label ~outdir ~file program =
+  let graph = RVG.rvg rvg_cache pre_cache lsb_cache kind program in
   let module C = Graph.Components.Make(RVG) in
   let (_,scc_number) = C.scc graph in
   let rv_color (rv: RV.t) =
