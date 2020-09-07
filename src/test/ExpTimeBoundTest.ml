@@ -111,6 +111,11 @@ let tests =
           ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/SelectSort.koat");
           ("simple_nested", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/simple_nested.koat");
           ("simple_recursive", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/simple_recursive.koat");
+
+          (* O(n^1) should also be a valid bound for spctrm, however it is not currently found by KoAT
+           * The reason is the transition f66 -> f66. It seems like the LexRSM chooses a big non-increasing set
+           * which leads to this quadratic bound *)
+          ("spctrm", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/spctrm.koat");
           ("sprdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/sprdwalk.koat");
           ("trapped_miner", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/trapped_miner.koat");
           ("TruncSelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/TruncSelectSort.koat");
