@@ -37,7 +37,6 @@ jobs:
     # Build the binary using docker and run all tests
     - name: build and test
       run: |
-        docker build . -t koatbuild --target koat2_build
         docker build . -t koat
 
     - name: export docker cache
