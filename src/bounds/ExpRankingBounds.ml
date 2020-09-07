@@ -58,6 +58,8 @@ let get_bound entry_locations incoming_enum appr rankfunc: RealBound.t =
        *)
        if RealPolynomial.is_const rank then
          let inc_prob_timebound = List.map (Approximation.exptimebound appr) entry_trans_to_location |> List.enum |> RealBound.sum in
+         Logger.log logger Logger.DEBUG (fun () -> "rank_and_incoming_time", ["rank", RealPolynomial.to_string rank
+                                                                             ; "incoming_time", RealBound.to_string inc_prob_timebound]);
          mul_inctime_and_rhs (inc_prob_timebound, rank_bounded)
       else
         let inc_det_timebound =
@@ -65,6 +67,8 @@ let get_bound entry_locations incoming_enum appr rankfunc: RealBound.t =
           |> List.enum |> Bound.sum
           |> Bound.appr_substition_abs_all Bound.of_var |> RealBound.of_intbound
         in
+         Logger.log logger Logger.DEBUG (fun () -> "rank_and_incoming_time", ["rank", RealPolynomial.to_string rank
+                                                                             ; "incoming_time", RealBound.to_string inc_det_timebound]);
         mul_inctime_and_rhs (inc_det_timebound, rank_bounded)
      )
   |> List.enum
