@@ -100,6 +100,7 @@ let tests =
           ("prseq", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prseq.koat");
           ("prspeed", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/prspeed.koat");
           ("race", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/race.koat");
+          ("rank3.c", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/rank3.c.koat");
           ("rdbub", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/rdbub.koat");
           ("rdseql", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdseql.koat");
           ("rdspeed", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/rdspeed.koat");
