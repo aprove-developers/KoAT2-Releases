@@ -106,10 +106,10 @@ let tests =
           ("rdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/rdwalk.koat");
           ("realheapsort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/realheapsort.koat");
           ("rejection_sampling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/rejection_sampling.koat");
-          ("robot", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Abynth-Suite/robot.koat");
+          ("robot", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/robot.koat");
           ("roulette", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/roulette.koat");
-          ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/SelectSort.koat");
-          ("simple_nested", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/simple_nested.koat");
+          ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/SelectSort.koat");
+          ("simple_nested", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/simple_nested.koat");
           ("simple_recursive", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/simple_recursive.koat");
 
           (* O(n^1) should also be a valid bound for spctrm, however it is not currently found by KoAT
