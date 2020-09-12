@@ -27,9 +27,8 @@
   eval_srch_bb4_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) -> eval_srch_bb5_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) :|: v_3 < nondef_1
   eval_srch_bb4_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) -> eval_srch_bb5_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) :|: v_3 > nondef_1
   eval_srch_bb4_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) -> eval_srch__critedge_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) :|: v_3 = nondef_1
-
-  eval_srch_bb5_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) -> 0.5:eval_srch_bb6_in(nondef_2, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) :+: 0.5:eval_srch_bb9_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n)
-
+  eval_srch_bb5_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) -> Com_1(eval_srch_bb6_in(nondef_2, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n)) :|: nondef_2 > 0
+  eval_srch_bb5_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) -> Com_1(eval_srch_bb9_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n)) :|: nondef_2 <= 0
   eval_srch_bb6_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) -> eval_srch_bb7_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) :|: v_11 <= v_j_1 + 1
   eval_srch_bb6_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) -> eval_srch_bb8_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) :|: v_11 > v_j_1 + 1
   eval_srch_bb7_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1, v_m, v_n) -> eval_srch_bb3_in(v_11, v_22, v_23, v_3, v_i_0, v_j_0, v_j_1 - v_11, v_m, v_n)
