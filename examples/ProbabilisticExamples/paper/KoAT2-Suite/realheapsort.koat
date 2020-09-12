@@ -10,7 +10,7 @@
 
   evalrealheapsortbb3in(A,B,C,D) -> 0.5:evalrealheapsortbb5in(A,B,C,D) :+: 0.5:evalrealheapsortbb2in(A,B,C,D) :|: 0 >= C
 
-  evalrealheapsortbb3in(A,B,C,D) -> 0.5:evalrealheapsortbb4in(A,B,C,D) :+: 0.5:evalrealheapsortbb4in(A,B,C,D) :|: C >= 1
+  evalrealheapsortbb3in(A,B,C,D) -> 0.5:evalrealheapsortbb3in(A,B,C,D) :+: 0.5:evalrealheapsortbb4in(A,B,C,D) :|: C >= 1
 
   evalrealheapsortbb4in(A,B,C,D) -> evalrealheapsortbb2in(A,B,C,D) :|: C + 1 = 0
   evalrealheapsortbb4in(A,B,C,D) -> evalrealheapsortbb2in(A,B,C,D) :|: C >= 0 && E >= 0 && C + 1 >= 2*E && 2*E >= C
