@@ -1,3 +1,6 @@
+# This example is taken from the TPDB (Complexity_ITS/Flores-Montoya_16/rank3.c.koat).
+# In this version location eval_rank2_27 has a probabilistic loop counting down the value of variable v_m
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS eval_rank2_start))
 (VAR nondef_0 nondef_1 v_10 v_14 v_15 v_16 v_5 v_m v_x_0 v_x_1 v_x_2 v_y_0 v_y_1 v_y_2)

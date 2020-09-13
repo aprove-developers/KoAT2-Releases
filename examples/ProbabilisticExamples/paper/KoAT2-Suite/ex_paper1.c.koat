@@ -1,3 +1,6 @@
+# This example is taken from the TPDB (Complexity_ITS/Flores-Montoya_16/ex_paper1.c.koat).
+# The location eval_p1_stop now has an additional probabilistic self-loop, counting up the value of variable v_x
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS eval_p1_start))
 (VAR nondef_0 v__0 v__01 v__1 v__2 v_10 v_3 v_6 v_8 v_i_0 v_x v_y v_z)

@@ -1,3 +1,7 @@
+# This example of an integer abstroction of the heapsort algorithm
+# is taken from the TPDB (Complexity_ITS/Flores-Montoya_16/realheapsort.c.koat).
+# This version contains probabilistic branching outgoing of location evalrealheapsortbb3in
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS evalrealheapsortstart))
 (VAR A B C D E F G)

@@ -1,3 +1,6 @@
+# This example is taken from the TPDB (Complexity_ITS/Brockschmidt_16/T2/spctrm.koat).
+# In this version location f66 now possesses a probabilistic self-loop
+
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f0))
 (VAR A B C D E F G H I J K L M N O P Q R S T U V W X Y Z A1 B1 C1 D1)
