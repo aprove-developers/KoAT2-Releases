@@ -105,7 +105,7 @@ let tests =
           ("rdspeed", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/rdspeed.koat");
           ("rdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/rdwalk.koat");
           ("realheapsort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/realheapsort.koat");
-          ("rejection_sampling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/rejection_sampling.koat");
+          ("sampling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/sampling.koat");
           ("robot", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/robot.koat");
           ("roulette", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/roulette.koat");
           ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/SelectSort.koat");
@@ -117,7 +117,7 @@ let tests =
            * which leads to this quadratic bound *)
           ("spctrm", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/spctrm.koat");
           ("sprdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/sprdwalk.koat");
-          ("trapped_miner", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/trapped_miner.koat");
+          ("miner", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/miner.koat");
           ("TruncSelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/TruncSelectSort.koat");
           ("two_arrays2", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/two_arrays2.koat");
         ];
