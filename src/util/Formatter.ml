@@ -78,11 +78,16 @@ let rec render_markdown meta f =
   | Empty          -> ""
 
   (* TODO: Is this a useful encoding for strings in markdown? *)
-  | Str s                   -> Netencoding.Html.encode ~in_enc:`Enc_utf8 () s
+  | Str s                   -> Netencoding.Html.encode ~in_enc:`Enc_utf8 () @@
+        String.replace_chars
+          (fun c -> match c with
+            | '*' -> "\\*"
+            | c -> String.of_char c)
+          s
 
   | RawStr s       -> s
   | Paragraph f'   -> render_markdown meta f' ^ "\n\n"
-  | NewLine        -> "\\\n"
+  | NewLine        -> "  \n"
   | Header (s,f')  ->
       (match s with
       | Big -> "\n# " ^ render_markdown meta f' ^ "\n"
