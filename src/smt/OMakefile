@@ -1,10 +1,6 @@
-OCAMLPACKS[] =
-    z3
-    batteries
-
 OCAMLINCLUDES[] =
     ../util
-    ../poly 
+    ../poly
     ../constraints
 
 OCAML_LIBS[] =

@@ -10,12 +10,13 @@ type logger =
   | LocalSizeBound (**  Logger handling local size-bounds  *)
   | Preprocessor (**  Logger handling preprocessors  *)
   | CFR (**  Logger handling control flow refinement  *)
+  | Inv (** Logger handling invariant creation *)
 
 (** List of all available loggers *)
-let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; CFR]
+let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; CFR; Inv]
 
 (** List of all available loggers *)
-let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; CFR]
+let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; CFR; Inv]
 
 (** Returns a string matching to the given logger. *)          
 let show_logger = function
@@ -27,6 +28,7 @@ let show_logger = function
   | LocalSizeBound -> "lsb"
   | Preprocessor -> "preprocessor"
   | CFR -> "cfr"
+  | Inv -> "invariants"
 
 let get =
   Logger.make_log % show_logger

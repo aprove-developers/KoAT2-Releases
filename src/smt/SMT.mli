@@ -1,43 +1,49 @@
-(** Provides different implementations of SMT solvers *)
 open Batteries
 open Formulas
 open Polynomials
-   
+open BoundsInst
+
 (** Provides different implementations of SMT solvers *)
-   
-(** A unified interface for SMT solvers (currently supported: Z3) *)
+
+(* Z3Solver without optimization *)
 module Z3Solver :
+  sig
+    val satisfiable : RealFormula.t -> bool
+    val to_string : RealFormula.t -> string
+    val bound_gt_zero : RealFormula.t -> RealBound.t -> bool
+    val bound_lt_zero : RealFormula.t -> RealBound.t -> bool
+    val cmp_bounds: RealFormula.t -> [`GE | `GT] -> RealBound.t -> RealBound.t -> bool
+  end
+
+(** A unified interface for SMT solvers (currently supported: Z3) *)
+module Z3Opt :
 sig
-    (** Checks if there exists a satisfying assignment for a given formula. *)
     val satisfiable : Formula.t -> bool
 
-    (** Checks if there exists no satisfying assignment for a given formula. *)
     val unsatisfiable : Formula.t -> bool
 
-    (** Checks if every assignment is satisfying for a given formula. *)
     val tautology : Formula.t -> bool
-      
-    (** Checks if two formulas are equivalent. *)
+
     val equivalent : Formula.t -> Formula.t -> bool
-      
-    (** Returns a model of a formula. TODO doc  ?coeffs_to_minimise: *)
+
     val get_model : ?coeffs_to_minimise:Var.t list -> Formula.t -> Polynomial.valuation Option.t
-    
-    (** Returns true iff the formula implies the positivity of the polynomial. *)
+
     val check_positivity : Formula.t -> Polynomial.t -> bool
-    
-    (** Returns true iff the formula implies the negativity of the polynomial. *)
+
     val check_negativity : Formula.t -> Polynomial.t -> bool
   end
 
-(** A unified interface for incremental SMT solvers (currently supported: Z3) *)
 module IncrementalZ3Solver :
 sig
   type t
 
-  (** Creates a new incremental smt solver. *)
-  val create : ?model:bool -> unit -> t
-     
+  (* Outputs a string with smt2 format for testing *)
+  val to_string : t -> string
+  (** Creates a new incremental smt solver.
+      The first entry of the timeout argument specifies the timeout in s for the Z3 Solver used in
+      the satisfiable and unsatisfiable function whereas the second argument determines the timeout for the Z3Optimizer in s*)
+  val create : ?model:bool -> ?timeout:float option -> unit -> t
+
   (** Creates a backtracking point. *)
   val push : t -> unit
 
@@ -47,11 +53,19 @@ sig
   (** Checks if the current state is satisfiable. *)
   val satisfiable : t -> bool
 
+  (** Checks if the current state is satisfiable. Return None if unknown (e.g. due to incomplete theory or timeout) *)
+  val satisfiable_option : t -> bool option
+
   (** Checks if the current state is satisfiable. *)
   val unsatisfiable : t -> bool
 
+  (** Checks if the current state is unsatisfiable. Return None if unknown (e.g. due to incomplete theory or timeout) *)
+  val unsatisfiable_option : t -> bool option
+
   (** Asserts the formula. *)
   val add : t -> Formula.t -> unit
+
+  val  add_real : t -> RealFormula.t -> unit
 
   (** Minimizes the variable. *)
   val minimize : t -> Var.t -> unit
@@ -59,10 +73,29 @@ sig
   (** Maximizes the variable. *)
   val maximize : t -> Var.t -> unit
 
-  (** Sets the variables, which absolute value should be minimized. *)
+  (* maximizes the number of variables set to 0. If add_as_constraint (defaulting to false) is true
+    a backtracking point is created before enforcing the minimal number of set variables *)
+  val minimize_set_vars : t -> ?add_as_constraint:bool -> Var.t list -> unit
+
+
+  (** Sets the variables, which absolute value should be minimized. Does not work as intended? *)
+  val minimize_absolute_with_weight : t -> (Var.t*OurFloat.t) list -> unit
+
   val minimize_absolute : t -> Var.t list -> unit
 
-  (** Returns a model of the current state, if the state is satisfiable. *)
-  val model : t -> Polynomial.valuation Option.t
+  val minimize_absolute_old : t -> Var.t list -> unit
 
+  (** Sets the variables, which absolute value should be minimized. Another try*)
+  val minimize_absolute_iteratively : t -> Var.t list -> unit
+
+  (** Similarly to minimise_absolute_iteratively but only works on ints.
+      Additionally a manually implemented binary search is employed which leads to significantly improved performance
+      but is still very slow compared to minimize_absolute_old *)
+  val minimise_absolute_ints_binary_search_iteratively: t -> Var.t list -> unit
+
+  (** Returns a model of the current state, if the state is satisfiable. *)
+  val model : ?optimized:bool -> t -> Polynomial.valuation Option.t
+
+  (** Returns a real model of the current state, if the state is satisfiable. *)
+  val model_real : ?optimized:bool -> t -> RealPolynomial.valuation Option.t
 end
