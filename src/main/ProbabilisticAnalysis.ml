@@ -32,15 +32,15 @@ let run probabilistic_goal (params: params) =
     | Goal.ExpectedComplexity -> (
       match params.result with
       |"termcomp" -> print_termcomp_expected
-      |"all" -> print_all_expected_bounds ~html:params.html
-      |_ -> print_overall_expected_costbound ~html:params.html
+      |"all" -> print_all_expected_bounds ~format:params.out_format
+      |_ -> print_overall_expected_costbound ~format:params.out_format
     )
 
     | Goal.ExpectedSize v -> (
       match params.result with
       |"termcomp" -> print_termcomp_expected_size v
-      |"all" -> print_all_expected_bounds_expected_size v ~html:params.html
-      |_ -> print_overall_expected_sizebound ~html:params.html v
+      |"all" -> print_all_expected_bounds_expected_size v ~format:params.out_format
+      |_ -> print_overall_expected_sizebound ~format:params.out_format v
     )
   in
 

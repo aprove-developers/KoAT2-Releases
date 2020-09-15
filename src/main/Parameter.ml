@@ -44,8 +44,8 @@ type params = {
     simple_input : bool; [@default false] [@aka ["s"]]
     (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
 
-     html : bool; [@default false] [@aka ["h"]]
-    (** Enabling printing the result in html format or not *)
+    out_format : Formatter.format; [@enum Formatter.["plain", Formatter.Plain; "html", Formatter.Html; "markdown", Formatter.Markdown]] [@default Formatter.Plain]
+    (** The output format *)
 
     output_dir : string option; [@aka ["o"]]
     (** An absolute or relative path to the output directory, where all generated files should end up. *)

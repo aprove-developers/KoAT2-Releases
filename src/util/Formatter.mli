@@ -1,7 +1,11 @@
 open Batteries
 open FormatMonad
 
-type format = Plain | Html
+type format = Plain | Html | Markdown
+
+val is_html: format -> bool
+val is_plain: format -> bool
+val is_markdown: format -> bool
 
 val str: String.t -> unit Monad.t
 val raw_str: String.t -> unit Monad.t

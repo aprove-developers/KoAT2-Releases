@@ -4,6 +4,19 @@ open FormattedString
 
 type format = Plain
             | Html
+            | Markdown
+
+let is_html = function
+  | Html -> true
+  | _    -> false
+
+let is_plain = function
+  | Plain -> true
+  | _    -> false
+
+let is_markdown = function
+  | Plain -> true
+  | _    -> false
 
 let str = write_format % mk_str
 let raw_str = write_format % mk_raw_str
@@ -60,10 +73,27 @@ let render_html meta f =
 
 let rec render_plain _ f = render_string f
 
-let render_monad ~format (expr: 'a Monad.t) initial_meta =
+let rec render_markdown meta f =
+  match f with
+  | Empty          -> ""
+
+  (* TODO: Is this a useful encoding for strings in markdown? *)
+  | Str s                   -> Netencoding.Html.encode ~in_enc:`Enc_utf8 () s
+
+  | RawStr s       -> s
+  | Paragraph f'   -> render_markdown meta f' ^ "\n\n"
+  | NewLine        -> "\\\n"
+  | Header (s,f')  ->
+      (match s with
+      | Big -> "\n# " ^ render_markdown meta f' ^ "\n"
+      | Small -> "\n## " ^ render_markdown meta f' ^ "\n")
+  | SequentialComp (f1, f2) -> render_markdown meta f1 ^ render_markdown meta f2
+
+let render_monad ~(format: format) (expr: 'a Monad.t) initial_meta =
   let (meta, form, _) = expr initial_meta in
   match format with
   | Plain -> render_plain meta form ^ "\n"
   | Html  -> render_html  meta form ^ "\n"
+  | Markdown  -> render_markdown  meta form ^ "\n"
 
 let render_default ~format expr = render_monad ~format:format expr initial_meta
