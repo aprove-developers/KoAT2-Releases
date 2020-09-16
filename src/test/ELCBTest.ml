@@ -12,7 +12,7 @@ let tests =
   let vary = RealBound.of_var @@ Var.mk_arg 1 in
   "ELSB" >::: [
     "elcb" >::: List.map
-      (fun (gt,argnum,l,lower_bound, lower_bound_red, program_string) ->
+      (fun (gt,argnum,l,lower_bound,  program_string) ->
         (Int.to_string gt) >::
           (fun _ ->
             let var = Var.mk_arg argnum in
@@ -37,23 +37,16 @@ let tests =
             in
             let rv = ((gt,loc),var) in
             let elcb     = ExpLocalChangeBound.(elcb elcb_cache rv) in
-            let elcb_red = ExpLocalChangeBound.(reduced_elcb elcb_cache rv) in
             let error_string =
               "elcb_mismatch elcb: " ^ (RealBound.show ~complexity:false elcb)
               ^ " expected " ^ (RealBound.show ~complexity:false lower_bound)
               ^ " in program " ^ (Program.to_string prog)
             in
-            let error_string_red =
-              "elcb_mismatch reduced_elcb: " ^ (RealBound.show ~complexity:false elcb_red)
-              ^ " expected " ^ (RealBound.show ~complexity:false lower_bound_red)
-              ^ " in program " ^ (Program.to_string prog)
-            in
             assert_bool error_string (bounds_pos_vars lower_bound elcb);
-            assert_bool error_string_red (bounds_pos_vars lower_bound_red elcb_red)
           )
       )
       [
-        (0, 0, "g", RealBound.zero, RealBound.zero,
+        (0, 0, "g", RealBound.zero,
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"
@@ -62,7 +55,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "g", RealBound.zero, RealBound.zero,
+        (0, 0, "g", RealBound.zero,
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"
@@ -71,7 +64,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "g", RealBound.zero, RealBound.zero,
+        (0, 0, "g", RealBound.zero,
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X Y)                            \n"
@@ -80,7 +73,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 1, "g", RealBound.(abs @@ vary), RealBound.(abs @@ vary),
+        (0, 1, "g", RealBound.(abs @@ vary),
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X Y)                            \n"
@@ -89,7 +82,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 1, "g", RealBound.(abs @@ vary), RealBound.(abs @@ vary),
+        (0, 1, "g", RealBound.(abs @@ vary),
           "(GOAL EXPECTEDCOMPLEXITY)                  \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))            \n"
         ^ "(VAR X Y)                                  \n"
@@ -98,7 +91,7 @@ let tests =
         ^ ")                                          \n"
         );
 
-        (0, 1, "g", RealBound.(of_constant (OurFloat.of_float 0.5) * abs vary), RealBound.(abs @@ vary),
+        (0, 1, "g", RealBound.(of_constant (OurFloat.of_float 0.5) * abs vary),
           "(GOAL EXPECTEDCOMPLEXITY)                  \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))            \n"
         ^ "(VAR X Y)                                  \n"
@@ -107,7 +100,7 @@ let tests =
         ^ ")                                          \n"
         );
 
-        (0, 1, "g", RealBound.(abs @@ vary - (of_constant @@ OurFloat.of_int 5) * varx), RealBound.(abs @@ vary - (of_constant @@ OurFloat.of_int 5) * varx),
+        (0, 1, "g", RealBound.(abs @@ vary - (of_constant @@ OurFloat.of_int 5) * varx),
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X Y)                            \n"
@@ -116,7 +109,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "g", RealBound.infinity, RealBound.infinity,
+        (0, 0, "g", RealBound.infinity,
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"
@@ -125,7 +118,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "g", RealBound.(of_constant (OurFloat.of_int 5)), RealBound.(of_constant (OurFloat.of_int 5)),
+        (0, 0, "g", RealBound.(of_constant (OurFloat.of_int 5)),
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"
@@ -134,7 +127,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "g", RealBound.(of_constant (OurFloat.of_int 10)), RealBound.(of_constant (OurFloat.of_int 10)),
+        (0, 0, "g", RealBound.(of_constant (OurFloat.of_int 10)),
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"
@@ -143,7 +136,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "g", RealBound.(of_constant (OurFloat.of_int 25)), RealBound.(of_constant (OurFloat.of_int 25)),
+        (0, 0, "g", RealBound.(of_constant (OurFloat.of_int 25)),
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"
@@ -152,7 +145,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "g", RealBound.(of_constant (OurFloat.of_int 5)), RealBound.(of_constant (OurFloat.of_int 5)),
+        (0, 0, "g", RealBound.(of_constant (OurFloat.of_int 5)),
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"
@@ -161,7 +154,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "g", RealBound.(abs @@ varx + of_constant (OurFloat.of_int 5)), RealBound.(abs @@ varx + of_constant (OurFloat.of_int 5)),
+        (0, 0, "g", RealBound.(abs @@ varx + of_constant (OurFloat.of_int 5)),
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"
@@ -170,7 +163,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "g", RealBound.(of_constant (OurFloat.of_int 50)), RealBound.(of_constant (OurFloat.of_int 50)),
+        (0, 0, "g", RealBound.(of_constant (OurFloat.of_int 50)),
           "(GOAL EXPECTEDCOMPLEXITY)                   \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))             \n"
         ^ "(VAR X)                                     \n"
@@ -179,7 +172,7 @@ let tests =
         ^ ")                                           \n"
         );
 
-        (0, 0, "g", RealBound.(of_constant @@ OurFloat.of_int 100), RealBound.(of_constant @@ OurFloat.of_int 100),
+        (0, 0, "g", RealBound.(of_constant @@ OurFloat.of_int 100),
           "(GOAL EXPECTEDCOMPLEXITY)                     \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))               \n"
         ^ "(VAR X)                                       \n"
@@ -188,7 +181,7 @@ let tests =
         ^ ")                                             \n"
         );
 
-        (0, 0, "g", RealBound.zero, RealBound.zero,
+        (0, 0, "g", RealBound.zero,
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"
@@ -197,7 +190,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "h", RealBound.(abs varx), RealBound.(abs varx),
+        (0, 0, "h", RealBound.(abs varx),
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"
@@ -206,7 +199,7 @@ let tests =
         ^ ")                                    \n"
         );
 
-        (0, 0, "g", RealBound.(of_constant (OurFloat.of_float 1.5) * abs varx), RealBound.(of_constant (OurFloat.of_float 1.5) * abs varx),
+        (0, 0, "g", RealBound.(of_constant (OurFloat.of_float 1.5) * abs varx),
           "(GOAL EXPECTEDCOMPLEXITY)            \n"
         ^ "(STARTTERM (FUNCTIONSYMBOLS f))      \n"
         ^ "(VAR X)                              \n"

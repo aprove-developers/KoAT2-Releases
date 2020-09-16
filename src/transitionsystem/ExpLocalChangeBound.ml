@@ -30,7 +30,6 @@ let print_matrix =
 type t = {
   elcb : RealBound.t; (** The expected local change bound *)
   var : Var.t;
-  reduced_coeff : OurFloat.t; (** The reduced expected local size bound as used in the computation of expected nontrivial size bounds*)
 }
 
 type concave_convex_cache = (concave_convex_op * String.t, bool) Hashtbl.t
@@ -267,13 +266,12 @@ let elcb_ (((gt, l), v): RV.t): t =
         {
           var = v;
           elcb = RealBound.simplify_vars_nonnegative b;
-          reduced_coeff = OurFloat.(one/total_probability);
         }
   in
   Logger.with_log
     logger Logger.DEBUG
     (fun () -> "elcb_",["gt", GeneralTransition.to_id_string gt; "l", Location.to_string l; "var", Var.to_string v])
-    ~result:(fun t -> "elcb: "^ RealBound.to_string t.elcb ^ " reduced_coeff: " ^ OurFloat.to_string t.reduced_coeff)
+    ~result:(fun t -> "elcb: "^ RealBound.to_string t.elcb)
     execute
 
 let compute_elcb cache =
@@ -288,10 +286,6 @@ let elcb cache erv =
 let elcb_plus_var cache erv =
   let t = compute_elcb cache erv in
   RealBound.(abs (of_var t.var) + t.elcb)
-
-let reduced_elcb cache erv =
-  let t = compute_elcb cache erv in
-  RealBound.(of_constant t.reduced_coeff * t.elcb)
 
 let vars cache =
   RealBound.vars % elcb_plus_var cache

@@ -17,9 +17,6 @@ val elcb : elcb_cache -> RV.t -> RealBound.t
  * adding the considered variables absolute value to the change bound *)
 val elcb_plus_var : elcb_cache -> RV.t -> RealBound.t
 
-(* Infers a reduced elcb *)
-val reduced_elcb : elcb_cache -> RV.t -> RealBound.t
-
 (* This computes the variables occuring in an expected update. Note that
    var program rv = var(elcb(rv) + v) where v is the variable of rv.
    Hence when considering the vars of a rv we get the variables necessary to compute

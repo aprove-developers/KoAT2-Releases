@@ -40,7 +40,7 @@ let compute_ pre_cache elcb_cache program get_timebound_gt get_exptimebound get_
     in
 
     let var_change_bound =
-      ExpLocalChangeBound.(reduced_elcb elcb_cache ((gt,target_loc),var))
+      ExpLocalChangeBound.(elcb elcb_cache ((gt,target_loc),var))
       (* perform appr_substitution with all pre size bounds *)
       |> fun b -> Enum.map (appr_substitution_pre_size b) pre_trans
       |> RealBound.maximum
