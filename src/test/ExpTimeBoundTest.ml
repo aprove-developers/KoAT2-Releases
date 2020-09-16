@@ -108,7 +108,7 @@ let tests =
           ("sampling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/sampling.koat");
           ("robot", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/robot.koat");
           ("roulette", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/roulette.koat");
-          ("SelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/SelectSort.koat");
+          ("selectsort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/selectsort.koat");
           ("simple_nested", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/simple_nested.koat");
           ("simple_recursive", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/simple_recursive.koat");
 
@@ -118,7 +118,7 @@ let tests =
           ("spctrm", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/spctrm.koat");
           ("sprdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/sprdwalk.koat");
           ("miner", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/miner.koat");
-          ("TruncSelectSort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/TruncSelectSort.koat");
+          ("trunc_selectsort", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/trunc_selectsort.koat");
           ("two_arrays2", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/two_arrays2.koat");
         ];
   ]
