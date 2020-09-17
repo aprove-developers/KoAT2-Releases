@@ -1,5 +1,5 @@
 # Multiple Races between a tortoise and a hare.
-# The difference to the normal multirace example is the missing
+# The difference to the normal multirace example from absynth is the missing
 # condition M>=0 in the first transition
 
 (GOAL EXPECTEDCOMPLEXITY)
