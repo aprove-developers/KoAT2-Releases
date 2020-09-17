@@ -38,8 +38,8 @@ export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 
 ## Run
 
-1. After compiling the testprogram "test" is run, it can be found in the subdirectory test.
-2. Run ./koat2 in main to get the help page of koat2
-  For further information run ./koat2 commandname --help
-  The main command proceeding a full analysis is the command "analyse".
+1. After compiling the testprogram `test` is run, it can be found in the subdirectory `test`.
+2. Run `./koat2` in main to get the help page of `koat2`
+  For further information run `./koat2 commandname` --help
+  The main command proceeding a full analysis is the command `analyse`.
 3. A detailed description of the input format and how to execute this tool can be found [here](https://aprove-developers.github.io/ExpectedUpperBounds/). 
