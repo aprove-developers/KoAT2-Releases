@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR a b)
+(RULES
+        start(a, b) -> one(a, b)
+        one(a, b) -> one(a - 1, b) [ a > b ]
+)

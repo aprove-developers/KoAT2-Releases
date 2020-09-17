@@ -1,0 +1,3 @@
+koat: internal error, uncaught exception:
+      Failure("Negation not yet supported!")
+      

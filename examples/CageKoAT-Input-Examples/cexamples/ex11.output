@@ -1,0 +1,3 @@
+koat: internal error, uncaught exception:
+      Failure("SMT-Solver does not know a solution due to: (incomplete (theory arithmetic))")
+      

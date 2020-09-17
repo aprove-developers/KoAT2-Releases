@@ -1,0 +1,23 @@
+digraph G {
+  f_0 [color="#336600", label="ar_0", shape=box, style="bold", ];
+  g_0 [color="#33CC33", label="ar_0", shape=box, style="bold", ];
+  h_0 [label="ar_0", shape=box, ];
+  g_1 [color="#33CC33", label="ar_1", shape=box, style="bold", ];
+  h_1 [color="#33CC33", label="ar_1", shape=box, style="bold", ];
+  
+  subgraph cluster_f { label="f"; f_0;
+     };
+  subgraph cluster_g { label="g"; g_1;g_0;
+     };
+  subgraph cluster_h { label="h"; h_1;h_0;
+     };
+  
+  f_0 -> g_0 [color="#0000FF", style="solid", ];
+  g_0 -> g_0 [color="#33CC33", style="bold", ];
+  g_0 -> h_0 [color="#0000FF", style="solid", ];
+  h_0 -> h_0 [color="#0000FF", style="solid", ];
+  g_1 -> g_1 [color="#33CC33", style="bold", ];
+  g_1 -> h_1 [color="#0000FF", style="solid", ];
+  h_1 -> h_1 [color="#33CC33", style="bold", ];
+  
+  }

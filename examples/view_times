@@ -1,0 +1,3 @@
+#!/bin/bash
+
+find . -name *.output | xargs grep -H "Overall timebound" | awk -F: '{print $1":" $3}'

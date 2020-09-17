@@ -1,0 +1,19 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR a b)
+(RULES
+        start(a, b) -> one(a, b)
+        one(a, b) -> two(a, b)
+        two(a, b) -> three(a, b)
+        three(a, b) -> four(a, b)
+        four(a, b) -> leftOne(a, b) [ a > b ]
+        four(a, b) -> rightOne(a, b) [ a < b ]
+        leftOne(a, b) -> leftTwo(a, b)
+        leftTwo(a, b) -> leftThree(a, b)
+        leftThree(a, b) -> leftFour(a, b)
+        rightOne(a, b) -> rightTwo(a, b)
+        rightTwo(a, b) -> rightThree(a, b)
+        rightThree(a, b) -> rightFour(a, b)
+        leftFour(a, b) -> four(a - 1, b)
+        rightFour(a, b) -> four(a, b - 1)
+)

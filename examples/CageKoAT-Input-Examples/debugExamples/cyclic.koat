@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS start))
+(VAR a b)
+(RULES
+        start(a, b) -> cycle(a, b)
+        cycle(a, b) -> cycle(b, a)
+)
