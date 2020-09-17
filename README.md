@@ -1,4 +1,4 @@
-# KoAT Reimplementation - Analysis of Expected Runtimes
+# KoAT's Reimplementation KoAT2 - Analysis of Expected Runtimes
 Implementation of the techniques from our work [Inferring Expected Runtimes Using Expected Sizes](https://aprove-developers.github.io/ExpectedUpperBounds/)
 
 ## Build
@@ -42,4 +42,4 @@ export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 2. Run ./koat2 in main to get the help page of koat2
   For further information run ./koat2 commandname --help
   The main command proceeding a full analysis is the command "analyse".
-3. A detailed description of the input format and how to execute KoAT
+3. A detailed description of the input format and how to execute this tool can be found [here](https://aprove-developers.github.io/ExpectedUpperBounds/). 
