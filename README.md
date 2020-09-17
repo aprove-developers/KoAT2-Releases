@@ -20,21 +20,30 @@ export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 ### Build [Docker](https://www.docker.com/) image
 
 1. Install docker as described [here](https://docs.docker.com/engine/install/).
-2. Execute `docker build -t koat -f Dockerfile .` in the topdirectory of this repository. This builds a docker image with the name `koat`. Details on how to execute this docker image can be found [here](https://aprove-developers.github.io/ExpectedUpperBounds/).
-  
+2. Execute `docker build -t koat -f Dockerfile .` in the topdirectory of this repository. This builds a docker image with the name `koat`. The docker image contains a static binary. Details on how to execute this docker image can be found [here](https://aprove-developers.github.io/ExpectedUpperBounds/).
+
 ## Links
 
 - Ocaml Forum: https://discuss.ocaml.org/
 - Opam: https://opam.ocaml.org/
-- Batteries Included: http://ocaml-batteries-team.github.io/batteries-included/hdoc2/
 - Omake: http://omake.metaprl.org/manual/omake-doc.html
 - Omake Recipes: http://www.camlcity.org/knowledge/kb_001_omake_recipes.html
 - OUnit: http://ounit.forge.ocamlcore.org/api-ounit/index.html
 - Menhir: http://gallium.inria.fr/~fpottier/menhir/
-- Ocamlgraph: http://ocamlgraph.lri.fr/doc/
-- Cmdliner: http://erratique.ch/software/cmdliner/doc/Cmdliner
-- Ocamlnet: http://projects.camlcity.org/projects/ocamlnet.html
+- Musl: https://www.musl-libc.org/
 
+## Used Libraries
+KoAT2 makes use of the following external tools and libraries. In the static binary built inside the docker image, these libraries are linked into the binary.
+
+- [APRON](<https://antoinemine.github.io/Apron/doc/>)
+- [Batteries](<http://ocaml-batteries-team.github.io/batteries-included/hdoc2/>)
+- [Cmdliner](<http://erratique.ch/software/cmdliner/doc/Cmdliner>)
+- [FPath](<https://erratique.ch/software/fpath>)
+- [Ocamlgraph](<http://ocamlgraph.lri.fr/doc/>)
+- [Ocamlnet](http://projects.camlcity.org/projects/ocamlnet.html)
+- [ppx_deriving](<https://github.com/ocaml-ppx/ppx_deriving>)
+- [ppx_deriving_cmdliner](<https://github.com/hammerlab/ppx_deriving_cmdliner>)
+- [Z3](https://github.com/Z3Prover/z3)
 
 ## Run
 
