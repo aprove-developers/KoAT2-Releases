@@ -1,6 +1,0 @@
-eq(pubs_start(A,B,C,D,E,F),0,[f1(A,B,C,D,E,F)],[]).
-eq(f1(A,B,C,D,E,F),1,[f0(A,B,C,D,E,F)],[]).
-eq(f0(A,B,C,D,E,F),1,[f0(-1 + A,B,G,H,I,F)],[I >= 1, A >= 1]).
-eq(f0(A,B,C,D,E,F),1,[f0(-1 + A,B,G,H,I,F)],[0 >= 1 + I, A >= 1]).
-eq(f0(A,B,C,D,E,F),1,[f0(A,B,-1 + C,G,0,H)],[A >= 1, C >= 3]).
-eq(f0(A,B,C,D,E,F),1,[f2(A,G,C,D,E,F)],[0 >= A]).

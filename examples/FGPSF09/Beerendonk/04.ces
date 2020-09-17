@@ -1,3 +1,0 @@
-eq(pubs_start(A,B),0,[start(A,B)],[]).
-eq(start(A,B),1,[eval(A,B)],[]).
-eq(eval(A,B),1,[eval(B,A)],[A >= 1 + B]).

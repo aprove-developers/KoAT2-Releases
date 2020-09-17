@@ -1,7 +1,0 @@
-(GOAL COMPLEXITY)
-(STARTTERM (FUNCTIONSYMBOLS f))
-(VAR x)
-(RULES
-  f(x) -> g(x)
-  g(x) -> h(x)
-)

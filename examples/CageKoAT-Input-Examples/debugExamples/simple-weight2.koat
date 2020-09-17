@@ -1,8 +1,0 @@
-(GOAL COMPLEXITY)
-(STARTTERM (FUNCTIONSYMBOLS start))
-(VAR x y)
-(RULES
-  start(x, y) -> g(x, 0)
-  g(x,y) -{1,x}> f(x,y)
-  f(x,y) -> f(x-1, y) [x > y]
-)

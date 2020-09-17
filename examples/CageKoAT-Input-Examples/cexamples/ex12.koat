@@ -1,7 +1,0 @@
-(GOAL COMPLEXITY)
-(STARTTERM (FUNCTIONSYMBOLS f))
-(VAR x)
-(RULES
-  f(x) -> g(100)
-  g(x) -> g(x - 1) [ x > 0 ]
-)

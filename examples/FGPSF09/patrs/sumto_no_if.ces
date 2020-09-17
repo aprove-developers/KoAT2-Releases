@@ -1,4 +1,0 @@
-eq(pubs_start(A,B),0,[start(A,B)],[]).
-eq(start(A,B),1,[sumto(A,B)],[]).
-eq(sumto(A,B),1,[sumto(1 + A,B)],[B >= A]).
-eq(sumto(A,B),1,[end(A,B)],[A >= 1 + B]).

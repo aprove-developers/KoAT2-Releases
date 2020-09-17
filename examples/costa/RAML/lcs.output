@@ -1,3 +1,0 @@
-koat: internal error, uncaught exception:
-      Readers.Error("Parser error at line 15 at char number 35 which is directly after max")
-      

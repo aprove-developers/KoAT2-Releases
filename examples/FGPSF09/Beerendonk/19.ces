@@ -1,8 +1,0 @@
-eq(pubs_start(A,B,C),0,[start(A,B,C)],[]).
-eq(start(A,B,C),1,[eval(A,B,C)],[]).
-eq(eval(A,B,C),1,[eval(A,B,C)],[C >= 1 + B, B >= A, B >= C]).
-eq(eval(A,B,C),1,[eval(A,B,C)],[A >= 1 + B, B >= A, B >= C]).
-eq(eval(A,B,C),1,[eval(A,B,-1 + C)],[C >= 1 + B, B >= A]).
-eq(eval(A,B,C),1,[eval(A,B,-1 + C)],[A >= 1 + B, B >= A, C >= 1 + B]).
-eq(eval(A,B,C),1,[eval(-1 + A,B,C)],[C >= 1 + B, A >= 1 + B]).
-eq(eval(A,B,C),1,[eval(-1 + A,B,C)],[A >= 1 + B]).

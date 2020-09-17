@@ -1,1 +1,0 @@
-ERROR: The given program uses recursion. Recursion is not supported by the current version of koat. The program will exit now.
