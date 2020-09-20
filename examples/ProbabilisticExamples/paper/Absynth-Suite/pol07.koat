@@ -9,5 +9,5 @@
   f(I,J,N) -> g(1,J,N)
   g(I,J,N) -> h(I+1,I-1,N) :|: I<N
   h(I,J,N) -> 0.5:h(I,J-1,N) :+: 0.5:h(I,J,N) :|: J>0
-  h(I,J,N) -> g(I,J,N)
+  h(I,J,N) -> g(I,J,N)                        :|: J<1
 )

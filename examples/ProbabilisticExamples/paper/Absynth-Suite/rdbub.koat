@@ -8,5 +8,5 @@
   f(N,J) -> g(N,J)
   g(N,J) -> h(UNIFORM(-1,0),N) :|: N>0
   h(N,J) -> 0.25:h(N,J) :+: 0.75:h(N,J-1) :|: J>0
-  h(N,J) -> g(N,J)
+  h(N,J) -> g(N,J)                        :|: J<1
 )

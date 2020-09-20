@@ -4,11 +4,11 @@
 
 (GOAL EXPECTEDSIZE Z)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR M S N Z)
+(VAR minPrice sPrice numShares Z)
 (RULES
-  f(M,S,N,Z) -> g(M,S,N,0) :|: M >= 0
-  g(M,S,N,Z) -> 0.25:h(M,S+1,N,Z) :+: 0.75:h(M,S-1,N,Z) :|: M<S
-  h(M,S,N,Z) -> i(M,S,UNIFORM(0,3),Z)
-  i(M,S,N,Z) -> i(M,S,N-1,Z+S) :|: N>0
-  i(M,S,N,Z) -> g(M,S,N,Z)
+  f(minPrice,sPrice,numShares,Z) -> g(minPrice,sPrice,numShares,0) :|: minPrice >= 0
+  g(minPrice,sPrice,numShares,Z) -> 0.25:h(minPrice,sPrice+1,numShares,Z) :+: 0.75:h(minPrice,sPrice-1,numShares,Z) :|: minPrice<sPrice
+  h(minPrice,sPrice,numShares,Z) -> i(minPrice,sPrice,UNIFORM(0,3),Z)
+  i(minPrice,sPrice,numShares,Z) -> i(minPrice,sPrice,numShares-1,Z+sPrice) :|: numShares>0
+  i(minPrice,sPrice,numShares,Z) -> g(minPrice,sPrice,numShares,Z)          :|: numShare<1
 )

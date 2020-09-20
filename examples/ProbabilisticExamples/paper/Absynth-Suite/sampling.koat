@@ -15,5 +15,5 @@
   j(x,y,k,n) -> h(x,y,0,n) :|: x>y || x<y
 
   # Exit outer loop
-  h(x,y,k,n) -> g(x,y,k,n-1)
+  h(x,y,k,n) -> g(x,y,k,n-1) :|: k<1
 )

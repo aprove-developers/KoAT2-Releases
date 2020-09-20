@@ -11,5 +11,5 @@
   # Single Races
   h(H,T,M,N) -> 0.25:h(H,T+1,M,N) :+: 0.75:h(UNIFORM(1,3),T+1,M,N)  :|: H<=T
   # Exit Race
-  h(H,T,M,N) -> g(H,T,M,N-1)
+  h(H,T,M,N) -> g(H,T,M,N-1)                                        :|: H > T
 )

@@ -8,5 +8,5 @@
   f(N,Y) -{0}> g(N,Y) :|: Y>=0
   g(N,Y) -{9}> 0.9:h(N+1,Y) :+: 0.1:h(N,Y)      :|: N<0     # start outer loop
   h(N,Y) -{5}> 0.5:h(N,Y-100) :+: 0.5:h(N,Y-90) :|: Y>=100  # inner loop
-  h(N,Y) -{0}> g(N,Y+1000)                                  # close outer loop
+  h(N,Y) -{0}> g(N,Y+1000)                      :|: Y<100   # close outer loop
 )

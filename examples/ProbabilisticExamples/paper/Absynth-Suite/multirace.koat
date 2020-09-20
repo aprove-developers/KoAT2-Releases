@@ -5,10 +5,10 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR h t m n)
 (RULES
-  f(h,t,m,n) -{0}> g(h,t,m,n)                                     :|: m>=0
-  g(h,t,m,n) -{0}> h(0,m,m,n)                                     :|: n>0
+  f(h,t,m,n) -{0}> g(h,t,m,n)                                       :|: m>=0
+  g(h,t,m,n) -{0}> h(0,m,m,n)                                       :|: n>0
   # Single Races
   h(h,t,m,n) -> 0.25:h(h,t+1,m,n) :+: 0.75:h(UNIFORM(1,3),t+1,m,n)  :|: h<=t
   # Exit Race
-  h(h,t,m,n) -{0}> g(h,t,m,n-1)
+  h(h,t,m,n) -{0}> g(h,t,m,n-1)                                     :|: h>t
 )

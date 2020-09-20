@@ -7,13 +7,12 @@
 (VAR X Y W N M)
 (RULES
   # first loop
-  f(X,Y,W,N,M) -> g(0,Y,W,N,M)
-  g(X,Y,W,N,M) -> h(UNIFORM(-1,2),Y+3*M,W,N,M) :|: X<N
-  h(X,Y,W,N,M) -> i(X,BINOMIAL(3,0.5),W,N,M)
-  i(X,Y,W,N,M) -> g(X,Y,W,N,M)
-  i(X,Y,W,N,M) -> j(X,Y,W,N,M) # exit loop
-  ## second loop
-  j(X,Y,W,N,M) -> k(X,Y,W,N,M) :|: Y>0
+  f(X,Y,W,N,M) -{0}> g(0,Y,W,N,M) :|: M>=0 && y >= 0
+  g(X,Y,W,N,M) -{0}> h(UNIFORM(0,1),Y+3*M,W,N,M) :|: X<N
+  h(X,Y,W,N,M) -{0}> g(X,BINOMIAL(3,0.5),W,N,M)
+  g(X,Y,W,N,M) -{0}> j(X,Y,W,N,M) :|: N<X+1 # exit loop
+  # second loop
+  j(X,Y,W,N,M) -{0}> k(X,Y,W,N,M) :|: Y>0
   k(X,Y,W,N,M) -> k(X,Y,W-1,N,M) :|: W>0
-  k(X,Y,W,N,M) -> 0.25:j(X,Y+1,W,N,M) :+: 0.75:j(X,Y-1,W,N,M)
+  k(X,Y,W,N,M) -> 0.25:j(X,Y+1,W,N,M) :+: 0.75:j(X,Y-1,W,N,M) :|: W<1
 )
