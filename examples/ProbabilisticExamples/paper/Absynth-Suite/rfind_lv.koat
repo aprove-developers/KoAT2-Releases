@@ -4,7 +4,6 @@
 (STARTTERM (FUNCTIONSYMBOLS f))
 (VAR flag)
 (RULES
-  # first loop
   f(flag) -{0}> g(1)
   # second branch is 1/4 * 1/3 = 1/12 and 1/4 * 2/3 = 1/6
   g(flag) -> 0.5:g(0) :+: 0.5:g(1) :|: flag > 0
