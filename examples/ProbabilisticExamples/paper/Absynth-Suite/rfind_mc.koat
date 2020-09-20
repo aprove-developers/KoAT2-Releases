@@ -1,0 +1,15 @@
+# Taken from absynth
+#
+# Since the preceding nonprobrobabilistic analysis performed by KoAT
+# finds a nonprobabilistic linear time bound for the inner loop (g->h, h->g)
+# KoAT does not call the expected time bounds method which would compute a constant
+# expected bound for the inner loop (by ignoring the i<k constraint)
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR flag k flag i)
+(RULES
+  # first loop
+  f(k,flag,i) -{0}> g(k,1,0)
+  g(k,flag,i) -> 0.5:h(k,0,i) :+: 0.5:h(k,1,i)    :|: i<k && flag > 0
+  h(k,flag,i) -> g(k,flag,i+1)
+)

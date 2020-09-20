@@ -1,0 +1,46 @@
+# Taken from absynth
+#
+# First the functions are encoded (each with an additional and location)
+# Then the control flow is represented by chaining end locations to the 'input location' of the 
+# next function
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR flag_ab flag_ac flag_bc)
+(RULES
+  # function definitions
+  abc(flag_ab, flag_ac, flag_bc) ->
+    [1/6]:abc_end(flag_ab, 0, 0) :+:
+    [1/6]:abc_end(0, 0, 0) :+:
+    [2/6]:abc_end(flag_ab, 0, 0) :+:
+    [2/6]:abc_end(0, 0, flag_bc)
+
+  ab(flag_ab, flag_ac, flag_bc) ->
+    [1/3]:ab(0, flag_ac, flag_bc) :+:
+    [2/6]:ab(0, flag_ac, flag_bc) :+:
+    [2/6]:ab(1, flag_ac, flag_bc) :|: flag_ab > 0
+  ab(flag_ab, flag_ac, flag_bc) -{0}> ab_end(flag_ab, flag_ac, flag_bc) :|: flag_ab < 1
+
+  ac(flag_ab, flag_ac, flag_bc) ->
+    [1/3]:ac(flag_ab, 0, flag_bc) :+:
+    [2/3]:ac(flag_ab, 0, flag_bc) :|: flag_ac > 0
+  ac(flag_ab, flag_ac, flag_bc) -{0}> ac_end(flag_ab, flag_ac, flag_bc) :|: flag_ac < 1
+
+  bc(flag_ab, flag_ac, flag_bc) ->
+    [1/2]:bc(flag_ab, flag_ac, 0) :+:
+    [1/2]:bc(flag_ab, flag_ac, 0) :|: flag_bc > 0
+  bc(flag_ab, flag_ac, flag_bc) -{0}> bc_end(flag_ab, flag_ac, flag_bc) :|: flag_bc < 1
+
+  # control flow
+
+  f(flag_ab, flag_ac, flag_bc) -{0}> abc(1, 1, 1)
+
+  abc_end(flag_ab, flag_ac, flag_bc) -{0}> ab(flag_ab, flag_ac, flag_bc) :|: flag_ab = 1
+  abc_end(flag_ab, flag_ac, flag_bc) -{0}> ab_end(flag_ab, flag_ac, flag_bc) :|: flag_ab = 0
+
+  ab_end(flag_ab, flag_ac, flag_bc) -{0}> ac(flag_ab, flag_ac, flag_bc) :|: flag_ac = 1
+  ab_end(flag_ab, flag_ac, flag_bc) -{0}> ac_end(flag_ab, flag_ac, flag_bc) :|: flag_ac = 0
+
+  ac_end(flag_ab, flag_ac, flag_bc) -{0}> bc(flag_ab, flag_ac, flag_bc) :|: flag_bc = 1
+  ac_end(flag_ab, flag_ac, flag_bc) -{0}> bc_end(flag_ab, flag_ac, flag_bc) :|: flag_bc = 0
+)
