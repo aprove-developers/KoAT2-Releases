@@ -1,0 +1,17 @@
+# Model a geometric distribution with parameter 0.5
+# Taken from Absynth
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR c)
+(RULES
+  f(c) -{0}> g(c)
+
+  # loop with probabilistic exit condition between g and h
+  g(c) -{1}> 0.5:h(0) :+: 0.5:loopstop(1)
+  # and tick 2
+  h(c) -{2}> g(c)
+
+  # tick after loop
+  loopstop(c) -> j(c)
+)
