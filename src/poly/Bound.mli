@@ -3,6 +3,16 @@ open Batteries
 open Polynomials
    
 (** A MinMaxPolynomial is a polynomial which allows the usage of min and max functions  *)
+module Make_BoundOver :
+  functor (Num : PolyTypes.OurNumber) -> functor
+          (Poly :
+             sig
+               include PolyTypes.Polynomial with type value = Num.t
+                                             and type valuation = Valuation.Make(Num).t
+                                             and type monomial = Monomials.Make(Num).t
+               val max_of_occurring_constants : t -> Num.t
+             end ) ->
+    sig
 
 type t
 

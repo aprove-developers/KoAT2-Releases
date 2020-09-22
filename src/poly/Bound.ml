@@ -4,11 +4,20 @@ open Util
    
 let logger = Logging.(get Bound)
            
-module Valuation_ = Valuation.Make(OurInt)
-type valuation = Valuation.Make(OurInt).t
-                  
-type polynomial = Polynomial.t
-type value = OurInt.t
+module Make_BoundOver (Num : PolyTypes.OurNumber)
+                      (Poly :
+                        sig
+                          include PolyTypes.Polynomial with type value = Num.t
+                                                        and type valuation = Valuation.Make(Num).t
+                                                        and type monomial = Monomials.Make(Num).t
+                          val max_of_occurring_constants : t -> Num.t
+                        end ) =
+  struct
+    module Valuation_ = Valuation.Make(Num)
+    type valuation = Valuation.Make(Num).t
+
+    type polynomial = Poly.t
+    type value = Num.t
                 
 (* Minus Infinity is max of an empty list *)
 (* Infinity is min of an empty list *)
