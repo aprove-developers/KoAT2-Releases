@@ -1,9 +1,9 @@
 open Batteries
 
-include Number.MakeNumeric(Big_int)
+include Number.MakeNumeric(Num)
+
 let (=~=) = equal
 
-(* TODO Make it possible to pow with Big_int *)
 let pow i (n: int) = pow i (of_int n)
 
 let max a b =
@@ -17,5 +17,15 @@ let min a b =
     a
   else
     b
+
+let of_ourint f =
+  f
+  |> Num.num_of_big_int
+
+let (>) = Num.(>/)
+let (<) = Num.(</)
+
+let (>=) = Num.(>=/)
+let (<=) = Num.(<=/)
 
 let minus_one = sub zero one
