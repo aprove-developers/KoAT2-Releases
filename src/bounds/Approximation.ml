@@ -198,7 +198,7 @@ let output_formatted ?(embeddings=[]) program expected appr =
   let overall_exptimebound = program_exptimebound appr program in
 
   paragraph (
-   (str_header_big "Initial Complexity Problem"
+   (str_header_big "Initial Complexity Problem (after preprocessing)"
       >> (write_format @@ Program.to_formatted_string program) >> newline
       (* only include graph in html output *)
       >> mapM write_format embeddings ) )
