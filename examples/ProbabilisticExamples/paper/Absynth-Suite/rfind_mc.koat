@@ -6,7 +6,7 @@
 # expected bound for the inner loop (by ignoring the i<k constraint)
 (GOAL EXPECTEDCOMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS f))
-(VAR flag k flag i)
+(VAR k flag i)
 (RULES
   f(k,flag,i) -{0}> g(k,1,0)
   g(k,flag,i) -> 0.5:h(k,0,i) :+: 0.5:h(k,1,i)    :|: i<k && flag > 0
