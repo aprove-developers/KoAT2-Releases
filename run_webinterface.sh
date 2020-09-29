@@ -16,6 +16,7 @@ if [ "$VALID_ARGUMENTS" != "0" ]; then
 fi
 
 HTML=""
+RESULT="overall"
 
 eval set -- "$PARSED_ARGUMENTS"
 while :
@@ -24,7 +25,7 @@ do
     -i | --input)   INPUT="$2" ; shift 2 ;;
     -r | --result)  RESULT="$2" ; shift 2 ;;
     -t | --timeout) TIMEOUT="$2" ; shift 2 ;;
-    -h | --html) HTML="--html" ; shift ;;
+    -h | --html) HTML="--out-format html" ; shift ;;
     # -- means the end of the arguments; drop this, and break out of the while loop
     --) shift; break ;;
     # If invalid options were passed, then getopt should have reported an error,
