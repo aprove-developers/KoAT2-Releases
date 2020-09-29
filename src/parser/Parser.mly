@@ -153,8 +153,6 @@ cvect :
                   { (ub, Polynomial.one) }
         |       MINUS LBRACE ub = polynomial SEMICOLON gtb = polynomial RBRACE GREATERTHAN
                   { (ub, gtb) }
-        |       MINUS LBRACE ub = polynomial RBRACE GREATERTHAN
-                  { (ub, Polynomial.one) }
         |       ARROW
                   { (Polynomial.one, Polynomial.one) };
 
