@@ -232,7 +232,7 @@ let output_formatted ?(embeddings=[]) program expected appr =
 
   >> paragraph(
       str_header_big "Sizebounds:"
-      >> write_format (SizeApproximation.to_formatted appr.size))
+      >> write_format (SizeApproximation.to_formatted ~print_lower:false appr.size))
 
   >> when_m expected
       (paragraph (
