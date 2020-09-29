@@ -1,7 +1,9 @@
 (** Modules used to infer size-bounds for trivial components. *)
 open Batteries
+open BoundsInst
 open ProgramTypes
 open RVGTypes
+
 (** Modules used to infer size-bounds for trivial components. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'.*)
    
@@ -52,4 +54,3 @@ let compute kind program get_sizebound (t,v) =
                                                           "rv", RV.to_id_string (t,v)])
                      ~result:Bound.to_string
                      execute
-

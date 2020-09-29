@@ -1,5 +1,6 @@
 (** Implementation of cost-bounds.*)
 open Batteries
+open BoundsInst
 open ProgramTypes
    
 (** Returns true iff bound is not finite. *)

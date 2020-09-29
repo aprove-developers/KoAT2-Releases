@@ -44,3 +44,27 @@ sig
   Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
   val of_polynomial : PolynomialOver(OurInt).t -> t
 end
+
+module RealPolynomial :
+sig
+  include module type of PolynomialOver(OurFloat)
+
+  val separate_by_sign : t -> (t * t)
+
+  val max_of_occurring_constants : t -> OurFloat.t
+  val of_intpoly : Polynomial.t -> t
+  val degree_coeff_list : t -> value list
+end
+
+module RealParameterPolynomial :
+sig
+  include module type of PolynomialOver(PolynomialOver(OurFloat))
+
+  val eval_coefficients : (Var.t -> OurFloat.t) -> PolynomialOver(PolynomialOver(OurFloat)).t -> PolynomialOver(OurFloat).t
+
+  val flatten : t -> PolynomialOver(OurFloat).t
+
+  val of_polynomial : PolynomialOver(OurFloat).t -> t
+
+  val of_int_parapoly : PolynomialOver(PolynomialOver(OurInt)).t -> t
+end

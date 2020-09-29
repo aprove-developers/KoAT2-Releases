@@ -1,6 +1,7 @@
 (** Provides a unified interface of the parser and lexer for transition graphs. *)
 open Batteries
-   
+open BoundsInst
+
 (** Provides a unified interface of the parser and lexer for transition graphs.
     With this module it is possible to abstract from the details of parsing and lexing *)
 

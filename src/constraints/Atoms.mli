@@ -1,6 +1,7 @@
 (** Provides default implementations of atoms. *)
 open Batteries
 open Polynomials
+open BoundsInst
    
 (** Provides default implementations of atoms, i.e., for two objects q and p (e.g. polynomials, bounds), and a comparator ~, the expression  q ~ p is an atom. *)
 

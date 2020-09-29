@@ -2,6 +2,7 @@
 open Batteries
 open Polynomials
 open Formulas
+open BoundsInst
    
 let description = "Search for a local size bound"
 

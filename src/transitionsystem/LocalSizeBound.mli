@@ -1,8 +1,10 @@
 (** Implementation of local size-bounds. *)
 open Batteries
+open BoundsInst
 open Formulas
 open Polynomials
 open ProgramTypes
+
 (* TODO doc *)   
 
 (* Concept:

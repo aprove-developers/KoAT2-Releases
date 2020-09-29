@@ -1,3 +1,5 @@
+open BoundsInst
+
 (** Computes coefficients for Multiphase Ranking Functions necessary for upper time-bounds. *)
 (** Handles multiphase ranking functions [cf. Genaim,Amram 2017] and computes coefficients for upper time-bounds. *)
 

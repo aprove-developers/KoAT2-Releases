@@ -3,6 +3,7 @@ open Batteries
 open ProgramTypes
 open RVGTypes
 open Readers
+open BoundsInst
 
 let command = "analyse"
 

@@ -46,6 +46,7 @@
   module Poly = Polynomials.Polynomial
   open Formulas
   open ProgramTypes
+  open BoundsInst
 %}
 
 %%

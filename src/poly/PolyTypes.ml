@@ -1,6 +1,22 @@
 (** Provides all modules related to polynomials. *)
 open Batteries
 
+module type OurNumber =
+  sig
+    include Number.Numeric
+
+    val (=~=) : t -> t -> bool
+    val pow : t -> int -> t
+    val max : t -> t -> t
+    val min : t -> t -> t
+
+    val of_ourint : OurInt.t -> t
+
+    (** The constant representing -1.
+      This is not provided by Number.Numeric but is quite useful *)
+    val minus_one: t
+  end
+
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
     They can be typeclass-like extended by MakePartialOrder. *)
 module type BasePartialOrder =

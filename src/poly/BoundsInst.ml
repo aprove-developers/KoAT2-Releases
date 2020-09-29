@@ -2,6 +2,7 @@ open Batteries
 open Polynomials
 
 module Bound = BoundType.Make_BoundOver (OurInt) (Polynomial)
+
 module RealBound = 
   struct
     include BoundType.Make_BoundOver (OurFloat) (RealPolynomial)
@@ -18,4 +19,5 @@ module RealBound =
         ~min:(min)
         ~abs:(abs)
         ~inf:(infinity)
+
   end

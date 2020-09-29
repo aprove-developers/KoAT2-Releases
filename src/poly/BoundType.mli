@@ -1,8 +1,8 @@
+(** Implementation of bounds, i.e., polynomials, exponential terms and max/min terms.*)
 open Batteries
 open Polynomials
-
+   
 (** A MinMaxPolynomial is a polynomial which allows the usage of min and max functions  *)
-
 module Make_BoundOver :
   functor (Num : PolyTypes.OurNumber) -> functor
           (Poly :
@@ -14,134 +14,138 @@ module Make_BoundOver :
              end ) ->
     sig
 
-      type t
+type t
 
-      include PolyTypes.Evaluable with type t := t with type value = Num.t
-      include PolyTypes.Math with type t := t
-      include PolyTypes.PartialOrder with type t := t
+include PolyTypes.Evaluable with type t := t with type value = Num.t
+include PolyTypes.Math with type t := t
+include PolyTypes.PartialOrder with type t := t
 
-      (** This function simplifies bounds under the assumption that every variable can only take non-negative values. This for example allows the simplification of |X| = X *)
-      val simplify_vars_nonnegative : t -> t
+(** {1  {L Following methods are convenience methods for the creation of bounds.}} *)
 
-      (** This function simplifies bounds using the bound comparison hints given by its first argument*)
-      val simplify_opt_invariants : ([`GE | `GT] -> t -> t -> bool option) -> t -> t
+(** Creates a bound from a polynomial over OutInt. *)
+val of_poly : Poly.t -> t   
+           
+(** Creates a constant bound from a constant Num. *)
+val of_constant : value -> t
 
-      val simplify_vars_nonnegative : t -> t
+(** Creates a constant bound from an integer. *)
+val of_int : int -> t
 
-      (** Following methods are convenience methods for the creation of polynomials. *)
+(** Transforms a bound into an integer. *)
+val to_int : t -> int
 
-      val of_poly : Poly.t -> t
-      val of_intpoly : Polynomial.t -> t
-      val of_constant : value -> t
-      val of_int : int -> t
-      val to_int : t -> int
-      val of_var : Var.t -> t
-      val of_var_string : string -> t
+(** Creates a bound from a Variable. *)
+val of_var : Var.t -> t
 
-      val min : t -> t -> t
-      val max : t -> t -> t
+(** Creates a bound of a string representing a variable. *)
+val of_var_string : string -> t
+  
+(** Returns for two bounds p,q the minimum bound min(p,q). *)
+val min : t -> t -> t
 
-      (** Returns a bound representing the minimum of all the values.
-          Raises an exception, if the enum is empty.
-          Use the function infinity for those cases. *)
-      val minimum : t Enum.t -> t
-      (** Returns a bound representing the maximum of all the values.
-          Raises an exception, if the enum is empty.
-          Use the function minus_infinity for those cases. *)
-      val maximum : t Enum.t -> t
+(** Returns for two bounds p,q the maximum bound max(p,q). *)
+val max : t -> t -> t
 
-      val infinity : t
-      val minus_infinity : t
-      val exp : value -> t -> t
-      val abs : t -> t
+(** Returns a bound representing the minimum of all the values.
+    Raises an exception, if the enum is empty.
+    Use the function infinity for those cases. *)
+val minimum : t Enum.t -> t
 
-      val abs_bound : ([`Lower | `Upper] -> t) -> t
+(** Returns a bound representing the maximum of all the values.
+    Raises an exception, if the enum is empty.
+    Use the function minus_infinity for those cases. *)
+val maximum : t Enum.t -> t
+  
+(** Returns the infinity bound. *)
+val infinity : t
 
-      val max_of_occurring_constants : t -> Num.t
+(** Returns the negative infinity bound. *)
+val minus_infinity : t
 
-      val is_infinity : t -> bool
+(** Returns for a positive integer Num i and a bound b the new bound b^i. *)
+val exp : value -> t -> t
 
-      val is_one : t -> bool
+(** Returns for a bound b the new (absolute) bound |b| := max(0,b) + max(0,-b)*)
+val abs : t -> t
 
-      val is_minus_infinity : t -> bool
+(** Returns for a polynomial bound the maximal occuring constant. TODO doc *)
+val max_of_occurring_constants : t -> Num.t
 
-      val to_string : t -> string
+(** Returns true iff. a bound is infinite. *)
+val is_infinity : t -> bool
+  
+(** Returns true iff. a bound is negative infinty. *)
+val is_minus_infinity : t -> bool
 
-      val to_constructor_string : t -> string
+(** Creates a string representing the bound by calling {b show} with complexity enabled. *)
+val to_string : t -> string
 
-      val show : ?complexity:bool -> t -> string
+(** Generates a string from a bound and adds the asymptotic complexity if parameter {i complexity} is not assigned to false. *)
+val show : ?complexity:bool -> t -> string
 
-      (** Functions to classify the quality of the bound *)
+(** Functions to classify the quality of the bound *)
 
+  
+(** {1  {L Following methods can be used to classify the type of the bound. }}*)
 
-      (** Following methods can be used to classify the type of the polynomial. *)
+(** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
+        Ignores naming equalities. *)
+val substitute : Var.t -> replacement:t -> t -> t
 
-      (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
-              Ignores naming equalities. *)
-      val substitute : Var.t -> replacement:t -> t -> t
+(** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
+        Leaves all variables unchanged which are not in the replacement map.  *)
+val substitute_all : t Map.Make(Var).t -> t -> t
 
-      (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
-              Leaves all variables unchanged which are not in the replacement map.  *)
-      val substitute_all : t Map.Make(Var).t -> t -> t
+(** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
+val substitute_f : (Var.t -> t) -> t -> t
 
-      (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
-      val substitute_f : (Var.t -> t) -> t -> t
+(** TODO doc*)
+val appr_substitution : [ `Lower | `Upper ] -> lower:(Var.t -> t) -> higher:(Var.t -> t) -> t -> t
 
-      val appr_substitution : [ `Lower | `Upper ] -> lower:(Var.t -> t) -> higher:(Var.t -> t) -> t -> t
+(** Replaces all arithmetical operations by new constructors. *)
+val fold : const:(value -> 'b) ->
+           var:(Var.t -> 'b) ->
+           neg:('b -> 'b) ->               
+           plus:('b -> 'b -> 'b) ->
+           times:('b -> 'b -> 'b) ->
+           exp:(value -> 'b -> 'b) ->
+           max:('b -> 'b -> 'b) ->
+           inf:'b ->
+           t -> 'b 
 
-      (** Similar to appr_substitution but operates on bounds of absolute values *)
-      val appr_substition_abs_all : (Var.t -> t) -> t -> t
+(** TODO doc *)
+type complexity =
+Inf
+ (** Bound is infinite. *)
+  | Polynomial of int 
+  (** Bound is in asymptotic class O(n^i) *)
+  | Exponential of int 
+  (** Bound is in corresponding asymptotic class O(2^2^...^n) where the integer value denotes the amount of powers.*)
 
-      (** Similar to appr_substitution_abs_all but substitutes only one variable *)
-      val appr_substitution_abs_one : Var.t -> t -> t -> t
+(** TODO doc where is this method? Returns true iff. two bounds are equal. Or asym. equal?*)
+val equal_complexity : complexity -> complexity -> bool
 
-      (** Replaces all arithmetical operations by new constructors. *)
-      val fold : const:(value -> 'b) ->
-                 var:(Var.t -> 'b) ->
-                 neg:('b -> 'b) ->
-                 plus:('b -> 'b -> 'b) ->
-                 times:('b -> 'b -> 'b) ->
-                 exp:(value -> 'b -> 'b) ->
-                 max:('b -> 'b -> 'b) ->
-                 min:('b -> 'b -> 'b) ->
-                 abs:('b -> 'b) ->
-                 inf:'b ->
-                 t -> 'b
+(** Returns string representing asymptotic complexity class. *)
+val show_complexity : complexity -> string
 
-      type complexity =
-        | Inf
-        | Polynomial of int
-        | Exponential of int
+(** Returns string representing asymptotic complexity class in the TermComp format. *)
+val show_complexity_termcomp : complexity -> string
+  
+(** Returns an overapproximation of the asymptotic complexity of the given bound. *)
+val asymptotic_complexity : t -> complexity
 
-      val equal_complexity : complexity -> complexity -> bool
+(** Returns true iff the asymptotic complexity is n^1. *)
+val is_linear : t -> bool
 
-      val compare_complexity : complexity -> complexity -> int
+(** -1 if first bound asy. lower, 0 if both are asym. equal, 1 otherwise *)
+val compare_asy : t -> t -> int
 
-      val show_complexity : complexity -> string
+(** Needed for Atomizable but not yet implemented. *)
+val coeff_of_var : Var.t -> t -> value
 
-      val show_complexity_termcomp : complexity -> string
+(** Needed for Atomizable but not yet implemented. *)
+val of_coeff_list : value list -> Var.t list -> t
 
-      (** Returns an overapproximation of the asymptotic complexity of the given bound. *)
-      val asymptotic_complexity : t -> complexity
-
-      (** Returns true iff the asymptotic complexity is n^1. *)
-      val is_linear : t -> bool
-
-      (** When bound b is linear in variable v is_linear_in_var v b returns true.  Note that max(v,v') is neither linear in v nor v'. *)
-      val is_linear_in_var : Var.t -> t -> bool
-
-      (** Needed for Atomizable but not yet implemented. *)
-      val coeff_of_var : Var.t -> t -> value
-
-      (** Needed for Atomizable but not yet implemented. *)
-      val of_coeff_list : value list -> Var.t list -> t
-
-      (** returns the constant of a bound *)
-      val get_constant : t -> value
-
-      (** if the bound is a constant it retuns this constant *)
-      val get_constant_option: t -> value option
-
-      (** get_var (Var v) returns some var and none if the argument is not of the form Var v*)
-      val get_var : t -> Var.t option
-    end
+(** Returns the constant of a bound *)
+val get_constant : t -> value
+end

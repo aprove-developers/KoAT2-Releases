@@ -1,5 +1,6 @@
 (** Module is used to compute (non-trivial) size-bounds. *)
 open Batteries
+open BoundsInst
 open ProgramTypes
 open RVGTypes
    
