@@ -1,0 +1,9 @@
+# Figure 5 of the probabilistic KoAT paper
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR X)
+(RULES
+  f(X) -> g(UNIFORM(1,15))
+  g(X) -> h(X*X)
+)

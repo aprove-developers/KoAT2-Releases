@@ -81,9 +81,9 @@ let tests =
           ("ex_paper1.c", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/ex_paper1.c.koat");
           ("fcall", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/fcall.koat");
           ("fib_exp_size", RealBound.Exponential 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/fib_exp_size.koat");
-          ("fig1", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/fig1.koat");
-          ("fig3", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/fig1.koat");
-          ("fig5", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/KoAT2-Suite/fig5.koat");
+          ("fig4", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/fig4.koat");
+          ("fig5", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/fig5.koat");
+          ("fig6", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/KoAT2-Suite/fig6.koat");
           ("filling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/filling.koat");
           ("hyper", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/hyper.koat");
           ("knuth_morris_pratt.c", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/knuth_morris_pratt.c.koat");
