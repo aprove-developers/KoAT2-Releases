@@ -59,7 +59,8 @@ WORKDIR /home/koat2
 COPY --from=koat2_build /home/opam/build/src/main/koat2 app/src/main/koat2
 
 # Add Probabilistic Examples
-COPY examples/ProbabilisticExamples/paper examples
+COPY examples/ProbabilisticExamples/paper/KoAT2-Suite/ examples
+COPY examples//ProbabilisticExamples/paper/Absynth-Suite/ examples
 
 # Add scripts
 COPY docker_entry.sh app/src/main/docker_entry.sh
