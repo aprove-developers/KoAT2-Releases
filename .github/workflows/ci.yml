@@ -32,6 +32,7 @@ jobs:
 
     - name: restore docker cache
       run: |
+        ls -lh ~/cache
         if [ -e ~/cache/image.tar.xz ]; then xz -dc ~/cache/image.tar.xz | docker load; fi
 
     # Build the binary using docker and run all tests
@@ -50,7 +51,7 @@ jobs:
         df -h
 
     # Do not export the artifacts to save on storage capacity.
-    # Uncommont the following to export them nevertheless.
+    # Uncomment the following to export them nevertheless.
 
         # - name: export artifacts
         #   run: |
