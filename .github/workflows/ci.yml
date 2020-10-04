@@ -33,6 +33,8 @@ jobs:
     - name: restore docker cache
       run: |
         ls -lh ~/cache
+        file ~/cache/image.tar.xz
+        cat ~/cache/image.tar.xz
         if [ -e ~/cache/image.tar.xz ]; then xz -dc ~/cache/image.tar.xz | docker load; fi
 
     # Build the binary using docker and run all tests
