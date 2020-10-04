@@ -28,7 +28,7 @@ jobs:
       name: Cache docker image
       with:
         path: ~/cache
-        key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile') }}
+        key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile', '**/ci.yml') }}
 
     - name: restore docker cache
       run: |
@@ -40,6 +40,7 @@ jobs:
     # Build the binary using docker and run all tests
     - name: build and test
       run: |
+        docker build . -t koatbuild --target koat2_build
         docker build . -t koat
 
     - name: export docker cache
