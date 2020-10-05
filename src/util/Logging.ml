@@ -20,16 +20,16 @@ type logger =
 let loggers =
   [
     Approximation;
-    BottomUp;
+(*    BottomUp;*)
     Bound;
     BoundWrapper;
     ELSB;
-    ExactRuntime;
+(*    ExactRuntime;*)
     ExpSize;
     ExpTime;
     LexRSM;
     LocalSizeBound;
-    MeteringRSM;
+(*    MeteringRSM;*)
     PRF;
     Preprocessor;
     Size;
@@ -43,11 +43,11 @@ let show_logger = function
   | Bound          -> "bound"
   | BoundWrapper   -> "boundWrapper"
   | BottomUp       -> "bottomUp"
-  | ELSB           -> "elcb"
+  | ELSB           -> "elsb"
   | ExactRuntime   -> "exactruntime"
   | ExpSize        -> "expSize"
   | ExpTime        -> "expTime"
-  | LexRSM         -> "lexrsmMap"
+  | LexRSM         -> "plrf"
   | LocalSizeBound -> "lsb"
   | MeteringRSM    -> "metrsmMap"
   | PRF            -> "prf"
