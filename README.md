@@ -33,7 +33,7 @@ export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 - Musl: https://www.musl-libc.org/
 
 ## Used Libraries
-KoAT2 makes use of the following external tools and libraries. In the static binary built inside the docker image, these libraries are linked into the binary.
+KoAT2 makes use of the following external libraries. In the static binary built inside the docker image, these libraries are linked into the binary.
 
 - [APRON](<https://antoinemine.github.io/Apron/doc/>)
 - [Batteries](<http://ocaml-batteries-team.github.io/batteries-included/hdoc2/>)
@@ -44,6 +44,9 @@ KoAT2 makes use of the following external tools and libraries. In the static bin
 - [ppx_deriving](<https://github.com/ocaml-ppx/ppx_deriving>)
 - [ppx_deriving_cmdliner](<https://github.com/hammerlab/ppx_deriving_cmdliner>)
 - [Z3](https://github.com/Z3Prover/z3)
+
+## External Tool
+To generate an image of the graph of the PIP, KoAT2 invokes [Graphviz](https://graphviz.org/), which has to be manually installed on the system. Note that when building the Docker image, the current alpine binaries of graphviz are installed. Thus, the resulting image already contains graphviz. 
 
 ## Run
 
