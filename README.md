@@ -47,7 +47,7 @@ KoAT2 makes use of the following external libraries. In the static binary built 
 - [Z3](https://github.com/Z3Prover/z3)
 
 ## External Tool
-To generate an image of the graph of the PIP, KoAT2 invokes [Graphviz](https://graphviz.org/), which has to be manually installed on the system. Note that when building the Docker image, the current alpine binaries of graphviz are installed. Thus, the resulting image already contains graphviz. 
+To generate an image of the graph of the PIP, KoAT2 invokes [Graphviz](https://graphviz.org/), which has to be manually installed on the system. Note that when building the Docker image, the current alpine binaries of [Graphviz](https://graphviz.org/) are installed. Thus, the resulting image already contains [Graphviz](https://graphviz.org/). 
 
 ## Run
 
