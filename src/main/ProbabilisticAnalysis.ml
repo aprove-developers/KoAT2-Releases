@@ -94,7 +94,7 @@ let run probabilistic_goal (params: params) =
                         (Bounds.find_exp_bounds
                           params.simplify_prob_smt
                           ~refined_smt_timeout:(Some (Float.of_int params.refined_smt_timeout))
-                          ~generate_invariants_bottom_up:Preprocessor.generate_invariants params.bottom_up cache
+                          ~generate_invariants_bottom_up:Preprocessor.generate_invariants false cache
                         )
                    else (program, appr))
          |> tap (fun (program, appr) -> result_print goal program appr)
