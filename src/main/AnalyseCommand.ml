@@ -7,7 +7,7 @@ open Goal
 
 let command = "analyse"
 
-let description = "Proceed a full time, cost and size analysis on a given integer transition system. Probabilistic and Nonprobabilistic Methods are supported."
+let description = "Proceed a full time, cost and size analysis on a given integer transition system. Probabilistic and Non-probabilistic Methods are supported."
 
 let run (params: params) =
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
