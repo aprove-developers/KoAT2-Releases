@@ -75,7 +75,7 @@ let print_termcomp_deterministic (program: Program.t) (appr: Approximation.t): u
         |> Bound.show_complexity_termcomp
     in
     result
-    |> print_string
+    |> print_endline
 
 (** Prints the overall expected timebound of the program as plaintext to the shell. *)
 let print_termcomp_expected (program: Program.t) (appr: Approximation.t): unit =
@@ -86,7 +86,7 @@ let print_termcomp_expected (program: Program.t) (appr: Approximation.t): unit =
     |> RealBound.show_complexity_termcomp
   in
   result
-  |> print_string
+  |> print_endline
 
 (** Prints the overall expected timebound of the program as plaintext to the shell. *)
 let print_termcomp_expected_size v (program: Program.t) (appr: Approximation.t): unit =
