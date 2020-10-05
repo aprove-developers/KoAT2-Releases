@@ -1,5 +1,6 @@
 # KoAT's Reimplementation KoAT2 - Analysis of Expected Runtimes
 Implementation of the techniques from our work [Inferring Expected Runtimes Using Expected Sizes](https://aprove-developers.github.io/ExpectedUpperBounds/)
+Please note that a working installation of [Graphviz](https://www.graphviz.org/) is required to render the input programs as graphs.
 
 ## Build
 
@@ -12,7 +13,7 @@ Implementation of the techniques from our work [Inferring Expected Runtimes Usin
     * this builds the OCaml bindings and the _libz3.so_ library (in `~/.opam/system/lib/Z3` if the Opam configuration files were installed in the default location)
 4. update the `LD_LIBRARY_PATH` such that _libz3.so_ can be found. To be on the safe side write "eval `opam config env`" and "
 export LD_LIBRARY_PATH="$(ocamlfind printconf destdir)/stublibs:${LD_LIBRARY_PATH}"" into your .bashrc file. If this still does not work add "
-export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}"" 
+export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 5. `opam install menhir ounit apron cmdliner ppx_deriving ppx_deriving_cmdliner batteries ocamlnet`
 6. `opam install omake`
 7. `omake`
@@ -52,4 +53,4 @@ To generate an image of the graph of the PIP, KoAT2 invokes [Graphviz](https://g
 
 1. After compiling, the testprogram `test` is run. It can be found in the subdirectory `test`.
 2. Run `./koat2` in main to get the help page of `koat2`. For further information run `./koat2 commandname --help`. The main command proceeding a full analysis is the command `analyse`.
-3. A detailed description of the input format and how to execute this tool can be found [here](https://aprove-developers.github.io/ExpectedUpperBounds/). 
+3. A detailed description of the input format and how to execute this tool can be found [here](https://aprove-developers.github.io/ExpectedUpperBounds/).
