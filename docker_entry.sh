@@ -6,5 +6,5 @@ if [ "$1" == "run-all" ]; then
     time koat2 analyse -i $i --bottom-up
   done
 else
-  time koat2 analyse -i "$@"
+  time koat2 analyse "$@"
 fi
