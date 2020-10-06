@@ -1,0 +1,11 @@
+# This example counts down the variable X in the inner loop by making
+# use of probabilistic branching and nondeterministic assignments.
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR X)
+(RULES
+  f(X) -> g(X) :|: X>0
+  g(X) -> h(X) :|: X>0
+  h(X) -> 0.5:g(X) :+: 0.5:g(X-Y) :|: Y > 1
+)
