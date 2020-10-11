@@ -182,7 +182,7 @@ let general_transition_constraint cache constraint_type gtrans: RealFormula.t =
           let (upd_constraints_t1,template_subst_t1) = encode_update cache t1 in
           let (upd_constraints_t2,template_subst_t2) = encode_update cache t2 in
           let t1_pos = RealParameterConstraint.mk_ge template_subst_t1 RealParameterPolynomial.zero in
-          let t2_pos = RealParameterAtom.mk_ge template_subst_t1 RealParameterPolynomial.zero in
+          let t2_pos = RealParameterAtom.mk_ge template_subst_t2 RealParameterPolynomial.zero in
           let extended_guard =
             RealParameterConstraint.of_realconstraint guard
             |> RealParameterConstraint.mk_and (RealParameterConstraint.of_realconstraint upd_constraints_t1)
