@@ -83,20 +83,36 @@ let from_real_formula context =
 
 module Z3Solver =
   struct
-    let init formula =
+    let init formula_from_context =
       let ctx = (Z3.mk_context [("model", "true"); ("proof", "false")]) in
-      let z3formula = from_real_formula ctx formula in
+      let z3formula = formula_from_context ctx in
       let solver = (Z3.Solver.mk_solver ctx None) in
       (Z3.Solver.add solver [z3formula]) ;
       solver
 
+    let result_is solver expected_result =
+      let result = Z3.Solver.check solver [] in
+      if result == Z3.Solver.UNKNOWN then
+        raise (Failure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown solver))
+      else
+        result == expected_result
+
     let satisfiable formula =
-      let solver = init formula in
-      let res = (Z3.Solver.check solver []) in
-      match res with
-        | SATISFIABLE -> true
-        | UNSATISFIABLE -> false
-        | UNKNOWN -> raise (Failure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
+      let solver = init (fun ctx -> from_real_formula ctx formula) in
+      result_is solver Z3.Solver.SATISFIABLE
+
+    let unsatisfiable formula =
+      let solver = init (fun ctx -> from_real_formula ctx formula) in
+      result_is solver Z3.Solver.UNSATISFIABLE
+
+    let satisfiable_int formula =
+      let solver = init (fun ctx -> from_formula ctx formula) in
+      result_is solver Z3.Solver.SATISFIABLE
+
+    let unsatisfiable_int formula =
+      let solver = init (fun ctx -> from_formula ctx formula) in
+      result_is solver Z3.Solver.UNSATISFIABLE
+
 
     (* TODO sinnvoll in formulas integrieren *)
     let bound_gt_zero formula bound =
@@ -136,7 +152,7 @@ module Z3Solver =
         | UNKNOWN -> raise (Failure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
 
     let to_string formula =
-      Z3.Solver.to_string (init formula)
+      Z3.Solver.to_string @@ init (fun ctx -> from_real_formula ctx formula)
 
   end
 

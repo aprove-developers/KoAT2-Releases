@@ -18,6 +18,7 @@ module type Atomizable =
     val coeff_of_var : Var.t -> t -> value
     val get_constant : t -> value
     val of_coeff_list : value list -> Var.t list -> t
+    val sum : t Enum.t -> t
   end
    
 (** An atom is a comparison between two polynomials. *)
@@ -60,7 +61,7 @@ module type Atom =
                 and type value = value
 
         type t
-             
+        type compkind = LE | LT             
 
         (** {1  {L Following methods are convenience methods for the creation of atoms.}} *)
           
@@ -101,7 +102,7 @@ module type Atom =
         val neg : t -> t
           
         (** Returns a string representing the atom. Parameter {i to_file} is used to get a representation with less special characters. *)
-        val to_string : ?to_file:bool -> ?comp:string -> t -> string
+        val to_string : ?to_file:bool -> t -> string
 
         (** Returns the set of variables which are active in the atom.
             A variable is active, if it's value has an effect on the evaluation of the atom. *)
@@ -118,6 +119,7 @@ module type Atom =
         (** Replaces all operations by new constructors. *)
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
+                   lt:('b -> 'b -> 'c) ->
                    t -> 'c
                    
         (** Returns if both polynomials are linear. *)
@@ -136,6 +138,7 @@ module type Constraint =
   sig
         type value
         type polynomial
+        type compkind
         type atom
         type t
         
@@ -224,6 +227,7 @@ module type Constraint =
         (** Replaces all operations by new constructors. *)
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
+                   lt:('b -> 'b -> 'c) ->
                    correct:('d) ->
                    conj:('d -> 'c -> 'd) ->
                    t -> 'd
@@ -236,13 +240,13 @@ module type Constraint =
         val get_coefficient_vector : Var.t -> t -> value list
           
         (** Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination. *)
-        val get_matrix : VarSet.t -> t -> value list list
+        val get_matrix : Var.t list -> t -> value list list
           
         (** Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination.*)
         val get_constant_vector : t -> value list
           
         (** TODO doc *)
-        val dualise : Var.t list -> value list list -> polynomial list -> t
+        val dualise : Var.t list -> polynomial list list -> polynomial list -> t
           
   end
 
@@ -348,6 +352,7 @@ module type Formula =
         (** Replaces all operations by new constructors. *)
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
+                   lt:('b -> 'b -> 'c) ->
                    correct:('d) ->
                    conj:('d -> 'c -> 'd) ->
                    wrong:('e) ->

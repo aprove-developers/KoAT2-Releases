@@ -23,7 +23,10 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       List.fold_left (fun b scaled -> plus b (ScaledMonomial_.fold ~const ~var ~times ~pow scaled)) (const Value.zero)
                     
     let degree poly =
-      List.max (List.map (ScaledMonomial_.degree) poly )
+      if poly = [] then
+        0
+      else
+        List.max (List.map (ScaledMonomial_.degree) poly )
       
     let coeff mon poly =
          poly

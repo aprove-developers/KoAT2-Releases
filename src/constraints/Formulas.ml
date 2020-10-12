@@ -46,15 +46,16 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let constraints formula =
       formula
 
-    let fold ~subject ~le ~correct ~conj ~wrong ~disj =
-      List.fold_left (fun c constr -> disj c (C.fold ~subject ~le ~correct ~conj constr)) wrong
+    let fold ~subject ~le ~lt ~correct ~conj ~wrong ~disj =
+      List.fold_left (fun c constr -> disj c (C.fold ~subject ~le ~lt ~correct ~conj constr)) wrong
 
     let map_polynomial f =
-      fold ~subject:f ~le:mk_le ~correct:mk_true ~conj:mk_and ~wrong:mk_false ~disj:mk_or
+      fold ~subject:f ~le:mk_le ~lt:mk_lt ~correct:mk_true ~conj:mk_and ~wrong:mk_false ~disj:mk_or
       
     let neg =
       fold ~subject:identity
            ~le:mk_gt
+           ~lt:mk_gt
            ~correct:mk_false
            ~conj:mk_or
            ~wrong:mk_true
@@ -125,4 +126,30 @@ module Formula =
 module ParameterFormula =
   struct
     include FormulaOver(ParameterConstraint)
+  end
+
+module RealFormula =
+  struct
+    include FormulaOver(RealConstraint)
+
+    let of_intformula =
+      Formula.fold
+        ~subject:(Polynomials.RealPolynomial.of_intpoly)
+        ~le:mk_le
+        ~lt:mk_lt
+        ~correct:mk_true
+        ~conj:mk_and
+        ~wrong:mk_false
+        ~disj:mk_or
+
+    let max_of_occurring_constants constraints =
+      constraints
+      |> List.map RealConstraint.max_of_occurring_constants
+      |> List.fold_left OurFloat.mul OurFloat.one
+
+  end
+
+module RealParameterFormula =
+  struct
+    include FormulaOver(RealParameterConstraint)
   end

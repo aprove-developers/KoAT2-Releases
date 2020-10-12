@@ -26,13 +26,13 @@ sig
   val get_coefficient_vector : Var.t -> t -> value list
     
   (** Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination. *)  
-  val get_matrix : VarSet.t -> t -> value list list
+  val get_matrix : Var.t list -> t -> value list list
     
   (** Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination. *)
   val get_constant_vector : t -> value list
     
   (** TODO doc *)
-  val dualise : Var.t list -> value list list -> polynomial list -> t
+  val dualise : Var.t list -> A.P.t list list -> A.P.t list -> t
         
   (** TODO doc *)
   val max_of_occurring_constants : t -> OurInt.t
@@ -49,7 +49,7 @@ sig
   val get_coefficient_vector : Var.t -> t -> value list
     
   (** Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination. *)  
-  val get_matrix : VarSet.t -> t -> value list list
+  val get_matrix : Var.t list -> t -> value list list
     
   (** Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination. *)
   val get_constant_vector : t -> value list
@@ -65,5 +65,27 @@ module BoundConstraint :
 sig
   include module type of ConstraintOver(BoundAtom)
                        
+  (* Add operations specific to parameter constraints here if needed *)
+end
+
+module RealConstraint :
+sig
+  include module type of ConstraintOver(RealAtom)
+
+  val max_of_occurring_constants : t -> OurFloat.t
+
+  (* Add operations specific to polynomial constraints here if needed *)
+  val of_intconstraint : Constraint.t -> t
+end
+
+module RealParameterConstraint :
+sig
+  include module type of ConstraintOver(RealParameterAtom)
+
+  val of_realconstraint : RealConstraint.t -> t
+  val of_intconstraint  :     Constraint.t -> t
+
+  val farkas_transform : t -> Atoms.RealParameterAtom.t -> RealConstraint.t
+
   (* Add operations specific to parameter constraints here if needed *)
 end
