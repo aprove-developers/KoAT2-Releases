@@ -56,7 +56,7 @@ sig
   (** Returns the coefficient of a variable which is normalised to the lhs. *)
   val get_coefficient : Var.t -> t -> value
 
-  val max_of_occurring_constants : Polynomials.RealPolynomial.t * 'a -> OurFloat.t
+  val max_of_occurring_constants : t -> OurFloat.t
 
   (* Add operations specific to polynomial atoms here if needed *)
   val of_intatom : Atom.t -> t
