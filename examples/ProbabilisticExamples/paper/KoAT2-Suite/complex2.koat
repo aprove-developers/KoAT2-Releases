@@ -1,0 +1,21 @@
+# A complex program with sequential and nested loops and polynomial expected complexity.
+# This shows how runtime bounds are computed form size bounds
+# Taken from absynth
+#
+# The difference to the normal complex example are the missing
+# conditions M>=0, and y>=0 at the begin
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR X Y W N M)
+(RULES
+  # first loop
+  f(X,Y,W,N,M) -{0}> g(0,Y,W,N,M) # :|: M>=0 && y >= 0
+  g(X,Y,W,N,M) -{0}> h(UNIFORM(0,1),Y+3*M,W,N,M) :|: X<N
+  h(X,Y,W,N,M) -{0}> g(X,BINOMIAL(3,0.5),W,N,M)
+  g(X,Y,W,N,M) -{0}> j(X,Y,W,N,M) :|: N<X+1 # exit loop
+  # second loop
+  j(X,Y,W,N,M) -{0}> k(X,Y,W,N,M) :|: Y>0
+  k(X,Y,W,N,M) -> k(X,Y,W-1,N,M) :|: W>0
+  k(X,Y,W,N,M) -> 0.25:j(X,Y+1,W,N,M) :+: 0.75:j(X,Y-1,W,N,M) :|: W<1
+)

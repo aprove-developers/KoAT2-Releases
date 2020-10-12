@@ -32,7 +32,7 @@ module Make(Value : PolyTypes.Ring) =
       else if Value.(scaled.coeff =~= (neg one)) then "-" ^ Monomial.to_string scaled.mon
       else if Value.(scaled.coeff =~= (zero)) then ""
       else if Monomial.(scaled.mon =~= Monomial.one) then
-        (if scaled.coeff > Value.zero then "+" else "") ^ Value.to_string scaled.coeff
+        (if Value.compare scaled.coeff Value.zero = 1 then "+" else "") ^ Value.to_string scaled.coeff
       else
         (if scaled.coeff > Value.zero then
           "+" else ""

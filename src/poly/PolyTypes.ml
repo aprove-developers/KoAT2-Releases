@@ -217,6 +217,7 @@ module type Ring =
     include BaseMath with type t := t
 
     val equal : t -> t -> bool
+    val compare: t -> t -> int
     val (=~=) : t -> t -> bool
     (** Stable structural compare, but not an actual compare *)
     val compare : t -> t -> int
