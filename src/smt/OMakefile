@@ -1,5 +1,6 @@
 OCAMLPACKS[] =
     batteries
+    z3
     
 OCAMLINCLUDES[] =
     ../util
