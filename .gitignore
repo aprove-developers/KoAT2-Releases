@@ -16,3 +16,5 @@ gmon.out
 perf.data*
 *.output
 *.koatoutput
+
+/tmp_*/

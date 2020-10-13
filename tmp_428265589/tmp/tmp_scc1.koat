@@ -1,9 +1,0 @@
-(GOAL COMPLEXITY)
-(STARTTERM (FUNCTIONSYMBOLS l0))
-(VAR Arg0 Arg1 Arg2 Arg0' Arg1' Arg2')
-(RULES 
-  l0(Arg0,Arg1,Arg2) -> Com_1(l1(Arg0, Arg1, Arg2))
-  l1(Arg0,Arg1,Arg2) -> Com_1(l2(Arg0, Arg1, Arg2)) :|: Arg0 >= 0
-  l2(Arg0,Arg1,Arg2) -> Com_1(l1(Arg0, Arg1 + 1, Arg2)) :|: Arg2 -Arg1 >= 0
-  l2(Arg0,Arg1,Arg2) -> Com_1(l1(Arg0 -1, Arg1, Arg2)) :|: Arg1 -Arg2 > 0
-)
