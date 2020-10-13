@@ -1,3 +1,6 @@
+OCAMLPACKS[] =
+    batteries
+    
 OCAMLINCLUDES[] =
     ../util
     ../poly
