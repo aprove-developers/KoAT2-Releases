@@ -17,7 +17,7 @@ type params = {
   } [@@deriving cmdliner, show]
 
 let run (params: params) =
-  let module Z3 = SMT.Z3Solver in
+  let module Z3 = SMT.Z3Opt in
   let solve = match params.solver with
     | `Z3 -> Z3.get_model
   and constr = Readers.read_formula params.constr in

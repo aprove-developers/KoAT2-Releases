@@ -159,7 +159,7 @@ module Methods =
                 List.map (fun (expected, vars, constr) ->
                     constr >:: (fun _ -> assert_equal ~cmp:list_list_equality ~printer:list_list_print
                                                       (List.map (List.map OurInt.of_int) expected)
-                                                      (Constraint.get_matrix (VarSet.of_string_list vars) (Readers.read_constraint constr) )))
+                                                      (Constraint.get_matrix (List.map Var.of_string vars) (Readers.read_constraint constr) )))
                         [
                             ([[1; 2; 3];[1; 3; -4]],["x";"y"], "x+y <= 5 && 2*x + 3*y <= -2 && 3*x-4*y <= 0");
                             ([[1; -1];[-1; 1]],["x";"y"], "x = y");

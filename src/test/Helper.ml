@@ -48,7 +48,7 @@ let assert_equal_lsb =
 
 let assert_equal_formula =
   assert_equal
-    ~cmp:(fun f1 f2 -> SMT.Z3Solver.unsatisfiable Formula.Infix.(f1 && Formula.neg f2))
+    ~cmp:(fun f1 f2 -> SMT.Z3Solver.unsatisfiable_int Formula.Infix.(f1 && Formula.neg f2))
     ~printer:Formula.to_string
 
 let assert_equal_program =     

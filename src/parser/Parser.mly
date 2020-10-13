@@ -29,7 +29,7 @@
 
 %start <Polynomials.Polynomial.t> onlyPolynomial
 
-%start <Bound.t> onlyBound
+%start <BoundsInst.Bound.t> onlyBound
 
 %type <Program.t> program
 

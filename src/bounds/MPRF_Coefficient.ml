@@ -7,6 +7,7 @@ open ProgramTypes
 open Formulas
 
 let logger = Logging.(get Time)
+module SMTSolver = SMT.IncrementalZ3SolverOld
 
 module Valuation = Valuation.Make(OurInt)
 
@@ -43,9 +44,9 @@ let compute_mue_k (rank : (Location.t -> Polynomial.t) list) (k:int) (l,t,l') =
     (*Use SMT Solver *)
     let newVariables = Var.fresh_id_list Var.Int k in
     let formula = template_formula rank k (l,t,l') newVariables in 
-    let opt = SMT.IncrementalZ3Solver.create () in
-    SMT.IncrementalZ3Solver.add opt formula;
-    let model = SMT.IncrementalZ3Solver.model opt in
+    let opt = SMTSolver.create () in
+    SMTSolver.add opt formula;
+    let model = SMTSolver.model opt in
     List.init k (fun i ->  OurInt.to_float (Valuation.eval_opt (List.nth newVariables i) (Option.get model) |? OurInt.zero))
 
 (* Returns sum_i (list1(i) := (c_i,d_i)_i -> c_i )* (list2(i) := (mu_i)_i) *)

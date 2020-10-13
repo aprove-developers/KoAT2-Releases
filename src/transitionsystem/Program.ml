@@ -121,7 +121,7 @@ let pre program (l,t,_) =
          TransitionLabel.append t' t
          |> TransitionLabel.guard
          |> Formula.mk
-         |> SMT.Z3Solver.satisfiable
+         |> SMT.Z3Solver.satisfiable_int
        )
 
 let succ program (_,t,l') =
@@ -132,7 +132,7 @@ let succ program (_,t,l') =
          TransitionLabel.append t t'
          |> TransitionLabel.guard
          |> Formula.mk
-         |> SMT.Z3Solver.satisfiable
+         |> SMT.Z3Solver.satisfiable_int
        )
 
 let sccs program =

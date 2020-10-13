@@ -5,7 +5,7 @@ open Formulas
 open Constraints
 open Polynomials
    
-module Z3Solver = SMT.Z3Solver
+module Z3Solver = SMT.Z3Opt
 
 module Valuation = Valuation.Make(OurInt)
                   

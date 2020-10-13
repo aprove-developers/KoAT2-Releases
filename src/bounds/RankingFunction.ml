@@ -6,7 +6,7 @@ open Polynomials
 open ProgramTypes
 open CFR 
    
-module SMTSolver = SMT.Z3Solver
+module SMTSolver = SMT.IncrementalZ3SolverOld
 module Valuation = Valuation.Make(OurInt)
                  
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
@@ -138,13 +138,13 @@ let make decreasing_transition non_increasing_transitions valuation =
     non_increasing = non_increasing_transitions;
   }
 
-let find_with measure non_increasing_transitions decreasing_transition =
+(* let find_with measure non_increasing_transitions decreasing_transition =
   Formula.Infix.(
     non_increasing_constraints measure non_increasing_transitions
     && bounded_constraint measure decreasing_transition
     && decreasing_constraint measure decreasing_transition)
   |> SMTSolver.get_model ~coeffs_to_minimise:!fresh_coeffs
-  |> Option.map (make decreasing_transition non_increasing_transitions)
+  |> Option.map (make decreasing_transition non_increasing_transitions) *)
   
 module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
                     
@@ -156,9 +156,7 @@ let ranking_table = function
   | `Time -> time_ranking_table
   | `Cost -> cost_ranking_table
 
-module Solver = SMT.IncrementalZ3Solver
-
-let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
+let try_decreasing (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
   non_increasing
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
@@ -167,13 +165,13 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
          Logger.(log logger DEBUG (fun () -> "try_decreasing", ["measure", show_measure measure;
                                                                 "decreasing", Transition.to_id_string decreasing;
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing)]));
-         Solver.push opt;
-         Solver.add opt (bounded_constraint measure decreasing);
-         Solver.add opt (decreasing_constraint measure decreasing);
+         SMTSolver.push opt;
+         SMTSolver.add opt (bounded_constraint measure decreasing);
+         SMTSolver.add opt (decreasing_constraint measure decreasing);
          
-         if Solver.satisfiable opt then (   
-           Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
-           Solver.model opt
+         if SMTSolver.satisfiable opt then (   
+           SMTSolver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
+           SMTSolver.model opt
            |> Option.map (make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
            |> Option.may (fun ranking_function ->
                   to_be_found := !to_be_found - 1;
@@ -185,7 +183,7 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
                                                "rank", only_rank_to_string ranking_function]))
                 )
          );
-         Solver.pop opt;
+         SMTSolver.pop opt;
          CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
          CFR.poll_timeout ~applied_cfr:applied_cfr
        );
@@ -193,19 +191,19 @@ let try_decreasing (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be
     raise Exit
 
            
-let rec backtrack (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
-  if Solver.satisfiable opt then (
+let rec backtrack (steps_left: int) (index: int) (opt: SMTSolver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
+  if SMTSolver.satisfiable opt then (
     if steps_left == 0 then (
       try_decreasing opt non_increasing to_be_found measure applied_cfr
     ) else (
       for i=index to Array.length scc - 1 do
         let transition = Array.get scc i in
-        Solver.push opt;
-        Solver.add opt (non_increasing_constraint measure transition);
+        SMTSolver.push opt;
+        SMTSolver.add opt (non_increasing_constraint measure transition);
         Stack.push transition non_increasing;
         backtrack (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure applied_cfr; 
         ignore (Stack.pop non_increasing);
-        Solver.pop opt;
+        SMTSolver.pop opt;
       done;
       try_decreasing opt non_increasing to_be_found measure applied_cfr
     )
@@ -218,7 +216,7 @@ let compute_ measure applied_cfr program =
          try
            backtrack (TransitionSet.cardinal scc)
                      0
-                     (Solver.create ())
+                     (SMTSolver.create ())
                      (Array.of_enum (TransitionSet.enum scc))
                      (Stack.create ())
                      (ref (TransitionSet.cardinal scc))
@@ -236,7 +234,7 @@ let compute_scc measure applied_cfr program scc =
   try
     backtrack (TransitionSet.cardinal scc)
               0
-              (Solver.create ())
+              (SMTSolver.create ())
               (Array.of_enum (TransitionSet.enum scc))
               (Stack.create ())
               (ref (TransitionSet.cardinal scc))

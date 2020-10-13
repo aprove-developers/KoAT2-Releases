@@ -8,7 +8,7 @@ open CFR
 
 (** Class is derived from RankingFunction.ml*)
 
-module SMTSolver = SMT.Z3Solver
+module SMTSolver = SMT.IncrementalZ3SolverOld
 module Valuation = Valuation.Make(OurInt)
 
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
@@ -42,8 +42,6 @@ let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
     List.append fresh_vars [constant_var]
 
 module TemplateTable = Hashtbl.Make(Location)
-
-module Solver = SMT.IncrementalZ3Solver
 
 type constraint_type = [ `Non_Increasing | `Decreasing] [@@deriving show, eq]
 
@@ -219,7 +217,7 @@ let ranking_table = function
   | `Time -> time_ranking_table
   | `Cost -> cost_ranking_table
 
-let try_decreasing depth (opt: Solver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
+let try_decreasing depth (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
   non_increasing
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
@@ -230,12 +228,12 @@ let try_decreasing depth (opt: Solver.t) (non_increasing: Transition.t Stack.t) 
                                                                 "decreasing", Transition.to_id_string decreasing;
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
                                                                 "depth", string_of_int depth]));
-        Solver.push opt;
-        Solver.add opt (decreasing_constraint depth measure decreasing);
+        SMTSolver.push opt;
+        SMTSolver.add opt (decreasing_constraint depth measure decreasing);
 
-        if Solver.satisfiable opt then (
-          Solver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
-          Solver.model opt
+        if SMTSolver.satisfiable opt then (
+          SMTSolver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
+          SMTSolver.model opt
           |> Option.map (make depth decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
           |> Option.may (fun ranking_function ->
               to_be_found := !to_be_found - 1;
@@ -247,7 +245,7 @@ let try_decreasing depth (opt: Solver.t) (non_increasing: Transition.t Stack.t) 
                   "rank", only_rank_to_string ranking_function];))
             )
         );
-        Solver.pop opt; 
+        SMTSolver.pop opt; 
         CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
         CFR.poll_timeout ~applied_cfr:applied_cfr)
     );
@@ -255,19 +253,19 @@ let try_decreasing depth (opt: Solver.t) (non_increasing: Transition.t Stack.t) 
     raise Exit
 
 
-let rec backtrack depth (steps_left: int) (index: int) (opt: Solver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr=
-    if Solver.satisfiable opt then (
+let rec backtrack depth (steps_left: int) (index: int) (opt: SMTSolver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr=
+    if SMTSolver.satisfiable opt then (
       if steps_left == 0 then (
         try_decreasing depth opt non_increasing to_be_found measure applied_cfr
       ) else (
         for i=index to Array.length scc - 1 do
           let transition = Array.get scc i in
-          Solver.push opt;
-          Solver.add opt (non_increasing_constraint depth measure transition);
+          SMTSolver.push opt;
+          SMTSolver.add opt (non_increasing_constraint depth measure transition);
           Stack.push transition non_increasing;
           backtrack depth (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure applied_cfr;
           ignore (Stack.pop non_increasing);
-          Solver.pop opt;
+          SMTSolver.pop opt;
         done;
         try_decreasing depth opt non_increasing to_be_found measure applied_cfr;
       )
@@ -284,7 +282,7 @@ let compute_ measure applied_cfr program =
            numberOfGeneratedTemplates := depth);
            backtrack depth (TransitionSet.cardinal scc)
                      0
-                     (Solver.create ())
+                     (SMTSolver.create ())
                      (Array.of_enum (TransitionSet.enum scc))
                      (Stack.create ())
                      (ref (TransitionSet.cardinal scc))
@@ -307,7 +305,7 @@ let compute_scc measure applied_cfr program scc =
     numberOfGeneratedTemplates := depth);
     backtrack depth (TransitionSet.cardinal scc)
               0
-              (Solver.create ())
+              (SMTSolver.create ())
               (Array.of_enum (TransitionSet.enum scc))
               (Stack.create ())
               (ref (TransitionSet.cardinal scc))

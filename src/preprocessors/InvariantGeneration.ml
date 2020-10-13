@@ -71,6 +71,7 @@ module Koat2Apron =
         ~subject:(poly_to_apron environment)
         (* We have a<=b, Apron uses form c>=0, therefore we need 0<=b-a *)
         ~le:(fun expr1 expr2 -> Tcons1.make (Texpr1.binop Texpr1.Sub expr2 expr1 Texpr1.Int Texpr1.Up) Tcons1.SUPEQ)
+        ~lt:(fun expr1 expr2 -> Tcons1.make (Texpr1.binop Texpr1.Sub expr2 expr1 Texpr1.Int Texpr1.Up) Tcons1.SUP)
         atom
       
     (** Converts a koat constraint to its apron equivalent *)
