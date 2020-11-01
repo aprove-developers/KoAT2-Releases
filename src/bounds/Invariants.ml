@@ -10,24 +10,42 @@ open ProgramTypes
         
 let logger = Logging.(get Inv)  
 
+type constraint_type = [ `Initiation | `Disability | `Consecution | `Non_Increasing | `Decreasing | `Bounded ] [@@deriving show, eq]
+
+type measure = [ `Cost | `Time ] [@@deriving show, eq]
+
+(* let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id) *)
+
 (** Given a list of variables an affine template-polynomial is generated*)            
-let invariant_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
+let invariant_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
   let vars = VarSet.elements vars in
   let num_vars = List.length vars in
   let fresh_vars = Var.fresh_id_list Var.Int num_vars in
-  let fresh_coeffs = List.map Polynomial.of_var fresh_vars in
-  let linear_poly = ParameterPolynomial.of_coeff_list fresh_coeffs vars in
+  let fresh_coeffs = List.map RealPolynomial.of_var fresh_vars in
+  let linear_poly = RealParameterPolynomial.of_coeff_list fresh_coeffs vars in
   let constant_var = Var.fresh_id Var.Int () in
-  let constant_poly = ParameterPolynomial.of_constant (Polynomial.of_var constant_var) in
-  ParameterPolynomial.(linear_poly + constant_poly),
+  let constant_poly = RealParameterPolynomial.of_constant (RealPolynomial.of_var constant_var) in
+  RealParameterPolynomial.(linear_poly + constant_poly),
   List.append fresh_vars [constant_var]
+
+(** Given a list of variables an affine template-polynomial is generated*)            
+let ranking_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
+  let vars = VarSet.elements vars in
+  let num_vars = List.length vars in
+  let fresh_vars = Var.fresh_id_list Var.Int num_vars in
+  let fresh_coeffs = List.map RealPolynomial.of_var fresh_vars in
+  let linear_poly = RealParameterPolynomial.of_coeff_list fresh_coeffs vars in
+  let constant_var = Var.fresh_id Var.Int () in
+  let constant_poly = RealParameterPolynomial.of_constant (RealPolynomial.of_var constant_var) in
+  RealParameterPolynomial.(linear_poly + constant_poly),
+  List.append fresh_vars [constant_var]
+
+let fresh_coeffs: Var.t list ref = ref []
 
 (** Invariant templates location wise *)
 module TemplateTable_Inv = Hashtbl.Make(Location)
 
-let template_table: ParameterPolynomial.t TemplateTable_Inv.t = TemplateTable_Inv.create 10
-
-let fresh_coeffs: Var.t list ref = ref []
+let template_table_inv: RealParameterPolynomial.t TemplateTable_Inv.t = TemplateTable_Inv.create 10
                                  
 let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): unit =
   let execute () =
@@ -38,38 +56,36 @@ let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): u
     in
     let templates = List.map ins_loc_prf locations in
     templates
-    |> List.iter (fun (location,polynomial,_) -> TemplateTable_Inv.add template_table location polynomial);
+    |> List.iter (fun (location,polynomial,_) -> TemplateTable_Inv.add template_table_inv location polynomial);
     templates
     |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
     |> List.flatten
     |> (fun fresh_vars -> fresh_coeffs := fresh_vars)
   in
   Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "compute_ranking_templates", [])
+                  (fun () -> "compute_invariant_templates", [])
                   ~result:(fun () ->
-                    template_table
+                    template_table_inv
                     |> TemplateTable_Inv.enum
-                    |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial)
+                    |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ RealParameterPolynomial.to_string polynomial)
                   )
                   execute
 
 (** Ranking templates location wise *)
-module TemplateTable_Rank = Hashtbl.Make(Location)
+module TemplateTable = Hashtbl.Make(Location)
 
-let template_table: ParameterPolynomial.t TemplateTable_Rank.t = TemplateTable_Rank.create 10
-
-let fresh_coeffs: Var.t list ref = ref []
+let template_table: RealParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
                                  
-let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): unit =
+let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): unit =
   let execute () =
     let ins_loc_prf location =
       (* Each location needs its own ranking template with different fresh variables *)
-      let (parameter_poly, fresh_vars) = invariant_template vars in
+      let (parameter_poly, fresh_vars) = ranking_template vars in
       (location, parameter_poly, fresh_vars)
     in
     let templates = List.map ins_loc_prf locations in
     templates
-    |> List.iter (fun (location,polynomial,_) -> TemplateTable_Rank.add template_table location polynomial);
+    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add template_table location polynomial);
     templates
     |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
     |> List.flatten
@@ -79,30 +95,81 @@ let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): u
                   (fun () -> "compute_ranking_templates", [])
                   ~result:(fun () ->
                     template_table
-                    |> TemplateTable_Rank.enum
-                    |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial)
+                    |> TemplateTable.enum
+                    |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ RealParameterPolynomial.to_string polynomial)
                   )
-                  execute
-
+                  execute                  
 
 let as_parapoly label var =
   match TransitionLabel.update label var with
   (** Correct? In the nondeterministic case we just make it deterministic? *)
-  | None -> ParameterPolynomial.of_var var
-  | Some p -> ParameterPolynomial.of_polynomial p
+  | None -> RealParameterPolynomial.of_var var
+  | Some p -> RealParameterPolynomial.of_intpoly p
 
 let decreaser measure t =
   match measure with
   | `Cost -> TransitionLabel.cost t
   | `Time -> Polynomial.one
 
-let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
-  let template = TemplateTable_Rank.find template_table in
+let transition_constraint_ (measure, constraint_type, (l,t,l')): RealFormula.t =
+  let exec = 
+  let template = TemplateTable.find template_table in
+  let template_inv = TemplateTable.find template_table in
   let atom =
     match constraint_type with
-    | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (as_parapoly t) (template l'))
-    | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
-    | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))  
+    | `Initiation -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.zero)
+    | `Disability -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.one)
+    | `Consecution -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= template_inv l') (* TODO hier substituieren ??? *)
+    | `Non_Increasing -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.substitute_f (as_parapoly t) (template l'))
+    | `Decreasing -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.(of_intpoly (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
+    | `Bounded -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.of_intpoly (decreaser measure t))  
   in
-  ParameterConstraint.farkas_transform (Constraint.mk_and (TransitionLabel.guard t) Constraint.mk_true) atom
-  |> Formula.mk
+  let const = 
+    match constraint_type with
+    | `Initiation -> RealParameterConstraint.mk_true (* TODO können wir hier was einschränken? *)
+    | _ -> RealParameterConstraint.(mk_and (mk [RealParameterAtom.Infix.(RealParameterPolynomial.zero >= template_inv l)]) (of_intconstraint(TransitionLabel.guard t))) 
+  in
+  RealParameterConstraint.farkas_transform const atom
+  |> RealFormula.mk in
+  Logger.(log logger DEBUG (fun () -> "invariant", [
+                                               "measure", show_measure measure;
+                                               "constraint_type", show_constraint_type constraint_type;
+                                               "transition", Transition.to_id_string (l,t,l');
+                                               "formula: ", RealFormula.to_string exec])); exec
+       
+(* let transition_constraint = cache#add transition_constraint_ TODO fix cache*)
+
+let transition_constraint = transition_constraint_
+  
+let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list): RealFormula.t =
+  transitions
+  |> List.map (fun t -> transition_constraint (measure, constraint_type, t))
+  |> RealFormula.all
+  
+let non_increasing_constraint measure transition =
+  transition_constraint (measure, `Non_Increasing, transition)
+
+let non_increasing_constraints measure transitions =
+  transitions_constraint measure `Non_Increasing (TransitionSet.to_list transitions)
+  
+let bounded_constraint measure transition =
+  transition_constraint (measure, `Bounded, transition)
+
+let decreasing_constraint measure transition =
+  transition_constraint (measure, `Decreasing, transition)
+
+let initiation_constraint measure transition =
+  transition_constraint (measure, `Initiation, transition)
+
+let disability_constraint measure transition =
+  transition_constraint (measure, `Disability, transition)
+
+let consecution_constraint measure transition =
+  transition_constraint (measure, `Consecution, transition)
+
+let consecution_constraints measure transitions =
+  transitions_constraint measure `Consecution (TransitionSet.to_list transitions)
+
+let formula_inv measure transition = 
+  RealFormula.Infix.((bounded_constraint measure transition) 
+                  && (decreasing_constraint measure transition)) 

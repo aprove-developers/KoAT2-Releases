@@ -53,6 +53,7 @@ sig
 
   val max_of_occurring_constants : t -> OurFloat.t
   val of_intpoly : Polynomial.t -> t
+  val to_intpoly : t -> Polynomial.t
   val degree_coeff_list : t -> value list
 end
 
@@ -65,6 +66,9 @@ sig
   val flatten : t -> PolynomialOver(OurFloat).t
 
   val of_polynomial : PolynomialOver(OurFloat).t -> t
+
+  val of_intpoly : Polynomial.t -> t
+
 
   val of_int_parapoly : PolynomialOver(PolynomialOver(OurInt)).t -> t
 end
