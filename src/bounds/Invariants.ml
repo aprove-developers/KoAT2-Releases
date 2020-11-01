@@ -131,7 +131,7 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): RealFormula.t =
   in
   RealParameterConstraint.farkas_transform const atom
   |> RealFormula.mk in
-  Logger.(log logger DEBUG (fun () -> "invariant", [
+  Logger.(log logger DEBUG (fun () -> "transition_constraint_", [
                                                "measure", show_measure measure;
                                                "constraint_type", show_constraint_type constraint_type;
                                                "transition", Transition.to_id_string (l,t,l');
