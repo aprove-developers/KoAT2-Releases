@@ -112,30 +112,31 @@ let decreaser measure t =
   | `Time -> Polynomial.one
 
 let transition_constraint_ (measure, constraint_type, (l,t,l')): RealFormula.t =
-  let exec = 
   let template = TemplateTable.find template_table in
-  let template_inv = TemplateTable.find template_table in
+  let template_inv = TemplateTable.find template_table_inv in
   let atom =
     match constraint_type with
     | `Initiation -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.zero)
     | `Disability -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.one)
-    | `Consecution -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= template_inv l') (* TODO hier substituieren ??? *)
+    | `Consecution -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.substitute_f (as_parapoly t) (template_inv l'))
     | `Non_Increasing -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.substitute_f (as_parapoly t) (template l'))
     | `Decreasing -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.(of_intpoly (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
     | `Bounded -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.of_intpoly (decreaser measure t))  
   in
-  let const = 
+  let constr = 
     match constraint_type with
     | `Initiation -> RealParameterConstraint.mk_true (* TODO können wir hier was einschränken? *)
     | _ -> RealParameterConstraint.(mk_and (mk [RealParameterAtom.Infix.(RealParameterPolynomial.zero >= template_inv l)]) (of_intconstraint(TransitionLabel.guard t))) 
   in
-  RealParameterConstraint.farkas_transform const atom
-  |> RealFormula.mk in
-  Logger.(log logger DEBUG (fun () -> "transition_constraint_", [
-                                               "measure", show_measure measure;
-                                               "constraint_type", show_constraint_type constraint_type;
-                                               "transition", Transition.to_id_string (l,t,l');
-                                               "formula: ", RealFormula.to_string exec])); exec
+  RealParameterConstraint.farkas_transform constr atom
+  |> RealFormula.mk
+  |> tap (fun formula -> Logger.(log logger DEBUG (fun () -> "transition_constraint_", [
+                                              "measure", show_measure measure;
+                                              "constraint_type", show_constraint_type constraint_type;
+                                              "transition", Transition.to_id_string (l,t,l');
+                                              "constraint ", RealParameterConstraint.to_string constr;
+                                              "atom", RealParameterAtom.to_string atom;
+                                              "formula: ", RealFormula.to_string formula])))
        
 (* let transition_constraint = cache#add transition_constraint_ TODO fix cache*)
 
