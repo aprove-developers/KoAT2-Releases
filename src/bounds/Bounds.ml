@@ -46,7 +46,7 @@ open LocalSizeBound
   |> CostBounds.infer_from_timebounds program_cfr in
   (program_cfr,appr_cost) *)
 
-  let find_bounds ?(depth = 5) ?(mprf = false) ?(cfr = false) ?(time_cfr = 180) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
+  let find_bounds ?(depth = 5) ?(mprf = false) ?(cfr = false) ?(time_cfr = 180) ?(inv = false) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
     if cfr then
       CFR.number_unsolved_trans := (Program.cardinal_trans_scc program);
       CFR.time_cfr := float_of_int time_cfr;
@@ -55,12 +55,12 @@ open LocalSizeBound
       MultiphaseRankingFunction.list_init depth);
   let (program_cfr,updated_appr) = appr
   |> TrivialTimeBounds.compute program
-  |> RankingBounds.improve ~mprf:mprf ~cfr:cfr `Time program in
+  |> RankingBounds.improve ~mprf:mprf ~cfr:cfr ~inv:inv `Time program in
   let appr_cost =
   updated_appr
   |> (fun appr ->
     if program_cfr |> Program.transitions |> TransitionSet.exists (fun t -> not (Polynomial.is_one (Transition.cost t))) then
-      RankingBounds.improve ~mprf:mprf ~cfr:false `Cost program_cfr appr
+      RankingBounds.improve ~mprf:mprf ~cfr:false ~inv:inv `Cost program_cfr appr
       |> snd
     else
       appr

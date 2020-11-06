@@ -14,7 +14,9 @@ type constraint_type = [ `Initiation | `Disability | `Consecution | `Non_Increas
 
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
-(* let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id) *)
+module Valuation = Valuation.Make(OurFloat)
+
+let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id)
 
 (** Given a list of variables an affine template-polynomial is generated*)            
 let invariant_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
@@ -116,7 +118,7 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): RealFormula.t =
   let template_inv = TemplateTable.find template_table_inv in
   let atom =
     match constraint_type with
-    | `Initiation -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.zero)
+    | `Initiation -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.substitute_f (as_parapoly t) (template_inv l'))
     | `Disability -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.one)
     | `Consecution -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.substitute_f (as_parapoly t) (template_inv l'))
     | `Non_Increasing -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.substitute_f (as_parapoly t) (template l'))
@@ -125,7 +127,8 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): RealFormula.t =
   in
   let constr = 
     match constraint_type with
-    | `Initiation -> RealParameterConstraint.mk_true (* TODO können wir hier was einschränken? *)
+    (** TODO build up a look up table for already calculated invariants and use them as initiation. *)
+    | `Initiation -> RealParameterConstraint.(mk_and mk_true (of_intconstraint(TransitionLabel.guard t)))
     | _ -> RealParameterConstraint.(mk_and (mk [RealParameterAtom.Infix.(RealParameterPolynomial.zero >= template_inv l)]) (of_intconstraint(TransitionLabel.guard t))) 
   in
   RealParameterConstraint.farkas_transform constr atom
@@ -138,9 +141,7 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): RealFormula.t =
                                               "atom", RealParameterAtom.to_string atom;
                                               "formula: ", RealFormula.to_string formula])))
        
-(* let transition_constraint = cache#add transition_constraint_ TODO fix cache*)
-
-let transition_constraint = transition_constraint_
+let transition_constraint = cache#add transition_constraint_ 
   
 let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list): RealFormula.t =
   transitions
@@ -171,6 +172,9 @@ let consecution_constraint measure transition =
 let consecution_constraints measure transitions =
   transitions_constraint measure `Consecution (TransitionSet.to_list transitions)
 
-let formula_inv measure transition = 
-  RealFormula.Infix.((bounded_constraint measure transition) 
-                  && (decreasing_constraint measure transition)) 
+
+let rank_from_valuation valuation location =
+  location
+  |> TemplateTable.find template_table
+  |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero)
+  |> RealPolynomial.to_intpoly 

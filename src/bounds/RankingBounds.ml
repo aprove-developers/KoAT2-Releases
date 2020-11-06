@@ -138,7 +138,7 @@ let bounded measure appr transition =
   | `Cost -> false
 
 (** We try to improve a single scc until we reach a fixed point. *)
-let rec improve_timebound_rec ?(mprf = false) (scc: TransitionSet.t)  measure program appr =
+let rec improve_timebound_rec ?(mprf = false) ?(inv = false) (scc: TransitionSet.t)  measure program appr =
   let execute () =
     scc
     |> tap (fun scc -> (Logger.with_log logger_cfr Logger.INFO
@@ -154,7 +154,7 @@ let rec improve_timebound_rec ?(mprf = false) (scc: TransitionSet.t)  measure pr
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank_mprf measure program appr rank) appr
           else 
-            RankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc                     
+            RankingFunction.find_scc ~inv:inv measure (Option.is_some !backtrack_point) program transition scc                     
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank measure program appr rank) appr)
@@ -162,10 +162,10 @@ let rec improve_timebound_rec ?(mprf = false) (scc: TransitionSet.t)  measure pr
       (Logger.with_log logger Logger.INFO
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
              execute)
-      |> MaybeChanged.if_changed (improve_timebound_rec ~mprf:mprf scc measure program)
+      |> MaybeChanged.if_changed (improve_timebound_rec ~mprf:mprf ~inv:inv scc measure program)
       |> MaybeChanged.unpack
 
-  let improve_timebound ?(mprf = false) (scc: TransitionSet.t)  measure program appr =
+  let improve_timebound ?(mprf = false) ?(inv = false) (scc: TransitionSet.t)  measure program appr =
   let execute () =
     scc
     |> tap (fun scc -> (Logger.with_log logger_cfr Logger.INFO
@@ -181,7 +181,7 @@ let rec improve_timebound_rec ?(mprf = false) (scc: TransitionSet.t)  measure pr
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank_mprf measure program appr rank) appr
           else 
-            RankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc                    
+            RankingFunction.find_scc  ~inv:inv measure (Option.is_some !backtrack_point) program transition scc                    
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank measure program appr rank) appr)
@@ -190,12 +190,12 @@ let rec improve_timebound_rec ?(mprf = false) (scc: TransitionSet.t)  measure pr
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
              execute)
 
-  let rec improve_scc ?(mprf = false) (scc: TransitionSet.t)  measure program appr = 
+  let rec improve_scc ?(mprf = false) ?(inv = false) (scc: TransitionSet.t)  measure program appr = 
     appr
-    |> improve_timebound_rec ~mprf:mprf scc measure program
+    |> improve_timebound_rec ~mprf:mprf ~inv:inv scc measure program
     |> SizeBounds.improve program ~scc:(Option.some scc) (Option.is_some !backtrack_point)
-    |> improve_timebound ~mprf:mprf scc measure program
-    |> MaybeChanged.if_changed (improve_scc ~mprf:mprf scc measure program)
+    |> improve_timebound ~mprf:mprf ~inv:inv scc measure program
+    |> MaybeChanged.if_changed (improve_scc ~mprf:mprf ~inv:inv scc measure program)
     |> MaybeChanged.unpack
 
 
@@ -242,7 +242,7 @@ let rec fold_until f p acc = function
     | x :: xs -> fold_until f p (f acc x) xs
     | [] -> acc
 
-let rec improve ?(mprf = false) ?(cfr = false) measure program appr =
+let rec improve ?(mprf = false) ?(cfr = false) ?(inv = false) measure program appr =
   program
     |> Program.sccs
     |> List.of_enum
@@ -255,7 +255,7 @@ let rec improve ?(mprf = false) ?(cfr = false) measure program appr =
                           try 
                             appr               
                             |> SizeBounds.improve program ~scc:(Option.some scc) (Option.is_some !backtrack_point)
-                            |> improve_scc ~mprf:mprf scc measure program
+                            |> improve_scc ~mprf:mprf ~inv:inv scc measure program
                             |> apply_cfr ~cfr:cfr ~mprf:mprf scc measure program
                           with TIMEOUT | NOT_IMPROVED ->
                             LocalSizeBound.reset_cfr ();  

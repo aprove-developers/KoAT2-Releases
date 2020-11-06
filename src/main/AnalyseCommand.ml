@@ -81,6 +81,9 @@ type params = {
     cfr : bool; [@default false]
     (** True iff control flow refinement should be applied *)
 
+    inv : bool; [@default false]
+    (** True iff invariants should be computed on the fly; only relevant for ranking functions and not for mprf. *)
+
     time_limit_cfr : int; [@default 180]
     (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
 
@@ -178,7 +181,7 @@ let run (params: params) =
               )
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
-                     Bounds.find_bounds ~depth:(params.depth) ~mprf:(params.multiphaserankingfunctions) ~cfr:(params.cfr) ~time_cfr:(params.time_limit_cfr) program appr
+                     Bounds.find_bounds ~depth:(params.depth) ~mprf:(params.multiphaserankingfunctions) ~cfr:(params.cfr) ~time_cfr:(params.time_limit_cfr) ~inv:(params.inv) program appr
                    else (program, appr))
          |> tap (fun (program, appr) -> params.result program appr)
          |> tap (fun (program, appr) ->

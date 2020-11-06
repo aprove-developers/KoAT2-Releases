@@ -25,9 +25,9 @@ val decreasing : t -> Transition.t
 val non_increasing : t -> Transition.t list
 
 (** Finds a suitable ranking function for the given transitions T'. *)
-val find : measure -> bool -> Program.t -> Transition.t -> t list
+val find : ?inv:bool ->  measure -> bool -> Program.t -> Transition.t -> t list
 
-val find_scc : measure -> bool -> Program.t -> Transition.t -> ProgramTypes.TransitionSet.t -> t list
+val find_scc : ?inv:bool -> measure -> bool -> Program.t -> Transition.t -> ProgramTypes.TransitionSet.t -> t list
 
 (** Converts a ranking function into a string*)
 val to_string : t -> string

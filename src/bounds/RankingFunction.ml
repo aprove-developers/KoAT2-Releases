@@ -133,8 +133,15 @@ let rank_from_valuation valuation location =
   |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
 
 let make decreasing_transition non_increasing_transitions valuation =
-  {
+  { 
     rank = rank_from_valuation valuation;
+    decreasing = decreasing_transition;
+    non_increasing = non_increasing_transitions;
+  }
+
+let make_inv decreasing_transition non_increasing_transitions valuation =
+  { 
+    rank = Invariants.rank_from_valuation valuation;
     decreasing = decreasing_transition;
     non_increasing = non_increasing_transitions;
   }
@@ -161,7 +168,7 @@ let ranking_table = function
 let change_valuation (values: RealPolynomial.valuation) = 
   Valuation.from (List.map (fun x -> (x,  RealValuation.eval x values |> OurFloat.upper_int)) (RealValuation.vars values))
 
-let try_decreasing (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
+let try_decreasing ?(inv = false) (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
   non_increasing
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
@@ -171,16 +178,22 @@ let try_decreasing (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to
                                                                 "decreasing", Transition.to_id_string decreasing;
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing)]));
          SMTSolver.push opt;
-         (* SMTSolver.add_real opt (RealFormula.of_intformula (bounded_constraint measure decreasing));
-         SMTSolver.add_real opt (RealFormula.of_intformula (decreasing_constraint measure decreasing)); *)
-         
-        SMTSolver.add_real opt (Invariants.formula_inv measure decreasing);
-         
+         if inv then (
+          SMTSolver.add_real opt  (Invariants.bounded_constraint measure decreasing);
+          SMTSolver.add_real opt  (Invariants.decreasing_constraint measure decreasing); )
+         else (
+          SMTSolver.add_real opt (RealFormula.of_intformula (bounded_constraint measure decreasing));
+          SMTSolver.add_real opt (RealFormula.of_intformula (decreasing_constraint measure decreasing));
+         );
+                  
          if SMTSolver.satisfiable opt then (   
-           (* SMTSolver.minimize_absolute opt !fresh_coeffs; Check if minimization is forgotten. *)
+           (* SMTSolver.minimize_absolute opt !fresh_coeffs; Check if minimization is forgotten. TODO *)
            SMTSolver.model_real opt
-           |> Option.map change_valuation
-           |> Option.map (make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+           |> Option.map (
+              if inv then 
+               make_inv decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum)
+              else 
+               make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation)
            |> Option.may (fun ranking_function ->
                   to_be_found := !to_be_found - 1;
                   RankingTable.add (ranking_table measure) decreasing ranking_function;
@@ -199,44 +212,44 @@ let try_decreasing (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to
     raise Exit
 
            
-let rec backtrack (steps_left: int) (index: int) (opt: SMTSolver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
+let rec backtrack ?(inv = false) (steps_left: int) (index: int) (opt: SMTSolver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) (program: Program.t) applied_cfr =
   if SMTSolver.satisfiable opt then (
     if steps_left == 0 then (
-      try_decreasing opt non_increasing to_be_found measure applied_cfr
+      try_decreasing ~inv:inv opt non_increasing to_be_found measure applied_cfr
     ) else (
       for i=index to Array.length scc - 1 do
         let transition = Array.get scc i in
         SMTSolver.push opt;
-        (* TODO *)
-        (* SMTSolver.add opt (non_increasing_constraint measure transition); *)
-        SMTSolver.add_real opt (Invariants.non_increasing_constraint measure transition);
+        if inv then (
+          SMTSolver.add_real opt (Invariants.non_increasing_constraint measure transition);
+          Program.entry_transitions logger program [transition]
+          |> List.iter (fun trans ->  SMTSolver.add_real opt (Invariants.initiation_constraint measure trans));)
+        else 
+           SMTSolver.add opt (non_increasing_constraint measure transition);
         Stack.push transition non_increasing;
-        backtrack (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure applied_cfr; 
+        backtrack ~inv:inv (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure program applied_cfr; 
         ignore (Stack.pop non_increasing);
         SMTSolver.pop opt;
       done;
-      try_decreasing opt non_increasing to_be_found measure applied_cfr
+      try_decreasing ~inv:inv opt non_increasing to_be_found measure applied_cfr
     )
   )
 
-let compute_ measure applied_cfr program =
-               Printf.printf "hi\n";
-
+let compute_ ?(inv = false) measure applied_cfr program =
   program
   |> Program.sccs
   |> Enum.iter (fun scc ->
          try
-           let opt = SMTSolver.create () in
-           SMTSolver.add_real opt (Invariants.consecution_constraints measure (Program.transitions program));
-           (* TODO add for all location initiaion *)
            backtrack (TransitionSet.cardinal scc)
                      0
-                     opt
+                     (SMTSolver.create ())
                      (Array.of_enum (TransitionSet.enum scc))
                      (Stack.create ())
                      (ref (TransitionSet.cardinal scc))
                      measure
-                     applied_cfr;
+                     program
+                     applied_cfr
+                     ~inv:inv;
            scc
            |> TransitionSet.iter (fun t ->
                   if not (RankingTable.mem (ranking_table measure) t) then
@@ -245,19 +258,18 @@ let compute_ measure applied_cfr program =
          with Exit -> ()
        )
 
-let compute_scc measure applied_cfr program scc =
+let compute_scc ?(inv = false) measure applied_cfr program scc =
   try
-    let opt = SMTSolver.create () in
-    SMTSolver.add_real opt (Invariants.consecution_constraints measure (Program.transitions program));
-           (* TODO add for all location initiaion *)
     backtrack (TransitionSet.cardinal scc)
               0
-              opt
+              (SMTSolver.create ())
               (Array.of_enum (TransitionSet.enum scc))
               (Stack.create ())
               (ref (TransitionSet.cardinal scc))
               measure
-              applied_cfr;
+              program
+              applied_cfr
+              ~inv:inv;
     scc
     |> TransitionSet.iter (fun t ->
           if not (RankingTable.mem (ranking_table measure) t) then
@@ -267,17 +279,18 @@ let compute_scc measure applied_cfr program scc =
        
 
   
-let find measure applied_cfr program transition =
+let find ?(inv = false) measure applied_cfr program transition =
   let execute () =
+    if inv then (
     if Invariants.TemplateTable_Inv.is_empty Invariants.template_table_inv then
       Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
     if Invariants.TemplateTable.is_empty Invariants.template_table then
-      Invariants.compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+      Invariants.compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
 
     if TemplateTable.is_empty template_table then
       compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
     if RankingTable.is_empty (ranking_table measure) then
-      compute_ measure applied_cfr program;
+      compute_ measure applied_cfr program ~inv:inv;
     (try
       RankingTable.find_all (ranking_table measure) transition
     with Not_found -> [])
@@ -289,17 +302,18 @@ let find measure applied_cfr program transition =
                   ~result:(Util.enum_to_string to_string % List.enum)
                   execute
 
-let find_scc measure applied_cfr program transition scc =
+let find_scc ?(inv = false) measure applied_cfr program transition scc =
   let execute () =
-    if Invariants.TemplateTable_Inv.is_empty Invariants.template_table_inv then
-      Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-    if Invariants.TemplateTable.is_empty Invariants.template_table then
-      Invariants.compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+    if inv then (
+      if Invariants.TemplateTable_Inv.is_empty Invariants.template_table_inv then
+        Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+      if Invariants.TemplateTable.is_empty Invariants.template_table then
+        Invariants.compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
 
     if TemplateTable.is_empty template_table then
       compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
     if RankingTable.is_empty (ranking_table measure) then
-      compute_scc measure applied_cfr program scc;
+      compute_scc measure applied_cfr program scc ~inv:inv;
     (try
       RankingTable.find_all (ranking_table measure) transition
     with Not_found -> [])
@@ -314,6 +328,9 @@ let find_scc measure applied_cfr program transition scc =
 
 let reset () =
   cache#clear;
+  Invariants.cache#clear;
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
+  Invariants.TemplateTable.clear Invariants.template_table;
+  Invariants.TemplateTable_Inv.clear Invariants.template_table_inv;
   TemplateTable.clear template_table
