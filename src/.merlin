@@ -22,4 +22,4 @@ B bounds
 B preprocessors
 B main
 
-PKG batteries oUnit Z3 ocamlgraph fpath apron ppx_deriving ppx_deriving.eq ppx_deriving.ord ppx_deriving.show ppx_deriving_cmdliner
+PKG batteries oUnit z3 ocamlgraph fpath apron ppx_deriving ppx_deriving.eq ppx_deriving.ord ppx_deriving.show ppx_deriving_cmdliner
