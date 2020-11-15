@@ -35,6 +35,9 @@ sig
   (** Type of a transition, i.e., two connected locations and a label. *)
   type t = Location.t * TransitionLabel.t * Location.t
   
+  (** Equal iff. two transitions have the same id. *)
+  val equal : t -> t -> bool
+
   (** TODO doc *)
   val same : t -> t -> bool
 

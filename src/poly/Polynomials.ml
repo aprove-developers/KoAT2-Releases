@@ -380,4 +380,5 @@ module ParameterPolynomial =
 
     let of_int_parapoly =
       ParameterPolynomial.fold ~const:(of_constant % helper_of_intpoly) ~var:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
+
   end

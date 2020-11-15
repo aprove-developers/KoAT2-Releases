@@ -20,16 +20,21 @@ module Transition =
     type t = Location.t * TransitionLabel.t * Location.t
 
 
-    let equal equal_lbl (l1,t1,l1') (l2,t2,l2') =
+
+
+    let equal_ equal_lbl (l1,t1,l1') (l2,t2,l2') =
       Location.equal l1 l2
       && equal_lbl t1 t2
       && Location.equal l1' l2'
       
+    let equal = 
+      equal_ TransitionLabel.same
+
     let same =
-      equal TransitionLabel.same
+      equal_ TransitionLabel.same
       
     let equivalent =
-      equal TransitionLabel.equivalent
+      equal_ TransitionLabel.equivalent
 
     let compare compare_lbl (l1,t1,l1') (l2,t2,l2') =
       if Location.compare l1 l2 != 0 then

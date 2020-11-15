@@ -34,8 +34,6 @@ let fresh_id t = {
     cost = t.cost;
   }
 
-
-
 let trival variables =
   let var_map = 
     VarSet.fold (fun var map -> VarMap.add var (Polynomial.of_var var) map) variables VarMap.empty in

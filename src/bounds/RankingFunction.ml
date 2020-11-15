@@ -7,9 +7,8 @@ open ProgramTypes
 open CFR 
    
 module SMTSolver = SMT.IncrementalZ3Solver
-module RealValuation = Valuation.Make(OurFloat)
 module Valuation = Valuation.Make(OurInt)
-                 
+
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
 type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ] [@@deriving show, eq]
@@ -49,7 +48,7 @@ let as_parapoly label var =
   (** Correct? In the nondeterministic case we just make it deterministic? *)
   | None -> ParameterPolynomial.of_var var
   | Some p -> ParameterPolynomial.of_polynomial p
- 
+
 (** Given a list of variables an affine template-polynomial is generated*)            
 let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
   let vars = VarSet.elements vars in
@@ -61,23 +60,42 @@ let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
   let constant_poly = ParameterPolynomial.of_constant (Polynomial.of_var constant_var) in
   ParameterPolynomial.(linear_poly + constant_poly),
   List.append fresh_vars [constant_var]
+
+let as_parapoly_real label var =
+  match TransitionLabel.update label var with
+  (** Correct? In the nondeterministic case we just make it deterministic? *)
+  | None -> RealParameterPolynomial.of_var var
+  | Some p -> RealParameterPolynomial.of_intpoly p
+ 
+(** Given a list of variables an affine template-polynomial is generated*)            
+let ranking_template_real (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
+  let vars = VarSet.elements vars in
+  let num_vars = List.length vars in
+  let fresh_vars = Var.fresh_id_list Var.Real num_vars in
+  let fresh_coeffs = List.map RealPolynomial.of_var fresh_vars in
+  let linear_poly = RealParameterPolynomial.of_coeff_list fresh_coeffs vars in
+  let constant_var = Var.fresh_id Var.Real () in
+  let constant_poly = RealParameterPolynomial.of_constant (RealPolynomial.of_var constant_var) in
+  RealParameterPolynomial.(linear_poly + constant_poly),
+  List.append fresh_vars [constant_var]
    
 module TemplateTable = Hashtbl.Make(Location)
 
 let template_table: ParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
+let template_table_real: RealParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
 
 let fresh_coeffs: Var.t list ref = ref []
-                                 
-let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): unit =
+
+let compute_ranking_templates_ (vars: VarSet.t) (locations: Location.t list) ranking_template_ template_table_ to_string: unit =
   let execute () =
     let ins_loc_prf location =
       (* Each location needs its own ranking template with different fresh variables *)
-      let (parameter_poly, fresh_vars) = ranking_template vars in
+      let (parameter_poly, fresh_vars) = ranking_template_ vars in
       (location, parameter_poly, fresh_vars)
     in
     let templates = List.map ins_loc_prf locations in
     templates
-    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add template_table location polynomial);
+    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add template_table_ location polynomial);
     templates
     |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
     |> List.flatten
@@ -86,11 +104,17 @@ let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list): uni
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> "compute_ranking_templates", [])
                   ~result:(fun () ->
-                    template_table
+                    template_table_
                     |> TemplateTable.enum
-                    |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial)
+                    |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ to_string polynomial)
                   )
                   execute
+
+let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list) : unit =
+  compute_ranking_templates_ vars locations ranking_template template_table ParameterPolynomial.to_string
+
+let compute_ranking_templates_real (vars: VarSet.t) (locations: Location.t list) : unit =
+  compute_ranking_templates_ vars locations ranking_template_real template_table_real RealParameterPolynomial.to_string
 
 let decreaser measure t =
   match measure with
@@ -103,7 +127,7 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
     match constraint_type with
     | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (as_parapoly t) (template l'))
     | `Decreasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.(of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
-    | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))  
+    | `Bounded -> ParameterAtom.Infix.(template l >= ParameterPolynomial.of_polynomial (decreaser measure t))      
   in
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk  
@@ -141,7 +165,7 @@ let make decreasing_transition non_increasing_transitions valuation =
 
 let make_inv decreasing_transition non_increasing_transitions valuation =
   { 
-    rank = Invariants.rank_from_valuation valuation;
+    rank = Invariants.rank_from_valuation (TemplateTable.find template_table_real) valuation;
     decreasing = decreasing_transition;
     non_increasing = non_increasing_transitions;
   }
@@ -164,9 +188,9 @@ let ranking_table = function
   | `Time -> time_ranking_table
   | `Cost -> cost_ranking_table
 
-
+(** We are searching for a real model, hence we need to cast reals to integers. *)
 let change_valuation (values: RealPolynomial.valuation) = 
-  Valuation.from (List.map (fun x -> (x,  RealValuation.eval x values |> OurFloat.upper_int)) (RealValuation.vars values))
+  Valuation.from (List.map (fun x -> (x,  Invariants.Valuation.eval x values |> OurFloat.upper_int)) (Invariants.Valuation.vars values))
 
 let try_decreasing ?(inv = false) (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
   non_increasing
@@ -179,19 +203,23 @@ let try_decreasing ?(inv = false) (opt: SMTSolver.t) (non_increasing: Transition
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing)]));
          SMTSolver.push opt;
          if inv then (
-          SMTSolver.add_real opt  (Invariants.bounded_constraint measure decreasing);
-          SMTSolver.add_real opt  (Invariants.decreasing_constraint measure decreasing); )
+          let template = TemplateTable.find template_table_real in
+          SMTSolver.add_real opt (Invariants.bounded_constraint measure decreasing template);
+          SMTSolver.add_real opt (Invariants.decreasing_constraint measure decreasing template);
+          SMTSolver.add_real opt (Invariants.consecution_constraint measure decreasing template);)
          else (
-          SMTSolver.add_real opt (RealFormula.of_intformula (bounded_constraint measure decreasing));
-          SMTSolver.add_real opt (RealFormula.of_intformula (decreasing_constraint measure decreasing));
+          SMTSolver.add opt (bounded_constraint measure decreasing);
+          SMTSolver.add opt (decreasing_constraint measure decreasing);
          );
                   
          if SMTSolver.satisfiable opt then (   
            (* SMTSolver.minimize_absolute opt !fresh_coeffs; Check if minimization is forgotten. TODO *)
            SMTSolver.model_real opt
            |> Option.map (
-              if inv then 
-               make_inv decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum)
+              if inv then (
+               make_inv decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+               % tap (fun x -> Invariants.store_inv x decreasing)
+               % tap (fun x -> Invariants.store_inv_set x (non_increasing |> Stack.enum |> TransitionSet.of_enum))
               else 
                make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation)
            |> Option.may (fun ranking_function ->
@@ -221,9 +249,11 @@ let rec backtrack ?(inv = false) (steps_left: int) (index: int) (opt: SMTSolver.
         let transition = Array.get scc i in
         SMTSolver.push opt;
         if inv then (
-          SMTSolver.add_real opt (Invariants.non_increasing_constraint measure transition);
+          let template_real = TemplateTable.find template_table_real in
+          SMTSolver.add_real opt (Invariants.non_increasing_constraint measure transition template_real);
+          SMTSolver.add_real opt (Invariants.consecution_constraint measure transition template_real);
           Program.entry_transitions logger program [transition]
-          |> List.iter (fun trans ->  SMTSolver.add_real opt (Invariants.initiation_constraint measure trans));)
+          |> List.iter (fun trans ->  SMTSolver.add_real opt (Invariants.initiation_constraint measure trans template_real));)
         else 
            SMTSolver.add opt (non_increasing_constraint measure transition);
         Stack.push transition non_increasing;
@@ -282,13 +312,12 @@ let compute_scc ?(inv = false) measure applied_cfr program scc =
 let find ?(inv = false) measure applied_cfr program transition =
   let execute () =
     if inv then (
-    if Invariants.TemplateTable_Inv.is_empty Invariants.template_table_inv then
-      Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-    if Invariants.TemplateTable.is_empty Invariants.template_table then
-      Invariants.compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
-
+    if Invariants.TemplateTable.is_empty Invariants.template_table_inv then
+      Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
     if TemplateTable.is_empty template_table then
       compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
+    if TemplateTable.is_empty template_table_real then
+      compute_ranking_templates_real (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);  
     if RankingTable.is_empty (ranking_table measure) then
       compute_ measure applied_cfr program ~inv:inv;
     (try
@@ -305,13 +334,12 @@ let find ?(inv = false) measure applied_cfr program transition =
 let find_scc ?(inv = false) measure applied_cfr program transition scc =
   let execute () =
     if inv then (
-      if Invariants.TemplateTable_Inv.is_empty Invariants.template_table_inv then
-        Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-      if Invariants.TemplateTable.is_empty Invariants.template_table then
-        Invariants.compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
-
+      if Invariants.TemplateTable.is_empty Invariants.template_table_inv then
+        Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
     if TemplateTable.is_empty template_table then
       compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
+    if TemplateTable.is_empty template_table_real then
+      compute_ranking_templates_real (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);  
     if RankingTable.is_empty (ranking_table measure) then
       compute_scc measure applied_cfr program scc ~inv:inv;
     (try
@@ -331,6 +359,6 @@ let reset () =
   Invariants.cache#clear;
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
-  Invariants.TemplateTable.clear Invariants.template_table;
-  Invariants.TemplateTable_Inv.clear Invariants.template_table_inv;
-  TemplateTable.clear template_table
+  Invariants.TemplateTable.clear Invariants.template_table_inv;
+  TemplateTable.clear template_table;
+  TemplateTable.clear template_table_real
