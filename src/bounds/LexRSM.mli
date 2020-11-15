@@ -3,8 +3,6 @@ open ProgramTypes
 type lrsm_cache
 val new_cache: unit -> lrsm_cache
 
-val find_whole_prog : lrsm_cache -> Program.t -> Goal.goal -> unit
-
 type t
 val rank: t -> (Location.t -> Polynomials.RealPolynomial.t)
 val decreasing: t -> GeneralTransition.t
