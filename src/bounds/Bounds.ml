@@ -52,7 +52,9 @@ open LocalSizeBound
       CFR.time_cfr := float_of_int time_cfr;
     if mprf then( 
       MultiphaseRankingFunction.maxDepth := depth;
-      MultiphaseRankingFunction.list_init depth);
+      MultiphaseRankingFunction.list_init depth;
+      if inv then
+        MultiphaseRankingFunction.list_init_real depth;);
   let (program_cfr,updated_appr) = appr
   |> TrivialTimeBounds.compute program
   |> RankingBounds.improve ~mprf:mprf ~cfr:cfr ~inv:inv `Time program in

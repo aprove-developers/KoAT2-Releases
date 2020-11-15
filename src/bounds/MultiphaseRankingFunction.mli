@@ -33,10 +33,13 @@ val maxDepth : int Batteries.ref
 (** Initializes list after maxDepth is set. *)
 val list_init : int -> unit
 
-(** Finds a suitable multiphase ranking function for the given transitions T'. *)
-val find : measure -> bool -> Program.t -> Transition.t -> t list
+(** Initializes list after maxDepth is set. *)
+val list_init_real : int -> unit
 
-val find_scc : measure -> bool ->  Program.t -> Transition.t -> TransitionSet.t ->  t list
+(** Finds a suitable multiphase ranking function for the given transitions T'. *)
+val find : ?inv:bool -> measure -> bool -> Program.t -> Transition.t -> t list
+
+val find_scc : ?inv:bool -> measure -> bool ->  Program.t -> Transition.t -> TransitionSet.t ->  t list
 
 
 (** Converts a multiphase ranking function into a string*)

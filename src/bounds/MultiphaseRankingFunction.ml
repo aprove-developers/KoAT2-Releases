@@ -8,7 +8,7 @@ open CFR
 
 (** Class is derived from RankingFunction.ml*)
 
-module SMTSolver = SMT.IncrementalZ3SolverOld
+module SMTSolver = SMT.IncrementalZ3Solver
 module Valuation = Valuation.Make(OurInt)
 
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
@@ -28,7 +28,6 @@ let as_parapoly label var =
     | None -> ParameterPolynomial.of_var var
     | Some p -> ParameterPolynomial.of_polynomial p
 
-
 (** Given a list of variables an affine template-polynomial is generated*)
 let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
     let vars = VarSet.elements vars in
@@ -41,9 +40,27 @@ let ranking_template (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
     ParameterPolynomial.(linear_poly + constant_poly),
     List.append fresh_vars [constant_var]
 
+let as_parapoly_real label var =
+  match TransitionLabel.update label var with
+  (** Correct? In the nondeterministic case we just make it deterministic? *)
+  | None -> RealParameterPolynomial.of_var var
+  | Some p -> RealParameterPolynomial.of_intpoly p
+ 
+(** Given a list of variables an affine template-polynomial is generated*)            
+let ranking_template_real (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
+  let vars = VarSet.elements vars in
+  let num_vars = List.length vars in
+  let fresh_vars = Var.fresh_id_list Var.Real num_vars in
+  let fresh_coeffs = List.map RealPolynomial.of_var fresh_vars in
+  let linear_poly = RealParameterPolynomial.of_coeff_list fresh_coeffs vars in
+  let constant_var = Var.fresh_id Var.Real () in
+  let constant_poly = RealParameterPolynomial.of_constant (RealPolynomial.of_var constant_var) in
+  RealParameterPolynomial.(linear_poly + constant_poly),
+  List.append fresh_vars [constant_var]
+
 module TemplateTable = Hashtbl.Make(Location)
 
-type constraint_type = [ `Non_Increasing | `Decreasing] [@@deriving show, eq]
+type constraint_type = [`Non_Increasing | `Decreasing] [@@deriving show, eq]
 
 let maxDepth = ref 5
 
@@ -84,26 +101,29 @@ let only_rank_to_string {rank; decreasing; non_increasing; depth} =
 let to_string {rank; decreasing; non_increasing; depth} =
   "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; depth} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
-
 let template_tables: ((ParameterPolynomial.t TemplateTable.t) list) ref = ref []
+let template_tables_real: ((RealParameterPolynomial.t TemplateTable.t) list) ref = ref []
 
 let list_init depth = 
   template_tables := (List.init depth (fun i -> TemplateTable.create 10))
+
+let list_init_real depth = 
+  template_tables_real := (List.init depth (fun i -> TemplateTable.create 10))
 
 let fresh_coeffs: Var.t list ref = ref []
 
 let numberOfGeneratedTemplates = ref 0
 
-let compute_ranking_templates (depth:int) (vars: VarSet.t) (locations: Location.t list): unit =
+let compute_ranking_templates_ (depth: int) (vars: VarSet.t) (locations: Location.t list) ranking_template_ template_table_ to_string: unit =
   let execute (i:int) =
     let ins_loc_prf location =
       (* Each location needs its own ranking template with different fresh variables *)
-      let (parameter_poly, fresh_vars) = ranking_template vars in
+      let (parameter_poly, fresh_vars) = ranking_template_ vars in
       (location, parameter_poly, fresh_vars)
     in
     let templates = List.map ins_loc_prf locations in
     templates
-    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add (List.nth !template_tables i) location polynomial);
+    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add (List.nth !template_table_ i) location polynomial);
     templates
     |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
     |> List.flatten
@@ -113,19 +133,23 @@ let compute_ranking_templates (depth:int) (vars: VarSet.t) (locations: Location.
     Logger.with_log logger Logger.DEBUG
       (fun () -> "compute_mprf_templates_" ^ string_of_int i, [])
       ~result:(fun () ->
-          (List.nth !template_tables i)
+          (List.nth !template_table_ i)
           |> TemplateTable.enum
-          |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ ParameterPolynomial.to_string polynomial)
+          |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ to_string polynomial)
         )
       (fun () -> execute i);
   done
 
+let compute_ranking_templates (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
+  compute_ranking_templates_ depth vars locations ranking_template template_tables ParameterPolynomial.to_string
 
+let compute_ranking_templates_real (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
+  compute_ranking_templates_ depth vars locations ranking_template_real template_tables_real RealParameterPolynomial.to_string
 
 (* Methods define properties of mrf *)
 
-(* method for mrf and functions f_2 to f_d*)
-let transition_constraint_ (template_table0,template_table1, measure, constraint_type, (l,t,l')): Formula.t =
+(* method for mrf and functions f_2 to f_d of depth i *)
+let transition_constraint_i (template_table0, template_table1, measure, constraint_type, (l,t,l')): Formula.t =
   let template0 = TemplateTable.find template_table0 in
   let template1 = TemplateTable.find template_table1 in
   let poly = ParameterPolynomial.add (template0 l) (template1 l) in
@@ -159,11 +183,11 @@ let transition_constraint_d (template_table1, measure, constraint_type, (l,t,l')
         |> Formula.mk)
 
 (* use all three functions above combined*)
-let transition_constraints_ (depth, measure, constraint_type, (l,t,l')): Formula.t =
+let transition_constraint_ (depth, measure, constraint_type, (l,t,l')): Formula.t =
   let res = ref Formula.mk_true in
   for i = 1 to (depth - 1) do
     res := ((List.nth !template_tables (i - 1)), (List.nth !template_tables i), measure, constraint_type, (l,t,l'))
-           |> transition_constraint_
+           |> transition_constraint_i
            |> Formula.mk_and !res
   done;
   res := ((List.nth !template_tables 0), measure, constraint_type, (l,t,l'))
@@ -175,7 +199,7 @@ let transition_constraints_ (depth, measure, constraint_type, (l,t,l')): Formula
          |> Formula.mk_and !res;
   !res
 
-let transition_constraint = cache#add  (transition_constraints_)
+let transition_constraint = cache#add  (transition_constraint_)
 
 let transitions_constraint depth measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
@@ -207,6 +231,14 @@ let make depth decreasing_transition non_increasing_transitions valuation  =
   depth = depth;
 }
 
+let make_inv depth decreasing_transition non_increasing_transitions valuation =
+  { 
+    rank = List.init depth (fun i -> MPRF_Invariants.rank_from_valuation (TemplateTable.find (List.nth !template_tables_real i)) valuation);
+    decreasing = decreasing_transition;
+    non_increasing = non_increasing_transitions;
+    depth = depth;
+  }
+
 module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
 
 let time_ranking_table: t RankingTable.t = RankingTable.create 10
@@ -217,7 +249,11 @@ let ranking_table = function
   | `Time -> time_ranking_table
   | `Cost -> cost_ranking_table
 
-let try_decreasing depth (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
+(** We are searching for a real model, hence we need to cast reals to integers. *)
+let change_valuation (values: RealPolynomial.valuation) = 
+  Valuation.from (List.map (fun x -> (x,  MPRF_Invariants.Valuation.eval x values |> OurFloat.upper_int)) (MPRF_Invariants.Valuation.vars values))
+
+let try_decreasing ?(inv = false) depth (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
   non_increasing
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
@@ -229,12 +265,23 @@ let try_decreasing depth (opt: SMTSolver.t) (non_increasing: Transition.t Stack.
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
                                                                 "depth", string_of_int depth]));
         SMTSolver.push opt;
-        SMTSolver.add opt (decreasing_constraint depth measure decreasing);
-
+        if inv then (
+          let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !template_tables_real n)) in 
+          SMTSolver.add_real opt (MPRF_Invariants.decreasing_constraint depth measure decreasing templates_real);
+          SMTSolver.add_real opt (MPRF_Invariants.consecution_constraint depth measure decreasing templates_real);
+        ) else (
+          SMTSolver.add opt (decreasing_constraint depth measure decreasing);
+        );
         if SMTSolver.satisfiable opt then (
-          SMTSolver.minimize_absolute opt !fresh_coeffs; (* Check if minimization is forgotten. *)
-          SMTSolver.model opt
-          |> Option.map (make depth decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+          (* SMTSolver.minimize_absolute opt !fresh_coeffs;  Check if minimization is forgotten. *)
+          SMTSolver.model_real opt
+          |> Option.map (
+            if inv then (
+              make_inv depth decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum)
+              % tap (fun x -> MPRF_Invariants.store_inv x decreasing)
+              % tap (fun x -> MPRF_Invariants.store_inv_set x (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+            ) else 
+              make depth decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation)
           |> Option.may (fun ranking_function ->
               to_be_found := !to_be_found - 1;
               RankingTable.add (ranking_table measure) decreasing ranking_function;
@@ -253,25 +300,32 @@ let try_decreasing depth (opt: SMTSolver.t) (non_increasing: Transition.t Stack.
     raise Exit
 
 
-let rec backtrack depth (steps_left: int) (index: int) (opt: SMTSolver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr=
+let rec backtrack ?(inv = false) depth (steps_left: int) (index: int) (opt: SMTSolver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) (program: Program.t) applied_cfr =
     if SMTSolver.satisfiable opt then (
       if steps_left == 0 then (
-        try_decreasing depth opt non_increasing to_be_found measure applied_cfr
+        try_decreasing ~inv:inv depth opt non_increasing to_be_found measure applied_cfr
       ) else (
         for i=index to Array.length scc - 1 do
           let transition = Array.get scc i in
           SMTSolver.push opt;
-          SMTSolver.add opt (non_increasing_constraint depth measure transition);
+          if inv then (
+            let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !template_tables_real n)) in 
+            SMTSolver.add_real opt (MPRF_Invariants.non_increasing_constraint depth measure transition templates_real);
+            SMTSolver.add_real opt (MPRF_Invariants.consecution_constraint depth measure transition templates_real);
+            Program.entry_transitions logger program [transition]
+            |> List.iter (fun trans ->  SMTSolver.add_real opt (MPRF_Invariants.initiation_constraint depth measure trans templates_real));
+          ) else 
+            SMTSolver.add opt (non_increasing_constraint depth measure transition);
           Stack.push transition non_increasing;
-          backtrack depth (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure applied_cfr;
+          backtrack ~inv:inv depth (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure program applied_cfr;
           ignore (Stack.pop non_increasing);
           SMTSolver.pop opt;
         done;
-        try_decreasing depth opt non_increasing to_be_found measure applied_cfr;
+        try_decreasing ~inv:inv depth opt non_increasing to_be_found measure applied_cfr;
       )
     )
 
-let compute_ measure applied_cfr program =
+let compute_ ?(inv = false) measure applied_cfr program =
   program
   |> Program.sccs
   |> Enum.iter (fun scc ->
@@ -279,14 +333,19 @@ let compute_ measure applied_cfr program =
            for depth = 1 to !maxDepth do
            if !numberOfGeneratedTemplates < depth then (
            compute_ranking_templates depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+           if inv then
+            compute_ranking_templates_real depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
            numberOfGeneratedTemplates := depth);
-           backtrack depth (TransitionSet.cardinal scc)
+           backtrack ~inv:inv
+                     depth 
+                     (TransitionSet.cardinal scc)
                      0
                      (SMTSolver.create ())
                      (Array.of_enum (TransitionSet.enum scc))
                      (Stack.create ())
                      (ref (TransitionSet.cardinal scc))
                      measure
+                     program
                      applied_cfr;
           done; 
            scc
@@ -297,19 +356,24 @@ let compute_ measure applied_cfr program =
          with Exit -> ()
         )
 
-let compute_scc measure applied_cfr program scc =
+let compute_scc ?(inv = false) measure applied_cfr program scc =
   try
     for depth = 1 to !maxDepth do
     if !numberOfGeneratedTemplates < depth then (
-    compute_ranking_templates depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+      compute_ranking_templates depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+    if inv then
+      compute_ranking_templates_real depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
     numberOfGeneratedTemplates := depth);
-    backtrack depth (TransitionSet.cardinal scc)
+    backtrack ~inv:inv
+              depth 
+              (TransitionSet.cardinal scc)
               0
               (SMTSolver.create ())
               (Array.of_enum (TransitionSet.enum scc))
               (Stack.create ())
               (ref (TransitionSet.cardinal scc))
               measure
+              program
               applied_cfr;
   done; 
     scc
@@ -320,11 +384,12 @@ let compute_scc measure applied_cfr program scc =
   with Exit -> ()
         
 
-let find measure applied_cfr program transition =
+let find ?(inv = false) measure applied_cfr program transition =
   let execute () =
-    (** or 2 or 3 or ... d *)
-    if RankingTable.is_empty (ranking_table measure) then
-      compute_ measure applied_cfr program;
+    if inv then (
+      if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then
+        MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););    if RankingTable.is_empty (ranking_table measure) then
+      compute_ ~inv:inv measure applied_cfr program;
     (try
        RankingTable.find_all (ranking_table measure) transition
      with Not_found -> [])
@@ -336,10 +401,13 @@ let find measure applied_cfr program transition =
     ~result:(Util.enum_to_string to_string % List.enum)
     execute
 
-let find_scc measure applied_cfr program transition scc =
+let find_scc ?(inv = false) measure applied_cfr program transition scc =
     let execute () =
+    if inv then (
+      if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then
+        MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);); 
     if RankingTable.is_empty (ranking_table measure) then
-      compute_scc measure applied_cfr program scc;
+      compute_scc ~inv:inv measure applied_cfr program scc;
     (try
       RankingTable.find_all (ranking_table measure) transition
     with Not_found -> [])
@@ -354,9 +422,11 @@ let find_scc measure applied_cfr program transition scc =
 (* Useful for testing*)
 let reset () =
   cache#clear;
+  (* MPRF_Invariants.cache#clear; *)
   numberOfGeneratedTemplates := 0;
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
-  for i = 0 to List.length !template_tables - 1 do
-    TemplateTable.clear (List.nth !template_tables i)
-  done
+  if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then 
+    MPRF_Invariants.TemplateTable.clear MPRF_Invariants.template_table_inv;
+  List.iter (fun e -> TemplateTable.clear e) !template_tables;
+  List.iter (fun e -> TemplateTable.clear e) !template_tables_real;

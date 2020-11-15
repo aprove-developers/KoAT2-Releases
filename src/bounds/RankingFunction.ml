@@ -211,15 +211,14 @@ let try_decreasing ?(inv = false) (opt: SMTSolver.t) (non_increasing: Transition
           SMTSolver.add opt (bounded_constraint measure decreasing);
           SMTSolver.add opt (decreasing_constraint measure decreasing);
          );
-                  
          if SMTSolver.satisfiable opt then (   
            (* SMTSolver.minimize_absolute opt !fresh_coeffs; Check if minimization is forgotten. TODO *)
            SMTSolver.model_real opt
            |> Option.map (
               if inv then (
-               make_inv decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+               make_inv decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum)
                % tap (fun x -> Invariants.store_inv x decreasing)
-               % tap (fun x -> Invariants.store_inv_set x (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+               % tap (fun x -> Invariants.store_inv_set x (non_increasing |> Stack.enum |> TransitionSet.of_enum)))
               else 
                make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation)
            |> Option.may (fun ranking_function ->
@@ -352,7 +351,6 @@ let find_scc ?(inv = false) measure applied_cfr program transition scc =
                                                         "transition", Transition.to_id_string transition])
                   ~result:(Util.enum_to_string to_string % List.enum)
                   execute
-
 
 let reset () =
   cache#clear;

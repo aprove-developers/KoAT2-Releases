@@ -149,7 +149,7 @@ let rec improve_timebound_rec ?(mprf = false) ?(inv = false) (scc: TransitionSet
     |> MaybeChanged.fold_enum (
       (fun appr transition ->
           if mprf then
-            MultiphaseRankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc
+            MultiphaseRankingFunction.find_scc ~inv:inv measure (Option.is_some !backtrack_point) program transition scc
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank_mprf measure program appr rank) appr
@@ -176,7 +176,7 @@ let rec improve_timebound_rec ?(mprf = false) ?(inv = false) (scc: TransitionSet
     |> MaybeChanged.fold_enum (
       (fun appr transition ->
           if mprf then
-            MultiphaseRankingFunction.find_scc measure (Option.is_some !backtrack_point) program transition scc
+            MultiphaseRankingFunction.find_scc ~inv:inv measure (Option.is_some !backtrack_point) program transition scc
             |> List.enum
             |> MaybeChanged.fold_enum (fun appr rank ->
                   improve_with_rank_mprf measure program appr rank) appr
