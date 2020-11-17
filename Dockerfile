@@ -30,8 +30,8 @@ RUN RELEASE=1 omake --depend
 
 FROM ubuntu:20.04
 
-RUN apt update
-RUN apt upgrade
+RUN apt -y update
+RUN apt -y upgrade
 RUN apt install -y bash
 RUN apt install -y wget
 RUN apt install -y zip
