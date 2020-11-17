@@ -156,6 +156,12 @@ let rank_from_valuation valuation location =
   |> TemplateTable.find template_table
   |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
 
+let rank_from_valuation_real valuation location =
+  location
+  |> TemplateTable.find template_table_real
+  |> RealParameterPolynomial.to_int_parapoly
+  |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
+
 let make decreasing_transition non_increasing_transitions valuation =
   { 
     rank = rank_from_valuation valuation;
@@ -165,7 +171,7 @@ let make decreasing_transition non_increasing_transitions valuation =
 
 let make_inv decreasing_transition non_increasing_transitions valuation =
   { 
-    rank = Invariants.rank_from_valuation (TemplateTable.find template_table_real) valuation;
+    rank = rank_from_valuation_real valuation;
     decreasing = decreasing_transition;
     non_increasing = non_increasing_transitions;
   }
@@ -211,12 +217,13 @@ let try_decreasing ?(inv = false) (opt: SMTSolver.t) (non_increasing: Transition
           SMTSolver.add opt (bounded_constraint measure decreasing);
           SMTSolver.add opt (decreasing_constraint measure decreasing);
          );
-         if SMTSolver.satisfiable opt then (   
+         if SMTSolver.satisfiable opt then ( 
+           (* SMTSolver.minimize_absolute opt !fresh_coeffs;   *)
            (* SMTSolver.minimize_absolute opt !fresh_coeffs; Check if minimization is forgotten. TODO *)
            SMTSolver.model_real opt
            |> Option.map (
               if inv then (
-               make_inv decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum)
+               make_inv decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation
                % tap (fun x -> Invariants.store_inv x decreasing)
                % tap (fun x -> Invariants.store_inv_set x (non_increasing |> Stack.enum |> TransitionSet.of_enum)))
               else 

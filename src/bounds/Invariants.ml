@@ -159,9 +159,3 @@ let consecution_constraint measure transition template =
 
 let consecution_constraints measure transitions template =
   transitions_constraint measure `Consecution (TransitionSet.to_list transitions)
-
-let rank_from_valuation  template valuation location =
-  location
-  |> template
-  |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero)
-  |> RealPolynomial.to_intpoly 

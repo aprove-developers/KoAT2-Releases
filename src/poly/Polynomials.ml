@@ -381,4 +381,7 @@ module ParameterPolynomial =
     let of_int_parapoly =
       ParameterPolynomial.fold ~const:(of_constant % helper_of_intpoly) ~var:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
 
+    let to_int_parapoly = 
+      fold ~const:(ParameterPolynomial.of_constant % RealPolynomial.to_intpoly) ~var:ParameterPolynomial.of_var ~neg:ParameterPolynomial.neg ~plus:ParameterPolynomial.add ~times:ParameterPolynomial.mul ~pow:ParameterPolynomial.pow
+
   end

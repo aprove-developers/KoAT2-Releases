@@ -69,6 +69,7 @@ sig
 
   val of_intpoly : Polynomial.t -> t
 
-
   val of_int_parapoly : PolynomialOver(PolynomialOver(OurInt)).t -> t
+
+  val to_int_parapoly : t -> PolynomialOver(PolynomialOver(OurInt)).t
 end

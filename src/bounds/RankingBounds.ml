@@ -82,6 +82,17 @@ let compute_bound_mprf (appr: Approximation.t) (program: Program.t) (rank: Multi
      |> Enum.map (fun (l,t,l') ->
             let timebound = Approximation.timebound appr (l,t,l') in
             let rhs = Bound.(max zero (apply (fun kind -> Approximation.sizebound kind appr) (RankingFunction.rank rank l') (l,t,l'))) in
+            let p0 = Polynomial.of_coeff_list [OurInt.of_int (-21)] [Var.of_string "Arg_0"] in
+            let p1 = Polynomial.add (Polynomial.of_int 420) p0 in
+            let appr1 = Approximation.add_sizebound `Lower Bound.one (l,t,l') (Var.of_string "Arg_0") (Approximation.create program) in
+            let appr2 = Approximation.add_sizebound `Upper (Bound.infinity) (l,t,l') (Var.of_string "Arg_0") appr1 in
+            Printf.printf "Poly/RF: %S, appr_upper: %S" (Polynomial.to_string p1) 
+                                                (Bound.to_string 
+                                                (Bound.appr_substitution 
+                                                  `Upper 
+                                                  ~lower:(fun var -> (Approximation.sizebound `Lower appr2 (l,t,l') var))
+                                                  ~higher:(fun var -> (Approximation.sizebound `Upper appr2 (l,t,l') var))
+                                                  (Bound.of_poly p1)));
             Bound.(
               if is_infinity timebound then
                 if equal zero rhs then
