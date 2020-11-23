@@ -133,6 +133,13 @@ let asymptotic_complexity =
       | (Exponential x, Polynomial y) -> Exponential x
     )
     ~inf:Inf
+
+let is_constant bound =
+match (asymptotic_complexity bound) with 
+  | Polynomial 0 -> true
+  | _ -> false
+
+let is_negative (Const x) = (Num.compare x Num.zero) < 0
     
 (** Returns true iff. the bound is in complexity class O(n) *)
 let is_linear bound = 
@@ -504,6 +511,17 @@ let rec appr_substitution kind ~lower ~higher = function
   | Neg b -> neg (appr_substitution (reverse kind) ~lower ~higher b)
   | Sum (b1, b2) -> appr_substitution kind ~lower ~higher b1 + appr_substitution kind ~lower ~higher b2
   | Product (b1, b2) ->
+    if is_constant b1 then (
+      if is_negative b1 then
+        (Neg b1) * (appr_substitution kind ~lower ~higher (Neg b2))
+      else
+        b1 * (appr_substitution kind ~lower ~higher b2)
+    ) else if is_constant b2 then (
+      if is_negative b2 then
+        (appr_substitution kind ~lower ~higher (Neg b1)) * (Neg b2)
+      else
+        (appr_substitution kind ~lower ~higher b1) * b2
+    )else (
      List.cartesian_product [`Lower; `Upper] [`Lower; `Upper]
      |> List.map (fun (kind1,kind2) ->
             let multiplication = appr_substitution kind1 ~lower ~higher b1 * appr_substitution kind2 ~lower ~higher b2 in
@@ -513,7 +531,7 @@ let rec appr_substitution kind ~lower ~higher = function
               multiplication
           )
      |> List.enum
-     |> selector kind
+     |> selector kind)
   | Max (b1, b2) -> max (appr_substitution kind ~lower ~higher b1) (appr_substitution kind ~lower ~higher b2)
   | Pow (k,b) -> Pow (k, appr_substitution kind ~lower ~higher b)
 
