@@ -9,17 +9,34 @@ open CFR
 module SMTSolver = SMT.IncrementalZ3Solver
 module Valuation = Valuation.Make(OurInt)
 
-type measure = [ `Cost | `Time ] [@@deriving show, eq]
-
-type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ] [@@deriving show, eq]
-                     
 type t = {
     rank : Location.t -> Polynomial.t;
     decreasing : Transition.t;
     non_increasing : TransitionSet.t;
   }
 
-let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id)
+type measure = [ `Cost | `Time ] [@@deriving show, eq]
+
+type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ] [@@deriving show, eq]
+
+module TemplateTable = Hashtbl.Make(Location)
+module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
+
+type trans_constraint_cache = < add : (measure * constraint_type * ProgramTypes.Transition.t -> Formula.t) -> measure * constraint_type * ProgramTypes.Transition.t -> Formula.t; clear : unit >
+type ranking_cache = (t RankingTable.t * t RankingTable.t * Polynomials.ParameterPolynomial.t TemplateTable.t * RealParameterPolynomial.t TemplateTable.t * trans_constraint_cache)
+let new_cache: unit -> ranking_cache =
+  fun () -> (RankingTable.create 10, RankingTable.create 10, TemplateTable.create 10, TemplateTable.create 10,  Util.cache ~extractor:(Tuple3.map3 Transition.id))
+
+let get_time_ranking_table     (cache: ranking_cache) = Tuple5.first cache
+let get_cost_ranking_table     (cache: ranking_cache) = Tuple5.second cache
+let get_template_table         (cache: ranking_cache) = Tuple5.third cache
+let get_template_table_real    (cache: ranking_cache) = Tuple5.fourth cache
+let get_trans_constraint_cache (cache: ranking_cache) = Tuple5.fifth cache
+
+let get_ranking_table measure = 
+  match measure with
+  | `Time -> get_time_ranking_table 
+  | `Cost -> get_cost_ranking_table
 
 let one = ParameterPolynomial.one
         
@@ -78,11 +95,6 @@ let ranking_template_real (vars: VarSet.t): RealParameterPolynomial.t * Var.t li
   let constant_poly = RealParameterPolynomial.of_constant (RealPolynomial.of_var constant_var) in
   RealParameterPolynomial.(linear_poly + constant_poly),
   List.append fresh_vars [constant_var]
-   
-module TemplateTable = Hashtbl.Make(Location)
-
-let template_table: ParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
-let template_table_real: RealParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
 
 let fresh_coeffs: Var.t list ref = ref []
 
@@ -110,19 +122,19 @@ let compute_ranking_templates_ (vars: VarSet.t) (locations: Location.t list) ran
                   )
                   execute
 
-let compute_ranking_templates (vars: VarSet.t) (locations: Location.t list) : unit =
-  compute_ranking_templates_ vars locations ranking_template template_table ParameterPolynomial.to_string
+let compute_ranking_templates cache (vars: VarSet.t) (locations: Location.t list) : unit =
+  compute_ranking_templates_ vars locations ranking_template (get_template_table cache) ParameterPolynomial.to_string
 
-let compute_ranking_templates_real (vars: VarSet.t) (locations: Location.t list) : unit =
-  compute_ranking_templates_ vars locations ranking_template_real template_table_real RealParameterPolynomial.to_string
+let compute_ranking_templates_real cache (vars: VarSet.t) (locations: Location.t list) : unit =
+  compute_ranking_templates_ vars locations ranking_template_real (get_template_table_real cache) RealParameterPolynomial.to_string
 
 let decreaser measure t =
   match measure with
   | `Cost -> TransitionLabel.cost t
   | `Time -> Polynomial.one
 
-let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
-  let template = TemplateTable.find template_table in
+let transition_constraint_ cache (measure, constraint_type, (l,t,l')): Formula.t =
+  let template = TemplateTable.find (get_template_table cache) in
   let atom =
     match constraint_type with
     | `Non_Increasing -> ParameterAtom.Infix.(template l >= ParameterPolynomial.substitute_f (as_parapoly t) (template l'))
@@ -132,90 +144,72 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')): Formula.t =
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk  
        
-let transition_constraint = cache#add transition_constraint_
+let transition_constraint cache = (get_trans_constraint_cache cache)#add (transition_constraint_ cache)
   
-let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
+let transitions_constraint cache measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
-  |> List.map (fun t -> transition_constraint (measure, constraint_type, t))
+  |> List.map (fun t -> transition_constraint cache (measure, constraint_type, t))
   |> Formula.all
   
-let non_increasing_constraint measure transition =
-  transition_constraint (measure, `Non_Increasing, transition)
+let non_increasing_constraint cache measure transition =
+  transition_constraint cache (measure, `Non_Increasing, transition)
 
-let non_increasing_constraints measure transitions =
-  transitions_constraint measure `Non_Increasing (TransitionSet.to_list transitions)
+let non_increasing_constraints cache measure transitions =
+  transitions_constraint measure cache `Non_Increasing (TransitionSet.to_list transitions)
   
-let bounded_constraint measure transition =
-  transition_constraint (measure, `Bounded, transition)
+let bounded_constraint cache measure transition =
+  transition_constraint cache (measure, `Bounded, transition)
 
-let decreasing_constraint measure transition =
-  transition_constraint (measure, `Decreasing, transition)
+let decreasing_constraint cache measure transition =
+  transition_constraint cache (measure, `Decreasing, transition)
   
-let rank_from_valuation valuation location =
+let rank_from_valuation cache valuation location =
   location
-  |> TemplateTable.find template_table
+  |> TemplateTable.find (get_template_table cache)
   |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
 
-let rank_from_valuation_real valuation location =
+let rank_from_valuation_real cache valuation location =
   location
-  |> TemplateTable.find template_table_real
+  |> TemplateTable.find (get_template_table_real cache)
   |> RealParameterPolynomial.to_int_parapoly
   |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
 
-let make decreasing_transition non_increasing_transitions valuation =
+let make cache decreasing_transition non_increasing_transitions valuation =
   { 
-    rank = rank_from_valuation valuation;
+    rank = rank_from_valuation cache valuation;
     decreasing = decreasing_transition;
     non_increasing = non_increasing_transitions;
   }
 
-let make_inv decreasing_transition non_increasing_transitions valuation =
+let make_inv cache decreasing_transition non_increasing_transitions valuation =
   { 
-    rank = rank_from_valuation_real valuation;
+    rank = rank_from_valuation_real cache valuation;
     decreasing = decreasing_transition;
     non_increasing = non_increasing_transitions;
   }
-
-(* let find_with measure non_increasing_transitions decreasing_transition =
-  Formula.Infix.(
-    non_increasing_constraints measure non_increasing_transitions
-    && bounded_constraint measure decreasing_transition
-    && decreasing_constraint measure decreasing_transition)
-  |> SMTSolver.get_model ~coeffs_to_minimise:!fresh_coeffs
-  |> Option.map (make decreasing_transition non_increasing_transitions) *)
-  
-module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
-                    
-let time_ranking_table: t RankingTable.t = RankingTable.create 10
-
-let cost_ranking_table: t RankingTable.t = RankingTable.create 10
-
-let ranking_table = function
-  | `Time -> time_ranking_table
-  | `Cost -> cost_ranking_table
 
 (** We are searching for a real model, hence we need to cast reals to integers. *)
 let change_valuation (values: RealPolynomial.valuation) = 
   Valuation.from (List.map (fun x -> (x,  Invariants.Valuation.eval x values |> OurFloat.upper_int)) (Invariants.Valuation.vars values))
 
-let try_decreasing ?(inv = false) (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
+let try_decreasing cache ?(inv = false) (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
   non_increasing
   |> Stack.enum
-  |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
+  |> Enum.filter (fun t -> not (RankingTable.mem (get_ranking_table measure cache) t))
   |> Enum.iter (fun decreasing ->
-         let current_time = Unix.time() in
+         let current_time = Unix.gettimeofday() in
          Logger.(log logger DEBUG (fun () -> "try_decreasing", ["measure", show_measure measure;
                                                                 "decreasing", Transition.to_id_string decreasing;
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing)]));
          SMTSolver.push opt;
          if inv then (
-          let template = TemplateTable.find template_table_real in
+          let template = TemplateTable.find (get_template_table_real cache) in
           SMTSolver.add_real opt (Invariants.bounded_constraint measure decreasing template);
           SMTSolver.add_real opt (Invariants.decreasing_constraint measure decreasing template);
           SMTSolver.add_real opt (Invariants.consecution_constraint measure decreasing template);)
          else (
-          SMTSolver.add opt (bounded_constraint measure decreasing);
-          SMTSolver.add opt (decreasing_constraint measure decreasing);
+          SMTSolver.add opt (bounded_constraint cache measure decreasing);
+          SMTSolver.add opt (decreasing_constraint cache measure decreasing);
          );
          if SMTSolver.satisfiable opt then ( 
            (* SMTSolver.minimize_absolute opt !fresh_coeffs;   *)
@@ -223,14 +217,14 @@ let try_decreasing ?(inv = false) (opt: SMTSolver.t) (non_increasing: Transition
            SMTSolver.model_real opt
            |> Option.map (
               if inv then (
-               make_inv decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation
+               make_inv cache decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation
                % tap (fun x -> Invariants.store_inv x decreasing)
                % tap (fun x -> Invariants.store_inv_set x (non_increasing |> Stack.enum |> TransitionSet.of_enum)))
               else 
-               make decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation)
+               make cache decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation)
            |> Option.may (fun ranking_function ->
                   to_be_found := !to_be_found - 1;
-                  RankingTable.add (ranking_table measure) decreasing ranking_function;
+                  RankingTable.add (get_ranking_table measure cache) decreasing ranking_function;
                   Logger.(log logger INFO (fun () -> "add_ranking_function", [
                                                "measure", show_measure measure;
                                                "decreasing", Transition.to_id_string decreasing;
@@ -239,44 +233,46 @@ let try_decreasing ?(inv = false) (opt: SMTSolver.t) (non_increasing: Transition
                 )
          );
          SMTSolver.pop opt;
-         CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
-         CFR.poll_timeout ~applied_cfr:applied_cfr
+          if applied_cfr then (
+            CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.gettimeofday() -. current_time);
+            CFR.poll_timeout ~applied_cfr:applied_cfr)
        );
   if !to_be_found <= 0 then
     raise Exit
 
            
-let rec backtrack ?(inv = false) (steps_left: int) (index: int) (opt: SMTSolver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) (program: Program.t) applied_cfr =
+let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (opt: SMTSolver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) (program: Program.t) applied_cfr =
   if SMTSolver.satisfiable opt then (
     if steps_left == 0 then (
-      try_decreasing ~inv:inv opt non_increasing to_be_found measure applied_cfr
+      try_decreasing cache ~inv:inv opt non_increasing to_be_found measure applied_cfr
     ) else (
       for i=index to Array.length scc - 1 do
         let transition = Array.get scc i in
         SMTSolver.push opt;
         if inv then (
-          let template_real = TemplateTable.find template_table_real in
+          let template_real = TemplateTable.find (get_template_table_real cache) in
           SMTSolver.add_real opt (Invariants.non_increasing_constraint measure transition template_real);
           SMTSolver.add_real opt (Invariants.consecution_constraint measure transition template_real);
           Program.entry_transitions logger program [transition]
           |> List.iter (fun trans ->  SMTSolver.add_real opt (Invariants.initiation_constraint measure trans template_real));)
         else 
-           SMTSolver.add opt (non_increasing_constraint measure transition);
+           SMTSolver.add opt (non_increasing_constraint cache measure transition);
         Stack.push transition non_increasing;
-        backtrack ~inv:inv (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure program applied_cfr; 
+        backtrack cache ~inv:inv (steps_left - 1) (i + 1) opt scc non_increasing to_be_found measure program applied_cfr; 
         ignore (Stack.pop non_increasing);
         SMTSolver.pop opt;
       done;
-      try_decreasing ~inv:inv opt non_increasing to_be_found measure applied_cfr
+      try_decreasing cache ~inv:inv opt non_increasing to_be_found measure applied_cfr
     )
   )
 
-let compute_ ?(inv = false) measure applied_cfr program =
+let compute_ ?(inv = false) cache measure applied_cfr program =
   program
   |> Program.sccs
   |> Enum.iter (fun scc ->
          try
-           backtrack (TransitionSet.cardinal scc)
+           backtrack cache
+                     (TransitionSet.cardinal scc)
                      0
                      (SMTSolver.create ())
                      (Array.of_enum (TransitionSet.enum scc))
@@ -288,15 +284,16 @@ let compute_ ?(inv = false) measure applied_cfr program =
                      ~inv:inv;
            scc
            |> TransitionSet.iter (fun t ->
-                  if not (RankingTable.mem (ranking_table measure) t) then
+                  if not (RankingTable.mem (get_ranking_table measure cache) t) then
                     Logger.(log logger WARN (fun () -> "no_ranking_function", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
                 )
          with Exit -> ()
        )
 
-let compute_scc ?(inv = false) measure applied_cfr program scc =
+let compute_scc ?(inv = false) cache measure applied_cfr program scc =
   try
-    backtrack (TransitionSet.cardinal scc)
+    backtrack cache
+              (TransitionSet.cardinal scc)
               0
               (SMTSolver.create ())
               (Array.of_enum (TransitionSet.enum scc))
@@ -308,26 +305,27 @@ let compute_scc ?(inv = false) measure applied_cfr program scc =
               ~inv:inv;
     scc
     |> TransitionSet.iter (fun t ->
-          if not (RankingTable.mem (ranking_table measure) t) then
+          if not (RankingTable.mem (get_ranking_table measure cache) t) then
             Logger.(log logger WARN (fun () -> "no_ranking_function", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
         )
   with Exit -> ()
-       
 
-  
-let find ?(inv = false) measure applied_cfr program transition =
-  let execute () =
-    if inv then (
+let check_cache cache ?(inv = false) measure program applied_cfr = 
+  if inv then (
     if Invariants.TemplateTable.is_empty Invariants.template_table_inv then
       Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
-    if TemplateTable.is_empty template_table then
-      compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
-    if TemplateTable.is_empty template_table_real then
-      compute_ranking_templates_real (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);  
-    if RankingTable.is_empty (ranking_table measure) then
-      compute_ measure applied_cfr program ~inv:inv;
+    if TemplateTable.is_empty (get_template_table cache) then
+      compute_ranking_templates cache (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
+    if TemplateTable.is_empty (get_template_table_real cache) then
+      compute_ranking_templates_real cache (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list)
+
+let find cache ?(inv = false) measure applied_cfr program transition =
+  let execute () =
+    check_cache cache ~inv:inv measure program applied_cfr;
+    if RankingTable.is_empty (get_ranking_table measure cache) then
+      compute_ cache measure applied_cfr program ~inv:inv;
     (try
-      RankingTable.find_all (ranking_table measure) transition
+      RankingTable.find_all (get_ranking_table measure cache) transition
     with Not_found -> [])
     |> List.rev
   in
@@ -337,19 +335,13 @@ let find ?(inv = false) measure applied_cfr program transition =
                   ~result:(Util.enum_to_string to_string % List.enum)
                   execute
 
-let find_scc ?(inv = false) measure applied_cfr program transition scc =
+let find_scc cache ?(inv = false) measure applied_cfr program transition scc =
   let execute () =
-    if inv then (
-      if Invariants.TemplateTable.is_empty Invariants.template_table_inv then
-        Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
-    if TemplateTable.is_empty template_table then
-      compute_ranking_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
-    if TemplateTable.is_empty template_table_real then
-      compute_ranking_templates_real (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);  
-    if RankingTable.is_empty (ranking_table measure) then
-      compute_scc measure applied_cfr program scc ~inv:inv;
+      check_cache cache ~inv:inv measure program applied_cfr;
+      if RankingTable.is_empty (get_ranking_table measure cache) then
+        compute_scc cache measure applied_cfr program ~inv:inv scc;
     (try
-      RankingTable.find_all (ranking_table measure) transition
+      RankingTable.find_all (get_ranking_table measure cache) transition
     with Not_found -> [])
     |> List.rev
   in
@@ -359,11 +351,235 @@ let find_scc ?(inv = false) measure applied_cfr program transition scc =
                   ~result:(Util.enum_to_string to_string % List.enum)
                   execute
 
-let reset () =
-  cache#clear;
+
+  module Dijkstra =
+  Graph.Path.Dijkstra
+    (TransitionGraph)
+    (struct
+      type edge = Transition.t
+      type t = int
+      let weight = const 1
+      let compare = compare
+      let add = (+)
+      let zero = 0
+    end)
+
+module TransitionMap = Map.Make(
+  struct
+    type t = Transition.t
+    let compare = Transition.compare_same
+  end)
+
+(* Compute the shortest path from a node to itself while not considering self-loops *)
+let shortest_self_path_no_loop graph l =
+  TransitionGraph.locations graph
+  |> LocationSet.enum
+  |> Enum.filter (not % Location.equal l)
+  |> Enum.map
+      (* Intermediate node not equal to l *)
+      (fun v ->
+          let composed_path () =
+            let (p1, l1) = Dijkstra.shortest_path graph l v in
+            let (p2, l2) = Dijkstra.shortest_path graph v l in
+            Some (p1@p2, l1+l2)
+          in
+          try
+            composed_path ()
+          with Not_found -> None
+      )
+  |> Util.cat_maybes_enum
+  |> List.of_enum
+
+let next_candidates not_added_graph graph =
+  let already_connected_locations = TransitionGraph.locations graph |> LocationSet.enum in
+  (*
+    We want to close circles as fast as possible. Hence for all pairs of already added locations
+    l1 and l2, check how many transitions of the non added transitions must be added to obtain
+    a path l1 -> l2.
+  *)
+  Enum.cartesian_product (Enum.clone already_connected_locations) (Enum.clone already_connected_locations)
+  |> Enum.map
+      (fun (l1,l2) ->
+(*         Dijkstra does not deal with self-loops *)
+        if not (Location.equal l1 l2) then
+          try
+            Some (Dijkstra.shortest_path not_added_graph l1 l2)
+          with Not_found -> None
+        else
+          TransitionGraph.find_all_edges not_added_graph l1 l2
+          |> fun ts ->  List.nth_opt ts 0
+          |> fun o -> if Option.is_none o then List.nth_opt (shortest_self_path_no_loop not_added_graph l1) 0 else o
+          |> Option.map (fun t -> List.singleton t, 1)
+      )
+  |> Util.cat_maybes_enum
+  (* Which transition now is the begin of a path l1->l2? How long is a shortest such path? How many exist there?*)
+  |> Enum.fold
+      (fun tmap (path,length) ->
+        let first_trans = List.hd path in
+        TransitionMap.modify_def
+          ([], Int.max_num) first_trans
+          (fun (paths,length_shortest) -> path::paths, Int.min length length_shortest) tmap
+      )
+      TransitionMap.empty
+  |> TransitionMap.enum
+  |> List.of_enum
+  |> List.sort
+      (fun (gt1,(paths1,min_length1)) (gt,(paths2,min_length2))->
+        compare (min_length1, List.length paths1) (min_length2, List.length paths2))
+  |> List.map (fst % snd)
+  |> List.flatten
+  |> tap (fun l ->
+        Logger.log logger Logger.DEBUG
+        (fun () -> "next_candidates",
+          ["candidates", Util.enum_to_string (Util.enum_to_string Transition.to_id_string) % List.enum @@ List.map List.enum l]
+        )
+      )
+
+let close_next_cycle cache ?(inv = false) program measure solver not_added_graph graph: TransitionSet.t =
+  let all_paths = next_candidates not_added_graph graph in
+  let rec close_circle path: bool * TransitionSet.t = match path with
+    | []    -> true, TransitionSet.empty
+    | e::es ->
+        SMTSolver.push solver;
+        SMTSolver.add solver (non_increasing_constraint cache measure e);
+        if SMTSolver.satisfiable solver then
+          let (closed, non_inc_set) = close_circle es in
+          SMTSolver.pop solver;
+          closed, TransitionSet.add e non_inc_set
+        else
+          (SMTSolver.pop solver; false, TransitionSet.empty)
+  in
+  let rec choose_circle paths tset = match paths with
+    | []    -> tset
+    | p::ps ->
+        let (closed_curr, tset_curr) = close_circle p in
+        if closed_curr then
+          tset_curr
+        else
+          let best_tset =
+            if TransitionSet.cardinal tset >= TransitionSet.cardinal tset_curr then
+              tset
+            else
+              tset_curr
+          in
+          choose_circle ps best_tset
+  in
+  choose_circle all_paths TransitionSet.empty
+  |> tap (fun tset -> Logger.log logger Logger.DEBUG (fun () -> "close_next_cycle", ["add to non_inc_tset", TransitionSet.to_string tset]))
+  (* Add Constraints to the SMTSolver *)
+  |> tap (
+      TransitionSet.iter (fun transition -> 
+      if inv then (
+        let template_real = TemplateTable.find (get_template_table_real cache) in
+        SMTSolver.add_real solver (Invariants.non_increasing_constraint measure transition template_real);
+        SMTSolver.add_real solver (Invariants.consecution_constraint measure transition template_real);
+        Program.entry_transitions logger program [transition]
+        |> List.iter (fun trans ->  SMTSolver.add_real solver (Invariants.initiation_constraint measure trans template_real));)
+      else 
+        SMTSolver.add solver (non_increasing_constraint cache measure transition);)
+      )
+
+
+let find_non_inc_set cache ?(inv = false) program measure solver decreasing try_non_inc_set =
+  let decr_graph =
+    TransitionGraph.empty
+    |> flip TransitionGraph.add_edge_e decreasing
+  in
+  let not_added_graph =
+    TransitionGraph.empty
+    |> TransitionSet.fold (flip TransitionGraph.add_edge_e) try_non_inc_set
+  in
+  let rec try_close_cycles n_a_g g =
+    let next_non_inc_set = close_next_cycle ~inv:inv cache program measure solver n_a_g g in
+    if TransitionSet.is_empty next_non_inc_set then
+      TransitionGraph.transitions g
+    else
+      let n_a_g' = TransitionSet.fold (flip TransitionGraph.remove_edge_e) next_non_inc_set n_a_g in
+      let g' = TransitionSet.fold (flip TransitionGraph.add_edge_e) next_non_inc_set g in
+      try_close_cycles n_a_g' g'
+  in
+
+  try_close_cycles not_added_graph decr_graph
+
+let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program measure all_trans decreasing : unit =  
+  let current_time = Unix.gettimeofday () in  
+  let try_non_inc_set = TransitionSet.remove decreasing all_trans in
+  let solver = SMTSolver.create () in
+  if inv then (
+    let template = TemplateTable.find (get_template_table_real cache) in
+    SMTSolver.add_real solver (Invariants.bounded_constraint measure decreasing template);
+    SMTSolver.add_real solver (Invariants.decreasing_constraint measure decreasing template);
+    SMTSolver.add_real solver (Invariants.consecution_constraint measure decreasing template);)
+    else (
+    SMTSolver.add solver (bounded_constraint cache measure decreasing);
+    SMTSolver.add solver (decreasing_constraint cache measure decreasing););
+  if SMTSolver.satisfiable solver then (
+    let non_inc = find_non_inc_set ~inv:inv cache program measure solver decreasing try_non_inc_set in
+    (* SMTSolver.minimize_absolute_old solver !fresh_coeffs; *)
+    SMTSolver.model_real solver
+    |> Option.map (
+      if inv then (
+        make_inv cache decreasing non_inc % change_valuation
+        % tap (fun x -> Invariants.store_inv x decreasing)
+        % tap (fun x -> Invariants.store_inv_set x non_inc))
+      else 
+        make cache decreasing non_inc % change_valuation)
+    |> Option.may (fun rank_func ->
+      RankingTable.add (get_ranking_table measure cache) decreasing rank_func;
+      Logger.(log logger INFO (fun () -> "add_ranking_function", [
+                                    "measure", show_measure measure;
+                                    "decreasing", Transition.to_id_string decreasing;
+                                    "non_increasing", TransitionSet.to_string non_inc;
+                                    "rank", only_rank_to_string rank_func]))))
+    |> tap (fun _ ->          
+        if applied_cfr then (
+          CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.gettimeofday() -. current_time);
+          CFR.poll_timeout ~applied_cfr:applied_cfr))
+
+let compute_fast cache ?(inv = false) measure applied_cfr program =
+  program
+  |> Program.sccs
+  |> Enum.iter (fun scc -> TransitionSet.iter (compute_and_add_ranking_function cache applied_cfr program measure scc) scc)
+
+let compute_scc_fast cache ?(inv = false) measure applied_cfr program scc =
+  scc
+  |> TransitionSet.iter (compute_and_add_ranking_function cache applied_cfr program measure scc)
+
+let find_fast cache ?(inv = false) measure applied_cfr program transition =
+  let execute () =
+    check_cache cache ~inv:inv measure program applied_cfr;
+    compute_fast cache ~inv:inv measure applied_cfr program;
+    (try
+      RankingTable.find_all (get_ranking_table measure cache) transition
+    with Not_found -> [])
+    |> List.rev
+  in
+  Logger.with_log logger Logger.DEBUG 
+                  (fun () -> "find_ranking_functions_fast", ["measure", show_measure measure;
+                                                        "transition", Transition.to_id_string transition])
+                  ~result:(Util.enum_to_string to_string % List.enum)
+                  execute
+
+let find_scc_fast cache ?(inv = false) measure applied_cfr program transition scc =
+  let execute () =
+      check_cache cache ~inv:inv measure program applied_cfr;
+      compute_scc_fast cache ~inv:inv measure applied_cfr program scc;
+    (try
+      RankingTable.find_all (get_ranking_table measure cache) transition
+    with Not_found -> [])
+    |> List.rev
+  in
+  Logger.with_log logger Logger.DEBUG 
+                  (fun () -> "find_ranking_functions_scc_fast", ["measure", show_measure measure;
+                                                        "transition", Transition.to_id_string transition])
+                  ~result:(Util.enum_to_string to_string % List.enum)
+                  execute
+
+let reset cache =
+  (get_trans_constraint_cache cache)#clear;
   Invariants.cache#clear;
-  RankingTable.clear time_ranking_table;
-  RankingTable.clear cost_ranking_table;
+  RankingTable.clear (get_time_ranking_table cache);
+  RankingTable.clear (get_cost_ranking_table cache);
   Invariants.TemplateTable.clear Invariants.template_table_inv;
-  TemplateTable.clear template_table;
-  TemplateTable.clear template_table_real
+  TemplateTable.clear (get_template_table cache);
+  TemplateTable.clear (get_template_table_real cache)

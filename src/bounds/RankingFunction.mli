@@ -13,6 +13,10 @@ type t
 (** Type of measurement of ranking function, i.e., cost or time. *)
 type measure = [ `Cost | `Time ] [@@deriving show]
 
+type ranking_cache
+
+val new_cache : unit -> ranking_cache
+
 (** Returns the ranking polynomial for the specific location. *)
 val rank : t -> Location.t -> Polynomial.t
 
@@ -25,9 +29,13 @@ val decreasing : t -> Transition.t
 val non_increasing : t -> Transition.t list
 
 (** Finds a suitable ranking function for the given transitions T'. *)
-val find : ?inv:bool ->  measure -> bool -> Program.t -> Transition.t -> t list
+val find : ranking_cache -> ?inv:bool ->  measure -> bool -> Program.t -> Transition.t -> t list
 
-val find_scc : ?inv:bool -> measure -> bool -> Program.t -> Transition.t -> ProgramTypes.TransitionSet.t -> t list
+val find_scc : ranking_cache -> ?inv:bool -> measure -> bool -> Program.t -> Transition.t -> ProgramTypes.TransitionSet.t -> t list
+
+val find_fast : ranking_cache -> ?inv:bool ->  measure -> bool -> Program.t -> Transition.t -> t list
+
+val find_scc_fast : ranking_cache -> ?inv:bool -> measure -> bool -> Program.t -> Transition.t -> ProgramTypes.TransitionSet.t -> t list
 
 (** Converts a ranking function into a string*)
 val to_string : t -> string
@@ -37,4 +45,4 @@ val only_rank_to_string : t -> string
   
 (** Resets all cached data.
     Useful for testing in the same OCaml instance. *)
-val reset : unit -> unit
+val reset : ranking_cache -> unit

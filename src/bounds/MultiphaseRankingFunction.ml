@@ -259,7 +259,7 @@ let try_decreasing ?(inv = false) depth (opt: SMTSolver.t) (non_increasing: Tran
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
   |> Enum.iter (fun decreasing ->
         if not (RankingTable.mem (ranking_table measure) decreasing) then (
-        let current_time = Unix.time() in
+        let current_time = Unix.gettimeofday() in
         Logger.(log logger DEBUG (fun () -> "try_decreasing", ["measure", show_measure measure;
                                                                 "decreasing", Transition.to_id_string decreasing;
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
@@ -293,8 +293,9 @@ let try_decreasing ?(inv = false) depth (opt: SMTSolver.t) (non_increasing: Tran
             )
         );
         SMTSolver.pop opt; 
-        CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
-        CFR.poll_timeout ~applied_cfr:applied_cfr)
+        if applied_cfr then (
+          CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.gettimeofday() -. current_time);
+          CFR.poll_timeout ~applied_cfr:applied_cfr))
     );
   if !to_be_found <= 0 then
     raise Exit

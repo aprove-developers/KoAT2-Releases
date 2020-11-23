@@ -82,3 +82,9 @@ let contains s1 s2 =
     in
         try ignore (Str.search_forward re s1 0); true
         with Not_found -> false
+
+let cat_maybes l=
+  List.map Option.get (List.filter Option.is_some l)
+
+let cat_maybes_enum e =
+  Enum.map Option.get (Enum.filter Option.is_some e)

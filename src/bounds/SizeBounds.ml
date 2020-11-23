@@ -20,11 +20,12 @@ let improve program ?(scc = None) applied_cfr appr =
     |> List.fold_left (fun appr kind ->
            let rvg = RVG.rvg kind program  in
            List.fold_left (fun appr rvg_scc -> 
-              let current_time = Unix.time() in
+              let current_time = Unix.gettimeofday() in
               improve_scc kind program rvg appr rvg_scc
               |> tap (fun _ -> 
-                      CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.time() -. current_time);
-                      CFR.poll_timeout ~applied_cfr:applied_cfr)
+                if applied_cfr then (
+                  CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.gettimeofday() -. current_time);
+                  CFR.poll_timeout ~applied_cfr:applied_cfr))
             ) appr ( 
             if not (Option.is_some scc) then
              (List.rev (C.scc_list rvg))

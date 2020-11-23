@@ -36,7 +36,7 @@ let number_unsolved_trans = ref 0
 
 exception TIMEOUT
 
-(** Set the time which is reserved for this scc: time_left_cfr * #trans_scc/#trans_left *)
+(** Set the time which is reserved for this scc: time_left_cfr * #trans_scc/#trans_left. If we have an infinite transition, we set time_current_cfr to inf. (-1). *)
 let set_time_current_cfr (scc: TransitionSet.t) appr = 
   if !time_cfr >= 0. && (TransitionSet.for_all (fun t -> Approximation.is_time_bounded appr t) scc) then (
     time_cfr := max (!time_cfr -. !delta_current_cfr) 0.;
@@ -47,7 +47,7 @@ let set_time_current_cfr (scc: TransitionSet.t) appr =
     time_current_cfr := -1.)
 
 let poll_timeout ?(applied_cfr = true) =
-  if applied_cfr && !time_current_cfr < !delta_current_cfr  && !time_current_cfr > 0. then
+  if applied_cfr && !time_current_cfr < !delta_current_cfr  && !time_current_cfr > 0. then 
     raise TIMEOUT 
 
 
@@ -234,7 +234,7 @@ let apply_cfr (program: Program.t) appr =
       (fun sccs -> 
       Logger.log logger Logger.INFO
                                 (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter !nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
-      let time_current = Unix.time()
+      let time_current = Unix.gettimeofday()
       and scc_list = TransitionSet.to_list scc in
       let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
 
@@ -265,7 +265,7 @@ let apply_cfr (program: Program.t) appr =
       |> flip TransitionSet.diff scc
       |> TransitionSet.to_list
       |> flip Program.from initial_location
-      |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.time() -. time_current))
+      |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.gettimeofday() -. time_current))
       |> tap (fun _ -> poll_timeout ~applied_cfr:true)) minimalDisjointSCCs
       |> tap (fun _ -> nonLinearTransitions := TransitionSet.empty)
       (* |> Program.rename *)
