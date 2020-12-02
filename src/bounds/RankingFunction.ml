@@ -319,21 +319,23 @@ let check_cache cache ?(inv = false) measure program applied_cfr =
     if TemplateTable.is_empty (get_template_table_real cache) then
       compute_ranking_templates_real cache (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list)
 
+let logging measure transition methode_name = 
+  Logger.with_log logger Logger.DEBUG 
+                  (fun () -> methode_name, ["measure", show_measure measure;
+                                                        "transition", Transition.to_id_string transition])
+                  ~result:(Util.enum_to_string to_string % List.enum)
+
 let find cache ?(inv = false) measure applied_cfr program transition =
   let execute () =
     check_cache cache ~inv:inv measure program applied_cfr;
-    if RankingTable.is_empty (get_ranking_table measure cache) then
+    if RankingTable.is_empty (get_ranking_table measure cache) then 
       compute_ cache measure applied_cfr program ~inv:inv;
     (try
       RankingTable.find_all (get_ranking_table measure cache) transition
     with Not_found -> [])
     |> List.rev
   in
-  Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find_ranking_functions", ["measure", show_measure measure;
-                                                        "transition", Transition.to_id_string transition])
-                  ~result:(Util.enum_to_string to_string % List.enum)
-                  execute
+  logging measure transition "find_ranking_functions" execute
 
 let find_scc cache ?(inv = false) measure applied_cfr program transition scc =
   let execute () =
@@ -345,11 +347,7 @@ let find_scc cache ?(inv = false) measure applied_cfr program transition scc =
     with Not_found -> [])
     |> List.rev
   in
-  Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find_ranking_functions_scc", ["measure", show_measure measure;
-                                                        "transition", Transition.to_id_string transition])
-                  ~result:(Util.enum_to_string to_string % List.enum)
-                  execute
+  logging measure transition "find_ranking_functions_scc" execute
 
 
   module Dijkstra =
@@ -539,41 +537,35 @@ let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program me
 let compute_fast cache ?(inv = false) measure applied_cfr program =
   program
   |> Program.sccs
-  |> Enum.iter (fun scc -> TransitionSet.iter (compute_and_add_ranking_function cache applied_cfr program measure scc) scc)
+  |> Enum.iter (fun scc -> TransitionSet.iter (compute_and_add_ranking_function ~inv:inv cache applied_cfr program measure scc) scc)
 
 let compute_scc_fast cache ?(inv = false) measure applied_cfr program scc =
   scc
-  |> TransitionSet.iter (compute_and_add_ranking_function cache applied_cfr program measure scc)
+  |> TransitionSet.iter (compute_and_add_ranking_function ~inv:inv cache applied_cfr program measure scc)
 
 let find_fast cache ?(inv = false) measure applied_cfr program transition =
   let execute () =
     check_cache cache ~inv:inv measure program applied_cfr;
-    compute_fast cache ~inv:inv measure applied_cfr program;
+    if RankingTable.is_empty (get_ranking_table measure cache) then
+      compute_fast cache ~inv:inv measure applied_cfr program;
     (try
       RankingTable.find_all (get_ranking_table measure cache) transition
     with Not_found -> [])
     |> List.rev
   in
-  Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find_ranking_functions_fast", ["measure", show_measure measure;
-                                                        "transition", Transition.to_id_string transition])
-                  ~result:(Util.enum_to_string to_string % List.enum)
-                  execute
+  logging measure transition "find_ranking_functions_fast" execute
 
 let find_scc_fast cache ?(inv = false) measure applied_cfr program transition scc =
   let execute () =
-      check_cache cache ~inv:inv measure program applied_cfr;
+    check_cache cache ~inv:inv measure program applied_cfr;
+    if RankingTable.is_empty (get_ranking_table measure cache) then
       compute_scc_fast cache ~inv:inv measure applied_cfr program scc;
     (try
       RankingTable.find_all (get_ranking_table measure cache) transition
     with Not_found -> [])
     |> List.rev
   in
-  Logger.with_log logger Logger.DEBUG 
-                  (fun () -> "find_ranking_functions_scc_fast", ["measure", show_measure measure;
-                                                        "transition", Transition.to_id_string transition])
-                  ~result:(Util.enum_to_string to_string % List.enum)
-                  execute
+  logging measure transition "find_ranking_functions_scc_fast" execute
 
 let reset cache =
   (get_trans_constraint_cache cache)#clear;
