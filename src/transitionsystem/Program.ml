@@ -164,7 +164,7 @@ let is_initial_location program location =
   Location.(equal (program.start) location)
 
 let to_string ?(to_file = false) program  =
-  let transitions = String.concat "\n  " (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_id_string t)]) program.graph [])
+  let transitions = String.concat "\n  " (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string t)]) program.graph [])
   and locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
   if not to_file then
   String.concat "  " [

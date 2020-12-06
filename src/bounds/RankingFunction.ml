@@ -316,7 +316,7 @@ let check_cache cache ?(inv = false) measure program applied_cfr =
       Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
     if TemplateTable.is_empty (get_template_table cache) then
       compute_ranking_templates cache (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
-    if TemplateTable.is_empty (get_template_table_real cache) then
+    if TemplateTable.is_empty (get_template_table_real cache) && inv then
       compute_ranking_templates_real cache (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list)
 
 let logging measure transition methode_name = 
@@ -388,6 +388,32 @@ let shortest_self_path_no_loop graph l =
   |> Util.cat_maybes_enum
   |> List.of_enum
 
+(* *)
+let get_dijkstra_shortest_paths graph l1 l2  =
+  try
+    let (path, length) = Dijkstra.shortest_path graph l1 l2 in
+    let loc_path = List.map Transition.target path in
+    (* this list contains lists of transitions that are parallel and connect the corresponding nodes of loc_path *)
+    let all_parallel_trans =
+      Tuple2.first @@ List.fold_left
+        (fun (ps, curr_loc) next_loc ->
+          let par_trans = TransitionGraph.find_all_edges graph curr_loc next_loc in
+          (List.append ps (List.singleton par_trans), next_loc)
+        )
+        ([], l1)
+        loc_path
+    in
+    (* all possible parallel paths along loc_path *)
+    let all_par_paths =
+      List.fold_left (fun ps next_ts -> ListMonad.Monad.(next_ts >>= fun t -> List.map (fun p -> p@[t]) ps))
+        [[]]
+        all_parallel_trans
+    in
+    all_par_paths
+    |> List.enum
+    |> Enum.map (fun path -> path, length)
+  with Not_found -> Enum.empty ()
+
 let next_candidates not_added_graph graph =
   let already_connected_locations = TransitionGraph.locations graph |> LocationSet.enum in
   (*
@@ -400,16 +426,14 @@ let next_candidates not_added_graph graph =
       (fun (l1,l2) ->
 (*         Dijkstra does not deal with self-loops *)
         if not (Location.equal l1 l2) then
-          try
-            Some (Dijkstra.shortest_path not_added_graph l1 l2)
-          with Not_found -> None
+          get_dijkstra_shortest_paths not_added_graph l1 l2
         else
           TransitionGraph.find_all_edges not_added_graph l1 l2
-          |> fun ts ->  List.nth_opt ts 0
-          |> fun o -> if Option.is_none o then List.nth_opt (shortest_self_path_no_loop not_added_graph l1) 0 else o
-          |> Option.map (fun t -> List.singleton t, 1)
+          |> List.enum
+          |> Enum.map (fun t -> [t], 1)
+          |> Enum.append (List.enum @@ shortest_self_path_no_loop not_added_graph l1)
       )
-  |> Util.cat_maybes_enum
+  |> Enum.flatten
   (* Which transition now is the begin of a path l1->l2? How long is a shortest such path? How many exist there?*)
   |> Enum.fold
       (fun tmap (path,length) ->
@@ -439,8 +463,15 @@ let close_next_cycle cache ?(inv = false) program measure solver not_added_graph
     | []    -> true, TransitionSet.empty
     | e::es ->
         SMTSolver.push solver;
+      if inv then 
+        let template_real = TemplateTable.find (get_template_table_real cache) in
+        SMTSolver.add_real solver (Invariants.non_increasing_constraint measure e template_real);
+        SMTSolver.add_real solver (Invariants.consecution_constraint measure e template_real);
+        Program.entry_transitions logger program [e]
+        |> List.iter (fun trans ->  SMTSolver.add_real solver (Invariants.initiation_constraint measure trans template_real));
+      else 
         SMTSolver.add solver (non_increasing_constraint cache measure e);
-        if SMTSolver.satisfiable solver then
+      if SMTSolver.satisfiable solver then
           let (closed, non_inc_set) = close_circle es in
           SMTSolver.pop solver;
           closed, TransitionSet.add e non_inc_set
@@ -467,12 +498,12 @@ let close_next_cycle cache ?(inv = false) program measure solver not_added_graph
   (* Add Constraints to the SMTSolver *)
   |> tap (
       TransitionSet.iter (fun transition -> 
-      if inv then (
+      if inv then 
         let template_real = TemplateTable.find (get_template_table_real cache) in
         SMTSolver.add_real solver (Invariants.non_increasing_constraint measure transition template_real);
         SMTSolver.add_real solver (Invariants.consecution_constraint measure transition template_real);
         Program.entry_transitions logger program [transition]
-        |> List.iter (fun trans ->  SMTSolver.add_real solver (Invariants.initiation_constraint measure trans template_real));)
+        |> List.iter (fun trans ->  SMTSolver.add_real solver (Invariants.initiation_constraint measure trans template_real));
       else 
         SMTSolver.add solver (non_increasing_constraint cache measure transition);)
       )
@@ -496,7 +527,6 @@ let find_non_inc_set cache ?(inv = false) program measure solver decreasing try_
       let g' = TransitionSet.fold (flip TransitionGraph.add_edge_e) next_non_inc_set g in
       try_close_cycles n_a_g' g'
   in
-
   try_close_cycles not_added_graph decr_graph
 
 let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program measure all_trans decreasing : unit =  

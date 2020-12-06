@@ -468,6 +468,32 @@ let shortest_self_path_no_loop graph l =
   |> Util.cat_maybes_enum
   |> List.of_enum
 
+(* *)
+let get_dijkstra_shortest_paths graph l1 l2  =
+  try
+    let (path, length) = Dijkstra.shortest_path graph l1 l2 in
+    let loc_path = List.map Transition.target path in
+    (* this list contains lists of transitions that are parallel and connect the corresponding nodes of loc_path *)
+    let all_parallel_trans =
+      Tuple2.first @@ List.fold_left
+        (fun (ps, curr_loc) next_loc ->
+          let par_trans = TransitionGraph.find_all_edges graph curr_loc next_loc in
+          (List.append ps (List.singleton par_trans), next_loc)
+        )
+        ([], l1)
+        loc_path
+    in
+    (* all possible parallel paths along loc_path *)
+    let all_par_paths =
+      List.fold_left (fun ps next_ts -> ListMonad.Monad.(next_ts >>= fun t -> List.map (fun p -> p@[t]) ps))
+        [[]]
+        all_parallel_trans
+    in
+    all_par_paths
+    |> List.enum
+    |> Enum.map (fun path -> path, length)
+  with Not_found -> Enum.empty ()
+
 let next_candidates not_added_graph graph =
   let already_connected_locations = TransitionGraph.locations graph |> LocationSet.enum in
   (*
@@ -480,16 +506,14 @@ let next_candidates not_added_graph graph =
       (fun (l1,l2) ->
 (*         Dijkstra does not deal with self-loops *)
         if not (Location.equal l1 l2) then
-          try
-            Some (Dijkstra.shortest_path not_added_graph l1 l2)
-          with Not_found -> None
+          get_dijkstra_shortest_paths not_added_graph l1 l2
         else
           TransitionGraph.find_all_edges not_added_graph l1 l2
-          |> fun ts ->  List.nth_opt ts 0
-          |> fun o -> if Option.is_none o then List.nth_opt (shortest_self_path_no_loop not_added_graph l1) 0 else o
-          |> Option.map (fun t -> List.singleton t, 1)
+          |> List.enum
+          |> Enum.map (fun t -> [t], 1)
+          |> Enum.append (List.enum @@ shortest_self_path_no_loop not_added_graph l1)
       )
-  |> Util.cat_maybes_enum
+  |> Enum.flatten
   (* Which transition now is the begin of a path l1->l2? How long is a shortest such path? How many exist there?*)
   |> Enum.fold
       (fun tmap (path,length) ->
@@ -519,7 +543,14 @@ let close_next_cycle cache depth ?(inv = false) program measure solver not_added
     | []    -> true, TransitionSet.empty
     | e::es ->
         SMTSolver.push solver;
-        SMTSolver.add solver (non_increasing_constraint cache depth measure e);
+        if inv then 
+          let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in
+          SMTSolver.add_real solver (MPRF_Invariants.non_increasing_constraint depth measure e templates_real);
+          SMTSolver.add_real solver (MPRF_Invariants.consecution_constraint depth measure e templates_real);
+          Program.entry_transitions logger program [e]
+          |> List.iter (fun trans ->  SMTSolver.add_real solver (MPRF_Invariants.initiation_constraint depth measure trans templates_real));
+        else
+          SMTSolver.add solver (non_increasing_constraint cache depth measure e);
         if SMTSolver.satisfiable solver then
           let (closed, non_inc_set) = close_circle es in
           SMTSolver.pop solver;
@@ -547,12 +578,12 @@ let close_next_cycle cache depth ?(inv = false) program measure solver not_added
   (* Add Constraints to the SMTSolver *)
   |> tap (
       TransitionSet.iter (fun transition -> 
-      if inv then (
+      if inv then 
         let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in
-          SMTSolver.add_real solver (MPRF_Invariants.decreasing_constraint depth measure transition templates_real);
+          SMTSolver.add_real solver (MPRF_Invariants.non_increasing_constraint depth measure transition templates_real);
           SMTSolver.add_real solver (MPRF_Invariants.consecution_constraint depth measure transition templates_real);
         Program.entry_transitions logger program [transition]
-        |> List.iter (fun trans ->  SMTSolver.add_real solver (MPRF_Invariants.initiation_constraint depth measure trans templates_real));)
+        |> List.iter (fun trans ->  SMTSolver.add_real solver (MPRF_Invariants.initiation_constraint depth measure trans templates_real));
       else 
         SMTSolver.add solver (non_increasing_constraint cache depth measure transition);)
       )
@@ -576,12 +607,11 @@ let find_non_inc_set cache depth ?(inv = false) program measure solver decreasin
       let g' = TransitionSet.fold (flip TransitionGraph.add_edge_e) next_non_inc_set g in
       try_close_cycles n_a_g' g'
   in
-
   try_close_cycles not_added_graph decr_graph
 
 let compute_and_add_ranking_function cache depth ?(inv = false) applied_cfr program measure all_trans decreasing : unit =  
   let current_time = Unix.gettimeofday () in  
-    for depth = 1 to !maxDepth do
+    for depth = 1 to 1 do (* TODO *)
       if !numberOfGeneratedTemplates < depth then (
         compute_ranking_templates cache depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
         if inv then
@@ -590,14 +620,12 @@ let compute_and_add_ranking_function cache depth ?(inv = false) applied_cfr prog
     done;
   let try_non_inc_set = TransitionSet.remove decreasing all_trans in
   let solver = SMTSolver.create () in
-  if inv then (
+  if inv then 
     let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in 
-    SMTSolver.add_real solver (MPRF_Invariants.non_increasing_constraint depth measure decreasing templates_real);
+    SMTSolver.add_real solver (MPRF_Invariants.decreasing_constraint depth measure decreasing templates_real);
     SMTSolver.add_real solver (MPRF_Invariants.consecution_constraint depth measure decreasing templates_real);
-    Program.entry_transitions logger program [decreasing]
-    |> List.iter (fun trans ->  SMTSolver.add_real solver (MPRF_Invariants.initiation_constraint depth measure trans templates_real));
-  ) else 
-    SMTSolver.add solver (non_increasing_constraint cache depth measure decreasing);
+  else 
+    SMTSolver.add solver (decreasing_constraint cache depth measure decreasing);
   if SMTSolver.satisfiable solver then (
     let non_inc = find_non_inc_set ~inv:inv cache depth program measure solver decreasing try_non_inc_set in
     (* SMTSolver.minimize_absolute_old solver !fresh_coeffs; *)
