@@ -388,7 +388,7 @@ let compute_scc cache ?(inv = false) measure applied_cfr program scc =
     scc
     |> TransitionSet.iter (fun t ->
           if not (RankingTable.mem (ranking_table measure) t) then
-            Logger.(log logger WARN (fun () -> "no_mrf", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
+            Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
         ) 
   with Exit -> ()
         
@@ -611,43 +611,45 @@ let find_non_inc_set cache depth ?(inv = false) program measure solver decreasin
 
 let compute_and_add_ranking_function cache depth ?(inv = false) applied_cfr program measure all_trans decreasing : unit =  
   let current_time = Unix.gettimeofday () in  
-    for depth = 1 to 1 do (* TODO *)
-      if !numberOfGeneratedTemplates < depth then (
-        compute_ranking_templates cache depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+  try
+    for current_depth = 1 to depth do (* TODO *)
+      if !numberOfGeneratedTemplates < current_depth then (
+        compute_ranking_templates cache current_depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
         if inv then
-          compute_ranking_templates_real cache depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-        numberOfGeneratedTemplates := depth)
-    done;
-  let try_non_inc_set = TransitionSet.remove decreasing all_trans in
-  let solver = SMTSolver.create () in
-  if inv then 
-    let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in 
-    SMTSolver.add_real solver (MPRF_Invariants.decreasing_constraint depth measure decreasing templates_real);
-    SMTSolver.add_real solver (MPRF_Invariants.consecution_constraint depth measure decreasing templates_real);
-  else 
-    SMTSolver.add solver (decreasing_constraint cache depth measure decreasing);
-  if SMTSolver.satisfiable solver then (
-    let non_inc = find_non_inc_set ~inv:inv cache depth program measure solver decreasing try_non_inc_set in
-    (* SMTSolver.minimize_absolute_old solver !fresh_coeffs; *)
-    SMTSolver.model_real solver
-    |> Option.map (
-      if inv then (
-        make_inv cache depth decreasing non_inc
-        % tap (fun x -> MPRF_Invariants.store_inv x decreasing)
-        % tap (fun x -> MPRF_Invariants.store_inv_set x non_inc)
-      ) else 
-        make cache depth decreasing non_inc % change_valuation)
-    |> Option.may (fun rank_func ->
-      RankingTable.add (get_ranking_table measure cache) decreasing rank_func;
-      Logger.(log logger INFO (fun () -> "add_ranking_function", [
-                                    "measure", show_measure measure;
-                                    "decreasing", Transition.to_id_string decreasing;
-                                    "non_increasing", TransitionSet.to_string non_inc;
-                                    "rank", only_rank_to_string rank_func]))))
-    |> tap (fun _ ->          
-        if applied_cfr then (
-          CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.gettimeofday() -. current_time);
-          CFR.poll_timeout ~applied_cfr:applied_cfr))
+          compute_ranking_templates_real cache current_depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+        numberOfGeneratedTemplates := current_depth);
+    let try_non_inc_set = TransitionSet.remove decreasing all_trans in
+    let solver = SMTSolver.create () in
+    if inv then 
+      let templates_real = List.init current_depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in 
+      SMTSolver.add_real solver (MPRF_Invariants.decreasing_constraint current_depth measure decreasing templates_real);
+      SMTSolver.add_real solver (MPRF_Invariants.consecution_constraint current_depth measure decreasing templates_real);
+    else 
+      SMTSolver.add solver (decreasing_constraint cache current_depth measure decreasing);
+    if SMTSolver.satisfiable solver then (
+      let non_inc = find_non_inc_set ~inv:inv cache current_depth program measure solver decreasing try_non_inc_set in
+      (* SMTSolver.minimize_absolute_old solver !fresh_coeffs; *)
+      SMTSolver.model_real solver
+      |> Option.map (
+        if inv then (
+          make_inv cache current_depth decreasing non_inc
+          % tap (fun x -> MPRF_Invariants.store_inv x decreasing)
+          % tap (fun x -> MPRF_Invariants.store_inv_set x non_inc)
+        ) else 
+          make cache current_depth decreasing non_inc % change_valuation)
+      |> Option.may (fun rank_func ->
+        RankingTable.add (get_ranking_table measure cache) decreasing rank_func;
+        Logger.(log logger INFO (fun () -> "add_ranking_function", [
+                                      "measure", show_measure measure;
+                                      "decreasing", Transition.to_id_string decreasing;
+                                      "non_increasing", TransitionSet.to_string non_inc;
+                                      "rank", only_rank_to_string rank_func])))
+      |> tap (fun _ -> raise Exit))
+        done;
+    with Exit -> (         
+      if applied_cfr then (
+        CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.gettimeofday() -. current_time);
+        CFR.poll_timeout ~applied_cfr:applied_cfr))
 
 let compute_fast cache ?(inv = false) measure applied_cfr program =
   program
