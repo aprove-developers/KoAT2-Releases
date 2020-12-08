@@ -39,6 +39,8 @@
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="Readers" rel="Chapter" href="Readers.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
 <link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
@@ -62,6 +64,7 @@
 <link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
 <link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="ProofOutput" rel="Chapter" href="ProofOutput.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : GraphPrint</title>
 </head>
 <body>
@@ -73,7 +76,7 @@
 
 <pre><span id="MODULEGraphPrint"><span class="keyword">module</span> GraphPrint</span>: <code class="code">sig</code> <a href="GraphPrint.html">..</a> <code class="code">end</code></pre><hr width="100%">
 
-<pre><span id="VALprint_graph"><span class="keyword">val</span> print_graph</span> : <code class="type">Fpath.t -><br>       string -> 'a -> (Stdlib.Pervasives.out_channel -> 'a -> 'b) -> unit</code></pre>
+<pre><span id="VALprint_graph"><span class="keyword">val</span> print_graph</span> : <code class="type">Fpath.t -> string -> 'a -> (Stdlib.out_channel -> 'a -> 'b) -> unit</code></pre>
 <pre><span id="VALprint_system"><span class="keyword">val</span> print_system</span> : <code class="type">label:(<a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> string) -><br>       outdir:Fpath.t -> file:string -> <a href="Program.html#TYPEt">Program.t</a> -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program. 

@@ -39,6 +39,8 @@
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="Readers" rel="Chapter" href="Readers.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
 <link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
@@ -62,6 +64,7 @@
 <link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
 <link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="ProofOutput" rel="Chapter" href="ProofOutput.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : TrivialSizeBounds</title>
 </head>
 <body>
@@ -87,7 +90,7 @@
 </div>
 </div>
 
-<pre><span id="VALcompute"><span class="keyword">val</span> compute</span> : <code class="type">[ `Lower | `Upper ] -><br>       <a href="Program.html#TYPEt">Program.t</a> -><br>       ([ `Lower | `Upper ] -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">Bound.t</a>) -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">Bound.t</a></code></pre><div class="info ">
+<pre><span id="VALcompute"><span class="keyword">val</span> compute</span> : <code class="type"><a href="TrivialSizeBounds.html#TYPEkind">kind</a> -><br>       <a href="Program.html#TYPEt">Program.t</a> -><br>       ([ `Lower | `Upper ] -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">Bound.t</a>) -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> <a href="Bound.html#TYPEt">Bound.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'.</p>

@@ -34,6 +34,8 @@
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="Readers" rel="Chapter" href="Readers.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeApproximation" rel="Chapter" href="SizeApproximation.html">
 <link title="TransitionApproximation" rel="Chapter" href="TransitionApproximation.html">
@@ -57,6 +59,7 @@
 <link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
 <link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="ProofOutput" rel="Chapter" href="ProofOutput.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html"><title>Koat2 : Approximation</title>
 </head>
 <body>
@@ -68,7 +71,7 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;time&nbsp;:&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionApproximation</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;size&nbsp;:&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">SizeApproximation</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;cost&nbsp;:&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionApproximation</span>.t<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;?html:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;equivalent&nbsp;:&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;timebound&nbsp;:&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Bound</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;timebound_id&nbsp;:&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Bound</span>.t<br>
