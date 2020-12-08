@@ -41,9 +41,9 @@
 
 %{
   open BatTuple
-  module Constr = Constraints.Constraint
+  open Constraints
   open Atoms
-  module Poly = Polynomials.Polynomial
+  open Polynomials
   open Formulas
   open ProgramTypes
 %}
@@ -101,7 +101,7 @@ cost :
         |       MINUS LBRACE ub = polynomial RBRACE GREATERTHAN
                   { ub }
         |       ARROW
-                  { Poly.one };
+                  { Polynomial.one };
 transition_lhs :
 	|	start = ID; patterns = delimited(LPAR, separated_list(COMMA, ID), RPAR)
 	          { (start, patterns) } ;
@@ -129,7 +129,7 @@ formula :
 
 onlyConstraints :
         |       constr = separated_list(AND, constraint_atom) EOF
-                  { Constr.all constr } ;
+                  { Constraint.all constr } ;
         
 formula_constraint :
         |       constr = separated_list(AND, formula_atom)
@@ -154,11 +154,11 @@ formula_atom :
   	| 	LESSEQUAL { Atom.mk_le } ;
 
 %inline constraint_comparator :
-  	| 	EQUAL { Constr.mk_eq }
-  	| 	GREATERTHAN { Constr.mk_gt }
-  	| 	GREATEREQUAL { Constr.mk_ge }
-  	| 	LESSTHAN { Constr.mk_lt }
-  	| 	LESSEQUAL { Constr.mk_le } ;
+  	| 	EQUAL { Constraint.mk_eq }
+  	| 	GREATERTHAN { Constraint.mk_gt }
+  	| 	GREATEREQUAL { Constraint.mk_ge }
+  	| 	LESSTHAN { Constraint.mk_lt }
+  	| 	LESSEQUAL { Constraint.mk_le } ;
 
 %inline formula_comparator :
   	| 	EQUAL { Formula.mk_eq }
@@ -174,21 +174,21 @@ onlyPolynomial :
 
 variable :
 	|	v = ID
-                  { Poly.var v } ;
+                  { Polynomial.var v } ;
 
 polynomial :
 	|       v = variable
                   { v }
 	| 	c = UINT
-                  { Poly.value c }
+                  { Polynomial.value c }
 	|	LPAR; ex = polynomial; RPAR
                   { ex }
 	|       MINUS; ex = polynomial
-	          { Poly.neg ex }
+	          { Polynomial.neg ex }
 	|       p1 = polynomial; op = bioperator; p2 = polynomial
 	          { op p1 p2 }
 	|       v = variable; POW; c = UINT
-	          { Poly.pow v c } ;
+	          { Polynomial.pow v c } ;
 
 onlyBound :
         |       b = bound EOF { b } ;
@@ -221,6 +221,6 @@ bound :
 	|       MINUS { Bound.sub } ;
 
 %inline bioperator :
-	|	PLUS { Poly.add }
-	|	TIMES { Poly.mul }
-	|       MINUS { Poly.sub } ;
+	|	PLUS { Polynomial.add }
+	|	TIMES { Polynomial.mul }
+	|       MINUS { Polynomial.sub } ;
