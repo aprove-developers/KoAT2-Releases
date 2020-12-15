@@ -113,11 +113,14 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')) template: RealFo
     | `Decreasing -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.(of_intpoly (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
     | `Bounded -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.of_intpoly (decreaser measure t))  
   in
-  let constr = 
+  let constr =
     match constraint_type with
     (** TODO build up a look up table for already calculated invariants and use them as initiation. *)
-    | `Initiation -> RealParameterConstraint.(mk_and (RealParameterConstraint.of_realconstraint (get_inv l)) (of_intconstraint(TransitionLabel.guard t)))
-    | _ -> RealParameterConstraint.(mk_and (mk [RealParameterAtom.Infix.(RealParameterPolynomial.zero >= template_inv l)]) (of_intconstraint(TransitionLabel.guard t))) 
+    | `Initiation -> RealParameterConstraint.(mk_and (of_realconstraint(get_inv l)) (of_intconstraint (TransitionLabel.guard t)))
+    | _ -> RealParameterConstraint.(mk_and (mk_and 
+                                      (of_realconstraint(get_inv l))
+                                      (mk [RealParameterAtom.Infix.(template_inv l <= RealParameterPolynomial.zero)]))
+                                      (of_intconstraint (TransitionLabel.guard t)))
   in
   RealParameterConstraint.farkas_transform constr atom
   |> RealFormula.mk

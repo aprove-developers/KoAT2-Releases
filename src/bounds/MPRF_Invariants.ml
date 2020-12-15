@@ -102,6 +102,15 @@ let decreaser measure t =
   | `Cost -> TransitionLabel.cost t
   | `Time -> Polynomial.one
 
+let log_constraints logger measure constraint_type t constr atom formula =  
+  Logger.(log logger DEBUG (fun () -> "transition_constraint_", [
+                                              "measure", show_measure measure;
+                                              "constraint_type", show_constraint_type constraint_type;
+                                              "transition", Transition.to_id_string t;
+                                              "constraint ", RealParameterConstraint.to_string constr;
+                                              "atom", RealParameterAtom.to_string atom;
+                                              "formula: ", RealFormula.to_string formula]))
+
 (* Methods define properties of mrf *)
 (* method for mrf and functions f_2 to f_d of depth i *)
 let transition_constraint_i (template0, template1, measure, constraint_type, (l,t,l')): RealFormula.t =
@@ -118,18 +127,15 @@ let transition_constraint_i (template0, template1, measure, constraint_type, (l,
   let constr = 
     match constraint_type with
     (** TODO build up a look up table for already calculated invariants and use them as initiation. *)
-    | `Initiation -> RealParameterConstraint.(mk_and (RealParameterConstraint.of_realconstraint (get_inv l)) (of_intconstraint(TransitionLabel.guard t)))
-    | _ -> RealParameterConstraint.(mk_and (mk [RealParameterAtom.Infix.(RealParameterPolynomial.zero >= template_inv l)]) (of_intconstraint(TransitionLabel.guard t))) 
+    | `Initiation -> RealParameterConstraint.(mk_and (of_realconstraint(get_inv l)) (of_intconstraint (TransitionLabel.guard t)))
+    | _ -> RealParameterConstraint.(mk_and (mk_and 
+                                      (of_realconstraint(get_inv l))
+                                      (mk [RealParameterAtom.Infix.(template_inv l <= RealParameterPolynomial.zero)]))
+                                      (of_intconstraint (TransitionLabel.guard t)))
   in
   RealParameterConstraint.farkas_transform constr atom
   |> RealFormula.mk
-  |> tap (fun formula -> Logger.(log logger DEBUG (fun () -> "transition_constraint_", [
-                                              "measure", show_measure measure;
-                                              "constraint_type", show_constraint_type constraint_type;
-                                              "transition", Transition.to_id_string (l,t,l');
-                                              "constraint ", RealParameterConstraint.to_string constr;
-                                              "atom", RealParameterAtom.to_string atom;
-                                              "formula: ", RealFormula.to_string formula])))
+  |> tap (fun formula -> log_constraints logger measure constraint_type (l,t,l') constr atom formula)
 
 (* method for mrf and function f_1*)
 let transition_constraint_1 (template1, measure, constraint_type, (l,t,l')): RealFormula.t =
@@ -145,21 +151,19 @@ let transition_constraint_1 (template1, measure, constraint_type, (l,t,l')): Rea
   let constr = 
     match constraint_type with
     (** TODO build up a look up table for already calculated invariants and use them as initiation. *)
-    | `Initiation -> RealParameterConstraint.(mk_and (RealParameterConstraint.of_realconstraint (get_inv l)) (of_intconstraint(TransitionLabel.guard t)))
-    | _ -> RealParameterConstraint.(mk_and (mk [RealParameterAtom.Infix.(RealParameterPolynomial.zero >= template_inv l)]) (of_intconstraint(TransitionLabel.guard t))) 
+    | `Initiation -> RealParameterConstraint.(mk_and (of_realconstraint(get_inv l)) (of_intconstraint (TransitionLabel.guard t)))
+    | _ -> RealParameterConstraint.(mk_and (mk_and 
+                                      (of_realconstraint(get_inv l))
+                                      (mk [RealParameterAtom.Infix.(template_inv l <= RealParameterPolynomial.zero)]))
+                                      (of_intconstraint (TransitionLabel.guard t)))
   in
   RealParameterConstraint.farkas_transform constr atom
   |> RealFormula.mk
-  |> tap (fun formula -> Logger.(log logger DEBUG (fun () -> "transition_constraint_", [
-                                              "measure", show_measure measure;
-                                              "constraint_type", show_constraint_type constraint_type;
-                                              "transition", Transition.to_id_string (l,t,l');
-                                              "constraint ", RealParameterConstraint.to_string constr;
-                                              "atom", RealParameterAtom.to_string atom;
-                                              "formula: ", RealFormula.to_string formula])))
+  |> tap (fun formula -> log_constraints logger measure constraint_type (l,t,l') constr atom formula)
+
 
 (* method for mrf and function f_d*)
-let transition_constraint_d (template1, measure, constraint_type, (l,t,l')): RealFormula.t =
+let transition_constraint_d bound (template1, measure, constraint_type, (l,t,l')): RealFormula.t =
   let template_inv = TemplateTable.find template_table_inv in
   let atom =
     match constraint_type with
@@ -167,23 +171,21 @@ let transition_constraint_d (template1, measure, constraint_type, (l,t,l')): Rea
     | `Disability -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.one)
     | `Consecution -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.substitute_f (as_parapoly t) (template_inv l'))
     | `Non_Increasing -> RealParameterAtom.Infix.(RealParameterPolynomial.one >= RealParameterPolynomial.zero)
-    | `Decreasing  -> RealParameterAtom.Infix.((template1 l) >= RealParameterPolynomial.zero) 
+    | `Decreasing  -> RealParameterAtom.Infix.((template1 l) >= bound) 
     in
   let constr = 
     match constraint_type with
     (** TODO build up a look up table for already calculated invariants and use them as initiation. *)
-    | `Initiation -> RealParameterConstraint.(mk_and (RealParameterConstraint.of_realconstraint (get_inv l)) (of_intconstraint(TransitionLabel.guard t)))
-    | _ -> RealParameterConstraint.(mk_and (mk [RealParameterAtom.Infix.(RealParameterPolynomial.zero >= template_inv l)]) (of_intconstraint(TransitionLabel.guard t))) 
+    | `Initiation -> RealParameterConstraint.(mk_and (of_realconstraint(get_inv l)) (of_intconstraint (TransitionLabel.guard t)))
+    | _ -> RealParameterConstraint.(mk_and (mk_and 
+                                      (of_realconstraint(get_inv l))
+                                      (mk [RealParameterAtom.Infix.(template_inv l <= RealParameterPolynomial.zero)]))
+                                      (of_intconstraint (TransitionLabel.guard t)))
   in
   RealParameterConstraint.farkas_transform constr atom
   |> RealFormula.mk
-  |> tap (fun formula -> Logger.(log logger DEBUG (fun () -> "transition_constraint_", [
-                                              "measure", show_measure measure;
-                                              "constraint_type", show_constraint_type constraint_type;
-                                              "transition", Transition.to_id_string (l,t,l');
-                                              "constraint ", RealParameterConstraint.to_string constr;
-                                              "atom", RealParameterAtom.to_string atom;
-                                              "formula: ", RealFormula.to_string formula])))
+  |> tap (fun formula -> log_constraints logger measure constraint_type (l,t,l') constr atom formula)
+
 
 (* use all three functions above combined*)
 let transition_constraint_ (depth, measure, constraint_type, (l,t,l')) templates: RealFormula.t =
@@ -194,13 +196,17 @@ let transition_constraint_ (depth, measure, constraint_type, (l,t,l')) templates
            |> RealFormula.mk_and !res
   done;
   res := ((List.nth templates 0), measure, constraint_type, (l,t,l'))
-         |> transition_constraint_1
-         |> RealFormula.mk_and !res;
-
-  res := ((List.nth templates (depth - 1)), measure, constraint_type, (l,t,l'))
-         |> transition_constraint_d
-         |> RealFormula.mk_and !res;
-  !res
+      |> transition_constraint_1
+      |> RealFormula.mk_and !res;
+  if depth > 1 then
+    res := ((List.nth templates (depth - 1)), measure, constraint_type, (l,t,l'))
+        |> transition_constraint_d RealParameterPolynomial.zero
+        |> RealFormula.mk_and !res
+  else 
+    res := ((List.nth templates (depth - 1)), measure, constraint_type, (l,t,l'))
+        |> transition_constraint_d RealParameterPolynomial.one
+        |> RealFormula.mk_and !res;
+  !res 
        
 (* let transition_constraint = cache#add transition_constraint_  *)
   

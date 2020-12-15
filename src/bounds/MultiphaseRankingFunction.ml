@@ -182,31 +182,38 @@ let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')
   |> Formula.mk
 
 (* method for mrf and function f_d*)
-let transition_constraint_d (template_table1, measure, constraint_type, (l,t,l')): Formula.t =
+let transition_constraint_d bound (template_table1, measure, constraint_type, (l,t,l')) : Formula.t =
   let template1 = TemplateTable.find template_table1 in
     match constraint_type with
     | `Non_Increasing -> Formula.mk_true
     | `Decreasing  -> (
-      let atom = ParameterAtom.Infix.((template1 l)  >= ParameterPolynomial.zero) in
+      let atom = ParameterAtom.Infix.((template1 l)  >= bound) in
         ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
         |> Formula.mk)
 
 (* use all three functions above combined*)
 let transition_constraint_ cache depth (measure, constraint_type, (l,t,l')): Formula.t =
   let res = ref Formula.mk_true in
-  for i = 1 to (depth - 1) do
-    res := ((List.nth !(get_template_table cache) (i - 1)), (List.nth !(get_template_table cache) i), measure, constraint_type, (l,t,l'))
-           |> transition_constraint_i
-           |> Formula.mk_and !res
-  done;
-  res := ((List.nth !(get_template_table cache) 0), measure, constraint_type, (l,t,l'))
-         |> transition_constraint_1
-         |> Formula.mk_and !res;
+  
+    for i = 1 to (depth - 1) do
+      res := ((List.nth !(get_template_table cache) (i - 1)), (List.nth !(get_template_table cache) i), measure, constraint_type, (l,t,l'))
+            |> transition_constraint_i
+            |> Formula.mk_and !res
+    done;
+    res := ((List.nth !(get_template_table cache) 0), measure, constraint_type, (l,t,l'))
+          |> transition_constraint_1
+          |> Formula.mk_and !res;
+    if depth > 1 then
+      res := ((List.nth !(get_template_table cache) (depth - 1)), measure, constraint_type, (l,t,l'))
+          |> transition_constraint_d ParameterPolynomial.zero
+          |> Formula.mk_and !res
+    else 
+      res := ((List.nth !(get_template_table cache) (depth - 1)), measure, constraint_type, (l,t,l'))
+          |> transition_constraint_d ParameterPolynomial.one
+          |> Formula.mk_and !res;
+    !res 
 
-  res := ((List.nth !(get_template_table cache) (depth - 1)), measure, constraint_type, (l,t,l'))
-         |> transition_constraint_d
-         |> Formula.mk_and !res;
-  !res
+
 
 let transition_constraint cache depth = (get_trans_constraint_cache cache)#add (transition_constraint_ cache depth)
 
@@ -259,7 +266,7 @@ let ranking_table = function
 let change_valuation (values: RealPolynomial.valuation) = 
   Valuation.from (List.map (fun x -> (x,  MPRF_Invariants.Valuation.eval x values |> OurFloat.upper_int)) (MPRF_Invariants.Valuation.vars values))
 
-let try_decreasing cache ?(inv = false) depth (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
+let try_decreasing cache program ?(inv = false) depth (opt: SMTSolver.t) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) applied_cfr =
   non_increasing
   |> Stack.enum
   |> Enum.filter (fun t -> not (RankingTable.mem (ranking_table measure) t))
@@ -271,11 +278,13 @@ let try_decreasing cache ?(inv = false) depth (opt: SMTSolver.t) (non_increasing
                                                                 "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
                                                                 "depth", string_of_int depth]));
         SMTSolver.push opt;
-        if inv then (
+        if inv then 
           let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in 
           SMTSolver.add_real opt (MPRF_Invariants.decreasing_constraint depth measure decreasing templates_real);
           SMTSolver.add_real opt (MPRF_Invariants.consecution_constraint depth measure decreasing templates_real);
-        ) else (
+          Program.entry_transitions logger program [decreasing]
+          |> List.iter (fun trans ->  SMTSolver.add_real opt (MPRF_Invariants.initiation_constraint depth measure trans templates_real))
+        else (
           SMTSolver.add opt (decreasing_constraint cache depth measure decreasing);
         );
         if SMTSolver.satisfiable opt then (
@@ -310,7 +319,7 @@ let try_decreasing cache ?(inv = false) depth (opt: SMTSolver.t) (non_increasing
 let rec backtrack cache ?(inv = false) depth (steps_left: int) (index: int) (opt: SMTSolver.t) (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (to_be_found: int ref) (measure: measure) (program: Program.t) applied_cfr =
     if SMTSolver.satisfiable opt then (
       if steps_left == 0 then (
-        try_decreasing cache ~inv:inv depth opt non_increasing to_be_found measure applied_cfr
+        try_decreasing cache program ~inv:inv depth opt non_increasing to_be_found measure applied_cfr
       ) else (
         for i=index to Array.length scc - 1 do
           let transition = Array.get scc i in
@@ -328,7 +337,7 @@ let rec backtrack cache ?(inv = false) depth (steps_left: int) (index: int) (opt
           ignore (Stack.pop non_increasing);
           SMTSolver.pop opt;
         done;
-        try_decreasing cache ~inv:inv depth opt non_increasing to_be_found measure applied_cfr;
+        try_decreasing cache program ~inv:inv depth opt non_increasing to_be_found measure applied_cfr;
       )
     )
 
@@ -582,8 +591,8 @@ let close_next_cycle cache depth ?(inv = false) program measure solver not_added
         let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in
           SMTSolver.add_real solver (MPRF_Invariants.non_increasing_constraint depth measure transition templates_real);
           SMTSolver.add_real solver (MPRF_Invariants.consecution_constraint depth measure transition templates_real);
-        Program.entry_transitions logger program [transition]
-        |> List.iter (fun trans ->  SMTSolver.add_real solver (MPRF_Invariants.initiation_constraint depth measure trans templates_real));
+          Program.entry_transitions logger program [transition]
+          |> List.iter (fun trans ->  SMTSolver.add_real solver (MPRF_Invariants.initiation_constraint depth measure trans templates_real));
       else 
         SMTSolver.add solver (non_increasing_constraint cache depth measure transition);)
       )
@@ -624,6 +633,8 @@ let compute_and_add_ranking_function cache depth ?(inv = false) applied_cfr prog
       let templates_real = List.init current_depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in 
       SMTSolver.add_real solver (MPRF_Invariants.decreasing_constraint current_depth measure decreasing templates_real);
       SMTSolver.add_real solver (MPRF_Invariants.consecution_constraint current_depth measure decreasing templates_real);
+      Program.entry_transitions logger program [decreasing]
+      |> List.iter (fun trans ->  SMTSolver.add_real solver (MPRF_Invariants.initiation_constraint depth measure trans templates_real));
     else 
       SMTSolver.add solver (decreasing_constraint cache current_depth measure decreasing);
     if SMTSolver.satisfiable solver then (
