@@ -5,8 +5,6 @@ open Constraints
 open Atoms
 open Polynomials
 open ProgramTypes
-
-(* let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id) *)
         
 let logger = Logging.(get Inv)  
 

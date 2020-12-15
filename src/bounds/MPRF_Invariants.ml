@@ -5,8 +5,6 @@ open Constraints
 open Atoms
 open Polynomials
 open ProgramTypes
-
-(* let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id) *)
         
 let logger = Logging.(get Inv)  
 
@@ -19,7 +17,7 @@ module Valuation = Valuation.Make(OurFloat)
 (** Ranking templates location wise *)
 module TemplateTable = Hashtbl.Make(Location)
 
-let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id)
+let cache = Util.cache ~extractor:(Tuple4.map4 Transition.id)
 
 (** Given a list of variables an affine template-polynomial is generated*)            
 let invariant_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
@@ -214,30 +212,31 @@ let transition_constraint_ (depth, measure, constraint_type, (l,t,l')) templates
         |> RealFormula.mk_and !res;
   !res 
        
-(* let transition_constraint = cache#add transition_constraint_  *)
+let transition_constraint = 
+  cache#add transition_constraint_ 
   
 let transitions_constraint depth measure (constraint_type: constraint_type) (transitions : Transition.t list) templates: RealFormula.t =
   transitions
-  |> List.map (fun t -> transition_constraint_ (depth, measure, constraint_type, t) templates)
+  |> List.map (fun t -> transition_constraint (depth, measure, constraint_type, t) templates)
   |> RealFormula.all
   
 let non_increasing_constraint depth measure transition =
-  transition_constraint_ (depth, measure, `Non_Increasing, transition)
+  transition_constraint (depth, measure, `Non_Increasing, transition) 
 
 let non_increasing_constraints depth measure transitions =
   transitions_constraint depth measure `Non_Increasing (TransitionSet.to_list transitions) 
 
 let decreasing_constraint depth measure transition =
-  transition_constraint_ (depth, measure, `Decreasing, transition) 
+  transition_constraint (depth, measure, `Decreasing, transition) 
 
 let initiation_constraint depth measure transition =
-  transition_constraint_ (depth, measure, `Initiation, transition)
+  transition_constraint (depth, measure, `Initiation, transition)
 
 let disability_constraint depth measure transition =
-  transition_constraint_ (depth, measure, `Disability, transition)
+  transition_constraint (depth, measure, `Disability, transition)
 
 let consecution_constraint depth measure transition =
-  transition_constraint_ (depth, measure, `Consecution, transition)
+  transition_constraint (depth, measure, `Consecution, transition)
 
 let consecution_constraints depth measure transitions =
   transitions_constraint depth measure `Consecution (TransitionSet.to_list transitions)
