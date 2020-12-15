@@ -314,7 +314,7 @@ let compute_scc ?(inv = false) cache measure applied_cfr program scc =
 
 let check_cache cache ?(inv = false) measure program applied_cfr = 
   if inv then (
-    if Invariants.TemplateTable.is_empty Invariants.template_table_inv then
+    if Invariants.template_table_is_empty then
       Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
     if TemplateTable.is_empty (get_template_table cache) then
       compute_ranking_templates cache (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
@@ -604,9 +604,9 @@ let find_scc_fast cache ?(inv = false) measure applied_cfr program transition sc
 
 let reset cache =
   (get_trans_constraint_cache cache)#clear;
-  Invariants.cache#clear;
+  Invariants.clear_cache;
   RankingTable.clear (get_time_ranking_table cache);
   RankingTable.clear (get_cost_ranking_table cache);
-  Invariants.TemplateTable.clear Invariants.template_table_inv;
+  Invariants.template_table_clear;
   TemplateTable.clear (get_template_table cache);
   TemplateTable.clear (get_template_table_real cache)

@@ -19,7 +19,7 @@ module Valuation = Valuation.Make(OurFloat)
 (** Ranking templates location wise *)
 module TemplateTable = Hashtbl.Make(Location)
 
-(* let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id) *)
+let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id)
 
 (** Given a list of variables an affine template-polynomial is generated*)            
 let invariant_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
@@ -60,6 +60,12 @@ let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): u
                     |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ RealParameterPolynomial.to_string polynomial)
                   )
                   execute
+
+let template_table_is_empty = 
+  TemplateTable.is_empty template_table_inv
+
+let template_table_clear = 
+TemplateTable.clear template_table_inv
 
 (** Invariants are stored location wise.  If no invariant is stored for some location, we return true. *)
 let table_inv: RealConstraint.t TemplateTable.t = TemplateTable.create 10
@@ -215,29 +221,26 @@ let transitions_constraint depth measure (constraint_type: constraint_type) (tra
   |> List.map (fun t -> transition_constraint_ (depth, measure, constraint_type, t) templates)
   |> RealFormula.all
   
-let non_increasing_constraint depth measure transition templates =
-  transition_constraint_ (depth, measure, `Non_Increasing, transition) templates
+let non_increasing_constraint depth measure transition =
+  transition_constraint_ (depth, measure, `Non_Increasing, transition)
 
-let non_increasing_constraints depth measure transitions templates =
+let non_increasing_constraints depth measure transitions =
   transitions_constraint depth measure `Non_Increasing (TransitionSet.to_list transitions) 
 
-let decreasing_constraint depth measure transition templates =
-  transition_constraint_ (depth, measure, `Decreasing, transition) templates
+let decreasing_constraint depth measure transition =
+  transition_constraint_ (depth, measure, `Decreasing, transition) 
 
-let initiation_constraint depth measure transition templates =
-  transition_constraint_ (depth, measure, `Initiation, transition) templates
+let initiation_constraint depth measure transition =
+  transition_constraint_ (depth, measure, `Initiation, transition)
 
-let disability_constraint depth measure transition templates =
-  transition_constraint_ (depth, measure, `Disability, transition) templates
+let disability_constraint depth measure transition =
+  transition_constraint_ (depth, measure, `Disability, transition)
 
-let consecution_constraint depth measure transition templates =
-  transition_constraint_ (depth, measure, `Consecution, transition) templates
+let consecution_constraint depth measure transition =
+  transition_constraint_ (depth, measure, `Consecution, transition)
 
-let consecution_constraints depth measure transitions templates =
+let consecution_constraints depth measure transitions =
   transitions_constraint depth measure `Consecution (TransitionSet.to_list transitions)
 
-let rank_from_valuation  template valuation location =
-  location
-  |> template
-  |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurFloat.zero)
-  |> RealPolynomial.to_intpoly 
+let clear_cache = 
+  cache#clear

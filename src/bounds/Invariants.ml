@@ -61,6 +61,12 @@ let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): u
                   )
                   execute
 
+let template_table_is_empty = 
+  TemplateTable.is_empty template_table_inv
+
+let template_table_clear = 
+TemplateTable.clear template_table_inv
+
 (** Invariants are stored location wise.  If no invariant is stored for some location, we return true. *)
 let table_inv: RealConstraint.t TemplateTable.t = TemplateTable.create 10
 
@@ -139,26 +145,29 @@ let transitions_constraint measure (constraint_type: constraint_type) (transitio
   |> List.map (fun t -> transition_constraint (measure, constraint_type, t) template)
   |> RealFormula.all
   
-let non_increasing_constraint measure transition template =
-  transition_constraint (measure, `Non_Increasing, transition) template
+let non_increasing_constraint measure transition =
+  transition_constraint (measure, `Non_Increasing, transition)
 
-let non_increasing_constraints measure transitions template =
-  transitions_constraint measure `Non_Increasing (TransitionSet.to_list transitions) 
+let non_increasing_constraints measure transitions =
+  transitions_constraint measure `Non_Increasing (TransitionSet.to_list transitions)
   
-let bounded_constraint measure transition template =
-  transition_constraint (measure, `Bounded, transition) template
+let bounded_constraint measure transition =
+  transition_constraint (measure, `Bounded, transition)
 
-let decreasing_constraint measure transition template =
-  transition_constraint (measure, `Decreasing, transition) template
+let decreasing_constraint measure transition =
+  transition_constraint (measure, `Decreasing, transition)
 
-let initiation_constraint measure transition template =
-  transition_constraint (measure, `Initiation, transition) template
+let initiation_constraint measure transition =
+  transition_constraint (measure, `Initiation, transition)
 
-let disability_constraint measure transition template =
-  transition_constraint (measure, `Disability, transition) template
+let disability_constraint measure transition =
+  transition_constraint (measure, `Disability, transition)
 
-let consecution_constraint measure transition template =
-  transition_constraint (measure, `Consecution, transition) template
+let consecution_constraint measure transition =
+  transition_constraint (measure, `Consecution, transition)
 
-let consecution_constraints measure transitions template =
+let consecution_constraints measure transitions =
   transitions_constraint measure `Consecution (TransitionSet.to_list transitions)
+
+let clear_cache = 
+  cache#clear

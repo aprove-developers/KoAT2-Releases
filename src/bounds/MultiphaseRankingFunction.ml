@@ -238,6 +238,12 @@ let rank_from_valuation cache depth (i:int) valuation location =
   |> TemplateTable.find (List.nth !(get_template_table cache) i)
   |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
 
+let rank_from_valuation_real  template valuation location =
+  location
+  |> template
+  |> RealParameterPolynomial.eval_coefficients (fun var -> MPRF_Invariants.Valuation.eval_opt var valuation |? OurFloat.zero)
+  |> RealPolynomial.to_intpoly 
+
 let make cache depth decreasing_transition non_increasing_transitions valuation  =
 {
   rank = List.init depth (fun i -> rank_from_valuation cache depth i valuation);
@@ -248,7 +254,7 @@ let make cache depth decreasing_transition non_increasing_transitions valuation 
 
 let make_inv cache depth decreasing_transition non_increasing_transitions valuation =
   { 
-    rank = List.init depth (fun i -> MPRF_Invariants.rank_from_valuation (TemplateTable.find (List.nth !(get_template_table_real cache) i)) valuation);
+    rank = List.init depth (fun i -> rank_from_valuation_real (TemplateTable.find (List.nth !(get_template_table_real cache) i)) valuation);
     decreasing = decreasing_transition;
     non_increasing = non_increasing_transitions;
     depth = depth;
@@ -409,12 +415,10 @@ let logging measure transition methode_name =
 
 let find cache ?(inv = false) measure applied_cfr program transition =
   let execute () =
-    if inv then (
-      if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then
-      MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-      if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then
-        MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););    
-      if RankingTable.is_empty (ranking_table measure) then
+    if inv then 
+      if MPRF_Invariants.template_table_is_empty then
+        MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+    if RankingTable.is_empty (ranking_table measure) then
       compute_ cache ~inv:inv measure applied_cfr program;
     (try
        RankingTable.find_all (ranking_table measure) transition
@@ -425,11 +429,9 @@ let find cache ?(inv = false) measure applied_cfr program transition =
 
 let find_scc cache ?(inv = false) measure applied_cfr program transition scc =
     let execute () =
-    if inv then (
-      if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then
-      MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-      if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then
-        MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);); 
+    if inv then
+      if MPRF_Invariants.template_table_is_empty then
+        MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
     if RankingTable.is_empty (ranking_table measure) then
       compute_scc cache ~inv:inv measure applied_cfr program scc;
     (try
@@ -673,11 +675,9 @@ let compute_scc_fast cache ?(inv = false) measure applied_cfr program scc =
 
 let find_fast cache ?(inv = false) measure applied_cfr program transition =
   let execute () =  
-    if inv then (
-        if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then
-         MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-        if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then
-         MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););  
+    if inv then
+      if MPRF_Invariants.template_table_is_empty then
+        MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);  
     if RankingTable.is_empty (get_ranking_table measure cache) then
       compute_fast cache ~inv:inv measure applied_cfr program;
     (try
@@ -689,11 +689,9 @@ let find_fast cache ?(inv = false) measure applied_cfr program transition =
 
 let find_scc_fast cache ?(inv = false) measure applied_cfr program transition scc =
   let execute () =
-    if inv then (
-      if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then
-      MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-      if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then
-        MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););  
+    if inv then 
+      if MPRF_Invariants.template_table_is_empty then
+        MPRF_Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
     if RankingTable.is_empty (get_ranking_table measure cache) then
       compute_scc_fast cache ~inv:inv measure applied_cfr program scc;
     (try
@@ -706,11 +704,10 @@ let find_scc_fast cache ?(inv = false) measure applied_cfr program transition sc
 (* Useful for testing*)
 let reset cache =
   (get_trans_constraint_cache cache)#clear;
-  (* MPRF_Invariants.cache#clear; *)
+  MPRF_Invariants.clear_cache;
   numberOfGeneratedTemplates := 0;
   RankingTable.clear time_ranking_table;
   RankingTable.clear cost_ranking_table;
-  if MPRF_Invariants.TemplateTable.is_empty MPRF_Invariants.template_table_inv then 
-    MPRF_Invariants.TemplateTable.clear MPRF_Invariants.template_table_inv;
+  MPRF_Invariants.template_table_clear;
   List.iter (fun e -> TemplateTable.clear e) !(get_template_table cache);
   List.iter (fun e -> TemplateTable.clear e) !(get_template_table_real cache);
