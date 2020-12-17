@@ -37,16 +37,7 @@ type ranking_cache = (t RankingTable.t * t RankingTable.t * template_tables * te
 let new_cache: unit -> ranking_cache =
   fun () -> (RankingTable.create 10, RankingTable.create 10, ref (List.init !maxDepth (fun i -> TemplateTable.create 10)) , ref  (List.init !maxDepth (fun i -> TemplateTable.create 10)))
 
-let hash_measure measure = match measure with
-  | `Cost -> 0
-  | `Time -> 1
-
-let hash_constraint_type constraint_type = match constraint_type with
-  | `Non_Increasing -> 0
-  | `Decreasing -> 1
-
-let constraint_cache = Util.cache ~extractor:(fun (a,b,c,d,e) -> (b, hash_measure c, hash_constraint_type d, Transition.id e))
-
+let constraint_cache = Util.cache ~extractor:(fun (_, depth, measure, constraint_type, t) -> (depth, measure, constraint_type, Transition.id t))
 
 let get_time_ranking_table     (cache: ranking_cache) = Tuple4.first cache
 let get_cost_ranking_table     (cache: ranking_cache) = Tuple4.second cache

@@ -22,16 +22,16 @@ type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ] [@@deriving 
 module TemplateTable = Hashtbl.Make(Location)
 module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
 
-type trans_constraint_cache = < add : (measure * constraint_type * ProgramTypes.Transition.t -> Formula.t) -> measure * constraint_type * ProgramTypes.Transition.t -> Formula.t; clear : unit >
-type ranking_cache = (t RankingTable.t * t RankingTable.t * Polynomials.ParameterPolynomial.t TemplateTable.t * RealParameterPolynomial.t TemplateTable.t * trans_constraint_cache)
+type ranking_cache = (t RankingTable.t * t RankingTable.t * Polynomials.ParameterPolynomial.t TemplateTable.t * RealParameterPolynomial.t TemplateTable.t )
 let new_cache: unit -> ranking_cache =
-  fun () -> (RankingTable.create 10, RankingTable.create 10, TemplateTable.create 10, TemplateTable.create 10,  Util.cache ~extractor:(Tuple3.map3 Transition.id))
+  fun () -> (RankingTable.create 10, RankingTable.create 10, TemplateTable.create 10, TemplateTable.create 10)
 
-let get_time_ranking_table     (cache: ranking_cache) = Tuple5.first cache
-let get_cost_ranking_table     (cache: ranking_cache) = Tuple5.second cache
-let get_template_table         (cache: ranking_cache) = Tuple5.third cache
-let get_template_table_real    (cache: ranking_cache) = Tuple5.fourth cache
-let get_trans_constraint_cache (cache: ranking_cache) = Tuple5.fifth cache
+let get_time_ranking_table     (cache: ranking_cache) = Tuple4.first cache
+let get_cost_ranking_table     (cache: ranking_cache) = Tuple4.second cache
+let get_template_table         (cache: ranking_cache) = Tuple4.third cache
+let get_template_table_real    (cache: ranking_cache) = Tuple4.fourth cache
+
+let constraint_cache = Util.cache ~extractor:(fun (_, measure, constraint_type, t) -> (measure, constraint_type, Transition.id t))
 
 let get_ranking_table measure = 
   match measure with
@@ -133,7 +133,7 @@ let decreaser measure t =
   | `Cost -> TransitionLabel.cost t
   | `Time -> Polynomial.one
 
-let transition_constraint_ cache (measure, constraint_type, (l,t,l')): Formula.t =
+let transition_constraint_ (cache, measure, constraint_type, (l,t,l')): Formula.t =
   let template = TemplateTable.find (get_template_table cache) in
   let atom =
     match constraint_type with
@@ -144,24 +144,24 @@ let transition_constraint_ cache (measure, constraint_type, (l,t,l')): Formula.t
   ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
   |> Formula.mk  
        
-let transition_constraint cache = (get_trans_constraint_cache cache)#add (transition_constraint_ cache)
+let transition_constraint = constraint_cache#add transition_constraint_ 
   
 let transitions_constraint cache measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
   transitions
-  |> List.map (fun t -> transition_constraint cache (measure, constraint_type, t))
+  |> List.map (fun t -> transition_constraint (cache, measure, constraint_type, t))
   |> Formula.all
   
 let non_increasing_constraint cache measure transition =
-  transition_constraint cache (measure, `Non_Increasing, transition)
+  transition_constraint (cache, measure, `Non_Increasing, transition)
 
 let non_increasing_constraints cache measure transitions =
   transitions_constraint measure cache `Non_Increasing (TransitionSet.to_list transitions)
   
 let bounded_constraint cache measure transition =
-  transition_constraint cache (measure, `Bounded, transition)
+  transition_constraint (cache, measure, `Bounded, transition)
 
 let decreasing_constraint cache measure transition =
-  transition_constraint cache (measure, `Decreasing, transition)
+  transition_constraint (cache, measure, `Decreasing, transition)
   
 let rank_from_valuation cache valuation location =
   location
@@ -603,7 +603,7 @@ let find_scc_fast cache ?(inv = false) measure applied_cfr program transition sc
   logging measure transition "find_ranking_functions_scc_fast" execute
 
 let reset cache =
-  (get_trans_constraint_cache cache)#clear;
+  constraint_cache#clear;
   Invariants.clear_cache;
   RankingTable.clear (get_time_ranking_table cache);
   RankingTable.clear (get_cost_ranking_table cache);
