@@ -7,6 +7,7 @@ open ProgramTypes
 open CFR 
    
 module SMTSolver = SMT.IncrementalZ3Solver
+module SMTSolverInt = SMT.IncrementalZ3SolverInt
 module Valuation = Valuation.Make(OurInt)
 
 type t = {
@@ -155,7 +156,7 @@ let non_increasing_constraint cache measure transition =
   transition_constraint (cache, measure, `Non_Increasing, transition)
 
 let non_increasing_constraints cache measure transitions =
-  transitions_constraint measure cache `Non_Increasing (TransitionSet.to_list transitions)
+  transitions_constraint cache measure `Non_Increasing (TransitionSet.to_list transitions)
   
 let bounded_constraint cache measure transition =
   transition_constraint (cache, measure, `Bounded, transition)

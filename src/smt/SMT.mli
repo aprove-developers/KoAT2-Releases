@@ -40,6 +40,43 @@ sig
     val check_negativity : Formula.t -> Polynomial.t -> bool
   end
 
+(* Old Incrementel Solver for integer arithmetic. *)
+module IncrementalZ3SolverInt :
+sig
+  type t
+
+  (** Creates a new incremental smt solver. *)
+  val create : ?model:bool -> unit -> t
+     
+  (** Creates a backtracking point. *)
+  val push : t -> unit
+
+  (** Backtrack one backtracking point. Note that an exception is thrown if Pop is called without a corresponding push. *)
+  val pop : t -> unit
+
+  (** Checks if the current state is satisfiable. *)
+  val satisfiable : t -> bool
+
+  (** Checks if the current state is satisfiable. *)
+  val unsatisfiable : t -> bool
+
+  (** Asserts the formula. *)
+  val add : t -> Formula.t -> unit
+
+  (** Minimizes the variable. *)
+  val minimize : t -> Var.t -> unit
+
+  (** Maximizes the variable. *)
+  val maximize : t -> Var.t -> unit
+
+  (** Sets the variables, which absolute value should be minimized. *)
+  val minimize_absolute : t -> Var.t list -> unit
+
+  (** Returns a model of the current state, if the state is satisfiable. *)
+  val model : t -> Polynomial.valuation Option.t
+
+end
+
 module IncrementalZ3Solver :
 sig
   type t
@@ -107,40 +144,4 @@ sig
 
   (** Returns a real model of the current state, if the state is satisfiable. *)
   val model_real : ?optimized:bool -> t -> RealPolynomial.valuation Option.t
-end
-
-module IncrementalZ3SolverOld :
-sig
-  type t
-
-  (** Creates a new incremental smt solver. *)
-  val create : ?model:bool -> unit -> t
-     
-  (** Creates a backtracking point. *)
-  val push : t -> unit
-
-  (** Backtrack one backtracking point. Note that an exception is thrown if Pop is called without a corresponding push. *)
-  val pop : t -> unit
-
-  (** Checks if the current state is satisfiable. *)
-  val satisfiable : t -> bool
-
-  (** Checks if the current state is satisfiable. *)
-  val unsatisfiable : t -> bool
-
-  (** Asserts the formula. *)
-  val add : t -> Formula.t -> unit
-
-  (** Minimizes the variable. *)
-  val minimize : t -> Var.t -> unit
-
-  (** Maximizes the variable. *)
-  val maximize : t -> Var.t -> unit
-
-  (** Sets the variables, which absolute value should be minimized. *)
-  val minimize_absolute : t -> Var.t list -> unit
-
-  (** Returns a model of the current state, if the state is satisfiable. *)
-  val model : t -> Polynomial.valuation Option.t
-
 end

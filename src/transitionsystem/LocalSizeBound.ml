@@ -6,7 +6,7 @@ open ProgramTypes
    
 let logger = Logging.(get LocalSizeBound)
            
-module Solver = SMT.IncrementalZ3SolverOld
+module Solver = SMT.IncrementalZ3SolverInt
 
 type kind = [`Lower | `Upper] [@@deriving show, eq]
 

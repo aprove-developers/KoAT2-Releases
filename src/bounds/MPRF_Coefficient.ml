@@ -7,7 +7,7 @@ open ProgramTypes
 open Formulas
 
 let logger = Logging.(get Time)
-module SMTSolver = SMT.IncrementalZ3SolverOld
+module SMTSolver = SMT.IncrementalZ3SolverInt
 
 module Valuation = Valuation.Make(OurInt)
 
