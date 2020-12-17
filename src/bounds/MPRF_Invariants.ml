@@ -17,7 +17,7 @@ module Valuation = Valuation.Make(OurFloat)
 (** Ranking templates location wise *)
 module TemplateTable = Hashtbl.Make(Location)
 
-let cache = Util.cache ~extractor:(Tuple4.map4 Transition.id)
+let constraint_cache = Util.cache ~extractor:(Tuple4.map4 Transition.id)
 
 (** Given a list of variables an affine template-polynomial is generated*)            
 let invariant_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
@@ -85,14 +85,18 @@ let store_inv valuation (l,t,l') =
   inv_from_valuation valuation l
   |> RealConstraint.mk_ge RealPolynomial.zero
   |> RealConstraint.mk_and (get_inv l) 
+  |> tap (fun inv -> Logger.(log logger INFO (fun () -> "add_inv", ["trans:", Transition.to_id_string (l,t,l'); "inv: ", RealConstraint.to_string inv];)))
   |> TemplateTable.add table_inv l 
 
+  
 
 let store_inv_set valuation transitions =
   transitions
   |> TransitionSet.iter (fun (l,t,l') ->
     inv_from_valuation valuation l
     |> RealConstraint.mk_ge RealPolynomial.zero
+    |> RealConstraint.mk_and (get_inv l) 
+    |> tap (fun inv -> Logger.(log logger INFO (fun () -> "add_inv", ["trans:", Transition.to_id_string (l,t,l'); "inv: ", RealConstraint.to_string inv];)))
     |> TemplateTable.add table_inv l)
 
 let as_parapoly label var =
@@ -212,8 +216,7 @@ let transition_constraint_ (depth, measure, constraint_type, (l,t,l')) templates
         |> RealFormula.mk_and !res;
   !res 
        
-let transition_constraint = 
-  cache#add transition_constraint_ 
+let transition_constraint = constraint_cache#add transition_constraint_ 
   
 let transitions_constraint depth measure (constraint_type: constraint_type) (transitions : Transition.t list) templates: RealFormula.t =
   transitions
@@ -242,4 +245,4 @@ let consecution_constraints depth measure transitions =
   transitions_constraint depth measure `Consecution (TransitionSet.to_list transitions)
 
 let clear_cache = 
-  cache#clear
+  constraint_cache#clear
