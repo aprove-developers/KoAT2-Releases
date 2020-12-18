@@ -175,11 +175,8 @@ let transition_constraint_d bound (template1, measure, constraint_type, (l,t,l')
   let template_inv = TemplateTable.find template_table_inv in
   let atom =
     match constraint_type with
-    | `Initiation -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.substitute_f (as_parapoly t) (template_inv l'))
-    | `Disability -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.one)
-    | `Consecution -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.substitute_f (as_parapoly t) (template_inv l'))
-    | `Non_Increasing -> RealParameterAtom.Infix.(RealParameterPolynomial.one >= RealParameterPolynomial.zero)
     | `Decreasing  -> RealParameterAtom.Infix.((template1 l) >= bound) 
+    | _ -> RealParameterAtom.Infix.(RealParameterPolynomial.one >= RealParameterPolynomial.zero)
     in
   let constr = 
     match constraint_type with

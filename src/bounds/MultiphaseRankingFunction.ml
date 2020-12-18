@@ -562,48 +562,46 @@ let next_candidates not_added_graph graph =
         )
       )
 
+(* We first try this without inv enabled and if we arent successful we retry with inv on. *)
 let close_next_cycle cache depth ?(inv = false) program measure (solver_real: SMTSolver.t) (solver_int: SMTSolverInt.t) not_added_graph graph: TransitionSet.t =
   let all_paths = next_candidates not_added_graph graph in
-  let rec close_circle_int path: bool * TransitionSet.t = match path with
+  let rec close_circle path: bool * TransitionSet.t = match path with
     | []    -> true, TransitionSet.empty
     | e::es ->
-        SMTSolverInt.push solver_int;      
-        SMTSolverInt.add solver_int (non_increasing_constraint cache depth measure e);
-        if SMTSolverInt.satisfiable solver_int then
-          let (closed, non_inc_set) = close_circle_int es in
-          SMTSolverInt.pop solver_int; closed, TransitionSet.add e non_inc_set
+        if inv then
+          SMTSolver.push solver_real
         else
-          (SMTSolverInt.pop solver_int; false, TransitionSet.empty)
-  in
-  let rec close_circle_real path: bool * TransitionSet.t = match path with (* Only if inv is enabled and without invariants search wasnt successful *)
-  | []    -> true, TransitionSet.empty
-  | e::es ->
-        SMTSolver.push solver_real;
-        let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in
-        SMTSolver.add_real solver_real (MPRF_Invariants.non_increasing_constraint depth measure e templates_real);
-        SMTSolver.add_real solver_real (MPRF_Invariants.consecution_constraint depth measure e templates_real);
-        Program.entry_transitions logger program [e]
-        |> List.iter (fun trans ->  SMTSolver.add_real solver_real (MPRF_Invariants.initiation_constraint depth measure trans templates_real));
-      if SMTSolver.satisfiable solver_real then
-        let (closed, non_inc_set) = close_circle_real es in
-        SMTSolver.pop solver_real; closed, TransitionSet.add e non_inc_set
-      else
-        (SMTSolver.pop solver_real; false, TransitionSet.empty)
+          SMTSolverInt.push solver_int;
+
+        if inv then 
+          let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in
+          SMTSolver.add_real solver_real (MPRF_Invariants.non_increasing_constraint depth measure e templates_real);
+          SMTSolver.add_real solver_real (MPRF_Invariants.consecution_constraint depth measure e templates_real);
+          Program.entry_transitions logger program [e]
+          |> List.iter (fun trans ->  SMTSolver.add_real solver_real (MPRF_Invariants.initiation_constraint depth measure trans templates_real))
+        else
+          SMTSolverInt.add solver_int (non_increasing_constraint cache depth measure e);
+
+        if (not inv && SMTSolverInt.satisfiable solver_int) || (inv && SMTSolver.satisfiable solver_real) then
+          let (closed, non_inc_set) = close_circle es in
+          if inv then
+            SMTSolver.pop solver_real
+          else
+            SMTSolverInt.pop solver_int;
+          closed, TransitionSet.add e non_inc_set
+        else (
+          if inv then
+            SMTSolver.pop solver_real
+          else
+            SMTSolverInt.pop solver_int; 
+          false, TransitionSet.empty)
   in
   let rec choose_circle paths tset = match paths with
     | []    -> tset
     | p::ps ->
-        let (closed_curr, tset_curr) = close_circle_int p in
-        let (closed_curr_, tset_curr_) =
-        if (not closed_curr) && inv then
-          close_circle_real p
-        else
-          (closed_curr, tset_curr) in
-        
+        let (closed_curr, tset_curr) = close_circle p in
         if closed_curr then
           tset_curr
-        else if inv && closed_curr_ then
-          tset_curr_
         else
           let best_tset =
             if TransitionSet.cardinal tset >= TransitionSet.cardinal tset_curr then
@@ -618,13 +616,14 @@ let close_next_cycle cache depth ?(inv = false) program measure (solver_real: SM
   (* Add Constraints to the SMTSolver *)
   |> tap (
       TransitionSet.iter (fun transition -> 
-      if inv then (
+      if inv then 
         let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in
           SMTSolver.add_real solver_real (MPRF_Invariants.non_increasing_constraint depth measure transition templates_real);
           SMTSolver.add_real solver_real (MPRF_Invariants.consecution_constraint depth measure transition templates_real);
           Program.entry_transitions logger program [transition]
-          |> List.iter (fun trans ->  SMTSolver.add_real solver_real (MPRF_Invariants.initiation_constraint depth measure trans templates_real)));
-      SMTSolverInt.add solver_int (non_increasing_constraint cache depth measure transition);)
+          |> List.iter (fun trans ->  SMTSolver.add_real solver_real (MPRF_Invariants.initiation_constraint depth measure trans templates_real))
+      else 
+        SMTSolverInt.add solver_int (non_increasing_constraint cache depth measure transition);)
       )
 
 
@@ -649,7 +648,6 @@ let find_non_inc_set cache depth ?(inv = false) program measure (solver_real: SM
   try_close_cycles not_added_graph decr_graph
 
 let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program measure all_trans decreasing : unit =  
-  Printf.printf "decreasing: %s \n" (Transition.to_id_string decreasing);
   let current_time = Unix.gettimeofday () in  
   try
     for current_depth = 1 to !maxDepth do 
@@ -667,25 +665,23 @@ let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program me
       SMTSolver.add_real solver_real (MPRF_Invariants.consecution_constraint current_depth measure decreasing templates_real);
       Program.entry_transitions logger program [decreasing]
       |> List.iter (fun trans ->  SMTSolver.add_real solver_real (MPRF_Invariants.initiation_constraint current_depth measure trans templates_real)));
+    
     SMTSolverInt.add solver_int (decreasing_constraint cache current_depth measure decreasing);
     if SMTSolverInt.satisfiable solver_int then (
-      let non_inc = find_non_inc_set ~inv:inv cache current_depth program measure solver_real solver_int decreasing try_non_inc_set in
-      
+      let non_inc = find_non_inc_set ~inv:false cache current_depth program measure solver_real solver_int decreasing try_non_inc_set in
       SMTSolver.minimize_absolute_old solver_real !fresh_coeffs;
       SMTSolverInt.model solver_int
-      |> Option.map (
-        make cache current_depth decreasing non_inc
-      )
+      |> Option.map (make cache current_depth decreasing non_inc)
       |> Option.may (fun rank_func ->
         RankingTable.add (get_ranking_table measure cache) decreasing rank_func;
         Logger.(log logger INFO (fun () -> "add_ranking_function", [
                                       "measure", show_measure measure;
                                       "decreasing", Transition.to_id_string decreasing;
                                       "non_increasing", TransitionSet.to_string non_inc;
-                                      "rank", only_rank_to_string rank_func])))
-      |> tap (fun _ -> raise Exit)
-    )
-    else if SMTSolver.satisfiable solver_real then (
+                                      "rank", only_rank_to_string rank_func])));
+      raise Exit
+    );
+    if inv && SMTSolver.satisfiable solver_real then (
       let non_inc = find_non_inc_set ~inv:inv cache current_depth program measure solver_real solver_int decreasing try_non_inc_set in
       (* SMTSolver.minimize_absolute_old solver_real !fresh_coeffs; *)
       if inv then
@@ -700,9 +696,10 @@ let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program me
                                       "measure", show_measure measure;
                                       "decreasing", Transition.to_id_string decreasing;
                                       "non_increasing", TransitionSet.to_string non_inc;
-                                      "rank", only_rank_to_string rank_func])))
-      |> tap (fun _ -> raise Exit))
-        done;
+                                      "rank", only_rank_to_string rank_func])));
+      raise Exit
+    )
+      done;
     with Exit -> (         
       if applied_cfr then (
         CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.gettimeofday() -. current_time);
