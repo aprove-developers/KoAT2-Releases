@@ -668,6 +668,7 @@ let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program me
     
     SMTSolverInt.add solver_int (decreasing_constraint cache current_depth measure decreasing);
     if SMTSolverInt.satisfiable solver_int then (
+      (* First without invariants *)
       let non_inc = find_non_inc_set ~inv:false cache current_depth program measure solver_real solver_int decreasing try_non_inc_set in
       SMTSolver.minimize_absolute_old solver_real !fresh_coeffs;
       SMTSolverInt.model solver_int

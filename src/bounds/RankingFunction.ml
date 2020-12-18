@@ -483,6 +483,7 @@ let next_candidates not_added_graph graph =
         )
       )
 
+(* We first try this without inv enabled and if we arent successful we retry with inv on. *)
 let close_next_cycle cache ?(inv = false) program measure (solver_real: SMTSolver.t) (solver_int: SMTSolverInt.t) not_added_graph graph: TransitionSet.t =
   let all_paths = next_candidates not_added_graph graph in
   let rec close_circle path: bool * TransitionSet.t = match path with
@@ -584,6 +585,7 @@ let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program me
     SMTSolverInt.add solver_int (bounded_constraint cache measure decreasing);
     SMTSolverInt.add solver_int (decreasing_constraint cache measure decreasing);
       if SMTSolverInt.satisfiable solver_int then (
+        (* First without invariants *)
         let non_inc = find_non_inc_set ~inv:false cache program measure solver_real solver_int decreasing try_non_inc_set in
         SMTSolverInt.minimize_absolute solver_int !fresh_coeffs;
         SMTSolverInt.model solver_int
