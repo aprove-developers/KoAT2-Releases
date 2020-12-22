@@ -12,8 +12,8 @@ RUN opam update
 RUN opam upgrade
 RUN eval `opam env`
 RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev --no-cache
-RUN opam install z3 batteries -j2
-RUN opam install -j2 menhir cmdliner ppx_deriving ppx_deriving_cmdliner fpath apron ocamlgraph ounit omake
+RUN opam install -j $((`nproc` - 2)) z3 batteries 
+RUN opam install -j $((`nproc` - 2)) menhir cmdliner ppx_deriving ppx_deriving_cmdliner fpath apron ocamlgraph ounit omake
 RUN eval `opam env`
 
 ENV PATH=/home/opam/.opam/4.09.1+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
