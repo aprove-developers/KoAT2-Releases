@@ -150,11 +150,34 @@ let compute_ranking_templates_ (depth: int) (vars: VarSet.t) (locations: Locatio
       (fun () -> execute i);
   done
 
+(* We do not set fresh_coeffs as we do not minimize *)
+let compute_ranking_templates_real (depth: int) (vars: VarSet.t) (locations: Location.t list) ranking_template_ template_table_ to_string: unit =
+  let execute (i:int) =
+    let ins_loc_prf location =
+      (* Each location needs its own ranking template with different fresh variables *)
+      let (parameter_poly, fresh_vars) = ranking_template_ vars in
+      (location, parameter_poly, fresh_vars)
+    in
+    let templates = List.map ins_loc_prf locations in
+    templates
+    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add (List.nth !template_table_ i) location polynomial);
+  in
+  for i = !numberOfGeneratedTemplates to depth - 1 do
+    Logger.with_log logger Logger.DEBUG
+      (fun () -> "compute_mprf_templates_" ^ string_of_int i, [])
+      ~result:(fun () ->
+          (List.nth !template_table_ i)
+          |> TemplateTable.enum
+          |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ to_string polynomial)
+        )
+      (fun () -> execute i);
+  done
+
 let compute_ranking_templates cache (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
   compute_ranking_templates_ depth vars locations ranking_template (get_template_table cache) ParameterPolynomial.to_string
 
 let compute_ranking_templates_real cache (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
-  compute_ranking_templates_ depth vars locations ranking_template_real (get_template_table_real cache) RealParameterPolynomial.to_string
+  compute_ranking_templates_real depth vars locations ranking_template_real (get_template_table_real cache) RealParameterPolynomial.to_string
 
 (* Methods define properties of mprf *)
 
@@ -299,7 +322,6 @@ let try_decreasing cache program ?(inv = false) depth (solver_real: SMTSolver.t)
                                             "rank", only_rank_to_string ranking_function])))
         )
         else if inv && SMTSolver.satisfiable solver_real then (
-          (* SMTSolver.minimize_absolute solver_real !fresh_coeffs;  Check if minimization is forgotten. *)
           SMTSolver.model_real solver_real
            |> Option.map (
               make_inv cache depth decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) 
@@ -684,7 +706,6 @@ let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program me
     );
     if inv && SMTSolver.satisfiable solver_real then (
       let non_inc = find_non_inc_set ~inv:inv cache current_depth program measure solver_real solver_int decreasing try_non_inc_set in
-      (* SMTSolver.minimize_absolute_old solver_real !fresh_coeffs; *)
       if inv then
       SMTSolver.model_real solver_real
         |> Option.map (

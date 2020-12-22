@@ -31,8 +31,6 @@ let invariant_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list 
   RealParameterPolynomial.(linear_poly + constant_poly),
   List.append fresh_vars [constant_var]
 
-let fresh_coeffs: Var.t list ref = ref []
-
 let template_table_inv: RealParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
                                  
 let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): unit =
@@ -45,10 +43,6 @@ let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): u
     let templates = List.map ins_loc_prf locations in
     templates
     |> List.iter (fun (location,polynomial,_) -> TemplateTable.add template_table_inv location polynomial);
-    templates
-    |> List.map (fun (_,_,fresh_vars)-> fresh_vars)
-    |> List.flatten
-    |> (fun fresh_vars -> fresh_coeffs := fresh_vars)
   in
   Logger.with_log logger Logger.DEBUG 
                   (fun () -> "compute_invariant_templates", [])

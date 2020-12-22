@@ -123,11 +123,32 @@ let compute_ranking_templates_ (vars: VarSet.t) (locations: Location.t list) ran
                   )
                   execute
 
+(* We dont set fresh_coeffs as we do not minimize *)
+let compute_ranking_templates_real (vars: VarSet.t) (locations: Location.t list) ranking_template_ template_table_ to_string: unit =
+  let execute () =
+    let ins_loc_prf location =
+      (* Each location needs its own ranking template with different fresh variables *)
+      let (parameter_poly, fresh_vars) = ranking_template_ vars in
+      (location, parameter_poly, fresh_vars)
+    in
+    let templates = List.map ins_loc_prf locations in
+    templates
+    |> List.iter (fun (location,polynomial,_) -> TemplateTable.add template_table_ location polynomial);
+  in
+  Logger.with_log logger Logger.DEBUG 
+                  (fun () -> "compute_ranking_templates", [])
+                  ~result:(fun () ->
+                    template_table_
+                    |> TemplateTable.enum
+                    |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ to_string polynomial)
+                  )
+                  execute
+
 let compute_ranking_templates cache (vars: VarSet.t) (locations: Location.t list) : unit =
   compute_ranking_templates_ vars locations ranking_template (get_template_table cache) ParameterPolynomial.to_string
 
 let compute_ranking_templates_real cache (vars: VarSet.t) (locations: Location.t list) : unit =
-  compute_ranking_templates_ vars locations ranking_template_real (get_template_table_real cache) RealParameterPolynomial.to_string
+  compute_ranking_templates_real vars locations ranking_template_real (get_template_table_real cache) RealParameterPolynomial.to_string
 
 let decreaser measure t =
   match measure with
@@ -228,8 +249,7 @@ let try_decreasing cache program ?(inv = false) (solver_real: SMTSolver.t)  (sol
                                             "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
                                             "rank", only_rank_to_string ranking_function])))
         ) 
-        else if inv && SMTSolver.satisfiable solver_real then ( 
-          (* SMTSolver.minimize_absolute solver_real !fresh_coeffs; Check if minimization is forgotten. TODO *)
+        else if inv && SMTSolver.satisfiable solver_real  && false then ( 
           SMTSolver.model_real solver_real
           |> Option.map (
               make_inv cache decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation
@@ -342,7 +362,7 @@ let check_cache cache ?(inv = false) measure program applied_cfr =
       Invariants.compute_invariant_templates (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list););
     if TemplateTable.is_empty (get_template_table cache) then
       compute_ranking_templates cache (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);      
-    if TemplateTable.is_empty (get_template_table_real cache) && inv then
+    if inv && TemplateTable.is_empty (get_template_table_real cache) then
       compute_ranking_templates_real cache (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list)
 
 let logging measure transition methode_name = 
@@ -601,7 +621,6 @@ let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program me
       );
       if inv && SMTSolver.satisfiable solver_real then ( 
         let non_inc = find_non_inc_set ~inv:inv cache program measure solver_real solver_int decreasing try_non_inc_set in
-        (* SMTSolver.minimize_absolute solver_real !fresh_coeffs; Check if minimization is forgotten. TODO *)
         SMTSolver.model_real solver_real
         |> Option.map (
             make_inv cache decreasing non_inc % change_valuation
