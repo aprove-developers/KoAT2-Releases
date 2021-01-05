@@ -111,31 +111,39 @@ let add_bound = function
   | `Time -> Approximation.add_timebound
   | `Cost -> Approximation.add_costbound
 
+let get_bound = function
+  | `Time -> Approximation.timebound
+  | `Cost -> Approximation.costbound
+
 let improve_with_rank  measure program appr rank =
   let bound = compute_bound appr program rank in
-  if Bound.is_infinity bound then
-    MaybeChanged.same appr
-  else
+  let orginal_bound = get_bound measure appr (RankingFunction.decreasing rank) in
+  if (Bound.compare_asy orginal_bound bound) = 1 then
     rank
     |> RankingFunction.decreasing
     |> (fun t -> add_bound measure bound t appr)
     |> MaybeChanged.changed
+  else
+    MaybeChanged.same appr
 
 let improve_with_rank_mprf measure program appr rank =
   let bound = compute_bound_mprf appr program rank in
-  if Bound.is_infinity bound then
-    MaybeChanged.same appr
-  else
+  let orginal_bound = get_bound measure appr (MultiphaseRankingFunction.decreasing rank) in
+  if (Bound.compare_asy orginal_bound bound) = 1 then
     rank
     |> MultiphaseRankingFunction.decreasing
     |> (fun t -> add_bound measure bound t appr)
     |> MaybeChanged.changed
+  else
+    MaybeChanged.same appr
 
 (** Checks if a transition is bounded *)
 let bounded measure appr transition =
   match measure with
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> false
+
+let counter = ref 0
 
 (** We try to improve a single scc until we reach a fixed point. *)
 let rec improve_timebound_rec cache_rf cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t)  measure program appr =
