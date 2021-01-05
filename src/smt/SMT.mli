@@ -145,3 +145,31 @@ sig
   (** Returns a real model of the current state, if the state is satisfiable. *)
   val model_real : ?optimized:bool -> t -> RealPolynomial.valuation Option.t
 end
+
+(* Old Incrementel Solver for integer arithmetic. *)
+module SolverFast:
+sig
+  type t
+
+  (** Creates a new incremental smt solver. *)
+  val create : ?model:bool -> unit -> t
+     
+  (** Creates a backtracking point. *)
+  val push : t -> unit
+
+  (** Backtrack one backtracking point. Note that an exception is thrown if Pop is called without a corresponding push. *)
+  val pop : t -> unit
+
+  (** Checks if the current state is satisfiable. *)
+  val satisfiable : t -> bool
+
+  (** Checks if the current state is satisfiable. *)
+  val unsatisfiable : t -> bool
+
+  (** Asserts the formula. *)
+  val add : t -> Formula.t -> unit
+  
+  (** Returns a model of the current state, if the state is satisfiable. *)
+  val model : t -> Polynomial.valuation Option.t
+
+end

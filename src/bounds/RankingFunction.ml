@@ -7,7 +7,7 @@ open ProgramTypes
 open CFR 
    
 module SMTSolver = SMT.IncrementalZ3Solver
-module SMTSolverInt = SMT.IncrementalZ3SolverInt
+module SMTSolverInt = SMT.SolverFast
 module Valuation = Valuation.Make(OurInt)
 
 type t = {
@@ -237,7 +237,7 @@ let try_decreasing cache program ?(inv = false) (solver_real: SMTSolver.t)  (sol
         SMTSolverInt.add solver_int (decreasing_constraint cache measure decreasing);
 
         if SMTSolverInt.satisfiable solver_int then (
-          SMTSolverInt.minimize_absolute solver_int !fresh_coeffs;
+          (* SMTSolverInt.minimize_absolute solver_int !fresh_coeffs; *)
           SMTSolverInt.model solver_int
           |> Option.map (make cache decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
           |> Option.may (fun ranking_function ->
@@ -607,7 +607,7 @@ let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program me
       if SMTSolverInt.satisfiable solver_int then (
         (* First without invariants *)
         let non_inc = find_non_inc_set ~inv:false cache program measure solver_real solver_int decreasing try_non_inc_set in
-        SMTSolverInt.minimize_absolute solver_int !fresh_coeffs;
+        (* SMTSolverInt.minimize_absolute solver_int !fresh_coeffs; *)
         SMTSolverInt.model solver_int
         |> Option.map (make cache decreasing non_inc)
         |> Option.may (fun ranking_function ->

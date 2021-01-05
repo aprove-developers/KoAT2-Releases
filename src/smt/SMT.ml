@@ -632,3 +632,89 @@ module IncrementalZ3Solver =
         ignore handle
 
   end
+
+  (* Old Incrementel Solver for integer arithmetic. *)
+module SolverFast =
+  struct
+    type t = Z3.Solver.solver * Z3.context
+    
+    module Valuation = Valuation.Make(OurInt)
+
+    let create ?(model=true) () =
+      let context =
+        Z3.mk_context [
+            ("model", if model then "true" else "false");
+            ("proof", "false");
+            (* ("timeout", "10"); *)
+          ]
+      in
+      Z3.Solver.mk_simple_solver context, context
+
+    let solver (solver,_) = solver
+      
+    let push =
+      Z3.Solver.push % solver
+       
+    let pop t =
+      Z3.Solver.pop (solver t) 1
+
+    let result_is expected (solver,_) =
+      Z3.Solver.check solver []
+      |> fun result ->
+         if result == Z3.Solver.UNKNOWN then
+           raise (Failure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown solver))
+         else
+           result == expected
+
+    let satisfiable =
+      result_is Z3.Solver.SATISFIABLE
+
+    let unsatisfiable =
+      result_is Z3.Solver.UNSATISFIABLE
+
+    let add (solver,context) formula =
+      formula
+      |> from_formula context
+      |> fun formula -> Z3.Solver.add solver [formula]
+
+    let model (solver,_) =
+      if Z3.Solver.check solver [] == Z3.Solver.SATISFIABLE then
+        solver
+        |> Z3.Solver.get_model
+        |> Option.map (fun model ->
+               model
+               |> Z3.Model.get_const_decls
+               |> List.map (fun func_decl ->
+                      let var =
+                        func_decl
+                        |> Z3.FuncDecl.get_name
+                        |> Z3.Symbol.get_string
+                        |> Var.of_string
+                      in
+                      let value =
+                        func_decl
+                        |> Z3.Model.get_const_interp model                        
+                        |> Option.get (* Should be fine here *)
+                        |> (fun expr ->
+                          if Z3.Arithmetic.is_int expr then
+                            expr
+                            |> Z3.Arithmetic.Integer.get_big_int
+                            |> Z.to_string
+                            |> OurInt.of_string
+                          else
+                            expr
+                            |> Z3.Arithmetic.Real.get_ratio
+                            |> Q.to_bigint
+                            |> Z.to_string
+                            |> OurInt.of_string
+                        )
+                      in
+                      (var, value)
+                    )
+             )
+        |? []
+        |> Valuation.from
+        |> Option.some
+      else None
+
+  end
