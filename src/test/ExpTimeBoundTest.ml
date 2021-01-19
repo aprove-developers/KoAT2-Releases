@@ -75,6 +75,8 @@ let tests =
           ("complex", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Absynth-Suite/complex.koat");
           ("complex2", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/complex2.koat");
           ("condand", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/condand.koat");
+          ("const_biased_rdwalk", RealBound.Polynomial 0, "examples/ProbabilisticExamples/const_biased_rdwalk.koat");
+          ("const_biased_rdwalk_expanded", RealBound.Polynomial 0, "examples/ProbabilisticExamples/const_biased_rdwalk_expanded.koat");
           ("cooling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/cooling.koat");
           ("coupon", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/Absynth-Suite/coupon.koat");
           ("cousot9", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/cousot9.koat");
