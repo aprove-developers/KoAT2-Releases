@@ -1,0 +1,19 @@
+# The leading example from the probabilistic_koat paper
+# In the first loop a quadratic size bound for y is computed
+# which is then used to infer the overall quadratic expected runtime
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y z couunter1 counter2)
+(RULES
+  f(x,y,z,counter1,counter2) -{0}> g(x,y,z,counter1,counter2)
+  g(x,y,z,counter1,counter2) -{0}> h(x,y,z,0,counter2)                                              :|: x<y # start outer loop
+  h(x,y,z,counter1,counter2) -{0}> i(x,y,z,counter1+1,0)                                            :|: counter1<x # start middle loop
+  i(x,y,z,counter1,counter2) -> i(x,y,z+x*y,counter1,counter2+1)                                    :|: counter2 < y # inner loop
+
+  i(x,y,z,counter1,counter2) -{0}> h(x,y,z,counter1,counter2)                                       :|: counter2 >= y # exit inner loop
+  h(x,y,z,counter1,counter2) -{0}> g(x+1,y-1,z,counter1,counter2)                                   :|: counter1>=x  # exit middle loop
+  g(x,y,z,counter1,counter2) -{0}>  j(x,y,z,counter1,counter2)                                      :|: x>=y # exit outer loop
+
+  j(x,y,z,counter1,counter2) -> 0.5:j(x,y,z-1,counter1,counter2) :+: 0.5:j(x,y,z,counter1,counter2) :|: z>0 # start countdown loop
+)

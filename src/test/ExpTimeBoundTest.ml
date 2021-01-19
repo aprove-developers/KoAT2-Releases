@@ -87,12 +87,18 @@ let tests =
           ("fig5", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/KoAT2-Suite/fig5.koat");
           ("fig6", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/KoAT2-Suite/fig6.koat");
           ("filling", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/filling.koat");
+          ("geo", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/Absynth-Suite/geo.koat");
+          ("geo_race", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/geo_race.koat");
           ("hyper", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/hyper.koat");
           ("knuth_morris_pratt.c", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/knuth_morris_pratt.c.koat");
           ("leading", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/leading.koat");
+          ("leading.1", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/leading.1.koat");
           ("linear01", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/Absynth-Suite/linear01.koat");
           ("multirace", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/Absynth-Suite/multirace.koat");
           ("multirace2", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/multirace2.koat");
+          ("neg_init_upd", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/neg_init_upd.koat");
+          ("nested_break", RealBound.Polynomial 2, "examples/ProbabilisticExamples/paper/KoAT2-Suite/nested_break.koat");
+          ("nested_size", RealBound.Polynomial 5, "examples/ProbabilisticExamples/paper/KoAT2-Suite/nested_size.koat");
           ("nestedrdwalk", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/nested_rdwalk.koat");
           ("nondet_countdown", RealBound.Polynomial 1, "examples/ProbabilisticExamples/paper/KoAT2-Suite/nondet_countdown.koat");
           ("no_loop", RealBound.Polynomial 0, "examples/ProbabilisticExamples/paper/Absynth-Suite/no_loop.koat");

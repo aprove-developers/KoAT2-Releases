@@ -1,0 +1,13 @@
+# A loop with a nested exit condition
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y)
+(RULES
+  f(x,y) -{0}> g(x,y)
+  g(x,y) -{0}> 0.5:h(x,y+2) :+: 0.5:h(x,y-1)
+  h(x,y) -{0}> i(x-1,y)                           :|: y>10
+  h(x,y) -> g(x,y)                                :|: y<=10
+  i(x,y) -> stop(x,y)                             :|: x<5  # BREAK = 1
+  i(x,y) -> g(x,y)                                :|: x>=5 # BREAK = 0
+)

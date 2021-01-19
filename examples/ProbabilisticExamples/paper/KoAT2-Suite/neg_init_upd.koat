@@ -1,0 +1,10 @@
+# In the first iteration wihtout identity update the negative value y is added to x
+# Starting in the second iteration (without identity update) quantity t is subtracted from x
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y t)
+(RULES
+  f(x,y,t) -{0}> g(x,y,t) :|: t>=0 && y<=0 && -y < t
+  g(x,y,t) -> 0.5:g(x-y,t,t) :+: 0.5:g(x,y,t) :|: x>0
+)

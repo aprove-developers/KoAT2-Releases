@@ -1,0 +1,10 @@
+# A race example containing a geometric distribution
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x h)
+(RULES
+  f(x,h) -{0}> g(x,h)
+  g(x,h) -> i(x+1, h) :|: x<10+h
+  i(x,h) -> g(GEOMETRIC(0.5),h+1)
+)
