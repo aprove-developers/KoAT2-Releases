@@ -37,6 +37,9 @@ let tests =
                     (* Propagation into a constant loop *)
                     ("b", "b", "x > 0",
                      "a -> b(x) :|: x > 0, b -> b(x)");
+                    (* Propagation of a constant in a loop*)
+                    ("c", "b", "x > 0",
+                     "a -> b(30), b -> c(x) :|: x>0, c -> b(x+1), c -> b(x-1)");
                     (* Propagation after a constant loop *)
                     ("b", "c", "x > 0",
                      "a -> b(x) :|: x > 0, b -> b(x), b -> c(x)");

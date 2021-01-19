@@ -164,6 +164,14 @@ let transform_program program =
   let open Koat2Apron in
   let open Apron2Koat in
 
+  let locations =
+    program
+    |> Program.graph
+    |> TransitionGraph.locations
+  in
+
+  let transitions = Program.transitions program in
+
   (** Creates the apron environment where all program variables are integer variables. *)
   let environment: Apron.Environment.t =
     Apron.Environment.make (vars_to_apron (Program.vars program)) [||]
@@ -255,9 +263,7 @@ let transform_program program =
       All other values at other program locations are undefined in the beginning.
       This will change through assignments in the program. *)
   let bottom: 'a program_abstract =
-    program
-    |> Program.graph
-    |> TransitionGraph.locations
+    locations
     |> LocationSet.enum
     |> Enum.map (fun location ->
            if Program.is_initial_location program location then
@@ -286,6 +292,21 @@ let transform_program program =
       |> Hashtbl.of_enum
     in
 
+    let narrowing_abstract =
+      let location_abstract l =
+        TransitionSet.filter (fun (_,_,l') -> Location.equal l l') transitions
+        |> TransitionSet.enum
+        |> Enum.map (fun t -> apply_transition t (Apron.Abstract1.top manager environment))
+        |> Enum.fold (Apron.Abstract1.join manager) (Apron.Abstract1.bottom manager environment)
+      in
+      LocationSet.enum locations
+      (* The initial location does not have any ingoing transitions *)
+      |> Enum.filter (not % Program.is_initial_location program)
+      |> Enum.map (fun location -> (location, location_abstract location))
+      |> LocationMap.of_enum
+    in
+
+
     while not (Stack.is_empty worklist) do
       let (l,t,l') = Stack.pop worklist in
       let trans_id = TransitionLabel.id t in
@@ -297,7 +318,9 @@ let transform_program program =
           if Hashtbl.find transition_steps trans_id < max_steps_without_widening then
             Apron.Abstract1.join manager old_abstract transfered_l_abstract
           else
-            Apron.Abstract1.widening manager old_abstract transfered_l_abstract
+            Apron.Abstract1.meet manager
+              (Apron.Abstract1.widening manager old_abstract transfered_l_abstract)
+              (LocationMap.find narrowing_abstract l')
         ) program_abstract;
 
         (* count step *)
