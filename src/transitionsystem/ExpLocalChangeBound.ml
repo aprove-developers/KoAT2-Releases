@@ -212,12 +212,14 @@ let elcb_ (((gt, l), v): RV.t): t =
       | TransitionLabel.UpdateElement.Dist d ->
           ProbDistribution.expected_value_abs d
     in
-    (* compute a local change bound for a single transition elemnent *)
+    (* compute a local change bound for a single transition elemnent.
+     * If v is not an input_var then it is a temporary variable
+     * The change of temporary variables can not be practically bounded *)
     let handle_transition trans =
       Transition.label trans
       |> flip TransitionLabel.update v
-      |? TransitionLabel.UpdateElement.Poly (Polynomial.of_var v)
-      |> handle_update_element
+      |> Option.map handle_update_element
+      |? RealBound.infinity
     in
 
     let bound_nondet_vars b =
@@ -243,23 +245,14 @@ let elcb_ (((gt, l), v): RV.t): t =
         (RealBound.vars b) b
     in
 
-    (* necessary to normalise reduced elcbs *)
-    let total_probability =
-      Enum.clone transitions_with_prob
-      |> Enum.map Tuple2.second
-      |> Enum.fold OurFloat.add OurFloat.zero
-    in
     Enum.clone transitions_with_prob
     |> Enum.map (fun (t,p) -> (p, handle_transition t))
     |> Enum.map
         (fun (p,bound) ->
-          RealBound.(
-              of_constant p * abs bound,
-              of_constant (OurFloat.(p/total_probability)) * abs bound
-          )
+          RealBound.(of_constant p * abs bound)
         )
-    |> Enum.map (fun (b,red_b) -> RealBound.simplify_vars_nonnegative b, RealBound.simplify_vars_nonnegative red_b)
-    |> fun en -> (RealBound.sum % Enum.map Tuple2.first @@ Enum.clone en)
+    |> Enum.map (fun (b) -> RealBound.simplify_vars_nonnegative b)
+    |> RealBound.sum
     |> bound_nondet_vars
     |> simplify_with_guard
     |> fun b ->
