@@ -249,7 +249,7 @@ let try_decreasing cache program ?(inv = false) (solver_real: SMTSolver.t)  (sol
                                             "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
                                             "rank", only_rank_to_string ranking_function])))
         ) 
-        else if inv && SMTSolver.satisfiable solver_real  && false then ( 
+        else if inv && SMTSolver.satisfiable solver_real then ( 
           SMTSolver.model_real solver_real
           |> Option.map (
               make_inv cache decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum) % change_valuation
