@@ -1,6 +1,8 @@
 # KoAT's Reimplementation KoAT2 - Analysis of Expected Runtimes
-Implementation of the techniques from our work [Inferring Expected Runtimes Using Expected Sizes](https://aprove-developers.github.io/ExpectedUpperBounds/)
+Implementation of the techniques from our works [Computing Expected Runtimes for Constant Probability Programs](https://aprove-developers.github.io/recurrence/ and  [Inferring Expected Runtimes Using Expected Sizes](https://aprove-developers.github.io/ExpectedUpperBounds/)
 Please note that a working installation of [Graphviz](https://www.graphviz.org/) is required to render the input programs as graphs.
+
+Moreover, for using the technique for inferring [exact expected runtimes](https://aprove-developers.github.io/recurrence/) you need to install [Python3](https://www.python.org/) and its its library [SymPy](https://www.sympy.org/en/index.html) (via the package manager [Pip](https://pypi.org/project/pip/)) (even when using the static binary). 
 
 ## Build
 
@@ -34,7 +36,7 @@ export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 - Musl: https://www.musl-libc.org/
 - Python: https://www.python.org/
 - Pip: https://pypi.org/project/pip/
-- Sympy: https://www.sympy.org/en/index.html
+- SymPy: https://www.sympy.org/en/index.html
 
 ## Used Libraries
 KoAT2 makes use of the following external libraries. In the static binary built inside the docker image, these libraries are linked into the binary.
@@ -50,9 +52,9 @@ KoAT2 makes use of the following external libraries. In the static binary built 
 - [Z3](https://github.com/Z3Prover/z3)
 
 ## External Tools
-To generate an image of the graph of the PIP, KoAT2 invokes [Graphviz](https://graphviz.org/), which has to be manually installed on the system. Note that when building the Docker image, the current alpine binaries of [Graphviz](https://graphviz.org/) are installed. Thus, the resulting image already contains [Graphviz](https://graphviz.org/). 
+To generate an image of the graph of a probabilistic integer program, KoAT2 invokes [Graphviz](https://graphviz.org/), which has to be manually installed on the system. Note that when building the Docker image, the current alpine binaries of [Graphviz](https://graphviz.org/) are installed. Thus, the resulting image already contains [Graphviz](https://graphviz.org/). 
 
-For using the technique for inferring [exact expected runtimes](https://aprove-developers.github.io/recurrence/) you need to install `python3`, its package manager `pip` and its library `sympy` (even when using the static binary). 
+For using the technique for inferring [exact expected runtimes](https://aprove-developers.github.io/recurrence/) you need to install [Python3](https://www.python.org/) and its its library [SymPy](https://www.sympy.org/en/index.html) (via the package manager [Pip](https://pypi.org/project/pip/)) (even when using the static binary). 
 
 ## Run
 
