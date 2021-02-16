@@ -3,8 +3,6 @@ Implementation of the techniques from our works [Computing Expected Runtimes for
 Please note that a working installation of [Graphviz](https://www.graphviz.org/) is required to render the input programs as graphs.
 Moreover, for using the technique for inferring [exact expected runtimes](https://aprove-developers.github.io/recurrence/) you need to install [Python3](https://www.python.org/) and its its library [SymPy](https://www.sympy.org/en/index.html) via the package manager [Pip](https://pypi.org/project/pip/) (even when using the static binary). 
 
-Moreover, for using the technique for inferring [exact expected runtimes](https://aprove-developers.github.io/recurrence/) you need to install [Python3](https://www.python.org/) and its its library [SymPy](https://www.sympy.org/en/index.html) (via the package manager [Pip](https://pypi.org/project/pip/)) (even when using the static binary). 
-
 ## Build
 
 ### Build directly from source code
