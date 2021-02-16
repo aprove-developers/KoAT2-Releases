@@ -113,11 +113,16 @@ module Constraint =
       |> List.map Atom.max_of_occurring_constants
       |> List.fold_left OurInt.mul OurInt.one
 
+    let remove_strict = 
+      List.map Atom.remove_strict 
   end
 
 module ParameterConstraint =
   struct
     include ConstraintOver(ParameterAtom)
+
+    let remove_strict = 
+      List.map ParameterAtom.remove_strict 
 
     (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
     let apply_farkas a_matrix b_right c_left d_right =
@@ -133,9 +138,10 @@ module ParameterConstraint =
         VarSet.union (Constraint.vars constr) (ParameterAtom.vars param_atom)
         |> VarSet.to_list
       in
+      let non_strict_constr = Constraint.remove_strict constr in
       let costfunction = lift param_atom in
-      let a_matrix = Constraint.get_matrix vars constr in
-      let b_right = Constraint.get_constant_vector constr in
+      let a_matrix = Constraint.get_matrix vars non_strict_constr in
+      let b_right = Constraint.get_constant_vector non_strict_constr in
       let c_left = List.flatten (get_matrix vars costfunction) in
       (* TODO What, if the list is empty? *)
       let d_right = ParameterAtom.get_constant param_atom in

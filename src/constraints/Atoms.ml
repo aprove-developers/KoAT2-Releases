@@ -124,11 +124,21 @@ module Atom =
     let max_of_occurring_constants (poly,_) =
       Polynomial.max_of_occurring_constants poly
 
+    let remove_strict (poly, comp) = 
+      match comp with 
+      | LE -> (poly, comp)
+      | LT -> (Polynomial.add poly Polynomial.one, LE)
+
   end
 
 module ParameterAtom =
   struct
     include AtomOver(ParameterPolynomial)
+
+    let remove_strict (poly, comp) = 
+      match comp with 
+      | LE -> (poly, comp)
+      | LT -> (ParameterPolynomial.add poly ParameterPolynomial.one, LE)
   end
 
 module BoundAtom =

@@ -37,6 +37,8 @@ sig
   (** TODO doc *)
   val max_of_occurring_constants : t -> OurInt.t
 
+    val remove_strict : t -> t
+
   (* Add operations specific to polynomial constraints here if needed *)
 end
 
@@ -44,6 +46,8 @@ end
 module ParameterConstraint :
 sig
   include module type of ConstraintOver(ParameterAtom)
+
+  val remove_strict : t -> t
 
   (** Returns the row of all coefficients of a variable in a constraint, i.e., used for farkas quantor elimination. *)
   val get_coefficient_vector : Var.t -> t -> value list
