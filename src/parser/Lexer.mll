@@ -48,10 +48,10 @@ rule read =
   | "FUNCTIONSYMBOLS"      { P.FUNCTIONSYMBOLS }
   | "RULES"                { P.RULES }
   | "VAR"                  { P.VAR }
-  | "GUARDVEC"             { P.GUARDVEC }
+  | "GUARDPOLY"            { P.GUARDPOLY }
   | "GUARDVAL"             { P.GUARDVAL }
   | "UPDATES"              { P.UPDATES }
-  | "DIRECTTERMINATION   " {P.DIRECTTERMINATION }
+  | "DIRECTTERMINATION"    {P.DIRECTTERMINATION }
   | "PRECISION"            { P.PRECISION }
   | "INITIAL"              { P.INITIAL }
   | "min"                  { P.MIN }

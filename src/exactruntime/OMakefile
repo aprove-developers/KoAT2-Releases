@@ -1,5 +1,10 @@
+USE_OCAMLFIND = true
+
 MENHIR_ENABLED = true
 MENHIR_FLAGS += --infer
+
+OCAMLPACKS[] =
+    batteries
 
 OCAMLINCLUDES[] =
     ../poly
@@ -16,16 +21,13 @@ GEN_FILES[] =
 
 OCamlGeneratedFiles($(GEN_FILES))
 
-# All .ml files have to be listed here explicitly, in an ordering of their dependencies
-# Otherwise with the two automatically generated files ExactLexer & ExactParser
-# multiple compilation passes might be necessary
-FILES[] =
-  ExactLexer
-  ExactParser
-  ExactBound
-  ExactReader
-  ExactProgramTypes
-
+# Include all .ml files
+FILES[] = 
+    ExactLexer
+    ExactParser
+    ExactReader
+    ExactBound
+    ExactProgramTypes
 
 LIB = exactruntime
 

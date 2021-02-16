@@ -119,7 +119,7 @@ module Make_BoundOver :
 
       val show_complexity : complexity -> string
 
-      val show_complexity_termcomp : complexity -> string
+      val show_complexity_termcomp : ?tight:bool -> complexity -> string
 
       (** Returns an overapproximation of the asymptotic complexity of the given bound. *)
       val asymptotic_complexity : t -> complexity

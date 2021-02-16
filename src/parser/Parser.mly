@@ -14,7 +14,7 @@
 %token              MIN MAX INFINITY ABS
 %token              EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE ASTERMINATION
 %token              BERNOULLI BINOMIAL GEOMETRIC HYPERGEOMETRIC UNIFORM
-%token				GUARDVEC GUARDVAL UPDATES PRECISION DIRECTTERMINATION INITIAL
+%token				GUARDPOLY GUARDVAL UPDATES PRECISION DIRECTTERMINATION INITIAL
 %token <string>		FRACTION
 
 %left				PLUS MINUS
@@ -329,54 +329,66 @@ bound :
 
 
 exactProgram :
-        |       g = goal;
-                guard_vec = guard_vector
-                guard_val = guard_value
-                updates = exact_updates
-                d_term = ioption(direct_termination);
-                precision = ioption(precision);
-                initial = ioption(initial); EOF
-                  { ExactProgram.from guard_vec guard_val updates d_term precision initial} ;
+	|	g = goal;
+		vars = var_vector;
+		guard_poly = guard_poly;
+		guard_val = guard_value;
+		updates = exact_updates;
+		d_term = ioption(direct_termination);
+		precision = ioption(precision); 
+		initial = ioption(initial); EOF
+		{ ExactProgram.from vars guard_poly guard_val updates d_term precision initial} ;
 
-guard_vector :
-        |       LPAR GUARDVEC guard_vec = vector RPAR
-                  { guard_vec } ;
+var_vector :
+	|	LPAR VAR LPAR var_vec = separated_nonempty_list(COMMA, stringid) RPAR RPAR
+		{ var_vec } ;
+
+guard_poly :
+	|	LPAR GUARDPOLY guard_poly = polynomial RPAR
+		{ guard_poly } ;
 
 guard_value :
-        |       LPAR GUARDVAL guard_val = int_val RPAR
-                  { guard_val } ;
+	|	LPAR GUARDVAL guard_val = int_val RPAR
+		{ guard_val } ;
 
 exact_updates :
-        |       LPAR UPDATES updates = separated_nonempty_list(PROBDIV, prob_update) RPAR
-                  { updates } ;
+	|	LPAR UPDATES updates = separated_nonempty_list(PROBDIV, prob_update) RPAR
+		{ updates } ;
 
 direct_termination :
-        |       LPAR DIRECTTERMINATION; update = prob_update RPAR
-                  { update } ;
+	|	LPAR DIRECTTERMINATION; update = prob_update RPAR
+		{ update } ;
 
 precision :
-        |       LPAR PRECISION; prec = UINT RPAR
-                  { OurInt.of_int prec } ;
+	|	LPAR PRECISION; prec = UINT RPAR
+		{ OurInt.of_int prec } ;
 
 initial :
-        |       LPAR; INITIAL; init_vec = vector; RPAR
-                  { init_vec } ;
+	|	LPAR; INITIAL; init_vec = vector; RPAR
+		{ init_vec } ;
 
 prob_update :
-        |       prob = UINT COLON update = vector
-                  { ProbUpdate.from (OurNum.of_int prob) update }
-        |       prob = UFLOAT COLON update = vector
-                  { ProbUpdate.from (OurNum.of_float_string prob) update }
-        |       prob = FRACTION COLON update = vector
-                  { ProbUpdate.from (OurNum.of_string prob) update };
+	|	prob = UINT COLON update = poly_vector
+		{ ProbUpdate.from (OurNum.of_int prob) update }
+	|	prob = UFLOAT COLON update = poly_vector
+		{ ProbUpdate.from (OurNum.of_float_string prob) update }
+	|	prob = FRACTION COLON update = poly_vector
+		{ ProbUpdate.from (OurNum.of_string prob) update };
 
 vector :
-        |       LPAR values = separated_nonempty_list(COMMA, int_val) RPAR
-                  { values } ;
+	|	LPAR values = separated_nonempty_list(COMMA, int_val) RPAR
+		{ values } ;
 
 int_val :
-        |       value = UINT
-                  { OurInt.of_int value }
-        |       MINUS value = UINT
-                  { OurInt.of_int (-value) } ;
+	|	value = UINT
+		{ OurInt.of_int value } 
+	|	MINUS value = UINT
+		{ OurInt.of_int (-value) } ;
 
+poly_vector :
+	|	LPAR polys = separated_nonempty_list(COMMA, polynomial) RPAR
+		{ polys } ;
+		
+stringid :
+	|	v = ID
+		{ Var.of_string v } ;

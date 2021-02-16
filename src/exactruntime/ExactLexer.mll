@@ -1,7 +1,6 @@
 {
-  (** Provides an lexer to parse the output of the sage script *)
-  
-  (** Constructs a lexer for transition graphs as well as its used constraints and polynomials *)
+  (** Provides an lexer to parse the output of the python script *)
+
 (*  module Make(G : Parseable.Program) =
     struct*)
       open Lexing

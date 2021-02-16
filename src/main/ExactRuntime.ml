@@ -1,5 +1,4 @@
 open Batteries
-open ProgramTypes
 open Sys
 open Unix
 open Parameter
@@ -86,15 +85,16 @@ struct
     }
 
   let to_string_ label value =
-    value |> Option.map (fun str -> label ^ ": " ^ str) |> Option.map (List.make 1) |? []
+    value |> Option.map (fun str -> label ^ str) |> Option.map (List.make 1) |? []
   let to_string_list res =
-    to_string_ "RESULT" res.string_res
-    @ to_string_ "WARNING" res.warning
-    @ to_string_ "ERROR" res.error
-    @ to_string_ "TIME" res.time
-    @ to_string_ "EVALUATION" res.evaluation
-    @ to_string_ "LOWER BOUND" (Option.map (RealBound.show ~complexity:false) res.lower)
-    @ to_string_ "UPPER BOUND" (Option.map (RealBound.show ~complexity:false) res.upper)
+    to_string_ "" (Option.map ((RealBound.show_complexity_termcomp ~tight:true) % RealBound.asymptotic_complexity) res.upper) 
+    @ to_string_ "RESULT: " res.string_res
+    @ to_string_ "WARNING: " res.warning
+    @ to_string_ "ERROR: " res.error
+    @ to_string_ "TIME: " res.time
+    @ to_string_ "EVALUATION: " res.evaluation
+    @ to_string_ "LOWER BOUND: " (Option.map (RealBound.show ~complexity:false) res.lower)
+    @ to_string_ "UPPER BOUND: " (Option.map (RealBound.show ~complexity:false) res.upper)
 
   let to_string res =
     res |> to_string_list |> String.concat "\n"
@@ -132,10 +132,10 @@ let run (params: params) =
     let sage_path = get_koat_path Sys.argv.(0) ^ "/../exactruntime/exact_runtime_from_koat.py" in
     input_filename
     |> Readers.read_exact_file
-    |> (fun ep -> if ExactProgram.is_valid ~logger:logger ep then Some ep else None)
+    |> (fun ep -> if ExactProgram.is_valid ep && ExactProgram.is_cp_program ep then Some ep else None)
     |> Option.map (fun ep -> 
                       ep
-                      |> ExactProgram.to_sage
+                      |> ExactProgram.to_python
                       |> fun args -> "python3 " ^ sage_path ^ " " ^ args
                       |> read_process_lines
                       |> ExactResult.from_list

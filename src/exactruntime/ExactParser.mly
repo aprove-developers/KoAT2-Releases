@@ -1,3 +1,5 @@
+(*Parser used to read the results from the python script.*)
+
 %token  <string>	FLOAT
 %token  <string>	FRACTION
 %token  <string>	VAR
@@ -39,7 +41,7 @@ expression_bound :
 	|	SUM
 		{ ExactBound.list_sum }
 	|	PROD
-		{ExactBound.list_prod }
+		{ ExactBound.list_prod }
 
 %inline single_op :
 	|	COS

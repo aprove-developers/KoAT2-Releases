@@ -53,14 +53,20 @@ RUN RELEASE=1 omake test
 FROM alpine:3.12 as koat2_probabilistic
 LABEL author="Fabian Meyer"
 
+RUN apk add --no-cache py3-pip
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install sympy
+
 WORKDIR /home/koat2
 
 # Add executables
 COPY --from=koat2_build /home/opam/build/src/main/koat2 app/src/main/koat2
+COPY --from=koat2_build /home/opam/build/src/exactruntime/exact_runtime_from_koat.py app/src/exactruntime/exact_runtime_from_koat.py
 
 # Add Probabilistic Examples
 COPY examples/ProbabilisticExamples/paper/KoAT2-Suite/ examples
-COPY examples//ProbabilisticExamples/paper/Absynth-Suite/ examples
+COPY examples/ProbabilisticExamples/paper/Absynth-Suite/ examples
+COPY examples/ExactExamples examples/exact_runtime
 
 # Add scripts
 COPY docker_entry.sh app/src/main/docker_entry.sh

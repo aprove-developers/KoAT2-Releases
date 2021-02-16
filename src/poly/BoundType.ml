@@ -115,11 +115,19 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
       | Exponential 1 -> "O(EXP)"
       | Exponential x -> "O(EXP^" ^ show_complexity (Exponential (x-1)) ^ ")"
 
-    let show_complexity_termcomp = function
-      | Inf -> "MAYBE"
-      | Polynomial 0 -> "WORST_CASE(?, O(1))"
-      | Polynomial x -> "WORST_CASE(?, O(n^" ^ Int.to_string x ^ "))"
-      | Exponential _ -> "WORST_CASE(?, O(EXP))"
+    let show_complexity_termcomp ?(tight=false) =
+      if tight then
+        function
+        | Inf -> "MAYBE"
+        | Polynomial 0 -> "WORST_CASE(Omega(1), O(1))"
+        | Polynomial x -> "WORST_CASE(Omega(n^" ^ Int.to_string x ^ "), O(n^" ^ Int.to_string x ^ "))"
+        | Exponential _ -> "WORST_CASE(Omega(EXP), O(EXP))"
+      else
+        function
+        | Inf -> "MAYBE"
+        | Polynomial 0 -> "WORST_CASE(?, O(1))"
+        | Polynomial x -> "WORST_CASE(?, O(n^" ^ Int.to_string x ^ "))"
+        | Exponential _ -> "WORST_CASE(?, O(EXP))"
 
     let asymptotic_complexity =
       let min_max_helper = (fun x y ->

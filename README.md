@@ -32,6 +32,9 @@ export LD_LIBRARY_PATH="$(ocamlfind printconf destdir):${LD_LIBRARY_PATH}""
 - OUnit: http://ounit.forge.ocamlcore.org/api-ounit/index.html
 - Menhir: http://gallium.inria.fr/~fpottier/menhir/
 - Musl: https://www.musl-libc.org/
+- Python: https://www.python.org/
+- Pip: https://pypi.org/project/pip/
+- Sympy: https://www.sympy.org/en/index.html
 
 ## Used Libraries
 KoAT2 makes use of the following external libraries. In the static binary built inside the docker image, these libraries are linked into the binary.
@@ -46,11 +49,13 @@ KoAT2 makes use of the following external libraries. In the static binary built 
 - [ppx_deriving_cmdliner](<https://github.com/hammerlab/ppx_deriving_cmdliner>)
 - [Z3](https://github.com/Z3Prover/z3)
 
-## External Tool
+## External Tools
 To generate an image of the graph of the PIP, KoAT2 invokes [Graphviz](https://graphviz.org/), which has to be manually installed on the system. Note that when building the Docker image, the current alpine binaries of [Graphviz](https://graphviz.org/) are installed. Thus, the resulting image already contains [Graphviz](https://graphviz.org/). 
+
+For using the technique for inferring [exact expected runtimes](https://aprove-developers.github.io/recurrence/) you need to install `python3`, its package manager `pip` and its library `sympy` (even when using the static binary). 
 
 ## Run
 
 1. After compiling, the testprogram `test` is run. It can be found in the subdirectory `test`.
 2. Run `./koat2` in main to get the help page of `koat2`. For further information run `./koat2 commandname --help`. The main command proceeding a full analysis is the command `analyse`.
-3. A detailed description of the input format and how to execute this tool can be found [here](https://aprove-developers.github.io/ExpectedUpperBounds/).
+3. A detailed description of the different input formats and how to execute this tool can be found [here](https://aprove-developers.github.io/recurrence/) and [here](https://aprove-developers.github.io/ExpectedUpperBounds/).
