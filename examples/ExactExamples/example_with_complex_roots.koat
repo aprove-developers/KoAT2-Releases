@@ -1,5 +1,6 @@
 (GOAL EXACTRUNTIME)
-(GUARDVEC (1))
+(VAR (X))
+(GUARDPOLY X)
 (GUARDVAL 0)
 (UPDATES 5/36:(1) :+: 1/2:(0) :+: 13/60:(-1) :+: 7/90:(-2) :+: 1/15:(-3))
 (PRECISION 20)
