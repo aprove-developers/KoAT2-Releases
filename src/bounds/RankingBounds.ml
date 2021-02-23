@@ -143,7 +143,34 @@ let bounded measure appr transition =
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> false
 
-let counter = ref 0
+let one_successor (program: Program.t) (scc: TransitionSet.t) = 
+    TransitionSet.filter (fun (l,g,l') -> (not (Location.equal l l')) 
+                                       && (List.length (Program.outgoing_transitions logger program [(l,g,l')])) == 1) scc
+
+let knowledge_propagation (scc: TransitionSet.t) measure program appr = 
+  let execute () = 
+  scc
+  |> one_successor program
+  |> TransitionSet.enum
+  |> MaybeChanged.fold_enum ((
+    fun appr transition ->
+      let new_bound =
+      [transition]
+      |> Program.entry_transitions logger program
+      |> List.enum
+      |> Enum.map (fun (l,t,l') ->
+        Approximation.timebound appr (l,t,l'))
+      |> Bound.sum in 
+      let orginal_bound = get_bound measure appr transition in
+      if (Bound.compare_asy orginal_bound new_bound) = 1 then
+        add_bound measure new_bound transition appr
+        |> MaybeChanged.changed
+      else
+         MaybeChanged.same appr
+      )) appr in 
+      (Logger.with_log logger Logger.INFO
+            (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
+             execute)
 
 (** We try to improve a single scc until we reach a fixed point. *)
 let rec improve_timebound_rec cache_rf cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t)  measure program appr =
@@ -215,6 +242,9 @@ let rec improve_timebound_rec cache_rf cache_mprf ?(mprf = false) ?(inv = false)
     |> improve_timebound_rec cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program
     |> SizeBounds.improve program ~scc:(Option.some scc) (Option.is_some !backtrack_point)
     |> improve_timebound cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program
+    |> MaybeChanged.if_changed (improve_scc cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program)
+    |> MaybeChanged.unpack
+    |> knowledge_propagation scc measure program
     |> MaybeChanged.if_changed (improve_scc cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program)
     |> MaybeChanged.unpack
 
