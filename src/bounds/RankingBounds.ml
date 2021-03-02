@@ -245,7 +245,6 @@ let rec improve_timebound_rec cache_rf cache_mprf ?(mprf = false) ?(inv = false)
     |> MaybeChanged.if_changed (improve_scc cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program)
     |> MaybeChanged.unpack
     |> knowledge_propagation scc measure program
-    |> MaybeChanged.if_changed (improve_scc cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program)
     |> MaybeChanged.unpack
 
 
