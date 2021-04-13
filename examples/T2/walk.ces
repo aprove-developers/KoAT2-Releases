@@ -1,0 +1,8 @@
+eq(pubs_start(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O),0,[f22(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O)],[]).
+eq(f22(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O),1,[f18(A,H,C,D,E,F,P,H,2,Q,Q,Q,Q,3,0)],[H >= 1 + A, F >= 0]).
+eq(f22(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O),1,[f18(A,H,C,D,E,F,P,H,2,Q,Q,Q,Q,3,0)],[A >= 1 + H, F >= 0]).
+eq(f17(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O),1,[f20(B,B,C,D,E,F,P,H,I,J,K,L,M,N,O)],[C >= 0, D >= 0, B = A]).
+eq(f18(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O),1,[f17(A,P,C,1,Q,F,G,H,I,J,K,L,M,N,O)],[F >= 0, B >= 1 + A]).
+eq(f18(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O),1,[f17(A,P,C,1,Q,F,G,H,I,J,K,L,M,N,O)],[F >= 0, A >= 1 + B]).
+eq(f17(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O),1,[f17(A,P,C,1 + D,Q,F,G,H,I,J,K,L,M,N,O)],[B >= 1 + A, C >= 0, D >= 0]).
+eq(f17(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O),1,[f17(A,P,C,1 + D,Q,F,G,H,I,J,K,L,M,N,O)],[A >= 1 + B, C >= 0, D >= 0]).

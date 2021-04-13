@@ -1,0 +1,4 @@
+eq(pubs_start(A,B,C,D),0,[sqrt(A,B,C,D)],[]).
+eq(f(A,B,C,D),1,[end(A,B,C,D)],[C >= 1 + D]).
+eq(f(A,B,C,D),1,[f(1 + A,2 + B,2 + C + B,D)],[D >= C, B >= 0]).
+eq(sqrt(A,B,C,D),1,[f(0,1,1,D)],[]).
