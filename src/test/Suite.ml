@@ -22,6 +22,7 @@ let suite =
       BoundTest.tests;
       TimeboundTest.tests;
       InvariantGenerationTest.tests;
+      TWNTest.tests;
     ]
                      
 let () =

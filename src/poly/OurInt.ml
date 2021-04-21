@@ -22,3 +22,6 @@ let of_ourint =
   identity
 
 let minus_one = sub zero one
+
+let is_zero a = 
+  equal a zero
