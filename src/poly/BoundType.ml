@@ -139,8 +139,6 @@ match (asymptotic_complexity bound) with
   | Polynomial 0 -> true
   | _ -> false
 
-let is_negative (Const x) = (Num.compare x Num.zero) < 0
-    
 (** Returns true iff. the bound is in complexity class O(n) *)
 let is_linear bound = 
 match (asymptotic_complexity bound) with
@@ -207,6 +205,11 @@ let show ?(complexity=true) bound =
   show_bound bound ^ complexity_str
 
 let to_string = show ~complexity:true
+
+let is_negative b = 
+  match b with 
+  | (Const x) -> (Num.compare x Num.zero) < 0
+  | _ -> raise (Failure ("is_negative: only on constant (" ^ (to_string b) ^ ") \n"))
                       
 let rec (>) b1 b2 =
   let execute () =
