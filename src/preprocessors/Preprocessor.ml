@@ -8,18 +8,21 @@ type t =
   | CutUnreachableLocations
   | CutUnsatisfiableTransitions
   | Chaining
+  | EliminateNonContributors
   | InvariantGeneration[@@deriving ord, eq]
 
 let show = function
   | CutUnreachableLocations -> "reachable"
   | CutUnsatisfiableTransitions -> "sat"
   | Chaining -> "chaining"
+  | EliminateNonContributors -> "eliminate"
   | InvariantGeneration -> "invgen" 
 
 let affects = function
-  | CutUnreachableLocations -> []
+  | CutUnreachableLocations -> [EliminateNonContributors]
   | InvariantGeneration -> [CutUnsatisfiableTransitions]
-  | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining]
+  | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining; EliminateNonContributors]
+  | EliminateNonContributors -> []
   | Chaining -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
 
 let lift_to_program transform program =
@@ -32,6 +35,7 @@ let transform subject = function
   | CutUnreachableLocations -> lift_to_tuple CutUnreachableLocations.transform_program subject
   | CutUnsatisfiableTransitions -> lift_to_tuple CutUnsatisfiableTransitions.transform_program subject
   | Chaining -> lift_to_tuple (lift_to_program Chaining.transform_graph) subject
+  | EliminateNonContributors -> lift_to_tuple EliminateNonContributors.eliminate subject
   | InvariantGeneration -> lift_to_tuple InvariantGeneration.transform_program subject
 
 type outer_t = t
@@ -44,7 +48,7 @@ module PreprocessorSet =
     )
 
 let all =
-  [Chaining; CutUnreachableLocations; CutUnsatisfiableTransitions; InvariantGeneration]
+  [Chaining; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]
 
   
 type strategy = t list -> subject -> subject
@@ -72,9 +76,12 @@ let rec process_til_fixpoint_ ?(wanted=PreprocessorSet.of_list all) (todos: Prep
       else others in
     process_til_fixpoint_ ~wanted new_preprocessor_set (MaybeChanged.unpack maybe_changed)
 
-let process_til_fixpoint preprocessors =
+let process_til_fixpoint preprocessors subject =
   let set = PreprocessorSet.of_list preprocessors in
-  process_til_fixpoint_ ~wanted:set set
+  if PreprocessorSet.mem EliminateNonContributors set then 
+    process_til_fixpoint_ ~wanted:set set (process process_only_once [EliminateNonContributors] subject) 
+  else
+    process_til_fixpoint_ ~wanted:set set subject
   
 let all_strategies = [process_only_once; process_til_fixpoint]
   

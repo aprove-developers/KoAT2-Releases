@@ -106,3 +106,5 @@ val to_id_string : t -> string
 val rename : Var.t list -> t -> t
 
 val rename2 : RenameMap.t -> t -> t
+
+val remove_non_contributors : VarSet.t -> t -> t

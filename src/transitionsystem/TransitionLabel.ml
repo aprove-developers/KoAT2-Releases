@@ -237,3 +237,12 @@ let rename2 rename_map t =
     guard = Guard.rename t.guard rename_map;
     cost = Polynomial.rename rename_map t.cost;
   }
+
+let remove_non_contributors non_contributors t = 
+    let update_ = VarSet.fold (fun var u -> VarMap.remove var u) non_contributors t.update in
+    {
+    id = unique ();
+    update = update_;
+    guard = t.guard;
+    cost = t.cost;
+    }
