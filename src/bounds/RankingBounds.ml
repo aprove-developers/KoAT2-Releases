@@ -250,18 +250,13 @@ let rec improve_timebound_rec cache_rf cache_mprf ?(mprf = false) ?(inv = false)
 
 let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) measure program appr =
   if Option.is_some !backtrack_point then (
-    (** Done with orginial component and set backtrack_point *)
-    let (org_program,_,_) = Option.get !backtrack_point in
-    if not (TransitionSet.disjoint (Program.transitions org_program) scc) then 
-      backtrack_point := None
-  );
-  if Option.is_some !backtrack_point then (
     let (_,_,org_bound) = Option.get !backtrack_point in
     let cfr_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
     if (Bound.compare_asy org_bound cfr_bound) < 1 then (
       Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED", ["orginial bound", (Bound.to_string org_bound); "cfr bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
       raise NOT_IMPROVED
-    )
+    );
+    backtrack_point := None;
   ); 
   if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions)  then
       let org_bound = Bound.sum
