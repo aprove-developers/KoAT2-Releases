@@ -1,7 +1,7 @@
 (** Implementation of bounds, i.e., polynomials, exponential terms and max/min terms.*)
 open Batteries
 open Polynomials
-   
+
 (** A MinMaxPolynomial is a polynomial which allows the usage of min and max functions  *)
 module Make_BoundOver :
   functor (Num : PolyTypes.OurNumber) -> functor
@@ -23,8 +23,8 @@ include PolyTypes.PartialOrder with type t := t
 (** {1  {L Following methods are convenience methods for the creation of bounds.}} *)
 
 (** Creates a bound from a polynomial over OutInt. *)
-val of_poly : Poly.t -> t   
-           
+val of_poly : Poly.t -> t
+
 (** Creates a constant bound from a constant Num. *)
 val of_constant : value -> t
 
@@ -39,7 +39,7 @@ val of_var : Var.t -> t
 
 (** Creates a bound of a string representing a variable. *)
 val of_var_string : string -> t
-  
+
 (** Returns for two bounds p,q the minimum bound min(p,q). *)
 val min : t -> t -> t
 
@@ -55,7 +55,7 @@ val minimum : t Enum.t -> t
     Raises an exception, if the enum is empty.
     Use the function minus_infinity for those cases. *)
 val maximum : t Enum.t -> t
-  
+
 (** Returns the infinity bound. *)
 val infinity : t
 
@@ -73,7 +73,7 @@ val max_of_occurring_constants : t -> Num.t
 
 (** Returns true iff. a bound is infinite. *)
 val is_infinity : t -> bool
-  
+
 (** Returns true iff. a bound is negative infinty. *)
 val is_minus_infinity : t -> bool
 
@@ -85,7 +85,7 @@ val show : ?complexity:bool -> t -> string
 
 (** Functions to classify the quality of the bound *)
 
-  
+
 (** {1  {L Following methods can be used to classify the type of the bound. }}*)
 
 (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
@@ -105,21 +105,21 @@ val appr_substitution : [ `Lower | `Upper ] -> lower:(Var.t -> t) -> higher:(Var
 (** Replaces all arithmetical operations by new constructors. *)
 val fold : const:(value -> 'b) ->
            var:(Var.t -> 'b) ->
-           neg:('b -> 'b) ->               
+           neg:('b -> 'b) ->
            plus:('b -> 'b -> 'b) ->
            times:('b -> 'b -> 'b) ->
            exp:(value -> 'b -> 'b) ->
            max:('b -> 'b -> 'b) ->
            inf:'b ->
-           t -> 'b 
+           t -> 'b
 
 (** TODO doc *)
 type complexity =
 Inf
  (** Bound is infinite. *)
-  | Polynomial of int 
+  | Polynomial of int
   (** Bound is in asymptotic class O(n^i) *)
-  | Exponential of int 
+  | Exponential of int
   (** Bound is in corresponding asymptotic class O(2^2^...^n) where the integer value denotes the amount of powers.*)
 
 (** TODO doc where is this method? Returns true iff. two bounds are equal. Or asym. equal?*)
@@ -130,7 +130,7 @@ val show_complexity : complexity -> string
 
 (** Returns string representing asymptotic complexity class in the TermComp format. *)
 val show_complexity_termcomp : complexity -> string
-  
+
 (** Returns an overapproximation of the asymptotic complexity of the given bound. *)
 val asymptotic_complexity : t -> complexity
 

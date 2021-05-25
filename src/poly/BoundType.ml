@@ -1,9 +1,9 @@
 open Batteries
 open Polynomials
 open Util
-   
+
 let logger = Logging.(get Bound)
-           
+
 module Make_BoundOver (Num : PolyTypes.OurNumber)
                       (Poly :
                         sig
@@ -18,7 +18,7 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     type polynomial = Poly.t
     type value = Num.t
-                
+
 (* Minus Infinity is max of an empty list *)
 (* Infinity is min of an empty list *)
 type t =
@@ -28,7 +28,7 @@ type t =
   | Neg of t
   | Pow of Num.t * t
   | Sum of t * t
-  | Product of t * t 
+  | Product of t * t
   | Max of t * t [@@deriving eq, ord]
 
 let of_var v = Var v
@@ -44,7 +44,7 @@ let rec get_constant t =
   | Pow (n, b) -> Num.pow (get_constant b) (Num.to_int n)
   | Sum (b1, b2) -> Num.add (get_constant b1) (get_constant b2)
   | Product (b1, b2) -> Num.mul (get_constant b1) (get_constant b2)
-  | Max (b1, b2) -> Num.max (get_constant b1) (get_constant b2) 
+  | Max (b1, b2) -> Num.max (get_constant b1) (get_constant b2)
 
 module Constructor =
   struct
@@ -57,11 +57,11 @@ module Constructor =
       | Sum _ -> 5
       | Product _ -> 6
       | Max _ -> 7
-        
+
     let (<) b1 b2 =
       number b1 < number b2
   end
-          
+
 let rec fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf p =
   let fold_ = fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf in
   match p with
@@ -73,7 +73,7 @@ let rec fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf p =
   | Pow (value, n) -> exp value (fold_ n)
   | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
   | Product (b1, b2) -> times (fold_ b1) (fold_ b2)
-                    
+
 type complexity =
   | Inf (** Bound is infinite. *)
   | Polynomial of int (** Bound is in asymptotic class O(n^i) *)
@@ -135,18 +135,18 @@ let asymptotic_complexity =
     ~inf:Inf
 
 let is_constant bound =
-match (asymptotic_complexity bound) with 
+match (asymptotic_complexity bound) with
   | Polynomial 0 -> true
   | _ -> false
 
 (** Returns true iff. the bound is in complexity class O(n) *)
-let is_linear bound = 
+let is_linear bound =
 match (asymptotic_complexity bound) with
   | Polynomial 0 -> true
   | Polynomial 1 -> true
-  | _ -> false 
+  | _ -> false
 
-let compare_asy b1 b2 = 
+let compare_asy b1 b2 =
   match (asymptotic_complexity b1,asymptotic_complexity b2) with
   | (Inf,Inf) -> 0
   | (Inf,_) -> 1
@@ -173,14 +173,14 @@ let max_of_occurring_constants bound =
     ~max:Num.max
     ~inf:(raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
     bound
-  
+
 let rec show_bound = function
   | Var v -> Var.to_string v
   | Const c -> if Num.Compare.(c < Num.zero) then "("^Num.to_string c^")" else Num.to_string c
   | Infinity -> "inf"
   (*| Max (b1, Max (b2, b3)) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ ", " ^ show_bound b3 ^ "}"*)
   | Max (b1, b2) -> "max([" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ "])"
-  | Neg b ->( 
+  | Neg b ->(
       match b with
       | Const c -> (Num.to_string ( Num.neg c))
       | Neg d -> show_bound d
@@ -206,11 +206,11 @@ let show ?(complexity=true) bound =
 
 let to_string = show ~complexity:true
 
-let is_negative b = 
-  match b with 
+let is_negative b =
+  match b with
   | (Const x) -> (Num.compare x Num.zero) < 0
   | _ -> raise (Failure ("is_negative: only on constant (" ^ (to_string b) ^ ") \n"))
-                      
+
 let rec (>) b1 b2 =
   let execute () =
     match (b1, b2) with
@@ -275,7 +275,7 @@ let (=~=) = equal
 let rec simplify bound =
   let execute () =
     match bound with
-      
+
     | Infinity -> Infinity
 
     | Var v -> Var v
@@ -342,7 +342,7 @@ let rec simplify bound =
       | (b1, b2) when Constructor.(b2 < b1) -> simplify (Product (b2, b1))
       | (b1, b2) -> Product (b1, b2)
     )
-                        
+
     (* Simplify terms with pow head *)
     | Pow (value, exponent) -> (
        match simplify exponent with
@@ -375,30 +375,30 @@ let rec simplify bound =
                   (fun () -> "simplify", ["input", to_string bound])
                   ~result:to_string
                   execute
-  
+
 type outer_t = t
 module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
   struct
     type t = outer_t
-           
+
     let zero = Const (Num.zero)
-             
+
     let one = Const (Num.one)
-            
+
     let neg bound = simplify (Neg bound)
-              
+
     let add b1 b2 =
       simplify (Sum (b1, b2))
-      
+
     let mul b1 b2 =
       simplify (Product (b1, b2))
-      
+
     let pow bound n =
       bound
       |> Enum.repeat ~times:n
       |> Enum.fold mul one
       |> simplify
-      
+
   end
 include PolyTypes.MakeMath(BaseMathImpl)
 
@@ -406,27 +406,27 @@ let sum bounds =
   try
     bounds |> Enum.reduce add |> simplify
   with Not_found -> zero
-  
+
 let product bounds =
   try
     bounds |> Enum.reduce mul |> simplify
   with Not_found -> one
-  
+
 let sub t1 t2 =
   simplify (add t1 (neg t2))
-      
+
 let of_poly =
   Poly.fold ~const:of_constant ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow
-              
+
 let of_int i = Const (Num.of_int i)
-                  
+
 let to_int poly = raise (Failure "TODO: Not possible")
-                
+
 let of_var_string str = Var (Var.of_string str)
 
 let infinity = Infinity
 
-let minus_infinity = Neg Infinity 
+let minus_infinity = Neg Infinity
 
 let is_infinity = equal Infinity
 
@@ -465,7 +465,7 @@ let substitute_f substitution bound =
   bound
   |> fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~exp:exp ~max:max ~inf:infinity
   |> simplify
-  
+
 let substitute var ~replacement =
   substitute_f (fun target_var ->
       if Var.(var =~= target_var) then replacement else of_var target_var
