@@ -16,6 +16,12 @@ module Make_BoundOver :
 
 type t
 
+(* A finite bound *)
+type bound
+
+(* Obtain a finite bound whenever it is possible *)
+val prove_finiteness: t -> bound option
+
 include PolyTypes.Evaluable with type t := t with type value = Num.t
 (* include PolyTypes.Math with type t := t *)
 include PolyTypes.PartialOrder with type t := t
