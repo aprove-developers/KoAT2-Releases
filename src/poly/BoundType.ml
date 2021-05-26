@@ -31,6 +31,8 @@ type bound =
 type t = bound option [@@deriving eq,ord]
 (* None represents infinity *)
 
+let prove_finiteness = identity
+
 let bound_of_var v = Var v
 let of_var = OptionMonad.return % bound_of_var
 
