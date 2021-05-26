@@ -1,7 +1,7 @@
 open Batteries
 open ConstraintTypes
 open Lexing
-              
+
 let position_string lexbuf =
   let pos = lexbuf.lex_curr_p in
   Printf.sprintf "line %d at char number %d which is directly after %s"
@@ -16,7 +16,7 @@ let read_ rule lexbuf =
      raise (ParserUtil.Error (Printf.sprintf "%s at %s" msg (position_string lexbuf)))
   | Parser.Error ->
      raise (ParserUtil.Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
-    
+
 let read_file path =
   read_ Parser.onlyProgram (Lexing.from_channel @@ File.open_in path)
 
@@ -34,7 +34,7 @@ let read_formula =
 
 let read_constraint =
   read Parser.onlyConstraints
-  
+
 let read_atom =
   read Parser.onlyAtom
 
