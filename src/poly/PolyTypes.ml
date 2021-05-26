@@ -44,7 +44,7 @@ module type PartialOrder =
     val (<) : t -> t -> bool Option.t
 
     (** Greater or equal comparison of two elements of type {i t}. *)
-    val (>=) : t -> t -> bool Option.t      
+    val (>=) : t -> t -> bool Option.t
 
     (** Less or equal comparison of two elements of type {i t}. *)
     val (<=) : t -> t -> bool Option.t
@@ -70,7 +70,7 @@ module type Valuation =
   (** A valuation is a function which maps from a finite set of variables to values. *)
 
     type t
-    
+
     (** Type of variables. *)
     type var = Var.t
 
@@ -101,9 +101,9 @@ module type Valuation =
 
     (** Returns the var to value bindings. *)
     val bindings : t -> (var * value) Enum.t
-    
+
     (** Converts the valuation into a string using the print function. *)
-    val to_string : t -> string 
+    val to_string : t -> string
   end
 
 (** Evaluable is a unified interface of all parts of a polynomial. *)
@@ -115,8 +115,8 @@ module type Evaluable =
     type value
     type valuation
 
-    val (=~=) : t -> t -> bool       
-       
+    val (=~=) : t -> t -> bool
+
     (** Stable structural equality, but not actual equality *)
     val equal : t -> t -> bool
 
@@ -129,7 +129,7 @@ module type Evaluable =
     (** Returns a set of the variables which occur in the evaluable *)
     val vars : t -> VarSet.t
 
-    (** Assigns each variable inside the polynomial the value of the valuation and returns the arithmetically computed result. 
+    (** Assigns each variable inside the polynomial the value of the valuation and returns the arithmetically computed result.
         !! If the valuation does not provide a value for a variable, an exception is raised. !! *)
     val eval : t -> valuation -> value
 
@@ -147,7 +147,7 @@ module type Evaluable =
 module type Monomial =
   sig
     (** Provides default implementations of a monomial, i.e.,  a finite product of powers without a constant (e.g.: xy^2, y but not 5xy^2 + 7). *)
-    
+
     type t
     include Evaluable with type t := t
 
@@ -177,7 +177,7 @@ module type Monomial =
                var:(Var.t -> 'b) ->
                times:('b -> 'b -> 'b) ->
                pow:('b -> int -> 'b) ->
-               t -> 'b 
+               t -> 'b
   end
 
 (** A scaled monomial is a monomial multiplied with a coefficient. *)
@@ -216,7 +216,7 @@ module type ScaledMonomial =
                var:(Var.t -> 'b) ->
                times:('b -> 'b -> 'b) ->
                pow:('b -> int -> 'b) ->
-               t -> 'b 
+               t -> 'b
   end
 
 (** Modules including BaseMath define basic math operations.
@@ -284,7 +284,7 @@ module type Math =
 module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
   struct
     include Base
-  
+
     (** Returns the sum of all enums elements. *)
     let sum = Enum.fold add zero
 
@@ -319,13 +319,13 @@ module type Ring =
     type t [@@deriving eq]
 
     include BaseMath with type t := t
-       
+
 
     (** TODO doc *)
     val equal : t -> t -> bool
     val (=~=) : t -> t -> bool
     (** Stable structural compare, but not an actual compare *)
-    val compare : t -> t -> int      
+    val compare : t -> t -> int
 
     (** Creates an element of the ring from an integer value. *)
     val of_int : int -> t
@@ -336,7 +336,7 @@ module type Ring =
     (** Returns a string representing an element. *)
     val to_string : t -> string
   end
-  
+
 (** A Polynomial represents a mathematical polynomial *)
 module type Polynomial =
   sig
@@ -352,7 +352,7 @@ module type Polynomial =
 
     (** Type of scaled monomial in polynomial *)
     type scaled_monomial
-                  
+
     (** {1 {L Following methods are convenience methods for the creation of polynomials.}} *)
 
     (** Creates a polynomial as the sum of a list of monomials and integer coefficients. *)
@@ -390,7 +390,7 @@ module type Polynomial =
 
     (** Creates a polynomial from a coefficient list and a corresponding variable list. *)
     val of_coeff_list : value list -> Var.t list -> t
-      
+
     (** {1 {L Following methods return information over the polynomial.}} *)
 
     (** Returns the coefficient of the monomial. *)
@@ -398,7 +398,7 @@ module type Polynomial =
 
     (** Returns the coefficient of the term where only the given variable occurs. *)
     val coeff_of_var : Var.t -> t -> value
-      
+
     (** Returns the monomials of the polynomial without the empty monomial. *)
     val monomials : t -> monomial list
 
@@ -409,23 +409,23 @@ module type Polynomial =
     (** Returns a maybe not equivalent polynom where all factors of polynomials are minized but stay in same proportion. *)
     val scale_coefficients : t -> t
        *)
-      
+
     (** Returns a string representing the polynomial. *)
     val to_string : t -> string
 
     (** Returns a string representing polynomial with less special characters. *)
     val to_string_to_file : t -> string
 
-      
+
     (** {1 {L Following methods return if the atom has certain properties.}} *)
 
     (** Returns if the polynomial is equivalent to a term x^1 for any variable x. *)
     val is_var : t -> bool
 
-    (** Returns if the polynomial is equivalent to a term x^1 + c for any variable x and any constant c. *)      
+    (** Returns if the polynomial is equivalent to a term x^1 + c for any variable x and any constant c. *)
     val is_var_plus_constant : t -> bool
 
-    (** Returns if the polynomial is equivalent to a term x_1^1 + ... + x_n^1 + c for any variables x_1, ..., x_n and any constant c. *)      
+    (** Returns if the polynomial is equivalent to a term x_1^1 + ... + x_n^1 + c for any variables x_1, ..., x_n and any constant c. *)
     val is_sum_of_vars_plus_constant : t -> bool
 
     (** Returns if the polyomial is linear and contains at most one active variable. *)
@@ -451,14 +451,14 @@ module type Polynomial =
 
     (** Maps all coefficients to elements from the polynomial. *)
     val instantiate : (value -> t) -> t -> t
-      
+
     (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
         Ignores naming equalities. *)
     val substitute : Var.t -> replacement:t -> t -> t
-    
+
     (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
     val substitute_f : (Var.t -> t) -> t -> t
-    
+
     (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
         Leaves all variables unchanged which are not in the replacement map.  *)
     val substitute_all : t Map.Make(Var).t -> t -> t
@@ -478,10 +478,10 @@ module type Polynomial =
     (** Replaces all arithmetical operations by new constructors. *)
     val fold : const:(value -> 'b) ->
                var:(Var.t -> 'b) ->
-               neg:('b -> 'b) ->               
+               neg:('b -> 'b) ->
                plus:('b -> 'b -> 'b) ->
                times:('b -> 'b -> 'b) ->
                pow:('b -> int -> 'b) ->
-               t -> 'b 
+               t -> 'b
 
 end
