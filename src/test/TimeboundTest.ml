@@ -3,6 +3,7 @@ open BoundsInst
 open OUnit2
 open Helper
 open ProgramTypes
+open ApproximationModules
 
 (** Returns an overall timebound for the given program.*)
 let find_timebound ?(depth = 5) ?(mprf = false) (program: Program.t): Bound.t =
@@ -28,7 +29,7 @@ let from entries =
   let addEntry entry = match entry with
     | (key, value) -> M.add key value in
   List.fold_left (fun map keyadder -> keyadder map) M.empty (List.map addEntry entries)
-  
+
 let smaller_or_equal (vars: VarSet.t) b1 b2 =
   [-999999;0;999999]
   |> Enum.repeat ~times:(VarSet.cardinal vars)
@@ -46,10 +47,10 @@ let smaller_or_equal (vars: VarSet.t) b1 b2 =
            Bound.(substitute_f valuation b1 <= substitute_f valuation b2) |? false
          )
        )
-  
-let tests = 
+
+let tests =
   "Overall costbound" >::: [
-      
+
       ("Simple" >:::
          List.map (fun (minimal_sound_costbound_str, wanted_costbound_str, program_str) ->
              program_str >:: (fun _ ->
@@ -108,7 +109,7 @@ let tests =
                     (* Quadratic bound *)
                   ]
       );
-      
+
       ("Correct complexity class" >:::
          let open Bound in
          List.map (fun (expected_complexity, program_str) ->
@@ -118,21 +119,21 @@ let tests =
                      reset cache;
                      assert_equal ~cmp:equal_complexity ~printer:show_complexity expected_complexity complexity))
                   [
-                    (Inf, "a -> b(), b -> b()");                    
-                    (Inf, "a -> b(x), b -> b(x-1) :|: x>0, b -> b(x+1) :|: x<=0");                    
-                    (Polynomial 0, "a -> b(), b -> c()");                    
-                    (Polynomial 0, "a -> b(), b -> c(), a -> c()");                    
+                    (Inf, "a -> b(), b -> b()");
+                    (Inf, "a -> b(x), b -> b(x-1) :|: x>0, b -> b(x+1) :|: x<=0");
+                    (Polynomial 0, "a -> b(), b -> c()");
+                    (Polynomial 0, "a -> b(), b -> c(), a -> c()");
                     (* TODO Problem with constant ranking functions (Polynomial 0, "a -> b(x), b -> b(x-x) :|: x>0"); *)
-                    (Polynomial 0, "a -> b(x), b -> b(x-1) :|: x>x");                    
-                    (Polynomial 1, "a -> b(x), b -> b(x-1) :|: x>0");                    
-                    (Polynomial 1, "a -> b(x,y), b -> b(x-1,y) :|: x>y");                    
-                    (Polynomial 1, "a -> b(x,y), b -> b(x-1,y) :|: x>0, b -> c(x,y), c -> c(x+1,y) :|: x<y");                    
-                    (Polynomial 1, "a -> b(x,y), b -> b(x+1,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0");                    
+                    (Polynomial 0, "a -> b(x), b -> b(x-1) :|: x>x");
+                    (Polynomial 1, "a -> b(x), b -> b(x-1) :|: x>0");
+                    (Polynomial 1, "a -> b(x,y), b -> b(x-1,y) :|: x>y");
+                    (Polynomial 1, "a -> b(x,y), b -> b(x-1,y) :|: x>0, b -> c(x,y), c -> c(x+1,y) :|: x<y");
+                    (Polynomial 1, "a -> b(x,y), b -> b(x+1,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0");
                     (* Non-linear not supported by Z3 (Polynomial 2, "a -> b(x), b -> b(x-1) :|: x^2>0"); *)
-                    (Polynomial 2, "a -> b(x,y), b -> b(x+y,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0");                    
-                    (Exponential 1, "a -> b(x,y), b -> b(2*x,y-1) :|: y>0, b -> b(x-1,y) :|: x > 0");                    
-                    (Exponential 1, "a -> b(x,y,z), b -> c(x+y,y,z-1) :|: z>0, c -> b(x,x,z) :|: z>0, c -> d(x,y,z), d -> d(x-1,y,z) :|: x>0");                    
+                    (Polynomial 2, "a -> b(x,y), b -> b(x+y,y-1) :|: y>0, b -> c(x,y), c -> c(x-1,y) :|: x > 0");
+                    (Exponential 1, "a -> b(x,y), b -> b(2*x,y-1) :|: y>0, b -> b(x-1,y) :|: x > 0");
+                    (Exponential 1, "a -> b(x,y,z), b -> c(x+y,y,z-1) :|: z>0, c -> b(x,x,z) :|: z>0, c -> d(x,y,z), d -> d(x-1,y,z) :|: x>0");
                   ]
       );
-      
+
     ]
