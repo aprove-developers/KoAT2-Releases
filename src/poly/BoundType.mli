@@ -168,4 +168,11 @@ val of_coeff_list : value list -> Var.t list -> t
 
 (** Returns the constant of a bound *)
 val get_constant : t -> value
+
+(* Uses a heuristic to keep the 'better' of both bounds.
+ * It first compares the asymptotic complexity,
+ * then the number of occuring variables,
+ * and finally the syntactic complexity
+ * of both bounds. *)
+val keep_simpler_bound : t -> t -> t
 end
