@@ -199,8 +199,6 @@ bound :
 		{ Bound.infinity }
 	|	LPAR; b = bound; RPAR
                 { b }
-	|	MINUS b = bound
-		{ Bound.neg b }
 	|	c = UINT b = option(preceded(POW, bound))
 		{ Bound.exp (OurInt.of_int c) BatOption.(b |? Bound.one) }
 	|       v = ID
