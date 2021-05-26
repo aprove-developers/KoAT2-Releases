@@ -393,7 +393,24 @@ let rec vars_bound = function
   | Sum (b1, b2) -> VarSet.union (vars_bound b1) (vars_bound b2)
   | Product (b1, b2) -> VarSet.union (vars_bound b1) (vars_bound b2)
 
-let vars: t -> VarSet.t = Option.default VarSet.empty % Option.map vars_bound
+let vars = Option.default VarSet.empty % Option.map vars_bound
+
+let keep_simpler_bound b1 b2 = match compare_asy b1 b2 with
+  (* First compare asymptotic_complexity *)
+  | -1 -> b1
+  |  1 -> b2
+  |  _ ->
+      (* Now compare number of variables*)
+      match Int.compare (VarSet.cardinal @@ vars b1) (VarSet.cardinal @@ vars b2) with
+      | -1 -> b1
+      |  1 -> b2
+      |  _ ->
+          (* Finally compare length of to_string *)
+          match Int.compare (String.length @@ show_bound b1) (String.length @@ show_bound b2) with
+          | -1 -> b1
+          |  1 -> b2
+          |  _ -> b1
+
 
 let degree n = raise (Failure "degree for MinMaxPolynomial not yet implemented")
 let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implemented")
