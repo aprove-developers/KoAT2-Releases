@@ -8,7 +8,7 @@ exception Error of string
 
 module LocationTable = Hashtbl.Make(Location)
 
-(*Hashtable for caching the arities of locations while reading*)
+(** Hashtable for caching the arities of locations while reading **)
 let location_table: int LocationTable.t = LocationTable.create 20
 
 let empty_cache () =
@@ -25,20 +25,24 @@ let check_arity (loc: Location.t) (arity: int): unit =
    
 (** Generates transitions from given parameters *)
 let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t list): Transition.t list =
-  check_arity (Location.of_string (Tuple2.first lhs)) (List.length (Tuple2.second lhs));
-  check_arity (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))) (List.length (Tuple2.second (List.hd (Tuple2.second rhs))));  
+  let start_loc = Tuple2.first lhs
+  and var_list = Tuple2.second lhs
+  and target_loc = Tuple2.first (List.hd (Tuple2.second rhs))
+  and update_expr = Tuple2.second (List.hd (Tuple2.second rhs)) in
+  check_arity (Location.of_string start_loc) (List.length var_list);
+  check_arity (Location.of_string target_loc) (List.length update_expr);  
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
-	 (Location.of_string (Tuple2.first lhs),
+	 (Location.of_string start_loc,
           TransitionLabel.mk
             ~com_kind:(Tuple2.first rhs)
             ~targets:(Tuple2.second rhs)
-            ~patterns:(List.map Var.of_string (Tuple2.second lhs))
+            ~patterns:(List.map Var.of_string var_list)
             ~guard:constr 
             ~cost:cost,
-          (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))))
-       )
+          (Location.of_string target_loc)
+       ))
   |> List.map (fun (l,t,l') -> (l,t ~vars,l'))
 
 (** Returns list of default variables: x,y,z,u,v,w,p and q *)
