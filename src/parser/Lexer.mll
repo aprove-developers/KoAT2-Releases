@@ -1,14 +1,14 @@
 {
   (** Provides an lexer generated with ocamllex to lex transition graphs, its constraints and polynomials. *)
-  
+
   (** Constructs a lexer for transition graphs as well as its used constraints and polynomials *)
 (*  module Make(G : Parseable.Program) =
     struct*)
       open Lexing
       module P = Parser(*.Make(G)*)
-         
+
       exception SyntaxError of string
-                             
+
       let next_line lexbuf =
         let pos = lexbuf.lex_curr_p in
         lexbuf.lex_curr_p <-
@@ -32,12 +32,9 @@ rule read =
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
   | "RULES"           { P.RULES }
   | "VAR"             { P.VAR }
-  | "min"             { P.MIN }
-  | "max"             { P.MAX }
   | "inf"             { P.INFINITY }
   | int               { P.UINT (int_of_string (Lexing.lexeme lexbuf)) }
   | id                { P.ID (Lexing.lexeme lexbuf) }
-  | '|'               { P.ABS }
   | '('               { P.LPAR }
   | ')'               { P.RPAR }
   | '{'               { P.LBRACE }

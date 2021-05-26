@@ -8,15 +8,15 @@
 %token                  OR
 %token                  AND
 %token 			ARROW WITH LBRACK RBRACK
-%token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR 
+%token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
 %token                  COMMA
 %token                  MIN MAX INFINITY ABS
 
 %left			PLUS MINUS
 %left			TIMES
 %left			POW
-                  
-			
+
+
 %start <Program.t> onlyProgram
 
 %start <Program.t> onlyProgram_simple
@@ -74,7 +74,7 @@ transition_simple :
 	|	start = ID; cost = cost ; rhs = transition_rhs; formula = withConstraints
 	          { ParserUtil.mk_transition_simple start cost rhs formula } ;
 
-goal :		
+goal :
 	|	LPAR GOAL goal = ID RPAR
                   { goal } ;
 
@@ -86,15 +86,15 @@ transitions :
 	|	LPAR RULES transition = nonempty_list(transition) RPAR
 		  { fun vars -> List.map (fun t -> t vars) transition |> List.flatten } ;
 
-variables :   
+variables :
 	|	LPAR VAR vars = list(ID) RPAR
 		  { List.map Var.of_string vars } ;
-		  
+
 transition :
 	|	lhs = transition_lhs; cost = cost ; rhs = transition_rhs; formula = withConstraints
 	          { ParserUtil.mk_transition lhs cost rhs formula } ;
-		  
-cost : 
+
+cost :
         |       MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
                   { ub }
         |       MINUS ub = polynomial GREATERTHAN
@@ -109,7 +109,7 @@ transition_lhs :
 
 transition_rhs :
 	|       com_kind = ID; LPAR targets = separated_nonempty_list(COMMA, transition_target) RPAR
- 	          { (com_kind, targets) } 
+ 	          { (com_kind, targets) }
         |       target = transition_target
                   { ("Com_1", [target]) } ;
 transition_target :
@@ -118,7 +118,7 @@ transition_target :
 
 withConstraints :
 	|	{ Formula.mk_true }
-	|       WITH constr = separated_nonempty_list(AND, formula_atom) { Formula.all constr } 
+	|       WITH constr = separated_nonempty_list(AND, formula_atom) { Formula.all constr }
 	|       LBRACK constr = separated_nonempty_list(AND, formula_atom) RBRACK { Formula.all constr } ;
 
 onlyFormula :
@@ -131,7 +131,7 @@ formula :
 onlyConstraints :
         |       constr = separated_list(AND, constraint_atom) EOF
                   { Constraint.all constr } ;
-        
+
 formula_constraint :
         |       constr = separated_list(AND, formula_atom)
                   { Formula.all constr } ;
@@ -169,7 +169,7 @@ formula_atom :
   	| 	LESSTHAN { Formula.mk_lt }
   	| 	LESSEQUAL { Formula.mk_le } ;
 
-              
+
 onlyPolynomial :
         |       poly = polynomial EOF { poly } ;
 
@@ -199,18 +199,12 @@ bound :
 		{ Bound.infinity }
 	|	LPAR; b = bound; RPAR
                 { b }
-	|	MAX LBRACE max = separated_nonempty_list(COMMA, bound) RBRACE
-		{ Bound.maximum (BatList.enum max) }
-	|	MIN LBRACE min = separated_nonempty_list(COMMA, bound) RBRACE
-		{ Bound.minimum (BatList.enum min) }
 	|	MINUS b = bound
 		{ Bound.neg b }
 	|	c = UINT b = option(preceded(POW, bound))
 		{ Bound.exp (OurInt.of_int c) BatOption.(b |? Bound.one) }
 	|       v = ID
 	        { Bound.of_var_string v }
-	|       ABS b = bound ABS
-	        { Bound.abs b }
 	|       b = bound POW c = UINT
 	        { Bound.pow b c }
 	|	b1 = bound; op = bound_bioperator; b2 = bound
@@ -219,7 +213,6 @@ bound :
 %inline bound_bioperator :
 	|	PLUS { Bound.add }
 	|	TIMES { Bound.mul }
-	|       MINUS { Bound.sub } ;
 
 %inline bioperator :
 	|	PLUS { Polynomial.add }
