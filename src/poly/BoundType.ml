@@ -349,16 +349,6 @@ let infinity = None
 
 let is_infinity = Option.is_none
 
-let maximum bounds =
-  try
-    bounds |> Enum.reduce max |> simplify
-  with Not_found -> zero
-
-let minimum bounds =
-  try
-    bounds |> Enum.reduce min |> simplify
-  with Not_found -> infinity
-
 let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
 let exp value b = Option.map (exp_bound value) b
 
