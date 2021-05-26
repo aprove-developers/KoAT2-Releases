@@ -46,11 +46,6 @@ val of_var : Var.t -> t
 (** Creates a bound of a string representing a variable. *)
 val of_var_string : string -> t
 
-(** Returns a bound representing the maximum of all the values.
-    Raises an exception, if the enum is empty.
-    Use the bound zero for those cases. *)
-val maximum : t Enum.t -> t
-
 (** Returns the infinity bound. *)
 val infinity : t
 
