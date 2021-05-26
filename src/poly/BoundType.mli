@@ -125,6 +125,14 @@ val fold : const:(value -> 'b) ->
            inf:'b ->
            t -> 'b
 
+(** Replaces all arithmetical operations by new constructors in finite bounds. *)
+val fold_bound : const:(value -> 'b) ->
+           var:(Var.t -> 'b) ->
+           plus:('b -> 'b -> 'b) ->
+           times:('b -> 'b -> 'b) ->
+           exp:(value -> 'b -> 'b) ->
+           bound -> 'b
+
 (** TODO doc *)
 type complexity =
 Inf
