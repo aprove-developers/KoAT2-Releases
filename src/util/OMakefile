@@ -1,6 +1,3 @@
-OCAMLPACKS[] =
-    batteries
-
 # Include all .ml files
 FILES[] = $(removesuffix .ml, $(glob *.ml))
 

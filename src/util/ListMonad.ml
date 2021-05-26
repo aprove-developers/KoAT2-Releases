@@ -1,4 +1,4 @@
-module Monad = Monad.Make(
+include Monad.Make(
   struct
     type 'a t = 'a List.t
 
