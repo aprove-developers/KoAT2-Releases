@@ -23,17 +23,17 @@ module RV =
 
     let compare_same =
       compare Transition.compare_same
-      
+
     let compare_equivalent =
       compare Transition.compare_equivalent
 
     let hash (t,v) =
       Hashtbl.hash (Transition.to_string t ^ Var.to_string v)
-      
+
     let transition (t,_) = t
-                         
+
     let variable (_,v) = v
-                       
+
     let to_id_string (t,v) =
       "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
 
@@ -97,4 +97,4 @@ module RVG =
       in
       TransitionGraph.fold_edges_e add_transition (Program.graph program) empty
 
-  end  
+  end
