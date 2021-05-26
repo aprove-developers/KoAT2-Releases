@@ -47,7 +47,7 @@ sig
 
   (** Creates a new incremental smt solver. *)
   val create : ?model:bool -> unit -> t
-     
+
   (** Creates a backtracking point. *)
   val push : t -> unit
 
@@ -62,6 +62,9 @@ sig
 
   (** Asserts the formula. *)
   val add : t -> Formula.t -> unit
+
+  (** Add a bound comparison using the specified operator (LE = less-or-equal, LT = less-than)*)
+  val add_bound_comparison : t -> [`LE | `LT] -> Bound.t -> Bound.t -> unit
 
   (** Minimizes the variable. *)
   val minimize : t -> Var.t -> unit
@@ -153,7 +156,7 @@ sig
 
   (** Creates a new incremental smt solver. *)
   val create : ?model:bool -> unit -> t
-     
+
   (** Creates a backtracking point. *)
   val push : t -> unit
 
@@ -168,7 +171,7 @@ sig
 
   (** Asserts the formula. *)
   val add : t -> Formula.t -> unit
-  
+
   (** Returns a model of the current state, if the state is satisfiable. *)
   val model : t -> Polynomial.valuation Option.t
 

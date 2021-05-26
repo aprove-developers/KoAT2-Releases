@@ -53,6 +53,30 @@ let from_real_bound context bound =
   | Some b -> b
   | None -> raise (Failure "inf not supported in SMT-Solving")
 
+let from_bound context bound =
+  let from_finite_bound =
+    Bound.fold_bound
+      ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_s context (OurInt.to_string value))
+      ~var:(fun var ->
+        let varexp =
+          if Var.is_real var then
+            Z3.Arithmetic.Real.mk_const_s context (Var.to_string var)
+          else
+            Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var)
+        in
+        Z3.Boolean.mk_ite context
+          (Z3.Arithmetic.mk_gt context varexp (Z3.Arithmetic.Integer.mk_numeral_s context @@ OurInt.to_string OurInt.zero))
+          varexp
+          (Z3.Arithmetic.mk_unary_minus context varexp)
+      )
+      ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [p1; p2])
+      ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2])
+      ~exp:(fun b e -> Z3.Arithmetic.mk_power context (Z3.Arithmetic.Integer.mk_numeral_s context @@ OurInt.to_string b) e)
+  in
+  match Option.map from_finite_bound (Bound.prove_finiteness bound) with
+  | Some b -> b
+  | None -> raise (Failure "inf not supported in SMT-Solving")
+
 let from_formula context =
   Formula.fold
     ~subject:(from_poly context)
@@ -294,6 +318,15 @@ module IncrementalZ3SolverInt =
       formula
       |> from_formula context
       |> fun formula -> Z3.Optimize.add opt [formula]
+
+    let add_bound_comparison (opt, ctx) cmpoperator b1 b2 =
+      let z3_compoperator = match cmpoperator with
+        | `LE -> Z3.Arithmetic.mk_le
+        | `LT -> Z3.Arithmetic.mk_lt
+      in
+      let z3_b1 = from_bound ctx b1 in
+      let z3_b2 = from_bound ctx b2 in
+      Z3.Optimize.add opt [ (z3_compoperator ctx) z3_b1 z3_b2]
 
     (** Returns true iff the formula implies the positivity of the variable. *)
     let is_positive (opt,_) (var: Var.t) =
