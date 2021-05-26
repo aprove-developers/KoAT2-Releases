@@ -11,6 +11,9 @@ module LocationTable = Hashtbl.Make(Location)
 (*Hashtable for caching the arities of locations while reading*)
 let location_table: int LocationTable.t = LocationTable.create 20
 
+let empty_cache () =
+  LocationTable.clear location_table
+
 let check_arity (loc: Location.t) (arity: int): unit = 
   let stored_arity = LocationTable.find_option location_table loc
   and string_of_stored_arities = location_table
