@@ -1,7 +1,7 @@
 open Batteries
 open Polynomials
 open BoundsInst
-   
+
 module AtomOver(P : ConstraintTypes.Atomizable) =
 (*Polynomial Constraints of the form p1<p2, p1<=p2, etc. Conjunctions of these constraints form the real constraints*)
 struct
@@ -30,7 +30,7 @@ struct
           | GE -> ">="
           | LT -> "<"
           | LE -> "<="
-               
+
         let str_values = List.map to_string values
 
                        (*
@@ -45,7 +45,7 @@ struct
 
     (* Always in normalised form: polynomial <= 0 *)
     type compkind = LE | LT [@@deriving eq, ord]
-     
+
     type t = P.t * compkind [@@deriving eq, ord]
 
     let comp_to_string =
@@ -70,9 +70,9 @@ struct
 
     module Infix = struct
       let (>) = mk_gt
-      let (>=) = mk_ge 
-      let (<) = mk_lt 
-      let (<=) = mk_le      
+      let (>=) = mk_ge
+      let (<) = mk_lt
+      let (<=) = mk_le
     end
 
     (* TODO We can not decide all equalities right now because of some integer arithmetic *)
@@ -80,13 +80,13 @@ struct
     let (=~=) (poly1,comp1) (poly2,comp2) = P.(poly1 =~= poly2) && equal_compkind comp1 comp2
 
     let neg (poly,comp) = (P.neg poly, comp)
-              
+
     let to_string ?(to_file=false) (poly,comp) = (P.to_string poly) ^ (comp_to_string comp) ^ "0"
-        
+
     let vars (poly,_) = P.vars poly
 
     let normalised_lhs (poly,_) = poly
-             
+
     let rename (poly,comp) varmapping = (P.rename varmapping poly, comp)
 
     let fold ~subject ~le ~lt (poly,comp) =
@@ -94,18 +94,18 @@ struct
         le (subject poly) (subject P.zero)
       else
         lt (subject poly) (subject P.zero)
-      
+
                                (*
     (* TODO It's maybe possible to compare polynomials without full evaluation *)
     (* However, there are probably more expensive operations *)
     let models atom valuation =
       P.Value.Compare.((P.eval atom valuation) <= P.Value.zero)
                                 *)
-    let is_linear (poly,comp) = P.is_linear poly 
-        
+    let is_linear (poly,comp) = P.is_linear poly
+
     let get_coefficient var atom =
       P.coeff_of_var var (normalised_lhs atom)
-      
+
     let get_constant (poly,comp) =
       P.get_constant (P.neg poly)
 end
@@ -116,16 +116,16 @@ module Atom =
 
     let to_string ?(to_file=false) (poly,comp) =
       Polynomial.separate_by_sign poly
-      |> (fun (positive, negative) -> (if to_file then (Polynomial.to_string_to_file positive) 
-                                       else (Polynomial.to_string positive)) ^ (comp_to_string comp) ^ 
-                                       (if to_file then (Polynomial.to_string_to_file (Polynomial.neg negative)) 
+      |> (fun (positive, negative) -> (if to_file then (Polynomial.to_string_to_file positive)
+                                       else (Polynomial.to_string positive)) ^ (comp_to_string comp) ^
+                                       (if to_file then (Polynomial.to_string_to_file (Polynomial.neg negative))
                                        else (Polynomial.to_string (Polynomial.neg negative))))
-      
+
     let max_of_occurring_constants (poly,_) =
       Polynomial.max_of_occurring_constants poly
 
-    let remove_strict (poly, comp) = 
-      match comp with 
+    let remove_strict (poly, comp) =
+      match comp with
       | LE -> (poly, comp)
       | LT -> (Polynomial.add poly Polynomial.one, LE)
 
@@ -135,15 +135,10 @@ module ParameterAtom =
   struct
     include AtomOver(ParameterPolynomial)
 
-    let remove_strict (poly, comp) = 
-      match comp with 
+    let remove_strict (poly, comp) =
+      match comp with
       | LE -> (poly, comp)
       | LT -> (ParameterPolynomial.add poly ParameterPolynomial.one, LE)
-  end
-
-module BoundAtom =
-  struct
-    include AtomOver(Bound)
   end
 
 module RealAtom =
