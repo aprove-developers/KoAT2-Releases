@@ -30,29 +30,26 @@ let from_real_poly context =
     ~pow:(fun b e -> Z3.Arithmetic.mk_power context b (Z3.Arithmetic.Real.mk_numeral_i context e))
 
 let from_real_bound context bound =
-  let liftA2 f x x' =
-    let f1 = Option.map f x in
-    match f1 with
-    | (Some f2) -> Option.map f2 x'
-    | None -> None
+  let from_finite_bound =
+    RealBound.fold_bound
+      ~const:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string value))
+      ~var:(fun var ->
+        let varexp =
+          if Var.is_real var then
+            Z3.Arithmetic.Real.mk_const_s context (Var.to_string var)
+          else
+            Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var)
+        in
+        Z3.Boolean.mk_ite context
+          (Z3.Arithmetic.mk_gt context varexp (Z3.Arithmetic.Integer.mk_numeral_s context @@ OurInt.to_string OurInt.zero))
+          varexp
+          (Z3.Arithmetic.mk_unary_minus context varexp)
+      )
+      ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [p1; p2])
+      ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2])
+      ~exp:(fun b e -> Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context @@ OurFloat.to_string b) e)
   in
-
-  let boundm =
-    RealBound.fold
-      ~const:(fun value -> Some (Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string value)))
-      ~var:(fun var -> if Var.is_real var then
-                         Some (Z3.Arithmetic.Real.mk_const_s context (Var.to_string var))
-                       else
-                         Some (Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var)))
-      ~neg:(Option.map (Z3.Arithmetic.mk_unary_minus context))
-      ~plus:(liftA2 (fun p1 p2 -> Z3.Arithmetic.mk_add context [p1; p2]))
-      ~times:(liftA2 (fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2]))
-      ~exp:(fun b -> Option.map (fun e -> Z3.Arithmetic.mk_power context (Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string b)) e))
-      ~max:(liftA2 (fun a b -> Z3.Boolean.mk_ite context (Z3.Arithmetic.mk_gt context a b) a b))
-      ~inf:(None)
-      bound
-  in
-  match boundm with
+  match Option.map from_finite_bound (RealBound.prove_finiteness bound) with
   | Some b -> b
   | None -> raise (Failure "inf not supported in SMT-Solving")
 
@@ -258,7 +255,7 @@ module Z3Opt =
 module IncrementalZ3SolverInt =
   struct
     type t = Z3.Optimize.optimize * Z3.context
-    
+
     module Valuation = Valuation.Make(OurInt)
 
     let create ?(model=true) () =
@@ -271,10 +268,10 @@ module IncrementalZ3SolverInt =
       Z3.Optimize.mk_opt context, context
 
     let opt (opt,_) = opt
-      
+
     let push =
       Z3.Optimize.push % opt
-       
+
     let pop =
       Z3.Optimize.pop % opt
 
@@ -338,7 +335,7 @@ module IncrementalZ3SolverInt =
 
     let minimize (opt,context) var =
       ignore (Z3.Optimize.minimize opt (from_poly context (Polynomial.of_var var)))
-      
+
     let maximize (opt,context) var =
       ignore (Z3.Optimize.maximize opt (from_poly context (Polynomial.of_var var)))
 
@@ -358,7 +355,7 @@ module IncrementalZ3SolverInt =
                       in
                       let value =
                         func_decl
-                        |> Z3.Model.get_const_interp model                        
+                        |> Z3.Model.get_const_interp model
                         |> Option.get (* Should be fine here *)
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
@@ -637,7 +634,7 @@ module IncrementalZ3Solver =
 module SolverFast =
   struct
     type t = Z3.Solver.solver * Z3.context
-    
+
     module Valuation = Valuation.Make(OurInt)
 
     let create ?(model=true) () =
@@ -651,10 +648,10 @@ module SolverFast =
       Z3.Solver.mk_simple_solver context, context
 
     let solver (solver,_) = solver
-      
+
     let push =
       Z3.Solver.push % solver
-       
+
     let pop t =
       Z3.Solver.pop (solver t) 1
 
@@ -693,7 +690,7 @@ module SolverFast =
                       in
                       let value =
                         func_decl
-                        |> Z3.Model.get_const_interp model                        
+                        |> Z3.Model.get_const_interp model
                         |> Option.get (* Should be fine here *)
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
