@@ -1,24 +1,24 @@
 open Batteries
 open Atoms
 open Polynomials
-   
+
 module ConstraintOver(A : ConstraintTypes.Atom) =
   struct
-    
+
     module A = A
-    
+
     type value = A.value
     type polynomial = A.polynomial
     type compkind = A.compkind
     type atom = A.t
-       
+
     type t = A.t list [@@deriving eq, ord]
-    
+
     (** Same as List.length but outside of this module the list structure of constraints is invisible *)
     let num_of_atoms = List.length
-    
+
     let lift atom = [ atom ]
-    
+
     let mk atoms = atoms
 
     let mk_true = mk []
@@ -30,66 +30,66 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
     let mk_ge p1 p2 = lift (A.mk_ge p1 p2)
     let mk_lt p1 p2 = lift (A.mk_lt p1 p2)
     let mk_le p1 p2 = lift (A.mk_le p1 p2)
-    
+
     let mk_and = List.append
-                    
+
     module Infix = struct
       let (=) = mk_eq
       let (>) = mk_gt
-      let (>=) = mk_ge 
-      let (<) = mk_lt 
+      let (>=) = mk_ge
+      let (<) = mk_lt
       let (<=) = mk_le
       let (&&) = mk_and
     end
 
     (** TODO Filter related: x < 0 && x < 1*)
-    let all = List.flatten 
-      
+    let all = List.flatten
+
     let is_true = function
       | [] -> true
       | _ -> false
-      
+
     (* TODO Wrong, use SMT-solver here *)
     let (=~=) constr1 constr2 =
          List.combine constr1 constr2
       |> List.map (uncurry A.(=~=))
-      |> List.fold_left (&&) true 
+      |> List.fold_left (&&) true
 
     let vars constr =
          constr
       |> List.map (A.vars)
       |> List.fold_left VarSet.union VarSet.empty
-        
+
     let to_string ?(to_file=false) ?(comp=" <= ") ?(conj=" && ") constr = String.concat conj (List.map (A.to_string ~to_file) constr)
-        
+
     let rename constr varmapping = List.map (fun atom -> A.rename atom varmapping) constr
 
     let turn =
       List.map A.neg
 
     let atom_list = identity
-      
+
     let fold ~subject ~le ~lt ~correct ~conj =
       List.fold_left (fun c atom -> conj c (A.fold ~subject ~le ~lt atom)) correct
-      
+
     let map_polynomial f =
       fold ~subject:f ~le:mk_le ~lt:mk_lt ~correct:mk_true ~conj:mk_and
-      
+
     let drop_nonlinear constr =
       List.filter A.is_linear constr
-      
+
     (**returns a list of the coefficients of a variable in all the left sides of the constraints*)
-    let get_coefficient_vector var constr = 
+    let get_coefficient_vector var constr =
         List.map (A.get_coefficient var) constr
-            
+
     (**returns a list of the constants of the constraints*)
-    let get_constant_vector constr = 
-        List.map A.get_constant constr 
+    let get_constant_vector constr =
+        List.map A.get_constant constr
 
         (** returns a list of lists of the coefficients of the constraint*)
     let get_matrix vars constr =
         List.map (fun var -> get_coefficient_vector var constr) vars
-        
+
     (** returns a list of lists of the coefficients of the constraint*)
     let dualise vars (matrix: A.P.t list list) column =
       let dualised_left = List.map
@@ -107,22 +107,22 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
 module Constraint =
   struct
     include ConstraintOver(Atom)
-      
+
     let max_of_occurring_constants atoms =
       atoms
       |> List.map Atom.max_of_occurring_constants
       |> List.fold_left OurInt.mul OurInt.one
 
-    let remove_strict = 
-      List.map Atom.remove_strict 
+    let remove_strict =
+      List.map Atom.remove_strict
   end
 
 module ParameterConstraint =
   struct
     include ConstraintOver(ParameterAtom)
 
-    let remove_strict = 
-      List.map ParameterAtom.remove_strict 
+    let remove_strict =
+      List.map ParameterAtom.remove_strict
 
     (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
     let apply_farkas a_matrix b_right c_left d_right =
@@ -147,11 +147,6 @@ module ParameterConstraint =
       let d_right = ParameterAtom.get_constant param_atom in
       apply_farkas (List.map (List.map (Polynomial.of_constant)) a_matrix) b_right c_left d_right
   end
-
-module BoundConstraint =
-  struct
-    include ConstraintOver(BoundAtom)
-end
 
 module RealConstraint =
   struct

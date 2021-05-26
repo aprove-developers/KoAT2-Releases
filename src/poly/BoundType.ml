@@ -1,9 +1,9 @@
 open Batteries
 open Polynomials
 open Util
-   
+
 let logger = Logging.(get Bound)
-           
+
 module Make_BoundOver (Num : PolyTypes.OurNumber)
                       (Poly :
                         sig
@@ -18,62 +18,64 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
 
     type polynomial = Poly.t
     type value = Num.t
-                
+
 (* Minus Infinity is max of an empty list *)
 (* Infinity is min of an empty list *)
-type t =
-  | Infinity
-  | Const of Num.t
+type bound =
+    Const of Num.t (* absolute value *)
   | Var of Var.t
-  | Neg of t
-  | Pow of Num.t * t
-  | Sum of t * t
-  | Product of t * t 
-  | Max of t * t [@@deriving eq, ord]
+  | Pow of Num.t * bound
+  | Sum of bound * bound
+  | Product of bound * bound [@@deriving eq, ord]
 
-let of_var v = Var v
+type t = bound option [@@deriving eq,ord]
+(* None represents infinity *)
 
-let of_constant c = Const c
+let bound_of_var v = Var v
+let of_var = OptionMonad.return % bound_of_var
 
-let rec get_constant t =
+let bound_of_constant c = Const (Num.abs c)
+let of_constant = OptionMonad.return % bound_of_constant
+
+let get_constant t =
+  let rec get_constant_of_bound b = match b with
+    | Const c -> c
+    | Var var -> Num.zero
+    | Pow (n, b) -> Num.pow (get_constant_of_bound b) (Num.to_int n)
+    | Sum (b1, b2) -> Num.add (get_constant_of_bound b1) (get_constant_of_bound b2)
+    | Product (b1, b2) -> Num.mul (get_constant_of_bound b1) (get_constant_of_bound b2)
+  in
   match t with
-  | Infinity -> Num.zero
-  | Const c -> c
-  | Var var -> Num.zero
-  | Neg b -> Num.neg (get_constant b)
-  | Pow (n, b) -> Num.pow (get_constant b) (Num.to_int n)
-  | Sum (b1, b2) -> Num.add (get_constant b1) (get_constant b2)
-  | Product (b1, b2) -> Num.mul (get_constant b1) (get_constant b2)
-  | Max (b1, b2) -> Num.max (get_constant b1) (get_constant b2) 
+  | Some b -> get_constant_of_bound b
+  | None   -> Num.zero
+
 
 module Constructor =
   struct
     let number = function
-      | Infinity -> 0
       | Const _ -> 1
       | Var _ -> 2
-      | Neg _ -> 3
       | Pow _ -> 4
       | Sum _ -> 5
       | Product _ -> 6
-      | Max _ -> 7
-        
+
     let (<) b1 b2 =
       number b1 < number b2
   end
-          
-let rec fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf p =
-  let fold_ = fold ~const ~var ~neg ~plus ~times ~exp ~max ~inf in
+
+let rec fold_bound ~const ~var ~plus ~times ~exp p =
+  let fold_ = fold_bound ~const ~var ~plus ~times ~exp in
   match p with
-  | Infinity -> inf
   | Var v -> var v
   | Const c -> const c
-  | Max (b1, b2) -> max (fold_ b1) (fold_ b2)
-  | Neg b -> neg (fold_ b)
   | Pow (value, n) -> exp value (fold_ n)
   | Sum (b1, b2) -> plus (fold_ b1) (fold_ b2)
   | Product (b1, b2) -> times (fold_ b1) (fold_ b2)
-                    
+
+let fold ~const ~var ~plus ~times ~exp ~inf = function
+  | Some b -> fold_bound ~const ~var ~plus ~times ~exp b
+  | None -> inf
+
 type complexity =
   | Inf (** Bound is infinite. *)
   | Polynomial of int (** Bound is in asymptotic class O(n^i) *)
@@ -98,7 +100,6 @@ let asymptotic_complexity =
   fold
     ~const:(fun _ -> Polynomial 0)
     ~var:(fun _ -> Polynomial 1)
-    ~neg:identity
     ~plus:(fun x y ->
       match (x,y) with
       | (Inf,_) -> Inf
@@ -123,30 +124,21 @@ let asymptotic_complexity =
       | Polynomial x -> Exponential 1
       | Exponential x -> Exponential (Int.succ x)
     )
-    ~max:(fun x y ->
-      match (x,y) with
-      | (Inf,_) -> Inf
-      | (_,Inf) -> Inf
-      | (Polynomial x, Polynomial y) -> Polynomial (Int.max x y)
-      | (Exponential x, Exponential y) -> Exponential (Int.max x y)
-      | (Polynomial x, Exponential y) -> Exponential y
-      | (Exponential x, Polynomial y) -> Exponential x
-    )
     ~inf:Inf
 
 let is_constant bound =
-match (asymptotic_complexity bound) with 
+match (asymptotic_complexity bound) with
   | Polynomial 0 -> true
   | _ -> false
 
 (** Returns true iff. the bound is in complexity class O(n) *)
-let is_linear bound = 
+let is_linear bound =
 match (asymptotic_complexity bound) with
   | Polynomial 0 -> true
   | Polynomial 1 -> true
-  | _ -> false 
+  | _ -> false
 
-let compare_asy b1 b2 = 
+let compare_asy b1 b2 =
   match (asymptotic_complexity b1,asymptotic_complexity b2) with
   | (Inf,Inf) -> 0
   | (Inf,_) -> 1
@@ -164,39 +156,30 @@ let compare_asy b1 b2 =
 
 let max_of_occurring_constants bound =
   fold
-    ~const:Num.abs
+    ~const:identity
     ~var:(fun _ -> Num.one)
-    ~neg:identity
     ~plus:Num.add
     ~times:Num.mul
     ~exp:(fun _ -> raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
-    ~max:Num.max
     ~inf:(raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
     bound
-  
-let rec show_bound = function
-  | Var v -> Var.to_string v
-  | Const c -> if Num.Compare.(c < Num.zero) then "("^Num.to_string c^")" else Num.to_string c
-  | Infinity -> "inf"
-  (*| Max (b1, Max (b2, b3)) -> "max{" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ ", " ^ show_bound b3 ^ "}"*)
-  | Max (b1, b2) -> "max([" ^ show_bound b1 ^ ", " ^ show_bound b2 ^ "])"
-  | Neg b ->( 
-      match b with
-      | Const c -> (Num.to_string ( Num.neg c))
-      | Neg d -> show_bound d
-      | Sum (b1, b2) -> "-(" ^ show_bound (Sum (b1, b2)) ^ ")"
-      | Product (b1, b2) -> "-(" ^ show_bound (Product (b1, b2)) ^ ")"
-      | Max (b1, b2) -> "min([" ^ show_bound (Neg b1) ^ ", " ^ show_bound (Neg b2) ^ "])"
-      | b -> "-(" ^ (show_bound b) ^")"
-    )
-  | Pow (v, b) -> Num.to_string v ^ "^(" ^ show_bound b ^ ")"
-  | Sum (b1, Neg b2) -> show_bound b1 ^ "-" ^ show_bound b2
-  | Sum (b1, Const b2) when Num.Compare.(b2 < Num.zero) -> show_bound b1 ^ "-" ^ show_bound (Const (Num.neg b2))
-  | Sum (b1, b2) -> show_bound b1 ^ "+" ^ show_bound b2
-  | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ show_bound (Sum (b1, b2)) ^ ")*(" ^ show_bound (Sum (b3, b4)) ^ ")"
-  | Product (Sum (b1, b2), b3) -> "(" ^ show_bound (Sum (b1, b2)) ^ ")*" ^ show_bound b3
-  | Product (b1, Sum (b2, b3)) -> show_bound b1 ^ "*(" ^ show_bound (Sum (b2, b3)) ^ ")"
-  | Product (b1, b2) -> show_bound b1 ^ "*" ^ show_bound b2
+
+
+let show_bound t =
+  let rec show_inner = function
+    | Var v -> Var.to_string v
+    | Const c -> if Num.Compare.(c < Num.zero) then "("^Num.to_string c^")" else Num.to_string c
+    | Pow (v, b) -> Num.to_string v ^ "^(" ^ show_inner b ^ ")"
+    | Sum (b1, Const b2) when Num.Compare.(b2 < Num.zero) -> show_inner b1 ^ "-" ^ show_inner (Const (Num.neg b2))
+    | Sum (b1, b2) -> show_inner b1 ^ "+" ^ show_inner b2
+    | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ show_inner (Sum (b1, b2)) ^ ")*(" ^ show_inner (Sum (b3, b4)) ^ ")"
+    | Product (Sum (b1, b2), b3) -> "(" ^ show_inner (Sum (b1, b2)) ^ ")*" ^ show_inner b3
+    | Product (b1, Sum (b2, b3)) -> show_inner b1 ^ "*(" ^ show_inner (Sum (b2, b3)) ^ ")"
+    | Product (b1, b2) -> show_inner b1 ^ "*" ^ show_inner b2
+  in
+  match t with
+    | Some b -> show_inner b
+    | None -> "inf"
 
 let show ?(complexity=true) bound =
   let complexity_str =
@@ -206,60 +189,32 @@ let show ?(complexity=true) bound =
 
 let to_string = show ~complexity:true
 
-let is_negative b = 
-  match b with 
-  | (Const x) -> (Num.compare x Num.zero) < 0
-  | _ -> raise (Failure ("is_negative: only on constant (" ^ (to_string b) ^ ") \n"))
-                      
-let rec (>) b1 b2 =
+let gt_bound b1 b2 =
   let execute () =
-    match (b1, b2) with
-    | (_, Infinity) -> Some false
-    | (Infinity, _) -> Some true
-    | (Neg Infinity, _) -> Some false
-    | (Const c1, Const c2) when Num.Compare.(c1 > c2) -> Some true
-    | (b, Const z1) when Num.(equal z1 zero) -> (
-      match b with
-      | Max (b, _) when b > (Const Num.zero) |? false -> Some true
-      | Max (_, b) when b > (Const Num.zero) |? false -> Some true
-      | _ -> None
-    )
-    | (Const z1, b) when Num.(equal z1 zero) -> (
-      match b with
-      | Neg (Max (b, _)) when b > (Const Num.zero) |? false -> Some true
-      | Neg (Max (_, b)) when b > (Const Num.zero) |? false -> Some true
-      | _ -> None
-    )
-    | (b1, b2) -> None
+    match (b1,b2) with
+    | (Const c1, Const c2) when Num.Compare.(c1>c2) ->
+        Some true
+    | _  -> None
   in
   Logger.with_log logger Logger.DEBUG
-                  (fun () -> ">", ["condition", to_string b1 ^ ">" ^ to_string b2])
+                  (fun () -> ">", ["condition", to_string (Some b1) ^ ">" ^ to_string (Some b2)])
                   ~result:(Util.option_to_string Bool.to_string)
                   execute
 
+let (>) b1 b2 = match (b1,b2) with
+  | (Some b1, Some b2) -> gt_bound b1 b2
+  | (None, Some _) -> Some true
+  | (_, None) -> Some false
+
 let rec (>=) b1 b2 =
   let execute () =
-    if equal b1 b2 then
-      Some true
-    else (
-      match (b1, b2) with
-      | (Infinity, _) -> Some true
-      | (_, Neg Infinity) -> Some true
-      | (Const c1, Const c2) when Num.Compare.(c1 >= c2) -> Some true
-      | (b, Const z1) when Num.(equal z1 zero) -> (
-        match b with
-        | Max (b, _) when b >= (Const Num.zero) |? false -> Some true
-        | Max (_, b) when b >= (Const Num.zero) |? false -> Some true
-        | _ -> None
-      )
-      | (b, Const z1) when Num.(equal z1 zero) -> (
-        match b with
-        | Neg (Max (b, _)) when b >= (Const Num.zero) |? false -> Some true
-        | Neg (Max (_, b)) when b >= (Const Num.zero) |? false -> Some true
-        | _ -> None
-      )
-      | (b1, b2) -> None
-    )
+    match (b1,b2) with
+    | (None, None) -> Some true
+    | (Some b1, Some b2) -> if equal_bound b1 b2 then Some true else (match (b1,b2) with
+        | (Const c1, Const c2) when Num.Compare.(c1 >= c2) ->
+            Some true
+        | _ -> None)
+    | _ -> Some false
   in
   Logger.with_log logger Logger.DEBUG
                   (fun () -> ">=", ["condition", to_string b1 ^ ">=" ^ to_string b2])
@@ -272,281 +227,171 @@ let (<=) = flip (>=)
 
 let (=~=) = equal
 
-let rec simplify bound =
+let rec simplify_bound bound =
   let execute () =
     match bound with
-      
-    | Infinity -> Infinity
 
     | Var v -> Var v
 
     | Const c -> Const c
 
-    (* Simplify terms with negation head *)
-    | Neg b -> (
-      match simplify b with
-      | Const c -> Const (Num.neg c)
-      | Sum (b1, b2) -> simplify (Sum (Neg b1, Neg b2))
-      | Neg b -> b
-      | Product (b1, b2) -> simplify (Product (Neg b1, b2))
-      | b -> Neg b
-    )
-
     (* Simplify terms with sum head *)
     | Sum (b1, b2) -> (
-      match (simplify b1, simplify b2) with
+      match (simplify_bound b1, simplify_bound b2) with
       | (Const c, b) when Num.(c =~= zero) -> b
       | (b, Const c) when Num.(c =~= zero) -> b
       | (Const c1, Const c2) -> Const Num.(c1 + c2)
-      | (Const c1, Sum (Const c2, b)) -> simplify (Sum (Const Num.(c1 + c2), b))
-      | (Neg Infinity, Infinity) -> Const Num.zero
-      | (Infinity, Neg Infinity) -> Const Num.zero
-      | (_, Infinity) -> Infinity
-      | (Infinity, _) -> Infinity
-      | (_, Neg Infinity) -> Neg Infinity
-      | (Neg Infinity, _) -> Neg Infinity
-      | (Const c1, Max (Const c2, b)) -> simplify (Max (Const Num.(c1 + c2), Sum (Const c1, b)))
-      | (b1, Neg b2) when equal b1 b2 -> Const Num.zero
-      | (Neg b1, b2) when equal b1 b2 -> Const Num.zero
-      | (b1, b2) when equal b1 b2 -> simplify (Product (Const (Num.of_int 2), b1))
-      | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify (Sum (b2, Sum (b1, b3)))
-      | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Sum (Sum (b1, b3), b2))
-      | (b1, b2) when Constructor.(b2 < b1) -> simplify (Sum (b2, b1))
+      | (Const c1, Sum (Const c2, b)) -> simplify_bound (Sum (Const Num.(c1 + c2), b))
+      | (b1, b2) when equal_bound b1 b2 -> simplify_bound (Product (Const (Num.of_int 2), b1))
+      | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify_bound (Sum (b2, Sum (b1, b3)))
+      | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bound (Sum (Sum (b1, b3), b2))
+      | (b1, b2) when Constructor.(b2 < b1) -> simplify_bound (Sum (b2, b1))
       | (b1, b2) -> Sum (b1, b2)
     )
 
     (* Simplify terms with product head *)
     | Product (b1, b2) -> (
-      match (simplify b1, simplify b2) with
+      match (simplify_bound b1, simplify_bound b2) with
       | (Const c1, Const c2) -> Const (Num.(c1 * c2))
       | (Const c, b) when Num.(c =~= one) -> b
       | (b, Const c) when Num.(c =~= one) -> b
       | (Const c, b) when Num.(c =~= zero) -> Const Num.zero
       | (b, Const c) when Num.(c =~= zero) -> Const Num.zero
-      | (Const c, b) when Num.(c =~= neg one) -> simplify (Neg b)
-      | (b, Const c) when Num.(c =~= neg one) -> simplify (Neg b)
-      | (Infinity, b) when b >= Const Num.zero |? false -> Infinity
-      | (b, Infinity) when b >= Const Num.zero |? false -> Infinity
-      | (Infinity, b) when b <= Const Num.zero |? false -> Neg Infinity
-      | (b, Infinity) when b <= Const Num.zero |? false -> Neg Infinity
-      | (Neg Infinity, b) when b >= Const Num.zero |? false -> Neg Infinity
-      | (b, Neg Infinity) when b >= Const Num.zero |? false -> Neg Infinity
-      | (Neg Infinity, b) when b <= Const Num.zero |? false -> Infinity
-      | (b, Neg Infinity) when b <= Const Num.zero |? false -> Infinity
-      | (Max (Const zero1, b1), Max (Const zero2, b2)) when Num.(zero1 =~= zero) && Num.(zero2 =~= zero) ->
-         simplify (Max (Const Num.zero, Product (b1, b2)))
-      | (Max (Const zero1, b1), b2) when Num.(zero1 =~= zero) ->
-         simplify (Max (Const Num.zero, Product (b1, b2)))
-      | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify (Product (b2, Product (b1, b3)))
-      | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Product (Product (b1, b3), b2))
-      | (b1, b2) when Constructor.(b2 < b1) -> simplify (Product (b2, b1))
+      | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify_bound (Product (b2, Product (b1, b3)))
+      | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bound (Product (Product (b1, b3), b2))
+      | (b1, b2) when Constructor.(b2 < b1) -> simplify_bound (Product (b2, b1))
       | (b1, b2) -> Product (b1, b2)
     )
-                        
+
     (* Simplify terms with pow head *)
     | Pow (value, exponent) -> (
-       match simplify exponent with
-       | exponent when Num.(equal value zero) && (exponent > Const (Num.zero) |? false) -> Const Num.zero
+       match simplify_bound exponent with
+       | exponent when Num.(equal value zero) && (gt_bound exponent (Const (Num.zero)) |? false) -> Const Num.zero
        | _ when Num.(equal value one) -> Const Num.one
-       | Infinity when Num.Compare.(value >= Num.of_int 2) -> Infinity
-       | Neg Infinity when Num.Compare.(value >= Num.of_int 2) -> Const Num.zero
        | Const c -> Const Num.(pow value (to_int c))
        (* TODO Do not use Num.to_int *)
-       | Max (Const c, b) -> simplify (Max (Const (Num.pow value (Num.to_int c)), Pow (value, b)))
        | exponent -> Pow (value, exponent)
     )
 
-    (* Simplify terms with max head *)
-    | Max (b1, b2) ->
-       let (b1, b2) = (simplify b1, simplify b2) in
-       if b1 >= b2 |? false then
-         b1
-       else if b2 >= b1 |? false then
-         b2
-       else (
-         match (b1, b2) with
-         | (b1, Max (b2, b3)) when Constructor.(b2 < b1) -> simplify (Max (b2, Max (b1, b3)))
-         | (Max (b1, b2), b3) when Constructor.(b3 < b2) -> simplify (Max (Max (b1, b3), b2))
-         | (b1, b2) when Constructor.(b2 < b1) -> simplify (Max (b2, b1))
-         | (b1, b2) -> Max (b1, b2)
-       )
   in
   Logger.with_log logger Logger.DEBUG
-                  (fun () -> "simplify", ["input", to_string bound])
-                  ~result:to_string
+                  (fun () -> "simplify_bound", ["input", to_string (Some bound)])
+                  ~result:(to_string % OptionMonad.return)
                   execute
-  
-type outer_t = t
-module BaseMathImpl : (PolyTypes.BaseMath with type t = outer_t) =
-  struct
-    type t = outer_t
-           
-    let zero = Const (Num.zero)
-             
-    let one = Const (Num.one)
-            
-    let neg bound = simplify (Neg bound)
-              
-    let add b1 b2 =
-      simplify (Sum (b1, b2))
-      
-    let mul b1 b2 =
-      simplify (Product (b1, b2))
-      
-    let pow bound n =
-      bound
-      |> Enum.repeat ~times:n
-      |> Enum.fold mul one
-      |> simplify
-      
-  end
-include PolyTypes.MakeMath(BaseMathImpl)
+
+let simplify = Option.map simplify_bound
+
+let zero_bound = Const (Num.zero)
+let zero = Some zero_bound
+
+let one_bound = Const (Num.one)
+let one = Some one_bound
+
+let add_bound b1 b2 = simplify_bound (Sum (b1,b2))
+let add =
+  OptionMonad.liftM2 add_bound
+
+let mul_bound b1 b2 = simplify_bound (Product (b1,b2))
+let mul =
+  OptionMonad.liftM2 mul_bound
+
+let pow_bound bound n =
+  bound
+  |> Enum.repeat ~times:n
+  |> Enum.fold mul_bound one_bound
+  |> simplify_bound
+
+let pow bound n =
+  Option.map (flip pow_bound n) bound
+
+(** Returns the sum of all enums elements. *)
+let sum = Enum.fold add zero
+
+(** Returns the product of all enums elements. *)
+let product = Enum.fold mul one
+
+(** Addition of two elements. *)
+let (+) = add
+
+(** Multiplication of two elements *)
+let ( * ) = mul
+
+(** Raises an element to the power of an integer value. *)
+let ( ** ) = pow
+
+(** Negates element. *)
+let (~-) = neg
 
 let sum bounds =
   try
     bounds |> Enum.reduce add |> simplify
   with Not_found -> zero
-  
+
 let product bounds =
   try
     bounds |> Enum.reduce mul |> simplify
   with Not_found -> one
-  
-let sub t1 t2 =
-  simplify (add t1 (neg t2))
-      
+
 let of_poly =
-  Poly.fold ~const:of_constant ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow
-              
-let of_int i = Const (Num.of_int i)
-                  
+  OptionMonad.return %  Poly.fold ~const:bound_of_constant ~var:bound_of_var ~neg:identity ~plus:add_bound ~times:mul_bound ~pow:pow_bound
+
+let bound_of_int i = Const (Num.of_int @@ Int.abs i)
+let of_int = OptionMonad.return % bound_of_int
+
 let to_int poly = raise (Failure "TODO: Not possible")
-                
-let of_var_string str = Var (Var.of_string str)
 
-let infinity = Infinity
+let bound_of_var_string str = Var (Var.of_string str)
+let of_var_string = OptionMonad.return % bound_of_var_string
 
-let minus_infinity = Neg Infinity 
+let infinity = None
 
-let is_infinity = equal Infinity
-
-let is_minus_infinity = equal (Neg Infinity)
-
-let max b1 b2 =
-  simplify (Max (b1, b2))
-
-let min b1 b2 =
-  simplify (Neg (Max (neg b1, neg b2)))
+let is_infinity = Option.is_none
 
 let maximum bounds =
   try
     bounds |> Enum.reduce max |> simplify
-  with Not_found -> minus_infinity
+  with Not_found -> zero
 
 let minimum bounds =
   try
     bounds |> Enum.reduce min |> simplify
   with Not_found -> infinity
 
-let exp value b =
-  if Num.(Compare.(value < zero)) then
-    raise (Failure "Zero not allowed in bound pow")
-  else
-    simplify (Pow (value, b))
-
-let abs bound =
-  simplify (Max (zero, bound) + Max (zero, Neg bound))
+let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
+let exp value b = Option.map (exp_bound value) b
 
 let is_var = function
   | Var _ -> true
   | _ -> false
 
-let substitute_f substitution bound =
-  bound
-  |> fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~exp:exp ~max:max ~inf:infinity
-  |> simplify
-  
-let substitute var ~replacement =
+let substitute_f_bound substitution bound =
+  Option.map (simplify_bound % fold_bound ~const:bound_of_constant ~var:substitution ~plus:add_bound ~times:mul_bound ~exp:exp_bound) bound
+
+let substitute_f (substitution: Var.t -> t) (bound: t): t =
+  OptionMonad.(bound >>= fold_bound ~const:of_constant ~var:substitution ~plus:add ~times:mul ~exp:exp)
+
+let substitute_bound var ~replacement =
   substitute_f (fun target_var ->
       if Var.(var =~= target_var) then replacement else of_var target_var
     )
 
+let substitute var ~replacement b = substitute_bound var ~replacement b
+
 let substitute_all substitution =
   let module VarMap = Map.Make(Var) in
-  substitute_f (fun var ->
-      VarMap.find_default (of_var var) var substitution
-    )
+  substitute_f (fun var -> VarMap.find_default (of_var var) var substitution)
 
-type kind = [ `Lower | `Upper ]
+let contains_infinity =
+  Option.is_none
 
-let reverse = function
-  | `Lower -> `Upper
-  | `Upper -> `Lower
-
-let selector = function
-  | `Lower -> minimum
-  | `Upper -> maximum
-
-let inf = function
-  | `Lower -> minus_infinity
-  | `Upper -> infinity
-
-let evaluater lower higher = function
-  | `Lower -> lower
-  | `Upper -> higher
-
-let contains_infinity bound =
-  fold
-    ~const:(fun _ -> false)
-    ~var:(fun _ -> false)
-    ~neg:identity
-    ~plus:(||)
-    ~times:(||)
-    ~exp:(fun _ -> identity)
-    ~max:(||)
-    ~inf:true
-    bound
-
-let rec appr_substitution kind ~lower ~higher = function
-  | Infinity -> Infinity
-  | Var v -> evaluater lower higher kind v
-  | Const k -> Const k
-  | Neg b -> neg (appr_substitution (reverse kind) ~lower ~higher b)
-  | Sum (b1, b2) -> appr_substitution kind ~lower ~higher b1 + appr_substitution kind ~lower ~higher b2
-  | Product (b1, b2) ->
-    if is_constant b1 then (
-      if is_negative b1 then
-        (Neg b1) * (appr_substitution kind ~lower ~higher (Neg b2))
-      else
-        b1 * (appr_substitution kind ~lower ~higher b2)
-    ) else if is_constant b2 then (
-      if is_negative b2 then
-        (appr_substitution kind ~lower ~higher (Neg b1)) * (Neg b2)
-      else
-        (appr_substitution kind ~lower ~higher b1) * b2
-    )else (
-     List.cartesian_product [`Lower; `Upper] [`Lower; `Upper]
-     |> List.map (fun (kind1,kind2) ->
-            let multiplication = appr_substitution kind1 ~lower ~higher b1 * appr_substitution kind2 ~lower ~higher b2 in
-            if contains_infinity multiplication then
-              inf kind
-            else
-              multiplication
-          )
-     |> List.enum
-     |> selector kind)
-  | Max (b1, b2) -> max (appr_substitution kind ~lower ~higher b1) (appr_substitution kind ~lower ~higher b2)
-  | Pow (k,b) -> Pow (k, appr_substitution kind ~lower ~higher b)
-
-let rec vars = function
-  | Infinity -> VarSet.empty
+let rec vars_bound = function
   | Var v -> VarSet.singleton v
   | Const _ -> VarSet.empty
-  | Max (b1, b2) -> VarSet.union (vars b1) (vars b2)
-  | Neg b -> vars b
-  | Pow (v,b) -> vars b
-  | Sum (b1, b2) -> VarSet.union (vars b1) (vars b2)
-  | Product (b1, b2) -> VarSet.union (vars b1) (vars b2)
+  | Pow (v,b) -> vars_bound b
+  | Sum (b1, b2) -> VarSet.union (vars_bound b1) (vars_bound b2)
+  | Product (b1, b2) -> VarSet.union (vars_bound b1) (vars_bound b2)
+
+let vars: t -> VarSet.t = Option.default VarSet.empty % Option.map vars_bound
 
 let degree n = raise (Failure "degree for MinMaxPolynomial not yet implemented")
 let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implemented")
