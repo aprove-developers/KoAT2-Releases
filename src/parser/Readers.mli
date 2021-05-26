@@ -7,8 +7,6 @@ open BoundsInst
 
 (** Constructs a reader for the given transition graph *)
 
-exception Error of string
-                 
 (** Reads a file associated to the given path and returns a program. *)
 val read_file : string -> Program.t
 
@@ -19,7 +17,7 @@ val read_program_simple : string -> Program.t
 val read_formula : string -> Formulas.Formula.t
 
 val read_constraint : string -> Constraints.Constraint.t
-  
+
 val read_atom : string -> Atoms.Atom.t
 
 val read_polynomial : string -> Polynomials.Polynomial.t
