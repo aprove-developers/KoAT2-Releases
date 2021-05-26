@@ -38,7 +38,7 @@ FILES[] = $(removesuffix .ml, $(glob *.ml))
 OCamlProgram(Test, $(FILES))
 
 install: Test
-#     ./Test
+     ./Test
 
 clean:
   rm -f \
