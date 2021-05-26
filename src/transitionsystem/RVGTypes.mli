@@ -34,7 +34,7 @@ sig
   (** Returns the variable of the result variable. *)
   val variable : t -> Var.t
 end
-     
+
 (** Module handling result variable graphs. *)
 module RVG :
 sig
@@ -57,8 +57,8 @@ sig
 
   (** Returns all transitions that are used in the SCC of the RVG. *)
   val transitions : RV.t list -> Transition.t Enum.t
-    
+
   (** TODO doc *)
-  val rvg : [`Lower | `Upper] -> Program.t -> t
+  val rvg : Program.t -> t
 
 end
