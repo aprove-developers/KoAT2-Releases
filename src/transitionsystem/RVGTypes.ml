@@ -78,11 +78,11 @@ module RVG =
       |> List.map (flip add_vertex)
       |> List.fold_left (fun rvg adder -> adder rvg) rvg
 
-    let rvg kind (program: Program.t) =
+    let rvg (program: Program.t) =
       let add_transition (post_transition: Transition.t) (rvg: t): t =
         let rvg_with_vertices: t = add_vertices_to_rvg (program |> Program.vars |> VarSet.to_list |> List.map (fun var -> (post_transition,var))) rvg in
         let pre_nodes (post_transition: Transition.t) (post_var: Var.t) =
-          LocalSizeBound.sizebound_local program kind post_transition post_var
+          LocalSizeBound.sizebound_local program post_transition post_var
           |> Option.map LocalSizeBound.vars
           |? Program.vars program
           |> VarSet.enum
