@@ -32,6 +32,10 @@ public.InterfaceDoc(name, files) =
             $(mlfiles)
     return $(name).idoc
 
+OCAMLPACKS[] =
+  batteries
+  netstring
+
 CUSTOM_LIBS[] =
     util
     poly

@@ -22,5 +22,5 @@ module Make :
 
     val mapM: ('a -> 'b t) -> 'a list -> 'b list t
 
-    val liftM2 : ('a -> 'b -> 'c) -> 'a t -> 'b t -> 'c t
+    val liftM2: ('a -> 'b -> 'c) -> 'a M.t -> 'b M.t -> 'c M.t
   end
