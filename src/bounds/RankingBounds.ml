@@ -17,13 +17,10 @@ type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
 exception NOT_IMPROVED
 
-let apply (get_sizebound: [`Lower | `Upper] -> Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t) (transition: Transition.t): Bound.t =
+let apply (get_sizebound: Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t) (transition: Transition.t): Bound.t =
   rank
   |> Bound.of_poly
-  |> Bound.appr_substitution
-       `Upper
-       ~lower:(get_sizebound `Lower transition)
-       ~higher:(get_sizebound `Upper transition)
+  |> Bound.substitute_f (get_sizebound transition)
 
 
 (* method transforms polynome to parapolynom*)
