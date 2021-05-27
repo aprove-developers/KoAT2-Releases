@@ -11,14 +11,14 @@ module SMTSolver = SMT.IncrementalZ3SolverInt
 
 module Valuation = Valuation.Make(OurInt)
 
-(* Method transforms polynome to parapolynom*)
+(**  Method transforms polynome to parapolynom*)
 let as_parapoly label var =
     match TransitionLabel.update label var with
     (** Correct? In the nondeterministic case we just make it deterministic? *)
     | None -> ParameterPolynomial.of_var var
     | Some p -> ParameterPolynomial.of_polynomial p
 
-(*Generates formula for SMT Solver for mues *)
+(** Generates formula for SMT Solver for mues *)
 let template_formula (rank : (Location.t -> Polynomial.t) list) (k:int) (l,t,l') newVariables =
   (*generate templates*)
   let polynomials = (List.init k (fun i -> 
@@ -39,7 +39,7 @@ let template_formula (rank : (Location.t -> Polynomial.t) list) (k:int) (l,t,l')
                               formulas_mues_positve in
   Formula.mk_and formula_mues_positve formula
 
-(*Calculates mues for coefficients  1,...,k - 1 *)
+(** Calculates mues for coefficients  1,...,k - 1 *)
 let compute_mue_k (rank : (Location.t -> Polynomial.t) list) (k:int) (l,t,l') =  
     (*Use SMT Solver *)
     let newVariables = Var.fresh_id_list Var.Int k in
@@ -49,14 +49,14 @@ let compute_mue_k (rank : (Location.t -> Polynomial.t) list) (k:int) (l,t,l') =
     let model = SMTSolver.model opt in
     List.init k (fun i ->  OurInt.to_float (Valuation.eval_opt (List.nth newVariables i) (Option.get model) |? OurInt.zero))
 
-(* Returns sum_i (list1(i) := (c_i,d_i)_i -> c_i )* (list2(i) := (mu_i)_i) *)
+(** Returns sum_i (list1(i) := (c_i,d_i)_i -> c_i )* (list2(i) := (mu_i)_i) *)
 let rec sumProduct (list1, list2) =
   match (list1,list2) with
     | ([(x,_)],[y]) -> x *. y
     | ((x,_)::xs,y::ys) -> x *. y +. sumProduct (xs, ys)
     | _ -> 0.
 
-(* Calculates recursive all coefficient c_k,d_k*)
+(** Calculates recursive all coefficient c_k,d_k*)
 let rec compute_coefficients (depth:int) (rank : (Location.t -> Polynomial.t) list) (l,t,l') list =
   match list with
   | [] -> compute_coefficients depth rank (l,t,l') [(1.,1.)]
@@ -75,19 +75,22 @@ let rec compute_coefficients (depth:int) (rank : (Location.t -> Polynomial.t) li
                                                             ("c_" ^ string_of_int k ^ "/d_" ^ string_of_int k), string_of_int(int_of_float (ceil  (ck /. dk)))]);
        compute_coefficients (depth:int) rank (l,t,l') (List.append list [(ck,dk)])
 
-(* Returns max_i c_i /. d_i *)
+(** Returns max_i c_i /. d_i *)
 let rec maximum_coefficients list =
   match list with
   | [(x,y)] -> int_of_float(ceil (x /. y))
   | (x,y) :: rest -> max (int_of_float (ceil  (x /. y))) (maximum_coefficients rest)
   | _ -> 0
 
-(* Constructs the nested max bounds of all functions of the MPRF*)
-let rec maxBound_of_list list =
- match list with
- | [] -> Bound.one
- | [x] ->  Bound.max x (Bound.one)
- | x::xs -> Bound.max x (maxBound_of_list xs)
+let maximum_coefficients list =
+  list
+  |> List.map (fun (x,y) -> int_of_float(ceil (x /. y)))
+  |> List.fold max 0
+
+(** Constructs the nested sum of bounds of all functions of the MPRF (over-approximates the maximum of the bounds)*)
+let sumBound_of_list list =
+  list
+  |> List.fold Bound.add Bound.one
 
 let coefficient (rank: MultiphaseRankingFunction.t) = 
   let decreasing = MultiphaseRankingFunction.decreasing rank in
