@@ -12,7 +12,7 @@ let tests =
                      let result = TWN.check_twn(TransitionSet.any
                                                  (TransitionSet.filter (fun (l,_,l') -> Location.equal l l')
                                                  (Program.transitions (Readers.read_program_simple program)))) in
-                      Printf.printf "Program: %S \n" (Program.to_string (Readers.read_program_simple program));
+                      (* Printf.printf "Program: %S \n" (Program.to_string (Readers.read_program_simple program)); *)
                      assert_equal_bool expected_bool result))
                   [
                     (true, "l0 -> l1(x,y,z), l1 -> l1(x + y + z, y + z, z)");

@@ -21,6 +21,10 @@ sig
   (** TODO doc*)
   val max_of_occurring_constants : t -> OurInt.t
 
+  (** Returns the single right hand side constant of the atom. Only works as intended for comparison with <= or integer atoms *)
+  val get_constant : t -> value
+
+  (* Only works as intended for integer atoms *)
   val remove_strict : t -> t
 
   (* Add operations specific to polynomial atoms here if needed *)
