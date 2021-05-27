@@ -21,29 +21,29 @@ let as_parapoly label var =
 (** Generates formula for SMT Solver for mues *)
 let template_formula (rank : (Location.t -> Polynomial.t) list) (k:int) (l,t,l') newVariables =
   (*generate templates*)
-  let polynomials = (List.init k (fun i -> 
+  let polynomials = (List.init k (fun i ->
     (ParameterPolynomial.mult_with_const (Polynomial.of_var (List.nth newVariables i)) (ParameterPolynomial.of_polynomial ((List.nth rank i) l))))) in
   let f_k = (ParameterPolynomial.of_polynomial (((List.nth rank k) l))) in
   let f_k_update = (ParameterPolynomial.substitute_f (as_parapoly t) (ParameterPolynomial.of_polynomial((List.nth rank k) l'))) in
   let last_poly = ParameterPolynomial.sub f_k f_k_update in
   let complete_poly = (List.fold_left (fun a b -> (ParameterPolynomial.add a b)) ParameterPolynomial.zero (last_poly::polynomials)) in
   (*Built formula*)
-  let atom = ParameterAtom.Infix.(complete_poly >= ParameterPolynomial.one) in 
-  let formula = Formula.mk (ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom ) in 
+  let atom = ParameterAtom.Infix.(complete_poly >= ParameterPolynomial.one) in
+  let formula = Formula.mk (ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom ) in
 
-  let formulas_mues_positve = List.init k (fun i -> 
+  let formulas_mues_positve = List.init k (fun i ->
                     (Formula.lift (Atom.Infix.(Polynomial.of_var(List.nth newVariables i) >= Polynomial.zero)))) in
-  let formula_mues_positve = List.fold_left 
-                        (fun a b -> Formula.mk_and a b) 
-                              (Formula.lift (Atom.Infix.(Polynomial.of_var(List.nth newVariables (k - 1)) >= Polynomial.one))) 
+  let formula_mues_positve = List.fold_left
+                        (fun a b -> Formula.mk_and a b)
+                              (Formula.lift (Atom.Infix.(Polynomial.of_var(List.nth newVariables (k - 1)) >= Polynomial.one)))
                               formulas_mues_positve in
   Formula.mk_and formula_mues_positve formula
 
 (** Calculates mues for coefficients  1,...,k - 1 *)
-let compute_mue_k (rank : (Location.t -> Polynomial.t) list) (k:int) (l,t,l') =  
+let compute_mue_k (rank : (Location.t -> Polynomial.t) list) (k:int) (l,t,l') =
     (*Use SMT Solver *)
     let newVariables = Var.fresh_id_list Var.Int k in
-    let formula = template_formula rank k (l,t,l') newVariables in 
+    let formula = template_formula rank k (l,t,l') newVariables in
     let opt = SMTSolver.create () in
     SMTSolver.add opt formula;
     let model = SMTSolver.model opt in
@@ -92,7 +92,7 @@ let sumBound_of_list list =
   list
   |> List.fold Bound.add Bound.one
 
-let coefficient (rank: MultiphaseRankingFunction.t) = 
+let coefficient (rank: MultiphaseRankingFunction.t) =
   let decreasing = MultiphaseRankingFunction.decreasing rank in
   let coefficients = (compute_coefficients (MultiphaseRankingFunction.depth rank) (MultiphaseRankingFunction.rank rank) decreasing  []) in
   maximum_coefficients coefficients
