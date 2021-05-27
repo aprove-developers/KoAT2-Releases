@@ -130,13 +130,13 @@ let applyIrankFinder (scc_program: Program.t) =
     try Unix.mkdir ("./tmp_" ^ (string_of_int !random)) 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
   counter := !counter + 1;
   Program.to_file scc_program ("./tmp_" ^ (string_of_int !random) ^ "/tmp_scc" ^ (string_of_int !counter));
-  let err_code = Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-head-deep --no-unfold all --output-format koat --output-destination ./tmp_"
-   ^ (string_of_int !random)
-   ^ "/tmp --file ./tmp_"
-   ^ (string_of_int !random)
-   ^ "/tmp_scc"
-   ^ (string_of_int !counter)
-   ^ ".koat") in
+  ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-head-deep --no-unfold all --output-format koat --output-destination ./tmp_"
+               ^ (string_of_int !random)
+               ^ "/tmp --file ./tmp_"
+               ^ (string_of_int !random)
+               ^ "/tmp_scc"
+               ^ (string_of_int !counter)
+               ^ ".koat"));
   "./tmp_" ^ (string_of_int !random) ^ "/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
       |> Readers.read_input ~rename:false false
       |> Option.get
