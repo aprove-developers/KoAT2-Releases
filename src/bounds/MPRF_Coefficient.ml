@@ -85,12 +85,12 @@ let rec maximum_coefficients list =
 let maximum_coefficients list =
   list
   |> List.map (fun (x,y) -> int_of_float(ceil (x /. y)))
-  |> List.fold max 0
+  |> List.fold_left max 0
 
 (** Constructs the nested sum of bounds of all functions of the MPRF (over-approximates the maximum of the bounds)*)
 let sumBound_of_list list =
   list
-  |> List.fold Bound.add Bound.one
+  |> List.fold_left Bound.add Bound.one
 
 let coefficient (rank: MultiphaseRankingFunction.t) =
   let decreasing = MultiphaseRankingFunction.decreasing rank in
