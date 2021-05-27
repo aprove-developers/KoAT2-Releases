@@ -166,21 +166,20 @@ let max_of_occurring_constants bound =
     ~inf:(raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
     bound
 
+let rec show_bound_inner = function
+  | Var v -> Var.to_string v
+  | Const c -> if Num.Compare.(c < Num.zero) then "("^Num.to_string c^")" else Num.to_string c
+  | Pow (v, b) -> Num.to_string v ^ "^(" ^ show_bound_inner b ^ ")"
+  | Sum (b1, Const b2) when Num.Compare.(b2 < Num.zero) -> show_bound_inner b1 ^ "-" ^ show_bound_inner (Const (Num.neg b2))
+  | Sum (b1, b2) -> show_bound_inner b1 ^ "+" ^ show_bound_inner b2
+  | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ show_bound_inner (Sum (b1, b2)) ^ ")*(" ^ show_bound_inner (Sum (b3, b4)) ^ ")"
+  | Product (Sum (b1, b2), b3) -> "(" ^ show_bound_inner (Sum (b1, b2)) ^ ")*" ^ show_bound_inner b3
+  | Product (b1, Sum (b2, b3)) -> show_bound_inner b1 ^ "*(" ^ show_bound_inner (Sum (b2, b3)) ^ ")"
+  | Product (b1, b2) -> show_bound_inner b1 ^ "*" ^ show_bound_inner b2
 
 let show_bound t =
-  let rec show_inner = function
-    | Var v -> Var.to_string v
-    | Const c -> if Num.Compare.(c < Num.zero) then "("^Num.to_string c^")" else Num.to_string c
-    | Pow (v, b) -> Num.to_string v ^ "^(" ^ show_inner b ^ ")"
-    | Sum (b1, Const b2) when Num.Compare.(b2 < Num.zero) -> show_inner b1 ^ "-" ^ show_inner (Const (Num.neg b2))
-    | Sum (b1, b2) -> show_inner b1 ^ "+" ^ show_inner b2
-    | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ show_inner (Sum (b1, b2)) ^ ")*(" ^ show_inner (Sum (b3, b4)) ^ ")"
-    | Product (Sum (b1, b2), b3) -> "(" ^ show_inner (Sum (b1, b2)) ^ ")*" ^ show_inner b3
-    | Product (b1, Sum (b2, b3)) -> show_inner b1 ^ "*(" ^ show_inner (Sum (b2, b3)) ^ ")"
-    | Product (b1, b2) -> show_inner b1 ^ "*" ^ show_inner b2
-  in
   match t with
-    | Some b -> show_inner b
+    | Some b -> show_bound_inner b
     | None -> "inf"
 
 let show ?(complexity=true) bound =
@@ -229,57 +228,119 @@ let (<=) = flip (>=)
 
 let (=~=) = equal
 
-let rec simplify_bound bound =
-  let execute () =
-    match bound with
+(* In the following we simplify (finite) bounds to normal forms.
+ * A bound b is in normal form if it can be represented as the sum of products of coefficients and variables, or terms n^b where b
+ * is in normal form.
+ * E.g. (x+y)*(x+y) should be simplified to x^2 + 2*x*y + y^2
+ *)
+let
+  rec get_op_chain t b = match (t,b) with
+    | (`Sum, Sum (b1,b2))             -> get_op_chain t b1 @ get_op_chain t b2
+    | (`Product, Product (b1,b2))     -> get_op_chain t b1 @ get_op_chain t b2
+    | (_, b)                          -> [simplify_bound b]
 
-    | Var v -> Var v
+  (* Reverse to get_op_chain, e.g. construct a chain *)
+  and construct_op_chain t bs =
+    (* Sort terms to allow for better equality checking of similar terms. String comparison is kind of arbitrary *)
+    let sorted = List.sort (fun b1 b2 -> String.compare (show_bound_inner b1) (show_bound_inner b2)) bs in
+    match t with
+      | `Sum ->
+          (try List.reduce (fun b1 b2 -> Sum (b1,b2)) sorted
+          with Invalid_argument _  -> bound_of_constant (Num.zero))
+      | `Product ->
+          (try List.reduce (fun b1 b2 -> Product (b1,b2)) sorted
+          with Invalid_argument _  -> bound_of_constant (Num.one))
 
-    | Const c -> Const c
+  and simplify_bound bound =
+    let execute () =
+      match bound with
 
-    (* Simplify terms with sum head *)
-    | Sum (b1, b2) -> (
-      match (simplify_bound b1, simplify_bound b2) with
-      | (Const c, b) when Num.(c =~= zero) -> b
-      | (b, Const c) when Num.(c =~= zero) -> b
-      | (Const c1, Const c2) -> Const Num.(c1 + c2)
-      | (Const c1, Sum (Const c2, b)) -> simplify_bound (Sum (Const Num.(c1 + c2), b))
-      | (b1, b2) when equal_bound b1 b2 -> simplify_bound (Product (Const (Num.of_int 2), b1))
-      | (b1, Sum (b2, b3)) when Constructor.(b2 < b1) -> simplify_bound (Sum (b2, Sum (b1, b3)))
-      | (Sum (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bound (Sum (Sum (b1, b3), b2))
-      | (b1, b2) when Constructor.(b2 < b1) -> simplify_bound (Sum (b2, b1))
-      | (b1, b2) -> Sum (b1, b2)
-    )
+      | Var v -> Var v
 
-    (* Simplify terms with product head *)
-    | Product (b1, b2) -> (
-      match (simplify_bound b1, simplify_bound b2) with
-      | (Const c1, Const c2) -> Const (Num.(c1 * c2))
-      | (Const c, b) when Num.(c =~= one) -> b
-      | (b, Const c) when Num.(c =~= one) -> b
-      | (Const c, b) when Num.(c =~= zero) -> Const Num.zero
-      | (b, Const c) when Num.(c =~= zero) -> Const Num.zero
-      | (b1, Product (b2, b3)) when Constructor.(b2 < b1) -> simplify_bound (Product (b2, Product (b1, b3)))
-      | (Product (b1, b2), b3) when Constructor.(b3 < b2) -> simplify_bound (Product (Product (b1, b3), b2))
-      | (b1, b2) when Constructor.(b2 < b1) -> simplify_bound (Product (b2, b1))
-      | (b1, b2) -> Product (b1, b2)
-    )
+      | Const c -> Const c
 
-    (* Simplify terms with pow head *)
-    | Pow (value, exponent) -> (
-       match simplify_bound exponent with
-       | exponent when Num.(equal value zero) && (gt_bound exponent (Const (Num.zero)) |? false) -> Const Num.zero
-       | _ when Num.(equal value one) -> Const Num.one
-       | Const c -> Const Num.(pow value (to_int c))
-       (* TODO Do not use Num.to_int *)
-       | exponent -> Pow (value, exponent)
-    )
+      (* Simplify terms with sum head *)
+      | Sum (b1, b2) -> (
+          let sum_chain =
+            get_op_chain `Sum b1 @ get_op_chain `Sum b2
+            |> List.filter (not % equal_bound (Const Num.zero))
+          in
+          (* Merge addends that are a product of the same bound with different coefficients *)
+          let combine_chain_elements_with_coeffs =
+            let get_coeff_elem = function
+              | Product (Const c, b) -> (b,c)
+              | Product (b, Const c) -> (b,c)
+              | Const k              -> (Const Num.one, k)
+              | b                    -> (b,Num.one)
+            in
+            sum_chain
+            |> List.map get_coeff_elem
+            |> List.fold_left
+                (fun l (b,c) ->
+                  try
+                    let i = fst @@ List.findi (fun i -> equal_bound b % fst) l in
+                    List.modify_at i (fun (b,c') -> (b,Num.(c + c'))) l
+                  with Not_found -> List.cons (b,c) l)
+                []
+            |> List.map (fun (b,c) -> simplify_bound @@ Product (Const c, b))
+          in
+          (* Finally take the chain with possibly merged addends and construct a bound before applying the 'old' approach to it *)
+          construct_op_chain `Sum combine_chain_elements_with_coeffs
+        )
 
-  in
-  Logger.with_log logger Logger.DEBUG
-                  (fun () -> "simplify_bound", ["input", to_string (Some bound)])
-                  ~result:(to_string % OptionMonad.return)
-                  execute
+      (* Simplify terms with product head *)
+      | Product (b1, b2) -> (
+          let chain = get_op_chain `Product b1 @ get_op_chain `Product b2 in
+
+          (* Partition the chain in sets of constants and non-constant factors *)
+          let get_const = function
+            | Const c       -> Some c
+            | _             -> None
+          in
+          let all_non_consts = List.filter (Option.is_none % get_const) chain in
+          let all_consts = List.map Option.get @@ List.filter Option.is_some @@ List.map get_const chain in
+
+          (* Get the coefficient of the complete chain by multiplying all of its constant values *)
+          let const = List.fold_left Num.mul Num.one all_consts in
+
+          (* Here we have to multiply through *)
+          (* let non_const_chain = construct_op_chain `Product all_non_consts in *)
+
+          let final_sum_chain multiply_with_const =
+            (* Here we expect all_non_consts to be sums or vars, or exponential terms.
+             * For all sums we have to multiply the corresponding chains *)
+            List.map (get_op_chain `Sum) all_non_consts
+            (* multiply through *)
+            |> List.n_cartesian_product
+            |> List.map (fun l -> if multiply_with_const then (Const const)::l else l)
+            |> List.map (construct_op_chain `Product)
+            |> fun l -> (if Int.(List.length l > 1) then simplify_bound (construct_op_chain `Sum l) else construct_op_chain `Sum l)
+          in
+
+          if Num.(equal const zero) then
+            Const const
+          else if Num.(equal const one) then
+            final_sum_chain false
+          else if List.is_empty all_non_consts then
+            Const const
+          else
+            final_sum_chain true
+      )
+
+      (* Simplify terms with pow head *)
+      | Pow (value, exponent) -> (
+         match simplify_bound exponent with
+         | exponent when Num.(equal value zero) && (gt_bound exponent (Const (Num.zero)) |? false) -> Const Num.zero
+         | _ when Num.(equal value one) -> Const Num.one
+         | Const c -> Const Num.(pow value (to_int c)) (* TODO Do not use Num.to_int *)
+         | exponent -> Pow (value, exponent)
+      )
+
+    in
+    Logger.with_log logger Logger.DEBUG
+                    (fun () -> "simplify_bound", ["input", to_string (Some bound)])
+                    ~result:(to_string % OptionMonad.return)
+                    execute
 
 let simplify = Option.map simplify_bound
 
@@ -294,8 +355,11 @@ let add =
   OptionMonad.liftM2 add_bound
 
 let mul_bound b1 b2 = simplify_bound (Product (b1,b2))
-let mul =
-  OptionMonad.liftM2 mul_bound
+let mul b1 b2 = match (b1, b2) with
+  (* 0 * inf = inf * 0 = 0 *)
+  | (Some (Const c), None) -> if Num.equal c Num.zero then zero else None
+  | (None, Some (Const c)) -> if Num.equal c Num.zero then zero else None
+  | _ -> OptionMonad.liftM2 mul_bound b1 b2
 
 let pow_bound bound n =
   bound
