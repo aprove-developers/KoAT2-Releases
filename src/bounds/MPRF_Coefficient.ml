@@ -57,40 +57,31 @@ let rec sumProduct (list1, list2) =
     | _ -> 0.
 
 (** Calculates recursive all coefficient c_k,d_k*)
-let rec compute_coefficients (depth:int) (rank : (Location.t -> Polynomial.t) list) (l,t,l') list =
-  match list with
+let rec compute_coefficients (depth:int) (rank : (Location.t -> Polynomial.t) list) (l,t,l') coeffs =
+  match coeffs with
   | [] -> compute_coefficients depth rank (l,t,l') [(1.,1.)]
   | _  ->
-    if depth == List.length list then list
+    if depth == List.length coeffs then coeffs
      else
-       let k = List.length list in
+       let k = List.length coeffs in
        let mues = compute_mue_k rank k (l,t,l') in
        let sum_mues = (List.fold_left (fun a b -> a +. b) 0. mues) in
-       let ck = (1. +. sum_mues) +. (sumProduct (list, mues)) /. (float k) +. (List.nth mues (k - 1)) *.   (snd (List.nth list (k - 1))) in
-       let dk = (List.nth mues (k - 1)) *. (snd (List.nth list (k - 1))) /. (float (k + 1)) in
+       let ck = (1. +. sum_mues) +. (sumProduct (coeffs, mues)) /. (float k) +. (List.nth mues (k - 1)) *.   (snd (List.nth coeffs (k - 1))) in
+       let dk = (List.nth mues (k - 1)) *. (snd (List.nth coeffs (k - 1))) /. (float (k + 1)) in
        Logger.log logger Logger.DEBUG (fun () -> "coef.: ", ["k" , string_of_int k;
                                                             "mues", (List.fold_left (fun a b -> a ^ " " ^ string_of_float b) "" mues);
                                                             ("c_" ^ string_of_int k) , string_of_float ck;
                                                             ("d_" ^ string_of_int k), string_of_float dk;
                                                             ("c_" ^ string_of_int k ^ "/d_" ^ string_of_int k), string_of_int(int_of_float (ceil  (ck /. dk)))]);
-       compute_coefficients (depth:int) rank (l,t,l') (List.append list [(ck,dk)])
+       compute_coefficients (depth:int) rank (l,t,l') (List.append coeffs [(ck,dk)])
 
 (** Returns max_i c_i /. d_i *)
-let rec maximum_coefficients list =
-  match list with
-  | [(x,y)] -> int_of_float(ceil (x /. y))
-  | (x,y) :: rest -> max (int_of_float (ceil  (x /. y))) (maximum_coefficients rest)
-  | _ -> 0
-
-let maximum_coefficients list =
-  list
-  |> List.map (fun (x,y) -> int_of_float(ceil (x /. y)))
-  |> List.fold_left max 0
+let maximum_coefficients =
+  List.max % List.map (fun (x,y) -> int_of_float(ceil (x /. y)))
 
 (** Constructs the nested sum of bounds of all functions of the MPRF (over-approximates the maximum of the bounds)*)
-let sumBound_of_list list =
-  list
-  |> List.fold_left Bound.add Bound.one
+let sumBound_of_list coeffs =
+  List.fold_left Bound.add Bound.one coeffs
 
 let coefficient (rank: MultiphaseRankingFunction.t) =
   let decreasing = MultiphaseRankingFunction.decreasing rank in
