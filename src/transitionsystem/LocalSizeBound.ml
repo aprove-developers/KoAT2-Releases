@@ -44,6 +44,14 @@ type t = {
   vars: VarSet.t;
 } [@@deriving eq]
 
+let mk ?(s=1) ?(c=0) vars = 
+{
+  factor = abs(s);
+  constant = abs(c);
+  vars = (VarSet.of_string_list vars)
+
+}
+
 let initial_lsb s c vs = {factor = s; constant = c; vars = vs;}
 
 let factor t = t.factor
