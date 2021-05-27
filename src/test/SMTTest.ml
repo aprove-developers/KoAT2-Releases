@@ -56,7 +56,7 @@ let suite =
                                      (Polynomial.eval_partial (Readers.read_polynomial poly) (Z3Solver.get_model (Readers.read_formula constr) |? (Valuation.from [])) )))
                     [
                         ("fst", "x+y","a = 1 && b = 1", "a*x+b*y" );
-                        ("snd", "x+y","a = 1 && b = 1 && c<=0 && d<=0 || a = 1 && b = 1 && c > 0 && d > 0", "a*x+b*y + c*z + d*w" );
+                        ("snd", "x+y","a = 1 && b = 1 && a = 0 || a = 1 && b = 1 && c >= 0 && c <= 0 && d = 0", "a*x+b*y + c*z + d*w" );
                     ]
         );
 
