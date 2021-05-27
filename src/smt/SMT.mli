@@ -57,6 +57,8 @@ sig
   (** Checks if the current state is satisfiable. *)
   val satisfiable : t -> bool
 
+  val to_string : t -> string
+
   (** Checks if the current state is satisfiable. *)
   val unsatisfiable : t -> bool
 

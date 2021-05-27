@@ -314,6 +314,9 @@ module IncrementalZ3SolverInt =
     let unsatisfiable =
       result_is Z3.Solver.UNSATISFIABLE
 
+    let to_string (opt,_) =
+      Z3.Optimize.to_string opt
+
     let add (opt,context) formula =
       formula
       |> from_formula context
