@@ -138,8 +138,8 @@ let applyIrankFinder (scc_program: Program.t) =
                ^ (string_of_int !counter)
                ^ ".koat"));
   "./tmp_" ^ (string_of_int !random) ^ "/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
-  |> Readers.read_input ~rename:false false
-  |> Option.get
+      |> Readers.read_input ~rename:false false
+      |> Option.get
 
 (** TODO speed this up. -------------------------------------  *)
 let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitions =
@@ -207,11 +207,9 @@ let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
                                       |> Approximation.cost
                                       |> flip TransitionApproximation.get trans in
                                       VarSet.fold (fun x appr_cfr ->
-                                              let lower_sizebound_x = SizeApproximation.get `Lower (Approximation.size appr) trans x and
-                                                  upper_sizebound_x = SizeApproximation.get `Upper (Approximation.size appr) trans x in
+                                              let sizebound_x = SizeApproximation.get (Approximation.size appr) trans x in
                                                 appr_cfr
-                                                |> Approximation.add_sizebound `Lower lower_sizebound_x trans x
-                                                |> Approximation.add_sizebound `Upper upper_sizebound_x trans x) (Program.vars program) appr_cfr
+                                                |> Approximation.add_sizebound sizebound_x trans x) (Program.vars program) appr_cfr
 
                                       |> Approximation.add_timebound timebound trans
                                       |> Approximation.add_costbound costbound trans) unchangend_trans
