@@ -106,8 +106,11 @@ struct
     let get_coefficient var atom =
       P.coeff_of_var var (normalised_lhs atom)
 
-    let get_constant (poly,comp) =
-      P.get_constant (P.neg poly)
+    let get_constant (poly, compkind) =
+      match compkind with
+      | LE -> P.get_constant (P.neg poly)
+      (* Implicitly convert from < to <=*)
+      | LT -> (P.get_constant (P.neg @@ P.add P.one poly))
 end
 
 module Atom =
