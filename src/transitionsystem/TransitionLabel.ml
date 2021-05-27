@@ -1,23 +1,23 @@
 open Batteries
 open Polynomials
 open Formulas
-   
+
 module Guard = Constraints.Constraint
 type polynomial = Polynomial.t
 module VarMap = Map.Make(Var)
-           
+
 exception RecursionNotSupported
 exception OnlyCom1Supported
-        
+
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
-          
+
 type t = {
     id : int;
     update : Polynomial.t VarMap.t;
     guard : Guard.t;
     cost : Polynomial.t;
   }
-  
+
 let one = Polynomial.one
 
 let make ?(cost=one) com_kind ~update ~guard =
@@ -30,15 +30,15 @@ let make ?(cost=one) com_kind ~update ~guard =
 let fresh_id t = {
     id = unique ();
     update = t.update;
-    guard = t.guard; 
+    guard = t.guard;
     cost = t.cost;
   }
 
 let trival variables =
-  let var_map = 
+  let var_map =
     VarSet.fold (fun var map -> VarMap.add var (Polynomial.of_var var) map) variables VarMap.empty in
   make "Com_1" ~update:var_map ~guard:Guard.mk_true
-  
+
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
 
@@ -64,7 +64,7 @@ let take_last n xs =
   |> List.rev
   |> List.take n
   |> List.rev
-    
+
 (* TODO Pattern <-> Assigment relation *)
 let mk ?(cost=one) ~com_kind ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
@@ -78,10 +78,10 @@ let mk ?(cost=one) ~com_kind ~targets ~patterns ~guard ~vars =
       (List.enum appended_patterns, List.enum assignments_with_trivial)
       |> (uncurry Enum.combine)
       |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
-      |> Enum.fold (fun map adder -> adder map) VarMap.empty 
+      |> Enum.fold (fun map adder -> adder map) VarMap.empty
       |> fun update -> { id = unique ();
                          update; guard; cost;}
-                   
+
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
   let nondet_vars = VarTable.create 3 in
@@ -96,7 +96,7 @@ let append t1 t2 =
                  nondet_var
                )
          )
-  in 
+  in
   let new_update =
     VarMap.map (Polynomial.substitute_f (substitution t1.update)) t2.update
   and new_guard =
@@ -110,9 +110,9 @@ let append t1 t2 =
   }
 
 let id t = t.id
-             
-let update t var = VarMap.Exceptionless.find var t.update                    
-                 
+
+let update t var = VarMap.Exceptionless.find var t.update
+
 let guard t = t.guard
 
 let map_guard f label =
@@ -137,7 +137,7 @@ let default = {
     guard = Guard.mk_true;
     cost = one;
   }
-            
+
 let update_to_string update =
   if VarMap.is_empty update then
     "true"
@@ -149,25 +149,25 @@ let update_to_string update =
     |> fun (xs,ys) -> "("^(String.concat "," xs)^") -> ("^(String.concat "," ys)^")"
 
 let guard_to_string ?(to_file = false) label =
-  if 
-    Guard.is_true label.guard then "" 
+  if
+    Guard.is_true label.guard then ""
   else
     Guard.to_string ~to_file label.guard
 
-let to_string label =          
+let to_string label =
   let guard = if Guard.is_true label.guard then "" else "\n" ^ Guard.to_string ~comp:"&le;" ~conj:"&and;" label.guard in
   let cost = if Polynomial.is_one label.cost then "" else Polynomial.to_string label.cost ^ "&euro;" ^ ", " in
   "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ update_to_string label.update ^ guard
 
 let normalise t (input_vars:VarSet.t) = {
     id = t.id;
-    update = VarSet.fold (fun var fold_update -> if (VarMap.mem var fold_update) 
+    update = VarSet.fold (fun var fold_update -> if (VarMap.mem var fold_update)
                                             then fold_update
                                             else VarMap.add var (Polynomial.of_var var) fold_update) input_vars t.update;
-    guard = t.guard; 
+    guard = t.guard;
     cost = t.cost;
   }
-  
+
 let update_to_string_lhs ?(to_file = false) t =
   let update = t.update in
     if VarMap.is_empty update then
@@ -191,20 +191,20 @@ let update_to_string_rhs ?(to_file = false) t =
       |> List.split
       |> Tuple2.second
       |> fun xs -> "("^(String.concat "," xs)^")"
-    
 
-let to_id_string =          
+
+let to_id_string =
   string_of_int % id
 
-let input_vars t = 
+let input_vars t =
   t.update
   |> VarMap.keys
-  |> VarSet.of_enum  
+  |> VarSet.of_enum
 
 let input_size t =
   t
   |> input_vars
-  |> VarSet.cardinal 
+  |> VarSet.cardinal
 
 (** Whenever this function is invoked it is ensured that there are enough standard variables  *)
 let standard_renaming standard_vars t =
@@ -212,14 +212,14 @@ let standard_renaming standard_vars t =
   |> List.take (input_size t)
   |> List.combine ((VarSet.elements % input_vars) t)
   |> RenameMap.from
-  
+
 let rename_update update rename_map =
   update
-  |> VarMap.enum 
+  |> VarMap.enum
   |> Enum.map (fun (key, value) -> (RenameMap.find key rename_map ~default:key), Polynomial.rename rename_map value)
   |> VarMap.of_enum
-  
-  
+
+
 let rename standard_vars t =
   let rename_map = standard_renaming standard_vars t in
   {
@@ -228,7 +228,7 @@ let rename standard_vars t =
     guard = Guard.rename t.guard rename_map;
     cost = Polynomial.rename rename_map t.cost;
   }
-       
+
 
 let rename2 rename_map t =
   {
@@ -238,7 +238,7 @@ let rename2 rename_map t =
     cost = Polynomial.rename rename_map t.cost;
   }
 
-let remove_non_contributors non_contributors t = 
+let remove_non_contributors non_contributors t =
     let update_ = VarSet.fold (fun var u -> VarMap.remove var u) non_contributors t.update in
     {
     id = unique ();

@@ -1,7 +1,7 @@
 open Batteries
 
 let logger = Logging.(get Preprocessor)
-   
+
 type subject = Program.t * Approximation.t
 
 type t =
@@ -16,7 +16,7 @@ let show = function
   | CutUnsatisfiableTransitions -> "sat"
   | Chaining -> "chaining"
   | EliminateNonContributors -> "eliminate"
-  | InvariantGeneration -> "invgen" 
+  | InvariantGeneration -> "invgen"
 
 let affects = function
   | CutUnreachableLocations -> [EliminateNonContributors]
@@ -30,7 +30,7 @@ let lift_to_program transform program =
 
 let lift_to_tuple transform tuple =
   MaybeChanged.(transform (Tuple2.first tuple) >>= (fun program -> same (Tuple2.map1 (fun _ -> program) tuple)))
-              
+
 let transform subject = function
   | CutUnreachableLocations -> lift_to_tuple CutUnreachableLocations.transform_program subject
   | CutUnsatisfiableTransitions -> lift_to_tuple CutUnsatisfiableTransitions.transform_program subject
@@ -50,7 +50,7 @@ module PreprocessorSet =
 let all =
   [Chaining; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]
 
-  
+
 type strategy = t list -> subject -> subject
 
 let process strategy preprocessors subject =
@@ -78,10 +78,10 @@ let rec process_til_fixpoint_ ?(wanted=PreprocessorSet.of_list all) (todos: Prep
 
 let process_til_fixpoint preprocessors subject =
   let set = PreprocessorSet.of_list preprocessors in
-  if PreprocessorSet.mem EliminateNonContributors set then 
-    process_til_fixpoint_ ~wanted:set set (process process_only_once [EliminateNonContributors] subject) 
+  if PreprocessorSet.mem EliminateNonContributors set then
+    process_til_fixpoint_ ~wanted:set set (process process_only_once [EliminateNonContributors] subject)
   else
     process_til_fixpoint_ ~wanted:set set subject
-  
+
 let all_strategies = [process_only_once; process_til_fixpoint]
-  
+

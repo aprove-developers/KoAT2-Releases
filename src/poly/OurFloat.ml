@@ -22,7 +22,7 @@ let of_ourint f =
   f
   |> Num.num_of_big_int
 
-let upper_int x = 
+let upper_int x =
   OurInt.of_int (Num.to_int (Num.ceil (add x zero))) (** TODO maybe we have to add here one*)
 
 let (>) = Num.(>/)

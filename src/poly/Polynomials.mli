@@ -11,7 +11,7 @@ module PolynomialOver
                      and type valuation = Valuation.Make(Value).t
                      and type monomial = Monomials.Make(Value).t
 
-(** Provides default implementation of polynomials ranged over [OurInt]. *)               
+(** Provides default implementation of polynomials ranged over [OurInt]. *)
 module Polynomial :
 sig
   (** Provides default implementation of polynomials ranged over [OurInt]. *)
@@ -25,7 +25,7 @@ sig
   val max_of_occurring_constants : t -> OurInt.t
 
 end
-     
+
 (** Provides default implementation of polynomials where the coefficients are polynomials over [OurInt]. *)
 module ParameterPolynomial :
 sig
@@ -39,7 +39,7 @@ sig
   (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial.
   Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
   val flatten : t -> PolynomialOver(OurInt).t
-  
+
   (** Lifts a polynomial to a parameter polynomial such that the inner structure is kept.
   Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
   val of_polynomial : PolynomialOver(OurInt).t -> t

@@ -23,5 +23,5 @@ let of_ourint =
 
 let minus_one = sub zero one
 
-let is_zero a = 
+let is_zero a =
   equal a zero

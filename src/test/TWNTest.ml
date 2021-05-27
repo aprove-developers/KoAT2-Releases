@@ -3,14 +3,14 @@ open OUnit2
 open Helper
 open TWN
 open ProgramTypes
-   
-let tests = 
-  "TWN" >::: [ 
+
+let tests =
+  "TWN" >::: [
       ("check_twn" >:::
          List.map (fun (expected_bool, program) ->
-             program >:: (fun _ -> 
-                     let result = TWN.check_twn(TransitionSet.any 
-                                                 (TransitionSet.filter (fun (l,_,l') -> Location.equal l l') 
+             program >:: (fun _ ->
+                     let result = TWN.check_twn(TransitionSet.any
+                                                 (TransitionSet.filter (fun (l,_,l') -> Location.equal l l')
                                                  (Program.transitions (Readers.read_program_simple program)))) in
                       Printf.printf "Program: %S \n" (Program.to_string (Readers.read_program_simple program));
                      assert_equal_bool expected_bool result))

@@ -7,14 +7,14 @@ open Batteries
 type sort =
   | Real
   | Int [@@deriving eq, ord]
-  
+
 (** An ID is a unique identifier for the elements of an arbitrary set (of variables). *)
 type t =
   | Var of String.t
   (**Helpers are fresh variables generated via the computation. They represent a real or an integer value.*)
   | Helper of sort*int
   | Argument of int [@@deriving eq, ord]
- 
+
 (** TODO doc *)
 val equal : t -> t -> bool
 

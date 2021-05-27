@@ -14,7 +14,7 @@ let location_table: int LocationTable.t = LocationTable.create 20
 let empty_cache () =
   LocationTable.clear location_table
 
-let check_arity (loc: Location.t) (arity: int): unit = 
+let check_arity (loc: Location.t) (arity: int): unit =
   let stored_arity = LocationTable.find_option location_table loc
   and string_of_stored_arities = location_table
                     |> LocationTable.enum
@@ -22,7 +22,7 @@ let check_arity (loc: Location.t) (arity: int): unit =
   match stored_arity with
     |None -> LocationTable.add location_table loc arity
     |(Some m) -> if (m == arity) then () else raise (Error ("Location " ^ (Location.to_string loc) ^" occurs with different arities of variables "^ (string_of_int m) ^ "<>" ^ (string_of_int arity) ^ " !" ^ "\n Stored arities: " ^ string_of_stored_arities))
-   
+
 (** Generates transitions from given parameters *)
 let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t list): Transition.t list =
   let start_loc = Tuple2.first lhs
@@ -30,7 +30,7 @@ let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t 
   and target_loc = Tuple2.first (List.hd (Tuple2.second rhs))
   and update_expr = Tuple2.second (List.hd (Tuple2.second rhs)) in
   check_arity (Location.of_string start_loc) (List.length var_list);
-  check_arity (Location.of_string target_loc) (List.length update_expr);  
+  check_arity (Location.of_string target_loc) (List.length update_expr);
   formula
   |> Formula.constraints
   |> List.map (fun constr ->
@@ -39,7 +39,7 @@ let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t 
             ~com_kind:(Tuple2.first rhs)
             ~targets:(Tuple2.second rhs)
             ~patterns:(List.map Var.of_string var_list)
-            ~guard:constr 
+            ~guard:constr
             ~cost:cost,
           (Location.of_string target_loc)
        ))
@@ -60,7 +60,7 @@ let mk_transition_simple (start: string) (cost: Polynomial.t) (rhs: string * (st
             ~com_kind:(Tuple2.first rhs)
             ~targets:(Tuple2.second rhs)
             ~patterns:default_vars
-            ~guard:constr 
+            ~guard:constr
             ~cost:cost
             ~vars:default_vars, (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))))
        )

@@ -7,7 +7,7 @@ let map_to_set f varset =
   |> to_list
   |> Set.of_list
   |> Set.map f
-  
+
 let map_to_list f varset =
   varset
   |> to_list
@@ -24,7 +24,7 @@ let to_string varset =
   let output = IO.output_string () in
   print (fun output var -> IO.nwrite output (Var.to_string var)) output varset;
   IO.close_out output
-       
+
 let of_string_list list =
   list
   |> List.map Var.of_string
@@ -35,7 +35,7 @@ let powerset set =
     result
     |> Enum.clone
     |> Enum.map (fun ys -> add x ys)
-    |> Enum.append result 
+    |> Enum.append result
   in
   set
   |> enum
@@ -53,12 +53,12 @@ module Cache =
         let hash = Hashtbl.hash
       end
     )
-   
+
 let table =
   Cache.create 3
-  
-let memoize f =  
-  let g x = 
+
+let memoize f =
+  let g x =
     match Cache.find_option table x with
     | Some y -> y
     | None ->
@@ -71,9 +71,9 @@ let max set =
   try
     Some (max_elt set)
   with Not_found -> None
-  
+
 let combinations count set =
-  let rec f (count, set) =  
+  let rec f (count, set) =
     if count == 0 then
       List.singleton empty
     else
@@ -89,10 +89,10 @@ let combinations count set =
       |> List.of_enum
   in
   memoize f (count, set)
-  
+
 let sorted_combinations max set =
   Enum.seq 0 ((+) 1) ((>) (max+1))
   |> Enum.map (fun c -> combinations c set)
   |> Enum.map List.enum
   |> Enum.flatten
-  
+

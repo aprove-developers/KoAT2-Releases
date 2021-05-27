@@ -2,7 +2,7 @@
 open Batteries
 open BoundsInst
 open ProgramTypes
-   
+
 (** Returns true iff bound is not finite. *)
 let unbounded appr transition =
   Bound.is_infinity (Approximation.costbound appr transition)

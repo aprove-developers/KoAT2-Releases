@@ -4,10 +4,10 @@ open Helper
 open LocalSizeBound
 open Formulas
 open Polynomials
-   
-let tests = 
+
+let tests =
   "LocalSizeBound" >::: [
-                        
+
       ("find upper bound" >:::
          List.map (fun (expected, guard) ->
              "bound for x with " ^ guard >::

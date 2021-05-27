@@ -1,4 +1,4 @@
-(** Implemenation of a preprocessor which performs chaining on the TransitionGraph. *) 
+(** Implemenation of a preprocessor which performs chaining on the TransitionGraph. *)
 open Batteries
 open ProgramTypes
 
@@ -6,7 +6,7 @@ open ProgramTypes
 
 (** Logger Preprocessor *)
 let logger = Logging.(get Preprocessor)
-   
+
 (** Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location,
     making the location obsolete. *)
 let skip_location location graph =

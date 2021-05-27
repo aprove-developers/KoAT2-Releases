@@ -13,8 +13,8 @@ OCAMLPACKS[] =
     ppx_deriving.show
 
 OCAMLINCLUDES[] =
-    ../util 
-    ../poly 
+    ../util
+    ../poly
     ../constraints
     ../smt
     ../transitionsystem

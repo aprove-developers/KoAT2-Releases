@@ -20,7 +20,7 @@ module type Atomizable =
     val of_coeff_list : value list -> Var.t list -> t
     val sum : t Enum.t -> t
   end
-   
+
 (** An atom is a comparison between two polynomials. *)
 module type Atom =
   sig
@@ -32,11 +32,11 @@ module type Atom =
               GE -> a >= b.
               LT -> a < b.
               LE -> a <= b. *)
-          type t = GT 
-          (** a > b *) 
+          type t = GT
+          (** a > b *)
           | GE
-          (** a >= b *) 
-          | LT 
+          (** a >= b *)
+          | LT
           (** a < b*)
           | LE
           (** a <= b *)
@@ -51,7 +51,7 @@ module type Atom =
           val to_string : t -> string
 
         end
-                                                  
+
         type polynomial
         type value
 
@@ -61,10 +61,10 @@ module type Atom =
                 and type value = value
 
         type t
-        type compkind = LE | LT             
+        type compkind = LE | LT
 
         (** {1  {L Following methods are convenience methods for the creation of atoms.}} *)
-          
+
         (** Makes an atom out of two objects and a comparator. *)
         val mk : Comparator.t -> polynomial -> polynomial -> t
 
@@ -87,20 +87,20 @@ module type Atom =
           val (<=) : polynomial -> polynomial -> t
         end
 
-        
+
         (** {1  {L Following methods return certain properties of the atom. }}*)
-          
+
         val (=~=) : t -> t -> bool
 
         (** Stable structural equality, but not an actual equality *)
         val equal : t -> t -> bool
-          
+
         (** Stable structural compare, but not an actual compare *)
         val compare : t -> t -> int
-          
+
          (** Returns the negation of an atom. *)
         val neg : t -> t
-          
+
         (** Returns a string representing the atom. Parameter {i to_file} is used to get a representation with less special characters. *)
         val to_string : ?to_file:bool -> t -> string
 
@@ -121,13 +121,13 @@ module type Atom =
                    le:('b -> 'b -> 'c) ->
                    lt:('b -> 'b -> 'c) ->
                    t -> 'c
-                   
+
         (** Returns if both polynomials are linear. *)
         val is_linear : t -> bool
-    
+
         (** Returns the coefficient of a variable which is normalised to the lhs. *)
         val get_coefficient : Var.t -> t -> value
-          
+
         (** Returns the single right hand side constant of the atom. *)
         val get_constant : t -> value
 
@@ -141,7 +141,7 @@ module type Constraint =
         type compkind
         type atom
         type t
-        
+
         (* TODO Shouldn't be exposed *)
         module A : Atom
                with type t = atom
@@ -149,9 +149,9 @@ module type Constraint =
                 and type value = value
 
         (** {1  {L Following methods are convenience methods for the creation of constraints.}} *)
-          
+
         (** Lifts an atom to a constraint, i.e., a single atom {i a} is a constraint \[a\] as a constraint is a conjunction over atoms. *)
-        val lift : atom -> t      
+        val lift : atom -> t
 
         (** Creates a constraint from a set of atoms. *)
         val mk : atom list -> t
@@ -191,17 +191,17 @@ module type Constraint =
 
         (** Creates a constraint {i c1 && ... && cn}  of a list of constraints {i c1,...,cn}. *)
         val all : t list -> t
-          
+
         (** Negates every atom of the constraint. *)
         val turn : t -> t
 
         (** {1  {L Following methods return certain properties of the constraint.}} *)
-          
+
         (** Returns if the constraint is a tautology. We return true iff constraint is empty list \[\]. Thus, some cases [0 == 0] are missed? TODO doc? *)
         val is_true : t -> bool
-          
+
         val (=~=) : t -> t -> bool
-        
+
         (** Stable structural equality, but not an actual equality *)
         val equal : t -> t -> bool
 
@@ -223,7 +223,7 @@ module type Constraint =
 
         (** Returns the corresponding list of atoms. *)
         val atom_list : t -> atom list
-          
+
         (** Replaces all operations by new constructors. *)
         val fold : subject:(polynomial -> 'b) ->
                    le:('b -> 'b -> 'c) ->
@@ -231,23 +231,23 @@ module type Constraint =
                    correct:('d) ->
                    conj:('d -> 'c -> 'd) ->
                    t -> 'd
-                   
-        (** Drops all nonlinear atoms from the constraints. 
+
+        (** Drops all nonlinear atoms from the constraints.
           Example: {i (a > 0 && b^2 < 2)} gets transformed to {i (a > 0)} *)
         val drop_nonlinear : t -> t
-        
+
         (** Returns the row of all coefficients of a variable in a constraint, i.e., used for farkas quantor elimination. *)
         val get_coefficient_vector : Var.t -> t -> value list
-          
+
         (** Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination. *)
         val get_matrix : Var.t list -> t -> value list list
-          
+
         (** Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination.*)
         val get_constant_vector : t -> value list
-          
+
         (** TODO doc *)
         val dualise : Var.t list -> polynomial list list -> polynomial list -> t
-          
+
   end
 
 (** A formula is a propositional formula, a disjunction of constraints, i.e., a list of constraints or more precisely a list of atom lists. *)
@@ -257,16 +257,16 @@ module type Formula =
         type constr
         type polynomial
         type value
-       
+
         type t
-        
+
         (** {1  {L Following methods are convenience methods for the creation of formulas.}} *)
-        
+
         (** Lifts an atom to a formula, i.e., a single atom {i a} is a formula \[\[a\]\] as a formula is a disjunction over constraints. *)
-        val lift : atom -> t 
-        
-        (** Creates a formula from a set of constraints. *)     
-        val mk : constr -> t      
+        val lift : atom -> t
+
+        (** Creates a formula from a set of constraints. *)
+        val mk : constr -> t
 
         (** Creates the trivial formula {i true}, i.e., [true]. *)
         val mk_true : t
@@ -276,7 +276,7 @@ module type Formula =
 
         (** Returns the disjunction of two formulas. *)
         val mk_or : t -> t -> t
-        
+
         (** Returns the negated formula. *)
         val neg : t -> t
 
@@ -288,7 +288,7 @@ module type Formula =
 
         (** TODO doc *)
         val map_polynomial : (polynomial -> polynomial) -> t -> t
-          
+
         (** Creates a formula that expresses the equality of the two polynomials. *)
         val mk_eq : polynomial -> polynomial -> t
 
@@ -312,7 +312,7 @@ module type Formula =
 
         (** Returns the formula {i (p <= p1 && ... && p <= pn) } for a polynomial {i p} and a set of polynomials {i p1,...,pn}.*)
         val le_than_all : polynomial -> polynomial list -> t
-          
+
         (** Creates a formula {i (f1 && ... && fn)}  of a list of constraints {i f1,...,fn}. *)
         val all : t list -> t
 
@@ -321,7 +321,7 @@ module type Formula =
 
         (** Negates every atom of every constraint of the formula. *)
         val turn : t -> t
-          
+
         module Infix : sig
           val (=) : polynomial -> polynomial -> t
           val (>) : polynomial -> polynomial -> t
@@ -335,7 +335,7 @@ module type Formula =
         end
 
         (** {1  {L Following methods return certain properties of the formula.}} *)
-          
+
         (** Returns the set of variables which are active in the formula.
             A variable is active, if it's value has an effect on the evaluation of the constraint. *)
         val vars : t -> VarSet.t

@@ -7,7 +7,7 @@ module Make(Value : PolyTypes.Ring) =
     module Map = Map.Make(Var)
 
     type t = int Map.t [@@deriving eq, ord]
-           
+
     type value = Value.t
 
     let make list =
@@ -18,12 +18,12 @@ module Make(Value : PolyTypes.Ring) =
 
     let fold ~const ~var ~times ~pow mon =
       Map.fold (fun key n a -> times (pow (var key) n) a) mon (const Value.one)
-                   
+
     let vars mon =
       VarSet.of_enum (Map.keys mon)
-             
+
     let degree mon =
-      Map.fold (fun _ -> (+)) mon 0 
+      Map.fold (fun _ -> (+)) mon 0
 
     let degree_variable var mon =
       Map.find_default 0 var mon
@@ -42,8 +42,8 @@ module Make(Value : PolyTypes.Ring) =
 
     let is_univariate_linear mon =
       degree mon == 1
-      
-    let (=~=) = Map.equal (==) 
+
+    let (=~=) = Map.equal (==)
 
     let rename varmapping mon =
       let addRenamed var n map = Map.add (RenameMap.find var varmapping var) n map in
@@ -51,11 +51,11 @@ module Make(Value : PolyTypes.Ring) =
 
     let mul =
       let addPowers ?(p1=0) ?(p2=0) _ = p1 + p2 in
-      Map.merge (fun key p1 p2 -> Some (addPowers ?p1 ?p2 ()))  
+      Map.merge (fun key p1 p2 -> Some (addPowers ?p1 ?p2 ()))
 
     let eval_f mon f =
       Map.fold (fun var n result -> Value.mul result (f var)) mon Value.one
-      
+
     (* Idea: Merge each var from the monomial with its value from the valuation, do the exponentation and fold the result with a multiplication *)
     let eval mon valuation =
       let power ?(n=0) v = (Value.pow v n)

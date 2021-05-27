@@ -162,17 +162,17 @@ let run (params: params) =
     let program_str =
       if params.simple_input then
         input
-      else 
+      else
         input |> File.lines_of |> List.of_enum |> String.concat "\n"
     in
     print_string (program_str ^ "\n\n")
   );
   input
-  |> Readers.read_input ~rename:params.rename params.simple_input 
+  |> Readers.read_input ~rename:params.rename params.simple_input
   |> rename_program_option
   |> Option.map (fun program ->
          ((if (params.cfr) then program |> Normalise.normalise else program) , Approximation.create program)
-         |> Preprocessor.process params.preprocessing_strategy params.preprocessors 
+         |> Preprocessor.process params.preprocessing_strategy params.preprocessors
          |> tap (fun (program, appr) ->
                 if params.print_system then
                   GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
