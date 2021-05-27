@@ -21,7 +21,7 @@ let tests =
                          assert_equal_bound (LocalSizeBound.as_bound expected) (convert_lsb bound)))
                   [
                     (* Bounded by constants *)
-                    (mk, "x <= 0");
+                    (mk [], "x <= 0");
                     (mk ~c:5 [], "x <= 5");
                     (mk ~c:3 [], "x <= 7 - 10");
                     (mk ~c:7 [], "x <= 7 + y - y");
