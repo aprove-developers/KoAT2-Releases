@@ -100,22 +100,22 @@ let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): 
                     TransitionLabel.to_string label]
 
 (** Returns a string containing a size-bound transition and a result variable for a specified approximation. *)
-let bounded_rv_to_string (program: Program.t) kind (appr: Approximation.t) (t,v) =
-  let get_lsb kind (t, v) =
-    LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
+let bounded_rv_to_string (program: Program.t) (appr: Approximation.t) (t,v) =
+  let get_lsb (t, v) =
+    LocalSizeBound.(sizebound_local program t v |> Option.map as_bound |? Bound.infinity)
   in
   String.concat "" [RV.to_id_string (t, v);
                     "\n";
                     "Global: ";
-                    Approximation.sizebound kind appr t v |> Bound.to_string;
+                    Approximation.sizebound appr t v |> Bound.to_string;
                     "\n";
                     "Local: ";
-                    get_lsb kind (t,v) |> Bound.show ~complexity:false
+                    get_lsb (t,v) |> Bound.show ~complexity:false
     ]
 
 (** Returns a local size-bound for a specified transition and a specified variable. *)
-let get_lsb program kind (t, v) =
-  LocalSizeBound.(sizebound_local program kind t v |> Option.map as_bound |? default kind)
+let get_lsb program (t, v) =
+  LocalSizeBound.(sizebound_local program t v |> Option.map as_bound |? Bound.infinity)
 
 (** Returns a list of special variables which are arguments of the transition system. *)
 let standard_vars program =
@@ -178,8 +178,7 @@ let run (params: params) =
                   GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
-                  GraphPrint.print_rvg `Lower ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program;
-                  GraphPrint.print_rvg `Upper ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
+                  GraphPrint.print_rvg ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
                 )
               )
          |> (fun (program, appr) ->
@@ -192,8 +191,7 @@ let run (params: params) =
                   GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
          |> tap (fun (program, appr) ->
                 if params.print_rvg then (
-                  GraphPrint.print_rvg `Lower ~label:(bounded_rv_to_string program `Lower appr) ~outdir:output_dir ~file:input_filename program;
-                  GraphPrint.print_rvg `Upper ~label:(bounded_rv_to_string program `Upper appr) ~outdir:output_dir ~file:input_filename program;
+                  GraphPrint.print_rvg ~label:(bounded_rv_to_string program appr) ~outdir:output_dir ~file:input_filename program;
                 )
               )
        )
