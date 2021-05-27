@@ -58,8 +58,7 @@ let suite =
           GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
           "../../examples/KoAT-2013/sect1-lin.koat"
           |> Readers.read_file
-          |> tap (fun program -> GraphPrint.print_rvg `Lower ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
-          |> tap (fun program -> GraphPrint.print_rvg `Upper ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> tap (fun program -> GraphPrint.print_rvg ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
           |> ignore
         )
       );
