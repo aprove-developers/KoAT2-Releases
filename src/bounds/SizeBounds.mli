@@ -9,4 +9,4 @@ open RVGTypes
 val improve : Program.t -> ?scc:ProgramTypes.TransitionSet.t option -> bool -> Approximation.t -> Approximation.t
 
 (** Performs a single improvement step for a single scc to find better sizebounds for the approximation and updates the approximation. *)
-val improve_scc : [`Lower | `Upper] -> Program.t -> RVG.t -> Approximation.t -> RV.t list -> Approximation.t
+val improve_scc : Program.t -> RVG.t -> Approximation.t -> RV.t list -> Approximation.t
