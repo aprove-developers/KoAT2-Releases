@@ -96,6 +96,9 @@ let tests =
                      "a -> b(x,y), b -> b(x-1,y) :|: x>y");
 
                     ("x+y+1", None,
+                     "a -> b(x,y), b -> b(x+1,y) :|: x<y");
+
+                    ("y+1", None,
                      "a -> b(0,y), b -> b(x+1,y) :|: x<y");
 
                     ("x+y+2", None,
