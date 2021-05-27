@@ -105,19 +105,30 @@ let optimize_c max_c predicate lsb =
   {lsb with constant = c_result}
 
 let find_bound update_vars v' update_formula max_s =
-  let solver = Solver.create ~model:false () in
   let max_c = c_range update_formula in
-  let is_bounded b = is_bounded_with solver update_formula v' b in
-  Enum.seq 0 ((+) 1) ((>) (VarSet.cardinal update_vars + 1))
-  |> Enum.map (fun count ->
-      List.enum (VarSet.combinations count update_vars)
-     )
-  |> Enum.flatten
-  |> Enum.map (initial_lsb max_s max_c)
-  |> Enum.filter is_bounded
-  |> Enum.map (optimize_s max_s is_bounded)
-  |> Enum.map (optimize_c max_c is_bounded)
-  |> Enum.peek
+  let execute () =
+    let solver = Solver.create ~model:false () in
+    Solver.add solver update_formula;
+    let is_bounded b = is_bounded_with solver update_formula v' b in
+    Enum.seq 0 ((+) 1) ((>) (VarSet.cardinal update_vars + 1))
+    |> Enum.map (fun count ->
+        List.enum (VarSet.combinations count update_vars)
+       )
+    |> Enum.flatten
+    |> Enum.map (initial_lsb max_s max_c)
+    |> Enum.filter is_bounded
+    |> Enum.map (optimize_s max_s is_bounded)
+    |> Enum.map (optimize_c max_c is_bounded)
+    |> Enum.peek
+  in
+  Logger.with_log logger Logger.DEBUG
+    (fun () -> "find_bound", [ "update_vars", VarSet.to_string update_vars
+                             ; "v'", Var.to_string v'
+                             ; "max_s", Int.to_string max_s
+                             ; "max_c", Int.to_string max_c
+                             ; "update_formula", Formula.to_string update_formula])
+    ~result:to_string_option
+    execute
 
 let compute_bound program_vars (l,t,l') var =
   let execute () =
@@ -136,6 +147,7 @@ let compute_bound program_vars (l,t,l') var =
   in
   Logger.with_log logger Logger.DEBUG
       (fun () -> "compute_bound", [ "transition", Transition.to_id_string (l,t,l')
+                                  ; "guard", Constraints.Constraint.to_string (TransitionLabel.guard t)
                                   ; "var", Var.to_string var])
       ~result:to_string_option
       execute
