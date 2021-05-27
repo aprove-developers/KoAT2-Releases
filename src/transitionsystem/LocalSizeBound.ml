@@ -44,7 +44,7 @@ type t = {
   vars: VarSet.t;
 } [@@deriving eq]
 
-let mk ?(s=1) ?(c=0) vars = 
+let mk ?(s=1) ?(c=0) vars =
 {
   factor = abs(s);
   constant = abs(c);

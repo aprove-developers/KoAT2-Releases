@@ -34,7 +34,7 @@ module Transition :
 sig
   (** Type of a transition, i.e., two connected locations and a label. *)
   type t = Location.t * TransitionLabel.t * Location.t
-  
+
   (** Equal iff. two transitions have the same id. *)
   val equal : t -> t -> bool
 
@@ -49,7 +49,7 @@ sig
 
   (** TODO doc *)
   val compare_equivalent : t -> t -> int
-  
+
   (** Generates a hash value for a transition. *)
   val hash : t -> int
 
@@ -58,7 +58,7 @@ sig
 
   (** Returns a string representing the transition. Parameter {i to_file} is used to get a representation with less special characters. *)
   val to_string : ?to_file:bool -> t -> string
-  
+
   (** Returns the source location of a transiton. *)
   val src : t -> Location.t
 
@@ -67,7 +67,7 @@ sig
 
   (** Returns the target location of a transition. *)
   val target : t -> Location.t
-  
+
   (** Returns an (unique) id of a transition label. TODO doc unique??*)
   val id : t -> int
 

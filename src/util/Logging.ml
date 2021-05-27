@@ -18,7 +18,7 @@ let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocess
 (** List of all available loggers *)
 let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; CFR; Inv]
 
-(** Returns a string matching to the given logger. *)          
+(** Returns a string matching to the given logger. *)
 let show_logger = function
   | Approximation -> "appr"
   | Size -> "size"
@@ -38,7 +38,7 @@ let with_disabled_loggers (logs: (logger * Logger.level) list) =
   |> List.map (fun logger ->
          show_logger logger, List.find_opt (fun (l, level) -> l == logger) logs |> Option.map Tuple2.second |? Logger.NONE
        )
-  
+
 let use_loggers (logs: (logger * Logger.level) list) =
   Logger.init
     (with_disabled_loggers logs)

@@ -5,7 +5,7 @@ module Valuation = Valuation.Make(OurInt)
 let description = "Find solutions for a constraint"
 
 let command = "smt"
-                 
+
 type params = {
 
     constr : string; [@pos 0]
@@ -23,9 +23,9 @@ let run (params: params) =
   and constr = Readers.read_formula params.constr in
   constr
   |> solve
-  |> Option.map (fun solution -> 
+  |> Option.map (fun solution ->
          Enum.fold (fun str -> (fun (var,value) -> str ^ (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n"))) "" (Valuation.bindings solution)
        )
   |? "unsatisfiable\n"
   |> print_string
-  
+

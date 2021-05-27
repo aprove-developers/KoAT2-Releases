@@ -2,7 +2,7 @@ open Batteries
 open OUnit2
 open Helper
 open Polynomials
-   
+
 module Parser =
   struct
     let tests =
@@ -43,35 +43,35 @@ module Parser =
         ]
 
   end
-  
+
 module Methods =
   struct
     module Valuation = Valuation.Make(OurInt)
-               
+
     let example_valuation = Valuation.from_native [("x", 3); ("y", 5); ("z", 7)]
-                                            
+
     let evaluate str =
          str
       |> Readers.read_polynomial
       |> fun poly -> Polynomial.eval poly example_valuation
-      
+
     let example_valuation2 = Valuation.from [((Var.mk_helper Var.Int 1), (OurInt.of_int 1)); ((Var.mk_helper Var.Int 2), (OurInt.of_int 0)); ((Var.mk_helper Var.Int 3), (OurInt.of_int (-1)))]
-                                            
+
     let evaluate_partial poly =
          Polynomial.eval_partial poly example_valuation2
 
     let of_int = OurInt.of_int
 
     let of_string = Var.of_string
-    
+
     let rec list_equality (xs : OurInt.t list ) (ys : OurInt.t list) =
         match (xs, ys) with
             |([],[]) -> true
             |(x::tailxs, y::tailys) ->  OurInt.(x =~= y) && (list_equality tailxs tailys)
             | (_,_) -> false
-            
+
     let rec list_print (xs : OurInt.t list ) = String.concat "," (List.map OurInt.to_string xs)
-    
+
     let tests =
       "Polynomial" >::: [
           "String_matching" >::: (
@@ -83,7 +83,7 @@ module Methods =
                             ((Var.mk_helper Var.Int 1234567), "$_1234567");
                         ]
         );
-        
+
           "Evaluate" >::: (
             List.map (fun (testname, expected, expression) ->
                 testname >:: (fun _ -> assert_equal_value (OurInt.of_int expected) (evaluate expression)))
@@ -127,7 +127,7 @@ module Methods =
                        ("Constant", Polynomial.value 42, Polynomial.value 42);
                      ];
           );
-          
+
           "Instantiate TemplatePolynomial" >::: (
             List.map (fun (testname, expected, poly) ->
                 testname >:: (fun _ -> assert_equal_parameter_poly
@@ -149,7 +149,7 @@ module Methods =
                              (value 1)));
                      ];
           );
-          
+
           "from_coeff_list" >::: (
             List.map (fun (expected, coeffs, vars) ->
                 expected >:: (fun _ -> assert_equal_poly (Polynomial.of_coeff_list coeffs vars) (Readers.read_polynomial expected)))
@@ -188,13 +188,13 @@ module Methods =
                              (false, " x ^ 0 ");
                              (true, " x ^ 1 ");
                              (false, " x ^ 2 ");
-                             (false, " 2 * x "); 
+                             (false, " 2 * x ");
                              (true, " 2 * x - 1 * x ");
                              (false, "6 * x ^5 *y - 2*z");
                              (true , "x*y*z*a*b*c + d - x*y*z*a*b*c");
                            ];
                 );
-                
+
                 "is_univariate_linear" >::: (
                     List.map (fun (expected, expression) ->
                         expression >:: (fun _ -> assert_equal_bool expected (Polynomial.is_univariate_linear (Readers.read_polynomial expression))))
@@ -206,13 +206,13 @@ module Methods =
                                 (true, " x ^ 0 ");
                                 (false, " x - 100 * y + 3 * z ");
                                 (false, " x ^ 2 ");
-                                (true, " 2 * x "); 
+                                (true, " 2 * x ");
                                 (true, " 2 * x - 1 * x ");
                                 (false, "6 * x ^5 *y - 2*z");
                                 (true , "x*y*z*a*b*c + d - x*y*z*a*b*c");
                             ];
                     );
-                    
+
                 "is_linear" >::: (
                     List.map (fun (expected, expression) ->
                         expression >:: (fun _ -> assert_equal_bool expected (Polynomial.is_linear (Readers.read_polynomial expression))))
@@ -224,7 +224,7 @@ module Methods =
                                 (true, " x ^ 0 ");
                                 (true, " x - 100 * y + 3 * z ");
                                 (false, " x ^ 2 ");
-                                (true, " 2 * x "); 
+                                (true, " 2 * x ");
                                 (true, " 2 * x - 1 * x ");
                                 (false, "6 * x ^5 *y - 2*z");
                                 (true , "x*y*z*a*b*c + d - x*y*z*a*b*c");
@@ -293,9 +293,9 @@ module Methods =
 
                           ]
             );
-            
 
-              
+
+
         ]
 
 end

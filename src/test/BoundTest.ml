@@ -1,10 +1,10 @@
 open Batteries
 open OUnit2
 open Helper
-   
-let tests = 
+
+let tests =
   "Bound" >::: [
-                        
+
       ("simplify" >:::
          List.map (fun (expected_bound, bound) ->
              bound >::
@@ -40,12 +40,12 @@ let tests =
                     ("2^(x+y)", "2^(x+y)");
 
                     (* Sum *)
-                    ("x", "0+x");                   
-                    ("11", "7+4");                   
-                    ("2*x", "x+x");                   
-                    ("inf", "7+inf");                   
-                    ("inf", "inf+8");                   
-                    ("inf", "inf+inf");                   
+                    ("x", "0+x");
+                    ("11", "7+4");
+                    ("2*x", "x+x");
+                    ("inf", "7+inf");
+                    ("inf", "inf+8");
+                    ("inf", "inf+inf");
 
                     (* Product *)
                     ("0", "0*x");
@@ -53,10 +53,10 @@ let tests =
                     ("0", "0*inf");
 
                     (* Sum over Product *)
-                    ("5*x", "3*x+2*x");                   
+                    ("5*x", "3*x+2*x");
 
                   ]
       );
-      
+
     ]
 

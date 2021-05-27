@@ -3,14 +3,14 @@ open Constraints
 open Formulas
 open ProgramTypes
 open Util
-   
+
 type t = {
     graph: TransitionGraph.t;
     start: Location.t;
   }
 
 let start program = program.start
-  
+
 let graph g = g.graph
 
 let equal equal_graph program1 program2 =
@@ -24,7 +24,7 @@ let add_locations locations graph =
   locations
   |> Enum.map (fun l -> fun gr -> TransitionGraph.add_vertex gr l)
   |> Enum.fold (fun gr adder -> adder gr) graph
-  
+
 let add_transitions transitions graph =
   transitions
   |> Enum.map (fun t -> fun gr -> TransitionGraph.add_edge_e gr t)
@@ -39,7 +39,7 @@ let remove_transition program transition =
 (* Removes the transitions from a certain transitionset to a program *)
 let remove_TransitionSet (transitions:  TransitionSet.t) (program: t)  =
   program
-  |> TransitionSet.fold (fun transition resulting_program  -> 
+  |> TransitionSet.fold (fun transition resulting_program  ->
                                 transition
                                 |> remove_transition resulting_program) transitions
 
@@ -50,13 +50,13 @@ let locations transitions =
   transitions
   |> Enum.concat_map (fun (l,_,l') -> List.enum [l; l'])
   |> Enum.uniq_by Location.equal
-  
+
 let mk transitions =
   let locations = locations (Enum.clone transitions) in
   TransitionGraph.empty
   |> add_locations locations
   |> add_transitions transitions
-  
+
 let rename program =
   let counter: int ref = ref 0 in
   let map = Hashtbl.create 10 in
@@ -87,10 +87,10 @@ let from transitions start =
          graph = mk (List.enum transitions);
          start = start;
        }
-            
+
 let transitions =
   TransitionGraph.transitions % graph
-  
+
 let vars program =
   program
   |> transitions
@@ -98,7 +98,7 @@ let vars program =
   |> Enum.map Transition.label
   |> Enum.map TransitionLabel.vars
   |> Enum.fold VarSet.union VarSet.empty
-  
+
 let input_vars program =
   program
   |> transitions
@@ -106,11 +106,11 @@ let input_vars program =
   |> Enum.map Transition.label
   |> Enum.map TransitionLabel.input_vars
   |> Enum.fold VarSet.union VarSet.empty
-  
+
 let temp_vars =
   fun program -> VarSet.diff (vars program) (input_vars program)
 
-let cardinal_vars program = 
+let cardinal_vars program =
   VarSet.cardinal (vars program)
 
 let pre program (l,t,_) =
@@ -140,12 +140,12 @@ let sccs program =
   program.graph
   |> SCC.scc_list
   |> List.rev
-  |> List.enum  
+  |> List.enum
   |> Enum.map (TransitionGraph.loc_transitions program.graph)
   |> Enum.filter (not % TransitionSet.is_empty)
 
 let cardinal_trans_scc program =
-  Enum.fold (fun counter scc -> let cardinal = (TransitionSet.cardinal scc) in counter + if cardinal > 1 then cardinal else 0) 0 (sccs program) 
+  Enum.fold (fun counter scc -> let cardinal = (TransitionSet.cardinal scc) in counter + if cardinal > 1 then cardinal else 0) 0 (sccs program)
 
 let parallelTransitions graph (l,_,l') =
   transitions graph
@@ -170,25 +170,25 @@ let to_string ?(to_file = false) program  =
   String.concat "  " [
       "  Start:"; Location.to_string program.start;"\n";
       "Program_Vars:"; program |> input_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n";
-      "Temp_Vars:"; program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n"; 
+      "Temp_Vars:"; program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n";
       "Locations:"; locations;"\n";
       "Transitions:\n"; transitions;"\n";
     ]
-    else 
+    else
     String.concat "" [
         "(GOAL COMPLEXITY)\n";
         "(STARTTERM (FUNCTIONSYMBOLS "; program |> start |> Location.to_string; "))\n";
-        "(VAR "; (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) ""); ")\n"; 
+        "(VAR "; (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) ""); ")\n";
         "(RULES \n"; TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "" ; ")";
     ]
-  
+
 let to_simple_string program =
-  TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph "" 
+  TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph ""
 
 (* Prints the program to the file "file.koat" *)
-let to_file program file = 
-  let oc = open_out (file ^ ".koat") in  
-    Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)" 
+let to_file program file =
+  let oc = open_out (file ^ ".koat") in
+    Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
                     (Location.to_string (start program))
                     (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) "")
                     (TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "");
@@ -211,7 +211,7 @@ let entry_transitions logger (program: t) (rank_transitions: Transition.t list):
   |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                (fun () -> "entry_transitions", ["result", transitions |> List.enum |> Util.enum_to_string Transition.to_id_string]))
 
-let list_string list = 
+let list_string list =
   List.fold_right (fun x str -> str ^ " " ^ (Transition.to_string x)) list ""
 
 (** All outgoing transitions of the given transitions.

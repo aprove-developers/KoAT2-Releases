@@ -47,9 +47,9 @@ let enum_to_string content_to_string enum =
   List.print (fun output varset -> IO.nwrite output (content_to_string varset)) output list;
   IO.close_out output
 
-let memoize ~extractor f =  
+let memoize ~extractor f =
   let cache = Hashtbl.create 10 in
-  let g x = 
+  let g x =
     match Hashtbl.find_option cache (extractor x) with
     | Some y -> y
     | None ->
@@ -61,7 +61,7 @@ let memoize ~extractor f =
 let cache ~extractor = object
   val cache = Hashtbl.create 10
 
-  method add f x = 
+  method add f x =
     match Hashtbl.find_option cache (extractor x) with
     | Some y -> y
     | None ->
@@ -73,7 +73,7 @@ let cache ~extractor = object
   end
 
 (* TODO: Hash a string into an integer. https://stackoverflow.com/questions/2624192/good-hash-function-for-strings *)
-let hash str = 
+let hash str =
  String.fold_right (fun char res -> res * 31 + (int_of_char char)) str 1
 
 (** Returns true iff s2 is contained in s1. *)

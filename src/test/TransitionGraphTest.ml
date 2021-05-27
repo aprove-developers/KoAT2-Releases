@@ -4,7 +4,7 @@ open OUnit2
 open Helper
 open ProgramTypes
 open RVGTypes
-   
+
 let suite =
   "Graphs" >::: [
       (
@@ -51,7 +51,7 @@ let suite =
                      )
              )
         )
-                
+
       );
       (
         "Print" >:: (fun _ ->

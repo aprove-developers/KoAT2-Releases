@@ -2,7 +2,7 @@
 open Batteries
 open ProgramTypes
 open Readers
-   
+
 let description = "Search for a linear ranking function"
 
 let command = "prf"
@@ -15,9 +15,9 @@ type params = {
 
     simple_input : bool; [@default false] [@aka ["s"]]
     (** If the simple-input flag is set, the input is not interpreted as a filepath, but as a program in simple mode. *)
-    
+
   } [@@deriving cmdliner, show]
-  
+
 let run (params: params) =
   Logging.(use_loggers [PRF, Logger.DEBUG]);
   params.input

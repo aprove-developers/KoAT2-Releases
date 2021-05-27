@@ -1,9 +1,9 @@
 open Batteries
 open OUnit2
 open Helper
-open Formulas   
-                  
-let tests =      
+open Formulas
+
+let tests =
   "Formula" >:::[
       ("le_than_any" >:::
          List.map (fun (expected, lhs, rhs) ->
@@ -16,4 +16,4 @@ let tests =
                   ]
       );
     ]
-      
+

@@ -1,7 +1,7 @@
 (** Provides default implementations of formulas.*)
 open Batteries
 open Constraints
-   
+
 
 (** Constructs a default formula using a list of atoms each comparing two polynomials *)
 module FormulaOver(C : ConstraintTypes.Constraint) : ConstraintTypes.Formula

@@ -55,10 +55,10 @@ module Methods =
       |> Reader.read_atom
       |> fun atom -> Atom.models atom (Polynomial.Valuation_.from_native valuation)
                     *)
-      
-    let tests = 
+
+    let tests =
         "ConstraintsAtom" >:::[
-                        
+
             ("(=~=)" >:::
                 List.map (fun (atom1, atom2) ->
                     (atom1 ^ "=~=" ^ atom2) >:: (fun _ -> assert_equal_atom (Readers.read_atom atom1) (Readers.read_atom atom2)))
@@ -68,13 +68,13 @@ module Methods =
                                                     ("x <= y", "x - 1 < y");
                                                     ("x > y", "x - 1 >= y");
                                                     (*("4*x >= 2*y", "2*x >= y");*)
-                                                    (* Those are equivalent, but we can not decide (yet): 
+                                                    (* Those are equivalent, but we can not decide (yet):
                                                        ("2*x < 0", "x < 0");)
                                                        ("4*x > 2*y", "2*x > y");
                                                      *)
                                                     ("x*y < x", "x * (y - 1) < 0");
                   ]);
-                        
+
             ("vars" >:::
                 List.map (fun (expected, atom) ->
                     atom >:: (fun _ -> assert_equal_varset
@@ -84,7 +84,7 @@ module Methods =
                            (["x"], " x^3+2*x -1 < x^5 " );
                            (["x"; "y"; "z"], " x^5+y^6-z^3 + a*b*c + 2*z^3 +7*y^17 - a*b*c - 2*z^3 -7*y^17 < x^2+ 5*x*y*z " );
             ]);
-                        
+
             ("rename" >:::
                 List.map (fun (expected, atom) ->
                       atom >:: (fun _ -> assert_equal_atom (Readers.read_atom expected) (rename atom [("x", "a"); ("y", "b"); ("z", "c")])))
@@ -105,7 +105,7 @@ module Methods =
                             (true, "x < x ^ 2 + 2 * x * y", [("x", 3); ("y", 5)]);
                             (false, "x^2 * y^2 < 7", [("x", 3); ("y", 5); ("z", 7)]);
                         ]);
-             *)          
+             *)
             ("is_linear" >:::
                 List.map (fun (expected, atom) ->
                       atom >:: (fun _ -> assert_equal_bool expected (Atom.is_linear (Readers.read_atom atom))))
@@ -113,7 +113,7 @@ module Methods =
                             (true, "x < y");
                             (false, "x <= a^2 + b * 3 -6");
                             (false, "x >= a^2 + b * 3 -6" );
-                        ]);                        
+                        ]);
         ]
-        
+
       end

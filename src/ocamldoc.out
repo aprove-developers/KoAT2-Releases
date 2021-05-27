@@ -1,9 +1,9 @@
-\documentclass[11pt]{article} 
-\usepackage[latin1]{inputenc} 
-\usepackage[T1]{fontenc} 
+\documentclass[11pt]{article}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
 \usepackage{textcomp}
-\usepackage{fullpage} 
-\usepackage{url} 
+\usepackage{fullpage}
+\usepackage{url}
 \usepackage{ocamldoc}
 \title{Koat2}
 \begin{document}
@@ -224,7 +224,7 @@ type status =
 
 
 \label{type:MaybeChanged.t}\begin{ocamldoccode}
-type {\textquotesingle}a t = status * {\textquotesingle}a 
+type {\textquotesingle}a t = status * {\textquotesingle}a
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -519,7 +519,7 @@ A MinMaxPolynomial is a polynomial which allows the usage of min and max functio
 
 
 \label{type:Bound.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -968,7 +968,7 @@ A rename map is a function which maps from a finite set of variables to another 
 
 
 \label{type:RenameMap.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -976,7 +976,7 @@ type t
 
 
 \label{type:RenameMap.var}\begin{ocamldoccode}
-type var = Var.t 
+type var = Var.t
 \end{ocamldoccode}
 \index{var@\verb`var`}
 
@@ -1279,7 +1279,7 @@ Provides all module types related to polynomials
 
 
 \label{type:PolyTypes.BasePartialOrder.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -1374,19 +1374,19 @@ Extends a BasePartialOrder to get all the methods of a partial order
 
 
 \label{type:PolyTypes.Valuation.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
 
 \label{type:PolyTypes.Valuation.var}\begin{ocamldoccode}
-type var = Var.t 
+type var = Var.t
 \end{ocamldoccode}
 \index{var@\verb`var`}
 
 
 \label{type:PolyTypes.Valuation.value}\begin{ocamldoccode}
-type value 
+type value
 \end{ocamldoccode}
 \index{value@\verb`value`}
 
@@ -1502,19 +1502,19 @@ A valuation is a function which maps from a finite set of variables to values
 
 
 \label{type:PolyTypes.Evaluable.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
 
 \label{type:PolyTypes.Evaluable.value}\begin{ocamldoccode}
-type value 
+type value
 \end{ocamldoccode}
 \index{value@\verb`value`}
 
 
 \label{type:PolyTypes.Evaluable.valuation}\begin{ocamldoccode}
-type valuation 
+type valuation
 \end{ocamldoccode}
 \index{valuation@\verb`valuation`}
 
@@ -1570,7 +1570,7 @@ val eval : t ->
 \end{ocamldoccode}
 \index{eval@\verb`eval`}
 \begin{ocamldocdescription}
-Assigns each variable inside the polynomial the value of the valuation and returns the arithmetically computed result. 
+Assigns each variable inside the polynomial the value of the valuation and returns the arithmetically computed result.
         !! If the valuation does not provide a value for a variable, an exception is raised. !!
 
 
@@ -1619,7 +1619,7 @@ Evaluable is a unified interface of all parts of a polynomial
 
 
 \label{type:PolyTypes.Monomial.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -1725,13 +1725,13 @@ A monomial is a finite product of powers
 
 
 \label{type:PolyTypes.ScaledMonomial.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
 
 \label{type:PolyTypes.ScaledMonomial.monomial}\begin{ocamldoccode}
-type monomial 
+type monomial
 \end{ocamldoccode}
 \index{monomial@\verb`monomial`}
 
@@ -1811,7 +1811,7 @@ A scaled monomial is a monomial multiplied with a coefficient
 
 
 \label{type:PolyTypes.BaseMath.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -1977,7 +1977,7 @@ Extends a BaseMath module to get all math methods
 
 
 \label{type:PolyTypes.Ring.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -2044,7 +2044,7 @@ val to_string : t -> string
 
 
 \label{type:PolyTypes.Polynomial.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -2058,13 +2058,13 @@ type t
 {\tt{include }}{\tt{PolyTypes.Ring}}
 
 \label{type:PolyTypes.Polynomial.monomial}\begin{ocamldoccode}
-type monomial 
+type monomial
 \end{ocamldoccode}
 \index{monomial@\verb`monomial`}
 
 
 \label{type:PolyTypes.Polynomial.scaled-underscoremonomial}\begin{ocamldoccode}
-type scaled_monomial 
+type scaled_monomial
 \end{ocamldoccode}
 \index{scaled-underscoremonomial@\verb`scaled_monomial`}
 
@@ -2642,14 +2642,14 @@ val drop_nonlinear : t -> t
 \end{ocamldoccode}
 \index{drop-underscorenonlinear@\verb`drop_nonlinear`}
 \begin{ocamldocdescription}
-Drops all nonlinear atoms from the constraints. 
+Drops all nonlinear atoms from the constraints.
       Example: (a $>$ 0 \&\& b{\textasciicircum}2 $<$ 2) gets transformed to (a $>$ 0)
 
 
 \end{ocamldocdescription}
 
 
-The result of the following drop methods is not equivalent to the input constraint. 
+The result of the following drop methods is not equivalent to the input constraint.
       But each satisfying valuation of the input constraint is still a model of the new constraint.
 
 \label{val:Constraints.Constraint.get-underscorecoefficient-underscorevector}\begin{ocamldoccode}
@@ -2793,13 +2793,13 @@ Provides all module types related to constraints
 
 
 \label{type:ConstraintTypes.Atomizable.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
 
 \label{type:ConstraintTypes.Atomizable.value}\begin{ocamldoccode}
-type value 
+type value
 \end{ocamldoccode}
 \index{value@\verb`value`}
 
@@ -2936,13 +2936,13 @@ A comparator sets two values in a binary relation
 
 
 \label{type:ConstraintTypes.Atom.polynomial}\begin{ocamldoccode}
-type polynomial 
+type polynomial
 \end{ocamldoccode}
 \index{polynomial@\verb`polynomial`}
 
 
 \label{type:ConstraintTypes.Atom.value}\begin{ocamldoccode}
-type value 
+type value
 \end{ocamldoccode}
 \index{value@\verb`value`}
 
@@ -2957,7 +2957,7 @@ type value
 
 
 \label{type:ConstraintTypes.Atom.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -3182,25 +3182,25 @@ An atom is a comparison between two polynomials
 
 
 \label{type:ConstraintTypes.Constraint.value}\begin{ocamldoccode}
-type value 
+type value
 \end{ocamldoccode}
 \index{value@\verb`value`}
 
 
 \label{type:ConstraintTypes.Constraint.polynomial}\begin{ocamldoccode}
-type polynomial 
+type polynomial
 \end{ocamldoccode}
 \index{polynomial@\verb`polynomial`}
 
 
 \label{type:ConstraintTypes.Constraint.atom}\begin{ocamldoccode}
-type atom 
+type atom
 \end{ocamldoccode}
 \index{atom@\verb`atom`}
 
 
 \label{type:ConstraintTypes.Constraint.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -3458,7 +3458,7 @@ val drop_nonlinear : t -> t
 \end{ocamldoccode}
 \index{drop-underscorenonlinear@\verb`drop_nonlinear`}
 \begin{ocamldocdescription}
-Drops all nonlinear atoms from the constraints. 
+Drops all nonlinear atoms from the constraints.
           Example: (a $>$ 0 \&\& b{\textasciicircum}2 $<$ 2) gets transformed to (a $>$ 0)
 
 
@@ -3521,31 +3521,31 @@ A constraint is a conjunction of atoms
 
 
 \label{type:ConstraintTypes.Formula.atom}\begin{ocamldoccode}
-type atom 
+type atom
 \end{ocamldoccode}
 \index{atom@\verb`atom`}
 
 
 \label{type:ConstraintTypes.Formula.constr}\begin{ocamldoccode}
-type constr 
+type constr
 \end{ocamldoccode}
 \index{constr@\verb`constr`}
 
 
 \label{type:ConstraintTypes.Formula.polynomial}\begin{ocamldoccode}
-type polynomial 
+type polynomial
 \end{ocamldoccode}
 \index{polynomial@\verb`polynomial`}
 
 
 \label{type:ConstraintTypes.Formula.value}\begin{ocamldoccode}
-type value 
+type value
 \end{ocamldoccode}
 \index{value@\verb`value`}
 
 
 \label{type:ConstraintTypes.Formula.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -3908,7 +3908,7 @@ A unified interface for SMT solvers (currently supported: Z3)
 
 
 \label{type:SMT.IncrementalZ3Solver.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -4040,7 +4040,7 @@ Provides default modules to create locations, transitions and transitionsystems
 
 
 \label{type:Program.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -4152,7 +4152,7 @@ val pre :
 \end{ocamldoccode}
 \index{pre@\verb`pre`}
 \begin{ocamldocdescription}
-Returns a set of all transitions which occur directly before the given transition in the graph. 
+Returns a set of all transitions which occur directly before the given transition in the graph.
        Corresponds to pre(t).
 
 
@@ -4312,7 +4312,7 @@ val to_file : t -> string -> unit
 
 
 \label{type:RVGTypes.RV.t}\begin{ocamldoccode}
-type t = ProgramTypes.Transition.t * Var.t 
+type t = ProgramTypes.Transition.t * Var.t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -4440,7 +4440,7 @@ val rvg : [ {\textasciigrave}Lower | {\textasciigrave}Upper ] -> Program.t -> t
 
 
 \label{type:ProgramTypes.Location.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -4503,7 +4503,7 @@ A location is a node of a transition system and can be connected to other locati
 
 
 \label{type:ProgramTypes.Transition.t}\begin{ocamldoccode}
-type t = ProgramTypes.Location.t * TransitionLabel.t * ProgramTypes.Location.t 
+type t = ProgramTypes.Location.t * TransitionLabel.t * ProgramTypes.Location.t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -4700,13 +4700,13 @@ val add_invariant :
 
 
 \label{type:ProgramTypes.TransitionGraphWeight.t}\begin{ocamldoccode}
-type t = Value.t 
+type t = Value.t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
 
 \label{type:ProgramTypes.TransitionGraphWeight.edge}\begin{ocamldoccode}
-type edge = ProgramTypes.TransitionGraph.E.t 
+type edge = ProgramTypes.TransitionGraph.E.t
 \end{ocamldoccode}
 \index{edge@\verb`edge`}
 
@@ -4755,11 +4755,11 @@ A templated bound is a bound of a certain templated form.
 
 
 \label{type:LocalSizeBound.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 \begin{ocamldocdescription}
-Always smaller or equal to a scaling factor multiplied with the sum of all prevariables and a constant. Examples: x'$=$x+y , x'$=$2*(x+y+z) 
+Always smaller or equal to a scaling factor multiplied with the sum of all prevariables and a constant. Examples: x'$=$x+y , x'$=$2*(x+y+z)
     s * (e + sum {\tt{x1;...;xn}})
 
 
@@ -4972,7 +4972,7 @@ val sizebound_local :
 \end{ocamldoccode}
 \index{sizebound-underscorelocal@\verb`sizebound_local`}
 \begin{ocamldocdescription}
-Returns a local sizebound of the specified kind for the variable of the transition. 
+Returns a local sizebound of the specified kind for the variable of the transition.
     A local sizebound is expressed in relation to the values directly before executing the transition.
 
 
@@ -5050,7 +5050,7 @@ A transition is an edge of a transition system.
 
 
 \label{type:TransitionLabel.polynomial}\begin{ocamldoccode}
-type polynomial = Polynomials.Polynomial.t 
+type polynomial = Polynomials.Polynomial.t
 \end{ocamldoccode}
 \index{polynomial@\verb`polynomial`}
 
@@ -5068,7 +5068,7 @@ type polynomial = Polynomials.Polynomial.t
 
 
 \label{type:TransitionLabel.kind}\begin{ocamldoccode}
-type kind = [ {\textasciigrave}Lower | {\textasciigrave}Upper ] 
+type kind = [ {\textasciigrave}Lower | {\textasciigrave}Upper ]
 \end{ocamldoccode}
 \index{kind@\verb`kind`}
 
@@ -5092,7 +5092,7 @@ val compare_kind : kind -> kind -> Ppx_deriving_runtime.int
 
 
 \label{type:TransitionLabel.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -5339,7 +5339,7 @@ val print_system :
 \end{ocamldoccode}
 \index{print-underscoresystem@\verb`print_system`}
 \begin{ocamldocdescription}
-Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program. 
+Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH.
 
 
@@ -5356,7 +5356,7 @@ val print_rvg :
 \end{ocamldoccode}
 \index{print-underscorervg@\verb`print_rvg`}
 \begin{ocamldocdescription}
-Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program. 
+Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH.
 
 
@@ -5700,7 +5700,7 @@ val __ocaml_lex_read_rec : Lexing.lexbuf -> int -> P.token
 
 
 \label{type:SizeApproximation.kind}\begin{ocamldoccode}
-type kind = [ {\textasciigrave}Lower | {\textasciigrave}Upper ] 
+type kind = [ {\textasciigrave}Lower | {\textasciigrave}Upper ]
 \end{ocamldoccode}
 \index{kind@\verb`kind`}
 
@@ -5742,7 +5742,7 @@ val show_kind : kind -> Ppx_deriving_runtime.string
 
 
 \label{type:SizeApproximation.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -5814,7 +5814,7 @@ Provides default implementations of an approximation
 
 
 \label{type:Approximation.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -5822,7 +5822,7 @@ type t
 
 
 \label{type:Approximation.kind}\begin{ocamldoccode}
-type kind = [ {\textasciigrave}Lower | {\textasciigrave}Upper ] 
+type kind = [ {\textasciigrave}Lower | {\textasciigrave}Upper ]
 \end{ocamldoccode}
 \index{kind@\verb`kind`}
 \begin{ocamldocdescription}
@@ -5946,7 +5946,7 @@ val add_timebound : Bound.t -> ProgramTypes.Transition.t -> t -> t
 \end{ocamldoccode}
 \index{add-underscoretimebound@\verb`add_timebound`}
 \begin{ocamldocdescription}
-Adds the information that the specified bound is a valid timebound for the given transition. 
+Adds the information that the specified bound is a valid timebound for the given transition.
     The resulting approximation is guaranteed to be at least as good as the old approximation.
 
 
@@ -6019,7 +6019,7 @@ val sizebound : kind ->
 \end{ocamldoccode}
 \index{sizebound@\verb`sizebound`}
 \begin{ocamldocdescription}
-Returns a sizebound of the specified kind for the var of the transition. 
+Returns a sizebound of the specified kind for the var of the transition.
         A sizebound is expressed in relation to the input variable values of the program.
 
 
@@ -6036,7 +6036,7 @@ val add_sizebound :
 \end{ocamldoccode}
 \index{add-underscoresizebound@\verb`add_sizebound`}
 \begin{ocamldocdescription}
-Adds the information that the specified bound is a valid sizebound for the given variable of the transition. 
+Adds the information that the specified bound is a valid sizebound for the given variable of the transition.
         The resulting approximation is guaranteed to be at least as good as the old approximation.
 
 
@@ -6102,7 +6102,7 @@ Computes all entry transitions of the given transitions.
 
 
 \label{type:TransitionApproximation.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -6262,7 +6262,7 @@ Implementation of multiphase ranking function based on Linear Ranking Functions,
 
 
 \label{type:MultiphaseRankingFunction.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -6270,7 +6270,7 @@ type t
 
 
 \label{type:MultiphaseRankingFunction.measure}\begin{ocamldoccode}
-type measure = [ {\textasciigrave}Cost | {\textasciigrave}Time ] 
+type measure = [ {\textasciigrave}Cost | {\textasciigrave}Time ]
 \end{ocamldoccode}
 \index{measure@\verb`measure`}
 
@@ -6481,7 +6481,7 @@ Provides default implementations of RankingFunctions. KoAT uses this as a defaul
 
 
 \label{type:RankingFunction.t}\begin{ocamldoccode}
-type t 
+type t
 \end{ocamldoccode}
 \index{t@\verb`t`}
 
@@ -6489,7 +6489,7 @@ type t
 
 
 \label{type:RankingFunction.measure}\begin{ocamldoccode}
-type measure = [ {\textasciigrave}Cost | {\textasciigrave}Time ] 
+type measure = [ {\textasciigrave}Cost | {\textasciigrave}Time ]
 \end{ocamldoccode}
 \index{measure@\verb`measure`}
 
@@ -6654,7 +6654,7 @@ val logger : Batteries.Logger.log
 
 
 \label{type:TrivialSizeBounds.kind}\begin{ocamldoccode}
-type kind = [ {\textasciigrave}Lower | {\textasciigrave}Upper ] 
+type kind = [ {\textasciigrave}Lower | {\textasciigrave}Upper ]
 \end{ocamldoccode}
 \index{kind@\verb`kind`}
 
@@ -6780,7 +6780,7 @@ val logger : Batteries.Logger.log
 
 
 \label{type:NontrivialSizeBounds.kind}\begin{ocamldoccode}
-type kind = [ {\textasciigrave}Lower | {\textasciigrave}Upper ] 
+type kind = [ {\textasciigrave}Lower | {\textasciigrave}Upper ]
 \end{ocamldoccode}
 \index{kind@\verb`kind`}
 
@@ -6806,7 +6806,7 @@ val show_kind : kind -> Ppx_deriving_runtime.string
 
 
 \label{type:NontrivialSizeBounds.sign}\begin{ocamldoccode}
-type sign = [ {\textasciigrave}Neg | {\textasciigrave}Pos ] 
+type sign = [ {\textasciigrave}Neg | {\textasciigrave}Pos ]
 \end{ocamldoccode}
 \index{sign@\verb`sign`}
 
@@ -6885,7 +6885,7 @@ Provides all module types related to preprocessors
 
 
 \label{type:Preprocessor.subject}\begin{ocamldoccode}
-type subject = Program.t * Approximation.t 
+type subject = Program.t * Approximation.t
 \end{ocamldoccode}
 \index{subject@\verb`subject`}
 
@@ -6964,7 +6964,7 @@ Transforms a preprocessing step with the specific preprocessor on the subject.
 
 
 \label{type:Preprocessor.strategy}\begin{ocamldoccode}
-type strategy = t list -> subject -> subject 
+type strategy = t list -> subject -> subject
 \end{ocamldoccode}
 \index{strategy@\verb`strategy`}
 
@@ -7143,7 +7143,7 @@ A map from program locations to anything.
 
 
 \label{type:InvariantGeneration.program-underscoreabstract}\begin{ocamldoccode}
-type {\textquotesingle}a program_abstract = {\textquotesingle}a Apron.Abstract1.t LocationMap.t 
+type {\textquotesingle}a program_abstract = {\textquotesingle}a Apron.Abstract1.t LocationMap.t
 \end{ocamldoccode}
 \index{program-underscoreabstract@\verb`program_abstract`}
 \begin{ocamldocdescription}
@@ -7341,9 +7341,9 @@ val transform_program : Program.t -> MaybeChanged.status * Program.t
 
 
 
-This preprocessor removes all unsatisfiable transitions from the graph. 
+This preprocessor removes all unsatisfiable transitions from the graph.
     Those transitions can never be part of an evaluation.
-    Note that it only removes the specific transitions. 
+    Note that it only removes the specific transitions.
     After the transformation the graph might contain unreachable locations, and even locations that are not connected to any transition.
 
 
@@ -7443,7 +7443,7 @@ val transform_program : Program.t -> MaybeChanged.status * Program.t
 
 
 \label{type:Main.main-underscoreparams}\begin{ocamldoccode}
-type main_params = 
+type main_params =
 {\char123}  koat2 : string ;
 {\char125}
 \end{ocamldoccode}
@@ -7510,7 +7510,7 @@ val command : string
 
 
 \label{type:NormalizeCommand.params}\begin{ocamldoccode}
-type params = 
+type params =
 {\char123}  kind : [ {\textasciigrave}Atom | {\textasciigrave}Bound | {\textasciigrave}Polynomial ] ;
 \end{ocamldoccode}
 \begin{ocamldoccomment}
@@ -7593,7 +7593,7 @@ val command : string
 
 
 \label{type:SMTCommand.params}\begin{ocamldoccode}
-type params = 
+type params =
 {\char123}  constr : string ;
 \end{ocamldoccode}
 \begin{ocamldoccomment}
@@ -7676,7 +7676,7 @@ val command : string
 
 
 \label{type:PrfCommand.params}\begin{ocamldoccode}
-type params = 
+type params =
 {\char123}  input : string ;
 \end{ocamldoccode}
 \begin{ocamldoccomment}
@@ -7761,7 +7761,7 @@ val command : string
 
 
 \label{type:SizeCommand.params}\begin{ocamldoccode}
-type params = 
+type params =
 {\char123}  program : string ;
 \end{ocamldoccode}
 \begin{ocamldoccomment}
@@ -7836,7 +7836,7 @@ val command : string
 
 
 \label{type:LocalSizeBoundCommand.params}\begin{ocamldoccode}
-type params = 
+type params =
 {\char123}  kind : [ {\textasciigrave}Lower | {\textasciigrave}Upper ] ;
 \end{ocamldoccode}
 \begin{ocamldoccomment}
@@ -7968,7 +7968,7 @@ Prints the overall timebound of the program to the shell in the TermComp fashion
 
 
 \label{type:AnalyseCommand.params}\begin{ocamldoccode}
-type params = 
+type params =
 {\char123}  print_system : bool ;
 \end{ocamldoccode}
 \begin{ocamldoccomment}

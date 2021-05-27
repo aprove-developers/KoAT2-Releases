@@ -3,10 +3,10 @@ open OUnit2
 open Helper
 open ProgramTypes
 open Formulas
-   
-let tests = 
+
+let tests =
   "Invariant Generation" >::: [
-      
+
       ("Simple" >:::
          List.map (fun (l, l', invariant, program_str) ->
              program_str >:: (fun _ ->

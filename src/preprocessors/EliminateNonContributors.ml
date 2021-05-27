@@ -7,24 +7,24 @@ open Polynomials
 
 let logger = Logging.(get Preprocessor)
 
-let depends var label = 
+let depends var label =
     VarSet.exists (fun x -> TransitionLabel.update label x |? Polynomial.zero |> Polynomial.vars |> VarSet.mem var
                          || TransitionLabel.cost label |> Polynomial.vars |> VarSet.mem var)
 
-let rec eliminate_ program contributors non_contributors = 
-    let (xs,ys) = TransitionSet.fold (fun (l,t,l') (xs,ys) -> 
-                    VarSet.fold (fun y (xs,ys) -> 
-                        if depends y t xs then 
-                            (VarSet.add y xs, VarSet.remove y ys) 
-                        else (xs,ys)) ys (xs,ys)) 
-                        (Program.transitions program) 
+let rec eliminate_ program contributors non_contributors =
+    let (xs,ys) = TransitionSet.fold (fun (l,t,l') (xs,ys) ->
+                    VarSet.fold (fun y (xs,ys) ->
+                        if depends y t xs then
+                            (VarSet.add y xs, VarSet.remove y ys)
+                        else (xs,ys)) ys (xs,ys))
+                        (Program.transitions program)
                         (contributors, non_contributors) in
     if VarSet.equal non_contributors ys then
         contributors
     else
         eliminate_ program xs ys
 
-let eliminate program = 
+let eliminate program =
     let vars = Program.vars program in
     let vars_guard = TransitionSet.fold (fun (l,t,l') xs -> VarSet.union (Constraint.vars (TransitionLabel.guard t)) xs) (Program.transitions program) VarSet.empty in
     let contributors = eliminate_ program vars_guard (VarSet.diff vars vars_guard) in

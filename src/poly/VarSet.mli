@@ -2,7 +2,7 @@
 open Batteries
 
 include module type of Set.Make(Var)
-   
+
 (** TODO doc *)
 val map_to_set : (elt -> 'b) -> t -> 'b Set.t
 

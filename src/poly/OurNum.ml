@@ -4,7 +4,7 @@ include Number.MakeNumeric(Num)
 
 let (=~=) = equal
 
-let pow i (n: int) = pow i (of_int n)  
+let pow i (n: int) = pow i (of_int n)
 
 let max a b =
   if Compare.(a >= b) then
@@ -19,7 +19,7 @@ let min a b =
     b
 
 let of_ourint f =
-  f  
+  f
   |> Num.num_of_big_int
 
 let of_float_string fs =
@@ -27,7 +27,7 @@ let of_float_string fs =
               fs |> Num.of_float_string |> Num.abs |> Num.neg
             else
               fs |> Num.of_float_string
-  in  
+  in
   res
 
 let (>) = Num.(>/)

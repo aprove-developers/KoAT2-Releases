@@ -14,7 +14,7 @@ let (>>=) maybe f = match maybe with
   | (Same, subject) -> f subject
 
 let flat_map f maybe = maybe >>= f
-                     
+
 let map f = function
   | (status, subject) -> (status, f subject)
 
@@ -27,7 +27,7 @@ let has_changed = function
 let if_changed f = function
   | (Changed, subject) -> (Changed, f subject)
   | (Same, subject) -> (Same, subject)
-       
+
 let changed subject = (Changed, subject)
 
 let same subject = (Same, subject)

@@ -2,10 +2,10 @@ open Batteries
 open OUnit2
 open Helper
 open ProgramTypes
-   
-let tests = 
+
+let tests =
   "Preprocessors" >::: [
-      
+
       ("CutUnreachableLocations" >:::
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->
@@ -23,7 +23,7 @@ let tests =
                     ("l1 -> l2(x)", "l1 -> l2(x), l3 -> l4(x), l4 -> l5(x)");
                   ]
       );
-      
+
 (* TODO TransitionIDs instead of locations
       ("TrivialTimeBounds" >:::
          List.map (fun (src, target, program) ->
@@ -45,7 +45,7 @@ let tests =
                   ]
       );
  *)
-      
+
       ("CutUnsatisfiableTransitions" >:::
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->
@@ -96,8 +96,8 @@ let tests =
                     ("l1 -> l2(x)", "l1 -> l2(x)");
                     ("l1 -> l2(x)", "l1 -> l2(x), l2 -> l3(x) :|: 2 > 3");
                   ]
-      );      
+      );
 
     ]
 
-    
+

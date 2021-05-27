@@ -4,7 +4,7 @@ open Batteries
 let description = "Run a size bound improvement step"
 
 let command = "size"
-   
+
 type params = {
 
     program : string; [@pos 0] [@docv "FILE"]

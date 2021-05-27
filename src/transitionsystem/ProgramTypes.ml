@@ -5,12 +5,12 @@ open Constraints
 module Location =
   struct
     type t = string [@@deriving eq, ord]
-           
+
     let to_string l = l
-                    
+
     let hash l = Hashtbl.hash l
-               
-    let of_string name = name               
+
+    let of_string name = name
   end
 
 module LocationSet = Set.Make(Location)
@@ -26,13 +26,13 @@ module Transition =
       Location.equal l1 l2
       && equal_lbl t1 t2
       && Location.equal l1' l2'
-      
-    let equal = 
+
+    let equal =
       equal_ TransitionLabel.same
 
     let same =
       equal_ TransitionLabel.same
-      
+
     let equivalent =
       equal_ TransitionLabel.equivalent
 
@@ -45,18 +45,18 @@ module Transition =
         Location.compare l1' l2'
       else
         0
-      
+
     let compare_same =
       compare TransitionLabel.compare_same
-      
+
     let compare_equivalent =
       compare TransitionLabel.compare_equivalent
 
     let add_invariant invariant (l,t,l') =
       (l, TransitionLabel.map_guard (Constraint.mk_and invariant) t, l')
-      
+
     let src (src, _, _) = src
-                        
+
     let label (_, label, _) = label
 
     let target (_, _, target) = target
@@ -78,19 +78,19 @@ module Transition =
       if to_file then
         (
           if (Constraint.is_true (TransitionLabel.guard t)) then
-            ((Location.to_string l) 
-            ^ TransitionLabel.(update_to_string_lhs ~to_file t) 
-            ^ " -> Com_1(" ^ (Location.to_string l') 
+            ((Location.to_string l)
+            ^ TransitionLabel.(update_to_string_lhs ~to_file t)
+            ^ " -> Com_1(" ^ (Location.to_string l')
             ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ")")
           else
-            (Location.to_string l) 
-            ^ TransitionLabel.(update_to_string_lhs ~to_file t) 
-            ^ " -> Com_1(" ^ (Location.to_string l') 
-            ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ") :|: " 
+            (Location.to_string l)
+            ^ TransitionLabel.(update_to_string_lhs ~to_file t)
+            ^ " -> Com_1(" ^ (Location.to_string l')
+            ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ") :|: "
             ^ TransitionLabel.(guard_to_string ~to_file t)
         )
       else
-        (Location.to_string l) ^ TransitionLabel.(update_to_string_lhs t)^ " -> " ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t) ^":|:" ^ TransitionLabel.(guard_to_string t)      
+        (Location.to_string l) ^ TransitionLabel.(update_to_string_lhs t)^ " -> " ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t) ^":|:" ^ TransitionLabel.(guard_to_string t)
 
     let rename vars (l,t,l') =
       (l, (TransitionLabel.rename vars t),l')
@@ -98,7 +98,7 @@ module Transition =
     let rename2 rename_map (l,t,l') =
       (l, (TransitionLabel.rename2 rename_map t),l')
   end
-  
+
 module TransitionSet =
   struct
     include Set.Make(struct include Transition let compare = Transition.compare_same end)
@@ -114,7 +114,7 @@ module TransitionSet =
       enum
       |> Enum.map f
       |> of_enum
-      
+
   end
 
 
@@ -134,9 +134,9 @@ module TransitionGraph =
       |> TransitionSet.filter (fun (l,_,l') ->
              List.mem_cmp Location.compare l locations
              && List.mem_cmp Location.compare l' locations)
-                
+
     module Equivalence_TransitionSet = Set.Make(struct include Transition let compare = Transition.compare_equivalent end)
-                                     
+
     let equivalent graph1 graph2 =
       LocationSet.equal (locations graph1) (locations graph2)
       && Equivalence_TransitionSet.equal (graph1 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
@@ -144,17 +144,17 @@ module TransitionGraph =
 
     let replace_edge_e old_transition new_transition graph =
       add_edge_e (remove_edge_e graph old_transition) new_transition
-      
+
     let add_invariant location invariant graph =
       location
       |> succ_e graph (* An invariant holds before the execution of the successor transitions *)
       |> List.fold_left (fun result transition ->
              replace_edge_e transition (Transition.add_invariant invariant transition) result
-           ) graph          
-      
+           ) graph
+
   end
 
-module TransitionGraphWeight(Value : PolyTypes.Ring) = 
+module TransitionGraphWeight(Value : PolyTypes.Ring) =
   struct
     type t = Value.t
     type edge = TransitionGraph.E.t
@@ -164,7 +164,7 @@ module TransitionGraphWeight(Value : PolyTypes.Ring) =
     let zero = Value.zero
   end
 
-module IDSet = 
+module IDSet =
   struct
     include Set.Make(Batteries.Int)
 

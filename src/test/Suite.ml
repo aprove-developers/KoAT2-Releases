@@ -1,6 +1,6 @@
 open Batteries
 open OUnit2
-                             
+
 let suite =
   "Suite" >::: [
       VarSetTest.tests;
@@ -24,7 +24,7 @@ let suite =
       InvariantGenerationTest.tests;
       TWNTest.tests;
     ]
-                     
+
 let () =
   run_test_tt_main suite
-  
+

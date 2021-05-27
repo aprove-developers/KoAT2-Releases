@@ -7,7 +7,7 @@ type main_params = {koat2: string[@default ""]} [@@deriving cmdliner]
 
 let subcommand run params_cmdliner_term description command =
   Cmdliner.Term.(const run $ params_cmdliner_term (), info ~doc:description command)
-  
+
 let subcommands =
   [
     AnalyseCommand.(subcommand run params_cmdliner_term description command);
@@ -17,11 +17,11 @@ let subcommands =
     SMTCommand.(subcommand run params_cmdliner_term description command);
     NormalizeCommand.(subcommand run params_cmdliner_term description command);
   ]
-  
+
 let default_cmd =
-  let open Cmdliner.Term in 
+  let open Cmdliner.Term in
   fun _ -> `Help (`Pager, None)
-    
+
 let () =
   (* Read the arguments from the shell via an api and call run *)
   let main_command = Cmdliner.Term.(ret (const (fun _ -> `Help (`Pager, None)) $ main_params_cmdliner_term())),

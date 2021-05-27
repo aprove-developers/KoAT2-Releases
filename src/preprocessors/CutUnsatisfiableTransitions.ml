@@ -2,15 +2,15 @@
 open Batteries
 open Formulas
 open ProgramTypes
-   
-(** This preprocessor removes all unsatisfiable transitions from the graph. 
+
+(** This preprocessor removes all unsatisfiable transitions from the graph.
     Those transitions can never be part of an evaluation.
-    Note that it only removes the specific transitions. 
+    Note that it only removes the specific transitions.
     After the transformation the graph might contain unreachable locations, and even locations that are not connected to any transition. *)
 
 (** Logger Preprocessor *)
 let logger = Logging.(get Preprocessor)
-   
+
 (** Returns a set of transistions which have a conflicting guard (e.g. 0 > 0). *)
 let unsatisfiable_transitions graph : TransitionSet.t =
   let combine (l,t,l') set =

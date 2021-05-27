@@ -4,7 +4,7 @@ open BoundsInst
 open ProgramTypes
 
 (** This preprocessor infers for all transitions which are not part of an scc a time bound of one.
-    Those transitions can only be executed once and preprocessing might increase performance and also might lead to better bounds. *)   
+    Those transitions can only be executed once and preprocessing might increase performance and also might lead to better bounds. *)
 
 (** Transition graph represents scc. *)
 module SCC = Graph.Components.Make(TransitionGraph)

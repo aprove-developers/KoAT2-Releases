@@ -1,12 +1,12 @@
 (** Implemenation of a preprocessor which removes all unreachable locations. *)
 open Batteries
 open ProgramTypes
-   
+
 (** This preprocessor cuts all unreachable locations (and all transitions connected to them) from the program. *)
 
 (** Logger Preprocessor *)
 let logger = Logging.(get Preprocessor)
-   
+
 module LocationSet = Set.Make(Location)
 
 (** Returns a set of all locations which are reachable from the given start location. *)
@@ -19,7 +19,7 @@ let unreachable_locations graph start : LocationSet.t =
   LocationSet.diff (TransitionGraph.locations graph) (reachable_locations graph start)
 
 (** Returns program without unreachable locations and without all related transitions. *)
-let transform_program program = 
+let transform_program program =
   let unreachable_locations = unreachable_locations (Program.graph program) (Program.start program) in
   if LocationSet.is_empty unreachable_locations then
     MaybeChanged.same program

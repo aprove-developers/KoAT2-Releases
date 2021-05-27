@@ -13,7 +13,7 @@ type polynomial = Polynomials.Polynomial.t
 
 (** Module representing a map from variables to variables. *)
 module VarMap : module type of Map.Make(Var)
-                          
+
 (** Kind of bound, i.e., lower or upper. Is the ever used?? *)
 type kind = [ `Lower | `Upper ]  [@@deriving eq, ord]
 
@@ -23,7 +23,7 @@ type t
 (** KoAT2 does not support recursion yet. *)
 exception RecursionNotSupported
 
-(** Creates a label from an update function and a guard, a cost can be set, too (the default is the constant function one). 
+(** Creates a label from an update function and a guard, a cost can be set, too (the default is the constant function one).
 The string is used to set "Com_1". TODO doc ? *)
 val make : ?cost:polynomial -> string -> update:polynomial VarMap.t -> guard:Guard.t -> t
 
@@ -51,7 +51,7 @@ val same : t -> t -> bool
 
 (** Returns if the two labels describe the same transition *)
 val equivalent : t -> t -> bool
-  
+
 (** TODO doc *)
 val compare_same : t -> t -> int
 
@@ -83,7 +83,7 @@ val input_vars : t -> VarSet.t
 
 (** Returns the number of variables. *)
 val input_size : t -> int
-  
+
 (** Returns the cost function *)
 val cost : t -> polynomial
 

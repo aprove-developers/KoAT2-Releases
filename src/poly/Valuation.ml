@@ -18,18 +18,18 @@ module Make(Value : PolyTypes.Ring) =
     let zero vars = from (List.map (fun var -> (var, Value.zero)) vars)
 
     let eval = M.find
-             
+
     let eval_opt var valuation =
       try Some (M.find var valuation) with
         Not_found -> None
-                                      
+
     let is_defined valuation var =
       M.mem var valuation
 
     let vars valuation = List.map (fun (key, value) -> key) (M.bindings valuation)
 
     let bindings = M.enum
-    
+
     let to_string valuation =
       let output = IO.output_string () in
       M.print (fun output key -> IO.nwrite output (Var.to_string key)) (fun output value -> IO.nwrite output (Value.to_string value)) output valuation;

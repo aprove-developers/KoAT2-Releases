@@ -8,26 +8,26 @@ open LocalSizeBound
 (* let rec find_bounds_ ?(mprf = false) ?(cfr = false) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
   let (updated_appr, program_cfr) = appr
   |> SizeBounds.improve program
-  |> RankingBounds.improve  ~mprf:mprf ~cfr:cfr `Time program 
-  in 
-    if MaybeChanged.has_changed program_cfr then 
+  |> RankingBounds.improve  ~mprf:mprf ~cfr:cfr `Time program
+  in
+    if MaybeChanged.has_changed program_cfr then
         let unpacked_program_cfr = MaybeChanged.unpack program_cfr in
           LocalSizeBound.reset ();
           unpacked_program_cfr
           |> Approximation.create
-          |> TrivialTimeBounds.compute unpacked_program_cfr 
-          |> SizeBounds.improve unpacked_program_cfr 
+          |> TrivialTimeBounds.compute unpacked_program_cfr
+          |> SizeBounds.improve unpacked_program_cfr
           |> find_bounds_ ~mprf:mprf ~cfr:cfr unpacked_program_cfr
     else if MaybeChanged.has_changed updated_appr then
       updated_appr
       |> MaybeChanged.unpack
       |> find_bounds_  ~mprf:mprf ~cfr:cfr program
-    else 
+    else
       (program,appr) *)
 
 (** Triggers size and time-bounds computations and, if necessary, sets maximal depth of MRFs. *)
 (* let find_bounds ?(depth = 5) ?(mprf = false) ?(cfr = false) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
-  if mprf then( 
+  if mprf then(
     MultiphaseRankingFunction.maxDepth := depth;
     MultiphaseRankingFunction.list_init depth);
   let (program_cfr,updated_appr) = appr
@@ -47,13 +47,13 @@ open LocalSizeBound
   (program_cfr,appr_cost) *)
 
   let find_bounds ?(depth = 5) ?(mprf = false) ?(cfr = false) ?(fast = false) ?(time_cfr = 180) ?(inv = false) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
-   let cache_rf = RankingFunction.new_cache () in 
+   let cache_rf = RankingFunction.new_cache () in
     if cfr then
       CFR.number_unsolved_trans := (Program.cardinal_trans_scc program);
       CFR.time_cfr := float_of_int time_cfr;
     if mprf then
       MultiphaseRankingFunction.maxDepth := depth;
-   let cache_mprf = MultiphaseRankingFunction.new_cache () in 
+   let cache_mprf = MultiphaseRankingFunction.new_cache () in
   let (program_cfr,updated_appr) = appr
   |> TrivialTimeBounds.compute program
   |> RankingBounds.improve cache_rf cache_mprf ~mprf:mprf ~cfr:cfr ~inv:inv ~fast:fast `Time program in

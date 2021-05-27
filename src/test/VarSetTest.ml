@@ -2,7 +2,7 @@ open Batteries
 open OUnit2
 open Helper
 
-let tests = 
+let tests =
   "VarSet" >::: [
       ("powerset" >:::
          List.map (fun (expected, varset) ->
@@ -15,4 +15,4 @@ let tests =
                   ]
       );
     ]
-   
+

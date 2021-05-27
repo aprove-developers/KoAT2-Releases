@@ -5,8 +5,8 @@ open Constraints
 open Atoms
 open Polynomials
 open ProgramTypes
-        
-let logger = Logging.(get Inv)  
+
+let logger = Logging.(get Inv)
 
 type constraint_type = [ `Initiation | `Disability | `Consecution | `Non_Increasing | `Decreasing | `Bounded ] [@@deriving show, eq]
 
@@ -19,7 +19,7 @@ module TemplateTable = Hashtbl.Make(Location)
 
 let cache = Util.cache ~extractor:(Tuple3.map3 Transition.id)
 
-(** Given a list of variables an affine template-polynomial is generated*)            
+(** Given a list of variables an affine template-polynomial is generated*)
 let invariant_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
   let vars = VarSet.elements vars in
   let num_vars = List.length vars in
@@ -32,7 +32,7 @@ let invariant_template (vars: VarSet.t): RealParameterPolynomial.t * Var.t list 
   List.append fresh_vars [constant_var]
 
 let template_table_inv: RealParameterPolynomial.t TemplateTable.t = TemplateTable.create 10
-                                 
+
 let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): unit =
   let execute () =
     let ins_loc_prf location =
@@ -44,7 +44,7 @@ let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): u
     templates
     |> List.iter (fun (location,polynomial,_) -> TemplateTable.add template_table_inv location polynomial);
   in
-  Logger.with_log logger Logger.DEBUG 
+  Logger.with_log logger Logger.DEBUG
                   (fun () -> "compute_invariant_templates", [])
                   ~result:(fun () ->
                     template_table_inv
@@ -53,17 +53,17 @@ let compute_invariant_templates (vars: VarSet.t) (locations: Location.t list): u
                   )
                   execute
 
-let template_table_is_empty = 
+let template_table_is_empty =
   TemplateTable.is_empty template_table_inv
 
-let template_table_clear = 
+let template_table_clear =
 TemplateTable.clear template_table_inv
 
 (** Invariants are stored location wise.  If no invariant is stored for some location, we return true. *)
 let table_inv: RealConstraint.t TemplateTable.t = TemplateTable.create 10
 
 (** An invariant template is a RealConstraint. *)
-let get_inv location = 
+let get_inv location =
   location
   |> TemplateTable.find_option table_inv
   |> Option.map identity
@@ -78,8 +78,8 @@ let inv_from_valuation valuation location =
 let store_inv valuation (l,t,l') =
   inv_from_valuation valuation l
   |> RealConstraint.mk_ge RealPolynomial.zero
-  |> RealConstraint.mk_and (get_inv l) 
-  |> TemplateTable.add table_inv l 
+  |> RealConstraint.mk_and (get_inv l)
+  |> TemplateTable.add table_inv l
 
 
 let store_inv_set valuation transitions =
@@ -109,13 +109,13 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')) template: RealFo
     | `Consecution -> RealParameterAtom.Infix.(RealParameterPolynomial.zero >= RealParameterPolynomial.substitute_f (as_parapoly t) (template_inv l'))
     | `Non_Increasing -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.substitute_f (as_parapoly t) (template l'))
     | `Decreasing -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.(of_intpoly (decreaser measure t) + substitute_f (as_parapoly t) (template l')))
-    | `Bounded -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.of_intpoly (decreaser measure t))  
+    | `Bounded -> RealParameterAtom.Infix.(template l >= RealParameterPolynomial.of_intpoly (decreaser measure t))
   in
   let constr =
     match constraint_type with
     (** TODO build up a look up table for already calculated invariants and use them as initiation. *)
     | `Initiation -> RealParameterConstraint.(mk_and (of_realconstraint(get_inv l)) (of_intconstraint (TransitionLabel.guard t)))
-    | _ -> RealParameterConstraint.(mk_and (mk_and 
+    | _ -> RealParameterConstraint.(mk_and (mk_and
                                       (of_realconstraint(get_inv l))
                                       (mk [RealParameterAtom.Infix.(template_inv l <= RealParameterPolynomial.zero)]))
                                       (of_intconstraint (TransitionLabel.guard t)))
@@ -129,20 +129,20 @@ let transition_constraint_ (measure, constraint_type, (l,t,l')) template: RealFo
                                               "constraint ", RealParameterConstraint.to_string constr;
                                               "atom", RealParameterAtom.to_string atom;
                                               "formula: ", RealFormula.to_string formula])))
-       
-let transition_constraint = cache#add transition_constraint_ 
-  
+
+let transition_constraint = cache#add transition_constraint_
+
 let transitions_constraint measure (constraint_type: constraint_type) (transitions : Transition.t list) template: RealFormula.t =
   transitions
   |> List.map (fun t -> transition_constraint (measure, constraint_type, t) template)
   |> RealFormula.all
-  
+
 let non_increasing_constraint measure transition =
   transition_constraint (measure, `Non_Increasing, transition)
 
 let non_increasing_constraints measure transitions =
   transitions_constraint measure `Non_Increasing (TransitionSet.to_list transitions)
-  
+
 let bounded_constraint measure transition =
   transition_constraint (measure, `Bounded, transition)
 
@@ -161,5 +161,5 @@ let consecution_constraint measure transition =
 let consecution_constraints measure transitions =
   transitions_constraint measure `Consecution (TransitionSet.to_list transitions)
 
-let clear_cache = 
+let clear_cache =
   cache#clear

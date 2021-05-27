@@ -36,7 +36,7 @@ val store_inv_set : Valuation.t -> ProgramTypes.TransitionSet.t -> unit
 val non_increasing_constraint : int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
 
 val non_increasing_constraints : int -> measure -> TransitionSet.t ->  (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
-  
+
 val decreasing_constraint : int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
 
 val initiation_constraint : int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
