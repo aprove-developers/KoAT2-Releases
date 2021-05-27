@@ -3,13 +3,13 @@ open Batteries
 open Polynomials
 open Formulas
 open BoundsInst
-   
+
 let description = "Search for a local size bound"
 
 let command = "lsb"
-   
+
 type params = {
-    
+
     kind : [`Lower | `Upper]; [@enum ["upper", `Upper; "lower", `Lower]] [@pos 0] [@default `Upper]
     (** Which type of bound is requested. Available options: upper and lower. *)
 
@@ -28,5 +28,5 @@ let run (params: params) =
   let open TransitionLabel in
   let guard = Readers.read_formula params.guard in
   let var = Var.of_string params.var in
-  print_string (Bound.to_string LocalSizeBound.(find_bound params.kind (Formula.vars guard) var guard (Polynomial.of_var var) 1024 |> as_bound))
+  print_string (Bound.to_string LocalSizeBound.(find_bound (VarSet.inter (Formula.vars guard) (VarSet.singleton var)) var guard 1024 |> option_lsb_as_bound))
 

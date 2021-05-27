@@ -67,6 +67,10 @@ let as_bound lsb =
   let vars_sum = Bound.sum @@ Enum.map Bound.of_var (VarSet.enum lsb.vars) in
   Bound.(of_int lsb.factor * (of_int lsb.constant + vars_sum))
 
+let option_lsb_as_bound = function
+  | Some a -> as_bound a
+  | None -> Bound.infinity
+
 let as_substituted_bound substitution = Bound.substitute_f substitution % as_bound
 
 let is_bounded_with solver update_formula v' t =
