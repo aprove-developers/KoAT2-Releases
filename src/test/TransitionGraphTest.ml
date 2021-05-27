@@ -46,7 +46,7 @@ let suite =
       (
         "sizebound_local" >::: (
           [
-            ("l1", "l2", "A", "0");
+            ("l1", "l2", "A", "A");
             (* TODO We have to redefine good bounds here: ("l1", "l1", "A", "A-1"); *)
           ]
         |> List.map (fun (l,l',var,bound) ->
