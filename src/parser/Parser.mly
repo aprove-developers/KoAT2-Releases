@@ -10,7 +10,7 @@
 %token 			ARROW WITH LBRACK RBRACK
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
 %token                  COMMA
-%token                  MIN MAX INFINITY ABS
+%token                  INFINITY
 
 %left			PLUS MINUS
 %left			TIMES
