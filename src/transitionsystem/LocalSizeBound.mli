@@ -48,8 +48,10 @@ val to_string : t -> string
     Returns a bound representing the local sizebound with each variable substituted in a way that the bound is valid. *)
 val as_substituted_bound : (Var.t -> Bound.t) -> t -> Bound.t
 
-(** Converts the templated bound to an actual bound. *)
+(** Converts the templated bound to an actual (finite) bound. *)
 val as_bound : t -> Bound.t
+
+val option_lsb_as_bound : t option -> Bound.t
 
 (** Tries to find a templated bound of any of the defined templates. The first vars corresponds to
  * the variabels that may occur in the lsb *)
