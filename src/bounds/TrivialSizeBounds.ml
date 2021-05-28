@@ -21,7 +21,7 @@ let incoming_bound program get_sizebound lsb t =
     |> Enum.map substitute_with_prevalues
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute highest incoming bound", ["lsb", (Bound.to_string % LocalSizeBound.as_bound) lsb;
+                     (fun () -> "compute_highest_incoming_bound", ["lsb", (Bound.to_string % LocalSizeBound.as_bound) lsb;
                                                                    "transition", Transition.to_id_string t])
                   ~result:Bound.to_string
                   execute
@@ -44,6 +44,6 @@ let compute program get_sizebound (t,v) =
       |? Bound.infinity)
 
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute trivial bound", ["rv", RV.to_id_string (t,v)])
+                     (fun () -> "compute_trivial_bound", ["rv", RV.to_id_string (t,v)])
                      ~result:Bound.to_string
                      execute

@@ -140,10 +140,10 @@ let compute_
   else
     (* We have computed a bound in the absolute values*)
     Bound.(loop_scaling * (starting_value + loop_effect)))
-  |> tap (fun res -> Logger.log logger Logger.DEBUG (fun () -> "compute_with_negation",[ "loop_scaling", Bound.to_string loop_scaling
-                                                                                       ; "starting_value", Bound.to_string starting_value
-                                                                                       ; "loop_effect", Bound.to_string loop_effect
-                                                                                       ; "result", Bound.to_string res]))
+    |> tap (fun res -> Logger.log logger Logger.DEBUG (fun () -> "compute",[ "loop_scaling", Bound.to_string loop_scaling
+                                                                           ; "starting_value", Bound.to_string starting_value
+                                                                           ; "loop_effect", Bound.to_string loop_effect
+                                                                           ; "result", Bound.to_string res]))
 
 
 (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
