@@ -166,12 +166,28 @@ let max_of_occurring_constants bound =
     ~inf:(raise (Failure "Can not compute max_of_occurring_constants for non-polynomial bounds!"))
     bound
 
+let rec get_op_chain_and_apply_to_atoms f t b = match (t,b) with
+  | (`Sum, Sum (b1,b2))             -> get_op_chain_and_apply_to_atoms f t b1 @ get_op_chain_and_apply_to_atoms f t b2
+  | (`Product, Product (b1,b2))     -> get_op_chain_and_apply_to_atoms f t b1 @ get_op_chain_and_apply_to_atoms f t b2
+  | (_, b)                          -> [f b]
+
+let var_head = function
+  | Var _ -> true
+  | _     -> false
+
+let get_base_if_pow_head = function
+  | Pow (n,_) -> Some n
+  | _         -> None
+
 let rec show_bound_inner = function
   | Var v -> Var.to_string v
-  | Const c -> if Num.Compare.(c < Num.zero) then "("^Num.to_string c^")" else Num.to_string c
+  | Const c -> Num.to_string c
   | Pow (v, b) -> Num.to_string v ^ "^(" ^ show_bound_inner b ^ ")"
-  | Sum (b1, Const b2) when Num.Compare.(b2 < Num.zero) -> show_bound_inner b1 ^ "-" ^ show_bound_inner (Const (Num.neg b2))
-  | Sum (b1, b2) -> show_bound_inner b1 ^ "+" ^ show_bound_inner b2
+  | Sum (b1, b2) ->
+      (* Order terms by degree*)
+      let sum_chain = get_op_chain_and_apply_to_atoms identity `Sum b1 @ get_op_chain_and_apply_to_atoms identity `Sum b2 in
+      let sorted_chain = List.sort (fun b1 b2 -> compare_asy (OptionMonad.return b1) (OptionMonad.return b2)) sum_chain in
+      List.fold_lefti (fun s i b -> if i = 0 then show_bound_inner b else s^"+"^show_bound_inner b) "" @@ List.rev sorted_chain
   | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ show_bound_inner (Sum (b1, b2)) ^ ")*(" ^ show_bound_inner (Sum (b3, b4)) ^ ")"
   | Product (Sum (b1, b2), b3) -> "(" ^ show_bound_inner (Sum (b1, b2)) ^ ")*" ^ show_bound_inner b3
   | Product (b1, Sum (b2, b3)) -> show_bound_inner b1 ^ "*(" ^ show_bound_inner (Sum (b2, b3)) ^ ")"
@@ -233,12 +249,8 @@ let (=~=) = equal
  * is in normal form.
  * E.g. (x+y)*(x+y) should be simplified to x^2 + 2*x*y + y^2
  *)
-let
-  rec get_op_chain t b = match (t,b) with
-    | (`Sum, Sum (b1,b2))             -> get_op_chain t b1 @ get_op_chain t b2
-    | (`Product, Product (b1,b2))     -> get_op_chain t b1 @ get_op_chain t b2
-    | (_, b)                          -> [simplify_bound b]
-
+let rec
+  get_op_chain t = get_op_chain_and_apply_to_atoms simplify_bound t
   (* Reverse to get_op_chain, e.g. construct a chain *)
   and construct_op_chain t bs =
     (* Sort terms to allow for better equality checking of similar terms. String comparison is kind of arbitrary *)
