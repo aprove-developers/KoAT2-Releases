@@ -2,22 +2,24 @@ FROM ocaml/opam2:alpine as koat2_build
 LABEL author="Fabian Meyer"
 LABEL author="Marcel Hark"
 
+ARG OCAML_VERSION=4.11.2
+
 RUN cd /home/opam/opam-repository && git pull
 RUN opam update
 RUN opam upgrade
-RUN opam switch create -y 4.09.1+musl+static+flambda
+RUN opam switch create -y $OCAML_VERSION+musl+static+flambda
 RUN eval `opam env`
 RUN opam init
 RUN opam update
 RUN opam upgrade
 RUN eval `opam env`
 RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev --no-cache
-RUN opam install -j $((`nproc` - 2)) z3 batteries 
+RUN opam install -j $((`nproc` - 2)) z3 batteries
 RUN opam install -j $((`nproc` - 2)) menhir cmdliner ppx_deriving ppx_deriving_cmdliner fpath apron ocamlgraph ounit omake ocamlnet
 RUN eval `opam env`
 
-ENV PATH=/home/opam/.opam/4.09.1+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
-ENV LD_LIBRARY_PATH=/home/opam/.opam/4.09.1+musl+static+flambda/lib:/home/opam/.opam/4.09.1+musl+static+flambda/lib/stublibs
+ENV PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
+ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib/stublibs
 
 WORKDIR /home/opam
 
