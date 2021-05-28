@@ -13,21 +13,23 @@ RUN opam init
 RUN opam update
 RUN opam upgrade
 RUN eval `opam env`
-RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev --no-cache
-RUN opam install -j $((`nproc` - 2)) z3 batteries
-RUN opam install -j $((`nproc` - 2)) menhir cmdliner ppx_deriving ppx_deriving_cmdliner fpath apron ocamlgraph ounit omake ocamlnet
-RUN eval `opam env`
-
-ENV PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
-ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib/stublibs
+# Add graphviz for tests
+RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev graphviz --no-cache
 
 WORKDIR /home/opam
 
 COPY --chown=opam:opam src ./src
 COPY --chown=opam:opam OMakeroot .
+COPY --chown=opam:opam opam .
 COPY --chown=opam:opam OMakefile .
+# needed to run tests
 COPY --chown=opam:opam examples ./examples
 
+RUN opam install -j $((`nproc` - 2)) . --deps-only
+RUN eval `opam env`
+
+ENV PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
+ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib/stublibs
 # Run Build command
 RUN RELEASE=1 omake --depend
 
