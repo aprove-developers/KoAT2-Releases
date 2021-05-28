@@ -254,13 +254,20 @@ let rec
   (* Reverse to get_op_chain, e.g. construct a chain *)
   and construct_op_chain t bs =
     (* Sort terms to allow for better equality checking of similar terms. String comparison is kind of arbitrary *)
-    let sorted = List.sort (fun b1 b2 -> String.compare (show_bound_inner b1) (show_bound_inner b2)) bs in
+    (* We sort in reverse order, and then apply in reverse order again.
+     * This has the following advantage:
+       Consider a product chain [Var X, Const 1, Var Y]
+       Then, by sorting in reverse we get [Var Y, Var X, Const 1].
+       By, again applying in reverse we obtain Product (Var X, Var Y) -> Product (Const 1, Product (Var X, Var Y)).
+       The coefficient up-front then allows for better simplification later-on
+     * *)
+    let sorted = List.sort (fun b1 b2 -> String.compare (show_bound_inner b2) (show_bound_inner b1)) bs in
     match t with
       | `Sum ->
-          (try List.reduce (fun b1 b2 -> Sum (b1,b2)) sorted
+          (try List.reduce (fun b1 b2 -> Sum (b2,b1)) sorted
           with Invalid_argument _  -> bound_of_constant (Num.zero))
       | `Product ->
-          (try List.reduce (fun b1 b2 -> Product (b1,b2)) sorted
+          (try List.reduce (fun b1 b2 -> Product (b2,b1)) sorted
           with Invalid_argument _  -> bound_of_constant (Num.one))
 
   and simplify_bound bound =
