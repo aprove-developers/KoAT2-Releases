@@ -186,8 +186,8 @@ let rec show_bound_inner = function
   | Sum (b1, b2) ->
       (* Order terms by degree*)
       let sum_chain = get_op_chain_and_apply_to_atoms identity `Sum b1 @ get_op_chain_and_apply_to_atoms identity `Sum b2 in
-      let sorted_chain = List.sort (fun b1 b2 -> compare_asy (OptionMonad.return b1) (OptionMonad.return b2)) sum_chain in
-      List.fold_lefti (fun s i b -> if i = 0 then show_bound_inner b else s^"+"^show_bound_inner b) "" @@ List.rev sorted_chain
+      let sorted_chain = List.sort (fun b1 b2 -> compare_asy (OptionMonad.return b2) (OptionMonad.return b1)) sum_chain in
+      List.fold_lefti (fun s i b -> if i = 0 then show_bound_inner b else s^"+"^show_bound_inner b) "" sorted_chain
   | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ show_bound_inner (Sum (b1, b2)) ^ ")*(" ^ show_bound_inner (Sum (b3, b4)) ^ ")"
   | Product (Sum (b1, b2), b3) -> "(" ^ show_bound_inner (Sum (b1, b2)) ^ ")*" ^ show_bound_inner b3
   | Product (b1, Sum (b2, b3)) -> show_bound_inner b1 ^ "*(" ^ show_bound_inner (Sum (b2, b3)) ^ ")"
