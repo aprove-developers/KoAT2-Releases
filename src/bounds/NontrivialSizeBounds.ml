@@ -90,7 +90,7 @@ let compute_
 
   let loop_scaling =
     List.enum transitions
-    |> Enum.map (fun t -> Bound.exp (transition_scaling_factor t) (get_timebound t))
+    |> Enum.map (fun t -> if (OurInt.(equal (transition_scaling_factor t) one)) then Bound.one else Bound.exp (transition_scaling_factor t) (get_timebound t))
     |> Bound.product
   in
 
