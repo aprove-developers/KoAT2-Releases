@@ -33,6 +33,7 @@ let tests =
                     (mk ["y"], "x <= y && x>=-y");
                     (mk ["y"], "x <= y && x >= y");
                     (mk ["y"], "x <= y && x > 5");
+                    (mk ["y"], "x = y");
                     (* TODO Better heuristic for optimize vars: (AddsConstant 0 ["y"] "x <= y && y <= z"); *)
                     (mk ["z"], "x <= z && y <= z && x>=0");
 
