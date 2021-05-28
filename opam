@@ -1,0 +1,22 @@
+opam-version: "2.0"
+maintainer: "fabian.meyer@cs.rwth-aachen.de"
+build: [
+  [ "omake" ]
+]
+name: "koat2"
+
+depends: [
+  "apron"
+  "batteries"
+  "cmdliner"
+  "fpath"
+  "menhir"
+  "ocamlgraph"
+  "ocamlnet"
+  "omake"
+  "ounit"
+  "ppx_deriving"
+  "ppx_deriving_cmdliner"
+  "z3"
+]
+synopsis: "KoAT2: Runtime Analysis of Integer Programs"
