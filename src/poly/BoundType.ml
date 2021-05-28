@@ -414,10 +414,7 @@ let infinity = None
 let is_infinity = Option.is_none
 
 let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
-let exp value b = match (value,b) with
-  | _ when Num.(equal zero value) -> zero
-  | _ when Num.(equal one value)  -> one
-  | _ -> Option.map (exp_bound value) b
+let exp value b = Option.map (exp_bound value) b
 
 let is_var = function
   | Var _ -> true
