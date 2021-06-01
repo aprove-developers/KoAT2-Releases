@@ -178,7 +178,7 @@ let to_string ?(to_file = false) program  =
     String.concat "" [
         "(GOAL COMPLEXITY)\n";
         "(STARTTERM (FUNCTIONSYMBOLS "; program |> start |> Location.to_string; "))\n";
-        "(VAR "; (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) ""); ")\n";
+        "(VAR "; (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (vars program) ""); ")\n";
         "(RULES \n"; TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "" ; ")";
     ]
 
