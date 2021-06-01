@@ -221,10 +221,7 @@ let apply_cfr (program: Program.t) appr =
   and minimalDisjointSCCs = program
                             |> minimalSCCs
                             |> minimalDisjointSCCs
-                            (* |> SCCSet.filter (fun scc -> (TransitionSet.cardinal scc) <> 1 ) *)
-                            |> SCCSet.filter (fun scc -> TransitionSet.exists (fun t ->
-                            (VarSet.cardinal (Program.vars program)) =
-                            (VarSet.cardinal (TransitionLabel.vars_update (Transition.label t))))  scc)  in
+                            in
   if SCCSet.is_empty minimalDisjointSCCs then
     None
   else (
@@ -238,7 +235,7 @@ let apply_cfr (program: Program.t) appr =
       and scc_list = TransitionSet.to_list scc in
       let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
 
-      let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.vars program),l)) (LocationSet.to_list entry_locations) in
+      let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.input_vars program),l)) (LocationSet.to_list entry_locations) in
       let program_cfr =
       initial_location
       |> Program.from (entry_transitions@scc_list)
