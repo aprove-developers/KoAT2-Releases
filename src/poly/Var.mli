@@ -30,7 +30,7 @@ val (=~=) : t -> t -> bool
 (** Creates a variable from a string. *)
 val of_string : string -> t
 
- (** Returns a string representing the variable([\$_] for integer variables, [\@_] for real variables and [Arg_ ] for argument variables). Parameter {i to_file} is used to get a representation with less special characters. *)
+ (** Returns a string representing the variable([Temp_Int_] for integer variables, [Temp_Real_] for real variables and [Arg_ ] for argument variables). Parameter {i to_file} is used to get a representation with less special characters. *)
 val to_string : ?to_file:bool -> t -> Batteries.String.t
 
 (** Returns a not yet used id, which is guaranteed to be distinct from any yet existing ids. *)

@@ -12,16 +12,16 @@ type t =
 let (=~=) = equal
 
 let of_string str =
-  if String.starts_with str "$_" then
+  if String.starts_with str "Temp_Int_" then
     Helper (Int,(
         str
-        |> String.lchop ~n:2
+        |> String.lchop ~n:9
         |> Int.of_string
       ))
-  else if String.starts_with str "@_" then
+  else if String.starts_with str "Temp_Real_" then
     Helper (Real,(
         str
-        |> String.lchop ~n:2
+        |> String.lchop ~n:10
         |> Int.of_string
       ))
   else if String.starts_with str "Arg_" then
@@ -41,14 +41,14 @@ let to_string ?(to_file = false) =
   if to_file then
   function
     | Var str -> str
-    | Helper (Real,i) -> "@" ^ (String.of_int i)
-    | Helper (Int,i) -> "$" ^ (String.of_int i)
+    | Helper (Real,i) -> "TempReal" ^ (String.of_int i)
+    | Helper (Int,i) -> "TempInt" ^ (String.of_int i)
     | Argument i -> "Arg" ^ (String.of_int i)
   else
   function
     | Var str -> str
-    | Helper (Real,i) -> "@_" ^ (String.of_int i)
-    | Helper (Int,i) -> "$_" ^ (String.of_int i)
+    | Helper (Real,i) -> "Temp_Real_" ^ (String.of_int i)
+    | Helper (Int,i) -> "Temp_Int_" ^ (String.of_int i)
     | Argument i -> "Arg_" ^ (String.of_int i)
 let counter = ref 0
 

@@ -79,8 +79,8 @@ module Methods =
                 "input_str" >:: (fun _ -> assert_equal ~cmp:Var.(=~=) ~printer:Var.to_string (expected) (Var.of_string input_str) ))
                         [
                             (Var.of_string "x","x");
-                            ((Var.mk_helper Var.Int 1), "$_1");
-                            ((Var.mk_helper Var.Int 1234567), "$_1234567");
+                            ((Var.mk_helper Var.Int 1), "Temp_Int_1");
+                            ((Var.mk_helper Var.Int 1234567), "Temp_Int_1234567");
                         ]
         );
 
