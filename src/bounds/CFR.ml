@@ -84,7 +84,8 @@ let applyDijkstra (program: Program.t) =
   |> List.map (fun (l1,x,l2) ->
                       let (path, _) =
                           DjikstraTransitionGraph.shortest_path (graphs
-                                                                 |> List.find (fun graph -> TransitionGraph.mem_edge graph l1 l2)) l2 l1 in [(l1,x,l2)]@path)
+                                                                 |> List.find (fun graph -> TransitionGraph.mem_edge graph l1 l2)) l2 l1 in [(l1,x,l2)]@path
+                                                                 |> tap (Printf.printf "%s\n" % Util.enum_to_string (Transition.to_string)% List.enum))
 
 (* Add transitions which occur in the program and are parallel to a transition from the SCC. *)
 let parallelTransitions (program: Program.t) scc =
@@ -220,7 +221,7 @@ let apply_cfr (program: Program.t) appr =
   and minimalDisjointSCCs = program
                             |> minimalSCCs
                             |> minimalDisjointSCCs
-                            |> SCCSet.filter (fun scc -> (TransitionSet.cardinal scc) <> 1 )
+                            (* |> SCCSet.filter (fun scc -> (TransitionSet.cardinal scc) <> 1 ) *)
                             |> SCCSet.filter (fun scc -> TransitionSet.exists (fun t ->
                             (VarSet.cardinal (Program.vars program)) =
                             (VarSet.cardinal (TransitionLabel.vars_update (Transition.label t))))  scc)  in
