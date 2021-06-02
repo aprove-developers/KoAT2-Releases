@@ -18,7 +18,7 @@ val number_unsolved_trans : int Batteries.ref
 
 exception TIMEOUT
 
-val random : int Batteries.ref
+val uid : string Batteries.ref
 
 (** Returns the number of times a transition was unrolled. This ensures termination. *)
 val already_used_cfr : ProgramTypes.IDSet.t Batteries.ref
