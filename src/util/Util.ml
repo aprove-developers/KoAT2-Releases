@@ -88,3 +88,24 @@ let cat_maybes l=
 
 let cat_maybes_enum e =
   Enum.map Option.get (Enum.filter Option.is_some e)
+
+let measure_execution_time f =
+  let t0 = Unix.gettimeofday () in
+  let res = f () in
+  Printf.printf "Time %.2fs\n" (Unix.gettimeofday () -. t0);
+  res
+
+let measure_total_execution_time () =
+  let total_time: float ref = ref 0.0 in
+  let counter: int ref = ref 0 in
+  let get_counter description =
+    Printf.printf "%s: %.2fs over %i calls\n" (description) (!total_time) (!counter)
+  in
+  let measure_next_execution f =
+    let t0 = Unix.gettimeofday () in
+    let res = f () in
+    total_time := !total_time +. (Unix.gettimeofday () -. t0);
+    counter := !counter + 1;
+    res
+  in
+  measure_next_execution, get_counter
