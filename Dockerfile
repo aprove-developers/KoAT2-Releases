@@ -37,11 +37,11 @@ RUN RELEASE=1 omake --depend
 
 FROM ubuntu:20.04
 
-RUN apt -y update
-RUN apt -y upgrade
-RUN apt install -y bash vim
-RUN apt install -y wget
-RUN apt install -y zip
+RUN apt-get -y update
+RUN apt-get -y upgrade
+RUN apt-get install -y bash vim coreutils
+RUN apt-get install -y wget
+RUN apt-get install -y zip
 
 RUN adduser koat2
 WORKDIR /home/koat2
