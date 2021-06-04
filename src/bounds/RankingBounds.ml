@@ -13,6 +13,9 @@ let logger_cfr = Logging.(get CFR)
 
 let backtrack_point = ref None
 
+(* Collect all non-linear bounds *)
+let nonLinearTransitions = ref TransitionSet.empty
+
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
 exception NOT_IMPROVED
@@ -61,9 +64,9 @@ let compute_bound_mprf (appr: Approximation.t) (program: Program.t) (rank: Multi
  in
     let bound = execute () in
     if not (Bound.is_linear bound) && not (IDSet.mem (Transition.id (MultiphaseRankingFunction.decreasing rank)) !CFR.already_used_cfr) then
-      CFR.nonLinearTransitions := TransitionSet.add (MultiphaseRankingFunction.decreasing rank) !CFR.nonLinearTransitions
+      nonLinearTransitions := TransitionSet.add (MultiphaseRankingFunction.decreasing rank) !nonLinearTransitions
     else
-      CFR.nonLinearTransitions := TransitionSet.remove (MultiphaseRankingFunction.decreasing rank) !CFR.nonLinearTransitions;
+      nonLinearTransitions := TransitionSet.remove (MultiphaseRankingFunction.decreasing rank) !nonLinearTransitions;
     Logger.with_log logger Logger.DEBUG
       (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
                                    "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (MultiphaseRankingFunction.non_increasing rank));
@@ -95,9 +98,9 @@ let compute_bound_mprf (appr: Approximation.t) (program: Program.t) (rank: Multi
    in
     let bound = execute () in
     if not (Bound.is_linear bound) && not (IDSet.mem (Transition.id (RankingFunction.decreasing rank)) !CFR.already_used_cfr)  then
-      CFR.nonLinearTransitions := TransitionSet.add (RankingFunction.decreasing rank) !CFR.nonLinearTransitions
+      nonLinearTransitions := TransitionSet.add (RankingFunction.decreasing rank) !nonLinearTransitions
     else
-      CFR.nonLinearTransitions := TransitionSet.remove (RankingFunction.decreasing rank) !CFR.nonLinearTransitions;
+      nonLinearTransitions := TransitionSet.remove (RankingFunction.decreasing rank) !nonLinearTransitions;
    Logger.with_log logger Logger.DEBUG
         (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (RankingFunction.decreasing rank);
                                      "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (RankingFunction.non_increasing rank));
@@ -247,7 +250,7 @@ let rec improve_timebound_rec cache_rf cache_mprf ?(mprf = false) ?(inv = false)
 
 let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) measure program appr =
   if Option.is_some !backtrack_point then (
-    let (_,_,org_bound) = Option.get !backtrack_point in
+    let (_,_,org_bound,_) = Option.get !backtrack_point in
     let cfr_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
     if (Bound.compare_asy org_bound cfr_bound) < 1 then (
       Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED", ["orginial bound", (Bound.to_string org_bound); "cfr bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
@@ -255,21 +258,21 @@ let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) measure prog
     );
     backtrack_point := None;
   );
-  if cfr && not (TransitionSet.is_empty !CFR.nonLinearTransitions)  then
+  if cfr && not (TransitionSet.is_empty !nonLinearTransitions)  then
       let org_bound = Bound.sum
        (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
-        backtrack_point := Option.some (program,appr,org_bound);
+        backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions);
       let opt =
         CFR.set_time_current_cfr scc appr;
         CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
         Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions); "time", string_of_float !CFR.time_current_cfr]);
-        CFR.apply_cfr program appr in
+        CFR.apply_cfr (!nonLinearTransitions) program appr in
       if Option.is_some opt then (
-      let (program_cfr,appr_cfr) = Option.get opt in
-      backtrack_point := Option.some (program,appr,org_bound);
-      LocalSizeBound.switch_cache();
-      LocalSizeBound.enable_cfr();
-      MaybeChanged.changed (program_cfr, appr_cfr))
+        let (program_cfr,appr_cfr) = Option.get opt in
+        backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions);
+        LocalSizeBound.switch_cache();
+        LocalSizeBound.enable_cfr();
+        MaybeChanged.changed (program_cfr, appr_cfr))
       else
       MaybeChanged.same (program,appr)
     else
@@ -300,8 +303,9 @@ let rec improve cache_rf cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = false
                             |> apply_cfr ~cfr:cfr ~mprf:mprf scc measure program
                           with TIMEOUT | NOT_IMPROVED ->
                             LocalSizeBound.reset_cfr ();
-                            let (program,appr,_) = Option.get !backtrack_point in
+                            let (program,appr,_,non_linear_transitions) = Option.get !backtrack_point in
                             backtrack_point := None;
+                            nonLinearTransitions := non_linear_transitions;
                             MaybeChanged.changed (program,appr))
                         else monad)
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
