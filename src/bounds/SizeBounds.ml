@@ -13,10 +13,9 @@ let improve_scc program rvg appr = function
      let new_bound = NontrivialSizeBounds.compute program rvg (Approximation.timebound appr) (Approximation.sizebound appr) scc in
      Approximation.add_sizebounds new_bound scc appr
 
-let improve program ?(scc = None) applied_cfr appr =
+let improve program rvg ?(scc = None) applied_cfr appr =
   let execute () =
     let module C = Graph.Components.Make(RVG) in
-    let rvg = RVG.rvg program in
 
     List.fold_left (fun appr rvg_scc ->
        let current_time = Unix.gettimeofday() in
