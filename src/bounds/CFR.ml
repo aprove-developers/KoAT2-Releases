@@ -21,10 +21,6 @@ let already_used_cfr = ref IDSet.empty
 (* TODO *)
 let logger = Logging.(get CFR)
 
-(* Collect all non-linear bounds *)
-let nonLinearTransitions = ref TransitionSet.empty
-
-
 (** Timeouts *)
 (** We use this to measure the amount of time spend solving on the current cfr instance. *)
 let delta_current_cfr = ref 0.
@@ -54,16 +50,18 @@ let poll_timeout ?(applied_cfr = true) =
 
 
 (* SCCs that contain a non-linear transition, its not guaranteed that they are minimal *)
-let nonLinearSCCs (program: Program.t) =
+let nonLinearSCCs (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
   Program.sccs program
   |> Enum.filter (fun scc ->
-      (!nonLinearTransitions
+      (nonLinearTransitions
        |> TransitionSet.exists (fun nonLinearTransition ->
           scc
           |> TransitionSet.mem nonLinearTransition)))
 
 (* Transforms (non-minimal) TransitionSets (i.e. our SCCs) to TransitionGraphs to apply Djikstra as the next step. *)
 let getTransitionGraph (nonLinearSCCs: TransitionSet.t list)  =
+  Logger.log logger Logger.INFO
+                                (fun () -> "getTransitionGraph", ["input: " ^ (String.concat "\n" (List.map (TransitionSet.to_string) nonLinearSCCs)), ""]);
   nonLinearSCCs
   |> List.map (fun nonLinearSCC ->
       TransitionGraph.empty
@@ -73,13 +71,18 @@ let getTransitionGraph (nonLinearSCCs: TransitionSet.t list)  =
 
 (* Apply Dijkstra on ProgramGraph and get shortest l2 -> l1 path
 and add transition l1 -> l2 (thus, we get a circle, a minimal SCC) on all SCCs *)
-let applyDijkstra (program: Program.t) =
-  let nonLinearSCCs = program
-                    |> nonLinearSCCs in
-  let graphs = nonLinearSCCs
+let applyDijkstra (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
+  let allNonLinearSCCs = program
+                    |> (nonLinearSCCs nonLinearTransitions) in
+                    Logger.log logger Logger.INFO
+                                (fun () -> "applyDijkstra", ["non-linear sccs: " ^ (Enum.fold (fun str1 str2 -> str1 ^ "\n" ^str2) "" (Enum.map (TransitionSet.to_string) (Enum.clone allNonLinearSCCs))), ""]);
+  
+  let graphs = allNonLinearSCCs
                 |> List.of_enum
                 |> getTransitionGraph in
-  !nonLinearTransitions
+                Logger.log logger Logger.INFO
+                                (fun () -> "applyDijkstra", ["non-linear sccs graph: " ^ String.concat "\n" (List.map (TransitionSet.to_string%TransitionGraph.transitions) graphs), "program:" ^ (Program.to_string program)]);
+  nonLinearTransitions
   |> TransitionSet.to_list
   |> List.map (fun (l1,x,l2) ->
                       let (path, _) =
@@ -96,9 +99,9 @@ let parallelTransitions (program: Program.t) scc =
                                 |> Program.parallelTransitions program)) scc
 
 (* Constructs minimal SCCs containing a non-linear transition and all parallel edges. *)
-let minimalSCCs (program: Program.t) =
+let minimalSCCs (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
   program
-  |> applyDijkstra
+  |> (applyDijkstra nonLinearTransitions)
   |> List.map (fun scc -> parallelTransitions program scc)
 
 let string x =
@@ -214,11 +217,11 @@ let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
                                       |> Approximation.add_timebound timebound trans
                                       |> Approximation.add_costbound costbound trans) unchangend_trans
 
-let apply_cfr (program: Program.t) appr =
+let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) appr =
   delta_current_cfr := 0.;
   let initial_location = Program.start program
   and minimalDisjointSCCs = program
-                            |> minimalSCCs
+                            |> (minimalSCCs nonLinearTransitions)
                             |> minimalDisjointSCCs
                             in
   if SCCSet.is_empty minimalDisjointSCCs then
@@ -229,7 +232,7 @@ let apply_cfr (program: Program.t) appr =
     |> SCCSet.fold (fun scc merged_program ->
       (fun sccs ->
       Logger.log logger Logger.INFO
-                                (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter !nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
+                                (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
       let time_current = Unix.gettimeofday()
       and scc_list = TransitionSet.to_list scc in
       let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
@@ -251,7 +254,7 @@ let apply_cfr (program: Program.t) appr =
       (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
       already_used_cfr := IDSet.union
         (IDSet.union !already_used_cfr (IDSet.of_enum (Enum.map (fun trans -> Transition.id trans) (TransitionSet.enum transitions_cfr))))
-        (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum !nonLinearTransitions)));
+        (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum nonLinearTransitions)));
 
       (** Merges irankfinder and original program. *)
       merged_program
@@ -263,7 +266,6 @@ let apply_cfr (program: Program.t) appr =
       |> flip Program.from initial_location
       |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.gettimeofday() -. time_current))
       |> tap (fun _ -> poll_timeout ~applied_cfr:true)) minimalDisjointSCCs
-      |> tap (fun _ -> nonLinearTransitions := TransitionSet.empty)
       (* |> Program.rename *)
       in
       Option.some (program_res, get_appr_cfr program program_res appr))
