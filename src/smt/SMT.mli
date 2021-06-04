@@ -65,9 +65,6 @@ sig
   (** Asserts the formula. *)
   val add : t -> Formula.t -> unit
 
-  (** Add a bound comparison using the specified operator (LE = less-or-equal, LT = less-than)*)
-  val add_bound_comparison : t -> [`LE | `LT] -> Bound.t -> Bound.t -> unit
-
   (** Minimizes the variable. *)
   val minimize : t -> Var.t -> unit
 
@@ -176,5 +173,8 @@ sig
 
   (** Returns a model of the current state, if the state is satisfiable. *)
   val model : t -> Polynomial.valuation Option.t
+
+  (** Add a bound comparison using the specified operator (LE = less-or-equal, LT = less-than)*)
+  val add_bound_comparison : t -> [`LE | `LT] -> Bound.t -> Bound.t -> unit
 
 end
