@@ -322,15 +322,6 @@ module IncrementalZ3SolverInt =
       |> from_formula context
       |> fun formula -> Z3.Optimize.add opt [formula]
 
-    let add_bound_comparison (opt, ctx) cmpoperator b1 b2 =
-      let z3_compoperator = match cmpoperator with
-        | `LE -> Z3.Arithmetic.mk_le
-        | `LT -> Z3.Arithmetic.mk_lt
-      in
-      let z3_b1 = from_bound ctx b1 in
-      let z3_b2 = from_bound ctx b2 in
-      Z3.Optimize.add opt [ (z3_compoperator ctx) z3_b1 z3_b2]
-
     (** Returns true iff the formula implies the positivity of the variable. *)
     let is_positive (opt,_) (var: Var.t) =
       push opt;
@@ -709,6 +700,16 @@ module SolverFast =
       formula
       |> from_formula context
       |> fun formula -> Z3.Solver.add solver [formula]
+
+    let add_bound_comparison (solver, ctx) cmpoperator b1 b2 =
+      let z3_compoperator = match cmpoperator with
+        | `LE -> Z3.Arithmetic.mk_le
+        | `LT -> Z3.Arithmetic.mk_lt
+      in
+      let z3_b1 = from_bound ctx b1 in
+      let z3_b2 = from_bound ctx b2 in
+      Z3.Solver.add solver [ (z3_compoperator ctx) z3_b1 z3_b2]
+
 
     let model (solver,_) =
       if Z3.Solver.check solver [] == Z3.Solver.SATISFIABLE then
