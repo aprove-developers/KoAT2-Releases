@@ -141,7 +141,10 @@ let improve_with_rank_mprf measure program appr rank =
 let bounded measure appr transition =
   match measure with
   | `Time -> Approximation.is_time_bounded appr transition
-  | `Cost -> false
+  | `Cost -> if Polynomial.is_const (Transition.cost transition) then
+        true (* We can not compute a better bound in this case, so we consider this transition as bounded *)
+      else
+        false
 
 let one_successor (program: Program.t) (scc: TransitionSet.t) =
     TransitionSet.filter (fun (l,g,l') -> (not (Location.equal l l'))
@@ -237,12 +240,12 @@ let rec improve_timebound_rec cache_rf cache_mprf ?(mprf = false) ?(inv = false)
             (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
              execute)
 
-  let rec improve_scc cache_rf cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t)  measure program appr =
+  let rec improve_scc rvg cache_rf cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t)  measure program appr =
     appr
     |> improve_timebound_rec cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program
-    |> SizeBounds.improve program ~scc:(Option.some scc) (Option.is_some !backtrack_point)
+    |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
     |> improve_timebound cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program
-    |> MaybeChanged.if_changed (improve_scc cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program)
+    |> MaybeChanged.if_changed (improve_scc rvg cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program)
     |> MaybeChanged.unpack
     |> knowledge_propagation scc measure program
     |> MaybeChanged.unpack
@@ -286,7 +289,7 @@ let rec fold_until f p acc = function
     | x :: xs -> fold_until f p (f acc x) xs
     | [] -> acc
 
-let rec improve cache_rf cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
+let rec improve cache_rf rvg cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
   program
     |> Program.sccs
     |> List.of_enum
@@ -298,8 +301,8 @@ let rec improve cache_rf cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = false
                             RankingFunction.reset cache_rf;
                           try
                             appr
-                            |> SizeBounds.improve program ~scc:(Option.some scc) (Option.is_some !backtrack_point)
-                            |> improve_scc cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program
+                            |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
+                            |> improve_scc rvg cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program
                             |> apply_cfr ~cfr:cfr ~mprf:mprf scc measure program
                           with TIMEOUT | NOT_IMPROVED ->
                             LocalSizeBound.reset_cfr ();
@@ -309,5 +312,5 @@ let rec improve cache_rf cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = false
                             MaybeChanged.changed (program,appr))
                         else monad)
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
-    |> MaybeChanged.if_changed (fun (a,b) -> (improve cache_rf cache_mprf ~cfr:cfr ~mprf:mprf measure a b))
+    |> MaybeChanged.if_changed (fun (a,b) -> (improve cache_rf rvg cache_mprf ~cfr:cfr ~mprf:mprf measure a b))
     |> MaybeChanged.unpack
