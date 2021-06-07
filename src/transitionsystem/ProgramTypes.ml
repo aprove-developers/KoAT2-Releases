@@ -103,6 +103,8 @@ module TransitionSet =
   struct
     include Set.Make(struct include Transition let compare = Transition.compare_same end)
 
+    let to_id_string = Util.enum_to_string Transition.to_id_string % enum
+
     let powerset set =
       let combine (result: t Enum.t) (x: Transition.t) = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
       Enum.fold combine (Enum.singleton empty) (enum set)
