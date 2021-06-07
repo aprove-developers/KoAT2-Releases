@@ -16,6 +16,9 @@ let backtrack_point = ref None
 (* Collect all non-linear bounds *)
 let nonLinearTransitions = ref TransitionSet.empty
 
+(** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
+let already_used_cfr = ref IDSet.empty
+
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
 exception NOT_IMPROVED
@@ -63,7 +66,7 @@ let compute_bound_mprf (appr: Approximation.t) (program: Program.t) (rank: Multi
    |> Bound.sum
  in
     let bound = execute () in
-    if not (Bound.is_linear bound) && not (IDSet.mem (Transition.id (MultiphaseRankingFunction.decreasing rank)) !CFR.already_used_cfr) then
+    if not (Bound.is_linear bound) && not (IDSet.mem (Transition.id (MultiphaseRankingFunction.decreasing rank)) !already_used_cfr) then
       nonLinearTransitions := TransitionSet.add (MultiphaseRankingFunction.decreasing rank) !nonLinearTransitions
     else
       nonLinearTransitions := TransitionSet.remove (MultiphaseRankingFunction.decreasing rank) !nonLinearTransitions;
@@ -97,7 +100,7 @@ let compute_bound_mprf (appr: Approximation.t) (program: Program.t) (rank: Multi
      |> Bound.sum
    in
     let bound = execute () in
-    if not (Bound.is_linear bound) && not (IDSet.mem (Transition.id (RankingFunction.decreasing rank)) !CFR.already_used_cfr)  then
+    if not (Bound.is_linear bound) && not (IDSet.mem (Transition.id (RankingFunction.decreasing rank)) !already_used_cfr)  then
       nonLinearTransitions := TransitionSet.add (RankingFunction.decreasing rank) !nonLinearTransitions
     else
       nonLinearTransitions := TransitionSet.remove (RankingFunction.decreasing rank) !nonLinearTransitions;
@@ -269,9 +272,10 @@ let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) measure prog
         CFR.set_time_current_cfr scc appr;
         CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
         Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds_apply_cfr", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions); "time", string_of_float !CFR.time_current_cfr]);
-        CFR.apply_cfr (!nonLinearTransitions) program appr in
+        CFR.apply_cfr (!nonLinearTransitions) (!already_used_cfr) program appr in
       if Option.is_some opt then (
-        let (program_cfr,appr_cfr) = Option.get opt in
+        let (program_cfr,appr_cfr,already_used_cfr_upd) = Option.get opt in
+        already_used_cfr := already_used_cfr_upd;
         backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions);
         LocalSizeBound.switch_cache();
         LocalSizeBound.enable_cfr();
