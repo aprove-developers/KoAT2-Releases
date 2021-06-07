@@ -61,7 +61,7 @@ open LocalSizeBound
   let appr_cost =
   updated_appr
   |> (fun appr ->
-    if program_cfr |> Program.transitions |> TransitionSet.exists (fun t -> not (Polynomial.is_one (Transition.cost t))) then
+    if program_cfr |> Program.transitions |> TransitionSet.exists (fun t -> not (Polynomial.is_const (Transition.cost t))) then
       RankingBounds.improve cache_rf rvg cache_mprf ~mprf:mprf ~cfr:false ~inv:inv ~fast:fast `Cost program_cfr appr
       |> snd
     else

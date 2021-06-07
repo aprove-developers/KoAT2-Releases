@@ -141,7 +141,10 @@ let improve_with_rank_mprf measure program appr rank =
 let bounded measure appr transition =
   match measure with
   | `Time -> Approximation.is_time_bounded appr transition
-  | `Cost -> false
+  | `Cost -> if Polynomial.is_const (Transition.cost transition) then
+        true (* We can not compute a better bound in this case, so we consider this transition as bounded *)
+      else
+        false
 
 let one_successor (program: Program.t) (scc: TransitionSet.t) =
     TransitionSet.filter (fun (l,g,l') -> (not (Location.equal l l'))
