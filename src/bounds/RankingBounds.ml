@@ -210,7 +210,7 @@ let rec improve_timebound_rec cache_rf cache_mprf ?(mprf = false) ?(inv = false)
   let execute () =
     scc
     |> tap (fun scc -> (Logger.with_log logger_cfr Logger.INFO
-            (fun () -> "scc", ["scc", TransitionSet.to_string scc])
+            (fun () -> "improve_timebound", ["scc", TransitionSet.to_string scc])
              (fun _ -> ())))
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
     |> TransitionSet.enum
@@ -265,7 +265,7 @@ let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) measure prog
       let opt =
         CFR.set_time_current_cfr scc appr;
         CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
-        Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions); "time", string_of_float !CFR.time_current_cfr]);
+        Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds_apply_cfr", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions); "time", string_of_float !CFR.time_current_cfr]);
         CFR.apply_cfr (!nonLinearTransitions) program appr in
       if Option.is_some opt then (
         let (program_cfr,appr_cfr) = Option.get opt in
