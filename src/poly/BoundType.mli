@@ -58,6 +58,9 @@ val max_of_occurring_constants : t -> Num.t
 (** Returns true iff. a bound is infinite. *)
 val is_infinity : t -> bool
 
+(** Returns true iff. a bound is finite. *)
+val is_finite : t -> bool
+
 (** Creates a string representing the bound by calling {b show} with complexity enabled. *)
 val to_string : t -> string
 
