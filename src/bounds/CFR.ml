@@ -15,9 +15,6 @@ end
 
 module SCCSet = Set.Make(SCCSetCompare)
 
-(** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
-let already_used_cfr = ref IDSet.empty
-
 (* TODO *)
 let logger = Logging.(get CFR)
 
@@ -87,8 +84,7 @@ let applyDijkstra (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
   |> List.map (fun (l1,x,l2) ->
                       let (path, _) =
                           DjikstraTransitionGraph.shortest_path (graphs
-                                                                 |> List.find (fun graph -> TransitionGraph.mem_edge graph l1 l2)) l2 l1 in [(l1,x,l2)]@path
-                                                                 |> tap (Printf.printf "%s\n" % Util.enum_to_string (Transition.to_string)% List.enum))
+                                                                 |> List.find (fun graph -> TransitionGraph.mem_edge graph l1 l2)) l2 l1 in [(l1,x,l2)]@path)
 
 (* Add transitions which occur in the program and are parallel to a transition from the SCC. *)
 let parallelTransitions (program: Program.t) scc =
@@ -217,7 +213,7 @@ let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
                                       |> Approximation.add_timebound timebound trans
                                       |> Approximation.add_costbound costbound trans) unchangend_trans
 
-let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) appr =
+let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:IDSet.t) (program: Program.t) appr =
   delta_current_cfr := 0.;
   let initial_location = Program.start program
   and minimalDisjointSCCs = program
@@ -227,9 +223,8 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) appr 
   if SCCSet.is_empty minimalDisjointSCCs then
     None
   else (
-    let program_res =
-    program
-    |> SCCSet.fold (fun scc merged_program ->
+    let f_iteration = 
+      fun scc (merged_program,already_used_trans) ->
       (fun sccs ->
       Logger.log logger Logger.INFO
                                 (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
@@ -252,11 +247,13 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) appr 
       |> TransitionSet.map (fun t -> Transition.rename2 map t) in
 
       (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
-      already_used_cfr := IDSet.union
-        (IDSet.union !already_used_cfr (IDSet.of_enum (Enum.map (fun trans -> Transition.id trans) (TransitionSet.enum transitions_cfr))))
-        (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum nonLinearTransitions)));
-
+      let
+      already_used_cfr = IDSet.union
+        (IDSet.union already_used_trans (IDSet.of_enum (Enum.map (fun trans -> Transition.id trans) (TransitionSet.enum transitions_cfr))))
+        (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum nonLinearTransitions)))
+      and
       (** Merges irankfinder and original program. *)
+      processed_program =
       merged_program
       |> Program.transitions
       |> TransitionSet.union transitions_cfr
@@ -265,7 +262,13 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) appr 
       |> TransitionSet.to_list
       |> flip Program.from initial_location
       |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.gettimeofday() -. time_current))
-      |> tap (fun _ -> poll_timeout ~applied_cfr:true)) minimalDisjointSCCs
+      |> tap (fun _ -> poll_timeout ~applied_cfr:true)
+      in
+      (processed_program,already_used_cfr)
+    in
+    let (program_res,already_used_cfr_res) =
+    (program,IDSet.empty)
+    |> SCCSet.fold (f_iteration ) minimalDisjointSCCs
       (* |> Program.rename *)
       in
-      Option.some (program_res, get_appr_cfr program program_res appr))
+      Option.some (program_res, (get_appr_cfr program program_res appr), already_used_cfr_res))

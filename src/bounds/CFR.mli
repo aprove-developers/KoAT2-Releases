@@ -20,8 +20,5 @@ exception TIMEOUT
 
 val uid : string Batteries.ref
 
-(** Returns the number of times a transition was unrolled. This ensures termination. *)
-val already_used_cfr : ProgramTypes.IDSet.t Batteries.ref
-
 (** Unrolls all transitions listed in nonLinearTransitions.starrt  *)
-val apply_cfr :  ProgramTypes.TransitionSet.t -> Program.t -> Approximation.t -> (Program.t * Approximation.t) option
+val apply_cfr :  ProgramTypes.TransitionSet.t -> ProgramTypes.IDSet.t -> Program.t -> Approximation.t -> (Program.t * Approximation.t * ProgramTypes.IDSet.t) option
