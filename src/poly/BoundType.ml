@@ -431,6 +431,7 @@ let of_var_string = OptionMonad.return % bound_of_var_string
 let infinity = None
 
 let is_infinity = Option.is_none
+let is_finite = Option.is_some
 
 let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
 let exp value b = Option.map (exp_bound value) b
