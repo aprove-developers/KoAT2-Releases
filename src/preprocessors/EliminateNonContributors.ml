@@ -8,7 +8,6 @@ open Polynomials
 let logger = Logging.(get Preprocessor)
 
 let depends var label =
-    print_endline "Calling depends";
     VarSet.exists (fun x -> (TransitionLabel.update label x |? Polynomial.zero |> Polynomial.vars |> VarSet.mem var)
                          || (TransitionLabel.cost label |> Polynomial.vars |> VarSet.mem var))
 
