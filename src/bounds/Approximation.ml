@@ -75,19 +75,19 @@ let add_costbound bound transition appr =
   { appr with cost = TransitionApproximation.add bound transition appr.cost }
 
 let to_string program appr =
-  let overall_timebound = program_timebound appr program in
+  let overall_costbound = program_costbound appr program in
   let output = IO.output_string () in
-    if (not (Bound.is_infinity overall_timebound)) then
-      IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_timebound) ^ ")\n\n")
+    if (not (Bound.is_infinity overall_costbound)) then
+      IO.nwrite output ("YES( ?, " ^ Bound.to_string (overall_costbound) ^ ")\n\n")
     else
       IO.nwrite output "MAYBE\n\n";
-    IO.nwrite output "Initial Complexity Problem:\n";
+    IO.nwrite output "Initial Complexity Problem After Preprocessing:\n";
     IO.nwrite output (Program.to_string program^"\n");
     IO.nwrite output "Timebounds: \n";
-    IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (overall_timebound) ^ "\n");
+    IO.nwrite output ("  Overall timebound: " ^ Bound.to_string (program_timebound appr program) ^ "\n");
     appr.time |> TransitionApproximation.to_string (TransitionSet.to_list @@ Program.transitions program) |> IO.nwrite output;
     IO.nwrite output "\nCostbounds:\n";
-    IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (program_costbound appr program) ^ "\n");
+    IO.nwrite output ("  Overall costbound: " ^ Bound.to_string (overall_costbound) ^ "\n");
     appr.cost |> TransitionApproximation.to_string (TransitionSet.to_list @@ Program.transitions program) |> IO.nwrite output;
     IO.nwrite output "\nSizebounds:\n";
     appr.size |> SizeApproximation.to_string |> IO.nwrite output;
