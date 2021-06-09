@@ -101,12 +101,13 @@ let append t1 t2 =
     VarMap.map (Polynomial.substitute_f (substitution t1.update)) t2.update
   and new_guard =
     Guard.Infix.(t1.guard && Guard.map_polynomial (Polynomial.substitute_f (substitution t1.update)) t2.guard)
+  and updated_cost = Polynomial.substitute_f (substitution t1.update) t2.cost
   in
   {
     id = unique ();
     update = new_update;
     guard = new_guard;
-    cost = Polynomial.(t1.cost + t2.cost);
+    cost = Polynomial.(t1.cost + updated_cost);
   }
 
 let id t = t.id
@@ -147,6 +148,13 @@ let update_to_string update =
     |> List.map (fun (var,poly) -> (Var.to_string var, Polynomial.to_string poly))
     |> List.split
     |> fun (xs,ys) -> "("^(String.concat "," xs)^") -> ("^(String.concat "," ys)^")"
+
+let cost_to_string ?(to_file = false) label =
+  if 
+    Polynomial.is_one label.cost then "" 
+  else 
+    "{"^(Polynomial.to_string label.cost)^"}"
+
 
 let guard_to_string ?(to_file = false) label =
   if
