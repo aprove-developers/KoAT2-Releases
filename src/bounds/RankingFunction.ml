@@ -47,7 +47,7 @@ let rank f = f.rank
 
 let decreasing f = f.decreasing
 
-let non_increasing f = TransitionSet.to_list f.non_increasing
+let non_increasing f = f.non_increasing
 
 let rank_to_string (locations: Location.t list) (content_to_string: 'a -> string) (pol: Location.t -> 'a) =
   locations

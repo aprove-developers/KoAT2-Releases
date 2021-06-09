@@ -24,7 +24,7 @@ val decreasing : t -> Transition.t
 
 (** Returns a list of all transitions for which the multiphase ranking function is defined.
     Corresponds to T'. *)
-val non_increasing : t -> Transition.t list
+val non_increasing : t -> TransitionSet.t
 
 (** Returns the depth of a multiphase ranking function (i.e. returns d if MRF has form f1,f2,...,fd).*)
 val depth : t -> int

@@ -26,7 +26,7 @@ val decreasing : t -> Transition.t
 
 (** Returns a list of all transitions for which the prf is defined.
     Corresponds to T'. *)
-val non_increasing : t -> Transition.t list
+val non_increasing : t -> TransitionSet.t
 
 (** Finds a suitable ranking function for the given transitions T'. *)
 val find : ranking_cache -> ?inv:bool ->  measure -> bool -> Program.t -> Transition.t -> t list

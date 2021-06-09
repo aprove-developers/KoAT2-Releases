@@ -41,6 +41,7 @@ let compute_bound_mprf (appr: Approximation.t) (program: Program.t) (rank: Multi
  let execute () =
    rank
    |> MultiphaseRankingFunction.non_increasing
+   |> TransitionSet.to_list
    |> Program.entry_transitions logger program
    |> List.enum
    |> Enum.map (fun (l,t,l') ->
@@ -72,7 +73,7 @@ let compute_bound_mprf (appr: Approximation.t) (program: Program.t) (rank: Multi
       nonLinearTransitions := TransitionSet.remove (MultiphaseRankingFunction.decreasing rank) !nonLinearTransitions;
     Logger.with_log logger Logger.DEBUG
       (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
-                                   "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (MultiphaseRankingFunction.non_increasing rank));
+                                   "non_increasing", Util.enum_to_string Transition.to_id_string (TransitionSet.enum (MultiphaseRankingFunction.non_increasing rank));
                                    "rank", MultiphaseRankingFunction.only_rank_to_string rank;])
                     ~result:Bound.to_string (fun () -> bound)
 
@@ -80,6 +81,7 @@ let compute_bound_mprf (appr: Approximation.t) (program: Program.t) (rank: Multi
    let execute () =
      rank
      |> RankingFunction.non_increasing
+     |> TransitionSet.to_list
      |> Program.entry_transitions logger program
      |> List.enum
      |> Enum.map (fun (l,t,l') ->
@@ -106,7 +108,7 @@ let compute_bound_mprf (appr: Approximation.t) (program: Program.t) (rank: Multi
       nonLinearTransitions := TransitionSet.remove (RankingFunction.decreasing rank) !nonLinearTransitions;
    Logger.with_log logger Logger.DEBUG
         (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (RankingFunction.decreasing rank);
-                                     "non_increasing", Util.enum_to_string Transition.to_id_string (List.enum (RankingFunction.non_increasing rank));
+                                     "non_increasing", Util.enum_to_string Transition.to_id_string (TransitionSet.enum (RankingFunction.non_increasing rank));
                                      "rank", RankingFunction.only_rank_to_string rank])
                       ~result:Bound.to_string (fun () -> bound)
 
