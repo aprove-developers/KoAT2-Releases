@@ -80,12 +80,12 @@ module Transition =
           if (Constraint.is_true (TransitionLabel.guard t)) then
             ((Location.to_string l)
             ^ TransitionLabel.(update_to_string_lhs ~to_file t)
-            ^ " -"^ (TransitionLabel.cost_to_string ~to_file t) ^ "> Com_1(" ^ (Location.to_string l')
+            ^ " -> Com_1(" ^ (Location.to_string l')
             ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ")")
           else
             (Location.to_string l)
             ^ TransitionLabel.(update_to_string_lhs ~to_file t)
-            ^ " -"^ (TransitionLabel.cost_to_string ~to_file t) ^ "> Com_1(" ^ (Location.to_string l')
+            ^ " -> Com_1(" ^ (Location.to_string l')
             ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ") :|: "
             ^ TransitionLabel.(guard_to_string ~to_file t)
         )
