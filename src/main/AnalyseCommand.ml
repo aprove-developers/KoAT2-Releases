@@ -14,9 +14,9 @@ let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
   print_string (Approximation.to_string program appr)
 
 (** Prints the overall timebound of the program to the shell. *)
-let print_overall_timebound (program: Program.t) (appr: Approximation.t): unit =
+let print_overall_costbound (program: Program.t) (appr: Approximation.t): unit =
   program
-  |> Approximation.program_timebound appr
+  |> Approximation.program_costbound appr
   |> Bound.to_string
   |> print_endline
 
@@ -60,7 +60,7 @@ type params = {
     log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.NONE]
     (** The general log level of the loggers. *)
 
-    result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_timebound]] [@default print_overall_timebound] [@aka ["r"]]
+    result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_costbound]] [@default print_overall_costbound] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
 
     preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.([InvariantGeneration;  Chaining; CutUnsatisfiableTransitions; CutUnreachableLocations; EliminateNonContributors])]
