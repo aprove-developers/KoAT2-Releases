@@ -59,7 +59,7 @@ let check_triangular (t: TransitionLabel.t) =
     let array = Array.create n 0 in
     let set = init (0,0) n vars t matrix array (Set.of_list (List.range 0 `To (n - 1))) in
     let ordering = List.map (fun i -> List.nth vars i) (List.rev (compute_ordering matrix array n set [])) in
-    Printf.printf "%S\n" (Util.enum_to_string Var.to_string (List.enum ordering));
+    (* Printf.printf "%S\n" (Util.enum_to_string Var.to_string (List.enum ordering)); *)
     (List.length ordering) == n
 
 
