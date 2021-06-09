@@ -13,11 +13,16 @@ let logger = Logging.(get Size)
 (** Returns the maximum of all incoming sizebounds applied to the local sizebound.
     Corresponds to 'SizeBounds for trivial SCCs':
     S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)). *)
-let incoming_bound program get_sizebound lsb t =
+let incoming_bound rvg get_sizebound lsb t v =
+  (* since this is a trivial scc*)
   let execute () =
     let substitute_with_prevalues t' = LocalSizeBound.as_substituted_bound (fun v -> get_sizebound t' v) lsb in
-    t
-    |> Program.pre program
+    let pre_transitions =
+      RVG.pre rvg (t,v)
+      |> Enum.map RV.transition
+      |> Enum.uniq_by Transition.same
+    in
+    pre_transitions
     |> Enum.map substitute_with_prevalues
     |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
@@ -28,7 +33,7 @@ let incoming_bound program get_sizebound lsb t =
 
 (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
     Corresponds to 'SizeBounds for trivial SCCs'. *)
-let compute program get_sizebound (t,v) =
+let compute program rvg get_sizebound (t,v) =
   let execute () =
     let (lsb: LocalSizeBound.t Option.t) =
       LocalSizeBound.sizebound_local_rv program (t, v)
@@ -40,7 +45,7 @@ let compute program get_sizebound (t,v) =
     else
       LocalSizeBound.(
       lsb
-      |> Option.map (fun lsb -> incoming_bound program get_sizebound lsb t)
+      |> Option.map (fun lsb -> incoming_bound rvg get_sizebound lsb t v)
       |? Bound.infinity)
 
   in Logger.with_log logger Logger.DEBUG
