@@ -228,43 +228,50 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:IDSet.t) (pr
       (fun sccs ->
       Logger.log logger Logger.INFO
                                 (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
-      let time_current = Unix.gettimeofday()
-      and scc_list = TransitionSet.to_list scc in
-      let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
+      let unit_cost = TransitionSet.for_all (fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
+      (*if there are costs which are not one then we cannot apply irankfinder *)
+      if not (unit_cost scc) then
+         (merged_program,already_used_trans)
+      else
+        let time_current = Unix.gettimeofday()
+        and scc_list = 
+          TransitionSet.to_list scc
+          in
+        let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
 
-      let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.input_vars program),l)) (LocationSet.to_list entry_locations) in
-      let program_cfr =
-      initial_location
-      |> Program.from (entry_transitions@scc_list)
-      |> applyIrankFinder
+        let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.input_vars program),l)) (LocationSet.to_list entry_locations) in
+        let program_cfr =
+        initial_location
+        |> Program.from (entry_transitions@scc_list)
+        |> applyIrankFinder
 
-      (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
-      and map = RenameMap.from_native ((List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i)))) in
-      let transitions_cfr = program_cfr
-      |> Program.transitions
-      |> rename_entry_transition entry_locations initial_location
-      |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
-      |> TransitionSet.map (fun t -> Transition.rename2 map t) in
+        (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
+        and map = RenameMap.from_native ((List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i)))) in
+        let transitions_cfr = program_cfr
+        |> Program.transitions
+        |> rename_entry_transition entry_locations initial_location
+        |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
+        |> TransitionSet.map (fun t -> Transition.rename2 map t) in
 
-      (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
-      let
-      already_used_cfr = IDSet.union
-        (IDSet.union already_used_trans (IDSet.of_enum (Enum.map (fun trans -> Transition.id trans) (TransitionSet.enum transitions_cfr))))
-        (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum nonLinearTransitions)))
-      and
-      (** Merges irankfinder and original program. *)
-      processed_program =
-      merged_program
-      |> Program.transitions
-      |> TransitionSet.union transitions_cfr
-      |> TransitionSet.union (outgoing_transitions (Program.outgoing_transitions logger program scc_list) transitions_cfr)
-      |> flip TransitionSet.diff scc
-      |> TransitionSet.to_list
-      |> flip Program.from initial_location
-      |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.gettimeofday() -. time_current))
-      |> tap (fun _ -> poll_timeout ~applied_cfr:true)
-      in
-      (processed_program,already_used_cfr)
+        (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
+        let
+        already_used_cfr = IDSet.union
+          (IDSet.union already_used_trans (IDSet.of_enum (Enum.map (fun trans -> Transition.id trans) (TransitionSet.enum transitions_cfr))))
+          (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum nonLinearTransitions)))
+        and
+        (** Merges irankfinder and original program. *)
+        processed_program =
+        merged_program
+        |> Program.transitions
+        |> TransitionSet.union transitions_cfr
+        |> TransitionSet.union (outgoing_transitions (Program.outgoing_transitions logger program scc_list) transitions_cfr)
+        |> flip TransitionSet.diff scc
+        |> TransitionSet.to_list
+        |> flip Program.from initial_location
+        |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.gettimeofday() -. time_current))
+        |> tap (fun _ -> poll_timeout ~applied_cfr:true)
+        in
+        (processed_program,already_used_cfr)
     in
     let (program_res,already_used_cfr_res) =
     (program,IDSet.empty)
