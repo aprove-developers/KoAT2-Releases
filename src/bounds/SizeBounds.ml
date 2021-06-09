@@ -7,7 +7,7 @@ let logger = Logging.(get Size)
 
 let improve_scc program rvg appr = function
   | [((l,t,l'),v)] when not (RVG.mem_edge rvg ((l,t,l'),v) ((l,t,l'),v)) ->
-     let new_bound = TrivialSizeBounds.compute program (Approximation.sizebound appr) ((l,t,l'),v) in
+     let new_bound = TrivialSizeBounds.compute program rvg (Approximation.sizebound appr) ((l,t,l'),v) in
      Approximation.add_sizebound new_bound (l,t,l') v appr
   | scc ->
      let new_bound = NontrivialSizeBounds.compute program rvg (Approximation.timebound appr) (Approximation.sizebound appr) scc in
