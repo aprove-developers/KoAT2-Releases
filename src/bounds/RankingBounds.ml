@@ -7,8 +7,6 @@ open ProgramTypes
 open Formulas
 open CFR
 
-module TransitionTable = RankingFunction.TransitionTable
-
 let logger = Logging.(get Time)
 
 let logger_cfr = Logging.(get CFR)
