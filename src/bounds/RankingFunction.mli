@@ -5,6 +5,8 @@ open Atoms
 open Polynomials
 open ProgramTypes
 
+module TransitionTable : module type of Hashtbl.Make(struct include Transition let equal = Transition.same end)
+
 (** Provides default implementations of RankingFunctions. KoAT uses this as a default function if the user does not specify any requirements by setting parameters (e.g. --mrf). *)
 
 (** Type of ranking function consisting of a function mapping from locations to polynomials, a decreasing transition and a set of non-increasing transitions. *)
@@ -26,12 +28,21 @@ val decreasing : t -> Transition.t
 
 (** Returns a list of all transitions for which the prf is defined.
     Corresponds to T'. *)
-val non_increasing : t -> Transition.t list
+val non_increasing : t -> TransitionSet.t
 
 (** Finds a suitable ranking function for the given transitions T'. *)
 val find : ranking_cache -> ?inv:bool ->  measure -> bool -> Program.t -> Transition.t -> t list
 
-val find_scc : ranking_cache -> ?inv:bool -> measure -> bool -> Program.t -> Transition.t -> ProgramTypes.TransitionSet.t -> t list
+(* The argument of type Transition.t -> bool is a function that returns true if the transition has a finite time bound.
+ * It is used to compute 'good' non-increasing sets.
+ * the argument of type Transition.t -> VarSet.t assigns a transition the variables that have an unbounded size for this
+ * transition *)
+val find_scc : ranking_cache -> ?inv:bool -> measure -> bool -> Program.t ->
+  TransitionSet.t TransitionTable.t -> (* Map of transitions to the corresponding entry transitions *)
+  Transition.t -> (Transition.t -> bool) -> (Transition.t -> VarSet.t) ->
+  ProgramTypes.TransitionSet.t -> (* Transitions which should be decreasing in a ranking function. Use all transitions with unbounded time here *)
+  ProgramTypes.TransitionSet.t ->  (* The scc*)
+  t list
 
 val find_fast : ranking_cache -> ?inv:bool ->  measure -> bool -> Program.t -> Transition.t -> t list
 
