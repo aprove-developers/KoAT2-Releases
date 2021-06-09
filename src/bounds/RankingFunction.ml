@@ -22,7 +22,6 @@ type constraint_type = [ `Non_Increasing | `Decreasing | `Bounded ] [@@deriving 
 
 module TemplateTable = Hashtbl.Make(Location)
 module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
-module TransitionTable = RankingTable
 module CoeffTable = Hashtbl.Make(struct
                                    type t = Location.t * Var.t
                                    let equal (l1,v1) (l2,v2) = Location.equal l1 l2 && Var.equal v1 v2

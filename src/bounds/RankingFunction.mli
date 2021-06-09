@@ -5,8 +5,6 @@ open Atoms
 open Polynomials
 open ProgramTypes
 
-module TransitionTable : module type of Hashtbl.Make(struct include Transition let equal = Transition.same end)
-
 (** Provides default implementations of RankingFunctions. KoAT uses this as a default function if the user does not specify any requirements by setting parameters (e.g. --mrf). *)
 
 (** Type of ranking function consisting of a function mapping from locations to polynomials, a decreasing transition and a set of non-increasing transitions. *)
