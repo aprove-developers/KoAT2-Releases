@@ -16,15 +16,19 @@ let logger = Logging.(get Size)
 let incoming_bound rvg get_sizebound lsb t v =
   (* since this is a trivial scc*)
   let execute () =
-    let substitute_with_prevalues t' = LocalSizeBound.as_substituted_bound (fun v -> get_sizebound t' v) lsb in
-    let pre_transitions =
-      RVG.pre rvg (t,v)
-      |> Enum.map RV.transition
-      |> Enum.uniq_by Transition.same
-    in
-    pre_transitions
-    |> Enum.map substitute_with_prevalues
-    |> Bound.sum
+    (* If the LSB is constant there are no pre-transitions in the RVG *)
+    if LocalSizeBound.is_constant lsb then
+      LocalSizeBound.as_bound lsb
+    else
+      let substitute_with_prevalues t' = LocalSizeBound.as_substituted_bound (fun v -> get_sizebound t' v) lsb in
+      let pre_transitions =
+        RVG.pre rvg (t,v)
+        |> Enum.map RV.transition
+        |> Enum.uniq_by Transition.same
+      in
+      pre_transitions
+      |> Enum.map substitute_with_prevalues
+      |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute_highest_incoming_bound", ["lsb", (Bound.to_string % LocalSizeBound.as_bound) lsb;
                                                                    "transition", Transition.to_id_string t])
