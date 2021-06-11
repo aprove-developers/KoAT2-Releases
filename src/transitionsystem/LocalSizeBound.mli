@@ -24,6 +24,9 @@ val constant : t -> int
 (** Returns a set of of variables which affect the local sizebound *)
 val vars : t -> VarSet.t
 
+(** Is the LocalSizeBound constant, i.e. does it contain no variables? *)
+val is_constant : t -> bool
+
 (** Converts the templated bound to a string. *)
 val to_string : t -> string
 

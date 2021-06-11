@@ -60,6 +60,8 @@ let constant t = t.constant
 
 let vars t = t.vars
 
+let is_constant = VarSet.is_empty % vars
+
 let to_string lsb =
   "{" ^
   "factor: " ^ Int.to_string lsb.factor ^ "; " ^
