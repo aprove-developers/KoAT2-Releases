@@ -381,39 +381,6 @@ let rec backtrack cache ?(inv = false) depth (steps_left: int) (index: int) (sol
       )
     )
 
-let compute_ cache ?(inv = false) measure applied_cfr program =
-  program
-  |> Program.sccs
-  |> Enum.iter (fun scc ->
-         try
-           for depth = 1 to !maxDepth do
-           if !numberOfGeneratedTemplates < depth then (
-           compute_ranking_templates cache depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-           if inv then
-            compute_ranking_templates_real cache depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-           numberOfGeneratedTemplates := depth);
-           backtrack cache
-                     ~inv:inv
-                     depth
-                     (TransitionSet.cardinal scc)
-                     0
-                     (SMTSolver.create ())
-                     (SMTSolverInt.create ())
-                     (Array.of_enum (TransitionSet.enum scc))
-                     (Stack.create ())
-                     (ref (TransitionSet.cardinal scc))
-                     measure
-                     program
-                     applied_cfr;
-          done;
-           scc
-           |> TransitionSet.iter (fun t ->
-                  if not (RankingTable.mem (get_ranking_table measure cache) t) then
-                    Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
-                )
-         with Exit -> ()
-        )
-
 let compute_scc cache ?(inv = false) measure applied_cfr program scc =
   try
     for depth = 1 to !maxDepth do
@@ -442,6 +409,10 @@ let compute_scc cache ?(inv = false) measure applied_cfr program scc =
             Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure measure; "transition", Transition.to_id_string t]))
         )
   with Exit -> ()
+
+let compute_ cache ?(inv = false) measure applied_cfr program =
+  Program.sccs program
+  |> Enum.iter (compute_scc cache ~inv measure applied_cfr program)
 
 let logging measure transition methode_name =
   Logger.with_log logger Logger.DEBUG
