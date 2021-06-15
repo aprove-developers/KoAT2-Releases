@@ -123,6 +123,8 @@ let pre program (l,t,_) =
          |> Formula.mk
          |> SMT.Z3Opt.satisfiable
        )
+  (* pre evaluate the enum *)
+  |> tap (Enum.force)
 
 let succ program (_,t,l') =
   l'

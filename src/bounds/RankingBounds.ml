@@ -208,7 +208,8 @@ let improve_timebound_computation cache_rf cache_mprf ?(mprf=false) ?(inv=false)
           (if fast then
             MultiphaseRankingFunction.find_scc_fast ~inv:inv cache_mprf measure (Option.is_some !backtrack_point) program transition scc
           else
-            MultiphaseRankingFunction.find_scc ~inv:inv cache_mprf measure (Option.is_some !backtrack_point) program transition scc)
+            MultiphaseRankingFunction.find_scc ~inv:inv cache_mprf measure (Option.is_some !backtrack_point) program entry_trans_map transition
+              is_time_bounded get_unbounded_vars unbounded_transitions scc)
           |> List.enum
           |> MaybeChanged.fold_enum (fun appr rank ->
                 improve_with_rank_mprf measure entry_trans_map appr rank) appr
