@@ -201,7 +201,7 @@ let improve_timebound_computation cache_mprf ?(mprf=false) ?(inv=false) ?(fast=f
   let is_time_bounded = Bound.is_finite % Approximation.timebound appr in
   let unbounded_transitions =
     scc
-    |> tap (fun scc -> (Logger.with_log logger_cfr Logger.INFO
+    |> tap (fun scc -> (Logger.with_log logger Logger.INFO
             (fun () -> "improve_timebound", ["scc", TransitionSet.to_string scc])
              (fun _ -> ())))
     |> TransitionSet.filter (fun t -> not (bounded measure appr t))
@@ -215,18 +215,26 @@ let improve_timebound_computation cache_mprf ?(mprf=false) ?(inv=false) ?(fast=f
           else
             MultiphaseRankingFunction.find_scc ~inv:inv cache_mprf measure (Option.is_some !backtrack_point) program pre_trans_map transition
               is_time_bounded get_unbounded_vars unbounded_transitions scc)
-          |> List.enum
-          |> MaybeChanged.fold_enum (fun appr rank ->
-                improve_with_rank_mprf measure pre_trans_map appr rank) appr
+          |> function
+            | [] -> nonLinearTransitions := TransitionSet.union
+                              (TransitionSet.filter (fun t -> not (IDSet.mem (Transition.id t) !already_used_cfr)) unbounded_transitions)
+                              !nonLinearTransitions;                    MaybeChanged.same appr
+            | xs -> xs |> List.enum
+                       |> MaybeChanged.fold_enum (fun appr rank ->
+                          improve_with_rank_mprf measure pre_trans_map appr rank) appr
         else
           (MultiphaseRankingFunction.maxDepth := 1; if fast then
             MultiphaseRankingFunction.find_scc_fast cache_mprf ~inv:inv measure (Option.is_some !backtrack_point) program transition scc
           else
             MultiphaseRankingFunction.find_scc cache_mprf ~inv:inv measure (Option.is_some !backtrack_point) program pre_trans_map transition
               is_time_bounded get_unbounded_vars unbounded_transitions scc)
-          |> List.enum
-          |> MaybeChanged.fold_enum (fun appr rank ->
-                improve_with_rank_mprf measure pre_trans_map appr rank) appr)
+          |> function
+            | [] -> nonLinearTransitions := TransitionSet.union
+                              (TransitionSet.filter (fun t -> not (IDSet.mem (Transition.id t) !already_used_cfr)) unbounded_transitions)
+                              !nonLinearTransitions;
+                    MaybeChanged.same appr
+            | xs -> xs |> List.enum
+                       |> MaybeChanged.fold_enum (fun appr rank -> improve_with_rank_mprf measure pre_trans_map appr rank) appr)
     ) appr
 
 (** We try to improve a single scc until we reach a fixed point. *)
@@ -257,9 +265,9 @@ let rec improve_scc rvg cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false
   |> MaybeChanged.unpack
 
 
-let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) measure program appr =
+let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) rvg measure program appr =
   if Option.is_some !backtrack_point then (
-    let (_,_,org_bound,_) = Option.get !backtrack_point in
+    let (_,_,org_bound,_,_) = Option.get !backtrack_point in
     let cfr_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
     if (Bound.compare_asy org_bound cfr_bound) < 1 then (
       Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED", ["original bound", (Bound.to_string org_bound); "cfr bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
@@ -270,7 +278,7 @@ let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) measure prog
   if cfr && not (TransitionSet.is_empty !nonLinearTransitions)  then
       let org_bound = Bound.sum
        (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
-        backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions);
+        backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions, rvg);
       let opt =
         CFR.set_time_current_cfr scc appr;
         CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
@@ -279,14 +287,15 @@ let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) measure prog
       if Option.is_some opt then (
         let (program_cfr,appr_cfr,already_used_cfr_upd) = Option.get opt in
         already_used_cfr := already_used_cfr_upd;
-        backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions);
+        backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions, rvg);
+        let rvg_cfr = RVGTypes.RVG.rvg program_cfr in
         LocalSizeBound.switch_cache();
         LocalSizeBound.enable_cfr();
-        MaybeChanged.changed (program_cfr, appr_cfr))
+        MaybeChanged.changed (program_cfr, appr_cfr, rvg_cfr))
       else
-      MaybeChanged.same (program,appr)
+      MaybeChanged.same (program,appr,rvg)
     else
-      MaybeChanged.same (program,appr)
+      MaybeChanged.same (program,appr,rvg)
 
 (* https://stackoverflow.com/questions/6749956/how-to-quit-an-iteration-in-ocaml *)
 (** Fold left on a list with function [f] until predicate [p] is satisfied **)
@@ -319,14 +328,14 @@ let rec improve rvg cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = false) ?(f
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
                             |> improve_scc rvg cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program
                                   (compute_pre_transitions_for_transition program scc)
-                            |> apply_cfr ~cfr:cfr ~mprf:mprf scc measure program
+                            |> apply_cfr ~cfr:cfr ~mprf:mprf scc rvg measure program
                           with TIMEOUT | NOT_IMPROVED ->
                             LocalSizeBound.reset_cfr ();
-                            let (program,appr,_,non_linear_transitions) = Option.get !backtrack_point in
+                            let (program,appr,_,non_linear_transitions,rvg_org) = Option.get !backtrack_point in
                             backtrack_point := None;
                             nonLinearTransitions := non_linear_transitions;
-                            MaybeChanged.changed (program,appr))
+                            MaybeChanged.changed (program,appr,rvg_org))
                         else monad)
-                  (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
-    |> MaybeChanged.if_changed (fun (a,b) -> (improve rvg cache_mprf ~cfr:cfr ~mprf:mprf measure a b))
+                  (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg))
+    |> MaybeChanged.if_changed (fun (a,b,c) -> (improve c cache_mprf ~cfr:cfr ~mprf:mprf measure a b))
     |> MaybeChanged.unpack
