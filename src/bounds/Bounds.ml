@@ -14,7 +14,7 @@ let find_bounds ?(depth = 5) ?(mprf = false) ?(cfr = false) ?(fast = false) ?(ti
    if mprf then
      MultiphaseRankingFunction.maxDepth := depth;
    let cache_mprf = MultiphaseRankingFunction.new_cache () in
-  let (program_cfr,updated_appr) = appr
+  let (program_cfr,updated_appr,_) = appr
   |> TrivialTimeBounds.compute program
   |> RankingBounds.improve rvg cache_mprf ~mprf:mprf ~cfr:cfr ~inv:inv ~fast:fast `Time program in
   let appr_cost =
@@ -22,7 +22,7 @@ let find_bounds ?(depth = 5) ?(mprf = false) ?(cfr = false) ?(fast = false) ?(ti
   |> (fun appr ->
     if program_cfr |> Program.transitions |> TransitionSet.exists (fun t -> not (Polynomial.is_const (Transition.cost t))) then
       RankingBounds.improve rvg cache_mprf ~mprf:mprf ~cfr:false ~inv:inv ~fast:fast `Cost program_cfr appr
-      |> snd
+      |> Tuple3.second
     else
       appr
   )
