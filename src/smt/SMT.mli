@@ -3,6 +3,8 @@ open Formulas
 open Polynomials
 open BoundsInst
 
+exception SMTFailure of string
+
 (** Provides different implementations of SMT solvers *)
 
 (* Z3Solver without optimization *)

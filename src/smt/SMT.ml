@@ -5,6 +5,8 @@ open BoundsInst
 
 module VarMap = Map.Make(Var)
 
+exception SMTFailure of string
+
 let from_poly context =
   Polynomial.fold
     ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i context (OurInt.to_int value))
@@ -51,7 +53,7 @@ let from_real_bound context bound =
   in
   match Option.map from_finite_bound (RealBound.prove_finiteness bound) with
   | Some b -> b
-  | None -> raise (Failure "inf not supported in SMT-Solving")
+  | None -> raise (SMTFailure "inf not supported in SMT-Solving")
 
 let from_bound context bound =
   let from_finite_bound =
@@ -75,7 +77,7 @@ let from_bound context bound =
   in
   match Option.map from_finite_bound (Bound.prove_finiteness bound) with
   | Some b -> b
-  | None -> raise (Failure "inf not supported in SMT-Solving")
+  | None -> raise (SMTFailure "inf not supported in SMT-Solving")
 
 let from_formula context =
   Formula.fold
@@ -109,7 +111,7 @@ module Z3Solver =
     let result_is solver expected_result =
       let result = Z3.Solver.check solver [] in
       if result == Z3.Solver.UNKNOWN then
-        raise (Failure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown solver))
+        raise (SMTFailure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown solver))
       else
         result == expected_result
 
@@ -140,7 +142,7 @@ module Z3Solver =
       match res with
         | SATISFIABLE -> true
         | UNSATISFIABLE -> false
-        | UNKNOWN -> raise (Failure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
+        | UNKNOWN -> raise (SMTFailure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
 
     let bound_lt_zero formula bound =
       let ctx = (Z3.mk_context [("model", "true"); ("proof", "false")]) in
@@ -151,7 +153,7 @@ module Z3Solver =
       match res with
         | SATISFIABLE -> true
         | UNSATISFIABLE -> false
-        | UNKNOWN -> raise (Failure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
+        | UNKNOWN -> raise (SMTFailure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
 
     let cmp_bounds inv comperator b1 b2 =
       let ctx = (Z3.mk_context [("model", "true"); ("proof", "false")]) in
@@ -165,7 +167,7 @@ module Z3Solver =
       match res with
         | SATISFIABLE -> false
         | UNSATISFIABLE -> true
-        | UNKNOWN -> raise (Failure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
+        | UNKNOWN -> raise (SMTFailure ("Z3 does can not find a result due to " ^ Z3.Solver.get_reason_unknown solver))
 
     let to_string formula =
       Z3.Solver.to_string @@ init (fun ctx -> from_real_formula ctx formula)
@@ -190,7 +192,7 @@ module Z3Opt =
       Z3.Optimize.add optimisation_goal [formula];
       let result = Z3.Optimize.check optimisation_goal in
       if result == Z3.Solver.UNKNOWN then
-        raise (Failure ("SMT-Solver does not know a solution due to: " ^ Z3.Optimize.get_reason_unknown optimisation_goal))
+        raise (SMTFailure ("SMT-Solver does not know a solution due to: " ^ Z3.Optimize.get_reason_unknown optimisation_goal))
       else
         result == expected_result
 
@@ -304,7 +306,7 @@ module IncrementalZ3SolverInt =
       |> Z3.Optimize.check
       |> fun result ->
          if result == Z3.Solver.UNKNOWN then
-           raise (Failure ("SMT-Solver does not know a solution due to: " ^ Z3.Optimize.get_reason_unknown opt))
+           raise (SMTFailure ("SMT-Solver does not know a solution due to: " ^ Z3.Optimize.get_reason_unknown opt))
          else
            result == expected
 
@@ -448,7 +450,7 @@ module IncrementalZ3Solver =
       Z3.Solver.check slv []
       |> fun result ->
          if result = Z3.Solver.UNKNOWN then
-           raise (Failure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown slv))
+           raise (SMTFailure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown slv))
          else
            result = expected
 
@@ -459,7 +461,7 @@ module IncrementalZ3Solver =
       try
         Some (result_is Z3.Solver.SATISFIABLE t)
       with
-        (Failure _) -> None
+        (SMTFailure _) -> None
 
     let unsatisfiable =
       result_is Z3.Solver.UNSATISFIABLE
@@ -468,7 +470,7 @@ module IncrementalZ3Solver =
       try
         Some (result_is Z3.Solver.UNSATISFIABLE t)
       with
-        (Failure _) -> None
+        (SMTFailure _) -> None
 
     let add (ctx,slv,opt) formula =
       formula
@@ -686,7 +688,7 @@ module SolverFast =
       Z3.Solver.check solver []
       |> fun result ->
          if result == Z3.Solver.UNKNOWN then
-           raise (Failure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown solver))
+           raise (SMTFailure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown solver))
          else
            result == expected
 
