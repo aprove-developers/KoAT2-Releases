@@ -168,10 +168,7 @@ let one_successor (program: Program.t) (scc: TransitionSet.t) =
 
 let rec knowledge_propagation (scc: TransitionSet.t) measure program pre_trans_map appr =
   let execute () =
-    let one_successor =
-      TransitionSet.filter (fun (l,_,_) -> TransitionSet.cardinal (TransitionSet.filter (Location.equal l % Transition.target) scc) = 1)
-    in
-    one_successor scc
+    scc
     |> TransitionSet.enum
     |> MaybeChanged.fold_enum ((
       fun appr transition ->
