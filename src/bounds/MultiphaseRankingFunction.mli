@@ -36,7 +36,7 @@ val maxDepth : int Batteries.ref
 val find : ranking_cache -> ?inv:bool -> measure -> bool -> Program.t -> Transition.t -> t list
 
 val find_scc : ranking_cache -> ?inv:bool -> measure -> bool ->  Program.t ->
-  TransitionSet.t TransitionTable.t -> (* Map of transitions to the corresponding entry transitions *)
+  TransitionSet.t TransitionTable.t -> (* Map of transitions to the corresponding pre transitions *)
   Transition.t -> (Transition.t -> bool) -> (Transition.t -> VarSet.t) ->
   ProgramTypes.TransitionSet.t -> (* Transitions which should be decreasing in a ranking function. Use all transitions with unbounded time here *)
   ProgramTypes.TransitionSet.t ->  (* The scc*)
