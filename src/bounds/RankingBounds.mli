@@ -6,4 +6,4 @@ open ProgramTypes
 (** Performs improvement steps for the whole program to find better time-bounds and triggers control flow refinement if needed. *)
 
 (** Performs improvement steps to find better timebounds for the approximation and updates the approximation. *)
-val improve : RankingFunction.ranking_cache -> RVGTypes.RVG.t -> MultiphaseRankingFunction.ranking_cache -> ?mprf:bool -> ?cfr:bool -> ?inv:bool -> ?fast:bool -> [ `Cost | `Time ] -> Program.t -> Approximation.t ->  Program.t * Approximation.t
+val improve : RankingFunction.ranking_cache -> RVGTypes.RVG.t -> MultiphaseRankingFunction.ranking_cache -> ?mprf:bool -> ?cfr:bool -> ?inv:bool -> ?fast:bool -> [ `Cost | `Time ] -> Program.t -> Approximation.t ->  Program.t * Approximation.t * RVGTypes.RVG.t
