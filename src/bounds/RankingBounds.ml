@@ -160,32 +160,40 @@ let bounded measure appr transition =
         false
 
 let one_successor (program: Program.t) (scc: TransitionSet.t) =
-    TransitionSet.filter (fun (l,g,l') -> (not (Location.equal l l'))
-                                       && (List.length (Program.outgoing_transitions logger program [(l,g,l')])) == 1) scc
+    TransitionSet.filter (fun (l,t,l') ->
+      Printf.printf "one_succesor t %s  outgoing_trans %s\n" (Transition.to_id_string (l,t,l'))
+        (TransitionSet.to_id_string @@ TransitionSet.of_list @@ Program.outgoing_transitions logger program [(l,t,l')]);
+      List.length (Program.outgoing_transitions logger program [(l,t,l')]) == 1
+    ) scc
 
-let knowledge_propagation (scc: TransitionSet.t) measure program pre_trans_map appr =
+let rec knowledge_propagation (scc: TransitionSet.t) measure program pre_trans_map appr =
   let execute () =
-  scc
-  |> one_successor program
-  |> TransitionSet.enum
-  |> MaybeChanged.fold_enum ((
-    fun appr transition ->
-      let new_bound =
-        TransitionTable.find pre_trans_map transition
-        |> TransitionSet.enum
-        |> Enum.map (fun (l,t,l') -> Approximation.timebound appr (l,t,l'))
-        |> Bound.sum
-      in
-      let orginal_bound = get_bound measure appr transition in
-      if (Bound.compare_asy orginal_bound new_bound) = 1 then
-        add_bound measure new_bound transition appr
-        |> MaybeChanged.changed
-      else
-         MaybeChanged.same appr
-      )) appr in
-      (Logger.with_log logger Logger.INFO
-            (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
-             execute)
+    let one_successor =
+      TransitionSet.filter (fun (l,_,_) -> TransitionSet.cardinal (TransitionSet.filter (Location.equal l % Transition.target) scc) = 1)
+    in
+    one_successor scc
+    |> TransitionSet.enum
+    |> MaybeChanged.fold_enum ((
+      fun appr transition ->
+        let new_bound =
+          TransitionTable.find pre_trans_map transition
+          |> TransitionSet.enum
+          |> Enum.map (Approximation.timebound appr)
+          |> Bound.sum
+        in
+        let original_bound = get_bound measure appr transition in
+        if Bound.compare_asy original_bound new_bound = 1 then
+          add_bound measure new_bound transition appr
+          |> MaybeChanged.changed
+        else
+           MaybeChanged.same appr
+      )) appr
+    |> MaybeChanged.if_changed (knowledge_propagation scc measure program pre_trans_map)
+    |> MaybeChanged.unpack
+  in
+  (Logger.with_log logger Logger.INFO
+        (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
+         execute)
 
 let improve_timebound_computation cache_rf cache_mprf ?(mprf=false) ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure
   program pre_trans_map appr =
@@ -243,13 +251,12 @@ let improve_timebound cache_rf cache_mprf ?(mprf = false) ?(inv = false) ?(fast 
 
 let rec improve_scc rvg cache_rf cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program pre_trans_map appr =
   appr
+  |> knowledge_propagation scc measure program pre_trans_map
   |> improve_timebound_rec cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
   |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
-  |> tap (const (Logger.log logger Logger.INFO (fun () -> "Reset precomputed PRFs\n", []); RankingFunction.reset cache_rf))
+  |> tap (const (Logger.log logger Logger.INFO (fun () -> "Reset precomputed PRFs\n", []); RankingFunction.reset cache_rf; MultiphaseRankingFunction.reset cache_mprf;))
   |> improve_timebound cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
   |> MaybeChanged.if_changed (improve_scc rvg cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map)
-  |> MaybeChanged.unpack
-  |> knowledge_propagation scc measure program pre_trans_map
   |> MaybeChanged.unpack
 
 
