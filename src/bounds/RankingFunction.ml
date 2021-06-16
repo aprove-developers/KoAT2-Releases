@@ -238,7 +238,7 @@ let change_valuation (values: RealPolynomial.valuation) =
 
 let try_decreasing cache ?(inv = false) (solver_real: SMTSolver.t)  (solver_int: SMTSolverInt.t) (non_increasing: Transition.t Stack.t)
   (possible_decreasing: TransitionSet.t) (to_be_found: int ref) (measure: measure) applied_cfr (unbounded_vars: Transition.t ->
-    VarSet.t) entry_transitions entry_trans_map =
+    VarSet.t) entry_transitions pre_trans_map =
   non_increasing
   |> Stack.enum
   |> TransitionSet.inter possible_decreasing % TransitionSet.of_enum
@@ -282,7 +282,7 @@ let try_decreasing cache ?(inv = false) (solver_real: SMTSolver.t)  (solver_int:
           (* set coefficients of unbounded variables to 0*)
           VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var) unbounded_vars_at_entry_locs;
 
-          TransitionTable.find entry_trans_map decreasing
+          TransitionSet.remove decreasing (TransitionTable.find pre_trans_map decreasing)
           |> TransitionSet.iter (fun trans ->  SMTSolver.add_real solver_real (Invariants.initiation_constraint measure trans template)));
 
         SMTSolverInt.add solver_int (bounded_constraint cache measure decreasing);
@@ -329,22 +329,22 @@ let try_decreasing cache ?(inv = false) (solver_real: SMTSolver.t)  (solver_int:
   if !to_be_found <= 0 then
     raise Exit
 
-let entry_transitions_from_non_increasing map_trans_entry_trans non_increasing =
-  let all_possible_entry_trans =
+let entry_transitions_from_non_increasing map_trans_pre_trans non_increasing =
+  let all_possible_pre_trans =
     Stack.enum non_increasing
-    |> Enum.fold (fun tset t -> TransitionSet.union tset @@ TransitionTable.find map_trans_entry_trans t) TransitionSet.empty
+    |> Enum.fold (fun tset t -> TransitionSet.union tset @@ TransitionTable.find map_trans_pre_trans t) TransitionSet.empty
   in
-  TransitionSet.diff all_possible_entry_trans (TransitionSet.of_enum @@ Stack.enum non_increasing)
+  TransitionSet.diff all_possible_pre_trans (TransitionSet.of_enum @@ Stack.enum non_increasing)
 
 let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (solver_real: SMTSolver.t) (solver_int: SMTSolverInt.t)
                   (scc: Transition.t array) (non_increasing: Transition.t Stack.t) (possible_decreasing: TransitionSet.t)
                   (to_be_found: int ref) (measure: measure) applied_cfr is_time_bounded unbounded_vars
-                  (map_trans_entry_trans: TransitionSet.t TransitionTable.t) =
+                  (map_trans_pre_trans: TransitionSet.t TransitionTable.t) =
   if SMTSolverInt.satisfiable solver_int || (inv && SMTSolver.satisfiable solver_real) then (
     if steps_left == 0 then (
-      let entry_trans = entry_transitions_from_non_increasing map_trans_entry_trans non_increasing in
+      let entry_trans = entry_transitions_from_non_increasing map_trans_pre_trans non_increasing in
       try_decreasing cache ~inv:inv solver_real solver_int non_increasing possible_decreasing to_be_found measure
-        applied_cfr unbounded_vars entry_trans map_trans_entry_trans
+        applied_cfr unbounded_vars entry_trans map_trans_pre_trans
     ) else (
       for i=index to Array.length scc - 1 do
         let transition = Array.get scc i in
@@ -355,13 +355,13 @@ let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (solver_re
           let template_real = TemplateTable.find (get_template_table_real cache) in
           SMTSolver.add_real solver_real (Invariants.non_increasing_constraint measure transition template_real);
           SMTSolver.add_real solver_real (Invariants.consecution_constraint measure transition template_real);
-          TransitionTable.find map_trans_entry_trans transition
+          TransitionSet.remove transition (TransitionTable.find map_trans_pre_trans transition)
           |> TransitionSet.iter (fun trans ->  SMTSolver.add_real solver_real (Invariants.initiation_constraint measure trans template_real)));
 
         SMTSolverInt.add solver_int (non_increasing_constraint cache measure transition);
         Stack.push transition non_increasing;
         backtrack cache ~inv:inv (steps_left - 1) (i + 1) solver_real solver_int scc non_increasing possible_decreasing
-          to_be_found measure applied_cfr is_time_bounded unbounded_vars map_trans_entry_trans;
+          to_be_found measure applied_cfr is_time_bounded unbounded_vars map_trans_pre_trans;
         ignore (Stack.pop non_increasing);
 
         SMTSolverInt.pop solver_int;
@@ -369,15 +369,15 @@ let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (solver_re
           SMTSolver.pop solver_real;
       done;
 
-      let entry_trans = entry_transitions_from_non_increasing map_trans_entry_trans non_increasing in
+      let entry_trans = entry_transitions_from_non_increasing map_trans_pre_trans non_increasing in
       (* Only try_decreasing if the non_increasing set looks good, i.e. all incoming timebounds are finite*)
       if TransitionSet.for_all is_time_bounded entry_trans then
         try_decreasing cache ~inv:inv solver_real solver_int non_increasing possible_decreasing to_be_found
-          measure applied_cfr unbounded_vars entry_trans map_trans_entry_trans
+          measure applied_cfr unbounded_vars entry_trans map_trans_pre_trans
     )
   )
 
-let compute_scc ?(inv = false) cache measure applied_cfr map_trans_entry_trans is_time_bounded unbounded_vars decreasing_transitions scc =
+let compute_scc ?(inv = false) cache measure applied_cfr map_trans_pre_trans is_time_bounded unbounded_vars decreasing_transitions scc =
   try
     backtrack cache
               (TransitionSet.cardinal scc)
@@ -393,7 +393,7 @@ let compute_scc ?(inv = false) cache measure applied_cfr map_trans_entry_trans i
               ~inv:inv
               is_time_bounded
               unbounded_vars
-              map_trans_entry_trans;
+              map_trans_pre_trans;
     scc
     |> TransitionSet.iter (fun t ->
           if not (RankingTable.mem (get_ranking_table measure cache) t) then
@@ -402,16 +402,16 @@ let compute_scc ?(inv = false) cache measure applied_cfr map_trans_entry_trans i
   with Exit -> ()
 
 let compute_ ?(inv = false) cache measure applied_cfr program is_time_bounded unbounded_vars =
-  let map_trans_entry_trans scc =
+  let map_trans_pre_trans scc =
     let t = TransitionTable.create 10 in
     TransitionSet.enum scc
-    |> Enum.map (fun t -> t, TransitionSet.of_list (Program.entry_transitions logger program [t]))
+    |> Enum.map (fun t -> t, TransitionSet.of_enum (Program.pre program t))
     |> Enum.iter (uncurry @@ TransitionTable.add t) (* somehow find behaves strangely in combination with of_enum *)
     |> const t
   in
   program
   |> Program.sccs
-  |> Enum.iter (fun scc -> compute_scc ~inv cache measure applied_cfr (map_trans_entry_trans scc) is_time_bounded unbounded_vars scc scc)
+  |> Enum.iter (fun scc -> compute_scc ~inv cache measure applied_cfr (map_trans_pre_trans scc) is_time_bounded unbounded_vars scc scc)
 
 
 let fill_template_cache cache ?(inv = false) measure program applied_cfr =
@@ -441,11 +441,11 @@ let find cache ?(inv = false) measure applied_cfr program transition =
   in
   logging measure transition "find_ranking_functions" execute
 
-let find_scc cache ?(inv = false) measure applied_cfr program map_trans_entry_trans transition is_time_bounded unbounded_vars decreasing_transitions scc =
+let find_scc cache ?(inv = false) measure applied_cfr program map_trans_pre_trans transition is_time_bounded unbounded_vars decreasing_transitions scc =
   let execute () =
       fill_template_cache cache ~inv:inv measure program applied_cfr;
       if RankingTable.is_empty (get_ranking_table measure cache) then
-        compute_scc cache measure applied_cfr map_trans_entry_trans ~inv:inv is_time_bounded unbounded_vars decreasing_transitions scc;
+        compute_scc cache measure applied_cfr map_trans_pre_trans ~inv:inv is_time_bounded unbounded_vars decreasing_transitions scc;
     (try
       RankingTable.find_all (get_ranking_table measure cache) transition
     with Not_found -> [])
