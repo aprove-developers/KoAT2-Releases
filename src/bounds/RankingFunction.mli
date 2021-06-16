@@ -5,7 +5,7 @@ open Atoms
 open Polynomials
 open ProgramTypes
 
-(** Provides default implementations of RankingFunctions. KoAT uses this as a default function if the user does not specify any requirements by setting parameters (e.g. --mrf). *)
+(** Provides default implementations of RankingFunctions. KoAT uses this as a default function if the user does not specify any requirements by setting parameters (e.g. --mprf). *)
 
 (** Type of ranking function consisting of a function mapping from locations to polynomials, a decreasing transition and a set of non-increasing transitions. *)
 type t
