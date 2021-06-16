@@ -114,14 +114,17 @@ let cardinal_vars program =
   VarSet.cardinal (vars program)
 
 let pre program (l,t,_) =
+  let is_satisfiable f =
+    try SMT.Z3Opt.satisfiable f
+    with SMT.SMTFailure _ -> true (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
+  in
   l
   |> TransitionGraph.pred_e (graph program)
   |> List.enum
   |> Enum.filter (fun (_,t',_) ->
          TransitionLabel.append t' t
          |> TransitionLabel.guard
-         |> Formula.mk
-         |> SMT.Z3Opt.satisfiable
+         |> is_satisfiable % Formula.mk
        )
   (* pre evaluate the enum *)
   |> tap (Enum.force)
