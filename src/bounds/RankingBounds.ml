@@ -192,7 +192,7 @@ let rec knowledge_propagation (scc: TransitionSet.t) measure program pre_trans_m
         (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
          execute)
 
-let improve_timebound_computation cache_rf cache_mprf ?(mprf=false) ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure
+let improve_timebound_computation cache_mprf ?(mprf=false) ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure
   program pre_trans_map appr =
   let get_unbounded_vars transition =
     Program.input_vars program
@@ -219,41 +219,41 @@ let improve_timebound_computation cache_rf cache_mprf ?(mprf=false) ?(inv=false)
           |> MaybeChanged.fold_enum (fun appr rank ->
                 improve_with_rank_mprf measure pre_trans_map appr rank) appr
         else
-          (if fast then
-            RankingFunction.find_scc_fast cache_rf ~inv:inv measure (Option.is_some !backtrack_point) program transition scc
+          (MultiphaseRankingFunction.maxDepth := 1; if fast then
+            MultiphaseRankingFunction.find_scc_fast cache_mprf ~inv:inv measure (Option.is_some !backtrack_point) program transition scc
           else
-            RankingFunction.find_scc cache_rf ~inv:inv measure (Option.is_some !backtrack_point) program pre_trans_map transition
+            MultiphaseRankingFunction.find_scc cache_mprf ~inv:inv measure (Option.is_some !backtrack_point) program pre_trans_map transition
               is_time_bounded get_unbounded_vars unbounded_transitions scc)
           |> List.enum
           |> MaybeChanged.fold_enum (fun appr rank ->
-                improve_with_rank measure pre_trans_map appr rank) appr)
+                improve_with_rank_mprf measure pre_trans_map appr rank) appr)
     ) appr
 
 (** We try to improve a single scc until we reach a fixed point. *)
-let rec improve_timebound_rec cache_rf cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure
+let rec improve_timebound_rec cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure
   program pre_trans_map appr =
-  let execute () = improve_timebound_computation cache_rf cache_mprf ~mprf ~inv ~fast scc measure program pre_trans_map appr in
+  let execute () = improve_timebound_computation cache_mprf ~mprf ~inv ~fast scc measure program pre_trans_map appr in
       (Logger.with_log logger Logger.INFO
             (fun () -> "improve_bounds_rec", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
              execute)
-      |> MaybeChanged.if_changed (improve_timebound_rec cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map)
+      |> MaybeChanged.if_changed (improve_timebound_rec cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map)
       |> MaybeChanged.unpack
 
-let improve_timebound cache_rf cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program
+let improve_timebound cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program
   pre_trans_map appr =
-  let execute () = improve_timebound_computation cache_rf cache_mprf ~mprf ~inv ~fast scc measure program pre_trans_map appr in
+  let execute () = improve_timebound_computation cache_mprf ~mprf ~inv ~fast scc measure program pre_trans_map appr in
   (Logger.with_log logger Logger.INFO
         (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
          execute)
 
-let rec improve_scc rvg cache_rf cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program pre_trans_map appr =
+let rec improve_scc rvg cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program pre_trans_map appr =
   appr
   |> knowledge_propagation scc measure program pre_trans_map
-  |> improve_timebound_rec cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
+  |> improve_timebound_rec cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
   |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
-  |> tap (const (Logger.log logger Logger.INFO (fun () -> "Reset precomputed PRFs\n", []); RankingFunction.reset cache_rf; MultiphaseRankingFunction.reset cache_mprf;))
-  |> improve_timebound cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
-  |> MaybeChanged.if_changed (improve_scc rvg cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map)
+  |> tap (const (Logger.log logger Logger.INFO (fun () -> "Reset precomputed PRFs\n", []); MultiphaseRankingFunction.reset cache_mprf;))
+  |> improve_timebound cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
+  |> MaybeChanged.if_changed (improve_scc rvg cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map)
   |> MaybeChanged.unpack
 
 
@@ -303,7 +303,7 @@ let compute_pre_transitions_for_transition program scc =
   |> Enum.iter (uncurry @@ TransitionTable.add table) (* somehow find behaves strangely in combination with of_enum *)
   |> const table
 
-let rec improve cache_rf rvg cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
+let rec improve rvg cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
   program
     |> Program.sccs
     |> List.of_enum
@@ -312,12 +312,12 @@ let rec improve cache_rf rvg cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = f
                           if mprf then
                             MultiphaseRankingFunction.reset cache_mprf
                           else
-                            RankingFunction.reset cache_rf;
+                            MultiphaseRankingFunction.reset cache_mprf;
                           try
                             appr
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
-                            |> improve_scc rvg cache_rf cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program
+                            |> improve_scc rvg cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program
                                   (compute_pre_transitions_for_transition program scc)
                             |> apply_cfr ~cfr:cfr ~mprf:mprf scc measure program
                           with TIMEOUT | NOT_IMPROVED ->
@@ -328,5 +328,5 @@ let rec improve cache_rf rvg cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = f
                             MaybeChanged.changed (program,appr))
                         else monad)
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr))
-    |> MaybeChanged.if_changed (fun (a,b) -> (improve cache_rf rvg cache_mprf ~cfr:cfr ~mprf:mprf measure a b))
+    |> MaybeChanged.if_changed (fun (a,b) -> (improve rvg cache_mprf ~cfr:cfr ~mprf:mprf measure a b))
     |> MaybeChanged.unpack
