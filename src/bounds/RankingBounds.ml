@@ -204,7 +204,6 @@ let improve_scc rvg cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (s
   let rec step appr =
     appr
     |> knowledge_propagation scc measure program pre_trans_map
-    |> MaybeChanged.unpack % improve_timebound cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
     |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
     |> tap (const (Logger.log logger Logger.INFO (fun () -> "Reset precomputed PRFs\n", []); MultiphaseRankingFunction.reset cache_mprf;))
     |> improve_timebound cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
@@ -213,6 +212,7 @@ let improve_scc rvg cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false) (s
   in
   (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
   knowledge_propagation scc measure program pre_trans_map appr
+  |> MaybeChanged.unpack % improve_timebound cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
   |> step
 
 
