@@ -86,40 +86,6 @@ let compute_bound_mprf (appr: Approximation.t) (pre_trans_map: TransitionSet.t T
                     ~result:Bound.to_string (fun () -> bound)
 
 
- let compute_bound (appr: Approximation.t) (pre_trans_map: TransitionSet.t TransitionTable.t) (rank: RankingFunction.t) : Bound.t =
-   let execute () =
-     rank
-     |> RankingFunction.non_increasing
-     |> entry_transitions_from_pre_map pre_trans_map
-     |> TransitionSet.enum
-     |> Enum.map (fun (l,t,l') ->
-            let timebound = Approximation.timebound appr (l,t,l') in
-            let rhs = (apply (Approximation.sizebound appr) (RankingFunction.rank rank l') (l,t,l')) in
-            Bound.(
-              if is_infinity timebound then
-                if equal zero rhs then
-                  zero
-                else
-                  infinity
-              else
-                if is_infinity rhs then
-                  infinity
-                else
-                  timebound * rhs
-            ))
-     |> Bound.sum
-   in
-    let bound = execute () in
-    if not (Bound.is_linear bound) && not (IDSet.mem (Transition.id (RankingFunction.decreasing rank)) !already_used_cfr)  then
-      nonLinearTransitions := TransitionSet.add (RankingFunction.decreasing rank) !nonLinearTransitions
-    else
-      nonLinearTransitions := TransitionSet.remove (RankingFunction.decreasing rank) !nonLinearTransitions;
-   Logger.with_log logger Logger.DEBUG
-        (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (RankingFunction.decreasing rank);
-                                     "non_increasing", Util.enum_to_string Transition.to_id_string (TransitionSet.enum (RankingFunction.non_increasing rank));
-                                     "rank", RankingFunction.only_rank_to_string rank])
-                      ~result:Bound.to_string (fun () -> bound)
-
 let add_bound = function
   | `Time -> Approximation.add_timebound
   | `Cost -> Approximation.add_costbound
@@ -127,17 +93,6 @@ let add_bound = function
 let get_bound = function
   | `Time -> Approximation.timebound
   | `Cost -> Approximation.costbound
-
-let improve_with_rank measure pre_trans_map appr rank =
-  let bound = compute_bound appr pre_trans_map rank in
-  let orginal_bound = get_bound measure appr (RankingFunction.decreasing rank) in
-  if (Bound.compare_asy orginal_bound bound) = 1 then
-    rank
-    |> RankingFunction.decreasing
-    |> (fun t -> add_bound measure bound t appr)
-    |> MaybeChanged.changed
-  else
-    MaybeChanged.same appr
 
 let improve_with_rank_mprf measure program appr rank =
   let bound = compute_bound_mprf appr program rank in

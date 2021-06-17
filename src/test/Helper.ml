@@ -6,9 +6,8 @@ open Constraints
 open Atoms
 open Polynomials
 
-let reset cache =
-  RankingFunction.reset cache;
-  LocalSizeBound.reset ()
+let reset =
+  LocalSizeBound.reset
 
 let assert_equal_bool = assert_equal ~printer:Bool.to_string ~cmp:Bool.equal
 
