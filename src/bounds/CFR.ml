@@ -231,7 +231,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:IDSet.t) (pr
       let unit_cost = TransitionSet.for_all (fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
       (*if there are costs which are not one then we cannot apply irankfinder *)
       if not (unit_cost scc) then
-         (merged_program,already_used_trans)
+         (merged_program, IDSet.union already_used_trans (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum scc))))
       else
         let time_current = Unix.gettimeofday()
         and scc_list = 
@@ -257,7 +257,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:IDSet.t) (pr
         let
         already_used_cfr = IDSet.union
           (IDSet.union already_used_trans (IDSet.of_enum (Enum.map (fun trans -> Transition.id trans) (TransitionSet.enum transitions_cfr))))
-          (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum nonLinearTransitions)))
+          (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum scc)))
         and
         (** Merges irankfinder and original program. *)
         processed_program =
