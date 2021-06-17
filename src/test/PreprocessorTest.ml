@@ -10,8 +10,6 @@ let tests =
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->
                      let result = MaybeChanged.unpack (CutUnreachableLocations.transform_program (Readers.read_program_simple program)) in
-                     let cache = RankingFunction.new_cache () in
-                     reset cache;
                      assert_equal_program
                                      (Readers.read_program_simple expected_program)
                                      result))
@@ -52,8 +50,6 @@ let tests =
                      let result =
                        MaybeChanged.unpack (CutUnsatisfiableTransitions.transform_program (Readers.read_program_simple program))
                      in
-                     let cache = RankingFunction.new_cache () in
-                     reset cache;
                      assert_equal_program (Readers.read_program_simple expected_program) result))
                   [
                     ("l1 -> l2(x), l2 -> l3(x)", "l1 -> l3(x) :|: 2 > 3, l1 -> l2(x), l2 -> l3(x)");
@@ -66,8 +62,6 @@ let tests =
                      let result =
                        MaybeChanged.unpack (Preprocessor.lift_to_program Chaining.transform_graph (Readers.read_program_simple program))
                      in
-                     let cache = RankingFunction.new_cache () in
-                     reset cache;
                      assert_equal_program (Readers.read_program_simple expected_program) result))
                   [
                     ("l1 -> l2(x)", "l1 -> l2(x)");
@@ -89,8 +83,6 @@ let tests =
                                        Preprocessor.[CutUnreachableLocations; CutUnsatisfiableTransitions]
                                        (Readers.read_program_simple program, Approximation.empty 0 0))
                      in
-                     let cache = RankingFunction.new_cache () in
-                     reset cache;
                      assert_equal_program (Readers.read_program_simple expected_program) result))
                   [
                     ("l1 -> l2(x)", "l1 -> l2(x)");

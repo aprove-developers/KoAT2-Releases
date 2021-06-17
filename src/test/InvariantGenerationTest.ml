@@ -22,8 +22,6 @@ let tests =
                        |> (fun graph -> TransitionGraph.find_all_edges graph (Location.of_string l) (Location.of_string l'))
                        |> List.exists (fun (l,t,l') -> SMT.Z3Opt.tautology (Formula.Infix.(Formula.mk (TransitionLabel.guard t) => Readers.read_formula invariant)))
                      in
-                     let cache = RankingFunction.new_cache () in
-                     reset cache;
                      assert_bool (String.concat " " [invariant; "was not generated for a transition from location"; l; "to"; l'; "in a result program"; Program.to_simple_string result_program]) fulfiled))
                   [
                     (* Simple propagation to next transition *)
