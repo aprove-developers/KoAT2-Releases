@@ -124,7 +124,7 @@ let uid = ref ""
 
 (** Creates a file containing irankfinder, applies irankfinder and returns the resulting program. *)
 let applyIrankFinder (scc_program: Program.t) =
-  if !uid == "" then (
+  if String.equal !uid "" then (
     uid := (string_of_int (Unix.getpid ())) ^ "_" ^ (string_of_float (Unix. gettimeofday ()));
     try Unix.mkdir ("./tmp_" ^ !uid) 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
   counter := !counter + 1;
