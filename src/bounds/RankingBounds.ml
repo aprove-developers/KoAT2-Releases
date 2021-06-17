@@ -265,7 +265,7 @@ let rec improve_scc rvg cache_mprf ?(mprf = false) ?(inv = false) ?(fast = false
   |> MaybeChanged.unpack
 
 
-let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) rvg measure program appr =
+let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) cache_mprf rvg measure program appr =
   if Option.is_some !backtrack_point then (
     let (_,_,org_bound,_,_) = Option.get !backtrack_point in
     let cfr_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
@@ -287,10 +287,13 @@ let apply_cfr ?(cfr = false) ?(mprf = false) (scc: TransitionSet.t) rvg measure 
       if Option.is_some opt then (
         let (program_cfr,appr_cfr,already_used_cfr_upd) = Option.get opt in
         already_used_cfr := already_used_cfr_upd;
+        Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (IDSet.to_string !already_used_cfr)]);
         backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions, rvg);
+        nonLinearTransitions := TransitionSet.empty;
         let rvg_cfr = RVGTypes.RVG.rvg program_cfr in
         LocalSizeBound.switch_cache();
         LocalSizeBound.enable_cfr();
+        MultiphaseRankingFunction.reset cache_mprf;
         MaybeChanged.changed (program_cfr, appr_cfr, rvg_cfr))
       else
       MaybeChanged.same (program,appr,rvg)
@@ -328,12 +331,13 @@ let rec improve rvg cache_mprf ?(mprf = false) ?(cfr = false) ?(inv = false) ?(f
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
                             |> improve_scc rvg cache_mprf ~mprf:mprf ~inv:inv ~fast:fast scc measure program
                                   (compute_pre_transitions_for_transition program scc)
-                            |> apply_cfr ~cfr:cfr ~mprf:mprf scc rvg measure program
+                            |> apply_cfr ~cfr:cfr ~mprf:mprf scc cache_mprf rvg measure program
                           with TIMEOUT | NOT_IMPROVED ->
                             LocalSizeBound.reset_cfr ();
                             let (program,appr,_,non_linear_transitions,rvg_org) = Option.get !backtrack_point in
                             backtrack_point := None;
-                            nonLinearTransitions := non_linear_transitions;
+                            nonLinearTransitions := TransitionSet.empty;
+                            MultiphaseRankingFunction.reset cache_mprf;
                             MaybeChanged.changed (program,appr,rvg_org))
                         else monad)
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg))
