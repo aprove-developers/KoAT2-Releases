@@ -57,7 +57,7 @@ let template_table_is_empty =
   TemplateTable.is_empty template_table_inv
 
 let template_table_clear =
-TemplateTable.clear template_table_inv
+  TemplateTable.clear template_table_inv
 
 (** Invariants are stored location wise.  If no invariant is stored for some location, we return true. *)
 let table_inv: RealConstraint.t TemplateTable.t = TemplateTable.create 10
