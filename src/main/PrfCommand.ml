@@ -20,7 +20,7 @@ type params = {
 
 let run (params: params) =
   Logging.(use_loggers [PRF, Logger.DEBUG]);
-  MultiphaseRankingFunction.maxDepth := 1;
+  let max_depth = 1 in
   params.input
   |> Readers.read_input params.simple_input
   |> Option.may (fun program ->
@@ -33,10 +33,6 @@ let run (params: params) =
                      |> TransitionGraph.transitions
                      |> TransitionSet.filter (not % Approximation.is_time_bounded appr)
                    in
-                   let cache = MultiphaseRankingFunction.new_cache () in
-                   (** TODO Fix *)
-                   transitions
-                   |> TransitionSet.any
-                   |> MultiphaseRankingFunction.find cache `Time false program
-                   |> List.hd
-                   |> (fun prf -> print_string (MultiphaseRankingFunction.to_string prf ^ "\n"))))
+                   MultiphaseRankingFunction.find `Time false program max_depth
+                   |> Enum.filter (flip TransitionSet.mem transitions % MultiphaseRankingFunction.decreasing)
+                   |> Enum.iter (fun prf -> print_string (MultiphaseRankingFunction.to_string prf ^ "\n"))))
