@@ -333,11 +333,10 @@ let try_decreasing cache program ?(inv = false) depth (solver_real: SMTSolver.t)
           List.sort (fun (_,_,l'1) (_,_,l'2) -> Location.compare l'1 l'2)  (TransitionSet.to_list entry_transitions)
           |> List.group_consecutive (fun (_,_,l'1) (_,_,l'2) -> Location.equal l'1 l'2)
         in
-        let unbounded_vars_at_entry_locs =
+        let unbounded_vars_at_entry_locs coeff_table =
           List.map
             (fun ts ->
               let entryloc = Transition.target (List.hd ts) in
-              let coeff_table = get_coeffs_table cache in
               List.enum ts
               |> Enum.map unbounded_vars
               |> Enum.fold VarSet.union VarSet.empty
@@ -349,7 +348,8 @@ let try_decreasing cache program ?(inv = false) depth (solver_real: SMTSolver.t)
           |> List.fold_left VarSet.union VarSet.empty
         in
 
-        VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var) unbounded_vars_at_entry_locs;
+        VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
+          (unbounded_vars_at_entry_locs (get_coeffs_table cache));
         if inv then (
           SMTSolver.push solver_real;
           let templates_real = List.init depth (fun n -> TemplateTable.find (List.nth !(get_template_table_real cache) n)) in
@@ -357,7 +357,8 @@ let try_decreasing cache program ?(inv = false) depth (solver_real: SMTSolver.t)
           SMTSolver.add_real solver_real (MPRF_Invariants.consecution_constraint depth measure decreasing templates_real);
 
           (* set coefficients of unbounded variables to 0*)
-          VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var) unbounded_vars_at_entry_locs;
+          VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
+            (unbounded_vars_at_entry_locs (get_coeffs_table_real cache));
 
           TransitionSet.remove decreasing (TransitionTable.find pre_trans_map decreasing)
           |> TransitionSet.iter (fun trans ->  SMTSolver.add_real solver_real (MPRF_Invariants.initiation_constraint depth measure trans templates_real)));
