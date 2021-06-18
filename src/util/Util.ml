@@ -58,6 +58,19 @@ let memoize ~extractor f =
        y
   in g
 
+
+(* TODO: Replace memoize with this new version
+ * Adv.: Better control over side effects *)
+let memoize_v2 cache ~extractor f =
+  let g x =
+    match Hashtbl.find_option cache (extractor x) with
+    | Some y -> y
+    | None ->
+       let y = f x in
+       Hashtbl.add cache (extractor x) y;
+       y
+  in g
+
 let cache ~extractor = object
   val cache = Hashtbl.create 10
 
