@@ -198,7 +198,6 @@ let improve_scc rvg ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: T
     appr
     |> knowledge_propagation scc measure program pre_trans_map
     |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
-    |> tap (const (Logger.log logger Logger.INFO (fun () -> "Reset precomputed PRFs\n", []); MultiphaseRankingFunction.reset ();))
     |> improve_timebound ~mprf_max_depth ~inv ~fast scc measure program pre_trans_map
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
@@ -237,7 +236,6 @@ let apply_cfr ?(cfr = false) (scc: TransitionSet.t) rvg measure program appr =
         let rvg_cfr = RVGTypes.RVG.rvg program_cfr in
         LocalSizeBound.switch_cache();
         LocalSizeBound.enable_cfr();
-        MultiphaseRankingFunction.reset ();
         MaybeChanged.changed (program_cfr, appr_cfr, rvg_cfr))
       else
       MaybeChanged.same (program,appr,rvg)
@@ -265,7 +263,6 @@ let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast =
     |> List.of_enum
     |> fold_until (fun monad scc ->
                         if (TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc) then (
-                          MultiphaseRankingFunction.reset ();
                           try
                             appr
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
@@ -277,7 +274,6 @@ let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast =
                             let (program,appr,_,non_linear_transitions,rvg_org) = Option.get !backtrack_point in
                             backtrack_point := None;
                             nonLinearTransitions := TransitionSet.empty;
-                            MultiphaseRankingFunction.reset ();
                             MaybeChanged.changed (program,appr,rvg_org))
                         else monad)
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg))
