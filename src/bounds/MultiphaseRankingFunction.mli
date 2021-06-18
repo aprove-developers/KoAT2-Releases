@@ -33,10 +33,11 @@ val find : ?inv:bool -> measure -> bool -> Program.t -> int -> t Enum.t
 
 val find_scc : ?inv:bool -> measure -> bool ->  Program.t ->
   TransitionSet.t TransitionTable.t -> (* Map of transitions to the corresponding pre transitions *)
-  (Transition.t -> bool) -> (Transition.t -> VarSet.t) ->
+  (Transition.t -> bool) ->  (* Is the transition time-bounded? *)
+  (Transition.t -> VarSet.t) -> (* Unbounded vars for the transition *)
   ProgramTypes.TransitionSet.t -> (* Transitions which should be decreasing in a ranking function. Use all transitions with unbounded time here *)
   ProgramTypes.TransitionSet.t ->  (* The scc*)
-  int -> (* maximum depth of the ranking function *)
+  int -> (* depth of the ranking function *)
   t Enum.t
 
 val find_fast : ?inv:bool ->  measure -> bool -> Program.t -> int -> t Enum.t
