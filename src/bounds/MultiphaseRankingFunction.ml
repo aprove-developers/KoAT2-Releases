@@ -107,7 +107,7 @@ let ranking_template_real cache location (vars: VarSet.t): RealParameterPolynomi
   let fresh_coeffs = List.map RealPolynomial.of_var fresh_vars in
 
   (* store fresh_vars *)
-  let coeff_table = get_coeffs_table cache in
+  let coeff_table = get_coeffs_table_real cache in
   List.iter
     (fun (v,v') -> CoeffsTable.modify_def VarSet.empty (location,v) (VarSet.union (VarSet.singleton v')) coeff_table)
     (List.combine vars fresh_vars);
