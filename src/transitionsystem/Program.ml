@@ -126,8 +126,6 @@ let pre program (l,t,_) =
          |> TransitionLabel.guard
          |> is_satisfiable % Formula.mk
        )
-  (* pre evaluate the enum *)
-  |> tap (Enum.force)
 
 let succ program (_,t,l') =
   l'
