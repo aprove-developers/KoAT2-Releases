@@ -20,8 +20,8 @@ let unsatisfiable_transitions program graph : TransitionSet.t =
       else set
     else
       (* There needs to be a transition distinct from (l,t,l') to enter (l,t,l') *)
-      let intrans = TransitionSet.remove (l,t,l') % TransitionSet.of_enum @@ Program.pre program (l,t,l') in
-      if TransitionSet.is_empty intrans then
+      let intrans = Enum.filter (not % Transition.same (l,t,l')) @@ Program.pre program (l,t,l') in
+      if Enum.is_empty intrans then
         TransitionSet.add (l,t,l') set
       else set
   in
