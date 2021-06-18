@@ -4,7 +4,7 @@ open ProgramTypes
 open Polynomials
 open LocalSizeBound
 
-let find_bounds ?(mprf = None) ?(cfr = false) ?(fast = false) ?(time_cfr = 180) ?(inv = false) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
+let find_bounds ?(mprf_max_depth = 1) ?(cfr = false) ?(fast = false) ?(time_cfr = 180) ?(inv = false) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
   let rvg = RVGTypes.RVG.rvg program in
    if cfr then
      CFR.number_unsolved_trans := (Program.cardinal_trans_scc program);
@@ -12,12 +12,12 @@ let find_bounds ?(mprf = None) ?(cfr = false) ?(fast = false) ?(time_cfr = 180) 
 
   let (program_cfr,updated_appr,_) = appr
   |> TrivialTimeBounds.compute program
-  |> RankingBounds.improve rvg ~mprf ~cfr ~inv ~fast `Time program in
+  |> RankingBounds.improve rvg ~mprf_max_depth ~cfr ~inv ~fast `Time program in
   let appr_cost =
   updated_appr
   |> (fun appr ->
     if program_cfr |> Program.transitions |> TransitionSet.exists (fun t -> not (Polynomial.is_const (Transition.cost t))) then
-      Tuple3.second @@ RankingBounds.improve rvg ~mprf ~cfr ~inv ~fast `Cost program_cfr appr
+      Tuple3.second @@ RankingBounds.improve rvg ~mprf_max_depth ~cfr ~inv ~fast `Cost program_cfr appr
     else
       appr
   )

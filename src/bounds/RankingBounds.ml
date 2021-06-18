@@ -158,12 +158,21 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) (scc: TransitionSet
     |> tap (fun scc -> (Logger.log logger Logger.INFO (fun () -> "improve_timebound", ["scc", TransitionSet.to_string scc])))
     |> TransitionSet.filter (not % bounded measure appr)
   in
-  let rankfuncs =
+  let rankfunc_computation =
     if fast then
-      MultiphaseRankingFunction.find_scc_fast ~inv:inv measure (Option.is_some !backtrack_point) program scc max_depth
+      fun depth -> MultiphaseRankingFunction.find_scc_fast ~inv:inv measure (Option.is_some !backtrack_point) program scc depth
     else
-      MultiphaseRankingFunction.find_scc ~inv:inv measure (Option.is_some !backtrack_point) program pre_trans_map
-        is_time_bounded get_unbounded_vars unbounded_transitions scc max_depth
+      fun depth -> MultiphaseRankingFunction.find_scc ~inv:inv measure (Option.is_some !backtrack_point) program pre_trans_map
+        is_time_bounded get_unbounded_vars unbounded_transitions scc depth
+  in
+  (* Compute ranking functions up to the minimum depth such that at least one ranking functino is found
+   * or the depth is max_depth *)
+  (* Note that enums are lazy *)
+  let rankfuncs =
+    Enum.seq 1 ((+) 1) ((>) (max_depth + 1))
+    |> Enum.map rankfunc_computation
+    |> Enum.peek % Enum.filter (not % Enum.is_empty)
+    |? Enum.empty ()
   in
   let unranked_and_unbounded =
     TransitionSet.diff unbounded_transitions
@@ -177,27 +186,26 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) (scc: TransitionSet
   |> MaybeChanged.fold_enum (fun appr -> improve_with_rank_mprf measure pre_trans_map appr) appr
 
 
-let improve_timebound ?(mprf = None) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program
+let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program
   pre_trans_map appr =
-    let max_depth = Option.default 1 mprf in
-    let execute () = improve_timebound_computation ~inv ~fast scc measure program pre_trans_map max_depth appr in
+    let execute () = improve_timebound_computation ~inv ~fast scc measure program pre_trans_map mprf_max_depth appr in
     (Logger.with_log logger Logger.INFO
           (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
            execute)
 
-let improve_scc rvg ?(mprf = None) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program pre_trans_map appr =
+let improve_scc rvg ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program pre_trans_map appr =
   let rec step appr =
     appr
     |> knowledge_propagation scc measure program pre_trans_map
     |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
     |> tap (const (Logger.log logger Logger.INFO (fun () -> "Reset precomputed PRFs\n", []); MultiphaseRankingFunction.reset ();))
-    |> improve_timebound ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
+    |> improve_timebound ~mprf_max_depth ~inv ~fast scc measure program pre_trans_map
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
   in
   (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
   knowledge_propagation scc measure program pre_trans_map appr
-  |> MaybeChanged.unpack % improve_timebound ~mprf:mprf ~inv:inv ~fast:fast scc measure program pre_trans_map
+  |> MaybeChanged.unpack % improve_timebound ~mprf_max_depth ~inv ~fast scc measure program pre_trans_map
   |> step
 
 
@@ -251,7 +259,7 @@ let compute_pre_transitions_for_transition program scc =
   |> Enum.iter (uncurry @@ TransitionTable.add table) (* somehow find behaves strangely in combination with of_enum *)
   |> const table
 
-let rec improve rvg ?(mprf = None) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
+let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
   program
     |> Program.sccs
     |> List.of_enum
@@ -262,7 +270,7 @@ let rec improve rvg ?(mprf = None) ?(cfr = false) ?(inv = false) ?(fast = false)
                             appr
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
-                            |> improve_scc rvg ~mprf ~inv ~fast scc measure program (compute_pre_transitions_for_transition program scc)
+                            |> improve_scc rvg ~mprf_max_depth ~inv ~fast scc measure program (compute_pre_transitions_for_transition program scc)
                             |> apply_cfr ~cfr scc rvg measure program
                           with TIMEOUT | NOT_IMPROVED ->
                             LocalSizeBound.reset_cfr ();
@@ -273,5 +281,5 @@ let rec improve rvg ?(mprf = None) ?(cfr = false) ?(inv = false) ?(fast = false)
                             MaybeChanged.changed (program,appr,rvg_org))
                         else monad)
                   (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg))
-    |> MaybeChanged.if_changed (fun (a,b,c) -> (improve c ~cfr:cfr ~mprf:mprf measure a b))
+    |> MaybeChanged.if_changed (fun (a,b,c) -> (improve c ~cfr ~mprf_max_depth measure a b))
     |> MaybeChanged.unpack
