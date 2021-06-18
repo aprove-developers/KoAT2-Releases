@@ -49,7 +49,3 @@ val to_string : t -> string
 
 val only_rank_to_string : t -> string
 (** Converts a multiphase ranking function into a string without any further information. *)
-
-(** Resets all cached data.
-    Useful for testing in the same OCaml instance. *)
-val reset : unit -> unit

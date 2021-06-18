@@ -29,8 +29,6 @@ val memoize : extractor:('a -> 'c) -> ('a -> 'b) -> 'a -> 'b
 
 val memoize_v2 : ('a,'b) Hashtbl.t -> extractor:('c -> 'a) -> ('c -> 'b) -> 'c -> 'b
 
-val cache : extractor:('a -> 'b) -> < add : ('a -> 'c) -> 'a -> 'c; clear : unit >
-
 (**  Generates a hash interger value of a given string. *)
 val hash: string -> int
 
