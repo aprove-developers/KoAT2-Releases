@@ -148,14 +148,14 @@ let fresh_coeffs: Var.t list ref = ref []
 
 let numberOfGeneratedTemplates = ref 0
 
-let compute_ranking_templates_ (depth: int) (vars: VarSet.t) (locations: Location.t Enum.t) ranking_template_ template_table_ to_string: unit =
+let compute_ranking_templates_ (depth: int) (vars: VarSet.t) (locations: Location.t list) ranking_template_ template_table_ to_string: unit =
   let execute (i:int) =
     let ins_loc_prf location =
       (* Each location needs its own ranking template with different fresh variables *)
       let (parameter_poly, fresh_vars) = ranking_template_ location vars in
       (location, parameter_poly, fresh_vars)
     in
-    let templates = List.of_enum @@ Enum.map ins_loc_prf locations in
+    let templates = List.map ins_loc_prf locations in
     templates
     |> List.iter (fun (location,polynomial,_) -> TemplateTable.add (List.nth !template_table_ i) location polynomial);
     templates
@@ -176,13 +176,13 @@ let compute_ranking_templates_ (depth: int) (vars: VarSet.t) (locations: Locatio
 
 (* We do not set fresh_coeffs as we do not minimize *)
 (* TODO Merge with compute_ranking_tempaltes_ *)
-let compute_ranking_templates_real (depth: int) (vars: VarSet.t) (locations: Location.t Enum.t) ranking_template_ template_table_ to_string: unit =
+let compute_ranking_templates_real (depth: int) (vars: VarSet.t) (locations: Location.t list) ranking_template_ template_table_ to_string: unit =
   let execute (i:int) =
     (* Each location needs its own ranking template with different fresh variables *)
     let ins_loc_prf loc = ranking_template_ loc vars in
 
     locations
-    |> Enum.iter
+    |> List.iter
         (fun loc -> let (polynomial,_) = ins_loc_prf loc in TemplateTable.add (List.nth !template_table_ i) loc polynomial);
   in
   for i = !numberOfGeneratedTemplates to depth - 1 do
@@ -196,10 +196,10 @@ let compute_ranking_templates_real (depth: int) (vars: VarSet.t) (locations: Loc
       (fun () -> execute i);
   done
 
-let compute_ranking_templates cache (depth: int) (vars: VarSet.t) (locations: Location.t Enum.t) : unit =
+let compute_ranking_templates cache (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
   compute_ranking_templates_ depth vars locations (ranking_template cache) (get_template_table cache) ParameterPolynomial.to_string
 
-let compute_ranking_templates_real cache (depth: int) (vars: VarSet.t) (locations: Location.t Enum.t) : unit =
+let compute_ranking_templates_real cache (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
   compute_ranking_templates_real depth vars locations (ranking_template_real cache) (get_template_table_real cache) RealParameterPolynomial.to_string
 
 (* Methods define properties of mprf *)
@@ -456,7 +456,7 @@ let rec backtrack cache ?(inv = false) depth (steps_left: int) (index: int) (sol
     )
 
 let compute_scc ?(inv = false) cache program measure applied_cfr map_trans_pre_trans is_time_bounded unbounded_vars possible_decreasing scc =
-  let locations = LocationSet.enum @@ TransitionGraph.locations (Program.graph program) in
+  let locations = LocationSet.to_list @@ TransitionGraph.locations (Program.graph program) in
   let vars = Program.input_vars program in
   try
     for depth = 1 to !maxDepth do
@@ -732,9 +732,9 @@ let compute_and_add_ranking_function cache ?(inv = false) applied_cfr program me
   try
     for current_depth = 1 to !maxDepth do
       if !numberOfGeneratedTemplates < current_depth then (
-        compute_ranking_templates cache current_depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.enum);
+        compute_ranking_templates cache current_depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
         if inv then
-          compute_ranking_templates_real cache current_depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.enum);
+          compute_ranking_templates_real cache current_depth (Program.input_vars program) (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
         numberOfGeneratedTemplates := current_depth);
     let try_non_inc_set = TransitionSet.remove decreasing all_trans in
     let solver_int = SMTSolverInt.create () in
