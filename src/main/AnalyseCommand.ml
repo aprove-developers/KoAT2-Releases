@@ -72,10 +72,7 @@ type params = {
     rename : bool; [@default false]
     (** If the location names should be normalized to simplified names. *)
 
-    multiphaserankingfunctions : bool; [@default false] [@aka ["mprf"]]
-    (** Has to be set to true if multiphaserankingfunctions should be used. *)
-
-    depth : int; [@default 5] [@aka ["d"]]
+    depth : int; [@default 1] [@aka ["d"]]
     (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
 
     cfr : bool; [@default false]
@@ -183,7 +180,7 @@ let run (params: params) =
               )
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
-                     Bounds.find_bounds ~depth:(params.depth) ~mprf:(params.multiphaserankingfunctions) ~cfr:(params.cfr) ~time_cfr:(params.time_limit_cfr) ~inv:(params.inv) ~fast:(params.fast) program appr
+                     Bounds.find_bounds ~depth:(params.depth) ~cfr:(params.cfr) ~time_cfr:(params.time_limit_cfr) ~inv:(params.inv) ~fast:(params.fast) program appr
                    else (program, appr))
          |> tap (fun (program, appr) -> params.result program appr)
          |> tap (fun (program, appr) ->
