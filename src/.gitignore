@@ -33,6 +33,7 @@ test/output
 output
 main/koat2
 main/koat2_static
+main/koat-static
 
 #Ignore auto generated parser files
 parser/Parser.mli
