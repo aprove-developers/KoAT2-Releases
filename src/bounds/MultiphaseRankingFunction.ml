@@ -35,7 +35,7 @@ module CoeffsTable = Hashtbl.Make(struct
                                    let hash = Hashtbl.hash
                                   end)
 
-let maxDepth = ref 5
+let maxDepth = ref 1
 
 type template_tables = ParameterPolynomial.t TemplateTable.t list Batteries.ref
 type template_tables_real = RealParameterPolynomial.t TemplateTable.t list Batteries.ref
