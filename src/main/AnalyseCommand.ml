@@ -155,6 +155,7 @@ let run (params: params) =
         else
           input |> Fpath.v |> Fpath.parent)
   in
+  let mprf_max_depth = params.depth in
   if params.print_input then (
     let program_str =
       if params.simple_input then
@@ -180,7 +181,7 @@ let run (params: params) =
               )
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
-                     Bounds.find_bounds ~depth:(params.depth) ~cfr:(params.cfr) ~time_cfr:(params.time_limit_cfr) ~inv:(params.inv) ~fast:(params.fast) program appr
+                     Bounds.find_bounds ~mprf_max_depth ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast program appr
                    else (program, appr))
          |> tap (fun (program, appr) -> params.result program appr)
          |> tap (fun (program, appr) ->

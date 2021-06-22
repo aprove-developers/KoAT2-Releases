@@ -23,28 +23,26 @@ end
 
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
-val template_table_is_empty : bool
+type invariants_cache
 
-val template_table_clear : unit
+val new_cache: unit -> invariants_cache
 
-val compute_invariant_templates : VarSet.t -> Location.t list -> unit
+val compute_invariant_templates : invariants_cache -> VarSet.t -> Location.t list -> unit
 
-val store_inv : Valuation.t -> Transition.t -> unit
+val store_inv : invariants_cache -> Valuation.t -> Transition.t -> unit
 
-val store_inv_set : Valuation.t -> ProgramTypes.TransitionSet.t -> unit
+val store_inv_set : invariants_cache -> Valuation.t -> ProgramTypes.TransitionSet.t -> unit
 
-val non_increasing_constraint : int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
+val non_increasing_constraint : invariants_cache -> int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
 
-val non_increasing_constraints : int -> measure -> TransitionSet.t ->  (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
+val non_increasing_constraints : invariants_cache -> int -> measure -> TransitionSet.t ->  (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
 
-val decreasing_constraint : int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
+val decreasing_constraint : invariants_cache -> int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
 
-val initiation_constraint : int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
+val initiation_constraint : invariants_cache -> int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
 
-val disability_constraint : int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
+val disability_constraint : invariants_cache -> int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
 
-val consecution_constraint : int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
+val consecution_constraint : invariants_cache -> int -> measure -> Transition.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
 
-val consecution_constraints : int -> measure -> TransitionSet.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t
-
-val clear_cache : unit
+val consecution_constraints : invariants_cache ->  int -> measure -> TransitionSet.t -> (Location.t -> RealParameterPolynomial.t) list -> RealFormula.t

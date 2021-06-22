@@ -58,21 +58,6 @@ module RVG =
       pred rvg rv
       |> List.enum
 
-    (* TODO Optimizable *)
-    let entry_points rvg scc =
-      scc
-      |> List.enum
-      |> Enum.map (pre rvg)
-      |> Enum.flatten
-      |> Enum.uniq_by RV.same
-      |> Util.intersection RV.same (List.enum scc)
-
-    let transitions scc =
-      scc
-      |> List.enum
-      |> Enum.map RV.transition
-      |> Enum.uniq_by Transition.same
-
     let add_vertices_to_rvg vertices rvg =
       vertices
       |> List.map (flip add_vertex)
