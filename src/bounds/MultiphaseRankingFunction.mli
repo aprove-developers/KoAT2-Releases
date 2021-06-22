@@ -13,8 +13,6 @@ type t
 (** Type of measurement of ranking function, i.e., cost or time. *)
 type measure = [ `Cost | `Time ] [@@deriving show]
 
-type ranking_cache
-
 (** Returns a list of polynomials representing a multiphase ranking function. *)
 val rank : t -> (Location.t -> Polynomial.t) list
 
@@ -29,31 +27,25 @@ val non_increasing : t -> TransitionSet.t
 (** Returns the depth of a multiphase ranking function (i.e. returns d if MRF has form f1,f2,...,fd).*)
 val depth : t -> int
 
-(** A reference to store the maximum depth to bound the search space of multiphase ranking function. The default value is 5 and can be adjusted by the user with flag -d. *)
-val maxDepth : int Batteries.ref
+(** Tries to find a suitable multiphase ranking function for the given transitions T'.
+ * The int corresponds to the maximum depth of the mprf *)
+val find : ?inv:bool -> measure -> bool -> Program.t -> int -> t Enum.t
 
-(** Finds a suitable multiphase ranking function for the given transitions T'. *)
-val find : ranking_cache -> ?inv:bool -> measure -> bool -> Program.t -> Transition.t -> t list
-
-val find_scc : ranking_cache -> ?inv:bool -> measure -> bool ->  Program.t ->
+val find_scc : ?inv:bool -> measure -> bool ->  Program.t ->
   TransitionSet.t TransitionTable.t -> (* Map of transitions to the corresponding pre transitions *)
-  Transition.t -> (Transition.t -> bool) -> (Transition.t -> VarSet.t) ->
+  (Transition.t -> bool) ->  (* Is the transition time-bounded? *)
+  (Transition.t -> VarSet.t) -> (* Unbounded vars for the transition *)
   ProgramTypes.TransitionSet.t -> (* Transitions which should be decreasing in a ranking function. Use all transitions with unbounded time here *)
   ProgramTypes.TransitionSet.t ->  (* The scc*)
-  t list
+  int -> (* depth of the ranking function *)
+  t Enum.t
 
-val find_fast : ranking_cache -> ?inv:bool ->  measure -> bool -> Program.t -> Transition.t -> t list
+val find_fast : ?inv:bool ->  measure -> bool -> Program.t -> int -> t Enum.t
 
-val find_scc_fast : ranking_cache -> ?inv:bool -> measure -> bool -> Program.t -> Transition.t -> ProgramTypes.TransitionSet.t -> t list
+val find_scc_fast : ?inv:bool -> measure -> bool -> Program.t -> ProgramTypes.TransitionSet.t -> int -> t Enum.t
 
 (** Converts a multiphase ranking function into a string*)
 val to_string : t -> string
 
 val only_rank_to_string : t -> string
 (** Converts a multiphase ranking function into a string without any further information. *)
-
-(** Resets all cached data.
-    Useful for testing in the same OCaml instance. *)
-val reset : ranking_cache -> unit
-
-val new_cache : unit -> ranking_cache
