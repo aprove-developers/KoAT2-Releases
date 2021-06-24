@@ -91,6 +91,7 @@ type params = {
 
   } [@@deriving cmdliner]
 
+
 (** Returns a string containing a time-bound and the label of a transition for a specified approximation. *)
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
   String.concat "" ["Timebound: ";
@@ -142,6 +143,7 @@ let rename_program_option opt =
 
 (** Runs KoAT2 on provided parameters. *)
 let run (params: params) =
+  Timeout.start_time_of_koat2 := Unix.gettimeofday();
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
   let input = Option.default_delayed read_line params.input in
