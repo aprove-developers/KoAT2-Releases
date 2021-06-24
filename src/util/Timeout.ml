@@ -1,4 +1,7 @@
 open Batteries
+
+let start_time_of_koat2 = ref 0.
+
 let set_timer tsecs =
   ignore (Unix.setitimer Unix.ITIMER_REAL { Unix.it_interval = 0.0; Unix.it_value = tsecs })
 
