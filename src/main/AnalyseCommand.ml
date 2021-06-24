@@ -84,6 +84,8 @@ type params = {
     time_limit_cfr : int; [@default 180]
     (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
 
+    timeout : float; [@default 0.]
+    (** Makes sure the analysis stops after the specified amount of time. Might result in empty output.*)
     fast : bool [@default false]
     (** Search ranking functions on minimal sccs aka cycles. *)
 
@@ -169,7 +171,7 @@ let run (params: params) =
   |> Readers.read_input ~rename:params.rename params.simple_input
   |> rename_program_option
   |> Option.map (fun program ->
-         ((if (params.cfr) then program |> Normalise.normalise else program) , Approximation.create program)
+         lazy (((if (params.cfr) then program |> Normalise.normalise else program) , Approximation.create program)
          |> Preprocessor.process params.preprocessing_strategy params.preprocessors
          |> tap (fun (program, appr) ->
                 if params.print_system then
@@ -192,7 +194,9 @@ let run (params: params) =
                   GraphPrint.print_rvg ~label:(bounded_rv_to_string program appr) ~outdir:output_dir ~file:input_filename program;
                 )
               )
-       )
-      |> ignore;
+       ))
+    |> Timeout.timed_run params.timeout ~action:(lazy (print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!"))
+    
+    |> ignore;
     if params.log_level == NONE && params.cfr then
       ignore (Sys.command ("rm -f -r ./tmp_" ^ !CFR.uid))
