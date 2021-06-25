@@ -159,7 +159,6 @@ let run (params: params) =
         else
           input |> Fpath.v |> Fpath.parent)
   in
-  let mprf_max_depth = params.depth in
   if params.print_input then (
     let program_str =
       if params.simple_input then
@@ -169,11 +168,15 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
-  input
-  |> Readers.read_input ~rename:params.rename params.simple_input
-  |> rename_program_option
-  |> Option.map (fun program ->
-         lazy (((if (params.cfr) then program |> Normalise.normalise else program) , Approximation.create program)
+  let problem =
+    input
+    |> Readers.read_input ~rename:params.rename params.simple_input
+    |> rename_program_option
+  in
+  Option.bind problem (fun program ->
+      Timeout.timed_run params.timeout
+        ~action:(fun () -> print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n") @@ fun () ->
+         ((if params.cfr then program |> Normalise.normalise else program) , Approximation.create program)
          |> Preprocessor.process params.preprocessing_strategy params.preprocessors
          |> tap (fun (program, appr) ->
                 if params.print_system then
@@ -185,7 +188,7 @@ let run (params: params) =
               )
          |> (fun (program, appr) ->
                    if not params.no_boundsearch then
-                     Bounds.find_bounds ~mprf_max_depth ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast program appr
+                     Bounds.find_bounds ~mprf_max_depth:params.depth ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast program appr
                    else (program, appr))
          |> tap (fun (program, appr) -> params.result program appr)
          |> tap (fun (program, appr) ->
@@ -196,9 +199,7 @@ let run (params: params) =
                   GraphPrint.print_rvg ~label:(bounded_rv_to_string program appr) ~outdir:output_dir ~file:input_filename program;
                 )
               )
-       ))
-    |> Timeout.timed_run params.timeout ~action:(lazy (print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!"))
-    
+       )
     |> ignore;
     if params.log_level == NONE && params.cfr then
       ignore (Sys.command ("rm -f -r ./tmp_" ^ !CFR.uid))
