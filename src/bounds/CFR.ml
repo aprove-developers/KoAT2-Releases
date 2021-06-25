@@ -40,11 +40,6 @@ let set_time_current_cfr (scc: TransitionSet.t) appr =
     delta_current_cfr := 0.;
     time_current_cfr := -1.)
 
-let poll_timeout ?(applied_cfr = true) =
-  if applied_cfr && !time_current_cfr < !delta_current_cfr  && !time_current_cfr > 0. then
-    raise TIMEOUT
-
-
 
 (* SCCs that contain a non-linear transition, its not guaranteed that they are minimal *)
 let nonLinearSCCs (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
@@ -269,7 +264,6 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:IDSet.t) (pr
         |> TransitionSet.to_list
         |> flip Program.from initial_location
         |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.gettimeofday() -. time_current))
-        |> tap (fun _ -> poll_timeout ~applied_cfr:true)
         in
         (processed_program,already_used_cfr)
     in
