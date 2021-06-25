@@ -224,11 +224,12 @@ let apply_cfr ?(cfr = false) (scc: TransitionSet.t) rvg measure program appr =
        (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
         backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions, rvg);
       let opt =
-        CFR.set_time_current_cfr scc appr;
-        CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
-        Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds_apply_cfr", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions); "time", string_of_float !CFR.time_current_cfr]);
-        Timeout.timed_run 10. ~action:(lazy(log_timeout (); (raise TIMEOUT))) (Option.some (lazy (CFR.apply_cfr (!nonLinearTransitions) (!already_used_cfr) program appr)))
-        |> Option.get in
+        let tmp = 
+          CFR.set_time_current_cfr scc appr;
+          CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
+          Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds_apply_cfr", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions); "time", string_of_float !CFR.time_current_cfr]);
+          Timeout.timed_run 10. ~action:(log_timeout) (fun () -> (CFR.apply_cfr (!nonLinearTransitions) (!already_used_cfr) program appr)) in
+        if Option.is_some tmp then Option.get tmp else raise TIMEOUT in
       if Option.is_some opt then (
         let (program_cfr,appr_cfr,already_used_cfr_upd) = Option.get opt in
         already_used_cfr := already_used_cfr_upd;
@@ -267,7 +268,7 @@ let handle_exception () =
   MaybeChanged.changed (program,appr,rvg_org)
 
 let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) ?(currently_cfr = false) measure program appr =
-  let f = lazy (program
+  let f = program
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc ->
@@ -281,10 +282,12 @@ let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast =
                           with TIMEOUT | NOT_IMPROVED ->
                             handle_exception ())
                         else monad)
-                  (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg))) in
+                  (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg)) in
     let opt = 
-      if not currently_cfr then Lazy.force f
-      else try (Timeout.timed_run 10. ~action:(lazy(log_timeout (); (raise TIMEOUT))) (Option.some f) |> Option.get) with TIMEOUT -> handle_exception () in
+      if not currently_cfr then f
+      else 
+        let tmp = Timeout.timed_run 10. ~action:(log_timeout) (fun () -> f) in 
+        if Option.is_some tmp then Option.get tmp else handle_exception () in
     opt
     |> MaybeChanged.if_changed (fun (a,b,c) -> (improve c ~cfr ~mprf_max_depth ~currently_cfr:(not currently_cfr) measure a b))
     |> MaybeChanged.unpack
