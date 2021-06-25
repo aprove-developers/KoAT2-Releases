@@ -207,6 +207,7 @@ let improve_scc rvg ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: T
   |> MaybeChanged.unpack % improve_timebound ~mprf_max_depth ~inv ~fast scc measure program pre_trans_map
   |> step
 
+let log_timeout () = Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions)])
 
 let apply_cfr ?(cfr = false) (scc: TransitionSet.t) rvg measure program appr =
   if Option.is_some !backtrack_point then (
@@ -226,7 +227,8 @@ let apply_cfr ?(cfr = false) (scc: TransitionSet.t) rvg measure program appr =
         CFR.set_time_current_cfr scc appr;
         CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
         Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds_apply_cfr", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions); "time", string_of_float !CFR.time_current_cfr]);
-        CFR.apply_cfr (!nonLinearTransitions) (!already_used_cfr) program appr in
+        Timeout.timed_run 10. ~action:(lazy(log_timeout (); (raise TIMEOUT))) (Option.some (lazy (CFR.apply_cfr (!nonLinearTransitions) (!already_used_cfr) program appr)))
+        |> Option.get in
       if Option.is_some opt then (
         let (program_cfr,appr_cfr,already_used_cfr_upd) = Option.get opt in
         already_used_cfr := already_used_cfr_upd;
@@ -244,7 +246,7 @@ let apply_cfr ?(cfr = false) (scc: TransitionSet.t) rvg measure program appr =
 
 (* https://stackoverflow.com/questions/6749956/how-to-quit-an-iteration-in-ocaml *)
 (** Fold left on a list with function [f] until predicate [p] is satisfied **)
-(** In our case we restart iff a scc is unrolled and start again *)
+(** In our case we restart iff a scc is unrolled *)
 let rec fold_until f p acc = function
     | x :: xs when p acc -> acc
     | x :: xs -> fold_until f p (f acc x) xs
@@ -257,8 +259,15 @@ let compute_pre_transitions_for_transition program scc =
   |> Enum.iter (uncurry @@ TransitionTable.add table) (* somehow find behaves strangely in combination with of_enum *)
   |> const table
 
-let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
-  program
+let handle_exception () = 
+  LocalSizeBound.reset_cfr ();
+  let (program,appr,_,non_linear_transitions,rvg_org) = Option.get !backtrack_point in
+  backtrack_point := None;
+  nonLinearTransitions := TransitionSet.empty;
+  MaybeChanged.changed (program,appr,rvg_org)
+
+let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) ?(currently_cfr = false) measure program appr =
+  let f = lazy (program
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc ->
@@ -270,12 +279,12 @@ let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast =
                             |> improve_scc rvg ~mprf_max_depth ~inv ~fast scc measure program (compute_pre_transitions_for_transition program scc)
                             |> apply_cfr ~cfr scc rvg measure program
                           with TIMEOUT | NOT_IMPROVED ->
-                            LocalSizeBound.reset_cfr ();
-                            let (program,appr,_,non_linear_transitions,rvg_org) = Option.get !backtrack_point in
-                            backtrack_point := None;
-                            nonLinearTransitions := TransitionSet.empty;
-                            MaybeChanged.changed (program,appr,rvg_org))
+                            handle_exception ())
                         else monad)
-                  (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg))
-    |> MaybeChanged.if_changed (fun (a,b,c) -> (improve c ~cfr ~mprf_max_depth measure a b))
+                  (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg))) in
+    let opt = 
+      if not currently_cfr then Lazy.force f
+      else try (Timeout.timed_run 10. ~action:(lazy(log_timeout (); (raise TIMEOUT))) (Option.some f) |> Option.get) with TIMEOUT -> handle_exception () in
+    opt
+    |> MaybeChanged.if_changed (fun (a,b,c) -> (improve c ~cfr ~mprf_max_depth ~currently_cfr:(not currently_cfr) measure a b))
     |> MaybeChanged.unpack
