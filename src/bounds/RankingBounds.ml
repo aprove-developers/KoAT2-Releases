@@ -267,8 +267,8 @@ let handle_exception () =
   nonLinearTransitions := TransitionSet.empty;
   MaybeChanged.changed (program,appr,rvg_org)
 
-let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) ?(currently_cfr = false) measure program appr =
-  let f = program
+let evaluate_program rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
+  program
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc ->
@@ -282,11 +282,13 @@ let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast =
                           with TIMEOUT | NOT_IMPROVED ->
                             handle_exception ())
                         else monad)
-                  (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg)) in
+                  (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg))
+
+let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) ?(currently_cfr = false) measure program appr =
     let opt = 
-      if not currently_cfr then f
+      if not currently_cfr then evaluate_program rvg ~mprf_max_depth ~cfr ~inv ~fast measure program appr
       else 
-        let tmp = Timeout.timed_run 10. ~action:(log_timeout) (fun () -> f) in 
+        let tmp = Timeout.timed_run 10. ~action:(log_timeout) (fun () -> evaluate_program rvg ~mprf_max_depth ~inv ~fast  measure program appr) in 
         if Option.is_some tmp then Option.get tmp else handle_exception () in
     opt
     |> MaybeChanged.if_changed (fun (a,b,c) -> (improve c ~cfr ~mprf_max_depth ~currently_cfr:(not currently_cfr) measure a b))
