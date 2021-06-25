@@ -160,9 +160,9 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) (scc: TransitionSet
   in
   let rankfunc_computation =
     if fast then
-      fun depth -> MultiphaseRankingFunction.find_scc_fast ~inv:inv measure (Option.is_some !backtrack_point) program scc depth
+      fun depth -> MultiphaseRankingFunction.find_scc_fast ~inv:inv measure program scc depth
     else
-      fun depth -> MultiphaseRankingFunction.find_scc ~inv:inv measure (Option.is_some !backtrack_point) program pre_trans_map
+      fun depth -> MultiphaseRankingFunction.find_scc ~inv:inv measure program pre_trans_map
         is_time_bounded get_unbounded_vars unbounded_transitions scc depth
   in
   (* Compute ranking functions up to the minimum depth such that at least one ranking functino is found
