@@ -197,7 +197,7 @@ let improve_scc rvg ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: T
   let rec step appr =
     appr
     |> knowledge_propagation scc measure program pre_trans_map
-    |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
+    |> SizeBounds.improve program rvg ~scc:(Option.some scc)
     |> improve_timebound ~mprf_max_depth ~inv ~fast scc measure program pre_trans_map
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
@@ -276,7 +276,7 @@ let evaluate_program rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(f
                           try
                             appr
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
-                            |> SizeBounds.improve program rvg ~scc:(Option.some scc) (Option.is_some !backtrack_point)
+                            |> SizeBounds.improve program rvg ~scc:(Option.some scc)
                             |> improve_scc rvg ~mprf_max_depth ~inv ~fast scc measure program (compute_pre_transitions_for_transition program scc)
                             |> apply_cfr ~cfr scc rvg measure program
                           with TIMEOUT | NOT_IMPROVED ->
