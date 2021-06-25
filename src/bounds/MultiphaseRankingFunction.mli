@@ -29,9 +29,9 @@ val depth : t -> int
 
 (** Tries to find a suitable multiphase ranking function for the given transitions T'.
  * The int corresponds to the maximum depth of the mprf *)
-val find : ?inv:bool -> measure -> bool -> Program.t -> int -> t Enum.t
+val find : ?inv:bool -> measure -> Program.t -> int -> t Enum.t
 
-val find_scc : ?inv:bool -> measure -> bool ->  Program.t ->
+val find_scc : ?inv:bool -> measure ->  Program.t ->
   TransitionSet.t TransitionTable.t -> (* Map of transitions to the corresponding pre transitions *)
   (Transition.t -> bool) ->  (* Is the transition time-bounded? *)
   (Transition.t -> VarSet.t) -> (* Unbounded vars for the transition *)
@@ -40,9 +40,9 @@ val find_scc : ?inv:bool -> measure -> bool ->  Program.t ->
   int -> (* depth of the ranking function *)
   t Enum.t
 
-val find_fast : ?inv:bool ->  measure -> bool -> Program.t -> int -> t Enum.t
+val find_fast : ?inv:bool ->  measure -> Program.t -> int -> t Enum.t
 
-val find_scc_fast : ?inv:bool -> measure -> bool -> Program.t -> ProgramTypes.TransitionSet.t -> int -> t Enum.t
+val find_scc_fast : ?inv:bool -> measure -> Program.t -> ProgramTypes.TransitionSet.t -> int -> t Enum.t
 
 (** Converts a multiphase ranking function into a string*)
 val to_string : t -> string
