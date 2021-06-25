@@ -13,18 +13,11 @@ let improve_scc program rvg appr = function
      let new_bound = NontrivialSizeBounds.compute program rvg (Approximation.timebound appr) (Approximation.sizebound appr) scc in
      Approximation.add_sizebounds new_bound scc appr
 
-let improve program rvg ?(scc = None) applied_cfr appr =
+let improve program rvg ?(scc = None) appr =
   let execute () =
     let module C = Graph.Components.Make(RVG) in
 
-    List.fold_left (fun appr rvg_scc ->
-       let current_time = Unix.gettimeofday() in
-       improve_scc program rvg appr rvg_scc
-       |> tap (fun _ ->
-         if applied_cfr then (
-           CFR.delta_current_cfr := !CFR.delta_current_cfr +. (Unix.gettimeofday() -. current_time);
-           CFR.poll_timeout ~applied_cfr:applied_cfr))
-     ) appr (
+    List.fold_left (fun appr rvg_scc -> improve_scc program rvg appr rvg_scc) appr (
       if not (Option.is_some scc) then
         (List.rev (C.scc_list rvg))
       else (
