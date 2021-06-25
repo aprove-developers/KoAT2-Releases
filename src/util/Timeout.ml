@@ -7,21 +7,17 @@ let set_timer tsecs =
 
 exception Timeout
 
-let timed_run tsecs ?(action=lazy ()) command =
-    match command with
-    | None -> None
-    | Some call -> 
-        let oldsig = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> raise Timeout)) in
-            try
-            set_timer tsecs;
-            let res = (Lazy.force call) in
-                set_timer 0.0;
-                Sys.set_signal Sys.sigalrm oldsig;
-                (Some res)
-            with
-            | Timeout ->
-                (
-                Sys.set_signal Sys.sigalrm oldsig;
-                (Lazy.force action);
-                None
-                ) 
+let timed_run tsecs ?(action=const ()) command =
+  let oldsig = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> raise Timeout)) in
+  try
+    set_timer tsecs;
+    let res = command () in
+    set_timer 0.0;
+    Sys.set_signal Sys.sigalrm oldsig;
+    Some res
+  with Timeout ->
+      (
+      Sys.set_signal Sys.sigalrm oldsig;
+      action ();
+      None
+      )
