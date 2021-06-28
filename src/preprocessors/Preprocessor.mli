@@ -11,8 +11,8 @@ type subject = Program.t * Approximation.t
 type t =
   | CutUnreachableLocations  (** Removes all unreachable locations. *)
   | CutUnsatisfiableTransitions  (** Removes all unsatisfiable transitions. *)
-  | Chaining (** Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location, making the location obsolete. *)
   | EliminateNonContributors
+  | Chaining (** Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location, making the location obsolete. *)
   | InvariantGeneration  [@@deriving ord, eq] (** Adds invariants to transitions. *)
 
 (** Returns a string representing type of preprocessor. *)

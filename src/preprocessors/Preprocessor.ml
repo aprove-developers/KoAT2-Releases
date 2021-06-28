@@ -7,8 +7,8 @@ type subject = Program.t * Approximation.t
 type t =
   | CutUnreachableLocations
   | CutUnsatisfiableTransitions
-  | Chaining
   | EliminateNonContributors
+  | Chaining
   | InvariantGeneration[@@deriving ord, eq]
 
 let show = function
@@ -68,7 +68,7 @@ let rec process_til_fixpoint_ ?(wanted=PreprocessorSet.of_list all) (todos: Prep
   if PreprocessorSet.is_empty todos then
     subject
   else
-    let (preprocessor, others) = PreprocessorSet.pop todos in
+    let (preprocessor, others) = PreprocessorSet.pop_min todos in
     let maybe_changed = transform subject preprocessor in
     let new_preprocessor_set =
       if MaybeChanged.has_changed maybe_changed then
