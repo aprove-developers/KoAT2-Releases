@@ -13,9 +13,6 @@ let logger_cfr = Logging.(get CFR)
 
 let backtrack_point = ref None
 
-(* Collect all non-linear bounds *)
-let nonLinearTransitions = ref TransitionSet.empty
-
 (** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
 let already_used_cfr = ref TransitionSet.empty
 
@@ -75,10 +72,6 @@ let compute_bound_mprf (appr: Approximation.t) (pre_trans_map: TransitionSet.t T
    |> Bound.sum
  in
     let bound = execute () in
-    if not (Bound.is_linear bound) && not (TransitionSet.mem (MultiphaseRankingFunction.decreasing rank) !already_used_cfr) then
-      nonLinearTransitions := TransitionSet.add (MultiphaseRankingFunction.decreasing rank) !nonLinearTransitions
-    else
-      nonLinearTransitions := TransitionSet.remove (MultiphaseRankingFunction.decreasing rank) !nonLinearTransitions;
     Logger.with_log logger Logger.DEBUG
       (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
                                    "non_increasing", Util.enum_to_string Transition.to_id_string (TransitionSet.enum (MultiphaseRankingFunction.non_increasing rank));
@@ -174,14 +167,6 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) (scc: TransitionSet
     |> Enum.peek % Enum.filter (not % Enum.is_empty)
     |? Enum.empty ()
   in
-  let unranked_and_unbounded =
-    TransitionSet.diff unbounded_transitions
-      (TransitionSet.of_enum @@ Enum.map MultiphaseRankingFunction.decreasing @@ Enum.clone rankfuncs)
-  in
-  nonLinearTransitions :=
-    TransitionSet.union
-      (TransitionSet.filter (fun t -> not (TransitionSet.mem t !already_used_cfr)) unranked_and_unbounded)
-      !nonLinearTransitions;
   rankfuncs
   |> MaybeChanged.fold_enum (fun appr -> improve_with_rank_mprf measure pre_trans_map appr) appr
 
@@ -207,11 +192,12 @@ let improve_scc rvg ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: T
   |> MaybeChanged.unpack % improve_timebound ~mprf_max_depth ~inv ~fast scc measure program pre_trans_map
   |> step
 
-let log_timeout () = Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions)])
+let log_timeout_cfr non_linear_transitions =
+  Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["non-linear trans", (TransitionSet.to_string non_linear_transitions)])
 
 let apply_cfr ?(cfr = false) (scc: TransitionSet.t) rvg measure program appr =
   if Option.is_some !backtrack_point then (
-    let (_,_,org_bound,_,_) = Option.get !backtrack_point in
+    let (_,_,org_bound,_) = Option.get !backtrack_point in
     let cfr_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
     if (Bound.compare_asy org_bound cfr_bound) < 1 then (
       Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED", ["original bound", (Bound.to_string org_bound); "cfr bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
@@ -219,28 +205,28 @@ let apply_cfr ?(cfr = false) (scc: TransitionSet.t) rvg measure program appr =
     );
     backtrack_point := None;
   );
-  (* let non_linear_transitions =
-    Program.transitions program
-    |> TransitionSet.filter (Bound.is_linear % Approximation.timebound appr)
+  let non_linear_transitions =
+    TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) scc
     |> flip TransitionSet.diff !already_used_cfr
-  in *)
-  if cfr && not (TransitionSet.is_empty !nonLinearTransitions)  then
+  in
+  if cfr && not (TransitionSet.is_empty non_linear_transitions)  then
       let org_bound = Bound.sum
        (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
-        backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions, rvg);
+        backtrack_point := Option.some (program,appr,org_bound, rvg);
       let opt =
         let tmp =
           CFR.set_time_current_cfr scc appr;
           CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
-          Logger.log logger_cfr Logger.INFO (fun () -> "RankingBounds_apply_cfr", ["non-linear trans", (TransitionSet.to_string !nonLinearTransitions); "time", string_of_float !CFR.time_current_cfr]);
-          Timeout.timed_run 10. ~action:(log_timeout) (fun () -> (CFR.apply_cfr (!nonLinearTransitions) (!already_used_cfr) program appr)) in
+          Logger.log logger_cfr Logger.INFO
+            (fun () -> "RankingBounds_apply_cfr", [ "non-linear trans", TransitionSet.to_string non_linear_transitions
+                                                  ; "time", string_of_float !CFR.time_current_cfr]);
+          Timeout.timed_run 10. ~action:(fun () -> log_timeout_cfr non_linear_transitions) (fun () -> (CFR.apply_cfr non_linear_transitions !already_used_cfr program appr)) in
         if Option.is_some tmp then Option.get tmp else raise TIMEOUT in
       if Option.is_some opt then (
         let (program_cfr,appr_cfr,already_used_cfr_upd) = Option.get opt in
         already_used_cfr := already_used_cfr_upd;
         Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
-        backtrack_point := Option.some (program,appr,org_bound,!nonLinearTransitions, rvg);
-        nonLinearTransitions := TransitionSet.empty;
+        backtrack_point := Option.some (program,appr,org_bound,rvg);
         let rvg_cfr = RVGTypes.RVG.rvg program_cfr in
         LocalSizeBound.switch_cache();
         LocalSizeBound.enable_cfr();
@@ -267,9 +253,8 @@ let compute_pre_transitions_for_transition program scc =
 
 let handle_exception () =
   LocalSizeBound.reset_cfr ();
-  let (program,appr,_,non_linear_transitions,rvg_org) = Option.get !backtrack_point in
+  let (program,appr,_,rvg_org) = Option.get !backtrack_point in
   backtrack_point := None;
-  nonLinearTransitions := TransitionSet.empty;
   MaybeChanged.changed (program,appr,rvg_org)
 
 let evaluate_program rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
@@ -293,7 +278,9 @@ let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast =
     let opt =
       if not currently_cfr then evaluate_program rvg ~mprf_max_depth ~cfr ~inv ~fast measure program appr
       else
-        let tmp = Timeout.timed_run 10. ~action:(log_timeout) (fun () -> evaluate_program rvg ~mprf_max_depth ~inv ~fast  measure program appr) in
+        let tmp = Timeout.timed_run 10.
+          ~action:(fun () -> Logger.log logger Logger.INFO (fun () -> "TIMEOUT_EVALUATE_PROGRAM", []))
+          (fun () -> evaluate_program rvg ~mprf_max_depth ~inv ~fast  measure program appr) in
         if Option.is_some tmp then Option.get tmp else handle_exception () in
     opt
     |> MaybeChanged.if_changed (fun (a,b,c) -> (improve c ~cfr ~mprf_max_depth ~currently_cfr:(not currently_cfr) measure a b))
