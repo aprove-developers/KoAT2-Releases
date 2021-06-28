@@ -262,6 +262,7 @@ let evaluate_program rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(f
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc ->
+                        let (program,appr,rvg) = MaybeChanged.unpack monad in
                         if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then (
                           try
                             appr
