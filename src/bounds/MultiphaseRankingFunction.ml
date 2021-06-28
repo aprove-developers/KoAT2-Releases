@@ -155,7 +155,8 @@ let only_rank_to_string {rank; decreasing; non_increasing; depth} =
 let to_string {rank; decreasing; non_increasing; depth} =
   "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; depth} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
-let fresh_coeffs: Var.t list ref = ref []
+(* We do not minimise the coefficients for now *)
+(* let fresh_coeffs: Var.t list ref = ref [] *)
 
 let compute_ranking_templates_ (depth: int) (vars: VarSet.t) (locations: Location.t list) ranking_template_ template_table_ to_string: unit =
   let execute (i:int) =
@@ -167,32 +168,11 @@ let compute_ranking_templates_ (depth: int) (vars: VarSet.t) (locations: Locatio
     let templates = List.map ins_loc_prf locations in
     templates
     |> List.iter (fun (location,polynomial,_) -> TemplateTable.add (Array.get template_table_ i) location polynomial);
-    templates
+    (*
+     * if store_coeffs then templates
     |> List.map (fun (_,_,fresh_vars) -> fresh_vars)
     |> List.flatten
-    |> (fun fresh_vars -> fresh_coeffs := fresh_vars)
-  in
-  for i = 0 to depth - 1 do
-    Logger.with_log logger Logger.DEBUG
-      (fun () -> "compute_mprf_templates_" ^ string_of_int i, [])
-      ~result:(fun () ->
-          (Array.get template_table_ i)
-          |> TemplateTable.enum
-          |> Util.enum_to_string (fun (location, polynomial) -> Location.to_string location ^ ": " ^ to_string polynomial)
-        )
-      (fun () -> execute i);
-  done
-
-(* We do not set fresh_coeffs as we do not minimize *)
-(* TODO Merge with compute_ranking_tempaltes_ *)
-let compute_ranking_templates_real (depth: int) (vars: VarSet.t) (locations: Location.t list) ranking_template_ template_table_ to_string: unit =
-  let execute (i:int) =
-    (* Each location needs its own ranking template with different fresh variables *)
-    let ins_loc_prf loc = ranking_template_ loc vars in
-
-    locations
-    |> List.iter
-        (fun loc -> let (polynomial,_) = ins_loc_prf loc in TemplateTable.add (Array.get template_table_ i) loc polynomial);
+    |> (fun fresh_vars -> fresh_coeffs := fresh_vars) *)
   in
   for i = 0 to depth - 1 do
     Logger.with_log logger Logger.DEBUG
@@ -206,10 +186,10 @@ let compute_ranking_templates_real (depth: int) (vars: VarSet.t) (locations: Loc
   done
 
 let compute_ranking_templates cache (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
-  compute_ranking_templates_ depth vars locations (ranking_template cache) (cache.template_table) ParameterPolynomial.to_string
+  compute_ranking_templates_ depth vars locations (ranking_template cache) cache.template_table ParameterPolynomial.to_string
 
 let compute_ranking_templates_real cache (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
-  compute_ranking_templates_real depth vars locations (ranking_template_real cache) (cache.template_table_real) RealParameterPolynomial.to_string
+  compute_ranking_templates_ depth vars locations (ranking_template_real cache) cache.template_table_real RealParameterPolynomial.to_string
 
 (* Methods define properties of mprf *)
 
