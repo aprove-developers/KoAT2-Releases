@@ -195,7 +195,7 @@ let improve_scc rvg ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: T
 let log_timeout_cfr non_linear_transitions =
   Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["non-linear trans", (TransitionSet.to_string non_linear_transitions)])
 
-let apply_cfr ?(cfr = false) (scc: TransitionSet.t) rvg measure program appr =
+let apply_cfr (scc: TransitionSet.t) rvg measure program appr =
   if Option.is_some !backtrack_point then (
     let (_,_,org_bound,_) = Option.get !backtrack_point in
     let cfr_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
@@ -209,7 +209,7 @@ let apply_cfr ?(cfr = false) (scc: TransitionSet.t) rvg measure program appr =
     TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) scc
     |> flip TransitionSet.diff !already_used_cfr
   in
-  if cfr && not (TransitionSet.is_empty non_linear_transitions)  then
+  if not (TransitionSet.is_empty non_linear_transitions)  then
       let org_bound = Bound.sum
        (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
         backtrack_point := Option.some (program,appr,org_bound, rvg);
@@ -262,17 +262,18 @@ let evaluate_program rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(f
     |> Program.sccs
     |> List.of_enum
     |> fold_until (fun monad scc ->
-                        if (TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc) then (
+                        if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then (
                           try
                             appr
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc)
                             |> improve_scc rvg ~mprf_max_depth ~inv ~fast scc measure program (compute_pre_transitions_for_transition program scc)
-                            |> apply_cfr ~cfr scc rvg measure program
+                            (* Apply CFR if requested *)
+                            |> fun appr -> if cfr then apply_cfr scc rvg measure program appr else MaybeChanged.same (program,appr,rvg)
                           with TIMEOUT | NOT_IMPROVED ->
                             handle_exception ())
                         else monad)
-                  (fun monad -> MaybeChanged.has_changed monad) (MaybeChanged.same (program,appr,rvg))
+                  MaybeChanged.has_changed (MaybeChanged.same (program,appr,rvg))
 
 let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) ?(currently_cfr = false) measure program appr =
     let opt =
