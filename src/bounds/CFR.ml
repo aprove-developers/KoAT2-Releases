@@ -68,7 +68,7 @@ let applyDijkstra (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
                     |> (nonLinearSCCs nonLinearTransitions) in
                     Logger.log logger Logger.INFO
                                 (fun () -> "applyDijkstra", ["non-linear sccs: " ^ (Enum.fold (fun str1 str2 -> str1 ^ "\n" ^str2) "" (Enum.map (TransitionSet.to_string) (Enum.clone allNonLinearSCCs))), ""]);
-  
+
   let graphs = allNonLinearSCCs
                 |> List.of_enum
                 |> getTransitionGraph in
@@ -208,7 +208,7 @@ let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
                                       |> Approximation.add_timebound timebound trans
                                       |> Approximation.add_costbound costbound trans) unchangend_trans
 
-let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:IDSet.t) (program: Program.t) appr =
+let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSet.t) (program: Program.t) appr =
   delta_current_cfr := 0.;
   let initial_location = Program.start program
   and minimalDisjointSCCs = program
@@ -218,7 +218,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:IDSet.t) (pr
   if SCCSet.is_empty minimalDisjointSCCs then
     None
   else (
-    let f_iteration = 
+    let f_iteration =
       fun scc (merged_program,already_used_trans) ->
       (fun sccs ->
       Logger.log logger Logger.INFO
@@ -226,10 +226,10 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:IDSet.t) (pr
       let unit_cost = TransitionSet.for_all (fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
       (*if there are costs which are not one then we cannot apply irankfinder *)
       if not (unit_cost scc) then
-         (merged_program, IDSet.union already_used_trans (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum scc))))
+         (merged_program, TransitionSet.union already_used_trans scc)
       else
         let time_current = Unix.gettimeofday()
-        and scc_list = 
+        and scc_list =
           TransitionSet.to_list scc
           in
         let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
@@ -250,9 +250,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:IDSet.t) (pr
 
         (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
         let
-        already_used_cfr = IDSet.union
-          (IDSet.union already_used_trans (IDSet.of_enum (Enum.map (fun trans -> Transition.id trans) (TransitionSet.enum transitions_cfr))))
-          (IDSet.of_enum (Enum.map (fun t -> Transition.id t) (TransitionSet.enum scc)))
+        already_used_cfr = TransitionSet.union (TransitionSet.union already_used_trans transitions_cfr) scc
         and
         (** Merges irankfinder and original program. *)
         processed_program =
@@ -268,7 +266,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:IDSet.t) (pr
         (processed_program,already_used_cfr)
     in
     let (program_res,already_used_cfr_res) =
-    (program,IDSet.empty)
+    (program,TransitionSet.empty)
     |> SCCSet.fold (f_iteration ) minimalDisjointSCCs
       (* |> Program.rename *)
       in

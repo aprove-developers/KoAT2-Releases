@@ -165,11 +165,3 @@ module TransitionGraphWeight(Value : PolyTypes.Ring) =
     let add x y = Value.add x y
     let zero = Value.zero
   end
-
-module IDSet =
-  struct
-    include Set.Make(Batteries.Int)
-
-    let to_string =
-      Util.enum_to_string string_of_int % enum
-  end
