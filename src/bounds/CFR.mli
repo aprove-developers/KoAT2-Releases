@@ -1,3 +1,4 @@
+open ProgramTypes
 (** Provides control flow refinement on minimal SCCs containing non-linear transitions. *)
 
 (** Logger CFR *)
@@ -18,4 +19,4 @@ exception TIMEOUT
 val uid : string Batteries.ref
 
 (** Unrolls all transitions listed in nonLinearTransitions.starrt  *)
-val apply_cfr :  ProgramTypes.TransitionSet.t -> ProgramTypes.IDSet.t -> Program.t -> Approximation.t -> (Program.t * Approximation.t * ProgramTypes.IDSet.t) option
+val apply_cfr :  ProgramTypes.TransitionSet.t -> TransitionSet.t -> Program.t -> Approximation.t -> (Program.t * Approximation.t * TransitionSet.t) option
