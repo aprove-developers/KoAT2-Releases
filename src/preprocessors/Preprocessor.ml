@@ -91,10 +91,7 @@ let rec process_til_fixpoint_ ?(wanted=PreprocessorSet.of_list all) (todos: Prep
 
 let process_til_fixpoint preprocessors subject =
   let set = PreprocessorSet.of_list preprocessors in
-  if PreprocessorSet.mem EliminateNonContributors set then
-    process_til_fixpoint_ ~wanted:set set (process process_only_once [EliminateNonContributors] subject)
-  else
-    process_til_fixpoint_ ~wanted:set set subject
+  process_til_fixpoint_ ~wanted:set set subject
 
 let all_strategies = [process_only_once; process_til_fixpoint]
 
