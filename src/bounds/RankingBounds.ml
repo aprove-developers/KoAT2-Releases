@@ -6,6 +6,7 @@ open Constraints
 open ProgramTypes
 open Formulas
 open CFR
+open RVGTypes
 
 let logger = Logging.(get Time)
 
@@ -15,6 +16,7 @@ let logger_cfr = Logging.(get CFR)
 let already_used_cfr = ref TransitionSet.empty
 
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
+type rvg_with_sccs = RVG.t * RVG.scc list Lazy.t
 
 exception NOT_IMPROVED
 
@@ -176,11 +178,11 @@ let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc:
           (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
            execute)
 
-let improve_scc rvg ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program pre_trans_map appr =
+let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program pre_trans_map appr =
   let rec step appr =
     appr
     |> knowledge_propagation scc measure program pre_trans_map
-    |> SizeBounds.improve program rvg ~scc:(Option.some scc)
+    |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
     |> improve_timebound ~mprf_max_depth ~inv ~fast scc measure program pre_trans_map
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
@@ -197,12 +199,12 @@ let compute_pre_transitions_for_transition program scc =
   |> Enum.iter (uncurry @@ TransitionTable.add table) (* somehow find behaves strangely in combination with of_enum *)
   |> const table
 
-let apply_cfr (scc: TransitionSet.t) rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
+let apply_cfr (scc: TransitionSet.t) rvg_with_sccs ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
   let non_linear_transitions =
     TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) scc
     |> flip TransitionSet.diff !already_used_cfr
   in
-  if not (TransitionSet.is_empty non_linear_transitions)  then 
+  if not (TransitionSet.is_empty non_linear_transitions)  then
       let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
       let opt =
           CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
@@ -214,7 +216,7 @@ let apply_cfr (scc: TransitionSet.t) rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
         already_used_cfr := already_used_cfr_upd;
         Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
-        let rvg_cfr = RVGTypes.RVG.rvg program_cfr in
+        let rvg_with_sccs_cfr = RVGTypes.RVG.rvg_with_sccs program_cfr in
         LocalSizeBound.switch_cache();
         LocalSizeBound.enable_cfr();
         (* The new sccs which do not occur in the original program. *)
@@ -224,30 +226,30 @@ let apply_cfr (scc: TransitionSet.t) rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(
           |> List.filter (fun cfr_scc -> not (Enum.exists (fun scc_ -> TransitionSet.equal cfr_scc scc_) (Program.sccs program))) in
         let updated_appr_cfr =
           cfr_sccs
-          |> List.fold (fun appr scc ->
-                    if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then 
+          |> List.fold_left (fun appr scc ->
+                    if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                         appr
                         |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "cfr analysis", ["scc", TransitionSet.to_id_string scc]))
-                        |> SizeBounds.improve program_cfr rvg_cfr ~scc:(Option.some scc)
-                        |> improve_scc rvg_cfr ~mprf_max_depth ~inv ~fast scc measure program_cfr (compute_pre_transitions_for_transition program_cfr scc)                    
+                        |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
+                        |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~inv ~fast scc measure program_cfr (compute_pre_transitions_for_transition program_cfr scc)
                     else appr)
               appr_cfr in
-        let cfr_bound = Bound.sum (Enum.map 
+        let cfr_bound = Bound.sum (Enum.map
                                   (fun scc -> Bound.sum (Enum.map (fun t -> Approximation.timebound updated_appr_cfr t) (TransitionSet.enum scc)))
                                   (List.enum cfr_sccs))  in
         if (Bound.compare_asy org_bound cfr_bound) < 1 then (
           LocalSizeBound.reset_cfr();
-          Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED", 
+          Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED",
           ["original bound", (Bound.to_string org_bound); "cfr bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
-          (program, appr, rvg)
+          (program, appr, rvg_with_sccs)
         )
         else (
           LocalSizeBound.switch_cache();
-          (program_cfr, updated_appr_cfr, rvg_cfr)))
+          (program_cfr, updated_appr_cfr, rvg_with_sccs_cfr)))
       else
-      (program, appr, rvg)
+      (program, appr, rvg_with_sccs)
   else
-    (program, appr, rvg)
+    (program, appr, rvg_with_sccs)
 
 let handle_timeout_cfr non_linear_transitions =
   LocalSizeBound.reset_cfr ();
@@ -257,16 +259,16 @@ let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = fal
   program
     |> Program.sccs
     |> List.of_enum
-    |> List.fold (fun (program, appr, rvg) scc ->
-                        if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then 
+    |> List.fold_left (fun (program, appr, rvg) scc ->
+                        if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                             appr
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc)
                             |> improve_scc rvg ~mprf_max_depth ~inv ~fast scc measure program (compute_pre_transitions_for_transition program scc)
                             (* Apply CFR if requested *)
-                            |> fun appr -> 
+                            |> fun appr ->
                               if cfr then (
-                                Timeout.timed_run 10. ~action:(fun () -> handle_timeout_cfr scc) 
+                                Timeout.timed_run 10. ~action:(fun () -> handle_timeout_cfr scc)
                                 (fun () -> apply_cfr scc rvg ~mprf_max_depth ~inv ~fast measure program appr))
                                 |? (program, appr, rvg)
                               else (program, appr, rvg)
