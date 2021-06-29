@@ -41,11 +41,13 @@ module RV =
 
 module RVG =
   struct
-    include Graph.Persistent.Digraph.ConcreteBidirectional(struct
+    module G = Graph.Persistent.Digraph.ConcreteBidirectional(struct
                 include RV
                 let equal = same
                 let compare = compare_same
               end)
+    module C = Graph.Components.Make(G)
+    include G
 
     type scc = RV.t list
 
@@ -83,5 +85,9 @@ module RVG =
         |> Enum.fold (fun rvg (pre_transition,pre_var,post_var) -> add_edge rvg (pre_transition,pre_var) (post_transition,post_var)) rvg_with_vertices
       in
       TransitionGraph.fold_edges_e add_transition (Program.graph program) empty
+
+    let rvg_with_sccs program =
+      let rvg = rvg program in
+      rvg, Lazy.from_fun (fun () -> C.scc_list rvg)
 
   end

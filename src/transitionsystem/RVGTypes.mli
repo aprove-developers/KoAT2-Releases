@@ -51,7 +51,12 @@ sig
   (** Returns the predecessors of a result variable in the result variable graph. *)
   val pre : t -> RV.t -> RV.t Enum.t
 
-  (** TODO doc *)
+  type scc = RV.t list
+
+  (** Compute the result variable graph *)
   val rvg : Program.t -> t
+
+  (** Compute the result variable graph and lazily compute the list of all SCCs *)
+  val rvg_with_sccs : Program.t -> t * scc list Lazy.t
 
 end

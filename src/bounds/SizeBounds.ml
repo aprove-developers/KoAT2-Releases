@@ -13,18 +13,19 @@ let improve_scc program rvg appr = function
      let new_bound = NontrivialSizeBounds.compute program rvg (Approximation.timebound appr) (Approximation.sizebound appr) scc in
      Approximation.add_sizebounds new_bound scc appr
 
-let improve program rvg ?(scc = None) appr =
+let improve program (rvg, rvg_sccs) ?(scc = None) appr =
   let execute () =
-    let module C = Graph.Components.Make(RVG) in
+    let considered_sccs =
+      match scc with
+        | None -> List.rev (Lazy.force rvg_sccs)
+        | Some scc ->
+            Lazy.force rvg_sccs
+            |> List.filter (fun rvg_scc -> List.exists (fun (t,_) -> TransitionSet.mem t scc) rvg_scc || List.length rvg_scc == 1)
+            |> List.rev
+    in
 
-    List.fold_left (fun appr rvg_scc -> improve_scc program rvg appr rvg_scc) appr (
-      if not (Option.is_some scc) then
-        (List.rev (C.scc_list rvg))
-      else (
-      List.rev (List.filter (fun rvg_scc -> (List.exists (fun (t,x) -> TransitionSet.mem t (Option.get scc)) rvg_scc)
-                                            || ((List.length rvg_scc) == 1)) (C.scc_list rvg))
-      )
-    )
+    List.fold_left (improve_scc program rvg) appr considered_sccs
+
   in Logger.with_log logger Logger.INFO
                   (fun () -> "improve_size_bounds", [])
                   execute
