@@ -151,9 +151,9 @@ let update_to_string update =
     |> fun (xs,ys) -> "("^(String.concat "," xs)^") -> ("^(String.concat "," ys)^")"
 
 let cost_to_string ?(to_file = false) label =
-  if 
-    Polynomial.is_one label.cost then "" 
-  else 
+  if
+    Polynomial.is_one label.cost then ""
+  else
     "{"^(Polynomial.to_string label.cost)^"}"
 
 
@@ -241,6 +241,7 @@ let rename_temp_vars t temp_vars =
     guard = Guard.rename t.guard rename_map;
     cost = Polynomial.rename rename_map t.cost;
   }
+  |> tap (fun _ -> Hashtbl.clear vars_memoization)
 
 
 let rename standard_vars t =
