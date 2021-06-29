@@ -53,9 +53,22 @@ let all =
 
 type strategy = t list -> subject -> subject
 
+let normalise_temp_vars (program, appr) =
+  let temp_vars = LazyList.from (Var.fresh_id Var.Int) in
+  let normalised =
+    Program.map_graph (fun graph ->
+      let trans = ProgramTypes.TransitionGraph.transitions graph in
+      ProgramTypes.TransitionSet.fold
+        (fun (l,t,l') -> ProgramTypes.TransitionGraph.replace_edge_e (l,t,l') (l,TransitionLabel.rename_temp_vars t temp_vars,l'))
+        trans graph
+    ) program
+  in
+  normalised, appr
+
 let process strategy preprocessors subject =
   let execute () =
     strategy preprocessors subject
+    |> normalise_temp_vars
   in
   Logger.(with_log logger INFO
             (fun () -> "running_preprocessors", ["preprocessors", Util.enum_to_string show (List.enum preprocessors)])
