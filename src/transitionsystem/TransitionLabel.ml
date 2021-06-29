@@ -128,7 +128,8 @@ let vars_ {update; guard; cost; _} =
   |> (VarSet.union % Polynomial.vars) cost
 
 (* TODO May invalidate through invariant generation! *)
-let vars = Util.memoize ~extractor:id vars_
+let vars_memoization: (int,VarSet.t) Hashtbl.t = Hashtbl.create 10
+let vars = Util.memoize_v2 vars_memoization ~extractor:id vars_
 
 let vars_update t = (VarSet.of_enum % VarMap.keys) t.update
 
@@ -226,6 +227,20 @@ let rename_update update rename_map =
   |> VarMap.enum
   |> Enum.map (fun (key, value) -> (RenameMap.find key rename_map ~default:key), Polynomial.rename rename_map value)
   |> VarMap.of_enum
+
+
+let rename_temp_vars t temp_vars =
+  let temp_vars_of_label = VarSet.diff (vars t) (input_vars t) in
+  let rename_map =
+    List.mapi (fun i v -> v, LazyList.at temp_vars i) @@ VarSet.to_list temp_vars_of_label
+    |> RenameMap.from
+  in
+  {
+    id = t.id;
+    update = rename_update t.update rename_map;
+    guard = Guard.rename t.guard rename_map;
+    cost = Polynomial.rename rename_map t.cost;
+  }
 
 
 let rename standard_vars t =
