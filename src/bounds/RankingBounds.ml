@@ -11,8 +11,6 @@ let logger = Logging.(get Time)
 
 let logger_cfr = Logging.(get CFR)
 
-let backtrack_point = ref None
-
 (** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
 let already_used_cfr = ref TransitionSet.empty
 
@@ -192,58 +190,6 @@ let improve_scc rvg ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: T
   |> MaybeChanged.unpack % improve_timebound ~mprf_max_depth ~inv ~fast scc measure program pre_trans_map
   |> step
 
-let log_timeout_cfr non_linear_transitions =
-  Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["non-linear trans", (TransitionSet.to_string non_linear_transitions)])
-
-let apply_cfr (scc: TransitionSet.t) rvg measure program appr =
-  if Option.is_some !backtrack_point then (
-    let (_,_,org_bound,_) = Option.get !backtrack_point in
-    let cfr_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
-    if (Bound.compare_asy org_bound cfr_bound) < 1 then (
-      Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED", ["original bound", (Bound.to_string org_bound); "cfr bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
-      raise NOT_IMPROVED
-    );
-    backtrack_point := None;
-  );
-  let non_linear_transitions =
-    TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) scc
-    |> flip TransitionSet.diff !already_used_cfr
-  in
-  if not (TransitionSet.is_empty non_linear_transitions)  then
-      let org_bound = Bound.sum
-       (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
-        backtrack_point := Option.some (program,appr,org_bound, rvg);
-      let opt =
-        let tmp =
-          CFR.set_time_current_cfr scc appr;
-          CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
-          Logger.log logger_cfr Logger.INFO
-            (fun () -> "RankingBounds_apply_cfr", [ "non-linear trans", TransitionSet.to_string non_linear_transitions
-                                                  ; "time", string_of_float !CFR.time_current_cfr]);
-          Timeout.timed_run 10. ~action:(fun () -> log_timeout_cfr non_linear_transitions) (fun () -> (CFR.apply_cfr non_linear_transitions !already_used_cfr program appr)) in
-        if Option.is_some tmp then Option.get tmp else raise TIMEOUT in
-      if Option.is_some opt then (
-        let (program_cfr,appr_cfr,already_used_cfr_upd) = Option.get opt in
-        already_used_cfr := already_used_cfr_upd;
-        Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
-        backtrack_point := Option.some (program,appr,org_bound,rvg);
-        let rvg_cfr = RVGTypes.RVG.rvg program_cfr in
-        LocalSizeBound.switch_cache();
-        LocalSizeBound.enable_cfr();
-        MaybeChanged.changed (program_cfr, appr_cfr, rvg_cfr))
-      else
-      MaybeChanged.same (program,appr,rvg)
-    else
-      MaybeChanged.same (program,appr,rvg)
-
-(* https://stackoverflow.com/questions/6749956/how-to-quit-an-iteration-in-ocaml *)
-(** Fold left on a list with function [f] until predicate [p] is satisfied **)
-(** In our case we restart iff a scc is unrolled *)
-let rec fold_until f p acc = function
-    | x :: xs when p acc -> acc
-    | x :: xs -> fold_until f p (f acc x) xs
-    | [] -> acc
-
 let compute_pre_transitions_for_transition program scc =
   let table = TransitionTable.create 10 in
   TransitionSet.enum scc
@@ -251,39 +197,79 @@ let compute_pre_transitions_for_transition program scc =
   |> Enum.iter (uncurry @@ TransitionTable.add table) (* somehow find behaves strangely in combination with of_enum *)
   |> const table
 
-let handle_exception () =
-  LocalSizeBound.reset_cfr ();
-  let (program,appr,_,rvg_org) = Option.get !backtrack_point in
-  backtrack_point := None;
-  MaybeChanged.changed (program,appr,rvg_org)
+let apply_cfr (scc: TransitionSet.t) rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
+  let non_linear_transitions =
+    TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) scc
+    |> flip TransitionSet.diff !already_used_cfr
+  in
+  if not (TransitionSet.is_empty non_linear_transitions)  then 
+      let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
+      let opt =
+          CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
+          Logger.log logger_cfr Logger.INFO
+            (fun () -> "RankingBounds_apply_cfr", [ "non-linear trans", TransitionSet.to_string non_linear_transitions
+                                                  ; "time", string_of_float !CFR.time_current_cfr]);
+          CFR.apply_cfr non_linear_transitions !already_used_cfr program appr in
+      if Option.is_some opt then (
+        let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
+        already_used_cfr := already_used_cfr_upd;
+        Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
+        let rvg_cfr = RVGTypes.RVG.rvg program_cfr in
+        LocalSizeBound.switch_cache();
+        LocalSizeBound.enable_cfr();
+        (* The new sccs which do not occur in the original program. *)
+        let cfr_sccs = program_cfr
+          |> Program.sccs
+          |> List.of_enum
+          |> List.filter (fun cfr_scc -> not (Enum.exists (fun scc_ -> TransitionSet.equal cfr_scc scc_) (Program.sccs program))) in
+        let updated_appr_cfr =
+          cfr_sccs
+          |> List.fold (fun appr scc ->
+                    if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then 
+                        appr
+                        |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "cfr analysis", ["scc", TransitionSet.to_id_string scc]))
+                        |> SizeBounds.improve program_cfr rvg_cfr ~scc:(Option.some scc)
+                        |> improve_scc rvg_cfr ~mprf_max_depth ~inv ~fast scc measure program_cfr (compute_pre_transitions_for_transition program_cfr scc)                    
+                    else appr)
+              appr_cfr in
+        let cfr_bound = Bound.sum (Enum.map 
+                                  (fun scc -> Bound.sum (Enum.map (fun t -> Approximation.timebound updated_appr_cfr t) (TransitionSet.enum scc)))
+                                  (List.enum cfr_sccs))  in
+        if (Bound.compare_asy org_bound cfr_bound) < 1 then (
+          LocalSizeBound.reset_cfr();
+          Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED", 
+          ["original bound", (Bound.to_string org_bound); "cfr bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
+          (program, appr, rvg)
+        )
+        else (
+          LocalSizeBound.switch_cache();
+          (program_cfr, updated_appr_cfr, rvg_cfr)))
+      else
+      (program, appr, rvg)
+  else
+    (program, appr, rvg)
 
-let evaluate_program rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
+let handle_timeout_cfr non_linear_transitions =
+  LocalSizeBound.reset_cfr ();
+  Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["scc", (TransitionSet.to_string non_linear_transitions)])
+
+let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
   program
     |> Program.sccs
     |> List.of_enum
-    |> fold_until (fun monad scc ->
-                        let (program,appr,rvg) = MaybeChanged.unpack monad in
-                        if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then (
-                          try
+    |> List.fold (fun (program, appr, rvg) scc ->
+                        if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then 
                             appr
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc)
                             |> improve_scc rvg ~mprf_max_depth ~inv ~fast scc measure program (compute_pre_transitions_for_transition program scc)
                             (* Apply CFR if requested *)
-                            |> fun appr -> if cfr then apply_cfr scc rvg measure program appr else MaybeChanged.same (program,appr,rvg)
-                          with TIMEOUT | NOT_IMPROVED ->
-                            handle_exception ())
-                        else monad)
-                  MaybeChanged.has_changed (MaybeChanged.same (program,appr,rvg))
-
-let rec improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) ?(currently_cfr = false) measure program appr =
-    let opt =
-      if not currently_cfr then evaluate_program rvg ~mprf_max_depth ~cfr ~inv ~fast measure program appr
-      else
-        let tmp = Timeout.timed_run 10.
-          ~action:(fun () -> Logger.log logger Logger.INFO (fun () -> "TIMEOUT_EVALUATE_PROGRAM", []))
-          (fun () -> evaluate_program rvg ~mprf_max_depth ~inv ~fast  measure program appr) in
-        if Option.is_some tmp then Option.get tmp else handle_exception () in
-    opt
-    |> MaybeChanged.if_changed (fun (a,b,c) -> (improve c ~cfr ~mprf_max_depth ~currently_cfr:(not currently_cfr) measure a b))
-    |> MaybeChanged.unpack
+                            |> fun appr -> 
+                              if cfr then (
+                                Timeout.timed_run 10. ~action:(fun () -> handle_timeout_cfr scc) 
+                                (fun () -> apply_cfr scc rvg ~mprf_max_depth ~inv ~fast measure program appr))
+                                |? (program, appr, rvg)
+                              else (program, appr, rvg)
+                        else (program, appr, rvg))
+                  (program, appr, rvg)
+    |> Tuple3.get12

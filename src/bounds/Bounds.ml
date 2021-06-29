@@ -10,14 +10,14 @@ let find_bounds ?(mprf_max_depth = 1) ?(cfr = false) ?(fast = false) ?(time_cfr 
      CFR.number_unsolved_trans := (Program.cardinal_trans_scc program);
      CFR.time_cfr := float_of_int time_cfr;
 
-  let (program_cfr,updated_appr,_) = appr
+  let (program_cfr,updated_appr) = appr
   |> TrivialTimeBounds.compute program
   |> RankingBounds.improve rvg ~mprf_max_depth ~cfr ~inv ~fast `Time program in
   let appr_cost =
   updated_appr
   |> (fun appr ->
     if program_cfr |> Program.transitions |> TransitionSet.exists (fun t -> not (Polynomial.is_const (Transition.cost t))) then
-      Tuple3.second @@ RankingBounds.improve rvg ~mprf_max_depth ~cfr ~inv ~fast `Cost program_cfr appr
+      Tuple2.second @@ RankingBounds.improve rvg ~mprf_max_depth ~cfr ~inv ~fast `Cost program_cfr appr
     else
       appr
   )
