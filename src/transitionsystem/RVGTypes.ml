@@ -73,7 +73,7 @@ module RVG =
         let pre_nodes (post_var: Var.t) =
           LocalSizeBound.sizebound_local program post_transition post_var
           |> Option.map LocalSizeBound.vars
-          |? Program.vars program
+          |? VarSet.empty
           |> VarSet.enum
           |> Enum.cartesian_product (List.enum pre_transitions)
           |> Enum.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
