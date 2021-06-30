@@ -23,6 +23,7 @@ let suite =
       TimeboundTest.tests;
       InvariantGenerationTest.tests;
       OurRationalTest.tests;
+      TWNTest.tests
     ]
 
 let () =
