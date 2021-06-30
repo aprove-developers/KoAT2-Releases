@@ -5,6 +5,7 @@ open Constraints
 open ProgramTypes
 open Formulas
 open ApproximationModules
+open BoundsInst
 
 module DjikstraTransitionGraph = Graph.Path.Dijkstra(TransitionGraph)(TransitionGraphWeight(OurInt))
 
@@ -19,27 +20,21 @@ module SCCSet = Set.Make(SCCSetCompare)
 let logger = Logging.(get CFR)
 
 (** Timeouts *)
-(** We use this to measure the amount of time spend solving on the current cfr instance. *)
-let delta_current_cfr = ref 0.
-
-let time_current_cfr = ref 0.
-
+(** Measures the time spend on CFR. *)
 let time_cfr = ref 180.
 
-let number_unsolved_trans = ref 0
-
-exception TIMEOUT
-
-(** Set the time which is reserved for this scc: time_left_cfr * #trans_scc/#trans_left. If we have an infinite transition, we set time_current_cfr to inf. (-1). *)
-let set_time_current_cfr (scc: TransitionSet.t) appr =
-  if !time_cfr >= 0. && (TransitionSet.for_all (fun t -> Approximation.is_time_bounded appr t) scc) then (
-    time_cfr := max (!time_cfr -. !delta_current_cfr) 0.;
-    delta_current_cfr := 0.;
-    time_current_cfr := (float_of_int (TransitionSet.cardinal scc)) /. (float_of_int !number_unsolved_trans) *.  !time_cfr;)
+(* timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
+let compute_timeout_time program appr scc = 
+  if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
+   0.
   else (
-    delta_current_cfr := 0.;
-    time_current_cfr := -1.)
-
+    let toplogic_later_trans = program 
+      |> Program.transitions 
+      |> flip TransitionSet.diff scc 
+      |> TransitionSet.filter (fun t -> Bound.is_infinity (Approximation.timebound appr t)) in
+    !time_cfr *.
+    (float_of_int (TransitionSet.cardinal scc)) /. 
+    (float_of_int ((TransitionSet.cardinal toplogic_later_trans) + (TransitionSet.cardinal scc))))
 
 (* SCCs that contain a non-linear transition, its not guaranteed that they are minimal *)
 let nonLinearSCCs (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
@@ -209,7 +204,6 @@ let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
                                       |> Approximation.add_costbound costbound trans) unchangend_trans
 
 let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSet.t) (program: Program.t) appr =
-  delta_current_cfr := 0.;
   let initial_location = Program.start program
   and minimalDisjointSCCs = program
                             |> (minimalSCCs nonLinearTransitions)
@@ -228,8 +222,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
       if not (unit_cost scc) then
          (merged_program, TransitionSet.union already_used_trans scc)
       else
-        let time_current = Unix.gettimeofday()
-        and scc_list =
+        let scc_list =
           TransitionSet.to_list scc
           in
         let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
@@ -261,7 +254,6 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         |> flip TransitionSet.diff scc
         |> TransitionSet.to_list
         |> flip Program.from initial_location
-        |> tap (fun _ -> delta_current_cfr := !delta_current_cfr +. (Unix.gettimeofday() -. time_current))
         in
         (processed_program,already_used_cfr)
     in

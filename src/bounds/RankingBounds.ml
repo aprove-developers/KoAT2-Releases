@@ -199,18 +199,13 @@ let compute_pre_transitions_for_transition program scc =
   |> Enum.iter (uncurry @@ TransitionTable.add table) (* somehow find behaves strangely in combination with of_enum *)
   |> const table
 
-let apply_cfr (scc: TransitionSet.t) rvg_with_sccs ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
-  let non_linear_transitions =
-    TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) scc
-    |> flip TransitionSet.diff !already_used_cfr
-  in
+let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
   if not (TransitionSet.is_empty non_linear_transitions)  then
       let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
       let opt =
-          CFR.number_unsolved_trans := !CFR.number_unsolved_trans - (TransitionSet.cardinal scc);
           Logger.log logger_cfr Logger.INFO
             (fun () -> "RankingBounds_apply_cfr", [ "non-linear trans", TransitionSet.to_string non_linear_transitions
-                                                  ; "time", string_of_float !CFR.time_current_cfr]);
+                                                  ; "time", string_of_float time]);
           CFR.apply_cfr non_linear_transitions !already_used_cfr program appr in
       if Option.is_some opt then (
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
@@ -255,6 +250,8 @@ let handle_timeout_cfr non_linear_transitions =
   LocalSizeBound.reset_cfr ();
   Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["scc", (TransitionSet.to_string non_linear_transitions)])
 
+   
+
 let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
   program
     |> Program.sccs
@@ -265,12 +262,21 @@ let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = fal
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc)
                             |> improve_scc rvg ~mprf_max_depth ~inv ~fast scc measure program (compute_pre_transitions_for_transition program scc)
-                            (* Apply CFR if requested *)
+                            (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
                             |> fun appr ->
-                              if cfr then (
-                                Timeout.timed_run 10. ~action:(fun () -> handle_timeout_cfr scc)
-                                (fun () -> apply_cfr scc rvg ~mprf_max_depth ~inv ~fast measure program appr))
-                                |? (program, appr, rvg)
+                                let non_linear_transitions =
+                                  TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) scc
+                                  |> flip TransitionSet.diff !already_used_cfr
+                                in
+                              if cfr && !CFR.time_cfr > 0. && not (TransitionSet.is_empty non_linear_transitions) then (
+                                let time = CFR.compute_timeout_time program appr scc in
+                                let opt = Timeout.timed_run time ~action:(fun () -> handle_timeout_cfr scc)
+                                (fun () -> apply_cfr scc rvg time non_linear_transitions ~mprf_max_depth ~inv ~fast measure program appr) in
+                                if Option.is_some opt then 
+                                  let res, time_used = Option.get opt in
+                                  CFR.time_cfr := !CFR.time_cfr -. time_used; 
+                                  res 
+                                else (program, appr, rvg))
                               else (program, appr, rvg)
                         else (program, appr, rvg))
                   (program, appr, rvg)

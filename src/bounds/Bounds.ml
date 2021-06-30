@@ -7,9 +7,7 @@ open LocalSizeBound
 let find_bounds ?(mprf_max_depth = 1) ?(cfr = false) ?(fast = false) ?(time_cfr = 180) ?(inv = false) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
   let rvg_with_sccs = RVGTypes.RVG.rvg_with_sccs program in
    if cfr then
-     CFR.number_unsolved_trans := (Program.cardinal_trans_scc program);
-     CFR.time_cfr := float_of_int time_cfr;
-
+    CFR.time_cfr := float_of_int time_cfr;
   let (program_cfr,updated_appr) = appr
   |> TrivialTimeBounds.compute program
   |> RankingBounds.improve rvg_with_sccs ~mprf_max_depth ~cfr ~inv ~fast `Time program in

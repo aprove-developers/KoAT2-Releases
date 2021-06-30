@@ -10,11 +10,12 @@ exception Timeout
 let timed_run tsecs ?(action=const ()) command =
   let oldsig = Sys.signal Sys.sigalrm (Sys.Signal_handle (fun x -> raise Timeout)) in
   try
+    let time = Unix.gettimeofday() in
     set_timer tsecs;
     let res = command () in
     set_timer 0.0;
     Sys.set_signal Sys.sigalrm oldsig;
-    Some res
+    Some (res, Unix.gettimeofday() -. time)
   with Timeout ->
       (
       Sys.set_signal Sys.sigalrm oldsig;
