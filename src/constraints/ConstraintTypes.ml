@@ -131,6 +131,10 @@ module type Atom =
         (** Returns the single right hand side constant of the atom. *)
         val get_constant : t -> value
 
+        val poly : t -> polynomial
+
+        val is_lt : t -> bool
+
   end
 
 (** A constraint is a conjunction of atoms, i.e., we store those atoms in a list. *)
@@ -270,6 +274,9 @@ module type Formula =
 
         (** Creates the trivial formula {i true}, i.e., [true]. *)
         val mk_true : t
+
+        (** Creates the trivial formula {i false}, i.e., [false]. *)
+        val mk_false : t
 
         (** Returns the (normalized) conjunction of two formulas. *)
         val mk_and : t -> t -> t
