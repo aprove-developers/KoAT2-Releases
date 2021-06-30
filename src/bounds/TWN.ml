@@ -247,7 +247,9 @@ let time_bound (l,t,l') scc program appr =
     let cycle = ((l,t,l')::path) in
     let entry = Program.entry_transitions logger program cycle in
     let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entry in
-    List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity t)))) (*TODO: Stop if one is inf *)
+    let bound = List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity t)))) (*TODO: Stop if one is inf; TODO add bound for all tran on cycle*)
         (List.combine entry twn_loops) 
-        Bound.zero 
+        Bound.zero in
+    List.iter (fun t -> TimeBoundTable.add time_bound_table t bound) cycle;
+    bound
 else Option.get opt
