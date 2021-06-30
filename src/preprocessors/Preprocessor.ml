@@ -25,6 +25,17 @@ let affects = function
   | EliminateNonContributors -> []
   | Chaining -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
 
+(* Chaining might introduce MANY different temporary variables. To mitigate this we normalise their names*)
+let normalise_temp_vars program =
+  let temp_vars = LazyList.from (Var.fresh_id Var.Int) in
+  Program.map_graph (fun graph ->
+    let trans = ProgramTypes.TransitionGraph.transitions graph in
+    ProgramTypes.TransitionSet.fold
+      (fun (l,t,l') -> ProgramTypes.TransitionGraph.replace_edge_e (l,t,l') (l,TransitionLabel.rename_temp_vars t temp_vars,l'))
+      trans graph
+  ) program
+
+
 let lift_to_program transform program =
   MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (fun _ -> graph) program)))
 
@@ -34,7 +45,7 @@ let lift_to_tuple transform tuple =
 let transform subject = function
   | CutUnreachableLocations -> lift_to_tuple CutUnreachableLocations.transform_program subject
   | CutUnsatisfiableTransitions -> lift_to_tuple CutUnsatisfiableTransitions.transform_program subject
-  | Chaining -> lift_to_tuple (lift_to_program Chaining.transform_graph) subject
+  | Chaining -> lift_to_tuple (MaybeChanged.map normalise_temp_vars  % lift_to_program Chaining.transform_graph) subject
   | EliminateNonContributors -> lift_to_tuple EliminateNonContributors.eliminate subject
   | InvariantGeneration -> lift_to_tuple InvariantGeneration.transform_program subject
 
@@ -53,22 +64,9 @@ let all =
 
 type strategy = t list -> subject -> subject
 
-let normalise_temp_vars (program, appr) =
-  let temp_vars = LazyList.from (Var.fresh_id Var.Int) in
-  let normalised =
-    Program.map_graph (fun graph ->
-      let trans = ProgramTypes.TransitionGraph.transitions graph in
-      ProgramTypes.TransitionSet.fold
-        (fun (l,t,l') -> ProgramTypes.TransitionGraph.replace_edge_e (l,t,l') (l,TransitionLabel.rename_temp_vars t temp_vars,l'))
-        trans graph
-    ) program
-  in
-  normalised, appr
-
 let process strategy preprocessors subject =
   let execute () =
     strategy preprocessors subject
-    |> normalise_temp_vars
   in
   Logger.(with_log logger INFO
             (fun () -> "running_preprocessors", ["preprocessors", Util.enum_to_string show (List.enum preprocessors)])
