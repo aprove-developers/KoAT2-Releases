@@ -34,6 +34,8 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       |> List.map ScaledMonomial_.coeff
       |> List.fold_left Value.add Value.zero
 
+    let coeffs = List.map ScaledMonomial_.coeff
+
     let coeff_of_var var poly =
         let mon = Monomial_.lift var 1 in
             coeff mon poly
@@ -336,7 +338,21 @@ module RealPolynomial =
       fold ~const:(Polynomial.of_constant % OurFloat.upper_int) ~var:(Polynomial.of_var) ~neg:Polynomial.neg ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow
 
   end
+module RationalPolynomial =
+  struct
+    include PolynomialOver(OurRational)
 
+    let normalize poly = 
+      let coeff_inv = 
+        coeffs poly
+        |> List.filter (not % OurRational.is_integer)
+        |> List.map Tuple2.second
+        |> List.fold OurInt.lcm OurInt.one |> OurInt.abs |> OurRational.of_ourint in
+      poly
+      |> mult_with_const coeff_inv
+      |> fold ~const:(Polynomial.of_constant % OurRational.to_ourint) ~var:(Polynomial.of_var) ~neg:Polynomial.neg ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow
+  end
+  
 module ParameterPolynomial =
   struct
     module Outer = PolynomialOver(PolynomialOver(OurInt))
