@@ -396,6 +396,9 @@ module type Polynomial =
     (** Returns the coefficient of the monomial. *)
     val coeff : monomial -> t -> value
 
+    (** Returns a list of all coefficients. *)
+    val coeffs : t -> value list
+
     (** Returns the coefficient of the term where only the given variable occurs. *)
     val coeff_of_var : Var.t -> t -> value
 

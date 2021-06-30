@@ -57,6 +57,15 @@ sig
   val degree_coeff_list : t -> value list
 end
 
+module RationalPolynomial :
+sig
+  include module type of PolynomialOver(OurRational)
+
+  val degree_coeff_list : t -> value list
+
+  val normalize : t -> Polynomial.t
+end
+
 module RealParameterPolynomial :
 sig
   include module type of PolynomialOver(PolynomialOver(OurFloat))
