@@ -28,6 +28,10 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       else
         List.max (List.map (ScaledMonomial_.degree) poly )
 
+    let var_only_linear var = function
+      | [] -> true
+      | p -> List.for_all ((>=) 1) (List.map ScaledMonomial_.degree (List.filter (fun s -> VarSet.mem var (ScaledMonomial_.vars s)) p))
+
     let coeff mon poly =
          poly
       |> List.filter (fun scaled -> Monomial_.(=~=) (ScaledMonomial_.monomial scaled) mon)
@@ -102,6 +106,8 @@ module PolynomialOver(Value : PolyTypes.Ring) =
                 |_ -> []
         else []
 
+    let rec of_coeffs_list_univariate var coeffs = 
+      List.fold_righti (fun i coeff p -> (ScaledMonomial_.make coeff (Monomial_.lift var i))::p) coeffs []
 
     let var str = of_var (Var.of_string str)
 

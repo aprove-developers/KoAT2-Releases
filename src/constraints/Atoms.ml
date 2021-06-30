@@ -111,6 +111,14 @@ struct
       | LE -> P.get_constant (P.neg poly)
       (* Implicitly convert from < to <=*)
       | LT -> (P.get_constant (P.neg @@ P.add P.one poly))
+
+    let poly (poly, _) = poly
+
+    let is_lt (_, comp) = match comp with
+      | LT -> true
+      | _ -> false
+
+
 end
 
 module Atom =

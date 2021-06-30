@@ -390,6 +390,8 @@ module type Polynomial =
 
     (** Creates a polynomial from a coefficient list and a corresponding variable list. *)
     val of_coeff_list : value list -> Var.t list -> t
+    
+    val of_coeffs_list_univariate : Var.t -> value list -> t    
 
     (** {1 {L Following methods return information over the polynomial.}} *)
 
@@ -439,6 +441,8 @@ module type Polynomial =
 
     (** Returns if the polynomial is linear. *)
     val is_linear : t -> bool
+
+    val var_only_linear : Var.t -> t -> bool
 
     (** Returns if the value of the polynomial is the constant value zero (0). *)
     val is_zero : t -> bool
