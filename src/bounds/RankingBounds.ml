@@ -78,7 +78,6 @@ let compute_bound_mprf (appr: Approximation.t) (pre_trans_map: TransitionSet.t T
                                    "rank", MultiphaseRankingFunction.only_rank_to_string rank;])
                     ~result:Bound.to_string (fun () -> bound)
 
-
 let add_bound = function
   | `Time -> Approximation.add_timebound
   | `Cost -> Approximation.add_costbound
@@ -97,6 +96,18 @@ let improve_with_rank_mprf measure program appr rank =
     |> MaybeChanged.changed
   else
     MaybeChanged.same appr
+
+let improve_with_twn program scc measure appr =
+  let compute appr_ t = 
+   let bound = match measure with
+   | `Time -> TWN.time_bound t scc program appr_
+   | `Cost -> Bound.infinity in (* TODO *)
+   let orginal_bound = get_bound measure appr_ t in
+    if (Bound.compare_asy orginal_bound bound) = 1 then
+      MaybeChanged.changed (add_bound measure bound t appr_)
+    else
+      MaybeChanged.same appr_ in
+  MaybeChanged.fold_enum compute appr (TransitionSet.enum (TransitionSet.filter (Bound.is_infinity % Approximation.timebound appr) scc))
 
 (** Checks if a transition is bounded *)
 let bounded measure appr transition =
@@ -184,6 +195,9 @@ let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = fals
     |> knowledge_propagation scc measure program pre_trans_map
     |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
     |> improve_timebound ~mprf_max_depth ~inv ~fast scc measure program pre_trans_map
+    |> MaybeChanged.if_changed step
+    |> MaybeChanged.unpack
+    |> improve_with_twn program scc measure
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
   in

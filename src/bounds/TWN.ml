@@ -234,11 +234,20 @@ let rec find l list =
     | [] -> raise Not_found
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
-let time_bound (l,t,l') scc program =
-  let twn_scc = TransitionSet.filter check_twn scc in
-  let graph = getTransitionGraph twn_scc in
-  let path, _ = DjikstraTransitionGraph.shortest_path graph l' l in
-  let cycle = ((l,t,l')::path) in
-  let entry = Program.entry_transitions logger program cycle in
-  let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entry in
-  List.fold_right (fun t b -> Bound.add b (complexity t)) twn_loops Bound.zero
+module TimeBoundTable = Hashtbl.Make(Transition) 
+
+let time_bound_table: Bound.t TimeBoundTable.t = TimeBoundTable.create 10
+
+let time_bound (l,t,l') scc program appr = 
+  let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
+  if Option.is_none opt then 
+    let twn_scc = TransitionSet.filter check_twn scc in
+    let graph = getTransitionGraph twn_scc in
+    let path, _ = DjikstraTransitionGraph.shortest_path graph l' l in
+    let cycle = ((l,t,l')::path) in
+    let entry = Program.entry_transitions logger program cycle in
+    let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entry in
+    List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity t)))) (*TODO: Stop if one is inf *)
+        (List.combine entry twn_loops) 
+        Bound.zero 
+else Option.get opt
