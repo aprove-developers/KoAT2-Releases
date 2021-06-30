@@ -8,7 +8,7 @@ open BoundsInst
    
 let tests = 
   "TWN" >::: [ 
-    (* ("check_twn" >:::
+    ("check_twn" >:::
          List.map (fun (expected_bool, program) ->
              program >:: (fun _ -> 
                      let result = TWN.check_twn((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
@@ -20,7 +20,7 @@ let tests =
                     (false, "l0 -> l1(x,y,z,u,v,w), l1 -> l1(x + y, y + z, z + u, u + v, v + w, w + x)");
                     (true, "l0 -> l1(x,y,z,u,v,w), l1 -> l1(x + y, y + z, z + u, u + v, v + w, w)");
                   ]
-      ); *)
+      );
 
       ("check_closed-form" >:::
          List.map (fun (expected_string, expr) ->
@@ -73,17 +73,15 @@ let tests =
                   ]
       );
 
-      (* ("check_termination" >:::
+      ("check_termination" >:::
          List.map (fun (expected_bool, program) ->
              program >:: (fun _ -> 
-                     let result = TWN.termination(TransitionSet.any 
-                                                 (TransitionSet.filter (fun (l,_,l') -> Location.equal l l') 
-                                                 (Program.transitions (Readers.read_program_simple program))) |> Tuple3.second) in
-                     assert_equal_bool expected_bool true))
+                     let result = TWN.termination((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second) in
+                     assert_equal_bool expected_bool result))
                   [
                     (false, "l0 -> l1(x), l1 -> l1(x)");
                     (false, "l0 -> l1(x), l1 -> l1(x) :|: x > 0");
-                     (false, "l0 -> l1(x,y), l1 -> l1(x,x*x) :|: y <= 0");
+                    (false, "l0 -> l1(x,y), l1 -> l1(x,x*x) :|: y <= 0");
                     (true, "l0 -> l1(x,y), l1 -> l1(x,x*x) :|: y <= 0 && y != 0");
                     (true, "l0 -> l1(x), l1 -> l1(42) :|: x <= 0");
                     (true, "l0 -> l1(x,y), l1 -> l1(42,26) :|: x <= 10 && y + x <= 68");
@@ -96,7 +94,7 @@ let tests =
                     (true, "l0 -> l1(x,y,z), l1 -> l1(x + y*y*z*z, y, z-2*y*y) :|: x + y*y < 0 && y != 0 && z != 0");
                     (true, "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");
                   ]
-      ); *)
+      );
 
       ("OurInt.is_ge" >:::
          List.map (fun (expected_bool, a, b) ->
@@ -110,7 +108,7 @@ let tests =
                     (false, -5, 30);
                   ]
       );
-(* 
+
       ("TWN.monotonicity_th" >:::
          List.map (fun (expected_int, (b1, a1), (b2, a2), k) ->
              "" >:: (fun _ -> 
@@ -132,12 +130,10 @@ let tests =
       ("complexity" >:::
          List.map (fun (expected_string, program) ->
              "" >:: (fun _ -> 
-                     let result = TWN.complexity(TransitionSet.any 
-                                                 (TransitionSet.filter (fun (l,_,l') -> Location.equal l l') 
-                                                 (Program.transitions (Readers.read_program_simple program))) |> Tuple3.second) in
+                     let result = TWN.complexity((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second) in
                      assert_equal_string expected_string (Bound.to_string result)))
                   [
-                     ("7+6+4*x+4*x {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");
+                     ("8*x+13 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");
                    (* ("2 {O(1)}", "l0 -> l1(x,y), l1 -> l1(x,x*x) :|: y < 0");
                     ("2 {O(1)}", "l0 -> l1(x), l1 -> l1(42) :|: x <= 0");
                     ("2 {O(1)}", "l0 -> l1(x,y), l1 -> l1(42,26) :|: x <= 42 && y + x <= 67"); *)
@@ -147,6 +143,6 @@ let tests =
                     ("inf {Infinity}", "l0 -> l1(x,y), l1 -> l1(x,3*y+x*y) :|: x >= y && y >= 1"); *)
                     (* ("", "l0 -> l1(x,y,z), l1 -> l1(x + y*y*z*z + 1, y, z-2*y*y) :|: x + y*y < 0"); *)
                   ]
-      ); *)
+      );
       
   ]
