@@ -24,16 +24,16 @@ let logger = Logging.(get CFR)
 let time_cfr = ref 180.
 
 (* timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
-let compute_timeout_time program appr scc = 
+let compute_timeout_time program appr scc =
   if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
    0.
   else (
-    let toplogic_later_trans = program 
-      |> Program.transitions 
-      |> flip TransitionSet.diff scc 
+    let toplogic_later_trans = program
+      |> Program.transitions
+      |> flip TransitionSet.diff scc
       |> TransitionSet.filter (fun t -> Bound.is_infinity (Approximation.timebound appr t)) in
     !time_cfr *.
-    (float_of_int (TransitionSet.cardinal scc)) /. 
+    (float_of_int (TransitionSet.cardinal scc)) /.
     (float_of_int ((TransitionSet.cardinal toplogic_later_trans) + (TransitionSet.cardinal scc))))
 
 (* SCCs that contain a non-linear transition, its not guaranteed that they are minimal *)
