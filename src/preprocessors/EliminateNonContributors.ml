@@ -17,7 +17,7 @@ let rec eliminate_ program contributors non_contributors =
                         if depends y t contr then
                             (VarSet.add y contr, VarSet.remove y non_contr)
                         else
-                            (contr,non_contr)) ys (xs,ys)) 
+                            (contr,non_contr)) ys (xs,ys))
                         (Program.transitions program)
                         (contributors, non_contributors) in
     if VarSet.equal non_contributors ys then
@@ -27,7 +27,7 @@ let rec eliminate_ program contributors non_contributors =
 
 let eliminate program =
     let vars = Program.vars program in
-    let vars_guard = TransitionSet.fold (fun (l,t,l') xs -> VarSet.union (Constraint.vars (TransitionLabel.guard t)) xs) (Program.transitions program) VarSet.empty 
+    let vars_guard = TransitionSet.fold (fun (l,t,l') xs -> VarSet.union (Constraint.vars (TransitionLabel.guard t)) xs) (Program.transitions program) VarSet.empty
     and vars_cost = TransitionSet.fold (fun (l,t,l') xs -> VarSet.union (Polynomial.vars (TransitionLabel.cost t)) xs) (Program.transitions program) VarSet.empty in
     let init_contr = VarSet.union vars_guard vars_cost in
     Logger.(log logger INFO (fun () -> "EliminateNonContributors", [("init_contr", VarSet.to_string init_contr);("init_non_contributors", VarSet.to_string (VarSet.diff vars vars_guard))]));
