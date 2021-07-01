@@ -37,7 +37,7 @@ module CoeffsTable = Hashtbl.Make(struct
 type mprf_problem = {
   map_trans_pre_trans: TransitionSet.t TransitionTable.t;
   measure: measure;
-  scc: Transition.t Array.t;
+  make_non_increasing: Transition.t Array.t;
   make_decreasing: TransitionSet.t;
   unbounded_vars: Transition.t -> VarSet.t;
   find_depth: int;
@@ -401,6 +401,20 @@ let entry_transitions_from_non_increasing map_trans_pre_trans non_increasing =
   in
   TransitionSet.diff all_possible_pre_trans (TransitionSet.of_enum @@ Stack.enum non_increasing)
 
+let add_non_increasing_constraint cache problem solver_int solver_real inv transition =
+  SMTSolverInt.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition);
+  if inv then (
+    SMTSolver.push solver_real;
+    let templates_real = List.init problem.find_depth (fun n -> TemplateTable.find (Array.get cache.template_table_real n)) in
+    SMTSolver.add_real solver_real
+      (MPRF_Invariants.non_increasing_constraint cache.invariants_cache problem.find_depth problem.measure transition templates_real);
+    SMTSolver.add_real solver_real
+      (MPRF_Invariants.consecution_constraint cache.invariants_cache problem.find_depth problem.measure transition templates_real);
+    TransitionSet.remove transition (TransitionTable.find problem.map_trans_pre_trans transition)
+    |> TransitionSet.iter
+      (fun trans ->  SMTSolver.add_real solver_real
+        (MPRF_Invariants.initiation_constraint cache.invariants_cache problem.find_depth problem.measure trans templates_real)))
+
 
 let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (solver_real: SMTSolver.t) (solver_int: SMTSolverInt.t)
   (non_increasing: Transition.t Stack.t) (to_be_found: int ref) problem =
@@ -414,23 +428,14 @@ let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (solver_re
       if steps_left == 0 then (
         try_decreasing_if_entrytime_bounded non_increasing
       ) else (
-        for i=index to Array.length problem.scc - 1 do
-          let transition = Array.get problem.scc i in
+        for i=index to Array.length problem.make_non_increasing - 1 do
+          let transition = Array.get problem.make_non_increasing i in
 
           SMTSolverInt.push solver_int;
-          if inv then (
-            SMTSolver.push solver_real;
-            let templates_real = List.init problem.find_depth (fun n -> TemplateTable.find (Array.get cache.template_table_real n)) in
-            SMTSolver.add_real solver_real
-              (MPRF_Invariants.non_increasing_constraint cache.invariants_cache problem.find_depth problem.measure transition templates_real);
-            SMTSolver.add_real solver_real
-              (MPRF_Invariants.consecution_constraint cache.invariants_cache problem.find_depth problem.measure transition templates_real);
-            TransitionSet.remove transition (TransitionTable.find problem.map_trans_pre_trans transition)
-            |> TransitionSet.iter
-              (fun trans ->  SMTSolver.add_real solver_real
-                (MPRF_Invariants.initiation_constraint cache.invariants_cache problem.find_depth problem.measure trans templates_real)));
+          (if inv then SMTSolver.push solver_real);
 
-          SMTSolverInt.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition);
+          add_non_increasing_constraint cache problem solver_int solver_real inv transition;
+
           Stack.push transition non_increasing;
           backtrack cache ~inv:inv (steps_left - 1) (i + 1) solver_real solver_int non_increasing
             to_be_found problem;
@@ -444,28 +449,70 @@ let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (solver_re
       )
     )
 
+let get_minimum_applicable_non_inc_set mprf_problem =
+  let possible_non_inc_set = TransitionSet.of_array mprf_problem.make_non_increasing in
+  let rec helper min_applicable =
+    (* get time_unbounded pre transitions *)
+    TransitionSet.enum min_applicable
+    |> Enum.map (TransitionTable.find_opt mprf_problem.map_trans_pre_trans)
+    (* necessary since min_applicable can contain all possible pre transitions which may be outside of the current scc*)
+    |> Util.cat_maybes_enum
+    |> Enum.map TransitionSet.enum
+    |> Enum.flatten
+    |> Enum.filter (not % mprf_problem.is_time_bounded)
+    |> TransitionSet.of_enum
+
+    (* add previously found transitions*)
+    |> TransitionSet.union min_applicable
+    (* we can only consider scc transitions *)
+    |> TransitionSet.inter possible_non_inc_set
+    |> fun tset -> if TransitionSet.cardinal tset > TransitionSet.cardinal min_applicable then helper tset else tset
+  in
+  helper % TransitionSet.singleton
+
+
 let compute_scc ?(inv = false) cache program mprf_problem =
+  (* pairings of possible decreasins transitions with their min applicable sets*)
+  let pairings_make_decreasing_min_applicable =
+    TransitionSet.to_list (mprf_problem.make_decreasing)
+    |> List.map (fun t -> t, get_minimum_applicable_non_inc_set mprf_problem t)
+    |> List.group (fun (_,tset1) (_,tset2) -> TransitionSet.compare tset1 tset2)
+    |> List.map (fun l -> TransitionSet.of_list (List.map Tuple2.first l), Tuple2.second (List.hd l))
+  in
+
   let locations = LocationSet.to_list @@ TransitionGraph.locations (Program.graph program) in
   let vars = Program.input_vars program in
-  try
-    compute_ranking_templates cache mprf_problem.find_depth vars locations;
-    if inv then
-      compute_ranking_templates_real cache mprf_problem.find_depth vars locations;
+  compute_ranking_templates cache mprf_problem.find_depth vars locations;
+  if inv then
+    compute_ranking_templates_real cache mprf_problem.find_depth vars locations;
+
+  List.iter (fun (make_decr, min_applicable) ->
+    let solver_int = SMTSolverInt.create () in
+    let solver_real = SMTSolver.create () in
+
+    let non_inc = Stack.of_enum (TransitionSet.enum min_applicable) in
+    let make_non_increasing = TransitionSet.to_array @@ TransitionSet.diff (TransitionSet.of_array mprf_problem.make_non_increasing) min_applicable in
+    TransitionSet.iter (add_non_increasing_constraint cache mprf_problem solver_int solver_real inv) min_applicable;
+
+
+    try
       backtrack cache
                 ~inv:inv
-                (Array.length mprf_problem.scc)
+                (Array.length make_non_increasing)
                 0
-                (SMTSolver.create ())
-                (SMTSolverInt.create ())
-                (Stack.create ())
-                (ref (TransitionSet.cardinal mprf_problem.make_decreasing))
-                mprf_problem;
-    mprf_problem.scc
-    |> Array.iter (fun t ->
-          if not (RankingTable.mem cache.ranking_table t) then
-            Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure mprf_problem.measure; "transition", Transition.to_id_string t]))
-        )
-  with Exit -> ()
+                solver_real
+                solver_int
+                non_inc
+                (ref (TransitionSet.cardinal make_decr))
+                ({mprf_problem with make_non_increasing;});
+    with Exit -> ()
+  ) pairings_make_decreasing_min_applicable;
+
+  mprf_problem.make_decreasing
+  |> TransitionSet.iter (fun t ->
+        if not (RankingTable.mem cache.ranking_table t) then
+          Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure mprf_problem.measure; "transition", Transition.to_id_string t]))
+      )
 
 let compute_ cache ?(inv = false) measure program is_time_bounded unbounded_vars depth =
   let map_trans_pre_trans scc =
@@ -476,7 +523,7 @@ let compute_ cache ?(inv = false) measure program is_time_bounded unbounded_vars
     |> const t
   in
   let problem scc =
-    {  map_trans_pre_trans = map_trans_pre_trans scc; measure = measure; scc = Array.of_enum (TransitionSet.enum scc); make_decreasing = scc;
+    {  map_trans_pre_trans = map_trans_pre_trans scc; measure = measure; make_non_increasing = Array.of_enum (TransitionSet.enum scc); make_decreasing = scc;
        unbounded_vars; is_time_bounded; find_depth = depth; }
   in
   Program.sccs program
@@ -502,7 +549,7 @@ let find ?(inv = false) measure program depth =
 let find_scc ?(inv = false) measure program map_trans_pre_trans is_time_bounded unbounded_vars make_decreasing scc depth =
   let cache = new_cache depth in
   let mprf_problem =
-    { map_trans_pre_trans; measure; scc = TransitionSet.to_array scc; make_decreasing; unbounded_vars; find_depth = depth; is_time_bounded}
+    { map_trans_pre_trans; measure; make_non_increasing = TransitionSet.to_array scc; make_decreasing; unbounded_vars; find_depth = depth; is_time_bounded}
   in
   let execute () =
     if inv then

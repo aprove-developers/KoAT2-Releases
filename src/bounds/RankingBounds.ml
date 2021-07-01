@@ -264,7 +264,7 @@ let handle_timeout_cfr non_linear_transitions =
   LocalSizeBound.reset_cfr ();
   Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["scc", (TransitionSet.to_string non_linear_transitions)])
 
-   
+
 
 let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
   program
@@ -286,10 +286,10 @@ let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = fal
                                 let time = CFR.compute_timeout_time program appr scc in
                                 let opt = Timeout.timed_run time ~action:(fun () -> handle_timeout_cfr scc)
                                 (fun () -> apply_cfr scc rvg time non_linear_transitions ~mprf_max_depth ~inv ~fast measure program appr) in
-                                if Option.is_some opt then 
+                                if Option.is_some opt then
                                   let res, time_used = Option.get opt in
-                                  CFR.time_cfr := !CFR.time_cfr -. time_used; 
-                                  res 
+                                  CFR.time_cfr := !CFR.time_cfr -. time_used;
+                                  res
                                 else (program, appr, rvg))
                               else (program, appr, rvg)
                         else (program, appr, rvg))
