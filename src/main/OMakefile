@@ -5,6 +5,7 @@ OCAMLPACKS[] =
     apron.boxD
     ppx_deriving_cmdliner
     ppx_deriving.show
+    ppx_getenv
     z3
     ocamlgraph
     fpath
@@ -33,6 +34,14 @@ OCAML_LIBS[] =
 FILES[] = $(removesuffix .ml, $(glob *.ml))
 
 LIB = main
+
+# For koat2 --version
+if $(not $(defined-env KOAT2_GIT_VERSION))
+    VERSION = $(shell (git rev-parse --short HEAD))
+    DATE = $(shell (git log -1 --format=%cs))
+    VERSIONSTR = $(VERSION) from $(DATE)
+    setenv(KOAT2_GIT_VERSION, $(VERSIONSTR))
+    export
 
 OCamlProgram(koat2, $(FILES))
 
