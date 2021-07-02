@@ -17,6 +17,7 @@ depends: [
   "ounit"
   "ppx_deriving"
   "ppx_deriving_cmdliner"
+  "ppx_getenv"
   "z3"
 ]
 synopsis: "KoAT2: Runtime Analysis of Integer Programs"
