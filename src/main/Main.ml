@@ -3,7 +3,10 @@ open Batteries
 open ProgramTypes
 open RVGTypes
 
-type main_params = {koat2: string[@default ""]} [@@deriving cmdliner]
+type main_params = {
+  version: bool[@default false];
+  (** Print the git version *)
+} [@@deriving cmdliner]
 
 let subcommand run params_cmdliner_term description command =
   Cmdliner.Term.(const run $ params_cmdliner_term (), info ~doc:description command)
@@ -18,13 +21,16 @@ let subcommands =
     NormalizeCommand.(subcommand run params_cmdliner_term description command);
   ]
 
-let default_cmd =
-  let open Cmdliner.Term in
-  fun _ -> `Help (`Pager, None)
+let version = [%getenv "KOAT2_GIT_VERSION"]
+
+let default_cmd params =
+  if params.version then
+    `Ok (Printf.printf "KoAT2 version %s\n" version)
+  else `Help (`Pager, None)
 
 let () =
   (* Read the arguments from the shell via an api and call run *)
-  let main_command = Cmdliner.Term.(ret (const (fun _ -> `Help (`Pager, None)) $ main_params_cmdliner_term())),
+  let main_command = Cmdliner.Term.(ret (const default_cmd $ main_params_cmdliner_term())),
   Cmdliner.Term.info Sys.argv.(0) in
   (* Logger.init ["lsb", Logger.DEBUG; "size", Logger.DEBUG; "prf", Logger.DEBUG] (Logger.make_dbg_formatter IO.stdout); *)
   Cmdliner.Term.(exit @@ eval_choice main_command subcommands)
