@@ -32,8 +32,10 @@ RUN eval `opam env`
 
 ENV PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
 ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib/stublibs
+
 # Run Build command
-RUN RELEASE=1 omake --depend
+ARG KOAT2_VERSION_STRING=UNKNOWN
+RUN RELEASE=1 KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING omake --depend
 
 FROM ubuntu:20.04
 
