@@ -127,6 +127,10 @@ let pre program (l,t,_) =
          |> is_satisfiable % Formula.mk
        )
 
+let pre_cache: (int, TransitionSet.t) Hashtbl.t = Hashtbl.create 10
+let pre_transitionset_cached program = Util.memoize_v2 pre_cache ~extractor:Transition.id (TransitionSet.of_enum % pre program)
+let reset_pre_cache () = Hashtbl.clear pre_cache
+
 let succ program (_,t,l') =
   l'
   |> TransitionGraph.succ_e (graph program)
