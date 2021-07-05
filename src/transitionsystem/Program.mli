@@ -44,8 +44,15 @@ val graph : t -> TransitionGraph.t
 val add_invariant : Location.t -> Constraint.t -> t -> t
 
 (** Returns a set of all transitions which occur directly before the given transition in the graph.
-       Corresponds to pre(t). *)
+    Corresponds to pre(t).
+    Note that the computation involves calls to the SMT solver and is therefore expensive.
+    The returned Enum is lazy. *)
 val pre : t -> Transition.t -> Transition.t Enum.t
+
+(** A cached version of pre. The identifier for the cache is the transition id (the program is not considered) *)
+val pre_transitionset_cached: t -> Transition.t -> TransitionSet.t
+(** Reset the cache for pre_cached *)
+val reset_pre_cache: unit -> unit
 
 (** Returns true if the given transition is an initial transition. *)
 val is_initial : t -> Transition.t -> bool
