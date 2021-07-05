@@ -32,7 +32,6 @@ val depth : t -> int
 val find : ?inv:bool -> measure -> Program.t -> int -> t Enum.t
 
 val find_scc : ?inv:bool -> measure ->  Program.t ->
-  TransitionSet.t TransitionTable.t -> (* Map of transitions to the corresponding pre transitions *)
   (Transition.t -> bool) ->  (* Is the transition time-bounded? *)
   (Transition.t -> VarSet.t) -> (* Unbounded vars for the transition *)
   ProgramTypes.TransitionSet.t -> (* Transitions which should be decreasing in a ranking function. Use all transitions with unbounded time here *)
