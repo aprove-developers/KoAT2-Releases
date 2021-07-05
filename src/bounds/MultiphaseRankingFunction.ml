@@ -35,7 +35,7 @@ module CoeffsTable = Hashtbl.Make(struct
                                   end)
 
 type mprf_problem = {
-  map_trans_pre_trans: TransitionSet.t TransitionTable.t;
+  program: Program.t;
   measure: measure;
   make_non_increasing: Transition.t Array.t;
   make_decreasing: TransitionSet.t;
@@ -348,7 +348,7 @@ let try_decreasing cache ?(inv = false) (solver_real: SMTSolver.t) (solver_int: 
           VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
             (unbounded_vars_at_entry_locs cache.coeffs_table_real);
 
-          TransitionSet.remove decreasing (TransitionTable.find problem.map_trans_pre_trans decreasing)
+          TransitionSet.remove decreasing (Program.pre_transitionset_cached problem.program decreasing)
           |> TransitionSet.iter
             (fun trans ->  SMTSolver.add_real solver_real
               (MPRF_Invariants.initiation_constraint cache.invariants_cache problem.find_depth problem.measure trans templates_real)));
@@ -394,10 +394,10 @@ let try_decreasing cache ?(inv = false) (solver_real: SMTSolver.t) (solver_int: 
     raise Exit
 
 
-let entry_transitions_from_non_increasing map_trans_pre_trans non_increasing =
+let entry_transitions_from_non_increasing program non_increasing =
   let all_possible_pre_trans =
     Stack.enum non_increasing
-    |> Enum.fold (fun tset t -> TransitionSet.union tset @@ TransitionTable.find map_trans_pre_trans t) TransitionSet.empty
+    |> Enum.fold (fun tset -> TransitionSet.union tset % Program.pre_transitionset_cached program) TransitionSet.empty
   in
   TransitionSet.diff all_possible_pre_trans (TransitionSet.of_enum @@ Stack.enum non_increasing)
 
@@ -410,7 +410,7 @@ let add_non_increasing_constraint cache problem solver_int solver_real inv trans
       (MPRF_Invariants.non_increasing_constraint cache.invariants_cache problem.find_depth problem.measure transition templates_real);
     SMTSolver.add_real solver_real
       (MPRF_Invariants.consecution_constraint cache.invariants_cache problem.find_depth problem.measure transition templates_real);
-    TransitionSet.remove transition (TransitionTable.find problem.map_trans_pre_trans transition)
+    TransitionSet.remove transition (Program.pre_transitionset_cached problem.program transition)
     |> TransitionSet.iter
       (fun trans ->  SMTSolver.add_real solver_real
         (MPRF_Invariants.initiation_constraint cache.invariants_cache problem.find_depth problem.measure trans templates_real)))
@@ -419,7 +419,7 @@ let add_non_increasing_constraint cache problem solver_int solver_real inv trans
 let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (solver_real: SMTSolver.t) (solver_int: SMTSolverInt.t)
   (non_increasing: Transition.t Stack.t) (to_be_found: int ref) problem =
     let try_decreasing_if_entrytime_bounded non_increasing =
-      let entry_trans = entry_transitions_from_non_increasing problem.map_trans_pre_trans non_increasing in
+      let entry_trans = entry_transitions_from_non_increasing problem.program non_increasing in
       if TransitionSet.for_all problem.is_time_bounded entry_trans then
         try_decreasing cache ~inv:inv solver_real solver_int non_increasing to_be_found entry_trans problem;
     in
@@ -454,9 +454,8 @@ let get_minimum_applicable_non_inc_set mprf_problem =
   let rec helper min_applicable =
     (* get time_unbounded pre transitions *)
     TransitionSet.enum min_applicable
-    |> Enum.map (TransitionTable.find_opt mprf_problem.map_trans_pre_trans)
+    |> Enum.map (Program.pre_transitionset_cached mprf_problem.program)
     (* necessary since min_applicable can contain all possible pre transitions which may be outside of the current scc*)
-    |> Util.cat_maybes_enum
     |> Enum.map TransitionSet.enum
     |> Enum.flatten
     |> Enum.filter (not % mprf_problem.is_time_bounded)
@@ -515,15 +514,8 @@ let compute_scc ?(inv = false) cache program mprf_problem =
       )
 
 let compute_ cache ?(inv = false) measure program is_time_bounded unbounded_vars depth =
-  let map_trans_pre_trans scc =
-    let t = TransitionTable.create 10 in
-    TransitionSet.enum scc
-    |> Enum.map (fun t -> t, TransitionSet.of_enum (Program.pre program t))
-    |> Enum.iter (uncurry @@ TransitionTable.add t) (* somehow find behaves strangely in combination with of_enum *)
-    |> const t
-  in
   let problem scc =
-    {  map_trans_pre_trans = map_trans_pre_trans scc; measure = measure; make_non_increasing = Array.of_enum (TransitionSet.enum scc); make_decreasing = scc;
+    {  program; measure = measure; make_non_increasing = Array.of_enum (TransitionSet.enum scc); make_decreasing = scc;
        unbounded_vars; is_time_bounded; find_depth = depth; }
   in
   Program.sccs program
@@ -546,10 +538,10 @@ let find ?(inv = false) measure program depth =
   in
   logging measure "find_mprf" execute
 
-let find_scc ?(inv = false) measure program map_trans_pre_trans is_time_bounded unbounded_vars make_decreasing scc depth =
+let find_scc ?(inv = false) measure program is_time_bounded unbounded_vars make_decreasing scc depth =
   let cache = new_cache depth in
   let mprf_problem =
-    { map_trans_pre_trans; measure; make_non_increasing = TransitionSet.to_array scc; make_decreasing; unbounded_vars; find_depth = depth; is_time_bounded}
+    { program; measure; make_non_increasing = TransitionSet.to_array scc; make_decreasing; unbounded_vars; find_depth = depth; is_time_bounded}
   in
   let execute () =
     if inv then
