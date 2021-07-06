@@ -15,6 +15,10 @@ module ConstantConstraint = struct
         | EQ -> "=="
         | NEQ -> "!="
 
+        let to_tex = function
+        | EQ -> "="
+        | NEQ -> "\\neq"
+
       end
 
     type atom = (Comparator.t * OurInt.t) [@@deriving eq, ord]
@@ -118,6 +122,14 @@ module ConstantConstraint = struct
     | C ((comp, c)::xs) ->  "[[n " ^ (Comparator.to_string comp) ^ " " ^ (OurInt.to_string c) ^ (List.fold_right (fun (comp, c) str -> ", n " ^ (Comparator.to_string comp) ^ " " ^ (OurInt.to_string c) ^ str) 
                  xs
                  "") ^ "]]"
+
+    let to_tex = function
+    | T -> "\\exacteval{\\true}"
+    | F -> "\\exacteval{\\false}"
+    | C [] -> "\\exacteval{true}"
+    | C ((comp, c)::xs) ->  "\\exacteval{n" ^ (Comparator.to_tex comp) ^ " " ^ (OurInt.to_string c) ^ (List.fold_right (fun (comp, c) str -> ", n" ^ (Comparator.to_tex comp) ^ " " ^ (OurInt.to_string c) ^ str) 
+                 xs
+                 "") ^ "}"
 
     let compare c1 c2 = 
     match (c1, c2) with
