@@ -8,7 +8,7 @@ open Constraints
 open PolyExponential
 
 (*TODO *)
-let logger = Logging.(get Time)
+let logger = Logging.(get Twn)
 
 (*TODO Cost, negative coeff.  *)
 
@@ -151,35 +151,32 @@ let compute_f = function
   | [] -> Bound.zero
   | x::[] -> Bound.zero
   | xs -> 
-    let sub_poly = List.map (Tuple4.second) xs in
-    Printf.printf "alphas: %s\n" (sub_poly |> List.enum |> Util.enum_to_string Polynomial.to_string);
+    let alphas = List.map (Tuple4.second) xs in
+    Logger.log logger Logger.INFO (fun () -> "absolute alphas", ["", (alphas |> List.enum |> Util.enum_to_string Polynomial.to_string)]);
     let base_exp = List.map (fun (_,_,d,b) -> (b,d)) xs in
-    let kmax = compute_kmax sub_poly in
-    Printf.printf "kmax: %s \n" (OurInt.to_string kmax);
-    let m = compute_m sub_poly |> OurInt.to_int in
     let n_ = compute_N base_exp in
-    Printf.printf "N: %s \n" (OurInt.to_string n_);
+    Logger.log logger Logger.INFO (fun () -> "N", ["", (OurInt.to_string n_)]);
     let m_ = compute_M base_exp  in
-    Printf.printf "M: %s \n" (OurInt.to_string m_);
-    let poly = Polynomial.of_coeffs_list_univariate (Var.of_string "x") (List.make (m + 1) OurInt.one) in
-    Bound.(of_poly poly |> mul (of_constant (OurInt.add kmax kmax)) |> add (of_constant (OurInt.max m_ n_)))
+    Logger.log logger Logger.INFO (fun () -> "M", ["", (OurInt.to_string m_)]);
+    let poly = List.fold Polynomial.add Polynomial.zero alphas in
+    Bound.(of_poly (Polynomial.add poly poly) |> add (of_constant (OurInt.max m_ n_)))
 
 let get_bound t order npe varmap = 
   let bound, max_con = 
       List.fold_right (fun atom (bound, const) -> 
           let poly = Atom.poly atom in 
           let sub_poly = PE.substitute varmap poly |> PE.remove_frac in 
-          Printf.printf "sub_poly: %s\n" (PE.to_string sub_poly);
+          Logger.log logger Logger.INFO (fun () -> "npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", (PE.to_string sub_poly) ^ " ▷ 0"]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
-          Printf.printf "sub_poly_n length: %i\n" (List.length sub_poly_n);
           let max_const = OurInt.max const (PE.max_const sub_poly) in
           let rec summand = function
             | [] -> Bound.zero
             | x::[] -> Bound.zero
             | x::xs -> Bound.add (compute_f (x::xs)) (summand xs) in
-            (Bound.add bound ((summand sub_poly_n) |> tap (fun b -> Printf.printf "Bound: %s\n" (Bound.to_string b))), max_const))
+            (Bound.add bound ((summand sub_poly_n) 
+            |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "partial bound", ["", Bound.to_string b]))), max_const))
             (TransitionLabel.guard t) (Bound.one, OurInt.zero) in
-            Printf.printf "max_cons: %s\n" (OurInt.to_string max_con);
+            Logger.log logger Logger.INFO (fun () -> "max constant in constant constraint", ["", (OurInt.to_string max_con)]);
   Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
 
 let check_twn (l,t,l') =
@@ -193,19 +190,20 @@ let complexity t =
     Bound.infinity (* Not triangular *)
   else if not (check_weakly_monotonicity t) then
     Bound.infinity (* Not weakly monotonic *)
-  else
+  else (
+    Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
     let pe = PE.compute_closed_form (List.map (fun var -> 
         let update_var = TransitionLabel.update t var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
-        Printf.printf "pe: %s \n" (pe |> List.enum |> Util.enum_to_string PE.to_string);
+        Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
     let npe = PE.normalize pe in
-        Printf.printf "pe: %s \n" (npe |> List.enum |> Util.enum_to_string PE.to_string);
+        Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
     let varmap = Hashtbl.of_list (List.combine order npe) in
     let terminating = termination_ t order pe npe varmap in
     if not terminating then 
       Bound.infinity
     else 
-      get_bound t order npe varmap
+      get_bound t order npe varmap)
 
 (* Cycles and corresponding time-bound. *)
 
@@ -227,7 +225,6 @@ let compose_transitions cycle start =
   |> Tuple3.map1 List.rev in
   let pre, t1, post = split start (List.rev cycle |> List.map Tuple3.second) in 
   List.fold (fun u t -> TransitionLabel.append t u) t1 (pre@post)
-  |> tap (fun t -> Printf.printf "Trans: %s" (TransitionLabel.to_string t))
 
 let rec find l list =
     match list with
@@ -246,10 +243,13 @@ let time_bound (l,t,l') scc program appr =
     let path, _ = DjikstraTransitionGraph.shortest_path graph l' l in
     let cycle = ((l,t,l')::path) in
     let entry = Program.entry_transitions logger program cycle in
+    Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entry))]);
     let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entry in
+    Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entry) (List.map TransitionLabel.to_string twn_loops));
     let bound = List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity t)))) (*TODO: Stop if one is inf; TODO add bound for all tran on cycle*)
         (List.combine entry twn_loops) 
         Bound.zero in
     List.iter (fun t -> TimeBoundTable.add time_bound_table t bound) cycle;
     bound
 else Option.get opt
+  |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "bound", ["", Bound.to_string b]))

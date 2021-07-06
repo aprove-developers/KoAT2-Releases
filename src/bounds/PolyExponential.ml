@@ -187,6 +187,19 @@ module PE = struct
             |> List.filter (not % ((String.equal) ""))
             |> String.concat " + "
 
+    let to_tex pe = match pe with
+    | [] -> "0"
+    | xs ->
+        let to_string_cc (c, p, d, b) = if ConstantConstraint.is_true c then (if (d = 0 && b = 1 && RationalPolynomial.is_one p) then "1" else "") else (ConstantConstraint.to_tex c) in
+        let to_string_poly p = if RationalPolynomial.is_one p then "" 
+                                else if (p |> RationalPolynomial.monomials |> List.length |> (<) 1) then  "(" ^ (RationalPolynomial.to_string p) ^ ")" 
+                                else (RationalPolynomial.to_string p) in
+        let to_string_poly_n d = if d = 0 then "" else "n^{" ^ (string_of_int d) ^ "}" in
+        let to_string_exp_n b = if b = 1 then "" else (string_of_int b) ^ "^n" in
+        xs
+        |> List.map (fun (c, p, d, b) -> [to_string_cc (c, p, d, b); to_string_poly p; to_string_poly_n d; to_string_exp_n b] |> List.filter (not % ((String.equal) "")) |> String.concat " \\cdot ") 
+        |> List.filter (not % ((String.equal) ""))
+        |> String.concat " + "
 
     let compare (c1,p1,d1,b1) (c2,p2,d2,b2) = 
         if ConstantConstraint.compare c1 c2 != 0 then ConstantConstraint.compare c1 c2
