@@ -9,25 +9,6 @@
 find . -name "*.output" -type f -delete
 find . -name "*.koat" | parallel -j+0 --eta --timeout 90 'koat2 analyse -i {} -r all &> {.}.output'
 sleep 1m
-./view_results &> 20201214_results
-./view_times &> 20201214_times
-./view_costs &> 20201214_costs
-sleep 1m
-
-find . -name "*.output" -type f -delete
-find . -name "*.koat" | parallel -j+0 --eta --timeout 90 'koat2 analyse -i {} -r all  --cfr  --inv --fast --mprf &> {.}.output'
-sleep 1m
-./view_results &> 20201214_results_fast
-./view_times &> 20201214_times_fast
-./view_costs &> 20201214_costs_fast
-sleep 1m
-find . -name "*.output" -type f -delete
-
-find . -name "*.output" -type f -delete
-find . -name "*.koat" | parallel -j+0 --eta --timeout 90 'koat2 analyse -i {} -r all  --cfr  --inv --mprf &> {.}.output'
-sleep 1m
-./view_results &> 20201214_results_all
-./view_times &> 20201214_times_all
-./view_costs &> 20201214_costs_all
-sleep 1m
-find . -name "*.output" -type f -delete
+./view_results &> 2021_07_07_results
+./view_times &> 2021_07_07_times
+./view_costs &> 2021_07_07_costs

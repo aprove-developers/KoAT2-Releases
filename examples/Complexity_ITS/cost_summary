@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./view_costs | grep -o "\[.*\]" | sort | uniq -c

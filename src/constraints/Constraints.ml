@@ -115,6 +115,9 @@ module Constraint =
 
     let remove_strict =
       List.map Atom.remove_strict
+
+    let simplify = 
+      List.unique ~eq:Atom.equal
   end
 
 module ParameterConstraint =

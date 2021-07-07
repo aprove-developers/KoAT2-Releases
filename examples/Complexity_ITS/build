@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Runs all the koat test files in this and every subdirectory.
+# The results are put into *.output files.
+# The build takes about 40 minutes on Intel-hyperthreaded 8 cores.
+# The GNU tool parallel need to be installed.
+# `sudo apt-get install parallel`
+# The timeout stops single tests after x seconds.
+#find . -name "*.output" -type f -delete
+#find . -name "*.koat" | parallel -j+0 --eta --timeout 90 'koat2 analyse -i {} -r all &> {.}.output'
+./view_results &> 2021_07_07_results
+./view_times &> 2021_07_07_times
+./view_costs &> 2021_07_07_costs

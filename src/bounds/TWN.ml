@@ -113,7 +113,7 @@ let termination_ t order pe npe varmap =
           let sub_poly = PE.substitute varmap poly |> PE.remove_frac |> List.map (RationalPolynomial.normalize % Tuple4.second) in
           let formula_poly = if Atom.is_lt atom 
               then sub_poly |> red_lt
-              else sub_poly |> red_le in Formula.mk_and formula formula_poly) 
+              else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify) 
               (TransitionLabel.guard t) (Formula.mk_true) in
   (not % SMTSolver.satisfiable) formula
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string bool]);

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./view_times | grep -o "\[.*\]" | sort | uniq -c
