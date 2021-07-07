@@ -90,6 +90,8 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       |> List.map ScaledMonomial_.monomial
       |> List.filter ((<>) Monomial_.one)
 
+    let scaled_monomials poly = poly |> simplify
+
     let of_monomial mon = lift Value.one mon
 
     let of_power var n = of_monomial (Monomial_.lift var n)

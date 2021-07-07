@@ -10,6 +10,7 @@ module PolynomialOver
        : Polynomial with type value = Value.t
                      and type valuation = Valuation.Make(Value).t
                      and type monomial = Monomials.Make(Value).t
+                     and type scaled_monomial = ScaledMonomials.Make(Value).t
 
 (** Provides default implementation of polynomials ranged over [OurInt]. *)
 module Polynomial :
