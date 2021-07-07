@@ -121,6 +121,9 @@ module Formula =
       |> List.map Constraint.max_of_occurring_constants
       |> List.fold_left OurInt.add OurInt.one
 
+    let simplify = 
+      (List.unique ~eq:Constraint.equal) % (List.map Constraint.simplify) 
+
   end
 
 module ParameterFormula =

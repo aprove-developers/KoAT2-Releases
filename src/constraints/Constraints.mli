@@ -39,6 +39,8 @@ sig
 
     val remove_strict : t -> t
 
+  val simplify : t -> t
+
   (* Add operations specific to polynomial constraints here if needed *)
 end
 

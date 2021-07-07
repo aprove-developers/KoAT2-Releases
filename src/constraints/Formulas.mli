@@ -17,6 +17,7 @@ sig
   (** TODO doc *)
   val max_of_occurring_constants : t -> OurInt.t
 
+  val simplify : t -> t
   (* Add operations specific to polynomial formula here if needed *)
 end
 
