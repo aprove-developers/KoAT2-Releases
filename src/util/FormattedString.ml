@@ -41,12 +41,15 @@ type metadata = {
 let set_title str = fun meta -> { title = Some str; }
 
 
-let rec render_string f =
-  match f with
-  | Empty                   -> ""
-  | Str s                   -> s
-  | RawStr s                -> s
-  | Paragraph f'            -> render_string f' ^ "\n\n"
-  | NewLine                 -> "\n"
-  | Header (_,f')           -> render_string f' ^ "\n"
-  | SequentialComp (f1, f2) -> render_string f1 ^ render_string f2
+let render_string =
+  let rec helper ~indent f =
+    match f with
+    | Empty                   -> ""
+    | Str s                   -> String.repeat " " indent^s
+    | RawStr s                -> s
+    | Paragraph f'            -> helper f' ~indent:(indent + 2)^ "\n\n"
+    | NewLine                 -> "\n"
+    | Header (_,f')           -> helper f' ~indent ^ "\n"
+    | SequentialComp (f1, f2) -> helper f1 ~indent ^ helper ~indent f2
+  in
+  helper ~indent:0

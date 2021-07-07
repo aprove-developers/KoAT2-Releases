@@ -63,8 +63,14 @@ val is_initial_location : t -> Location.t -> bool
 (** Returns true if the program graphs are equivalent and both start locations are equal. *)
 val equivalent : t -> t -> bool
 
+(** Returns a formatted string representing the program. *)
+val to_formatted_string: t -> FormattedString.t
+
 (** Returns a string representing the program. *)
-val to_string : ?to_file:bool -> t -> string
+val to_string : t -> string
+
+(** Returns a string representing the program that can be dumped to a KoAT input file. *)
+val to_file : t -> string
 
 (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns a string representation of a program from such an input. *)
 val to_simple_string : t -> string
