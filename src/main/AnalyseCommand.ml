@@ -185,6 +185,7 @@ let run (params: params) =
       Timeout.timed_run params.timeout
         ~action:(fun () -> print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n") @@ fun () ->
          ((if params.cfr then program |> Normalise.normalise else program) , Approximation.create program)
+         |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
          |> Preprocessor.process params.preprocessing_strategy params.preprocessors
          |> tap (fun (prog, _) -> ProofOutput.add_to_proof @@ fun () ->
               FormattedString.(mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string prog))
