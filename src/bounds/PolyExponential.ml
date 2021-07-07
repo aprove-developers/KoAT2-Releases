@@ -158,7 +158,7 @@ module ConstantConstraint = struct
 
     let max_constant = function
     | C [] -> OurInt.minus_one
-    | C atoms -> List.max (List.map Tuple2.second atoms)
+    | C atoms -> OurInt.max_list (List.map Tuple2.second atoms)
     | _ -> OurInt.minus_one
 end
 
@@ -269,7 +269,7 @@ module PE = struct
     (* c.f.: masterthesis *)
     let multiply var poly monomials = 
         let constant = poly |> Polynomial.get_constant |> (flip ScaledMonomial.make) Monomial.one in
-            let scaled_monomials = constant::(List.map (fun monom -> ScaledMonomial.make (Polynomial.coeff monom poly) monom) monomials) in
+            let scaled_monomials = Polynomial.scaled_monomials poly in
             List.fold_right (fun tmp pe -> add tmp pe)
                 (List.map (fun scaled_monom -> 
                     let vars = scaled_monom |> VarSet.to_list % ScaledMonomial.vars in

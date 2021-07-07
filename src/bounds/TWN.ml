@@ -176,14 +176,14 @@ let compute_f = function
     let m_ = compute_M base_exp  in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["M", (OurInt.to_string m_)]);
     Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)))
-    |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha + max (N,M)", Bound.to_string b]))
+    |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]))
 
 let get_bound t order npe varmap = 
   let bound, max_con = 
       List.fold_right (fun atom (bound, const) -> 
           let poly = Atom.poly atom |> Polynomial.neg in 
           let sub_poly = PE.substitute varmap poly |> PE.remove_frac in 
-          Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 ◁ " ^ (PE.to_string sub_poly)]);
+          Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
           let max_const = OurInt.max const (PE.max_const sub_poly) in
           let rec summand = function
