@@ -56,6 +56,19 @@ let check_weakly_monotonicity (t: TransitionLabel.t) =
                           else 
                             update |> Option.get |> Polynomial.var_only_linear var) (TransitionLabel.input_vars t)
 
+
+(* NEGATIVITY *)
+
+let check_weakly_negativitiy (t: TransitionLabel.t) = 
+  VarSet.exists (fun var -> let update = TransitionLabel.update t var in
+                          if Option.is_none update then
+                            false
+                          else 
+                            update |> Option.get |> Polynomial.coeff_of_var var |> OurInt.is_negative) (TransitionLabel.input_vars t)
+
+
+let chain (t: TransitionLabel.t) = TransitionLabel.append t t
+
 (* TERMINATION: *)
 
 module SMTSolver = SMT.Z3Opt
@@ -202,25 +215,29 @@ let check_twn (l,t,l') =
 let complexity t = 
   let order = check_triangular t in
   if not (VarSet.is_empty (VarSet.diff (TransitionLabel.vars t) (TransitionLabel.input_vars t))) then
-    Bound.infinity  (* Non-det. is not allowed *)
+    Bound.infinity  (* TV Non-det. is not allowed *)
   else if (List.length order) != (VarSet.cardinal ((TransitionLabel.input_vars t))) then
     Bound.infinity (* Not triangular *)
   else if not (check_weakly_monotonicity t) then
     Bound.infinity (* Not weakly monotonic *)
   else (
+    let t_, was_negative =
+      if (check_weakly_negativitiy t) then
+        chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
+      else t, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
     let pe = PE.compute_closed_form (List.map (fun var -> 
-        let update_var = TransitionLabel.update t var in
+        let update_var = TransitionLabel.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
     let npe = PE.normalize pe in
         Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
     let varmap = Hashtbl.of_list (List.combine order npe) in
-    let terminating = termination_ t order pe npe varmap in
+    let terminating = termination_ t_ order pe npe varmap in
     if not terminating then 
       Bound.infinity
     else 
-      get_bound t order npe varmap)
+      let f = get_bound t_ order npe varmap in if was_negative then Bound.(add (add f f) one) else f)
 
 (* Cycles and corresponding time-bound. *)
 
@@ -255,6 +272,8 @@ let time_bound_table: Bound.t TimeBoundTable.t = TimeBoundTable.create 10
 let time_bound (l,t,l') scc program appr = 
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then 
+  let bound = 
+  Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
     let twn_scc = TransitionSet.filter check_twn scc in
     let graph = getTransitionGraph twn_scc in
     let path, _ = DjikstraTransitionGraph.shortest_path graph l' l in
@@ -263,11 +282,13 @@ let time_bound (l,t,l') scc program appr =
     Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entry))]);
     let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entry in
     Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entry) (List.map TransitionLabel.to_string twn_loops));
-    let bound = List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity t)))) (*TODO: Stop if one is inf; TODO add bound for all tran on cycle*)
+      List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity t)))) (*TODO: Stop if one is inf; TODO add bound for all tran on cycle*)
         (List.combine entry twn_loops) 
-        Bound.zero in
-    List.iter (fun t -> TimeBoundTable.add time_bound_table t bound) cycle;
-    bound
-    |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
+        Bound.zero
+        |> tap (fun b -> List.iter (fun t -> TimeBoundTable.add time_bound_table t b) cycle)) in
+    if Option.is_some bound then
+      bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
+    else
+      Bound.infinity |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
 else Option.get opt
   |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
