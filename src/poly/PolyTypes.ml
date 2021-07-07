@@ -407,6 +407,9 @@ module type Polynomial =
     (** Returns the monomials of the polynomial without the empty monomial. *)
     val monomials : t -> monomial list
 
+    (** Returns the scaled monomials of the polynomial without the empty monomial. *)
+    val scaled_monomials : t -> scaled_monomial list
+
     (** Returns the constant of the polynomial. *)
     val get_constant : t -> value
 

@@ -103,6 +103,9 @@ let termination_ t order pe npe varmap =
               else sub_poly |> red_le in Formula.mk_and formula formula_poly) 
               (TransitionLabel.guard t) (Formula.mk_true) in
   (not % SMTSolver.satisfiable) formula
+  |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string bool]);
+                      Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]))
+
 
 (* COMPLEXITY: *)
 
@@ -147,37 +150,51 @@ let compute_M = function
                          -> monotonicity_th (b1,a1) (b2, OurInt.(add a2 one)) OurInt.one
   | _ -> OurInt.zero
 
+
+module ScaledMonomial = ScaledMonomials.Make(OurInt)
+module Monomial = Monomials.Make(OurInt)
+let compute_alpha_abs = function
+  | [] -> Polynomial.zero
+  | x::[] -> Polynomial.fold ~const:(Polynomial.of_constant % OurInt.abs) ~var:(Polynomial.of_var) ~neg:identity ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow x
+  | xs -> List.flatten (List.map Polynomial.scaled_monomials xs) 
+          |> List.group (fun x y -> Monomial.compare (ScaledMonomial.monomial x) (ScaledMonomial.monomial y))
+          |> List.map (fun ys -> let max = OurInt.max_list (List.map (OurInt.abs % ScaledMonomial.coeff) ys) in 
+                      List.first ys |> ScaledMonomial.monomial |> ScaledMonomial.make max)
+          |> Polynomial.of_scaled 
+
 let compute_f = function
   | [] -> Bound.zero
   | x::[] -> Bound.zero
   | xs -> 
     let alphas = List.map (Tuple4.second) xs in
-    Logger.log logger Logger.INFO (fun () -> "absolute alphas", ["", (alphas |> List.enum |> Util.enum_to_string Polynomial.to_string)]);
+    Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["alphas", (alphas |> List.enum |> Util.enum_to_string Polynomial.to_string)]);
+    let alphas_abs = compute_alpha_abs alphas in
+    Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["alphas_abs", Polynomial.to_string alphas_abs]);
     let base_exp = List.map (fun (_,_,d,b) -> (b,d)) xs in
     let n_ = compute_N base_exp in
-    Logger.log logger Logger.INFO (fun () -> "N", ["", (OurInt.to_string n_)]);
+    Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["N", (OurInt.to_string n_)]);
     let m_ = compute_M base_exp  in
-    Logger.log logger Logger.INFO (fun () -> "M", ["", (OurInt.to_string m_)]);
-    let poly = List.fold Polynomial.add Polynomial.zero alphas in
-    Bound.(of_poly (Polynomial.add poly poly) |> add (of_constant (OurInt.max m_ n_)))
+    Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["M", (OurInt.to_string m_)]);
+    Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)))
+    |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha + max (N,M)", Bound.to_string b]))
 
 let get_bound t order npe varmap = 
   let bound, max_con = 
       List.fold_right (fun atom (bound, const) -> 
-          let poly = Atom.poly atom in 
+          let poly = Atom.poly atom |> Polynomial.neg in 
           let sub_poly = PE.substitute varmap poly |> PE.remove_frac in 
-          Logger.log logger Logger.INFO (fun () -> "npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", (PE.to_string sub_poly) ^ " ▷ 0"]);
+          Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 ◁ " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
           let max_const = OurInt.max const (PE.max_const sub_poly) in
           let rec summand = function
             | [] -> Bound.zero
             | x::[] -> Bound.zero
             | x::xs -> Bound.add (compute_f (x::xs)) (summand xs) in
-            (Bound.add bound ((summand sub_poly_n) 
-            |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "partial bound", ["", Bound.to_string b]))), max_const))
+            (Bound.add bound ((summand sub_poly_n)), max_const))
             (TransitionLabel.guard t) (Bound.one, OurInt.zero) in
-            Logger.log logger Logger.INFO (fun () -> "max constant in constant constraint", ["", (OurInt.to_string max_con)]);
+            Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", (OurInt.to_string max_con)]);
   Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
+  |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
 
 let check_twn (l,t,l') =
     (check_weakly_monotonicity t) && ((List.length (check_triangular t)) == (VarSet.cardinal ((TransitionLabel.input_vars t))))
@@ -251,5 +268,6 @@ let time_bound (l,t,l') scc program appr =
         Bound.zero in
     List.iter (fun t -> TimeBoundTable.add time_bound_table t bound) cycle;
     bound
+    |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
 else Option.get opt
-  |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "bound", ["", Bound.to_string b]))
+  |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
