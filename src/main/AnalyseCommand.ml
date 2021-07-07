@@ -4,6 +4,7 @@ open ProgramTypes
 open RVGTypes
 open Readers
 open BoundsInst
+open Formatter
 
 let command = "analyse"
 
@@ -53,6 +54,9 @@ type params = {
 
     output_dir : string option; [@aka ["o"]]
     (** An absolute or relative path to the output directory, where all generated files should end up. *)
+
+    show_proof: bool;
+    (** Displays the complexity proof. *)
 
     logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default Logging.all] [@sep ','] [@aka ["l"]]
     (** The loggers which should be activated. *)
@@ -168,16 +172,23 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
+  ProofOutput.compute_proof params.show_proof;
   let problem =
     input
     |> Readers.read_input ~rename:params.rename params.simple_input
     |> rename_program_option
+    |> tap (Option.may @@ fun prog -> ProofOutput.add_to_proof @@ fun () ->
+          FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string prog) )
+        )
   in
   Option.bind problem (fun program ->
       Timeout.timed_run params.timeout
         ~action:(fun () -> print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n") @@ fun () ->
          ((if params.cfr then program |> Normalise.normalise else program) , Approximation.create program)
          |> Preprocessor.process params.preprocessing_strategy params.preprocessors
+         |> tap (fun (prog, _) -> ProofOutput.add_to_proof @@ fun () ->
+              FormattedString.(mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string prog))
+            )
          |> tap (fun (program, appr) ->
                 if params.print_system then
                   GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
@@ -201,5 +212,6 @@ let run (params: params) =
               )
        )
     |> ignore;
+    if params.show_proof then print_string "\n\n"; ProofOutput.print_proof ();
     if params.log_level == NONE && params.cfr then
       ignore (Sys.command ("rm -f -r ./tmp_" ^ !CFR.uid))

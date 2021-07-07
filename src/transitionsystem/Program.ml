@@ -170,24 +170,31 @@ let is_initial program trans =
 let is_initial_location program location =
   Location.(equal (program.start) location)
 
-let to_string ?(to_file = false) program  =
-  let transitions = String.concat "\n  " (TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string t)]) program.graph [])
-  and locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
-  if not to_file then
-  String.concat "  " [
-      "  Start:"; Location.to_string program.start;"\n";
-      "Program_Vars:"; program |> input_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n";
-      "Temp_Vars:"; program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", "; "\n";
-      "Locations:"; locations;"\n";
-      "Transitions:\n"; transitions;"\n";
-    ]
-    else
-    String.concat "" [
-        "(GOAL COMPLEXITY)\n";
-        "(STARTTERM (FUNCTIONSYMBOLS "; program |> start |> Location.to_string; "))\n";
-        "(VAR "; (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (vars program) ""); ")\n";
-        "(RULES \n"; TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "" ; ")";
-    ]
+let to_formatted_string program =
+  let transitions =
+    TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string t)]) program.graph []
+    |> FormattedString.mappend % List.map FormattedString.mk_str_line
+  in
+  let locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
+  FormattedString.format_append (
+    [
+      "Start:  "^Location.to_string program.start;
+      "Program_Vars:  "^(program |> input_vars |> VarSet.map_to_list Var.to_string |> String.concat ", ");
+      "Temp_Vars:  "^(program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", ");
+      "Locations:  "^locations;
+      "Transitions:";
+    ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)
+  transitions
+
+let to_string = FormattedString.render_string % to_formatted_string
+
+let to_file program  =
+  String.concat "" [
+      "(GOAL COMPLEXITY)\n";
+      "(STARTTERM (FUNCTIONSYMBOLS "; program |> start |> Location.to_string; "))\n";
+      "(VAR "; (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (vars program) ""); ")\n";
+      "(RULES \n"; TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "" ; ")";
+  ]
 
 let to_simple_string program =
   TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph ""

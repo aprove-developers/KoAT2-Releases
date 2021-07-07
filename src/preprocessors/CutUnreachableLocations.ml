@@ -23,9 +23,12 @@ let transform_program program =
   let unreachable_locations = unreachable_locations (Program.graph program) (Program.start program) in
   if LocationSet.is_empty unreachable_locations then
     MaybeChanged.same program
-  else
+  else (
+    ProofOutput.add_str_paragraph_to_proof
+      (fun () -> "Cut unreachable locations "^Util.enum_to_string Location.to_string (LocationSet.enum unreachable_locations)^
+                 " from the program graph");
     let remove location program =
       Logger.(log logger INFO (fun () -> "cut_unreachable_locations", ["location", Location.to_string location]));
       Program.remove_location program location
     in
-    MaybeChanged.changed (LocationSet.fold remove unreachable_locations program)
+    MaybeChanged.changed (LocationSet.fold remove unreachable_locations program))
