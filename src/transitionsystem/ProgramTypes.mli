@@ -101,6 +101,8 @@ sig
 
   val create : ('a -> elt) -> 'a Batteries.Enum.t -> t
 
+  val locations: t -> LocationSet.t
+
 end
 
 (** This module represents a transition graph. *)

@@ -119,6 +119,9 @@ module TransitionSet =
       |> Enum.map f
       |> of_enum
 
+    let locations t = 
+      fold (fun (l,_,l') set -> LocationSet.add l set |> LocationSet.add l') t (LocationSet.empty)
+
   end
 
 
