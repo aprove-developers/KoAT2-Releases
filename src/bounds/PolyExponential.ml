@@ -268,7 +268,6 @@ module PE = struct
 
     (* c.f.: masterthesis *)
     let multiply var poly monomials = 
-        let constant = poly |> Polynomial.get_constant |> (flip ScaledMonomial.make) Monomial.one in
             let scaled_monomials = Polynomial.scaled_monomials poly in
             List.fold_right (fun tmp pe -> add tmp pe)
                 (List.map (fun scaled_monom -> 
