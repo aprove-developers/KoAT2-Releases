@@ -14,7 +14,13 @@ let skip_location location graph =
   |> Tuple2.mapn (fun f -> f graph location)
   |> Tuple2.mapn List.enum
   |> uncurry Enum.cartesian_product
-  |> Enum.map (fun ((l,t,_), (_,t',l')) -> (l, TransitionLabel.append t t', l'))
+  |> Enum.map (fun ((l,t,l1), (l'1,t',l')) ->
+        let chained = (l, TransitionLabel.append t t', l') in
+        ProofOutput.add_str_paragraph_to_proof
+          (fun () -> "Chain transitions "^Transition.to_id_string (l,t,l1)^" and "^
+                      Transition.to_id_string (l'1,t',l')^" to "^Transition.to_id_string chained);
+        chained
+     )
   |> (flip Program.add_transitions) graph
 
 (** Returns true if the specific location is chainable in the graph. *)

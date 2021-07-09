@@ -270,4 +270,9 @@ let transform_program program =
     in
     program
     |> LocationMap.fold add invariants
+    |> tap (fun prog -> ProofOutput.add_to_proof @@ fun () ->
+        FormattedString.(mk_paragraph (
+          (mk_header_big @@ mk_str "Invariant Generation using the Octagon Domain results in the following problem")<>(mk_paragraph @@ Program.to_formatted_string prog))
+        )
+       )
     |> MaybeChanged.changed (* TODO Actually, we should check if the new invariant is already implied and only then say, that it is changed. *)

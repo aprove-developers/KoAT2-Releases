@@ -90,7 +90,9 @@ module Transition =
             ^ TransitionLabel.(guard_to_string ~to_file t)
         )
       else
-        (Location.to_string l) ^ TransitionLabel.(update_to_string_lhs t)^ " -"^(TransitionLabel.(cost_to_string t))^"> " ^ (Location.to_string l') ^ TransitionLabel.(update_to_string_rhs t) ^":|:" ^ TransitionLabel.(guard_to_string t)
+        Int.to_string (TransitionLabel.id t)^":"^Location.to_string l ^ TransitionLabel.(update_to_string_lhs t)^ " -"^
+        TransitionLabel.cost_to_string t^"> " ^ Location.to_string l' ^
+        TransitionLabel.update_to_string_rhs t ^ if Constraint.is_true (TransitionLabel.guard t) then "" else ":|:" ^ TransitionLabel.(guard_to_string t)
 
     let rename vars (l,t,l') =
       (l, (TransitionLabel.rename vars t),l')
@@ -116,6 +118,9 @@ module TransitionSet =
       enum
       |> Enum.map f
       |> of_enum
+
+    let locations t = 
+      fold (fun (l,_,l') set -> LocationSet.add l set |> LocationSet.add l') t (LocationSet.empty)
 
   end
 
