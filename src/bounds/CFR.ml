@@ -100,7 +100,7 @@ let minimalDisjointSCCs (original_sccs: ProgramTypes.TransitionSet.t list) =
           original_scc
           |> List.fold_right
               (fun scc merged_scc ->
-                if (TransitionSet.disjoint scc merged_scc) then
+                if (LocationSet.disjoint (TransitionSet.locations scc) (TransitionSet.locations merged_scc)) then
                   merged_scc
                 else
                   (TransitionSet.union scc merged_scc)) original_sccs)
@@ -219,14 +219,13 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
                                 (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
       let unit_cost = TransitionSet.for_all (fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
       (*if there are costs which are not one then we cannot apply irankfinder *)
-      if not (unit_cost scc) then
-         (merged_program, TransitionSet.union already_used_trans scc)
+      if not (unit_cost scc) then (
+         (merged_program, TransitionSet.union already_used_trans scc))
       else
         let scc_list =
           TransitionSet.to_list scc
           in
         let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
-
         let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.input_vars program),l)) (LocationSet.to_list entry_locations) in
         let program_cfr =
         initial_location
@@ -260,6 +259,5 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
     let (program_res,already_used_cfr_res) =
     (program,TransitionSet.empty)
     |> SCCSet.fold (f_iteration ) minimalDisjointSCCs
-      (* |> Program.rename *)
       in
       Option.some (program_res, (get_appr_cfr program program_res appr), already_used_cfr_res))

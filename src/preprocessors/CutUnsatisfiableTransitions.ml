@@ -20,6 +20,7 @@ let unsatisfiable_transitions program graph : TransitionSet.t =
       else set
     else
       (* There needs to be a transition distinct from (l,t,l') to enter (l,t,l') *)
+      (* Note that the enum returned by Program.pre is lazy. Hence, we only have to compute the first value of this enum *)
       let intrans = Enum.filter (not % Transition.same (l,t,l')) @@ Program.pre program (l,t,l') in
       if Enum.is_empty intrans then
         TransitionSet.add (l,t,l') set
@@ -35,6 +36,7 @@ let transform_program program =
   else
     let remove transition program =
       Logger.(log logger INFO (fun () -> "cut_unsatisfiable_transitions", ["transition", Transition.to_id_string transition]));
+      ProofOutput.add_str_paragraph_to_proof(fun () -> "Cut unsatisfiable transition "^Transition.to_id_string transition);
       Program.remove_transition program transition
     in
     MaybeChanged.changed (TransitionSet.fold remove unsatisfiable_transitions program)
