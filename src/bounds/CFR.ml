@@ -233,7 +233,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         |> applyIrankFinder
 
         (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
-        and map = RenameMap.from_native ((List.init (Program.cardinal_vars program) (fun i -> ("Arg" ^ string_of_int i,"Arg_" ^ string_of_int i)))) in
+        and map = RenameMap.from_native ((List.init (Program.cardinal_vars program) (fun i -> ("Arg_" ^ string_of_int i,"Arg_" ^ string_of_int i)))) in
         let transitions_cfr = program_cfr
         |> Program.transitions
         |> rename_entry_transition entry_locations initial_location
