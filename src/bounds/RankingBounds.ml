@@ -188,8 +188,9 @@ let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc:
           (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
            execute)
 
-let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program appr =
+let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ?(twn = false) (scc: TransitionSet.t) measure program appr =
   let rec step appr =
+    if twn then
     appr
     |> knowledge_propagation scc measure program
     |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
@@ -199,13 +200,20 @@ let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = fals
     |> improve_with_twn program scc measure
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
+    else 
+    appr
+    |> knowledge_propagation scc measure program
+    |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
+    |> improve_timebound ~mprf_max_depth ~inv ~fast scc measure program
+    |> MaybeChanged.if_changed step
+    |> MaybeChanged.unpack
   in
   (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
   knowledge_propagation scc measure program appr
   |> MaybeChanged.unpack % improve_timebound ~mprf_max_depth ~inv ~fast scc measure program
   |> step
 
-let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) measure program appr =
+let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
   if not (TransitionSet.is_empty non_linear_transitions)  then
       let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
       let opt =
@@ -233,7 +241,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
                         appr
                         |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "cfr analysis", ["scc", TransitionSet.to_id_string scc]))
                         |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
-                        |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~inv ~fast scc measure program_cfr
+                        |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~inv ~fast ~twn scc measure program_cfr
                     else appr)
               (Approximation.create program_cfr) in
         let cfr_bound = Bound.sum (Enum.map
@@ -260,7 +268,7 @@ let handle_timeout_cfr non_linear_transitions =
 
 
 
-let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
+let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
   program
     |> Program.sccs
     |> List.of_enum
@@ -269,7 +277,7 @@ let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = fal
                             appr
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc)
-                            |> improve_scc rvg ~mprf_max_depth ~inv ~fast scc measure program
+                            |> improve_scc rvg ~mprf_max_depth ~inv ~fast ~twn scc measure program
                             (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
                             |> fun appr ->
                                 let non_linear_transitions =
@@ -279,7 +287,7 @@ let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = fal
                               if cfr && !CFR.time_cfr > 0. && not (TransitionSet.is_empty non_linear_transitions) then (
                                 let time = CFR.compute_timeout_time program appr scc in
                                 let opt = Timeout.timed_run time ~action:(fun () -> handle_timeout_cfr scc)
-                                (fun () -> apply_cfr scc rvg time non_linear_transitions ~mprf_max_depth ~inv ~fast measure program appr) in
+                                (fun () -> apply_cfr scc rvg time non_linear_transitions ~mprf_max_depth ~inv ~fast ~twn measure program appr) in
                                 if Option.is_some opt then
                                   let res, time_used = Option.get opt in
                                   CFR.time_cfr := !CFR.time_cfr -. time_used;
