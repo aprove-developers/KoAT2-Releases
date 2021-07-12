@@ -1,0 +1,12 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A B C N)
+(RULES
+  l0(A,B,C,N) -> l1(A,B,C,N)
+  l1(A,B,C,N) -> l1(A,B + N - 1,C,N - 1) :|: N > 0
+  l1(A,B,C,N) -> l2a(A,B,C) :|: N = 0
+  l2a(A,B,C) -> l2b(A,B, 2 * C) :|: A < B && C > 0
+  l2b(A,B,C) -> l2c(A + C * C, B, C) :|: C > 0
+  l2c(A,B,C) -> l2a(A, 3 * B, C) :|: C > 0
+  l2c(A,B,C) -> l3(A,B,C) :|: A >= B
+)
