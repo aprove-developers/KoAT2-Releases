@@ -30,7 +30,7 @@ let new_cache () = {
 }
 
 (* The value of measure is fixed within one computation of MPRFs *)
-let constraint_cache cache = Util.memoize_v2 cache.constraint_cache
+let constraint_cache cache = Util.memoize cache.constraint_cache
   ~extractor:(fun (d,_,c,t) -> d,c,Transition.id t)
 
 (** Given a list of variables an affine template-polynomial is generated*)
