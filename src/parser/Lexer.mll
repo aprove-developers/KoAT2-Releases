@@ -28,6 +28,10 @@ rule read =
   | white             { read lexbuf }
   | newline           { next_line lexbuf; read lexbuf }
   | "GOAL"            { P.GOAL }
+  | "COMPLEXITY"           { P.COMPLEXITY }
+  | "EXPECTEDCOMPLEXITY"   { P.EXPECTEDCOMPLEXITY }
+  (*| "EXACTRUNTIME"         { P.EXACTRUNTIME }
+  | "EXPECTEDSIZE"         { P.EXPECTEDSIZE } *)
   | "STARTTERM"       { P.STARTTERM }
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
   | "RULES"           { P.RULES }
