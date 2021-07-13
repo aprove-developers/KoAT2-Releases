@@ -24,6 +24,8 @@ clean:
   rm -f \
      *.omc \
      *.cmo \
+     *.cmt \
+     *.cmti \
      *.cmi \
      *.cmx \
      *.idoc \
