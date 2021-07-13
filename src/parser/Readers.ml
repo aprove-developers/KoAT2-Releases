@@ -58,3 +58,7 @@ let read_input ?(rename=false) simple program_str =
       |> Option.some
     with TransitionLabel.RecursionNotSupported ->
       prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now."; None
+
+let read_prog_goal_file path =
+  read_ Parser.programAndGoal (Lexing.from_channel @@ File.open_in path)
+
