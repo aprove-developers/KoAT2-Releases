@@ -23,7 +23,7 @@ let run (params: params) =
   let depth = 1 in
   params.input
   |> Readers.read_input params.simple_input
-  |> Option.may (fun program ->
+  |> (fun program ->
          Approximation.create program
          |> TrivialTimeBounds.compute program
          |> (fun appr ->

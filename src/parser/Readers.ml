@@ -49,16 +49,15 @@ let read_input ?(rename=false) simple program_str =
     program_str
     |> read_program_simple
     |> (if rename then Program.rename else identity)
-    |> Option.some
   else
     try
       program_str
       |> read_file
       |> (if rename then Program.rename else identity)
-      |> Option.some
     with TransitionLabel.RecursionNotSupported ->
-      prerr_string "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now."; None
+      failwith "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now."
 
-let read_prog_goal_file path =
+let read_prog_goal_file ?(rename=false) path =
   read_ Parser.programAndGoal (Lexing.from_channel @@ File.open_in path)
+  |> Tuple2.map1 (if rename then Program.rename else identity)
 
