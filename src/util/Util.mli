@@ -25,9 +25,7 @@ val powerset : 'a Set.t -> ('a Set.t) Enum.t
 
 val find_map : ('a -> 'b Option.t) -> 'a Enum.t -> 'b Option.t
 
-val memoize : extractor:('a -> 'c) -> ('a -> 'b) -> 'a -> 'b
-
-val memoize_v2 : ('a,'b) Hashtbl.t -> extractor:('c -> 'a) -> ('c -> 'b) -> 'c -> 'b
+val memoize : ('a,'b) Hashtbl.t -> extractor:('c -> 'a) -> ('c -> 'b) -> 'c -> 'b
 
 (**  Generates a hash interger value of a given string. *)
 val hash: string -> int

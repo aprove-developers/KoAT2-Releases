@@ -68,7 +68,7 @@ let new_cache max_depth =
 
 (* Cache does not depend on measure since the cache is unique for each measure *)
 let constraint_cache cache =
-  Util.memoize_v2 cache.constraint_cache ~extractor:(fun (depth, _, constraint_type, t) -> depth, constraint_type, Transition.id t)
+  Util.memoize cache.constraint_cache ~extractor:(fun (depth, _, constraint_type, t) -> depth, constraint_type, Transition.id t)
 
 let logger = Logging.(get PRF)
 
