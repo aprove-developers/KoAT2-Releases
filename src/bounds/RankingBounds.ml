@@ -190,17 +190,6 @@ let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc:
 
 let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ?(twn = false) (scc: TransitionSet.t) measure program appr =
   let rec step appr =
-    if twn then
-    appr
-    |> knowledge_propagation scc measure program
-    |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
-    |> improve_timebound ~mprf_max_depth ~inv ~fast scc measure program
-    |> MaybeChanged.if_changed step
-    |> MaybeChanged.unpack
-    |> improve_with_twn program scc measure
-    |> MaybeChanged.if_changed step
-    |> MaybeChanged.unpack
-    else 
     appr
     |> knowledge_propagation scc measure program
     |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
@@ -208,10 +197,17 @@ let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = fals
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
   in
+  let twn_step appr =
+    appr
+    |> improve_with_twn program scc measure
+    |> MaybeChanged.if_changed step
+    |> MaybeChanged.unpack
+  in
   (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
   knowledge_propagation scc measure program appr
   |> MaybeChanged.unpack % improve_timebound ~mprf_max_depth ~inv ~fast scc measure program
   |> step
+  |> twn_step
 
 let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
   if not (TransitionSet.is_empty non_linear_transitions)  then
