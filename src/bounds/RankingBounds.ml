@@ -26,14 +26,6 @@ let apply (get_sizebound: Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t)
   |> Bound.substitute_f (get_sizebound transition)
 
 
-(* method transforms polynome to parapolynom*)
-let as_parapoly label var =
-    match TransitionLabel.update label var with
-    (** Correct? In the nondeterministic case we just make it deterministic? *)
-    | None -> ParameterPolynomial.of_var var
-    | Some p -> ParameterPolynomial.of_polynomial p
-
-
 let entry_transitions program tset =
   let all_possible_entry_trans =
     TransitionSet.enum tset
