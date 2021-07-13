@@ -67,6 +67,8 @@ doc: $(IDOCS)
 clean:
     rm -f \
         *.omc \
+        *.cmt \
+        *.cmti \
         *.log \
         *.cache \
         $(DOC_DIR)/* \

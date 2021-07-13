@@ -10,6 +10,8 @@ clean:
   rm -f \
      *.omc \
      *.idoc \
+     *.cmt \
+     *.cmti \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
      *~
