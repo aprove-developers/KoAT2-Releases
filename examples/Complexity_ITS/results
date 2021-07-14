@@ -1,0 +1,19 @@
+#!/bin/bash
+
+while getopts i: flag
+do
+    case "${flag}" in
+        i) input=${OPTARG};;
+    esac
+done
+
+echo "O(1): `grep -i "O(1)" $input | wc -l`"
+echo "O(n): `grep -i "O(n)" $input | wc -l`"
+for i in 2 3 4 5 6 7 8 9 10
+do
+    echo "O(n^$i): `grep -i "O(n^$i)" $input | wc -l`"
+done
+echo "O(EXP): `grep -i "O(EXP)" $input | wc -l`"
+echo "inf {Infinity}: `grep -i "inf {Infinity}" $input | wc -l`"
+
+

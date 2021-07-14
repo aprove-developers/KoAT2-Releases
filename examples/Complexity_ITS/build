@@ -6,8 +6,14 @@
 # The GNU tool parallel need to be installed.
 # `sudo apt-get install parallel`
 # The timeout stops single tests after x seconds.
+find . -name "*.output" -type f -delete
+find . -name "*.koat" | parallel -j+0 --eta --timeout 90 'koat2 analyse --preprocessors=reachable,sat,eliminate,invgen --cfr -d 5 --twn -i {} -r all &> {.}.output'
+./view_results &> 2021_07_13_results_twn
+./view_times &> 2021_07_13_times_twn
+./view_costs &> 2021_07_13_costs_twn
+
 #find . -name "*.output" -type f -delete
-#find . -name "*.koat" | parallel -j+0 --eta --timeout 90 'koat2 analyse -i {} -r all &> {.}.output'
-./view_results &> 2021_07_07_results
-./view_times &> 2021_07_07_times
-./view_costs &> 2021_07_07_costs
+#find . -name "*.koat" | parallel -j+0 --eta --timeout 90 './koat2 analyse --preprocessors=reachable,sat,eliminate,invgen --cfr -d 5 -i {} -r all &> {.}.output'
+#./view_results &> 2021_07_13_results
+#./view_times &> 2021_07_13_times
+#./view_costs &> 2021_07_13_costs
