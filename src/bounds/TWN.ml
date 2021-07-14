@@ -273,9 +273,9 @@ let time_bound (l,t,l') scc program appr =
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then 
   let bound = 
-  Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
-    let twn_scc = TransitionSet.filter check_twn scc in
-    let graph = getTransitionGraph twn_scc in
+  Timeout.timed_run 20. ~action:(fun () -> ()) (fun () -> 
+    (* let twn_scc = TransitionSet.filter check_twn scc in *)
+    let graph = getTransitionGraph scc in
     let path, _ = DjikstraTransitionGraph.shortest_path graph l' l in
     let cycle = ((l,t,l')::path) in
     let entry = Program.entry_transitions logger program cycle in

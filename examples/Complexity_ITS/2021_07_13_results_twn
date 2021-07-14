@@ -1,0 +1,1668 @@
+==> ./tmp_124016_1626207008.57/tmp/tmp_scc1.output <==
+MAYBE
+
+Initial Complexity Problem After Preprocessing:
+Start:  f15
+Program_Vars:  Arg_0, Arg_1, Arg_2, Arg_3
+Temp_Vars:  
+Locations:  f1, f15
+Transitions:
+0:f1(Arg_0,Arg_1,Arg_2,Arg_3) -> f1(Arg_0,Arg_1,Arg_2,Arg_3):|:1+Arg_1<=Arg_3 && 2+Arg_0<=Arg_3 && 1+Arg_0<=Arg_1 && 1+Arg_1<=Arg_3 && Arg_2<=4
+1:f15(Arg_0,Arg_1,Arg_2,Arg_3) -> f1(Arg_0,Arg_1,Arg_2,Arg_3)
+
+Timebounds: 
+  Overall timebound: inf {Infinity}
+  0: f1->f1: inf {Infinity}
+  1: f15->f1: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: inf {Infinity}
+  0: f1->f1: inf {Infinity}
+  1: f15->f1: 1 {O(1)}
+
+Sizebounds:
+  0: f1->f1, Arg_0: Arg_0 {O(n)}
+  0: f1->f1, Arg_1: Arg_1 {O(n)}
+  0: f1->f1, Arg_2: Arg_2 {O(n)}
+  0: f1->f1, Arg_3: Arg_3 {O(n)}
+  1: f15->f1, Arg_0: Arg_0 {O(n)}
+  1: f15->f1, Arg_1: Arg_1 {O(n)}
+  1: f15->f1, Arg_2: Arg_2 {O(n)}
+  1: f15->f1, Arg_3: Arg_3 {O(n)}
+
+==> ./tmp_124016_1626207008.57/tmp/tmp_scc1_cfr1.output <==
+MAYBE
+
+Initial Complexity Problem After Preprocessing:
+Start:  n_f15
+Program_Vars:  Arg_0, Arg_1, Arg_2, Arg_3
+Temp_Vars:  
+Locations:  n_f15, n_f1___1, n_f1___2
+Transitions:
+0:n_f15(Arg_0,Arg_1,Arg_2,Arg_3) -> n_f1___2(Arg_0,Arg_1,Arg_2,Arg_3)
+1:n_f1___1(Arg_0,Arg_1,Arg_2,Arg_3) -> n_f1___1(Arg_0,Arg_1,Arg_2,Arg_3):|:1+Arg_1<=Arg_3 && 2+Arg_0<=Arg_3 && Arg_2<=4 && 1+Arg_0<=Arg_1 && 1+Arg_1<=Arg_3 && 1+Arg_0<=Arg_1 && Arg_2<=4 && Arg_2<=4 && 1+Arg_0<=Arg_1 && 1+Arg_1<=Arg_3 && Arg_2<=4 && 1+Arg_0<=Arg_1 && 1+Arg_1<=Arg_3 && Arg_2<=4 && 1+Arg_1<=Arg_3 && 1+Arg_0<=Arg_1
+2:n_f1___2(Arg_0,Arg_1,Arg_2,Arg_3) -> n_f1___1(Arg_0,Arg_1,Arg_2,Arg_3):|:Arg_2<=4 && 1+Arg_1<=Arg_3 && 1+Arg_0<=Arg_1
+
+Timebounds: 
+  Overall timebound: inf {Infinity}
+  0: n_f15->n_f1___2: 1 {O(1)}
+  1: n_f1___1->n_f1___1: inf {Infinity}
+  2: n_f1___2->n_f1___1: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: inf {Infinity}
+  0: n_f15->n_f1___2: 1 {O(1)}
+  1: n_f1___1->n_f1___1: inf {Infinity}
+  2: n_f1___2->n_f1___1: 1 {O(1)}
+
+Sizebounds:
+  0: n_f15->n_f1___2, Arg_0: Arg_0 {O(n)}
+  0: n_f15->n_f1___2, Arg_1: Arg_1 {O(n)}
+  0: n_f15->n_f1___2, Arg_2: Arg_2 {O(n)}
+  0: n_f15->n_f1___2, Arg_3: Arg_3 {O(n)}
+  1: n_f1___1->n_f1___1, Arg_0: Arg_0 {O(n)}
+  1: n_f1___1->n_f1___1, Arg_1: Arg_1 {O(n)}
+  1: n_f1___1->n_f1___1, Arg_2: Arg_2 {O(n)}
+  1: n_f1___1->n_f1___1, Arg_3: Arg_3 {O(n)}
+  2: n_f1___2->n_f1___1, Arg_0: Arg_0 {O(n)}
+  2: n_f1___2->n_f1___1, Arg_1: Arg_1 {O(n)}
+  2: n_f1___2->n_f1___1, Arg_2: Arg_2 {O(n)}
+  2: n_f1___2->n_f1___1, Arg_3: Arg_3 {O(n)}
+
+==> ./tmp_124016_1626207008.57/tmp_scc1.output <==
+[124242] Failed to execute script CFRefinement
+Traceback (most recent call last):
+  File "CFRefinement.py", line 123, in launch
+  File "partialevaluation/__init__.py", line 61, in control_flow_refinement
+  File "partialevaluation/__init__.py", line 101, in partialevaluate
+  File "partialevaluation/__init__.py", line 176, in set_props
+  File "partialevaluation/__init__.py", line 298, in johns_props1
+  File "partialevaluation/__init__.py", line 340, in _parse_props
+  File "partialevaluation/__init__.py", line 340, in <listcomp>
+  File "genericparser/__init__.py", line 121, in parse_constraint
+  File "genericparser/Constraint_parser.py", line 24, in parse_string
+  File "lark/lark.py", line 197, in parse
+  File "lark/parser_frontends.py", line 137, in parse
+  File "lark/parsers/xearley.py", line 126, in parse
+  File "lark/parsers/xearley.py", line 115, in scan
+lark.lexer.UnexpectedInput: No token defined for: '[' in '[-1*A' at line 1 col 1
+
+Expecting: {'SUM', '__LPAR', 'NUMBER', 'CNAME'}
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "CFRefinement.py", line 147, in <module>
+  File "CFRefinement.py", line 134, in launch
+Exception
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "CFRefinement.py", line 150, in <module>
+Exception
+Exception  -> No token defined for: '[' in '[-1*A' at line 1 col 1
+
+Expecting: {'SUM', '__LPAR', 'NUMBER', 'CNAME'}
+
+koat2: internal error, uncaught exception:
+       Sys_error("./tmp_124177_1626207021.57/tmp/tmp_scc1_cfr1.koat: No such file or directory")
+       
+
+==> ./tmp_123216_1626206996.8/tmp/tmp_scc1.output <==
+YES( ?, Arg_1+1 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f
+Program_Vars:  Arg_0, Arg_1, Arg_2
+Temp_Vars:  
+Locations:  f, h
+Transitions:
+0:f(Arg_0,Arg_1,Arg_2) -> h(Arg_0,Arg_1,Arg_2)
+1:h(Arg_0,Arg_1,Arg_2) -> h(Arg_0,Arg_1-1,Arg_2):|:Arg_2<=0 && 1+Arg_2<=Arg_0 && 1<=Arg_0 && 0<Arg_1
+
+Timebounds: 
+  Overall timebound: Arg_1+1 {O(n)}
+  0: f->h: 1 {O(1)}
+  1: h->h: Arg_1 {O(n)}
+
+Costbounds:
+  Overall costbound: Arg_1+1 {O(n)}
+  0: f->h: 1 {O(1)}
+  1: h->h: Arg_1 {O(n)}
+
+Sizebounds:
+  0: f->h, Arg_0: Arg_0 {O(n)}
+  0: f->h, Arg_1: Arg_1 {O(n)}
+  0: f->h, Arg_2: Arg_2 {O(n)}
+  1: h->h, Arg_0: Arg_0 {O(n)}
+  1: h->h, Arg_1: Arg_1 {O(n)}
+  1: h->h, Arg_2: Arg_2 {O(n)}
+
+==> ./tmp_123216_1626206996.8/tmp_scc1.output <==
+YES( ?, Arg_1+1 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f
+Program_Vars:  Arg_0, Arg_1, Arg_2
+Temp_Vars:  
+Locations:  f, h
+Transitions:
+0:f(Arg_0,Arg_1,Arg_2) -> h(Arg_0,Arg_1,Arg_2)
+1:h(Arg_0,Arg_1,Arg_2) -> h(Arg_0,Arg_1-1,Arg_2):|:Arg_2<=0 && 1+Arg_2<=Arg_0 && 1<=Arg_0 && 0<Arg_1
+
+Timebounds: 
+  Overall timebound: Arg_1+1 {O(n)}
+  0: f->h: 1 {O(1)}
+  1: h->h: Arg_1 {O(n)}
+
+Costbounds:
+  Overall costbound: Arg_1+1 {O(n)}
+  0: f->h: 1 {O(1)}
+  1: h->h: Arg_1 {O(n)}
+
+Sizebounds:
+  0: f->h, Arg_0: Arg_0 {O(n)}
+  0: f->h, Arg_1: Arg_1 {O(n)}
+  0: f->h, Arg_2: Arg_2 {O(n)}
+  1: h->h, Arg_0: Arg_0 {O(n)}
+  1: h->h, Arg_1: Arg_1 {O(n)}
+  1: h->h, Arg_2: Arg_2 {O(n)}
+
+==> ./tmp_123214_1626206996.78/tmp/tmp_scc1.output <==
+YES( ?, Arg_0+1 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f
+Program_Vars:  Arg_0, Arg_1
+Temp_Vars:  
+Locations:  f, h
+Transitions:
+0:f(Arg_0,Arg_1) -> h(Arg_0,Arg_1)
+1:h(Arg_0,Arg_1) -> h(Arg_0-1,Arg_1):|:Arg_1<=0 && 0<Arg_0
+
+Timebounds: 
+  Overall timebound: Arg_0+1 {O(n)}
+  0: f->h: 1 {O(1)}
+  1: h->h: Arg_0 {O(n)}
+
+Costbounds:
+  Overall costbound: Arg_0+1 {O(n)}
+  0: f->h: 1 {O(1)}
+  1: h->h: Arg_0 {O(n)}
+
+Sizebounds:
+  0: f->h, Arg_0: Arg_0 {O(n)}
+  0: f->h, Arg_1: Arg_1 {O(n)}
+  1: h->h, Arg_0: Arg_0 {O(n)}
+  1: h->h, Arg_1: Arg_1 {O(n)}
+
+==> ./tmp_123214_1626206996.78/tmp_scc1.output <==
+YES( ?, Arg_0+1 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f
+Program_Vars:  Arg_0, Arg_1
+Temp_Vars:  
+Locations:  f, h
+Transitions:
+0:f(Arg_0,Arg_1) -> h(Arg_0,Arg_1)
+1:h(Arg_0,Arg_1) -> h(Arg_0-1,Arg_1):|:Arg_1<=0 && 0<Arg_0
+
+Timebounds: 
+  Overall timebound: Arg_0+1 {O(n)}
+  0: f->h: 1 {O(1)}
+  1: h->h: Arg_0 {O(n)}
+
+Costbounds:
+  Overall costbound: Arg_0+1 {O(n)}
+  0: f->h: 1 {O(1)}
+  1: h->h: Arg_0 {O(n)}
+
+Sizebounds:
+  0: f->h, Arg_0: Arg_0 {O(n)}
+  0: f->h, Arg_1: Arg_1 {O(n)}
+  1: h->h, Arg_0: Arg_0 {O(n)}
+  1: h->h, Arg_1: Arg_1 {O(n)}
+
+==> ./Brockschmidt_16/KoAT-2014/scaling-exp-growth.output <==
+YES( ?, 2^(Arg_1)*Arg_0+Arg_0+Arg_1+2 {O(EXP)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f
+Program_Vars:  Arg_0, Arg_1
+Temp_Vars:  
+Locations:  f, g, h
+Transitions:
+0:f(Arg_0,Arg_1) -> g(Arg_0,Arg_1)
+1:g(Arg_0,Arg_1) -> g(2*Arg_0,Arg_1-1):|:0<Arg_1
+2:g(Arg_0,Arg_1) -> h(Arg_0,Arg_1):|:Arg_1<=0
+3:h(Arg_0,Arg_1) -> h(Arg_0-1,Arg_1):|:Arg_1<=0 && 0<Arg_0
+
+Timebounds: 
+  Overall timebound: 2^(Arg_1)*Arg_0+Arg_0+Arg_1+2 {O(EXP)}
+  0: f->g: 1 {O(1)}
+  1: g->g: Arg_1 {O(n)}
+  2: g->h: 1 {O(1)}
+  3: h->h: 2^(Arg_1)*Arg_0+Arg_0 {O(EXP)}
+
+Costbounds:
+  Overall costbound: 2^(Arg_1)*Arg_0+Arg_0+Arg_1+2 {O(EXP)}
+  0: f->g: 1 {O(1)}
+  1: g->g: Arg_1 {O(n)}
+  2: g->h: 1 {O(1)}
+  3: h->h: 2^(Arg_1)*Arg_0+Arg_0 {O(EXP)}
+
+Sizebounds:
+  0: f->g, Arg_0: Arg_0 {O(n)}
+  0: f->g, Arg_1: Arg_1 {O(n)}
+  1: g->g, Arg_0: 2^(Arg_1)*Arg_0 {O(EXP)}
+  1: g->g, Arg_1: Arg_1 {O(n)}
+  2: g->h, Arg_0: 2^(Arg_1)*Arg_0+Arg_0 {O(EXP)}
+  2: g->h, Arg_1: 2*Arg_1 {O(n)}
+  3: h->h, Arg_0: 2^(Arg_1)*Arg_0+Arg_0 {O(EXP)}
+  3: h->h, Arg_1: 2*Arg_1 {O(n)}
+
+==> ./Brockschmidt_16/KoAT-2014/adding-exp-growth2.output <==
+YES( ?, 2^(Arg_2)*4+Arg_2+3 {O(EXP)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f
+Program_Vars:  Arg_0, Arg_1, Arg_2
+Temp_Vars:  
+Locations:  f, g, h
+Transitions:
+0:f(Arg_0,Arg_1,Arg_2) -> g(1,1,Arg_2)
+1:g(Arg_0,Arg_1,Arg_2) -> g(Arg_0+Arg_1,Arg_0+Arg_1,Arg_2-1):|:1<=Arg_1 && 2<=Arg_0+Arg_1 && 1<=Arg_0 && 0<Arg_2
+2:g(Arg_0,Arg_1,Arg_2) -> h(Arg_0,Arg_1,Arg_2):|:1<=Arg_1 && 2<=Arg_0+Arg_1 && 1<=Arg_0 && Arg_2<=0
+3:h(Arg_0,Arg_1,Arg_2) -> h(Arg_0,Arg_1-1,Arg_2):|:Arg_2<=0 && 1+Arg_2<=Arg_0 && 1<=Arg_0 && 0<Arg_1
+
+Timebounds: 
+  Overall timebound: 2^(Arg_2)*4+Arg_2+3 {O(EXP)}
+  0: f->g: 1 {O(1)}
+  1: g->g: Arg_2 {O(n)}
+  2: g->h: 1 {O(1)}
+  3: h->h: 2^(Arg_2)*4+1 {O(EXP)}
+
+Costbounds:
+  Overall costbound: 2^(Arg_2)*4+Arg_2+3 {O(EXP)}
+  0: f->g: 1 {O(1)}
+  1: g->g: Arg_2 {O(n)}
+  2: g->h: 1 {O(1)}
+  3: h->h: 2^(Arg_2)*4+1 {O(EXP)}
+
+Sizebounds:
+  0: f->g, Arg_0: 1 {O(1)}
+  0: f->g, Arg_1: 1 {O(1)}
+  0: f->g, Arg_2: Arg_2 {O(n)}
+  1: g->g, Arg_0: 2^(Arg_2)*4 {O(EXP)}
+  1: g->g, Arg_1: 2^(Arg_2)*4 {O(EXP)}
+  1: g->g, Arg_2: Arg_2 {O(n)}
+  2: g->h, Arg_0: 2^(Arg_2)*4+1 {O(EXP)}
+  2: g->h, Arg_1: 2^(Arg_2)*4+1 {O(EXP)}
+  2: g->h, Arg_2: 2*Arg_2 {O(n)}
+  3: h->h, Arg_0: 2^(Arg_2)*4+1 {O(EXP)}
+  3: h->h, Arg_1: 2^(Arg_2)*4+1 {O(EXP)}
+  3: h->h, Arg_2: 2*Arg_2 {O(n)}
+
+==> ./Brockschmidt_16/KoAT-2014/exp-calls.output <==
+ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now.
+==> ./Brockschmidt_16/KoAT-2014/adding-exp-growth1.output <==
+YES( ?, 2^(Arg_0)+Arg_0+3 {O(EXP)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f
+Program_Vars:  Arg_0, Arg_1
+Temp_Vars:  
+Locations:  f, g, h
+Transitions:
+0:f(Arg_0,Arg_1) -> g(Arg_0,1)
+1:g(Arg_0,Arg_1) -> g(Arg_0-1,2*Arg_1):|:1<=Arg_1 && 0<Arg_0
+2:g(Arg_0,Arg_1) -> h(Arg_0,Arg_1):|:1<=Arg_1 && Arg_0<=0
+3:h(Arg_0,Arg_1) -> h(Arg_0,Arg_1-1):|:Arg_0<=0 && 0<Arg_1
+
+Timebounds: 
+  Overall timebound: 2^(Arg_0)+Arg_0+3 {O(EXP)}
+  0: f->g: 1 {O(1)}
+  1: g->g: Arg_0 {O(n)}
+  2: g->h: 1 {O(1)}
+  3: h->h: 2^(Arg_0)+1 {O(EXP)}
+
+Costbounds:
+  Overall costbound: 2^(Arg_0)+Arg_0+3 {O(EXP)}
+  0: f->g: 1 {O(1)}
+  1: g->g: Arg_0 {O(n)}
+  2: g->h: 1 {O(1)}
+  3: h->h: 2^(Arg_0)+1 {O(EXP)}
+
+Sizebounds:
+  0: f->g, Arg_0: Arg_0 {O(n)}
+  0: f->g, Arg_1: 1 {O(1)}
+  1: g->g, Arg_0: Arg_0 {O(n)}
+  1: g->g, Arg_1: 2^(Arg_0) {O(EXP)}
+  2: g->h, Arg_0: 2*Arg_0 {O(n)}
+  2: g->h, Arg_1: 2^(Arg_0)+1 {O(EXP)}
+  3: h->h, Arg_0: 2*Arg_0 {O(n)}
+  3: h->h, Arg_1: 2^(Arg_0)+1 {O(EXP)}
+
+==> ./Brockschmidt_16/KoAT-2014/adding-exp-growth3.output <==
+
+==> ./Brockschmidt_16/KoAT-2014/scaling-doubly-exp-growth.output <==
+
+==> ./Brockschmidt_16/KoAT-2014/nesting-ex1.output <==
+
+==> ./Brockschmidt_16/KoAT-2013/sect4-facSum.output <==
+ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now.
+==> ./Brockschmidt_16/KoAT-2013/sect2.output <==
+
+==> ./Brockschmidt_16/KoAT-2013/sect1-lin.output <==
+YES( ?, 2*Arg_0+2*Arg_1+2 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  l0
+Program_Vars:  Arg_0, Arg_1
+Temp_Vars:  
+Locations:  l0, l1, l2
+Transitions:
+0:l0(Arg_0,Arg_1) -> l1(Arg_0,Arg_1)
+1:l1(Arg_0,Arg_1) -> l1(Arg_0-1,Arg_1+1):|:1<=Arg_0
+2:l1(Arg_0,Arg_1) -> l2(Arg_0,Arg_1):|:Arg_0<=0
+3:l2(Arg_0,Arg_1) -> l2(Arg_0,Arg_1-1):|:Arg_0<=0 && 1<=Arg_1
+
+Timebounds: 
+  Overall timebound: 2*Arg_0+2*Arg_1+2 {O(n)}
+  0: l0->l1: 1 {O(1)}
+  1: l1->l1: Arg_0 {O(n)}
+  2: l1->l2: 1 {O(1)}
+  3: l2->l2: 2*Arg_1+Arg_0 {O(n)}
+
+Costbounds:
+  Overall costbound: 2*Arg_0+2*Arg_1+2 {O(n)}
+  0: l0->l1: 1 {O(1)}
+  1: l1->l1: Arg_0 {O(n)}
+  2: l1->l2: 1 {O(1)}
+  3: l2->l2: 2*Arg_1+Arg_0 {O(n)}
+
+Sizebounds:
+  0: l0->l1, Arg_0: Arg_0 {O(n)}
+  0: l0->l1, Arg_1: Arg_1 {O(n)}
+  1: l1->l1, Arg_0: Arg_0 {O(n)}
+  1: l1->l1, Arg_1: Arg_0+Arg_1 {O(n)}
+  2: l1->l2, Arg_0: 2*Arg_0 {O(n)}
+  2: l1->l2, Arg_1: 2*Arg_1+Arg_0 {O(n)}
+  3: l2->l2, Arg_0: 2*Arg_0 {O(n)}
+  3: l2->l2, Arg_1: 2*Arg_1+Arg_0 {O(n)}
+
+==> ./Brockschmidt_16/KoAT-2013/sect1-quad.output <==
+[124262] Failed to execute script CFRefinement
+Traceback (most recent call last):
+  File "CFRefinement.py", line 123, in launch
+  File "partialevaluation/__init__.py", line 61, in control_flow_refinement
+  File "partialevaluation/__init__.py", line 101, in partialevaluate
+  File "partialevaluation/__init__.py", line 176, in set_props
+  File "partialevaluation/__init__.py", line 298, in johns_props1
+  File "partialevaluation/__init__.py", line 340, in _parse_props
+  File "partialevaluation/__init__.py", line 340, in <listcomp>
+  File "genericparser/__init__.py", line 121, in parse_constraint
+  File "genericparser/Constraint_parser.py", line 24, in parse_string
+  File "lark/lark.py", line 197, in parse
+  File "lark/parser_frontends.py", line 137, in parse
+  File "lark/parsers/xearley.py", line 126, in parse
+  File "lark/parsers/xearley.py", line 115, in scan
+lark.lexer.UnexpectedInput: No token defined for: '[' in '[-1*A' at line 1 col 1
+
+Expecting: {'CNAME', '__LPAR', 'SUM', 'NUMBER'}
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "CFRefinement.py", line 147, in <module>
+  File "CFRefinement.py", line 134, in launch
+Exception
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "CFRefinement.py", line 150, in <module>
+Exception
+Exception  -> No token defined for: '[' in '[-1*A' at line 1 col 1
+
+Expecting: {'CNAME', '__LPAR', 'SUM', 'NUMBER'}
+
+koat2: internal error, uncaught exception:
+       Sys_error("./tmp_124223_1626207021.6/tmp/tmp_scc1_cfr1.koat: No such file or directory")
+       
+
+==> ./Brockschmidt_16/KoAT-2013/sect5-sumSum.output <==
+YES( ?, Arg_1*Arg_1+3*Arg_1+1 {O(n^2)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  l0
+Program_Vars:  Arg_1, Arg_2
+Temp_Vars:  
+Locations:  l0, l1, l2
+Transitions:
+8:l0(Arg_1,Arg_2) -> l1(Arg_1,Arg_2)
+9:l1(Arg_1,Arg_2) -> l2(Arg_1,0):|:1<=Arg_1
+11:l2(Arg_1,Arg_2) -> l1(Arg_1-1,Arg_2):|:0<=Arg_2 && 1<=Arg_1+Arg_2 && 1<=Arg_1 && Arg_1<=Arg_2
+10:l2(Arg_1,Arg_2) -> l2(Arg_1,Arg_2+1):|:0<=Arg_2 && 1<=Arg_1+Arg_2 && 1<=Arg_1 && Arg_2+1<=Arg_1
+
+Timebounds: 
+  Overall timebound: Arg_1*Arg_1+3*Arg_1+1 {O(n^2)}
+  8: l0->l1: 1 {O(1)}
+  9: l1->l2: Arg_1 {O(n)}
+  10: l2->l2: Arg_1*Arg_1+Arg_1 {O(n^2)}
+  11: l2->l1: Arg_1 {O(n)}
+
+Costbounds:
+  Overall costbound: Arg_1*Arg_1+3*Arg_1+1 {O(n^2)}
+  8: l0->l1: 1 {O(1)}
+  9: l1->l2: Arg_1 {O(n)}
+  10: l2->l2: Arg_1*Arg_1+Arg_1 {O(n^2)}
+  11: l2->l1: Arg_1 {O(n)}
+
+Sizebounds:
+  8: l0->l1, Arg_1: Arg_1 {O(n)}
+  8: l0->l1, Arg_2: Arg_2 {O(n)}
+  9: l1->l2, Arg_1: Arg_1 {O(n)}
+  9: l1->l2, Arg_2: 0 {O(1)}
+  10: l2->l2, Arg_1: Arg_1 {O(n)}
+  10: l2->l2, Arg_2: Arg_1*Arg_1+Arg_1 {O(n^2)}
+  11: l2->l1, Arg_1: Arg_1 {O(n)}
+  11: l2->l1, Arg_2: Arg_1*Arg_1+Arg_1 {O(n^2)}
+
+==> ./Brockschmidt_16/KoAT-2013/sect5-len.output <==
+YES( ?, Arg_1+2 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  l0
+Program_Vars:  Arg_1
+Temp_Vars:  
+Locations:  l0, l1, l2
+Transitions:
+6:l0(Arg_1) -> l1(Arg_1)
+7:l1(Arg_1) -> l1(Arg_1-1):|:1<=Arg_1
+8:l1(Arg_1) -> l2(Arg_1):|:Arg_1<=0
+
+Timebounds: 
+  Overall timebound: Arg_1+2 {O(n)}
+  6: l0->l1: 1 {O(1)}
+  7: l1->l1: Arg_1 {O(n)}
+  8: l1->l2: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: Arg_1+2 {O(n)}
+  6: l0->l1: 1 {O(1)}
+  7: l1->l1: Arg_1 {O(n)}
+  8: l1->l2: 1 {O(1)}
+
+Sizebounds:
+  6: l0->l1, Arg_1: Arg_1 {O(n)}
+  7: l1->l1, Arg_1: Arg_1 {O(n)}
+  8: l1->l2, Arg_1: 2*Arg_1 {O(n)}
+
+==> ./Brockschmidt_16/T2/neg-popl07-succeed.output <==
+
+==> ./Brockschmidt_16/T2/e-pgarch-fail.output <==
+MAYBE
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_0, Arg_1
+Temp_Vars:  P, Q
+Locations:  f0, f20, f28, f40
+Transitions:
+19:f0(Arg_0,Arg_1) -> f20(1,Arg_1):|:P<=0
+20:f0(Arg_0,Arg_1) -> f20(1,Arg_1):|:1<=P && 1<=Q
+21:f0(Arg_0,Arg_1) -> f40(1,Arg_1):|:P<=0 && 1<=Q
+22:f20(Arg_0,Arg_1) -> f28(0,P):|:Arg_0<=1 && 1<=Arg_0 && 1<=Arg_0
+23:f28(Arg_0,Arg_1) -> f40(Arg_0,Arg_1):|:Arg_0<=0 && 0<=Arg_0 && Arg_0<=0 && P<=999+Arg_1
+24:f28(Arg_0,Arg_1) -> f40(1,Arg_1):|:Arg_0<=0 && 0<=Arg_0 && Arg_0<=0 && Arg_1+1000<=P
+25:f40(Arg_0,Arg_1) -> f40(Arg_0,Arg_1):|:Arg_0<=1
+
+Timebounds: 
+  Overall timebound: inf {Infinity}
+  19: f0->f20: 1 {O(1)}
+  20: f0->f20: 1 {O(1)}
+  21: f0->f40: 1 {O(1)}
+  22: f20->f28: 1 {O(1)}
+  23: f28->f40: 1 {O(1)}
+  24: f28->f40: 1 {O(1)}
+  25: f40->f40: inf {Infinity}
+
+Costbounds:
+  Overall costbound: inf {Infinity}
+  19: f0->f20: 1 {O(1)}
+  20: f0->f20: 1 {O(1)}
+  21: f0->f40: 1 {O(1)}
+  22: f20->f28: 1 {O(1)}
+  23: f28->f40: 1 {O(1)}
+  24: f28->f40: 1 {O(1)}
+  25: f40->f40: inf {Infinity}
+
+Sizebounds:
+  19: f0->f20, Arg_0: 1 {O(1)}
+  19: f0->f20, Arg_1: Arg_1 {O(n)}
+  20: f0->f20, Arg_0: 1 {O(1)}
+  20: f0->f20, Arg_1: Arg_1 {O(n)}
+  21: f0->f40, Arg_0: 1 {O(1)}
+  21: f0->f40, Arg_1: Arg_1 {O(n)}
+  22: f20->f28, Arg_0: 0 {O(1)}
+  23: f28->f40, Arg_0: 0 {O(1)}
+  24: f28->f40, Arg_0: 1 {O(1)}
+  25: f40->f40, Arg_0: 2 {O(1)}
+
+==> ./Brockschmidt_16/T2/cnt.output <==
+YES( ?, 523 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_0, Arg_1, Arg_2, Arg_3
+Temp_Vars:  R
+Locations:  f0, f11, f14, f33, f36, f58
+Transitions:
+21:f0(Arg_0,Arg_1,Arg_2,Arg_3) -> f11(0,Arg_1,Arg_2,Arg_3)
+22:f11(Arg_0,Arg_1,Arg_2,Arg_3) -> f14(Arg_0,0,Arg_2,Arg_3):|:0<=Arg_0 && Arg_0<=9
+23:f11(Arg_0,Arg_1,Arg_2,Arg_3) -> f33(Arg_0,Arg_1,0,Arg_3):|:0<=Arg_0 && 10<=Arg_0
+25:f14(Arg_0,Arg_1,Arg_2,Arg_3) -> f11(Arg_0+1,Arg_1,Arg_2,Arg_3):|:0<=Arg_1 && 0<=Arg_0+Arg_1 && 0<=Arg_0 && 10<=Arg_1
+24:f14(Arg_0,Arg_1,Arg_2,Arg_3) -> f14(Arg_0,Arg_1+1,Arg_2,Arg_3):|:0<=Arg_1 && 0<=Arg_0+Arg_1 && 0<=Arg_0 && Arg_1<=9
+26:f33(Arg_0,Arg_1,Arg_2,Arg_3) -> f36(Arg_0,Arg_1,Arg_2,0):|:0<=Arg_2 && 10<=Arg_0+Arg_2 && 10<=Arg_0 && Arg_2<=9
+27:f33(Arg_0,Arg_1,Arg_2,Arg_3) -> f58(Arg_0,Arg_1,Arg_2,Arg_3):|:0<=Arg_2 && 10<=Arg_0+Arg_2 && 10<=Arg_0 && 10<=Arg_2
+30:f36(Arg_0,Arg_1,Arg_2,Arg_3) -> f33(Arg_0,Arg_1,Arg_2+1,Arg_3):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && 10<=Arg_0+Arg_3 && 0<=Arg_2 && 10<=Arg_0+Arg_2 && 10<=Arg_0 && 10<=Arg_3
+28:f36(Arg_0,Arg_1,Arg_2,Arg_3) -> f36(Arg_0,Arg_1,Arg_2,Arg_3+1):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && 10<=Arg_0+Arg_3 && 0<=Arg_2 && 10<=Arg_0+Arg_2 && 10<=Arg_0 && Arg_3<=9 && R+1<=0
+29:f36(Arg_0,Arg_1,Arg_2,Arg_3) -> f36(Arg_0,Arg_1,Arg_2,Arg_3+1):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && 10<=Arg_0+Arg_3 && 0<=Arg_2 && 10<=Arg_0+Arg_2 && 10<=Arg_0 && Arg_3<=9
+
+Timebounds: 
+  Overall timebound: 523 {O(1)}
+  21: f0->f11: 1 {O(1)}
+  22: f11->f14: 10 {O(1)}
+  23: f11->f33: 1 {O(1)}
+  24: f14->f14: 100 {O(1)}
+  25: f14->f11: 100 {O(1)}
+  26: f33->f36: 10 {O(1)}
+  27: f33->f58: 1 {O(1)}
+  28: f36->f36: 100 {O(1)}
+  29: f36->f36: 100 {O(1)}
+  30: f36->f33: 100 {O(1)}
+
+Costbounds:
+  Overall costbound: 523 {O(1)}
+  21: f0->f11: 1 {O(1)}
+  22: f11->f14: 10 {O(1)}
+  23: f11->f33: 1 {O(1)}
+  24: f14->f14: 100 {O(1)}
+  25: f14->f11: 100 {O(1)}
+  26: f33->f36: 10 {O(1)}
+  27: f33->f58: 1 {O(1)}
+  28: f36->f36: 100 {O(1)}
+  29: f36->f36: 100 {O(1)}
+  30: f36->f33: 100 {O(1)}
+
+Sizebounds:
+  21: f0->f11, Arg_0: 0 {O(1)}
+  21: f0->f11, Arg_1: Arg_1 {O(n)}
+  21: f0->f11, Arg_2: Arg_2 {O(n)}
+  21: f0->f11, Arg_3: Arg_3 {O(n)}
+  22: f11->f14, Arg_0: 9 {O(1)}
+  22: f11->f14, Arg_1: 0 {O(1)}
+  22: f11->f14, Arg_2: Arg_2 {O(n)}
+  22: f11->f14, Arg_3: Arg_3 {O(n)}
+  23: f11->f33, Arg_0: 10 {O(1)}
+  23: f11->f33, Arg_1: 10 {O(1)}
+  23: f11->f33, Arg_2: 0 {O(1)}
+  23: f11->f33, Arg_3: Arg_3 {O(n)}
+  24: f14->f14, Arg_0: 9 {O(1)}
+  24: f14->f14, Arg_1: 10 {O(1)}
+  24: f14->f14, Arg_2: Arg_2 {O(n)}
+  24: f14->f14, Arg_3: Arg_3 {O(n)}
+  25: f14->f11, Arg_0: 10 {O(1)}
+  25: f14->f11, Arg_1: 10 {O(1)}
+  25: f14->f11, Arg_2: Arg_2 {O(n)}
+  25: f14->f11, Arg_3: Arg_3 {O(n)}
+  26: f33->f36, Arg_0: 10 {O(1)}
+  26: f33->f36, Arg_1: 10 {O(1)}
+  26: f33->f36, Arg_2: 9 {O(1)}
+  26: f33->f36, Arg_3: 0 {O(1)}
+  27: f33->f58, Arg_0: 10 {O(1)}
+  27: f33->f58, Arg_1: 10 {O(1)}
+  27: f33->f58, Arg_2: 38 {O(1)}
+  27: f33->f58, Arg_3: 20 {O(1)}
+  28: f36->f36, Arg_0: 10 {O(1)}
+  28: f36->f36, Arg_1: 10 {O(1)}
+  28: f36->f36, Arg_2: 18 {O(1)}
+  28: f36->f36, Arg_3: 10 {O(1)}
+  29: f36->f36, Arg_0: 10 {O(1)}
+  29: f36->f36, Arg_1: 10 {O(1)}
+  29: f36->f36, Arg_2: 18 {O(1)}
+  29: f36->f36, Arg_3: 10 {O(1)}
+  30: f36->f33, Arg_0: 10 {O(1)}
+  30: f36->f33, Arg_1: 10 {O(1)}
+  30: f36->f33, Arg_2: 38 {O(1)}
+  30: f36->f33, Arg_3: 20 {O(1)}
+
+==> ./Brockschmidt_16/T2/neg-e-acqrel-fail.output <==
+koat2: internal error, uncaught exception:
+       Not_found
+       
+
+==> ./Brockschmidt_16/T2/simple_pre2.output <==
+YES( ?, 1 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  
+Temp_Vars:  
+Locations:  f0, f8
+Transitions:
+1:f0 -> f8
+
+Timebounds: 
+  Overall timebound: 1 {O(1)}
+  1: f0->f8: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 1 {O(1)}
+  1: f0->f8: 1 {O(1)}
+
+Sizebounds:
+
+==> ./Brockschmidt_16/T2/hongyi1.output <==
+
+==> ./Brockschmidt_16/T2/bitcount16.output <==
+YES( ?, 34 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_2
+Temp_Vars:  
+Locations:  f0, f27, f5
+Transitions:
+8:f0(Arg_2) -> f5(0)
+11:f5(Arg_2) -> f27(Arg_2):|:0<=Arg_2 && 16<=Arg_2
+9:f5(Arg_2) -> f5(Arg_2+1):|:0<=Arg_2 && Arg_2<=15
+10:f5(Arg_2) -> f5(Arg_2+1):|:0<=Arg_2 && Arg_2<=15
+
+Timebounds: 
+  Overall timebound: 34 {O(1)}
+  8: f0->f5: 1 {O(1)}
+  9: f5->f5: 16 {O(1)}
+  10: f5->f5: 16 {O(1)}
+  11: f5->f27: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 34 {O(1)}
+  8: f0->f5: 1 {O(1)}
+  9: f5->f5: 16 {O(1)}
+  10: f5->f5: 16 {O(1)}
+  11: f5->f27: 1 {O(1)}
+
+Sizebounds:
+  8: f0->f5, Arg_2: 0 {O(1)}
+  9: f5->f5, Arg_2: 16 {O(1)}
+  10: f5->f5, Arg_2: 16 {O(1)}
+  11: f5->f27, Arg_2: 32 {O(1)}
+
+==> ./Brockschmidt_16/T2/slayer-n3-filtered.output <==
+YES( ?, 1 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f6
+Program_Vars:  Arg_0, Arg_2, Arg_8, Arg_26, Arg_33, Arg_35
+Temp_Vars:  K1, M1, O1, P1
+Locations:  f6, f7
+Transitions:
+16:f6(Arg_0,Arg_2,Arg_8,Arg_26,Arg_33,Arg_35) -> f7(M1,K1,100,0,O1,P1):|:M1<=0 && Arg_26<=0 && 0<=Arg_26 && Arg_8<=100 && 100<=Arg_8 && Arg_2<=0 && 0<=Arg_2 && Arg_0<=Arg_33 && Arg_33<=Arg_0 && Arg_35<=0 && 0<=Arg_35
+
+Timebounds: 
+  Overall timebound: 1 {O(1)}
+  16: f6->f7: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 1 {O(1)}
+  16: f6->f7: 1 {O(1)}
+
+Sizebounds:
+
+==> ./Brockschmidt_16/T2/janne_complex.output <==
+koat2: internal error, uncaught exception:
+       Not_found
+       
+
+==> ./Brockschmidt_16/T2/nakata.output <==
+
+==> ./Brockschmidt_16/T2/neg-1394complete-succeed.output <==
+
+==> ./Brockschmidt_16/T2/p-14.output <==
+YES( ?, Arg_0+2 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f300
+Program_Vars:  Arg_0
+Temp_Vars:  
+Locations:  f1, f2, f300
+Transitions:
+6:f2(Arg_0) -> f1(Arg_0-1):|:Arg_0<=1
+5:f2(Arg_0) -> f2(Arg_0-1):|:2<=Arg_0
+7:f300(Arg_0) -> f2(Arg_0)
+
+Timebounds: 
+  Overall timebound: Arg_0+2 {O(n)}
+  5: f2->f2: Arg_0 {O(n)}
+  6: f2->f1: 1 {O(1)}
+  7: f300->f2: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: Arg_0+2 {O(n)}
+  5: f2->f2: Arg_0 {O(n)}
+  6: f2->f1: 1 {O(1)}
+  7: f300->f2: 1 {O(1)}
+
+Sizebounds:
+  5: f2->f2, Arg_0: Arg_0 {O(n)}
+  6: f2->f1, Arg_0: 2*Arg_0+2 {O(n)}
+  7: f300->f2, Arg_0: Arg_0 {O(n)}
+
+==> ./Brockschmidt_16/T2/slayer-n2.output <==
+
+==> ./Brockschmidt_16/T2/ex30.output <==
+YES( ?, 2*Arg_2+2*Arg_4+6*Arg_3+6*Arg_5+22 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_0, Arg_2, Arg_3, Arg_4, Arg_5
+Temp_Vars:  H, J
+Locations:  f0, f12, f25, f34
+Transitions:
+11:f0(Arg_0,Arg_2,Arg_3,Arg_4,Arg_5) -> f12(H,J,0,Arg_4,Arg_5)
+12:f12(Arg_0,Arg_2,Arg_3,Arg_4,Arg_5) -> f12(Arg_0,Arg_2,Arg_3+1,Arg_4,Arg_5):|:0<=Arg_3 && Arg_3+1<=Arg_2
+13:f12(Arg_0,Arg_2,Arg_3,Arg_4,Arg_5) -> f25(Arg_0,Arg_2,Arg_3,Arg_0,0):|:0<=Arg_3 && Arg_2<=Arg_3
+14:f25(Arg_0,Arg_2,Arg_3,Arg_4,Arg_5) -> f25(Arg_0,Arg_2,Arg_3,Arg_4,Arg_5+1):|:0<=Arg_5 && 0<=Arg_3+Arg_5 && Arg_4<=Arg_0 && Arg_0<=Arg_4 && 0<=Arg_3 && Arg_2<=Arg_3 && Arg_5+1<=Arg_4
+15:f25(Arg_0,Arg_2,Arg_3,Arg_4,Arg_5) -> f34(Arg_0,Arg_2,Arg_3,Arg_4,Arg_5):|:0<=Arg_5 && 0<=Arg_3+Arg_5 && Arg_4<=Arg_0 && Arg_0<=Arg_4 && 0<=Arg_3 && Arg_2<=Arg_3 && Arg_4<=Arg_5
+
+Timebounds: 
+  Overall timebound: 2*Arg_2+2*Arg_4+6*Arg_3+6*Arg_5+22 {O(n)}
+  11: f0->f12: 1 {O(1)}
+  12: f12->f12: 2*Arg_2+4*Arg_3+8 {O(n)}
+  13: f12->f25: 1 {O(1)}
+  14: f25->f25: 2*Arg_3+2*Arg_4+6*Arg_5+11 {O(n)}
+  15: f25->f34: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 2*Arg_2+2*Arg_4+6*Arg_3+6*Arg_5+22 {O(n)}
+  11: f0->f12: 1 {O(1)}
+  12: f12->f12: 2*Arg_2+4*Arg_3+8 {O(n)}
+  13: f12->f25: 1 {O(1)}
+  14: f25->f25: 2*Arg_3+2*Arg_4+6*Arg_5+11 {O(n)}
+  15: f25->f34: 1 {O(1)}
+
+Sizebounds:
+  11: f0->f12, Arg_3: 0 {O(1)}
+  11: f0->f12, Arg_4: Arg_4 {O(n)}
+  11: f0->f12, Arg_5: Arg_5 {O(n)}
+  12: f12->f12, Arg_3: 2*Arg_2+4*Arg_3+8 {O(n)}
+  12: f12->f12, Arg_4: Arg_4 {O(n)}
+  12: f12->f12, Arg_5: Arg_5 {O(n)}
+  13: f12->f25, Arg_3: 2*Arg_2+4*Arg_3+8 {O(n)}
+  13: f12->f25, Arg_5: 0 {O(1)}
+  14: f25->f25, Arg_3: 2*Arg_2+4*Arg_3+8 {O(n)}
+  14: f25->f25, Arg_5: 2*Arg_3+2*Arg_4+6*Arg_5+11 {O(n)}
+  15: f25->f34, Arg_3: 4*Arg_2+8*Arg_3+16 {O(n)}
+  15: f25->f34, Arg_5: 2*Arg_3+2*Arg_4+6*Arg_5+11 {O(n)}
+
+==> ./Brockschmidt_16/T2/p-43-terminate.output <==
+
+==> ./Brockschmidt_16/T2/fun2b.output <==
+
+==> ./Brockschmidt_16/T2/fourn.c.i.fourn.pl.t2.fixed.output <==
+YES( ?, Arg_0+Arg_2+4 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  start
+Program_Vars:  Arg_0, Arg_2, Arg_4
+Temp_Vars:  
+Locations:  f1, f10, f2, start
+Transitions:
+119:f10(Arg_0,Arg_2,Arg_4) -> f1(Arg_0,Arg_2,Arg_4):|:Arg_4<=1 && 1<=Arg_4 && 1+Arg_0<=Arg_2 && Arg_2<=0
+121:f2(Arg_0,Arg_2,Arg_4) -> f10(Arg_0,Arg_2,1):|:1+Arg_0<=Arg_2
+120:f2(Arg_0,Arg_2,Arg_4) -> f2(Arg_0,Arg_2+1,Arg_4):|:Arg_2<=Arg_0
+122:start(Arg_0,Arg_2,Arg_4) -> f2(Arg_0,Arg_2,Arg_4)
+
+Timebounds: 
+  Overall timebound: Arg_0+Arg_2+4 {O(n)}
+  119: f10->f1: 1 {O(1)}
+  120: f2->f2: Arg_0+Arg_2+1 {O(n)}
+  121: f2->f10: 1 {O(1)}
+  122: start->f2: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: Arg_0+Arg_2+4 {O(n)}
+  119: f10->f1: 1 {O(1)}
+  120: f2->f2: Arg_0+Arg_2+1 {O(n)}
+  121: f2->f10: 1 {O(1)}
+  122: start->f2: 1 {O(1)}
+
+Sizebounds:
+  119: f10->f1, Arg_0: 2*Arg_0 {O(n)}
+  119: f10->f1, Arg_2: 3*Arg_2+Arg_0+1 {O(n)}
+  119: f10->f1, Arg_4: 1 {O(1)}
+  120: f2->f2, Arg_0: Arg_0 {O(n)}
+  120: f2->f2, Arg_2: 2*Arg_2+Arg_0+1 {O(n)}
+  120: f2->f2, Arg_4: Arg_4 {O(n)}
+  121: f2->f10, Arg_0: 2*Arg_0 {O(n)}
+  121: f2->f10, Arg_2: 3*Arg_2+Arg_0+1 {O(n)}
+  121: f2->f10, Arg_4: 1 {O(1)}
+  122: start->f2, Arg_0: Arg_0 {O(n)}
+  122: start->f2, Arg_2: Arg_2 {O(n)}
+  122: start->f2, Arg_4: Arg_4 {O(n)}
+
+==> ./Brockschmidt_16/T2/streamserver.bug.output <==
+
+==> ./Brockschmidt_16/T2/array_init_assign.output <==
+YES( ?, 8 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_0, Arg_1
+Temp_Vars:  C
+Locations:  f0, f10, f18, f4
+Transitions:
+0:f0(Arg_0,Arg_1) -> f4(0,Arg_1)
+2:f10(Arg_0,Arg_1) -> f10(Arg_0,Arg_1+1):|:0<=Arg_1 && 2<=Arg_0+Arg_1 && 2<=Arg_0 && Arg_1<=1
+3:f10(Arg_0,Arg_1) -> f18(Arg_0,Arg_1):|:0<=Arg_1 && 2<=Arg_0+Arg_1 && 2<=Arg_0 && 2<=Arg_1 && C+1<=0
+4:f10(Arg_0,Arg_1) -> f18(Arg_0,Arg_1):|:0<=Arg_1 && 2<=Arg_0+Arg_1 && 2<=Arg_0 && 2<=Arg_1
+5:f4(Arg_0,Arg_1) -> f10(Arg_0,0):|:0<=Arg_0 && 2<=Arg_0
+1:f4(Arg_0,Arg_1) -> f4(Arg_0+1,Arg_1):|:0<=Arg_0 && Arg_0<=1
+
+Timebounds: 
+  Overall timebound: 8 {O(1)}
+  0: f0->f4: 1 {O(1)}
+  2: f10->f10: 2 {O(1)}
+  3: f10->f18: 1 {O(1)}
+  4: f10->f18: 1 {O(1)}
+  1: f4->f4: 2 {O(1)}
+  5: f4->f10: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 8 {O(1)}
+  0: f0->f4: 1 {O(1)}
+  2: f10->f10: 2 {O(1)}
+  3: f10->f18: 1 {O(1)}
+  4: f10->f18: 1 {O(1)}
+  1: f4->f4: 2 {O(1)}
+  5: f4->f10: 1 {O(1)}
+
+Sizebounds:
+  0: f0->f4, Arg_0: 0 {O(1)}
+  0: f0->f4, Arg_1: Arg_1 {O(n)}
+  2: f10->f10, Arg_0: 2 {O(1)}
+  2: f10->f10, Arg_1: 2 {O(1)}
+  3: f10->f18, Arg_0: 2 {O(1)}
+  3: f10->f18, Arg_1: 2 {O(1)}
+  4: f10->f18, Arg_0: 2 {O(1)}
+  4: f10->f18, Arg_1: 2 {O(1)}
+  1: f4->f4, Arg_0: 2 {O(1)}
+  1: f4->f4, Arg_1: Arg_1 {O(n)}
+  5: f4->f10, Arg_0: 2 {O(1)}
+  5: f4->f10, Arg_1: 0 {O(1)}
+
+==> ./Brockschmidt_16/T2/ex7.output <==
+YES( ?, 12 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_2, Arg_3
+Temp_Vars:  
+Locations:  f0, f19, f7
+Transitions:
+6:f0(Arg_2,Arg_3) -> f7(10,0)
+8:f7(Arg_2,Arg_3) -> f19(Arg_2,Arg_3):|:0<=Arg_3 && 10<=Arg_2+Arg_3 && Arg_2<=10+Arg_3 && Arg_2<=10 && 10<=Arg_2 && Arg_2<=Arg_3
+7:f7(Arg_2,Arg_3) -> f7(Arg_2,Arg_3+1):|:0<=Arg_3 && 10<=Arg_2+Arg_3 && Arg_2<=10+Arg_3 && Arg_2<=10 && 10<=Arg_2 && Arg_3+1<=Arg_2
+
+Timebounds: 
+  Overall timebound: 12 {O(1)}
+  6: f0->f7: 1 {O(1)}
+  7: f7->f7: 10 {O(1)}
+  8: f7->f19: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 12 {O(1)}
+  6: f0->f7: 1 {O(1)}
+  7: f7->f7: 10 {O(1)}
+  8: f7->f19: 1 {O(1)}
+
+Sizebounds:
+  6: f0->f7, Arg_2: 10 {O(1)}
+  6: f0->f7, Arg_3: 0 {O(1)}
+  7: f7->f7, Arg_2: 10 {O(1)}
+  7: f7->f7, Arg_3: 10 {O(1)}
+  8: f7->f19, Arg_2: 10 {O(1)}
+  8: f7->f19, Arg_3: 10 {O(1)}
+
+==> ./Brockschmidt_16/T2/n-48.output <==
+
+==> ./Brockschmidt_16/T2/qrdcmp.c.i.qrdcmp.pl.t2.fixed.output <==
+YES( ?, 12*Arg_1+17*Arg_0+2*Arg_3+3*Arg_10+10 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f2
+Program_Vars:  Arg_0, Arg_1, Arg_2, Arg_3, Arg_9, Arg_10
+Temp_Vars:  S, T, U, V
+Locations:  f1, f2, f26, f32, f5, f52, f55, f62, f9
+Transitions:
+51:f2(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f5(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10):|:2<=Arg_0
+52:f26(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f32(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10):|:3<=Arg_3 && 4<=Arg_2+Arg_3 && 2+Arg_1<=Arg_3 && 5<=Arg_0+Arg_3 && 1+Arg_0<=Arg_3 && 1<=Arg_2 && 3<=Arg_0+Arg_2 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && 1+Arg_0<=Arg_3
+56:f32(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f52(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10):|:3<=Arg_3 && 4<=Arg_2+Arg_3 && 2+Arg_1<=Arg_3 && 5<=Arg_0+Arg_3 && 1+Arg_0<=Arg_3 && 1<=Arg_2 && 3<=Arg_0+Arg_2 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && 1+Arg_0<=Arg_3
+57:f32(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f52(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10):|:3<=Arg_3 && 4<=Arg_2+Arg_3 && 2+Arg_1<=Arg_3 && 5<=Arg_0+Arg_3 && 1+Arg_0<=Arg_3 && 1<=Arg_2 && 3<=Arg_0+Arg_2 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && 1+Arg_0<=Arg_3
+59:f5(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f1(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10):|:2<=Arg_0 && Arg_0<=Arg_1 && S+1<=0
+60:f5(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f1(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10):|:2<=Arg_0 && Arg_0<=Arg_1 && 1<=S
+61:f5(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f1(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10):|:2<=Arg_0 && Arg_0<=Arg_1
+58:f5(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f9(Arg_0,Arg_1,0,Arg_3,Arg_9,Arg_10):|:2<=Arg_0 && Arg_1+1<=Arg_0
+63:f52(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f5(Arg_0,Arg_1+1,Arg_2,Arg_3,Arg_9,Arg_10):|:3<=Arg_3 && 4<=Arg_2+Arg_3 && 2+Arg_1<=Arg_3 && 5<=Arg_0+Arg_3 && 1+Arg_0<=Arg_3 && 1<=Arg_2 && 3<=Arg_0+Arg_2 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && 1+Arg_0<=Arg_10
+62:f52(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f55(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10):|:3<=Arg_3 && 4<=Arg_2+Arg_3 && 2+Arg_1<=Arg_3 && 5<=Arg_0+Arg_3 && 1+Arg_0<=Arg_3 && 1<=Arg_2 && 3<=Arg_0+Arg_2 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && Arg_10<=Arg_0
+65:f55(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f62(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10):|:3<=Arg_3 && 4<=Arg_2+Arg_3 && 1+Arg_10<=Arg_3 && 2+Arg_1<=Arg_3 && 5<=Arg_0+Arg_3 && 1+Arg_0<=Arg_3 && 1<=Arg_2 && 3<=Arg_0+Arg_2 && Arg_10<=Arg_0 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && TU<=Arg_9 && Arg_9+1<=TU+T && S<=T && UV<=Arg_9 && Arg_9+1<=UV+V && V<=S && 1+Arg_0<=Arg_3
+66:f62(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f52(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10+1):|:3<=Arg_3 && 4<=Arg_2+Arg_3 && 1+Arg_10<=Arg_3 && 2+Arg_1<=Arg_3 && 5<=Arg_0+Arg_3 && 1+Arg_0<=Arg_3 && 1<=Arg_2 && 3<=Arg_0+Arg_2 && Arg_10<=Arg_0 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && 1+Arg_0<=Arg_3
+71:f9(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f26(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10):|:0<=Arg_2 && 2<=Arg_0+Arg_2 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && 1<=Arg_2 && 1+Arg_0<=Arg_3
+69:f9(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f5(Arg_0,Arg_1+1,0,Arg_3,Arg_9,Arg_10):|:0<=Arg_2 && 2<=Arg_0+Arg_2 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && 1+Arg_0<=Arg_3 && Arg_2<=0 && 0<=Arg_2
+67:f9(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f9(Arg_0,Arg_1,Arg_2,Arg_3+1,Arg_9,Arg_10):|:0<=Arg_2 && 2<=Arg_0+Arg_2 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && 1+S<=Arg_2 && Arg_3<=Arg_0
+68:f9(Arg_0,Arg_1,Arg_2,Arg_3,Arg_9,Arg_10) -> f9(Arg_0,Arg_1,S,Arg_3+1,Arg_9,Arg_10):|:0<=Arg_2 && 2<=Arg_0+Arg_2 && 1+Arg_1<=Arg_0 && 2<=Arg_0 && Arg_2<=S && Arg_3<=Arg_0
+
+Timebounds: 
+  Overall timebound: 12*Arg_1+17*Arg_0+2*Arg_3+3*Arg_10+10 {O(n)}
+  51: f2->f5: 1 {O(1)}
+  52: f26->f32: Arg_0+Arg_1+1 {O(n)}
+  56: f32->f52: Arg_0+Arg_1+1 {O(n)}
+  57: f32->f52: Arg_0+Arg_1+1 {O(n)}
+  58: f5->f9: Arg_0+Arg_1+1 {O(n)}
+  59: f5->f1: 1 {O(1)}
+  60: f5->f1: 1 {O(1)}
+  61: f5->f1: 1 {O(1)}
+  62: f52->f55: 2*Arg_0+Arg_1+Arg_10+1 {O(n)}
+  63: f52->f5: Arg_0+Arg_1 {O(n)}
+  65: f55->f62: 2*Arg_0+Arg_1+Arg_10 {O(n)}
+  66: f62->f52: 2*Arg_0+Arg_1+Arg_10 {O(n)}
+  67: f9->f9: 2*Arg_0+Arg_1+Arg_3 {O(n)}
+  68: f9->f9: 2*Arg_0+Arg_1+Arg_3 {O(n)}
+  69: f9->f5: Arg_0+Arg_1 {O(n)}
+  71: f9->f26: Arg_0+Arg_1+1 {O(n)}
+
+Costbounds:
+  Overall costbound: 12*Arg_1+17*Arg_0+2*Arg_3+3*Arg_10+10 {O(n)}
+  51: f2->f5: 1 {O(1)}
+  52: f26->f32: Arg_0+Arg_1+1 {O(n)}
+  56: f32->f52: Arg_0+Arg_1+1 {O(n)}
+  57: f32->f52: Arg_0+Arg_1+1 {O(n)}
+  58: f5->f9: Arg_0+Arg_1+1 {O(n)}
+  59: f5->f1: 1 {O(1)}
+  60: f5->f1: 1 {O(1)}
+  61: f5->f1: 1 {O(1)}
+  62: f52->f55: 2*Arg_0+Arg_1+Arg_10+1 {O(n)}
+  63: f52->f5: Arg_0+Arg_1 {O(n)}
+  65: f55->f62: 2*Arg_0+Arg_1+Arg_10 {O(n)}
+  66: f62->f52: 2*Arg_0+Arg_1+Arg_10 {O(n)}
+  67: f9->f9: 2*Arg_0+Arg_1+Arg_3 {O(n)}
+  68: f9->f9: 2*Arg_0+Arg_1+Arg_3 {O(n)}
+  69: f9->f5: Arg_0+Arg_1 {O(n)}
+  71: f9->f26: Arg_0+Arg_1+1 {O(n)}
+
+Sizebounds:
+  51: f2->f5, Arg_0: Arg_0 {O(n)}
+  51: f2->f5, Arg_1: Arg_1 {O(n)}
+  51: f2->f5, Arg_2: Arg_2 {O(n)}
+  51: f2->f5, Arg_3: Arg_3 {O(n)}
+  51: f2->f5, Arg_9: Arg_9 {O(n)}
+  51: f2->f5, Arg_10: Arg_10 {O(n)}
+  52: f26->f32, Arg_0: Arg_0 {O(n)}
+  52: f26->f32, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  52: f26->f32, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  52: f26->f32, Arg_9: Arg_9 {O(n)}
+  52: f26->f32, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  56: f32->f52, Arg_0: Arg_0 {O(n)}
+  56: f32->f52, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  56: f32->f52, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  56: f32->f52, Arg_9: Arg_9 {O(n)}
+  56: f32->f52, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  57: f32->f52, Arg_0: Arg_0 {O(n)}
+  57: f32->f52, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  57: f32->f52, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  57: f32->f52, Arg_9: Arg_9 {O(n)}
+  57: f32->f52, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  58: f5->f9, Arg_0: Arg_0 {O(n)}
+  58: f5->f9, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  58: f5->f9, Arg_2: 0 {O(1)}
+  58: f5->f9, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  58: f5->f9, Arg_9: Arg_9 {O(n)}
+  58: f5->f9, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  59: f5->f1, Arg_0: 3*Arg_0 {O(n)}
+  59: f5->f1, Arg_1: 4*Arg_0+7*Arg_1 {O(n)}
+  59: f5->f1, Arg_3: 4*Arg_1+7*Arg_3+8*Arg_0 {O(n)}
+  59: f5->f1, Arg_9: 3*Arg_9 {O(n)}
+  59: f5->f1, Arg_10: 2*Arg_1+4*Arg_0+5*Arg_10 {O(n)}
+  60: f5->f1, Arg_0: 3*Arg_0 {O(n)}
+  60: f5->f1, Arg_1: 4*Arg_0+7*Arg_1 {O(n)}
+  60: f5->f1, Arg_3: 4*Arg_1+7*Arg_3+8*Arg_0 {O(n)}
+  60: f5->f1, Arg_9: 3*Arg_9 {O(n)}
+  60: f5->f1, Arg_10: 2*Arg_1+4*Arg_0+5*Arg_10 {O(n)}
+  61: f5->f1, Arg_0: 3*Arg_0 {O(n)}
+  61: f5->f1, Arg_1: 4*Arg_0+7*Arg_1 {O(n)}
+  61: f5->f1, Arg_3: 4*Arg_1+7*Arg_3+8*Arg_0 {O(n)}
+  61: f5->f1, Arg_9: 3*Arg_9 {O(n)}
+  61: f5->f1, Arg_10: 2*Arg_1+4*Arg_0+5*Arg_10 {O(n)}
+  62: f52->f55, Arg_0: Arg_0 {O(n)}
+  62: f52->f55, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  62: f52->f55, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  62: f52->f55, Arg_9: Arg_9 {O(n)}
+  62: f52->f55, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  63: f52->f5, Arg_0: Arg_0 {O(n)}
+  63: f52->f5, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  63: f52->f5, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  63: f52->f5, Arg_9: Arg_9 {O(n)}
+  63: f52->f5, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  65: f55->f62, Arg_0: Arg_0 {O(n)}
+  65: f55->f62, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  65: f55->f62, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  65: f55->f62, Arg_9: Arg_9 {O(n)}
+  65: f55->f62, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  66: f62->f52, Arg_0: Arg_0 {O(n)}
+  66: f62->f52, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  66: f62->f52, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  66: f62->f52, Arg_9: Arg_9 {O(n)}
+  66: f62->f52, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  67: f9->f9, Arg_0: Arg_0 {O(n)}
+  67: f9->f9, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  67: f9->f9, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  67: f9->f9, Arg_9: Arg_9 {O(n)}
+  67: f9->f9, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  68: f9->f9, Arg_0: Arg_0 {O(n)}
+  68: f9->f9, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  68: f9->f9, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  68: f9->f9, Arg_9: Arg_9 {O(n)}
+  68: f9->f9, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  69: f9->f5, Arg_0: Arg_0 {O(n)}
+  69: f9->f5, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  69: f9->f5, Arg_2: 0 {O(1)}
+  69: f9->f5, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  69: f9->f5, Arg_9: Arg_9 {O(n)}
+  69: f9->f5, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+  71: f9->f26, Arg_0: Arg_0 {O(n)}
+  71: f9->f26, Arg_1: 2*Arg_0+3*Arg_1 {O(n)}
+  71: f9->f26, Arg_3: 2*Arg_1+3*Arg_3+4*Arg_0 {O(n)}
+  71: f9->f26, Arg_9: Arg_9 {O(n)}
+  71: f9->f26, Arg_10: 2*Arg_0+2*Arg_10+Arg_1 {O(n)}
+
+==> ./Brockschmidt_16/T2/matmult.output <==
+YES( ?, Arg_6+18464 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_0, Arg_1, Arg_2, Arg_3, Arg_4, Arg_5, Arg_6
+Temp_Vars:  
+Locations:  f0, f16, f19, f33, f36, f52, f55, f59, f73
+Transitions:
+32:f0(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f16(0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6)
+33:f16(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f19(Arg_0,0,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6):|:0<=Arg_0 && Arg_0<=19
+34:f16(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f33(Arg_0,Arg_1,0,Arg_3,Arg_4,Arg_5,Arg_6):|:0<=Arg_0 && 20<=Arg_0
+36:f19(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f16(Arg_0+1,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6):|:0<=Arg_1 && 0<=Arg_0+Arg_1 && 0<=Arg_0 && 20<=Arg_1
+35:f19(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f19(Arg_0,Arg_1+1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6):|:0<=Arg_1 && 0<=Arg_0+Arg_1 && 0<=Arg_0 && Arg_1<=19
+37:f33(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f36(Arg_0,Arg_1,Arg_2,0,Arg_4,Arg_5,Arg_6):|:0<=Arg_2 && 20<=Arg_0+Arg_2 && 20<=Arg_0 && Arg_2<=19
+38:f33(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f52(Arg_0,Arg_1,Arg_2,Arg_3,0,Arg_5,Arg_6):|:0<=Arg_2 && 20<=Arg_0+Arg_2 && 20<=Arg_0 && 20<=Arg_2
+40:f36(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f33(Arg_0,Arg_1,Arg_2+1,Arg_3,Arg_4,Arg_5,Arg_6):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && 20<=Arg_0+Arg_3 && 0<=Arg_2 && 20<=Arg_0+Arg_2 && 20<=Arg_0 && 20<=Arg_3
+39:f36(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f36(Arg_0,Arg_1,Arg_2,Arg_3+1,Arg_4,Arg_5,Arg_6):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && 20<=Arg_0+Arg_3 && 0<=Arg_2 && 20<=Arg_0+Arg_2 && 20<=Arg_0 && Arg_3<=19
+41:f52(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f55(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,0,Arg_6):|:0<=Arg_4 && 20<=Arg_2+Arg_4 && 20<=Arg_0+Arg_4 && 20<=Arg_2 && 40<=Arg_0+Arg_2 && 20<=Arg_0 && Arg_4<=19
+42:f52(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f73(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6):|:0<=Arg_4 && 20<=Arg_2+Arg_4 && 20<=Arg_0+Arg_4 && 20<=Arg_2 && 40<=Arg_0+Arg_2 && 20<=Arg_0 && 20<=Arg_4
+44:f55(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f52(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4+1,Arg_5,Arg_6):|:0<=Arg_5 && 0<=Arg_4+Arg_5 && 20<=Arg_2+Arg_5 && 20<=Arg_0+Arg_5 && 0<=Arg_4 && 20<=Arg_2+Arg_4 && 20<=Arg_0+Arg_4 && 20<=Arg_2 && 40<=Arg_0+Arg_2 && 20<=Arg_0 && 20<=Arg_5
+43:f55(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f59(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,0):|:0<=Arg_5 && 0<=Arg_4+Arg_5 && 20<=Arg_2+Arg_5 && 20<=Arg_0+Arg_5 && 0<=Arg_4 && 20<=Arg_2+Arg_4 && 20<=Arg_0+Arg_4 && 20<=Arg_2 && 40<=Arg_0+Arg_2 && 20<=Arg_0 && Arg_5<=19
+46:f59(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f55(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5+1,Arg_6):|:0<=Arg_6 && 0<=Arg_5+Arg_6 && 0<=Arg_4+Arg_6 && 20<=Arg_2+Arg_6 && 20<=Arg_0+Arg_6 && 0<=Arg_5 && 0<=Arg_4+Arg_5 && 20<=Arg_2+Arg_5 && 20<=Arg_0+Arg_5 && 0<=Arg_4 && 20<=Arg_2+Arg_4 && 20<=Arg_0+Arg_4 && 20<=Arg_2 && 40<=Arg_0+Arg_2 && 20<=Arg_0 && 20<=Arg_6
+45:f59(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6) -> f59(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4,Arg_5,Arg_6+1):|:0<=Arg_6 && 0<=Arg_5+Arg_6 && 0<=Arg_4+Arg_6 && 20<=Arg_2+Arg_6 && 20<=Arg_0+Arg_6 && 0<=Arg_5 && 0<=Arg_4+Arg_5 && 20<=Arg_2+Arg_5 && 20<=Arg_0+Arg_5 && 0<=Arg_4 && 20<=Arg_2+Arg_4 && 20<=Arg_0+Arg_4 && 20<=Arg_2 && 40<=Arg_0+Arg_2 && 20<=Arg_0 && Arg_6<=19
+
+Timebounds: 
+  Overall timebound: Arg_6+18464 {O(n)}
+  32: f0->f16: 1 {O(1)}
+  33: f16->f19: 20 {O(1)}
+  34: f16->f33: 1 {O(1)}
+  35: f19->f19: 400 {O(1)}
+  36: f19->f16: 400 {O(1)}
+  37: f33->f36: 20 {O(1)}
+  38: f33->f52: 1 {O(1)}
+  39: f36->f36: 400 {O(1)}
+  40: f36->f33: 400 {O(1)}
+  41: f52->f55: 20 {O(1)}
+  42: f52->f73: 1 {O(1)}
+  43: f55->f59: 400 {O(1)}
+  44: f55->f52: 400 {O(1)}
+  45: f59->f59: Arg_6+8000 {O(n)}
+  46: f59->f55: 8000 {O(1)}
+
+Costbounds:
+  Overall costbound: Arg_6+18464 {O(n)}
+  32: f0->f16: 1 {O(1)}
+  33: f16->f19: 20 {O(1)}
+  34: f16->f33: 1 {O(1)}
+  35: f19->f19: 400 {O(1)}
+  36: f19->f16: 400 {O(1)}
+  37: f33->f36: 20 {O(1)}
+  38: f33->f52: 1 {O(1)}
+  39: f36->f36: 400 {O(1)}
+  40: f36->f33: 400 {O(1)}
+  41: f52->f55: 20 {O(1)}
+  42: f52->f73: 1 {O(1)}
+  43: f55->f59: 400 {O(1)}
+  44: f55->f52: 400 {O(1)}
+  45: f59->f59: Arg_6+8000 {O(n)}
+  46: f59->f55: 8000 {O(1)}
+
+Sizebounds:
+  32: f0->f16, Arg_0: 0 {O(1)}
+  32: f0->f16, Arg_1: Arg_1 {O(n)}
+  32: f0->f16, Arg_2: Arg_2 {O(n)}
+  32: f0->f16, Arg_3: Arg_3 {O(n)}
+  32: f0->f16, Arg_4: Arg_4 {O(n)}
+  32: f0->f16, Arg_5: Arg_5 {O(n)}
+  32: f0->f16, Arg_6: Arg_6 {O(n)}
+  33: f16->f19, Arg_0: 19 {O(1)}
+  33: f16->f19, Arg_1: 0 {O(1)}
+  33: f16->f19, Arg_2: Arg_2 {O(n)}
+  33: f16->f19, Arg_3: Arg_3 {O(n)}
+  33: f16->f19, Arg_4: Arg_4 {O(n)}
+  33: f16->f19, Arg_5: Arg_5 {O(n)}
+  33: f16->f19, Arg_6: Arg_6 {O(n)}
+  34: f16->f33, Arg_0: 20 {O(1)}
+  34: f16->f33, Arg_1: 20 {O(1)}
+  34: f16->f33, Arg_2: 0 {O(1)}
+  34: f16->f33, Arg_3: Arg_3 {O(n)}
+  34: f16->f33, Arg_4: Arg_4 {O(n)}
+  34: f16->f33, Arg_5: Arg_5 {O(n)}
+  34: f16->f33, Arg_6: Arg_6 {O(n)}
+  35: f19->f19, Arg_0: 19 {O(1)}
+  35: f19->f19, Arg_1: 20 {O(1)}
+  35: f19->f19, Arg_2: Arg_2 {O(n)}
+  35: f19->f19, Arg_3: Arg_3 {O(n)}
+  35: f19->f19, Arg_4: Arg_4 {O(n)}
+  35: f19->f19, Arg_5: Arg_5 {O(n)}
+  35: f19->f19, Arg_6: Arg_6 {O(n)}
+  36: f19->f16, Arg_0: 20 {O(1)}
+  36: f19->f16, Arg_1: 20 {O(1)}
+  36: f19->f16, Arg_2: Arg_2 {O(n)}
+  36: f19->f16, Arg_3: Arg_3 {O(n)}
+  36: f19->f16, Arg_4: Arg_4 {O(n)}
+  36: f19->f16, Arg_5: Arg_5 {O(n)}
+  36: f19->f16, Arg_6: Arg_6 {O(n)}
+  37: f33->f36, Arg_0: 20 {O(1)}
+  37: f33->f36, Arg_1: 20 {O(1)}
+  37: f33->f36, Arg_2: 19 {O(1)}
+  37: f33->f36, Arg_3: 0 {O(1)}
+  37: f33->f36, Arg_4: Arg_4 {O(n)}
+  37: f33->f36, Arg_5: Arg_5 {O(n)}
+  37: f33->f36, Arg_6: Arg_6 {O(n)}
+  38: f33->f52, Arg_0: 20 {O(1)}
+  38: f33->f52, Arg_1: 20 {O(1)}
+  38: f33->f52, Arg_2: 20 {O(1)}
+  38: f33->f52, Arg_3: 20 {O(1)}
+  38: f33->f52, Arg_4: 0 {O(1)}
+  38: f33->f52, Arg_5: Arg_5 {O(n)}
+  38: f33->f52, Arg_6: Arg_6 {O(n)}
+  39: f36->f36, Arg_0: 20 {O(1)}
+  39: f36->f36, Arg_1: 20 {O(1)}
+  39: f36->f36, Arg_2: 19 {O(1)}
+  39: f36->f36, Arg_3: 20 {O(1)}
+  39: f36->f36, Arg_4: Arg_4 {O(n)}
+  39: f36->f36, Arg_5: Arg_5 {O(n)}
+  39: f36->f36, Arg_6: Arg_6 {O(n)}
+  40: f36->f33, Arg_0: 20 {O(1)}
+  40: f36->f33, Arg_1: 20 {O(1)}
+  40: f36->f33, Arg_2: 20 {O(1)}
+  40: f36->f33, Arg_3: 20 {O(1)}
+  40: f36->f33, Arg_4: Arg_4 {O(n)}
+  40: f36->f33, Arg_5: Arg_5 {O(n)}
+  40: f36->f33, Arg_6: Arg_6 {O(n)}
+  41: f52->f55, Arg_0: 20 {O(1)}
+  41: f52->f55, Arg_1: 20 {O(1)}
+  41: f52->f55, Arg_2: 20 {O(1)}
+  41: f52->f55, Arg_3: 20 {O(1)}
+  41: f52->f55, Arg_4: 19 {O(1)}
+  41: f52->f55, Arg_5: 0 {O(1)}
+  41: f52->f55, Arg_6: Arg_6+20 {O(n)}
+  42: f52->f73, Arg_0: 20 {O(1)}
+  42: f52->f73, Arg_1: 20 {O(1)}
+  42: f52->f73, Arg_2: 20 {O(1)}
+  42: f52->f73, Arg_3: 20 {O(1)}
+  42: f52->f73, Arg_4: 20 {O(1)}
+  42: f52->f73, Arg_5: 20 {O(1)}
+  42: f52->f73, Arg_6: 20 {O(1)}
+  43: f55->f59, Arg_0: 20 {O(1)}
+  43: f55->f59, Arg_1: 20 {O(1)}
+  43: f55->f59, Arg_2: 20 {O(1)}
+  43: f55->f59, Arg_3: 20 {O(1)}
+  43: f55->f59, Arg_4: 19 {O(1)}
+  43: f55->f59, Arg_5: 19 {O(1)}
+  43: f55->f59, Arg_6: 0 {O(1)}
+  44: f55->f52, Arg_0: 20 {O(1)}
+  44: f55->f52, Arg_1: 20 {O(1)}
+  44: f55->f52, Arg_2: 20 {O(1)}
+  44: f55->f52, Arg_3: 20 {O(1)}
+  44: f55->f52, Arg_4: 20 {O(1)}
+  44: f55->f52, Arg_5: 20 {O(1)}
+  44: f55->f52, Arg_6: 20 {O(1)}
+  45: f59->f59, Arg_0: 20 {O(1)}
+  45: f59->f59, Arg_1: 20 {O(1)}
+  45: f59->f59, Arg_2: 20 {O(1)}
+  45: f59->f59, Arg_3: 20 {O(1)}
+  45: f59->f59, Arg_4: 19 {O(1)}
+  45: f59->f59, Arg_5: 19 {O(1)}
+  45: f59->f59, Arg_6: 20 {O(1)}
+  46: f59->f55, Arg_0: 20 {O(1)}
+  46: f59->f55, Arg_1: 20 {O(1)}
+  46: f59->f55, Arg_2: 20 {O(1)}
+  46: f59->f55, Arg_3: 20 {O(1)}
+  46: f59->f55, Arg_4: 19 {O(1)}
+  46: f59->f55, Arg_5: 20 {O(1)}
+  46: f59->f55, Arg_6: 20 {O(1)}
+
+==> ./Brockschmidt_16/T2/subpoly_crash.output <==
+MAYBE
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_0, Arg_1
+Temp_Vars:  
+Locations:  f0, f1, f2
+Transitions:
+0:f0(Arg_0,Arg_1) -> f1(Arg_0,Arg_0):|:Arg_0<=Arg_1 && Arg_1<=Arg_0
+1:f1(Arg_0,Arg_1) -> f1(Arg_0+1,Arg_1+1):|:Arg_1<=Arg_0 && Arg_0<=Arg_1
+2:f1(Arg_0,Arg_1) -> f2(Arg_0,Arg_1):|:Arg_1<=Arg_0 && Arg_0<=Arg_1
+
+Timebounds: 
+  Overall timebound: inf {Infinity}
+  0: f0->f1: 1 {O(1)}
+  1: f1->f1: inf {Infinity}
+  2: f1->f2: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: inf {Infinity}
+  0: f0->f1: 1 {O(1)}
+  1: f1->f1: inf {Infinity}
+  2: f1->f2: 1 {O(1)}
+
+Sizebounds:
+  0: f0->f1, Arg_0: Arg_0 {O(n)}
+  0: f0->f1, Arg_1: Arg_0 {O(n)}
+
+==> ./Brockschmidt_16/T2/fast_poll.output <==
+
+==> ./Brockschmidt_16/T2/pearl-necklace.output <==
+YES( ?, 14*Arg_0+40*Arg_1+6 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_0, Arg_1, Arg_2, Arg_3, Arg_4
+Temp_Vars:  
+Locations:  f0, f1, f2, f3, f4
+Transitions:
+0:f0(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f1(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4)
+1:f1(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f1(Arg_0,Arg_1+1,Arg_2,Arg_3,Arg_4):|:Arg_1+1<=Arg_0
+2:f1(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f2(Arg_0,Arg_1,Arg_1,Arg_3,Arg_4):|:Arg_0<=Arg_1
+3:f2(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f2(Arg_0,Arg_1,Arg_2-1,Arg_3,Arg_4):|:Arg_2<=Arg_1 && Arg_0<=Arg_1 && 1<=Arg_2
+4:f2(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f3(Arg_0,Arg_1,Arg_2,Arg_2,Arg_4):|:Arg_2<=Arg_1 && Arg_0<=Arg_1 && Arg_2<=0
+5:f3(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f3(Arg_0,Arg_1,Arg_2,Arg_3+1,Arg_4):|:Arg_3<=Arg_1 && Arg_2<=Arg_3 && Arg_2<=0 && Arg_2<=Arg_1 && Arg_0<=Arg_1 && Arg_3+1<=Arg_0
+6:f3(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f4(Arg_0,Arg_1,Arg_2,Arg_3,Arg_3):|:Arg_3<=Arg_1 && Arg_2<=Arg_3 && Arg_2<=0 && Arg_2<=Arg_1 && Arg_0<=Arg_1 && Arg_0<=Arg_3
+7:f4(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f4(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4-1):|:Arg_4<=Arg_3 && Arg_4<=Arg_1 && Arg_2<=Arg_4 && Arg_3<=Arg_1 && Arg_2<=Arg_3 && Arg_0<=Arg_3 && Arg_2<=0 && Arg_2<=Arg_1 && Arg_0<=Arg_1 && 1<=Arg_4
+
+Timebounds: 
+  Overall timebound: 14*Arg_0+40*Arg_1+6 {O(n)}
+  0: f0->f1: 1 {O(1)}
+  1: f1->f1: Arg_0+Arg_1 {O(n)}
+  2: f1->f2: 1 {O(1)}
+  3: f2->f2: 3*Arg_1+Arg_0 {O(n)}
+  4: f2->f3: 1 {O(1)}
+  5: f3->f3: 12*Arg_1+4*Arg_0+1 {O(n)}
+  6: f3->f4: 1 {O(1)}
+  7: f4->f4: 24*Arg_1+8*Arg_0+1 {O(n)}
+
+Costbounds:
+  Overall costbound: 14*Arg_0+40*Arg_1+6 {O(n)}
+  0: f0->f1: 1 {O(1)}
+  1: f1->f1: Arg_0+Arg_1 {O(n)}
+  2: f1->f2: 1 {O(1)}
+  3: f2->f2: 3*Arg_1+Arg_0 {O(n)}
+  4: f2->f3: 1 {O(1)}
+  5: f3->f3: 12*Arg_1+4*Arg_0+1 {O(n)}
+  6: f3->f4: 1 {O(1)}
+  7: f4->f4: 24*Arg_1+8*Arg_0+1 {O(n)}
+
+Sizebounds:
+  0: f0->f1, Arg_0: Arg_0 {O(n)}
+  0: f0->f1, Arg_1: Arg_1 {O(n)}
+  0: f0->f1, Arg_2: Arg_2 {O(n)}
+  0: f0->f1, Arg_3: Arg_3 {O(n)}
+  0: f0->f1, Arg_4: Arg_4 {O(n)}
+  1: f1->f1, Arg_0: Arg_0 {O(n)}
+  1: f1->f1, Arg_1: 2*Arg_1+Arg_0 {O(n)}
+  1: f1->f1, Arg_2: Arg_2 {O(n)}
+  1: f1->f1, Arg_3: Arg_3 {O(n)}
+  1: f1->f1, Arg_4: Arg_4 {O(n)}
+  2: f1->f2, Arg_0: 2*Arg_0 {O(n)}
+  2: f1->f2, Arg_1: 3*Arg_1+Arg_0 {O(n)}
+  2: f1->f2, Arg_2: 3*Arg_1+Arg_0 {O(n)}
+  2: f1->f2, Arg_3: 2*Arg_3 {O(n)}
+  2: f1->f2, Arg_4: 2*Arg_4 {O(n)}
+  3: f2->f2, Arg_0: 2*Arg_0 {O(n)}
+  3: f2->f2, Arg_1: 3*Arg_1+Arg_0 {O(n)}
+  3: f2->f2, Arg_2: 3*Arg_1+Arg_0 {O(n)}
+  3: f2->f2, Arg_3: 2*Arg_3 {O(n)}
+  3: f2->f2, Arg_4: 2*Arg_4 {O(n)}
+  4: f2->f3, Arg_0: 4*Arg_0 {O(n)}
+  4: f2->f3, Arg_1: 2*Arg_0+6*Arg_1 {O(n)}
+  4: f2->f3, Arg_2: 2*Arg_0+6*Arg_1 {O(n)}
+  4: f2->f3, Arg_3: 2*Arg_0+6*Arg_1 {O(n)}
+  4: f2->f3, Arg_4: 4*Arg_4 {O(n)}
+  5: f3->f3, Arg_0: 4*Arg_0 {O(n)}
+  5: f3->f3, Arg_1: 2*Arg_0+6*Arg_1 {O(n)}
+  5: f3->f3, Arg_2: 2*Arg_0+6*Arg_1 {O(n)}
+  5: f3->f3, Arg_3: 18*Arg_1+6*Arg_0+1 {O(n)}
+  5: f3->f3, Arg_4: 4*Arg_4 {O(n)}
+  6: f3->f4, Arg_0: 8*Arg_0 {O(n)}
+  6: f3->f4, Arg_1: 12*Arg_1+4*Arg_0 {O(n)}
+  6: f3->f4, Arg_2: 12*Arg_1+4*Arg_0 {O(n)}
+  6: f3->f4, Arg_3: 24*Arg_1+8*Arg_0+1 {O(n)}
+  6: f3->f4, Arg_4: 24*Arg_1+8*Arg_0+1 {O(n)}
+  7: f4->f4, Arg_0: 8*Arg_0 {O(n)}
+  7: f4->f4, Arg_1: 12*Arg_1+4*Arg_0 {O(n)}
+  7: f4->f4, Arg_2: 12*Arg_1+4*Arg_0 {O(n)}
+  7: f4->f4, Arg_3: 24*Arg_1+8*Arg_0+1 {O(n)}
+  7: f4->f4, Arg_4: 24*Arg_1+8*Arg_0+1 {O(n)}
+
+==> ./Brockschmidt_16/T2/two_arrays1.output <==
+
+==> ./Brockschmidt_16/T2/dsa_test15.output <==
+YES( ?, 23 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_1, Arg_2
+Temp_Vars:  
+Locations:  f0, f19, f29, f8
+Transitions:
+11:f0(Arg_1,Arg_2) -> f8(0,Arg_2)
+12:f19(Arg_1,Arg_2) -> f19(Arg_1,Arg_2+1):|:0<=Arg_2 && 10<=Arg_1+Arg_2 && 10<=Arg_1 && Arg_2<=9
+13:f19(Arg_1,Arg_2) -> f29(Arg_1,Arg_2):|:0<=Arg_2 && 10<=Arg_1+Arg_2 && 10<=Arg_1 && 10<=Arg_2
+15:f8(Arg_1,Arg_2) -> f19(Arg_1,0):|:0<=Arg_1 && 10<=Arg_1
+14:f8(Arg_1,Arg_2) -> f8(Arg_1+1,Arg_2):|:0<=Arg_1 && Arg_1<=9
+
+Timebounds: 
+  Overall timebound: 23 {O(1)}
+  11: f0->f8: 1 {O(1)}
+  12: f19->f19: 10 {O(1)}
+  13: f19->f29: 1 {O(1)}
+  14: f8->f8: 10 {O(1)}
+  15: f8->f19: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 23 {O(1)}
+  11: f0->f8: 1 {O(1)}
+  12: f19->f19: 10 {O(1)}
+  13: f19->f29: 1 {O(1)}
+  14: f8->f8: 10 {O(1)}
+  15: f8->f19: 1 {O(1)}
+
+Sizebounds:
+  11: f0->f8, Arg_1: 0 {O(1)}
+  11: f0->f8, Arg_2: Arg_2 {O(n)}
+  12: f19->f19, Arg_1: 10 {O(1)}
+  12: f19->f19, Arg_2: 10 {O(1)}
+  13: f19->f29, Arg_1: 10 {O(1)}
+  13: f19->f29, Arg_2: 10 {O(1)}
+  14: f8->f8, Arg_1: 10 {O(1)}
+  14: f8->f8, Arg_2: Arg_2 {O(n)}
+  15: f8->f19, Arg_1: 10 {O(1)}
+  15: f8->f19, Arg_2: 0 {O(1)}
+
+==> ./Brockschmidt_16/T2/p-60.output <==
+YES( ?, 101*Arg_1+4 {O(n)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f2
+Program_Vars:  Arg_0, Arg_1
+Temp_Vars:  
+Locations:  f2, f3, f300
+Transitions:
+8:f2(Arg_0,Arg_1) -> f3(0,Arg_1):|:Arg_1<=0
+7:f2(Arg_0,Arg_1) -> f300(1,Arg_1):|:1<=Arg_1
+10:f300(Arg_0,Arg_1) -> f3(Arg_0,Arg_1):|:1<=Arg_1 && 2<=Arg_0+Arg_1 && 1<=Arg_0 && 101<=Arg_0
+9:f300(Arg_0,Arg_1) -> f300(1+Arg_0,Arg_1):|:1<=Arg_1 && 2<=Arg_0+Arg_1 && 1<=Arg_0 && Arg_0<=100 && 1<=Arg_1
+
+Timebounds: 
+  Overall timebound: 101*Arg_1+4 {O(n)}
+  7: f2->f300: 1 {O(1)}
+  8: f2->f3: 1 {O(1)}
+  9: f300->f300: 101*Arg_1+1 {O(n)}
+  10: f300->f3: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 101*Arg_1+4 {O(n)}
+  7: f2->f300: 1 {O(1)}
+  8: f2->f3: 1 {O(1)}
+  9: f300->f300: 101*Arg_1+1 {O(n)}
+  10: f300->f3: 1 {O(1)}
+
+Sizebounds:
+  7: f2->f300, Arg_0: 1 {O(1)}
+  7: f2->f300, Arg_1: Arg_1 {O(n)}
+  8: f2->f3, Arg_0: 0 {O(1)}
+  8: f2->f3, Arg_1: Arg_1 {O(n)}
+  9: f300->f300, Arg_0: 101 {O(1)}
+  9: f300->f300, Arg_1: Arg_1 {O(n)}
+  10: f300->f3, Arg_0: 101 {O(1)}
+  10: f300->f3, Arg_1: Arg_1 {O(n)}
+
+==> ./Brockschmidt_16/T2/bf17.output <==
+YES( ?, 14717 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  Arg_0, Arg_1, Arg_2, Arg_3, Arg_4
+Temp_Vars:  
+Locations:  f0, f61, f69, f72, f83, f89, f93
+Transitions:
+36:f0(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f61(5,17,0,0,Arg_4)
+37:f61(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f61(Arg_0,Arg_1,Arg_2,Arg_2+1,Arg_4):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_3+1<=Arg_0 && Arg_2<=Arg_3 && Arg_3<=Arg_2
+38:f61(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f61(Arg_0,Arg_1,Arg_2,Arg_3+1,Arg_4):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_3+1<=Arg_0 && 1+Arg_2<=Arg_3
+39:f61(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f69(Arg_0,Arg_1,Arg_2,0,Arg_4):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_0<=Arg_3
+40:f69(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f72(Arg_0,Arg_1,Arg_2,Arg_3,0):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_3+1<=Arg_0
+41:f69(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f83(Arg_0,Arg_1,Arg_2,0,Arg_4):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_0<=Arg_3
+43:f72(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f69(Arg_0,Arg_1,Arg_2,Arg_3+1,Arg_4):|:0<=Arg_4 && 0<=Arg_3+Arg_4 && 0<=Arg_2+Arg_4 && Arg_2<=Arg_4 && 17<=Arg_1+Arg_4 && Arg_1<=17+Arg_4 && 5<=Arg_0+Arg_4 && Arg_0<=5+Arg_4 && 0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_1<=Arg_4
+42:f72(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f72(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4+1):|:0<=Arg_4 && 0<=Arg_3+Arg_4 && 0<=Arg_2+Arg_4 && Arg_2<=Arg_4 && 17<=Arg_1+Arg_4 && Arg_1<=17+Arg_4 && 5<=Arg_0+Arg_4 && Arg_0<=5+Arg_4 && 0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_4+1<=Arg_1
+45:f83(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f83(Arg_0,Arg_1,Arg_2,Arg_3+1,Arg_4):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_3+1<=Arg_1
+44:f83(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f89(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_3+1<=Arg_1
+46:f83(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f93(Arg_0,Arg_1,Arg_2,0,Arg_4):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_1<=Arg_3
+48:f93(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f89(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_0<=Arg_3
+47:f93(Arg_0,Arg_1,Arg_2,Arg_3,Arg_4) -> f93(Arg_0,Arg_1,Arg_2,Arg_3+1,Arg_4):|:0<=Arg_3 && 0<=Arg_2+Arg_3 && Arg_2<=Arg_3 && 17<=Arg_1+Arg_3 && Arg_1<=17+Arg_3 && 5<=Arg_0+Arg_3 && Arg_0<=5+Arg_3 && Arg_2<=0 && 17+Arg_2<=Arg_1 && Arg_1+Arg_2<=17 && 5+Arg_2<=Arg_0 && Arg_0+Arg_2<=5 && 0<=Arg_2 && 17<=Arg_1+Arg_2 && Arg_1<=17+Arg_2 && 5<=Arg_0+Arg_2 && Arg_0<=5+Arg_2 && Arg_1<=17 && Arg_1<=12+Arg_0 && Arg_0+Arg_1<=22 && 17<=Arg_1 && 22<=Arg_0+Arg_1 && 12+Arg_0<=Arg_1 && Arg_0<=5 && 5<=Arg_0 && Arg_3+1<=Arg_0
+
+Timebounds: 
+  Overall timebound: 14717 {O(1)}
+  36: f0->f61: 1 {O(1)}
+  37: f61->f61: 1 {O(1)}
+  38: f61->f61: 85 {O(1)}
+  39: f61->f69: 1 {O(1)}
+  40: f69->f72: 85 {O(1)}
+  41: f69->f83: 1 {O(1)}
+  42: f72->f72: 7225 {O(1)}
+  43: f72->f69: 7225 {O(1)}
+  44: f83->f89: 1 {O(1)}
+  45: f83->f83: 85 {O(1)}
+  46: f83->f93: 1 {O(1)}
+  47: f93->f93: 5 {O(1)}
+  48: f93->f89: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 14717 {O(1)}
+  36: f0->f61: 1 {O(1)}
+  37: f61->f61: 1 {O(1)}
+  38: f61->f61: 85 {O(1)}
+  39: f61->f69: 1 {O(1)}
+  40: f69->f72: 85 {O(1)}
+  41: f69->f83: 1 {O(1)}
+  42: f72->f72: 7225 {O(1)}
+  43: f72->f69: 7225 {O(1)}
+  44: f83->f89: 1 {O(1)}
+  45: f83->f83: 85 {O(1)}
+  46: f83->f93: 1 {O(1)}
+  47: f93->f93: 5 {O(1)}
+  48: f93->f89: 1 {O(1)}
+
+Sizebounds:
+  36: f0->f61, Arg_0: 5 {O(1)}
+  36: f0->f61, Arg_1: 17 {O(1)}
+  36: f0->f61, Arg_2: 0 {O(1)}
+  36: f0->f61, Arg_3: 0 {O(1)}
+  36: f0->f61, Arg_4: Arg_4 {O(n)}
+  37: f61->f61, Arg_0: 5 {O(1)}
+  37: f61->f61, Arg_1: 17 {O(1)}
+  37: f61->f61, Arg_2: 0 {O(1)}
+  37: f61->f61, Arg_3: 1 {O(1)}
+  37: f61->f61, Arg_4: Arg_4 {O(n)}
+  38: f61->f61, Arg_0: 5 {O(1)}
+  38: f61->f61, Arg_1: 17 {O(1)}
+  38: f61->f61, Arg_2: 0 {O(1)}
+  38: f61->f61, Arg_3: 5 {O(1)}
+  38: f61->f61, Arg_4: Arg_4 {O(n)}
+  39: f61->f69, Arg_0: 5 {O(1)}
+  39: f61->f69, Arg_1: 17 {O(1)}
+  39: f61->f69, Arg_2: 0 {O(1)}
+  39: f61->f69, Arg_3: 0 {O(1)}
+  39: f61->f69, Arg_4: Arg_4 {O(n)}
+  40: f69->f72, Arg_0: 5 {O(1)}
+  40: f69->f72, Arg_1: 17 {O(1)}
+  40: f69->f72, Arg_2: 0 {O(1)}
+  40: f69->f72, Arg_3: 4 {O(1)}
+  40: f69->f72, Arg_4: 0 {O(1)}
+  41: f69->f83, Arg_0: 5 {O(1)}
+  41: f69->f83, Arg_1: 17 {O(1)}
+  41: f69->f83, Arg_2: 0 {O(1)}
+  41: f69->f83, Arg_3: 0 {O(1)}
+  41: f69->f83, Arg_4: 17 {O(1)}
+  42: f72->f72, Arg_0: 5 {O(1)}
+  42: f72->f72, Arg_1: 17 {O(1)}
+  42: f72->f72, Arg_2: 0 {O(1)}
+  42: f72->f72, Arg_3: 4 {O(1)}
+  42: f72->f72, Arg_4: 17 {O(1)}
+  43: f72->f69, Arg_0: 5 {O(1)}
+  43: f72->f69, Arg_1: 17 {O(1)}
+  43: f72->f69, Arg_2: 0 {O(1)}
+  43: f72->f69, Arg_3: 5 {O(1)}
+  43: f72->f69, Arg_4: 17 {O(1)}
+  44: f83->f89, Arg_0: 5 {O(1)}
+  44: f83->f89, Arg_1: 17 {O(1)}
+  44: f83->f89, Arg_2: 0 {O(1)}
+  44: f83->f89, Arg_3: 16 {O(1)}
+  44: f83->f89, Arg_4: 34 {O(1)}
+  45: f83->f83, Arg_0: 5 {O(1)}
+  45: f83->f83, Arg_1: 17 {O(1)}
+  45: f83->f83, Arg_2: 0 {O(1)}
+  45: f83->f83, Arg_3: 17 {O(1)}
+  45: f83->f83, Arg_4: 17 {O(1)}
+  46: f83->f93, Arg_0: 5 {O(1)}
+  46: f83->f93, Arg_1: 17 {O(1)}
+  46: f83->f93, Arg_2: 0 {O(1)}
+  46: f83->f93, Arg_3: 0 {O(1)}
+  46: f83->f93, Arg_4: 17 {O(1)}
+  47: f93->f93, Arg_0: 5 {O(1)}
+  47: f93->f93, Arg_1: 17 {O(1)}
+  47: f93->f93, Arg_2: 0 {O(1)}
+  47: f93->f93, Arg_3: 5 {O(1)}
+  47: f93->f93, Arg_4: 17 {O(1)}
+  48: f93->f89, Arg_0: 5 {O(1)}
+  48: f93->f89, Arg_1: 17 {O(1)}
+  48: f93->f89, Arg_2: 0 {O(1)}
+  48: f93->f89, Arg_3: 5 {O(1)}
+  48: f93->f89, Arg_4: 17 {O(1)}
+
+==> ./Brockschmidt_16/T2/p-61.output <==
+YES( ?, 1003 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f1
+Program_Vars:  Arg_0, Arg_1
+Temp_Vars:  
+Locations:  f1, f2, f300
+Transitions:
+9:f1(Arg_0,Arg_1) -> f300(1000,Arg_1)
+11:f300(Arg_0,Arg_1) -> f2(Arg_0,Arg_1):|:Arg_0<=1000 && Arg_0<=100 && Arg_1<=9
+12:f300(Arg_0,Arg_1) -> f2(Arg_0,Arg_1):|:Arg_0<=1000 && 10<=Arg_1
+10:f300(Arg_0,Arg_1) -> f300(Arg_0-1,Arg_1):|:Arg_0<=1000 && 101<=Arg_0 && Arg_1<=9
+
+Timebounds: 
+  Overall timebound: 1003 {O(1)}
+  9: f1->f300: 1 {O(1)}
+  10: f300->f300: 1000 {O(1)}
+  11: f300->f2: 1 {O(1)}
+  12: f300->f2: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 1003 {O(1)}
+  9: f1->f300: 1 {O(1)}
+  10: f300->f300: 1000 {O(1)}
+  11: f300->f2: 1 {O(1)}
+  12: f300->f2: 1 {O(1)}
+
+Sizebounds:
+  9: f1->f300, Arg_0: 1000 {O(1)}
+  9: f1->f300, Arg_1: Arg_1 {O(n)}
+  10: f300->f300, Arg_0: 999 {O(1)}
+  10: f300->f300, Arg_1: Arg_1 {O(n)}
+  11: f300->f2, Arg_0: 999 {O(1)}
+  11: f300->f2, Arg_1: Arg_1 {O(n)}
+  12: f300->f2, Arg_0: 1000 {O(1)}
+  12: f300->f2, Arg_1: Arg_1 {O(n)}
+
+==> ./Brockschmidt_16/T2/n-46.output <==
+
+==> ./Brockschmidt_16/T2/array1.output <==
+YES( ?, 1 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f0
+Program_Vars:  
+Temp_Vars:  
+Locations:  f0, f7
+Transitions:
+1:f0 -> f7
+
+Timebounds: 
+  Overall timebound: 1 {O(1)}
+  1: f0->f7: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 1 {O(1)}
+  1: f0->f7: 1 {O(1)}
+
+Sizebounds:
+
+==> ./Brockschmidt_16/T2/p-13.output <==
+YES( ?, 2 {O(1)})
+
+Initial Complexity Problem After Preprocessing:
+Start:  f2
+Program_Vars:  Arg_0
+Temp_Vars:  
+Locations:  f2, f3
+Transitions:
+2:f2(Arg_0) -> f3(Arg_0-1):|:0<=Arg_0
+3:f2(Arg_0) -> f3(Arg_0):|:Arg_0+1<=0
+
+Timebounds: 
+  Overall timebound: 2 {O(1)}
+  2: f2->f3: 1 {O(1)}
+  3: f2->f3: 1 {O(1)}
+
+Costbounds:
+  Overall costbound: 2 {O(1)}
+  2: f2->f3: 1 {O(1)}
+  3: f2->f3: 1 {O(1)}
+
+Sizebounds:
+
+==> ./Brockschmidt_16/T2/rewrite.output <==
+koat2: internal error, uncaught exception:
+       Invalid_argument("List.range 0 `To -1")
+       
