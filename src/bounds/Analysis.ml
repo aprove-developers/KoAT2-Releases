@@ -199,7 +199,7 @@ let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = fals
   knowledge_propagation scc measure program appr
   |> MaybeChanged.unpack % improve_timebound ~mprf_max_depth ~inv ~fast scc measure program
   |> step
-  |> twn_step
+  |> if twn then twn_step else identity
 
 let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
   if not (TransitionSet.is_empty non_linear_transitions)  then
