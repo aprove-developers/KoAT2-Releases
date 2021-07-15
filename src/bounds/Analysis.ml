@@ -26,14 +26,6 @@ let apply (get_sizebound: Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t)
   |> Bound.substitute_f (get_sizebound transition)
 
 
-(* method transforms polynome to parapolynom*)
-let as_parapoly label var =
-    match TransitionLabel.update label var with
-    (** Correct? In the nondeterministic case we just make it deterministic? *)
-    | None -> ParameterPolynomial.of_var var
-    | Some p -> ParameterPolynomial.of_polynomial p
-
-
 let entry_transitions program tset =
   let all_possible_entry_trans =
     TransitionSet.enum tset
@@ -214,7 +206,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
       let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
       let opt =
           Logger.log logger_cfr Logger.INFO
-            (fun () -> "RankingBounds_apply_cfr", [ "non-linear trans", TransitionSet.to_string non_linear_transitions
+            (fun () -> "Analysis_apply_cfr", [ "non-linear trans", TransitionSet.to_string non_linear_transitions
                                                   ; "time", string_of_float time]);
           CFR.apply_cfr non_linear_transitions !already_used_cfr program appr in
       if Option.is_some opt then (

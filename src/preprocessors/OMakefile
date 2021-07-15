@@ -36,6 +36,8 @@ InterfaceDoc($(LIB), $(FILES))
 clean:
   rm -f \
      *.omc \
+     *.cmt \
+     *.cmti \
      *.idoc \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      $(LIB).a $(LIB).cmxa $(LIB).cma \
