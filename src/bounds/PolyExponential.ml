@@ -326,28 +326,29 @@ module PE = struct
                 let s_ = RationalPolynomial.mult_with_const OurRational.(div c_d (one - c)) (transform d) in
                 RationalPolynomial.add s (compute_r RationalPolynomial.(add (sub q s) (mult_with_const c s_)) c)
 
-    (* c.f.: eq. (7) *)
+    (* c.f.: eq. (8) *)
     let no_positive (c, p, d, b) max_const coeff_var = 
         if ConstantConstraint.is_false c then 
             [] 
         else 
-            let rec lt_max i = 
+            (* c.f.: eq. (9) *)
+            let rec le_max i = 
                 let tmp = i - 1 in
                 let term = 
                     if ConstantConstraint.eval (OurInt.of_int tmp) c && i >= 1 then
                     let coeff = OurRational.div 
                         OurRational.(of_ourint OurInt.(mul (pow (of_int tmp) d) (pow (of_int b) tmp)))
-                        OurRational.(of_ourint OurInt.(pow (of_int coeff_var) (to_int (max_const + one)))) in 
+                        OurRational.(of_ourint OurInt.(pow (of_int coeff_var) i)) in 
                     [(ConstantConstraint.mk_gt tmp, RationalPolynomial.mult_with_const coeff p, 0, coeff_var)]
                     else [] in match i with
                 | -1 -> []
                 | 0 -> []
-                | 1 -> term
-                | _ -> term@(lt_max tmp) in
+                | _ -> term@(le_max tmp) in
+            (* c.f.: eq. (10) *)
             let gt_max = 
                 let r = compute_r (transform d) OurRational.(div (of_int coeff_var) (of_int b)) in
                 let max_const_inc = OurInt.(max_const + one) in 
-                let coeff = OurRational.(mul (mul (pow (div (of_int b) (of_int coeff_var)) (OurInt.to_int max_const_inc)) (of_int (-b))) 
+                let coeff = OurRational.(mul (div (pow (div (of_int b) (of_int coeff_var)) (OurInt.to_int max_const_inc)) (of_int (-b))) 
                                      (RationalPolynomial.eval_f r (fun _ -> OurRational.of_ourint max_const_inc))) in
                 let coeff_list = RationalPolynomial.degree_coeff_list r in
                 let degree_r = (List.length coeff_list) - 1 in
@@ -355,10 +356,9 @@ module PE = struct
                     let term x = [(ConstantConstraint.mk_gt ((OurInt.to_int max_const) + 1), RationalPolynomial.mult_with_const (OurRational.div x (OurRational.of_int b)) p, degree_r - i, b)] in
                     match coeff_list_ with   
                         | [] -> []
-                        | x::[] -> (term x)
                         | x::xs -> (term x)@(pe_ xs (i - 1)) in
                 [(ConstantConstraint.mk_gt ((OurInt.to_int max_const) + 1), RationalPolynomial.mult_with_const coeff p, 0, coeff_var)]@(pe_ coeff_list degree_r) in
-            (lt_max ((OurInt.to_int max_const) + 1))@gt_max
+            (le_max ((OurInt.to_int max_const) + 1))@gt_max
 
     let poly_with_var var poly = 
         let monomials = Polynomial.monomials poly |> List.filter (fun monomial -> (Monomial.degree_variable var monomial) = 0) in

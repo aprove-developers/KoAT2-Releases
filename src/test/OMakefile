@@ -43,6 +43,8 @@ install: Test
 clean:
   rm -f \
      *.omc \
+     *.cmt \
+     *.cmti \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
      Test Test.opt \
      *~ \

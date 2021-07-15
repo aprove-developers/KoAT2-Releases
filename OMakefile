@@ -8,4 +8,5 @@ clean:
     rm -f \
         *.omc \
         *.log \
-        *.cache
+        *.cache \
+        .omakedb*

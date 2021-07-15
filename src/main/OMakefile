@@ -53,6 +53,8 @@ InterfaceDoc($(LIB), $(FILES))
 clean:
   rm -f \
      *.omc \
+     *.cmt \
+     *.cmti \
      *.idoc \
      *.cmo \
      $(filter-proper-targets $(glob $(addsuffix .*, $(FILES)))) \
