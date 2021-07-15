@@ -485,6 +485,10 @@ let compute_scc ?(inv = false) cache program mprf_problem =
   if inv then
     compute_ranking_templates_real cache mprf_problem.find_depth vars locations;
 
+  Logger.log logger Logger.DEBUG
+      (fun () -> "compute_scc",
+        ["pairings_make_decr_min_applicable", Util.enum_to_string (fun (tset1,tset2) -> TransitionSet.to_id_string tset1^", "
+                                              ^TransitionSet.to_id_string tset2) (List.enum pairings_make_decreasing_min_applicable)]);
   List.iter (fun (make_decr, min_applicable) ->
     let solver_int = SMTSolverInt.create () in
     let solver_real = SMTSolver.create () in
