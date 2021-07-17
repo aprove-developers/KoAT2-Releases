@@ -269,6 +269,12 @@ module TimeBoundTable = Hashtbl.Make(Transition)
 
 let time_bound_table: Bound.t TimeBoundTable.t = TimeBoundTable.create 10
 
+let insert_sizebounds entry appr bound = 
+  entry
+  |> List.map (fun t -> Bound.substitute_f (Approximation.sizebound appr t) bound)
+  |> List.enum
+  |> Bound.sum
+
 let time_bound (l,t,l') scc program appr = 
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then 
@@ -285,6 +291,7 @@ let time_bound (l,t,l') scc program appr =
       List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity t)))) (*TODO: Stop if one is inf; TODO add bound for all tran on cycle*)
         (List.combine entry twn_loops) 
         Bound.zero
+        |> insert_sizebounds entry appr
         |> tap (fun b -> List.iter (fun t -> TimeBoundTable.add time_bound_table t b) cycle)) in
     if Option.is_some bound then
       bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
