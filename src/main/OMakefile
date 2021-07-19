@@ -3,6 +3,7 @@ OCAMLPACKS[] =
     apron
     apron.octD
     apron.boxD
+    parmap
     ppx_deriving_cmdliner
     ppx_deriving.show
     ppx_getenv
