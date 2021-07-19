@@ -217,7 +217,6 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
         LocalSizeBound.switch_cache();
         LocalSizeBound.enable_cfr();
         Program.reset_pre_cache ();
-        Program.to_file program_cfr "cfr";
         (* The new sccs which do not occur in the original program. *)
         let cfr_sccs = program_cfr
           |> Program.sccs
