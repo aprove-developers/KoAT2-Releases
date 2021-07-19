@@ -217,8 +217,8 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
         LocalSizeBound.switch_cache();
         LocalSizeBound.enable_cfr();
         Program.reset_pre_cache ();
+        Program.to_file program_cfr "cfr";
         (* The new sccs which do not occur in the original program. *)
-
         let cfr_sccs = program_cfr
           |> Program.sccs
           |> List.of_enum in
@@ -231,7 +231,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
                         |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
                         |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~inv ~fast ~twn scc measure program_cfr
                     else appr)
-              (Approximation.create program_cfr) in
+              (Approximation.create program_cfr |> TrivialTimeBounds.compute program_cfr) in
         let cfr_bound = Bound.sum (Enum.map
                                   (fun scc -> Bound.sum (Enum.map (fun t -> Approximation.timebound updated_appr_cfr t) (TransitionSet.enum scc)))
                                   (List.enum cfr_sccs))  in

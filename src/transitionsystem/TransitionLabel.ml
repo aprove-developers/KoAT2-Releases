@@ -20,7 +20,7 @@ type t = {
 
 let one = Polynomial.one
 
-let make ?(cost=one) com_kind ~update ~guard =
+let make ~cost com_kind ~update ~guard =
   if com_kind <> "Com_1" then raise OnlyCom1Supported else
   {
     id = unique ();
@@ -37,7 +37,7 @@ let fresh_id t = {
 let trival variables =
   let var_map =
     VarSet.fold (fun var map -> VarMap.add var (Polynomial.of_var var) map) variables VarMap.empty in
-  make "Com_1" ~update:var_map ~guard:Guard.mk_true
+  make ~cost:Polynomial.one "Com_1" ~update:var_map ~guard:Guard.mk_true
 
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
@@ -66,7 +66,7 @@ let take_last n xs =
   |> List.rev
 
 (* TODO Pattern <-> Assigment relation *)
-let mk ?(cost=one) ~com_kind ~targets ~patterns ~guard ~vars =
+let mk ~cost ~com_kind ~targets ~patterns ~guard ~vars =
   if List.length targets != 1 then raise RecursionNotSupported else
     if com_kind <> "Com_1" then raise OnlyCom1Supported else
       let (target, assignments) = List.hd targets in
@@ -129,7 +129,7 @@ let vars_ {update; guard; cost; _} =
 
 (* TODO May invalidate through invariant generation! *)
 let vars_memoization: (int,VarSet.t) Hashtbl.t = Hashtbl.create 10
-let vars = Util.memoize_v2 vars_memoization ~extractor:id vars_
+let vars = Util.memoize vars_memoization ~extractor:id vars_
 
 let vars_update t = (VarSet.of_enum % VarMap.keys) t.update
 

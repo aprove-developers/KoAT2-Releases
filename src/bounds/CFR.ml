@@ -128,7 +128,6 @@ let applyIrankFinder (scc_program: Program.t) =
                ^ ".koat"));
   "./tmp_" ^ !uid ^ "/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
       |> Readers.read_input ~rename:false false
-      |> Option.get
 
 (** TODO speed this up. -------------------------------------  *)
 let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitions =

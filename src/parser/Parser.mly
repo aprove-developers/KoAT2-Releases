@@ -11,6 +11,7 @@
 %token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
 %token                  COMMA
 %token                  INFINITY
+%token                  EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE
 
 %left			PLUS MINUS
 %left			TIMES
@@ -31,7 +32,7 @@
 
 %start <BoundsInst.Bound.t> onlyBound
 
-%type <Program.t> program
+%start <Program.t * Goal.goal> programAndGoal
 
 %type <Formulas.Formula.t> formula
 
@@ -52,15 +53,15 @@
 %%
 
 onlyProgram :
-        |       p = program; EOF
-                  { p } ;
+        |       p_and_g = programAndGoal
+                  { Tuple2.first p_and_g } ;
 
-program :
-        |       goal
+programAndGoal :
+        |       g = goal
                 start = start
                 variables = variables
-                transitions = transitions
-                  { Program.from (transitions variables) start } ;
+                transitions = transitions; EOF
+                  { Program.from (transitions variables) start, g } ;
 
 onlyProgram_simple :
         |       graph = program_simple; EOF
@@ -75,8 +76,14 @@ transition_simple :
 	          { ParserUtil.mk_transition_simple start cost rhs formula } ;
 
 goal :
-	|	LPAR GOAL goal = ID RPAR
-                  { goal } ;
+        |       LPAR GOAL COMPLEXITY RPAR
+                  { Complexity }
+        |       LPAR GOAL EXACTRUNTIME RPAR
+                  { ExactRuntime }
+        |       LPAR GOAL EXPECTEDCOMPLEXITY RPAR
+                  { ProbabilisticGoal ExpectedComplexity }
+        |       LPAR GOAL EXPECTEDSIZE var=ID RPAR
+                  { ProbabilisticGoal (ExpectedSize (Var.of_string var)) };
 
 start :
 	|	LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
