@@ -150,8 +150,9 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) (scc: TransitionSet
       else
         MultiphaseRankingFunction.find_scc ~inv:inv measure program is_time_bounded get_unbounded_vars scc depth
     in
-    TransitionSet.enum unbounded_transitions
-    |> Enum.map compute_function
+    TransitionSet.to_array unbounded_transitions
+    |> Parmap.array_parmap compute_function
+    |> Array.enum
     |> Util.cat_maybes_enum
   in
   (* Compute ranking functions up to the minimum depth such that at least one ranking functino is found
