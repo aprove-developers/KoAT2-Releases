@@ -34,14 +34,14 @@ val find : ?inv:bool -> measure -> Program.t -> int -> t Enum.t
 val find_scc : ?inv:bool -> measure ->  Program.t ->
   (Transition.t -> bool) ->  (* Is the transition time-bounded? *)
   (Transition.t -> VarSet.t) -> (* Unbounded vars for the transition *)
-  ProgramTypes.TransitionSet.t -> (* Transitions which should be decreasing in a ranking function. Use all transitions with unbounded time here *)
-  ProgramTypes.TransitionSet.t ->  (* The scc*)
+  TransitionSet.t ->  (* The scc*)
   int -> (* depth of the ranking function *)
-  t Enum.t
+  Transition.t -> (* The transition that should be decreasing *)
+  t option
 
 val find_fast : ?inv:bool ->  measure -> Program.t -> int -> t Enum.t
 
-val find_scc_fast : ?inv:bool -> measure -> Program.t -> ProgramTypes.TransitionSet.t -> int -> t Enum.t
+val find_scc_fast : ?inv:bool -> measure -> Program.t -> TransitionSet.t -> int -> Transition.t -> t option
 
 (** Converts a multiphase ranking function into a string*)
 val to_string : t -> string

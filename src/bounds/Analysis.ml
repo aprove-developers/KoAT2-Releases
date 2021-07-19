@@ -143,12 +143,16 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) (scc: TransitionSet
     |> tap (fun scc -> (Logger.log logger Logger.INFO (fun () -> "improve_timebound", ["scc", TransitionSet.to_string scc])))
     |> TransitionSet.filter (not % bounded measure appr)
   in
-  let rankfunc_computation =
-    if fast then
-      fun depth -> MultiphaseRankingFunction.find_scc_fast ~inv:inv measure program scc depth
-    else
-      fun depth -> MultiphaseRankingFunction.find_scc ~inv:inv measure program
-        is_time_bounded get_unbounded_vars unbounded_transitions scc depth
+  let rankfunc_computation depth =
+    let compute_function =
+      if fast then
+        MultiphaseRankingFunction.find_scc_fast ~inv:inv measure program scc depth
+      else
+        MultiphaseRankingFunction.find_scc ~inv:inv measure program is_time_bounded get_unbounded_vars scc depth
+    in
+    TransitionSet.enum unbounded_transitions
+    |> Enum.map compute_function
+    |> Util.cat_maybes_enum
   in
   (* Compute ranking functions up to the minimum depth such that at least one ranking functino is found
    * or the depth is max_depth *)
