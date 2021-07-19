@@ -195,11 +195,10 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
         already_used_cfr := already_used_cfr_upd;
         Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
+        Program.reset_pre_cache ();
         let rvg_with_sccs_cfr = RVGTypes.RVG.rvg_with_sccs program_cfr in
         LocalSizeBound.switch_cache();
         LocalSizeBound.enable_cfr();
-        Program.reset_pre_cache ();
-        Program.to_file program_cfr "cfr";
         (* The new sccs which do not occur in the original program. *)
         let cfr_sccs = program_cfr
           |> Program.sccs
@@ -234,6 +233,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
 
 let handle_timeout_cfr non_linear_transitions =
   LocalSizeBound.reset_cfr ();
+  Program.reset_pre_cache ();
   Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["scc", (TransitionSet.to_string non_linear_transitions)])
 
 
