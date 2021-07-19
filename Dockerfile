@@ -1,10 +1,9 @@
-FROM ocaml/opam2:alpine as koat2_build
+FROM ocaml/opam:alpine as koat2_build
 LABEL author="Fabian Meyer"
 LABEL author="Marcel Hark"
 
 ARG OCAML_VERSION=4.11.2
 
-RUN cd /home/opam/opam-repository && git pull
 RUN opam update
 RUN opam upgrade
 RUN opam switch create -y $OCAML_VERSION+musl+static+flambda
