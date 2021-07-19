@@ -39,9 +39,6 @@ module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
     let sum appr program =
       Trans.fold_transset (fun transition result -> B.(get appr transition + result)) (Program.transitions program) B.zero
 
-    let sum_available (name,map) =
-      Hashtbl.fold (fun transition bound result -> B.(bound + result)) map B.zero
-
     let add ?(simplifyfunc=identity) bound transition (name,map) =
       (try
          Hashtbl.modify (Trans.id transition) (simplifyfunc % B.keep_simpler_bound bound) map

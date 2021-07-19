@@ -68,16 +68,6 @@ module PolynomialOver(Value : PolyTypes.Ring) =
 
     let to_string_to_file poly = to_string_simplified ~to_file:true (simplify poly)
 
-    let rec equal_simplified poly1 poly2 =
-      List.length poly1 == List.length poly2 &&
-        match poly1 with
-        | [] -> true
-        | scaled :: tail ->
-           let curr_mon = ScaledMonomial_.monomial scaled in
-           let curr_coeff = ScaledMonomial_.coeff scaled in
-           Value.(=~=) curr_coeff (coeff curr_mon poly2) &&
-             equal_simplified tail (delete_monomial curr_mon poly2)
-
     let monomials poly =
          poly
       |> simplify
@@ -387,10 +377,6 @@ module ParameterPolynomial =
     (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
     let of_polynomial (poly : Inner.t): t =
       Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
-
-    let of_intmonom intmonom =
-      List.map (fun var -> (var, ParameterPolynomial.Monomial_.degree_variable var intmonom)) (intmonom |> ParameterPolynomial.Monomial_.vars |> VarSet.to_list)
-      |> Monomial_.make
 
     let of_intpoly =
       (of_polynomial % RealPolynomial.of_intpoly)

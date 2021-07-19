@@ -20,9 +20,9 @@ type t = {
   depth : int;
 }
 
-type measure = [ `Cost | `Time ] [@@deriving show, eq]
+type measure = [ `Cost | `Time ] [@@deriving show]
 
-type constraint_type = [`Non_Increasing | `Decreasing] [@@deriving show, eq]
+type constraint_type = [`Non_Increasing | `Decreasing]
 
 module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
 
@@ -103,12 +103,6 @@ let ranking_template cache location (vars: VarSet.t): ParameterPolynomial.t * Va
     let constant_poly = ParameterPolynomial.of_constant (Polynomial.of_var constant_var) in
     ParameterPolynomial.(linear_poly + constant_poly),
     List.append fresh_vars [constant_var]
-
-let as_parapoly_real label var =
-  match TransitionLabel.update label var with
-  (** Correct? In the nondeterministic case we just make it deterministic? *)
-  | None -> RealParameterPolynomial.of_var var
-  | Some p -> RealParameterPolynomial.of_intpoly p
 
 (** Given a list of variables an affine template-polynomial is generated*)
 let ranking_template_real cache location (vars: VarSet.t): RealParameterPolynomial.t * Var.t list =
@@ -251,16 +245,8 @@ let transition_constraint_ cache (depth, measure, constraint_type, (l,t,l')): Fo
 
 let transition_constraint cache = constraint_cache cache (transition_constraint_ cache)
 
-let transitions_constraint cache depth measure (constraint_type: constraint_type) (transitions : Transition.t list): Formula.t =
-  transitions
-  |> List.map (fun t -> transition_constraint cache (depth, measure, constraint_type, t) )
-  |> Formula.all
-
 let non_increasing_constraint cache depth measure transition =
   transition_constraint cache (depth, measure, `Non_Increasing, transition)
-
-let non_increasing_constraints cache depth measure transitions =
-  transitions_constraint cache depth measure `Non_Increasing (TransitionSet.to_list transitions)
 
 let decreasing_constraint cache depth measure transition =
   transition_constraint cache (depth, measure, `Decreasing, transition)
@@ -293,11 +279,6 @@ let make_inv cache depth decreasing_transition non_increasing_transitions valuat
     non_increasing = non_increasing_transitions;
     depth = depth;
   }
-
-
-(** We are searching for a real model, hence we need to cast reals to integers. *)
-let change_valuation (values: RealPolynomial.valuation) =
-  Valuation.from (List.map (fun x -> (x,  MPRF_Invariants.Valuation.eval x values |> OurFloat.upper_int)) (MPRF_Invariants.Valuation.vars values))
 
 
 let entry_transitions_from_non_increasing program non_increasing =
@@ -769,11 +750,6 @@ let compute_and_add_ranking_function cache ?(inv = false) program measure all_tr
       raise Exit
     )
     with Exit -> ()
-
-let compute_fast cache ?(inv = false) measure program max_depth =
-  program
-  |> Program.sccs
-  |> Enum.iter (fun scc -> TransitionSet.iter (compute_and_add_ranking_function ~inv:inv cache program measure scc max_depth) scc)
 
 let find_scc_fast ?(inv = false) measure program scc max_depth decreasing =
   let execute () =

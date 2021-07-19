@@ -16,15 +16,6 @@ struct
 
         let values = [GT; GE; LT; LE]
 
-        (* Helper function *)
-        let is_inverted (comp1 : t) (comp2 : t) =
-          match (comp1, comp2) with
-          | (GT, LT) -> true
-          | (GE, LE) -> true
-          | (LT, GT) -> true
-          | (LE, GE) -> true
-          | (_,_) -> false
-
         let to_string = function
           | GT -> ">"
           | GE -> ">="
@@ -175,9 +166,6 @@ module RealAtom =
 module RealParameterAtom =
   struct
     include AtomOver(RealParameterPolynomial)
-
-    let of_int_para_atom atom =
-      mk Comparator.LE (RealParameterPolynomial.of_int_parapoly atom) RealParameterPolynomial.zero
 
     let get_constant (poly,_) =
       P.get_constant (P.neg poly)

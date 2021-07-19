@@ -13,8 +13,6 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
                                  sig
                                    type t
                                    val id: t -> int
-                                   val src: t -> Location.t
-                                   val target_string: t -> string
                                    val to_id_string: t -> string
                                    val compare_same: t -> t -> int
                                  end)
