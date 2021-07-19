@@ -38,14 +38,14 @@ type mprf_problem = {
   program: Program.t;
   measure: measure;
   make_non_increasing: Transition.t Array.t;
-  make_decreasing: TransitionSet.t;
+  make_decreasing: Transition.t;
   unbounded_vars: Transition.t -> VarSet.t;
   find_depth: int;
   is_time_bounded: Transition.t -> bool;
 }
 
 type ranking_cache = {
-  ranking_table: t RankingTable.t;
+  rank_func: t option ref;
   template_table: ParameterPolynomial.t TemplateTable.t Array.t;
   template_table_real: RealParameterPolynomial.t TemplateTable.t Array.t;
   coeffs_table: VarSet.t CoeffsTable.t;
@@ -57,7 +57,7 @@ type ranking_cache = {
 let new_cache max_depth =
   let new_template_table () = Array.init max_depth (fun i -> TemplateTable.create 10) in
   {
-    ranking_table = RankingTable.create 10;
+    rank_func = ref None;
     template_table = new_template_table ();
     template_table_real = new_template_table ();
     coeffs_table = CoeffsTable.create 10;
@@ -299,100 +299,6 @@ let make_inv cache depth decreasing_transition non_increasing_transitions valuat
 let change_valuation (values: RealPolynomial.valuation) =
   Valuation.from (List.map (fun x -> (x,  MPRF_Invariants.Valuation.eval x values |> OurFloat.upper_int)) (MPRF_Invariants.Valuation.vars values))
 
-let try_decreasing cache ?(inv = false) (solver_real: SMTSolver.t) (solver_int: SMTSolverInt.t) (non_increasing: Transition.t Stack.t)
-   (to_be_found: int ref) (entry_transitions: TransitionSet.t) problem =
-  non_increasing
-  |> Stack.enum
-  |> TransitionSet.inter problem.make_decreasing % TransitionSet.of_enum
-  |> TransitionSet.enum
-  |> Enum.filter (fun t -> not (RankingTable.mem cache.ranking_table t))
-  |> Enum.iter (fun decreasing ->
-        Logger.(log logger DEBUG (fun () -> "try_decreasing", ["measure", show_measure problem.measure;
-                                                               "decreasing", Transition.to_id_string decreasing;
-                                                               "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
-                                                               "depth", string_of_int problem.find_depth]));
-        SMTSolverInt.push solver_int;
-
-        (* Set the coefficients for all variables for which a corresponding size bound does not exist for the entry transitions to
-         * 0. *)
-        let entry_trans_grouped_by_loc =
-          List.sort (fun (_,_,l'1) (_,_,l'2) -> Location.compare l'1 l'2)  (TransitionSet.to_list entry_transitions)
-          |> List.group_consecutive (fun (_,_,l'1) (_,_,l'2) -> Location.equal l'1 l'2)
-        in
-        let unbounded_vars_at_entry_locs coeff_table =
-          List.map
-            (fun ts ->
-              let entryloc = Transition.target (List.hd ts) in
-              List.enum ts
-              |> Enum.map problem.unbounded_vars
-              |> Enum.fold VarSet.union VarSet.empty
-              |> VarSet.enum
-              |> Enum.map (fun v -> VarSet.enum @@ CoeffsTable.find coeff_table (entryloc,v))
-              |> Enum.flatten
-              |> VarSet.of_enum)
-            entry_trans_grouped_by_loc
-          |> List.fold_left VarSet.union VarSet.empty
-        in
-
-        VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
-          (unbounded_vars_at_entry_locs cache.coeffs_table);
-        if inv then (
-          SMTSolver.push solver_real;
-          let templates_real = List.init problem.find_depth (fun n -> TemplateTable.find (Array.get cache.template_table_real n)) in
-          SMTSolver.add_real solver_real
-            (MPRF_Invariants.decreasing_constraint cache.invariants_cache problem.find_depth problem.measure decreasing templates_real);
-          SMTSolver.add_real solver_real
-            (MPRF_Invariants.consecution_constraint cache.invariants_cache problem.find_depth problem.measure decreasing templates_real);
-
-          (* set coefficients of unbounded variables to 0*)
-          VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
-            (unbounded_vars_at_entry_locs cache.coeffs_table_real);
-
-          TransitionSet.remove decreasing (Program.pre_transitionset_cached problem.program decreasing)
-          |> TransitionSet.iter
-            (fun trans ->  SMTSolver.add_real solver_real
-              (MPRF_Invariants.initiation_constraint cache.invariants_cache problem.find_depth problem.measure trans templates_real)));
-
-        SMTSolverInt.add solver_int (decreasing_constraint cache problem.find_depth problem.measure decreasing);
-
-        if SMTSolverInt.satisfiable solver_int then (
-          (* SMTSolverInt.minimize_absolute solver_int !fresh_coeffs; *)
-          SMTSolverInt.model solver_int
-          |> Option.map (make cache problem.find_depth decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
-          |> Option.may (fun ranking_function ->
-              to_be_found := !to_be_found - 1;
-              RankingTable.add cache.ranking_table decreasing ranking_function;
-              Logger.(log logger INFO (fun () -> "add_mprf", [
-                                            "measure", show_measure problem.measure;
-                                            "decreasing", Transition.to_id_string decreasing;
-                                            "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
-                                            "rank", only_rank_to_string ranking_function])))
-        )
-        else if inv && SMTSolver.satisfiable solver_real then (
-          SMTSolver.model_real solver_real
-           |> Option.map (
-              make_inv cache problem.find_depth decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum)
-              % tap (fun x -> MPRF_Invariants.store_inv cache.invariants_cache x decreasing)
-              % tap (fun x -> MPRF_Invariants.store_inv_set cache.invariants_cache x (non_increasing |> Stack.enum |> TransitionSet.of_enum)))
-          |> Option.may (fun ranking_function ->
-              to_be_found := !to_be_found - 1;
-              RankingTable.add cache.ranking_table decreasing ranking_function;
-              Logger.(log logger INFO (fun () -> "add_mprf_inv", [
-                  "measure", show_measure problem.measure;
-                  "decreasing", Transition.to_id_string decreasing;
-                  "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
-                  "rank", only_rank_to_string ranking_function];))
-            )
-        );
-
-        SMTSolverInt.pop solver_int;
-        if inv then
-          SMTSolver.pop solver_real;
-
-    );
-  if !to_be_found <= 0 then
-    raise Exit
-
 
 let entry_transitions_from_non_increasing program non_increasing =
   let all_possible_pre_trans =
@@ -415,18 +321,95 @@ let add_non_increasing_constraint cache problem solver_int solver_real inv trans
       (fun trans ->  SMTSolver.add_real solver_real
         (MPRF_Invariants.initiation_constraint cache.invariants_cache problem.find_depth problem.measure trans templates_real)))
 
+let add_decreasing_constraint cache problem solver_int solver_real inv =
+  if inv then (
+    SMTSolver.push solver_real;
+    let templates_real = List.init problem.find_depth (fun n -> TemplateTable.find (Array.get cache.template_table_real n)) in
+    SMTSolver.add_real solver_real
+      (MPRF_Invariants.decreasing_constraint cache.invariants_cache problem.find_depth problem.measure problem.make_decreasing templates_real);
+    SMTSolver.add_real solver_real
+      (MPRF_Invariants.consecution_constraint cache.invariants_cache problem.find_depth problem.measure problem.make_decreasing templates_real);
 
-let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (solver_real: SMTSolver.t) (solver_int: SMTSolverInt.t)
-  (non_increasing: Transition.t Stack.t) (to_be_found: int ref) problem =
-    let try_decreasing_if_entrytime_bounded non_increasing =
+    TransitionSet.remove problem.make_decreasing (Program.pre_transitionset_cached problem.program problem.make_decreasing)
+    |> TransitionSet.iter
+      (fun trans ->  SMTSolver.add_real solver_real
+        (MPRF_Invariants.initiation_constraint cache.invariants_cache problem.find_depth problem.measure trans templates_real)));
+  SMTSolverInt.add solver_int (decreasing_constraint cache problem.find_depth problem.measure problem.make_decreasing)
+
+let finalise_mprf cache ?(inv = false) solver_real solver_int non_increasing entry_transitions problem =
+  (* Set the coefficients for all variables for which a corresponding size bound does not exist for the entry transitions to
+   * 0. *)
+  let entry_trans_grouped_by_loc =
+    List.sort (fun (_,_,l'1) (_,_,l'2) -> Location.compare l'1 l'2)  (TransitionSet.to_list entry_transitions)
+    |> List.group_consecutive (fun (_,_,l'1) (_,_,l'2) -> Location.equal l'1 l'2)
+  in
+  let unbounded_vars_at_entry_locs coeff_table =
+    List.map
+      (fun ts ->
+        let entryloc = Transition.target (List.hd ts) in
+        List.enum ts
+        |> Enum.map problem.unbounded_vars
+        |> Enum.fold VarSet.union VarSet.empty
+        |> VarSet.enum
+        |> Enum.map (fun v -> VarSet.enum @@ CoeffsTable.find coeff_table (entryloc,v))
+        |> Enum.flatten
+        |> VarSet.of_enum)
+      entry_trans_grouped_by_loc
+    |> List.fold_left VarSet.union VarSet.empty
+  in
+
+  SMTSolverInt.push solver_int;
+  VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
+    (unbounded_vars_at_entry_locs cache.coeffs_table);
+  if inv then (
+    SMTSolver.push solver_real;
+    VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
+      (unbounded_vars_at_entry_locs cache.coeffs_table_real);
+  );
+
+  if SMTSolverInt.satisfiable solver_int then (
+    (* SMTSolverInt.minimize_absolute solver_int !fresh_coeffs; *)
+    SMTSolverInt.model solver_int
+    |> Option.map (make cache problem.find_depth problem.make_decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+    |> Option.may (fun ranking_function ->
+        cache.rank_func := Some ranking_function;
+        Logger.(log logger INFO (fun () -> "add_mprf", [
+                                      "measure", show_measure problem.measure;
+                                      "decreasing", Transition.to_id_string problem.make_decreasing;
+                                      "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
+                                      "rank", only_rank_to_string ranking_function])));
+        raise Exit
+  )
+  else if inv && SMTSolver.satisfiable solver_real then (
+    SMTSolver.model_real solver_real
+     |> Option.map (
+        make_inv cache problem.find_depth problem.make_decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum)
+        % tap (fun x -> MPRF_Invariants.store_inv cache.invariants_cache x problem.make_decreasing)
+        % tap (fun x -> MPRF_Invariants.store_inv_set cache.invariants_cache x (non_increasing |> Stack.enum |> TransitionSet.of_enum)))
+    |> Option.may (fun ranking_function ->
+        cache.rank_func := Some ranking_function;
+        Logger.(log logger INFO (fun () -> "add_mprf_inv", [
+            "measure", show_measure problem.measure;
+            "decreasing", Transition.to_id_string problem.make_decreasing;
+            "non_increasing", Util.enum_to_string Transition.to_id_string (Stack.enum non_increasing);
+            "rank", only_rank_to_string ranking_function];));
+        raise Exit
+      )
+  ) else (
+    SMTSolverInt.pop solver_int;
+    (if inv then SMTSolver.pop solver_real)
+  )
+
+let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (solver_real: SMTSolver.t) (solver_int: SMTSolverInt.t) (non_increasing: Transition.t Stack.t) problem =
+    let finalise_if_entrytime_bounded non_increasing =
       let entry_trans = entry_transitions_from_non_increasing problem.program non_increasing in
       if TransitionSet.for_all problem.is_time_bounded entry_trans then
-        try_decreasing cache ~inv:inv solver_real solver_int non_increasing to_be_found entry_trans problem;
+        finalise_mprf cache ~inv solver_real solver_int non_increasing entry_trans problem;
     in
 
     if SMTSolverInt.satisfiable solver_int || (inv && SMTSolver.satisfiable solver_real) then (
       if steps_left == 0 then (
-        try_decreasing_if_entrytime_bounded non_increasing
+        finalise_if_entrytime_bounded non_increasing
       ) else (
         for i=index to Array.length problem.make_non_increasing - 1 do
           let transition = Array.get problem.make_non_increasing i in
@@ -437,15 +420,14 @@ let rec backtrack cache ?(inv = false) (steps_left: int) (index: int) (solver_re
           add_non_increasing_constraint cache problem solver_int solver_real inv transition;
 
           Stack.push transition non_increasing;
-          backtrack cache ~inv:inv (steps_left - 1) (i + 1) solver_real solver_int non_increasing
-            to_be_found problem;
+          backtrack cache ~inv:inv (steps_left - 1) (i + 1) solver_real solver_int non_increasing problem;
           ignore (Stack.pop non_increasing);
 
           SMTSolverInt.pop solver_int;
           if inv then
             SMTSolver.pop solver_real;
         done;
-        try_decreasing_if_entrytime_bounded non_increasing
+        finalise_if_entrytime_bounded non_increasing
       )
     )
 
@@ -467,82 +449,48 @@ let get_minimum_applicable_non_inc_set mprf_problem =
     |> TransitionSet.inter possible_non_inc_set
     |> fun tset -> if TransitionSet.cardinal tset > TransitionSet.cardinal min_applicable then helper tset else tset
   in
-  helper % TransitionSet.singleton
+  helper (TransitionSet.singleton mprf_problem.make_decreasing)
 
 
 let compute_scc ?(inv = false) cache program mprf_problem =
-  (* pairings of possible decreasins transitions with their min applicable sets*)
-  let pairings_make_decreasing_min_applicable =
-    TransitionSet.to_list (mprf_problem.make_decreasing)
-    |> List.map (fun t -> t, get_minimum_applicable_non_inc_set mprf_problem t)
-    |> List.group (fun (_,tset1) (_,tset2) -> TransitionSet.compare tset1 tset2)
-    |> List.map (fun l -> TransitionSet.of_list (List.map Tuple2.first l), Tuple2.second (List.hd l))
-  in
-
   let locations = LocationSet.to_list @@ TransitionGraph.locations (Program.graph program) in
   let vars = Program.input_vars program in
   compute_ranking_templates cache mprf_problem.find_depth vars locations;
   if inv then
     compute_ranking_templates_real cache mprf_problem.find_depth vars locations;
 
+
+  let solver_int = SMTSolverInt.create () in
+  let solver_real = SMTSolver.create () in
+
+  (* make transition decreasing*)
+  add_decreasing_constraint cache mprf_problem solver_int solver_real inv;
+
+  (* initial constraint propagation for incoming timebounds*)
+  let min_applicable = get_minimum_applicable_non_inc_set mprf_problem in
   Logger.log logger Logger.DEBUG
-      (fun () -> "compute_scc",
-        ["pairings_make_decr_min_applicable", Util.enum_to_string (fun (tset1,tset2) -> TransitionSet.to_id_string tset1^", "
-                                              ^TransitionSet.to_id_string tset2) (List.enum pairings_make_decreasing_min_applicable)]);
-  List.iter (fun (make_decr, min_applicable) ->
-    let solver_int = SMTSolverInt.create () in
-    let solver_real = SMTSolver.create () in
+      (fun () -> "compute_scc", [ "decreasing", Transition.to_id_string mprf_problem.make_decreasing
+                                ; "min_applicable_non_inc_set", TransitionSet.to_id_string min_applicable]);
+  let non_inc = Stack.of_enum (TransitionSet.enum min_applicable) in
+  let make_non_increasing = TransitionSet.to_array @@ TransitionSet.diff (TransitionSet.of_array mprf_problem.make_non_increasing) min_applicable in
+  TransitionSet.iter (add_non_increasing_constraint cache mprf_problem solver_int solver_real inv) min_applicable;
 
-    let non_inc = Stack.of_enum (TransitionSet.enum min_applicable) in
-    let make_non_increasing = TransitionSet.to_array @@ TransitionSet.diff (TransitionSet.of_array mprf_problem.make_non_increasing) min_applicable in
-    TransitionSet.iter (add_non_increasing_constraint cache mprf_problem solver_int solver_real inv) min_applicable;
+  try
+    backtrack cache
+              ~inv:inv
+              (Array.length make_non_increasing)
+              0
+              solver_real
+              solver_int
+              non_inc
+              ({mprf_problem with make_non_increasing;})
+  with Exit -> ();
+
+  (if Option.is_none !(cache.rank_func) then
+    Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure mprf_problem.measure; "transition", Transition.to_id_string mprf_problem.make_decreasing])))
 
 
-    try
-      backtrack cache
-                ~inv:inv
-                (Array.length make_non_increasing)
-                0
-                solver_real
-                solver_int
-                non_inc
-                (ref (TransitionSet.cardinal make_decr))
-                ({mprf_problem with make_non_increasing;});
-    with Exit -> ()
-  ) pairings_make_decreasing_min_applicable;
-
-  mprf_problem.make_decreasing
-  |> TransitionSet.iter (fun t ->
-        if not (RankingTable.mem cache.ranking_table t) then
-          Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure mprf_problem.measure; "transition", Transition.to_id_string t]))
-      )
-
-let compute_ cache ?(inv = false) measure program is_time_bounded unbounded_vars depth =
-  let problem scc =
-    {  program; measure = measure; make_non_increasing = Array.of_enum (TransitionSet.enum scc); make_decreasing = scc;
-       unbounded_vars; is_time_bounded; find_depth = depth; }
-  in
-  Program.sccs program
-  |> Enum.iter (fun scc -> compute_scc cache ~inv program (problem scc))
-
-let logging measure methode_name =
-  Logger.with_log logger Logger.DEBUG
-                  (fun () -> methode_name, ["measure", show_measure measure])
-                  ~result:(Util.enum_to_string to_string % Enum.clone)
-
-let find ?(inv = false) measure program depth =
-  let cache = new_cache 5 in
-  let execute () =
-    if inv then
-        MPRF_Invariants.compute_invariant_templates cache.invariants_cache (Program.input_vars program)
-          (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-
-    compute_ cache ~inv:inv measure program (const true) (const @@ VarSet.empty) depth;
-    RankingTable.values cache.ranking_table
-  in
-  logging measure "find_mprf" execute
-
-let find_scc ?(inv = false) measure program is_time_bounded unbounded_vars make_decreasing scc depth =
+let find_scc ?(inv = false) measure program is_time_bounded unbounded_vars scc depth make_decreasing =
   let cache = new_cache depth in
   let mprf_problem =
     { program; measure; make_non_increasing = TransitionSet.to_array scc; make_decreasing; unbounded_vars; find_depth = depth; is_time_bounded}
@@ -553,9 +501,23 @@ let find_scc ?(inv = false) measure program is_time_bounded unbounded_vars make_
         (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
 
     compute_scc cache ~inv:inv program mprf_problem;
-    RankingTable.values cache.ranking_table
+    !(cache.rank_func)
   in
-  logging measure "find_scc_mprf" execute
+  Logger.with_log logger Logger.DEBUG
+    (fun () -> "find_scc", ["measure", show_measure measure; "scc", TransitionSet.to_id_string scc])
+    ~result:(Util.enum_to_string to_string % Option.enum)
+    execute
+
+let find ?(inv = false) measure program depth =
+  let execute () =
+    Program.sccs program
+    |> Enum.map (fun scc -> Enum.map (find_scc ~inv measure program (const false) (const VarSet.empty) scc depth) @@ TransitionSet.enum scc)
+    |> Util.cat_maybes_enum % Enum.flatten
+  in
+  Logger.with_log logger Logger.DEBUG
+    (fun () -> "find", ["measure", show_measure measure])
+    ~result:(Util.enum_to_string to_string)
+    execute
 
  module Dijkstra =
   Graph.Path.Dijkstra
@@ -781,7 +743,7 @@ let compute_and_add_ranking_function cache ?(inv = false) program measure all_tr
       SMTSolverInt.model solver_int
       |> Option.map (make cache depth decreasing non_inc)
       |> Option.may (fun rank_func ->
-        RankingTable.add cache.ranking_table decreasing rank_func;
+        cache.rank_func := Some rank_func;
         Logger.(log logger INFO (fun () -> "add_ranking_function", [
                                       "measure", show_measure measure;
                                       "decreasing", Transition.to_id_string decreasing;
@@ -798,7 +760,7 @@ let compute_and_add_ranking_function cache ?(inv = false) program measure all_tr
           % tap (fun x -> MPRF_Invariants.store_inv cache.invariants_cache x decreasing)
           % tap (fun x -> MPRF_Invariants.store_inv_set cache.invariants_cache x non_inc))
       |> Option.may (fun rank_func ->
-        RankingTable.add cache.ranking_table decreasing rank_func;
+        cache.rank_func := Some rank_func;
         Logger.(log logger INFO (fun () -> "add_ranking_function", [
                                       "measure", show_measure measure;
                                       "decreasing", Transition.to_id_string decreasing;
@@ -813,31 +775,29 @@ let compute_fast cache ?(inv = false) measure program max_depth =
   |> Program.sccs
   |> Enum.iter (fun scc -> TransitionSet.iter (compute_and_add_ranking_function ~inv:inv cache program measure scc max_depth) scc)
 
-let compute_scc_fast cache ?(inv = false) measure program max_depth scc =
-  scc
-  |> TransitionSet.iter (compute_and_add_ranking_function ~inv:inv cache program measure scc max_depth)
+let find_scc_fast ?(inv = false) measure program scc max_depth decreasing =
+  let execute () =
+    let cache = new_cache max_depth in
+    if inv then
+      MPRF_Invariants.compute_invariant_templates cache.invariants_cache (Program.input_vars program)
+        (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
+
+
+    compute_and_add_ranking_function cache ~inv:inv program measure scc max_depth decreasing;
+    !(cache.rank_func)
+  in
+  Logger.with_log logger Logger.DEBUG
+    (fun () -> "find_scc_fast", ["measure", show_measure measure; "scc", TransitionSet.to_id_string scc])
+    ~result:(Util.enum_to_string to_string % Option.enum)
+    execute
 
 let find_fast ?(inv = false) measure program max_depth =
   let execute () =
-    let cache = new_cache max_depth in
-    if inv then
-      MPRF_Invariants.compute_invariant_templates cache.invariants_cache (Program.input_vars program)
-        (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-
-    compute_fast cache ~inv:inv measure program max_depth;
-    RankingTable.values cache.ranking_table
+    Program.sccs program
+    |> Enum.map (fun scc -> Enum.map (find_scc_fast ~inv measure program scc max_depth) @@ TransitionSet.enum scc)
+    |> Util.cat_maybes_enum % Enum.flatten
   in
-  logging measure "find_ranking_functions_fast" execute
-
-let find_scc_fast ?(inv = false) measure program scc max_depth =
-  let execute () =
-    let cache = new_cache max_depth in
-    if inv then
-      MPRF_Invariants.compute_invariant_templates cache.invariants_cache (Program.input_vars program)
-        (program |> Program.graph |> TransitionGraph.locations |> LocationSet.to_list);
-
-
-    compute_scc_fast cache ~inv:inv measure program max_depth scc;
-    RankingTable.values cache.ranking_table
-  in
-  logging measure "find_ranking_functions_scc_fast" execute
+  Logger.with_log logger Logger.DEBUG
+    (fun () -> "find_fast", ["measure", show_measure measure])
+    ~result:(Util.enum_to_string to_string)
+    execute
