@@ -21,13 +21,19 @@
 let int = ['0'-'9'] ['0'-'9']*
 let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
+let comment = '#'[^ '\n' '\r']*newline
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']* '\''?
 
 rule read =
   parse
   | white             { read lexbuf }
   | newline           { next_line lexbuf; read lexbuf }
+  | comment           { next_line lexbuf; read lexbuf }
   | "GOAL"            { P.GOAL }
+  | "COMPLEXITY"           { P.COMPLEXITY }
+  | "EXPECTEDCOMPLEXITY"   { P.EXPECTEDCOMPLEXITY }
+  (*| "EXACTRUNTIME"         { P.EXACTRUNTIME }
+  | "EXPECTEDSIZE"         { P.EXPECTEDSIZE } *)
   | "STARTTERM"       { P.STARTTERM }
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
   | "RULES"           { P.RULES }

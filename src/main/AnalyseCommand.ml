@@ -175,45 +175,43 @@ let run (params: params) =
     print_string (program_str ^ "\n\n")
   );
   ProofOutput.compute_proof params.show_proof;
-  let problem =
+  let program =
     input
     |> Readers.read_input ~rename:params.rename params.simple_input
-    |> rename_program_option
-    |> tap (Option.may @@ fun prog -> ProofOutput.add_to_proof @@ fun () ->
+    |> rename_program
+    |> tap (fun prog -> ProofOutput.add_to_proof @@ fun () ->
           FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string prog) )
         )
   in
-  Option.bind problem (fun program ->
-      Timeout.timed_run params.timeout
-        ~action:(fun () -> print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n") @@ fun () ->
-         ((if params.cfr then program |> Normalise.normalise else program) , Approximation.create program)
-         |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
-         |> Preprocessor.process params.preprocessing_strategy params.preprocessors
-         |> tap (fun (prog, _) -> ProofOutput.add_to_proof @@ fun () ->
-              FormattedString.(mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string prog))
+  Timeout.timed_run params.timeout
+    ~action:(fun () -> print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n") (fun () ->
+     ((if params.cfr then program |> Normalise.normalise else program) , Approximation.create program)
+     |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
+     |> Preprocessor.process params.preprocessing_strategy params.preprocessors
+     |> tap (fun (prog, _) -> ProofOutput.add_to_proof @@ fun () ->
+          FormattedString.(mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string prog))
+        )
+     |> tap (fun (program, appr) ->
+            if params.print_system then
+              GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
+     |> tap (fun (program, appr) ->
+            if params.print_rvg then (
+              GraphPrint.print_rvg ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
             )
-         |> tap (fun (program, appr) ->
-                if params.print_system then
-                  GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
-         |> tap (fun (program, appr) ->
-                if params.print_rvg then (
-                  GraphPrint.print_rvg ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
-                )
-              )
-         |> (fun (program, appr) ->
-                   if not params.no_boundsearch then
-                     Bounds.find_bounds ~mprf_max_depth:params.depth ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast ~twn:params.twn program appr
-                   else (program, appr))
-         |> tap (fun (program, appr) -> params.result program appr)
-         |> tap (fun (program, appr) ->
-                if params.print_system then
-                  GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
-         |> tap (fun (program, appr) ->
-                if params.print_rvg then (
-                  GraphPrint.print_rvg ~label:(bounded_rv_to_string program appr) ~outdir:output_dir ~file:input_filename program;
-                )
-              )
-       )
+          )
+     |> (fun (program, appr) ->
+               if not params.no_boundsearch then
+                 Bounds.find_bounds ~mprf_max_depth:params.depth ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast program appr
+               else (program, appr))
+     |> tap (fun (program, appr) -> params.result program appr)
+     |> tap (fun (program, appr) ->
+            if params.print_system then
+              GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
+     |> tap (fun (program, appr) ->
+            if params.print_rvg then (
+              GraphPrint.print_rvg ~label:(bounded_rv_to_string program appr) ~outdir:output_dir ~file:input_filename program;
+            )
+          ))
     |> ignore;
     if params.show_proof then print_string "\n\n"; ProofOutput.print_proof ();
     if params.log_level == NONE && params.cfr then

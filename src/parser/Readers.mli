@@ -24,4 +24,6 @@ val read_polynomial : string -> Polynomials.Polynomial.t
 
 val read_bound : string -> Bound.t
 
-val read_input : ?rename:bool -> bool -> string -> Program.t option
+val read_input : ?rename:bool -> bool -> string -> Program.t
+
+val read_prog_goal_file : ?rename:bool -> string -> Program.t * Goal.goal

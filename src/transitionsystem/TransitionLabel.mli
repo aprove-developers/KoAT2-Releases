@@ -25,10 +25,10 @@ exception RecursionNotSupported
 
 (** Creates a label from an update function and a guard, a cost can be set, too (the default is the constant function one).
 The string is used to set "Com_1". TODO doc ? *)
-val make : ?cost:polynomial -> string -> update:polynomial VarMap.t -> guard:Guard.t -> t
+val make : cost:polynomial -> string -> update:polynomial VarMap.t -> guard:Guard.t -> t
 
 (** TODO doc? *)
-val mk : ?cost:polynomial ->
+val mk : cost:polynomial ->
          com_kind:string ->
          targets:(string * (polynomial list)) list ->
          patterns:Var.t list ->
