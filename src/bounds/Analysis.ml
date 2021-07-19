@@ -99,13 +99,6 @@ let bounded measure appr transition =
       else
         false
 
-let one_successor (program: Program.t) (scc: TransitionSet.t) =
-    TransitionSet.filter (fun (l,t,l') ->
-      Printf.printf "one_succesor t %s  outgoing_trans %s\n" (Transition.to_id_string (l,t,l'))
-        (TransitionSet.to_id_string @@ TransitionSet.of_list @@ Program.outgoing_transitions logger program [(l,t,l')]);
-      List.length (Program.outgoing_transitions logger program [(l,t,l')]) == 1
-    ) scc
-
 let rec knowledge_propagation (scc: TransitionSet.t) measure program appr =
   let execute () =
     scc
