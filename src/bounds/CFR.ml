@@ -224,8 +224,8 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         let scc_list =
           TransitionSet.to_list scc
           in
-        let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger program scc_list)) in
-        let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.input_vars program),l)) (LocationSet.to_list entry_locations) in
+        let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger merged_program scc_list)) in
+        let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.input_vars merged_program),l)) (LocationSet.to_list entry_locations) in
         let program_cfr =
         initial_location
         |> Program.from (entry_transitions@scc_list)
@@ -233,12 +233,17 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
 
         (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
         and map = RenameMap.from_native (List.map (fun var -> (String.replace ~sub:"_" ~by:"" ~str:(Var.to_string var) |> Tuple2.second, 
-                                                               Var.to_string var)) (Program.input_vars program |> VarSet.to_list))  in
+                                                               Var.to_string var)) (Program.input_vars merged_program |> VarSet.to_list))  in
         let transitions_cfr = program_cfr
         |> Program.transitions
         |> rename_entry_transition entry_locations initial_location
         |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
         |> TransitionSet.map (fun t -> Transition.rename2 map t) in
+
+        let removable_loc = 
+          let locations = List.fold_right (fun (l,_,l') locations -> locations |> LocationSet.add l |> LocationSet.add l') scc_list LocationSet.empty in
+          LocationSet.filter (fun l -> TransitionSet.exists (fun (_,_,l') -> Location.equal l l') (TransitionSet.diff (Program.transitions merged_program) scc)) locations 
+          |> LocationSet.diff locations in
 
         (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
         let
@@ -249,8 +254,9 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         merged_program
         |> Program.transitions
         |> TransitionSet.union transitions_cfr
-        |> TransitionSet.union (outgoing_transitions (Program.outgoing_transitions logger program scc_list) transitions_cfr)
+        |> TransitionSet.union (outgoing_transitions (Program.outgoing_transitions logger merged_program scc_list) transitions_cfr)
         |> flip TransitionSet.diff scc
+        |> TransitionSet.filter (fun (l,_,_) -> not (LocationSet.mem l removable_loc))
         |> TransitionSet.to_list
         |> flip Program.from initial_location
         in
