@@ -15,7 +15,7 @@ let logger_cfr = Logging.(get CFR)
 (** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
 let already_used_cfr = ref TransitionSet.empty
 
-type measure = [ `Cost | `Time ] [@@deriving show, eq]
+type measure = [ `Cost | `Time ] [@@deriving show]
 type rvg_with_sccs = RVG.t * RVG.scc list Lazy.t
 
 exception NOT_IMPROVED

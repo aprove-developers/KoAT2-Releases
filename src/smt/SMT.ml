@@ -220,17 +220,6 @@ module Z3Opt =
     let check_negativity (formula : Formula.t) (poly: Polynomial.t) =
       tautology Formula.Infix.(formula => (poly <= Polynomial.zero))
 
-    let minimisation_goal (formula : Formula.t) (coeffs_to_minimise: Var.t list): Z3.Expr.expr =
-      let generator poly v =
-        if check_positivity formula Polynomial.(of_var v) then
-          Polynomial.(poly + of_var v)
-        else if check_negativity formula Polynomial.(of_var v) then
-          Polynomial.(poly - of_var v)
-        else
-          poly
-      in
-      from_poly !context (List.fold_left generator Polynomial.zero coeffs_to_minimise)
-
     let get_model ?(coeffs_to_minimise=[]) formula =
       let z3_expr = from_formula !context formula in
       let optimisation_goal = Z3.Optimize.mk_opt !context in
@@ -324,33 +313,6 @@ module IncrementalZ3SolverInt =
       |> from_formula context
       |> fun formula -> Z3.Optimize.add opt [formula]
 
-    (** Returns true iff the formula implies the positivity of the variable. *)
-    let is_positive (opt,_) (var: Var.t) =
-      push opt;
-      add opt Formula.Infix.(Polynomial.of_var var >= Polynomial.zero);
-      let result = unsatisfiable opt in
-      pop opt;
-      result
-
-    (** Returns true iff the formula implies the negativity of the variable. *)
-    let is_negative (opt,_) (var: Var.t) =
-      push opt;
-      add opt Formula.Infix.(Polynomial.of_var var <= Polynomial.zero);
-      let result = unsatisfiable opt in
-      pop opt;
-      result
-
-    let minimisation_goal (opt,context) (vars: Var.t list): Z3.Expr.expr =
-      let generator poly v =
-        if is_positive opt v then
-          Polynomial.(poly + of_var v)
-        else if is_negative opt v then
-          Polynomial.(poly - of_var v)
-        else
-          poly
-      in
-      from_poly context (List.fold_left generator Polynomial.zero vars)
-
 (*    let minimize opt vars =
       ignore (Z3.Optimize.minimize opt (minimisation_goal opt vars))
  *)
@@ -441,10 +403,6 @@ module IncrementalZ3Solver =
     let pop t =
       Z3.Optimize.pop (opt t);
       Z3.Solver.pop (slv t) 1
-
-    let result_is_not_unknown = function
-      | Z3.Solver.UNKNOWN -> false
-      | _                 -> true
 
     let result_is expected (_,slv,_) =
       Z3.Solver.check slv []

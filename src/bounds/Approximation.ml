@@ -3,8 +3,6 @@ open BoundsInst
 open ProgramTypes
 open ApproximationModules
 
-let logger = Logging.(get Approximation)
-
 type t = {
     time: TransitionApproximation.t;
     size: SizeApproximation.t;

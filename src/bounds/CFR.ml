@@ -90,8 +90,6 @@ let minimalSCCs (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
   |> (applyDijkstra nonLinearTransitions)
   |> List.map (fun scc -> parallelTransitions program scc)
 
-let string x =
-  List.fold_right (fun trans str -> str ^ "\n" ^ (TransitionSet.to_string trans)) x ""
 
 (* Merges non-disjoint SCCS *)
 let minimalDisjointSCCs (original_sccs: ProgramTypes.TransitionSet.t list) =
@@ -232,7 +230,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         |> applyIrankFinder
 
         (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
-        and map = RenameMap.from_native (List.map (fun var -> (String.replace ~sub:"_" ~by:"" ~str:(Var.to_string var) |> Tuple2.second, 
+        and map = RenameMap.from_native (List.map (fun var -> (String.replace ~sub:"_" ~by:"" ~str:(Var.to_string var) |> Tuple2.second,
                                                                Var.to_string var)) (Program.input_vars merged_program |> VarSet.to_list))  in
         let transitions_cfr = program_cfr
         |> Program.transitions
@@ -240,9 +238,9 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
         |> TransitionSet.map (fun t -> Transition.rename2 map t) in
 
-        let removable_loc = 
+        let removable_loc =
           let locations = List.fold_right (fun (l,_,l') locations -> locations |> LocationSet.add l |> LocationSet.add l') scc_list LocationSet.empty in
-          LocationSet.filter (fun l -> TransitionSet.exists (fun (_,_,l') -> Location.equal l l') (TransitionSet.diff (Program.transitions merged_program) scc)) locations 
+          LocationSet.filter (fun l -> TransitionSet.exists (fun (_,_,l') -> Location.equal l l') (TransitionSet.diff (Program.transitions merged_program) scc)) locations
           |> LocationSet.diff locations in
 
         (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)

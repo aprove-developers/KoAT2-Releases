@@ -68,7 +68,7 @@ module Methods =
             |(x::tailxs, y::tailys) -> OurInt.(x =~= y) && (list_equality tailxs tailys)
             | (_,_) -> false
 
-    let rec list_print (xs : OurInt.t list ) = "[" ^ String.concat "," (List.map OurInt.to_string xs) ^ "]"
+    let list_print (xs : OurInt.t list ) = "[" ^ String.concat "," (List.map OurInt.to_string xs) ^ "]"
 
     let list_list_equality xs ys = list_equality (List.concat xs) (List.concat ys)
 
