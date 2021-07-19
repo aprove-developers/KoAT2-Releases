@@ -10,7 +10,35 @@ open PolyExponential
 (*TODO *)
 let logger = Logging.(get Twn)
 
-(*TODO Cost, negative coeff.  *)
+(*TODO Cost*)
+
+(* ELIMINIATE  *)
+
+let depends var label =
+    VarSet.exists (fun x -> (TransitionLabel.update label x |? Polynomial.zero |> Polynomial.vars |> VarSet.mem var)
+                         || (TransitionLabel.cost label |> Polynomial.vars |> VarSet.mem var))
+
+let rec eliminate_ t contributors non_contributors =
+    let (xs,ys) = VarSet.fold (fun y (contr,non_contr) ->
+                        if depends y t contr then
+                            (VarSet.add y contr, VarSet.remove y non_contr)
+                        else
+                            (contr,non_contr)) (TransitionLabel.input_vars t)
+                        (contributors, non_contributors) in
+    if VarSet.equal non_contributors ys then
+        contributors
+    else
+        eliminate_ t xs ys
+
+let eliminate t =
+    let vars = TransitionLabel.input_vars t in
+    let vars_guard = Constraint.vars (TransitionLabel.guard t)
+    and vars_cost = Polynomial.vars (TransitionLabel.cost t) in
+    let init_contr = VarSet.union vars_guard vars_cost in
+    Logger.(log logger INFO (fun () -> "EliminateNonContributors", [("init_contr", VarSet.to_string init_contr);("init_non_contributors", VarSet.to_string (VarSet.diff vars vars_guard))]));
+    let contributors = eliminate_ t init_contr (VarSet.diff vars init_contr) in
+    let non_contributors = VarSet.diff vars contributors in
+    TransitionLabel.remove_non_contributors non_contributors t
 
 (* TOPOLOGICAL ORDERING: *)
 
@@ -288,7 +316,7 @@ let time_bound (l,t,l') scc program appr =
     Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entry))]);
     let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entry in
     Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entry) (List.map TransitionLabel.to_string twn_loops));
-      List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity t)))) (*TODO: Stop if one is inf; TODO add bound for all tran on cycle*)
+      List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity (t |> eliminate))))) (*TODO: Stop if one is inf;*)
         (List.combine entry twn_loops) 
         Bound.zero
         |> insert_sizebounds entry appr
