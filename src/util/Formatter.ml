@@ -71,7 +71,7 @@ let render_html meta f =
     ; end_document
     ]
 
-let rec render_plain _ f = render_string f
+let render_plain _ f = render_string f
 
 let rec render_markdown meta f =
   match f with

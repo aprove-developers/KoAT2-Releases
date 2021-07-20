@@ -316,7 +316,7 @@ module type Ring =
   (** Providing the construct for the algebraic structure of a ring. *)
 
     (** Type of its elements. *)
-    type t [@@deriving eq]
+    type t
 
     include BaseMath with type t := t
 

@@ -188,14 +188,6 @@ let to_formatted_string program =
 
 let to_string = FormattedString.render_string % to_formatted_string
 
-let to_file program  =
-  String.concat "" [
-      "(GOAL COMPLEXITY)\n";
-      "(STARTTERM (FUNCTIONSYMBOLS "; program |> start |> Location.to_string; "))\n";
-      "(VAR "; (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (vars program) ""); ")\n";
-      "(RULES \n"; TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "" ; ")";
-  ]
-
 let to_simple_string program =
   TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph ""
 
@@ -224,9 +216,6 @@ let entry_transitions logger (program: t) (rank_transitions: Transition.t list):
   |> List.of_enum
   |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                (fun () -> "entry_transitions", ["result", transitions |> List.enum |> Util.enum_to_string Transition.to_id_string]))
-
-let list_string list =
-  List.fold_right (fun x str -> str ^ " " ^ (Transition.to_string x)) list ""
 
 (** All outgoing transitions of the given transitions.
     These are such transitions, that can occur immediately after one of the transitions, but are not themselves part of the given transitions. *)

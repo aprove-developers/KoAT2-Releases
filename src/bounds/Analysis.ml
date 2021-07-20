@@ -15,7 +15,7 @@ let logger_cfr = Logging.(get CFR)
 (** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
 let already_used_cfr = ref TransitionSet.empty
 
-type measure = [ `Cost | `Time ] [@@deriving show, eq]
+type measure = [ `Cost | `Time ] [@@deriving show]
 type rvg_with_sccs = RVG.t * RVG.scc list Lazy.t
 
 exception NOT_IMPROVED
@@ -110,13 +110,6 @@ let bounded measure appr transition =
       else
         false
 
-let one_successor (program: Program.t) (scc: TransitionSet.t) =
-    TransitionSet.filter (fun (l,t,l') ->
-      Printf.printf "one_succesor t %s  outgoing_trans %s\n" (Transition.to_id_string (l,t,l'))
-        (TransitionSet.to_id_string @@ TransitionSet.of_list @@ Program.outgoing_transitions logger program [(l,t,l')]);
-      List.length (Program.outgoing_transitions logger program [(l,t,l')]) == 1
-    ) scc
-
 let rec knowledge_propagation (scc: TransitionSet.t) measure program appr =
   let execute () =
     scc
@@ -154,12 +147,17 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) (scc: TransitionSet
     |> tap (fun scc -> (Logger.log logger Logger.INFO (fun () -> "improve_timebound", ["scc", TransitionSet.to_string scc])))
     |> TransitionSet.filter (not % bounded measure appr)
   in
-  let rankfunc_computation =
-    if fast then
-      fun depth -> MultiphaseRankingFunction.find_scc_fast ~inv:inv measure program scc depth
-    else
-      fun depth -> MultiphaseRankingFunction.find_scc ~inv:inv measure program
-        is_time_bounded get_unbounded_vars unbounded_transitions scc depth
+  let rankfunc_computation depth =
+    let compute_function =
+      if fast then
+        MultiphaseRankingFunction.find_scc_fast ~inv:inv measure program scc depth
+      else
+        MultiphaseRankingFunction.find_scc ~inv:inv measure program is_time_bounded get_unbounded_vars scc depth
+    in
+    TransitionSet.to_array unbounded_transitions
+    |> Parmap.array_parmap compute_function
+    |> Array.enum
+    |> Util.cat_maybes_enum
   in
   (* Compute ranking functions up to the minimum depth such that at least one ranking functino is found
    * or the depth is max_depth *)
@@ -213,14 +211,15 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
         already_used_cfr := already_used_cfr_upd;
         Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
+        Program.reset_pre_cache ();
         let rvg_with_sccs_cfr = RVGTypes.RVG.rvg_with_sccs program_cfr in
         LocalSizeBound.switch_cache();
         LocalSizeBound.enable_cfr();
-        Program.reset_pre_cache ();
         (* The new sccs which do not occur in the original program. *)
         let cfr_sccs = program_cfr
           |> Program.sccs
-          |> List.of_enum in
+          |> List.of_enum
+          |> List.filter (fun cfr_scc -> not (Enum.exists (fun scc_ -> TransitionSet.equal cfr_scc scc_) (Program.sccs program))) in
         let updated_appr_cfr =
           cfr_sccs
           |> List.fold_left (fun appr scc ->
@@ -230,7 +229,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
                         |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
                         |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~inv ~fast ~twn scc measure program_cfr
                     else appr)
-              (Approximation.create program_cfr |> TrivialTimeBounds.compute program_cfr) in
+              appr_cfr in
         let cfr_bound = Bound.sum (Enum.map
                                   (fun scc -> Bound.sum (Enum.map (fun t -> Approximation.timebound updated_appr_cfr t) (TransitionSet.enum scc)))
                                   (List.enum cfr_sccs))  in
@@ -251,6 +250,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
 
 let handle_timeout_cfr non_linear_transitions =
   LocalSizeBound.reset_cfr ();
+  Program.reset_pre_cache ();
   Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["scc", (TransitionSet.to_string non_linear_transitions)])
 
 

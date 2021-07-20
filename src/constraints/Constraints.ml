@@ -14,9 +14,6 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
 
     type t = A.t list [@@deriving eq, ord]
 
-    (** Same as List.length but outside of this module the list structure of constraints is invisible *)
-    let num_of_atoms = List.length
-
     let lift atom = [ atom ]
 
     let mk atoms = atoms
@@ -178,14 +175,6 @@ module RealParameterConstraint =
 
     let of_intconstraint =
       of_realconstraint % RealConstraint.of_intconstraint
-
-    let flatten =
-      fold
-        ~subject:RealParameterPolynomial.flatten
-        ~le:RealConstraint.mk_le
-        ~lt:RealConstraint.mk_lt
-        ~correct:RealConstraint.mk_true
-        ~conj:RealConstraint.mk_and
 
     (**returns a list of the constants of the constraints*)
     let get_constant_vector constr =
