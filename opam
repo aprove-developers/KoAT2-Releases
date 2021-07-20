@@ -15,6 +15,7 @@ depends: [
   "ocamlnet"
   "omake"
   "ounit"
+  "parmap"
   "ppx_deriving"
   "ppx_deriving_cmdliner"
   "ppx_getenv"

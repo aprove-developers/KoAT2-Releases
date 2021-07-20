@@ -70,7 +70,7 @@ module Methods =
             |(x::tailxs, y::tailys) ->  OurInt.(x =~= y) && (list_equality tailxs tailys)
             | (_,_) -> false
 
-    let rec list_print (xs : OurInt.t list ) = String.concat "," (List.map OurInt.to_string xs)
+    let list_print (xs : OurInt.t list ) = String.concat "," (List.map OurInt.to_string xs)
 
     let tests =
       "Polynomial" >::: [

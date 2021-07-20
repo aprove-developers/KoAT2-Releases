@@ -10,13 +10,11 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                           include PolyTypes.Polynomial with type value = Num.t
                                                         and type valuation = Valuation.Make(Num).t
                                                         and type monomial = Monomials.Make(Num).t
-                          val max_of_occurring_constants : t -> Num.t
                         end ) =
   struct
     module Valuation_ = Valuation.Make(Num)
     type valuation = Valuation.Make(Num).t
 
-    type polynomial = Poly.t
     type value = Num.t
 
 (* Minus Infinity is max of an empty list *)
@@ -50,20 +48,6 @@ let get_constant t =
   match t with
   | Some b -> get_constant_of_bound b
   | None   -> Num.zero
-
-
-module Constructor =
-  struct
-    let number = function
-      | Const _ -> 1
-      | Var _ -> 2
-      | Pow _ -> 4
-      | Sum _ -> 5
-      | Product _ -> 6
-
-    let (<) b1 b2 =
-      number b1 < number b2
-  end
 
 let rec fold_bound ~const ~var ~plus ~times ~exp p =
   let fold_ = fold_bound ~const ~var ~plus ~times ~exp in
@@ -128,11 +112,6 @@ let asymptotic_complexity =
     )
     ~inf:Inf
 
-let is_constant bound =
-match (asymptotic_complexity bound) with
-  | Polynomial 0 -> true
-  | _ -> false
-
 (** Returns true iff. the bound is in complexity class O(n) *)
 let is_linear bound =
 match (asymptotic_complexity bound) with
@@ -170,14 +149,6 @@ let rec get_op_chain_and_apply_to_atoms f t b = match (t,b) with
   | (`Sum, Sum (b1,b2))             -> get_op_chain_and_apply_to_atoms f t b1 @ get_op_chain_and_apply_to_atoms f t b2
   | (`Product, Product (b1,b2))     -> get_op_chain_and_apply_to_atoms f t b1 @ get_op_chain_and_apply_to_atoms f t b2
   | (_, b)                          -> [f b]
-
-let var_head = function
-  | Var _ -> true
-  | _     -> false
-
-let get_base_if_pow_head = function
-  | Pow (n,_) -> Some n
-  | _         -> None
 
 let rec show_bound_inner = function
   | Var v -> Var.to_string v
@@ -223,7 +194,7 @@ let (>) b1 b2 = match (b1,b2) with
   | (None, Some _) -> Some true
   | (_, None) -> Some false
 
-let rec (>=) b1 b2 =
+let (>=) b1 b2 =
   let execute () =
     match (b1,b2) with
     | (None, None) -> Some true
@@ -389,12 +360,6 @@ let pow_bound bound n =
 let pow bound n =
   Option.map (flip pow_bound n) bound
 
-(** Returns the sum of all enums elements. *)
-let sum = Enum.fold add zero
-
-(** Returns the product of all enums elements. *)
-let product = Enum.fold mul one
-
 (** Addition of two elements. *)
 let (+) = add
 
@@ -403,9 +368,6 @@ let ( * ) = mul
 
 (** Raises an element to the power of an integer value. *)
 let ( ** ) = pow
-
-(** Negates element. *)
-let (~-) = neg
 
 let sum bounds =
   try
@@ -436,13 +398,6 @@ let is_finite = Option.is_some
 let exp_bound value b = simplify_bound (Pow (Num.abs value, b))
 let exp value b = Option.map (exp_bound value) b
 
-let is_var = function
-  | Var _ -> true
-  | _ -> false
-
-let substitute_f_bound substitution bound =
-  Option.map (simplify_bound % fold_bound ~const:bound_of_constant ~var:substitution ~plus:add_bound ~times:mul_bound ~exp:exp_bound) bound
-
 let substitute_f (substitution: Var.t -> t) (bound: t): t =
   OptionMonad.(bound >>= fold_bound ~const:of_constant ~var:substitution ~plus:add ~times:mul ~exp:exp)
 
@@ -456,9 +411,6 @@ let substitute var ~replacement b = substitute_bound var ~replacement b
 let substitute_all substitution =
   let module VarMap = Map.Make(Var) in
   substitute_f (fun var -> VarMap.find_default (of_var var) var substitution)
-
-let contains_infinity =
-  Option.is_none
 
 let rec vars_bound = function
   | Var v -> VarSet.singleton v
@@ -490,7 +442,6 @@ let degree n = raise (Failure "degree for MinMaxPolynomial not yet implemented")
 let rename map p = raise (Failure "rename for MinMaxPolynomial not yet implemented")
 let eval p valuation = raise (Failure "eval for MinMaxPolynomial not yet implemented")
 let eval_f p valuation = raise (Failure "eval_f for MinMaxPolynomial not yet implemented")
-let of_string p = raise (Failure "of_string for MinMaxPolynomial not yet implemented")
 let coeff_of_var p = raise (Failure "coeff_of_var for MinMaxPolynomial not yet implemented")
 let of_coeff_list p = raise (Failure "of_coeff_list for MinMaxPolynomial not yet implemented")
 end

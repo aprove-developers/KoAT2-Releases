@@ -8,7 +8,7 @@ open ProgramTypes
 
 let logger = Logging.(get Inv)
 
-type constraint_type = [ `Initiation | `Disability | `Consecution | `Non_Increasing | `Decreasing ] [@@deriving show, eq]
+type constraint_type = [ `Initiation | `Disability | `Consecution | `Non_Increasing | `Decreasing ] [@@deriving show]
 
 type measure = [ `Cost | `Time ] [@@deriving show, eq]
 
