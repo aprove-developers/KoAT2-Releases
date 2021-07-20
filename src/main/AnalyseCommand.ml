@@ -201,7 +201,7 @@ let run (params: params) =
           )
      |> (fun (program, appr) ->
                if not params.no_boundsearch then
-                 Bounds.find_bounds ~mprf_max_depth:params.depth ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast program appr
+                 Bounds.find_bounds ~mprf_max_depth:params.depth ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast ~twn:params.twn program appr
                else (program, appr))
      |> tap (fun (program, appr) -> params.result program appr)
      |> tap (fun (program, appr) ->

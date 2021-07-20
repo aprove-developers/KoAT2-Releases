@@ -320,7 +320,12 @@ let time_bound (l,t,l') scc program appr =
         (List.combine entry twn_loops) 
         Bound.zero
         |> insert_sizebounds entry appr
-        |> tap (fun b -> List.iter (fun t -> TimeBoundTable.add time_bound_table t b) cycle)) in
+        |> tap (fun b -> List.iter (fun t -> TimeBoundTable.add time_bound_table t b) cycle)) 
+        |> tap (fun prog -> ProofOutput.add_to_proof @@ fun () ->
+             FormattedString.(mk_paragraph (
+              (mk_header_big @@ mk_str "Invariant Generation using the Octagon Domain results in the following problem")<>(mk_paragraph FormattedString.Empty))
+            )
+          )  in
     if Option.is_some bound then
       bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
     else
