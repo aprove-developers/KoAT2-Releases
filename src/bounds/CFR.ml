@@ -216,7 +216,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
                                 (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
       let unit_cost = TransitionSet.for_all (fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
       (*if there are costs which are not one then we cannot apply irankfinder *)
-      if not (unit_cost scc) then (
+      if not (unit_cost scc) || (VarSet.is_empty (Program.input_vars merged_program)) then (
          (merged_program, TransitionSet.union already_used_trans scc))
       else
         let scc_list =
