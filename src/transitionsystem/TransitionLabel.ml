@@ -180,7 +180,7 @@ let normalise t (input_vars:VarSet.t) = {
 let update_to_string_lhs ?(to_file = false) t =
   let update = t.update in
     if VarMap.is_empty update then
-      ""
+      if to_file then "()" else ""
     else
       update
       |> VarMap.bindings
@@ -192,7 +192,7 @@ let update_to_string_lhs ?(to_file = false) t =
 let update_to_string_rhs ?(to_file = false) t =
   let update = t.update in
     if VarMap.is_empty update then
-      ""
+      if to_file then "()" else ""
     else
       update
       |> VarMap.bindings
