@@ -103,7 +103,8 @@ let minimalDisjointSCCs (original_sccs: ProgramTypes.TransitionSet.t list) =
                 else
                   (TransitionSet.union scc merged_scc)) original_sccs)
   |> SCCSet.of_list
-
+  |> fun tmp -> SCCSet.filter (fun scc1 -> not (SCCSet.exists (fun scc2 -> TransitionSet.subset scc1 scc2 && not (TransitionSet.equal scc1 scc2)) tmp)) tmp
+  
 (** Counts file and creates always a new file useful for debugging. *)
 let counter = ref 0
 
@@ -213,7 +214,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
       fun scc (merged_program,already_used_trans) ->
       (fun sccs ->
       Logger.log logger Logger.INFO
-                                (fun () -> "minimalSCCs", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
+                                (fun () -> "minimalSCC", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
       let unit_cost = TransitionSet.for_all (fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
       (*if there are costs which are not one then we cannot apply irankfinder *)
       if not (unit_cost scc) || (VarSet.is_empty (Program.input_vars merged_program)) then (
