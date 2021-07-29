@@ -37,8 +37,10 @@ module Make(Value : PolyTypes.Ring) =
       else
         let entry_string key n =
           Var.to_string ~to_file key ^ (if n != 1 then "^" ^ string_of_int n else "")
-        and ((var, n), without_first) = Map.pop mon in
-        Map.fold (fun key n str -> str ^ (entry_string key n)) without_first (entry_string var n)
+        in
+        Map.bindings mon
+        |> List.map (uncurry entry_string)
+        |> String.concat "*"
 
     let is_univariate_linear mon =
       degree mon == 1

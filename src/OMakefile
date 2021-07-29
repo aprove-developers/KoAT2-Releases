@@ -1,7 +1,7 @@
 USE_OCAMLFIND = true
 
 if $(defined-env RELEASE)
-    OCAMLOPTFLAGS = -thread -O3 -cc $(CXX) -ccopt -static
+    OCAMLOPTFLAGS = -thread -O2 -cc $(CXX) -ccopt -static
     OCAMLCFLAGS = -thread -ccopt -static
     BYTE_ENABLED = false
     NATIVE_ENABLED = true
