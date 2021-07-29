@@ -263,6 +263,11 @@ let complexity t =
         let update_var = TransitionLabel.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
+        ProofOutput.add_to_proof @@ (fun () -> 
+          FormattedString.(mk_str_line "closed-form:" <> (
+          (List.combine (List.map Var.to_string order) (List.map PE.to_string pe))
+          |> List.map (fun (a,b) -> a ^ ": " ^ b) 
+          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)) |> FormattedString.mk_paragraph);
     let npe = PE.normalize pe in
         Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
     let varmap = Hashtbl.of_list (List.combine order npe) in
