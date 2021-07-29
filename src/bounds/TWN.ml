@@ -216,6 +216,11 @@ let compute_f = function
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["N", (OurInt.to_string n_)]);
     let m_ = compute_M base_exp  in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["M", (OurInt.to_string m_)]);
+    ProofOutput.add_to_proof @@ (fun () ->
+      [ "alphas_abs: " ^ (Polynomial.to_string alphas_abs);
+        "M: " ^ (OurInt.to_string m_);
+        "N: " ^ (OurInt.to_string n_);
+      ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_paragraph);
     Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)))
     |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]))
 
@@ -305,7 +310,8 @@ let insert_sizebounds entry appr bound =
 
 let time_bound (l,t,l') scc program appr = 
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
-  if Option.is_none opt then 
+  if Option.is_none opt then (
+    ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:")));
   let bound = 
   Timeout.timed_run 20. ~action:(fun () -> ()) (fun () -> 
     (* let twn_scc = TransitionSet.filter check_twn scc in *)
@@ -323,9 +329,8 @@ let time_bound (l,t,l') scc program appr =
         |> tap (fun b -> List.iter (fun t -> TimeBoundTable.add time_bound_table t b) cycle)) in
     if Option.is_some bound then
       bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
-      |> tap (fun _ -> ProofOutput.add_to_proof @@ fun () ->
-             FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:")<>(mk_paragraph (FormattedString.mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string)))))
+      |> tap (fun _ -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string))))
     else
       Bound.infinity |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
-else Option.get opt
+  ) else Option.get opt
   |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
