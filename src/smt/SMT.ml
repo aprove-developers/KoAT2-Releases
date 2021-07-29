@@ -181,18 +181,18 @@ module Z3Opt =
 
     let context = ref (
                       Z3.mk_context [
-                          ("model", "true");
+                          ("model", "false");
                           ("proof", "false");
                         ]
                     )
 
     let result_is expected_result formula =
       let formula = from_formula !context formula in
-      let optimisation_goal = Z3.Optimize.mk_opt !context in
-      Z3.Optimize.add optimisation_goal [formula];
-      let result = Z3.Optimize.check optimisation_goal in
+      let optimisation_goal = Z3.Solver.mk_simple_solver !context in
+      Z3.Solver.add optimisation_goal [formula];
+      let result = Z3.Solver.check optimisation_goal [] in
       if result == Z3.Solver.UNKNOWN then
-        raise (SMTFailure ("SMT-Solver does not know a solution due to: " ^ Z3.Optimize.get_reason_unknown optimisation_goal))
+        raise (SMTFailure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown optimisation_goal))
       else
         result == expected_result
 
