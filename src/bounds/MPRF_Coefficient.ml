@@ -1,10 +1,5 @@
 open Batteries
 open BoundsInst
-open Polynomials
-open Atoms
-open Constraints
-open ProgramTypes
-open Formulas
 
 let logger = Logging.(get Time)
 
