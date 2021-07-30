@@ -145,7 +145,11 @@ let termination_ t order pe npe varmap =
               (TransitionLabel.guard t) (Formula.mk_true) in
   (not % SMTSolver.satisfiable) formula
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string bool]);
-                      Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]))
+                      Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
+            ProofOutput.add_to_proof @@ (fun () ->
+              [ "Termination: " ^ (string_of_bool bool);
+                "Formula: " ^ (Formula.to_string formula);
+              ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_paragraph);)
 
 
 (* COMPLEXITY: *)
@@ -216,13 +220,14 @@ let compute_f = function
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["N", (OurInt.to_string n_)]);
     let m_ = compute_M base_exp  in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["M", (OurInt.to_string m_)]);
-    ProofOutput.add_to_proof @@ (fun () ->
+    Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)))
+    |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);
+      ProofOutput.add_to_proof @@ (fun () ->
       [ "alphas_abs: " ^ (Polynomial.to_string alphas_abs);
         "M: " ^ (OurInt.to_string m_);
         "N: " ^ (OurInt.to_string n_);
-      ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_paragraph);
-    Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)))
-    |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]))
+        "Bound: " ^ (Bound.to_string b);
+      ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_paragraph);)
 
 let get_bound t order npe varmap = 
   let bound, max_con = 
@@ -259,6 +264,7 @@ let complexity t =
         chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
       else t, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
+    ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string (List.enum order))));
     let pe = PE.compute_closed_form (List.map (fun var -> 
         let update_var = TransitionLabel.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
@@ -323,10 +329,15 @@ let time_bound (l,t,l') scc program appr =
     let graph = getTransitionGraph scc in
     let path, _ = DjikstraTransitionGraph.shortest_path graph l' l in
     let cycle = ((l,t,l')::path) in
+    ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle))));
     let entry = Program.entry_transitions logger program cycle in
     Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entry))]);
     let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entry in
     Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entry) (List.map TransitionLabel.to_string twn_loops));
+        ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_str_line "  twn_loops:") <> 
+        (List.combine (List.map Transition.to_string entry) (List.map TransitionLabel.to_string twn_loops)
+        |> List.map (fun (a,b) -> "entry: " ^ a ^ " results in twn-loop: " ^ b)
+        |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)));
       List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity (t |> eliminate))))) (*TODO: Stop if one is inf;*)
         (List.combine entry twn_loops) 
         Bound.zero
