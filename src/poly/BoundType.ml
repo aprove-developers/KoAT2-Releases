@@ -374,6 +374,8 @@ let sum bounds =
     bounds |> Enum.reduce add |> simplify
   with Not_found -> zero
 
+let sum_list = sum % List.enum
+
 let product bounds =
   try
     bounds |> Enum.reduce mul |> simplify

@@ -20,10 +20,7 @@ type rvg_with_sccs = RVG.t * RVG.scc list Lazy.t
 
 exception NOT_IMPROVED
 
-let apply (get_sizebound: Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t) (transition: Transition.t): Bound.t =
-  rank
-  |> Bound.of_poly
-  |> Bound.substitute_f (get_sizebound transition)
+let apply get_sizebound  = Bound.substitute_f get_sizebound % Bound.of_poly
 
 
 let entry_transitions program tset =
@@ -43,12 +40,12 @@ let compute_bound_mprf program (appr: Approximation.t) (rank: MultiphaseRankingF
    |> TransitionSet.enum
    |> Enum.map (fun (l,t,l') ->
        let timebound = Approximation.timebound appr (l,t,l') in
-       let evaluate = (fun rank -> (apply (Approximation.sizebound appr) rank) (l,t,l')) in
-       let evaluated_rankingFunctions = (List.init (MultiphaseRankingFunction.depth rank) (fun i -> (evaluate ((List.nth (MultiphaseRankingFunction.rank rank) i) l')))) in
+       let evaluate = apply (Approximation.sizebound appr (l,t,l')) in
+       let evaluated_ranking_funcs = List.map (fun r -> evaluate @@ r l') (MultiphaseRankingFunction.rank rank) in
        let rhs = if MultiphaseRankingFunction.depth rank = 1 then
-          List.nth evaluated_rankingFunctions 0
+          List.nth evaluated_ranking_funcs 0
        else
-          Bound. (add one (mul (of_int (MPRF_Coefficient.coefficient rank))  (MPRF_Coefficient.sumBound_of_list evaluated_rankingFunctions))) in
+          Bound.( one + (of_int (MPRF_Coefficient.coefficient rank) * Bound.sum_list evaluated_ranking_funcs) ) in
         Bound.(
           if is_infinity timebound then
             if equal zero rhs then
