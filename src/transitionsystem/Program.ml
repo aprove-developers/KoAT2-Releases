@@ -80,8 +80,29 @@ let rename program =
   }
 
 let from com_transitions start =
-  if List.exists (not % Int.equal 1 % List.length) com_transitions then raise RecursionNotSupported else
-    com_transitions
+  let all_trans = List.flatten com_transitions in
+  let start_locs = LocationSet.of_list @@ List.map Transition.src all_trans in
+
+  (* Try to eliminate recursion. When there is a Com_k transition we aim to construct a Com_1 transition by eliminating
+   * all targets that do not appear on the left hand side of a rule.
+   * However, we need to keep at least on target for each transition, such that the transition itself is not eliminated and it
+   * still incurs a cost of 1. *)
+  let cleaned_com_k_transitions =
+    List.map
+      (fun ts ->
+        if List.length ts > 1 then
+          let arb_trans = List.hd ts in
+          let cleaned = List.filter (flip LocationSet.mem start_locs % Transition.target) ts in
+          if List.is_empty cleaned then [arb_trans] else cleaned
+          |> tap (fun new_ts -> if List.length new_ts = 1 then Logger.log Logging.(get Program) INFO (fun () ->
+              "eliminate_recursion",[ "old_targets", Util.enum_to_string Transition.to_id_string (List.enum ts)
+                                    ; "new_targets", Util.enum_to_string Transition.to_id_string (List.enum new_ts)]) else ())
+        else ts
+      )
+      com_transitions
+  in
+  if List.exists (not % Int.equal 1 % List.length) cleaned_com_k_transitions then raise RecursionNotSupported else
+    cleaned_com_k_transitions
     |> List.flatten
     |> fun transitions ->
        if transitions |> List.map Transition.target |> List.mem_cmp Location.compare start then
