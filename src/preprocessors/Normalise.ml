@@ -12,4 +12,4 @@ let normalise program =
     let trans = Program.transitions program
     |> TransitionSet.map (fun (l,g,l') -> (l,TransitionLabel.normalise g input_vars,l'))
     |> TransitionSet.to_list in
-    Program.from trans (Program.start program)
+    Program.from (List.map List.singleton trans) (Program.start program)
