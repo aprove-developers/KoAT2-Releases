@@ -251,37 +251,38 @@ let check_twn (l,t,l') =
     (check_weakly_monotonicity t) && ((List.length (check_triangular t)) == (VarSet.cardinal ((TransitionLabel.input_vars t))))
 
 let complexity t = 
-  let order = check_triangular t in
   if not (VarSet.is_empty (VarSet.diff (TransitionLabel.vars t) (TransitionLabel.input_vars t))) then
     Bound.infinity  (* TV Non-det. is not allowed *)
-  else if (List.length order) != (VarSet.cardinal ((TransitionLabel.input_vars t))) then
-    Bound.infinity (* Not triangular *)
-  else if not (check_weakly_monotonicity t) then
-    Bound.infinity (* Not weakly monotonic *)
-  else (
-    let t_, was_negative =
-      if (check_weakly_negativitiy t) then
-        chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
-      else t, false in
-    Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-    ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string (List.enum order))));
-    let pe = PE.compute_closed_form (List.map (fun var -> 
-        let update_var = TransitionLabel.update t_ var in
-        (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
-        Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
-        ProofOutput.add_to_proof @@ (fun () -> 
-          FormattedString.(mk_str_line "closed-form:" <> (
-          (List.combine (List.map Var.to_string order) (List.map PE.to_string pe))
-          |> List.map (fun (a,b) -> a ^ ": " ^ b) 
-          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)) |> FormattedString.mk_paragraph);
-    let npe = PE.normalize pe in
-        Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
-    let varmap = Hashtbl.of_list (List.combine order npe) in
-    let terminating = termination_ t_ order pe npe varmap in
-    if not terminating then 
-      Bound.infinity
-    else 
-      let f = get_bound t_ order npe varmap in if was_negative then Bound.(add (add f f) one) else f)
+  else 
+    let order = check_triangular t in
+    if (List.length order) != (VarSet.cardinal ((TransitionLabel.input_vars t))) then
+      Bound.infinity (* Not triangular *)
+    else if not (check_weakly_monotonicity t) then
+      Bound.infinity (* Not weakly monotonic *)
+    else (
+      let t_, was_negative =
+        if (check_weakly_negativitiy t) then
+          chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
+        else t, false in
+      Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
+      ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string (List.enum order))));
+      let pe = PE.compute_closed_form (List.map (fun var -> 
+          let update_var = TransitionLabel.update t_ var in
+          (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
+          Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
+          ProofOutput.add_to_proof @@ (fun () -> 
+            FormattedString.(mk_str_line "closed-form:" <> (
+            (List.combine (List.map Var.to_string order) (List.map PE.to_string pe))
+            |> List.map (fun (a,b) -> a ^ ": " ^ b) 
+            |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)) |> FormattedString.mk_paragraph);
+      let npe = PE.normalize pe in
+          Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
+      let varmap = Hashtbl.of_list (List.combine order npe) in
+      let terminating = termination_ t_ order pe npe varmap in
+      if not terminating then 
+        Bound.infinity
+      else 
+        let f = get_bound t_ order npe varmap in if was_negative then Bound.(add (add f f) one) else f)
 
 (* Cycles and corresponding time-bound. *)
 
@@ -338,7 +339,12 @@ let time_bound (l,t,l') scc program appr =
         (List.combine (List.map Transition.to_string entry) (List.map TransitionLabel.to_string twn_loops)
         |> List.map (fun (a,b) -> "entry: " ^ a ^ " results in twn-loop: " ^ b)
         |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)));
-      List.fold_right (fun (entry, t) b -> Bound.(add b (mul (Approximation.timebound appr entry) (complexity (t |> eliminate))))) (*TODO: Stop if one is inf;*)
+      List.fold_right (fun (entry, t) b -> 
+          let eliminated_t = t |> eliminate in
+            if VarSet.is_empty (TransitionLabel.vars eliminated_t) then 
+              Bound.infinity 
+            else
+              (Bound.(add b (mul (Approximation.timebound appr entry) (complexity eliminated_t))))) (*TODO: Stop if one is inf;*)
         (List.combine entry twn_loops) 
         Bound.zero
         |> insert_sizebounds entry appr
