@@ -54,7 +54,7 @@ let read_input ?(rename=false) simple program_str =
       program_str
       |> read_file
       |> (if rename then Program.rename else identity)
-    with TransitionLabel.RecursionNotSupported ->
+    with Program.RecursionNotSupported ->
       failwith "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now."
 
 let read_prog_goal_file ?(rename=false) path =

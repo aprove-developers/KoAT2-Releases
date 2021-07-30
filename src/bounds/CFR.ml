@@ -104,7 +104,7 @@ let minimalDisjointSCCs (original_sccs: ProgramTypes.TransitionSet.t list) =
                   (TransitionSet.union scc merged_scc)) original_sccs)
   |> SCCSet.of_list
   |> fun tmp -> SCCSet.filter (fun scc1 -> not (SCCSet.exists (fun scc2 -> TransitionSet.subset scc1 scc2 && not (TransitionSet.equal scc1 scc2)) tmp)) tmp
-  
+
 (** Counts file and creates always a new file useful for debugging. *)
 let counter = ref 0
 
@@ -228,7 +228,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.input_vars merged_program),l)) (LocationSet.to_list entry_locations) in
         let program_cfr =
         initial_location
-        |> Program.from (entry_transitions@scc_list)
+        |> Program.from (List.map List.singleton @@ entry_transitions@scc_list)
         |> applyIrankFinder
 
         (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
@@ -258,7 +258,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         |> flip TransitionSet.diff scc
         |> TransitionSet.filter (fun (l,_,_) -> not (LocationSet.mem l removable_loc))
         |> TransitionSet.to_list
-        |> flip Program.from initial_location
+        |> flip Program.from initial_location % List.map List.singleton
         in
         (processed_program,already_used_cfr)
     in

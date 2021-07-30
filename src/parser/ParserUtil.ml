@@ -5,6 +5,8 @@ open Polynomials
 open ProgramTypes
 
 exception Error of string
+exception ComKindAndTargetsMismatch
+exception OnlyCom1InSimpleMode
 
 module LocationTable = Hashtbl.Make(Location)
 
@@ -24,26 +26,28 @@ let check_arity (loc: Location.t) (arity: int): unit =
     |(Some m) -> if (m == arity) then () else raise (Error ("Location " ^ (Location.to_string loc) ^" occurs with different arities of variables "^ (string_of_int m) ^ "<>" ^ (string_of_int arity) ^ " !" ^ "\n Stored arities: " ^ string_of_stored_arities))
 
 (** Generates transitions from given parameters *)
-let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t list): Transition.t list =
-  let start_loc = Tuple2.first lhs
-  and var_list = Tuple2.second lhs
-  and target_loc = Tuple2.first (List.hd (Tuple2.second rhs))
-  and update_expr = Tuple2.second (List.hd (Tuple2.second rhs)) in
-  check_arity (Location.of_string start_loc) (List.length var_list);
-  check_arity (Location.of_string target_loc) (List.length update_expr);
-  formula
-  |> Formula.constraints
-  |> List.map (fun constr ->
-	 (Location.of_string start_loc,
-          TransitionLabel.mk
-            ~com_kind:(Tuple2.first rhs)
-            ~targets:(Tuple2.second rhs)
-            ~patterns:(List.map Var.of_string var_list)
-            ~guard:constr
-            ~cost:cost,
-          (Location.of_string target_loc)
-       ))
-  |> List.map (fun (l,t,l') -> (l,t ~vars,l'))
+let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t list) =
+  let targets = Tuple2.second rhs in
+  let start_loc = Tuple2.first lhs in
+  let var_list = Tuple2.second lhs in
+  let com_kind = Int.of_string @@ String.lchop ~n:4 @@ Tuple2.first rhs in
+  if not (Int.equal com_kind (List.length targets)) then raise ComKindAndTargetsMismatch else
+    check_arity (Location.of_string start_loc) (List.length var_list);
+    List.iter
+      (fun (target_loc, update_expr) -> check_arity (Location.of_string target_loc) (List.length update_expr))
+      (Tuple2.second rhs);
+    formula
+    |> Formula.constraints
+    |> List.map (fun constr ->
+        List.map
+          (fun (target_loc, update_expr) ->
+            (Location.of_string start_loc,
+              TransitionLabel.mk ~assignments:update_expr ~guard:constr ~patterns:(List.map Var.of_string var_list ) ~cost,
+              Location.of_string target_loc)
+          )
+          (Tuple2.second rhs)
+       )
+    |> List.map (List.map (fun (l,t,l') -> (l,t ~vars,l')))
 
 (** Returns list of default variables: x,y,z,u,v,w,p and q *)
 let default_vars =
@@ -51,27 +55,30 @@ let default_vars =
   |> List.map Var.of_string
 
 (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns all transitions from such an input. *)
+(** Assume Com_1 transitions *)
 let mk_transition_simple (start: string) (cost: Polynomial.t) (rhs: string * (string * Polynomial.t list) list) (formula: Formula.t): Transition.t list =
-  formula
-  |> Formula.constraints
-  |> List.map (fun constr ->
-	 (Location.of_string start,
-          TransitionLabel.mk
-            ~com_kind:(Tuple2.first rhs)
-            ~targets:(Tuple2.second rhs)
-            ~patterns:default_vars
-            ~guard:constr
-            ~cost:cost
-            ~vars:default_vars, (Location.of_string (Tuple2.first (List.hd (Tuple2.second rhs)))))
-       )
+  let com_kind = Int.of_string @@ String.lchop ~n:4 @@ Tuple2.first rhs in
+  if not (Int.equal com_kind 1) then raise OnlyCom1InSimpleMode else
+    let (target_loc, updates) =  List.hd @@ Tuple2.second rhs in
+    formula
+    |> Formula.constraints
+    |> List.map (fun constr ->
+           (Location.of_string start,
+            TransitionLabel.mk
+              ~assignments:updates
+              ~patterns:default_vars
+              ~guard:constr
+              ~cost:cost
+              ~vars:default_vars, Location.of_string target_loc)
+         )
 
 (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns program from such an input. *)
 let mk_program_simple (transitions: Transition.t list): Program.t =
   transitions
   |> List.hd
   |> Transition.src
-  |> Program.from transitions
+  |> Program.from (List.map List.singleton transitions)
 
 (** Returns a program corresponding to the given list of transition with a fixed start location. *)
 let mk_program goal start vars (transitions: Transition.t list): Program.t =
-  Program.from transitions start
+  Program.from (List.map List.singleton transitions) start

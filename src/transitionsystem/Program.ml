@@ -4,6 +4,8 @@ open Formulas
 open ProgramTypes
 open Util
 
+exception RecursionNotSupported
+
 type t = {
     graph: TransitionGraph.t;
     start: Location.t;
@@ -77,16 +79,18 @@ let rename program =
     start = new_start;
   }
 
-let from transitions start =
-  transitions
-  |> fun transitions ->
-     if transitions |> List.map Transition.target |> List.mem_cmp Location.compare start then
-       raise (Failure "Transition leading back to the initial location.")
-     else
-       {
-         graph = mk (List.enum transitions);
-         start = start;
-       }
+let from com_transitions start =
+  if List.exists (not % Int.equal 1 % List.length) com_transitions then raise RecursionNotSupported else
+    com_transitions
+    |> List.flatten
+    |> fun transitions ->
+       if transitions |> List.map Transition.target |> List.mem_cmp Location.compare start then
+         raise (Failure "Transition leading back to the initial location.")
+       else
+         {
+           graph = mk (List.enum transitions);
+           start = start;
+         }
 
 let transitions =
   TransitionGraph.transitions % graph

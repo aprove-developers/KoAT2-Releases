@@ -20,17 +20,10 @@ type kind = [ `Lower | `Upper ]  [@@deriving eq, ord]
 (** A transition label consists of an unique id, an update function, a guard and a cost function. *)
 type t
 
-(** KoAT2 does not support recursion yet. *)
-exception RecursionNotSupported
-
-(** Creates a label from an update function and a guard, a cost can be set, too (the default is the constant function one).
-The string is used to set "Com_1". TODO doc ? *)
-val make : cost:polynomial -> string -> update:polynomial VarMap.t -> guard:Guard.t -> t
 
 (** TODO doc? *)
 val mk : cost:polynomial ->
-         com_kind:string ->
-         targets:(string * (polynomial list)) list ->
+         assignments: polynomial list ->
          patterns:Var.t list ->
          guard:Guard.t ->
          vars:Var.t list ->
