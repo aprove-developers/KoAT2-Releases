@@ -7,6 +7,8 @@ open Formulas
 open ApproximationModules
 open BoundsInst
 
+exception CFRefinementCRASH 
+
 module DjikstraTransitionGraph = Graph.Path.Dijkstra(TransitionGraph)(TransitionGraphWeight(OurInt))
 
 module SCCSetCompare = struct
@@ -118,13 +120,14 @@ let applyIrankFinder (scc_program: Program.t) =
     try Unix.mkdir ("./tmp_" ^ !uid) 0o700 with Unix.Unix_error (Unix.EEXIST, _, _) -> ());
   counter := !counter + 1;
   Program.to_file scc_program ("./tmp_" ^ !uid ^ "/tmp_scc" ^ (string_of_int !counter));
-  ignore (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-head-deep --no-unfold all --output-format koat --output-destination ./tmp_"
+  let tmp = (Sys.command ("CFRefinement -cfr-it 1 -cfr-call -cfr-head -cfr-head-deep --no-unfold all --output-format koat --output-destination ./tmp_"
                ^ !uid
                ^ "/tmp --file ./tmp_"
                ^ !uid
                ^ "/tmp_scc"
                ^ (string_of_int !counter)
-               ^ ".koat"));
+               ^ ".koat > /dev/null 2>&1")) in
+  if tmp != 0 then raise CFRefinementCRASH;
   "./tmp_" ^ !uid ^ "/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
       |> Readers.read_input ~rename:false false
 
@@ -226,41 +229,43 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         Program.reset_pre_cache ();
         let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger merged_program scc_list)) in
         let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.input_vars merged_program),l)) (LocationSet.to_list entry_locations) in
-        let program_cfr =
-        initial_location
-        |> Program.from (List.map List.singleton @@ entry_transitions@scc_list)
-        |> applyIrankFinder
+        try   
+          let program_cfr =
+          initial_location
+          |> Program.from (List.map List.singleton @@ entry_transitions@scc_list)
+          |> applyIrankFinder
 
-        (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
-        and map = RenameMap.from_native (List.map (fun var -> (String.replace ~sub:"_" ~by:"" ~str:(Var.to_string var) |> Tuple2.second,
-                                                               Var.to_string var)) (Program.input_vars merged_program |> VarSet.to_list))  in
-        let transitions_cfr = program_cfr
-        |> Program.transitions
-        |> rename_entry_transition entry_locations initial_location
-        |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
-        |> TransitionSet.map (fun t -> Transition.rename2 map t) in
+          (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
+          and map = RenameMap.from_native (List.map (fun var -> (String.replace ~sub:"_" ~by:"" ~str:(Var.to_string var) |> Tuple2.second,
+                                                                Var.to_string var)) (Program.input_vars merged_program |> VarSet.to_list))  in
+          let transitions_cfr = program_cfr
+          |> Program.transitions
+          |> rename_entry_transition entry_locations initial_location
+          |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
+          |> TransitionSet.map (fun t -> Transition.rename2 map t) in
 
-        let removable_loc =
-          let locations = List.fold_right (fun (l,_,l') locations -> locations |> LocationSet.add l |> LocationSet.add l') scc_list LocationSet.empty in
-          LocationSet.filter (fun l -> TransitionSet.exists (fun (_,_,l') -> Location.equal l l') (TransitionSet.diff (Program.transitions merged_program) scc)) locations
-          |> LocationSet.diff locations in
+          let removable_loc =
+            let locations = List.fold_right (fun (l,_,l') locations -> locations |> LocationSet.add l |> LocationSet.add l') scc_list LocationSet.empty in
+            LocationSet.filter (fun l -> TransitionSet.exists (fun (_,_,l') -> Location.equal l l') (TransitionSet.diff (Program.transitions merged_program) scc)) locations
+            |> LocationSet.diff locations in
 
-        (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
-        let
-        already_used_cfr = TransitionSet.union (TransitionSet.union already_used_trans transitions_cfr) scc
-        and
-        (** Merges irankfinder and original program. *)
-        processed_program =
-        merged_program
-        |> Program.transitions
-        |> TransitionSet.union transitions_cfr
-        |> TransitionSet.union (outgoing_transitions (Program.outgoing_transitions logger merged_program scc_list) transitions_cfr)
-        |> flip TransitionSet.diff scc
-        |> TransitionSet.filter (fun (l,_,_) -> not (LocationSet.mem l removable_loc))
-        |> TransitionSet.to_list
-        |> flip Program.from initial_location % List.map List.singleton
-        in
-        (processed_program,already_used_cfr)
+          (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
+          let
+          already_used_cfr = TransitionSet.union (TransitionSet.union already_used_trans transitions_cfr) scc
+          and
+          (** Merges irankfinder and original program. *)
+          processed_program =
+          merged_program
+          |> Program.transitions
+          |> TransitionSet.union transitions_cfr
+          |> TransitionSet.union (outgoing_transitions (Program.outgoing_transitions logger merged_program scc_list) transitions_cfr)
+          |> flip TransitionSet.diff scc
+          |> TransitionSet.filter (fun (l,_,_) -> not (LocationSet.mem l removable_loc))
+          |> TransitionSet.to_list
+          |> flip Program.from initial_location % List.map List.singleton
+          in
+          (processed_program,already_used_cfr)
+        with CFRefinementCRASH -> (merged_program,already_used_trans)
     in
     let (program_res,already_used_cfr_res) =
     (program,TransitionSet.empty)
