@@ -11,13 +11,14 @@ let from_poly context =
   Polynomial.fold
     ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i context (OurInt.to_int value))
     ~var:(fun var -> if Var.is_real var then
-                       Z3.Arithmetic.Real.mk_const_s context (Var.to_string var)
+                      (Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))
                      else
                        Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))
     ~neg:(Z3.Arithmetic.mk_unary_minus context)
     ~plus:(fun p1 p2 -> Z3.Arithmetic.mk_add context [p1; p2])
     ~times:(fun p1 p2 -> Z3.Arithmetic.mk_mul context [p1; p2])
-    ~pow:(fun b e -> Z3.Arithmetic.mk_power context b (Z3.Arithmetic.Integer.mk_numeral_i context e))
+    (* Somehow Z3.Arithmetic.mk_power makes Z3 use real arithmetic.. *)
+    ~pow:(fun b e -> if e = 1 then b else if e > 1 then Z3.Arithmetic.mk_mul context (List.make e b) else failwith "Polynomial exponents should be between 1 and n")
 
 let from_real_poly context =
   RealPolynomial.fold
