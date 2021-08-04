@@ -8,7 +8,7 @@ open ProgramTypes
 (** Class is derived from RankingFunction.ml*)
 
 module SMTSolver = SMT.IncrementalZ3Solver
-module SMTSolverInt = SMT.SolverFast
+module SMTSolverInt = SMT.IncrementalZ3Solver
 module Valuation = Valuation.Make(OurInt)
 
 type mprf = (Location.t -> Polynomial.t) list

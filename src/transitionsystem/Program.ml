@@ -140,7 +140,7 @@ let cardinal_vars program =
 
 let pre program (l,t,_) =
   let is_satisfiable f =
-    try SMT.Z3Opt.satisfiable f
+    try SMT.Z3Solver.satisfiable f
     with SMT.SMTFailure _ -> true (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
   in
   l
@@ -164,7 +164,7 @@ let succ program (_,t,l') =
          TransitionLabel.append t t'
          |> TransitionLabel.guard
          |> Formula.mk
-         |> SMT.Z3Opt.satisfiable
+         |> SMT.Z3Solver.satisfiable
        )
 
 let sccs program =
