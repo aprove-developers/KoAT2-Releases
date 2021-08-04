@@ -6,7 +6,7 @@ open ProgramTypes
 
 let logger = Logging.(get LocalSizeBound)
 
-module Solver = SMT.SolverFast
+module Solver = SMT.IncrementalZ3Solver
 
 (** Performs a binary search between the lowest and highest value to find the optimal value which satisfies the predicate.
     We assume that the highest value already satisfies the predicate.
