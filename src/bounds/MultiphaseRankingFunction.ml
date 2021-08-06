@@ -466,7 +466,7 @@ let compute_scc ?(inv = false) cache program mprf_problem =
   let make_non_increasing = TransitionSet.to_array @@ TransitionSet.diff (TransitionSet.of_array mprf_problem.make_non_increasing) min_applicable in
   TransitionSet.iter (add_non_increasing_constraint cache mprf_problem solver_int solver_real inv) min_applicable;
 
-  try
+  (try
     backtrack cache
               ~inv:inv
               (Array.length make_non_increasing)
@@ -475,10 +475,10 @@ let compute_scc ?(inv = false) cache program mprf_problem =
               solver_int
               non_inc
               ({mprf_problem with make_non_increasing;})
-  with Exit -> ();
+  with Exit -> ());
 
-  (if Option.is_none !(cache.rank_func) then
-    Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure mprf_problem.measure; "transition", Transition.to_id_string mprf_problem.make_decreasing])))
+  if Option.is_none !(cache.rank_func) then
+    Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure mprf_problem.measure; "transition", Transition.to_id_string mprf_problem.make_decreasing]))
 
 
 let find_scc ?(inv = false) measure program is_time_bounded unbounded_vars scc depth make_decreasing =
