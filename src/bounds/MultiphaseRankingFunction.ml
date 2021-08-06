@@ -207,7 +207,7 @@ let transition_constraint_i (template_table0, template_table1, measure, constrai
     | `Non_Increasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
     | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template1 l')))
   in
-  ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
+  ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
   |> Formula.mk
 
 (* method for mprf and function f_1*)
@@ -218,7 +218,7 @@ let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')
       | `Non_Increasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
       | `Decreasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template1 l')))
   in
-  ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
+  ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
   |> Formula.mk
 
 (* method for mprf and function f_d*)
@@ -228,7 +228,7 @@ let transition_constraint_d bound (template_table1, measure, constraint_type, (l
     | `Non_Increasing -> Formula.mk_true
     | `Decreasing  -> (
       let atom = ParameterAtom.Infix.((template1 l)  >= bound) in
-        ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
+        ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
         |> Formula.mk)
 
 (* use all three functions above combined*)
