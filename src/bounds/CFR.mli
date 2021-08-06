@@ -4,6 +4,8 @@ open ProgramTypes
 (** Logger CFR *)
 val logger : Batteries.Logger.log
 
+val add_to_proof : Program.t -> BoundsInst.Bound.t -> unit
+
 val time_cfr : float Batteries.ref
 
 val compute_timeout_time : Program.t -> Approximation.t -> TransitionSet.t -> float

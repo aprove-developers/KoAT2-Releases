@@ -221,6 +221,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
           (program, appr, rvg_with_sccs)
         )
         else (
+          CFR.add_to_proof program_cfr cfr_bound;
           LocalSizeBound.switch_cache();
           (program_cfr, updated_appr_cfr, rvg_with_sccs_cfr)))
       else
