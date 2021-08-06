@@ -200,6 +200,9 @@ module type Constraint =
         (** Returns if the constraint is a tautology. We return true iff constraint is empty list \[\]. Thus, some cases [0 == 0] are missed? TODO doc? *)
         val is_true : t -> bool
 
+        (* Returns if all polynomials contained in the constraint are linear *)
+        val is_linear : t -> bool
+
         val (=~=) : t -> t -> bool
 
         (** Stable structural equality, but not an actual equality *)
@@ -321,6 +324,9 @@ module type Formula =
 
         (** Negates every atom of every constraint of the formula. *)
         val turn : t -> t
+
+        (* Checks whether all polynomials occuring in this formula are linear *)
+        val is_linear : t -> bool
 
         module Infix : sig
           val (=) : polynomial -> polynomial -> t

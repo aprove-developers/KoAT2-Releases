@@ -149,7 +149,7 @@ let pre program (l,t,_) =
   |> Enum.filter (fun (_,t',_) ->
          TransitionLabel.append t' t
          |> TransitionLabel.guard
-         |> is_satisfiable % Formula.mk
+         |> is_satisfiable % Formula.mk % Constraint.drop_nonlinear (* such that Z3 uses QF_LIA*)
        )
 
 let pre_cache: (int, TransitionSet.t) Hashtbl.t = Hashtbl.create 10
