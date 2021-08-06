@@ -84,13 +84,15 @@ let option_lsb_as_bound = function
 let as_substituted_bound substitution = Bound.substitute_f substitution % as_bound
 
 let is_bounded_with solver update_formula v' t =
-  (* Prove that under formula the bound from validity_as_bound always evaluates to a non-negative value *)
-  Solver.push solver;
-  (* Check if as_bound is always greator or equal than v' *)
-  Solver.add_bound_comparison solver `LT (as_bound t) (Bound.of_var v');
-  let result = Solver.unsatisfiable solver in
-  Solver.pop solver;
-  result
+  if Formula.is_linear update_formula then (
+    (* Prove that under formula the bound from validity_as_bound always evaluates to a non-negative value *)
+    Solver.push solver;
+    (* Check if as_bound is always greator or equal than v' *)
+    Solver.add_bound_comparison solver `LT (as_bound t) (Bound.of_var v');
+    let result = Solver.unsatisfiable solver in
+    Solver.pop solver;
+    result
+  ) else false
 
 let optimize_s max_s predicate lsb =
   let s_result =
