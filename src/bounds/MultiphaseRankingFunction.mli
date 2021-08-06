@@ -48,3 +48,5 @@ val to_string : t -> string
 
 val only_rank_to_string : t -> string
 (** Converts a multiphase ranking function into a string without any further information. *)
+
+val add_to_proof : t -> unit

@@ -79,11 +79,12 @@ let get_bound = function
 let improve_with_rank_mprf measure program appr rank =
   let bound = compute_bound_mprf program appr rank in
   let orginal_bound = get_bound measure appr (MultiphaseRankingFunction.decreasing rank) in
-  if (Bound.compare_asy orginal_bound bound) = 1 then
+  if (Bound.compare_asy orginal_bound bound) = 1 then (
+    MultiphaseRankingFunction.add_to_proof rank;
     rank
     |> MultiphaseRankingFunction.decreasing
     |> (fun t -> add_bound measure bound t appr)
-    |> MaybeChanged.changed
+    |> MaybeChanged.changed)
   else
     MaybeChanged.same appr
 
