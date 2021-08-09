@@ -6,6 +6,12 @@ type format = Plain
             | Html
             | Markdown
 
+
+let format_to_string = function
+  | Plain -> "plain"
+  | Html -> "html"
+  | Markdown -> "markdown"
+
 let is_html = function
   | Html -> true
   | _    -> false

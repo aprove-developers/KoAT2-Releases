@@ -58,6 +58,9 @@ type params = {
     show_proof: bool;
     (** Displays the complexity proof. *)
 
+    proof_format: Formatter.format; [@enum [Formatter.Html; Formatter.Markdown; Formatter.Plain] |> List.map (fun f -> Formatter.format_to_string f, f)] [@default Formatter.Plain]
+    (** What should be the output format of the proof. html, markdown, or plain? *)
+
     logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default Logging.all] [@sep ','] [@aka ["l"]]
     (** The loggers which should be activated. *)
 
@@ -211,6 +214,6 @@ let run (params: params) =
             )
           ))
     |> ignore;
-    if params.show_proof then print_string "\n\n"; ProofOutput.print_proof ();
+    if params.show_proof then print_string "\n\n"; ProofOutput.print_proof params.proof_format;
     if params.log_level == NONE && params.cfr then
       ignore (Sys.command ("rm -f -r ./tmp_" ^ !CFR.uid))
