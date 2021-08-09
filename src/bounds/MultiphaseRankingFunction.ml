@@ -150,13 +150,13 @@ let only_rank_to_string {rank; decreasing; non_increasing; depth} =
 let to_string {rank; decreasing; non_increasing; depth} =
   "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; depth} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
-let add_to_proof {rank; decreasing; non_increasing; depth} bound = 
+let add_to_proof {rank; decreasing; non_increasing; depth} bound =
   let locations = non_increasing |> TransitionSet.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
   ProofOutput.add_to_proof @@ FormattedString.(fun () ->
     mk_header_small (mk_str ("MPRF for transition " ^ Transition.to_string decreasing ^ " of depth " ^ string_of_int depth ^ ":")) <>
     mk_paragraph (
-      mk_newline <> mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string bound)) <>
-      mk_newline <> mk_str "MPRF:" <> mk_newline <> 
+      mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string bound)) <>
+      mk_str "MPRF:" <> mk_newline <>
         (locations |> List.map (fun l -> Location.to_string l ^ " " ^ polyList_to_string (rank, l)) |> List.map (mk_str_line) |> mappend |> mk_paragraph)))
 
 (* We do not minimise the coefficients for now *)

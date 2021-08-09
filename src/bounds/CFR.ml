@@ -25,8 +25,8 @@ let add_to_proof program bound =
   ProofOutput.add_to_proof @@ FormattedString.(fun () ->  
     mk_header_small (mk_str "CFR: Improvement to new bound with the following program: ") <> 
     mk_paragraph (
-      mk_newline <> mk_str ("new bound: ") <> mk_newline <> mk_paragraph (mk_str (Bound.to_string bound)) <> 
-      mk_newline <> mk_str ("cfr-program: ") <> mk_newline <> mk_paragraph (Program.to_formatted_string program)))
+      mk_str ("new bound: ") <> mk_newline <> mk_paragraph (mk_str (Bound.to_string bound)) <>
+      mk_str ("cfr-program: ") <> mk_newline <> mk_paragraph (Program.to_formatted_string program)))
 
 (** Timeouts *)
 (** Measures the time spend on CFR. *)
