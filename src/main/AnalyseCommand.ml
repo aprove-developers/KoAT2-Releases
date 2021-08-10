@@ -194,10 +194,10 @@ let run (params: params) =
         )
      |> tap (fun (program, appr) ->
             if params.print_system then
-              GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
+              GraphPrint.print_system ~format:"png" ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
      |> tap (fun (program, appr) ->
             if params.print_rvg then (
-              GraphPrint.print_rvg ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
+              GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
             )
           )
      |> (fun (program, appr) ->
@@ -207,10 +207,10 @@ let run (params: params) =
      |> tap (fun (program, appr) -> params.result program appr)
      |> tap (fun (program, appr) ->
             if params.print_system then
-              GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
+              GraphPrint.print_system ~format:"png" ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
      |> tap (fun (program, appr) ->
             if params.print_rvg then (
-              GraphPrint.print_rvg ~label:(bounded_rv_to_string program appr) ~outdir:output_dir ~file:input_filename program;
+              GraphPrint.print_rvg ~format:"png" ~label:(bounded_rv_to_string program appr) ~outdir:output_dir ~file:input_filename program;
             )
           ))
     |> ignore;

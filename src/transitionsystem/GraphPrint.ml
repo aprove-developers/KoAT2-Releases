@@ -1,9 +1,8 @@
 (** Module provides methods to print a program or a result variable graph to png file. *)
-open Batteries
 open ProgramTypes
 open RVGTypes
 
-let print_graph out_dir name graph output_graph =
+let print_graph ~format out_dir name graph output_graph =
   let full_path ext =
     Fpath.(to_string (out_dir // (v name |> add_ext ext)))
   in
@@ -12,7 +11,19 @@ let print_graph out_dir name graph output_graph =
   (* Write a graphviz dot file *)
   output_graph (Stdlib.open_out_bin (full_path "dot")) graph;
   (* Generate a png from the dot file with an external call to graphviz *)
-  ignore (Sys.command ("dot -T png -o " ^ full_path "png" ^ " " ^ full_path "dot"))
+  ignore (Sys.command ("dot -T"^ format ^ " -o " ^ full_path format ^ " " ^ full_path "dot"))
+
+let print_graph_to_string ~format graph (output_graph: out_channel -> 'a -> 'b) =
+  let rec read_from_channel inp_chann =
+    try let next_line = input_line inp_chann in
+        next_line ^ "\n" ^ read_from_channel inp_chann
+    with End_of_file -> ""
+  in
+
+  let (graphviz_in, graphviz_out) = Unix.open_process ("dot -T"^format) in
+  output_graph graphviz_out graph;
+  close_out graphviz_out;
+  read_from_channel graphviz_in
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
@@ -29,6 +40,74 @@ let print_system ~label ~outdir ~file program =
                                        let graph_attributes _ = []
                                      end) in
   print_graph outdir (file ^ "_system") (Program.graph program) Dot.output_graph
+
+open Batteries
+
+(* Compute an edge label from a TransitionLabel
+   Whenever possible we use unicode representations of mathematic symbols.  *)
+let label l =
+    let get_subscript_str i =
+      Int.to_string i
+      |> String.to_list
+      |> List.map (fun c -> "&#832" ^ String.of_char c ^ ";")
+      |> String.concat ""
+    in
+    let t_id =
+      TransitionLabel.id l
+      |> get_subscript_str
+      |> fun str -> "t" ^ str
+    in
+    let updates =
+      let print_update (v,p) =
+        let is_identity = Polynomials.Polynomial.(equal p (of_var v)) in
+        if is_identity then "" else
+          "&eta; (" ^ Var.to_string v ^ ") = " ^ Polynomials.Polynomial.to_string p
+      in
+      TransitionLabel.update_map l
+      |> TransitionLabel.VarMap.bindings
+      |> List.map print_update
+      |> List.filter (not % String.is_empty)
+      |> String.concat "\n"
+    in
+    let guard =
+      let g = TransitionLabel.guard l in
+      if TransitionLabel.Guard.is_true g then "" else
+      "&tau; = " ^ TransitionLabel.Guard.to_string g
+    in
+
+    let cost =
+      let cost_poly =
+        if Polynomials.Polynomial.(equal (TransitionLabel.cost l) one) then ""
+        else Polynomials.Polynomial.to_string @@ TransitionLabel.cost l
+      in
+      if String.is_empty cost_poly then ""
+      else
+        "\\{" ^ cost_poly ^ "\\}"
+    in
+
+
+    [ t_id
+    ; updates
+    ; guard
+    ; cost
+    ]
+    |> List.filter (not % String.is_empty)
+    |> String.concat "\n"
+
+  (* Dot configuration *)
+  module DotPretty = Graph.Graphviz.Dot(struct
+                                          include TransitionGraph
+                                          let edge_attributes (a, e, b) = [`Label (label e)]
+                                          let default_edge_attributes _ = []
+                                          let get_subgraph _ = None
+                                          let vertex_attributes _ = [`Shape `Circle]
+                                          let vertex_name v = Location.to_string v
+                                          let default_vertex_attributes _ = []
+                                          let graph_attributes _ = []
+                                     end)
+
+let print_system_pretty ?(format="pdf") program =
+  print_graph_to_string ~format:format (Program.graph program) DotPretty.output_graph
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
