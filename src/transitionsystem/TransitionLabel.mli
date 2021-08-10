@@ -57,6 +57,9 @@ val id : t -> int
 (** Returns the update of a variable. *)
 val update : t -> Var.t -> polynomial Option.t
 
+(** Returns the update map of the transitionlabel *)
+val update_map : t -> polynomial VarMap.t
+
 (** Returns the guard of the label. *)
 val guard : t -> Guard.t
 
