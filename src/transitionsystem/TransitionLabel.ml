@@ -107,6 +107,8 @@ let id t = t.id
 
 let update t var = VarMap.Exceptionless.find var t.update
 
+let update_map t = t.update
+
 let guard t = t.guard
 
 let map_guard f label =
