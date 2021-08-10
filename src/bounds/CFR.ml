@@ -235,7 +235,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
           in
         Program.reset_pre_cache ();
         let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger merged_program scc_list)) in
-        let entry_transitions = List.map (fun l -> (initial_location, TransitionLabel.trival (Program.input_vars merged_program),l)) (LocationSet.to_list entry_locations) in
+        let entry_transitions = List.map (fun (l,t,l') -> (initial_location,t,l')) (Program.entry_transitions logger merged_program scc_list) in
         try   
           let program_cfr =
           initial_location
