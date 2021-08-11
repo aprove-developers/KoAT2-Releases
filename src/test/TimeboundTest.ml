@@ -12,7 +12,7 @@ let find_timebound ?(mprf_max_depth = 1) (program: Program.t): Bound.t =
   (program, Approximation.create program)
   |> Tuple2.map1 preprocess
   |> (fun (program, appr) ->
-    Bounds.find_bounds ~mprf_max_depth program appr
+    Bounds.find_bounds ~mprf_max_depth ~preprocess program appr
     |> fun (program,appr) -> Approximation.(TransitionApproximation.sum (time appr) program)
   )
 
@@ -21,7 +21,7 @@ let find_costbound (program: Program.t): Bound.t =
   (program, Approximation.create program)
   |> Tuple2.map1 preprocess
   |> (fun (program, appr) ->
-    Bounds.find_bounds program appr
+    Bounds.find_bounds ~preprocess program appr
     |> fun (program,appr) -> Approximation.program_costbound appr program
   )
 
