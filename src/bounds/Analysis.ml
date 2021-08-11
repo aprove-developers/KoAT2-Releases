@@ -18,8 +18,6 @@ let already_used_cfr = ref TransitionSet.empty
 type measure = [ `Cost | `Time ] [@@deriving show]
 type rvg_with_sccs = RVG.t * RVG.scc list Lazy.t
 
-exception NOT_IMPROVED
-
 let apply get_sizebound  = Bound.substitute_f get_sizebound % Bound.of_poly
 
 
