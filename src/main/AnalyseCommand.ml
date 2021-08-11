@@ -159,6 +159,7 @@ let run (params: params) =
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
   let input = Option.default_delayed read_line params.input in
+  let preprocess = Preprocessor.process params.preprocessing_strategy params.preprocessors in
   let input_filename =
     if params.simple_input then
       "dummyname"
@@ -194,7 +195,7 @@ let run (params: params) =
     ~action:(fun () -> print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n") (fun () ->
      ((if params.cfr then program |> Normalise.normalise else program) , Approximation.create program)
      |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
-     |> Preprocessor.process params.preprocessing_strategy params.preprocessors
+     |> Tuple2.map1 preprocess
      |> tap (fun (prog, _) -> ProofOutput.add_to_proof @@ fun () ->
           FormattedString.( mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string prog)
             <> program_to_formatted_string prog params.proof_format))

@@ -14,7 +14,6 @@ OCAMLINCLUDES[] =
     ../poly
     ../constraints
     ../transitionsystem
-    ../bounds
     ../smt
 
 OCAML_LIBS[] =
@@ -22,7 +21,6 @@ OCAML_LIBS[] =
     ../poly/poly
     ../constraints/constraints
     ../transitionsystem/transitionsystem
-    ../bounds/bounds
     ../smt/smt
 
 # Include all .ml files
