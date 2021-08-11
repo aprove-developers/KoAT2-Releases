@@ -7,7 +7,7 @@ open Formulas
 open ApproximationModules
 open BoundsInst
 
-exception CFRefinementCRASH 
+exception CFRefinementCRASH
 
 module DjikstraTransitionGraph = Graph.Path.Dijkstra(TransitionGraph)(TransitionGraphWeight(OurInt))
 
@@ -22,11 +22,14 @@ module SCCSet = Set.Make(SCCSetCompare)
 let logger = Logging.(get CFR)
 
 let add_to_proof program bound =
-  ProofOutput.add_to_proof @@ FormattedString.(fun () ->  
-    mk_header_small (mk_str "CFR: Improvement to new bound with the following program: ") <> 
+  ProofOutput.add_to_proof_with_format @@ FormattedString.(fun format ->
+    mk_header_small (mk_str "CFR: Improvement to new bound with the following program: ") <>
     mk_paragraph (
       mk_str ("new bound: ") <> mk_newline <> mk_paragraph (mk_str (Bound.to_string bound)) <>
-      mk_str ("cfr-program: ") <> mk_newline <> mk_paragraph (Program.to_formatted_string program)))
+      mk_str ("cfr-program: ") <> mk_newline <> mk_paragraph (Program.to_formatted_string program)) <>
+      match format with
+      | Formatter.Html -> mk_raw_str (GraphPrint.print_system_pretty ~format:"svg" program)
+      | _ -> FormattedString.Empty )
 
 (** Timeouts *)
 (** Measures the time spend on CFR. *)
@@ -236,7 +239,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         Program.reset_pre_cache ();
         let entry_locations = LocationSet.of_list (List.map (fun (_,_,l) -> l) (Program.entry_transitions logger merged_program scc_list)) in
         let entry_transitions = List.map (fun (l,t,l') -> (initial_location,t,l')) (Program.entry_transitions logger merged_program scc_list) in
-        try   
+        try
           let program_cfr =
           initial_location
           |> Program.from (List.map List.singleton @@ entry_transitions@scc_list)

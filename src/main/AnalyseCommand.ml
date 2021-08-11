@@ -148,6 +148,11 @@ let rename_program_option opt =
     |None -> None
 
 
+let program_to_formatted_string prog = function
+  | Formatter.Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty ~format:"svg" prog)
+  | _ -> FormattedString.Empty
+
+
 (** Runs KoAT2 on provided parameters. *)
 let run (params: params) =
   Timeout.start_time_of_koat2 := Unix.gettimeofday();
@@ -176,13 +181,14 @@ let run (params: params) =
     print_string (program_str ^ "\n\n")
   );
   ProofOutput.compute_proof params.show_proof;
+  ProofOutput.proof_format params.proof_format;
   let program =
     input
     |> Readers.read_input ~rename:params.rename params.simple_input
     |> rename_program
     |> tap (fun prog -> ProofOutput.add_to_proof @@ fun () ->
-          FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string prog) )
-        )
+          FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string prog)
+            <> program_to_formatted_string prog params.proof_format))
   in
   Timeout.timed_run params.timeout
     ~action:(fun () -> print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n") (fun () ->
@@ -190,8 +196,8 @@ let run (params: params) =
      |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
      |> Preprocessor.process params.preprocessing_strategy params.preprocessors
      |> tap (fun (prog, _) -> ProofOutput.add_to_proof @@ fun () ->
-          FormattedString.(mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string prog))
-        )
+          FormattedString.( mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string prog)
+            <> program_to_formatted_string prog params.proof_format))
      |> tap (fun (program, appr) ->
             if params.print_system then
               GraphPrint.print_system ~format:"png" ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
