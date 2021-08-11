@@ -214,6 +214,6 @@ let run (params: params) =
             )
           ))
     |> ignore;
-    if params.show_proof then print_string "\n\n"; ProofOutput.print_proof params.proof_format;
+    if params.show_proof then (print_string "\n\n"; ProofOutput.print_proof params.proof_format);
     if params.log_level == NONE && params.cfr then
       ignore (Sys.command ("rm -f -r ./tmp_" ^ !CFR.uid))
