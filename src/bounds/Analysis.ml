@@ -18,12 +18,7 @@ let already_used_cfr = ref TransitionSet.empty
 type measure = [ `Cost | `Time ] [@@deriving show]
 type rvg_with_sccs = RVG.t * RVG.scc list Lazy.t
 
-exception NOT_IMPROVED
-
-let apply (get_sizebound: Transition.t -> Var.t -> Bound.t) (rank: Polynomial.t) (transition: Transition.t): Bound.t =
-  rank
-  |> Bound.of_poly
-  |> Bound.substitute_f (get_sizebound transition)
+let apply get_sizebound  = Bound.substitute_f get_sizebound % Bound.of_poly
 
 
 let entry_transitions program tset =
@@ -43,12 +38,12 @@ let compute_bound_mprf program (appr: Approximation.t) (rank: MultiphaseRankingF
    |> TransitionSet.enum
    |> Enum.map (fun (l,t,l') ->
        let timebound = Approximation.timebound appr (l,t,l') in
-       let evaluate = (fun rank -> (apply (Approximation.sizebound appr) rank) (l,t,l')) in
-       let evaluated_rankingFunctions = (List.init (MultiphaseRankingFunction.depth rank) (fun i -> (evaluate ((List.nth (MultiphaseRankingFunction.rank rank) i) l')))) in
+       let evaluate = apply (Approximation.sizebound appr (l,t,l')) in
+       let evaluated_ranking_funcs = List.map (fun r -> evaluate @@ r l') (MultiphaseRankingFunction.rank rank) in
        let rhs = if MultiphaseRankingFunction.depth rank = 1 then
-          List.nth evaluated_rankingFunctions 0
+          List.nth evaluated_ranking_funcs 0
        else
-          Bound. (add one (mul (of_int (MPRF_Coefficient.coefficient rank))  (MPRF_Coefficient.sumBound_of_list evaluated_rankingFunctions))) in
+          Bound.( one + (of_int (MPRF_Coefficient.coefficient rank) * Bound.sum_list evaluated_ranking_funcs) ) in
         Bound.(
           if is_infinity timebound then
             if equal zero rhs then
@@ -81,11 +76,12 @@ let get_bound = function
 let improve_with_rank_mprf measure program appr rank =
   let bound = compute_bound_mprf program appr rank in
   let orginal_bound = get_bound measure appr (MultiphaseRankingFunction.decreasing rank) in
-  if (Bound.compare_asy orginal_bound bound) = 1 then
+  if (Bound.compare_asy orginal_bound bound) = 1 then (
+    MultiphaseRankingFunction.add_to_proof rank bound;
     rank
     |> MultiphaseRankingFunction.decreasing
     |> (fun t -> add_bound measure bound t appr)
-    |> MaybeChanged.changed
+    |> MaybeChanged.changed)
   else
     MaybeChanged.same appr
 
@@ -199,7 +195,7 @@ let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = fals
   |> step
   |> if twn then twn_step else identity
 
-let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
+let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ~preprocess ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
   if not (TransitionSet.is_empty non_linear_transitions)  then
       let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
       let opt =
@@ -209,6 +205,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
           CFR.apply_cfr non_linear_transitions !already_used_cfr program appr in
       if Option.is_some opt then (
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
+        let program_cfr = preprocess program_cfr in
         already_used_cfr := already_used_cfr_upd;
         Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
         Program.reset_pre_cache ();
@@ -241,6 +238,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
           (program, appr, rvg_with_sccs)
         )
         else (
+          CFR.add_to_proof program_cfr cfr_bound;
           LocalSizeBound.switch_cache();
           (program_cfr, updated_appr_cfr, rvg_with_sccs_cfr)))
       else
@@ -255,7 +253,7 @@ let handle_timeout_cfr non_linear_transitions =
 
 
 
-let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
+let improve rvg ?(mprf_max_depth = 1) ~preprocess ?(cfr = false) ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
   program
     |> Program.sccs
     |> List.of_enum
@@ -274,7 +272,7 @@ let improve rvg ?(mprf_max_depth = 1) ?(cfr = false) ?(inv = false) ?(fast = fal
                               if cfr && !CFR.time_cfr > 0. && not (TransitionSet.is_empty non_linear_transitions) then (
                                 let time = CFR.compute_timeout_time program appr scc in
                                 let opt = Timeout.timed_run time ~action:(fun () -> handle_timeout_cfr scc)
-                                (fun () -> apply_cfr scc rvg time non_linear_transitions ~mprf_max_depth ~inv ~fast ~twn measure program appr) in
+                                (fun () -> apply_cfr scc rvg time non_linear_transitions ~mprf_max_depth ~inv ~fast ~twn ~preprocess measure program appr) in
                                 if Option.is_some opt then
                                   let res, time_used = Option.get opt in
                                   CFR.time_cfr := !CFR.time_cfr -. time_used;

@@ -15,7 +15,7 @@ let logger = Logging.(get Preprocessor)
 let unsatisfiable_transitions program graph : TransitionSet.t =
   let combine (l,t,l') set =
     if Program.is_initial_location program l then
-      if SMT.Z3Opt.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then
+      if SMT.Z3Solver.unsatisfiable (Formula.mk (TransitionLabel.guard t)) then
         TransitionSet.add (l,t,l') set
       else set
     else

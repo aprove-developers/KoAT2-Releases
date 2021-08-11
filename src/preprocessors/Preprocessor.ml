@@ -2,8 +2,6 @@ open Batteries
 
 let logger = Logging.(get Preprocessor)
 
-type subject = Program.t * Approximation.t
-
 type t =
   | CutUnreachableLocations
   | CutUnsatisfiableTransitions
@@ -39,15 +37,12 @@ let normalise_temp_vars program =
 let lift_to_program transform program =
   MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (fun _ -> graph) program)))
 
-let lift_to_tuple transform tuple =
-  MaybeChanged.(transform (Tuple2.first tuple) >>= (fun program -> same (Tuple2.map1 (fun _ -> program) tuple)))
-
 let transform subject = function
-  | CutUnreachableLocations -> lift_to_tuple CutUnreachableLocations.transform_program subject
-  | CutUnsatisfiableTransitions -> lift_to_tuple CutUnsatisfiableTransitions.transform_program subject
-  | Chaining -> lift_to_tuple (MaybeChanged.map normalise_temp_vars  % lift_to_program Chaining.transform_graph) subject
-  | EliminateNonContributors -> lift_to_tuple EliminateNonContributors.eliminate subject
-  | InvariantGeneration -> lift_to_tuple InvariantGeneration.transform_program subject
+  | CutUnreachableLocations -> CutUnreachableLocations.transform_program subject
+  | CutUnsatisfiableTransitions -> CutUnsatisfiableTransitions.transform_program subject
+  | Chaining -> (MaybeChanged.map normalise_temp_vars  % lift_to_program Chaining.transform_graph) subject
+  | EliminateNonContributors -> EliminateNonContributors.eliminate subject
+  | InvariantGeneration -> InvariantGeneration.transform_program subject
 
 type outer_t = t
 module PreprocessorSet =
@@ -62,7 +57,7 @@ let all =
   [Chaining; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]
 
 
-type strategy = t list -> subject -> subject
+type strategy = t list -> Program.t -> Program.t
 
 let process strategy preprocessors subject =
   let execute () =
@@ -75,7 +70,7 @@ let process strategy preprocessors subject =
 let process_only_once preprocessors =
   PreprocessorSet.fold (fun preprocessor subject -> MaybeChanged.unpack (transform subject preprocessor)) (PreprocessorSet.of_list preprocessors)
 
-let rec process_til_fixpoint_ ?(wanted=PreprocessorSet.of_list all) (todos: PreprocessorSet.t) (subject: subject) : subject =
+let rec process_til_fixpoint_ ?(wanted=PreprocessorSet.of_list all) (todos: PreprocessorSet.t) (subject: Program.t) : Program.t =
   if PreprocessorSet.is_empty todos then
     subject
   else

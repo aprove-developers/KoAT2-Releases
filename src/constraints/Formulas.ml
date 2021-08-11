@@ -110,6 +110,8 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let turn =
       List.map C.turn
 
+    let is_linear = List.for_all C.is_linear
+
   end
 
 module Formula =

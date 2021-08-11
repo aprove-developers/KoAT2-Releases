@@ -13,7 +13,7 @@ let suite =
             let files = Array.filter (fun s -> String.ends_with s ".koat") (Sys.readdir ("../../examples/" ^ folder))
             and test (file : string): unit = try ignore (Readers.read_file ("../../examples/" ^ folder ^ "/" ^ file)) with
                                              | ParserUtil.Error msg -> failwith msg
-                                             | TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported" in
+                                             | Program.RecursionNotSupported -> skip_if true "Recursion not supported" in
             Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
         "Examples" >::: List.map test_folder ["KoAT-2013"; "KoAT-2014"; "SAS10"; "T2"]
       );
@@ -31,7 +31,7 @@ let suite =
                   read_function ()
               with
                 | ParserUtil.Error msg -> failwith msg
-                | TransitionLabel.RecursionNotSupported -> skip_if true "Recursion not supported"
+                | Program.RecursionNotSupported -> skip_if true "Recursion not supported"
             in
             Array.to_list (Array.map (fun s -> (s >:: (fun _ -> test s))) files)) in
         "Examples" >::: List.map test_folder ["CageKoAT-Input-Examples/weightedExamples/badExamples" ;"CageKoAT-Input-Examples/weightedExamples/constantWeights"; "CageKoAT-Input-Examples/weightedExamples/simplePolyWeights"; "CageKoAT-Input-Examples/debugExamples"; "CageKoAT-Input-Examples/cexamples"]
@@ -64,10 +64,10 @@ let suite =
       );
       (
         "Print" >:: (fun _ ->
-          GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
+          GraphPrint.print_system ~format:"png" ~label:TransitionLabel.to_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" (Readers.read_file "../../examples/KoAT-2013/sect1-lin.koat");
           "../../examples/KoAT-2013/sect1-lin.koat"
           |> Readers.read_file
-          |> tap (fun program -> GraphPrint.print_rvg ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
+          |> tap (fun program -> GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:(Fpath.v "output") ~file:"sect1-lin" program)
           |> ignore
         )
       );

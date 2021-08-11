@@ -27,6 +27,10 @@ val size : t -> SizeApproximation.t
 (** Returns cost-approximation. *)
 val cost : t -> ApproximationModules.TransitionApproximation.t
 
+
+(**  Creates a formatted string containing time,size and cost-bounds. *)
+val to_formatted : ?show_initial:bool -> Program.t -> t -> FormattedString.t
+
 (**  Creates a string containing time,size and cost-bounds. *)
 val to_string : Program.t -> t -> string
 

@@ -6,6 +6,9 @@ open Constraints
 
 open ProgramTypes
 
+(** KoAT does not support recursion yet *)
+exception RecursionNotSupported
+
 (** Type of a program consisting of a program graph and a start location. *)
 type t
 
@@ -34,8 +37,8 @@ val mk : Transition.t Enum.t -> TransitionGraph.t
 (** TODO doc *)
 val rename : t -> t
 
-(** Creates a program from a list of transitions and a (start) location. *)
-val from : Transition.t list -> Location.t -> t
+(** Creates a program from a list of transitions and a (start) location. A list of k transitions makes up a Com_k transition *)
+val from : Transition.t list list -> Location.t -> t
 
 (** Returns transition graph of a program. *)
 val graph : t -> TransitionGraph.t

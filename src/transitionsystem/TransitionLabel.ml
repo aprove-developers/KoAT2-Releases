@@ -6,9 +6,6 @@ module Guard = Constraints.Constraint
 type polynomial = Polynomial.t
 module VarMap = Map.Make(Var)
 
-exception RecursionNotSupported
-exception OnlyCom1Supported
-
 type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
 
 type t = {
@@ -20,8 +17,7 @@ type t = {
 
 let one = Polynomial.one
 
-let make ~cost com_kind ~update ~guard =
-  if com_kind <> "Com_1" then raise OnlyCom1Supported else
+let make ~cost ~update ~guard =
   {
     id = unique ();
     update; guard; cost;
@@ -37,7 +33,7 @@ let fresh_id t = {
 let trival variables =
   let var_map =
     VarSet.fold (fun var map -> VarMap.add var (Polynomial.of_var var) map) variables VarMap.empty in
-  make ~cost:Polynomial.one "Com_1" ~update:var_map ~guard:Guard.mk_true
+  make ~cost:Polynomial.one ~update:var_map ~guard:Guard.mk_true
 
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
@@ -66,21 +62,18 @@ let take_last n xs =
   |> List.rev
 
 (* TODO Pattern <-> Assigment relation *)
-let mk ~cost ~com_kind ~targets ~patterns ~guard ~vars =
-  if List.length targets != 1 then raise RecursionNotSupported else
-    if com_kind <> "Com_1" then raise OnlyCom1Supported else
-      let (target, assignments) = List.hd targets in
-      let assignments_with_trivial =
-          assignments @ List.map Polynomial.of_var (take_last ((List.length patterns) - (List.length assignments)) patterns) in
-      let appended_patterns =
-          patterns @ Var.fresh_id_list Var.Int ((List.length assignments) - (List.length patterns)) in
-      (* TODO Better error handling in case the sizes differ *)
-      (List.enum appended_patterns, List.enum assignments_with_trivial)
-      |> (uncurry Enum.combine)
-      |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
-      |> Enum.fold (fun map adder -> adder map) VarMap.empty
-      |> fun update -> { id = unique ();
-                         update; guard; cost;}
+let mk ~cost ~assignments ~patterns ~guard ~vars =
+  let assignments_with_trivial =
+      assignments @ List.map Polynomial.of_var (take_last ((List.length patterns) - (List.length assignments)) patterns) in
+  let appended_patterns =
+      patterns @ Var.fresh_id_list Var.Int ((List.length assignments) - (List.length patterns)) in
+  (* TODO Better error handling in case the sizes differ *)
+  (List.enum appended_patterns, List.enum assignments_with_trivial)
+  |> (uncurry Enum.combine)
+  |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
+  |> Enum.fold (fun map adder -> adder map) VarMap.empty
+  |> fun update -> { id = unique ();
+                     update; guard; cost;}
 
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
@@ -113,6 +106,8 @@ let append t1 t2 =
 let id t = t.id
 
 let update t var = VarMap.Exceptionless.find var t.update
+
+let update_map t = t.update
 
 let guard t = t.guard
 

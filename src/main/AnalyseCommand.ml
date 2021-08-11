@@ -58,6 +58,9 @@ type params = {
     show_proof: bool;
     (** Displays the complexity proof. *)
 
+    proof_format: Formatter.format; [@enum [Formatter.Html; Formatter.Markdown; Formatter.Plain] |> List.map (fun f -> Formatter.format_to_string f, f)] [@default Formatter.Plain]
+    (** What should be the output format of the proof. html, markdown, or plain? *)
+
     logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default Logging.all] [@sep ','] [@aka ["l"]]
     (** The loggers which should be activated. *)
 
@@ -67,7 +70,7 @@ type params = {
     result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_costbound]] [@default print_overall_costbound] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
 
-    preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.([InvariantGeneration;  Chaining; CutUnsatisfiableTransitions; CutUnreachableLocations; EliminateNonContributors])]
+    preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.([InvariantGeneration;  CutUnsatisfiableTransitions; CutUnreachableLocations; EliminateNonContributors])]
     (** The preprocessors which should be applied before running the actual algorithm. *)
 
     preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
@@ -147,12 +150,18 @@ let rename_program_option opt =
     |None -> None
 
 
+let program_to_formatted_string prog = function
+  | Formatter.Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty ~format:"svg" prog)
+  | _ -> FormattedString.Empty
+
+
 (** Runs KoAT2 on provided parameters. *)
 let run (params: params) =
   Timeout.start_time_of_koat2 := Unix.gettimeofday();
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
   let input = Option.default_delayed read_line params.input in
+  let preprocess = Preprocessor.process params.preprocessing_strategy params.preprocessors in
   let input_filename =
     if params.simple_input then
       "dummyname"
@@ -175,44 +184,46 @@ let run (params: params) =
     print_string (program_str ^ "\n\n")
   );
   ProofOutput.compute_proof params.show_proof;
+  ProofOutput.proof_format params.proof_format;
   let program =
     input
     |> Readers.read_input ~rename:params.rename params.simple_input
     |> rename_program
     |> tap (fun prog -> ProofOutput.add_to_proof @@ fun () ->
-          FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string prog) )
-        )
+          FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string prog)
+            <> program_to_formatted_string prog params.proof_format))
   in
   Timeout.timed_run params.timeout
     ~action:(fun () -> print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n") (fun () ->
      ((if params.cfr then program |> Normalise.normalise else program) , Approximation.create program)
      |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
-     |> Preprocessor.process params.preprocessing_strategy params.preprocessors
+     |> Tuple2.map1 preprocess
      |> tap (fun (prog, _) -> ProofOutput.add_to_proof @@ fun () ->
-          FormattedString.(mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string prog))
-        )
+          FormattedString.( mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string prog)
+            <> program_to_formatted_string prog params.proof_format))
      |> tap (fun (program, appr) ->
             if params.print_system then
-              GraphPrint.print_system ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
+              GraphPrint.print_system ~format:"png" ~label:TransitionLabel.to_string ~outdir:output_dir ~file:input_filename program)
      |> tap (fun (program, appr) ->
             if params.print_rvg then (
-              GraphPrint.print_rvg ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
+              GraphPrint.print_rvg ~format:"png" ~label:RV.to_id_string ~outdir:output_dir ~file:input_filename program
             )
           )
      |> (fun (program, appr) ->
                if not params.no_boundsearch then
-                 Bounds.find_bounds ~mprf_max_depth:params.depth ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast ~twn:params.twn program appr
+                 Bounds.find_bounds ~mprf_max_depth:params.depth ~preprocess ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast ~twn:params.twn program appr
                else (program, appr))
      |> tap (fun (program, appr) -> params.result program appr)
+     |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~show_initial:false program appr))
      |> tap (fun (program, appr) ->
             if params.print_system then
-              GraphPrint.print_system ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
+              GraphPrint.print_system ~format:"png" ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
      |> tap (fun (program, appr) ->
             if params.print_rvg then (
-              GraphPrint.print_rvg ~label:(bounded_rv_to_string program appr) ~outdir:output_dir ~file:input_filename program;
+              GraphPrint.print_rvg ~format:"png" ~label:(bounded_rv_to_string program appr) ~outdir:output_dir ~file:input_filename program;
             )
           ))
     |> ignore;
-    if params.show_proof then print_string "\n\n"; ProofOutput.print_proof ();
+    if params.show_proof then (print_string "\n\n"; ProofOutput.print_proof params.proof_format);
     if params.log_level == NONE && params.cfr then
       ignore (Sys.command ("rm -f -r ./tmp_" ^ !CFR.uid))

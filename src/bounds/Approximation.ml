@@ -2,6 +2,8 @@ open Batteries
 open BoundsInst
 open ProgramTypes
 open ApproximationModules
+open Formatter
+open FormattedString
 
 type t = {
     time: TransitionApproximation.t;
@@ -72,6 +74,28 @@ let program_costbound =
 let add_costbound bound transition appr =
   { appr with cost = TransitionApproximation.add bound transition appr.cost }
 
+let to_formatted ?(show_initial=false) program appr =
+  let overall_timebound = program_timebound appr program in
+  mk_str_header_big "All Bounds" <>
+  if show_initial then
+    mk_paragraph (
+     (mk_str_header_small "Initial Complexity Problem (after preprocessing)"
+        <> (Program.to_formatted_string program) <> mk_newline
+     ) )
+  else FormattedString.Empty
+
+  <> mk_str_header_small "Timebounds" <> ( mk_paragraph (
+       mk_str_line ("Overall timebound:" ^ Bound.to_string overall_timebound)
+       <> TransitionApproximation.to_formatted (Program.transitions program |> TransitionSet.to_list) appr.time) )
+
+  <> mk_str_header_small "Costbounds" <> ( mk_paragraph (
+        mk_str_line ("Overall costbound: " ^ Bound.to_string (program_costbound appr program))
+        <> TransitionApproximation.to_formatted (Program.transitions program |> TransitionSet.to_list) appr.cost ) )
+
+  <> mk_str_header_small "Sizebounds" <> (mk_paragraph @@ SizeApproximation.to_formatted appr.size)
+
+
+(* TODO: use to_formatted *)
 let to_string program appr =
   let overall_costbound = program_costbound appr program in
   let output = IO.output_string () in
