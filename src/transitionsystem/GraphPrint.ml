@@ -35,7 +35,7 @@ let print_system ~label ~outdir ~file program =
                                        let default_edge_attributes _ = []
                                        let get_subgraph _ = None
                                        let vertex_attributes _ = [`Shape `Box]
-                                       let vertex_name v = Location.to_string v
+                                       let vertex_name v = "\""^Location.to_string v^"\""
                                        let default_vertex_attributes _ = []
                                        let graph_attributes _ = []
                                      end) in
@@ -101,7 +101,7 @@ let label l =
                                           let default_edge_attributes _ = []
                                           let get_subgraph _ = None
                                           let vertex_attributes _ = [`Shape `Circle]
-                                          let vertex_name v = Location.to_string v
+                                          let vertex_name v = "\""^Location.to_string v^"\""
                                           let default_vertex_attributes _ = []
                                           let graph_attributes _ = []
                                      end)
