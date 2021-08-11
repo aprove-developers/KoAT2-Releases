@@ -79,9 +79,9 @@ let tests =
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->
                      let result =
-                       Tuple2.first (Preprocessor.process_til_fixpoint
-                                       Preprocessor.[CutUnreachableLocations; CutUnsatisfiableTransitions]
-                                       (Readers.read_program_simple program, Approximation.empty 0 0))
+                       (Preprocessor.process_til_fixpoint
+                          Preprocessor.[CutUnreachableLocations; CutUnsatisfiableTransitions]
+                          (Readers.read_program_simple program))
                      in
                      assert_equal_program (Readers.read_program_simple expected_program) result))
                   [
