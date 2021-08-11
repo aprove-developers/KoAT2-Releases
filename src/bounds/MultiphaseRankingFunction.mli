@@ -4,6 +4,7 @@ open Constraints
 open Atoms
 open Polynomials
 open ProgramTypes
+open BoundsInst
 
 (** Implementation of multiphase ranking function based on Linear Ranking Functions, flag --mrf has to be set to use multiphase ranking function. *)
 
@@ -48,3 +49,5 @@ val to_string : t -> string
 
 val only_rank_to_string : t -> string
 (** Converts a multiphase ranking function into a string without any further information. *)
+
+val add_to_proof : t -> Bound.t -> unit

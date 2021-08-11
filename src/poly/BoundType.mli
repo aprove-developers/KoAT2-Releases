@@ -86,6 +86,9 @@ val pow : t -> int -> t
 (** Returns the sum of all enums elements. *)
 val sum : t Enum.t -> t
 
+(** Returns the sum of all list elements. *)
+val sum_list : t list -> t
+
 (** Returns the product of all enums elements. *)
 val product : t Enum.t -> t
 

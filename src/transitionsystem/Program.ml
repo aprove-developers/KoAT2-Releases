@@ -4,6 +4,8 @@ open Formulas
 open ProgramTypes
 open Util
 
+exception RecursionNotSupported
+
 type t = {
     graph: TransitionGraph.t;
     start: Location.t;
@@ -77,16 +79,39 @@ let rename program =
     start = new_start;
   }
 
-let from transitions start =
-  transitions
-  |> fun transitions ->
-     if transitions |> List.map Transition.target |> List.mem_cmp Location.compare start then
-       raise (Failure "Transition leading back to the initial location.")
-     else
-       {
-         graph = mk (List.enum transitions);
-         start = start;
-       }
+let from com_transitions start =
+  let all_trans = List.flatten com_transitions in
+  let start_locs = LocationSet.of_list @@ List.map Transition.src all_trans in
+
+  (* Try to eliminate recursion. When there is a Com_k transition we aim to construct a Com_1 transition by eliminating
+   * all targets that do not appear on the left hand side of a rule.
+   * However, we need to keep at least on target for each transition, such that the transition itself is not eliminated and it
+   * still incurs a cost of 1. *)
+  let cleaned_com_k_transitions =
+    List.map
+      (fun ts ->
+        if List.length ts > 1 then
+          let arb_trans = List.hd ts in
+          let cleaned = List.filter (flip LocationSet.mem start_locs % Transition.target) ts in
+          if List.is_empty cleaned then [arb_trans] else cleaned
+          |> tap (fun new_ts -> if List.length new_ts = 1 then Logger.log Logging.(get Program) INFO (fun () ->
+              "eliminate_recursion",[ "old_targets", Util.enum_to_string Transition.to_id_string (List.enum ts)
+                                    ; "new_targets", Util.enum_to_string Transition.to_id_string (List.enum new_ts)]) else ())
+        else ts
+      )
+      com_transitions
+  in
+  if List.exists (not % Int.equal 1 % List.length) cleaned_com_k_transitions then raise RecursionNotSupported else
+    cleaned_com_k_transitions
+    |> List.flatten
+    |> fun transitions ->
+       if transitions |> List.map Transition.target |> List.mem_cmp Location.compare start then
+         raise (Failure "Transition leading back to the initial location.")
+       else
+         {
+           graph = mk (List.enum transitions);
+           start = start;
+         }
 
 let transitions =
   TransitionGraph.transitions % graph
@@ -115,7 +140,7 @@ let cardinal_vars program =
 
 let pre program (l,t,_) =
   let is_satisfiable f =
-    try SMT.Z3Opt.satisfiable f
+    try SMT.Z3Solver.satisfiable f
     with SMT.SMTFailure _ -> true (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
   in
   l
@@ -124,7 +149,7 @@ let pre program (l,t,_) =
   |> Enum.filter (fun (_,t',_) ->
          TransitionLabel.append t' t
          |> TransitionLabel.guard
-         |> is_satisfiable % Formula.mk
+         |> is_satisfiable % Formula.mk % Constraint.drop_nonlinear (* such that Z3 uses QF_LIA*)
        )
 
 let pre_cache: (int, TransitionSet.t) Hashtbl.t = Hashtbl.create 10
@@ -139,7 +164,7 @@ let succ program (_,t,l') =
          TransitionLabel.append t t'
          |> TransitionLabel.guard
          |> Formula.mk
-         |> SMT.Z3Opt.satisfiable
+         |> SMT.Z3Solver.satisfiable
        )
 
 let sccs program =

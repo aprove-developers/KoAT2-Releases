@@ -99,7 +99,7 @@ let chain (t: TransitionLabel.t) = TransitionLabel.append t t
 
 (* TERMINATION: *)
 
-module SMTSolver = SMT.Z3Opt
+module SMTSolver = SMT.Z3Solver
 
 let red_lt poly_list =
     let rec constraint_eq_zero i = function 

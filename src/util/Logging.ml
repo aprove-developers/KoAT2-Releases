@@ -7,6 +7,7 @@ type logger =
   | Time (** Logger handling time-bounds *)
   | PRF (** Logger handling (multiphase) ranking function creation *)
   | Bound (**  Logger handling  simplification of bounds *)
+  | Program (** Logger handling creation of programs, e.g., possible elimination of recursion *)
   | LocalSizeBound (**  Logger handling local size-bounds  *)
   | Preprocessor (**  Logger handling preprocessors  *)
   | CFR (**  Logger handling control flow refinement  *)
@@ -14,10 +15,10 @@ type logger =
   | Twn (** Logger handling twn local time-bound computation *)
 
 (** List of all available loggers *)
-let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; CFR; Inv; Twn]
+let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Program; Preprocessor; CFR; Inv; Twn]
 
 (** List of all available loggers *)
-let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Preprocessor; CFR; Inv; Twn]
+let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Program; Preprocessor; CFR; Inv; Twn]
 
 (** Returns a string matching to the given logger. *)
 let show_logger = function
@@ -30,6 +31,7 @@ let show_logger = function
   | Preprocessor -> "preprocessor"
   | CFR -> "cfr"
   | Inv -> "invariants"
+  | Program -> "program"
   | Twn -> "twn"
 
 let get =

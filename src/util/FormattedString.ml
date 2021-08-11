@@ -32,6 +32,9 @@ let mk_header size f = Header (size, f)
 let mk_header_small f = Header (Small, f)
 let mk_header_big f = Header (Big, f)
 
+let mk_str_header_big = mk_header_big % mk_str
+let mk_str_header_small = mk_header_small % mk_str
+
 let mk_paragraph form = Paragraph form
 
 type metadata = {

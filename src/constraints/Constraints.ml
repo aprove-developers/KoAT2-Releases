@@ -75,6 +75,8 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
     let drop_nonlinear constr =
       List.filter A.is_linear constr
 
+    let is_linear = List.for_all A.is_linear
+
     (**returns a list of the coefficients of a variable in all the left sides of the constraints*)
     let get_coefficient_vector var constr =
         List.map (A.get_coefficient var) constr

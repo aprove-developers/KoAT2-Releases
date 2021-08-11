@@ -4,11 +4,12 @@ open Constraints
 open Atoms
 open Polynomials
 open ProgramTypes
+open BoundsInst
 
 (** Class is derived from RankingFunction.ml*)
 
 module SMTSolver = SMT.IncrementalZ3Solver
-module SMTSolverInt = SMT.SolverFast
+module SMTSolverInt = SMT.IncrementalZ3Solver
 module Valuation = Valuation.Make(OurInt)
 
 type mprf = (Location.t -> Polynomial.t) list
@@ -149,6 +150,15 @@ let only_rank_to_string {rank; decreasing; non_increasing; depth} =
 let to_string {rank; decreasing; non_increasing; depth} =
   "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; depth} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
+let add_to_proof {rank; decreasing; non_increasing; depth} bound =
+  let locations = non_increasing |> TransitionSet.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
+  ProofOutput.add_to_proof @@ FormattedString.(fun () ->
+    mk_header_small (mk_str ("MPRF for transition " ^ Transition.to_string decreasing ^ " of depth " ^ string_of_int depth ^ ":")) <>
+    mk_paragraph (
+      mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string bound)) <>
+      mk_str "MPRF:" <> mk_newline <>
+        (locations |> List.map (fun l -> Location.to_string l ^ " " ^ polyList_to_string (rank, l)) |> List.map (mk_str_line) |> mappend |> mk_paragraph)))
+
 (* We do not minimise the coefficients for now *)
 (* let fresh_coeffs: Var.t list ref = ref [] *)
 
@@ -197,7 +207,7 @@ let transition_constraint_i (template_table0, template_table1, measure, constrai
     | `Non_Increasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
     | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template1 l')))
   in
-  ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
+  ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
   |> Formula.mk
 
 (* method for mprf and function f_1*)
@@ -208,7 +218,7 @@ let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')
       | `Non_Increasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
       | `Decreasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template1 l')))
   in
-  ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
+  ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
   |> Formula.mk
 
 (* method for mprf and function f_d*)
@@ -218,7 +228,7 @@ let transition_constraint_d bound (template_table1, measure, constraint_type, (l
     | `Non_Increasing -> Formula.mk_true
     | `Decreasing  -> (
       let atom = ParameterAtom.Infix.((template1 l)  >= bound) in
-        ParameterConstraint.farkas_transform (TransitionLabel.guard t) atom
+        ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
         |> Formula.mk)
 
 (* use all three functions above combined*)
@@ -456,7 +466,7 @@ let compute_scc ?(inv = false) cache program mprf_problem =
   let make_non_increasing = TransitionSet.to_array @@ TransitionSet.diff (TransitionSet.of_array mprf_problem.make_non_increasing) min_applicable in
   TransitionSet.iter (add_non_increasing_constraint cache mprf_problem solver_int solver_real inv) min_applicable;
 
-  try
+  (try
     backtrack cache
               ~inv:inv
               (Array.length make_non_increasing)
@@ -465,10 +475,10 @@ let compute_scc ?(inv = false) cache program mprf_problem =
               solver_int
               non_inc
               ({mprf_problem with make_non_increasing;})
-  with Exit -> ();
+  with Exit -> ());
 
-  (if Option.is_none !(cache.rank_func) then
-    Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure mprf_problem.measure; "transition", Transition.to_id_string mprf_problem.make_decreasing])))
+  if Option.is_none !(cache.rank_func) then
+    Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure mprf_problem.measure; "transition", Transition.to_id_string mprf_problem.make_decreasing]))
 
 
 let find_scc ?(inv = false) measure program is_time_bounded unbounded_vars scc depth make_decreasing =
