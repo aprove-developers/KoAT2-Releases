@@ -211,6 +211,7 @@ let run (params: params) =
                  Bounds.find_bounds ~mprf_max_depth:params.depth ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast program appr
                else (program, appr))
      |> tap (fun (program, appr) -> params.result program appr)
+     |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~show_initial:false program appr))
      |> tap (fun (program, appr) ->
             if params.print_system then
               GraphPrint.print_system ~format:"png" ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)
