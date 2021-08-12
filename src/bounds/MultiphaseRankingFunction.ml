@@ -151,7 +151,7 @@ let to_string {rank; decreasing; non_increasing; depth} =
   "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; depth} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
 let add_to_proof {rank; decreasing; non_increasing; depth} bound program =
-  TransitionSet.iter (fun t -> GraphPrint.TransitionMap.add GraphPrint.color_map t GraphPrint.Green) non_increasing;
+  TransitionSet.iter (fun t -> GraphPrint.TransitionMap.add GraphPrint.color_map t GraphPrint.Blue) non_increasing;
   GraphPrint.TransitionMap.add GraphPrint.color_map decreasing GraphPrint.Red;
   let locations = non_increasing |> TransitionSet.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
   ProofOutput.add_to_proof @@ FormattedString.(fun () ->
