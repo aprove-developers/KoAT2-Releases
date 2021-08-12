@@ -131,3 +131,21 @@ let print_rvg ~label ~outdir ~file program =
                      end) in
   print_graph outdir (file ^ "_rvg") graph Dot.output_graph
 
+let counter = ref 0
+
+let print_system_pretty_html program =
+  "<button onclick=\"showgraph" ^ string_of_int !counter ^ "()\">Show Graph</button>\n" ^
+  "<div id=\"graph" ^ string_of_int !counter ^ "\" style=\"display:none\">\n" ^
+  (print_graph_to_string ~format:"svg" (Program.graph program) DotPretty.output_graph) ^
+  "</div>\n 
+  <script>
+    function showgraph" ^ string_of_int !counter ^ "() {
+      var x = document.getElementById(\"graph" ^ string_of_int !counter ^ "\");
+      if (x.style.display === \"none\") {
+        x.style.display = \"block\";
+      } else {
+        x.style.display = \"none\";
+      }
+    }
+  </script>"
+  |> tap (fun _ -> counter := !counter + 1)
