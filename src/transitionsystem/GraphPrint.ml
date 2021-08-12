@@ -94,10 +94,29 @@ let label l =
     |> List.filter (not % String.is_empty)
     |> String.concat "\n"
 
+type color = Black | Red | Blue | Green | Yellow | Purple | Brown | White [@@deriving ord, eq]
+
+let get_color = function
+  | Black -> `Color 0
+  | Red -> `Color 16711680
+  | Blue -> `Color 255
+  | Green -> `Color 32768
+  | Yellow -> `Color 16776960
+  | Purple -> `Color 800080
+  | Brown -> `Color 10824234
+  | White -> `Color 16777215
+
+module TransitionMap = Hashtbl.Make(Transition)
+
+let color_map = TransitionMap.create 10
+
   (* Dot configuration *)
   module DotPretty = Graph.Graphviz.Dot(struct
                                           include TransitionGraph
-                                          let edge_attributes (a, e, b) = [`Label (label e)]
+                                          let edge_attributes (a, e, b) = [`Label (label e); 
+                                            if not (TransitionMap.mem color_map (a, e, b)) then 
+                                              get_color Black else 
+                                              get_color (TransitionMap.find color_map (a, e, b))]
                                           let default_edge_attributes _ = []
                                           let get_subgraph _ = None
                                           let vertex_attributes _ = [`Shape `Circle]
@@ -108,6 +127,7 @@ let label l =
 
 let print_system_pretty ?(format="pdf") program =
   print_graph_to_string ~format:format (Program.graph program) DotPretty.output_graph
+  |> tap (fun _ -> TransitionMap.clear color_map)
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
@@ -148,4 +168,4 @@ let print_system_pretty_html program =
       }
     }
   </script>"
-  |> tap (fun _ -> counter := !counter + 1)
+  |> tap (fun _ -> counter := !counter + 1; TransitionMap.clear color_map)
