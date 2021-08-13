@@ -106,28 +106,25 @@ let get_color = function
   | Brown -> `Color 10824234
   | White -> `Color 16777215
 
-module TransitionMap = Hashtbl.Make(Transition)
+module TransitionMap = Map.Make(struct include Transition let compare = compare_same end)
 
-let color_map = TransitionMap.create 10
 
-  (* Dot configuration *)
-  module DotPretty = Graph.Graphviz.Dot(struct
-                                          include TransitionGraph
-                                          let edge_attributes (a, e, b) = [`Label (label e); 
-                                            if not (TransitionMap.mem color_map (a, e, b)) then 
-                                              get_color Black else 
-                                              get_color (TransitionMap.find color_map (a, e, b))]
-                                          let default_edge_attributes _ = []
-                                          let get_subgraph _ = None
-                                          let vertex_attributes _ = [`Shape `Circle]
-                                          let vertex_name v = "\""^Location.to_string v^"\""
-                                          let default_vertex_attributes _ = []
-                                          let graph_attributes _ = []
-                                     end)
-
-let print_system_pretty ?(format="pdf") program =
+let print_system_pretty ?(format="pdf") ?(color_map = TransitionMap.empty) program =
+  let module DotPretty = Graph.Graphviz.Dot(struct
+                                             include TransitionGraph
+                                             let edge_attributes (a, e, b) = [`Label (label e);
+                                               if not (TransitionMap.mem (a, e, b) color_map) then
+                                                 get_color Black else
+                                                 get_color (TransitionMap.find (a, e, b) color_map)]
+                                             let default_edge_attributes _ = []
+                                             let get_subgraph _ = None
+                                             let vertex_attributes _ = [`Shape `Circle]
+                                             let vertex_name v = "\""^Location.to_string v^"\""
+                                             let default_vertex_attributes _ = []
+                                             let graph_attributes _ = []
+                                   end)
+  in
   print_graph_to_string ~format:format (Program.graph program) DotPretty.output_graph
-  |> tap (fun _ -> TransitionMap.clear color_map)
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
@@ -151,16 +148,15 @@ let print_rvg ~label ~outdir ~file program =
                      end) in
   print_graph outdir (file ^ "_rvg") graph Dot.output_graph
 
-let counter = ref 0
-
-let print_system_pretty_html program =
-  "<button onclick=\"showgraph" ^ string_of_int !counter ^ "()\">Show Graph</button>\n" ^
-  "<div id=\"graph" ^ string_of_int !counter ^ "\" style=\"display:none\">\n" ^
-  (print_graph_to_string ~format:"svg" (Program.graph program) DotPretty.output_graph) ^
-  "</div>\n 
+let print_system_pretty_html color_map program =
+  let divid = unique () in
+  "<button onclick=\"showgraph" ^ string_of_int divid ^ "()\">Show Graph</button>\n" ^
+  "<div id=\"graph" ^ string_of_int divid ^ "\" style=\"display:none\">\n" ^
+  (print_system_pretty ~format:"svg" ~color_map program) ^
+  "</div>\n
   <script>
-    function showgraph" ^ string_of_int !counter ^ "() {
-      var x = document.getElementById(\"graph" ^ string_of_int !counter ^ "\");
+    function showgraph" ^ string_of_int divid ^ "() {
+      var x = document.getElementById(\"graph" ^ string_of_int divid ^ "\");
       if (x.style.display === \"none\") {
         x.style.display = \"block\";
       } else {
@@ -168,4 +164,3 @@ let print_system_pretty_html program =
       }
     }
   </script>"
-  |> tap (fun _ -> counter := !counter + 1; TransitionMap.clear color_map)
