@@ -154,13 +154,13 @@ let add_to_proof {rank; decreasing; non_increasing; depth} bound program =
   TransitionSet.iter (fun t -> GraphPrint.TransitionMap.add GraphPrint.color_map t GraphPrint.Blue) non_increasing;
   GraphPrint.TransitionMap.add GraphPrint.color_map decreasing GraphPrint.Red;
   let locations = non_increasing |> TransitionSet.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
-  ProofOutput.add_to_proof @@ FormattedString.(fun () ->
+  ProofOutput.add_to_proof_with_format @@ FormattedString.(fun format ->
     mk_header_small (mk_str ("MPRF for transition " ^ Transition.to_string decreasing ^ " of depth " ^ string_of_int depth ^ ":")) <>
     mk_paragraph (
       mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string bound)) <>
       mk_str "MPRF:" <> mk_newline <>
         (locations |> List.map (fun l -> Location.to_string l ^ " " ^ polyList_to_string (rank, l)) |> List.map (mk_str_line) |> mappend |> mk_paragraph)) <> 
-        FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html program))
+        if Formatter.is_html format then FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html program) else FormattedString.Empty)
 
 (* We do not minimise the coefficients for now *)
 (* let fresh_coeffs: Var.t list ref = ref [] *)
