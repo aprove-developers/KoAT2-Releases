@@ -13,17 +13,21 @@ let print_graph ~format out_dir name graph output_graph =
   (* Generate a png from the dot file with an external call to graphviz *)
   ignore (Sys.command ("dot -T"^ format ^ " -o " ^ full_path format ^ " " ^ full_path "dot"))
 
-let print_graph_to_string ~format graph (output_graph: out_channel -> 'a -> 'b) =
+let print_graph_to_string ~format graph output_graph =
   let rec read_from_channel inp_chann =
     try let next_line = input_line inp_chann in
         next_line ^ "\n" ^ read_from_channel inp_chann
     with End_of_file -> ""
   in
 
-  let (graphviz_in, graphviz_out) = Unix.open_process ("dot -T"^format) in
-  output_graph graphviz_out graph;
-  close_out graphviz_out;
-  read_from_channel graphviz_in
+  try
+    let (graphviz_in, graphviz_out) = Unix.open_process ("dot -T"^format ^ " 2>/dev/null") in
+    output_graph graphviz_out graph;
+    close_out graphviz_out;
+    Some (read_from_channel graphviz_in)
+  with
+    (* Some Programs lead to huge graphs and huge edge labels that dot cannot handle. *)
+    Sys_error e -> None
 
 (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
@@ -148,19 +152,21 @@ let print_rvg ~label ~outdir ~file program =
                      end) in
   print_graph outdir (file ^ "_rvg") graph Dot.output_graph
 
-let print_system_pretty_html color_map program =
-  let divid = unique () in
-  "<button onclick=\"showgraph" ^ string_of_int divid ^ "()\">Show Graph</button>\n" ^
-  "<div id=\"graph" ^ string_of_int divid ^ "\" style=\"display:none\">\n" ^
-  (print_system_pretty ~format:"svg" ~color_map program) ^
-  "</div>\n
-  <script>
-    function showgraph" ^ string_of_int divid ^ "() {
-      var x = document.getElementById(\"graph" ^ string_of_int divid ^ "\");
-      if (x.style.display === \"none\") {
-        x.style.display = \"block\";
-      } else {
-        x.style.display = \"none\";
-      }
-    }
-  </script>"
+let print_system_pretty_html color_map program = match print_system_pretty ~format:"svg" ~color_map program with
+  | None -> ""
+  | Some system ->
+      let divid = unique () in
+      "<button onclick=\"showgraph" ^ string_of_int divid ^ "()\">Show Graph</button>\n" ^
+      "<div id=\"graph" ^ string_of_int divid ^ "\" style=\"display:none\">\n" ^
+      system ^
+      "</div>\n
+      <script>
+        function showgraph" ^ string_of_int divid ^ "() {
+          var x = document.getElementById(\"graph" ^ string_of_int divid ^ "\");
+          if (x.style.display === \"none\") {
+            x.style.display = \"block\";
+          } else {
+            x.style.display = \"none\";
+          }
+        }
+      </script>"
