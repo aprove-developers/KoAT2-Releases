@@ -11,15 +11,17 @@ module RV = RVGTypes.RV
  * *)
 let compute_
       (rvg: RVG.t)
-      (get_lsb: RV.t -> LocalSizeBound.t)
+      (get_lsb: RV.t -> LocalSizeBound.t * bool)
       (get_timebound: Transition.t -> Bound.t)
       (get_sizebound: Transition.t -> Var.t -> Bound.t)
       (scc: RV.t List.t) =
 
-  (** All transitions that are present in the scc.
+  let (rvs_equality, rvs_non_equality) = List.partition (Tuple2.second % get_lsb) scc in
+
+  (** All transitions that are present in the scc and that are not of equality type.
       Corresponds to T_C in the thesis. *)
   let transitions =
-    scc
+    rvs_non_equality
     |> List.map (fun (t,v) -> t)
     |> List.unique ~eq:Transition.same
     |> tap (fun transitions -> Logger.log logger Logger.DEBUG (fun () -> "transitions", ["result", Util.enum_to_string Transition.to_id_string (List.enum transitions)]))
@@ -27,7 +29,7 @@ let compute_
 
   (** Returns all the variables with which the given transition does occur as result variable in the scc. *)
   let get_scc_vars transition =
-    scc
+    rvs_non_equality
     |> List.filter (fun (t,v) -> Transition.same t transition)
     |> List.map (fun (t,v) -> v)
     |> List.unique ~eq:Var.equal
@@ -60,10 +62,15 @@ let compute_
 
 
   let starting_value =
+    let rvs_equality_type_max_constant =
+      List.map (LocalSizeBound.constant % Tuple2.first % get_lsb) rvs_equality
+      |> List.fold_left max 0
+    in
     List.enum scc
     |> Enum.flatten % Enum.map pre_out_scc
     |> Enum.map (uncurry get_sizebound)
     |> Bound.sum
+    |> Bound.add (Bound.of_int rvs_equality_type_max_constant)
   in
 
   let transition_scaling_factor t =
@@ -78,7 +85,7 @@ let compute_
     let scaling_explicit =
       t
       |> get_scc_vars
-      |> Enum.map (fun v -> get_lsb (t,v))
+      |> Enum.map (fun v -> Tuple2.first @@ get_lsb (t,v))
       |> Enum.map LocalSizeBound.factor
       |> Util.max_option (>)
       |? 1
@@ -104,11 +111,11 @@ let compute_
     |> Bound.sum
   in
 
-  let rv_constant = Bound.of_int % LocalSizeBound.constant % get_lsb in
+  let rv_constant = Bound.of_int % LocalSizeBound.constant % Tuple2.first % get_lsb in
 
   let rv_effect rv =
     let rv_vars =
-      get_lsb rv
+      Tuple2.first (get_lsb rv)
       |> VarSet.enum % LocalSizeBound.vars
       |> Util.without Var.equal (scc_variables rv)
     in
@@ -153,13 +160,9 @@ let compute_
     Corresponds to 'SizeBounds for nontrivial SCCs'. *)
 let compute program rvg get_timebound get_sizebound scc =
   let execute () =
-    LocalSizeBound.sizebound_local_scc program scc
-    |> flip Option.Monad.bind (fun get_lsb ->
-        Option.map
-          (fun get_lsb_abs -> compute_ rvg get_lsb_abs get_timebound get_sizebound scc)
-          (LocalSizeBound.sizebound_local_scc program scc)
-       )
-    |? Bound.infinity
+    match LocalSizeBound.sizebound_local_scc program scc with
+    | Some get_lsb -> compute_ rvg get_lsb get_timebound get_sizebound scc
+    | None ->  Bound.infinity
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute_nontrivial_bound", ["scc", RVG.rvs_to_id_string scc])
                      ~result:Bound.to_string
