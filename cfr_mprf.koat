@@ -1,9 +1,0 @@
-(GOAL COMPLEXITY)
-(STARTTERM (FUNCTIONSYMBOLS l0))
-(VAR X Y A)
-(RULES
-  l0(X,Y) -> Com_1(l1(B,Y)) :|: B >= 1
-  l1(X,Y) -> Com_1(l1(X + 1,Y)) :|: 19 >= X && 1 <= X
-  l1(X,Y) -> Com_1(l2(X + 1,Y)) :|: Y > 0
-  l2(X,Y) -> Com_1(l1(X + 1,Y - 1)) 
-)
