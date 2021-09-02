@@ -151,7 +151,7 @@ let rename_program_option opt =
 
 
 let program_to_formatted_string prog = function
-  | Formatter.Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty ~format:"svg" prog)
+  | Formatter.Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html GraphPrint.TransitionMap.empty prog)
   | _ -> FormattedString.Empty
 
 
