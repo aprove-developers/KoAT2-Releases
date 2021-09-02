@@ -29,6 +29,8 @@ let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
   |> Bound.show_complexity_termcomp
   |> print_endline
 
+type local = [`MPRF | `TWN]
+
 (** The shell arguments which can be defined in the console. *)
 type params = {
 
@@ -76,6 +78,9 @@ type params = {
     preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
 
+    local : local list; [@enum [("mprf", `MPRF); ("twn", `TWN)]] [@default [`MPRF]] [@sep ','] 
+    (** Choose methods to compute local runtime-bounds: mprf, twn *)
+
     rename : bool; [@default false]
     (** If the location names should be normalized to simplified names. *)
 
@@ -96,8 +101,6 @@ type params = {
     fast : bool; [@default false]
     (** Search ranking functions on minimal sccs aka cycles. *)
 
-    twn : bool; [@default false]
-    (**  Use twn*)
   } [@@deriving cmdliner]
 
 
@@ -211,7 +214,7 @@ let run (params: params) =
           )
      |> (fun (program, appr) ->
                if not params.no_boundsearch then
-                 Bounds.find_bounds ~mprf_max_depth:params.depth ~preprocess ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast ~twn:params.twn program appr
+                 Bounds.find_bounds ~mprf_max_depth:params.depth ~preprocess ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast ~local:params.local program appr
                else (program, appr))
      |> tap (fun (program, appr) -> params.result program appr)
      |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~show_initial:false program appr))
