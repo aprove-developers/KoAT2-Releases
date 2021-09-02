@@ -28,7 +28,7 @@ let add_to_proof program bound =
       mk_str ("new bound: ") <> mk_newline <> mk_paragraph (mk_str (Bound.to_string bound)) <>
       mk_str ("cfr-program: ") <> mk_newline <> mk_paragraph (Program.to_formatted_string program)) <>
       match format with
-      | Formatter.Html -> mk_raw_str (GraphPrint.print_system_pretty ~format:"svg" program)
+      | Formatter.Html -> mk_raw_str (GraphPrint.print_system_pretty_html GraphPrint.TransitionMap.empty program)
       | _ -> FormattedString.Empty )
 
 (** Timeouts *)
