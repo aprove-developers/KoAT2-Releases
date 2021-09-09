@@ -312,7 +312,7 @@ let rec find l list =
 
 module TimeBoundTable = Hashtbl.Make(Transition) 
 
-let time_bound_table: Bound.t TimeBoundTable.t = TimeBoundTable.create 10
+let time_bound_table: (Bound.t * (Transition.t list)) TimeBoundTable.t = TimeBoundTable.create 10
 
 let insert_sizebounds entry appr bound = 
   entry
@@ -347,12 +347,15 @@ let time_bound (l,t,l') scc program appr =
               (Bound.(add b (mul (Approximation.timebound appr entry) (complexity eliminated_t))))) (*TODO: Stop if one is inf;*)
         (List.combine entry twn_loops) 
         Bound.zero
-        |> insert_sizebounds entry appr
-        |> tap (fun b -> List.iter (fun t -> TimeBoundTable.add time_bound_table t b) cycle)) in
+        |> tap (fun b -> List.iter (fun t -> TimeBoundTable.add time_bound_table t (b, entry)) cycle)
+        |> insert_sizebounds entry appr) in
     if Option.is_some bound then
       bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
       |> tap (fun _ -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string))))
     else
       Bound.infinity |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
-  ) else Option.get opt
-  |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
+  ) else 
+    let b, entry = Option.get opt in
+    let bound = insert_sizebounds entry appr b in
+    bound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
+          |> tap (fun _ -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (bound |> Bound.to_string))))
