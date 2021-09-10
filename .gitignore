@@ -21,3 +21,4 @@ perf.data*
 
 *.cmt
 *.cmti
+bin/
