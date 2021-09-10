@@ -44,6 +44,8 @@ RUN apt-get update && \
     apt-get install -y graphviz libtinfo5 libgmp-dev
 
 COPY scripts/koat2_assets/wrapper_script.sh bin/wrapper_script.sh
+COPY scripts/koat2_assets/run_koat2_cfr_c.sh bin/run_koat2_cfr_c.sh
+COPY scripts/koat2_assets/run_koat2_cfr.sh bin/run_koat2_cfr.sh
 COPY scripts/koat2_assets/run_koat2_c.sh bin/run_koat2_c.sh
 COPY scripts/koat2_assets/clang bin/clang
 COPY scripts/koat2_assets/llvm2kittel bin/llvm2kittel
