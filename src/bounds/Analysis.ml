@@ -187,7 +187,11 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
           CFR.apply_cfr non_linear_transitions !already_used_cfr program appr in
       if Option.is_some opt then (
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
+        (* temporary disable proof output here. This improves readability of the proof and omits confiusing proof output when CFR is not applied*)
+        let proof_setting = ProofOutput.is_computing_proof in
+        ProofOutput.compute_proof false;
         let program_cfr = preprocess program_cfr in
+        ProofOutput.compute_proof proof_setting;
         already_used_cfr := already_used_cfr_upd;
         Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
         Program.reset_pre_cache ();
