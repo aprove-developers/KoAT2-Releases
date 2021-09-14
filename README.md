@@ -1,5 +1,5 @@
 # KoatReimplementation with Controlflow - Refinement
-Reimplementation of KoAT with componentwise monotonic bounds
+Reimplementation of KoAT.
 
 ## Build
 
