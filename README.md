@@ -3,6 +3,8 @@ Reimplementation of KoAT.
 
 ## Build
 
+### Build directly from source code
+
 1. Use `opam init` and follow the instructions to set up Opam and install OCaml 4.06.1 if necessary
 2. `opam install -j$(nproc) . --deps-only`
       * requires the _gmp_ and _mpfr_ libraries
@@ -10,7 +12,13 @@ Reimplementation of KoAT.
 4. You may add `export PATH=$PATH:"path-to-Koat2-repository/Koat2/src/main/"` (with the substituted path) into your .bashrc file to use `koat2` directly.
 5. For Controlflow - Refinement download https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.2/irankfinder_1.3.2_linux_x86_64.zip and unzip it. Add `export PATH=$PATH:"path-to-irankfinder-folder/irankfinder/"` (with the substituted path) into your .bashrc file such that KoAT2 is able to find iRankFinder.
 
+### Build [Docker](https://www.docker.com/) image
+
+1. Install docker as described [here](https://docs.docker.com/engine/install/).
+2. Execute `./build_container.sh` in the topdirectory of this repository. This builds a docker image with the name `koat2`. The docker image contains a static binary.
+
 ## Static Binary
+
 To get a statically linked binary, please execute the script `compile_static_binary.sh`. This will set up a docker container in which OCaml 4.09.1 for compiling static binaries using musl is installed with all required packages to compile KoAT2. Please note that in this case, the used libraries (see below) are linked _statically_ into the resulting binary. The code of these libraries can be found when following the given links below.
 
 ## Links
