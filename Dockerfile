@@ -42,7 +42,7 @@ FROM ubuntu:20.04
 
 RUN apt-get -y update
 RUN apt-get -y upgrade
-RUN apt-get install -y bash vim coreutils
+RUN apt-get install -y bash vim coreutils graphviz
 
 RUN adduser koat2
 WORKDIR /home/koat2
