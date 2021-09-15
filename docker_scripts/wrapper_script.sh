@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 if [ "$1" = "its" ]; then
-  timeout 300s koat2 analyse -i ${@:2}
+  timeout 300s koat2 ${@:2}
   KOAT_EXIT=$?
 fi
 if [ "$1" = "c" ]; then
