@@ -109,6 +109,38 @@ let update t var = VarMap.Exceptionless.find var t.update
 
 let update_map t = t.update
 
+module Monomial = Monomials.Make(OurInt)
+let overapprox_nonlinear_updates t =
+  let overapprox_poly var poly (guard, update) =
+    if Polynomial.is_linear poly then guard, update
+    else
+      let new_var = Var.fresh_id Var.Int () in
+      let new_var_poly = Polynomial.of_var new_var in
+      match Polynomial.monomials_with_coeffs poly with
+        | [(coeff,mon)] ->
+            (** check if update is quadratic, ^4, ^6, ... *)
+            let vars = Monomial.vars mon in
+            if VarSet.cardinal vars = 1 then
+              if (Monomial.degree_variable var mon) mod 2 = 0 && Var.equal (VarSet.any vars) var then
+                let var_poly = Polynomial.of_var var in
+                (* check if variable can be zero. drop nonlinear to ensure fast termination of SMT call *)
+                let formula = Formula.mk_and (Formula.mk_eq  var_poly Polynomial.zero) (Formula.mk @@ Guard.drop_nonlinear t.guard) in
+                if SMT.Z3Solver.unsatisfiable formula then
+                  (* The update will increase the variable (disregardin factor) *)
+                  Guard.mk_and (Guard.mk_gt new_var_poly var_poly) guard, VarMap.add var (Polynomial.mul (Polynomial.of_constant coeff) new_var_poly) update
+                else
+                  (* updated variable will be non-negative (disregardin factor) *)
+                  Guard.mk_and (Guard.mk_ge new_var_poly Polynomial.zero) guard, VarMap.add var (Polynomial.mul (Polynomial.of_constant coeff) new_var_poly) update
+              else
+                guard, VarMap.add var new_var_poly update
+            else
+              guard, VarMap.add var new_var_poly update
+
+        | _ -> Guard.mk_true, VarMap.add var new_var_poly update
+  in
+  let (guard',update') = VarMap.fold overapprox_poly t.update (t.guard, t.update) in
+  {t with guard = guard'; update = update'}
+
 let guard t = t.guard
 
 let map_guard f label =
