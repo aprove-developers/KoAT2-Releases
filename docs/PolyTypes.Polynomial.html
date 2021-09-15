@@ -35,7 +35,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -54,7 +53,6 @@
 <link title="OurFloat" rel="Chapter" href="OurFloat.html">
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -214,6 +212,12 @@
 <pre><span id="VALmonomials"><span class="keyword">val</span> monomials</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> <a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a> list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the monomials of the polynomial without the empty monomial.</p>
+</div>
+</div>
+
+<pre><span id="VALmonomials_with_coeffs"><span class="keyword">val</span> monomials_with_coeffs</span> : <code class="type"><a href="PolyTypes.Polynomial.html#TYPEt">t</a> -> (value * <a href="PolyTypes.Polynomial.html#TYPEmonomial">monomial</a>) list</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns all monomials and their coefficients of the polynomial.</p>
 </div>
 </div>
 

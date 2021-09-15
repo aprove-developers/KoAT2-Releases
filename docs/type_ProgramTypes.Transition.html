@@ -31,7 +31,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -50,7 +49,6 @@
 <link title="OurFloat" rel="Chapter" href="OurFloat.html">
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -92,6 +90,8 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compare_equivalent&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;hash&nbsp;:&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;overapprox_nonlinear_updates&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_id_string&nbsp;:&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;?to_file:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;src&nbsp;:&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Location</span>.t<br>
