@@ -32,7 +32,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -51,7 +50,6 @@
 <link title="OurFloat" rel="Chapter" href="OurFloat.html">
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -248,10 +246,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Lexer.html#VAL__ocaml_lex_read_rec">__ocaml_lex_read_rec</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
-<tr><td><a href="Lexer.html#VAL__ocaml_lex_tables">__ocaml_lex_tables</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
 <tr><td align="left"><div>A</div></td></tr>
 <tr><td><a href="SMT.IncrementalZ3Solver.html#VALadd">add</a> [<a href="SMT.IncrementalZ3Solver.html">SMT.IncrementalZ3Solver</a>]</td>
 <td><div class="info">
@@ -2172,6 +2166,12 @@
 
 </div>
 </td></tr>
+<tr><td><a href="PolyTypes.Polynomial.html#VALmonomials_with_coeffs">monomials_with_coeffs</a> [<a href="PolyTypes.Polynomial.html">PolyTypes.Polynomial</a>]</td>
+<td><div class="info">
+<p>Returns all monomials and their coefficients of the polynomial.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="PolyTypes.BaseMath.html#VALmul">mul</a> [<a href="PolyTypes.BaseMath.html">PolyTypes.BaseMath</a>]</td>
 <td><div class="info">
 <p>Returns product of two element.</p>
@@ -2230,8 +2230,6 @@
 <tr><td><a href="MPRF_Invariants.html#VALnew_cache">new_cache</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
 <td></td></tr>
 <tr><td><a href="Formatter.html#VALnewline">newline</a> [<a href="Formatter.html">Formatter</a>]</td>
-<td></td></tr>
-<tr><td><a href="Lexer.html#VALnext_line">next_line</a> [<a href="Lexer.html">Lexer</a>]</td>
 <td></td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALnon_increasing">non_increasing</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
 <td><div class="info">
@@ -2422,20 +2420,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Parser.html#VALonlyAtom">onlyAtom</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyBound">onlyBound</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyConstraints">onlyConstraints</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyFormula">onlyFormula</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyPolynomial">onlyPolynomial</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyProgram">onlyProgram</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyProgram_simple">onlyProgram_simple</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALonly_rank_to_string">only_rank_to_string</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
 <td><div class="info">
 <p>Converts a multiphase ranking function into a string without any further information.</p>
@@ -2452,6 +2436,14 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TransitionLabel.html#VALoverapprox_nonlinear_updates">overapprox_nonlinear_updates</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
+<td><div class="info">
+<p>Overapproximates nonlinear updates by nondeterministic updates.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="ProgramTypes.Transition.html#VALoverapprox_nonlinear_updates">overapprox_nonlinear_updates</a> [<a href="ProgramTypes.Transition.html">ProgramTypes.Transition</a>]</td>
+<td></td></tr>
 <tr><td align="left"><div>P</div></td></tr>
 <tr><td><a href="Formatter.html#VALparagraph">paragraph</a> [<a href="Formatter.html">Formatter</a>]</td>
 <td></td></tr>
@@ -2633,8 +2625,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Parser.html#VALprogramAndGoal">programAndGoal</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
 <tr><td><a href="Approximation.html#VALprogram_costbound">program_costbound</a> [<a href="Approximation.html">Approximation</a>]</td>
 <td><div class="info">
 <p>Returns a costbound for the program.</p>
@@ -2676,8 +2666,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Lexer.html#VALread">read</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
 <tr><td><a href="Readers.html#VALread_atom">read_atom</a> [<a href="Readers.html">Readers</a>]</td>
 <td></td></tr>
 <tr><td><a href="Readers.html#VALread_bound">read_bound</a> [<a href="Readers.html">Readers</a>]</td>
@@ -3543,6 +3531,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="PolyTypes.Monomial.html#VALvars">vars</a> [<a href="PolyTypes.Monomial.html">PolyTypes.Monomial</a>]</td>
+<td></td></tr>
 <tr><td><a href="MPRF_Invariants.Valuation.html#VALvars">vars</a> [<a href="MPRF_Invariants.Valuation.html">MPRF_Invariants.Valuation</a>]</td>
 <td></td></tr>
 <tr><td><a href="LocalSizeBound.html#VALvars">vars</a> [<a href="LocalSizeBound.html">LocalSizeBound</a>]</td>
