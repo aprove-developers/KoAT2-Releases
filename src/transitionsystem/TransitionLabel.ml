@@ -124,12 +124,16 @@ let overapprox_nonlinear_updates t =
               if (Monomial.degree_variable var mon) mod 2 = 0 && Var.equal (VarSet.any vars) var then
                 let var_poly = Polynomial.of_var var in
                 (* check if variable can be zero. drop nonlinear to ensure fast termination of SMT call *)
-                let formula = Formula.mk_and (Formula.mk_eq  var_poly Polynomial.zero) (Formula.mk @@ Guard.drop_nonlinear t.guard) in
+                let formula = Formula.mk_and
+                              (Formula.mk_and  (Formula.mk_lt var_poly (Polynomial.of_int 2))
+                                               (Formula.mk_gt var_poly (Polynomial.of_int (-2))))
+                              (Formula.mk @@ Guard.drop_nonlinear t.guard)
+                in
                 if SMT.Z3Solver.unsatisfiable formula then
-                  (* The update will increase the variable (disregardin factor) *)
+                  (* The update will increase the variable (disregarding factor) *)
                   Guard.mk_and (Guard.mk_gt new_var_poly var_poly) guard, VarMap.add var (Polynomial.mul (Polynomial.of_constant coeff) new_var_poly) update
                 else
-                  (* updated variable will be non-negative (disregardin factor) *)
+                  (* updated variable will be non-negative (disregarding factor) *)
                   Guard.mk_and (Guard.mk_ge new_var_poly Polynomial.zero) guard, VarMap.add var (Polynomial.mul (Polynomial.of_constant coeff) new_var_poly) update
               else
                 guard, VarMap.add var new_var_poly update
