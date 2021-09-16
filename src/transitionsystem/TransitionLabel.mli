@@ -57,7 +57,7 @@ val id : t -> int
 (** Returns the update of a variable. *)
 val update : t -> Var.t -> polynomial Option.t
 
-(** Overapproximates nonlinear updates by nondeterministic updates. Usefull for Farkas lemma *)
+(** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
 val overapprox_nonlinear_updates : t -> t
 
 (** Returns the update map of the transitionlabel *)
