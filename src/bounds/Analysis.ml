@@ -108,9 +108,12 @@ let rec knowledge_propagation (scc: TransitionSet.t) measure program appr =
           |> Bound.sum
         in
         let original_bound = get_bound measure appr transition in
-        if Bound.compare_asy original_bound new_bound = 1 then
+        if Bound.compare_asy original_bound new_bound = 1 then (
+          ProofOutput.add_str_paragraph_to_proof (fun () ->
+            "knowledge_propagation leads to new time bound "^Bound.to_string new_bound^" for transition "^Transition.to_string transition
+          );
           add_bound measure new_bound transition appr
-          |> MaybeChanged.changed
+          |> MaybeChanged.changed)
         else
            MaybeChanged.same appr
       )) appr
@@ -189,7 +192,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
       if Option.is_some opt then (
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
         (* temporary disable proof output here. This improves readability of the proof and omits confiusing proof output when CFR is not applied*)
-        let proof_setting = ProofOutput.is_computing_proof in
+        let proof_setting = ProofOutput.is_computing_proof () in
         ProofOutput.compute_proof false;
         let program_cfr = preprocess program_cfr in
         ProofOutput.compute_proof proof_setting;
