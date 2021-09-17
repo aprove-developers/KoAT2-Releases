@@ -2,7 +2,7 @@
 
 (** Settings *)
 val compute_proof: bool -> unit
-val is_computing_proof: bool
+val is_computing_proof: unit -> bool
 val proof_format: Formatter.format -> unit
 
 val add_to_proof: (unit -> FormattedString.t) -> unit
