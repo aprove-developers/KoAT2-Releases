@@ -1,5 +1,5 @@
-# KoatReimplementation with Controlflow - Refinement
-Reimplementation of KoAT.
+# KoAT2
+Reimplementation of KoAT with control-flow refinement and multiphase ranking functions.
 
 ## Build
 
