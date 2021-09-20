@@ -190,12 +190,9 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
                                                   ; "time", string_of_float time]);
           CFR.apply_cfr non_linear_transitions !already_used_cfr program appr in
       if Option.is_some opt then (
+        ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "Analysing control-flow refined program");
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
-        (* temporary disable proof output here. This improves readability of the proof and omits confiusing proof output when CFR is not applied*)
-        let proof_setting = ProofOutput.is_computing_proof () in
-        ProofOutput.compute_proof false;
         let program_cfr = preprocess program_cfr in
-        ProofOutput.compute_proof proof_setting;
         already_used_cfr := already_used_cfr_upd;
         Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
         Program.reset_pre_cache ();
@@ -221,6 +218,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
                                   (fun scc -> Bound.sum (Enum.map (fun t -> Approximation.timebound updated_appr_cfr t) (TransitionSet.enum scc)))
                                   (List.enum cfr_sccs))  in
         if (Bound.compare_asy org_bound cfr_bound) < 1 then (
+          ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "CFR did not improve the program. Rolling back");
           LocalSizeBound.reset_cfr();
           Program.reset_pre_cache ();
           Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED",
