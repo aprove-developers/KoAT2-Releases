@@ -57,6 +57,9 @@ KoAT2 makes use of the following external tools and libraries.
 - [ppx_getenv](<https://github.com/ocaml-ppx/ppx_getenv>)
 - [Z3](https://github.com/Z3Prover/z3)
 
+## External Tools
+To generate an image of the graph of an integer program, KoAT2 invokes [Graphviz](https://graphviz.org/), which has to be manually installed on the system. Note that when building the Docker image, the current alpine binaries of [Graphviz](https://graphviz.org/) are installed. Thus, the resulting image already contains [Graphviz](https://graphviz.org/). 
+
 ## Input Format
 
 To analyze programs with KoAT2, they need to be represented as *Integer Transition Systems*.
