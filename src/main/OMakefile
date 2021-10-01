@@ -1,4 +1,5 @@
 OCAMLPACKS[] =
+    async
     batteries
     apron
     apron.octD
