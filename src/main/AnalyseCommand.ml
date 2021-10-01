@@ -60,7 +60,7 @@ type params = {
     show_proof: bool;
     (** Displays the complexity proof. *)
 
-    proof_format: Formatter.format; [@enum [Formatter.Html; Formatter.Markdown; Formatter.Plain] |> List.map (fun f -> Formatter.format_to_string f, f)] [@default Formatter.Plain]
+    proof_format: Formatter.format; [@enum [Formatter.Html; Formatter.Markdown; Formatter.Plain] |> List.map (fun f -> Formatter.format_to_string f, f)] [@default Formatter.Markdown]
     (** What should be the output format of the proof. html, markdown, or plain? *)
 
     logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default Logging.all] [@sep ','] [@aka ["l"]]
@@ -157,9 +157,23 @@ let program_to_formatted_string prog = function
   | Formatter.Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html GraphPrint.TransitionMap.empty prog)
   | _ -> FormattedString.Empty
 
+let test () = 
+  let d1 = 
+ (* timeout after 3 seconds *) 
+    Async.(Clock.after Core.(sec 3.) >>= (fun () -> Deferred.return 3));
+  in
+  let d2 =
+    Async.(Clock.after Core.(sec 5.) >>= (fun () -> Deferred.return 5));
+  in
+  let l = [d1; d2] in
+  let any = Async.Deferred.any l in ()
 
 (** Runs KoAT2 on provided parameters. *)
 let run (params: params) =
+  test ();
+  let () = Async.(Core.never_returns (Scheduler.go ())) in
+  (* let value = Async.Deferred.value_exn any in *)
+  (* Printf.printf "%i\n" value; *)
   Timeout.start_time_of_koat2 := Unix.gettimeofday();
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
