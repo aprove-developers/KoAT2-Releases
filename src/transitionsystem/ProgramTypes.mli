@@ -53,6 +53,8 @@ sig
   (** Generates a hash value for a transition. *)
   val hash : t -> int
 
+  val overapprox_nonlinear_updates: t -> t
+
   (** Returns a string of the form id: src -> target. *)
   val to_id_string : t -> string
 

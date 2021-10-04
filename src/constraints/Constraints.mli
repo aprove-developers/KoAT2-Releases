@@ -37,7 +37,7 @@ sig
   (** TODO doc *)
   val max_of_occurring_constants : t -> OurInt.t
 
-    val remove_strict : t -> t
+  val remove_strict : t -> t
 
   val simplify : t -> t
 

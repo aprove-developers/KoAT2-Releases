@@ -60,7 +60,7 @@ type params = {
     show_proof: bool;
     (** Displays the complexity proof. *)
 
-    proof_format: Formatter.format; [@enum [Formatter.Html; Formatter.Markdown; Formatter.Plain] |> List.map (fun f -> Formatter.format_to_string f, f)] [@default Formatter.Markdown]
+    proof_format: Formatter.format; [@enum [Formatter.Html; Formatter.Markdown; Formatter.Plain] |> List.map (fun f -> Formatter.format_to_string f, f)] [@default Formatter.Plain]
     (** What should be the output format of the proof. html, markdown, or plain? *)
 
     logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default Logging.all] [@sep ','] [@aka ["l"]]
@@ -157,50 +157,13 @@ let program_to_formatted_string prog = function
   | Formatter.Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html GraphPrint.TransitionMap.empty prog)
   | _ -> FormattedString.Empty
 
-(* let (r,w) = Pipe.create ()
-
-let test () = 
-  let d1 = 
- (* timeout after 3 seconds *) 
-    (Clock.after Core.(sec 3.) >>= (fun () -> Deferred.return 3));
-  in
-  let d2 =
-    (Clock.after Core.(sec 5.) >>= (fun () -> Deferred.return 5));
-  in
-  let l = [d1; d2] in
-  let any = Deferred.any l in 
-  let x = Pipe.write w any in
-  Pipe.read r *)
-
-(* open Async
-
-let output s = printf "%s\n" s
-
-let async () = 
-  let _ = output "A" in
-  let d0 = Deferred.any [Clock.after Core.(sec 7.) >>= (fun _ -> Deferred.return 7); Clock.after Core.(sec 2.) >>= (fun _ -> Deferred.return 7)] in
-  let _  = upon d0 (fun _ -> output "B") in
-  ignore (Core.never_returns (Scheduler.go ()));
-  Deferred.value_exn d0 *)
-
-open Lwt
-
-let output s = Lwt_io.printf "%s\n" s 
-
-let async () =
-  let _ = output "A" in
-  Lwt.pick [Lwt_unix.sleep 2.0 >>= (fun () -> Lwt.return 2); Lwt_unix.sleep 1.0 >>= (fun () -> Lwt.return 1)]
-
 
 (** Runs KoAT2 on provided parameters. *)
 let run (params: params) =
-  let i = Lwt_main.run (async ()) in
-  Printf.printf "%i\n" i;
-  (* let i = Lwt_main.run(async ()); *)
   Timeout.start_time_of_koat2 := Unix.gettimeofday();
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
-  let input = Option.default_delayed Batteries.read_line params.input in
+  let input = Option.default_delayed read_line params.input in
   let preprocess = Preprocessor.process params.preprocessing_strategy params.preprocessors in
   let input_filename =
     if params.simple_input then

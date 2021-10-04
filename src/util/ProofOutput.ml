@@ -7,6 +7,8 @@ let compute = ref false
 let format = ref Plain
 let proof = ref Empty
 
+let is_computing_proof () = !compute
+
 let compute_proof b = compute := b
 
 let proof_format f = format := f

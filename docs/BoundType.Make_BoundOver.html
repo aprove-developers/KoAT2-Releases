@@ -1,0 +1,417 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="Up" href="BoundType.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="AnalyseCommand" rel="Chapter" href="AnalyseCommand.html">
+<link title="Analysis" rel="Chapter" href="Analysis.html">
+<link title="Approximation" rel="Chapter" href="Approximation.html">
+<link title="ApproximationModules" rel="Chapter" href="ApproximationModules.html">
+<link title="Atoms" rel="Chapter" href="Atoms.html">
+<link title="BoundType" rel="Chapter" href="BoundType.html">
+<link title="Bounds" rel="Chapter" href="Bounds.html">
+<link title="BoundsInst" rel="Chapter" href="BoundsInst.html">
+<link title="CFR" rel="Chapter" href="CFR.html">
+<link title="Chaining" rel="Chapter" href="Chaining.html">
+<link title="ConstraintTypes" rel="Chapter" href="ConstraintTypes.html">
+<link title="Constraints" rel="Chapter" href="Constraints.html">
+<link title="CostBounds" rel="Chapter" href="CostBounds.html">
+<link title="CutUnreachableLocations" rel="Chapter" href="CutUnreachableLocations.html">
+<link title="CutUnsatisfiableTransitions" rel="Chapter" href="CutUnsatisfiableTransitions.html">
+<link title="EliminateNonContributors" rel="Chapter" href="EliminateNonContributors.html">
+<link title="FormatMonad" rel="Chapter" href="FormatMonad.html">
+<link title="FormattedString" rel="Chapter" href="FormattedString.html">
+<link title="Formatter" rel="Chapter" href="Formatter.html">
+<link title="Formulas" rel="Chapter" href="Formulas.html">
+<link title="Goal" rel="Chapter" href="Goal.html">
+<link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
+<link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
+<link title="ListMonad" rel="Chapter" href="ListMonad.html">
+<link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
+<link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
+<link title="Logging" rel="Chapter" href="Logging.html">
+<link title="MPRF_Coefficient" rel="Chapter" href="MPRF_Coefficient.html">
+<link title="MPRF_Invariants" rel="Chapter" href="MPRF_Invariants.html">
+<link title="Main" rel="Chapter" href="Main.html">
+<link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
+<link title="Monad" rel="Chapter" href="Monad.html">
+<link title="Monomials" rel="Chapter" href="Monomials.html">
+<link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
+<link title="Normalise" rel="Chapter" href="Normalise.html">
+<link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
+<link title="OptionMonad" rel="Chapter" href="OptionMonad.html">
+<link title="OurFloat" rel="Chapter" href="OurFloat.html">
+<link title="OurInt" rel="Chapter" href="OurInt.html">
+<link title="OurNum" rel="Chapter" href="OurNum.html">
+<link title="OurRational" rel="Chapter" href="OurRational.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
+<link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
+<link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
+<link title="Polynomials" rel="Chapter" href="Polynomials.html">
+<link title="Preprocessor" rel="Chapter" href="Preprocessor.html">
+<link title="PrfCommand" rel="Chapter" href="PrfCommand.html">
+<link title="Program" rel="Chapter" href="Program.html">
+<link title="ProgramTypes" rel="Chapter" href="ProgramTypes.html">
+<link title="ProofOutput" rel="Chapter" href="ProofOutput.html">
+<link title="RVGTypes" rel="Chapter" href="RVGTypes.html">
+<link title="Readers" rel="Chapter" href="Readers.html">
+<link title="RenameMap" rel="Chapter" href="RenameMap.html">
+<link title="SMT" rel="Chapter" href="SMT.html">
+<link title="SMTCommand" rel="Chapter" href="SMTCommand.html">
+<link title="ScaledMonomials" rel="Chapter" href="ScaledMonomials.html">
+<link title="SizeApproximationType" rel="Chapter" href="SizeApproximationType.html">
+<link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
+<link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
+<link title="TWN" rel="Chapter" href="TWN.html">
+<link title="Timeout" rel="Chapter" href="Timeout.html">
+<link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
+<link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
+<link title="TransitionTable" rel="Chapter" href="TransitionTable.html">
+<link title="TrivialSizeBounds" rel="Chapter" href="TrivialSizeBounds.html">
+<link title="TrivialTimeBounds" rel="Chapter" href="TrivialTimeBounds.html">
+<link title="Util" rel="Chapter" href="Util.html">
+<link title="Valuation" rel="Chapter" href="Valuation.html">
+<link title="Var" rel="Chapter" href="Var.html">
+<link title="VarSet" rel="Chapter" href="VarSet.html"><link title=" Following methods are convenience methods for the creation of bounds." rel="Section" href="#1_Followingmethodsareconveniencemethodsforthecreationofbounds">
+<link title=" Following methods can be used to classify the type of the bound. " rel="Section" href="#1_Followingmethodscanbeusedtoclassifythetypeofthebound">
+<title>Koat2 : BoundType.Make_BoundOver</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="BoundType.html" title="BoundType">Up</a>
+&nbsp;</div>
+<h1>Functor <a href="type_BoundType.Make_BoundOver.html">BoundType.Make_BoundOver</a></h1>
+
+<pre><span id="MODULEMake_BoundOver"><span class="keyword">module</span> Make_BoundOver</span>: <div class="sig_block"><code class="code">functor (</code><code class="code">Num</code><code class="code"> : </code><code class="type"><a href="PolyTypes.OurNumber.html">PolyTypes.OurNumber</a></code><code class="code">) -&gt; </code><div class="sig_block"><code class="code">functor (</code><code class="code">Poly</code><code class="code"> : </code><code class="code">sig</code></pre><div class="sig_block">
+<pre><span class="keyword">include</span> PolyTypes.Polynomial</pre>
+
+<pre><span id="VALmax_of_occurring_constants"><span class="keyword">val</span> max_of_occurring_constants</span> : <code class="type">t -> Num.t</code></pre></div><pre><code class="code">end</code><code class="code">) -&gt; </code><code class="code">sig</code> <a href="BoundType.Make_BoundOver.html">..</a> <code class="code">end</code></div></div></pre><div class="info module top">
+<div class="info-desc">
+<p>A MinMaxPolynomial is a polynomial which allows the usage of min and max functions</p>
+</div>
+</div>
+<table border="0" cellpadding="3" width="100%">
+<tr>
+<td align="left" valign="top" width="1%%"><b>Parameters: </b></td>
+<td>
+<table class="paramstable">
+<tr>
+<td align="center" valign="top" width="15%">
+<code>Num</code></td>
+<td align="center" valign="top">:</td>
+<td><code class="type"><a href="PolyTypes.OurNumber.html">PolyTypes.OurNumber</a></code>
+<tr>
+<td align="center" valign="top" width="15%">
+<code>Poly</code></td>
+<td align="center" valign="top">:</td>
+<td><code class="type">sig
+               include <a href="PolyTypes.Polynomial.html">PolyTypes.Polynomial</a> with type value = Num.t
+                                             and type valuation = <a href="Valuation.Make.html">Valuation.Make</a>(Num).t
+                                             and type monomial = <a href="Monomials.Make.html">Monomials.Make</a>(Num).t
+               val max_of_occurring_constants : t -> Num.t
+             end</code>
+</table>
+</td>
+</tr>
+</table>
+<hr width="100%">
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
+
+
+<pre><span id="TYPEbound"><span class="keyword">type</span> <code class="type"></code>bound</span> </pre>
+
+
+<pre><span id="VALprove_finiteness"><span class="keyword">val</span> prove_finiteness</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEbound">bound</a> option</code></pre>
+<pre><span class="keyword">include</span> <a href="PolyTypes.Evaluable.html">PolyTypes.Evaluable</a></pre>
+
+<pre><span class="keyword">include</span> <a href="PolyTypes.PartialOrder.html">PolyTypes.PartialOrder</a></pre>
+<h2 id="1_Followingmethodsareconveniencemethodsforthecreationofbounds"> <div align=left>Following methods are convenience methods for the creation of bounds.</div></h2>
+<pre><span id="VALof_poly"><span class="keyword">val</span> of_poly</span> : <code class="type">Poly.t -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a bound from a polynomial over OutInt.</p>
+</div>
+</div>
+
+<pre><span id="VALof_constant"><span class="keyword">val</span> of_constant</span> : <code class="type">value -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a constant bound from a constant Num.</p>
+</div>
+</div>
+
+<pre><span id="VALof_int"><span class="keyword">val</span> of_int</span> : <code class="type">int -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a constant bound from an integer.</p>
+</div>
+</div>
+
+<pre><span id="VALto_int"><span class="keyword">val</span> to_int</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> int</code></pre><div class="info ">
+<div class="info-desc">
+<p>Transforms a bound into an integer.</p>
+</div>
+</div>
+
+<pre><span id="VALof_var"><span class="keyword">val</span> of_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a bound from a Variable.</p>
+</div>
+</div>
+
+<pre><span id="VALof_var_string"><span class="keyword">val</span> of_var_string</span> : <code class="type">string -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a bound of a string representing a variable.</p>
+</div>
+</div>
+
+<pre><span id="VALinfinity"><span class="keyword">val</span> infinity</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the infinity bound.</p>
+</div>
+</div>
+
+<pre><span id="VALexp"><span class="keyword">val</span> exp</span> : <code class="type">value -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns for a positive integer Num i and a bound b the new bound b^i.</p>
+</div>
+</div>
+
+<pre><span id="VALmax_of_occurring_constants"><span class="keyword">val</span> max_of_occurring_constants</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> Num.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns for a polynomial bound the maximal occuring constant. TODO doc</p>
+</div>
+</div>
+
+<pre><span id="VALis_infinity"><span class="keyword">val</span> is_infinity</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns true iff. a bound is infinite.</p>
+</div>
+</div>
+
+<pre><span id="VALis_finite"><span class="keyword">val</span> is_finite</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns true iff. a bound is finite.</p>
+</div>
+</div>
+
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Creates a string representing the bound by calling <b>show</b> with complexity enabled.</p>
+</div>
+</div>
+
+<pre><span id="VALshow"><span class="keyword">val</span> show</span> : <code class="type">?complexity:bool -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Generates a string from a bound and adds the asymptotic complexity if parameter <i>complexity</i> is not assigned to false.</p>
+</div>
+</div>
+<p>Math functions. Since we can not negate or subtract bounds, these functions form a prober subset of PolyTypes.Math</p>
+
+<pre><span id="VALzero"><span class="keyword">val</span> zero</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns zero element.</p>
+</div>
+</div>
+
+<pre><span id="VALone"><span class="keyword">val</span> one</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns one element.</p>
+</div>
+</div>
+
+<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -><br>       <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns sum of two element.</p>
+</div>
+</div>
+
+<pre><span id="VALmul"><span class="keyword">val</span> mul</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -><br>       <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns product of two element.</p>
+</div>
+</div>
+
+<pre><span id="VALpow"><span class="keyword">val</span> pow</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> int -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns element to the power of some provided integer value.</p>
+</div>
+</div>
+
+<pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> Batteries.Enum.t -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the sum of all enums elements.</p>
+</div>
+</div>
+
+<pre><span id="VALsum_list"><span class="keyword">val</span> sum_list</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> list -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the sum of all list elements.</p>
+</div>
+</div>
+
+<pre><span id="VALproduct"><span class="keyword">val</span> product</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> Batteries.Enum.t -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the product of all enums elements.</p>
+</div>
+</div>
+
+<pre><span id="VAL(+)"><span class="keyword">val</span> (+)</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -><br>       <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Addition of two elements.</p>
+</div>
+</div>
+
+<pre><span id="VAL( * )"><span class="keyword">val</span> ( * )</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -><br>       <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Multiplication of two elements</p>
+</div>
+</div>
+
+<pre><span id="VAL( ** )"><span class="keyword">val</span> ( ** )</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> int -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Raises an element to the power of an integer value.</p>
+</div>
+</div>
+<p>Functions to classify the quality of the bound</p>
+<h2 id="1_Followingmethodscanbeusedtoclassifythetypeofthebound"> <div align=left>Following methods can be used to classify the type of the bound. </div></h2>
+<pre><span id="VALsubstitute"><span class="keyword">val</span> substitute</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -><br>       replacement:<a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -><br>       <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
+        Ignores naming equalities.</p>
+</div>
+</div>
+
+<pre><span id="VALsubstitute_all"><span class="keyword">val</span> substitute_all</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> Batteries.Map.Make(Var).t -><br>       <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
+        Leaves all variables unchanged which are not in the replacement map.</p>
+</div>
+</div>
+
+<pre><span id="VALsubstitute_f"><span class="keyword">val</span> substitute_f</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a>) -><br>       <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.</p>
+</div>
+</div>
+
+<pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">const:(value -> 'b) -><br>       var:(<a href="Var.html#TYPEt">Var.t</a> -> 'b) -><br>       plus:('b -> 'b -> 'b) -><br>       times:('b -> 'b -> 'b) -><br>       exp:(value -> 'b -> 'b) -> inf:'b -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> 'b</code></pre><div class="info ">
+<div class="info-desc">
+<p>Replaces all arithmetical operations by new constructors.</p>
+</div>
+</div>
+
+<pre><span id="VALfold_bound"><span class="keyword">val</span> fold_bound</span> : <code class="type">const:(value -> 'b) -><br>       var:(<a href="Var.html#TYPEt">Var.t</a> -> 'b) -><br>       plus:('b -> 'b -> 'b) -><br>       times:('b -> 'b -> 'b) -><br>       exp:(value -> 'b -> 'b) -> <a href="BoundType.Make_BoundOver.html#TYPEbound">bound</a> -> 'b</code></pre><div class="info ">
+<div class="info-desc">
+<p>Replaces all arithmetical operations by new constructors in finite bounds.</p>
+</div>
+</div>
+
+<pre><code><span id="TYPEcomplexity"><span class="keyword">type</span> <code class="type"></code>complexity</span> = </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcomplexity.Inf"><span class="constructor">Inf</span></span></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Bound is infinite.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcomplexity.Polynomial"><span class="constructor">Polynomial</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Bound is in asymptotic class O(n^i)</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcomplexity.Exponential"><span class="constructor">Exponential</span></span> <span class="keyword">of</span> <code class="type">int</code></code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+<div class="info-desc">
+<p>Bound is in corresponding asymptotic class O(2^2^...^n) where the integer value denotes the amount of powers.</p>
+</div>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+
+<div class="info ">
+<div class="info-desc">
+<p>TODO doc</p>
+</div>
+</div>
+
+
+<pre><span id="VALequal_complexity"><span class="keyword">val</span> equal_complexity</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEcomplexity">complexity</a> -><br>       <a href="BoundType.Make_BoundOver.html#TYPEcomplexity">complexity</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>TODO doc where is this method? Returns true iff. two bounds are equal. Or asym. equal?</p>
+</div>
+</div>
+
+<pre><span id="VALshow_complexity"><span class="keyword">val</span> show_complexity</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEcomplexity">complexity</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns string representing asymptotic complexity class.</p>
+</div>
+</div>
+
+<pre><span id="VALshow_complexity_termcomp"><span class="keyword">val</span> show_complexity_termcomp</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEcomplexity">complexity</a> -> string</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns string representing asymptotic complexity class in the TermComp format.</p>
+</div>
+</div>
+
+<pre><span id="VALasymptotic_complexity"><span class="keyword">val</span> asymptotic_complexity</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEcomplexity">complexity</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns an overapproximation of the asymptotic complexity of the given bound.</p>
+</div>
+</div>
+
+<pre><span id="VALis_linear"><span class="keyword">val</span> is_linear</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns true iff the asymptotic complexity is n^1.</p>
+</div>
+</div>
+
+<pre><span id="VALcompare_asy"><span class="keyword">val</span> compare_asy</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> int</code></pre><div class="info ">
+<div class="info-desc">
+<p>-1 if first bound asy. lower, 0 if both are asym. equal, 1 otherwise</p>
+</div>
+</div>
+
+<pre><span id="VALcoeff_of_var"><span class="keyword">val</span> coeff_of_var</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> value</code></pre><div class="info ">
+<div class="info-desc">
+<p>Needed for Atomizable but not yet implemented.</p>
+</div>
+</div>
+
+<pre><span id="VALof_coeff_list"><span class="keyword">val</span> of_coeff_list</span> : <code class="type">value list -> <a href="Var.html#TYPEt">Var.t</a> list -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Needed for Atomizable but not yet implemented.</p>
+</div>
+</div>
+
+<pre><span id="VALget_constant"><span class="keyword">val</span> get_constant</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> value</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the constant of a bound</p>
+</div>
+</div>
+
+<pre><span id="VALkeep_simpler_bound"><span class="keyword">val</span> keep_simpler_bound</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -><br>       <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre></body></html>
