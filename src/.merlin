@@ -20,4 +20,4 @@ B bounds
 B preprocessors
 B main
 
-PKG async batteries oUnit z3 ocamlgraph fpath apron ppx_deriving ppx_deriving.eq ppx_deriving.ord ppx_deriving.show ppx_deriving_cmdliner ppx_getenv parmap
+PKG lwt_ppx lwt.unix lwt batteries oUnit z3 ocamlgraph fpath apron ppx_deriving ppx_deriving.eq ppx_deriving.ord ppx_deriving.show ppx_deriving_cmdliner ppx_getenv parmap
