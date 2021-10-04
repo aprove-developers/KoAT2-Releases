@@ -119,9 +119,12 @@ let rec knowledge_propagation (scc: TransitionSet.t) measure program appr =
           |> Bound.sum
         in
         let original_bound = get_bound measure appr transition in
-        if Bound.compare_asy original_bound new_bound = 1 then
+        if Bound.compare_asy original_bound new_bound = 1 then (
+          ProofOutput.add_str_paragraph_to_proof (fun () ->
+            "knowledge_propagation leads to new time bound "^Bound.to_string new_bound^" for transition "^Transition.to_string transition
+          );
           add_bound measure new_bound transition appr
-          |> MaybeChanged.changed
+          |> MaybeChanged.changed)
         else
            MaybeChanged.same appr
       )) appr
@@ -144,13 +147,14 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) ~local (scc: Transi
       |> tap (fun scc -> (Logger.log logger Logger.INFO (fun () -> "improve_timebound", ["scc", TransitionSet.to_string scc])))
       |> TransitionSet.filter (not % bounded measure appr)
     in
+    let scc_overapprox_nonlinear = TransitionSet.map Transition.overapprox_nonlinear_updates scc in
     let rankfunc_computation depth =
       let compute_function =
         if fast then
-          MultiphaseRankingFunction.find_scc_fast ~inv:inv measure program scc depth
+          MultiphaseRankingFunction.find_scc_fast ~inv:inv measure program scc_overapprox_nonlinear depth % Transition.overapprox_nonlinear_updates
         else
-          MultiphaseRankingFunction.find_scc ~inv:inv measure program is_time_bounded get_unbounded_vars scc depth
-      in
+          MultiphaseRankingFunction.find_scc ~inv:inv measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth % Transition.overapprox_nonlinear_updates
+    in
       TransitionSet.to_array unbounded_transitions
       |> Parmap.array_parmap compute_function
       |> Array.enum
@@ -203,6 +207,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
                                                   ; "time", string_of_float time]);
           CFR.apply_cfr non_linear_transitions !already_used_cfr program appr in
       if Option.is_some opt then (
+        ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "Analysing control-flow refined program");
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
         let program_cfr = preprocess program_cfr in
         already_used_cfr := already_used_cfr_upd;
@@ -230,6 +235,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
                                   (fun scc -> Bound.sum (Enum.map (fun t -> Approximation.timebound updated_appr_cfr t) (TransitionSet.enum scc)))
                                   (List.enum cfr_sccs))  in
         if (Bound.compare_asy org_bound cfr_bound) < 1 then (
+          ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "CFR did not improve the program. Rolling back");
           LocalSizeBound.reset_cfr();
           Program.reset_pre_cache ();
           Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED",

@@ -1,4 +1,3 @@
-docs
 *.omc
 .omakedb
 .omakedb.lock
@@ -21,3 +20,4 @@ perf.data*
 
 *.cmt
 *.cmti
+bin/

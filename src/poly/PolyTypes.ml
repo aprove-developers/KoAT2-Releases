@@ -163,6 +163,9 @@ module type Monomial =
     (** Deletes all occurences of the given variable. *)
     val delete_var : Var.t -> t -> t
 
+    (* Get all vars occuring in the monomial*)
+    val vars : t -> VarSet.t
+
     (** Returns if the monomial is of the simplified form x^1 for any variable x. *)
     val is_univariate_linear : t -> bool
 
@@ -409,6 +412,8 @@ module type Polynomial =
 
     (** Returns the scaled monomials of the polynomial without the empty monomial. *)
     val scaled_monomials : t -> scaled_monomial list
+    (** Returns all monomials and their coefficients of the polynomial. *)
+    val monomials_with_coeffs : t -> (value * monomial) list
 
     (** Returns the constant of the polynomial. *)
     val get_constant : t -> value

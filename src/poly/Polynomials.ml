@@ -81,6 +81,11 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       |> List.filter ((<>) Monomial_.one)
 
     let scaled_monomials poly = poly |> simplify
+    
+    let monomials_with_coeffs poly =
+         poly
+      |> simplify
+      |> List.map (fun mon -> ScaledMonomial_.coeff mon, ScaledMonomial_.monomial mon)
 
     let of_monomial mon = lift Value.one mon
 

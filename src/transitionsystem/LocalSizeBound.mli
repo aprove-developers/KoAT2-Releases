@@ -40,8 +40,9 @@ val as_bound : t -> Bound.t
 val option_lsb_as_bound : t option -> Bound.t
 
 (** Tries to find a templated bound of any of the defined templates. The first vars corresponds to
- * the variabels that may occur in the lsb *)
-val find_bound : VarSet.t -> Var.t -> Formula.t -> int -> t option
+ * the variabels that may occur in the lsb.
+ * The bool Lazy.t value indiciates if this lsb is of the equality type *)
+val find_bound : VarSet.t -> Var.t -> Formula.t -> int -> (t * bool Lazy.t) option
 
 (** Returns a local sizebound of the specified kind for the variable of the transition.
     A local sizebound is expressed in relation to the values directly before executing the transition. *)
@@ -51,7 +52,7 @@ val sizebound_local_rv : Program.t -> (Transition.t * Var.t) -> t Option.t
 
 (** If for all result variables of the given kind a local sizebound is defined, this function returns a local sizebound function.
     Otherwise it returns None. *)
-val sizebound_local_scc : Program.t ->  (Transition.t * Var.t) list -> ((Transition.t * Var.t) -> t) Option.t
+val sizebound_local_scc : Program.t ->  (Transition.t * Var.t) list -> ((Transition.t * Var.t) -> t * bool) Option.t
 
 (** Resets all cached data.
     Useful for testing in the same OCaml instance. *)

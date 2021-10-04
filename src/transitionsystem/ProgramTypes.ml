@@ -99,6 +99,8 @@ module Transition =
 
     let rename2 rename_map (l,t,l') =
       (l, (TransitionLabel.rename2 rename_map t),l')
+
+    let overapprox_nonlinear_updates (l,t,l') = l,TransitionLabel.overapprox_nonlinear_updates t,l'
   end
 
 module TransitionSet =
@@ -119,7 +121,7 @@ module TransitionSet =
       |> Enum.map f
       |> of_enum
 
-    let locations t = 
+    let locations t =
       fold (fun (l,_,l') set -> LocationSet.add l set |> LocationSet.add l') t (LocationSet.empty)
 
   end
