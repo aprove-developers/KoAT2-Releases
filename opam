@@ -10,6 +10,8 @@ depends: [
   "batteries"
   "cmdliner"
   "fpath"
+  "lwt"
+  "lwt_ppx"
   "menhir"
   "ocamlgraph"
   "ocamlnet"
