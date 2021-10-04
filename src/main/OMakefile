@@ -1,5 +1,7 @@
 OCAMLPACKS[] =
-    async
+    lwt_ppx
+    lwt.unix
+    lwt
     batteries
     apron
     apron.octD
