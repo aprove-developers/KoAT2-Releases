@@ -135,8 +135,7 @@ let rec knowledge_propagation (scc: TransitionSet.t) measure program appr =
         (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
          execute)
 
-let improve_timebound_computation ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measure program max_depth appr =
-  let local_rank appr = 
+let local_rank ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure program max_depth appr = 
     let get_unbounded_vars transition =
       Program.input_vars program
       |> VarSet.filter (Bound.is_infinity % Approximation.sizebound appr transition)
@@ -170,16 +169,18 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) ~local (scc: Transi
       |? Enum.empty ()
     in
     rankfuncs
-    |> MaybeChanged.fold_enum (fun appr -> improve_with_rank_mprf measure program appr) appr in
+    |> MaybeChanged.fold_enum (fun appr -> improve_with_rank_mprf measure program appr) appr
+
+let improve_timebound_computation ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measure program max_depth appr =
   let locals = 
     (if List.is_empty local || (List.mem `MPRF local) then
-      [local_rank] else []) @
+      [local_rank ~inv ~fast scc measure program max_depth] else []) @
     (if (List.mem `TWN local) then
       [improve_with_twn program scc measure] else []) in
     MaybeChanged.fold_enum (fun appr f -> f appr) appr (List.enum locals)
 
-let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program appr =
-    let execute () = improve_timebound_computation ~inv ~fast scc measure program mprf_max_depth appr in
+let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ~local (scc: TransitionSet.t) measure program appr =
+    let execute () = improve_timebound_computation ~inv ~fast ~local scc measure program mprf_max_depth appr in
     (Logger.with_log logger Logger.INFO
           (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
            execute)
