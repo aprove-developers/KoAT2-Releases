@@ -8,6 +8,9 @@ open Batteries
 (** Module representing the guard. *)
 module Guard = Constraints.Constraint
 
+(** Module representing the invariants. *)
+module Invariant = Constraints.Constraint
+
 (** Type as a short form of our polynomials over [OurInt]. *)
 type polynomial = Polynomials.Polynomial.t
 
@@ -30,6 +33,8 @@ val mk : cost:polynomial ->
          t
 
 val fresh_id : t -> t
+
+val add_invariant : t -> Invariant.t -> t
 
 val normalise : t -> VarSet.t -> t
 
@@ -65,6 +70,12 @@ val update_map : t -> polynomial VarMap.t
 
 (** Returns the guard of the label. *)
 val guard : t -> Guard.t
+
+(** Returns the guard of the label without considering invariants. *)
+val guard_without_inv : t -> Guard.t
+
+(** Returns the invariant. *)
+val invariant : t -> Invariant.t
 
 (** Returns a new transition label with the guard changed. *)
 val map_guard : (Guard.t -> Guard.t) -> t -> t

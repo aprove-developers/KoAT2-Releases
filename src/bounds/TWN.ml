@@ -131,8 +131,8 @@ let termination t =
           let formula_poly = if Atom.is_lt atom 
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly) 
-              (TransitionLabel.guard t) (Formula.mk_true) in
-  (not % SMTSolver.satisfiable) formula
+              (TransitionLabel.guard_without_inv t) (Formula.mk_true) in
+  (not % SMTSolver.satisfiable) (Formula.mk_and formula (Formula.mk (TransitionLabel.invariant t)))
 
 let termination_ t order pe npe varmap = 
   let formula = 
@@ -142,8 +142,8 @@ let termination_ t order pe npe varmap =
           let formula_poly = if Atom.is_lt atom 
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify) 
-              (TransitionLabel.guard t) (Formula.mk_true) in
-  (not % SMTSolver.satisfiable) formula
+              (TransitionLabel.guard_without_inv t) (Formula.mk_true) in
+  (not % SMTSolver.satisfiable) (Formula.mk_and formula (Formula.mk (TransitionLabel.invariant t)))
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string bool]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
             ProofOutput.add_to_proof @@ (fun () ->
@@ -242,7 +242,7 @@ let get_bound t order npe varmap =
             | x::[] -> Bound.zero
             | x::xs -> Bound.add (compute_f (x::xs)) (summand xs) in
             (Bound.add bound ((summand sub_poly_n)), max_const))
-            (TransitionLabel.guard t) (Bound.one, OurInt.zero) in
+            (TransitionLabel.guard_without_inv t) (Bound.one, OurInt.zero) in
             Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", (OurInt.to_string max_con)]);
   Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
   |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
@@ -325,7 +325,7 @@ let time_bound (l,t,l') scc program appr =
   if Option.is_none opt then (
     ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:")));
   let bound = 
-  Timeout.timed_run 20. ~action:(fun () -> ()) (fun () -> 
+  Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
     (* let twn_scc = TransitionSet.filter check_twn scc in *)
     let graph = getTransitionGraph scc in
     let path, _ = DjikstraTransitionGraph.shortest_path graph l' l in
