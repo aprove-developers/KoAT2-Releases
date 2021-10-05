@@ -53,7 +53,7 @@ module Transition =
       compare TransitionLabel.compare_equivalent
 
     let add_invariant invariant (l,t,l') =
-      (l, TransitionLabel.map_guard (Constraint.mk_and invariant) t, l')
+      (l, TransitionLabel.add_invariant t invariant, l')
 
     let src (src, _, _) = src
 

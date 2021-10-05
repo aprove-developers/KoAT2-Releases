@@ -3,6 +3,7 @@ open Polynomials
 open Formulas
 
 module Guard = Constraints.Constraint
+module Invariant = Constraints.Constraint
 type polynomial = Polynomial.t
 module VarMap = Map.Make(Var)
 
@@ -12,6 +13,7 @@ type t = {
     id : int;
     update : Polynomial.t VarMap.t;
     guard : Guard.t;
+    invariant :Invariant.t;
     cost : Polynomial.t;
   }
 
@@ -20,15 +22,20 @@ let one = Polynomial.one
 let make ~cost ~update ~guard =
   {
     id = unique ();
-    update; guard; cost;
+    update; guard; 
+    invariant = Invariant.mk_true;
+    cost;
   }
 
 let fresh_id t = {
     id = unique ();
     update = t.update;
     guard = t.guard;
+    invariant = t.invariant;
     cost = t.cost;
   }
+
+let add_invariant t invariant' = {t with invariant = invariant'}
 
 let trival variables =
   let var_map =
@@ -41,6 +48,7 @@ let same lbl1 lbl2 =
 let equivalent lbl1 lbl2 =
   VarMap.equal Polynomial.equal lbl1.update lbl2.update
   && Guard.equal lbl1.guard lbl2.guard
+  && Invariant.equal lbl1.invariant lbl2.invariant
   && Polynomial.equal lbl1.cost lbl2.cost
 
 let compare_same lbl1 lbl2 =
@@ -51,6 +59,8 @@ let compare_equivalent lbl1 lbl2 =
     VarMap.compare Polynomial.compare lbl1.update lbl2.update
   else if Guard.compare lbl1.guard lbl2.guard != 0 then
     Guard.compare lbl1.guard lbl2.guard
+  else if Invariant.compare lbl1.invariant lbl2.invariant != 0 then
+    Invariant.compare lbl1.invariant lbl2.invariant
   else if Polynomial.compare lbl1.cost lbl2.cost != 0 then
     Polynomial.compare lbl1.cost lbl2.cost
   else
@@ -73,7 +83,9 @@ let mk ~cost ~assignments ~patterns ~guard ~vars =
   |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
   |> Enum.fold (fun map adder -> adder map) VarMap.empty
   |> fun update -> { id = unique ();
-                     update; guard; cost;}
+                     update; guard; 
+                     invariant = Invariant.mk_true; 
+                     cost;}
 
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
@@ -94,12 +106,15 @@ let append t1 t2 =
     VarMap.map (Polynomial.substitute_f (substitution t1.update)) t2.update
   and new_guard =
     Guard.Infix.(t1.guard && Guard.map_polynomial (Polynomial.substitute_f (substitution t1.update)) t2.guard)
+  and new_invariant =
+    Invariant.Infix.(t1.invariant && Invariant.map_polynomial (Polynomial.substitute_f (substitution t1.update)) t2.invariant)
   and updated_cost = Polynomial.substitute_f (substitution t1.update) t2.cost
   in
   {
     id = unique ();
     update = new_update;
     guard = new_guard;
+    invariant = new_invariant;
     cost = Polynomial.(t1.cost + updated_cost);
   }
 
@@ -145,17 +160,22 @@ let overapprox_nonlinear_updates t =
   let (guard',update') = VarMap.fold overapprox_poly t.update (t.guard, t.update) in
   {t with guard = guard'; update = update'}
 
-let guard t = t.guard
+let guard t = Guard.mk_and t.guard t.invariant
+
+let guard_without_inv t = t.guard
+
+let invariant t = t.invariant
 
 let map_guard f label =
   { label with guard = f label.guard }
 
 let cost t = t.cost
 
-let vars_ {update; guard; cost; _} =
+let vars_ {update; guard; invariant; cost; _} =
   VarMap.fold (fun _ -> VarSet.union % Polynomial.vars) update VarSet.empty
   |> (VarSet.union % VarSet.of_enum % VarMap.keys) update
   |> (VarSet.union % Guard.vars) guard
+  |> (VarSet.union % Invariant.vars) invariant
   |> (VarSet.union % Polynomial.vars) cost
 
 (* TODO May invalidate through invariant generation! *)
@@ -168,6 +188,7 @@ let default = {
     id = 0;
     update = VarMap.empty;
     guard = Guard.mk_true;
+    invariant = Invariant.mk_true;
     cost = one;
   }
 
@@ -192,10 +213,10 @@ let guard_to_string ?(to_file = false) label =
   if
     Guard.is_true label.guard then ""
   else
-    Guard.to_string ~to_file label.guard
+    Guard.to_string ~to_file (Guard.mk_and label.guard label.invariant)
 
 let to_string label =
-  let guard = if Guard.is_true label.guard then "" else "\n" ^ Guard.to_string ~comp:"&le;" ~conj:"&and;" label.guard in
+  let guard = if Guard.is_true (Guard.mk_and label.guard label.invariant) then "" else "\n" ^ Guard.to_string ~comp:"&le;" ~conj:"&and;" (Guard.mk_and label.guard label.invariant) in
   let cost = if Polynomial.is_one label.cost then "" else Polynomial.to_string label.cost ^ "&euro;" ^ ", " in
   "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ update_to_string label.update ^ guard
 
@@ -205,6 +226,7 @@ let normalise t (input_vars:VarSet.t) = {
                                             then fold_update
                                             else VarMap.add var (Polynomial.of_var var) fold_update) input_vars t.update;
     guard = t.guard;
+    invariant = t.invariant;
     cost = t.cost;
   }
 
@@ -270,6 +292,7 @@ let rename_temp_vars t temp_vars =
     id = t.id;
     update = rename_update t.update rename_map;
     guard = Guard.rename t.guard rename_map;
+    invariant = Invariant.rename t.invariant rename_map;
     cost = Polynomial.rename rename_map t.cost;
   }
   |> tap (fun _ -> Hashtbl.clear vars_memoization)
@@ -281,6 +304,7 @@ let rename standard_vars t =
     id = t.id;
     update = rename_update t.update rename_map;
     guard = Guard.rename t.guard rename_map;
+    invariant = Invariant.rename t.invariant rename_map;
     cost = Polynomial.rename rename_map t.cost;
   }
 
@@ -290,6 +314,7 @@ let rename2 rename_map t =
     id = t.id;
     update = rename_update t.update rename_map;
     guard = Guard.rename t.guard rename_map;
+    invariant = Invariant.rename t.invariant rename_map;
     cost = Polynomial.rename rename_map t.cost;
   }
 
@@ -299,5 +324,6 @@ let remove_non_contributors non_contributors t =
     id = unique ();
     update = update_;
     guard = t.guard;
+    invariant = t.invariant;
     cost = t.cost;
     }
