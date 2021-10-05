@@ -170,22 +170,26 @@ let local_rank ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure program
     rankfuncs
     |> MaybeChanged.fold_enum (fun appr -> improve_with_rank_mprf measure program appr) appr
 
-let never_ready () = 
-  let (p,_) = Lwt.wait () in
-  p
-
 let lwt_parallel ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measure program max_depth appr = 
   if List.is_empty local || (List.mem `MPRF local && List.length local == 1) then
-      Lwt.return (local_rank ~inv ~fast scc measure program max_depth appr)
+    Lwt.both 
+      (Lwt.return (local_rank ~inv ~fast scc measure program max_depth appr))
+      (Lwt.return (MaybeChanged.same appr))
   else if (List.mem `TWN local && List.length local == 1) then
-      Lwt.return (improve_with_twn program scc measure appr)
-  else Lwt.pick ([
-    let result_rf = (local_rank ~inv ~fast scc measure program max_depth appr) in
-     if MaybeChanged.has_changed result_rf then Lwt.return result_rf else Lwt.return result_rf] @ [Lwt.return (improve_with_twn program scc measure appr)])
+    Lwt.both 
+      (Lwt.return (MaybeChanged.same appr))
+      (Lwt.return (improve_with_twn program scc measure appr)) 
+  else 
+    Lwt.both 
+      (Lwt.return (local_rank ~inv ~fast scc measure program max_depth appr))
+      (Lwt.return (improve_with_twn program scc measure appr))
+    
     
 
 let improve_timebound_computation ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measure program max_depth appr =
-  Lwt_main.run (lwt_parallel ~inv ~fast ~local scc measure program max_depth appr)
+  let (x,y) = Lwt_main.run (lwt_parallel ~inv ~fast ~local scc measure program max_depth appr) in
+  if MaybeChanged.has_changed x then x else y
+
 
 let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ~local (scc: TransitionSet.t) measure program appr =
     let execute () = improve_timebound_computation ~inv ~fast ~local scc measure program mprf_max_depth appr in
