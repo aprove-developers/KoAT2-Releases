@@ -251,38 +251,30 @@ let check_twn (l,t,l') =
     (check_weakly_monotonicity t) && ((List.length (check_triangular t)) == (VarSet.cardinal ((TransitionLabel.input_vars t))))
 
 let complexity t = 
-  if not (VarSet.is_empty (VarSet.diff (TransitionLabel.vars t) (TransitionLabel.input_vars t))) then
-    Bound.infinity  (* TV Non-det. is not allowed *)
-  else 
     let order = check_triangular t in
-    if (List.length order) != (VarSet.cardinal ((TransitionLabel.input_vars t))) then
-      Bound.infinity (* Not triangular *)
-    else if not (check_weakly_monotonicity t) then
-      Bound.infinity (* Not weakly monotonic *)
-    else (
-      let t_, was_negative =
-        if (check_weakly_negativitiy t) then
-          chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
-        else t, false in
-      Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-      ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string (List.enum order))));
-      let pe = PE.compute_closed_form (List.map (fun var -> 
-          let update_var = TransitionLabel.update t_ var in
-          (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
-          Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
-          ProofOutput.add_to_proof @@ (fun () -> 
-            FormattedString.(mk_str_line "closed-form:" <> (
-            (List.combine (List.map Var.to_string order) (List.map PE.to_string pe))
-            |> List.map (fun (a,b) -> a ^ ": " ^ b) 
-            |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)) |> FormattedString.mk_paragraph);
-      let npe = PE.normalize pe in
-          Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
-      let varmap = Hashtbl.of_list (List.combine order npe) in
-      let terminating = termination_ t_ order pe npe varmap in
-      if not terminating then 
-        Bound.infinity
-      else 
-        let f = get_bound t_ order npe varmap in if was_negative then Bound.(add (add f f) one) else f)
+    let t_, was_negative =
+      if (check_weakly_negativitiy t) then
+        chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
+      else t, false in
+    Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
+    ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string (List.enum order))));
+    let pe = PE.compute_closed_form (List.map (fun var -> 
+        let update_var = TransitionLabel.update t_ var in
+        (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
+        Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
+        ProofOutput.add_to_proof @@ (fun () -> 
+          FormattedString.(mk_str_line "closed-form:" <> (
+          (List.combine (List.map Var.to_string order) (List.map PE.to_string pe))
+          |> List.map (fun (a,b) -> a ^ ": " ^ b) 
+          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)) |> FormattedString.mk_paragraph);
+    let npe = PE.normalize pe in
+        Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
+    let varmap = Hashtbl.of_list (List.combine order npe) in
+    let terminating = termination_ t_ order pe npe varmap in
+    if not terminating then 
+      Bound.infinity
+    else 
+      let f = get_bound t_ order npe varmap in if was_negative then Bound.(add (add f f) one) else f
 
 (* Cycles and corresponding time-bound. *)
 
@@ -294,6 +286,19 @@ let getTransitionGraph (trans: TransitionSet.t)  =
         transition
         |> TransitionGraph.add_edge_e graph) trans
 
+
+type path = Transition.t list
+
+let rec cycles trans l0 (paths: (path * LocationSet.t) list) (res: path list) =
+  if List.is_empty paths then res
+  else 
+    let (path, loc_done) = List.first paths in
+    let path_trans = TransitionSet.filter 
+      (fun (l,t,l') -> let (l_path,_,l_path') = List.first path in Location.equal l l_path' && not (LocationSet.mem l' loc_done)) trans in
+    let cycle_trans = TransitionSet.filter (fun (l,t,l') -> Location.equal l' l0) path_trans in
+    cycles trans l0
+      ((List.tl paths) @ (List.map (fun (l,t,l') -> ((l,t,l')::path, LocationSet.add l loc_done)) ((TransitionSet.diff path_trans cycle_trans) |> TransitionSet.to_list)))
+      res @ (List.map (fun t -> (t::path)|> List.rev) (TransitionSet.to_list cycle_trans))
 
 (* We compute the transitions l->l by contracting a (shifted to start) cycle (l1 ->_t1 l2 ->_t2 ... -> ln ->_tn l1 with the update tn % ... % t_1
 and the guard g1 && g1(t1) && g2(t2 % t1) && .. and cost TODO )  *)
@@ -310,6 +315,20 @@ let rec find l list =
     | [] -> raise Not_found
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
+(* Finds a twn-cycle (we do not (!) check termination here) *)
+let find_cycle program cycles = List.find (fun cycle -> 
+    let entry = Program.entry_transitions logger program cycle in
+    let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entry in
+    List.for_all (fun (entry, t) -> 
+      let eliminated_t = t |> eliminate in
+      not (VarSet.is_empty (TransitionLabel.vars eliminated_t)) (* Are there any variables *)
+       && VarSet.equal (TransitionLabel.vars eliminated_t) (TransitionLabel.input_vars eliminated_t) (* No Temp Vars? *)
+       && let order = check_triangular eliminated_t in (List.length order) == (VarSet.cardinal ((TransitionLabel.input_vars eliminated_t))) (* Triangular?*)
+       && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)) (List.combine entry twn_loops)) cycles
+
+       (* TODO: We should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. *)
+
+
 module TimeBoundTable = Hashtbl.Make(Transition) 
 
 let time_bound_table: (Bound.t * (Transition.t list)) TimeBoundTable.t = TimeBoundTable.create 10
@@ -321,15 +340,13 @@ let insert_sizebounds entry appr bound =
   |> Bound.sum
 
 let time_bound (l,t,l') scc program appr = 
+  try 
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then (
     ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:")));
   let bound = 
   Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
-    (* let twn_scc = TransitionSet.filter check_twn scc in *)
-    let graph = getTransitionGraph scc in
-    let path, _ = DjikstraTransitionGraph.shortest_path graph l' l in
-    let cycle = ((l,t,l')::path) in
+    let cycle = find_cycle program (if Location.equal l l' then [[(l,t,l')]] else (cycles scc l ([([(l,t,l')], (LocationSet.singleton l'))]) [])) in
     ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle))));
     let entry = Program.entry_transitions logger program cycle in
     Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entry))]);
@@ -358,4 +375,6 @@ let time_bound (l,t,l') scc program appr =
     let b, entry = Option.get opt in
     let bound = insert_sizebounds entry appr b in
     bound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
-          |> tap (fun _ -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (bound |> Bound.to_string))))
+          |> tap (fun _ -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (bound |> Bound.to_string)))) 
+    with Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
+    
