@@ -216,7 +216,7 @@ let guard_to_string ?(to_file = false) label =
     Guard.to_string ~to_file (Guard.mk_and label.guard label.invariant)
 
 let to_string label =
-  let guard = if Guard.is_true (Guard.mk_and label.guard label.invariant) then "" else "\n" ^ Guard.to_string ~comp:"&le;" ~conj:"&and;" (Guard.mk_and label.guard label.invariant) in
+  let guard = if Guard.is_true (Guard.mk_and label.guard label.invariant) then "" else "\n" ^ Guard.to_string ~comp:" &le;" ~conj:" && " (Guard.mk_and label.guard label.invariant) in
   let cost = if Polynomial.is_one label.cost then "" else Polynomial.to_string label.cost ^ "&euro;" ^ ", " in
   "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ update_to_string label.update ^ guard
 
