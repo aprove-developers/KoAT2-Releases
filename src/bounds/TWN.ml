@@ -20,8 +20,6 @@ let add_to_proof_graph program cycle entries =
         | _    -> FormattedString.Empty));
   ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle))))
 
-(*TODO Cost*)
-
 (* ELIMINIATE  *)
 
 let depends var label =
@@ -129,6 +127,7 @@ let red_le poly_list =
     | x::xs -> Constraint.(mk_and (mk_eq x Polynomial.zero) (constr xs))  in
     Formula.(mk_or (red_lt poly_list) (poly_list |> constr |> mk))
 
+(* For Testing *)
 let termination t = 
   let order = check_triangular t in
   let pe = PE.compute_closed_form (List.map (fun var -> 
@@ -227,12 +226,13 @@ let compute_f = function
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["alphas", (alphas |> List.enum |> Util.enum_to_string Polynomial.to_string)]);
     let alphas_abs = compute_alpha_abs alphas in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["alphas_abs", Polynomial.to_string alphas_abs]);
-    let base_exp = List.map (fun (_,_,d,b) -> (b,d)) xs in
-    let n_ = compute_N base_exp in
+    let base_exp ys = List.map (fun (_,_,d,b) -> (b,d)) ys in
+    let prefix ys = List.fold_left (fun acc itt -> ((List.hd acc)@[itt])::acc) [[]] ys in
+    let n_ = OurInt.max_list (List.map (fun ys -> compute_N (base_exp ys)) (prefix xs)) in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["N", (OurInt.to_string n_)]);
-    let m_ = compute_M base_exp  in
+    let m_ = OurInt.max_list (List.map (fun ys -> compute_M (base_exp ys)) (prefix xs)) in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["M", (OurInt.to_string m_)]);
-    Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)))
+    Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)) |> add (of_constant OurInt.one))
     |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);
       ProofOutput.add_to_proof @@ (fun () ->
       [ "alphas_abs: " ^ (Polynomial.to_string alphas_abs);
@@ -255,6 +255,7 @@ let get_bound t order npe varmap =
   Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
   |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
 
+(* For Testing *)
 let check_twn (l,t,l') =
     (check_weakly_monotonicity t) && ((List.length (check_triangular t)) == (VarSet.cardinal ((TransitionLabel.input_vars t))))
 
@@ -284,7 +285,8 @@ let complexity t =
     else 
       let f = get_bound t_ order npe varmap in if was_negative then Bound.(add (add f f) one) else f
 
-(* Cycles and corresponding time-bound. *)
+
+(* CYLES and corresponding time-bound. *)
 
 type path = Transition.t list
 
@@ -330,58 +332,54 @@ let find_cycle program cycles = List.find (fun cycle ->
 
 module TimeBoundTable = Hashtbl.Make(Transition) 
 
-let time_bound_table: (Bound.t * (Transition.t list)) TimeBoundTable.t = TimeBoundTable.create 10
+let time_bound_table: (path * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
 
-let insert_sizebounds entry appr bound = 
-  entry
-  |> List.map (fun t -> Bound.substitute_f (Approximation.sizebound appr t) bound)
-  |> List.enum
-  |> Bound.sum
+let lift appr entry bound = 
+  let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
+    Bound.mul (Approximation.timebound appr entry) bound_with_sizebound
 
 let time_bound (l,t,l') scc program appr = 
   try 
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then (
     ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:")));
-  let bound = 
-  Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
-    let cycle = find_cycle program (if Location.equal l l' then [[(l,t,l')]] else (cycles scc l ([([(l,t,l')], (LocationSet.singleton l'))]) [])) in
-    let entries = Program.entry_transitions logger program cycle in
-    add_to_proof_graph program cycle entries;
-    Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
-    let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
-    Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops));
-        ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_str_line "  twn_loops:") <> 
-        (List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops)
-        |> List.map (fun (a,b) -> "entry: " ^ a ^ " results in twn-loop: " ^ b)
-        |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)));
-      List.fold_right (fun (entry, t) b -> 
-          let eliminated_t = t |> eliminate in
-            if VarSet.is_empty (TransitionLabel.vars eliminated_t) then 
-              Bound.infinity 
-            else
-              let bound = complexity eliminated_t in
-              if Bound.is_infinity bound then raise (Non_Terminating (cycle, entries));
-              Bound.(add b (mul (Approximation.timebound appr entry) bound)))
+    let bound = 
+    Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
+      let cycle = find_cycle program (if Location.equal l l' then [[(l,t,l')]] else (cycles scc l ([([(l,t,l')], (LocationSet.singleton l'))]) [])) in
+      let entries = Program.entry_transitions logger program cycle in
+      add_to_proof_graph program cycle entries;
+      Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
+      let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
+      Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops));
+          ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_str_line "  twn_loops:") <> 
+          (List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops)
+          |> List.map (fun (a,b) -> "entry: " ^ a ^ " results in twn-loop: " ^ b)
+          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)));
+        List.map (fun (entry, t)-> 
+            let eliminated_t = t |> eliminate in
+              if VarSet.is_empty (TransitionLabel.vars eliminated_t) then 
+                Bound.infinity 
+              else
+                let bound = complexity eliminated_t in
+                if Bound.is_infinity bound then raise (Non_Terminating (cycle, entries));
+                lift appr entry bound)
         (List.combine entries twn_loops) 
-        Bound.zero
-        |> tap (fun b -> List.iter (fun t -> TimeBoundTable.add time_bound_table t (b, entries)) cycle)
-        |> insert_sizebounds entries appr) in
-    if Option.is_some bound then
-      bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
-      |> tap (fun _ -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string))))
-    else (
-      Logger.log logger Logger.INFO (fun () -> "twn", ["Timeout", Bound.to_string Bound.infinity]);
-      Bound.infinity)
-  ) else 
-    let b, entry = Option.get opt in
-    let bound = insert_sizebounds entry appr b in
-    bound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "time_bound", ["global_bound", Bound.to_string b]))
-          |> tap (fun _ -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (bound |> Bound.to_string)))) 
+        |> Bound.sum_list) in
+      if Option.is_some bound then
+        bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
+        |> tap (fun _ -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string))))
+      else (
+        Logger.log logger Logger.INFO (fun () -> "twn", ["Timeout", Bound.to_string Bound.infinity]);
+        Bound.infinity)
+  )
+  else 
+    let cycle, xs = Option.get opt in
+    let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
+    bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
+                         |> tap (fun b -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (b |> Bound.to_string)))) 
     with 
       | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
       | Non_Terminating (cycle,entries)-> 
         Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]); 
-        List.iter (fun t -> TimeBoundTable.add time_bound_table t (Bound.infinity, entries)) cycle;
+        List.iter (fun t -> TimeBoundTable.add time_bound_table t (cycle, List.map (fun t -> (t, Bound.infinity)) entries)) cycle;
         Bound.infinity
-    
