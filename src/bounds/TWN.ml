@@ -221,7 +221,7 @@ let compute_alpha_abs = function
 
 let compute_f = function
   | [] -> Bound.zero
-  | x::[] -> Bound.zero
+  | x::[] -> Bound.one
   | xs -> 
     let alphas = List.map (Tuple4.second) xs in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["alphas", (alphas |> List.enum |> Util.enum_to_string Polynomial.to_string)]);
@@ -249,11 +249,7 @@ let get_bound t order npe varmap =
           Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
           let max_const = OurInt.max const (PE.max_const sub_poly) in
-          let rec summand = function
-            | [] -> Bound.zero
-            | x::[] -> Bound.zero
-            | x::xs -> Bound.add (compute_f (x::xs)) (summand xs) in
-            (Bound.add bound ((summand sub_poly_n)), max_const))
+            (Bound.add bound ((compute_f sub_poly_n)), max_const))
             (TransitionLabel.guard_without_inv t) (Bound.one, OurInt.zero) in
             Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", (OurInt.to_string max_con)]);
   Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
