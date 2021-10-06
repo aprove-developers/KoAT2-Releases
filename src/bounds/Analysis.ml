@@ -184,12 +184,9 @@ let lwt_parallel ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measur
       (Lwt.return (local_rank ~inv ~fast scc measure program max_depth appr))
       (Lwt.return (improve_with_twn program scc measure appr))
     
-    
-
 let improve_timebound_computation ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measure program max_depth appr =
   let (x,y) = Lwt_main.run (lwt_parallel ~inv ~fast ~local scc measure program max_depth appr) in
-  if MaybeChanged.has_changed x then x else y
-
+  if MaybeChanged.has_changed x || MaybeChanged.has_changed y then MaybeChanged.changed (Approximation.min program (MaybeChanged.unpack x) (MaybeChanged.unpack y)) else x
 
 let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ~local (scc: TransitionSet.t) measure program appr =
     let execute () = improve_timebound_computation ~inv ~fast ~local scc measure program mprf_max_depth appr in
