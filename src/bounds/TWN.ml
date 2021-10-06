@@ -7,8 +7,18 @@ open BoundsInst
 open Constraints
 open PolyExponential
 
-(*TODO *)
+(* PROOF *)
 let logger = Logging.(get Twn)
+
+let add_to_proof_graph program cycle entries =
+  let color_map =
+  List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty 
+  |> List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Red) entries in
+    ProofOutput.add_to_proof_with_format @@ (fun format -> FormattedString.mk_paragraph (
+      match format with
+        | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html color_map program)
+        | _    -> FormattedString.Empty));
+  ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle))))
 
 (*TODO Cost*)
 
@@ -340,8 +350,8 @@ let time_bound (l,t,l') scc program appr =
   let bound = 
   Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
     let cycle = find_cycle program (if Location.equal l l' then [[(l,t,l')]] else (cycles scc l ([([(l,t,l')], (LocationSet.singleton l'))]) [])) in
-    ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle))));
     let entries = Program.entry_transitions logger program cycle in
+    add_to_proof_graph program cycle entries;
     Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
     let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
     Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops));
