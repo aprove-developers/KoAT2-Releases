@@ -161,6 +161,9 @@ val is_linear : t -> bool
 (** -1 if first bound asy. lower, 0 if both are asym. equal, 1 otherwise *)
 val compare_asy : t -> t -> int
 
+(** Returns the asy. smaller bound (if both are equal than the first argument)*)
+val min_asy : t -> t -> t
+
 (** Needed for Atomizable but not yet implemented. *)
 val coeff_of_var : Var.t -> t -> value
 

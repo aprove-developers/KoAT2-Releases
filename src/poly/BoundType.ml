@@ -129,6 +129,9 @@ let compare_asy b1 b2 =
   | (_, Exponential y) -> -1
   | (Polynomial x, Polynomial y) -> Int.compare x y
 
+let min_asy b1 b2 =
+  if compare_asy b1 b2 <= 0 then b1 else b2 
+
 (* let is_linear bound =
   let cplx = asymptotic_complexity bound in
     match cplx with
