@@ -172,24 +172,18 @@ let local_rank ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure program
 
 let lwt_parallel ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measure program max_depth appr = 
   if List.is_empty local || (List.mem `MPRF local && List.length local == 1) then
-    Lwt.both 
-      (Lwt.return (local_rank ~inv ~fast scc measure program max_depth appr))
-      (Lwt.return (MaybeChanged.same appr))
+    Lwt_main.run (Lwt.return (local_rank ~inv ~fast scc measure program max_depth appr))
   else if (List.mem `TWN local && List.length local == 1) then
-    Lwt.both 
-      (Lwt.return (MaybeChanged.same appr))
-      (Lwt.return (improve_with_twn program scc measure appr)) 
+    Lwt_main.run  (Lwt.return (improve_with_twn program scc measure appr)) 
   else 
-    Lwt.both 
+    let (x,y) = Lwt_main.run
+      (Lwt.both 
       (Lwt.return (local_rank ~inv ~fast scc measure program max_depth appr))
-      (Lwt.return (improve_with_twn program scc measure appr))
-    
-let improve_timebound_computation ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measure program max_depth appr =
-  let (x,y) = Lwt_main.run (lwt_parallel ~inv ~fast ~local scc measure program max_depth appr) in
-  if MaybeChanged.has_changed x || MaybeChanged.has_changed y then MaybeChanged.changed (Approximation.min program (MaybeChanged.unpack x) (MaybeChanged.unpack y)) else x
+      (Lwt.return (improve_with_twn program scc measure appr))) in
+    if MaybeChanged.has_changed x || MaybeChanged.has_changed y then MaybeChanged.changed (Approximation.min program (MaybeChanged.unpack x) (MaybeChanged.unpack y)) else x
 
 let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ~local (scc: TransitionSet.t) measure program appr =
-    let execute () = improve_timebound_computation ~inv ~fast ~local scc measure program mprf_max_depth appr in
+    let execute () = lwt_parallel ~inv ~fast ~local scc measure program mprf_max_depth appr in
     (Logger.with_log logger Logger.INFO
           (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
            execute)
