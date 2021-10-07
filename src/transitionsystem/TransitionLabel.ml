@@ -325,3 +325,7 @@ let remove_non_contributors non_contributors t =
     invariant = t.invariant;
     cost = t.cost;
     }
+
+(* We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
+let separate_guard_invariant t invariant' = {t with guard = List.filter (fun atom -> List.exists (fun atom_inv -> Atoms.Atom.equal atom atom_inv) invariant' |> not) t.guard;
+                                                    invariant = List.filter (fun atom -> List.exists (fun atom_inv -> Atoms.Atom.equal atom atom_inv) invariant') t.guard}

@@ -118,9 +118,12 @@ val to_id_string : t -> string
 (** TODO doc *)
 val rename : Var.t list -> t -> t
 
-(* Rename temporary variables to identifiers provided by the (possibly infinite) lazy list *)
+(** Rename temporary variables to identifiers provided by the (possibly infinite) lazy list *)
 val rename_temp_vars : t -> Var.t LazyList.t -> t
 
 val rename2 : RenameMap.t -> t -> t
 
 val remove_non_contributors : VarSet.t -> t -> t
+
+(** We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
+val separate_guard_invariant : t -> Invariant.t -> t

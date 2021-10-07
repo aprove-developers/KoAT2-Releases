@@ -214,6 +214,15 @@ let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
                                       |> Approximation.add_timebound timebound trans
                                       |> Approximation.add_costbound costbound trans) unchangend_trans
 
+(* We just output guard && invariant. Hence we need to separate invariants after irankfinder call. *)
+let restore_invariants (program: Program.t) trans = 
+  let org_trans = Program.transitions program in
+  let trans_without_entry = TransitionSet.filter (fun (l,_,_) -> not (Util.contains (Location.to_string l) ("_" ^ (Location.to_string (Program.start program))))) trans in
+  let matching_trans (l,_,l') = TransitionSet.find_first (fun (l_org,_,l'_org) -> Util.contains (Location.to_string l) ("_" ^ (Location.to_string l_org) ^ "__")
+                                                                               && Util.contains (Location.to_string l') ("_" ^ (Location.to_string l'_org) ^ "__")) org_trans in
+  TransitionSet.map (fun (l,t,l') -> let (_,t_org,_) = matching_trans (l,t,l') in (l, TransitionLabel.separate_guard_invariant t (TransitionLabel.invariant t_org), l')) trans_without_entry
+  |> TransitionSet.union (TransitionSet.diff trans trans_without_entry)
+
 let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSet.t) (program: Program.t) appr =
   let initial_location = Program.start program
   and minimalDisjointSCCs = program
@@ -250,6 +259,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
                                                                 Var.to_string var)) (Program.input_vars merged_program |> VarSet.to_list))  in
           let transitions_cfr = program_cfr
           |> Program.transitions
+          |> restore_invariants merged_program
           |> rename_entry_transition entry_locations initial_location
           |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
           |> TransitionSet.map (fun t -> Transition.rename2 map t) in
