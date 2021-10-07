@@ -217,11 +217,13 @@ let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
 (* We just output guard && invariant. Hence we need to separate invariants after irankfinder call. *)
 let restore_invariants (program: Program.t) trans = 
   let org_trans = Program.transitions program in
-  let trans_without_entry = TransitionSet.filter (fun (l,_,_) -> not (Util.contains (Location.to_string l) ("_" ^ (Location.to_string (Program.start program))))) trans in
-  let matching_trans (l,_,l') = TransitionSet.find_first (fun (l_org,_,l'_org) -> Util.contains (Location.to_string l) ("_" ^ (Location.to_string l_org) ^ "__")
-                                                                               && Util.contains (Location.to_string l') ("_" ^ (Location.to_string l'_org) ^ "__")) org_trans in
+  let trans_without_entry = TransitionSet.filter (fun (l,_,_) -> not (String.equal (Location.to_string l) ("n_" ^ (Location.to_string (Program.start program))))) trans in
+  let matching_trans (l,_,l') = TransitionSet.filter (fun (l_org,_,l'_org) -> Util.contains (Location.to_string l) ("n_" ^ (Location.to_string l_org) ^ "__")
+                                                                           && Util.contains (Location.to_string l') ("n_" ^ (Location.to_string l'_org) ^ "__")
+) org_trans |> TransitionSet.any in
   TransitionSet.map (fun (l,t,l') -> let (_,t_org,_) = matching_trans (l,t,l') in (l, TransitionLabel.separate_guard_invariant t (TransitionLabel.invariant t_org), l')) trans_without_entry
   |> TransitionSet.union (TransitionSet.diff trans trans_without_entry)
+
 
 let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSet.t) (program: Program.t) appr =
   let initial_location = Program.start program
