@@ -19,12 +19,10 @@ type t = {
 
 let one = Polynomial.one
 
-let make ~cost ~update ~guard =
+let make ~cost ~update ~guard ~invariant =
   {
     id = unique ();
-    update; guard; 
-    invariant = Invariant.mk_true;
-    cost;
+    update; guard; invariant; cost;
   }
 
 let fresh_id t = {
@@ -35,12 +33,10 @@ let fresh_id t = {
     cost = t.cost;
   }
 
-let add_invariant t invariant' = {t with invariant = invariant'}
-
 let trival variables =
   let var_map =
     VarSet.fold (fun var map -> VarMap.add var (Polynomial.of_var var) map) variables VarMap.empty in
-  make ~cost:Polynomial.one ~update:var_map ~guard:Guard.mk_true
+  make ~cost:Polynomial.one ~update:var_map ~guard:Guard.mk_true ~invariant:Invariant.mk_true
 
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
@@ -166,8 +162,10 @@ let guard_without_inv t = t.guard
 
 let invariant t = t.invariant
 
+let add_invariant t invariant' = {t with invariant = (Invariant.mk_and (t.invariant) invariant');}
+
 let map_guard f label =
-  { label with guard = f label.guard }
+  { label with guard = f label.guard; invariant = f label.invariant}
 
 let cost t = t.cost
 
@@ -211,7 +209,7 @@ let cost_to_string ?(to_file = false) label =
 
 let guard_to_string ?(to_file = false) label =
   if
-    Guard.is_true label.guard then ""
+    Guard.is_true (Guard.mk_and label.guard label.invariant) then ""
   else
     Guard.to_string ~to_file (Guard.mk_and label.guard label.invariant)
 
