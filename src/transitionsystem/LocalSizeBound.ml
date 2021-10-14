@@ -3,6 +3,7 @@ open BoundsInst
 open Formulas
 open Polynomials
 open ProgramTypes
+open Constraints
 
 let logger = Logging.(get LocalSizeBound)
 
@@ -88,15 +89,13 @@ let option_lsb_as_bound = function
 let as_substituted_bound substitution = Bound.substitute_f substitution % as_bound
 
 let is_bounded_with solver update_formula v' t =
-  if Formula.is_linear update_formula then (
-    (* Prove that under formula the bound from validity_as_bound always evaluates to a non-negative value *)
-    Solver.push solver;
-    (* Check if as_bound is always greator or equal than v' *)
-    Solver.add_bound_comparison solver `LT (as_bound t) (Bound.of_var v');
-    let result = Solver.unsatisfiable solver in
-    Solver.pop solver;
-    result
-  ) else false
+  (* Prove that under formula the bound from validity_as_bound always evaluates to a non-negative value *)
+  Solver.push solver;
+  (* Check if as_bound is always greator or equal than v' *)
+  Solver.add_bound_comparison solver `LT (as_bound t) (Bound.of_var v');
+  let result = Solver.unsatisfiable solver in
+  Solver.pop solver;
+  result
 
 let is_of_equality_type t update_formula v' =
   (* Trivially holds for constant lsbs *)
@@ -166,7 +165,12 @@ let compute_bound program_vars (l,t,l') var =
     TransitionLabel.update t var
     |> flip Option.bind (fun ue ->
         let v' = Var.fresh_id Var.Int () in
-        let update_formula = Formula.Infix.(Formula.mk (TransitionLabel.guard t) && Polynomial.of_var v' = ue) in
+        let update_formula =
+          (* Facilitate SMT call by removing non-linear constraints. *)
+          (* The resulting update_formula is an overapproximation of the original formula *)
+          Formula.mk @@ Constraint.drop_nonlinear @@
+            (Constraint.mk_and (TransitionLabel.guard t) (Constraint.mk_eq (Polynomial.of_var v') ue))
+        in
         let update_vars =
           VarSet.union
            (Polynomial.vars ue)
