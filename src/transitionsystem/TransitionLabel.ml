@@ -252,6 +252,29 @@ let update_to_string_rhs ?(to_file = false) t =
       |> Tuple2.second
       |> fun xs -> "("^(String.concat "," xs)^")"
 
+let update_to_string_lhs_index t =
+  let update = t.update in
+    if VarMap.is_empty update then
+      ""
+    else
+      update
+      |> VarMap.bindings
+      |> List.map (fun (var,poly) -> (Var.to_string_index var, (Polynomial.to_string_index poly)))
+      |> List.split
+      |> Tuple2.first
+      |> fun xs -> "("^(String.concat "," xs)^")"
+
+let update_to_string_rhs_index t =
+  let update = t.update in
+    if VarMap.is_empty update then
+      ""
+    else
+      update
+      |> VarMap.bindings
+      |> List.map (fun (var,poly) -> (Var.to_string_index var, (Polynomial.to_string_index poly)))
+      |> List.split
+      |> Tuple2.second
+      |> fun xs -> "("^(String.concat "," xs)^")"
 
 let to_id_string =
   string_of_int % id
