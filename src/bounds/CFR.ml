@@ -214,11 +214,11 @@ let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
                                       |> Approximation.add_timebound timebound trans
                                       |> Approximation.add_costbound costbound trans) unchangend_trans
 
-let apply_cfr scc (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSet.t) (program: Program.t) appr =
+let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSet.t) (program: Program.t) appr =
   let initial_location = Program.start program
-  and minimalDisjointSCCs = SCCSet.singleton scc (*program
+  and minimalDisjointSCCs = program
                             |> (minimalSCCs nonLinearTransitions)
-                            |> minimalDisjointSCCs *)
+                            |> minimalDisjointSCCs
                             in
   if SCCSet.is_empty minimalDisjointSCCs then
     None
