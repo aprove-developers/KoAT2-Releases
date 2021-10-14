@@ -61,6 +61,8 @@ sig
   (** Returns a string representing the transition. Parameter {i to_file} is used to get a representation with less special characters. *)
   val to_string : ?to_file:bool -> t -> string
 
+  val to_string_index : t -> string
+
   (** Returns the source location of a transiton. *)
   val src : t -> Location.t
 

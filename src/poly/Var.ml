@@ -50,6 +50,13 @@ let to_string ?(to_file = false) =
     | Helper (Real,i) -> "Temp_Real_" ^ (String.of_int i)
     | Helper (Int,i) -> "Temp_Int_" ^ (String.of_int i)
     | Argument i -> "Arg_" ^ (String.of_int i)
+
+let to_string_index = function
+  | Var str -> str
+  | Helper (Real,i) -> "Temp_Real" ^ (Util.natural_to_index i)
+  | Helper (Int,i) -> "Temp_Int" ^ (Util.natural_to_index i)
+  | Argument i -> "x" ^ (Util.natural_to_index i)
+
 let counter = ref 0
 
 (* We have special variables which are arguments of the transition system. Counting starts with 0 to be with KoAT *)

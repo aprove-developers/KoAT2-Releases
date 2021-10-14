@@ -197,15 +197,15 @@ let is_initial_location program location =
 
 let to_formatted_string program =
   let transitions =
-    TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string t)]) program.graph []
+    TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string_index t)]) program.graph []
     |> FormattedString.mappend % List.map FormattedString.mk_str_line
   in
   let locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
   FormattedString.format_append (
     [
       "Start:  "^Location.to_string program.start;
-      "Program_Vars:  "^(program |> input_vars |> VarSet.map_to_list Var.to_string |> String.concat ", ");
-      "Temp_Vars:  "^(program |> temp_vars |> VarSet.map_to_list Var.to_string |> String.concat ", ");
+      "Program_Vars:  "^(program |> input_vars |> VarSet.map_to_list Var.to_string_index |> String.concat ", ");
+      "Temp_Vars:  "^(program |> temp_vars |> VarSet.map_to_list Var.to_string_index |> String.concat ", ");
       "Locations:  "^locations;
       "Transitions:";
     ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)

@@ -95,3 +95,12 @@ let measure_total_execution_time () =
     res
   in
   measure_next_execution, get_counter
+
+let index = ["₀";"₁";"₂";"₃";"₄";"₅";"₆";"₇";"₈";"₉"]
+
+exception Negative
+
+let rec natural_to_index = function
+  | n when n < 0 -> raise Negative
+  | n when n < 10 -> List.nth index n
+  | n -> if n / 10 == 0 then "" else natural_to_index (n / 10) ^ (List.nth index (n mod 10)) 

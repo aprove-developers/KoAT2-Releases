@@ -42,3 +42,5 @@ val measure_execution_time : (unit -> 'a) -> 'a
 
 (* Returns a function to measure the execution time of an evaluation, and a function to get the total amount of measured seconds *)
 val measure_total_execution_time : unit -> ((unit -> 'a) -> 'a) * (string -> unit)
+
+val natural_to_index : int -> string
