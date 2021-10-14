@@ -335,6 +335,11 @@ module TimeBoundTable = Hashtbl.Make(Transition)
 let time_bound_table: (path * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
 
 let lift appr entry bound = 
+  ProofOutput.add_to_proof @@ (fun () -> FormattedString.(mk_paragraph (mk_str_line ("relevant size-bounds w.r.t t_" ^ (Transition.id entry |> string_of_int) ^ ":") <> (
+          Bound.vars bound
+          |> VarSet.to_list
+          |> List.map (fun v -> (Var.to_string v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string)) 
+          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend))));
   let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
     Bound.mul (Approximation.timebound appr entry) bound_with_sizebound
 
