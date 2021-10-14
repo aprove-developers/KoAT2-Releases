@@ -188,7 +188,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
           Logger.log logger_cfr Logger.INFO
             (fun () -> "Analysis_apply_cfr", [ "non-linear trans", TransitionSet.to_string non_linear_transitions
                                                   ; "time", string_of_float time]);
-          CFR.apply_cfr scc non_linear_transitions !already_used_cfr program appr in
+          CFR.apply_cfr non_linear_transitions !already_used_cfr program appr in
       if Option.is_some opt then (
         ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "Analysing control-flow refined program");
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
