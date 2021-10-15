@@ -356,10 +356,10 @@ let time_bound (l,t,l') scc program appr =
       Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
       let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
       Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops));
-          ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_str_line "  twn_loops:") <> 
-          (List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops)
-          |> List.map (fun (a,b) -> "entry: " ^ a ^ " results in twn-loop: " ^ b)
-          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)));
+          ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>  
+          (List.combine (List.map Transition.to_string_pretty entries) (List.map (TransitionLabel.to_string ~pretty:true) twn_loops)
+          |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_str_line ("results in twn-loop: " ^ b))
+          |> FormattedString.mappend)));
         List.map (fun (entry, t)-> 
             let eliminated_t = t |> eliminate in
               if VarSet.is_empty (TransitionLabel.vars eliminated_t) then 

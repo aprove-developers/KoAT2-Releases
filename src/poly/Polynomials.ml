@@ -72,7 +72,7 @@ module PolynomialOver(Value : PolyTypes.Ring) =
 
     let to_string poly = to_string_simplified (simplify poly)
 
-    let to_string_index poly = to_string_simplified ~index:true (simplify poly)
+    let to_string_pretty poly = to_string_simplified ~index:true (simplify poly)
 
     let to_string_to_file poly = to_string_simplified ~to_file:true (simplify poly)
 

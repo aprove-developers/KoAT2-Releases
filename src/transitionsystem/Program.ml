@@ -197,7 +197,7 @@ let is_initial_location program location =
 
 let to_formatted_string program =
   let transitions =
-    TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string_index t)]) program.graph []
+    TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string_pretty t)]) program.graph []
     |> FormattedString.mappend % List.map FormattedString.mk_str_line
   in
   let locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in

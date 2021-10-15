@@ -426,7 +426,7 @@ module type Polynomial =
     (** Returns a string representing the polynomial. *)
     val to_string : t -> string
 
-    val to_string_index : t -> string
+    val to_string_pretty : t -> string
 
     (** Returns a string representing polynomial with less special characters. *)
     val to_string_to_file : t -> string

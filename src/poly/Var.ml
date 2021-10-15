@@ -55,7 +55,7 @@ let to_string_index = function
   | Var str -> str
   | Helper (Real,i) -> "Temp_Real" ^ (Util.natural_to_index i)
   | Helper (Int,i) -> "Temp_Int" ^ (Util.natural_to_index i)
-  | Argument i -> "x" ^ (Util.natural_to_index i)
+  | Argument i -> "X" ^ (Util.natural_to_index i)
 
 let counter = ref 0
 

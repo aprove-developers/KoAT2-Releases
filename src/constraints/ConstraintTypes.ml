@@ -102,7 +102,7 @@ module type Atom =
         val neg : t -> t
 
         (** Returns a string representing the atom. Parameter {i to_file} is used to get a representation with less special characters. *)
-        val to_string : ?to_file:bool -> t -> string
+        val to_string : ?to_file:bool -> ?pretty:bool -> t -> string
 
         (** Returns the set of variables which are active in the atom.
             A variable is active, if it's value has an effect on the evaluation of the atom. *)
@@ -220,7 +220,7 @@ module type Constraint =
         val vars : t -> VarSet.t
 
         (** Returns a string representing the constraint. Parameter {i to_file} is used to get a representation with less special characters. *)
-        val to_string : ?to_file:bool -> ?comp:string -> ?conj:string -> t -> string
+        val to_string : ?to_file:bool -> ?pretty:bool -> ?comp:string -> ?conj:string -> t -> string
 
 
         (** {1  {L Following methods manipulate constraints and return the manipulated versions.}} *)
