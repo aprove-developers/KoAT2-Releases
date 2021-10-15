@@ -39,10 +39,10 @@ struct
 
     type t = P.t * compkind [@@deriving eq, ord]
 
-    let comp_to_string =
+    let comp_to_string ?(pretty=false)=
       function
-      | LE -> "<="
-      | LT -> "<"
+      | LE -> if pretty then " ≤ " else "<="
+      | LT -> if pretty then " < " else "<"
 
     (* Helper function *)
     let normalise poly1 poly2 = function
@@ -72,7 +72,7 @@ struct
 
     let neg (poly,comp) = (P.neg poly, comp)
 
-    let to_string ?(to_file=false) (poly,comp) = (P.to_string poly) ^ (comp_to_string comp) ^ "0"
+    let to_string ?(to_file=false) ?(pretty=false) (poly,comp) = (P.to_string poly) ^ (comp_to_string comp) ^ "0"
 
     let vars (poly,_) = P.vars poly
 
@@ -116,12 +116,12 @@ module Atom =
   struct
     include AtomOver(Polynomial)
 
-    let to_string ?(to_file=false) (poly,comp) =
+    let to_string ?(to_file=false) ?(pretty=false) (poly,comp) =
       Polynomial.separate_by_sign poly
       |> (fun (positive, negative) -> (if to_file then (Polynomial.to_string_to_file positive)
-                                       else (Polynomial.to_string positive)) ^ (comp_to_string comp) ^
+                                       else if pretty then Polynomial.to_string_pretty positive else (Polynomial.to_string positive)) ^ (comp_to_string comp ~pretty) ^
                                        (if to_file then (Polynomial.to_string_to_file (Polynomial.neg negative))
-                                       else (Polynomial.to_string (Polynomial.neg negative))))
+                                       else if pretty then Polynomial.to_string_pretty negative else  (Polynomial.to_string (Polynomial.neg negative))))
 
     let max_of_occurring_constants (poly,_) =
       Polynomial.max_of_occurring_constants poly
@@ -155,7 +155,7 @@ module RealAtom =
   struct
     include AtomOver(RealPolynomial)
 
-    let to_string ?(to_file=false) (poly,comp) =
+    let to_string ?(to_file=false) ?(pretty=false) (poly,comp) =
       RealPolynomial.separate_by_sign poly
       |> (fun (positive, negative) -> RealPolynomial.to_string positive ^ (comp_to_string comp) ^ RealPolynomial.to_string (RealPolynomial.neg negative))
 

@@ -207,16 +207,11 @@ let cost_to_string ?(to_file = false) label =
     "{"^(Polynomial.to_string label.cost)^"}"
 
 
-let guard_to_string ?(to_file = false) label =
+let guard_to_string ?(to_file = false) ?(pretty = false) label =
   if
     Guard.is_true (Guard.mk_and label.guard label.invariant) then ""
   else
-    Guard.to_string ~to_file (Guard.mk_and label.guard label.invariant)
-
-let to_string label =
-  let guard = if Guard.is_true (Guard.mk_and label.guard label.invariant) then "" else "\n" ^ Guard.to_string ~comp:" &le;" ~conj:" && " (Guard.mk_and label.guard label.invariant) in
-  let cost = if Polynomial.is_one label.cost then "" else Polynomial.to_string label.cost ^ "&euro;" ^ ", " in
-  "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ update_to_string label.update ^ guard
+    Guard.to_string ~to_file ~pretty ~conj:(if pretty then " ∧ " else " && ") (Guard.mk_and label.guard label.invariant)
 
 let normalise t (input_vars:VarSet.t) = {
     id = t.id;
@@ -252,29 +247,37 @@ let update_to_string_rhs ?(to_file = false) t =
       |> Tuple2.second
       |> fun xs -> "("^(String.concat "," xs)^")"
 
-let update_to_string_lhs_index t =
+let update_to_string_lhs_pretty t =
   let update = t.update in
     if VarMap.is_empty update then
       ""
     else
       update
       |> VarMap.bindings
-      |> List.map (fun (var,poly) -> (Var.to_string_index var, (Polynomial.to_string_index poly)))
+      |> List.map (fun (var,poly) -> (Var.to_string_index var, (Polynomial.to_string_pretty poly)))
       |> List.split
       |> Tuple2.first
       |> fun xs -> "("^(String.concat "," xs)^")"
 
-let update_to_string_rhs_index t =
+let update_to_string_rhs_pretty t =
   let update = t.update in
     if VarMap.is_empty update then
       ""
     else
       update
       |> VarMap.bindings
-      |> List.map (fun (var,poly) -> (Var.to_string_index var, (Polynomial.to_string_index poly)))
+      |> List.map (fun (var,poly) -> (Var.to_string_index var, (Polynomial.to_string_pretty poly)))
       |> List.split
       |> Tuple2.second
       |> fun xs -> "("^(String.concat "," xs)^")"
+
+let to_string ?(pretty = false) label =
+  let guard = if Guard.is_true (Guard.mk_and label.guard label.invariant) then "" else " :|: " ^ guard_to_string ~pretty label in
+  let cost = if Polynomial.is_one label.cost then "" else if pretty then Polynomial.to_string_pretty label.cost else Polynomial.to_string label.cost in
+  if pretty then
+    "t" ^ (Util.natural_to_index label.id) ^ ": " ^ update_to_string_lhs_pretty label ^ " -{" ^ cost ^ "}> "  ^ update_to_string_rhs_pretty label ^ guard
+  else 
+    "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ "&euro;" ^ ", " ^ update_to_string label.update ^ guard
 
 let to_id_string =
   string_of_int % id

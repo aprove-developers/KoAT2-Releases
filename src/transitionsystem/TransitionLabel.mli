@@ -98,7 +98,7 @@ val input_size : t -> int
 val cost : t -> polynomial
 
 (** Returns a string representing the label. *)
-val to_string : t -> string
+val to_string : ?pretty:bool -> t -> string
 
 (** Returns a string representing the left hand side of the update function. Parameter {i to_file} is used to get a representation with less special characters. *)
 val update_to_string_lhs : ?to_file:bool -> t -> string
@@ -106,12 +106,12 @@ val update_to_string_lhs : ?to_file:bool -> t -> string
 (** Returns a string representing the right hand side of the update function. Parameter {i to_file} is used to get a representation with less special characters. *)
 val update_to_string_rhs : ?to_file:bool -> t -> string
 
-val update_to_string_lhs_index : t -> string
+val update_to_string_lhs_pretty : t -> string
 
-val update_to_string_rhs_index : t -> string
+val update_to_string_rhs_pretty : t -> string
 
 (** Returns a string representing the guard. Parameter {i to_file} is used to get a representation with less special characters. *)
-val guard_to_string : ?to_file:bool -> t -> string
+val guard_to_string : ?to_file:bool -> ?pretty:bool -> t -> string
 
 (** Returns a string representing the cost. Parameter {i to_file} is used to get a representation with less special characters. *)
 val cost_to_string : ?to_file:bool -> t -> string

@@ -57,7 +57,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
       |> List.map (A.vars)
       |> List.fold_left VarSet.union VarSet.empty
 
-    let to_string ?(to_file=false) ?(comp=" <= ") ?(conj=" && ") constr = String.concat conj (List.map (A.to_string ~to_file) constr)
+    let to_string ?(to_file=false) ?(pretty=false)  ?(comp=" <= ") ?(conj=" && ") constr = String.concat conj (List.map (A.to_string ~to_file ~pretty) constr)
 
     let rename constr varmapping = List.map (fun atom -> A.rename atom varmapping) constr
 
