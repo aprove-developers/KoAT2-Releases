@@ -9,6 +9,7 @@ type t = Empty
        | NewLine
        | Header of header_size * t
        | Paragraph of t
+       | Block of t
        | SequentialComp of t * t
 
 let (<>) form1 form2 =
@@ -37,6 +38,8 @@ let mk_str_header_small = mk_header_small % mk_str
 
 let mk_paragraph form = Paragraph form
 
+let mk_block form = Block form
+
 type metadata = {
   title: String.t Option.t;
 }
@@ -51,6 +54,7 @@ let render_string =
     | Str s                   -> String.repeat " " indent^s
     | RawStr s                -> s
     | Paragraph f'            -> helper f' ~indent:(indent + 2)^ "\n\n"
+    | Block f'                -> helper f' ~indent:(indent + 2)^ "\n"
     | NewLine                 -> "\n"
     | Header (_,f')           -> helper f' ~indent ^ "\n"
     | SequentialComp (f1, f2) -> helper f1 ~indent ^ helper ~indent f2
