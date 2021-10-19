@@ -61,6 +61,7 @@ let render_html meta f =
     | RawStr s                -> s ^ "\n"
     | Paragraph f''           -> "<p>\n" ^ render_f_only f'' ^ "</p>\n"
     | NewLine                 -> "<br/>\n"
+    | Block f''                   -> "<dd>" ^ render_f_only f'' ^ "</dd>\n"
     | Header (s,f')           ->
         (match s with
         | Big -> "<h3>" ^ render_f_only f' ^ "</h3>\n"
@@ -93,6 +94,7 @@ let rec render_markdown meta f =
 
   | RawStr s       -> s
   | Paragraph f'   -> render_markdown meta f' ^ "\n\n"
+  | Block f'       -> "\t" ^ render_markdown meta f' ^ "\n"
   | NewLine        -> "  \n"
   | Header (s,f')  ->
       (match s with

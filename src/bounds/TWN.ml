@@ -266,16 +266,16 @@ let complexity t =
         chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
       else t, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-    ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string (List.enum order))));
+    ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string_index (List.enum order))));
     let pe = PE.compute_closed_form (List.map (fun var -> 
         let update_var = TransitionLabel.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
         ProofOutput.add_to_proof @@ (fun () -> 
-          FormattedString.(mk_str_line "closed-form:" <> (
-          (List.combine (List.map Var.to_string order) (List.map PE.to_string pe))
+          FormattedString.(mk_str "closed-form:" <> (
+          (List.combine (List.map Var.to_string_index order) (List.map PE.to_string_pretty pe))
           |> List.map (fun (a,b) -> a ^ ": " ^ b) 
-          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)) |> FormattedString.mk_paragraph);
+          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
     let npe = PE.normalize pe in
         Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
     let varmap = Hashtbl.of_list (List.combine order npe) in
@@ -358,7 +358,7 @@ let time_bound (l,t,l') scc program appr =
       Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops));
           ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>  
           (List.combine (List.map Transition.to_string_pretty entries) (List.map (TransitionLabel.to_string ~pretty:true) twn_loops)
-          |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_str_line ("results in twn-loop: " ^ b))
+          |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend)));
         List.map (fun (entry, t)-> 
             let eliminated_t = t |> eliminate in

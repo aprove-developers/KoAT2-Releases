@@ -24,6 +24,8 @@ sig
 
     val to_string : t -> string
 
+    val to_string_pretty : t -> string
+
     val substitute : (Var.t, t) Hashtbl.t -> Polynomial.t -> t
 
     val normalize : t list -> t list

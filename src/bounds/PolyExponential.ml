@@ -15,10 +15,6 @@ module ConstantConstraint = struct
         | EQ -> "=="
         | NEQ -> "!="
 
-        let to_tex = function
-        | EQ -> "="
-        | NEQ -> "\\neq"
-
       end
 
     type atom = (Comparator.t * OurInt.t) [@@deriving eq, ord]
@@ -123,14 +119,6 @@ module ConstantConstraint = struct
                  xs
                  "") ^ "]]"
 
-    let to_tex = function
-    | T -> "\\exacteval{\\true}"
-    | F -> "\\exacteval{\\false}"
-    | C [] -> "\\exacteval{true}"
-    | C ((comp, c)::xs) ->  "\\exacteval{n" ^ (Comparator.to_tex comp) ^ " " ^ (OurInt.to_string c) ^ (List.fold_right (fun (comp, c) str -> ", n" ^ (Comparator.to_tex comp) ^ " " ^ (OurInt.to_string c) ^ str) 
-                 xs
-                 "") ^ "}"
-
     let compare c1 c2 = 
     match (c1, c2) with
     | (T,F) -> -1
@@ -187,17 +175,17 @@ module PE = struct
             |> List.filter (not % ((String.equal) ""))
             |> String.concat " + "
 
-    let to_tex pe = match pe with
+    let to_string_pretty pe = match pe with
     | [] -> "0"
     | xs ->
-        let to_string_cc (c, p, d, b) = if ConstantConstraint.is_true c then (if (d = 0 && b = 1 && RationalPolynomial.is_one p) then "1" else "") else (ConstantConstraint.to_tex c) in
+        let to_string_cc (c, p, d, b) = if ConstantConstraint.is_true c then (if (d = 0 && b = 1 && RationalPolynomial.is_one p) then "1" else "") else (ConstantConstraint.to_string c) in
         let to_string_poly p = if RationalPolynomial.is_one p then "" 
-                                else if (p |> RationalPolynomial.monomials |> List.length |> (<) 1) then  "(" ^ (RationalPolynomial.to_string p) ^ ")" 
-                                else (RationalPolynomial.to_string p) in
-        let to_string_poly_n d = if d = 0 then "" else "n^{" ^ (string_of_int d) ^ "}" in
+                                else if (p |> RationalPolynomial.monomials |> List.length |> (<) 1) then  "(" ^ (RationalPolynomial.to_string_pretty p) ^ ")" 
+                                else (RationalPolynomial.to_string_pretty p) in
+        let to_string_poly_n d = if d = 0 then "" else "n^" ^ (string_of_int d) in
         let to_string_exp_n b = if b = 1 then "" else (string_of_int b) ^ "^n" in
         xs
-        |> List.map (fun (c, p, d, b) -> [to_string_cc (c, p, d, b); to_string_poly p; to_string_poly_n d; to_string_exp_n b] |> List.filter (not % ((String.equal) "")) |> String.concat " \\cdot ") 
+        |> List.map (fun (c, p, d, b) -> [to_string_cc (c, p, d, b); to_string_poly p; to_string_poly_n d; to_string_exp_n b] |> List.filter (not % ((String.equal) "")) |> String.concat " * ") 
         |> List.filter (not % ((String.equal) ""))
         |> String.concat " + "
 
