@@ -104,6 +104,13 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let to_string constr =
       String.concat " || " (List.map C.to_string  constr)
 
+    let to_string_pretty = function
+      | [] -> FormattedString.Empty
+      | x::xs -> 
+        (C.to_string ~pretty:true x)::(List.map (((^) " ∨ ") % C.to_string ~pretty:true) xs) 
+        |> List.map FormattedString.mk_str_line
+        |> List.reduce FormattedString.(<>)
+
     let rename formula varmapping =
       List.map (fun constr -> C.rename constr varmapping) formula
 
