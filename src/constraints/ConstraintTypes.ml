@@ -356,6 +356,8 @@ module type Formula =
         (** Returns a string representing the constraint. *)
         val to_string : t -> string
 
+        val to_string_pretty : t -> FormattedString.t
+
 
         (** {1  {L  Following methods manipulate atoms and return the manipulated versions. }}*)
 

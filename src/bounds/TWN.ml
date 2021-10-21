@@ -158,10 +158,20 @@ let termination_ t order pe npe varmap =
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string bool]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
             ProofOutput.add_to_proof @@ (fun () ->
-              [ "Termination: " ^ (string_of_bool bool);
+              (* [ "Termination: " ^ (string_of_bool bool);
                 "Formula: " ^ (Formula.to_string formula);
-              ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_paragraph);)
+              ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend *)
+               FormattedString.(
+               mk_str_line ("Termination: " ^ (string_of_bool bool))
+               <> mk_str_line "Formula: "
+               <> (Formula.to_string_pretty formula |> mk_block)
+               |> mk_paragraph);))
 
+
+              (* FormattedString.mk_str_line ("Termination: " ^ (string_of_bool bool))
+              <>  FormattedString.mk_str_line "Formula: "
+              <> (List.map (FormattadString.mk_str_line % Constraint.to_string) formula |> FormattedString.mappend)
+              |> FormattedString.mk_paragraph)) *)
 
 (* COMPLEXITY: *)
 
