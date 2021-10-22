@@ -85,6 +85,7 @@
 <body>
 <code class="code"><span class="keyword">sig</span><br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Guard</span>&nbsp;=&nbsp;<span class="constructor">Constraints</span>.<span class="constructor">Constraint</span><br>
+&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Invariant</span>&nbsp;=&nbsp;<span class="constructor">Constraints</span>.<span class="constructor">Constraint</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;polynomial&nbsp;=&nbsp;<span class="constructor">Polynomials</span>.<span class="constructor">Polynomial</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">VarMap</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
@@ -193,6 +194,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;patterns:<span class="constructor">Var</span>.t&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;guard:<span class="constructor">Guard</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;vars:<span class="constructor">Var</span>.t&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;fresh_id&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;add_invariant&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Invariant</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;normalise&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;trival&nbsp;:&nbsp;<span class="constructor">VarSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;append&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
@@ -208,6 +210,8 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_map&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.polynomial&nbsp;<span class="constructor">TransitionLabel</span>.<span class="constructor">VarMap</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guard&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Guard</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guard_without_inv&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Guard</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;invariant&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Invariant</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;map_guard&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Guard</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Guard</span>.t)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;default&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
@@ -216,10 +220,13 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;input_vars&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;input_size&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;cost&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.polynomial<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;?pretty:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_to_string_lhs&nbsp;:&nbsp;?to_file:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_to_string_rhs&nbsp;:&nbsp;?to_file:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guard_to_string&nbsp;:&nbsp;?to_file:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_to_string_lhs_pretty&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_to_string_rhs_pretty&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guard_to_string&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;?to_file:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?pretty:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;cost_to_string&nbsp;:&nbsp;?to_file:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_id_string&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;rename&nbsp;:&nbsp;<span class="constructor">Var</span>.t&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
@@ -228,4 +235,6 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;rename2&nbsp;:&nbsp;<span class="constructor">RenameMap</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remove_non_contributors&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">VarSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;separate_guard_invariant&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Invariant</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t<br>
 <span class="keyword">end</span></code></body></html>

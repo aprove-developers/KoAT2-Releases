@@ -173,13 +173,13 @@
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a string representing the bound by calling <b>show</b> with complexity enabled.</p>
 </div>
 </div>
 
-<pre><span id="VALshow"><span class="keyword">val</span> show</span> : <code class="type">?complexity:bool -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<pre><span id="VALshow"><span class="keyword">val</span> show</span> : <code class="type">?pretty:bool -> ?complexity:bool -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Generates a string from a bound and adds the asymptotic complexity if parameter <i>complexity</i> is not assigned to false.</p>
 </div>
@@ -363,6 +363,12 @@
 <pre><span id="VALcompare_asy"><span class="keyword">val</span> compare_asy</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>-1 if first bound asy. lower, 0 if both are asym. equal, 1 otherwise</p>
+</div>
+</div>
+
+<pre><span id="VALmin_asy"><span class="keyword">val</span> min_asy</span> : <code class="type"><a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -><br>       <a href="BoundType.Make_BoundOver.html#TYPEt">t</a> -> <a href="BoundType.Make_BoundOver.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the asy. smaller bound (if both are equal than the first argument)</p>
 </div>
 </div>
 
