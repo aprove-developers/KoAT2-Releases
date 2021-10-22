@@ -13,6 +13,8 @@ let compute_proof b = compute := b
 
 let proof_format f = format := f
 
+let get_format () = !format
+
 let add_to_proof str_computation =
   if !compute then
     proof := !proof<>str_computation ()
