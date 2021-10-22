@@ -121,7 +121,7 @@ let rec knowledge_propagation (scc: TransitionSet.t) measure program appr =
         let original_bound = get_bound measure appr transition in
         if Bound.compare_asy original_bound new_bound = 1 then (
           ProofOutput.add_str_paragraph_to_proof (fun () ->
-            "knowledge_propagation leads to new time bound "^Bound.to_string new_bound^" for transition "^Transition.to_string transition
+            "knowledge_propagation leads to new time bound "^Bound.to_string ~pretty:true new_bound^" for transition "^Transition.to_string_pretty transition
           );
           add_bound measure new_bound transition appr
           |> MaybeChanged.changed)
