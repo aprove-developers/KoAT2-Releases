@@ -357,7 +357,6 @@ let time_bound (l,t,l') scc program appr = (
   try 
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in 
   if Option.is_none opt then (
-    proof_append FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:"));
     let bound = 
     Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
       let cycle = find_cycle appr program (if Location.equal l l' then [[(l,t,l')]] else (cycles scc l ([([(l,t,l')], (LocationSet.singleton l'))]) [])) in
@@ -370,16 +369,18 @@ let time_bound (l,t,l') scc program appr = (
           (List.combine (List.map Transition.to_string_pretty entries) (List.map (TransitionLabel.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
-        List.map (fun (entry, t)-> 
-            let eliminated_t = t |> eliminate in
-              if VarSet.is_empty (TransitionLabel.vars eliminated_t) then 
-                Bound.infinity 
-              else
-                let bound = complexity eliminated_t in
-                if Bound.is_infinity bound then raise (Non_Terminating (cycle, entries));
-                lift appr entry bound)
-        (List.combine entries twn_loops) 
-        |> Bound.sum_list) in
+        let global_local_bounds =
+          List.map (fun (entry, t) -> 
+              let eliminated_t = t |> eliminate in
+                if VarSet.is_empty (TransitionLabel.vars eliminated_t) then 
+                  Bound.infinity, (entry, Bound.infinity) 
+                else
+                  let bound = complexity eliminated_t in
+                  if Bound.is_infinity bound then raise (Non_Terminating (cycle, entries));
+                  lift appr entry bound, (entry, bound))
+          (List.combine entries twn_loops) in
+        List.iter (fun t -> TimeBoundTable.add time_bound_table t (cycle, List.map Tuple2.second global_local_bounds)) cycle;
+        global_local_bounds |> List.map Tuple2.first |> Bound.sum_list) in
       if Option.is_some bound then
         bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
         |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true))))
@@ -392,10 +393,13 @@ let time_bound (l,t,l') scc program appr = (
     let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
     bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
                          |> tap (fun b -> proof_append FormattedString.((mk_str_line (b |> Bound.to_string ~pretty:true)))) 
-    with 
-      | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
-      | Non_Terminating (cycle,entries)-> 
-        Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]); 
-        List.iter (fun t -> TimeBoundTable.add time_bound_table t (cycle, List.map (fun t -> (t, Bound.infinity)) entries)) cycle;
-        Bound.infinity)
-  |> tap (fun b -> if Bound.is_finite b then ProofOutput.add_to_proof @@ fun () -> FormattedString.(mk_header_small (mk_str "TWN-Loops:") <> !proof))
+  with 
+    | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
+    | Non_Terminating (cycle,entries)-> 
+      Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]); 
+      List.iter (fun t -> TimeBoundTable.add time_bound_table t (cycle, List.map (fun t -> (t, Bound.infinity)) entries)) cycle;
+      Bound.infinity)
+  |> tap (fun b -> if Bound.compare_asy b (Approximation.timebound appr (l,t,l')) < 0 then ProofOutput.add_to_proof @@ fun () -> 
+    FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:") <> 
+                      mk_header_small (mk_str ("TWN-Loops: t" ^ (TransitionLabel.id t |> Util.natural_to_index) ^ " " ^ Bound.to_string ~pretty:true b)) <> 
+                      !proof))
