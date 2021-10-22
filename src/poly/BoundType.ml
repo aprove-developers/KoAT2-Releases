@@ -153,32 +153,32 @@ let rec get_op_chain_and_apply_to_atoms f t b = match (t,b) with
   | (`Product, Product (b1,b2))     -> get_op_chain_and_apply_to_atoms f t b1 @ get_op_chain_and_apply_to_atoms f t b2
   | (_, b)                          -> [f b]
 
-let rec show_bound_inner = function
-  | Var v -> Var.to_string v
+let rec show_bound_inner ?(pretty=false) = function
+  | Var v -> if pretty then Var.to_string_index v else Var.to_string v
   | Const c -> Num.to_string c
-  | Pow (v, b) -> Num.to_string v ^ "^(" ^ show_bound_inner b ^ ")"
+  | Pow (v, b) -> Num.to_string v ^ "^(" ^ show_bound_inner ~pretty b ^ ")"
   | Sum (b1, b2) ->
       (* Order terms by degree*)
       let sum_chain = get_op_chain_and_apply_to_atoms identity `Sum b1 @ get_op_chain_and_apply_to_atoms identity `Sum b2 in
       let sorted_chain = List.sort (fun b1 b2 -> compare_asy (OptionMonad.return b2) (OptionMonad.return b1)) sum_chain in
-      List.fold_lefti (fun s i b -> if i = 0 then show_bound_inner b else s^"+"^show_bound_inner b) "" sorted_chain
-  | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ show_bound_inner (Sum (b1, b2)) ^ ")*(" ^ show_bound_inner (Sum (b3, b4)) ^ ")"
-  | Product (Sum (b1, b2), b3) -> "(" ^ show_bound_inner (Sum (b1, b2)) ^ ")*" ^ show_bound_inner b3
-  | Product (b1, Sum (b2, b3)) -> show_bound_inner b1 ^ "*(" ^ show_bound_inner (Sum (b2, b3)) ^ ")"
-  | Product (b1, b2) -> show_bound_inner b1 ^ "*" ^ show_bound_inner b2
+      List.fold_lefti (fun s i b -> if i = 0 then show_bound_inner ~pretty b else s^"+"^show_bound_inner ~pretty b) "" sorted_chain
+  | Product (Sum (b1, b2), Sum (b3, b4)) -> "(" ^ show_bound_inner ~pretty (Sum (b1, b2)) ^ ")*(" ^ show_bound_inner ~pretty (Sum (b3, b4)) ^ ")"
+  | Product (Sum (b1, b2), b3) -> "(" ^ show_bound_inner ~pretty (Sum (b1, b2)) ^ ")*" ^ show_bound_inner ~pretty b3
+  | Product (b1, Sum (b2, b3)) -> show_bound_inner ~pretty b1 ^ "*(" ^ show_bound_inner ~pretty (Sum (b2, b3)) ^ ")"
+  | Product (b1, b2) -> show_bound_inner ~pretty b1 ^ "*" ^ show_bound_inner ~pretty b2
 
-let show_bound t =
+let show_bound ?(pretty=false) t =
   match t with
-    | Some b -> show_bound_inner b
+    | Some b -> show_bound_inner ~pretty b
     | None -> "inf"
 
-let show ?(complexity=true) bound =
+let show ?(pretty=false) ?(complexity=true) bound =
   let complexity_str =
     if complexity then " {" ^ (show_complexity % asymptotic_complexity) bound ^ "}" else ""
   in
-  show_bound bound ^ complexity_str
+  show_bound ~pretty bound ^ complexity_str
 
-let to_string = show ~complexity:true
+let to_string ?(pretty=false) = show ~complexity:true ~pretty
 
 let gt_bound b1 b2 =
   let execute () =

@@ -97,11 +97,11 @@ let to_formatted ?(show_initial=false) program appr =
   else FormattedString.Empty
 
   <> mk_str_header_small "Timebounds" <> ( mk_paragraph (
-       mk_str_line ("Overall timebound:" ^ Bound.to_string overall_timebound)
+       mk_str_line ("Overall timebound:" ^ Bound.to_string ~pretty:true overall_timebound)
        <> TransitionApproximation.to_formatted (Program.transitions program |> TransitionSet.to_list) appr.time) )
 
   <> mk_str_header_small "Costbounds" <> ( mk_paragraph (
-        mk_str_line ("Overall costbound: " ^ Bound.to_string (program_costbound appr program))
+        mk_str_line ("Overall costbound: " ^ Bound.to_string ~pretty:true (program_costbound appr program))
         <> TransitionApproximation.to_formatted (Program.transitions program |> TransitionSet.to_list) appr.cost ) )
 
   <> mk_str_header_small "Sizebounds" <> (mk_paragraph @@ SizeApproximation.to_formatted appr.size)

@@ -10,15 +10,19 @@ open PolyExponential
 (* PROOF *)
 let logger = Logging.(get Twn)
 
+let proof = ref FormattedString.Empty
+
+let proof_append f_str = proof := FormattedString.(!proof <> f_str)
+
 let add_to_proof_graph program cycle entries =
   let color_map =
   List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty 
   |> List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Red) entries in
-    ProofOutput.add_to_proof_with_format @@ (fun format -> FormattedString.mk_paragraph (
-      match format with
+    proof_append FormattedString.(mk_paragraph (
+      match ProofOutput.get_format () with
         | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html color_map program)
         | _    -> FormattedString.Empty));
-  ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle))))
+  proof_append (FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle))))
 
 (* ELIMINIATE  *)
 
@@ -143,7 +147,7 @@ let termination t =
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly) 
               (TransitionLabel.guard_without_inv t) (Formula.mk_true) in
-  (not % SMTSolver.satisfiable) (Formula.mk_and formula (Formula.mk (TransitionLabel.invariant t)))
+  (not % SMTSolver.satisfiable) (Formula.implies (Formula.mk (TransitionLabel.invariant t)) formula |> Formula.simplify)
 
 let termination_ t order pe npe varmap = 
   let formula = 
@@ -157,21 +161,12 @@ let termination_ t order pe npe varmap =
   (not % SMTSolver.satisfiable) (Formula.mk_and formula (Formula.mk (TransitionLabel.invariant t)))
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string bool]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
-            ProofOutput.add_to_proof @@ (fun () ->
-              (* [ "Termination: " ^ (string_of_bool bool);
-                "Formula: " ^ (Formula.to_string formula);
-              ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend *)
-               FormattedString.(
-               mk_str_line ("Termination: " ^ (string_of_bool bool))
-               <> mk_str_line "Formula: "
-               <> (Formula.to_string_pretty formula |> mk_block)
-               |> mk_paragraph);))
-
-
-              (* FormattedString.mk_str_line ("Termination: " ^ (string_of_bool bool))
-              <>  FormattedString.mk_str_line "Formula: "
-              <> (List.map (FormattadString.mk_str_line % Constraint.to_string) formula |> FormattedString.mappend)
-              |> FormattedString.mk_paragraph)) *)
+    proof_append
+        FormattedString.(
+        mk_str_line ("Termination: " ^ (string_of_bool bool))
+        <> mk_str_line "Formula: "
+        <> (Formula.to_string_pretty formula |> mk_block)
+        |> mk_paragraph);)
 
 (* COMPLEXITY: *)
 
@@ -228,7 +223,7 @@ let compute_alpha_abs = function
                       List.first ys |> ScaledMonomial.monomial |> ScaledMonomial.make max)
           |> Polynomial.of_scaled 
 
-let compute_f = function
+let compute_f atom = function
   | [] -> Bound.zero
   | x::[] -> Bound.one
   | xs -> 
@@ -244,12 +239,12 @@ let compute_f = function
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["M", (OurInt.to_string m_)]);
     Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)) |> add (of_constant OurInt.one))
     |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);
-      ProofOutput.add_to_proof @@ (fun () ->
-      [ "alphas_abs: " ^ (Polynomial.to_string alphas_abs);
+      proof_append (
+      [ "alphas_abs: " ^ (Polynomial.to_string_pretty alphas_abs);
         "M: " ^ (OurInt.to_string m_);
         "N: " ^ (OurInt.to_string n_);
-        "Bound: " ^ (Bound.to_string b);
-      ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_paragraph);)
+        "Bound: " ^ (Bound.to_string ~pretty:true b);
+      ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block |> FormattedString.(<>) (FormattedString.mk_str_line ("Stabilization-Threshold for: " ^ (Atom.to_string ~pretty:true atom))));)
 
 let get_bound t order npe varmap = 
   let bound, max_con = 
@@ -259,8 +254,8 @@ let get_bound t order npe varmap =
           Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
           let max_const = OurInt.max const (PE.max_const sub_poly) in
-            (Bound.add bound ((compute_f sub_poly_n)), max_const))
-            (TransitionLabel.guard_without_inv t) (Bound.one, OurInt.zero) in
+            (Bound.add bound ((compute_f atom sub_poly_n)), max_const))
+            (TransitionLabel.guard_without_inv t |> Constraint.simplify) (Bound.one, OurInt.zero) in
             Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", (OurInt.to_string max_con)]);
   Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
   |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
@@ -276,12 +271,12 @@ let complexity t =
         chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
       else t, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-    ProofOutput.add_to_proof @@ (fun () -> FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string_index (List.enum order))));
+    proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string_index (List.enum order))));
     let pe = PE.compute_closed_form (List.map (fun var -> 
         let update_var = TransitionLabel.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
-        ProofOutput.add_to_proof @@ (fun () -> 
+        proof_append (
           FormattedString.(mk_str "closed-form:" <> (
           (List.combine (List.map Var.to_string_index order) (List.map PE.to_string_pretty pe))
           |> List.map (fun (a,b) -> a ^ ": " ^ b) 
@@ -345,19 +340,23 @@ module TimeBoundTable = Hashtbl.Make(Transition)
 let time_bound_table: (path * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
 
 let lift appr entry bound = 
-  ProofOutput.add_to_proof @@ (fun () -> FormattedString.(mk_paragraph (mk_str_line ("relevant size-bounds w.r.t. t_" ^ (Transition.id entry |> string_of_int) ^ ":") <> (
-          Bound.vars bound
-          |> VarSet.to_list
-          |> List.map (fun v -> (Var.to_string v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string)) 
-          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend))));
   let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
     Bound.mul (Approximation.timebound appr entry) bound_with_sizebound
+  |> tap (fun b -> 
+    proof_append (FormattedString.(mk_paragraph (mk_str_line ("relevant size-bounds w.r.t. t" ^ (Transition.id entry |> Util.natural_to_index) ^ ":") <> (
+          Bound.vars bound
+          |> VarSet.to_list
+          |> List.map (fun v -> (Var.to_string_index v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true)) 
+          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend) <> 
+          FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_index) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <> 
+          FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
-let time_bound (l,t,l') scc program appr = 
+let time_bound (l,t,l') scc program appr = (
+  proof := FormattedString.Empty;
   try 
-  let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
+  let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in 
   if Option.is_none opt then (
-    ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:")));
+    proof_append FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:"));
     let bound = 
     Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
       let cycle = find_cycle program (if Location.equal l l' then [[(l,t,l')]] else (cycles scc l ([([(l,t,l')], (LocationSet.singleton l'))]) [])) in
@@ -366,10 +365,10 @@ let time_bound (l,t,l') scc program appr =
       Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
       let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
       Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops));
-          ProofOutput.add_to_proof @@ (fun () -> FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>  
+          proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>  
           (List.combine (List.map Transition.to_string_pretty entries) (List.map (TransitionLabel.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
-          |> FormattedString.mappend)));
+          |> FormattedString.mappend));
         List.map (fun (entry, t)-> 
             let eliminated_t = t |> eliminate in
               if VarSet.is_empty (TransitionLabel.vars eliminated_t) then 
@@ -382,19 +381,20 @@ let time_bound (l,t,l') scc program appr =
         |> Bound.sum_list) in
       if Option.is_some bound then
         bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
-        |> tap (fun _ -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string))))
+        |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true))))
       else (
         Logger.log logger Logger.INFO (fun () -> "twn", ["Timeout", Bound.to_string Bound.infinity]);
         Bound.infinity)
   )
-  else 
+  else
     let cycle, xs = Option.get opt in
     let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
     bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
-                         |> tap (fun b -> ProofOutput.add_to_proof @@ fun () -> FormattedString.((mk_str_line (b |> Bound.to_string)))) 
+                         |> tap (fun b -> proof_append FormattedString.((mk_str_line (b |> Bound.to_string ~pretty:true)))) 
     with 
       | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
       | Non_Terminating (cycle,entries)-> 
         Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]); 
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (cycle, List.map (fun t -> (t, Bound.infinity)) entries)) cycle;
-        Bound.infinity
+        Bound.infinity)
+  |> tap (fun b -> if Bound.is_finite b then ProofOutput.add_to_proof @@ fun () -> FormattedString.(mk_header_small (mk_str "TWN-Loops:") <> !proof))
