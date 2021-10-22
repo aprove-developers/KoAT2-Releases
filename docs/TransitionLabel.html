@@ -110,6 +110,11 @@
 
 </div>
 
+<pre><span id="MODULEInvariant"><span class="keyword">module</span> <a href="TransitionLabel.Invariant.html">Invariant</a></span>: <code class="type"><a href="Constraints.Constraint.html">Constraints.Constraint</a></code></pre><div class="info">
+<p>Module representing the invariants.</p>
+
+</div>
+
 <pre><span id="TYPEpolynomial"><span class="keyword">type</span> <code class="type"></code>polynomial</span> = <code class="type">Polynomials.Polynomial.t</code> </pre>
 <div class="info ">
 <div class="info-desc">
@@ -148,6 +153,7 @@
 </div>
 
 <pre><span id="VALfresh_id"><span class="keyword">val</span> fresh_id</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre>
+<pre><span id="VALadd_invariant"><span class="keyword">val</span> add_invariant</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> Invariant.t -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre>
 <pre><span id="VALnormalise"><span class="keyword">val</span> normalise</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> VarSet.t -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre>
 <pre><span id="VALtrival"><span class="keyword">val</span> trival</span> : <code class="type">VarSet.t -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre>
 <pre><span id="VALappend"><span class="keyword">val</span> append</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre><div class="info ">
@@ -211,6 +217,18 @@
 </div>
 </div>
 
+<pre><span id="VALguard_without_inv"><span class="keyword">val</span> guard_without_inv</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> Guard.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the guard of the label without considering invariants.</p>
+</div>
+</div>
+
+<pre><span id="VALinvariant"><span class="keyword">val</span> invariant</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> Invariant.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the invariant.</p>
+</div>
+</div>
+
 <pre><span id="VALmap_guard"><span class="keyword">val</span> map_guard</span> : <code class="type">(Guard.t -> Guard.t) -> <a href="TransitionLabel.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a new transition label with the guard changed.</p>
@@ -248,7 +266,7 @@
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -> <a href="TransitionLabel.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string representing the label.</p>
 </div>
@@ -266,7 +284,9 @@
 </div>
 </div>
 
-<pre><span id="VALguard_to_string"><span class="keyword">val</span> guard_to_string</span> : <code class="type">?to_file:bool -> <a href="TransitionLabel.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<pre><span id="VALupdate_to_string_lhs_pretty"><span class="keyword">val</span> update_to_string_lhs_pretty</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALupdate_to_string_rhs_pretty"><span class="keyword">val</span> update_to_string_rhs_pretty</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALguard_to_string"><span class="keyword">val</span> guard_to_string</span> : <code class="type">?to_file:bool -> ?pretty:bool -> <a href="TransitionLabel.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string representing the guard. Parameter <i>to_file</i> is used to get a representation with less special characters.</p>
 </div>
@@ -290,6 +310,17 @@
 </div>
 </div>
 
-<pre><span id="VALrename_temp_vars"><span class="keyword">val</span> rename_temp_vars</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> <a href="Var.html#TYPEt">Var.t</a> Batteries.LazyList.t -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre>
+<pre><span id="VALrename_temp_vars"><span class="keyword">val</span> rename_temp_vars</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> <a href="Var.html#TYPEt">Var.t</a> Batteries.LazyList.t -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Rename temporary variables to identifiers provided by the (possibly infinite) lazy list</p>
+</div>
+</div>
+
 <pre><span id="VALrename2"><span class="keyword">val</span> rename2</span> : <code class="type"><a href="RenameMap.html#TYPEt">RenameMap.t</a> -> <a href="TransitionLabel.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre>
-<pre><span id="VALremove_non_contributors"><span class="keyword">val</span> remove_non_contributors</span> : <code class="type">VarSet.t -> <a href="TransitionLabel.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre></body></html>
+<pre><span id="VALremove_non_contributors"><span class="keyword">val</span> remove_non_contributors</span> : <code class="type">VarSet.t -> <a href="TransitionLabel.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre>
+<pre><span id="VALseparate_guard_invariant"><span class="keyword">val</span> separate_guard_invariant</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> Invariant.t -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>We execute CFRefinement with guard &amp;&amp; invariant -&gt; We need to separate invariant afterwards.</p>
+</div>
+</div>
+</body></html>

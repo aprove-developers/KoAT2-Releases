@@ -5,9 +5,9 @@
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="Start" href="index.html">
-<link rel="previous" href="TWN.Monomial.html">
-<link rel="next" href="TWN.TimeBoundTable.html">
-<link rel="Up" href="TWN.html">
+<link rel="previous" href="TransitionLabel.Guard.html">
+<link rel="next" href="TransitionLabel.VarMap.html">
+<link rel="Up" href="TransitionLabel.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
 <link title="Index of values" rel=Appendix href="index_values.html">
@@ -85,14 +85,61 @@
 <link title="Util" rel="Chapter" href="Util.html">
 <link title="Valuation" rel="Chapter" href="Valuation.html">
 <link title="Var" rel="Chapter" href="Var.html">
-<link title="VarSet" rel="Chapter" href="VarSet.html"><title>Koat2 : TWN.DjikstraTransitionGraph</title>
+<link title="VarSet" rel="Chapter" href="VarSet.html"><title>Koat2 : TransitionLabel.Invariant</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="TWN.Monomial.html" title="TWN.Monomial">Previous</a>
-&nbsp;<a class="up" href="TWN.html" title="TWN">Up</a>
-&nbsp;<a class="post" href="TWN.TimeBoundTable.html" title="TWN.TimeBoundTable">Next</a>
+<div class="navbar"><a class="pre" href="TransitionLabel.Guard.html" title="TransitionLabel.Guard">Previous</a>
+&nbsp;<a class="up" href="TransitionLabel.html" title="TransitionLabel">Up</a>
+&nbsp;<a class="post" href="TransitionLabel.VarMap.html" title="TransitionLabel.VarMap">Next</a>
 </div>
-<h1>Module <a href="type_TWN.DjikstraTransitionGraph.html">TWN.DjikstraTransitionGraph</a></h1>
+<h1>Module <a href="type_TransitionLabel.Invariant.html">TransitionLabel.Invariant</a></h1>
 
-<pre><span id="MODULEDjikstraTransitionGraph"><span class="keyword">module</span> DjikstraTransitionGraph</span>: <code class="type">Graph.Path.Dijkstra</code><code class="code">(</code><code class="type"><a href="ProgramTypes.TransitionGraph.html">ProgramTypes.TransitionGraph</a></code><code class="code">)</code><code class="code">(</code><code class="type"><a href="ProgramTypes.TransitionGraphWeight.html">ProgramTypes.TransitionGraphWeight</a></code><code class="code">(</code><code class="type"><a href="OurInt.html">OurInt</a></code><code class="code">)</code><code class="code">)</code></pre><hr width="100%">
-</body></html>
+<pre><span id="MODULEInvariant"><span class="keyword">module</span> Invariant</span>: <code class="type"><a href="Constraints.Constraint.html">Constraints.Constraint</a></code></pre><div class="info module top">
+<div class="info-desc">
+<p>Module representing the invariants.</p>
+</div>
+</div>
+<hr width="100%">
+
+<pre><span class="keyword">include</span> ??</pre>
+
+<pre><span id="VALdrop_nonlinear"><span class="keyword">val</span> drop_nonlinear</span> : <code class="type">t -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>Drops all nonlinear atoms from the constraints. Example: (a &gt; 0 &amp;&amp; b^2 &lt; 2) gets transformed to (a &gt; 0)</p>
+</div>
+</div>
+<p>The result of the following drop methods is not equivalent to the input constraint.
+      But each satisfying valuation of the input constraint is still a model of the new constraint.</p>
+
+<pre><span id="VALget_coefficient_vector"><span class="keyword">val</span> get_coefficient_vector</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> t -> value list</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the row of all coefficients of a variable in a constraint, i.e., used for farkas quantor elimination.</p>
+</div>
+</div>
+
+<pre><span id="VALget_matrix"><span class="keyword">val</span> get_matrix</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -> t -> value list list</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination.</p>
+</div>
+</div>
+
+<pre><span id="VALget_constant_vector"><span class="keyword">val</span> get_constant_vector</span> : <code class="type">t -> value list</code></pre><div class="info ">
+<div class="info-desc">
+<p>Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination.</p>
+</div>
+</div>
+
+<pre><span id="VALdualise"><span class="keyword">val</span> dualise</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -> A.P.t list list -> A.P.t list -> t</code></pre><div class="info ">
+<div class="info-desc">
+<p>TODO doc</p>
+</div>
+</div>
+
+<pre><span id="VALmax_of_occurring_constants"><span class="keyword">val</span> max_of_occurring_constants</span> : <code class="type">t -> OurInt.t</code></pre><div class="info ">
+<div class="info-desc">
+<p>TODO doc</p>
+</div>
+</div>
+
+<pre><span id="VALremove_strict"><span class="keyword">val</span> remove_strict</span> : <code class="type">t -> t</code></pre>
+<pre><span id="VALsimplify"><span class="keyword">val</span> simplify</span> : <code class="type">t -> t</code></pre></body></html>
