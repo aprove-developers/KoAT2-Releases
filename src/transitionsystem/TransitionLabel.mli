@@ -74,6 +74,8 @@ val guard : t -> Guard.t
 (** Returns the guard of the label without considering invariants. *)
 val guard_without_inv : t -> Guard.t
 
+val without_inv : t -> t
+
 (** Returns the invariant. *)
 val invariant : t -> Invariant.t
 
