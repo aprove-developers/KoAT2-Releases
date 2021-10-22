@@ -84,7 +84,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
            )
       |> List.map
            (fun ((transition, var), bound) ->
-            FormattedString.mk_str_line @@ "  "  ^ Trans.to_id_string transition ^ ", " ^ Var.to_string var ^ ": " ^ B.to_string bound)
+            FormattedString.mk_str_line @@ "  t" ^ (Trans.id transition |> Util.natural_to_index) ^ ", " ^ Var.to_string_index var ^ ": " ^ B.to_string ~pretty:true bound)
       |> FormattedString.mappend
 
     let to_string size =

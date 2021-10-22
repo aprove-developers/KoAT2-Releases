@@ -62,10 +62,10 @@ val is_infinity : t -> bool
 val is_finite : t -> bool
 
 (** Creates a string representing the bound by calling {b show} with complexity enabled. *)
-val to_string : t -> string
+val to_string : ?pretty:bool -> t -> string
 
 (** Generates a string from a bound and adds the asymptotic complexity if parameter {i complexity} is not assigned to false. *)
-val show : ?complexity:bool -> t -> string
+val show : ?pretty:bool -> ?complexity:bool -> t -> string
 
 (** Math functions. Since we can not negate or subtract bounds, these functions form a prober subset of PolyTypes.Math *)
 (** Returns zero element. *)
