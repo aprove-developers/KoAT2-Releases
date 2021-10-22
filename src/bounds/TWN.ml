@@ -327,7 +327,7 @@ let find_cycle appr program cycles = List.find (fun cycle ->
     let entries = Program.entry_transitions logger program cycle in
     let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
     List.for_all (fun (entry, t) -> 
-      let eliminated_t = t |> eliminate in
+      let eliminated_t = TransitionLabel.without_inv t |> eliminate in
       not (VarSet.is_empty (TransitionLabel.vars eliminated_t)) (* Are there any variables *)
        && VarSet.equal (TransitionLabel.vars eliminated_t) (TransitionLabel.input_vars eliminated_t) (* No Temp Vars? *)
        && let order = check_triangular eliminated_t in (List.length order) == (VarSet.cardinal ((TransitionLabel.input_vars eliminated_t))) (* Triangular?*)
@@ -371,7 +371,7 @@ let time_bound (l,t,l') scc program appr = (
           |> FormattedString.mappend));
         let global_local_bounds =
           List.map (fun (entry, t) -> 
-              let eliminated_t = t |> eliminate in
+              let eliminated_t = TransitionLabel.without_inv t |> eliminate in
                 if VarSet.is_empty (TransitionLabel.vars eliminated_t) then 
                   Bound.infinity, (entry, Bound.infinity) 
                 else

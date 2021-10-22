@@ -160,6 +160,8 @@ let guard t = Guard.mk_and t.guard t.invariant
 
 let guard_without_inv t = t.guard
 
+let without_inv t = {t with invariant = Invariant.mk_true}
+
 let invariant t = t.invariant
 
 let add_invariant t invariant' = {t with invariant = (Invariant.mk_and (t.invariant) invariant');}
