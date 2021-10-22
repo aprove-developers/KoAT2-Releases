@@ -323,17 +323,18 @@ let rec find l list =
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
 (* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
-let find_cycle program cycles = List.find (fun cycle -> 
-    let entry = Program.entry_transitions logger program cycle in
-    let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entry in
+let find_cycle appr program cycles = List.find (fun cycle -> 
+    let entries = Program.entry_transitions logger program cycle in
+    let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
     List.for_all (fun (entry, t) -> 
       let eliminated_t = t |> eliminate in
       not (VarSet.is_empty (TransitionLabel.vars eliminated_t)) (* Are there any variables *)
        && VarSet.equal (TransitionLabel.vars eliminated_t) (TransitionLabel.input_vars eliminated_t) (* No Temp Vars? *)
        && let order = check_triangular eliminated_t in (List.length order) == (VarSet.cardinal ((TransitionLabel.input_vars eliminated_t))) (* Triangular?*)
-       && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)) (List.combine entry twn_loops)) cycles
+       && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)
+       && List.for_all (Approximation.is_time_bounded appr) entries) (List.combine entries twn_loops)) cycles
 
-       (* TODO: We should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. *)
+       (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
 
 module TimeBoundTable = Hashtbl.Make(Transition) 
 
@@ -359,7 +360,7 @@ let time_bound (l,t,l') scc program appr = (
     proof_append FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:"));
     let bound = 
     Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
-      let cycle = find_cycle program (if Location.equal l l' then [[(l,t,l')]] else (cycles scc l ([([(l,t,l')], (LocationSet.singleton l'))]) [])) in
+      let cycle = find_cycle appr program (if Location.equal l l' then [[(l,t,l')]] else (cycles scc l ([([(l,t,l')], (LocationSet.singleton l'))]) [])) in
       let entries = Program.entry_transitions logger program cycle in
       add_to_proof_graph program cycle entries;
       Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
