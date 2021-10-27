@@ -33,7 +33,7 @@ val of_string : string -> t
  (** Returns a string representing the variable([Temp_Int_] for integer variables, [Temp_Real_] for real variables and [Arg_ ] for argument variables). Parameter {i to_file} is used to get a representation with less special characters. *)
 val to_string : ?to_file:bool -> t -> Batteries.String.t
 
-val to_string_index : t -> String.t
+val to_string_pretty : t -> String.t
 
 (** Returns a not yet used id, which is guaranteed to be distinct from any yet existing ids. *)
 val fresh_id : sort -> unit -> t

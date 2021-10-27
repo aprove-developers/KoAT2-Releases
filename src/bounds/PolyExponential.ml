@@ -226,7 +226,9 @@ module PE = struct
     let neg = 
         List.map (fun (c, p, d, b) -> (c, RationalPolynomial.neg p, d, b))
 
-    let substitute varmap poly = 
+    let substitute varmap poly =
+    Printf.printf "poly: %s\n" (Polynomial.to_string poly);
+    Hashtbl.iter (fun a b -> Printf.printf "var: %s map: %s\n" (Var.to_string_pretty a) (to_string_pretty b) ) varmap;
     Polynomial.fold ~const:(mk_cons % OurRational.of_ourint)
                     ~var:(fun var -> Hashtbl.find varmap var)
                     ~neg:neg
@@ -234,6 +236,7 @@ module PE = struct
                     ~times:mul
                     ~pow:power poly
     |> simplify
+    |> tap (fun p -> Printf.printf "res: %s\n" (to_string_pretty p))
     
     let rec binomial n k = if n = k then OurInt.one 
                                     else OurInt.div (OurInt.mul (binomial (n-1) k) (OurInt.of_int n)) (OurInt.of_int (n-k))
