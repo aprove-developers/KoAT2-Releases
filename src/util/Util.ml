@@ -96,11 +96,18 @@ let measure_total_execution_time () =
   in
   measure_next_execution, get_counter
 
-let index = ["₀";"₁";"₂";"₃";"₄";"₅";"₆";"₇";"₈";"₉"]
+let subscript = ["₀";"₁";"₂";"₃";"₄";"₅";"₆";"₇";"₈";"₉"]
+
+let superscript = ["⁰";"¹";"²";"³";"⁴";"⁵";"⁶";"⁷";"⁸";"⁹"]
 
 exception Negative
 
-let rec natural_to_index = function
+let rec natural_to_subscript = function
   | n when n < 0 -> raise Negative
-  | n when n < 10 -> List.nth index n
-  | n -> if n / 10 == 0 then "" else natural_to_index (n / 10) ^ (List.nth index (n mod 10)) 
+  | n when n < 10 -> List.nth subscript n
+  | n -> if n / 10 == 0 then "" else natural_to_subscript (n / 10) ^ (List.nth subscript (n mod 10)) 
+
+let rec natural_to_superscript = function
+  | n when n < 0 -> raise Negative
+  | n when n < 10 -> List.nth superscript n
+  | n -> if n / 10 == 0 then "" else natural_to_superscript (n / 10) ^ (List.nth superscript (n mod 10)) 

@@ -56,11 +56,11 @@ module PolynomialOver(Value : PolyTypes.Ring) =
          if Value.(curr_coeff =~= zero) then (simplify (delete_monomial curr_monom tail))
          else (ScaledMonomial_.make curr_coeff curr_monom) :: (simplify (delete_monomial curr_monom tail) )
 
-    let to_string_simplified ?(to_file=false) ?(index=false) poly =
+    let to_string_simplified ?(to_file=false) ?(pretty=false) poly =
       let positive, negative = List.partition (fun s -> ScaledMonomial_.coeff s > Value.zero) poly in
       let str_list str scaled_monomials = match
         scaled_monomials
-        |> List.map (ScaledMonomial_.to_string ~to_file ~index)
+        |> List.map (ScaledMonomial_.to_string ~to_file ~pretty)
         |> List.filter (not % (String.equal "")) with
           | [] -> ""
           | xs -> String.concat str xs in
@@ -72,7 +72,7 @@ module PolynomialOver(Value : PolyTypes.Ring) =
 
     let to_string poly = to_string_simplified (simplify poly)
 
-    let to_string_pretty poly = to_string_simplified ~index:true (simplify poly)
+    let to_string_pretty poly = to_string_simplified ~pretty:true (simplify poly)
 
     let to_string_to_file poly = to_string_simplified ~to_file:true (simplify poly)
 

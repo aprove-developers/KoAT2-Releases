@@ -251,6 +251,7 @@ let get_bound t order npe varmap =
       List.fold_right (fun atom (bound, const) -> 
           let poly = Atom.poly atom |> Polynomial.neg in 
           let sub_poly = PE.substitute varmap poly |> PE.remove_frac in 
+          Printf.printf "sub_poly: %s\n" (PE.to_string sub_poly);
           Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
           let max_const = OurInt.max const (PE.max_const sub_poly) in
@@ -271,14 +272,14 @@ let complexity t =
         chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
       else t, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-    proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string_index (List.enum order))));
+    proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string_pretty (List.enum order))));
     let pe = PE.compute_closed_form (List.map (fun var -> 
         let update_var = TransitionLabel.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
         proof_append (
           FormattedString.(mk_str "closed-form:" <> (
-          (List.combine (List.map Var.to_string_index order) (List.map PE.to_string_pretty pe))
+          (List.combine (List.map Var.to_string_pretty order) (List.map PE.to_string_pretty pe))
           |> List.map (fun (a,b) -> a ^ ": " ^ b) 
           |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
     let npe = PE.normalize pe in
@@ -344,12 +345,12 @@ let lift appr entry bound =
   let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
     Bound.mul (Approximation.timebound appr entry) bound_with_sizebound
   |> tap (fun b -> 
-    proof_append (FormattedString.(mk_paragraph (mk_str_line ("relevant size-bounds w.r.t. t" ^ (Transition.id entry |> Util.natural_to_index) ^ ":") <> (
+    proof_append (FormattedString.(mk_paragraph (mk_str_line ("relevant size-bounds w.r.t. t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ":") <> (
           Bound.vars bound
           |> VarSet.to_list
-          |> List.map (fun v -> (Var.to_string_index v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true)) 
+          |> List.map (fun v -> (Var.to_string_pretty v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true)) 
           |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend) <> 
-          FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_index) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <> 
+          FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <> 
           FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
 let time_bound (l,t,l') scc program appr = (
@@ -401,5 +402,5 @@ let time_bound (l,t,l') scc program appr = (
       Bound.infinity)
   |> tap (fun b -> if Bound.compare_asy b (Approximation.timebound appr (l,t,l')) < 0 then ProofOutput.add_to_proof @@ fun () -> 
     FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:") <> 
-                      mk_header_small (mk_str ("TWN-Loops: t" ^ (TransitionLabel.id t |> Util.natural_to_index) ^ " " ^ Bound.to_string ~pretty:true b)) <> 
+                      mk_header_small (mk_str ("TWN-Loops: t" ^ (TransitionLabel.id t |> Util.natural_to_subscript) ^ " " ^ Bound.to_string ~pretty:true b)) <> 
                       !proof))

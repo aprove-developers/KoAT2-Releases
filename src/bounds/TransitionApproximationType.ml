@@ -55,7 +55,7 @@ module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
       transitions
       |> List.sort Trans.compare_same
       |> List.map (fun t -> t, Hashtbl.find_option map (Trans.id t) |? B.infinity)
-      |> List.map (fun (t,b) -> FormattedString.mk_str_line @@ "  t" ^ (Trans.id t |> Util.natural_to_index) ^ ": " ^ B.to_string ~pretty:true b)
+      |> List.map (fun (t,b) -> FormattedString.mk_str_line @@ "  t" ^ (Trans.id t |> Util.natural_to_subscript) ^ ": " ^ B.to_string ~pretty:true b)
       |> FormattedString.mappend
 
     let to_string transitions (name, map) =

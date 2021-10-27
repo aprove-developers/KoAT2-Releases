@@ -31,12 +31,14 @@ module Make(Value : PolyTypes.Ring) =
     let delete_var = Map.remove
 
     (* Probably inefficient but not important in to_string *)
-    let to_string ?(to_file = false) ?(index = false) mon =
+    let to_string ?(to_file = false) ?(pretty = false) mon =
       if Map.is_empty mon then
         "1"
       else
         let entry_string key n =
-          if index then Var.to_string_index key else Var.to_string ~to_file key ^ (if n != 1 then "^" ^ string_of_int n else "")
+          if pretty then let str = Var.to_string_pretty key in
+            if n != 1 then "(" ^ str ^ ")" ^ Util.natural_to_superscript n else str
+          else (Var.to_string ~to_file key ^ (if n != 1 then "^" ^ string_of_int n else ""))
         in
         Map.bindings mon
         |> List.map (uncurry entry_string)

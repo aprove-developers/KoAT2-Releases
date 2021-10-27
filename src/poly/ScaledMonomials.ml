@@ -27,10 +27,10 @@ module Make(Value : PolyTypes.Ring) =
 
     let degree scaled = Monomial.degree scaled.mon
 
-    let to_string ?(to_file = false) ?(index = false) scaled =
-      if Value.(scaled.coeff =~= one) then Monomial.to_string ~to_file ~index scaled.mon
+    let to_string ?(to_file = false) ?(pretty = false) scaled =
+      if Value.(scaled.coeff =~= one) then Monomial.to_string ~to_file ~pretty scaled.mon
       else if Value.(scaled.coeff =~= zero) then ""
-      else Value.to_string scaled.coeff ^ if Monomial.(scaled.mon =~= Monomial.one) then "" else "*" ^ Monomial.to_string ~to_file ~index scaled.mon
+      else Value.to_string scaled.coeff ^ if Monomial.(scaled.mon =~= Monomial.one) then "" else "*" ^ Monomial.to_string ~to_file ~pretty scaled.mon
 
     type outer_t = t
     module BasePartialOrderImpl : (PolyTypes.BasePartialOrder with type t = outer_t) =

@@ -256,7 +256,7 @@ let update_to_string_lhs_pretty t =
     else
       update
       |> VarMap.bindings
-      |> List.map (fun (var,poly) -> (Var.to_string_index var, (Polynomial.to_string_pretty poly)))
+      |> List.map (fun (var,poly) -> (Var.to_string_pretty var, (Polynomial.to_string_pretty poly)))
       |> List.split
       |> Tuple2.first
       |> fun xs -> "("^(String.concat "," xs)^")"
@@ -268,7 +268,7 @@ let update_to_string_rhs_pretty t =
     else
       update
       |> VarMap.bindings
-      |> List.map (fun (var,poly) -> (Var.to_string_index var, (Polynomial.to_string_pretty poly)))
+      |> List.map (fun (var,poly) -> (Var.to_string_pretty var, (Polynomial.to_string_pretty poly)))
       |> List.split
       |> Tuple2.second
       |> fun xs -> "("^(String.concat "," xs)^")"
@@ -277,7 +277,7 @@ let to_string ?(pretty = false) label =
   let guard = if Guard.is_true (Guard.mk_and label.guard label.invariant) then "" else " :|: " ^ guard_to_string ~pretty label in
   let cost = if Polynomial.is_one label.cost then "" else if pretty then Polynomial.to_string_pretty label.cost else Polynomial.to_string label.cost in
   if pretty then
-    "t" ^ (Util.natural_to_index label.id) ^ ": " ^ update_to_string_lhs_pretty label ^ " -{" ^ cost ^ "}> "  ^ update_to_string_rhs_pretty label ^ guard
+    "t" ^ (Util.natural_to_subscript label.id) ^ ": " ^ update_to_string_lhs_pretty label ^ " -{" ^ cost ^ "}> "  ^ update_to_string_rhs_pretty label ^ guard
   else 
     "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ "&euro;" ^ ", " ^ update_to_string label.update ^ guard
 

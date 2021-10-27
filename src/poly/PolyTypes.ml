@@ -124,7 +124,7 @@ module type Evaluable =
     val compare : t -> t -> int
 
     (** Returns a string representing the evaluation. Parameter {i to_file} is used to get a representation with less special characters. *)
-    val to_string : ?to_file:bool -> ?index:bool -> t -> string
+    val to_string : ?to_file:bool -> ?pretty:bool -> t -> string
 
     (** Returns a set of the variables which occur in the evaluable *)
     val vars : t -> VarSet.t
