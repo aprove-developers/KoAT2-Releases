@@ -14,7 +14,7 @@ let proof = ref FormattedString.Empty
 
 let proof_append f_str = proof := FormattedString.(!proof <> f_str)
 
-let add_to_proof_graph program cycle entries =
+(* let add_to_proof_graph program cycle entries =
   let color_map =
   List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty 
   |> List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Red) entries in
@@ -22,7 +22,7 @@ let add_to_proof_graph program cycle entries =
       match ProofOutput.get_format () with
         | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html color_map program)
         | _    -> FormattedString.Empty));
-  proof_append (FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle))))
+  proof_append (FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle)))) *)
 
 (* ELIMINIATE  *)
 
@@ -251,7 +251,6 @@ let get_bound t order npe varmap =
       List.fold_right (fun atom (bound, const) -> 
           let poly = Atom.poly atom |> Polynomial.neg in 
           let sub_poly = PE.substitute varmap poly |> PE.remove_frac in 
-          Printf.printf "sub_poly: %s\n" (PE.to_string sub_poly);
           Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
           let max_const = OurInt.max const (PE.max_const sub_poly) in
@@ -362,7 +361,7 @@ let time_bound (l,t,l') scc program appr = (
     Timeout.timed_run 5. ~action:(fun () -> ()) (fun () -> 
       let cycle = find_cycle appr program (if Location.equal l l' then [[(l,t,l')]] else (cycles scc l ([([(l,t,l')], (LocationSet.singleton l'))]) [])) in
       let entries = Program.entry_transitions logger program cycle in
-      add_to_proof_graph program cycle entries;
+      (* add_to_proof_graph program cycle entries; *)
       Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
       let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
       Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops));
