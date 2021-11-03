@@ -95,7 +95,7 @@ let improve_with_twn program scc measure appr =
       MaybeChanged.changed (add_bound measure bound t appr_)
     else
       MaybeChanged.same appr_ in
-  MaybeChanged.fold_enum compute appr (TransitionSet.enum (TransitionSet.filter (Bound.is_infinity % Approximation.timebound appr) scc))
+  MaybeChanged.fold compute appr (TransitionSet.to_list (TransitionSet.filter (Bound.is_infinity % Approximation.timebound appr) scc))
 
 (** Checks if a transition is bounded *)
 let bounded measure appr transition =
