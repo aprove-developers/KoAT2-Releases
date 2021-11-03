@@ -36,7 +36,7 @@ module Make(Value : PolyTypes.Ring) =
         "1"
       else
         let entry_string key n =
-          if pretty then let str = Var.to_string_pretty key in
+          if pretty then let str = Var.to_string ~pretty key in
             if n != 1 then "(" ^ str ^ ")" ^ Util.natural_to_superscript n else str
           else (Var.to_string ~to_file key ^ (if n != 1 then "^" ^ string_of_int n else ""))
         in

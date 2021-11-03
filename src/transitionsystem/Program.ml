@@ -195,17 +195,17 @@ let is_initial program trans =
 let is_initial_location program location =
   Location.(equal (program.start) location)
 
-let to_formatted_string program =
+let to_formatted_string ?(pretty=false) program =
   let transitions =
-    TransitionGraph.fold_edges_e (fun t str -> str @ [(Transition.to_string_pretty t)]) program.graph []
+    TransitionGraph.fold_edges_e (fun t str -> str @ [if pretty then Transition.to_string_pretty t else Transition.to_string t]) program.graph []
     |> FormattedString.mappend % List.map FormattedString.mk_str_line
   in
   let locations = String.concat ", " (TransitionGraph.fold_vertex (fun l str -> str @ [(Location.to_string l)]) program.graph []) in
   FormattedString.format_append (
     [
       "Start:  "^Location.to_string program.start;
-      "Program_Vars:  "^(program |> input_vars |> VarSet.map_to_list Var.to_string_pretty |> String.concat ", ");
-      "Temp_Vars:  "^(program |> temp_vars |> VarSet.map_to_list Var.to_string_pretty |> String.concat ", ");
+      "Program_Vars:  "^(program |> input_vars |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ", ");
+      "Temp_Vars:  "^(program |> temp_vars |> VarSet.map_to_list (Var.to_string ~pretty) |> String.concat ", ");
       "Locations:  "^locations;
       "Transitions:";
     ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend)

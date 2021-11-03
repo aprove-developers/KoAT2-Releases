@@ -86,7 +86,7 @@ let min program appr1 appr2 =
       appr |> add_timebound min_timebound t |> add_costbound min_costbound t
   ) (Program.transitions program)
 
-let to_formatted ?(show_initial=false) program appr =
+let to_formatted ?(show_initial=false) ?(pretty=false) program appr =
   let overall_timebound = program_timebound appr program in
   mk_str_header_big "All Bounds" <>
   if show_initial then
@@ -97,14 +97,14 @@ let to_formatted ?(show_initial=false) program appr =
   else FormattedString.Empty
 
   <> mk_str_header_small "Timebounds" <> ( mk_paragraph (
-       mk_str_line ("Overall timebound:" ^ Bound.to_string ~pretty:true overall_timebound)
-       <> TransitionApproximation.to_formatted (Program.transitions program |> TransitionSet.to_list) appr.time) )
+       mk_str_line ("Overall timebound:" ^ Bound.to_string ~pretty overall_timebound)
+       <> TransitionApproximation.to_formatted ~pretty (Program.transitions program |> TransitionSet.to_list) appr.time) )
 
   <> mk_str_header_small "Costbounds" <> ( mk_paragraph (
-        mk_str_line ("Overall costbound: " ^ Bound.to_string ~pretty:true (program_costbound appr program))
-        <> TransitionApproximation.to_formatted (Program.transitions program |> TransitionSet.to_list) appr.cost ) )
+        mk_str_line ("Overall costbound: " ^ Bound.to_string ~pretty (program_costbound appr program))
+        <> TransitionApproximation.to_formatted ~pretty (Program.transitions program |> TransitionSet.to_list) appr.cost ) )
 
-  <> mk_str_header_small "Sizebounds" <> (mk_paragraph @@ SizeApproximation.to_formatted appr.size)
+  <> mk_str_header_small "Sizebounds" <> (mk_paragraph @@ SizeApproximation.to_formatted ~pretty appr.size)
 
 
 (* TODO: use to_formatted *)

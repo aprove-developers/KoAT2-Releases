@@ -67,7 +67,7 @@ val is_initial_location : t -> Location.t -> bool
 val equivalent : t -> t -> bool
 
 (** Returns a formatted string representing the program. *)
-val to_formatted_string: t -> FormattedString.t
+val to_formatted_string: ?pretty:bool -> t -> FormattedString.t
 
 (** Returns a string representing the program. *)
 val to_string : t -> string

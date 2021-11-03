@@ -51,11 +51,14 @@ module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
     let all_bounded appr =
       List.for_all (fun t -> not (B.equal (get appr t) B.infinity))
 
-    let to_formatted transitions (name, map) =
+    let to_formatted ?(pretty=false) transitions (name, map) =
       transitions
       |> List.sort Trans.compare_same
       |> List.map (fun t -> t, Hashtbl.find_option map (Trans.id t) |? B.infinity)
-      |> List.map (fun (t,b) -> FormattedString.mk_str_line @@ "  t" ^ (Trans.id t |> Util.natural_to_subscript) ^ ": " ^ B.to_string ~pretty:true b)
+      |> List.map (fun (t,b) -> if pretty then 
+          FormattedString.mk_str_line @@ "  t" ^ (Trans.id t |> Util.natural_to_subscript) ^ ": " ^ B.to_string ~pretty:true b
+        else
+          FormattedString.mk_str_line @@ "  t" ^ (Trans.id t |> string_of_int) ^ ": " ^ B.to_string b)
       |> FormattedString.mappend
 
     let to_string transitions (name, map) =
