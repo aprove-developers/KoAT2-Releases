@@ -154,7 +154,7 @@ let rec get_op_chain_and_apply_to_atoms f t b = match (t,b) with
   | (_, b)                          -> [f b]
 
 let rec show_bound_inner ?(pretty=false) = function
-  | Var v -> if pretty then Var.to_string_pretty v else Var.to_string v
+  | Var v -> if pretty then Var.to_string ~pretty v else Var.to_string v
   | Const c -> Num.to_string c
   | Pow (v, b) -> Num.to_string v ^ "^(" ^ show_bound_inner ~pretty b ^ ")"
   | Sum (b1, b2) ->

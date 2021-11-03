@@ -74,7 +74,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
       List.iter (fun (t,v) -> ignore (add ~simplifyfunc:simplifyfunc bound t v map)) scc;
       map
 
-    let to_formatted size =
+    let to_formatted ?(pretty=false) size =
       Map.to_list size
       |> List.sort (fun ((t1,v1),b1) ((t2,v2),b2) ->
              if Trans.compare_same t1 t2 != 0 then
@@ -83,8 +83,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
                Var.compare v1 v2
            )
       |> List.map
-           (fun ((transition, var), bound) ->
-            FormattedString.mk_str_line @@ "  t" ^ (Trans.id transition |> Util.natural_to_subscript) ^ ", " ^ Var.to_string_pretty var ^ ": " ^ B.to_string ~pretty:true bound)
+           (fun ((transition, var), bound) -> FormattedString.mk_str_line @@ "  t" ^ (if pretty then Trans.id transition |> Util.natural_to_subscript else Trans.id transition |> string_of_int) ^ ", " ^ Var.to_string ~pretty var ^ ": " ^ B.to_string ~pretty bound)
       |> FormattedString.mappend
 
     let to_string size =

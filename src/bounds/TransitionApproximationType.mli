@@ -38,7 +38,7 @@ module Make_TransitionApproximation :
 
      val all_bounded : t -> Trans.t list -> bool
 
-     val to_formatted : Trans.t list -> t -> FormattedString.t
+     val to_formatted : ?pretty:bool -> Trans.t list -> t -> FormattedString.t
 
      val to_string : Trans.t list -> t -> string
 

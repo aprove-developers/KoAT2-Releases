@@ -40,7 +40,7 @@ module Make_SizeApproximation :
 
     val add_all : ?simplifyfunc:(B.t -> B.t) -> B.t -> RV.t list -> t -> t
 
-    val to_formatted : t -> FormattedString.t
+    val to_formatted : ?pretty:bool -> t -> FormattedString.t
 
     val to_string : t -> string
 

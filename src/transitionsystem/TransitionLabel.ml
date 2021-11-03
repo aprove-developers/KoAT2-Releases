@@ -256,7 +256,7 @@ let update_to_string_lhs_pretty t =
     else
       update
       |> VarMap.bindings
-      |> List.map (fun (var,poly) -> (Var.to_string_pretty var, (Polynomial.to_string_pretty poly)))
+      |> List.map (fun (var,poly) -> (Var.to_string ~pretty:true var, (Polynomial.to_string_pretty poly)))
       |> List.split
       |> Tuple2.first
       |> fun xs -> "("^(String.concat "," xs)^")"
@@ -268,7 +268,7 @@ let update_to_string_rhs_pretty t =
     else
       update
       |> VarMap.bindings
-      |> List.map (fun (var,poly) -> (Var.to_string_pretty var, (Polynomial.to_string_pretty poly)))
+      |> List.map (fun (var,poly) -> (Var.to_string ~pretty:true var, (Polynomial.to_string_pretty poly)))
       |> List.split
       |> Tuple2.second
       |> fun xs -> "("^(String.concat "," xs)^")"

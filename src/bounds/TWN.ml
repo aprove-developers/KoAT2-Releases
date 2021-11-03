@@ -271,14 +271,14 @@ let complexity t =
         chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
       else t, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-    proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string Var.to_string_pretty (List.enum order))));
+    proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
     let pe = PE.compute_closed_form (List.map (fun var -> 
         let update_var = TransitionLabel.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
         proof_append (
           FormattedString.(mk_str "closed-form:" <> (
-          (List.combine (List.map Var.to_string_pretty order) (List.map PE.to_string_pretty pe))
+          (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
           |> List.map (fun (a,b) -> a ^ ": " ^ b) 
           |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
     let npe = PE.normalize pe in
@@ -347,7 +347,7 @@ let lift appr entry bound =
     proof_append (FormattedString.(mk_paragraph (mk_str_line ("relevant size-bounds w.r.t. t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ":") <> (
           Bound.vars bound
           |> VarSet.to_list
-          |> List.map (fun v -> (Var.to_string_pretty v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true)) 
+          |> List.map (fun v -> (Var.to_string ~pretty:true v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true)) 
           |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend) <> 
           FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <> 
           FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))

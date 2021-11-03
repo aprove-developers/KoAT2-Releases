@@ -37,25 +37,25 @@ let hash = Hashtbl.hash
 let mk_helper domain n = Helper (domain, n)
 
 (** TODO fix this. *)
-let to_string ?(to_file = false) =
+let to_string ?(pretty = false) ?(to_file = false) =
   if to_file then
   function
     | Var str -> str
     | Helper (Real,i) -> "TempReal" ^ (String.of_int i)
     | Helper (Int,i) -> "TempInt" ^ (String.of_int i)
     | Argument i -> "Arg" ^ (String.of_int i)
+  else if pretty then 
+  function
+    | Var str -> str
+    | Helper (Real,i) -> "Temp_Real" ^ (Util.natural_to_subscript i)
+    | Helper (Int,i) -> "Temp_Int" ^ (Util.natural_to_subscript i)
+    | Argument i -> "X" ^ (Util.natural_to_subscript i)
   else
   function
     | Var str -> str
     | Helper (Real,i) -> "Temp_Real_" ^ (String.of_int i)
     | Helper (Int,i) -> "Temp_Int_" ^ (String.of_int i)
     | Argument i -> "Arg_" ^ (String.of_int i)
-
-let to_string_pretty = function
-  | Var str -> str
-  | Helper (Real,i) -> "Temp_Real" ^ (Util.natural_to_subscript i)
-  | Helper (Int,i) -> "Temp_Int" ^ (Util.natural_to_subscript i)
-  | Argument i -> "X" ^ (Util.natural_to_subscript i)
 
 let counter = ref 0
 
