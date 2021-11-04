@@ -78,10 +78,10 @@ let min program appr1 appr2 =
   create program
   |> TransitionSet.fold (
     fun t appr -> 
-    let min_timebound = Bound.min_asy (timebound appr1 t) (timebound appr2 t) in
-    let min_costbound = Bound.min_asy (costbound appr1 t) (costbound appr2 t) in
+    let min_timebound = Bound.keep_simpler_bound (timebound appr1 t) (timebound appr2 t) in
+    let min_costbound = Bound.keep_simpler_bound (costbound appr1 t) (costbound appr2 t) in
     VarSet.fold (fun var appr ->
-      let min_sizebound = Bound.min_asy (sizebound appr1 t var) (sizebound appr2 t var) in appr |> add_sizebound min_sizebound t var) 
+      let min_sizebound = Bound.keep_simpler_bound (sizebound appr1 t var) (sizebound appr2 t var) in appr |> add_sizebound min_sizebound t var) 
       (Program.input_vars program)
       appr |> add_timebound min_timebound t |> add_costbound min_costbound t
   ) (Program.transitions program)
