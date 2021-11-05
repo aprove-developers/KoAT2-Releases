@@ -194,7 +194,7 @@ let outgoing_transitions (outgoing_trans: Transition.t list) (scc_cfr: Transitio
 
 
 (** Generates the approximation for the new program_cfr from the one of the original program. *)
-let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
+let merge_appr (program: Program.t) (program_cfr: Program.t) appr =
   let unchangend_trans = TransitionSet.inter (Program.transitions program) (Program.transitions program_cfr) in
   program_cfr
   |> Approximation.create
@@ -293,4 +293,4 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
     (program,TransitionSet.empty)
     |> SCCSet.fold (f_iteration ) minimalDisjointSCCs
       in
-      Option.some (program_res, (get_appr_cfr program program_res appr), already_used_cfr_res))
+      Option.some (program_res, (merge_appr program program_res appr), already_used_cfr_res))
