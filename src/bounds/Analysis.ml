@@ -271,7 +271,7 @@ let improve rvg ?(mprf_max_depth = 1) ~preprocess ~local ~cfr ?(inv = false) ?(f
                                 in
                               if not (TransitionSet.is_empty non_linear_transitions) && List.mem `Chaining cfr then (
                                 let opt = Timeout.timed_run 10. ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
-                                (fun () -> apply_cfr "chaining" (CFR.lift_to_program (Chaining.transform_graph ~scc:scc)) (fun _ _ -> ()) scc rvg 10. non_linear_transitions ~mprf_max_depth ~inv ~fast ~preprocess ~local measure program appr) in
+                                (fun () -> apply_cfr "chaining" (CFR.lift_to_program (Chaining.transform_graph ~scc:(Option.some scc))) (fun _ _ -> ()) scc rvg 10. non_linear_transitions ~mprf_max_depth ~inv ~fast ~preprocess ~local measure program appr) in
                                 if Option.is_some opt then
                                   let res, time_used = Option.get opt in
                                   res

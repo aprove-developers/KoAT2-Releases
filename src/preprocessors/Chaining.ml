@@ -38,11 +38,11 @@ let chain location graph : TransitionGraph.t =
   |> Enum.fold TransitionGraph.remove_edge_e skipped
 
 (** Performs chaining on the TransitionGraph. *)
-let transform_graph ?(scc=TransitionSet.empty) (graph: TransitionGraph.t): TransitionGraph.t MaybeChanged.t =
+let transform_graph ?(scc=None) (graph: TransitionGraph.t): TransitionGraph.t MaybeChanged.t =
   let try_chaining location maybe_changed_graph =
     let open MaybeChanged in
     maybe_changed_graph >>= (fun graph ->
-      if LocationSet.mem location (TransitionSet.locations scc) && chainable graph location then (
+      if (Option.is_none scc || LocationSet.mem location (TransitionSet.locations (Option.get scc))) && chainable graph location then (
         Logger.(log logger INFO (fun () -> "chaining", ["location", Location.to_string location]));
         changed (chain location graph)
       ) else
