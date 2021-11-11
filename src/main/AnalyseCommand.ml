@@ -30,6 +30,7 @@ let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
   |> print_endline
 
 type local = [`MPRF | `TWN]
+type cfr = [`PartialEvaluation | `Chaining]
 
 (** The shell arguments which can be defined in the console. *)
 type params = {
@@ -87,8 +88,8 @@ type params = {
     depth : int; [@default 1] [@aka ["d"]]
     (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
 
-    cfr : bool; [@default false]
-    (** True iff control flow refinement should be applied *)
+    cfr : cfr list; [@enum [("pe", `PartialEvaluation); ("chain", `Chaining)]] [@default []] [@sep ','] 
+    (** Choose methods for local control-flow-refinement: pe (Partial Evaluation) or chain (Chaining) *)
 
     inv : bool; [@default false]
     (** True iff invariants should be computed on the fly; only relevant for ranking functions and not for mprf. *)
@@ -198,7 +199,7 @@ let run (params: params) =
   in
   Timeout.timed_run params.timeout
     ~action:(fun () -> print_string "TIMEOUT: Complexity analysis of the given ITS stopped as the given timelimit has been exceeded!\n") (fun () ->
-     ((if params.cfr then program |> Normalise.normalise else program) , Approximation.create program)
+     ((if not (List.is_empty params.cfr) then program |> Normalise.normalise else program) , Approximation.create program)
      |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
      |> Tuple2.map1 preprocess
      |> tap (fun (prog, _) -> ProofOutput.add_to_proof @@ fun () ->
@@ -228,5 +229,5 @@ let run (params: params) =
           ))
     |> ignore;
     if params.show_proof then (print_string "\n\n"; ProofOutput.print_proof params.proof_format);
-    if params.log_level == NONE && params.cfr then
-      ignore (Sys.command ("rm -f -r ./tmp_" ^ !CFR.uid))
+    if params.log_level == NONE && not (List.mem `PartialEvaluation params.cfr) then
+      ignore (Sys.command ("rm -f -r ./tmp_" ^ !PartialEvaluation.uid))
