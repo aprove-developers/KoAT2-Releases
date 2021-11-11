@@ -13,9 +13,6 @@ OCAMLPACKS[] =
     ppx_deriving.ord
     ppx_deriving.show
     netstring
-    lwt_ppx
-    lwt.unix
-    lwt
 
 OCAMLINCLUDES[] =
     ../util

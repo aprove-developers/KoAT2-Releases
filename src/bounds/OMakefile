@@ -1,7 +1,4 @@
 OCAMLPACKS[] =
-    lwt_ppx
-    lwt.unix
-    lwt
     batteries
     ocamlgraph
     parmap
