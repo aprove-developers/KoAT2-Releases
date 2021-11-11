@@ -86,9 +86,7 @@ let improve_with_rank_mprf measure program appr rank =
 
 let improve_with_twn program scc measure appr =
   let compute appr_ t = 
-   let bound = match measure with
-   | `Time -> TWN.time_bound t scc program appr_
-   | `Cost -> Bound.infinity in (* TODO *)
+   let bound = TWN.time_bound t scc program appr_ in
    let orginal_bound = get_bound measure appr_ t in
     if (Bound.compare_asy orginal_bound bound) = 1 then
       MaybeChanged.changed (add_bound measure bound t appr_)
