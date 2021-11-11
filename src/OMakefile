@@ -43,8 +43,8 @@ CUSTOM_LIBS[] =
     smt
     transitionsystem
     parser
-    bounds
     preprocessors
+    bounds
     main
 
 # All the intermediate formats of package documentations

@@ -22,3 +22,6 @@ let merge_appr (program: Program.t) (program_cfr: Program.t) appr =
 
                                       |> Approximation.add_timebound timebound trans
                                       |> Approximation.add_costbound costbound trans) unchangend_trans
+
+let lift_to_program transform program =
+  MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (fun _ -> graph) program)))
