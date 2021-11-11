@@ -141,7 +141,6 @@ let applyIrankFinder (scc_program: Program.t) =
   "./tmp_" ^ !uid ^ "/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
       |> Readers.read_input ~rename:false false
 
-(** TODO speed this up. -------------------------------------  *)
 let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitions =
   transitions
   |> TransitionSet.map (fun (l,g,l') ->
@@ -165,7 +164,6 @@ let find_matching_locations (l': Location.t) (entry_transitions_cfr: TransitionS
   )
   |> Enum.map (fun (_,_,l') -> l')
   |> LocationSet.of_enum
-
 
 
 let rename_entry_transition (entry_locations: LocationSet.t) (initial_location: Location.t) (transitions: TransitionSet.t) =
@@ -214,14 +212,15 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
     MaybeChanged.same program
   else (
     let f_iteration =
-      fun scc merged_program ->
+      fun scc mc ->
+      let merged_program = MaybeChanged.unpack mc in
       (fun sccs ->
       Logger.log logger Logger.INFO
                                 (fun () -> "minimalSCC", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
       let unit_cost = TransitionSet.for_all (fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
       (*if there are costs which are not one then we cannot apply irankfinder *)
       if not (unit_cost scc) || (VarSet.is_empty (Program.input_vars merged_program)) then 
-         merged_program
+         mc
       else
         let scc_list =
           TransitionSet.to_list scc
@@ -261,11 +260,8 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
           |> TransitionSet.to_list
           |> flip Program.from initial_location % List.map List.singleton
           in
-          processed_program
-        with CFRefinementCRASH -> merged_program
+          MaybeChanged.changed processed_program
+        with CFRefinementCRASH -> mc
     in
-    let program_res =
-    program
-    |> SCCSet.fold f_iteration minimalDisjointSCCs
-      in
-      MaybeChanged.changed program_res)
+    MaybeChanged.same program
+    |> SCCSet.fold f_iteration minimalDisjointSCCs)
