@@ -11,9 +11,6 @@ OCAMLPACKS[] =
     ocamlgraph
     fpath
     netstring
-    lwt_ppx
-    lwt.unix
-    lwt
 
 OCAMLINCLUDES[] =
     ../util
