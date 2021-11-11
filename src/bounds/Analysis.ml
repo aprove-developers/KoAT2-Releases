@@ -230,7 +230,7 @@ let apply_cfr method_name f_cfr f_proof (scc: TransitionSet.t) rvg_with_sccs tim
                         |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
                         |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~inv ~fast ~local scc measure program_cfr
                     else appr)
-            (PartialEvaluation.merge_appr program program_cfr appr) in
+            (CFR.merge_appr program program_cfr appr) in
         let cfr_bound = Bound.sum (Enum.map
                                   (fun scc -> Bound.sum (Enum.map (fun t -> Approximation.timebound updated_appr_cfr t) (TransitionSet.enum scc)))
                                   (List.enum cfr_sccs))  in

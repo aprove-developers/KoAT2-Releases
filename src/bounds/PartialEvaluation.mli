@@ -12,7 +12,5 @@ val compute_timeout_time : Program.t -> Approximation.t -> TransitionSet.t -> fl
 
 val uid : string Batteries.ref
 
-val merge_appr : Program.t -> Program.t -> Approximation.t -> Approximation.t
-
 (** Unrolls all transitions listed in nonLinearTransitions.starrt  *)
 val apply_cfr :  ProgramTypes.TransitionSet.t -> TransitionSet.t -> Program.t -> Program.t MaybeChanged.t
