@@ -9,4 +9,4 @@ open RVGTypes
 type rvg_with_sccs = RVG.t * RVG.scc list Lazy.t
 
 (** Performs improvement steps to find better timebounds for the approximation and updates the approximation. *)
-val improve : rvg_with_sccs -> ?mprf_max_depth:int -> preprocess:(Program.t -> Program.t) -> local:([`MPRF | `TWN ] list) -> ?cfr:bool -> ?inv:bool -> ?fast:bool -> [ `Cost | `Time ] -> Program.t -> Approximation.t ->  Program.t * Approximation.t
+val improve : rvg_with_sccs -> ?mprf_max_depth:int -> preprocess:(Program.t -> Program.t) -> local:([`MPRF | `TWN ] list) -> cfr:([`PartialEvaluation | `Chaining ] list) -> ?inv:bool -> ?fast:bool -> [ `Cost | `Time ] -> Program.t -> Approximation.t ->  Program.t * Approximation.t

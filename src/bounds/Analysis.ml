@@ -5,14 +5,14 @@ open Atoms
 open Constraints
 open ProgramTypes
 open Formulas
-open CFR
+open PartialEvaluation
 open RVGTypes
 
 let logger = Logging.(get Time)
 
 let logger_cfr = Logging.(get CFR)
 
-(** Table: transition -> amount of times (orginal) transition was involed in CFR. *)
+(** Table: transition -> amount of times (orginal) transition was involed in PartialEvaluation. *)
 let already_used_cfr = ref TransitionSet.empty
 
 type measure = [ `Cost | `Time ] [@@deriving show]
@@ -171,9 +171,9 @@ let local_rank ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure program
 
 let lwt_parallel ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measure program max_depth appr = 
   if List.is_empty local || (List.mem `MPRF local && List.length local == 1) then
-    Lwt_main.run (Lwt.return (local_rank ~inv ~fast scc measure program max_depth appr))
+    local_rank ~inv ~fast scc measure program max_depth appr
   else if (List.mem `TWN local && List.length local == 1) then
-    Lwt_main.run  (Lwt.return (improve_with_twn program scc measure appr)) 
+    improve_with_twn program scc measure appr
   else 
       let mc1 = (local_rank ~inv ~fast scc measure program max_depth appr) in
       let mc2 = (improve_with_twn program scc measure (MaybeChanged.unpack mc1)) in
@@ -199,19 +199,19 @@ let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = fals
   |> MaybeChanged.unpack % improve_timebound ~mprf_max_depth ~inv ~fast ~local scc measure program
   |> step
 
-let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ~preprocess ~local ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
+
+let apply_cfr method_name f_cfr f_proof (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ~preprocess ~local ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
   if not (TransitionSet.is_empty non_linear_transitions)  then
       let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
-      let opt =
+      let mc =
           Logger.log logger_cfr Logger.INFO
-            (fun () -> "Analysis_apply_cfr", [ "non-linear trans", TransitionSet.to_string non_linear_transitions
+            (fun () -> "Analysis_apply_" ^ method_name, [ "non-linear trans", TransitionSet.to_string non_linear_transitions
                                                   ; "time", string_of_float time]);
-          CFR.apply_cfr non_linear_transitions !already_used_cfr program appr in
-      if Option.is_some opt then (
+          f_cfr program in
+      if MaybeChanged.has_changed mc then (
         ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "Analysing control-flow refined program");
-        let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
-        let program_cfr = preprocess program_cfr in
-        Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
+        let program_cfr = mc |> MaybeChanged.unpack |> preprocess  in
+        Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_" ^ method_name, ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
         Program.reset_pre_cache ();
         let rvg_with_sccs_cfr = RVGTypes.RVG.rvg_with_sccs program_cfr in
         LocalSizeBound.switch_cache();
@@ -226,11 +226,11 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
           |> List.fold_left (fun appr scc ->
                     if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                         appr
-                        |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "cfr analysis", ["scc", TransitionSet.to_id_string scc]))
+                        |> tap (const @@ Logger.log logger Logger.INFO (fun () -> method_name ^ "analysis", ["scc", TransitionSet.to_id_string scc]))
                         |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
                         |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~inv ~fast ~local scc measure program_cfr
                     else appr)
-              appr_cfr in
+            (PartialEvaluation.merge_appr program program_cfr appr) in
         let cfr_bound = Bound.sum (Enum.map
                                   (fun scc -> Bound.sum (Enum.map (fun t -> Approximation.timebound updated_appr_cfr t) (TransitionSet.enum scc)))
                                   (List.enum cfr_sccs))  in
@@ -239,11 +239,11 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
           LocalSizeBound.reset_cfr();
           Program.reset_pre_cache ();
           Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED",
-          ["original bound", (Bound.to_string org_bound); "cfr bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
+          ["original bound", (Bound.to_string org_bound); method_name ^ " bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
           (program, appr, rvg_with_sccs)
         )
         else (
-          CFR.add_to_proof program_cfr cfr_bound;
+          f_proof program_cfr cfr_bound;
           LocalSizeBound.switch_cache();
           (program_cfr, updated_appr_cfr, rvg_with_sccs_cfr)))
       else
@@ -251,69 +251,12 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
   else
     (program, appr, rvg_with_sccs)
 
-let handle_timeout_cfr non_linear_transitions =
+let handle_timeout_cfr method_name non_linear_transitions =
   LocalSizeBound.reset_cfr ();
   Program.reset_pre_cache ();
-  Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR", ["scc", (TransitionSet.to_string non_linear_transitions)])
+  Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR_" ^ method_name, ["scc", (TransitionSet.to_string non_linear_transitions)])
 
-let apply_chaining (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ~preprocess ~local ?(inv = false) ?(fast = false) ?(twn = false) measure program appr =
-  if not (TransitionSet.is_empty non_linear_transitions)  then
-      let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
-      let maybe =
-          (* Logger.log logger_cfr Logger.INFO
-            (fun () -> "Analysis_apply_cfr", [ "non-linear trans", TransitionSet.to_string non_linear_transitions
-                                                  ; "time", string_of_float time]); *)
-          Chaining2.lift_to_program scc Chaining2.transform_graph program in
-      if MaybeChanged.has_changed maybe then (
-        (* ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "Analysing chained program"); *)
-        let program_chained = (MaybeChanged.unpack maybe) |> preprocess in
-
-        (* Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]); *)
-        Program.reset_pre_cache ();
-        let rvg_with_sccs_cfr = RVGTypes.RVG.rvg_with_sccs program_chained in
-        LocalSizeBound.switch_cache();
-        LocalSizeBound.enable_cfr();
-        (* The new sccs which do not occur in the original program. *)
-        let chained_sccs = program_chained
-          |> Program.sccs
-          |> List.of_enum
-          |> List.filter (fun chained_scc -> not (Enum.exists (fun scc_ -> TransitionSet.equal chained_scc scc_) (Program.sccs program))) in
-        let updated_appr_chained =
-          chained_sccs
-          |> List.fold_left (fun appr scc ->
-                    if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
-                        appr
-                        |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "cfr analysis", ["scc", TransitionSet.to_id_string scc]))
-                        |> SizeBounds.improve program_chained rvg_with_sccs_cfr ~scc:(Option.some scc)
-                        |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~inv ~fast ~local scc measure program_chained
-                    else appr)
-              (CFR.merge_appr program program_chained appr) in
-        let chained_bound = Bound.sum (Enum.map
-                                  (fun scc -> Bound.sum (Enum.map (fun t -> Approximation.timebound updated_appr_chained t) (TransitionSet.enum scc)))
-                                  (List.enum chained_sccs))  in
-        if (Bound.compare_asy org_bound chained_bound) < 1 then (
-          (* ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "CFR did not improve the program. Rolling back"); *)
-          LocalSizeBound.reset_cfr();
-          Program.reset_pre_cache ();
-          (* Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED",
-          ["original bound", (Bound.to_string org_bound); "cfr bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]); *)
-          (program, appr, rvg_with_sccs)
-        )
-        else (
-          (* CFR.add_to_proof program_cfr cfr_bound; *)
-          LocalSizeBound.switch_cache();
-          (program_chained, updated_appr_chained, rvg_with_sccs_cfr)))
-      else
-      (program, appr, rvg_with_sccs)
-  else
-    (program, appr, rvg_with_sccs)
-
-let handle_timeout_chaining non_linear_transitions =
-  LocalSizeBound.reset_cfr ();
-  Program.reset_pre_cache ();
-  Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CHAINING", ["scc", (TransitionSet.to_string non_linear_transitions)])
-
-let improve rvg ?(mprf_max_depth = 1) ~preprocess ~local ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
+let improve rvg ?(mprf_max_depth = 1) ~preprocess ~local ~cfr ?(inv = false) ?(fast = false) measure program appr =
   program
     |> Program.sccs
     |> List.of_enum
@@ -328,9 +271,9 @@ let improve rvg ?(mprf_max_depth = 1) ~preprocess ~local ?(cfr = false) ?(inv = 
                                 let non_linear_transitions =
                                   TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) scc
                                 in
-                              if not (TransitionSet.is_empty non_linear_transitions) then (
-                                let opt = Timeout.timed_run 10. ~action:(fun () -> handle_timeout_chaining scc)
-                                (fun () -> apply_chaining scc rvg 10. non_linear_transitions ~mprf_max_depth ~inv ~fast ~preprocess ~local measure program appr) in
+                              if not (TransitionSet.is_empty non_linear_transitions) && List.mem `Chaining cfr then (
+                                let opt = Timeout.timed_run 10. ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
+                                (fun () -> apply_cfr "chaining" (Chaining2.lift_to_program scc Chaining2.transform_graph) (fun _ _ -> ()) scc rvg 10. non_linear_transitions ~mprf_max_depth ~inv ~fast ~preprocess ~local measure program appr) in
                                 if Option.is_some opt then
                                   let res, time_used = Option.get opt in
                                   res
@@ -341,13 +284,13 @@ let improve rvg ?(mprf_max_depth = 1) ~preprocess ~local ?(cfr = false) ?(inv = 
                                   TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) (TransitionSet.inter scc (Program.transitions program))
                                   |> flip TransitionSet.diff !already_used_cfr
                                 in
-                              if cfr && !CFR.time_cfr > 0. && not (TransitionSet.is_empty non_linear_transitions) then (
-                                let time = CFR.compute_timeout_time program appr scc in
-                                let opt = Timeout.timed_run time ~action:(fun () -> handle_timeout_cfr scc)
-                                (fun () -> apply_cfr scc rvg time non_linear_transitions ~mprf_max_depth ~inv ~fast ~preprocess ~local measure program appr) in
+                              if !PartialEvaluation.time_cfr > 0. && not (TransitionSet.is_empty non_linear_transitions) && List.mem `PartialEvaluation cfr then (
+                                let time = PartialEvaluation.compute_timeout_time program appr scc in
+                                let opt = Timeout.timed_run time ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
+                                (fun () -> apply_cfr "partial_evaluation" (PartialEvaluation.apply_cfr non_linear_transitions !already_used_cfr) (PartialEvaluation.add_to_proof) scc rvg time non_linear_transitions ~mprf_max_depth ~inv ~fast ~preprocess ~local measure program appr) in
                                 if Option.is_some opt then
                                   let res, time_used = Option.get opt in
-                                  CFR.time_cfr := !CFR.time_cfr -. time_used;
+                                  PartialEvaluation.time_cfr := !PartialEvaluation.time_cfr -. time_used;
                                   res
                                 else (program, appr, rvg))
                               else (program, appr, rvg))

@@ -225,24 +225,24 @@ let restore_invariants (program: Program.t) trans =
   |> TransitionSet.union (TransitionSet.diff trans trans_without_entry)
 
 
-let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSet.t) (program: Program.t) appr =
+let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSet.t) (program: Program.t) =
   let initial_location = Program.start program
   and minimalDisjointSCCs = program
                             |> (minimalSCCs nonLinearTransitions)
                             |> minimalDisjointSCCs
                             in
   if SCCSet.is_empty minimalDisjointSCCs then
-    None
+    MaybeChanged.same program
   else (
     let f_iteration =
-      fun scc (merged_program,already_used_trans) ->
+      fun scc merged_program ->
       (fun sccs ->
       Logger.log logger Logger.INFO
                                 (fun () -> "minimalSCC", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
       let unit_cost = TransitionSet.for_all (fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
       (*if there are costs which are not one then we cannot apply irankfinder *)
-      if not (unit_cost scc) || (VarSet.is_empty (Program.input_vars merged_program)) then (
-         (merged_program, TransitionSet.union already_used_trans scc))
+      if not (unit_cost scc) || (VarSet.is_empty (Program.input_vars merged_program)) then 
+         merged_program
       else
         let scc_list =
           TransitionSet.to_list scc
@@ -271,12 +271,8 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
             LocationSet.filter (fun l -> TransitionSet.exists (fun (_,_,l') -> Location.equal l l') (TransitionSet.diff (Program.transitions merged_program) scc)) locations
             |> LocationSet.diff locations in
 
-          (** Ensures that each transition is only used once in a cfr unrolling step. TODO use sets and fix this.  *)
-          let
-          already_used_cfr = TransitionSet.union (TransitionSet.union already_used_trans transitions_cfr) scc
-          and
           (** Merges irankfinder and original program. *)
-          processed_program =
+          let processed_program =
           merged_program
           |> Program.transitions
           |> TransitionSet.union transitions_cfr
@@ -286,11 +282,11 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
           |> TransitionSet.to_list
           |> flip Program.from initial_location % List.map List.singleton
           in
-          (processed_program,already_used_cfr)
-        with CFRefinementCRASH -> (merged_program,already_used_trans)
+          processed_program
+        with CFRefinementCRASH -> merged_program
     in
-    let (program_res,already_used_cfr_res) =
-    (program,TransitionSet.empty)
-    |> SCCSet.fold (f_iteration ) minimalDisjointSCCs
+    let program_res =
+    program
+    |> SCCSet.fold f_iteration minimalDisjointSCCs
       in
-      Option.some (program_res, (merge_appr program program_res appr), already_used_cfr_res))
+      MaybeChanged.changed program_res)
