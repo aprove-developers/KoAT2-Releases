@@ -147,7 +147,7 @@ let termination t =
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly) 
               (TransitionLabel.guard_without_inv t) (Formula.mk_true) in
-  (not % SMTSolver.satisfiable) (Formula.implies (Formula.mk (TransitionLabel.invariant t)) formula |> Formula.simplify)
+  (not % SMTSolver.satisfiable) (Formula.mk_and (Formula.mk (TransitionLabel.invariant t)) formula |> Formula.simplify)
 
 let termination_ t order pe npe varmap = 
   let formula = 
@@ -158,8 +158,8 @@ let termination_ t order pe npe varmap =
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify) 
               (TransitionLabel.guard_without_inv t) (Formula.mk_true) in
-  (not % SMTSolver.satisfiable) (Formula.mk_and formula (Formula.mk (TransitionLabel.invariant t)))
-  |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string bool]);
+  (not % SMTSolver.satisfiable) (Formula.mk_and (Formula.mk (TransitionLabel.invariant t)) formula)
+  |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
     proof_append
         FormattedString.(
@@ -370,7 +370,7 @@ let time_bound (l,t,l') scc program appr =
           |> FormattedString.mappend));
         let global_local_bounds =
           List.map (fun (entry, t) -> 
-              let eliminated_t = TransitionLabel.without_inv t |> eliminate in
+              let eliminated_t = t |> eliminate in
                 if VarSet.is_empty (TransitionLabel.vars eliminated_t) then 
                   Bound.infinity, (entry, Bound.infinity) 
                 else
