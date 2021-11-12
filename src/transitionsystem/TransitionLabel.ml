@@ -215,6 +215,18 @@ let guard_to_string ?(to_file = false) ?(pretty = false) label =
   else
     Guard.to_string ~to_file ~pretty ~conj:(if pretty then " ∧ " else " && ") (Guard.mk_and label.guard label.invariant)
 
+let guard_without_inv_to_string ?(to_file = false) ?(pretty = false) label =
+  if
+    Guard.is_true label.guard then ""
+  else
+    Guard.to_string ~to_file ~pretty ~conj:(if pretty then " ∧ " else " && ") label.guard
+
+let invariant_to_string ?(to_file = false) ?(pretty = false) label =
+  if
+    Invariant.is_true label.invariant then ""
+  else
+    Invariant.to_string ~to_file ~pretty ~conj:(if pretty then " ∧ " else " && ") label.invariant
+
 let normalise t (input_vars:VarSet.t) = {
     id = t.id;
     update = VarSet.fold (fun var fold_update -> if (VarMap.mem var fold_update)
@@ -274,12 +286,13 @@ let update_to_string_rhs_pretty t =
       |> fun xs -> "("^(String.concat "," xs)^")"
 
 let to_string ?(pretty = false) label =
-  let guard = if Guard.is_true (Guard.mk_and label.guard label.invariant) then "" else " :|: " ^ guard_to_string ~pretty label in
+  let guard = if Guard.is_true label.guard  then "" else " :|: " ^ guard_without_inv_to_string ~pretty label in
+  let invariant = if Invariant.is_true label.invariant  then "" else " [ " ^ invariant_to_string ~pretty label ^ " ] " in
   let cost = if Polynomial.is_one label.cost then "" else if pretty then Polynomial.to_string_pretty label.cost else Polynomial.to_string label.cost in
   if pretty then
-    "t" ^ (Util.natural_to_subscript label.id) ^ ": " ^ update_to_string_lhs_pretty label ^ " -{" ^ cost ^ "}> "  ^ update_to_string_rhs_pretty label ^ guard
+    "t" ^ (Util.natural_to_subscript label.id) ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty label ^ " -{" ^ cost ^ "}> "  ^ update_to_string_rhs_pretty label ^ guard
   else 
-    "ID: " ^ string_of_int label.id ^ ", " ^ cost ^ "&euro;" ^ ", " ^ update_to_string label.update ^ guard
+    "ID: " ^ invariant ^ string_of_int label.id ^ ", " ^ cost ^ "&euro;" ^ ", " ^ update_to_string label.update ^ guard
 
 let to_id_string =
   string_of_int % id
