@@ -352,7 +352,7 @@ let lift appr entry bound =
           FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <> 
           FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
-let time_bound (l,t,l') scc program appr = 
+let time_bound (l,t,l') scc program appr = (
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in 
   if Option.is_none opt then (
@@ -397,7 +397,7 @@ let time_bound (l,t,l') scc program appr =
     let cycle, xs = Option.get opt in
     let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
     bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
-                         |> tap (fun b -> proof_append FormattedString.((mk_str_line (b |> Bound.to_string ~pretty:true)))))
+                         |> tap (fun b -> proof_append FormattedString.((mk_str_line (b |> Bound.to_string ~pretty:true))))))
   |> tap (fun b -> if Bound.compare_asy b (Approximation.timebound appr (l,t,l')) < 0 then ProofOutput.add_to_proof @@ fun () -> 
     FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:") <> 
                       mk_header_small (mk_str ("TWN-Loops: t" ^ (TransitionLabel.id t |> Util.natural_to_subscript) ^ " " ^ Bound.to_string ~pretty:true b)) <> 
