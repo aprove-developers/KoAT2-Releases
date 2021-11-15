@@ -58,6 +58,7 @@
 <link title="OurRational" rel="Chapter" href="OurRational.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -76,6 +77,7 @@
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
+<link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -105,7 +107,7 @@
 <pre><span id="TYPErvg_with_sccs"><span class="keyword">type</span> <code class="type"></code>rvg_with_sccs</span> = <code class="type">RVGTypes.RVG.t * <a href="RVGTypes.RVG.html#TYPEscc">RVGTypes.RVG.scc</a> list Stdlib.Lazy.t</code> </pre>
 
 
-<pre><span id="VALimprove"><span class="keyword">val</span> improve</span> : <code class="type"><a href="Analysis.html#TYPErvg_with_sccs">rvg_with_sccs</a> -><br>       ?mprf_max_depth:int -><br>       preprocess:(<a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a>) -><br>       local:[ `MPRF | `TWN ] list -><br>       ?cfr:bool -><br>       ?inv:bool -><br>       ?fast:bool -><br>       [ `Cost | `Time ] -><br>       <a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="Program.html#TYPEt">Program.t</a> * <a href="Approximation.html#TYPEt">Approximation.t</a></code></pre><div class="info ">
+<pre><span id="VALimprove"><span class="keyword">val</span> improve</span> : <code class="type"><a href="Analysis.html#TYPErvg_with_sccs">rvg_with_sccs</a> -><br>       ?mprf_max_depth:int -><br>       preprocess:(<a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a>) -><br>       local:[ `MPRF | `TWN ] list -><br>       cfr:[ `Chaining | `PartialEvaluation ] list -><br>       ?inv:bool -><br>       ?fast:bool -><br>       [ `Cost | `Time ] -><br>       <a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="Program.html#TYPEt">Program.t</a> * <a href="Approximation.html#TYPEt">Approximation.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Performs improvement steps to find better timebounds for the approximation and updates the approximation.</p>
 </div>
