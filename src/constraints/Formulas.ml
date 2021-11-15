@@ -101,10 +101,10 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
       |> List.map (C.vars)
       |> List.fold_left VarSet.union VarSet.empty
 
-    let to_string constr =
-      String.concat " || " (List.map C.to_string  constr)
+    let to_string ?(pretty=false) constr =
+      String.concat (if pretty then " ∨ " else " || ") (List.map (C.to_string ~pretty) constr)
 
-    let to_string_pretty = function
+    let to_string_formatted = function
       | [] -> FormattedString.Empty
       | x::xs -> 
         (C.to_string ~pretty:true x)::(List.map (((^) " ∨ ") % C.to_string ~pretty:true) xs) 
@@ -119,6 +119,7 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
 
     let is_linear = List.for_all C.is_linear
 
+    let is_true = List.for_all C.is_true
   end
 
 module Formula =
