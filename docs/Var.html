@@ -58,6 +58,7 @@
 <link title="OurRational" rel="Chapter" href="OurRational.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -76,6 +77,7 @@
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
+<link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -127,6 +129,8 @@
 
 <pre><span id="VALequal_sort"><span class="keyword">val</span> equal_sort</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -> <a href="Var.html#TYPEsort">sort</a> -> Ppx_deriving_runtime.bool</code></pre>
 <pre><span id="VALcompare_sort"><span class="keyword">val</span> compare_sort</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -> <a href="Var.html#TYPEsort">sort</a> -> Ppx_deriving_runtime.int</code></pre>
+<pre><span class="keyword">include</span> ??</pre>
+
 <pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -164,6 +168,8 @@
 
 <pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> <a href="Var.html#TYPEt">t</a> -> bool</code></pre>
 <pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> <a href="Var.html#TYPEt">t</a> -> int</code></pre>
+<pre><span class="keyword">include</span> ??</pre>
+
 <pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> <a href="Var.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
@@ -194,13 +200,12 @@
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?to_file:bool -> <a href="Var.html#TYPEt">t</a> -> Batteries.String.t</code></pre><div class="info ">
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -> ?to_file:bool -> <a href="Var.html#TYPEt">t</a> -> Batteries.String.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string representing the variable(<code class="code">Temp_Int_</code> for integer variables, <code class="code">Temp_Real_</code> for real variables and <code class="code">Arg_ </code> for argument variables). Parameter <i>to_file</i> is used to get a representation with less special characters.</p>
 </div>
 </div>
 
-<pre><span id="VALto_string_index"><span class="keyword">val</span> to_string_index</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> Batteries.String.t</code></pre>
 <pre><span id="VALfresh_id"><span class="keyword">val</span> fresh_id</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -> unit -> <a href="Var.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a not yet used id, which is guaranteed to be distinct from any yet existing ids.</p>

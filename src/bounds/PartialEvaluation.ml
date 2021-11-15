@@ -159,9 +159,7 @@ let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitio
 let find_matching_locations (l': Location.t) (entry_transitions_cfr: TransitionSet.t) =
   entry_transitions_cfr
   |> TransitionSet.enum
-  |> Enum.filter (fun (_,_,l'_cfr) ->
-                            Util.contains (Location.to_string l'_cfr) ("n_" ^ (Location.to_string l') ^ "__")
-  )
+  |> Enum.filter (fun (_,_,l'_cfr) -> String.exists (Location.to_string l'_cfr) ("n_" ^ (Location.to_string l') ^ "__"))
   |> Enum.map (fun (_,_,l') -> l')
   |> LocationSet.of_enum
 
@@ -185,19 +183,19 @@ let outgoing_transitions (outgoing_trans: Transition.t list) (scc_cfr: Transitio
                                                                        |> LocationSet.add l') scc_cfr LocationSet.empty in
   TransitionSet.empty
   |> List.fold_right (fun (l,t,l') set -> locations_cfr
-                                          |> LocationSet.filter (fun l_cfr -> Util.contains (Location.to_string l_cfr) ("_" ^ (Location.to_string l) ^ "__"))
+                                          |> LocationSet.filter (fun l_cfr -> String.exists (Location.to_string l_cfr) ("_" ^ (Location.to_string l) ^ "__"))
                                           |> LocationSet.enum
                                           |> TransitionSet.create (function l_cfr ->(l_cfr, TransitionLabel.fresh_id t,l'))
                                           |> TransitionSet.union set) outgoing_trans
 
 
 (* We just output guard && invariant. Hence we need to separate invariants after irankfinder call. *)
-let restore_invariants (program: Program.t) trans = 
+let restore_invariants (program: Program.t) trans =
   let org_trans = Program.transitions program in
-  let trans_without_entry = TransitionSet.filter (fun (l,_,_) -> not (String.equal (Location.to_string l) ("n_" ^ (Location.to_string (Program.start program))))) trans in
-  let matching_trans (l,_,l') = TransitionSet.filter (fun (l_org,_,l'_org) -> Util.contains (Location.to_string l) ("n_" ^ (Location.to_string l_org) ^ "__")
-                                                                           && Util.contains (Location.to_string l') ("n_" ^ (Location.to_string l'_org) ^ "__")
-) org_trans |> TransitionSet.any in
+  let trans_without_entry = TransitionSet.filter (not % String.equal ("n_"^Location.to_string (Program.start program)) % Location.to_string % Transition.src) trans in
+  let matching_trans (l,_,l') = TransitionSet.filter (fun (l_org,_,l'_org) -> String.exists (Location.to_string l) ("n_" ^ (Location.to_string l_org) ^ "__")
+                                                                           && String.exists (Location.to_string l') ("n_" ^ (Location.to_string l'_org) ^ "__")) org_trans
+                             |> TransitionSet.any in
   TransitionSet.map (fun (l,t,l') -> let (_,t_org,_) = matching_trans (l,t,l') in (l, TransitionLabel.separate_guard_invariant t (TransitionLabel.invariant t_org), l')) trans_without_entry
   |> TransitionSet.union (TransitionSet.diff trans trans_without_entry)
 
@@ -219,7 +217,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
                                 (fun () -> "minimalSCC", ["non-linear transitions: " ^ (TransitionSet.to_string (TransitionSet.inter nonLinearTransitions scc)), "\n minimalSCC: " ^ (TransitionSet.to_string scc)])) scc;
       let unit_cost = TransitionSet.for_all (fun trans -> Polynomial.(equal (Transition.cost trans) one)) in
       (*if there are costs which are not one then we cannot apply irankfinder *)
-      if not (unit_cost scc) || (VarSet.is_empty (Program.input_vars merged_program)) then 
+      if not (unit_cost scc) || (VarSet.is_empty (Program.input_vars merged_program)) then
          mc
       else
         let scc_list =
