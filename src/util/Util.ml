@@ -62,13 +62,6 @@ let memoize cache ~extractor f =
 let hash str =
  String.fold_right (fun char res -> res * 31 + (int_of_char char)) str 1
 
-(** Returns true iff s2 is contained in s1. *)
-let contains s1 s2 =
-    let re = Str.regexp_string s2
-    in
-        try ignore (Str.search_forward re s1 0); true
-        with Not_found -> false
-
 let cat_maybes l=
   List.map Option.get (List.filter Option.is_some l)
 
@@ -105,9 +98,9 @@ exception Negative
 let rec natural_to_subscript = function
   | n when n < 0 -> raise Negative
   | n when n < 10 -> List.nth subscript n
-  | n -> if n / 10 == 0 then "" else natural_to_subscript (n / 10) ^ (List.nth subscript (n mod 10)) 
+  | n -> if n / 10 == 0 then "" else natural_to_subscript (n / 10) ^ (List.nth subscript (n mod 10))
 
 let rec natural_to_superscript = function
   | n when n < 0 -> raise Negative
   | n when n < 10 -> List.nth superscript n
-  | n -> if n / 10 == 0 then "" else natural_to_superscript (n / 10) ^ (List.nth superscript (n mod 10)) 
+  | n -> if n / 10 == 0 then "" else natural_to_superscript (n / 10) ^ (List.nth superscript (n mod 10))

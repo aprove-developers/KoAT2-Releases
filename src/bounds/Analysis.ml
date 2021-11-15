@@ -85,7 +85,7 @@ let improve_with_rank_mprf measure program appr rank =
     MaybeChanged.same appr
 
 let improve_with_twn program scc measure appr =
-  let compute appr_ t = 
+  let compute appr_ t =
    let bound = TWN.time_bound t scc program appr_ in
    let orginal_bound = get_bound measure appr_ t in
     if (Bound.compare_asy orginal_bound bound) = 1 then
@@ -132,7 +132,7 @@ let rec knowledge_propagation (scc: TransitionSet.t) measure program appr =
         (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
          execute)
 
-let local_rank ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure program max_depth appr = 
+let local_rank ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure program max_depth appr =
     let get_unbounded_vars transition =
       Program.input_vars program
       |> VarSet.filter (Bound.is_infinity % Approximation.sizebound appr transition)
@@ -167,15 +167,13 @@ let local_rank ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure program
     rankfuncs
     |> MaybeChanged.fold_enum (fun appr -> improve_with_rank_mprf measure program appr) appr
 
-let lwt_parallel ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measure program max_depth appr = 
+let lwt_parallel ?(inv=false) ?(fast=false) ~local (scc: TransitionSet.t) measure program max_depth appr =
   if List.is_empty local || (List.mem `MPRF local && List.length local == 1) then
     local_rank ~inv ~fast scc measure program max_depth appr
   else if (List.mem `TWN local && List.length local == 1) then
     improve_with_twn program scc measure appr
-  else 
-      let mc1 = (local_rank ~inv ~fast scc measure program max_depth appr) in
-      let mc2 = (improve_with_twn program scc measure (MaybeChanged.unpack mc1)) in
-      if (MaybeChanged.has_changed mc1) || (MaybeChanged.has_changed mc2) then MaybeChanged.changed (MaybeChanged.unpack mc2) else mc1
+  else
+      MaybeChanged.(local_rank ~inv ~fast scc measure program max_depth appr >>= improve_with_twn program scc measure)
 
 let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) ~local (scc: TransitionSet.t) measure program appr =
     let execute () = lwt_parallel ~inv ~fast ~local scc measure program mprf_max_depth appr in
