@@ -58,6 +58,7 @@
 <link title="OurRational" rel="Chapter" href="OurRational.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -76,6 +77,7 @@
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
+<link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -101,4 +103,4 @@
 </div>
 <hr width="100%">
 
-<pre><span id="VALfind_bounds"><span class="keyword">val</span> find_bounds</span> : <code class="type">?mprf_max_depth:int -><br>       preprocess:(<a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a>) -><br>       local:[ `MPRF | `TWN ] list -><br>       ?cfr:bool -><br>       ?fast:bool -><br>       ?time_cfr:int -><br>       ?inv:bool -><br>       ?twn:bool -> <a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="Program.html#TYPEt">Program.t</a> * <a href="Approximation.html#TYPEt">Approximation.t</a></code></pre></body></html>
+<pre><span id="VALfind_bounds"><span class="keyword">val</span> find_bounds</span> : <code class="type">?mprf_max_depth:int -><br>       preprocess:(<a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a>) -><br>       local:[ `MPRF | `TWN ] list -><br>       cfr:[ `Chaining | `PartialEvaluation ] list -><br>       ?fast:bool -><br>       ?time_cfr:int -><br>       ?inv:bool -><br>       ?twn:bool -> <a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="Program.html#TYPEt">Program.t</a> * <a href="Approximation.html#TYPEt">Approximation.t</a></code></pre></body></html>

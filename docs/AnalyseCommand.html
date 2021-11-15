@@ -57,6 +57,7 @@
 <link title="OurRational" rel="Chapter" href="OurRational.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -75,6 +76,7 @@
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
+<link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -120,6 +122,9 @@
 </div>
 
 <pre><span id="TYPElocal"><span class="keyword">type</span> <code class="type"></code>local</span> = <code class="type">[ `MPRF | `TWN ]</code> </pre>
+
+
+<pre><span id="TYPEcfr"><span class="keyword">type</span> <code class="type"></code>cfr</span> = <code class="type">[ `Chaining | `PartialEvaluation ]</code> </pre>
 
 
 <pre><code><span id="TYPEparams"><span class="keyword">type</span> <code class="type"></code>params</span> = {</code></pre><table class="typetable">
@@ -333,10 +338,10 @@
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTparams.cfr">cfr</span>&nbsp;: <code class="type">bool</code>;</code></td>
+<code><span id="TYPEELTparams.cfr">cfr</span>&nbsp;: <code class="type"><a href="AnalyseCommand.html#TYPEcfr">cfr</a> list</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
 <div class="info-desc">
-<p>True iff control flow refinement should be applied</p>
+<p>Choose methods for local control-flow-refinement: pe (Partial Evaluation) or chain (Chaining)</p>
 </div>
 </div>
 </td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
@@ -389,7 +394,7 @@
 </div>
 </td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
-}
+<code>}</code>
 
 <div class="info ">
 <div class="info-desc">
@@ -399,6 +404,8 @@
 
 
 <pre><span id="VALparams_cmdliner_term"><span class="keyword">val</span> params_cmdliner_term</span> : <code class="type">unit -> <a href="AnalyseCommand.html#TYPEparams">params</a> Cmdliner.Term.t</code></pre>
+<pre><span class="keyword">include</span> struct ... end</pre>
+
 <pre><span id="VALbounded_label_to_string"><span class="keyword">val</span> bounded_label_to_string</span> : <code class="type"><a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string containing a time-bound and the label of a transition for a specified approximation.</p>

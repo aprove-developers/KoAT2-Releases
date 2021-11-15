@@ -53,6 +53,7 @@
 <link title="OurRational" rel="Chapter" href="OurRational.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -71,6 +72,7 @@
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
+<link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -90,7 +92,7 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;(&nbsp;=~=&nbsp;)&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;equal&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compare&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;?to_file:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?index:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;?to_file:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;?pretty:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;eval&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;valuation&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;value<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;eval_f&nbsp;:&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;(<span class="constructor">Var</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;value)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;value<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;rename&nbsp;:&nbsp;<span class="constructor">RenameMap</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;t<br>
