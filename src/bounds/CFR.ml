@@ -160,8 +160,7 @@ let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitio
 let find_matching_locations (l': Location.t) (entry_transitions_cfr: TransitionSet.t) =
   entry_transitions_cfr
   |> TransitionSet.enum
-  |> Enum.filter (fun (_,_,l'_cfr) ->
-                            Util.contains (Location.to_string l'_cfr) ("n_" ^ (Location.to_string l') ^ "__")
+  |> Enum.filter (fun (_,_,l'_cfr) -> String.exists (Location.to_string l'_cfr) ("n_" ^ Location.to_string l' ^ "__")
   )
   |> Enum.map (fun (_,_,l') -> l')
   |> LocationSet.of_enum
@@ -187,7 +186,7 @@ let outgoing_transitions (outgoing_trans: Transition.t list) (scc_cfr: Transitio
                                                                        |> LocationSet.add l') scc_cfr LocationSet.empty in
   TransitionSet.empty
   |> List.fold_right (fun (l,t,l') set -> locations_cfr
-                                          |> LocationSet.filter (fun l_cfr -> Util.contains (Location.to_string l_cfr) ("_" ^ (Location.to_string l) ^ "__"))
+                                          |> LocationSet.filter (fun l_cfr -> String.exists (Location.to_string l_cfr) ("_" ^ Location.to_string l ^ "__"))
                                           |> LocationSet.enum
                                           |> TransitionSet.create (function l_cfr ->(l_cfr, TransitionLabel.fresh_id t,l'))
                                           |> TransitionSet.union set) outgoing_trans

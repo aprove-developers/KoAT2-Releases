@@ -32,6 +32,7 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
+<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -50,6 +51,7 @@
 <link title="OurFloat" rel="Chapter" href="OurFloat.html">
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
+<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -246,6 +248,10 @@
 
 </div>
 </td></tr>
+<tr><td><a href="Lexer.html#VAL__ocaml_lex_read_rec">__ocaml_lex_read_rec</a> [<a href="Lexer.html">Lexer</a>]</td>
+<td></td></tr>
+<tr><td><a href="Lexer.html#VAL__ocaml_lex_tables">__ocaml_lex_tables</a> [<a href="Lexer.html">Lexer</a>]</td>
+<td></td></tr>
 <tr><td align="left"><div>A</div></td></tr>
 <tr><td><a href="SMT.IncrementalZ3Solver.html#VALadd">add</a> [<a href="SMT.IncrementalZ3Solver.html">SMT.IncrementalZ3Solver</a>]</td>
 <td><div class="info">
@@ -710,12 +716,6 @@
 <tr><td><a href="ConstraintTypes.Formula.html#VALconstraints">constraints</a> [<a href="ConstraintTypes.Formula.html">ConstraintTypes.Formula</a>]</td>
 <td><div class="info">
 <p>Returns a list of all constraints occuring in the disjunction.</p>
-
-</div>
-</td></tr>
-<tr><td><a href="Util.html#VALcontains">contains</a> [<a href="Util.html">Util</a>]</td>
-<td><div class="info">
-<p>Returns true iff s2 is contained in s1.</p>
 
 </div>
 </td></tr>
@@ -2231,6 +2231,8 @@
 <td></td></tr>
 <tr><td><a href="Formatter.html#VALnewline">newline</a> [<a href="Formatter.html">Formatter</a>]</td>
 <td></td></tr>
+<tr><td><a href="Lexer.html#VALnext_line">next_line</a> [<a href="Lexer.html">Lexer</a>]</td>
+<td></td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALnon_increasing">non_increasing</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
 <td><div class="info">
 <p>Returns a list of all transitions for which the multiphase ranking function is defined.</p>
@@ -2420,6 +2422,20 @@
 
 </div>
 </td></tr>
+<tr><td><a href="Parser.html#VALonlyAtom">onlyAtom</a> [<a href="Parser.html">Parser</a>]</td>
+<td></td></tr>
+<tr><td><a href="Parser.html#VALonlyBound">onlyBound</a> [<a href="Parser.html">Parser</a>]</td>
+<td></td></tr>
+<tr><td><a href="Parser.html#VALonlyConstraints">onlyConstraints</a> [<a href="Parser.html">Parser</a>]</td>
+<td></td></tr>
+<tr><td><a href="Parser.html#VALonlyFormula">onlyFormula</a> [<a href="Parser.html">Parser</a>]</td>
+<td></td></tr>
+<tr><td><a href="Parser.html#VALonlyPolynomial">onlyPolynomial</a> [<a href="Parser.html">Parser</a>]</td>
+<td></td></tr>
+<tr><td><a href="Parser.html#VALonlyProgram">onlyProgram</a> [<a href="Parser.html">Parser</a>]</td>
+<td></td></tr>
+<tr><td><a href="Parser.html#VALonlyProgram_simple">onlyProgram_simple</a> [<a href="Parser.html">Parser</a>]</td>
+<td></td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALonly_rank_to_string">only_rank_to_string</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
 <td><div class="info">
 <p>Converts a multiphase ranking function into a string without any further information.</p>
@@ -2625,6 +2641,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="Parser.html#VALprogramAndGoal">programAndGoal</a> [<a href="Parser.html">Parser</a>]</td>
+<td></td></tr>
 <tr><td><a href="Approximation.html#VALprogram_costbound">program_costbound</a> [<a href="Approximation.html">Approximation</a>]</td>
 <td><div class="info">
 <p>Returns a costbound for the program.</p>
@@ -2666,6 +2684,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="Lexer.html#VALread">read</a> [<a href="Lexer.html">Lexer</a>]</td>
+<td></td></tr>
 <tr><td><a href="Readers.html#VALread_atom">read_atom</a> [<a href="Readers.html">Readers</a>]</td>
 <td></td></tr>
 <tr><td><a href="Readers.html#VALread_bound">read_bound</a> [<a href="Readers.html">Readers</a>]</td>

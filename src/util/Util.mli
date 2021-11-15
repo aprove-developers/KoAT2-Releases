@@ -30,9 +30,6 @@ val memoize : ('a,'b) Hashtbl.t -> extractor:('c -> 'a) -> ('c -> 'b) -> 'c -> '
 (**  Generates a hash interger value of a given string. *)
 val hash: string -> int
 
-(** Returns true iff s2 is contained in s1. *)
-val contains : string -> string -> bool
-
 val cat_maybes : 'a option list -> 'a list
 
 val cat_maybes_enum : 'a option Enum.t -> 'a Enum.t
