@@ -6,6 +6,7 @@ open Atoms
 open BoundsInst
 open Constraints
 open PolyExponential
+open TWNLoop
 
 (* PROOF *)
 let logger = Logging.(get Twn)
@@ -42,13 +43,13 @@ let dfs graph visited start_node =
 let toposort graph = 
   List.fold_left (fun visited (node,_) -> dfs graph visited node) [] graph
 
-let check_triangular (t: TransitionLabel.t) = 
-  let vars = VarSet.to_list (TransitionLabel.input_vars t) in 
+let check_triangular (t: TWNLoop.t) = 
+  let vars = VarSet.to_list (TWNLoop.input_vars t) in 
   let n = List.length vars in
   let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
   let graph = List.mapi (fun i var -> 
     let vars_update = 
-        TransitionLabel.update t var 
+        TWNLoop.update t var 
         |? Polynomial.zero 
         |> Polynomial.vars 
         |> VarSet.remove var 
@@ -61,25 +62,25 @@ let check_triangular (t: TransitionLabel.t) =
 
 (* MONOTONICITY *)
 
-let check_weakly_monotonicity (t: TransitionLabel.t) = 
-  VarSet.for_all (fun var -> let update = TransitionLabel.update t var in
+let check_weakly_monotonicity (t: TWNLoop.t) = 
+  VarSet.for_all (fun var -> let update = TWNLoop.update t var in
                           if Option.is_none update then
                             true
                           else 
-                            update |> Option.get |> Polynomial.var_only_linear var) (TransitionLabel.input_vars t)
+                            update |> Option.get |> Polynomial.var_only_linear var) (TWNLoop.input_vars t)
 
 
 (* NEGATIVITY *)
 
-let check_weakly_negativitiy (t: TransitionLabel.t) = 
-  VarSet.exists (fun var -> let update = TransitionLabel.update t var in
+let check_weakly_negativitiy (t: TWNLoop.t) = 
+  VarSet.exists (fun var -> let update = TWNLoop.update t var in
                           if Option.is_none update then
                             false
                           else 
-                            update |> Option.get |> Polynomial.coeff_of_var var |> OurInt.is_negative) (TransitionLabel.input_vars t)
+                            update |> Option.get |> Polynomial.coeff_of_var var |> OurInt.is_negative) (TWNLoop.input_vars t)
 
 
-let chain (t: TransitionLabel.t) = TransitionLabel.append t t
+let chain (t: TWNLoop.t) = TWNLoop.append t t
 
 (* TERMINATION: *)
 
@@ -105,9 +106,10 @@ let red_le poly_list =
 
 (* For Testing *)
 let termination t = 
-  let order = check_triangular t in
+  let twn = TWNLoop.mk_transition t in
+  let order = check_triangular twn in
   let pe = PE.compute_closed_form (List.map (fun var -> 
-      let update_var = TransitionLabel.update t var in
+      let update_var = TWNLoop.update twn var in
       (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
   let npe = PE.normalize pe in
   let varmap = Hashtbl.of_list (List.combine order npe) in
@@ -118,8 +120,8 @@ let termination t =
           let formula_poly = if Atom.is_lt atom 
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly) 
-              (TransitionLabel.guard_without_inv t) (Formula.mk_true) in
-  (not % SMTSolver.satisfiable) (Formula.mk_and (Formula.mk (TransitionLabel.invariant t)) formula |> Formula.simplify)
+              (TWNLoop.guard_without_inv twn |> Formula.atoms |> List.unique ~eq:Atom.equal) (Formula.mk_true) in
+  (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant twn) formula |> Formula.simplify)
 
 let termination_ t order pe npe varmap = 
   let formula = 
@@ -129,8 +131,8 @@ let termination_ t order pe npe varmap =
           let formula_poly = if Atom.is_lt atom 
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify) 
-              (TransitionLabel.guard_without_inv t) (Formula.mk_true) in
-  (not % SMTSolver.satisfiable) (Formula.mk_and (Formula.mk (TransitionLabel.invariant t)) formula)
+              (TWNLoop.guard_without_inv t |> Formula.atoms |> List.unique ~eq:Atom.equal) (Formula.mk_true) in
+  (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant t) formula)
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
     proof_append
@@ -227,25 +229,27 @@ let get_bound t order npe varmap =
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
           let max_const = OurInt.max const (PE.max_const sub_poly) in
             (Bound.add bound ((compute_f atom sub_poly_n)), max_const))
-            (TransitionLabel.guard_without_inv t |> Constraint.simplify) (Bound.one, OurInt.zero) in
+            (TWNLoop.guard_without_inv t |> Formula.atoms |> List.unique ~eq:Atom.equal) (Bound.one, OurInt.zero) in
             Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", (OurInt.to_string max_con)]);
   Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
   |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
 
 (* For Testing *)
-let check_twn (l,t,l') =
-    (check_weakly_monotonicity t) && ((List.length (check_triangular t)) == (VarSet.cardinal ((TransitionLabel.input_vars t))))
+let check_twn loop = 
+  (check_weakly_monotonicity loop) && ((List.length (check_triangular loop)) == (VarSet.cardinal ((TWNLoop.input_vars loop))))
 
-let complexity t = 
-    let order = check_triangular t in
+let check_twn (_,t,_) = check_twn (TWNLoop.mk_transition t)
+
+let complexity loop = 
+    let order = check_triangular loop in
     let t_, was_negative =
-      if (check_weakly_negativitiy t) then
-        chain t |> tap (fun t -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TransitionLabel.to_string t])), true
-      else t, false in
+      if (check_weakly_negativitiy loop) then
+        chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TWNLoop.to_string loop])), true
+      else loop, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
     proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
     let pe = PE.compute_closed_form (List.map (fun var -> 
-        let update_var = TransitionLabel.update t_ var in
+        let update_var = TWNLoop.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
         proof_append (
@@ -262,55 +266,65 @@ let complexity t =
     else 
       let f = get_bound t_ order npe varmap in if was_negative then Bound.(add (add f f) one) else f
 
+let complexity_ (_,t,_) = complexity (TWNLoop.mk_transition t)
 
 (* CYLES and corresponding time-bound. *)
 
-type path = Transition.t list
+type path = (Location.t * TWNLoop.t * Location.t) list
 
 (* Computes all cycles containing l0. The function call "cycles l0 trans l0 [l0 ->_t l1, l_1] []" returns all paths containing t *)
 let rec cycles trans l0 (paths: (path * LocationSet.t) list) (res: path list) =
   if List.is_empty paths then res
   else 
     let (path, loc_done) = List.first paths in
-    let path_trans = TransitionSet.filter 
-      (fun (l,t,l') -> let (l_path,_,l_path') = List.first path in Location.equal l l_path' && not (LocationSet.mem l' loc_done)) trans in
-    let cycle_trans = TransitionSet.filter (fun (l,t,l') -> Location.equal l' l0) path_trans in
+    let path_trans = Set.filter 
+      (fun (l,_,l') -> let (l_path,_,l_path') = List.first path in Location.equal l l_path' && not (LocationSet.mem l' loc_done)) trans in
+    let cycle_trans = Set.filter (fun (_,_,l') -> Location.equal l' l0) path_trans in
     cycles trans l0
-      ((List.tl paths) @ (List.map (fun (l,t,l') -> ((l,t,l')::path, LocationSet.add l loc_done)) ((TransitionSet.diff path_trans cycle_trans) |> TransitionSet.to_list)))
-      res @ (List.map (fun t -> (t::path)|> List.rev) (TransitionSet.to_list cycle_trans))
+      ((List.tl paths) @ (List.map (fun (l,t,l') -> ((l,t,l')::path, LocationSet.add l loc_done)) ((Set.diff path_trans cycle_trans) |> Set.to_list)))
+      res @ (List.map (fun t -> (t::path)|> List.rev) (Set.to_list cycle_trans))
 
 (* We compute the transitions l->l by contracting a (shifted to start) cycle (l1 ->_t1 l2 ->_t2 ... -> ln ->_tn l1 with the update tn % ... % t_1
-and the guard g1 && g1(t1) && g2(t2 % t1) && .. and cost TODO )  *)
-let compose_transitions cycle start = 
+and the guard g1 && g1(t1) && g2(t2 % t1) && .. and cost)  *)
+let compose_transitions cycle start =
   let rec split i = function
   | [] -> raise Not_found
   | x::xs -> if i == 0 then ([],x,xs) else let y,t,z = split (i - 1) xs in (x::y,t, z)
   |> Tuple3.map1 List.rev in
   let pre, t1, post = split start (List.rev cycle |> List.map Tuple3.second) in 
-  List.fold (fun u t -> TransitionLabel.append t u) t1 (pre@post)
+  List.fold (fun u t -> TWNLoop.append t u) t1 (pre@post)
 
+(* Finds entered location on cycle. *)
 let rec find l list =
     match list with
     | [] -> raise Not_found
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
 (* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
-let find_cycle appr program cycles = List.find (fun cycle -> 
-    let entries = Program.entry_transitions logger program cycle in
-    let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
+let find_cycle appr program (cycles: path list) = List.find (fun cycle -> 
+    let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.parallel_trans twn))@xs) [] cycle in
+    let entries = Program.entry_transitions logger program handled_transitions in
+    let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in
     List.for_all (fun (entry, t) -> 
-      let eliminated_t = TransitionLabel.without_inv t |> EliminateNonContributors.eliminate_t in
-      not (VarSet.is_empty (TransitionLabel.vars eliminated_t)) (* Are there any variables *)
-       && VarSet.equal (TransitionLabel.vars eliminated_t) (TransitionLabel.input_vars eliminated_t) (* No Temp Vars? *)
-       && let order = check_triangular eliminated_t in (List.length order) == (VarSet.cardinal ((TransitionLabel.input_vars eliminated_t))) (* Triangular?*)
+      let eliminated_t = t |> TWNLoop.parallel_trans |> List.map (EliminateNonContributors.eliminate_t % TransitionLabel.without_inv) |> TWNLoop.mk_transitions in 
+      not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
+       && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
+       && let order = check_triangular eliminated_t in (List.length order) == (VarSet.cardinal ((TWNLoop.input_vars eliminated_t))) (* Triangular?*)
        && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)
        && List.for_all (Approximation.is_time_bounded appr) entries) (List.combine entries twn_loops)) cycles
 
        (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
 
+let rec parallel_edges ys = function
+  | [] -> ys
+  | (l,t,l')::xs -> let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in
+                    let h (l1,t1,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TransitionLabel.update_to_string_rhs t1) in
+  if List.exists f ys then parallel_edges ys xs
+  else parallel_edges ((l, TWNLoop.mk_transitions List.(map Tuple3.second (filter h ((l,t,l')::xs))), l')::ys) xs
+
 module TimeBoundTable = Hashtbl.Make(Transition) 
 
-let time_bound_table: (path * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
+let time_bound_table: ((Transition.t list) * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
 
 let lift appr entry bound = 
   let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
@@ -330,33 +344,38 @@ let time_bound (l,t,l') scc program appr = (
   if Option.is_none opt then (
     let bound = 
     Timeout.timed_run 5. (fun () -> try
-      let cycle = find_cycle appr program (if Location.equal l l' then [[(l,t,l')]] else (cycles scc l ([([(l,t,l')], (LocationSet.singleton l'))]) [])) in
-      let entries = Program.entry_transitions logger program cycle in
+      let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
+      let cycle = find_cycle appr program (
+      if Location.equal l l' then 
+      let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in [[List.find f parallel_edges]] 
+      else (cycles (parallel_edges |> Set.of_list) l ([([(l,(TWNLoop.mk_transition t),l')], (LocationSet.singleton l'))]) [])) in
+      let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.parallel_trans twn))@xs) [] cycle in
+      let entries = Program.entry_transitions logger program handled_transitions in
       (* add_to_proof_graph program cycle entries; *)
-      Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list cycle)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
+      Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
       let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
-      Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TransitionLabel.to_string twn_loops));
+      Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TWNLoop.to_string twn_loops));
           proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>  
-          (List.combine (List.map Transition.to_string_pretty entries) (List.map (TransitionLabel.to_string ~pretty:true) twn_loops)
+          (List.combine (List.map Transition.to_string_pretty entries) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
         let global_local_bounds =
           List.map (fun (entry, t) -> 
-              let eliminated_t = t |> EliminateNonContributors.eliminate_t in
-                if VarSet.is_empty (TransitionLabel.vars eliminated_t) then 
+                let eliminated_t = t |> TWNLoop.parallel_trans |> List.map EliminateNonContributors.eliminate_t |> TWNLoop.mk_transitions in 
+                if VarSet.is_empty (TWNLoop.vars eliminated_t) then 
                   Bound.infinity, (entry, Bound.infinity) 
                 else
                   let bound = complexity eliminated_t in
-                  if Bound.is_infinity bound then raise (Non_Terminating (cycle, entries));
+                  if Bound.is_infinity bound then raise (Non_Terminating (handled_transitions, entries));
                   lift appr entry bound, (entry, bound))
           (List.combine entries twn_loops) in
-        List.iter (fun t -> TimeBoundTable.add time_bound_table t (cycle, List.map Tuple2.second global_local_bounds)) cycle;
+        List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map Tuple2.second global_local_bounds)) handled_transitions;
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
       with 
       | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
-      | Non_Terminating (cycle,entries)-> 
+      | Non_Terminating (handled_transitions,entries)-> 
         Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]); 
-        List.iter (fun t -> TimeBoundTable.add time_bound_table t (cycle, List.map (fun t -> (t, Bound.infinity)) entries)) cycle;
+        List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> (t, Bound.infinity)) entries)) handled_transitions;
         Bound.infinity) in
       if Option.is_some bound then
         bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))

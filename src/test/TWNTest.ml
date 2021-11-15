@@ -132,7 +132,7 @@ let tests =
       ("complexity" >:::
          List.map (fun (expected_string, program) ->
              "" >:: (fun _ -> 
-                     let result = TWN.complexity((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second) in
+                     let result = TWN.complexity_((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
                      assert_equal_string expected_string (Bound.to_string result)))
                   [
                      (* ("8*x+13 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0"); *)

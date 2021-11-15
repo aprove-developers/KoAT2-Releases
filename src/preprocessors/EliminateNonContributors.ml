@@ -45,7 +45,7 @@ let eliminate_t t =
     Logger.(log logger INFO (fun () -> "EliminateNonContributors", [("init_contr", VarSet.to_string init_contr);("init_non_contributors", VarSet.to_string (VarSet.diff vars vars_guard))]));
     let contributors = eliminate_t_ t init_contr (VarSet.diff vars init_contr) in
     let non_contributors = VarSet.diff vars contributors in
-    TransitionLabel.remove_non_contributors non_contributors t
+    TransitionLabel.remove_non_contributors non_contributors t    
 
 let eliminate program =
     let vars = Program.vars program in

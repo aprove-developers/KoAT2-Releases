@@ -275,6 +275,8 @@ module type Formula =
         (** Creates a formula from a set of constraints. *)
         val mk : constr -> t
 
+        val lift : constr list -> t
+
         (** Creates the trivial formula {i true}, i.e., [true]. *)
         val mk_true : t
 
@@ -336,6 +338,8 @@ module type Formula =
         val is_linear : t -> bool
 
         val is_true : t -> bool
+
+        val atoms : t -> (atom list)
 
         module Infix : sig
           val (=) : polynomial -> polynomial -> t
