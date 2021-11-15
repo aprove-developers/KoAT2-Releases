@@ -137,7 +137,7 @@ let termination_ t order pe npe varmap =
         FormattedString.(
         mk_str_line ("Termination: " ^ (string_of_bool bool))
         <> mk_str_line "Formula: "
-        <> (Formula.to_string_pretty formula |> mk_block)
+        <> (Formula.to_string_formatted formula |> mk_block)
         |> mk_paragraph);)
 
 (* COMPLEXITY: *)

@@ -335,6 +335,8 @@ module type Formula =
         (* Checks whether all polynomials occuring in this formula are linear *)
         val is_linear : t -> bool
 
+        val is_true : t -> bool
+
         module Infix : sig
           val (=) : polynomial -> polynomial -> t
           val (>) : polynomial -> polynomial -> t
@@ -354,9 +356,9 @@ module type Formula =
         val vars : t -> VarSet.t
 
         (** Returns a string representing the constraint. *)
-        val to_string : t -> string
+        val to_string : ?pretty:bool -> t -> string
 
-        val to_string_pretty : t -> FormattedString.t
+        val to_string_formatted : t -> FormattedString.t
 
 
         (** {1  {L  Following methods manipulate atoms and return the manipulated versions. }}*)
