@@ -19,6 +19,9 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let lift atom =
       mk (C.lift atom)
 
+    let lift constr =
+      constr
+
     let mk_true =
       mk C.mk_true
 
@@ -120,6 +123,8 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let is_linear = List.for_all C.is_linear
 
     let is_true = List.for_all C.is_true
+
+    let atoms = List.concat % List.map C.atom_list 
   end
 
 module Formula =
