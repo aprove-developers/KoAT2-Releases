@@ -57,6 +57,7 @@
 <link title="OurRational" rel="Chapter" href="OurRational.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -75,6 +76,7 @@
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
+<link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -262,6 +264,7 @@
 </div>
 
 <pre><span id="VALis_linear"><span class="keyword">val</span> is_linear</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALis_true"><span class="keyword">val</span> is_true</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> bool</code></pre>
 <pre><span id="MODULEInfix"><span class="keyword">module</span> <a href="ConstraintTypes.Formula.Infix.html">Infix</a></span>: <code class="code">sig</code> <a href="ConstraintTypes.Formula.Infix.html">..</a> <code class="code">end</code></pre><h2 id="1_Followingmethodsreturncertainpropertiesoftheformula"> <div align=left>Following methods return certain properties of the formula.</div></h2>
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> VarSet.t</code></pre><div class="info ">
 <div class="info-desc">
@@ -270,13 +273,13 @@
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> string</code></pre><div class="info ">
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string representing the constraint.</p>
 </div>
 </div>
 
-<pre><span id="VALto_string_pretty"><span class="keyword">val</span> to_string_pretty</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">FormattedString.t</a></code></pre><h2 id="1_Followingmethodsmanipulateatomsandreturnthemanipulatedversions"> <div align=left> Following methods manipulate atoms and return the manipulated versions. </div></h2>
+<pre><span id="VALto_string_formatted"><span class="keyword">val</span> to_string_formatted</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">FormattedString.t</a></code></pre><h2 id="1_Followingmethodsmanipulateatomsandreturnthemanipulatedversions"> <div align=left> Following methods manipulate atoms and return the manipulated versions. </div></h2>
 <pre><span id="VALrename"><span class="keyword">val</span> rename</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="RenameMap.html#TYPEt">RenameMap.t</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Assigns the variables of the constraint new names based on the rename map</p>

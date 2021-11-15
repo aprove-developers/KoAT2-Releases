@@ -54,6 +54,7 @@
 <link title="OurRational" rel="Chapter" href="OurRational.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -72,6 +73,7 @@
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
+<link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -362,11 +364,9 @@
 
 </div>
 </td></tr>
+<tr><td><a href="PartialEvaluation.html#VALadd_to_proof">add_to_proof</a> [<a href="PartialEvaluation.html">PartialEvaluation</a>]</td>
+<td></td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALadd_to_proof">add_to_proof</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
-<td></td></tr>
-<tr><td><a href="CFR.html#VALadd_to_proof">add_to_proof</a> [<a href="CFR.html">CFR</a>]</td>
-<td></td></tr>
-<tr><td><a href="TWN.html#VALadd_to_proof_graph">add_to_proof_graph</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
 <tr><td><a href="ProofOutput.html#VALadd_to_proof_with_format">add_to_proof_with_format</a> [<a href="ProofOutput.html">ProofOutput</a>]</td>
 <td></td></tr>
@@ -432,7 +432,9 @@
 
 </div>
 </td></tr>
-<tr><td><a href="CFR.html#VALapply_cfr">apply_cfr</a> [<a href="CFR.html">CFR</a>]</td>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALappend">append</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
+<tr><td><a href="PartialEvaluation.html#VALapply_cfr">apply_cfr</a> [<a href="PartialEvaluation.html">PartialEvaluation</a>]</td>
 <td><div class="info">
 <p>Unrolls all transitions listed in nonLinearTransitions.starrt</p>
 
@@ -728,7 +730,7 @@
 <td></td></tr>
 <tr><td><a href="ProofOutput.html#VALcompute_proof">compute_proof</a> [<a href="ProofOutput.html">ProofOutput</a>]</td>
 <td></td></tr>
-<tr><td><a href="CFR.html#VALcompute_timeout_time">compute_timeout_time</a> [<a href="CFR.html">CFR</a>]</td>
+<tr><td><a href="PartialEvaluation.html#VALcompute_timeout_time">compute_timeout_time</a> [<a href="PartialEvaluation.html">PartialEvaluation</a>]</td>
 <td></td></tr>
 <tr><td><a href="MPRF_Invariants.html#VALconsecution_constraint">consecution_constraint</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
 <td></td></tr>
@@ -770,18 +772,14 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Util.html#VALcontains">contains</a> [<a href="Util.html">Util</a>]</td>
-<td><div class="info">
-<p>Returns true iff s2 is contained in s1.</p>
-
-</div>
-</td></tr>
 <tr><td><a href="TransitionLabel.html#VALcost">cost</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
 <td><div class="info">
 <p>Returns the cost function</p>
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALcost">cost</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="ProgramTypes.Transition.html#VALcost">cost</a> [<a href="ProgramTypes.Transition.html">ProgramTypes.Transition</a>]</td>
 <td><div class="info">
 <p>Returns a cost function of a transition represented as a polynomial.</p>
@@ -800,6 +798,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALcost_to_string">cost_to_string</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="Approximation.html#VALcostbound">costbound</a> [<a href="Approximation.html">Approximation</a>]</td>
 <td><div class="info">
 <p>Returns a costbound for the transition.</p>
@@ -875,8 +875,6 @@
 </td></tr>
 <tr><td><a href="OurRational.html#VALden">den</a> [<a href="OurRational.html">OurRational</a>]</td>
 <td></td></tr>
-<tr><td><a href="TWN.html#VALdepends">depends</a> [<a href="TWN.html">TWN</a>]</td>
-<td></td></tr>
 <tr><td><a href="EliminateNonContributors.html#VALdepends">depends</a> [<a href="EliminateNonContributors.html">EliminateNonContributors</a>]</td>
 <td></td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALdepth">depth</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
@@ -928,13 +926,13 @@
 </div>
 </td></tr>
 <tr><td align="left"><div>E</div></td></tr>
-<tr><td><a href="TWN.html#VALeliminate">eliminate</a> [<a href="TWN.html">TWN</a>]</td>
-<td></td></tr>
 <tr><td><a href="EliminateNonContributors.html#VALeliminate">eliminate</a> [<a href="EliminateNonContributors.html">EliminateNonContributors</a>]</td>
 <td></td></tr>
-<tr><td><a href="TWN.html#VALeliminate_">eliminate_</a> [<a href="TWN.html">TWN</a>]</td>
-<td></td></tr>
 <tr><td><a href="EliminateNonContributors.html#VALeliminate_">eliminate_</a> [<a href="EliminateNonContributors.html">EliminateNonContributors</a>]</td>
+<td></td></tr>
+<tr><td><a href="EliminateNonContributors.html#VALeliminate_t">eliminate_t</a> [<a href="EliminateNonContributors.html">EliminateNonContributors</a>]</td>
+<td></td></tr>
+<tr><td><a href="EliminateNonContributors.html#VALeliminate_t_">eliminate_t_</a> [<a href="EliminateNonContributors.html">EliminateNonContributors</a>]</td>
 <td></td></tr>
 <tr><td><a href="SizeApproximationType.Make_SizeApproximation.html#VALempty">empty</a> [<a href="SizeApproximationType.Make_SizeApproximation.html">SizeApproximationType.Make_SizeApproximation</a>]</td>
 <td></td></tr>
@@ -977,11 +975,7 @@
 </div>
 </td></tr>
 <tr><td><a href="Preprocessor.html#VALequal">equal</a> [<a href="Preprocessor.html">Preprocessor</a>]</td>
-<td><div class="info">
-<p>Adds invariants to transitions.</p>
-
-</div>
-</td></tr>
+<td></td></tr>
 <tr><td><a href="PolyTypes.Ring.html#VALequal">equal</a> [<a href="PolyTypes.Ring.html">PolyTypes.Ring</a>]</td>
 <td><div class="info">
 <p>TODO doc</p>
@@ -1193,6 +1187,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="MaybeChanged.html#VALfold">fold</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
+<td></td></tr>
 <tr><td><a href="ConstraintTypes.Formula.html#VALfold">fold</a> [<a href="ConstraintTypes.Formula.html">ConstraintTypes.Formula</a>]</td>
 <td><div class="info">
 <p>Replaces all operations by new constructors.</p>
@@ -1448,18 +1444,24 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALguard">guard</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALguard_to_string">guard_to_string</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
 <td><div class="info">
 <p>Returns a string representing the guard.</p>
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALguard_to_string">guard_to_string</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALguard_without_inv">guard_without_inv</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
 <td><div class="info">
 <p>Returns the guard of the label without considering invariants.</p>
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALguard_without_inv_to_string">guard_without_inv_to_string</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td align="left"><div>H</div></td></tr>
 <tr><td><a href="MaybeChanged.html#VALhas_changed">has_changed</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
 <td></td></tr>
@@ -1500,6 +1502,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALid">id</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="RenameMap.html#VALid">id</a> [<a href="RenameMap.html">RenameMap</a>]</td>
 <td><div class="info">
 <p>Creates a rename map where every variable keeps its name</p>
@@ -1600,6 +1604,10 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALinvariant">invariant</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALinvariant_to_string">invariant_to_string</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="ProofOutput.html#VALis_computing_proof">is_computing_proof</a> [<a href="ProofOutput.html">ProofOutput</a>]</td>
 <td></td></tr>
 <tr><td><a href="PolyTypes.Polynomial.html#VALis_const">is_const</a> [<a href="PolyTypes.Polynomial.html">PolyTypes.Polynomial</a>]</td>
@@ -1726,6 +1734,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="ConstraintTypes.Formula.html#VALis_true">is_true</a> [<a href="ConstraintTypes.Formula.html">ConstraintTypes.Formula</a>]</td>
+<td></td></tr>
 <tr><td><a href="ConstraintTypes.Constraint.html#VALis_true">is_true</a> [<a href="ConstraintTypes.Constraint.html">ConstraintTypes.Constraint</a>]</td>
 <td><div class="info">
 <p>Returns if the constraint is a tautology.</p>
@@ -1834,6 +1844,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="CFR.html#VALlift_to_program">lift_to_program</a> [<a href="CFR.html">CFR</a>]</td>
+<td></td></tr>
 <tr><td><a href="ProgramTypes.TransitionGraph.html#VALloc_transitions">loc_transitions</a> [<a href="ProgramTypes.TransitionGraph.html">ProgramTypes.TransitionGraph</a>]</td>
 <td><div class="info">
 <p>Returns the set of transitions consisting of transitions which are in the program graph and where both source and target location are part of the given location list.</p>
@@ -1868,6 +1880,12 @@
 </td></tr>
 <tr><td><a href="TWN.html#VALlogger">logger</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
+<tr><td><a href="PartialEvaluation.html#VALlogger">logger</a> [<a href="PartialEvaluation.html">PartialEvaluation</a>]</td>
+<td><div class="info">
+<p>Logger CFR</p>
+
+</div>
+</td></tr>
 <tr><td><a href="Normalise.html#VALlogger">logger</a> [<a href="Normalise.html">Normalise</a>]</td>
 <td><div class="info">
 <p>Logger Preprocessor</p>
@@ -1899,12 +1917,6 @@
 <tr><td><a href="Chaining.html#VALlogger">logger</a> [<a href="Chaining.html">Chaining</a>]</td>
 <td><div class="info">
 <p>Logger Preprocessor</p>
-
-</div>
-</td></tr>
-<tr><td><a href="CFR.html#VALlogger">logger</a> [<a href="CFR.html">CFR</a>]</td>
-<td><div class="info">
-<p>Logger CFR</p>
 
 </div>
 </td></tr>
@@ -2045,6 +2057,12 @@
 <td></td></tr>
 <tr><td><a href="Util.html#VALmemoize">memoize</a> [<a href="Util.html">Util</a>]</td>
 <td></td></tr>
+<tr><td><a href="CFR.html#VALmerge_appr">merge_appr</a> [<a href="CFR.html">CFR</a>]</td>
+<td><div class="info">
+<p>Generates the approximation for the new program_cfr from the one of the original program.</p>
+
+</div>
+</td></tr>
 <tr><td><a href="PolyTypes.OurNumber.html#VALmin">min</a> [<a href="PolyTypes.OurNumber.html">PolyTypes.OurNumber</a>]</td>
 <td></td></tr>
 <tr><td><a href="OurNum.html#VALmin">min</a> [<a href="OurNum.html">OurNum</a>]</td>
@@ -2354,7 +2372,9 @@
 </div>
 </td></tr>
 <tr><td align="left"><div>N</div></td></tr>
-<tr><td><a href="Util.html#VALnatural_to_index">natural_to_index</a> [<a href="Util.html">Util</a>]</td>
+<tr><td><a href="Util.html#VALnatural_to_subscript">natural_to_subscript</a> [<a href="Util.html">Util</a>]</td>
+<td></td></tr>
+<tr><td><a href="Util.html#VALnatural_to_superscript">natural_to_superscript</a> [<a href="Util.html">Util</a>]</td>
 <td></td></tr>
 <tr><td><a href="PolyTypes.BaseMath.html#VALneg">neg</a> [<a href="PolyTypes.BaseMath.html">PolyTypes.BaseMath</a>]</td>
 <td><div class="info">
@@ -2401,6 +2421,8 @@
 </div>
 </td></tr>
 <tr><td><a href="TransitionLabel.html#VALnormalise">normalise</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
+<td></td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALnormalise">normalise</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
 <td></td></tr>
 <tr><td><a href="Normalise.html#VALnormalise">normalise</a> [<a href="Normalise.html">Normalise</a>]</td>
 <td></td></tr>
@@ -3378,7 +3400,7 @@
 <td></td></tr>
 <tr><td><a href="TWN.html#VALtime_bound_table">time_bound_table</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
-<tr><td><a href="CFR.html#VALtime_cfr">time_cfr</a> [<a href="CFR.html">CFR</a>]</td>
+<tr><td><a href="PartialEvaluation.html#VALtime_cfr">time_cfr</a> [<a href="PartialEvaluation.html">PartialEvaluation</a>]</td>
 <td></td></tr>
 <tr><td><a href="Approximation.html#VALtimebound">timebound</a> [<a href="Approximation.html">Approximation</a>]</td>
 <td><div class="info">
@@ -3428,6 +3450,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALto_id_string">to_id_string</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="ProgramTypes.TransitionSet.html#VALto_id_string">to_id_string</a> [<a href="ProgramTypes.TransitionSet.html">ProgramTypes.TransitionSet</a>]</td>
 <td><div class="info">
 <p>Returns a short string representing the transition set.</p>
@@ -3492,6 +3516,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALto_string">to_string</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="ProgramTypes.TransitionSet.html#VALto_string">to_string</a> [<a href="ProgramTypes.TransitionSet.html">ProgramTypes.TransitionSet</a>]</td>
 <td><div class="info">
 <p>Returns a string representing the transition set.</p>
@@ -3602,15 +3628,13 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Var.html#VALto_string_index">to_string_index</a> [<a href="Var.html">Var</a>]</td>
+<tr><td><a href="ConstraintTypes.Formula.html#VALto_string_formatted">to_string_formatted</a> [<a href="ConstraintTypes.Formula.html">ConstraintTypes.Formula</a>]</td>
 <td></td></tr>
 <tr><td><a href="ProgramTypes.Transition.html#VALto_string_pretty">to_string_pretty</a> [<a href="ProgramTypes.Transition.html">ProgramTypes.Transition</a>]</td>
 <td></td></tr>
 <tr><td><a href="PolyTypes.Polynomial.html#VALto_string_pretty">to_string_pretty</a> [<a href="PolyTypes.Polynomial.html">PolyTypes.Polynomial</a>]</td>
 <td></td></tr>
 <tr><td><a href="PolyExponential.PE.html#VALto_string_pretty">to_string_pretty</a> [<a href="PolyExponential.PE.html">PolyExponential.PE</a>]</td>
-<td></td></tr>
-<tr><td><a href="ConstraintTypes.Formula.html#VALto_string_pretty">to_string_pretty</a> [<a href="ConstraintTypes.Formula.html">ConstraintTypes.Formula</a>]</td>
 <td></td></tr>
 <tr><td><a href="PolyTypes.Polynomial.html#VALto_string_to_file">to_string_to_file</a> [<a href="PolyTypes.Polynomial.html">PolyTypes.Polynomial</a>]</td>
 <td><div class="info">
@@ -3679,7 +3703,7 @@
 </div>
 </td></tr>
 <tr><td align="left"><div>U</div></td></tr>
-<tr><td><a href="CFR.html#VALuid">uid</a> [<a href="CFR.html">CFR</a>]</td>
+<tr><td><a href="PartialEvaluation.html#VALuid">uid</a> [<a href="PartialEvaluation.html">PartialEvaluation</a>]</td>
 <td></td></tr>
 <tr><td><a href="CostBounds.html#VALunbounded">unbounded</a> [<a href="CostBounds.html">CostBounds</a>]</td>
 <td><div class="info">
@@ -3715,19 +3739,27 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALupdate">update</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALupdate_map">update_map</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
 <td><div class="info">
 <p>Returns the update map of the transitionlabel</p>
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALupdate_to_string">update_to_string</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALupdate_to_string_lhs">update_to_string_lhs</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
 <td><div class="info">
 <p>Returns a string representing the left hand side of the update function.</p>
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALupdate_to_string_lhs">update_to_string_lhs</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALupdate_to_string_lhs_pretty">update_to_string_lhs_pretty</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
+<td></td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALupdate_to_string_lhs_pretty">update_to_string_lhs_pretty</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
 <td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALupdate_to_string_rhs">update_to_string_rhs</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
 <td><div class="info">
@@ -3735,7 +3767,11 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALupdate_to_string_rhs">update_to_string_rhs</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALupdate_to_string_rhs_pretty">update_to_string_rhs_pretty</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
+<td></td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALupdate_to_string_rhs_pretty">update_to_string_rhs_pretty</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
 <td></td></tr>
 <tr><td><a href="OurFloat.html#VALupper_int">upper_int</a> [<a href="OurFloat.html">OurFloat</a>]</td>
 <td></td></tr>
@@ -3867,6 +3903,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TransitionLabel.html#VALwithout_inv">without_inv</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
+<td></td></tr>
 <tr><td><a href="FormatMonad.html#VALwrite_format">write_format</a> [<a href="FormatMonad.html">FormatMonad</a>]</td>
 <td></td></tr>
 <tr><td><a href="FormatMonad.html#VALwrite_meta">write_meta</a> [<a href="FormatMonad.html">FormatMonad</a>]</td>

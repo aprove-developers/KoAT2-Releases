@@ -53,6 +53,7 @@
 <link title="OurRational" rel="Chapter" href="OurRational.html">
 <link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
+<link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
 <link title="PolyTypes" rel="Chapter" href="PolyTypes.html">
 <link title="Polynomials" rel="Chapter" href="Polynomials.html">
@@ -71,6 +72,7 @@
 <link title="SizeBounds" rel="Chapter" href="SizeBounds.html">
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
+<link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -83,17 +85,4 @@
 <link title="VarSet" rel="Chapter" href="VarSet.html"><title>Koat2 : CFR</title>
 </head>
 <body>
-<code class="code"><span class="keyword">sig</span><br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;logger&nbsp;:&nbsp;<span class="constructor">Batteries</span>.<span class="constructor">Logger</span>.log<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;add_to_proof&nbsp;:&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">BoundsInst</span>.<span class="constructor">Bound</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;time_cfr&nbsp;:&nbsp;float&nbsp;<span class="constructor">Batteries</span>.ref<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compute_timeout_time&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">TransitionSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;float<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;uid&nbsp;:&nbsp;string&nbsp;<span class="constructor">Batteries</span>.ref<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;apply_cfr&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">TransitionSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">TransitionSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Approximation</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Program</span>.t&nbsp;*&nbsp;<span class="constructor">Approximation</span>.t&nbsp;*&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">TransitionSet</span>.t)&nbsp;option<br>
-<span class="keyword">end</span></code></body></html>
+<code class="code"><span class="keyword">sig</span>&nbsp;<span class="keyword">end</span></code></body></html>
