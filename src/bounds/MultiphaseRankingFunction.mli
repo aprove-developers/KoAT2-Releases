@@ -40,10 +40,6 @@ val find_scc : ?inv:bool -> measure ->  Program.t ->
   Transition.t -> (* The transition that should be decreasing *)
   t option
 
-val find_fast : ?inv:bool ->  measure -> Program.t -> int -> t Enum.t
-
-val find_scc_fast : ?inv:bool -> measure -> Program.t -> TransitionSet.t -> int -> Transition.t -> t option
-
 (** Converts a multiphase ranking function into a string*)
 val to_string : t -> string
 
