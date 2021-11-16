@@ -124,7 +124,7 @@ let rec knowledge_propagation (scc: TransitionSet.t) measure program appr =
         (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
          execute)
 
-let improve_timebound_computation ?(inv=false) ?(fast=false) (scc: TransitionSet.t) measure program max_depth appr =
+let improve_timebound_computation ?(inv=false) (scc: TransitionSet.t) measure program max_depth appr =
   let get_unbounded_vars transition =
     Program.input_vars program
     |> VarSet.filter (Bound.is_infinity % Approximation.sizebound appr transition)
@@ -138,9 +138,6 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) (scc: TransitionSet
   let scc_overapprox_nonlinear = TransitionSet.map Transition.overapprox_nonlinear_updates scc in
   let rankfunc_computation depth =
     let compute_function =
-      if fast then
-        MultiphaseRankingFunction.find_scc_fast ~inv:inv measure program scc_overapprox_nonlinear depth % Transition.overapprox_nonlinear_updates
-      else
         MultiphaseRankingFunction.find_scc ~inv:inv measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth % Transition.overapprox_nonlinear_updates
     in
     TransitionSet.to_array unbounded_transitions
@@ -161,27 +158,27 @@ let improve_timebound_computation ?(inv=false) ?(fast=false) (scc: TransitionSet
   |> MaybeChanged.fold_enum (fun appr -> improve_with_rank_mprf measure program appr) appr
 
 
-let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program appr =
-    let execute () = improve_timebound_computation ~inv ~fast scc measure program mprf_max_depth appr in
+let improve_timebound ?(mprf_max_depth = 1) ?(inv = false) (scc: TransitionSet.t) measure program appr =
+    let execute () = improve_timebound_computation ~inv scc measure program mprf_max_depth appr in
     (Logger.with_log logger Logger.INFO
           (fun () -> "improve_bounds", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
            execute)
 
-let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) ?(fast = false) (scc: TransitionSet.t) measure program appr =
+let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ?(inv = false) (scc: TransitionSet.t) measure program appr =
   let rec step appr =
     appr
     |> knowledge_propagation scc measure program
     |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
-    |> improve_timebound ~mprf_max_depth ~inv ~fast scc measure program
+    |> improve_timebound ~mprf_max_depth ~inv scc measure program
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
   in
   (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
   knowledge_propagation scc measure program appr
-  |> MaybeChanged.unpack % improve_timebound ~mprf_max_depth ~inv ~fast scc measure program
+  |> MaybeChanged.unpack % improve_timebound ~mprf_max_depth ~inv scc measure program
   |> step
 
-let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ~preprocess ?(inv = false) ?(fast = false) measure program appr =
+let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?(mprf_max_depth = 1) ~preprocess ?(inv = false) measure program appr =
   if not (TransitionSet.is_empty non_linear_transitions)  then
       let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
       let opt =
@@ -211,7 +208,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
                         appr
                         |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "cfr analysis", ["scc", TransitionSet.to_id_string scc]))
                         |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
-                        |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~inv ~fast scc measure program_cfr
+                        |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~inv scc measure program_cfr
                     else appr)
               appr_cfr in
         let cfr_bound = Bound.sum (Enum.map
@@ -241,7 +238,7 @@ let handle_timeout_cfr non_linear_transitions =
 
 
 
-let improve rvg ?(mprf_max_depth = 1) ~preprocess ?(cfr = false) ?(inv = false) ?(fast = false) measure program appr =
+let improve rvg ?(mprf_max_depth = 1) ~preprocess ?(cfr = false) ?(inv = false) measure program appr =
   program
     |> Program.sccs
     |> List.of_enum
@@ -250,7 +247,7 @@ let improve rvg ?(mprf_max_depth = 1) ~preprocess ?(cfr = false) ?(inv = false) 
                             appr
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc)
-                            |> improve_scc rvg ~mprf_max_depth ~inv ~fast scc measure program
+                            |> improve_scc rvg ~mprf_max_depth ~inv scc measure program
                             (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
                             |> fun appr ->
                                 let non_linear_transitions =
@@ -260,7 +257,7 @@ let improve rvg ?(mprf_max_depth = 1) ~preprocess ?(cfr = false) ?(inv = false) 
                               if cfr && !CFR.time_cfr > 0. && not (TransitionSet.is_empty non_linear_transitions) then (
                                 let time = CFR.compute_timeout_time program appr scc in
                                 let opt = Timeout.timed_run time ~action:(fun () -> handle_timeout_cfr scc)
-                                (fun () -> apply_cfr scc rvg time non_linear_transitions ~mprf_max_depth ~preprocess ~inv ~fast measure program appr) in
+                                (fun () -> apply_cfr scc rvg time non_linear_transitions ~mprf_max_depth ~preprocess ~inv measure program appr) in
                                 if Option.is_some opt then
                                   let res, time_used = Option.get opt in
                                   CFR.time_cfr := !CFR.time_cfr -. time_used;

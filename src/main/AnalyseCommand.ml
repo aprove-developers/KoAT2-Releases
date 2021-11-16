@@ -93,8 +93,6 @@ type params = {
 
     timeout : float; [@default 0.]
     (** Makes sure the analysis stops after the specified amount of time. Might result in empty output.*)
-    fast : bool [@default false]
-    (** Search ranking functions on minimal sccs aka cycles. *)
 
   } [@@deriving cmdliner]
 
@@ -209,7 +207,7 @@ let run (params: params) =
           )
      |> (fun (program, appr) ->
                if not params.no_boundsearch then
-                 Bounds.find_bounds ~mprf_max_depth:params.depth ~preprocess ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv ~fast:params.fast program appr
+                 Bounds.find_bounds ~mprf_max_depth:params.depth ~preprocess ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~inv:params.inv program appr
                else (program, appr))
      |> tap (fun (program, appr) -> params.result program appr)
      |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~show_initial:false program appr))

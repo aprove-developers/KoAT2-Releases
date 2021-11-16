@@ -107,16 +107,6 @@
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">TransitionSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;option<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_fast&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;?inv:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.measure&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;<span class="constructor">Batteries</span>.<span class="constructor">Enum</span>.t<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_scc_fast&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;?inv:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.measure&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">TransitionSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;only_rank_to_string&nbsp;:&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;add_to_proof&nbsp;:<br>

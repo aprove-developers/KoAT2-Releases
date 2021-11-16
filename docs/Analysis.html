@@ -102,7 +102,7 @@
 <pre><span id="TYPErvg_with_sccs"><span class="keyword">type</span> <code class="type"></code>rvg_with_sccs</span> = <code class="type">RVGTypes.RVG.t * <a href="RVGTypes.RVG.html#TYPEscc">RVGTypes.RVG.scc</a> list Stdlib.Lazy.t</code> </pre>
 
 
-<pre><span id="VALimprove"><span class="keyword">val</span> improve</span> : <code class="type"><a href="Analysis.html#TYPErvg_with_sccs">rvg_with_sccs</a> -><br>       ?mprf_max_depth:int -><br>       preprocess:(<a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a>) -><br>       ?cfr:bool -><br>       ?inv:bool -><br>       ?fast:bool -><br>       [ `Cost | `Time ] -><br>       <a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="Program.html#TYPEt">Program.t</a> * <a href="Approximation.html#TYPEt">Approximation.t</a></code></pre><div class="info ">
+<pre><span id="VALimprove"><span class="keyword">val</span> improve</span> : <code class="type"><a href="Analysis.html#TYPErvg_with_sccs">rvg_with_sccs</a> -><br>       ?mprf_max_depth:int -><br>       preprocess:(<a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a>) -><br>       ?cfr:bool -><br>       ?inv:bool -><br>       [ `Cost | `Time ] -><br>       <a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="Program.html#TYPEt">Program.t</a> * <a href="Approximation.html#TYPEt">Approximation.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Performs improvement steps to find better timebounds for the approximation and updates the approximation.</p>
 </div>
