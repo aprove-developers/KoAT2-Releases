@@ -17,7 +17,7 @@ let proof_append f_str = proof := FormattedString.(!proof <> f_str)
 
 (* let add_to_proof_graph program cycle entries =
   let color_map =
-  List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty 
+  List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty
   |> List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Red) entries in
     proof_append FormattedString.(mk_paragraph (
       match ProofOutput.get_format () with
@@ -30,30 +30,30 @@ let proof_append f_str = proof := FormattedString.(!proof <> f_str)
 (* https://stackoverflow.com/questions/4653914/topological-sort-in-ocaml *)
 exception CycleFound of int list
 
-let dfs graph visited start_node = 
-  let rec explore path visited node = 
+let dfs graph visited start_node =
+  let rec explore path visited node =
     if List.mem node path    then raise (CycleFound path) else
-    if List.mem node visited then visited else     
-      let new_path = node :: path in 
+    if List.mem node visited then visited else
+      let new_path = node :: path in
       let edges    = List.assoc node graph in
       let visited  = List.fold_left (explore new_path) visited edges in
       node :: visited
   in explore [] visited start_node
- 
-let toposort graph = 
+
+let toposort graph =
   List.fold_left (fun visited (node,_) -> dfs graph visited node) [] graph
 
-let check_triangular (t: TWNLoop.t) = 
-  let vars = VarSet.to_list (TWNLoop.input_vars t) in 
+let check_triangular (t: TWNLoop.t) =
+  let vars = VarSet.to_list (TWNLoop.input_vars t) in
   let n = List.length vars in
   let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
-  let graph = List.mapi (fun i var -> 
-    let vars_update = 
-        TWNLoop.update t var 
-        |? Polynomial.zero 
-        |> Polynomial.vars 
-        |> VarSet.remove var 
-        |> VarSet.to_list 
+  let graph = List.mapi (fun i var ->
+    let vars_update =
+        TWNLoop.update t var
+        |? Polynomial.zero
+        |> Polynomial.vars
+        |> VarSet.remove var
+        |> VarSet.to_list
         |> List.map (fun var -> List.assoc var vars_i) in (i, vars_update)) vars in
   let order = try toposort graph with CycleFound _ -> [] in
   List.map (fun i -> List.assoc i (List.map Tuple2.swap vars_i)) order
@@ -62,21 +62,21 @@ let check_triangular (t: TWNLoop.t) =
 
 (* MONOTONICITY *)
 
-let check_weakly_monotonicity (t: TWNLoop.t) = 
+let check_weakly_monotonicity (t: TWNLoop.t) =
   VarSet.for_all (fun var -> let update = TWNLoop.update t var in
                           if Option.is_none update then
                             true
-                          else 
+                          else
                             update |> Option.get |> Polynomial.var_only_linear var) (TWNLoop.input_vars t)
 
 
 (* NEGATIVITY *)
 
-let check_weakly_negativitiy (t: TWNLoop.t) = 
+let check_weakly_negativitiy (t: TWNLoop.t) =
   VarSet.exists (fun var -> let update = TWNLoop.update t var in
                           if Option.is_none update then
                             false
-                          else 
+                          else
                             update |> Option.get |> Polynomial.coeff_of_var var |> OurInt.is_negative) (TWNLoop.input_vars t)
 
 
@@ -89,7 +89,7 @@ module SMTSolver = SMT.Z3Solver
 exception Non_Terminating of (Transition.t list * Transition.t list)
 
 let red_lt poly_list =
-    let rec constraint_eq_zero i = function 
+    let rec constraint_eq_zero i = function
     | [] -> Constraint.mk_true
     | x::xs when i == 0 -> Constraint.mk_true
     | x::xs -> Constraint.(mk_and (mk_eq x Polynomial.zero) (constraint_eq_zero (i - 1) xs))  in
@@ -105,34 +105,38 @@ let red_le poly_list =
     Formula.(mk_or (red_lt poly_list) (poly_list |> constr |> mk))
 
 (* For Testing *)
-let termination t = 
+let termination t =
   let twn = TWNLoop.mk_transition t in
   let order = check_triangular twn in
-  let pe = PE.compute_closed_form (List.map (fun var -> 
+  let pe = PE.compute_closed_form (List.map (fun var ->
       let update_var = TWNLoop.update twn var in
       (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
   let npe = PE.normalize pe in
   let varmap = Hashtbl.of_list (List.combine order npe) in
-  let formula = 
-      List.fold_right (fun atom formula -> 
-          let poly = Atom.poly atom in 
+  let formula =
+    Formula.any (
+    List.map (fun constr ->
+      List.fold_right (fun atom formula ->
+          let poly = Atom.poly atom in
           let sub_poly = PE.substitute varmap poly |> PE.remove_frac |> List.map (RationalPolynomial.normalize % Tuple4.second) in
-          let formula_poly = if Atom.is_lt atom 
+          let formula_poly = if Atom.is_lt atom
               then sub_poly |> red_lt
-              else sub_poly |> red_le in Formula.mk_and formula formula_poly) 
-              (TWNLoop.guard_without_inv twn |> Formula.atoms |> List.unique ~eq:Atom.equal) (Formula.mk_true) in
+              else sub_poly |> red_le in Formula.mk_and formula formula_poly)
+              (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) (TWNLoop.guard_without_inv twn |> Formula.constraints)) in
   (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant twn) formula |> Formula.simplify)
 
-let termination_ t order pe npe varmap = 
-  let formula = 
-      List.fold_right (fun atom formula -> 
-          let poly = Atom.poly atom in 
+let termination_ t order pe npe varmap =
+  let formula =
+    Formula.any (
+    List.map (fun constr ->
+      List.fold_right (fun atom formula ->
+          let poly = Atom.poly atom in
           let sub_poly = PE.substitute varmap poly |> PE.remove_frac |> List.map (RationalPolynomial.normalize % Tuple4.second) in
-          let formula_poly = if Atom.is_lt atom 
+          let formula_poly = if Atom.is_lt atom
               then sub_poly |> red_lt
-              else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify) 
-              (TWNLoop.guard_without_inv t |> Formula.atoms |> List.unique ~eq:Atom.equal) (Formula.mk_true) in
-  (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant t) formula)
+              else sub_poly |> red_le in Formula.mk_and formula formula_poly)
+              (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) (TWNLoop.guard_without_inv t |> Formula.constraints)) in
+  (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant t) formula |> Formula.simplify)
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
     proof_append
@@ -147,8 +151,8 @@ let termination_ t order pe npe varmap =
 (* Computes the monotoncitiy threshold for (b1,a1) > (b2,a2), i.e., smallest m s.t for all n >= m: n^a1 * b1^n > k * n^a1 * b1^n *)
 let monotonicity_th (b1,a1) (b2,a2) k =
   if OurInt.is_negative k || OurInt.is_zero k then OurInt.one
-  else 
-    let rec test_m m = 
+  else
+    let rec test_m m =
       let tmp1 = OurInt.(mul (pow_ourint m a1) (pow_ourint b1 m)) in
       let tmp2 = OurInt.(mul (mul (pow_ourint m a2) (pow_ourint b2 m)) k) in
       if OurInt.is_ge a1 a2 then
@@ -169,7 +173,7 @@ let compute_kmax sub_poly = sub_poly |> List.map (OurInt.max_list % (List.map Ou
 
 let compute_m sub_poly = (List.map Polynomial.degree sub_poly) |> List.max |> OurInt.of_int
 
-let compute_N = function 
+let compute_N = function
   | [] -> OurInt.zero
   | x::[] -> OurInt.zero
   | x::y::[] -> OurInt.one
@@ -178,10 +182,10 @@ let compute_N = function
     let mt_ = monotonicity_th x2 x3 (OurInt.of_int ((List.length xs) + 1)) in
     OurInt.max mt mt_
 
-let compute_M = function 
+let compute_M = function
   | [] -> OurInt.zero
   | x::[] -> OurInt.zero
-  | (b1,a1)::(b2,a2)::xs when ((OurInt.is_gt b1 b2) || ((OurInt.equal b1 b2) && (OurInt.is_gt a1 OurInt.(add a2 one)))) 
+  | (b1,a1)::(b2,a2)::xs when ((OurInt.is_gt b1 b2) || ((OurInt.equal b1 b2) && (OurInt.is_gt a1 OurInt.(add a2 one))))
                          -> monotonicity_th (b1,a1) (b2, OurInt.(add a2 one)) OurInt.one
   | _ -> OurInt.zero
 
@@ -191,16 +195,16 @@ module Monomial = Monomials.Make(OurInt)
 let compute_alpha_abs = function
   | [] -> Polynomial.zero
   | x::[] -> Polynomial.fold ~const:(Polynomial.of_constant % OurInt.abs) ~var:(Polynomial.of_var) ~neg:identity ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow x
-  | xs -> List.flatten (List.map Polynomial.scaled_monomials xs) 
+  | xs -> List.flatten (List.map Polynomial.scaled_monomials xs)
           |> List.group (fun x y -> Monomial.compare (ScaledMonomial.monomial x) (ScaledMonomial.monomial y))
-          |> List.map (fun ys -> let max = OurInt.max_list (List.map (OurInt.abs % ScaledMonomial.coeff) ys) in 
+          |> List.map (fun ys -> let max = OurInt.max_list (List.map (OurInt.abs % ScaledMonomial.coeff) ys) in
                       List.first ys |> ScaledMonomial.monomial |> ScaledMonomial.make max)
-          |> Polynomial.of_scaled 
+          |> Polynomial.of_scaled
 
 let compute_f atom = function
   | [] -> Bound.zero
   | x::[] -> Bound.one
-  | xs -> 
+  | xs ->
     let alphas = List.map (Tuple4.second) xs in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["alphas", (alphas |> List.enum |> Util.enum_to_string Polynomial.to_string)]);
     let alphas_abs = compute_alpha_abs alphas in
@@ -220,11 +224,11 @@ let compute_f atom = function
         "Bound: " ^ (Bound.to_string ~pretty:true b);
       ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block |> FormattedString.(<>) (FormattedString.mk_str_line ("Stabilization-Threshold for: " ^ (Atom.to_string ~pretty:true atom))));)
 
-let get_bound t order npe varmap = 
-  let bound, max_con = 
-      List.fold_right (fun atom (bound, const) -> 
-          let poly = Atom.poly atom |> Polynomial.neg in 
-          let sub_poly = PE.substitute varmap poly |> PE.remove_frac in 
+let get_bound t order npe varmap =
+  let bound, max_con =
+      List.fold_right (fun atom (bound, const) ->
+          let poly = Atom.poly atom |> Polynomial.neg in
+          let sub_poly = PE.substitute varmap poly |> PE.remove_frac in
           Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
           let max_const = OurInt.max const (PE.max_const sub_poly) in
@@ -235,12 +239,12 @@ let get_bound t order npe varmap =
   |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
 
 (* For Testing *)
-let check_twn loop = 
+let check_twn loop =
   (check_weakly_monotonicity loop) && ((List.length (check_triangular loop)) == (VarSet.cardinal ((TWNLoop.input_vars loop))))
 
 let check_twn (_,t,_) = check_twn (TWNLoop.mk_transition t)
 
-let complexity loop = 
+let complexity loop =
     let order = check_triangular loop in
     let t_, was_negative =
       if (check_weakly_negativitiy loop) then
@@ -248,22 +252,22 @@ let complexity loop =
       else loop, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
     proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
-    let pe = PE.compute_closed_form (List.map (fun var -> 
+    let pe = PE.compute_closed_form (List.map (fun var ->
         let update_var = TWNLoop.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
         proof_append (
           FormattedString.(mk_str "closed-form:" <> (
           (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
-          |> List.map (fun (a,b) -> a ^ ": " ^ b) 
+          |> List.map (fun (a,b) -> a ^ ": " ^ b)
           |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
     let npe = PE.normalize pe in
         Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
     let varmap = Hashtbl.of_list (List.combine order npe) in
     let terminating = termination_ t_ order pe npe varmap in
-    if not terminating then 
+    if not terminating then
       Bound.infinity
-    else 
+    else
       let f = get_bound t_ order npe varmap in if was_negative then Bound.(add (add f f) one) else f
 
 let complexity_ (_,t,_) = complexity (TWNLoop.mk_transition t)
@@ -275,9 +279,9 @@ type path = (Location.t * TWNLoop.t * Location.t) list
 (* Computes all cycles containing l0. The function call "cycles l0 trans l0 [l0 ->_t l1, l_1] []" returns all paths containing t *)
 let rec cycles trans l0 (paths: (path * LocationSet.t) list) (res: path list) =
   if List.is_empty paths then res
-  else 
+  else
     let (path, loc_done) = List.first paths in
-    let path_trans = Set.filter 
+    let path_trans = Set.filter
       (fun (l,_,l') -> let (l_path,_,l_path') = List.first path in Location.equal l l_path' && not (LocationSet.mem l' loc_done)) trans in
     let cycle_trans = Set.filter (fun (_,_,l') -> Location.equal l' l0) path_trans in
     cycles trans l0
@@ -291,7 +295,7 @@ let compose_transitions cycle start =
   | [] -> raise Not_found
   | x::xs -> if i == 0 then ([],x,xs) else let y,t,z = split (i - 1) xs in (x::y,t, z)
   |> Tuple3.map1 List.rev in
-  let pre, t1, post = split start (List.rev cycle |> List.map Tuple3.second) in 
+  let pre, t1, post = split start (List.rev cycle |> List.map Tuple3.second) in
   List.fold (fun u t -> TWNLoop.append t u) t1 (pre@post)
 
 (* Finds entered location on cycle. *)
@@ -301,12 +305,12 @@ let rec find l list =
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
 (* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
-let find_cycle appr program (cycles: path list) = List.find (fun cycle -> 
+let find_cycle appr program (cycles: path list) = List.find (fun cycle ->
     let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.parallel_trans twn))@xs) [] cycle in
     let entries = Program.entry_transitions logger program handled_transitions in
     let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in
-    List.for_all (fun (entry, t) -> 
-      let eliminated_t = t |> TWNLoop.parallel_trans |> List.map (EliminateNonContributors.eliminate_t % TransitionLabel.without_inv) |> TWNLoop.mk_transitions in 
+    List.for_all (fun (entry, t) ->
+      let eliminated_t = t |> TWNLoop.parallel_trans |> List.map (EliminateNonContributors.eliminate_t % TransitionLabel.without_inv) |> TWNLoop.mk_transitions in
       not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
        && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
        && let order = check_triangular eliminated_t in (List.length order) == (VarSet.cardinal ((TWNLoop.input_vars eliminated_t))) (* Triangular?*)
@@ -322,32 +326,32 @@ let rec parallel_edges ys = function
   if List.exists f ys then parallel_edges ys xs
   else parallel_edges ((l, TWNLoop.mk_transitions List.(map Tuple3.second (filter h ((l,t,l')::xs))), l')::ys) xs
 
-module TimeBoundTable = Hashtbl.Make(Transition) 
+module TimeBoundTable = Hashtbl.Make(Transition)
 
 let time_bound_table: ((Transition.t list) * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
 
-let lift appr entry bound = 
+let lift appr entry bound =
   let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
     Bound.mul (Approximation.timebound appr entry) bound_with_sizebound
-  |> tap (fun b -> 
+  |> tap (fun b ->
     proof_append (FormattedString.(mk_paragraph (mk_str_line ("relevant size-bounds w.r.t. t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ":") <> (
           Bound.vars bound
           |> VarSet.to_list
-          |> List.map (fun v -> (Var.to_string ~pretty:true v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true)) 
-          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend) <> 
-          FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <> 
+          |> List.map (fun v -> (Var.to_string ~pretty:true v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true))
+          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend) <>
+          FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
           FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
 let time_bound (l,t,l') scc program appr = (
   proof := FormattedString.Empty;
-  let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in 
+  let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then (
-    let bound = 
+    let bound =
     Timeout.timed_run 5. (fun () -> try
       let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
       let cycle = find_cycle appr program (
-      if Location.equal l l' then 
-      let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in [[List.find f parallel_edges]] 
+      if Location.equal l l' then
+      let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in [[List.find f parallel_edges]]
       else (cycles (parallel_edges |> Set.of_list) l ([([(l,(TWNLoop.mk_transition t),l')], (LocationSet.singleton l'))]) [])) in
       let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.parallel_trans twn))@xs) [] cycle in
       let entries = Program.entry_transitions logger program handled_transitions in
@@ -355,15 +359,15 @@ let time_bound (l,t,l') scc program appr = (
       Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
       let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
       Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TWNLoop.to_string twn_loops));
-          proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>  
+          proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>
           (List.combine (List.map Transition.to_string_pretty entries) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
         let global_local_bounds =
-          List.map (fun (entry, t) -> 
-                let eliminated_t = t |> TWNLoop.parallel_trans |> List.map EliminateNonContributors.eliminate_t |> TWNLoop.mk_transitions in 
-                if VarSet.is_empty (TWNLoop.vars eliminated_t) then 
-                  Bound.infinity, (entry, Bound.infinity) 
+          List.map (fun (entry, t) ->
+                let eliminated_t = t |> TWNLoop.parallel_trans |> List.map EliminateNonContributors.eliminate_t |> TWNLoop.mk_transitions in
+                if VarSet.is_empty (TWNLoop.vars eliminated_t) then
+                  Bound.infinity, (entry, Bound.infinity)
                 else
                   let bound = complexity eliminated_t in
                   if Bound.is_infinity bound then raise (Non_Terminating (handled_transitions, entries));
@@ -371,10 +375,10 @@ let time_bound (l,t,l') scc program appr = (
           (List.combine entries twn_loops) in
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map Tuple2.second global_local_bounds)) handled_transitions;
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
-      with 
+      with
       | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
-      | Non_Terminating (handled_transitions,entries)-> 
-        Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]); 
+      | Non_Terminating (handled_transitions,entries)->
+        Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]);
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> (t, Bound.infinity)) entries)) handled_transitions;
         Bound.infinity) in
       if Option.is_some bound then
@@ -389,7 +393,7 @@ let time_bound (l,t,l') scc program appr = (
     let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
     bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
                          |> tap (fun b -> proof_append FormattedString.((mk_str_line (b |> Bound.to_string ~pretty:true))))))
-  |> tap (fun b -> if Bound.compare_asy b (Approximation.timebound appr (l,t,l')) < 0 then ProofOutput.add_to_proof @@ fun () -> 
-    FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:") <> 
-                      mk_header_small (mk_str ("TWN-Loops: t" ^ (TransitionLabel.id t |> Util.natural_to_subscript) ^ " " ^ Bound.to_string ~pretty:true b)) <> 
+  |> tap (fun b -> if Bound.compare_asy b (Approximation.timebound appr (l,t,l')) < 0 then ProofOutput.add_to_proof @@ fun () ->
+    FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:") <>
+                      mk_header_small (mk_str ("TWN-Loops: t" ^ (TransitionLabel.id t |> Util.natural_to_subscript) ^ " " ^ Bound.to_string ~pretty:true b)) <>
                       !proof))
