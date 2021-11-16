@@ -30,9 +30,9 @@ val depth : t -> int
 
 (** Tries to find a suitable multiphase ranking function for the given transitions T'.
  * The int corresponds to the maximum depth of the mprf *)
-val find : ?inv:bool -> measure -> Program.t -> int -> t Enum.t
+val find : measure -> Program.t -> int -> t Enum.t
 
-val find_scc : ?inv:bool -> measure ->  Program.t ->
+val find_scc : measure ->  Program.t ->
   (Transition.t -> bool) ->  (* Is the transition time-bounded? *)
   (Transition.t -> VarSet.t) -> (* Unbounded vars for the transition *)
   TransitionSet.t ->  (* The scc*)
