@@ -121,7 +121,7 @@ let termination t =
           let sub_poly = PE.substitute varmap poly |> PE.remove_frac |> List.map (RationalPolynomial.normalize % Tuple4.second) in
           let formula_poly = if Atom.is_lt atom
               then sub_poly |> red_lt
-              else sub_poly |> red_le in Formula.mk_and formula formula_poly)
+              else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
               (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) (TWNLoop.guard_without_inv twn |> Formula.constraints)) in
   (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant twn) formula |> Formula.simplify)
 
@@ -134,9 +134,9 @@ let termination_ t order pe npe varmap =
           let sub_poly = PE.substitute varmap poly |> PE.remove_frac |> List.map (RationalPolynomial.normalize % Tuple4.second) in
           let formula_poly = if Atom.is_lt atom
               then sub_poly |> red_lt
-              else sub_poly |> red_le in Formula.mk_and formula formula_poly)
+              else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
               (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) (TWNLoop.guard_without_inv t |> Formula.constraints)) in
-  (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant t) formula |> Formula.simplify)
+  (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant t) formula)
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
     proof_append
