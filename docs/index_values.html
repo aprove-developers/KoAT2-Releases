@@ -38,7 +38,6 @@
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
 <link title="Logging" rel="Chapter" href="Logging.html">
 <link title="MPRF_Coefficient" rel="Chapter" href="MPRF_Coefficient.html">
-<link title="MPRF_Invariants" rel="Chapter" href="MPRF_Invariants.html">
 <link title="Main" rel="Chapter" href="Main.html">
 <link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
 <link title="Monad" rel="Chapter" href="Monad.html">
@@ -476,6 +475,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="ConstraintTypes.Formula.html#VALatoms">atoms</a> [<a href="ConstraintTypes.Formula.html">ConstraintTypes.Formula</a>]</td>
+<td></td></tr>
 <tr><td align="left"><div>B</div></td></tr>
 <tr><td><a href="Monad.Make.html#VALbind">bind</a> [<a href="Monad.Make.html">Monad.Make</a>]</td>
 <td></td></tr>
@@ -485,8 +486,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.Valuation.html#VALbindings">bindings</a> [<a href="MPRF_Invariants.Valuation.html">MPRF_Invariants.Valuation</a>]</td>
-<td></td></tr>
 <tr><td><a href="AnalyseCommand.html#VALbounded_label_to_string">bounded_label_to_string</a> [<a href="AnalyseCommand.html">AnalyseCommand</a>]</td>
 <td><div class="info">
 <p>Returns a string containing a time-bound and the label of a transition for a specified approximation.</p>
@@ -690,6 +689,8 @@
 <td></td></tr>
 <tr><td><a href="TWN.html#VALcomplexity">complexity</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
+<tr><td><a href="TWN.html#VALcomplexity_">complexity_</a> [<a href="TWN.html">TWN</a>]</td>
+<td></td></tr>
 <tr><td><a href="TWN.html#VALcompose_transitions">compose_transitions</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
 <tr><td><a href="TrivialTimeBounds.html#VALcompute">compute</a> [<a href="TrivialTimeBounds.html">TrivialTimeBounds</a>]</td>
@@ -722,8 +723,6 @@
 <td></td></tr>
 <tr><td><a href="TWN.html#VALcompute_f">compute_f</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALcompute_invariant_templates">compute_invariant_templates</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
-<td></td></tr>
 <tr><td><a href="TWN.html#VALcompute_kmax">compute_kmax</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
 <tr><td><a href="TWN.html#VALcompute_m">compute_m</a> [<a href="TWN.html">TWN</a>]</td>
@@ -731,10 +730,6 @@
 <tr><td><a href="ProofOutput.html#VALcompute_proof">compute_proof</a> [<a href="ProofOutput.html">ProofOutput</a>]</td>
 <td></td></tr>
 <tr><td><a href="PartialEvaluation.html#VALcompute_timeout_time">compute_timeout_time</a> [<a href="PartialEvaluation.html">PartialEvaluation</a>]</td>
-<td></td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALconsecution_constraint">consecution_constraint</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
-<td></td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALconsecution_constraints">consecution_constraints</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
 <td></td></tr>
 <tr><td><a href="InvariantGeneration.Apron2Koat.html#VALconst_from_apron">const_from_apron</a> [<a href="InvariantGeneration.Apron2Koat.html">InvariantGeneration.Apron2Koat</a>]</td>
 <td><div class="info">
@@ -778,8 +773,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="TWNLoop.TWNLoop.html#VALcost">cost</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
-<td></td></tr>
 <tr><td><a href="ProgramTypes.Transition.html#VALcost">cost</a> [<a href="ProgramTypes.Transition.html">ProgramTypes.Transition</a>]</td>
 <td><div class="info">
 <p>Returns a cost function of a transition represented as a polynomial.</p>
@@ -798,8 +791,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="TWNLoop.TWNLoop.html#VALcost_to_string">cost_to_string</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
-<td></td></tr>
 <tr><td><a href="Approximation.html#VALcostbound">costbound</a> [<a href="Approximation.html">Approximation</a>]</td>
 <td><div class="info">
 <p>Returns a costbound for the transition.</p>
@@ -829,8 +820,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALdecreasing_constraint">decreasing_constraint</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
-<td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALdefault">default</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
 <td><div class="info">
 <p>Returns a default label with id 0, <code class="code">true</code> as the guard,no update function and the default cost function.</p>
@@ -896,8 +885,6 @@
 <tr><td><a href="AnalyseCommand.html#VALdescription">description</a> [<a href="AnalyseCommand.html">AnalyseCommand</a>]</td>
 <td></td></tr>
 <tr><td><a href="TWN.html#VALdfs">dfs</a> [<a href="TWN.html">TWN</a>]</td>
-<td></td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALdisability_constraint">disability_constraint</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
 <td></td></tr>
 <tr><td><a href="OurRational.html#VALdiv">div</a> [<a href="OurRational.html">OurRational</a>]</td>
 <td></td></tr>
@@ -1018,8 +1005,6 @@
 </td></tr>
 <tr><td><a href="TransitionLabel.html#VALequal_kind">equal_kind</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
 <td></td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALequal_measure">equal_measure</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
-<td></td></tr>
 <tr><td><a href="Var.html#VALequal_sort">equal_sort</a> [<a href="Var.html">Var</a>]</td>
 <td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALequivalent">equivalent</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
@@ -1076,8 +1061,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.Valuation.html#VALeval">eval</a> [<a href="MPRF_Invariants.Valuation.html">MPRF_Invariants.Valuation</a>]</td>
-<td></td></tr>
 <tr><td><a href="Polynomials.RealParameterPolynomial.html#VALeval_coefficients">eval_coefficients</a> [<a href="Polynomials.RealParameterPolynomial.html">Polynomials.RealParameterPolynomial</a>]</td>
 <td></td></tr>
 <tr><td><a href="Polynomials.ParameterPolynomial.html#VALeval_coefficients">eval_coefficients</a> [<a href="Polynomials.ParameterPolynomial.html">Polynomials.ParameterPolynomial</a>]</td>
@@ -1098,8 +1081,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.Valuation.html#VALeval_opt">eval_opt</a> [<a href="MPRF_Invariants.Valuation.html">MPRF_Invariants.Valuation</a>]</td>
-<td></td></tr>
 <tr><td><a href="PolyTypes.Polynomial.html#VALeval_partial">eval_partial</a> [<a href="PolyTypes.Polynomial.html">PolyTypes.Polynomial</a>]</td>
 <td><div class="info">
 <p>Creates a polynomial where every variable for which a value is assigned by the valuation is replaced by this value.</p>
@@ -1151,13 +1132,9 @@
 <td></td></tr>
 <tr><td><a href="TWN.html#VALfind_cycle">find_cycle</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
-<tr><td><a href="MultiphaseRankingFunction.html#VALfind_fast">find_fast</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
-<td></td></tr>
 <tr><td><a href="Util.html#VALfind_map">find_map</a> [<a href="Util.html">Util</a>]</td>
 <td></td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALfind_scc">find_scc</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
-<td></td></tr>
-<tr><td><a href="MultiphaseRankingFunction.html#VALfind_scc_fast">find_scc_fast</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
 <td></td></tr>
 <tr><td><a href="MaybeChanged.html#VALflat_map">flat_map</a> [<a href="MaybeChanged.html">MaybeChanged</a>]</td>
 <td></td></tr>
@@ -1269,8 +1246,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.Valuation.html#VALfrom">from</a> [<a href="MPRF_Invariants.Valuation.html">MPRF_Invariants.Valuation</a>]</td>
-<td></td></tr>
 <tr><td><a href="RenameMap.html#VALfrom_native">from_native</a> [<a href="RenameMap.html">RenameMap</a>]</td>
 <td><div class="info">
 <p>Creates a rename map from a two strings (vars) association list</p>
@@ -1283,8 +1258,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.Valuation.html#VALfrom_native">from_native</a> [<a href="MPRF_Invariants.Valuation.html">MPRF_Invariants.Valuation</a>]</td>
-<td></td></tr>
 <tr><td align="left"><div>G</div></td></tr>
 <tr><td><a href="OurInt.html#VALgcd">gcd</a> [<a href="OurInt.html">OurInt</a>]</td>
 <td></td></tr>
@@ -1460,6 +1433,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALguard_without_inv">guard_without_inv</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="TWNLoop.TWNLoop.html#VALguard_without_inv_to_string">guard_without_inv_to_string</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
 <td></td></tr>
 <tr><td align="left"><div>H</div></td></tr>
@@ -1560,8 +1535,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALinitiation_constraint">initiation_constraint</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
-<td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALinput_size">input_size</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
 <td><div class="info">
 <p>Returns the number of variables.</p>
@@ -1574,6 +1547,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALinput_vars">input_vars</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="Program.html#VALinput_vars">input_vars</a> [<a href="Program.html">Program</a>]</td>
 <td><div class="info">
 <p>Returns all input variables of the program.</p>
@@ -1628,8 +1603,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.Valuation.html#VALis_defined">is_defined</a> [<a href="MPRF_Invariants.Valuation.html">MPRF_Invariants.Valuation</a>]</td>
-<td></td></tr>
 <tr><td><a href="BoundType.Make_BoundOver.html#VALis_finite">is_finite</a> [<a href="BoundType.Make_BoundOver.html">BoundType.Make_BoundOver</a>]</td>
 <td><div class="info">
 <p>Returns true iff.</p>
@@ -2279,6 +2252,8 @@
 <td></td></tr>
 <tr><td><a href="FormattedString.html#VALmk_str_line">mk_str_line</a> [<a href="FormattedString.html">FormattedString</a>]</td>
 <td></td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALmk_transition">mk_transition</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="ParserUtil.html#VALmk_transition">mk_transition</a> [<a href="ParserUtil.html">ParserUtil</a>]</td>
 <td><div class="info">
 <p>Generates transitions from given parameters</p>
@@ -2291,6 +2266,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALmk_transitions">mk_transitions</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="ConstraintTypes.Formula.html#VALmk_true">mk_true</a> [<a href="ConstraintTypes.Formula.html">ConstraintTypes.Formula</a>]</td>
 <td><div class="info">
 <p>Creates the trivial formula <i>true</i>, i.e., <code class="code">true</code>.</p>
@@ -2396,8 +2373,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALnew_cache">new_cache</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
-<td></td></tr>
 <tr><td><a href="Formatter.html#VALnewline">newline</a> [<a href="Formatter.html">Formatter</a>]</td>
 <td></td></tr>
 <tr><td><a href="Lexer.html#VALnext_line">next_line</a> [<a href="Lexer.html">Lexer</a>]</td>
@@ -2410,10 +2385,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALnon_increasing_constraint">non_increasing_constraint</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
-<td></td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALnon_increasing_constraints">non_increasing_constraints</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
-<td></td></tr>
 <tr><td><a href="Program.html#VALnon_trivial_transitions">non_trivial_transitions</a> [<a href="Program.html">Program</a>]</td>
 <td><div class="info">
 <p>Returns all transitions, that belong to an SCC.</p>
@@ -2421,8 +2392,6 @@
 </div>
 </td></tr>
 <tr><td><a href="TransitionLabel.html#VALnormalise">normalise</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
-<td></td></tr>
-<tr><td><a href="TWNLoop.TWNLoop.html#VALnormalise">normalise</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
 <td></td></tr>
 <tr><td><a href="Normalise.html#VALnormalise">normalise</a> [<a href="Normalise.html">Normalise</a>]</td>
 <td></td></tr>
@@ -2660,6 +2629,10 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWN.html#VALparallel_edges">parallel_edges</a> [<a href="TWN.html">TWN</a>]</td>
+<td></td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALparallel_trans">parallel_trans</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="SizeCommand.html#VALparams_cmdliner_term">params_cmdliner_term</a> [<a href="SizeCommand.html">SizeCommand</a>]</td>
 <td></td></tr>
 <tr><td><a href="SMTCommand.html#VALparams_cmdliner_term">params_cmdliner_term</a> [<a href="SMTCommand.html">SMTCommand</a>]</td>
@@ -2733,8 +2706,6 @@
 </div>
 </td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALpp_measure">pp_measure</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
-<td></td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALpp_measure">pp_measure</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
 <td></td></tr>
 <tr><td><a href="SizeCommand.html#VALpp_params">pp_params</a> [<a href="SizeCommand.html">SizeCommand</a>]</td>
 <td></td></tr>
@@ -3182,8 +3153,6 @@
 </td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALshow_measure">show_measure</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
 <td></td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALshow_measure">show_measure</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
-<td></td></tr>
 <tr><td><a href="SizeCommand.html#VALshow_params">show_params</a> [<a href="SizeCommand.html">SizeCommand</a>]</td>
 <td></td></tr>
 <tr><td><a href="SMTCommand.html#VALshow_params">show_params</a> [<a href="SMTCommand.html">SMTCommand</a>]</td>
@@ -3260,10 +3229,6 @@
 </div>
 </td></tr>
 <tr><td><a href="Timeout.html#VALstart_time_of_koat2">start_time_of_koat2</a> [<a href="Timeout.html">Timeout</a>]</td>
-<td></td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALstore_inv">store_inv</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
-<td></td></tr>
-<tr><td><a href="MPRF_Invariants.html#VALstore_inv_set">store_inv_set</a> [<a href="MPRF_Invariants.html">MPRF_Invariants</a>]</td>
 <td></td></tr>
 <tr><td><a href="Formatter.html#VALstr">str</a> [<a href="Formatter.html">Formatter</a>]</td>
 <td></td></tr>
@@ -3578,8 +3543,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="MPRF_Invariants.Valuation.html#VALto_string">to_string</a> [<a href="MPRF_Invariants.Valuation.html">MPRF_Invariants.Valuation</a>]</td>
-<td></td></tr>
 <tr><td><a href="LocalSizeBound.html#VALto_string">to_string</a> [<a href="LocalSizeBound.html">LocalSizeBound</a>]</td>
 <td><div class="info">
 <p>Converts the templated bound to a string.</p>
@@ -3747,6 +3710,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALupdate_map">update_map</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="TWNLoop.TWNLoop.html#VALupdate_to_string">update_to_string</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
 <td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALupdate_to_string_lhs">update_to_string_lhs</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
@@ -3822,6 +3787,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALvars">vars</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="Program.html#VALvars">vars</a> [<a href="Program.html">Program</a>]</td>
 <td><div class="info">
 <p>Returns all variables of the program.</p>
@@ -3841,8 +3808,6 @@
 </div>
 </td></tr>
 <tr><td><a href="PolyTypes.Monomial.html#VALvars">vars</a> [<a href="PolyTypes.Monomial.html">PolyTypes.Monomial</a>]</td>
-<td></td></tr>
-<tr><td><a href="MPRF_Invariants.Valuation.html#VALvars">vars</a> [<a href="MPRF_Invariants.Valuation.html">MPRF_Invariants.Valuation</a>]</td>
 <td></td></tr>
 <tr><td><a href="LocalSizeBound.html#VALvars">vars</a> [<a href="LocalSizeBound.html">LocalSizeBound</a>]</td>
 <td><div class="info">
@@ -3870,12 +3835,16 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALvars_">vars_</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="InvariantGeneration.Apron2Koat.html#VALvars_from_apron">vars_from_apron</a> [<a href="InvariantGeneration.Apron2Koat.html">InvariantGeneration.Apron2Koat</a>]</td>
 <td><div class="info">
 <p>Converts an apron variable set to its koat equivalent.</p>
 
 </div>
 </td></tr>
+<tr><td><a href="TWNLoop.TWNLoop.html#VALvars_memoization">vars_memoization</a> [<a href="TWNLoop.TWNLoop.html">TWNLoop.TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="InvariantGeneration.Koat2Apron.html#VALvars_to_apron">vars_to_apron</a> [<a href="InvariantGeneration.Koat2Apron.html">InvariantGeneration.Koat2Apron</a>]</td>
 <td><div class="info">
 <p>Converts a koat variable set to its apron equivalent.</p>
@@ -3929,8 +3898,6 @@
 </div>
 </td></tr>
 <tr><td><a href="OurRational.html#VALzero">zero</a> [<a href="OurRational.html">OurRational</a>]</td>
-<td></td></tr>
-<tr><td><a href="MPRF_Invariants.Valuation.html#VALzero">zero</a> [<a href="MPRF_Invariants.Valuation.html">MPRF_Invariants.Valuation</a>]</td>
 <td></td></tr>
 <tr><td><a href="BoundType.Make_BoundOver.html#VALzero">zero</a> [<a href="BoundType.Make_BoundOver.html">BoundType.Make_BoundOver</a>]</td>
 <td><div class="info">

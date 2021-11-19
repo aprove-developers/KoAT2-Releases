@@ -37,7 +37,6 @@
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
 <link title="Logging" rel="Chapter" href="Logging.html">
 <link title="MPRF_Coefficient" rel="Chapter" href="MPRF_Coefficient.html">
-<link title="MPRF_Invariants" rel="Chapter" href="MPRF_Invariants.html">
 <link title="Main" rel="Chapter" href="Main.html">
 <link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
 <link title="Monad" rel="Chapter" href="Monad.html">
@@ -91,27 +90,34 @@
 &nbsp;&nbsp;&nbsp;&nbsp;update&nbsp;:&nbsp;<span class="constructor">Polynomials</span>.<span class="constructor">Polynomial</span>.t&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">VarMap</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;guard&nbsp;:&nbsp;<span class="constructor">Guard</span>.t;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;invariant&nbsp;:&nbsp;<span class="constructor">Invariant</span>.t;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;cost&nbsp;:&nbsp;<span class="constructor">Polynomials</span>.<span class="constructor">Polynomial</span>.t;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;parallel_trans&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;list;<br>
 &nbsp;&nbsp;}<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;id&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">VarMap</span>.key&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Polynomials</span>.<span class="constructor">Polynomial</span>.t&nbsp;option<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_map&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Polynomials</span>.<span class="constructor">Polynomial</span>.t&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">VarMap</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guard&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Guard</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guard_without_inv&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Guard</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;invariant&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Invariant</span>.t<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;cost&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">Polynomials</span>.<span class="constructor">Polynomial</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;parallel_trans&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_transitions&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_transition&nbsp;:&nbsp;<span class="constructor">TransitionLabel</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;append&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_to_string&nbsp;:&nbsp;<span class="constructor">Polynomials</span>.<span class="constructor">Polynomial</span>.t&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">VarMap</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;cost_to_string&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guard_to_string&nbsp;:&nbsp;?pretty:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;guard_without_inv_to_string&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;?pretty:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;invariant_to_string&nbsp;:&nbsp;?pretty:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;normalise&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_to_string_lhs&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_to_string_rhs&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_to_string_lhs_pretty&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;update_to_string_rhs_pretty&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;?pretty:bool&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_id_string&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;vars_&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;vars_memoization&nbsp;:&nbsp;(int,&nbsp;<span class="constructor">VarSet</span>.t)&nbsp;<span class="constructor">Batteries</span>.<span class="constructor">Hashtbl</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;vars&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;input_vars&nbsp;:&nbsp;<span class="constructor">TWNLoop</span>.<span class="constructor">TWNLoop</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t<br>
 <span class="keyword">end</span></code></body></html>
