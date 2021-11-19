@@ -103,4 +103,58 @@
 
 
 <pre><span id="MODULEVarMap"><span class="keyword">module</span> <a href="TWNLoop.VarMap.html">VarMap</a></span>: <code class="type">Batteries.Map.Make</code><code class="code">(</code><code class="type"><a href="Var.html">Var</a></code><code class="code">)</code></pre>
-<pre><span id="MODULETWNLoop"><span class="keyword">module</span> <a href="TWNLoop.TWNLoop.html">TWNLoop</a></span>: <code class="code">sig</code> <a href="TWNLoop.TWNLoop.html">..</a> <code class="code">end</code></pre></body></html>
+<pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.update">update</span>&nbsp;: <code class="type">Polynomials.Polynomial.t VarMap.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.guard">guard</span>&nbsp;: <code class="type">Guard.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.invariant">invariant</span>&nbsp;: <code class="type">Invariant.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.subsumed_transitionlabels">subsumed_transitionlabels</span>&nbsp;: <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> list</code>;</code></td>
+
+</tr></table>
+<code>}</code>
+
+
+
+<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> VarMap.key -> Polynomials.Polynomial.t option</code></pre>
+<pre><span id="VALupdate_map"><span class="keyword">val</span> update_map</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> Polynomials.Polynomial.t VarMap.t</code></pre>
+<pre><span id="VALguard"><span class="keyword">val</span> guard</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> Guard.t</code></pre>
+<pre><span id="VALguard_without_inv"><span class="keyword">val</span> guard_without_inv</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> Guard.t</code></pre>
+<pre><span id="VALinvariant"><span class="keyword">val</span> invariant</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> Invariant.t</code></pre>
+<pre><span id="VALsubsumed_transitionlabels"><span class="keyword">val</span> subsumed_transitionlabels</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> list</code></pre>
+<pre><span id="VALsubsumed_transitions"><span class="keyword">val</span> subsumed_transitions</span> : <code class="type">'a -> 'b -> <a href="TWNLoop.html#TYPEt">t</a> -> ('a * <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> * 'b) list</code></pre>
+<pre><span id="VALmk_transitions"><span class="keyword">val</span> mk_transitions</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> list -> <a href="TWNLoop.html#TYPEt">t</a></code></pre>
+<pre><span id="VALremove_non_contributors"><span class="keyword">val</span> remove_non_contributors</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> VarSet.t -> <a href="TWNLoop.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_transition"><span class="keyword">val</span> mk_transition</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> <a href="TWNLoop.html#TYPEt">t</a></code></pre>
+<pre><span id="VALappend"><span class="keyword">val</span> append</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> <a href="TWNLoop.html#TYPEt">t</a> -> <a href="TWNLoop.html#TYPEt">t</a></code></pre>
+<pre><span id="VALupdate_to_string"><span class="keyword">val</span> update_to_string</span> : <code class="type">Polynomials.Polynomial.t VarMap.t -> string</code></pre>
+<pre><span id="VALguard_to_string"><span class="keyword">val</span> guard_to_string</span> : <code class="type">?pretty:bool -> <a href="TWNLoop.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALguard_without_inv_to_string"><span class="keyword">val</span> guard_without_inv_to_string</span> : <code class="type">?pretty:bool -> <a href="TWNLoop.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALinvariant_to_string"><span class="keyword">val</span> invariant_to_string</span> : <code class="type">?pretty:bool -> <a href="TWNLoop.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALupdate_to_string_lhs"><span class="keyword">val</span> update_to_string_lhs</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALupdate_to_string_rhs"><span class="keyword">val</span> update_to_string_rhs</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALupdate_to_string_lhs_pretty"><span class="keyword">val</span> update_to_string_lhs_pretty</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALupdate_to_string_rhs_pretty"><span class="keyword">val</span> update_to_string_rhs_pretty</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -> <a href="TWNLoop.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> VarSet.t</code></pre>
+<pre><span id="VALinput_vars"><span class="keyword">val</span> input_vars</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -> VarSet.t</code></pre></body></html>

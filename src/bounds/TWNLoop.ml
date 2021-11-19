@@ -1,22 +1,19 @@
 open Batteries
 open Polynomials
+open ProgramTypes
 
 module Guard = Formulas.Formula
 module Invariant = Formulas.Formula
 type polynomial = Polynomial.t
 module VarMap = Map.Make(Var)
 
-module TWNLoop = struct
-
 type t = {
-    id : int;
-    update : Polynomial.t VarMap.t;
-    guard : Guard.t;
-    invariant : Invariant.t;
-    parallel_trans : TransitionLabel.t list;
+  id: int;
+  update : Polynomial.t VarMap.t;
+  guard : Guard.t;
+  invariant : Invariant.t;
+  subsumed_transitionlabels : TransitionLabel.t list; (* Transitions that are subsumed by this t *)
 }
-
-let id t = t.id
 
 let update t var = VarMap.Exceptionless.find var t.update
 
@@ -28,15 +25,19 @@ let guard_without_inv t = t.guard
 
 let invariant t = t.invariant
 
-let parallel_trans t = t.parallel_trans
+let subsumed_transitionlabels t = t.subsumed_transitionlabels
+let subsumed_transitions l l' twn = List.map (fun t -> l,t,l') twn.subsumed_transitionlabels
 
 let mk_transitions xs = {
-    id = unique ();
+    id = unique();
     update = List.first xs |> TransitionLabel.update_map;
     guard = Guard.lift (List.map TransitionLabel.guard xs);
     invariant = Guard.lift (List.map TransitionLabel.invariant xs);
-    parallel_trans = xs;
+    subsumed_transitionlabels = xs;
 }
+
+let remove_non_contributors t non_contributors =
+  { t with update = VarSet.fold VarMap.remove non_contributors t.update }
 
 let mk_transition t = mk_transitions [t]
 
@@ -62,12 +63,11 @@ let append t1 t2 =
   and new_invariant =
     Invariant.Infix.(t1.invariant && Invariant.map_polynomial (Polynomial.substitute_f (substitution t1.update)) t2.invariant)
   in
-  {
-    id = unique ();
+  { id = unique ();
     update = new_update;
     guard = new_guard;
     invariant = new_invariant;
-    parallel_trans = t1.parallel_trans;
+    subsumed_transitionlabels = t1.subsumed_transitionlabels@t2.subsumed_transitionlabels;
   }
 
 
@@ -152,26 +152,17 @@ let to_string ?(pretty = false) label =
   let guard = if Guard.is_true label.guard  then "" else " :|: " ^ guard_without_inv_to_string ~pretty label in
   let invariant = if Invariant.is_true label.invariant  then "" else " [" ^ invariant_to_string ~pretty label ^ "]" in
   if pretty then
-    "t" ^ (Util.natural_to_subscript label.id) ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty label ^ " -> " ^  update_to_string_rhs_pretty label ^ guard
-  else 
-    "ID: " ^ invariant ^ string_of_int label.id ^ ", " ^ update_to_string label.update ^ guard
+    "twn" ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty label ^ " -> " ^  update_to_string_rhs_pretty label ^ guard
+  else
+    "Inv: " ^ invariant ^ ", " ^ update_to_string label.update ^ guard
 
-let to_id_string =
-  string_of_int % id
-
-let vars_ {update; guard; invariant; _} =
+let vars {update; guard; invariant; _} =
   VarMap.fold (fun _ -> VarSet.union % Polynomial.vars) update VarSet.empty
   |> (VarSet.union % VarSet.of_enum % VarMap.keys) update
   |> (VarSet.union % Guard.vars) guard
   |> (VarSet.union % Invariant.vars) invariant
 
-let vars_memoization: (int,VarSet.t) Hashtbl.t = Hashtbl.create 10
-
-let vars = Util.memoize vars_memoization ~extractor:id vars_
-
 let input_vars t =
-  t.update
-  |> VarMap.keys
+  VarMap.keys t.update
   |> VarSet.of_enum
 
-end
