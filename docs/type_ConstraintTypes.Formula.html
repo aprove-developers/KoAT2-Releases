@@ -37,7 +37,6 @@
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
 <link title="Logging" rel="Chapter" href="Logging.html">
 <link title="MPRF_Coefficient" rel="Chapter" href="MPRF_Coefficient.html">
-<link title="MPRF_Invariants" rel="Chapter" href="MPRF_Invariants.html">
 <link title="Main" rel="Chapter" href="Main.html">
 <link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
 <link title="Monad" rel="Chapter" href="Monad.html">
@@ -91,8 +90,8 @@
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;polynomial<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;value<br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;t<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;lift&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.atom&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.constr&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.t<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;lift&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.constr&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_true&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_false&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;mk_and&nbsp;:<br>
@@ -139,6 +138,7 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;turn&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_linear&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_true&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;atoms&nbsp;:&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ConstraintTypes</span>.<span class="constructor">Formula</span>.atom&nbsp;list<br>
 &nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Infix</span>&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;(&nbsp;=&nbsp;)&nbsp;:<br>

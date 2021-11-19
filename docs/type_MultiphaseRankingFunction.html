@@ -37,7 +37,6 @@
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
 <link title="Logging" rel="Chapter" href="Logging.html">
 <link title="MPRF_Coefficient" rel="Chapter" href="MPRF_Coefficient.html">
-<link title="MPRF_Invariants" rel="Chapter" href="MPRF_Invariants.html">
 <link title="Main" rel="Chapter" href="Main.html">
 <link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
 <link title="Monad" rel="Chapter" href="Monad.html">
@@ -101,25 +100,13 @@
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">TransitionSet</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;depth&nbsp;:&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;?inv:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.measure&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;<span class="constructor">Batteries</span>.<span class="constructor">Enum</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_scc&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;?inv:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.measure&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool)&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t)&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">TransitionSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;option<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_fast&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;?inv:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.measure&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;<span class="constructor">Batteries</span>.<span class="constructor">Enum</span>.t<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_scc_fast&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;?inv:bool&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.measure&nbsp;<span class="keywordsign">-&gt;</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Program</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">TransitionSet</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;int&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">ProgramTypes</span>.<span class="constructor">Transition</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;option<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;<span class="constructor">MultiphaseRankingFunction</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>

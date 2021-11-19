@@ -41,7 +41,6 @@
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
 <link title="Logging" rel="Chapter" href="Logging.html">
 <link title="MPRF_Coefficient" rel="Chapter" href="MPRF_Coefficient.html">
-<link title="MPRF_Invariants" rel="Chapter" href="MPRF_Invariants.html">
 <link title="Main" rel="Chapter" href="Main.html">
 <link title="MaybeChanged" rel="Chapter" href="MaybeChanged.html">
 <link title="Monad" rel="Chapter" href="Monad.html">
@@ -137,7 +136,7 @@
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
 <h2 id="1_Followingmethodsareconveniencemethodsforthecreationofformulas"> <div align=left>Following methods are convenience methods for the creation of formulas.</div></h2>
-<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEatom">atom</a> -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEconstr">constr</a> list -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Lifts an atom to a formula, i.e., a single atom <i>a</i> is a formula [[a]] as a formula is a disjunction over constraints.</p>
 </div>
@@ -149,6 +148,7 @@
 </div>
 </div>
 
+<pre><span id="VALlift"><span class="keyword">val</span> lift</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEconstr">constr</a> list -> <a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre>
 <pre><span id="VALmk_true"><span class="keyword">val</span> mk_true</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates the trivial formula <i>true</i>, i.e., <code class="code">true</code>.</p>
@@ -265,6 +265,7 @@
 
 <pre><span id="VALis_linear"><span class="keyword">val</span> is_linear</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> bool</code></pre>
 <pre><span id="VALis_true"><span class="keyword">val</span> is_true</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALatoms"><span class="keyword">val</span> atoms</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> <a href="ConstraintTypes.Formula.html#TYPEatom">atom</a> list</code></pre>
 <pre><span id="MODULEInfix"><span class="keyword">module</span> <a href="ConstraintTypes.Formula.Infix.html">Infix</a></span>: <code class="code">sig</code> <a href="ConstraintTypes.Formula.Infix.html">..</a> <code class="code">end</code></pre><h2 id="1_Followingmethodsreturncertainpropertiesoftheformula"> <div align=left>Following methods return certain properties of the formula.</div></h2>
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="ConstraintTypes.Formula.html#TYPEt">t</a> -> VarSet.t</code></pre><div class="info ">
 <div class="info-desc">
