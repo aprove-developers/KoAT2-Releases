@@ -6,7 +6,6 @@ open Atoms
 open BoundsInst
 open Constraints
 open PolyExponential
-open TWNLoop
 
 (* PROOF *)
 let logger = Logging.(get Twn)
@@ -292,9 +291,11 @@ let rec cycles trans l0 (paths: (path * LocationSet.t) list) (res: path list) =
 and the guard g1 && g1(t1) && g2(t2 % t1) && .. and cost)  *)
 let compose_transitions cycle start =
   let rec split i = function
-  | [] -> raise Not_found
-  | x::xs -> if i == 0 then ([],x,xs) else let y,t,z = split (i - 1) xs in (x::y,t, z)
-  |> Tuple3.map1 List.rev in
+    | [] -> raise Not_found
+    | x::xs ->
+        if i == 0 then ([],x,xs) else let y,t,z = split (i - 1) xs in (x::y,t, z)
+        |> Tuple3.map1 List.rev
+  in
   let pre, t1, post = split start (List.rev cycle |> List.map Tuple3.second) in
   List.fold (fun u t -> TWNLoop.append t u) t1 (pre@post)
 
@@ -306,14 +307,17 @@ let rec find l list =
 
 (* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
 let find_cycle appr program (cycles: path list) = List.find (fun cycle ->
-    let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.parallel_trans twn))@xs) [] cycle in
+    let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
     let entries = Program.entry_transitions logger program handled_transitions in
     let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in
     List.for_all (fun (entry, t) ->
-      let eliminated_t = t |> TWNLoop.parallel_trans |> List.map (EliminateNonContributors.eliminate_t % TransitionLabel.without_inv) |> TWNLoop.mk_transitions in
+      let eliminated_t =
+        EliminateNonContributors.eliminate_t
+          (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
+      in
       not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
        && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
-       && let order = check_triangular eliminated_t in (List.length order) == (VarSet.cardinal ((TWNLoop.input_vars eliminated_t))) (* Triangular?*)
+       && let order = check_triangular eliminated_t in List.length order == VarSet.cardinal (TWNLoop.input_vars eliminated_t) (* Triangular?*)
        && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)
        && List.for_all (Approximation.is_time_bounded appr) entries) (List.combine entries twn_loops)) cycles
 
@@ -347,46 +351,53 @@ let time_bound (l,t,l') scc program appr = (
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then (
     let bound =
-    Timeout.timed_run 5. (fun () -> try
-      let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
-      let cycle = find_cycle appr program (
-      if Location.equal l l' then
-      let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in [[List.find f parallel_edges]]
-      else (cycles (parallel_edges |> Set.of_list) l ([([(l,(TWNLoop.mk_transition t),l')], (LocationSet.singleton l'))]) [])) in
-      let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.parallel_trans twn))@xs) [] cycle in
-      let entries = Program.entry_transitions logger program handled_transitions in
-      (* add_to_proof_graph program cycle entries; *)
-      Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
-      let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
-      Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TWNLoop.to_string twn_loops));
-          proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>
+      Timeout.timed_run 5. (fun () -> try
+        let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
+        let cycle = find_cycle appr program (
+          if Location.equal l l' then
+            let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in
+            [[List.find f parallel_edges]]
+          else
+            (cycles (parallel_edges |> Set.of_list) l ([([(l,(TWNLoop.mk_transition t),l')], (LocationSet.singleton l'))]) []))
+        in
+        let handled_transitions = ListMonad.(cycle >>= fun (l,twn,l') -> TWNLoop.subsumed_transitions l l' twn) in
+        let entries = Program.entry_transitions logger program handled_transitions in
+        (* add_to_proof_graph program cycle entries; *)
+        Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
+        let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
+        Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TWNLoop.to_string twn_loops));
+        proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>
           (List.combine (List.map Transition.to_string_pretty entries) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
         let global_local_bounds =
           List.map (fun (entry, t) ->
-                let eliminated_t = t |> TWNLoop.parallel_trans |> List.map EliminateNonContributors.eliminate_t |> TWNLoop.mk_transitions in
+                let eliminated_t =
+                  EliminateNonContributors.eliminate_t
+                    (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
+                in
                 if VarSet.is_empty (TWNLoop.vars eliminated_t) then
                   Bound.infinity, (entry, Bound.infinity)
-                else
+                else (
                   let bound = complexity eliminated_t in
                   if Bound.is_infinity bound then raise (Non_Terminating (handled_transitions, entries));
-                  lift appr entry bound, (entry, bound))
+                  lift appr entry bound, (entry, bound)) )
           (List.combine entries twn_loops) in
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map Tuple2.second global_local_bounds)) handled_transitions;
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
-      with
-      | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
-      | Non_Terminating (handled_transitions,entries)->
-        Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]);
-        List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> (t, Bound.infinity)) entries)) handled_transitions;
-        Bound.infinity) in
-      if Option.is_some bound then
-        bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
-        |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true))))
-      else (
-        Logger.log logger Logger.INFO (fun () -> "twn", ["Timeout", Bound.to_string Bound.infinity]);
-        Bound.infinity)
+        with
+        | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
+        | Non_Terminating (handled_transitions,entries)->
+            Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]);
+            List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> (t, Bound.infinity)) entries)) handled_transitions;
+            Bound.infinity)
+    in
+    if Option.is_some bound then
+      bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
+      |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true))))
+    else (
+      Logger.log logger Logger.INFO (fun () -> "twn", ["Timeout", Bound.to_string Bound.infinity]);
+      Bound.infinity)
   )
   else (
     let cycle, xs = Option.get opt in

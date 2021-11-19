@@ -104,7 +104,7 @@
 
 <pre><span id="VALlogger"><span class="keyword">val</span> logger</span> : <code class="type">Batteries.Logger.log</code></pre>
 <pre><span id="VALdepends"><span class="keyword">val</span> depends</span> : <code class="type">VarSet.elt -> <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> VarSet.t -> bool</code></pre>
-<pre><span id="VALeliminate_t_"><span class="keyword">val</span> eliminate_t_</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> VarSet.t -> VarSet.t -> VarSet.t</code></pre>
+<pre><span id="VALeliminate_t_"><span class="keyword">val</span> eliminate_t_</span> : <code class="type">VarSet.t -><br>       (VarSet.elt -> Polynomials.Polynomial.t option) -><br>       VarSet.t -> VarSet.t -> VarSet.t</code></pre>
 <pre><span id="VALeliminate_"><span class="keyword">val</span> eliminate_</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> VarSet.t -> VarSet.t -> VarSet.t</code></pre>
-<pre><span id="VALeliminate_t"><span class="keyword">val</span> eliminate_t</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a></code></pre>
+<pre><span id="VALeliminate_t"><span class="keyword">val</span> eliminate_t</span> : <code class="type">VarSet.t -><br>       VarSet.t -><br>       (VarSet.elt -> Polynomials.Polynomial.t option) -> (VarSet.t -> 'a) -> 'a</code></pre>
 <pre><span id="VALeliminate"><span class="keyword">val</span> eliminate</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="MaybeChanged.html#TYPEstatus">MaybeChanged.status</a> * <a href="Program.html#TYPEt">Program.t</a></code></pre></body></html>
