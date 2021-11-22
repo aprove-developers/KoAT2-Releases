@@ -166,6 +166,13 @@
 </div>
 </div>
 
+<pre><span id="VALsimplify_guard"><span class="keyword">val</span> simplify_guard</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">t</a></code></pre><div class="info ">
+<div class="info-desc">
+<p>Simplifies the guard of the transition. This function performs calls to the SMT solver and is therefore expensive.
+ This method makes O(n^2) calls to the smt solver where n is the number of atoms in the guard.</p>
+</div>
+</div>
+
 <pre><span id="VALsame"><span class="keyword">val</span> same</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns if the two labels are the same entity.</p>

@@ -50,6 +50,28 @@ let equivalent lbl1 lbl2 =
 let compare_same lbl1 lbl2 =
   Int.compare lbl1.id lbl2.id
 
+let simplify_guard t =
+  (* Only try to simplify the linear part *)
+  let (lin_atoms, non_lin_atoms) = List.partition Atoms.Atom.is_linear @@ Guard.simplify @@ Guard.atom_list t.guard in
+  let not_implied constrs =
+    List.filter (fun c -> SMT.Z3Solver.satisfiable
+      Formulas.Formula.(mk_and (List.fold_left (fun f c' -> mk_and f (mk @@ Guard.mk [c'])) mk_true constrs)
+                               (neg @@ mk @@ Guard.mk [c])))
+  in
+  let rec greed_minimpl_set constr_chosen = function
+    | [] -> constr_chosen
+    | constr_missing ->
+        let (next_constr, constr_missing') =
+          List.map (fun c -> c,not_implied (List.cons c constr_chosen) constr_missing) constr_missing
+          |> Tuple2.first % List.min_max ~cmp:(fun (_,l) (_,l') -> compare (List.length l) (List.length l'))
+        in
+        greed_minimpl_set (List.cons next_constr constr_chosen) constr_missing'
+  in
+  (* Perform initial check to catch tautologies *)
+  let simplified = Guard.mk @@ greed_minimpl_set [] (not_implied [] lin_atoms) @ non_lin_atoms in
+  Printf.printf "simplified %s !! from %s\n" (Guard.to_string simplified) (Guard.to_string t.guard);
+  { t with guard = simplified }
+
 let compare_equivalent lbl1 lbl2 =
   if VarMap.compare Polynomial.compare lbl1.update lbl2.update != 0 then
     VarMap.compare Polynomial.compare lbl1.update lbl2.update
@@ -79,8 +101,8 @@ let mk ~cost ~assignments ~patterns ~guard ~vars =
   |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
   |> Enum.fold (fun map adder -> adder map) VarMap.empty
   |> fun update -> { id = unique ();
-                     update; guard; 
-                     invariant = Invariant.mk_true; 
+                     update; guard;
+                     invariant = Invariant.mk_true;
                      cost;}
 
 let append t1 t2 =
@@ -291,7 +313,7 @@ let to_string ?(pretty = false) label =
   let cost = if Polynomial.is_one label.cost then if pretty then "->" else "" else if pretty then "-{" ^ Polynomial.to_string_pretty label.cost else Polynomial.to_string label.cost ^ "}>" in
   if pretty then
     "t" ^ (Util.natural_to_subscript label.id) ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty label ^ " " ^ cost ^ " "  ^ update_to_string_rhs_pretty label ^ guard
-  else 
+  else
     "ID: " ^ invariant ^ string_of_int label.id ^ ", " ^ cost ^ "&euro;" ^ ", " ^ update_to_string label.update ^ guard
 
 let to_id_string =

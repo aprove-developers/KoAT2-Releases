@@ -44,6 +44,10 @@ val trival : VarSet.t -> t
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
 val append : t -> t -> t
 
+(** Simplifies the guard of the transition. This function performs calls to the SMT solver and is therefore expensive.
+ * This method makes O(n^2) calls to the smt solver where n is the number of atoms in the guard. *)
+val simplify_guard : t -> t
+
 (** Returns if the two labels are the same entity. *)
 val same : t -> t -> bool
 
