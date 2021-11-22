@@ -14,7 +14,7 @@ let proof = ref FormattedString.Empty
 
 let proof_append f_str = proof := FormattedString.(!proof <> f_str)
 
-(* let add_to_proof_graph program cycle entries =
+let add_to_proof_graph program cycle entries =
   let color_map =
   List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty
   |> List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Red) entries in
@@ -22,7 +22,7 @@ let proof_append f_str = proof := FormattedString.(!proof <> f_str)
       match ProofOutput.get_format () with
         | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html color_map program)
         | _    -> FormattedString.Empty));
-  proof_append (FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle)))) *)
+  proof_append (FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle))))
 
 (* TOPOLOGICAL ORDERING: *)
 
@@ -294,10 +294,9 @@ let compose_transitions cycle start =
     | [] -> raise Not_found
     | x::xs ->
         if i == 0 then ([],x,xs) else let y,t,z = split (i - 1) xs in (x::y,t, z)
-        |> Tuple3.map1 List.rev
   in
-  let pre, t1, post = split start (List.rev cycle |> List.map Tuple3.second) in
-  List.fold (fun u t -> TWNLoop.append t u) t1 (pre@post)
+  let pre, t1, post = split start cycle in
+  List.fold (fun u t -> TWNLoop.append u (Tuple3.second t)) (Tuple3.second t1) (post@pre)
 
 (* Finds entered location on cycle. *)
 let rec find l list =
