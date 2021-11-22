@@ -69,7 +69,6 @@ let simplify_guard t =
   in
   (* Perform initial check to catch tautologies *)
   let simplified = Guard.mk @@ greed_minimpl_set [] (not_implied [] lin_atoms) @ non_lin_atoms in
-  Printf.printf "simplified %s !! from %s\n" (Guard.to_string simplified) (Guard.to_string t.guard);
   { t with guard = simplified }
 
 let compare_equivalent lbl1 lbl2 =
