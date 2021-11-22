@@ -84,7 +84,7 @@ let update_to_string update =
 
 let guard_to_string ?(pretty = false) label =
   if
-    Guard.is_true (Guard.mk_and label.guard label.invariant) then ""
+    Guard.is_true (Guard.mk_and label.guard label.invariant |> Guard.simplify) then ""
   else
     Guard.to_string ~pretty (Guard.mk_and label.guard label.invariant)
 
@@ -150,11 +150,11 @@ let update_to_string_rhs_pretty t =
 
 let to_string ?(pretty = false) label =
   let guard = if Guard.is_true label.guard  then "" else " :|: " ^ guard_without_inv_to_string ~pretty label in
-  let invariant = if Invariant.is_true label.invariant  then "" else " [" ^ invariant_to_string ~pretty label ^ "]" in
+  let invariant = if Invariant.is_true label.invariant  then "" else "Inv: " ^ " [" ^ invariant_to_string ~pretty label ^ "] , "in
   if pretty then
     "twn" ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty label ^ " -> " ^  update_to_string_rhs_pretty label ^ guard
   else
-    "Inv: " ^ invariant ^ ", " ^ update_to_string label.update ^ guard
+    invariant  ^ update_to_string label.update ^ guard
 
 let vars {update; guard; invariant; _} =
   VarMap.fold (fun _ -> VarSet.union % Polynomial.vars) update VarSet.empty
