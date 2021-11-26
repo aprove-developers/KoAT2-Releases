@@ -31,7 +31,7 @@ let subsumed_transitions l l' twn = List.map (fun t -> l,t,l') twn.subsumed_tran
 let mk_transitions xs = {
     id = unique();
     update = List.first xs |> TransitionLabel.update_map;
-    guard = Guard.lift (List.map TransitionLabel.guard xs);
+    guard = Guard.lift (List.map TransitionLabel.guard_without_inv xs);
     invariant = Guard.lift (List.map TransitionLabel.invariant xs);
     subsumed_transitionlabels = xs;
 }
