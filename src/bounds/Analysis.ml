@@ -138,7 +138,8 @@ let improve_timebound_computation (scc: TransitionSet.t) measure program max_dep
   let scc_overapprox_nonlinear = TransitionSet.map Transition.overapprox_nonlinear_updates scc in
   let rankfunc_computation depth =
     let compute_function =
-        MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth % Transition.overapprox_nonlinear_updates
+        MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth
+          % flip TransitionSet.find scc_overapprox_nonlinear
     in
     TransitionSet.to_array unbounded_transitions
     |> Parmap.array_parmap compute_function
