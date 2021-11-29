@@ -143,37 +143,57 @@ let update_map t = t.update
 
 module Monomial = Monomials.Make(OurInt)
 let overapprox_nonlinear_updates t =
-  let overapprox_poly var poly (guard, update) =
+  let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
+
+  let overapprox_poly orig_var poly (guard, update) =
     if Polynomial.is_linear poly then guard, update
     else
-      let new_var = Var.fresh_id Var.Int () in
-      let new_var_poly = Polynomial.of_var new_var in
-      match Polynomial.monomials_with_coeffs poly with
-        | [(coeff,mon)] ->
-            (** check if update is quadratic, ^4, ^6, ... *)
-            let vars = Monomial.vars mon in
-            if VarSet.cardinal vars = 1 then
-              if (Monomial.degree_variable var mon) mod 2 = 0 && Var.equal (VarSet.any vars) var then
-                let var_poly = Polynomial.of_var var in
-                (* check if variable can be zero. drop nonlinear to ensure fast termination of SMT call *)
-                let formula = Formula.mk_and
+      let handle_monom (coeff,mon) =
+        if Monomial.is_univariate_linear mon then
+          Guard.mk_true, Polynomial.mul (Polynomial.of_constant coeff) (Polynomial.of_monomial mon)
+        else
+          let new_var = Var.fresh_id Var.Int () in
+          let new_var_poly = Polynomial.of_var new_var in
+          let new_var_poly_with_coeff = Polynomial.mul (Polynomial.of_constant coeff) new_var_poly in
+          (** check if update is quadratic, ^4, ^6, ... *)
+          let vars = Monomial.vars mon in
+          if VarSet.cardinal vars = 1 then
+            let var = VarSet.any vars in
+            if (Monomial.degree_variable var mon) mod 2 = 0 then
+              let var_poly = Polynomial.of_var var in
+              (* check if term will increase. drop nonlinear to ensure fast termination of SMT call *)
+              let formula = Formula.mk_and
                               (Formula.mk_and  (Formula.mk_lt var_poly (Polynomial.of_int 2))
                                                (Formula.mk_gt var_poly (Polynomial.of_int (-2))))
-                              (Formula.mk @@ Guard.drop_nonlinear t.guard)
+                              (Formula.mk @@ Guard.drop_nonlinear orig_guard_and_invariants)
+              in
+              if SMT.Z3Solver.unsatisfiable formula then
+                (* The update will increase the variable (disregarding factor) *)
+                Guard.mk_and (Guard.mk_gt new_var_poly var_poly) (Guard.mk_ge new_var_poly (Polynomial.of_int 4)), new_var_poly_with_coeff
+              else
+                (* check if term can be zero. drop nonlinear to ensure fast termination of SMT call *)
+                let formula = Formula.mk_and
+                                (Formula.mk_eq var_poly (Polynomial.of_int 0))
+                                (Formula.mk @@ Guard.drop_nonlinear orig_guard_and_invariants)
                 in
                 if SMT.Z3Solver.unsatisfiable formula then
-                  (* The update will increase the variable (disregarding factor) *)
-                  Guard.mk_and (Guard.mk_gt new_var_poly var_poly) guard, VarMap.add var (Polynomial.mul (Polynomial.of_constant coeff) new_var_poly) update
+                  (* updated variable will be positive (disregarding factor) *)
+                  Guard.mk_and (Guard.mk_gt new_var_poly Polynomial.zero) (Guard.mk_ge new_var_poly var_poly), new_var_poly_with_coeff
                 else
                   (* updated variable will be non-negative (disregarding factor) *)
-                  Guard.mk_and (Guard.mk_ge new_var_poly Polynomial.zero) guard, VarMap.add var (Polynomial.mul (Polynomial.of_constant coeff) new_var_poly) update
-              else
-                guard, VarMap.add var new_var_poly update
+                  Guard.mk_ge new_var_poly Polynomial.zero, new_var_poly_with_coeff
             else
-              guard, VarMap.add var new_var_poly update
-
-        | _ -> Guard.mk_true, VarMap.add var new_var_poly update
+              Guard.mk_true, new_var_poly_with_coeff
+          else
+            Guard.mk_true, new_var_poly_with_coeff
+    in
+    let (final_guard, final_upd_poly) =
+      List.map handle_monom (Polynomial.monomials_with_coeffs poly)
+      |> List.fold_left (fun (g,p) (g',p') -> Guard.mk_and g g', Polynomial.add p p') (guard, Polynomial.zero)
+    in
+    final_guard, VarMap.add orig_var final_upd_poly update
   in
+
   let (guard',update') = VarMap.fold overapprox_poly t.update (t.guard, t.update) in
   {t with guard = guard'; update = update'}
 
