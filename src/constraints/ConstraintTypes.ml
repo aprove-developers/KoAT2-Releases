@@ -220,7 +220,7 @@ module type Constraint =
         val vars : t -> VarSet.t
 
         (** Returns a string representing the constraint. Parameter {i to_file} is used to get a representation with less special characters. *)
-        val to_string : ?to_file:bool -> ?pretty:bool -> ?comp:string -> ?conj:string -> t -> string
+        val to_string : ?to_file:bool -> ?pretty:bool -> ?conj:string -> t -> string
 
 
         (** {1  {L Following methods manipulate constraints and return the manipulated versions.}} *)
