@@ -80,7 +80,7 @@ let tests =
                     ("3", Some "5",
                      "a -> b(x), b -> c(x), b -> d(x), c -> d(x)");
 
-                    ("11", None,
+                    ("11", Some "12",
                      "a -> b(10), b -> b(x-1) :|: x>0");
 
                     (* TODO Possible? ("6", None, "a -> b(10), b -> b(x-2) :|: x>0"); *)
