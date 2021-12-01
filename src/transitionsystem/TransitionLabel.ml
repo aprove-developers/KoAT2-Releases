@@ -312,7 +312,7 @@ let update_to_string_lhs_pretty t =
       |> List.map (fun (var,poly) -> (Var.to_string ~pretty:true var, (Polynomial.to_string_pretty poly)))
       |> List.split
       |> Tuple2.first
-      |> fun xs -> "("^(String.concat "," xs)^")"
+      |> fun xs -> "("^(String.concat ", " xs)^")"
 
 let update_to_string_rhs_pretty t =
   let update = t.update in
@@ -324,7 +324,7 @@ let update_to_string_rhs_pretty t =
       |> List.map (fun (var,poly) -> (Var.to_string ~pretty:true var, (Polynomial.to_string_pretty poly)))
       |> List.split
       |> Tuple2.second
-      |> fun xs -> "("^(String.concat "," xs)^")"
+      |> fun xs -> "("^(String.concat ", " xs)^")"
 
 let to_string ?(pretty = false) label =
   let guard = if Guard.is_true label.guard  then "" else " :|: " ^ guard_without_inv_to_string ~pretty label in

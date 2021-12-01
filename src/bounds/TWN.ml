@@ -22,7 +22,7 @@ let add_to_proof_graph program cycle entries =
       match ProofOutput.get_format () with
         | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html color_map program)
         | _    -> FormattedString.Empty));
-  proof_append (FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string (List.enum cycle))))
+  proof_append (FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string_pretty (List.enum cycle))))
 
 (* TOPOLOGICAL ORDERING: *)
 

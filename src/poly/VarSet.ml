@@ -20,9 +20,9 @@ let map_to_array f varset =
 
 (* There is no to_string for sets in batteries,
    but there is a very efficient print function which is however a bit inconvenient to use. *)
-let to_string varset =
+let to_string ?(pretty=false) varset =
   let output = IO.output_string () in
-  print (fun output var -> IO.nwrite output (Var.to_string var)) output varset;
+  print (fun output var -> IO.nwrite output (Var.to_string ~pretty var)) output varset;
   IO.close_out output
 
 let of_string_list list =

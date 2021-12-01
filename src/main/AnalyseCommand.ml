@@ -189,7 +189,7 @@ let run (params: params) =
     |> Readers.read_input ~rename:params.rename params.simple_input
     |> rename_program
     |> tap (fun prog -> ProofOutput.add_to_proof @@ fun () ->
-          FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string prog)
+          FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string ~pretty:true prog)
             <> program_to_formatted_string prog params.proof_format))
   in
   Timeout.timed_run params.timeout
@@ -198,7 +198,7 @@ let run (params: params) =
      |> tap (fun _ -> ProofOutput.add_to_proof (fun () -> FormattedString.mk_header_big (FormattedString.mk_str "Preprocessing")))
      |> Tuple2.map1 preprocess
      |> tap (fun (prog, _) -> ProofOutput.add_to_proof @@ fun () ->
-          FormattedString.( mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string prog)
+          FormattedString.( mk_header_big (mk_str "Problem after Preprocessing")<>mk_paragraph (Program.to_formatted_string ~pretty:true prog)
             <> program_to_formatted_string prog params.proof_format))
      |> tap (fun (program, appr) ->
             if params.print_system then
@@ -213,7 +213,7 @@ let run (params: params) =
                  Bounds.find_bounds ~mprf_max_depth:params.depth ~preprocess ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~local:params.local program appr
                else (program, appr))
      |> tap (fun (program, appr) -> params.result program appr)
-     |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~show_initial:false program appr))
+     |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~pretty:true ~show_initial:false program appr))
      |> tap (fun (program, appr) ->
             if params.print_system then
               GraphPrint.print_system ~format:"png" ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)

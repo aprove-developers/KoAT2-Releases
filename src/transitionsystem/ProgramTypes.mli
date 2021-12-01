@@ -57,6 +57,7 @@ sig
 
   (** Returns a string of the form id: src -> target. *)
   val to_id_string : t -> string
+  val to_id_string_pretty : t -> string
 
   (** Returns a string representing the transition. Parameter {i to_file} is used to get a representation with less special characters. *)
   val to_string : ?to_file:bool -> t -> string
