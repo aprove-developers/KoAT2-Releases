@@ -313,7 +313,7 @@ let transform_program program =
   else
     let add location invariant program =
       Logger.(log logger INFO (fun () -> "add_invariant", ["location", Location.to_string location; "invariant", Constraint.to_string invariant]));
-      ProofOutput.add_str_paragraph_to_proof (fun () -> "Found invariant " ^ Constraint.to_string invariant ^ " for location "^Location.to_string location);
+      ProofOutput.add_str_paragraph_to_proof (fun () -> "Found invariant " ^ Constraint.to_string ~pretty:true invariant ^ " for location "^Location.to_string location);
       Program.add_invariant location invariant program
     in
     program

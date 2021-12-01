@@ -58,7 +58,7 @@ let eliminate program =
     let program_ = Program.from (List.map List.singleton @@ TransitionSet.to_list transitions_) (Program.start program) in
         Logger.(log logger INFO (fun () -> "EliminateNonContributors", [("non_contributors", VarSet.to_string non_contributors)]));
         if not (VarSet.is_empty non_contributors) then
-          ProofOutput.add_str_paragraph_to_proof(fun () -> "Eliminate variables "^VarSet.to_string non_contributors^" that do not contribute to the problem");
+          ProofOutput.add_str_paragraph_to_proof(fun () -> "Eliminate variables "^VarSet.to_string ~pretty:true non_contributors^" that do not contribute to the problem");
     if VarSet.is_empty non_contributors then (** this is hideous *)
         (MaybeChanged.same program)
     else

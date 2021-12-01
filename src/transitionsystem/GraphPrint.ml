@@ -65,7 +65,7 @@ let label l =
       let print_update (v,p) =
         let is_identity = Polynomials.Polynomial.(equal p (of_var v)) in
         if is_identity then "" else
-          "&eta; (" ^ Var.to_string v ^ ") = " ^ Polynomials.Polynomial.to_string p
+          "&eta; (" ^ Var.to_string  ~pretty:true v ^ ") = " ^ Polynomials.Polynomial.to_string_pretty p
       in
       TransitionLabel.update_map l
       |> TransitionLabel.VarMap.bindings
@@ -76,7 +76,7 @@ let label l =
     let guard =
       let g = TransitionLabel.guard l in
       if TransitionLabel.Guard.is_true g then "" else
-      "&tau; = " ^ TransitionLabel.Guard.to_string g
+      "&tau; = " ^ TransitionLabel.Guard.to_string ~pretty:true g
     in
 
     let cost =

@@ -17,8 +17,8 @@ let skip_location location graph =
   |> Enum.map (fun ((l,t,l1), (l'1,t',l')) ->
         let chained = (l, TransitionLabel.append t t', l') in
         ProofOutput.add_str_paragraph_to_proof
-          (fun () -> "Chain transitions "^Transition.to_id_string (l,t,l1)^" and "^
-                      Transition.to_id_string (l'1,t',l')^" to "^Transition.to_id_string chained);
+          (fun () -> "Chain transitions "^Transition.to_id_string_pretty (l,t,l1)^" and "^
+                      Transition.to_id_string_pretty (l'1,t',l')^" to "^Transition.to_id_string_pretty chained);
         chained
      )
   |> (flip Program.add_transitions) graph

@@ -35,8 +35,8 @@ let transform_program program =
     MaybeChanged.same program
   else
     let remove transition program =
-      Logger.(log logger INFO (fun () -> "cut_unsatisfiable_transitions", ["transition", Transition.to_id_string transition]));
-      ProofOutput.add_str_paragraph_to_proof(fun () -> "Cut unsatisfiable transition "^Transition.to_id_string transition);
+      Logger.(log logger INFO (fun () -> "cut_unsatisfiable_transitions", ["transition", Transition.to_id_string_pretty transition]));
+      ProofOutput.add_str_paragraph_to_proof(fun () -> "Cut unsatisfiable transition "^Transition.to_id_string_pretty transition);
       Program.remove_transition program transition
     in
     MaybeChanged.changed (TransitionSet.fold remove unsatisfiable_transitions program)

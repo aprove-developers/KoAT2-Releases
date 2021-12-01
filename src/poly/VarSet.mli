@@ -13,7 +13,7 @@ val map_to_list : (elt -> 'b) -> t -> 'b list
 val map_to_array : (elt -> 'b) -> t -> 'b array
 
 (** Returns a string representing a set of variables. *)
-val to_string : t -> string
+val to_string : ?pretty:bool -> t -> string
 
 (** Creates a set of variables from a list of strings. *)
 val of_string_list : string list -> t

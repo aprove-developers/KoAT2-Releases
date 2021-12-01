@@ -25,8 +25,8 @@ let add_to_proof program bound =
   ProofOutput.add_to_proof_with_format @@ FormattedString.(fun format ->
     mk_header_small (mk_str "CFR: Improvement to new bound with the following program: ") <>
     mk_paragraph (
-      mk_str ("new bound: ") <> mk_newline <> mk_paragraph (mk_str (Bound.to_string bound)) <>
-      mk_str ("cfr-program: ") <> mk_newline <> mk_paragraph (Program.to_formatted_string program)) <>
+      mk_str ("new bound: ") <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true bound)) <>
+      mk_str ("cfr-program: ") <> mk_newline <> mk_paragraph (Program.to_formatted_string ~pretty:true program)) <>
       match format with
       | Formatter.Html -> mk_raw_str (GraphPrint.print_system_pretty_html GraphPrint.TransitionMap.empty program)
       | _ -> FormattedString.Empty )
