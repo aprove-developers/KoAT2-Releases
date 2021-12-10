@@ -46,6 +46,9 @@ val graph : t -> TransitionGraph.t
 (** Adds the invariant to a location of the program. *)
 val add_invariant : Location.t -> Constraint.t -> t -> t
 
+(** Tries to simplify the guard of all transitions by invoking the SMT Solver *)
+val simplify_all_guards : t -> t
+
 (** Returns a set of all transitions which occur directly before the given transition in the graph.
     Corresponds to pre(t).
     Note that the computation involves calls to the SMT solver and is therefore expensive.
