@@ -113,8 +113,17 @@ let from com_transitions start =
            start = start;
          }
 
+
 let transitions =
   TransitionGraph.transitions % graph
+
+let simplify_all_guards program =
+  let trans = transitions program in
+  let new_trans =
+    TransitionSet.to_list trans
+    |> List.map (fun (l,t,l') -> (l,TransitionLabel.simplify_guard t,l'))
+  in
+  from (List.map List.singleton new_trans) program.start
 
 let vars program =
   program
