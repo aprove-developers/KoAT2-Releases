@@ -187,7 +187,7 @@ let transition_constraint_i (template_table0, template_table1, measure, constrai
   let poly = ParameterPolynomial.add (template0 l) (template1 l) in
   let atom =
     match constraint_type with
-    | `Non_Increasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
+    | `Non_Increasing -> ParameterAtom.Infix.(template1 l  >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
     | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template1 l')))
   in
   ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
@@ -210,7 +210,7 @@ let transition_constraint_d bound (template_table1, measure, constraint_type, (l
     match constraint_type with
     | `Non_Increasing -> Formula.mk_true
     | `Decreasing  -> (
-      let atom = ParameterAtom.Infix.((template1 l)  >= bound) in
+      let atom = ParameterAtom.Infix.(template1 l  >= bound) in
         ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
         |> Formula.mk)
 
@@ -380,8 +380,7 @@ let compute_scc cache program mprf_problem =
                                 ; "min_applicable_non_inc_set", TransitionSet.to_id_string min_applicable]);
   let non_inc = Stack.of_enum (TransitionSet.enum min_applicable) in
   let make_non_increasing = TransitionSet.to_array @@ TransitionSet.diff (TransitionSet.of_array mprf_problem.make_non_increasing) min_applicable in
-  TransitionSet.iter (add_non_increasing_constraint cache mprf_problem solver_int) min_applicable;
-
+  TransitionSet.iter (add_non_increasing_constraint cache mprf_problem solver_int) @@ TransitionSet.remove mprf_problem.make_decreasing min_applicable;
   (try
     backtrack cache
               (Array.length make_non_increasing)
