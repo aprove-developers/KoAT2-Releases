@@ -266,11 +266,22 @@ let entry_transitions_from_non_increasing program non_increasing =
   in
   TransitionSet.diff all_possible_pre_trans (TransitionSet.of_enum @@ Stack.enum non_increasing)
 
-let add_non_increasing_constraint cache problem solver_int transition =
-  SMTSolverInt.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition)
-
 let add_decreasing_constraint cache problem solver_int =
   SMTSolverInt.add solver_int (decreasing_constraint cache problem.find_depth problem.measure problem.make_decreasing)
+
+let add_non_increasing_constraint cache problem solver_int transition =
+  SMTSolverInt.push solver_int;
+  SMTSolverInt.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition);
+  (* Note that decreasing constraint is *not* subsumed by the non-increasing constraint.
+     Hence, we first try to add the non-increasing constraint. If this does not work, we try the decreasing constraint instead.
+  *)
+  if SMTSolverInt.satisfiable solver_int then (
+    SMTSolverInt.pop solver_int;
+    SMTSolverInt.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition);
+  ) else (
+    SMTSolverInt.pop solver_int;
+    add_decreasing_constraint cache {problem with make_decreasing = transition} solver_int
+  )
 
 let finalise_mprf cache solver_int non_increasing entry_transitions problem =
   (* Set the coefficients for all variables for which a corresponding size bound does not exist for the entry transitions to
