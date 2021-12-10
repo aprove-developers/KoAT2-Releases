@@ -8,7 +8,7 @@ open BoundsInst
 
 (** Class is derived from RankingFunction.ml*)
 
-module SMTSolverInt = SMT.IncrementalZ3Solver
+module Solver = SMT.IncrementalZ3Solver
 module Valuation = Valuation.Make(OurInt)
 
 type mprf = (Location.t -> Polynomial.t) list
@@ -218,7 +218,7 @@ let transition_constraint_d bound (template_table1, measure, constraint_type, (l
 let transition_constraint_ cache (depth, measure, constraint_type, (l,t,l')): Formula.t =
   let res = ref Formula.mk_true in
     for i = 1 to (depth - 1) do
-      res := ((Array.get cache.template_table (i - 1)), (Array.get cache.template_table i), measure, constraint_type, (l,t,l'))
+      res := (Array.get cache.template_table (i - 1), Array.get cache.template_table i, measure, constraint_type, (l,t,l'))
             |> transition_constraint_i
             |> Formula.mk_and !res
     done;
@@ -267,10 +267,10 @@ let entry_transitions_from_non_increasing program non_increasing =
   TransitionSet.diff all_possible_pre_trans (TransitionSet.of_enum @@ Stack.enum non_increasing)
 
 let add_non_increasing_constraint cache problem solver_int transition =
-  SMTSolverInt.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition)
+  Solver.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition)
 
 let add_decreasing_constraint cache problem solver_int =
-  SMTSolverInt.add solver_int (decreasing_constraint cache problem.find_depth problem.measure problem.make_decreasing)
+  Solver.add solver_int (decreasing_constraint cache problem.find_depth problem.measure problem.make_decreasing)
 
 let finalise_mprf cache solver_int non_increasing entry_transitions problem =
   (* Set the coefficients for all variables for which a corresponding size bound does not exist for the entry transitions to
@@ -294,12 +294,12 @@ let finalise_mprf cache solver_int non_increasing entry_transitions problem =
     |> List.fold_left VarSet.union VarSet.empty
   in
 
-  SMTSolverInt.push solver_int;
-  VarSet.iter (SMTSolverInt.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
+  Solver.push solver_int;
+  VarSet.iter (Solver.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
     (unbounded_vars_at_entry_locs cache.coeffs_table);
-  if SMTSolverInt.satisfiable solver_int then (
-    (* SMTSolverInt.minimize_absolute solver_int !fresh_coeffs; *)
-    SMTSolverInt.model solver_int
+  if Solver.satisfiable solver_int then (
+    (* Solver.minimize_absolute solver_int !fresh_coeffs; *)
+    Solver.model solver_int
     |> Option.map (make cache problem.find_depth problem.make_decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
     |> Option.may (fun ranking_function ->
         cache.rank_func := Some ranking_function;
@@ -311,24 +311,24 @@ let finalise_mprf cache solver_int non_increasing entry_transitions problem =
         raise Exit
   )
   else (
-    SMTSolverInt.pop solver_int;
+    Solver.pop solver_int;
   )
 
-let rec backtrack cache (steps_left: int) (index: int) (solver_int: SMTSolverInt.t) (non_increasing: Transition.t Stack.t) problem =
+let rec backtrack cache (steps_left: int) (index: int) (solver_int: Solver.t) (non_increasing: Transition.t Stack.t) problem =
     let finalise_if_entrytime_bounded non_increasing =
       let entry_trans = entry_transitions_from_non_increasing problem.program non_increasing in
       if TransitionSet.for_all problem.is_time_bounded entry_trans then
         finalise_mprf cache solver_int non_increasing entry_trans problem;
     in
 
-    if SMTSolverInt.satisfiable solver_int then (
+    if Solver.satisfiable solver_int then (
       if steps_left == 0 then (
         finalise_if_entrytime_bounded non_increasing
       ) else (
         for i=index to Array.length problem.make_non_increasing - 1 do
           let transition = Array.get problem.make_non_increasing i in
 
-          SMTSolverInt.push solver_int;
+          Solver.push solver_int;
 
           add_non_increasing_constraint cache problem solver_int transition;
 
@@ -336,7 +336,7 @@ let rec backtrack cache (steps_left: int) (index: int) (solver_int: SMTSolverInt
           backtrack cache (steps_left - 1) (i + 1)  solver_int non_increasing problem;
           ignore (Stack.pop non_increasing);
 
-          SMTSolverInt.pop solver_int;
+          Solver.pop solver_int;
         done;
         finalise_if_entrytime_bounded non_increasing
       )
@@ -368,7 +368,7 @@ let compute_scc cache program mprf_problem =
   let vars = Program.input_vars program in
   compute_ranking_templates cache mprf_problem.find_depth vars locations;
 
-  let solver_int = SMTSolverInt.create () in
+  let solver_int = Solver.create () in
 
   (* make transition decreasing*)
   add_decreasing_constraint cache mprf_problem solver_int;
