@@ -357,11 +357,11 @@ let time_bound (l,t,l') scc program appr = (
             let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in
             [[List.find f parallel_edges]]
           else
-            (cycles (parallel_edges |> Set.of_list) l ([([(l,(TWNLoop.mk_transition t),l')], (LocationSet.singleton l'))]) []))
+            (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition t),l')], (LocationSet.singleton l'))]) []))
         in
         let handled_transitions = ListMonad.(cycle >>= fun (l,twn,l') -> TWNLoop.subsumed_transitions l l' twn) in
         let entries = Program.entry_transitions logger program handled_transitions in
-        (* add_to_proof_graph program cycle entries; *)
+        (* add_to_proof_graph program handled_transitions entries; *)
         Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
         let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
         Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TWNLoop.to_string twn_loops));
