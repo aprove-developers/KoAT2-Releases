@@ -85,7 +85,7 @@ type params = {
     cfr : bool; [@default false]
     (** True iff control flow refinement should be applied *)
 
-    time_limit_cfr : int; [@default 180]
+    time_limit_cfr : int; [@default 20]
     (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
 
     timeout : float; [@default 0.]
