@@ -124,6 +124,8 @@ let termination t =
               (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) (TWNLoop.guard_without_inv twn |> Formula.constraints)) in
   (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant twn) formula |> Formula.simplify)
 
+module Valuation = Valuation.Make(OurInt)
+
 let termination_ t order pe npe varmap =
   let formula =
     Formula.any (
@@ -135,9 +137,11 @@ let termination_ t order pe npe varmap =
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
               (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) (TWNLoop.guard_without_inv t |> Formula.constraints)) in
-  (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant t) formula)
+  let model = SMTSolver.get_model (Formula.mk_and (TWNLoop.invariant t) formula) in
+  (Option.is_none model)
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
+                      if Option.is_some model then Logger.log logger Logger.DEBUG (fun () -> "termination", ["model", (Option.get model |> Valuation.to_string)]);
     proof_append
         FormattedString.(
         mk_str_line ("Termination: " ^ (string_of_bool bool))
