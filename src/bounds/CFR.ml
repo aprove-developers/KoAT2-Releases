@@ -197,7 +197,6 @@ let get_appr_cfr (program: Program.t) (program_cfr: Program.t) appr =
   let unchangend_trans = TransitionSet.inter (Program.transitions program) (Program.transitions program_cfr) in
   program_cfr
   |> Approximation.create
-  |> TrivialTimeBounds.compute program_cfr
   |> TransitionSet.fold (fun trans appr_cfr ->
                                       let timebound = appr
                                       |> Approximation.time

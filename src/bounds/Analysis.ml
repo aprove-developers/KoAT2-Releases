@@ -191,6 +191,7 @@ let apply_cfr (scc: TransitionSet.t) rvg_with_sccs time non_linear_transitions ?
         ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "Analysing control-flow refined program");
         let (program_cfr, appr_cfr, already_used_cfr_upd) = Option.get opt in
         let program_cfr = preprocess program_cfr in
+        let appr_cfr = TrivialTimeBounds.compute program_cfr appr_cfr in
         already_used_cfr := already_used_cfr_upd;
         Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_cfr", ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
         Program.reset_pre_cache ();
