@@ -1,9 +1,10 @@
 open Batteries
 open Polynomials
 open ProgramTypes
+open Atoms
 
 module Guard = Formulas.Formula
-module Invariant = Formulas.Formula
+module Invariant = Constraints.Constraint
 type polynomial = Polynomial.t
 module VarMap = Map.Make(Var)
 
@@ -19,7 +20,7 @@ let update t var = VarMap.Exceptionless.find var t.update
 
 let update_map t = t.update
 
-let guard t = Guard.mk_and t.guard t.invariant
+let guard t = Guard.mk_and t.guard (Guard.lift [t.invariant])
 
 let guard_without_inv t = t.guard
 
@@ -28,11 +29,14 @@ let invariant t = t.invariant
 let subsumed_transitionlabels t = t.subsumed_transitionlabels
 let subsumed_transitions l l' twn = List.map (fun t -> l,t,l') twn.subsumed_transitionlabels
 
-let mk_transitions xs = {
+let mk_transitions xs =
+let invariants = List.map TransitionLabel.invariant xs in
+let common_invariants = List.flatten invariants |> List.filter (fun atom -> List.for_all (List.exists (Atom.equal atom)) invariants) in
+{
     id = unique();
     update = List.first xs |> TransitionLabel.update_map;
     guard = Guard.lift (List.map TransitionLabel.guard_without_inv xs);
-    invariant = Guard.lift (List.map TransitionLabel.invariant xs);
+    invariant = common_invariants;
     subsumed_transitionlabels = xs;
 }
 
@@ -84,9 +88,9 @@ let update_to_string update =
 
 let guard_to_string ?(pretty = false) label =
   if
-    Guard.is_true (Guard.mk_and label.guard label.invariant) then ""
+    Guard.is_true (Guard.mk_and label.guard (Guard.mk label.invariant)) then ""
   else
-    Guard.to_string ~pretty (Guard.mk_and label.guard label.invariant)
+    Guard.to_string ~pretty (Guard.mk_and label.guard (Guard.mk label.invariant))
 
 let guard_without_inv_to_string  ?(pretty = false) label =
   if

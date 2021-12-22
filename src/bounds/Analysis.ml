@@ -132,37 +132,6 @@ let rec knowledge_propagation (scc: TransitionSet.t) measure program appr =
         (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
          execute)
 
-(** Maybe this will be helpful later. *)
-(*
- let rec knowledge_propagation_size (scc: TransitionSet.t) measure program appr =
-  let execute () =
-    List.cartesian_product (TransitionSet.to_list scc) (Program.input_vars program |> VarSet.to_list)
-    |> List.enum
-    |> MaybeChanged.fold_enum ((
-      fun appr ((l,t,l'), var) ->
-        let new_bound =
-          Program.pre_transitionset_cached program (l,t,l')
-          |> TransitionSet.enum
-          |> Enum.map (flip (Approximation.sizebound appr) var)
-          |> Enum.map (Bound.substitute_f (Bound.of_poly % Option.get % (TransitionLabel.update t)))
-          |> Bound.sum
-        in
-        if Bound.compare_asy (Approximation.sizebound appr (l,t,l') var) new_bound = 1 then (
-          ProofOutput.add_str_paragraph_to_proof (fun () ->
-            "knowledge_propagation leads to new size bound "^Bound.to_string ~pretty:true new_bound^" for transition "^Transition.to_string_pretty (l,t,l')
-          );
-          add_bound measure new_bound (l,t,l') appr
-          |> MaybeChanged.changed)
-        else
-           MaybeChanged.same appr
-      )) appr
-    |> MaybeChanged.if_changed (knowledge_propagation_size scc measure program)
-    |> MaybeChanged.unpack
-  in
-  (Logger.with_log logger Logger.INFO
-        (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc; "measure", show_measure measure])
-         execute) *)
-
 let local_rank (scc: TransitionSet.t) measure program max_depth appr =
     let get_unbounded_vars transition =
       Program.input_vars program
@@ -214,7 +183,6 @@ let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ~local (scc: TransitionSet.t
   let rec step appr =
     appr
     |> knowledge_propagation scc measure program
-    (* |> knowledge_propagation_size scc measure program *)
     |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
     |> improve_timebound ~mprf_max_depth ~local scc measure program
     |> MaybeChanged.if_changed step
