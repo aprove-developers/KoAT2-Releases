@@ -122,7 +122,7 @@ let termination t =
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
               (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) (TWNLoop.guard_without_inv twn |> Formula.constraints)) in
-  (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant twn) formula |> Formula.simplify)
+  (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant twn |> Formula.mk) formula |> Formula.simplify)
 
 module Valuation = Valuation.Make(OurInt)
 
@@ -137,7 +137,7 @@ let termination_ t order pe npe varmap =
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
               (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) (TWNLoop.guard_without_inv t |> Formula.constraints)) in
-  let model = SMTSolver.get_model (Formula.mk_and (TWNLoop.invariant t) formula) in
+  let model = SMTSolver.get_model (Formula.mk_and (TWNLoop.invariant t |> Formula.mk) formula) in
   (Option.is_none model)
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
