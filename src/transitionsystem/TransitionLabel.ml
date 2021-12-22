@@ -222,6 +222,7 @@ let vars_ {update; guard; invariant; cost; _} =
 (* TODO May invalidate through invariant generation! *)
 let vars_memoization: (int,VarSet.t) Hashtbl.t = Hashtbl.create 10
 let vars = Util.memoize vars_memoization ~extractor:id vars_
+let vars_without_memoization = vars_ (** TODO remove this *)
 
 let vars_update t = (VarSet.of_enum % VarMap.keys) t.update
 

@@ -162,22 +162,22 @@ module Apron2Koat =
 
   end
 
-let transform_program program =
+let transform_program_ program_ program =
 
   let open Koat2Apron in
   let open Apron2Koat in
 
   let locations =
-    Program.graph program
+    Program.graph program_
     |> TransitionGraph.locations
   in
 
-  let transitions = Program.transitions program in
-  let vars = Program.vars program in
+  let transitions = Program.transitions program_ in
+  let vars = List.fold (fun vars (_,t,_) -> VarSet.union vars (TransitionLabel.vars_without_memoization t)) VarSet.empty (transitions |> TransitionSet.to_list) in
 
-  (** Creates the apron environment where all program variables are integer variables. *)
+  (** Creates the apron environment where all program_ variables are integer variables. *)
   let environment: Apron.Environment.t =
-    Apron.Environment.make (vars_to_apron (Program.vars program)) [||]
+    Apron.Environment.make (vars_to_apron vars) [||]
   in
 
   (** The manager defines the abstract domain of the variables.
@@ -227,7 +227,7 @@ let transform_program program =
     locations
     |> LocationSet.enum
     |> Enum.map (fun location ->
-           if Program.is_initial_location program location then
+           if Program.is_initial_location program_ location then
               (location, Apron.Abstract1.top manager environment)
            else
              (location, Apron.Abstract1.bottom manager environment)
@@ -241,7 +241,7 @@ let transform_program program =
     (* TODO Maybe it is better to recompute transitions instead of locations. *)
     (** We use a modifiable stack here for performance reasons. *)
     let worklist: Transition.t Stack.t =
-      program
+      program_
       |> Program.transitions
       |> TransitionSet.enum
       |> Stack.of_enum
@@ -260,7 +260,7 @@ let transform_program program =
       in
       LocationSet.enum locations
       (* The initial location does not have any ingoing transitions *)
-      |> Enum.filter (not % Program.is_initial_location program)
+      |> Enum.filter (not % Program.is_initial_location program_)
       |> Enum.map (fun location -> (location, location_abstract location))
       |> LocationMap.of_enum
     in
@@ -282,7 +282,7 @@ let transform_program program =
         ) program_abstract;
 
         (* add succesor transitons to worklist *)
-        TransitionGraph.succ_e (Program.graph program) l'
+        TransitionGraph.succ_e (Program.graph program_) l'
         |> List.iter (fun transition ->
               (*TODO comparison faster with 2 component transition id*)
                if not (Enum.exists (Transition.equivalent transition) (Stack.enum worklist)) then
@@ -309,7 +309,7 @@ let transform_program program =
   in
 
   if LocationMap.is_empty invariants then
-    MaybeChanged.same program
+    MaybeChanged.same program_
   else
     let add location invariant program =
       Logger.(log logger INFO (fun () -> "add_invariant", ["location", Location.to_string location; "invariant", Constraint.to_string invariant]));
@@ -319,3 +319,8 @@ let transform_program program =
     program
     |> LocationMap.fold add invariants
     |> MaybeChanged.changed (* TODO Actually, we should check if the new invariant is already implied and only then say, that it is changed. *)
+
+let transform_program program =
+  let transitions = TransitionSet.map (Tuple3.map identity TransitionLabel.overapprox_nonlinear_updates identity) (Program.transitions program) in
+  let program_ = Program.from (List.map List.singleton (transitions |> TransitionSet.to_list)) (Program.start program) in
+  transform_program_ program_ program
