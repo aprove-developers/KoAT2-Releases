@@ -86,8 +86,6 @@ let option_lsb_as_bound = function
   | Some a -> as_bound a
   | None -> Bound.infinity
 
-let as_substituted_bound substitution = Bound.substitute_f substitution % as_bound
-
 let is_bounded_with solver update_formula v' t =
   (* Prove that under formula the bound from validity_as_bound always evaluates to a non-negative value *)
   Solver.push solver;

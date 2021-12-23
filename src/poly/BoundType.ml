@@ -37,6 +37,16 @@ let of_var = OptionMonad.return % bound_of_var
 let bound_of_constant c = Const (Num.abs c)
 let of_constant = OptionMonad.return % bound_of_constant
 
+let is_constant =
+  let rec is_constant = function
+    | Const   _       -> true
+    | Var     _       -> false
+    | Pow     (_,b)   -> is_constant b
+    | Sum     (b1,b2) -> is_constant b1 && is_constant b2
+    | Product (b1,b2) -> is_constant b1 && is_constant b2
+  in
+  Option.default false % Option.map is_constant
+
 let get_constant t =
   let rec get_constant_of_bound b = match b with
     | Const c -> c

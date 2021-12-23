@@ -34,6 +34,9 @@ val of_poly : Poly.t -> t
 (** Creates a constant bound from a constant Num. *)
 val of_constant : value -> t
 
+(** Is the bound constant? *)
+val is_constant : t -> bool
+
 (** Creates a constant bound from an integer. *)
 val of_int : int -> t
 

@@ -17,10 +17,10 @@ let incoming_bound rvg get_sizebound lsb t v =
   (* since this is a trivial scc*)
   let execute () =
     (* If the LSB is constant there are no pre-transitions in the RVG *)
-    if LocalSizeBound.is_constant lsb then
-      LocalSizeBound.as_bound lsb
+    if Bound.is_constant lsb then
+      lsb
     else
-      let substitute_with_prevalues t' = LocalSizeBound.as_substituted_bound (fun v -> get_sizebound t' v) lsb in
+      let substitute_with_prevalues t' = Bound.substitute_f (fun v -> get_sizebound t' v) lsb in
       let pre_transitions =
         RVG.pre rvg (t,v)
         |> Enum.map RV.transition
@@ -30,7 +30,7 @@ let incoming_bound rvg get_sizebound lsb t v =
       |> Enum.map substitute_with_prevalues
       |> Bound.sum
   in Logger.with_log logger Logger.DEBUG
-                     (fun () -> "compute_highest_incoming_bound", ["lsb", (Bound.to_string % LocalSizeBound.as_bound) lsb;
+                     (fun () -> "compute_highest_incoming_bound", ["lsb", Bound.to_string lsb;
                                                                    "transition", Transition.to_id_string t])
                   ~result:Bound.to_string
                   execute
@@ -43,15 +43,27 @@ let compute program rvg get_sizebound (t,v) =
       LocalSizeBound.sizebound_local_rv program (t, v)
     in
     if Program.is_initial program t then
-      LocalSizeBound.(
-      Option.map as_bound lsb
-      |? Bound.infinity )
+      match lsb with
+        | Some b -> LocalSizeBound.as_bound b
+        | None ->
+            let tlabel = Transition.label t in
+            match TransitionLabel.update tlabel v with
+              | Some u ->
+                  if VarSet.subset (Polynomials.Polynomial.vars u) (TransitionLabel.input_vars tlabel) then
+                    Bound.of_poly u
+                  else Bound.infinity
+              | None   -> Bound.infinity
     else
-      LocalSizeBound.(
-      lsb
-      |> Option.map (fun lsb -> incoming_bound rvg get_sizebound lsb t v)
-      |? Bound.infinity)
-
+      match lsb with
+        | Some b -> incoming_bound rvg get_sizebound (LocalSizeBound.as_bound b) t v
+        | None ->
+            let tlabel = Transition.label t in
+            match TransitionLabel.update tlabel v with
+              | Some u ->
+                  if VarSet.subset (Polynomials.Polynomial.vars u) (TransitionLabel.input_vars tlabel) then
+                    Bound.of_poly u
+                  else Bound.infinity
+              | None   -> Bound.infinity
   in Logger.with_log logger Logger.DEBUG
                      (fun () -> "compute_trivial_bound", ["rv", RV.to_id_string (t,v)])
                      ~result:Bound.to_string

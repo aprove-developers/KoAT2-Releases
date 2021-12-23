@@ -30,10 +30,6 @@ val is_constant : t -> bool
 (** Converts the templated bound to a string. *)
 val to_string : t -> string
 
-(** Takes a function that returns sizebounds for each variable and a local sizebound.
-    Returns a bound representing the local sizebound with each variable substituted in a way that the bound is valid. *)
-val as_substituted_bound : (Var.t -> Bound.t) -> t -> Bound.t
-
 (** Converts the templated bound to an actual (finite) bound. *)
 val as_bound : t -> Bound.t
 
