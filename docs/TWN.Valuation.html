@@ -5,9 +5,9 @@
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="Start" href="index.html">
-<link rel="previous" href="TransitionTable.html">
-<link rel="next" href="TrivialTimeBounds.html">
-<link rel="Up" href="index.html">
+<link rel="previous" href="TWN.SMTSolver.html">
+<link rel="next" href="TWN.ScaledMonomial.html">
+<link rel="Up" href="TWN.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
 <link title="Index of values" rel=Appendix href="index_values.html">
@@ -86,42 +86,14 @@
 <link title="Util" rel="Chapter" href="Util.html">
 <link title="Valuation" rel="Chapter" href="Valuation.html">
 <link title="Var" rel="Chapter" href="Var.html">
-<link title="VarSet" rel="Chapter" href="VarSet.html"><title>Koat2 : TrivialSizeBounds</title>
+<link title="VarSet" rel="Chapter" href="VarSet.html"><title>Koat2 : TWN.Valuation</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="TransitionTable.html" title="TransitionTable">Previous</a>
-&nbsp;<a class="up" href="index.html" title="Index">Up</a>
-&nbsp;<a class="post" href="TrivialTimeBounds.html" title="TrivialTimeBounds">Next</a>
+<div class="navbar"><a class="pre" href="TWN.SMTSolver.html" title="TWN.SMTSolver">Previous</a>
+&nbsp;<a class="up" href="TWN.html" title="TWN">Up</a>
+&nbsp;<a class="post" href="TWN.ScaledMonomial.html" title="TWN.ScaledMonomial">Next</a>
 </div>
-<h1>Module <a href="type_TrivialSizeBounds.html">TrivialSizeBounds</a></h1>
+<h1>Module <a href="type_TWN.Valuation.html">TWN.Valuation</a></h1>
 
-<pre><span id="MODULETrivialSizeBounds"><span class="keyword">module</span> TrivialSizeBounds</span>: <code class="code">sig</code> <a href="TrivialSizeBounds.html">..</a> <code class="code">end</code></pre><div class="info module top">
-<div class="info-desc">
-<p>Modules used to infer size-bounds for trivial components.</p>
-</div>
-</div>
-<hr width="100%">
-<p>Modules used to infer size-bounds for trivial components. That is an scc which consists only of one result variable without a loop to itself.
-    Corresponds to 'SizeBounds for trivial SCCs'.</p>
-
-<pre><span id="VALlogger"><span class="keyword">val</span> logger</span> : <code class="type">Batteries.Logger.log</code></pre><div class="info ">
-<div class="info-desc">
-<p>Logger Size</p>
-</div>
-</div>
-
-<pre><span id="VALincoming_bound"><span class="keyword">val</span> incoming_bound</span> : <code class="type">RVGTypes.RVG.t -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> BoundsInst.Bound.t) -><br>       BoundsInst.Bound.t -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
-<div class="info-desc">
-<p>Returns the maximum of all incoming sizebounds applied to the local sizebound.
-    Corresponds to 'SizeBounds for trivial SCCs':
-    S'(alpha) = max(S_l(alpha)(S(t',v_1),...,S(t',v_n)) for all t' in pre(t)).</p>
-</div>
-</div>
-
-<pre><span id="VALcompute"><span class="keyword">val</span> compute</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       RVGTypes.RVG.t -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> BoundsInst.Bound.t) -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
-<div class="info-desc">
-<p>Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
-    Corresponds to 'SizeBounds for trivial SCCs'.</p>
-</div>
-</div>
+<pre><span id="MODULEValuation"><span class="keyword">module</span> Valuation</span>: <code class="type"><a href="Valuation.Make.html">Valuation.Make</a></code><code class="code">(</code><code class="type"><a href="OurInt.html">OurInt</a></code><code class="code">)</code></pre><hr width="100%">
 </body></html>

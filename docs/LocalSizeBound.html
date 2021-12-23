@@ -152,13 +152,6 @@
 </div>
 </div>
 
-<pre><span id="VALas_substituted_bound"><span class="keyword">val</span> as_substituted_bound</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> -> BoundsInst.Bound.t) -> <a href="LocalSizeBound.html#TYPEt">t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
-<div class="info-desc">
-<p>Takes a function that returns sizebounds for each variable and a local sizebound.
-    Returns a bound representing the local sizebound with each variable substituted in a way that the bound is valid.</p>
-</div>
-</div>
-
 <pre><span id="VALas_bound"><span class="keyword">val</span> as_bound</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Converts the templated bound to an actual (finite) bound.</p>

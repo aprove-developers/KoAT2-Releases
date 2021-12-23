@@ -93,8 +93,6 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;vars&nbsp;:&nbsp;<span class="constructor">LocalSizeBound</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">VarSet</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;is_constant&nbsp;:&nbsp;<span class="constructor">LocalSizeBound</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;bool<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;to_string&nbsp;:&nbsp;<span class="constructor">LocalSizeBound</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;string<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;as_substituted_bound&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Var</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">BoundsInst</span>.<span class="constructor">Bound</span>.t)&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">LocalSizeBound</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">BoundsInst</span>.<span class="constructor">Bound</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;as_bound&nbsp;:&nbsp;<span class="constructor">LocalSizeBound</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">BoundsInst</span>.<span class="constructor">Bound</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;option_lsb_as_bound&nbsp;:&nbsp;<span class="constructor">LocalSizeBound</span>.t&nbsp;option&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">BoundsInst</span>.<span class="constructor">Bound</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;find_bound&nbsp;:<br>
