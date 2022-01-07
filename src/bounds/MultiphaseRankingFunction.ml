@@ -187,7 +187,7 @@ let transition_constraint_i (template_table0, template_table1, measure, constrai
   let poly = ParameterPolynomial.add (template0 l) (template1 l) in
   let atom =
     match constraint_type with
-    | `Non_Increasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
+    | `Non_Increasing -> ParameterAtom.Infix.(template1 l  >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
     | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template1 l')))
   in
   ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
@@ -210,7 +210,7 @@ let transition_constraint_d bound (template_table1, measure, constraint_type, (l
     match constraint_type with
     | `Non_Increasing -> Formula.mk_true
     | `Decreasing  -> (
-      let atom = ParameterAtom.Infix.((template1 l)  >= bound) in
+      let atom = ParameterAtom.Infix.(template1 l  >= bound) in
         ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
         |> Formula.mk)
 
@@ -266,11 +266,22 @@ let entry_transitions_from_non_increasing program non_increasing =
   in
   TransitionSet.diff all_possible_pre_trans (TransitionSet.of_enum @@ Stack.enum non_increasing)
 
-let add_non_increasing_constraint cache problem solver_int transition =
-  Solver.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition)
-
 let add_decreasing_constraint cache problem solver_int =
   Solver.add solver_int (decreasing_constraint cache problem.find_depth problem.measure problem.make_decreasing)
+
+let add_non_increasing_constraint cache problem solver_int transition =
+  Solver.push solver_int;
+  Solver.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition);
+  (* Note that decreasing constraint is *not* subsumed by the non-increasing constraint.
+     Hence, we first try to add the non-increasing constraint. If this does not work, we try the decreasing constraint instead.
+  *)
+  if Solver.satisfiable solver_int then (
+    Solver.pop solver_int;
+    Solver.add solver_int (non_increasing_constraint cache problem.find_depth problem.measure transition);
+  ) else (
+    Solver.pop solver_int;
+    add_decreasing_constraint cache {problem with make_decreasing = transition} solver_int
+  )
 
 let finalise_mprf cache solver_int non_increasing entry_transitions problem =
   (* Set the coefficients for all variables for which a corresponding size bound does not exist for the entry transitions to
@@ -380,8 +391,7 @@ let compute_scc cache program mprf_problem =
                                 ; "min_applicable_non_inc_set", TransitionSet.to_id_string min_applicable]);
   let non_inc = Stack.of_enum (TransitionSet.enum min_applicable) in
   let make_non_increasing = TransitionSet.to_array @@ TransitionSet.diff (TransitionSet.of_array mprf_problem.make_non_increasing) min_applicable in
-  TransitionSet.iter (add_non_increasing_constraint cache mprf_problem solver_int) min_applicable;
-
+  TransitionSet.iter (add_non_increasing_constraint cache mprf_problem solver_int) @@ TransitionSet.remove mprf_problem.make_decreasing min_applicable;
   (try
     backtrack cache
               (Array.length make_non_increasing)
