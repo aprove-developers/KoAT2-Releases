@@ -115,9 +115,9 @@
 </div>
 </div>
 
-<pre><span id="VALempty_cache"><span class="keyword">val</span> empty_cache</span> : <code class="type">unit -> unit</code></pre>
-<pre><span id="VALcheck_arity"><span class="keyword">val</span> check_arity</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -> int -> unit</code></pre>
-<pre><span id="VALmk_transition"><span class="keyword">val</span> mk_transition</span> : <code class="type">string * string list -><br>       Polynomials.Polynomial.t -><br>       string * (string * <a href="TransitionLabel.html#TYPEpolynomial">TransitionLabel.polynomial</a> list) list -><br>       Formulas.Formula.t -><br>       <a href="Var.html#TYPEt">Var.t</a> list -><br>       (<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> * <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a>) list<br>       list</code></pre><div class="info ">
+<pre><span id="VALempty_cache"><span class="keyword">val</span> empty_cache</span> : <code class="type">unit -&gt; unit</code></pre>
+<pre><span id="VALcheck_arity"><span class="keyword">val</span> check_arity</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; int -&gt; unit</code></pre>
+<pre><span id="VALmk_transition"><span class="keyword">val</span> mk_transition</span> : <code class="type">string * string list -&gt;<br>       Polynomials.Polynomial.t -&gt;<br>       string * (string * <a href="TransitionLabel.html#TYPEpolynomial">TransitionLabel.polynomial</a> list) list -&gt;<br>       Formulas.Formula.t -&gt;<br>       <a href="Var.html#TYPEt">Var.t</a> list -&gt;<br>       (<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> * <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a>) list<br>       list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Generates transitions from given parameters</p>
 </div>
@@ -130,19 +130,19 @@
 </div>
 <p>Input is not interpreted as a filepath, but as a program in simple mode. Method returns all transitions from such an input.</p>
 
-<pre><span id="VALmk_transition_simple"><span class="keyword">val</span> mk_transition_simple</span> : <code class="type">string -><br>       Polynomials.Polynomial.t -><br>       string * (string * Polynomials.Polynomial.t list) list -><br>       Formulas.Formula.t -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list</code></pre><div class="info ">
+<pre><span id="VALmk_transition_simple"><span class="keyword">val</span> mk_transition_simple</span> : <code class="type">string -&gt;<br>       Polynomials.Polynomial.t -&gt;<br>       string * (string * Polynomials.Polynomial.t list) list -&gt;<br>       Formulas.Formula.t -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Assume Com_1 transitions</p>
 </div>
 </div>
 
-<pre><span id="VALmk_program_simple"><span class="keyword">val</span> mk_program_simple</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -> <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
+<pre><span id="VALmk_program_simple"><span class="keyword">val</span> mk_program_simple</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -&gt; <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Input is not interpreted as a filepath, but as a program in simple mode. Method returns program from such an input.</p>
 </div>
 </div>
 
-<pre><span id="VALmk_program"><span class="keyword">val</span> mk_program</span> : <code class="type">'a -><br>       <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -> 'b -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -> <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
+<pre><span id="VALmk_program"><span class="keyword">val</span> mk_program</span> : <code class="type">'a -&gt;<br>       <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; 'b -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -&gt; <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a program corresponding to the given list of transition with a fixed start location.</p>
 </div>

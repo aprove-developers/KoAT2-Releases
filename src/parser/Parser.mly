@@ -77,13 +77,13 @@ transition_simple :
 
 goal :
         |       LPAR GOAL COMPLEXITY RPAR
-                  { Complexity }
+                  { Goal.Complexity }
         |       LPAR GOAL EXACTRUNTIME RPAR
-                  { ExactRuntime }
+                  { Goal.ExactRuntime }
         |       LPAR GOAL EXPECTEDCOMPLEXITY RPAR
-                  { ProbabilisticGoal ExpectedComplexity }
+                  { Goal.(ProbabilisticGoal ExpectedComplexity) }
         |       LPAR GOAL EXPECTEDSIZE var=ID RPAR
-                  { ProbabilisticGoal (ExpectedSize (Var.of_string var)) };
+                  { Goal.(ProbabilisticGoal (ExpectedSize (Var.of_string var))) };
 
 start :
 	|	LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
