@@ -174,8 +174,6 @@ let monotonicity_th (b1,a1) (b2,a2) k =
 
 let compute_kmax sub_poly = sub_poly |> List.map (OurInt.max_list % (List.map OurInt.abs) % Polynomial.coeffs) |> OurInt.max_list
 
-let compute_m sub_poly = (List.map Polynomial.degree sub_poly) |> List.max |> OurInt.of_int
-
 let compute_N = function
   | [] -> OurInt.zero
   | x::[] -> OurInt.zero
