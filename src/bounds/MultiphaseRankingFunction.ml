@@ -47,9 +47,7 @@ type mprf_problem = {
 type ranking_cache = {
   rank_func: t option ref;
   template_table: ParameterPolynomial.t TemplateTable.t Array.t;
-  template_table_real: RealParameterPolynomial.t TemplateTable.t Array.t;
   coeffs_table: VarSet.t CoeffsTable.t;
-  coeffs_table_real: VarSet.t CoeffsTable.t;
   constraint_cache: (int * constraint_type * int, Formula.t) Hashtbl.t;
 }
 
@@ -58,9 +56,7 @@ let new_cache max_depth =
   {
     rank_func = ref None;
     template_table = new_template_table ();
-    template_table_real = new_template_table ();
     coeffs_table = CoeffsTable.create 10;
-    coeffs_table_real = CoeffsTable.create 10;
     constraint_cache = Hashtbl.create 10;
   }
 
