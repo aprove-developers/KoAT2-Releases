@@ -119,10 +119,10 @@
 
 
 
-<pre><span id="VALmain_params_cmdliner_term"><span class="keyword">val</span> main_params_cmdliner_term</span> : <code class="type">unit -> <a href="Main.html#TYPEmain_params">main_params</a> Cmdliner.Term.t</code></pre>
+<pre><span id="VALmain_params_cmdliner_term"><span class="keyword">val</span> main_params_cmdliner_term</span> : <code class="type">unit -&gt; <a href="Main.html#TYPEmain_params">main_params</a> Cmdliner.Term.t</code></pre>
 <pre><span class="keyword">include</span> struct ... end</pre>
 
-<pre><span id="VALsubcommand"><span class="keyword">val</span> subcommand</span> : <code class="type">('a -> 'b) -><br>       (unit -> 'a Cmdliner.Term.t) -><br>       string -> string -> 'b Cmdliner.Term.t * Cmdliner.Term.info</code></pre>
+<pre><span id="VALsubcommand"><span class="keyword">val</span> subcommand</span> : <code class="type">('a -&gt; 'b) -&gt;<br>       (unit -&gt; 'a Cmdliner.Term.t) -&gt;<br>       string -&gt; string -&gt; 'b Cmdliner.Term.t * Cmdliner.Term.info</code></pre>
 <pre><span id="VALsubcommands"><span class="keyword">val</span> subcommands</span> : <code class="type">(unit Cmdliner.Term.t * Cmdliner.Term.info) list</code></pre>
 <pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">string</code></pre>
-<pre><span id="VALdefault_cmd"><span class="keyword">val</span> default_cmd</span> : <code class="type"><a href="Main.html#TYPEmain_params">main_params</a> -> [> `Help of [> `Pager ] * 'a option | `Ok of unit ]</code></pre></body></html>
+<pre><span id="VALdefault_cmd"><span class="keyword">val</span> default_cmd</span> : <code class="type">main_params -&gt; [&gt; `Help of [&gt; `Pager ] * 'a option | `Ok of unit ]</code></pre></body></html>

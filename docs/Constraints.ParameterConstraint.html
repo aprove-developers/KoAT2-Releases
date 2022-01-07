@@ -104,26 +104,26 @@
 
 <pre><span class="keyword">include</span> ??</pre>
 
-<pre><span id="VALremove_strict"><span class="keyword">val</span> remove_strict</span> : <code class="type">t -> t</code></pre>
-<pre><span id="VALget_coefficient_vector"><span class="keyword">val</span> get_coefficient_vector</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -> t -> value list</code></pre><div class="info ">
+<pre><span id="VALremove_strict"><span class="keyword">val</span> remove_strict</span> : <code class="type">t -&gt; t</code></pre>
+<pre><span id="VALget_coefficient_vector"><span class="keyword">val</span> get_coefficient_vector</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> -&gt; t -&gt; value list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the row of all coefficients of a variable in a constraint, i.e., used for farkas quantor elimination.</p>
 </div>
 </div>
 
-<pre><span id="VALget_matrix"><span class="keyword">val</span> get_matrix</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -> t -> value list list</code></pre><div class="info ">
+<pre><span id="VALget_matrix"><span class="keyword">val</span> get_matrix</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -&gt; t -&gt; value list list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination.</p>
 </div>
 </div>
 
-<pre><span id="VALget_constant_vector"><span class="keyword">val</span> get_constant_vector</span> : <code class="type">t -> value list</code></pre><div class="info ">
+<pre><span id="VALget_constant_vector"><span class="keyword">val</span> get_constant_vector</span> : <code class="type">t -&gt; value list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination.</p>
 </div>
 </div>
 
-<pre><span id="VALfarkas_transform"><span class="keyword">val</span> farkas_transform</span> : <code class="type">Constraints.Constraint.t -> Atoms.ParameterAtom.t -> Constraints.Constraint.t</code></pre><div class="info ">
+<pre><span id="VALfarkas_transform"><span class="keyword">val</span> farkas_transform</span> : <code class="type">Constraints.Constraint.t -&gt; Atoms.ParameterAtom.t -&gt; Constraints.Constraint.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Applies Farkas-Transformation on a Constraint and a ParameterAtom.</p>
 </div>

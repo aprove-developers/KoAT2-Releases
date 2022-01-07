@@ -119,25 +119,25 @@
 </div>
 
 
-<pre><span id="VALfrom"><span class="keyword">val</span> from</span> : <code class="type">(<a href="RenameMap.html#TYPEvar">var</a> * <a href="RenameMap.html#TYPEvar">var</a>) list -> <a href="RenameMap.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALfrom"><span class="keyword">val</span> from</span> : <code class="type">(<a href="RenameMap.html#TYPEvar">var</a> * <a href="RenameMap.html#TYPEvar">var</a>) list -&gt; <a href="RenameMap.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a rename map from a two variable association list</p>
 </div>
 </div>
 
-<pre><span id="VALfrom_native"><span class="keyword">val</span> from_native</span> : <code class="type">(string * string) list -> <a href="RenameMap.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALfrom_native"><span class="keyword">val</span> from_native</span> : <code class="type">(string * string) list -&gt; <a href="RenameMap.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a rename map from a two strings (vars) association list</p>
 </div>
 </div>
 
-<pre><span id="VALid"><span class="keyword">val</span> id</span> : <code class="type"><a href="RenameMap.html#TYPEvar">var</a> list -> <a href="RenameMap.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALid"><span class="keyword">val</span> id</span> : <code class="type"><a href="RenameMap.html#TYPEvar">var</a> list -&gt; <a href="RenameMap.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a rename map where every variable keeps its name</p>
 </div>
 </div>
 
-<pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type"><a href="RenameMap.html#TYPEvar">var</a> -> <a href="RenameMap.html#TYPEt">t</a> -> default:<a href="RenameMap.html#TYPEvar">var</a> -> <a href="RenameMap.html#TYPEvar">var</a></code></pre><div class="info ">
+<pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type"><a href="RenameMap.html#TYPEvar">var</a> -&gt; <a href="RenameMap.html#TYPEt">t</a> -&gt; default:<a href="RenameMap.html#TYPEvar">var</a> -&gt; <a href="RenameMap.html#TYPEvar">var</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the new name of the variable or a default value, if the rename map does not assign a new name to the variable</p>
 </div>

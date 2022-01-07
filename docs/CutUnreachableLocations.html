@@ -110,19 +110,19 @@
 </div>
 
 <pre><span id="MODULELocationSet"><span class="keyword">module</span> <a href="CutUnreachableLocations.LocationSet.html">LocationSet</a></span>: <code class="type">Batteries.Set.Make</code><code class="code">(</code><code class="type"><a href="ProgramTypes.Location.html">ProgramTypes.Location</a></code><code class="code">)</code></pre>
-<pre><span id="VALreachable_locations"><span class="keyword">val</span> reachable_locations</span> : <code class="type">ProgramTypes.TransitionGraph.t -><br>       ProgramTypes.TransitionGraph.V.t -> LocationSet.t</code></pre><div class="info ">
+<pre><span id="VALreachable_locations"><span class="keyword">val</span> reachable_locations</span> : <code class="type">ProgramTypes.TransitionGraph.t -&gt;<br>       ProgramTypes.TransitionGraph.V.t -&gt; LocationSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a set of all locations which are reachable from the given start location.</p>
 </div>
 </div>
 
-<pre><span id="VALunreachable_locations"><span class="keyword">val</span> unreachable_locations</span> : <code class="type">ProgramTypes.TransitionGraph.t -><br>       ProgramTypes.TransitionGraph.V.t -> LocationSet.t</code></pre><div class="info ">
+<pre><span id="VALunreachable_locations"><span class="keyword">val</span> unreachable_locations</span> : <code class="type">ProgramTypes.TransitionGraph.t -&gt;<br>       ProgramTypes.TransitionGraph.V.t -&gt; LocationSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a set of all locations which are unreachable from the given start location.</p>
 </div>
 </div>
 
-<pre><span id="VALtransform_program"><span class="keyword">val</span> transform_program</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="MaybeChanged.html#TYPEstatus">MaybeChanged.status</a> * <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
+<pre><span id="VALtransform_program"><span class="keyword">val</span> transform_program</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="MaybeChanged.html#TYPEstatus">MaybeChanged.status</a> * <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns program without unreachable locations and without all related transitions.</p>
 </div>

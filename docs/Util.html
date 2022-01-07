@@ -102,51 +102,51 @@
 </div>
 <hr width="100%">
 
-<pre><span id="VALget_all"><span class="keyword">val</span> get_all</span> : <code class="type">'a Batteries.Option.t list -> 'a list Batteries.Option.t</code></pre><div class="info ">
+<pre><span id="VALget_all"><span class="keyword">val</span> get_all</span> : <code class="type">'a Batteries.Option.t list -&gt; 'a list Batteries.Option.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns None if one of the optionals evaluates to None.
     If all optionals evaluate to Some, it returns a list of those values.</p>
 </div>
 </div>
 
-<pre><span id="VALmax_option"><span class="keyword">val</span> max_option</span> : <code class="type">('a -> 'a -> bool) -> 'a Batteries.Enum.t -> 'a Batteries.Option.t</code></pre><div class="info ">
+<pre><span id="VALmax_option"><span class="keyword">val</span> max_option</span> : <code class="type">('a -&gt; 'a -&gt; bool) -&gt; 'a Batteries.Enum.t -&gt; 'a Batteries.Option.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Computes the maximum of the enum if non-empty, else returns None.</p>
 </div>
 </div>
 
-<pre><span id="VALmin_option"><span class="keyword">val</span> min_option</span> : <code class="type">('a -> 'a -> bool) -> 'a Batteries.Enum.t -> 'a Batteries.Option.t</code></pre><div class="info ">
+<pre><span id="VALmin_option"><span class="keyword">val</span> min_option</span> : <code class="type">('a -&gt; 'a -&gt; bool) -&gt; 'a Batteries.Enum.t -&gt; 'a Batteries.Option.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Computes the maximum of the enum if non-empty, else returns None.</p>
 </div>
 </div>
 
-<pre><span id="VALintersection"><span class="keyword">val</span> intersection</span> : <code class="type">('a -> 'a -> bool) -><br>       'a Batteries.Enum.t -> 'a Batteries.Enum.t -> 'a Batteries.Enum.t</code></pre><div class="info ">
+<pre><span id="VALintersection"><span class="keyword">val</span> intersection</span> : <code class="type">('a -&gt; 'a -&gt; bool) -&gt;<br>       'a Batteries.Enum.t -&gt; 'a Batteries.Enum.t -&gt; 'a Batteries.Enum.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Computes the intersection between both enums with the given equality function.</p>
 </div>
 </div>
 
-<pre><span id="VALwithout"><span class="keyword">val</span> without</span> : <code class="type">('a -> 'a -> bool) -><br>       'a Batteries.Enum.t -> 'a Batteries.Enum.t -> 'a Batteries.Enum.t</code></pre><div class="info ">
+<pre><span id="VALwithout"><span class="keyword">val</span> without</span> : <code class="type">('a -&gt; 'a -&gt; bool) -&gt;<br>       'a Batteries.Enum.t -&gt; 'a Batteries.Enum.t -&gt; 'a Batteries.Enum.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns an enum that contains all elements that are present in the second enum but not in the first enum.</p>
 </div>
 </div>
 
-<pre><span id="VALoption_to_string"><span class="keyword">val</span> option_to_string</span> : <code class="type">('a -> string) -> 'a Batteries.Option.t -> string</code></pre>
-<pre><span id="VALenum_to_string"><span class="keyword">val</span> enum_to_string</span> : <code class="type">('a -> string) -> 'a Batteries.Enum.t -> string</code></pre>
-<pre><span id="VALpowerset"><span class="keyword">val</span> powerset</span> : <code class="type">'a Batteries.Set.t -> 'a Batteries.Set.t Batteries.Enum.t</code></pre>
-<pre><span id="VALfind_map"><span class="keyword">val</span> find_map</span> : <code class="type">('a -> 'b Batteries.Option.t) -> 'a Batteries.Enum.t -> 'b Batteries.Option.t</code></pre>
-<pre><span id="VALmemoize"><span class="keyword">val</span> memoize</span> : <code class="type">('a, 'b) Batteries.Hashtbl.t -><br>       extractor:('c -> 'a) -> ('c -> 'b) -> 'c -> 'b</code></pre>
-<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type">string -> int</code></pre><div class="info ">
+<pre><span id="VALoption_to_string"><span class="keyword">val</span> option_to_string</span> : <code class="type">('a -&gt; string) -&gt; 'a Batteries.Option.t -&gt; string</code></pre>
+<pre><span id="VALenum_to_string"><span class="keyword">val</span> enum_to_string</span> : <code class="type">('a -&gt; string) -&gt; 'a Batteries.Enum.t -&gt; string</code></pre>
+<pre><span id="VALpowerset"><span class="keyword">val</span> powerset</span> : <code class="type">'a Batteries.Set.t -&gt; 'a Batteries.Set.t Batteries.Enum.t</code></pre>
+<pre><span id="VALfind_map"><span class="keyword">val</span> find_map</span> : <code class="type">('a -&gt; 'b Batteries.Option.t) -&gt; 'a Batteries.Enum.t -&gt; 'b Batteries.Option.t</code></pre>
+<pre><span id="VALmemoize"><span class="keyword">val</span> memoize</span> : <code class="type">('a, 'b) Batteries.Hashtbl.t -&gt;<br>       extractor:('c -&gt; 'a) -&gt; ('c -&gt; 'b) -&gt; 'c -&gt; 'b</code></pre>
+<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type">string -&gt; int</code></pre><div class="info ">
 <div class="info-desc">
 <p>Generates a hash interger value of a given string.</p>
 </div>
 </div>
 
-<pre><span id="VALcat_maybes"><span class="keyword">val</span> cat_maybes</span> : <code class="type">'a option list -> 'a list</code></pre>
-<pre><span id="VALcat_maybes_enum"><span class="keyword">val</span> cat_maybes_enum</span> : <code class="type">'a option Batteries.Enum.t -> 'a Batteries.Enum.t</code></pre>
-<pre><span id="VALmeasure_execution_time"><span class="keyword">val</span> measure_execution_time</span> : <code class="type">(unit -> 'a) -> 'a</code></pre>
-<pre><span id="VALmeasure_total_execution_time"><span class="keyword">val</span> measure_total_execution_time</span> : <code class="type">unit -> ((unit -> 'a) -> 'a) * (string -> unit)</code></pre>
-<pre><span id="VALnatural_to_subscript"><span class="keyword">val</span> natural_to_subscript</span> : <code class="type">int -> string</code></pre>
-<pre><span id="VALnatural_to_superscript"><span class="keyword">val</span> natural_to_superscript</span> : <code class="type">int -> string</code></pre></body></html>
+<pre><span id="VALcat_maybes"><span class="keyword">val</span> cat_maybes</span> : <code class="type">'a option list -&gt; 'a list</code></pre>
+<pre><span id="VALcat_maybes_enum"><span class="keyword">val</span> cat_maybes_enum</span> : <code class="type">'a option Batteries.Enum.t -&gt; 'a Batteries.Enum.t</code></pre>
+<pre><span id="VALmeasure_execution_time"><span class="keyword">val</span> measure_execution_time</span> : <code class="type">(unit -&gt; 'a) -&gt; 'a</code></pre>
+<pre><span id="VALmeasure_total_execution_time"><span class="keyword">val</span> measure_total_execution_time</span> : <code class="type">unit -&gt; ((unit -&gt; 'a) -&gt; 'a) * (string -&gt; unit)</code></pre>
+<pre><span id="VALnatural_to_subscript"><span class="keyword">val</span> natural_to_subscript</span> : <code class="type">int -&gt; string</code></pre>
+<pre><span id="VALnatural_to_superscript"><span class="keyword">val</span> natural_to_superscript</span> : <code class="type">int -&gt; string</code></pre></body></html>

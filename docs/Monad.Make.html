@@ -95,8 +95,8 @@
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type">'a</code> t</span> </pre>
 
 
-<pre><span id="VALpure"><span class="keyword">val</span> pure</span> : <code class="type">'a -> 'a <a href="Monad.Make.html#TYPEt">t</a></code></pre>
-<pre><span id="VALbind"><span class="keyword">val</span> bind</span> : <code class="type">'a <a href="Monad.Make.html#TYPEt">t</a> -> ('a -> 'b <a href="Monad.Make.html#TYPEt">t</a>) -> 'b <a href="Monad.Make.html#TYPEt">t</a></code></pre></div><pre><code class="code">end</code><code class="code">) -&gt; </code><code class="code">sig</code> <a href="Monad.Make.html">..</a> <code class="code">end</code></div></pre><table border="0" cellpadding="3" width="100%">
+<pre><span id="VALpure"><span class="keyword">val</span> pure</span> : <code class="type">'a -&gt; 'a <a href="Monad.Make.html#TYPEt">t</a></code></pre>
+<pre><span id="VALbind"><span class="keyword">val</span> bind</span> : <code class="type">'a <a href="Monad.Make.html#TYPEt">t</a> -&gt; ('a -&gt; 'b <a href="Monad.Make.html#TYPEt">t</a>) -&gt; 'b <a href="Monad.Make.html#TYPEt">t</a></code></pre></div><pre><code class="code">end</code><code class="code">) -&gt; </code><code class="code">sig</code> <a href="Monad.Make.html">..</a> <code class="code">end</code></div></pre><table border="0" cellpadding="3" width="100%">
 <tr>
 <td align="left" valign="top" width="1%%"><b>Parameters: </b></td>
 <td>
@@ -119,12 +119,12 @@
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type">'a</code> t</span> = <code class="type">'a M.t</code> </pre>
 
 
-<pre><span id="VALpure"><span class="keyword">val</span> pure</span> : <code class="type">'a -> 'a <a href="Monad.Make.html#TYPEt">t</a></code></pre>
-<pre><span id="VALreturn"><span class="keyword">val</span> return</span> : <code class="type">'a -> 'a <a href="Monad.Make.html#TYPEt">t</a></code></pre>
-<pre><span id="VALbind"><span class="keyword">val</span> bind</span> : <code class="type">'a <a href="Monad.Make.html#TYPEt">t</a> -> ('a -> 'b <a href="Monad.Make.html#TYPEt">t</a>) -> 'b <a href="Monad.Make.html#TYPEt">t</a></code></pre>
-<pre><span id="VAL(>>=)"><span class="keyword">val</span> (&gt;&gt;=)</span> : <code class="type">'a <a href="Monad.Make.html#TYPEt">t</a> -> ('a -> 'b <a href="Monad.Make.html#TYPEt">t</a>) -> 'b <a href="Monad.Make.html#TYPEt">t</a></code></pre>
-<pre><span id="VAL(>>)"><span class="keyword">val</span> (&gt;&gt;)</span> : <code class="type">'a <a href="Monad.Make.html#TYPEt">t</a> -> 'b <a href="Monad.Make.html#TYPEt">t</a> -> 'b <a href="Monad.Make.html#TYPEt">t</a></code></pre>
-<pre><span id="VALwhen_m"><span class="keyword">val</span> when_m</span> : <code class="type">bool -> unit <a href="Monad.Make.html#TYPEt">t</a> -> unit <a href="Monad.Make.html#TYPEt">t</a></code></pre>
-<pre><span id="VALsequence"><span class="keyword">val</span> sequence</span> : <code class="type">'a <a href="Monad.Make.html#TYPEt">t</a> list -> 'a list <a href="Monad.Make.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmapM"><span class="keyword">val</span> mapM</span> : <code class="type">('a -> 'b <a href="Monad.Make.html#TYPEt">t</a>) -> 'a list -> 'b list <a href="Monad.Make.html#TYPEt">t</a></code></pre>
-<pre><span id="VALliftM2"><span class="keyword">val</span> liftM2</span> : <code class="type">('a -> 'b -> 'c) -> 'a M.t -> 'b M.t -> 'c M.t</code></pre></body></html>
+<pre><span id="VALpure"><span class="keyword">val</span> pure</span> : <code class="type">'a -&gt; 'a <a href="Monad.Make.html#TYPEt">t</a></code></pre>
+<pre><span id="VALreturn"><span class="keyword">val</span> return</span> : <code class="type">'a -&gt; 'a <a href="Monad.Make.html#TYPEt">t</a></code></pre>
+<pre><span id="VALbind"><span class="keyword">val</span> bind</span> : <code class="type">'a <a href="Monad.Make.html#TYPEt">t</a> -&gt; ('a -&gt; 'b <a href="Monad.Make.html#TYPEt">t</a>) -&gt; 'b <a href="Monad.Make.html#TYPEt">t</a></code></pre>
+<pre><span id="VAL(>>=)"><span class="keyword">val</span> (&gt;&gt;=)</span> : <code class="type">'a <a href="Monad.Make.html#TYPEt">t</a> -&gt; ('a -&gt; 'b <a href="Monad.Make.html#TYPEt">t</a>) -&gt; 'b <a href="Monad.Make.html#TYPEt">t</a></code></pre>
+<pre><span id="VAL(>>)"><span class="keyword">val</span> (&gt;&gt;)</span> : <code class="type">'a <a href="Monad.Make.html#TYPEt">t</a> -&gt; 'b <a href="Monad.Make.html#TYPEt">t</a> -&gt; 'b <a href="Monad.Make.html#TYPEt">t</a></code></pre>
+<pre><span id="VALwhen_m"><span class="keyword">val</span> when_m</span> : <code class="type">bool -&gt; unit <a href="Monad.Make.html#TYPEt">t</a> -&gt; unit <a href="Monad.Make.html#TYPEt">t</a></code></pre>
+<pre><span id="VALsequence"><span class="keyword">val</span> sequence</span> : <code class="type">'a <a href="Monad.Make.html#TYPEt">t</a> list -&gt; 'a list <a href="Monad.Make.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmapM"><span class="keyword">val</span> mapM</span> : <code class="type">('a -&gt; 'b <a href="Monad.Make.html#TYPEt">t</a>) -&gt; 'a list -&gt; 'b list <a href="Monad.Make.html#TYPEt">t</a></code></pre>
+<pre><span id="VALliftM2"><span class="keyword">val</span> liftM2</span> : <code class="type">('a -&gt; 'b -&gt; 'c) -&gt; 'a M.t -&gt; 'b M.t -&gt; 'c M.t</code></pre></body></html>

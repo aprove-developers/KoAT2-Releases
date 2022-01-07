@@ -100,38 +100,38 @@
 </div>
 <hr width="100%">
 
-<pre><span id="VALvar_from_apron"><span class="keyword">val</span> var_from_apron</span> : <code class="type">Apron.Var.t -> <a href="Var.html#TYPEt">Var.t</a></code></pre><div class="info ">
+<pre><span id="VALvar_from_apron"><span class="keyword">val</span> var_from_apron</span> : <code class="type">Apron.Var.t -&gt; <a href="Var.html#TYPEt">Var.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Converts an apron variable to its koat equivalent.</p>
 </div>
 </div>
 
-<pre><span id="VALvars_from_apron"><span class="keyword">val</span> vars_from_apron</span> : <code class="type">Apron.Var.t array -> VarSet.t</code></pre><div class="info ">
+<pre><span id="VALvars_from_apron"><span class="keyword">val</span> vars_from_apron</span> : <code class="type">Apron.Var.t array -&gt; VarSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Converts an apron variable set to its koat equivalent.</p>
 </div>
 </div>
 <p>Converts an apron integer to its koat equivalent.</p>
 
-<pre><span id="VALconst_from_apron"><span class="keyword">val</span> const_from_apron</span> : <code class="type">Apron.Coeff.t -> OurInt.t</code></pre><div class="info ">
+<pre><span id="VALconst_from_apron"><span class="keyword">val</span> const_from_apron</span> : <code class="type">Apron.Coeff.t -&gt; OurInt.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO Usage of OurInt.to_int breaks usage of big_int</p>
 </div>
 </div>
 
-<pre><span id="VALpoly_from_apron"><span class="keyword">val</span> poly_from_apron</span> : <code class="type">Apron.Texpr1.t -> Polynomials.Polynomial.t</code></pre><div class="info ">
+<pre><span id="VALpoly_from_apron"><span class="keyword">val</span> poly_from_apron</span> : <code class="type">Apron.Texpr1.t -&gt; Polynomials.Polynomial.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Converts an apron polynomial to its koat equivalent.</p>
 </div>
 </div>
 
-<pre><span id="VALatom_from_apron"><span class="keyword">val</span> atom_from_apron</span> : <code class="type">Apron.Tcons1.t -> Constraints.Constraint.t</code></pre><div class="info ">
+<pre><span id="VALatom_from_apron"><span class="keyword">val</span> atom_from_apron</span> : <code class="type">Apron.Tcons1.t -&gt; Constraints.Constraint.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Converts an apron atom to its koat equivalent</p>
 </div>
 </div>
 
-<pre><span id="VALconstraint_from_apron"><span class="keyword">val</span> constraint_from_apron</span> : <code class="type">Apron.Tcons1.earray -> Constraints.Constraint.t</code></pre><div class="info ">
+<pre><span id="VALconstraint_from_apron"><span class="keyword">val</span> constraint_from_apron</span> : <code class="type">Apron.Tcons1.earray -&gt; Constraints.Constraint.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Converts a koat constraint to its apron equivalent</p>
 </div>
