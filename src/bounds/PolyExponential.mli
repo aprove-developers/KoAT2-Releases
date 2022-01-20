@@ -2,8 +2,9 @@
 open Batteries
 open Polynomials
 open ProgramTypes
+open Formulas
 
-module ConstantConstraint : 
+module ConstantConstraint :
 sig
     module Comparator :
     sig
@@ -35,5 +36,7 @@ sig
     val remove_frac : t -> t
 
     val compute_closed_form : (Var.t * Polynomial.t) list -> t list
+
+    val monotonic_kernel : Formula.t -> t -> t
 
 end

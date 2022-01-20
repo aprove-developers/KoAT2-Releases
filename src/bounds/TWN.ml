@@ -79,7 +79,7 @@ let check_weakly_negativitiy (t: TWNLoop.t) =
                             update |> Option.get |> Polynomial.coeff_of_var var |> OurInt.is_negative) (TWNLoop.input_vars t)
 
 
-let chain (t: TWNLoop.t) = TWNLoop.append t t
+let chain (t: TWNLoop.t) = TWNLoop.chain t
 
 (* TERMINATION: *)
 
@@ -106,7 +106,7 @@ let red_le poly_list =
 
 module Valuation = Valuation.Make(OurInt)
 
-let termination_ twn order pe npe varmap =
+let termination_ twn order npe varmap =
   let update = fun v -> match TWNLoop.update twn v with
     | Some p -> p
     | None -> Polynomial.of_var v in
@@ -142,7 +142,7 @@ let termination t =
       (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
   let npe = PE.normalize pe in
   let varmap = Hashtbl.of_list (List.combine order npe) in
-  termination_ twn order pe npe varmap
+  termination_ twn order npe varmap
 
 (* COMPLEXITY: *)
 
@@ -201,7 +201,7 @@ let compute_f atom = function
   | [] -> Bound.zero
   | x::[] -> Bound.one
   | xs ->
-    let alphas = List.map (Tuple4.second) xs in
+    let alphas = List.map (Tuple4.second) xs |> List.tl in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["alphas", (alphas |> List.enum |> Util.enum_to_string Polynomial.to_string)]);
     let alphas_abs = compute_alpha_abs alphas in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["alphas_abs", Polynomial.to_string alphas_abs]);
@@ -224,7 +224,7 @@ let get_bound t order npe varmap =
   let bound, max_con =
       List.fold_right (fun atom (bound, const) ->
           let poly = Atom.poly atom |> Polynomial.neg in
-          let sub_poly = PE.substitute varmap poly |> PE.remove_frac in
+          let sub_poly = PE.substitute varmap poly |> PE.remove_frac |> PE.monotonic_kernel (TWNLoop.invariant t |> Formula.mk) in
           Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
           let max_const = OurInt.max const (PE.max_const sub_poly) in
@@ -260,7 +260,7 @@ let complexity loop =
     let npe = PE.normalize pe in
         Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
     let varmap = Hashtbl.of_list (List.combine order npe) in
-    let terminating = termination_ t_ order pe npe varmap in
+    let terminating = termination_ t_ order npe varmap in
     if not terminating then
       Bound.infinity
     else
@@ -377,6 +377,7 @@ let time_bound (l,t,l') scc program appr = (
                   |> List.map (TransitionLabel.invariant % Transition.label)
                   |> fun invariants -> List.flatten invariants |> List.filter (fun atom -> List.for_all (List.exists (Atom.equal atom)) invariants)
                   |> TWNLoop.add_invariant twn in
+
                 let eliminated_t =
                   EliminateNonContributors.eliminate_t
                     (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)

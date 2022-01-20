@@ -77,6 +77,25 @@ let append t1 t2 =
     subsumed_transitionlabels = t1.subsumed_transitionlabels@t2.subsumed_transitionlabels;
   }
 
+let chain t =
+  let module VarTable = Hashtbl.Make(Var) in
+  let nondet_vars = VarTable.create 3 in
+  let substitution update_map var =
+    VarMap.Exceptionless.find var update_map
+    |? Polynomial.of_var
+         (* Variables which are nondeterministic in the preceding transition are represented by fresh variables. *)
+         (VarTable.find_option nondet_vars var
+          |> Option.default_delayed (fun () ->
+                 let nondet_var = Var.fresh_id Var.Int () in
+                 VarTable.add nondet_vars var nondet_var;
+                 nondet_var
+               )
+         )
+  in
+  let new_update =
+    VarMap.map (Polynomial.substitute_f (substitution t.update)) t.update in
+  {t with update = new_update}
+
 
 let update_to_string update =
   if VarMap.is_empty update then
