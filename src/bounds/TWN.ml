@@ -103,30 +103,14 @@ let red_le poly_list =
     | x::xs -> Constraint.(mk_and (mk_eq x Polynomial.zero) (constr xs))  in
     Formula.(mk_or (red_lt poly_list) (poly_list |> constr |> mk))
 
-(* For Testing *)
-let termination t =
-  let twn = TWNLoop.mk_transition t in
-  let order = check_triangular twn in
-  let pe = PE.compute_closed_form (List.map (fun var ->
-      let update_var = TWNLoop.update twn var in
-      (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
-  let npe = PE.normalize pe in
-  let varmap = Hashtbl.of_list (List.combine order npe) in
-  let formula =
-    Formula.any (
-    List.map (fun constr ->
-      List.fold_right (fun atom formula ->
-          let poly = Atom.poly atom in
-          let sub_poly = PE.substitute varmap poly |> PE.remove_frac |> List.map (RationalPolynomial.normalize % Tuple4.second) in
-          let formula_poly = if Atom.is_lt atom
-              then sub_poly |> red_lt
-              else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
-              (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) (TWNLoop.guard_without_inv twn |> Formula.constraints)) in
-  (not % SMTSolver.satisfiable) (Formula.mk_and (TWNLoop.invariant twn |> Formula.mk) formula |> Formula.simplify)
 
 module Valuation = Valuation.Make(OurInt)
 
-let termination_ t order pe npe varmap =
+let termination_ twn order pe npe varmap =
+  let update = fun v -> match TWNLoop.update twn v with
+    | Some p -> p
+    | None -> Polynomial.of_var v in
+  let self_impl, rest = TWNLoop.invariant twn |> List.partition (fun a -> let f = Constraint.lift a |> Formula.mk in SMTSolver.satisfiable (Formula.implies f (Formula.map_polynomial (Polynomial.substitute_f update) f))) in
   let formula =
     Formula.any (
     List.map (fun constr ->
@@ -136,8 +120,8 @@ let termination_ t order pe npe varmap =
           let formula_poly = if Atom.is_lt atom
               then sub_poly |> red_lt
               else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
-              (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) (TWNLoop.guard_without_inv t |> Formula.constraints)) in
-  let model = SMTSolver.get_model (Formula.mk_and (TWNLoop.invariant t |> Formula.mk) formula) in
+              (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) ((TWNLoop.guard_without_inv twn |> Formula.mk_and (Formula.mk rest) |> Formula.constraints))) in
+  let model = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in
   (Option.is_none model)
   |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
@@ -148,6 +132,17 @@ let termination_ t order pe npe varmap =
         <> mk_str_line "Formula: "
         <> (Formula.to_string_formatted formula |> mk_block)
         |> mk_paragraph);)
+
+(* For Testing *)
+let termination t =
+  let twn = TWNLoop.mk_transition t in
+  let order = check_triangular twn in
+  let pe = PE.compute_closed_form (List.map (fun var ->
+      let update_var = TWNLoop.update twn var in
+      (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
+  let npe = PE.normalize pe in
+  let varmap = Hashtbl.of_list (List.combine order npe) in
+  termination_ twn order pe npe varmap
 
 (* COMPLEXITY: *)
 
@@ -372,10 +367,19 @@ let time_bound (l,t,l') scc program appr = (
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
         let global_local_bounds =
-          List.map (fun (entry, t) ->
+          List.map (fun (entry, twn) ->
+                let program_only_entry = Program.from ((TransitionSet.to_list (TransitionSet.diff (Program.transitions program) (TransitionSet.of_list entries))) |> List.map List.singleton |> (@) [[entry]]) (Program.start program) in
+                let twn_inv = InvariantGeneration.transform_program program_only_entry
+                  |> MaybeChanged.unpack
+                  |> Program.transitions
+                  |> TransitionSet.filter (fun t -> List.exists (Transition.equal t) handled_transitions)
+                  |> TransitionSet.to_list
+                  |> List.map (TransitionLabel.invariant % Transition.label)
+                  |> fun invariants -> List.flatten invariants |> List.filter (fun atom -> List.for_all (List.exists (Atom.equal atom)) invariants)
+                  |> TWNLoop.add_invariant twn in
                 let eliminated_t =
                   EliminateNonContributors.eliminate_t
-                    (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
+                    (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
                 in
                 if VarSet.is_empty (TWNLoop.vars eliminated_t) then
                   Bound.infinity, (entry, Bound.infinity)

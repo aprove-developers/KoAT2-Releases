@@ -45,6 +45,9 @@ let remove_non_contributors t non_contributors =
 
 let mk_transition t = mk_transitions [t]
 
+let add_invariant t inv =
+  {t with invariant = Invariant.mk_and t.invariant inv}
+
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
   let nondet_vars = VarTable.create 3 in
