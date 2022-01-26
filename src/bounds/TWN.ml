@@ -147,7 +147,7 @@ let termination t =
 (* COMPLEXITY: *)
 
 (* Computes the monotoncitiy threshold for (b1,a1) > (b2,a2), i.e., smallest m s.t for all n >= m: n^a1 * b1^n > k * n^a1 * b1^n *)
-let monotonicity_th (b1,a1) (b2,a2) k =
+let monotonicity_th k (b1,a1) (b2,a2) =
   if OurInt.is_negative k || OurInt.is_zero k then OurInt.one
   else
     let rec test_m m =
@@ -167,6 +167,8 @@ let monotonicity_th (b1,a1) (b2,a2) k =
         if OurInt.is_ge tmp2 tmp1 then m else decrease_m m_dec in
     OurInt.zero |> test_m |> decrease_m
 
+let monotonicity_th_int k (b1,a1) (b2,a2) = monotonicity_th (OurInt.of_int k) (OurInt.of_int b1, OurInt.of_int a1) (OurInt.of_int b2, OurInt.of_int a2)
+
 let compute_kmax sub_poly = sub_poly |> List.map (OurInt.max_list % (List.map OurInt.abs) % Polynomial.coeffs) |> OurInt.max_list
 
 let compute_N = function
@@ -174,15 +176,15 @@ let compute_N = function
   | x::[] -> OurInt.zero
   | x::y::[] -> OurInt.one
   | x1::x2::x3::xs ->
-    let mt = List.map (fun x -> monotonicity_th x3 x OurInt.one) xs |> OurInt.max_list in
-    let mt_ = monotonicity_th x2 x3 (OurInt.of_int ((List.length xs) + 1)) in
+    let mt = List.map (fun x -> monotonicity_th OurInt.one x3 x) xs |> OurInt.max_list in
+    let mt_ = monotonicity_th (OurInt.of_int ((List.length xs) + 1)) x2 x3 in
     OurInt.max mt mt_
 
 let compute_M = function
   | [] -> OurInt.zero
   | x::[] -> OurInt.zero
   | (b1,a1)::(b2,a2)::xs when ((OurInt.is_gt b1 b2) || ((OurInt.equal b1 b2) && (OurInt.is_gt a1 OurInt.(add a2 one))))
-                         -> monotonicity_th (b1,a1) (b2, OurInt.(add a2 one)) OurInt.one
+                         -> monotonicity_th OurInt.one (b1,a1) (b2, OurInt.(add a2 one))
   | _ -> OurInt.zero
 
 
@@ -224,10 +226,11 @@ let get_bound t order npe varmap =
   let bound, max_con =
       List.fold_right (fun atom (bound, const) ->
           let poly = Atom.poly atom |> Polynomial.neg in
-          let sub_poly = PE.substitute varmap poly |> PE.remove_frac |> PE.monotonic_kernel (TWNLoop.invariant t |> Formula.mk) in
+          let sub_poly, l_ = PE.substitute varmap poly |> PE.remove_frac |> PE.monotonic_kernel (TWNLoop.invariant t |> Formula.mk) in
+          let l_max = List.map (fun (x,y) -> monotonicity_th_int 1 x y) l_  |> OurInt.max_list in
           Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
-          let max_const = OurInt.max const (PE.max_const sub_poly) in
+          let max_const = OurInt.max_list [const; (PE.max_const sub_poly); l_max] in
             (Bound.add bound ((compute_f atom sub_poly_n)), max_const))
             (TWNLoop.guard_without_inv t |> Formula.atoms |> List.unique ~eq:Atom.equal) (Bound.one, OurInt.zero) in
             Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", (OurInt.to_string max_con)]);

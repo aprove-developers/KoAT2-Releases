@@ -409,33 +409,33 @@ module PE = struct
     module MonomialRational = Monomials.Make(OurRational)
 
     let monotonic_kernel invariants = function
-        | [] -> [] (*, None *)
-        | [x] -> [x] (*, None *)
+        | [] -> [], []
+        | [x] -> [x], []
         | x::xs ->
         let f_matching_monomial scm = List.find_opt (fun (c,p,d,b) ->
             List.exists (fun scm2 ->
             OurRational.sign (ScaledMonomialRational.coeff scm) != (OurRational.sign (ScaledMonomialRational.coeff scm2)) &&
             MonomialRational.equal (ScaledMonomialRational.monomial scm) (ScaledMonomialRational.monomial scm2)) (RationalPolynomial.scaled_monomials p)) xs in
-        let ys = List.fold_right (fun (c0,p0,d0,b0) tmp ->
+        let ys, mths = List.fold_right (fun (c0,p0,d0,b0) (tmp, mths) (* t1 *) ->
             let (c,p,d,b) = (c0,p0,d0,b0)::tmp |> simplify |> List.first
             and ys = (c0,p0,d0,b0)::tmp |> simplify |> List.tl in
-            List.fold_right (fun scm zs ->
+            List.fold_right (fun scm (zs, mths_inner) ->
                 if not (SMTSolver.satisfiable (Formula.(mk_and invariants (mk_le (RationalPolynomial.normalize (RationalPolynomial.of_scaled [scm])) Polynomial.zero)))) then
                     (** negative *)
                     let matching_monomial = f_matching_monomial scm in
                     if Option.is_some matching_monomial then
                         let (c1,p1,d1,b1) = Option.get matching_monomial in
-                        (c1, [scm |> ScaledMonomialRational.mult_with_const OurRational.minus_one] |> RationalPolynomial.of_scaled,d1,b1)::zs |> simplify
+                        ((c1, [scm |> ScaledMonomialRational.mult_with_const OurRational.minus_one] |> RationalPolynomial.of_scaled,d1,b1)::zs |> simplify, ((b1,d1),(b,d))::mths_inner)
                     else
-                        (c,RationalPolynomial.of_scaled [scm],d,b)::zs
+                        ((c,RationalPolynomial.of_scaled [scm],d,b)::zs, mths_inner)
                 else if not (SMTSolver.satisfiable (Formula.(mk_and invariants (mk_lt Polynomial.zero (RationalPolynomial.normalize (RationalPolynomial.of_scaled [scm])))))) then
                     (** positive *)
-                    zs
+                    (zs, ((b,d),(0,0))::mths_inner)
                 else
-                    (c,RationalPolynomial.of_scaled [scm],d,b)::zs) (RationalPolynomial.scaled_monomials p) ys) xs [] in
+                    ((c,RationalPolynomial.of_scaled [scm],d,b)::zs), mths_inner) (RationalPolynomial.scaled_monomials p) (ys, mths)) xs ([],[]) in
         if negative_dominated invariants (x::ys) then
-            x::ys |> simplify (*, None *)
+            (x::ys |> simplify), mths
         else
-            x::xs (*, None *)
+            x::xs, []
 
 end
