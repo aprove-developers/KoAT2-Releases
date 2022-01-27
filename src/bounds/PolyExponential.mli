@@ -37,6 +37,6 @@ sig
 
     val compute_closed_form : (Var.t * Polynomial.t) list -> t list
 
-    val monotonic_kernel : Formula.t -> t -> t * ((int * int) * (int * int)) list
+    val monotonic_kernel : Formula.t -> Formula.t -> t -> t * ((int * int) * (int * int)) list
 
 end
