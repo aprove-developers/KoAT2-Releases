@@ -110,7 +110,7 @@ let termination_ twn order npe varmap =
   let update = fun v -> match TWNLoop.update twn v with
     | Some p -> p
     | None -> Polynomial.of_var v in
-  let self_impl, rest = TWNLoop.invariant twn |> List.partition (fun a -> let f = Constraint.lift a |> Formula.mk in SMTSolver.satisfiable (Formula.implies f (Formula.map_polynomial (Polynomial.substitute_f update) f))) in
+  let self_impl, rest = TWNLoop.invariant twn |> List.partition (fun a -> let f = Constraint.lift a |> Formula.mk in SMTSolver.tautology (Formula.implies f (Formula.map_polynomial (Polynomial.substitute_f update) f))) in
   let formula =
     Formula.any (
     List.map (fun constr ->
@@ -226,7 +226,7 @@ let get_bound t order npe varmap =
   let bound, max_con =
       List.fold_right (fun atom (bound, const) ->
           let poly = Atom.poly atom |> Polynomial.neg in
-          let sub_poly, l_ = PE.substitute varmap poly |> PE.remove_frac |> PE.monotonic_kernel (TWNLoop.invariant t |> Formula.mk) in
+          let sub_poly, l_ = PE.substitute varmap poly |> PE.remove_frac |> PE.monotonic_kernel (TWNLoop.invariant t |> Formula.mk) (TWNLoop.guard t) in
           let l_max = List.map (fun (x,y) -> monotonicity_th_int 1 x y) l_  |> OurInt.max_list in
           Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
