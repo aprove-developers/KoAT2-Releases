@@ -15,7 +15,7 @@ RUN opam init
 RUN opam update
 RUN opam upgrade
 # Add graphviz for tests
-RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev graphviz zip --no-cache
+RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip --no-cache
 
 WORKDIR /home/opam
 
