@@ -79,7 +79,7 @@ let check_weakly_negativitiy (t: TWNLoop.t) =
                             update |> Option.get |> Polynomial.coeff_of_var var |> OurInt.is_negative) (TWNLoop.input_vars t)
 
 
-let chain (t: TWNLoop.t) = TWNLoop.chain t
+let chain (t: TWNLoop.t) = TWNLoop.append t t
 
 (* TERMINATION: *)
 
