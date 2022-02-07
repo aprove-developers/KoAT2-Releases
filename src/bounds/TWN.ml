@@ -227,7 +227,7 @@ let get_bound t order npe varmap =
       List.fold_right (fun atom (bound, const) ->
           let poly = Atom.poly atom |> Polynomial.neg in
           let sub_poly, l_ = PE.substitute varmap poly |> PE.remove_frac |> PE.monotonic_kernel (TWNLoop.invariant t |> Formula.mk) (TWNLoop.guard t) in
-          let l_max = List.map (fun (x,y) -> monotonicity_th_int 1 x y) l_  |> OurInt.max_list in
+          let l_max = if List.is_empty [] then OurInt.zero else List.map (fun (x,y) -> monotonicity_th_int 1 x y) l_  |> OurInt.max_list in
           Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
           let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
           let max_const = OurInt.max_list [const; (PE.max_const sub_poly); l_max] in
