@@ -309,7 +309,7 @@ let transform_program_ program_ program =
   in
 
   if LocationMap.is_empty invariants then
-    MaybeChanged.same program_
+    MaybeChanged.same program
   else
     let add location invariant program =
       Logger.(log logger INFO (fun () -> "add_invariant", ["location", Location.to_string location; "invariant", Constraint.to_string invariant]));
