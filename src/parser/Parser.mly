@@ -48,6 +48,7 @@
   open Formulas
   open ProgramTypes
   open BoundsInst
+  open Goal
 %}
 
 %%
