@@ -1,5 +1,5 @@
 # KoAT2
-Reimplementation of KoAT with control-flow refinement, multiphase ranking functions and twn-loops.
+Reimplementation of KoAT with control-flow refinement and multiphase ranking functions.
 
 ## Build
 
