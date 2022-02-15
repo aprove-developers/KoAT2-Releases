@@ -76,6 +76,17 @@ let suite =
                     ]
         );
 
+        "get_model_valuation" >::: (
+        List.map (fun (testname, expected, constr, poly) ->
+            testname >:: (fun _ -> assert_equal_poly
+                                     (Readers.read_polynomial expected)
+                                     (Polynomial.eval_partial (Readers.read_polynomial poly) (Yices2Solver.get_model (Readers.read_formula constr) |? (Valuation.from [])) )))
+                    [
+                        ("fst", "x+y","a = 1 && b = 1", "a*x+b*y" );
+                        ("snd", "x+y","a = 1 && b = 1 && a = 0 || a = 1 && b = 1 && c >= 0 && c <= 0 && d = 0", "a*x+b*y + c*z + d*w" );
+                    ]
+        );
+
 (*        "get_model_advanced" >::: (
         List.map (fun (expected, constr, atom) ->
             constr >:: (fun _ -> assert_equal ~cmp:String.equal ~printer:print_str expected (Z3Solver.get_model (Constraints.farkas_transform (Reader.read_constraint constr)(Reader.read_atom atom)))))
