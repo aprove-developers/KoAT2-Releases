@@ -1,5 +1,6 @@
 OCAMLPACKS[] =
     batteries
+    yices2_bindings
     z3
 
 OCAMLINCLUDES[] =
