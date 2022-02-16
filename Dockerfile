@@ -15,7 +15,28 @@ RUN opam init
 RUN opam update
 RUN opam upgrade
 # Add graphviz for tests
-RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev graphviz zip --no-cache
+RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev libffi-dev libc6-compat graphviz zip tar --no-cache
+
+#-------------------------------------------
+# Yices2
+#-------------------------------------------
+WORKDIR /home
+
+RUN sudo wget -O "yices2.tar.gz" https://yices.csl.sri.com/releases/2.6.4/yices-2.6.4-x86_64-pc-linux-gnu.tar.gz && \
+    sudo tar -zxvf yices2.tar.gz && \
+    sudo rm yices2.tar.gz
+
+WORKDIR /home/yices-2.6.4
+
+RUN sudo ./install-yices
+
+ENV LD_LIBRARY_PATH=/usr/local/lib/:${LD_LIBRARY_PATH}
+
+RUN git clone https://github.com/SRI-CSL/yices2_ocaml_bindings.git && \
+    cd yices2_ocaml_bindings/ && \
+    opam install .
+
+
 
 WORKDIR /home/opam
 
@@ -45,6 +66,8 @@ RUN RELEASE=1 KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING omake --depend
 # Get llvm2kittel + clang to analyse C programs
 #-------------------------------------------
 
+WORKDIR /home
+
 FROM ubuntu:14.04 as koat2_c_utils
 
 RUN apt-get update && \
@@ -64,7 +87,6 @@ RUN wget https://releases.llvm.org/3.4/clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13
     tar xfv clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13.10.tar.xz && \
     rm *.tar.xz && \
     mv clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13.10/bin/clang .
-
 
 #-------------------------------------------
 # Final Image
