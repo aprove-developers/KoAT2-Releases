@@ -7,13 +7,9 @@ LABEL author="Marcel Hark"
 
 ARG OCAML_VERSION=4.11.2
 
-RUN opam update
-RUN opam upgrade
 RUN opam switch create -y $OCAML_VERSION+musl+static+flambda
 RUN eval `opam env`
-RUN opam init
-RUN opam update
-RUN opam upgrade
+
 # Add graphviz for tests
 RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev libffi-dev libc6-compat graphviz zip tar autoconf gperf --no-cache
 
