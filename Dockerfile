@@ -15,30 +15,25 @@ RUN opam init
 RUN opam update
 RUN opam upgrade
 # Add graphviz for tests
-RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev libffi-dev libc6-compat graphviz zip tar --no-cache
+RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev libffi-dev libc6-compat graphviz zip tar autoconf gperf --no-cache
 
 #-------------------------------------------
 # Yices2
 #-------------------------------------------
-WORKDIR /home
-
-RUN sudo wget -O "yices2.tar.gz" https://yices.csl.sri.com/releases/2.6.4/yices-2.6.4-x86_64-pc-linux-gnu.tar.gz && \
-    sudo tar -zxvf yices2.tar.gz && \
-    sudo rm yices2.tar.gz
-
-WORKDIR /home/yices-2.6.4
-
-RUN sudo ./install-yices
+RUN git clone https://github.com/SRI-CSL/yices2 && \
+    cd yices2 && \
+    autoconf && \
+    ./configure && \
+    make -j$(nproc) && \
+    sudo make install
 
 ENV LD_LIBRARY_PATH=/usr/local/lib/:${LD_LIBRARY_PATH}
 
 RUN git clone https://github.com/SRI-CSL/yices2_ocaml_bindings.git && \
-    cd yices2_ocaml_bindings/ && \
-    opam install .
+    cd yices2_ocaml_bindings/ && \ 
+    opam install . -j$(nproc) && \
+    eval $(opam env)
 
-
-
-WORKDIR /home/opam
 
 RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.1/irankfinder_v1.3.1_rhel7.zip && \
     mkdir irankfinder && \
@@ -46,7 +41,7 @@ RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/
     rm irankfinder.zip
 
 COPY --chown=opam:opam opam .
-RUN opam install -j $((`nproc` - 2)) . --deps-only
+RUN opam install -j $(nproc) . --deps-only
 
 COPY --chown=opam:opam src ./src
 COPY --chown=opam:opam OMakeroot .
