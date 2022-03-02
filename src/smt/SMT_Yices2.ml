@@ -115,6 +115,10 @@ module IncrementalYices2Solver =
       let context = Context.malloc ~config () in
       config, context, VarTable.create 0
 
+    let close (config,_,_) =
+      let open EEH in
+        Config.free config;
+        Global.exit()
 
     let push (_,context,_) =
       EEH.Context.push context
@@ -125,8 +129,6 @@ module IncrementalYices2Solver =
     let result_is expected_result (config, context, vars) =
         let open EEH in
         let result = Context.check context in
-        Config.free config;
-        Global.exit();
       if result == Yices2.Low.Types.(`STATUS_UNKNOWN) || result == Yices2.Low.Types.(`STATUS_ERROR) then
         raise (SMTFailure ("SMT-Solver does not know a solution"))
       else

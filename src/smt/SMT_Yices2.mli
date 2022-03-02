@@ -28,6 +28,8 @@ sig
   (** Creates a new incremental smt solver. *)
   val create : unit -> t
 
+  val close : t -> unit
+
   (** Creates a backtracking point. *)
   val push : t -> unit
 
