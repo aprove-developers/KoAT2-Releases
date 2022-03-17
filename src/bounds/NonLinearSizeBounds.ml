@@ -19,8 +19,11 @@ let improve_t (l,t,l') appr =
             let update_var = TransitionLabel.update t var in
             (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         if List.is_empty closed_form |> not then
-            let bound = PE.overapprox (List.last closed_form) (Approximation.timebound appr (l,t,l')) in
-            Approximation.add_sizebound bound (l,t,l') var appr
+            List.fold_right (fun (var, pe) appr ->
+                if Approximation.sizebound appr (l,t,l') var |> Bound.is_finite |> not then
+                    let bound = PE.overapprox pe (Approximation.timebound appr (l,t,l')) in
+                    Approximation.add_sizebound bound (l,t,l') var appr
+                else appr) (List.combine order closed_form) appr
         else
             appr) (TransitionLabel.vars t) appr
 
