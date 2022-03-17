@@ -7,17 +7,29 @@ LABEL author="Marcel Hark"
 
 ARG OCAML_VERSION=4.11.2
 
-RUN opam update
-RUN opam upgrade
 RUN opam switch create -y $OCAML_VERSION+musl+static+flambda
 RUN eval `opam env`
-RUN opam init
-RUN opam update
-RUN opam upgrade
-# Add graphviz for tests
-RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev graphviz zip --no-cache
 
-WORKDIR /home/opam
+# Add graphviz for tests
+RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev libffi-dev libc6-compat graphviz zip tar autoconf gperf --no-cache
+
+#-------------------------------------------
+# Yices2
+#-------------------------------------------
+RUN git clone https://github.com/SRI-CSL/yices2 && \
+    cd yices2 && \
+    autoconf && \
+    ./configure && \
+    make -j$(nproc) && \
+    sudo make install
+
+ENV LD_LIBRARY_PATH=/usr/local/lib/:${LD_LIBRARY_PATH}
+
+RUN git clone https://github.com/SRI-CSL/yices2_ocaml_bindings.git && \
+    cd yices2_ocaml_bindings/ && \ 
+    opam install . -j$(nproc) && \
+    eval $(opam env)
+
 
 RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.1/irankfinder_v1.3.1_rhel7.zip && \
     mkdir irankfinder && \
@@ -25,7 +37,7 @@ RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/
     rm irankfinder.zip
 
 COPY --chown=opam:opam opam .
-RUN opam install -j $((`nproc` - 2)) . --deps-only
+RUN opam install -j $(nproc) . --deps-only
 
 COPY --chown=opam:opam src ./src
 COPY --chown=opam:opam OMakeroot .
@@ -44,6 +56,8 @@ RUN RELEASE=1 KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING omake --depend
 #-------------------------------------------
 # Get llvm2kittel + clang to analyse C programs
 #-------------------------------------------
+
+WORKDIR /home
 
 FROM ubuntu:14.04 as koat2_c_utils
 
@@ -64,7 +78,6 @@ RUN wget https://releases.llvm.org/3.4/clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13
     tar xfv clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13.10.tar.xz && \
     rm *.tar.xz && \
     mv clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13.10/bin/clang .
-
 
 #-------------------------------------------
 # Final Image
