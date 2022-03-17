@@ -58,6 +58,7 @@ let check_triangular (t: TWNLoop.t) =
   List.map (fun i -> List.assoc i (List.map Tuple2.swap vars_i)) order
   |> List.rev
 
+let check_triangular_t (t: TransitionLabel.t) = check_triangular (TWNLoop.mk_transition t)
 
 (* MONOTONICITY *)
 

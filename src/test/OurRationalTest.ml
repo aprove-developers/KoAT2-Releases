@@ -4,11 +4,11 @@ open Helper
 open ProgramTypes
 open Polynomials
 
-let tests = 
-    "OurRational" >::: [ 
+let tests =
+    "OurRational" >::: [
         ("equal" >:::
             List.map (fun (expected_bool, tuple) ->
-                "" >:: (fun _ -> 
+                "" >:: (fun _ ->
                         let result = OurRational.equal (OurRational.of_int_tuple (2,42)) (OurRational.of_int_tuple tuple) in
                         assert_equal_bool expected_bool result))
                     [
@@ -21,7 +21,7 @@ let tests =
 
         ("to_string" >:::
             List.map (fun (expected_string, tuple) ->
-                "" >:: (fun _ -> 
+                "" >:: (fun _ ->
                         let result = OurRational.to_string (OurRational.of_int_tuple tuple) in
                         assert_equal_string expected_string result))
                     [
@@ -36,7 +36,7 @@ let tests =
 
         ("mul" >:::
             List.map (fun (expected_string, tuple1, tuple2) ->
-                "" >:: (fun _ -> 
+                "" >:: (fun _ ->
                         let result = OurRational.mul (OurRational.of_int_tuple tuple1) (OurRational.of_int_tuple tuple2) |> OurRational.to_string in
                         assert_equal_string expected_string result))
                     [
@@ -54,7 +54,7 @@ let tests =
 
         ("add" >:::
             List.map (fun (expected_string, tuple1, tuple2) ->
-                "" >:: (fun _ -> 
+                "" >:: (fun _ ->
                         let result = OurRational.add (OurRational.of_int_tuple tuple1) (OurRational.of_int_tuple tuple2) |> OurRational.to_string in
                         assert_equal_string expected_string result))
                     [
@@ -72,7 +72,7 @@ let tests =
 
         ("is_negative" >:::
             List.map (fun (expected_bool, tuple) ->
-                "" >:: (fun _ -> 
+                "" >:: (fun _ ->
                         let result = OurRational.is_negative (OurRational.of_int_tuple tuple) in
                         assert_equal_bool expected_bool result))
                     [
@@ -88,7 +88,7 @@ let tests =
 
         ("compare" >:::
             List.map (fun (expected_int, tuple1, tuple2) ->
-                "" >:: (fun _ -> 
+                "" >:: (fun _ ->
                         let result = OurRational.compare (OurRational.of_int_tuple tuple1) (OurRational.of_int_tuple tuple2) in
                         assert_equal_int expected_int result))
                     [
@@ -106,7 +106,7 @@ let tests =
 
         ("is_ge" >:::
             List.map (fun (expected_bool, tuple1, tuple2) ->
-                "" >:: (fun _ -> 
+                "" >:: (fun _ ->
                         let result = OurRational.is_ge (OurRational.of_int_tuple tuple1) (OurRational.of_int_tuple tuple2) in
                         assert_equal_bool expected_bool result))
                     [
@@ -124,7 +124,7 @@ let tests =
 
         ("pow" >:::
             List.map (fun (expected_string, tuple1, exp) ->
-                "" >:: (fun _ -> 
+                "" >:: (fun _ ->
                         let result = OurRational.pow (OurRational.of_int_tuple tuple1) exp |> OurRational.to_string in
                         assert_equal_string expected_string result))
                     [
@@ -137,6 +137,30 @@ let tests =
                     ("-1/8", (1,-2), 3);
                     ("1/16", (1,-2), 4);
                     ("2401/625", (7,5), 4);
+                    ]
+        );
+
+        ("ceil" >:::
+            List.map (fun (expected_string, tuple) ->
+                "" >:: (fun _ ->
+                        let result = OurRational.ceil (OurRational.of_int_tuple tuple) |> OurInt.to_string in
+                        assert_equal_string expected_string result))
+                    [
+                    ("1", (3,5));
+                    ("0", (-3,5));
+                    ("7", (49,7));
+                    ]
+        );
+
+        ("floor" >:::
+            List.map (fun (expected_string, tuple) ->
+                "" >:: (fun _ ->
+                        let result = OurRational.floor (OurRational.of_int_tuple tuple) |> OurInt.to_string in
+                        assert_equal_string expected_string result))
+                    [
+                    ("0", (3,5));
+                    ("-1", (-3,5));
+                    ("7", (49,7));
                     ]
         );
   ]
