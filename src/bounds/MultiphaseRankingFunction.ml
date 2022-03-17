@@ -115,7 +115,7 @@ let rank_to_string (locations: Location.t list) (content_to_string: ((Location.t
 let polyList_to_string ?(pretty=false) ((rank: (Location.t -> 'a) list) , (l : Location.t)) =
   rank
   |> List.enum
-  |> Util.enum_to_string (fun p -> (if pretty then Polynomial.to_string_pretty else Polynomial.to_string) (p l) ^ " ")
+  |> Util.enum_to_string (fun p -> (if pretty then Polynomial.to_string_pretty else Polynomial.to_string) (p l))
 
 let only_rank_to_string {rank; decreasing; non_increasing; depth} =
   let locations = non_increasing |> TransitionSet.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
@@ -135,7 +135,7 @@ let add_to_proof {rank; decreasing; non_increasing; depth} bound program =
     mk_paragraph (
       mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true bound)) <>
       mk_str "MPRF:" <> mk_newline <>
-        (locations |> List.map (fun l -> Location.to_string l ^ " " ^ polyList_to_string ~pretty:true (rank, l)) |> List.map (mk_str_line) |> mappend |> mk_paragraph)) <>
+        (locations |> List.map (fun l -> "• " ^ Location.to_string l ^ ": " ^ polyList_to_string ~pretty:true (rank, l)) |> List.map (mk_str_line) |> mappend |> mk_paragraph)) <>
         match format with
         | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html color_map program)
         | _    -> FormattedString.Empty
