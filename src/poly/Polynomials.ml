@@ -83,7 +83,7 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       |> List.filter ((<>) Monomial_.one)
 
     let scaled_monomials poly = poly |> simplify
-    
+
     let monomials_with_coeffs poly =
          poly
       |> simplify
@@ -105,7 +105,7 @@ module PolynomialOver(Value : PolyTypes.Ring) =
                 |_ -> []
         else []
 
-    let rec of_coeffs_list_univariate var coeffs = 
+    let rec of_coeffs_list_univariate var coeffs =
       List.fold_righti (fun i coeff p -> (ScaledMonomial_.make coeff (Monomial_.lift var i))::p) coeffs []
 
     let var str = of_var (Var.of_string str)
@@ -347,17 +347,32 @@ module RationalPolynomial =
   struct
     include PolynomialOver(OurRational)
 
-    let normalize poly = 
-      let coeff_inv = 
+    let normalize poly =
+      let coeff_inv =
         coeffs poly
         |> List.filter (not % OurRational.is_integer)
         |> List.map Tuple2.second
         |> List.fold OurInt.lcm OurInt.one |> OurInt.abs |> OurRational.of_ourint in
       poly
       |> mult_with_const coeff_inv
-      |> fold ~const:(Polynomial.of_constant % OurRational.to_ourint) ~var:(Polynomial.of_var) ~neg:Polynomial.neg ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow
+      |> fold
+        ~const:(Polynomial.of_constant % OurRational.to_ourint)
+        ~var:(Polynomial.of_var)
+        ~neg:Polynomial.neg
+        ~plus:Polynomial.add
+        ~times:Polynomial.mul
+        ~pow:Polynomial.pow
+
+    let overapprox =
+      fold
+        ~const:(Polynomial.of_constant % OurRational.ceil % OurRational.abs)
+        ~var:Polynomial.of_var
+        ~neg:Polynomial.neg
+        ~plus:Polynomial.add
+        ~times:Polynomial.mul
+        ~pow:Polynomial.pow
   end
-  
+
 module ParameterPolynomial =
   struct
     module Outer = PolynomialOver(PolynomialOver(OurInt))

@@ -105,6 +105,9 @@ val input_size : t -> int
 (** Returns the cost function *)
 val cost : t -> polynomial
 
+(** Returns t with costs 1 *)
+val uniform : t -> t
+
 (** Returns a string representing the label. *)
 val to_string : ?pretty:bool -> t -> string
 

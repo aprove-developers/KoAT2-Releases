@@ -64,7 +64,11 @@ sig
 
   val degree_coeff_list : t -> value list
 
+  (** Multiply with lcm *)
   val normalize : t -> Polynomial.t
+
+  (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
+  val overapprox : t -> Polynomial.t
 end
 
 module RealParameterPolynomial :

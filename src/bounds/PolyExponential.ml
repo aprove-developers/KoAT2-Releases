@@ -439,4 +439,12 @@ module PE = struct
         else
             x::xs, []
 
+    open BoundsInst
+
+    let overapprox t runtime_bound =
+        List.map (fun (c, p, d, b) ->
+            let bound_p = p |> RationalPolynomial.overapprox |> Bound.of_poly
+            and bound_d = Bound.pow runtime_bound d
+            and bound_b = Bound.exp (OurInt.of_int b) runtime_bound in Bound.(add (add bound_p bound_d) bound_b)) t
+        |> Bound.sum_list
 end
