@@ -1,6 +1,5 @@
 OCAMLPACKS[] =
     z3
-    yices2_bindings
     batteries
     apron
     apron.octD
