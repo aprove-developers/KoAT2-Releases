@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -103,8 +102,8 @@
 <hr width="100%">
 
 <pre><span id="VALlogger"><span class="keyword">val</span> logger</span> : <code class="type">Batteries.Logger.log</code></pre>
-<pre><span id="VALdepends"><span class="keyword">val</span> depends</span> : <code class="type">VarSet.elt -&gt; <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -&gt; VarSet.t -&gt; bool</code></pre>
-<pre><span id="VALeliminate_t_"><span class="keyword">val</span> eliminate_t_</span> : <code class="type">VarSet.t -&gt;<br>       (VarSet.elt -&gt; Polynomials.Polynomial.t option) -&gt;<br>       VarSet.t -&gt; VarSet.t -&gt; VarSet.t</code></pre>
-<pre><span id="VALeliminate_"><span class="keyword">val</span> eliminate_</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; VarSet.t -&gt; VarSet.t -&gt; VarSet.t</code></pre>
-<pre><span id="VALeliminate_t"><span class="keyword">val</span> eliminate_t</span> : <code class="type">VarSet.t -&gt;<br>       VarSet.t -&gt;<br>       (VarSet.elt -&gt; Polynomials.Polynomial.t option) -&gt; (VarSet.t -&gt; 'a) -&gt; 'a</code></pre>
-<pre><span id="VALeliminate"><span class="keyword">val</span> eliminate</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="MaybeChanged.html#TYPEstatus">MaybeChanged.status</a> * <a href="Program.html#TYPEt">Program.t</a></code></pre></body></html>
+<pre><span id="VALdepends"><span class="keyword">val</span> depends</span> : <code class="type">VarSet.elt -> <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> VarSet.t -> bool</code></pre>
+<pre><span id="VALeliminate_t_"><span class="keyword">val</span> eliminate_t_</span> : <code class="type">VarSet.t -><br>       (VarSet.elt -> Polynomials.Polynomial.t option) -><br>       VarSet.t -> VarSet.t -> VarSet.t</code></pre>
+<pre><span id="VALeliminate_"><span class="keyword">val</span> eliminate_</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> VarSet.t -> VarSet.t -> VarSet.t</code></pre>
+<pre><span id="VALeliminate_t"><span class="keyword">val</span> eliminate_t</span> : <code class="type">VarSet.t -><br>       VarSet.t -><br>       (VarSet.elt -> Polynomials.Polynomial.t option) -> (VarSet.t -> 'a) -> 'a</code></pre>
+<pre><span id="VALeliminate"><span class="keyword">val</span> eliminate</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="MaybeChanged.html#TYPEstatus">MaybeChanged.status</a> * <a href="Program.html#TYPEt">Program.t</a></code></pre></body></html>

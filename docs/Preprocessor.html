@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -162,12 +161,12 @@
 </div>
 
 
-<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="Preprocessor.html#TYPEt">t</a> -&gt; <a href="Preprocessor.html#TYPEt">t</a> -&gt; Ppx_deriving_runtime.int</code></pre>
-<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="Preprocessor.html#TYPEt">t</a> -&gt; <a href="Preprocessor.html#TYPEt">t</a> -&gt; Ppx_deriving_runtime.bool</code></pre>
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="Preprocessor.html#TYPEt">t</a> -> <a href="Preprocessor.html#TYPEt">t</a> -> Ppx_deriving_runtime.int</code></pre>
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="Preprocessor.html#TYPEt">t</a> -> <a href="Preprocessor.html#TYPEt">t</a> -> Ppx_deriving_runtime.bool</code></pre>
 <pre><span class="keyword">include</span> ??</pre>
 <p>Adds invariants to transitions.</p>
 
-<pre><span id="VALshow"><span class="keyword">val</span> show</span> : <code class="type"><a href="Preprocessor.html#TYPEt">t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALshow"><span class="keyword">val</span> show</span> : <code class="type"><a href="Preprocessor.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string representing type of preprocessor.</p>
 </div>
@@ -179,20 +178,20 @@
 </div>
 </div>
 
-<pre><span id="VALaffects"><span class="keyword">val</span> affects</span> : <code class="type"><a href="Preprocessor.html#TYPEt">t</a> -&gt; <a href="Preprocessor.html#TYPEt">t</a> list</code></pre><div class="info ">
+<pre><span id="VALaffects"><span class="keyword">val</span> affects</span> : <code class="type"><a href="Preprocessor.html#TYPEt">t</a> -> <a href="Preprocessor.html#TYPEt">t</a> list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns all the preprocessors that might successfully run after a run of the specific preprocessor.</p>
 </div>
 </div>
 
-<pre><span id="VALtransform"><span class="keyword">val</span> transform</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Preprocessor.html#TYPEt">t</a> -&gt; <a href="Program.html#TYPEt">Program.t</a> <a href="MaybeChanged.html#TYPEt">MaybeChanged.t</a></code></pre><div class="info ">
+<pre><span id="VALtransform"><span class="keyword">val</span> transform</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Preprocessor.html#TYPEt">t</a> -> <a href="Program.html#TYPEt">Program.t</a> <a href="MaybeChanged.html#TYPEt">MaybeChanged.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Transforms a preprocessing step with the specific preprocessor on the Program.t.
     Results in a Program.t that might be changed.</p>
 </div>
 </div>
 
-<pre><span id="TYPEstrategy"><span class="keyword">type</span> <code class="type"></code>strategy</span> = <code class="type"><a href="Preprocessor.html#TYPEt">t</a> list -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Program.html#TYPEt">Program.t</a></code> </pre>
+<pre><span id="TYPEstrategy"><span class="keyword">type</span> <code class="type"></code>strategy</span> = <code class="type"><a href="Preprocessor.html#TYPEt">t</a> list -> <a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a></code> </pre>
 <div class="info ">
 <div class="info-desc">
 <p>The type strategy is a list of preprocessors for a Program.t to derive a new Program.t.</p>
@@ -206,7 +205,7 @@
 </div>
 </div>
 
-<pre><span id="VALprocess"><span class="keyword">val</span> process</span> : <code class="type"><a href="Preprocessor.html#TYPEstrategy">strategy</a> -&gt; <a href="Preprocessor.html#TYPEt">t</a> list -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
+<pre><span id="VALprocess"><span class="keyword">val</span> process</span> : <code class="type"><a href="Preprocessor.html#TYPEstrategy">strategy</a> -> <a href="Preprocessor.html#TYPEt">t</a> list -> <a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Uses the strategy to preprocess the given Program.t with the specified preprocessors.</p>
 </div>
@@ -224,7 +223,7 @@
 </div>
 </div>
 
-<pre><span id="VALlift_to_program"><span class="keyword">val</span> lift_to_program</span> : <code class="type">(ProgramTypes.TransitionGraph.t -&gt;<br>        ProgramTypes.TransitionGraph.t <a href="MaybeChanged.html#TYPEt">MaybeChanged.t</a>) -&gt;<br>       <a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Program.html#TYPEt">Program.t</a> <a href="MaybeChanged.html#TYPEt">MaybeChanged.t</a></code></pre><div class="info ">
+<pre><span id="VALlift_to_program"><span class="keyword">val</span> lift_to_program</span> : <code class="type">(ProgramTypes.TransitionGraph.t -><br>        ProgramTypes.TransitionGraph.t <a href="MaybeChanged.html#TYPEt">MaybeChanged.t</a>) -><br>       <a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a> <a href="MaybeChanged.html#TYPEt">MaybeChanged.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>

@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -110,97 +109,97 @@
 </div>
 
 
-<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Equal iff. two transitions have the same id.</p>
 </div>
 </div>
 
-<pre><span id="VALsame"><span class="keyword">val</span> same</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALsame"><span class="keyword">val</span> same</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALequivalent"><span class="keyword">val</span> equivalent</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALequivalent"><span class="keyword">val</span> equivalent</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALcompare_same"><span class="keyword">val</span> compare_same</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALcompare_same"><span class="keyword">val</span> compare_same</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALcompare_equivalent"><span class="keyword">val</span> compare_equivalent</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALcompare_equivalent"><span class="keyword">val</span> compare_equivalent</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>Generates a hash value for a transition.</p>
 </div>
 </div>
 
-<pre><span id="VALoverapprox_nonlinear_updates"><span class="keyword">val</span> overapprox_nonlinear_updates</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a></code></pre>
-<pre><span id="VALto_id_string"><span class="keyword">val</span> to_id_string</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALoverapprox_nonlinear_updates"><span class="keyword">val</span> overapprox_nonlinear_updates</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">t</a></code></pre>
+<pre><span id="VALto_id_string"><span class="keyword">val</span> to_id_string</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string of the form id: src -&gt; target.</p>
 </div>
 </div>
 
-<pre><span id="VALto_id_string_pretty"><span class="keyword">val</span> to_id_string_pretty</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; string</code></pre>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?to_file:bool -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALto_id_string_pretty"><span class="keyword">val</span> to_id_string_pretty</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?to_file:bool -> <a href="ProgramTypes.Transition.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string representing the transition. Parameter <i>to_file</i> is used to get a representation with less special characters.</p>
 </div>
 </div>
 
-<pre><span id="VALto_string_pretty"><span class="keyword">val</span> to_string_pretty</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; string</code></pre>
-<pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a></code></pre><div class="info ">
+<pre><span id="VALto_string_pretty"><span class="keyword">val</span> to_string_pretty</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALsrc"><span class="keyword">val</span> src</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the source location of a transiton.</p>
 </div>
 </div>
 
-<pre><span id="VALlabel"><span class="keyword">val</span> label</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a></code></pre><div class="info ">
+<pre><span id="VALlabel"><span class="keyword">val</span> label</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the label of a transition.</p>
 </div>
 </div>
 
-<pre><span id="VALtarget"><span class="keyword">val</span> target</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a></code></pre><div class="info ">
+<pre><span id="VALtarget"><span class="keyword">val</span> target</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the target location of a transition.</p>
 </div>
 </div>
 
-<pre><span id="VALid"><span class="keyword">val</span> id</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALid"><span class="keyword">val</span> id</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns an (unique) id of a transition label. TODO doc unique??</p>
 </div>
 </div>
 
-<pre><span id="VALcost"><span class="keyword">val</span> cost</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; Polynomials.Polynomial.t</code></pre><div class="info ">
+<pre><span id="VALcost"><span class="keyword">val</span> cost</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">t</a> -> Polynomials.Polynomial.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a cost function of a transition represented as a polynomial.</p>
 </div>
 </div>
 
-<pre><span id="VALadd_invariant"><span class="keyword">val</span> add_invariant</span> : <code class="type">Constraints.Constraint.t -&gt;<br>       <a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALadd_invariant"><span class="keyword">val</span> add_invariant</span> : <code class="type">Constraints.Constraint.t -><br>       <a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Adds the invariant to this transition.</p>
 </div>
 </div>
 
-<pre><span id="VALrename"><span class="keyword">val</span> rename</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALrename"><span class="keyword">val</span> rename</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -> <a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALrename2"><span class="keyword">val</span> rename2</span> : <code class="type"><a href="RenameMap.html#TYPEt">RenameMap.t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">t</a></code></pre></body></html>
+<pre><span id="VALrename2"><span class="keyword">val</span> rename2</span> : <code class="type"><a href="RenameMap.html#TYPEt">RenameMap.t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">t</a></code></pre></body></html>

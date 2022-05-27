@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -101,10 +100,10 @@
 <pre><span id="MODULETransitionApproximation"><span class="keyword">module</span> <a href="ApproximationModules.TransitionApproximation.html">TransitionApproximation</a></span>: <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html">TransitionApproximationType.Make_TransitionApproximation</a></code><code class="code">(</code><code class="type"><a href="OurInt.html">OurInt</a></code><code class="code">)</code><code class="code">(</code><code class="type"><a href="Polynomials.Polynomial.html">Polynomials.Polynomial</a></code><code class="code">)</code><code class="code">(</code><code class="code">sig</code></pre><div class="sig_block">
 <pre><span class="keyword">include</span> <a href="ProgramTypes.Transition.html">ProgramTypes.Transition</a></pre>
 
-<pre><span id="VALfold_transset"><span class="keyword">val</span> fold_transset</span> : <code class="type">(ProgramTypes.TransitionSet.elt -&gt; 'a -&gt; 'a) -&gt;<br>       ProgramTypes.TransitionSet.t -&gt; 'a -&gt; 'a</code></pre></div>
+<pre><span id="VALfold_transset"><span class="keyword">val</span> fold_transset</span> : <code class="type">(ProgramTypes.TransitionSet.elt -> 'a -> 'a) -><br>       ProgramTypes.TransitionSet.t -> 'a -> 'a</code></pre></div>
 <pre><code class="code">end</code><code class="code">)</code></pre>
 <pre><span id="MODULESizeApproximation"><span class="keyword">module</span> <a href="ApproximationModules.SizeApproximation.html">SizeApproximation</a></span>: <code class="type"><a href="SizeApproximationType.Make_SizeApproximation.html">SizeApproximationType.Make_SizeApproximation</a></code><code class="code">(</code><code class="type"><a href="OurInt.html">OurInt</a></code><code class="code">)</code><code class="code">(</code><code class="type"><a href="Polynomials.Polynomial.html">Polynomials.Polynomial</a></code><code class="code">)</code><code class="code">(</code><code class="code">sig</code></pre><div class="sig_block">
 <pre><span class="keyword">include</span> <a href="ProgramTypes.Transition.html">ProgramTypes.Transition</a></pre>
 
-<pre><span id="VALtarget_string"><span class="keyword">val</span> target_string</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; string</code></pre></div>
+<pre><span id="VALtarget_string"><span class="keyword">val</span> target_string</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> string</code></pre></div>
 <pre><code class="code">end</code><code class="code">)</code><code class="code">(</code><code class="type"><a href="ApproximationModules.RV.html">RV</a></code><code class="code">)</code></pre></body></html>

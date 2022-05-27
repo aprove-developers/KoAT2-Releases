@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -175,20 +174,20 @@
 
 
 
-<pre><span id="VAL(<>)"><span class="keyword">val</span> (&lt;&gt;)</span> : <code class="type">t -&gt; t -&gt; t</code></pre>
-<pre><span id="VALformat_append"><span class="keyword">val</span> format_append</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a> -&gt; <a href="FormattedString.html#TYPEt">t</a> -&gt; <a href="FormattedString.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmappend"><span class="keyword">val</span> mappend</span> : <code class="type">t list -&gt; t</code></pre>
-<pre><span id="VALmk_raw_str"><span class="keyword">val</span> mk_raw_str</span> : <code class="type">Batteries.String.t -&gt; t</code></pre>
-<pre><span id="VALmk_str"><span class="keyword">val</span> mk_str</span> : <code class="type">Batteries.String.t -&gt; t</code></pre>
-<pre><span id="VALmk_newline"><span class="keyword">val</span> mk_newline</span> : <code class="type">t</code></pre>
-<pre><span id="VALmk_str_line"><span class="keyword">val</span> mk_str_line</span> : <code class="type">Batteries.String.t -&gt; t</code></pre>
-<pre><span id="VALmk_header"><span class="keyword">val</span> mk_header</span> : <code class="type">header_size -&gt; t -&gt; t</code></pre>
-<pre><span id="VALmk_header_small"><span class="keyword">val</span> mk_header_small</span> : <code class="type">t -&gt; t</code></pre>
-<pre><span id="VALmk_header_big"><span class="keyword">val</span> mk_header_big</span> : <code class="type">t -&gt; t</code></pre>
-<pre><span id="VALmk_str_header_big"><span class="keyword">val</span> mk_str_header_big</span> : <code class="type">Batteries.String.t -&gt; t</code></pre>
-<pre><span id="VALmk_str_header_small"><span class="keyword">val</span> mk_str_header_small</span> : <code class="type">Batteries.String.t -&gt; t</code></pre>
-<pre><span id="VALmk_paragraph"><span class="keyword">val</span> mk_paragraph</span> : <code class="type">t -&gt; t</code></pre>
-<pre><span id="VALmk_block"><span class="keyword">val</span> mk_block</span> : <code class="type">t -&gt; t</code></pre>
+<pre><span id="VAL(<>)"><span class="keyword">val</span> (&lt;&gt;)</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALformat_append"><span class="keyword">val</span> format_append</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmappend"><span class="keyword">val</span> mappend</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a> list -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_raw_str"><span class="keyword">val</span> mk_raw_str</span> : <code class="type">Batteries.String.t -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_str"><span class="keyword">val</span> mk_str</span> : <code class="type">Batteries.String.t -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_newline"><span class="keyword">val</span> mk_newline</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_str_line"><span class="keyword">val</span> mk_str_line</span> : <code class="type">Batteries.String.t -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_header"><span class="keyword">val</span> mk_header</span> : <code class="type"><a href="FormattedString.html#TYPEheader_size">header_size</a> -> <a href="FormattedString.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_header_small"><span class="keyword">val</span> mk_header_small</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_header_big"><span class="keyword">val</span> mk_header_big</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_str_header_big"><span class="keyword">val</span> mk_str_header_big</span> : <code class="type">Batteries.String.t -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_str_header_small"><span class="keyword">val</span> mk_str_header_small</span> : <code class="type">Batteries.String.t -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_paragraph"><span class="keyword">val</span> mk_paragraph</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_block"><span class="keyword">val</span> mk_block</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">t</a></code></pre>
 <pre><code><span id="TYPEmetadata"><span class="keyword">type</span> <code class="type"></code>metadata</span> = {</code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -197,9 +196,9 @@
 <code><span id="TYPEELTmetadata.title">title</span>&nbsp;: <code class="type">Batteries.String.t Batteries.Option.t</code>;</code></td>
 
 </tr></table>
-<code>}</code>
+}
 
 
 
-<pre><span id="VALset_title"><span class="keyword">val</span> set_title</span> : <code class="type">Batteries.String.t -&gt; 'a -&gt; metadata</code></pre>
-<pre><span id="VALrender_string"><span class="keyword">val</span> render_string</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a> -&gt; Batteries.String.t</code></pre></body></html>
+<pre><span id="VALset_title"><span class="keyword">val</span> set_title</span> : <code class="type">Batteries.String.t -> 'a -> <a href="FormattedString.html#TYPEmetadata">metadata</a></code></pre>
+<pre><span id="VALrender_string"><span class="keyword">val</span> render_string</span> : <code class="type"><a href="FormattedString.html#TYPEt">t</a> -> Batteries.String.t</code></pre></body></html>

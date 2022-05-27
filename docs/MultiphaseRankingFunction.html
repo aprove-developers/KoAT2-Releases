@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="Start" href="index.html">
 <link rel="previous" href="Monomials.html">
-<link rel="next" href="NontrivialSizeBounds.html">
+<link rel="next" href="NonLinearSizeBounds.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
 <link title="Index of exceptions" rel=Appendix href="index_exceptions.html">
@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -91,7 +90,7 @@
 <body>
 <div class="navbar"><a class="pre" href="Monomials.html" title="Monomials">Previous</a>
 &nbsp;<a class="up" href="index.html" title="Index">Up</a>
-&nbsp;<a class="post" href="NontrivialSizeBounds.html" title="NontrivialSizeBounds">Next</a>
+&nbsp;<a class="post" href="NonLinearSizeBounds.html" title="NonLinearSizeBounds">Next</a>
 </div>
 <h1>Module <a href="type_MultiphaseRankingFunction.html">MultiphaseRankingFunction</a></h1>
 
@@ -119,54 +118,54 @@
 </div>
 
 
-<pre><span id="VALpp_measure"><span class="keyword">val</span> pp_measure</span> : <code class="type">Ppx_deriving_runtime.Format.formatter -&gt;<br>       <a href="MultiphaseRankingFunction.html#TYPEmeasure">measure</a> -&gt; Ppx_deriving_runtime.unit</code></pre>
-<pre><span id="VALshow_measure"><span class="keyword">val</span> show_measure</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEmeasure">measure</a> -&gt; Ppx_deriving_runtime.string</code></pre>
+<pre><span id="VALpp_measure"><span class="keyword">val</span> pp_measure</span> : <code class="type">Ppx_deriving_runtime.Format.formatter -><br>       <a href="MultiphaseRankingFunction.html#TYPEmeasure">measure</a> -> Ppx_deriving_runtime.unit</code></pre>
+<pre><span id="VALshow_measure"><span class="keyword">val</span> show_measure</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEmeasure">measure</a> -> Ppx_deriving_runtime.string</code></pre>
 <pre><span class="keyword">include</span> ??</pre>
 
-<pre><span id="VALrank"><span class="keyword">val</span> rank</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -&gt;<br>       (<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; Polynomials.Polynomial.t) list</code></pre><div class="info ">
+<pre><span id="VALrank"><span class="keyword">val</span> rank</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -><br>       (<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -> Polynomials.Polynomial.t) list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a list of polynomials representing a multiphase ranking function.</p>
 </div>
 </div>
 
-<pre><span id="VALdecreasing"><span class="keyword">val</span> decreasing</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a></code></pre><div class="info ">
+<pre><span id="VALdecreasing"><span class="keyword">val</span> decreasing</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a non-empty list of all transitions which are strictly decreasing and at the same time bounded with one.
     Corresponds to T_&gt; .</p>
 </div>
 </div>
 
-<pre><span id="VALnon_increasing"><span class="keyword">val</span> non_increasing</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -&gt; ProgramTypes.TransitionSet.t</code></pre><div class="info ">
+<pre><span id="VALnon_increasing"><span class="keyword">val</span> non_increasing</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -> ProgramTypes.TransitionSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a list of all transitions for which the multiphase ranking function is defined.
     Corresponds to T'.</p>
 </div>
 </div>
 
-<pre><span id="VALdepth"><span class="keyword">val</span> depth</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALdepth"><span class="keyword">val</span> depth</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the depth of a multiphase ranking function (i.e. returns d if MRF has form f1,f2,...,fd).</p>
 </div>
 </div>
 
-<pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEmeasure">measure</a> -&gt;<br>       <a href="Program.html#TYPEt">Program.t</a> -&gt; int -&gt; <a href="MultiphaseRankingFunction.html#TYPEt">t</a> Batteries.Enum.t</code></pre><div class="info ">
+<pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEmeasure">measure</a> -><br>       <a href="Program.html#TYPEt">Program.t</a> -> int -> <a href="MultiphaseRankingFunction.html#TYPEt">t</a> Batteries.Enum.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Tries to find a suitable multiphase ranking function for the given transitions T'.
  The int corresponds to the maximum depth of the mprf</p>
 </div>
 </div>
 
-<pre><span id="VALfind_scc"><span class="keyword">val</span> find_scc</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEmeasure">measure</a> -&gt;<br>       <a href="Program.html#TYPEt">Program.t</a> -&gt;<br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; bool) -&gt;<br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; VarSet.t) -&gt;<br>       ProgramTypes.TransitionSet.t -&gt;<br>       int -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="MultiphaseRankingFunction.html#TYPEt">t</a> option</code></pre>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALfind_scc"><span class="keyword">val</span> find_scc</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEmeasure">measure</a> -><br>       <a href="Program.html#TYPEt">Program.t</a> -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> bool) -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> VarSet.t) -><br>       ProgramTypes.TransitionSet.t -><br>       int -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="MultiphaseRankingFunction.html#TYPEt">t</a> option</code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Converts a multiphase ranking function into a string</p>
 </div>
 </div>
 
-<pre><span id="VALonly_rank_to_string"><span class="keyword">val</span> only_rank_to_string</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALonly_rank_to_string"><span class="keyword">val</span> only_rank_to_string</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Converts a multiphase ranking function into a string without any further information.</p>
 </div>
 </div>
 
-<pre><span id="VALadd_to_proof"><span class="keyword">val</span> add_to_proof</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -&gt; BoundsInst.Bound.t -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; unit</code></pre></body></html>
+<pre><span id="VALadd_to_proof"><span class="keyword">val</span> add_to_proof</span> : <code class="type"><a href="MultiphaseRankingFunction.html#TYPEt">t</a> -> BoundsInst.Bound.t -> <a href="Program.html#TYPEt">Program.t</a> -> unit</code></pre></body></html>

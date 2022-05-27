@@ -5,7 +5,7 @@
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="Start" href="index.html">
-<link rel="previous" href="MultiphaseRankingFunction.html">
+<link rel="previous" href="NonLinearSizeBounds.html">
 <link rel="next" href="Normalise.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -89,7 +88,7 @@
 <link title="VarSet" rel="Chapter" href="VarSet.html"><title>Koat2 : NontrivialSizeBounds</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="MultiphaseRankingFunction.html" title="MultiphaseRankingFunction">Previous</a>
+<div class="navbar"><a class="pre" href="NonLinearSizeBounds.html" title="NonLinearSizeBounds">Previous</a>
 &nbsp;<a class="up" href="index.html" title="Index">Up</a>
 &nbsp;<a class="post" href="Normalise.html" title="Normalise">Next</a>
 </div>
@@ -99,8 +98,8 @@
 
 <pre><span id="VALlogger"><span class="keyword">val</span> logger</span> : <code class="type">Batteries.Logger.log</code></pre>
 <pre><span id="MODULERV"><span class="keyword">module</span> <a href="NontrivialSizeBounds.RV.html">RV</a></span>: <code class="type"><a href="RVGTypes.RV.html">RVGTypes.RV</a></code></pre>
-<pre><span id="VALcompute_"><span class="keyword">val</span> compute_</span> : <code class="type">RVGTypes.RVG.t -&gt;<br>       (RV.t -&gt; <a href="LocalSizeBound.html#TYPEt">LocalSizeBound.t</a> * bool) -&gt;<br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; BoundsInst.Bound.t) -&gt;<br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="Var.html#TYPEt">Var.t</a> -&gt; BoundsInst.Bound.t) -&gt;<br>       RV.t Batteries.List.t -&gt; BoundsInst.Bound.t</code></pre>
-<pre><span id="VALcompute"><span class="keyword">val</span> compute</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt;<br>       RVGTypes.RVG.t -&gt;<br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; BoundsInst.Bound.t) -&gt;<br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="Var.html#TYPEt">Var.t</a> -&gt; BoundsInst.Bound.t) -&gt;<br>       RV.t Batteries.List.t -&gt; BoundsInst.Bound.t</code></pre><div class="info ">
+<pre><span id="VALcompute_"><span class="keyword">val</span> compute_</span> : <code class="type">RVGTypes.RVG.t -><br>       (RV.t -> <a href="LocalSizeBound.html#TYPEt">LocalSizeBound.t</a> * bool) -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> BoundsInst.Bound.t) -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> BoundsInst.Bound.t) -><br>       RV.t Batteries.List.t -> BoundsInst.Bound.t</code></pre>
+<pre><span id="VALcompute"><span class="keyword">val</span> compute</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       RVGTypes.RVG.t -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> BoundsInst.Bound.t) -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> BoundsInst.Bound.t) -><br>       RV.t Batteries.List.t -> BoundsInst.Bound.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
     Corresponds to 'SizeBounds for nontrivial SCCs'.</p>

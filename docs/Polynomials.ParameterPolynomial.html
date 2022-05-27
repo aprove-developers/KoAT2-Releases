@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -105,20 +104,20 @@
 
 <pre><span class="keyword">include</span> ??</pre>
 
-<pre><span id="VALeval_coefficients"><span class="keyword">val</span> eval_coefficients</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> -&gt; OurInt.t) -&gt;<br>       PolynomialOver(PolynomialOver(OurInt)).t -&gt; PolynomialOver(OurInt).t</code></pre><div class="info ">
+<pre><span id="VALeval_coefficients"><span class="keyword">val</span> eval_coefficients</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> -> OurInt.t) -><br>       PolynomialOver(PolynomialOver(OurInt)).t -> PolynomialOver(OurInt).t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Evaluates coefficients (which are polynomials over <code class="code">OurInt</code>) and returns the resulting polynomial over <code class="code">OurInt</code>.</p>
 </div>
 </div>
 
-<pre><span id="VALflatten"><span class="keyword">val</span> flatten</span> : <code class="type">t -&gt; PolynomialOver(OurInt).t</code></pre><div class="info ">
+<pre><span id="VALflatten"><span class="keyword">val</span> flatten</span> : <code class="type">t -> PolynomialOver(OurInt).t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Transforms the template polynomial such that all inner values get lifted to the outer polynomial.
   Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1</p>
 </div>
 </div>
 
-<pre><span id="VALof_polynomial"><span class="keyword">val</span> of_polynomial</span> : <code class="type">PolynomialOver(OurInt).t -&gt; t</code></pre><div class="info ">
+<pre><span id="VALof_polynomial"><span class="keyword">val</span> of_polynomial</span> : <code class="type">PolynomialOver(OurInt).t -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Lifts a polynomial to a parameter polynomial such that the inner structure is kept.
   Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)</p>

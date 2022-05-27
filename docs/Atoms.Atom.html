@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -104,16 +103,16 @@
 
 <pre><span class="keyword">include</span> ??</pre>
 
-<pre><span id="VALmax_of_occurring_constants"><span class="keyword">val</span> max_of_occurring_constants</span> : <code class="type">t -&gt; OurInt.t</code></pre><div class="info ">
+<pre><span id="VALmax_of_occurring_constants"><span class="keyword">val</span> max_of_occurring_constants</span> : <code class="type">t -> OurInt.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALget_constant"><span class="keyword">val</span> get_constant</span> : <code class="type">t -&gt; value</code></pre><div class="info ">
+<pre><span id="VALget_constant"><span class="keyword">val</span> get_constant</span> : <code class="type">t -> value</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the single right hand side constant of the atom. Only works as intended for comparison with &lt;= or integer atoms</p>
 </div>
 </div>
 
-<pre><span id="VALremove_strict"><span class="keyword">val</span> remove_strict</span> : <code class="type">t -&gt; t</code></pre></body></html>
+<pre><span id="VALremove_strict"><span class="keyword">val</span> remove_strict</span> : <code class="type">t -> t</code></pre></body></html>

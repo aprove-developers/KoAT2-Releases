@@ -35,7 +35,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -46,6 +45,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -54,7 +54,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -103,13 +102,13 @@
 <pre><span class="keyword">include</span> ??</pre>
 <p>Module handling result variable graphs, i.e., a digraph where the nodes are result variables.</p>
 
-<pre><span id="VALrvs_to_id_string"><span class="keyword">val</span> rvs_to_id_string</span> : <code class="type"><a href="RVGTypes.RV.html#TYPEt">RVGTypes.RV.t</a> list -&gt; string</code></pre><div class="info ">
+<pre><span id="VALrvs_to_id_string"><span class="keyword">val</span> rvs_to_id_string</span> : <code class="type"><a href="RVGTypes.RV.html#TYPEt">RVGTypes.RV.t</a> list -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string which is created by calling <code class="code">to_id_string</code> on every result variable.</p>
 </div>
 </div>
 
-<pre><span id="VALpre"><span class="keyword">val</span> pre</span> : <code class="type">t -&gt; <a href="RVGTypes.RV.html#TYPEt">RVGTypes.RV.t</a> -&gt; <a href="RVGTypes.RV.html#TYPEt">RVGTypes.RV.t</a> Batteries.Enum.t</code></pre><div class="info ">
+<pre><span id="VALpre"><span class="keyword">val</span> pre</span> : <code class="type">t -> <a href="RVGTypes.RV.html#TYPEt">RVGTypes.RV.t</a> -> <a href="RVGTypes.RV.html#TYPEt">RVGTypes.RV.t</a> Batteries.Enum.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the predecessors of a result variable in the result variable graph.</p>
 </div>
@@ -118,13 +117,13 @@
 <pre><span id="TYPEscc"><span class="keyword">type</span> <code class="type"></code>scc</span> = <code class="type"><a href="RVGTypes.RV.html#TYPEt">RVGTypes.RV.t</a> list</code> </pre>
 
 
-<pre><span id="VALrvg"><span class="keyword">val</span> rvg</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; t</code></pre><div class="info ">
+<pre><span id="VALrvg"><span class="keyword">val</span> rvg</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Compute the result variable graph</p>
 </div>
 </div>
 
-<pre><span id="VALrvg_with_sccs"><span class="keyword">val</span> rvg_with_sccs</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; t * <a href="RVGTypes.RVG.html#TYPEscc">scc</a> list Stdlib.Lazy.t</code></pre><div class="info ">
+<pre><span id="VALrvg_with_sccs"><span class="keyword">val</span> rvg_with_sccs</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> t * <a href="RVGTypes.RVG.html#TYPEscc">scc</a> list Stdlib.Lazy.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Compute the result variable graph and lazily compute the list of all SCCs</p>
 </div>

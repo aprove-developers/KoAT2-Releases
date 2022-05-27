@@ -35,7 +35,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -46,6 +45,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -54,7 +54,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -102,49 +101,49 @@
 
 <pre><span class="keyword">include</span> ??</pre>
 
-<pre><span id="VALmap_to_set"><span class="keyword">val</span> map_to_set</span> : <code class="type">(elt -&gt; 'b) -&gt; t -&gt; 'b Batteries.Set.t</code></pre><div class="info ">
+<pre><span id="VALmap_to_set"><span class="keyword">val</span> map_to_set</span> : <code class="type">(elt -> 'b) -> t -> 'b Batteries.Set.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALmap_to_list"><span class="keyword">val</span> map_to_list</span> : <code class="type">(elt -&gt; 'b) -&gt; t -&gt; 'b list</code></pre><div class="info ">
+<pre><span id="VALmap_to_list"><span class="keyword">val</span> map_to_list</span> : <code class="type">(elt -> 'b) -> t -> 'b list</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALmap_to_array"><span class="keyword">val</span> map_to_array</span> : <code class="type">(elt -&gt; 'b) -&gt; t -&gt; 'b array</code></pre><div class="info ">
+<pre><span id="VALmap_to_array"><span class="keyword">val</span> map_to_array</span> : <code class="type">(elt -> 'b) -> t -> 'b array</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -&gt; t -&gt; string</code></pre><div class="info ">
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -> t -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string representing a set of variables.</p>
 </div>
 </div>
 
-<pre><span id="VALof_string_list"><span class="keyword">val</span> of_string_list</span> : <code class="type">string list -&gt; t</code></pre><div class="info ">
+<pre><span id="VALof_string_list"><span class="keyword">val</span> of_string_list</span> : <code class="type">string list -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a set of variables from a list of strings.</p>
 </div>
 </div>
 
-<pre><span id="VALpowerset"><span class="keyword">val</span> powerset</span> : <code class="type">t -&gt; t Batteries.Enum.t</code></pre><div class="info ">
+<pre><span id="VALpowerset"><span class="keyword">val</span> powerset</span> : <code class="type">t -> t Batteries.Enum.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALcombinations"><span class="keyword">val</span> combinations</span> : <code class="type">int -&gt; t -&gt; t list</code></pre><div class="info ">
+<pre><span id="VALcombinations"><span class="keyword">val</span> combinations</span> : <code class="type">int -> t -> t list</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALsorted_combinations"><span class="keyword">val</span> sorted_combinations</span> : <code class="type">int -&gt; t -&gt; t Batteries.Enum.t</code></pre><div class="info ">
+<pre><span id="VALsorted_combinations"><span class="keyword">val</span> sorted_combinations</span> : <code class="type">int -> t -> t Batteries.Enum.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>

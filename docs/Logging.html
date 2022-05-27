@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -238,24 +237,24 @@
 
 
 
-<pre><span id="VALloggers"><span class="keyword">val</span> loggers</span> : <code class="type">logger list</code></pre><div class="info ">
+<pre><span id="VALloggers"><span class="keyword">val</span> loggers</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> list</code></pre><div class="info ">
 <div class="info-desc">
 <p>List of all available loggers</p>
 </div>
 </div>
 
-<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type">logger list</code></pre><div class="info ">
+<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> list</code></pre><div class="info ">
 <div class="info-desc">
 <p>List of all available loggers</p>
 </div>
 </div>
 
-<pre><span id="VALshow_logger"><span class="keyword">val</span> show_logger</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALshow_logger"><span class="keyword">val</span> show_logger</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string matching to the given logger.</p>
 </div>
 </div>
 
-<pre><span id="VALget"><span class="keyword">val</span> get</span> : <code class="type">logger -&gt; Batteries.Logger.log</code></pre>
-<pre><span id="VALwith_disabled_loggers"><span class="keyword">val</span> with_disabled_loggers</span> : <code class="type">(<a href="Logging.html#TYPElogger">logger</a> * Batteries.Logger.level) list -&gt;<br>       (string * Batteries.Logger.level) list</code></pre>
-<pre><span id="VALuse_loggers"><span class="keyword">val</span> use_loggers</span> : <code class="type">(<a href="Logging.html#TYPElogger">logger</a> * Batteries.Logger.level) list -&gt; unit</code></pre></body></html>
+<pre><span id="VALget"><span class="keyword">val</span> get</span> : <code class="type"><a href="Logging.html#TYPElogger">logger</a> -> Batteries.Logger.log</code></pre>
+<pre><span id="VALwith_disabled_loggers"><span class="keyword">val</span> with_disabled_loggers</span> : <code class="type">(<a href="Logging.html#TYPElogger">logger</a> * Batteries.Logger.level) list -><br>       (string * Batteries.Logger.level) list</code></pre>
+<pre><span id="VALuse_loggers"><span class="keyword">val</span> use_loggers</span> : <code class="type">(<a href="Logging.html#TYPElogger">logger</a> * Batteries.Logger.level) list -> unit</code></pre></body></html>

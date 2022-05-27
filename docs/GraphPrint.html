@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -102,16 +101,16 @@
 </div>
 <hr width="100%">
 
-<pre><span id="VALprint_graph"><span class="keyword">val</span> print_graph</span> : <code class="type">format:Fpath.ext -&gt;<br>       Fpath.t -&gt; string -&gt; 'a -&gt; (out_channel -&gt; 'a -&gt; 'b) -&gt; unit</code></pre>
-<pre><span id="VALprint_graph_to_string"><span class="keyword">val</span> print_graph_to_string</span> : <code class="type">format:string -&gt; 'a -&gt; (out_channel -&gt; 'a -&gt; 'b) -&gt; string option</code></pre>
-<pre><span id="VALprint_system"><span class="keyword">val</span> print_system</span> : <code class="type">label:(<a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -&gt; string) -&gt;<br>       outdir:Fpath.t -&gt; file:string -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; format:Fpath.ext -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALprint_graph"><span class="keyword">val</span> print_graph</span> : <code class="type">format:Fpath.ext -><br>       Fpath.t -> string -> 'a -> (Stdlib.out_channel -> 'a -> 'b) -> unit</code></pre>
+<pre><span id="VALprint_graph_to_string"><span class="keyword">val</span> print_graph_to_string</span> : <code class="type">format:string -> 'a -> (Stdlib.out_channel -> 'a -> 'b) -> string option</code></pre>
+<pre><span id="VALprint_system"><span class="keyword">val</span> print_system</span> : <code class="type">label:(<a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> string) -><br>       outdir:Fpath.t -> file:string -> <a href="Program.html#TYPEt">Program.t</a> -> format:Fpath.ext -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH.</p>
 </div>
 </div>
 
-<pre><span id="VALlabel"><span class="keyword">val</span> label</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -&gt; string</code></pre>
+<pre><span id="VALlabel"><span class="keyword">val</span> label</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> string</code></pre>
 <pre><code><span id="TYPEcolor"><span class="keyword">type</span> <code class="type"></code>color</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -172,22 +171,22 @@
 
 
 
-<pre><span id="VALcompare_color"><span class="keyword">val</span> compare_color</span> : <code class="type">color -&gt; color -&gt; Ppx_deriving_runtime.int</code></pre>
-<pre><span id="VALequal_color"><span class="keyword">val</span> equal_color</span> : <code class="type"><a href="GraphPrint.html#TYPEcolor">color</a> -&gt; <a href="GraphPrint.html#TYPEcolor">color</a> -&gt; Ppx_deriving_runtime.bool</code></pre>
+<pre><span id="VALcompare_color"><span class="keyword">val</span> compare_color</span> : <code class="type"><a href="GraphPrint.html#TYPEcolor">color</a> -> <a href="GraphPrint.html#TYPEcolor">color</a> -> Ppx_deriving_runtime.int</code></pre>
+<pre><span id="VALequal_color"><span class="keyword">val</span> equal_color</span> : <code class="type"><a href="GraphPrint.html#TYPEcolor">color</a> -> <a href="GraphPrint.html#TYPEcolor">color</a> -> Ppx_deriving_runtime.bool</code></pre>
 <pre><span class="keyword">include</span> struct ... end</pre>
 
-<pre><span id="VALget_color"><span class="keyword">val</span> get_color</span> : <code class="type"><a href="GraphPrint.html#TYPEcolor">color</a> -&gt; [&gt; `Color of int ]</code></pre>
+<pre><span id="VALget_color"><span class="keyword">val</span> get_color</span> : <code class="type"><a href="GraphPrint.html#TYPEcolor">color</a> -> [> `Color of int ]</code></pre>
 <pre><span id="MODULETransitionMap"><span class="keyword">module</span> <a href="GraphPrint.TransitionMap.html">TransitionMap</a></span>: <code class="type">Batteries.Map.Make</code><code class="code">(</code><code class="code">sig</code></pre><div class="sig_block">
 <pre><span class="keyword">include</span> <a href="ProgramTypes.Transition.html">ProgramTypes.Transition</a></pre>
 
-<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -&gt; t -&gt; int</code></pre></div>
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -> t -> int</code></pre></div>
 <pre><code class="code">end</code><code class="code">)</code></pre>
-<pre><span id="VALprint_system_pretty"><span class="keyword">val</span> print_system_pretty</span> : <code class="type">?format:string -&gt;<br>       ?color_map:color TransitionMap.t -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; string option</code></pre>
-<pre><span id="VALprint_rvg"><span class="keyword">val</span> print_rvg</span> : <code class="type">label:(<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -&gt; string) -&gt;<br>       outdir:Fpath.t -&gt; file:string -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; format:Fpath.ext -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALprint_system_pretty"><span class="keyword">val</span> print_system_pretty</span> : <code class="type">?format:string -><br>       ?color_map:<a href="GraphPrint.html#TYPEcolor">color</a> TransitionMap.t -><br>       <a href="Program.html#TYPEt">Program.t</a> -> string option</code></pre>
+<pre><span id="VALprint_rvg"><span class="keyword">val</span> print_rvg</span> : <code class="type">label:(<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> string) -><br>       outdir:Fpath.t -> file:string -> <a href="Program.html#TYPEt">Program.t</a> -> format:Fpath.ext -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
         For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH.</p>
 </div>
 </div>
 
-<pre><span id="VALprint_system_pretty_html"><span class="keyword">val</span> print_system_pretty_html</span> : <code class="type"><a href="GraphPrint.html#TYPEcolor">color</a> TransitionMap.t -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; string</code></pre></body></html>
+<pre><span id="VALprint_system_pretty_html"><span class="keyword">val</span> print_system_pretty_html</span> : <code class="type"><a href="GraphPrint.html#TYPEcolor">color</a> TransitionMap.t -> <a href="Program.html#TYPEt">Program.t</a> -> string</code></pre></body></html>

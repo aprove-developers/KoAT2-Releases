@@ -31,7 +31,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -42,6 +41,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -50,7 +50,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -99,4 +98,11 @@
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;remove_frac&nbsp;:&nbsp;<span class="constructor">PolyExponential</span>.<span class="constructor">PE</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">PolyExponential</span>.<span class="constructor">PE</span>.t<br>
 &nbsp;&nbsp;<span class="keyword">val</span>&nbsp;compute_closed_form&nbsp;:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="constructor">Var</span>.t&nbsp;*&nbsp;<span class="constructor">Polynomials</span>.<span class="constructor">Polynomial</span>.t)&nbsp;list&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">PolyExponential</span>.<span class="constructor">PE</span>.t&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;monotonic_kernel&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Formulas</span>.<span class="constructor">Formula</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">Formulas</span>.<span class="constructor">Formula</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">PolyExponential</span>.<span class="constructor">PE</span>.t&nbsp;<span class="keywordsign">-&gt;</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">PolyExponential</span>.<span class="constructor">PE</span>.t&nbsp;*&nbsp;((int&nbsp;*&nbsp;int)&nbsp;*&nbsp;(int&nbsp;*&nbsp;int))&nbsp;list<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;overapprox&nbsp;:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="constructor">PolyExponential</span>.<span class="constructor">PE</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">BoundsInst</span>.<span class="constructor">Bound</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">BoundsInst</span>.<span class="constructor">Bound</span>.t<br>
 <span class="keyword">end</span></code></body></html>

@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -109,7 +108,7 @@
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
 
-<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type">int -&gt; int -&gt; <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type">int -> int -> <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns an empty approximation that does not contain any non-trivial information.
     That means, that every upper bound is infinite and every lower bound is minus infinite.
@@ -118,121 +117,121 @@
 </div>
 </div>
 
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates an empty approximation of a given program.</p>
 </div>
 </div>
 
-<pre><span id="VALtime"><span class="keyword">val</span> time</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; ApproximationModules.TransitionApproximation.t</code></pre><div class="info ">
+<pre><span id="VALtime"><span class="keyword">val</span> time</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> ApproximationModules.TransitionApproximation.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns time-approximation.</p>
 </div>
 </div>
 
-<pre><span id="VALsize"><span class="keyword">val</span> size</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; ApproximationModules.SizeApproximation.t</code></pre><div class="info ">
+<pre><span id="VALsize"><span class="keyword">val</span> size</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> ApproximationModules.SizeApproximation.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns size-approximation.</p>
 </div>
 </div>
 
-<pre><span id="VALcost"><span class="keyword">val</span> cost</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; ApproximationModules.TransitionApproximation.t</code></pre><div class="info ">
+<pre><span id="VALcost"><span class="keyword">val</span> cost</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> ApproximationModules.TransitionApproximation.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns cost-approximation.</p>
 </div>
 </div>
 
-<pre><span id="VALto_formatted"><span class="keyword">val</span> to_formatted</span> : <code class="type">?show_initial:bool -&gt;<br>       ?pretty:bool -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Approximation.html#TYPEt">t</a> -&gt; <a href="FormattedString.html#TYPEt">FormattedString.t</a></code></pre><div class="info ">
+<pre><span id="VALto_formatted"><span class="keyword">val</span> to_formatted</span> : <code class="type">?show_initial:bool -><br>       ?pretty:bool -> <a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">FormattedString.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a formatted string containing time,size and cost-bounds.</p>
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Approximation.html#TYPEt">t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a string containing time,size and cost-bounds.</p>
 </div>
 </div>
 
-<pre><span id="VALequivalent"><span class="keyword">val</span> equivalent</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; <a href="Approximation.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALequivalent"><span class="keyword">val</span> equivalent</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> <a href="Approximation.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns true iff. time and size-bounds are equivalent. Costs-bounds are not considered.</p>
 </div>
 </div>
 <h2 id="1_Timeboundrelatedmethods"> <div align=left>Timebound related methods</div></h2>
-<pre><span id="VALtimebound"><span class="keyword">val</span> timebound</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; BoundsInst.Bound.t</code></pre><div class="info ">
+<pre><span id="VALtimebound"><span class="keyword">val</span> timebound</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a timebound for the transition.</p>
 </div>
 </div>
 
-<pre><span id="VALtimebound_id"><span class="keyword">val</span> timebound_id</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; int -&gt; BoundsInst.Bound.t</code></pre><div class="info ">
+<pre><span id="VALtimebound_id"><span class="keyword">val</span> timebound_id</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> int -> BoundsInst.Bound.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a timebound for the transition id.</p>
 </div>
 </div>
 
-<pre><span id="VALprogram_timebound"><span class="keyword">val</span> program_timebound</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; BoundsInst.Bound.t</code></pre><div class="info ">
+<pre><span id="VALprogram_timebound"><span class="keyword">val</span> program_timebound</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> <a href="Program.html#TYPEt">Program.t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a timebound for the program.</p>
 </div>
 </div>
 
-<pre><span id="VALadd_timebound"><span class="keyword">val</span> add_timebound</span> : <code class="type">BoundsInst.Bound.t -&gt;<br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="Approximation.html#TYPEt">t</a> -&gt; <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALadd_timebound"><span class="keyword">val</span> add_timebound</span> : <code class="type">BoundsInst.Bound.t -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Approximation.html#TYPEt">t</a> -> <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Adds the information that the specified bound is a valid timebound for the given transition.
     The resulting approximation is guaranteed to be at least as good as the old approximation.</p>
 </div>
 </div>
 
-<pre><span id="VALall_times_bounded"><span class="keyword">val</span> all_times_bounded</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALall_times_bounded"><span class="keyword">val</span> all_times_bounded</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns true iff. all transitions from a given list of transitions are bounded and not infinity.</p>
 </div>
 </div>
 
-<pre><span id="VALis_time_bounded"><span class="keyword">val</span> is_time_bounded</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALis_time_bounded"><span class="keyword">val</span> is_time_bounded</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns true iff. a given transition is bounded and not infinity.</p>
 </div>
 </div>
 <h2 id="1_Costboundrelatedmethods"> <div align=left> Costbound related methods</div></h2>
-<pre><span id="VALcostbound"><span class="keyword">val</span> costbound</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; BoundsInst.Bound.t</code></pre><div class="info ">
+<pre><span id="VALcostbound"><span class="keyword">val</span> costbound</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a costbound for the transition.</p>
 </div>
 </div>
 
-<pre><span id="VALprogram_costbound"><span class="keyword">val</span> program_costbound</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; BoundsInst.Bound.t</code></pre><div class="info ">
+<pre><span id="VALprogram_costbound"><span class="keyword">val</span> program_costbound</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> <a href="Program.html#TYPEt">Program.t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a costbound for the program.</p>
 </div>
 </div>
 
-<pre><span id="VALadd_costbound"><span class="keyword">val</span> add_costbound</span> : <code class="type">BoundsInst.Bound.t -&gt;<br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="Approximation.html#TYPEt">t</a> -&gt; <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALadd_costbound"><span class="keyword">val</span> add_costbound</span> : <code class="type">BoundsInst.Bound.t -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Approximation.html#TYPEt">t</a> -> <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Adds a (cost-)bound of a transition to an existing approximation.</p>
 </div>
 </div>
 <h2 id="1_Sizeboundrelatedmethods"> <div align=left> Sizebound related methods</div></h2>
-<pre><span id="VALsizebound"><span class="keyword">val</span> sizebound</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="Var.html#TYPEt">Var.t</a> -&gt; BoundsInst.Bound.t</code></pre><div class="info ">
+<pre><span id="VALsizebound"><span class="keyword">val</span> sizebound</span> : <code class="type"><a href="Approximation.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a sizebound for the var of the transition.
         A sizebound is expressed in relation to the input variable values of the program.</p>
 </div>
 </div>
 
-<pre><span id="VALadd_sizebound"><span class="keyword">val</span> add_sizebound</span> : <code class="type">BoundsInst.Bound.t -&gt;<br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="Var.html#TYPEt">Var.t</a> -&gt; <a href="Approximation.html#TYPEt">t</a> -&gt; <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALadd_sizebound"><span class="keyword">val</span> add_sizebound</span> : <code class="type">BoundsInst.Bound.t -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> <a href="Approximation.html#TYPEt">t</a> -> <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Adds the information that the specified bound is a valid sizebound for the given variable of the transition.
         The resulting approximation is guaranteed to be at least as good as the old approximation.</p>
 </div>
 </div>
 
-<pre><span id="VALadd_sizebounds"><span class="keyword">val</span> add_sizebounds</span> : <code class="type">BoundsInst.Bound.t -&gt;<br>       ApproximationModules.RV.t list -&gt; <a href="Approximation.html#TYPEt">t</a> -&gt; <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALadd_sizebounds"><span class="keyword">val</span> add_sizebounds</span> : <code class="type">BoundsInst.Bound.t -><br>       ApproximationModules.RV.t list -> <a href="Approximation.html#TYPEt">t</a> -> <a href="Approximation.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Add a size bound for all result variables of the list</p>
 </div>
 </div>
 
-<pre><span id="VALmin"><span class="keyword">val</span> min</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Approximation.html#TYPEt">t</a> -&gt; <a href="Approximation.html#TYPEt">t</a> -&gt; <a href="Approximation.html#TYPEt">t</a></code></pre></body></html>
+<pre><span id="VALmin"><span class="keyword">val</span> min</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">t</a> -> <a href="Approximation.html#TYPEt">t</a> -> <a href="Approximation.html#TYPEt">t</a></code></pre></body></html>

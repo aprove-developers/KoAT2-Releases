@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -115,14 +114,14 @@
 </div>
 </td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
-<code>}</code>
+}
 
 
 
-<pre><span id="VALmain_params_cmdliner_term"><span class="keyword">val</span> main_params_cmdliner_term</span> : <code class="type">unit -&gt; <a href="Main.html#TYPEmain_params">main_params</a> Cmdliner.Term.t</code></pre>
+<pre><span id="VALmain_params_cmdliner_term"><span class="keyword">val</span> main_params_cmdliner_term</span> : <code class="type">unit -> <a href="Main.html#TYPEmain_params">main_params</a> Cmdliner.Term.t</code></pre>
 <pre><span class="keyword">include</span> struct ... end</pre>
 
-<pre><span id="VALsubcommand"><span class="keyword">val</span> subcommand</span> : <code class="type">('a -&gt; 'b) -&gt;<br>       (unit -&gt; 'a Cmdliner.Term.t) -&gt;<br>       string -&gt; string -&gt; 'b Cmdliner.Term.t * Cmdliner.Term.info</code></pre>
+<pre><span id="VALsubcommand"><span class="keyword">val</span> subcommand</span> : <code class="type">('a -> 'b) -><br>       (unit -> 'a Cmdliner.Term.t) -><br>       string -> string -> 'b Cmdliner.Term.t * Cmdliner.Term.info</code></pre>
 <pre><span id="VALsubcommands"><span class="keyword">val</span> subcommands</span> : <code class="type">(unit Cmdliner.Term.t * Cmdliner.Term.info) list</code></pre>
 <pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">string</code></pre>
-<pre><span id="VALdefault_cmd"><span class="keyword">val</span> default_cmd</span> : <code class="type">main_params -&gt; [&gt; `Help of [&gt; `Pager ] * 'a option | `Ok of unit ]</code></pre></body></html>
+<pre><span id="VALdefault_cmd"><span class="keyword">val</span> default_cmd</span> : <code class="type"><a href="Main.html#TYPEmain_params">main_params</a> -> [> `Help of [> `Pager ] * 'a option | `Ok of unit ]</code></pre></body></html>
