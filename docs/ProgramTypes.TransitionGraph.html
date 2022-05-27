@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -105,37 +104,37 @@
 
 <pre><span class="keyword">include</span> ??</pre>
 
-<pre><span id="VALlocations"><span class="keyword">val</span> locations</span> : <code class="type">t -&gt; ProgramTypes.LocationSet.t</code></pre><div class="info ">
+<pre><span id="VALlocations"><span class="keyword">val</span> locations</span> : <code class="type">t -> ProgramTypes.LocationSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the set of locations.</p>
 </div>
 </div>
 
-<pre><span id="VALtransitions"><span class="keyword">val</span> transitions</span> : <code class="type">t -&gt; ProgramTypes.TransitionSet.t</code></pre><div class="info ">
+<pre><span id="VALtransitions"><span class="keyword">val</span> transitions</span> : <code class="type">t -> ProgramTypes.TransitionSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the set of transitions.</p>
 </div>
 </div>
 
-<pre><span id="VALloc_transitions"><span class="keyword">val</span> loc_transitions</span> : <code class="type">t -&gt; <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> list -&gt; ProgramTypes.TransitionSet.t</code></pre><div class="info ">
+<pre><span id="VALloc_transitions"><span class="keyword">val</span> loc_transitions</span> : <code class="type">t -> <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> list -> ProgramTypes.TransitionSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the set of transitions consisting of transitions which are in the program graph and where both source and target location are part of the given location list.</p>
 </div>
 </div>
 
-<pre><span id="VALequivalent"><span class="keyword">val</span> equivalent</span> : <code class="type">t -&gt; t -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALequivalent"><span class="keyword">val</span> equivalent</span> : <code class="type">t -> t -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALreplace_edge_e"><span class="keyword">val</span> replace_edge_e</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; t -&gt; t</code></pre><div class="info ">
+<pre><span id="VALreplace_edge_e"><span class="keyword">val</span> replace_edge_e</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> t -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Replaces the first edge by the second edge.</p>
 </div>
 </div>
 
-<pre><span id="VALadd_invariant"><span class="keyword">val</span> add_invariant</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; Constraints.Constraint.t -&gt; t -&gt; t</code></pre><div class="info ">
+<pre><span id="VALadd_invariant"><span class="keyword">val</span> add_invariant</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -> Constraints.Constraint.t -> t -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Adds the invariant to the location of the graph.</p>
 </div>

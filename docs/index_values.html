@@ -32,7 +32,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -43,6 +42,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -51,7 +51,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -258,11 +257,9 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Lexer.html#VAL__ocaml_lex_read_rec">__ocaml_lex_read_rec</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
-<tr><td><a href="Lexer.html#VAL__ocaml_lex_tables">__ocaml_lex_tables</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
 <tr><td align="left"><div>A</div></td></tr>
+<tr><td><a href="OurRational.html#VALabs">abs</a> [<a href="OurRational.html">OurRational</a>]</td>
+<td></td></tr>
 <tr><td><a href="SMT.IncrementalZ3Solver.html#VALadd">add</a> [<a href="SMT.IncrementalZ3Solver.html">SMT.IncrementalZ3Solver</a>]</td>
 <td><div class="info">
 <p>Asserts the formula.</p>
@@ -308,6 +305,8 @@
 </div>
 </td></tr>
 <tr><td><a href="TransitionLabel.html#VALadd_invariant">add_invariant</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
+<td></td></tr>
+<tr><td><a href="TWNLoop.html#VALadd_invariant">add_invariant</a> [<a href="TWNLoop.html">TWNLoop</a>]</td>
 <td></td></tr>
 <tr><td><a href="ProgramTypes.TransitionGraph.html#VALadd_invariant">add_invariant</a> [<a href="ProgramTypes.TransitionGraph.html">ProgramTypes.TransitionGraph</a>]</td>
 <td><div class="info">
@@ -511,6 +510,10 @@
 <td></td></tr>
 <tr><td><a href="Util.html#VALcat_maybes_enum">cat_maybes_enum</a> [<a href="Util.html">Util</a>]</td>
 <td></td></tr>
+<tr><td><a href="OurRational.html#VALceil">ceil</a> [<a href="OurRational.html">OurRational</a>]</td>
+<td></td></tr>
+<tr><td><a href="TWNLoop.html#VALchain">chain</a> [<a href="TWNLoop.html">TWNLoop</a>]</td>
+<td></td></tr>
 <tr><td><a href="TWN.html#VALchain">chain</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
 <tr><td><a href="Chaining.html#VALchain">chain</a> [<a href="Chaining.html">Chaining</a>]</td>
@@ -534,6 +537,8 @@
 <tr><td><a href="SMT.Z3Solver.html#VALcheck_positivity">check_positivity</a> [<a href="SMT.Z3Solver.html">SMT.Z3Solver</a>]</td>
 <td></td></tr>
 <tr><td><a href="TWN.html#VALcheck_triangular">check_triangular</a> [<a href="TWN.html">TWN</a>]</td>
+<td></td></tr>
+<tr><td><a href="TWN.html#VALcheck_triangular_t">check_triangular_t</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
 <tr><td><a href="TWN.html#VALcheck_twn">check_twn</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
@@ -721,7 +726,7 @@
 <td></td></tr>
 <tr><td><a href="TWN.html#VALcompute_kmax">compute_kmax</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
-<tr><td><a href="TWN.html#VALcompute_m">compute_m</a> [<a href="TWN.html">TWN</a>]</td>
+<tr><td><a href="NonLinearSizeBounds.html#VALcompute_order">compute_order</a> [<a href="NonLinearSizeBounds.html">NonLinearSizeBounds</a>]</td>
 <td></td></tr>
 <tr><td><a href="ProofOutput.html#VALcompute_proof">compute_proof</a> [<a href="ProofOutput.html">ProofOutput</a>]</td>
 <td></td></tr>
@@ -1142,6 +1147,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="OurRational.html#VALfloor">floor</a> [<a href="OurRational.html">OurRational</a>]</td>
+<td></td></tr>
 <tr><td><a href="PolyTypes.Polynomial.html#VALfold">fold</a> [<a href="PolyTypes.Polynomial.html">PolyTypes.Polynomial</a>]</td>
 <td><div class="info">
 <p>Replaces all arithmetical operations by new constructors.</p>
@@ -1499,6 +1506,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="NonLinearSizeBounds.html#VALimprove">improve</a> [<a href="NonLinearSizeBounds.html">NonLinearSizeBounds</a>]</td>
+<td></td></tr>
 <tr><td><a href="Analysis.html#VALimprove">improve</a> [<a href="Analysis.html">Analysis</a>]</td>
 <td><div class="info">
 <p>Performs improvement steps to find better timebounds for the approximation and updates the approximation.</p>
@@ -1511,6 +1520,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="NonLinearSizeBounds.html#VALimprove_t">improve_t</a> [<a href="NonLinearSizeBounds.html">NonLinearSizeBounds</a>]</td>
+<td></td></tr>
 <tr><td><a href="TrivialSizeBounds.html#VALincoming_bound">incoming_bound</a> [<a href="TrivialSizeBounds.html">TrivialSizeBounds</a>]</td>
 <td><div class="info">
 <p>Returns the maximum of all incoming sizebounds applied to the local sizebound.</p>
@@ -1871,6 +1882,8 @@
 </td></tr>
 <tr><td><a href="NontrivialSizeBounds.html#VALlogger">logger</a> [<a href="NontrivialSizeBounds.html">NontrivialSizeBounds</a>]</td>
 <td></td></tr>
+<tr><td><a href="NonLinearSizeBounds.html#VALlogger">logger</a> [<a href="NonLinearSizeBounds.html">NonLinearSizeBounds</a>]</td>
+<td></td></tr>
 <tr><td><a href="InvariantGeneration.html#VALlogger">logger</a> [<a href="InvariantGeneration.html">InvariantGeneration</a>]</td>
 <td><div class="info">
 <p>Logger Preprocessor</p>
@@ -2070,6 +2083,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="OurRational.html#VALminus_one">minus_one</a> [<a href="OurRational.html">OurRational</a>]</td>
+<td></td></tr>
 <tr><td><a href="OurInt.html#VALminus_one">minus_one</a> [<a href="OurInt.html">OurInt</a>]</td>
 <td></td></tr>
 <tr><td><a href="OurFloat.html#VALminus_one">minus_one</a> [<a href="OurFloat.html">OurFloat</a>]</td>
@@ -2314,7 +2329,11 @@
 </td></tr>
 <tr><td><a href="PolyTypes.Polynomial.html#VALmonomials_with_coeffs">monomials_with_coeffs</a> [<a href="PolyTypes.Polynomial.html">PolyTypes.Polynomial</a>]</td>
 <td></td></tr>
+<tr><td><a href="PolyExponential.PE.html#VALmonotonic_kernel">monotonic_kernel</a> [<a href="PolyExponential.PE.html">PolyExponential.PE</a>]</td>
+<td></td></tr>
 <tr><td><a href="TWN.html#VALmonotonicity_th">monotonicity_th</a> [<a href="TWN.html">TWN</a>]</td>
+<td></td></tr>
+<tr><td><a href="TWN.html#VALmonotonicity_th_int">monotonicity_th_int</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
 <tr><td><a href="PolyTypes.BaseMath.html#VALmul">mul</a> [<a href="PolyTypes.BaseMath.html">PolyTypes.BaseMath</a>]</td>
 <td><div class="info">
@@ -2381,8 +2400,6 @@
 </td></tr>
 <tr><td><a href="Formatter.html#VALnewline">newline</a> [<a href="Formatter.html">Formatter</a>]</td>
 <td></td></tr>
-<tr><td><a href="Lexer.html#VALnext_line">next_line</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
 <tr><td><a href="OurRational.html#VALnom">nom</a> [<a href="OurRational.html">OurRational</a>]</td>
 <td></td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALnon_increasing">non_increasing</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
@@ -2408,7 +2425,11 @@
 </div>
 </td></tr>
 <tr><td><a href="Polynomials.RationalPolynomial.html#VALnormalize">normalize</a> [<a href="Polynomials.RationalPolynomial.html">Polynomials.RationalPolynomial</a>]</td>
-<td></td></tr>
+<td><div class="info">
+<p>Multiply with lcm</p>
+
+</div>
+</td></tr>
 <tr><td><a href="PolyExponential.PE.html#VALnormalize">normalize</a> [<a href="PolyExponential.PE.html">PolyExponential.PE</a>]</td>
 <td></td></tr>
 <tr><td align="left"><div>O</div></td></tr>
@@ -2586,20 +2607,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Parser.html#VALonlyAtom">onlyAtom</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyBound">onlyBound</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyConstraints">onlyConstraints</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyFormula">onlyFormula</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyPolynomial">onlyPolynomial</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyProgram">onlyProgram</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
-<tr><td><a href="Parser.html#VALonlyProgram_simple">onlyProgram_simple</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
 <tr><td><a href="MultiphaseRankingFunction.html#VALonly_rank_to_string">only_rank_to_string</a> [<a href="MultiphaseRankingFunction.html">MultiphaseRankingFunction</a>]</td>
 <td><div class="info">
 <p>Converts a multiphase ranking function into a string without any further information.</p>
@@ -2616,6 +2623,14 @@
 
 </div>
 </td></tr>
+<tr><td><a href="Polynomials.RationalPolynomial.html#VALoverapprox">overapprox</a> [<a href="Polynomials.RationalPolynomial.html">Polynomials.RationalPolynomial</a>]</td>
+<td><div class="info">
+<p>Returns poly where each coeff.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="PolyExponential.PE.html#VALoverapprox">overapprox</a> [<a href="PolyExponential.PE.html">PolyExponential.PE</a>]</td>
+<td></td></tr>
 <tr><td><a href="TransitionLabel.html#VALoverapprox_nonlinear_updates">overapprox_nonlinear_updates</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
 <td><div class="info">
 <p>Overapproximates nonlinear updates by nondeterministic updates.</p>
@@ -2813,8 +2828,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Parser.html#VALprogramAndGoal">programAndGoal</a> [<a href="Parser.html">Parser</a>]</td>
-<td></td></tr>
 <tr><td><a href="Approximation.html#VALprogram_costbound">program_costbound</a> [<a href="Approximation.html">Approximation</a>]</td>
 <td><div class="info">
 <p>Returns a costbound for the program.</p>
@@ -2860,8 +2873,6 @@
 
 </div>
 </td></tr>
-<tr><td><a href="Lexer.html#VALread">read</a> [<a href="Lexer.html">Lexer</a>]</td>
-<td></td></tr>
 <tr><td><a href="Readers.html#VALread_atom">read_atom</a> [<a href="Readers.html">Readers</a>]</td>
 <td></td></tr>
 <tr><td><a href="Readers.html#VALread_bound">read_bound</a> [<a href="Readers.html">Readers</a>]</td>
@@ -3166,6 +3177,10 @@
 <tr><td><a href="PrfCommand.html#VALshow_params">show_params</a> [<a href="PrfCommand.html">PrfCommand</a>]</td>
 <td></td></tr>
 <tr><td><a href="LocalSizeBoundCommand.html#VALshow_params">show_params</a> [<a href="LocalSizeBoundCommand.html">LocalSizeBoundCommand</a>]</td>
+<td></td></tr>
+<tr><td><a href="OurRational.html#VALsign">sign</a> [<a href="OurRational.html">OurRational</a>]</td>
+<td></td></tr>
+<tr><td><a href="OurInt.html#VALsign">sign</a> [<a href="OurInt.html">OurInt</a>]</td>
 <td></td></tr>
 <tr><td><a href="PolyTypes.Polynomial.html#VALsimplify">simplify</a> [<a href="PolyTypes.Polynomial.html">PolyTypes.Polynomial</a>]</td>
 <td><div class="info">
@@ -3695,6 +3710,12 @@
 <tr><td><a href="CostBounds.html#VALunbounded">unbounded</a> [<a href="CostBounds.html">CostBounds</a>]</td>
 <td><div class="info">
 <p>Returns true iff bound is not finite.</p>
+
+</div>
+</td></tr>
+<tr><td><a href="TransitionLabel.html#VALuniform">uniform</a> [<a href="TransitionLabel.html">TransitionLabel</a>]</td>
+<td><div class="info">
+<p>Returns t with costs 1</p>
 
 </div>
 </td></tr>

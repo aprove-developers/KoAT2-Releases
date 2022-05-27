@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -99,15 +98,15 @@
 
 <pre><span class="keyword">include</span> struct ... end</pre>
 
-<pre><span id="VAL(=~=)"><span class="keyword">val</span> (=~=)</span> : <code class="type">t -&gt; t -&gt; bool</code></pre>
-<pre><span id="VALpow"><span class="keyword">val</span> pow</span> : <code class="type">t -&gt; int -&gt; t</code></pre>
-<pre><span id="VALmax"><span class="keyword">val</span> max</span> : <code class="type">Compare.bat__compare_t -&gt; Compare.bat__compare_t -&gt; Compare.bat__compare_t</code></pre>
-<pre><span id="VALmin"><span class="keyword">val</span> min</span> : <code class="type">Compare.bat__compare_t -&gt; Compare.bat__compare_t -&gt; Compare.bat__compare_t</code></pre>
-<pre><span id="VALof_ourint"><span class="keyword">val</span> of_ourint</span> : <code class="type">Big_int.big_int -&gt; Batteries.Num.num</code></pre>
-<pre><span id="VALupper_int"><span class="keyword">val</span> upper_int</span> : <code class="type">t -&gt; OurInt.t</code></pre><p>TODO maybe we have to add here one</p>
+<pre><span id="VAL(=~=)"><span class="keyword">val</span> (=~=)</span> : <code class="type">t -> t -> bool</code></pre>
+<pre><span id="VALpow"><span class="keyword">val</span> pow</span> : <code class="type">t -> int -> t</code></pre>
+<pre><span id="VALmax"><span class="keyword">val</span> max</span> : <code class="type">Compare.bat__compare_t -> Compare.bat__compare_t -> Compare.bat__compare_t</code></pre>
+<pre><span id="VALmin"><span class="keyword">val</span> min</span> : <code class="type">Compare.bat__compare_t -> Compare.bat__compare_t -> Compare.bat__compare_t</code></pre>
+<pre><span id="VALof_ourint"><span class="keyword">val</span> of_ourint</span> : <code class="type">Big_int.big_int -> Batteries.Num.num</code></pre>
+<pre><span id="VALupper_int"><span class="keyword">val</span> upper_int</span> : <code class="type">t -> OurInt.t</code></pre><p>TODO maybe we have to add here one</p>
 
-<pre><span id="VAL(>)"><span class="keyword">val</span> (&gt;)</span> : <code class="type">Batteries.Num.num -&gt; Batteries.Num.num -&gt; bool</code></pre>
-<pre><span id="VAL(<)"><span class="keyword">val</span> (&lt;)</span> : <code class="type">Batteries.Num.num -&gt; Batteries.Num.num -&gt; bool</code></pre>
-<pre><span id="VAL(>=)"><span class="keyword">val</span> (&gt;=)</span> : <code class="type">Batteries.Num.num -&gt; Batteries.Num.num -&gt; bool</code></pre>
-<pre><span id="VAL(<=)"><span class="keyword">val</span> (&lt;=)</span> : <code class="type">Batteries.Num.num -&gt; Batteries.Num.num -&gt; bool</code></pre>
+<pre><span id="VAL(>)"><span class="keyword">val</span> (&gt;)</span> : <code class="type">Batteries.Num.num -> Batteries.Num.num -> bool</code></pre>
+<pre><span id="VAL(<)"><span class="keyword">val</span> (&lt;)</span> : <code class="type">Batteries.Num.num -> Batteries.Num.num -> bool</code></pre>
+<pre><span id="VAL(>=)"><span class="keyword">val</span> (&gt;=)</span> : <code class="type">Batteries.Num.num -> Batteries.Num.num -> bool</code></pre>
+<pre><span id="VAL(<=)"><span class="keyword">val</span> (&lt;=)</span> : <code class="type">Batteries.Num.num -> Batteries.Num.num -> bool</code></pre>
 <pre><span id="VALminus_one"><span class="keyword">val</span> minus_one</span> : <code class="type">t</code></pre></body></html>

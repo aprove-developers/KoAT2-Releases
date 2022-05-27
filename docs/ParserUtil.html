@@ -5,7 +5,7 @@
 <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="Start" href="index.html">
-<link rel="previous" href="Parser.html">
+<link rel="previous" href="OurRational.html">
 <link rel="next" href="PartialEvaluation.html">
 <link rel="Up" href="index.html">
 <link title="Index of types" rel=Appendix href="index_types.html">
@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -89,7 +88,7 @@
 <link title="VarSet" rel="Chapter" href="VarSet.html"><title>Koat2 : ParserUtil</title>
 </head>
 <body>
-<div class="navbar"><a class="pre" href="Parser.html" title="Parser">Previous</a>
+<div class="navbar"><a class="pre" href="OurRational.html" title="OurRational">Previous</a>
 &nbsp;<a class="up" href="index.html" title="Index">Up</a>
 &nbsp;<a class="post" href="PartialEvaluation.html" title="PartialEvaluation">Next</a>
 </div>
@@ -115,9 +114,9 @@
 </div>
 </div>
 
-<pre><span id="VALempty_cache"><span class="keyword">val</span> empty_cache</span> : <code class="type">unit -&gt; unit</code></pre>
-<pre><span id="VALcheck_arity"><span class="keyword">val</span> check_arity</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; int -&gt; unit</code></pre>
-<pre><span id="VALmk_transition"><span class="keyword">val</span> mk_transition</span> : <code class="type">string * string list -&gt;<br>       Polynomials.Polynomial.t -&gt;<br>       string * (string * <a href="TransitionLabel.html#TYPEpolynomial">TransitionLabel.polynomial</a> list) list -&gt;<br>       Formulas.Formula.t -&gt;<br>       <a href="Var.html#TYPEt">Var.t</a> list -&gt;<br>       (<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> * <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a>) list<br>       list</code></pre><div class="info ">
+<pre><span id="VALempty_cache"><span class="keyword">val</span> empty_cache</span> : <code class="type">unit -> unit</code></pre>
+<pre><span id="VALcheck_arity"><span class="keyword">val</span> check_arity</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -> int -> unit</code></pre>
+<pre><span id="VALmk_transition"><span class="keyword">val</span> mk_transition</span> : <code class="type">string * string list -><br>       Polynomials.Polynomial.t -><br>       string * (string * <a href="TransitionLabel.html#TYPEpolynomial">TransitionLabel.polynomial</a> list) list -><br>       Formulas.Formula.t -><br>       <a href="Var.html#TYPEt">Var.t</a> list -><br>       (<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> * <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a>) list<br>       list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Generates transitions from given parameters</p>
 </div>
@@ -130,19 +129,19 @@
 </div>
 <p>Input is not interpreted as a filepath, but as a program in simple mode. Method returns all transitions from such an input.</p>
 
-<pre><span id="VALmk_transition_simple"><span class="keyword">val</span> mk_transition_simple</span> : <code class="type">string -&gt;<br>       Polynomials.Polynomial.t -&gt;<br>       string * (string * Polynomials.Polynomial.t list) list -&gt;<br>       Formulas.Formula.t -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list</code></pre><div class="info ">
+<pre><span id="VALmk_transition_simple"><span class="keyword">val</span> mk_transition_simple</span> : <code class="type">string -><br>       Polynomials.Polynomial.t -><br>       string * (string * Polynomials.Polynomial.t list) list -><br>       Formulas.Formula.t -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Assume Com_1 transitions</p>
 </div>
 </div>
 
-<pre><span id="VALmk_program_simple"><span class="keyword">val</span> mk_program_simple</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -&gt; <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
+<pre><span id="VALmk_program_simple"><span class="keyword">val</span> mk_program_simple</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -> <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Input is not interpreted as a filepath, but as a program in simple mode. Method returns program from such an input.</p>
 </div>
 </div>
 
-<pre><span id="VALmk_program"><span class="keyword">val</span> mk_program</span> : <code class="type">'a -&gt;<br>       <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; 'b -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -&gt; <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
+<pre><span id="VALmk_program"><span class="keyword">val</span> mk_program</span> : <code class="type">'a -><br>       <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -> 'b -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -> <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a program corresponding to the given list of transition with a fixed start location.</p>
 </div>

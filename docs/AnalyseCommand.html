@@ -35,7 +35,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -46,6 +45,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -54,7 +54,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -102,19 +101,19 @@
 
 <pre><span id="VALcommand"><span class="keyword">val</span> command</span> : <code class="type">string</code></pre>
 <pre><span id="VALdescription"><span class="keyword">val</span> description</span> : <code class="type">string</code></pre>
-<pre><span id="VALprint_all_bounds"><span class="keyword">val</span> print_all_bounds</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALprint_all_bounds"><span class="keyword">val</span> print_all_bounds</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Prints the whole resulting approximation to the shell.</p>
 </div>
 </div>
 
-<pre><span id="VALprint_overall_costbound"><span class="keyword">val</span> print_overall_costbound</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALprint_overall_costbound"><span class="keyword">val</span> print_overall_costbound</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Prints the overall timebound of the program to the shell.</p>
 </div>
 </div>
 
-<pre><span id="VALprint_termcomp"><span class="keyword">val</span> print_termcomp</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALprint_termcomp"><span class="keyword">val</span> print_termcomp</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Prints the overall timebound of the program to the shell in the TermComp fashion.</p>
 </div>
@@ -265,7 +264,7 @@
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTparams.result">result</span>&nbsp;: <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; unit</code>;</code></td>
+<code><span id="TYPEELTparams.result">result</span>&nbsp;: <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> unit</code>;</code></td>
 <td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
 <div class="info-desc">
 <p>The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class.</p>
@@ -369,7 +368,7 @@
 </div>
 </td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
-<code>}</code>
+}
 
 <div class="info ">
 <div class="info-desc">
@@ -378,53 +377,53 @@
 </div>
 
 
-<pre><span id="VALparams_cmdliner_term"><span class="keyword">val</span> params_cmdliner_term</span> : <code class="type">unit -&gt; <a href="AnalyseCommand.html#TYPEparams">params</a> Cmdliner.Term.t</code></pre>
+<pre><span id="VALparams_cmdliner_term"><span class="keyword">val</span> params_cmdliner_term</span> : <code class="type">unit -> <a href="AnalyseCommand.html#TYPEparams">params</a> Cmdliner.Term.t</code></pre>
 <pre><span class="keyword">include</span> struct ... end</pre>
 
-<pre><span id="VALbounded_label_to_string"><span class="keyword">val</span> bounded_label_to_string</span> : <code class="type"><a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALbounded_label_to_string"><span class="keyword">val</span> bounded_label_to_string</span> : <code class="type"><a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string containing a time-bound and the label of a transition for a specified approximation.</p>
 </div>
 </div>
 
-<pre><span id="VALbounded_rv_to_string"><span class="keyword">val</span> bounded_rv_to_string</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALbounded_rv_to_string"><span class="keyword">val</span> bounded_rv_to_string</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string containing a size-bound transition and a result variable for a specified approximation.</p>
 </div>
 </div>
 
-<pre><span id="VALget_lsb"><span class="keyword">val</span> get_lsb</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -&gt; BoundsInst.Bound.t</code></pre><div class="info ">
+<pre><span id="VALget_lsb"><span class="keyword">val</span> get_lsb</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a local size-bound for a specified transition and a specified variable.</p>
 </div>
 </div>
 
-<pre><span id="VALstandard_vars"><span class="keyword">val</span> standard_vars</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Var.html#TYPEt">Var.t</a> list</code></pre><div class="info ">
+<pre><span id="VALstandard_vars"><span class="keyword">val</span> standard_vars</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Var.html#TYPEt">Var.t</a> list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a list of special variables which are arguments of the transition system.</p>
 </div>
 </div>
 
-<pre><span id="VALrename_graph"><span class="keyword">val</span> rename_graph</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -&gt;<br>       ProgramTypes.TransitionGraph.t -&gt; ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
+<pre><span id="VALrename_graph"><span class="keyword">val</span> rename_graph</span> : <code class="type"><a href="Var.html#TYPEt">Var.t</a> list -><br>       ProgramTypes.TransitionGraph.t -> ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>For each transition rename standard_vars transition.</p>
 </div>
 </div>
 
-<pre><span id="VALrename_program"><span class="keyword">val</span> rename_program</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
+<pre><span id="VALrename_program"><span class="keyword">val</span> rename_program</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Provides renamed program</p>
 </div>
 </div>
 
-<pre><span id="VALrename_program_option"><span class="keyword">val</span> rename_program_option</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> option -&gt; <a href="Program.html#TYPEt">Program.t</a> option</code></pre><div class="info ">
+<pre><span id="VALrename_program_option"><span class="keyword">val</span> rename_program_option</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> option -> <a href="Program.html#TYPEt">Program.t</a> option</code></pre><div class="info ">
 <div class="info-desc">
 <p>Provides renamed program if program is set, else None is returned.</p>
 </div>
 </div>
 
-<pre><span id="VALprogram_to_formatted_string"><span class="keyword">val</span> program_to_formatted_string</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Formatter.html#TYPEformat">Formatter.format</a> -&gt; <a href="FormattedString.html#TYPEt">FormattedString.t</a></code></pre>
-<pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type">params -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALprogram_to_formatted_string"><span class="keyword">val</span> program_to_formatted_string</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Formatter.html#TYPEformat">Formatter.format</a> -> <a href="FormattedString.html#TYPEt">FormattedString.t</a></code></pre>
+<pre><span id="VALrun"><span class="keyword">val</span> run</span> : <code class="type"><a href="AnalyseCommand.html#TYPEparams">params</a> -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Runs KoAT2 on provided parameters.</p>
 </div>

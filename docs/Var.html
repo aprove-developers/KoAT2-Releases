@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -126,8 +125,8 @@
 </div>
 
 
-<pre><span id="VALequal_sort"><span class="keyword">val</span> equal_sort</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -&gt; <a href="Var.html#TYPEsort">sort</a> -&gt; Ppx_deriving_runtime.bool</code></pre>
-<pre><span id="VALcompare_sort"><span class="keyword">val</span> compare_sort</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -&gt; <a href="Var.html#TYPEsort">sort</a> -&gt; Ppx_deriving_runtime.int</code></pre>
+<pre><span id="VALequal_sort"><span class="keyword">val</span> equal_sort</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -> <a href="Var.html#TYPEsort">sort</a> -> Ppx_deriving_runtime.bool</code></pre>
+<pre><span id="VALcompare_sort"><span class="keyword">val</span> compare_sort</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -> <a href="Var.html#TYPEsort">sort</a> -> Ppx_deriving_runtime.int</code></pre>
 <pre><span class="keyword">include</span> ??</pre>
 
 <pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = </code></pre><table class="typetable">
@@ -165,83 +164,83 @@
 </div>
 
 
-<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -&gt; <a href="Var.html#TYPEt">t</a> -&gt; bool</code></pre>
-<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -&gt; <a href="Var.html#TYPEt">t</a> -&gt; int</code></pre>
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> <a href="Var.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> <a href="Var.html#TYPEt">t</a> -> int</code></pre>
 <pre><span class="keyword">include</span> ??</pre>
 
-<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -&gt; <a href="Var.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> <a href="Var.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -&gt; <a href="Var.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> <a href="Var.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALhash"><span class="keyword">val</span> hash</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VAL(=~=)"><span class="keyword">val</span> (=~=)</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -&gt; <a href="Var.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VAL(=~=)"><span class="keyword">val</span> (=~=)</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> <a href="Var.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -&gt; <a href="Var.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALof_string"><span class="keyword">val</span> of_string</span> : <code class="type">string -> <a href="Var.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a variable from a string.</p>
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -&gt; ?to_file:bool -&gt; <a href="Var.html#TYPEt">t</a> -&gt; Batteries.String.t</code></pre><div class="info ">
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -> ?to_file:bool -> <a href="Var.html#TYPEt">t</a> -> Batteries.String.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string representing the variable(<code class="code">Temp_Int_</code> for integer variables, <code class="code">Temp_Real_</code> for real variables and <code class="code">Arg_ </code> for argument variables). Parameter <i>to_file</i> is used to get a representation with less special characters.</p>
 </div>
 </div>
 
-<pre><span id="VALfresh_id"><span class="keyword">val</span> fresh_id</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -&gt; unit -&gt; <a href="Var.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALfresh_id"><span class="keyword">val</span> fresh_id</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -> unit -> <a href="Var.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a not yet used id, which is guaranteed to be distinct from any yet existing ids.</p>
 </div>
 </div>
 
-<pre><span id="VALfresh_ids"><span class="keyword">val</span> fresh_ids</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -&gt; int -&gt; <a href="Var.html#TYPEt">t</a> Batteries.Enum.t</code></pre><div class="info ">
+<pre><span id="VALfresh_ids"><span class="keyword">val</span> fresh_ids</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -> int -> <a href="Var.html#TYPEt">t</a> Batteries.Enum.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a bunch of fresh ids.</p>
 </div>
 </div>
 
-<pre><span id="VALfresh_id_list"><span class="keyword">val</span> fresh_id_list</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -&gt; int -&gt; <a href="Var.html#TYPEt">t</a> list</code></pre><div class="info ">
+<pre><span id="VALfresh_id_list"><span class="keyword">val</span> fresh_id_list</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -> int -> <a href="Var.html#TYPEt">t</a> list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a bunch of fresh ids.</p>
 </div>
 </div>
 
-<pre><span id="VALfresh_arg_list"><span class="keyword">val</span> fresh_arg_list</span> : <code class="type">int -&gt; <a href="Var.html#TYPEt">t</a> list</code></pre><div class="info ">
+<pre><span id="VALfresh_arg_list"><span class="keyword">val</span> fresh_arg_list</span> : <code class="type">int -> <a href="Var.html#TYPEt">t</a> list</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a bunch of fresh arg ids.</p>
 </div>
 </div>
 
-<pre><span id="VALis_helper"><span class="keyword">val</span> is_helper</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALis_helper"><span class="keyword">val</span> is_helper</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns true if variable has type <code class="code">Helper</code>.</p>
 </div>
 </div>
 
-<pre><span id="VALmk_helper"><span class="keyword">val</span> mk_helper</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -&gt; int -&gt; <a href="Var.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALmk_helper"><span class="keyword">val</span> mk_helper</span> : <code class="type"><a href="Var.html#TYPEsort">sort</a> -> int -> <a href="Var.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a helper variable of type <code class="code">sort</code> and a given id.</p>
 </div>
 </div>
 
-<pre><span id="VALis_real"><span class="keyword">val</span> is_real</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALis_real"><span class="keyword">val</span> is_real</span> : <code class="type"><a href="Var.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns true if variable is ranged over real numbers.</p>
 </div>

@@ -36,7 +36,6 @@
 <link title="Goal" rel="Chapter" href="Goal.html">
 <link title="GraphPrint" rel="Chapter" href="GraphPrint.html">
 <link title="InvariantGeneration" rel="Chapter" href="InvariantGeneration.html">
-<link title="Lexer" rel="Chapter" href="Lexer.html">
 <link title="ListMonad" rel="Chapter" href="ListMonad.html">
 <link title="LocalSizeBound" rel="Chapter" href="LocalSizeBound.html">
 <link title="LocalSizeBoundCommand" rel="Chapter" href="LocalSizeBoundCommand.html">
@@ -47,6 +46,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -55,7 +55,6 @@
 <link title="OurInt" rel="Chapter" href="OurInt.html">
 <link title="OurNum" rel="Chapter" href="OurNum.html">
 <link title="OurRational" rel="Chapter" href="OurRational.html">
-<link title="Parser" rel="Chapter" href="Parser.html">
 <link title="ParserUtil" rel="Chapter" href="ParserUtil.html">
 <link title="PartialEvaluation" rel="Chapter" href="PartialEvaluation.html">
 <link title="PolyExponential" rel="Chapter" href="PolyExponential.html">
@@ -118,74 +117,74 @@
 </div>
 
 
-<pre><span id="VALadd_locations"><span class="keyword">val</span> add_locations</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> Batteries.Enum.t -&gt;<br>       ProgramTypes.TransitionGraph.t -&gt; ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
+<pre><span id="VALadd_locations"><span class="keyword">val</span> add_locations</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> Batteries.Enum.t -><br>       ProgramTypes.TransitionGraph.t -> ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Adds all locations from an enum to a transtion graph.</p>
 </div>
 </div>
 
-<pre><span id="VALadd_transitions"><span class="keyword">val</span> add_transitions</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.Enum.t -&gt;<br>       ProgramTypes.TransitionGraph.t -&gt; ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
+<pre><span id="VALadd_transitions"><span class="keyword">val</span> add_transitions</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.Enum.t -><br>       ProgramTypes.TransitionGraph.t -> ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Adds all transitions from an enum to a transtion graph.</p>
 </div>
 </div>
 
-<pre><span id="VALremove_location"><span class="keyword">val</span> remove_location</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALremove_location"><span class="keyword">val</span> remove_location</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -> <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Removes the location from the program and all edges to it.</p>
 </div>
 </div>
 
-<pre><span id="VALremove_transition"><span class="keyword">val</span> remove_transition</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALremove_transition"><span class="keyword">val</span> remove_transition</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Removes a transition from a program.</p>
 </div>
 </div>
 
-<pre><span id="VALremove_TransitionSet"><span class="keyword">val</span> remove_TransitionSet</span> : <code class="type">ProgramTypes.TransitionSet.t -&gt; <a href="Program.html#TYPEt">t</a> -&gt; <a href="Program.html#TYPEt">t</a></code></pre>
-<pre><span id="VALmap_graph"><span class="keyword">val</span> map_graph</span> : <code class="type">(ProgramTypes.TransitionGraph.t -&gt; ProgramTypes.TransitionGraph.t) -&gt;<br>       <a href="Program.html#TYPEt">t</a> -&gt; <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALremove_TransitionSet"><span class="keyword">val</span> remove_TransitionSet</span> : <code class="type">ProgramTypes.TransitionSet.t -> <a href="Program.html#TYPEt">t</a> -> <a href="Program.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmap_graph"><span class="keyword">val</span> map_graph</span> : <code class="type">(ProgramTypes.TransitionGraph.t -> ProgramTypes.TransitionGraph.t) -><br>       <a href="Program.html#TYPEt">t</a> -> <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.Enum.t -&gt; ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
+<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.Enum.t -> ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a transition graph from an enum of transitions.</p>
 </div>
 </div>
 
-<pre><span id="VALrename"><span class="keyword">val</span> rename</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALrename"><span class="keyword">val</span> rename</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>TODO doc</p>
 </div>
 </div>
 
-<pre><span id="VALfrom"><span class="keyword">val</span> from</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list list -&gt; <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALfrom"><span class="keyword">val</span> from</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list list -> <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -> <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a program from a list of transitions and a (start) location. A list of k transitions makes up a Com_k transition</p>
 </div>
 </div>
 
-<pre><span id="VALgraph"><span class="keyword">val</span> graph</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
+<pre><span id="VALgraph"><span class="keyword">val</span> graph</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns transition graph of a program.</p>
 </div>
 </div>
 
-<pre><span id="VALadd_invariant"><span class="keyword">val</span> add_invariant</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; Constraints.Constraint.t -&gt; <a href="Program.html#TYPEt">t</a> -&gt; <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALadd_invariant"><span class="keyword">val</span> add_invariant</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -> Constraints.Constraint.t -> <a href="Program.html#TYPEt">t</a> -> <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Adds the invariant to a location of the program.</p>
 </div>
 </div>
 
-<pre><span id="VALsimplify_all_guards"><span class="keyword">val</span> simplify_all_guards</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALsimplify_all_guards"><span class="keyword">val</span> simplify_all_guards</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> <a href="Program.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Tries to simplify the guard of all transitions by invoking the SMT Solver</p>
 </div>
 </div>
 
-<pre><span id="VALpre"><span class="keyword">val</span> pre</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt;<br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.Enum.t</code></pre><div class="info ">
+<pre><span id="VALpre"><span class="keyword">val</span> pre</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.Enum.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a set of all transitions which occur directly before the given transition in the graph.
     Corresponds to pre(t).
@@ -194,7 +193,7 @@
 </div>
 </div>
 
-<pre><span id="VALpre_transitionset_cached"><span class="keyword">val</span> pre_transitionset_cached</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; ProgramTypes.TransitionSet.t</code></pre><div class="info ">
+<pre><span id="VALpre_transitionset_cached"><span class="keyword">val</span> pre_transitionset_cached</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> ProgramTypes.TransitionSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>A cached version of pre. The identifier for the cache is the transition id (the program is not considered)</p>
 
@@ -202,123 +201,123 @@
 </div>
 </div>
 
-<pre><span id="VALreset_pre_cache"><span class="keyword">val</span> reset_pre_cache</span> : <code class="type">unit -&gt; unit</code></pre>
-<pre><span id="VALis_initial"><span class="keyword">val</span> is_initial</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALreset_pre_cache"><span class="keyword">val</span> reset_pre_cache</span> : <code class="type">unit -> unit</code></pre>
+<pre><span id="VALis_initial"><span class="keyword">val</span> is_initial</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns true if the given transition is an initial transition.</p>
 </div>
 </div>
 
-<pre><span id="VALis_initial_location"><span class="keyword">val</span> is_initial_location</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALis_initial_location"><span class="keyword">val</span> is_initial_location</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns true if the given transition is an initial transition.</p>
 </div>
 </div>
 
-<pre><span id="VALequivalent"><span class="keyword">val</span> equivalent</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; <a href="Program.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALequivalent"><span class="keyword">val</span> equivalent</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> <a href="Program.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns true if the program graphs are equivalent and both start locations are equal.</p>
 </div>
 </div>
 
-<pre><span id="VALto_formatted_string"><span class="keyword">val</span> to_formatted_string</span> : <code class="type">?pretty:bool -&gt; <a href="Program.html#TYPEt">t</a> -&gt; <a href="FormattedString.html#TYPEt">FormattedString.t</a></code></pre><div class="info ">
+<pre><span id="VALto_formatted_string"><span class="keyword">val</span> to_formatted_string</span> : <code class="type">?pretty:bool -> <a href="Program.html#TYPEt">t</a> -> <a href="FormattedString.html#TYPEt">FormattedString.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a formatted string representing the program.</p>
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string representing the program.</p>
 </div>
 </div>
 
-<pre><span id="VALto_file"><span class="keyword">val</span> to_file</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; string -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALto_file"><span class="keyword">val</span> to_file</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> string -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a string representing the program that can be dumped to a KoAT input file.</p>
 </div>
 </div>
 
-<pre><span id="VALto_simple_string"><span class="keyword">val</span> to_simple_string</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALto_simple_string"><span class="keyword">val</span> to_simple_string</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Input is not interpreted as a filepath, but as a program in simple mode. Method returns a string representation of a program from such an input.</p>
 </div>
 </div>
 
-<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; VarSet.t</code></pre><div class="info ">
+<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> VarSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns all variables of the program.</p>
 </div>
 </div>
 
-<pre><span id="VALinput_vars"><span class="keyword">val</span> input_vars</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; VarSet.t</code></pre><div class="info ">
+<pre><span id="VALinput_vars"><span class="keyword">val</span> input_vars</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> VarSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns all input variables of the program.</p>
 </div>
 </div>
 
-<pre><span id="VALcardinal_vars"><span class="keyword">val</span> cardinal_vars</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALcardinal_vars"><span class="keyword">val</span> cardinal_vars</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the number of variables.</p>
 </div>
 </div>
 
-<pre><span id="VALtransitions"><span class="keyword">val</span> transitions</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; ProgramTypes.TransitionSet.t</code></pre><div class="info ">
+<pre><span id="VALtransitions"><span class="keyword">val</span> transitions</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> ProgramTypes.TransitionSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a set of all transitions which occur in the program graph of the program.</p>
 </div>
 </div>
 
-<pre><span id="VALlocations"><span class="keyword">val</span> locations</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.Enum.t -&gt;<br>       <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> Batteries.Enum.t</code></pre><div class="info ">
+<pre><span id="VALlocations"><span class="keyword">val</span> locations</span> : <code class="type"><a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.Enum.t -><br>       <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> Batteries.Enum.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns all locations which occur in the transitions, but each location only once.</p>
 </div>
 </div>
 
-<pre><span id="VALstart"><span class="keyword">val</span> start</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a></code></pre><div class="info ">
+<pre><span id="VALstart"><span class="keyword">val</span> start</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns start location.</p>
 </div>
 </div>
 
-<pre><span id="VALsccs"><span class="keyword">val</span> sccs</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; ProgramTypes.TransitionSet.t Batteries.Enum.t</code></pre><div class="info ">
+<pre><span id="VALsccs"><span class="keyword">val</span> sccs</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> ProgramTypes.TransitionSet.t Batteries.Enum.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the (biggest) strongly connected components of the transiton graph.</p>
 </div>
 </div>
 
-<pre><span id="VALcardinal_trans_scc"><span class="keyword">val</span> cardinal_trans_scc</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALcardinal_trans_scc"><span class="keyword">val</span> cardinal_trans_scc</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the number of transition involved in a scc.</p>
 </div>
 </div>
 
-<pre><span id="VALparallelTransitions"><span class="keyword">val</span> parallelTransitions</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt;<br>       <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> * <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt;<br>       ProgramTypes.TransitionSet.t</code></pre><div class="info ">
+<pre><span id="VALparallelTransitions"><span class="keyword">val</span> parallelTransitions</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -><br>       <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> * <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -><br>       ProgramTypes.TransitionSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns all transitions which are parallel to a given transition. Thus, all transitions start in the same location and end in the same location.</p>
 </div>
 </div>
 
-<pre><span id="VALnon_trivial_transitions"><span class="keyword">val</span> non_trivial_transitions</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; ProgramTypes.TransitionSet.t</code></pre><div class="info ">
+<pre><span id="VALnon_trivial_transitions"><span class="keyword">val</span> non_trivial_transitions</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> ProgramTypes.TransitionSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns all transitions, that belong to an SCC.</p>
 </div>
 </div>
 
-<pre><span id="VALto_file"><span class="keyword">val</span> to_file</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -&gt; string -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALto_file"><span class="keyword">val</span> to_file</span> : <code class="type"><a href="Program.html#TYPEt">t</a> -> string -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a file (if it does not already exist) and writes the program into it.</p>
 </div>
 </div>
 
-<pre><span id="VALentry_transitions"><span class="keyword">val</span> entry_transitions</span> : <code class="type">Batteries.Logger.log -&gt;<br>       <a href="Program.html#TYPEt">t</a> -&gt;<br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.List.t</code></pre><div class="info ">
+<pre><span id="VALentry_transitions"><span class="keyword">val</span> entry_transitions</span> : <code class="type">Batteries.Logger.log -><br>       <a href="Program.html#TYPEt">t</a> -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.List.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Computes all entry transitions of the given transitions.
     These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions.</p>
 </div>
 </div>
 
-<pre><span id="VALoutgoing_transitions"><span class="keyword">val</span> outgoing_transitions</span> : <code class="type">Batteries.Logger.log -&gt;<br>       <a href="Program.html#TYPEt">t</a> -&gt;<br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -&gt; <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.List.t</code></pre><div class="info ">
+<pre><span id="VALoutgoing_transitions"><span class="keyword">val</span> outgoing_transitions</span> : <code class="type">Batteries.Logger.log -><br>       <a href="Program.html#TYPEt">t</a> -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list -> <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> Batteries.List.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Computes all outgoing transitions of the given transitions.
     These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions.</p>
