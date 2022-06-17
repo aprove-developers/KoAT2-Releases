@@ -22,7 +22,7 @@ RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/
     rm irankfinder.zip
 
 COPY --chown=opam:opam opam .
-RUN opam install -j $((`nproc` - 2)) . --deps-only
+RUN opam install -j $(nproc) . --deps-only
 
 COPY --chown=opam:opam src ./src
 COPY --chown=opam:opam OMakeroot .
