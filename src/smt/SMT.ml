@@ -112,6 +112,8 @@ module Z3Solver =
                         ]
                     )
 
+    let version = Z3.Version.full_version
+
     let result_is expected_result formula =
       let formula = from_formula !context formula in
       let optimisation_goal = Z3.Solver.mk_simple_solver !context in
