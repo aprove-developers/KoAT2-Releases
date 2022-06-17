@@ -27,5 +27,6 @@ let run (params: params) =
          Enum.fold (fun str -> (fun (var,value) -> str ^ (Var.to_string var ^ " -> " ^ OurInt.to_string value ^ "\n"))) "" (Valuation.bindings solution)
        )
   |? "unsatisfiable\n"
-  |> print_string
+  |> print_string;
+  Printf.printf "\nZ3 version: %s\n" Z3.version;
 
