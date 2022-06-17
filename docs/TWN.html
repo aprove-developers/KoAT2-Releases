@@ -47,6 +47,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -106,6 +107,7 @@
 <pre><span id="VALdfs"><span class="keyword">val</span> dfs</span> : <code class="type">(int * int list) list -&gt; int list -&gt; int -&gt; int list</code></pre>
 <pre><span id="VALtoposort"><span class="keyword">val</span> toposort</span> : <code class="type">(int * int list) list -&gt; int list</code></pre>
 <pre><span id="VALcheck_triangular"><span class="keyword">val</span> check_triangular</span> : <code class="type"><a href="TWNLoop.html#TYPEt">TWNLoop.t</a> -&gt; VarSet.elt list</code></pre>
+<pre><span id="VALcheck_triangular_t"><span class="keyword">val</span> check_triangular_t</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -&gt; VarSet.elt list</code></pre>
 <pre><span id="VALcheck_weakly_monotonicity"><span class="keyword">val</span> check_weakly_monotonicity</span> : <code class="type"><a href="TWNLoop.html#TYPEt">TWNLoop.t</a> -&gt; bool</code></pre>
 <pre><span id="VALcheck_weakly_negativitiy"><span class="keyword">val</span> check_weakly_negativitiy</span> : <code class="type"><a href="TWNLoop.html#TYPEt">TWNLoop.t</a> -&gt; bool</code></pre>
 <pre><span id="VALchain"><span class="keyword">val</span> chain</span> : <code class="type"><a href="TWNLoop.html#TYPEt">TWNLoop.t</a> -&gt; <a href="TWNLoop.html#TYPEt">TWNLoop.t</a></code></pre>
@@ -114,12 +116,12 @@
 
 <pre><span id="VALred_lt"><span class="keyword">val</span> red_lt</span> : <code class="type">Formulas.Formula.polynomial list -&gt; Formulas.Formula.t</code></pre>
 <pre><span id="VALred_le"><span class="keyword">val</span> red_le</span> : <code class="type">Constraints.Constraint.polynomial list -&gt; Formulas.Formula.t</code></pre>
-<pre><span id="VALtermination"><span class="keyword">val</span> termination</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -&gt; bool</code></pre>
 <pre><span id="MODULEValuation"><span class="keyword">module</span> <a href="TWN.Valuation.html">Valuation</a></span>: <code class="type"><a href="Valuation.Make.html">Valuation.Make</a></code><code class="code">(</code><code class="type"><a href="OurInt.html">OurInt</a></code><code class="code">)</code></pre>
-<pre><span id="VALtermination_"><span class="keyword">val</span> termination_</span> : <code class="type"><a href="TWNLoop.html#TYPEt">TWNLoop.t</a> -&gt;<br>       'a -&gt; 'b -&gt; 'c -&gt; (<a href="Var.html#TYPEt">Var.t</a>, <a href="PolyExponential.PE.html#TYPEt">PolyExponential.PE.t</a>) Batteries.Hashtbl.t -&gt; bool</code></pre>
-<pre><span id="VALmonotonicity_th"><span class="keyword">val</span> monotonicity_th</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; OurInt.t -&gt; OurInt.t</code></pre>
+<pre><span id="VALtermination_"><span class="keyword">val</span> termination_</span> : <code class="type"><a href="TWNLoop.html#TYPEt">TWNLoop.t</a> -&gt;<br>       'a -&gt; 'b -&gt; (<a href="Var.html#TYPEt">Var.t</a>, <a href="PolyExponential.PE.html#TYPEt">PolyExponential.PE.t</a>) Batteries.Hashtbl.t -&gt; bool</code></pre>
+<pre><span id="VALtermination"><span class="keyword">val</span> termination</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -&gt; bool</code></pre>
+<pre><span id="VALmonotonicity_th"><span class="keyword">val</span> monotonicity_th</span> : <code class="type">OurInt.t -&gt; OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; OurInt.t</code></pre>
+<pre><span id="VALmonotonicity_th_int"><span class="keyword">val</span> monotonicity_th_int</span> : <code class="type">int -&gt; int * int -&gt; int * int -&gt; OurInt.t</code></pre>
 <pre><span id="VALcompute_kmax"><span class="keyword">val</span> compute_kmax</span> : <code class="type">Polynomials.Polynomial.t list -&gt; OurInt.t</code></pre>
-<pre><span id="VALcompute_m"><span class="keyword">val</span> compute_m</span> : <code class="type">Polynomials.Polynomial.t list -&gt; OurInt.t</code></pre>
 <pre><span id="VALcompute_N"><span class="keyword">val</span> compute_N</span> : <code class="type">(OurInt.t * OurInt.t) list -&gt; OurInt.t</code></pre>
 <pre><span id="VALcompute_M"><span class="keyword">val</span> compute_M</span> : <code class="type">(OurInt.t * OurInt.t) list -&gt; OurInt.t</code></pre>
 <pre><span id="MODULEScaledMonomial"><span class="keyword">module</span> <a href="TWN.ScaledMonomial.html">ScaledMonomial</a></span>: <code class="type"><a href="ScaledMonomials.Make.html">ScaledMonomials.Make</a></code><code class="code">(</code><code class="type"><a href="OurInt.html">OurInt</a></code><code class="code">)</code></pre>
@@ -134,10 +136,10 @@
 <pre><span id="TYPEpath"><span class="keyword">type</span> <code class="type"></code>path</span> = <code class="type">(<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * <a href="TWNLoop.html#TYPEt">TWNLoop.t</a> * <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a>) list</code> </pre>
 
 
-<pre><span id="VALcycles"><span class="keyword">val</span> cycles</span> : <code class="type">(ProgramTypes.LocationSet.elt * <a href="TWNLoop.html#TYPEt">TWNLoop.t</a> * ProgramTypes.LocationSet.elt)<br>       Batteries.Set.t -&gt;<br>       <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt;<br>       (<a href="TWN.html#TYPEpath">path</a> * ProgramTypes.LocationSet.t) list -&gt; <a href="TWN.html#TYPEpath">path</a> list -&gt; path list</code></pre>
+<pre><span id="VALcycles"><span class="keyword">val</span> cycles</span> : <code class="type">(ProgramTypes.LocationSet.elt * <a href="TWNLoop.html#TYPEt">TWNLoop.t</a> * ProgramTypes.LocationSet.elt)<br>       Batteries.Set.t -&gt;<br>       <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt;<br>       (<a href="TWN.html#TYPEpath">path</a> * ProgramTypes.LocationSet.t) list -&gt;<br>       <a href="TWN.html#TYPEpath">path</a> list -&gt; <a href="TWN.html#TYPEpath">path</a> list</code></pre>
 <pre><span id="VALcompose_transitions"><span class="keyword">val</span> compose_transitions</span> : <code class="type">('a * <a href="TWNLoop.html#TYPEt">TWNLoop.t</a> * 'b) list -&gt; int -&gt; <a href="TWNLoop.html#TYPEt">TWNLoop.t</a></code></pre>
 <pre><span id="VALfind"><span class="keyword">val</span> find</span> : <code class="type"><a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> -&gt; (<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * 'a * 'b) list -&gt; int</code></pre>
-<pre><span id="VALfind_cycle"><span class="keyword">val</span> find_cycle</span> : <code class="type"><a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="TWN.html#TYPEpath">path</a> list -&gt; path</code></pre>
+<pre><span id="VALfind_cycle"><span class="keyword">val</span> find_cycle</span> : <code class="type"><a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="TWN.html#TYPEpath">path</a> list -&gt; <a href="TWN.html#TYPEpath">path</a></code></pre>
 <pre><span id="VALparallel_edges"><span class="keyword">val</span> parallel_edges</span> : <code class="type">(<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * <a href="TWNLoop.html#TYPEt">TWNLoop.t</a> * <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a>) list -&gt;<br>       (<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> * <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a>) list -&gt;<br>       (<a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a> * <a href="TWNLoop.html#TYPEt">TWNLoop.t</a> * <a href="ProgramTypes.Location.html#TYPEt">ProgramTypes.Location.t</a>) list</code></pre>
 <pre><span id="MODULETimeBoundTable"><span class="keyword">module</span> <a href="TWN.TimeBoundTable.html">TimeBoundTable</a></span>: <code class="type">Batteries.Hashtbl.Make</code><code class="code">(</code><code class="type"><a href="ProgramTypes.Transition.html">ProgramTypes.Transition</a></code><code class="code">)</code></pre>
 <pre><span id="VALtime_bound_table"><span class="keyword">val</span> time_bound_table</span> : <code class="type">(<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> list *<br>        (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * BoundsInst.Bound.t) list)<br>       TimeBoundTable.t</code></pre>

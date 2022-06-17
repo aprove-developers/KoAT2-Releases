@@ -47,6 +47,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -120,14 +121,14 @@
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type">'a</code> t</span> = <code class="type"><a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code> </pre>
 
 
-<pre><span id="VALreturn"><span class="keyword">val</span> return</span> : <code class="type">'a -&gt; status * 'a</code></pre>
-<pre><span id="VAL(>>=)"><span class="keyword">val</span> (&gt;&gt;=)</span> : <code class="type">status * 'a -&gt; ('a -&gt; status * 'b) -&gt; status * 'b</code></pre>
+<pre><span id="VALreturn"><span class="keyword">val</span> return</span> : <code class="type">'a -&gt; <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre>
+<pre><span id="VAL(>>=)"><span class="keyword">val</span> (&gt;&gt;=)</span> : <code class="type"><a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -&gt;<br>       ('a -&gt; <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b) -&gt; <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b</code></pre>
 <pre><span id="VALflat_map"><span class="keyword">val</span> flat_map</span> : <code class="type">('a -&gt; <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b) -&gt;<br>       <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -&gt; <a href="MaybeChanged.html#TYPEstatus">status</a> * 'b</code></pre>
 <pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">('a -&gt; 'b) -&gt; 'c * 'a -&gt; 'c * 'b</code></pre>
 <pre><span id="VALunpack"><span class="keyword">val</span> unpack</span> : <code class="type">'a * 'b -&gt; 'b</code></pre>
 <pre><span id="VALhas_changed"><span class="keyword">val</span> has_changed</span> : <code class="type"><a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -&gt; bool</code></pre>
-<pre><span id="VALif_changed"><span class="keyword">val</span> if_changed</span> : <code class="type">('a -&gt; 'a) -&gt; <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -&gt; status * 'a</code></pre>
-<pre><span id="VALchanged"><span class="keyword">val</span> changed</span> : <code class="type">'a -&gt; status * 'a</code></pre>
-<pre><span id="VALsame"><span class="keyword">val</span> same</span> : <code class="type">'a -&gt; status * 'a</code></pre>
-<pre><span id="VALfold_enum"><span class="keyword">val</span> fold_enum</span> : <code class="type">('a -&gt; 'b -&gt; 'a <a href="MaybeChanged.html#TYPEt">t</a>) -&gt; 'a -&gt; 'b Batteries.Enum.t -&gt; 'a t</code></pre>
-<pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">('a -&gt; 'b -&gt; 'a <a href="MaybeChanged.html#TYPEt">t</a>) -&gt; 'a -&gt; 'b Batteries.List.t -&gt; 'a t</code></pre></body></html>
+<pre><span id="VALif_changed"><span class="keyword">val</span> if_changed</span> : <code class="type">('a -&gt; 'a) -&gt; <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a -&gt; <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre>
+<pre><span id="VALchanged"><span class="keyword">val</span> changed</span> : <code class="type">'a -&gt; <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre>
+<pre><span id="VALsame"><span class="keyword">val</span> same</span> : <code class="type">'a -&gt; <a href="MaybeChanged.html#TYPEstatus">status</a> * 'a</code></pre>
+<pre><span id="VALfold_enum"><span class="keyword">val</span> fold_enum</span> : <code class="type">('a -&gt; 'b -&gt; 'a <a href="MaybeChanged.html#TYPEt">t</a>) -&gt;<br>       'a -&gt; 'b Batteries.Enum.t -&gt; 'a <a href="MaybeChanged.html#TYPEt">t</a></code></pre>
+<pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">('a -&gt; 'b -&gt; 'a <a href="MaybeChanged.html#TYPEt">t</a>) -&gt;<br>       'a -&gt; 'b Batteries.List.t -&gt; 'a <a href="MaybeChanged.html#TYPEt">t</a></code></pre></body></html>

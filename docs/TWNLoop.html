@@ -47,6 +47,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -143,25 +144,27 @@
 
 
 
-<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type">t -&gt; VarMap.key -&gt; Polynomials.Polynomial.t option</code></pre>
-<pre><span id="VALupdate_map"><span class="keyword">val</span> update_map</span> : <code class="type">t -&gt; Polynomials.Polynomial.t VarMap.t</code></pre>
-<pre><span id="VALguard"><span class="keyword">val</span> guard</span> : <code class="type">t -&gt; Guard.t</code></pre>
-<pre><span id="VALguard_without_inv"><span class="keyword">val</span> guard_without_inv</span> : <code class="type">t -&gt; Guard.t</code></pre>
-<pre><span id="VALinvariant"><span class="keyword">val</span> invariant</span> : <code class="type">t -&gt; Invariant.t</code></pre>
-<pre><span id="VALsubsumed_transitionlabels"><span class="keyword">val</span> subsumed_transitionlabels</span> : <code class="type">t -&gt; <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> list</code></pre>
-<pre><span id="VALsubsumed_transitions"><span class="keyword">val</span> subsumed_transitions</span> : <code class="type">'a -&gt; 'b -&gt; t -&gt; ('a * <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> * 'b) list</code></pre>
-<pre><span id="VALmk_transitions"><span class="keyword">val</span> mk_transitions</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> list -&gt; t</code></pre>
-<pre><span id="VALremove_non_contributors"><span class="keyword">val</span> remove_non_contributors</span> : <code class="type">t -&gt; VarSet.t -&gt; t</code></pre>
-<pre><span id="VALmk_transition"><span class="keyword">val</span> mk_transition</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -&gt; t</code></pre>
-<pre><span id="VALappend"><span class="keyword">val</span> append</span> : <code class="type">t -&gt; t -&gt; t</code></pre>
+<pre><span id="VALupdate"><span class="keyword">val</span> update</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; VarMap.key -&gt; Polynomials.Polynomial.t option</code></pre>
+<pre><span id="VALupdate_map"><span class="keyword">val</span> update_map</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; Polynomials.Polynomial.t VarMap.t</code></pre>
+<pre><span id="VALguard"><span class="keyword">val</span> guard</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; Guard.t</code></pre>
+<pre><span id="VALguard_without_inv"><span class="keyword">val</span> guard_without_inv</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; Guard.t</code></pre>
+<pre><span id="VALinvariant"><span class="keyword">val</span> invariant</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; Invariant.t</code></pre>
+<pre><span id="VALsubsumed_transitionlabels"><span class="keyword">val</span> subsumed_transitionlabels</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> list</code></pre>
+<pre><span id="VALsubsumed_transitions"><span class="keyword">val</span> subsumed_transitions</span> : <code class="type">'a -&gt; 'b -&gt; <a href="TWNLoop.html#TYPEt">t</a> -&gt; ('a * <a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> * 'b) list</code></pre>
+<pre><span id="VALmk_transitions"><span class="keyword">val</span> mk_transitions</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> list -&gt; <a href="TWNLoop.html#TYPEt">t</a></code></pre>
+<pre><span id="VALremove_non_contributors"><span class="keyword">val</span> remove_non_contributors</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; VarSet.t -&gt; <a href="TWNLoop.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmk_transition"><span class="keyword">val</span> mk_transition</span> : <code class="type"><a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -&gt; <a href="TWNLoop.html#TYPEt">t</a></code></pre>
+<pre><span id="VALadd_invariant"><span class="keyword">val</span> add_invariant</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; Invariant.t -&gt; <a href="TWNLoop.html#TYPEt">t</a></code></pre>
+<pre><span id="VALappend"><span class="keyword">val</span> append</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; <a href="TWNLoop.html#TYPEt">t</a> -&gt; <a href="TWNLoop.html#TYPEt">t</a></code></pre>
+<pre><span id="VALchain"><span class="keyword">val</span> chain</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; <a href="TWNLoop.html#TYPEt">t</a></code></pre>
 <pre><span id="VALupdate_to_string"><span class="keyword">val</span> update_to_string</span> : <code class="type">Polynomials.Polynomial.t VarMap.t -&gt; string</code></pre>
-<pre><span id="VALguard_to_string"><span class="keyword">val</span> guard_to_string</span> : <code class="type">?pretty:bool -&gt; t -&gt; string</code></pre>
-<pre><span id="VALguard_without_inv_to_string"><span class="keyword">val</span> guard_without_inv_to_string</span> : <code class="type">?pretty:bool -&gt; t -&gt; string</code></pre>
-<pre><span id="VALinvariant_to_string"><span class="keyword">val</span> invariant_to_string</span> : <code class="type">?pretty:bool -&gt; t -&gt; string</code></pre>
-<pre><span id="VALupdate_to_string_lhs"><span class="keyword">val</span> update_to_string_lhs</span> : <code class="type">t -&gt; string</code></pre>
-<pre><span id="VALupdate_to_string_rhs"><span class="keyword">val</span> update_to_string_rhs</span> : <code class="type">t -&gt; string</code></pre>
-<pre><span id="VALupdate_to_string_lhs_pretty"><span class="keyword">val</span> update_to_string_lhs_pretty</span> : <code class="type">t -&gt; string</code></pre>
-<pre><span id="VALupdate_to_string_rhs_pretty"><span class="keyword">val</span> update_to_string_rhs_pretty</span> : <code class="type">t -&gt; string</code></pre>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -&gt; t -&gt; string</code></pre>
+<pre><span id="VALguard_to_string"><span class="keyword">val</span> guard_to_string</span> : <code class="type">?pretty:bool -&gt; <a href="TWNLoop.html#TYPEt">t</a> -&gt; string</code></pre>
+<pre><span id="VALguard_without_inv_to_string"><span class="keyword">val</span> guard_without_inv_to_string</span> : <code class="type">?pretty:bool -&gt; <a href="TWNLoop.html#TYPEt">t</a> -&gt; string</code></pre>
+<pre><span id="VALinvariant_to_string"><span class="keyword">val</span> invariant_to_string</span> : <code class="type">?pretty:bool -&gt; <a href="TWNLoop.html#TYPEt">t</a> -&gt; string</code></pre>
+<pre><span id="VALupdate_to_string_lhs"><span class="keyword">val</span> update_to_string_lhs</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; string</code></pre>
+<pre><span id="VALupdate_to_string_rhs"><span class="keyword">val</span> update_to_string_rhs</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; string</code></pre>
+<pre><span id="VALupdate_to_string_lhs_pretty"><span class="keyword">val</span> update_to_string_lhs_pretty</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; string</code></pre>
+<pre><span id="VALupdate_to_string_rhs_pretty"><span class="keyword">val</span> update_to_string_rhs_pretty</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; string</code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">?pretty:bool -&gt; <a href="TWNLoop.html#TYPEt">t</a> -&gt; string</code></pre>
 <pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; VarSet.t</code></pre>
-<pre><span id="VALinput_vars"><span class="keyword">val</span> input_vars</span> : <code class="type">t -&gt; VarSet.t</code></pre></body></html>
+<pre><span id="VALinput_vars"><span class="keyword">val</span> input_vars</span> : <code class="type"><a href="TWNLoop.html#TYPEt">t</a> -&gt; VarSet.t</code></pre></body></html>
