@@ -47,6 +47,7 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
+<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -102,8 +103,8 @@
 </div>
 <hr width="100%">
 
-<pre><span id="VALprint_graph"><span class="keyword">val</span> print_graph</span> : <code class="type">format:Fpath.ext -&gt;<br>       Fpath.t -&gt; string -&gt; 'a -&gt; (out_channel -&gt; 'a -&gt; 'b) -&gt; unit</code></pre>
-<pre><span id="VALprint_graph_to_string"><span class="keyword">val</span> print_graph_to_string</span> : <code class="type">format:string -&gt; 'a -&gt; (out_channel -&gt; 'a -&gt; 'b) -&gt; string option</code></pre>
+<pre><span id="VALprint_graph"><span class="keyword">val</span> print_graph</span> : <code class="type">format:Fpath.ext -&gt;<br>       Fpath.t -&gt; string -&gt; 'a -&gt; (Stdlib.out_channel -&gt; 'a -&gt; 'b) -&gt; unit</code></pre>
+<pre><span id="VALprint_graph_to_string"><span class="keyword">val</span> print_graph_to_string</span> : <code class="type">format:string -&gt; 'a -&gt; (Stdlib.out_channel -&gt; 'a -&gt; 'b) -&gt; string option</code></pre>
 <pre><span id="VALprint_system"><span class="keyword">val</span> print_system</span> : <code class="type">label:(<a href="TransitionLabel.html#TYPEt">TransitionLabel.t</a> -&gt; string) -&gt;<br>       outdir:Fpath.t -&gt; file:string -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; format:Fpath.ext -&gt; unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Prints a png file in the given directory with the given filename (the extension .png will be generated) for the transition graph of the program.
@@ -172,7 +173,7 @@
 
 
 
-<pre><span id="VALcompare_color"><span class="keyword">val</span> compare_color</span> : <code class="type">color -&gt; color -&gt; Ppx_deriving_runtime.int</code></pre>
+<pre><span id="VALcompare_color"><span class="keyword">val</span> compare_color</span> : <code class="type"><a href="GraphPrint.html#TYPEcolor">color</a> -&gt; <a href="GraphPrint.html#TYPEcolor">color</a> -&gt; Ppx_deriving_runtime.int</code></pre>
 <pre><span id="VALequal_color"><span class="keyword">val</span> equal_color</span> : <code class="type"><a href="GraphPrint.html#TYPEcolor">color</a> -&gt; <a href="GraphPrint.html#TYPEcolor">color</a> -&gt; Ppx_deriving_runtime.bool</code></pre>
 <pre><span class="keyword">include</span> struct ... end</pre>
 
@@ -182,7 +183,7 @@
 
 <pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">t -&gt; t -&gt; int</code></pre></div>
 <pre><code class="code">end</code><code class="code">)</code></pre>
-<pre><span id="VALprint_system_pretty"><span class="keyword">val</span> print_system_pretty</span> : <code class="type">?format:string -&gt;<br>       ?color_map:color TransitionMap.t -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; string option</code></pre>
+<pre><span id="VALprint_system_pretty"><span class="keyword">val</span> print_system_pretty</span> : <code class="type">?format:string -&gt;<br>       ?color_map:<a href="GraphPrint.html#TYPEcolor">color</a> TransitionMap.t -&gt;<br>       <a href="Program.html#TYPEt">Program.t</a> -&gt; string option</code></pre>
 <pre><span id="VALprint_rvg"><span class="keyword">val</span> print_rvg</span> : <code class="type">label:(<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -&gt; string) -&gt;<br>       outdir:Fpath.t -&gt; file:string -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; format:Fpath.ext -&gt; unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
