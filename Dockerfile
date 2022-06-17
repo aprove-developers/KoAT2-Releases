@@ -7,15 +7,12 @@ LABEL author="Marcel Hark"
 
 ARG OCAML_VERSION=4.11.2
 
-RUN opam update
-RUN opam upgrade
+# Use our fork of opam-repository for static Z3
+RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opam-repository.git
+
 RUN opam switch create -y $OCAML_VERSION+musl+static+flambda
-RUN eval `opam env`
-RUN opam init
-RUN opam update
-RUN opam upgrade
 # Add graphviz for tests
-RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev graphviz zip --no-cache
+RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip --no-cache
 
 WORKDIR /home/opam
 
