@@ -47,7 +47,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -78,6 +77,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -104,13 +104,13 @@
 <hr width="100%">
 <p>Performs a single improvement step for a whole program to find better size-bounds.</p>
 
-<pre><span id="VALimprove"><span class="keyword">val</span> improve</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt;<br>       RVGTypes.RVG.t * <a href="RVGTypes.RVG.html#TYPEscc">RVGTypes.RVG.scc</a> list Stdlib.Lazy.t -&gt;<br>       ?scc:ProgramTypes.TransitionSet.t option -&gt;<br>       <a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; <a href="Approximation.html#TYPEt">Approximation.t</a></code></pre><div class="info ">
+<pre><span id="VALimprove"><span class="keyword">val</span> improve</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       RVGTypes.RVG.t * <a href="RVGTypes.RVG.html#TYPEscc">RVGTypes.RVG.scc</a> list Stdlib.Lazy.t -><br>       ?scc:ProgramTypes.TransitionSet.t option -><br>       <a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Performs a single improvement step for a whole program to find better sizebounds for the approximation and updates the approximation.</p>
 </div>
 </div>
 
-<pre><span id="VALimprove_scc"><span class="keyword">val</span> improve_scc</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt;<br>       RVGTypes.RVG.t -&gt; <a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; <a href="RVGTypes.RV.html#TYPEt">RVGTypes.RV.t</a> list -&gt; <a href="Approximation.html#TYPEt">Approximation.t</a></code></pre><div class="info ">
+<pre><span id="VALimprove_scc"><span class="keyword">val</span> improve_scc</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       RVGTypes.RVG.t -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> <a href="RVGTypes.RV.html#TYPEt">RVGTypes.RV.t</a> list -> <a href="Approximation.html#TYPEt">Approximation.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Performs a single improvement step for a single scc to find better sizebounds for the approximation and updates the approximation.</p>
 </div>

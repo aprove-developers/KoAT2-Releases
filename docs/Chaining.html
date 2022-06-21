@@ -47,7 +47,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -78,6 +77,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -110,26 +110,26 @@
 </div>
 </div>
 
-<pre><span id="VALskip_location"><span class="keyword">val</span> skip_location</span> : <code class="type">ProgramTypes.TransitionGraph.vertex -&gt;<br>       ProgramTypes.TransitionGraph.t -&gt; ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
+<pre><span id="VALskip_location"><span class="keyword">val</span> skip_location</span> : <code class="type">ProgramTypes.TransitionGraph.vertex -><br>       ProgramTypes.TransitionGraph.t -> ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location,
     making the location obsolete.</p>
 </div>
 </div>
 
-<pre><span id="VALchainable"><span class="keyword">val</span> chainable</span> : <code class="type">ProgramTypes.TransitionGraph.t -&gt; ProgramTypes.TransitionGraph.vertex -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALchainable"><span class="keyword">val</span> chainable</span> : <code class="type">ProgramTypes.TransitionGraph.t -> ProgramTypes.TransitionGraph.vertex -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns true if the specific location is chainable in the graph.</p>
 </div>
 </div>
 
-<pre><span id="VALchain"><span class="keyword">val</span> chain</span> : <code class="type">ProgramTypes.TransitionGraph.vertex -&gt;<br>       ProgramTypes.TransitionGraph.t -&gt; ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
+<pre><span id="VALchain"><span class="keyword">val</span> chain</span> : <code class="type">ProgramTypes.TransitionGraph.vertex -><br>       ProgramTypes.TransitionGraph.t -> ProgramTypes.TransitionGraph.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Performs a chaining step removing the location from the graph.</p>
 </div>
 </div>
 
-<pre><span id="VALtransform_graph"><span class="keyword">val</span> transform_graph</span> : <code class="type">?scc:ProgramTypes.TransitionSet.t option -&gt;<br>       ProgramTypes.TransitionGraph.t -&gt;<br>       ProgramTypes.TransitionGraph.t <a href="MaybeChanged.html#TYPEt">MaybeChanged.t</a></code></pre><div class="info ">
+<pre><span id="VALtransform_graph"><span class="keyword">val</span> transform_graph</span> : <code class="type">?scc:ProgramTypes.TransitionSet.t option -><br>       ProgramTypes.TransitionGraph.t -><br>       ProgramTypes.TransitionGraph.t <a href="MaybeChanged.html#TYPEt">MaybeChanged.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Performs chaining on the TransitionGraph.</p>
 </div>

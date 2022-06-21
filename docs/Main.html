@@ -47,7 +47,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -78,6 +77,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -120,10 +120,10 @@
 
 
 
-<pre><span id="VALmain_params_cmdliner_term"><span class="keyword">val</span> main_params_cmdliner_term</span> : <code class="type">unit -&gt; <a href="Main.html#TYPEmain_params">main_params</a> Cmdliner.Term.t</code></pre>
+<pre><span id="VALmain_params_cmdliner_term"><span class="keyword">val</span> main_params_cmdliner_term</span> : <code class="type">unit -> <a href="Main.html#TYPEmain_params">main_params</a> Cmdliner.Term.t</code></pre>
 <pre><span class="keyword">include</span> struct ... end</pre>
 
-<pre><span id="VALsubcommand"><span class="keyword">val</span> subcommand</span> : <code class="type">('a -&gt; 'b) -&gt;<br>       (unit -&gt; 'a Cmdliner.Term.t) -&gt;<br>       string -&gt; string -&gt; 'b Cmdliner.Term.t * Cmdliner.Term.info</code></pre>
+<pre><span id="VALsubcommand"><span class="keyword">val</span> subcommand</span> : <code class="type">('a -> 'b) -><br>       (unit -> 'a Cmdliner.Term.t) -><br>       string -> string -> 'b Cmdliner.Term.t * Cmdliner.Term.info</code></pre>
 <pre><span id="VALsubcommands"><span class="keyword">val</span> subcommands</span> : <code class="type">(unit Cmdliner.Term.t * Cmdliner.Term.info) list</code></pre>
 <pre><span id="VALversion"><span class="keyword">val</span> version</span> : <code class="type">string</code></pre>
-<pre><span id="VALdefault_cmd"><span class="keyword">val</span> default_cmd</span> : <code class="type"><a href="Main.html#TYPEmain_params">main_params</a> -&gt; [&gt; `Help of [&gt; `Pager ] * 'a option | `Ok of unit ]</code></pre></body></html>
+<pre><span id="VALdefault_cmd"><span class="keyword">val</span> default_cmd</span> : <code class="type"><a href="Main.html#TYPEmain_params">main_params</a> -> [> `Help of [> `Pager ] * 'a option | `Ok of unit ]</code></pre></body></html>

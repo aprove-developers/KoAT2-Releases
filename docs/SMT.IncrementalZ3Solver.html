@@ -46,7 +46,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -77,6 +76,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -99,54 +99,54 @@
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
 
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">?model:bool -&gt; unit -&gt; <a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">?model:bool -> unit -> <a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a new incremental smt solver.</p>
 </div>
 </div>
 
-<pre><span id="VALpush"><span class="keyword">val</span> push</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALpush"><span class="keyword">val</span> push</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Creates a backtracking point.</p>
 </div>
 </div>
 
-<pre><span id="VALpop"><span class="keyword">val</span> pop</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALpop"><span class="keyword">val</span> pop</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Backtrack one backtracking point. Note that an exception is thrown if Pop is called without a corresponding push.</p>
 </div>
 </div>
 
-<pre><span id="VALsatisfiable"><span class="keyword">val</span> satisfiable</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALsatisfiable"><span class="keyword">val</span> satisfiable</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Checks if the current state is satisfiable.</p>
 </div>
 </div>
 
-<pre><span id="VALunsatisfiable"><span class="keyword">val</span> unsatisfiable</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALunsatisfiable"><span class="keyword">val</span> unsatisfiable</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Checks if the current state is satisfiable.</p>
 </div>
 </div>
 
-<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -&gt; Formulas.Formula.t -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -> Formulas.Formula.t -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Asserts the formula.</p>
 </div>
 </div>
 
-<pre><span id="VALadd_real"><span class="keyword">val</span> add_real</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -&gt; Formulas.RealFormula.t -&gt; unit</code></pre>
-<pre><span id="VALmodel"><span class="keyword">val</span> model</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -&gt;<br>       Polynomials.Polynomial.valuation Batteries.Option.t</code></pre><div class="info ">
+<pre><span id="VALadd_real"><span class="keyword">val</span> add_real</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -> Formulas.RealFormula.t -> unit</code></pre>
+<pre><span id="VALmodel"><span class="keyword">val</span> model</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -><br>       Polynomials.Polynomial.valuation Batteries.Option.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a model of the current state, if the state is satisfiable.</p>
 </div>
 </div>
 
-<pre><span id="VALmodel_real"><span class="keyword">val</span> model_real</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -&gt;<br>       Polynomials.RealPolynomial.valuation Batteries.Option.t</code></pre>
-<pre><span id="VALadd_bound_comparison"><span class="keyword">val</span> add_bound_comparison</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -&gt;<br>       [ `LE | `LT ] -&gt; BoundsInst.Bound.t -&gt; BoundsInst.Bound.t -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALmodel_real"><span class="keyword">val</span> model_real</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -><br>       Polynomials.RealPolynomial.valuation Batteries.Option.t</code></pre>
+<pre><span id="VALadd_bound_comparison"><span class="keyword">val</span> add_bound_comparison</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -><br>       [ `LE | `LT ] -> BoundsInst.Bound.t -> BoundsInst.Bound.t -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Add a bound comparison using the specified operator (LE = less-or-equal, LT = less-than)</p>
 </div>
 </div>
 
-<pre><span id="VALadd_realbound_comparison"><span class="keyword">val</span> add_realbound_comparison</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -&gt;<br>       [ `LE | `LT ] -&gt; BoundsInst.RealBound.t -&gt; BoundsInst.RealBound.t -&gt; unit</code></pre></body></html>
+<pre><span id="VALadd_realbound_comparison"><span class="keyword">val</span> add_realbound_comparison</span> : <code class="type"><a href="SMT.IncrementalZ3Solver.html#TYPEt">t</a> -><br>       [ `LE | `LT ] -> BoundsInst.RealBound.t -> BoundsInst.RealBound.t -> unit</code></pre></body></html>

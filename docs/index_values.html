@@ -43,7 +43,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -74,6 +73,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -732,7 +732,7 @@
 <td></td></tr>
 <tr><td><a href="TWN.html#VALcompute_kmax">compute_kmax</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
-<tr><td><a href="NonLinearSizeBounds.html#VALcompute_order">compute_order</a> [<a href="NonLinearSizeBounds.html">NonLinearSizeBounds</a>]</td>
+<tr><td><a href="TWNSizeBounds.html#VALcompute_order">compute_order</a> [<a href="TWNSizeBounds.html">TWNSizeBounds</a>]</td>
 <td></td></tr>
 <tr><td><a href="ProofOutput.html#VALcompute_proof">compute_proof</a> [<a href="ProofOutput.html">ProofOutput</a>]</td>
 <td></td></tr>
@@ -1506,14 +1506,14 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNSizeBounds.html#VALimprove">improve</a> [<a href="TWNSizeBounds.html">TWNSizeBounds</a>]</td>
+<td></td></tr>
 <tr><td><a href="SizeBounds.html#VALimprove">improve</a> [<a href="SizeBounds.html">SizeBounds</a>]</td>
 <td><div class="info">
 <p>Performs a single improvement step for a whole program to find better sizebounds for the approximation and updates the approximation.</p>
 
 </div>
 </td></tr>
-<tr><td><a href="NonLinearSizeBounds.html#VALimprove">improve</a> [<a href="NonLinearSizeBounds.html">NonLinearSizeBounds</a>]</td>
-<td></td></tr>
 <tr><td><a href="Analysis.html#VALimprove">improve</a> [<a href="Analysis.html">Analysis</a>]</td>
 <td><div class="info">
 <p>Performs improvement steps to find better timebounds for the approximation and updates the approximation.</p>
@@ -1526,7 +1526,7 @@
 
 </div>
 </td></tr>
-<tr><td><a href="NonLinearSizeBounds.html#VALimprove_t">improve_t</a> [<a href="NonLinearSizeBounds.html">NonLinearSizeBounds</a>]</td>
+<tr><td><a href="TWNSizeBounds.html#VALimprove_t">improve_t</a> [<a href="TWNSizeBounds.html">TWNSizeBounds</a>]</td>
 <td></td></tr>
 <tr><td><a href="TrivialSizeBounds.html#VALincoming_bound">incoming_bound</a> [<a href="TrivialSizeBounds.html">TrivialSizeBounds</a>]</td>
 <td><div class="info">
@@ -1872,6 +1872,8 @@
 
 </div>
 </td></tr>
+<tr><td><a href="TWNSizeBounds.html#VALlogger">logger</a> [<a href="TWNSizeBounds.html">TWNSizeBounds</a>]</td>
+<td></td></tr>
 <tr><td><a href="TWN.html#VALlogger">logger</a> [<a href="TWN.html">TWN</a>]</td>
 <td></td></tr>
 <tr><td><a href="PartialEvaluation.html#VALlogger">logger</a> [<a href="PartialEvaluation.html">PartialEvaluation</a>]</td>
@@ -1887,8 +1889,6 @@
 </div>
 </td></tr>
 <tr><td><a href="NontrivialSizeBounds.html#VALlogger">logger</a> [<a href="NontrivialSizeBounds.html">NontrivialSizeBounds</a>]</td>
-<td></td></tr>
-<tr><td><a href="NonLinearSizeBounds.html#VALlogger">logger</a> [<a href="NonLinearSizeBounds.html">NonLinearSizeBounds</a>]</td>
 <td></td></tr>
 <tr><td><a href="InvariantGeneration.html#VALlogger">logger</a> [<a href="InvariantGeneration.html">InvariantGeneration</a>]</td>
 <td><div class="info">

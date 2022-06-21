@@ -46,7 +46,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -77,6 +76,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -99,12 +99,12 @@
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type">(<a href="PolyExponential.ConstantConstraint.html#TYPEt">PolyExponential.ConstantConstraint.t</a> * Polynomials.RationalPolynomial.t *<br>        int * int)<br>       list</code> </pre>
 
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> -&gt; string</code></pre>
-<pre><span id="VALto_string_pretty"><span class="keyword">val</span> to_string_pretty</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> -&gt; string</code></pre>
-<pre><span id="VALsubstitute"><span class="keyword">val</span> substitute</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a>, <a href="PolyExponential.PE.html#TYPEt">t</a>) Batteries.Hashtbl.t -&gt;<br>       Polynomials.Polynomial.t -&gt; <a href="PolyExponential.PE.html#TYPEt">t</a></code></pre>
-<pre><span id="VALnormalize"><span class="keyword">val</span> normalize</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> list -&gt; <a href="PolyExponential.PE.html#TYPEt">t</a> list</code></pre>
-<pre><span id="VALmax_const"><span class="keyword">val</span> max_const</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> -&gt; OurInt.t</code></pre>
-<pre><span id="VALremove_frac"><span class="keyword">val</span> remove_frac</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> -&gt; <a href="PolyExponential.PE.html#TYPEt">t</a></code></pre>
-<pre><span id="VALcompute_closed_form"><span class="keyword">val</span> compute_closed_form</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> * Polynomials.Polynomial.t) list -&gt; <a href="PolyExponential.PE.html#TYPEt">t</a> list</code></pre>
-<pre><span id="VALmonotonic_kernel"><span class="keyword">val</span> monotonic_kernel</span> : <code class="type">Formulas.Formula.t -&gt;<br>       Formulas.Formula.t -&gt;<br>       <a href="PolyExponential.PE.html#TYPEt">t</a> -&gt;<br>       <a href="PolyExponential.PE.html#TYPEt">t</a> * ((int * int) * (int * int)) list</code></pre>
-<pre><span id="VALoverapprox"><span class="keyword">val</span> overapprox</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> -&gt; BoundsInst.Bound.t -&gt; BoundsInst.Bound.t</code></pre></body></html>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALto_string_pretty"><span class="keyword">val</span> to_string_pretty</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALsubstitute"><span class="keyword">val</span> substitute</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a>, <a href="PolyExponential.PE.html#TYPEt">t</a>) Batteries.Hashtbl.t -><br>       Polynomials.Polynomial.t -> <a href="PolyExponential.PE.html#TYPEt">t</a></code></pre>
+<pre><span id="VALnormalize"><span class="keyword">val</span> normalize</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> list -> <a href="PolyExponential.PE.html#TYPEt">t</a> list</code></pre>
+<pre><span id="VALmax_const"><span class="keyword">val</span> max_const</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> -> OurInt.t</code></pre>
+<pre><span id="VALremove_frac"><span class="keyword">val</span> remove_frac</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> -> <a href="PolyExponential.PE.html#TYPEt">t</a></code></pre>
+<pre><span id="VALcompute_closed_form"><span class="keyword">val</span> compute_closed_form</span> : <code class="type">(<a href="Var.html#TYPEt">Var.t</a> * Polynomials.Polynomial.t) list -> <a href="PolyExponential.PE.html#TYPEt">t</a> list</code></pre>
+<pre><span id="VALmonotonic_kernel"><span class="keyword">val</span> monotonic_kernel</span> : <code class="type">Formulas.Formula.t -><br>       Formulas.Formula.t -><br>       <a href="PolyExponential.PE.html#TYPEt">t</a> -><br>       <a href="PolyExponential.PE.html#TYPEt">t</a> * ((int * int) * (int * int)) list</code></pre>
+<pre><span id="VALoverapprox"><span class="keyword">val</span> overapprox</span> : <code class="type"><a href="PolyExponential.PE.html#TYPEt">t</a> -> BoundsInst.Bound.t -> BoundsInst.Bound.t</code></pre></body></html>

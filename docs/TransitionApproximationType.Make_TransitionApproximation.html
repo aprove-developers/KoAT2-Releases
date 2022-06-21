@@ -45,7 +45,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -76,6 +75,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -95,14 +95,14 @@
 <pre><span id="MODULEMake_TransitionApproximation"><span class="keyword">module</span> Make_TransitionApproximation</span>: <div class="sig_block"><code class="code">functor (</code><code class="code">Num</code><code class="code"> : </code><code class="type"><a href="PolyTypes.OurNumber.html">PolyTypes.OurNumber</a></code><code class="code">) -&gt; </code><div class="sig_block"><code class="code">functor (</code><code class="code">Poly</code><code class="code"> : </code><code class="code">sig</code></pre><div class="sig_block">
 <pre><span class="keyword">include</span> PolyTypes.Polynomial</pre>
 
-<pre><span id="VALmax_of_occurring_constants"><span class="keyword">val</span> max_of_occurring_constants</span> : <code class="type">t -&gt; Num.t</code></pre></div><pre><code class="code">end</code><code class="code">) -&gt; </code><div class="sig_block"><code class="code">functor (</code><code class="code">Trans</code><code class="code"> : </code><code class="code">sig</code></pre><div class="sig_block">
+<pre><span id="VALmax_of_occurring_constants"><span class="keyword">val</span> max_of_occurring_constants</span> : <code class="type">t -> Num.t</code></pre></div><pre><code class="code">end</code><code class="code">) -&gt; </code><div class="sig_block"><code class="code">functor (</code><code class="code">Trans</code><code class="code"> : </code><code class="code">sig</code></pre><div class="sig_block">
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
 
-<pre><span id="VALid"><span class="keyword">val</span> id</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt; int</code></pre>
-<pre><span id="VALto_id_string"><span class="keyword">val</span> to_id_string</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt; string</code></pre>
-<pre><span id="VALcompare_same"><span class="keyword">val</span> compare_same</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt;<br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt; int</code></pre>
-<pre><span id="VALfold_transset"><span class="keyword">val</span> fold_transset</span> : <code class="type">(<a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt; 'a -&gt; 'a) -&gt;<br>       ProgramTypes.TransitionSet.t -&gt; 'a -&gt; 'a</code></pre></div><pre><code class="code">end</code><code class="code">) -&gt; </code><code class="code">sig</code> <a href="TransitionApproximationType.Make_TransitionApproximation.html">..</a> <code class="code">end</code></div></div></div></pre><div class="info module top">
+<pre><span id="VALid"><span class="keyword">val</span> id</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -> int</code></pre>
+<pre><span id="VALto_id_string"><span class="keyword">val</span> to_id_string</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALcompare_same"><span class="keyword">val</span> compare_same</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -><br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -> int</code></pre>
+<pre><span id="VALfold_transset"><span class="keyword">val</span> fold_transset</span> : <code class="type">(<a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -> 'a -> 'a) -><br>       ProgramTypes.TransitionSet.t -> 'a -> 'a</code></pre></div><pre><code class="code">end</code><code class="code">) -&gt; </code><code class="code">sig</code> <a href="TransitionApproximationType.Make_TransitionApproximation.html">..</a> <code class="code">end</code></div></div></div></pre><div class="info module top">
 <div class="info-desc">
 <p>Abstracts TransitionApproximation so that it can be used to handle normal transitions with integer bounds and general
  transitions with real bounds</p>
@@ -149,17 +149,17 @@
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> </pre>
 
 
-<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type">string -&gt; int -&gt; <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a></code></pre>
-<pre><span id="VALget"><span class="keyword">val</span> get</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt;<br>       Trans.t -&gt; B.t</code></pre>
-<pre><span id="VALget_id"><span class="keyword">val</span> get_id</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt;<br>       int -&gt; B.t</code></pre>
-<pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt;<br>       <a href="Program.html#TYPEt">Program.t</a> -&gt; B.t</code></pre><div class="info ">
+<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type">string -> int -> <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a></code></pre>
+<pre><span id="VALget"><span class="keyword">val</span> get</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -><br>       Trans.t -> B.t</code></pre>
+<pre><span id="VALget_id"><span class="keyword">val</span> get_id</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -><br>       int -> B.t</code></pre>
+<pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -><br>       <a href="Program.html#TYPEt">Program.t</a> -> B.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a timebound of the specified kind for the execution of the whole graph.</p>
 </div>
 </div>
 
-<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type">?simplifyfunc:(B.t -&gt;<br>                      B.t) -&gt;<br>       B.t -&gt;<br>       Trans.t -&gt;<br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt;<br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a></code></pre>
-<pre><span id="VALall_bounded"><span class="keyword">val</span> all_bounded</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt;<br>       Trans.t list -&gt; bool</code></pre>
-<pre><span id="VALto_formatted"><span class="keyword">val</span> to_formatted</span> : <code class="type">?pretty:bool -&gt;<br>       Trans.t list -&gt;<br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt;<br>       <a href="FormattedString.html#TYPEt">FormattedString.t</a></code></pre>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">Trans.t list -&gt;<br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt; string</code></pre>
-<pre><span id="VALequivalent"><span class="keyword">val</span> equivalent</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt;<br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -&gt; bool</code></pre></body></html>
+<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type">?simplifyfunc:(B.t -><br>                      B.t) -><br>       B.t -><br>       Trans.t -><br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -><br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a></code></pre>
+<pre><span id="VALall_bounded"><span class="keyword">val</span> all_bounded</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -><br>       Trans.t list -> bool</code></pre>
+<pre><span id="VALto_formatted"><span class="keyword">val</span> to_formatted</span> : <code class="type">?pretty:bool -><br>       Trans.t list -><br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -><br>       <a href="FormattedString.html#TYPEt">FormattedString.t</a></code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">Trans.t list -><br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -> string</code></pre>
+<pre><span id="VALequivalent"><span class="keyword">val</span> equivalent</span> : <code class="type"><a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -><br>       <a href="TransitionApproximationType.Make_TransitionApproximation.html#TYPEt">t</a> -> bool</code></pre></body></html>
