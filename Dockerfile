@@ -34,9 +34,10 @@ COPY --chown=opam:opam examples ./examples
 ENV PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
 ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib/stublibs
 
-# Run Build command
+# Run Build command and strip binaries
 ARG KOAT2_VERSION_STRING=UNKNOWN
-RUN RELEASE=1 KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING omake --depend
+RUN RELEASE=1 KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING omake --depend && \
+    strip src/main/koat2.opt
 
 #-------------------------------------------
 # Get llvm2kittel + clang to analyse C programs
