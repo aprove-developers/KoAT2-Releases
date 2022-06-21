@@ -47,7 +47,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -78,6 +77,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -103,39 +103,39 @@
 <pre><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = <code class="type">OurInt.t * OurInt.t</code> </pre>
 
 
-<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; bool</code></pre>
-<pre><span id="VAL(=~=)"><span class="keyword">val</span> (=~=)</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; bool</code></pre>
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t -> bool</code></pre>
+<pre><span id="VAL(=~=)"><span class="keyword">val</span> (=~=)</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t -> bool</code></pre>
 <pre><span id="VALzero"><span class="keyword">val</span> zero</span> : <code class="type">OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALis_zero"><span class="keyword">val</span> is_zero</span> : <code class="type">OurInt.t * 'a -&gt; bool</code></pre>
+<pre><span id="VALis_zero"><span class="keyword">val</span> is_zero</span> : <code class="type">OurInt.t * 'a -> bool</code></pre>
 <pre><span id="VALone"><span class="keyword">val</span> one</span> : <code class="type">OurInt.t * OurInt.t</code></pre>
 <pre><span id="VALminus_one"><span class="keyword">val</span> minus_one</span> : <code class="type">OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALreduce_sign"><span class="keyword">val</span> reduce_sign</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALreduce"><span class="keyword">val</span> reduce</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALof_int"><span class="keyword">val</span> of_int</span> : <code class="type">int -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALof_int_tuple"><span class="keyword">val</span> of_int_tuple</span> : <code class="type">int * int -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALto_int"><span class="keyword">val</span> to_int</span> : <code class="type">OurInt.t * OurInt.t -&gt; int</code></pre>
-<pre><span id="VALto_ourint"><span class="keyword">val</span> to_ourint</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t</code></pre>
-<pre><span id="VALof_ourint"><span class="keyword">val</span> of_ourint</span> : <code class="type">'a -&gt; 'a * OurInt.t</code></pre>
-<pre><span id="VALof_ourint_tuple"><span class="keyword">val</span> of_ourint_tuple</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALto_ourfloat"><span class="keyword">val</span> to_ourfloat</span> : <code class="type">Big_int.big_int * Big_int.big_int -&gt; OurFloat.t</code></pre>
-<pre><span id="VALnom"><span class="keyword">val</span> nom</span> : <code class="type">'a * 'b -&gt; 'a</code></pre>
-<pre><span id="VALden"><span class="keyword">val</span> den</span> : <code class="type">'a * 'b -&gt; 'b</code></pre>
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">OurInt.t * OurInt.t -&gt; string</code></pre>
-<pre><span id="VALmul"><span class="keyword">val</span> mul</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALneg"><span class="keyword">val</span> neg</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALsub"><span class="keyword">val</span> sub</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALis_negative"><span class="keyword">val</span> is_negative</span> : <code class="type">OurInt.t * OurInt.t -&gt; bool</code></pre>
-<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; int</code></pre>
-<pre><span id="VALis_ge"><span class="keyword">val</span> is_ge</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; bool</code></pre>
-<pre><span id="VALreciprocal"><span class="keyword">val</span> reciprocal</span> : <code class="type">OurInt.t * 'a -&gt; 'a * OurInt.t</code></pre>
-<pre><span id="VALdiv"><span class="keyword">val</span> div</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALpow_ourint"><span class="keyword">val</span> pow_ourint</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALpow"><span class="keyword">val</span> pow</span> : <code class="type">OurInt.t * OurInt.t -&gt; int -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALis_integer"><span class="keyword">val</span> is_integer</span> : <code class="type">OurInt.t * OurInt.t -&gt; bool</code></pre>
-<pre><span id="VAL(-)"><span class="keyword">val</span> (-)</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VAL(+)"><span class="keyword">val</span> (+)</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALsign"><span class="keyword">val</span> sign</span> : <code class="type">OurInt.t * OurInt.t -&gt; int</code></pre>
-<pre><span id="VALabs"><span class="keyword">val</span> abs</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t * OurInt.t</code></pre>
-<pre><span id="VALceil"><span class="keyword">val</span> ceil</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t</code></pre>
-<pre><span id="VALfloor"><span class="keyword">val</span> floor</span> : <code class="type">OurInt.t * OurInt.t -&gt; OurInt.t</code></pre></body></html>
+<pre><span id="VALreduce_sign"><span class="keyword">val</span> reduce_sign</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALreduce"><span class="keyword">val</span> reduce</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALof_int"><span class="keyword">val</span> of_int</span> : <code class="type">int -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALof_int_tuple"><span class="keyword">val</span> of_int_tuple</span> : <code class="type">int * int -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALto_int"><span class="keyword">val</span> to_int</span> : <code class="type">OurInt.t * OurInt.t -> int</code></pre>
+<pre><span id="VALto_ourint"><span class="keyword">val</span> to_ourint</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t</code></pre>
+<pre><span id="VALof_ourint"><span class="keyword">val</span> of_ourint</span> : <code class="type">'a -> 'a * OurInt.t</code></pre>
+<pre><span id="VALof_ourint_tuple"><span class="keyword">val</span> of_ourint_tuple</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALto_ourfloat"><span class="keyword">val</span> to_ourfloat</span> : <code class="type">Big_int.big_int * Big_int.big_int -> OurFloat.t</code></pre>
+<pre><span id="VALnom"><span class="keyword">val</span> nom</span> : <code class="type">'a * 'b -> 'a</code></pre>
+<pre><span id="VALden"><span class="keyword">val</span> den</span> : <code class="type">'a * 'b -> 'b</code></pre>
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type">OurInt.t * OurInt.t -> string</code></pre>
+<pre><span id="VALmul"><span class="keyword">val</span> mul</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALneg"><span class="keyword">val</span> neg</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALsub"><span class="keyword">val</span> sub</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALis_negative"><span class="keyword">val</span> is_negative</span> : <code class="type">OurInt.t * OurInt.t -> bool</code></pre>
+<pre><span id="VALcompare"><span class="keyword">val</span> compare</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t -> int</code></pre>
+<pre><span id="VALis_ge"><span class="keyword">val</span> is_ge</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t -> bool</code></pre>
+<pre><span id="VALreciprocal"><span class="keyword">val</span> reciprocal</span> : <code class="type">OurInt.t * 'a -> 'a * OurInt.t</code></pre>
+<pre><span id="VALdiv"><span class="keyword">val</span> div</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALpow_ourint"><span class="keyword">val</span> pow_ourint</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALpow"><span class="keyword">val</span> pow</span> : <code class="type">OurInt.t * OurInt.t -> int -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALis_integer"><span class="keyword">val</span> is_integer</span> : <code class="type">OurInt.t * OurInt.t -> bool</code></pre>
+<pre><span id="VAL(-)"><span class="keyword">val</span> (-)</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VAL(+)"><span class="keyword">val</span> (+)</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALsign"><span class="keyword">val</span> sign</span> : <code class="type">OurInt.t * OurInt.t -> int</code></pre>
+<pre><span id="VALabs"><span class="keyword">val</span> abs</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t * OurInt.t</code></pre>
+<pre><span id="VALceil"><span class="keyword">val</span> ceil</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t</code></pre>
+<pre><span id="VALfloor"><span class="keyword">val</span> floor</span> : <code class="type">OurInt.t * OurInt.t -> OurInt.t</code></pre></body></html>

@@ -47,7 +47,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -78,6 +77,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -105,11 +105,11 @@
 </div>
 </div>
 
-<pre><span id="VALadd_to_proof"><span class="keyword">val</span> add_to_proof</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; BoundsInst.Bound.t -&gt; unit</code></pre>
+<pre><span id="VALadd_to_proof"><span class="keyword">val</span> add_to_proof</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> BoundsInst.Bound.t -> unit</code></pre>
 <pre><span id="VALtime_cfr"><span class="keyword">val</span> time_cfr</span> : <code class="type">float Batteries.ref</code></pre>
-<pre><span id="VALcompute_timeout_time"><span class="keyword">val</span> compute_timeout_time</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Approximation.html#TYPEt">Approximation.t</a> -&gt; ProgramTypes.TransitionSet.t -&gt; float</code></pre>
+<pre><span id="VALcompute_timeout_time"><span class="keyword">val</span> compute_timeout_time</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -> <a href="Approximation.html#TYPEt">Approximation.t</a> -> ProgramTypes.TransitionSet.t -> float</code></pre>
 <pre><span id="VALuid"><span class="keyword">val</span> uid</span> : <code class="type">string Batteries.ref</code></pre>
-<pre><span id="VALapply_cfr"><span class="keyword">val</span> apply_cfr</span> : <code class="type">ProgramTypes.TransitionSet.t -&gt;<br>       ProgramTypes.TransitionSet.t -&gt; <a href="Program.html#TYPEt">Program.t</a> -&gt; <a href="Program.html#TYPEt">Program.t</a> <a href="MaybeChanged.html#TYPEt">MaybeChanged.t</a></code></pre><div class="info ">
+<pre><span id="VALapply_cfr"><span class="keyword">val</span> apply_cfr</span> : <code class="type">ProgramTypes.TransitionSet.t -><br>       ProgramTypes.TransitionSet.t -> <a href="Program.html#TYPEt">Program.t</a> -> <a href="Program.html#TYPEt">Program.t</a> <a href="MaybeChanged.html#TYPEt">MaybeChanged.t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Unrolls all transitions listed in nonLinearTransitions.starrt</p>
 </div>

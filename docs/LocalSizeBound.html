@@ -47,7 +47,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -78,6 +77,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -111,56 +111,56 @@
 </div>
 
 
-<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type">?s:int -&gt; ?c:int -&gt; string list -&gt; <a href="LocalSizeBound.html#TYPEt">t</a></code></pre><div class="info ">
+<pre><span id="VALmk"><span class="keyword">val</span> mk</span> : <code class="type">?s:int -> ?c:int -> string list -> <a href="LocalSizeBound.html#TYPEt">t</a></code></pre><div class="info ">
 <div class="info-desc">
 <p>Constructs a local size bound with the variables specified as string list</p>
 </div>
 </div>
 
-<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -&gt; <a href="LocalSizeBound.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALequal"><span class="keyword">val</span> equal</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> <a href="LocalSizeBound.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns if the templated bounds represent the same bound.</p>
 </div>
 </div>
 
-<pre><span id="VALfactor"><span class="keyword">val</span> factor</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALfactor"><span class="keyword">val</span> factor</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the factor of the local sizebound. Raises unbounded, if the local size bound is unbounded</p>
 </div>
 </div>
 
-<pre><span id="VALconstant"><span class="keyword">val</span> constant</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -&gt; int</code></pre><div class="info ">
+<pre><span id="VALconstant"><span class="keyword">val</span> constant</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> int</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the constant of the local sizebound. Raises unbounded, if the local size bound is unbounded</p>
 </div>
 </div>
 
-<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -&gt; VarSet.t</code></pre><div class="info ">
+<pre><span id="VALvars"><span class="keyword">val</span> vars</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> VarSet.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a set of of variables which affect the local sizebound</p>
 </div>
 </div>
 
-<pre><span id="VALis_constant"><span class="keyword">val</span> is_constant</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -&gt; bool</code></pre><div class="info ">
+<pre><span id="VALis_constant"><span class="keyword">val</span> is_constant</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> bool</code></pre><div class="info ">
 <div class="info-desc">
 <p>Is the LocalSizeBound constant, i.e. does it contain no variables?</p>
 </div>
 </div>
 
-<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -&gt; string</code></pre><div class="info ">
+<pre><span id="VALto_string"><span class="keyword">val</span> to_string</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> string</code></pre><div class="info ">
 <div class="info-desc">
 <p>Converts the templated bound to a string.</p>
 </div>
 </div>
 
-<pre><span id="VALas_bound"><span class="keyword">val</span> as_bound</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -&gt; BoundsInst.Bound.t</code></pre><div class="info ">
+<pre><span id="VALas_bound"><span class="keyword">val</span> as_bound</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> -> BoundsInst.Bound.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Converts the templated bound to an actual (finite) bound.</p>
 </div>
 </div>
 
-<pre><span id="VALoption_lsb_as_bound"><span class="keyword">val</span> option_lsb_as_bound</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> option -&gt; BoundsInst.Bound.t</code></pre>
-<pre><span id="VALfind_bound"><span class="keyword">val</span> find_bound</span> : <code class="type">VarSet.t -&gt;<br>       <a href="Var.html#TYPEt">Var.t</a> -&gt;<br>       Formulas.Formula.t -&gt; int -&gt; (<a href="LocalSizeBound.html#TYPEt">t</a> * bool Stdlib.Lazy.t) option</code></pre><div class="info ">
+<pre><span id="VALoption_lsb_as_bound"><span class="keyword">val</span> option_lsb_as_bound</span> : <code class="type"><a href="LocalSizeBound.html#TYPEt">t</a> option -> BoundsInst.Bound.t</code></pre>
+<pre><span id="VALfind_bound"><span class="keyword">val</span> find_bound</span> : <code class="type">VarSet.t -><br>       <a href="Var.html#TYPEt">Var.t</a> -><br>       Formulas.Formula.t -> int -> (<a href="LocalSizeBound.html#TYPEt">t</a> * bool Stdlib.Lazy.t) option</code></pre><div class="info ">
 <div class="info-desc">
 <p>Tries to find a templated bound of any of the defined templates. The first vars corresponds to
  the variabels that may occur in the lsb.
@@ -168,37 +168,37 @@
 </div>
 </div>
 
-<pre><span id="VALsizebound_local"><span class="keyword">val</span> sizebound_local</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt;<br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -&gt; <a href="Var.html#TYPEt">Var.t</a> -&gt; <a href="LocalSizeBound.html#TYPEt">t</a> Batteries.Option.t</code></pre><div class="info ">
+<pre><span id="VALsizebound_local"><span class="keyword">val</span> sizebound_local</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> -> <a href="Var.html#TYPEt">Var.t</a> -> <a href="LocalSizeBound.html#TYPEt">t</a> Batteries.Option.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns a local sizebound of the specified kind for the variable of the transition.
     A local sizebound is expressed in relation to the values directly before executing the transition.</p>
 </div>
 </div>
 
-<pre><span id="VALsizebound_local_rv"><span class="keyword">val</span> sizebound_local_rv</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt;<br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -&gt; <a href="LocalSizeBound.html#TYPEt">t</a> Batteries.Option.t</code></pre>
-<pre><span id="VALsizebound_local_scc"><span class="keyword">val</span> sizebound_local_scc</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -&gt;<br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a>) list -&gt;<br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -&gt; <a href="LocalSizeBound.html#TYPEt">t</a> * bool)<br>       Batteries.Option.t</code></pre><div class="info ">
+<pre><span id="VALsizebound_local_rv"><span class="keyword">val</span> sizebound_local_rv</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       <a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> <a href="LocalSizeBound.html#TYPEt">t</a> Batteries.Option.t</code></pre>
+<pre><span id="VALsizebound_local_scc"><span class="keyword">val</span> sizebound_local_scc</span> : <code class="type"><a href="Program.html#TYPEt">Program.t</a> -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a>) list -><br>       (<a href="ProgramTypes.Transition.html#TYPEt">ProgramTypes.Transition.t</a> * <a href="Var.html#TYPEt">Var.t</a> -> <a href="LocalSizeBound.html#TYPEt">t</a> * bool)<br>       Batteries.Option.t</code></pre><div class="info ">
 <div class="info-desc">
 <p>If for all result variables of the given kind a local sizebound is defined, this function returns a local sizebound function.
     Otherwise it returns None.</p>
 </div>
 </div>
 
-<pre><span id="VALreset"><span class="keyword">val</span> reset</span> : <code class="type">unit -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALreset"><span class="keyword">val</span> reset</span> : <code class="type">unit -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Resets all cached data.
     Useful for testing in the same OCaml instance.</p>
 </div>
 </div>
 
-<pre><span id="VALreset_cfr"><span class="keyword">val</span> reset_cfr</span> : <code class="type">unit -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALreset_cfr"><span class="keyword">val</span> reset_cfr</span> : <code class="type">unit -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Resets all cached data used in the cfr computation.
     Useful for testing in the same OCaml instance.</p>
 </div>
 </div>
 
-<pre><span id="VALswitch_cache"><span class="keyword">val</span> switch_cache</span> : <code class="type">unit -&gt; unit</code></pre>
-<pre><span id="VALenable_cfr"><span class="keyword">val</span> enable_cfr</span> : <code class="type">unit -&gt; unit</code></pre><div class="info ">
+<pre><span id="VALswitch_cache"><span class="keyword">val</span> switch_cache</span> : <code class="type">unit -> unit</code></pre>
+<pre><span id="VALenable_cfr"><span class="keyword">val</span> enable_cfr</span> : <code class="type">unit -> unit</code></pre><div class="info ">
 <div class="info-desc">
 <p>Enables cfr.</p>
 </div>

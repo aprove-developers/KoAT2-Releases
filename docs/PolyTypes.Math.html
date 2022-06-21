@@ -47,7 +47,6 @@
 <link title="Monad" rel="Chapter" href="Monad.html">
 <link title="Monomials" rel="Chapter" href="Monomials.html">
 <link title="MultiphaseRankingFunction" rel="Chapter" href="MultiphaseRankingFunction.html">
-<link title="NonLinearSizeBounds" rel="Chapter" href="NonLinearSizeBounds.html">
 <link title="NontrivialSizeBounds" rel="Chapter" href="NontrivialSizeBounds.html">
 <link title="Normalise" rel="Chapter" href="Normalise.html">
 <link title="NormalizeCommand" rel="Chapter" href="NormalizeCommand.html">
@@ -78,6 +77,7 @@
 <link title="SizeCommand" rel="Chapter" href="SizeCommand.html">
 <link title="TWN" rel="Chapter" href="TWN.html">
 <link title="TWNLoop" rel="Chapter" href="TWNLoop.html">
+<link title="TWNSizeBounds" rel="Chapter" href="TWNSizeBounds.html">
 <link title="Timeout" rel="Chapter" href="Timeout.html">
 <link title="TransitionApproximationType" rel="Chapter" href="TransitionApproximationType.html">
 <link title="TransitionLabel" rel="Chapter" href="TransitionLabel.html">
@@ -106,49 +106,49 @@
 
 <pre><span class="keyword">include</span> <a href="PolyTypes.BaseMath.html">PolyTypes.BaseMath</a></pre>
 
-<pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type">t Batteries.Enum.t -&gt; t</code></pre><div class="info ">
+<pre><span id="VALsum"><span class="keyword">val</span> sum</span> : <code class="type">t Batteries.Enum.t -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the sum of all enums elements.</p>
 </div>
 </div>
 
-<pre><span id="VALproduct"><span class="keyword">val</span> product</span> : <code class="type">t Batteries.Enum.t -&gt; t</code></pre><div class="info ">
+<pre><span id="VALproduct"><span class="keyword">val</span> product</span> : <code class="type">t Batteries.Enum.t -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Returns the product of all enums elements.</p>
 </div>
 </div>
 
-<pre><span id="VALsub"><span class="keyword">val</span> sub</span> : <code class="type">t -&gt; t -&gt; t</code></pre><div class="info ">
+<pre><span id="VALsub"><span class="keyword">val</span> sub</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Subtracts the second element from the first one.</p>
 </div>
 </div>
 
-<pre><span id="VAL(+)"><span class="keyword">val</span> (+)</span> : <code class="type">t -&gt; t -&gt; t</code></pre><div class="info ">
+<pre><span id="VAL(+)"><span class="keyword">val</span> (+)</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Addition of two elements.</p>
 </div>
 </div>
 
-<pre><span id="VAL(-)"><span class="keyword">val</span> (-)</span> : <code class="type">t -&gt; t -&gt; t</code></pre><div class="info ">
+<pre><span id="VAL(-)"><span class="keyword">val</span> (-)</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Subtraction of two elements.</p>
 </div>
 </div>
 
-<pre><span id="VAL( * )"><span class="keyword">val</span> ( * )</span> : <code class="type">t -&gt; t -&gt; t</code></pre><div class="info ">
+<pre><span id="VAL( * )"><span class="keyword">val</span> ( * )</span> : <code class="type">t -> t -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Multiplication of two elements</p>
 </div>
 </div>
 
-<pre><span id="VAL( ** )"><span class="keyword">val</span> ( ** )</span> : <code class="type">t -&gt; int -&gt; t</code></pre><div class="info ">
+<pre><span id="VAL( ** )"><span class="keyword">val</span> ( ** )</span> : <code class="type">t -> int -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Raises an element to the power of an integer value.</p>
 </div>
 </div>
 
-<pre><span id="VAL(~-)"><span class="keyword">val</span> (~-)</span> : <code class="type">t -&gt; t</code></pre><div class="info ">
+<pre><span id="VAL(~-)"><span class="keyword">val</span> (~-)</span> : <code class="type">t -> t</code></pre><div class="info ">
 <div class="info-desc">
 <p>Negates element.</p>
 </div>
