@@ -5,6 +5,8 @@ FROM ocaml/opam:alpine as koat2_build
 LABEL author="Fabian Meyer"
 LABEL author="Marcel Hark"
 
+WORKDIR /home/opam
+
 ARG OCAML_VERSION=4.11.2
 
 # Use our fork of opam-repository for static Z3
@@ -14,7 +16,19 @@ RUN opam switch create -y $OCAML_VERSION+musl+static+flambda
 # Add graphviz for tests
 RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip --no-cache
 
-WORKDIR /home/opam
+# PPL
+RUN wget https://www.bugseng.com/external/ppl/download/ftp/releases/1.2/ppl-1.2.tar.xz && \
+    tar xfv ppl-1.2.tar.xz
+
+RUN cd ppl-1.2 && \
+    ./configure
+
+RUN cd ppl-1.2 && \
+    make -j$(nproc)
+
+RUN cd ppl-1.2 && \
+    sudo make install && \
+    make -j$(nproc) installcheck
 
 RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.1/irankfinder_v1.3.1_rhel7.zip && \
     mkdir irankfinder && \
