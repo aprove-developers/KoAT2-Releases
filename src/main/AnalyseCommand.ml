@@ -182,7 +182,7 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
-  ProofOutput.compute_proof params.show_proof;
+  ProofOutput.enable_proof params.show_proof;
   ProofOutput.proof_format params.proof_format;
   let program =
     input

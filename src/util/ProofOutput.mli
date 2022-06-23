@@ -1,8 +1,8 @@
 
 
 (** Settings *)
-val compute_proof: bool -> unit
-val is_computing_proof: unit -> bool
+val enable_proof: bool -> unit
+val proof_is_enabled: unit -> bool
 val proof_format: Formatter.format -> unit
 val get_format: unit -> Formatter.format
 
