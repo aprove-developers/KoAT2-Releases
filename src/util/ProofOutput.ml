@@ -3,29 +3,29 @@ open FormatMonad
 open Formatter
 open FormattedString
 
-let compute = ref false
+let proof_enabled = ref false
 let format = ref Plain
-let proof = ref Empty
+let proof: (FormattedString.t Lazy.t) ref = ref (Lazy.from_val Empty)
 
-let is_computing_proof () = !compute
+let proof_is_enabled () = !proof_enabled
 
-let compute_proof b = compute := b
+let enable_proof b = proof_enabled := b
 
 let proof_format f = format := f
 
 let get_format () = !format
 
 let add_to_proof str_computation =
-  if !compute then
-    proof := !proof<>str_computation ()
+  if !proof_enabled then
+    proof :=  Lazy.map (fun p -> p<>str_computation ()) !proof (* fun () -> !proof ()<>str_computation () *)
 
 let add_to_proof_with_format str_computation =
-  if !compute then
-    proof := !proof<>str_computation !format
+  if !proof_enabled then
+    proof := Lazy.map (fun p -> p<>str_computation !format) !proof (* fun () -> !proof ()<>str_computation () *)
 
 let add_str_paragraph_to_proof f =
   add_to_proof @@ (FormattedString.mk_paragraph % FormattedString.mk_str_line % f )
 
 let print_proof format =
   print_string @@ Formatter.render_default ~format
-    (write_format !proof >> title "KoAT2 Proof Output")
+    (write_format (Lazy.force !proof) >> title "KoAT2 Proof Output")
