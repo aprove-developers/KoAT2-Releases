@@ -62,7 +62,7 @@ doc: $(IDOCS)
     ocamlfind ocamldoc -hide-warnings -d $(DOC_DIR) -stars -sort -t "Koat2" -html \
         $(mapprefix -load, $(IDOCS))
 
-.DEFAULT: doc install
+.DEFAULT: install
 
 clean:
     rm -f \
