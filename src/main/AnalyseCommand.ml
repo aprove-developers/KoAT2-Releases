@@ -61,7 +61,7 @@ type params = {
     show_proof: bool;
     (** Displays the complexity proof. *)
 
-    proof_format: Formatter.format; [@enum [Formatter.Html; Formatter.Markdown; Formatter.Plain] |> List.map (fun f -> Formatter.format_to_string f, f)] [@default Formatter.Markdown]
+    proof_format: Formatter.format; [@enum [Formatter.Html; Formatter.Markdown; Formatter.Plain] |> List.map (fun f -> Formatter.format_to_string f, f)] [@default Formatter.Plain]
     (** What should be the output format of the proof. html, markdown, or plain? *)
 
     logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default Logging.all] [@sep ','] [@aka ["l"]]
@@ -182,7 +182,7 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
-  ProofOutput.compute_proof params.show_proof;
+  ProofOutput.enable_proof params.show_proof;
   ProofOutput.proof_format params.proof_format;
   let program =
     input
