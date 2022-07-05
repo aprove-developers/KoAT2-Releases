@@ -60,6 +60,33 @@ let check_triangular (t: TWNLoop.t) =
 
 let check_triangular_t (t: TransitionLabel.t) = check_triangular (TWNLoop.mk_transition t)
 
+let check_solvable (t: TransitionLabel.t) = 
+  let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in
+  let module SCC = Graph.Components.Make(DG) in
+  let dg_linear = VarSet.fold (fun x graph -> 
+              let vars = TransitionLabel.update t x |? Polynomial.of_var x |> Polynomial.vars in
+              VarSet.fold (fun y graph -> DG.add_edge graph x y) vars graph) (TransitionLabel.vars t) DG.empty and
+  dg_non_linear = VarSet.fold (fun x graph -> 
+              let update = TransitionLabel.update t x |? Polynomial.of_var x in
+              let linear_vars = update
+                |> Polynomial.vars
+                |> VarSet.filter (fun v -> Polynomial.var_only_linear v update |> not) in
+              VarSet.fold (fun y graph -> DG.add_edge graph x y) linear_vars graph) (TransitionLabel.vars t) DG.empty in
+  let blocks = SCC.scc_list dg_linear in
+  if List.for_all (fun scc -> List.length scc = 1) (SCC.scc_list dg_non_linear) (* We don't have cyclic non-linear dependencies. *)
+  && List.for_all (fun scc -> 
+                    List.for_all (fun x -> 
+                      List.for_all (fun y -> 
+                      TransitionLabel.update t x 
+                      |? Polynomial.of_var x 
+                      |> Polynomial.var_only_linear y) 
+                      scc) 
+                    scc) blocks (* For all blocks, all variables x,y in such a block: The update of x only depends linear on y *) then
+    Option.some (blocks)
+  else
+    None
+
+ 
 (* MONOTONICITY *)
 
 let check_weakly_monotonicity (t: TWNLoop.t) =
@@ -346,7 +373,14 @@ let lift appr entry bound =
           FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
           FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
+(* let to_string arg =
+  if Option.is_some arg then
+    "solvable: " ^ (Util.enum_to_string (Util.enum_to_string Var.to_string) (Option.get arg |> List.map List.enum |> List.enum))
+  else
+    "not solvable" (* Just for Testing *) *)
+
 let time_bound (l,t,l') scc program appr = (
+  (* Printf.printf "%s\n" (to_string (check_solvable t)); (* Just for Testing *) *)
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then (
