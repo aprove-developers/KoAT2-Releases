@@ -9,6 +9,7 @@ let preprocess = Preprocessor.process_til_fixpoint Preprocessor.([InvariantGener
 
 (** Returns an overall timebound for the given program.*)
 let find_timebound ?(mprf_max_depth = 1) (program: Program.t): Bound.t =
+  print_string "timeboundtest 12\n";
   (program, Approximation.create program)
   |> Tuple2.map1 preprocess
   |> (fun (program, appr) ->
@@ -18,6 +19,7 @@ let find_timebound ?(mprf_max_depth = 1) (program: Program.t): Bound.t =
 
 (** Returns an overall costbound for the given program. *)
 let find_costbound (program: Program.t): Bound.t =
+  print_string "timeboundtest 22\n";
   (program, Approximation.create program)
   |> Tuple2.map1 preprocess
   |> (fun (program, appr) ->
