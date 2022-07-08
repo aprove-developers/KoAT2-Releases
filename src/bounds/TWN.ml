@@ -6,6 +6,7 @@ open Atoms
 open BoundsInst
 open Constraints
 open PolyExponential
+open Lacaml
 
 (* PROOF *)
 let logger = Logging.(get Twn)
@@ -240,9 +241,11 @@ let get_bound t order npe varmap =
 
 (* For Testing *)
 let check_twn loop =
+  print_string "244 TWN";
   (check_weakly_monotonicity loop) && ((List.length (check_triangular loop)) == (VarSet.cardinal ((TWNLoop.input_vars loop))))
 
-let check_twn (_,t,_) = check_twn (TWNLoop.mk_transition t)
+let check_twn (_,t,_) = 
+  print_string "248TWN \n"; check_twn (TWNLoop.mk_transition t)
 
 let complexity loop =
     let order = check_triangular loop in
@@ -302,25 +305,27 @@ let compose_transitions cycle start =
 (* Finds entered location on cycle. *)
 let rec find l list =
     match list with
-    | [] -> raise Not_found
+    | [] -> raise Not_found (*TODO umbenennen *)
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
 (* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
-let find_cycle appr program (cycles: path list) = List.find (fun cycle ->
+let find_cycle appr program (cycles: path list) = 
+  print_string "\n 316 TWN";
+  List.find (fun cycle ->
+    (* list of all transitions in a cycle, twnloop doesn't require each transition to be in twn form, but together they do *)
     let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
     let entries = Program.entry_transitions logger program handled_transitions in
-    let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in
+    let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in (* 'find' throws an exception *)
     List.for_all (fun (entry, t) ->
-      let eliminated_t =
+      let eliminated_t = (* throw out useless variables *)
         EliminateNonContributors.eliminate_t
           (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
       in
       not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
        && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
-       && let order = check_triangular eliminated_t in List.length order == VarSet.cardinal (TWNLoop.input_vars eliminated_t) (* Triangular?*)
+       && let order = check_triangular eliminated_t in List.length order == VarSet.cardinal (TWNLoop.input_vars eliminated_t) (* Triangular?*) (*TODO: automorphism check here *)
        && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)
        && List.for_all (Approximation.is_time_bounded appr) entries) (List.combine entries twn_loops)) cycles
-
        (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
 
 let rec parallel_edges ys = function
@@ -332,6 +337,7 @@ let rec parallel_edges ys = function
 
 module TimeBoundTable = Hashtbl.Make(Transition)
 
+(* keys: liste von transition (kreise), values: bounds von eingangstransitionen *)
 let time_bound_table: ((Transition.t list) * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
 
 let lift appr entry bound =
@@ -346,10 +352,42 @@ let lift appr entry bound =
           FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
           FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
+
+let exists_linear_automorphism = function
+  | _ -> true
+
+let exists_non_linear_automorphism = function
+  | _ -> true
+  
+(* unfinished *)
+let transform_linearly (cycle: path) = 
+  print_string "\n 363 TWN"; 
+  cycle
+
+(* unfinished *)
+let transform_non_linearly (cycle: path) = print_string "\n 366 TWN"; cycle
+
+(* unfinished: TODO remember the transformation*)
+(* transforms only if it's twn transformable, otherwise unchanged *)
+let transform (cycle: path) = 
+  (*if (check_twn cycle) then cycle 
+  else*) if (exists_linear_automorphism cycle) then (transform_linearly cycle)
+  else if (exists_non_linear_automorphism cycle) then (transform_non_linearly cycle)
+  else cycle
+
 let time_bound (l,t,l') scc program appr = (
+  let y2 = (Polynomial.add (Polynomial.of_power (Var.of_string "x") 2) (Polynomial.one)) in
+  let variables_list = [Var.of_string "x"; Var.of_string "y"] in 
+  let t123 = TransitionLabel.mk ~cost:(TransitionLabel.cost t) ~guard:(TransitionLabel.guard t) ~assignments:[y2] ~patterns:[Var.of_string "x"] ~vars:variables_list in 
+  print_string (TransitionLabel.to_string t123);
+  print_string "\n 379 TWN";
+  (*let t = t123 in*)
+  print_string (TransitionLabel.to_string t);
+  print_string "\n 382 TWN ";
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then (
+    print_string "\n 396 TWN";
     let bound =
       Timeout.timed_run 5. (fun () -> try
         let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
@@ -360,6 +398,10 @@ let time_bound (l,t,l') scc program appr = (
           else
             (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition t),l')], (LocationSet.singleton l'))]) []))
         in
+        let transformed_cycle = (transform cycle) in (* transforms only if it's twn transformable, otherwise unchanged *)
+        print_string "\n 397 TWN";
+        print_int (List.length cycle);
+        print_string (List.fold_left (^) "" (List.map (fun x -> "a") cycle));
         let handled_transitions = ListMonad.(cycle >>= fun (l,twn,l') -> TWNLoop.subsumed_transitions l l' twn) in
         let entries = Program.entry_transitions logger program handled_transitions in
         (* add_to_proof_graph program handled_transitions entries; *)
@@ -403,13 +445,16 @@ let time_bound (l,t,l') scc program appr = (
             Bound.infinity)
     in
     if Option.is_some bound then
+      (print_string "\n 425 TWN";
       bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
-      |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true))))
+      |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true)))))
     else (
+      print_string "\n 429 TWN";
       Logger.log logger Logger.INFO (fun () -> "twn", ["Timeout", Bound.to_string Bound.infinity]);
       Bound.infinity)
   )
   else (
+    print_string "\n 434 TWN";
     let cycle, xs = Option.get opt in
     let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
     bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))

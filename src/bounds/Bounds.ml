@@ -5,6 +5,16 @@ open Polynomials
 open LocalSizeBound
 
 let find_bounds ?(mprf_max_depth = 1) ~preprocess ~local ~cfr ?(time_cfr = 180) ?(twn = false) (program: Program.t) (appr: Approximation.t): Program.t * Approximation.t =
+  print_string "bounds 8 \n";
+  let t = Big_int.big_int_of_int 5  in 
+  let ads : Var.t = Var.of_string "x" in 
+  let y = Polynomials.Polynomial.of_coeff_list [t; t;t] [ads; Var.of_string "x"; Var.of_string "y"]  in 
+  print_string (Polynomials.Polynomial.to_string y);
+  (*print_string program;*)
+  print_bool twn;
+  Printf.printf("\n");
+  (*print_string appr;*)
+  print_int time_cfr;
   let rvg_with_sccs = RVGTypes.RVG.rvg_with_sccs program in
    if not (List.is_empty cfr) then
     PartialEvaluation.time_cfr := float_of_int time_cfr;
