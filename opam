@@ -8,6 +8,7 @@ name: "koat2"
 depends: [
   "apron"
   "batteries"
+  "conf-ppl"
   "cmdliner"
   "fpath"
   "menhir"
