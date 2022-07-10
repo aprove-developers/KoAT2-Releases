@@ -26,7 +26,7 @@ let version = [%getenv "KOAT2_GIT_VERSION"]
 
 let default_cmd params =
   if params.version then
-    `Ok (Printf.printf "KoAT2 version %s\n" version)
+    `Ok (Printf.printf "KoAT2 version %s (%s)\n" version Z3.Version.full_version)
   else `Help (`Pager, None)
 
 let () =

@@ -5,19 +5,30 @@ FROM ocaml/opam:alpine as koat2_build
 LABEL author="Fabian Meyer"
 LABEL author="Marcel Hark"
 
+WORKDIR /home/opam
+
 ARG OCAML_VERSION=4.11.2
 
-RUN opam update
-RUN opam upgrade
-RUN opam switch create -y $OCAML_VERSION+musl+static+flambda
-RUN eval `opam env`
-RUN opam init
-RUN opam update
-RUN opam upgrade
-# Add graphviz for tests
-RUN sudo apk add m4 python2 gmp-dev perl mpfr-dev graphviz zip --no-cache
+# Use our fork of opam-repository for static Z3
+RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opam-repository.git
 
-WORKDIR /home/opam
+RUN opam switch create -y $OCAML_VERSION+musl+static+flambda
+# Add graphviz for tests
+RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip --no-cache
+
+# PPL
+RUN wget https://www.bugseng.com/external/ppl/download/ftp/releases/1.2/ppl-1.2.tar.xz && \
+    tar xfv ppl-1.2.tar.xz
+
+RUN cd ppl-1.2 && \
+    ./configure
+
+RUN cd ppl-1.2 && \
+    make -j$(nproc)
+
+RUN cd ppl-1.2 && \
+    sudo make install && \
+    make -j$(nproc) installcheck
 
 RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.1/irankfinder_v1.3.1_rhel7.zip && \
     mkdir irankfinder && \
@@ -25,7 +36,7 @@ RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/
     rm irankfinder.zip
 
 COPY --chown=opam:opam opam .
-RUN opam install -j $((`nproc` - 2)) . --deps-only
+RUN opam install -j $(nproc) . --deps-only
 
 COPY --chown=opam:opam src ./src
 COPY --chown=opam:opam OMakeroot .
@@ -37,9 +48,10 @@ COPY --chown=opam:opam examples ./examples
 ENV PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
 ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib/stublibs
 
-# Run Build command
+# Run Build command and strip binaries
 ARG KOAT2_VERSION_STRING=UNKNOWN
-RUN RELEASE=1 KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING omake --depend
+RUN RELEASE=1 KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING omake --depend && \
+    strip src/main/koat2.opt
 
 #-------------------------------------------
 # Get llvm2kittel + clang to analyse C programs

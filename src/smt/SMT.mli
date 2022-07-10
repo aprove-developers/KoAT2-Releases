@@ -10,6 +10,9 @@ exception SMTFailure of string
 (** A unified interface for SMT solvers (currently supported: Z3) *)
 module Z3Solver :
 sig
+    (** Version of the Z3 solver *)
+    val version : string
+
     val satisfiable : Formula.t -> bool
 
     val unsatisfiable : Formula.t -> bool

@@ -7,6 +7,7 @@ open BoundsInst
 open Constraints
 open PolyExponential
 open Lacaml
+open TransitionLabel
 
 (* PROOF *)
 let logger = Logging.(get Twn)
@@ -60,6 +61,36 @@ let check_triangular (t: TWNLoop.t) =
   |> List.rev
 
 let check_triangular_t (t: TransitionLabel.t) = check_triangular (TWNLoop.mk_transition t)
+
+let check_solvable (t: TWNLoop.t) =
+  let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in
+  let module SCC = Graph.Components.Make(DG) in
+  let dg_linear = VarSet.fold (fun x graph ->
+              let vars = TWNLoop.update t x |? Polynomial.of_var x |> Polynomial.vars in
+              VarSet.fold (fun y graph -> DG.add_edge graph x y) vars graph) (TWNLoop.vars t) DG.empty and
+  dg_non_linear = VarSet.fold (fun x graph ->
+              let update = TWNLoop.update t x |? Polynomial.of_var x in
+              let linear_vars = update
+                |> Polynomial.vars
+                |> VarSet.filter (fun v -> Polynomial.var_only_linear v update |> not) in
+              VarSet.fold (fun y graph -> DG.add_edge graph x y) linear_vars graph) (TWNLoop.vars t) DG.empty in
+  let blocks = SCC.scc_list dg_linear in
+  if List.for_all (fun scc -> List.length scc = 1) (SCC.scc_list dg_non_linear) (* We don't have cyclic non-linear dependencies. *)
+  && List.for_all (fun scc ->
+                    List.for_all (fun x ->
+                      List.for_all (fun y ->
+                      TWNLoop.update t x
+                      |? Polynomial.of_var x
+                      |> Polynomial.var_only_linear y)
+                      scc)
+                    scc) blocks (* For all blocks, all variables x,y in such a block: The update of x only depends linear on y *) then
+    Option.some (blocks)
+  else
+    None
+
+let check_solvable_t (t: TransitionLabel.t) = check_solvable (TWNLoop.mk_transition t)
+
+
 
 (* MONOTONICITY *)
 
@@ -302,6 +333,44 @@ let compose_transitions cycle start =
   let pre, t1, post = split start cycle in
   List.fold (fun u t -> TWNLoop.append u (Tuple3.second t)) (Tuple3.second t1) (post@pre)
 
+(* get_linear_update_of_variable (x<- 2x+3y+y^2) x y returns 3 *)
+let get_linear_update_of_variable (t:TransitionLabel.t) (var_left:TWNLoop.VarMap.key) (var_right:TWNLoop.VarMap.key)= 
+  let update = Option.get (TransitionLabel.update t var_left) in 
+  let fupdate = List.filter (fun (x,y) -> Monomial.is_univariate_linear y) (Polynomial.monomials_with_coeffs update) in 
+  let (x,y) = List.find  (fun (x,y) -> (Var.equal (List.first (VarSet.to_list (Monomial.vars y))))  var_right) fupdate in 
+  x
+(* get_linear_update_list (x<- 2x+3y+y^2) x [x;y] returns [2;3] *)
+let rec get_linear_update_list (t:TransitionLabel.t) (var_left:TWNLoop.VarMap.key) (block:TWNLoop.VarMap.key list) = match block with
+  | [] -> []
+  | x::xs -> get_linear_update_of_variable t var_left x :: get_linear_update_list t var_left xs 
+
+let matrix_of_linear_assignments (t:TransitionLabel.t) (block:TWNLoop.VarMap.key list) = 
+  List.map (fun x -> get_linear_update_list t x block) block
+  (*List.map (fun x-> get_linear_update_of_variable t x y) block 
+  let xy = List.first block in 
+  let xx = t.keys t xy in 
+  let yx = Polynomial.is_linear xy in
+  let x = List.map (TransitionLabel.update t) block in 
+  let y = List.map Option.get x in 
+  print_endline "340 TWN:";
+  print_string ((Polynomial.to_string) (List.first y));
+  [[4;0];[0;6]]
+*)
+  
+(*TWNLoop.VarMap.key list  option -> bool *)
+let check_transformable_one_block (block:TWNLoop.VarMap.key list) = match block with 
+  | [] -> false
+  | [x] -> true 
+  | (x::xs) -> true (* TODO: this case where the magic happens *)
+
+(* For each block we check if it is transformable *)
+(*TWNLoop.VarMap.key list list option -> bool list *)
+let rec check_transformable (blocks:TWNLoop.VarMap.key list list option) = match blocks with 
+  | None -> []
+  | Some [] -> []
+  | Some (xs::xss) -> (check_transformable_one_block xs)::(check_transformable (Some xss))
+
+
 (* Finds entered location on cycle. *)
 let rec find l list =
     match list with
@@ -323,6 +392,7 @@ let find_cycle appr program (cycles: path list) =
       in
       not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
        && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
+       && List.for_all (fun x -> x) (check_transformable (check_solvable t))
        && let order = check_triangular eliminated_t in List.length order == VarSet.cardinal (TWNLoop.input_vars eliminated_t) (* Triangular?*) (*TODO: automorphism check here *)
        && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)
        && List.for_all (Approximation.is_time_bounded appr) entries) (List.combine entries twn_loops)) cycles
@@ -374,6 +444,17 @@ let transform (cycle: path) =
   else*) if (exists_linear_automorphism cycle) then (transform_linearly cycle)
   else if (exists_non_linear_automorphism cycle) then (transform_non_linearly cycle)
   else cycle
+  
+ let to_string arg =
+  if Option.is_some arg then
+    "solvable: " ^ (Util.enum_to_string (Util.enum_to_string Var.to_string) (Option.get arg |> List.map List.enum |> List.enum))
+  else
+    "not solvable" (* Just for Testing *) 
+
+let list_list_to_string xss =
+  let yss = List.map (fun xs -> List.map (fun x -> Big_int.to_string x) xs) xss in 
+  let zs = List.map (fun ys -> List.fold (^) " " ys) yss in 
+  List.fold (^) " " zs
 
 let time_bound (l,t,l') scc program appr = (
   let y2 = (Polynomial.add (Polynomial.of_power (Var.of_string "x") 2) (Polynomial.one)) in
@@ -384,6 +465,13 @@ let time_bound (l,t,l') scc program appr = (
   (*let t = t123 in*)
   print_string (TransitionLabel.to_string t);
   print_string "\n 382 TWN ";
+
+  Printf.printf "%s\n" (to_string (check_solvable_t t)); (* Just for Testing *)
+  (*let matrix = List.map (matrix_of_linear_assignments t) (Option.get (check_solvable_t t)) in*)
+  print_string (Big_int.string_of_big_int (get_linear_update_of_variable t (Var.of_string "Arg_1") (Var.of_string "Arg_0"))); 
+  let matrix = matrix_of_linear_assignments t (List.first (Option.get (check_solvable_t t))) in 
+  Printf.printf "475: %s\n" (list_list_to_string matrix);
+  
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then (
@@ -391,14 +479,13 @@ let time_bound (l,t,l') scc program appr = (
     let bound =
       Timeout.timed_run 5. (fun () -> try
         let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
-        let cycle = find_cycle appr program (
+        let cycle = find_cycle appr program ( (*find_cycle throws an exception if no cycle is found (for efficiency reasons) *)
           if Location.equal l l' then
             let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in
             [[List.find f parallel_edges]]
           else
             (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition t),l')], (LocationSet.singleton l'))]) []))
         in
-        let transformed_cycle = (transform cycle) in (* transforms only if it's twn transformable, otherwise unchanged *)
         print_string "\n 397 TWN";
         print_int (List.length cycle);
         print_string (List.fold_left (^) "" (List.map (fun x -> "a") cycle));
