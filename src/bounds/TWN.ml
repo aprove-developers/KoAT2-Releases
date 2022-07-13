@@ -17,6 +17,7 @@ let proof = ref FormattedString.Empty
 let proof_append f_str = proof := FormattedString.(!proof <> f_str)
 
 let add_to_proof_graph program cycle entries =
+  let x1  = Lacaml.D.Vec.of_list [1.;2.] in
   let color_map =
   List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty
   |> List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Red) entries in
@@ -466,7 +467,9 @@ let matrix_times_vector (matrix:Polynomials.Polynomial.value list list) (vars:TW
 (* sorts the blocks from function check_solvable in the order defined in the transition (needs O(n^2 log n) due to index_of) *)
 let change_order t blocks = 
   let var_list = (VarSet.to_list (TransitionLabel.vars t)) in 
-  let blocks = List.map (List.sort (fun x y -> if List.index_of x var_list < List.index_of y var_list then -1 else 1)) blocks in 
+  let blocks = List.map (List.sort (fun x y -> 
+                                            if List.index_of x var_list < List.index_of y var_list then -1 else 1)
+                        ) blocks in 
   List.sort (fun x y -> if List.index_of (List.first x) var_list < List.index_of (List.first y) var_list then -1 else 1) blocks
 
 
@@ -495,26 +498,28 @@ let time_bound (l,t,l') scc program appr = (
 
   (*now for higher dimensions: *)
   (*Fragen: 
-  Wie kann ich übersichtlicher coden?
-  Warum ist updated_transition der guard verändert? 
-  Wie achte ich auf die Reihenfolge der Variablen?
+  Wie kann ich übersichtlicher coden? and und einrücken
   Wie binde ich Lacaml ein?
-  Wieso wird der code doppelt auf dieser Transition ausgeführt?
-  Wann muss man Klammern bei einer Funktion am Anfang schreiben?
-  Kann change order richtig se
+  Wieso wird der code doppelt auf dieser Transition ausgeführt? normales fixpunkt-gedöns
+  Wann muss man Klammern bei einer Funktion am Anfang schreiben? für tap
+  Wie ersetze ich dann die Transition durch die transformierte? nicht ersetzen sondern nur laufzeit mit neuer transition berechnen und die laufzeit wieder zurücktransformieren
+  Aber sollte man dann nicht die Funktion bound mit der transformierten Transition aufrufen?
   *)
-  
-  let blocks = Option.get (check_solvable_t t) in 
-  let blocks = change_order t blocks in 
+
+  let blocks = Option.get (check_solvable_t t) 
+              |> change_order t in 
   let matrices = List.map (matrix_of_linear_assignments t) blocks in (* TODO: use difference of matrices *)
   let linear_parts = List.map2 matrix_times_vector matrices blocks in
   let transformed_matrices = List.map (transform_linearly_matrix) matrices in 
-  (*
-  let linear_parts = List.map2 matrix_times_vector (List.map2 (Lacaml.minus) transformed_matrices matrices) blocks in
-   *)
+  (*let y : Lacaml.D.vec = Lacaml.D.Vec.sub x1 x2 in 
+  Printf.printf "510: %s\n" (List.fold (fun x y -> x^y^"; " ) " " ((List.map (string_of_float) (Lacaml.D.Vec.to_list y))));
+  let linear_parts = List.map2 matrix_times_vector (List.map2 (Lacaml.matrix_minus) transformed_matrices matrices) blocks in
+  *)
   let update1 = List.map2 Polynomial.add (List.map (fun x -> Option.get (TransitionLabel.update t x)) (List.concat blocks)) (List.concat linear_parts) in 
-  let updated_transition = TransitionLabel.mk ~cost:(TransitionLabel.cost t) ~guard:(TransitionLabel.guard t) ~assignments:update1 ~patterns:(List.concat blocks) ~vars:(VarSet.to_list (TransitionLabel.vars t)) in 
-  
+  let updated_transition = TransitionLabel.mk ~cost:(TransitionLabel.cost t) ~guard:(TransitionLabel.guard_without_inv t) ~assignments:update1 ~patterns:(List.concat blocks) ~vars:(VarSet.to_list (TransitionLabel.vars t)) |> (flip TransitionLabel.add_invariant) (TransitionLabel.invariant t) in 
+   
+   
+   (* unbound value means not in mli *)
   Printf.printf "510: %s\n" (to_string (Some blocks));
   Printf.printf "511: %s\n" (list_list_to_string (List.concat matrices));
   Printf.printf "512: %s\n" (List.fold (fun x y -> x^"; "^y) "" (List.map (Polynomial.to_string) (List.concat linear_parts)));
@@ -522,7 +527,7 @@ let time_bound (l,t,l') scc program appr = (
   Printf.printf "514: %s\n" (TransitionLabel.to_string updated_transition);
   Printf.printf "515: %s\n" (List.fold (fun x y -> x^y^"; " ) " " ( List.map (Var.to_string) (VarSet.to_list (TransitionLabel.vars t))));
   Printf.printf "516: %s\n" (list_list_to_string (List.concat transformed_matrices));
-  Printf.printf "516: %s\n" (List.fold (fun x y -> x^(Var.to_string y)^"; " ) " "  (VarSet.to_list (TransitionLabel.vars t)));
+  Printf.printf "517: %s\n" (List.fold (fun x y -> x^(Var.to_string y)^"; " ) " "  (VarSet.to_list (TransitionLabel.vars t)));
 
  proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
