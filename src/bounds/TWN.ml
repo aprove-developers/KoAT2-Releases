@@ -6,7 +6,7 @@ open Atoms
 open BoundsInst
 open Constraints
 open PolyExponential
-open Lacaml
+open Lacaml.D
 open TransitionLabel
 
 (* PROOF *)
@@ -17,7 +17,7 @@ let proof = ref FormattedString.Empty
 let proof_append f_str = proof := FormattedString.(!proof <> f_str)
 
 let add_to_proof_graph program cycle entries =
-  let x1  = Lacaml.D.Vec.of_list [1.;2.] in
+  let a = Mat.random ~from:(-500.) ~range:1000. 5 5 in
   let color_map =
   List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty
   |> List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Red) entries in
@@ -276,7 +276,7 @@ let check_twn loop =
   print_string "244 TWN";
   (check_weakly_monotonicity loop) && ((List.length (check_triangular loop)) == (VarSet.cardinal ((TWNLoop.input_vars loop))))
 
-let check_twn (_,t,_) = 
+let check_twn (_,t,_) =
   print_string "248TWN \n"; check_twn (TWNLoop.mk_transition t)
 
 let complexity loop =
@@ -335,29 +335,29 @@ let compose_transitions cycle start =
   List.fold (fun u t -> TWNLoop.append u (Tuple3.second t)) (Tuple3.second t1) (post@pre)
 
 (* get_linear_update_of_variable (x<- 2x+3y+y^2) x y returns 3 *)
-let get_linear_update_of_variable (t:TransitionLabel.t) (var_left:TWNLoop.VarMap.key) (var_right:TWNLoop.VarMap.key)= 
-  let update = Option.get (TransitionLabel.update t var_left) in 
-  let fupdate = List.filter (fun (x,y) -> Monomial.is_univariate_linear y) (Polynomial.monomials_with_coeffs update) in 
-  let (x,y) = List.find  (fun (x,y) -> (Var.equal (List.first (VarSet.to_list (Monomial.vars y))))  var_right) fupdate in 
+let get_linear_update_of_variable (t:TransitionLabel.t) (var_left:TWNLoop.VarMap.key) (var_right:TWNLoop.VarMap.key)=
+  let update = Option.get (TransitionLabel.update t var_left) in
+  let fupdate = List.filter (fun (x,y) -> Monomial.is_univariate_linear y) (Polynomial.monomials_with_coeffs update) in
+  let (x,y) = List.find  (fun (x,y) -> (Var.equal (List.first (VarSet.to_list (Monomial.vars y))))  var_right) fupdate in
   x
 (* get_linear_update_list (x<- 2x+3y+y^2) x [x;y] returns [2;3] *)
 let rec get_linear_update_list (t:TransitionLabel.t) (var_left:TWNLoop.VarMap.key) (block:TWNLoop.VarMap.key list) = match block with
   | [] -> []
-  | x::xs -> get_linear_update_of_variable t var_left x :: get_linear_update_list t var_left xs 
+  | x::xs -> get_linear_update_of_variable t var_left x :: get_linear_update_list t var_left xs
 
-let matrix_of_linear_assignments (t:TransitionLabel.t) (block:TWNLoop.VarMap.key list) = 
+let matrix_of_linear_assignments (t:TransitionLabel.t) (block:TWNLoop.VarMap.key list) =
   List.map (fun x -> get_linear_update_list t x block) block
 
-  
+
 (*TWNLoop.VarMap.key list  option -> bool *)
-let check_transformable_one_block (block:TWNLoop.VarMap.key list) = match block with 
+let check_transformable_one_block (block:TWNLoop.VarMap.key list) = match block with
   | [] -> false
-  | [x] -> true 
+  | [x] -> true
   | (x::xs) -> true (* TODO: this case where the magic happens *)
 
 (* For each block we check if it is transformable *)
 (*TWNLoop.VarMap.key list list option -> bool list *)
-let rec check_transformable (blocks:TWNLoop.VarMap.key list list option) = match blocks with 
+let rec check_transformable (blocks:TWNLoop.VarMap.key list list option) = match blocks with
   | None -> []
   | Some [] -> []
   | Some (xs::xss) -> (check_transformable_one_block xs)::(check_transformable (Some xss))
@@ -370,7 +370,7 @@ let rec find l list =
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
 (* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
-let find_cycle appr program (cycles: path list) = 
+let find_cycle appr program (cycles: path list) =
   print_string "\n 316 TWN";
   List.find (fun cycle ->
     (* list of all transitions in a cycle, twnloop doesn't require each transition to be in twn form, but together they do *)
@@ -415,7 +415,7 @@ let lift appr entry bound =
           FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
 
-let transform_linearly_matrix (matrix:Polynomials.Polynomial.value list list) = match matrix with 
+let transform_linearly_matrix (matrix:Polynomials.Polynomial.value list list) = match matrix with
   | [x] -> [[Big_int.of_int 1]]
   | _   -> [[Big_int.of_int 2;Big_int.of_int 0];[Big_int.of_int 0;Big_int.of_int 3]]
 
@@ -424,10 +424,10 @@ let exists_linear_automorphism = function
 
 let exists_non_linear_automorphism = function
   | _ -> true
-  
+
 (* unfinished *)
-let transform_linearly (cycle: path) = 
-  print_string "\n 363 TWN"; 
+let transform_linearly (cycle: path) =
+  print_string "\n 363 TWN";
   cycle
 
 (* unfinished *)
@@ -435,41 +435,41 @@ let transform_non_linearly (cycle: path) = print_string "\n 366 TWN"; cycle
 
 (* unfinished: TODO remember the transformation*)
 (* transforms only if it's twn transformable, otherwise unchanged *)
-let transform (cycle: path) = 
-  (*if (check_twn cycle) then cycle 
+let transform (cycle: path) =
+  (*if (check_twn cycle) then cycle
   else*) if (exists_linear_automorphism cycle) then (transform_linearly cycle)
   else if (exists_non_linear_automorphism cycle) then (transform_non_linearly cycle)
   else cycle
-  
+
  let to_string arg =
   if Option.is_some arg then
     "solvable: " ^ (Util.enum_to_string (Util.enum_to_string Var.to_string) (Option.get arg |> List.map List.enum |> List.enum))
   else
-    "not solvable" (* Just for Testing *) 
+    "not solvable" (* Just for Testing *)
 
 let list_list_to_string xss =
-  let yss = List.map (fun xs -> List.map (fun x -> Big_int.to_string x) xs) xss in 
-  let zs = List.map (fun ys -> List.fold (fun x y -> x ^y^"; ") " " ys) yss in 
+  let yss = List.map (fun xs -> List.map (fun x -> Big_int.to_string x) xs) xss in
+  let zs = List.map (fun ys -> List.fold (fun x y -> x ^y^"; ") " " ys) yss in
   List.fold (fun x y -> x^y^"; " ) " " zs
 
 (*
 let rec nested_Big_int_lists_to_string = function
   | (x::xs)::xss -> (^) (nested_Big_int_lists_to_string (x::xs)) (nested_Big_int_lists_to_string xss )
-  | (x::xs) -> let ys = List.map Big_int.to_string (x::xs) in  
-               List.fold (^) " " ys 
+  | (x::xs) -> let ys = List.map Big_int.to_string (x::xs) in
+               List.fold (^) " " ys
   | [] -> ""
-*) 
+*)
 (*Polynomials.Polynomial.value list list -> VarSet.t -> Polynomials.Polynomial.t list*)
-let matrix_times_vector (matrix:Polynomials.Polynomial.value list list) (vars:TWNLoop.VarMap.key list) = 
+let matrix_times_vector (matrix:Polynomials.Polynomial.value list list) (vars:TWNLoop.VarMap.key list) =
   List.map (fun xs -> List.fold_left2 (fun acc x var -> Polynomial.add acc (Polynomial.mult_with_const x (Polynomial.of_power var 1))) Polynomial.zero xs (vars)) matrix
   (*List.map (fun x -> List.map2 (fun x y -> Polynomial.mult_with_const x (Polynomial.of_power y 1)) x (VarSet.to_list vars)) matrix *)
-  
+
 (* sorts the blocks from function check_solvable in the order defined in the transition (needs O(n^2 log n) due to index_of) *)
-let change_order t blocks = 
-  let var_list = (VarSet.to_list (TransitionLabel.vars t)) in 
-  let blocks = List.map (List.sort (fun x y -> 
+let change_order t blocks =
+  let var_list = (VarSet.to_list (TransitionLabel.vars t)) in
+  let blocks = List.map (List.sort (fun x y ->
                                             if List.index_of x var_list < List.index_of y var_list then -1 else 1)
-                        ) blocks in 
+                        ) blocks in
   List.sort (fun x y -> if List.index_of (List.first x) var_list < List.index_of (List.first y) var_list then -1 else 1) blocks
 
 
@@ -477,27 +477,27 @@ let change_order t blocks =
 let time_bound (l,t,l') scc program appr = (
   (*
   let y2 = Polynomial.mult_with_const (Big_int.big_int_of_int 3) (Polynomial.add (Polynomial.of_power (Var.of_string "x") 2) (Polynomial.one)) in
-  let variables_list = [Var.of_string "x"; Var.of_string "y"] in 
-  let t123 = TransitionLabel.mk ~cost:(TransitionLabel.cost t) ~guard:(TransitionLabel.guard t) ~assignments:[y2] ~patterns:[Var.of_string "x"] ~vars:variables_list in 
+  let variables_list = [Var.of_string "x"; Var.of_string "y"] in
+  let t123 = TransitionLabel.mk ~cost:(TransitionLabel.cost t) ~guard:(TransitionLabel.guard t) ~assignments:[y2] ~patterns:[Var.of_string "x"] ~vars:variables_list in
   print_string (TransitionLabel.to_string t123);
   (*let t = t123 in*)
   Printf.printf "466 %s\n" (TransitionLabel.to_string t);
 
   Printf.printf "%s\n" (to_string (check_solvable_t t)); (* Just for Testing *)
   (*let matrix = List.map (matrix_of_linear_assignments t) (Option.get (check_solvable_t t)) in*)
-  print_string (Big_int.string_of_big_int (get_linear_update_of_variable t (Var.of_string "Arg_1") (Var.of_string "Arg_0"))); 
-  let matrix = matrix_of_linear_assignments t (List.first (Option.get (check_solvable_t t))) in 
+  print_string (Big_int.string_of_big_int (get_linear_update_of_variable t (Var.of_string "Arg_1") (Var.of_string "Arg_0")));
+  let matrix = matrix_of_linear_assignments t (List.first (Option.get (check_solvable_t t))) in
   Printf.printf "475: %s\n" (list_list_to_string matrix);
-  let var_left = List.first (List.first (Option.get (check_solvable_t t))) in 
-  let update1 = Option.get (TransitionLabel.update t var_left) in 
+  let var_left = List.first (List.first (Option.get (check_solvable_t t))) in
+  let update1 = Option.get (TransitionLabel.update t var_left) in
   Printf.printf "475: %s\n" (list_list_to_string matrix);
-  let update1 = Polynomial.add update1 update1 in 
-  let update1 = (Option.get (TransitionLabel.update t var_left)) in 
+  let update1 = Polynomial.add update1 update1 in
+  let update1 = (Option.get (TransitionLabel.update t var_left)) in
   Printf.printf "484: %s\n" (Polynomial.to_string_pretty update1);
   *)
 
   (*now for higher dimensions: *)
-  (*Fragen: 
+  (*Fragen:
   Wie kann ich übersichtlicher coden? and und einrücken
   Wie binde ich Lacaml ein?
   Wieso wird der code doppelt auf dieser Transition ausgeführt? normales fixpunkt-gedöns
@@ -506,19 +506,19 @@ let time_bound (l,t,l') scc program appr = (
   Aber sollte man dann nicht die Funktion bound mit der transformierten Transition aufrufen?
   *)
 
-  let blocks = Option.get (check_solvable_t t) 
-              |> change_order t in 
+  let blocks = Option.get (check_solvable_t t)
+              |> change_order t in
   let matrices = List.map (matrix_of_linear_assignments t) blocks in (* TODO: use difference of matrices *)
   let linear_parts = List.map2 matrix_times_vector matrices blocks in
-  let transformed_matrices = List.map (transform_linearly_matrix) matrices in 
-  (*let y : Lacaml.D.vec = Lacaml.D.Vec.sub x1 x2 in 
+  let transformed_matrices = List.map (transform_linearly_matrix) matrices in
+  (*let y : Lacaml.D.vec = Lacaml.D.Vec.sub x1 x2 in
   Printf.printf "510: %s\n" (List.fold (fun x y -> x^y^"; " ) " " ((List.map (string_of_float) (Lacaml.D.Vec.to_list y))));
   let linear_parts = List.map2 matrix_times_vector (List.map2 (Lacaml.matrix_minus) transformed_matrices matrices) blocks in
   *)
-  let update1 = List.map2 Polynomial.add (List.map (fun x -> Option.get (TransitionLabel.update t x)) (List.concat blocks)) (List.concat linear_parts) in 
-  let updated_transition = TransitionLabel.mk ~cost:(TransitionLabel.cost t) ~guard:(TransitionLabel.guard_without_inv t) ~assignments:update1 ~patterns:(List.concat blocks) ~vars:(VarSet.to_list (TransitionLabel.vars t)) |> (flip TransitionLabel.add_invariant) (TransitionLabel.invariant t) in 
-   
-   
+  let update1 = List.map2 Polynomial.add (List.map (fun x -> Option.get (TransitionLabel.update t x)) (List.concat blocks)) (List.concat linear_parts) in
+  let updated_transition = TransitionLabel.mk ~cost:(TransitionLabel.cost t) ~guard:(TransitionLabel.guard_without_inv t) ~assignments:update1 ~patterns:(List.concat blocks) ~vars:(VarSet.to_list (TransitionLabel.vars t)) |> (flip TransitionLabel.add_invariant) (TransitionLabel.invariant t) in
+
+
    (* unbound value means not in mli *)
   Printf.printf "510: %s\n" (to_string (Some blocks));
   Printf.printf "511: %s\n" (list_list_to_string (List.concat matrices));
