@@ -452,7 +452,8 @@ let transform_linearly_matrix (matrix:Lacaml.D.mat) =
   if Lacaml.D.Mat.dim1 matrix == 1 
       then (Lacaml.D.Mat.of_list [[1.]], matrix)
   else (
-      let (number_of_distinct_eigen_values, real_part_eigen_values, im_part_eigen_values,transformed_matrix) = Lacaml.D.gees matrix in 
+      let _matrix = Lacaml.D.Mat.of_list @@ Lacaml.D.Mat.to_list matrix in (*copy, side-effects would transfer to the function calling this *)
+      let (number_of_distinct_eigen_values, real_part_eigen_values, im_part_eigen_values,transformation) = Lacaml.D.gees _matrix in (* matrix is now the transformed *)
       if not @@ List.for_all (fun x -> Float.abs(x) < 0.0001) (Lacaml.D.Vec.to_list im_part_eigen_values) (* TODO find better way of testing complex *)
         then raise Not_found (* TODO maybe option is better than raising exception *)
       (* else if (pairwise_distinct (Lacaml.D.Vec.to_list real_part_eigen_values)) 
@@ -461,12 +462,13 @@ let transform_linearly_matrix (matrix:Lacaml.D.mat) =
       
       (* let eigen_value_blocks = eigen_values_to_blocks eigen_values in 
       let jordan_blocks = Lacaml.D.Mat.of_diag in 
-      let res = merge_jordan_blocks_and_transformations jordan_blocks in *)
-      Printf.printf "450: ";print_mat matrix;
-      Printf.printf "450: ";print_mat transformed_matrix;
-      Printf.printf "450: "; (print_vec real_part_eigen_values);
-      let transformed_matrix =Lacaml.D.Mat.of_list [[2.;0.];[0.;3.]] in 
-      (Lacaml.D.Mat.of_list [[1.; 1.];[1.;2.]],transformed_matrix)))(*  [[Big_int.of_int 2;Big_int.of_int 0];[Big_int.of_int 0;Big_int.of_int 3]]))*)
+      let res = merge_jordan_blocks_and_transformations jordan_blocks in 
+      let transformed_matrix = Lacaml.D.gemm (Lacaml.D.Mat.transpose_copy transformation) @@ Lacaml.D.gemm og_matrix transformation in *)
+      Printf.printf "450: original: \n";print_mat matrix;
+      Printf.printf "450: upper triangular:\n";print_mat _matrix;
+      Printf.printf "450: orthonormal: \n";print_mat transformation;
+      Printf.printf "450: eigenvaleues: \n"; (print_vec real_part_eigen_values);
+      (transformation,_matrix)))(*  [[Big_int.of_int 2;Big_int.of_int 0];[Big_int.of_int 0;Big_int.of_int 3]]))*)
 
 let exists_linear_automorphism = function
   | _ -> true
@@ -497,18 +499,11 @@ let transform (cycle: path) =
     "not solvable" (* Just for Testing *)
 
 
-(*
-let rec nested_Big_int_lists_to_string = function
-  | (x::xs)::xss -> (^) (nested_Big_int_lists_to_string (x::xs)) (nested_Big_int_lists_to_string xss )
-  | (x::xs) -> let ys = List.map Big_int.to_string (x::xs) in
-               List.fold (^) " " ys
-  | [] -> ""
-*)
-(*Polynomials.Polynomial.value list list -> VarSet.t -> Polynomials.Polynomial.t list*)
+(* -> Polynomials.Polynomial.t list*)
 let matrix_times_vector (matrix:Lacaml__D.mat) (vars:TWNLoop.VarMap.key list) =
-  let matrix = List.map (List.map Big_int.of_float) @@ Lacaml.D.Mat.to_list matrix in (*make list to big_int TODO: maybe update matrices are not ints *)
-  List.map (fun xs -> List.fold_left2 (fun acc x var -> Polynomial.add acc (Polynomial.mult_with_const x (Polynomial.of_power var 1))) Polynomial.zero xs (vars)) matrix
-  (*List.map (fun x -> List.map2 (fun x y -> Polynomial.mult_with_const x (Polynomial.of_power y 1)) x (VarSet.to_list vars)) matrix *)
+  let matrix = List.map (List.map Num.of_float) @@ Lacaml.D.Mat.to_list matrix in (*make mat to list list OurFloat  *)
+  List.map (fun xs -> List.fold_left2 (fun acc x var -> RealPolynomial.add acc (RealPolynomial.mult_with_const x (RealPolynomial.of_power var 1))) RealPolynomial.zero xs (vars)) matrix
+
 
 (* sorts the blocks from function check_solvable in the order defined in the transition (needs O(n^2 log n) due to index_of) *)
 let change_order t blocks =
@@ -522,17 +517,18 @@ let change_order t blocks =
    tail recursive *)
 let rec compose_polynomials variables new_polynomials old_poly = match variables, new_polynomials with 
   | [],[] -> old_poly
-  | x::xs,poly::polys -> compose_polynomials xs polys (Polynomial.substitute x ~replacement:poly old_poly)
+  | x::xs,poly::polys -> compose_polynomials xs polys (RealPolynomial.substitute x ~replacement:poly old_poly)
   | _,_ -> raise Not_found (* TODO: find better exception for this case or better idea than exception *)
 
 (*  *)
-let apply_poly_transformation variables old_polynomials new_polynomials =
-  List.map (compose_polynomials variables new_polynomials) old_polynomials
-
+let apply_poly_transformation  variables old_polynomials new_polynomials = 
+  List.map (fun x -> compose_polynomials variables new_polynomials x ) old_polynomials
 
 let time_bound (l,transition,l') scc program appr = (
   (*
   let y2 = Polynomial.mult_with_const (Big_int.big_int_of_int 3) (Polynomial.add (Polynomial.of_power (Var.of_string "x") 2) (Polynomial.one)) in
+  (* y2 = 3*x^2 +3 *)
+  let y2 = Polynomial.mult_with_const (Big_int.big_int_of_int 3) (Polynomial.add (Polynomial.of_power (List.first (List.first blocks)) 2) (Polynomial.one)) in
   let variables_list = [Var.of_string "x"; Var.of_string "y"] in
   let t123 = TransitionLabel.mk ~cost:(TransitionLabel.cost t) ~guard:(TransitionLabel.guard t) ~assignments:[y2] ~patterns:[Var.of_string "x"] ~vars:variables_list in
   print_string (TransitionLabel.to_string t123);
@@ -550,6 +546,11 @@ let time_bound (l,transition,l') scc program appr = (
   let update1 = Polynomial.add update1 update1 in
   let update1 = (Option.get (TransitionLabel.update t var_left)) in
   Printf.printf "484: %s\n" (Polynomial.to_string_pretty update1);
+
+  
+  let m1 = Lacaml.D.Mat.of_list [[1.;1.;1.;-1.;0.];[0.;1.;0.;0.;1.];[0.;0.;0.;1.;0.];[0.;0.;-1.;2.;1.];[0.;0.;0.;0.;1.]] in 
+  let ( left_eigen_vectors,real_part_eigen_values, im_part_eigen_values,right_eigen_vectors) = Lacaml.D.geev m1 in 
+  transpose_copy hat keine seiteneffekte
   *)
 
   (*now for higher dimensions: *)
@@ -565,79 +566,47 @@ let time_bound (l,transition,l') scc program appr = (
   test for complexity/ Rundungsfehler: alles muss int sein  
   Polynome sind hier immer BigInt Polynome? ja, todo probe
   wie sinnvoll ist jordan normalform? reicht nicht eine Transformation in eine obere Dreieckmatrix (Schursche Normalform, diagonal genau dann wenn möglich)
-  Nur gibt mir der S
+
+  Wenn die transformation nicht rational nicht, wie bei dem beispiel, wie soll ich dann den Guard anpassen?
   *)
-  let m4 = Lacaml.D.Mat.of_list [[0.;0.];[0.;0.]] in 
-  let m1 = Lacaml.D.Mat.of_list [[2.;0.];[0.;3.]] in 
-  let (_,real_part_eigen_values, im_part_eigen_values,m3) = Lacaml.D.gees ~vs:(m4) m1 in 
-  Printf.printf "499: \n";print_mat m4;
 
   (* find order for variables and independent blocks and sort them for elegant code when updating transition *)
   let blocks = change_order transition @@ Option.get (check_solvable_t transition) in 
   (* calculate matrices and cast them to Lacaml.D.mat *)
   let matrices = List.map (mat_of_big_int_list) @@ List.map (matrix_of_linear_assignments transition) blocks in 
   let (transformations,transformed_matrices) = List.split @@ List.map (transform_linearly_matrix) matrices in
-  let linear_parts = List.map2 matrix_times_vector (List.map2 (fun x y -> Lacaml.D.Mat.sub x y) transformed_matrices matrices) blocks in (* compiler needs the lambda function *)
-  let update1 = List.map2 Polynomial.add (List.map (fun x -> Option.get (TransitionLabel.update transition x)) (List.concat blocks)) (List.concat linear_parts) in
+  (* the next 3 lines compute (eta^-1 @@ update @@ eta)(x) as stated in Termination of Polynomial Loops Thm. 5*)
+  let new_update = List.concat @@ List.map2 matrix_times_vector transformations blocks (* eta(x) *)
+                        |> apply_poly_transformation (*(update(eta(x))*)
+                            (List.concat blocks)  
+                            (List.map (fun x -> RealPolynomial.of_intpoly @@ Option.get (TransitionLabel.update transition x))
+                                      (List.concat blocks)
+                            )
+                        |> apply_poly_transformation (*eta^(-1)(update(eta(x)))*)
+                            (List.concat blocks) 
+                            (List.concat @@ List.map2 matrix_times_vector (List.map (Lacaml.D.Mat.transpose_copy) transformations) blocks)
+                        |> List.map RealPolynomial.to_intpoly in (*cast it back to int_poly *)
+
+  List.iter (print_string) (List.map Polynomial.to_string (List.map (fun x -> Option.get (TransitionLabel.update transition x)) (List.concat blocks)));
+  Printf.printf "\n506: \n "; List.iter (print_string) (List.map (fun x -> "; " ^ Polynomial.to_string_pretty x) new_update);
+
+  (* this approach was based on the wrong assumption that only linear parts had to be transformed
+  let linear_parts = List.map RealPolynomial.to_intpoly @@ List.concat @@ List.map2 matrix_times_vector (List.map2 (fun x y -> Lacaml.D.Mat.sub x y) transformed_matrices matrices) blocks in (* compiler needs the lambda function *)
+  let update1 = List.map2 Polynomial.add (List.map (fun x -> Option.get (TransitionLabel.update transition x)) (List.concat blocks)) (linear_parts) in
+  *)
   let updated_guard = TransitionLabel.guard_without_inv transition in 
   
   let updated_transition = TransitionLabel.mk 
                             ~cost:(TransitionLabel.cost transition) 
                             ~guard:(TransitionLabel.guard_without_inv transition) 
-                            ~assignments:update1 ~patterns:(List.concat blocks) 
+                            ~assignments:new_update 
+                            ~patterns:(List.concat blocks) 
                             ~vars:(VarSet.to_list (TransitionLabel.vars transition)) 
                           |> (flip TransitionLabel.add_invariant) (TransitionLabel.invariant transition) in
 
-  
-  
-  let m2 =  List.first transformed_matrices in 
-  let x1  = Lacaml.D.Vec.of_list [1.;2.] in
-  let m1 = Lacaml.D.Mat.of_list [[1.;1.;1.;-1.;0.];[0.;1.;0.;0.;1.];[0.;0.;0.;1.;0.];[0.;0.;-1.;2.;1.];[0.;0.;0.;0.;1.]] in 
-  let ( left_eigen_vectors,real_part_eigen_values, im_part_eigen_values,right_eigen_vectors) = Lacaml.D.geev m1 in 
-
-  (* y2 = 3*x^2 +3 *)
-  let y2 = Polynomial.mult_with_const (Big_int.big_int_of_int 3) (Polynomial.add (Polynomial.of_power (List.first (List.first blocks)) 2) (Polynomial.one)) in
-  let first_replacement = Polynomial.substitute (List.first (List.first blocks)) ~replacement:y2 (Polynomial.( ** ) (Option.get (TransitionLabel.update transition (List.first (List.first blocks))))2) in 
-  let replacements = List.map2 (fun x y -> Polynomial.substitute x ~replacement:y  (Option.get (TransitionLabel.update transition x)))
-                               (List.concat blocks)
-                               (List.concat linear_parts) 
-       in 
-  let some_polynomial = (Polynomial.( ** ) (Option.get (TransitionLabel.update transition (List.first (List.first blocks))))2) in 
-  let replacements2 = apply_poly_transformation [((List.first (List.first blocks)))] [some_polynomial] [y2]  in
-
-  
-  let (number_of_eigen_pairs, eigen_values, eigen_vectors, _) = Lacaml.D.syevr m1 in (* syevr funktioniert leider nicht :( *)
-  Printf.printf "500: %d\n" number_of_eigen_pairs;
-  Printf.printf "501: \n"; print_vec eigen_values;
-  Printf.printf "502: \n"; print_mat eigen_vectors;
-  Printf.printf "503: \n";print_mat right_eigen_vectors;
-  Printf.printf "504: \n";print_vec real_part_eigen_values;
-  Printf.printf "505: \n";print_mat m2;
-  Printf.printf "506: \n";print_mat m3;
-  Printf.printf "507: %s\n" @@ Polynomial.to_string first_replacement;
-  Printf.printf "508: %s\n" @@ Polynomial.to_string y2;
-  Printf.printf "509: %s\n" @@ Polynomial.to_string @@ (Polynomial.( ** ) (Option.get (TransitionLabel.update transition (List.first (List.first blocks))))2);
-  Printf.printf "510: %s\n" @@ Polynomial.to_string (List.first replacements2);
-
 
    (* unbound value means not in mli 
-  Printf.printf "510: %s\n" (to_string (Some blocks));
-  Printf.printf "511: \n"; (List.map print_mat matrices));
-  Printf.printf "512: %s\n" (List.fold (fun x y -> x^"; "^y) "" (List.map (Polynomial.to_string) (List.concat linear_parts)));
-  Printf.printf "513: %s\n" (TransitionLabel.to_string transition);
-  Printf.printf "514: %s\n" (TransitionLabel.to_string updated_transition);
-  Printf.printf "515: %s\n" (List.fold (fun x y -> x^y^"; " ) " " ( List.map (Var.to_string) (VarSet.to_list (TransitionLabel.vars transition))));
-  Printf.printf "516: \n" ; List.map print_mat transformed_matrices; 
-  Printf.printf "517: %s\n" (List.fold (fun x y -> x^(Var.to_string y)^"; " ) " "  (VarSet.to_list (TransitionLabel.vars transition)));
 *)
-(*
-  1. Eigenwerte
-  2. Eigenraeume
-  3. Hauptraeume
-  4. Transformationsmatrix
- *)
-
-
 
  proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,transition,l') in
