@@ -12,12 +12,10 @@ let description = "Proceed a full time, cost and size analysis on a given intege
 
 (** Prints the whole resulting approximation to the shell. *)
 let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
-  print_string "15 Analyse Command \n";
   print_string (Approximation.to_string program appr)
 
 (** Prints the overall timebound of the program to the shell. *)
 let print_overall_costbound (program: Program.t) (appr: Approximation.t): unit =
-  print_string "20 Analyse Command \n";
   program
   |> Approximation.program_costbound appr
   |> Bound.to_string
@@ -161,9 +159,6 @@ let local_to_string = function
 
 (** Runs KoAT2 on provided parameters. *)
 let run (params: params) =
-  print_string "analysecommand 161\n";
-  (*let abc : string = local_to_string params.local in
-  print_string  (List.fold_left (^) "a" (map local_to_string params.local)); TODO understand why this isnt working*)
   Timeout.start_time_of_koat2 := Unix.gettimeofday();
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
