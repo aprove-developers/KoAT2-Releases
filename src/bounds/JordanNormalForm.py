@@ -34,11 +34,11 @@ def matrix_is_integer(m:Matrix) -> bool:
     return matrix_is_func(m, integer)
 
 
-def jordan_normal_form(s):
+def jordan_normal_form(matrix_as_list):
     matrix_as_int_list = list(map(int, matrix_as_list))  # cast to int
     dim = sqrt(len(matrix_as_int_list))
-    m2 = Matrix(dim, dim, matrix_as_int_list)
-    [t, j] = m2.jordan_form()
+    m = Matrix(dim, dim, matrix_as_int_list)
+    [t, j] = m.jordan_form()
     t_inv = t.inv()
 
     normalized_t_inv = normalize(t_inv)
