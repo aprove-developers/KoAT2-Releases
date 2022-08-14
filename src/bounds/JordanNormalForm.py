@@ -30,7 +30,7 @@ def matrix_is_rational(m: Matrix) -> bool:
 
 
 def matrix_is_integer(m:Matrix) -> bool:
-    integer = lambda x: all(i == 1 for i in get_denominator(x))
+    integer =  lambda x : get_denominator(x) == 1
     return matrix_is_func(m, integer)
 
 
