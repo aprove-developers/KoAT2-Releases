@@ -371,6 +371,9 @@ module RationalPolynomial =
         ~plus:Polynomial.add
         ~times:Polynomial.mul
         ~pow:Polynomial.pow
+
+    let of_intpoly  =
+      Polynomial.fold ~const:(of_constant % OurRational.of_ourint) ~var:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
   end
 
 module ParameterPolynomial =
