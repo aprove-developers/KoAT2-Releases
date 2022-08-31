@@ -11,8 +11,8 @@ ARG OCAML_VERSION=4.11.2
 
 # Use our fork of opam-repository for static Z3
 RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opam-repository.git
-
 RUN opam switch create -y $OCAML_VERSION+musl+static+flambda
+RUN opam repo remove default
 # Add graphviz for tests
 RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip --no-cache
 
