@@ -1,5 +1,5 @@
 opam-version: "2.0"
-maintainer: "fabian.meyer@cs.rwth-aachen.de"
+maintainer: "eleanore.meyer@cs.rwth-aachen.de"
 build: [
   [ "omake" ]
 ]

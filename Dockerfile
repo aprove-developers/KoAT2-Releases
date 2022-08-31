@@ -2,7 +2,7 @@
 # Build KoAT
 #-------------------------------------------
 FROM ocaml/opam:alpine as koat2_build
-LABEL author="Fabian Meyer"
+LABEL author="Eleanore Meyer"
 LABEL author="Marcel Hark"
 
 WORKDIR /home/opam
