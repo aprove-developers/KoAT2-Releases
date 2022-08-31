@@ -69,6 +69,8 @@ sig
 
   (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
   val overapprox : t -> Polynomial.t
+  
+  val of_intpoly : Polynomial.t -> t
 end
 
 module RealParameterPolynomial :

@@ -8,6 +8,7 @@ open Constraints
 open PolyExponential
 open Lacaml.D
 open TransitionLabel
+open Automorphism
 
 (* PROOF *)
 let logger = Logging.(get Twn)
@@ -334,62 +335,58 @@ let compose_transitions cycle start =
   List.fold (fun u t -> TWNLoop.append u (Tuple3.second t)) (Tuple3.second t1) (post@pre)
 
 (* get_linear_update_of_variable (x<- 2x+3y+y^2) x y returns 3 *)
-let get_linear_update_of_variable (t:TransitionLabel.t) (var_left:TWNLoop.VarMap.key) (var_right:TWNLoop.VarMap.key)=
-  let update = Option.get (TransitionLabel.update t var_left) in
+let get_linear_update_of_variable (t:TWNLoop.t) (var_left:TWNLoop.VarMap.key) (var_right:TWNLoop.VarMap.key)=
+  let update = Option.get (TWNLoop.update t var_left) in
   let fupdate = List.filter (fun (x,y) -> Monomial.is_univariate_linear y) (Polynomial.monomials_with_coeffs update) in
   let (x,y) = List.find  (fun (x,y) -> (Var.equal (List.first (VarSet.to_list (Monomial.vars y))))  var_right) fupdate in
   x
-(* get_linear_update_list (x<- 2x+3y+y^2) x [x;y] returns [2;3] *)
-let rec get_linear_update_list (t:TransitionLabel.t) (var_left:TWNLoop.VarMap.key) (block:TWNLoop.VarMap.key list) = match block with
+
+(** get_linear_update_list [(x<- 2x+3y+y^2) x [x;y]] returns [[2;3]] *)
+let rec get_linear_update_list (t:TWNLoop.t) (var_left:TWNLoop.VarMap.key) (block:TWNLoop.VarMap.key list) = match block with
   | [] -> []
   | x::xs -> get_linear_update_of_variable t var_left x :: get_linear_update_list t var_left xs
 
-let matrix_of_linear_assignments (t:TransitionLabel.t) (block:TWNLoop.VarMap.key list) =
+let matrix_of_linear_assignments (t:TWNLoop.t) (block:TWNLoop.VarMap.key list) =
   List.map (fun x -> get_linear_update_list t x block) block
 
-
-(*TWNLoop.VarMap.key list  option -> bool *)
-let check_transformable_one_block (block:TWNLoop.VarMap.key list) = match block with
-  | [] -> false
-  | [x] -> true
-  | (x::xs) -> true (* TODO: this case where the magic happens *)
-
-(* For each block we check if it is transformable *)
-(*TWNLoop.VarMap.key list list option -> bool list *)
-let rec check_transformable (blocks:TWNLoop.VarMap.key list list option) = match blocks with
-  | None -> []
-  | Some [] -> []
-  | Some (xs::xss) -> (check_transformable_one_block xs)::(check_transformable (Some xss))
 
 let print_flist xs = (
   Printf.printf "[";
   List.iter (Printf.printf "%f; ") xs;
   Printf.printf "]\n";)
 
+
 let print_vec v = 
   let flist = Lacaml.D.Vec.to_list v in
   print_flist flist
 
+
 let print_mat m = 
   let m_float = Lacaml.D.Mat.to_list m in
   List.map print_flist m_float
+
 
 let mat_of_big_int_list m = 
   Lacaml.D.Mat.of_list @@ List.map (List.map Big_int.float_of_big_int) m 
 
 
 (** [matrix_times_vector A x] returns a polynomial list where each element stores a row of [A*x] *)
-let matrix_times_vector (matrix:Batteries.Num.num list list) (vars:TWNLoop.VarMap.key list) =
-  (*let matrix = List.map (List.map Num.of_float) @@ Lacaml.D.Mat.to_list matrix in (*make mat to list list OurFloat  *)*)
-  List.map (fun xs -> List.fold_left2 (fun acc x var -> RealPolynomial.add acc (RealPolynomial.mult_with_const x (RealPolynomial.of_power var 1))) RealPolynomial.zero xs (vars)) matrix
+let matrix_times_vector_rational (matrix:OurRational.t list list) (vars:TWNLoop.VarMap.key list) =
+  List.map (fun xs -> RationalPolynomial.of_coeff_list xs vars) matrix 
+
+  (*let matrix = List.map (List.map Num.of_float) @@ Lacaml.D.Mat.to_list matrix in (*make mat to list list OurFloat  *)
+  print_string "376 \n";
+  List.map (fun xs -> List.fold_left2 (fun acc x var -> RationalPolynomial.add acc (RationalPolynomial.mult_with_const x (RationalPolynomial.of_power var 1))) RationalPolynomial.zero xs (vars)) matrix *)
 
 let matrix_times_vector_int (matrix:Big_int.big_int list list) (vars:TWNLoop.VarMap.key list) =
-  (*let matrix = List.map (List.map Num.of_float) @@ Lacaml.D.Mat.to_list matrix in (*make mat to list list OurFloat  *)*)
-  List.map (fun xs -> List.fold_left2 (fun acc x var -> Polynomial.add acc (Polynomial.mult_with_const x (Polynomial.of_power var 1))) Polynomial.zero xs (vars)) matrix
+  List.map (fun xs -> Polynomial.of_coeff_list xs vars) matrix 
+  (*let matrix = List.map (List.map Num.of_float) @@ Lacaml.D.Mat.to_list matrix in (*make mat to list list OurFloat  *)
+  print_string "381 \n";
+  List.map (fun xs -> List.fold_left2 (fun acc x var -> Polynomial.add acc (Polynomial.mult_with_const x (Polynomial.of_power var 1))) Polynomial.zero xs (vars)) matrix*)
 
 (** sorts the blocks from function check_solvable in the order defined in the transition (needs O(n^2 log n) due to index_of) *)
 let change_order t blocks =
-  let var_list = (VarSet.to_list (TransitionLabel.vars t)) in
+  let var_list = (VarSet.to_list (TWNLoop.vars t)) in
   let blocks = List.map (List.sort (fun x y ->
                                             if List.index_of x var_list < List.index_of y var_list then -1 else 1)
                         ) blocks in
@@ -405,6 +402,8 @@ let compose_polynomials variables new_polynomials old_poly =
     | _,_ -> (print_string "546"; raise Not_found ) (* TODO: find better exception for this case or better idea than exception *) in 
   compose_polynomials_acc variables new_polynomials old_poly (RealPolynomial.zero) 
 
+(** compose_int_polynomials [[x;y]] [[x^2;y^3]] [(x <- x+y)]  returns [x <- x^2+y^3]. 
+    tail recursive*)
 let compose_int_polynomials variables new_polynomials old_poly = 
   let rec compose_polynomials_acc variables new_polynomials old_poly acc_poly = match variables, new_polynomials with 
     | [],[] -> Polynomial.add old_poly acc_poly
@@ -413,9 +412,10 @@ let compose_int_polynomials variables new_polynomials old_poly =
     | _,_ -> (print_string "547"; raise Not_found ) (* TODO: find better exception for this case or better idea than exception *) in 
   compose_polynomials_acc variables new_polynomials old_poly (Polynomial.zero) 
 
+
 (*  *)
 let apply_poly_transformation  variables old_polynomials new_polynomials = 
-  List.map (compose_polynomials variables new_polynomials) old_polynomials
+  List.map (Automorphism.compose_rational_polynomials variables new_polynomials) old_polynomials
 
 (*
 let pairwise_distinct xs =
@@ -461,15 +461,25 @@ let rec list_lift (n:int) (xs:'a list) : 'a list list = match  xs with
 
 (** turns string into Ourfloat list list (which represents a matrix) *)
 let parse_int_matrix (dim2:int) (s:string) = 
-  Str.split (Str.regexp "[^0-9.]+") s (*turn string into list, splitted at each non number char *)
-      |> List.map Big_int.of_string (* turn string list into float list *)
-      |> list_lift dim2   (*turn float list into float list list *)
+  Str.split (Str.regexp "[^0-9/./\-]+") s (*turn string into list, splitted at each non number char *)
+      |> List.map int_of_string (* turn string list into float list *)
+      |> List.map Big_int.of_int
+      |> list_lift dim2 
+      (*|> List.map Big_int.of_string (* turn string list into float list *)
+      |> list_lift dim2   (*turn float list into float list list *)*)
 
+(** turns python string "a/b"into OurRational a/b  *)
+let string_to_our_rational (s:string) = 
+  let fraction = Str.split (Str.regexp "[^0-9.\-]+") s in 
+  if List.length fraction == 1 then 
+    OurRational.of_int @@ int_of_string @@ List.first fraction
+  else 
+    OurRational.of_int_tuple (int_of_string @@  List.at fraction 0, int_of_string @@  List.at fraction 1)
 
 (** turns string into Ourfloat list list (which represents a matrix) *)
 let parse_matrix (dim2:int) (s:string) = 
-  Str.split (Str.regexp "[^0-9.]+") s (*turn string into list, splitted at each non number char *)
-      |> List.map Num.of_string (* turn string list into float list *)
+  Str.split (Str.regexp "[^0-9/./\-]+") s (*turn string into list, splitted at each non number char *)
+      |> List.map string_to_our_rational  (* turn string list into float list *)
       |> list_lift dim2   (*turn float list into float list list *)
       (*|> Lacaml.D.Mat.of_list *)
   (*for i = 0 to dim1 - 1 do
@@ -481,14 +491,14 @@ let parse_matrix (dim2:int) (s:string) =
 (* matrix is square *)
 let transform_linearly_matrix (matrix: Big_int.big_int list list) = 
   if List.length matrix == 1 (* nothing to transform *)
-      then Some ( [[Num.of_float 1.]], matrix,  [[Num.of_float 1.]], [[Big_int.of_int 1]]) (*Todo as 2. argument return matrix *)
+      then Some ( [[(OurInt.of_int 1, OurInt.of_int 1)]], matrix,  [[(OurInt.of_int 1, OurInt.of_int 1)]], [[Big_int.of_int 1]]) (*Todo as 2. argument return matrix *)
       (*Some (Lacaml.D.Mat.of_list [[1.]], matrix, Lacaml.D.Mat.of_list [[1.]], Lacaml.D.Mat.of_list [[1.]])*)
   else 
     let command = "python3 -c 'from src.bounds.JordanNormalForm import jordan_normal_form; jordan_normal_form(" ^ matrix_to_string matrix ^ ")'" in  
     (* the python output consits of 4 matrices: T, J, T^-1, T^-1_nomralized, see jordan normal form or gives an error string *)
     let python_output = read_process_lines command in 
     match python_output with 
-      | [a;b;c;d] -> (*let [t; j; t_inverse; t_inverse_normalized] = (List.map (parse_matrix (List.length matrix)) [a;b;c;d]) in *)
+      | [a;b;c;d] ->  (*let [t; j; t_inverse; t_inverse_normalized] = (List.map (parse_matrix (List.length matrix)) [a;b;c;d]) in *)
                       Some(parse_matrix (List.length matrix) a, 
                         	 parse_int_matrix (List.length matrix) b,
                            parse_matrix (List.length matrix) c,
@@ -512,16 +522,24 @@ let exists_linear_automorphism = function
 let exists_non_linear_automorphism = function
   | _ -> true
 
-(* unfinished *)
-let transform_linearly (transition: TransitionLabel.t) =
-  print_string "\n 363 TWN";
-  
+(* unfinished 
+let of_twn_loop (transition: TWNLoop.t) : TransitionLabel.t =
+
+  TransitionLabel.mk ~cost:(TransitionLabel.cost TransitionLabel.default) 
+                                ~guard:(Formula.atoms (TWNLoop.guard_without_inv transition))
+                                ~assignments: (TWNLoop.update transition)
+                                ~patterns: (VarSet.to_list (TWNLoop.vars transition))
+                                ~vars:(VarSet.to_list (TWNLoop.vars transition)) 
+                              |> (flip TransitionLabel.add_invariant) (TWNLoop.invariant transition)*)
+
+
+let transform_linearly (transition: TWNLoop.t) =  
   (* find order for variables and independent blocks and sort them for elegant code when updating transition *)
-  match (check_solvable_t transition) with 
+  match (check_solvable transition) with 
     | None -> None 
     | Some x -> let blocks = change_order transition x in 
-  if List.length blocks == List.length (VarSet.to_list (TransitionLabel.vars transition)) then
-      Some transition (*loop already is in twn form*)
+  if List.length blocks == List.length (VarSet.to_list (TWNLoop.vars transition)) then
+      Some (transition, Automorphism.identity_aut) (*loop already is in twn form*)
   else
     let concat_blocks = List.concat blocks in 
     (* calculate matrices and cast them to Lacaml.D.mat *)
@@ -531,75 +549,66 @@ let transform_linearly (transition: TransitionLabel.t) =
       None
     else
       let (transformations,js,transformation_invs,normalized_transformation_invs) = 
-        List.fold (fun (xs1,xs2,xs3,xs4) (x1,x2,x3,x4) -> ((x1::xs1) , (x2::xs2) ,(x3::xs3) , (x4::xs4))) 
-                  ([],[],[],[]) 
-                  (List.map Option.get transformations) in
-
-      (* the next 3 lines compute (eta^-1 @@ update @@ eta)(x) as stated in Termination of Polynomial Loops Thm. 5*)
-      let new_update = List.concat @@ List.map2 matrix_times_vector transformations blocks (* eta(x) *)
-                            |> apply_poly_transformation (*(update(eta(x))*)
-                                concat_blocks
-                                (List.map (fun x -> RealPolynomial.of_intpoly @@ Option.get (TransitionLabel.update transition x))
+        List.fold_right (fun  (x1,x2,x3,x4) (xs1,xs2,xs3,xs4)-> ((x1::xs1) , (x2::xs2) ,(x3::xs3) , (x4::xs4))) 
+                  (List.map Option.get transformations) 
+                  ([],[],[],[]) in
+      let eta = List.concat @@ List.map2 matrix_times_vector_rational transformations blocks in 
+      let eta_inv = List.concat @@ List.map2 matrix_times_vector_rational transformation_invs blocks in
+      let update_polys = (List.map (fun x -> RationalPolynomial.of_intpoly (Option.get (TWNLoop.update transition x)))
                                           concat_blocks
-                                )
-                            |> apply_poly_transformation (*eta^(-1)(update(eta(x)))*)
-                                concat_blocks
-                                (List.concat @@ List.map2 matrix_times_vector (transformation_invs) blocks)
-                            |> List.map RealPolynomial.to_intpoly in (*cast it back to int_poly *)
-      List.iter (print_string) (List.map Polynomial.to_string (List.map (fun x -> Option.get (TransitionLabel.update transition x)) concat_blocks));  (* Print update of transition *)
-      Printf.printf "\n506: \n "; List.iter (print_string) (List.map (fun x -> "; " ^ Polynomial.to_string_pretty x) new_update);
+                                ) in
+      let new_update = apply_poly_transformation concat_blocks eta_inv @@ apply_poly_transformation concat_blocks update_polys eta (*eta^(-1)(update(eta(x)))*)
+                      |> List.map RationalPolynomial.normalize in (*cast it back to int_poly TODO check if polys are really int polys, compare with js *)
+      (*Printf.printf "\n501: \n "; List.iter (print_string) (List.map (fun x -> "; " ^ RationalPolynomial.to_string_pretty x) eta_inv);
+      Printf.printf "\n503: \n "; List.iter (print_string) (List.map (fun x -> "; " ^ Polynomial.to_string_pretty x) new_update);
+      Printf.printf "\n504: \n "; List.iter (print_string) (List.map (fun x -> "; " ^ RationalPolynomial.to_string_pretty x) update_polys);
+      Printf.printf "\n505: \n "; List.iter (print_string) (List.map (fun x -> "; " ^ RationalPolynomial.to_string_pretty x) eta);*)
       
-      let new_guard_polynomials = List.concat @@ List.map2 matrix_times_vector_int normalized_transformation_invs blocks in 
-      let guard = TransitionLabel.guard_without_inv transition in 
-      let updated_guard = Guard.map_polynomial (compose_int_polynomials concat_blocks new_guard_polynomials) guard in 
-      
-      let invariant = TransitionLabel.invariant transition in 
-      let updated_invariant = Guard.map_polynomial (compose_int_polynomials concat_blocks new_guard_polynomials) invariant in 
+      let normalized_eta_inv = List.concat @@ List.map2 matrix_times_vector_int normalized_transformation_invs blocks in 
+      let guard = TWNLoop.guard_without_inv transition in 
+      let updated_guard = Guard.map_polynomial (compose_int_polynomials concat_blocks normalized_eta_inv) (TWNLoop.Guard.atoms guard) in 
+      Printf.printf "\n503: %s \n " (Guard.to_string updated_guard);
 
-      (*return updated transition*)
-      Some (TransitionLabel.mk 
-                                ~cost:(TransitionLabel.cost transition) 
+      let invariant = TWNLoop.invariant transition in 
+      let updated_invariant = Guard.map_polynomial (compose_int_polynomials concat_blocks normalized_eta_inv) invariant in 
+
+      (*return updated transition and automorphism*)
+      let automorphism = Automorphism.of_poly_list concat_blocks eta eta_inv in 
+      Some ((TWNLoop.mk_transition @@TransitionLabel.mk 
+                                ~cost:(TransitionLabel.cost TransitionLabel.default) (*TODO sind die kosten von bedeutung? *)
                                 ~guard:updated_guard
                                 ~assignments:new_update 
                                 ~patterns:concat_blocks 
-                                ~vars:(VarSet.to_list (TransitionLabel.vars transition)) 
-                              |> (flip TransitionLabel.add_invariant) updated_invariant) 
-  
+                                ~vars:(VarSet.to_list (TWNLoop.vars transition)) 
+                              |> (flip TWNLoop.add_invariant) updated_invariant ),
+              automorphism)
 
-(* unfinished *)
 
-let transform_non_linearly (t: TransitionLabel.t) = print_string "\n 366 TWN"; 
+let transform_non_linearly (t: TWNLoop.t) = print_string "\n 366 TWN"; 
   None
-(* unfinished: TODO remember the transformation
-let transform_non_linearly (cycle: path) = print_string "\n 366 TWN"; 
-  cycle*)
-(* transforms only if it's twn transformable, otherwise unchanged 
-let transform (cycle: path) =
-  (*if (check_twn cycle) then cycle
-  else*) if (exists_linear_automorphism cycle) then (transform_linearly cycle)
-  else if (exists_non_linear_automorphism cycle) then (transform_non_linearly cycle)
-  else cycle*)
+(* unfinished: TODO remember the transformation*)
 
-let transform ((_,t,_): Transition.t) =
-  (*if (check_twn cycle) then cycle
-  else*) match (transform_linearly t) with 
+let transform ((entry, t):ProgramTypes.Transition.t * TWNLoop.t) =
+   match (transform_linearly t) with 
+  | Some (transformed, automorphism) -> Some (entry, (Transition.target entry, transformed,Transition.target entry ), automorphism)(*TODO find target *)
   | None -> (transform_non_linearly t)
-  | Some x -> Some x
 
 let to_string arg =
   if Option.is_some arg then
     "solvable: " ^ (Util.enum_to_string (Util.enum_to_string Var.to_string) (Option.get arg |> List.map List.enum |> List.enum))
   else
     "not solvable" (* Just for Testing *)
+
+
 (* Finds entered location on cycle. *)
 let rec find l list =
     match list with
     | [] ->  raise Not_found (*TODO umbenennen *)
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
+
 (* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
 let find_cycle appr program (cycles: path list) =
-  print_string "\n 316 TWN";
   List.find (fun cycle ->
     (* list of all transitions in a cycle, twnloop doesn't require each transition to be in twn form, but together they do *)
     let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
@@ -612,33 +621,50 @@ let find_cycle appr program (cycles: path list) =
       in
       not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
        && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
-       && let order = check_triangular eliminated_t in List.length order == VarSet.cardinal (TWNLoop.input_vars eliminated_t) (* Triangular?*) (*TODO: automorphism check here *)
-       && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *) (* nicht mehr checken sondern check transformable aufrufen, diese und obere zeile, danach den rückgabewert anpassen *)
-       && List.for_all (Approximation.is_time_bounded appr) entries) (List.combine entries twn_loops)) cycles
+       && let order = check_triangular eliminated_t in List.length order == VarSet.cardinal (TWNLoop.input_vars eliminated_t) (* Triangular?*) 
+       && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *) 
+       && (Approximation.is_time_bounded appr) entry) (List.combine entries twn_loops)) cycles
        (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
   
 
+let lift_option (xs:'a option list) : 'a list option = 
+  if List.for_all Option.is_some xs then 
+    Some (List.map Option.get xs)
+  else 
+    None 
 
-(*let find_cycle_my appr program (cycles: path list) =
+let find_cycle appr program (cycles: path list) =
   print_string "\n 317 TWN";
-  let res = List.find_map (fun cycle ->
+  List.find_map (fun cycle ->
     (* list of all transitions in a cycle, twnloop doesn't require each transition to be in twn form, but together they do *)
       let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
       let entries = Program.entry_transitions logger program handled_transitions in
       let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in (* 'find' throws an exception *)
-      List.for_all (fun (entry, t) ->
+      let (_,_, end_location) = List.last cycle in 
+      let entries_twn_loops = (List.combine entries twn_loops) in 
+      if (List.for_all (fun (entry, t) ->
+          let start_location = Transition.target entry in 
           let eliminated_t = (* throw out useless variables *)
             EliminateNonContributors.eliminate_t
               (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
           in
           not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
           && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
-          (*&& check_transformable t *)
-          
-          && List.for_all (Approximation.is_time_bounded appr) entries) 
-        (List.combine entries twn_loops)) 
-    cycles in
-  transform res (*return list of automorphism aditionally for bound *)*)
+          && (Approximation.is_time_bounded appr) entry) 
+        entries_twn_loops
+      ) then 
+        lift_option @@ List.map transform entries_twn_loops
+         (*let res = lift_option @@ List.map transform (List.combine entries twn_loops) in 
+         match res with 
+         | None -> None 
+         | Some res -> List.map (fun (x,y,z) -> (x,(l,y,l'),z)) res *)
+      else 
+        None 
+      (*
+       in 
+      lift_option @@ List.map (fun (x,y) -> (x,transform y)) res *)
+      )
+    cycles 
   (*list of (a,b,c) where a the entry transition, b the loop, c the automorphism *)
        (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
 
@@ -668,7 +694,6 @@ let lift appr entry bound =
 
 
 let time_bound (l,transition,l') scc program appr = (
-  
   (* y2 = 3*x^2 +3 *)
   (* y3 = x +y ---- y4 = -2x + 4y;   y5 = -x + y;    y6 = -x - y 
   let y2 = Polynomial.mult_with_const (Big_int.big_int_of_int 3) (Polynomial.add (Polynomial.of_power (Var.of_string "x") 2) (Polynomial.one)) in
@@ -693,6 +718,12 @@ let time_bound (l,transition,l') scc program appr = (
   let update1 = Polynomial.add update1 update1 in
   let update1 = (Option.get (TransitionLabel.update t var_left)) in
   Printf.printf "484: %s\n" (Polynomial.to_string_pretty update1);
+    prints:
+
+    Printf.printf " : %s \n" ;
+    print_string "552 \n";
+    List.iter (List.iter (List.iter (fun x -> print_string ((OurRational.to_string x) ^ "; ")))) transformations;
+    List.iter (List.iter (fun x -> print_string ((Var.to_string x) ^ "; "))) blocks; 
 
   
   let m1 = Lacaml.D.Mat.of_list [[1.;1.;1.;-1.;0.];[0.;1.;0.;0.;1.];[0.;0.;0.;1.;0.];[0.;0.;-1.;2.;1.];[0.;0.;0.;0.;1.]] in 
@@ -715,7 +746,6 @@ let time_bound (l,transition,l') scc program appr = (
   wie sinnvoll ist jordan normalform? reicht nicht eine Transformation in eine obere Dreieckmatrix (Schursche Normalform, diagonal genau dann wenn möglich)
 
   Wenn die transformation nicht rational nicht, wie bei dem beispiel, wie soll ich dann den Guard anpassen?
-  Guard sachen sind mit TODO markiert
   Wie ersetze ich nun die Transition?/wo findet das berechnen der closed form usw statt?
 
   wie mache ich code abschnitte kenntlich die ich kopiert habe?
@@ -724,10 +754,20 @@ let time_bound (l,transition,l') scc program appr = (
     müsste ich aber auch in python machen, da ich in ocaml nicht mit algebraischen zahlen umgehen kann
   Du meintest die Transformation klappt auch wenn (nicht nur die Transformationsmatrix rational ist) sondern auch die Normalform an sich. Wie soll das gehen?
 
+  Wenn die Eigenwerte nicht ganzzahlig sind, dann verwerde ich. Wenn dann noch die Transformationsmatrix nicht rational ist, dann verwerfe ich auch. Kann dieser Fall überhaupt eintreten, dass T nicht rational ist, aber die eigenwerte ganzzahlig?
+  Man kann transitionen mit reellen polynomen konstruieren. Kann KoAT das analysieren? Denn reelle Guards gehen ja zB nicht ne
+  "List.for_all (Approximation.is_time_bounded appr) entries" macht doch gar keinen Sinn oder? dann fragt man das jedes mal für alle ab
+  ich weiß nicht, ob ich was falsch mache, aber sympy ist dermaßen langsam, dass es vielleicht sinnvoll ist, erst mit Lacaml zu überprüfen ob die eigenwerte int sind bevor man sympy benutzt
 
-  TODO Lacaml wegnehmen check, guard check, bound, find_cycle
+  eigenwerte berechnen kann sympy ziemlich schnell, es macht also viel sinn erstmal die zu berechnen, auf ganzzahligkeit zu überprüfen, und dann erst jordan 
+  ich finde das highlighting von der doktorarbeit mit den examples sehr schön, weißt du zufällig wie man das macht? 
+  Muss ich diese Schreibweise aus Lemma 9.1.7 übernehmen, oder kann ich sagen, dass polynome sowohl elemente des polynomringes sind als auch polynomfunktionen?
+  Ist nicht die Startlocation gleich der endlocation in einem kreis? 
+
+  TODO bound, find_cycle, 
   
   *)
+  (*print_string "764";
   let vars = (VarSet.to_list (TransitionLabel.vars transition)) in 
   let y1 = Polynomial.add ( (Polynomial.of_power (List.at vars 1) 1)) (((Polynomial.of_power (List.at vars 2) 1))) in 
   let y2 = (Polynomial.of_power (List.at vars 2) 2) in
@@ -739,11 +779,11 @@ let time_bound (l,transition,l') scc program appr = (
   let guard = TransitionLabel.guard_without_inv transition in 
   let uguard = Guard.map_polynomial (compose_int_polynomials ([List.at vars 1;List.at vars 2]) new_polynomials) guard in 
   Printf.printf "\n 720: %s " (Guard.to_string guard);
-  Printf.printf "\n 721: %s " (Guard.to_string uguard);
+  Printf.printf "\n 721: %s " (Guard.to_string uguard);*)
 
    (* unbound value means not in mli 
 *)
-
+  
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,transition,l') in
   if Option.is_none opt then (
@@ -751,7 +791,8 @@ let time_bound (l,transition,l') scc program appr = (
     let bound =
       Timeout.timed_run 5. (fun () -> try
         let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
-        let cycle = find_cycle appr program ( (*find_cycle throws an exception if no cycle is found (for efficiency reasons) *)
+        let (entries, cycle, automorphisms) = List.fold (fun (xs1,xs2,xs3) (x1,x2,x3) -> ((x1::xs1) , (x2::xs2) ,(x3::xs3) )) 
+                  ([],[],[])  @@  find_cycle appr program ( (*find_cycle throws an exception if no cycle is found (for efficiency reasons) *)
           if Location.equal l l' then
             let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs transition) (TWNLoop.update_to_string_rhs loop) in
             [[List.find f parallel_edges]]
@@ -760,7 +801,7 @@ let time_bound (l,transition,l') scc program appr = (
         in
         print_string "\n 397 TWN";
         let handled_transitions = ListMonad.(cycle >>= fun (l,twn,l') -> TWNLoop.subsumed_transitions l l' twn) in
-        let entries = Program.entry_transitions logger program handled_transitions in
+        (* let entries = Program.entry_transitions logger program handled_transitions in*)
         (* add_to_proof_graph program handled_transitions entries; *)
         Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,transition,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
         let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
