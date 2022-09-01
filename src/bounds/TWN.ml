@@ -44,19 +44,21 @@ let toposort graph =
 
 let check_triangular (t: TWNLoop.t) =
   let vars = VarSet.to_list (TWNLoop.input_vars t) in
-  let n = List.length vars in
-  let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
-  let graph = List.mapi (fun i var ->
-    let vars_update =
-        TWNLoop.update t var
-        |? Polynomial.zero
-        |> Polynomial.vars
-        |> VarSet.remove var
-        |> VarSet.to_list
-        |> List.map (fun var -> List.assoc var vars_i) in (i, vars_update)) vars in
-  let order = try toposort graph with CycleFound _ -> [] in
-  List.map (fun i -> List.assoc i (List.map Tuple2.swap vars_i)) order
-  |> List.rev
+  if List.is_empty vars || (TWNLoop.vars t |> VarSet.cardinal) != (List.length vars) then []
+  else
+    let n = List.length vars in
+    let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
+    let graph = List.mapi (fun i var ->
+      let vars_update =
+          TWNLoop.update t var
+          |? Polynomial.zero
+          |> Polynomial.vars
+          |> VarSet.remove var
+          |> VarSet.to_list
+          |> List.map (fun var -> List.assoc var vars_i) in (i, vars_update)) vars in
+    let order = try toposort graph with CycleFound _ -> [] in
+    List.map (fun i -> List.assoc i (List.map Tuple2.swap vars_i)) order
+    |> List.rev
 
 let check_triangular_t (t: TransitionLabel.t) = check_triangular (TWNLoop.mk_transition t)
 

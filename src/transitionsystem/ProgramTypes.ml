@@ -19,9 +19,6 @@ module Transition =
   struct
     type t = Location.t * TransitionLabel.t * Location.t
 
-
-
-
     let equal_ equal_lbl (l1,t1,l1') (l2,t2,l2') =
       Location.equal l1 l2
       && equal_lbl t1 t2
