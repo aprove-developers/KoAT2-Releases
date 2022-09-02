@@ -212,7 +212,7 @@ let map_guard f label =
 
 let cost t = t.cost
 
-let uniform t = {t with cost = Polynomial.one}
+let only_update t = {t with cost = Polynomial.one; guard = Guard.mk_true; invariant = Invariant.mk_true}
 
 let vars_ {update; guard; invariant; cost; _} =
   VarMap.fold (fun _ -> VarSet.union % Polynomial.vars) update VarSet.empty

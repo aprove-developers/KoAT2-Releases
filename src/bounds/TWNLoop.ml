@@ -45,6 +45,8 @@ let remove_non_contributors t non_contributors =
 
 let mk_transition t = mk_transitions [t]
 
+let singleton t = subsumed_transitionlabels t |>  List.first
+
 let add_invariant t inv =
   {t with invariant = Invariant.mk_and t.invariant inv}
 
