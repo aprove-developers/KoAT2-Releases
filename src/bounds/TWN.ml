@@ -43,8 +43,9 @@ let toposort graph =
   List.fold_left (fun visited (node,_) -> dfs graph visited node) [] graph
 
 let check_triangular (t: TWNLoop.t) =
-  let vars = VarSet.to_list (TWNLoop.input_vars t) in
-  if List.is_empty vars || (TWNLoop.vars t |> VarSet.cardinal) != (List.length vars) then []
+  let vars = VarSet.to_list (TWNLoop.input_vars t)
+  and tmp_vars = VarSet.diff (TWNLoop.vars t) (TWNLoop.input_vars t) in
+  if List.is_empty vars || not (VarSet.is_empty tmp_vars) then (Printf.printf "BLUB\n"; [])
   else
     let n = List.length vars in
     let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
@@ -278,7 +279,7 @@ let complexity_ (_,t,_) = complexity (TWNLoop.mk_transition t)
 
 type path = (Location.t * TWNLoop.t * Location.t) list
 
-(* Computes all cycles containing l0. The function call "cycles l0 trans l0 [l0 ->_t l1, l_1] []" returns all paths containing t *)
+(* Computes all cycles containing l0. The function call "cycles trans l0 [l0 ->_t l1] []" returns all paths containing t *)
 let rec cycles trans l0 (paths: (path * LocationSet.t) list) (res: path list) =
   if List.is_empty paths then res
   else
@@ -325,6 +326,7 @@ let find_cycle appr program (cycles: path list) = List.find (fun cycle ->
 
        (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
 
+(** Gets a list of transitions and rec. merges them into twn-loops, i.e., disjunctions of transitions. *)
 let rec parallel_edges ys = function
   | [] -> ys
   | (l,t,l')::xs -> let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in
@@ -360,7 +362,7 @@ let time_bound (l,t,l') scc program appr = (
             let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in
             [[List.find f parallel_edges]]
           else
-            (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition t),l')], (LocationSet.singleton l'))]) []))
+            (cycles (parallel_edges |> Set.of_list) l [([(l,TWNLoop.mk_transition t,l')], (LocationSet.singleton l'))] []))
         in
         let handled_transitions = ListMonad.(cycle >>= fun (l,twn,l') -> TWNLoop.subsumed_transitions l l' twn) in
         let entries = Program.entry_transitions logger program handled_transitions in
