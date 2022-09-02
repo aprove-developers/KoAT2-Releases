@@ -26,7 +26,6 @@ let find_cycle appr program var (cycles: path list) =
 
 
 let improve_t program trans (l,t,l') appr =
-    let entries = Program.entry_transitions logger program [(l,t,l')] in
     VarSet.fold (fun var appr ->
     if Approximation.sizebound appr (l,t,l') var |> Bound.is_infinity then
         let parallel_edges = TWN.parallel_edges [] trans in
