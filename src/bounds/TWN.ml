@@ -45,7 +45,7 @@ let toposort graph =
 let check_triangular (t: TWNLoop.t) =
   let vars = VarSet.to_list (TWNLoop.input_vars t)
   and tmp_vars = VarSet.diff (TWNLoop.vars t) (TWNLoop.input_vars t) in
-  if List.is_empty vars || not (VarSet.is_empty tmp_vars) then (Printf.printf "BLUB\n"; [])
+  if List.is_empty vars || not (VarSet.is_empty tmp_vars) then []
   else
     let n = List.length vars in
     let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
