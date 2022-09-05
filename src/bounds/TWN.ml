@@ -45,7 +45,7 @@ let toposort graph =
 let check_triangular (t: TWNLoop.t) =
   let vars = VarSet.to_list (TWNLoop.input_vars t)
   and tmp_vars = VarSet.diff (TWNLoop.vars t) (TWNLoop.input_vars t) in
-  if List.is_empty vars || not (VarSet.is_empty tmp_vars) then (Printf.printf "BLUB\n"; [])
+  if List.is_empty vars || not (VarSet.is_empty tmp_vars) then []
   else
     let n = List.length vars in
     let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
@@ -350,8 +350,23 @@ let lift appr entry bound =
           FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
           FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
+let check_non_increasing twn_loop t =
+  List.for_all (fun atom ->
+    let poly = Atom.poly atom |> Polynomial.neg in
+    Printf.printf "poly: %s\n" (Polynomial.to_string_pretty poly);
+    let poly_updated = Polynomial.substitute_f (TransitionLabel.update_full t) poly in
+    Printf.printf "poly_: %s\n" (Polynomial.to_string_pretty poly_updated);
+    let atom = Atom.mk_le poly poly_updated in
+    Printf.printf "atom: %s \n" (Atom.to_string atom);
+    let guard = TransitionLabel.guard t in
+
+    Printf.printf "Formula: %s \n" (Formula.(mk_and (mk guard) (mk [atom])) |> Formula.to_string);
+    SMTSolver.satisfiable Formula.(mk_and (mk guard) (mk [atom])) |> not
+    |> tap (fun b -> Printf.printf "bool %B\n" b)) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms)
+
 let time_bound (l,t,l') scc program appr = (
   proof := FormattedString.Empty;
+
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then (
     let bound =
@@ -385,7 +400,10 @@ let time_bound (l,t,l') scc program appr = (
                   |> List.map (TransitionLabel.invariant % Transition.label)
                   |> fun invariants -> List.flatten invariants |> List.filter (fun atom -> List.for_all (List.exists (Atom.equal atom)) invariants)
                   |> TWNLoop.add_invariant twn in
-
+                  Printf.printf "entry: %s \n" (Transition.to_string_pretty entry);
+                (* Printf.printf "t: %S\n" (TWNLoop.to_string twn_inv);
+                List.iter (fun (_,t',_) -> Printf.printf "t': %S\n%B\n" (TransitionLabel.to_string  t') (check_non_increasing twn_inv t');
+                  ) (TransitionSet.to_list scc); *)
                 let eliminated_t =
                   EliminateNonContributors.eliminate_t
                     (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
