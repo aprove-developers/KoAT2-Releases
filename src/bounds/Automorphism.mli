@@ -7,12 +7,22 @@ type t
 
 val vars: t -> VarSet.t 
 
+val poly_map: t -> (Polynomials.RationalPolynomial.t Map.Make(Var).t)
+
+val inv_poly_map: t -> (Polynomials.Polynomial.t Map.Make(Var).t)
+
+val inv_rational_poly_map: t -> (Polynomials.RationalPolynomial.t Map.Make(Var).t)
+
 val vars_as_list: t -> VarSet.elt list 
+
+val inv_poly_list: t -> Polynomials.Polynomial.t list 
+
+val inv_rational_poly_list: t -> Polynomials.RationalPolynomial.t list 
 
 val poly_as_list: t -> Polynomials.RationalPolynomial.t list
 
 (** [vars polys inv_polys] returns an automorphism, but does not check whether it truely is a mathematical automorphism*)
-val of_poly_list: VarSet.elt list -> Polynomials.RationalPolynomial.t list -> Polynomials.RationalPolynomial.t list -> t
+val of_poly_list: VarSet.elt list -> Polynomials.RationalPolynomial.t list -> Polynomials.Polynomial.t list -> t
 
 val identity_aut : t 
 (** compose_rational_polynomials [[x;y]] [[x^2;y^3]] [(x <- x+y)]  returns [x <- x^2+y^3]. 
@@ -29,3 +39,5 @@ val apply_poly_transformation:  Var.t list -> Polynomials.RationalPolynomial.t l
 val apply: Polynomials.RationalPolynomial.t list -> t -> Polynomials.RationalPolynomial.t list
 
 val apply_inv: Polynomials.RationalPolynomial.t list -> t -> Polynomials.RationalPolynomial.t list
+
+val transform_bound: t -> BoundsInst.Bound.t -> BoundsInst.Bound.t

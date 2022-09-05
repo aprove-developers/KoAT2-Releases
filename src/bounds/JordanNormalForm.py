@@ -9,14 +9,14 @@ def get_denominator(n):  # returns the quotient of a fraction
     return fraction(n)[1]
 
 
-def normalize(m: Matrix) -> Matrix:  # turns a rational matrix into an integer matrix
+def normalization_factor(m: Matrix) -> Matrix:  # turns a rational matrix into an integer matrix
     list_of_denominators = []
     for i in m:
         b = get_denominator(i)
         if b != 1:
             list_of_denominators.append(b)
     factor = lcm_list(list_of_denominators)
-    return factor * m
+    return factor
 
 
 def jordan_normal_form(matrix_as_list):
@@ -29,8 +29,9 @@ def jordan_normal_form(matrix_as_list):
     else:
         [t, j] = m.jordan_form()
         t_inv = t.inv()
-        normalized_t_inv = normalize(t_inv)
+        factor = normalization_factor(t_inv)
+        t_inv *= factor
+        t /= factor
         print(t)
         print(j.tolist())
         print(t_inv.tolist())
-        print(normalized_t_inv.tolist())
