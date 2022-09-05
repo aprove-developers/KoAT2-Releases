@@ -3,18 +3,29 @@ open Batteries
 open Polynomials
 open ProgramTypes
 open Atoms
+open BoundsInst
 
 module VarMap = Map.Make(Var)
 
 type t = {
   poly : RationalPolynomial.t VarMap.t;
-  inverse_poly :  RationalPolynomial.t VarMap.t;
+  inverse_poly :  Polynomial.t VarMap.t;
 }
 let vars t :VarSet.t= fold (fun acc poly -> VarSet.union acc (RationalPolynomial.vars poly)) VarSet.empty (VarMap.values t.poly)
+
+let poly_map t = t.poly 
+
+let inv_poly_map t = t.inverse_poly 
+
+let inv_rational_poly_map t = VarMap.map (RationalPolynomial.of_intpoly) t.inverse_poly 
 
 let vars_as_list t : VarSet.elt list = VarSet.to_list @@ vars t 
 
 let poly_as_list t = List.map (fun var -> VarMap.find var t.poly) (VarSet.to_list (vars t))
+
+let inv_poly_list t = List.map (fun var -> VarMap.find var t.inverse_poly) (VarSet.to_list (vars t))
+
+let inv_rational_poly_list t = List.map RationalPolynomial.of_intpoly @@ inv_poly_list t
 
 let identity_aut = {poly = VarMap.empty; inverse_poly = VarMap.empty}
 
@@ -50,3 +61,9 @@ let apply_poly_transformation  variables old_polynomials new_polynomials =
 let apply polys t = apply_poly_transformation (vars_as_list t) polys (poly_as_list t)
 
 let apply_inv polys t = apply_poly_transformation (vars_as_list t) polys (poly_as_list t)
+
+(*helper function to transform_bound *)
+let bound_map_of_automorphism t = VarMap.fold (fun key value map -> (VarMap.add key (BoundsInst.Bound.of_poly value) map)) (inv_poly_map t) VarMap.empty
+
+(** applies the inverse automorphism to the bound*)
+let transform_bound t bound = BoundsInst.Bound.substitute_all (bound_map_of_automorphism t) bound 
