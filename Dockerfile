@@ -2,17 +2,13 @@
 # Build KoAT
 #-------------------------------------------
 FROM ocaml/opam:alpine as koat2_build
-LABEL author="Fabian Meyer"
+LABEL author="Eleanore Meyer"
 LABEL author="Marcel Hark"
 
 WORKDIR /home/opam
 
-ARG OCAML_VERSION=4.11.2
+ARG OCAML_VERSION=4.14.0
 
-# Use our fork of opam-repository for static Z3
-RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opam-repository.git
-
-RUN opam switch create -y $OCAML_VERSION+musl+static+flambda
 # Add graphviz for tests
 RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip --no-cache
 
@@ -35,6 +31,11 @@ RUN wget -O "irankfinder.zip" https://github.com/jesusjda/pyRankFinder/releases/
     unzip irankfinder.zip -d irankfinder && \
     rm irankfinder.zip
 
+# Use our fork of opam-repository for static Z3
+RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opam-repository.git
+RUN opam switch create -y $OCAML_VERSION-musl+static+flambda --packages=ocaml-variants.$OCAML_VERSION+options,ocaml-option-static,ocaml-option-musl,ocaml-option-flambda
+RUN opam repo remove default
+
 COPY --chown=opam:opam opam .
 RUN opam install -j $(nproc) . --deps-only
 
@@ -50,7 +51,8 @@ ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/hom
 
 # Run Build command and strip binaries
 ARG KOAT2_VERSION_STRING=UNKNOWN
-RUN RELEASE=1 KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING omake --depend && \
+RUN eval $(opam env) && \
+    RELEASE=1 KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING omake --depend && \
     strip src/main/koat2.opt
 
 #-------------------------------------------
@@ -102,9 +104,6 @@ COPY docker_scripts/wrapper_script.sh bin/wrapper_script.sh
 COPY docker_scripts/run_koat2_c.sh bin/run_koat2_c.sh
 
 RUN chmod +x /koat2/irankfinder/1.3.1/irankfinder/CFRefinement
-#Update PATH to include the added executables
-# ENV PATH=/koat2/irankfinder/1.3.1/irankfinder/partialevaluation/bin:/koat2/irankfinder/1.3.1/irankfinder/ppl:/koat2/irankfinder/1.3.1/irankfinder:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/koat2/bin
-# ENV LD_LIBRARY_PATH=/koat2/irankfinder/1.3.1/irankfinder/ppl:/koat2/irankfinder/1.3.1/irankfinder/partialevaluation/bin:/koat2/irankfinder/1.3.1/irankfinder:/lib:/usr/local/lib:/usr/lib
 
 ENV PATH=$PATH:/koat2/bin:/koat2/irankfinder/1.3.1/irankfinder/partialevaluation/bin:/koat2/irankfinder/1.3.1/irankfinder/ppl:/koat2/irankfinder/1.3.1/irankfinder
 # ENV LD_LIBRARY_PATH=/lib:/usr/local/lib:/usr/lib
