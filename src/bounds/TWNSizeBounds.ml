@@ -29,6 +29,7 @@ let improve_t program trans (l,t,l') appr =
     VarSet.fold (fun var appr ->
     if Approximation.sizebound appr (l,t,l') var |> Bound.is_infinity then
         let parallel_edges = TWN.parallel_edges [] trans in
+        try (
         let cycle = find_cycle appr program var (
           if Location.equal l l' then
             let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in
@@ -52,7 +53,8 @@ let improve_t program trans (l,t,l') appr =
                 else
                     Bound.infinity) cycle
         |> Bound.sum_list
-        |> (fun bound -> Approximation.add_sizebound bound (l,t,l') var appr)
+        |> (fun bound -> Approximation.add_sizebound bound (l,t,l') var appr))
+        with Not_found -> appr
     else appr) (TransitionLabel.input_vars t) appr
 
 let improve program ?(scc = None) appr =
