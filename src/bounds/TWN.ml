@@ -539,10 +539,12 @@ let transform_linearly (transition: TWNLoop.t) =
     | None -> None 
     | Some x -> let blocks = change_order transition x in 
   if List.length blocks == List.length (VarSet.to_list (TWNLoop.vars transition)) then
+     let guard = TWNLoop.guard_without_inv transition in 
+      Printf.printf "\n 501: %s \n " (Guard.to_string (TWNLoop.Guard.atoms guard));
       Some (transition, Automorphism.identity_aut) (*loop already is in twn form*)
   else
     let concat_blocks = List.concat blocks in 
-    (* calculate matrices and cast them to Lacaml.D.mat *)
+    (* calculate matrices *)
     let matrices = List.map (matrix_of_linear_assignments transition) blocks in 
     let transformations = List.map (transform_linearly_matrix) matrices in (*(transformations,transformed_matrices) *)
     if not @@ List.for_all Option.is_some transformations then 
@@ -557,12 +559,12 @@ let transform_linearly (transition: TWNLoop.t) =
       let automorphism = Automorphism.of_poly_list concat_blocks eta eta_inv in 
       
       let update_map = VarMap.map RationalPolynomial.of_intpoly @@ TWNLoop.update_map transition in 
-      let update_polys = (List.map (fun x -> RationalPolynomial.of_intpoly (Option.get (TWNLoop.update transition x)))
+      (*let update_polys = (List.map (fun x -> RationalPolynomial.of_intpoly (Option.get (TWNLoop.update transition x)))
                                           concat_blocks
                                 ) in
       let test =   List.map (RationalPolynomial.substitute_all update_map)  (Automorphism.poly_as_list automorphism) in 
-      Printf.printf "564";
-      List.iter (fun x -> print_string (RationalPolynomial.to_string x)) test; 
+      Printf.printf "564 ";
+      List.iter (fun x -> print_string (RationalPolynomial.to_string x)) test; *)
       let new_update = List.map (RationalPolynomial.substitute_all update_map) (Automorphism.inv_rational_poly_list automorphism) 
                 |> List.map (RationalPolynomial.substitute_all (Automorphism.poly_map automorphism)) 
                 |> List.map RationalPolynomial.normalize in 
@@ -573,15 +575,15 @@ let transform_linearly (transition: TWNLoop.t) =
       Printf.printf "\n504: \n "; List.iter (print_string) (List.map (fun x -> "; " ^ RationalPolynomial.to_string_pretty x) update_polys);
       Printf.printf "\n505: \n "; List.iter (print_string) (List.map (fun x -> "; " ^ RationalPolynomial.to_string_pretty x) eta);*)
       
-      let guard = TWNLoop.guard transition in 
+      let guard = TWNLoop.guard_without_inv transition in 
       let updated_guard = Guard.map_polynomial (compose_int_polynomials concat_blocks eta_inv) (TWNLoop.Guard.atoms guard) in 
-      Printf.printf "\n502: %s \n " (Guard.to_string (TWNLoop.Guard.atoms guard));
-      Printf.printf "\n503: %s \n " (Guard.to_string updated_guard);
+      Printf.printf "\n 502: %s \n " (Guard.to_string (TWNLoop.Guard.atoms guard));
+      Printf.printf "503: %s \n " (Guard.to_string updated_guard);
 
       let invariant = TWNLoop.invariant transition in 
       let updated_invariant = Guard.map_polynomial (compose_int_polynomials concat_blocks eta_inv) invariant in 
-      Printf.printf "\n504: %s \n " (Guard.to_string invariant);
-      Printf.printf "\n505: %s \n " (Guard.to_string updated_invariant);
+      Printf.printf "504: %s \n " (Guard.to_string invariant);
+      Printf.printf "505: %s \n " (Guard.to_string updated_invariant);
 
       (*return updated transition and automorphism*)
       Some ((TWNLoop.mk_transition @@TransitionLabel.mk 
@@ -644,7 +646,6 @@ let lift_option (xs:'a option list) : 'a list option =
     None 
 
 let find_cycle appr program (cycles: path list) =
-  print_string "\n 317 TWN";
   List.find_map (fun cycle ->
     (* list of all transitions in a cycle, twnloop doesn't require each transition to be in twn form, but together they do *)
       let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
@@ -684,8 +685,8 @@ let find_cycle appr program (cycles: path list) =
         entries_twn_loops
       ) then 
         (
-          List.iter (fun (x,b) -> print_string ((Transition.to_string x ) ^ "; " ^ (TWNLoop.to_string b ) ^ ";; ")) entries_twn_loops ;
-        print_string "\n 665 3TWN";
+          (*List.iter (fun (x,b) -> print_string ((Transition.to_string x ) ^ "; " ^ (TWNLoop.to_string b ) ^ ";; ")) entries_twn_loops ;*)
+        print_string "\n 665 some entry is not timed bounded TWN \n ";
         None 
       )
       else if (List.for_all (fun (entry, t) ->
@@ -699,7 +700,7 @@ let find_cycle appr program (cycles: path list) =
           && (Approximation.is_time_bounded appr) entry) 
         entries_twn_loops
       ) then (
-        print_string "\n 665 4TWN";
+        print_string "\n 665 transforming into TWN\n";
         lift_option @@ List.map transform entries_twn_loops)
          (*let res = lift_option @@ List.map transform (List.combine entries twn_loops) in 
          match res with 
@@ -743,16 +744,16 @@ let lift appr entry bound =
 
 
 let time_bound (l,transition,l') scc program appr = (
-      Printf.printf "\n746: %s  %s\n " (Location.to_string  l) (Location.to_string  l');
-      Printf.printf "\n747: %s \n " (Guard.to_string (TransitionLabel.guard_without_inv transition)); (* TODO guard without invariant ausprobieren was dann da is *)
+      Printf.printf "746: %s  %s\n " (Location.to_string  l) (Location.to_string  l');
+      Printf.printf "747: %s  " (Guard.to_string (TransitionLabel.guard_without_inv transition)); (* TODO guard without invariant ausprobieren was dann da is *)
+
+  (* y2 = 3*x^2 +3 *)
+  (* y3 = x +y ---- y4 = -2x + 4y;   y5 = -x + y;    y6 = -x - y 
   let y1 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.of_power (Var.of_string "y") 1))) in 
   let y2 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.of_power (Var.of_string "y") 2))) in 
   let varmap = VarMap.add (Var.of_string "x") y1 VarMap.empty |> VarMap.add (Var.of_string "y") y2 in 
   let res = Polynomial.substitute_all varmap y1  in 
   Printf.printf "742: %s \n" (Polynomial.to_string res);
-
-  (* y2 = 3*x^2 +3 *)
-  (* y3 = x +y ---- y4 = -2x + 4y;   y5 = -x + y;    y6 = -x - y 
   let y2 = Polynomial.mult_with_const (Big_int.big_int_of_int 3) (Polynomial.add (Polynomial.of_power (Var.of_string "x") 2) (Polynomial.one)) in
   let y4 =  RealPolynomial.add (RealPolynomial.mult_with_const (Num.num_of_int (-2)) (RealPolynomial.of_power (Var.of_string "x") 1)) ((RealPolynomial.mult_with_const (Num.num_of_int (4)) (RealPolynomial.of_power (Var.of_string "y") 1))) in
   let y5 = RealPolynomial.add (RealPolynomial.mult_with_const (Num.num_of_int (-1)) (RealPolynomial.of_power (Var.of_string "x") 1)) ((RealPolynomial.mult_with_const (Num.num_of_int (1)) (RealPolynomial.of_power (Var.of_string "y") 1))) in
@@ -822,12 +823,17 @@ let time_bound (l,transition,l') scc program appr = (
   Ist nicht die Startlocation gleich der endlocation in einem kreis? 
   Warum macht der die twn analyse nicht richtig? 
 
-  Warum kommt splitUpTransformed timeout? aber das untransformierte nicht, es kommen nämlich guard bedingungen hinzu, wodurch die berechnungen anscheinend so viel schwerer werden, dass das ganze nicht terminiert
-  splitUpStrange ist kein twn loop weil 
-  nestedlinear wird nicht transformiert, weil obwohl sich die kreise ausschließen, das heißt der innere auf jeden fall linear ist und der äußere sorgt aber dafür dass die eine bedingung (entries are bounded) verletzt ist
+  nestedlinear wird nicht transformiert, weil obwohl sich die kreise ausschließen, das heißt der innere auf jeden fall linear ist und der äußere sorgt aber dafür dass die eine bedingung (entries are bounded) verletzt ist | enable die mprf
+  Warum kommt splitUpTransformed timeout? aber das untransformierte nicht, es kommen nämlich guard bedingungen hinzu, wodurch die berechnungen anscheinend so viel schwerer werden, dass das ganze nicht terminiert in 5 sec| klappt mittlerweile
+  splitUpStrange, da klappt das zusammenziehen irgendwie nicht, ist kein twn loop weil wohl ein entry nicht bounded ist ???
   So, ich denke ich muss mit nicht linearen Automorphismen anfangen, wie?
-  Kolloqium: Zeit? PowerPoint? Live Demo?
-  TODO find_cycle, cython, beispiele, kreis
+  Kolloqium: Zeit 25, PowerPoint jo, Live Demo jo mittwoch 16 uhr probevortrag
+  docker jo 
+  
+
+  splitUp vs splitUp strange schafft das nicht, weil dem != statt dem > 
+
+  TODO 8.1.8 mit algorithmus abschreibencython (nur das starten geht schneller), beispiele, kreis
   
   *)
   (*print_string "764";
@@ -909,11 +915,9 @@ let time_bound (l,transition,l') scc program appr = (
             Bound.infinity)
     in
     if Option.is_some bound then
-      (print_string "\n 425 TWN";
       bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
-      |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true)))))
+      |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true))))
     else (
-      print_string "\n 429 TWN";
       Logger.log logger Logger.INFO (fun () -> "twn", ["Timeout", Bound.to_string Bound.infinity]);
       Bound.infinity)
   )

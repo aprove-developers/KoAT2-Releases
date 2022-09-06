@@ -9,14 +9,13 @@ def get_denominator(n):  # returns the quotient of a fraction
     return fraction(n)[1]
 
 
-def normalization_factor(m: Matrix) -> Matrix:  # turns a rational matrix into an integer matrix
+def normalization_factor(m: Matrix) -> Matrix:  # returns the least common multiple of all denominators in the matrix m
     list_of_denominators = []
     for i in m:
         b = get_denominator(i)
         if b != 1:
             list_of_denominators.append(b)
-    factor = lcm_list(list_of_denominators)
-    return factor
+    return lcm_list(list_of_denominators)
 
 
 def jordan_normal_form(matrix_as_list):
