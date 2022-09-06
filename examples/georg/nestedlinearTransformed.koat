@@ -4,6 +4,6 @@
 (RULES
   l0(X,Y,Z,N) -> Com_1(l1(X,Y,Z,N)) :|: N > 0 
   l1(X,Y,Z,N) -> Com_1(l2(N,2*N,Z,N)) :|: N > 0 
-  l2(X,Y,Z,N) -> Com_1(l2(X+Y,-2*X+4*Y,Z,N)) :|:X+ Y <= Z && Y>0
+  l2(X,Y,Z,N) -> Com_1(l2(2*X,3*Y,Z,N)) :|: Y <= Z && Y>0
   l2(X,Y,Z,N) -> Com_1(l1(X,Y,Z,N-1)) :|: Y > Z 
 )
