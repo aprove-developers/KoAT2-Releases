@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR X Y)
+(RULES
+  l0(X,Y) -> l1(X, Y)
+  l1(X,Y) -> l1(X + 1, Y + 1) :|: 100 > X
+  l1(X,Y) -> l1(2 * X, 3 * Y) :|: Y < X && Y > 0
+)

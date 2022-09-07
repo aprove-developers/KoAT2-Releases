@@ -311,7 +311,9 @@ let rec find l list =
 (* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
 let find_cycle appr program (cycles: path list) = List.find (fun cycle ->
     let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
+    Printf.printf "HANDLED: %s\n" (TransitionSet.to_string (TransitionSet.of_list handled_transitions));
     let entries = Program.entry_transitions logger program handled_transitions in
+    Printf.printf "ENTRIES: %s\n" (TransitionSet.to_string (TransitionSet.of_list entries));
     let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in
     List.for_all (fun (entry, t) ->
       let eliminated_t =
@@ -322,7 +324,8 @@ let find_cycle appr program (cycles: path list) = List.find (fun cycle ->
        && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
        && let order = check_triangular eliminated_t in List.length order == VarSet.cardinal (TWNLoop.input_vars eliminated_t) (* Triangular?*)
        && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)
-       && List.for_all (Approximation.is_time_bounded appr) entries) (List.combine entries twn_loops)) cycles
+       (* && List.for_all (Approximation.is_time_bounded appr) entries *)
+       ) (List.combine entries twn_loops)) cycles
 
        (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
 
@@ -336,9 +339,10 @@ let rec parallel_edges ys = function
 
 module TimeBoundTable = Hashtbl.Make(Transition)
 
-let time_bound_table: ((Transition.t list) * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
+let time_bound_table: ((Transition.t list) * (Transition.t list * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
 
-let lift appr entry bound =
+let lift appr entries bound =
+  List.map (fun entry ->
   let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
     Bound.mul (Approximation.timebound appr entry) bound_with_sizebound
   |> tap (fun b ->
@@ -348,7 +352,8 @@ let lift appr entry bound =
           |> List.map (fun v -> (Var.to_string ~pretty:true v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true))
           |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend) <>
           FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
-          FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
+          FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))) entries
+  |> Bound.sum_list
 
 let check_non_increasing twn_loop t =
   List.for_all (fun atom ->
@@ -364,10 +369,28 @@ let check_non_increasing twn_loop t =
     SMTSolver.satisfiable Formula.(mk_and (mk guard) (mk [atom])) |> not
     |> tap (fun b -> Printf.printf "bool %B\n" b)) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms)
 
+let find_non_increasing_set program appr cycle twn_loop entry =
+  let rec f program appr cycle twn_loop entries res =
+    if List.for_all (Approximation.is_time_bounded appr) res then
+      Option.some res
+    else
+      let bounded, unbounded = List.partition (Approximation.is_time_bounded appr) entries in
+      let new_entries = Program.entry_transitions logger program unbounded
+                        |> TransitionSet.of_list
+                        |> flip TransitionSet.diff (TransitionSet.of_list entries)
+                        |> TransitionSet.to_list
+                        |> List.filter (fun (_,t,_) -> List.for_all ((!=) (TransitionLabel.id t)) (List.map TransitionLabel.id cycle)) in
+      if not (List.is_empty new_entries) && List.for_all (check_non_increasing twn_loop) (List.map Tuple3.second new_entries) then
+        f program appr cycle twn_loop entries (new_entries @ bounded)
+      else
+        None in
+  f program appr cycle twn_loop [entry] [entry]
+
 let time_bound (l,t,l') scc program appr = (
   proof := FormattedString.Empty;
 
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
+  Printf.printf "TRANSITION: %s \n" (Transition.to_string_pretty (l,t,l'));
   if Option.is_none opt then (
     let bound =
       Timeout.timed_run 5. (fun () -> try
@@ -391,6 +414,7 @@ let time_bound (l,t,l') scc program appr = (
           |> FormattedString.mappend));
         let global_local_bounds =
           List.map (fun (entry, twn) ->
+                Printf.printf "ENTRY:   %s \n" (Transition.to_string_pretty entry);
                 let program_only_entry = Program.from ((TransitionSet.to_list (TransitionSet.diff (Program.transitions program) (TransitionSet.of_list entries))) |> List.map List.singleton |> (@) [[entry]]) (Program.start program) in
                 let twn_inv = InvariantGeneration.transform_program program_only_entry
                   |> MaybeChanged.unpack
@@ -409,11 +433,15 @@ let time_bound (l,t,l') scc program appr = (
                     (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
                 in
                 if VarSet.is_empty (TWNLoop.vars eliminated_t) then
-                  Bound.infinity, (entry, Bound.infinity)
+                  Bound.infinity, ([entry], Bound.infinity)
                 else (
                   let bound = complexity eliminated_t in
                   if Bound.is_infinity bound then raise (Non_Terminating (handled_transitions, entries));
-                  lift appr entry bound, (entry, bound)) )
+                  let non_increasing_entries = find_non_increasing_set program appr (List.map (TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle |> List.flatten) twn entry in
+                  if Option.is_some non_increasing_entries then
+                    lift appr (Option.get non_increasing_entries) bound, ((Option.get non_increasing_entries), bound)
+                  else
+                    Bound.infinity, ([entry], bound)))
           (List.combine entries twn_loops) in
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map Tuple2.second global_local_bounds)) handled_transitions;
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
@@ -421,7 +449,7 @@ let time_bound (l,t,l') scc program appr = (
         | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
         | Non_Terminating (handled_transitions,entries)->
             Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]);
-            List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> (t, Bound.infinity)) entries)) handled_transitions;
+            List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> ([t], Bound.infinity)) entries)) handled_transitions;
             Bound.infinity)
     in
     if Option.is_some bound then
@@ -433,7 +461,7 @@ let time_bound (l,t,l') scc program appr = (
   )
   else (
     let cycle, xs = Option.get opt in
-    let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
+    let bound_with_sizebound = Bound.sum_list (List.map (fun (entries, bound) -> lift appr entries bound) xs) in
     bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
                          |> tap (fun b -> proof_append FormattedString.((mk_str_line (b |> Bound.to_string ~pretty:true))))))
   |> tap (fun b -> if Bound.compare_asy b (Approximation.timebound appr (l,t,l')) < 0 then ProofOutput.add_to_proof @@ fun () ->
