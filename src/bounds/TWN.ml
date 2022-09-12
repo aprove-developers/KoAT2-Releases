@@ -6,7 +6,6 @@ open Atoms
 open BoundsInst
 open Constraints
 open PolyExponential
-open Lacaml.D
 open TransitionLabel
 open Automorphism
 
@@ -356,7 +355,7 @@ let print_flist xs = (
   List.iter (Printf.printf "%f; ") xs;
   Printf.printf "]\n";)
 
-
+(*
 let print_vec v = 
   let flist = Lacaml.D.Vec.to_list v in
   print_flist flist
@@ -368,7 +367,7 @@ let print_mat m =
 
 
 let mat_of_big_int_list m = 
-  Lacaml.D.Mat.of_list @@ List.map (List.map Big_int.float_of_big_int) m 
+  Lacaml.D.Mat.of_list @@ List.map (List.map Big_int.float_of_big_int) m *)
 
 
 (** [matrix_times_vector A x] returns a polynomial list where each element stores a row of [A*x] *)
@@ -565,10 +564,8 @@ let transform_linearly (transition: TWNLoop.t) =
       let test =   List.map (RationalPolynomial.substitute_all update_map)  (Automorphism.poly_as_list automorphism) in 
       Printf.printf "564 ";
       List.iter (fun x -> print_string (RationalPolynomial.to_string x)) test; *)
-      let new_update = List.map (RationalPolynomial.substitute_all update_map) (Automorphism.inv_rational_poly_list automorphism) 
-                |> List.map (RationalPolynomial.substitute_all (Automorphism.poly_map automorphism)) 
-                |> List.map RationalPolynomial.normalize in 
-      (*let new_update = apply_poly_transformation concat_blocks (List.map RationalPolynomial.of_intpoly eta_inv) @@ apply_poly_transformation concat_blocks update_polys eta (*eta^(-1)(update(eta(x)))*)
+      let new_update = Automorphism.transform_update automorphism update_map in 
+      (*let new_update = apply_poly_transformation concat_blocks (List.map RationalPolynomial.of_intpoly eta_inv) @@ apply_poly_transformation concat_blocks update_polys eta (*eta(update(eta^(-1)(x)))*)
                       |> List.map RationalPolynomial.normalize in*) (*cast it back to int_poly TODO check if polys are really int polys, compare with js *)
       (*Printf.printf "\n501: \n "; List.iter (print_string) (List.map (fun x -> "; " ^ RationalPolynomial.to_string_pretty x) eta_inv);
       Printf.printf "\n503: \n "; List.iter (print_string) (List.map (fun x -> "; " ^ Polynomial.to_string_pretty x) new_update);
@@ -745,7 +742,83 @@ let lift appr entry bound =
 
 let time_bound (l,transition,l') scc program appr = (
       Printf.printf "746: %s  %s\n " (Location.to_string  l) (Location.to_string  l');
-      Printf.printf "747: %s  " (Guard.to_string (TransitionLabel.guard_without_inv transition)); (* TODO guard without invariant ausprobieren was dann da is *)
+      Printf.printf "747: %s  \n" (Guard.to_string (TransitionLabel.guard_without_inv transition)); (* TODO guard without invariant ausprobieren was dann da is *)
+  let y2 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.of_power (Var.of_string "y") 2))) in 
+  let y3 = Polynomial.mul (y2) (Polynomial.of_var (Var.of_string "x")) in 
+  let a = ParameterPolynomial.of_coeff_list [y2] [Var.of_string "x"] in 
+  let b = ParameterPolynomial.of_coeff_list [y3] [Var.of_string "x"] in
+  let c = ParameterPolynomial.of_coeff_list [(((Polynomial.of_power (Var.of_string "y") 2)))] [Var.of_string "x"] in 
+  let d = ParameterPolynomial.of_coeff_list [Polynomial.of_var (Var.of_string "a")] [Var.of_string "x"] in 
+  let (e,f) = List.split @@ ParameterPolynomial.monomials_with_coeffs d in  
+  Printf.printf "861: %s  \n" (Polynomial.to_string (List.first e));
+  Printf.printf "861: %s  \n" (ParameterPolynomial.to_string a);
+  Printf.printf "861: %s  \n" (ParameterPolynomial.to_string b);
+  Printf.printf "861: %s  \n" (ParameterPolynomial.to_string c);
+  let xs = Endomorphism.enumerate_help 2 3 in 
+  List.iter (List.iter (fun x -> print_string ((string_of_int x) ^ "; "))) xs; 
+
+  let degree = 3 in 
+  let vars = [Var.of_string "x"; Var.of_string "y"] in 
+  let endomorphism = Endomorphism.of_poly_list [Var.of_string "y"; Var.of_string "x"] [Polynomial.of_var @@ Var.of_string "x"; Polynomial.of_var @@ Var.of_string "y"] in 
+  let polys = Endomorphism.enumerate_all_polys_degree 3 [Var.of_string "x"; Var.of_string "y"] in 
+  Printf.printf "863: %s  \n" @@ string_of_int @@ List.length polys;
+  List.iter  (fun x -> print_string ((Polynomial.to_string x) ^ "; ")) polys; 
+  Printf.printf " \n" ;
+  let polys2 = List.map ParameterPolynomial.of_polynomial polys in  
+  let var = Var.of_string "x" in 
+  List.iter  (fun x -> print_string ((ParameterPolynomial.to_string x) ^ "; ")) polys2; 
+  let polys2 = List.map (fun poly -> ParameterPolynomial.mult_with_const (Polynomial.of_var (Var.of_string ("a"^(Var.to_string var)^(ParameterPolynomial.to_string poly)))) poly) polys2 in (*TODO add the index i to the  a *)
+  let sum = List.fold (ParameterPolynomial.(+)) ParameterPolynomial.zero polys2 
+  |> Endomorphism.apply_for_parameter_poly endomorphism 
+  in 
+  Printf.printf " \n866: %s  \n" (ParameterPolynomial.to_string_pretty sum);
+  
+  let coeffs = ParameterPolynomial.monomials_with_coeffs sum in 
+  let (coeffs_of_var, other_coeffs) = List.partition (fun (x,y)-> ParameterPolynomial.equal (ParameterPolynomial.of_monomial y) (ParameterPolynomial.of_var var)) coeffs 
+        |> (fun (xs,ys) -> (List.map (fun (x,y) -> x) xs, List.map (fun (x,y) -> x) ys )) (*keep only the coefficients, not the monomials*)
+  in
+  Printf.printf "867: %s  \n" (Polynomial.to_string (List.first coeffs_of_var));
+  let formula_p_r_var = List.map (fun x ->Formula.mk_eq x Polynomial.one) coeffs_of_var 
+            @ List.map (fun x ->Formula.mk_eq x Polynomial.zero) other_coeffs  
+            |> List.fold (Formula.mk_and) Formula.mk_true 
+  in
+  Printf.printf " \n %s" @@ Formula.to_string formula_p_r_var;
+  let res  = Option.get @@ SMTSolver.get_model formula_p_r_var in
+ Printf.printf "868: %s  \n" @@ Valuation.to_string @@  res; 
+  let res = Valuation.eval (Var.of_string "ax1") res in 
+  print_int @@ Big_int.to_int @@res;
+  let sums = List.make (List.length vars) sum in  
+
+  
+  let inv_endomorphism_polys = List.map (fun var -> 
+  let polys = Endomorphism.enumerate_all_polys_degree degree vars (* get all monomials up to degree *)
+                |> List.map ParameterPolynomial.of_polynomial 
+                |> List.map (fun poly -> ParameterPolynomial.mult_with_const (Polynomial.of_var (Var.of_string ("a"^(Var.to_string var)^(ParameterPolynomial.to_string poly)))) poly) in (*multiply each polynomial with a distinct constant*)
+                List.fold (ParameterPolynomial.(+)) ParameterPolynomial.zero polys) vars 
+  in 
+  let inv_endomorphism = List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars inv_endomorphism_polys in
+
+  
+  let formula = Endomorphism.formula_to_check_invertibility endomorphism in
+  let res  = Option.get @@ SMTSolver.get_model formula in
+  Printf.printf " \n 870: %s  \n" @@ Valuation.to_string @@  res; 
+  
+  let y2 = Polynomial.sub ( (Polynomial.of_power (Var.of_string "x") 2)) (((Polynomial.of_power (Var.of_string "y") 1))) in 
+  let y3 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.one))) in 
+  let endomorphism = Endomorphism.of_poly_list [Var.of_string "x"; Var.of_string "y"] [y2;y3] in 
+  let formula = Endomorphism.formula_to_check_invertibility endomorphism in
+  let valuation  = Option.get @@ SMTSolver.get_model formula in
+  Printf.printf " \n 871: %s  \n" @@ Valuation.to_string @@  valuation; 
+  let res = List.of_enum @@ Valuation.bindings valuation in 
+  let valuation_map = List.fold (fun map (var, int) -> VarMap.add var ( int) map) VarMap.empty res in 
+  Printf.printf "\n 873: %s " @@ VarMap.fold (fun var int str -> str ^ "Variable: "^(Var.to_string var)^" -> " ^ (OurInt.to_string int)^"\n") valuation_map "";
+  let res = List.map (ParameterPolynomial.eval_coefficients (fun x -> (VarMap.find x valuation_map))) @@ Endomorphism.inv_poly_as_list endomorphism in 
+  let res = List.map (ParameterPolynomial.eval_coefficients (fun x -> Valuation.eval x valuation)) @@ Endomorphism.inv_poly_as_list endomorphism in 
+  List.iter (fun x -> print_string @@ Polynomial.to_string x ^ "; ") res ;
+  
+ (* let formula = Formula.mk_eq sum (Polynomial.of_var (Var.of_string "x")) in 
+  let result = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in *)
+  
 
   (* y2 = 3*x^2 +3 *)
   (* y3 = x +y ---- y4 = -2x + 4y;   y5 = -x + y;    y6 = -x - y 
@@ -832,8 +905,11 @@ let time_bound (l,transition,l') scc program appr = (
   
 
   splitUp vs splitUp strange schafft das nicht, weil dem != statt dem > 
+  Datenträger oder wie elektronisch einreichen?
 
   TODO 8.1.8 mit algorithmus abschreibencython (nur das starten geht schneller), beispiele, kreis
+
+  parameter polynome, nach x umformen lassen, den koeffizienten= 1 setzen
   
   *)
   (*print_string "764";
@@ -850,9 +926,10 @@ let time_bound (l,transition,l') scc program appr = (
   Printf.printf "\n 720: %s " (Guard.to_string guard);
   Printf.printf "\n 721: %s " (Guard.to_string uguard);*)
 
+  
+
    (* unbound value means not in mli 
 *)
-
   
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,transition,l') in
