@@ -1,10 +1,12 @@
-
 open Batteries
 open Polynomials
 open ProgramTypes
 open Atoms
 open BoundsInst
 open Formulas
+open Constraints
+open PolyExponential
+open TransitionLabel
 
 module Valuation = Valuation.Make(OurInt)
 module VarMap = Map.Make(Var)
@@ -12,27 +14,31 @@ module VarMap = Map.Make(Var)
 module Endomorphism =
   struct
   type t= {
-    poly : Polynomial.t VarMap.t;
+    poly : ParameterPolynomial.t VarMap.t;
     inv_poly : ParameterPolynomial.t VarMap.t;
   }
-  let to_string t = VarMap.fold (fun var poly str -> str ^ "Variable: "^(Var.to_string var)^" -> " ^ (Polynomial.to_string poly)^"\n") t.poly ""
+  let to_string t = VarMap.fold (fun var poly str -> str ^ "Variable: "^(Var.to_string var)^" -> " ^ (ParameterPolynomial.to_string poly)^"\n") t.poly ""
         ^ VarMap.fold (fun var poly str -> str ^ "Inverse: "^(Var.to_string var)^" -> " ^ (ParameterPolynomial.to_string poly)^"\n") t.inv_poly ""
   
-  let vars t :VarSet.t= fold (fun acc poly -> VarSet.union acc (Polynomial.vars poly)) VarSet.empty (VarMap.values t.poly)
+  let vars t :VarSet.t= fold (fun acc poly -> VarSet.union acc (ParameterPolynomial.vars poly)) VarSet.empty (VarMap.values t.poly)
   
   let vars_as_list t : Var.t list =  List.of_enum @@ VarMap.keys t.poly
 
   let identity_end = {poly = VarMap.empty;
                   inv_poly = VarMap.empty}
+  let poly_list t = List.map (fun var -> VarMap.find var t.poly) (vars_as_list t)
+  
+  let inv_poly_list t = List.map (fun var -> VarMap.find var t.inv_poly) (vars_as_list t)
 
-  let poly_as_list t = List.map (fun var -> VarMap.find var t.poly) (vars_as_list t)
-  let inv_poly_as_list t = List.map (fun var -> VarMap.find var t.inv_poly) (vars_as_list t)
+  let poly_map t = t.poly 
+
+  let inv_poly_map t = t.inv_poly 
 
   let degree_of_polylist polys = 
-    Polynomial.degree @@ List.max ~cmp:(fun x y -> if ((Polynomial.degree x) < (Polynomial.degree y)) then -1 else 1) polys 
+    ParameterPolynomial.degree @@ List.max ~cmp:(fun x y -> if ((ParameterPolynomial.degree x) < (ParameterPolynomial.degree y)) then -1 else 1) polys 
 
   let degree_of_endomorphism t =
-    degree_of_polylist (poly_as_list t)
+    degree_of_polylist (poly_list t)
 
   (** Haskell's [m..n] is create_list m n, which is [m;m+1;...;n] or [] if m>n. Tail recursive*)
   let create_list i j = 
@@ -63,11 +69,11 @@ module Endomorphism =
   
   
 
-  let create_inv degree vars = let inv_endomorphism_polys = 
+  let create_default_mapping ?(letter_for_index="a") degree vars  = let inv_endomorphism_polys = 
       List.map (fun var -> 
                 let polys = enumerate_all_polys_degree degree vars (* get all monomials up to degree *)
                 |> List.map ParameterPolynomial.of_polynomial 
-                |> List.map (fun poly -> ParameterPolynomial.mult_with_const (Polynomial.of_var (Var.of_string ("a"^(Var.to_string var)^(ParameterPolynomial.to_string poly)))) poly) in (*multiply each polynomial with a distinct constant*)
+                |> List.map (fun poly -> ParameterPolynomial.mult_with_const (Polynomial.of_var (Var.of_string (letter_for_index^(Var.to_string var)^(ParameterPolynomial.to_string poly)))) poly) in (*multiply each polynomial with a distinct constant*)
                 List.fold (ParameterPolynomial.(+)) ParameterPolynomial.zero polys) vars 
     in 
     List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars inv_endomorphism_polys 
@@ -75,11 +81,17 @@ module Endomorphism =
   (** [vars polys inv_polys] returns an endomorphism*)
   let of_poly_list vars_list poly_list : t = 
     {        poly = List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars_list poly_list;    
-            inv_poly = create_inv (Int.pow (degree_of_polylist poly_list) ((List.length vars_list)-1)) vars_list 
+            inv_poly = create_default_mapping (Int.pow (degree_of_polylist poly_list) ((List.length vars_list)-1)) vars_list 
     }
 
-  let apply_for_parameter_poly t (ppoly:ParameterPolynomial.t) = 
-    ParameterPolynomial.substitute_all (VarMap.map ParameterPolynomial.of_polynomial (t.poly)) ppoly (*let x = VarMap.add  var ppoly VarMap.empty  in  (ParameterPolynomial.of_polynomial @@ RationalPolynomial.normalize (VarMap.find var (poly_map t)))*)
+  let of_degree vars_list degree : t = 
+    {   poly =     create_default_mapping (degree)                                     vars_list ~letter_for_index:("b") ;
+        inv_poly = create_default_mapping (Int.pow degree ((List.length vars_list)-1)) vars_list 
+    }
+
+
+  let apply t (ppoly:ParameterPolynomial.t) = 
+    ParameterPolynomial.substitute_all ((t.poly)) ppoly (*let x = VarMap.add  var ppoly VarMap.empty  in  (ParameterPolynomial.of_polynomial @@ RationalPolynomial.normalize (VarMap.find var (poly_map t)))*)
   
   let make_formula_help var sum_that_is_equal_to_var = 
     let (coeffs_of_var, other_coeffs) = ParameterPolynomial.monomials_with_coeffs sum_that_is_equal_to_var
@@ -92,14 +104,14 @@ module Endomorphism =
 
   (**returns the formula to check right invertibility for one variable, it is technically not p_r_i as in Termination of Polynomial Loops but its later mentioned transformed version *)
   let get_p_r_i endomorphism vars var =  
-    let sum_that_is_equal_to_var = apply_for_parameter_poly endomorphism (VarMap.find var endomorphism.inv_poly) in 
+    let sum_that_is_equal_to_var = ParameterPolynomial.simplify @@ apply endomorphism (VarMap.find var endomorphism.inv_poly) in 
     make_formula_help var sum_that_is_equal_to_var  
     
   let apply_inverse endomorphism poly = 
-    ParameterPolynomial.substitute_all endomorphism.inv_poly @@ ParameterPolynomial.of_polynomial poly 
+    ParameterPolynomial.substitute_all endomorphism.inv_poly poly 
 
   let get_p_l_i endomorphism vars var = 
-    let sum_that_is_equal_to_var = apply_inverse endomorphism (VarMap.find var endomorphism.poly) in  
+    let sum_that_is_equal_to_var = ParameterPolynomial.simplify @@ apply_inverse endomorphism (VarMap.find var endomorphism.poly) in  
     make_formula_help var sum_that_is_equal_to_var  
    
   let formula_to_check_invertibility endomorphism = 
@@ -108,6 +120,8 @@ module Endomorphism =
      @ List.map (get_p_l_i endomorphism vars_as_list) vars_as_list
     |> List.fold (Formula.mk_and) Formula.mk_true
   
+  let formula_to_check_twn endomorphism = 
+    Formula.mk_false
 
 end 
 module Automorphism =
@@ -127,7 +141,7 @@ let inv_rational_poly_map t = VarMap.map (RationalPolynomial.of_intpoly) t.inv_p
 
 let vars_as_list t : Var.t list =  List.of_enum @@ VarMap.keys t.poly
 
-let poly_as_list t = List.map (fun var -> VarMap.find var t.poly) (VarSet.to_list (vars t))
+let poly_list t = List.map (fun var -> VarMap.find var t.poly) (VarSet.to_list (vars t))
 
 let inv_poly_list t = List.map (fun var -> VarMap.find var t.inv_poly) (VarSet.to_list (vars t))
 
@@ -164,14 +178,17 @@ let compose_int_polynomials variables new_polynomials old_poly =
 let apply_poly_transformation  variables old_polynomials new_polynomials = 
   List.map (compose_rational_polynomials variables new_polynomials) old_polynomials
 
-let apply polys t = apply_poly_transformation (vars_as_list t) polys (poly_as_list t)
+let apply polys t = apply_poly_transformation (vars_as_list t) polys (poly_list t)
 
-let apply_inv polys t = apply_poly_transformation (vars_as_list t) polys (poly_as_list t)
+let apply_inv polys t = apply_poly_transformation (vars_as_list t) polys (poly_list t)
 
 let transform_update t update_map =
   List.map (RationalPolynomial.substitute_all update_map) (inv_rational_poly_list t) 
                 |> List.map (RationalPolynomial.substitute_all (poly_map t)) 
                 |> List.map RationalPolynomial.normalize 
+
+let transform_guard t guard = 
+  Guard.map_polynomial (Polynomial.substitute_all t.inv_poly) guard 
 (*helper function to transform_bound *)
 let bound_map_of_automorphism t = VarMap.fold (fun key value map -> (VarMap.add key (BoundsInst.Bound.of_poly value) map)) (inv_poly_map t) VarMap.empty
 
@@ -179,7 +196,8 @@ let bound_map_of_automorphism t = VarMap.fold (fun key value map -> (VarMap.add 
 let transform_bound t bound = BoundsInst.Bound.substitute_all (bound_map_of_automorphism t) bound 
 
 let of_endomorphism endomorphism (valuation:Polynomials.Polynomial.valuation) = 
-    let inv_polys = List.map (ParameterPolynomial.eval_coefficients (fun x -> Valuation.eval x valuation)) @@ Endomorphism.inv_poly_as_list endomorphism in 
-    of_poly_list (Endomorphism.vars_as_list endomorphism) (List.map RationalPolynomial.of_intpoly @@ Endomorphism.poly_as_list endomorphism) inv_polys
+    let inv_polys = List.map (ParameterPolynomial.eval_coefficients (fun x -> Valuation.eval x valuation)) @@ Endomorphism.inv_poly_list endomorphism in 
+    let polys =     List.map (ParameterPolynomial.eval_coefficients (fun x -> Valuation.eval x valuation)) @@ Endomorphism.poly_list endomorphism in 
+    of_poly_list (Endomorphism.vars_as_list endomorphism) (List.map RationalPolynomial.of_intpoly polys) inv_polys
 
 end
