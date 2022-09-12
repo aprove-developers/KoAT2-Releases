@@ -19,7 +19,7 @@ sig
 
   include module type of PolynomialOver(OurInt)
 
-  (** Separates polynomial into a two list. One list with all scaled monomials of the polynomial with negative coefficienta and the other list with only scaled monomials with non-negative coefficients. *)
+  (** Separates polynomial into a two list. One list with all scaled monomials of the polynomial with negative coefficients and the other list with only scaled monomials with non-negative coefficients. *)
   val separate_by_sign : t -> (t * t)
 
   (** TODO doc *)

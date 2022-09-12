@@ -21,6 +21,5 @@ depends: [
   "ppx_deriving_cmdliner"
   "ppx_getenv"
   "z3"
-  "lacaml"
 ]
 synopsis: "KoAT2: Runtime Analysis of Integer Programs"
