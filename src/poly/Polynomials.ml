@@ -363,6 +363,22 @@ module RationalPolynomial =
         ~times:Polynomial.mul
         ~pow:Polynomial.pow
 
+    let normalize_return_factor poly = 
+      let coeff_inv =
+        coeffs poly
+        |> List.filter (not % OurRational.is_integer)
+        |> List.map Tuple2.second
+        |> List.fold OurInt.lcm OurInt.one |> OurInt.abs |> OurRational.of_ourint in
+      (poly
+      |> mult_with_const coeff_inv
+      |> fold
+        ~const:(Polynomial.of_constant % OurRational.to_ourint)
+        ~var:(Polynomial.of_var)
+        ~neg:Polynomial.neg
+        ~plus:Polynomial.add
+        ~times:Polynomial.mul
+        ~pow:Polynomial.pow, coeff_inv)
+
     let overapprox =
       fold
         ~const:(Polynomial.of_constant % OurRational.ceil % OurRational.abs)

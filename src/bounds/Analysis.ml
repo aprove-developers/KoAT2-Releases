@@ -173,8 +173,7 @@ let rec print_my_list = function
 let lwt_parallel ~local (scc: TransitionSet.t) measure program max_depth appr =
   Printf.printf "174 Analysis: %s\n" (print_my_list local);
   if List.is_empty local || (List.mem `MPRF local && List.length local == 1) then
-    improve_with_twn program scc measure appr
-    (*local_rank scc measure program max_depth appr TODO remove backwards*)
+    local_rank scc measure program max_depth appr 
   else if (List.mem `TWN local && List.length local == 1) then
     improve_with_twn program scc measure appr
   else

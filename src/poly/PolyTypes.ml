@@ -157,6 +157,9 @@ module type Monomial =
     (** Creates a monomial from a variable and a exponent. *)
     val lift : Var.t -> int -> t
 
+    (** Creates a monomial from a variable with an exponent of 1  *)
+    val of_var : Var.t -> t
+
     (** Returns the degree of the given variable. *)
     val degree_variable : Var.t -> t -> int
 
