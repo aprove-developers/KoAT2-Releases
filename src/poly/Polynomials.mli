@@ -31,7 +31,6 @@ end
 module ParameterPolynomial :
 sig
   (** Provides default implementation of polynomials where the coefficients are polynomials over [OurInt]. *)
-
   include module type of PolynomialOver(PolynomialOver(OurInt))
 
   (** Evaluates coefficients (which are polynomials over [OurInt]) and returns the resulting polynomial over [OurInt].*)
@@ -66,6 +65,9 @@ sig
 
   (** Multiply with lcm *)
   val normalize : t -> Polynomial.t
+
+  (** Multiply with lcm and return lcm*)
+  val normalize_return_factor : t -> Polynomial.t * (OurInt.t * OurInt.t)
 
   (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
   val overapprox : t -> Polynomial.t

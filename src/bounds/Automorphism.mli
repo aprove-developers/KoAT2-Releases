@@ -39,13 +39,15 @@ sig
     
     val formula_to_check_invertibility: t -> Formulas.Formula.t
 
-    val formula_to_check_twn: t -> Formulas.Formula.t
+    val formula_to_check_twn: VarSet.elt list -> t -> Polynomials.PolynomialOver(OurInt).t Batteries.Map.Make(Var).t -> Formulas.Formula.t
 
 end
 module Automorphism :
 sig
     type t
 
+    val to_string: t -> string
+    
     val vars: t -> VarSet.t 
 
     val poly_map: t -> (Polynomials.RationalPolynomial.t Map.Make(Var).t)
