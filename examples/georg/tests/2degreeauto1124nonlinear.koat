@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR X Y Z)
+(RULES
+  l0(X,Y,Z) -> Com_1(l1(X,Y,Z)) :|: X > 0 && Y > 0 && Z > 0
+  l1(X,Y,Z) -> Com_1(l1(2*Y+4*X+2*Y^3+Y^4+X^2+2*X*Z^2+Z^4-2-3*Y^2-2*X*Y-2*Y*Z^2-2*X*Y^2-2*Y^2*Z^2,Y+Y^2-X-Z^2,Z)) :|: 4+3*Y^2<4*Y+3*X && 2*Y+2*X<2+2*Y^2 
+)

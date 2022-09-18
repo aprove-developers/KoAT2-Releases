@@ -81,23 +81,24 @@ module Endomorphism =
                                     polys)) (*multiply each monomial with a distinct constant*)
       vars 
     in 
-    List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars inv_endomorphism_polys 
+    List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars inv_endomorphism_polys *)
 
 let create_default_mapping ?(letter_for_index="a") degree vars  = 
-
-  let polys =  let res = enumerate_all_polys_degree degree vars (* get all monomials up to degree *)
+  (* we must be careful with storage usage, thats why we need a dense encoding of monomials, which is ensured by giving every monomial a number  *)
+  let res = enumerate_all_polys_degree degree vars (* get all monomials up to degree *)
                 |> List.map ParameterPolynomial.of_polynomial in 
-                 fun var -> List.map2 (fun int poly -> ParameterPolynomial.mult_with_const (Polynomial.of_var (Var.of_string (letter_for_index^(Var.to_string var)^(Int.to_string int)))) poly) (create_list 1 (List.length res)) res  in 
+  let polys =  fun var -> List.map2 (fun int poly -> ParameterPolynomial.mult_with_const (Polynomial.of_var (Var.of_string (letter_for_index^(Var.to_string var)^(Int.to_string int)))) poly) (create_list 1 (List.length res)) res  in 
+  print_int (List.length res);
   let endomorphism_polys = 
       List.map (fun var -> 
                   (*multiply each monomial with a distinct constant*)
                 List.fold (ParameterPolynomial.(+)) ParameterPolynomial.zero (polys var)
                 ) 
                 vars 
-    in 
-    List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars endomorphism_polys*)
+    in
+    List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars endomorphism_polys
 
-  let create_default_mapping ?(letter_for_index="a") degree vars  = 
+  (*let create_default_mapping ?(letter_for_index="a") degree vars  = 
     let endomorphism_polys = 
       List.map (fun var -> 
                 let polys = enumerate_all_polys_degree degree vars (* get all monomials up to degree *)
@@ -107,7 +108,7 @@ let create_default_mapping ?(letter_for_index="a") degree vars  =
                 ) 
                 vars 
     in 
-    List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars endomorphism_polys 
+    List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars endomorphism_polys *)
 
   (** [vars polys inv_polys] returns an endomorphism*)
   let of_poly_list vars_list poly_list : t = 
