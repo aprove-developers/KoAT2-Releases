@@ -467,8 +467,9 @@ let transform_with_aut transition automorphism vars =
                           |> (flip TWNLoop.add_invariant) updated_invariant )
 
 
-let transform_linearly (transition: TWNLoop.t) =  
-  (* find order for variables and independent blocks and sort them for elegant code when updating transition  *) 
+let transform_linearly (transition: TWNLoop.t) =
+None  
+  (* find order for variables and independent blocks and sort them for elegant code when updating transition   
   match (check_solvable transition) with 
     | None -> None 
     | Some x -> let blocks = change_order transition x in 
@@ -491,10 +492,10 @@ let transform_linearly (transition: TWNLoop.t) =
       let eta = List.concat @@ List.map2 matrix_times_vector_rational transformations blocks in 
       let eta_inv = List.concat @@ List.map2 matrix_times_vector_int transformation_invs blocks in 
       let automorphism = Automorphism.of_poly_list concat_blocks eta eta_inv in 
-      Some (transform_with_aut transition automorphism concat_blocks, automorphism)   
+      Some (transform_with_aut transition automorphism concat_blocks, automorphism)   *)
 
 (** transform_non_linearly transform a TWNLoop into twn form, it starts with the degree 1 and then counts upwards, until for some degree the formulas get too large. *)
-let rec transform_non_linearly ?(degree = 1) (t: TWNLoop.t) = print_string "\n 366 TWN"; 
+let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) = print_string "\n 366 TWN"; 
   let vars = VarSet.to_list @@ TWNLoop.vars t in 
   let endomorphism = Endomorphism.of_degree vars degree in 
   Printf.printf " \n 875: %s  \n" @@ Endomorphism.to_string @@  endomorphism; 
@@ -544,8 +545,44 @@ let find_cycle appr program (cycles: path list) =
       let entries = Program.entry_transitions logger program handled_transitions in
       let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in (* 'find' throws an exception *)
       let entries_twn_loops = (List.combine entries twn_loops) in 
-      
-      if (List.for_all (fun (entry, t) ->
+      if (not @@ List.is_empty @@ List.filter (fun (entry, t) ->
+          let eliminated_t = (* throw out useless variables *)
+            EliminateNonContributors.eliminate_t
+              (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
+          in
+          (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)) 
+        entries_twn_loops
+      ) then 
+        (
+        print_string "\n 665 1 TWN";
+        None 
+      )
+      else if not (List.for_all (fun (entry, t) ->
+          let eliminated_t = (* throw out useless variables *)
+            EliminateNonContributors.eliminate_t
+              (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
+          in
+           (VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t))) (* No Temp Vars? *)
+        entries_twn_loops
+      ) then 
+        (
+        print_string "\n 665 2TWN";
+        None 
+      )
+      else if not (List.for_all (fun (entry, t) ->
+          let eliminated_t = (* throw out useless variables *)
+            EliminateNonContributors.eliminate_t
+              (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
+          in
+          ((Approximation.is_time_bounded appr) entry)) 
+        entries_twn_loops
+      ) then 
+        (
+          (*List.iter (fun (x,b) -> print_string ((Transition.to_string x ) ^ "; " ^ (TWNLoop.to_string b ) ^ ";; ")) entries_twn_loops ;*)
+        print_string "\n 665 some entry is not timed bounded TWN \n ";
+        None 
+      )
+      else if (List.for_all (fun (entry, t) ->
           let start_location = Transition.target entry in 
           let eliminated_t = (* throw out useless variables *)
             EliminateNonContributors.eliminate_t
@@ -556,12 +593,17 @@ let find_cycle appr program (cycles: path list) =
           && (Approximation.is_time_bounded appr) entry) 
         entries_twn_loops
       ) then (
+        print_string "\n 665 transforming into TWN\n";
         lift_option @@ List.map transform entries_twn_loops)
+         (*let res = lift_option @@ List.map transform (List.combine entries twn_loops) in 
+         match res with 
+         | None -> None 
+         | Some res -> List.map (fun (x,y,z) -> (x,(l,y,l'),z)) res *)
       else 
         (
-          
-  Printf.printf " 561: not twn transformable \n";
+        print_string "\n 665 5TWN";
         None )
+      
     )
     cycles 
        (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
@@ -614,6 +656,7 @@ let test_for_time vars degree =
 
 
 let time_bound (l,transition,l') scc program appr = (
+  Printf.printf " 682 : %s \n" @@ TransitionLabel.to_string transition;
   Printf.printf " 683 : %s \n" @@ to_string @@ check_solvable_t transition;
   Printf.printf " 684 : %s \n" @@ Location.to_string l;
   let vars = VarSet.to_list @@TransitionLabel.vars transition in 
