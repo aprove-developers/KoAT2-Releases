@@ -104,3 +104,12 @@ let rec natural_to_superscript = function
   | n when n < 0 -> raise Negative
   | n when n < 10 -> List.nth superscript n
   | n -> if n / 10 == 0 then "" else natural_to_superscript (n / 10) ^ (List.nth superscript (n mod 10))
+
+let rec read_from_channel inp_chann =
+  try let next_line = input_line inp_chann in
+      next_line ^ "\n" ^ read_from_channel inp_chann
+  with End_of_file -> ""
+
+let read_process cmd =
+  let chan = Unix.open_process_in cmd in
+  read_from_channel chan

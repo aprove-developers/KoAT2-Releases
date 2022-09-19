@@ -8,9 +8,7 @@ Reimplementation of KoAT with control-flow refinement and multiphase ranking fun
 1. Use `opam init` and follow the instructions to set up Opam and install OCaml 4.06.1 if necessary
 2. `opam install -j$(nproc) . --deps-only`
       * requires the _gmp_ and _mpfr_ libraries
-3. Run `omake` to build KoAT2
-4. You may add `export PATH=$PATH:"path-to-Koat2-repository/Koat2/src/main/"` (with the substituted path) into your .bashrc file to use `koat2` directly.
-5. For Controlflow - Refinement download https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.2/irankfinder_1.3.2_linux_x86_64.zip and unzip it. Add `export PATH=$PATH:"path-to-irankfinder-folder/irankfinder/"` (with the substituted path) into your .bashrc file such that KoAT2 is able to find iRankFinder.
+3. Run `dune build` to build KoAT2
 
 ### Build [Docker](https://www.docker.com/) image
 
@@ -25,22 +23,27 @@ To get a statically linked binary, please execute the script `compile_static_bin
 
 - Ocaml Forum: https://discuss.ocaml.org/
 - Opam: https://opam.ocaml.org/
+- Dune: https://dune.readthedocs.io
 - Batteries Included: http://ocaml-batteries-team.github.io/batteries-included/hdoc2/
-- Omake: http://omake.metaprl.org/manual/omake-doc.html
-- Omake Recipes: http://www.camlcity.org/knowledge/kb_001_omake_recipes.html
 - OUnit: http://ounit.forge.ocamlcore.org/api-ounit/index.html
 - Menhir: http://gallium.inria.fr/~fpottier/menhir/
 - Ocamlgraph: http://ocamlgraph.lri.fr/doc/
 - Cmdliner: http://erratique.ch/software/cmdliner/doc/Cmdliner
 - iRankFinder: https://github.com/costa-group/iRankFinder
 
-
 ## Run
 
-1. After compiling the testprogram "test" is run, it can be found in the subdirectory test.
-2. Run ./koat2 in main to get the help page of koat2
+1. After compiling the binaries are located in `_build/install/bin`.
+2. Run `./koat2` to get the help page of koat2
   For further information run ./koat2 commandname --help
   The main command proceeding a full analysis is the "analyse" command.
+3. The project can be built and run by dune directly with the command `dune exec koat2 --`, or you may `export PATH=$PATH:"path-to-koat/_build/install/default/bin"` (with the substituted path) into your .bashrc file to use `koat2` directly.
+4. For Controlflow - Refinement download https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.2/irankfinder_1.3.2_linux_x86_64.zip and unzip it. Add `export PATH=$PATH:"path-to-irankfinder-folder/irankfinder/"` (with the substituted path) into your .bashrc file such that KoAT2 is able to find iRankFinder.
+
+## Tests & documentation
+
+1. Documentation is build via the dune target `@doc`. Execute the command `dune build @doc`. The resultion documentation can be found in `_build/default/_doc/`
+2. Running tests is done with the command `dune runtest`
 
 ## Used Libraries
 KoAT2 makes use of the following external tools and libraries.
@@ -49,12 +52,12 @@ KoAT2 makes use of the following external tools and libraries.
 - [Batteries](<http://ocaml-batteries-team.github.io/batteries-included/hdoc2/>)
 - [Cmdliner](<http://erratique.ch/software/cmdliner/doc/Cmdliner>)
 - [FPath](<https://erratique.ch/software/fpath>)
+- [metapp](<https://github.com/thierry-martinez/metapp>)
 - [Ocamlgraph](<http://ocamlgraph.lri.fr/doc/>)
 - [Ocamlnet](<http://projects.camlcity.org/projects/ocamlnet.html>) for HTML proof output
 - [Parmap](<https://github.com/rdicosmo/parmap>)
 - [ppx_deriving](<https://github.com/ocaml-ppx/ppx_deriving>)
 - [ppx_deriving_cmdliner](<https://github.com/hammerlab/ppx_deriving_cmdliner>)
-- [ppx_getenv](<https://github.com/ocaml-ppx/ppx_getenv>)
 - [Z3](https://github.com/Z3Prover/z3)
 
 ## External Tools
@@ -79,14 +82,6 @@ The lower bound is ignored by KoAT2.
 The upper bound has to be non-negative for every model of the transition's guard.
 
 At the moment, we do not support recursion, i.e., we only support `Com_1`, which can also be omitted.
-
-## Run
-
-1. After compiling the testprogram "test" is run, it can be found in the subdirectory test.
-  *One* of the test *fails*, due to a wrong input format, which is a correct test for the given file.
-2. Run ./koat2 in main to get the help page of koat2
-  For further information run ./koat2 commandname --help
-  The main command proceeding a full analysis is the "analyse" command.
 
 ## API
 You can find our [API](<https://aprove-developers.github.io/KoAT2-Releases/index.html>) on GitHub Pages. We are still improving the documentation.
