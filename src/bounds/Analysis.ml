@@ -171,7 +171,7 @@ let lwt_parallel ~local (scc: TransitionSet.t) measure program max_depth appr =
   else if (List.mem `TWN local && List.length local == 1) then
     improve_with_twn program scc measure appr
   else
-      MaybeChanged.(local_rank scc measure program max_depth appr >>= improve_with_twn program scc measure)
+    MaybeChanged.(local_rank scc measure program max_depth appr >>= improve_with_twn program scc measure)
 
 let improve_timebound ?(mprf_max_depth = 1) ~local (scc: TransitionSet.t) measure program appr =
     let execute () = lwt_parallel ~local scc measure program mprf_max_depth appr in

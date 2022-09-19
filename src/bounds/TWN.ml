@@ -311,9 +311,7 @@ let rec find l list =
 (* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
 let find_cycle appr program (cycles: path list) = List.find (fun cycle ->
     let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
-    Printf.printf "HANDLED: %s\n" (TransitionSet.to_string (TransitionSet.of_list handled_transitions));
     let entries = Program.entry_transitions logger program handled_transitions in
-    Printf.printf "ENTRIES: %s\n" (TransitionSet.to_string (TransitionSet.of_list entries));
     let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in
     List.for_all (fun (entry, t) ->
       let eliminated_t =
@@ -356,41 +354,40 @@ let lift appr entries bound =
   |> Bound.sum_list
 
 let check_non_increasing twn_loop t =
+  Printf.printf "TWNLoop: %s\n" (TWNLoop.to_string twn_loop);
   List.for_all (fun atom ->
-    let poly = Atom.poly atom |> Polynomial.neg in
-    Printf.printf "poly: %s\n" (Polynomial.to_string_pretty poly);
+    Printf.printf "atom: %s\n" (Atom.to_string atom);
+    (** Here, an atom has the form poly < 0. *)
+    let poly = Atom.poly atom in
     let poly_updated = Polynomial.substitute_f (TransitionLabel.update_full t) poly in
-    Printf.printf "poly_: %s\n" (Polynomial.to_string_pretty poly_updated);
-    let atom = Atom.mk_le poly poly_updated in
-    Printf.printf "atom: %s \n" (Atom.to_string atom);
-    let guard = TransitionLabel.guard t in
-
-    Printf.printf "Formula: %s \n" (Formula.(mk_and (mk guard) (mk [atom])) |> Formula.to_string);
-    SMTSolver.satisfiable Formula.(mk_and (mk guard) (mk [atom])) |> not
-    |> tap (fun b -> Printf.printf "bool %B\n" b)) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms)
+    let atom = Atom.mk_le poly poly_updated |> Atom.neg
+    and guard = TransitionLabel.guard t in
+    Printf.printf "FORMULA: %s\n" Formula.(mk_and (mk guard) (mk [atom]) |> to_string);
+    SMTSolver.tautology Formula.(implies (mk guard) (mk [atom]))) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms)
 
 let find_non_increasing_set program appr cycle twn_loop entry =
-  let rec f program appr cycle twn_loop entries res =
-    if List.for_all (Approximation.is_time_bounded appr) res then
-      Option.some res
+  let rec f non_increasing entries =
+    if List.for_all (fun entry -> (Approximation.is_time_bounded appr entry) && (Approximation.is_size_bounded program appr entry)) entries then
+      Option.some (non_increasing, entries)
     else
-      let bounded, unbounded = List.partition (Approximation.is_time_bounded appr) entries in
-      let new_entries = Program.entry_transitions logger program unbounded
-                        |> TransitionSet.of_list
-                        |> flip TransitionSet.diff (TransitionSet.of_list entries)
-                        |> TransitionSet.to_list
-                        |> List.filter (fun (_,t,_) -> List.for_all ((!=) (TransitionLabel.id t)) (List.map TransitionLabel.id cycle)) in
-      if not (List.is_empty new_entries) && List.for_all (check_non_increasing twn_loop) (List.map Tuple3.second new_entries) then
-        f program appr cycle twn_loop entries (new_entries @ bounded)
+      let bounded, unbounded = List.partition (fun entry -> (Approximation.is_time_bounded appr entry) && (Approximation.is_size_bounded program appr entry)) entries in
+      let new_entries = bounded @ (Program.entry_transitions logger program unbounded |> List.filter (fun (_,t,_) -> List.for_all ((!=) (TransitionLabel.id t)) (List.map TransitionLabel.id cycle))) in
+      if List.for_all (check_non_increasing twn_loop) (List.map Tuple3.second unbounded) then
+        f (unbounded @ non_increasing) new_entries
       else
         None in
-  f program appr cycle twn_loop [entry] [entry]
+  f [] [entry]
+
+let check_update_invariant twn_loop atom =
+  let poly = Atom.poly atom in
+  let poly_updated = Polynomial.substitute_f (TWNLoop.update_full twn_loop) poly in
+  let atom_updated = Atom.mk_le poly_updated Polynomial.zero in
+  SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
 
 let time_bound (l,t,l') scc program appr = (
   proof := FormattedString.Empty;
 
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
-  Printf.printf "TRANSITION: %s \n" (Transition.to_string_pretty (l,t,l'));
   if Option.is_none opt then (
     let bound =
       Timeout.timed_run 5. (fun () -> try
@@ -412,9 +409,9 @@ let time_bound (l,t,l') scc program appr = (
           (List.combine (List.map Transition.to_string_pretty entries) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
+        Printf.printf "DECREASING: %s\n" (TransitionLabel.to_string ~pretty:true t);
         let global_local_bounds =
           List.map (fun (entry, twn) ->
-                Printf.printf "ENTRY:   %s \n" (Transition.to_string_pretty entry);
                 let program_only_entry = Program.from ((TransitionSet.to_list (TransitionSet.diff (Program.transitions program) (TransitionSet.of_list entries))) |> List.map List.singleton |> (@) [[entry]]) (Program.start program) in
                 let twn_inv = InvariantGeneration.transform_program program_only_entry
                   |> MaybeChanged.unpack
@@ -424,7 +421,6 @@ let time_bound (l,t,l') scc program appr = (
                   |> List.map (TransitionLabel.invariant % Transition.label)
                   |> fun invariants -> List.flatten invariants |> List.filter (fun atom -> List.for_all (List.exists (Atom.equal atom)) invariants)
                   |> TWNLoop.add_invariant twn in
-                  Printf.printf "entry: %s \n" (Transition.to_string_pretty entry);
                 (* Printf.printf "t: %S\n" (TWNLoop.to_string twn_inv);
                 List.iter (fun (_,t',_) -> Printf.printf "t': %S\n%B\n" (TransitionLabel.to_string  t') (check_non_increasing twn_inv t');
                   ) (TransitionSet.to_list scc); *)
@@ -436,10 +432,15 @@ let time_bound (l,t,l') scc program appr = (
                   Bound.infinity, ([entry], Bound.infinity)
                 else (
                   let bound = complexity eliminated_t in
+                  Printf.printf "hi\n";
                   if Bound.is_infinity bound then raise (Non_Terminating (handled_transitions, entries));
-                  let non_increasing_entries = find_non_increasing_set program appr (List.map (TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle |> List.flatten) twn entry in
-                  if Option.is_some non_increasing_entries then
-                    lift appr (Option.get non_increasing_entries) bound, ((Option.get non_increasing_entries), bound)
+                  let non_increasing_opt = find_non_increasing_set program appr (List.map (TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle |> List.flatten) twn entry in
+                  if Option.is_some non_increasing_opt then
+                    let non_increasing, entries = Option.get non_increasing_opt in
+                    non_increasing |> List.enum |> Util.enum_to_string Transition.to_string_pretty |> Printf.printf "NON_INCREASING: %s\n";
+                    Printf.printf "ENTRY: %s\n" (Transition.to_string_pretty entry);
+                    entries |> List.enum |> Util.enum_to_string Transition.to_string_pretty |> Printf.printf "ENTRIES: %s\n";
+                    lift appr entries bound |> tap (fun b -> Printf.printf "BOUND: %s\n" (Bound.to_string b)), (entries, bound)
                   else
                     Bound.infinity, ([entry], bound)))
           (List.combine entries twn_loops) in
