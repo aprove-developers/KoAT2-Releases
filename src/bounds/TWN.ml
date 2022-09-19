@@ -275,11 +275,10 @@ let get_bound t order npe varmap =
 
 (* For Testing *)
 let check_twn loop =
-  print_string "244 TWN";
   (check_weakly_monotonicity loop) && ((List.length (check_triangular loop)) == (VarSet.cardinal ((TWNLoop.input_vars loop))))
 
 let check_twn (_,t,_) =
-  print_string "248TWN \n"; check_twn (TWNLoop.mk_transition t)
+ check_twn (TWNLoop.mk_transition t)
 
 let complexity loop =
     let order = check_triangular loop in
@@ -452,14 +451,15 @@ let transform_linearly_matrix (matrix: OurInt.t list list) =
 
 
 let transform_with_aut transition automorphism vars =
-  let new_update = VarMap.map RationalPolynomial.of_intpoly @@ TWNLoop.update_map transition (*current update *)
-                  |> Automorphism.transform_update automorphism
-                  |> List.map Polynomial.simplify in
+  match VarMap.map RationalPolynomial.of_intpoly @@ TWNLoop.update_map transition (*current update *)
+                  |> Automorphism.transform_update automorphism with 
+                  |  None -> None 
+                  |  Some x -> let  new_update = List.map Polynomial.simplify x in
   let updated_guard =  TWNLoop.Guard.atoms @@ TWNLoop.guard_without_inv transition (*current guard *)
                     |> Automorphism.transform_guard automorphism in
   let updated_invariant = Automorphism.transform_guard automorphism @@ TWNLoop.invariant transition in
   (*return updated transition and automorphism*)
-  (TWNLoop.mk_transition @@TransitionLabel.mk
+  Some (TWNLoop.mk_transition @@TransitionLabel.mk
                             ~cost:(TransitionLabel.cost TransitionLabel.default) (*TODO sind die kosten von bedeutung? *)
                             ~guard:updated_guard
                             ~assignments:new_update
@@ -469,14 +469,11 @@ let transform_with_aut transition automorphism vars =
 
 
 let transform_linearly (transition: TWNLoop.t) =
-None
-  (* find order for variables and independent blocks and sort them for elegant code when updating transition
+  (* find order for variables and independent blocks and sort them for elegant code when updating transition*)
   match (check_solvable transition) with
     | None -> None
     | Some x -> let blocks = change_order transition x in
   if List.length blocks == List.length (VarSet.to_list (TWNLoop.vars transition)) then
-     let guard = TWNLoop.guard_without_inv transition in
-      Printf.printf "\n 501: %s \n " (Guard.to_string (TWNLoop.Guard.atoms guard));
       Some (transition, Automorphism.identity_aut) (*loop already is in twn form*)
   else
     let concat_blocks = List.concat blocks in
@@ -493,26 +490,26 @@ None
       let eta = List.concat @@ List.map2 matrix_times_vector_rational transformations blocks in
       let eta_inv = List.concat @@ List.map2 matrix_times_vector_int transformation_invs blocks in
       let automorphism = Automorphism.of_poly_list concat_blocks eta eta_inv in
-      Some (transform_with_aut transition automorphism concat_blocks, automorphism)   *)
+      match transform_with_aut transition automorphism concat_blocks with 
+      | None -> None 
+      | Some x -> Some(x, automorphism)  
 
 (** transform_non_linearly transform a TWNLoop into twn form, it starts with the degree 1 and then counts upwards, until for some degree the formulas get too large. *)
-let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) = print_string "\n 366 TWN";
+let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) = 
   let vars = VarSet.to_list @@ TWNLoop.vars t in
   let endomorphism = Endomorphism.of_degree vars degree in
-  Printf.printf " \n 875: %s  \n" @@ Endomorphism.to_string @@  endomorphism;
   let inv_formula = Endomorphism.formula_to_check_invertibility endomorphism in
-  print_endline "endline1";
   try let twn_formula = Endomorphism.formula_to_check_twn vars endomorphism (TWNLoop.update_map t) in
-  print_endline "endline2";
-  match SMTSolver.get_model @@ Formula.simplify @@ Formula.mk_and inv_formula twn_formula with
-    | None -> print_endline "endline None"; None (* transform_non_linearly ~degree:(degree +1) t*)
-    | Some valuation ->print_endline "endline Some"; let automorphism = Automorphism.of_endomorphism endomorphism valuation in
-      Some (transform_with_aut t automorphism vars, automorphism)
-  with | Stack_overflow -> print_endline "endline overflow";None (*transform_non_linearly ~degree:(degree -1) t*)
+    match SMTSolverTimeout.get_model @@ Formula.simplify @@ Formula.mk_and inv_formula twn_formula with
+      | None ->  transform_non_linearly ~degree:(degree +1) t
+      | Some valuation -> let automorphism = Automorphism.of_endomorphism endomorphism valuation in
+        match transform_with_aut t automorphism vars with 
+        | None -> None (* transform with aut returns None iff result is not integer update, however this should never be the case as here we use integer automorphisms  *)
+        | Some x -> Some (x, automorphism)
+  with | Stack_overflow -> None 
 
 
 let transform ((entry, t):ProgramTypes.Transition.t * TWNLoop.t) =
-  Printf.printf "transforming into twn \n";
    match (transform_linearly t) with
   | Some (transformed, automorphism) -> Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)(*TODO find target *)
   | None -> match (transform_non_linearly t) with
@@ -546,7 +543,7 @@ let find_cycle appr program (cycles: path list) =
       let entries = Program.entry_transitions logger program handled_transitions in
       let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in (* 'find' throws an exception *)
       let entries_twn_loops = (List.combine entries twn_loops) in
-      if (not @@ List.is_empty @@ List.filter (fun (entry, t) ->
+      (*if (not @@ List.is_empty @@ List.filter (fun (entry, t) ->
           let eliminated_t = (* throw out useless variables *)
             EliminateNonContributors.eliminate_t
               (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
@@ -583,8 +580,7 @@ let find_cycle appr program (cycles: path list) =
         print_string "\n 665 some entry is not timed bounded TWN \n ";
         None
       )
-      else if (List.for_all (fun (entry, t) ->
-          let start_location = Transition.target entry in
+      else *)if (List.for_all (fun (entry, t) ->
           let eliminated_t = (* throw out useless variables *)
             EliminateNonContributors.eliminate_t
               (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
@@ -594,7 +590,6 @@ let find_cycle appr program (cycles: path list) =
           && (Approximation.is_time_bounded appr) entry)
         entries_twn_loops
       ) then (
-        print_string "\n 665 transforming into TWN\n";
         lift_option @@ List.map transform entries_twn_loops)
          (*let res = lift_option @@ List.map transform (List.combine entries twn_loops) in
          match res with
@@ -602,7 +597,6 @@ let find_cycle appr program (cycles: path list) =
          | Some res -> List.map (fun (x,y,z) -> (x,(l,y,l'),z)) res *)
       else
         (
-        print_string "\n 665 5TWN";
         None )
 
     )
@@ -657,7 +651,7 @@ let test_for_time vars degree =
 
 
 let time_bound (l,transition,l') scc program appr = (
-  Printf.printf " 682 : %s \n" @@ TransitionLabel.to_string transition;
+  (*Printf.printf " 682 : %s \n" @@ TransitionLabel.to_string transition;
   Printf.printf " 683 : %s \n" @@ to_string @@ check_solvable_t transition;
   Printf.printf " 684 : %s \n" @@ Location.to_string l;
   let vars = VarSet.to_list @@TransitionLabel.vars transition in
@@ -673,13 +667,13 @@ let time_bound (l,transition,l') scc program appr = (
   let y2 = Polynomial.add (Polynomial.one) (((Polynomial.of_power (Var.of_string "Arg_0") 1))) in
   let y3 = Polynomial.add ( (Polynomial.of_power (Var.of_string "Arg_2") 1)) ( (Polynomial.of_power (Var.of_string "Arg_0") 2)) in
   let endo = Endomorphism.of_poly_list vars @@ List.map ParameterPolynomial.of_polynomial @@ [y1;y2] in
-  let valuation = SMTSolver.get_model @@ Endomorphism.formula_to_check_invertibility endo in
+  let valuation = SMTSolverTimeout.get_model @@ Endomorphism.formula_to_check_invertibility endo in
   let automorphism = Automorphism.of_endomorphism endo @@ Option.get valuation in
   let vars = VarSet.to_list@@ TransitionLabel.vars transition in
   let new_transition = transform_with_aut (TWNLoop.mk_transition transition) automorphism vars  in
   Printf.printf " 686 : %s \n" @@ TWNLoop.to_string @@ (TWNLoop.mk_transition transition);
-  Printf.printf " 687 : %s \n" @@ TWNLoop.to_string new_transition;
-  (*Printf.printf " 685 : %s \n" @@ Automorphism.to_string automorphism;*)
+  Printf.printf " 687 : %s \n" @@ TWNLoop.to_string @@ Option.get new_transition;
+  Printf.printf " 685 : %s \n" @@ Automorphism.to_string automorphism;*)
   (*let formel = Formula.mk_eq RationalPolynomial.one @@ RationalPolynomial.of_coeff_list [OurRational.of_int_tuple (1,2)] [Var.of_string "x"] in
   let y2 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.of_power (Var.of_string "y") 2))) in
   let y3 = Polynomial.mul (y2) (Polynomial.of_var (Var.of_string "x")) in
@@ -866,7 +860,6 @@ let time_bound (l,transition,l') scc program appr = (
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,transition,l') in
   if Option.is_none opt then (
-    print_string "\n 396 TWN";
     let bound =
       Timeout.timed_run 5. (fun () -> try
         let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
@@ -879,7 +872,6 @@ let time_bound (l,transition,l') scc program appr = (
             (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition transition),l')], (LocationSet.singleton l'))]) [])) )
                   ([],[],[])
         in
-        print_string "\n 397 TWN";
         let handled_transitions = ListMonad.(cycle >>= fun (l,twn,l') -> TWNLoop.subsumed_transitions l l' twn) in
         (* let entries = Program.entry_transitions logger program handled_transitions in*)
         (* add_to_proof_graph program handled_transitions entries; *)
@@ -902,11 +894,9 @@ let time_bound (l,transition,l') scc program appr = (
                   |> fun invariants -> List.flatten invariants |> List.filter (fun atom -> List.for_all (List.exists (Atom.equal atom)) invariants)
                   |> TWNLoop.add_invariant twn in
 
-    Printf.printf "\n 828 %s" (TWNLoop.to_string twn_inv);
                 let eliminated_t = EliminateNonContributors.eliminate_t
                     (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
                 in
-    Printf.printf "\n 833 %s \n " (TWNLoop.to_string eliminated_t);
                 if VarSet.is_empty (TWNLoop.vars eliminated_t) then
                   Bound.infinity, (entry, Bound.infinity)
                 else (
@@ -931,7 +921,6 @@ let time_bound (l,transition,l') scc program appr = (
       Bound.infinity)
   )
   else (
-    print_string "\n 434 TWN";
     let cycle, xs = Option.get opt in
     let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
     bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
