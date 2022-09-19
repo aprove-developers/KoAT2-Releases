@@ -85,4 +85,7 @@ val add_sizebound : Bound.t -> Transition.t -> Var.t -> t -> t
 (** Add a size bound for all result variables of the list *)
 val add_sizebounds : Bound.t -> RV.t list -> t -> t
 
+(** Returns true iff. all size bounds of a given transition are bounded and not infinity. *)
+val is_size_bounded : Program.t -> t -> Transition.t -> bool
+
 val min : Program.t -> t -> t -> t
