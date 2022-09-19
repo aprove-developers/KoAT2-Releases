@@ -253,11 +253,19 @@ let transform_update t update_map =
 
 let transform_guard t guard = 
   Guard.map_polynomial (Polynomial.substitute_all t.inv_poly) guard 
+
 (*helper function to transform_bound *)
 let bound_map_of_automorphism t = VarMap.fold (fun key value map -> (VarMap.add key (BoundsInst.Bound.of_poly value) map)) (inv_poly_map t) VarMap.empty
 
 (** applies the inverse automorphism to the bound*)
-let transform_bound t bound = BoundsInst.Bound.substitute_all (bound_map_of_automorphism t) bound 
+let transform_bound t bound = 
+print_endline@@ BoundsInst.Bound.to_string@@bound ;
+        print_endline "A262";
+let x1 = bound_map_of_automorphism t in 
+
+        print_endline "A263";
+BoundsInst.Bound.substitute_all (bound_map_of_automorphism t) bound 
+(*BoundsInst.Bound.substitute_all (bound_map_of_automorphism t) bound *)
 
 let of_endomorphism endomorphism (valuation:Polynomials.Polynomial.valuation) = 
     let inv_polys = List.map (ParameterPolynomial.eval_coefficients (fun x -> Valuation.eval x valuation)) @@ Endomorphism.inv_poly_list endomorphism in 
