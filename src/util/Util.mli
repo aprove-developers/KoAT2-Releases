@@ -44,3 +44,6 @@ val natural_to_subscript : int -> string
 
 val natural_to_superscript : int -> string
 
+val read_from_channel: BatInnerIO.input -> string
+
+val read_process: string -> string

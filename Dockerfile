@@ -36,15 +36,15 @@ RUN opam repo add --set-default ourrepo https://github.com/aprove-developers/opa
 RUN opam switch create -y $OCAML_VERSION-musl+static+flambda --packages=ocaml-variants.$OCAML_VERSION+options,ocaml-option-static,ocaml-option-musl,ocaml-option-flambda
 RUN opam repo remove default
 
-COPY --chown=opam:opam opam .
+COPY --chown=opam:opam koat2.opam .
 RUN opam install -j $(nproc) . --deps-only
 
+COPY --chown=opam:opam bin ./bin
+COPY --chown=opam:opam dune ./dune
+COPY --chown=opam:opam dune-project ./dune-project
 COPY --chown=opam:opam src ./src
-COPY --chown=opam:opam OMakeroot .
-
-COPY --chown=opam:opam OMakefile .
-# needed to run tests
 COPY --chown=opam:opam examples ./examples
+COPY --chown=opam:opam test ./test
 
 ENV PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/opam/src/main
 ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib/stublibs
@@ -52,8 +52,9 @@ ENV LD_LIBRARY_PATH=/home/opam/.opam/$OCAML_VERSION+musl+static+flambda/lib:/hom
 # Run Build command and strip binaries
 ARG KOAT2_VERSION_STRING=UNKNOWN
 RUN eval $(opam env) && \
-    RELEASE=1 KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING omake --depend && \
-    strip src/main/koat2.opt
+    KOAT2_GIT_VERSION=$KOAT2_VERSION_STRING dune build --release && \
+    dune runtest --release && \
+    strip _build/default/bin/main.exe -o koat2
 
 #-------------------------------------------
 # Get llvm2kittel + clang to analyse C programs
@@ -94,7 +95,7 @@ WORKDIR /koat2
 COPY examples/Complexity_ITS ./examples/Complexity_ITS
 COPY examples/Complexity_C_Integer ./examples/Complexity_C_Integer
 
-COPY --from=koat2_build /home/opam/src/main/koat2.opt bin/koat2
+COPY --from=koat2_build /home/opam/koat2 bin/koat2
 COPY --from=koat2_build /home/opam/irankfinder ./irankfinder
 
 COPY --from=koat2_c_utils /llvm2kittel/build/llvm2kittel bin/llvm2kittel

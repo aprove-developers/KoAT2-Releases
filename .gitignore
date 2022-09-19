@@ -1,6 +1,4 @@
 *.omc
-.omakedb
-.omakedb.lock
 /src/output/tmp_rvg.dot
 
 #Ignore git patch files
@@ -20,6 +18,7 @@ perf.data*
 
 *.cmt
 *.cmti
-bin/
 
-docs/
+_build/
+
+koat2_static
