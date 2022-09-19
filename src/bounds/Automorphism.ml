@@ -19,7 +19,7 @@ module Endomorphism =
     inv_poly : ParameterPolynomial.t VarMap.t;
   }
   let to_string t = "Automorphism:\n" ^ VarMap.fold (fun var poly str -> str ^ (Var.to_string var)^" -> " ^ (ParameterPolynomial.to_string poly)^"\n") t.poly ""
-                    ^"Inverse: \n"^      VarMap.fold (fun var poly str -> str ^ (Var.to_string var)^" -> " ^ (ParameterPolynomial.to_string poly)^"\n") t.inv_poly ""
+                   ^"Inverse: \n"^      VarMap.fold (fun var poly str -> str ^ (Var.to_string var)^" -> " ^ (ParameterPolynomial.to_string poly)^"\n") t.inv_poly ""
   
   let vars t :VarSet.t= fold (fun acc poly -> VarSet.union acc (ParameterPolynomial.vars poly)) VarSet.empty (VarMap.values t.poly)
   
@@ -109,7 +109,7 @@ let create_default_mapping ?(letter_for_index="a") degree vars  =
     in 
     List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars endomorphism_polys *)
 
-  (** [vars polys inv_polys] returns an endomorphism*)
+  (** [of_poly_list vars polys] returns an endomorphism*)
   let of_poly_list vars_list poly_list : t = 
     {        poly = List.fold_left2 (fun map var poly -> VarMap.add var poly map) VarMap.empty vars_list poly_list;    
             inv_poly = create_default_mapping (Int.pow (degree_of_polylist poly_list) ((List.length vars_list)-1)) vars_list 
@@ -117,7 +117,7 @@ let create_default_mapping ?(letter_for_index="a") degree vars  =
 
   let of_degree vars_list degree : t = 
     {   poly =     create_default_mapping (degree)                                     vars_list ~letter_for_index:("b") ;
-        inv_poly = create_default_mapping (Int.pow degree ((List.length vars_list)-1)) vars_list 
+        inv_poly = create_default_mapping (degree) vars_list (*Int.pow degree ((List.length vars_list)-1) *)
     }
 
 
