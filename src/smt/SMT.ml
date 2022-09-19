@@ -203,7 +203,7 @@ module Z3SolverTimeout =
                       Z3.mk_context [
                           ("model", "false");
                           ("proof", "false");
-                          ("timeout", "10000"); (* timeout (unsigned) default timeout (in milliseconds) used for solvers *)
+                          ("timeout", "2000"); (* timeout (unsigned) default timeout (in milliseconds) used for solvers *)
                         ]
                     )
 

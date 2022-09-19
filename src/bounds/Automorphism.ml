@@ -88,7 +88,6 @@ let create_default_mapping ?(letter_for_index="a") degree vars  =
   let res = enumerate_all_polys_degree degree vars (* get all monomials up to degree *)
                 |> List.map ParameterPolynomial.of_polynomial in 
   let polys =  fun var -> List.map2 (fun int poly -> ParameterPolynomial.mult_with_const (Polynomial.of_var (Var.of_string (letter_for_index^(Var.to_string var)^(Int.to_string int)))) poly) (create_list 1 (List.length res)) res  in 
-  print_int (List.length res);
   let endomorphism_polys = 
       List.map (fun var -> 
                   (*multiply each monomial with a distinct constant*)
@@ -161,16 +160,12 @@ let create_default_mapping ?(letter_for_index="a") degree vars  =
   let rec formula_to_check_twn_help vars (transformed_update:Polynomials.ParameterPolynomial.t list) = match vars, transformed_update with 
     | [], [] -> Formula.mk_true 
     | (var::vars), (transformed_update::transformed_updates) ->
-  print_endline "endline131";
           let coeffs = ParameterPolynomial.monomials_with_coeffs transformed_update in 
-          
-  print_endline "endline133";
           let zero_coeffs = List.filter (fun  (coeff,monom) -> not (VarSet.subset (ParameterMonomial.vars monom) (VarSet.of_list vars) 
                                                           || (ParameterMonomial.equal (monom) (ParameterMonomial.of_var var)
                                                           && VarSet.subset (VarSet.of_list [var]) (ParameterMonomial.vars monom)))) coeffs 
 
                           |> List.map Tuple2.first in
-  print_endline "endline139";
           List.map (fun x ->Formula.mk_eq x Polynomial.zero) zero_coeffs (* set all the coefficients of monomials we do not want to zero *)
           |> List.fold (Formula.mk_and) Formula.mk_true (* fold them together *)
           |> Formula.mk_and (formula_to_check_twn_help vars transformed_updates) 
@@ -178,9 +173,7 @@ let create_default_mapping ?(letter_for_index="a") degree vars  =
 
 
   let formula_to_check_twn vars endomorphism twn_update_map =
-  print_endline "endline147"; 
     let polys = transform_update endomorphism @@ VarMap.map ParameterPolynomial.of_polynomial twn_update_map in
-  print_endline "endline149"; 
     formula_to_check_twn_help vars polys 
 
 
@@ -226,7 +219,7 @@ let compose_rational_polynomials variables new_polynomials old_poly =
     | [],[] -> RationalPolynomial.add old_poly acc_poly
     | x::xs,poly::polys -> compose_polynomials_acc xs polys old_poly
                                  (RationalPolynomial.add acc_poly @@ RationalPolynomial.sub (RationalPolynomial.substitute x ~replacement:poly old_poly) old_poly) 
-    | _,_ -> (print_string "546"; raise Not_found ) (* TODO: find better exception for this case or better idea than exception *) in 
+    | _,_ -> ( raise (Invalid_argument "compose_rational_polynomials: lengths do not match") ) (* TODO: find better exception for this case or better idea than exception *) in 
   compose_polynomials_acc variables new_polynomials old_poly (RationalPolynomial.zero) 
 
 (** compose_int_polynomials [[x;y]] [[x^2;y^3]] [(x <- x+y)]  returns [x <- x^2+y^3]. 
@@ -236,7 +229,7 @@ let compose_int_polynomials variables new_polynomials old_poly =
     | [],[] -> Polynomial.add old_poly acc_poly
     | x::xs,poly::polys -> compose_polynomials_acc xs polys old_poly
                                  (Polynomial.add acc_poly @@ Polynomial.sub (Polynomial.substitute x ~replacement:poly old_poly) old_poly) 
-    | _,_ -> (print_string "547"; raise Not_found ) (* TODO: find better exception for this case or better idea than exception *) in 
+    | _,_ -> (raise (Invalid_argument "compose_int_polynomials: lengths  do not match") ) (* TODO: find better exception for this case or better idea than exception *) in 
   compose_polynomials_acc variables new_polynomials old_poly (Polynomial.zero) 
 
 (*  *)
@@ -247,10 +240,16 @@ let apply polys t = apply_poly_transformation (vars_as_list t) polys (poly_list 
 
 let apply_inv polys t = apply_poly_transformation (vars_as_list t) polys (poly_list t)
 
+let is_integer_poly  poly = 
+    List.for_all OurRational.is_integer @@ RationalPolynomial.coeffs poly 
+
 let transform_update t update_map =
-  List.map (RationalPolynomial.substitute_all update_map) (poly_list t) 
+  let res = List.map (RationalPolynomial.substitute_all update_map) (poly_list t) 
                 |> List.map (RationalPolynomial.substitute_all (inv_rational_poly_map t)) 
-                |> List.map RationalPolynomial.normalize 
+                in 
+  if (List.for_all is_integer_poly res) then           
+               Some  (List.map RationalPolynomial.normalize res )
+  else None 
 
 let transform_guard t guard = 
   Guard.map_polynomial (Polynomial.substitute_all t.inv_poly) guard 
@@ -263,8 +262,7 @@ let transform_bound t bound = BoundsInst.Bound.substitute_all (bound_map_of_auto
 let of_endomorphism endomorphism (valuation:Polynomials.Polynomial.valuation) = 
     let inv_polys = List.map (ParameterPolynomial.eval_coefficients (fun x -> Valuation.eval x valuation)) @@ Endomorphism.inv_poly_list endomorphism in 
     let polys =     List.map (ParameterPolynomial.eval_coefficients (fun x -> Valuation.eval x valuation)) @@ Endomorphism.poly_list endomorphism in 
-    let res = of_poly_list (Endomorphism.vars_as_list endomorphism) (List.map RationalPolynomial.of_intpoly polys) inv_polys in 
-    Printf.printf "245 Automorphism: %s \n" @@ to_string res;
-    res 
+     of_poly_list (Endomorphism.vars_as_list endomorphism) (List.map RationalPolynomial.of_intpoly polys) inv_polys 
+    
 
 end

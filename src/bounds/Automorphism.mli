@@ -88,8 +88,8 @@ sig
     (** applies the inverse automorphism to the bound*)
     val transform_bound: t -> BoundsInst.Bound.t -> BoundsInst.Bound.t
 
-    (**eta(update(eta_inv(x))) *)
-    val transform_update: t -> Polynomials.RationalPolynomial.t Map.Make(Var).t ->Polynomials.Polynomial.t list
+    (**eta_inv(update(eta(x))) *)
+    val transform_update: t -> Polynomials.RationalPolynomial.t Map.Make(Var).t ->Polynomials.Polynomial.t list option
     
     val transform_guard: t -> TransitionLabel.Guard.t -> TransitionLabel.Guard.t
 
