@@ -117,6 +117,7 @@ let chain (t: TWNLoop.t) = TWNLoop.append t t
 (* TERMINATION: *)
 
 module SMTSolver = SMT.Z3Solver
+module SMTSolverTimeout = SMT.Z3SolverTimeout
 
 exception Non_Terminating of (Transition.t list * Transition.t list)
 
@@ -353,10 +354,10 @@ let matrix_of_linear_assignments (t:TWNLoop.t) (block:TWNLoop.VarMap.key list) =
 
 (** [matrix_times_vector A x] returns a polynomial list where each element stores a row of [A*x] *)
 let matrix_times_vector_rational (matrix:OurRational.t list list) (vars:TWNLoop.VarMap.key list) =
-  List.map (fun xs -> RationalPolynomial.of_coeff_list xs vars) matrix 
+  List.map (fun xs -> RationalPolynomial.of_coeff_list xs vars) matrix
 
 let matrix_times_vector_int (matrix:OurInt.t list list) (vars:TWNLoop.VarMap.key list) =
-  List.map (fun xs -> Polynomial.of_coeff_list xs vars) matrix 
+  List.map (fun xs -> Polynomial.of_coeff_list xs vars) matrix
 
 (** sorts the blocks from function check_solvable in the order defined in the transition (needs O(n^2 log n) due to index_of) *)
 let change_order t blocks =
@@ -369,10 +370,10 @@ let change_order t blocks =
 
 (*
 let pairwise_distinct xs =
-  let sorted_xs = List.sort (fun x y -> if x<y then 1 else -1) xs in 
-  let rec pairwise_distinct_help = function 
+  let sorted_xs = List.sort (fun x y -> if x<y then 1 else -1) xs in
+  let rec pairwise_distinct_help = function
     x::y::xs -> if x == y then false else pairwise_distinct_help (y::xs)
-   |  _ -> true  
+   |  _ -> true
   in pairwise_distinct_help sorted_xs  *)
 
 let list_list_to_string xss =
@@ -380,7 +381,7 @@ let list_list_to_string xss =
   let zs = List.map (fun ys -> List.fold (fun x y -> x ^y^"; ") " " ys) yss in
   List.fold (fun x y -> x^y^"; " ) " " zs
 
-  
+
 let read_process_lines command = (* This function was written by Tom Küspert *)
   let lines = ref [] in
   let in_channel = Unix.open_process_in command in
@@ -389,134 +390,134 @@ let read_process_lines command = (* This function was written by Tom Küspert *)
       while true do
         lines := input_line in_channel :: !lines
       done;
-    with 
+    with
       | BatInnerIO.Input_closed -> ()
       | End_of_file -> ()
   end;
   List.rev !lines
 
 (** returns python-friendly list (not list of list) of [matrix]*)
-let matrix_to_string matrix = 
-  let flattened_matrix = List.flatten matrix in 
+let matrix_to_string matrix =
+  let flattened_matrix = List.flatten matrix in
   "["
-  ^ List.fold (fun x y -> x  ^ (OurInt.to_string y)^ ",") "" (List.take (List.length flattened_matrix -1) flattened_matrix) 
+  ^ List.fold (fun x y -> x  ^ (OurInt.to_string y)^ ",") "" (List.take (List.length flattened_matrix -1) flattened_matrix)
   ^ (OurInt.to_string (List.last flattened_matrix))
   ^ "]"
 
 (** separates [xs] into several list of length n. If [n] does not divide the length of the list, the last chunk will be shorter*)
-let rec list_lift (n:int) (xs:'a list) : 'a list list = match  xs with 
-    | [] -> [] 
+let rec list_lift (n:int) (xs:'a list) : 'a list list = match  xs with
+    | [] -> []
     | xs -> let (a,b) = List.takedrop n xs in a::(list_lift n b)
 
 
 (** turns string into OurInt list list (which represents a matrix).
   [parse_matrix d s] return the matrix of dimension [d] times [d] that is described with string [s] *)
-let parse_int_matrix (dim:int) (s:string) = 
+let parse_int_matrix (dim:int) (s:string) =
   Str.split (Str.regexp "[^0-9/./\-]+") s (*turn string into list, splitted at each non number char *)
       |> List.map int_of_string (* turn string list into float list *)
       |> List.map OurInt.of_int
-      |> list_lift dim 
+      |> list_lift dim
 
 (** turns python string "a/b"into OurRational a/b  *)
-let string_to_our_rational (s:string) = 
-  let fraction = Str.split (Str.regexp "[^0-9.\-]+") s in 
-  if List.length fraction == 1 then 
+let string_to_our_rational (s:string) =
+  let fraction = Str.split (Str.regexp "[^0-9.\-]+") s in
+  if List.length fraction == 1 then
     OurRational.of_int @@ int_of_string @@ List.first fraction
-  else 
+  else
     OurRational.of_int_tuple (int_of_string @@  List.at fraction 0, int_of_string @@  List.at fraction 1)
 
 (** turns string into OurRational list list (which represents a matrix).
   [parse_matrix d s] return the matrix of dimension [d] times [d] that is described with string [s] *)
-let parse_matrix (dim:int) (s:string) = 
+let parse_matrix (dim:int) (s:string) =
   Str.split (Str.regexp "[^0-9/./\-]+") s (*turn string into list, splitted at each non number char *)
       |> List.map string_to_our_rational  (* turn string list into float list *)
       |> list_lift dim  (*turn rational list into rational list list *)
-      
+
 
 (* matrix is square *)
-let transform_linearly_matrix (matrix: OurInt.t list list) = 
+let transform_linearly_matrix (matrix: OurInt.t list list) =
   if List.length matrix == 1 (* nothing to transform *)
       then Some ( [[(OurInt.of_int 1, OurInt.of_int 1)]], matrix,  [[OurInt.of_int 1]]) (*Todo as 2. argument return matrix *)
       (*Some (Lacaml.D.Mat.of_list [[1.]], matrix, Lacaml.D.Mat.of_list [[1.]], Lacaml.D.Mat.of_list [[1.]])*)
-  else 
-    let command = "python3 -c 'from src.bounds.JordanNormalForm import jordan_normal_form; jordan_normal_form(" ^ matrix_to_string matrix ^ ")'" in  
+  else
+    let command = "python3 -c 'from src.bounds.JordanNormalForm import jordan_normal_form; jordan_normal_form(" ^ matrix_to_string matrix ^ ")'" in
     (* the python output consits of 4 matrices: T, J, T^-1, T^-1_nomralized, see jordan normal form or gives an error string *)
-    let python_output = read_process_lines command in 
-    match python_output with 
+    let python_output = read_process_lines command in
+    match python_output with
       | [a;b;c] ->  (*let [t; j; t_inverse; t_inverse_normalized] = (List.map (parse_matrix (List.length matrix)) [a;b;c;d]) in *)
-                      Some(parse_matrix (List.length matrix) a, 
+                      Some(parse_matrix (List.length matrix) a,
                         	 parse_int_matrix (List.length matrix) b,
                            parse_int_matrix (List.length matrix) c)
       | _ -> None (*error string *)
-    
 
-let transform_with_aut transition automorphism vars = 
+
+let transform_with_aut transition automorphism vars =
   let new_update = VarMap.map RationalPolynomial.of_intpoly @@ TWNLoop.update_map transition (*current update *)
-                  |> Automorphism.transform_update automorphism  
+                  |> Automorphism.transform_update automorphism
                   |> List.map Polynomial.simplify in
   let updated_guard =  TWNLoop.Guard.atoms @@ TWNLoop.guard_without_inv transition (*current guard *)
-                    |> Automorphism.transform_guard automorphism in 
-  let updated_invariant = Automorphism.transform_guard automorphism @@ TWNLoop.invariant transition in 
+                    |> Automorphism.transform_guard automorphism in
+  let updated_invariant = Automorphism.transform_guard automorphism @@ TWNLoop.invariant transition in
   (*return updated transition and automorphism*)
-  (TWNLoop.mk_transition @@TransitionLabel.mk 
+  (TWNLoop.mk_transition @@TransitionLabel.mk
                             ~cost:(TransitionLabel.cost TransitionLabel.default) (*TODO sind die kosten von bedeutung? *)
                             ~guard:updated_guard
-                            ~assignments:new_update 
+                            ~assignments:new_update
                             ~patterns:vars
-                            ~vars:(VarSet.to_list (TWNLoop.vars transition)) 
+                            ~vars:(VarSet.to_list (TWNLoop.vars transition))
                           |> (flip TWNLoop.add_invariant) updated_invariant )
 
 
 let transform_linearly (transition: TWNLoop.t) =
-None  
-  (* find order for variables and independent blocks and sort them for elegant code when updating transition   
-  match (check_solvable transition) with 
-    | None -> None 
-    | Some x -> let blocks = change_order transition x in 
+None
+  (* find order for variables and independent blocks and sort them for elegant code when updating transition
+  match (check_solvable transition) with
+    | None -> None
+    | Some x -> let blocks = change_order transition x in
   if List.length blocks == List.length (VarSet.to_list (TWNLoop.vars transition)) then
-     let guard = TWNLoop.guard_without_inv transition in 
+     let guard = TWNLoop.guard_without_inv transition in
       Printf.printf "\n 501: %s \n " (Guard.to_string (TWNLoop.Guard.atoms guard));
       Some (transition, Automorphism.identity_aut) (*loop already is in twn form*)
   else
-    let concat_blocks = List.concat blocks in 
+    let concat_blocks = List.concat blocks in
     (* calculate matrices *)
-    let matrices = List.map (matrix_of_linear_assignments transition) blocks in 
+    let matrices = List.map (matrix_of_linear_assignments transition) blocks in
     let transformations = List.map (transform_linearly_matrix) matrices in (*(transformations,transformed_matrices) *)
-    if not @@ List.for_all Option.is_some transformations then 
+    if not @@ List.for_all Option.is_some transformations then
       None
     else
-      let (transformations,js,transformation_invs) = 
-        List.fold_right (fun  (x1,x2,x3) (xs1,xs2,xs3)-> ((x1::xs1) , (x2::xs2) ,(x3::xs3))) 
-                  (List.map Option.get transformations) 
+      let (transformations,js,transformation_invs) =
+        List.fold_right (fun  (x1,x2,x3) (xs1,xs2,xs3)-> ((x1::xs1) , (x2::xs2) ,(x3::xs3)))
+                  (List.map Option.get transformations)
                   ([],[],[]) in
-      let eta = List.concat @@ List.map2 matrix_times_vector_rational transformations blocks in 
-      let eta_inv = List.concat @@ List.map2 matrix_times_vector_int transformation_invs blocks in 
-      let automorphism = Automorphism.of_poly_list concat_blocks eta eta_inv in 
+      let eta = List.concat @@ List.map2 matrix_times_vector_rational transformations blocks in
+      let eta_inv = List.concat @@ List.map2 matrix_times_vector_int transformation_invs blocks in
+      let automorphism = Automorphism.of_poly_list concat_blocks eta eta_inv in
       Some (transform_with_aut transition automorphism concat_blocks, automorphism)   *)
 
 (** transform_non_linearly transform a TWNLoop into twn form, it starts with the degree 1 and then counts upwards, until for some degree the formulas get too large. *)
-let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) = print_string "\n 366 TWN"; 
-  let vars = VarSet.to_list @@ TWNLoop.vars t in 
-  let endomorphism = Endomorphism.of_degree vars degree in 
-  Printf.printf " \n 875: %s  \n" @@ Endomorphism.to_string @@  endomorphism; 
+let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) = print_string "\n 366 TWN";
+  let vars = VarSet.to_list @@ TWNLoop.vars t in
+  let endomorphism = Endomorphism.of_degree vars degree in
+  Printf.printf " \n 875: %s  \n" @@ Endomorphism.to_string @@  endomorphism;
   let inv_formula = Endomorphism.formula_to_check_invertibility endomorphism in
   print_endline "endline1";
   try let twn_formula = Endomorphism.formula_to_check_twn vars endomorphism (TWNLoop.update_map t) in
   print_endline "endline2";
   match SMTSolver.get_model @@ Formula.simplify @@ Formula.mk_and inv_formula twn_formula with
     | None -> print_endline "endline None"; None (* transform_non_linearly ~degree:(degree +1) t*)
-    | Some valuation ->print_endline "endline Some"; let automorphism = Automorphism.of_endomorphism endomorphism valuation in 
-      Some (transform_with_aut t automorphism vars, automorphism)   
+    | Some valuation ->print_endline "endline Some"; let automorphism = Automorphism.of_endomorphism endomorphism valuation in
+      Some (transform_with_aut t automorphism vars, automorphism)
   with | Stack_overflow -> print_endline "endline overflow";None (*transform_non_linearly ~degree:(degree -1) t*)
 
 
 let transform ((entry, t):ProgramTypes.Transition.t * TWNLoop.t) =
   Printf.printf "transforming into twn \n";
-   match (transform_linearly t) with 
+   match (transform_linearly t) with
   | Some (transformed, automorphism) -> Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)(*TODO find target *)
-  | None -> match (transform_non_linearly t) with 
+  | None -> match (transform_non_linearly t) with
           | Some (transformed, automorphism) -> Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)
-          | None -> None 
+          | None -> None
 
 let to_string arg =
   if Option.is_some arg then
@@ -532,11 +533,11 @@ let rec find l list =
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
 
-let lift_option (xs:'a option list) : 'a list option = 
-  if List.for_all Option.is_some xs then 
+let lift_option (xs:'a option list) : 'a list option =
+  if List.for_all Option.is_some xs then
     Some (List.map Option.get xs)
-  else 
-    None 
+  else
+    None
 
 let find_cycle appr program (cycles: path list) =
   List.find_map (fun cycle ->
@@ -544,18 +545,18 @@ let find_cycle appr program (cycles: path list) =
       let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
       let entries = Program.entry_transitions logger program handled_transitions in
       let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in (* 'find' throws an exception *)
-      let entries_twn_loops = (List.combine entries twn_loops) in 
+      let entries_twn_loops = (List.combine entries twn_loops) in
       if (not @@ List.is_empty @@ List.filter (fun (entry, t) ->
           let eliminated_t = (* throw out useless variables *)
             EliminateNonContributors.eliminate_t
               (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
           in
-          (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)) 
+          (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *))
         entries_twn_loops
-      ) then 
+      ) then
         (
         print_string "\n 665 1 TWN";
-        None 
+        None
       )
       else if not (List.for_all (fun (entry, t) ->
           let eliminated_t = (* throw out useless variables *)
@@ -564,48 +565,48 @@ let find_cycle appr program (cycles: path list) =
           in
            (VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t))) (* No Temp Vars? *)
         entries_twn_loops
-      ) then 
+      ) then
         (
         print_string "\n 665 2TWN";
-        None 
+        None
       )
       else if not (List.for_all (fun (entry, t) ->
           let eliminated_t = (* throw out useless variables *)
             EliminateNonContributors.eliminate_t
               (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
           in
-          ((Approximation.is_time_bounded appr) entry)) 
+          ((Approximation.is_time_bounded appr) entry))
         entries_twn_loops
-      ) then 
+      ) then
         (
           (*List.iter (fun (x,b) -> print_string ((Transition.to_string x ) ^ "; " ^ (TWNLoop.to_string b ) ^ ";; ")) entries_twn_loops ;*)
         print_string "\n 665 some entry is not timed bounded TWN \n ";
-        None 
+        None
       )
       else if (List.for_all (fun (entry, t) ->
-          let start_location = Transition.target entry in 
+          let start_location = Transition.target entry in
           let eliminated_t = (* throw out useless variables *)
             EliminateNonContributors.eliminate_t
               (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
           in
           not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
           && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
-          && (Approximation.is_time_bounded appr) entry) 
+          && (Approximation.is_time_bounded appr) entry)
         entries_twn_loops
       ) then (
         print_string "\n 665 transforming into TWN\n";
         lift_option @@ List.map transform entries_twn_loops)
-         (*let res = lift_option @@ List.map transform (List.combine entries twn_loops) in 
-         match res with 
-         | None -> None 
+         (*let res = lift_option @@ List.map transform (List.combine entries twn_loops) in
+         match res with
+         | None -> None
          | Some res -> List.map (fun (x,y,z) -> (x,(l,y,l'),z)) res *)
-      else 
+      else
         (
         print_string "\n 665 5TWN";
         None )
-      
+
     )
-    cycles 
+    cycles
        (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
 
 let rec parallel_edges ys = function
@@ -633,25 +634,25 @@ let lift appr entry bound =
           FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
 
-let test_for_time vars degree = 
-  let start = Unix.gettimeofday () in 
+let test_for_time vars degree =
+  let start = Unix.gettimeofday () in
   print_endline "";
-  let endomorphism = Endomorphism.of_degree vars degree in 
+  let endomorphism = Endomorphism.of_degree vars degree in
   Printf.printf "Execution time building endomorphism: %fs\n%!" (Unix.gettimeofday () -. start);
-  Printf.printf " \n 875: %s  \n" @@ Endomorphism.to_string @@  endomorphism; 
+  Printf.printf " \n 875: %s  \n" @@ Endomorphism.to_string @@  endomorphism;
   print_endline "";
-  let start = Unix.gettimeofday () in 
+  let start = Unix.gettimeofday () in
   let formula = Formula.simplify @@  Endomorphism.formula_to_check_invertibility endomorphism in
   Printf.printf "Execution time for formula building: %fs\n%!" (Unix.gettimeofday () -. start);
   print_endline "";
-  
-  let start = Unix.gettimeofday () in 
-  match SMTSolver.get_model formula with 
-    | None -> degree 
-    | Some valuation -> 
+
+  let start = Unix.gettimeofday () in
+  match SMTSolver.get_model formula with
+    | None -> degree
+    | Some valuation ->
                     Printf.printf "Execution time for model: %fs\n%!" (Unix.gettimeofday () -. start);
                     print_endline "";
-                    Printf.printf " \n 876: %s  \n" @@ Valuation.to_string @@  valuation; 
+                    Printf.printf " \n 876: %s  \n" @@ Valuation.to_string @@  valuation;
                     degree
 
 
@@ -659,95 +660,95 @@ let time_bound (l,transition,l') scc program appr = (
   Printf.printf " 682 : %s \n" @@ TransitionLabel.to_string transition;
   Printf.printf " 683 : %s \n" @@ to_string @@ check_solvable_t transition;
   Printf.printf " 684 : %s \n" @@ Location.to_string l;
-  let vars = VarSet.to_list @@TransitionLabel.vars transition in 
-  let vars = [Var.of_string "Arg_0"; Var.of_string "Arg_1"] in 
-  let y1 = Polynomial.sub ( (Polynomial.of_power (Var.of_string "Arg_1") 1)) (((Polynomial.of_power (Var.of_string "Arg_1") 0))) in 
-  let y2 = Polynomial.add (Polynomial.zero) (((Polynomial.of_power (Var.of_string "Arg_1") 2))) 
+  let vars = VarSet.to_list @@TransitionLabel.vars transition in
+  let vars = [Var.of_string "Arg_0"; Var.of_string "Arg_1"] in
+  let y1 = Polynomial.sub ( (Polynomial.of_power (Var.of_string "Arg_1") 1)) (((Polynomial.of_power (Var.of_string "Arg_1") 0))) in
+  let y2 = Polynomial.add (Polynomial.zero) (((Polynomial.of_power (Var.of_string "Arg_1") 2)))
           |> flip Polynomial.sub ( (Polynomial.of_power (Var.of_string "Arg_0") 1)) in
-  let y1 = Polynomial.sub ( (Polynomial.of_power (Var.of_string "Arg_0") 2)) (((Polynomial.of_power (Var.of_string "Arg_1") 1))) 
+  let y1 = Polynomial.sub ( (Polynomial.of_power (Var.of_string "Arg_0") 2)) (((Polynomial.of_power (Var.of_string "Arg_1") 1)))
   |>Polynomial.add Polynomial.one
   |>Polynomial.add (Polynomial.of_power (Var.of_string "Arg_0") 1)
   |>Polynomial.add (Polynomial.of_power (Var.of_string "Arg_0") 1)
-  in 
-  let y2 = Polynomial.add (Polynomial.one) (((Polynomial.of_power (Var.of_string "Arg_0") 1))) in 
-  let y3 = Polynomial.add ( (Polynomial.of_power (Var.of_string "Arg_2") 1)) ( (Polynomial.of_power (Var.of_string "Arg_0") 2)) in 
-  let endo = Endomorphism.of_poly_list vars @@ List.map ParameterPolynomial.of_polynomial @@ [y1;y2] in 
+  in
+  let y2 = Polynomial.add (Polynomial.one) (((Polynomial.of_power (Var.of_string "Arg_0") 1))) in
+  let y3 = Polynomial.add ( (Polynomial.of_power (Var.of_string "Arg_2") 1)) ( (Polynomial.of_power (Var.of_string "Arg_0") 2)) in
+  let endo = Endomorphism.of_poly_list vars @@ List.map ParameterPolynomial.of_polynomial @@ [y1;y2] in
   let valuation = SMTSolver.get_model @@ Endomorphism.formula_to_check_invertibility endo in
-  let automorphism = Automorphism.of_endomorphism endo @@ Option.get valuation in 
-  let vars = VarSet.to_list@@ TransitionLabel.vars transition in 
-  let new_transition = transform_with_aut (TWNLoop.mk_transition transition) automorphism vars  in 
+  let automorphism = Automorphism.of_endomorphism endo @@ Option.get valuation in
+  let vars = VarSet.to_list@@ TransitionLabel.vars transition in
+  let new_transition = transform_with_aut (TWNLoop.mk_transition transition) automorphism vars  in
   Printf.printf " 686 : %s \n" @@ TWNLoop.to_string @@ (TWNLoop.mk_transition transition);
   Printf.printf " 687 : %s \n" @@ TWNLoop.to_string new_transition;
   (*Printf.printf " 685 : %s \n" @@ Automorphism.to_string automorphism;*)
-  (*let formel = Formula.mk_eq RationalPolynomial.one @@ RationalPolynomial.of_coeff_list [OurRational.of_int_tuple (1,2)] [Var.of_string "x"] in 
-  let y2 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.of_power (Var.of_string "y") 2))) in 
-  let y3 = Polynomial.mul (y2) (Polynomial.of_var (Var.of_string "x")) in 
-  let a = ParameterPolynomial.of_coeff_list [y2] [Var.of_string "x"] in 
+  (*let formel = Formula.mk_eq RationalPolynomial.one @@ RationalPolynomial.of_coeff_list [OurRational.of_int_tuple (1,2)] [Var.of_string "x"] in
+  let y2 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.of_power (Var.of_string "y") 2))) in
+  let y3 = Polynomial.mul (y2) (Polynomial.of_var (Var.of_string "x")) in
+  let a = ParameterPolynomial.of_coeff_list [y2] [Var.of_string "x"] in
   let b = ParameterPolynomial.of_coeff_list [y3] [Var.of_string "x"] in
-  let c = ParameterPolynomial.of_coeff_list [(((Polynomial.of_power (Var.of_string "y") 2)))] [Var.of_string "x"] in 
-  let d = ParameterPolynomial.of_coeff_list [Polynomial.of_var (Var.of_string "a")] [Var.of_string "x"] in 
-  let (e,f) = List.split @@ ParameterPolynomial.monomials_with_coeffs d in  
+  let c = ParameterPolynomial.of_coeff_list [(((Polynomial.of_power (Var.of_string "y") 2)))] [Var.of_string "x"] in
+  let d = ParameterPolynomial.of_coeff_list [Polynomial.of_var (Var.of_string "a")] [Var.of_string "x"] in
+  let (e,f) = List.split @@ ParameterPolynomial.monomials_with_coeffs d in
   Printf.printf "861: %s  \n" (Polynomial.to_string (List.first e));
   Printf.printf "861: %s  \n" (ParameterPolynomial.to_string a);
   Printf.printf "861: %s  \n" (ParameterPolynomial.to_string b);
   Printf.printf "861: %s  \n" (ParameterPolynomial.to_string c);
 
-  
-  let endomorphism = Endomorphism.of_poly_list [Var.of_string "y"; Var.of_string "x"] [ParameterPolynomial.of_var @@ Var.of_string "x"; ParameterPolynomial.of_var @@ Var.of_string "y"] in 
-  
+
+  let endomorphism = Endomorphism.of_poly_list [Var.of_string "y"; Var.of_string "x"] [ParameterPolynomial.of_var @@ Var.of_string "x"; ParameterPolynomial.of_var @@ Var.of_string "y"] in
+
   let formula = Endomorphism.formula_to_check_invertibility endomorphism in
   let res  = Option.get @@ SMTSolver.get_model formula in
-  Printf.printf " \n 870: %s  \n" @@ Valuation.to_string @@  res; 
-  
-  let y2 = ParameterPolynomial.sub ( (ParameterPolynomial.of_power (Var.of_string "x") 2)) (((ParameterPolynomial.of_power (Var.of_string "y") 1))) in 
-  let y3 = ParameterPolynomial.add ( (ParameterPolynomial.of_power (Var.of_string "x") 1)) (((ParameterPolynomial.one))) in 
-  let endomorphism = Endomorphism.of_poly_list [Var.of_string "x"; Var.of_string "y"] [y2;y3] in 
+  Printf.printf " \n 870: %s  \n" @@ Valuation.to_string @@  res;
+
+  let y2 = ParameterPolynomial.sub ( (ParameterPolynomial.of_power (Var.of_string "x") 2)) (((ParameterPolynomial.of_power (Var.of_string "y") 1))) in
+  let y3 = ParameterPolynomial.add ( (ParameterPolynomial.of_power (Var.of_string "x") 1)) (((ParameterPolynomial.one))) in
+  let endomorphism = Endomorphism.of_poly_list [Var.of_string "x"; Var.of_string "y"] [y2;y3] in
   let formula = Endomorphism.formula_to_check_invertibility endomorphism in
-  
+
   let valuation  = Option.get @@ SMTSolver.get_model formula in
-  Printf.printf " \n 871: %s  \n" @@ Valuation.to_string @@  valuation; 
-  let res = List.map (ParameterPolynomial.eval_coefficients (fun x -> Valuation.eval x valuation)) @@ Endomorphism.inv_poly_list endomorphism in 
+  Printf.printf " \n 871: %s  \n" @@ Valuation.to_string @@  valuation;
+  let res = List.map (ParameterPolynomial.eval_coefficients (fun x -> Valuation.eval x valuation)) @@ Endomorphism.inv_poly_list endomorphism in
   List.iter (fun x -> print_string @@ Polynomial.to_string x ^ "; ") res ;
- 
-  let vars = [Var.of_string "x"; Var.of_string "y"] in 
+
+  let vars = [Var.of_string "x"; Var.of_string "y"] in
   let twn_formula = Endomorphism.formula_to_check_twn vars endomorphism (TransitionLabel.update_map transition) in
   let valuation  = Option.get @@ SMTSolver.get_model twn_formula in
-  Printf.printf " \n 872: %s  \n" @@ Valuation.to_string @@  valuation; 
-  Printf.printf " \n 873: %s  \n" @@ Formula.to_string twn_formula; 
-  let a = test_for_time vars 1 in 
-  let a = test_for_time vars 2 in 
-  let a = test_for_time vars 3 in 
-  let update = VarMap.map ParameterPolynomial.of_polynomial @@ TransitionLabel.update_map transition in 
-  let transformed = 
-  List.map (ParameterPolynomial.substitute_all update) (Endomorphism.inv_poly_list endomorphism) 
-                |> List.map (ParameterPolynomial.substitute_all (Endomorphism.poly_map endomorphism))  in 
-  let vars = List.of_enum @@ VarMap.keys update in 
-  
-  let var = List.first vars in 
-  let vars = VarSet.of_list vars in 
-  let res = List.first transformed in 
-  let coeffs = ParameterPolynomial.monomials_with_coeffs @@ List.first transformed in 
-  let zero_coeffs =  (* List.filter (fun (coeff,monom) -> VarSet.subset (Monomial.vars monom) vars || 
-                                (VarSet.subset (VarSet.of_list [var]) (Monomial.vars monom) && Polynomial.equal (Polynomial.of_monomial monom) (Polynomial.of_var var))) *) 
-                    List.filter (fun  (coeff,monom) -> VarSet.subset (ParameterMonomial.vars monom) vars 
+  Printf.printf " \n 872: %s  \n" @@ Valuation.to_string @@  valuation;
+  Printf.printf " \n 873: %s  \n" @@ Formula.to_string twn_formula;
+  let a = test_for_time vars 1 in
+  let a = test_for_time vars 2 in
+  let a = test_for_time vars 3 in
+  let update = VarMap.map ParameterPolynomial.of_polynomial @@ TransitionLabel.update_map transition in
+  let transformed =
+  List.map (ParameterPolynomial.substitute_all update) (Endomorphism.inv_poly_list endomorphism)
+                |> List.map (ParameterPolynomial.substitute_all (Endomorphism.poly_map endomorphism))  in
+  let vars = List.of_enum @@ VarMap.keys update in
+
+  let var = List.first vars in
+  let vars = VarSet.of_list vars in
+  let res = List.first transformed in
+  let coeffs = ParameterPolynomial.monomials_with_coeffs @@ List.first transformed in
+  let zero_coeffs =  (* List.filter (fun (coeff,monom) -> VarSet.subset (Monomial.vars monom) vars ||
+                                (VarSet.subset (VarSet.of_list [var]) (Monomial.vars monom) && Polynomial.equal (Polynomial.of_monomial monom) (Polynomial.of_var var))) *)
+                    List.filter (fun  (coeff,monom) -> VarSet.subset (ParameterMonomial.vars monom) vars
                                                     || (ParameterMonomial.equal (monom) (ParameterMonomial.of_var var)
-                                                    && VarSet.subset (VarSet.of_list [var]) (ParameterMonomial.vars monom))) coeffs 
+                                                    && VarSet.subset (VarSet.of_list [var]) (ParameterMonomial.vars monom))) coeffs
 
                     |> List.map Tuple2.first in
 
-  let formula =  List.fold (fun formula poly -> Formula.mk_and formula (Formula.mk_eq poly Polynomial.zero)) Formula.mk_true zero_coeffs in 
+  let formula =  List.fold (fun formula poly -> Formula.mk_and formula (Formula.mk_eq poly Polynomial.zero)) Formula.mk_true zero_coeffs in
   *)
 
- (* let formula = Formula.mk_eq sum (Polynomial.of_var (Var.of_string "x")) in 
+ (* let formula = Formula.mk_eq sum (Polynomial.of_var (Var.of_string "x")) in
   let result = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in *)
-  
+
 
   (* y2 = 3*x^2 +3 *)
-  (* y3 = x +y ---- y4 = -2x + 4y;   y5 = -x + y;    y6 = -x - y 
-  let y1 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.of_power (Var.of_string "y") 1))) in 
-  let y2 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.of_power (Var.of_string "y") 2))) in 
-  let varmap = VarMap.add (Var.of_string "x") y1 VarMap.empty |> VarMap.add (Var.of_string "y") y2 in 
-  let res = Polynomial.substitute_all varmap y1  in 
+  (* y3 = x +y ---- y4 = -2x + 4y;   y5 = -x + y;    y6 = -x - y
+  let y1 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.of_power (Var.of_string "y") 1))) in
+  let y2 = Polynomial.add ( (Polynomial.of_power (Var.of_string "x") 1)) (((Polynomial.of_power (Var.of_string "y") 2))) in
+  let varmap = VarMap.add (Var.of_string "x") y1 VarMap.empty |> VarMap.add (Var.of_string "y") y2 in
+  let res = Polynomial.substitute_all varmap y1  in
   Printf.printf "742: %s \n" (Polynomial.to_string res);
   let y2 = Polynomial.mult_with_const (OurInt.OurInt_of_int 3) (Polynomial.add (Polynomial.of_power (Var.of_string "x") 2) (Polynomial.one)) in
   let y4 =  RealPolynomial.add (RealPolynomial.mult_with_const (Num.num_of_int (-2)) (RealPolynomial.of_power (Var.of_string "x") 1)) ((RealPolynomial.mult_with_const (Num.num_of_int (4)) (RealPolynomial.of_power (Var.of_string "y") 1))) in
@@ -776,11 +777,11 @@ let time_bound (l,transition,l') scc program appr = (
     Printf.printf " : %s \n" ;
     print_string "552 \n";
     List.iter (List.iter (List.iter (fun x -> print_string ((OurRational.to_string x) ^ "; ")))) transformations;
-    List.iter (List.iter (fun x -> print_string ((Var.to_string x) ^ "; "))) blocks; 
+    List.iter (List.iter (fun x -> print_string ((Var.to_string x) ^ "; "))) blocks;
 
-  
-  let m1 = Lacaml.D.Mat.of_list [[1.;1.;1.;-1.;0.];[0.;1.;0.;0.;1.];[0.;0.;0.;1.;0.];[0.;0.;-1.;2.;1.];[0.;0.;0.;0.;1.]] in 
-  let ( left_eigen_vectors,real_part_eigen_values, im_part_eigen_values,right_eigen_vectors) = Lacaml.D.geev m1 in 
+
+  let m1 = Lacaml.D.Mat.of_list [[1.;1.;1.;-1.;0.];[0.;1.;0.;0.;1.];[0.;0.;0.;1.;0.];[0.;0.;-1.;2.;1.];[0.;0.;0.;0.;1.]] in
+  let ( left_eigen_vectors,real_part_eigen_values, im_part_eigen_values,right_eigen_vectors) = Lacaml.D.geev m1 in
   transpose_copy hat keine seiteneffekte
   *)
 
@@ -791,10 +792,10 @@ let time_bound (l,transition,l') scc program appr = (
   Wieso wird der code doppelt auf dieser Transition ausgeführt? normales fixpunkt-gedöns
   Wann muss man Klammern bei einer Funktion am Anfang schreiben? für tap
   Wie ersetze ich dann die Transition durch die transformierte? nicht ersetzen sondern nur laufzeit mit neuer transition berechnen und die laufzeit wieder zurücktransformieren
-  
+
   Aber sollte man dann nicht die Funktion bound mit der transformierten Transition aufrufen?
   pretty prints funktionieren nicht: egal
-  test for complexity/ Rundungsfehler: alles muss int sein  
+  test for complexity/ Rundungsfehler: alles muss int sein
   Polynome sind hier immer BigInt Polynome? ja,
   wie sinnvoll ist jordan normalform? reicht nicht eine Transformation in eine obere Dreieckmatrix (Schursche Normalform, diagonal genau dann wenn möglich)
 
@@ -803,7 +804,7 @@ let time_bound (l,transition,l') scc program appr = (
 
   wie mache ich code abschnitte kenntlich die ich kopiert habe?
   dieses über console aufrufen ist nicht wirklich schnell, hast Du Erfahrungen zu anderen Methoden? zB Pycaml (Vielleicht vorkompilen)
-  es könnte sein, dass der guard rational ist, obwohl der Automophismus zB x1 auf sqrt(2) * x^1 abbildet wenn er zB x1^2 < 0 lautet, die überprüfung für diesen spezialfall 
+  es könnte sein, dass der guard rational ist, obwohl der Automophismus zB x1 auf sqrt(2) * x^1 abbildet wenn er zB x1^2 < 0 lautet, die überprüfung für diesen spezialfall
     müsste ich aber auch in python machen, da ich in ocaml nicht mit algebraischen zahlen umgehen kann
   Du meintest die Transformation klappt auch wenn (nicht nur die Transformationsmatrix rational ist) sondern auch die Normalform an sich. Wie soll das gehen?
 
@@ -812,26 +813,26 @@ let time_bound (l,transition,l') scc program appr = (
   "List.for_all (Approximation.is_time_bounded appr) entries" macht doch gar keinen Sinn oder? dann fragt man das jedes mal für alle ab
   ich weiß nicht, ob ich was falsch mache, aber sympy ist dermaßen langsam, dass es vielleicht sinnvoll ist, erst mit Lacaml zu überprüfen ob die eigenwerte int sind bevor man sympy benutzt
 
-  eigenwerte berechnen kann sympy ziemlich schnell, es macht also viel sinn erstmal die zu berechnen, auf ganzzahligkeit zu überprüfen, und dann erst jordan 
-  ich finde das highlighting von der doktorarbeit mit den examples sehr schön, weißt du zufällig wie man das macht? 
+  eigenwerte berechnen kann sympy ziemlich schnell, es macht also viel sinn erstmal die zu berechnen, auf ganzzahligkeit zu überprüfen, und dann erst jordan
+  ich finde das highlighting von der doktorarbeit mit den examples sehr schön, weißt du zufällig wie man das macht?
   Muss ich diese Schreibweise aus Lemma 9.1.7 übernehmen, oder kann ich sagen, dass polynome sowohl elemente des polynomringes sind als auch polynomfunktionen?
-  Ist nicht die Startlocation gleich der endlocation in einem kreis? 
-  Warum macht der die twn analyse nicht richtig? 
+  Ist nicht die Startlocation gleich der endlocation in einem kreis?
+  Warum macht der die twn analyse nicht richtig?
 
   nestedlinear wird nicht transformiert, weil obwohl sich die kreise ausschließen, das heißt der innere auf jeden fall linear ist und der äußere sorgt aber dafür dass die eine bedingung (entries are bounded) verletzt ist | enable die mprf
   Warum kommt splitUpTransformed timeout? aber das untransformierte nicht, es kommen nämlich guard bedingungen hinzu, wodurch die berechnungen anscheinend so viel schwerer werden, dass das ganze nicht terminiert in 5 sec| klappt mittlerweile
   splitUpStrange, da klappt das zusammenziehen irgendwie nicht, ist kein twn loop weil wohl ein entry nicht bounded ist ???
   So, ich denke ich muss mit nicht linearen Automorphismen anfangen, wie?
   Kolloqium: Zeit 25, PowerPoint jo, Live Demo jo mittwoch 16 uhr probevortrag
-  docker jo 
-  
+  docker jo
 
-  splitUp vs splitUp strange schafft das nicht, weil dem != statt dem > 
+
+  splitUp vs splitUp strange schafft das nicht, weil dem != statt dem >
 
   Datenträger oder wie elektronisch einreichen? einfach email
   local  bound frage, ja einfach r
-  wo sind die results 
-  nimmt der alle testprogramme? 
+  wo sind die results
+  nimmt der alle testprogramme?
   wo kann ich nur meine eigenen testen
 
   Der Smtsolver lucky guessed immer beim zweiten versuch, im ersten schafft er das nicht
@@ -841,35 +842,35 @@ let time_bound (l,transition,l') scc program appr = (
   TODO 8.1.8 mit algorithmus abschreiben,cython (nur das starten geht schneller), beispiele, kreis
 
   parameter polynome, nach x umformen lassen, den koeffizienten= 1 setzen
-  
+
   *)
   (*print_string "764";
-  let vars = (VarSet.to_list (TransitionLabel.vars transition)) in 
-  let y1 = Polynomial.add ( (Polynomial.of_power (List.at vars 1) 1)) (((Polynomial.of_power (List.at vars 2) 1))) in 
+  let vars = (VarSet.to_list (TransitionLabel.vars transition)) in
+  let y1 = Polynomial.add ( (Polynomial.of_power (List.at vars 1) 1)) (((Polynomial.of_power (List.at vars 2) 1))) in
   let y2 = (Polynomial.of_power (List.at vars 2) 2) in
-  let new_polynomials = [y1;y2] in 
+  let new_polynomials = [y1;y2] in
 
-  
-  let invariant = TransitionLabel.invariant transition in 
-  let updated_invariant = Guard.map_polynomial (compose_int_polynomials ([List.at vars 1;List.at vars 2]) new_polynomials) invariant in 
-  let guard = TransitionLabel.guard_without_inv transition in 
-  let uguard = Guard.map_polynomial (compose_int_polynomials ([List.at vars 1;List.at vars 2]) new_polynomials) guard in 
+
+  let invariant = TransitionLabel.invariant transition in
+  let updated_invariant = Guard.map_polynomial (compose_int_polynomials ([List.at vars 1;List.at vars 2]) new_polynomials) invariant in
+  let guard = TransitionLabel.guard_without_inv transition in
+  let uguard = Guard.map_polynomial (compose_int_polynomials ([List.at vars 1;List.at vars 2]) new_polynomials) guard in
   Printf.printf "\n 720: %s " (Guard.to_string guard);
   Printf.printf "\n 721: %s " (Guard.to_string uguard);*)
 
-  
 
-   (* unbound value means not in mli 
+
+   (* unbound value means not in mli
 *)
-  
+
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,transition,l') in
   if Option.is_none opt then (
     print_string "\n 396 TWN";
     let bound =
       Timeout.timed_run 5. (fun () -> try
-        let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in 
-        let (entries, cycle, automorphisms) = List.fold_right (fun  (x1,x2,x3) (xs1,xs2,xs3)-> ((x1::xs1) , (x2::xs2) ,(x3::xs3) )) 
+        let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
+        let (entries, cycle, automorphisms) = List.fold_right (fun  (x1,x2,x3) (xs1,xs2,xs3)-> ((x1::xs1) , (x2::xs2) ,(x3::xs3) ))
                    ( find_cycle appr program ( (*find_cycle throws an exception if no cycle is found (for efficiency reasons) *)
           if Location.equal l l' then
             let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs transition) (TWNLoop.update_to_string_rhs loop) in
@@ -900,7 +901,7 @@ let time_bound (l,transition,l') scc program appr = (
                   |> List.map (TransitionLabel.invariant % Transition.label)
                   |> fun invariants -> List.flatten invariants |> List.filter (fun atom -> List.for_all (List.exists (Atom.equal atom)) invariants)
                   |> TWNLoop.add_invariant twn in
-                
+
     Printf.printf "\n 828 %s" (TWNLoop.to_string twn_inv);
                 let eliminated_t = EliminateNonContributors.eliminate_t
                     (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
@@ -909,7 +910,7 @@ let time_bound (l,transition,l') scc program appr = (
                 if VarSet.is_empty (TWNLoop.vars eliminated_t) then
                   Bound.infinity, (entry, Bound.infinity)
                 else (
-                  let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in 
+                  let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in
                   if Bound.is_infinity bound then raise (Non_Terminating (handled_transitions, entries));
                   lift appr entry bound, (entry, bound)) )
           (List.map2 (fun (a,b) c -> (a,b,c)) (List.combine entries twn_loops) automorphisms) in (* TODO remove code duplicate from find_cycle*)
