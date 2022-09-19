@@ -41,7 +41,7 @@ module Endomorphism =
   let degree_of_endomorphism t =
     degree_of_polylist (poly_list t)
 
-  (** Haskell's [m..n] is create_list m n, which is [m;m+1;...;n] or [] if m>n. Tail recursive*)
+  (* Haskell's [m..n] is create_list m n, which is [m;m+1;...;n] or [] if m>n. Tail recursive
   let create_list i j = 
       let rec create_list_acc i j acc = 
         if (i<=j) then
@@ -49,7 +49,7 @@ module Endomorphism =
         else 
           acc
       in 
-      create_list_acc i j []
+      create_list_acc i j []*)
       
       
   let rec enumerate_help d length = 
@@ -58,7 +58,7 @@ module Endomorphism =
       | _, 1 -> [[d]]
       | d, length -> 
         List.flatten @@ List.map (fun x -> List.map (fun xs -> x::xs) (enumerate_help (d-x) (length-1))) 
-                                (create_list 0 d)
+                                (List.range 0 `To (d))
           
 
   (** enumerates all polynomials of degree less or equal than d with variables *)
@@ -87,7 +87,7 @@ let create_default_mapping ?(letter_for_index="a") degree vars  =
   (* we must be careful with storage usage, thats why we need a dense encoding of monomials, which is ensured by giving every monomial a number  *)
   let res = enumerate_all_polys_degree degree vars (* get all monomials up to degree *)
                 |> List.map ParameterPolynomial.of_polynomial in 
-  let polys =  fun var -> List.map2 (fun int poly -> ParameterPolynomial.mult_with_const (Polynomial.of_var (Var.of_string (letter_for_index^(Var.to_string var)^(Int.to_string int)))) poly) (create_list 1 (List.length res)) res  in 
+  let polys =  fun var -> List.map2 (fun int poly -> ParameterPolynomial.mult_with_const (Polynomial.of_var (Var.of_string (letter_for_index^(Var.to_string var)^(Int.to_string int)))) poly) (List.range 1 `To (List.length res)) res  in 
   let endomorphism_polys = 
       List.map (fun var -> 
                   (*multiply each monomial with a distinct constant*)
@@ -258,13 +258,7 @@ let transform_guard t guard =
 let bound_map_of_automorphism t = VarMap.fold (fun key value map -> (VarMap.add key (BoundsInst.Bound.of_poly value) map)) (inv_poly_map t) VarMap.empty
 
 (** applies the inverse automorphism to the bound*)
-let transform_bound t bound = 
-print_endline@@ BoundsInst.Bound.to_string@@bound ;
-        print_endline "A262";
-let x1 = bound_map_of_automorphism t in 
-
-        print_endline "A263";
-BoundsInst.Bound.substitute_all (bound_map_of_automorphism t) bound 
+let transform_bound t bound = BoundsInst.Bound.substitute_all (bound_map_of_automorphism t) bound 
 (*BoundsInst.Bound.substitute_all (bound_map_of_automorphism t) bound *)
 
 let of_endomorphism endomorphism (valuation:Polynomials.Polynomial.valuation) = 

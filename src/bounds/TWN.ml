@@ -45,26 +45,22 @@ let toposort graph =
   List.fold_left (fun visited (node,_) -> dfs graph visited node) [] graph
 
 let check_triangular (t: TWNLoop.t) =
-        print_endline "48";
   let vars = VarSet.to_list (TWNLoop.input_vars t) in
   let n = List.length vars in
-        print_endline "49";
-        print_endline @@ string_of_int n;
-  let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
-        print_endline "50";
-  let graph = List.mapi (fun i var ->
-    let vars_update =
-        TWNLoop.update t var
-        |? Polynomial.zero
-        |> Polynomial.vars
-        |> VarSet.remove var
-        |> VarSet.to_list
-        |> List.map (fun var -> List.assoc var vars_i) in (i, vars_update)) vars in
-        print_endline "51";
-  let order = try toposort graph with CycleFound _ -> [] in
-        print_endline "52";
-  List.map (fun i -> List.assoc i (List.map Tuple2.swap vars_i)) order
-  |> List.rev
+  if (n == 0) then []
+  else 
+    let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
+    let graph = List.mapi (fun i var ->
+      let vars_update =
+          TWNLoop.update t var
+          |? Polynomial.zero
+          |> Polynomial.vars
+          |> VarSet.remove var
+          |> VarSet.to_list
+          |> List.map (fun var -> List.assoc var vars_i) in (i, vars_update)) vars in
+    let order = try toposort graph with CycleFound _ -> [] in
+    List.map (fun i -> List.assoc i (List.map Tuple2.swap vars_i)) order
+    |> List.rev
 
 let check_triangular_t (t: TransitionLabel.t) = check_triangular (TWNLoop.mk_transition t)
 
@@ -287,17 +283,13 @@ let check_twn (_,t,_) =
  check_twn (TWNLoop.mk_transition t)
 
 let complexity loop =
-        print_endline "283";
     let order = check_triangular loop in
-        print_endline "285";
     let t_, was_negative =
       if (check_weakly_negativitiy loop) then
         chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TWNLoop.to_string loop])), true
       else loop, false in
-        print_endline "290";
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
     proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
-        print_endline "291";
     let pe = PE.compute_closed_form (List.map (fun var ->
         let update_var = TWNLoop.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
@@ -307,13 +299,10 @@ let complexity loop =
           (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
           |> List.map (fun (a,b) -> a ^ ": " ^ b)
           |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
-        print_endline "303";
     let npe = PE.normalize pe in
         Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
     let varmap = Hashtbl.of_list (List.combine order npe) in
-        print_endline "307";
     let terminating = termination_ t_ order npe varmap in
-        print_endline "309";
     if not terminating then
       Bound.infinity
     else
@@ -485,8 +474,7 @@ let transform_with_aut transition automorphism vars =
                           |> (flip TWNLoop.add_invariant) updated_invariant )
 
 
-let transform_linearly (transition: TWNLoop.t) =
-  print_endline "476";
+let transform_linearly (transition: TWNLoop.t) = 
   (* find order for variables and independent blocks and sort them for elegant code when updating transition*)
   match (check_solvable transition) with
     | None -> None
@@ -496,10 +484,8 @@ let transform_linearly (transition: TWNLoop.t) =
   else
   
     let concat_blocks = List.concat blocks in
-  print_endline "485";
     (* calculate matrices *)
     let matrices = List.map (matrix_of_linear_assignments transition) blocks in
-  print_endline "487";
     let transformations = List.map (transform_linearly_matrix) matrices in (*(transformations,transformed_matrices) *)
     if not @@ List.for_all Option.is_some transformations then
       None
@@ -511,15 +497,12 @@ let transform_linearly (transition: TWNLoop.t) =
       let eta = List.concat @@ List.map2 matrix_times_vector_rational transformations blocks in
       let eta_inv = List.concat @@ List.map2 matrix_times_vector_int transformation_invs blocks in
       let automorphism = Automorphism.of_poly_list concat_blocks eta eta_inv in
-  print_endline "489";
       match transform_with_aut transition automorphism concat_blocks with 
       | None -> None 
-      | Some x -> 
-  print_endline "492";Some(x, automorphism)  
+      | Some x -> Some(x, automorphism)  
 
 (** transform_non_linearly transform a TWNLoop into twn form, it starts with the degree 1 and then counts upwards, until for some degree the formulas get too large. *)
 let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) = 
-  print_endline "503";
   let vars = VarSet.to_list @@ TWNLoop.vars t in
   try let endomorphism = Endomorphism.of_degree vars degree in
       let inv_formula = Endomorphism.formula_to_check_invertibility endomorphism in
@@ -534,7 +517,6 @@ let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) =
 
 
 let transform ((entry, t):ProgramTypes.Transition.t * TWNLoop.t) =
-  print_endline "517";
    match (transform_linearly t) with
   | Some (transformed, automorphism) -> Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)(*TODO find target *)
   | None -> match (transform_non_linearly t) with
@@ -676,7 +658,6 @@ let test_for_time vars degree =
 
 
 let time_bound (l,transition,l') scc program appr = (
-  print_endline "660";
   (*Printf.printf " 682 : %s \n" @@ TransitionLabel.to_string transition;
   Printf.printf " 683 : %s \n" @@ to_string @@ check_solvable_t transition;
   Printf.printf " 684 : %s \n" @@ Location.to_string l;
@@ -900,23 +881,19 @@ let time_bound (l,transition,l') scc program appr = (
             (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition transition),l')], (LocationSet.singleton l'))]) [])) )
                   ([],[],[])
         in
-        print_endline "890";
         let handled_transitions = ListMonad.(cycle >>= fun (l,twn,l') -> TWNLoop.subsumed_transitions l l' twn) in
         (* let entries = Program.entry_transitions logger program handled_transitions in*)
         (* add_to_proof_graph program handled_transitions entries; *)
         Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,transition,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
         let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
-        print_endline "890";
         Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TWNLoop.to_string twn_loops));
         proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>
           (List.combine (List.map Transition.to_string_pretty entries) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
-        print_endline "901";
         let global_local_bounds =
           List.map (fun (entry, twn, automorphism) -> (*entry,twn,automorph *)
                 let program_only_entry = Program.from ((TransitionSet.to_list (TransitionSet.diff (Program.transitions program) (TransitionSet.of_list entries))) |> List.map List.singleton |> (@) [[entry]]) (Program.start program) in
-        print_endline "904";
                 let twn_inv = InvariantGeneration.transform_program program_only_entry
                   |> MaybeChanged.unpack
                   |> Program.transitions
@@ -929,32 +906,22 @@ let time_bound (l,transition,l') scc program appr = (
                 let eliminated_t = EliminateNonContributors.eliminate_t
                     (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
                 in
-        print_endline "916s";
                 if VarSet.is_empty (TWNLoop.vars eliminated_t) then
-       (print_endline "917s";
-                  Bound.infinity, (entry, Bound.infinity))
+                  Bound.infinity, (entry, Bound.infinity)
                 else (
-        print_endline "923s";
-          let x1 = complexity eliminated_t in 
-        print_endline "923";
-          let bound = Automorphism.transform_bound automorphism x1 in 
-                  (*let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in*)
-        print_endline "924s";
+                  let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in
                   if Bound.is_infinity bound then raise (Non_Terminating (handled_transitions, entries));
                   lift appr entry bound, (entry, bound)) )
           (List.map2 (fun (a,b) c -> (a,b,c)) (List.combine entries twn_loops) automorphisms) in (* TODO remove code duplicate from find_cycle*)
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map Tuple2.second global_local_bounds)) handled_transitions;
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
         with
-        | Not_found -> 
-        print_endline "932"; Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
+        | Not_found ->  Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
         | Non_Terminating (handled_transitions,entries)->
-        print_endline "933";
             Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]);
             List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> (t, Bound.infinity)) entries)) handled_transitions;
             Bound.infinity)
     in
-        print_endline "939";
     if Option.is_some bound then
       bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
       |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true))))
