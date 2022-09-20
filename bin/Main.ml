@@ -22,19 +22,9 @@ let subcommands =
     NormalizeCommand.(subcommand run params_cmdliner_term description command);
   ]
 
-let git_version: string =
-  [%meta
-     [%e match Sys.getenv_opt "KOAT2_GIT_VERSION" with
-     | None ->
-         let version = Util.read_process "git rev-parse --short HEAD" and
-             date    = Util.read_process "git log -1 --format=%cs"    in
-         let version_str =  version^" from "^date in
-         String.nreplace ~sub:"\n" ~by:"" ~str:(version^" from "^date)
-     | Some x -> x]]
-
 let default_cmd params =
   if params.version then
-    `Ok (Printf.printf "KoAT2 version %s (%s)\n" git_version Z3.Version.full_version)
+    `Ok (Printf.printf "%s\n" VersionString.version)
   else `Help (`Pager, None)
 
 let () =
