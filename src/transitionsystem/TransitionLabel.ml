@@ -4,10 +4,9 @@ open Formulas
 
 module Guard = Constraints.Constraint
 module Invariant = Constraints.Constraint
+module Monomial = Monomials.Make(OurInt)
 type polynomial = Polynomial.t
 module VarMap = Map.Make(Var)
-
-type kind = [ `Lower | `Upper ] [@@deriving eq, ord]
 
 type t = {
     id : int;
@@ -16,8 +15,6 @@ type t = {
     invariant :Invariant.t;
     cost : Polynomial.t;
   }
-
-let one = Polynomial.one
 
 let make ~cost ~update ~guard ~invariant =
   {
@@ -32,11 +29,6 @@ let fresh_id t = {
     invariant = t.invariant;
     cost = t.cost;
   }
-
-let trival variables =
-  let var_map =
-    VarSet.fold (fun var map -> VarMap.add var (Polynomial.of_var var) map) variables VarMap.empty in
-  make ~cost:Polynomial.one ~update:var_map ~guard:Guard.mk_true ~invariant:Invariant.mk_true
 
 let same lbl1 lbl2 =
   lbl1.id = lbl2.id
@@ -63,7 +55,7 @@ let simplify_guard t =
     | constr_missing ->
         let (next_constr, constr_missing') =
           List.map (fun c -> c,not_implied (List.cons c constr_chosen) constr_missing) constr_missing
-          |> Tuple2.first % List.min_max ~cmp:(fun (_,l) (_,l') -> compare (List.length l) (List.length l'))
+          |> List.min ~cmp:(fun (_,l) (_,l') -> compare (List.length l) (List.length l'))
         in
         greed_minimpl_set (List.cons next_constr constr_chosen) constr_missing'
   in
@@ -141,10 +133,8 @@ let update t var = VarMap.Exceptionless.find var t.update
 
 let update_map t = t.update
 
-module Monomial = Monomials.Make(OurInt)
 let overapprox_nonlinear_updates t =
   let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
-
   let overapprox_poly orig_var poly (guard, update) =
     if Polynomial.is_linear poly then guard, update
     else
@@ -233,7 +223,7 @@ let default = {
     update = VarMap.empty;
     guard = Guard.mk_true;
     invariant = Invariant.mk_true;
-    cost = one;
+    cost = Polynomial.one;
   }
 
 let update_to_string update =

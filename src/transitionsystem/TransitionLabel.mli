@@ -17,9 +17,6 @@ type polynomial = Polynomials.Polynomial.t
 (** Module representing a map from variables to variables. *)
 module VarMap : module type of Map.Make(Var)
 
-(** Kind of bound, i.e., lower or upper. Is the ever used?? *)
-type kind = [ `Lower | `Upper ]  [@@deriving eq, ord]
-
 (** A transition label consists of an unique id, an update function, a guard and a cost function. *)
 type t
 
@@ -37,8 +34,6 @@ val fresh_id : t -> t
 val add_invariant : t -> Invariant.t -> t
 
 val normalise : t -> VarSet.t -> t
-
-val trival : VarSet.t -> t
 
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
