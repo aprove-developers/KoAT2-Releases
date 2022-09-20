@@ -87,7 +87,7 @@ RUN wget https://releases.llvm.org/3.4/clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13
 FROM ubuntu:20.04
 
 RUN apt-get -y update && \
-    apt-get install -y bash vim coreutils graphviz libgmp-dev libtinfo5
+    apt-get install --no-install-recommends -y bash vim coreutils graphviz libgmp-dev libtinfo5 git
 
 RUN mkdir /koat2
 WORKDIR /koat2
