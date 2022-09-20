@@ -252,7 +252,14 @@ let handle_timeout_cfr method_name non_linear_transitions =
   Program.reset_pre_cache ();
   Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR_" ^ method_name, ["scc", (TransitionSet.to_string non_linear_transitions)])
 
+open Readers
+open SolvableSizeBounds
+
 let improve rvg ?(mprf_max_depth = 1) ~preprocess ~local ~cfr measure program appr =
+  let bound = Readers.read_bound "2*(x +
+  n)" |> Bound.substitute (Var.of_string "n") ~replacement:(Readers.read_bound "y") in
+  SolvableSizeBounds.run_python;
+  Printf.printf "BOUND: %s\n" (Bound.to_string bound);
   program
     |> Program.sccs
     |> List.of_enum
