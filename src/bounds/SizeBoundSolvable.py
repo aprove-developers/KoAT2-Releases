@@ -13,14 +13,14 @@ def abs_expr(expr):
     else:
         return expr.func(*tuple(map(lambda x: abs_expr(x), expr.args)))
 
-def size_bound(matrix_as_list):
+def size_bound(matrix_as_list, vars_as_list):
     matrix_as_int_list = list(map(int, matrix_as_list))  # cast to int
     dim = sqrt(len(matrix_as_int_list))
     m = Matrix(dim, dim, matrix_as_int_list)
     P_inv, J = m.jordan_form()
     if J.is_diagonal():
         n = Symbol('n')
-        vars = symbols('X0:%d'%dim)
+        vars = symbols(vars_as_list)
         phi_inv = P_inv * Matrix(dim,1,vars)
         phi = P_inv.inv() * Matrix(dim,1,vars)
         clt = J**n * Matrix(dim,1,vars)
