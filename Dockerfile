@@ -88,6 +88,8 @@ FROM ubuntu:20.04
 RUN apt-get -y update && \
     apt-get install -y bash vim coreutils graphviz libgmp-dev libtinfo5 python3-sympy
 
+RUN apt-get -y --no-install-recommends install python3-sympy
+
 RUN mkdir /koat2
 WORKDIR /koat2
 
