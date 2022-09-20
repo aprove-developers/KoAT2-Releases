@@ -51,6 +51,7 @@ rule read =
   | '*'               { P.TIMES }
   | '-'               { P.MINUS }
   | '^'               { P.POW }
+  | "**"              { P.POW }
   | "->"              { P.ARROW }
   | "="               { P.EQUAL }
   | "!="              { P.UNEQUAL }
