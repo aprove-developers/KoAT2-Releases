@@ -1,8 +1,8 @@
 (GOAL COMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS l0))
-(VAR X Y)
+(VAR X1 X2 X3 X4 X5)
 (RULES
-  l0(X,Y) -> l1(X, Y)
-  l1(X,Y) -> l1(X + 1, Y + 1) :|: 100 > X
-  l1(X,Y) -> l1(2 * X, 3 * Y) :|: Y < X && Y > 0
+  l0(X1,X2,X3,X4,X5) -> l1(X1,X2,X3,X4,X5)
+  l1(X1,X2,X3,X4,X5) -> l1(X1,X2 - X4^2,X3,X4 + 1,X5) :|: X2 > 0
+  l1(X1,X2,X3,X4,X5) -> l1(X1,X2,2 * X3,3 * X4,X5) :|: X4 < X3 && X4 > 0
 )
