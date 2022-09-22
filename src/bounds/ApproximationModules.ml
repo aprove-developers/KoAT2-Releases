@@ -1,5 +1,5 @@
 open Batteries
-open ProgramTypes
+open Program
 
 module RV = RVGTypes.RV
 

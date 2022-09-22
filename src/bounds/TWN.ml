@@ -1,6 +1,6 @@
 open Batteries
 open Polynomials
-open ProgramTypes
+open Program
 open Formulas
 open Atoms
 open BoundsInst

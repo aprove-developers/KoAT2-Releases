@@ -118,7 +118,7 @@ module Atom =
 
     let to_string ?(to_file=false) ?(pretty=false) (poly,comp) =
       Polynomial.separate_by_sign poly
-      |> (fun (positive, negative) -> (if to_file then (Polynomial.to_string_to_file positive) else if pretty then Polynomial.to_string_pretty positive else (Polynomial.to_string positive)) ^ 
+      |> (fun (positive, negative) -> (if to_file then (Polynomial.to_string_to_file positive) else if pretty then Polynomial.to_string_pretty positive else (Polynomial.to_string positive)) ^
                                       (comp_to_string comp ~pretty) ^
                                       (if to_file then (Polynomial.to_string_to_file (Polynomial.neg negative)) else if pretty then Polynomial.to_string_pretty (Polynomial.neg negative) else  (Polynomial.to_string (Polynomial.neg negative))))
 

@@ -1,6 +1,6 @@
 open Batteries
 open BoundsInst
-open ProgramTypes
+open Program
 open ApproximationModules
 open Formatter
 open FormattedString

@@ -1,5 +1,5 @@
 open Batteries
-open ProgramTypes
+open Program
 open ApproximationModules
 
 (** Generates the approximation for the new program_cfr from the one of the original program. *)
@@ -25,3 +25,4 @@ let merge_appr (program: Program.t) (program_cfr: Program.t) appr =
 
 let lift_to_program transform program =
   MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (fun _ -> graph) program)))
+

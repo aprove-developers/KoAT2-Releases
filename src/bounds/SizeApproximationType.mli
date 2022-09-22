@@ -1,6 +1,6 @@
 open Batteries
 open BoundsInst
-open ProgramTypes
+open Program
 open RVGTypes
 
 module Make_SizeApproximation :

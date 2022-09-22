@@ -3,7 +3,7 @@ open Batteries
 open BoundsInst
 open OUnit2
 open Helper
-open ProgramTypes
+open Program
 open RVGTypes
 
 let suite =

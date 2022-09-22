@@ -3,7 +3,7 @@ open BoundsInst
 open Polynomials
 open Atoms
 open Constraints
-open ProgramTypes
+open Program
 open Formulas
 open PartialEvaluation
 open RVGTypes

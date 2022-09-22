@@ -1,7 +1,7 @@
 (** Handles shell arguments and computes ranking functions for a program. *)
 open Batteries
 open Koat2
-open ProgramTypes
+open Program
 open Readers
 
 let description = "Search for a linear ranking function"

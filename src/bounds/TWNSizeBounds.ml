@@ -1,5 +1,5 @@
 open Batteries
-open ProgramTypes
+open Program
 open Polynomials
 open PolyExponential
 open BoundsInst

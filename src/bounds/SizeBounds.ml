@@ -1,5 +1,5 @@
 open Batteries
-open ProgramTypes
+open Program
 open RVGTypes
 
 let logger = Logging.(get Size)

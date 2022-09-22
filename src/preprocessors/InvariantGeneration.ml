@@ -1,6 +1,6 @@
 (** Implemenation of a preprocessor which adds invariants to transitions.*)
 open Batteries
-open ProgramTypes
+open Program
 open Polynomials
 open Atoms
 open Constraints

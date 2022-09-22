@@ -1,180 +1,254 @@
-(** Provides default modules to create locations, transitions and transitionsystems. *)
 open Batteries
 open Constraints
+open Polynomials
+(** Provides commonly used module types in programs *)
 
-module Location =
-  struct
-    type t = string [@@deriving eq, ord]
+(** A location is a node of a transition system and can be connected to other locations via transitions. *)
+module type Location = sig
+  (** Type of location, we use strings. *)
+  type t
 
-    let to_string l = l
+  val equal : t -> t -> bool
 
-    let hash l = Hashtbl.hash l
+  val compare : t -> t -> int
 
-    let of_string name = name
-  end
+  (** Generates a hash value for a location.*)
+  val hash : t -> int
 
-module LocationSet = Set.Make(Location)
+  (** Returns a string representing a location. *)
+  val to_string : t -> string
+end
 
-module Transition =
-  struct
-    type t = Location.t * TransitionLabel.t * Location.t
+(** A transition connects two locations and is labeled with an updated function and a guard. *)
+module type Transition = sig
+  type location
+  (** Type of a transition, i.e., two connected locations and a label. *)
+  type t = location * TransitionLabel.t * location
 
-    let equal_ equal_lbl (l1,t1,l1') (l2,t2,l2') =
-      Location.equal l1 l2
-      && equal_lbl t1 t2
-      && Location.equal l1' l2'
+  val equal : t -> t -> bool
 
-    let equal =
-      equal_ TransitionLabel.same
+  val same : t -> t -> bool
 
-    let same =
-      equal_ TransitionLabel.same
+  val equivalent : t -> t -> bool
 
-    let equivalent =
-      equal_ TransitionLabel.equivalent
+  val compare_same : t -> t -> int
 
-    let compare compare_lbl (l1,t1,l1') (l2,t2,l2') =
-      if Location.compare l1 l2 != 0 then
-        Location.compare l1 l2
-      else if compare_lbl t1 t2 != 0 then
-        compare_lbl t1 t2
-      else if Location.compare l1' l2' != 0 then
-        Location.compare l1' l2'
-      else
-        0
+  val compare_equivalent : t -> t -> int
 
-    let compare_same =
-      compare TransitionLabel.compare_same
+  (** Generates a hash value for a transition. *)
+  val hash : t -> int
 
-    let compare_equivalent =
-      compare TransitionLabel.compare_equivalent
+  val overapprox_nonlinear_updates: t -> t
 
-    let add_invariant invariant (l,t,l') =
-      (l, TransitionLabel.add_invariant t invariant, l')
+  (** Returns a string of the form id: src -> target. *)
+  val to_id_string : t -> string
+  val to_id_string_pretty : t -> string
 
-    let src (src, _, _) = src
+  (** Returns a string representing the transition. Parameter {i to_file} is used to get a representation with less special characters. *)
+  val to_string : ?to_file:bool -> t -> string
 
-    let label (_, label, _) = label
+  val to_string_pretty : t -> string
 
-    let target (_, _, target) = target
+  (** Returns the source location of a transiton. *)
+  val src : t -> location
 
-    let id =
-      TransitionLabel.id % label
+  (** Returns the label of a transition. *)
+  val label : t -> TransitionLabel.t
 
-    (* let compare_same trans1 trans2 =
-      Int.compare (id trans1) (id trans2)  *)
+  (** Returns the target location of a transition. *)
+  val target : t -> location
 
-    let cost t = TransitionLabel.cost (label t)
+  (** Returns an (unique) id of a transition label. TODO doc unique??*)
+  val id : t -> int
 
-    let hash = Hashtbl.hash % id
+  (** Returns a cost function of a transition represented as a polynomial. *)
+  val cost : t -> Polynomial.t
 
-    let to_id_string (l,label,l') =
-      (Int.to_string % TransitionLabel.id) label ^ ": " ^ Location.to_string l ^ "->" ^ Location.to_string l'
+  (** Adds the invariant to this transition. *)
+  val add_invariant : Constraint.t -> t -> t
 
-    let to_id_string_pretty  (l,label,l') =
-      "t" ^ Util.natural_to_subscript (TransitionLabel.id label) ^ ": " ^ Location.to_string l ^ "→" ^ Location.to_string l'
+  (** TODO doc *)
+  val rename : Var.t list -> t -> t
 
-    let to_string ?(to_file = false) (l,t,l') =
-      if to_file then
-        (
-          if (Constraint.is_true (TransitionLabel.guard t)) then
-            ((Location.to_string l)
-            ^ TransitionLabel.(update_to_string_lhs ~to_file t)
-            ^ " -"^ (TransitionLabel.cost_to_string ~to_file t) ^ "> Com_1(" ^ (Location.to_string l')
-            ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ")")
-          else
-            (Location.to_string l)
-            ^ TransitionLabel.(update_to_string_lhs ~to_file t)
-            ^ " -"^ (TransitionLabel.cost_to_string ~to_file t) ^ "> Com_1(" ^ (Location.to_string l')
-            ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ") :|: "
-            ^ TransitionLabel.(guard_to_string ~to_file t)
-        )
-      else
-        Int.to_string (TransitionLabel.id t)^":"^Location.to_string l ^ TransitionLabel.(update_to_string_lhs t)^ " -"^
-        TransitionLabel.cost_to_string t^"> " ^ Location.to_string l' ^
-        TransitionLabel.update_to_string_rhs t ^ if Constraint.is_true (TransitionLabel.guard t) then "" else ":|:" ^ TransitionLabel.(guard_to_string t)
+  val rename2 : RenameMap.t -> t -> t
+end
 
-    let to_string_pretty (l,t,l') =
-      "t" ^ Util.natural_to_subscript (TransitionLabel.id t)^": "^Location.to_string l ^ TransitionLabel.(update_to_string_lhs_pretty t)^
-      (if Polynomials.Polynomial.(equal one (TransitionLabel.cost t)) then " → " else " -"^ TransitionLabel.cost_to_string t^"> " ) ^
-      Location.to_string l' ^
-      TransitionLabel.update_to_string_rhs_pretty t ^ if Constraint.is_true (TransitionLabel.guard t) then "" else " :|: " ^ TransitionLabel.(guard_to_string ~pretty:true t)
+module type TransitionSet = sig
+  (** A set of transitions. *)
 
-    let rename vars (l,t,l') =
-      (l, (TransitionLabel.rename vars t),l')
+  include Set.S
+  type locationSet
 
-    let rename2 rename_map (l,t,l') =
-      (l, (TransitionLabel.rename2 rename_map t),l')
+  (** TODO doc *)
+  val powerset : t -> t Enum.t
 
-    let overapprox_nonlinear_updates (l,t,l') = l,TransitionLabel.overapprox_nonlinear_updates t,l'
-  end
+  (** Returns a string representing the transition set. *)
+  val to_string : t -> string
 
-module TransitionSet =
-  struct
-    include Set.Make(struct include Transition let compare = Transition.compare_same end)
+  (** Returns a short string representing the transition set. *)
+  val to_id_string : t -> string
 
-    let to_id_string = Util.enum_to_string Transition.to_id_string % enum
+  val create : ('a -> elt) -> 'a Batteries.Enum.t -> t
 
-    let powerset set =
-      let combine (result: t Enum.t) (x: Transition.t) = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
-      Enum.fold combine (Enum.singleton empty) (enum set)
+  val locations: t -> locationSet
+end
 
-    let to_string =
-      Util.enum_to_string Transition.to_id_string % enum
+(** This module represents a transition graph. *)
+module type TransitionGraph = sig
+  module Location: Location
+  module Transition: Transition 
+    with type location = Location.t
+    and type t = Location.t * TransitionLabel.t * Location.t
+  module LocationSet: Set.S with type elt = Location.t
+  module TransitionSet : TransitionSet 
+    with type elt = Transition.t 
+    and type locationSet = LocationSet.t
 
-    let create f enum =
-      enum
-      |> Enum.map f
-      |> of_enum
+  include Graph.Sig.P with type V.t = Location.t
+    and type V.label = Location.t
+      and type E.t = Location.t * TransitionLabel.t * Location.t
+      and type E.label = TransitionLabel.t
 
-    let locations t =
-      fold (fun (l,_,l') set -> LocationSet.add l set |> LocationSet.add l') t (LocationSet.empty)
+  (** Creates a transition graph from an enum of transitions. *)
+  val mk : Transition.t Enum.t -> t 
 
-  end
+  (** Adds all locations from an enum to a transtion graph. *)
+  val add_locations : Location.t Enum.t -> t -> t
 
+  (** Adds all transitions from an enum to a transtion graph. Implicitly adds locations when they do not exit. *)
+  val add_transitions : Transition.t Enum.t -> t -> t
 
+  (** Returns the set of locations. *)
+  val locations : t -> LocationSet. t
 
-module TransitionGraph =
-  struct
-    include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_same end)
+  (** Returns the set of transitions. *)
+  val transitions : t -> TransitionSet.t
 
-    let locations graph =
-      fold_vertex LocationSet.add graph LocationSet.empty
+  (** Returns the set of transitions consisting of transitions which are in the program graph and where both source and target location are part of the given location list. *)
+  val loc_transitions : t -> Location.t list -> TransitionSet.t
 
-    let transitions graph =
-      fold_edges_e TransitionSet.add graph TransitionSet.empty
+  (** Checks fore equivalence TODO: lies everywhere...*)
+  val equivalent : t -> t -> bool
 
-    let loc_transitions graph locations =
-      transitions graph
-      |> TransitionSet.filter (fun (l,_,l') ->
-             List.mem_cmp Location.compare l locations
-             && List.mem_cmp Location.compare l' locations)
+  (** Replaces the first edge by the second edge. *)
+  val replace_edge_e : Transition.t -> Transition.t -> t -> t
 
-    module Equivalence_TransitionSet = Set.Make(struct include Transition let compare = Transition.compare_equivalent end)
+  (** Adds the invariant to the location of the graph. *)
+  val add_invariant : Location.t -> Constraint.t -> t -> t
+end
 
-    let equivalent graph1 graph2 =
-      LocationSet.equal (locations graph1) (locations graph2)
-      && Equivalence_TransitionSet.equal (graph1 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
-           (graph2 |> transitions |> TransitionSet.enum |> Equivalence_TransitionSet.of_enum)
+module type Program = sig 
+  (* module Location : Location *)
+  type location
+  module Transition : Transition with type location = location
+  module LocationSet: Set.S with type elt = location
+  module TransitionSet : TransitionSet
+    with type elt = Transition.t 
+    and type locationSet = LocationSet.t
+  module TransitionGraph : TransitionGraph 
+    with type Location.t = location
+    and type LocationSet.t = LocationSet.t
+    and type Transition.t = Transition.t
+    and type TransitionSet.t = TransitionSet.t
+    and type TransitionSet.locationSet = LocationSet.t
 
-    let replace_edge_e old_transition new_transition graph =
-      add_edge_e (remove_edge_e graph old_transition) new_transition
+  (** Type of a program consisting of a program graph and a start location. *)
+  type t
 
-    let add_invariant location invariant graph =
-      location
-      |> succ_e graph (* An invariant holds before the execution of the successor transitions *)
-      |> List.fold_left (fun result transition ->
-             replace_edge_e transition (Transition.add_invariant invariant transition) result
-           ) graph
+  (** Removes the location from the program and all edges to it. *)
+  val remove_location : t -> location -> t
 
-  end
+  (** Removes a transition from a program. *)
+  val remove_transition : t -> Transition.t -> t
 
-module TransitionGraphWeight(Value : PolyTypes.Ring) =
-  struct
-    type t = Value.t
-    type edge = TransitionGraph.E.t
-    let weight (x : edge) = Value.one
-    let compare x y = 0
-    let add x y = Value.add x y
-    let zero = Value.zero
-  end
+  (* Removes the transitions from a certain transitionset to a program *)
+  val remove_TransitionSet: TransitionSet.t -> t -> t
+
+  (** TODO doc *)
+  val map_graph : (TransitionGraph.t -> TransitionGraph.t) -> t -> t
+
+  (** Creates a program from a list of transitions and a (start) location. A list of k transitions makes up a Com_k transition *)
+  val from : Transition.t list list -> location -> t
+
+  (** Returns transition graph of a program. *)
+  val graph : t -> TransitionGraph.t
+
+  (** Adds the invariant to a location of the program. *)
+  val add_invariant : location -> Constraint.t -> t -> t
+
+  (** Tries to simplify the guard of all transitions by invoking the SMT Solver *)
+  val simplify_all_guards : t -> t
+
+  (** Returns a set of all transitions which occur directly before the given transition in the graph.
+      Corresponds to pre(t).
+      Note that the computation involves calls to the SMT solver and is therefore expensive.
+      The returned Enum is lazy. *)
+  val pre : t -> Transition.t -> Transition.t Enum.t
+
+  (** A cached version of pre. The identifier for the cache is the transition id (the program is not considered) *)
+  val pre_transitionset_cached: t -> Transition.t -> TransitionSet.t
+  (** Reset the cache for pre_cached *)
+  val reset_pre_cache: unit -> unit
+
+  (** Returns true if the given transition is an initial transition. *)
+  val is_initial : t -> Transition.t -> bool
+
+  (** Returns true if the given transition is an initial transition. *)
+  val is_initial_location : t -> location -> bool
+
+  (** Returns true if the program graphs are equivalent and both start locations are equal. *)
+  val equivalent : t -> t -> bool
+
+  (** Returns a formatted string representing the program. *)
+  val to_formatted_string: ?pretty:bool -> t -> FormattedString.t
+
+  (** Returns a string representing the program. *)
+  val to_string : t -> string
+
+  (** Returns a string representing the program that can be dumped to a KoAT input file. *)
+  val to_file : t -> string
+
+  (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns a string representation of a program from such an input. *)
+  val to_simple_string : t -> string
+
+  (** Returns all variables of the program. *)
+  val vars : t -> VarSet.t
+
+  (** Returns all input variables of the program. *)
+  val input_vars : t -> VarSet.t
+
+  (** Returns the number of variables. *)
+  val cardinal_vars : t -> int
+
+  (** Returns all locations which occur in the transitions, but each location only once. *)
+  val locations : t -> LocationSet.t
+
+  (** Returns a set of all transitions which occur in the program graph of the program. *)
+  val transitions : t -> TransitionSet.t
+
+  (** Returns start location. *)
+  val start : t -> location
+
+  (** Returns the (biggest) strongly connected components of the transiton graph. *)
+  val sccs : t -> TransitionSet.t Enum.t
+
+  (** Returns the number of transition involved in a scc. *)
+  val cardinal_trans_scc : t -> int
+
+  (** Returns all transitions which are parallel to a given transition. Thus, all transitions start in the same location and end in the same location. *)
+  val parallelTransitions : t -> Transition.t -> TransitionSet.t
+
+  (** Returns all transitions, that belong to an SCC. *)
+  val non_trivial_transitions : t -> TransitionSet.t
+
+  (** Creates a file (if it does not already exist) and writes the program into it. *)
+  val to_file : t -> string -> unit
+
+  (** Computes all entry transitions of the given transitions.
+      These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
+  val entry_transitions : Batteries.Logger.log -> t -> Transition.t list -> Transition.t Batteries.List.t
+
+  (** Computes all outgoing transitions of the given transitions.
+      These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
+  val outgoing_transitions : Batteries.Logger.log -> t -> Transition.t list -> Transition.t Batteries.List.t
+end

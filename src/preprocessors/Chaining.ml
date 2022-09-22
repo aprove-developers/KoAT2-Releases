@@ -1,6 +1,6 @@
 (** Implemenation of a preprocessor which performs chaining on the TransitionGraph. *)
 open Batteries
-open ProgramTypes
+open Program
 
 (** Implemenation of a preprocessor which performs chaining on the TransitionGraph. Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location, making the location obsolete. *)
 
@@ -21,7 +21,7 @@ let skip_location location graph =
                       Transition.to_id_string_pretty (l'1,t',l')^" to "^Transition.to_id_string_pretty chained);
         chained
      )
-  |> (flip Program.add_transitions) graph
+  |> (flip TransitionGraph.add_transitions) graph
 
 (** Returns true if the specific location is chainable in the graph. *)
 let chainable graph location : bool =

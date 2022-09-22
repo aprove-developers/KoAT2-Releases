@@ -2,12 +2,21 @@ open Batteries
 open Polynomials
 open Atoms
 open Constraints
-open ProgramTypes
+open Program
 open Formulas
 open ApproximationModules
 open BoundsInst
 
 exception CFRefinementCRASH
+
+module TransitionGraphWeight(Value : PolyTypes.Ring) = struct
+    type t = Value.t
+    type edge = TransitionGraph.E.t
+    let weight (x : edge) = Value.one
+    let compare x y = 0
+    let add x y = Value.add x y
+    let zero = Value.zero
+  end
 
 module DjikstraTransitionGraph = Graph.Path.Dijkstra(TransitionGraph)(TransitionGraphWeight(OurInt))
 
@@ -104,7 +113,7 @@ let minimalSCCs (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
 
 
 (* Merges non-disjoint SCCS *)
-let minimalDisjointSCCs (original_sccs: ProgramTypes.TransitionSet.t list) =
+let minimalDisjointSCCs (original_sccs: TransitionSet.t list) =
   original_sccs
   |> List.map (fun original_scc ->
           original_scc

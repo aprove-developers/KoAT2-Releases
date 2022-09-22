@@ -1,6 +1,6 @@
 (** Implemenation of a preprocessor which normalises updates. *)
 open Batteries
-open ProgramTypes
+open Program
 
 (** This preprocessor fills up all transitions Arg_1,...,Arg_i -> u(Arg_1),...,u(Arg_j) to Arg_1,...,Arg_n -> u(Arg_1),...,u(Arg_n)*)
 

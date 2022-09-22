@@ -1,5 +1,5 @@
 (** Module provides methods to print a program or a result variable graph to png file. *)
-open ProgramTypes
+open Program
 open RVGTypes
 
 let print_graph ~format out_dir name graph output_graph =
