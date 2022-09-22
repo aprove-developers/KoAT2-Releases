@@ -29,7 +29,8 @@ let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
   |> Bound.show_complexity_termcomp
   |> print_endline
 
-type local = [`MPRF | `TWN]
+(** TWN for no transformations, TWNTransform for both techniques, TWNTransformJordan to transform only with jordan normal form, TWNTransformGeneral to transform only with the general approach *)
+type local = [`MPRF | `TWN | `TWNTransform | `TWNTransformJordan | `TWNTransformGeneral]
 type cfr = [`PartialEvaluation | `Chaining]
 
 (** The shell arguments which can be defined in the console. *)
@@ -79,7 +80,7 @@ type params = {
     preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
 
-    local : local list; [@enum [("mprf", `MPRF); ("twn", `TWN)]] [@default [`MPRF]] [@sep ',']
+    local : local list; [@enum [("mprf", `MPRF); ("twn", `TWN);("twn-transform", `TWNTransform);("twn-transform-jordan", `TWNTransformJordan);("twn-transform-general", `TWNTransformGeneral)]] [@default [`MPRF]] [@sep ',']
     (** Choose methods to compute local runtime-bounds: mprf, twn *)
 
     rename : bool; [@default false]

@@ -474,13 +474,15 @@ let transform_with_aut transition automorphism vars =
                           |> (flip TWNLoop.add_invariant) updated_invariant )
 
 
-let transform_linearly (transition: TWNLoop.t) = 
+let transform_linearly (transition: TWNLoop.t) transformation_type = 
   (* find order for variables and independent blocks and sort them for elegant code when updating transition*)
   match (check_solvable transition) with
     | None -> None
     | Some x -> let blocks = change_order transition x in
   if List.length blocks == List.length (VarSet.to_list (TWNLoop.vars transition)) then
       Some (transition, Automorphism.identity_aut) (*loop already is in twn form*)
+  else if transformation_type != `TWNTransformJordan  && transformation_type != `TWNTransform  then 
+    None 
   else
   
     let concat_blocks = List.concat blocks in
@@ -516,12 +518,15 @@ let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) =
   with | Stack_overflow -> None 
 
 
-let transform ((entry, t):ProgramTypes.Transition.t * TWNLoop.t) =
-   match (transform_linearly t) with
+let transform transformation_type ((entry, t):ProgramTypes.Transition.t * TWNLoop.t)  =
+   match (transform_linearly t transformation_type) with
   | Some (transformed, automorphism) -> Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)(*TODO find target *)
-  | None -> match (transform_non_linearly t) with
-          | Some (transformed, automorphism) -> Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)
-          | None -> None
+  | None -> if transformation_type ==  `TWNTransformGeneral || transformation_type ==  `TWNTransform then 
+              match (transform_non_linearly t) with
+                    | Some (transformed, automorphism) -> Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)
+                    | None -> None
+            else 
+              None 
 
 let to_string arg =
   if Option.is_some arg then
@@ -543,7 +548,7 @@ let lift_option (xs:'a option list) : 'a list option =
   else
     None
 
-let find_cycle appr program (cycles: path list) =
+let find_cycle appr program (cycles: path list) transformation_type =
   List.find_map (fun cycle ->
     (* list of all transitions in a cycle, twnloop doesn't require each transition to be in twn form, but together they do *)
       let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
@@ -597,7 +602,7 @@ let find_cycle appr program (cycles: path list) =
           && (Approximation.is_time_bounded appr) entry)
         entries_twn_loops
       ) then (
-        lift_option @@ List.map transform entries_twn_loops)
+        lift_option @@ List.map (transform transformation_type) entries_twn_loops)
          (*let res = lift_option @@ List.map transform (List.combine entries twn_loops) in
          match res with
          | None -> None
@@ -657,7 +662,7 @@ let test_for_time vars degree =
                     degree
 
 
-let time_bound (l,transition,l') scc program appr = (
+let time_bound (l,transition,l') scc program appr transformation_type = (
   (*Printf.printf " 682 : %s \n" @@ TransitionLabel.to_string transition;
   Printf.printf " 683 : %s \n" @@ to_string @@ check_solvable_t transition;
   Printf.printf " 684 : %s \n" @@ Location.to_string l;
@@ -842,9 +847,18 @@ let time_bound (l,transition,l') scc program appr = (
 
   Temp_int ? debug6 in funktion get_linear_update_of_variable, da hat eine variable kein update?
 
-  TODO 8.1.8 mit algorithmus abschreiben,cython (nur das starten geht schneller), beispiele, kreis
+  ./Eval_Changes/Main_static countResults results/59f9d9e/koat2_its.csv
 
-  parameter polynome, nach x umformen lassen, den koeffizienten= 1 setzen
+  Was ist hier cits, das scheint mehr zu sein
+  warum hat cofloco nur eine_c evaluation
+  warum 
+  evaluation fehlt, daher conclusion ein wichtiger absatz und auch abstract, koat2 mit allem hat kein csv file fuer c
+  2 proofs fehlen auch
+  twn loops komisch erklärt
+  mathematical backround 
+
+
+  TODO 8.1.8 mit algorithmus 
 
   *)
   (*print_string "764";
@@ -878,7 +892,7 @@ let time_bound (l,transition,l') scc program appr = (
             let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs transition) (TWNLoop.update_to_string_rhs loop) in
             [[List.find f parallel_edges]]
           else
-            (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition transition),l')], (LocationSet.singleton l'))]) [])) )
+            (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition transition),l')], (LocationSet.singleton l'))]) [])) transformation_type)
                   ([],[],[])
         in
         let handled_transitions = ListMonad.(cycle >>= fun (l,twn,l') -> TWNLoop.subsumed_transitions l l' twn) in
