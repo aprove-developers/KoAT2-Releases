@@ -1,4 +1,4 @@
-open Polynomials 
+open Polynomials
 
 module TransitionGraphWeight(Value : PolyTypes.Ring) = struct
     type t = Value.t

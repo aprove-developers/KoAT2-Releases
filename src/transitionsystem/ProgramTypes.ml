@@ -96,12 +96,12 @@ end
 (** This module represents a transition graph. *)
 module type TransitionGraph = sig
   module Location: Location
-  module Transition: Transition 
+  module Transition: Transition
     with type location = Location.t
     and type t = Location.t * TransitionLabel.t * Location.t
   module LocationSet: Set.S with type elt = Location.t
-  module TransitionSet : TransitionSet 
-    with type elt = Transition.t 
+  module TransitionSet : TransitionSet
+    with type elt = Transition.t
     and type locationSet = LocationSet.t
 
   include Graph.Sig.P with type V.t = Location.t
@@ -110,7 +110,7 @@ module type TransitionGraph = sig
       and type E.label = TransitionLabel.t
 
   (** Creates a transition graph from an enum of transitions. *)
-  val mk : Transition.t Enum.t -> t 
+  val mk : Transition.t Enum.t -> t
 
   (** Adds all locations from an enum to a transtion graph. *)
   val add_locations : Location.t Enum.t -> t -> t
@@ -137,15 +137,15 @@ module type TransitionGraph = sig
   val add_invariant : Location.t -> Constraint.t -> t -> t
 end
 
-module type Program = sig 
+module type Program = sig
   (* module Location : Location *)
   type location
   module Transition : Transition with type location = location
   module LocationSet: Set.S with type elt = location
   module TransitionSet : TransitionSet
-    with type elt = Transition.t 
+    with type elt = Transition.t
     and type locationSet = LocationSet.t
-  module TransitionGraph : TransitionGraph 
+  module TransitionGraph : TransitionGraph
     with type Location.t = location
     and type LocationSet.t = LocationSet.t
     and type Transition.t = Transition.t
