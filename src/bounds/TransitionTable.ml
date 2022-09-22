@@ -1,3 +1,3 @@
-open ProgramTypes
+open Program
 
 include Hashtbl.Make (struct include Transition let equal = Transition.same end)

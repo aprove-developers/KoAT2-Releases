@@ -3,7 +3,7 @@ open Formulas
 open Constraints
 open Atoms
 open Polynomials
-open ProgramTypes
+open Program
 open BoundsInst
 
 (** Class is derived from RankingFunction.ml*)
@@ -118,7 +118,7 @@ let polyList_to_string ?(pretty=false) ((rank: (Location.t -> 'a) list) , (l : L
   |> Util.enum_to_string (fun p -> (if pretty then Polynomial.to_string_pretty else Polynomial.to_string) (p l))
 
 let only_rank_to_string {rank; decreasing; non_increasing; depth} =
-  let locations = non_increasing |> TransitionSet.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
+  let locations = non_increasing |> TransitionSet.locations |> LocationSet.to_list in
   rank_to_string locations polyList_to_string rank
 
 let to_string {rank; decreasing; non_increasing; depth} =
@@ -129,7 +129,7 @@ let add_to_proof {rank; decreasing; non_increasing; depth} bound program =
     TransitionSet.fold (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) non_increasing GraphPrint.TransitionMap.empty
     |> GraphPrint.TransitionMap.add decreasing GraphPrint.Red
   in
-  let locations = non_increasing |> TransitionSet.enum |> Program.locations |> List.of_enum |> List.unique ~eq:Location.equal in
+  let locations = non_increasing |> TransitionSet.locations |> LocationSet.to_list in
   ProofOutput.add_to_proof_with_format @@ FormattedString.(fun format ->
     mk_header_small (mk_str ("MPRF for transition " ^ Transition.to_string_pretty decreasing ^ " of depth " ^ string_of_int depth ^ ":")) <>
     mk_paragraph (

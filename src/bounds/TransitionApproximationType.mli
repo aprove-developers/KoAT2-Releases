@@ -1,6 +1,6 @@
 open Batteries
 open BoundsInst
-open ProgramTypes
+open Program
 (** Abstracts TransitionApproximation so that it can be used to handle normal transitions with integer bounds and general
  * transitions with real bounds*)
 module Make_TransitionApproximation :

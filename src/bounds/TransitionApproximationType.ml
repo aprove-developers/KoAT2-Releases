@@ -1,5 +1,5 @@
 open Batteries
-open ProgramTypes
+open Program 
 
 module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
                                     (Poly :

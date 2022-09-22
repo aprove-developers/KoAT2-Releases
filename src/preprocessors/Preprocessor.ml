@@ -1,4 +1,5 @@
 open Batteries
+open Program
 
 let logger = Logging.(get Preprocessor)
 
@@ -27,9 +28,9 @@ let affects = function
 let normalise_temp_vars program =
   let temp_vars = LazyList.from (Var.fresh_id Var.Int) in
   Program.map_graph (fun graph ->
-    let trans = ProgramTypes.TransitionGraph.transitions graph in
-    ProgramTypes.TransitionSet.fold
-      (fun (l,t,l') -> ProgramTypes.TransitionGraph.replace_edge_e (l,t,l') (l,TransitionLabel.rename_temp_vars t temp_vars,l'))
+    let trans = TransitionGraph.transitions graph in
+    TransitionSet.fold
+      (fun (l,t,l') -> TransitionGraph.replace_edge_e (l,t,l') (l,TransitionLabel.rename_temp_vars t temp_vars,l'))
       trans graph
   ) program
 

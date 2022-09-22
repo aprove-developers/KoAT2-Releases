@@ -1,13 +1,11 @@
 (** Implemenation of a preprocessor which removes all unreachable locations. *)
 open Batteries
-open ProgramTypes
+open Program
 
 (** This preprocessor cuts all unreachable locations (and all transitions connected to them) from the program. *)
 
 (** Logger Preprocessor *)
 let logger = Logging.(get Preprocessor)
-
-module LocationSet = Set.Make(Location)
 
 (** Returns a set of all locations which are reachable from the given start location. *)
 let reachable_locations graph start : LocationSet.t  =

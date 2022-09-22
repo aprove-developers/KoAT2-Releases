@@ -46,7 +46,7 @@
   open Atoms
   open Polynomials
   open Formulas
-  open ProgramTypes
+  open Program
   open BoundsInst
 %}
 

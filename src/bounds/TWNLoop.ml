@@ -1,6 +1,6 @@
 open Batteries
 open Polynomials
-open ProgramTypes
+open Program
 open Atoms
 
 module Guard = Formulas.Formula

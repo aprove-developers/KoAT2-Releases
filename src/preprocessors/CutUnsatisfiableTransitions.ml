@@ -1,7 +1,7 @@
 (** Implemenation of a preprocessor which removes all unsatisfiable transitions. *)
 open Batteries
 open Formulas
-open ProgramTypes
+open Program
 
 (** This preprocessor removes all unsatisfiable transitions from the graph.
     Those transitions can never be part of an evaluation.
