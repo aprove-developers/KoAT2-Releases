@@ -393,8 +393,8 @@ module type Polynomial =
 
     (** Creates a polynomial from a coefficient list and a corresponding variable list. *)
     val of_coeff_list : value list -> Var.t list -> t
-    
-    val of_coeffs_list_univariate : Var.t -> value list -> t    
+
+    val of_coeffs_list_univariate : Var.t -> value list -> t
 
     (** {1 {L Following methods return information over the polynomial.}} *)
 

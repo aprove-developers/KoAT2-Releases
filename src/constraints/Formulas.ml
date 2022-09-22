@@ -109,8 +109,8 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
 
     let to_string_formatted = function
       | [] -> FormattedString.Empty
-      | x::xs -> 
-        (C.to_string ~pretty:true x)::(List.map (((^) " ∨ ") % C.to_string ~pretty:true) xs) 
+      | x::xs ->
+        (C.to_string ~pretty:true x)::(List.map (((^) " ∨ ") % C.to_string ~pretty:true) xs)
         |> List.map FormattedString.mk_str_line
         |> List.reduce FormattedString.(<>)
 
@@ -124,7 +124,7 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
 
     let is_true = List.for_all C.is_true
 
-    let atoms = List.concat % List.map C.atom_list 
+    let atoms = List.concat % List.map C.atom_list
   end
 
 module Formula =
@@ -136,8 +136,8 @@ module Formula =
       |> List.map Constraint.max_of_occurring_constants
       |> List.fold_left OurInt.add OurInt.one
 
-    let simplify = 
-      (List.unique ~eq:Constraint.equal) % (List.map Constraint.simplify) 
+    let simplify =
+      (List.unique ~eq:Constraint.equal) % (List.map Constraint.simplify)
 
   end
 

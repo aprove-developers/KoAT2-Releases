@@ -44,7 +44,7 @@ let to_string ?(pretty = false) ?(to_file = false) =
     | Helper (Real,i) -> "TempReal" ^ (String.of_int i)
     | Helper (Int,i) -> "TempInt" ^ (String.of_int i)
     | Argument i -> "Arg" ^ (String.of_int i)
-  else if pretty then 
+  else if pretty then
   function
     | Var str -> str
     | Helper (Real,i) -> "Temp_Real" ^ (Util.natural_to_subscript i)

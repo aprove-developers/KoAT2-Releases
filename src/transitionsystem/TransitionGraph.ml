@@ -4,7 +4,7 @@ module TransitionGraphOver(L : ProgramTypes.Location) = struct
   module Location = L
   module LocationSet = Set.Make(Location)
   module Transition = Transition.TransitionOver(Location)
-  module TransitionSet = struct 
+  module TransitionSet = struct
     include Set.Make(struct include Transition let compare = Transition.compare_same end)
     type locationSet = LocationSet.t
     let to_id_string = Util.enum_to_string Transition.to_id_string % enum
@@ -27,7 +27,7 @@ module TransitionGraphOver(L : ProgramTypes.Location) = struct
 
   include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_same end)
 
-  let add_locations locations graph = Enum.fold add_vertex graph locations 
+  let add_locations locations graph = Enum.fold add_vertex graph locations
 
   let add_transitions transitions graph = Enum.fold add_edge_e graph transitions
 

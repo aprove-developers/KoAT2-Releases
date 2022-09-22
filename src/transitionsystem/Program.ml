@@ -5,7 +5,7 @@ open Util
 
 exception RecursionNotSupported
 
-module ProgramOver(L: ProgramTypes.Location) = struct 
+module ProgramOver(L: ProgramTypes.Location) = struct
   type location = L.t
   module TransitionGraph = TransitionGraph.TransitionGraphOver(L)
   module LocationSet = TransitionGraph.LocationSet
