@@ -172,16 +172,16 @@ module type Constraint =
         (** Creates a constraint that expresses the equality of the two polynomials. *)
         val mk_eq : polynomial -> polynomial -> t
 
-        (** Creates a constraint that expresses for two polynomials {i p} and {i q} the comparision {i p > q}. *)
+        (** Creates a constraint that expresses for two polynomials {i p} and {i q} the comparison {i p > q}. *)
         val mk_gt : polynomial -> polynomial -> t
 
-        (** Creates a constraint that expresses for two polynomials {i p} and {i q} the comparision {i p >= q}. *)
+        (** Creates a constraint that expresses for two polynomials {i p} and {i q} the comparison {i p >= q}. *)
         val mk_ge : polynomial -> polynomial -> t
 
-        (** Creates a constraint that expresses for two polynomials {i p} and {i q} the comparision {i p < q}. *)
+        (** Creates a constraint that expresses for two polynomials {i p} and {i q} the comparison {i p < q}. *)
         val mk_lt : polynomial -> polynomial -> t
 
-        (** Creates a constraint that expresses for two polynomials {i p} and {i q} the comparision {i p <= q}. *)
+        (** Creates a constraint that expresses for two polynomials {i p} and {i q} the comparison {i p <= q}. *)
         val mk_le : polynomial -> polynomial -> t
 
         module Infix : sig
@@ -304,16 +304,16 @@ module type Formula =
         (** Creates a formula that expresses the equality of the two polynomials. *)
         val mk_eq : polynomial -> polynomial -> t
 
-        (** Creates a formula that expresses for two polynomials {i p} and {i q} the comparision {i p > q}. *)
+        (** Creates a formula that expresses for two polynomials {i p} and {i q} the comparison {i p > q}. *)
         val mk_gt : polynomial -> polynomial -> t
 
-        (** Creates a formula that expresses for two polynomials {i p} and {i q} the comparision {i p >= q}. *)
+        (** Creates a formula that expresses for two polynomials {i p} and {i q} the comparison {i p >= q}. *)
         val mk_ge : polynomial -> polynomial -> t
 
-        (** Creates a formula that expresses for two polynomials {i p} and {i q} the comparision {i p < q}. *)
+        (** Creates a formula that expresses for two polynomials {i p} and {i q} the comparison {i p < q}. *)
         val mk_lt : polynomial -> polynomial -> t
 
-        (** Creates a formula that expresses for two polynomials {i p} and {i q} the comparision {i p <= q}. *)
+        (** Creates a formula that expresses for two polynomials {i p} and {i q} the comparison {i p <= q}. *)
         val mk_le : polynomial -> polynomial -> t
 
         (** Creates a formula that expresses the unequality of the two polynomials. *)
