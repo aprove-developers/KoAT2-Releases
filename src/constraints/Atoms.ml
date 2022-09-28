@@ -108,8 +108,6 @@ struct
     let is_lt (_, comp) = match comp with
       | LT -> true
       | _ -> false
-
-
 end
 
 module Atom =
@@ -117,10 +115,11 @@ module Atom =
     include AtomOver(Polynomial)
 
     let to_string ?(to_file=false) ?(pretty=false) (poly,comp) =
-      Polynomial.separate_by_sign poly
-      |> (fun (positive, negative) -> (if to_file then (Polynomial.to_string_to_file positive) else if pretty then Polynomial.to_string_pretty positive else (Polynomial.to_string positive)) ^
-                                      (comp_to_string comp ~pretty) ^
-                                      (if to_file then (Polynomial.to_string_to_file (Polynomial.neg negative)) else if pretty then Polynomial.to_string_pretty (Polynomial.neg negative) else  (Polynomial.to_string (Polynomial.neg negative))))
+      let poly_print = if to_file then Polynomial.to_string_to_file
+                  else if pretty then Polynomial.to_string_pretty
+                  else Polynomial.to_string
+      in Polynomial.separate_by_sign poly
+      |> (fun (positive, negative) -> poly_print positive ^ comp_to_string comp ~pretty ^ poly_print (Polynomial.neg negative))
 
     let max_of_occurring_constants (poly,_) =
       Polynomial.max_of_occurring_constants poly
@@ -155,8 +154,11 @@ module RealAtom =
     include AtomOver(RealPolynomial)
 
     let to_string ?(to_file=false) ?(pretty=false) (poly,comp) =
-      RealPolynomial.separate_by_sign poly
-      |> (fun (positive, negative) -> RealPolynomial.to_string positive ^ (comp_to_string comp) ^ RealPolynomial.to_string (RealPolynomial.neg negative))
+      let poly_print = if to_file then RealPolynomial.to_string_to_file
+                  else if pretty then RealPolynomial.to_string_pretty
+                  else RealPolynomial.to_string
+      in RealPolynomial.separate_by_sign poly
+      |> (fun (positive, negative) -> poly_print positive ^ comp_to_string comp ~pretty ^ poly_print (RealPolynomial.neg negative))
 
     let max_of_occurring_constants (poly,_) =
       RealPolynomial.max_of_occurring_constants poly
