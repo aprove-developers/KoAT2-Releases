@@ -48,6 +48,8 @@ module TransitionOver(L : ProgramTypes.Location) = struct
 
   let id = TransitionLabel.id % label
 
+  let map_label f (l,label,l') = l, f label, l'
+
   (* let compare_same trans1 trans2 =
     Int.compare (id trans1) (id trans2)  *)
 

@@ -55,6 +55,9 @@ module type Transition = sig
   (** Returns the label of a transition. *)
   val label : t -> TransitionLabel.t
 
+  (** Apply a function to a transitions label *)
+  val map_label: (TransitionLabel.t -> TransitionLabel.t) -> t -> t
+
   (** Returns the target location of a transition. *)
   val target : t -> location
 
