@@ -46,17 +46,18 @@ let suite =
       );
       (
         "sizebound_local" >::: (
+          let arg0 = LazyList.hd Var.args in
           [
-            ("l1", "l2", "A", "A");
+            ("l1", "l2", arg0, Bound.of_var arg0);
             (* TODO We have to redefine good bounds here: ("l1", "l1", "A", "A-1"); *)
           ]
         |> List.map (fun (l,l',var,bound) ->
-               "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ var ^ " is " ^ bound ^ "?" >:: (fun _ ->
+               "Bound from " ^ l ^ " to " ^ l' ^ " for var " ^ Var.to_string var ^ " is " ^ Bound.to_string bound ^ "?" >:: (fun _ ->
                        let program = Readers.read_file "../../../examples/KoAT-2013/sect1-lin.koat" in
                        let t = TransitionGraph.find_edge (Program.graph program) (Location.of_string l) (Location.of_string l') in
                        TransitionLabel.(assert_equal_bound
-                                                  (Bound.of_poly (Readers.read_polynomial bound))
-                                                  LocalSizeBound.(sizebound_local program t (Var.of_string var) |> option_lsb_as_bound)
+                                                  bound
+                                                  LocalSizeBound.(sizebound_local program t var |> option_lsb_as_bound)
                        )
                      )
              )
@@ -72,4 +73,20 @@ let suite =
           |> ignore
         )
       );
+      "ParseEdgeCases" >:::
+        [
+          (
+            let program_str =
+              "(GOAL COMPLEXITY)\n(STARTTERM (FUNCTIONSYMBOLS f0))\n(VAR A)\n(RULES f0(X,A)->f1(A,A))"
+            in
+            let prog = Readers.read_program program_str in
+            program_str >:: (fun _ ->
+              TransitionSet.any (Program.transitions prog)
+              |> TransitionLabel.update_map % Transition.label
+              |> TransitionLabel.VarMap.for_all
+                  (fun _ u -> Polynomials.Polynomial.(equal (of_var @@ Var.of_string "Arg_1") u))
+              |> assert_bool "Wrongly parsed update"
+            )
+          )
+        ]
     ]

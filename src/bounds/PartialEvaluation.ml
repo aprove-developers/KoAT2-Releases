@@ -249,7 +249,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
           |> restore_invariants merged_program
           |> rename_entry_transition entry_locations initial_location
           |> TransitionSet.filter (fun (l,_,_) -> not (BatString.equal ("n_" ^ (Location.to_string initial_location)) (Location.to_string l)))
-          |> TransitionSet.map (fun t -> Transition.rename2 map t) in
+          |> TransitionSet.map (fun t -> Transition.rename map t) in
 
           let removable_loc =
             let locations = List.fold_right (fun (l,_,l') locations -> locations |> LocationSet.add l |> LocationSet.add l') scc_list LocationSet.empty in

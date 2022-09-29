@@ -67,10 +67,7 @@ module type Transition = sig
   (** Adds the invariant to this transition. *)
   val add_invariant : Constraint.t -> t -> t
 
-  (** TODO doc *)
-  val rename : Var.t list -> t -> t
-
-  val rename2 : RenameMap.t -> t -> t
+  val rename : RenameMap.t -> t -> t
 end
 
 module type TransitionSet = sig
