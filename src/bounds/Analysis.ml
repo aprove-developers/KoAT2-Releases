@@ -166,12 +166,12 @@ let local_rank (scc: TransitionSet.t) measure program max_depth appr =
     |> MaybeChanged.fold_enum (fun appr -> improve_with_rank_mprf measure program appr) appr
 
 let lwt_parallel ~local (scc: TransitionSet.t) measure program max_depth appr =
-  if List.is_empty local || (List.mem `MPRF local && List.length local == 1) then
+  if List.is_empty local || (List.mem `MPRF local && List.mem `TWN local |> not) then
     local_rank scc measure program max_depth appr
-  else if (List.mem `TWN local && List.length local == 1) then
+  else if List.mem `MPRF local |> not && List.mem `TWN local then
     improve_with_twn program scc measure appr
   else
-      MaybeChanged.(local_rank scc measure program max_depth appr >>= improve_with_twn program scc measure)
+    MaybeChanged.(local_rank scc measure program max_depth appr >>= improve_with_twn program scc measure)
 
 let improve_timebound ?(mprf_max_depth = 1) ~local (scc: TransitionSet.t) measure program appr =
     let execute () = lwt_parallel ~local scc measure program mprf_max_depth appr in
