@@ -369,13 +369,6 @@ let input_size t =
   |> VarSet.cardinal
 
 
-(** Whenever this function is invoked it is ensured that there are enough standard variables  *)
-let standard_renaming standard_vars t =
-  standard_vars
-  |> List.take (input_size t)
-  |> List.combine ((VarSet.elements % input_vars) t)
-  |> RenameMap.from
-
 let rename_update update rename_map =
   update
   |> VarMap.enum
