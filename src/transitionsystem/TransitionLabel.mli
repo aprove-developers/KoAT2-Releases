@@ -125,6 +125,9 @@ val cost_to_string : ?to_file:bool -> t -> string
 (** Returns a string representing the id of the label. *)
 val to_id_string : t -> string
 
+(** The call {i fill_up_arg_vars_up_to_num n} adds trivial updates for the first {i n}, i.e. Arg_0, .., Arg_n-1 arguments that are not contained in the labels update map *)
+val fill_up_arg_vars_up_to_num: int -> t -> t
+
 (** TODO doc *)
 val rename : RenameMap.t -> t -> t
 

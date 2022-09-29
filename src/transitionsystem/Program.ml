@@ -69,16 +69,20 @@ module ProgramOver(L: ProgramTypes.Location) = struct
         com_transitions
     in
     if List.exists (not % Int.equal 1 % List.length) cleaned_com_k_transitions then raise RecursionNotSupported else
-      cleaned_com_k_transitions
-      |> List.flatten
-      |> fun transitions ->
-         if transitions |> List.map Transition.target |> List.mem_cmp L.compare start then
-           raise (Failure "Transition leading back to the initial location.")
-         else
-           {
-             graph = TransitionGraph.mk(List.enum transitions);
-             start = start;
-           }
+      let transs =
+        let all = List.flatten cleaned_com_k_transitions in
+        let num_arg_vars =
+          List.max @@ List.map (TransitionLabel.input_size % Transition.label) all
+        in
+        List.map (Transition.map_label (TransitionLabel.fill_up_arg_vars_up_to_num num_arg_vars)) all
+      in
+      if transs |> List.map Transition.target |> List.mem_cmp L.compare start then
+        raise (Failure "Transition leading back to the initial location.")
+      else
+        {
+          graph = TransitionGraph.mk (List.enum transs);
+          start = start;
+        }
 
 
   let transitions =
