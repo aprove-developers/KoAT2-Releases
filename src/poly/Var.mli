@@ -33,6 +33,9 @@ val of_string : string -> t
  (** Returns a string representing the variable([Temp_Int_] for integer variables, [Temp_Real_] for real variables and [Arg_ ] for argument variables). Parameter {i to_file} is used to get a representation with less special characters. *)
 val to_string : ?pretty:bool -> ?to_file:bool -> t -> Batteries.String.t
 
+(** An (infinite) list of all possible argument variables *)
+val args: t LazyList.t
+
 (** Returns a not yet used id, which is guaranteed to be distinct from any yet existing ids. *)
 val fresh_id : sort -> unit -> t
 
@@ -41,9 +44,6 @@ val fresh_ids : sort -> int -> t Enum.t
 
 (** Returns a bunch of fresh ids. *)
 val fresh_id_list : sort -> int -> t list
-
-(** Returns a bunch of fresh arg ids. *)
-val fresh_arg_list : int -> t list
 
 (** Returns true if variable has type [Helper]. *)
 val is_helper : t -> bool

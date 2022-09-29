@@ -126,12 +126,10 @@ val cost_to_string : ?to_file:bool -> t -> string
 val to_id_string : t -> string
 
 (** TODO doc *)
-val rename : Var.t list -> t -> t
+val rename : RenameMap.t -> t -> t
 
 (** Rename temporary variables to identifiers provided by the (possibly infinite) lazy list *)
 val rename_temp_vars : t -> Var.t LazyList.t -> t
-
-val rename2 : RenameMap.t -> t -> t
 
 val remove_non_contributors : VarSet.t -> t -> t
 

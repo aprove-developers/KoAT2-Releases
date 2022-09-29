@@ -62,26 +62,20 @@ let counter = ref 0
 (* We have special variables which are arguments of the transition system. Counting starts with 0 to be with KoAT *)
 let arg_counter = ref (-1)
 
+let args =
+  LazyList.seq 0 (fun x -> x+1) (const true)
+  |> LazyList.map (fun i -> Argument i)
+
 (* TODO Use unique from batteries because of thread safety *)
 let fresh_id domain () =
   incr counter;
   Helper (domain, !counter)
 
-let fresh_arg () =
-  incr arg_counter;
-  Argument !arg_counter
-
 let fresh_ids domain n =
   Enum.take n (Enum.from (fresh_id domain))
 
-let fresh_args n =
-  Enum.take n (Enum.from (fresh_arg))
-
 let fresh_id_list domain n =
   List.of_enum (fresh_ids domain n)
-
-let fresh_arg_list n =
-  List.of_enum (fresh_args n)
 
 let is_real = function
   | Var _ -> false

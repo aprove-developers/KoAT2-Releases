@@ -90,9 +90,6 @@ module TransitionOver(L : ProgramTypes.Location) = struct
   let rename vars (l,t,l') =
     (l, (TransitionLabel.rename vars t),l')
 
-  let rename2 rename_map (l,t,l') =
-    (l, (TransitionLabel.rename2 rename_map t),l')
-
   let overapprox_nonlinear_updates (l,t,l') = l,TransitionLabel.overapprox_nonlinear_updates t,l'
 end
 

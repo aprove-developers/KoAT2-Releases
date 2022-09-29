@@ -88,29 +88,27 @@ let tests =
 
                     (* Linear bound *)
 
-                    ("x+1", None,
+                    ("Arg_0+1", None,
                      "a -> b(x), b -> b(x-1) :|: x>0");
 
-                    ("x+y+1", None,
+                    ("Arg_0+Arg_1+1", None,
                      "a -> b(x,y), b -> b(x-1,y) :|: x+y>0");
 
-                    ("x+y+1", None,
+                    ("Arg_0+Arg_1+1", None,
                      "a -> b(x,y), b -> b(x-1,y) :|: x>y");
 
-                    ("x+y+1", None,
+                    ("Arg_0+Arg_1+1", None,
                      "a -> b(x,y), b -> b(x+1,y) :|: x<y");
 
-                    ("y+1", None,
+                    ("Arg_1+1", None,
                      "a -> b(0,y), b -> b(x+1,y) :|: x<y");
 
                     (* This is not the smallest possible bound. But it is the smallest that can be computed using monotone bounds. *)
-                    ("x+y+2 + y", None,
+                    ("Arg_0+Arg_1+2 + Arg_1", None,
                      "a -> b(x,y), b -> b(x-1,y) :|: x>0, b -> c(x,y), c -> c(x,y-1) :|: y>0");
 
-                    (* TODO Problem with non-determinism: max{0,y}+1 or max{0,x}+1 ("max{0,min{x,y}}+1", Some "max{0,y}+1", "a -> b(x,y), b -> b(x-1,y-1) :|: x>0 && y>0"); *)
-
                     (* This is not the smallest possible bound. But it is the smallest that can be computed using monotone bounds. *)
-                    ("x+(y+x)+2 + y", None,
+                    ("Arg_0+(Arg_1+Arg_0)+2 + Arg_1", None,
                      "a -> b(x,y), b -> b(x-1,y+1) :|: x>0, b -> c(x,y) :|: x<=0, c -> c(x,y-1) :|: y>0");
 
                     (* Quadratic bound *)

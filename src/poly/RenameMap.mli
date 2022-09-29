@@ -12,6 +12,9 @@ type var = Var.t
 (** Creates a rename map from a two variable association list *)
 val from : (var * var) list -> t
 
+(** Creates a rename map from a two variable association enum *)
+val of_enum : (var * var) Enum.t -> t
+
 (** Creates a rename map from a two strings (vars) association list *)
 val from_native : (string * string) list -> t
 

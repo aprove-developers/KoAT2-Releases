@@ -80,21 +80,48 @@ let take_last n xs =
   |> List.take n
   |> List.rev
 
-(* TODO Pattern <-> Assigment relation *)
+let fill_up_update_arg_vars_up_to_num n update =
+  let missing_args =
+    VarSet.diff
+      (VarSet.of_enum % Enum.take n @@ LazyList.enum Var.args)
+      (VarSet.of_enum @@ VarMap.keys update)
+  in
+  VarSet.fold (fun v -> VarMap.add v (Polynomial.of_var v)) missing_args update
+
+let fill_up_arg_vars_up_to_num n t =
+  {t with update = fill_up_update_arg_vars_up_to_num n t.update}
+
+
 let mk ~cost ~assignments ~patterns ~guard ~vars =
-  let assignments_with_trivial =
-      assignments @ List.map Polynomial.of_var (take_last ((List.length patterns) - (List.length assignments)) patterns) in
-  let appended_patterns =
-      patterns @ Var.fresh_id_list Var.Int ((List.length assignments) - (List.length patterns)) in
-  (* TODO Better error handling in case the sizes differ *)
-  (List.enum appended_patterns, List.enum assignments_with_trivial)
-  |> (uncurry Enum.combine)
-  |> Enum.map (fun (var, assignment) -> VarMap.add var assignment)
-  |> Enum.fold (fun map adder -> adder map) VarMap.empty
-  |> fun update -> { id = unique ();
-                     update; guard;
-                     invariant = Invariant.mk_true;
-                     cost;}
+  let temp_vars =
+    let vars_in_update =
+      List.enum assignments
+      |> Enum.map Polynomial.vars
+      |> Enum.fold VarSet.union VarSet.empty
+    in
+    let vars = VarSet.union (Guard.vars guard) (vars_in_update) in
+    VarSet.diff vars (VarSet.of_list patterns)
+  in
+
+  let map_to_arg_vars =
+    Enum.combine (List.enum patterns) (LazyList.enum Var.args)
+    |> RenameMap.of_enum
+  in
+  let update =
+    List.enum assignments
+    |> Enum.map (Polynomial.rename map_to_arg_vars)
+    |> Enum.combine (LazyList.enum Var.args)
+    |> VarMap.of_enum
+    |> fill_up_update_arg_vars_up_to_num (List.length patterns)
+  in
+  {
+    id = unique ();
+    update;
+    guard = Guard.rename guard map_to_arg_vars;
+    invariant = Guard.mk_true;
+    cost = Polynomial.rename map_to_arg_vars cost;
+  }
+
 
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
@@ -341,6 +368,7 @@ let input_size t =
   |> input_vars
   |> VarSet.cardinal
 
+
 (** Whenever this function is invoked it is ensured that there are enough standard variables  *)
 let standard_renaming standard_vars t =
   standard_vars
@@ -370,19 +398,7 @@ let rename_temp_vars t temp_vars =
   }
   |> tap (fun _ -> Hashtbl.clear vars_memoization)
 
-
-let rename standard_vars t =
-  let rename_map = standard_renaming standard_vars t in
-  {
-    id = t.id;
-    update = rename_update t.update rename_map;
-    guard = Guard.rename t.guard rename_map;
-    invariant = Invariant.rename t.invariant rename_map;
-    cost = Polynomial.rename rename_map t.cost;
-  }
-
-
-let rename2 rename_map t =
+let rename rename_map t =
   {
     id = t.id;
     update = rename_update t.update rename_map;
