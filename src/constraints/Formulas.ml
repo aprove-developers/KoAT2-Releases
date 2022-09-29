@@ -58,7 +58,7 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let neg =
       fold ~subject:identity
            ~le:mk_gt
-           ~lt:mk_gt
+           ~lt:mk_ge
            ~correct:mk_false
            ~conj:mk_or
            ~wrong:mk_true
