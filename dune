@@ -2,4 +2,4 @@
  (release
    (link_flags (:standard -ccopt -static -ccopt -no-pie)))
  (dev
-   (flags (:standard -g -w -A-4-6-7-9-27-29-32-33-35-36-38-40..42-44-45-48-50-60-70))))
+   (flags (:standard -g -w +A-4-6-7-9-27-29-32-33-35-36-38-40..42-44-45-48-50-60-70))))
