@@ -164,7 +164,7 @@ let run (params: params) =
   ProofOutput.proof_format params.proof_format;
   let program =
     input
-    |> Readers.read_input ~rename:params.rename params.simple_input
+    |> Readers.read_input ~rename:(List.mem `PartialEvaluation params.cfr || params.rename) params.simple_input
     |> tap (fun prog -> ProofOutput.add_to_proof @@ fun () ->
           FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string ~pretty:true prog)
             <> program_to_formatted_string prog params.proof_format))
