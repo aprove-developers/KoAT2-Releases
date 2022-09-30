@@ -93,16 +93,6 @@ let fill_up_arg_vars_up_to_num n t =
 
 
 let mk ~cost ~assignments ~patterns ~guard ~vars =
-  let temp_vars =
-    let vars_in_update =
-      List.enum assignments
-      |> Enum.map Polynomial.vars
-      |> Enum.fold VarSet.union VarSet.empty
-    in
-    let vars = VarSet.union (Guard.vars guard) (vars_in_update) in
-    VarSet.diff vars (VarSet.of_list patterns)
-  in
-
   let map_to_arg_vars =
     Enum.combine (List.enum patterns) (LazyList.enum Var.args)
     |> RenameMap.of_enum
