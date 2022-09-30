@@ -3,7 +3,6 @@ open Big_int.Infix
 
 module Make(Value : PolyTypes.Ring) =
   struct
-    module Valuation_ = Valuation.Make(Value)
     type valuation = Valuation.Make(Value).t
     module Monomial = Monomials.Make(Value)
 
