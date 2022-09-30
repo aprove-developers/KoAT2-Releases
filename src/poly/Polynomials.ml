@@ -390,6 +390,10 @@ module RationalPolynomial =
 
     let of_intpoly  =
       Polynomial.fold ~const:(of_constant % OurRational.of_ourint) ~var:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
+  
+    let is_integer_poly  poly = 
+      List.for_all OurRational.is_integer @@ coeffs poly 
+
   end
 
 module ParameterPolynomial =

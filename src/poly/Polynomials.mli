@@ -73,6 +73,9 @@ sig
   val overapprox : t -> Polynomial.t
   
   val of_intpoly : Polynomial.t -> t
+
+  val is_integer_poly : t -> bool 
+
 end
 
 module RealParameterPolynomial :

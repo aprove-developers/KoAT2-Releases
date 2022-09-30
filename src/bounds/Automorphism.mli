@@ -11,11 +11,15 @@ sig
     
     val vars: t -> VarSet.t 
 
+    val vars_as_list: t -> Var.t list
+
+    val identity_end : t 
+
+    val poly_list: t -> Polynomials.ParameterPolynomial.t list
+
     val poly_map: t -> (Polynomials.ParameterPolynomial.t Map.Make(Var).t)
 
     val inv_poly_map: t -> (Polynomials.ParameterPolynomial.t Map.Make(Var).t)
-
-    val poly_list: t -> Polynomials.ParameterPolynomial.t list
 
     val inv_poly_list: t -> Polynomials.ParameterPolynomial.t list
 
@@ -23,20 +27,12 @@ sig
 
     val of_degree: Var.t list -> int -> t
 
-    val identity_end : t 
-
     val apply:  t -> Polynomials.ParameterPolynomial.t -> Polynomials.ParameterPolynomial.t
-
-    val enumerate_help: int -> int -> int list list 
 
     val enumerate_all_polys_degree: int -> Var.t list -> Polynomials.Polynomial.t list
 
-    val degree_of_polylist: Polynomials.ParameterPolynomial.t list -> int
-    (**returns the formula to check right invertibility for one variable, it is technically not p_r_i as in Termination of Polynomial Loops but its later mentioned transformed version *)
-    val get_p_r_i: t -> 'a -> Var.t -> Formulas.Formula.t
-    (**returns the formula to check right invertibility for one variable, it is technically not p_r_i as in Termination of Polynomial Loops but its later mentioned transformed version *)
-    val get_p_l_i: t -> 'a -> Var.t -> Formulas.Formula.t
-    
+    val degree: t -> int
+   
     val formula_to_check_invertibility: t -> Formulas.Formula.t
 
     val formula_to_check_twn: VarSet.elt list -> t -> Polynomials.PolynomialOver(OurInt).t Batteries.Map.Make(Var).t -> Formulas.Formula.t
@@ -70,21 +66,7 @@ sig
     val of_endomorphism: Endomorphism.t -> Polynomials.Polynomial.valuation -> t
 
     val identity_aut : t 
-    (** compose_rational_polynomials [[x;y]] [[x^2;y^3]] [(x <- x+y)]  returns [x <- x^2+y^3]. 
-        tail recursive*)
-    val compose_rational_polynomials : Var.t list -> Polynomials.RationalPolynomial.t list -> Polynomials.RationalPolynomial.t -> Polynomials.RationalPolynomial.t
-
-    (** compose_int_polynomials [[x;y]] [[x^2;y^3]] [(x <- x+y)]  returns [x <- x^2+y^3]. 
-        tail recursive*)
-    val compose_int_polynomials: Var.t list -> Polynomials.Polynomial.t list -> Polynomials.Polynomial.t -> Polynomials.Polynomial.t
-    (*  *)
-
-    val apply_poly_transformation:  Var.t list -> Polynomials.RationalPolynomial.t list -> Polynomials.RationalPolynomial.t list -> Polynomials.RationalPolynomial.t list
-
-    val apply: Polynomials.RationalPolynomial.t list -> t -> Polynomials.RationalPolynomial.t list
-
-    val apply_inv: Polynomials.RationalPolynomial.t list -> t -> Polynomials.RationalPolynomial.t list
-
+  
     (** applies the inverse automorphism to the bound*)
     val transform_bound: t -> BoundsInst.Bound.t -> BoundsInst.Bound.t
 
