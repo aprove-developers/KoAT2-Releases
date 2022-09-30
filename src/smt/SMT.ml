@@ -3,8 +3,6 @@ open Formulas
 open Polynomials
 open BoundsInst
 
-module VarMap = Map.Make(Var)
-
 exception SMTFailure of string
 
 let from_poly context =

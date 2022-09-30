@@ -105,7 +105,7 @@ module PolynomialOver(Value : PolyTypes.Ring) =
                 |_ -> []
         else []
 
-    let rec of_coeffs_list_univariate var coeffs =
+    let of_coeffs_list_univariate var coeffs =
       List.fold_righti (fun i coeff p -> (ScaledMonomial_.make coeff (Monomial_.lift var i))::p) coeffs []
 
     let var str = of_var (Var.of_string str)

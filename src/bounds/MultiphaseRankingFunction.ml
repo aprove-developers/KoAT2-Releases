@@ -6,8 +6,6 @@ open Polynomials
 open Program
 open BoundsInst
 
-(** Class is derived from RankingFunction.ml*)
-
 module Solver = SMT.IncrementalZ3Solver
 module Valuation = Valuation.Make(OurInt)
 
@@ -23,8 +21,6 @@ type t = {
 type measure = [ `Cost | `Time ] [@@deriving show]
 
 type constraint_type = [`Non_Increasing | `Decreasing]
-
-module RankingTable = Hashtbl.Make(struct include Transition let equal = Transition.same end)
 
 module TemplateTable = Hashtbl.Make(Location)
 

@@ -12,7 +12,6 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                                                         and type monomial = Monomials.Make(Num).t
                         end ) =
   struct
-    module Valuation_ = Valuation.Make(Num)
     type valuation = Valuation.Make(Num).t
 
     type value = Num.t
