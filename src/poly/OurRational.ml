@@ -33,6 +33,14 @@ let of_int i =
 let of_int_tuple (n,d) =
     if d == 0 then raise (Div_Zero "OurRational.of_ourint div_zero") else (OurInt.of_int n, OurInt.of_int d) |> reduce
 
+(** turns string "a/b" into OurRational a/b; turns "a" into a/1 *)
+let of_string (s:string) =
+  let fraction = Str.split (Str.regexp "[^0-9.\-]+") s in
+  if List.length fraction == 1 then
+    of_int @@ int_of_string @@ List.first fraction
+  else
+    of_int_tuple (int_of_string @@  List.at fraction 0, int_of_string @@  List.at fraction 1)
+
 let to_int (n,d) = OurInt.div n d |> OurInt.to_int
 
 let to_ourint (n,d) = OurInt.div n d
