@@ -19,11 +19,39 @@ module type Location = sig
   val to_string : t -> string
 end
 
+module type TransitionSet = sig
+  (** A set of transitions. *)
+
+  include Set.S
+  type locationSet
+
+  (** TODO doc *)
+  val powerset : t -> t Enum.t
+
+  (** Returns a string representing the transition set. *)
+  val to_string : t -> string
+
+  (** Returns a short string representing the transition set. *)
+  val to_id_string : t -> string
+
+  val create : ('a -> elt) -> 'a Batteries.Enum.t -> t
+
+  val locations: t -> locationSet
+end
+
+
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
 module type Transition = sig
   type location
+  module Location: Location with type t = location
+
   (** Type of a transition, i.e., two connected locations and a label. *)
   type t = location * TransitionLabel.t * location
+
+  module TransitionSet : TransitionSet with
+    type elt = t
+
+  module LocationSet : Set.S with type t = TransitionSet.locationSet and type elt = location
 
   val equal : t -> t -> bool
 
@@ -73,36 +101,16 @@ module type Transition = sig
   val rename : RenameMap.t -> t -> t
 end
 
-module type TransitionSet = sig
-  (** A set of transitions. *)
-
-  include Set.S
-  type locationSet
-
-  (** TODO doc *)
-  val powerset : t -> t Enum.t
-
-  (** Returns a string representing the transition set. *)
-  val to_string : t -> string
-
-  (** Returns a short string representing the transition set. *)
-  val to_id_string : t -> string
-
-  val create : ('a -> elt) -> 'a Batteries.Enum.t -> t
-
-  val locations: t -> locationSet
-end
-
 (** This module represents a transition graph. *)
 module type TransitionGraph = sig
   module Location: Location
   module Transition: Transition
     with type location = Location.t
     and type t = Location.t * TransitionLabel.t * Location.t
-  module LocationSet: Set.S with type elt = Location.t
+  module LocationSet: Set.S with type t = Transition.TransitionSet.locationSet
   module TransitionSet : TransitionSet
-    with type elt = Transition.t
-    and type locationSet = LocationSet.t
+    with type t = Transition.TransitionSet.t
+    with type locationSet = Transition.TransitionSet.locationSet
 
   include Graph.Sig.P with type V.t = Location.t
     and type V.label = Location.t
@@ -140,17 +148,18 @@ end
 module type Program = sig
   (* module Location : Location *)
   type location
-  module Transition : Transition with type location = location
-  module LocationSet: Set.S with type elt = location
+  module Transition : Transition
+    with type location = location
+  module LocationSet: Set.S with type t = Transition.TransitionSet.locationSet
   module TransitionSet : TransitionSet
-    with type elt = Transition.t
-    and type locationSet = LocationSet.t
+    with type t = Transition.TransitionSet.t
+    with type locationSet = Transition.TransitionSet.locationSet
   module TransitionGraph : TransitionGraph
     with type Location.t = location
-    and type LocationSet.t = LocationSet.t
     and type Transition.t = Transition.t
-    and type TransitionSet.t = TransitionSet.t
-    and type TransitionSet.locationSet = LocationSet.t
+    and module Transition.TransitionSet = Transition.TransitionSet
+    and module TransitionSet = Transition.TransitionSet
+    and type LocationSet.t = Transition.TransitionSet.locationSet
 
   (** Type of a program consisting of a program graph and a start location. *)
   type t
