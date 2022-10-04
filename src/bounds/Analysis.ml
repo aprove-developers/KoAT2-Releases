@@ -174,7 +174,7 @@ let lwt_parallel ~local (scc: TransitionSet.t) measure program max_depth appr =
   else if (List.mem `MPRF local) && (List.mem `TWN local || List.mem `TWNTransformGeneral local || List.mem `TWNTransformJordan local || List.mem `TWNTransform local) && (List.length local == 2) then
       MaybeChanged.(local_rank scc measure program max_depth appr >>= improve_with_twn program scc measure (List.find (fun x -> not (x == `MPRF)) local) )
   else
-    raise (Invalid_argument "--local commands are not correct. Use 'mprf' or at most one of 'twn','twn-transform-jordan', 'twn-transform',or 'twn-transform-general'")
+    raise (Invalid_argument "--local commands are not correct. Use 'mprf' or at most one of 'twn', 'twn-transform-jordan', 'twn-transform',or 'twn-transform-general'")
 
 let improve_timebound ?(mprf_max_depth = 1) ~local (scc: TransitionSet.t) measure program appr =
     let execute () = lwt_parallel ~local scc measure program mprf_max_depth appr in
