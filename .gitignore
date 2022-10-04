@@ -21,4 +21,7 @@ perf.data*
 
 _build/
 
+__pycache__/
+src/bounds/__pycache__
+
 koat2_static
