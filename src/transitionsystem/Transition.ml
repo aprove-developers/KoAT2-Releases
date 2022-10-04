@@ -93,6 +93,31 @@ module TransitionOver(L : ProgramTypes.Location) = struct
     (l, (TransitionLabel.rename vars t),l')
 
   let overapprox_nonlinear_updates (l,t,l') = l,TransitionLabel.overapprox_nonlinear_updates t,l'
+
+  module Location = L
+  module LocationSet = Set.Make(L)
+  module TransitionSet = struct
+    type outer_t = t
+    include Set.Make(struct type t = outer_t let compare = compare_same end)
+    type locationSet = LocationSet.t
+
+    let powerset set =
+      let combine (result: t Enum.t) (x: outer_t) = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
+      Enum.fold combine (Enum.singleton empty) (enum set)
+
+    let to_string =
+      Util.enum_to_string to_id_string % enum
+
+    let to_id_string = Util.enum_to_string to_id_string % enum
+
+    let create f enum =
+      enum
+      |> Enum.map f
+      |> of_enum
+
+    let locations t =
+      fold (fun (l,_,l') set -> LocationSet.add l set |> LocationSet.add l') t (LocationSet.empty)
+  end
 end
 
 include TransitionOver(Location)
