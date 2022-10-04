@@ -84,9 +84,9 @@ let improve_with_rank_mprf measure program appr rank =
   else
     MaybeChanged.same appr
 
-let improve_with_twn program scc measure appr =
+let improve_with_twn program scc measure transformation_type appr =
   let compute appr_ t =
-   let bound = TWN.time_bound t scc program appr_ in
+   let bound = TWN.time_bound t scc program appr_ transformation_type in
    let orginal_bound = get_bound measure appr_ t in
     if (Bound.compare_asy orginal_bound bound) = 1 then
       MaybeChanged.changed (add_bound measure bound t appr_)
@@ -165,13 +165,16 @@ let local_rank (scc: TransitionSet.t) measure program max_depth appr =
     rankfuncs
     |> MaybeChanged.fold_enum (fun appr -> improve_with_rank_mprf measure program appr) appr
 
+
 let lwt_parallel ~local (scc: TransitionSet.t) measure program max_depth appr =
   if List.is_empty local || (List.mem `MPRF local && List.mem `TWN local |> not) then
     local_rank scc measure program max_depth appr
-  else if List.mem `MPRF local |> not && List.mem `TWN local then
-    improve_with_twn program scc measure appr
+  else if List.mem `MPRF local |> not && (List.mem `TWN local || List.mem `TWNTransformGeneral local || List.mem `TWNTransformJordan local || List.mem `TWNTransform local) then
+    improve_with_twn program scc measure (List.first local) appr
+  else if (List.mem `MPRF local) && (List.mem `TWN local || List.mem `TWNTransformGeneral local || List.mem `TWNTransformJordan local || List.mem `TWNTransform local) then
+      MaybeChanged.(local_rank scc measure program max_depth appr >>= improve_with_twn program scc measure (List.find (fun x -> not (x == `MPRF)) local) )
   else
-    MaybeChanged.(local_rank scc measure program max_depth appr >>= improve_with_twn program scc measure)
+    raise (Invalid_argument "--local commands are not correct, use 'mprf' and one of 'twn','twn-transform','twn-transform-general' or 'twn-transform-jordan'")
 
 let improve_timebound ?(mprf_max_depth = 1) ~local (scc: TransitionSet.t) measure program appr =
     let execute () = lwt_parallel ~local scc measure program mprf_max_depth appr in

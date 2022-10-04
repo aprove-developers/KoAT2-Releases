@@ -72,7 +72,7 @@ module ProgramOver(L: ProgramTypes.Location) = struct
       let transs =
         let all = List.flatten cleaned_com_k_transitions in
         let num_arg_vars =
-          List.max @@ List.map (TransitionLabel.input_size % Transition.label) all
+          List.max ~cmp:(Int.compare) @@ List.map (TransitionLabel.input_size % Transition.label) all
         in
         List.map (Transition.map_label (TransitionLabel.fill_up_arg_vars_up_to_num num_arg_vars)) all
       in

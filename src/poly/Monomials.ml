@@ -16,6 +16,8 @@ module Make(Value : PolyTypes.Ring) =
 
     let lift var n = make [(var, n)]
 
+    let of_var var = make [(var, 1)]
+
     let fold ~const ~var ~times ~pow mon =
       Map.fold (fun key n a -> times (pow (var key) n) a) mon (const Value.one)
 
