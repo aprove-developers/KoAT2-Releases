@@ -19,7 +19,7 @@ sig
 
   include module type of PolynomialOver(OurInt)
 
-  (** Separates polynomial into a two list. One list with all scaled monomials of the polynomial with negative coefficienta and the other list with only scaled monomials with non-negative coefficients. *)
+  (** Separates polynomial into a two list. One list with all scaled monomials of the polynomial with negative coefficients and the other list with only scaled monomials with non-negative coefficients. *)
   val separate_by_sign : t -> (t * t)
 
   (** TODO doc *)
@@ -31,7 +31,6 @@ end
 module ParameterPolynomial :
 sig
   (** Provides default implementation of polynomials where the coefficients are polynomials over [OurInt]. *)
-
   include module type of PolynomialOver(PolynomialOver(OurInt))
 
   (** Evaluates coefficients (which are polynomials over [OurInt]) and returns the resulting polynomial over [OurInt].*)
@@ -67,8 +66,16 @@ sig
   (** Multiply with lcm *)
   val normalize : t -> Polynomial.t
 
+  (** Multiply with lcm and return lcm*)
+  val normalize_return_factor : t -> Polynomial.t * (OurInt.t * OurInt.t)
+
   (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
   val overapprox : t -> Polynomial.t
+  
+  val of_intpoly : Polynomial.t -> t
+
+  val is_integer_poly : t -> bool 
+
 end
 
 module RealParameterPolynomial :

@@ -1,0 +1,7 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR X Y Z)
+(RULES
+  l0(X,Y,Z) -> Com_1(l1(X,Y,Z)) :|: X > 0 && Y > 0 && Z > 0
+  l1(X,Y,Z) -> Com_1(l1(X+Y,-2*X+4*Y,Z)) :|: X+Y <= Z && X+Y!=0
+)

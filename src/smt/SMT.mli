@@ -28,6 +28,26 @@ sig
     val check_negativity : Formula.t -> Polynomial.t -> bool
   end
 
+module Z3SolverTimeout :
+sig
+    (** Version of the Z3 solver *)
+    val version : string
+
+    val satisfiable : Formula.t -> bool
+
+    val unsatisfiable : Formula.t -> bool
+
+    val tautology : Formula.t -> bool
+
+    val equivalent : Formula.t -> Formula.t -> bool
+
+    val get_model : ?coeffs_to_minimise:Var.t list -> Formula.t -> Polynomial.valuation Option.t
+
+    val check_positivity : Formula.t -> Polynomial.t -> bool
+
+    val check_negativity : Formula.t -> Polynomial.t -> bool
+  end
+
 (* Incrementel Solver *)
 module IncrementalZ3Solver:
 sig

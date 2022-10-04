@@ -6,6 +6,8 @@ open Atoms
 open BoundsInst
 open Constraints
 open PolyExponential
+open TransitionLabel
+open Automorphism
 
 (* PROOF *)
 let logger = Logging.(get Twn)
@@ -43,11 +45,10 @@ let toposort graph =
   List.fold_left (fun visited (node,_) -> dfs graph visited node) [] graph
 
 let check_triangular (t: TWNLoop.t) =
-  let vars = VarSet.to_list (TWNLoop.input_vars t)
-  and tmp_vars = VarSet.diff (TWNLoop.vars t) (TWNLoop.input_vars t) in
-  if List.is_empty vars || not (VarSet.is_empty tmp_vars) then []
+  let vars = VarSet.to_list (TWNLoop.input_vars t) in
+  let n = List.length vars in
+  if (n == 0) then []
   else
-    let n = List.length vars in
     let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
     let graph = List.mapi (fun i var ->
       let vars_update =
@@ -62,6 +63,36 @@ let check_triangular (t: TWNLoop.t) =
     |> List.rev
 
 let check_triangular_t (t: TransitionLabel.t) = check_triangular (TWNLoop.mk_transition t)
+
+let check_solvable (t: TWNLoop.t) =
+  let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in
+  let module SCC = Graph.Components.Make(DG) in
+  let dg_linear = VarSet.fold (fun x graph ->
+              let vars = TWNLoop.update t x |? Polynomial.of_var x |> Polynomial.vars in
+              VarSet.fold (fun y graph -> DG.add_edge graph x y) vars graph) (TWNLoop.vars t) DG.empty and
+  dg_non_linear = VarSet.fold (fun x graph ->
+              let update = TWNLoop.update t x |? Polynomial.of_var x in
+              let linear_vars = update
+                |> Polynomial.vars
+                |> VarSet.filter (fun v -> Polynomial.var_only_linear v update |> not) in
+              VarSet.fold (fun y graph -> DG.add_edge graph x y) linear_vars graph) (TWNLoop.vars t) DG.empty in
+  let blocks = SCC.scc_list dg_linear in
+  if List.for_all (fun scc -> List.length scc = 1) (SCC.scc_list dg_non_linear) (* We don't have cyclic non-linear dependencies. *)
+  && List.for_all (fun scc ->
+                    List.for_all (fun x ->
+                      List.for_all (fun y ->
+                      TWNLoop.update t x
+                      |? Polynomial.of_var x
+                      |> Polynomial.var_only_linear y)
+                      scc)
+                    scc) blocks (* For all blocks, all variables x,y in such a block: The update of x only depends linear on y *) then
+    Option.some (blocks)
+  else
+    None
+
+let check_solvable_t (t: TransitionLabel.t) = check_solvable (TWNLoop.mk_transition t)
+
+
 
 (* MONOTONICITY *)
 
@@ -88,6 +119,7 @@ let chain (t: TWNLoop.t) = TWNLoop.append t t
 (* TERMINATION: *)
 
 module SMTSolver = SMT.Z3Solver
+module SMTSolverTimeout = SMT.Z3SolverTimeout
 
 exception Non_Terminating of (Transition.t list * Transition.t list)
 
@@ -111,6 +143,7 @@ let red_le poly_list =
 module Valuation = Valuation.Make(OurInt)
 
 let termination_ twn order npe varmap =
+
   let update = fun v -> match TWNLoop.update twn v with
     | Some p -> p
     | None -> Polynomial.of_var v in
@@ -194,6 +227,7 @@ let compute_M = function
 
 module ScaledMonomial = ScaledMonomials.Make(OurInt)
 module Monomial = Monomials.Make(OurInt)
+module ParameterMonomial = Monomials.Make(PolynomialOver(OurInt))
 let compute_alpha_abs = function
   | [] -> Polynomial.zero
   | x::[] -> Polynomial.fold ~const:(Polynomial.of_constant % OurInt.abs) ~var:(Polynomial.of_var) ~neg:identity ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow x
@@ -245,7 +279,8 @@ let get_bound t order npe varmap =
 let check_twn loop =
   (check_weakly_monotonicity loop) && ((List.length (check_triangular loop)) == (VarSet.cardinal ((TWNLoop.input_vars loop))))
 
-let check_twn (_,t,_) = check_twn (TWNLoop.mk_transition t)
+let check_twn (_,t,_) =
+ check_twn (TWNLoop.mk_transition t)
 
 let complexity loop =
     let order = check_triangular loop in
@@ -302,28 +337,212 @@ let compose_transitions cycle start =
   let pre, t1, post = split start cycle in
   List.fold (fun u t -> TWNLoop.append u (Tuple3.second t)) (Tuple3.second t1) (post@pre)
 
+(** get_linear_update_of_variable (x<- 2x+3y+y^2) x y returns 3 *)
+let get_linear_update_of_variable (t:TWNLoop.t) (var_left:TWNLoop.VarMap.key) (var_right:TWNLoop.VarMap.key)=
+  match (TWNLoop.update t var_left) with
+    | None -> (OurInt.of_int 0)
+    | Some update ->
+  let fupdate = List.filter (fun (x,y) -> Monomial.is_univariate_linear y) (Polynomial.monomials_with_coeffs update) in
+  let (x,y) = List.find  (fun (x,y) -> (Var.equal (List.first (VarSet.to_list (Monomial.vars y))))  var_right) fupdate in
+  x
+
+(** get_linear_update_list [(x<- 2x+3y+y^2) x [x;y]] returns [[2;3]] *)
+let rec get_linear_update_list (t:TWNLoop.t) (var_left:TWNLoop.VarMap.key) (block:TWNLoop.VarMap.key list) = match block with
+  | [] -> []
+  | x::xs -> get_linear_update_of_variable t var_left x :: get_linear_update_list t var_left xs
+
+let matrix_of_linear_assignments (t:TWNLoop.t) (block:TWNLoop.VarMap.key list) =
+  List.map (fun x -> get_linear_update_list t x block) block
+
+
+(** [matrix_times_vector A x] returns a polynomial list where each element stores a row of [A*x] *)
+let matrix_times_vector_rational (matrix:OurRational.t list list) (vars:TWNLoop.VarMap.key list) =
+  List.map (fun xs -> RationalPolynomial.of_coeff_list xs vars) matrix
+
+let matrix_times_vector_int (matrix:OurInt.t list list) (vars:TWNLoop.VarMap.key list) =
+  List.map (fun xs -> Polynomial.of_coeff_list xs vars) matrix
+
+(** sorts the blocks from function check_solvable in the order defined in the transition (needs O(n^2 log n) due to index_of) *)
+let change_order t blocks =
+  let var_list = (VarSet.to_list (TWNLoop.vars t)) in
+  let blocks = List.map (List.sort (fun x y ->
+                                            if List.index_of x var_list < List.index_of y var_list then -1 else 1)
+                        ) blocks in
+  List.sort (fun x y -> if List.index_of (List.first x) var_list < List.index_of (List.first y) var_list then -1 else 1) blocks
+
+let read_process_lines command = (* This function was written by Tom Küspert *)
+  let lines = ref [] in
+  let in_channel = Unix.open_process_in command in
+  begin
+    try
+      while true do
+        lines := input_line in_channel :: !lines
+      done;
+    with
+      | BatInnerIO.Input_closed -> ()
+      | End_of_file -> ()
+  end;
+  List.rev !lines
+
+(** returns python-friendly list (not list of list) of [matrix]*)
+let matrix_to_string matrix =
+  let flattened_matrix = List.flatten matrix in
+  "["
+  ^ List.fold (fun x y -> x  ^ (OurInt.to_string y)^ ",") "" (List.take (List.length flattened_matrix -1) flattened_matrix)
+  ^ (OurInt.to_string (List.last flattened_matrix))
+  ^ "]"
+
+(** separates [xs] into several list of length n. If [n] does not divide the length of the list, the last chunk will be shorter*)
+let rec list_lift (n:int) (xs:'a list) : 'a list list = match  xs with
+    | [] -> []
+    | xs -> let (a,b) = List.takedrop n xs in a::(list_lift n b)
+
+
+(** turns string into OurInt list list (which represents a matrix).
+  [parse_matrix d s] return the matrix of dimension [d] times [d] that is described with string [s] *)
+let parse_int_matrix (dim:int) (s:string) =
+  Str.split (Str.regexp "[^0-9/./\-]+") s (*turn string into list, splitted at each non number char *)
+      |> List.map int_of_string
+      |> List.map OurInt.of_int
+      |> list_lift dim
+
+(** [parse_matrix d s] return the matrix of dimension [d] times [d] that is described with string [s] *)
+let parse_matrix (dim:int) (s:string) =
+  Str.split (Str.regexp "[^0-9/./\-]+") s (*turn string into list, splitted at each non number character *)
+      |> List.map OurRational.of_string
+      |> list_lift dim  (*turn OurRational list into OurRational list list *)
+
+
+(**[transform_linearly_matrix A] returns the jordan decomposition [(T * B *T^{-1})] of [A] if all eigenvalues are integer and
+Here, [T^{-1}] is normalized, i.e., an integer matrix.
+[A] has to be square *)
+let transform_linearly_matrix (matrix: OurInt.t list list) =
+  if List.length matrix == 1 (* nothing to transform *)
+      then Some ( [[(OurInt.of_int 1, OurInt.of_int 1)]], matrix,  [[OurInt.of_int 1]])
+  else
+    let command = "python3 -c 'from src.bounds.JordanNormalForm import jordan_normal_form; jordan_normal_form(" ^ matrix_to_string matrix ^ ")'" in
+    (* the python output consits of 3 matrices: T, J, T^-1 (which is normalized, see jordan normal form) or gives an error string *)
+    let python_output = read_process_lines command in
+    match python_output with
+      | [a;b;c] ->    Some(parse_matrix (List.length matrix) a,
+                        	 parse_int_matrix (List.length matrix) b,
+                           parse_int_matrix (List.length matrix) c)
+      | _ -> None (*error string *)
+
+(**[transform_with_aut twn_loop automorphism vars] transforms a loop by the given automorphism,
+i.e., applies the inverse to the invariant and guard and transforms the update   *)
+let transform_with_aut twn_loop automorphism vars =
+  match VarMap.map RationalPolynomial.of_intpoly @@ TWNLoop.update_map twn_loop (*current update *)
+                  |> Automorphism.transform_update automorphism with
+                  |  None -> None
+                  |  Some x -> let  new_update = List.map Polynomial.simplify x in
+  let updated_guard =  TWNLoop.Guard.atoms @@ TWNLoop.guard_without_inv twn_loop (*current guard *)
+                    |> Automorphism.transform_guard automorphism in
+  let updated_invariant = Automorphism.transform_guard automorphism @@ TWNLoop.invariant twn_loop in
+  (*return updated transition and automorphism*)
+  Some (TWNLoop.mk_transition @@TransitionLabel.mk
+                            ~cost:(TransitionLabel.cost TransitionLabel.default) (*TODO sind die kosten von bedeutung? *)
+                            ~guard:updated_guard
+                            ~assignments:new_update
+                            ~patterns:vars
+                            ~vars:(VarSet.to_list (TWNLoop.vars twn_loop))
+                          |> (flip TWNLoop.add_invariant) updated_invariant )
+
+(** [transform_linearly loop transformation_type] first checks whether a loop is in twn-form.
+    Then tries to find a  transformation using the jordan decomposition. To compute it, we call sympy.*)
+let transform_linearly (transition: TWNLoop.t) transformation_type =
+  (* find order for variables and independent blocks and sort them for elegant code when updating transition*)
+  match (check_solvable transition) with
+    | None -> None
+    | Some x -> let blocks = change_order transition x in
+  if List.length blocks == List.length (VarSet.to_list (TWNLoop.vars transition)) then
+      Some (transition, Automorphism.identity_aut) (*loop already is in twn form*)
+  else if transformation_type != `TWNTransformJordan  && transformation_type != `TWNTransform  then
+    None
+  else
+    let concat_blocks = List.concat blocks in
+    (* compute linear update matrices *)
+    let matrices = List.map (matrix_of_linear_assignments transition) blocks in
+    let transformations = List.map (transform_linearly_matrix) matrices in (*(transformations,transformed_matrices) *)
+    if not @@ List.for_all Option.is_some transformations then
+      None
+    else
+      let (transformations,js,transformation_invs) =
+        List.fold_right (fun  (x1,x2,x3) (xs1,xs2,xs3)-> ((x1::xs1) , (x2::xs2) ,(x3::xs3)))
+                  (List.map Option.get transformations)
+                  ([],[],[]) in
+      let eta = List.concat @@ List.map2 matrix_times_vector_rational transformations blocks in
+      let eta_inv = List.concat @@ List.map2 matrix_times_vector_int transformation_invs blocks in
+      let automorphism = Automorphism.of_poly_list concat_blocks eta eta_inv in
+      match transform_with_aut transition automorphism concat_blocks with
+      | None -> None
+      | Some x -> Some(x, automorphism)
+
+(** transform_non_linearly transforms a TWNLoop into twn form, it starts with the degree 1 and then counts upwards,
+    until for some degree the formulas get too large. The degree of the inverse is the same as the degree of the automorphism
+*)
+let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) =
+  let vars = VarSet.to_list @@ TWNLoop.vars t in
+  try let endomorphism = Endomorphism.of_degree vars degree in
+      let inv_formula = Endomorphism.formula_to_check_invertibility endomorphism in
+      let twn_formula = Endomorphism.formula_to_check_twn vars endomorphism (TWNLoop.update_map t) in
+      match SMTSolverTimeout.get_model @@ Formula.simplify @@ Formula.mk_and inv_formula twn_formula with
+        | None ->  transform_non_linearly ~degree:(degree +1) t
+        | Some valuation -> let automorphism = Automorphism.of_endomorphism endomorphism valuation in
+          match transform_with_aut t automorphism vars with
+          | None -> None (* transform with aut returns None iff result is not integer update, however this should never be the case as here we use integer automorphisms  *)
+          | Some x -> Some (x, automorphism)
+  with | Stack_overflow -> None
+
+(** transform tries to transform a given loop into twn-form. First checks whether the given loop is twn;
+then tries the Jordan approach;
+then tries general approach
+Returns the resulting twn-loop and an transformation automorphism *)
+let transform transformation_type ((entry, t):Transition.t * TWNLoop.t)  =
+   match (transform_linearly t transformation_type) with
+  | Some (transformed, automorphism) ->  Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)(*TODO find target *)
+  | None -> if transformation_type ==  `TWNTransformGeneral || transformation_type ==  `TWNTransform then
+              match (transform_non_linearly t) with
+                    | Some (transformed, automorphism) -> Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)
+                    | None -> None
+            else
+              None
+
 (* Finds entered location on cycle. *)
 let rec find l list =
     match list with
-    | [] -> raise Not_found
+    | [] ->  raise Not_found
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
-(* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
-let find_cycle appr program (cycles: path list) = List.find (fun cycle ->
-    let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
-    let entries = Program.entry_transitions logger program handled_transitions in
-    let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in
-    List.for_all (fun (entry, t) ->
-      let eliminated_t =
-        EliminateNonContributors.eliminate_t
-          (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
-      in
-      not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
-       && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
-       && let order = check_triangular eliminated_t in List.length order == VarSet.cardinal (TWNLoop.input_vars eliminated_t) (* Triangular?*)
-       && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)
-       && List.for_all (Approximation.is_time_bounded appr) entries) (List.combine entries twn_loops)) cycles
+(** lift_option [[Some x; Some y]] returns [Some [x;y]]. Returns none if none is element of list. *)
+let lift_option (xs:'a option list) : 'a list option =
+  if List.for_all Option.is_some xs then
+    Some (List.map Option.get xs)
+  else
+    None
 
+let find_cycle appr program (cycles: path list) transformation_type =
+  List.find_map (fun cycle ->
+    (* list of all transitions in a cycle, twnloop doesn't require each transition to be in twn form, but together they do *)
+      let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
+      let entries = Program.entry_transitions logger program handled_transitions in
+      let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in (* 'find' throws an exception *)
+      let entries_twn_loops = (List.combine entries twn_loops) in
+      if (List.for_all (fun (entry, t) ->
+          let eliminated_t = (* throw out useless variables *)
+            EliminateNonContributors.eliminate_t
+              (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
+          in
+          not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
+          && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
+          && (Approximation.is_time_bounded appr) entry)
+        entries_twn_loops
+      ) then (
+        lift_option @@ List.map (transform transformation_type) entries_twn_loops) (*tries to transform into loops. *)
+      else
+        None  (*Not twn nor twn-transformable *)
+    )
+    cycles
        (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
 
 (** Gets a list of transitions and rec. merges them into twn-loops, i.e., disjunctions of transitions. *)
@@ -336,6 +555,7 @@ let rec parallel_edges ys = function
 
 module TimeBoundTable = Hashtbl.Make(Transition)
 
+(* keys: liste von transition (kreise), values: bounds von eingangstransitionen *)
 let time_bound_table: ((Transition.t list) * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
 
 let lift appr entry bound =
@@ -350,24 +570,27 @@ let lift appr entry bound =
           FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
           FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
-let time_bound (l,t,l') scc program appr = (
+
+let time_bound (l,transition,l') scc program appr transformation_type = (
   proof := FormattedString.Empty;
-  let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
+  let opt = TimeBoundTable.find_option time_bound_table (l,transition,l') in
   if Option.is_none opt then (
     let bound =
       Timeout.timed_run 5. (fun () -> try
         let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
-        let cycle = find_cycle appr program (
+        let (entries, cycle, automorphisms) = List.fold_right (fun  (x1,x2,x3) (xs1,xs2,xs3)-> ((x1::xs1) , (x2::xs2) ,(x3::xs3) ))
+                   ( find_cycle appr program ( (*find_cycle throws an exception if no cycle is found (for efficiency reasons) *)
           if Location.equal l l' then
-            let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in
+            let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs transition) (TWNLoop.update_to_string_rhs loop) in
             [[List.find f parallel_edges]]
           else
-            (cycles (parallel_edges |> Set.of_list) l [([(l,TWNLoop.mk_transition t,l')], (LocationSet.singleton l'))] []))
+            (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition transition),l')], (LocationSet.singleton l'))]) [])) transformation_type)
+                  ([],[],[])
         in
         let handled_transitions = ListMonad.(cycle >>= fun (l,twn,l') -> TWNLoop.subsumed_transitions l l' twn) in
-        let entries = Program.entry_transitions logger program handled_transitions in
+        (* let entries = Program.entry_transitions logger program handled_transitions in*)
         (* add_to_proof_graph program handled_transitions entries; *)
-        Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,t,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
+        Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,transition,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
         let twn_loops = List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries in
         Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TWNLoop.to_string twn_loops));
         proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>
@@ -375,7 +598,7 @@ let time_bound (l,t,l') scc program appr = (
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
         let global_local_bounds =
-          List.map (fun (entry, twn) ->
+          List.map (fun (entry, twn, automorphism) -> (*entry,twn,automorph *)
                 let program_only_entry = Program.from ((TransitionSet.to_list (TransitionSet.diff (Program.transitions program) (TransitionSet.of_list entries))) |> List.map List.singleton |> (@) [[entry]]) (Program.start program) in
                 let twn_inv = InvariantGeneration.transform_program program_only_entry
                   |> MaybeChanged.unpack
@@ -386,21 +609,20 @@ let time_bound (l,t,l') scc program appr = (
                   |> fun invariants -> List.flatten invariants |> List.filter (fun atom -> List.for_all (List.exists (Atom.equal atom)) invariants)
                   |> TWNLoop.add_invariant twn in
 
-                let eliminated_t =
-                  EliminateNonContributors.eliminate_t
+                let eliminated_t = EliminateNonContributors.eliminate_t
                     (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
                 in
                 if VarSet.is_empty (TWNLoop.vars eliminated_t) then
                   Bound.infinity, (entry, Bound.infinity)
                 else (
-                  let bound = complexity eliminated_t in
+                  let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in
                   if Bound.is_infinity bound then raise (Non_Terminating (handled_transitions, entries));
                   lift appr entry bound, (entry, bound)) )
-          (List.combine entries twn_loops) in
+          (List.map2 (fun (a,b) c -> (a,b,c)) (List.combine entries twn_loops) automorphisms) in (* TODO remove code duplicate from find_cycle*)
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map Tuple2.second global_local_bounds)) handled_transitions;
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
         with
-        | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
+        | Not_found ->  Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
         | Non_Terminating (handled_transitions,entries)->
             Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]);
             List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> (t, Bound.infinity)) entries)) handled_transitions;
@@ -418,7 +640,7 @@ let time_bound (l,t,l') scc program appr = (
     let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
     bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
                          |> tap (fun b -> proof_append FormattedString.((mk_str_line (b |> Bound.to_string ~pretty:true))))))
-  |> tap (fun b -> if Bound.compare_asy b (Approximation.timebound appr (l,t,l')) < 0 then ProofOutput.add_to_proof @@ fun () ->
+  |> tap (fun b -> if Bound.compare_asy b (Approximation.timebound appr (l,transition,l')) < 0 then ProofOutput.add_to_proof @@ fun () ->
     FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:") <>
-                      mk_header_small (mk_str ("TWN-Loops: t" ^ (TransitionLabel.id t |> Util.natural_to_subscript) ^ " " ^ Bound.to_string ~pretty:true b)) <>
+                      mk_header_small (mk_str ("TWN-Loops: t" ^ (TransitionLabel.id transition |> Util.natural_to_subscript) ^ " " ^ Bound.to_string ~pretty:true b)) <>
                       !proof))
