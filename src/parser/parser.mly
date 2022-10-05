@@ -32,7 +32,7 @@
 
 %start <BoundsInst.Bound.t> onlyBound
 
-%start <Program.t * Goal.goal> programAndGoal
+%start <Program.t * Goal.classical Goal.goal> programAndGoal
 
 %type <Formulas.Formula.t> formula
 
@@ -80,10 +80,6 @@ goal :
                   { Goal.Complexity }
         |       LPAR GOAL EXACTRUNTIME RPAR
                   { Goal.ExactRuntime }
-        |       LPAR GOAL EXPECTEDCOMPLEXITY RPAR
-                  { Goal.(ProbabilisticGoal ExpectedComplexity) }
-        |       LPAR GOAL EXPECTEDSIZE var=ID RPAR
-                  { Goal.(ProbabilisticGoal (ExpectedSize (Var.of_string var))) };
 
 start :
 	|	LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
