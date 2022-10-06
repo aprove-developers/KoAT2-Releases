@@ -363,7 +363,7 @@ module RationalPolynomial =
         ~times:Polynomial.mul
         ~pow:Polynomial.pow
 
-    let normalize_return_factor poly = 
+    let normalize_return_factor poly =
       let coeff_inv =
         coeffs poly
         |> List.filter (not % OurRational.is_integer)
@@ -390,9 +390,9 @@ module RationalPolynomial =
 
     let of_intpoly  =
       Polynomial.fold ~const:(of_constant % OurRational.of_ourint) ~var:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
-  
-    let is_integer_poly  poly = 
-      List.for_all OurRational.is_integer @@ coeffs poly 
+
+    let is_integer_poly  poly =
+      List.for_all OurRational.is_integer @@ coeffs poly
 
   end
 

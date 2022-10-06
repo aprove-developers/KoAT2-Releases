@@ -71,10 +71,10 @@ sig
 
   (** Returns poly where each coeff. is replaced by its absolute, ceiled value *)
   val overapprox : t -> Polynomial.t
-  
+
   val of_intpoly : Polynomial.t -> t
 
-  val is_integer_poly : t -> bool 
+  val is_integer_poly : t -> bool
 
 end
 
