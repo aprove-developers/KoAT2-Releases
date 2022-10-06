@@ -7,6 +7,34 @@ open BoundsInst
 open Constraints
 open PolyExponential
 
+let check_solvable (t: TWNLoop.t) =
+  let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in
+  let module SCC = Graph.Components.Make(DG) in
+  let dg_linear = VarSet.fold (fun x graph ->
+              let vars = TWNLoop.update t x |? Polynomial.of_var x |> Polynomial.vars in
+              VarSet.fold (fun y graph -> DG.add_edge graph x y) vars graph) (TWNLoop.vars t) DG.empty and
+  dg_non_linear = VarSet.fold (fun x graph ->
+              let update = TWNLoop.update t x |? Polynomial.of_var x in
+              let linear_vars = update
+                |> Polynomial.vars
+                |> VarSet.filter (fun v -> Polynomial.var_only_linear v update |> not) in
+              VarSet.fold (fun y graph -> DG.add_edge graph x y) linear_vars graph) (TWNLoop.vars t) DG.empty in
+  let blocks = SCC.scc_list dg_linear in
+  if List.for_all (fun scc -> List.length scc = 1) (SCC.scc_list dg_non_linear) (* We don't have cyclic non-linear dependencies. *)
+  && List.for_all (fun scc ->
+                    List.for_all (fun x ->
+                      List.for_all (fun y ->
+                      TWNLoop.update t x
+                      |? Polynomial.of_var x
+                      |> Polynomial.var_only_linear y)
+                      scc)
+                    scc) blocks (* For all blocks, all variables x,y in such a block: The update of x only depends linear on y *) then
+    Option.some blocks
+  else
+    None
+
+let check_solvable_t (t: TransitionLabel.t) = check_solvable (TWNLoop.mk_transition t)
+
 (* PROOF *)
 let logger = Logging.(get Twn)
 
@@ -308,24 +336,29 @@ let rec find l list =
     | [] -> raise Not_found
     | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
 
-(* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
-let find_cycle appr program (cycles: path list) = List.find (fun cycle ->
-    let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
-    let entries = Program.entry_transitions logger program handled_transitions in
-    let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in
-    List.for_all (fun (entry, t) ->
-      let eliminated_t =
-        EliminateNonContributors.eliminate_t
-          (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
-      in
-      not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
-       && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
-       && let order = check_triangular eliminated_t in List.length order == VarSet.cardinal (TWNLoop.input_vars eliminated_t) (* Triangular?*)
-       && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)
-       (* && List.for_all (Approximation.is_time_bounded appr) entries *)
-       ) (List.combine entries twn_loops)) cycles
+exception No_Cycle
 
-       (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
+(* Checks for a list of cycles if twn synt. req. are fulfilled (we do not (!) check termination here) *)
+let find_cycle appr program (cycles: path list) =
+  try
+    List.find (fun cycle ->
+      let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
+      let entries = Program.entry_transitions logger program handled_transitions in
+      let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in
+      List.for_all (fun (entry, t) ->
+        let eliminated_t =
+          EliminateNonContributors.eliminate_t
+            (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
+        in
+        not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
+        && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
+        && let order = check_triangular eliminated_t in List.length order == VarSet.cardinal (TWNLoop.input_vars eliminated_t) (* Triangular?*)
+        && check_weakly_monotonicity eliminated_t (* Weakly Monotonic? *)
+        (* && List.for_all (Approximation.is_time_bounded appr) entries *)
+        ) (List.combine entries twn_loops)) cycles
+  with
+  | Not_found -> raise No_Cycle
+    (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
 
 (** Gets a list of transitions and rec. merges them into twn-loops, i.e., disjunctions of transitions. *)
 let rec parallel_edges ys = function
@@ -354,15 +387,12 @@ let lift appr entries bound =
   |> Bound.sum_list
 
 let check_non_increasing twn_loop t =
-  Printf.printf "TWNLoop: %s\n" (TWNLoop.to_string twn_loop);
   List.for_all (fun atom ->
-    Printf.printf "atom: %s\n" (Atom.to_string atom);
     (** Here, an atom has the form poly < 0. *)
     let poly = Atom.poly atom in
     let poly_updated = Polynomial.substitute_f (TransitionLabel.update_full t) poly in
     let atom = Atom.mk_le poly poly_updated |> Atom.neg
     and guard = TransitionLabel.guard t in
-    Printf.printf "FORMULA: %s\n" Formula.(mk_and (mk guard) (mk [atom]) |> to_string);
     SMTSolver.tautology Formula.(implies (mk guard) (mk [atom]))) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms)
 
 let find_non_increasing_set program appr cycle twn_loop entry =
@@ -386,7 +416,6 @@ let check_update_invariant twn_loop atom =
 
 let time_bound (l,t,l') scc program appr = (
   proof := FormattedString.Empty;
-
   let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
   if Option.is_none opt then (
     let bound =
@@ -409,7 +438,6 @@ let time_bound (l,t,l') scc program appr = (
           (List.combine (List.map Transition.to_string_pretty entries) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
-        Printf.printf "DECREASING: %s\n" (TransitionLabel.to_string ~pretty:true t);
         let global_local_bounds =
           List.map (fun (entry, twn) ->
                 let program_only_entry = Program.from ((TransitionSet.to_list (TransitionSet.diff (Program.transitions program) (TransitionSet.of_list entries))) |> List.map List.singleton |> (@) [[entry]]) (Program.start program) in
@@ -421,9 +449,6 @@ let time_bound (l,t,l') scc program appr = (
                   |> List.map (TransitionLabel.invariant % Transition.label)
                   |> fun invariants -> List.flatten invariants |> List.filter (fun atom -> List.for_all (List.exists (Atom.equal atom)) invariants)
                   |> TWNLoop.add_invariant twn in
-                (* Printf.printf "t: %S\n" (TWNLoop.to_string twn_inv);
-                List.iter (fun (_,t',_) -> Printf.printf "t': %S\n%B\n" (TransitionLabel.to_string  t') (check_non_increasing twn_inv t');
-                  ) (TransitionSet.to_list scc); *)
                 let eliminated_t =
                   EliminateNonContributors.eliminate_t
                     (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
@@ -432,22 +457,18 @@ let time_bound (l,t,l') scc program appr = (
                   Bound.infinity, ([entry], Bound.infinity)
                 else (
                   let bound = complexity eliminated_t in
-                  Printf.printf "hi\n";
                   if Bound.is_infinity bound then raise (Non_Terminating (handled_transitions, entries));
                   let non_increasing_opt = find_non_increasing_set program appr (List.map (TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle |> List.flatten) twn entry in
                   if Option.is_some non_increasing_opt then
                     let non_increasing, entries = Option.get non_increasing_opt in
-                    non_increasing |> List.enum |> Util.enum_to_string Transition.to_string_pretty |> Printf.printf "NON_INCREASING: %s\n";
-                    Printf.printf "ENTRY: %s\n" (Transition.to_string_pretty entry);
-                    entries |> List.enum |> Util.enum_to_string Transition.to_string_pretty |> Printf.printf "ENTRIES: %s\n";
-                    lift appr entries bound |> tap (fun b -> Printf.printf "BOUND: %s\n" (Bound.to_string b)), (entries, bound)
+                    lift appr entries bound, (entries, bound)
                   else
                     Bound.infinity, ([entry], bound)))
           (List.combine entries twn_loops) in
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map Tuple2.second global_local_bounds)) handled_transitions;
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
         with
-        | Not_found -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
+        | No_Cycle -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
         | Non_Terminating (handled_transitions,entries)->
             Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]);
             List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> ([t], Bound.infinity)) entries)) handled_transitions;
