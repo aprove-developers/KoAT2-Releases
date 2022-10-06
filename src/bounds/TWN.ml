@@ -592,8 +592,7 @@ module TimeBoundTable = Hashtbl.Make(Transition)
 (* keys: liste von transition (kreise), values: bounds von eingangstransitionen *)
 let time_bound_table: ((Transition.t list) * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
 
-let lift appr entries bound =
-  List.map (fun entry ->
+let lift appr entry bound =
   let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
     Bound.mul (Approximation.timebound appr entry) bound_with_sizebound
   |> tap (fun b ->
@@ -603,8 +602,7 @@ let lift appr entries bound =
           |> List.map (fun v -> (Var.to_string ~pretty:true v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true))
           |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend) <>
           FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
-          FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))) entries
-  |> Bound.sum_list
+          FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
 
 let check_non_increasing twn_loop t =
   List.for_all (fun atom ->
@@ -634,8 +632,7 @@ let check_update_invariant twn_loop atom =
   let atom_updated = Atom.mk_le poly_updated Polynomial.zero in
   SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
 
-
-(* let time_bound (l,transition,l') scc program appr transformation_type = (
+let time_bound (l,transition,l') scc program appr transformation_type = (
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,transition,l') in
   if Option.is_none opt then (
@@ -689,32 +686,30 @@ let check_update_invariant twn_loop atom =
                 (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
             in
             if VarSet.is_empty (TWNLoop.vars eliminated_t) then
-              Bound.infinity, ([entry], Bound.infinity)
+              Bound.infinity, (entry, Bound.infinity)
             else (
               let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in
               if Bound.is_infinity bound then
                 raise (Non_Terminating (handled_transitions, entries));
-              else (
-                lift appr [entry] bound, ([entry], bound))))
+                lift appr entry bound, (entry, bound)))
           (List.map2 (fun (a,b) c -> (a,b,c)) (List.combine entries twn_loops) automorphisms)
         in
-        let non_increasing_opt =
+        (* let non_increasing_opt =
           find_non_increasing_set program appr (List.map (TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle |> List.flatten) twn entry
-        in
-        if Option.is_some non_increasing_opt then
+        in *)
+        (* if Option.is_some non_increasing_opt then
           let non_increasing, entries = Option.get non_increasing_opt in
           lift appr entries bound, (entries, bound)
         else
           Bound.infinity, ([entry], bound)
-          (List.combine entries twn_loops)
-
+          (List.combine entries twn_loops) *)
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map Tuple2.second global_local_bounds)) handled_transitions;
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
         with
         | No_Cycle -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
         | Non_Terminating (handled_transitions,entries)->
             Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]);
-            List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> ([t], Bound.infinity)) entries)) handled_transitions;
+            List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> (t, Bound.infinity)) entries)) handled_transitions;
             Bound.infinity)
     in
     if Option.is_some bound then
@@ -726,12 +721,10 @@ let check_update_invariant twn_loop atom =
   )
   else (
     let cycle, xs = Option.get opt in
-    let bound_with_sizebound = Bound.sum_list (List.map (fun (entries, bound) -> lift appr entries bound) xs) in
+    let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
     bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
                          |> tap (fun b -> proof_append FormattedString.((mk_str_line (b |> Bound.to_string ~pretty:true)))))
   |> tap (fun b -> if Bound.compare_asy b (Approximation.timebound appr (l,transition,l')) < 0 then ProofOutput.add_to_proof @@ fun () ->
     FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:") <>
                       mk_header_small (mk_str ("TWN-Loops: t" ^ (TransitionLabel.id transition |> Util.natural_to_subscript) ^ " " ^ Bound.to_string ~pretty:true b)) <>
-                      !proof)) *)
-
-let time_bound (l,transition,l') scc program appr transformation_type = Bound.infinity
+                      !proof)))
