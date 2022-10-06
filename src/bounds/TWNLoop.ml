@@ -20,6 +20,9 @@ let update t var = VarMap.Exceptionless.find var t.update
 
 let update_map t = t.update
 
+let update_full t var = let res = VarMap.Exceptionless.find var t.update in
+  if Option.is_some res then Option.get res else Polynomial.of_var var
+
 let guard t = Guard.mk_and t.guard (Guard.lift [t.invariant])
 
 let guard_without_inv t = t.guard
