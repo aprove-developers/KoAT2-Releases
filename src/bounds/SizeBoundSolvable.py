@@ -16,26 +16,27 @@ def abs_expr(expr):
 
 # We assume that every variable has the name "Arg_i" for some i
 # Returns an "invariant" with loop-counter n
-def size_bound(matrix_as_list, vars_as_list):
+def size_bound(matrix_as_list, vars_as_list, var):
     matrix_as_int_list = list(map(int, matrix_as_list))  # cast to int
     dim = sqrt(len(matrix_as_int_list))
     m = Matrix(dim, dim, matrix_as_int_list) # build matrix
     P_inv, J = m.jordan_form() # compute Jordan normal form
+    if J.is_diagonal():
+        n = Symbol('n')
+        vars = symbols(vars_as_list)
+        helper_vars = symbols(list(map(lambda x: x + "_H", vars_as_list)))
+        dict_helper_vars = dict(zip(vars, helper_vars)) # Rename variables (Arg_i -> Arg_i_H) to have simultaneous substitutions
 
+        index = vars_as_list.index(var)
 
-    n = Symbol('n')
-    vars = symbols(vars_as_list)
-    helper_vars = symbols(list(map(lambda x: x + "_H", vars_as_list)))
-    dict_helper_vars = dict(zip(vars, helper_vars)) # Rename variables (Arg_i -> Arg_i_H) to have simultaneous substitutions
+        phi_inv = (P_inv * Matrix(dim,1,vars))[index]
+        phi = P_inv.inv() * Matrix(dim,1,vars)[index]
 
-    print("test")
+        clt = J[index]**n * Matrix(dim,1,vars) # Closed form of Jordan normal form (see https://en.wikipedia.org/wiki/Jordan_normal_form#Matrix_functions)
 
-    phi_inv = P_inv * Matrix(dim,1,vars)
-    phi = P_inv.inv() * Matrix(dim,1,vars)
+        res = phi_inv.subs(dict_helper_vars).subs(dict(zip(helper_vars, clt))).subs(dict_helper_vars).subs(dict(zip(helper_vars, phi)))
+        print(abs_expr(res.expand()))
+    else:
+        print("eigenvalues are not pairwise different")
 
-    clt = J**n * Matrix(dim,1,vars) # Closed form of Jordan normal form (see https://en.wikipedia.org/wiki/Jordan_normal_form#Matrix_functions)
-
-    res = phi_inv.subs(dict_helper_vars).subs(dict(zip(helper_vars, clt))).subs(dict_helper_vars).subs(dict(zip(helper_vars, phi)))
-    print(list(map(lambda x: abs_expr(x.expand()), res)))
-
-# python3 -c 'from src.bounds.SizeBoundSolvable import size_bound; size_bound([1,3,2,1,2,1,1,3,2],["x","y","z"])'
+# python3 -c 'from src.bounds.SizeBoundSolvable import size_bound; size_bound([3,2,-5,-3],["x","y"], "x")'

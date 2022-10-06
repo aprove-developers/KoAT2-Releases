@@ -185,6 +185,7 @@ let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ~local (scc: TransitionSet.t
     |> knowledge_propagation scc measure program
     |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
     |> TWNSizeBounds.improve program ~scc:(Option.some scc)
+    |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
     |> improve_timebound ~mprf_max_depth ~local scc measure program
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
@@ -224,6 +225,7 @@ let apply_cfr method_name f_cfr f_proof (scc: TransitionSet.t) rvg_with_sccs tim
                         |> tap (const @@ Logger.log logger Logger.INFO (fun () -> method_name ^ "analysis", ["scc", TransitionSet.to_id_string scc]))
                         |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
                         |> TWNSizeBounds.improve program ~scc:(Option.some scc)
+                        |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
                         |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~local scc measure program_cfr
                     else appr)
             (CFR.merge_appr program program_cfr appr) in
@@ -252,14 +254,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
   Program.reset_pre_cache ();
   Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR_" ^ method_name, ["scc", (TransitionSet.to_string non_linear_transitions)])
 
-open Readers
-open SolvableSizeBounds
-
 let improve rvg ?(mprf_max_depth = 1) ~preprocess ~local ~cfr measure program appr =
-  let bound = Readers.read_bound "2*(x +
-  n)" |> Bound.substitute (Var.of_string "n") ~replacement:(Readers.read_bound "y") in
-  SolvableSizeBounds.run_python;
-  Printf.printf "BOUND: %s\n" (Bound.to_string bound);
   program
     |> Program.sccs
     |> List.of_enum
@@ -269,6 +264,7 @@ let improve rvg ?(mprf_max_depth = 1) ~preprocess ~local ~cfr measure program ap
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc)
                             |> TWNSizeBounds.improve program ~scc:(Option.some scc)
+                            |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
                             |> improve_scc rvg ~mprf_max_depth ~local scc measure program
                             (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
                             |> fun appr -> (
