@@ -1,21 +1,21 @@
-%token	<string>	ID
-%token	<int>		UINT
-%token			PLUS MINUS TIMES POW
-%token			EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
-%token			LPAR RPAR
-%token                  LBRACE RBRACE
-%token			EOF
-%token                  OR
-%token                  AND
-%token 			ARROW WITH LBRACK RBRACK
-%token			GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
-%token                  COMMA
-%token                  INFINITY
-%token                  EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE
+%token <string> ID
+%token <int>    UINT
+%token          PLUS MINUS TIMES POW
+%token          EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
+%token          LPAR RPAR
+%token          LBRACE RBRACE
+%token          EOF
+%token          OR
+%token          AND
+%token          ARROW WITH LBRACK RBRACK
+%token          GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
+%token          COMMA
+%token          INFINITY
+%token          EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE
 
-%left			PLUS MINUS
-%left			TIMES
-%left			POW
+%left           PLUS MINUS
+%left           TIMES
+%left           POW
 
 
 %start <Program.t> onlyProgram
