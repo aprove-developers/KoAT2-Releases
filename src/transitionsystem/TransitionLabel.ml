@@ -150,6 +150,9 @@ let update t var = VarMap.Exceptionless.find var t.update
 
 let update_map t = t.update
 
+let update_full t var = let res = VarMap.Exceptionless.find var t.update in
+  if Option.is_some res then Option.get res else Polynomial.of_var var
+
 let overapprox_nonlinear_updates t =
   let orig_guard_and_invariants = Guard.mk_and t.guard t.invariant in
   let overapprox_poly orig_var poly (guard, update) =
@@ -403,3 +406,4 @@ let remove_non_contributors non_contributors t =
 (* We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
 let separate_guard_invariant t invariant' = {t with guard = List.filter (fun atom -> List.exists (fun atom_inv -> Atoms.Atom.equal atom atom_inv) invariant' |> not) t.guard;
                                                     invariant = List.filter (fun atom -> List.exists (fun atom_inv -> Atoms.Atom.equal atom atom_inv) invariant') t.guard}
+

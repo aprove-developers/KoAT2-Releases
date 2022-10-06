@@ -43,6 +43,9 @@ let add_sizebound bound transition var appr =
 let add_sizebounds bound scc appr =
   { appr with size = SizeApproximation.add_all bound scc appr.size }
 
+let is_size_bounded program appr t =
+  VarSet.exists (Bound.is_infinity % (sizebound appr t)) (Program.input_vars program) |> not
+
 (** Timebound related methods *)
 
 let timebound =
