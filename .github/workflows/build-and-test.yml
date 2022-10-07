@@ -1,0 +1,75 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Build and Test KoAT2
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+
+# change branch to probabilistic later on
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    - uses: actions/cache@v1
+      name: Cache docker image
+      with:
+        path: ~/cache
+        key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile', '**/ci.yml') }}
+
+    - name: restore docker cache
+      run: |
+        if [ -e ~/cache/image.tar.xz ]; then xz -dc ~/cache/image.tar.xz | docker load; fi
+
+    # Build the binary using docker and run all tests
+    - name: build and test
+      run: |
+        ./build_container.sh --target koat2_build
+
+    - name: export docker cache
+      run: |
+        # Save all used docker images
+        # Export all cached steps if no cache was present
+        if [ ! -e ~/cache ]; then
+          mkdir ~/cache
+          docker save $(docker history koatbuild -q | grep -v missing) | xz -T4 -z -1 - > ~/cache/image.tar.xz
+        fi
+        df -h
+
+    # Do not export the artifacts to save on storage capacity.
+    # Uncomment the following to export them nevertheless.
+
+        # - name: export artifacts
+        #   run: |
+        #     cd ~
+        #     docker container create --name temp koatbuild
+        #     docker container cp temp:/home/opam/build/src/main/koat2.opt koat-static
+        #     docker container rm temp
+        #     chmod +x koat-static
+        #     xz -1 -T4 koat-static
+        #     ls -lh
+        #     docker save koat | xz -T4 -z -1 - > ~/koat-docker.tar.xz
+
+        # - uses: actions/upload-artifact@v2
+        #   with:
+        #     name: static-binary
+        #     path: ~/koat-static.xz
+
+        # - uses: actions/upload-artifact@v2
+        #   with:
+        #     name: docker-img
+        #     path: ~/koat-docker.tar.xz
+
