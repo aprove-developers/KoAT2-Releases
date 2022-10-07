@@ -567,7 +567,7 @@ let find_cycle appr program (cycles: path list) transformation_type =
           in
           not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
           && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
-          && (Approximation.is_time_bounded appr) entry)
+          (* && (Approximation.is_time_bounded appr) entry) *) )
         entries_twn_loops
       ) then (
         lift_option @@ List.map (transform transformation_type) entries_twn_loops) (*tries to transform into loops. *)
@@ -590,9 +590,10 @@ let rec parallel_edges ys = function
 module TimeBoundTable = Hashtbl.Make(Transition)
 
 (* keys: liste von transition (kreise), values: bounds von eingangstransitionen *)
-let time_bound_table: ((Transition.t list) * (Transition.t * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
+let time_bound_table: ((Transition.t list) * (Transition.t list * Bound.t) list) TimeBoundTable.t = TimeBoundTable.create 10
 
-let lift appr entry bound =
+let lift appr entries bound =
+  List.map (fun entry ->
   let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
     Bound.mul (Approximation.timebound appr entry) bound_with_sizebound
   |> tap (fun b ->
@@ -602,7 +603,14 @@ let lift appr entry bound =
           |> List.map (fun v -> (Var.to_string ~pretty:true v) ^ ": " ^ (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true))
           |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend) <>
           FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
-          FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))
+          FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))))) entries
+  |> Bound.sum_list
+
+let check_update_invariant twn_loop atom =
+  let poly = Atom.poly atom in
+  let poly_updated = Polynomial.substitute_f (TWNLoop.update_full twn_loop) poly in
+  let atom_updated = Atom.mk_le poly_updated Polynomial.zero in
+  SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
 
 let check_non_increasing twn_loop t =
   List.for_all (fun atom ->
@@ -611,7 +619,7 @@ let check_non_increasing twn_loop t =
     let poly_updated = Polynomial.substitute_f (TransitionLabel.update_full t) poly in
     let atom = Atom.mk_le poly poly_updated |> Atom.neg
     and guard = TransitionLabel.guard t in
-    SMTSolver.tautology Formula.(implies (mk guard) (mk [atom]))) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms)
+    SMTSolver.tautology Formula.(implies (mk guard) (mk [atom]))) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms |> List.filter (check_update_invariant twn_loop))
 
 let find_non_increasing_set program appr cycle twn_loop entry =
   let rec f non_increasing entries =
@@ -625,12 +633,6 @@ let find_non_increasing_set program appr cycle twn_loop entry =
       else
         None in
   f [] [entry]
-
-let check_update_invariant twn_loop atom =
-  let poly = Atom.poly atom in
-  let poly_updated = Polynomial.substitute_f (TWNLoop.update_full twn_loop) poly in
-  let atom_updated = Atom.mk_le poly_updated Polynomial.zero in
-  SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
 
 let time_bound (l,transition,l') scc program appr transformation_type = (
   proof := FormattedString.Empty;
@@ -655,7 +657,7 @@ let time_bound (l,transition,l') scc program appr transformation_type = (
         let twn_loops =
           List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries
         in
-        Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map Transition.to_string entries) (List.map TWNLoop.to_string twn_loops));
+        Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map ((^) "entry: " % Transition.to_id_string) entries) (List.map ((^) "  loop: " % TWNLoop.to_string) twn_loops));
         proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>
           (List.combine (List.map Transition.to_string_pretty entries) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
@@ -686,12 +688,17 @@ let time_bound (l,transition,l') scc program appr transformation_type = (
                 (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
             in
             if VarSet.is_empty (TWNLoop.vars eliminated_t) then
-              Bound.infinity, (entry, Bound.infinity)
+              Bound.infinity, ([entry], Bound.infinity)
             else (
+              let non_increasing_opt =
+                find_non_increasing_set program appr (List.map (TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle |> List.flatten) twn entry
+              in
+              let non_increasing, entries = non_increasing_opt |? ([], [entry]) in
+              Logger.log logger Logger.DEBUG (fun () -> "twn", ["non_increasing", TransitionSet.to_string (TransitionSet.of_list non_increasing)]);
               let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in
               if Bound.is_infinity bound then
                 raise (Non_Terminating (handled_transitions, entries));
-                lift appr entry bound, (entry, bound)))
+                lift appr entries bound, (entries, bound)))
           (List.map2 (fun (a,b) c -> (a,b,c)) (List.combine entries twn_loops) automorphisms)
         in
         (* let non_increasing_opt =
@@ -709,7 +716,7 @@ let time_bound (l,transition,l') scc program appr transformation_type = (
         | No_Cycle -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
         | Non_Terminating (handled_transitions,entries)->
             Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]);
-            List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> (t, Bound.infinity)) entries)) handled_transitions;
+            List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> ([t], Bound.infinity)) entries)) handled_transitions;
             Bound.infinity)
     in
     if Option.is_some bound then
