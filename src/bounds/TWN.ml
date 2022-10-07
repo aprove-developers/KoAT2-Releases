@@ -430,14 +430,14 @@ let rec list_lift (n:int) (xs:'a list) : 'a list list = match  xs with
 (** turns string into OurInt list list (which represents a matrix).
   [parse_matrix d s] return the matrix of dimension [d] times [d] that is described with string [s] *)
 let parse_int_matrix (dim:int) (s:string) =
-  Str.split (Str.regexp "[^0-9/./\-]+") s (*turn string into list, splitted at each non number char *)
+  Str.split (Str.regexp "[^0-9/./\\-]+") s (*turn string into list, splitted at each non number char *)
       |> List.map int_of_string
       |> List.map OurInt.of_int
       |> list_lift dim
 
 (** [parse_matrix d s] return the matrix of dimension [d] times [d] that is described with string [s] *)
 let parse_matrix (dim:int) (s:string) =
-  Str.split (Str.regexp "[^0-9/./\-]+") s (*turn string into list, splitted at each non number character *)
+  Str.split (Str.regexp "[^0-9/./\\-]+") s (*turn string into list, splitted at each non number character *)
       |> List.map OurRational.of_string
       |> list_lift dim  (*turn OurRational list into OurRational list list *)
 

@@ -35,7 +35,7 @@ let of_int_tuple (n,d) =
 
 (** turns string "a/b" into OurRational a/b; turns "a" into a/1 *)
 let of_string (s:string) =
-  let fraction = Str.split (Str.regexp "[^0-9.\-]+") s in
+  let fraction = Str.split (Str.regexp "[^0-9.\\-]+") s in
   if List.length fraction == 1 then
     of_int @@ int_of_string @@ List.first fraction
   else
