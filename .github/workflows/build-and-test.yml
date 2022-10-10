@@ -34,10 +34,13 @@ jobs:
       run: |
         if [ -e ~/cache/image.tar.xz ]; then xz -dc ~/cache/image.tar.xz | docker load; fi
 
-    # Build the binary using docker and run all tests
+    # Build the binary using docker and run tests
     - name: build and test
       run: |
-        ./build_container.sh --target koat2_build
+        # Incremental builds so that we can cache all stages of the build
+        ./build_container.sh -t koat2_build --target koat2_build
+        ./build_container.sh -t koat2_c_utils --target koat2_c_utils
+        ./build_container.sh
 
     - name: export docker cache
       run: |
@@ -45,31 +48,37 @@ jobs:
         # Export all cached steps if no cache was present
         if [ ! -e ~/cache ]; then
           mkdir ~/cache
-          docker save $(docker history koatbuild -q | grep -v missing) | xz -T4 -z -1 - > ~/cache/image.tar.xz
+          echo "Saving the following images:"
+          echo "Build"
+          docker history koat2_build --no-trunc | grep -v missing
+          echo
+          echo
+          echo "C Utils"
+          docker history koat2_c_utils --no-trunc | grep -v missing
+          echo
+          echo
+          echo "KoAT2"
+          docker history koat2 --no-trunc | grep -v missing
+          echo
+          echo
+          docker save $(docker history koat2_build -q | grep -v missing) $(docker history koat2_c_utils -q | grep -v missing) $(docker history koat2 -q | grep -v missing) | xz -T4 -z -1 - > ~/cache/image.tar.xz
         fi
         df -h
 
-    # Do not export the artifacts to save on storage capacity.
-    # Uncomment the following to export them nevertheless.
+    - name: export artifacts
+      run: |
+        ./compile_static_binary.sh
+        chmod +x koat2_static
+        xz -1 -T4 koat2_static
+        docker save koat2 | xz -T4 -z -1 - > koat2_docker.tar.xz
 
-        # - name: export artifacts
-        #   run: |
-        #     cd ~
-        #     docker container create --name temp koatbuild
-        #     docker container cp temp:/home/opam/build/src/main/koat2.opt koat-static
-        #     docker container rm temp
-        #     chmod +x koat-static
-        #     xz -1 -T4 koat-static
-        #     ls -lh
-        #     docker save koat | xz -T4 -z -1 - > ~/koat-docker.tar.xz
+    - uses: actions/upload-artifact@v2
+      with:
+        name: static-binary
+        path: koat2_static.xz
 
-        # - uses: actions/upload-artifact@v2
-        #   with:
-        #     name: static-binary
-        #     path: ~/koat-static.xz
-
-        # - uses: actions/upload-artifact@v2
-        #   with:
-        #     name: docker-img
-        #     path: ~/koat-docker.tar.xz
+    - uses: actions/upload-artifact@v2
+      with:
+        name: docker-img
+        path: koat2_docker.tar.xz
 
