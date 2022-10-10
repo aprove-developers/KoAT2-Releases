@@ -28,7 +28,7 @@ jobs:
       name: Cache docker image
       with:
         path: ~/cache
-        key: ${{ runner.os }}-docker-${{ hashFiles('**/Dockerfile', '**/ci.yml') }}
+        key: ${{ runner.os }}-docker-v2-${{ hashFiles('**/Dockerfile', '**/ci.yml') }}
 
     - name: restore docker cache
       run: |
