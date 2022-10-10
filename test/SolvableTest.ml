@@ -19,18 +19,18 @@ let tests =
                      let result = TWN.check_solvable_t((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second) in
                      assert_equal_string expected_string (to_string result)))
                   [
-                    ("solvable: [[p]; [q]; [u]; [v]; [w]; [x]; [y]; [z]]", "l0 -> l1(x), l1 -> l1(x)"); (* Currently a simple program always consists of variables p,q,u,v,w,x,y,z *)
+                    ("solvable: [[Arg_0]; [Arg_1]; [Arg_2]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]; [Arg_7]]", "l0 -> l1(x), l1 -> l1(x)"); (* Currently a simple program always consists of variables p,q,u,v,w,x,y,z *)
                     ("not solvable", "l0 -> l1(x), l1 -> l1(x^2)");
                     ("not solvable", "l0 -> l1(x,y), l1 -> l1(y^2,x^2)");
-                     ("solvable: [[p]; [q]; [u]; [v]; [w]; [y; x]; [z]]", "l0 -> l1(x,y), l1 -> l1(x + y,x + y)");
-                    ("solvable: [[p]; [q]; [u]; [v]; [w]; [y]; [x]; [z]]", "l0 -> l1(x,y), l1 -> l1(x + y^2,y)"); (* Note that there might be multiple ways to define the blocks of a solvable loop. *)
+                    ("solvable: [[Arg_1; Arg_0]; [Arg_2]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]; [Arg_7]]", "l0 -> l1(x,y), l1 -> l1(x + y,x + y)");
+                    ("solvable: [[Arg_1]; [Arg_0]; [Arg_2]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]; [Arg_7]]", "l0 -> l1(x,y), l1 -> l1(x + y^2,y)"); (* Note that there might be multiple ways to define the blocks of a solvable loop. *)
                     ("not solvable", "l0 -> l1(x,y), l1 -> l1(x + y + y^2,x + y)");
-                    ("solvable: [[p]; [q]; [u]; [v]; [w]; [x]; [y]; [z]]", "l0 -> l1(x,y,z), l1 -> l1(x + 5,y + x^2, z + y^2)");
-                    ("solvable: [[p]; [q]; [u]; [v]; [w]; [x]; [y]; [z]]", "l0 -> l1(x,y,z), l1 -> l1(x + 5,y + x^2, z + y^2)");
+                    ("solvable: [[Arg_0]; [Arg_1]; [Arg_2]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]; [Arg_7]]", "l0 -> l1(x,y,z), l1 -> l1(x + 5,y + x^2, z + y^2)");
+                    ("solvable: [[Arg_0]; [Arg_1]; [Arg_2]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]; [Arg_7]]", "l0 -> l1(x,y,z), l1 -> l1(x + 5,y + x^2, z + y^2)");
                     ("not solvable", "l0 -> l1(x,y,z), l1 -> l1(x + 5,y + x^2 + z, z + y^2)");
                     ("not solvable", "l0 -> l1(x,y,z,q), l1 -> l1(x + 5 + y,y + x + z^2, z + y, z)");
-                    ("solvable: [[p]; [q]; [z; y; x]; [u]; [v]; [w]]", "l0 -> l1(x,y,z,q), l1 -> l1(x + 5 + y,y + x + z, z + y, q + z)");
-                    ("solvable: [[p]; [q]; [z; y; x]; [u]; [v]; [w]]", "l0 -> l1(x,y,z,q), l1 -> l1(x + 5 + y,y + x + z, z + y, q + z*z)");
+                    ("solvable: [[Arg_2; Arg_1; Arg_0]; [Arg_7]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]]", "l0 -> l1(x,y,z,q), l1 -> l1(x + 5 + y,y + x + z, z + y, q + z)");
+                    ("solvable: [[Arg_2; Arg_1; Arg_0]; [Arg_7]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]]", "l0 -> l1(x,y,z,q), l1 -> l1(x + 5 + y,y + x + z, z + y, q + z*z)");
                   ]
       );
   ]
