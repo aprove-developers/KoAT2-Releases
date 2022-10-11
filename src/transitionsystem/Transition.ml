@@ -117,6 +117,8 @@ module TransitionOver(L : ProgramTypes.Location) = struct
 
     let locations t =
       fold (fun (l,_,l') set -> LocationSet.add l set |> LocationSet.add l') t (LocationSet.empty)
+
+    let targets = LocationSet.of_enum % Enum.map target % enum
   end
 end
 

@@ -37,6 +37,9 @@ module type TransitionSet = sig
   val create : ('a -> elt) -> 'a Batteries.Enum.t -> t
 
   val locations: t -> locationSet
+
+  (** Returns a locationSet corresponding to the targets of all transitions contained in the set passed as first argument *)
+  val targets: t -> locationSet
 end
 
 
