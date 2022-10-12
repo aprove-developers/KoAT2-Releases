@@ -364,7 +364,7 @@ let compose_transitions cycle start =
         if i == 0 then ([],x,xs) else let y,t,z = split (i - 1) xs in (x::y,t, z)
   in
   let pre, t1, post = split start cycle in
-  List.fold (fun u t -> TWNLoop.append u (Tuple3.second t)) (Tuple3.second t1) (post@pre)
+  List.fold TWNLoop.append t1 (post@pre)
 
 (** get_linear_update_of_variable (x<- 2x+3y+y^2) x y returns 3 *)
 let get_linear_update_of_variable (t:TWNLoop.t) (var_left:TWNLoop.VarMap.key) (var_right:TWNLoop.VarMap.key)=
@@ -527,21 +527,23 @@ let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) =
 then tries the Jordan approach;
 then tries general approach
 Returns the resulting twn-loop and an transformation automorphism *)
-let transform transformation_type ((entry, t):Transition.t * TWNLoop.t)  =
+let transform transformation_type ((entry, entries, t): Transition.t * Transition.t list * TWNLoop.t)  =
    match (transform_linearly t transformation_type) with
-  | Some (transformed, automorphism) ->  Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)(*TODO find target *)
+  | Some (transformed, automorphism) ->  Some (entry, entries, transformed, automorphism)
   | None -> if transformation_type ==  `TWNTransformGeneral || transformation_type ==  `TWNTransform then
               match (transform_non_linearly t) with
-                    | Some (transformed, automorphism) -> Some (entry, (Transition.target entry, transformed, Transition.target entry ), automorphism)
+                    | Some (transformed, automorphism) -> Some (entry, entries, transformed, automorphism)
                     | None -> None
             else
               None
 
+let corresponding_transition t (trans: TransitionSet.t) = TransitionSet.find_first (fun (_,t',_) -> (TransitionLabel.id t) == (TransitionLabel.id t')) trans
+
 (* Finds entered location on cycle. *)
-let rec find l list =
+let rec find l scc list =
     match list with
     | [] ->  raise Not_found
-    | (l',_,_)::xs -> if Location.equal l l' then 0 else 1 + (find l xs)
+    | t::xs -> let (_,_,l') = corresponding_transition t scc in if Location.equal l l' then 0 else 1 + (find l scc xs)
 
 (** lift_option [[Some x; Some y]] returns [Some [x;y]]. Returns none if none is element of list. *)
 let lift_option (xs:'a option list) : 'a list option =
@@ -552,25 +554,57 @@ let lift_option (xs:'a option list) : 'a list option =
 
 exception No_Cycle
 
-let find_cycle appr program (cycles: path list) transformation_type =
+let check_update_invariant twn_loop atom =
+  let poly = Atom.poly atom in
+  let poly_updated = Polynomial.substitute_f (TWNLoop.update_full twn_loop) poly in
+  let atom_updated = Atom.mk_lt poly_updated Polynomial.zero in
+  SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
+
+let check_non_increasing twn_loop t =
+  List.for_all (fun atom ->
+    (** Here, an atom has the form poly < 0. *)
+    let poly = Atom.poly atom in
+    let poly_updated = Polynomial.substitute_f (TransitionLabel.update_full t) poly in
+    let atom = Atom.mk_le poly poly_updated |> Atom.neg
+    and guard = TransitionLabel.guard t in
+    SMTSolver.tautology Formula.(implies (mk guard) (mk [atom]))) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms |> List.filter (check_update_invariant twn_loop))
+
+let find_non_increasing_set program appr decreasing loop entry =
+  let rec f non_increasing entries =
+    if List.for_all (fun entry -> (Approximation.is_time_bounded appr entry) && (Approximation.is_size_bounded program appr entry)) entries then
+      Option.some (non_increasing, entries)
+    else
+      let bounded, unbounded = List.partition (fun entry -> (Approximation.is_time_bounded appr entry) && (Approximation.is_size_bounded program appr entry)) entries in
+      let new_entries = bounded @ (Program.entry_transitions logger program unbounded |> List.filter (fun (_,t,_) -> List.for_all ((!=) (TransitionLabel.id t)) (List.map TransitionLabel.id decreasing))) in
+      if List.for_all (check_non_increasing loop) (List.map Tuple3.second unbounded) then
+        f (unbounded @ non_increasing) new_entries
+      else
+        None in
+  f [] [entry]
+
+let find_cycle appr scc program (cycles: path list) transformation_type =
   try
   List.find_map (fun cycle ->
     (* list of all transitions in a cycle, twnloop doesn't require each transition to be in twn form, but together they do *)
       let handled_transitions = List.fold (fun xs (l,twn,l') -> (List.map (fun t -> (l,t,l')) (TWNLoop.subsumed_transitionlabels twn))@xs) [] cycle in
       let entries = Program.entry_transitions logger program handled_transitions in
-      let twn_loops = List.map (fun (_,_,l') -> compose_transitions cycle (find l' cycle)) entries in (* 'find' throws an exception *)
-      let entries_twn_loops = (List.combine entries twn_loops) in
-      if (List.for_all (fun (entry, t) ->
+      let twn_loops = List.map (fun (_,_,l') -> compose_transitions (cycle |> List.map Tuple3.second) (find l' scc (cycle |> List.map (List.first % TWNLoop.subsumed_transitionlabels % Tuple3.second)))) entries in (* 'find' throws an exception *)
+      let loop_entry = (List.combine twn_loops entries) in
+      if (List.for_all (fun (t, entry) ->
           let eliminated_t = (* throw out useless variables *)
             EliminateNonContributors.eliminate_t
               (TWNLoop.input_vars t) (TWNLoop.Guard.vars @@ TWNLoop.guard t) (TWNLoop.update t) (TWNLoop.remove_non_contributors t)
           in
           not (VarSet.is_empty (TWNLoop.vars eliminated_t)) (* Are there any variables *)
-          && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *)
-          (* && (Approximation.is_time_bounded appr) entry) *) )
-        entries_twn_loops
+          && VarSet.equal (TWNLoop.vars eliminated_t) (TWNLoop.input_vars eliminated_t) (* No Temp Vars? *))
+        loop_entry
       ) then (
-        lift_option @@ List.map (transform transformation_type) entries_twn_loops) (*tries to transform into loops. *)
+        let subsumed_transitionlabels = List.map (TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle |> List.fold (@) [] in
+        let non_increasing_opt = List.map (uncurry @@ (find_non_increasing_set program appr subsumed_transitionlabels)) loop_entry in
+        if List.for_all Option.is_some non_increasing_opt then (
+          lift_option @@ List.map (transform transformation_type) (List.combine (List.map (Tuple2.second % Option.get) non_increasing_opt) twn_loops |> List.combine entries |> List.map (fun (x,(y,z)) -> (x,y,z)))) (*tries to transform into loops. *)
+        else
+          None)
       else
         None  (*Not twn nor twn-transformable *)
     )
@@ -612,28 +646,6 @@ let check_update_invariant twn_loop atom =
   let atom_updated = Atom.mk_le poly_updated Polynomial.zero in
   SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
 
-let check_non_increasing twn_loop t =
-  List.for_all (fun atom ->
-    (** Here, an atom has the form poly < 0. *)
-    let poly = Atom.poly atom in
-    let poly_updated = Polynomial.substitute_f (TransitionLabel.update_full t) poly in
-    let atom = Atom.mk_le poly poly_updated |> Atom.neg
-    and guard = TransitionLabel.guard t in
-    SMTSolver.tautology Formula.(implies (mk guard) (mk [atom]))) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms |> List.filter (check_update_invariant twn_loop))
-
-let find_non_increasing_set program appr cycle twn_loop entry =
-  let rec f non_increasing entries =
-    if List.for_all (fun entry -> (Approximation.is_time_bounded appr entry) && (Approximation.is_size_bounded program appr entry)) entries then
-      Option.some (non_increasing, entries)
-    else
-      let bounded, unbounded = List.partition (fun entry -> (Approximation.is_time_bounded appr entry) && (Approximation.is_size_bounded program appr entry)) entries in
-      let new_entries = bounded @ (Program.entry_transitions logger program unbounded |> List.filter (fun (_,t,_) -> List.for_all ((!=) (TransitionLabel.id t)) (List.map TransitionLabel.id cycle))) in
-      if List.for_all (check_non_increasing twn_loop) (List.map Tuple3.second unbounded) then
-        f (unbounded @ non_increasing) new_entries
-      else
-        None in
-  f [] [entry]
-
 let time_bound (l,transition,l') scc program appr transformation_type = (
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,transition,l') in
@@ -641,37 +653,37 @@ let time_bound (l,transition,l') scc program appr transformation_type = (
     let bound =
       Timeout.timed_run 5. (fun () -> try
         let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
-        let (entries, cycle, automorphisms) = List.fold_right (fun  (x1,x2,x3) (xs1,xs2,xs3)-> ((x1::xs1) , (x2::xs2) ,(x3::xs3) )) (* TODO *)
-                   (find_cycle appr program ( (* find_cycle throws an exception if no cycle is found (for efficiency reasons) *)
-          if Location.equal l l' then
-            let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs transition) (TWNLoop.update_to_string_rhs loop) in
-            [[List.find f parallel_edges]]
-          else
-            (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition transition),l')], (LocationSet.singleton l'))]) [])) transformation_type)
-                  ([],[],[])
+        let (entries_org, entries, cycle, automorphisms) =
+          let cycles = find_cycle appr scc program ( (* find_cycle throws an exception if no cycle is found (for efficiency reasons) *)
+            if Location.equal l l' then
+              let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs transition) (TWNLoop.update_to_string_rhs loop) in
+              [[List.find f parallel_edges]]
+            else
+              (cycles (parallel_edges |> List.filter (fun (l,_,l') -> not (Location.equal l l')) |> Set.of_list) l ([([(l,(TWNLoop.mk_transition transition),l')], (LocationSet.singleton l'))]) [])) transformation_type in
+          List.fold_right (fun (x0,x1,x2,x3) (xs0,xs1,xs2,xs3) -> ((x0::xs0),(x1::xs1),(x2::xs2),(x3::xs3))) cycles ([],[],[],[])
         in
         let handled_transitions =
-          ListMonad.(cycle >>= fun (l,twn,l') -> TWNLoop.subsumed_transitions l l' twn)
+          ListMonad.(cycle >>= fun loop -> TWNLoop.subsumed_transitions scc loop)
         in
-        Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,transition,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries))]);
+        Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,transition,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries_org))]);
         let twn_loops =
-          List.map (fun (l,t,l') -> compose_transitions cycle (find l' cycle)) entries
+          List.map (fun (l,t,l') -> compose_transitions cycle (find l' scc (cycle |> List.map (List.first % TWNLoop.subsumed_transitionlabels)))) entries_org
         in
-        Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map ((^) "entry: " % Transition.to_id_string) entries) (List.map ((^) "  loop: " % TWNLoop.to_string) twn_loops));
+        Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map ((^) "entry: " % Transition.to_id_string) entries_org) (List.map ((^) "  loop: " % TWNLoop.to_string) twn_loops));
         proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>
-          (List.combine (List.map Transition.to_string_pretty entries) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
+          (List.combine (List.map Transition.to_string_pretty entries_org) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
         let global_local_bounds =
-          List.map (fun (entry, twn, automorphism) -> (* entry,twn,automorphism *)
+          List.map (fun (entry_org, non_increasing, loop, automorphism) -> (* entry,twn,automorphism *)
             let program_with_one_entry =
               let non_entries =
-                TransitionSet.to_list (TransitionSet.diff (Program.transitions program) (TransitionSet.of_list entries))
+                TransitionSet.to_list (TransitionSet.diff (Program.transitions program) (TransitionSet.of_list entries_org))
               in
               Program.from (
                 non_entries (* TODO simplify *)
                 |> List.map List.singleton
-                |> (@) [[entry]])
+                |> (@) [[entry_org]])
                 (Program.start program)
             in
             let twn_inv =
@@ -683,33 +695,20 @@ let time_bound (l,transition,l') scc program appr transformation_type = (
               |> TransitionSet.to_list
               |> List.map (TransitionLabel.invariant % Transition.label)
               |> fun invariants -> List.flatten invariants |> List.filter (fun atom -> List.for_all (List.exists (Atom.equal atom)) invariants)
-              |> TWNLoop.add_invariant twn in
+              |> TWNLoop.add_invariant loop in
             let eliminated_t = EliminateNonContributors.eliminate_t
                 (TWNLoop.input_vars twn_inv) (TWNLoop.Guard.vars @@ TWNLoop.guard twn_inv) (TWNLoop.update twn_inv) (TWNLoop.remove_non_contributors twn_inv)
             in
             if VarSet.is_empty (TWNLoop.vars eliminated_t) then
-              Bound.infinity, ([entry], Bound.infinity)
+              Bound.infinity, ([entry_org], Bound.infinity)
             else (
-              let non_increasing_opt =
-                find_non_increasing_set program appr (List.map (TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle |> List.flatten) twn entry
-              in
-              let non_increasing, entries = non_increasing_opt |? ([], [entry]) in
-              Logger.log logger Logger.DEBUG (fun () -> "twn", ["non_increasing", TransitionSet.to_string (TransitionSet.of_list non_increasing)]);
+              (* Logger.log logger Logger.DEBUG (fun () -> "twn", ["non_increasing", TransitionSet.to_string (TransitionSet.of_list non_increasing)]); *)
               let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in
               if Bound.is_infinity bound then
-                raise (Non_Terminating (handled_transitions, entries));
-                lift appr entries bound, (entries, bound)))
-          (List.map2 (fun (a,b) c -> (a,b,c)) (List.combine entries twn_loops) automorphisms)
+                raise (Non_Terminating (handled_transitions, [entry_org]));
+                lift appr non_increasing bound, (non_increasing, bound)))
+          (List.map2 (fun (a,b) (c,d) -> (a,b,c,d)) (List.combine entries_org entries) (List.combine twn_loops automorphisms))
         in
-        (* let non_increasing_opt =
-          find_non_increasing_set program appr (List.map (TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle |> List.flatten) twn entry
-        in *)
-        (* if Option.is_some non_increasing_opt then
-          let non_increasing, entries = Option.get non_increasing_opt in
-          lift appr entries bound, (entries, bound)
-        else
-          Bound.infinity, ([entry], bound)
-          (List.combine entries twn_loops) *)
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map Tuple2.second global_local_bounds)) handled_transitions;
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
         with

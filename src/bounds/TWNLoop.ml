@@ -30,7 +30,10 @@ let guard_without_inv t = t.guard
 let invariant t = t.invariant
 
 let subsumed_transitionlabels t = t.subsumed_transitionlabels
-let subsumed_transitions l l' twn = List.map (fun t -> l,t,l') twn.subsumed_transitionlabels
+
+let corresponding_transition t (trans: TransitionSet.t) = TransitionSet.find_first (fun (_,t',_) -> (TransitionLabel.id t) == (TransitionLabel.id t')) trans
+
+let subsumed_transitions trans twn = List.map (fun t -> corresponding_transition t trans) twn.subsumed_transitionlabels
 
 let mk_transitions xs =
 let invariants = List.map TransitionLabel.invariant xs in

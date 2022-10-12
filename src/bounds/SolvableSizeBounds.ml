@@ -28,12 +28,12 @@ let rec get_linear_update_list (t:TransitionLabel.t) (var_left:TWNLoop.VarMap.ke
 let matrix_of_linear_assignments (t:TransitionLabel.t) (block:TWNLoop.VarMap.key list) =
   List.map (fun x -> get_linear_update_list t x block) block
 
-let find_cycle appr program var (cycles: path list) =
+let find_cycle appr program trans var (cycles: path list) =
     let f_eliminate t =
         EliminateNonContributors.eliminate_t (TWNLoop.vars t) (VarSet.singleton var) (TWNLoop.update t) TransitionLabel.remove_non_contributors (t |> TWNLoop.singleton |> TransitionLabel.only_update) in
     List.find_map (fun cycle ->
         let entries = Program.entry_transitions logger program (cycle |> List.map (Tuple3.map2 (List.first % TWNLoop.subsumed_transitionlabels))) in
-        let twn_loops = List.map (fun (_,_,l') -> TWN.compose_transitions cycle (TWN.find l' cycle) |> f_eliminate) entries in
+        let twn_loops = List.map (fun (_,_,l') -> TWN.compose_transitions (List.map Tuple3.second cycle) (TWN.find l' trans (List.map (List.first % TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle)) |> f_eliminate) entries in
       let blocks = List.map (fun twn_loop ->
           let block = TWN.check_solvable_t twn_loop in
           if Option.is_some block then
@@ -82,7 +82,7 @@ let improve_t program trans (l,t,l') appr =
   VarSet.fold (fun var appr ->
   if Approximation.sizebound appr (l,t,l') var |> Bound.is_linear |> not then
       try (
-      let cycle = find_cycle appr program var [[(l,TWNLoop.mk_transition t,l')]] in
+      let cycle = find_cycle appr program (trans |> TransitionSet.of_list) var [[(l,TWNLoop.mk_transition t,l')]] in
       List.map (fun (entry, (update_as_matrix, block)) ->
           run_python var block update_as_matrix |? Bound.infinity
             |> Bound.substitute (Var.of_string "n") ~replacement:(Approximation.timebound appr (l,t,l'))) cycle
