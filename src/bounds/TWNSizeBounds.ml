@@ -13,12 +13,12 @@ let compute_order t var =
 
 type path = (Location.t * TWNLoop.t * Location.t) list
 
-let find_cycle appr program var (cycles: path list) =
+let find_cycle appr program trans var (cycles: path list) =
     let f_eliminate t =
         EliminateNonContributors.eliminate_t (TWNLoop.vars t) (VarSet.singleton var) (TWNLoop.update t) TransitionLabel.remove_non_contributors (t |> TWNLoop.singleton |> TransitionLabel.only_update) in
     List.find_map (fun cycle ->
         let entries = Program.entry_transitions logger program (cycle |> List.map (Tuple3.map2 (List.first % TWNLoop.subsumed_transitionlabels))) in
-        let twn_loops = List.map (fun (_,_,l') -> TWN.compose_transitions cycle (TWN.find l' cycle) |> f_eliminate) entries in
+        let twn_loops = List.map (fun (_,_,l') -> TWN.compose_transitions (List.map Tuple3.second cycle) (TWN.find l' (trans |> TransitionSet.of_list) (List.map (List.first % TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle)) |> f_eliminate) entries in
         if List.for_all (fun t -> TWN.check_triangular_t t != []) twn_loops then
             Option.some (List.combine twn_loops entries)
         else
@@ -30,7 +30,7 @@ let improve_t program trans (l,t,l') appr =
     if Approximation.sizebound appr (l,t,l') var |> Bound.is_infinity then
         let parallel_edges = TWN.parallel_edges [] trans in
         try (
-        let cycle = find_cycle appr program var (
+        let cycle = find_cycle appr program trans var (
           if Location.equal l l' then
             let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs t) (TWNLoop.update_to_string_rhs loop) in
             [[List.find f parallel_edges]]
