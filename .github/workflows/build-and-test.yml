@@ -65,20 +65,22 @@ jobs:
         fi
         df -h
 
-    - name: export artifacts
-      run: |
-        ./compile_static_binary.sh
-        chmod +x koat2_static
-        xz -1 -T4 koat2_static
-        docker save koat2 | xz -T4 -z -1 - > koat2_docker.tar.xz
+        # Deactivated for now to save some space
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: static-binary
-        path: koat2_static.xz
+        #- name: export artifacts
+        #  run: |
+        #    ./compile_static_binary.sh
+        #    chmod +x koat2_static
+        #    xz -1 -T4 koat2_static
+        #    docker save koat2 | xz -T4 -z -1 - > koat2_docker.tar.xz
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: docker-img
-        path: koat2_docker.tar.xz
+        #- uses: actions/upload-artifact@v2
+        #  with:
+        #    name: static-binary
+        #    path: koat2_static.xz
+
+        #- uses: actions/upload-artifact@v2
+        #  with:
+        #    name: docker-img
+        #    path: koat2_docker.tar.xz
 
