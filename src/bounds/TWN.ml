@@ -188,9 +188,9 @@ let termination_ twn order npe varmap =
               (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) ((TWNLoop.guard_without_inv twn |> Formula.mk_and (Formula.mk rest) |> Formula.constraints))) in
   let model = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in
   (Option.is_none model)
-  |> tap (fun bool -> Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
+ |> tap (fun bool ->  (* Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
                       Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
-                      if Option.is_some model then Logger.log logger Logger.DEBUG (fun () -> "termination", ["model", (Option.get model |> Valuation.to_string)]);
+                      if Option.is_some model then Logger.log logger Logger.DEBUG (fun () -> "termination", ["model", (Option.get model |> Valuation.to_string)]); *)
     proof_append
         FormattedString.(
         mk_str_line ("Termination: " ^ (string_of_bool bool))
@@ -281,7 +281,7 @@ let compute_f atom = function
     let m_ = OurInt.max_list (List.map (fun ys -> compute_M (base_exp ys)) (prefix xs)) in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["M", (OurInt.to_string m_)]);
     Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)) |> add (of_constant OurInt.one))
-    |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);
+    |> tap (fun b -> (* Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);  *)
       proof_append (
       [ "alphas_abs: " ^ (Polynomial.to_string_pretty alphas_abs);
         "M: " ^ (OurInt.to_string m_);
@@ -318,16 +318,16 @@ let complexity loop =
         chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TWNLoop.to_string loop])), true
       else loop, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-    proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
+    (* proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order)))); *)
     let pe = PE.compute_closed_form (List.map (fun var ->
         let update_var = TWNLoop.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
-        proof_append (
+        (* proof_append (
           FormattedString.(mk_str "closed-form:" <> (
           (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
           |> List.map (fun (a,b) -> a ^ ": " ^ b)
-          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
+          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block))); *)
     let npe = PE.normalize pe in
         Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
     let varmap = Hashtbl.of_list (List.combine order npe) in
@@ -527,12 +527,12 @@ let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) =
 then tries the Jordan approach;
 then tries general approach
 Returns the resulting twn-loop and an transformation automorphism *)
-let transform transformation_type ((entry, entries, t): Transition.t * Transition.t list * TWNLoop.t)  =
+let transform transformation_type ((entry, x, t): Transition.t * (Transition.t list * Transition.t list) * TWNLoop.t)  =
    match (transform_linearly t transformation_type) with
-  | Some (transformed, automorphism) ->  Some (entry, entries, transformed, automorphism)
+  | Some (transformed, automorphism) ->  Some (entry, x, transformed, automorphism)
   | None -> if transformation_type ==  `TWNTransformGeneral || transformation_type ==  `TWNTransform then
               match (transform_non_linearly t) with
-                    | Some (transformed, automorphism) -> Some (entry, entries, transformed, automorphism)
+                    | Some (transformed, automorphism) -> Some (entry, x, transformed, automorphism)
                     | None -> None
             else
               None
@@ -575,12 +575,14 @@ let find_non_increasing_set program appr decreasing loop entry =
       Option.some (non_increasing, entries)
     else
       let bounded, unbounded = List.partition (fun entry -> (Approximation.is_time_bounded appr entry) && (Approximation.is_size_bounded program appr entry)) entries in
-      let new_entries = bounded @ (Program.entry_transitions logger program unbounded |> List.filter (fun (_,t,_) -> List.for_all ((!=) (TransitionLabel.id t)) (List.map TransitionLabel.id decreasing))) in
       if List.for_all (check_non_increasing loop) (List.map Tuple3.second unbounded) then
+        let new_entries =
+          bounded @ (Program.entry_transitions logger program (unbounded @ non_increasing))
+        in
         f (unbounded @ non_increasing) new_entries
       else
         None in
-  f [] [entry]
+  f (List.map (fun t -> corresponding_transition t (Program.transitions program)) decreasing) [entry]
 
 let find_cycle appr scc program (cycles: path list) transformation_type =
   try
@@ -602,7 +604,7 @@ let find_cycle appr scc program (cycles: path list) transformation_type =
         let subsumed_transitionlabels = List.map (TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle |> List.fold (@) [] in
         let non_increasing_opt = List.map (uncurry @@ (find_non_increasing_set program appr subsumed_transitionlabels)) loop_entry in
         if List.for_all Option.is_some non_increasing_opt then (
-          lift_option @@ List.map (transform transformation_type) (List.combine (List.map (Tuple2.second % Option.get) non_increasing_opt) twn_loops |> List.combine entries |> List.map (fun (x,(y,z)) -> (x,y,z)))) (*tries to transform into loops. *)
+          lift_option @@ List.map (transform transformation_type) (List.combine (List.map Option.get non_increasing_opt) twn_loops |> List.combine entries |> List.map (fun (x,(y,z)) -> (x,y,z)))) (*tries to transform into loops. *)
         else
           None)
       else
@@ -630,7 +632,7 @@ let lift appr entries bound =
   List.map (fun entry ->
   let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
     Bound.mul (Approximation.timebound appr entry) bound_with_sizebound
-  |> tap (fun b ->
+    |> tap (fun b ->
     proof_append (FormattedString.(mk_paragraph (mk_str_line ("relevant size-bounds w.r.t. t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ":") <> (
           Bound.vars bound
           |> VarSet.to_list
@@ -646,14 +648,15 @@ let check_update_invariant twn_loop atom =
   let atom_updated = Atom.mk_le poly_updated Polynomial.zero in
   SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
 
-let time_bound (l,transition,l') scc program appr transformation_type = (
+let time_bound (l,transition,l') scc program appr transformation_type =
   proof := FormattedString.Empty;
   let opt = TimeBoundTable.find_option time_bound_table (l,transition,l') in
+  let bound =
   if Option.is_none opt then (
     let bound =
       Timeout.timed_run 5. (fun () -> try
         let parallel_edges = parallel_edges [] (TransitionSet.to_list scc) in
-        let (entries_org, entries, cycle, automorphisms) =
+        let (entries_org, non_incr_entries, cycle, automorphisms) =
           let cycles = find_cycle appr scc program ( (* find_cycle throws an exception if no cycle is found (for efficiency reasons) *)
             if Location.equal l l' then
               let f (l1,loop,l1') = Location.equal l l1 && Location.equal l' l1' && String.equal (TransitionLabel.update_to_string_rhs transition) (TWNLoop.update_to_string_rhs loop) in
@@ -665,17 +668,18 @@ let time_bound (l,transition,l') scc program appr transformation_type = (
         let handled_transitions =
           ListMonad.(cycle >>= fun loop -> TWNLoop.subsumed_transitions scc loop)
         in
-        Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,transition,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries_org))]);
+        (* Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,transition,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries_org))]); *)
         let twn_loops =
           List.map (fun (l,t,l') -> compose_transitions cycle (find l' scc (cycle |> List.map (List.first % TWNLoop.subsumed_transitionlabels)))) entries_org
         in
-        Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map ((^) "entry: " % Transition.to_id_string) entries_org) (List.map ((^) "  loop: " % TWNLoop.to_string) twn_loops));
-        proof_append FormattedString.((mk_header_small (mk_str "TWN-Loops:")) <>
+        (* Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map ((^) "entry: " % Transition.to_id_string) entries_org) (List.map ((^) "  loop: " % TWNLoop.to_string) twn_loops));  *)
+        proof_append FormattedString.((mk_header_small (mk_str "Cycles:")) <>
           (List.combine (List.map Transition.to_string_pretty entries_org) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
           |> FormattedString.mappend));
         let global_local_bounds =
-          List.map (fun (entry_org, non_increasing, loop, automorphism) -> (* entry,twn,automorphism *)
+          List.map (fun (entry_org, (non_increasing,new_entries), loop, automorphism) -> (* entry,twn,automorphism *)
+            proof_append FormattedString.(mk_header_small (mk_str @@ "Cycle by " ^  (Transition.to_id_string_pretty entry_org)));
             let program_with_one_entry =
               let non_entries =
                 TransitionSet.to_list (TransitionSet.diff (Program.transitions program) (TransitionSet.of_list entries_org))
@@ -706,8 +710,12 @@ let time_bound (l,transition,l') scc program appr transformation_type = (
               let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in
               if Bound.is_infinity bound then
                 raise (Non_Terminating (handled_transitions, [entry_org]));
-                lift appr non_increasing bound, (non_increasing, bound)))
-          (List.map2 (fun (a,b) (c,d) -> (a,b,c,d)) (List.combine entries_org entries) (List.combine twn_loops automorphisms))
+                proof_append FormattedString.(
+                  mk_header_small (mk_str @@ "Lift Bound: ")
+                  <> mk_str_line @@ "Compute new entries: " ^ (new_entries |> List.enum |> Util.enum_to_string Transition.to_id_string_pretty)
+                  <> mk_str_line @@ "Non increasing transitions: " ^ (non_increasing |> List.enum |> Util.enum_to_string Transition.to_id_string_pretty));
+                lift appr new_entries bound, (new_entries, bound)))
+          (List.map2 (fun (a,b) (c,d) -> (a,b,c,d)) (List.combine entries_org non_incr_entries) (List.combine twn_loops automorphisms))
         in
         List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map Tuple2.second global_local_bounds)) handled_transitions;
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
@@ -720,7 +728,7 @@ let time_bound (l,transition,l') scc program appr transformation_type = (
     in
     if Option.is_some bound then
       bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
-      |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true))))
+      (* |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true)))) *)
     else (
       Logger.log logger Logger.INFO (fun () -> "twn", ["Timeout", Bound.to_string Bound.infinity]);
       Bound.infinity)
@@ -729,8 +737,10 @@ let time_bound (l,transition,l') scc program appr transformation_type = (
     let cycle, xs = Option.get opt in
     let bound_with_sizebound = Bound.sum_list (List.map (fun (entry, bound) -> lift appr entry bound) xs) in
     bound_with_sizebound |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
-                         |> tap (fun b -> proof_append FormattedString.((mk_str_line (b |> Bound.to_string ~pretty:true)))))
-  |> tap (fun b -> if Bound.compare_asy b (Approximation.timebound appr (l,transition,l')) < 0 then ProofOutput.add_to_proof @@ fun () ->
-    FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:") <>
-                      mk_header_small (mk_str ("TWN-Loops: t" ^ (TransitionLabel.id transition |> Util.natural_to_subscript) ^ " " ^ Bound.to_string ~pretty:true b)) <>
-                      !proof)))
+                         |> tap (fun b -> proof_append FormattedString.((mk_str_line (b |> Bound.to_string ~pretty:true))))) in
+    (if Bound.compare_asy bound (Approximation.timebound appr (l,transition,l')) < 0 then
+      let formatted = FormattedString.((mk_header_big @@ mk_str "Time-Bound by TWN-Loops:") <>
+              mk_header_small (mk_str ("TWN-Loop t" ^ (TransitionLabel.id transition |> Util.natural_to_subscript) ^ " with runtime bound " ^ Bound.to_string ~pretty:true bound)) <>
+              !proof) in
+      ProofOutput.add_to_proof @@ fun () -> formatted);
+    bound
