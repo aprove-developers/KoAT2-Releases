@@ -605,8 +605,7 @@ let find_cycle appr scc program (cycles: path list) transformation_type =
         None  (*Not twn nor twn-transformable *)
     )
     cycles
-       (* TODO: Maybe we should sort w.r.t size-bounds of entry transitions first and take minimum afterwards. And if we get different cycles for the same transitions at different timepoints then we need to compute termination and sth. twice  *)
-       with
+    with
     | Not_found -> raise No_Cycle
 
 (** Gets a list of transitions and rec. merges them into twn-loops, i.e., disjunctions of transitions. *)
@@ -662,11 +661,9 @@ let time_bound (l,transition,l') scc program appr transformation_type =
         let handled_transitions =
           ListMonad.(cycle >>= fun loop -> TWNLoop.subsumed_transitions scc loop)
         in
-        (* Logger.log logger Logger.INFO (fun () -> "cycle", ["decreasing", Transition.to_id_string (l,transition,l'); "cycle", (TransitionSet.to_id_string (TransitionSet.of_list handled_transitions)); "entry", (TransitionSet.to_id_string (TransitionSet.of_list entries_org))]); *)
         let twn_loops =
           List.map (fun (l,t,l') -> compose_transitions cycle (find l' scc (cycle |> List.map (List.first % TWNLoop.subsumed_transitionlabels)))) entries_org
         in
-        (* Logger.log logger Logger.INFO (fun () -> "twn_loops", List.combine (List.map ((^) "entry: " % Transition.to_id_string) entries_org) (List.map ((^) "  loop: " % TWNLoop.to_string) twn_loops));  *)
         proof_append FormattedString.((mk_header_small (mk_str "Cycles:")) <>
           (List.combine (List.map Transition.to_string_pretty entries_org) (List.map (TWNLoop.to_string ~pretty:true) twn_loops)
           |> List.map (fun (a,b) -> FormattedString.mk_str_line ("entry: " ^ a) <> FormattedString.mk_block (FormattedString.mk_str_line ("results in twn-loop: " ^ b)))
@@ -700,7 +697,6 @@ let time_bound (l,transition,l') scc program appr transformation_type =
             if VarSet.is_empty (TWNLoop.vars eliminated_t) then
               Bound.infinity, ([entry_org], Bound.infinity)
             else (
-              (* Logger.log logger Logger.DEBUG (fun () -> "twn", ["non_increasing", TransitionSet.to_string (TransitionSet.of_list non_increasing)]); *)
               let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in
               if Bound.is_infinity bound then
                 raise (Non_Terminating (handled_transitions, [entry_org]));
@@ -721,8 +717,7 @@ let time_bound (l,transition,l') scc program appr transformation_type =
             Bound.infinity)
     in
     if Option.is_some bound then
-      bound |> Option.get |> Tuple2.first |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "twn", ["global_bound", Bound.to_string b]))
-      (* |> tap (fun _ -> proof_append FormattedString.((mk_str_line (bound |> Option.get |> Tuple2.first |> Bound.to_string ~pretty:true)))) *)
+      bound |> Option.get |> Tuple2.first
     else (
       Logger.log logger Logger.INFO (fun () -> "twn", ["Timeout", Bound.to_string Bound.infinity]);
       Bound.infinity)
