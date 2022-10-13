@@ -184,9 +184,9 @@ let update_to_string_rhs_pretty t =
 
 let to_string ?(pretty = false) label =
   let guard = if Guard.is_true label.guard  then "" else " :|: " ^ guard_without_inv_to_string ~pretty label in
-  let invariant = if Invariant.is_true label.invariant  then "" else "Inv: [" ^ invariant_to_string ~pretty label ^ "] , "in
+  let invariant = if Invariant.is_true label.invariant  then "" else "[" ^ invariant_to_string ~pretty label ^ "] , "in
   if pretty then
-    "twn" ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty label ^ " -> " ^  update_to_string_rhs_pretty label ^ guard
+    invariant ^ " " ^ update_to_string_lhs_pretty label ^ " -> " ^  update_to_string_rhs_pretty label ^ guard
   else
     invariant  ^ update_to_string label.update ^ guard
 
