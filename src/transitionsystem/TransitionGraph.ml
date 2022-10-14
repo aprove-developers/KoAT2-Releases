@@ -2,7 +2,7 @@ open Batteries
 
 module TransitionGraphOver(L : ProgramTypes.Location) = struct
   module Location = L
-  module Transition = Transition.TransitionOver(Location)
+  module Transition = Transition.TransitionOver(L)
   module LocationSet = Transition.LocationSet
   module TransitionSet = Transition.TransitionSet
 
