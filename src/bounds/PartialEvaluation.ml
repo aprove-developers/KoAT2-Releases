@@ -2,8 +2,7 @@ open Batteries
 open Polynomials
 open Atoms
 open Constraints
-open Program
-open Formulas
+open ProgramModules
 open ApproximationModules
 open BoundsInst
 

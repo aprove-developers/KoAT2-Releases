@@ -6,9 +6,9 @@ open Constraints
 
 module ProgramOver(L: ProgramTypes.Location) : sig
   include ProgramTypes.Program
-    with type location = L.t
+    with module Location = L
     and type LocationSet.elt = L.t
-    and type Transition.location = L.t
+    and module Transition.Location = L
     and type Transition.t = L.t * TransitionLabel.t * L.t
     and type TransitionSet.elt = L.t * TransitionLabel.t * L.t
 end
