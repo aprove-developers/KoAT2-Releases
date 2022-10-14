@@ -10,8 +10,4 @@ module TransitionGraphOver(L: ProgramTypes.Location) : sig
   and type TransitionSet.elt = L.t * TransitionLabel.t * L.t
 end
 
-include ProgramTypes.TransitionGraph
-  with type Location.t = Location.t
-  and type Transition.location = Location.t
-  and type LocationSet.elt = Location.t
-  and type TransitionSet.elt = Location.t * TransitionLabel.t * Location.t
+include module type of TransitionGraphOver(Location)

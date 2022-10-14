@@ -6,5 +6,4 @@ module TransitionOver(L: ProgramTypes.Location) : sig
   with type location = L.t
 end
 
-include ProgramTypes.Transition
-  with type location = Location.t
+include module type of TransitionOver(Location)
