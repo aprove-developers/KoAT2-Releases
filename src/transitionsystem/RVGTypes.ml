@@ -1,5 +1,5 @@
 open Batteries
-open Program
+open ProgramModules
 
 module RV =
   struct

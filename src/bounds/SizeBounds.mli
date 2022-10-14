@@ -1,7 +1,7 @@
 (** Performs a single improvement step for a whole program to find better size-bounds. *)
 
 open Batteries
-open Program
+open ProgramModules
 open RVGTypes
 (** Performs a single improvement step for a whole program to find better size-bounds. *)
 

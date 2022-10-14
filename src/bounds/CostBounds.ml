@@ -1,7 +1,7 @@
 (** Implementation of cost-bounds.*)
 open Batteries
 open BoundsInst
-open Program
+open ProgramModules
 
 (** Returns true iff bound is not finite. *)
 let unbounded appr transition =

@@ -1,6 +1,6 @@
 (** Updates size and time-bounds until a fixed point is reached. *)
 open Batteries
-open Program
+open ProgramModules
 open Polynomials
 open LocalSizeBound
 

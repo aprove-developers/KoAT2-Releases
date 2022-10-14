@@ -1,5 +1,5 @@
 open Batteries
-open Program
+open ProgramModules
 open ApproximationModules
 
 (** Generates the approximation for the new program_cfr from the one of the original program. *)

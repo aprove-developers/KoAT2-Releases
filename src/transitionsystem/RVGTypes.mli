@@ -1,6 +1,6 @@
 (** Provides all modules related to result variable graphs. *)
 open Batteries
-open Program
+open ProgramModules
 
 (** Module handling result variables. *)
 module RV :

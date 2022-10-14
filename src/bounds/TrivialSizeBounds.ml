@@ -1,7 +1,7 @@
 (** Modules used to infer size-bounds for trivial components. *)
 open Batteries
 open BoundsInst
-open Program
+open ProgramModules
 open RVGTypes
 
 (** Modules used to infer size-bounds for trivial components. That is an scc which consists only of one result variable without a loop to itself.

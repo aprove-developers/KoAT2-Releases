@@ -1,7 +1,7 @@
 (** Implemenation of a preprocessor which eliminates variables that do not contribute to guards. *)
 open Batteries
 open Formulas
-open Program
+open ProgramModules
 open Constraints
 open Polynomials
 
