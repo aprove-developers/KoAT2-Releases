@@ -1,7 +1,7 @@
 (** Handles shell arguments and computes an upper time-bound. *)
 open Batteries
 open Koat2
-open Program
+open ProgramModules
 open RVGTypes
 open Readers
 open BoundsInst

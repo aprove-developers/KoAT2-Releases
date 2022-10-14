@@ -1,7 +1,7 @@
 (** Provides an implementation of polynomial-exponential expressions*)
 open Batteries
 open Polynomials
-open Program
+open ProgramModules
 open Formulas
 open BoundsInst
 

@@ -1,6 +1,6 @@
 (** Implemenation of a preprocessor which performs chaining on the TransitionGraph. *)
 open Batteries
-open Program
+open ProgramModules
 
 (** Implemenation of a preprocessor which performs chaining on the TransitionGraph. Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location, making the location obsolete. *)
 

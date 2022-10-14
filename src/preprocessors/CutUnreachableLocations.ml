@@ -1,6 +1,6 @@
 (** Implemenation of a preprocessor which removes all unreachable locations. *)
 open Batteries
-open Program
+open ProgramModules
 
 (** This preprocessor cuts all unreachable locations (and all transitions connected to them) from the program. *)
 

@@ -3,7 +3,7 @@ open Batteries
 open BoundsInst
 open OUnit2
 open Helper
-open Program
+open ProgramModules
 open ApproximationModules
 
 let preprocess = Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])

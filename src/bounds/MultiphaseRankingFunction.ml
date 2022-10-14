@@ -3,7 +3,7 @@ open Formulas
 open Constraints
 open Atoms
 open Polynomials
-open Program
+open ProgramModules
 open BoundsInst
 
 module Solver = SMT.IncrementalZ3Solver

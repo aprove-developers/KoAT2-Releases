@@ -1,7 +1,7 @@
 (** Main Module *)
 open Batteries
 open Koat2
-open Program
+open ProgramModules
 open RVGTypes
 
 type main_params = {

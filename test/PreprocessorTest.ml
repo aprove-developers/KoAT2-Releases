@@ -2,7 +2,7 @@ open Koat2
 open Batteries
 open OUnit2
 open Helper
-open Program
+open ProgramModules
 
 let tests =
   "Preprocessors" >::: [

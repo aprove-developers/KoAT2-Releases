@@ -1,6 +1,6 @@
 (** Provides all module types related to preprocessors. *)
 open Batteries
-open Program
+open ProgramModules
 
 (** Provides all module types related to preprocessors. *)
 

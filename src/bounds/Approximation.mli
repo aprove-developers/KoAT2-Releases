@@ -1,7 +1,7 @@
 (** Implementation of approximations containing time, size and cost-bounds. *)
 open Batteries
 open BoundsInst
-open Program
+open ProgramModules
 open RVGTypes
 open ApproximationModules
 

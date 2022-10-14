@@ -1,4 +1,4 @@
-open Program
+open ProgramModules
 (** Provides control flow refinement on minimal SCCs containing non-linear transitions. *)
 
 (** Logger CFR *)
