@@ -2,7 +2,7 @@
 open Batteries
 open Formulas
 open Polynomials
-open Program
+open ProgramModules
 
 exception Error of string
 exception ComKindAndTargetsMismatch

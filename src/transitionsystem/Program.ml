@@ -6,7 +6,7 @@ open Util
 exception RecursionNotSupported
 
 module ProgramOver(L: ProgramTypes.Location) = struct
-  type location = L.t
+  module Location = L
   module TransitionGraph = TransitionGraph.TransitionGraphOver(L)
   module LocationSet = TransitionGraph.LocationSet
   module Transition = TransitionGraph.Transition
@@ -240,6 +240,7 @@ module ProgramOver(L: ProgramTypes.Location) = struct
                                  (fun () -> "outgoing_transitions", ["result", transitions |> List.enum |> Util.enum_to_string Transition.to_id_string]))
 end
 
+module SpecializedLocation = Location
 include ProgramOver(Location)
 
 let rename program =
@@ -254,7 +255,7 @@ let rename program =
            Logger.(log Logging.(get Preprocessor) INFO (fun () -> "renaming", ["original", Location.to_string location; "new", new_name]));
            new_name
          )
-    |> Location.of_string
+    |> SpecializedLocation.of_string
   in
   let new_start = name program.start in
   {
