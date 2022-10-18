@@ -3,15 +3,15 @@ open Batteries
 
 type logger =
   | Approximation (**  Logger handling approximations *)
-  | Size (** Logger handling size-bounds *)
-  | Time (** Logger handling time-bounds *)
-  | PRF (** Logger handling (multiphase) ranking function creation *)
   | Bound (**  Logger handling  simplification of bounds *)
-  | Program (** Logger handling creation of programs, e.g., possible elimination of recursion *)
-  | LocalSizeBound (**  Logger handling local size-bounds  *)
-  | Preprocessor (**  Logger handling preprocessors  *)
   | CFR (**  Logger handling control flow refinement  *)
   | Inv (** Logger handling invariant creation *)
+  | LocalSizeBound (**  Logger handling local size-bounds  *)
+  | PRF (** Logger handling (multiphase) ranking function creation *)
+  | Preprocessor (**  Logger handling preprocessors  *)
+  | Program (** Logger handling creation of programs, e.g., possible elimination of recursion *)
+  | Size (** Logger handling size-bounds *)
+  | Time (** Logger handling time-bounds *)
   | Twn (** Logger handling twn local time-bound computation *)
 
 (** List of all available loggers *)
@@ -23,15 +23,15 @@ let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Program; Prepr
 (** Returns a string matching to the given logger. *)
 let show_logger = function
   | Approximation -> "appr"
-  | Size -> "size"
-  | Time -> "time"
-  | PRF -> "prf"
   | Bound -> "bound"
-  | LocalSizeBound -> "lsb"
-  | Preprocessor -> "preprocessor"
   | CFR -> "cfr"
   | Inv -> "invariants"
+  | LocalSizeBound -> "lsb"
+  | PRF -> "prf"
+  | Preprocessor -> "preprocessor"
   | Program -> "program"
+  | Size -> "size"
+  | Time -> "time"
   | Twn -> "twn"
 
 let get =
