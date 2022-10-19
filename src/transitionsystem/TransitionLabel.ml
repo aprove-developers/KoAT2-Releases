@@ -92,7 +92,7 @@ let fill_up_arg_vars_up_to_num n t =
   {t with update = fill_up_update_arg_vars_up_to_num n t.update}
 
 
-let mk ~cost ~assignments ~patterns ~guard ~vars =
+let mk ?(id = None) ~cost ~assignments ~patterns ~guard ~vars =
   let map_to_arg_vars =
     Enum.combine (List.enum patterns) (LazyList.enum Var.args)
     |> RenameMap.of_enum
@@ -105,7 +105,7 @@ let mk ~cost ~assignments ~patterns ~guard ~vars =
     |> fill_up_update_arg_vars_up_to_num (List.length patterns)
   in
   {
-    id = unique ();
+    id = if Option.is_none id then unique () else Option.get id;
     update;
     guard = Guard.rename guard map_to_arg_vars;
     invariant = Guard.mk_true;

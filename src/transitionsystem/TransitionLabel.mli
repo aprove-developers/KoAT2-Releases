@@ -22,7 +22,8 @@ type t
 
 
 (** TODO doc? *)
-val mk : cost:polynomial ->
+val mk : ?id:int option ->
+         cost:polynomial ->
          assignments: polynomial list ->
          patterns:Var.t list ->
          guard:Guard.t ->

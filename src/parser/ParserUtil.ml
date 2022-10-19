@@ -42,7 +42,7 @@ let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t 
         List.map
           (fun (target_loc, update_expr) ->
             (Location.of_string start_loc,
-              TransitionLabel.mk ~assignments:update_expr ~guard:constr ~patterns:(List.map Var.of_string var_list ) ~cost,
+              TransitionLabel.mk ~id:None ~assignments:update_expr ~guard:constr ~patterns:(List.map Var.of_string var_list ) ~cost,
               Location.of_string target_loc)
           )
           (Tuple2.second rhs)
@@ -65,6 +65,7 @@ let mk_transition_simple (start: string) (cost: Polynomial.t) (rhs: string * (st
     |> List.map (fun constr ->
            (Location.of_string start,
             TransitionLabel.mk
+              ~id:None
               ~assignments:updates
               ~patterns:default_vars
               ~guard:constr
