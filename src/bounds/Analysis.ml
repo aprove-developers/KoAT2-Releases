@@ -167,12 +167,12 @@ let local_rank (scc: TransitionSet.t) measure program max_depth appr =
 
 
 let lwt_parallel ~local (scc: TransitionSet.t) measure program max_depth appr =
-  if List.is_empty local || (List.mem `MPRF local && List.mem `TWN local |> not) then
+  if List.is_empty local || (List.mem `MPRF local && not @@ (List.mem `TWN local || List.mem `TWNTransformGeneral local || List.mem `TWNTransformJordan local || List.mem `TWNTransform local)) then
     local_rank scc measure program max_depth appr
-  else if List.mem `MPRF local |> not && (List.mem `TWN local || List.mem `TWNTransformGeneral local || List.mem `TWNTransformJordan local || List.mem `TWNTransform local) && (List.length local == 1) then
+  else if not @@ List.mem `MPRF local && (List.mem `TWN local || List.mem `TWNTransformGeneral local || List.mem `TWNTransformJordan local || List.mem `TWNTransform local) && (List.length local == 1) then
     improve_with_twn program scc measure (List.first local) appr
   else if (List.mem `MPRF local) && (List.mem `TWN local || List.mem `TWNTransformGeneral local || List.mem `TWNTransformJordan local || List.mem `TWNTransform local) && (List.length local == 2) then
-      MaybeChanged.(local_rank scc measure program max_depth appr >>= improve_with_twn program scc measure (List.find (fun x -> not (x == `MPRF)) local) )
+      MaybeChanged.(local_rank scc measure program max_depth appr >>= improve_with_twn program scc measure (List.find (fun x -> not (x == `MPRF)) local))
   else
     raise (Invalid_argument "--local commands are not correct. Use 'mprf' or at most one of 'twn', 'twn-transform-jordan', 'twn-transform',or 'twn-transform-general'")
 
@@ -188,7 +188,7 @@ let improve_scc rvg_with_sccs ?(mprf_max_depth = 1) ~local (scc: TransitionSet.t
     |> knowledge_propagation scc measure program
     |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
     |> TWNSizeBounds.improve program ~scc:(Option.some scc)
-    (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
+    |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
     |> improve_timebound ~mprf_max_depth ~local scc measure program
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
@@ -228,7 +228,7 @@ let apply_cfr method_name f_cfr f_proof (scc: TransitionSet.t) rvg_with_sccs tim
                         |> tap (const @@ Logger.log logger Logger.INFO (fun () -> method_name ^ "analysis", ["scc", TransitionSet.to_id_string scc]))
                         |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
                         |> TWNSizeBounds.improve program ~scc:(Option.some scc)
-                        (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
+                        |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
                         |> improve_scc rvg_with_sccs_cfr ~mprf_max_depth ~local scc measure program_cfr
                     else appr)
             (CFR.merge_appr program program_cfr appr) in
@@ -267,7 +267,7 @@ let improve rvg ?(mprf_max_depth = 1) ~preprocess ~local ~cfr measure program ap
                             |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                             |> SizeBounds.improve program rvg ~scc:(Option.some scc)
                             |> TWNSizeBounds.improve program ~scc:(Option.some scc)
-                            (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
+                            |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
                             |> improve_scc rvg ~mprf_max_depth ~local scc measure program
                             (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
                             |> fun appr -> (
