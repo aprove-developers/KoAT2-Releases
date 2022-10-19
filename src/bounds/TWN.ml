@@ -468,14 +468,17 @@ let transform_with_aut twn_loop automorphism vars =
   let updated_guard =  TWNLoop.Guard.atoms @@ TWNLoop.guard_without_inv twn_loop (*current guard *)
                     |> Automorphism.transform_guard automorphism in
   let updated_invariant = Automorphism.transform_guard automorphism @@ TWNLoop.invariant twn_loop in
-  (*return updated transition and automorphism*)
-  Some (TWNLoop.mk_transition @@TransitionLabel.mk
+  let new_transitionlabels = TWNLoop.subsumed_transitionlabels twn_loop
+                             |> List.map (fun t -> TransitionLabel.mk
+                            ~id:(TransitionLabel.id t |> Option.some)
                             ~cost:(TransitionLabel.cost TransitionLabel.default) (*TODO sind die kosten von bedeutung? *)
                             ~guard:updated_guard
                             ~assignments:new_update
                             ~patterns:vars
-                            ~vars:(VarSet.to_list (TWNLoop.vars twn_loop))
-                          |> (flip TWNLoop.add_invariant) updated_invariant )
+                            ~vars:(VarSet.to_list (TWNLoop.vars twn_loop))) in
+  (*return updated transition and automorphism*)
+  Some (TWNLoop.mk_transitions new_transitionlabels
+        |> (flip TWNLoop.add_invariant) updated_invariant )
 
 (** [transform_linearly loop transformation_type] first checks whether a loop is in twn-form.
     Then tries to find a  transformation using the jordan decomposition. To compute it, we call sympy.*)
