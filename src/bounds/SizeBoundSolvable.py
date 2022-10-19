@@ -32,7 +32,7 @@ def size_bound(matrix_as_list, vars_as_list, var):
         phi_inv = (P_inv * Matrix(dim,1,vars))[index]
         phi = P_inv.inv() * Matrix(dim,1,vars)[index]
 
-        clt = J[index]**n * Matrix(dim,1,vars) # Closed form of Jordan normal form (see https://en.wikipedia.org/wiki/Jordan_normal_form#Matrix_functions)
+        clt = J**n * Matrix(dim,1,vars) # Closed form of Jordan normal form (see https://en.wikipedia.org/wiki/Jordan_normal_form#Matrix_functions)
 
         res = phi_inv.subs(dict_helper_vars).subs(dict(zip(helper_vars, clt))).subs(dict_helper_vars).subs(dict(zip(helper_vars, phi)))
         print(abs_expr(res.expand()))
