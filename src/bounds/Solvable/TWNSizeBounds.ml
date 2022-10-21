@@ -9,7 +9,7 @@ let logger = Logging.(get Size)
 
 let compute_order t var =
     let t' = EliminateNonContributors.eliminate_t (TransitionLabel.vars t) (VarSet.singleton var) (TransitionLabel.update t) TransitionLabel.remove_non_contributors (t |> TransitionLabel.only_update) in
-    TWN.check_triangular_t t'
+    Check_TWN.check_triangular_t t'
 
 type path = (Location.t * TWNLoop.t * Location.t) list
 
@@ -19,7 +19,7 @@ let find_cycle appr program trans var (cycles: path list) =
     List.find_map (fun cycle ->
         let entries = Program.entry_transitions logger program (cycle |> List.map (Tuple3.map2 (List.first % TWNLoop.subsumed_transitionlabels))) in
         let twn_loops = List.map (fun (_,_,l') -> TWN.compose_transitions (List.map Tuple3.second cycle) (TWN.find l' (trans |> TransitionSet.of_list) (List.map (List.first % TWNLoop.subsumed_transitionlabels % Tuple3.second) cycle)) |> f_eliminate) entries in
-        if List.for_all (fun t -> TWN.check_triangular_t t != []) twn_loops then
+        if List.for_all (fun t -> Check_TWN.check_triangular_t t != []) twn_loops then
             Option.some (List.combine twn_loops entries)
         else
             None) cycles
@@ -38,7 +38,7 @@ let improve_t program trans (l,t,l') appr =
             (TWN.cycles (parallel_edges |> Set.of_list) l [([(l,TWNLoop.mk_transition t,l')], (LocationSet.singleton l'))] []))
         in
         List.map (fun (cycle, entry) ->
-            let order = TWN.check_triangular_t cycle in
+            let order = Check_TWN.check_triangular_t cycle in
             if List.is_empty order then Bound.infinity
             else
                 let closed_form = PE.compute_closed_form (List.map (fun var ->
