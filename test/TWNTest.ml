@@ -12,7 +12,7 @@ let tests =
     ("check_twn" >:::
          List.map (fun (expected_bool, program) ->
              program >:: (fun _ ->
-                     let result = TWN.check_twn((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
+                     let result = Check_TWN.check_twn((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
                      assert_equal_bool expected_bool result))
                   [
                     (true, "l0 -> l1(x,y,z), l1 -> l1(x + y + z, y + z, z)");
@@ -78,7 +78,7 @@ let tests =
       ("check_termination" >:::
          List.map (fun (expected_bool, program) ->
              program >:: (fun _ ->
-                     let result = TWN.termination((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second) in
+                     let result = TWN_Termination.termination((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second) in
                      assert_equal_bool expected_bool result))
                   [
                     (false, "l0 -> l1(x), l1 -> l1(x)");
@@ -115,7 +115,7 @@ let tests =
       ("TWN.monotonicity_th" >:::
          List.map (fun (expected_int, (b1, a1), (b2, a2), k) ->
              "" >:: (fun _ ->
-                     let result = TWN.monotonicity_th_int k (b1, a1) (b2, a2)  |> OurInt.to_int in
+                     let result = TWN_Complexity.monotonicity_th_int k (b1, a1) (b2, a2)  |> OurInt.to_int in
                      assert_equal_int expected_int result))
                   [
                     (15, (1,2), (1,1), 14);
@@ -133,7 +133,7 @@ let tests =
       ("complexity" >:::
          List.map (fun (expected_string, program) ->
              "" >:: (fun _ ->
-                     let result = TWN.complexity_((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
+                     let result = TWN_Complexity.complexity_((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
                      assert_equal_string expected_string (Bound.to_string result)))
                   [
                      (* ("8*x+13 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0"); *)

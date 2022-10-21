@@ -9,34 +9,6 @@ open PolyExponential
 open TransitionLabel
 open Automorphism
 
-let check_solvable (t: TWNLoop.t) =
-  let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in
-  let module SCC = Graph.Components.Make(DG) in
-  let dg_linear = VarSet.fold (fun x graph ->
-              let vars = TWNLoop.update t x |? Polynomial.of_var x |> Polynomial.vars in
-              VarSet.fold (fun y graph -> DG.add_edge graph x y) vars graph) (TWNLoop.vars t) DG.empty and
-  dg_non_linear = VarSet.fold (fun x graph ->
-              let update = TWNLoop.update t x |? Polynomial.of_var x in
-              let linear_vars = update
-                |> Polynomial.vars
-                |> VarSet.filter (fun v -> Polynomial.var_only_linear v update |> not) in
-              VarSet.fold (fun y graph -> DG.add_edge graph x y) linear_vars graph) (TWNLoop.vars t) DG.empty in
-  let blocks = SCC.scc_list dg_linear in
-  if List.for_all (fun scc -> List.length scc = 1) (SCC.scc_list dg_non_linear) (* We don't have cyclic non-linear dependencies. *)
-  && List.for_all (fun scc ->
-                    List.for_all (fun x ->
-                      List.for_all (fun y ->
-                      TWNLoop.update t x
-                      |? Polynomial.of_var x
-                      |> Polynomial.var_only_linear y)
-                      scc)
-                    scc) blocks (* For all blocks, all variables x,y in such a block: The update of x only depends linear on y *) then
-    Option.some blocks
-  else
-    None
-
-let check_solvable_t (t: TransitionLabel.t) = check_solvable (TWNLoop.mk_transition t)
-
 (* PROOF *)
 let logger = Logging.(get Twn)
 
@@ -54,290 +26,8 @@ let add_to_proof_graph program cycle entries =
         | _    -> FormattedString.Empty));
   proof_append (FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string_pretty (List.enum cycle))))
 
-(* TOPOLOGICAL ORDERING: *)
-
-(* https://stackoverflow.com/questions/4653914/topological-sort-in-ocaml *)
-exception CycleFound of int list
-
-let dfs graph visited start_node =
-  let rec explore path visited node =
-    if List.mem node path    then raise (CycleFound path) else
-    if List.mem node visited then visited else
-      let new_path = node :: path in
-      let edges    = List.assoc node graph in
-      let visited  = List.fold_left (explore new_path) visited edges in
-      node :: visited
-  in explore [] visited start_node
-
-let toposort graph =
-  List.fold_left (fun visited (node,_) -> dfs graph visited node) [] graph
-
-let check_triangular (t: TWNLoop.t) =
-  let vars = VarSet.to_list (TWNLoop.input_vars t) in
-  let n = List.length vars in
-  if (n == 0) then []
-  else
-    let vars_i = List.combine vars (List.range 0 `To (n - 1)) in
-    let graph = List.mapi (fun i var ->
-      let vars_update =
-          TWNLoop.update t var
-          |? Polynomial.zero
-          |> Polynomial.vars
-          |> VarSet.remove var
-          |> VarSet.to_list
-          |> List.map (fun var -> List.assoc var vars_i) in (i, vars_update)) vars in
-    let order = try toposort graph with CycleFound _ -> [] in
-    List.map (fun i -> List.assoc i (List.map Tuple2.swap vars_i)) order
-    |> List.rev
-
-let check_triangular_t (t: TransitionLabel.t) = check_triangular (TWNLoop.mk_transition t)
-
-let check_solvable (t: TWNLoop.t) =
-  let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in
-  let module SCC = Graph.Components.Make(DG) in
-  let dg_linear = VarSet.fold (fun x graph ->
-              let vars = TWNLoop.update t x |? Polynomial.of_var x |> Polynomial.vars in
-              VarSet.fold (fun y graph -> DG.add_edge graph x y) vars graph) (TWNLoop.vars t) DG.empty and
-  dg_non_linear = VarSet.fold (fun x graph ->
-              let update = TWNLoop.update t x |? Polynomial.of_var x in
-              let linear_vars = update
-                |> Polynomial.vars
-                |> VarSet.filter (fun v -> Polynomial.var_only_linear v update |> not) in
-              VarSet.fold (fun y graph -> DG.add_edge graph x y) linear_vars graph) (TWNLoop.vars t) DG.empty in
-  let blocks = SCC.scc_list dg_linear in
-  if List.for_all (fun scc -> List.length scc = 1) (SCC.scc_list dg_non_linear) (* We don't have cyclic non-linear dependencies. *)
-  && List.for_all (fun scc ->
-                    List.for_all (fun x ->
-                      List.for_all (fun y ->
-                      TWNLoop.update t x
-                      |? Polynomial.of_var x
-                      |> Polynomial.var_only_linear y)
-                      scc)
-                    scc) blocks (* For all blocks, all variables x,y in such a block: The update of x only depends linear on y *) then
-    Option.some (blocks)
-  else
-    None
-
-let check_solvable_t (t: TransitionLabel.t) = check_solvable (TWNLoop.mk_transition t)
-
-
-
-(* MONOTONICITY *)
-
-let check_weakly_monotonicity (t: TWNLoop.t) =
-  VarSet.for_all (fun var -> let update = TWNLoop.update t var in
-                          if Option.is_none update then
-                            true
-                          else
-                            update |> Option.get |> Polynomial.var_only_linear var) (TWNLoop.input_vars t)
-
-
-(* NEGATIVITY *)
-
-let check_weakly_negativitiy (t: TWNLoop.t) =
-  VarSet.exists (fun var -> let update = TWNLoop.update t var in
-                          if Option.is_none update then
-                            false
-                          else
-                            update |> Option.get |> Polynomial.coeff_of_var var |> OurInt.is_negative) (TWNLoop.input_vars t)
-
-
-let chain (t: TWNLoop.t) = TWNLoop.append t t
-
-(* TERMINATION: *)
-
 module SMTSolver = SMT.Z3Solver
 module SMTSolverTimeout = SMT.Z3SolverTimeout
-
-exception Non_Terminating of (Transition.t list * Transition.t list)
-
-let red_lt poly_list =
-    let rec constraint_eq_zero i = function
-    | [] -> Constraint.mk_true
-    | x::xs when i == 0 -> Constraint.mk_true
-    | x::xs -> Constraint.(mk_and (mk_eq x Polynomial.zero) (constraint_eq_zero (i - 1) xs))  in
-    let rec formula i = function
-    | [] -> Formula.mk_false
-    | x::xs -> Formula.(mk_or (mk_and (mk_lt x Polynomial.zero) (constraint_eq_zero (i - 1) poly_list |> Formula.mk)) (formula (i + 1) xs))  in
-    formula 1 poly_list
-
-let red_le poly_list =
-    let rec constr = function
-    | [] -> Constraint.mk_true
-    | x::xs -> Constraint.(mk_and (mk_eq x Polynomial.zero) (constr xs))  in
-    Formula.(mk_or (red_lt poly_list) (poly_list |> constr |> mk))
-
-
-module Valuation = Valuation.Make(OurInt)
-
-let check_update_invariant twn_loop atom =
-  let poly = Atom.poly atom in
-  let poly_updated = Polynomial.substitute_f (TWNLoop.update_full twn_loop) poly in
-  let atom_updated = Atom.mk_lt poly_updated Polynomial.zero in
-  SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
-
-let termination_ twn order npe varmap =
-  let self_impl, rest = TWNLoop.invariant twn |> List.partition @@ check_update_invariant twn in
-  let formula =
-    Formula.any (
-    List.map (fun constr ->
-      List.fold_right (fun atom formula ->
-          let poly = Atom.poly atom in
-          let sub_poly = PE.substitute varmap poly |> PE.remove_frac |> List.map (RationalPolynomial.normalize % Tuple4.second) in
-          let formula_poly = if Atom.is_lt atom
-              then sub_poly |> red_lt
-              else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
-              (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) ((TWNLoop.guard_without_inv twn |> Formula.mk_and (Formula.mk rest) |> Formula.constraints))) in
-  let model = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in
-  (Option.is_none model)
- |> tap (fun bool ->
-    proof_append
-        FormattedString.(
-        mk_str_line ("Termination: " ^ (string_of_bool bool))
-        <> mk_str_line "Formula: "
-        <> (Formula.to_string_formatted formula |> mk_block)
-        |> mk_paragraph);)
-
-(* For Testing *)
-let termination t =
-  let twn = TWNLoop.mk_transition t in
-  let order = check_triangular twn in
-  let pe = PE.compute_closed_form (List.map (fun var ->
-      let update_var = TWNLoop.update twn var in
-      (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
-  let npe = PE.normalize pe in
-  let varmap = Hashtbl.of_list (List.combine order npe) in
-  termination_ twn order npe varmap
-
-(* COMPLEXITY: *)
-
-(* Computes the monotoncitiy threshold for (b1,a1) > (b2,a2), i.e., smallest m s.t for all n >= m: n^a1 * b1^n > k * n^a1 * b1^n *)
-let monotonicity_th k (b1,a1) (b2,a2) =
-  if OurInt.is_negative k || OurInt.is_zero k then OurInt.one
-  else
-    let rec test_m m =
-      let tmp1 = OurInt.(mul (pow_ourint m a1) (pow_ourint b1 m)) in
-      let tmp2 = OurInt.(mul (mul (pow_ourint m a2) (pow_ourint b2 m)) k) in
-      if OurInt.is_ge a1 a2 then
-        if (OurInt.is_gt tmp1 tmp2) then m else test_m OurInt.(add m one)
-      else
-        let tmp = OurRational.(mul (pow_ourint (reduce (m , OurInt.(add m one))) (OurInt.sub a2 a1)) (reduce (b1, b2))) in
-        if (OurRational.(is_ge tmp one) && (OurInt.is_gt tmp1 tmp2)) then m else test_m OurInt.(add m one) in
-    let rec decrease_m m =
-      if OurInt.is_zero m then m
-      else
-        let m_dec = OurInt.(sub m one) in
-        let tmp1 = OurInt.(mul (pow_ourint m_dec a1) (pow_ourint b1 m_dec)) in
-        let tmp2 = OurInt.(mul (mul (pow_ourint m_dec a2) (pow_ourint b2 m_dec)) k) in
-        if OurInt.is_ge tmp2 tmp1 then m else decrease_m m_dec in
-    OurInt.zero |> test_m |> decrease_m
-
-let monotonicity_th_int k (b1,a1) (b2,a2) = monotonicity_th (OurInt.of_int k) (OurInt.of_int b1, OurInt.of_int a1) (OurInt.of_int b2, OurInt.of_int a2)
-
-let compute_kmax sub_poly = sub_poly |> List.map (OurInt.max_list % (List.map OurInt.abs) % Polynomial.coeffs) |> OurInt.max_list
-
-let compute_N = function
-  | [] -> OurInt.zero
-  | x::[] -> OurInt.zero
-  | x::y::[] -> OurInt.one
-  | x1::x2::x3::xs ->
-    let mt = List.map (fun x -> monotonicity_th OurInt.one x3 x) xs |> OurInt.max_list in
-    let mt_ = monotonicity_th (OurInt.of_int ((List.length xs) + 1)) x2 x3 in
-    OurInt.max mt mt_
-
-let compute_M = function
-  | [] -> OurInt.zero
-  | x::[] -> OurInt.zero
-  | (b1,a1)::(b2,a2)::xs when ((OurInt.is_gt b1 b2) || ((OurInt.equal b1 b2) && (OurInt.is_gt a1 OurInt.(add a2 one))))
-                         -> monotonicity_th OurInt.one (b1,a1) (b2, OurInt.(add a2 one))
-  | _ -> OurInt.zero
-
-
-module ScaledMonomial = ScaledMonomials.Make(OurInt)
-module Monomial = Monomials.Make(OurInt)
-module ParameterMonomial = Monomials.Make(PolynomialOver(OurInt))
-
-let compute_alpha_abs = function
-  | [] -> Polynomial.zero
-  | x::[] -> Polynomial.fold ~const:(Polynomial.of_constant % OurInt.abs) ~var:(Polynomial.of_var) ~neg:identity ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow x
-  | xs -> List.flatten (List.map Polynomial.scaled_monomials xs)
-          |> List.group (fun x y -> Monomial.compare (ScaledMonomial.monomial x) (ScaledMonomial.monomial y))
-          |> List.map (fun ys -> let max = OurInt.max_list (List.map (OurInt.abs % ScaledMonomial.coeff) ys) in
-                      List.first ys |> ScaledMonomial.monomial |> ScaledMonomial.make max)
-          |> Polynomial.of_scaled
-
-let compute_f atom = function
-  | [] -> Bound.zero
-  | x::[] -> Bound.one
-  | xs ->
-    let alphas = List.map (Tuple4.second) xs |> List.tl in
-    Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["alphas", (alphas |> List.enum |> Util.enum_to_string Polynomial.to_string)]);
-    let alphas_abs = compute_alpha_abs alphas in
-    Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["alphas_abs", Polynomial.to_string alphas_abs]);
-    let base_exp ys = List.map (fun (_,_,d,b) -> (b,d)) ys in
-    let prefix ys = List.fold_left (fun acc itt -> ((List.hd acc)@[itt])::acc) [[]] ys in
-    let n_ = OurInt.max_list (List.map (fun ys -> compute_N (base_exp ys)) (prefix xs)) in
-    Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["N", (OurInt.to_string n_)]);
-    let m_ = OurInt.max_list (List.map (fun ys -> compute_M (base_exp ys)) (prefix xs)) in
-    Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["M", (OurInt.to_string m_)]);
-    Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)) |> add (of_constant OurInt.one))
-    |> tap (fun b -> (* Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);  *)
-      proof_append (
-      [ "alphas_abs: " ^ (Polynomial.to_string_pretty alphas_abs);
-        "M: " ^ (OurInt.to_string m_);
-        "N: " ^ (OurInt.to_string n_);
-        "Bound: " ^ (Bound.to_string ~pretty:true b);
-      ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block |> FormattedString.(<>) (FormattedString.mk_str_line ("Stabilization-Threshold for: " ^ (Atom.to_string ~pretty:true atom))));)
-
-let get_bound t order npe varmap =
-  let bound, max_con =
-      List.fold_right (fun atom (bound, const) ->
-          let poly = Atom.poly atom |> Polynomial.neg in
-          let sub_poly, l_ = PE.substitute varmap poly |> PE.remove_frac |> PE.monotonic_kernel (TWNLoop.invariant t |> Formula.mk) (TWNLoop.guard t) in
-          let l_max = if List.is_empty [] then OurInt.zero else List.map (fun (x,y) -> monotonicity_th_int 1 x y) l_  |> OurInt.max_list in
-          Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
-          let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
-          let max_const = OurInt.max_list [const; (PE.max_const sub_poly); l_max] in
-            (Bound.add bound ((compute_f atom sub_poly_n)), max_const))
-            (TWNLoop.guard_without_inv t |> Formula.atoms |> List.unique ~eq:Atom.equal) (Bound.one, OurInt.zero) in
-            Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", (OurInt.to_string max_con)]);
-  Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
-  |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
-
-(* For Testing *)
-let check_twn loop =
-  (check_weakly_monotonicity loop) && ((List.length (check_triangular loop)) == (VarSet.cardinal ((TWNLoop.input_vars loop))))
-
-let check_twn (_,t,_) =
- check_twn (TWNLoop.mk_transition t)
-
-let complexity loop =
-    let order = check_triangular loop in
-    let t_, was_negative =
-      if (check_weakly_negativitiy loop) then
-        chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TWNLoop.to_string loop])), true
-      else loop, false in
-    Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-    proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
-    let pe = PE.compute_closed_form (List.map (fun var ->
-        let update_var = TWNLoop.update t_ var in
-        (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
-        Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
-        proof_append (
-          FormattedString.(mk_str "closed-form:" <> (
-          (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
-          |> List.map (fun (a,b) -> a ^ ": " ^ b)
-          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
-    let npe = PE.normalize pe in
-        Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
-    let varmap = Hashtbl.of_list (List.combine order npe) in
-    let terminating = termination_ t_ order npe varmap in
-    if not terminating then
-      Bound.infinity
-    else
-      let f = get_bound t_ order npe varmap in if was_negative then Bound.(add (add f f) one) else f
-
-let complexity_ (_,t,_) = complexity (TWNLoop.mk_transition t)
 
 (* CYLES and corresponding time-bound. *)
 
@@ -365,6 +55,9 @@ let compose_transitions cycle start =
   in
   let pre, t1, post = split start cycle in
   List.fold TWNLoop.append t1 (post@pre)
+
+module ScaledMonomial = ScaledMonomials.Make(OurInt)
+module Monomial = Monomials.Make(OurInt)
 
 (** get_linear_update_of_variable (x<- 2x+3y+y^2) x y returns 3 *)
 let get_linear_update_of_variable (t:TWNLoop.t) (var_left:TWNLoop.VarMap.key) (var_right:TWNLoop.VarMap.key)=
@@ -449,7 +142,7 @@ let transform_linearly_matrix (matrix: OurInt.t list list) =
   if List.length matrix == 1 (* nothing to transform *)
       then Some ( [[(OurInt.of_int 1, OurInt.of_int 1)]], matrix,  [[OurInt.of_int 1]])
   else
-    let command = "python3 -c 'from src.bounds.JordanNormalForm import jordan_normal_form; jordan_normal_form(" ^ matrix_to_string matrix ^ ")'" in
+    let command = "python3 -c 'from src.bounds.Solvable.JordanNormalForm import jordan_normal_form; jordan_normal_form(" ^ matrix_to_string matrix ^ ")'" in
     (* the python output consits of 3 matrices: T, J, T^-1 (which is normalized, see jordan normal form) or gives an error string *)
     let python_output = read_process_lines command in
     match python_output with
@@ -484,7 +177,7 @@ let transform_with_aut twn_loop automorphism vars =
     Then tries to find a  transformation using the jordan decomposition. To compute it, we call sympy.*)
 let transform_linearly (transition: TWNLoop.t) transformation_type =
   (* find order for variables and independent blocks and sort them for elegant code when updating transition*)
-  match (check_solvable transition) with
+  match (Check_Solvable.check_solvable transition) with
     | None -> None
     | Some x -> let blocks = change_order transition x in
   if List.length blocks == List.length (VarSet.to_list (TWNLoop.vars transition)) then
@@ -564,7 +257,7 @@ let check_non_increasing twn_loop t =
     let poly_updated = Polynomial.substitute_f (TransitionLabel.update_full t) poly in
     let atom = Atom.mk_le poly poly_updated |> Atom.neg
     and guard = TransitionLabel.guard t in
-    SMTSolver.tautology Formula.(implies (mk guard) (mk [atom]))) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms |> List.filter (check_update_invariant twn_loop))
+    SMTSolver.tautology Formula.(implies (mk guard) (mk [atom]))) (twn_loop |> TWNLoop.guard_without_inv |> Formula.atoms |> List.filter (TWN_Termination.check_update_invariant twn_loop))
 
 let find_non_increasing_set program appr decreasing loop entry =
   let rec f non_increasing entries =
@@ -700,9 +393,9 @@ let time_bound (l,transition,l') scc program appr transformation_type =
             if VarSet.is_empty (TWNLoop.vars eliminated_t) then
               Bound.infinity, ([entry_org], Bound.infinity)
             else (
-              let bound = Automorphism.transform_bound automorphism @@ complexity eliminated_t in
+              let bound = Automorphism.transform_bound automorphism @@ TWN_Complexity.complexity eliminated_t in
               if Bound.is_infinity bound then
-                raise (Non_Terminating (handled_transitions, [entry_org]));
+                raise (TWN_Termination.Non_Terminating (handled_transitions, [entry_org]));
                 proof_append FormattedString.(
                   mk_header_small (mk_str @@ "Lift Bound: ")
                   <> mk_str_line @@ "Compute new entries: " ^ (new_entries |> List.enum |> Util.enum_to_string Transition.to_id_string_pretty)
@@ -714,7 +407,7 @@ let time_bound (l,transition,l') scc program appr transformation_type =
         global_local_bounds |> List.map Tuple2.first |> Bound.sum_list
         with
         | No_Cycle -> Logger.log logger Logger.DEBUG (fun () -> "twn", ["no twn_cycle found", ""]); Bound.infinity
-        | Non_Terminating (handled_transitions,entries)->
+        | TWN_Termination.Non_Terminating (handled_transitions,entries)->
             Logger.log logger Logger.DEBUG (fun () -> "twn", ["non terminating", ""]);
             List.iter (fun t -> TimeBoundTable.add time_bound_table t (handled_transitions, List.map (fun t -> ([t], Bound.infinity)) entries)) handled_transitions;
             Bound.infinity)

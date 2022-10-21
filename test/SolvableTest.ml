@@ -16,10 +16,10 @@ let tests =
       ("check_solvable" >:::
          List.map (fun (expected_string, program) ->
              program >:: (fun _ ->
-                     let result = TWN.check_solvable_t((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second) in
+                     let result = Check_Solvable.check_solvable_t((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second) in
                      assert_equal_string expected_string (to_string result)))
                   [
-                    ("solvable: [[Arg_0]; [Arg_1]; [Arg_2]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]; [Arg_7]]", "l0 -> l1(x), l1 -> l1(x)"); (* Currently a simple program always consists of variables p,q,u,v,w,x,y,z *)
+                    ("solvable: [[Arg_0]; [Arg_1]; [Arg_2]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]; [Arg_7]]", "l0 -> l1(x), l1 -> l1(x)");
                     ("not solvable", "l0 -> l1(x), l1 -> l1(x^2)");
                     ("not solvable", "l0 -> l1(x,y), l1 -> l1(y^2,x^2)");
                     ("solvable: [[Arg_1; Arg_0]; [Arg_2]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]; [Arg_7]]", "l0 -> l1(x,y), l1 -> l1(x + y,x + y)");
