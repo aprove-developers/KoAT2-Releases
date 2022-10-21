@@ -98,7 +98,8 @@ COPY examples/Complexity_C_Integer ./examples/Complexity_C_Integer
 COPY --from=koat2_build /home/opam/koat2 bin/koat2
 COPY --from=koat2_build /home/opam/irankfinder ./irankfinder
 # COPY source code for sympy python script
-COPY src/bounds/JordanNormalForm.py ./src/bounds/JordanNormalForm.py
+COPY src/bounds/Solvable/JordanNormalForm.py ./src/bounds/Solvable/JordanNormalForm.py
+COPY src/bounds/Solvable/SizeBoundSolvable.py ./src/bounds/Solvable/SizeBoundSolvable.py
 
 COPY --from=koat2_c_utils /llvm2kittel/build/llvm2kittel bin/llvm2kittel
 COPY --from=koat2_c_utils /clang bin/clang
