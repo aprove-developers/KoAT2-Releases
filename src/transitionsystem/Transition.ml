@@ -22,11 +22,11 @@ module TransitionOver(L : ProgramTypes.Location) = struct
     equal_ TransitionLabel.equivalent
 
   let compare compare_lbl (l1,t1,l1') (l2,t2,l2') =
-    if L.compare l1 l2 != 0 then
+    if L.equal l1 l2 then
       L.compare l1 l2
-    else if compare_lbl t1 t2 != 0 then
+    else if compare_lbl t1 t2 <> 0 then
       compare_lbl t1 t2
-    else if L.compare l1' l2' != 0 then
+    else if L.compare l1' l2' <> 0 then
       L.compare l1' l2'
     else
       0
