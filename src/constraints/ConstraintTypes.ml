@@ -2,6 +2,8 @@
 open Batteries
 open PolyTypes
 
+exception StrictUnremovable of string
+
  (** A default atom module. *)
 module type Atomizable =
   sig
@@ -87,6 +89,9 @@ module type Atom =
           val (<=) : polynomial -> polynomial -> t
         end
 
+        (** Express strict inequalities with non-strict counterparts. Only works iff all variables are discrete.
+             Raises {i StrictUnremovable} otherwise *)
+        val remove_strict : t -> t
 
         (** {1  {L Following methods return certain properties of the atom. }}*)
 
@@ -146,12 +151,6 @@ module type Constraint =
         type atom
         type t
 
-        (* TODO Shouldn't be exposed *)
-        module A : Atom
-               with type t = atom
-                and type polynomial = polynomial
-                and type value = value
-
         (** {1  {L Following methods are convenience methods for the creation of constraints.}} *)
 
         (** Lifts an atom to a constraint, i.e., a single atom {i a} is a constraint \[a\] as a constraint is a conjunction over atoms. *)
@@ -183,6 +182,10 @@ module type Constraint =
 
         (** Creates a constraint that expresses for two polynomials {i p} and {i q} the comparison {i p <= q}. *)
         val mk_le : polynomial -> polynomial -> t
+
+        (** Express strict inequalities with non-strict counterparts. Only works iff all variables are discrete.
+             Raises {i StrictUnremovable} otherwise *)
+        val remove_strict : t -> t
 
         module Infix : sig
           val (=) : polynomial -> polynomial -> t
@@ -324,6 +327,10 @@ module type Formula =
 
         (** Returns the formula {i (p <= p1 && ... && p <= pn) } for a polynomial {i p} and a set of polynomials {i p1,...,pn}.*)
         val le_than_all : polynomial -> polynomial list -> t
+
+        (** Express strict inequalities with non-strict counterparts. Only works iff all variables are discrete.
+             Raises {i StrictUnremovable} otherwise *)
+        val remove_strict : t -> t
 
         (** Creates a formula {i (f1 && ... && fn)}  of a list of constraints {i f1,...,fn}. *)
         val all : t list -> t

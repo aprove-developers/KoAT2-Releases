@@ -32,7 +32,7 @@ sig
   val get_constant_vector : t -> value list
 
   (** TODO doc *)
-  val dualise : Var.t list -> A.P.t list list -> A.P.t list -> t
+  val dualise : Var.t list -> polynomial list list -> polynomial list -> t
 
   (** TODO doc *)
   val max_of_occurring_constants : t -> OurInt.t
@@ -42,28 +42,6 @@ sig
   val simplify : t -> t
 
   (* Add operations specific to polynomial constraints here if needed *)
-end
-
-(** Provides an implementation of constraints consisting of atoms over parameter polynomials. *)
-module ParameterConstraint :
-sig
-  include module type of ConstraintOver(ParameterAtom)
-
-  val remove_strict : t -> t
-
-  (** Returns the row of all coefficients of a variable in a constraint, i.e., used for farkas quantor elimination. *)
-  val get_coefficient_vector : Var.t -> t -> value list
-
-  (** Returns the matrix of all coefficients of a variable from a set of variables in a constraint, i.e., used for farkas quantor elimination. *)
-  val get_matrix : Var.t list -> t -> value list list
-
-  (** Returns the row of all constants in a constraint, i.e., used for farkas quantor elimination. *)
-  val get_constant_vector : t -> value list
-
-  (** Applies Farkas-Transformation on a Constraint and a ParameterAtom. *)
-  val farkas_transform : Constraint.t -> Atoms.ParameterAtom.t -> Constraint.t
-
-  (* Add operations specific to parameter constraints here if needed *)
 end
 
 module RealConstraint :
@@ -76,14 +54,23 @@ sig
   val of_intconstraint : Constraint.t -> t
 end
 
-module RealParameterConstraint :
+(** Provides an implementation of constraints consisting of atoms over parameter polynomials. *)
+module ParameterConstraintOver(Value: PolyTypes.Ring):
 sig
-  include module type of ConstraintOver(RealParameterAtom)
+  include module type of ConstraintOver(ParameterAtomOver(Value))
 
-  val of_realconstraint : RealConstraint.t -> t
-  val of_intconstraint  :     Constraint.t -> t
+  type unparametrised_constraint = ConstraintOver(AtomOver(Polynomials.PolynomialOver(Value))).t
 
-  val farkas_transform : t -> Atoms.RealParameterAtom.t -> RealConstraint.t
+  val of_constraint: unparametrised_constraint -> t
 
-  (* Add operations specific to parameter constraints here if needed *)
+  (** Applies Farkas-Transformation on a Constraint and a ParameterAtom. *)
+  val farkas_transform : t -> atom -> unparametrised_constraint
+end
+
+module ParameterConstraint: module type of ParameterConstraintOver(OurInt)
+
+module RealParameterConstraint: sig
+  include module type of ParameterConstraintOver(OurFloat)
+
+  val of_intconstraint: Constraint.t -> t
 end

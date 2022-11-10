@@ -46,6 +46,8 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let mk_uneq p1 p2 =
       mk_or (mk_lt p1 p2) (mk_gt p1 p2)
 
+    let remove_strict = List.map C.remove_strict
+
     let constraints formula =
       formula
 

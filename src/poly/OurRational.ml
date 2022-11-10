@@ -6,6 +6,8 @@ exception Div_Zero of string
 
 type t = OurInt.t * OurInt.t
 
+let is_integral (_,d) = OurInt.(equal one d)
+
 let equal (n1, d1) (n2, d2) = (OurInt.equal n1 n2) && (OurInt.equal d1 d2)
 
 let (=~=) = equal

@@ -170,6 +170,9 @@ let compute_ranking_templates_ (depth: int) (vars: VarSet.t) (locations: Locatio
 let compute_ranking_templates cache (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
   compute_ranking_templates_ depth vars locations (ranking_template cache) cache.template_table ParameterPolynomial.to_string
 
+let apply_farkas pre concl =
+  ParameterConstraint.(farkas_transform (of_constraint @@ Constraint.drop_nonlinear pre)) concl
+
 (* Methods define properties of mprf *)
 
 (* method for mprf and functions f_2 to f_d of depth i *)
@@ -182,7 +185,7 @@ let transition_constraint_i (template_table0, template_table1, measure, constrai
     | `Non_Increasing -> ParameterAtom.Infix.(template1 l  >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
     | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template1 l')))
   in
-  ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
+  apply_farkas (TransitionLabel.guard t) atom
   |> Formula.mk
 
 (* method for mprf and function f_1*)
@@ -193,7 +196,7 @@ let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')
       | `Non_Increasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
       | `Decreasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template1 l')))
   in
-  ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
+  apply_farkas (TransitionLabel.guard t) atom
   |> Formula.mk
 
 (* method for mprf and function f_d*)
@@ -203,7 +206,7 @@ let transition_constraint_d bound (template_table1, measure, constraint_type, (l
     | `Non_Increasing -> Formula.mk_true
     | `Decreasing  -> (
       let atom = ParameterAtom.Infix.(template1 l  >= bound) in
-        ParameterConstraint.farkas_transform (Constraint.drop_nonlinear @@ TransitionLabel.guard t) atom
+        apply_farkas (TransitionLabel.guard t) atom
         |> Formula.mk)
 
 (* use all three functions above combined*)
