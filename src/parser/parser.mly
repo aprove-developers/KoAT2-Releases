@@ -1,5 +1,5 @@
 %token <string> ID
-%token <int>    UINT
+%token <string> UINT
 %token          PLUS MINUS TIMES POW
 %token          EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
 %token          LPAR RPAR
@@ -185,11 +185,15 @@ variable:
   | v = ID
     { Polynomial.var v } ;
 
+our_int:
+  | int_string = UINT
+    { OurInt.of_string int_string } ;
+
 polynomial:
   | v = variable
     { v }
-  | c = UINT
-    { Polynomial.value c }
+  | c = our_int
+    { Polynomial.of_constant c }
   | LPAR; ex = polynomial; RPAR
     { ex }
   | MINUS; ex = polynomial
@@ -197,7 +201,7 @@ polynomial:
   | p1 = polynomial; op = bioperator; p2 = polynomial
     { op p1 p2 }
   | v = variable; POW; c = UINT
-    { Polynomial.pow v c } ;
+    { Polynomial.pow v (int_of_string c) } ;
 
 onlyBound:
   | b = bound EOF { b } ;
@@ -207,12 +211,12 @@ bound:
     { Bound.infinity }
   | LPAR; b = bound; RPAR
     { b }
-  | c = UINT b = option(preceded(POW, bound))
-    { Bound.exp (OurInt.of_int c) BatOption.(b |? Bound.one) }
+  | c = our_int b = option(preceded(POW, bound))
+    { Bound.exp c BatOption.(b |? Bound.one) }
   | v = ID
     { Bound.of_var_string v }
   | b = bound POW c = UINT
-    { Bound.pow b c }
+    { Bound.pow b (int_of_string c) }
   | b1 = bound; op = bound_bioperator; b2 = bound
     { op b1 b2 } ;
 
