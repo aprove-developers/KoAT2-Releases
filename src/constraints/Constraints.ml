@@ -39,6 +39,9 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
       let (&&) = mk_and
     end
 
+    let remove_strict =
+      List.map A.remove_strict
+
     (** TODO Filter related: x < 0 && x < 1*)
     let all = List.flatten
 
@@ -112,42 +115,8 @@ module Constraint =
       |> List.map Atom.max_of_occurring_constants
       |> List.fold_left OurInt.mul OurInt.one
 
-    let remove_strict =
-      List.map Atom.remove_strict
-
     let simplify =
       List.unique ~eq:Atom.equal
-  end
-
-module ParameterConstraint =
-  struct
-    include ConstraintOver(ParameterAtom)
-
-    let remove_strict =
-      List.map ParameterAtom.remove_strict
-
-    (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
-    let apply_farkas a_matrix b_right c_left d_right =
-      let num_of_fresh = List.length b_right in
-      let fresh_vars = Var.fresh_id_list Var.Real num_of_fresh in
-      let dual_constr = Constraint.dualise fresh_vars a_matrix c_left in
-      let cost_constr = Polynomial.of_coeff_list b_right fresh_vars in
-      Constraint.Infix.(dual_constr && cost_constr <= d_right)
-
-    (** Invokes farkas quantifier elimination. Uses apply_farkas*)
-    let farkas_transform constr param_atom =
-      let vars =
-        VarSet.union (Constraint.vars constr) (ParameterAtom.vars param_atom)
-        |> VarSet.to_list
-      in
-      let non_strict_constr = Constraint.remove_strict constr in
-      let costfunction = lift param_atom in
-      let a_matrix = Constraint.get_matrix vars non_strict_constr in
-      let b_right = Constraint.get_constant_vector non_strict_constr in
-      let c_left = List.flatten (get_matrix vars costfunction) in
-      (* TODO What, if the list is empty? *)
-      let d_right = ParameterAtom.get_constant param_atom in
-      apply_farkas (List.map (List.map (Polynomial.of_constant)) a_matrix) b_right c_left d_right
   end
 
 module RealConstraint =
@@ -163,46 +132,52 @@ module RealConstraint =
       mk (List.map (fun atom -> RealAtom.of_intatom atom) intconstraint)
   end
 
+module ParameterConstraintOver(Value: PolyTypes.Ring) = struct
+  include ConstraintOver(ParameterAtomOver(Value))
+
+  module ParaP = ParameterPolynomialOver(Value)
+  module C = ConstraintOver(AtomOver(Polynomials.PolynomialOver(Value)))
+
+  type unparametrised_constraint = C.t
+
+  let of_constraint =
+    C.fold
+      ~subject:(fun p -> ParaP.of_polynomial p)
+      ~le:mk_le
+      ~lt:mk_lt
+      ~correct:mk_true
+      ~conj:mk_and
+
+  (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
+  let apply_farkas a_matrix b_right c_left d_right =
+    let num_of_fresh = List.length b_right in
+    let fresh_vars = Var.fresh_id_list Var.Real num_of_fresh in
+    let dual_constr = C.dualise fresh_vars a_matrix c_left in
+    let (cost_constr: ParaP.t) = ParaP.of_coeff_list b_right fresh_vars in
+    C.Infix.(dual_constr && ParaP.flatten cost_constr <= d_right)
+
+  (** Invokes farkas quantifier elimination. Uses apply_farkas*)
+  let farkas_transform constr param_atom =
+    (* Remove strict comparisons in constraints by replacing them with their non-strict counterparts *)
+    let constr,param_atom = remove_strict constr, A.remove_strict param_atom in
+
+    let vars =
+      VarSet.union (vars constr) (A.vars param_atom)
+      |> VarSet.to_list
+    in
+    let a_matrix = get_matrix vars constr in
+    let b_right = get_constant_vector constr in
+    let c_left = List.map (flip A.get_coefficient param_atom) vars in
+    let d_right = A.get_constant param_atom in
+    apply_farkas a_matrix b_right c_left d_right
+end
+
+module ParameterConstraint = ParameterConstraintOver(OurInt)
+
 module RealParameterConstraint =
   struct
-    include ConstraintOver(RealParameterAtom)
-
-    let of_realconstraint =
-      RealConstraint.fold
-        ~subject:RealParameterPolynomial.of_polynomial
-        ~le:mk_le
-        ~lt:mk_lt
-        ~correct:mk_true
-        ~conj:mk_and
+    include ParameterConstraintOver(OurFloat)
 
     let of_intconstraint =
-      of_realconstraint % RealConstraint.of_intconstraint
-
-    (**returns a list of the constants of the constraints*)
-    let get_constant_vector constr =
-        List.map RealParameterAtom.get_constant constr
-
-    (** Farkas Lemma applied to a linear constraint and a cost function given as System Ax<= b, cx<=d. A,b,c,d are the inputs *)
-    let apply_farkas (a_matrix: RealPolynomial.t list list) b_right c_left d_right =
-      let num_of_fresh = List.length b_right in
-      let fresh_vars = Var.fresh_id_list Var.Real num_of_fresh in
-      let dual_constr = RealConstraint.dualise fresh_vars a_matrix c_left in
-      let cost_constr =
-        List.map2 (fun c -> RealPolynomial.mul c % RealPolynomial.of_var) b_right fresh_vars
-        |> List.enum
-        |> RealPolynomial.sum
-      in
-      RealConstraint.Infix.(dual_constr && cost_constr <= d_right)
-
-    (** Invokes farkas quantifier elimination. Uses apply_farkas*)
-    let farkas_transform (constr: t) (param_atom: RealParameterAtom.t) =
-      let vars =
-        VarSet.union (vars constr) (RealParameterAtom.vars param_atom)
-        |> VarSet.to_list
-      in
-      let (a_matrix: RealPolynomial.t list list) = get_matrix vars constr in
-      let (b_right: RealPolynomial.t list) = get_constant_vector constr in
-      let (c_left) = List.map (flip RealParameterAtom.get_coefficient param_atom) vars in
-      let d_right = RealParameterAtom.get_constant param_atom in
-      apply_farkas a_matrix b_right c_left d_right
+      of_constraint % RealConstraint.of_intconstraint
   end

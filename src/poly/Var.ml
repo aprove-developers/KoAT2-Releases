@@ -77,6 +77,12 @@ let fresh_ids domain n =
 let fresh_id_list domain n =
   List.of_enum (fresh_ids domain n)
 
+let is_integral = function
+  | Var _           -> true
+  | Argument _      -> true
+  | Helper (Int,_)  -> true
+  | Helper (Real,_) -> false
+
 let is_real = function
   | Var _ -> false
   | Argument _ -> false

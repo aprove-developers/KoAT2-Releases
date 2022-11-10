@@ -2,6 +2,8 @@ open Batteries
 
 include Number.MakeNumeric(Num)
 
+let is_integral = Num.is_integer_num
+
 let (=~=) = equal
 
 let pow i (n: int) = pow i (of_int n)

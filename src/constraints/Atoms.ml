@@ -74,6 +74,12 @@ struct
 
     let to_string ?(to_file=false) ?(pretty=false) (poly,comp) = (P.to_string poly) ^ (comp_to_string comp) ^ "0"
 
+    let remove_strict = function
+      | (p, LE) -> p,LE
+      | (p, LT) -> if P.is_integral p then (P.(add one p),LE)
+        else
+          raise (ConstraintTypes.StrictUnremovable ("Can not remove strict comperator in "^to_string (p,LT)))
+
     let vars (poly,_) = P.vars poly
 
     let normalised_lhs (poly,_) = poly
@@ -112,7 +118,7 @@ end
 
 module Atom =
   struct
-    include AtomOver(Polynomial)
+    include AtomOver(PolynomialOver(OurInt))
 
     let to_string ?(to_file=false) ?(pretty=false) (poly,comp) =
       let poly_print = if to_file then Polynomial.to_string_to_file
@@ -131,27 +137,11 @@ module Atom =
       | (LT,LE) -> (poly1,LT) =~= (Polynomial.(poly2 - one),LT)
       | (LT,LT) -> Polynomial.(poly1 =~= poly2)
       | (LE,LE) -> Polynomial.(poly1 =~= poly2)
-
-    let remove_strict (poly, comp) =
-      match comp with
-      | LE -> (poly, comp)
-      | LT -> (Polynomial.add poly Polynomial.one, LE)
-
-  end
-
-module ParameterAtom =
-  struct
-    include AtomOver(ParameterPolynomial)
-
-    let remove_strict (poly, comp) =
-      match comp with
-      | LE -> (poly, comp)
-      | LT -> (ParameterPolynomial.add poly ParameterPolynomial.one, LE)
   end
 
 module RealAtom =
   struct
-    include AtomOver(RealPolynomial)
+    include AtomOver(PolynomialOver(OurFloat))
 
     let to_string ?(to_file=false) ?(pretty=false) (poly,comp) =
       let poly_print = if to_file then RealPolynomial.to_string_to_file
@@ -172,10 +162,15 @@ module RealAtom =
 
   end
 
-module RealParameterAtom =
-  struct
-    include AtomOver(RealParameterPolynomial)
+module ParameterAtomOver(Value: PolyTypes.Ring) = AtomOver(ParameterPolynomialOver(Value))
 
-    let get_constant (poly,_) =
-      P.get_constant (P.neg poly)
-  end
+module ParameterAtom = struct
+  include ParameterAtomOver(OurInt)
+
+  let remove_strict (poly, comp) =
+    match comp with
+    | LE -> (poly, comp)
+    | LT -> (ParameterPolynomial.add poly ParameterPolynomial.one, LE)
+end
+
+module RealParameterAtom = ParameterAtomOver(OurFloat)

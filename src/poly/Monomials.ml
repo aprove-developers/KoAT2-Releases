@@ -10,6 +10,9 @@ module Make(Value : PolyTypes.Ring) =
 
     type value = Value.t
 
+    (* A monomial is integral if the variables can only take integral values *)
+    let is_integral = Enum.for_all identity % Enum.map Var.is_integral % Map.keys
+
     let make list =
       let addEntry map (var, n) = Map.modify_def 0 var ((+) n) map in
       List.fold_left addEntry Map.empty list

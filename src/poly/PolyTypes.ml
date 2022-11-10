@@ -10,6 +10,8 @@ module type OurNumber =
     val max : t -> t -> t
     val min : t -> t -> t
 
+    val is_integral: t -> bool
+
     val of_ourint : OurInt.t -> t
 
     (** The constant representing -1.
@@ -154,6 +156,9 @@ module type Monomial =
     (** Creates a monomial from a list of variables and their exponents. *)
     val make : (Var.t * int) list -> t
 
+    (* Can the monomial take integral values only, i.e., all vars are of sort Var.Int? *)
+    val is_integral: t -> bool
+
     (** Creates a monomial from a variable and a exponent. *)
     val lift : Var.t -> int -> t
 
@@ -198,6 +203,9 @@ module type ScaledMonomial =
 
     (** Creates a scaled monomial from a monomial and constant factor. *)
     val make : value -> monomial -> t
+
+    (* Can the scaled monomial take integral values only, i.e., the coefficient is integral and all vars are of sort Var.Int? *)
+    val is_integral: t -> bool
 
     (** Lifts a monomial to a scaled monomial with the constant factor one. *)
     val lift : monomial -> t
@@ -326,6 +334,9 @@ module type Ring =
 
     include BaseMath with type t := t
 
+    (*  is the value integral? *)
+    val is_integral: t -> bool
+
 
     (** TODO doc *)
     val equal : t -> t -> bool
@@ -335,9 +346,6 @@ module type Ring =
 
     (** Creates an element of the ring from an integer value. *)
     val of_int : int -> t
-
-    (** Returns a ring element interpreted as an integer value. *)
-    val to_int : t -> int
 
     (** Returns a string representing an element. *)
     val to_string : t -> string

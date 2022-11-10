@@ -51,5 +51,8 @@ val is_helper : t -> bool
 (** Creates a helper variable of type [sort] and a given id. *)
 val mk_helper : sort -> int -> t
 
+(** Returns true if variable is ranged over the integers. *)
+val is_integral: t -> bool
+
 (** Returns true if variable is ranged over real numbers. *)
 val is_real : t -> bool
