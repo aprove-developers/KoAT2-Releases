@@ -75,10 +75,6 @@ let transform_program_ program_ program =
     abstract
     |> apply_guard (TransitionLabel.guard t)
     |> apply_update (TransitionLabel.update t)
-    |> tap ( fun a' ->
-        let to_string a = Apron.Abstract1.print Format.str_formatter a; Format.flush_str_formatter () in
-        Printf.printf "apply_transition %s to %s obtained %s\n" (Transition.to_string_pretty (l,t,l')) (to_string abstract) (to_string a')
-       )
   in
 
   (** The bottom element of the static analysis for the whole program.
@@ -183,7 +179,6 @@ let transform_program_ program_ program =
     |> MaybeChanged.changed (* TODO Actually, we should check if the new invariant is already implied and only then say, that it is changed. *)
 
 let transform_program program =
-  Printf.printf "Here\n";
   let transitions = TransitionSet.map (Tuple3.map identity TransitionLabel.overapprox_nonlinear_updates identity) (Program.transitions program) in
   let program_ = Program.from (List.map List.singleton (transitions |> TransitionSet.to_list)) (Program.start program) in
   transform_program_ program_ program
