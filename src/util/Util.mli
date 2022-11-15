@@ -35,7 +35,7 @@ val cat_maybes : 'a option list -> 'a list
 val cat_maybes_enum : 'a option Enum.t -> 'a Enum.t
 
 (* Execute a function and measure its execution time. The time used by the function is then printed to stdout *)
-val measure_execution_time : (unit -> 'a) -> 'a
+val measure_execution_time : ?methodname:string -> (unit -> 'a) -> 'a
 
 (* Returns a function to measure the execution time of an evaluation, and a function to get the total amount of measured seconds *)
 val measure_total_execution_time : unit -> ((unit -> 'a) -> 'a) * (string -> unit)
