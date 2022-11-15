@@ -142,4 +142,4 @@ module Apron2Koat =
       Constraint.all !result
   end
 
-let abstract_to_string a = Apron.Abstract1.print Format.str_formatter a; Format.flush_str_formatter
+let abstract_to_string a = Apron.Abstract1.print Format.str_formatter a; Format.flush_str_formatter ()
