@@ -140,11 +140,11 @@ module Z3Solver =
 
     (** Returns true iff the formula implies the positivity of the polynomial*)
     let check_positivity (formula : Formula.t) (poly: Polynomial.t) =
-      tautology Formula.Infix.(formula => (poly >= Polynomial.zero))
+      tautology Formula.Infix.(formula => (poly > Polynomial.zero))
 
     (** Returns true iff the formula implies the negativity of the polynomial*)
     let check_negativity (formula : Formula.t) (poly: Polynomial.t) =
-      tautology Formula.Infix.(formula => (poly <= Polynomial.zero))
+      tautology Formula.Infix.(formula => (poly < Polynomial.zero))
 
     let get_model ?(coeffs_to_minimise=[]) formula =
       let z3_expr = from_formula !context formula in
