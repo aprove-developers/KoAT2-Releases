@@ -20,7 +20,7 @@ let show = function
 let affects = function
   | CutUnreachableLocations -> [EliminateNonContributors]
   | InvariantGeneration -> [CutUnsatisfiableTransitions]
-  | CutUnsatisfiableTransitions -> [CutUnreachableLocations; Chaining; EliminateNonContributors]
+  | CutUnsatisfiableTransitions -> [CutUnreachableLocations; EliminateNonContributors]
   | EliminateNonContributors -> []
   | Chaining -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
 
