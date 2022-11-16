@@ -128,6 +128,12 @@ module type TransitionGraph = sig
   (** Adds all transitions from an enum to a transtion graph. Implicitly adds locations when they do not exit. *)
   val add_transitions : Transition.t Enum.t -> t -> t
 
+  (** Apply function to the graphs transitions  *)
+  val map_transitions: (Transition.t -> Transition.t) -> t -> t
+
+  (** Apply function to the graphs labels  *)
+  val map_labels: (TransitionLabel.t -> TransitionLabel.t) -> t -> t
+
   (** Returns the set of locations. *)
   val locations : t -> LocationSet. t
 
@@ -174,8 +180,14 @@ module type Program = sig
   (* Removes the transitions from a certain transitionset to a program *)
   val remove_TransitionSet: TransitionSet.t -> t -> t
 
-  (** TODO doc *)
+  (** Apply function to the underlying TransitionGraph *)
   val map_graph : (TransitionGraph.t -> TransitionGraph.t) -> t -> t
+
+  (** Apply function to the programs transitions  *)
+  val map_transitions: (Transition.t -> Transition.t) -> t -> t
+
+  (** Apply function to the programs labels  *)
+  val map_labels: (TransitionLabel.t -> TransitionLabel.t) -> t -> t
 
   (** Creates a program from a list of transitions and a (start) location. A list of k transitions makes up a Com_k transition *)
   val from : Transition.t list list -> Location.t -> t

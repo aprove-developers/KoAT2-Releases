@@ -8,7 +8,9 @@ module TransitionGraphOver(L : ProgramTypes.Location) = struct
 
   let test: TransitionSet.locationSet = Transition.LocationSet.empty
 
-  include Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_same end)
+  module GraphModule = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_same end)
+
+  include GraphModule
 
   let add_locations locations graph = Enum.fold add_vertex graph locations
 
@@ -19,6 +21,12 @@ module TransitionGraphOver(L : ProgramTypes.Location) = struct
   let locations graph = fold_vertex LocationSet.add graph LocationSet.empty
 
   let transitions graph = fold_edges_e TransitionSet.add graph TransitionSet.empty
+
+  let map_transitions f t =
+    let module MapModule = Graph.Gmap.Edge(GraphModule)(struct include GraphModule let empty () = empty end) in
+    MapModule.map f t
+
+  let map_labels f = map_transitions (fun(l,t,l') -> (l,f t,l'))
 
   let loc_transitions graph locations =
     transitions graph
