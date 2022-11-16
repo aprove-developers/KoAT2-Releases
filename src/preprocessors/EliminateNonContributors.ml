@@ -54,11 +54,10 @@ let eliminate program =
     Logger.(log logger INFO (fun () -> "EliminateNonContributors", [("init_contr", VarSet.to_string init_contr);("init_non_contributors", VarSet.to_string (VarSet.diff vars vars_guard))]));
     let contributors = eliminate_ program init_contr (VarSet.diff vars init_contr) in
     let non_contributors = VarSet.diff vars contributors in
-    let transitions_ = program |> Program.transitions |> TransitionSet.map (fun (l,t,l') -> (l,TransitionLabel.remove_non_contributors non_contributors t ,l')) in
-    let program_ = Program.from (List.map List.singleton @@ TransitionSet.to_list transitions_) (Program.start program) in
-        Logger.(log logger INFO (fun () -> "EliminateNonContributors", [("non_contributors", VarSet.to_string non_contributors)]));
-        if not (VarSet.is_empty non_contributors) then
-          ProofOutput.add_str_paragraph_to_proof(fun () -> "Eliminate variables "^VarSet.to_string ~pretty:true non_contributors^" that do not contribute to the problem");
+    let program_ = Program.map_labels (TransitionLabel.remove_non_contributors non_contributors) program in
+    Logger.(log logger INFO (fun () -> "EliminateNonContributors", [("non_contributors", VarSet.to_string non_contributors)]));
+    if not (VarSet.is_empty non_contributors) then
+      ProofOutput.add_str_paragraph_to_proof(fun () -> "Eliminate variables "^VarSet.to_string ~pretty:true non_contributors^" that do not contribute to the problem");
     if VarSet.is_empty non_contributors then (** this is hideous *)
         (MaybeChanged.same program)
     else

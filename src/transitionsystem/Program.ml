@@ -44,6 +44,10 @@ module ProgramOver(L: ProgramTypes.Location) = struct
   let map_graph f program =
     { program with graph = f program.graph }
 
+  let map_transitions f = map_graph (TransitionGraph.map_transitions f)
+
+  let map_labels f = map_transitions (fun(l,t,l') -> l,f t,l')
+
   let locations = TransitionGraph.locations % graph
 
   let from com_transitions start =

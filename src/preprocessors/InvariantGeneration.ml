@@ -179,6 +179,5 @@ let transform_program_ program_ program =
     |> MaybeChanged.changed (* TODO Actually, we should check if the new invariant is already implied and only then say, that it is changed. *)
 
 let transform_program program =
-  let transitions = TransitionSet.map (Tuple3.map identity TransitionLabel.overapprox_nonlinear_updates identity) (Program.transitions program) in
-  let program_ = Program.from (List.map List.singleton (transitions |> TransitionSet.to_list)) (Program.start program) in
+  let program_ = Program.map_labels TransitionLabel.overapprox_nonlinear_updates program in
   transform_program_ program_ program
