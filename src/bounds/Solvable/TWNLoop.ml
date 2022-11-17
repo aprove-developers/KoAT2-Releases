@@ -31,7 +31,7 @@ let invariant t = t.invariant
 
 let subsumed_transitionlabels t = t.subsumed_transitionlabels
 
-let corresponding_transition t (trans: TransitionSet.t) = TransitionSet.find_first (fun (_,t',_) -> (TransitionLabel.id t) == (TransitionLabel.id t')) trans
+let corresponding_transition t (trans: TransitionSet.t) = List.find (fun (_,t',_) -> (TransitionLabel.id t) == (TransitionLabel.id t')) (trans |> TransitionSet.to_list)
 
 let subsumed_transitions trans twn = List.map (fun t -> corresponding_transition t trans) twn.subsumed_transitionlabels
 
