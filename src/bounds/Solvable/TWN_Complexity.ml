@@ -77,13 +77,13 @@ let compute_f atom = function
     let m_ = OurInt.max_list (List.map (fun ys -> compute_M (base_exp ys)) (prefix xs)) in
     Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["M", (OurInt.to_string m_)]);
     Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)) |> add (of_constant OurInt.one))
-    (* |> tap (fun b -> (* Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);  *)
-      proof_append (
+    |> tap (fun b -> (* Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);  *)
+      TWN_Proofs.proof_append (
       [ "alphas_abs: " ^ (Polynomial.to_string_pretty alphas_abs);
         "M: " ^ (OurInt.to_string m_);
         "N: " ^ (OurInt.to_string n_);
         "Bound: " ^ (Bound.to_string ~pretty:true b);
-      ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block |> FormattedString.(<>) (FormattedString.mk_str_line ("Stabilization-Threshold for: " ^ (Atom.to_string ~pretty:true atom))));) *)
+      ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block |> FormattedString.(<>) (FormattedString.mk_str_line ("Stabilization-Threshold for: " ^ (Atom.to_string ~pretty:true atom))));)
 
 let get_bound t order npe varmap =
   let bound, max_con =
@@ -107,16 +107,16 @@ let complexity loop =
         Check_TWN.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TWNLoop.to_string loop])), true
       else loop, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-    (* proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order)))); *)
+    TWN_Proofs.proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
     let pe = PE.compute_closed_form (List.map (fun var ->
         let update_var = TWNLoop.update t_ var in
         (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
         Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
-        (* proof_append (
+        TWN_Proofs.proof_append (
           FormattedString.(mk_str "closed-form:" <> (
           (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
           |> List.map (fun (a,b) -> a ^ ": " ^ b)
-          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block))); *)
+          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
     let npe = PE.normalize pe in
         Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
     let varmap = Hashtbl.of_list (List.combine order npe) in

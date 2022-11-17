@@ -50,13 +50,13 @@ let termination_ twn order npe varmap =
               (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) ((TWNLoop.guard_without_inv twn |> Formula.mk_and (Formula.mk rest) |> Formula.constraints))) in
   let model = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in
   (Option.is_none model)
- (* |> tap (fun bool ->
-    proof_append
+ |> tap (fun bool ->
+    TWN_Proofs.proof_append
         FormattedString.(
         mk_str_line ("Termination: " ^ (string_of_bool bool))
         <> mk_str_line "Formula: "
         <> (Formula.to_string_formatted formula |> mk_block)
-        |> mk_paragraph);) *)
+        |> mk_paragraph);)
 
 (* For Testing *)
 let termination t =
