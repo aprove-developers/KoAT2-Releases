@@ -21,7 +21,7 @@ module TransitionOver(L : ProgramTypes.Location) = struct
   let equivalent =
     equal_ TransitionLabel.equivalent
 
-  let compare compare_lbl (l1,t1,l1') (l2,t2,l2') =
+  let compare_f compare_lbl (l1,t1,l1') (l2,t2,l2') =
     if not (L.equal l1 l2) then
       L.compare l1 l2
     else if compare_lbl t1 t2 <> 0 then
@@ -32,10 +32,12 @@ module TransitionOver(L : ProgramTypes.Location) = struct
       0
 
   let compare_same =
-    compare TransitionLabel.compare_same
+    compare_f TransitionLabel.compare_same
 
   let compare_equivalent =
-    compare TransitionLabel.compare_equivalent
+    compare_f TransitionLabel.compare_equivalent
+
+  let compare = compare_same
 
   let add_invariant invariant (l,t,l') =
     (l, TransitionLabel.add_invariant t invariant, l')
@@ -93,33 +95,32 @@ module TransitionOver(L : ProgramTypes.Location) = struct
     (l, (TransitionLabel.rename vars t),l')
 
   let overapprox_nonlinear_updates (l,t,l') = l,TransitionLabel.overapprox_nonlinear_updates t,l'
+end
 
-  module Location = L
+module TransitionSetOver(L: ProgramTypes.Location) = struct
+  include Set.Make(TransitionOver(L))
+
+  module Transition = TransitionOver(L)
   module LocationSet = Set.Make(L)
-  module TransitionSet = struct
-    type outer_t = t
-    include Set.Make(struct type t = outer_t let compare = compare_same end)
-    type locationSet = LocationSet.t
 
-    let powerset set =
-      let combine (result: t Enum.t) (x: outer_t) = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
-      Enum.fold combine (Enum.singleton empty) (enum set)
+  type location_set = Set.Make(L).t
 
-    let to_string =
-      Util.enum_to_string to_id_string % enum
+  let powerset set =
+    let combine (result: t Enum.t) x = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
+    Enum.fold combine (Enum.singleton empty) (enum set)
 
-    let to_id_string = Util.enum_to_string to_id_string % enum
+  let to_string =
+    Util.enum_to_string Transition.to_id_string % enum
 
-    let create f enum =
-      enum
-      |> Enum.map f
-      |> of_enum
+  let to_id_string = Util.enum_to_string Transition.to_id_string % enum
 
-    let locations t =
-      fold (fun (l,_,l') set -> LocationSet.add l set |> LocationSet.add l') t (LocationSet.empty)
+  let create f enum =
+    of_enum (Enum.map f enum)
 
-    let targets = LocationSet.of_enum % Enum.map target % enum
-  end
+  let locations t =
+    fold (fun (l,_,l') set -> LocationSet.add l set |> LocationSet.add l') t (LocationSet.empty)
+
+  let targets = LocationSet.of_enum % Enum.map Transition.target % enum
 end
 
 include TransitionOver(Location)

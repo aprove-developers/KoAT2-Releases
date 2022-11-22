@@ -4,10 +4,10 @@ open Batteries
 (** Creates a TransitionGraph over a given location type *)
 module TransitionGraphOver(L: ProgramTypes.Location) : sig
   include ProgramTypes.TransitionGraph
-  with module Location = L
-  and module Transition.Location = L
-  and type LocationSet.elt = L.t
-  and type TransitionSet.elt = L.t * TransitionLabel.t * L.t
+  with type location = L.t
+  and  type location_set = Set.Make(L).t
+  and  type transition = Transition.TransitionOver(L).t
+  and  type transition_set = Set.Make(Transition.TransitionOver(L)).t
 end
 
 include module type of TransitionGraphOver(Location)

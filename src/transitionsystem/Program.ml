@@ -8,9 +8,9 @@ exception RecursionNotSupported
 module ProgramOver(L: ProgramTypes.Location) = struct
   module Location = L
   module TransitionGraph = TransitionGraph.TransitionGraphOver(L)
-  module LocationSet = TransitionGraph.LocationSet
-  module Transition = TransitionGraph.Transition
-  module TransitionSet = TransitionGraph.TransitionSet
+  module LocationSet = Set.Make(L)
+  module TransitionSet = Transition.TransitionSetOver(L)
+  module Transition = Transition.TransitionOver(L)
 
   type t = {
       graph: TransitionGraph.t;
@@ -163,7 +163,7 @@ module ProgramOver(L: ProgramTypes.Location) = struct
   let cardinal_trans_scc program =
     Enum.fold (fun counter scc -> let cardinal = (TransitionSet.cardinal scc) in counter + if cardinal > 1 then cardinal else 0) 0 (sccs program)
 
-  let parallelTransitions graph (l,_,l') =
+  let parallel_transitions graph (l,_,l') =
     transitions graph
       |> TransitionSet.filter (fun (l1,_,l1') ->  L.equal l l1 && L.equal l' l1')
 
@@ -199,15 +199,6 @@ module ProgramOver(L: ProgramTypes.Location) = struct
 
   let to_simple_string program =
     TransitionGraph.fold_edges_e (fun t str -> str ^ ", " ^ Transition.to_string t) program.graph ""
-
-  (* Prints the program to the file "file.koat" *)
-  let to_file program file =
-    let oc = open_out (file ^ ".koat") in
-      Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
-                      (L.to_string (start program))
-                      (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) "")
-                      (TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "");
-      close_out oc
 
   (** All entry transitions of the given transitions.
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
@@ -266,3 +257,12 @@ let rename program =
     graph = TransitionGraph.map_vertex name program.graph;
     start = new_start;
   }
+
+  (* Prints the program to the file "file.koat" *)
+  let to_file program file =
+    let oc = open_out (file ^ ".koat") in
+      Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
+                      (Location.to_string (start program))
+                      (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) "")
+                      (TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "");
+      close_out oc

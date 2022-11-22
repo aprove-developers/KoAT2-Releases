@@ -102,7 +102,7 @@ let parallelTransitions (program: Program.t) scc =
   |> List.fold_right (fun transition res ->
         res
         |> TransitionSet.union (transition
-                                |> Program.parallelTransitions program)) scc
+                                |> Program.parallel_transitions program)) scc
 
 (* Constructs minimal SCCs containing a non-linear transition and all parallel edges. *)
 let minimalSCCs (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
