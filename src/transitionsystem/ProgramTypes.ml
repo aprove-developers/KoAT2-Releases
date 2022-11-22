@@ -23,7 +23,7 @@ module type TransitionSet = sig
   (** A set of transitions. *)
 
   include Set.S
-  type locationSet
+  type location_set
 
   (** TODO doc *)
   val powerset : t -> t Enum.t
@@ -36,30 +36,28 @@ module type TransitionSet = sig
 
   val create : ('a -> elt) -> 'a Batteries.Enum.t -> t
 
-  val locations: t -> locationSet
+  val locations: t -> location_set
 
   (** Returns a locationSet corresponding to the targets of all transitions contained in the set passed as first argument *)
-  val targets: t -> locationSet
+  val targets: t -> location_set
 end
 
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
 module type Transition = sig
-  module Location: Location
+  type location
 
   (** Type of a transition, i.e., two connected locations and a label. *)
-  type t = Location.t * TransitionLabel.t * Location.t
-
-  module TransitionSet : TransitionSet with
-    type elt = t
-
-  module LocationSet : Set.S with type t = TransitionSet.locationSet and type elt = Location.t
+  type t = location * TransitionLabel.t * location
 
   val equal : t -> t -> bool
 
   val same : t -> t -> bool
 
   val equivalent : t -> t -> bool
+
+  (** default to compare_same, i.e., comparison of ids *)
+  val compare: t -> t -> int
 
   val compare_same : t -> t -> int
 
@@ -79,8 +77,8 @@ module type Transition = sig
 
   val to_string_pretty : t -> string
 
-  (** Returns the source location of a transiton. *)
-  val src : t -> Location.t
+  (** Returns the source location of a transition. *)
+  val src : t -> location
 
   (** Returns the label of a transition. *)
   val label : t -> TransitionLabel.t
@@ -89,7 +87,7 @@ module type Transition = sig
   val map_label: (TransitionLabel.t -> TransitionLabel.t) -> t -> t
 
   (** Returns the target location of a transition. *)
-  val target : t -> Location.t
+  val target : t -> location
 
   (** Returns an (unique) id of a transition label. TODO doc unique??*)
   val id : t -> int
@@ -105,68 +103,66 @@ end
 
 (** This module represents a transition graph. *)
 module type TransitionGraph = sig
-  module Location: Location
-  module Transition: Transition
-    with module Location = Location
-    and type t = Location.t * TransitionLabel.t * Location.t
-  module LocationSet: Set.S with type t = Transition.TransitionSet.locationSet
-  module TransitionSet : TransitionSet
-    with type t = Transition.TransitionSet.t
-    with type locationSet = Transition.TransitionSet.locationSet
+  type location
+  type location_set
+  type transition = location * TransitionLabel.t * location
+  type transition_set
 
-  include Graph.Sig.P with type V.t = Location.t
-    and type V.label = Location.t
-      and type E.t = Location.t * TransitionLabel.t * Location.t
+
+  include Graph.Sig.P with type V.t = location
+    and type V.label = location
+      and type E.t = transition
       and type E.label = TransitionLabel.t
 
   (** Creates a transition graph from an enum of transitions. *)
-  val mk : Transition.t Enum.t -> t
+  val mk : transition Enum.t -> t
 
   (** Adds all locations from an enum to a transtion graph. *)
-  val add_locations : Location.t Enum.t -> t -> t
+  val add_locations : location Enum.t -> t -> t
 
   (** Adds all transitions from an enum to a transtion graph. Implicitly adds locations when they do not exit. *)
-  val add_transitions : Transition.t Enum.t -> t -> t
+  val add_transitions : transition Enum.t -> t -> t
 
   (** Apply function to the graphs transitions  *)
-  val map_transitions: (Transition.t -> Transition.t) -> t -> t
+  val map_transitions: (transition -> transition) -> t -> t
 
   (** Apply function to the graphs labels  *)
   val map_labels: (TransitionLabel.t -> TransitionLabel.t) -> t -> t
 
   (** Returns the set of locations. *)
-  val locations : t -> LocationSet. t
+  val locations : t -> location_set
 
   (** Returns the set of transitions. *)
-  val transitions : t -> TransitionSet.t
+  val transitions : t -> transition_set
 
   (** Returns the set of transitions consisting of transitions which are in the program graph and where both source and target location are part of the given location list. *)
-  val loc_transitions : t -> Location.t list -> TransitionSet.t
+  val loc_transitions : t -> location list -> transition_set
 
   (** Checks fore equivalence TODO: lies everywhere...*)
   val equivalent : t -> t -> bool
 
   (** Replaces the first edge by the second edge. *)
-  val replace_edge_e : Transition.t -> Transition.t -> t -> t
+  val replace_edge_e : transition -> transition -> t -> t
 
   (** Adds the invariant to the location of the graph. *)
-  val add_invariant : Location.t -> Constraint.t -> t -> t
+  val add_invariant : location -> Constraint.t -> t -> t
 end
 
 module type Program = sig
   (* module Location : Location *)
   module Location: Location
   module Transition : Transition
-    with module Location = Location
-  module LocationSet: Set.S with type t = Transition.TransitionSet.locationSet
+    with type location = Location.t
+  (* module LocationSet: Set.S with type t = Transition.TransitionSet.location_set *)
+  module LocationSet: Set.S with type elt = Location.t
   module TransitionSet : TransitionSet
-    with type t = Transition.TransitionSet.t
-    with type locationSet = LocationSet.t
+    with type elt = Transition.t
+    and  type location_set = LocationSet.t
   module TransitionGraph : TransitionGraph
-    with module Location = Location
-    and module Transition = Transition
-    and module TransitionSet = Transition.TransitionSet
-    and type LocationSet.t = Transition.TransitionSet.locationSet
+    with type location = Location.t
+    and  type location_set = LocationSet.t
+    and  type transition = Transition.t
+    and  type transition_set = TransitionSet.t
 
   (** Type of a program consisting of a program graph and a start location. *)
   type t
@@ -176,9 +172,6 @@ module type Program = sig
 
   (** Removes a transition from a program. *)
   val remove_transition : t -> Transition.t -> t
-
-  (* Removes the transitions from a certain transitionset to a program *)
-  val remove_TransitionSet: TransitionSet.t -> t -> t
 
   (** Apply function to the underlying TransitionGraph *)
   val map_graph : (TransitionGraph.t -> TransitionGraph.t) -> t -> t
@@ -227,9 +220,6 @@ module type Program = sig
   (** Returns a string representing the program. *)
   val to_string : t -> string
 
-  (** Returns a string representing the program that can be dumped to a KoAT input file. *)
-  val to_file : t -> string
-
   (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns a string representation of a program from such an input. *)
   val to_simple_string : t -> string
 
@@ -238,9 +228,6 @@ module type Program = sig
 
   (** Returns all input variables of the program. *)
   val input_vars : t -> VarSet.t
-
-  (** Returns the number of variables. *)
-  val cardinal_vars : t -> int
 
   (** Returns all locations which occur in the transitions, but each location only once. *)
   val locations : t -> LocationSet.t
@@ -254,17 +241,11 @@ module type Program = sig
   (** Returns the (biggest) strongly connected components of the transiton graph. *)
   val sccs : t -> TransitionSet.t Enum.t
 
-  (** Returns the number of transition involved in a scc. *)
-  val cardinal_trans_scc : t -> int
-
   (** Returns all transitions which are parallel to a given transition. Thus, all transitions start in the same location and end in the same location. *)
-  val parallelTransitions : t -> Transition.t -> TransitionSet.t
+  val parallel_transitions : t -> Transition.t -> TransitionSet.t
 
   (** Returns all transitions, that belong to an SCC. *)
   val non_trivial_transitions : t -> TransitionSet.t
-
-  (** Creates a file (if it does not already exist) and writes the program into it. *)
-  val to_file : t -> string -> unit
 
   (** Computes all entry transitions of the given transitions.
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)

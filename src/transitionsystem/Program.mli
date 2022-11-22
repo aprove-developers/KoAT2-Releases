@@ -7,13 +7,14 @@ open Constraints
 module ProgramOver(L: ProgramTypes.Location) : sig
   include ProgramTypes.Program
     with module Location = L
-    and type LocationSet.elt = L.t
-    and module Transition.Location = L
-    and type Transition.t = L.t * TransitionLabel.t * L.t
-    and type TransitionSet.elt = L.t * TransitionLabel.t * L.t
+    and module Transition = Transition.TransitionOver(L)
+    and module LocationSet = Set.Make(L)
 end
 
 include module type of ProgramOver(Location)
+
+(** Returns a string representing the program that can be dumped to a KoAT input file. *)
+val to_file : t -> string -> unit
 
 (** TODO doc *)
 val rename : t -> t

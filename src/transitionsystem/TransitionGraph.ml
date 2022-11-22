@@ -1,12 +1,15 @@
 open Batteries
 
 module TransitionGraphOver(L : ProgramTypes.Location) = struct
-  module Location = L
-  module Transition = Transition.TransitionOver(L)
-  module LocationSet = Transition.LocationSet
-  module TransitionSet = Transition.TransitionSet
+  type location = L.t
+  type location_set = Set.Make(L).t
+  type transition = Transition.TransitionOver(L).t
+  type transition_set = Set.Make(Transition.TransitionOver(L)).t
 
-  let test: TransitionSet.locationSet = Transition.LocationSet.empty
+  module Location = L
+  module LocationSet = Set.Make(L)
+  module TransitionSet = Set.Make(Transition.TransitionOver(L))
+  module Transition = Transition.TransitionOver(L)
 
   module GraphModule = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Location)(struct include TransitionLabel let compare = compare_same end)
 

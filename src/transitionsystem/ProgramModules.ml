@@ -17,6 +17,3 @@ module Transition = Program.Transition
 module TransitionSet = Program.TransitionSet
 module Location = Location
 module LocationSet = Program.LocationSet
-
-let id: type a. a -> a = fun a->a
-let test: LocationSet.t -> TransitionSet.locationSet = id
