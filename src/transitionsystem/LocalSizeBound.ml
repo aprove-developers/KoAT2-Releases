@@ -172,7 +172,7 @@ let compute_bound program_vars (l,t,l') var =
         let update_vars =
           VarSet.union
            (Polynomial.vars ue)
-           (VarSet.inter (VarSet.singleton var) (TransitionLabel.Guard.vars @@ TransitionLabel.guard t))
+           (VarSet.inter (VarSet.singleton var) (Guard.vars @@ TransitionLabel.guard t))
         in
         try (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
           (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
