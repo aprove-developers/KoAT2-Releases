@@ -1,5 +1,6 @@
 open Batteries
 open Polynomials
+open ProgramTypes
 open ProgramModules
 open Formulas
 open Atoms

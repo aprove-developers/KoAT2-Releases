@@ -9,7 +9,6 @@ open PolyExponential
 open TransitionLabel
 
 module Valuation = Valuation.Make(OurInt)
-module VarMap = Map.Make(Var)
 module ParameterMonomial = Monomials.Make(PolynomialOver(OurInt))
 
 module Endomorphism =

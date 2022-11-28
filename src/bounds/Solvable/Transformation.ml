@@ -1,5 +1,6 @@
 open Automorphism
 open Batteries
+open ProgramTypes
 open Formulas
 open Polynomials
 open TransitionLabel
@@ -11,7 +12,7 @@ module ScaledMonomial = ScaledMonomials.Make(OurInt)
 module Monomial = Monomials.Make(OurInt)
 
 (** get_linear_update_of_variable (x<- 2x+3y+y^2) x y returns 3 *)
-let get_linear_update_of_variable (t:TWNLoop.t) (var_left:TWNLoop.VarMap.key) (var_right:TWNLoop.VarMap.key)=
+let get_linear_update_of_variable (t:TWNLoop.t) (var_left:VarMap.key) (var_right:VarMap.key)=
   match (TWNLoop.update t var_left) with
     | None -> (OurInt.of_int 0)
     | Some update ->
@@ -20,19 +21,19 @@ let get_linear_update_of_variable (t:TWNLoop.t) (var_left:TWNLoop.VarMap.key) (v
   x
 
 (** get_linear_update_list [(x<- 2x+3y+y^2) x [x;y]] returns [[2;3]] *)
-let rec get_linear_update_list (t:TWNLoop.t) (var_left:TWNLoop.VarMap.key) (block:TWNLoop.VarMap.key list) = match block with
+let rec get_linear_update_list (t:TWNLoop.t) (var_left:VarMap.key) (block:VarMap.key list) = match block with
   | [] -> []
   | x::xs -> get_linear_update_of_variable t var_left x :: get_linear_update_list t var_left xs
 
-let matrix_of_linear_assignments (t:TWNLoop.t) (block:TWNLoop.VarMap.key list) =
+let matrix_of_linear_assignments (t:TWNLoop.t) (block:VarMap.key list) =
   List.map (fun x -> get_linear_update_list t x block) block
 
 
 (** [matrix_times_vector A x] returns a polynomial list where each element stores a row of [A*x] *)
-let matrix_times_vector_rational (matrix:OurRational.t list list) (vars:TWNLoop.VarMap.key list) =
+let matrix_times_vector_rational (matrix:OurRational.t list list) (vars:VarMap.key list) =
   List.map (fun xs -> RationalPolynomial.of_coeff_list xs vars) matrix
 
-let matrix_times_vector_int (matrix:OurInt.t list list) (vars:TWNLoop.VarMap.key list) =
+let matrix_times_vector_int (matrix:OurInt.t list list) (vars:VarMap.key list) =
   List.map (fun xs -> Polynomial.of_coeff_list xs vars) matrix
 
 (** sorts the blocks from function check_solvable in the order defined in the transition (needs O(n^2 log n) due to index_of) *)

@@ -83,7 +83,7 @@ let suite =
             program_str >:: (fun _ ->
               TransitionSet.any (Program.transitions prog)
               |> TransitionLabel.update_map % Transition.label
-              |> TransitionLabel.VarMap.for_all
+              |> ProgramTypes.VarMap.for_all
                   (fun _ u -> Polynomials.Polynomial.(equal (of_var @@ Var.of_string "Arg_1") u))
               |> assert_bool "Wrongly parsed update"
             )

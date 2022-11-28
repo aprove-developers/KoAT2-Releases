@@ -3,6 +3,8 @@ open Constraints
 open Polynomials
 (** Provides commonly used module types in programs *)
 
+module VarMap = Map.Make(Var) (* Useful module *)
+
 (** A location is a node of a transition system and can be connected to other locations via transitions. *)
 module type Location = sig
   (** Type of location, we use strings. *)
@@ -42,13 +44,115 @@ module type TransitionSet = sig
   val targets: t -> location_set
 end
 
+module type TransitionLabel = sig
+  (** A transition label consists of an unique id, an update function, a guard and a cost function. *)
+  type t
+  type update_element
+  module Invariant = Guard
+
+  (** Returns a default label with id 0, [true] as the guard,no update function and the default cost function. *)
+  val default: t
+
+  (** Returns the update map of the transitionlabel *)
+  val update_map : t -> update_element VarMap.t
+
+  (** Returns the update of a variable. *)
+  val update : t -> Var.t -> update_element Option.t
+
+  (** TODO doc *)
+  val normalise : t -> VarSet.t -> t
+
+  (** Returns if the two labels are the same entity. *)
+  val same: t -> t -> bool
+
+  (** Returns if the two labels describe the same transition *)
+  val equivalent: t -> t -> bool
+
+  (** Compare IDs *)
+  val compare_same: t -> t -> int
+  (** TODO doc *)
+  val compare_equivalent: t -> t -> int
+  (** This should default to compare_same *)
+  val compare: t -> t -> int
+
+  (** Returns the guard of the label. *)
+  val guard: t -> Guard.t
+
+  (** Returns the guard of the label without considering invariants. *)
+  val guard_without_inv : t -> Guard.t
+
+  (** Returns the invariant. *)
+  val invariant : t -> Invariant.t
+
+  (** Apply function to guard *)
+  val map_guard: (Guard.t -> Guard.t) -> t -> t
+
+  (** Returns the unique id. *)
+  val id: t -> int
+
+  val add_invariant: t -> Invariant.t -> t
+
+  (** Returns the cost function *)
+  val cost : t -> Polynomials.Polynomial.t
+
+  (** Returns a string representing the label. *)
+  val to_string : ?pretty:bool -> t -> string
+
+  (** Returns a string representing the left hand side of the update function. *)
+  val update_to_string_lhs : t -> string
+
+  (** Returns a string representing the right hand side of the update function. *)
+  val update_to_string_rhs : t -> string
+
+  val update_to_string_lhs_pretty : t -> string
+
+  val update_to_string_rhs_pretty : t -> string
+
+  (** Returns a string representing the cost. *)
+  val cost_to_string : t -> string
+
+  (** Returns a string representing the id of the label. *)
+  val to_id_string : t -> string
+
+  (** The call {i fill_up_arg_vars_up_to_num n} adds trivial updates for the first {i n}, i.e. Arg_0, .., Arg_n-1 arguments that are not contained in the labels update map *)
+  val fill_up_arg_vars_up_to_num: int -> t -> t
+
+  (** TODO doc *)
+  val rename : RenameMap.t -> t -> t
+
+  (** Rename temporary variables to identifiers provided by the (possibly infinite) lazy list *)
+  val rename_temp_vars : t -> Var.t LazyList.t -> t
+
+  (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
+  val overapprox_nonlinear_updates : t -> t
+
+  (** Returns the set of variables. *)
+  val vars : t -> VarSet.t
+
+  val vars_without_memoization : t -> VarSet.t
+
+  (** Returns the set of input variables of the transition, i.e. the non temporary variables  *)
+  val input_vars : t -> VarSet.t
+
+  (** Returns the number of input variables *)
+  val input_size: t -> int
+
+  (** Guard that is true if both transitions can be executed one after another *)
+  val chain_guards: t -> t -> Guard.t
+
+  (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
+  val overapprox_nonlinear_updates : t -> t
+
+  val remove_non_contributors : VarSet.t -> t -> t
+end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
 module type Transition = sig
   type location
+  type transition_label
 
   (** Type of a transition, i.e., two connected locations and a label. *)
-  type t = location * TransitionLabel.t * location
+  type t = location * transition_label * location
 
   val equal : t -> t -> bool
 
@@ -81,10 +185,10 @@ module type Transition = sig
   val src : t -> location
 
   (** Returns the label of a transition. *)
-  val label : t -> TransitionLabel.t
+  val label : t -> transition_label
 
   (** Apply a function to a transitions label *)
-  val map_label: (TransitionLabel.t -> TransitionLabel.t) -> t -> t
+  val map_label: (transition_label -> transition_label) -> t -> t
 
   (** Returns the target location of a transition. *)
   val target : t -> location
@@ -105,14 +209,15 @@ end
 module type TransitionGraph = sig
   type location
   type location_set
-  type transition = location * TransitionLabel.t * location
+  type transition_label
+  type transition = location * transition_label * location
   type transition_set
 
 
   include Graph.Sig.P with type V.t = location
     and type V.label = location
       and type E.t = transition
-      and type E.label = TransitionLabel.t
+      and type E.label = transition_label
 
   (** Creates a transition graph from an enum of transitions. *)
   val mk : transition Enum.t -> t
@@ -127,7 +232,7 @@ module type TransitionGraph = sig
   val map_transitions: (transition -> transition) -> t -> t
 
   (** Apply function to the graphs labels  *)
-  val map_labels: (TransitionLabel.t -> TransitionLabel.t) -> t -> t
+  val map_labels: (transition_label -> transition_label) -> t -> t
 
   (** Returns the set of locations. *)
   val locations : t -> location_set
@@ -150,8 +255,9 @@ end
 
 module type Program = sig
   type location
+  type transition_label
 
-  type transition = location * TransitionLabel.t * location
+  type transition = location * transition_label * location
 
   type location_set
   type transition_set
@@ -180,7 +286,7 @@ module type Program = sig
   val map_transitions: (transition -> transition) -> t -> t
 
   (** Apply function to the programs labels  *)
-  val map_labels: (TransitionLabel.t -> TransitionLabel.t) -> t -> t
+  val map_labels: (transition_label -> transition_label) -> t -> t
 
   (** Returns transition graph of a program. *)
   val graph : t -> transition_graph

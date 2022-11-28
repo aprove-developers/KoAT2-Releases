@@ -7,15 +7,32 @@ open Constraints
 (** KoAT does not support recursion yet *)
 exception RecursionNotSupported
 
-module ProgramOver(L: ProgramTypes.Location) : sig
+
+module Make(TL: ProgramTypes.TransitionLabel)
+           (T: ProgramTypes.Transition with type transition_label = TL.t)
+           (L: ProgramTypes.Location with type t = T.location)
+           (G: ProgramTypes.TransitionGraph with type location = L.t
+                                             and type location_set = Set.Make(L).t
+                                             and type transition_label = TL.t
+                                             and type transition_set = Transition.TransitionSetOver(T)(L).t): sig
   include ProgramTypes.Program
     with type location = L.t
+     and type transition_label = TL.t
      and type location_set = Set.Make(L).t
-     and type transition_set = Transition.TransitionSetOver(L).t
-     and type transition_graph = TransitionGraph.TransitionGraphOver(L).t
+     and type transition_set = Transition.TransitionSetOver(T)(L).t
+     and type transition_graph = G.t
 end
 
-include module type of ProgramOver(Location)
+module ProgramOverLocation(L: ProgramTypes.Location) : sig
+  include ProgramTypes.Program
+    with type location = L.t
+     and type transition_label = TransitionLabel.t
+     and type location_set = Set.Make(L).t
+     and type transition_set = Transition.TransitionSetOver(Transition.TransitionOver(TransitionLabel)(L))(L).t
+     and type transition_graph = TransitionGraph.TransitionGraphOverLocation(L).t
+end
+
+include module type of ProgramOverLocation(Location)
 
 (** Returns a string representing the program that can be dumped to a KoAT input file. *)
 val to_file : t -> string -> unit

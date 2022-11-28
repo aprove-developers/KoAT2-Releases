@@ -4,7 +4,9 @@ open Formulas
 
 module Invariant = Guard
 module Monomial = Monomials.Make(OurInt)
-module VarMap = Map.Make(Var)
+module VarMap = ProgramTypes.VarMap
+
+type update_element = Polynomial.t
 
 type t = {
     id : int;
@@ -51,6 +53,9 @@ let compare_equivalent lbl1 lbl2 =
     Polynomial.compare lbl1.cost lbl2.cost
   else
     0
+
+let compare = compare_same
+
 let take_last n xs =
   xs
   |> List.rev
@@ -184,6 +189,8 @@ let overapprox_nonlinear_updates t =
   {t with guard = guard'; update = update'}
 
 let guard t = Guard.mk_and t.guard t.invariant
+
+let chain_guards t1 t2 = guard (append t1 t2)
 
 let guard_without_inv t = t.guard
 

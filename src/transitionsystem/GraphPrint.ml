@@ -2,6 +2,8 @@
 open ProgramModules
 open RVGTypes
 
+module VarMap = ProgramTypes.VarMap
+
 let print_graph ~format out_dir name graph output_graph =
   let full_path ext =
     Fpath.(to_string (out_dir // (v name |> add_ext ext)))
@@ -68,7 +70,7 @@ let label l =
           "&eta; (" ^ Var.to_string  ~pretty:true v ^ ") = " ^ Polynomials.Polynomial.to_string_pretty p
       in
       TransitionLabel.update_map l
-      |> TransitionLabel.VarMap.bindings
+      |> VarMap.bindings
       |> List.map print_update
       |> List.filter (not % String.is_empty)
       |> String.concat "\n"
