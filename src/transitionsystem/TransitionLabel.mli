@@ -101,10 +101,10 @@ val only_update : t -> t
 val to_string : ?pretty:bool -> t -> string
 
 (** Returns a string representing the left hand side of the update function. Parameter {i to_file} is used to get a representation with less special characters. *)
-val update_to_string_lhs : ?to_file:bool -> t -> string
+val update_to_string_lhs : t -> string
 
 (** Returns a string representing the right hand side of the update function. Parameter {i to_file} is used to get a representation with less special characters. *)
-val update_to_string_rhs : ?to_file:bool -> t -> string
+val update_to_string_rhs : t -> string
 
 val update_to_string_lhs_pretty : t -> string
 
@@ -129,3 +129,11 @@ val remove_non_contributors : VarSet.t -> t -> t
 
 (** We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
 val separate_guard_invariant : t -> Invariant.t -> t
+
+(** Returns a string representing the left hand side of the update function.
+    Can be used to dump the Program to a file. *)
+val update_to_file_string_lhs: t -> string
+
+(** Returns a string representing the right hand side of the update function.
+    Can be used to dump the Program to a file. *)
+val update_to_file_string_rhs: t -> string

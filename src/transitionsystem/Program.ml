@@ -12,7 +12,6 @@ module ProgramOver(L: ProgramTypes.Location) = struct
   type transition_set = Transition.TransitionSetOver(L).t
   type transition_graph = TransitionGraph.TransitionGraphOver(L).t
 
-  module Location = L
   module TransitionGraph = TransitionGraph.TransitionGraphOver(L)
   module LocationSet = Set.Make(L)
   module TransitionSet = Transition.TransitionSetOver(L)
@@ -241,7 +240,7 @@ module ProgramOver(L: ProgramTypes.Location) = struct
                                  (fun () -> "outgoing_transitions", ["result", transitions |> List.enum |> Util.enum_to_string Transition.to_id_string]))
 end
 
-module SpecializedLocation = Location
+module SpecializedTransition = Transition
 include ProgramOver(Location)
 
 let rename program =
@@ -256,7 +255,7 @@ let rename program =
            Logger.(log Logging.(get Preprocessor) INFO (fun () -> "renaming", ["original", Location.to_string location; "new", new_name]));
            new_name
          )
-    |> SpecializedLocation.of_string
+    |> Location.of_string
   in
   let new_start = name program.start in
   {
@@ -264,11 +263,11 @@ let rename program =
     start = new_start;
   }
 
-  (* Prints the program to the file "file.koat" *)
-  let to_file program file =
-    let oc = open_out (file ^ ".koat") in
-      Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
-                      (Location.to_string (start program))
-                      (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) "")
-                      (TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(Transition.to_string ~to_file:true t) ^ "\n") program.graph "");
-      close_out oc
+(* Prints the program to the file "file.koat" *)
+let to_file program file =
+  let oc = open_out (file ^ ".koat") in
+    Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
+                    (Location.to_string (start program))
+                    (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) "")
+                    (TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^(SpecializedTransition.to_file_string t) ^ "\n") program.graph "");
+    close_out oc

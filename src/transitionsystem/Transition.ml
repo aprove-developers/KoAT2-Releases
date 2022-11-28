@@ -65,31 +65,16 @@ module TransitionOver(L : ProgramTypes.Location) = struct
   let to_id_string_pretty  (l,label,l') =
     "t" ^ Util.natural_to_subscript (TransitionLabel.id label) ^ ": " ^ L.to_string l ^ "→" ^ L.to_string l'
 
-  let to_string ?(to_file = false) (l,t,l') =
-    if to_file then
-      (
-        if (Constraint.is_true (TransitionLabel.guard t)) then
-          ((L.to_string l)
-          ^ TransitionLabel.(update_to_string_lhs ~to_file t)
-          ^ " -"^ (TransitionLabel.cost_to_string ~to_file t) ^ "> Com_1(" ^ (L.to_string l')
-          ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ")")
-        else
-          (L.to_string l)
-          ^ TransitionLabel.(update_to_string_lhs ~to_file t)
-          ^ " -"^ (TransitionLabel.cost_to_string ~to_file t) ^ "> Com_1(" ^ (L.to_string l')
-          ^ TransitionLabel.(update_to_string_rhs ~to_file t) ^ ") :|: "
-          ^ TransitionLabel.(guard_to_string ~to_file t)
-      )
-    else
-      Int.to_string (TransitionLabel.id t)^":"^L.to_string l ^ TransitionLabel.(update_to_string_lhs t)^ " -"^
-      TransitionLabel.cost_to_string t^"> " ^ L.to_string l' ^
-      TransitionLabel.update_to_string_rhs t ^ if Constraint.is_true (TransitionLabel.guard t) then "" else ":|:" ^ TransitionLabel.(guard_to_string t)
+  let to_string (l,t,l') =
+    Int.to_string (TransitionLabel.id t)^":"^L.to_string l ^ TransitionLabel.(update_to_string_lhs t)^ " -"^
+    TransitionLabel.cost_to_string t^"> " ^ L.to_string l' ^
+    TransitionLabel.update_to_string_rhs t ^ if Constraint.is_true (TransitionLabel.guard t) then "" else ":|:" ^ TransitionLabel.(Guard.to_string (TransitionLabel.guard t))
 
   let to_string_pretty (l,t,l') =
     "t" ^ Util.natural_to_subscript (TransitionLabel.id t)^": "^L.to_string l ^ TransitionLabel.(update_to_string_lhs_pretty t)^
     (if Polynomials.Polynomial.(equal one (TransitionLabel.cost t)) then " → " else " -"^ TransitionLabel.cost_to_string t^"> " ) ^
     L.to_string l' ^
-    TransitionLabel.update_to_string_rhs_pretty t ^ if Constraint.is_true (TransitionLabel.guard t) then "" else " :|: " ^ TransitionLabel.(guard_to_string ~pretty:true t)
+    TransitionLabel.update_to_string_rhs_pretty t ^ if Constraint.is_true (TransitionLabel.guard t) then "" else " :|: " ^ TransitionLabel.(Guard.to_string ~pretty:true (TransitionLabel.guard t))
 
   let rename vars (l,t,l') =
     (l, (TransitionLabel.rename vars t),l')
@@ -124,3 +109,15 @@ module TransitionSetOver(L: ProgramTypes.Location) = struct
 end
 
 include TransitionOver(Location)
+
+let to_file_string (l,t,l') =
+  let without_guard =
+    Location.to_string l
+    ^ TransitionLabel.update_to_file_string_lhs t
+    ^ " -" ^ TransitionLabel.cost_to_string t ^ "> Com_1(" ^ Location.to_string l'
+    ^ TransitionLabel.update_to_file_string_rhs t ^ ")"
+  in
+  if Constraint.is_true (TransitionLabel.guard t) then
+    without_guard ^ " :|: " ^ Guard.to_file_string (TransitionLabel.guard t)
+  else
+    without_guard
