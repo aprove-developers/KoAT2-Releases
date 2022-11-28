@@ -35,6 +35,9 @@ let read_formula =
 let read_constraint =
   read Parser.onlyConstraints
 
+let read_update_element =
+  read Parser.onlyUpdateElement
+
 let read_atom =
   read Parser.onlyAtom
 
@@ -60,3 +63,7 @@ let read_input ?(rename=false) simple program_str =
 let read_prog_goal_file ?(rename=false) path =
   read_ Parser.programAndGoal (Lexing.from_channel @@ File.open_in path)
   |> Tuple2.map1 (if rename then Program_.rename else identity)
+
+let read_probabilistic_prog_goal_file path =
+  read_ Parser.probabilisticProgramAndGoal (Lexing.from_channel @@ File.open_in path)
+

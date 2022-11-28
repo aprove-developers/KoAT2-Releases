@@ -1,5 +1,6 @@
 %token <string> ID
 %token <string> UINT
+%token <string> UFLOAT
 %token          PLUS MINUS TIMES POW
 %token          EQUAL UNEQUAL GREATERTHAN GREATEREQUAL LESSTHAN LESSEQUAL
 %token          LPAR RPAR
@@ -7,11 +8,12 @@
 %token          EOF
 %token          OR
 %token          AND
-%token          ARROW WITH LBRACK RBRACK
+%token          ARROW WITH PROBDIV LBRACK RBRACK
 %token          GOAL STARTTERM FUNCTIONSYMBOLS RULES VAR
-%token          COMMA
+%token          COMMA COLON
 %token          INFINITY
 %token          EXPECTEDCOMPLEXITY COMPLEXITY EXACTRUNTIME EXPECTEDSIZE
+%token          BERNOULLI BINOMIAL GEOMETRIC HYPERGEOMETRIC UNIFORM
 
 %left           PLUS MINUS
 %left           TIMES
@@ -19,6 +21,8 @@
 
 
 %start <Program.t> onlyProgram
+
+%start <ProbabilisticPrograms.ProbabilisticProgram.t> onlyProbabilisticProgram
 
 %start <Program.t> onlyProgram_simple
 
@@ -30,9 +34,13 @@
 
 %start <Polynomials.Polynomial.t> onlyPolynomial
 
+%start <UpdateElement_.t> onlyUpdateElement
+
 %start <BoundsInst.Bound.t> onlyBound
 
 %start <Program.t * Goal.classical Goal.goal> programAndGoal
+
+%start <ProbabilisticPrograms.ProbabilisticProgram.t * Goal.probabilistic Goal.goal> probabilisticProgramAndGoal
 
 %type <Formulas.Formula.t> formula
 
@@ -56,12 +64,23 @@ onlyProgram:
   | p_and_g = programAndGoal
     { Tuple2.first p_and_g } ;
 
+onlyProbabilisticProgram:
+  | p_and_g = probabilisticProgramAndGoal
+    { Tuple2.first p_and_g };
+
 programAndGoal:
   | g = goal
     start = start
     variables = variables
     transitions = transitions; EOF
     { Program.from_com_transitions (transitions variables) start, g } ;
+
+probabilisticProgramAndGoal:
+  | g = probabilisticGoal
+    start = start
+    variables = variables;
+    general_transitions = general_transitions; EOF
+    { ParserUtil.mk_probabilistic_program start general_transitions, g }
 
 onlyProgram_simple:
   | graph = program_simple; EOF
@@ -81,6 +100,12 @@ goal:
   | LPAR GOAL EXACTRUNTIME RPAR
     { Goal.ExactRuntime }
 
+probabilisticGoal:
+  | LPAR GOAL EXPECTEDCOMPLEXITY RPAR
+    { Goal.ExpectedComplexity }
+  | LPAR GOAL EXPECTEDSIZE var=ID RPAR
+    { Goal.ExpectedSize (Var.of_string var) }
+
 start:
   | LPAR STARTTERM LPAR FUNCTIONSYMBOLS start = ID RPAR RPAR
     { Location.of_string start } ;
@@ -89,6 +114,10 @@ transitions:
   | LPAR RULES transition = nonempty_list(transition) RPAR
     { fun vars -> List.map (fun t -> t vars) transition |> List.flatten } ;
 
+general_transitions:
+  | LPAR RULES general_transitions = nonempty_list(general_transition) RPAR
+    { ParserUtil.mk_general_transitions general_transitions } ;
+
 variables:
   | LPAR VAR vars = list(ID) RPAR
     { List.map Var.of_string vars } ;
@@ -96,6 +125,14 @@ variables:
 transition:
   | lhs = transition_lhs; cost = cost ; rhs = transition_rhs; formula = withConstraints
     { ParserUtil.mk_transition lhs cost rhs formula } ;
+
+(* We construct the ProbabilisticTransitionLabels in a delayed fashion since we might have to copy them, e.g. the guard
+       contains multiple constraints. The delayed construction ensures that every Label gets a unique id *)
+general_transition:
+  | lhs = transition_lhs; cost = cost; rhss = general_transition_rhss; constr = withConstraints
+    { (lhs, cost,
+       List.map
+         (fun r -> ParserUtil.embed_probabilistic_transition_label lhs r) rhss, constr) } ;
 
 cost:
   | MINUS LBRACE ub = polynomial COMMA lb = polynomial RBRACE GREATERTHAN
@@ -120,6 +157,60 @@ transition_rhs:
 transition_target:
   | target = ID; LPAR assignments = separated_list(COMMA, polynomial) RPAR
     { (target, assignments) } ;
+
+(* TODO: Alternatively parse classical transition here *)
+general_transition_rhss:
+  | rhss = separated_nonempty_list(PROBDIV, prob_transition_rhs_with_prob)
+    { rhss }
+    (** If there is only one transition then we allow to omit the probability annotation *)
+  | rhs = prob_transition_rhs_without_prob
+    { [(OurFloat.one,rhs)] };
+
+prob_transition_rhs_with_prob:
+  | prob=our_float; COLON; rhs_without_prob=prob_transition_rhs_without_prob
+    { (prob,rhs_without_prob) }
+
+prob_transition_rhs_without_prob:
+ | com_kind = ID; LPAR targets = separated_nonempty_list(COMMA, probabilistic_transition_target) RPAR
+   { (com_kind, targets) }
+ | target = probabilistic_transition_target
+   { ("Com_1", [target]) } ;
+
+probabilistic_transition_target:
+  | target = ID; LPAR assignments = separated_list(COMMA, update_element) RPAR
+    { (target,assignments) };
+
+update_element:
+  | v = update_value
+    { v }
+  | c = our_int
+    { UpdateElement_.of_constant c }
+  | LPAR; ex = update_element; RPAR
+    { ex }
+  | MINUS; ex = update_element
+    { UpdateElement_.neg ex }
+  | p1 = update_element; op = update_element_bioperator; p2 = update_element
+    { op p1 p2 }
+  | v = update_value; POW; c = UINT
+    { UpdateElement_.pow v (int_of_string c) } ;
+
+update_value:
+  | d = dist
+    { UpdateElement_.of_dist d }
+  | v = ID
+    { UpdateElement_.var v } ;
+
+dist:
+  | BERNOULLI; LPAR; p = our_float; RPAR
+    { ProbabilityDistribution.Binomial (Polynomial.one,p) }
+  | BINOMIAL; LPAR; n = polynomial; COMMA; p = our_float; RPAR
+    { ProbabilityDistribution.Binomial (n,p) }
+  | GEOMETRIC; LPAR; p = our_float; RPAR
+    { ProbabilityDistribution.Geometric p }
+  | HYPERGEOMETRIC; LPAR; bigN = our_int; COMMA; k = polynomial; COMMA; n = polynomial; RPAR
+    { ProbabilityDistribution.Hypergeometric (bigN,k,n) }
+  | UNIFORM; LPAR; p1 = polynomial; COMMA; p2 = polynomial; RPAR
+    { ProbabilityDistribution.Uniform (p1,p2) }
 
 withConstraints:
   | { Formula.mk_true }
@@ -181,9 +272,16 @@ formula_atom:
 onlyPolynomial:
   | poly = polynomial EOF { poly } ;
 
+onlyUpdateElement:
+  | ue = update_element EOF { ue };
+
 variable:
   | v = ID
     { Polynomial.var v } ;
+
+our_float:
+  | float_string = UFLOAT
+    { ParserUtil.ourfloat_of_decimal_or_fraction_string float_string } ;
 
 our_int:
   | int_string = UINT
@@ -223,6 +321,11 @@ bound:
 %inline bound_bioperator:
   | PLUS { Bound.add }
   | TIMES { Bound.mul }
+
+%inline update_element_bioperator:
+  | PLUS  { UpdateElement_.add }
+  | TIMES { UpdateElement_.mul }
+  | MINUS { UpdateElement_.sub } ;
 
 %inline bioperator:
   | PLUS { Polynomial.add }

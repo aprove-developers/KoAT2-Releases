@@ -5,6 +5,10 @@ open Util
 
 exception RecursionNotSupported
 
+module GenericProgram = struct
+  type ('a, 'b) t = { start: 'a; graph: 'b }
+end
+
 module Make(TL: ProgramTypes.TransitionLabel)
            (T: ProgramTypes.Transition with type transition_label = TL.t)
            (L: ProgramTypes.Location with type t = T.location)
@@ -23,10 +27,8 @@ struct
   module LocationSet = Set.Make(L)
   module TransitionSet = Transition_.TransitionSetOver(T)(L)
 
-  type t = {
-      graph: G.t;
-      start: L.t;
-    }
+  open GenericProgram
+  type t = (location, transition_graph) GenericProgram.t
 
   let start program = program.start
 
@@ -56,7 +58,7 @@ struct
 
   let map_labels f = map_transitions (fun(l,t,l') -> l,f t,l')
 
-  let locations = G.locations % graph
+  let locations: t -> location_set = G.locations % graph
 
   let transitions =
     G.transitions % graph
@@ -133,7 +135,7 @@ struct
     transitions graph
       |> TransitionSet.filter (fun (l1,_,l1') ->  L.equal l l1 && L.equal l' l1')
 
-  let non_trivial_transitions =
+  let non_trivial_transitions: t -> transition_set =
     Enum.fold TransitionSet.union TransitionSet.empty % sccs
 
   let add_invariant location invariant =
@@ -205,6 +207,7 @@ module ProgramOverLocation(L: ProgramTypes.Location) =
   Make(TransitionLabel_) (Transition_.TransitionOver(TransitionLabel_)(L)) (L)
       (TransitionGraph_.TransitionGraphOverLocation(L))
 
+open GenericProgram
 include ProgramOverLocation(Location)
 
 let from_com_transitions com_transitions start =
