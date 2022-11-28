@@ -201,6 +201,9 @@ struct
     |> List.of_enum
     |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                  (fun () -> "outgoing_transitions", ["result", transitions |> List.enum |> Util.enum_to_string T.to_id_string]))
+
+  let remove_non_contributors vset = map_labels (TL.remove_non_contributors vset)
+
 end
 
 module ProgramOverLocation(L: ProgramTypes.Location) =

@@ -3,24 +3,28 @@ open ProgramModules
 
 let logger = Logging.(get Preprocessor)
 
-type t =
-  | CutUnreachableLocations
-  | CutUnsatisfiableTransitions
-  | EliminateNonContributors
-  | Chaining
-  | InvariantGeneration[@@deriving ord, eq]
+(* The ordering of contructors below influences the order of the resulting Set.t *)
+type _ t =
+  | CutZeroProbTransitions: ProbabilisticPrograms.ProbabilisticProgram.t t
+  | CutUnreachableLocations: 'p t
+  | CutUnsatisfiableTransitions: 'p t
+  | EliminateNonContributors: 'p t
+  | Chaining: Program.t t
+  | InvariantGeneration: 'p t
 
-let show = function
+let show: type p. p t -> string = function
+  | CutZeroProbTransitions -> "zeroprobtransitions"
   | CutUnreachableLocations -> "reachable"
   | CutUnsatisfiableTransitions -> "sat"
   | Chaining -> "chaining"
   | EliminateNonContributors -> "eliminate"
   | InvariantGeneration -> "invgen"
 
-let affects = function
+let affects: type p. p t -> p t list = function
+  | CutZeroProbTransitions -> [ ]
   | CutUnreachableLocations -> [EliminateNonContributors]
-  | InvariantGeneration -> [CutUnsatisfiableTransitions]
-  | CutUnsatisfiableTransitions -> [CutUnreachableLocations; EliminateNonContributors]
+  | InvariantGeneration -> [ CutUnsatisfiableTransitions ]
+  | CutUnsatisfiableTransitions -> [ CutUnreachableLocations; EliminateNonContributors]
   | EliminateNonContributors -> []
   | Chaining -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
 
@@ -35,57 +39,64 @@ let normalise_temp_vars program =
   ) program
 
 
-let lift_to_program transform program =
-  MaybeChanged.(transform (Program.graph program) >>= (fun graph -> same (Program.map_graph (fun _ -> graph) program)))
+let lift_to_program (transform: TransitionGraph.t -> TransitionGraph.t MaybeChanged.t) (program: Program.t) =
+  MaybeChanged.(transform (Program.graph program) >>= fun graph -> same (Program.map_graph (fun _ -> graph) program))
 
-let transform subject = function
-  | CutUnreachableLocations -> CutUnreachableLocations.transform_program subject
-  | CutUnsatisfiableTransitions -> CutUnsatisfiableTransitions.transform_program subject
+let transform (type p) (module P: ProgramTypes.ClassicalProgramModules with type Program.t = p)
+    (subject: P.Program.t) (p: P.Program.t t): P.Program.t MaybeChanged.t =
+  match p with
+  | CutUnreachableLocations ->
+    let module CUL = CutUnreachableLocations.Make(P) in
+    CUL.transform_program subject
+  | CutUnsatisfiableTransitions ->
+    let module CUT = CutUnsatisfiableTransitions.Make(P) in CUT.transform_program subject
+  | CutZeroProbTransitions -> CutZeroProbTransitions.transform_program subject
   | Chaining -> (MaybeChanged.map normalise_temp_vars  % lift_to_program Chaining.transform_graph) subject
-  | EliminateNonContributors -> EliminateNonContributors.eliminate subject
-  | InvariantGeneration -> InvariantGeneration.transform_program subject
+  | EliminateNonContributors ->
+    let module ENC = EliminateNonContributors.Make(P) in ENC.eliminate subject
+  | InvariantGeneration ->
+    let module IG = InvariantGeneration.Make(P) in IG.transform_program subject
 
-type outer_t = t
-module PreprocessorSet =
-  Set.Make(
-      struct
-        type t = outer_t
-        let compare = compare
-      end
-    )
-
-let all =
+let all_classical: Program.t t list =
   [Chaining; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]
 
+let all_probabilistic: ProbabilisticPrograms.ProbabilisticProgram.t t list =
+  [CutZeroProbTransitions; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]
 
-type strategy = t list -> Program.t -> Program.t
+let all_generic: 'a. 'a t list =
+  [CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]
 
-let process strategy preprocessors subject =
+type 'p strategy = (module ProgramTypes.ClassicalProgramModules with type Program.t = 'p) -> 'p t list -> 'p -> 'p
+
+let process (type p) (module P: ProgramTypes.ClassicalProgramModules with type Program.t = p)
+    (strat: P.Program.t strategy) preprocessors subject =
   let execute () =
-    strategy preprocessors subject
+    strat (module P) preprocessors subject
   in
   Logger.(with_log logger INFO
             (fun () -> "running_preprocessors", ["preprocessors", Util.enum_to_string show (List.enum preprocessors)])
-            execute)
+              execute)
 
-let process_only_once preprocessors =
-  PreprocessorSet.fold (fun preprocessor subject -> MaybeChanged.unpack (transform subject preprocessor)) (PreprocessorSet.of_list preprocessors)
+let process_only_once: type p. p strategy = fun (module P) preprocessors ->
+  Set.fold (fun preprocessor subject -> MaybeChanged.unpack (transform (module P) subject preprocessor)) (Set.of_list preprocessors)
 
-let rec process_til_fixpoint_ ?(wanted=PreprocessorSet.of_list all) (todos: PreprocessorSet.t) (subject: Program.t) : Program.t =
-  if PreprocessorSet.is_empty todos then
-    subject
-  else
-    let (preprocessor, others) = PreprocessorSet.pop_min todos in
-    let maybe_changed = transform subject preprocessor in
-    let new_preprocessor_set =
-      if MaybeChanged.has_changed maybe_changed then
-        PreprocessorSet.(preprocessor |> affects |> of_list |> inter wanted |> union others)
-      else others in
-    process_til_fixpoint_ ~wanted new_preprocessor_set (MaybeChanged.unpack maybe_changed)
+let process_till_fixpoint_ (type p) (module P: ProgramTypes.ClassicalProgramModules with type Program.t = p)
+    ~(wanted:P.Program.t t Set.t) =
+  let rec iterate (todos: P.Program.t t Set.t) (subject: P.Program.t): P.Program.t =
+    if Set.is_empty todos then subject
+    else
+      let (preprocessor, others) = Set.pop_min todos in
+      let maybe_changed = transform (module P) subject preprocessor in
+      let new_preprocessor_set =
+        if MaybeChanged.has_changed maybe_changed then
+          Set.(preprocessor |> affects |> of_list |> intersect wanted |> union others)
+        else others in
+      iterate new_preprocessor_set (MaybeChanged.unpack maybe_changed)
+  in
+  iterate
 
-let process_til_fixpoint preprocessors subject =
-  let set = PreprocessorSet.of_list preprocessors in
-  process_til_fixpoint_ ~wanted:set set subject
+let process_till_fixpoint: type p. p strategy = fun (module P) preprocessors subject ->
+  let set = Set.of_list preprocessors in
+  process_till_fixpoint_ (module P) ~wanted:set set subject
 
-let all_strategies = [process_only_once; process_til_fixpoint]
-
+let all_strategies: 'p. 'p strategy list = [process_only_once; process_till_fixpoint]

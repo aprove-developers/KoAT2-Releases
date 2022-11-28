@@ -80,7 +80,7 @@ let tests =
          List.map (fun (expected_program, program) ->
              program >:: (fun _ ->
                      let result =
-                       (Preprocessor.process_til_fixpoint
+                       (Preprocessor.process_till_fixpoint (module ProgramModules)
                           Preprocessor.[CutUnreachableLocations; CutUnsatisfiableTransitions]
                           (Readers.read_program_simple program))
                      in

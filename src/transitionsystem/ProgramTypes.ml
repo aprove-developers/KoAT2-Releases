@@ -279,6 +279,9 @@ module type Program = sig
   (** Removes a transition from a program. *)
   val remove_transition : t -> transition -> t
 
+  (* Removes the transitions from a certain transitionset to a program *)
+  val remove_transition_set: transition_set -> t -> t
+
   (** Apply function to the underlying TransitionGraph *)
   val map_graph : (transition_graph -> transition_graph) -> t -> t
 
@@ -357,6 +360,9 @@ module type Program = sig
   (** Computes all outgoing transitions of the given transitions.
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
   val outgoing_transitions : Batteries.Logger.log -> t -> transition list -> transition Batteries.List.t
+
+  (** Remove the given variables that do not contribute to the problem *)
+  val remove_non_contributors: VarSet.t -> t -> t
 end
 
 module type ProgramModules = sig
