@@ -73,6 +73,6 @@ sig
     (**eta_inv(update(eta(x))) *)
     val transform_update: t -> Polynomials.RationalPolynomial.t Map.Make(Var).t ->Polynomials.Polynomial.t list option
 
-    val transform_guard: t -> TransitionLabel.Guard.t -> TransitionLabel.Guard.t
+    val transform_guard: t -> Guard.t -> Guard.t
 
 end

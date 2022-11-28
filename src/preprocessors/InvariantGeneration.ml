@@ -45,7 +45,7 @@ let transform_program_ program_ program =
   in
 
   (** Applies the guard to the abstract value, reducing its size. *)
-  let apply_guard (guard: TransitionLabel.Guard.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
+  let apply_guard (guard: Guard.t) (abstract: 'a Apron.Abstract1.t): 'a Apron.Abstract1.t =
     guard
     |> constraint_to_apron environment
     |> Apron.Abstract1.meet_tcons_array manager abstract

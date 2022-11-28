@@ -2,10 +2,8 @@ open Batteries
 open Polynomials
 open Formulas
 
-module Guard = Constraints.Constraint
-module Invariant = Constraints.Constraint
+module Invariant = Guard
 module Monomial = Monomials.Make(OurInt)
-type polynomial = Polynomial.t
 module VarMap = Map.Make(Var)
 
 type t = {
@@ -41,27 +39,6 @@ let equivalent lbl1 lbl2 =
 
 let compare_same lbl1 lbl2 =
   Int.compare lbl1.id lbl2.id
-
-let simplify_guard t =
-  (* Only try to simplify the linear part *)
-  let (lin_atoms, non_lin_atoms) = List.partition Atoms.Atom.is_linear @@ Guard.simplify @@ Guard.atom_list t.guard in
-  let not_implied constrs =
-    List.filter (fun c -> SMT.Z3Solver.satisfiable
-      Formulas.Formula.(mk_and (List.fold_left (fun f c' -> mk_and f (mk @@ Guard.mk [c'])) mk_true constrs)
-                               (neg @@ mk @@ Guard.mk [c])))
-  in
-  let rec greed_minimpl_set constr_chosen = function
-    | [] -> constr_chosen
-    | constr_missing ->
-        let (next_constr, constr_missing') =
-          List.map (fun c -> c,not_implied (List.cons c constr_chosen) constr_missing) constr_missing
-          |> List.min ~cmp:(fun (_,l) (_,l') -> compare (List.length l) (List.length l'))
-        in
-        greed_minimpl_set (List.cons next_constr constr_chosen) constr_missing'
-  in
-  (* Perform initial check to catch tautologies *)
-  let simplified = Guard.mk @@ greed_minimpl_set [] (not_implied [] lin_atoms) @ non_lin_atoms in
-  { t with guard = simplified }
 
 let compare_equivalent lbl1 lbl2 =
   if VarMap.compare Polynomial.compare lbl1.update lbl2.update != 0 then
@@ -111,7 +88,6 @@ let mk ~id ~cost ~assignments ~patterns ~guard ~vars =
     invariant = Guard.mk_true;
     cost = Polynomial.rename map_to_arg_vars cost;
   }
-
 
 let append t1 t2 =
   let module VarTable = Hashtbl.Make(Var) in
@@ -262,25 +238,6 @@ let cost_to_string ?(to_file = false) label =
   else
     "{"^(Polynomial.to_string label.cost)^"}"
 
-
-let guard_to_string ?(to_file = false) ?(pretty = false) label =
-  if
-    Guard.is_true (Guard.mk_and label.guard label.invariant) then ""
-  else
-    Guard.to_string ~to_file ~pretty ~conj:(if pretty then " ∧ " else " && ") (Guard.mk_and label.guard label.invariant)
-
-let guard_without_inv_to_string ?(to_file = false) ?(pretty = false) label =
-  if
-    Guard.is_true label.guard then ""
-  else
-    Guard.to_string ~to_file ~pretty ~conj:(if pretty then " ∧ " else " && ") label.guard
-
-let invariant_to_string ?(to_file = false) ?(pretty = false) label =
-  if
-    Invariant.is_true label.invariant then ""
-  else
-    Invariant.to_string ~to_file ~pretty ~conj:(if pretty then " ∧ " else " && ") label.invariant
-
 let normalise t (input_vars:VarSet.t) = {
     id = t.id;
     update = VarSet.fold (fun var fold_update -> if (VarMap.mem var fold_update)
@@ -339,14 +296,14 @@ let update_to_string_rhs_pretty t =
       |> Tuple2.second
       |> fun xs -> "("^(String.concat ", " xs)^")"
 
-let to_string ?(pretty = false) label =
-  let guard = if Guard.is_true label.guard  then "" else " :|: " ^ guard_without_inv_to_string ~pretty label in
-  let invariant = if Invariant.is_true label.invariant  then "" else " [" ^ invariant_to_string ~pretty label ^ "]" in
-  let cost = if Polynomial.is_one label.cost then if pretty then "->" else "" else if pretty then "-{" ^ Polynomial.to_string_pretty label.cost else Polynomial.to_string label.cost ^ "}>" in
+let to_string ?(pretty = false) t =
+  let guard = if Guard.is_true t.guard  then "" else " :|: " ^ Guard.to_string ~pretty t.guard in
+  let invariant = if Invariant.is_true t.invariant  then "" else " [" ^ Guard.to_string ~pretty t.invariant ^ "]" in
+  let cost = if Polynomial.is_one t.cost then if pretty then "->" else "" else if pretty then "-{" ^ Polynomial.to_string_pretty t.cost else Polynomial.to_string t.cost ^ "}>" in
   if pretty then
-    "t" ^ (Util.natural_to_subscript label.id) ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty label ^ " " ^ cost ^ " "  ^ update_to_string_rhs_pretty label ^ guard
+    "t" ^ (Util.natural_to_subscript t.id) ^ ":" ^ invariant ^ " " ^ update_to_string_lhs_pretty t ^ " " ^ cost ^ " "  ^ update_to_string_rhs_pretty t ^ guard
   else
-    "ID: " ^ invariant ^ string_of_int label.id ^ ", " ^ cost ^ "&euro;" ^ ", " ^ update_to_string label.update ^ guard
+    "ID: " ^ invariant ^ string_of_int t.id ^ ", " ^ cost ^ "&euro;" ^ ", " ^ update_to_string t.update ^ guard
 
 let to_id_string =
   string_of_int % id
@@ -367,7 +324,6 @@ let rename_update update rename_map =
   |> VarMap.enum
   |> Enum.map (fun (key, value) -> (RenameMap.find key rename_map ~default:key), Polynomial.rename rename_map value)
   |> VarMap.of_enum
-
 
 let rename_temp_vars t temp_vars =
   let temp_vars_of_label = VarSet.diff (vars t) (input_vars t) in

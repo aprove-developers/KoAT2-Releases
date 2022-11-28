@@ -5,14 +5,8 @@ open Batteries
     A guard has to be fulfiled for a state to reach another state via the transition.
     An update assigns variables a new value as a linear combination of the old values. *)
 
-(** Module representing the guard. *)
-module Guard = Constraints.Constraint
-
 (** Module representing the invariants. *)
-module Invariant = Constraints.Constraint
-
-(** Type as a short form of our polynomials over [OurInt]. *)
-type polynomial = Polynomials.Polynomial.t
+module Invariant = Guard
 
 (** Module representing a map from variables to variables. *)
 module VarMap : module type of Map.Make(Var)
@@ -23,8 +17,8 @@ type t
 
 (** TODO doc? *)
 val mk : id:int option ->
-         cost:polynomial ->
-         assignments: polynomial list ->
+         cost: Polynomials.Polynomial.t ->
+         assignments: Polynomials.Polynomial.t list ->
          patterns:Var.t list ->
          guard:Guard.t ->
          vars:Var.t list ->
@@ -39,10 +33,6 @@ val normalise : t -> VarSet.t -> t
 (** Appends the second label to the first label.
     An evaluation of the resulting label is equivalent to an evaluation of the first label and then the second label. *)
 val append : t -> t -> t
-
-(** Simplifies the guard of the transition. This function performs calls to the SMT solver and is therefore expensive.
- * This method makes O(n^2) calls to the smt solver where n is the number of atoms in the guard. *)
-val simplify_guard : t -> t
 
 (** Returns if the two labels are the same entity. *)
 val same : t -> t -> bool
@@ -60,16 +50,16 @@ val compare_equivalent : t -> t -> int
 val id : t -> int
 
 (** Returns the update of a variable. *)
-val update : t -> Var.t -> polynomial Option.t
+val update : t -> Var.t -> Polynomials.Polynomial.t Option.t
 
 (** Returns the full update of the transitionlabel *)
-val update_full : t -> Var.t -> polynomial
+val update_full : t -> Var.t -> Polynomials.Polynomial.t
 
 (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
 val overapprox_nonlinear_updates : t -> t
 
 (** Returns the update map of the transitionlabel *)
-val update_map : t -> polynomial VarMap.t
+val update_map : t -> Polynomials.Polynomial.t VarMap.t
 
 (** Returns the guard of the label. *)
 val guard : t -> Guard.t
@@ -102,7 +92,7 @@ val input_vars : t -> VarSet.t
 val input_size : t -> int
 
 (** Returns the cost function *)
-val cost : t -> polynomial
+val cost : t -> Polynomials.Polynomial.t
 
 (** Returns t with costs 1 *)
 val only_update : t -> t
@@ -120,11 +110,8 @@ val update_to_string_lhs_pretty : t -> string
 
 val update_to_string_rhs_pretty : t -> string
 
-(** Returns a string representing the guard. Parameter {i to_file} is used to get a representation with less special characters. *)
-val guard_to_string : ?to_file:bool -> ?pretty:bool -> t -> string
-
-(** Returns a string representing the cost. Parameter {i to_file} is used to get a representation with less special characters. *)
-val cost_to_string : ?to_file:bool -> t -> string
+(** Returns a string representing the cost. *)
+val cost_to_string : t -> string
 
 (** Returns a string representing the id of the label. *)
 val to_id_string : t -> string

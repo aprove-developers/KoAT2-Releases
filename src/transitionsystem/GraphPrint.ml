@@ -75,8 +75,8 @@ let label l =
     in
     let guard =
       let g = TransitionLabel.guard l in
-      if TransitionLabel.Guard.is_true g then "" else
-      "&tau; = " ^ TransitionLabel.Guard.to_string ~pretty:true g
+      if Guard.is_true g then "" else
+      "&tau; = " ^ Guard.to_string ~pretty:true g
     in
 
     let cost =
