@@ -7,6 +7,11 @@ open Constraints
 (** KoAT does not support recursion yet *)
 exception RecursionNotSupported
 
+(** This allows us to show type equality of programs created with Make outside of this module. *)
+(** For instance in the case of probabilistic programs we want the abstract type t of probabilistic programs and overapproximated probabilistic programs to coincide *)
+module GenericProgram: sig
+  type ('a,'b) t
+end
 
 module Make(TL: ProgramTypes.TransitionLabel)
            (T: ProgramTypes.Transition with type transition_label = TL.t)
@@ -21,6 +26,7 @@ module Make(TL: ProgramTypes.TransitionLabel)
      and type location_set = Set.Make(L).t
      and type transition_set = Transition_.TransitionSetOver(T)(L).t
      and type transition_graph = G.t
+     and type t = (L.t, G.t) GenericProgram.t
 end
 
 module ProgramOverLocation(L: ProgramTypes.Location) : sig

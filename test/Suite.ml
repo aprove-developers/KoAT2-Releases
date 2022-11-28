@@ -25,6 +25,7 @@ let suite =
       OurRationalTest.tests;
       TWNTest.tests;
       SolvableTest.tests;
+      UpdateElementTests.tests;
     ]
 
 let () =

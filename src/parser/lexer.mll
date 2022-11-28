@@ -24,6 +24,9 @@ let newline = '\r' | '\n' | "\r\n"
 let comment = '#'[^ '\n' '\r']*newline
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '.' '_' '\'']* '\''?
 
+let fraction = ['-']?['0'-'9']+['/']['1'-'9']['0'-'9']*
+let probfloat = ['+']?(['0'-'1']*)?['.']['0'-'9']+ | '1''.''0'* | '[' fraction ']'
+
 rule read =
   parse
   | white             { read lexbuf }
@@ -33,13 +36,19 @@ rule read =
   | "COMPLEXITY"           { P.COMPLEXITY }
   | "EXPECTEDCOMPLEXITY"   { P.EXPECTEDCOMPLEXITY }
   (*| "EXACTRUNTIME"         { P.EXACTRUNTIME }
-  | "EXPECTEDSIZE"         { P.EXPECTEDSIZE } *)
+  | "EXPECTEDSIZE"    { P.EXPECTEDSIZE } *)
+  | "BERNOULLI"       { P.BERNOULLI }
+  | "BINOMIAL"        { P.BINOMIAL }
+  | "GEOMETRIC"       { P.GEOMETRIC }
+  | "HYPERGEOMETRIC"  { P.HYPERGEOMETRIC }
+  | "UNIFORM"         { P.UNIFORM }
   | "STARTTERM"       { P.STARTTERM }
   | "FUNCTIONSYMBOLS" { P.FUNCTIONSYMBOLS }
   | "RULES"           { P.RULES }
   | "VAR"             { P.VAR }
   | "inf"             { P.INFINITY }
   | int               { P.UINT (Lexing.lexeme lexbuf) }
+  | probfloat         { P.UFLOAT (Lexing.lexeme lexbuf)}
   | id                { P.ID (Lexing.lexeme lexbuf) }
   | '('               { P.LPAR }
   | ')'               { P.RPAR }
@@ -63,6 +72,8 @@ rule read =
   | "/\\"             { P.AND }
   | "||"              { P.OR }
   | ":|:"             { P.WITH }
+  | ":+:"             { P.PROBDIV }
+  | ":"               { P.COLON }
   | ','               { P.COMMA }
   | eof               { P.EOF }
   | _                 { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
