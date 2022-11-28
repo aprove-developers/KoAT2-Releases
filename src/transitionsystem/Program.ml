@@ -6,6 +6,12 @@ open Util
 exception RecursionNotSupported
 
 module ProgramOver(L: ProgramTypes.Location) = struct
+  type location = L.t
+  type transition = L.t * TransitionLabel.t * L.t
+  type location_set = Set.Make(L).t
+  type transition_set = Transition.TransitionSetOver(L).t
+  type transition_graph = TransitionGraph.TransitionGraphOver(L).t
+
   module Location = L
   module TransitionGraph = TransitionGraph.TransitionGraphOver(L)
   module LocationSet = Set.Make(L)

@@ -6,9 +6,10 @@ open Constraints
 
 module ProgramOver(L: ProgramTypes.Location) : sig
   include ProgramTypes.Program
-    with module Location = L
-    and module Transition = Transition.TransitionOver(L)
-    and module LocationSet = Set.Make(L)
+    with type location = L.t
+     and type location_set = Set.Make(L).t
+     and type transition_set = Transition.TransitionSetOver(L).t
+     and type transition_graph = TransitionGraph.TransitionGraphOver(L).t
 end
 
 include module type of ProgramOver(Location)
