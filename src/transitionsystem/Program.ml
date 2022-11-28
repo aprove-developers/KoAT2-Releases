@@ -41,7 +41,7 @@ module ProgramOver(L: ProgramTypes.Location) = struct
     { program with graph = TransitionGraph.remove_edge_e program.graph transition }
 
   (* Removes the transitions from a certain transitionset to a program *)
-  let remove_TransitionSet (transitions:  TransitionSet.t) (program: t)  =
+  let remove_transition_set (transitions:  TransitionSet.t) (program: t)  =
     program
     |> TransitionSet.fold (fun transition resulting_program  ->
                                   transition
