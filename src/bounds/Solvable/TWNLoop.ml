@@ -2,11 +2,11 @@ open Batteries
 open Polynomials
 open ProgramModules
 open Atoms
+open ProgramTypes
 
 module Guard = Formulas.Formula
 module Invariant = Constraints.Constraint
 type polynomial = Polynomial.t
-module VarMap = Map.Make(Var)
 
 type t = {
   id: int;

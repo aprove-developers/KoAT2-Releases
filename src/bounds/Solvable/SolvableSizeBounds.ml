@@ -1,4 +1,5 @@
 open Batteries
+open ProgramTypes
 open ProgramModules
 open Polynomials
 open PolyExponential
@@ -12,7 +13,7 @@ type path = (Location.t * TWNLoop.t * Location.t) list
 module Monomial = Monomials.Make(OurInt)
 
 (** get_linear_update_of_variable (x<- 2x+3y+y^2) x y returns 3 *)
-let get_linear_update_of_variable (t:TransitionLabel.t) (var_left:TWNLoop.VarMap.key) (var_right:TWNLoop.VarMap.key) =
+let get_linear_update_of_variable (t:TransitionLabel.t) (var_left:VarMap.key) (var_right:VarMap.key) =
   match (TransitionLabel.update t var_left) with
     | None -> (OurInt.of_int 0)
     | Some update ->
@@ -21,11 +22,11 @@ let get_linear_update_of_variable (t:TransitionLabel.t) (var_left:TWNLoop.VarMap
   x
 
 (** get_linear_update_list [(x<- 2x+3y+y^2) x [x;y]] returns [[2;3]] *)
-let rec get_linear_update_list (t:TransitionLabel.t) (var_left:TWNLoop.VarMap.key) (block:TWNLoop.VarMap.key list) = match block with
+let rec get_linear_update_list (t:TransitionLabel.t) (var_left:VarMap.key) (block:VarMap.key list) = match block with
   | [] -> []
   | x::xs -> get_linear_update_of_variable t var_left x :: get_linear_update_list t var_left xs
 
-let matrix_of_linear_assignments (t:TransitionLabel.t) (block:TWNLoop.VarMap.key list) =
+let matrix_of_linear_assignments (t:TransitionLabel.t) (block:VarMap.key list) =
   List.map (fun x -> get_linear_update_list t x block) block
 
 let find_cycle twn_loop var =
