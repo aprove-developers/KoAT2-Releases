@@ -8,11 +8,11 @@ open BoundsInst
 (** Constructs a reader for the given transition graph *)
 
 (** Reads a file associated to the given path and returns a program. *)
-val read_file : string -> Program.t
+val read_file : string -> Program_.t
 
-val read_program : string -> Program.t
+val read_program : string -> Program_.t
 
-val read_program_simple : string -> Program.t
+val read_program_simple : string -> Program_.t
 
 val read_formula : string -> Formulas.Formula.t
 
@@ -24,6 +24,6 @@ val read_polynomial : string -> Polynomials.Polynomial.t
 
 val read_bound : string -> Bound.t
 
-val read_input : ?rename:bool -> bool -> string -> Program.t
+val read_input : ?rename:bool -> bool -> string -> Program_.t
 
-val read_prog_goal_file : ?rename:bool -> string -> Program.t * Goal.classical Goal.goal
+val read_prog_goal_file : ?rename:bool -> string -> Program_.t * Goal.classical Goal.goal

@@ -11,17 +11,17 @@ module Make(TL: ProgramTypes.TransitionLabel)
            (G: ProgramTypes.TransitionGraph with type location = L.t
                                              and type location_set = Set.Make(L).t
                                              and type transition_label = TL.t
-                                             and type transition_set = Transition.TransitionSetOver(T)(L).t) =
+                                             and type transition_set = Transition_.TransitionSetOver(T)(L).t) =
 struct
   type location = L.t
   type transition_label = TL.t
   type transition = L.t * TL.t * L.t
   type location_set = Set.Make(L).t
-  type transition_set = Transition.TransitionSetOver(T)(L).t
+  type transition_set = Transition_.TransitionSetOver(T)(L).t
   type transition_graph = G.t
 
   module LocationSet = Set.Make(L)
-  module TransitionSet = Transition.TransitionSetOver(T)(L)
+  module TransitionSet = Transition_.TransitionSetOver(T)(L)
 
   type t = {
       graph: G.t;
@@ -202,14 +202,14 @@ struct
 end
 
 module ProgramOverLocation(L: ProgramTypes.Location) =
-  Make(TransitionLabel) (Transition.TransitionOver(TransitionLabel)(L)) (L)
-      (TransitionGraph.TransitionGraphOverLocation(L))
+  Make(TransitionLabel_) (Transition_.TransitionOver(TransitionLabel_)(L)) (L)
+      (TransitionGraph_.TransitionGraphOverLocation(L))
 
 include ProgramOverLocation(Location)
 
 let from_com_transitions com_transitions start =
   let all_trans = List.flatten com_transitions in
-  let start_locs = LocationSet.of_list @@ List.map Transition.src all_trans in
+  let start_locs = LocationSet.of_list @@ List.map Transition_.src all_trans in
 
   (* Try to eliminate recursion. When there is a Com_k transition we aim to construct a Com_1 transition by eliminating
    * all targets that do not appear on the left hand side of a rule.
@@ -220,11 +220,11 @@ let from_com_transitions com_transitions start =
       (fun ts ->
         if List.length ts > 1 then
           let arb_trans = List.hd ts in
-          let cleaned = List.filter (flip LocationSet.mem start_locs % Transition.target) ts in
+          let cleaned = List.filter (flip LocationSet.mem start_locs % Transition_.target) ts in
           if List.is_empty cleaned then [arb_trans] else cleaned
           |> tap (fun new_ts -> if List.length new_ts = 1 then Logger.log Logging.(get Program) INFO (fun () ->
-              "eliminate_recursion",[ "old_targets", Util.enum_to_string Transition.to_id_string (List.enum ts)
-                                    ; "new_targets", Util.enum_to_string Transition.to_id_string (List.enum new_ts)]) else ())
+              "eliminate_recursion",[ "old_targets", Util.enum_to_string Transition_.to_id_string (List.enum ts)
+                                    ; "new_targets", Util.enum_to_string Transition_.to_id_string (List.enum new_ts)]) else ())
         else ts
       )
       com_transitions
@@ -233,9 +233,9 @@ let from_com_transitions com_transitions start =
     let transs =
       let all = List.flatten cleaned_com_k_transitions in
       let num_arg_vars =
-        List.max ~cmp:Int.compare @@ List.map (TransitionLabel.input_size % Transition.label) all
+        List.max ~cmp:Int.compare @@ List.map (TransitionLabel_.input_size % Transition_.label) all
       in
-      List.map (Transition.map_label (TransitionLabel.fill_up_arg_vars_up_to_num num_arg_vars)) all
+      List.map (Transition_.map_label (TransitionLabel_.fill_up_arg_vars_up_to_num num_arg_vars)) all
     in
     from_enum start (List.enum transs)
 
@@ -255,7 +255,7 @@ let rename program =
   in
   let new_start = name program.start in
   {
-    graph = TransitionGraph.map_vertex name program.graph;
+    graph = TransitionGraph_.map_vertex name program.graph;
     start = new_start;
   }
 
@@ -265,5 +265,5 @@ let to_file program file =
     Printf.fprintf oc "(GOAL COMPLEXITY) \n(STARTTERM (FUNCTIONSYMBOLS %s))\n(VAR%s)\n(RULES \n%s)"
                     (Location.to_string (start program))
                     (VarSet.fold (fun var str -> str ^ " " ^ Var.to_string ~to_file:true var) (input_vars program) "")
-                    (TransitionGraph.fold_edges_e (fun t str-> str ^ " " ^Transition.to_file_string t ^ "\n") program.graph "");
+                    (TransitionGraph_.fold_edges_e (fun t str-> str ^ " " ^Transition_.to_file_string t ^ "\n") program.graph "");
     close_out oc

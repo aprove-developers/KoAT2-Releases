@@ -1,5 +1,6 @@
 open Batteries
 open Polynomials
+open ProgramModules
 
 let check_solvable (t: TWNLoop.t) =
   let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in

@@ -358,3 +358,41 @@ module type Program = sig
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
   val outgoing_transitions : Batteries.Logger.log -> t -> transition list -> transition Batteries.List.t
 end
+
+module type ProgramModules = sig
+  module Location: Location
+  module LocationSet: Set.S with type elt = Location.t
+
+  module UpdateElement: PolyTypes.Polynomial
+    with type value = OurInt.t
+
+  module TransitionLabel: TransitionLabel
+    with type update_element = UpdateElement.t
+
+  module Transition: Transition
+    with type location = Location.t
+     and type transition_label = TransitionLabel.t
+
+  module TransitionSet: TransitionSet
+    with type elt = Transition.t
+     and type location_set = LocationSet.t
+
+  module TransitionGraph: TransitionGraph
+    with type location = Location.t
+     and type location_set = LocationSet.t
+     and type transition_label = TransitionLabel.t
+     and type transition = Transition.t
+     and type transition_set = TransitionSet.t
+
+  module Program: Program
+    with type location = Location.t
+     and type location_set = LocationSet.t
+     and type transition_label = TransitionLabel.t
+     and type transition = Transition.t
+     and type transition_set = TransitionGraph.transition_set
+     and type transition_graph = TransitionGraph.t
+end
+
+(** For classical/non-probabilistic programs we want polynomial updates only. *)
+module type ClassicalProgramModules = ProgramModules
+  with module UpdateElement = Polynomials.Polynomial

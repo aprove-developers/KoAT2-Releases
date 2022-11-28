@@ -3,7 +3,7 @@ open Batteries
 open ProgramTypes
 open Formulas
 open Polynomials
-open TransitionLabel
+open ProgramModules
 
 module SMTSolver = SMT.Z3Solver
 module SMTSolverTimeout = SMT.Z3SolverTimeout

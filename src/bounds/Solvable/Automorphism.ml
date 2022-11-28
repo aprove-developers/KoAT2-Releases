@@ -6,7 +6,7 @@ open BoundsInst
 open Formulas
 open Constraints
 open PolyExponential
-open TransitionLabel
+open ProgramModules
 
 module Valuation = Valuation.Make(OurInt)
 module ParameterMonomial = Monomials.Make(PolynomialOver(OurInt))

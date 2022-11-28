@@ -4,7 +4,7 @@ open BoundsInst
 open Formulas
 open Polynomials
 open ProgramTypes
-
+open ProgramModules
 
 (** LocalSizeBounds are of the form factor * (constant + sum [x1;...;xn]) *)
 type t

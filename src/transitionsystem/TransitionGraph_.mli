@@ -13,7 +13,7 @@ module Make_(T: ProgramTypes.Transition)
      and type location_set = Set.Make(L).t
      and type transition_label = T.transition_label
      and type transition = T.t
-     and type transition_set = Transition.TransitionSetOver(T)(L).t
+     and type transition_set = Transition_.TransitionSetOver(T)(L).t
      and type t = G.t
 end
 
@@ -22,9 +22,9 @@ module TransitionGraphOverLocation(L: ProgramTypes.Location) : sig
   include ProgramTypes.TransitionGraph
     with type location = L.t
      and type location_set = Set.Make(L).t
-     and type transition_label = TransitionLabel.t
-     and type transition = Transition.TransitionOver(TransitionLabel)(L).t
-     and type transition_set = Transition.TransitionSetOver(Transition.TransitionOver(TransitionLabel)(L))(L).t
+     and type transition_label = TransitionLabel_.t
+     and type transition = Transition_.TransitionOver(TransitionLabel_)(L).t
+     and type transition_set = Transition_.TransitionSetOver(Transition_.TransitionOver(TransitionLabel_)(L))(L).t
 end
 
 include module type of TransitionGraphOverLocation(Location)

@@ -4,6 +4,7 @@ open Constraints
 open Formulas
 open PolyExponential
 open Polynomials
+open ProgramModules
 
 (* TERMINATION: *)
 

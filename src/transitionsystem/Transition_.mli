@@ -17,7 +17,7 @@ module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location wi
 end
 
 
-include module type of TransitionOver(TransitionLabel)(Location)
+include module type of TransitionOver(TransitionLabel_)(Location)
 
 (** Can be used to dump the transition into a koat file *)
 val to_file_string: t -> string
