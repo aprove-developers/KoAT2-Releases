@@ -232,7 +232,7 @@ let update_to_string update =
     |> List.split
     |> fun (xs,ys) -> "("^(String.concat "," xs)^") -> ("^(String.concat "," ys)^")"
 
-let cost_to_string ?(to_file = false) label =
+let cost_to_string label =
   if
     Polynomial.is_one label.cost then ""
   else
@@ -248,7 +248,7 @@ let normalise t (input_vars:VarSet.t) = {
     cost = t.cost;
   }
 
-let update_to_string_lhs ?(to_file = false) t =
+let update_to_string_lhs_ ?(to_file = false) t =
   let update = t.update in
     if VarMap.is_empty update then
       if to_file then "()" else ""
@@ -260,7 +260,10 @@ let update_to_string_lhs ?(to_file = false) t =
       |> Tuple2.first
       |> fun xs -> "("^(String.concat "," xs)^")"
 
-let update_to_string_rhs ?(to_file = false) t =
+let update_to_string_lhs = update_to_string_lhs_ ~to_file:false
+let update_to_file_string_lhs = update_to_string_lhs_ ~to_file:true
+
+let update_to_string_rhs_ ?(to_file = false) t =
   let update = t.update in
     if VarMap.is_empty update then
       if to_file then "()" else ""
@@ -271,6 +274,9 @@ let update_to_string_rhs ?(to_file = false) t =
       |> List.split
       |> Tuple2.second
       |> fun xs -> "("^(String.concat "," xs)^")"
+
+let update_to_string_rhs = update_to_string_rhs_ ~to_file:false
+let update_to_file_string_rhs = update_to_string_rhs_ ~to_file:true
 
 let update_to_string_lhs_pretty t =
   let update = t.update in

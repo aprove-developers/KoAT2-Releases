@@ -72,8 +72,8 @@ module type Transition = sig
   val to_id_string : t -> string
   val to_id_string_pretty : t -> string
 
-  (** Returns a string representing the transition. Parameter {i to_file} is used to get a representation with less special characters. *)
-  val to_string : ?to_file:bool -> t -> string
+  (** Returns a string representing the transition. *)
+  val to_string : t -> string
 
   val to_string_pretty : t -> string
 

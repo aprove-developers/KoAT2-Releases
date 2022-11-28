@@ -15,3 +15,6 @@ module TransitionSetOver(L: ProgramTypes.Location): sig
 end
 
 include module type of TransitionOver(Location)
+
+(** Can be used to dump the transition into a koat file *)
+val to_file_string: t -> string
