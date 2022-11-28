@@ -10,11 +10,11 @@ module Make_(T: ProgramTypes.Transition)
   type location_set = Set.Make(L).t
   type transition_label = T.transition_label
   type transition = T.t
-  type transition_set = Transition.TransitionSetOver(T)(L).t
+  type transition_set = Transition_.TransitionSetOver(T)(L).t
 
   module Location = L
   module LocationSet = Set.Make(L)
-  module TransitionSet = Transition.TransitionSetOver(T)(L)
+  module TransitionSet = Transition_.TransitionSetOver(T)(L)
 
   include G
 
@@ -61,7 +61,7 @@ module Make_(T: ProgramTypes.Transition)
 end
 
 module TransitionGraphOverLocation(L: ProgramTypes.Location) =
-  Make_(Transition.TransitionOver(TransitionLabel)(L)) (L)
-       (Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(L)(TransitionLabel))
+  Make_(Transition_.TransitionOver(TransitionLabel_)(L)) (L)
+       (Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(L)(TransitionLabel_))
 
 include TransitionGraphOverLocation(Location)

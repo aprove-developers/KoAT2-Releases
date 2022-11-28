@@ -14,22 +14,22 @@ module Make(TL: ProgramTypes.TransitionLabel)
            (G: ProgramTypes.TransitionGraph with type location = L.t
                                              and type location_set = Set.Make(L).t
                                              and type transition_label = TL.t
-                                             and type transition_set = Transition.TransitionSetOver(T)(L).t): sig
+                                             and type transition_set = Transition_.TransitionSetOver(T)(L).t): sig
   include ProgramTypes.Program
     with type location = L.t
      and type transition_label = TL.t
      and type location_set = Set.Make(L).t
-     and type transition_set = Transition.TransitionSetOver(T)(L).t
+     and type transition_set = Transition_.TransitionSetOver(T)(L).t
      and type transition_graph = G.t
 end
 
 module ProgramOverLocation(L: ProgramTypes.Location) : sig
   include ProgramTypes.Program
     with type location = L.t
-     and type transition_label = TransitionLabel.t
+     and type transition_label = TransitionLabel_.t
      and type location_set = Set.Make(L).t
-     and type transition_set = Transition.TransitionSetOver(Transition.TransitionOver(TransitionLabel)(L))(L).t
-     and type transition_graph = TransitionGraph.TransitionGraphOverLocation(L).t
+     and type transition_set = Transition_.TransitionSetOver(Transition_.TransitionOver(TransitionLabel_)(L))(L).t
+     and type transition_graph = TransitionGraph_.TransitionGraphOverLocation(L).t
 end
 
 include module type of ProgramOverLocation(Location)
@@ -41,7 +41,7 @@ val to_file : t -> string -> unit
 (**  A list of k transitions makes up a Com_k transition *)
 (**  Since KoAT currently does not support recursion we try to eliminate it. *)
 (**  If this is not possible we throw a RecursionNotSupportedException *)
-val from_com_transitions : Transition.t list list -> Location.t -> t
+val from_com_transitions : Transition_.t list list -> Location.t -> t
 
 (** TODO doc *)
 val rename : t -> t

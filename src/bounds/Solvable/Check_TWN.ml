@@ -1,5 +1,6 @@
 open Batteries
 open Polynomials
+open ProgramModules
 
 (* TOPOLOGICAL ORDERING: *)
 

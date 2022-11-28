@@ -2,6 +2,7 @@ open Batteries
 open BoundsInst
 open ProgramTypes
 open RVGTypes
+open ProgramModules
 
 let logger = Logging.(get Size)
 

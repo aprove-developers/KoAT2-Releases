@@ -3,6 +3,7 @@ open Batteries
 open BoundsInst
 open ProgramTypes
 open RVGTypes
+open ProgramModules
 
 (** Performs improvement steps for the whole program to find better time-bounds and triggers control flow refinement if needed. *)
 

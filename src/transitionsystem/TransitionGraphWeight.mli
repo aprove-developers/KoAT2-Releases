@@ -7,7 +7,7 @@ module TransitionGraphWeight (Value : PolyTypes.Ring) :
     type t = Value.t
 
     (** Type of transitions. *)
-    type edge = TransitionGraph.E.t
+    type edge = TransitionGraph_.E.t
 
     (** Weight function mapping from transitions to one. *)
     val weight : edge -> Value.t

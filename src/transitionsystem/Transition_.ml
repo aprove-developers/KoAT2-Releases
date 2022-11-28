@@ -104,16 +104,16 @@ module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location wi
   let targets = LocationSet.of_enum % Enum.map T.target % enum
 end
 
-include TransitionOver(TransitionLabel)(Location)
+include TransitionOver(TransitionLabel_)(Location)
 
 let to_file_string (l,t,l') =
   let without_guard =
     Location.to_string l
-    ^ TransitionLabel.update_to_file_string_lhs t
-    ^ " -" ^ TransitionLabel.cost_to_string t ^ "> Com_1(" ^ Location.to_string l'
-    ^ TransitionLabel.update_to_file_string_rhs t ^ ")"
+    ^ TransitionLabel_.update_to_file_string_lhs t
+    ^ " -" ^ TransitionLabel_.cost_to_string t ^ "> Com_1(" ^ Location.to_string l'
+    ^ TransitionLabel_.update_to_file_string_rhs t ^ ")"
   in
-  if Constraint.is_true (TransitionLabel.guard t) then
-    without_guard ^ " :|: " ^ Guard.to_file_string (TransitionLabel.guard t)
+  if Constraint.is_true (TransitionLabel_.guard t) then
+    without_guard ^ " :|: " ^ Guard.to_file_string (TransitionLabel_.guard t)
   else
     without_guard
