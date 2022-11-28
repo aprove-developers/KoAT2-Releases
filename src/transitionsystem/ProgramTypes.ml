@@ -149,47 +149,41 @@ module type TransitionGraph = sig
 end
 
 module type Program = sig
-  (* module Location : Location *)
-  module Location: Location
-  module Transition : Transition
-    with type location = Location.t
-  (* module LocationSet: Set.S with type t = Transition.TransitionSet.location_set *)
-  module LocationSet: Set.S with type elt = Location.t
-  module TransitionSet : TransitionSet
-    with type elt = Transition.t
-    and  type location_set = LocationSet.t
-  module TransitionGraph : TransitionGraph
-    with type location = Location.t
-    and  type location_set = LocationSet.t
-    and  type transition = Transition.t
-    and  type transition_set = TransitionSet.t
+  type location
+
+  type transition = location * TransitionLabel.t * location
+
+  type location_set
+  type transition_set
+
+  type transition_graph
 
   (** Type of a program consisting of a program graph and a start location. *)
   type t
 
   (** Removes the location from the program and all edges to it. *)
-  val remove_location : t -> Location.t -> t
+  val remove_location : t -> location -> t
 
   (** Removes a transition from a program. *)
-  val remove_transition : t -> Transition.t -> t
+  val remove_transition : t -> transition -> t
 
   (** Apply function to the underlying TransitionGraph *)
-  val map_graph : (TransitionGraph.t -> TransitionGraph.t) -> t -> t
+  val map_graph : (transition_graph -> transition_graph) -> t -> t
 
   (** Apply function to the programs transitions  *)
-  val map_transitions: (Transition.t -> Transition.t) -> t -> t
+  val map_transitions: (transition -> transition) -> t -> t
 
   (** Apply function to the programs labels  *)
   val map_labels: (TransitionLabel.t -> TransitionLabel.t) -> t -> t
 
   (** Creates a program from a list of transitions and a (start) location. A list of k transitions makes up a Com_k transition *)
-  val from : Transition.t list list -> Location.t -> t
+  val from : transition list list -> location -> t
 
   (** Returns transition graph of a program. *)
-  val graph : t -> TransitionGraph.t
+  val graph : t -> transition_graph
 
   (** Adds the invariant to a location of the program. *)
-  val add_invariant : Location.t -> Constraint.t -> t -> t
+  val add_invariant : location -> Constraint.t -> t -> t
 
   (** Tries to simplify the guard of all transitions by invoking the SMT Solver *)
   val simplify_all_guards : t -> t
@@ -198,18 +192,18 @@ module type Program = sig
       Corresponds to pre(t).
       Note that the computation involves calls to the SMT solver and is therefore expensive.
       The returned Enum is lazy. *)
-  val pre : t -> Transition.t -> Transition.t Enum.t
+  val pre : t -> transition -> transition Enum.t
 
   (** A cached version of pre. The identifier for the cache is the transition id (the program is not considered) *)
-  val pre_transitionset_cached: t -> Transition.t -> TransitionSet.t
+  val pre_transitionset_cached: t -> transition -> transition_set
   (** Reset the cache for pre_cached *)
   val reset_pre_cache: unit -> unit
 
   (** Returns true if the given transition is an initial transition. *)
-  val is_initial : t -> Transition.t -> bool
+  val is_initial : t -> transition -> bool
 
   (** Returns true if the given transition is an initial transition. *)
-  val is_initial_location : t -> Location.t -> bool
+  val is_initial_location : t -> location -> bool
 
   (** Returns true if the program graphs are equivalent and both start locations are equal. *)
   val equivalent : t -> t -> bool
@@ -230,28 +224,28 @@ module type Program = sig
   val input_vars : t -> VarSet.t
 
   (** Returns all locations which occur in the transitions, but each location only once. *)
-  val locations : t -> LocationSet.t
+  val locations : t -> location_set
 
   (** Returns a set of all transitions which occur in the program graph of the program. *)
-  val transitions : t -> TransitionSet.t
+  val transitions : t -> transition_set
 
   (** Returns start location. *)
-  val start : t -> Location.t
+  val start : t -> location
 
   (** Returns the (biggest) strongly connected components of the transiton graph. *)
-  val sccs : t -> TransitionSet.t Enum.t
+  val sccs : t -> transition_set Enum.t
 
   (** Returns all transitions which are parallel to a given transition. Thus, all transitions start in the same location and end in the same location. *)
-  val parallel_transitions : t -> Transition.t -> TransitionSet.t
+  val parallel_transitions : t -> transition -> transition_set
 
   (** Returns all transitions, that belong to an SCC. *)
-  val non_trivial_transitions : t -> TransitionSet.t
+  val non_trivial_transitions : t -> transition_set
 
   (** Computes all entry transitions of the given transitions.
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
-  val entry_transitions : Batteries.Logger.log -> t -> Transition.t list -> Transition.t Batteries.List.t
+  val entry_transitions : Batteries.Logger.log -> t -> transition list -> transition Batteries.List.t
 
   (** Computes all outgoing transitions of the given transitions.
       These are such transitions, that can occur immediately before one of the transitions, but are not themselves part of the given transitions. *)
-  val outgoing_transitions : Batteries.Logger.log -> t -> Transition.t list -> Transition.t Batteries.List.t
+  val outgoing_transitions : Batteries.Logger.log -> t -> transition list -> transition Batteries.List.t
 end
