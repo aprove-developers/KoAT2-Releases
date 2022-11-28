@@ -181,11 +181,11 @@ let time_bound (l,transition,l') scc program appr transformation_type =
               let non_entries =
                 TransitionSet.to_list (TransitionSet.diff (Program.transitions program) (TransitionSet.of_list entries_org))
               in
-              Program.from (
-                non_entries (* TODO simplify *)
-                |> List.map List.singleton
-                |> (@) [[entry_org]])
+              Program.from_enum
                 (Program.start program)
+                (List.enum non_entries (* TODO simplify *)
+                 |> Enum.append (Enum.singleton entry_org))
+
             in
             let twn_inv =
               program_with_one_entry
