@@ -6,7 +6,7 @@ open Helper
 open ProgramModules
 open ApproximationModules
 
-let preprocess = Preprocessor.process_til_fixpoint Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
+let preprocess = Preprocessor.process_till_fixpoint (module ProgramModules) Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
 
 (** Returns an overall timebound for the given program.*)
 let find_timebound ?(mprf_max_depth = 1) (program: Program.t): Bound.t =

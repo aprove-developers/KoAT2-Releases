@@ -75,10 +75,10 @@ type params = {
     result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_costbound]] [@default print_overall_costbound] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
 
-    preprocessors : Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all)] [@default Preprocessor.([InvariantGeneration;  CutUnsatisfiableTransitions; CutUnreachableLocations; EliminateNonContributors])]
+    preprocessors : Program.t Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all_classical)] [@default Preprocessor.([InvariantGeneration;  CutUnsatisfiableTransitions; CutUnreachableLocations; EliminateNonContributors])]
     (** The preprocessors which should be applied before running the actual algorithm. *)
 
-    preprocessing_strategy : Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_til_fixpoint]] [@default Preprocessor.process_til_fixpoint]
+    preprocessing_strategy : Program.t Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_till_fixpoint]] [@default Preprocessor.process_till_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
 
     local : local list; [@enum [("mprf", `MPRF); ("twn", `TWN);("twn-transform", `TWNTransform);("twn-transform-jordan", `TWNTransformJordan);("twn-transform-general", `TWNTransformGeneral)]] [@default [`MPRF]] [@sep ',']
@@ -142,7 +142,7 @@ let run (params: params) =
   let logs = List.map (fun log -> (log, params.log_level)) params.logs in
   Logging.use_loggers logs;
   let input = Option.default_delayed read_line params.input in
-  let preprocess = Preprocessor.process params.preprocessing_strategy params.preprocessors in
+  let preprocess = Preprocessor.process (module ProgramModules) params.preprocessing_strategy params.preprocessors in
   let input_filename =
     if params.simple_input then
       "dummyname"
