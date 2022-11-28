@@ -79,7 +79,3 @@ let mk_program_simple (transitions: Transition.t list): Program.t =
   |> List.hd
   |> Transition.src
   |> Program.from (List.map List.singleton transitions)
-
-(** Returns a program corresponding to the given list of transition with a fixed start location. *)
-let mk_program goal start vars (transitions: Transition.t list): Program.t =
-  Program.from (List.map List.singleton transitions) start
