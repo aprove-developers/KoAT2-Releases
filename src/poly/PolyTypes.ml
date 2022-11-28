@@ -19,6 +19,25 @@ module type OurNumber =
     val minus_one: t
   end
 
+(** module type for indeterminates in polynomials and monomials *)
+module type Indeterminate = sig
+  type t
+
+  val compare: t -> t -> int
+
+  val to_string:  ?pretty:bool -> ?to_file:bool -> t -> string
+
+  val is_integral: t -> bool
+
+  val rename: RenameMap.t -> t -> t
+
+  val vars: t -> VarSet.t
+
+  val of_var: Var.t -> t
+
+  val equal: t -> t -> bool
+end
+
 (** Modules including BasePartialOrder fulfil all requirements to become a partial order.
     They can be typeclass-like extended by MakePartialOrder. *)
 module type BasePartialOrder =
@@ -69,40 +88,38 @@ module MakePartialOrder(Base : BasePartialOrder) : (PartialOrder with type t := 
 (** A valuation is a function which maps from a finite set of variables to values. *)
 module type Valuation =
   sig
-  (** A valuation is a function which maps from a finite set of variables to values. *)
+  (** A valuation is a function which maps from a finite set of indeterminates to values. *)
 
     type t
-
-    (** Type of variables. *)
-    type var = Var.t
+    type indeterminate
 
     (** Type of values. *)
     type value
 
-    (** Creates a valuation from variables to values. *)
-    val from : (var * value) list -> t
+    (** Creates a valuation from indeterminates to values. *)
+    val from : (indeterminate * value) list -> t
 
-    (** Creates a valuation from a string (var) to int (value) association list. *)
-    val from_native : (string * int) list -> t
+    (** Creates a valuation where every indeterminate is assigned the value zero. *)
+    val zero : indeterminate list -> t
 
-    (** Creates a valuation where every variable is assigned the value zero. *)
-    val zero : var list -> t
+    (** Returns the value of the indeterminate.
+        !! If the valuation does not provide a value for a indeterminate, an exception is raised. !! *)
+    val eval : indeterminate -> t -> value
 
-    (** Returns the value of the variable.
-        !! If the valuation does not provide a value for a variable, an exception is raised. !! *)
-    val eval : var -> t -> value
+    (** Returns the value of the indeterminate, if the valuation defines one for it. *)
+    val eval_opt : indeterminate -> t -> value Option.t
 
-    (** Returns the value of the variable, if the valuation defines one for it. *)
-    val eval_opt : var -> t -> value Option.t
+    (** Returns true if indeterminate is defined. *)
+    val is_defined : t -> indeterminate -> bool
 
-    (** Returns true if variable is defined. *)
-    val is_defined : t -> var -> bool
+    (** Returns a list of the indeterminates for which the valuation is defined. *)
+    val indeterminates : t -> indeterminate list
 
     (** Returns a list of the variables for which the valuation is defined. *)
-    val vars : t -> var list
+    val vars: t -> Var.t list
 
-    (** Returns the var to value bindings. *)
-    val bindings : t -> (var * value) Enum.t
+    (** Returns the indeterminates to value bindings. *)
+    val bindings : t -> (indeterminate * value) Enum.t
 
     (** Converts the valuation into a string using the print function. *)
     val to_string : t -> string
@@ -116,6 +133,7 @@ module type Evaluable =
     type t
     type value
     type valuation
+    type indeterminate
 
     val (=~=) : t -> t -> bool
 
@@ -128,6 +146,9 @@ module type Evaluable =
     (** Returns a string representing the evaluation. Parameter {i to_file} is used to get a representation with less special characters. *)
     val to_string : ?to_file:bool -> ?pretty:bool -> t -> string
 
+    (* Get all indeterminates occuring in the evaluable *)
+    val indeterminates: t -> indeterminate Enum.t
+
     (** Returns a set of the variables which occur in the evaluable *)
     val vars : t -> VarSet.t
 
@@ -135,8 +156,8 @@ module type Evaluable =
         !! If the valuation does not provide a value for a variable, an exception is raised. !! *)
     val eval : t -> valuation -> value
 
-    (** Assigns each variable inside the polynomial the value of the evaluated function and returns the arithmetically computed result. *)
-    val eval_f : t -> (Var.t -> value) -> value
+    (** Assigns each indeterminate inside the polynomial the value of the evaluated function and returns the arithmetically computed result. *)
+    val eval_f : t -> (indeterminate -> value) -> value
 
     (** Assigns the variables of the evaluable new names based on the rename map. *)
     val rename : RenameMap.t -> t -> t
@@ -151,31 +172,43 @@ module type Monomial =
     (** Provides default implementations of a monomial, i.e.,  a finite product of powers without a constant (e.g.: xy^2, y but not 5xy^2 + 7). *)
 
     type t
-    include Evaluable with type t := t
+    type indeterminate
+    include Evaluable with type t := t and type indeterminate := indeterminate
 
-    (** Creates a monomial from a list of variables and their exponents. *)
-    val make : (Var.t * int) list -> t
+    (** Creates a monomial from a list of indeterminates and their exponents. *)
+    val make : (indeterminate * int) list -> t
 
     (* Can the monomial take integral values only, i.e., all vars are of sort Var.Int? *)
     val is_integral: t -> bool
 
-    (** Creates a monomial from a variable and a exponent. *)
-    val lift : Var.t -> int -> t
+    (** Creates a monomial from an enum of indeterminates and their exponents. *)
+    val of_enum : (indeterminate * int) Enum.t -> t
+
+    (** Returns an enum of all occurring indeterminates with their degree *)
+    val to_enum : t -> (indeterminate * int) Enum.t
+
+    (** Creates a monomial from an indeterminate and a exponent. *)
+    val lift : indeterminate -> int -> t
+
+    (** Creates a monomial from an indeterminate with an exponent of 1  *)
+    val of_indeterminate : indeterminate -> t
 
     (** Creates a monomial from a variable with an exponent of 1  *)
     val of_var : Var.t -> t
 
-    (** Returns the degree of the given variable. *)
-    val degree_variable : Var.t -> t -> int
+    (** Returns the degree of the given indeterminate. *)
+    val degree_variable : indeterminate -> t -> int
 
-    (** Deletes all occurences of the given variable. *)
-    val delete_var : Var.t -> t -> t
+    (** Deletes all occurences of the given indeterminate. *)
+    val delete_indeterminate : indeterminate -> t -> t
 
     (* Get all vars occuring in the monomial*)
     val vars : t -> VarSet.t
 
     (** Returns if the monomial is of the simplified form x^1 for any variable x. *)
     val is_univariate_linear : t -> bool
+
+    val pow : t -> int -> t
 
     (** Multiplies two monomials. The result is always a monomial. *)
     val mul : t -> t -> t
@@ -185,7 +218,7 @@ module type Monomial =
 
     (** Replaces all arithmetical operations by new constructors. *)
     val fold : const:(value -> 'b) ->
-               var:(Var.t -> 'b) ->
+               indeterminate:(indeterminate -> 'b) ->
                times:('b -> 'b -> 'b) ->
                pow:('b -> int -> 'b) ->
                t -> 'b
@@ -197,8 +230,9 @@ module type ScaledMonomial =
   (** A scaled monomial is a monomial multiplied with a coefficient. *)
 
     type t
+    type indeterminate
     type monomial
-    include Evaluable with type t := t
+    include Evaluable with type t := t and type indeterminate := indeterminate
     include PartialOrder with type t := t
 
     (** Creates a scaled monomial from a monomial and constant factor. *)
@@ -227,7 +261,7 @@ module type ScaledMonomial =
 
     (** Replaces all arithmetical operations by new constructors. *)
     val fold : const:(value -> 'b) ->
-               var:(Var.t -> 'b) ->
+               indeterminate:(indeterminate -> 'b) ->
                times:('b -> 'b -> 'b) ->
                pow:('b -> int -> 'b) ->
                t -> 'b
@@ -356,7 +390,10 @@ module type Polynomial =
   sig
     type t
 
-    include Evaluable with type t := t
+    (* type of indeterminates/variables *)
+    type indeterminate
+
+    include Evaluable with type t := t and type indeterminate := indeterminate
     include Math with type t := t
     include PartialOrder with type t := t
     include Ring with type t := t
@@ -378,6 +415,9 @@ module type Polynomial =
     (** Creates a polynomial as the sum of a list of scaled monomials. *)
     val of_scaled : scaled_monomial list -> t
 
+    (** Lifts a indeterminate/variable to a polynomial. *)
+    val of_indeterminate: indeterminate -> t
+
     (** Lifts a variable to a polynomial. *)
     val of_var : Var.t -> t
 
@@ -396,16 +436,16 @@ module type Polynomial =
     (** TODO doc *)
     val int_helper : int -> t
 
-    (** Lifts a variable to the power of an intger value to a polynomial. *)
-    val of_power : Var.t -> int -> t
+    (** Lifts an indeterminate to the power of an intger value to a polynomial. *)
+    val of_power : indeterminate -> int -> t
 
     (** Lifts a monomial to a polynomial *)
     val of_monomial : monomial -> t
 
-    (** Creates a polynomial from a coefficient list and a corresponding variable list. *)
-    val of_coeff_list : value list -> Var.t list -> t
+    (** Creates a polynomial from a coefficient list and a corresponding indeterminate list. *)
+    val of_coeff_list : value list -> indeterminate list -> t
 
-    val of_coeffs_list_univariate : Var.t -> value list -> t
+    val of_coeffs_list_univariate : indeterminate -> value list -> t
 
     (** {1 {L Following methods return information over the polynomial.}} *)
 
@@ -414,6 +454,9 @@ module type Polynomial =
 
     (** Returns a list of all coefficients. *)
     val coeffs : t -> value list
+
+    (** Returns the coefficient of the term where only the given indeterminate occurs. *)
+    val coeff_of_indeterminate : indeterminate -> t -> value
 
     (** Returns the coefficient of the term where only the given variable occurs. *)
     val coeff_of_var : Var.t -> t -> value
@@ -428,6 +471,9 @@ module type Polynomial =
 
     (** Returns the constant of the polynomial. *)
     val get_constant : t -> value
+
+    (** Returns the unique indeterminate that defines the polynomial if it exists *)
+    val get_indeterminate: t -> indeterminate option
 
       (*
     (** Returns a maybe not equivalent polynom where all factors of polynomials are minized but stay in same proportion. *)
@@ -445,24 +491,25 @@ module type Polynomial =
 
     (** {1 {L Following methods return if the atom has certain properties.}} *)
 
-    (** Returns if the polynomial is equivalent to a term x^1 for any variable x. *)
-    val is_var : t -> bool
+    (** Returns if the polynomial is equivalent to a term x^1 for any indeterminate x. *)
+    val is_indeterminate : t -> bool
 
-    (** Returns if the polynomial is equivalent to a term x^1 + c for any variable x and any constant c. *)
-    val is_var_plus_constant : t -> bool
+    (** Returns if the polynomial is equivalent to a term x^1 + c for any indeterminate x and any constant c. *)
+    val is_indeterminate_plus_constant : t -> bool
 
-    (** Returns if the polynomial is equivalent to a term x_1^1 + ... + x_n^1 + c for any variables x_1, ..., x_n and any constant c. *)
-    val is_sum_of_vars_plus_constant : t -> bool
+    (** Returns if the polynomial is equivalent to a term x_1^1 + ... + x_n^1 + c for any indeterminates x_1, ..., x_n and any constant c. *)
+    val is_sum_of_indeterminates_plus_constant : t -> bool
 
-    (** Returns if the polyomial is linear and contains at most one active variable. *)
+    (** Returns if the polyomial is linear and contains at most one active indeterminate. *)
     val is_univariate_linear : t -> bool
 
-    (** Returns if the value of the polynomial is not be affected by any variable. *)
+    (** Returns if the value of the polynomial is not be affected by any indeterminate. *)
     val is_const : t -> bool
 
     (** Returns if the polynomial is linear. *)
     val is_linear : t -> bool
 
+    val indeterminate_only_linear : indeterminate -> t -> bool
     val var_only_linear : Var.t -> t -> bool
 
     (** Returns if the value of the polynomial is the constant value zero (0). *)
@@ -482,15 +529,10 @@ module type Polynomial =
 
     (** Substitutes every occurrence of the variable in the polynomial by the replacement polynomial.
         Ignores naming equalities. *)
-    val substitute : Var.t -> replacement:t -> t -> t
+    val substitute : indeterminate -> replacement:t -> t -> t
 
     (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial. *)
-    val substitute_f : (Var.t -> t) -> t -> t
-
-    (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
-        Leaves all variables unchanged which are not in the replacement map.  *)
-    val substitute_all : t Map.Make(Var).t -> t -> t
-
+    val substitute_f : (indeterminate -> t) -> t -> t
 
     (** Removes all summands from the polynomial which are equivalent to the monomial. *)
     val delete_monomial : monomial -> t -> t
@@ -505,7 +547,7 @@ module type Polynomial =
 
     (** Replaces all arithmetical operations by new constructors. *)
     val fold : const:(value -> 'b) ->
-               var:(Var.t -> 'b) ->
+               indeterminate:(indeterminate -> 'b) ->
                neg:('b -> 'b) ->
                plus:('b -> 'b -> 'b) ->
                times:('b -> 'b -> 'b) ->

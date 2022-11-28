@@ -7,6 +7,7 @@ module Make_SizeApproximation (Num : PolyTypes.OurNumber) (Poly :
                                    include PolyTypes.Polynomial with type value = Num.t
                                                                  and type valuation = Valuation.Make(Num).t
                                                                  and type monomial = Monomials.Make(Num).t
+                                                                 and type indeterminate = Var.t
                                    val max_of_occurring_constants : t -> Num.t
                                  end )
                               (Trans :

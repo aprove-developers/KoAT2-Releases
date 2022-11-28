@@ -1,10 +1,12 @@
 open Batteries
 open Big_int.Infix
 
-module Make(Value : PolyTypes.Ring) =
+module MakeOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes.Ring) =
   struct
-    type valuation = Valuation.Make(Value).t
-    module Monomial = Monomials.Make(Value)
+    type valuation = Valuation.MakeOverIndeterminate(I)(Value).t
+    module Monomial = Monomials.MakeOverIndeterminate(I)(Value)
+
+    type indeterminate = I.t
 
     type t =
       {
@@ -21,8 +23,8 @@ module Make(Value : PolyTypes.Ring) =
 
     let make coefficient monomial = { coeff = coefficient; mon = monomial }
 
-    let fold ~const ~var ~times ~pow scaled =
-      times (const scaled.coeff) (Monomial.fold ~const ~var ~times ~pow scaled.mon)
+    let fold ~const ~indeterminate ~times ~pow scaled =
+      times (const scaled.coeff) (Monomial.fold ~const ~indeterminate ~times ~pow scaled.mon)
 
     let coeff scaled = scaled.coeff
 
@@ -80,6 +82,10 @@ module Make(Value : PolyTypes.Ring) =
         mon = mon
       }
 
+    let indeterminates scaled = Monomial.indeterminates scaled.mon
+
     let vars scaled = Monomial.vars scaled.mon
 
   end
+
+module Make = MakeOverIndeterminate(VarIndeterminate)

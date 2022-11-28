@@ -180,7 +180,7 @@ module Methods =
                 );
                 "is_var" >::: (
                   List.map (fun (expected, expression) ->
-                      expression >:: (fun _ -> assert_equal_bool expected (Polynomial.is_var (Readers.read_polynomial expression))))
+                      expression >:: (fun _ -> assert_equal_bool expected (Polynomial.is_indeterminate (Readers.read_polynomial expression))))
                            [
                              (false, " 1 ");
                              (true, " x ");

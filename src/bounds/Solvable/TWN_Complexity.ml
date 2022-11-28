@@ -55,7 +55,7 @@ module Monomial = Monomials.Make(OurInt)
 
 let compute_alpha_abs = function
   | [] -> Polynomial.zero
-  | x::[] -> Polynomial.fold ~const:(Polynomial.of_constant % OurInt.abs) ~var:(Polynomial.of_var) ~neg:identity ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow x
+  | x::[] -> Polynomial.fold ~const:(Polynomial.of_constant % OurInt.abs) ~indeterminate:(Polynomial.of_var) ~neg:identity ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow x
   | xs -> List.flatten (List.map Polynomial.scaled_monomials xs)
           |> List.group (fun x y -> Monomial.compare (ScaledMonomial.monomial x) (ScaledMonomial.monomial y))
           |> List.map (fun ys -> let max = OurInt.max_list (List.map (OurInt.abs % ScaledMonomial.coeff) ys) in
