@@ -236,9 +236,8 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         let entry_transitions = List.map (fun (l,t,l') -> (initial_location,t,l')) (Program.entry_transitions logger merged_program scc_list) in
         try
           let program_cfr =
-          initial_location
-          |> Program.from (List.map List.singleton @@ entry_transitions@scc_list)
-          |> applyIrankFinder
+            Program.from_enum initial_location (List.enum @@ entry_transitions@scc_list)
+            |> applyIrankFinder
 
           (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
           and map = RenameMap.from_native (List.map (fun var -> (String.replace ~sub:"_" ~by:"" ~str:(Var.to_string var) |> Tuple2.second,
@@ -264,7 +263,7 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
           |> flip TransitionSet.diff scc
           |> TransitionSet.filter (fun (l,_,_) -> not (LocationSet.mem l removable_loc))
           |> TransitionSet.to_list
-          |> flip Program.from initial_location % List.map List.singleton
+          |> Program.from_enum initial_location % List.enum
           in
           MaybeChanged.changed processed_program
         with CFRefinementCRASH -> mc

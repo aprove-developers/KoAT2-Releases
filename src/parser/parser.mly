@@ -61,7 +61,7 @@ programAndGoal:
     start = start
     variables = variables
     transitions = transitions; EOF
-    { Program.from (transitions variables) start, g } ;
+    { Program.from_com_transitions (transitions variables) start, g } ;
 
 onlyProgram_simple:
   | graph = program_simple; EOF

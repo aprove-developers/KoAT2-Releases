@@ -161,6 +161,12 @@ module type Program = sig
   (** Type of a program consisting of a program graph and a start location. *)
   type t
 
+  (** Create a program from a start location and an enum of transitions *)
+  val from_enum: location -> transition Enum.t -> t
+
+  (** Create a program from a start location and a graph *)
+  val from_graph: location -> transition_graph -> t
+
   (** Removes the location from the program and all edges to it. *)
   val remove_location : t -> location -> t
 
@@ -175,9 +181,6 @@ module type Program = sig
 
   (** Apply function to the programs labels  *)
   val map_labels: (TransitionLabel.t -> TransitionLabel.t) -> t -> t
-
-  (** Creates a program from a list of transitions and a (start) location. A list of k transitions makes up a Com_k transition *)
-  val from : transition list list -> location -> t
 
   (** Returns transition graph of a program. *)
   val graph : t -> transition_graph

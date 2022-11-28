@@ -75,7 +75,4 @@ let mk_transition_simple (start: string) (cost: Polynomial.t) (rhs: string * (st
 
 (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns program from such an input. *)
 let mk_program_simple (transitions: Transition.t list): Program.t =
-  transitions
-  |> List.hd
-  |> Transition.src
-  |> Program.from (List.map List.singleton transitions)
+  Program.from_enum (Transition.src @@ List.hd transitions) (List.enum transitions)
