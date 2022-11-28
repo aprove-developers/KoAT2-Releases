@@ -10,11 +10,14 @@ module Make_BoundOver (Num : PolyTypes.OurNumber)
                           include PolyTypes.Polynomial with type value = Num.t
                                                         and type valuation = Valuation.Make(Num).t
                                                         and type monomial = Monomials.Make(Num).t
+                                                        and type indeterminate = Var.t
                         end ) =
   struct
     type valuation = Valuation.Make(Num).t
 
     type value = Num.t
+
+    type indeterminate = Var.t
 
 (* Minus Infinity is max of an empty list *)
 (* Infinity is min of an empty list *)
@@ -395,7 +398,7 @@ let product bounds =
   with Not_found -> one
 
 let of_poly =
-  OptionMonad.return %  Poly.fold ~const:bound_of_constant ~var:bound_of_var ~neg:identity ~plus:add_bound ~times:mul_bound ~pow:pow_bound
+  OptionMonad.return %  Poly.fold ~const:bound_of_constant ~indeterminate:bound_of_var ~neg:identity ~plus:add_bound ~times:mul_bound ~pow:pow_bound
 
 let bound_of_int i = Const (Num.of_int @@ Int.abs i)
 let of_int = OptionMonad.return % bound_of_int
@@ -435,6 +438,8 @@ let rec vars_bound = function
   | Product (b1, b2) -> VarSet.union (vars_bound b1) (vars_bound b2)
 
 let vars = Option.default VarSet.empty % Option.map vars_bound
+
+let indeterminates = VarSet.enum % vars
 
 let keep_simpler_bound b1 b2 = match compare_asy b1 b2 with
   (* First compare asymptotic_complexity *)

@@ -3,6 +3,8 @@ open Batteries
 include Number.MakeNumeric(Num)
 
 let is_integral = Num.is_integer_num
+let sum = Enum.fold (+) zero
+let list_sum = sum % List.enum
 
 let (=~=) = equal
 

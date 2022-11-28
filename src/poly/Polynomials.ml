@@ -1,17 +1,18 @@
 open Batteries
 open PolyTypes
 
-module PolynomialOver(Value : PolyTypes.Ring) =
+module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes.Ring) =
   struct
-    module Monomial_ = Monomials.Make(Value)
-    module ScaledMonomial_ = ScaledMonomials.Make(Value)
-    module Valuation_ = Valuation.Make(Value)
-    type valuation = Valuation.Make(Value).t
+    module Monomial_ = Monomials.MakeOverIndeterminate(I)(Value)
+    module ScaledMonomial_ = ScaledMonomials.MakeOverIndeterminate(I)(Value)
+    module Valuation_ = Valuation.MakeOverIndeterminate(I)(Value)
+    type valuation = Valuation_.t
 
     type monomial = Monomial_.t
     type scaled_monomial = ScaledMonomial_.t
     type t = ScaledMonomial_.t list [@@deriving eq, ord]
     type value = Value.t
+    type indeterminate = I.t
 
     let make = List.map (fun (coeff, mon) -> ScaledMonomial_.make coeff mon)
 
@@ -22,8 +23,8 @@ module PolynomialOver(Value : PolyTypes.Ring) =
 
     let of_scaled scaled = scaled
 
-    let fold ~const ~var ~neg ~plus ~times ~pow =
-      List.fold_left (fun b scaled -> plus b (ScaledMonomial_.fold ~const ~var ~times ~pow scaled)) (const Value.zero)
+    let fold ~const ~indeterminate ~neg ~plus ~times ~pow =
+      List.fold_left (fun b scaled -> plus b (ScaledMonomial_.fold ~const ~indeterminate ~times ~pow scaled)) (const Value.zero)
 
     let degree poly =
       if poly = [] then
@@ -31,9 +32,12 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       else
         List.max (List.map (ScaledMonomial_.degree) poly )
 
-    let var_only_linear var = function
-      | [] -> true
-      | p -> List.for_all ((>=) 1) (List.map ScaledMonomial_.degree (List.filter (fun s -> VarSet.mem var (ScaledMonomial_.vars s)) p))
+    let indeterminate_only_linear i p =
+      Enum.map (ScaledMonomial_.monomial) (List.enum p)
+      |> Enum.map (Monomial_.degree_variable i)
+      |> Enum.for_all ((>=) 1)
+
+    let var_only_linear v = indeterminate_only_linear (I.of_var v)
 
     let coeff mon poly =
          poly
@@ -43,9 +47,11 @@ module PolynomialOver(Value : PolyTypes.Ring) =
 
     let coeffs = List.map ScaledMonomial_.coeff
 
-    let coeff_of_var var poly =
+    let coeff_of_indeterminate var poly =
         let mon = Monomial_.lift var 1 in
             coeff mon poly
+
+    let coeff_of_var var poly = coeff_of_indeterminate (I.of_var var) poly
 
     let delete_monomial mon poly =
       List.filter (fun x -> not (Monomial_.(=~=) (ScaledMonomial_.monomial x) mon)) poly
@@ -98,7 +104,8 @@ module PolynomialOver(Value : PolyTypes.Ring) =
 
     let of_constant c = lift c Monomial_.one
 
-    let of_var var = of_power var 1
+    let of_indeterminate i = of_power i 1
+    let of_var = of_indeterminate % I.of_var
 
     let rec of_coeff_list coeffs vars =
         if (List.length coeffs) == (List.length vars) then
@@ -124,6 +131,26 @@ module PolynomialOver(Value : PolyTypes.Ring) =
     (* Gets the constant *)
     let get_constant poly = coeff Monomial_.one (simplify poly)
 
+    let get_indeterminate t =
+      if List.length t = 1 then
+        let scaled = List.hd t in
+        if Value.equal Value.one (ScaledMonomial_.coeff scaled) then
+          let pow_list = List.of_enum @@ Monomial_.to_enum @@ ScaledMonomial_.monomial scaled in
+          if List.length pow_list = 1 then
+            let (ind,pow) = List.hd pow_list in
+            if pow = 1 then Some ind
+            else None
+          else None
+        else None
+      else None
+
+    let indeterminates poly =
+      let module S = Set.Make(I) in
+      List.enum (monomials (simplify poly))
+      |> Enum.map Monomial_.indeterminates
+      |> Enum.flatten
+      |> S.enum % S.of_enum
+
     let vars poly =
          poly
       |> simplify
@@ -131,19 +158,19 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       |> List.map Monomial_.vars
       |> List.fold_left VarSet.union VarSet.empty
 
-    let is_var poly =
+    let is_indeterminate poly =
          poly
       |> simplify
       |> monomials
       |> fun monomials -> List.length monomials == 1 &&
                             Monomial_.is_univariate_linear (List.hd monomials) && (Value.(=~=) (coeff (List.hd monomials) poly) Value.one)
 
-    let is_var_plus_constant poly =
+    let is_indeterminate_plus_constant poly =
          poly
       |> delete_monomial Monomial_.one
-      |> is_var
+      |> is_indeterminate
 
-    let is_sum_of_vars_plus_constant poly =
+    let is_sum_of_indeterminates_plus_constant poly =
          poly
       |> delete_monomial Monomial_.one
       |> List.for_all (fun scaled -> Value.(=~=) (ScaledMonomial_.coeff scaled) Value.one &&
@@ -161,26 +188,6 @@ module PolynomialOver(Value : PolyTypes.Ring) =
 
     let mult_with_const const poly =
       List.map (ScaledMonomial_.mult_with_const const) poly
-
-        (*Should throw an error if polynom is not univariate*)
-    (*Seems like I should be able to make it more efficient*)
-    (* let degree_coeff_list (poly:t) =
-      if VarSet.cardinal (vars poly) <= 1 then
-        let default_map =
-          Enum.init (degree poly) (fun i -> (i,Value.zero))
-          |> Map.of_enum
-        in
-        poly
-        |> List.enum
-        |> Enum.map (fun s_monom ->
-                          (ScaledMonomial_.degree s_monom,
-                          ScaledMonomial_.coeff s_monom))
-        |> Map.of_enum
-        |> fun map -> Map.union map default_map
-        |> Map.bindings
-        |> List.map (fun (k,v) -> v)
-        |> tap (fun res -> Printf.printf "poly: %s coeff: %s\n" (to_string poly) (List.enum res |> Util.enum_to_string Value.to_string))
-      else [] *)
 
       let degree_coeff_list (poly:t) =
         if VarSet.cardinal (vars poly) <= 1 then
@@ -245,28 +252,12 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       end
     include PolyTypes.MakePartialOrder(BasePartialOrderImpl)
 
-          (*
-    (* Helper: Returns the greatest common divisor of the two values. Uses the Euclid algorithm. *)
-    let rec gcd (a: Value.t) (b: Value.t) =
-      if Value.(b =~= zero) then a
-      else gcd b (Value.modulo a b)
-
-    (* Helper: Returns the greatest common divisor of all coefficients. *)
-    let coefficients_gcd (poly: t) =
-      List.fold_right gcd (List.map ScaledMonomial_.coeff poly) Value.zero
-
-    let scale_coefficients poly =
-      let divisor: Value.t = Value.abs (coefficients_gcd poly) in
-      let scale_coeff scaled = ScaledMonomial_.(make Value.(coeff scaled / divisor) (monomial scaled)) in
-      List.map scale_coeff poly
-           *)
-
     let is_zero poly = poly =~= zero
 
     let is_one poly = poly =~= one
 
     let instantiate (substitution : Value.t -> t) =
-      fold ~const:substitution ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow
+      fold ~const:substitution ~indeterminate:of_indeterminate ~neg:neg ~plus:add ~times:mul ~pow:pow
 
     let eval_f poly f =
          poly
@@ -279,28 +270,33 @@ module PolynomialOver(Value : PolyTypes.Ring) =
       |> List.fold_left Value.add Value.zero
 
     let substitute_f substitution =
-      fold ~const:of_constant ~var:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow
+      fold ~const:of_constant ~indeterminate:substitution ~neg:neg ~plus:add ~times:mul ~pow:pow
 
-    let substitute var ~replacement =
-      substitute_f (fun target_var ->
-          if Var.(var =~= target_var) then replacement else of_var target_var
-        )
-
-    let substitute_all substitution =
-      let module VarMap = Map.Make(Var) in
-      substitute_f (fun var ->
-          VarMap.find_default (of_var var) var substitution
+    let substitute ind ~replacement =
+      substitute_f (fun target_ind ->
+          if I.equal ind target_ind then replacement else of_indeterminate target_ind
         )
 
     let eval_partial poly valuation =
-      substitute_f (fun var ->
-          Option.map of_constant (Valuation_.eval_opt var valuation) |? of_var var
+      substitute_f (fun ind ->
+          Option.map of_constant (Valuation_.eval_opt ind valuation) |? of_indeterminate ind
         ) poly
 
     let partition =
       List.partition
 
   end
+
+module PolynomialOver(Value: PolyTypes.Ring) = struct
+  include PolynomialOverIndeterminate(VarIndeterminate)(Value)
+
+  let substitute_all substitution =
+    let module VarMap = Map.Make(Var) in
+    substitute_f (fun var ->
+        VarMap.find_default (of_var var) var substitution
+      )
+
+end
 
 
 module Polynomial =
@@ -313,7 +309,7 @@ module Polynomial =
     let max_of_occurring_constants =
       fold
         ~const:OurInt.abs
-        ~var:(fun _ -> OurInt.one)
+        ~indeterminate:(fun _ -> OurInt.one)
         ~neg:identity
         ~plus:OurInt.add
         ~times:OurInt.mul
@@ -331,18 +327,19 @@ module RealPolynomial =
     let max_of_occurring_constants =
       fold
         ~const:OurFloat.abs
-        ~var:(fun _ -> OurFloat.one)
+        ~indeterminate:(fun _ -> OurFloat.one)
         ~neg:identity
         ~plus:OurFloat.add
         ~times:OurFloat.mul
         ~pow:OurFloat.pow
 
     let of_intpoly  =
-      Polynomial.fold ~const:(of_constant % OurFloat.of_ourint) ~var:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
+      Polynomial.fold ~const:(of_constant % OurFloat.of_ourint) ~indeterminate:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
 
     let to_intpoly =
-      fold ~const:(Polynomial.of_constant % OurFloat.upper_int) ~var:(Polynomial.of_var) ~neg:Polynomial.neg ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow
+      fold ~const:(Polynomial.of_constant % OurFloat.upper_int) ~indeterminate:Polynomial.of_var ~neg:Polynomial.neg ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow
 
+    let of_intconstant = of_constant % OurFloat.of_ourint
   end
 module RationalPolynomial =
   struct
@@ -358,7 +355,7 @@ module RationalPolynomial =
       |> mult_with_const coeff_inv
       |> fold
         ~const:(Polynomial.of_constant % OurRational.to_ourint)
-        ~var:(Polynomial.of_var)
+        ~indeterminate:(Polynomial.of_var)
         ~neg:Polynomial.neg
         ~plus:Polynomial.add
         ~times:Polynomial.mul
@@ -374,7 +371,7 @@ module RationalPolynomial =
       |> mult_with_const coeff_inv
       |> fold
         ~const:(Polynomial.of_constant % OurRational.to_ourint)
-        ~var:(Polynomial.of_var)
+        ~indeterminate:(Polynomial.of_var)
         ~neg:Polynomial.neg
         ~plus:Polynomial.add
         ~times:Polynomial.mul
@@ -383,14 +380,14 @@ module RationalPolynomial =
     let overapprox =
       fold
         ~const:(Polynomial.of_constant % OurRational.ceil % OurRational.abs)
-        ~var:Polynomial.of_var
+        ~indeterminate:Polynomial.of_var
         ~neg:Polynomial.neg
         ~plus:Polynomial.add
         ~times:Polynomial.mul
         ~pow:Polynomial.pow
 
     let of_intpoly  =
-      Polynomial.fold ~const:(of_constant % OurRational.of_ourint) ~var:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
+      Polynomial.fold ~const:(of_constant % OurRational.of_ourint) ~indeterminate:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
 
     let is_integer_poly  poly =
       List.for_all OurRational.is_integer @@ coeffs poly
@@ -405,21 +402,21 @@ module ParameterPolynomialOver(Value : PolyTypes.Ring) = struct
 
   let eval_coefficients f =
     Outer.fold ~const:(fun inner -> Inner.of_constant (Inner.eval_f inner f))
-                ~var:Inner.of_var
-                ~neg:Inner.neg
-                ~plus:Inner.add
-                ~times:Inner.mul
-                ~pow:Inner.pow
+               ~indeterminate:Inner.of_var
+               ~neg:Inner.neg
+               ~plus:Inner.add
+               ~times:Inner.mul
+               ~pow:Inner.pow
 
   (** Transforms the template polynomial such that all inner values get lifted to the outer polynomial. *)
   (** Example: (2a+b)x + (3a)y - 1 gets transformed to 2ax + bx + 3ay - 1 *)
   let flatten (templatepoly : Outer.t): Inner.t =
-    Outer.fold ~const:identity ~var:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
+    Outer.fold ~const:identity ~indeterminate:Inner.of_var ~neg:Inner.neg ~plus:Inner.add ~times:Inner.mul ~pow:Inner.pow templatepoly
 
   (** Lifts a polynomial to a parameter polynomial such that the inner structure is kept.*)
   (** Example: 2x +3 is interpreted as 2x+3 and not as the constant polynomial (2x+3)*(1)*)
   let of_polynomial (poly : Inner.t): t =
-    Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~var:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
+    Inner.fold ~const:(fun value -> of_constant (Inner.of_constant value)) ~indeterminate:of_var ~neg:neg ~plus:add ~times:mul ~pow:pow poly
 end
 
 module ParameterPolynomial = ParameterPolynomialOver(OurInt)

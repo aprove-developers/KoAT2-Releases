@@ -3,14 +3,28 @@ open Batteries
 open PolyTypes
 
 (** Provides default implementations of polynomials. *)
+module PolynomialOverIndeterminate(I: Indeterminate)(Value: Ring):
+  Polynomial
+    with type value = Value.t
+    and type valuation = Valuation.MakeOverIndeterminate(I)(Value).t
+    and type monomial = Monomials.MakeOverIndeterminate(I)(Value).t
+    and type scaled_monomial = ScaledMonomials.MakeOverIndeterminate(I)(Value).t
+    and type indeterminate = I.t
+
 
 (** Constructs a default polynomial using a list of monomials and their coefficients *)
-module PolynomialOver
-         (Value : Ring)
-       : Polynomial with type value = Value.t
+module PolynomialOver(Value : Ring): sig
+ include Polynomial with type value = Value.t
                      and type valuation = Valuation.Make(Value).t
                      and type monomial = Monomials.Make(Value).t
                      and type scaled_monomial = ScaledMonomials.Make(Value).t
+                     and type indeterminate = Var.t
+
+
+  (** Substitutes every occurrence of the variables in the polynomial by the corresponding replacement polynomial.
+      Leaves all variables unchanged which are not in the replacement map.  *)
+  val substitute_all : t Map.Make(Var).t -> t -> t
+end
 
 (** Provides default implementation of polynomials ranged over [OurInt]. *)
 module Polynomial :
@@ -33,6 +47,7 @@ sig
 
   val separate_by_sign : t -> (t * t)
 
+  val of_intconstant : OurInt.t -> t
   val max_of_occurring_constants : t -> OurFloat.t
   val of_intpoly : Polynomial.t -> t
 end

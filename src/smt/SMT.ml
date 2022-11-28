@@ -8,7 +8,7 @@ exception SMTFailure of string
 let from_poly context =
   Polynomial.fold
     ~const:(fun value -> Z3.Arithmetic.Integer.mk_numeral_i context (OurInt.to_int value))
-    ~var:(fun var -> if Var.is_real var then
+    ~indeterminate:(fun var -> if Var.is_real var then
                       (Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))
                      else
                        Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))
@@ -21,7 +21,7 @@ let from_poly context =
 let from_real_poly context =
   RealPolynomial.fold
     ~const:(fun value -> Z3.Arithmetic.Real.mk_numeral_s context (OurFloat.to_string value))
-    ~var:(fun var -> if Var.is_real var then
+    ~indeterminate:(fun var -> if Var.is_real var then
                        Z3.Arithmetic.Real.mk_const_s context (Var.to_string var)
                      else
                        Z3.Arithmetic.Integer.mk_const_s context (Var.to_string var))

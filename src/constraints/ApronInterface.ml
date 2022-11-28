@@ -28,7 +28,7 @@ module Koat2Apron =
         ~const:(fun c ->
           Texpr1.Cst (const_to_apron c)
         )
-        ~var:(fun v ->
+        ~indeterminate:(fun v ->
           Texpr1.Var (var_to_apron v)
         )
         ~neg:(fun expr ->
