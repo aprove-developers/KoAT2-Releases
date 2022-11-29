@@ -1,12 +1,19 @@
 (** Performs a single improvement step for a whole program to find better size-bounds. *)
 
 open Batteries
-open ProgramModules
-open RVGTypes
-(** Performs a single improvement step for a whole program to find better size-bounds. *)
 
-(** Performs a single improvement step for a whole program to find better sizebounds for the approximation and updates the approximation. *)
-val improve : Program.t -> RVG.t * RVG.scc list Lazy.t -> ?scc:TransitionSet.t option -> Approximation.t -> Approximation.t
+module Make(PM: ProgramTypes.ClassicalProgramModules): sig
+  (** Performs a single improvement step for a whole program to find better size-bounds. *)
 
-(** Performs a single improvement step for a single scc to find better sizebounds for the approximation and updates the approximation. *)
-val improve_scc : Program.t -> RVG.t -> Approximation.t -> RV.t list -> Approximation.t
+  (** Performs a single improvement step for a whole program to find better sizebounds for the approximation and updates the approximation. *)
+  val improve : PM.Program.t
+              -> RVGTypes.MakeRVG(PM).t * RVGTypes.MakeRVG(PM).scc list Lazy.t
+              -> ?scc:PM.TransitionSet.t option -> Approximation.Make(PM).t -> Approximation.Make(PM).t
+
+  (** Performs a single improvement step for a single scc to find better sizebounds for the approximation and updates the approximation. *)
+  val improve_scc : PM.Program.t -> RVGTypes.MakeRVG(PM).t -> Approximation.Make(PM).t
+                  -> RVGTypes.MakeRV(PM.TransitionLabel)(PM.Transition).t list
+                  -> Approximation.Make(PM).t
+end
+
+include module type of Make(ProgramModules)
