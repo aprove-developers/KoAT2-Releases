@@ -1,0 +1,13 @@
+# The leading example from the probabilistic_koat TACAS 2021 paper
+# In the first loop a quadratic size bound for y is computed
+# which is then used to infer the overall quadratic expected runtime
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y)
+(RULES
+  f(x,y) -{0}> g(x,y)
+  g(x,y) -> 0.5:g(x-1,y+x) :+: 0.5:g(x,y+x) :|: x>0
+  g(x,y) -{0}> h(x,y)
+  h(x,y) -> h(x,y-1) :|: y>0
+)

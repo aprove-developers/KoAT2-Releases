@@ -1,0 +1,13 @@
+# A slight variation of the leading example from the 2021 TACAS paper
+# In the first loop a size bound for the absolute value of y is computed
+# which is then used to infer the overall quadratic expected runtime
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR x y z)
+(RULES
+  f(x,y,z) -{0}> g(x,y,z)
+  g(x,y,z) -> 0.5:g(x-1,y+z,z) :+: 0.5:g(x,y-z,z) :|: x>0
+  g(x,y,z) -{0}> h(x,y,z)
+  h(x,y,z) -> h(x,y-1,z) :|: y>0
+)
