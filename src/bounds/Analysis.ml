@@ -39,10 +39,13 @@ let compute_bound_mprf program (appr: Approximation.t) (rank: MultiphaseRankingF
        let timebound = Approximation.timebound appr (l,t,l') in
        let evaluate = apply (Approximation.sizebound appr (l,t,l')) in
        let evaluated_ranking_funcs = List.map (fun r -> evaluate @@ r l') (MultiphaseRankingFunction.rank rank) in
-       let rhs = if MultiphaseRankingFunction.depth rank = 1 then
-          List.nth evaluated_ranking_funcs 0
-       else
-          Bound.( one + (of_int (MPRF_Coefficient.coefficient rank) * Bound.sum_list evaluated_ranking_funcs) ) in
+       let depth = MultiphaseRankingFunction.depth rank in
+       let rhs =
+         if depth = 1 then
+           List.nth evaluated_ranking_funcs 0
+         else
+           Bound.(one + (of_int (MPRF_Coefficient.coefficient depth) * Bound.sum_list evaluated_ranking_funcs))
+       in
         Bound.(
           if is_infinity timebound then
             if equal zero rhs then
