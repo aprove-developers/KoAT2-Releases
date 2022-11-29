@@ -320,6 +320,12 @@ module ProbabilisticTransitionLabel = struct
     else
       0
 
+  let ids_to_string ?(pretty=false) t =
+    if pretty then
+      "t"^Util.natural_to_subscript (id t)^" &isin; g"^Util.natural_to_subscript (gt_id t)
+    else
+      "t"^Int.to_string (id t)^" in g"^Int.to_string (gt_id t)
+
   let update_to_string_rhs = update_to_string_rhs UpdateElement_.to_string (fun t -> t.update)
   let update_to_string_rhs_pretty = update_to_string_rhs_pretty UpdateElement_.to_string_pretty (fun t -> t.update)
   let to_string =
@@ -359,6 +365,10 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
       Polynomial.compare t1.cost t2.cost
     else
       0
+
+  let ids_to_string ?(pretty=false) t =
+    if pretty then "t" ^ Util.natural_to_subscript (id t)
+    else "t" ^ Int.to_string (id t)
 
   let update_to_string_rhs = update_to_string_rhs Polynomial.to_string (fun t -> t.overappr_nonprob_update)
   let update_to_string_rhs_pretty = update_to_string_rhs_pretty Polynomial.to_string_pretty (fun t -> t.overappr_nonprob_update)

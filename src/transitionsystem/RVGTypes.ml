@@ -1,16 +1,26 @@
 open Batteries
 open ProgramModules
 
-module RV =
+module type RVType = sig
+  type t
+  val to_id_string: t -> string
+  val same: t -> t -> bool
+  val hash: t -> int
+  val compare_same: t -> t -> int
+  val ids_to_string: ?pretty:bool -> t -> string
+end
+
+module MakeRV(TL: ProgramTypes.TransitionLabel)
+             (T: ProgramTypes.Transition with type transition_label = TL.t) =
   struct
-    type t = Transition.t * Var.t
+    type t = T.t * Var.t
 
     let same (t1,v1) (t2,v2) =
-      Transition.same t1 t2
+      T.same t1 t2
       && Var.equal v1 v2
 
     let equivalent (t1,v1) (t2,v2) =
-      Transition.equivalent t1 t2
+      T.equivalent t1 t2
       && Var.equal v1 v2
 
     let compare compare_transition (t1,v1) (t2,v2) =
@@ -22,32 +32,43 @@ module RV =
         0
 
     let compare_same =
-      compare Transition.compare_same
+      compare T.compare_same
 
     let compare_equivalent =
-      compare Transition.compare_equivalent
+      compare T.compare_equivalent
 
     let hash (t,v) =
-      Hashtbl.hash (Transition.to_string t ^ Var.to_string v)
+      Hashtbl.hash (T.to_string t ^ Var.to_string v)
 
     let transition (t,_) = t
 
     let variable (_,v) = v
 
     let to_id_string (t,v) =
-      "|" ^ Transition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
+      "|" ^ T.to_id_string t ^ "," ^ Var.to_string v ^ "|"
+
+    let ids_to_string ?(pretty=false) (t,v) =
+      TL.ids_to_string ~pretty (T.label t) ^ ", " ^ Var.to_string ~pretty v
 
   end
 
-module RVG =
+module RV = MakeRV(TransitionLabel)(Transition)
+
+module MakeRVG(PM: ProgramTypes.ClassicalProgramModules) =
   struct
+    open PM
+
+    module RV = MakeRV(TransitionLabel)(Transition)
+
     module G = Graph.Persistent.Digraph.ConcreteBidirectional(struct
-                include RV
+                include MakeRV(TransitionLabel)(Transition)
                 let equal = same
                 let compare = compare_same
               end)
     module C = Graph.Components.Make(G)
     include G
+
+    module LSB = LocalSizeBound.Make(PM)
 
     type scc = RV.t list
 
@@ -61,18 +82,20 @@ module RVG =
       |> List.enum
 
     let add_vertices_to_rvg vertices rvg =
-      vertices
-      |> List.map (flip add_vertex)
-      |> List.fold_left (fun rvg adder -> adder rvg) rvg
+      Enum.fold add_vertex rvg vertices
 
     let rvg (program: Program.t) =
       let add_transition (post_transition: Transition.t) (rvg: t): t =
-        let rvg_with_vertices: t = add_vertices_to_rvg (program |> Program.vars |> VarSet.to_list |> List.map (fun var -> (post_transition,var))) rvg in
+        let rvg_with_vertices: t =
+          add_vertices_to_rvg
+            (Program.vars program |> VarSet.enum |> Enum.map (fun var -> (post_transition,var)))
+            rvg
+        in
         (* Force evaluation of pre_transitions to avoid recomputation in pre_nodes *)
         let pre_transitions = TransitionSet.to_list @@ Program.pre_transitionset_cached program post_transition in
         let pre_nodes (post_var: Var.t) =
-          LocalSizeBound.sizebound_local program post_transition post_var
-          |> Option.map LocalSizeBound.vars
+          LSB.sizebound_local program post_transition post_var
+          |> Option.map LSB.vars
           |? VarSet.empty
           |> VarSet.enum
           |> Enum.cartesian_product (List.enum pre_transitions)
@@ -91,3 +114,5 @@ module RVG =
       rvg, Lazy.from_fun (fun () -> C.scc_list rvg)
 
   end
+
+module RVG = MakeRVG(ProgramModules)
