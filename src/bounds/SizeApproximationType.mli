@@ -3,41 +3,19 @@ open BoundsInst
 open ProgramModules
 open RVGTypes
 
-module Make_SizeApproximation :
-  functor (Num : PolyTypes.OurNumber)
-          (Poly :
-             sig
-               include PolyTypes.Polynomial with type value = Num.t
-                                             and type valuation = Valuation.Make(Num).t
-                                             and type monomial = Monomials.Make(Num).t
-                                             and type indeterminate = Var.t
-               val max_of_occurring_constants : t -> Num.t
-             end )
-          (Trans :
-             sig
-               type t
-               val same: t -> t -> bool
-               val id: t -> int
-               val src: t -> Location.t
-               val target_string: t -> string
-               val to_id_string: t -> string
-               val compare_same: t -> t -> int
-             end)
-          (RV :
-             sig
-               type t = Trans.t * Var.t
-               val to_id_string: t -> string
-             end) ->
+module Make
+  (Num: PolyTypes.OurNumber)
+  (RV: RVGTypes.RVType):
   sig
-    module B : sig include module type of BoundType.Make_BoundOver(Num)(Poly) end
+    module B : sig include module type of BoundType.Make_BoundOver(Num) end
 
     type t
 
     val empty : int -> t
 
-    val get : t -> Trans.t -> Var.t -> B.t
+    val get : t -> RV.t -> B.t
 
-    val add : ?simplifyfunc:(B.t -> B.t) -> B.t -> Trans.t -> Var.t -> t -> t
+    val add : ?simplifyfunc:(B.t -> B.t) -> B.t -> RV.t -> t -> t
 
     val add_all : ?simplifyfunc:(B.t -> B.t) -> B.t -> RV.t list -> t -> t
 

@@ -1,11 +1,11 @@
 open Batteries
 open Polynomials
 
-module Bound = BoundType.Make_BoundOver (OurInt) (Polynomial)
+module Bound = BoundType.Make_BoundOver(OurInt)
 
 module RealBound =
   struct
-    include BoundType.Make_BoundOver (OurFloat) (RealPolynomial)
+    include BoundType.Make_BoundOver(OurFloat)
 
     let of_intbound =
       Bound.fold

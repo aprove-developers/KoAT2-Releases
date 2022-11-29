@@ -1,20 +1,9 @@
 open Batteries
 open ProgramModules
 
-module RV = RVGTypes.RV
-
-module TransitionApproximation = TransitionApproximationType.Make_TransitionApproximation(OurInt)(Polynomials.Polynomial)
-                                                                                         (struct
-                                                                                           include Transition
-                                                                                           let fold_transset = TransitionSet.fold
-                                                                                          end)
+module MakeTransitionApproximation(PM: ProgramTypes.ProgramModules) =
+  TransitionApproximationType.Make(OurInt)(PM)
 
 
-module SizeApproximation =
-  SizeApproximationType.Make_SizeApproximation(OurInt)(Polynomials.Polynomial)
-                                              (struct
-                                                include Transition
-                                                let target_string =
-                                                  Location.to_string % Transition.target
-                                               end)
-                                              (RV)
+module MakeSizeApproximation(PM: ProgramTypes.ProgramModules) =
+  SizeApproximationType.Make(OurInt)(RVGTypes.MakeRV(PM.TransitionLabel)(PM.Transition))
