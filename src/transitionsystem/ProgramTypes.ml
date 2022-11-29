@@ -90,6 +90,10 @@ module type TransitionLabel = sig
   (** Returns the unique id. *)
   val id: t -> int
 
+  (** Returns a string with the transitions id (or ids in case of probabilistic programs). *)
+  (** Used for printing graphs. *)
+  val ids_to_string: ?pretty:bool -> t -> string
+
   val add_invariant: t -> Invariant.t -> t
 
   (** Returns the cost function *)

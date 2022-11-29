@@ -229,6 +229,10 @@ let default = {
     cost = Polynomial.one;
   }
 
+let ids_to_string ?(pretty=false) t =
+  if pretty then "t" ^ Util.natural_to_subscript (id t)
+  else "t" ^ Int.to_string (id t)
+
 let update_to_string update =
   if VarMap.is_empty update then
     "true"
