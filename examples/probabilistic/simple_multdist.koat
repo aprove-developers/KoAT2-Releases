@@ -1,0 +1,9 @@
+# Simple linear loop with complicated looking update
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR X)
+(RULES
+  f(X,Y) -> g(X,Y)
+  g(X,Y) -> [1/2]:g(X-UNIFORM(-1,2)*UNIFORM(-3,1)^2,Y) :+: [1/2]:g(X,Y)    :|: X>0
+)
