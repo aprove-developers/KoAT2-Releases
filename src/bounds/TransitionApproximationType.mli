@@ -3,45 +3,29 @@ open BoundsInst
 open ProgramModules
 (** Abstracts TransitionApproximation so that it can be used to handle normal transitions with integer bounds and general
  * transitions with real bounds*)
-module Make_TransitionApproximation :
- functor (Num : PolyTypes.OurNumber) -> functor
-         (Poly :
-            sig
-              include PolyTypes.Polynomial with type value = Num.t
-                                            and type valuation = Valuation.Make(Num).t
-                                            and type monomial = Monomials.Make(Num).t
-                                            and type indeterminate = Var.t
-              val max_of_occurring_constants : t -> Num.t
-            end )
-         (Trans :
-            sig
-              type t
-              val id: t -> int
-              val to_id_string: t -> string
-              val compare_same: t -> t -> int
-              val fold_transset: (t -> 'a -> 'a) -> TransitionSet.t -> 'a -> 'a
-            end) ->
+module Make(Num : PolyTypes.OurNumber)
+           (PM: ProgramTypes.ProgramModules):
    sig
-     module B : sig include module type of BoundType.Make_BoundOver(Num)(Poly) end
+     module B : sig include module type of BoundType.Make_BoundOver(Num) end
 
      type t
 
      val empty : string -> int -> t
 
-     val get : t -> Trans.t -> B.t
+     val get : t -> PM.Transition.t -> B.t
 
      val get_id : t -> int -> B.t
 
      (** Returns a timebound of the specified kind for the execution of the whole graph. *)
-     val sum : t -> Program.t -> B.t
+     val sum : t -> PM.Program.t -> B.t
 
-     val add : ?simplifyfunc:(B.t -> B.t) -> B.t -> Trans.t -> t -> t
+     val add : ?simplifyfunc:(B.t -> B.t) -> B.t -> PM.Transition.t -> t -> t
 
-     val all_bounded : t -> Trans.t list -> bool
+     val all_bounded : t -> PM.Transition.t list -> bool
 
-     val to_formatted : ?pretty:bool -> Trans.t list -> t -> FormattedString.t
+     val to_formatted : ?pretty:bool -> PM.Transition.t list -> t -> FormattedString.t
 
-     val to_string : Trans.t list -> t -> string
+     val to_string : PM.Transition.t list -> t -> string
 
      val equivalent : t -> t -> bool
    end

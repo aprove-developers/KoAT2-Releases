@@ -1,25 +1,12 @@
 open Batteries
 open ProgramModules
 
-module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
-                                    (Poly :
-                                       sig
-                                         include PolyTypes.Polynomial with type value = Num.t
-                                                                       and type valuation = Valuation.Make(Num).t
-                                                                       and type monomial = Monomials.Make(Num).t
-                                                                       and type indeterminate = Var.t
-                                         val max_of_occurring_constants : t -> Num.t
-                                       end )
-                                    (Trans :
-                                       sig
-                                         type t
-                                         val id: t -> int
-                                         val to_id_string: t -> string
-                                         val compare_same: t -> t -> int
-                                         val fold_transset: (t -> 'a -> 'a) -> TransitionSet.t -> 'a -> 'a
-                                       end) =
+module Make(Num : PolyTypes.OurNumber)
+           (PM: ProgramTypes.ProgramModules) =
   struct
-    module B = BoundType.Make_BoundOver (Num) (Poly)
+    open PM
+
+    module B = BoundType.Make_BoundOver(Num)
     let logger = Logging.(get Approximation)
 
     type t = string * (int, B.t) Hashtbl.t
@@ -35,18 +22,18 @@ module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
                          execute
 
     let get (name,map) transition =
-      get_id (name,map) (Trans.id transition)
+      get_id (name,map) (Transition.id transition)
 
     let sum appr program =
-      Trans.fold_transset (fun transition result -> B.(get appr transition + result)) (Program.transitions program) B.zero
+      TransitionSet.fold (fun transition result -> B.(get appr transition + result)) (Program.transitions program) B.zero
 
     let add ?(simplifyfunc=identity) bound transition (name,map) =
       (try
-         Hashtbl.modify (Trans.id transition) (simplifyfunc % B.keep_simpler_bound bound) map
+         Hashtbl.modify (Transition.id transition) (simplifyfunc % B.keep_simpler_bound bound) map
        with
-       | Not_found -> Hashtbl.add map (Trans.id transition) (simplifyfunc bound));
+       | Not_found -> Hashtbl.add map (Transition.id transition) (simplifyfunc bound));
       Logger.log logger Logger.INFO
-        (fun () -> "add_" ^ name ^ "_bound", ["transition", Trans.to_id_string transition; "bound", B.to_string bound]);
+        (fun () -> "add_" ^ name ^ "_bound", ["transition", Transition.to_id_string transition; "bound", B.to_string bound]);
       (name, map)
 
     let all_bounded appr =
@@ -54,12 +41,12 @@ module Make_TransitionApproximation (Num : PolyTypes.OurNumber)
 
     let to_formatted ?(pretty=false) transitions (name, map) =
       transitions
-      |> List.sort Trans.compare_same
-      |> List.map (fun t -> t, Hashtbl.find_option map (Trans.id t) |? B.infinity)
+      |> List.sort Transition.compare_same
+      |> List.map (fun t -> t, Hashtbl.find_option map (Transition.id t) |? B.infinity)
       |> List.map (fun (t,b) -> if pretty then
-          FormattedString.mk_str_line @@ "  t" ^ (Trans.id t |> Util.natural_to_subscript) ^ ": " ^ B.to_string ~pretty:true b
+          FormattedString.mk_str_line @@ "  t" ^ (Transition.id t |> Util.natural_to_subscript) ^ ": " ^ B.to_string ~pretty:true b
         else
-          FormattedString.mk_str_line @@ "  t" ^ (Trans.id t |> string_of_int) ^ ": " ^ B.to_string b)
+          FormattedString.mk_str_line @@ "  t" ^ (Transition.id t |> string_of_int) ^ ": " ^ B.to_string b)
       |> FormattedString.mappend
 
     let to_string transitions (name, map) =
