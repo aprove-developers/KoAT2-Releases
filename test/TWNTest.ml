@@ -7,6 +7,10 @@ open PolyExponential
 open Polynomials
 open BoundsInst
 
+module Check_TWN = Check_TWN.Make(ProgramModules)
+module TWN_Complexity = TWN_Complexity.Make(ProgramModules)
+module TWN_Termination = TWN_Termination.Make(ProgramModules)
+
 let tests =
   "TWN" >::: [
     ("check_twn" >:::

@@ -7,6 +7,10 @@ open Constraints
 
 let logger = Logging.(get Size)
 
+module Check_TWN = Check_TWN.Make(ProgramModules)
+module TWN = TWN.Make(ProgramModules)
+module TWNLoop = TWNLoop.Make(ProgramModules)
+
 let compute_order t var =
     let t' = EliminateNonContributors.eliminate_t (TransitionLabel.vars t) (VarSet.singleton var) (TransitionLabel.update t) TransitionLabel.remove_non_contributors (t |> TransitionLabel.only_update) in
     Check_TWN.check_triangular_t t'

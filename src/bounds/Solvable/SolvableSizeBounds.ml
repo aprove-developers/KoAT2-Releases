@@ -8,6 +8,11 @@ open Constraints
 
 let logger = Logging.(get Size)
 
+(** TODO This module currently only works with ProgramModules.Program.t *)
+
+module Check_Solvable = Check_Solvable.Make(ProgramModules)
+module TWNLoop = TWNLoop.Make(ProgramModules)
+
 type path = (Location.t * TWNLoop.t * Location.t) list
 
 module Monomial = Monomials.Make(OurInt)
@@ -31,11 +36,17 @@ let matrix_of_linear_assignments (t:TransitionLabel.t) (block:VarMap.key list) =
 
 let find_cycle twn_loop var =
   let f_eliminate t =
-    EliminateNonContributors.eliminate_t (TransitionLabel.vars t) (VarSet.singleton var) (TransitionLabel.update t) TransitionLabel.remove_non_contributors (TransitionLabel.only_update t) in
+    EliminateNonContributors.eliminate_t
+      (TransitionLabel.vars t) (VarSet.singleton var) (TransitionLabel.update t)
+      TransitionLabel.remove_non_contributors (TransitionLabel.only_update t)
+  in
   let block = Check_Solvable.check_solvable_t (f_eliminate twn_loop) in
     if Option.is_some block then
       let unwrapped_block = Option.get block |> List.find (List.mem var) in
-      if List.for_all (Polynomial.is_linear % (TransitionLabel.update_full twn_loop)) unwrapped_block then
+      if List.for_all
+          (Polynomial.is_linear % (fun v -> TransitionLabel.update twn_loop v |? Polynomial.of_var v))
+          unwrapped_block
+      then
         let update_matrix = matrix_of_linear_assignments twn_loop unwrapped_block in
         Some (update_matrix |> List.flatten, unwrapped_block)
       else
@@ -90,7 +101,7 @@ let improve_t program trans (l,t,l') appr =
   else appr) (TransitionLabel.input_vars t) appr
 
 let improve program ?(scc = None) appr =
-    let trans = (if Option.is_some scc then (Option.get scc) else Program.transitions program)
+    let trans = (if Option.is_some scc then Option.get scc else Program.transitions program)
         |> TransitionSet.to_list
         |> List.filter (fun (l,t,l') -> Approximation.is_time_bounded appr (l,t,l')) in
     List.fold_right (improve_t program trans) trans appr
