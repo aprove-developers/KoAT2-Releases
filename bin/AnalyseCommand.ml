@@ -145,7 +145,7 @@ let run (params: params) =
   let preprocess = Preprocessor.process (module ProgramModules) params.preprocessing_strategy params.preprocessors in
 
   (* TODO improve parser arguments to avoid the case of multiple twns *)
-  let local =
+  let bounds_conf =
     let check_twn_already_set c = if Option.is_some c.Analysis.twn_configuration then
       raise (Invalid_argument "--local commands are not correct. Use 'mprf' or at most one of 'twn', 'twn-transform-jordan', 'twn-transform',or 'twn-transform-general'")
     in
@@ -157,7 +157,11 @@ let run (params: params) =
           | `TWNTransformGeneral -> (check_twn_already_set conf; {conf with twn_configuration = Some (TWN.Transformation Transformation.GeneralTransform)})
           | `TWNTransformJordan -> (check_twn_already_set conf; {conf with twn_configuration = Some (TWN.Transformation Transformation.JordanTransform)})
         )
-        ({run_mprf_depth = None;twn_configuration = None;}) params.local
+        ({run_mprf_depth = None;twn_configuration = None; twn_size_bounds = ComputeTwnSizeBounds; cfr_configuration = NoCFR}) params.local
+      |> fun conf -> match params.cfr with
+                  | [] -> conf
+                  | l -> { conf with cfr_configuration = PerformCFR l}
+
     )
   in
 
@@ -210,7 +214,7 @@ let run (params: params) =
           )
      |> (fun (program, appr) ->
                if not params.no_boundsearch then
-                 Bounds.find_bounds ~preprocess ~cfr:params.cfr ~time_cfr:params.time_limit_cfr ~local program appr
+                 Bounds.find_bounds ~conf:bounds_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr
                else (program, appr))
      |> tap (fun (program, appr) -> params.result program appr)
      |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~pretty:true ~show_initial:false program appr))
