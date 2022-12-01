@@ -11,6 +11,16 @@ module SMTSolverTimeout = SMT.Z3SolverTimeout
 module ScaledMonomial = ScaledMonomials.Make(OurInt)
 module Monomial = Monomials.Make(OurInt)
 
+module TWNLoop = TWNLoop.Make(ProgramModules)
+module Check_Solvable = Check_Solvable.Make(ProgramModules)
+
+type transformation_type = TransformTryBoth
+                         | GeneralTransform
+                         | JordanTransform   [@@deriving eq]
+
+(** Currently the TWN transformations *only* work on ProgramModules.Program.t . *)
+(** The reason is the underlying program itself is transformed rather than a possible TWNLoop that was abstracted from the program *)
+
 (** get_linear_update_of_variable (x<- 2x+3y+y^2) x y returns 3 *)
 let get_linear_update_of_variable (t:TWNLoop.t) (var_left:VarMap.key) (var_right:VarMap.key)=
   match (TWNLoop.update t var_left) with
@@ -110,7 +120,7 @@ let transform_with_aut twn_loop automorphism vars =
                   |> Automorphism.transform_update automorphism with
                   |  None -> None
                   |  Some x -> let  new_update = List.map Polynomial.simplify x in
-  let updated_guard =  TWNLoop.Guard.atoms @@ TWNLoop.guard_without_inv twn_loop (*current guard *)
+  let updated_guard =  Formula.atoms @@ TWNLoop.guard_without_inv twn_loop (*current guard *)
                     |> Automorphism.transform_guard automorphism in
   let updated_invariant = Automorphism.transform_guard automorphism @@ TWNLoop.invariant twn_loop in
   let new_transitionlabels = TWNLoop.subsumed_transitionlabels twn_loop
@@ -129,31 +139,32 @@ let transform_with_aut twn_loop automorphism vars =
     Then tries to find a  transformation using the jordan decomposition. To compute it, we call sympy.*)
 let transform_linearly (transition: TWNLoop.t) transformation_type =
   (* find order for variables and independent blocks and sort them for elegant code when updating transition*)
-  match (Check_Solvable.check_solvable transition) with
+  match Check_Solvable.check_solvable transition with
     | None -> None
-    | Some x -> let blocks = change_order transition x in
-  if List.length blocks == List.length (VarSet.to_list (TWNLoop.vars transition)) then
-      Some (transition, Automorphism.identity_aut) (*loop already is in twn form*)
-  else if transformation_type != `TWNTransformJordan  && transformation_type != `TWNTransform  then
-    None
-  else
-    let concat_blocks = List.concat blocks in
-    (* compute linear update matrices *)
-    let matrices = List.map (matrix_of_linear_assignments transition) blocks in
-    let transformations = List.map (transform_linearly_matrix) matrices in (*(transformations,transformed_matrices) *)
-    if not @@ List.for_all Option.is_some transformations then
-      None
-    else
-      let (transformations,js,transformation_invs) =
-        List.fold_right (fun  (x1,x2,x3) (xs1,xs2,xs3)-> ((x1::xs1) , (x2::xs2) ,(x3::xs3)))
-                  (List.map Option.get transformations)
-                  ([],[],[]) in
-      let eta = List.concat @@ List.map2 matrix_times_vector_rational transformations blocks in
-      let eta_inv = List.concat @@ List.map2 matrix_times_vector_int transformation_invs blocks in
-      let automorphism = Automorphism.of_poly_list concat_blocks eta eta_inv in
-      match transform_with_aut transition automorphism concat_blocks with
-      | None -> None
-      | Some x -> Some(x, automorphism)
+    | Some x ->
+      let blocks = change_order transition x in
+      if List.length blocks == List.length (VarSet.to_list (TWNLoop.vars transition)) then
+          Some (transition, Automorphism.identity_aut) (*loop already is in twn form*)
+      else if transformation_type != JordanTransform  && transformation_type != TransformTryBoth  then
+        None
+      else
+        let concat_blocks = List.concat blocks in
+        (* compute linear update matrices *)
+        let matrices = List.map (matrix_of_linear_assignments transition) blocks in
+        let transformations = List.map (transform_linearly_matrix) matrices in (*(transformations,transformed_matrices) *)
+        if not @@ List.for_all Option.is_some transformations then
+          None
+        else
+          let (transformations,js,transformation_invs) =
+            List.fold_right (fun  (x1,x2,x3) (xs1,xs2,xs3)-> ((x1::xs1) , (x2::xs2) ,(x3::xs3)))
+                      (List.map Option.get transformations)
+                      ([],[],[]) in
+          let eta = List.concat @@ List.map2 matrix_times_vector_rational transformations blocks in
+          let eta_inv = List.concat @@ List.map2 matrix_times_vector_int transformation_invs blocks in
+          let automorphism = Automorphism.of_poly_list concat_blocks eta eta_inv in
+          match transform_with_aut transition automorphism concat_blocks with
+          | None -> None
+          | Some x -> Some(x, automorphism)
 
 (** transform_non_linearly transforms a TWNLoop into twn form, it starts with the degree 1 and then counts upwards,
     until for some degree the formulas get too large. The degree of the inverse is the same as the degree of the automorphism
@@ -169,17 +180,17 @@ let rec transform_non_linearly ?(degree =1) (t: TWNLoop.t) =
           match transform_with_aut t automorphism vars with
           | None -> None (* transform with aut returns None iff result is not integer update, however this should never be the case as here we use integer automorphisms  *)
           | Some x -> Some (x, automorphism)
-  with | Stack_overflow -> None
+  with | Stack_overflow -> None (* TODO Waiting for the stack overflow to occur might not be the best idea *)
 
 (** transform tries to transform a given loop into twn-form. First checks whether the given loop is twn;
 then tries the Jordan approach;
 then tries general approach
 Returns the resulting twn-loop and an transformation automorphism *)
 let transform transformation_type ((entry, x, t): Transition.t * (Transition.t list * Transition.t list) * TWNLoop.t)  =
-   match (transform_linearly t transformation_type) with
+   match transform_linearly t transformation_type with
   | Some (transformed, automorphism) ->  Some (entry, x, transformed, automorphism)
-  | None -> if transformation_type ==  `TWNTransformGeneral || transformation_type ==  `TWNTransform then
-              match (transform_non_linearly t) with
+  | None -> if transformation_type ==  GeneralTransform || transformation_type ==  TransformTryBoth then
+              match transform_non_linearly t with
                     | Some (transformed, automorphism) -> Some (entry, x, transformed, automorphism)
                     | None -> None
             else

@@ -4,6 +4,8 @@ open OUnit2
 open Helper
 open ProgramModules
 
+module Check_Solvable = Check_Solvable.Make(ProgramModules)
+
 
 let to_string arg =
   if Option.is_some arg then

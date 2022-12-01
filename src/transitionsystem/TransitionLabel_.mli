@@ -28,9 +28,6 @@ val update_map : t -> Polynomials.Polynomial.t Map.Make(Var).t
 (** Returns the update of a variable. *)
 val update : t -> Var.t -> Polynomials.Polynomial.t Option.t
 
-(** Returns the full update of the transitionlabel *)
-val update_full : t -> Var.t -> Polynomials.Polynomial.t
-
 (** Returns the update map of the transitionlabel *)
 val update_map : t -> Polynomials.Polynomial.t Map.Make(Var).t
 

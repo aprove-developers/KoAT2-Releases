@@ -8,12 +8,14 @@ open ApproximationModules
 
 let preprocess = Preprocessor.process_till_fixpoint (module ProgramModules) Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
 
+let local = Analysis.({ run_mprf_depth = Some 1; twn_configuration = None; })
+
 (** Returns an overall timebound for the given program.*)
 let find_timebound ?(mprf_max_depth = 1) (program: Program.t): Bound.t =
   (program, Approximation.create program)
   |> Tuple2.map1 preprocess
   |> (fun (program, appr) ->
-    Bounds.find_bounds ~mprf_max_depth ~preprocess ~local:([`MPRF]) ~cfr:([]) program appr
+    Bounds.find_bounds ~preprocess ~local:({local with run_mprf_depth = Some mprf_max_depth}) ~cfr:([]) program appr
     |> fun (program,appr) -> Approximation.(TransitionApproximation.sum (time appr) program)
   )
 
@@ -22,7 +24,7 @@ let find_costbound (program: Program.t): Bound.t =
   (program, Approximation.create program)
   |> Tuple2.map1 preprocess
   |> (fun (program, appr) ->
-    Bounds.find_bounds ~preprocess ~local:([`MPRF]) ~cfr:([]) program appr
+    Bounds.find_bounds ~preprocess ~local ~cfr:([]) program appr
     |> fun (program,appr) -> Approximation.program_costbound appr program
   )
 
