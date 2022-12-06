@@ -3,11 +3,9 @@ open BoundsInst
 open ProgramModules
 (** Abstracts TransitionApproximation so that it can be used to handle normal transitions with integer bounds and general
  * transitions with real bounds*)
-module Make(Num : PolyTypes.OurNumber)
+module Make(B : BoundType.Bound)
            (PM: ProgramTypes.ProgramModules):
    sig
-     module B : sig include module type of BoundType.Make_BoundOver(Num) end
-
      type t
 
      val empty : string -> int -> t

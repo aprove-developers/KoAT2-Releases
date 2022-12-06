@@ -4,11 +4,9 @@ open ProgramModules
 open RVGTypes
 
 module Make
-  (Num: PolyTypes.OurNumber)
+  (B: BoundType.Bound)
   (RV: RVGTypes.RVType):
   sig
-    module B : sig include module type of BoundType.Make_BoundOver(Num) end
-
     type t
 
     val empty : int -> t

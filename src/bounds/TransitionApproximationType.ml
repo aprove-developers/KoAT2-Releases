@@ -1,12 +1,11 @@
 open Batteries
 open ProgramModules
 
-module Make(Num : PolyTypes.OurNumber)
+module Make(B : BoundType.Bound)
            (PM: ProgramTypes.ProgramModules) =
   struct
     open PM
 
-    module B = BoundType.Make_BoundOver(Num)
     let logger = Logging.(get Approximation)
 
     type t = string * (int, B.t) Hashtbl.t

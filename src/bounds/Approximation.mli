@@ -1,14 +1,12 @@
 (** Implementation of approximations containing time, size and cost-bounds. *)
 open Batteries
 open BoundsInst
-open ApproximationModules
 
 (** Provides default implementations of an approximation *)
 
 module Make(PM: ProgramTypes.ProgramModules): sig
-  module TransitionApproximation: module type of ApproximationModules.MakeTransitionApproximation(PM)
-  module SizeApproximation: module type of ApproximationModules.MakeSizeApproximation(PM)
-
+  module TransitionApproximation: module type of TransitionApproximationType.Make(Bound)(PM)
+  module SizeApproximation: module type of SizeApproximationType.Make(Bound)(RVGTypes.MakeRV(PM.TransitionLabel)(PM.Transition))
   type t
 
   (** Returns an empty approximation that does not contain any non-trivial information.

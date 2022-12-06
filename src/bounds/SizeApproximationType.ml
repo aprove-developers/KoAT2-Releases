@@ -2,10 +2,9 @@ open Batteries
 open ProgramTypes
 open RVGTypes
 
-module Make(Num : PolyTypes.OurNumber)
+module Make(B : BoundType.Bound)
            (RV: RVGTypes.RVType) =
   struct
-    module B = BoundType.Make_BoundOver(Num)
     let logger = Logging.(get Approximation)
 
     module Map = Hashtbl.Make(struct include RV let equal = same end)
