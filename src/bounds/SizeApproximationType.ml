@@ -21,6 +21,8 @@ module Make(B : BoundType.Bound)
                          (fun () -> "sizebound", ["rv", RV.to_id_string rv])
                          ~result:B.to_string
                          execute
+    let enum = Map.enum
+    let of_enum = Map.of_enum
 
     let add ?(simplifyfunc=identity) bound rv map =
       (* We do not want to log trivial size bounds *)

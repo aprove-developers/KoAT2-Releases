@@ -7,9 +7,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   module RVG = RVGTypes.MakeRVG(PM)
 
-  module TrivialSizeBounds = TrivialSizeBounds.Make(PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis(PM)
   module NontrivialSizeBounds = NontrivialSizeBounds.Make(PM)
-  module Approximation = Approximation.Make(PM)
+  module TrivialSizeBounds = TrivialSizeBounds.Make(PM)
 
   let improve_scc program rvg appr = function
     | [((l,t,l'),v)] when not (RVG.mem_edge rvg ((l,t,l'),v) ((l,t,l'),v)) ->

@@ -2,7 +2,9 @@ open Batteries
 open ProgramModules
 
 module type RVType = sig
-  type t
+  type transition
+
+  type t = transition * Var.t
   val to_id_string: t -> string
   val same: t -> t -> bool
   val hash: t -> int
@@ -13,6 +15,8 @@ end
 module MakeRV(TL: ProgramTypes.TransitionLabel)
              (T: ProgramTypes.Transition with type transition_label = TL.t) =
   struct
+    type transition = T.t
+
     type t = T.t * Var.t
 
     let same (t1,v1) (t2,v2) =

@@ -31,7 +31,7 @@ let handle_transformation (type a) (conf: a configuration): a =
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  module Approximation = Approximation.Make(PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis(PM)
   module InvariantGeneration = InvariantGeneration.Make(PM)
   module TWNLoop = TWNLoop.Make(PM)
   module TWN_Complexity = TWN_Complexity.Make(PM)
