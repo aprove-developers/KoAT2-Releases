@@ -1,14 +1,13 @@
 open Batteries
 open BoundsInst
 open ProgramModules
-open ApproximationModules
 open Formatter
 open FormattedString
 
 module Make(PM: ProgramTypes.ProgramModules) = struct
   open PM
-  module TransitionApproximation = ApproximationModules.MakeTransitionApproximation(PM)
-  module SizeApproximation = ApproximationModules.MakeSizeApproximation(PM)
+  module TransitionApproximation = TransitionApproximationType.Make(Bound)(PM)
+  module SizeApproximation = SizeApproximationType.Make(Bound)(RVGTypes.MakeRV(PM.TransitionLabel)(PM.Transition))
 
   type t = {
       time: TransitionApproximation.t;

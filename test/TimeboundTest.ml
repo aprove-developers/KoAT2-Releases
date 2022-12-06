@@ -4,7 +4,6 @@ open BoundsInst
 open OUnit2
 open Helper
 open ProgramModules
-open ApproximationModules
 
 let preprocess = Preprocessor.process_till_fixpoint (module ProgramModules) Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
 
