@@ -5,7 +5,7 @@ open BoundsInst
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  module Approximation = Approximation.Make(PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis(PM)
 
   (** Returns true iff bound is not finite. *)
   let unbounded appr transition =

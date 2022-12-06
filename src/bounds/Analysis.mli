@@ -14,11 +14,11 @@ type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
                 , ProgramModules.TransitionSet.t
                 , RVGTypes.MakeRVG(ProgramModules).t, RVGTypes.MakeRVG(ProgramModules).scc
                 , TWNLoop.Make(ProgramModules).t
-                , Approximation.Make(ProgramModules).t) cfr_configuration
+                , Approximation.MakeForClassicalAnalysis(ProgramModules).t) cfr_configuration
 
 type ('prog, 'tset, 'appr) twn_size_bounds =
   | NoTwnSizeBounds: ('prog,'trans_set,'appr) twn_size_bounds
-  | ComputeTwnSizeBounds: (ProgramModules.Program.t, ProgramModules.TransitionSet.t,Approximation.Make(ProgramModules).t) twn_size_bounds
+  | ComputeTwnSizeBounds: (ProgramModules.Program.t, ProgramModules.TransitionSet.t,Approximation.MakeForClassicalAnalysis(ProgramModules).t) twn_size_bounds
 
 
 type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
@@ -34,7 +34,7 @@ type classical_program_conf_type = ( ProgramModules.Transition.t
                                    , RVGTypes.MakeRVG(ProgramModules).t
                                    , RVGTypes.MakeRVG(ProgramModules).scc
                                    , TWNLoop.Make(ProgramModules).t
-                                   , Approximation.Make(ProgramModules).t ) analysis_configuration
+                                   , Approximation.MakeForClassicalAnalysis(ProgramModules).t ) analysis_configuration
 
 
 module Make(PM: ProgramTypes.ClassicalProgramModules): sig
@@ -43,7 +43,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   (** The type of the configuration for the program *)
   type conf_type =
     (PM.Transition.t,PM.Program.t,PM.TransitionSet.t,
-     MakeRVG(PM).t,MakeRVG(PM).scc,TWNLoop.Make(PM).t, Approximation.Make(PM).t) analysis_configuration
+     MakeRVG(PM).t,MakeRVG(PM).scc,TWNLoop.Make(PM).t, Approximation.MakeForClassicalAnalysis(PM).t) analysis_configuration
 
   (** Default configuration. mprf_depth of 1, no twn, no cfr, and no twn size bounds*)
   val default_configuration: conf_type
@@ -53,6 +53,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   (** Performs improvement steps to find better timebounds for the approximation and updates the approximation. *)
   val improve : conf:conf_type -> rvg_with_sccs
               -> preprocess:(PM.Program.t -> PM.Program.t)
-              -> [ `Cost | `Time ] -> PM.Program.t -> Approximation.Make(PM).t
-              -> PM.Program.t * Approximation.Make(PM).t
+              -> [ `Cost | `Time ] -> PM.Program.t -> Approximation.MakeForClassicalAnalysis(PM).t
+              -> PM.Program.t * Approximation.MakeForClassicalAnalysis(PM).t
 end

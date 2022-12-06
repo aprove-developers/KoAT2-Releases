@@ -2,7 +2,12 @@
 open Batteries
 
 module type RVType = sig
-  type t
+  (** The transition part of the RVG, i.e., in case of classical programs transitions and in case of probabilistic programs tuples of transitions and locations *)
+  type transition
+
+  (** Type of a result variable is a transiton and a variable. *)
+  type t = transition * Var.t
+
   val to_id_string: t -> string
   val same: t -> t -> bool
   val hash: t -> int
@@ -15,10 +20,7 @@ module MakeRV(TL: ProgramTypes.TransitionLabel)
              (T: ProgramTypes.Transition with type transition_label = TL.t): sig
   (** Module handling result variables. *)
 
-  (** Type of a result variable is a transiton and a variable. *)
-  type t = T.t * Var.t
-
-  include RVType with type t:=t
+  include RVType with type transition = T.t
 
   (** TODO doc *)
   val equivalent : t -> t -> bool

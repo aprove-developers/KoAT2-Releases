@@ -7,7 +7,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   module Analysis = Analysis.Make(PM)
-  module Approximation = Approximation.Make(PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis(PM)
   module CostBounds = CostBounds.Make(PM)
   module RVG = RVGTypes.MakeRVG(PM)
   module TrivialTimeBounds = TrivialTimeBounds.Make(PM)

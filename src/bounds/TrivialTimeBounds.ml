@@ -9,7 +9,7 @@ open ProgramModules
 module Make(PM: ProgramTypes.ProgramModules) = struct
   open PM
 
-  module Approximation = Approximation.Make(PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis(PM)
 
   (** Transition graph represents scc. *)
   module SCC = Graph.Components.Make(TransitionGraph)

@@ -18,11 +18,11 @@ type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
                 , ProgramModules.TransitionSet.t
                 , RVGTypes.MakeRVG(ProgramModules).t, RVGTypes.MakeRVG(ProgramModules).scc
                 , TWNLoop.Make(ProgramModules).t
-                , Approximation.Make(ProgramModules).t) cfr_configuration
+                , Approximation.MakeForClassicalAnalysis(ProgramModules).t) cfr_configuration
 
 type ('prog, 'tset, 'appr) twn_size_bounds =
   | NoTwnSizeBounds: ('prog,'trans_set,'appr) twn_size_bounds
-  | ComputeTwnSizeBounds: (ProgramModules.Program.t, ProgramModules.TransitionSet.t,Approximation.Make(ProgramModules).t) twn_size_bounds
+  | ComputeTwnSizeBounds: (ProgramModules.Program.t, ProgramModules.TransitionSet.t,Approximation.MakeForClassicalAnalysis(ProgramModules).t) twn_size_bounds
 
 type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
   { run_mprf_depth: int option
@@ -37,7 +37,7 @@ type classical_program_conf_type = ( ProgramModules.Transition.t
                                    , RVGTypes.MakeRVG(ProgramModules).t
                                    , RVGTypes.MakeRVG(ProgramModules).scc
                                    , TWNLoop.Make(ProgramModules).t
-                                   , Approximation.Make(ProgramModules).t ) analysis_configuration
+                                   , Approximation.MakeForClassicalAnalysis(ProgramModules).t ) analysis_configuration
 
 
 type measure = [ `Cost | `Time ] [@@deriving show]
@@ -53,7 +53,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   module Approximation_ = Approximation
-  module Approximation = Approximation.Make(PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis(PM)
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make(PM)
   module RVG = RVGTypes.MakeRVG(PM)
   module SizeBounds = SizeBounds.Make(PM)
@@ -286,7 +286,7 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
         ~(preprocess: ProgramModules.Program.t -> ProgramModules.Program.t)
         measure
         (program: ProgramModules.Program.t)
-        (appr: Approximation_.Make(ProgramModules).t) =
+        (appr: Approximation_.MakeForClassicalAnalysis(ProgramModules).t) =
 
       if not (TransitionSet.is_empty non_linear_transitions)  then
         let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
