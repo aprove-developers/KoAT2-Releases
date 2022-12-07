@@ -92,7 +92,7 @@ let fill_up_arg_vars_up_to_num n t =
   {t with update = fill_up_update_arg_vars_up_to_num n t.update}
 
 
-let mk ?(id = None) ~cost ~assignments ~patterns ~guard ~vars =
+let mk ~id ~cost ~assignments ~patterns ~guard ~vars =
   let map_to_arg_vars =
     Enum.combine (List.enum patterns) (LazyList.enum Var.args)
     |> RenameMap.of_enum
