@@ -47,3 +47,16 @@ val natural_to_superscript : int -> string
 val read_from_channel: BatInnerIO.input -> string
 
 val read_process: string -> string
+
+(** Reasoning about type equalities *)
+module TypeEq: sig
+  type (_,_) t = | Refl: ('a,'a) t
+
+  (** transitivity *)
+  val trans: ('a,'b) t -> ('b,'c) t -> ('a,'c) t
+
+  (** symmetry *)
+  val sym: ('a,'b) t -> ('b,'a) t
+
+  val coerce: ('a,'b) t -> 'a -> 'b
+end

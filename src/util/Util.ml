@@ -113,3 +113,16 @@ let rec read_from_channel inp_chann =
 let read_process cmd =
   let chan = Unix.open_process_in cmd in
   read_from_channel chan
+
+module TypeEq = struct
+  type (_,_) t =  | Refl: ('a,'a) t
+
+  let trans: type a b c. (a,b) t -> (b,c) t -> (a,c) t =
+    fun Refl -> fun Refl -> Refl
+
+  let sym: type a b. (a,b) t -> (b,a) t =
+    fun Refl -> Refl
+
+  let coerce: type a b. (a,b) t -> a -> b =
+    fun Refl -> fun a -> a
+end
