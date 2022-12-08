@@ -4,7 +4,8 @@ open BoundsInst
 
 (** Provides default implementations of an approximation *)
 
-module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules): sig
+module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules)
+           (T: TransitionApproximationType.ApproximableTransition with type program = PM.Program.t): sig
   (* module TransitionApproximation: module type of TransitionApproximationType.Make(B)(PM) *)
   (* module SizeApproximation: module type of SizeApproximationType.Make(B)(RV) *)
   type t
@@ -31,7 +32,7 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules): sig
   (** {1  {L Timebound related methods}} *)
 
   (** Returns a timebound for the transition. *)
-  val timebound : t -> PM.Transition.t -> B.t
+  val timebound : t -> T.t -> B.t
 
   (** Returns a timebound for the transition id. *)
   val timebound_id : t -> int -> B.t
@@ -41,25 +42,25 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules): sig
 
   (** Adds the information that the specified bound is a valid timebound for the given transition.
       The resulting approximation is guaranteed to be at least as good as the old approximation. *)
-  val add_timebound : B.t -> PM.Transition.t -> t -> t
+  val add_timebound : B.t -> T.t -> t -> t
 
   (** Returns true iff. all transitions from a given list of transitions are bounded and not infinity. *)
-  val all_times_bounded : t -> PM.Transition.t list -> bool
+  val all_times_bounded : t -> T.t Enum.t -> bool
 
   (** Returns true iff. a given transition is bounded and not infinity. *)
-  val is_time_bounded : t -> PM.Transition.t -> bool
+  val is_time_bounded : t -> T.t -> bool
 
 
   (** {1  {L  Costbound related methods}} *)
 
   (** Returns a costbound for the transition. *)
-  val costbound : t -> PM.Transition.t -> B.t
+  val costbound : t -> T.t -> B.t
 
   (** Returns a costbound for the program. *)
   val program_costbound : t -> PM.Program.t -> B.t
 
   (** Adds a (cost-)bound of a transition to an existing approximation. *)
-  val add_costbound : B.t -> PM.Transition.t -> t -> t
+  val add_costbound : B.t -> T.t -> t -> t
 
 
   (** {1  {L  Sizebound related methods}} *)
@@ -79,8 +80,11 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules): sig
   val is_size_bounded : PM.Program.t -> t -> PM.RV.transition -> bool
 end
 
+module MakeWithDefaultTransition(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules):
+  module type of Make(B)(PM)(TransitionApproximationType.MakeDefaultApproximableTransition(PM))
+
 module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules):
-  module type of Make(BoundsInst.Bound)(PM)
+  module type of MakeWithDefaultTransition(BoundsInst.Bound)(PM)
 
 
 include module type of MakeForClassicalAnalysis(ProgramModules)
@@ -90,12 +94,30 @@ module Coerce(B: BoundType.Bound)
              (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules)
              (_: sig
 
-                val t_eq: (PM.Transition.t,PM'.Transition.t) Util.TypeEq.t
+                val t_eq: ( TransitionApproximationType.MakeDefaultApproximableTransition(PM).t
+                          , TransitionApproximationType.MakeDefaultApproximableTransition(PM').t) Util.TypeEq.t
 
                 module RVTupleEq: functor(F: functor(_: ProgramTypes.RVTuple) -> sig type t end) -> sig
                   val proof: (F(PM.RV.RVTuple_).t, F(PM'.RV.RVTuple_).t) Util.TypeEq.t
                  end
               end): sig
 
-  val coerce: Make(B)(PM).t -> Make(B)(PM').t
+  val coerce: MakeWithDefaultTransition(B)(PM).t -> MakeWithDefaultTransition(B)(PM').t
+end
+
+module Probabilistic: sig
+  module ClassicApproximation:
+    module type of
+      MakeWithDefaultTransition(BoundsInst.Bound)(ProbabilisticProgramModules)
+  module ExpApproximation:
+    module type of
+      Make(BoundsInst.RealBound)
+          (struct include ProbabilisticProgramModules module RV = GRV end)
+          (struct
+            open ProbabilisticProgramModules
+            type program = Program.t
+            include GeneralTransition
+            let id = gt_id
+            let all_from_program = GeneralTransitionSet.enum % Program.gts
+          end)
 end

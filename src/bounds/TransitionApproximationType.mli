@@ -1,34 +1,48 @@
 open Batteries
-open BoundsInst
-open ProgramModules
+
+(** Module type of transitions for which we can create approximations *)
+module type ApproximableTransition = sig
+  type program
+  type t
+
+  val id: t -> int
+  val to_id_string: t -> string
+  val compare_same: t -> t -> int
+  val all_from_program: program -> t Enum.t
+end
+
+module MakeDefaultApproximableTransition(PM: ProgramTypes.ProgramModules):
+  ApproximableTransition with type program = PM.Program.t
+                          and type t = PM.Transition.t
+
 (** Abstracts TransitionApproximation so that it can be used to handle normal transitions with integer bounds and general
  * transitions with real bounds*)
 module Make(B : BoundType.Bound)
-           (PM: ProgramTypes.ProgramModules):
+           (T: ApproximableTransition):
    sig
      type t
 
      val empty : string -> int -> t
 
-     val get : t -> PM.Transition.t -> B.t
+     val get : t -> T.t -> B.t
 
      val get_id : t -> int -> B.t
 
-     (** Returns a timebound of the specified kind for the execution of the whole graph. *)
-     val sum : t -> PM.Program.t -> B.t
+     (** Returns a timebound for the execution of all given transitions *)
+     val sum : t -> T.program -> B.t
 
-     val add : ?simplifyfunc:(B.t -> B.t) -> B.t -> PM.Transition.t -> t -> t
+     val add : ?simplifyfunc:(B.t -> B.t) -> B.t -> T.t -> t -> t
 
-     val all_bounded : t -> PM.Transition.t list -> bool
+     val all_bounded : t -> T.t Enum.t -> bool
 
-     val to_formatted : ?pretty:bool -> PM.Transition.t list -> t -> FormattedString.t
+     val to_formatted : ?pretty:bool -> T.t list -> t -> FormattedString.t
 
-     val to_string : PM.Transition.t list -> t -> string
+     val to_string : T.t list -> t -> string
 
      val equivalent : t -> t -> bool
    end
 
 module EqMake(B: BoundType.Bound)
-             (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules): sig
-  val proof: (Make(B)(PM).t, Make(B)(PM').t) Util.TypeEq.t
+             (T: ApproximableTransition)(T': ApproximableTransition): sig
+  val proof: (Make(B)(T).t, Make(B)(T').t) Util.TypeEq.t
 end

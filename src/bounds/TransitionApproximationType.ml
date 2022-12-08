@@ -1,10 +1,25 @@
 open Batteries
 
-module Make(B : BoundType.Bound)
-           (PM: ProgramTypes.ProgramModules) =
-  struct
-    open PM
+module type ApproximableTransition = sig
+  type program
+  type t
 
+  val id: t -> int
+  val to_id_string: t -> string
+  val compare_same: t -> t -> int
+  val all_from_program: program -> t Enum.t
+end
+
+module MakeDefaultApproximableTransition(PM: ProgramTypes.ProgramModules) = struct
+  type program = PM.Program.t
+  let all_from_program = PM.TransitionSet.enum % PM.Program.transitions
+
+  include PM.Transition
+end
+
+module Make(B : BoundType.Bound)
+           (T: ApproximableTransition) =
+  struct
     let logger = Logging.(get Approximation)
 
     (** TODO improve type safety by making a hash table over transitions *)
@@ -21,31 +36,31 @@ module Make(B : BoundType.Bound)
                          execute
 
     let get (name,map) transition =
-      get_id (name,map) (Transition.id transition)
+      get_id (name,map) (T.id transition)
 
     let sum appr program =
-      TransitionSet.fold (fun transition result -> B.(get appr transition + result)) (Program.transitions program) B.zero
+      Enum.fold (fun result trans -> B.(get appr trans + result)) B.zero (T.all_from_program program)
 
     let add ?(simplifyfunc=identity) bound transition (name,map) =
       (try
-         Hashtbl.modify (Transition.id transition) (simplifyfunc % B.keep_simpler_bound bound) map
+         Hashtbl.modify (T.id transition) (simplifyfunc % B.keep_simpler_bound bound) map
        with
-       | Not_found -> Hashtbl.add map (Transition.id transition) (simplifyfunc bound));
+       | Not_found -> Hashtbl.add map (T.id transition) (simplifyfunc bound));
       Logger.log logger Logger.INFO
-        (fun () -> "add_" ^ name ^ "_bound", ["transition", Transition.to_id_string transition; "bound", B.to_string bound]);
+        (fun () -> "add_" ^ name ^ "_bound", ["transition", T.to_id_string transition; "bound", B.to_string bound]);
       (name, map)
 
     let all_bounded appr =
-      List.for_all (fun t -> not (B.equal (get appr t) B.infinity))
+      Enum.for_all (fun t -> not (B.equal (get appr t) B.infinity))
 
     let to_formatted ?(pretty=false) transitions (name, map) =
       transitions
-      |> List.sort Transition.compare_same
-      |> List.map (fun t -> t, Hashtbl.find_option map (Transition.id t) |? B.infinity)
+      |> List.sort T.compare_same
+      |> List.map (fun t -> t, Hashtbl.find_option map (T.id t) |? B.infinity)
       |> List.map (fun (t,b) -> if pretty then
-          FormattedString.mk_str_line @@ "  t" ^ (Transition.id t |> Util.natural_to_subscript) ^ ": " ^ B.to_string ~pretty:true b
+          FormattedString.mk_str_line @@ "  t" ^ (T.id t |> Util.natural_to_subscript) ^ ": " ^ B.to_string ~pretty:true b
         else
-          FormattedString.mk_str_line @@ "  t" ^ (Transition.id t |> string_of_int) ^ ": " ^ B.to_string b)
+          FormattedString.mk_str_line @@ "  t" ^ (T.id t |> string_of_int) ^ ": " ^ B.to_string b)
       |> FormattedString.mappend
 
     let to_string transitions (name, map) =
@@ -71,6 +86,6 @@ module Make(B : BoundType.Bound)
   end
 
 module EqMake(B: BoundType.Bound)
-             (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules) = struct
-  let proof: (Make(B)(PM).t, Make(B)(PM').t) Util.TypeEq.t = Util.TypeEq.Refl
+             (T: ApproximableTransition)(T': ApproximableTransition) = struct
+  let proof: (Make(B)(T).t, Make(B)(T').t) Util.TypeEq.t = Util.TypeEq.Refl
 end
