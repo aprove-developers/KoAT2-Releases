@@ -4,7 +4,7 @@ open BoundsInst
 
 (** Provides default implementations of an approximation *)
 
-module Make(B: BoundType.Bound)(RV: RVGTypes.RVType)(PM: ProgramTypes.ProgramModules): sig
+module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules): sig
   (* module TransitionApproximation: module type of TransitionApproximationType.Make(B)(PM) *)
   (* module SizeApproximation: module type of SizeApproximationType.Make(B)(RV) *)
   type t
@@ -66,21 +66,36 @@ module Make(B: BoundType.Bound)(RV: RVGTypes.RVType)(PM: ProgramTypes.ProgramMod
 
   (** Returns a sizebound for the var of the transition.
           A sizebound is expressed in relation to the input variable values of the program. *)
-  val sizebound : t -> RV.transition -> Var.t -> B.t
+  val sizebound : t -> PM.RV.transition -> Var.t -> B.t
 
   (** Adds the information that the specified bound is a valid sizebound for the given variable of the transition.
           The resulting approximation is guaranteed to be at least as good as the old approximation. *)
-  val add_sizebound : B.t -> RV.transition -> Var.t -> t -> t
+  val add_sizebound : B.t -> PM.RV.transition -> Var.t -> t -> t
 
   (** Add a size bound for all result variables of the list *)
-  val add_sizebounds : B.t -> RV.t list -> t -> t
+  val add_sizebounds : B.t -> PM.RV.t list -> t -> t
 
   (** Returns true iff. all size bounds of a given transition are bounded and not infinity. *)
-  val is_size_bounded : PM.Program.t -> t -> RV.transition -> bool
+  val is_size_bounded : PM.Program.t -> t -> PM.RV.transition -> bool
 end
 
 module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules):
-  module type of Make(BoundsInst.Bound)(RVGTypes.MakeRV(PM.TransitionLabel)(PM.Transition))(PM)
+  module type of Make(BoundsInst.Bound)(PM)
 
 
 include module type of MakeForClassicalAnalysis(ProgramModules)
+
+
+module Coerce(B: BoundType.Bound)
+             (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules)
+             (_: sig
+
+                val t_eq: (PM.Transition.t,PM'.Transition.t) Util.TypeEq.t
+
+                module RVTupleEq: functor(F: functor(_: ProgramTypes.RVTuple) -> sig type t end) -> sig
+                  val proof: (F(PM.RV.RVTuple_).t, F(PM'.RV.RVTuple_).t) Util.TypeEq.t
+                 end
+              end): sig
+
+  val coerce: Make(B)(PM).t -> Make(B)(PM').t
+end

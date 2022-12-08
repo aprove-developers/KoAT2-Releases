@@ -300,7 +300,7 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
           let program_cfr = mc |> MaybeChanged.unpack |> preprocess  in
           Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_" ^ method_name, ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
           Program.reset_pre_cache ();
-          let rvg_with_sccs_cfr = RVGTypes.RVG.rvg_with_sccs program_cfr in
+          let rvg_with_sccs_cfr = RVG.rvg_with_sccs program_cfr in
           LocalSizeBound.switch_cache();
           LocalSizeBound.enable_cfr();
           (* The new sccs which do not occur in the original program. *)

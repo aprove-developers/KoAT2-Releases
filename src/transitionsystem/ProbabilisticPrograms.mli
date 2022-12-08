@@ -121,3 +121,29 @@ module ProbabilisticProgramNonProbOverappr: sig
      and type transition_graph = ProbabilisticTransitionGraphNonProbOverappr.t
      and type t = ProbabilisticProgram.t
 end
+
+(** RV Types for transitions *)
+
+module RVTuple_:
+  ProgramTypes.RVTuple with type transition = ProbabilisticTransition.t
+module RVTupleNonProbOverappr_:
+  ProgramTypes.RVTuple with type transition = ProbabilisticTransitionNonProbOverappr.t
+
+
+module ProbabilisticRV: ProgramTypes.RV with type RVTuple_.transition = ProbabilisticTransition.t
+
+module ProbabilisticRVNonProbOverappr:
+  ProgramTypes.RV with type RVTuple_.transition = ProbabilisticTransitionNonProbOverappr.t
+
+module Equalities: sig
+  (** Some Equalities *)
+  val t_eq: (ProbabilisticTransitionNonProbOverappr.t,ProbabilisticTransition.t) Util.TypeEq.t
+  module RVTupleTypeCoercion: sig
+    module A = ProbabilisticRVNonProbOverappr.RVTuple_
+    module B = ProbabilisticRV.RVTuple_
+
+    module Coerce(F: functor(_:ProgramTypes.RVTuple) -> sig type t end): sig
+      val proof: (F(A).t,F(B).t) Util.TypeEq.t
+    end
+  end
+end

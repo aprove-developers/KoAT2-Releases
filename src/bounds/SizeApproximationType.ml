@@ -3,11 +3,11 @@ open ProgramTypes
 open RVGTypes
 
 module Make(B : BoundType.Bound)
-           (RV: RVGTypes.RVType) =
+           (RV: ProgramTypes.RV) =
   struct
     let logger = Logging.(get Approximation)
 
-    module Map = Hashtbl.Make(struct include RV let equal = same end)
+    module Map = Hashtbl.Make(RV.RVTuple_)
 
     type t = B.t Map.t
 
@@ -78,3 +78,18 @@ module Make(B : BoundType.Bound)
       Set.equal (to_set size1) (to_set size2)
 
   end
+
+module EqMake(B: BoundType.Bound)
+             (RV: ProgramTypes.RV)(RV': ProgramTypes.RV)
+             (RVTupleEq: functor(F: functor(_: ProgramTypes.RVTuple) -> sig type t end) -> sig
+                val proof: (F(RV.RVTuple_).t, F(RV'.RVTuple_).t) Util.TypeEq.t
+              end) = struct
+
+  let proof: (Make(B)(RV).t, Make(B)(RV').t) Util.TypeEq.t =
+    let module T = RVTupleEq(functor (F: ProgramTypes.RVTuple) -> struct
+        type t = B.t Hashtbl.Make(F).t (* get rid of polymorphism in Hashtbl.Make(_).t *)
+      end)
+    in
+    T.proof
+
+end

@@ -8,6 +8,7 @@ module Transition = ProbabilisticPrograms.ProbabilisticTransition
 module TransitionSet = Transition_.TransitionSetOver(Transition)(Location)
 module TransitionGraph = ProbabilisticPrograms.ProbabilisticTransitionGraph
 module Program = ProbabilisticPrograms.ProbabilisticProgram
+module RV = ProbabilisticPrograms.ProbabilisticRV
 
 module GeneralTransition = ProbabilisticPrograms.GeneralTransition
 module GeneralTransitionSet = ProbabilisticPrograms.GeneralTransitionSet
@@ -25,4 +26,6 @@ module NonProbOverappr = struct
     Transition_.TransitionSetOver(ProbabilisticPrograms.ProbabilisticTransitionNonProbOverappr)(Location)
   module Transition = ProbabilisticPrograms.ProbabilisticTransitionNonProbOverappr
   module TransitionLabel = ProbabilisticPrograms.ProbabilisticTransitionLabelNonProbOverappr
+
+  module RV = ProbabilisticPrograms.ProbabilisticRVNonProbOverappr
 end

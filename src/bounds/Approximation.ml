@@ -4,7 +4,7 @@ open ProgramModules
 open Formatter
 open FormattedString
 
-module Make(B: BoundType.Bound)(RV: RVGTypes.RVType)(PM: ProgramTypes.ProgramModules) = struct
+module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules) = struct
   open PM
   module TransitionApproximation = TransitionApproximationType.Make(B)(PM)
   module SizeApproximation = SizeApproximationType.Make(B)(RV)
@@ -123,7 +123,28 @@ module Make(B: BoundType.Bound)(RV: RVGTypes.RVType)(PM: ProgramTypes.ProgramMod
       IO.close_out output
 end
 
+module Coerce(B: BoundType.Bound)
+             (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules)
+             (E: sig
+
+                val t_eq: (PM.Transition.t,PM'.Transition.t) Util.TypeEq.t
+
+                module RVTupleEq: functor(F: functor(_: ProgramTypes.RVTuple) -> sig type t end) -> sig
+                  val proof: (F(PM.RV.RVTuple_).t, F(PM'.RV.RVTuple_).t) Util.TypeEq.t
+                 end
+              end) = struct
+
+  module SizeApproximationEq = SizeApproximationType.EqMake(B)(PM.RV)(PM'.RV)(E.RVTupleEq)
+  module TransitionApproximationEq = TransitionApproximationType.EqMake(B)(PM)(PM')
+
+  let coerce: Make(B)(PM).t -> Make(B)(PM').t = fun appr ->
+    match SizeApproximationEq.proof, TransitionApproximationEq.proof with
+    | Refl,Refl ->
+      (* type equality does not seem to be lifted to records *)
+      { size = appr.size; time = appr.time; cost = appr.cost; }
+end
+
 module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules) =
-  Make(BoundsInst.Bound)(RVGTypes.MakeRV(PM.TransitionLabel)(PM.Transition))(PM)
+  Make(BoundsInst.Bound)(PM)
 
 include MakeForClassicalAnalysis(ProgramModules)

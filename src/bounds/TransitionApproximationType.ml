@@ -1,5 +1,4 @@
 open Batteries
-open ProgramModules
 
 module Make(B : BoundType.Bound)
            (PM: ProgramTypes.ProgramModules) =
@@ -8,6 +7,7 @@ module Make(B : BoundType.Bound)
 
     let logger = Logging.(get Approximation)
 
+    (** TODO improve type safety by making a hash table over transitions *)
     type t = string * (int, B.t) Hashtbl.t
 
     let empty name size = (name, Hashtbl.create size)
@@ -69,3 +69,8 @@ module Make(B : BoundType.Bound)
       let to_set = Set.of_enum % Hashtbl.enum in
       Set.equal (to_set map1) (to_set map2)
   end
+
+module EqMake(B: BoundType.Bound)
+             (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules) = struct
+  let proof: (Make(B)(PM).t, Make(B)(PM').t) Util.TypeEq.t = Util.TypeEq.Refl
+end

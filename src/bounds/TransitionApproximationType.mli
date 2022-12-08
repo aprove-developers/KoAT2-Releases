@@ -27,3 +27,8 @@ module Make(B : BoundType.Bound)
 
      val equivalent : t -> t -> bool
    end
+
+module EqMake(B: BoundType.Bound)
+             (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules): sig
+  val proof: (Make(B)(PM).t, Make(B)(PM').t) Util.TypeEq.t
+end

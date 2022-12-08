@@ -1,27 +1,19 @@
 open Batteries
-open ProgramModules
-
-module type RVType = sig
-  type transition
-
-  type t = transition * Var.t
-  val to_id_string: t -> string
-  val same: t -> t -> bool
-  val hash: t -> int
-  val compare_same: t -> t -> int
-  val ids_to_string: ?pretty:bool -> t -> string
-end
 
 module MakeRV(TL: ProgramTypes.TransitionLabel)
              (T: ProgramTypes.Transition with type transition_label = TL.t) =
   struct
-    type transition = T.t
+    module RVTuple_ = struct
+      type transition = T.t
+      type t = T.t * Var.t
+      let equal (t1,v1) (t2,v2)= T.same t1 t2 && Var.equal v1 v2
+      let hash (t,v) = Hashtbl.hash (T.id t, Var.to_string v)
+    end
 
-    type t = T.t * Var.t
+    type transition = RVTuple_.transition
+    type t = RVTuple_.t
 
-    let same (t1,v1) (t2,v2) =
-      T.same t1 t2
-      && Var.equal v1 v2
+    let same = RVTuple_.equal
 
     let equivalent (t1,v1) (t2,v2) =
       T.equivalent t1 t2
@@ -35,14 +27,13 @@ module MakeRV(TL: ProgramTypes.TransitionLabel)
       else
         0
 
+    let hash = RVTuple_.hash
+
     let compare_same =
       compare T.compare_same
 
     let compare_equivalent =
       compare T.compare_equivalent
-
-    let hash (t,v) =
-      Hashtbl.hash (T.to_string t ^ Var.to_string v)
 
     let transition (t,_) = t
 
@@ -56,7 +47,7 @@ module MakeRV(TL: ProgramTypes.TransitionLabel)
 
   end
 
-module RV = MakeRV(TransitionLabel)(Transition)
+module RV = MakeRV(TransitionLabel_)(Transition_)
 
 module MakeRVG(PM: ProgramTypes.ClassicalProgramModules) =
   struct
@@ -72,7 +63,7 @@ module MakeRVG(PM: ProgramTypes.ClassicalProgramModules) =
     module C = Graph.Components.Make(G)
     include G
 
-    module LSB = LocalSizeBound.Make(PM)
+    module LSB = LocalSizeBound.Make(PM.TransitionLabel)(PM.Transition)(PM.Program)
 
     type scc = RV.t list
 
@@ -118,5 +109,3 @@ module MakeRVG(PM: ProgramTypes.ClassicalProgramModules) =
       rvg, Lazy.from_fun (fun () -> C.scc_list rvg)
 
   end
-
-module RVG = MakeRVG(ProgramModules)

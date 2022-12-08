@@ -12,6 +12,8 @@ module ProgramModulesOver(L: ProgramTypes.Location): ProgramTypes.ProgramModules
   module Transition = Transition_.TransitionOver(TransitionLabel)(L)
 
   module Program = Program_.ProgramOverLocation(L)
+
+  module RV = RVGTypes.MakeRV(TransitionLabel)(Transition)
 end
 
 (* here we can not simply use include ProgramModulesOver(Location) since we rely on the specialized versions *)
@@ -23,3 +25,4 @@ module TransitionSet = Transition_.TransitionSetOver(Transition_.TransitionOver(
 module Transition = Transition_
 module LocationSet = Set.Make(Location)
 module Location = Location
+module RV = RVGTypes.MakeRV(TransitionLabel)(Transition)

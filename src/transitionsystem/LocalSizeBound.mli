@@ -4,9 +4,10 @@ open BoundsInst
 open Formulas
 open Polynomials
 open ProgramTypes
-open ProgramModules
 
-module Make(PM: ProgramTypes.ClassicalProgramModules): sig
+module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomial.t)
+           (T: ProgramTypes.Transition with type transition_label = TL.t)
+           (P: ProgramTypes.Program with type transition_label = TL.t): sig
   (** LocalSizeBounds are of the form factor * (constant + sum [x1;...;xn]) *)
   type t
 
@@ -43,13 +44,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
 
   (** Returns a local sizebound of the specified kind for the variable of the transition.
       A local sizebound is expressed in relation to the values directly before executing the transition. *)
-  val sizebound_local : PM.Program.t -> PM.Transition.t -> Var.t -> t Option.t
+  val sizebound_local : P.t -> T.t -> Var.t -> t Option.t
 
-  val sizebound_local_rv : PM.Program.t -> (PM.Transition.t * Var.t) -> t Option.t
+  val sizebound_local_rv : P.t -> (T.t * Var.t) -> t Option.t
 
   (** If for all result variables of the given kind a local sizebound is defined, this function returns a local sizebound function.
       Otherwise it returns None. *)
-  val sizebound_local_scc : PM.Program.t ->  (PM.Transition.t * Var.t) list -> ((PM.Transition.t * Var.t) -> t * bool) Option.t
+  val sizebound_local_scc : P.t ->  (T.t * Var.t) list -> ((T.t * Var.t) -> t * bool) Option.t
 
   (** Resets all cached data.
       Useful for testing in the same OCaml instance. *)
@@ -65,4 +66,4 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   val enable_cfr : unit -> unit
 end
 
-include module type of Make(ProgramModules)
+include module type of Make(TransitionLabel_)(Transition_)(Program_)

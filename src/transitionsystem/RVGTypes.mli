@@ -1,26 +1,12 @@
 (** Provides all modules related to result variable graphs. *)
 open Batteries
 
-module type RVType = sig
-  (** The transition part of the RVG, i.e., in case of classical programs transitions and in case of probabilistic programs tuples of transitions and locations *)
-  type transition
-
-  (** Type of a result variable is a transiton and a variable. *)
-  type t = transition * Var.t
-
-  val to_id_string: t -> string
-  val same: t -> t -> bool
-  val hash: t -> int
-  val compare_same: t -> t -> int
-  val ids_to_string: ?pretty:bool -> t -> string
-end
-
 (** Module handling result variables. *)
 module MakeRV(TL: ProgramTypes.TransitionLabel)
              (T: ProgramTypes.Transition with type transition_label = TL.t): sig
   (** Module handling result variables. *)
 
-  include RVType with type transition = T.t
+  include ProgramTypes.RV with type RVTuple_.transition = T.t
 
   (** TODO doc *)
   val equivalent : t -> t -> bool
@@ -38,7 +24,7 @@ module MakeRV(TL: ProgramTypes.TransitionLabel)
   val variable : t -> Var.t
 end
 
-module RV: module type of MakeRV(ProgramModules.TransitionLabel)(ProgramModules.Transition)
+module RV: module type of MakeRV(TransitionLabel_)(Transition_)
 
 (** Module handling result variable graphs. *)
 module MakeRVG(PM: ProgramTypes.ClassicalProgramModules):
@@ -64,5 +50,3 @@ sig
   (** Compute the result variable graph and lazily compute the list of all SCCs *)
   val rvg_with_sccs : PM.Program.t -> t * scc list Lazy.t
 end
-
-module RVG: module type of MakeRVG(ProgramModules)

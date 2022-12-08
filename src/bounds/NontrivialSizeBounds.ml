@@ -6,7 +6,7 @@ let logger = Logging.(get Size)
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  module LSB = LocalSizeBound.Make(PM)
+  module LSB = LocalSizeBound.Make(TransitionLabel)(Transition)(Program)
   module RV = RVGTypes.MakeRV(TransitionLabel)(Transition)
   module RVG = RVGTypes.MakeRVG(PM)
 
