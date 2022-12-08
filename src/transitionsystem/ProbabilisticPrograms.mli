@@ -124,6 +124,9 @@ end
 
 (** RV Types for transitions *)
 
+(** General Transitions *)
+module GRV: ProgramTypes.RV with type RVTuple_.transition = GeneralTransition.t * Location.t
+
 module RVTuple_:
   ProgramTypes.RVTuple with type transition = ProbabilisticTransition.t
 module RVTupleNonProbOverappr_:

@@ -13,6 +13,8 @@ module RV = ProbabilisticPrograms.ProbabilisticRV
 module GeneralTransition = ProbabilisticPrograms.GeneralTransition
 module GeneralTransitionSet = ProbabilisticPrograms.GeneralTransitionSet
 
+module GRV = ProbabilisticPrograms.GRV
+
 module NonProbOverappr = struct
   module Program = ProbabilisticPrograms.ProbabilisticProgramNonProbOverappr
   module TransitionGraph = ProbabilisticPrograms.ProbabilisticTransitionGraphNonProbOverappr
