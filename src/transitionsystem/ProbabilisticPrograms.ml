@@ -624,6 +624,10 @@ module GeneralTransition = struct
         gt.transitions
     in
     { transitions = transitions' }
+
+  let ids_to_string ?(pretty=false) gt =
+    if pretty then "g" ^ Util.natural_to_subscript (gt_id gt)
+    else "t" ^ Int.to_string (gt_id gt)
 end
 
 module GeneralTransitionSet = struct
@@ -745,6 +749,37 @@ let compare_rv compare_transition (t1,v1) (t2,v2) =
     Var.compare v1 v2
   else
     0
+
+module GRV = struct
+  module RVTuple_ = struct
+    type transition = GeneralTransition.t * Location.t
+    type t = transition * Var.t
+    let equal ((gt1,l1),v1) ((gt2,l2),v2) =
+      GeneralTransition.same gt1 gt1
+      && Location.equal l1 l2
+      && Var.equal v1 v2
+    let hash ((gt,l),v) = Hashtbl.hash (GeneralTransition.gt_id gt, Location.to_string l, Var.to_string v)
+  end
+
+  type transition = RVTuple_.transition
+  type t = RVTuple_.t
+  let same = RVTuple_.equal
+  let hash = RVTuple_.hash
+  let compare_same =
+    let cmp (gt1,l1) (gt2,l2) =
+      match GeneralTransition.compare_same gt1 gt2 with
+      | 0 -> Location.compare l1 l2
+      | r -> r
+    in
+    compare_rv cmp
+
+  let to_id_string ((gt,l),v) =
+    "|(" ^ GeneralTransition.to_id_string gt ^ "," ^ Location.to_string l ^ ")," ^ Var.to_string v ^ "|"
+
+  let ids_to_string ?(pretty=false) ((gt,l),v) =
+    "("^ GeneralTransition.ids_to_string ~pretty gt ^ "," ^ Location.to_string l
+    ^ ", " ^ Var.to_string ~pretty v
+end
 
 module RVTuple_ = struct
   type transition = ProbabilisticTransition.t
