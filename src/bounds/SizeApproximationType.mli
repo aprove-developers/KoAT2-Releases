@@ -3,9 +3,7 @@ open BoundsInst
 open ProgramModules
 open RVGTypes
 
-module Make
-  (B: BoundType.Bound)
-  (RV: RVGTypes.RVType):
+module Make(B: BoundType.Bound)(RV: ProgramTypes.RV):
   sig
     type t
 
@@ -26,3 +24,13 @@ module Make
     val enum: t -> (RV.t * B.t) Enum.t
     val of_enum: (RV.t * B.t) Enum.t -> t
   end
+
+module EqMake(B: BoundType.Bound)
+             (RV: ProgramTypes.RV)(RV': ProgramTypes.RV)
+             (_: functor(F: functor(_: ProgramTypes.RVTuple) -> sig type t end) -> sig
+                val proof: (F(RV.RVTuple_).t, F(RV'.RVTuple_).t) Util.TypeEq.t
+              end): sig
+
+  val proof: (Make(B)(RV).t, Make(B)(RV').t) Util.TypeEq.t
+
+end

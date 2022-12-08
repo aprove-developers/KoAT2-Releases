@@ -2,7 +2,6 @@ open Batteries
 open BoundsInst
 open Formulas
 open Polynomials
-open ProgramModules
 open Constraints
 
 let logger = Logging.(get LocalSizeBound)
@@ -40,8 +39,9 @@ let c_range formula =
   |> OurInt.to_int
 
 
-module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
-  open PM
+module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomial.t)
+           (T: ProgramTypes.Transition with type transition_label = TL.t)
+           (P: ProgramTypes.Program with type transition_label = TL.t) = struct
 
   type t = {
     factor: int;
@@ -164,19 +164,19 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   let compute_bound program_vars (l,t,l') var =
     let execute () =
-      TransitionLabel.update t var
+      TL.update t var
       |> flip Option.bind (fun ue ->
           let v' = Var.fresh_id Var.Int () in
           let update_formula =
             (* Facilitate SMT call by removing non-linear constraints. *)
             (* The resulting update_formula is an overapproximation of the original formula *)
             Formula.mk @@ Constraint.drop_nonlinear @@
-              (Constraint.mk_and (TransitionLabel.guard t) (Constraint.mk_eq (Polynomial.of_var v') ue))
+              (Constraint.mk_and (TL.guard t) (Constraint.mk_eq (Polynomial.of_var v') ue))
           in
           let update_vars =
             VarSet.union
             (Polynomial.vars ue)
-            (VarSet.inter (VarSet.singleton var) (Guard.vars @@ TransitionLabel.guard t))
+            (VarSet.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
           in
           try (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
             (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
@@ -186,8 +186,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         )
     in
     Logger.with_log logger Logger.DEBUG
-        (fun () -> "compute_bound", [ "transition", Transition.to_id_string (l,t,l')
-                                    ; "guard", Constraints.Constraint.to_string (TransitionLabel.guard t)
+        (fun () -> "compute_bound", [ "transition", T.to_id_string (l,t,l')
+                                    ; "guard", Constraints.Constraint.to_string (TL.guard t)
                                     ; "var", Var.to_string var])
         ~result:to_string_option_tuple
         execute
@@ -196,12 +196,12 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module LSB_Cache =
     Hashtbl.Make(
         struct
-          type t = Transition.t * Var.t
+          type t = T.t * Var.t
           let equal (t1,v1) (t2,v2) =
-            Transition.same t1 t2
+            T.same t1 t2
             && Var.equal v1 v2
           let hash (t,v) =
-            Hashtbl.hash (Transition.id t, v)
+            Hashtbl.hash (T.id t, v)
         end
       )
 
@@ -215,7 +215,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     LSB_Cache.clear table
 
   let sizebound_local_with_equality program t v =
-    let program_vars = Program.input_vars program in
+    let program_vars = P.input_vars program in
     let cache = table in
     match LSB_Cache.find_option cache (t,v) with
       | Some lsb -> lsb
@@ -230,7 +230,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let sizebound_local_rv program (t,v) =
     sizebound_local program t v
 
-  let sizebound_local_scc program scc: (Transition.t * Var.t -> t * bool) Option.t =
+  let sizebound_local_scc program scc: (T.t * Var.t -> t * bool) Option.t =
     let lsbs =
       List.map (fun (t,v) -> (t,v), sizebound_local_with_equality program t v) scc
     in
@@ -263,4 +263,4 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     currently_cfr := true
 end
 
-include Make(ProgramModules)
+include Make(TransitionLabel_)(Transition_)(Program_)

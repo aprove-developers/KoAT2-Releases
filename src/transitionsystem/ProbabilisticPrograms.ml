@@ -736,3 +736,68 @@ module ProbabilisticProgramNonProbOverappr = struct
   include Program_.Make(ProbabilisticTransitionLabelNonProbOverappr)(ProbabilisticTransitionNonProbOverappr)
       (Location)(ProbabilisticTransitionGraphNonProbOverappr)
 end
+
+
+let compare_rv compare_transition (t1,v1) (t2,v2) =
+  if compare_transition t1 t2 != 0 then
+    compare_transition t1 t2
+  else if Var.compare v1 v2 != 0 then
+    Var.compare v1 v2
+  else
+    0
+
+module RVTuple_ = struct
+  type transition = ProbabilisticTransition.t
+  type t = transition * Var.t
+  let equal (t1,v1) (t2,v2) = ProbabilisticTransition.same t1 t2 && Var.equal v1 v2
+  let hash (t1,v1) = Hashtbl.hash (ProbabilisticTransition.id t1, Var.to_string v1)
+end
+module RVTupleNonProbOverappr_ = RVTuple_
+
+module ProbabilisticRV = struct
+  module RVTuple_ = RVTuple_
+
+  type transition = RVTuple_.transition
+  type t = RVTuple_.t
+  let same = RVTuple_.equal
+  let hash = RVTuple_.hash
+  let compare_same = compare_rv ProbabilisticTransition.compare_same
+
+  let to_id_string (t,v) =
+    "|" ^ ProbabilisticTransition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
+
+  let ids_to_string ?(pretty=false) (t,v) =
+    ProbabilisticTransitionLabel.ids_to_string ~pretty (ProbabilisticTransition.label t) ^ ", " ^ Var.to_string ~pretty v
+end
+module ProbabilisticRVNonProbOverappr = struct
+  module RVTuple_ = RVTupleNonProbOverappr_
+
+  type transition = RVTupleNonProbOverappr_.transition
+  type t = RVTupleNonProbOverappr_.t
+  let same = RVTupleNonProbOverappr_.equal
+  let hash = RVTupleNonProbOverappr_.hash
+  let compare_same = compare_rv ProbabilisticTransitionNonProbOverappr.compare_same
+
+  let to_id_string (t,v) =
+    "|" ^ ProbabilisticTransitionNonProbOverappr.to_id_string t ^ "," ^ Var.to_string v ^ "|"
+
+  let ids_to_string ?(pretty=false) (t,v) =
+    ProbabilisticTransitionLabelNonProbOverappr.ids_to_string ~pretty (ProbabilisticTransitionNonProbOverappr.label t)
+    ^ ", " ^ Var.to_string ~pretty v
+end
+
+module Equalities = struct
+  let t_eq: (ProbabilisticTransitionNonProbOverappr.t,ProbabilisticTransition.t) Util.TypeEq.t =
+    Util.TypeEq.Refl
+
+  module RVTupleTypeCoercion = struct
+    module A = ProbabilisticRVNonProbOverappr.RVTuple_
+    module B = ProbabilisticRV.RVTuple_
+
+    module Coerce(F: functor(_:ProgramTypes.RVTuple) -> sig type t end): sig
+      val proof: (F(A).t, F(B).t) Util.TypeEq.t
+    end = struct
+      let proof: (F(A).t,F(B).t) Util.TypeEq.t = Util.TypeEq.Refl
+    end
+  end
+end

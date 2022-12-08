@@ -369,6 +369,32 @@ module type Program = sig
   val remove_non_contributors: VarSet.t -> t -> t
 end
 
+(** This can be helpfun in regards with Set.Make, Map.Make and coercion of result variables *)
+module type RVTuple = sig
+  (** RV transition type.
+       Note that for probabilistic programs one might also want to consider tuples of general transitions and locations here *)
+  type transition
+
+  (** Type of a result variable is a transiton and a variable. *)
+  type t = transition * Var.t
+
+  val equal: t -> t -> bool
+  val hash: t -> int
+end
+
+module type RV = sig
+  module RVTuple_: RVTuple
+
+  type transition = RVTuple_.transition
+  type t = RVTuple_.t
+
+  val to_id_string: t -> string
+  val same: t -> t -> bool
+  val hash: t -> int
+  val compare_same: t -> t -> int
+  val ids_to_string: ?pretty:bool -> t -> string
+end
+
 module type ProgramModules = sig
   module Location: Location
   module LocationSet: Set.S with type elt = Location.t
@@ -401,8 +427,12 @@ module type ProgramModules = sig
      and type transition = Transition.t
      and type transition_set = TransitionGraph.transition_set
      and type transition_graph = TransitionGraph.t
+
+  module RV: RV
 end
 
-(** For classical/non-probabilistic programs we want polynomial updates only. *)
-module type ClassicalProgramModules = ProgramModules
-  with module UpdateElement = Polynomials.Polynomial
+(** For classical/non-probabilistic programs we want polynomial updates only and RV.transition = Transition.t *)
+module type ClassicalProgramModules = sig
+  include ProgramModules with module UpdateElement = Polynomial
+  module RV: RV with type RVTuple_.transition = Transition.t
+end

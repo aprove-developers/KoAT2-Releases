@@ -3,6 +3,7 @@ open ProgramModules
 open RVGTypes
 
 module VarMap = ProgramTypes.VarMap
+module RVG = RVGTypes.MakeRVG(ProgramModules)
 
 let print_graph ~format out_dir name graph output_graph =
 let full_path ext =
