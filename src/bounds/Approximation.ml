@@ -1,12 +1,13 @@
 open Batteries
 open BoundsInst
-open ProgramModules
 open Formatter
 open FormattedString
 
-module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules) = struct
+module Make(B: BoundType.Bound)
+           (PM: ProgramTypes.ProgramModules)
+           (T: TransitionApproximationType.ApproximableTransition with type program = PM.Program.t) = struct
   open PM
-  module TransitionApproximation = TransitionApproximationType.Make(B)(PM)
+  module TransitionApproximation = TransitionApproximationType.Make(B)(T)
   module SizeApproximation = SizeApproximationType.Make(B)(RV)
 
   type t = {
@@ -81,7 +82,9 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules) = struct
   let add_costbound bound transition appr =
     { appr with cost = TransitionApproximation.add bound transition appr.cost }
 
-  let to_formatted ?(show_initial=false) ?(pretty=false) program appr =
+  let to_formatted ?(show_initial=false) ?(pretty=false) (program: Program.t) appr =
+    let approximable_transitions = List.of_enum (T.all_from_program program) in
+
     let overall_timebound = program_timebound appr program in
     mk_str_header_big "All Bounds" <>
     if show_initial then
@@ -93,17 +96,18 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules) = struct
 
     <> mk_str_header_small "Timebounds" <> ( mk_paragraph (
          mk_str_line ("Overall timebound:" ^ B.to_string ~pretty overall_timebound)
-         <> TransitionApproximation.to_formatted ~pretty (Program.transitions program |> TransitionSet.to_list) appr.time) )
+         <> TransitionApproximation.to_formatted ~pretty approximable_transitions appr.time) )
 
     <> mk_str_header_small "Costbounds" <> ( mk_paragraph (
           mk_str_line ("Overall costbound: " ^ B.to_string ~pretty (program_costbound appr program))
-          <> TransitionApproximation.to_formatted ~pretty (Program.transitions program |> TransitionSet.to_list) appr.cost ) )
+          <> TransitionApproximation.to_formatted ~pretty approximable_transitions appr.cost ) )
 
     <> mk_str_header_small "Sizebounds" <> (mk_paragraph @@ SizeApproximation.to_formatted ~pretty appr.size)
 
 
   (* TODO: use to_formatted *)
   let to_string program appr =
+    let approximable_transitions = List.of_enum (T.all_from_program program) in
     let overall_costbound = program_costbound appr program in
     let output = IO.output_string () in
       if (not (B.is_infinity overall_costbound)) then
@@ -114,20 +118,26 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules) = struct
       IO.nwrite output (Program.to_string program^"\n");
       IO.nwrite output "Timebounds: \n";
       IO.nwrite output ("  Overall timebound: " ^ B.to_string (program_timebound appr program) ^ "\n");
-      appr.time |> TransitionApproximation.to_string (TransitionSet.to_list @@ Program.transitions program) |> IO.nwrite output;
+      appr.time |> TransitionApproximation.to_string approximable_transitions |> IO.nwrite output;
       IO.nwrite output "\nCostbounds:\n";
       IO.nwrite output ("  Overall costbound: " ^ B.to_string (overall_costbound) ^ "\n");
-      appr.cost |> TransitionApproximation.to_string (TransitionSet.to_list @@ Program.transitions program) |> IO.nwrite output;
+      appr.cost |> TransitionApproximation.to_string approximable_transitions |> IO.nwrite output;
       IO.nwrite output "\nSizebounds:\n";
       appr.size |> SizeApproximation.to_string |> IO.nwrite output;
       IO.close_out output
 end
 
+module MakeWithDefaultTransition(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules) =
+  Make(B)(PM)(TransitionApproximationType.MakeDefaultApproximableTransition(PM))
+
+module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules) =
+  MakeWithDefaultTransition(BoundsInst.Bound)(PM)
+
 module Coerce(B: BoundType.Bound)
              (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules)
              (E: sig
 
-                val t_eq: (PM.Transition.t,PM'.Transition.t) Util.TypeEq.t
+                val t_eq: (PM.Transition.t, PM'.Transition.t) Util.TypeEq.t
 
                 module RVTupleEq: functor(F: functor(_: ProgramTypes.RVTuple) -> sig type t end) -> sig
                   val proof: (F(PM.RV.RVTuple_).t, F(PM'.RV.RVTuple_).t) Util.TypeEq.t
@@ -135,16 +145,34 @@ module Coerce(B: BoundType.Bound)
               end) = struct
 
   module SizeApproximationEq = SizeApproximationType.EqMake(B)(PM.RV)(PM'.RV)(E.RVTupleEq)
-  module TransitionApproximationEq = TransitionApproximationType.EqMake(B)(PM)(PM')
+  module TransitionApproximationEq =
+    TransitionApproximationType.EqMake(B)(TransitionApproximationType.MakeDefaultApproximableTransition(PM))
+                                         (TransitionApproximationType.MakeDefaultApproximableTransition(PM'))
 
-  let coerce: Make(B)(PM).t -> Make(B)(PM').t = fun appr ->
+  let coerce: MakeWithDefaultTransition(B)(PM).t -> MakeWithDefaultTransition(B)(PM').t = fun appr ->
     match SizeApproximationEq.proof, TransitionApproximationEq.proof with
     | Refl,Refl ->
       (* type equality does not seem to be lifted to records *)
       { size = appr.size; time = appr.time; cost = appr.cost; }
 end
 
-module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules) =
-  Make(BoundsInst.Bound)(PM)
-
 include MakeForClassicalAnalysis(ProgramModules)
+
+
+module Probabilistic = struct
+  module ClassicApproximation =
+    MakeWithDefaultTransition(BoundsInst.Bound)(ProbabilisticProgramModules)
+  module ExpApproximation =
+    Make(BoundsInst.RealBound)
+        (struct
+          include ProbabilisticProgramModules
+          module RV = GRV
+         end)
+        (struct
+          open ProbabilisticProgramModules
+          type program = Program.t
+          include GeneralTransition
+          let id = gt_id
+          let all_from_program = GeneralTransitionSet.enum % Program.gts
+        end)
+end
