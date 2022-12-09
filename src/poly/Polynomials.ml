@@ -315,6 +315,41 @@ module Polynomial =
         ~times:OurInt.mul
         ~pow:OurInt.pow
 
+    let pull_out_common_addends (t1:t) (t2:t)  =
+      let findi_opt p l =
+        try Some (List.findi (const p) l)
+        with Not_found -> None
+      in
+
+      (* Iterate over t1. Initially t2' = t1. *)
+      (* In every step we take a scaled monomial from t1. *)
+      (* If the monomial occurs in t2 as well (with a coefficient of the same sign) we pull out the scaled monomial by adding it to t', t1' (if necessary), and altering t2' *)
+      let iter_t1 (t',(t1',t2')) t1_next =
+        let next_mon = ScaledMonomial_.monomial t1_next in
+        let t2_o =
+          findi_opt
+            (fun t2_next -> Monomial_.equal next_mon (ScaledMonomial_.monomial t2_next)
+                         &&  OurInt.compare (ScaledMonomial_.coeff t1_next) OurInt.zero = OurInt.compare (ScaledMonomial_.coeff t2_next) OurInt.zero)
+            t2'
+        in
+        match t2_o with
+        | None -> t',(t1_next::t1',t2')
+        | Some (i,t2_next) ->
+          let c1, c2 = ScaledMonomial_.coeff t1_next, ScaledMonomial_.coeff t2_next in
+          let common_mon = ScaledMonomial_.monomial t1_next in
+          match OurInt.(compare (abs c1) (abs c2)) with
+            | -1 ->
+              let t' = ScaledMonomial_.make c1 common_mon :: t' in
+              let t2' = ScaledMonomial_.make OurInt.(c2 - c1) common_mon :: List.remove_at i t2' in
+              t', (t1',t2')
+            | _  ->
+              let t' = ScaledMonomial_.make c2 common_mon :: t' in
+              let t1' = ScaledMonomial_.make OurInt.(c1 - c2) common_mon :: t1' in
+              let t2' = List.remove_at i t2' in
+              t', (t1',t2')
+      in
+      List.fold iter_t1 ([],([],t2)) t1
+
   end
 
 module RealPolynomial =

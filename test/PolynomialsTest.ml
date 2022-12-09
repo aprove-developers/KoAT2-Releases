@@ -75,6 +75,48 @@ module Methods =
 
     let tests =
       "Polynomial" >::: [
+        "pull_out_common_addends" >::: (
+          List.map (fun (t1_s,t2_s,(t'_s,(t1'_s, t2'_s))) ->
+              let t1 = Readers.read_polynomial t1_s in
+              let t2 = Readers.read_polynomial t2_s in
+              let t' = Readers.read_polynomial t'_s in
+              let t1' = Readers.read_polynomial t1'_s in
+              let t2' = Readers.read_polynomial t2'_s in
+
+              let t'_comp, (t1'_comp, t2'_comp) = Polynomial.pull_out_common_addends t1 t2 in
+              (Polynomial.to_string t1 ^ "," ^ Polynomial.to_string t2) >:::
+                [ ("t'" >:: fun _ -> assert_equal_poly t' t'_comp)
+                ; ("t1'" >:: fun _ -> assert_equal_poly t1' t1'_comp)
+                ; ("t2'" >:: fun _ -> assert_equal_poly t2' t2'_comp)
+                ]
+            )
+            [
+              ("X","2*X", ("X",("0","X")))
+            ; ("2*X","X", ("X",("X","0")))
+            ; ("2*X","2*X", ("2*X",("0","0")))
+
+            ; ("X","-2*X", ("0",("X","-2*X")))
+            ; ("-2*X","X", ("0",("-2*X","X")))
+            ; ("-2*X","2*X", ("0",("-2*X","2*X")))
+
+            ; ("-X","-2*X", ("-X",("0","-1*X")))
+            ; ("-2*X","-X", ("-X",("-1*X","0")))
+            ; ("-2*X","-2*X", ("-2*X",("0","0")))
+
+            ; ("2*X + 3*Y", "3*X + 4*Z", ("2*X", ("3*Y","X + 4*Z")))
+            ; ("3*X + 4*Z", "2*X + 3*Y", ("2*X", ("X + 4*Z","3*Y")))
+
+            ; ("4*X + 3*X*Y", "2*X", ("2*X",("2*X + 3*X*Y","0")))
+            ; ("2*X", "4*X + 3*X*Y", ("2*X",("0","2*X + 3*X*Y")))
+
+            ; ("5*X*Y", "4*X + 3*X*Y", ("3*X*Y",("2*X*Y","4*X")))
+            ; ("4*X + 3*X*Y", "5*X*Y", ("3*X*Y",("4*X","2*X*Y")))
+
+            ; ("5*X*Y + X", "4*X + 3*X*Y", ("X + 3*X*Y",("2*X*Y","3*X")))
+            ; ("4*X + 3*X*Y", "5*X*Y + X", ("X + 3*X*Y",("3*X","2*X*Y")))
+            ]
+        );
+
           "String_matching" >::: (
             List.map (fun (expected,input_str) ->
                 "input_str" >:: (fun _ -> assert_equal ~cmp:Var.(=~=) ~printer:Var.to_string (expected) (Var.of_string input_str) ))
