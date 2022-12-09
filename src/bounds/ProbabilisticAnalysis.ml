@@ -3,7 +3,11 @@ open ProbabilisticProgramModules
 open BoundsInst
 open Approximation.Probabilistic
 
-let lift_bounds class_appr gts program_vars appr: ExpApproximation.t =
+type configuration = { compute_refined_plrfs: bool }
+
+let default_configuration = { compute_refined_plrfs = false }
+
+let lift_bounds gts program_vars (class_appr, appr): ExpApproximation.t =
   let lift_time_bounds appr =
     let gt_timebound gt =
       TransitionSet.enum (GeneralTransition.transitions gt)
@@ -30,8 +34,37 @@ let lift_bounds class_appr gts program_vars appr: ExpApproximation.t =
   in
   lift_size_bounds (lift_time_bounds appr)
 
+let improve_timebounds ~conf program scc (class_appr,appr): ExpApproximation.t MaybeChanged.t =
+  let is_exptime_bounded = ExpApproximation.is_time_bounded appr in
+  let unbounded_vars (gt,l) =
+    Program.input_vars program
+    |> VarSet.filter (RealBound.is_infinity % ExpApproximation.sizebound appr (gt,l))
+  in
+  let find_plrfs refined =
+    GeneralTransitionSet.filter (not % is_exptime_bounded) scc
+    |> GeneralTransitionSet.to_array
+    |> Parmap.array_parmap (Plrf.find_scc ~refined program is_exptime_bounded unbounded_vars scc)
+    |> Array.enum
+    |> Util.cat_maybes_enum
+  in
+  (if conf.compute_refined_plrfs then List.enum [false; true] else List.enum [false])
+  |> Enum.map find_plrfs
+  |> Enum.filter (not % Enum.is_empty)
+  |> fun en -> Enum.peek en |? Enum.empty ()
+  |> MaybeChanged.fold_enum (fun appr -> PlrfBounds.improve_with_plrf program (class_appr,appr)) appr
 
-let perform_analysis program class_appr: ExpApproximation.t =
+
+let rec improve_scc ~conf program scc (class_appr,appr) : ExpApproximation.t =
+  improve_timebounds ~conf program scc (class_appr,appr)
+  |> fun mc ->
+      if MaybeChanged.has_changed mc then
+        improve_scc ~conf program scc (class_appr, MaybeChanged.unpack mc)
+      else MaybeChanged.unpack mc
+
+let perform_analysis ?(conf=default_configuration) program class_appr: ExpApproximation.t =
   let gts = Program.gts program in
   let program_vars = Program.vars program in
-  lift_bounds class_appr gts program_vars (ExpApproximation.create program)
+  let sccs = Program.sccs_gts program in
+
+  lift_bounds gts program_vars (class_appr, ExpApproximation.create program)
+  |> fun appr -> Enum.fold (fun appr scc -> improve_scc ~conf program scc (class_appr,appr)) appr sccs

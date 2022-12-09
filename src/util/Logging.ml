@@ -5,8 +5,10 @@ type logger =
   | Approximation (**  Logger handling approximations *)
   | Bound (**  Logger handling  simplification of bounds *)
   | CFR (**  Logger handling control flow refinement  *)
+  | ExpTime (** Logger handling computation of expected time bounds *)
   | Inv (** Logger handling invariant creation *)
   | LocalSizeBound (**  Logger handling local size-bounds  *)
+  | PLRF (** Logger handling probabilistic linear ranking functions *)
   | PRF (** Logger handling (multiphase) ranking function creation *)
   | Preprocessor (**  Logger handling preprocessors  *)
   | Program (** Logger handling creation of programs, e.g., possible elimination of recursion *)
@@ -25,8 +27,10 @@ let show_logger = function
   | Approximation -> "appr"
   | Bound -> "bound"
   | CFR -> "cfr"
+  | ExpTime -> "exptime"
   | Inv -> "invariants"
   | LocalSizeBound -> "lsb"
+  | PLRF -> "plrf"
   | PRF -> "prf"
   | Preprocessor -> "preprocessor"
   | Program -> "program"

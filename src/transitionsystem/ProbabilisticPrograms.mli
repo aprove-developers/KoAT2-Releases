@@ -97,6 +97,12 @@ module ProbabilisticProgram: sig
   (** The general transitions of the program *)
   val gts: t -> GeneralTransitionSet.t
 
+  (** Enum of general transitions that form SCCs *)
+  (** At least one transition of the general transition needs to be contained in the SCC so that *)
+  (** the general transition itself is also viewed as part of the SCC. *)
+  (** The resulting enum is in topological order *)
+  val sccs_gts : t -> GeneralTransitionSet.t Enum.t
+
   val pre_gt_cached: t -> GeneralTransition.t -> GeneralTransitionSet.t
 
   (* Restores legacy semantics for updates with distributions, i.e. updates of the form X->UNIFORM(0,1) are interpreted as X->X+UNIFORM(0,1) *)

@@ -348,7 +348,7 @@ module type Program = sig
   (** Returns start location. *)
   val start : t -> location
 
-  (** Returns the (biggest) strongly connected components of the transiton graph. *)
+  (** Returns the (biggest) strongly connected components of the transiton graph in topological order. *)
   val sccs : t -> transition_set Enum.t
 
   (** Returns all transitions which are parallel to a given transition. Thus, all transitions start in the same location and end in the same location. *)
