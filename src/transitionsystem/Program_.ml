@@ -123,7 +123,7 @@ struct
   let sccs program =
     let module SCC = Graph.Components.Make(G) in
     SCC.scc_list program.graph
-    |> List.rev
+    |> List.rev (* scc_list is in reverse topological order *)
     |> List.enum
     |> Enum.map (G.loc_transitions program.graph)
     |> Enum.filter (not % TransitionSet.is_empty)

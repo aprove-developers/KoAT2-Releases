@@ -712,6 +712,16 @@ module ProbabilisticProgram = struct
   let temp_vars t =
     VarSet.diff (vars t) (input_vars t)
 
+  let sccs_gts t =
+    let gts = gts t in
+    sccs t
+    |> Enum.map (fun tset ->
+        GeneralTransitionSet.filter (fun gt ->
+            let gt_transs = GeneralTransition.transitions gt in
+            ProbabilisticTransitionSet.exists (fun t -> ProbabilisticTransitionSet.mem t gt_transs) tset
+          ) gts
+      )
+
   let to_formatted_string ?(pretty=false) t =
     let transitions =
       GeneralTransitionSet.to_list (gts t)
