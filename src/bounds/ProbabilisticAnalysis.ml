@@ -53,9 +53,25 @@ let improve_timebounds ~conf program scc (class_appr,appr): ExpApproximation.t M
   |> fun en -> Enum.peek en |? Enum.empty ()
   |> MaybeChanged.fold_enum (fun appr -> PlrfBounds.improve_with_plrf program (class_appr,appr)) appr
 
+let rec knowledge_propagation program scc appr_mc: ExpApproximation.t MaybeChanged.t =
+  GeneralTransitionSet.filter (not % ExpApproximation.is_time_bounded (MaybeChanged.unpack appr_mc)) scc
+  |> GeneralTransitionSet.enum
+  |> fun gtset ->  MaybeChanged.(appr_mc >>= fun appr -> MaybeChanged.fold_enum (fun appr gt ->
+      let new_bound =
+        GeneralTransitionSet.enum (Program.pre_gt_cached program gt)
+        |> Enum.map (ExpApproximation.timebound appr)
+        |> RealBound.sum
+      in
+      if RealBound.is_finite new_bound then
+        MaybeChanged.changed (ExpApproximation.add_timebound new_bound gt appr)
+      else MaybeChanged.same appr
+    ) appr gtset)
+  |> fun appr_mc ->
+      if MaybeChanged.has_changed appr_mc then knowledge_propagation program scc appr_mc else appr_mc
 
 let rec improve_scc ~conf program scc (class_appr,appr) : ExpApproximation.t =
   improve_timebounds ~conf program scc (class_appr,appr)
+  |> knowledge_propagation program scc
   |> fun mc ->
       if MaybeChanged.has_changed mc then
         improve_scc ~conf program scc (class_appr, MaybeChanged.unpack mc)
