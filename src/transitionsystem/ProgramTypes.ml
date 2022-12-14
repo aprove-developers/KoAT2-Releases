@@ -378,6 +378,9 @@ module type RVTuple = sig
   (** Type of a result variable is a transiton and a variable. *)
   type t = transition * Var.t
 
+  (** Comparison with IDs to compare transitions *)
+  val compare: t -> t -> int
+
   val equal: t -> t -> bool
   val hash: t -> int
 end

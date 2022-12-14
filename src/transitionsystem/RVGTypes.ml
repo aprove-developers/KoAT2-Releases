@@ -3,11 +3,20 @@ open Batteries
 module MakeRV(TL: ProgramTypes.TransitionLabel)
              (T: ProgramTypes.Transition with type transition_label = TL.t) =
   struct
+    let compare compare_transition (t1,v1) (t2,v2) =
+      if compare_transition t1 t2 != 0 then
+        compare_transition t1 t2
+      else if Var.compare v1 v2 != 0 then
+        Var.compare v1 v2
+      else
+        0
+
     module RVTuple_ = struct
       type transition = T.t
       type t = T.t * Var.t
       let equal (t1,v1) (t2,v2)= T.same t1 t2 && Var.equal v1 v2
       let hash (t,v) = Hashtbl.hash (T.id t, Var.to_string v)
+      let compare = compare T.compare_same
     end
 
     type transition = RVTuple_.transition
@@ -18,14 +27,6 @@ module MakeRV(TL: ProgramTypes.TransitionLabel)
     let equivalent (t1,v1) (t2,v2) =
       T.equivalent t1 t2
       && Var.equal v1 v2
-
-    let compare compare_transition (t1,v1) (t2,v2) =
-      if compare_transition t1 t2 != 0 then
-        compare_transition t1 t2
-      else if Var.compare v1 v2 != 0 then
-        Var.compare v1 v2
-      else
-        0
 
     let hash = RVTuple_.hash
 

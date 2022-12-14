@@ -769,19 +769,20 @@ module GRV = struct
       && Location.equal l1 l2
       && Var.equal v1 v2
     let hash ((gt,l),v) = Hashtbl.hash (GeneralTransition.gt_id gt, Location.to_string l, Var.to_string v)
+    let compare =
+      let cmp (gt1,l1) (gt2,l2) =
+        match GeneralTransition.compare_same gt1 gt2 with
+        | 0 -> Location.compare l1 l2
+        | r -> r
+      in
+      compare_rv cmp
   end
 
   type transition = RVTuple_.transition
   type t = RVTuple_.t
   let same = RVTuple_.equal
   let hash = RVTuple_.hash
-  let compare_same =
-    let cmp (gt1,l1) (gt2,l2) =
-      match GeneralTransition.compare_same gt1 gt2 with
-      | 0 -> Location.compare l1 l2
-      | r -> r
-    in
-    compare_rv cmp
+  let compare_same = RVTuple_.compare
 
   let to_id_string ((gt,l),v) =
     "|(" ^ GeneralTransition.to_id_string gt ^ "," ^ Location.to_string l ^ ")," ^ Var.to_string v ^ "|"
@@ -796,6 +797,7 @@ module RVTuple_ = struct
   type t = transition * Var.t
   let equal (t1,v1) (t2,v2) = ProbabilisticTransition.same t1 t2 && Var.equal v1 v2
   let hash (t1,v1) = Hashtbl.hash (ProbabilisticTransition.id t1, Var.to_string v1)
+  let compare = compare_rv ProbabilisticTransition.compare_same
 end
 module RVTupleNonProbOverappr_ = RVTuple_
 
