@@ -109,6 +109,9 @@ module ProbabilisticProgram: sig
   val restore_legacy_distribution_update_semantics: t -> t
 
   val to_string_pretty: t -> string
+
+  (** is the given general transition initial, i.e., does it start in the initial location *)
+  val is_initial_gt: t -> GeneralTransition.t -> bool
 end
 
 module ProbabilisticTransitionGraphNonProbOverappr: ProgramTypes.TransitionGraph

@@ -5,6 +5,7 @@ type logger =
   | Approximation (**  Logger handling approximations *)
   | Bound (**  Logger handling  simplification of bounds *)
   | CFR (**  Logger handling control flow refinement  *)
+  | ExpSize (** Logger handling computation of expected time bounds *)
   | ExpTime (** Logger handling computation of expected time bounds *)
   | Inv (** Logger handling invariant creation *)
   | LocalSizeBound (**  Logger handling local size-bounds  *)
@@ -17,16 +18,17 @@ type logger =
   | Twn (** Logger handling twn local time-bound computation *)
 
 (** List of all available loggers *)
-let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Program; Preprocessor; CFR; Inv; Twn]
+let loggers = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Program; Preprocessor; CFR; Inv; Twn; ExpSize; ExpTime]
 
 (** List of all available loggers *)
-let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Program; Preprocessor; CFR; Inv; Twn]
+let all = [Approximation; Size; Time; PRF; Bound; LocalSizeBound; Program; Preprocessor; CFR; Inv; Twn; ExpSize; ExpTime]
 
 (** Returns a string matching to the given logger. *)
 let show_logger = function
   | Approximation -> "appr"
   | Bound -> "bound"
   | CFR -> "cfr"
+  | ExpSize -> "expsize"
   | ExpTime -> "exptime"
   | Inv -> "invariants"
   | LocalSizeBound -> "lsb"
