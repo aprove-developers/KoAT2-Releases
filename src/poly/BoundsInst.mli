@@ -12,4 +12,6 @@ module RealBound: sig
                            and type polynomial = Polynomials.RealPolynomial.t
 
   val of_intbound: Bound.t -> t
+
+  val of_intpoly: Polynomials.Polynomial.t -> t
 end

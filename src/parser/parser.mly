@@ -36,6 +36,8 @@
 
 %start <UpdateElement_.t> onlyUpdateElement
 
+%start <ProbabilisticPrograms.GeneralTransitionSet.t> general_transitions
+
 %start <BoundsInst.Bound.t> onlyBound
 
 %start <Program.t * Goal.classical Goal.goal> programAndGoal

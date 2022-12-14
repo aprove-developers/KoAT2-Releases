@@ -1,4 +1,5 @@
 open Batteries
+open BoundsInst
 open Polynomials
 
 module UpdateValue = struct
@@ -34,6 +35,10 @@ module UpdateValue = struct
   let moment_poly d i = match d with
     | Var  v -> RealPolynomial.pow (RealPolynomial.of_var v) i
     | Dist d -> ProbabilityDistribution.moment_poly d i
+
+  let moment_abs_bound d i = match d with
+    | Var v  -> RealBound.(pow (of_var v) i)
+    | Dist d -> ProbabilityDistribution.moment_abs_bound d i
 
   let is_integral = fun _ -> true
 
@@ -217,3 +222,39 @@ let as_linear_guard constr t new_var =
   as_linear_abstract manager constr t new_var
   |> Apron.Abstract1.to_tcons_array manager
   |> ApronInterface.Apron2Koat.constraint_from_apron
+
+let pull_out_of_uniform: t -> t =
+  fold
+    ~const:of_constant
+    ~indeterminate:(function
+        | Dist (Uniform (a,b)) ->
+          let p,(a',b') = Polynomial.pull_out_common_addends a b in
+          add (of_poly p) (of_indeterminate @@ Dist (Uniform (a',b')))
+        | i -> of_indeterminate i
+      )
+    ~neg:neg
+    ~plus:add
+    ~times:mul
+    ~pow:pow
+
+let exp_value_abs_bound t =
+  pull_out_of_uniform t
+  |> fold
+       ~const:(RealBound.of_constant % OurFloat.of_ourint)
+       ~indeterminate:(function
+           | Dist d -> ProbabilityDistribution.exp_value_abs_bound d
+           | Var v -> RealBound.of_var v
+         )
+       ~neg:identity
+       ~plus:RealBound.add
+       ~times:RealBound.mul
+       ~pow:RealBound.pow
+
+let exp_value_abs_bound t =
+  let simplified = pull_out_of_uniform t in
+  List.enum (monomials_with_coeffs simplified)
+  |> Enum.map
+      (Tuple2.map2
+         (RealBound.product % Enum.map (uncurry UpdateValue.moment_abs_bound) % Monomial_.to_enum))
+  |> Enum.map RealBound.(fun(c,p) -> mul (of_constant @@ OurFloat.of_ourint c) p)
+  |> RealBound.sum

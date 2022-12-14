@@ -26,6 +26,8 @@ val read_update_element : string -> ProbabilisticProgramModules.UpdateElement.t
 
 val read_bound : string -> Bound.t
 
+val read_general_transitions: string -> ProbabilisticProgramModules.GeneralTransitionSet.t
+
 val read_input : ?rename:bool -> bool -> string -> Program_.t
 
 val read_prog_goal_file : ?rename:bool -> string -> Program_.t * Goal.classical Goal.goal

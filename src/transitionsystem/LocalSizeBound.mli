@@ -5,6 +5,9 @@ open Formulas
 open Polynomials
 open ProgramTypes
 
+(** Estimate range of contant from guard formula *)
+val c_range: Formula.t -> int
+
 module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomial.t)
            (T: ProgramTypes.Transition with type transition_label = TL.t)
            (P: ProgramTypes.Program with type transition_label = TL.t): sig

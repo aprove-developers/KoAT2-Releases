@@ -28,6 +28,15 @@ let assert_equal_varset =
 let assert_equal_poly =
   assert_equal ~cmp:Polynomial.(=~=) ~printer:Polynomial.to_string
 
+let assert_equal_realpoly_smt =
+  let cmp p1 p2 =
+    (* Z3Solver is *not* thread-safe compared to the incremental one *)
+    let s = SMT.IncrementalZ3Solver.create () in
+    SMT.IncrementalZ3Solver.add_real s (RealFormula.mk_uneq p1 p2);
+    SMT.IncrementalZ3Solver.unsatisfiable s
+  in
+  assert_equal ~cmp ~printer:RealPolynomial.to_string
+
 let assert_equal_parameter_poly =
   assert_equal ~cmp:ParameterPolynomial.(=~=) ~printer:ParameterPolynomial.to_string
 

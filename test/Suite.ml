@@ -26,6 +26,7 @@ let suite =
       TWNTest.tests;
       SolvableTest.tests;
       UpdateElementTests.tests;
+      ExpectedLocalChangeBoundTests.tests;
     ]
 
 let () =

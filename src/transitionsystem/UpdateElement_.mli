@@ -36,6 +36,8 @@ val as_guard: t -> Var.t -> Guard.t
 
 val exp_value_poly: t -> RealPolynomial.t
 
+val exp_value_abs_bound: t -> BoundsInst.RealBound.t
+
 val moment_poly: t -> int -> RealPolynomial.t
 
 (* try to convert the UpdateElement to a Polynomial *)

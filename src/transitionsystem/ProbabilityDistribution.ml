@@ -92,3 +92,20 @@ let moment_poly d i =
         (* TODO *)
           | _ -> failwith @@ Int.to_string i^". moment of uniform distribution not yet implemented."
   )
+
+open BoundsInst
+
+let exp_value_abs_bound = function
+  | Uniform        (a,b)      -> RealBound.(of_constant (OurFloat.of_float 0.5) * (of_intpoly a + of_intpoly b))
+  | Binomial       (n,p)      -> RealBound.of_poly @@ exp_value_poly (Binomial (n,p))
+  | Geometric      a          -> RealBound.of_poly @@ exp_value_poly (Geometric a)
+  | Hypergeometric (bigN,k,n) -> RealBound.of_poly @@ exp_value_poly (Hypergeometric (bigN,k,n))
+
+let moment_abs_bound d i =
+  if Int.equal i 1 then exp_value_abs_bound d
+  else
+    match d with
+    | Uniform        (a,b)      -> failwith @@ Int.to_string i ^". moment of absolute uniform distribution not yet implemented."
+    | Binomial       (n,p)      -> RealBound.of_poly @@ moment_poly (Binomial (n,p)) i
+    | Geometric      a          -> RealBound.of_poly @@ moment_poly (Geometric a) i
+    | Hypergeometric (bigN,k,n) -> RealBound.of_poly @@ moment_poly (Hypergeometric (bigN,k,n)) i
