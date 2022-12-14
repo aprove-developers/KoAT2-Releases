@@ -32,6 +32,9 @@ let read_program_simple =
 let read_formula =
   read Parser.onlyFormula
 
+let read_general_transitions =
+  read Parser.general_transitions
+
 let read_constraint =
   read Parser.onlyConstraints
 

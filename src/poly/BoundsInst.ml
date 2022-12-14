@@ -72,6 +72,15 @@ module Make(Num : PolyTypes.OurNumber) =
       | Some b -> fold_bound ~const ~var ~plus ~times ~exp b
       | None -> inf
 
+    let to_poly =
+      fold
+        ~const:(Option.some % Poly.of_constant)
+        ~var:(Option.some % Poly.of_var)
+        ~plus:(OptionMonad.liftM2 Poly.add)
+        ~times:(OptionMonad.liftM2 Poly.mul)
+        ~exp:(fun _ _ -> None)
+        ~inf:None
+
     type complexity =
       | Inf (** Bound is infinite. *)
       | Polynomial of int (** Bound is in asymptotic class O(n^i) *)
@@ -479,4 +488,5 @@ module RealBound =
         ~exp:(fun value -> exp (OurFloat.of_ourint value))
         ~inf:(infinity)
 
+    let of_intpoly = of_poly % RealPolynomial.of_intpoly
   end

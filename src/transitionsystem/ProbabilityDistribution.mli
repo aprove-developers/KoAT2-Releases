@@ -25,3 +25,9 @@ val moment_poly: t -> int -> RealPolynomial.t
 
 (** Returns a constraint that encodes the admissibility of distribution updates. e.g. for {i UNIFORM(p1,p2)} we require {i p1<=p2} *)
 val admissibility_constraint: t -> Guard.t
+
+(** A bound on the expected absolute value (i.e., the expectation of the absolute value of the random variable)*)
+val exp_value_abs_bound: t -> BoundsInst.RealBound.t
+
+(** A bound on the corresponding moment of the absolute value (i.e., the expectation of the absolute value of the random variable)*)
+val moment_abs_bound: t -> int -> BoundsInst.RealBound.t

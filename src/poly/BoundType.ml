@@ -24,6 +24,9 @@ module type Bound =
     (** Creates a bound from a polynomial *)
     val of_poly : polynomial -> t
 
+    (** Tries to convert the bound to a polynomial if possible *)
+    val to_poly : t -> polynomial Option.t
+
     (** Creates a constant bound from a constant value. *)
     val of_constant : value -> t
 
