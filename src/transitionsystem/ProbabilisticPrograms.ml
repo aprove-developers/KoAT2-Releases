@@ -712,6 +712,9 @@ module ProbabilisticProgram = struct
   let temp_vars t =
     VarSet.diff (vars t) (input_vars t)
 
+  let is_initial_gt t gt =
+    Location.equal (start t) (GeneralTransition.src gt)
+
   let sccs_gts t =
     let gts = gts t in
     sccs t
