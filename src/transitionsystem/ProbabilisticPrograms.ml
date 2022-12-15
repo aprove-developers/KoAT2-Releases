@@ -627,7 +627,7 @@ module GeneralTransition = struct
 
   let ids_to_string ?(pretty=false) gt =
     if pretty then "g" ^ Util.natural_to_subscript (gt_id gt)
-    else "t" ^ Int.to_string (gt_id gt)
+    else "g" ^ Int.to_string (gt_id gt)
 end
 
 module GeneralTransitionSet = struct
@@ -789,7 +789,7 @@ module GRV = struct
 
   let ids_to_string ?(pretty=false) ((gt,l),v) =
     "("^ GeneralTransition.ids_to_string ~pretty gt ^ "," ^ Location.to_string l
-    ^ ", " ^ Var.to_string ~pretty v
+    ^ "), " ^ Var.to_string ~pretty v
 end
 
 module RVTuple_ = struct
