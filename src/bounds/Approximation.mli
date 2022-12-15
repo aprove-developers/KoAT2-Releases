@@ -106,7 +106,9 @@ module Coerce(B: BoundType.Bound)
 end
 
 module Probabilistic: sig
-  module ClassicApproximation:
+  module NonProbOverapprApproximation:
+    module type of MakeForClassicalAnalysis(ProbabilisticProgramModules.NonProbOverappr)
+  module ClassicalApproximation:
     module type of
       MakeWithDefaultTransition(BoundsInst.Bound)(ProbabilisticProgramModules)
   module ExpApproximation:
@@ -120,4 +122,6 @@ module Probabilistic: sig
             let id = gt_id
             let all_from_program = GeneralTransitionSet.enum % Program.gts
           end)
+
+  val coerce_from_nonprob_overappr_approximation: NonProbOverapprApproximation.t -> ClassicalApproximation.t
 end

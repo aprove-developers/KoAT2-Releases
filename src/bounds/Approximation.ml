@@ -160,7 +160,8 @@ include MakeForClassicalAnalysis(ProgramModules)
 
 
 module Probabilistic = struct
-  module ClassicApproximation =
+  module NonProbOverapprApproximation = MakeForClassicalAnalysis(ProbabilisticProgramModules.NonProbOverappr)
+  module ClassicalApproximation =
     MakeWithDefaultTransition(BoundsInst.Bound)(ProbabilisticProgramModules)
   module ExpApproximation =
     Make(BoundsInst.RealBound)
@@ -175,4 +176,15 @@ module Probabilistic = struct
           let id = gt_id
           let all_from_program = GeneralTransitionSet.enum % Program.gts
         end)
+
+  let coerce_from_nonprob_overappr_approximation: NonProbOverapprApproximation.t -> ClassicalApproximation.t =
+    let module M = Coerce(BoundsInst.Bound)
+                         (ProbabilisticProgramModules.NonProbOverappr)(ProbabilisticProgramModules)
+        (struct
+          let t_eq = ProbabilisticPrograms.Equalities.t_eq
+          module RVTupleEq = ProbabilisticPrograms.Equalities.RVTupleTypeCoercion.Coerce
+        end)
+    in
+    M.coerce
+
 end
