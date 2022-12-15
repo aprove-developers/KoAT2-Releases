@@ -115,6 +115,16 @@ module Methods =
                             (false, "x <= a^2 + b * 3 -6");
                             (false, "x >= a^2 + b * 3 -6" );
                         ]);
+
+            ("negation" >:::
+              List.map (fun (expected, atom) ->
+                atom >:: (fun _ -> assert_equal_atom (Readers.read_atom expected) (Readers.read_atom atom |> Atom.neg)))
+                  [
+                    ("x <= 0", "x > 0");
+                    ("x >= y", "x < y");
+                    ("1 < 0", "0 <= 1");
+                    ("1 > 0", "0 >= 1");
+                  ]);
         ]
 
       end
