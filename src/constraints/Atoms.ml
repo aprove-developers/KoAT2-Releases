@@ -70,7 +70,9 @@ struct
     (* Maybe use SMT-solver here *)
     let (=~=) (poly1,comp1) (poly2,comp2) = P.(poly1 =~= poly2) && equal_compkind comp1 comp2
 
-    let neg (poly,comp) = (P.neg poly, comp)
+    let neg = function 
+      | (poly,LE) -> (P.neg poly, LT)
+      | (poly,LT) -> (P.neg poly, LE)
 
     let to_string ?(to_file=false) ?(pretty=false) (poly,comp) = (P.to_string poly) ^ (comp_to_string comp) ^ "0"
 
