@@ -37,7 +37,7 @@ let improve_with_plrf program (class_appr,appr) rank =
 
         let inc_det_timebound =
           List.enum class_trans_to_loc
-          |> Enum.map (ClassicApproximation.timebound class_appr)
+          |> Enum.map (ClassicalApproximation.timebound class_appr)
           |> RealBound.of_intbound % Bound.sum
         in
         RealBound.(inc_det_timebound * rank_bounded)

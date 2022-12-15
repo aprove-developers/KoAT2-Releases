@@ -11,7 +11,7 @@ let lift_bounds gts program_vars (class_appr, appr): ExpApproximation.t =
   let lift_time_bounds appr =
     let gt_timebound gt =
       TransitionSet.enum (GeneralTransition.transitions gt)
-      |> Enum.map (ClassicApproximation.timebound class_appr)
+      |> Enum.map (ClassicalApproximation.timebound class_appr)
       |> RealBound.of_intbound % Bound.sum
     in
     GeneralTransitionSet.enum gts
@@ -25,7 +25,7 @@ let lift_bounds gts program_vars (class_appr, appr): ExpApproximation.t =
     in
     let rv_sizebound ((gt,l),v) =
       TransitionSet.enum (GeneralTransition.transitions gt)
-      |> Enum.map (fun t -> ClassicApproximation.sizebound class_appr t v)
+      |> Enum.map (fun t -> ClassicalApproximation.sizebound class_appr t v)
       |> RealBound.of_intbound % Bound.sum
     in
     List.enum (List.cartesian_product (GeneralTransitionSet.to_list gts) (VarSet.to_list program_vars))
