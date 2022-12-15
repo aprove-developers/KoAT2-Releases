@@ -15,7 +15,8 @@ let compute_ue_diff label v  =
     (* the absolute value of v decreases instead of increases *)
     let s = SMT.IncrementalZ3Solver.create () in
     let v' = Var.fresh_id Var.Int () in
-    SMT.IncrementalZ3Solver.add s (Formulas.Formula.mk @@ UpdateElement.as_guard ue v');
+    let constr = Constraints.Constraint.mk_and (UpdateElement.as_guard ue v') (TransitionLabel.guard label) in
+    SMT.IncrementalZ3Solver.add s (Formulas.Formula.mk constr);
     (* search contra *)
     SMT.IncrementalZ3Solver.add_bound_comparison s `LT (Bound.of_var v) (Bound.of_var v');
     if SMT.IncrementalZ3Solver.unsatisfiable s then UpdateElement.zero
