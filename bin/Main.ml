@@ -18,6 +18,7 @@ let subcommands =
     PrfCommand.(subcommand run params_cmdliner_term description command);
     LocalSizeBoundCommand.(subcommand run params_cmdliner_term description command);
     PlrfCommand.(subcommand run params_cmdliner_term description command);
+    ProbabilisticAnalyseCommand.(subcommand run params_cmdliner_term description command);
     SizeCommand.(subcommand run params_cmdliner_term description command);
     SMTCommand.(subcommand run params_cmdliner_term description command);
     NormalizeCommand.(subcommand run params_cmdliner_term description command);
