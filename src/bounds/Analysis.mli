@@ -53,6 +53,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   (** Performs improvement steps to find better timebounds for the approximation and updates the approximation. *)
   val improve : conf:conf_type -> rvg_with_sccs
               -> preprocess:(PM.Program.t -> PM.Program.t)
-              -> [ `Cost | `Time ] -> PM.Program.t -> Approximation.MakeForClassicalAnalysis(PM).t
+              -> PM.Program.t -> Approximation.MakeForClassicalAnalysis(PM).t
               -> PM.Program.t * Approximation.MakeForClassicalAnalysis(PM).t
 end
