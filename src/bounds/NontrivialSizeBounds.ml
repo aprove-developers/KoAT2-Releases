@@ -10,6 +10,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module RV = RVGTypes.MakeRV(TransitionLabel)(Transition)
   module RVG = RVGTypes.MakeRVG(PM)
 
+  module RVSet = Set.Make(RV.RVTuple_)
+
   (* Computes size bounds for SCCs with negation. Uses the original KoAT method, and only considers bounds on absolute values
    * *)
   let compute_
@@ -19,6 +21,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         (get_sizebound: Transition.t -> Var.t -> Bound.t)
         (scc: RV.t List.t) =
 
+    let scc_rvset = RVSet.of_list scc in
     let (rvs_equality, rvs_non_equality) = List.partition (Tuple2.second % get_lsb) scc in
 
     (** All transitions that are present in the scc and that are not of equality type.
@@ -44,21 +47,23 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let pre_in_scc rv =
       rv
       |> RVG.pre rvg
-      |> Util.intersection RV.same (List.enum scc)
+      |> RVSet.of_enum
+      |> RVSet.inter scc_rvset
     in
 
     (** Returns all result variables that may influence the given result variable and that are not part of the scc. *)
     let pre_out_scc rv =
       rv
       |> RVG.pre rvg
-      |> Util.without RV.same (List.enum scc)
+      |> RVSet.of_enum
+      |> fun pre -> RVSet.diff pre scc_rvset
     in
 
     (** Returns all result variables that may influence the given result variable from within the scc.
         Corresponds to V_rv in the thesis. *)
     let scc_variables rv =
       rv
-      |> pre_in_scc
+      |> RVSet.enum % pre_in_scc
       |> Enum.map (fun (t,v) -> v)
       |> Enum.uniq_by Var.equal
     in
@@ -70,7 +75,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         |> List.fold_left max 0
       in
       List.enum scc
-      |> Enum.flatten % Enum.map pre_out_scc
+      |> RVSet.enum % Enum.fold RVSet.union RVSet.empty % Enum.map pre_out_scc
       |> Enum.map (uncurry get_sizebound)
       |> Bound.sum
       |> Bound.add (Bound.of_int rvs_equality_type_max_constant)
@@ -108,7 +113,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     in
 
     let incoming_constant rv v =
-      pre_out_scc rv
+      RVSet.enum (pre_out_scc rv)
       |> Enum.filter (fun (_,v') -> Var.equal v v')
       |> Enum.map (uncurry get_sizebound)
       |> Bound.sum
