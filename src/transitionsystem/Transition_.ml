@@ -114,6 +114,6 @@ let to_file_string (l,t,l') =
     ^ TransitionLabel_.update_to_file_string_rhs t ^ ")"
   in
   if Constraint.is_true (TransitionLabel_.guard t) then
-    without_guard ^ " :|: " ^ Guard.to_file_string (TransitionLabel_.guard t)
-  else
     without_guard
+  else
+    without_guard ^ " :|: " ^ Guard.to_file_string (TransitionLabel_.guard t)
