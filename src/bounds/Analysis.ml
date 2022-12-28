@@ -55,6 +55,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module Approximation_ = Approximation
   module Approximation = Approximation.MakeForClassicalAnalysis(PM)
   module CostBounds = CostBounds.Make(PM)
+  module LSB = LocalSizeBound.Make(PM.TransitionLabel)(PM.Transition)(PM.Program)
+  module LSB_Table = Hashtbl.Make(PM.RV.RVTuple_)
   module MultiphaseRankingFunction = MultiphaseRankingFunction.Make(PM)
   module RVG = RVGTypes.MakeRVG(PM)
   module SizeBounds = SizeBounds.Make(PM)
@@ -68,8 +70,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
                                          ; twn_configuration = None
                                          ; cfr_configuration = NoCFR
                                          ; twn_size_bounds = NoTwnSizeBounds }
-
-type rvg_with_sccs = RVG.t * RVG.scc list Lazy.t
 
 let apply get_sizebound  = Bound.substitute_f get_sizebound % Bound.of_poly
 
@@ -248,11 +248,11 @@ let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.
   | ComputeTwnSizeBounds -> TWNSizeBounds.improve program ~scc:(Option.some scc) appr
 
 (* TODO unify conf types with ~local! *)
-let improve_scc ~conf rvg_with_sccs (scc: TransitionSet.t) program appr =
+let improve_scc ~conf rvg_with_sccs (scc: TransitionSet.t) program lsb_table appr =
   let rec step appr =
     appr
     |> knowledge_propagation scc program
-    |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc)
+    |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc) (LSB_Table.find lsb_table)
     |> twn_size_bounds ~conf scc program
     (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
     |> improve_timebound ~conf scc `Time program
@@ -272,13 +272,32 @@ let scc_cost_bounds ~conf program scc appr =
 
 
 let handle_timeout_cfr method_name non_linear_transitions =
-  LocalSizeBound.reset_cfr ();
   Program.reset_pre_cache ();
   Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR_" ^ method_name, ["scc", (TransitionSet.to_string non_linear_transitions)])
 
 
+  let all_rvs program input_vars =
+    List.cartesian_product
+      (TransitionSet.to_list (Program.transitions program))
+      (VarSet.to_list input_vars)
+
+  let add_missing_lsbs program lsbs =
+    let input_vars = Program.input_vars program in
+    all_rvs program input_vars
+    |> List.iter (fun(t,v)->
+        if LSB_Table.mem lsbs (t,v) then ()
+        else LSB_Table.add lsbs (t,v) (LSB.compute_bound input_vars t v)
+       )
+
+  let compute_lsbs program =
+    let input_vars = Program.input_vars program in
+    List.enum (all_rvs program input_vars)
+    |> Enum.map (fun(t,v) -> (t,v),LSB.compute_bound input_vars t v)
+    |> LSB_Table.of_enum
+
+
 let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: TransitionSet.t)
-  program rvg appr: Program.t * Approximation.t * (RVG.t * RVG.scc list lazy_t) =
+  program rvg lsbs appr: Program.t * Approximation.t * (RVG.t * RVG.scc list lazy_t) =
   match conf.cfr_configuration with
   | NoCFR -> program,appr,rvg
   | PerformCFR cfr -> ProgramModules.(
@@ -295,7 +314,7 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
         (program: ProgramModules.Program.t)
         (appr: Approximation_.MakeForClassicalAnalysis(ProgramModules).t) =
 
-      if not (TransitionSet.is_empty non_linear_transitions)  then
+      if not (TransitionSet.is_empty non_linear_transitions) then
         let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
         let mc =
           Logger.log logger_cfr Logger.INFO
@@ -305,11 +324,10 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
         if MaybeChanged.has_changed mc then (
           ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "Analysing control-flow refined program");
           let program_cfr = mc |> MaybeChanged.unpack |> preprocess  in
+          add_missing_lsbs program_cfr lsbs;
           Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_" ^ method_name, ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
           Program.reset_pre_cache ();
-          let rvg_with_sccs_cfr = RVG.rvg_with_sccs program_cfr in
-          LocalSizeBound.switch_cache();
-          LocalSizeBound.enable_cfr();
+          let rvg_with_sccs_cfr = RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first) % LSB_Table.find lsbs) program_cfr in
           (* The new sccs which do not occur in the original program. *)
           let cfr_sccs = program_cfr
                          |> Program.sccs
@@ -321,10 +339,10 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
                 if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                   appr
                   |> tap (const @@ Logger.log logger Logger.INFO (fun () -> method_name ^ "analysis", ["scc", TransitionSet.to_id_string scc]))
-                  |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc)
+                  |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc) (LSB_Table.find lsbs)
                   |> TWNSizeBounds.improve program ~scc:(Option.some scc)
                   (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
-                  |> improve_scc ~conf rvg_with_sccs_cfr scc program_cfr
+                  |> improve_scc ~conf rvg_with_sccs_cfr scc program_cfr lsbs
                 else appr)
               (CFR.merge_appr program program_cfr appr) in
           let cfr_bound = Bound.sum (Enum.map
@@ -332,7 +350,6 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
                                        (List.enum cfr_sccs))  in
           if (Bound.compare_asy org_bound cfr_bound) < 1 then (
             ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "CFR did not improve the program. Rolling back");
-            LocalSizeBound.reset_cfr();
             Program.reset_pre_cache ();
             Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED",
                                                          ["original bound", (Bound.to_string org_bound); method_name ^ " bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
@@ -340,7 +357,6 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
           )
           else (
             f_proof program_cfr cfr_bound;
-            LocalSizeBound.switch_cache();
             (program_cfr, updated_appr_cfr, rvg_with_sccs_cfr)))
         else
           (program, appr, rvg_with_sccs)
@@ -376,7 +392,9 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
       else (program, appr, rvg))
    )
 
-  let improve ~conf rvg ~preprocess program appr =
+  let improve ~conf ~preprocess program appr =
+    let lsbs = compute_lsbs program in
+    let rvg = RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first)% LSB_Table.find lsbs) program in
     let program, appr =
       program
       |> Program.sccs
@@ -386,12 +404,12 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
                if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                  appr
                  |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
-                 |> SizeBounds.improve program rvg ~scc:(Option.some scc)
+                 |> SizeBounds.improve program rvg ~scc:(Option.some scc) (LSB_Table.find lsbs)
                  |> twn_size_bounds ~conf scc program
                  (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
-                 |> improve_scc ~conf rvg scc program
+                 |> improve_scc ~conf rvg scc program lsbs
                  (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
-                 |> handle_cfr ~conf ~preprocess scc program rvg
+                 |> handle_cfr ~conf ~preprocess scc program rvg lsbs
                  |> fun (program,appr,rvg) -> (program, scc_cost_bounds ~conf program scc appr,rvg)
                else (program, appr, rvg)
              in

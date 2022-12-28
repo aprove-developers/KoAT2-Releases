@@ -18,7 +18,6 @@ let tests =
                                                 (Readers.read_formula guard)
                                                 1024
                          in
-                         reset ();
                          match bound with
                           | Some (lsb,equality) ->
                               assert_equal_bound (LocalSizeBound.as_bound expected) (LocalSizeBound.as_bound lsb);

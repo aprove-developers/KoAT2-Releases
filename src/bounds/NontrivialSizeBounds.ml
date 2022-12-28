@@ -166,9 +166,16 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   (** Computes a bound for a nontrivial scc. That is an scc which consists of a loop.
       Corresponds to 'SizeBounds for nontrivial SCCs'. *)
-  let compute program rvg get_timebound get_sizebound scc =
+  let compute program rvg get_timebound get_sizebound scc get_lsb =
+    let lsb_fun =
+      let lsbs = List.map (fun(t,v) -> (t,v), get_lsb (t,v)) scc in
+      if List.for_all (Option.is_some % Tuple2.second) lsbs then
+        Some (fun k -> Tuple2.map2 Lazy.force % Option.get @@ List.assoc k lsbs)
+      else None
+    in
+
     let execute () =
-      match LSB.sizebound_local_scc program scc with
+      match lsb_fun with
       | Some get_lsb -> compute_ rvg get_lsb get_timebound get_sizebound scc
       | None ->  Bound.infinity
     in Logger.with_log logger Logger.DEBUG
