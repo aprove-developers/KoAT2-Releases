@@ -48,10 +48,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   (** Default configuration. mprf_depth of 1, no twn, no cfr, and no twn size bounds*)
   val default_configuration: conf_type
 
-  type rvg_with_sccs = MakeRVG(PM).t * MakeRVG(PM).scc list Lazy.t
-
   (** Performs improvement steps to find better timebounds for the approximation and updates the approximation. *)
-  val improve : conf:conf_type -> rvg_with_sccs
+  val improve : conf:conf_type
               -> preprocess:(PM.Program.t -> PM.Program.t)
               -> PM.Program.t -> Approximation.MakeForClassicalAnalysis(PM).t
               -> PM.Program.t * Approximation.MakeForClassicalAnalysis(PM).t

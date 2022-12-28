@@ -3,7 +3,6 @@ open ProgramModules
 open RVGTypes
 
 module VarMap = ProgramTypes.VarMap
-module RVG = RVGTypes.MakeRVG(ProgramModules)
 
 let print_graph ~format out_dir name graph output_graph =
 let full_path ext =
@@ -152,13 +151,22 @@ end
 module MakeFromClassical(PM: ProgramTypes.ClassicalProgramModules) = struct
     include Make(PM)
 
+    module RVG = MakeRVG(PM)
+    module LSB = LocalSizeBound.Make(PM.TransitionLabel)(PM.Transition)(PM.Program)
+
     (** Prints a png file in the given directory with the given filename (the extension .png will be generated) for the result variable graph of the program.
             For this operation graphviz need to be installed and the 'dot' command must be accessible in the PATH. *)
     let print_rvg ~label ~outdir ~file program =
-    let graph = RVG.rvg program in
+    let graph =
+      RVG.rvg
+        (fun(t,v) ->
+          LSB.compute_bound (PM.Program.input_vars program) t v
+          |> Option.map Batteries.(LSB.vars % Batteries.Tuple2.first))
+        program
+    in
     let module C = Graph.Components.Make(RVG) in
     let (_,scc_number) = C.scc graph in
-    let rv_color (rv: RV.t) =
+    let rv_color (rv: PM.RV.t) =
         scc_number rv * 424242
     in
     (* Definition of some graphviz options how it should be layout *)

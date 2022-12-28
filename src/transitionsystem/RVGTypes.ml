@@ -64,8 +64,6 @@ module MakeRVG(PM: ProgramTypes.ClassicalProgramModules) =
     module C = Graph.Components.Make(G)
     include G
 
-    module LSB = LocalSizeBound.Make(PM.TransitionLabel)(PM.Transition)(PM.Program)
-
     type scc = RV.t list
 
     let rvs_to_id_string rvs =
@@ -80,24 +78,24 @@ module MakeRVG(PM: ProgramTypes.ClassicalProgramModules) =
     let add_vertices_to_rvg vertices rvg =
       Enum.fold add_vertex rvg vertices
 
-    let rvg (program: Program.t) =
+    let rvg get_vars_in_lsb (program: Program.t) =
+      let program_vars = Program.input_vars program in
       let add_transition (post_transition: Transition.t) (rvg: t): t =
         let rvg_with_vertices: t =
           add_vertices_to_rvg
-            (Program.vars program |> VarSet.enum |> Enum.map (fun var -> (post_transition,var)))
+            (VarSet.enum program_vars |> Enum.map (fun var -> (post_transition,var)))
             rvg
         in
         (* Force evaluation of pre_transitions to avoid recomputation in pre_nodes *)
         let pre_transitions = TransitionSet.to_list @@ Program.pre_transitionset_cached program post_transition in
         let pre_nodes (post_var: Var.t) =
-          LSB.sizebound_local program post_transition post_var
-          |> Option.map LSB.vars
+          get_vars_in_lsb (post_transition,post_var)
           |? VarSet.empty
           |> VarSet.enum
           |> Enum.cartesian_product (List.enum pre_transitions)
           |> Enum.map (fun (pre_transition,pre_var) -> (pre_transition,pre_var,post_var))
         in
-        Program.vars program
+        program_vars
         |> VarSet.enum
         |> Enum.map pre_nodes
         |> Enum.flatten
@@ -105,8 +103,8 @@ module MakeRVG(PM: ProgramTypes.ClassicalProgramModules) =
       in
       TransitionGraph.fold_edges_e add_transition (Program.graph program) empty
 
-    let rvg_with_sccs program =
-      let rvg = rvg program in
+    let rvg_with_sccs get_vars_in_lsb program =
+      let rvg = rvg get_vars_in_lsb program in
       rvg, Lazy.from_fun (fun () -> C.scc_list rvg)
 
   end

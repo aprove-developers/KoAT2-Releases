@@ -11,7 +11,6 @@ let logger = Logging.(get Size)
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  module LSB = LocalSizeBound.Make(PM.TransitionLabel)(PM.Transition)(PM.Program)
   module RV = RVGTypes.MakeRV(PM.TransitionLabel)(PM.Transition)
   module RVG = RVGTypes.MakeRVG(PM)
 
@@ -49,14 +48,11 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   (** Computes a bound for a trivial scc. That is an scc which consists only of one result variable without a loop to itself.
       Corresponds to 'SizeBounds for trivial SCCs'. *)
-  let compute (program: Program.t) rvg get_sizebound (t,v) =
+  let compute (program: Program.t) rvg get_sizebound (t,v) lsb_as_bound =
     let execute () =
-      let (lsb: LSB.t Option.t) =
-        LSB.sizebound_local_rv program (t, v)
-      in
       if Program.is_initial program t then
-        match lsb with
-          | Some b -> LSB.as_bound b
+        match lsb_as_bound with
+          | Some b -> b
           | None ->
               let tlabel = Transition.label t in
               match TransitionLabel.update tlabel v with
@@ -66,8 +62,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
                     else Bound.infinity
                 | None   -> Bound.infinity
       else
-        match lsb with
-          | Some b -> incoming_bound_lsb rvg get_sizebound (LSB.as_bound b) t v
+        match lsb_as_bound with
+          | Some b -> incoming_bound_lsb rvg get_sizebound b t v
           | None ->
               let tlabel = Transition.label t in
               match TransitionLabel.update tlabel v with

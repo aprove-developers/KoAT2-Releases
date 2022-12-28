@@ -45,28 +45,11 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
   * The bool Lazy.t value indiciates if this lsb is of the equality type *)
   val find_bound : VarSet.t -> Var.t -> Formula.t -> int -> (t * bool Lazy.t) option
 
+  val compute_bound:  VarSet.t -> T.t -> Var.t -> (t * bool Lazy.t) option
+
   (** Returns a local sizebound of the specified kind for the variable of the transition.
       A local sizebound is expressed in relation to the values directly before executing the transition. *)
   val sizebound_local : P.t -> T.t -> Var.t -> t Option.t
-
-  val sizebound_local_rv : P.t -> (T.t * Var.t) -> t Option.t
-
-  (** If for all result variables of the given kind a local sizebound is defined, this function returns a local sizebound function.
-      Otherwise it returns None. *)
-  val sizebound_local_scc : P.t ->  (T.t * Var.t) list -> ((T.t * Var.t) -> t * bool) Option.t
-
-  (** Resets all cached data.
-      Useful for testing in the same OCaml instance. *)
-  val reset : unit -> unit
-
-  (** Resets all cached data used in the cfr computation.
-      Useful for testing in the same OCaml instance. *)
-  val reset_cfr : unit -> unit
-
-  val switch_cache : unit -> unit
-
-  (** Enables cfr. *)
-  val enable_cfr : unit -> unit
 end
 
 include module type of Make(TransitionLabel_)(Transition_)(Program_)
