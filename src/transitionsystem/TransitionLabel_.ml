@@ -362,6 +362,7 @@ let rename rename_map t =
     invariant = Invariant.rename t.invariant rename_map;
     cost = Polynomial.rename rename_map t.cost;
   }
+  |> tap (fun _ -> Hashtbl.clear vars_memoization)
 
 let remove_non_contributors non_contributors t =
     let update_ = VarSet.fold (fun var u -> VarMap.remove var u) non_contributors t.update in

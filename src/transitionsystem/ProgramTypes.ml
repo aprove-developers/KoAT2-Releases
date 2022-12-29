@@ -271,7 +271,8 @@ module type Program = sig
   (** Type of a program consisting of a program graph and a start location. *)
   type t
 
-  (** Create a program from a start location and an enum of transitions *)
+  (** Create a program from a start location and an enum of transitions. *)
+  (** The user is responsible for making sure that the arities of all locations match and for correct naming of arg variables *)
   val from_enum: location -> transition Enum.t -> t
 
   (** Create a program from a start location and a graph *)
