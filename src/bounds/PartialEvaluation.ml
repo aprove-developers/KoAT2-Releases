@@ -130,6 +130,16 @@ let counter = ref 0
 (** To allow several parallel executions of KoAT, we create cfr-output folders with unique names. *)
 let uid = ref ""
 
+(** After parsing the program outputted by iRankFinder the arg variables will be called Arg_0, Arg_1. *)
+(** But suppose we have already preprocessed our program and eliminated argument variable Arg_0. I.e. argument variables are Arg_1,.. *)
+(** Then we have to correspondingly rename the argument variables from iRankFinder *)
+let rename_arg_vars original_program program_cfr =
+  let rename_map =
+    Enum.combine (LazyList.enum Var.args) (VarSet.enum @@ Program.input_vars original_program)
+    |> RenameMap.from % List.of_enum
+  in
+  Program.map_transitions (Transition.rename rename_map) program_cfr
+
 (** Creates a file containing irankfinder, applies irankfinder and returns the resulting program. *)
 let applyIrankFinder (scc_program: Program.t) =
   if String.equal !uid "" then (
@@ -146,7 +156,8 @@ let applyIrankFinder (scc_program: Program.t) =
                ^ ".koat > /dev/null 2>&1")) in
   if tmp != 0 then raise CFRefinementCRASH;
   "./tmp_" ^ !uid ^ "/tmp/tmp_scc" ^ (string_of_int !counter) ^ "_cfr1.koat"
-      |> Readers.read_input ~rename:false false
+  |> Readers.read_input ~rename:false false
+  |> rename_arg_vars scc_program
 
 let rename_matching_trans (l_original: Location.t) (l_cfr: Location.t) transitions =
   transitions
@@ -235,8 +246,8 @@ let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSe
         let entry_transitions = List.map (fun (l,t,l') -> (initial_location,t,l')) (Program.entry_transitions logger merged_program scc_list) in
         try
           let program_cfr =
-            Program.from_enum initial_location (List.enum @@ entry_transitions@scc_list)
-            |> applyIrankFinder
+          Program.from_enum initial_location (List.enum @@ entry_transitions@scc_list)
+          |> applyIrankFinder
 
           (** Prepares transitions created by irankfinder to merge. Hier müssen noch die Variablen x' = update(x) verändert werden. *)
           and map = RenameMap.from_native (List.map (fun var -> (String.replace ~sub:"_" ~by:"" ~str:(Var.to_string var) |> Tuple2.second,
