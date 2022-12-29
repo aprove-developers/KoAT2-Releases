@@ -381,19 +381,28 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
       program
       |> Program.sccs
       |> List.of_enum
-      |> List.fold_left (fun (program, appr, rvg) scc ->
-                          if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
-                              appr
-                              |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
-                              |> SizeBounds.improve program rvg ~scc:(Option.some scc)
-                              |> twn_size_bounds ~conf scc program
-                              (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
-                              |> improve_scc ~conf rvg scc program
- (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
- |> handle_cfr ~conf ~preprocess scc program rvg
- |> fun (program,appr,rvg) -> (program, scc_cost_bounds ~conf program scc appr,rvg)
-                          else (program, appr, rvg))
-                    (program, appr, rvg)
+      |> List.fold_left (fun (program, appr, rvg) scc_orig ->
+             let improve_scc scc =
+               if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
+                 appr
+                 |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
+                 |> SizeBounds.improve program rvg ~scc:(Option.some scc)
+                 |> twn_size_bounds ~conf scc program
+                 (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
+                 |> improve_scc ~conf rvg scc program
+                 (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
+                 |> handle_cfr ~conf ~preprocess scc program rvg
+                 |> fun (program,appr,rvg) -> (program, scc_cost_bounds ~conf program scc appr,rvg)
+               else (program, appr, rvg)
+             in
+             (* Check if SCC still exists and keep only existing transitions (Preprocessing in cfr might otherwise cut them ) *)
+             match conf.cfr_configuration with
+             | NoCFR        -> improve_scc scc_orig
+             | PerformCFR _ ->
+                let scc = TransitionSet.inter scc_orig (Program.transitions program) in
+                if TransitionSet.is_empty scc then (program,appr,rvg)
+                else improve_scc scc
+           ) (program, appr, rvg)
       |> Tuple3.get12
     in
     let appr_with_costbounds = CostBounds.infer_from_timebounds program appr in
