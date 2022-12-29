@@ -386,7 +386,7 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
                               appr
                               |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                               |> SizeBounds.improve program rvg ~scc:(Option.some scc)
-                              (* TODO |> TWNSizeBounds.improve program ~scc:(Option.some scc) *)
+                              |> twn_size_bounds ~conf scc program
                               (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
                               |> improve_scc ~conf rvg scc program
  (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
