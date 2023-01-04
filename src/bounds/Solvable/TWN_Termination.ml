@@ -13,8 +13,8 @@ module SMTSolverTimeout = SMT.Z3SolverTimeout
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  module TWNLoop = TWNLoop.Make(PM)
   module Check_TWN = Check_TWN.Make(PM)
+  module Loop = SimpleCycle.Loop(PM)
 
   exception Non_Terminating of (Transition.t list * Transition.t list)
 
@@ -36,14 +36,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   module Valuation = Valuation.Make(OurInt)
 
-  let check_update_invariant twn_loop atom =
-    let poly = Atom.poly atom in
-    let poly_updated = Polynomial.substitute_f (TWNLoop.update_full twn_loop) poly in
-    let atom_updated = Atom.mk_lt poly_updated Polynomial.zero in
-    SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
-
-  let termination_ twn order npe varmap =
-    let self_impl, rest = TWNLoop.invariant twn |> List.partition @@ check_update_invariant twn in
+  let termination_ ((guard,inv,update): Loop.t) order npe varmap =
+    let self_impl, rest = Constraint.mk_true, inv in
+    (* TODO TWNLoop.invariant twn |> List.partition @@ check_update_invariant twn in *)
     let formula =
       Formula.any (
       List.map (fun constr ->
@@ -53,7 +48,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             let formula_poly = if Atom.is_lt atom
                 then sub_poly |> red_lt
                 else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
-                (constr |> List.unique ~eq:Atom.equal) (Formula.mk_true)) ((TWNLoop.guard_without_inv twn |> Formula.mk_and (Formula.mk rest) |> Formula.constraints))) in
+                (constr |> List.unique ~eq:Atom.equal) Formula.mk_true) (Formula.mk_and guard (Formula.mk rest) |> Formula.constraints)) in
     let model = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in
     (Option.is_none model)
    |> tap (fun bool ->
@@ -66,12 +61,12 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   (* For Testing *)
   let termination t =
-    let twn = TWNLoop.mk_transition t in
-    let order = Check_TWN.check_triangular twn in
+    let loop = Loop.mk t in
+    let order = Check_TWN.check_triangular loop in
     let pe = PE.compute_closed_form (List.map (fun var ->
-        let update_var = TWNLoop.update twn var in
-        (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
+        let update_var = Loop.update_var loop var in
+        var, update_var) order) in
     let npe = PE.normalize pe in
     let varmap = Hashtbl.of_list (List.combine order npe) in
-    termination_ twn order npe varmap
+    termination_ loop order npe varmap
 end

@@ -387,7 +387,7 @@ module PE = struct
 
 
     (* Monotonic Kernel *)
-    module SMTSolver = SMT.Z3Solver
+    (* module SMTSolver = SMT.Z3Solver *)
 
     let red_gt poly_list =
         let rec constraint_eq_zero i = function
@@ -399,15 +399,15 @@ module PE = struct
         | x::xs -> Formula.(mk_or (mk_and (mk_gt x Polynomial.zero) (constraint_eq_zero (i - 1) poly_list |> Formula.mk)) (formula (i + 1) xs))  in
         formula 1 poly_list
 
-    let negative_dominated invariant guard npe =
+    (* let negative_dominated invariant guard npe =
     let formula = red_gt (List.map (RationalPolynomial.normalize % Tuple4.second) npe) in (* npe > 0 *)
     SMTSolver.satisfiable Formula.(mk_and (mk_and invariant guard) formula |> simplify) (* there exist a model sat. guard && inv && red(npe > 0) *)
     |> not
 
     module ScaledMonomialRational = ScaledMonomials.Make(OurRational)
-    module MonomialRational = Monomials.Make(OurRational)
+    module MonomialRational = Monomials.Make(OurRational) *)
 
-    let monotonic_kernel precondition guard = function
+    (* let monotonic_kernel precondition guard = function
         | [] -> [], []
         | [x] -> [x], []
         | x::xs ->
@@ -435,7 +435,7 @@ module PE = struct
         if negative_dominated precondition guard (x::ys) then
             (x::ys |> simplify), mths
         else
-            x::xs, []
+            x::xs, [] *)
 
     open BoundsInst
 

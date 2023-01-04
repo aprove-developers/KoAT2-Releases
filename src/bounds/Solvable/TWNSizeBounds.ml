@@ -1,4 +1,4 @@
-open Batteries
+(* open Batteries
 open ProgramModules
 open Polynomials
 open PolyExponential
@@ -65,4 +65,4 @@ let improve program ?(scc = None) appr =
     let trans = (if Option.is_some scc then (Option.get scc) else Program.transitions program)
         |> TransitionSet.to_list
         |> List.filter (fun (l,t,l') -> Approximation.is_time_bounded appr (l,t,l')) in
-    List.fold_right (improve_t program trans) trans appr
+    List.fold_right (improve_t program trans) trans appr *)

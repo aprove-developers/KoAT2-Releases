@@ -9,7 +9,7 @@ let logger = Logging.(get Twn)
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module Check_TWN = Check_TWN.Make(PM)
-  module TWNLoop = TWNLoop.Make(PM)
+  module Loop = SimpleCycle.Loop(PM)
   module TWN_Termination = TWN_Termination.Make(PM)
 
   (* COMPLEXITY: *)
@@ -19,8 +19,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     if OurInt.is_negative k || OurInt.is_zero k then OurInt.one
     else
       let rec test_m m =
-        let tmp1 = OurInt.(mul (pow_ourint m a1) (pow_ourint b1 m)) in
-        let tmp2 = OurInt.(mul (mul (pow_ourint m a2) (pow_ourint b2 m)) k) in
+        let tmp1 = OurInt.((pow_ourint m a1) * (pow_ourint b1 m)) in
+        let tmp2 = OurInt.((pow_ourint m a2) * (pow_ourint b2 m) * k) in
         if OurInt.is_ge a1 a2 then
           if (OurInt.is_gt tmp1 tmp2) then m else test_m OurInt.(add m one)
         else
@@ -29,9 +29,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let rec decrease_m m =
         if OurInt.is_zero m then m
         else
-          let m_dec = OurInt.(sub m one) in
-          let tmp1 = OurInt.(mul (pow_ourint m_dec a1) (pow_ourint b1 m_dec)) in
-          let tmp2 = OurInt.(mul (mul (pow_ourint m_dec a2) (pow_ourint b2 m_dec)) k) in
+          let m_dec = OurInt.(m - one) in
+          let tmp1 = OurInt.((pow_ourint m_dec a1) * (pow_ourint b1 m_dec)) in
+          let tmp2 = OurInt.((pow_ourint m_dec a2) * (pow_ourint b2 m_dec) * k) in
           if OurInt.is_ge tmp2 tmp1 then m else decrease_m m_dec in
       OurInt.zero |> test_m |> decrease_m
 
@@ -82,7 +82,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let m_ = OurInt.max_list (List.map (fun ys -> compute_M (base_exp ys)) (prefix xs)) in
       Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["M", (OurInt.to_string m_)]);
       Bound.(of_poly (Polynomial.add alphas_abs alphas_abs) |> add (of_constant (OurInt.max m_ n_)) |> add (of_constant OurInt.one))
-      |> tap (fun b -> (* Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);  *)
+      |> tap (fun b ->
+        Logger.log logger Logger.INFO (fun () -> "complexity.compute_f", ["2*alpha_abs+max(N,M)", Bound.to_string b]);
         TWN_Proofs.proof_append (
         [ "alphas_abs: " ^ (Polynomial.to_string_pretty alphas_abs);
           "M: " ^ (OurInt.to_string m_);
@@ -90,32 +91,32 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           "Bound: " ^ (Bound.to_string ~pretty:true b);
         ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block |> FormattedString.(<>) (FormattedString.mk_str_line ("Stabilization-Threshold for: " ^ (Atom.to_string ~pretty:true atom))));)
 
-  let get_bound t order npe varmap =
+  let get_bound ((guard,inv,update): Loop.t) order npe varmap =
     let bound, max_con =
         List.fold_right (fun atom (bound, const) ->
             let poly = Atom.poly atom |> Polynomial.neg in
-            let sub_poly, l_ = PE.substitute varmap poly |> PE.remove_frac |> PE.monotonic_kernel (TWNLoop.invariant t |> Formula.mk) (TWNLoop.guard t) in
-            let l_max = if List.is_empty [] then OurInt.zero else List.map (fun (x,y) -> monotonicity_th_int 1 x y) l_  |> OurInt.max_list in
-            Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", (Atom.to_string atom); "subs", "0 <= " ^ (PE.to_string sub_poly)]);
+            let sub_poly = PE.substitute varmap poly |> PE.remove_frac (* TODO |> PE.monotonic_kernel inv (TWNLoop.guard t) *) in
+            Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", Atom.to_string atom; "subs", "0 <= " ^ PE.to_string sub_poly]);
             let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
-            let max_const = OurInt.max_list [const; (PE.max_const sub_poly); l_max] in
-              (Bound.add bound ((compute_f atom sub_poly_n)), max_const))
-              (TWNLoop.guard_without_inv t |> Formula.atoms |> List.unique ~eq:Atom.equal) (Bound.one, OurInt.zero) in
-              Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", (OurInt.to_string max_con)]);
+            let max_const = OurInt.max const (PE.max_const sub_poly) in
+              Bound.add bound (compute_f atom sub_poly_n), max_const)
+              (guard |> Formula.atoms |> List.unique ~eq:Atom.equal) (Bound.one, OurInt.zero) in (* TODO guard without inv *)
+              Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", OurInt.to_string max_con]);
     Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
     |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
 
-  let complexity loop =
+  let complexity ((guard,inv,update): Loop.t) =
+      let loop = (guard,inv,update) in
       let order = Check_TWN.check_triangular loop in
       let t_, was_negative =
         if (Check_TWN.check_weakly_negativitiy loop) then
-          Check_TWN.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", TWNLoop.to_string loop])), true
+          Check_TWN.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", Loop.to_string loop])), true
         else loop, false in
       Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
       TWN_Proofs.proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
       let pe = PE.compute_closed_form (List.map (fun var ->
-          let update_var = TWNLoop.update t_ var in
-          (var, if Option.is_some update_var then Option.get update_var else Polynomial.of_var var)) order) in
+          let update_var = Loop.update_var t_ var in
+          var, update_var) order) in
           Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
           TWN_Proofs.proof_append (
             FormattedString.(mk_str "closed-form:" <> (
@@ -123,13 +124,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             |> List.map (fun (a,b) -> a ^ ": " ^ b)
             |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
       let npe = PE.normalize pe in
-          Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string npe)));
-      let varmap = Hashtbl.of_list (List.combine order npe) in
+          Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string npe));
+      let varmap = Hashtbl.of_list @@ List.combine order npe in
       let terminating = TWN_Termination.termination_ t_ order npe varmap in
       if not terminating then
         Bound.infinity
       else
-        let f = get_bound t_ order npe varmap in if was_negative then Bound.(add (add f f) one) else f
+        let f = get_bound t_ order npe varmap in if was_negative then Bound.(f + f + one) else f
 
-  let complexity_ (_,t,_) = complexity (TWNLoop.mk_transition t)
+  let complexity_ (_,t,_) = complexity (Loop.mk t)
 end

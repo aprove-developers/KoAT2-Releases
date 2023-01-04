@@ -245,7 +245,8 @@ let improve_timebound (scc: TransitionSet.t) measure program appr =
 let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.t) (appr: Approximation.t) =
   match conf.twn_size_bounds with
   | NoTwnSizeBounds -> appr
-  | ComputeTwnSizeBounds -> TWNSizeBounds.improve program ~scc:(Option.some scc) appr
+  | _ -> appr
+  (* | ComputeTwnSizeBounds -> TWNSizeBounds.improve program ~scc:(Option.some scc) appr *)
 
 (* TODO unify conf types with ~local! *)
 let improve_scc ~conf rvg_with_sccs (scc: TransitionSet.t) program lsb_table appr =
@@ -340,7 +341,7 @@ let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: Tr
                   appr
                   |> tap (const @@ Logger.log logger Logger.INFO (fun () -> method_name ^ "analysis", ["scc", TransitionSet.to_id_string scc]))
                   |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc) (LSB_Table.find lsbs)
-                  |> TWNSizeBounds.improve program ~scc:(Option.some scc)
+                  (* |> TWNSizeBounds.improve program ~scc:(Option.some scc) *)
                   (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
                   |> improve_scc ~conf rvg_with_sccs_cfr scc program_cfr lsbs
                 else appr)
