@@ -5,6 +5,8 @@ open Batteries
     If all optionals evaluate to Some, it returns a list of those values. *)
 val get_all : ('a Option.t) list -> ('a list) Option.t
 
+val group : ('a -> 'a -> bool) -> 'a list -> 'a list list
+
 (** Computes the maximum of the enum if non-empty, else returns None. *)
 val max_option : ('a -> 'a -> bool) -> 'a Enum.t -> 'a Option.t
 

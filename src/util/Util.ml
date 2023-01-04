@@ -5,6 +5,16 @@ let get_all xs =
     Option.bind maybe (fun x -> Option.map (fun list -> x :: list) result) in
   List.fold_left combine (Some []) xs
 
+(* https://stackoverflow.com/questions/22120765/group-function-in-ocaml *)
+let group f l =
+  let rec grouping acc = function
+    | [] -> acc
+    | hd::tl ->
+      let l1,l2 = List.partition (f hd) tl in
+      grouping ((hd::l1)::acc) l2
+  in
+  grouping [] l
+
 let max_option greater =
   let f = function
     | (None, y) -> Some y
