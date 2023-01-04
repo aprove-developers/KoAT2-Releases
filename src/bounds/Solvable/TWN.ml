@@ -59,6 +59,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     TWN_Proofs.proof := FormattedString.Empty;
     let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
     if Option.is_none opt then (
+      let bound = Timeout.timed_run 5. (fun () ->
       (* We have not yet computed a (local) runtime bound. *)
       let loops_opt = SimpleCycle.find_loops appr program scc t in
       if Option.is_some loops_opt then
@@ -67,6 +68,10 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         (Option.get loops_opt)
         |> List.enum
         |> Bound.sum
+      else
+        Bound.infinity) in
+      if Option.is_some bound then
+        Tuple2.first @@ Option.get bound
       else
         Bound.infinity
     ) else (
