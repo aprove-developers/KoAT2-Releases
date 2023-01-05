@@ -40,17 +40,7 @@ module Loop(PM: ProgramTypes.ClassicalProgramModules) = struct
     in
       (new_guard,Constraint.mk_true,new_update)
 
-  module SMTSolver = SMT.Z3Solver
-
-  (** Checks if an atom a is an update invariant, i.e., |= a -> update(a). *)
-  let check_update_invariant (guard,_,update) atom =
-    let poly = Atom.poly atom in
-    let substitution update_map = fun var ->
-      VarMap.Exceptionless.find var update_map |? Polynomial.of_var var
-    in
-    let poly_updated = Polynomial.substitute_f (substitution update) poly in
-    let atom_updated = Atom.mk_le poly_updated Polynomial.zero in
-    SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
+  let chain (t: t) = append t t
 end
 
 module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct

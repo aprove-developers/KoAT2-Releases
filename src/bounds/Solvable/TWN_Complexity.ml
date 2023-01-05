@@ -110,7 +110,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let order = Check_TWN.check_triangular loop in
       let t_, was_negative =
         if (Check_TWN.check_weakly_negativitiy loop) then
-          Check_TWN.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", Loop.to_string loop])), true
+          Loop.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", Loop.to_string loop])), true
         else loop, false in
       Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
       TWN_Proofs.proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
