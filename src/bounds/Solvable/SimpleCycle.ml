@@ -126,7 +126,7 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
     List.find_map_opt (fun cycle ->
       let chained_cycle = chain_cycle cycle program in
       if List.for_all (fun (entry,loop) -> f appr entry loop) chained_cycle then
-        Option.some chained_cycle
+        Option.some (handled_transitions cycle, chained_cycle)
       else
         None) cycles
 end
