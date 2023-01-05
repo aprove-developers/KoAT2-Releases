@@ -16,6 +16,7 @@ module Loop(PM: ProgramTypes.ClassicalProgramModules) = struct
   let guard = Tuple3.first
   let inv = Tuple3.second
   let update = Tuple3.third
+  let update_opt (_,_,update) var = VarMap.find_opt var update
   let update_var (_,_,update) var = VarMap.find_opt var update |? Polynomial.of_var var
   let updated_vars t = VarMap.keys (update t) |> VarSet.of_enum
 
@@ -41,6 +42,13 @@ module Loop(PM: ProgramTypes.ClassicalProgramModules) = struct
       (new_guard,Constraint.mk_true,new_update)
 
   let chain (t: t) = append t t
+
+  let eliminate_non_contributors (loop: t) =
+    let f loop non_contributors =
+      (guard loop, VarSet.fold VarMap.remove non_contributors (update loop)) in
+    let (guard, new_update) =
+      EliminateNonContributors.eliminate_t (updated_vars loop) (Formula.vars @@ guard loop) (update_opt loop) (f loop) in
+    (guard, Tuple3.second loop, new_update) (** TODO fix when adding invariants. *)
 end
 
 module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
@@ -107,7 +115,7 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
     However, we consider them when we compute the final bound. *)
   let chain_cycle cycle program =
     let entries = Program.entry_transitions logger program (handled_transitions cycle) in
-    List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry)) entries
+    List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors) entries
 
   let find_loops f appr program scc t = (* TODO add var *)
     let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
