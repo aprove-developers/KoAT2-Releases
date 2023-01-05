@@ -36,8 +36,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   module Valuation = Valuation.Make(OurInt)
 
-  let termination_ ((guard,inv,update): Loop.t) order npe varmap =
-    let self_impl, rest = Constraint.mk_true, inv in
+  let termination_ ((guard,update): Loop.t) order npe varmap =
+    let self_impl, rest = Constraint.mk_true, Constraint.mk_true in
     (* TODO TWNLoop.invariant twn |> List.partition @@ check_update_invariant twn in *)
     let formula =
       Formula.any (

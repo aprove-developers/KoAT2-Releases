@@ -9,28 +9,27 @@ open ProgramTypes
 module Loop(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  (** A loop is a 3-tuple (guard,invariant,update) *)
-  type t = Formula.t * Constraint.t * (Polynomial.t VarMap.t)
+  (** A loop is a 2-tuple (guard,update) *)
+  type t = Formula.t * (Polynomial.t VarMap.t)
 
-  let mk t = (Formula.mk (TransitionLabel.guard t), TransitionLabel.invariant t, TransitionLabel.update_map t)
-  let guard = Tuple3.first
-  let inv = Tuple3.second
-  let update = Tuple3.third
-  let update_opt (_,_,update) var = VarMap.find_opt var update
-  let update_var (_,_,update) var = VarMap.find_opt var update |? Polynomial.of_var var
-  let updated_vars t = VarMap.keys (update t) |> VarSet.of_enum
+  let mk t = (Formula.mk (TransitionLabel.guard t), TransitionLabel.update_map t)
+  let guard = Tuple2.first
+  let update = Tuple2.second
+  let update_opt (_,update) var = VarMap.find_opt var update
+  let update_var (_,update) var = VarMap.find_opt var update |? Polynomial.of_var var
+  let updated_vars t = VarMap.keys @@ update t |> VarSet.of_enum
 
-  let to_string ((guard,inv,update): t) =
+  let to_string ((guard,update): t) =
     let update_str =
       update
       |> VarMap.bindings
       |> List.map (fun (var,poly) -> (Var.to_string ~pretty:true var, Polynomial.to_string_pretty poly))
       |> List.split
       |> fun (xs,ys) -> "("^(String.concat "," xs)^") -> ("^(String.concat "," ys)^")" in
-    "(" ^ Formula.to_string ~pretty:true guard ^ "," ^ Constraint.to_string ~pretty:true inv ^ "," ^ update_str
+    "(" ^ Formula.to_string ~pretty:true guard ^ "," ^ update_str
 
-  (** Appends two loops. However, update invariants are removed as appending does not maintain update invariance. *)
-  let append ((guard,_,update): t) ((guard',_,update'): t) =
+  (** Appends two loops. *)
+  let append ((guard,update): t) ((guard',update'): t) =
     let substitution update_map = fun var ->
       VarMap.Exceptionless.find var update_map |? Polynomial.of_var var
     in
@@ -39,16 +38,14 @@ module Loop(PM: ProgramTypes.ClassicalProgramModules) = struct
     and new_guard =
       Formula.Infix.(guard  && Formula.map_polynomial (Polynomial.substitute_f (substitution update)) (guard'))
     in
-      (new_guard,Constraint.mk_true,new_update)
+      (new_guard,new_update)
 
-  let chain (t: t) = append t t
+  let chain t = append t t
 
   let eliminate_non_contributors (loop: t) =
     let f loop non_contributors =
       (guard loop, VarSet.fold VarMap.remove non_contributors (update loop)) in
-    let (guard, new_update) =
-      EliminateNonContributors.eliminate_t (updated_vars loop) (Formula.vars @@ guard loop) (update_opt loop) (f loop) in
-    (guard, Tuple3.second loop, new_update) (** TODO fix when adding invariants. *)
+    EliminateNonContributors.eliminate_t (updated_vars loop) (Formula.vars @@ guard loop) (update_opt loop) (f loop)
 end
 
 module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
@@ -106,7 +103,7 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
   (* We contract a (shifted to start) cycle to a loop  *)
   let contract_cycle (cycle: path) start =
     let pre, post = List.span (fun (l,_,_) -> not @@ Location.equal start l) cycle in
-    let merge (_,ts,_) = (List.map (Formula.mk % TransitionLabel.guard) ts |> Formula.any, Constraint.mk_true, List.first ts |> TransitionLabel.update_map) in
+    let merge (_,ts,_) = (List.map (Formula.mk % TransitionLabel.guard) ts |> Formula.any, List.first ts |> TransitionLabel.update_map) in
     let merge_pre = List.map merge pre and merge_post = List.map merge post in
     List.fold Loop.append (List.first merge_post) (List.drop 1 merge_post@merge_pre)
 

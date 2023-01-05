@@ -91,46 +91,46 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           "Bound: " ^ (Bound.to_string ~pretty:true b);
         ] |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block |> FormattedString.(<>) (FormattedString.mk_str_line ("Stabilization-Threshold for: " ^ (Atom.to_string ~pretty:true atom))));)
 
-  let get_bound ((guard,inv,update): Loop.t) order npe varmap =
+  let get_bound ((guard,update): Loop.t) order npe varmap =
     let bound, max_con =
-        List.fold_right (fun atom (bound, const) ->
-            let poly = Atom.poly atom |> Polynomial.neg in
-            let sub_poly = PE.substitute varmap poly |> PE.remove_frac (* TODO |> PE.monotonic_kernel inv (TWNLoop.guard t) *) in
-            Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", Atom.to_string atom; "subs", "0 <= " ^ PE.to_string sub_poly]);
-            let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
-            let max_const = OurInt.max const (PE.max_const sub_poly) in
-              Bound.add bound (compute_f atom sub_poly_n), max_const)
-              (guard |> Formula.atoms |> List.unique ~eq:Atom.equal) (Bound.one, OurInt.zero) in (* TODO guard without inv *)
-              Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", OurInt.to_string max_con]);
+      List.fold_right (fun atom (bound, const) ->
+        let poly = Atom.poly atom |> Polynomial.neg in
+        let sub_poly = PE.substitute varmap poly |> PE.remove_frac (* TODO |> PE.monotonic_kernel inv (TWNLoop.guard t) *) in
+        Logger.log logger Logger.INFO (fun () -> "complexity: npe -> guard_atom", ["atom", Atom.to_string atom; "subs", "0 <= " ^ PE.to_string sub_poly]);
+        let sub_poly_n = sub_poly |> List.map (fun (c,p,d,b) -> (c, RationalPolynomial.normalize p , d |> OurInt.of_int, b |> OurInt.of_int)) in
+        let max_const = OurInt.max const (PE.max_const sub_poly) in
+          Bound.add bound (compute_f atom sub_poly_n), max_const)
+          (guard |> Formula.atoms |> List.unique ~eq:Atom.equal) (Bound.one, OurInt.zero) in (* TODO guard without inv *)
+          Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["max constant in constant constraint", OurInt.to_string max_con]);
     Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
     |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
 
-  let complexity ((guard,inv,update): Loop.t) =
-      let loop = (guard,inv,update) in
-      let order = Check_TWN.check_triangular loop in
-      let t_, was_negative =
-        if (Check_TWN.check_weakly_negativitiy loop) then
-          Loop.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", Loop.to_string loop])), true
-        else loop, false in
-      Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
-      TWN_Proofs.proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
-      let pe = PE.compute_closed_form (List.map (fun var ->
-          let update_var = Loop.update_var t_ var in
-          var, update_var) order) in
-          Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
-          TWN_Proofs.proof_append (
-            FormattedString.(mk_str "closed-form:" <> (
-            (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
-            |> List.map (fun (a,b) -> a ^ ": " ^ b)
-            |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
-      let npe = PE.normalize pe in
-          Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string npe));
-      let varmap = Hashtbl.of_list @@ List.combine order npe in
-      let terminating = TWN_Termination.termination_ t_ order npe varmap in
-      if not terminating then
-        Bound.infinity
-      else
-        let f = get_bound t_ order npe varmap in if was_negative then Bound.(f + f + one) else f
+  let complexity ((guard,update): Loop.t) =
+    let loop = (guard,update) in
+    let order = Check_TWN.check_triangular loop in
+    let t_, was_negative =
+      if (Check_TWN.check_weakly_negativitiy loop) then
+        Loop.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", Loop.to_string loop])), true
+      else loop, false in
+    Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
+    TWN_Proofs.proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
+    let pe = PE.compute_closed_form (List.map (fun var ->
+      let update_var = Loop.update_var t_ var in
+      var, update_var) order) in
+      Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
+      TWN_Proofs.proof_append (
+        FormattedString.(mk_str "closed-form:" <> (
+        (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
+        |> List.map (fun (a,b) -> a ^ ": " ^ b)
+        |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
+    let npe = PE.normalize pe in
+      Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string npe));
+    let varmap = Hashtbl.of_list @@ List.combine order npe in
+    let terminating = TWN_Termination.termination_ t_ order npe varmap in
+    if not terminating then
+      Bound.infinity
+    else
+      let f = get_bound t_ order npe varmap in if was_negative then Bound.(f + f + one) else f
 
   let complexity_ (_,t,_) = complexity (Loop.mk t)
 end
