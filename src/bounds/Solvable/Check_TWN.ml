@@ -84,10 +84,10 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let update = Loop.update_var t var in
       update |> Polynomial.coeff_of_var var |> OurInt.is_negative) (Loop.updated_vars t)
 
-  (* For Testing *)
-  let check_twn loop =
+  let check_twn_loop loop =
     check_weakly_monotonicity loop && ((List.length (check_triangular loop)) == (VarSet.cardinal ((Loop.updated_vars loop))))
 
+  (* For Testing *)
   let check_twn (_,t,_) =
-   check_twn (Loop.mk t)
+   check_twn_loop (Loop.mk t)
 end

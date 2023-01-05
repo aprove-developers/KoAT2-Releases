@@ -1,11 +1,11 @@
-open Batteries
-open Polynomials
-open Formulas
+open Automorphism
 open Atoms
+open Batteries
 open BoundsInst
 open Constraints
+open Formulas
 open PolyExponential
-open Automorphism
+open Polynomials
 
 let logger = Logging.(get Twn)
 
@@ -36,6 +36,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module TWNLoop = TWNLoop.Make(PM)
   module TWN_Complexity = TWN_Complexity.Make(PM)
   module TWN_Termination = TWN_Termination.Make(PM)
+  module Check_TWN = Check_TWN.Make(PM)
   module SimpleCycle = SimpleCycle.SimpleCycle(PM)
 
   module TimeBoundTable = Hashtbl.Make(Transition)
@@ -55,13 +56,16 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
             FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))
 
+  let heuristic_for_cycle appr entry loop =
+    Check_TWN.check_twn_loop loop && Approximation.is_time_bounded appr entry
+
   let time_bound (l,t,l') scc program appr transformation_type =
     TWN_Proofs.proof := FormattedString.Empty;
     let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
     if Option.is_none opt then (
       let bound = Timeout.timed_run 5. (fun () ->
       (* We have not yet computed a (local) runtime bound. *)
-      let loops_opt = SimpleCycle.find_loops appr program scc t in
+      let loops_opt = SimpleCycle.find_loops heuristic_for_cycle appr program scc t in
       if Option.is_some loops_opt then
         List.map (fun (entry,loop) ->
           TWN_Complexity.complexity loop |> lift appr entry)
