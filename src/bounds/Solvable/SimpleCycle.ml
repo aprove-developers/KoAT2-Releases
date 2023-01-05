@@ -124,11 +124,4 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
         Option.some chained_cycle
       else
         None) cycles
-
-  (**
-    - merge all transitionlabels
-    - compute all cycles
-    - take first which fulfills f (check)
-    *)
-
 end
