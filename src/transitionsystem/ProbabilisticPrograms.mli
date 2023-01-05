@@ -50,6 +50,9 @@ module GeneralTransition: sig
   val to_string: t -> string
   val to_string_pretty: t -> string
 
+  (* Obtain a string only containing the transitoin's id, e.g., [ "g3" ] *)
+  val ids_to_string: ?pretty:bool -> t -> string
+
   (** defaults to compare_same *)
   val compare: t -> t -> int
 

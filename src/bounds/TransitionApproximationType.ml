@@ -8,6 +8,7 @@ module type ApproximableTransition = sig
   val to_id_string: t -> string
   val compare_same: t -> t -> int
   val all_from_program: program -> t Enum.t
+  val ids_to_string: ?pretty:bool -> t -> string
 end
 
 module MakeDefaultApproximableTransition(PM: ProgramTypes.ProgramModules) = struct
@@ -15,6 +16,8 @@ module MakeDefaultApproximableTransition(PM: ProgramTypes.ProgramModules) = stru
   let all_from_program = PM.TransitionSet.enum % PM.Program.transitions
 
   include PM.Transition
+  let ids_to_string ?(pretty=false) =
+    PM.TransitionLabel.ids_to_string ~pretty % PM.Transition.label
 end
 
 module Make(B : BoundType.Bound)
@@ -58,9 +61,9 @@ module Make(B : BoundType.Bound)
       |> List.sort T.compare_same
       |> List.map (fun t -> t, Hashtbl.find_option map (T.id t) |? B.infinity)
       |> List.map (fun (t,b) -> if pretty then
-          FormattedString.mk_str_line @@ "  t" ^ (T.id t |> Util.natural_to_subscript) ^ ": " ^ B.to_string ~pretty:true b
+          FormattedString.mk_str_line @@ "  " ^ T.ids_to_string ~pretty t ^ ": " ^ B.to_string ~pretty:true b
         else
-          FormattedString.mk_str_line @@ "  t" ^ (T.id t |> string_of_int) ^ ": " ^ B.to_string b)
+          FormattedString.mk_str_line @@ "  " ^ T.ids_to_string ~pretty t ^ ": " ^ B.to_string b)
       |> FormattedString.mappend
 
     let to_string transitions (name, map) =
