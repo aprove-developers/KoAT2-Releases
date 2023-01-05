@@ -1,9 +1,9 @@
-open Batteries
-open ProgramModules
-open Formulas
-open Constraints
 open Atoms
+open Batteries
+open Constraints
+open Formulas
 open Polynomials
+open ProgramModules
 open ProgramTypes
 
 module Loop(PM: ProgramTypes.ClassicalProgramModules) = struct
@@ -109,7 +109,7 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
     let entries = Program.entry_transitions logger program (handled_transitions cycle) in
     List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry)) entries
 
-  let find_loops appr program scc t = (* TODO add var *)
+  let find_loops f appr program scc t = (* TODO add var *)
     let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
       Location.equal l1 l2 &&
       Location.equal l1' l2' &&
@@ -120,7 +120,7 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
     let cycles = cycles_with_t merged_trans merged_t in
     List.find_map_opt (fun cycle ->
       let chained_cycle = chain_cycle cycle program in
-      if List.for_all (fun (entry,loop) -> true (* TODO f appr program entry trans var loop *)) chained_cycle then
+      if List.for_all (fun (entry,loop) -> f appr entry loop) chained_cycle then
         Option.some chained_cycle
       else
         None) cycles
