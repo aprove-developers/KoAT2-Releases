@@ -335,6 +335,7 @@ module ProbabilisticTransitionLabel = struct
 
   let vars = vars VarsNonOverapproximated
   let vars_without_memoization = vars_without_memoization VarsNonOverapproximated
+  let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr = struct
@@ -379,6 +380,7 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
 
   let vars = vars VarsOverapproximated
   let vars_without_memoization = vars_without_memoization VarsOverapproximated
+  let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
 end
 
 module ProbabilisticTransition = struct

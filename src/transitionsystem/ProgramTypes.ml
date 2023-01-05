@@ -139,7 +139,9 @@ module type TransitionLabel = sig
   val input_vars : t -> VarSet.t
 
   (** Returns the number of input variables *)
-  val input_size: t -> int
+  val input_size : t -> int
+
+  val has_tmp_vars : t -> bool
 
   (** Guard that is true if both transitions can be executed one after another *)
   val chain_guards: t -> t -> Guard.t

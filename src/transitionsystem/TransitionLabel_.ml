@@ -216,8 +216,6 @@ let vars_memoization: (int,VarSet.t) Hashtbl.t = Hashtbl.create 10
 let vars = Util.memoize vars_memoization ~extractor:id vars_
 let vars_without_memoization = vars_ (** TODO remove this *)
 
-let vars_update t = (VarSet.of_enum % VarMap.keys) t.update
-
 let default = {
     id = 0;
     update = VarMap.empty;
@@ -326,6 +324,8 @@ let input_vars t =
   t.update
   |> VarMap.keys
   |> VarSet.of_enum
+
+let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
 
 let input_size t =
   t
