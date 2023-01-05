@@ -115,18 +115,23 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
     List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors) entries
 
   let find_loops f appr program scc t = (* TODO add var *)
-    let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
-      Location.equal l1 l2 &&
-      Location.equal l1' l2' &&
-      TransitionLabel.equivalent t t') (TransitionSet.to_list scc)
-      |> List.map (fun xs -> (Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs)
-    in
-    let merged_t = List.find (List.exists (fun t' -> TransitionLabel.equivalent t t') % Tuple3.second) merged_trans in
-    let cycles = cycles_with_t merged_trans merged_t in
-    List.find_map_opt (fun cycle ->
-      let chained_cycle = chain_cycle cycle program in
-      if List.for_all (fun (entry,loop) -> f appr entry loop) chained_cycle then
-        Option.some (handled_transitions cycle, chained_cycle)
-      else
-        None) cycles
+    Printf.printf "hi %B\n" (not @@ TransitionLabel.has_tmp_vars t);
+    if not @@ TransitionLabel.has_tmp_vars t then
+      let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
+        Location.equal l1 l2 &&
+        Location.equal l1' l2' &&
+        TransitionLabel.equivalent t t')
+        (TransitionSet.to_list scc |> List.filter (not % TransitionLabel.has_tmp_vars % Tuple3.second))
+        |> List.map (fun xs -> (Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs)
+      in
+      let merged_t = List.find (List.exists (fun t' -> TransitionLabel.equivalent t t') % Tuple3.second) merged_trans in
+      let cycles = cycles_with_t merged_trans merged_t in
+      List.find_map_opt (fun cycle ->
+        let chained_cycle = chain_cycle cycle program in
+        if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
+          Option.some (handled_transitions cycle, chained_cycle)
+        else
+          None) cycles
+    else
+      None
 end

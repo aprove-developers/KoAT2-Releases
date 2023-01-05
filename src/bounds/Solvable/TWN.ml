@@ -6,6 +6,7 @@ open Constraints
 open Formulas
 open PolyExponential
 open Polynomials
+open ProgramModules
 
 let logger = Logging.(get Twn)
 
@@ -56,7 +57,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
             FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))
 
-  let heuristic_for_cycle appr entry loop =
+  let heuristic_for_cycle appr entry program loop =
     Check_TWN.check_twn_loop loop && Approximation.is_time_bounded appr entry
 
   let time_bound (l,t,l') scc program appr transformation_type =
@@ -81,7 +82,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       else
         Bound.infinity
     ) else (
-      Printf.printf "hi id %i\n" (TransitionLabel.id t);
       (* We already have computed a (local) runtime bound and just lift it again.*)
       let xs = Option.get opt in
       let bound_with_sizebound = Bound.sum_list (List.map (Tuple2.uncurry @@ lift appr) xs) in

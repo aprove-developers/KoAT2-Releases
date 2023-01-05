@@ -45,6 +45,8 @@ val only_update: t -> t
 (** Returns the number of variables. *)
 val input_size : t -> int
 
+val has_tmp_vars : t -> bool
+
 (** Returns a string representing the left hand side of the update function.
     Can be used to dump the Program to a file. *)
 val update_to_file_string_lhs: t -> string
