@@ -42,10 +42,10 @@ module Loop(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   let chain t = append t t
 
-  let eliminate_non_contributors (loop: t) =
+  let eliminate_non_contributors ?(relevant_vars = None) (loop: t) =
     let f loop non_contributors =
       (guard loop, VarSet.fold VarMap.remove non_contributors (update loop)) in
-    EliminateNonContributors.eliminate_t (updated_vars loop) (Formula.vars @@ guard loop) (update_opt loop) (f loop)
+    EliminateNonContributors.eliminate_t (updated_vars loop) (relevant_vars |? Formula.vars @@ guard loop) (update_opt loop) (f loop)
 end
 
 module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
@@ -110,12 +110,11 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
   (** This method computes a loop for every entry transition of the cycle.
     Notice that we do not regard costs in the chaining step.
     However, we consider them when we compute the final bound. *)
-  let chain_cycle cycle program =
+  let chain_cycle ?(relevant_vars = None) cycle program =
     let entries = Program.entry_transitions logger program (handled_transitions cycle) in
-    List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors) entries
+    List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars) entries
 
-  let find_loops f appr program scc t = (* TODO add var *)
-    Printf.printf "hi %B\n" (not @@ TransitionLabel.has_tmp_vars t);
+  let find_loops ?(relevant_vars = None) f appr program scc t = (* TODO add var *)
     if not @@ TransitionLabel.has_tmp_vars t then
       let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
         Location.equal l1 l2 &&
@@ -127,7 +126,7 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
       let merged_t = List.find (List.exists (fun t' -> TransitionLabel.equivalent t t') % Tuple3.second) merged_trans in
       let cycles = cycles_with_t merged_trans merged_t in
       List.find_map_opt (fun cycle ->
-        let chained_cycle = chain_cycle cycle program in
+        let chained_cycle = chain_cycle ~relevant_vars cycle program in
         if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
           Option.some (handled_transitions cycle, chained_cycle)
         else

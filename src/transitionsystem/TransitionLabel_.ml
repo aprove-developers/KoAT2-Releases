@@ -332,7 +332,6 @@ let input_size t =
   |> input_vars
   |> VarSet.cardinal
 
-
 let rename_update update rename_map =
   update
   |> VarMap.enum
