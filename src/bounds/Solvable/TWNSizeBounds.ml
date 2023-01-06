@@ -5,17 +5,9 @@ open Polynomials
 open PolyExponential
 open ProgramModules
 
-let logger = Logging.(get Size)
-
 module Check_TWN = Check_TWN.Make(ProgramModules)
-module TWN = TWN.Make(ProgramModules)
-module TWNLoop = TWNLoop.Make(ProgramModules)
 module Loop = SimpleCycle.Loop(ProgramModules)
 module SimpleCycle = SimpleCycle.SimpleCycle(ProgramModules)
-
-let compute_order t var =
-    let t' = EliminateNonContributors.eliminate_t (TransitionLabel.vars t) (VarSet.singleton var) (TransitionLabel.update t) TransitionLabel.remove_non_contributors (t |> TransitionLabel.only_update) in
-    Check_TWN.check_triangular_t t'
 
 let heuristic_for_cycle appr entry program loop =
     Check_TWN.check_twn_loop loop && VarSet.for_all (Bound.is_finite % Approximation.sizebound appr entry) (Program.input_vars program)
@@ -53,6 +45,6 @@ let improve_t program trans (l,t,l') appr =
             appr) (TransitionLabel.input_vars t) appr
 
 let improve program ?(scc = None) appr =
-    let trans = (if Option.is_some scc then (Option.get scc) else Program.transitions program)
+    let trans = scc |? Program.transitions program
         |> TransitionSet.filter (fun (l,t,l') -> Approximation.is_time_bounded appr (l,t,l')) in
     TransitionSet.fold (improve_t program trans) trans appr

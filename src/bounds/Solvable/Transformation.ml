@@ -139,7 +139,7 @@ let transform_with_aut twn_loop automorphism vars =
     Then tries to find a  transformation using the jordan decomposition. To compute it, we call sympy.*)
 let transform_linearly (transition: TWNLoop.t) transformation_type =
   (* find order for variables and independent blocks and sort them for elegant code when updating transition*)
-  match Check_Solvable.check_solvable transition with
+  match Check_Solvable.check_solvable (TWNLoop.guard transition, TWNLoop.update_map transition) with
     | None -> None
     | Some x ->
       let blocks = change_order transition x in

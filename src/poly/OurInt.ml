@@ -57,4 +57,6 @@ let rec max_list = function
   | [] -> zero
   | x::xs -> max x (max_list xs)
 
+let sum_list = List.fold (+) zero
+
 let sign a = if is_zero a then 0 else if is_negative a then -1 else 1

@@ -245,7 +245,9 @@ let improve_timebound (scc: TransitionSet.t) measure program appr =
 let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.t) (appr: Approximation.t) =
   match conf.twn_size_bounds with
   | NoTwnSizeBounds -> appr
-  | ComputeTwnSizeBounds -> TWNSizeBounds.improve program ~scc:(Option.some scc) appr
+  | ComputeTwnSizeBounds ->
+    TWNSizeBounds.improve program ~scc:(Option.some scc) appr
+    |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
 
 (* TODO unify conf types with ~local! *)
 let improve_scc ~conf rvg_with_sccs (scc: TransitionSet.t) program lsb_table appr =
@@ -254,7 +256,6 @@ let improve_scc ~conf rvg_with_sccs (scc: TransitionSet.t) program lsb_table app
     |> knowledge_propagation scc program
     |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc) (LSB_Table.find lsb_table)
     |> twn_size_bounds ~conf scc program
-    (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
     |> improve_timebound ~conf scc `Time program
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
@@ -341,7 +342,6 @@ let handle_timeout_cfr method_name non_linear_transitions =
                     |> tap (const @@ Logger.log logger Logger.INFO (fun () -> method_name ^ "analysis", ["scc", TransitionSet.to_id_string scc]))
                     |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc) (LSB_Table.find lsbs)
                     |> twn_size_bounds ~conf scc program
-                    (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
                     |> improve_scc ~conf rvg_with_sccs_cfr scc program_cfr lsbs
                   else appr)
                 (CFR.merge_appr program program_cfr appr) in
@@ -405,7 +405,6 @@ let handle_timeout_cfr method_name non_linear_transitions =
                  |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                  |> SizeBounds.improve program rvg ~scc:(Option.some scc) (LSB_Table.find lsbs)
                  |> twn_size_bounds ~conf scc program
-                 (* |> SolvableSizeBounds.improve program ~scc:(Option.some scc) *)
                  |> improve_scc ~conf rvg scc program lsbs
                  (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
                  |> handle_cfr ~conf ~preprocess scc program rvg lsbs
