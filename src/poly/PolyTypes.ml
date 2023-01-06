@@ -509,6 +509,9 @@ module type Polynomial =
     (** Returns if the polynomial is linear. *)
     val is_linear : t -> bool
 
+    (** Returns true iff each monomial has degree >= 1. *)
+    val no_constant_addend : t -> bool
+
     val indeterminate_only_linear : indeterminate -> t -> bool
     val var_only_linear : Var.t -> t -> bool
 

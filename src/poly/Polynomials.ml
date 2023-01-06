@@ -181,6 +181,8 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
 
     let is_const poly = degree poly <= 0
 
+    let no_constant_addend = List.for_all (fun sm -> ScaledMonomial_.degree sm >= 1)
+
     let is_linear poly = (degree poly <= 1)
 
     let rename varmapping poly =
