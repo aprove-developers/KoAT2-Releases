@@ -14,7 +14,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   module Check_TWN = Check_TWN.Make(PM)
-  module Loop = SimpleCycle.Loop(PM)
+  module Loop = Loop.Make(PM)
 
   exception Non_Terminating of (Transition.t list * Transition.t list)
 

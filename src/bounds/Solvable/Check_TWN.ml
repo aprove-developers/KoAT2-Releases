@@ -5,7 +5,7 @@ open Polynomials
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  module Loop = SimpleCycle.Loop(PM)
+  module Loop = Loop.Make(PM)
 
   (* TOPOLOGICAL ORDERING: *)
   (* https://stackoverflow.com/questions/4653914/topological-sort-in-ocaml *)

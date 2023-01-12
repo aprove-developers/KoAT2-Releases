@@ -9,8 +9,8 @@ open Constraints
 let logger = Logging.(get Size)
 
 module Check_Solvable = Check_Solvable.Make(ProgramModules)
-module Loop = SimpleCycle.Loop(ProgramModules)
-module SimpleCycle = SimpleCycle.SimpleCycle(ProgramModules)
+module Loop = Loop.Make(ProgramModules)
+module SimpleCycle = SimpleCycle.Make(ProgramModules)
 
 module Monomial = Monomials.Make(OurInt)
 module ScaledMonomials = ScaledMonomials.Make(OurInt)
@@ -82,7 +82,7 @@ let improve_t program trans (l,t,l') appr =
               let cycle, loops = Option.get loops_opt in
               let local_bounds =
                   (* We first compute for every var (with a closed form) and every entry a local size bound *)
-                  List.map (fun (entry,loop) ->
+                  List.map (fun (entry,(loop,_)) ->
                       let blocks = Check_Solvable.check_solvable loop in
                       if Option.is_none blocks then ((l,t,l'),Bound.infinity)
                       else

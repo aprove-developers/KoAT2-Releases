@@ -17,7 +17,7 @@ type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
               -> ( ProgramModules.Program.t
                 , ProgramModules.TransitionSet.t
                 , RVGTypes.MakeRVG(ProgramModules).t, RVGTypes.MakeRVG(ProgramModules).scc
-                , SimpleCycle.Loop(ProgramModules).t
+                , Loop.Make(ProgramModules).t
                 , Approximation.MakeForClassicalAnalysis(ProgramModules).t) cfr_configuration
 
 type ('prog, 'tset, 'appr) twn_size_bounds =
@@ -36,7 +36,7 @@ type classical_program_conf_type = ( ProgramModules.Transition.t
                                    , ProgramModules.TransitionSet.t
                                    , RVGTypes.MakeRVG(ProgramModules).t
                                    , RVGTypes.MakeRVG(ProgramModules).scc
-                                   , SimpleCycle.Loop(ProgramModules).t
+                                   , Loop.Make(ProgramModules).t
                                    , Approximation.MakeForClassicalAnalysis(ProgramModules).t ) analysis_configuration
 
 
@@ -64,7 +64,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module TWN = TWN.Make(PM)
 
   type conf_type =
-    (Transition.t,Program.t,TransitionSet.t,RVG.t,RVG.scc,SimpleCycle.Loop(PM).t, Approximation.t) analysis_configuration
+    (Transition.t,Program.t,TransitionSet.t,RVG.t,RVG.scc,Loop.Make(PM).t, Approximation.t) analysis_configuration
 
   let default_configuration: conf_type = { run_mprf_depth = Some 1
                                          ; twn_configuration = None
@@ -142,7 +142,7 @@ let improve_with_rank_mprf measure program appr rank =
 
 let improve_with_twn program scc transformation_type appr =
   let compute appr_ t =
-   let bound = TWN.time_bound t scc program appr_ transformation_type in
+   let bound = TWN.time_bound transformation_type t scc program appr_ in
    let orginal_bound = get_bound `Time appr_ t in
     if (Bound.compare_asy orginal_bound bound) = 1 then
       MaybeChanged.changed (add_bound `Time bound t appr_)

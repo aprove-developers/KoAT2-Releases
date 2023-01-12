@@ -4,7 +4,7 @@ open Polynomials
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  module Loop = SimpleCycle.Loop(PM)
+  module Loop = Loop.Make(PM)
 
   let check_solvable (t: Loop.t) =
     let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in
