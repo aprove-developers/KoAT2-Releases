@@ -32,6 +32,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module TWN_Termination = TWN_Termination.Make(PM)
   module Check_TWN = Check_TWN.Make(PM)
   module SimpleCycle = SimpleCycle.Make(PM)
+  module Check_Solvable = Check_Solvable.Make(PM)
 
   module TimeBoundTable = Hashtbl.Make(Transition)
 
@@ -50,8 +51,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             FormattedString.mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
             FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))
 
-  let heuristic_for_cycle appr entry program loop =
-    Check_TWN.check_twn_loop loop && Approximation.is_time_bounded appr entry
+  let heuristic_for_cycle transformation_type appr entry program loop = match transformation_type with
+    | `NoTransformation -> Check_TWN.check_twn_loop loop && Approximation.is_time_bounded appr entry
+    | `Transformation -> Option.is_some @@ Check_Solvable.check_solvable loop (*  *)
 
   let time_bound transformation_type (l,t,l') scc program appr =
     TWN_Proofs.proof := FormattedString.Empty;
@@ -59,7 +61,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     if Option.is_none opt then (
       let bound = Timeout.timed_run 5. (fun () ->
       (* We have not yet computed a (local) runtime bound. *)
-      let loops_opt = SimpleCycle.find_loops heuristic_for_cycle appr program scc t in
+      let loops_opt = SimpleCycle.find_loops (heuristic_for_cycle transformation_type) appr program scc t in
       if Option.is_some loops_opt then
         let cycle, loops = Option.get loops_opt in
         let local_bounds = List.map (fun (entry,(loop,aut)) -> entry, Automorphism.apply_to_bound (TWN_Complexity.complexity loop) aut) loops in
