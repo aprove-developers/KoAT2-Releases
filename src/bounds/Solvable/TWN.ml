@@ -17,24 +17,17 @@ type ('twnt,'tt) twn_transformation_fun_type =
   'tt * ('tt list * 'tt list) * 'twnt -> ('tt * ('tt list * 'tt list) * 'twnt * Automorphism.t) option
 
 type twn_transformation_fun_type_transformable =
-  (TWNLoop.Make(ProgramModules).t, ProgramModules.Transition.t) twn_transformation_fun_type
+  (SimpleCycle.Loop(ProgramModules).t, ProgramModules.Transition.t) twn_transformation_fun_type
 
 type _ configuration = NoTransformation: ('a,'b) twn_transformation_fun_type configuration
-                     | Transformation: Transformation.transformation_type
-                                     -> (TWNLoop.Make(ProgramModules).t,
+                     | Transformation: (SimpleCycle.Loop(ProgramModules).t,
                                          ProgramModules.Transition.t) twn_transformation_fun_type configuration
-
-(** Applies any required transformation *)
-let handle_transformation (type a) (conf: a configuration): a =
-  match conf with | Transformation transformation -> Transformation.transform transformation
-                  | NoTransformation -> fun (a,b,c) -> Some (a,b,c,Automorphism.identity_aut)
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   module Approximation = Approximation.MakeForClassicalAnalysis(PM)
   module InvariantGeneration = InvariantGeneration.Make(PM)
-  module TWNLoop = TWNLoop.Make(PM)
   module TWN_Complexity = TWN_Complexity.Make(PM)
   module TWN_Termination = TWN_Termination.Make(PM)
   module Check_TWN = Check_TWN.Make(PM)

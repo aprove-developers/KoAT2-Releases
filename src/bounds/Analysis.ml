@@ -17,7 +17,7 @@ type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
               -> ( ProgramModules.Program.t
                 , ProgramModules.TransitionSet.t
                 , RVGTypes.MakeRVG(ProgramModules).t, RVGTypes.MakeRVG(ProgramModules).scc
-                , TWNLoop.Make(ProgramModules).t
+                , SimpleCycle.Loop(ProgramModules).t
                 , Approximation.MakeForClassicalAnalysis(ProgramModules).t) cfr_configuration
 
 type ('prog, 'tset, 'appr) twn_size_bounds =
@@ -36,7 +36,7 @@ type classical_program_conf_type = ( ProgramModules.Transition.t
                                    , ProgramModules.TransitionSet.t
                                    , RVGTypes.MakeRVG(ProgramModules).t
                                    , RVGTypes.MakeRVG(ProgramModules).scc
-                                   , TWNLoop.Make(ProgramModules).t
+                                   , SimpleCycle.Loop(ProgramModules).t
                                    , Approximation.MakeForClassicalAnalysis(ProgramModules).t ) analysis_configuration
 
 
@@ -64,7 +64,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module TWN = TWN.Make(PM)
 
   type conf_type =
-    (Transition.t,Program.t,TransitionSet.t,RVG.t,RVG.scc,TWNLoop.Make(PM).t, Approximation.t) analysis_configuration
+    (Transition.t,Program.t,TransitionSet.t,RVG.t,RVG.scc,SimpleCycle.Loop(PM).t, Approximation.t) analysis_configuration
 
   let default_configuration: conf_type = { run_mprf_depth = Some 1
                                          ; twn_configuration = None

@@ -9,7 +9,6 @@ open Constraints
 let logger = Logging.(get Size)
 
 module Check_Solvable = Check_Solvable.Make(ProgramModules)
-module TWNLoop = TWNLoop.Make(ProgramModules)
 module Loop = SimpleCycle.Loop(ProgramModules)
 module SimpleCycle = SimpleCycle.SimpleCycle(ProgramModules)
 
