@@ -154,10 +154,8 @@ let improve_with_twn program scc transformation_type appr =
 let bounded measure appr transition =
   match measure with
   | `Time -> Approximation.is_time_bounded appr transition
-  | `Cost -> if Polynomial.is_const (Transition.cost transition) then
-        true (* We can not compute a better bound in this case, so we consider this transition as bounded *)
-      else
-        false
+  | `Cost -> Polynomial.is_const (Transition.cost transition) (* We can not compute a better bound in this case, so we consider this transition as bounded *)
+
 
 let rec knowledge_propagation (scc: TransitionSet.t) program appr =
   let execute () =
