@@ -31,7 +31,7 @@ let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
   |> print_endline
 
 (** TWN for no transformations, TWNTransform for both techniques, TWNTransformJordan to transform only with jordan normal form, TWNTransformGeneral to transform only with the general approach *)
-type local = [`MPRF | `TWN | `TWNTransform | `TWNTransformJordan | `TWNTransformGeneral]
+type local = [`MPRF | `TWN | `TWNTransform]
 type cfr = [`PartialEvaluation | `Chaining]
 
 (** The shell arguments which can be defined in the console. *)
@@ -81,7 +81,7 @@ type params = {
     preprocessing_strategy : Program.t Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_till_fixpoint]] [@default Preprocessor.process_till_fixpoint]
     (** The strategy which should be used to apply the preprocessors. *)
 
-    local : local list; [@enum [("mprf", `MPRF); ("twn", `TWN);("twn-transform", `TWNTransform);("twn-transform-jordan", `TWNTransformJordan);("twn-transform-general", `TWNTransformGeneral)]] [@default [`MPRF]] [@sep ',']
+    local : local list; [@enum [("mprf", `MPRF); ("twn", `TWN); ("twn-transform", `TWNTransform);]] [@default [`MPRF]] [@sep ',']
     (** Choose methods to compute local runtime-bounds: mprf, twn *)
 
     rename : bool; [@default false]
@@ -147,20 +147,18 @@ let run (params: params) =
   (* TODO improve parser arguments to avoid the case of multiple twns *)
   let bounds_conf =
     let check_twn_already_set c = if Option.is_some c.Analysis.twn_configuration then
-      raise (Invalid_argument "--local commands are not correct. Use 'mprf' or at most one of 'twn', 'twn-transform-jordan', 'twn-transform',or 'twn-transform-general'")
+      raise (Invalid_argument "--local commands are not correct. Use 'mprf' or at most one of 'twn', 'twn-transform'")
     in
     Analysis.(
       List.fold_left (fun conf -> function
           | `MPRF -> {conf with run_mprf_depth = Some params.depth;}
           | `TWN -> (check_twn_already_set conf; {conf with twn_configuration = Some TWN.NoTransformation;})
-          | `TWNTransform -> (check_twn_already_set conf; {conf with twn_configuration = Some (TWN.Transformation Transformation.TransformTryBoth)})
-          | `TWNTransformGeneral -> (check_twn_already_set conf; {conf with twn_configuration = Some (TWN.Transformation Transformation.GeneralTransform)})
-          | `TWNTransformJordan -> (check_twn_already_set conf; {conf with twn_configuration = Some (TWN.Transformation Transformation.JordanTransform)})
+          | `TWNTransform -> (check_twn_already_set conf; {conf with twn_configuration = Some TWN.Transformation})
         )
         ({run_mprf_depth = None;twn_configuration = None; twn_size_bounds = ComputeTwnSizeBounds; cfr_configuration = NoCFR}) params.local
       |> fun conf -> match params.cfr with
                   | [] -> conf
-                  | l -> { conf with cfr_configuration = PerformCFR l}
+                  | l -> {conf with cfr_configuration = PerformCFR l}
 
     )
   in
