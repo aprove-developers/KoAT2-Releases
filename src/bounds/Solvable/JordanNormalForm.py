@@ -23,9 +23,7 @@ def jordan_normal_form(matrix_as_list):
     dim = sqrt(len(matrix_as_int_list))
     m = Matrix(dim, dim, matrix_as_int_list)
     eigenvalues = m.eigenvals()
-    if not all(sympify(x).is_integer for x in eigenvalues):
-        print("transformation is not rational and eigenvalues are not integer")
-    else:
+    if all(sympify(x).is_integer for x in eigenvalues):
         [t_inv, j] = m.jordan_form()
         t = t_inv.inv()
         factor = normalization_factor(t_inv)
@@ -34,3 +32,5 @@ def jordan_normal_form(matrix_as_list):
         print(t)
         print(j.tolist())
         print(t_inv.tolist())
+    else:
+        print("transformation is not rational and eigenvalues are not integer")

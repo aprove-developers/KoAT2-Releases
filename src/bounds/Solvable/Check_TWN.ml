@@ -7,7 +7,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   module Loop = SimpleCycle.Loop(PM)
 
-
   (* TOPOLOGICAL ORDERING: *)
   (* https://stackoverflow.com/questions/4653914/topological-sort-in-ocaml *)
 
@@ -50,34 +49,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   let check_triangular_t (t: TransitionLabel.t) =
     check_triangular (Loop.mk t)
-
-  let check_solvable (t: Loop.t) =
-    let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in
-    let module SCC = Graph.Components.Make(DG) in
-    let vars = Loop.updated_vars t in
-    let dg_linear = VarSet.fold (fun x graph ->
-                let vars = Loop.update_var t x |> Polynomial.vars in
-                VarSet.fold (fun y graph -> DG.add_edge graph x y) vars graph) vars DG.empty and
-    dg_non_linear = VarSet.fold (fun x graph ->
-                let update = Loop.update_var t x in
-                let linear_vars = update
-                  |> Polynomial.vars
-                  |> VarSet.filter (fun v -> Polynomial.var_only_linear v update |> not) in
-                VarSet.fold (fun y graph -> DG.add_edge graph x y) linear_vars graph) vars DG.empty in
-    let blocks = SCC.scc_list dg_linear in
-    if List.for_all (fun scc -> List.length scc = 1) (SCC.scc_list dg_non_linear) (* We don't have cyclic non-linear dependencies. *)
-    && List.for_all (fun scc ->
-                      List.for_all (fun x ->
-                        List.for_all (fun y ->
-                        Loop.update_var t x
-                        |> Polynomial.var_only_linear y)
-                        scc)
-                      scc) blocks (* For all blocks, all variables x,y in such a block: The update of x only depends linear on y *) then
-      Option.some (blocks)
-    else
-      None
-
-  let check_solvable_t (t: TransitionLabel.t) = check_solvable (Loop.mk t)
 
   (* MONOTONICITY *)
   let check_weakly_monotonicity (t: Loop.t) =
