@@ -16,7 +16,11 @@ module Automorphism =
 
   let identity = {poly = VarMap.empty; inv_poly = VarMap.empty}
 
-  let apply_to_bound t = List.fold_right (fun var bound ->
-    let bound_of_inv_poly = Bound.of_poly @@ RationalPolynomial.overapprox (VarMap.find var t.inv_poly) in
-    Bound.substitute var ~replacement:bound_of_inv_poly bound) (List.of_enum @@ VarMap.keys t.inv_poly)
+  let apply_to_bound bound = function
+    | None -> bound
+    | Some t -> List.fold_right (fun var bound ->
+      let bound_of_inv_poly =
+        Bound.of_poly @@ RationalPolynomial.overapprox (VarMap.find var t.inv_poly)
+      in
+        Bound.substitute var ~replacement:bound_of_inv_poly bound) (List.of_enum @@ VarMap.keys t.inv_poly) bound
 end

@@ -17,10 +17,10 @@ type ('twnt,'tt) twn_transformation_fun_type =
   'tt * ('tt list * 'tt list) * 'twnt -> ('tt * ('tt list * 'tt list) * 'twnt * Automorphism.t) option
 
 type twn_transformation_fun_type_transformable =
-  (SimpleCycle.Loop(ProgramModules).t, ProgramModules.Transition.t) twn_transformation_fun_type
+  (Loop.Make(ProgramModules).t, ProgramModules.Transition.t) twn_transformation_fun_type
 
 type _ configuration = NoTransformation: ('a,'b) twn_transformation_fun_type configuration
-                     | Transformation: (SimpleCycle.Loop(ProgramModules).t,
+                     | Transformation: (Loop.Make(ProgramModules).t,
                                          ProgramModules.Transition.t) twn_transformation_fun_type configuration
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
@@ -31,7 +31,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module TWN_Complexity = TWN_Complexity.Make(PM)
   module TWN_Termination = TWN_Termination.Make(PM)
   module Check_TWN = Check_TWN.Make(PM)
-  module SimpleCycle = SimpleCycle.SimpleCycle(PM)
+  module SimpleCycle = SimpleCycle.Make(PM)
 
   module TimeBoundTable = Hashtbl.Make(Transition)
 
@@ -53,7 +53,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let heuristic_for_cycle appr entry program loop =
     Check_TWN.check_twn_loop loop && Approximation.is_time_bounded appr entry
 
-  let time_bound (l,t,l') scc program appr transformation_type =
+  let time_bound transformation_type (l,t,l') scc program appr =
     TWN_Proofs.proof := FormattedString.Empty;
     let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
     if Option.is_none opt then (
@@ -62,7 +62,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let loops_opt = SimpleCycle.find_loops heuristic_for_cycle appr program scc t in
       if Option.is_some loops_opt then
         let cycle, loops = Option.get loops_opt in
-        let local_bounds = List.map (fun (entry,loop) -> entry, TWN_Complexity.complexity loop) loops in
+        let local_bounds = List.map (fun (entry,(loop,aut)) -> entry, Automorphism.apply_to_bound (TWN_Complexity.complexity loop) aut) loops in
         List.iter (fun t -> TimeBoundTable.add time_bound_table t local_bounds) cycle;
         List.map (Tuple2.uncurry @@ lift appr) local_bounds
         |> List.enum

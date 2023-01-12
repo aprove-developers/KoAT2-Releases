@@ -9,7 +9,7 @@ let logger = Logging.(get Twn)
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module Check_TWN = Check_TWN.Make(PM)
-  module Loop = SimpleCycle.Loop(PM)
+  module Loop = Loop.Make(PM)
   module TWN_Termination = TWN_Termination.Make(PM)
 
   (* COMPLEXITY: *)

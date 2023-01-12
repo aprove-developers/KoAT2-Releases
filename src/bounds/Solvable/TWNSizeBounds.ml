@@ -6,8 +6,8 @@ open PolyExponential
 open ProgramModules
 
 module Check_TWN = Check_TWN.Make(ProgramModules)
-module Loop = SimpleCycle.Loop(ProgramModules)
-module SimpleCycle = SimpleCycle.SimpleCycle(ProgramModules)
+module Loop = Loop.Make(ProgramModules)
+module SimpleCycle = SimpleCycle.Make(ProgramModules)
 
 let heuristic_for_cycle appr entry program loop =
     Check_TWN.check_twn_loop loop && VarSet.for_all (Bound.is_finite % Approximation.sizebound appr entry) (Program.input_vars program)
@@ -23,7 +23,7 @@ let improve_t program trans (l,t,l') appr =
                 let cycle, loops = Option.get loops_opt in
                 let local_bounds =
                     (* We first compute for every var (with a closed form) and every entry a local size bound *)
-                    List.map (fun (entry,loop) ->
+                    List.map (fun (entry,(loop,_)) ->
                         let order = Check_TWN.check_triangular loop in
                         if List.is_empty order then ((l,t,l'),Bound.infinity)
                         else

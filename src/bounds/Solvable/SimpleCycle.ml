@@ -3,55 +3,15 @@ open Batteries
 open Constraints
 open Formulas
 open Polynomials
-open ProgramModules
-open ProgramTypes
+open Transformation
 
-module Loop(PM: ProgramTypes.ClassicalProgramModules) = struct
+module VarMap = Map.Make(Var)
+
+module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
-  (** A loop is a 2-tuple (guard,update) *)
-  type t = Formula.t * (Polynomial.t VarMap.t)
-
-  let mk t = (Formula.mk (TransitionLabel.guard t), TransitionLabel.update_map t)
-  let guard = Tuple2.first
-  let update = Tuple2.second
-  let update_opt (_,update) var = VarMap.find_opt var update
-  let update_var (_,update) var = VarMap.find_opt var update |? Polynomial.of_var var
-  let updated_vars t = VarMap.keys @@ update t |> VarSet.of_enum
-
-  let to_string ((guard,update): t) =
-    let update_str =
-      update
-      |> VarMap.bindings
-      |> List.map (fun (var,poly) -> (Var.to_string ~pretty:true var, Polynomial.to_string_pretty poly))
-      |> List.split
-      |> fun (xs,ys) -> "("^(String.concat "," xs)^") -> ("^(String.concat "," ys)^")" in
-    "(" ^ Formula.to_string ~pretty:true guard ^ "," ^ update_str
-
-  (** Appends two loops. *)
-  let append ((guard,update): t) ((guard',update'): t) =
-    let substitution update_map = fun var ->
-      VarMap.Exceptionless.find var update_map |? Polynomial.of_var var
-    in
-    let new_update =
-      VarMap.map (Polynomial.substitute_f (substitution update)) update'
-    and new_guard =
-      Formula.Infix.(guard  && Formula.map_polynomial (Polynomial.substitute_f (substitution update)) (guard'))
-    in
-      (new_guard,new_update)
-
-  let chain t = append t t
-
-  let eliminate_non_contributors ?(relevant_vars = None) (loop: t) =
-    let f loop non_contributors =
-      (guard loop, VarSet.fold VarMap.remove non_contributors (update loop)) in
-    EliminateNonContributors.eliminate_t (updated_vars loop) (relevant_vars |? Formula.vars @@ guard loop) (update_opt loop) (f loop)
-end
-
-module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
-  open PM
-
-  module Loop = Loop(PM)
+  module Loop = Loop.Make(PM)
+  module Transformation = Transformation.Make(PM)
 
   (** A simple cycle l0 ->_{t_11 || ... || t_1m} ... ->_{t_n1 || ... || t_nk} ln with
     - p.w.d locations,
@@ -114,7 +74,7 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
     let entries = Program.entry_transitions logger program (handled_transitions cycle) in
     List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars) entries
 
-  let find_loops ?(relevant_vars = None) f appr program scc t = (* TODO add var *)
+  let find_loops ?(relevant_vars = None) f ?(transformation_type = `NoTransformation) appr program scc t = (* TODO add var *)
     if not @@ TransitionLabel.has_tmp_vars t then
       let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
         Location.equal l1 l2 &&
@@ -128,7 +88,9 @@ module SimpleCycle(PM: ProgramTypes.ClassicalProgramModules) = struct
       List.find_map_opt (fun cycle ->
         let chained_cycle = chain_cycle ~relevant_vars cycle program in
         if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
-          Option.some (handled_transitions cycle, chained_cycle)
+          Option.some
+          (handled_transitions cycle,
+          List.map (fun (entry,loop) -> (entry,Transformation.transform transformation_type loop)) chained_cycle)
         else
           None) cycles
     else
