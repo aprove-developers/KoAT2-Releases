@@ -231,7 +231,7 @@ let run_local ~conf (scc: TransitionSet.t) measure program appr =
       (match measure, conf.twn_configuration with
         | (`Cost,_) -> MaybeChanged.return appr
         | (`Time,None) -> MaybeChanged.return appr
-        | (`Time,Some twn_conf) -> improve_with_twn program scc twn_conf appr)
+        | (`Time,Some twn_conf) -> improve_with_twn program scc `NoTransformation appr)
   )
 
 let improve_timebound (scc: TransitionSet.t) measure program appr =
