@@ -181,7 +181,7 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
 
     let is_const poly = degree poly <= 0
 
-    let no_constant_addend = List.for_all (fun sm -> ScaledMonomial_.degree sm >= 1)
+    let no_constant_addend poly = not @@ (is_const poly || List.exists (fun sm -> ScaledMonomial_.degree sm = 0) poly)
 
     let is_linear poly = (degree poly <= 1)
 

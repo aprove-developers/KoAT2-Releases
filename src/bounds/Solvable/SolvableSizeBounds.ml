@@ -85,9 +85,9 @@ let improve_t program trans (l,t,l') appr =
                   List.map (fun (entry,(loop,_)) ->
                       let blocks = Check_Solvable.check_solvable loop in
                       if Option.is_none blocks then ((l,t,l'),Bound.infinity)
-                      else
+                      else (
                         let block = List.find (List.mem var) @@ Option.get blocks in
-                        entry, run_python var block (matrix_of_linear_assignments t block) |? Bound.infinity) loops
+                        entry, run_python var block (matrix_of_linear_assignments t block) |? Bound.infinity)) loops
               in
               (* Lifting previously computed local size bounds and store them in appr. *)
               let lifted_bound = List.map (lift appr var) local_bounds |> List.enum |> Bound.sum in
