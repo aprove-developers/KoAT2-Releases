@@ -19,7 +19,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     - we always consider a list of transitions with the same update. *)
   type path = (Location.t * TransitionLabel.t list * Location.t) list
 
-  let to_string path = List.map (fun (l,ts,l') -> Location.to_string l ^ List.fold_right (fun t str -> str ^ TransitionLabel.to_string t) ts "" ^ Location.to_string l') path |> String.concat ""
+  let to_string path = List.map (fun (l,ts,l') -> "(" ^ Location.to_string l ^ "," ^ List.fold_right (fun t str -> str ^ TransitionLabel.to_string ~pretty:true t ^ " ") ts "" ^ "," ^ Location.to_string l' ^ ")") path |> String.concat " -> "
 
   let handled_transitions t =
     List.flatten (List.map (fun (l,ts,l') -> List.fold_right (fun t res -> (l,t,l')::res) ts []) t)
@@ -30,18 +30,18 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let (cycles, paths) =
       List.partition (fun path ->
         let
-          l_start = List.first path |> Tuple3.first and
-          l_end = List.last path |> Tuple3.third in
+          l_start = List.last path |> Tuple3.first and
+          l_end = List.first path |> Tuple3.third in
         Location.equal l_start l_end
       )
       paths
     in
-    if List.is_empty paths then cycles@res
+    if List.is_empty paths then (List.map List.rev cycles@res)
     (* Extend "open" paths. *)
     else
       let extended_paths =
         List.fold (fun paths path ->
-        let l_end = List.last path |> Tuple3.third in
+        let l_end = List.first path |> Tuple3.third in
         let successors = List.filter (
           fun (l,_,l') ->
             Location.equal l_end l (* successor transition *) &&
