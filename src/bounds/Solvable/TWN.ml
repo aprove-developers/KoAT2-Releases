@@ -52,7 +52,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))
 
   let heuristic_for_cycle transformation_type appr entry program loop = match transformation_type with
-    | `NoTransformation -> Check_TWN.check_twn_loop loop && Approximation.is_time_bounded appr entry
+    | `NoTransformation -> true
     | `Transformation -> Option.is_some @@ Check_Solvable.check_solvable loop (*  *)
 
   let time_bound transformation_type (l,t,l') scc program appr =
