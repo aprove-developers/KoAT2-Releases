@@ -64,7 +64,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let loops_opt = SimpleCycle.find_loops (heuristic_for_cycle transformation_type) appr program scc t in
       if Option.is_some loops_opt then
         let cycle, loops = Option.get loops_opt in
-        let local_bounds = List.map (fun (entry,(loop,aut)) -> entry, Automorphism.apply_to_bound (TWN_Complexity.complexity loop) aut) loops in
+        let local_bounds = List.map (fun (entry,(loop,aut)) -> entry, Automorphism.apply_to_bound (TWN_Complexity.complexity ~entry:(Option.some entry) loop) aut) loops in
         List.iter (fun t -> TimeBoundTable.add time_bound_table t local_bounds) cycle;
         List.map (Tuple2.uncurry @@ lift appr) local_bounds
         |> List.enum

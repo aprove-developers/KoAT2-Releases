@@ -34,11 +34,19 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       | x::xs -> Constraint.(mk_and (mk_eq x Polynomial.zero) (constr xs))  in
       Formula.(mk_or (red_lt poly_list) (poly_list |> constr |> mk))
 
-  module Valuation = Valuation.Make(OurInt)
+  let check_update_invariant (loop: Loop.t) atom =
+    let poly = Atom.poly atom in
+    let poly_updated = Polynomial.substitute_f (Loop.update_var loop) poly in
+    let atom_updated = Atom.mk_lt poly_updated Polynomial.zero in
+    SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
 
-  let termination_ ((guard,update): Loop.t) order npe varmap =
-    let self_impl, rest = Constraint.mk_true, Constraint.mk_true in
-    (* TODO TWNLoop.invariant twn |> List.partition @@ check_update_invariant twn in *)
+  let termination_ ((guard,update): Loop.t) ?(entry = None) order npe varmap =
+    let self_impl =
+      if Option.is_some entry then
+        let (_,t,_) = Option.get entry in
+        List.filter (check_update_invariant (guard,update)) (TransitionLabel.guard t)
+      else
+        Constraint.mk_true in
     let formula =
       Formula.any (
       List.map (fun constr ->
@@ -48,7 +56,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             let formula_poly = if Atom.is_lt atom
                 then sub_poly |> red_lt
                 else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
-                (constr |> List.unique ~eq:Atom.equal) Formula.mk_true) (Formula.mk_and guard (Formula.mk rest) |> Formula.constraints)) in
+                (constr |> List.unique ~eq:Atom.equal) Formula.mk_true) (Formula.constraints @@ guard)) in
     let model = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in
     (Option.is_none model)
    |> tap (fun bool ->

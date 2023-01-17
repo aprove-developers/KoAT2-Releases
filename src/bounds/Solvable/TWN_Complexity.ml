@@ -105,7 +105,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
     |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
 
-  let complexity ((guard,update): Loop.t) =
+  let complexity ?(entry = None) ((guard,update): Loop.t) =
     let loop = (guard,update) in
     let order = Check_TWN.check_triangular loop in
     let t_, was_negative =
@@ -126,7 +126,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let npe = PE.normalize pe in
       Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string npe));
     let varmap = Hashtbl.of_list @@ List.combine order npe in
-    let terminating = TWN_Termination.termination_ t_ order npe varmap in
+    let terminating = TWN_Termination.termination_ t_ ~entry:entry order npe varmap in
     if not terminating then
       Bound.infinity
     else
