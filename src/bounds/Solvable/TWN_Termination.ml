@@ -5,6 +5,8 @@ open Formulas
 open PolyExponential
 open Polynomials
 
+let logger = Logging.(get Twn)
+
 (* TERMINATION: *)
 
 module SMTSolver = SMT.Z3Solver
@@ -40,6 +42,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let atom_updated = Atom.mk_lt poly_updated Polynomial.zero in
     SMTSolver.tautology Formula.(implies (mk [atom]) (mk [atom_updated]))
 
+  module Valuation = Valuation.Make(OurInt)
+
   let termination_ ((guard,update): Loop.t) ?(entry = None) order npe varmap =
     let self_impl =
       if Option.is_some entry then
@@ -60,6 +64,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let model = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in
     (Option.is_none model)
    |> tap (fun bool ->
+      Logger.log logger Logger.INFO (fun () -> "termination", ["is_satisfiable", Bool.to_string (not bool)]);
+                      Logger.log logger Logger.DEBUG (fun () -> "termination", ["formula", Formula.to_string formula]);
+                      if Option.is_some model then Logger.log logger Logger.DEBUG (fun () -> "termination", ["model", (Option.get model |> Valuation.to_string)]);
       TWN_Proofs.proof_append
           FormattedString.(
           mk_str_line ("Termination: " ^ (string_of_bool bool))

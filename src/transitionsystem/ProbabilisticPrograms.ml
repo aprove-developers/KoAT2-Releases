@@ -320,6 +320,9 @@ module ProbabilisticTransitionLabel = struct
     else
       0
 
+  let equivalent_update t1 t2 =
+    VarMap.equal UpdateElement_.equal t1.update t2.update
+
   let ids_to_string ?(pretty=false) t =
     if pretty then
       "t"^Util.natural_to_subscript (id t)^" &isin; g"^Util.natural_to_subscript (gt_id t)
@@ -366,6 +369,9 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
       Polynomial.compare t1.cost t2.cost
     else
       0
+
+  let equivalent_update t1 t2 =
+    VarMap.equal Polynomial.equal t1.overappr_nonprob_update t2.overappr_nonprob_update
 
   let ids_to_string ?(pretty=false) t =
     if pretty then "t" ^ Util.natural_to_subscript (id t)
