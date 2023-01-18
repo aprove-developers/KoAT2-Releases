@@ -54,6 +54,9 @@ let compare_equivalent lbl1 lbl2 =
   else
     0
 
+let equivalent_update lbl1 lbl2 =
+  VarMap.equal Polynomial.equal lbl1.update lbl2.update
+
 let compare = compare_same
 
 let take_last n xs =

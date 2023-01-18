@@ -75,6 +75,8 @@ module type TransitionLabel = sig
   (** This should default to compare_same *)
   val compare: t -> t -> int
 
+  val equivalent_update: t -> t -> bool
+
   (** Returns the guard of the label. *)
   val guard: t -> Guard.t
 

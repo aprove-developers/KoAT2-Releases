@@ -79,7 +79,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
         Location.equal l1 l2 &&
         Location.equal l1' l2' &&
-        TransitionLabel.equivalent t t')
+        TransitionLabel.equivalent_update t t')
         (TransitionSet.to_list scc |> List.filter (not % TransitionLabel.has_tmp_vars % Tuple3.second))
         |> List.map (fun xs -> (Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs)
       in
