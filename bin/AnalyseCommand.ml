@@ -211,9 +211,14 @@ let run (params: params) =
             )
           )
      |> (fun (program, appr) ->
-               if not params.no_boundsearch then
+
+               if params.no_boundsearch then
+                (program, appr)
+               else if TransitionSet.exists (TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program) then
+                (program, appr)
+               else
                  Bounds.find_bounds ~conf:bounds_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr
-               else (program, appr))
+               )
      |> tap (fun (program, appr) -> params.result program appr)
      |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~pretty:true ~show_initial:false program appr))
      |> tap (fun (program, appr) ->
