@@ -10,7 +10,6 @@ let logger = Logging.(get Twn)
 (* TERMINATION: *)
 
 module SMTSolver = SMT.Z3Solver
-module SMTSolverTimeout = SMT.Z3SolverTimeout
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
@@ -44,7 +43,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   module Valuation = Valuation.Make(OurInt)
 
-  let termination_ ((guard,update): Loop.t) ?(entry = None) order npe varmap =
+  let termination_ ?(entry = None) ((guard,update): Loop.t) varmap =
     let self_impl =
       if Option.is_some entry then
         let (_,t,_) = Option.get entry in
@@ -75,7 +74,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           |> mk_paragraph);)
 
   (* For Testing *)
-  let termination t =
+  let termination (_,t,_) =
     let loop = Loop.mk t in
     let order = Check_TWN.check_triangular loop in
     let pe = PE.compute_closed_form (List.map (fun var ->
@@ -83,5 +82,5 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         var, update_var) order) in
     let npe = PE.normalize pe in
     let varmap = Hashtbl.of_list (List.combine order npe) in
-    termination_ loop order npe varmap
+    termination_ loop varmap
 end

@@ -5,6 +5,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   module Loop = Loop.Make(PM)
+  type blocks = Var.t list list
 
   let check_solvable (t: Loop.t) =
     let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in
@@ -32,5 +33,5 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     else
       None
 
-  let check_solvable_t (t: TransitionLabel.t) = check_solvable @@ Loop.mk t
+  let check_solvable_ (_,t,_) = check_solvable @@ Loop.mk t
 end

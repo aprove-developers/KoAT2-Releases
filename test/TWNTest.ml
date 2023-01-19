@@ -16,7 +16,8 @@ let tests =
     ("check_twn" >:::
          List.map (fun (expected_bool, program) ->
              program >:: (fun _ ->
-                     let result = Check_TWN.check_twn((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
+                     let program = Readers.read_program_simple program in
+                     let result = Check_TWN.check_twn_ (program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
                      assert_equal_bool expected_bool result))
                   [
                     (true, "l0 -> l1(x,y,z), l1 -> l1(x + y + z, y + z, z)");
@@ -82,7 +83,7 @@ let tests =
       ("check_termination" >:::
          List.map (fun (expected_bool, program) ->
              program >:: (fun _ ->
-                     let result = TWN_Termination.termination((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second) in
+                     let result = TWN_Termination.termination(Readers.read_program_simple program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
                      assert_equal_bool expected_bool result))
                   [
                     (false, "l0 -> l1(x), l1 -> l1(x)");
@@ -137,7 +138,7 @@ let tests =
       ("complexity" >:::
          List.map (fun (expected_string, program) ->
              "" >:: (fun _ ->
-                     let result = TWN_Complexity.complexity_((Readers.read_program_simple program) |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
+                     let result = TWN_Complexity.complexity_(Readers.read_program_simple program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
                      assert_equal_string expected_string (Bound.to_string result)))
                   [
                      (* ("8*x+13 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0"); *)

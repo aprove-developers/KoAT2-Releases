@@ -5,12 +5,11 @@ open ProgramModules
 open Formulas
 open BoundsInst
 
-module ConstantConstraint :
+module ConstantConstraint:
 sig
-    module Comparator :
+    module Comparator:
     sig
         type t = EQ | NEQ
-
     end
 
     type atom = (Comparator.t * OurInt.t)
@@ -20,7 +19,7 @@ sig
     val to_string : t -> string
 end
 
-module PE :
+module PE:
 sig
     type t = (ConstantConstraint.t * RationalPolynomial.t * int * int) list
 
@@ -41,5 +40,4 @@ sig
     (* val monotonic_kernel : Formula.t -> Formula.t -> t -> t * ((int * int) * (int * int)) list *)
 
     val overapprox : t -> Bound.t -> Bound.t
-
 end
