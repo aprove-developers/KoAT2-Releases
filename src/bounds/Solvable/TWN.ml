@@ -10,19 +10,14 @@ open ProgramModules
 
 let logger = Logging.(get Twn)
 
-module SMTSolver = SMT.Z3Solver
-module SMTSolverTimeout = SMT.Z3SolverTimeout
-
 type configuration = NoTransformation | Transformation
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   module Approximation = Approximation.MakeForClassicalAnalysis(PM)
-  module InvariantGeneration = InvariantGeneration.Make(PM)
-  module TWN_Complexity = TWN_Complexity.Make(PM)
-  module TWN_Termination = TWN_Termination.Make(PM)
   module Check_TWN = Check_TWN.Make(PM)
+  module TWN_Complexity = TWN_Complexity.Make(PM)
   module SimpleCycle = SimpleCycle.Make(PM)
   module Check_Solvable = Check_Solvable.Make(PM)
   module TimeBoundTable = Hashtbl.Make(Transition)
