@@ -17,8 +17,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module Check_TWN = Check_TWN.Make(PM)
   module Loop = Loop.Make(PM)
 
-  exception Non_Terminating of (Transition.t list * Transition.t list)
-
   let red_lt poly_list =
       let rec constraint_eq_zero i = function
       | [] -> Constraint.mk_true
