@@ -45,6 +45,5 @@ let improve_t program trans (l,t,l') appr =
             appr) (TransitionLabel.input_vars t) appr
 
 let improve program ?(scc = None) appr =
-    let trans = scc |? Program.transitions program
-        |> TransitionSet.filter (fun (l,t,l') -> Approximation.is_time_bounded appr (l,t,l')) in
-    TransitionSet.fold (improve_t program trans) trans appr
+  let trans = scc |? TransitionSet.filter (Approximation.is_time_bounded appr) @@ Program.transitions program in
+  TransitionSet.fold (improve_t program trans) trans appr
