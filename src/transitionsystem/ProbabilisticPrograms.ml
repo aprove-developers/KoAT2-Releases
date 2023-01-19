@@ -1,4 +1,5 @@
 open Batteries
+open Formulas
 open Polynomials
 
 exception ProbabilitiesDoNotSumToOne
@@ -339,6 +340,8 @@ module ProbabilisticTransitionLabel = struct
   let vars = vars VarsNonOverapproximated
   let vars_without_memoization = vars_without_memoization VarsNonOverapproximated
   let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
+
+  let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr = struct
@@ -387,6 +390,8 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let vars = vars VarsOverapproximated
   let vars_without_memoization = vars_without_memoization VarsOverapproximated
   let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
+  let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
+
 end
 
 module ProbabilisticTransition = struct
