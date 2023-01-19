@@ -126,7 +126,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let npe = PE.normalize pe in
       Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string npe));
     let varmap = Hashtbl.of_list @@ List.combine order npe in
-    let terminating = TWN_Termination.termination_ t_ ~entry:entry order npe varmap in
+    let terminating = TWN_Termination.termination_ t_ ~entry:entry varmap in
     if not terminating then
       Bound.infinity
     else

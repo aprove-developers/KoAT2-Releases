@@ -47,9 +47,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       List.map (fun i -> List.assoc i (List.map Tuple2.swap vars_i)) order
       |> List.rev
 
-  let check_triangular_t (t: TransitionLabel.t) =
-    check_triangular (Loop.mk t)
-
   (* MONOTONICITY *)
   let check_weakly_monotonicity (t: Loop.t) =
     VarSet.for_all (fun var ->
@@ -62,11 +59,11 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let update = Loop.update_var t var in
       update |> Polynomial.coeff_of_var var |> OurInt.is_negative) (Loop.updated_vars t)
 
-  let check_twn_loop loop  =
+  let check_twn loop  =
   check_weakly_monotonicity loop
     && ((List.length (check_triangular loop)) == (VarSet.cardinal ((Loop.updated_vars loop))))
 
   (* For Testing *)
-  let check_twn (_,t,_) =
-   check_twn_loop (Loop.mk t)
+  let check_twn_ (_,t,_) =
+   check_twn (Loop.mk t)
 end

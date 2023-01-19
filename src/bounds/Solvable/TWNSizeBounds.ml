@@ -10,7 +10,7 @@ module Loop = Loop.Make(ProgramModules)
 module SimpleCycle = SimpleCycle.Make(ProgramModules)
 
 let heuristic_for_cycle appr entry program loop =
-    Check_TWN.check_twn_loop loop && VarSet.for_all (Bound.is_finite % Approximation.sizebound appr entry) (Program.input_vars program)
+    Check_TWN.check_twn loop && VarSet.for_all (Bound.is_finite % Approximation.sizebound appr entry) (Program.input_vars program)
 
 let lift appr var (entry,local_bound) =
     Bound.substitute_f (fun var -> Approximation.sizebound appr entry var) local_bound
