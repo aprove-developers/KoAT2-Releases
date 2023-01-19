@@ -13,15 +13,7 @@ let logger = Logging.(get Twn)
 module SMTSolver = SMT.Z3Solver
 module SMTSolverTimeout = SMT.Z3SolverTimeout
 
-type ('twnt,'tt) twn_transformation_fun_type =
-  'tt * ('tt list * 'tt list) * 'twnt -> ('tt * ('tt list * 'tt list) * 'twnt * Automorphism.t) option
-
-type twn_transformation_fun_type_transformable =
-  (Loop.Make(ProgramModules).t, ProgramModules.Transition.t) twn_transformation_fun_type
-
-type _ configuration = NoTransformation: ('a,'b) twn_transformation_fun_type configuration
-                     | Transformation: (Loop.Make(ProgramModules).t,
-                                         ProgramModules.Transition.t) twn_transformation_fun_type configuration
+type configuration = NoTransformation | Transformation
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
@@ -33,7 +25,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module Check_TWN = Check_TWN.Make(PM)
   module SimpleCycle = SimpleCycle.Make(PM)
   module Check_Solvable = Check_Solvable.Make(PM)
-
   module TimeBoundTable = Hashtbl.Make(Transition)
 
   (* Keys: transition, values: bounds of entry transitions. *)
@@ -52,8 +43,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))
 
   let heuristic_for_cycle transformation_type appr entry program loop = match transformation_type with
-    | `NoTransformation -> Check_TWN.check_twn loop && Approximation.is_time_bounded appr entry
-    | `Transformation -> Option.is_some @@ Check_Solvable.check_solvable loop (*  *)
+    | NoTransformation -> Check_TWN.check_twn loop && Approximation.is_time_bounded appr entry
+    | Transformation -> Option.is_some @@ Check_Solvable.check_solvable loop (*  *)
 
   let time_bound transformation_type (l,t,l') scc program appr =
     TWN_Proofs.proof := FormattedString.Empty;
