@@ -6,7 +6,6 @@ open RVGTypes
 
 (** These types are used to limit certain analyses methods to the specified underlying types. *)
 (** Together with the GADTs they are used to prove type equalities *)
-type ('a,'b) twn_conf = ('a,'b) TWN.twn_transformation_fun_type
 type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
   | NoCFR: ('a,'b,'c,'d,'e,'f) cfr_configuration
   | PerformCFR: [ `Chaining | `PartialEvaluation ] list
@@ -23,7 +22,7 @@ type ('prog, 'tset, 'appr) twn_size_bounds =
 
 type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
   { run_mprf_depth: int option
-  ; twn_configuration: ('twn,'trans) TWN.twn_transformation_fun_type TWN.configuration option
+  ; twn_configuration: TWN.configuration option
   ; cfr_configuration: ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
   ; twn_size_bounds: ('prog, 'tset,'appr) twn_size_bounds
   }

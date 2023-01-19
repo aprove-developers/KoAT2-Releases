@@ -1,39 +1,38 @@
+open Atoms
 open Batteries
 open BoundsInst
-open Polynomials
-open Atoms
 open Constraints
 open Formulas
 open PartialEvaluation
+open Polynomials
+open ProgramModules
 open RVGTypes
-
 
 (* The types below are used to restrict certain analyses methods to certain underlying types *)
 (* TODO simpliy somehow? *)
-type ('a,'b) twn_conf = ('a,'b) TWN.twn_transformation_fun_type
 type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
   | NoCFR: ('a,'b,'c,'d,'e,'f) cfr_configuration
   | PerformCFR: [ `Chaining | `PartialEvaluation ] list
-              -> ( ProgramModules.Program.t
-                , ProgramModules.TransitionSet.t
+              -> ( Program.t
+                , TransitionSet.t
                 , RVGTypes.MakeRVG(ProgramModules).t, RVGTypes.MakeRVG(ProgramModules).scc
                 , Loop.Make(ProgramModules).t
                 , Approximation.MakeForClassicalAnalysis(ProgramModules).t) cfr_configuration
 
 type ('prog, 'tset, 'appr) twn_size_bounds =
   | NoTwnSizeBounds: ('prog,'trans_set,'appr) twn_size_bounds
-  | ComputeTwnSizeBounds: (ProgramModules.Program.t, ProgramModules.TransitionSet.t,Approximation.MakeForClassicalAnalysis(ProgramModules).t) twn_size_bounds
+  | ComputeTwnSizeBounds: (Program.t, TransitionSet.t,Approximation.MakeForClassicalAnalysis(ProgramModules).t) twn_size_bounds
 
 type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
   { run_mprf_depth: int option
-  ; twn_configuration: ('twn,'trans) TWN.twn_transformation_fun_type TWN.configuration option
+  ; twn_configuration: TWN.configuration option
   ; cfr_configuration: ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
   ; twn_size_bounds: ('prog, 'tset,'appr) twn_size_bounds
   }
 
-type classical_program_conf_type = ( ProgramModules.Transition.t
-                                   , ProgramModules.Program.t
-                                   , ProgramModules.TransitionSet.t
+type classical_program_conf_type = ( Transition.t
+                                   , Program.t
+                                   , TransitionSet.t
                                    , RVGTypes.MakeRVG(ProgramModules).t
                                    , RVGTypes.MakeRVG(ProgramModules).scc
                                    , Loop.Make(ProgramModules).t
@@ -47,7 +46,7 @@ let logger = Logging.(get Time)
 let logger_cfr = Logging.(get CFR)
 
 (** Table: transition -> amount of times (orginal) transition was involed in PartialEvaluation. *)
-let already_used_cfr = ref ProgramModules.TransitionSet.empty
+let already_used_cfr = ref TransitionSet.empty
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
@@ -231,7 +230,7 @@ let run_local ~conf (scc: TransitionSet.t) measure program appr =
       (match measure, conf.twn_configuration with
         | (`Cost,_) -> MaybeChanged.return appr
         | (`Time,None) -> MaybeChanged.return appr
-        | (`Time,Some twn_conf) -> improve_with_twn program scc `NoTransformation appr)
+        | (`Time,Some twn_conf) -> improve_with_twn program scc twn_conf appr)
   )
 
 let improve_timebound (scc: TransitionSet.t) measure program appr =
@@ -299,26 +298,25 @@ let handle_timeout_cfr method_name non_linear_transitions =
     program rvg lsbs appr: Program.t * Approximation.t * (RVG.t * RVG.scc list lazy_t) =
     match conf.cfr_configuration with
     | NoCFR -> program,appr,rvg
-    | PerformCFR cfr -> ProgramModules.(
+    | PerformCFR cfr -> (
       let module Approximation = Approximation_ in
       let module SizeBounds = SizeBounds_ in
       let apply_cfr
           (method_name: string)
-          (f_cfr: ProgramModules.Program.t -> ProgramModules.Program.t MaybeChanged.t)
-          (f_proof: ProgramModules.Program.t -> Bound.t -> unit)
+          (f_cfr: Program.t -> Program.t MaybeChanged.t)
+          (f_proof: Program.t -> Bound.t -> unit)
           (rvg_with_sccs: RVGTypes.MakeRVG(ProgramModules).t * RVGTypes.MakeRVG(ProgramModules).scc list Lazy.t)
           (time: float)
-          (non_linear_transitions: ProgramModules.TransitionSet.t)
-          ~(preprocess: ProgramModules.Program.t -> ProgramModules.Program.t)
-          (program: ProgramModules.Program.t)
+          (non_linear_transitions: TransitionSet.t)
+          ~(preprocess: Program.t -> Program.t)
+          (program: Program.t)
           (appr: Approximation_.MakeForClassicalAnalysis(ProgramModules).t) =
 
         if not (TransitionSet.is_empty non_linear_transitions) then
           let org_bound = Bound.sum (Enum.map (fun t -> Approximation.timebound appr t) (TransitionSet.enum scc))  in
           let mc =
             Logger.log logger_cfr Logger.INFO
-              (fun () -> "Analysis_apply_" ^ method_name, [ "non-linear trans", TransitionSet.to_string non_linear_transitions
-                                                      ; "time", string_of_float time]);
+              (fun () -> "Analysis_apply_" ^ method_name, [ "non-linear trans", TransitionSet.to_string non_linear_transitions; "time", string_of_float time]);
             f_cfr program in
           if MaybeChanged.has_changed mc then (
             ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "Analysing control-flow refined program");
