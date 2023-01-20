@@ -5,13 +5,12 @@ open Formulas
 open Polynomials
 open Transformation
 
-module VarMap = Map.Make(Var)
-
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   module Loop = Loop.Make(PM)
   module Transformation = Transformation.Make(PM)
+  module Approximation = Approximation.MakeForClassicalAnalysis(PM)
 
   (** A simple cycle l0 ->_{t_11 || ... || t_1m} ... ->_{t_n1 || ... || t_nk} ln with
     - p.w.d locations,
@@ -74,7 +73,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let entries = Program.entry_transitions logger program (handled_transitions cycle) in
     List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars) entries
 
-  let find_loops ?(relevant_vars = None) f ?(transformation_type = `NoTransformation) appr program scc t = (* TODO add var *)
+  let find_loops ?(relevant_vars = None) ?(transformation_type = `NoTransformation) f appr program scc t =
     if not @@ TransitionLabel.has_tmp_vars t then
       let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
         Location.equal l1 l2 &&
