@@ -13,6 +13,8 @@ let description = "Search for a probabilistic ranking function"
 
 let command = "prob-analyse"
 
+type classic_local = [`MPRF | `TWN | `TWNTransform]
+
 type params = {
   input : string; [@aka ["i"]]
   (** Either an absolute or relative path to the koat input file which defines the probabilistic integer transition system. *)
@@ -24,6 +26,9 @@ type params = {
 
   mprf_depth : int; [@default 1] [@aka ["d"]]
   (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
+
+  classic_local : classic_local list; [@enum [("mprf", `MPRF); ("twn", `TWN); ("twn-transform", `TWNTransform);]] [@default [`MPRF]] [@sep ',']
+  (** Choose methods to compute local runtime-bounds: mprf, twn *)
 
   preprocessing_strategy : Program.t Preprocessor.strategy; [@enum Preprocessor.["once", process_only_once; "fixpoint", process_till_fixpoint]] [@default Preprocessor.process_till_fixpoint]
   (** The strategy which should be used to apply the preprocessors. *)
@@ -43,7 +48,15 @@ let run (params: params) =
 
   Printf.printf "prog %s\n\n" (Program.to_string_pretty program);
 
-  let classical_analysis_conf = { OverapprAnalysis.default_configuration with run_mprf_depth = Some params.mprf_depth } in
+  let classical_analysis_conf =
+    (* { OverapprAnalysis.default_configuration with run_mprf_depth = Some params.mprf_depth ; twn_configuration = Some NoTransformation } *)
+    List.fold_left (fun conf -> function
+        | `MPRF -> { conf with Analysis.run_mprf_depth = Some params.mprf_depth; }
+        | `TWN -> { conf with twn_configuration = Some TWN.NoTransformation; }
+        | `TWNTransform -> { conf with twn_configuration = Some TWN.Transformation }
+      )
+      OverapprAnalysis.default_configuration  params.classic_local
+  in
 
   let program, class_appr =
     preprocess program
