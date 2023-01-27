@@ -157,6 +157,9 @@ module type Bound =
     (** Returns true iff the asymptotic complexity is n^1. *)
     val is_linear : t -> bool
 
+    (** Returns true iff the asymptotic complexity is polynomial. *)
+    val is_polynomial : t -> bool
+
     (** -1 if first bound asy. lower, 0 if both are asym. equal, 1 otherwise *)
     val compare_asy : t -> t -> int
 

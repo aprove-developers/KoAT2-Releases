@@ -17,7 +17,7 @@ let lift appr var (entry,local_bound) =
 
 let improve_t program trans (l,t,l') appr =
     VarSet.fold (fun var appr ->
-        if Approximation.sizebound appr (l,t,l') var |> Bound.is_infinity then
+        if not @@ Bound.is_polynomial @@ Approximation.sizebound appr (l,t,l') var then
             let loops_opt = SimpleCycle.find_loops ~relevant_vars:(Option.some @@ VarSet.singleton var) heuristic_for_cycle appr program trans t in
             if Option.is_some loops_opt then
                 let cycle, loops = Option.get loops_opt in

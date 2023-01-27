@@ -138,6 +138,11 @@ module Make(Num : PolyTypes.OurNumber) =
       | Polynomial 1 -> true
       | _ -> false
 
+    let is_polynomial bound =
+    match (asymptotic_complexity bound) with
+      | Polynomial _ -> true
+      | _ -> false
+
     let compare_asy b1 b2 =
       match (asymptotic_complexity b1,asymptotic_complexity b2) with
       | (Inf,Inf) -> 0
