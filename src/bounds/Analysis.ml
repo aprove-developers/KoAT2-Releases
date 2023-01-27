@@ -337,7 +337,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
                     appr
                     |> tap (const @@ Logger.log logger Logger.INFO (fun () -> method_name ^ "analysis", ["scc", TransitionSet.to_id_string scc]))
                     |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc) (LSB_Table.find lsbs)
-                    |> twn_size_bounds ~conf scc program
+                    |> twn_size_bounds ~conf scc program_cfr
                     |> improve_scc ~conf rvg_with_sccs_cfr scc program_cfr lsbs
                   else appr)
                 (CFR.merge_appr program program_cfr appr) in
