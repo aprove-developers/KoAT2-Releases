@@ -2,8 +2,8 @@ open Batteries
 
 (** Modules relevant for working with programs *)
 module ProgramModulesOver(L: ProgramTypes.Location): ProgramTypes.ProgramModules = struct
+  module LocationSet = Location.LocationSetOver(L)
   module Location = L
-  module LocationSet = Set.Make(L)
   module UpdateElement = Polynomials.Polynomial
   module TransitionLabel = TransitionLabel_
 
@@ -23,6 +23,6 @@ module TransitionGraph = TransitionGraph_
 module TransitionLabel = TransitionLabel_
 module TransitionSet = Transition_.TransitionSetOver(Transition_.TransitionOver(TransitionLabel_)(Location))(Location)
 module Transition = Transition_
-module LocationSet = Set.Make(Location)
+module LocationSet = Location.LocationSetOver(Location)
 module Location = Location
 module RV = RVGTypes.MakeRV(TransitionLabel)(Transition)

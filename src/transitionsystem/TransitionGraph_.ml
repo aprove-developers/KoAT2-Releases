@@ -6,15 +6,17 @@ module Make_(T: ProgramTypes.Transition)
                              and type V.label = L.t
                              and type E.t = L.t * T.transition_label * L.t
                              and type E.label = T.transition_label) = struct
+
+
   type location = L.t
-  type location_set = Set.Make(L).t
+  type location_set = Location.LocationSetOver(L).t
   type transition_label = T.transition_label
   type transition = T.t
   type transition_set = Transition_.TransitionSetOver(T)(L).t
 
-  module Location = L
-  module LocationSet = Set.Make(L)
+  module LocationSet = Location.LocationSetOver(L)
   module TransitionSet = Transition_.TransitionSetOver(T)(L)
+  module Location = L
 
   include G
 

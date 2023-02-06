@@ -2,7 +2,7 @@ open Batteries
 
 module Location = Location
 module UpdateElement = UpdateElement_
-module LocationSet = Set.Make(Location)
+module LocationSet = Location.LocationSetOver(Location)
 module TransitionLabel = ProbabilisticPrograms.ProbabilisticTransitionLabel
 module Transition = ProbabilisticPrograms.ProbabilisticTransition
 module TransitionSet = Transition_.TransitionSetOver(Transition)(Location)
@@ -19,7 +19,7 @@ module NonProbOverappr = struct
   module Program = ProbabilisticPrograms.ProbabilisticProgramNonProbOverappr
   module TransitionGraph = ProbabilisticPrograms.ProbabilisticTransitionGraphNonProbOverappr
 
-  module LocationSet = Set.Make(Location)
+  module LocationSet = Location.LocationSetOver(Location)
   module Location = Location
 
   module UpdateElement = Polynomials.Polynomial

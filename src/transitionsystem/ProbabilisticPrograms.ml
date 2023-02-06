@@ -505,7 +505,7 @@ module ProbabilisticTransitionNonProbOverappr = struct
 end
 
 module GeneralTransition = struct
-  module LocationSet = Set.Make(Location)
+  module LocationSet = Location.LocationSetOver(Location)
   module ProbabilisticTransitionSet = Transition_.TransitionSetOver(ProbabilisticTransition)(Location)
 
   type t = {
@@ -647,9 +647,9 @@ module GeneralTransitionSet = struct
   include Set.Make(GeneralTransition)
   module ProbabilisticTransitionSet = Transition_.TransitionSetOver(ProbabilisticTransition)(Location)
 
-  module LocationSet = Set.Make(Location)
+  module LocationSet = Location.LocationSetOver(Location)
   module GeneralTransition = GeneralTransition
-  type location_set = Set.Make(Location).t
+  type location_set = LocationSet.t
 
   let powerset set =
     let combine (result: t Enum.t) x = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in
@@ -691,7 +691,7 @@ module ProbabilisticTransitionGraph =
   TransitionGraph_.Make_(ProbabilisticTransition)(Location)(TransitionGraph_Ocamlgraph_Repr_)
 
 module ProbabilisticProgram = struct
-  module LocationSet = Set.Make(Location)
+  module LocationSet = Location.LocationSetOver(Location)
   include Program_.Make(ProbabilisticTransitionLabel)(ProbabilisticTransition)(Location)(ProbabilisticTransitionGraph)
 
   module ProbabilisticTransitionSet = Transition_.TransitionSetOver(ProbabilisticTransition)(Location)

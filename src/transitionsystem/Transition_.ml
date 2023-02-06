@@ -82,9 +82,9 @@ end
 module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location with type t = T.location) = struct
   include Set.Make(T)
 
-  module LocationSet = Set.Make(L)
+  module LocationSet = Location.LocationSetOver(L)
 
-  type location_set = Set.Make(L).t
+  type location_set = Location.LocationSetOver(L).t
 
   let powerset set =
     let combine (result: t Enum.t) x = Enum.append result (Enum.map (fun ys -> add x ys) (Enum.clone result)) in

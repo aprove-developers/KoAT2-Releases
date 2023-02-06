@@ -13,7 +13,7 @@ module TransitionSetOver(T: ProgramTypes.Transition)(L: ProgramTypes.Location wi
   include ProgramTypes.TransitionSet
     with type t = Set.Make(T).t
      and type elt = T.t
-     and type location_set = Set.Make(L).t
+     and type location_set = Location.LocationSetOver(L).t
 end
 
 
