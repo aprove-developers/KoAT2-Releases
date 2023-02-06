@@ -35,7 +35,7 @@ module GeneralTransition: sig
           t
 
   val src: t -> Location.t
-  val targets: t -> Set.Make(Location).t
+  val targets: t -> Location.LocationSetOver(Location).t
   val guard: t -> Guard.t
   val invariant: t -> Guard.t
   val guard_without_inv: t -> Guard.t
@@ -63,7 +63,7 @@ module GeneralTransition: sig
   val input_vars: t -> VarSet.t
 
   (** all locations, i.e. the input location and all target locations *)
-  val locations: t -> Set.Make(Location).t
+  val locations: t -> Location.LocationSetOver(Location).t
 
   val remove_non_contributors: VarSet.t -> t -> t
 
@@ -75,7 +75,7 @@ module GeneralTransitionSet: sig
   include ProgramTypes.TransitionSet
     with type elt = GeneralTransition.t
      and type t = Set.Make(GeneralTransition).t
-     and type location_set = Set.Make(Location).t
+     and type location_set = Location.LocationSetOver(Location).t
 
   val all_transitions: t -> Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
 end
@@ -83,7 +83,7 @@ end
 module ProbabilisticTransitionGraph:
   ProgramTypes.TransitionGraph
     with type location = Location.t
-     and type location_set = Set.Make(Location).t
+     and type location_set = Location.LocationSetOver(Location).t
      and type transition_set = Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
      and type transition_label = ProbabilisticTransitionLabel.t
 
@@ -91,7 +91,7 @@ module ProbabilisticProgram: sig
   include ProgramTypes.Program
     with type location = Location.t
      and type transition_label = ProbabilisticTransitionLabel.t
-     and type location_set = Set.Make(Location).t
+     and type location_set = Location.LocationSetOver(Location).t
      and type transition_set = Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
      and type transition_graph = ProbabilisticTransitionGraph.t
 
@@ -119,7 +119,7 @@ end
 
 module ProbabilisticTransitionGraphNonProbOverappr: ProgramTypes.TransitionGraph
   with type location = Location.t
-   and type location_set = Set.Make(Location).t
+   and type location_set = Location.LocationSetOver(Location).t
    and type transition_set = Transition_.TransitionSetOver(ProbabilisticTransitionNonProbOverappr)(Location).t
    and type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
 
@@ -127,7 +127,7 @@ module ProbabilisticProgramNonProbOverappr: sig
   include ProgramTypes.Program
     with type location = Location.t
      and type transition_label = ProbabilisticTransitionLabelNonProbOverappr.t
-     and type location_set = Set.Make(Location).t
+     and type location_set = Location.LocationSetOver(Location).t
      and type transition_set =
            Transition_.TransitionSetOver(ProbabilisticTransitionNonProbOverappr)(Location).t
      and type transition_graph = ProbabilisticTransitionGraphNonProbOverappr.t
