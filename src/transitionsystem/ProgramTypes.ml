@@ -21,6 +21,13 @@ module type Location = sig
   val to_string : t -> string
 end
 
+module type LocationSet = sig 
+  include Set.S
+
+  (** Returns a string representing the transition set. *)
+  val to_string : t -> string
+end
+
 module type TransitionSet = sig
   (** A set of transitions. *)
 
@@ -407,7 +414,7 @@ end
 
 module type ProgramModules = sig
   module Location: Location
-  module LocationSet: Set.S with type elt = Location.t
+  module LocationSet: LocationSet with type elt = Location.t
 
   module UpdateElement: PolyTypes.Polynomial
     with type value = OurInt.t

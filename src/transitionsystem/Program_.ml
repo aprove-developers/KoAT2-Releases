@@ -13,18 +13,18 @@ module Make(TL: ProgramTypes.TransitionLabel)
            (T: ProgramTypes.Transition with type transition_label = TL.t)
            (L: ProgramTypes.Location with type t = T.location)
            (G: ProgramTypes.TransitionGraph with type location = L.t
-                                             and type location_set = Set.Make(L).t
+                                             and type location_set = Location.LocationSetOver(L).t
                                              and type transition_label = TL.t
                                              and type transition_set = Transition_.TransitionSetOver(T)(L).t) =
 struct
   type location = L.t
   type transition_label = TL.t
   type transition = L.t * TL.t * L.t
-  type location_set = Set.Make(L).t
+  type location_set = Location.LocationSetOver(L).t
   type transition_set = Transition_.TransitionSetOver(T)(L).t
   type transition_graph = G.t
 
-  module LocationSet = Set.Make(L)
+  module LocationSet = Location.LocationSetOver(L)
   module TransitionSet = Transition_.TransitionSetOver(T)(L)
 
   open GenericProgram
