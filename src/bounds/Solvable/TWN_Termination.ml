@@ -57,7 +57,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             let formula_poly = if Atom.is_lt atom
                 then sub_poly |> red_lt
                 else sub_poly |> red_le in Formula.mk_and formula formula_poly |> Formula.simplify)
-                (constr |> List.unique ~eq:Atom.equal) Formula.mk_true) (Formula.constraints @@ guard)) in
+                (constr |> List.unique ~eq:Atom.equal) Formula.mk_true) (Formula.constraints guard)) in
     let model = SMTSolver.get_model (Formula.mk_and (Formula.mk self_impl) formula |> Formula.simplify) in
     (Option.is_none model)
    |> tap (fun bool ->
