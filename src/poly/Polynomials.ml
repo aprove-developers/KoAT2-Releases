@@ -37,7 +37,9 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
       |> Enum.map (Monomial_.degree_variable i)
       |> Enum.for_all ((>=) 1)
 
-    let var_only_linear v = indeterminate_only_linear (I.of_var v)
+    let var_only_linear var = function
+      | [] -> true
+      | p -> List.for_all ((>=) 1) (List.map ScaledMonomial_.degree (List.filter (fun s -> VarSet.mem var (ScaledMonomial_.vars s)) p))
 
     let coeff mon poly =
          poly
