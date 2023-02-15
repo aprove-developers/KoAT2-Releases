@@ -7,9 +7,9 @@ open ProgramModules
 
 let preprocess = Preprocessor.process_till_fixpoint (module ProgramModules) Preprocessor.([InvariantGeneration; CutUnsatisfiableTransitions; CutUnreachableLocations])
 
+let conf = Analysis.default_configuration
 module Analysis = Analysis.Make(ProgramModules)
 module Bounds = Bounds.Make(ProgramModules)
-let conf = Analysis.default_configuration
 
 (** Returns an overall timebound for the given program.*)
 let find_timebound ?(mprf_max_depth = 1) (program: Program.t): Bound.t =
