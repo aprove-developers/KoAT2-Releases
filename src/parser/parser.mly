@@ -34,6 +34,8 @@
 
 %start <Polynomials.Polynomial.t> onlyPolynomial
 
+%start <ProbabilityDistribution.t> onlyProbabilityDistribution
+
 %start <UpdateElement_.t> onlyUpdateElement
 
 %start <ProbabilisticPrograms.GeneralTransitionSet.t> general_transitions
@@ -197,12 +199,12 @@ update_element:
     { UpdateElement_.pow v (int_of_string c) } ;
 
 update_value:
-  | d = dist
+  | d = onlyProbabilityDistribution
     { UpdateElement_.of_dist d }
   | v = ID
     { UpdateElement_.var v } ;
 
-dist:
+onlyProbabilityDistribution:
   | BERNOULLI; LPAR; p = our_float; RPAR
     { ProbabilityDistribution.Binomial (Polynomial.one,p) }
   | BINOMIAL; LPAR; n = polynomial; COMMA; p = our_float; RPAR

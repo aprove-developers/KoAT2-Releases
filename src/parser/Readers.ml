@@ -38,6 +38,9 @@ let read_general_transitions =
 let read_constraint =
   read Parser.onlyConstraints
 
+let read_probability_distribution =
+  read Parser.onlyProbabilityDistribution
+
 let read_update_element =
   read Parser.onlyUpdateElement
 
