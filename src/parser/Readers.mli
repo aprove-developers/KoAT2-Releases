@@ -35,3 +35,6 @@ val read_input : ?rename:bool -> bool -> string -> Program_.t
 val read_prog_goal_file : ?rename:bool -> string -> Program_.t * Goal.classical Goal.goal
 val read_probabilistic_prog_goal_file : string
                                       -> ProbabilisticPrograms.ProbabilisticProgram.t * Goal.probabilistic Goal.goal
+
+val read_probabilistic_program : string
+                              -> ProbabilisticPrograms.ProbabilisticProgram.t

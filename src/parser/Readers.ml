@@ -17,8 +17,11 @@ let read_ rule lexbuf =
   | Parser.Error ->
      raise (ParserUtil.Error (Printf.sprintf "Parser error at %s" (position_string lexbuf)))
 
-let read_file path =
-  read_ Parser.onlyProgram (Lexing.from_channel @@ File.open_in path)
+let read_target_from_file_ target path =
+  read_ target (Lexing.from_channel @@ File.open_in path)
+
+let read_file =
+  read_target_from_file_ Parser.onlyProgram
 
 let read rule str =
   read_ rule (Lexing.from_string str)
@@ -67,9 +70,11 @@ let read_input ?(rename=false) simple program_str =
       failwith "ERROR: The given program uses recursion. Recursion is not supported by the current version of koat2. The program will exit now."
 
 let read_prog_goal_file ?(rename=false) path =
-  read_ Parser.programAndGoal (Lexing.from_channel @@ File.open_in path)
+  read_target_from_file_ Parser.programAndGoal path
   |> Tuple2.map1 (if rename then Program_.rename else identity)
 
-let read_probabilistic_prog_goal_file path =
-  read_ Parser.probabilisticProgramAndGoal (Lexing.from_channel @@ File.open_in path)
+let read_probabilistic_program =
+  read_target_from_file_ Parser.onlyProbabilisticProgram
 
+let read_probabilistic_prog_goal_file =
+  read_target_from_file_ Parser.probabilisticProgramAndGoal
