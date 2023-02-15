@@ -22,12 +22,11 @@ let min a b =
   else
     b
 
-let of_ourint f =
-  f
-  |> Num.num_of_big_int
+let of_ourint = Num.num_of_big_int
 
-let upper_int x =
-  OurInt.of_int (Num.to_int (Num.ceil (add x zero))) (** TODO maybe we have to add here one*)
+let to_ourint_ceiled =
+  (* OurInt.of_int (Num.to_int (Num.ceil (add x zero))) (\** TODO maybe we have to add here one*\) *)
+  Num.big_int_of_num % Num.ceil
 
 let (>) = Num.(>/)
 let (<) = Num.(</)
