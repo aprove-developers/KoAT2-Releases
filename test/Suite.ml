@@ -29,6 +29,7 @@ let suite =
       ProbabilityDistributionTests.tests;
       UpdateElementTests.tests;
       ExpectedLocalChangeBoundTests.tests;
+      ExpTimeBoundsTests.tests;
     ]
 
 let () =
