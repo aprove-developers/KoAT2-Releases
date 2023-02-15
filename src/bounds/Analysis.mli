@@ -36,6 +36,9 @@ type classical_program_conf_type = ( ProgramModules.Transition.t
                                    , Approximation.MakeForClassicalAnalysis(ProgramModules).t ) analysis_configuration
 
 
+(** Default configuration. mprf_depth of 1, no twn, no cfr, and no twn size bounds*)
+val default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration
+
 module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   (** Performs improvement steps for the whole program to find better time-bounds and triggers control flow refinement if needed. *)
 
@@ -43,9 +46,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   type conf_type =
     (PM.Transition.t,PM.Program.t,PM.TransitionSet.t,
      MakeRVG(PM).t,MakeRVG(PM).scc,Loop.Make(PM).t, Approximation.MakeForClassicalAnalysis(PM).t) analysis_configuration
-
-  (** Default configuration. mprf_depth of 1, no twn, no cfr, and no twn size bounds*)
-  val default_configuration: conf_type
 
   (** Performs improvement steps to find better timebounds for the approximation and updates the approximation. *)
   val improve : conf:conf_type

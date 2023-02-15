@@ -48,6 +48,13 @@ let logger_cfr = Logging.(get CFR)
 (** Table: transition -> amount of times (orginal) transition was involed in PartialEvaluation. *)
 let already_used_cfr = ref TransitionSet.empty
 
+let default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration =
+  { run_mprf_depth = Some 1
+  ; twn_configuration = None
+  ; cfr_configuration = NoCFR
+  ; twn_size_bounds = NoTwnSizeBounds }
+
+
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
@@ -64,12 +71,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   type conf_type =
     (Transition.t,Program.t,TransitionSet.t,RVG.t,RVG.scc,Loop.Make(PM).t, Approximation.t) analysis_configuration
-
-  let default_configuration: conf_type = { run_mprf_depth = Some 1
-                                         ; twn_configuration = None
-                                         ; cfr_configuration = NoCFR
-                                         ; twn_size_bounds = NoTwnSizeBounds }
-
 let apply get_sizebound  = Bound.substitute_f get_sizebound % Bound.of_poly
 
 

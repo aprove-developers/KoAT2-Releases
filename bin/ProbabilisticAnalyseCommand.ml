@@ -49,13 +49,12 @@ let run (params: params) =
   Printf.printf "prog %s\n\n" (Program.to_string_pretty program);
 
   let classical_analysis_conf =
-    (* { OverapprAnalysis.default_configuration with run_mprf_depth = Some params.mprf_depth ; twn_configuration = Some NoTransformation } *)
     List.fold_left (fun conf -> function
         | `MPRF -> { conf with Analysis.run_mprf_depth = Some params.mprf_depth; }
         | `TWN -> { conf with twn_configuration = Some TWN.NoTransformation; }
         | `TWNTransform -> { conf with twn_configuration = Some TWN.Transformation }
       )
-      OverapprAnalysis.default_configuration  params.classic_local
+      Analysis.default_configuration params.classic_local
   in
 
   let program, class_appr =
