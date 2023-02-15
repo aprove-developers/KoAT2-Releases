@@ -25,6 +25,8 @@ let suite =
       OurRationalTest.tests;
       TWNTest.tests;
       SolvableTest.tests;
+
+      ProbabilityDistributionTests.tests;
       UpdateElementTests.tests;
       ExpectedLocalChangeBoundTests.tests;
     ]

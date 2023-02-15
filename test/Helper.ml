@@ -43,6 +43,16 @@ let assert_equal_bound =
 let assert_equal_bound_option =
   assert_equal ~cmp:(Option.eq ~eq:Bound.(=~=)) ~printer:(Util.option_to_string Bound.to_string)
 
+let assert_ge_realbound_smt =
+  let module Solver = SMT.IncrementalZ3Solver in
+  let cmp b1 b2 =
+    (* Z3Solver is *not* thread-safe compared to the incremental one *)
+    let s = Solver.create () in
+    Solver.add_realbound_comparison s `LT b1 b2;
+    not (Solver.satisfiable s)
+  in
+  assert_equal ~cmp ~printer:RealBound.to_string
+
 let assert_equal_atom =
   assert_equal ~cmp:Atom.(=~=) ~printer:Atom.to_string
 

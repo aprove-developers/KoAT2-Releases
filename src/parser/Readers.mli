@@ -22,6 +22,8 @@ val read_atom : string -> Atoms.Atom.t
 
 val read_polynomial : string -> Polynomials.Polynomial.t
 
+val read_probability_distribution: string -> ProbabilityDistribution.t
+
 val read_update_element : string -> ProbabilisticProgramModules.UpdateElement.t
 
 val read_bound : string -> Bound.t
