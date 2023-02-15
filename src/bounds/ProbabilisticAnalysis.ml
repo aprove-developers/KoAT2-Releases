@@ -205,3 +205,16 @@ let perform_analysis ?(conf=default_configuration) program class_appr: ExpApprox
       Enum.fold
         (fun appr scc_with_locs -> improve_scc ~conf program gts program_vars scc_with_locs (class_appr,appr))
         appr sccs
+
+module ClassicalBounds = Bounds.Make(NonProbOverappr)
+
+let perform_classic_and_probabilistic_analysis ?(classic_conf=Analysis.default_configuration) ?(conf=default_configuration) ~preprocess program=
+  let program, class_appr =
+    ClassicalBounds.find_bounds
+      ~preprocess ~conf:classic_conf program (NonProbOverapprApproximation.create program)
+    |> Tuple2.map2 coerce_from_nonprob_overappr_approximation
+  in
+
+  let prob_appr = perform_analysis program class_appr in
+
+  program, (class_appr, prob_appr)
