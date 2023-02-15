@@ -51,12 +51,12 @@ let as_guard d v' = let poly_v' = Polynomial.of_var v' in let zero = Polynomial.
 
 let exp_value_poly = function
   | Binomial       (n,p)      -> RealPolynomial.(of_intpoly n * of_constant p)
-  | Geometric      a          -> RealPolynomial.of_constant( OurFloat.(div (of_int 1) a) )
+  | Geometric      a          -> RealPolynomial.of_constant(OurFloat.(div (of_int 1) a) )
   | Hypergeometric (bigN,k,n) -> RealPolynomial.(of_intpoly k * of_intpoly n * of_constant OurFloat.(one/of_ourint bigN))
   | Uniform (a,b)             -> RealPolynomial.mul (RealPolynomial.of_constant @@ OurFloat.of_float 0.5)
                                    (RealPolynomial.add (RealPolynomial.of_intpoly a) (RealPolynomial.of_intpoly b))
 
-(* TODO generalise to higher orders *)
+(* TODO generalise to higher orders we might want to use polylogs for geo distribution *)
 let moment_poly d i =
   if i = 1 then exp_value_poly d
   else (match d with
@@ -105,7 +105,10 @@ let moment_abs_bound d i =
   if Int.equal i 1 then exp_value_abs_bound d
   else
     match d with
-    | Uniform        (a,b)      -> failwith @@ Int.to_string i ^". moment of absolute uniform distribution not yet implemented."
+    | Uniform        (a,b)      ->
+      if i mod 2 = 0 then RealBound.of_poly @@ moment_poly (Uniform (a,b)) i
+      else failwith @@
+        Int.to_string i ^". moment of absolute uniform distribution not yet implemented."
     | Binomial       (n,p)      -> RealBound.of_poly @@ moment_poly (Binomial (n,p)) i
     | Geometric      a          -> RealBound.of_poly @@ moment_poly (Geometric a) i
     | Hypergeometric (bigN,k,n) -> RealBound.of_poly @@ moment_poly (Hypergeometric (bigN,k,n)) i
