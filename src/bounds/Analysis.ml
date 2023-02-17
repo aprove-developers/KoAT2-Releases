@@ -19,15 +19,15 @@ type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
                 , Loop.Make(ProgramModules).t
                 , Approximation.MakeForClassicalAnalysis(ProgramModules).t) cfr_configuration
 
-type ('prog, 'tset, 'appr) twn_size_bounds =
-  | NoTwnSizeBounds: ('prog,'trans_set,'appr) twn_size_bounds
-  | ComputeTwnSizeBounds: (Program.t, TransitionSet.t,Approximation.MakeForClassicalAnalysis(ProgramModules).t) twn_size_bounds
+type ('prog, 'tset, 'appr) closed_form_size_bounds =
+  | NoClosedFormSizeBounds: ('prog,'trans_set,'appr) closed_form_size_bounds
+  | ComputeClosedFormSizeBounds: (Program.t, TransitionSet.t,Approximation.MakeForClassicalAnalysis(ProgramModules).t) closed_form_size_bounds
 
 type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
   { run_mprf_depth: int option
   ; twn_configuration: TWN.configuration option
   ; cfr_configuration: ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
-  ; twn_size_bounds: ('prog, 'tset,'appr) twn_size_bounds
+  ; closed_form_size_bounds: ('prog, 'tset,'appr) closed_form_size_bounds
   }
 
 type classical_program_conf_type = ( Transition.t
@@ -52,7 +52,7 @@ let default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration =
   { run_mprf_depth = Some 1
   ; twn_configuration = None
   ; cfr_configuration = NoCFR
-  ; twn_size_bounds = NoTwnSizeBounds }
+  ; closed_form_size_bounds = NoClosedFormSizeBounds }
 
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
@@ -241,9 +241,9 @@ let improve_timebound (scc: TransitionSet.t) measure program appr =
            execute)
 
 let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.t) (appr: Approximation.t) =
-  match conf.twn_size_bounds with
-  | NoTwnSizeBounds -> appr
-  | ComputeTwnSizeBounds ->
+  match conf.closed_form_size_bounds with
+  | NoClosedFormSizeBounds -> appr
+  | ComputeClosedFormSizeBounds ->
     TWNSizeBounds.improve program ~scc:(Option.some scc) appr
     |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
 
