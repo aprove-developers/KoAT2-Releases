@@ -84,6 +84,9 @@ type params = {
     local : local list; [@enum [("mprf", `MPRF); ("twn", `TWN); ("twn-transform", `TWNTransform);]] [@default [`MPRF]] [@sep ',']
     (** Choose methods to compute local runtime-bounds: mprf, twn *)
 
+    closed_form_size_bounds : bool; [@default false]
+    (** If size should be computed by closed forms. *)
+
     rename : bool; [@default false]
     (** If the location names should be normalized to simplified names. *)
 
@@ -155,11 +158,11 @@ let run (params: params) =
           | `TWN -> (check_twn_already_set conf; {conf with twn_configuration = Some TWN.NoTransformation;})
           | `TWNTransform -> (check_twn_already_set conf; {conf with twn_configuration = Some TWN.Transformation})
         )
-        ({run_mprf_depth = None;twn_configuration = None; twn_size_bounds = ComputeTwnSizeBounds; cfr_configuration = NoCFR}) params.local
+        ({run_mprf_depth = None; twn_configuration = None; closed_form_size_bounds = NoClosedFormSizeBounds; cfr_configuration = NoCFR}) params.local
+      |> fun conf -> if params.closed_form_size_bounds then {conf with closed_form_size_bounds = ComputeClosedFormSizeBounds} else conf
       |> fun conf -> match params.cfr with
                   | [] -> conf
                   | l -> {conf with cfr_configuration = PerformCFR l}
-
     )
   in
 

@@ -15,16 +15,16 @@ type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
                 , Loop.Make(ProgramModules).t
                 , Approximation.MakeForClassicalAnalysis(ProgramModules).t) cfr_configuration
 
-type ('prog, 'tset, 'appr) twn_size_bounds =
-  | NoTwnSizeBounds: ('prog,'trans_set,'appr) twn_size_bounds
-  | ComputeTwnSizeBounds: (ProgramModules.Program.t, ProgramModules.TransitionSet.t,Approximation.MakeForClassicalAnalysis(ProgramModules).t) twn_size_bounds
+type ('prog, 'tset, 'appr) closed_form_size_bounds =
+  | NoClosedFormSizeBounds: ('prog,'trans_set,'appr) closed_form_size_bounds
+  | ComputeClosedFormSizeBounds: (ProgramModules.Program.t,ProgramModules.TransitionSet.t,Approximation.MakeForClassicalAnalysis(ProgramModules).t) closed_form_size_bounds
 
 
 type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
   { run_mprf_depth: int option
   ; twn_configuration: TWN.configuration option
   ; cfr_configuration: ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
-  ; twn_size_bounds: ('prog, 'tset,'appr) twn_size_bounds
+  ; closed_form_size_bounds: ('prog, 'tset,'appr) closed_form_size_bounds
   }
 
 type classical_program_conf_type = ( ProgramModules.Transition.t
@@ -36,7 +36,7 @@ type classical_program_conf_type = ( ProgramModules.Transition.t
                                    , Approximation.MakeForClassicalAnalysis(ProgramModules).t ) analysis_configuration
 
 
-(** Default configuration. mprf_depth of 1, no twn, no cfr, and no twn size bounds*)
+(** Default configuration. mprf_depth of 1, no twn, no cfr, and no closed form size bounds*)
 val default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration
 
 module Make(PM: ProgramTypes.ClassicalProgramModules): sig
