@@ -18,7 +18,7 @@ let tests =
   "ExpTimeBoundsTests" >:::[
     "asymptotic" >:::
       List.map (fun (name, complexity_exp, prog_dir) ->
-        (fun f  -> name >::: [OUnitTest.TestCase (test_len,f)]) @@ fun _ ->
+        (fun f  -> name >: test_case ~length:test_len f) @@ fun _ ->
             let prog =
               Readers.read_probabilistic_program (prog_dir ^ name ^ ".koat")
               |> preprocess
