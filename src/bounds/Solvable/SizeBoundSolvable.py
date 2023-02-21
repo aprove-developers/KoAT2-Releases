@@ -45,6 +45,8 @@ def size_bound(matrix_as_list, vars_as_list, var):
         for col in x[2]:
             P_inv = P_inv.row_join(col)
 
+    print(algebraic_mult_zero)
+
     vars = symbols(vars_as_list)
     helper_vars = symbols(list(map(lambda x: x + "_H", vars_as_list)))
     dict_helper_vars = dict(zip(vars, helper_vars)) # Rename variables (Arg_i -> Arg_i_H) to have simultaneous substitutions

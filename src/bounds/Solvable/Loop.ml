@@ -1,4 +1,5 @@
 open Batteries
+open BoundsInst
 open Formulas
 open Polynomials
 
@@ -11,6 +12,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   type t = Formula.t * (Polynomial.t VarMap.t)
 
   let mk t = (Formula.mk (TransitionLabel.guard t), TransitionLabel.update_map t)
+  let id formula = (formula, VarMap.empty)
   let guard = Tuple2.first
   let update = Tuple2.second
   let update_opt (_,update) var = VarMap.find_opt var update
@@ -44,4 +46,11 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let f loop non_contributors =
       (guard loop, VarSet.fold VarMap.remove non_contributors (update loop)) in
     EliminateNonContributors.eliminate_t (updated_vars loop) (relevant_vars |? Formula.vars @@ guard loop) (update_opt loop) (f loop)
+
+  let compute_bound_n_iterations (loop_org: t) var =
+    let rec f (loop,bound) = function
+    | 0 -> (loop,bound)
+    | n -> let chained_loop = append loop loop_org in
+      f (chained_loop, Bound.(add bound (of_poly @@ update_var chained_loop var))) (n - 1) in
+    Tuple2.second % f (id Formula.mk_true,Bound.zero)
 end
