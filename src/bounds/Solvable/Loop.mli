@@ -1,3 +1,4 @@
+open BoundsInst
 open Formulas
 open Polynomials
 open ProgramTypes
@@ -21,5 +22,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   val chain : t -> t
 
   val eliminate_non_contributors : ?relevant_vars:VarSet.t option -> t -> Formula.t * UpdateElement.t VarMap.t
+
+  val compute_bound_n_iterations : t -> Var.t -> int -> Bound.t
 
 end

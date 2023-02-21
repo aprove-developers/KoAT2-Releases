@@ -63,7 +63,7 @@ let run_python var block update_matrix =
   let command = "python3 -c 'from src.bounds.Solvable.SizeBoundSolvable import size_bound; size_bound(" ^ update_str ^ "," ^ vars_str ^ ",\"" ^ Var.to_string var ^ "\")'" in
   let python_output = read_process_lines command in
   match python_output with
-      | [a] -> Some (a |> Readers.read_bound)
+      | [n;a] -> Some (int_of_string n,a |> Readers.read_bound)
       | _ -> None (* Error string *)
 
 let heuristic_for_cycle appr program loop =
@@ -106,7 +106,8 @@ let improve_t program trans t appr =
               if Option.is_none blocks then Bound.infinity
               else
                 let block = List.find (List.mem var) @@ Option.get blocks in
-                run_python var block (matrix_of_linear_assignments (Transition.label t) block) |? Bound.infinity
+                let (n, b) = Option.get @@ run_python var block (matrix_of_linear_assignments (Transition.label t) block) in
+                Bound.add (Loop.compute_bound_n_iterations loop var n) b
           in
           SizeBoundTable.add size_bound_table (t,var) (local_bound,entries_traversal);
           (* Lifting previously computed local size bounds and store them in appr. *)
