@@ -116,7 +116,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         VarMap.empty traversal
 
   (** This function is used to obtain a loop which corresponds to a simple cycle. Used for SizeBounds. *)
-  let find_loop ?(relevant_vars = None) ?(transformation_type = `NoTransformation) f appr program scc (l,t,l') =
+  let find_loop ?(relevant_vars = None) f appr program scc (l,t,l') =
     if not @@ TransitionLabel.has_tmp_vars t then
       let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
         Location.equal l1 l2 &&
@@ -128,7 +128,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let merged_t = List.find (List.exists (fun t' -> TransitionLabel.equivalent t t') % Tuple3.second) merged_trans in
       let cycles = cycles_with_t merged_trans merged_t in
       List.find_map_opt (fun cycle ->
-        let loop = contract_cycle cycle l' in
+        let loop = contract_cycle cycle l' |> Loop.eliminate_non_contributors ~relevant_vars in
         if f appr program loop then
           let entries = Program.entry_transitions logger program (handled_transitions cycle) in
           Option.some (loop, List.map (fun entry -> entry, traverse_cycle cycle (Transition.src entry) l') entries)

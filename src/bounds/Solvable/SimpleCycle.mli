@@ -20,4 +20,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
     TransitionSet.t ->
     TransitionLabel.t ->
     (Transition.t list * (Transition.t * (Loop.t * Automorphism.t option)) list) option
+
+  val find_loop :
+    ?relevant_vars: VarSet.t option ->
+    (Approximation.t -> Program.t ->  Formula.t * Polynomial.t VarMap.t -> bool) ->
+    Approximation.t ->
+    Program.t ->
+    TransitionSet.t ->
+    Transition.t ->
+    (Loop.t * (Transition.t * Polynomial.t VarMap.t) list) option
 end
