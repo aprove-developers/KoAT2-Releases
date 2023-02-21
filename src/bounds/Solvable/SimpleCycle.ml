@@ -5,6 +5,7 @@ open Formulas
 open Polynomials
 open Transformation
 
+module VarMap = Map.Make(Var)
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
@@ -73,6 +74,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let entries = Program.entry_transitions logger program (handled_transitions cycle) in
     List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars) entries
 
+  (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
   let find_loops ?(relevant_vars = None) ?(transformation_type = `NoTransformation) f appr program scc t =
     if not @@ TransitionLabel.has_tmp_vars t then
       let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
@@ -90,6 +92,46 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           Option.some
           (handled_transitions cycle,
           List.map (fun (entry,loop) -> (entry,Transformation.transform transformation_type loop)) chained_cycle)
+        else
+          None) cycles
+    else
+      None
+
+  (** Computes update_n * ... * update_i where update_n is the update of a transition (_,_,target) and resp. update_i for (start,_,_). *)
+  let traverse_cycle (cycle: path) start target =
+    if Location.equal start target then
+      TransitionLabel.update_map @@ List.first @@ Tuple3.second (List.first cycle)
+    else
+      let target_t = List.find (Location.equal target % Tuple3.third) cycle in
+      let traversal = cycle@cycle
+      |> List.drop_while (Location.equal start % Tuple3.first)
+      |> List.take_while (not % Location.equal target % Tuple3.third)
+      |> List.rev
+      |> (@) [target_t] in
+      let substitution update_map = fun var ->
+        VarMap.Exceptionless.find var update_map |? Polynomial.of_var var
+      in
+      List.fold (fun map (_,ts,_) ->
+        VarMap.map (Polynomial.substitute_f (substitution (TransitionLabel.update_map @@ List.first ts))) map)
+        VarMap.empty traversal
+
+  (** This function is used to obtain a loop which corresponds to a simple cycle. Used for SizeBounds. *)
+  let find_loop ?(relevant_vars = None) ?(transformation_type = `NoTransformation) f appr program scc (l,t,l') =
+    if not @@ TransitionLabel.has_tmp_vars t then
+      let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
+        Location.equal l1 l2 &&
+        Location.equal l1' l2' &&
+        TransitionLabel.equivalent_update t t')
+        (TransitionSet.to_list scc |> List.filter (not % TransitionLabel.has_tmp_vars % Tuple3.second))
+        |> List.map (fun xs -> (Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs)
+      in
+      let merged_t = List.find (List.exists (fun t' -> TransitionLabel.equivalent t t') % Tuple3.second) merged_trans in
+      let cycles = cycles_with_t merged_trans merged_t in
+      List.find_map_opt (fun cycle ->
+        let loop = contract_cycle cycle l' in
+        if f appr program loop then
+          let entries = Program.entry_transitions logger program (handled_transitions cycle) in
+          Option.some (loop, List.map (fun entry -> entry, traverse_cycle cycle (Transition.src entry) l') entries)
         else
           None) cycles
     else
