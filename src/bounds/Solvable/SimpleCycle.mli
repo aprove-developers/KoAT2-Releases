@@ -18,7 +18,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
     Approximation.t ->
     Program.t ->
     TransitionSet.t ->
-    TransitionLabel.t ->
+    Transition.t ->
     (Transition.t list * (Transition.t * (Loop.t * Automorphism.t option)) list) option
 
   val find_loop :

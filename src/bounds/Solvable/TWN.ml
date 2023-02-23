@@ -47,7 +47,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     if Option.is_none opt then (
       let bound = Timeout.timed_run 5. (fun () ->
       (* We have not yet computed a (local) runtime bound. *)
-      let loops_opt = SimpleCycle.find_loops (heuristic_for_cycle transformation_type) appr program scc t in
+      let loops_opt = SimpleCycle.find_loops (heuristic_for_cycle transformation_type) appr program scc (l,t,l') in
       if Option.is_some loops_opt then
         let cycle, loops = Option.get loops_opt in
         let local_bounds = List.map (fun (entry,(loop,aut)) -> entry, Automorphism.apply_to_bound (TWN_Complexity.complexity ~entry:(Option.some entry) loop) aut) loops in
