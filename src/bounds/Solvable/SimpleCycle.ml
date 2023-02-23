@@ -65,7 +65,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let pre, post = List.span (fun (l,_,_) -> not @@ Location.equal start l) cycle in
     let merge (_,ts,_) = (List.map (Formula.mk % TransitionLabel.guard) ts |> Formula.any, List.first ts |> TransitionLabel.update_map) in
     let merge_pre = List.map merge pre and merge_post = List.map merge post in
-    (* Printf.printf "pre: %s \n post:_%s \n cycle %s \n Location: %s length %i \n" (to_string pre) (to_string post) (to_string cycle) (Location.to_string start) (List.length merge_post); *)
     List.fold Loop.append (List.first merge_post) (List.drop 1 merge_post@merge_pre)
 
   (** This method computes a loop for every entry transition of the cycle.
@@ -121,7 +120,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   (** This function is used to obtain a loop which corresponds to a simple cycle. Used for SizeBounds. *)
   let find_loop ?(relevant_vars = None) f appr program scc (l,t,l') =
-    (* Printf.printf "t: %s\n" (Transition.to_string_pretty (l,t,l')); *)
     if not @@ TransitionLabel.has_tmp_vars t then
       let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
         Location.equal l1 l2 &&
@@ -134,7 +132,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         List.exists (fun t1 -> TransitionLabel.same t t1) ts
           && Location.equal l l1
           && Location.equal l' l1') merged_trans in
-      (* Printf.printf "t_merged: %s\n" (to_string [merged_t]); *)
       let cycles = cycles_with_t merged_trans merged_t in
       List.find_map_opt (fun cycle ->
         let loop = contract_cycle cycle l |> Loop.eliminate_non_contributors ~relevant_vars in
