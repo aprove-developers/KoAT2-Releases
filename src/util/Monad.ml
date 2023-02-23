@@ -18,6 +18,8 @@ module Make
     let pure = M.pure
     let bind = M.bind
 
+    let (let*) x f = x >>= f
+
     let when_m b f =
       if b then
         f

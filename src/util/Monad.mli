@@ -16,6 +16,9 @@ module Make :
     val (>>=): 'a t -> ('a -> 'b t) -> 'b t
     val (>>): 'a t -> 'b t -> 'b t
 
+    (* Monadic let binding *)
+    val (let*): 'a t -> ('a -> 'b t) -> 'b t
+
     val when_m: bool -> unit t -> unit t
 
     val sequence: 'a t list -> 'a list t
