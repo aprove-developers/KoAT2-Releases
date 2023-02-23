@@ -63,7 +63,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   (* We contract a (shifted to start) cycle to a loop  *)
   let contract_cycle (cycle: path) start =
     let pre, post = List.span (fun (l,_,_) -> not @@ Location.equal start l) cycle in
-    let merge (_,ts,_) = (List.map (Formula.mk % TransitionLabel.guard) ts |> Formula.any, List.first ts |> TransitionLabel.update_map) in
+    let merge (_,ts,_) = (List.map (Formula.mk % TransitionLabel.guard_without_inv) ts |> Formula.any, List.first ts |> TransitionLabel.update_map) in
     let merge_pre = List.map merge pre and merge_post = List.map merge post in
     List.fold Loop.append (List.first merge_post) (List.drop 1 merge_post@merge_pre)
 

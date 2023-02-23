@@ -1,3 +1,4 @@
+open Atoms
 open BoundsInst
 
 module Make(PM: ProgramTypes.ClassicalProgramModules): sig
@@ -8,7 +9,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
 
   (** This method computes a complexity bound for twn-loops.
     Gets a {[Loop]}, an entry {[Transition]} for invariants derivation in the termination proof, and a closed form of every variable. *)
-  val complexity : ?entry:(PM.Transition.t) option -> Loop.t -> Bound.t
+  val complexity : ?entry:(PM.Transition.t) option -> Atom.t list -> Loop.t -> Bound.t
 
   (** Gets a {[TransitionLabel]} in twn-form and returns a complexity bound for the respective twn-loop. *)
   val complexity_ : PM.Transition.t -> Bound.t
