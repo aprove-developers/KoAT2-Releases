@@ -6,6 +6,7 @@ include Monad.Make(
 
     type 'a t = 'a Option.t
 
+    let map = Option.map
     let pure = Option.Monad.return
 
   end

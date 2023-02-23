@@ -2,6 +2,8 @@ include Monad.Make(
   struct
     type 'a t = 'a List.t
 
+    let map = List.map
+
     let pure (e : 'a) : 'a list =
       [e]
 
