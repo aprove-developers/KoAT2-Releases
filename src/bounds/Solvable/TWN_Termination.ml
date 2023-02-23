@@ -41,11 +41,11 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   module Valuation = Valuation.Make(OurInt)
 
-  let termination_ ?(entry = None) ((guard,update): Loop.t) varmap =
+  let termination_ ?(entry = None) ((guard,update): Loop.t) upd_invariant_cand varmap =
     let self_impl =
       if Option.is_some entry then
         let (_,t,_) = Option.get entry in
-        List.filter (check_update_invariant (guard,update)) (TransitionLabel.guard t)
+        List.filter (check_update_invariant (guard,update)) (TransitionLabel.guard t)@(upd_invariant_cand)
       else
         Constraint.mk_true in
     let formula =
@@ -80,5 +80,5 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         var, update_var) order) in
     let npe = PE.normalize pe in
     let varmap = Hashtbl.of_list (List.combine order npe) in
-    termination_ loop varmap
+    termination_ loop [] varmap
 end
