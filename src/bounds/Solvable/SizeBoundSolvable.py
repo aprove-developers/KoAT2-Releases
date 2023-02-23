@@ -1,6 +1,7 @@
 from sympy import Matrix
 from sympy import Abs, ceiling, sqrt
 from sympy import symbols, Symbol
+from collections import Counter
 
 # Rec. applies (ceiling @ abs) to each variable-free expression
 def abs_expr(expr):
@@ -26,26 +27,26 @@ def size_bound(matrix_as_list, vars_as_list, var):
     matrix_as_int_list = list(map(int, matrix_as_list))  # cast to int
     dim = sqrt(len(matrix_as_int_list))
     m = Matrix(dim, dim, matrix_as_int_list) # build matrix
-    eigenvects = m.eigenvects()
     Jexp = Matrix.zeros(dim,dim)
-    P_inv = Matrix([])
+    P_inv, J = m.jordan_form()
+    eigenvalues = J.diagonal()
+    counter = Counter(eigenvalues)
     n = Symbol('n')
     algebraic_mult_zero = 0
 
     # Compute J**n
-    counter = 0;
-    for x in eigenvects:
-        if x[0] == 0:
-            algebraic_mult_zero = x[1]
+    tmp = 0
+    while(tmp < dim):
+        if eigenvalues[tmp] == 0:
+            algebraic_mult_zero = counter[eigenvalues[tmp]]
         else:
-            for i in range(0,x[1]):
-                for j in range(i,x[1]):
-                    Jexp[i + counter,j + counter] = binomial(n,j-i) * 1/x[0]**(j-i) * x[0]**n
-        counter = counter + x[1]
-        for col in x[2]:
-            P_inv = P_inv.row_join(col)
+            for i in range(0,counter[eigenvalues[tmp]]):
+                for j in range(i,counter[eigenvalues[tmp]]):
+                    Jexp[i + tmp,j + tmp] = binomial(n,j-i) * 1/eigenvalues[tmp]**(j-i) * eigenvalues[tmp]**n
+        tmp = tmp + counter[eigenvalues[tmp]]
 
     print(algebraic_mult_zero)
+
 
     vars = symbols(vars_as_list)
     helper_vars = symbols(list(map(lambda x: x + "_H", vars_as_list)))

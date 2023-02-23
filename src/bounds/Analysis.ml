@@ -245,11 +245,6 @@ let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.
   | NoClosedFormSizeBounds -> appr
   | ComputeClosedFormSizeBounds ->
     TWNSizeBounds.improve program ~scc:(Option.some scc) appr
-    |> TWNSizeBounds.improve program ~scc:(Option.some scc)
-    |> TWNSizeBounds.improve program ~scc:(Option.some scc)
-    |> TWNSizeBounds.improve program ~scc:(Option.some scc)
-    |> TWNSizeBounds.improve program ~scc:(Option.some scc)
-
     |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
 
 (* TODO unify conf types with ~local! *)
