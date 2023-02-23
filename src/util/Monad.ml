@@ -4,6 +4,7 @@ module Make
   (M :
     sig
       type 'a t
+      val map : ('a -> 'b) -> 'a t -> 'b t
       val pure : 'a -> 'a t
       val bind : 'a t -> ('a -> 'b t) -> 'b t
     end) =
@@ -17,8 +18,6 @@ module Make
     let return = M.pure
     let pure = M.pure
     let bind = M.bind
-
-    let (let*) x f = x >>= f
 
     let when_m b f =
       if b then
@@ -39,4 +38,24 @@ module Make
     let liftM2 f ma mb =
       ma >>= (fun a -> mb >>= (fun b -> pure (f a b)))
 
+    let (let+) (type a) (type b) (a: a t) (f: a -> b) = M.map f a
+    let (and+) (type a) (type b) (a: a t) (b: b t): (a*b) t =
+      liftM2 Tuple2.make a b
+
+    let (let*) = (>>=)
+    let (and*) = (and+)
+
   end
+
+module MakeGeneral
+  (M :
+    sig
+      type 'a t
+      val pure : 'a -> 'a t
+      val bind : 'a t -> ('a -> 'b t) -> 'b t
+    end) =
+  Make(
+    struct
+      include M
+      let map f a = bind a (pure % f)
+    end)
