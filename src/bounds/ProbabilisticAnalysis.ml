@@ -197,7 +197,7 @@ let improve_scc ~conf program program_gts program_vars scc (class_appr,appr) : E
 
 let perform_analysis ?(conf=default_configuration) program class_appr: ExpApproximation.t =
   let gts = Program.gts program in
-  let program_vars = Program.vars program in
+  let program_vars = Program.input_vars program in
   let sccs = Program.sccs_gts program in
 
   lift_bounds gts program_vars (class_appr, ExpApproximation.create program)
