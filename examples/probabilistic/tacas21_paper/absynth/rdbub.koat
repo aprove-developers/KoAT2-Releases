@@ -1,0 +1,12 @@
+# Two nested probabilistic loops that model a probabilistic insertion sort
+# Taken from absynth
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR N)
+(RULES
+  f(N,J) -> g(N,J)
+  g(N,J) -> h(N+UNIFORM(-1,0),N) :|: N>0
+  h(N,J) -> 0.25:h(N,J) :+: 0.75:h(N,J-1) :|: J>0
+  h(N,J) -> g(N,J)                        :|: J<1
+)

@@ -1,0 +1,19 @@
+# A polynomial expected time example
+#
+# Taken from absynth
+# The original example contains no ticks but a variable z which seems to capture the expected costs
+# Hence, here we ask for an upper bound on the expected size of variable Z upon termination.
+
+# (GOAL EXPECTEDSIZE Z)
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR minPrice sPrice numShares Z)
+(RULES
+  f(minPrice,sPrice,numShares,Z) -> g(minPrice,sPrice,numShares,0) :|: minPrice >= 0
+  g(minPrice,sPrice,numShares,Z) -> 0.25:h(minPrice,sPrice+1,numShares,Z) :+: 0.75:h(minPrice,sPrice-1,numShares,Z) :|: minPrice<sPrice
+  h(minPrice,sPrice,numShares,Z) -> [1/6]:i(minPrice,sPrice,-2,Z) :+: [1/6]:i(minPrice,sPrice,-1,Z) :+: [1/6]:i(minPrice,sPrice,0,Z) :+: [1/6]:i(minPrice,sPrice,1,Z) :+: [1/6]:i(minPrice,sPrice,2,Z) :+: [1/6]:i(minPrice,sPrice,3,Z)
+  i(minPrice,sPrice,numShares,Z) -> i(minPrice,sPrice,numShares-1,Z+sPrice) :|: numShares>0
+  i(minPrice,sPrice,numShares,Z) -> j(minPrice,sPrice,numShares-1,Z)        :|: numShares<1
+  j(minPrice,sPrice,numShares,Z) -> j(minPrice,sPrice,numShares+1,Z-sPrice) :|: numShares<0
+  j(minPrice,sPrice,numShares,Z) -> g(minPrice,sPrice,numShares,Z)          :|: numShares > -1
+)
