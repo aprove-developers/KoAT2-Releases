@@ -1,0 +1,13 @@
+# A program consisting of an outer loop stopping with probability 0.5
+# and an inner loop that in every iteration of the outer loop
+# counts down the variable z
+
+(GOAL EXPECTEDCOMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS f))
+(VAR X Y Z)
+(RULES
+  f(X,Y,Z) -> g(1,Y,Z)
+  g(X,Y,Z) -> h(X,Z,Z)                      :|: X>0
+  h(X,Y,Z) -> h(X,Y-X,Z)                    :|: Y>0
+  h(X,Y,Z) -> 0.5:g(1,Y,Z) :+: 0.5:g(0,Y,Z) :|: Y<1
+)
