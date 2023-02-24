@@ -136,8 +136,8 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
           ) program_abstract;
 
           (* add succesor transitons to worklist *)
-          TransitionSet.filter (fun (start_l,_,_) -> Location.equal start_l l') transitions
-          |> TransitionSet.enum
+          TransitionGraph.succ_e (Program.graph program_) l'
+          |> List.enum
           |> Enum.iter (fun transition ->
                 (*TODO comparison faster with 2 component transition id*)
                 if not (Enum.exists (Transition.equal transition) (Stack.enum worklist)) then
