@@ -22,12 +22,12 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
   (** An abstract value for all values of variable at every program location. *)
   type 'a program_abstract = ('a Apron.Abstract1.t) LocationMap.t
 
-  let transform_program_ (program: Program.t) =
+  let transform_program_ program_ (program: Program.t) =
     let open ApronInterface.Koat2Apron in
     let open ApronInterface.Apron2Koat in
 
-    let transitions = Program.transitions program in
-    let locations = Program.locations program in
+    let transitions = Program.transitions program_ in
+    let locations = Program.locations program_ in
 
     let vars = List.fold (fun vars (_,t,_) -> VarSet.union vars (TransitionLabel.vars_without_memoization t)) VarSet.empty (TransitionSet.to_list transitions) in
 
@@ -82,7 +82,7 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
       locations
       |> (LocationSet.enum: LocationSet.t -> Location.t Enum.t)
       |> Enum.map (fun location ->
-            if Program.is_initial_location program location then
+            if Program.is_initial_location program_ location then
                 (location, Apron.Abstract1.top manager environment)
             else
               (location, Apron.Abstract1.bottom manager environment)
@@ -114,7 +114,7 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
         in
         LocationSet.enum locations
         (* The initial location does not have any ingoing transitions *)
-        |> Enum.filter (not % Program.is_initial_location program)
+        |> Enum.filter (not % Program.is_initial_location program_)
         |> Enum.map (fun location -> (location, location_abstract location))
         |> LocationMap.of_enum
       in
@@ -176,7 +176,7 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
       |> MaybeChanged.changed (* TODO Actually, we should check if the new invariant is already implied and only then say, that it is changed. *)
 
   let transform_program program =
-    transform_program_ program
+    transform_program_ (Program.map_labels TransitionLabel.overapprox_nonlinear_updates program) program
 
 end
 
