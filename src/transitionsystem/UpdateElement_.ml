@@ -7,8 +7,8 @@ module UpdateValue = struct
          | Dist of ProbabilityDistribution.t [@@deriving eq,ord]
 
   let to_string ?(pretty=false) ?(to_file=false) = function
-    | Dist d -> ProbabilityDistribution.to_string d
-    | Var  v -> Var.to_string v
+    | Dist d -> ProbabilityDistribution.to_string ~pretty d
+    | Var  v -> Var.to_string ~pretty v
 
   let rename m = function
     | Dist d -> Dist (ProbabilityDistribution.rename m d)
