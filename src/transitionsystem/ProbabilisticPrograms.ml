@@ -626,7 +626,7 @@ module GeneralTransition = struct
       |> Enum.reduce (fun a b -> a^" :+: "^b)
     in
     let arrow = if String.is_empty cost_str then "→"  else "-"^cost_str^">" in
-    id_string ^ Location.to_string (src t) ^ vars ^ " " ^ arrow ^ " " ^ trans_string ^ " :|: " ^ Guard.to_string ~pretty:false (guard t)
+    id_string ^ Location.to_string (src t) ^ vars ^ " " ^ arrow ^ " " ^ trans_string ^ " :|: " ^ Guard.to_string ~pretty:true (guard t)
 
   let remove_non_contributors non_contributors gt =
     let transitions' =
