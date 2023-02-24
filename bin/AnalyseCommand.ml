@@ -149,24 +149,23 @@ let run (params: params) =
 
   (* TODO improve parser arguments to avoid the case of multiple twns *)
   let bounds_conf =
-    let check_twn_already_set c = if Option.is_some c.Analysis.twn_configuration then
+    let open Analysis in
+    let check_twn_already_set c = if Option.is_some c then
       raise (Invalid_argument "--local commands are not correct. Use 'mprf' or at most one of 'twn', 'twn-transform'")
     in
-    Analysis.(
-      List.fold_left (fun conf -> function
-          | `MPRF -> {conf with run_mprf_depth = Some params.depth;}
-          | `TWN -> (check_twn_already_set conf; {conf with twn_configuration = Some TWN.NoTransformation;})
-          | `TWNTransform -> (check_twn_already_set conf; {conf with twn_configuration = Some TWN.Transformation})
-        )
-        ({run_mprf_depth = None; twn_configuration = None; closed_form_size_bounds = NoClosedFormSizeBounds; cfr_configuration = NoCFR}) params.local
-      |> fun conf -> if params.closed_form_size_bounds then {conf with closed_form_size_bounds = ComputeClosedFormSizeBounds} else conf
-      |> fun conf -> match params.cfr with
-                  | [] -> conf
-                  | l -> {conf with cfr_configuration = PerformCFR l}
-    )
+    {
+      run_mprf_depth = if List.mem `MPRF params.local then Some params.depth else None;
+      twn_configuration = List.fold_left (fun twn_conf -> function
+          | `TWN -> (check_twn_already_set twn_conf; Some TWN.NoTransformation)
+          | `TWNTransform -> (check_twn_already_set twn_conf; Some TWN.Transformation)
+          | _ -> twn_conf
+      ) None params.local;
+      closed_form_size_bounds = if params.closed_form_size_bounds then ComputeClosedFormSizeBounds else NoClosedFormSizeBounds;
+      cfr_configuration = match params.cfr with
+        | [] -> NoCFR
+        | l ->  PerformCFR l;
+    }
   in
-
-
   let input_filename =
     if params.simple_input then
       "dummyname"
