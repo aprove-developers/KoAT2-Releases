@@ -12,25 +12,15 @@ module Check_Solvable = Check_Solvable.Make(ProgramModules)
 module Loop = Loop.Make(ProgramModules)
 module SimpleCycle = SimpleCycle.Make(ProgramModules)
 
-module Monomial = Monomials.Make(OurInt)
-module ScaledMonomials = ScaledMonomials.Make(OurInt)
-
-(** get_linear_update_of_variable (x<- 2x+3y+y^2) x y returns 3 *)
-let get_factor_of_var t update (var: Var.t) =
-  let linear_monomials = List.filter (Monomial.is_univariate_linear % ScaledMonomials.monomial) (Polynomial.scaled_monomials update) in
-  let linear_monomials_var = List.filter (VarSet.mem var % ScaledMonomials.vars) linear_monomials in
-  List.map ScaledMonomials.coeff linear_monomials_var
-  |> OurInt.sum_list
-
-(** get_linear_update_list (x<- 2x+3y+y^2) x [x;y] returns [2;3] *)
-let rec get_linear_update_of_var t (block: Var.t list) (var_left: Var.t) = match block with
-  | [] -> []
-  | x::xs ->
-    (get_factor_of_var t (TransitionLabel.update t var_left |? Polynomial.of_var var_left) x) ::
-    (get_linear_update_of_var t xs var_left)
-
-let matrix_of_linear_assignments t (block: Var.t list) =
-  List.map (get_linear_update_of_var t block) block
+let matrix_of_linear_assignments loop (block: Var.t list) =
+  (** get_linear_update_list (x<- 2x+3y+y^2) x [x;y] returns [2;3] *)
+  let rec get_linear_update_of_var loop (block: Var.t list) (var_left: Var.t) = match block with
+    | [] -> []
+    | x::xs ->
+      (Polynomial.coeff_of_indeterminate x (Loop.update_var loop var_left)) ::
+      (get_linear_update_of_var loop xs var_left)
+  in
+  List.map (get_linear_update_of_var loop block) block
 
 (* This function was written by Tom Küspert *)
 let read_process_lines command =
@@ -104,10 +94,11 @@ let improve_t program trans t appr =
             (* We first compute for every var (with a closed form) and every entry a local size bound *)
               let blocks = Check_Solvable.check_solvable loop in
               if Option.is_none blocks then Bound.infinity
-              else
-                let block = List.find (List.mem var) @@ Option.get blocks in
-                let (n, b) = Option.get @@ run_python var block (matrix_of_linear_assignments (Transition.label t) block) in
-                Bound.add (Loop.compute_bound_n_iterations loop var n) b
+              else (
+                (* As we obtain minimal solvable blocks, we have to merge them, e.g., if we consider Y in for (X,Y) <- (2*X,X), we infer the blocks [X],[Y] and have to merge them to [X,Y] . *)
+                let block = List.flatten @@ List.filter (fun block -> List.exists (flip List.mem block) (VarSet.to_list @@ (VarSet.add var (Loop.updated_vars loop)))) @@ Option.get blocks in
+                let (n, b) = Option.get @@ run_python var block (matrix_of_linear_assignments loop block) in
+                Bound.add (Loop.compute_bound_n_iterations loop var n) b)
           in
           SizeBoundTable.add size_bound_table (t,var) (local_bound,entries_traversal);
           (* Lifting previously computed local size bounds and store them in appr. *)
