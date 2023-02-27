@@ -29,6 +29,11 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
       Bound.mul (Approximation.timebound appr entry) bound_with_sizebound
       |> tap @@ fun b ->
+      Logger.log logger Logger.INFO (fun () -> "lift",
+            Bound.vars bound
+            |> VarSet.to_list
+            |> List.map (fun v -> ("t: " ^ (Transition.to_id_string entry)  ^ ", yvar: " ^ Var.to_string v) , (Approximation.sizebound appr entry v |> Bound.to_string ~pretty:true)));
+      Logger.log logger Logger.INFO (fun () -> "lift", [("RB of entry", Approximation.timebound appr entry |> Bound.to_string); ("Result", Bound.to_string b)]);
       TWN_Proofs.proof_append @@ FormattedString.(mk_paragraph (mk_str_line ("relevant size-bounds w.r.t. t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ":") <> (
             Bound.vars bound
             |> VarSet.to_list
