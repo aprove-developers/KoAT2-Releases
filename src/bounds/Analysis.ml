@@ -194,19 +194,20 @@ let rec knowledge_propagation_size (scc: TransitionSet.t) program appr =
     |> List.filter (fun (var,transition) -> Bound.is_infinity @@ Approximation.sizebound appr transition var)
     |> List.enum
     |> MaybeChanged.fold_enum (
-      fun appr (var,transition) ->
+      fun appr (var,(l,t,l')) ->
         let new_bound =
-          Program.pre_transitionset_cached program transition
+          Program.pre_transitionset_cached program (l,t,l')
           |> TransitionSet.enum
           |> Enum.map (flip (Approximation.sizebound appr) var)
           |> Bound.sum
+          |> Bound.substitute_f (fun var -> Bound.of_poly @@ (TransitionLabel.update t var |? Polynomial.of_var var))
         in
-        let original_bound = Approximation.sizebound appr transition var in
+        let original_bound = Approximation.sizebound appr (l,t,l') var in
         if Bound.compare_asy original_bound new_bound = 1 then (
           ProofOutput.add_str_paragraph_to_proof (fun () ->
-            "knowledge_propagation leads to new size bound "^Bound.to_string ~pretty:true new_bound^" for var" ^ Var.to_string var ^ " and transition " ^Transition.to_string_pretty transition
+            "knowledge_propagation leads to new size bound "^Bound.to_string ~pretty:true new_bound^" for var" ^ Var.to_string var ^ " and transition " ^ Transition.to_string_pretty (l,t,l')
           );
-          Approximation.add_sizebound new_bound transition var appr
+          Approximation.add_sizebound new_bound (l,t,l') var appr
           |> MaybeChanged.changed)
         else
            MaybeChanged.same appr
