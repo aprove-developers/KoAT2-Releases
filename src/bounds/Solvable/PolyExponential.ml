@@ -441,8 +441,9 @@ module PE = struct
 
     let overapprox t runtime_bound =
         List.map (fun (c, p, d, b) ->
-            let bound_p = p |> RationalPolynomial.overapprox |> Bound.of_poly
+            let bound_p = Bound.of_poly @@ RationalPolynomial.overapprox p
             and bound_d = Bound.pow runtime_bound d
-            and bound_b = Bound.exp (OurInt.of_int b) runtime_bound in Bound.(add (add bound_p bound_d) bound_b)) t
+            and bound_b = Bound.exp (OurInt.of_int b) runtime_bound in
+            Bound.(bound_p * bound_d * bound_b)) t
         |> Bound.sum_list
 end

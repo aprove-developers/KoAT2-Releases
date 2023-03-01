@@ -35,7 +35,7 @@ let lift appr t var closed_form (entry,traversal) =
     else
       Bound.infinity
   in
-  Bound.substitute_f (fun var -> Approximation.sizebound appr entry var) local_size
+  Bound.substitute_f (Approximation.sizebound appr entry) local_size
 
 let improve_t program trans t appr =
   VarSet.fold (fun var appr ->
