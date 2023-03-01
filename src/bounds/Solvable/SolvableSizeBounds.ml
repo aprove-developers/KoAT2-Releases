@@ -77,7 +77,7 @@ let lift appr t var bound (entry,traversal) =
   (* Insert runtime bound. *)
   let local_size = Bound.substitute (Var.of_string "n") ~replacement:(Approximation.timebound appr t) bound
   |> Bound.substitute_f (fun var -> Bound.of_poly @@ (VarMap.find_opt var traversal |? Polynomial.of_var var)) in
-  Bound.substitute_f (fun var -> Approximation.sizebound appr entry var) local_size
+  Bound.substitute_f (Approximation.sizebound appr entry) local_size
 
 let improve_t program trans t appr =
   VarSet.fold (fun var appr ->
