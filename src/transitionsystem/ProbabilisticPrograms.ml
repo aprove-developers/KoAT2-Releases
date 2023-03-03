@@ -257,7 +257,7 @@ module ProbabilisticTransitionLabel_ = struct
     Guard.Infix.(t1.overappr_guard && t1.invariant
                  && Guard.map_polynomial (Polynomial.substitute_f (substitution t1.overappr_nonprob_update))
                                         t2.overappr_guard
-                 && Guard.map_polynomial (Polynomial.substitute_f (substitution t2.overappr_nonprob_update))
+                 && Guard.map_polynomial (Polynomial.substitute_f (substitution t1.overappr_nonprob_update))
                                         t2.invariant)
 
   let overapprox_nonlinear_updates t =
