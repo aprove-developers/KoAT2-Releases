@@ -26,10 +26,10 @@ let suite =
       TWNTest.tests;
       SolvableTest.tests;
 
-      ProbabilityDistributionTests.tests;
-      UpdateElementTests.tests;
-      ExpectedLocalChangeBoundTests.tests;
-      ExpTimeBoundsTests.tests;
+      ProbabilityDistributionTest.tests;
+      UpdateElementTest.tests;
+      ExpectedLocalChangeBoundTest.tests;
+      ExpTimeBoundsTest.tests;
     ]
 
 let () =
