@@ -15,6 +15,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   val update_opt : t -> Var.t -> Polynomial.t option
   val update_var : t -> Var.t -> Polynomial.t
   val updated_vars : t -> VarSet.t
+  val vars : t -> VarSet.t
 
   val to_string : t -> string
 
