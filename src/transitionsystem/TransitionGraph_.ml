@@ -60,6 +60,14 @@ module Make_(T: ProgramTypes.Transition)
            replace_edge_e transition (T.add_invariant invariant transition) result
          ) graph
 
+  let sccs graph =
+    let module SCC = Graph.Components.Make(G) in
+    List.map (loc_transitions graph) @@ SCC.scc_list graph
+    |> List.filter (not % TransitionSet.is_empty)
+
+  let sccs_ trans =
+    let graph = add_transitions trans empty in
+    sccs graph
 end
 
 module TransitionGraphOverLocation(L: ProgramTypes.Location) =

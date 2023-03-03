@@ -121,12 +121,9 @@ struct
          )
 
   let sccs program =
-    let module SCC = Graph.Components.Make(G) in
-    SCC.scc_list program.graph
+    G.sccs program.graph
     |> List.rev (* scc_list is in reverse topological order *)
     |> List.enum
-    |> Enum.map (G.loc_transitions program.graph)
-    |> Enum.filter (not % TransitionSet.is_empty)
 
   let cardinal_trans_scc program =
     Enum.fold (fun counter scc -> let cardinal = (TransitionSet.cardinal scc) in counter + if cardinal > 1 then cardinal else 0) 0 (sccs program)
