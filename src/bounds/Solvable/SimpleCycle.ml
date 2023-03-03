@@ -148,12 +148,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           let trans_in_scc = List.map TransitionSet.to_list sccs |> List.flatten |> TransitionSet.of_list in
           let relevant_entries = (
             List.map (fun scc ->
-            if TransitionSet.exists (fun (_,t,_) -> VarSet.disjoint (VarSet.of_enum (VarMap.keys @@ TransitionLabel.update_map t)) (Loop.vars loop)) scc then
+            if TransitionSet.exists (fun (_,t,_) -> not @@ VarSet.disjoint (VarSet.of_enum (VarMap.keys @@ TransitionLabel.update_map t)) (Loop.vars loop)) scc then
               List.filter (flip TransitionSet.mem scc) entries_inside
             else
-              List.filter TransitionSet.(not % flip mem scc) @@ Program.entry_transitions logger program (TransitionSet.to_list scc)) sccs |> List.flatten)
+              List.filter TransitionSet.(not % flip mem scc) @@ Program.entry_transitions logger program (TransitionSet.to_list scc)
+            ) sccs |> List.flatten)
             @
-            (List.filter (flip TransitionSet.mem trans_in_scc) entries_inside) (* Transition which are non in an SCC. *)
+            (List.filter (not % flip TransitionSet.mem trans_in_scc) entries_inside) (* Transition which are not in an SCC. *)
           in
           Option.some (loop, List.map (fun entry -> entry, traverse_cycle cycle (Transition.src entry) l) (List.unique ~eq:Transition.same relevant_entries@entries_outside))
         else
