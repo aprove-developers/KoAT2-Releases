@@ -14,6 +14,7 @@ let suite =
           ConstraintsTest.Methods.tests;
         ];
       TransitionGraphTest.suite;
+      ProgramTest.tests;
       SMTTest.suite;
       IDTest.tests;
       LocalSizeBoundTest.tests;
