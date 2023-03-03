@@ -145,14 +145,17 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           (* If a component changes a variable of the loop, then all entries in this component are relevant.
              Otherwise, we take the entries leading to this component which are not in the original scc. *)
           let sccs = TransitionGraph.sccs_ (List.enum @@ TransitionSet.(to_list @@ diff scc @@ of_list handled_transitions)) in
-          let relevant_entries =
+          let trans_in_scc = List.map TransitionSet.to_list sccs |> List.flatten |> TransitionSet.of_list in
+          let relevant_entries = (
             List.map (fun scc ->
             if TransitionSet.exists (fun (_,t,_) -> VarSet.disjoint (VarSet.of_enum (VarMap.keys @@ TransitionLabel.update_map t)) (Loop.vars loop)) scc then
               List.filter (flip TransitionSet.mem scc) entries_inside
             else
-              List.filter TransitionSet.(not % flip mem scc) @@ Program.entry_transitions logger program (TransitionSet.to_list scc)) sccs |> List.flatten
+              List.filter TransitionSet.(not % flip mem scc) @@ Program.entry_transitions logger program (TransitionSet.to_list scc)) sccs |> List.flatten)
+            @
+            (List.filter (flip TransitionSet.mem trans_in_scc) entries_inside) (* Transition which are non in an SCC. *)
           in
-          Option.some (loop, List.map (fun entry -> entry, traverse_cycle cycle (Transition.src entry) l) (relevant_entries@entries_outside))
+          Option.some (loop, List.map (fun entry -> entry, traverse_cycle cycle (Transition.src entry) l) (List.unique ~eq:Transition.same relevant_entries@entries_outside))
         else
           None) cycles
     else
