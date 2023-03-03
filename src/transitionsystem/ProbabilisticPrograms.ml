@@ -272,7 +272,7 @@ module ProbabilisticTransitionLabel_ = struct
         ) t.update
       |> fun m -> VarMap.map Tuple2.first m, Guard.all (List.of_enum % Enum.map Tuple2.second @@ VarMap.values m)
     in
-    let overappr_guard = Guard.simplify overappr_guard in
+    let overappr_guard = Guard.mk_and overappr_guard (Guard.drop_nonlinear t.overappr_guard) in
     { t with overappr_nonprob_update; overappr_guard; }
 
   let restore_legacy_distribution_update_semantics t =
