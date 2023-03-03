@@ -21,7 +21,7 @@ module type Location = sig
   val to_string : t -> string
 end
 
-module type LocationSet = sig 
+module type LocationSet = sig
   include Set.S
 
   (** Returns a string representing the transition set. *)
@@ -268,6 +268,12 @@ module type TransitionGraph = sig
 
   (** Adds the invariant to the location of the graph. *)
   val add_invariant : location -> Constraint.t -> t -> t
+
+  (** Returns the (biggest) strongly connected components of the transiton graph. *)
+  val sccs : t -> transition_set list
+
+  (** Returns the (biggest) strongly connected components of the transitons. *)
+  val sccs_ : transition Enum.t -> transition_set list
 end
 
 module type Program = sig
