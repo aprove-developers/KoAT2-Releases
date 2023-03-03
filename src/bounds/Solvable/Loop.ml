@@ -18,6 +18,12 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let update_opt (_,update) var = VarMap.find_opt var update
   let update_var (_,update) var = VarMap.find_opt var update |? Polynomial.of_var var
   let updated_vars t = VarMap.keys @@ update t |> VarSet.of_enum
+  let vars t =
+    List.map (Polynomial.vars % update_var t) (VarSet.to_list @@ updated_vars t)
+    |> List.map VarSet.to_list
+    |> List.flatten
+    |> VarSet.of_list
+    |> VarSet.union (updated_vars t)
 
   let to_string ((guard,update): t) =
     let update_str =
