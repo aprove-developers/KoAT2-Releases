@@ -337,6 +337,10 @@ let input_size t =
   |> input_vars
   |> VarSet.cardinal
 
+let changed_vars t =
+  input_vars t
+  |> VarSet.filter (fun v -> not Polynomial.(equal (of_var v) (update t v |? of_var v)))
+
 let rename_update update rename_map =
   update
   |> VarMap.enum

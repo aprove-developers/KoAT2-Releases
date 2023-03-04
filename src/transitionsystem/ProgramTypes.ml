@@ -154,6 +154,9 @@ module type TransitionLabel = sig
 
   val has_tmp_vars : t -> bool
 
+  (** All input variables where the update is not x' = x.*)
+  val changed_vars : t -> VarSet.t
+
   (** Guard that is true if both transitions can be executed one after another *)
   val chain_guards: t -> t -> Guard.t
 
