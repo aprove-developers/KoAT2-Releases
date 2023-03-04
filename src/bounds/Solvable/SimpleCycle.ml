@@ -142,16 +142,16 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           let entries_inside,entries_outside =
             List.partition (flip TransitionSet.mem scc) (Program.entry_transitions logger program handled_transitions)
           in
-          (* If a component changes a variable of the loop, then all entries in this component are relevant.
-             Otherwise, we take the entries leading to this component which are not in the original scc. *)
+          (* If a sub_scc changes a variable of the loop, then all entries in this sub_scc are relevant.
+             Otherwise, we take the entries leading to this sub_scc which are not in the original scc. *)
           let sccs = TransitionGraph.sccs_ (List.enum @@ TransitionSet.(to_list @@ diff scc @@ of_list handled_transitions)) in
           let trans_in_scc = List.map TransitionSet.to_list sccs |> List.flatten |> TransitionSet.of_list in
           let relevant_entries = (
-            List.map (fun scc ->
-            if TransitionSet.exists (fun (_,t,_) -> not @@ VarSet.disjoint (VarSet.of_enum (VarMap.keys @@ TransitionLabel.update_map t)) (Loop.vars loop)) scc then
-              List.filter (flip TransitionSet.mem scc) entries_inside
+            List.map (fun sub_scc ->
+            if TransitionSet.exists (fun (_,t,_) -> not @@ VarSet.disjoint (TransitionLabel.changed_vars t) (Loop.vars loop)) sub_scc then
+              List.filter (flip TransitionSet.mem sub_scc) entries_inside
             else
-              List.filter TransitionSet.(not % flip mem scc) @@ Program.entry_transitions logger program (TransitionSet.to_list scc)
+              List.filter TransitionSet.(not % flip mem scc) @@ Program.entry_transitions logger program (TransitionSet.to_list sub_scc)
             ) sccs |> List.flatten)
             @
             (List.filter (not % flip TransitionSet.mem trans_in_scc) entries_inside) (* Transition which are not in an SCC. *)

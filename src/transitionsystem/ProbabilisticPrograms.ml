@@ -341,6 +341,10 @@ module ProbabilisticTransitionLabel = struct
   let vars_without_memoization = vars_without_memoization VarsNonOverapproximated
   let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
 
+  let changed_vars t =
+    input_vars t
+    |> VarSet.filter (fun v -> not UpdateElement_.(equal (of_var v) (update t v |? of_var v)))
+
   let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
 end
 
@@ -391,6 +395,10 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let vars_without_memoization = vars_without_memoization VarsOverapproximated
   let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
   let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
+
+  let changed_vars t =
+    input_vars t
+    |> VarSet.filter (fun v -> not Polynomial.(equal (of_var v) (update t v |? of_var v)))
 
 end
 
