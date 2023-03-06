@@ -15,7 +15,10 @@ module Make(M: ProgramTypes.ProgramModules) = struct
   (** Returns a set of all locations which are unreachable from the given start location. *)
   let unreachable_locations program start : M.LocationSet.t =
     let graph = M.Program.graph program in
-    M.LocationSet.diff (M.Program.locations program) (reachable_locations graph start)
+    if M.LocationSet.is_empty (M.Program.locations program) then
+      M.LocationSet.empty
+    else
+      M.LocationSet.diff (M.Program.locations program) (reachable_locations graph start)
 
   (** Returns program without unreachable locations and without all related transitions. *)
   let transform_program (program: M.Program.t) =

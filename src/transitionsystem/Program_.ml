@@ -84,7 +84,7 @@ struct
     fun program -> VarSet.diff (vars program) (input_vars program)
 
   let from_graph start graph =
-    if List.is_empty (G.pred_e graph start) then
+    if G.is_empty graph || List.is_empty (G.pred_e graph start) then
       { start; graph; }
     else raise (Failure "Transition leading back to the initial location.")
 
@@ -218,29 +218,32 @@ let from_com_transitions com_transitions start =
    * all targets that do not appear on the left hand side of a rule.
    * However, we need to keep at least on target for each transition, such that the transition itself is not eliminated and it
    * still incurs a cost of 1. *)
-  let cleaned_com_k_transitions =
-    List.map
-      (fun ts ->
-        if List.length ts > 1 then
-          let arb_trans = List.hd ts in
-          let cleaned = List.filter (flip LocationSet.mem start_locs % Transition_.target) ts in
-          if List.is_empty cleaned then [arb_trans] else cleaned
-          |> tap (fun new_ts -> if List.length new_ts = 1 then Logger.log Logging.(get Program) INFO (fun () ->
-              "eliminate_recursion",[ "old_targets", Util.enum_to_string Transition_.to_id_string (List.enum ts)
-                                    ; "new_targets", Util.enum_to_string Transition_.to_id_string (List.enum new_ts)]) else ())
-        else ts
-      )
-      com_transitions
-  in
-  if List.exists (not % Int.equal 1 % List.length) cleaned_com_k_transitions then raise RecursionNotSupported else
-    let transs =
-      let all = List.flatten cleaned_com_k_transitions in
-      let num_arg_vars =
-        List.max ~cmp:Int.compare @@ List.map (TransitionLabel_.input_size % Transition_.label) all
-      in
-      List.map (Transition_.map_label (TransitionLabel_.fill_up_arg_vars_up_to_num num_arg_vars)) all
+  if List.is_empty all_trans then
+    from_graph start (TransitionGraph_.empty)
+  else
+    let cleaned_com_k_transitions =
+      List.map
+        (fun ts ->
+          if List.length ts > 1 then
+            let arb_trans = List.hd ts in
+            let cleaned = List.filter (flip LocationSet.mem start_locs % Transition_.target) ts in
+            if List.is_empty cleaned then [arb_trans] else cleaned
+            |> tap (fun new_ts -> if List.length new_ts = 1 then Logger.log Logging.(get Program) INFO (fun () ->
+                "eliminate_recursion",[ "old_targets", Util.enum_to_string Transition_.to_id_string (List.enum ts)
+                                      ; "new_targets", Util.enum_to_string Transition_.to_id_string (List.enum new_ts)]) else ())
+          else ts
+        )
+        com_transitions
     in
-    from_enum start (List.enum transs)
+    if List.exists (not % Int.equal 1 % List.length) cleaned_com_k_transitions then raise RecursionNotSupported else
+      let transs =
+        let all = List.flatten cleaned_com_k_transitions in
+        let num_arg_vars =
+          List.max ~cmp:Int.compare @@ List.map (TransitionLabel_.input_size % Transition_.label) all
+        in
+        List.map (Transition_.map_label (TransitionLabel_.fill_up_arg_vars_up_to_num num_arg_vars)) all
+      in
+      from_enum start (List.enum transs)
 
 let rename program =
   let counter: int ref = ref 0 in

@@ -115,11 +115,11 @@ start:
     { Location.of_string start } ;
 
 transitions:
-  | LPAR RULES transition = nonempty_list(transition) RPAR
+  | LPAR RULES transition = list(transition) RPAR
     { fun vars -> List.map (fun t -> t vars) transition |> List.flatten } ;
 
 general_transitions:
-  | LPAR RULES general_transitions = nonempty_list(general_transition) RPAR
+  | LPAR RULES general_transitions = list(general_transition) RPAR
     { ParserUtil.mk_general_transitions general_transitions } ;
 
 variables:
