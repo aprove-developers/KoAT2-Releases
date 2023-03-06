@@ -103,18 +103,14 @@ module Z3Solver =
   struct
     module Valuation = Valuation.Make(OurInt)
 
-    let context = ref (
-                      Z3.mk_context [
-                          ("model", "false");
-                          ("proof", "false");
-                        ]
-                    )
+    let mk_context = fun () -> Z3.mk_context [("model", "false"); ("proof", "false");]
 
     let version = Z3.Version.full_version
 
     let result_is expected_result formula =
-      let formula = from_formula !context formula in
-      let optimisation_goal = Z3.Solver.mk_simple_solver !context in
+      let context = mk_context () in
+      let formula = from_formula context formula in
+      let optimisation_goal = Z3.Solver.mk_simple_solver context in
       Z3.Solver.add optimisation_goal [formula];
       let result = Z3.Solver.check optimisation_goal [] in
       if result == Z3.Solver.UNKNOWN then
@@ -147,8 +143,9 @@ module Z3Solver =
       tautology Formula.Infix.(formula => (poly < Polynomial.zero))
 
     let get_model ?(coeffs_to_minimise=[]) formula =
-      let z3_expr = from_formula !context formula in
-      let optimisation_goal = Z3.Optimize.mk_opt !context in
+      let context = mk_context () in
+      let z3_expr = from_formula context formula in
+      let optimisation_goal = Z3.Optimize.mk_opt context in
       Z3.Optimize.add optimisation_goal [z3_expr];
       let status = Z3.Optimize.check optimisation_goal in
       if status == Z3.Solver.SATISFIABLE then
