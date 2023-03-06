@@ -10,15 +10,14 @@ let tests =
     "check_update_as_guard_of_max_degree" >:::
         List.mapi
           (fun i (guard, updated_var, update, expected_result) ->
-             let guard           = Readers.read_constraint guard in
-             let updated_var     = Var.of_string updated_var in
-             let update          = Readers.read_update_element update in
-             let expected_result = Readers.read_constraint expected_result in
+             "case "^Int.to_string i >:: fun _ ->
+               let guard           = Readers.read_constraint guard in
+               let updated_var     = Var.of_string updated_var in
+               let update          = Readers.read_update_element update in
+               let expected_result = Readers.read_constraint expected_result in
+               let result = UpdateElement.as_linear_guard guard update updated_var in
 
-             let result = UpdateElement.as_linear_guard guard update updated_var in
-
-             ("case "^Int.to_string i)
-               >:: fun _ -> assert_equal_formula (Formula.mk expected_result) (Formula.mk result)
+               assert_equal_formula (Formula.mk expected_result) (Formula.mk result)
           )
           [
             ("X>=1", "X'", "X*X", "X >= 1 && X' >= X")
