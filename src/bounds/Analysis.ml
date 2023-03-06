@@ -306,6 +306,9 @@ let scc_cost_bounds ~conf program scc appr =
 
 let handle_timeout_cfr method_name non_linear_transitions =
   Program.reset_pre_cache ();
+  TWN.reset_cfr();
+  TWNSizeBounds.reset_cfr();
+  SolvableSizeBounds.reset_cfr();
   Logger.log logger_cfr Logger.INFO (fun () -> "TIMEOUT_CFR_" ^ method_name, ["scc", (TransitionSet.to_string non_linear_transitions)])
 
 
@@ -359,6 +362,9 @@ let handle_timeout_cfr method_name non_linear_transitions =
             add_missing_lsbs program_cfr lsbs;
             Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_" ^ method_name, ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
             Program.reset_pre_cache ();
+            TWN.reset_cfr();
+            TWNSizeBounds.reset_cfr();
+            SolvableSizeBounds.reset_cfr();
             let rvg_with_sccs_cfr = RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first) % LSB_Table.find lsbs) program_cfr in
             (* The new sccs which do not occur in the original program. *)
             let cfr_sccs = program_cfr
@@ -382,6 +388,9 @@ let handle_timeout_cfr method_name non_linear_transitions =
             if (Bound.compare_asy org_bound cfr_bound) < 1 then (
               ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "CFR did not improve the program. Rolling back");
               Program.reset_pre_cache ();
+              TWN.reset_cfr();
+              TWNSizeBounds.reset_cfr();
+              SolvableSizeBounds.reset_cfr();
               Logger.log logger_cfr Logger.INFO (fun () -> "NOT_IMPROVED",
                                                           ["original bound", (Bound.to_string org_bound); method_name ^ " bound", (Bound.show_complexity (Bound.asymptotic_complexity cfr_bound))]);
               (program, appr, rvg_with_sccs)
@@ -454,4 +463,4 @@ let handle_timeout_cfr method_name non_linear_transitions =
     in
     let appr_with_costbounds = CostBounds.infer_from_timebounds program appr in
     program, appr_with_costbounds
-  end
+end

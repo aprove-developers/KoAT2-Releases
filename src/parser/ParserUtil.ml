@@ -50,7 +50,7 @@ let mk_transition lhs (cost: Polynomial.t) rhs (formula: Formula.t) (vars:Var.t 
           )
           (Tuple2.second rhs)
        )
-    |> List.map (List.map (fun (l,t,l') -> (l,t ~vars,l')))
+    |> List.map (List.map (fun (l,t,l') -> (l,t,l')))
 
 (** Returns list of default variables: x,y,z,u,v,w,p and q *)
 let default_vars =
@@ -72,8 +72,7 @@ let mk_transition_simple (start: string) (cost: Polynomial.t) (rhs: string * (st
               ~assignments:updates
               ~patterns:default_vars
               ~guard:constr
-              ~cost:cost
-              ~vars:default_vars, Location.of_string target_loc)
+              ~cost:cost, Location.of_string target_loc)
          )
 
 (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns program from such an input. *)

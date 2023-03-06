@@ -25,6 +25,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   (* Keys: transition, values: bounds of entry transitions. *)
   let time_bound_table: (Transition.t * Bound.t) list TimeBoundTable.t = TimeBoundTable.create 10
 
+  (** Internal memoization: The idea is to use this cache if we applied cfr and
+    1) delete it and use the original cache if we get a timeout or
+    2) if the analysis of the unrolled scc is completed successfully use this cache as the main memory.
+    TODO Currently, we just reset the cache. *)
+  let reset_cfr () =
+    TimeBoundTable.clear time_bound_table
+
   let lift appr entry bound =
     let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
       Bound.mul (Approximation.timebound appr entry) bound_with_sizebound

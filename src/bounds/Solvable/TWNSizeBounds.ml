@@ -26,6 +26,13 @@ module SizeBoundTable = Hashtbl.Make(VT)
 
 let size_bound_table: (PE.t Option.t * (Transition.t * Polynomial.t VarMap.t) list) SizeBoundTable.t = SizeBoundTable.create 10
 
+(** Internal memoization: The idea is to use this cache if we applied cfr and
+  1) delete it and use the original cache if we get a timeout or
+  2) if the analysis of the unrolled scc is completed successfully use this cache as the main memory.
+  TODO Currently, we just reset the cache. *)
+let reset_cfr () =
+  SizeBoundTable.clear size_bound_table
+
 let lift appr t var closed_form (entry,traversal) =
   (* Insert runtime bound. *)
   let local_size =

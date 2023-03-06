@@ -8,4 +8,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   module Approximation : module type of  Approximation.MakeForClassicalAnalysis(PM)
 
   val time_bound : configuration -> Transition.t -> TransitionSet.t -> Program.t -> Approximation.t -> Bound.t
+
+  val reset_cfr : unit -> unit
 end
