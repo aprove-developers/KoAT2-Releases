@@ -12,14 +12,13 @@ let tests =
   "ExpectedChangeBoundTests" >:::
     List.mapi
       (fun i (gt, expected) ->
-         let gt = GeneralTransitionSet.any (Readers.read_general_transitions gt) in
+         Printf.sprintf "case %i:%s" i gt >:: fun _ ->
+           let gt = GeneralTransitionSet.any (Readers.read_general_transitions gt) in
+           let program_vars = GeneralTransition.input_vars gt in
+           let elcb =  ExpectedLocalChangeBound.compute_elcb program_vars ((gt,loc_g), var_first_arg) in
 
-         let program_vars = GeneralTransition.input_vars gt in
-         let elcb =  ExpectedLocalChangeBound.compute_elcb program_vars ((gt,loc_g), var_first_arg) in
-
-         ("case "^Int.to_string i^":"^GeneralTransition.to_string gt)
-           >:: fun _ -> Helper.assert_equal_realpoly_smt (Option.get @@ RealBound.to_poly expected)
-                                                      (Option.get @@ RealBound.to_poly elcb)
+           Helper.assert_equal_realpoly_smt (Option.get @@ RealBound.to_poly expected)
+                                            (Option.get @@ RealBound.to_poly elcb)
       )
       RealBound.(
         [

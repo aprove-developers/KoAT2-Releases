@@ -12,14 +12,13 @@ let tests =
     "moment_poly" >:::
         List.map
           (fun (order, dist_str, expected_result) ->
-             let dist = Readers.read_probability_distribution dist_str in
-
-             let result = ProbabilityDistribution.moment_poly dist order in
-
              let order_string = if order = 1 then "" else "^" ^ Int.to_string order in
+             Printf.sprintf "E(%s^%s)" dist_str order_string >:: fun _ ->
+             (* "E(" ^ dist_str ^ order_string ^ ")" >:: fun _ -> *)
+               let dist = Readers.read_probability_distribution dist_str in
+               let result = ProbabilityDistribution.moment_poly dist order in
 
-             ("E(" ^ ProbabilityDistribution.to_string dist ^ order_string ^ ")")
-               >:: fun _ -> assert_equal_realpoly_smt expected_result result
+               assert_equal_realpoly_smt expected_result result
           )
           (let open RealPolynomial in
             [
@@ -51,14 +50,12 @@ let tests =
     "moment_abs_bound" >:::
         List.map
           (fun (order, dist_str, expected_result) ->
-             let dist = Readers.read_probability_distribution dist_str in
-
-             let result = ProbabilityDistribution.moment_abs_bound dist order in
-
              let order_string = if order = 1 then "" else "^" ^ Int.to_string order in
+             Printf.sprintf "E(%s^%s)" dist_str order_string >:: fun _ ->
+               let dist = Readers.read_probability_distribution dist_str in
+               let result = ProbabilityDistribution.moment_abs_bound dist order in
 
-             ("E(" ^ ProbabilityDistribution.to_string dist ^ order_string ^ ")")
-               >:: fun _ -> assert_ge_realbound_smt result expected_result
+               assert_ge_realbound_smt result expected_result
           )
           (let open BoundsInst.RealBound in
             [
