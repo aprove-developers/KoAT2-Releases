@@ -8,9 +8,9 @@ name: Build and Test KoAT2
 # change branch to probabilistic later on
 on:
   push:
-    branches: [ master ]
+    branches: [ master citest ]
   pull_request:
-    branches: [ master ]
+    branches: [ master citest ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
