@@ -15,7 +15,6 @@ val mk : id:int option ->
          assignments: Polynomials.Polynomial.t list ->
          patterns:Var.t list ->
          guard:Guard.t ->
-         vars:Var.t list ->
          t
 
 (** Appends the second label to the first label.

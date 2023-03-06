@@ -12,7 +12,7 @@ type t = {
     id : int;
     update : Polynomial.t VarMap.t;
     guard : Guard.t;
-    invariant :Invariant.t;
+    invariant : Invariant.t;
     cost : Polynomial.t;
   }
 
@@ -77,7 +77,7 @@ let fill_up_arg_vars_up_to_num n t =
   {t with update = fill_up_update_arg_vars_up_to_num n t.update}
 
 
-let mk ~id ~cost ~assignments ~patterns ~guard ~vars =
+let mk ~id ~cost ~assignments ~patterns ~guard =
   let map_to_arg_vars =
     Enum.combine (List.enum patterns) (LazyList.enum Var.args)
     |> RenameMap.of_enum
@@ -373,14 +373,9 @@ let rename rename_map t =
   |> tap (fun _ -> Hashtbl.clear vars_memoization)
 
 let remove_non_contributors non_contributors t =
-    let update_ = VarSet.fold (fun var u -> VarMap.remove var u) non_contributors t.update in
-    {
-    id = unique ();
-    update = update_;
-    guard = t.guard;
-    invariant = t.invariant;
-    cost = t.cost;
-    }
+  let patterns = List.filter (flip VarSet.mem non_contributors) (VarSet.to_list @@ input_vars t) in
+  let assignments = List.map (flip VarMap.find t.update) patterns in
+  mk ~cost:t.cost ~assignments:assignments ~patterns:patterns ~guard:t.guard ~id:None
 
 (* We execute CFRefinement with guard && invariant -> We need to separate invariant afterwards. *)
 let separate_guard_invariant t invariant' = {t with guard = List.filter (fun atom -> List.exists (fun atom_inv -> Atoms.Atom.equal atom atom_inv) invariant' |> not) t.guard;
