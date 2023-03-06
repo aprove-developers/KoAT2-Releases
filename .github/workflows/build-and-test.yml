@@ -5,8 +5,6 @@ name: Run Dockerfile
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
-
-# change branch to probabilistic later on
 on:
   push:
     branches: [ master ]
@@ -25,73 +23,5 @@ jobs:
       - uses: docker/build-push-action@v2
         with:
           context: .
-          from-cache: gha
-          to-cache: gha, mode=max
-#     # The type of runner that the job will run on
-#     runs-on: ubuntu-latest
-#
-#     # Steps represent a sequence of tasks that will be executed as part of the job
-#     steps:
-#     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-#     - uses: actions/checkout@v2
-#
-#     - uses: actions/cache@v1
-#       name: Cache docker image
-#       with:
-#         path: ~/cache
-#         key: ${{ runner.os }}-docker-v2-${{ hashFiles('**/Dockerfile', '**/ci.yml') }}
-#
-#     - name: restore docker cache
-#       run: |
-#         if [ -e ~/cache/image.tar.xz ]; then xz -dc ~/cache/image.tar.xz | docker load; fi
-#
-#     # Build the binary using docker and run tests
-#     - name: build and test
-#       run: |
-#         # Incremental builds so that we can cache all stages of the build
-#         ./build_container.sh -t koat2_build --target koat2_build
-#         ./build_container.sh -t koat2_c_utils --target koat2_c_utils
-#         ./build_container.sh
-#
-#     - name: export docker cache
-#       run: |
-#         # Save all used docker images
-#         # Export all cached steps if no cache was present
-#         if [ ! -e ~/cache ]; then
-#           mkdir ~/cache
-#           echo "Saving the following images:"
-#           echo "Build"
-#           docker history koat2_build --no-trunc | grep -v missing
-#           echo
-#           echo
-#           echo "C Utils"
-#           docker history koat2_c_utils --no-trunc | grep -v missing
-#           echo
-#           echo
-#           echo "KoAT2"
-#           docker history koat2 --no-trunc | grep -v missing
-#           echo
-#           echo
-#           docker save $(docker history koat2_build -q | grep -v missing) $(docker history koat2_c_utils -q | grep -v missing) $(docker history koat2 -q | grep -v missing) | xz -T4 -z -1 - > ~/cache/image.tar.xz
-#         fi
-#         df -h
-#
-#         # Deactivated for now to save some space
-#
-#         #- name: export artifacts
-#         #  run: |
-#         #    ./compile_static_binary.sh
-#         #    chmod +x koat2_static
-#         #    xz -1 -T4 koat2_static
-#         #    docker save koat2 | xz -T4 -z -1 - > koat2_docker.tar.xz
-#
-#         #- uses: actions/upload-artifact@v2
-#         #  with:
-#         #    name: static-binary
-#         #    path: koat2_static.xz
-#
-#         #- uses: actions/upload-artifact@v2
-#         #  with:
-#         #    name: docker-img
-#         #    path: koat2_docker.tar.xz
-#
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
