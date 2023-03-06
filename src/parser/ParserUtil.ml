@@ -121,7 +121,11 @@ let mk_general_transitions (gts: ((string * string list) * Polynomial.t * (int *
         if List.length cleaned > 1 then raise Program_.RecursionNotSupported else List.hd (cleaned@t))
       gts
   in
-  let number_patterns = List.max ~cmp:Int.compare @@ List.map (fun ((_,patterns),_,_,_) -> List.length patterns) gts in
+  let number_patterns =
+    if List.is_empty gts then
+      0
+    else
+      List.max ~cmp:Int.compare @@ List.map (fun ((_,patterns),_,_,_) -> List.length patterns) gts in
   let mk_general_transition ((start_loc,patterns),cost,(rhss: (OurFloat.t * UpdateElement.t list * string) list),formula) =
     List.enum (Formula.constraints formula)
     |> Enum.map (fun guard ->
