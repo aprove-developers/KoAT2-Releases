@@ -373,7 +373,7 @@ let rename rename_map t =
   |> tap (fun _ -> Hashtbl.clear vars_memoization)
 
 let remove_non_contributors non_contributors t =
-  let patterns = List.filter (flip VarSet.mem non_contributors) (VarSet.to_list @@ input_vars t) in
+  let patterns = List.filter (flip VarSet.mem (VarSet.diff (input_vars t) non_contributors)) (VarSet.to_list @@ input_vars t) in
   let assignments = List.map (flip VarMap.find t.update) patterns in
   mk ~cost:t.cost ~assignments:assignments ~patterns:patterns ~guard:t.guard ~id:None
 
