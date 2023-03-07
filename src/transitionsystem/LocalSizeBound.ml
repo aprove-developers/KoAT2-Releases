@@ -198,40 +198,6 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
   let sizebound_local program t v =
       Option.map Tuple2.first @@ sizebound_local_with_equality program t v
 
-  let sizebound_local_rv program (t,v) =
-    sizebound_local program t v
-
-  let sizebound_local_scc program scc: (T.t * Var.t -> t * bool) Option.t =
-    let lsbs =
-      List.map (fun (t,v) -> (t,v), sizebound_local_with_equality program t v) scc
-    in
-    if List.for_all (Option.is_some % Tuple2.second) lsbs then
-      Some (fun k -> Tuple2.map2 Lazy.force % Option.get @@ List.assoc k lsbs)
-    else None
-
-
-  (** Internal memoization for local size bounds.
-    The idea is to use this cache if we applied cfr and
-      1) delete it and use the original cache if we get a timeout or
-      2) if the analysis of the unrolled scc is completed successfully use this cache as the main memory. *)
-  let currently_cfr = ref false
-
-  let  (table_cfr: lsb_cache) =
-    LSB_Cache.create 10
-
-  let reset_cfr () =
-    currently_cfr := false;
-    LSB_Cache.clear table_cfr
-
-  let switch_cache () =
-    if !currently_cfr then (
-      reset();
-      Enum.iter (fun (k,b) -> LSB_Cache.add table k b) (LSB_Cache.enum table_cfr);
-      reset_cfr()
-    )
-
-  let enable_cfr () =
-    currently_cfr := true
 end
 
 include Make(TransitionLabel_)(Transition_)(Program_)

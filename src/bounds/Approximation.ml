@@ -136,9 +136,6 @@ module MakeForClassicalAnalysis(PM: ProgramTypes.ProgramModules) =
 module Coerce(B: BoundType.Bound)
              (PM: ProgramTypes.ProgramModules)(PM': ProgramTypes.ProgramModules)
              (E: sig
-
-                val t_eq: (PM.Transition.t, PM'.Transition.t) Util.TypeEq.t
-
                 module RVTupleEq: functor(F: functor(_: ProgramTypes.RVTuple) -> sig type t end) -> sig
                   val proof: (F(PM.RV.RVTuple_).t, F(PM'.RV.RVTuple_).t) Util.TypeEq.t
                  end
@@ -181,7 +178,6 @@ module Probabilistic = struct
     let module M = Coerce(BoundsInst.Bound)
                          (ProbabilisticProgramModules.NonProbOverappr)(ProbabilisticProgramModules)
         (struct
-          let t_eq = ProbabilisticPrograms.Equalities.t_eq
           module RVTupleEq = ProbabilisticPrograms.Equalities.RVTupleTypeCoercion.Coerce
         end)
     in

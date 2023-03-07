@@ -8,8 +8,6 @@ type t = Binomial of Polynomial.t * OurFloat.t
 
 val to_string: ?pretty:bool -> ?to_file:bool -> t -> string
 
-val equal: t -> t -> bool
-
 val rename: RenameMap.t -> t -> t
 
 val vars: t -> VarSet.t

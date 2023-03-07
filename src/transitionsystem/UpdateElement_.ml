@@ -238,19 +238,6 @@ let pull_out_of_uniform: t -> t =
     ~pow:pow
 
 let exp_value_abs_bound t =
-  pull_out_of_uniform t
-  |> fold
-       ~const:(RealBound.of_constant % OurFloat.of_ourint)
-       ~indeterminate:(function
-           | Dist d -> ProbabilityDistribution.exp_value_abs_bound d
-           | Var v -> RealBound.of_var v
-         )
-       ~neg:identity
-       ~plus:RealBound.add
-       ~times:RealBound.mul
-       ~pow:RealBound.pow
-
-let exp_value_abs_bound t =
   let simplified = pull_out_of_uniform t in
   List.enum (monomials_with_coeffs simplified)
   |> Enum.map

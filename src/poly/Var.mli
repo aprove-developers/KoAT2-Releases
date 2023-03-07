@@ -13,7 +13,7 @@ type t =
   | Var of String.t
   (**Helpers are fresh variables generated via the computation. They represent a real or an integer value.*)
   | Helper of sort*int
-  | Argument of int [@@deriving eq, ord]
+  | Argument of int
 
 (** TODO doc *)
 val equal : t -> t -> bool

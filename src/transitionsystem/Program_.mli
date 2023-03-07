@@ -40,9 +40,6 @@ end
 
 include module type of ProgramOverLocation(Location)
 
-(** Returns a string representing the program that can be dumped to a KoAT input file. *)
-val to_file : t -> string -> unit
-
 (** Creates a program from a list of transitions and a (start) location. *)
 (**  A list of k transitions makes up a Com_k transition *)
 (**  Since KoAT currently does not support recursion we try to eliminate it. *)
