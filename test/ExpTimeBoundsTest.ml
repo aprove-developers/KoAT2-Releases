@@ -40,10 +40,9 @@ let tests =
             assert_bool error_msg (RealBound.equal_complexity complexity complexity_exp)
 
         )
-        (let open RealBound in
-          [
-            ("leading_tacas21"  , Polynomial 2, "../../../examples/probabilistic/")
-          ; ("leading_tacas21.1", Polynomial 2, "../../../examples/probabilistic/")
-          ; ("simple_multdist"  , Polynomial 1, "../../../examples/probabilistic/")
-          ])
+        RealBound.[
+          ("leading_tacas21"  , Polynomial 2, "../../../examples/probabilistic/")
+        ; ("leading_tacas21.1", Polynomial 2, "../../../examples/probabilistic/")
+        ; ("simple_multdist"  , Polynomial 1, "../../../examples/probabilistic/")
+        ]
   ]
