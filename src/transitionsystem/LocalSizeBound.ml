@@ -192,37 +192,8 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
         ~result:to_string_option_tuple
         execute
 
-  (** Internal memoization for local size bounds *)
-  module LSB_Cache =
-    Hashtbl.Make(
-        struct
-          type t = T.t * Var.t
-          let equal (t1,v1) (t2,v2) =
-            T.same t1 t2
-            && Var.equal v1 v2
-          let hash (t,v) =
-            Hashtbl.hash (T.id t, v)
-        end
-      )
-
-  (** Store lsbs and if the lsb is of the equality_type *)
-  type lsb_cache = (t * bool Lazy.t) Option.t LSB_Cache.t
-
-  let (table: lsb_cache) =
-    LSB_Cache.create 10
-
-  let reset () =
-    LSB_Cache.clear table
-
   let sizebound_local_with_equality program t v =
-    let program_vars = P.input_vars program in
-    let cache = table in
-    match LSB_Cache.find_option cache (t,v) with
-      | Some lsb -> lsb
-      | None ->
-          let lsb = compute_bound program_vars t v in
-          LSB_Cache.add cache (t,v) lsb;
-          lsb
+    compute_bound (P.input_vars program) t v
 
   let sizebound_local program t v =
       Option.map Tuple2.first @@ sizebound_local_with_equality program t v
