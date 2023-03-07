@@ -375,9 +375,6 @@ module RealPolynomial =
     let of_intpoly  =
       Polynomial.fold ~const:(of_constant % OurFloat.of_ourint) ~indeterminate:(of_var) ~neg:neg ~plus:add ~times:mul ~pow:pow
 
-    let to_intpoly =
-      fold ~const:(Polynomial.of_constant % OurFloat.to_ourint_ceiled) ~indeterminate:Polynomial.of_var ~neg:Polynomial.neg ~plus:Polynomial.add ~times:Polynomial.mul ~pow:Polynomial.pow
-
     let of_intconstant = of_constant % OurFloat.of_ourint
   end
 module RationalPolynomial =

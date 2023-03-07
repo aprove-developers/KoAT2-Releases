@@ -272,9 +272,6 @@ module type Formula =
 
         (** {1  {L Following methods are convenience methods for the creation of formulas.}} *)
 
-        (** Lifts an atom to a formula, i.e., a single atom {i a} is a formula \[\[a\]\] as a formula is a disjunction over constraints. *)
-        val lift : atom -> t
-
         (** Creates a formula from a set of constraints. *)
         val mk : constr -> t
 

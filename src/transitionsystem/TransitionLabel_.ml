@@ -16,12 +16,6 @@ type t = {
     cost : Polynomial.t;
   }
 
-let make ~cost ~update ~guard ~invariant =
-  {
-    id = unique ();
-    update; guard; invariant; cost;
-  }
-
 let fresh_id t = {
     id = unique ();
     update = t.update;
@@ -58,12 +52,6 @@ let equivalent_update lbl1 lbl2 =
   VarMap.equal Polynomial.equal lbl1.update lbl2.update
 
 let compare = compare_same
-
-let take_last n xs =
-  xs
-  |> List.rev
-  |> List.take n
-  |> List.rev
 
 let fill_up_update_arg_vars_up_to_num n update =
   let missing_args =
@@ -193,8 +181,6 @@ let guard t = Guard.mk_and t.guard t.invariant
 let chain_guards t1 t2 = guard (append t1 t2)
 
 let guard_without_inv t = t.guard
-
-let without_inv t = {t with invariant = Invariant.mk_true}
 
 let invariant t = t.invariant
 

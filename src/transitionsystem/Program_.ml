@@ -64,7 +64,7 @@ struct
     G.transitions % graph
 
   let simplify_all_guards: t -> t =
-    map_transitions (T.map_label (TL.map_guard Guard.simplify))
+    map_transitions (T.map_label (TL.map_guard Guard.simplify_guard))
 
   let vars program =
     transitions program
@@ -90,9 +90,6 @@ struct
 
   let from_enum start =
     from_graph start % G.mk
-
-  let cardinal_vars program =
-    VarSet.cardinal (vars program)
 
   let pre program (l,t,_) =
     let is_satisfiable f =
@@ -124,9 +121,6 @@ struct
     G.sccs program.graph
     |> List.rev (* scc_list is in reverse topological order *)
     |> List.enum
-
-  let cardinal_trans_scc program =
-    Enum.fold (fun counter scc -> let cardinal = (TransitionSet.cardinal scc) in counter + if cardinal > 1 then cardinal else 0) 0 (sccs program)
 
   let parallel_transitions graph (l,_,l') =
     transitions graph

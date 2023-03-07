@@ -59,9 +59,6 @@ let to_string ?(pretty = false) ?(to_file = false) =
 
 let counter = ref 0
 
-(* We have special variables which are arguments of the transition system. Counting starts with 0 to be with KoAT *)
-let arg_counter = ref (-1)
-
 let args =
   LazyList.seq 0 (fun x -> x+1) (const true)
   |> LazyList.map (fun i -> Argument i)

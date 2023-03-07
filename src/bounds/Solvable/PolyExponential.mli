@@ -16,12 +16,20 @@ sig
 
     type t = C of atom list | T | F
 
+    val mk: OurInt.t -> Comparator.t -> t
+    val mk_eq: OurInt.t -> t
+    val mk_neq: OurInt.t -> t
+
+    val equal: t -> t -> bool
+
     val to_string : t -> string
 end
 
 module PE:
 sig
     type t = (ConstantConstraint.t * RationalPolynomial.t * int * int) list
+
+    val mk: ConstantConstraint.t -> RationalPolynomial.t -> int -> int -> t
 
     val to_string : t -> string
 

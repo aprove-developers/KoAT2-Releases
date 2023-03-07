@@ -138,9 +138,6 @@ module type TransitionLabel = sig
   (** Rename temporary variables to identifiers provided by the (possibly infinite) lazy list *)
   val rename_temp_vars : t -> Var.t LazyList.t -> t
 
-  (** Overapproximates nonlinear updates by nondeterministic updates. Useful for Farkas lemma *)
-  val overapprox_nonlinear_updates : t -> t
-
   (** Returns the set of variables. *)
   val vars : t -> VarSet.t
 

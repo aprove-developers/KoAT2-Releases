@@ -43,6 +43,7 @@ module GeneralTransition: sig
   val same: t -> t -> bool
   val gt_id: t -> int
   val to_id_string: t -> string
+  val to_id_string_pretty: t -> string
   val cost: t -> Polynomials.Polynomial.t
 
   val add_invariant: t -> Guard.t -> t

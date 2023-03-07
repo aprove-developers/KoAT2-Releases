@@ -9,9 +9,7 @@ open Util
 module ConstantConstraint = struct
     module Comparator =
       struct
-        type t = EQ | NEQ [@@deriving eq, ord]
-
-        let values = [EQ; NEQ]
+        type t = EQ | NEQ
 
         let to_string = function
         | EQ -> "=="
@@ -19,17 +17,13 @@ module ConstantConstraint = struct
 
       end
 
-    type atom = (Comparator.t * OurInt.t) [@@deriving eq, ord]
+    type atom = (Comparator.t * OurInt.t)
 
     let atom_eq = function
     | (Comparator.EQ, _) -> true
     | _ -> false
 
-    let atom_neq = function
-    | (Comparator.NEQ, _) -> true
-    | _ -> false
-
-    type t = C of atom list | T | F [@@deriving eq, ord]
+    type t = C of atom list | T | F
 
     let mk c = function
     | Comparator.EQ -> C [(Comparator.EQ, c)]
@@ -159,7 +153,7 @@ module PE = struct
     module ScaledMonomial = ScaledMonomials.Make(OurInt)
     module Monomial = Monomials.Make(OurInt)
 
-    let mk constr poly degree base = [(constr, poly, degree, base)]
+    let mk constr poly degree base: t = [(constr, poly, degree, base)]
 
     let mk_cons cons = if OurRational.equal OurRational.zero cons then [] else [(ConstantConstraint.mk_true, RationalPolynomial.of_constant cons, 0, 1)]
 
@@ -389,15 +383,15 @@ module PE = struct
     (* Monotonic Kernel *)
     (* module SMTSolver = SMT.Z3Solver *)
 
-    let red_gt poly_list =
-        let rec constraint_eq_zero i = function
-        | [] -> Constraint.mk_true
-        | x::xs when i == 0 -> Constraint.mk_true
-        | x::xs -> Constraint.(mk_and (mk_eq x Polynomial.zero) (constraint_eq_zero (i - 1) xs))  in
-        let rec formula i = function
-        | [] -> Formula.mk_false
-        | x::xs -> Formula.(mk_or (mk_and (mk_gt x Polynomial.zero) (constraint_eq_zero (i - 1) poly_list |> Formula.mk)) (formula (i + 1) xs))  in
-        formula 1 poly_list
+    (* let red_gt poly_list = *)
+    (*     let rec constraint_eq_zero i = function *)
+    (*     | [] -> Constraint.mk_true *)
+    (*     | x::xs when i == 0 -> Constraint.mk_true *)
+    (*     | x::xs -> Constraint.(mk_and (mk_eq x Polynomial.zero) (constraint_eq_zero (i - 1) xs))  in *)
+    (*     let rec formula i = function *)
+    (*     | [] -> Formula.mk_false *)
+    (*     | x::xs -> Formula.(mk_or (mk_and (mk_gt x Polynomial.zero) (constraint_eq_zero (i - 1) poly_list |> Formula.mk)) (formula (i + 1) xs))  in *)
+    (*     formula 1 poly_list *)
 
     (* let negative_dominated invariant guard npe =
     let formula = red_gt (List.map (RationalPolynomial.normalize % Tuple4.second) npe) in (* npe > 0 *)

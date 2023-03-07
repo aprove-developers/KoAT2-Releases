@@ -38,9 +38,6 @@ module MakeOverIndeterminate(I : PolyTypes.Indeterminate)(Value : PolyTypes.Ring
 
     let delete_indeterminate = Map.remove
 
-    let to_map = fun t -> t
-    let of_map = fun t -> t
-
     (* Probably inefficient but not important in to_string *)
     let to_string ?(to_file = false) ?(pretty = false) mon =
       if Map.is_empty mon then

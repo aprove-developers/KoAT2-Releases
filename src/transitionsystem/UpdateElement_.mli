@@ -22,6 +22,12 @@ module UpdateValue : sig
   val is_integral: t -> bool
 
   val as_guard: t -> Var.t -> Guard.t
+
+  (* Get a polynomial representing the expected value *)
+  val exp_value_poly: t -> RealPolynomial.t
+
+  (* Get a polynomial representing the corresponding non-central moment, i.e. E(d^i) *)
+  val moment_poly : t -> int -> RealPolynomial.t
 end
 
 include module type of PolynomialOverIndeterminate(UpdateValue)(OurInt)

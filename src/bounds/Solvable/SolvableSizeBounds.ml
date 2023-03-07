@@ -6,8 +6,6 @@ open PolyExponential
 open BoundsInst
 open Constraints
 
-let logger = Logging.(get Size)
-
 module Check_Solvable = Check_Solvable.Make(ProgramModules)
 module Loop = Loop.Make(ProgramModules)
 module SimpleCycle = SimpleCycle.Make(ProgramModules)

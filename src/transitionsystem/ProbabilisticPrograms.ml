@@ -297,7 +297,6 @@ module ProbabilisticTransitionLabel = struct
   let update t v = VarMap.find_opt v t.update
   let guard t = Guard.mk_and t.invariant t.guard
   let guard_without_inv t = t.guard
-  let probability t = t.probability
 
   (** Returns if the two labels describe the same transition *)
   let equivalent t1 t2 =
@@ -597,12 +596,6 @@ module GeneralTransition = struct
   let to_id_string t =
     let show_prob_branch (_,label,l') =
       Int.to_string (ProbabilisticTransitionLabel.id label) ^ ": " ^ OurFloat.to_string (ProbabilisticTransitionLabel.probability label) ^ ":" ^ Location.to_string l'
-    in
-    Int.to_string (gt_id t) ^ ":" ^ Location.to_string (src t) ^ "->" ^ Util.enum_to_string show_prob_branch (ProbabilisticTransitionSet.enum t.transitions)
-
-  let to_id_string_pretty t =
-    let show_prob_branch (_,label,l') =
-      Int.to_string (ProbabilisticTransitionLabel.id label) ^ ":" ^ OurFloat.to_string (ProbabilisticTransitionLabel.probability label) ^ ":" ^ Location.to_string l'
     in
     Int.to_string (gt_id t) ^ ":" ^ Location.to_string (src t) ^ "->" ^ Util.enum_to_string show_prob_branch (ProbabilisticTransitionSet.enum t.transitions)
 
