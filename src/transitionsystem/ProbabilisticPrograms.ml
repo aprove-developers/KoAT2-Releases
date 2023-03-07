@@ -789,7 +789,7 @@ module GRV = struct
     type transition = GeneralTransition.t * Location.t
     type t = transition * Var.t
     let equal ((gt1,l1),v1) ((gt2,l2),v2) =
-      GeneralTransition.same gt1 gt1
+      GeneralTransition.same gt1 gt2
       && Location.equal l1 l2
       && Var.equal v1 v2
     let hash ((gt,l),v) = Hashtbl.hash (GeneralTransition.gt_id gt, Location.to_string l, Var.to_string v)
