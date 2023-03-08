@@ -2,6 +2,7 @@ open Batteries
 open BoundsInst
 open Formatter
 open FormattedString
+open Lens.Infix
 
 module Make(B: BoundType.Bound)
            (PM: ProgramTypes.ProgramModules)
@@ -14,7 +15,7 @@ module Make(B: BoundType.Bound)
       time: TransitionApproximation.t;
       size: SizeApproximation.t;
       cost: TransitionApproximation.t;
-    }
+    } [@@deriving lens { submodule = true }]
 
   let equivalent appr1 appr2 =
     TransitionApproximation.equivalent appr1.time appr2.time
@@ -42,11 +43,11 @@ module Make(B: BoundType.Bound)
   let sizebound appr t v =
     SizeApproximation.get (size appr) (t,v)
 
-  let add_sizebound bound transition var appr =
-    { appr with size = SizeApproximation.add bound (transition,var) appr.size }
+  let add_sizebound bound transition var =
+    Lens.size ^%= SizeApproximation.add bound (transition,var)
 
-  let add_sizebounds bound scc appr =
-    { appr with size = SizeApproximation.add_all bound scc appr.size }
+  let add_sizebounds bound scc =
+    Lens.size ^%= SizeApproximation.add_all bound scc
 
   let is_size_bounded program appr t =
     not @@ VarSet.exists (fun v -> B.is_infinity @@ sizebound appr t v ) (Program.input_vars program)
@@ -62,8 +63,8 @@ module Make(B: BoundType.Bound)
   let program_timebound =
     TransitionApproximation.sum % time
 
-  let add_timebound bound transition appr =
-    { appr with time = TransitionApproximation.add bound transition appr.time }
+  let add_timebound bound transition =
+    Lens.time ^%= TransitionApproximation.add bound transition
 
   let all_times_bounded =
     TransitionApproximation.all_bounded % time
@@ -79,8 +80,8 @@ module Make(B: BoundType.Bound)
   let program_costbound =
     TransitionApproximation.sum % cost
 
-  let add_costbound bound transition appr =
-    { appr with cost = TransitionApproximation.add bound transition appr.cost }
+  let add_costbound bound transition =
+    Lens.cost ^%= TransitionApproximation.add bound transition
 
   let to_formatted ?(show_initial=false) ?(pretty=false) (program: Program.t) appr =
     let approximable_transitions = List.of_enum (T.all_from_program program) in

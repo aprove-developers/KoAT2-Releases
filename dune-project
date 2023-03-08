@@ -29,6 +29,7 @@
    conf-ppl
    dune
    fpath
+   lens
    menhir
    metapp
    ocamlgraph
