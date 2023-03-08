@@ -102,6 +102,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         else (
           TimeBoundTable.add time_bound_table (l,t,l') [(l,t,l'),Bound.infinity];
           false)) in
-        Option.is_some bound 
-      ) else List.for_all (Bound.is_finite % Tuple2.second) (Option.get opt)
+        Option.is_some bound && Tuple2.first @@ Option.get bound
+      ) else 
+        List.for_all (Bound.is_finite % Tuple2.second) (Option.get opt)
 end
