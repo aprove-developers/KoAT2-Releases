@@ -16,6 +16,7 @@ depends: [
   "conf-ppl"
   "dune" {>= "3.3"}
   "fpath"
+  "lens"
   "menhir"
   "metapp"
   "ocamlgraph"
