@@ -9,5 +9,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
 
   val time_bound : configuration -> Transition.t -> TransitionSet.t -> Program.t -> Approximation.t -> Bound.t
 
+  val has_time_bound : configuration -> Transition.t -> TransitionSet.t -> Program.t -> Approximation.t -> bool
+
   val reset_cfr : unit -> unit
 end

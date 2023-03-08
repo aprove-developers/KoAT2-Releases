@@ -39,6 +39,8 @@ type classical_program_conf_type = ( ProgramModules.Transition.t
 (** Default configuration. mprf_depth of 1, no twn, no cfr, and no closed form size bounds*)
 val default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration
 
+val termination_only: bool -> unit
+
 module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   (** Performs improvement steps for the whole program to find better time-bounds and triggers control flow refinement if needed. *)
 

@@ -48,6 +48,9 @@ let logger_cfr = Logging.(get CFR)
 (** Table: transition -> amount of times (orginal) transition was involed in PartialEvaluation. *)
 let already_used_cfr = ref TransitionSet.empty
 
+let termination = ref false
+let termination_only t = termination := t
+
 let default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration =
   { run_mprf_depth = Some 1
   ; twn_configuration = None
@@ -156,6 +159,16 @@ let bounded measure appr transition =
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> Polynomial.is_const (Transition.cost transition) (* We can not compute a better bound in this case, so we consider this transition as bounded *)
 
+let improve_termination_twn program scc transformation_type appr =
+  let compute appr_ t =
+    let has_bound = TWN.has_time_bound transformation_type t scc program appr_ in
+    let orginal_has_bound = bounded `Time appr_ t in
+    if not orginal_has_bound && has_bound then
+      MaybeChanged.changed (add_bound `Time Bound.one t appr_)
+    else
+      MaybeChanged.same appr_ in
+  MaybeChanged.fold compute appr (TransitionSet.to_list (TransitionSet.filter (Bound.is_infinity % Approximation.timebound appr) scc))
+  
 
 let rec knowledge_propagation (scc: TransitionSet.t) program appr =
   let execute () =
@@ -264,7 +277,9 @@ let run_local ~conf (scc: TransitionSet.t) measure program appr =
       (match measure, conf.twn_configuration with
         | (`Cost,_) -> MaybeChanged.return appr
         | (`Time,None) -> MaybeChanged.return appr
-        | (`Time,Some twn_conf) -> improve_with_twn program scc twn_conf appr)
+        | (`Time,Some twn_conf) -> if !termination
+            then improve_termination_twn program scc twn_conf appr
+            else improve_with_twn program scc twn_conf appr)
   )
 
 let improve_timebound (scc: TransitionSet.t) measure program appr =
