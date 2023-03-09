@@ -50,7 +50,7 @@ module Make(B : BoundType.Bound)
 
     let to_formatted ?(pretty=false) size =
       Map.to_list size
-      |> List.sort (fun (rv1,_) (rv2,_) -> RV.compare_same rv1 rv2)
+      |> List.sort (fun (rv1,_) (rv2,_) -> RV.compare rv1 rv2)
       |> List.map
            (fun (rv, bound) -> FormattedString.mk_str_line @@
              "  " ^ RV.ids_to_string ~pretty rv ^ ": " ^ B.to_string ~pretty bound)
@@ -64,8 +64,8 @@ module Make(B : BoundType.Bound)
       let module Set =
         Set.Make(struct type t = RV.t * B.t
                         let compare (rv1,bound1) (rv2,bound2) =
-                          if RV.compare_same rv1 rv2 != 0 then
-                            RV.compare_same rv1 rv2
+                          if RV.compare rv1 rv2 != 0 then
+                            RV.compare rv1 rv2
                           else if B.(bound1 < bound2) |? false then
                             -1
                           else if B.(bound1 > bound2) |? false then

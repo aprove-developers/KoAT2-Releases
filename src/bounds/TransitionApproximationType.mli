@@ -7,7 +7,7 @@ module type ApproximableTransition = sig
 
   val id: t -> int
   val to_id_string: t -> string
-  val compare_same: t -> t -> int
+  val compare: t -> t -> int
   val all_from_program: program -> t Enum.t
   val ids_to_string: ?pretty:bool -> t -> string
 end
