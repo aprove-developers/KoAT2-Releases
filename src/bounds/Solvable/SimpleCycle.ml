@@ -75,13 +75,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars) entries
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
-  let find_loops ?(relevant_vars = None) ?(transformation_type = `NoTransformation) f appr program scc (l,t,l') =
-    if not @@ TransitionLabel.has_tmp_vars t then
+  let find_loops ?(relevant_vars = None) ?(transformation_type = `NoTransformation) ?(termination_only=false) f appr program scc (l,t,l') =
+    if not @@ TransitionLabel.has_tmp_vars t || termination_only then
       let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
         Location.equal l1 l2 &&
         Location.equal l1' l2' &&
         TransitionLabel.equivalent_update t t')
-        (TransitionSet.to_list scc |> List.filter (not % TransitionLabel.has_tmp_vars % Tuple3.second))
+        (TransitionSet.to_list scc |> List.filter (fun (_,t,_) -> termination_only || not @@ TransitionLabel.has_tmp_vars t))
         |> List.map (fun xs -> (Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs)
       in
       let merged_t = List.find (fun (l1,ts,l1') ->
