@@ -58,7 +58,7 @@ module ProbabilisticTransitionLabel_ = struct
     { t with update = add_self_updates_if_missing UpdateElement_.of_var input_vars t.update;
              overappr_nonprob_update = add_self_updates_if_missing Polynomial.of_var input_vars t.overappr_nonprob_update; }
 
-  let same t1 t2 = t1.id = t2.id
+  let equal t1 t2 = t1.id = t2.id
 
   let fill_up_update_arg_vars_up_to_num from_var n update =
     let all_args = (VarSet.of_enum % Enum.take n @@ LazyList.enum Var.args) in
@@ -100,8 +100,7 @@ module ProbabilisticTransitionLabel_ = struct
       cost = Polynomial.rename map_to_arg_vars cost;
     }
 
-  let compare_same t1 t2 = Int.compare t1.id t2.id
-  let compare = compare_same
+  let compare t1 t2 = Int.compare t1.id t2.id
 
   let id t = t.id
   let gt_id t = t.gt_id
@@ -414,10 +413,8 @@ module ProbabilisticTransition = struct
   let target = GenericTransition.target
   let id = GenericTransition.id
   let gt_id (_,label,_) = ProbabilisticTransitionLabel.gt_id label
-  let compare_same = GenericTransition.compare_same
   let compare = GenericTransition.compare
   let equal = GenericTransition.equal
-  let same = GenericTransition.same
   let equivalent = GenericTransition.equivalent
   let compare_equivalent = GenericTransition.compare_equivalent
   let hash = GenericTransition.hash
@@ -492,10 +489,8 @@ module ProbabilisticTransitionNonProbOverappr = struct
   let label = GenericTransition.label
   let target = GenericTransition.target
   let id = GenericTransition.id
-  let compare_same = GenericTransition.compare_same
   let compare = GenericTransition.compare
   let equal = GenericTransition.equal
-  let same = GenericTransition.same
   let equivalent = GenericTransition.equivalent
   let compare_equivalent = GenericTransition.compare_equivalent
   let hash = GenericTransition.hash
@@ -574,9 +569,8 @@ module GeneralTransition = struct
   let guard_without_inv = ProbabilisticTransitionLabel.guard_without_inv % get_arbitrary_label
   let targets t = LocationSet.of_enum @@ Enum.map (ProbabilisticTransition.target) (ProbabilisticTransitionSet.enum t.transitions)
 
-  let same t1 t2 = Int.equal (gt_id t1) (gt_id t2)
-  let compare_same t1 t2 = Int.compare (gt_id t1) (gt_id t2)
-  let compare = compare_same
+  let equal t1 t2 = Int.equal (gt_id t1) (gt_id t2)
+  let compare t1 t2 = Int.compare (gt_id t1) (gt_id t2)
 
   let add_invariant gt inv =
     { transitions = ProbabilisticTransitionSet.map (ProbabilisticTransition.add_invariant inv) gt.transitions }
@@ -782,13 +776,13 @@ module GRV = struct
     type transition = GeneralTransition.t * Location.t
     type t = transition * Var.t
     let equal ((gt1,l1),v1) ((gt2,l2),v2) =
-      GeneralTransition.same gt1 gt2
+      GeneralTransition.equal gt1 gt2
       && Location.equal l1 l2
       && Var.equal v1 v2
     let hash ((gt,l),v) = Hashtbl.hash (GeneralTransition.gt_id gt, Location.to_string l, Var.to_string v)
     let compare =
       let cmp (gt1,l1) (gt2,l2) =
-        match GeneralTransition.compare_same gt1 gt2 with
+        match GeneralTransition.compare gt1 gt2 with
         | 0 -> Location.compare l1 l2
         | r -> r
       in
@@ -797,9 +791,9 @@ module GRV = struct
 
   type transition = RVTuple_.transition
   type t = RVTuple_.t
-  let same = RVTuple_.equal
+  let equal = RVTuple_.equal
   let hash = RVTuple_.hash
-  let compare_same = RVTuple_.compare
+  let compare = RVTuple_.compare
 
   let to_id_string ((gt,l),v) =
     "|(" ^ GeneralTransition.to_id_string gt ^ "," ^ Location.to_string l ^ ")," ^ Var.to_string v ^ "|"
@@ -812,9 +806,9 @@ end
 module RVTuple_ = struct
   type transition = ProbabilisticTransition.t
   type t = transition * Var.t
-  let equal (t1,v1) (t2,v2) = ProbabilisticTransition.same t1 t2 && Var.equal v1 v2
+  let equal (t1,v1) (t2,v2) = ProbabilisticTransition.equal t1 t2 && Var.equal v1 v2
   let hash (t1,v1) = Hashtbl.hash (ProbabilisticTransition.id t1, Var.to_string v1)
-  let compare = compare_rv ProbabilisticTransition.compare_same
+  let compare = compare_rv ProbabilisticTransition.compare
 end
 module RVTupleNonProbOverappr_ = RVTuple_
 
@@ -823,9 +817,9 @@ module ProbabilisticRV = struct
 
   type transition = RVTuple_.transition
   type t = RVTuple_.t
-  let same = RVTuple_.equal
+  let equal = RVTuple_.equal
   let hash = RVTuple_.hash
-  let compare_same = compare_rv ProbabilisticTransition.compare_same
+  let compare = compare_rv ProbabilisticTransition.compare
 
   let to_id_string (t,v) =
     "|" ^ ProbabilisticTransition.to_id_string t ^ "," ^ Var.to_string v ^ "|"
@@ -838,9 +832,9 @@ module ProbabilisticRVNonProbOverappr = struct
 
   type transition = RVTupleNonProbOverappr_.transition
   type t = RVTupleNonProbOverappr_.t
-  let same = RVTupleNonProbOverappr_.equal
+  let equal = RVTupleNonProbOverappr_.equal
   let hash = RVTupleNonProbOverappr_.hash
-  let compare_same = compare_rv ProbabilisticTransitionNonProbOverappr.compare_same
+  let compare = compare_rv ProbabilisticTransitionNonProbOverappr.compare
 
   let to_id_string (t,v) =
     "|" ^ ProbabilisticTransitionNonProbOverappr.to_id_string t ^ "," ^ Var.to_string v ^ "|"

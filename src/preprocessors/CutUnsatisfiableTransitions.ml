@@ -22,7 +22,7 @@ module Make(M: ProgramTypes.ProgramModules) = struct
       else
         (* There needs to be a transition distinct from (l,t,l') to enter (l,t,l') *)
         (* Note that the enum returned by Program.pre is lazy. Hence, we only have to compute the first value of this enum *)
-        let intrans = Enum.filter (not % Transition.same (l,t,l')) @@ Program.pre program (l,t,l') in
+        let intrans = Enum.filter (not % Transition.equal (l,t,l')) @@ Program.pre program (l,t,l') in
         if Enum.is_empty intrans then
           TransitionSet.add (l,t,l') set
         else set

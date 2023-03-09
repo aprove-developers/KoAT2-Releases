@@ -40,7 +40,6 @@ module GeneralTransition: sig
   val invariant: t -> Guard.t
   val guard_without_inv: t -> Guard.t
   val transitions: t -> Transition_.TransitionSetOver(ProbabilisticTransition)(Location).t
-  val same: t -> t -> bool
   val gt_id: t -> int
   val to_id_string: t -> string
   val to_id_string_pretty: t -> string
@@ -54,11 +53,8 @@ module GeneralTransition: sig
   (* Obtain a string only containing the transitoin's id, e.g., [ "g3" ] *)
   val ids_to_string: ?pretty:bool -> t -> string
 
-  (** defaults to compare_same *)
+  (** compare gt_ids*)
   val compare: t -> t -> int
-
-  (** Compare using general transition id *)
-  val compare_same: t -> t -> int
 
   val vars: t -> VarSet.t
   val input_vars: t -> VarSet.t

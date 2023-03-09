@@ -3,7 +3,7 @@ open Batteries
 module MakeRV(TL: ProgramTypes.TransitionLabel)
              (T: ProgramTypes.Transition with type transition_label = TL.t) =
   struct
-    let compare compare_transition (t1,v1) (t2,v2) =
+    let compare_ compare_transition (t1,v1) (t2,v2) =
       if compare_transition t1 t2 != 0 then
         compare_transition t1 t2
       else if Var.compare v1 v2 != 0 then
@@ -14,15 +14,15 @@ module MakeRV(TL: ProgramTypes.TransitionLabel)
     module RVTuple_ = struct
       type transition = T.t
       type t = T.t * Var.t
-      let equal (t1,v1) (t2,v2)= T.same t1 t2 && Var.equal v1 v2
+      let equal (t1,v1) (t2,v2)= T.equal t1 t2 && Var.equal v1 v2
       let hash (t,v) = Hashtbl.hash (T.id t, Var.to_string v)
-      let compare = compare T.compare_same
+      let compare = compare_ T.compare
     end
 
     type transition = RVTuple_.transition
     type t = RVTuple_.t
 
-    let same = RVTuple_.equal
+    let equal = RVTuple_.equal
 
     let equivalent (t1,v1) (t2,v2) =
       T.equivalent t1 t2
@@ -30,11 +30,11 @@ module MakeRV(TL: ProgramTypes.TransitionLabel)
 
     let hash = RVTuple_.hash
 
-    let compare_same =
-      compare T.compare_same
+    let compare =
+      compare_ T.compare
 
     let compare_equivalent =
-      compare T.compare_equivalent
+      compare_ T.compare_equivalent
 
     let transition (t,_) = t
 
@@ -56,11 +56,7 @@ module MakeRVG(PM: ProgramTypes.ClassicalProgramModules) =
 
     module RV = MakeRV(TransitionLabel)(Transition)
 
-    module G = Graph.Persistent.Digraph.ConcreteBidirectional(struct
-                include MakeRV(TransitionLabel)(Transition)
-                let equal = same
-                let compare = compare_same
-              end)
+    module G = Graph.Persistent.Digraph.ConcreteBidirectional(MakeRV(TransitionLabel)(Transition))
     module C = Graph.Components.Make(G)
     include G
 

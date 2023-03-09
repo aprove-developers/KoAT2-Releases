@@ -85,7 +85,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         |> List.map (fun xs -> (Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs)
       in
       let merged_t = List.find (fun (l1,ts,l1') ->
-        List.exists (fun t1 -> TransitionLabel.same t t1) ts
+        List.exists (fun t1 -> TransitionLabel.equal t t1) ts
           && Location.equal l l1
           && Location.equal l' l1') merged_trans in
       let cycles = cycles_with_t merged_trans merged_t in
@@ -129,7 +129,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         |> List.map (fun xs -> (Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs)
       in
       let merged_t = List.find (fun (l1,ts,l1') ->
-        List.exists (fun t1 -> TransitionLabel.same t t1) ts
+        List.exists (fun t1 -> TransitionLabel.equal t t1) ts
           && Location.equal l l1
           && Location.equal l' l1') merged_trans in
       let cycles = cycles_with_t merged_trans merged_t in
@@ -156,7 +156,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             @
             (List.filter (not % flip TransitionSet.mem trans_in_scc) entries_inside) (* Transition which are not in an SCC. *)
           in
-          Option.some (loop, List.map (fun entry -> entry, traverse_cycle cycle (Transition.src entry) l) (List.unique ~eq:Transition.same relevant_entries@entries_outside))
+          Option.some (loop, List.map (fun entry -> entry, traverse_cycle cycle (Transition.src entry) l) (List.unique ~eq:Transition.equal relevant_entries@entries_outside))
         else
           None) cycles
     else
