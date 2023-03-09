@@ -83,13 +83,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       bound_with_sizebound
     )
 
-    let has_time_bound transformation_type (l,t,l') scc program appr =
+    let terminates transformation_type (l,t,l') scc program appr =
       TWN_Proofs.proof := FormattedString.Empty;
       let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
       if Option.is_none opt then (
         let bound = Timeout.timed_run 5. (fun () ->
         (* We have not yet computed a (local) runtime bound. *)
-        let loops_opt = SimpleCycle.find_loops (heuristic_for_cycle transformation_type) appr program scc (l,t,l') in
+        let loops_opt = SimpleCycle.find_loops ~termination_only:true(heuristic_for_cycle transformation_type) appr program scc (l,t,l') in
         if Option.is_some loops_opt then
           let cycle, loops = Option.get loops_opt in
           let upd_invariant_cand = List.map (Constraint.atom_list % TransitionLabel.invariant % Tuple3.second) cycle |> List.flatten in

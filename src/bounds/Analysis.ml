@@ -161,9 +161,9 @@ let bounded measure appr transition =
 
 let improve_termination_twn program scc transformation_type appr =
   let compute appr_ t =
-    let has_bound = TWN.has_time_bound transformation_type t scc program appr_ in
-    let orginal_has_bound = bounded `Time appr_ t in
-    if not orginal_has_bound && has_bound then
+    let terminates = TWN.terminates transformation_type t scc program appr_ in
+    let orginal_terminates = bounded `Time appr_ t in
+    if not orginal_terminates && terminates then
       MaybeChanged.changed (add_bound `Time Bound.one t appr_)
     else
       MaybeChanged.same appr_ in

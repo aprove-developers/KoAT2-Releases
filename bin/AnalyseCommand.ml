@@ -19,7 +19,7 @@ let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
 let print_overall_costbound (program: Program.t) (appr: Approximation.t): unit =
   program
   |> Approximation.program_costbound appr
-  |> Bound.to_string
+  |> Bound.to_string 
   |> print_endline
 
 (** Prints the overall timebound of the program to the shell in the TermComp fashion. *)
@@ -28,6 +28,12 @@ let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
   |> Approximation.program_costbound appr
   |> Bound.asymptotic_complexity
   |> Bound.show_complexity_termcomp
+  |> print_endline
+
+let print_termination (program: Program.t) (appr: Approximation.t): unit =
+  program
+  |> Approximation.program_costbound appr
+  |> Bound.to_string ~termination_only:true
   |> print_endline
 
 (** TWN for no transformations, TWNTransform for both techniques, TWNTransformJordan to transform only with jordan normal form, TWNTransformGeneral to transform only with the general approach *)
@@ -109,7 +115,7 @@ type params = {
 
 (** Returns a string containing a time-bound and the label of a transition for a specified approximation. *)
 let bounded_label_to_string (appr: Approximation.t) (label: TransitionLabel.t): string =
-  String.concat "" ["Timebound: ";
+  String.concat "" ["s: ";
                     Approximation.timebound_id appr (TransitionLabel.id label) |> Bound.to_string;
                     "\n";
                     TransitionLabel.to_string label]
@@ -224,8 +230,8 @@ let run (params: params) =
                else
                  Bounds.find_bounds ~conf:bounds_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr
                )
-     |> tap (fun (program, appr) -> params.result program appr)
-     |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~pretty:true ~show_initial:false program appr))
+     |> tap (fun (program, appr) -> (if params.termination then print_termination else params.result) program appr)
+     |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~pretty:true ~show_initial:false ~termination_only:params.termination program appr))
      |> tap (fun (program, appr) ->
             if params.print_system then
               GraphPrint.print_system ~format:"png" ~label:(bounded_label_to_string appr) ~outdir:output_dir ~file:input_filename program)

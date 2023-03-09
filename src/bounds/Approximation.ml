@@ -82,46 +82,53 @@ module Make(B: BoundType.Bound)
   let add_costbound bound transition appr =
     { appr with cost = TransitionApproximation.add bound transition appr.cost }
 
-  let to_formatted ?(show_initial=false) ?(pretty=false) (program: Program.t) appr =
+  let to_formatted ?(show_initial=false) ?(pretty=false) ?(termination_only=false) (program: Program.t) appr =
     let approximable_transitions = List.of_enum (T.all_from_program program) in
 
     let overall_timebound = program_timebound appr program in
     mk_str_header_big "All Bounds" <>
-    if show_initial then
-      mk_paragraph (
-       (mk_str_header_small "Initial Complexity Problem (after preprocessing)"
-          <> (Program.to_formatted_string program) <> mk_newline
-       ) )
-    else FormattedString.Empty
 
-    <> mk_str_header_small "Timebounds" <> ( mk_paragraph (
-         mk_str_line ("Overall timebound:" ^ B.to_string ~pretty overall_timebound)
-         <> TransitionApproximation.to_formatted ~pretty approximable_transitions appr.time) )
-
-    <> mk_str_header_small "Costbounds" <> ( mk_paragraph (
-          mk_str_line ("Overall costbound: " ^ B.to_string ~pretty (program_costbound appr program))
-          <> TransitionApproximation.to_formatted ~pretty approximable_transitions appr.cost ) )
+      (if not termination_only then
+          if show_initial then
+            mk_paragraph (
+            (mk_str_header_small "Initial Complexity Problem (after preprocessing)"
+                <> (Program.to_formatted_string program) <> mk_newline
+            ) )
+          else FormattedString.Empty
+          
+        <> mk_str_header_small "Timebounds" <> ( mk_paragraph (
+            mk_str_line ("Overall timebound:" ^ B.to_string ~pretty overall_timebound)
+            <> TransitionApproximation.to_formatted ~pretty approximable_transitions appr.time) )
+            
+        <> mk_str_header_small "Costbounds" <> ( mk_paragraph (
+            mk_str_line ("Overall costbound: " ^ B.to_string ~pretty (program_costbound appr program))
+            <> TransitionApproximation.to_formatted ~pretty approximable_transitions appr.cost ) ) 
+      else 
+        mk_str_header_small "Termination behavior" <> ( mk_paragraph (
+          mk_str_line ("Overall termination: " ^ B.to_string ~pretty ~termination_only overall_timebound)
+          <> TransitionApproximation.to_formatted ~pretty ~termination_only approximable_transitions appr.time) ))
 
     <> mk_str_header_small "Sizebounds" <> (mk_paragraph @@ SizeApproximation.to_formatted ~pretty appr.size)
 
 
   (* TODO: use to_formatted *)
-  let to_string program appr =
+  let to_string ?(termination_only=false) program appr =
     let approximable_transitions = List.of_enum (T.all_from_program program) in
     let overall_costbound = program_costbound appr program in
     let output = IO.output_string () in
       if (not (B.is_infinity overall_costbound)) then
-        IO.nwrite output ("YES( ?, " ^ B.to_string (overall_costbound) ^ ")\n\n")
+        IO.nwrite output ("YES( ?, " ^ B.to_string ~termination_only (overall_costbound) ^ ")\n\n")
       else
         IO.nwrite output "MAYBE\n\n";
       IO.nwrite output "Initial Complexity Problem After Preprocessing:\n";
       IO.nwrite output (Program.to_string program^"\n");
       IO.nwrite output "Timebounds: \n";
-      IO.nwrite output ("  Overall timebound: " ^ B.to_string (program_timebound appr program) ^ "\n");
-      appr.time |> TransitionApproximation.to_string approximable_transitions |> IO.nwrite output;
-      IO.nwrite output "\nCostbounds:\n";
-      IO.nwrite output ("  Overall costbound: " ^ B.to_string (overall_costbound) ^ "\n");
-      appr.cost |> TransitionApproximation.to_string approximable_transitions |> IO.nwrite output;
+      IO.nwrite output ("  Overall timebound: " ^ B.to_string ~termination_only (program_timebound appr program) ^ "\n");
+      appr.time |> TransitionApproximation.to_string ~termination_only approximable_transitions |> IO.nwrite output;
+      if not termination_only then
+        IO.nwrite output "\nCostbounds:\n";
+        IO.nwrite output ("  Overall costbound: " ^ B.to_string (overall_costbound) ^ "\n");
+        appr.cost |> TransitionApproximation.to_string approximable_transitions |> IO.nwrite output;
       IO.nwrite output "\nSizebounds:\n";
       appr.size |> SizeApproximation.to_string |> IO.nwrite output;
       IO.close_out output
