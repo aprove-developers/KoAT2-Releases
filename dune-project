@@ -39,6 +39,7 @@
    parmap
    ppx_deriving
    ppx_deriving_cmdliner
+   zarith
    z3
    )
  )
