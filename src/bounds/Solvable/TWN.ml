@@ -89,7 +89,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       if Option.is_none opt then (
         let bound = Timeout.timed_run 5. (fun () ->
         (* We have not yet computed a (local) runtime bound. *)
-        let loops_opt = SimpleCycle.find_loops ~termination_only:true(heuristic_for_cycle transformation_type) appr program scc (l,t,l') in
+        let loops_opt = SimpleCycle.find_loops ~termination_only:true (heuristic_for_cycle transformation_type) appr program scc (l,t,l') in
         if Option.is_some loops_opt then
           let cycle, loops = Option.get loops_opt in
           let upd_invariant_cand = List.map (Constraint.atom_list % TransitionLabel.invariant % Tuple3.second) cycle |> List.flatten in

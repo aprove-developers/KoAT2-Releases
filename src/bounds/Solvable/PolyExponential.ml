@@ -224,7 +224,7 @@ module PE = struct
 
     let substitute varmap poly =
     Polynomial.fold ~const:(mk_cons % OurRational.of_ourint)
-                    ~indeterminate:(fun var -> Hashtbl.find varmap var)
+                    ~indeterminate:(fun var -> try (Hashtbl.find varmap var) with Not_found -> [])
                     ~neg:neg
                     ~plus:add
                     ~times:mul
