@@ -18,7 +18,7 @@ let tests =
       ("check_solvable" >:::
          List.map (fun (expected_string, program) ->
              program >:: (fun _ ->
-                     let result = Check_Solvable.check_solvable_ (Readers.read_program_simple program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
+                     let result = Check_Solvable.check_solvable_ (Readers.read_program_simple program |> Program.sccs |> List.first |> Base.Set.choose_exn) in
                      assert_equal_string expected_string (to_string result)))
                   [
                     ("solvable: [[Arg_0]; [Arg_1]; [Arg_2]; [Arg_3]; [Arg_4]; [Arg_5]; [Arg_6]; [Arg_7]]", "l0 -> l1(x), l1 -> l1(x)");

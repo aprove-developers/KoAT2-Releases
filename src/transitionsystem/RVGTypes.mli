@@ -36,7 +36,7 @@ sig
   val rvs_to_id_string : MakeRV(PM.TransitionLabel)(PM.Transition).t list -> string
 
   (** Returns the predecessors of a result variable in the result variable graph. *)
-  val pre : t -> MakeRV(PM.TransitionLabel)(PM.Transition).t -> MakeRV(PM.TransitionLabel)(PM.Transition).t Enum.t
+  val pre : t -> MakeRV(PM.TransitionLabel)(PM.Transition).t -> MakeRV(PM.TransitionLabel)(PM.Transition).t List.t
 
   type scc = MakeRV(PM.TransitionLabel)(PM.Transition).t list
 

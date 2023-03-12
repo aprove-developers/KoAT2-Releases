@@ -1,5 +1,4 @@
 (** Provides default implementations of variables. *)
-open Batteries
 
 (** Provides default implementations of an ID. *)
 
@@ -14,6 +13,9 @@ type t =
   (**Helpers are fresh variables generated via the computation. They represent a real or an integer value.*)
   | Helper of sort*int
   | Argument of int
+
+include OurBase.Comparator.S with type t := t
+include OurBase.Sexpable.S with type t := t
 
 (** TODO doc *)
 val equal : t -> t -> bool
@@ -34,13 +36,10 @@ val of_string : string -> t
 val to_string : ?pretty:bool -> ?to_file:bool -> t -> Batteries.String.t
 
 (** An (infinite) list of all possible argument variables *)
-val args: t LazyList.t
+val args: t Base.Sequence.t
 
 (** Returns a not yet used id, which is guaranteed to be distinct from any yet existing ids. *)
 val fresh_id : sort -> unit -> t
-
-(** Returns a bunch of fresh ids. *)
-val fresh_ids : sort -> int -> t Enum.t
 
 (** Returns a bunch of fresh ids. *)
 val fresh_id_list : sort -> int -> t list

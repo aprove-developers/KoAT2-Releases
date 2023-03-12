@@ -332,8 +332,14 @@ module type Math =
     (** Returns the sum of all enums elements. *)
     val sum : t Enum.t -> t
 
+    (** Returns the sum of all enums elements. *)
+    val sum_sequence : t OurBase.Sequence.t -> t
+
     (** Returns the product of all enums elements. *)
     val product : t Enum.t -> t
+
+    (** Returns the product of all sequence elements. *)
+    val product_sequence : t OurBase.Sequence.t -> t
 
     (** Subtracts the second element from the first one. *)
     val sub : t -> t -> t
@@ -362,8 +368,14 @@ module MakeMath(Base : BaseMath) : (Math with type t := Base.t) =
     (** Returns the sum of all enums elements. *)
     let sum = Enum.fold add zero
 
+    (** Returns the sum of all enums elements. *)
+    let sum_sequence = OurBase.Sequence.fold ~f:add ~init:zero
+
     (** Returns the product of all enums elements. *)
     let product = Enum.fold mul one
+
+    (** Returns the product of all enums elements. *)
+    let product_sequence = OurBase.Sequence.fold ~f:mul ~init:one
 
     (** Subtracts the second element from the first one. *)
     let sub t1 t2 = add t1 (neg t2)

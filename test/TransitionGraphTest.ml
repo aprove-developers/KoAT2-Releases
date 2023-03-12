@@ -41,12 +41,12 @@ let suite =
         "pre(t)" >:: (fun _ ->
           let program = Readers.read_file "../../../examples/KoAT-2013/sect1-lin.koat" in
           let transition = TransitionGraph.find_edge (Program.graph program) (Location.of_string "l1") (Location.of_string "l2") in
-          assert_equal_int 2 (Enum.count (Program.pre program transition))
+          assert_equal_int 2 (Base.Sequence.length (Program.pre program transition))
         )
       );
       (
         "sizebound_local" >::: (
-          let arg0 = LazyList.hd Var.args in
+          let arg0 = Base.Sequence.hd_exn Var.args in
           [
             ("l1", "l2", arg0, Bound.of_var arg0);
             (* TODO We have to redefine good bounds here: ("l1", "l1", "A", "A-1"); *)
@@ -81,10 +81,10 @@ let suite =
             in
             let prog = Readers.read_program program_str in
             program_str >:: (fun _ ->
-              TransitionSet.any (Program.transitions prog)
+              Base.Set.choose_exn (Program.transitions prog)
               |> TransitionLabel.update_map % Transition.label
-              |> ProgramTypes.VarMap.for_all
-                  (fun _ u -> Polynomials.Polynomial.(equal (of_var @@ Var.of_string "Arg_1") u))
+              |> Base.Map.for_all
+                  ~f:(fun u -> Polynomials.Polynomial.(equal (of_var @@ Var.of_string "Arg_1") u))
               |> assert_bool "Wrongly parsed update"
             )
           )

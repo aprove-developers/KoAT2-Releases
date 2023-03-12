@@ -173,11 +173,11 @@ let as_linear_abstract manager constr t new_var =
     |> Guard.all % List.of_enum
   in
 
-  let keep_vars = VarSet.add new_var @@ VarSet.union (Guard.vars constr) (vars t) in
+  let keep_vars = Base.Set.add (Base.Set.union (Guard.vars constr) (vars t)) new_var in
   let all_vars =
-    VarSet.union keep_vars (VarSet.union (Guard.vars indet_guard) (Guard.vars multiplicands_post_update_constraint))
+    Base.Set.union keep_vars (Base.Set.union (Guard.vars indet_guard) (Guard.vars multiplicands_post_update_constraint))
   in
-  let temp_vars = VarSet.diff all_vars keep_vars in
+  let temp_vars = Base.Set.diff all_vars keep_vars in
 
   let open ApronInterface.Koat2Apron in let open ApronInterface.Apron2Koat in
   let environment = Apron.Environment.make (vars_to_apron all_vars) [||] in

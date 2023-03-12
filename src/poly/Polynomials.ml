@@ -39,7 +39,7 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
 
     let var_only_linear var = function
       | [] -> true
-      | p -> List.for_all ((>=) 1) (List.map ScaledMonomial_.degree (List.filter (fun s -> VarSet.mem var (ScaledMonomial_.vars s)) p))
+      | p -> List.for_all ((>=) 1) (List.map ScaledMonomial_.degree (List.filter (fun s -> Base.Set.mem (ScaledMonomial_.vars s) var) p))
 
     let coeff mon poly =
          poly
@@ -158,7 +158,7 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
       |> simplify
       |> monomials
       |> List.map Monomial_.vars
-      |> List.fold_left VarSet.union VarSet.empty
+      |> List.fold_left Base.Set.union VarSet.empty
 
     let is_indeterminate poly =
          poly
@@ -179,7 +179,7 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
                                        Monomial_.is_univariate_linear (ScaledMonomial_.monomial scaled))
 
     let is_univariate_linear poly =
-      degree poly <= 1 && VarSet.cardinal (vars poly) <= 1
+      degree poly <= 1 && Base.Set.length (vars poly) <= 1
 
     let is_const poly = degree poly <= 0
 
@@ -194,7 +194,7 @@ module PolynomialOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes
       List.map (ScaledMonomial_.mult_with_const const) poly
 
       let degree_coeff_list (poly:t) =
-        if VarSet.cardinal (vars poly) <= 1 then
+        if Base.Set.length (vars poly) <= 1 then
         let tuples_deg_coeff = List.map (fun s -> (ScaledMonomial_.degree s, ScaledMonomial_.coeff s)) poly in
         let missing_degrees = Set.diff (Set.of_list (List.range 0 `To (degree poly))) (Set.of_list (List.map Tuple2.first tuples_deg_coeff)) in
           missing_degrees

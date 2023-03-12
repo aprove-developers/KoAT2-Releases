@@ -14,13 +14,13 @@ let assert_equal_string = assert_equal ~printer:identity ~cmp:String.equal
 let assert_equal_int = assert_equal ~printer:string_of_int ~cmp:Int.equal
 
 let assert_equal_varset_enum =
-  assert_equal ~cmp:(Enum.equal VarSet.equal) ~printer:(Util.enum_to_string VarSet.to_string)
+  assert_equal ~cmp:(Enum.equal Base.Set.equal) ~printer:(Util.enum_to_string VarSet.to_string)
 
 let assert_equal_value =
   assert_equal ~cmp:OurInt.(=~=) ~printer:OurInt.to_string
 
 let assert_equal_varset =
-  assert_equal ~cmp:VarSet.equal ~printer:VarSet.to_string
+  assert_equal ~cmp:Base.Set.equal ~printer:VarSet.to_string
 
 let assert_equal_poly =
   assert_equal ~cmp:Polynomial.(=~=) ~printer:Polynomial.to_string

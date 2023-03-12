@@ -58,7 +58,7 @@ module ConstraintOver(A : ConstraintTypes.Atom) =
     let vars constr =
          constr
       |> List.map (A.vars)
-      |> List.fold_left VarSet.union VarSet.empty
+      |> List.fold_left Base.Set.union VarSet.empty
 
     let to_string ?(to_file=false) ?(pretty=false) ?(conj=" && ") constr = String.concat (if pretty then " ∧ " else conj) (List.map (A.to_string ~to_file ~pretty) constr)
 
@@ -162,8 +162,8 @@ module ParameterConstraintOver(Value: PolyTypes.Ring) = struct
     let constr,param_atom = remove_strict constr, A.remove_strict param_atom in
 
     let vars =
-      VarSet.union (vars constr) (A.vars param_atom)
-      |> VarSet.to_list
+      Base.Set.union (vars constr) (A.vars param_atom)
+      |> Base.Set.to_list
     in
     let a_matrix = get_matrix vars constr in
     let b_right = get_constant_vector constr in

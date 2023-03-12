@@ -255,7 +255,7 @@ module PE = struct
             let scaled_monomials = Polynomial.scaled_monomials poly in
             List.fold_right (fun tmp pe -> add tmp pe)
                 (List.map (fun scaled_monom ->
-                    let vars = scaled_monom |> VarSet.to_list % ScaledMonomial.vars in
+                    let vars = scaled_monom |> Base.Set.to_list % ScaledMonomial.vars in
                     let monom = ScaledMonomial.monomial scaled_monom in
                     let constant = (mk_cons (OurRational.of_ourint (ScaledMonomial.coeff scaled_monom)), 1) in
                     vars
@@ -374,7 +374,7 @@ module PE = struct
     (** We assume that we get a list of var -> poly, s.t., the list ordering corresponds to a valid twn order. *)
     let compute_closed_form var_poly =
         ClosedFormTable.clear closed_form_table;
-        List.map (fun (var, poly) -> let tmp = if VarSet.mem var (Polynomial.vars poly) then poly_with_var var poly else only_poly var poly in
+        List.map (fun (var, poly) -> let tmp = if Base.Set.mem (Polynomial.vars poly) var then poly_with_var var poly else only_poly var poly in
                                      tmp
                                      |> simplify
                                      |> tap (fun pe -> ClosedFormTable.add closed_form_table var pe)) var_poly

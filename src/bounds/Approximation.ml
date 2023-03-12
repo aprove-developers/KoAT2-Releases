@@ -29,7 +29,7 @@ module Make(B: BoundType.Bound)
 
   let create program =
     empty (TransitionGraph.nb_edges (Program.graph program))
-          (VarSet.cardinal (Program.vars program))
+          (Base.Set.length (Program.vars program))
 
   let time appr = appr.time
 
@@ -50,7 +50,7 @@ module Make(B: BoundType.Bound)
     Lens.size ^%= SizeApproximation.add_all bound scc
 
   let is_size_bounded program appr t =
-    not @@ VarSet.exists (fun v -> B.is_infinity @@ sizebound appr t v ) (Program.input_vars program)
+    not @@ Base.Set.exists ~f:(fun v -> B.is_infinity @@ sizebound appr t v ) (Program.input_vars program)
 
   (** Timebound related methods *)
 
@@ -84,7 +84,7 @@ module Make(B: BoundType.Bound)
     Lens.cost ^%= TransitionApproximation.add bound transition
 
   let to_formatted ?(show_initial=false) ?(pretty=false) ?(termination_only=false) (program: Program.t) appr =
-    let approximable_transitions = List.of_enum (T.all_from_program program) in
+    let approximable_transitions = Base.Sequence.to_list (T.all_from_program program) in
 
     let overall_timebound = program_timebound appr program in
     mk_str_header_big "All Bounds" <>
@@ -115,7 +115,7 @@ module Make(B: BoundType.Bound)
 
   (* TODO: use to_formatted *)
   let to_string ?(termination_only=false) program appr =
-    let approximable_transitions = List.of_enum (T.all_from_program program) in
+    let approximable_transitions = Base.Sequence.to_list (T.all_from_program program) in
     let overall_costbound = program_costbound appr program in
     let output = IO.output_string () in
       if (not (B.is_infinity overall_costbound)) then
@@ -180,7 +180,7 @@ module Probabilistic = struct
           type program = Program.t
           include GeneralTransition
           let id = gt_id
-          let all_from_program = GeneralTransitionSet.enum % Program.gts
+          let all_from_program = Base.Set.to_sequence % Program.gts
         end)
 
   let coerce_from_nonprob_overappr_approximation: NonProbOverapprApproximation.t -> ClassicalApproximation.t =

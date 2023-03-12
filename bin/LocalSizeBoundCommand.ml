@@ -29,5 +29,4 @@ let run (params: params) =
   let open ProgramModules.TransitionLabel in
   let guard = Readers.read_formula params.guard in
   let var = Var.of_string params.var in
-  print_string (Bound.to_string LocalSizeBound.(find_bound (VarSet.inter (Formula.vars guard) (VarSet.singleton var)) var guard 1024 |> Option.map Tuple2.first |> option_lsb_as_bound))
-
+  print_string (Bound.to_string LocalSizeBound.(find_bound (Base.Set.inter (Formula.vars guard) (VarSet.singleton var)) var guard 1024 |> Option.map Tuple2.first |> option_lsb_as_bound))

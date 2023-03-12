@@ -69,7 +69,7 @@ module MakeOverIndeterminate(I : PolyTypes.Indeterminate)(Value : PolyTypes.Ring
     let vars t =
       Map.keys t
       |> Enum.map I.vars
-      |> Enum.fold VarSet.union VarSet.empty
+      |> Enum.fold Base.Set.union VarSet.empty
 
     let mul =
       let addPowers ?(p1=0) ?(p2=0) _ = p1 + p2 in

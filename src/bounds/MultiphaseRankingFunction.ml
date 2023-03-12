@@ -71,27 +71,27 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module VarMap = Map.Make(Var)
   (* method transforms polynome to parapolynom*)
   let as_parapoly update var =
-      match VarMap.find_opt var update with
+      match Base.Map.find update var with
       (** Correct? In the nondeterministic case we just make it deterministic? *)
       | None -> ParameterPolynomial.of_var var
       | Some p -> ParameterPolynomial.of_polynomial p
 
   (** Given a list of variables an affine template-polynomial is generated*)
   let ranking_template cache location (vars: VarSet.t): ParameterPolynomial.t * Var.t list =
-      let vars = VarSet.elements vars in
+      let vars = Base.Set.elements vars in
       let num_vars = List.length vars in
       let fresh_vars = Var.fresh_id_list Var.Int num_vars in
       let fresh_coeffs = List.map Polynomial.of_var fresh_vars in
 
       if Option.is_some cache && Option.is_some location then (
-      (* store fresh_vars *)
+        (* store fresh_vars *)
         let cache = Option.get cache
         and location = Option.get location in
         let coeff_table = cache.coeffs_table in
         List.iter
           (* (fun (v,v') -> CoeffTable.add coeff_table (location,v) v') *)
-          (fun (v,v') -> CoeffsTable.modify_def VarSet.empty (location,v) (VarSet.union (VarSet.singleton v')) coeff_table)
-          (List.combine vars fresh_vars)
+          (fun (v,v') -> CoeffsTable.modify_def VarSet.empty (location,v) (Base.Set.union (VarSet.singleton v')) coeff_table)
+          (List.combine vars fresh_vars);
       );
 
       let linear_poly = ParameterPolynomial.of_coeff_list fresh_coeffs vars in
@@ -120,7 +120,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     |> Util.enum_to_string (fun p -> (if pretty then Polynomial.to_string_pretty else Polynomial.to_string) (p l))
 
   let only_rank_to_string {rank; decreasing; non_increasing; depth} =
-    let locations = non_increasing |> TransitionSet.locations |> LocationSet.to_list in
+    let locations = non_increasing |> TransitionSet.locations |> Base.Set.to_list in
     rank_to_string locations polyList_to_string rank
 
   let to_string {rank; decreasing; non_increasing; depth} =
@@ -129,10 +129,10 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let add_to_proof {rank; decreasing; non_increasing; depth} bound program =
     let module GraphPrint = GraphPrint.Make(PM) in
     let color_map =
-      TransitionSet.fold (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) non_increasing GraphPrint.TransitionMap.empty
+      Base.Set.fold ~f:(fun colourmap t -> GraphPrint.TransitionMap.add t GraphPrint.Blue colourmap) non_increasing ~init:GraphPrint.TransitionMap.empty
       |> GraphPrint.TransitionMap.add decreasing GraphPrint.Red
     in
-    let locations = non_increasing |> TransitionSet.locations |> LocationSet.to_list in
+    let locations = non_increasing |> TransitionSet.locations |> Base.Set.to_list in
     ProofOutput.add_to_proof_with_format @@ FormattedString.(fun format ->
       mk_header_small (mk_str ("MPRF for transition " ^ Transition.to_string_pretty decreasing ^ " of depth " ^ string_of_int depth ^ ":")) <>
       mk_paragraph (
@@ -185,7 +185,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   (* Methods define properties of mprf *)
 
   (* method for mprf and functions f_2 to f_d of depth i *)
-  let transition_constraint_i_ (measure, constraint_type) (update,guard,cost) template0_l template1_l template1_l': Formula.t =
+  let transition_constraint_i_ (measure, constraint_type) (update, guard,cost) template0_l template1_l template1_l': Formula.t =
     let poly = ParameterPolynomial.add (template0_l) (template1_l) in
     let atom =
       match constraint_type with
@@ -277,9 +277,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let entry_transitions_from_non_increasing program non_increasing =
     let all_possible_pre_trans =
       Stack.enum non_increasing
-      |> Enum.fold (fun tset -> TransitionSet.union tset % Program.pre_transitionset_cached program) TransitionSet.empty
+      |> Enum.fold (fun tset -> Base.Set.union tset % Program.pre_transitionset_cached program) TransitionSet.empty
     in
-    TransitionSet.diff all_possible_pre_trans (TransitionSet.of_enum @@ Stack.enum non_increasing)
+    Base.Set.diff all_possible_pre_trans (TransitionSet.of_list @@ List.of_enum @@ Stack.enum non_increasing)
 
   let add_decreasing_constraint cache problem solver_int =
     Solver.add solver_int (decreasing_constraint cache problem.find_depth problem.measure problem.make_decreasing)
@@ -302,7 +302,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     (* Set the coefficients for all variables for which a corresponding size bound does not exist for the entry transitions to
     * 0. *)
     let entry_trans_grouped_by_loc =
-      List.sort (fun (_,_,l'1) (_,_,l'2) -> Location.compare l'1 l'2)  (TransitionSet.to_list entry_transitions)
+      List.sort (fun (_,_,l'1) (_,_,l'2) -> Location.compare l'1 l'2)  (Base.Set.to_list entry_transitions)
       |> List.group_consecutive (fun (_,_,l'1) (_,_,l'2) -> Location.equal l'1 l'2)
     in
     let unbounded_vars_at_entry_locs coeff_table =
@@ -311,22 +311,22 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           let entryloc = Transition.target (List.hd ts) in
           List.enum ts
           |> Enum.map problem.unbounded_vars
-          |> Enum.fold VarSet.union VarSet.empty
-          |> VarSet.enum
-          |> Enum.map (fun v -> VarSet.enum @@ CoeffsTable.find coeff_table (entryloc,v))
-          |> Enum.flatten
-          |> VarSet.of_enum)
+          |> Enum.fold Base.Set.union VarSet.empty
+          |> Base.Set.to_sequence
+          |> Base.Sequence.map ~f:(fun v -> Base.Set.to_sequence @@ CoeffsTable.find coeff_table (entryloc,v))
+          |> Base.Sequence.join
+          |> VarSet.of_sequence)
         entry_trans_grouped_by_loc
-      |> List.fold_left VarSet.union VarSet.empty
+      |> List.fold_left Base.Set.union VarSet.empty
     in
 
     Solver.push solver_int;
-    VarSet.iter (Solver.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
+    Base.Set.iter ~f:(Solver.add solver_int % Formula.mk_eq Polynomial.zero % Polynomial.of_var)
       (unbounded_vars_at_entry_locs cache.coeffs_table);
     if Solver.satisfiable solver_int then (
       (* Solver.minimize_absolute solver_int !fresh_coeffs; *)
       Solver.model solver_int
-      |> Option.map (make cache problem.find_depth problem.make_decreasing (non_increasing |> Stack.enum |> TransitionSet.of_enum))
+      |> Option.map (make cache problem.find_depth problem.make_decreasing (non_increasing |> Stack.enum |> List.of_enum |> TransitionSet.of_list))
       |> Option.may (fun ranking_function ->
           cache.rank_func := Some ranking_function;
           Logger.(log logger INFO (fun () -> "add_mprf", [
@@ -343,7 +343,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let rec backtrack cache (steps_left: int) (index: int) (solver_int: Solver.t) (non_increasing: Transition.t Stack.t) problem =
       let finalise_if_entrytime_bounded non_increasing =
         let entry_trans = entry_transitions_from_non_increasing problem.program non_increasing in
-        if TransitionSet.for_all problem.is_time_bounded entry_trans then
+        if Base.Set.for_all ~f:problem.is_time_bounded entry_trans then
           finalise_mprf cache solver_int non_increasing entry_trans problem;
       in
 
@@ -369,29 +369,29 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       )
 
   let get_minimum_applicable_non_inc_set mprf_problem =
-    let possible_non_inc_set = TransitionSet.of_array mprf_problem.make_non_increasing in
+    let possible_non_inc_set = Base.Set.of_array (module Transition) mprf_problem.make_non_increasing in
     let rec helper min_applicable =
       (* get time_unbounded pre transitions *)
-      TransitionSet.enum min_applicable
-      |> Enum.map (Program.pre_transitionset_cached mprf_problem.program)
+      Base.Set.to_sequence min_applicable
+      |> Base.Sequence.map ~f:(Program.pre_transitionset_cached mprf_problem.program)
       (* necessary since min_applicable can contain all possible pre transitions which may be outside of the current scc*)
-      |> Enum.map TransitionSet.enum
-      |> Enum.flatten
-      |> Enum.filter (not % mprf_problem.is_time_bounded)
-      |> TransitionSet.of_enum
+      |> Base.Sequence.map ~f:Base.Set.to_sequence
+      |> Base.Sequence.join
+      |> Base.Sequence.filter ~f:(not % mprf_problem.is_time_bounded)
+      |> TransitionSet.of_sequence
 
       (* add previously found transitions*)
-      |> TransitionSet.union min_applicable
+      |> Base.Set.union min_applicable
       (* we can only consider scc transitions *)
-      |> TransitionSet.inter possible_non_inc_set
-      |> fun tset -> if TransitionSet.cardinal tset > TransitionSet.cardinal min_applicable then helper tset else tset
+      |> Base.Set.inter possible_non_inc_set
+      |> fun tset -> if Base.Set.length tset > Base.Set.length min_applicable then helper tset else tset
     in
     helper (TransitionSet.singleton mprf_problem.make_decreasing)
 
 
   let compute_scc cache program mprf_problem =
-    let locations = LocationSet.to_list @@ TransitionGraph.locations (Program.graph program) in
-    let vars = program |> Program.input_vars in
+    let locations = Base.Set.to_list @@ TransitionGraph.locations (Program.graph program) in
+    let vars = Program.input_vars program in
     compute_ranking_templates cache mprf_problem.find_depth vars locations;
 
     let solver_int = Solver.create () in
@@ -404,9 +404,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     Logger.log logger Logger.DEBUG
         (fun () -> "compute_scc", [ "decreasing", Transition.to_id_string mprf_problem.make_decreasing
                                   ; "min_applicable_non_inc_set", TransitionSet.to_id_string min_applicable]);
-    let non_inc = Stack.of_enum (TransitionSet.enum min_applicable) in
-    let make_non_increasing = TransitionSet.to_array @@ TransitionSet.diff (TransitionSet.of_array mprf_problem.make_non_increasing) min_applicable in
-    TransitionSet.iter (add_non_increasing_constraint cache mprf_problem solver_int) @@ TransitionSet.remove mprf_problem.make_decreasing min_applicable;
+    let non_inc = Stack.of_enum @@ List.enum (Base.Set.to_list min_applicable) in
+    let make_non_increasing = Base.Set.to_array @@ Base.Set.diff (Base.Set.of_array (module Transition) mprf_problem.make_non_increasing) min_applicable in
+    Base.Set.iter ~f:(add_non_increasing_constraint cache mprf_problem solver_int) @@ Base.Set.remove min_applicable mprf_problem.make_decreasing;
     (try
       backtrack cache
                 (Array.length make_non_increasing)
@@ -422,7 +422,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let find_scc measure program is_time_bounded unbounded_vars scc depth make_decreasing =
     let cache = new_cache depth in
     let mprf_problem =
-      { program; measure; make_non_increasing = TransitionSet.to_array scc; make_decreasing; unbounded_vars; find_depth = depth; is_time_bounded}
+      { program; measure; make_non_increasing = Base.Set.to_array scc; make_decreasing; unbounded_vars; find_depth = depth; is_time_bounded}
     in
     let execute () =
       compute_scc cache program mprf_problem;
@@ -435,13 +435,18 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   let find measure program depth =
     let execute () =
-      Program.sccs program
-      |> Enum.map (fun scc -> Enum.map (find_scc measure program (const false) (const VarSet.empty) scc depth) @@ TransitionSet.enum scc)
-      |> Util.cat_maybes_enum % Enum.flatten
+      Base.Sequence.of_list (Program.sccs program)
+      |> Base.Sequence.map
+          ~f:(fun scc ->
+            Base.Set.to_sequence scc
+            |> Base.Sequence.map ~f:(find_scc measure program (const false) (const VarSet.empty) scc depth)
+          )
+      |> Base.Sequence.join
+      |> Base.Sequence.filter_opt
     in
     Logger.with_log logger Logger.DEBUG
       (fun () -> "find", ["measure", show_measure measure])
-      ~result:(Util.enum_to_string to_string)
+      ~result:(Util.sequence_to_string ~f:to_string)
       execute
 
   module Loop = Loop.Make(PM)

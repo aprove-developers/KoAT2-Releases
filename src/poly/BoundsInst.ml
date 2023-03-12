@@ -408,12 +408,22 @@ module Make(Num : PolyTypes.OurNumber) =
         bounds |> Enum.reduce add |> simplify
       with Not_found -> zero
 
+    let sum_sequence (bounds: t Base.Sequence.t) =
+      Base.Sequence.reduce ~f:add bounds
+      |> Base.Option.map ~f:simplify
+       |? zero
+
     let sum_list = sum % List.enum
 
     let product bounds =
       try
         bounds |> Enum.reduce mul |> simplify
       with Not_found -> one
+
+    let product_sequence (bounds: t Base.Sequence.t) =
+      Base.Sequence.reduce ~f:mul bounds
+      |> Base.Option.map ~f:simplify
+      |? one
 
     let of_poly =
       OptionMonad.return %  Poly.fold ~const:bound_of_constant ~indeterminate:bound_of_var ~neg:identity ~plus:add_bound ~times:mul_bound ~pow:pow_bound
@@ -452,12 +462,12 @@ module Make(Num : PolyTypes.OurNumber) =
       | Var v -> VarSet.singleton v
       | Const _ -> VarSet.empty
       | Pow (v,b) -> vars_bound b
-      | Sum (b1, b2) -> VarSet.union (vars_bound b1) (vars_bound b2)
-      | Product (b1, b2) -> VarSet.union (vars_bound b1) (vars_bound b2)
+      | Sum (b1, b2) -> Base.Set.union (vars_bound b1) (vars_bound b2)
+      | Product (b1, b2) -> Base.Set.union (vars_bound b1) (vars_bound b2)
 
     let vars = Option.default VarSet.empty % Option.map vars_bound
 
-    let indeterminates = VarSet.enum % vars
+    let indeterminates = List.enum % Base.Set.to_list % vars
 
     let keep_simpler_bound b1 b2 = match compare_asy b1 b2 with
       (* First compare asymptotic_complexity *)
@@ -465,7 +475,7 @@ module Make(Num : PolyTypes.OurNumber) =
       |  1 -> b2
       |  _ ->
           (* Now compare number of variables*)
-          match Int.compare (VarSet.cardinal @@ vars b1) (VarSet.cardinal @@ vars b2) with
+          match Int.compare (Base.Set.length @@ vars b1) (Base.Set.length @@ vars b2) with
           | -1 -> b1
           |  1 -> b2
           |  _ ->

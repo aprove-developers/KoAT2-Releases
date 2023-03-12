@@ -241,7 +241,7 @@ let run (params: params) =
 
                if params.no_boundsearch then
                 (program, appr)
-               else if TransitionSet.exists (TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program) then
+               else if Base.Set.exists ~f:(TransitionLabel.negative_costs % Tuple3.second) (Program.transitions program) then
                 (program, appr)
                else
                  Bounds.find_bounds ~conf:bounds_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr

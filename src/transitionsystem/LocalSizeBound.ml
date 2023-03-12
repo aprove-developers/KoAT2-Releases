@@ -65,7 +65,7 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
 
   let vars t = t.vars
 
-  let is_constant = VarSet.is_empty % vars
+  let is_constant = Base.Set.is_empty % vars
 
   let to_string lsb =
     "{" ^
@@ -83,7 +83,7 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
     | Some (lsb,b) -> to_string lsb ^ " equality: " ^ Bool.to_string (Lazy.force b)
 
   let as_bound lsb =
-    let vars_sum = Bound.sum @@ Enum.map Bound.of_var (VarSet.enum lsb.vars) in
+    let vars_sum = Bound.sum_sequence @@ Base.Sequence.map ~f:Bound.of_var (Base.Set.to_sequence lsb.vars) in
     Bound.(of_int lsb.factor * (of_int lsb.constant + vars_sum))
 
   let option_lsb_as_bound = function
@@ -101,19 +101,19 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
 
   let is_of_equality_type t update_formula v' =
     (* Trivially holds for constant lsbs *)
-    if VarSet.is_empty t.vars then true
+    if Base.Set.is_empty t.vars then true
     else
       (* Trivially holds for identity lsbs *)
-      if t.factor > 1 && not (VarSet.is_empty t.vars) then false
+      if t.factor > 1 && not (Base.Set.is_empty t.vars) then false
       else
       (* Trivially does not hold if scaling > 1 and variables are present *)
-        if VarSet.cardinal t.vars = 1 && Int.equal 0 t.constant then true
+        if Base.Set.length t.vars = 1 && Int.equal 0 t.constant then true
         else
           if Formula.is_linear update_formula then
             let solver = Solver.create ~model:false () in
             (* Find contra *)
             Solver.add solver update_formula;
-            VarSet.to_list t.vars
+            Base.Set.to_list t.vars
             |> List.iter (fun v -> Solver.add_bound_comparison solver `LT (Bound.of_var v) (Bound.of_var v'));
             Solver.add_bound_comparison solver `LT (Bound.of_int t.constant) (Bound.of_var v');
             let contra_exists = Solver.satisfiable solver in
@@ -141,7 +141,7 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
       let solver = Solver.create ~model:false () in
       Solver.add solver update_formula;
       let is_bounded b = is_bounded_with solver update_formula v' b in
-      Enum.seq 0 ((+) 1) ((>) (VarSet.cardinal update_vars + 1))
+      Enum.seq 0 ((+) 1) ((>) (Base.Set.length update_vars + 1))
       |> Enum.map (fun count ->
           List.enum (VarSet.combinations count update_vars)
         )
@@ -174,13 +174,13 @@ module Make(TL: ProgramTypes.TransitionLabel with type update_element = Polynomi
               (Constraint.mk_and (TL.guard t) (Constraint.mk_eq (Polynomial.of_var v') ue))
           in
           let update_vars =
-            VarSet.union
+            Base.Set.union
             (Polynomial.vars ue)
-            (VarSet.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
+            (Base.Set.inter (VarSet.singleton var) (Guard.vars @@ TL.guard t))
           in
           try (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
             (* We have to intersect update_vars with the program vars in order to eliminate temporary variables from local size bounds*)
-            find_bound (VarSet.inter program_vars update_vars) v' update_formula (s_range ue)
+            find_bound (Base.Set.inter program_vars update_vars) v' update_formula (s_range ue)
           with
             SMT.SMTFailure _ -> None
         )

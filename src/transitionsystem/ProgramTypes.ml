@@ -3,7 +3,7 @@ open Constraints
 open Polynomials
 (** Provides commonly used module types in programs *)
 
-module VarMap = Map.Make(Var) (* Useful module *)
+type 'a var_map = (Var.t, 'a, Var.comparator_witness) Base.Map.t
 
 (** A location is a node of a transition system and can be connected to other locations via transitions. *)
 module type Location = sig
@@ -19,10 +19,13 @@ module type Location = sig
 
   (** Returns a string representing a location. *)
   val to_string : t -> string
+
+  include OurBase.Comparator.S with type t := t
+  val sexp_of_t: t -> OurBase.Sexp.t
 end
 
 module type LocationSet = sig
-  include Set.S
+  include OurBase.Creators'0
 
   (** Returns a string representing the transition set. *)
   val to_string : t -> string
@@ -31,11 +34,7 @@ end
 module type TransitionSet = sig
   (** A set of transitions. *)
 
-  include Set.S
-  type location_set
-
-  (** TODO doc *)
-  val powerset : t -> t Enum.t
+  include OurBase.Creators'0
 
   (** Returns a string representing the transition set. *)
   val to_string : t -> string
@@ -43,8 +42,7 @@ module type TransitionSet = sig
   (** Returns a short string representing the transition set. *)
   val to_id_string : t -> string
 
-  val create : ('a -> elt) -> 'a Batteries.Enum.t -> t
-
+  type location_set
   val locations: t -> location_set
 
   (** Returns a locationSet corresponding to the targets of all transitions contained in the set passed as first argument *)
@@ -61,7 +59,7 @@ module type TransitionLabel = sig
   val default: t
 
   (** Returns the update map of the transitionlabel *)
-  val update_map : t -> update_element VarMap.t
+  val update_map : t -> update_element var_map
 
   (** Returns the update of a variable. *)
   val update : t -> Var.t -> update_element Option.t
@@ -166,6 +164,9 @@ module type TransitionLabel = sig
   val overapprox_nonlinear_updates : t -> t
 
   val remove_non_contributors : VarSet.t -> t -> t
+
+  include OurBase.Comparator.S with type t := t
+  val sexp_of_t : t -> OurBase.Sexp.t
 end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)
@@ -221,6 +222,9 @@ module type Transition = sig
   val add_invariant : Constraint.t -> t -> t
 
   val rename : RenameMap.t -> t -> t
+
+  include OurBase.Comparator.S with type t := t
+  val sexp_of_t: t -> OurBase.Sexp.t
 end
 
 (** This module represents a transition graph. *)
@@ -238,13 +242,13 @@ module type TransitionGraph = sig
       and type E.label = transition_label
 
   (** Creates a transition graph from an enum of transitions. *)
-  val mk : transition Enum.t -> t
+  val mk : transition Base.Sequence.t -> t
 
   (** Adds all locations from an enum to a transtion graph. *)
-  val add_locations : location Enum.t -> t -> t
+  val add_locations : location Base.Sequence.t -> t -> t
 
   (** Adds all transitions from an enum to a transtion graph. Implicitly adds locations when they do not exit. *)
-  val add_transitions : transition Enum.t -> t -> t
+  val add_transitions : transition Base.Sequence.t -> t -> t
 
   (** Apply function to the graphs transitions  *)
   val map_transitions: (transition -> transition) -> t -> t
@@ -274,7 +278,7 @@ module type TransitionGraph = sig
   val sccs : t -> transition_set list
 
   (** Returns the (biggest) strongly connected components of the transitons. *)
-  val sccs_ : transition Enum.t -> transition_set list
+  val sccs_ : transition Base.Sequence.t -> transition_set list
 end
 
 module type Program = sig
@@ -288,12 +292,14 @@ module type Program = sig
 
   type transition_graph
 
+  (* TODO type type = () *)
+
   (** Type of a program consisting of a program graph and a start location. *)
   type t
 
   (** Create a program from a start location and an enum of transitions. *)
   (** The user is responsible for making sure that the arities of all locations match and for correct naming of arg variables *)
-  val from_enum: location -> transition Enum.t -> t
+  val from_sequence: location -> transition Base.Sequence.t -> t
 
   (** Create a program from a start location and a graph *)
   val from_graph: location -> transition_graph -> t
@@ -328,8 +334,8 @@ module type Program = sig
   (** Returns a set of all transitions which occur directly before the given transition in the graph.
       Corresponds to pre(t).
       Note that the computation involves calls to the SMT solver and is therefore expensive.
-      The returned Enum is lazy. *)
-  val pre : t -> transition -> transition Enum.t
+      The returned Sequence is lazy. *)
+  val pre : t -> transition -> transition Base.Sequence.t
 
   (** A cached version of pre. The identifier for the cache is the transition id (the program is not considered) *)
   val pre_transitionset_cached: t -> transition -> transition_set
@@ -373,7 +379,7 @@ module type Program = sig
   val start : t -> location
 
   (** Returns the (biggest) strongly connected components of the transiton graph in topological order. *)
-  val sccs : t -> transition_set Enum.t
+  val sccs : t -> transition_set List.t
 
   (** Returns all transitions which are parallel to a given transition. Thus, all transitions start in the same location and end in the same location. *)
   val parallel_transitions : t -> transition -> transition_set
@@ -402,6 +408,9 @@ module type RVTuple = sig
   (** Type of a result variable is a transiton and a variable. *)
   type t = transition * Var.t
 
+  include OurBase.Comparator.S with type t := t
+  val sexp_of_t : t -> OurBase.Sexp.t
+
   (** Comparison with IDs to compare transitions *)
   val compare: t -> t -> int
 
@@ -424,7 +433,9 @@ end
 
 module type ProgramModules = sig
   module Location: Location
-  module LocationSet: LocationSet with type elt = Location.t
+  module LocationSet: LocationSet
+    with type elt = Location.t
+     and type elt_comparator_witness = Location.comparator_witness
 
   module UpdateElement: PolyTypes.Polynomial
     with type value = OurInt.t
@@ -438,7 +449,8 @@ module type ProgramModules = sig
 
   module TransitionSet: TransitionSet
     with type elt = Transition.t
-     and type location_set = LocationSet.t
+     and type elt_comparator_witness = Transition.comparator_witness
+     and type location_set = (Location.t, Location.comparator_witness) Base.Set.t
 
   module TransitionGraph: TransitionGraph
     with type location = Location.t

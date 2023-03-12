@@ -10,15 +10,15 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let check_solvable (t: Loop.t) =
     let module DG = Graph.Persistent.Digraph.ConcreteBidirectional(Var) in
     let module SCC = Graph.Components.Make(DG) in
-    let dg_linear = VarSet.fold (fun x graph ->
+    let dg_linear = Base.Set.fold ~f:(fun graph x ->
       let vars = Loop.update_var t x |> Polynomial.vars in
-      VarSet.fold (fun y graph -> DG.add_edge graph x y) vars graph) (Loop.updated_vars t) DG.empty and
-    dg_non_linear = VarSet.fold (fun x graph ->
+      Base.Set.fold ~f:(fun graph y -> DG.add_edge graph x y) vars ~init:graph) (Loop.updated_vars t) ~init:DG.empty and
+    dg_non_linear = Base.Set.fold ~f:(fun graph x ->
       let update = Loop.update_var t x in
       let linear_vars = update
         |> Polynomial.vars
-        |> VarSet.filter (fun v -> not @@ Polynomial.var_only_linear v update) in
-          VarSet.fold (fun y graph -> DG.add_edge graph x y) linear_vars graph) (Loop.updated_vars t) DG.empty in
+        |> Base.Set.filter ~f:(fun v -> not @@ Polynomial.var_only_linear v update) in
+          Base.Set.fold ~f:(fun graph y -> DG.add_edge graph x y) linear_vars ~init:graph) (Loop.updated_vars t) ~init:DG.empty in
     let blocks = SCC.scc_list dg_linear in
     if List.for_all (fun scc -> List.length scc = 1) (SCC.scc_list dg_non_linear)
       (* We don't have cyclic non-linear dependencies. *)

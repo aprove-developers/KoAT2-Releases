@@ -22,7 +22,7 @@ val mk : id:int option ->
 val append : t -> t -> t
 
 (** Returns the update map of the transitionlabel *)
-val update_map : t -> Polynomials.Polynomial.t Map.Make(Var).t
+val update_map : t -> Polynomials.Polynomial.t ProgramTypes.var_map
 
 (** Returns the update of a variable. *)
 val update : t -> Var.t -> Polynomials.Polynomial.t Option.t

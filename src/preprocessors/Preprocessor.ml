@@ -40,9 +40,9 @@ let normalise_temp_vars program =
   let temp_vars = LazyList.from (Var.fresh_id Var.Int) in
   Program.map_graph (fun graph ->
     let trans = TransitionGraph.transitions graph in
-    TransitionSet.fold
-      (fun (l,t,l') -> TransitionGraph.replace_edge_e (l,t,l') (l,TransitionLabel.rename_temp_vars t temp_vars,l'))
-      trans graph
+    Base.Set.fold
+      ~f:(fun graph (l,t,l') -> TransitionGraph.replace_edge_e (l,t,l') (l,TransitionLabel.rename_temp_vars t temp_vars,l') graph)
+      trans ~init:graph
   ) program
 
 

@@ -26,8 +26,8 @@ let run (params: params) =
 
   let lsbs =
     List.cartesian_product
-      (TransitionSet.to_list @@ Program.transitions program)
-      (VarSet.to_list input_vars)
+      (Base.Set.to_list @@ Program.transitions program)
+      (Base.Set.to_list input_vars)
     |> List.enum
     |> Enum.map (fun(t,v) -> (t,v),LSB.compute_bound input_vars t v)
     |> LSB_Table.of_enum

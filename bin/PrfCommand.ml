@@ -32,8 +32,8 @@ let run (params: params) =
                      program
                      |> Program.graph
                      |> TransitionGraph.transitions
-                     |> TransitionSet.filter (not % Approximation.is_time_bounded appr)
+                     |> Base.Set.filter ~f:(not % Approximation.is_time_bounded appr)
                    in
                    MultiphaseRankingFunction.find `Time program depth
-                   |> Enum.filter (flip TransitionSet.mem transitions % MultiphaseRankingFunction.decreasing)
-                   |> Enum.iter (fun prf -> print_string (MultiphaseRankingFunction.to_string prf ^ "\n"))))
+                   |> Base.Sequence.filter ~f:(Base.Set.mem transitions % MultiphaseRankingFunction.decreasing)
+                   |> Base.Sequence.iter ~f:(fun prf -> print_string (MultiphaseRankingFunction.to_string prf ^ "\n"))))

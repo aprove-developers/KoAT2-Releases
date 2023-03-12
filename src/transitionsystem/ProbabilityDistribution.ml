@@ -36,8 +36,8 @@ let admissibility_constraint = let zero = Polynomial.zero in function
 let vars = function
   | Binomial       (n,_)   -> Polynomial.vars n
   | Geometric      _       -> VarSet.empty
-  | Hypergeometric (_,k,n) -> VarSet.union (Polynomial.vars k)  (Polynomial.vars n)
-  | Uniform        (p1,p2) -> VarSet.union (Polynomial.vars p1) (Polynomial.vars p2)
+  | Hypergeometric (_,k,n) -> Base.Set.union (Polynomial.vars k)  (Polynomial.vars n)
+  | Uniform        (p1,p2) -> Base.Set.union (Polynomial.vars p1) (Polynomial.vars p2)
 
 let as_guard d v' = let poly_v' = Polynomial.of_var v' in let zero = Polynomial.zero in
   match d with

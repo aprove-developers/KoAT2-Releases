@@ -35,5 +35,8 @@ let same subject = (Same, subject)
 let fold_enum (f: 'a -> 'b -> 'a t) (subject: 'a) (enum: 'b Enum.t) : 'a t =
   Enum.fold (fun maybe_changed element -> maybe_changed >>= fun subject -> f subject element) (same subject) enum
 
+let fold_sequence ~(f: 'a -> 'b -> 'a t) ~(init: 'a) (seq: 'b Base.Sequence.t) : 'a t =
+  Base.Sequence.fold ~f:(fun maybe_changed element -> maybe_changed >>= fun subject -> f subject element) ~init:(same init) seq
+
 let fold (f: 'a -> 'b -> 'a t) (subject: 'a) (list: 'b List.t) : 'a t =
   List.fold (fun maybe_changed element -> maybe_changed >>= fun subject -> f subject element) (same subject) list

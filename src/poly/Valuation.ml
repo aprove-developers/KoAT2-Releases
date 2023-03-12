@@ -26,9 +26,9 @@ module MakeOverIndeterminate(I: PolyTypes.Indeterminate)(Value : PolyTypes.Ring)
     let indeterminates t = List.map Tuple2.first (M.bindings t)
 
     let vars valuation =
-      Enum.map (VarSet.enum % I.vars % Tuple2.first) (M.enum valuation)
-      |> Enum.flatten
-      |> VarSet.to_list % VarSet.of_enum
+      Base.Sequence.map ~f:(Base.Set.to_sequence % I.vars % Tuple2.first) (Base.Sequence.of_list @@ List.of_enum @@ M.enum valuation)
+      |> Base.Sequence.join
+      |> VarSet.stable_dedup_list % Base.Sequence.to_list
 
     let bindings = M.enum
 

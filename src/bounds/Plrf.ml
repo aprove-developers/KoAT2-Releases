@@ -30,14 +30,14 @@ let to_string t =
   " non_incr: " ^ GeneralTransitionSet.to_id_string t.non_increasing ^
   " rank: [" ^ (
                  GeneralTransitionSet.locations t.non_increasing
-                 |> LocationSet.to_list
+                 |> Base.Set.to_list
                  |> List.map (fun loc -> Location.to_string loc ^ ": " ^ (t.rank loc |> RealPolynomial.to_string)) |> String.concat "; "
                )
   ^ "]}"
 
 let rank t = t.rank
 let decreasing t = t.decreasing
-let non_increasing t = GeneralTransitionSet.union t.non_increasing (GeneralTransitionSet.singleton t.decreasing)
+let non_increasing t = Base.Set.union t.non_increasing (Base.Set.singleton (module GeneralTransition) t.decreasing)
 
 type lrsm_cache = {
   rank: t option ref;
@@ -61,7 +61,7 @@ let as_realparapoly label var =
 
 (** Given a list of variables an affine template-parameter-polynomial is generated*)
 let ranking_template cache location (vars: VarSet.t): RealParameterPolynomial.t * Var.t list * Var.t =
-  let vars = VarSet.elements vars in
+  let vars = Base.Set.elements vars in
   let num_vars = List.length vars in
   let fresh_vars = Var.fresh_id_list Var.Real num_vars in
   let fresh_coeffs = List.map RealPolynomial.of_var fresh_vars in
@@ -114,9 +114,9 @@ let expected_poly cache gtrans =
         (prob |> RealPolynomial.of_constant |> RealParameterPolynomial.of_polynomial)
         (RealParameterPolynomial.substitute_f (as_realparapoly t) (template l'))
   in
-  TransitionSet.fold
-    (fun trans poly -> RealParameterPolynomial.add (prob_branch_poly cache trans) poly)
-    (gtrans |> GeneralTransition.transitions) RealParameterPolynomial.zero
+  Base.Set.fold
+    ~f:(fun poly trans -> RealParameterPolynomial.add (prob_branch_poly cache trans) poly)
+    (gtrans |> GeneralTransition.transitions) ~init:RealParameterPolynomial.zero
 
 (* Logically encode the update applied to templates of a single transition t.
  * New Variables representing the updates values are introduced and substituted into the template.
@@ -127,19 +127,19 @@ let encode_update cache tguard (t:Transition.t) =
   in
   let new_var_map =
     let vars = RealParameterPolynomial.vars start_template in
-    VarSet.fold (fun old_var var_map -> VarMap.add old_var (Var.fresh_id Var.Int ()) var_map) vars VarMap.empty
+    Base.Set.fold ~f:(fun var_map old_var -> Base.Map.add_exn var_map ~key:old_var ~data:(Var.fresh_id Var.Int ())) vars ~init:(Base.Map.empty (module Var))
   in
   let update_map = Transition.label t |> TransitionLabel.update_map in
   let update_guard old_var ue =
-    let new_var = VarMap.find old_var new_var_map in
+    let new_var = Base.Map.find_exn new_var_map old_var in
     UpdateElement.as_linear_guard tguard ue new_var
   in
   let template_substituted =
     TemplateTable.find cache.template_table (Transition.target t)
-    |> RealParameterPolynomial.rename (VarMap.bindings new_var_map |> RenameMap.from)
+    |> RealParameterPolynomial.rename (Base.Map.to_alist new_var_map |> RenameMap.from)
   in
   let constrs =
-    VarMap.fold (fun old_var ue -> RealConstraint.mk_and (RealConstraint.of_intconstraint @@ update_guard old_var ue)) update_map RealConstraint.mk_true
+    Base.Map.fold ~f:(fun ~key ~data -> RealConstraint.mk_and (RealConstraint.of_intconstraint @@ update_guard key data)) update_map ~init:RealConstraint.mk_true
   in
   constrs, template_substituted
 
@@ -167,12 +167,12 @@ let general_transition_constraint cache constraint_type gtrans: RealFormula.t =
       in
 
       GeneralTransition.transitions gtrans
-      |> TransitionSet.to_list
+      |> Base.Set.to_list
       |> List.map transition_bound
 
     | `Bounded_Refined ->
         (* for every transition the guard needs to imply that all possible successor states have the same sign of the evaluated template *)
-        let tlist = GeneralTransition.transitions gtrans |> TransitionSet.to_list in
+        let tlist = GeneralTransition.transitions gtrans |> Base.Set.to_list in
         let t1_nonneg_implies_t2_nonneg t1 t2: RealParameterConstraint.t * (RealParameterAtom.t) =
           (* Under the condition that transition t1 leads to a state where the template is non-negative then transition t2
            * also leads to a succesor state such that the corresponding template is non-negative*)
@@ -236,14 +236,15 @@ type plrf_problem = {
 let entry_transitions_from_non_increasing program (non_increasing: GeneralTransition.t Stack.t) =
   let all_possible_pre_trans =
     Stack.enum non_increasing
-    |> Enum.fold (fun gts -> GeneralTransitionSet.union gts % Program.pre_gt_cached program) GeneralTransitionSet.empty
+    |> Enum.fold (fun gts -> Base.Set.union gts % Program.pre_gt_cached program) (Base.Set.empty (module GeneralTransition))
   in
-  GeneralTransitionSet.diff all_possible_pre_trans (GeneralTransitionSet.of_enum @@ Stack.enum non_increasing)
+  (* TODO  *)
+  Base.Set.diff all_possible_pre_trans (GeneralTransitionSet.of_list @@ List.of_enum @@ Stack.enum non_increasing)
 
 let finalise_plrf cache ~refined solver non_increasing entry_trans problem =
   let entry_trans_grouped_by_loc =
-    GeneralTransitionSet.to_list entry_trans
-    |> List.map (fun gt -> List.cartesian_product [gt] (LocationSet.to_list @@ GeneralTransition.targets gt))
+    Base.Set.to_list entry_trans
+    |> List.map (fun gt -> List.cartesian_product [gt] (Base.Set.to_list @@ GeneralTransition.targets gt))
     |> List.flatten
     |> List.sort (fun (_,l1) (_,l2) -> Location.compare l1 l2)
     |> List.group_consecutive (fun (_,l1) (_,l2) -> Location.equal l1 l2)
@@ -252,18 +253,18 @@ let finalise_plrf cache ~refined solver non_increasing entry_trans problem =
     List.map
       (fun ts ->
         let (_,entryloc) = List.hd ts in
-        List.enum ts
-        |> Enum.map problem.unbounded_vars
-        |> Enum.fold VarSet.union VarSet.empty
-        |> VarSet.map (fun v -> CoeffsTable.find cache.coeffs_table (entryloc,v))
+        Base.Sequence.of_list ts
+        |> Base.Sequence.map ~f:problem.unbounded_vars
+        |> Base.Sequence.fold ~f:Base.Set.union ~init:VarSet.empty
+        |> VarSet.map ~f:(fun v -> CoeffsTable.find cache.coeffs_table (entryloc,v))
       )
       entry_trans_grouped_by_loc
-    |> List.fold_left VarSet.union VarSet.empty
+    |> List.fold_left Base.Set.union VarSet.empty
   in
 
   (* Add variable constraints *)
   Solver.push solver;
-  VarSet.iter (Solver.add_real solver % RealFormula.mk_eq RealPolynomial.zero % RealPolynomial.of_var) unbounded_vars_at_entry_locs;
+  Base.Set.iter ~f:(Solver.add_real solver % RealFormula.mk_eq RealPolynomial.zero % RealPolynomial.of_var) unbounded_vars_at_entry_locs;
   Logger.log logger Logger.DEBUG (fun () -> "finalise_plrf",["unbounded_vars_at_entry_locs", VarSet.to_string unbounded_vars_at_entry_locs]);
 
   if Solver.satisfiable solver then (
@@ -273,7 +274,7 @@ let finalise_plrf cache ~refined solver non_increasing entry_trans problem =
       |> RealParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var model |? OurFloat.zero)
     in
     let ranking =
-      { decreasing = problem.decreasing ; non_increasing = GeneralTransitionSet.of_enum (Stack.enum non_increasing) ; rank = rfunc; }
+      { decreasing = problem.decreasing ; non_increasing = GeneralTransitionSet.of_list @@ List.of_enum (Stack.enum non_increasing) ; rank = rfunc; }
     in
     cache.rank := Some ranking;
     raise Exit
@@ -284,7 +285,7 @@ let finalise_plrf cache ~refined solver non_increasing entry_trans problem =
 let rec backtrack cache ?(refined = false) steps_left index solver non_increasing problem =
     let finalise_if_entrytime_bounded non_increasing =
       let entry_trans = entry_transitions_from_non_increasing problem.program non_increasing in
-      if GeneralTransitionSet.for_all problem.is_time_bounded entry_trans then
+      if Base.Set.for_all ~f:problem.is_time_bounded entry_trans then
         finalise_plrf cache ~refined solver non_increasing entry_trans problem;
     in
 
@@ -319,7 +320,7 @@ let compute_plrf ~refined ~timeout cache program is_time_bounded unbounded_vars 
   (* Here the non-refined bounded constraint is needed since otherwise the ranking function could become negative after the evaluation of
    * a decreasing transition *)
   add_bounding_constraint ~refined:false cache solver decreasing;
-  let make_non_increasing = GeneralTransitionSet.(remove decreasing transitions |> to_array) in
+  let make_non_increasing = Base.Set.(remove transitions decreasing |> to_array) in
   try
     backtrack cache ~refined
       (Array.length make_non_increasing)
@@ -345,15 +346,13 @@ let plrf_option_to_string = function
 let find_scc ?(refined=false) ?(timeout=None) program is_time_bounded unbounded_vars scc gt =
   let execute () =
     let vars =
-      GeneralTransitionSet.enum scc
-      |> Enum.map GeneralTransition.input_vars
-      |> Enum.fold VarSet.union VarSet.empty
+      Base.Set.to_sequence scc
+      |> Base.Sequence.map ~f:GeneralTransition.input_vars
+      |> Base.Sequence.fold ~f:Base.Set.union ~init:VarSet.empty
     in
     let locations =
-      GeneralTransitionSet.enum scc
-      |> Enum.map GeneralTransition.locations
-      |> Enum.fold LocationSet.union LocationSet.empty
-      |> LocationSet.to_list
+      GeneralTransitionSet.locations scc
+      |> Base.Set.to_list
     in
     find_plrf ~refined ~timeout program is_time_bounded unbounded_vars vars locations scc gt
     |> tap ( function
@@ -374,7 +373,7 @@ let find ?(refined=false) ?(timeout=None) program gt =
   let execute () =
     (* TODO  ProbabilisticProgram.sccs_gt program *)
     Enum.singleton (Program.gts program)
-    |> Enum.filter (GeneralTransitionSet.mem gt)
+    |> Enum.filter (flip Base.Set.mem gt)
     |> Enum.map (fun scc -> find_scc ~refined ~timeout program (const true) (const @@ Program.vars program) scc gt)
     |> Util.cat_maybes_enum
     |> Enum.peek

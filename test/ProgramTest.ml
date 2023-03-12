@@ -10,8 +10,8 @@ let tests =
         let program = Readers.read_program_simple program_simple_str in
         let trans =
           Program.transitions program
-          |> TransitionSet.filter (not % Location.equal (Program.start program) % Transition.src)
-          |> TransitionSet.any
+          |> Base.Set.filter ~f:(not % Location.equal (Program.start program) % Transition.src)
+          |> Base.Set.choose_exn
         in
         program_simple_str >:: fun _ ->
           assert_bool
@@ -20,7 +20,7 @@ let tests =
                else " to not have a pre transition"
              in "Expected " ^ Transition.to_id_string trans ^ pre_string ^ ", however the opposite was computed."
             )
-            (has_pre = (1 = List.length (List.of_enum @@ Program.pre program trans)))
+            (has_pre = (1 = List.length (Base.Sequence.to_list @@ Program.pre program trans)))
       )
 
       [

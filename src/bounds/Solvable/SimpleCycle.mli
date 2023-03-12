@@ -14,7 +14,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   val find_loops :
     ?relevant_vars: VarSet.t option ->
     ?transformation_type: [< `NoTransformation | `TWNTransform > `NoTransformation] ->
-    (Approximation.t -> Transition.t -> Program.t ->  Formula.t * Polynomial.t VarMap.t -> bool) ->
+    (Approximation.t -> Transition.t -> Program.t ->  Formula.t * Polynomial.t var_map -> bool) ->
     Approximation.t ->
     Program.t ->
     TransitionSet.t ->
@@ -23,10 +23,10 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
 
   val find_loop :
     ?relevant_vars: VarSet.t option ->
-    (Approximation.t -> Program.t ->  Formula.t * Polynomial.t VarMap.t -> bool) ->
+    (Approximation.t -> Program.t ->  Formula.t * Polynomial.t var_map -> bool) ->
     Approximation.t ->
     Program.t ->
     TransitionSet.t ->
     Transition.t ->
-    (Loop.t * (Transition.t * Polynomial.t VarMap.t) list) option
+    (Loop.t * (Transition.t * Polynomial.t var_map) list) option
 end

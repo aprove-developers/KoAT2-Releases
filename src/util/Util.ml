@@ -57,6 +57,10 @@ let enum_to_string content_to_string enum =
   List.print (fun output varset -> IO.nwrite output (content_to_string varset)) output list;
   IO.close_out output
 
+let sequence_to_string sequence ~f =
+  let open OurBase in
+  let list = Sequence.to_list @@ Sequence.map ~f sequence in
+  "[" ^ String.concat ~sep:"; " list ^ "]"
 
 let memoize cache ~extractor f =
   let g x =

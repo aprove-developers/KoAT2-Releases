@@ -27,7 +27,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
 
   let check_triangular (t: Loop.t) =
-    let vars = VarSet.to_list (Loop.updated_vars t) in
+    let vars = Base.Set.to_list (Loop.updated_vars t) in
     let n = List.length vars in
     if (n == 0) then []
     else
@@ -40,8 +40,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         let vars_update =
             Loop.update_var t var
             |> Polynomial.vars
-            |> VarSet.remove var
-            |> VarSet.to_list
+            |> flip Base.Set.remove var
+            |> Base.Set.to_list
             |> List.map (fun var -> List.assoc var vars_i) in (i, vars_update)) vars in
       let order = try toposort graph with CycleFound _ -> [] in
       List.map (fun i -> List.assoc i (List.map Tuple2.swap vars_i)) order
@@ -49,19 +49,19 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   (* MONOTONICITY *)
   let check_weakly_monotonicity (t: Loop.t) =
-    VarSet.for_all (fun var ->
+    Base.Set.for_all ~f:(fun var ->
       let update = Loop.update_var t var in
         Polynomial.var_only_linear var update) (Loop.updated_vars t)
 
   (* NEGATIVITY *)
   let check_weakly_negativitiy (t: Loop.t) =
-    VarSet.exists (fun var ->
+    Base.Set.exists ~f:(fun var ->
       let update = Loop.update_var t var in
       update |> Polynomial.coeff_of_var var |> OurInt.is_negative) (Loop.updated_vars t)
 
   let check_twn loop  =
   check_weakly_monotonicity loop
-    && ((List.length (check_triangular loop)) == (VarSet.cardinal ((Loop.updated_vars loop))))
+    && ((List.length (check_triangular loop)) == (Base.Set.length ((Loop.updated_vars loop))))
 
   (* For Testing *)
   let check_twn_ (_,t,_) =

@@ -1,5 +1,5 @@
 open Koat2
-open Batteries
+open OurBase
 open OUnit2
 open Helper
 open ProgramModules
@@ -16,10 +16,10 @@ module Loop = Loop.Make(ProgramModules)
 let tests =
   "TWN" >::: [
     ("check_twn" >:::
-         List.map (fun (expected_bool, program) ->
+         List.map ~f:(fun (expected_bool, program) ->
              program >:: (fun _ ->
                      let program = Readers.read_program_simple program in
-                     let result = Check_TWN.check_twn_ (program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
+                     let result = Check_TWN.check_twn_ (program |> Program.sccs |> List.hd_exn |> Base.Set.choose_exn) in
                      assert_equal_bool expected_bool result))
                   [
                     (true, "l0 -> l1(x,y,z), l1 -> l1(x + y + z, y + z, z)");
@@ -31,10 +31,10 @@ let tests =
       );
 
       ("check_closed-form" >:::
-         List.map (fun (expected_string, expr) ->
+         List.map ~f:(fun (expected_string, expr) ->
              "" >:: (fun _ ->
-                     let input = List.map (fun (str1, str2) -> (Var.of_string str1, Readers.read_polynomial str2)) expr in
-                     let result = Util.enum_to_string  PE.to_string ((PE.compute_closed_form input) |> List.enum) in
+                     let input = List.map ~f:(fun (str1, str2) -> (Var.of_string str1, Readers.read_polynomial str2)) expr in
+                     let result = Util.sequence_to_string ~f:PE.to_string ((PE.compute_closed_form input) |> Sequence.of_list) in
                      assert_equal_string expected_string result))
                   [
                     ("[[[n == 0]] * x + [[n != 0]] * 42]", [("x","42")]);
@@ -57,10 +57,10 @@ let tests =
       );
 
       ("check_normalized_closed-form" >:::
-         List.map (fun (expected_string, expr) ->
+         List.map ~f:(fun (expected_string, expr) ->
              "" >:: (fun _ ->
-                     let input = List.map (fun (str1, str2) -> (Var.of_string str1, Readers.read_polynomial str2)) expr in
-                     let result = Util.enum_to_string  PE.to_string ((PE.compute_closed_form input) |> PE.normalize |> List.enum) in
+                     let input = List.map ~f:(fun (str1, str2) -> (Var.of_string str1, Readers.read_polynomial str2)) expr in
+                     let result = Util.sequence_to_string ~f:PE.to_string ((PE.compute_closed_form input) |> PE.normalize |> Sequence.of_list) in
                      assert_equal_string expected_string result))
                   [
                     ("[42]", [("x","42")]);
@@ -83,9 +83,9 @@ let tests =
       );
 
       ("check_termination" >:::
-         List.map (fun (expected_bool, program) ->
+         List.map ~f:(fun (expected_bool, program) ->
              program >:: (fun _ ->
-                     let result = TWN_Termination.termination(Readers.read_program_simple program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second |> Loop.mk) in
+                     let result = TWN_Termination.termination (Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Base.Set.choose_exn |> Tuple3.second |> Loop.mk) in
                      assert_equal_bool expected_bool result))
                   [
                     (false, "l0 -> l1(x), l1 -> l1(x)");
@@ -107,7 +107,7 @@ let tests =
       );
 
       ("OurInt.is_ge" >:::
-         List.map (fun (expected_bool, a, b) ->
+         List.map ~f:(fun (expected_bool, a, b) ->
              "" >:: (fun _ ->
                      let result = OurInt.is_ge (OurInt.of_int a) (OurInt.of_int b) in
                      assert_equal_bool expected_bool result))
@@ -120,7 +120,7 @@ let tests =
       );
 
       ("TWN.monotonicity_th" >:::
-         List.map (fun (expected_int, (b1, a1), (b2, a2), k) ->
+         List.map ~f:(fun (expected_int, (b1, a1), (b2, a2), k) ->
              "" >:: (fun _ ->
                      let result = TWN_Complexity.monotonicity_th_int k (b1, a1) (b2, a2)  |> OurInt.to_int in
                      assert_equal_int expected_int result))
@@ -138,9 +138,9 @@ let tests =
       );
 
       ("complexity" >:::
-         List.map (fun (expected_string, program) ->
+         List.map ~f:(fun (expected_string, program) ->
              "" >:: (fun _ ->
-                     let result = TWN_Complexity.complexity_(Readers.read_program_simple program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
+                     let result = TWN_Complexity.complexity_(Readers.read_program_simple program |> Program.sccs |> List.hd_exn |> Base.Set.choose_exn) in
                      assert_equal_string expected_string (Bound.to_string result)))
                   [
                     ("4*Arg_0+4*Arg_1+7 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");

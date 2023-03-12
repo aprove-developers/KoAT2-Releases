@@ -77,7 +77,7 @@ let mk_transition_simple (start: string) (cost: Polynomial.t) (rhs: string * (st
 
 (** Input is not interpreted as a filepath, but as a program in simple mode. Method returns program from such an input. *)
 let mk_program_simple (transitions: Transition.t list): Program.t =
-  Program.from_enum (Transition.src @@ List.hd transitions) (List.enum transitions)
+  Program.from_sequence (Transition.src @@ List.hd transitions) (Base.Sequence.of_list transitions)
 
 let ourfloat_of_decimal_or_fraction_string (str: string): OurFloat.t =
   (* Check if fraction *)
@@ -127,8 +127,8 @@ let mk_general_transitions (gts: ((string * string list) * Polynomial.t * (int *
     else
       List.max ~cmp:Int.compare @@ List.map (fun ((_,patterns),_,_,_) -> List.length patterns) gts in
   let mk_general_transition ((start_loc,patterns),cost,(rhss: (OurFloat.t * UpdateElement.t list * string) list),formula) =
-    List.enum (Formula.constraints formula)
-    |> Enum.map (fun guard ->
+    Base.Sequence.of_list (Formula.constraints formula)
+    |> Base.Sequence.map ~f:(fun guard ->
         GeneralTransition.mk
           ~start:(Location.of_string start_loc)
           ~fill_up_to_num_arg_vars:number_patterns
@@ -140,10 +140,10 @@ let mk_general_transitions (gts: ((string * string list) * Polynomial.t * (int *
                    rhss)
           ~guard)
   in
-  List.enum cleaned_com_k_transitions
-  |> Enum.map mk_general_transition
-  |> Enum.flatten
-  |> GeneralTransitionSet.of_enum
+  Base.Sequence.of_list cleaned_com_k_transitions
+  |> Base.Sequence.map ~f:mk_general_transition
+  |> Base.Sequence.join
+  |> GeneralTransitionSet.of_sequence
 
 let mk_probabilistic_program start general_transitions =
   Program.from_gts start general_transitions

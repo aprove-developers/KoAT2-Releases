@@ -29,7 +29,7 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
     let transitions = Program.transitions program_ in
     let locations = Program.locations program_ in
 
-    let vars = List.fold (fun vars (_,t,_) -> VarSet.union vars (TransitionLabel.vars_without_memoization t)) VarSet.empty (TransitionSet.to_list transitions) in
+    let vars = List.fold (fun vars (_,t,_) -> Base.Set.union vars (TransitionLabel.vars_without_memoization t)) VarSet.empty (Base.Set.to_list transitions) in
 
     (** Creates the apron environment where all program_ variables are integer variables. *)
     let environment: Apron.Environment.t =
@@ -54,7 +54,7 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
       let any_value = Apron.(Texpr1.cst environment (Coeff.Interval Interval.top)) in
       let assignments =
         vars
-        |> VarSet.to_array
+        |> Base.Set.to_array
         |> Array.map update
         |> Array.map (Option.map_default (poly_to_apron environment) any_value)
       in
@@ -79,8 +79,8 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
         All other values at other program locations are undefined in the beginning.
         This will change through assignments in the program. *)
     let bottom(*: 'a program_abstract*) =
-      locations
-      |> (LocationSet.enum: LocationSet.t -> Location.t Enum.t)
+      Base.Set.to_list locations
+      |> List.enum
       |> Enum.map (fun location ->
             if Program.is_initial_location program_ location then
                 (location, Apron.Abstract1.top manager environment)
@@ -96,23 +96,23 @@ module Make(M: ProgramTypes.ClassicalProgramModules) = struct
       (* TODO Maybe it is better to recompute transitions instead of locations. *)
       (** We use a modifiable stack here for performance reasons. *)
       let worklist: Transition.t Stack.t =
-        transitions
-        |> TransitionSet.enum
+        Base.Set.to_list transitions
+        |> List.enum
         |> Stack.of_enum
       in
       let transition_steps =
-        TransitionMap.create (TransitionSet.cardinal transitions)
-        |> tap (fun m -> TransitionSet.iter (fun t -> TransitionMap.add m t 0) transitions)
+        TransitionMap.create (Base.Set.length transitions)
+        |> tap (fun m -> Base.Set.iter ~f:(fun t -> TransitionMap.add m t 0) transitions)
       in
 
       let narrowing_abstract =
         let location_abstract l =
-          TransitionSet.filter (fun (_,_,l') -> Location.equal l l') transitions
-          |> TransitionSet.enum
-          |> Enum.map (fun t -> apply_transition t (Apron.Abstract1.top manager environment))
-          |> Enum.fold (Apron.Abstract1.join manager) (Apron.Abstract1.bottom manager environment)
+          Base.Set.filter ~f:(fun (_,_,l') -> Location.equal l l') transitions
+          |> Base.Set.to_sequence
+          |> Base.Sequence.map ~f:(fun t -> apply_transition t (Apron.Abstract1.top manager environment))
+          |> Base.Sequence.fold ~f:(Apron.Abstract1.join manager) ~init:(Apron.Abstract1.bottom manager environment)
         in
-        LocationSet.enum locations
+        List.enum (Base.Set.to_list locations)
         (* The initial location does not have any ingoing transitions *)
         |> Enum.filter (not % Program.is_initial_location program_)
         |> Enum.map (fun location -> (location, location_abstract location))

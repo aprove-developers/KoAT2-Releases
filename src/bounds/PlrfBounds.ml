@@ -1,4 +1,4 @@
-open Batteries
+open OurBase
 open BoundsInst
 open ProbabilisticProgramModules
 open Approximation.Probabilistic
@@ -12,37 +12,37 @@ let improve_with_plrf program (class_appr,appr) rank =
   let entry_locations = BoundsHelper.entry_locations_of_gts program non_inc incoming_gts in
 
   let new_bound =
-    LocationSet.enum entry_locations
-    |> Enum.map (fun entry_loc ->
+    Set.to_sequence entry_locations
+    |> Sequence.map ~f:(fun entry_loc ->
         let entry_gts_to_loc =
-          GeneralTransitionSet.filter (LocationSet.mem entry_loc % GeneralTransition.targets) incoming_gts
+          Set.filter ~f:(flip Set.mem entry_loc % GeneralTransition.targets) incoming_gts
         in
         let class_trans_to_loc =
-          GeneralTransitionSet.to_list entry_gts_to_loc
-          |> List.map (fun gt ->
+          Set.to_list entry_gts_to_loc
+          |> List.map ~f:(fun gt ->
               GeneralTransition.transitions gt
-              |> TransitionSet.filter (Location.equal entry_loc % Transition.target)
-              |> TransitionSet.to_list
+              |> Base.Set.filter ~f:(Location.equal entry_loc % Transition.target)
+              |> Base.Set.to_list
             )
-          |> List.flatten
+          |> List.join
         in
 
         let rank_size_bound v =
-          GeneralTransitionSet.enum entry_gts_to_loc
-          |> Enum.map (fun gt -> ExpApproximation.sizebound appr (gt,entry_loc) v)
-          |> RealBound.sum
+          Set.to_sequence entry_gts_to_loc
+          |> Sequence.map ~f:(fun gt -> ExpApproximation.sizebound appr (gt,entry_loc) v)
+          |> RealBound.sum_sequence
         in
         let rank_at_loc = Plrf.rank rank entry_loc in
         let rank_bounded = RealBound.substitute_f rank_size_bound (RealBound.of_poly rank_at_loc) in
 
         let inc_det_timebound =
-          List.enum class_trans_to_loc
-          |> Enum.map (ClassicalApproximation.timebound class_appr)
-          |> RealBound.of_intbound % Bound.sum
+          Sequence.of_list class_trans_to_loc
+          |> Sequence.map ~f:(ClassicalApproximation.timebound class_appr)
+          |> RealBound.of_intbound % Bound.sum_sequence
         in
         RealBound.(inc_det_timebound * rank_bounded)
       )
-    |> RealBound.sum
+    |> RealBound.sum_sequence
   in
   Logger.log logger Logger.DEBUG (fun () -> "improve_with_plrf", [ "rank", Plrf.to_string rank
                                                                 ; "bound", RealBound.to_string new_bound]) ;

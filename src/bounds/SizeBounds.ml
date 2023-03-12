@@ -30,7 +30,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           | None -> List.rev (Lazy.force rvg_sccs)
           | Some scc ->
               Lazy.force rvg_sccs
-              |> List.filter (fun rvg_scc -> List.exists (fun (t,_) -> TransitionSet.mem t scc) rvg_scc || List.length rvg_scc == 1)
+              |> List.filter (fun rvg_scc -> List.exists (fun (t,_) -> Base.Set.mem scc t) rvg_scc || List.length rvg_scc == 1)
               |> List.rev
       in
 

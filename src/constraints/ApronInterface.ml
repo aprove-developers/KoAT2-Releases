@@ -89,7 +89,7 @@ module Apron2Koat =
 
     (** Converts an apron variable set to its koat equivalent. *)
     let vars_from_apron: Apron.Var.t array -> VarSet.t =
-      VarSet.of_enum % Array.enum % Array.map var_from_apron
+      VarSet.of_array % Array.map var_from_apron
 
     (** Converts an apron integer to its koat equivalent. *)
     (** TODO Usage of OurInt.to_int breaks usage of big_int *)

@@ -88,11 +88,17 @@ module type Bound =
     (** Returns the sum of all enums elements. *)
     val sum : t Enum.t -> t
 
+    (** Returns the sum of all sequence elements. *)
+    val sum_sequence : t Base.Sequence.t -> t
+
     (** Returns the sum of all list elements. *)
     val sum_list : t list -> t
 
     (** Returns the product of all enums elements. *)
     val product : t Enum.t -> t
+
+    (** Returns the product of all enums elements. *)
+    val product_sequence : t Base.Sequence.t -> t
 
     (** Addition of two elements. *)
     val (+) : t -> t -> t

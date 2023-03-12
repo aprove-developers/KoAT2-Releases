@@ -1,25 +1,25 @@
-open Batteries
+open OurBase
 open ProbabilisticProgramModules
 
 (* TODO unify both. Should be possible if we always keep the target location *)
 let entry_gts_with_locs program of_gts =
-  GeneralTransitionSet.enum of_gts
-  |> Enum.map (fun gt ->
+  Set.to_sequence of_gts
+  |> Sequence.map ~f:(fun gt ->
       let loc = GeneralTransition.src gt in
-      GeneralTransitionSet.enum (Program.pre_gt_cached program gt)
-      |> Enum.filter (fun gt -> not (GeneralTransitionSet.mem gt of_gts))
-      |> Enum.map (fun gt -> gt, loc)
+      Set.to_sequence (Program.pre_gt_cached program gt)
+      |> Sequence.filter ~f:(fun gt -> not (Set.mem of_gts gt))
+      |> Sequence.map ~f:(fun gt -> gt, loc)
     )
-  |> Enum.flatten
+  |> Sequence.join
 
 let entry_gts program of_gts =
-  Enum.map Tuple2.first (entry_gts_with_locs program of_gts)
-  |> GeneralTransitionSet.of_enum
+  Sequence.map ~f:Tuple2.first (entry_gts_with_locs program of_gts)
+  |> Set.of_sequence (module GeneralTransition)
 
 let entry_locations_of_gts program of_gts entry_gts =
-  GeneralTransitionSet.enum of_gts
-  |> Enum.map GeneralTransition.src
-  |> LocationSet.of_enum
-  |> LocationSet.filter (fun l ->
-      GeneralTransitionSet.exists (LocationSet.mem l % GeneralTransition.targets) entry_gts
+  Set.to_sequence of_gts
+  |> Sequence.map ~f:GeneralTransition.src
+  |> Set.of_sequence (module Location)
+  |> Set.filter ~f:(fun l ->
+      Set.exists ~f:(flip Set.mem l % GeneralTransition.targets) entry_gts
      )

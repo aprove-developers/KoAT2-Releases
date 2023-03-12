@@ -1,5 +1,5 @@
 (** Modules used to infer size-bounds for trivial components. *)
-open Batteries
+open OurBase
 open BoundsInst
 
 (** Modules used to infer size-bounds for trivial components. That is an scc which consists only of one result variable without a loop to itself.
@@ -26,8 +26,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       else
         let substitute_with_prevalues t' = Bound.substitute_f (fun v -> get_sizebound t' v) lsb in
         pre_transitions
-        |> Enum.map substitute_with_prevalues
-        |> Bound.sum
+        |> Base.Sequence.map ~f:substitute_with_prevalues
+        |> Bound.sum_sequence
     in Logger.with_log logger Logger.DEBUG
                        (fun () -> "compute_highest_incoming_bound", ["lsb", Bound.to_string lsb;
                                                                      "transition", Transition.to_id_string t])
@@ -37,8 +37,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let incoming_bound_lsb rvg get_sizebound lsb t v =
     let pre_transitions =
       RVG.pre rvg (t,v)
-      |> Enum.map RV.transition
-      |> Enum.uniq_by Transition.equal
+      |> List.map ~f:RV.transition
+      |> TransitionSet.stable_dedup_list
+      |> Base.Sequence.of_list
     in
     incoming_bound pre_transitions get_sizebound lsb t v
 
@@ -57,7 +58,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
               let tlabel = Transition.label t in
               match TransitionLabel.update tlabel v with
                 | Some u ->
-                    if VarSet.subset (Polynomials.Polynomial.vars u) (TransitionLabel.input_vars tlabel) then
+                    if Set.is_subset (Polynomials.Polynomial.vars u) ~of_:(TransitionLabel.input_vars tlabel) then
                       Bound.of_poly u
                     else Bound.infinity
                 | None   -> Bound.infinity
@@ -68,7 +69,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
               let tlabel = Transition.label t in
               match TransitionLabel.update tlabel v with
                 | Some u ->
-                    if VarSet.subset (Polynomials.Polynomial.vars u) (TransitionLabel.input_vars tlabel) then
+                    if Set.is_subset (Polynomials.Polynomial.vars u) ~of_:(TransitionLabel.input_vars tlabel) then
                       incoming_bound_lifted_update program get_sizebound u t v
                     else Bound.infinity
                 | None   -> Bound.infinity

@@ -101,7 +101,7 @@ module FormulaOver(C : ConstraintTypes.Constraint) =
     let vars formula =
          formula
       |> List.map (C.vars)
-      |> List.fold_left VarSet.union VarSet.empty
+      |> List.fold_left Base.Set.union VarSet.empty
 
     let to_string ?(pretty=false) constr =
       String.concat (if pretty then " ∨ " else " || ") (List.map (C.to_string ~pretty) constr)

@@ -1,10 +1,9 @@
 (** Provides implemenation variable sets. *)
-open Batteries
+open OurBase
 
-include module type of Set.Make(Var)
+include module type of MakeSetCreators0(Var)
 
-(** TODO doc *)
-val map_to_set : (elt -> 'b) -> t -> 'b Set.t
+val equal: t -> t -> bool
 
 (** TODO doc *)
 val map_to_list : (elt -> 'b) -> t -> 'b list
@@ -19,10 +18,4 @@ val to_string : ?pretty:bool -> t -> string
 val of_string_list : string list -> t
 
 (** TODO doc *)
-val powerset : t -> t Enum.t
-
-(** TODO doc *)
 val combinations : int -> t -> t list
-
-(** TODO doc *)
-val sorted_combinations : int -> t -> t Enum.t

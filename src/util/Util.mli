@@ -23,6 +23,8 @@ val option_to_string : ('a -> string) -> 'a Option.t -> string
 
 val enum_to_string : ('a -> string) -> 'a Enum.t -> string
 
+val sequence_to_string: 'a OurBase.Sequence.t -> f:('a -> string) -> string
+
 val powerset : 'a Set.t -> ('a Set.t) Enum.t
 
 val find_map : ('a -> 'b Option.t) -> 'a Enum.t -> 'b Option.t

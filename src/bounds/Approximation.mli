@@ -120,7 +120,7 @@ module Probabilistic: sig
             type program = Program.t
             include GeneralTransition
             let id = gt_id
-            let all_from_program = GeneralTransitionSet.enum % Program.gts
+            let all_from_program = Base.Set.to_sequence % Program.gts
           end)
 
   val coerce_from_nonprob_overappr_approximation: NonProbOverapprApproximation.t -> ClassicalApproximation.t

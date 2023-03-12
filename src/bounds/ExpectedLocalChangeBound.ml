@@ -25,9 +25,9 @@ let compute_ue_diff label v  =
 
 
 let compute_elcb program_vars ((gt,l),v) =
-  TransitionSet.enum (GeneralTransition.transitions gt)
-  |> Enum.filter (Location.equal l % Transition.target)
-  |> Enum.map (fun t ->
+  Base.Set.to_sequence (GeneralTransition.transitions gt)
+  |> Base.Sequence.filter ~f:(Location.equal l % Transition.target)
+  |> Base.Sequence.map ~f:(fun t ->
       let label = Transition.label t in
       let ue_diff = compute_ue_diff label v in
 
@@ -40,9 +40,9 @@ let compute_elcb program_vars ((gt,l),v) =
         in
         UpdateElement.exp_value_abs_bound ue_diff
         |> RealBound.substitute_f
-            (fun v -> if VarSet.mem v program_vars then RealBound.of_var v else temp_var_bound v)
+            (fun v -> if Base.Set.mem program_vars v then RealBound.of_var v else temp_var_bound v)
       in
 
       RealBound.(of_constant (TransitionLabel.probability label) * ue_exp_abs_diff_bound )
     )
-  |> RealBound.sum
+  |> RealBound.sum_sequence

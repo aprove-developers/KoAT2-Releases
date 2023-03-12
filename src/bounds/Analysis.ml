@@ -10,30 +10,30 @@ open RVGTypes
 
 (* The types below are used to restrict certain analyses methods to certain underlying types *)
 (* TODO simpliy somehow? *)
-type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
+type ('prog,'trans_compare,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
   | NoCFR: ('a,'b,'c,'d,'e,'f) cfr_configuration
   | PerformCFR: [ `Chaining | `PartialEvaluation ] list
               -> ( Program.t
-                , TransitionSet.t
+                , Transition.comparator_witness
                 , RVGTypes.MakeRVG(ProgramModules).t, RVGTypes.MakeRVG(ProgramModules).scc
                 , Loop.Make(ProgramModules).t
                 , Approximation.MakeForClassicalAnalysis(ProgramModules).t) cfr_configuration
 
-type ('prog, 'tset, 'appr) closed_form_size_bounds =
-  | NoClosedFormSizeBounds: ('prog,'trans_set,'appr) closed_form_size_bounds
-  | ComputeClosedFormSizeBounds: (Program.t, TransitionSet.t,Approximation.MakeForClassicalAnalysis(ProgramModules).t) closed_form_size_bounds
+type ('trans, 'prog, 'trans_compare, 'appr) closed_form_size_bounds =
+  | NoClosedFormSizeBounds: ('trans, 'prog,'trans_compare,'appr) closed_form_size_bounds
+  | ComputeClosedFormSizeBounds: (Transition.t, Program.t,Transition.comparator_witness,Approximation.MakeForClassicalAnalysis(ProgramModules).t) closed_form_size_bounds
 
-type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
+type ('trans,'prog,'trans_compare,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
   { run_mprf_depth: int option
   ; twn_configuration: TWN.configuration option
-  ; cfr_configuration: ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
-  ; closed_form_size_bounds: ('prog, 'tset,'appr) closed_form_size_bounds
+  ; cfr_configuration: ('prog,'trans_compare,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
+  ; closed_form_size_bounds: ('trans, 'prog, 'trans_compare,'appr) closed_form_size_bounds
   ; analysis_type: [`Termination | `Complexity]
   }
 
 type classical_program_conf_type = ( Transition.t
                                    , Program.t
-                                   , TransitionSet.t
+                                   , Transition.comparator_witness
                                    , RVGTypes.MakeRVG(ProgramModules).t
                                    , RVGTypes.MakeRVG(ProgramModules).scc
                                    , Loop.Make(ProgramModules).t
@@ -69,16 +69,27 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   module TWN = TWN.Make(PM)
 
   type conf_type =
-    (Transition.t,Program.t,TransitionSet.t,RVG.t,RVG.scc,Loop.Make(PM).t, Approximation.t) analysis_configuration
+    (Transition.t,Program.t,Transition.comparator_witness,RVG.t,RVG.scc,Loop.Make(PM).t, Approximation.t) analysis_configuration
+
+  let proof_program_is_standard
+      ~(eq_proof_prog:(Program.t, ProgramModules.Program.t) Util.TypeEq.t): (Program.t, ProgramModules.Program.t) Util.TypeEq.t =
+    eq_proof_prog
+
+  let proof_tset_is_standard
+      ~(eq_proof_trans:(Transition.t, ProgramModules.Transition.t) Util.TypeEq.t)
+      ~(eq_proof_trans_comparator:(Transition.comparator_witness, ProgramModules.Transition.comparator_witness) Util.TypeEq.t):
+        (TransitionSet.t, ProgramModules.TransitionSet.t) Util.TypeEq.t =
+    let Refl = eq_proof_trans in let Refl = eq_proof_trans_comparator in Refl
+
 let apply get_sizebound  = Bound.substitute_f get_sizebound % Bound.of_poly
 
 
 let entry_transitions program tset =
   let all_possible_entry_trans =
-    TransitionSet.enum tset
-    |> Enum.fold (fun tset -> TransitionSet.union tset % Program.pre_transitionset_cached program) TransitionSet.empty
+    Base.Set.to_sequence tset
+    |> Base.Sequence.fold ~f:(fun tset -> Base.Set.union tset % Program.pre_transitionset_cached program) ~init:TransitionSet.empty
   in
-  TransitionSet.diff all_possible_entry_trans (TransitionSet.of_enum @@ TransitionSet.enum tset)
+  Base.Set.diff all_possible_entry_trans tset
 
 (* Computes new bounds*)
 let compute_bound_mprf program (appr: Approximation.t) (rank: MultiphaseRankingFunction.t): Bound.t =
@@ -86,8 +97,8 @@ let compute_bound_mprf program (appr: Approximation.t) (rank: MultiphaseRankingF
    rank
    |> MultiphaseRankingFunction.non_increasing
    |> entry_transitions program
-   |> TransitionSet.enum
-   |> Enum.map (fun (l,t,l') ->
+   |> Base.Set.to_sequence
+   |> Base.Sequence.map ~f:(fun (l,t,l') ->
        let timebound = Approximation.timebound appr (l,t,l') in
        let evaluate = apply (Approximation.sizebound appr (l,t,l')) in
        let evaluated_ranking_funcs = List.map (fun r -> evaluate @@ r l') (MultiphaseRankingFunction.rank rank) in
@@ -110,12 +121,12 @@ let compute_bound_mprf program (appr: Approximation.t) (rank: MultiphaseRankingF
             else
               timebound * rhs
         ))
-   |> Bound.sum
+   |> Bound.sum_sequence
  in
     let bound = execute () in
     Logger.with_log logger Logger.DEBUG
       (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
-                                   "non_increasing", Util.enum_to_string Transition.to_id_string (TransitionSet.enum (MultiphaseRankingFunction.non_increasing rank));
+                                   "non_increasing", Util.sequence_to_string ~f:Transition.to_id_string (Base.Set.to_sequence (MultiphaseRankingFunction.non_increasing rank));
                                    "rank", MultiphaseRankingFunction.only_rank_to_string rank;])
                     ~result:Bound.to_string (fun () -> bound)
 
@@ -124,8 +135,7 @@ let bounded_mprf program (appr: Approximation.t) (rank: MultiphaseRankingFunctio
     rank
     |> MultiphaseRankingFunction.non_increasing
     |> entry_transitions program
-    |> TransitionSet.enum
-    |> Enum.for_all (fun (l,t,l') ->
+    |> Base.Set.for_all ~f:(fun (l,t,l') ->
       let timebound = Approximation.timebound appr (l,t,l') in
       let evaluated_ranking_funcs = List.map (fun r -> Bound.of_poly @@ r l') (MultiphaseRankingFunction.rank rank) in
       let depth = MultiphaseRankingFunction.depth rank in
@@ -137,7 +147,7 @@ let bounded_mprf program (appr: Approximation.t) (rank: MultiphaseRankingFunctio
       let terminates = execute () in
       Logger.with_log logger Logger.DEBUG
         (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
-                                    "non_increasing", Util.enum_to_string Transition.to_id_string (TransitionSet.enum (MultiphaseRankingFunction.non_increasing rank));
+                                    "non_increasing", Util.sequence_to_string ~f:Transition.to_id_string (Base.Set.to_sequence (MultiphaseRankingFunction.non_increasing rank));
                                     "rank", MultiphaseRankingFunction.only_rank_to_string rank;])
                      ~result:(fun b -> if b then "yes" else "maybe")
                      (fun () -> terminates)
@@ -170,7 +180,7 @@ let improve_with_twn program scc conf appr =
       MaybeChanged.changed (add_bound `Time bound t appr_)
     else
       MaybeChanged.same appr_ in
-  MaybeChanged.fold compute appr (TransitionSet.to_list (TransitionSet.filter (Bound.is_infinity % Approximation.timebound appr) scc))
+  MaybeChanged.fold compute appr (Base.Set.to_list (Base.Set.filter ~f:(Bound.is_infinity % Approximation.timebound appr) scc))
 
 (** Checks if a transition is bounded *)
 let bounded measure appr transition =
@@ -186,7 +196,7 @@ let improve_termination_twn program scc conf appr =
       MaybeChanged.changed (add_bound `Time Bound.one t appr_)
     else
       MaybeChanged.same appr_ in
-  MaybeChanged.fold compute appr (TransitionSet.to_list (TransitionSet.filter (Bound.is_infinity % Approximation.timebound appr) scc))
+  MaybeChanged.fold_sequence ~f:compute ~init:appr (Base.Sequence.filter ~f:(Bound.is_infinity % Approximation.timebound appr) (Base.Set.to_sequence scc))
 
 
 let improve_termination_rank_mprf measure program appr rank =
@@ -205,14 +215,14 @@ let improve_termination_rank_mprf measure program appr rank =
 let rec complexity_knowledge_propagation (scc: TransitionSet.t) program appr =
   let execute () =
     scc
-    |> TransitionSet.enum
-    |> MaybeChanged.fold_enum (
+    |> Base.Set.to_sequence
+    |> MaybeChanged.fold_sequence ~f:(
       fun appr transition ->
         let new_bound =
           Program.pre_transitionset_cached program transition
-          |> TransitionSet.enum
-          |> Enum.map (Approximation.timebound appr)
-          |> Bound.sum
+          |> Base.Set.to_sequence
+          |> Base.Sequence.map ~f:(Approximation.timebound appr)
+          |> Bound.sum_sequence
         in
         let original_bound = get_bound `Time appr transition in
         if Bound.compare_asy original_bound new_bound = 1 then (
@@ -223,7 +233,7 @@ let rec complexity_knowledge_propagation (scc: TransitionSet.t) program appr =
           |> MaybeChanged.changed)
         else
            MaybeChanged.same appr
-      ) appr
+      ) ~init:appr
     |> MaybeChanged.if_changed (complexity_knowledge_propagation scc program)
     |> MaybeChanged.unpack
   in
@@ -234,12 +244,12 @@ let rec complexity_knowledge_propagation (scc: TransitionSet.t) program appr =
   let rec termination_knowledge_propagation (scc: TransitionSet.t) program appr =
   let execute () =
     scc
-    |> TransitionSet.enum
-    |> MaybeChanged.fold_enum (
+    |> Base.Set.to_sequence
+    |> MaybeChanged.fold_sequence ~f:(
       fun appr transition ->
         let terminates =
           Program.pre_transitionset_cached program transition
-          |> TransitionSet.for_all (Bound.is_finite % Approximation.timebound appr)
+          |> Base.Set.for_all ~f:(Bound.is_finite % Approximation.timebound appr)
         in
         let original_bounded = bounded `Time appr transition in
         if not original_bounded && terminates then (
@@ -250,7 +260,7 @@ let rec complexity_knowledge_propagation (scc: TransitionSet.t) program appr =
           |> MaybeChanged.changed)
         else
             MaybeChanged.same appr
-      ) appr
+      ) ~init:appr
     |> MaybeChanged.if_changed (termination_knowledge_propagation scc program)
     |> MaybeChanged.unpack
   in
@@ -270,21 +280,21 @@ let local_rank ~conf (scc: TransitionSet.t) measure program max_depth appr =
       | `Complexity  ->
           program
           |> Program.input_vars
-          |> VarSet.filter (Bound.is_infinity % Approximation.sizebound appr transition)
+          |> Base.Set.filter ~f:(Bound.is_infinity % Approximation.sizebound appr transition)
     in
     let is_time_bounded = Bound.is_finite % Approximation.timebound appr in
     let unbounded_transitions =
       scc
       |> tap (fun scc -> (Logger.log logger Logger.INFO (fun () -> "improve_timebound", ["scc", TransitionSet.to_string scc])))
-      |> TransitionSet.filter (not % bounded measure appr)
+      |> Base.Set.filter ~f:(not % bounded measure appr)
     in
-    let scc_overapprox_nonlinear = TransitionSet.map Transition.overapprox_nonlinear_updates scc in
+    let scc_overapprox_nonlinear = TransitionSet.map ~f:Transition.overapprox_nonlinear_updates scc in
     let rankfunc_computation depth =
-      let compute_function =
+      let compute_function trans =
         MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth
-          % flip TransitionSet.find scc_overapprox_nonlinear
-      in
-      TransitionSet.to_array unbounded_transitions
+          @@ Option.get @@ Base.Set.binary_search scc_overapprox_nonlinear ~compare:Transition.compare `First_equal_to trans
+    in
+      Base.Set.to_array unbounded_transitions
       |> Parmap.array_parmap compute_function
       |> Array.enum
       |> Util.cat_maybes_enum
@@ -330,6 +340,8 @@ let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.
   match conf.closed_form_size_bounds with
   | NoClosedFormSizeBounds -> appr
   | ComputeClosedFormSizeBounds ->
+    let Util.TypeEq.Refl = proof_program_is_standard ~eq_proof_prog:Refl                                  in
+    let Util.TypeEq.Refl = proof_tset_is_standard    ~eq_proof_trans:Refl ~eq_proof_trans_comparator:Refl in
     TWNSizeBounds.improve program ~scc:(Option.some scc) appr
     |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
 
@@ -350,7 +362,7 @@ let improve_scc ~conf opt_rvg_with_sccs (scc: TransitionSet.t) program opt_lsb_t
   |> Util.find_fixpoint improvement
 
 let scc_cost_bounds ~conf program scc appr =
-  if TransitionSet.exists (not % Polynomial.is_const % Transition.cost) scc then
+  if Base.Set.exists ~f:(not % Polynomial.is_const % Transition.cost) scc then
     MaybeChanged.unpack (improve_timebound ~conf scc `Cost program appr)
   else
     appr
@@ -369,8 +381,8 @@ let handle_timeout_cfr method_name non_linear_transitions =
 
   let all_rvs program input_vars =
     List.cartesian_product
-      (TransitionSet.to_list (Program.transitions program))
-      (VarSet.to_list input_vars)
+      (Base.Set.to_list (Program.transitions program))
+      (Base.Set.to_list input_vars)
 
   let add_missing_lsbs program lsbs =
     let input_vars = program |> Program.input_vars in
@@ -391,6 +403,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
     match conf.cfr_configuration with
     | NoCFR -> program,appr,opt_rvg
     | PerformCFR cfr -> (
+      let Util.TypeEq.Refl = proof_tset_is_standard ~eq_proof_trans:Refl ~eq_proof_trans_comparator:Refl in
       let module Approximation = Approximation_ in
       let module SizeBounds = SizeBounds_ in
       let lsbs = opt_lsbs |? LSB_Table.create 0 in
@@ -406,7 +419,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
           (program: Program.t)
           (appr: Approximation_.MakeForClassicalAnalysis(ProgramModules).t) =
 
-        if TransitionSet.is_empty non_linear_transitions then (program, appr, rvg_with_sccs) else
+        if Base.Set.is_empty non_linear_transitions then (program, appr, rvg_with_sccs) else
         let mc =
           Logger.log logger_cfr Logger.INFO
             (fun () -> "Analysis_apply_" ^ method_name, [ "non-linear trans", TransitionSet.to_string non_linear_transitions; "time", string_of_float time]);
@@ -421,11 +434,11 @@ let handle_timeout_cfr method_name non_linear_transitions =
           | `Termination -> RVG.empty, Lazy.from_fun (const [])
           | `Complexity  -> RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first) % LSB_Table.find lsbs) program_cfr in
           (* The new sccs which do not occur in the original program. *)
-          let cfr_sccs = Program.sccs program_cfr
-                          |> List.of_enum
-                          |> List.filter (fun cfr_scc -> not (Enum.exists (fun scc_ -> TransitionSet.equal cfr_scc scc_) (Program.sccs program))) in
+          let cfr_sccs =
+            Program.sccs program_cfr
+            |> List.filter (fun cfr_scc -> not (Base.List.exists ~f:(fun scc_ -> Base.Set.equal cfr_scc scc_) (Program.sccs program))) in
           let update_appr appr scc = match conf.analysis_type with
-          | _ when not @@ TransitionSet.exists (Bound.is_infinity % Approximation.timebound appr) scc -> appr
+          | _ when not @@ Base.Set.exists ~f:(Bound.is_infinity % Approximation.timebound appr) scc -> appr
           | `Termination ->
               Logger.log logger Logger.INFO (fun () -> method_name ^ "analysis", ["scc", TransitionSet.to_id_string scc]);
               improve_scc ~conf (Some rvg_with_sccs_cfr) scc program_cfr opt_lsbs appr
@@ -446,10 +459,9 @@ let handle_timeout_cfr method_name non_linear_transitions =
             (program, appr, rvg_with_sccs)
           in
           let handle_cfr_termination =
-            let org_terminates = List.for_all (Bound.is_finite % Approximation.timebound appr) (TransitionSet.to_list scc) in
+            let org_terminates = Base.Set.for_all ~f:(Bound.is_finite % Approximation.timebound appr) scc in
             let cfr_terminates = List.for_all
-              (fun scc -> List.for_all (Bound.is_finite % Approximation.timebound updated_appr_cfr) (TransitionSet.to_list scc))
-              cfr_sccs  in
+              (fun scc -> Base.Set.for_all ~f:(Bound.is_finite % Approximation.timebound updated_appr_cfr) scc) cfr_sccs in
             let show b = if b then "Finite" else "Infinite" in (* For Debugging and Proofs *)
             if org_terminates || not cfr_terminates then
               handle_no_improvement (show org_terminates) (show cfr_terminates)
@@ -459,9 +471,9 @@ let handle_timeout_cfr method_name non_linear_transitions =
           in
           (*Calculates concrete bounds*)
           let handle_cfr_complexity =
-            let org_bound = Bound.sum (Enum.map (Approximation.timebound appr) (TransitionSet.enum scc))  in
+            let org_bound = Bound.sum_sequence (Base.Sequence.map ~f:(Approximation.timebound appr) (Base.Set.to_sequence scc))  in
             let cfr_bound = Bound.sum (Enum.map
-                                      (fun scc -> Bound.sum (Enum.map (Approximation.timebound updated_appr_cfr) (TransitionSet.enum scc)))
+                                      (fun scc -> Bound.sum_sequence (Base.Sequence.map ~f:(Approximation.timebound updated_appr_cfr) (Base.Set.to_sequence scc)))
                                       (List.enum cfr_sccs))  in
             if (Bound.compare_asy org_bound cfr_bound) < 1 then handle_no_improvement (Bound.to_string ~pretty:true org_bound) (Bound.show_complexity @@ Bound.asymptotic_complexity cfr_bound) else
               (f_proof program_cfr @@ Bound.to_string ~pretty:true cfr_bound;
@@ -473,7 +485,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
       in
       let partial_evaluation (program, appr, rvg) =
           let non_linear_transitions =
-            TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) (TransitionSet.inter scc (Program.transitions program))
+            Base.Set.filter ~f:(not % Bound.is_linear % Approximation.timebound appr) (Base.Set.inter scc (Program.transitions program))
           in
           let time = PartialEvaluation.compute_timeout_time program appr scc in
           Timeout.timed_run time ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
@@ -483,17 +495,17 @@ let handle_timeout_cfr method_name non_linear_transitions =
             (program, appr, rvg)
       in
       let non_linear_transitions =
-        TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) scc
+        Base.Set.filter ~f:(not % Bound.is_linear % Approximation.timebound appr) scc
       in
-      let chaining =
+        let chaining =
         Timeout.timed_run 10. ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
             (fun () -> apply_cfr "chaining" (CFR.lift_to_program (Chaining.transform_graph ~scc:(Option.some scc))) (fun _ _ -> ()) rvg 10. non_linear_transitions ~preprocess program appr)
         |> Option.map_default Tuple2.first (program, appr, rvg)
       in
-      if not (TransitionSet.is_empty non_linear_transitions) && List.mem `Chaining cfr then
+      if not (Base.Set.is_empty non_linear_transitions) && List.mem `Chaining cfr then
         chaining
       else (program, appr, rvg)
-      |> if !PartialEvaluation.time_cfr > 0. && not (TransitionSet.is_empty non_linear_transitions) && List.mem `PartialEvaluation cfr then
+      |> if !PartialEvaluation.time_cfr > 0. && not (Base.Set.is_empty non_linear_transitions) && List.mem `PartialEvaluation cfr then
           partial_evaluation
         else identity
     )
@@ -510,10 +522,9 @@ let handle_timeout_cfr method_name non_linear_transitions =
     let program, appr =
       program
       |> Program.sccs
-      |> List.of_enum
-      |> List.fold_left (fun (program, appr, opt_rvg) scc_orig ->
+      |> List.fold_left (fun (program, appr, rvg) scc_orig ->
              let improve_scc scc =
-               if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
+               if Base.Set.exists ~f:(fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                  appr
                  |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
                  |> (match conf.analysis_type with
@@ -531,8 +542,8 @@ let handle_timeout_cfr method_name non_linear_transitions =
              match conf.cfr_configuration with
              | NoCFR        -> improve_scc scc_orig
              | PerformCFR _ ->
-                let scc = TransitionSet.inter scc_orig (Program.transitions program) in
-                if TransitionSet.is_empty scc then (program,appr,opt_rvg)
+                let scc = Base.Set.inter scc_orig (Program.transitions program) in
+                if Base.Set.is_empty scc then (program,appr,rvg)
                 else improve_scc scc
            ) (program, appr, opt_rvg)
       |> Tuple3.get12

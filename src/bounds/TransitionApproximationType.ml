@@ -7,13 +7,14 @@ module type ApproximableTransition = sig
   val id: t -> int
   val to_id_string: t -> string
   val compare: t -> t -> int
-  val all_from_program: program -> t Enum.t
+  val all_from_program: program -> t Base.Sequence.t
   val ids_to_string: ?pretty:bool -> t -> string
 end
 
 module MakeDefaultApproximableTransition(PM: ProgramTypes.ProgramModules) = struct
   type program = PM.Program.t
-  let all_from_program = PM.TransitionSet.enum % PM.Program.transitions
+  let all_from_program =
+    Base.Set.to_sequence % PM.Program.transitions
 
   include PM.Transition
   let ids_to_string ?(pretty=false) =
@@ -42,7 +43,7 @@ module Make(B : BoundType.Bound)
       get_id (name,map) (T.id transition)
 
     let sum appr program =
-      Enum.fold (fun result trans -> B.(get appr trans + result)) B.zero (T.all_from_program program)
+      Base.Sequence.fold ~f:(fun result trans -> B.(get appr trans + result)) ~init:B.zero (T.all_from_program program)
 
     let add ?(simplifyfunc=identity) bound transition (name,map) =
       (try
