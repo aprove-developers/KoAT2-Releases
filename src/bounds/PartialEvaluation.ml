@@ -218,7 +218,7 @@ let restore_invariants (program: Program.t) trans =
   |> TransitionSet.union (TransitionSet.diff trans trans_without_entry)
 
 
-let apply_cfr (nonLinearTransitions: TransitionSet.t) (already_used:TransitionSet.t) (program: Program.t) =
+let apply_cfr (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
   let initial_location = Program.start program
   and minimalDisjointSCCs = program
                             |> (minimalSCCs nonLinearTransitions)
