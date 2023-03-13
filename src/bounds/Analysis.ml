@@ -123,6 +123,30 @@ let compute_bound_mprf program (appr: Approximation.t) (rank: MultiphaseRankingF
                                    "rank", MultiphaseRankingFunction.only_rank_to_string rank;])
                     ~result:Bound.to_string (fun () -> bound)
 
+let bounded_mprf program (appr: Approximation.t) (rank: MultiphaseRankingFunction.t): bool =
+  let execute () =
+    rank
+    |> MultiphaseRankingFunction.non_increasing
+    |> entry_transitions program
+    |> TransitionSet.enum
+    |> Enum.for_all (fun (l,t,l') ->
+      let timebound = Approximation.timebound appr (l,t,l') in
+      let evaluate = apply (Approximation.sizebound appr (l,t,l')) in
+      let evaluated_ranking_funcs = List.map (fun r -> evaluate @@ r l') (MultiphaseRankingFunction.rank rank) in
+      let depth = MultiphaseRankingFunction.depth rank in
+      if depth = 1 then
+        Bound.is_finite timebound || Bound.equal Bound.zero  @@ List.first evaluated_ranking_funcs
+      else
+        Bound.is_finite timebound && List.for_all Bound.is_finite evaluated_ranking_funcs)
+  in
+      let terminates = execute () in
+      Logger.with_log logger Logger.DEBUG
+        (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
+                                    "non_increasing", Util.enum_to_string Transition.to_id_string (TransitionSet.enum (MultiphaseRankingFunction.non_increasing rank));
+                                    "rank", MultiphaseRankingFunction.only_rank_to_string rank;])
+                     ~result:(fun b -> if b then "yes" else "no") 
+                     (fun () -> terminates) 
+                                      
 let add_bound = function
   | `Time -> Approximation.add_timebound
   | `Cost -> Approximation.add_costbound
@@ -168,6 +192,20 @@ let improve_termination_twn program scc transformation_type appr =
     else
       MaybeChanged.same appr_ in
   MaybeChanged.fold compute appr (TransitionSet.to_list (TransitionSet.filter (Bound.is_infinity % Approximation.timebound appr) scc))
+  
+
+let improve_termination_rank_mprf measure program appr rank =
+  let terminates = bounded_mprf program appr rank in
+  let orginal_terminates = bounded measure appr (MultiphaseRankingFunction.decreasing rank) in
+  if not orginal_terminates && terminates then (
+    let dummy_bound = if terminates then Bound.one else Bound.infinity in
+    MultiphaseRankingFunction.add_to_proof ~termination_only:true rank dummy_bound program;
+    rank
+    |> MultiphaseRankingFunction.decreasing
+    |> (fun t -> add_bound measure dummy_bound t appr)
+    |> MaybeChanged.changed)
+  else
+    MaybeChanged.same appr
   
 
 let rec knowledge_propagation (scc: TransitionSet.t) program appr =
@@ -262,8 +300,9 @@ let local_rank (scc: TransitionSet.t) measure program max_depth appr =
       |> Enum.map rankfunc_computation
       |> Enum.peek % Enum.filter (not % Enum.is_empty)
       |? Enum.empty ()    in
+    let improvement_function = if !termination then improve_termination_rank_mprf else improve_with_rank_mprf in
     rankfuncs
-    |> MaybeChanged.fold_enum (fun appr -> improve_with_rank_mprf measure program appr) appr
+    |> MaybeChanged.fold_enum (fun appr -> improvement_function measure program appr) appr
 
 
 let run_local ~conf (scc: TransitionSet.t) measure program appr =
