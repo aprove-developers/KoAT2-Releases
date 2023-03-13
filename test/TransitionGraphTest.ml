@@ -41,7 +41,7 @@ let suite =
         "pre(t)" >:: (fun _ ->
           let program = Readers.read_file "../../../examples/KoAT-2013/sect1-lin.koat" in
           let transition = TransitionGraph.find_edge (Program.graph program) (Location.of_string "l1") (Location.of_string "l2") in
-          assert_equal_int 2 (Base.Sequence.length (Program.pre program transition))
+          assert_equal_int 2 (Base.Set.length (Program.pre program transition))
         )
       );
       (

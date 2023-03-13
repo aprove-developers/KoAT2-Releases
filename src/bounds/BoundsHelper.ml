@@ -6,7 +6,7 @@ let entry_gts_with_locs program of_gts =
   Set.to_sequence of_gts
   |> Sequence.map ~f:(fun gt ->
       let loc = GeneralTransition.src gt in
-      Set.to_sequence (Program.pre_gt_cached program gt)
+      Set.to_sequence (Program.pre_gt program gt)
       |> Sequence.filter ~f:(fun gt -> not (Set.mem of_gts gt))
       |> Sequence.map ~f:(fun gt -> gt, loc)
     )

@@ -20,7 +20,7 @@ let tests =
                else " to not have a pre transition"
              in "Expected " ^ Transition.to_id_string trans ^ pre_string ^ ", however the opposite was computed."
             )
-            (has_pre = (1 = List.length (Base.Sequence.to_list @@ Program.pre program trans)))
+            (has_pre = (1 = Base.Set.length (Program.pre program trans)))
       )
 
       [

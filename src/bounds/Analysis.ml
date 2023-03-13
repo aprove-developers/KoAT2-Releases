@@ -87,7 +87,7 @@ let apply get_sizebound  = Bound.substitute_f get_sizebound % Bound.of_poly
 let entry_transitions program tset =
   let all_possible_entry_trans =
     Base.Set.to_sequence tset
-    |> Base.Sequence.fold ~f:(fun tset -> Base.Set.union tset % Program.pre_transitionset_cached program) ~init:TransitionSet.empty
+    |> Base.Sequence.fold ~f:(fun tset -> Base.Set.union tset % Program.pre program) ~init:TransitionSet.empty
   in
   Base.Set.diff all_possible_entry_trans tset
 
@@ -219,7 +219,7 @@ let rec complexity_knowledge_propagation (scc: TransitionSet.t) program appr =
     |> MaybeChanged.fold_sequence ~f:(
       fun appr transition ->
         let new_bound =
-          Program.pre_transitionset_cached program transition
+          Program.pre program transition
           |> Base.Set.to_sequence
           |> Base.Sequence.map ~f:(Approximation.timebound appr)
           |> Bound.sum
@@ -248,7 +248,7 @@ let rec complexity_knowledge_propagation (scc: TransitionSet.t) program appr =
     |> MaybeChanged.fold_sequence ~f:(
       fun appr transition ->
         let terminates =
-          Program.pre_transitionset_cached program transition
+          Program.pre program transition
           |> Base.Set.for_all ~f:(Bound.is_finite % Approximation.timebound appr)
         in
         let original_bounded = bounded `Time appr transition in
@@ -369,7 +369,6 @@ let scc_cost_bounds ~conf program scc appr =
 
 
 let reset_all_caches =
-  Program.reset_pre_cache ();
   TWN.reset_cfr();
   TWNSizeBounds.reset_cfr();
   SolvableSizeBounds.reset_cfr()

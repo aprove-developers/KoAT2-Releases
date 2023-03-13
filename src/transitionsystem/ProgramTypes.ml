@@ -334,13 +334,14 @@ module type Program = sig
   (** Returns a set of all transitions which occur directly before the given transition in the graph.
       Corresponds to pre(t).
       Note that the computation involves calls to the SMT solver and is therefore expensive.
-      The returned Sequence is lazy. *)
-  val pre : t -> transition -> transition Sequence.t
+      However, to improve performance they are cached inside the program type [t]. *)
+  val pre : t -> transition -> transition_set
 
-  (** A cached version of pre. The identifier for the cache is the transition id (the program is not considered) *)
-  val pre_transitionset_cached: t -> transition -> transition_set
-  (** Reset the cache for pre_cached *)
-  val reset_pre_cache: unit -> unit
+  (** Similar to pre but return the pre-transitions as a lazy Sequence.
+      If the result has already been computed and cached in the value of type [t], then we do not recompute the pre-transitions.
+      If however the pre-transitions haven't been computed yet then they are lazily computed when inspecting the returned sequence. These values are *not* added to the cached!
+      This is for instance useful when cutting unsatisfiable transitions since during preprocessing the cache is invalidated many times and it suffices to check whether one pre-transition exists. *)
+  val pre_lazy: t -> transition -> transition Base.Sequence.t
 
   (** Returns true if the given transition is an initial transition. *)
   val is_initial : t -> transition -> bool

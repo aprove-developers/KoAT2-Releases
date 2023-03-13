@@ -65,7 +65,7 @@ let knowledge_propagation program scc appr_mc: ExpApproximation.t MaybeChanged.t
     |> Set.to_sequence
     |> fun gtset ->  MaybeChanged.fold_sequence ~f:(fun appr gt ->
         let new_bound =
-          Set.to_sequence (Program.pre_gt_cached program gt)
+          Set.to_sequence (Program.pre_gt program gt)
           |> Sequence.map ~f:(ExpApproximation.timebound appr)
           |> RealBound.sum
         in
@@ -86,7 +86,7 @@ let improve_sizebounds program program_vars scc (rvts_scc,rvs_in) elcbs (class_a
   let trivial_sizebounds appr =
     let trivial_sizebound_for_grv ((gt,l),v) =
       (* TODO *)
-      let pre_gt = Program.pre_gt_cached program gt in
+      let pre_gt = Program.pre_gt program gt in
       let start_loc = GeneralTransition.src gt in
       let pre_size_exp v =
         Set.to_sequence pre_gt
@@ -126,7 +126,7 @@ let improve_sizebounds program program_vars scc (rvts_scc,rvs_in) elcbs (class_a
     let entry_rvts = Sequence.to_list (BoundsHelper.entry_gts_with_locs program scc) in
     let overappr_var_in gt v =
       GeneralTransition.transitions gt
-      |> Program.pre_transitionset_cached program % Base.Set.choose_exn
+      |> Program.pre program % Base.Set.choose_exn
       |> Sequence.map ~f:(fun t -> ClassicalApproximation.sizebound class_appr t v) % Base.Set.to_sequence
       |> RealBound.of_intbound % Bound.sum
     in

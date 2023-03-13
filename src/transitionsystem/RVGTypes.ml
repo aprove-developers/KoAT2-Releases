@@ -87,7 +87,7 @@ module MakeRVG(PM: ProgramTypes.ClassicalProgramModules) =
             rvg
         in
         (* Force evaluation of pre_transitions to avoid recomputation in pre_nodes *)
-        let pre_transitions = Set.to_list @@ Program.pre_transitionset_cached program post_transition in
+        let pre_transitions = Set.to_list @@ Program.pre program post_transition in
         let pre_nodes (post_var: Var.t) =
           get_vars_in_lsb (post_transition,post_var)
           |? VarSet.empty

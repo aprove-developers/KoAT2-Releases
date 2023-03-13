@@ -6,7 +6,9 @@ open Util
 exception RecursionNotSupported
 
 module GenericProgram = struct
-  type ('a, 'b) t = { start: 'a; graph: 'b }
+  type ('trans, 'trans_cmp) pre_cache = ('trans, ('trans, 'trans_cmp) Set.t) Hashtbl.t
+  type ('loc, 'graph, 'trans, 'trans_cmp) t =
+    { start: 'loc; graph: 'graph; pre_cache: ('trans, 'trans_cmp) pre_cache Atomically.t }
 end
 
 module Make(TL: ProgramTypes.TransitionLabel)
@@ -27,7 +29,7 @@ struct
   module TransitionSet = Transition_.TransitionSetOver(T)(L)
 
   open GenericProgram
-  type t = (location, transition_graph) GenericProgram.t
+  type t = (location, transition_graph, transition, T.comparator_witness) GenericProgram.t
 
   let start program = program.start
 
@@ -37,25 +39,59 @@ struct
     equal_graph program1.graph program2.graph
     && L.equal program1.start program2.start
 
-  let equivalent =
+  let equivalent: t -> t -> bool =
     equal G.equivalent
 
+  let with_pre_cache program = Atomically.run_atomically program.pre_cache
+  let map_pre_cache program = Atomically.map_atomically program.pre_cache
+
+  let invalidate_pre_cache_for_transs invalidate_transs program =
+    let new_pre_cache = map_pre_cache program @@ fun pre_cache ->
+      if Hashtbl.is_empty pre_cache then pre_cache
+      else
+        (* copy to ensure immutability from outside view *)
+        Hashtbl.copy pre_cache
+        |> tap (fun tbl -> List.iter ~f:(Hashtbl.remove tbl) invalidate_transs)
+    in { program with pre_cache = new_pre_cache }
+
+ let invalidate_complete_pre_cache program =
+   (* TODO  specify hash function? *)
+   { program with
+     pre_cache = Hashtbl.create ~size:(G.nb_edges program.graph) (module T)
+                 |> Atomically.create }
+
   let remove_location program location =
+    let affected_transitions =
+      (* incoming and outgoing transition are removed *)
+      let ingress = G.pred_e program.graph location in
+      let outgress = G.succ_e program.graph location in
+      let outgreess_of_out_trans = ListMonad.(outgress >>= fun (_,_,l') -> G.succ_e program.graph l') in
+
+      (* transitions following an outgoing transitions might have store the outgoing transition (now removed)  in their pre-cache. So we remove it *)
+      ingress@outgress@outgreess_of_out_trans
+    in
     { program with graph = G.remove_vertex program.graph location }
+    |> invalidate_pre_cache_for_transs affected_transitions
 
   let remove_transition program transition =
+    let affected_transitions =
+      transition :: G.succ_e program.graph (T.target transition)
+    in
     { program with graph = G.remove_edge_e program.graph transition }
+    |> invalidate_pre_cache_for_transs affected_transitions
 
   (* Removes the transitions from a certain transitionset to a program *)
   let remove_transition_set (transitions:  TransitionSet.t) (program: t)  =
     Set.fold ~f:remove_transition transitions ~init:program
 
   let map_graph f program =
-    { program with graph = f program.graph }
+    invalidate_complete_pre_cache { program with graph = f program.graph }
 
-  let map_transitions f = map_graph (G.map_transitions f)
+  let map_transitions f =
+    invalidate_complete_pre_cache % map_graph (G.map_transitions f)
 
-  let map_labels f = map_transitions (fun(l,t,l') -> l,f t,l')
+  let map_labels f =
+    invalidate_complete_pre_cache % map_transitions (fun(l,t,l') -> l,f t,l')
 
   let locations: t -> location_set = G.locations % graph
 
@@ -84,13 +120,13 @@ struct
 
   let from_graph start graph =
     if G.is_empty graph || List.is_empty (G.pred_e graph start) then
-      { start; graph; }
+      { start; graph; pre_cache = Atomically.create @@ Hashtbl.create ~size:(G.nb_edges graph) (module T) }
     else raise (Failure "Transition leading back to the initial location.")
 
   let from_sequence start =
     from_graph start % G.mk
 
-  let pre program (l,t,_) =
+  let compute_pre program (l,t,l') =
     let is_satisfiable f =
       try SMT.Z3Solver.satisfiable f
       with SMT.SMTFailure _ -> true (* thrown if solver does not know a solution due to e.g. non-linear arithmetic *)
@@ -99,22 +135,27 @@ struct
     |> G.pred_e (graph program)
     |> Sequence.of_list
     |> Sequence.filter ~f:(fun (_,t',_) ->
-           TL.chain_guards t' t
-           |> is_satisfiable % Formula.mk % Constraint.drop_nonlinear (* such that Z3 uses QF_LIA*)
-         )
+          TL.chain_guards t' t
+          |> is_satisfiable % Formula.mk % Constraint.drop_nonlinear (* such that Z3 uses QF_LIA*)
+        )
 
-  let pre_cache: (int, TransitionSet.t) Hashtbl.t = Hashtbl.create ~size:10 (module Int)
-  let pre_transitionset_cached program = Util.memoize_base_hashtbl pre_cache ~extractor:T.id (TransitionSet.of_sequence % pre program)
-  let reset_pre_cache () = Hashtbl.clear pre_cache
+  let pre_lazy program trans =
+    let res = with_pre_cache program @@ fun pre_cache -> Hashtbl.find pre_cache trans in
+    match res with
+    | Some tset -> Set.to_sequence tset
+    | None -> compute_pre program trans
 
-  let succ program (_,t,l') =
+  let pre program trans = with_pre_cache program @@ fun pre_cache ->
+    match Hashtbl.find pre_cache trans with
+    | Some tset -> tset
+    | None      ->
+      let tset  = Set.of_sequence (module T) (compute_pre program trans) in
+      Hashtbl.add_exn pre_cache ~key:trans ~data:tset;
+      tset
+
+  let succ program (l,t,l') =
     G.succ_e (graph program) l'
-    |> Sequence.of_list
-    |> Sequence.filter ~f:(fun (_,t',_) ->
-           TL.chain_guards t t'
-           |> Formula.mk
-           |> SMT.Z3Solver.satisfiable
-         )
+    |> List.filter ~f:(fun t' -> Set.mem (pre program t') (l,t,l'))
 
   let sccs program =
     G.sccs program.graph
@@ -128,7 +169,8 @@ struct
     TransitionSet.union_list % sccs
 
   let add_invariant location invariant =
-    map_graph (G.add_invariant location invariant)
+    (* more fine grained invalidation should be possible but I'm not sure if this will be beneficial since we will find invariants for most locations *)
+    invalidate_complete_pre_cache % map_graph (G.add_invariant location invariant)
 
   let is_initial program trans =
     L.(equal (program.start) (T.src trans))
@@ -136,7 +178,7 @@ struct
   let is_initial_location program location =
     L.(equal (program.start) location)
 
-  let to_formatted_string ?(pretty=false) program =
+  let to_formatted_string ?(pretty=false) (program:t) =
     let transitions =
       G.fold_edges_e (fun t str -> str @ [if pretty then T.to_string_pretty t else T.to_string t]) program.graph []
       |> FormattedString.mappend % List.map ~f:FormattedString.mk_str_line
@@ -162,7 +204,7 @@ struct
   let entry_transitions logger (program: t) (rank_transitions: T.t list): T.t List.t =
     rank_transitions
     |> Sequence.of_list
-    |> Sequence.map ~f:(pre program)
+    |> Sequence.map ~f:(Set.to_sequence % pre program)
     |> Sequence.join
     |> Sequence.filter ~f:(fun r ->
            rank_transitions
@@ -177,14 +219,13 @@ struct
   let outgoing_transitions logger (program: t) (rank_transitions: T.t list): T.t List.t =
     rank_transitions
     |> Sequence.of_list
-    |> Sequence.map ~f:(succ program)
+    |> Sequence.map ~f:(Sequence.of_list % succ program)
     |> Sequence.join
     |> Sequence.filter ~f:(fun r ->
            rank_transitions
            |> List.for_all ~f:(not % T.equal r)
          )
-    |> Sequence.to_list
-    |> List.dedup_and_sort ~compare:T.compare
+    |> TransitionSet.stable_dedup_list % Sequence.to_list
     |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                  (fun () -> "outgoing_transitions", ["result", transitions |> Sequence.of_list |> Util.sequence_to_string ~f:T.to_id_string]))
 
@@ -252,6 +293,7 @@ let rename program =
   {
     graph = TransitionGraph_.map_vertex name program.graph;
     start = new_start;
+    pre_cache = Atomically.create @@ Hashtbl.create ~size:(TransitionGraph_.nb_vertex program.graph) (module Transition_)
   }
 
 (* Prints the program to the file "file.koat" *)
