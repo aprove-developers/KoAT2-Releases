@@ -380,7 +380,8 @@ let handle_timeout_cfr method_name non_linear_transitions =
        )
 
   let compute_lsbs program =
-    let input_vars = Program.input_vars program in
+    let vars = if !termination then Program.vars else Program.input_vars in
+    let input_vars = vars program in
     List.enum (all_rvs program input_vars)
     |> Enum.map (fun(t,v) -> (t,v),LSB.compute_bound input_vars t v)
     |> LSB_Table.of_enum

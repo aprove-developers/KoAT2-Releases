@@ -1,0 +1,8 @@
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A)
+(RULES
+  l0(A) -> l1(6)
+  l1(A) -> l1(T) :|: A > 5
+  l1(A) -> l2(A) :|: A >= 5
+)
