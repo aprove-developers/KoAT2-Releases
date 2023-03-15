@@ -45,9 +45,6 @@ let logger = Logging.(get Time)
 
 let logger_cfr = Logging.(get CFR)
 
-(** Table: transition -> amount of times (orginal) transition was involed in PartialEvaluation. *)
-let already_used_cfr = ref TransitionSet.empty
-
 let termination = ref false
 let termination_only t = termination := t
 
@@ -415,7 +412,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
             ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "Analysing control-flow refined program");
             let program_cfr = mc |> MaybeChanged.unpack |> preprocess  in
             add_missing_lsbs program_cfr lsbs;
-            Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_" ^ method_name, ["already_used:", (TransitionSet.to_string !already_used_cfr)]);
+            Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_" ^ method_name, []);
             Program.reset_pre_cache ();
             TWN.reset_cfr();
             TWNSizeBounds.reset_cfr();
@@ -472,12 +469,11 @@ let handle_timeout_cfr method_name non_linear_transitions =
       |> fun (program, appr, rvg) -> (
         let non_linear_transitions =
           TransitionSet.filter (not % Bound.is_linear % Approximation.timebound appr) (TransitionSet.inter scc (Program.transitions program))
-          |> flip TransitionSet.diff !already_used_cfr
         in
         if !PartialEvaluation.time_cfr > 0. && not (TransitionSet.is_empty non_linear_transitions) && List.mem `PartialEvaluation cfr then (
           let time = PartialEvaluation.compute_timeout_time program appr scc in
           let opt = Timeout.timed_run time ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
-              (fun () -> apply_cfr "partial_evaluation" (PartialEvaluation.apply_cfr non_linear_transitions !already_used_cfr) (PartialEvaluation.add_to_proof) rvg time non_linear_transitions ~preprocess program appr) in
+              (fun () -> apply_cfr "partial_evaluation" (PartialEvaluation.apply_cfr non_linear_transitions) (PartialEvaluation.add_to_proof) rvg time non_linear_transitions ~preprocess program appr) in
           if Option.is_some opt then
             let res, time_used = Option.get opt in
             PartialEvaluation.time_cfr := !PartialEvaluation.time_cfr -. time_used;

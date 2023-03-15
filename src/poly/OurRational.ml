@@ -114,6 +114,6 @@ let sign (n,d) = OurInt.sign n * OurInt.sign d
 
 let abs (n,d) = OurInt.abs n, OurInt.abs d
 
-let ceil (n,d) = OurInt.(add (div n d) (if is_zero (modulo n d) then zero else one))
+let floor (n,d) = OurInt.fdiv n d
 
-let floor (n,d) = OurInt.div n d
+let ceil (n,d) = OurInt.(floor (n,d) + if is_zero (n mod d) then zero else one)

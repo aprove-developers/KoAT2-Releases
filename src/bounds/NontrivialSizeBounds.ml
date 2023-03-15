@@ -29,14 +29,14 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let transitions =
       rvs_non_equality
       |> List.map (fun (t,v) -> t)
-      |> List.unique ~eq:Transition.same
+      |> List.unique ~eq:Transition.equal
       |> tap (fun transitions -> Logger.log logger Logger.DEBUG (fun () -> "transitions", ["result", Util.enum_to_string Transition.to_id_string (List.enum transitions)]))
     in
 
     (** Returns all the variables with which the given transition does occur as result variable in the scc. *)
     let get_scc_vars transition =
       rvs_non_equality
-      |> List.filter (fun (t,v) -> Transition.same t transition)
+      |> List.filter (fun (t,v) -> Transition.equal t transition)
       |> List.map (fun (t,v) -> v)
       |> List.unique ~eq:Var.equal
       |> tap (fun scc_vars -> Logger.log logger Logger.DEBUG (fun () -> "scc_vars", ["result", Util.enum_to_string Var.to_string (List.enum scc_vars)]))

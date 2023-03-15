@@ -3,7 +3,33 @@ open Batteries
 
 module type OurNumber =
   sig
-    include Number.Numeric
+    type t
+
+    val zero: t
+
+    val one: t
+
+    val add : t -> t -> t
+
+    val neg: t -> t
+
+    val mul: t -> t -> t
+
+    val equal: t -> t -> bool
+    val compare: t -> t -> int
+
+    val of_int: int -> t
+    val to_int: t -> int
+    val to_string: t -> string
+
+    val abs: t -> t
+
+    val (+): t -> t -> t
+
+    module Compare: sig
+      val (>): t ->t -> bool
+    end
+
 
     val (=~=) : t -> t -> bool
     val pow : t -> int -> t
