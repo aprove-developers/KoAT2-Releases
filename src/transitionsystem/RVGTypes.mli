@@ -29,11 +29,7 @@ module RV: module type of MakeRV(TransitionLabel_)(Transition_)
 (** Module handling result variable graphs. *)
 module MakeRVG(PM: ProgramTypes.ClassicalProgramModules):
 sig
-  include module type of Graph.Persistent.Digraph.ConcreteBidirectional(struct
-                             include MakeRV(PM.TransitionLabel)(PM.Transition)
-                             let equal = same
-                             let compare = compare_same
-                           end)
+  include module type of Graph.Persistent.Digraph.ConcreteBidirectional(MakeRV(PM.TransitionLabel)(PM.Transition))
   (** Module handling result variable graphs, i.e., a digraph where the nodes are result variables. *)
 
   (** Returns a string which is created by calling [to_id_string] on every result variable. *)

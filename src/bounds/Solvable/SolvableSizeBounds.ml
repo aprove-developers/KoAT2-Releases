@@ -58,6 +58,7 @@ let heuristic_for_cycle appr program loop =
   Option.is_some @@ Check_Solvable.check_solvable loop
   && VarSet.for_all (fun var -> Polynomial.is_linear @@ Loop.update_var loop var) (Loop.updated_vars loop)
   && VarSet.for_all (fun var -> Polynomial.no_constant_addend @@ Loop.update_var loop var) (Loop.updated_vars loop)
+  && VarSet.cardinal @@ Loop.vars loop > 1
 
 module VT = struct
   type t = Transition.t * Var.t

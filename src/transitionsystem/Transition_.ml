@@ -13,11 +13,8 @@ module TransitionOver(TL: ProgramTypes.TransitionLabel)(L : ProgramTypes.Locatio
     && equal_lbl t1 t2
     && L.equal l1' l2'
 
-  let equal =
-    equal_ TL.same
-
-  let same =
-    equal_ TL.same
+  let equal (_,t1,_) (_,t2,_) =
+    Int.equal (TL.id t1) (TL.id t2)
 
   let equivalent =
     equal_ TL.equivalent
@@ -32,13 +29,11 @@ module TransitionOver(TL: ProgramTypes.TransitionLabel)(L : ProgramTypes.Locatio
     else
       0
 
-  let compare_same =
-    compare_f TL.compare_same
+  let compare (_,t1,_) (_,t2,_) =
+    Int.compare (TL.id t1) (TL.id t2)
 
   let compare_equivalent =
     compare_f TL.compare_equivalent
-
-  let compare = compare_same
 
   let add_invariant invariant (l,t,l') =
     (l, TL.add_invariant t invariant, l')

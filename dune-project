@@ -29,6 +29,7 @@
    conf-ppl
    dune
    fpath
+   lens
    menhir
    metapp
    ocamlgraph
@@ -38,6 +39,7 @@
    parmap
    ppx_deriving
    ppx_deriving_cmdliner
+   zarith
    z3
    )
  )

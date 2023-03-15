@@ -69,17 +69,16 @@ module type TransitionLabel = sig
   (** TODO doc *)
   val normalise : t -> VarSet.t -> t
 
-  (** Returns if the two labels are the same entity. *)
-  val same: t -> t -> bool
-
   (** Returns if the two labels describe the same transition *)
   val equivalent: t -> t -> bool
 
-  (** Compare IDs *)
-  val compare_same: t -> t -> int
+  (* are both labels ids identical? *)
+  val equal: t -> t -> bool
+
   (** TODO doc *)
   val compare_equivalent: t -> t -> int
-  (** This should default to compare_same *)
+
+  (** Compare labels by ids *)
   val compare: t -> t -> int
 
   val equivalent_update: t -> t -> bool
@@ -173,14 +172,10 @@ module type Transition = sig
 
   val equal : t -> t -> bool
 
-  val same : t -> t -> bool
-
-  val equivalent : t -> t -> bool
-
-  (** default to compare_same, i.e., comparison of ids *)
+  (** compare transition ids *)
   val compare: t -> t -> int
 
-  val compare_same : t -> t -> int
+  val equivalent : t -> t -> bool
 
   val compare_equivalent : t -> t -> int
 
@@ -412,9 +407,9 @@ module type RV = sig
   type t = RVTuple_.t
 
   val to_id_string: t -> string
-  val same: t -> t -> bool
+  val equal: t -> t -> bool
   val hash: t -> int
-  val compare_same: t -> t -> int
+  val compare: t -> t -> int
   val ids_to_string: ?pretty:bool -> t -> string
 end
 

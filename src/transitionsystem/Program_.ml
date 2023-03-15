@@ -169,9 +169,9 @@ struct
     |> Enum.filter (fun r ->
            rank_transitions
            |> List.enum
-           |> Enum.for_all (not % T.same r)
+           |> Enum.for_all (not % T.equal r)
          )
-    |> Enum.uniq_by T.same
+    |> Enum.uniq_by T.equal
     |> List.of_enum
     |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                  (fun () -> "entry_transitions", ["result", transitions |> List.enum |> Util.enum_to_string T.to_id_string]))
@@ -186,9 +186,9 @@ struct
     |> Enum.filter (fun r ->
            rank_transitions
            |> List.enum
-           |> Enum.for_all (not % T.same r)
+           |> Enum.for_all (not % T.equal r)
          )
-    |> Enum.uniq_by T.same
+    |> Enum.uniq_by T.equal
     |> List.of_enum
     |> tap (fun transitions -> Logger.log logger Logger.DEBUG
                                  (fun () -> "outgoing_transitions", ["result", transitions |> List.enum |> Util.enum_to_string T.to_id_string]))

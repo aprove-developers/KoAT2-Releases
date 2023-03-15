@@ -24,16 +24,15 @@ let fresh_id t = {
     cost = t.cost;
   }
 
-let same lbl1 lbl2 =
-  lbl1.id = lbl2.id
-
 let equivalent lbl1 lbl2 =
   VarMap.equal Polynomial.equal lbl1.update lbl2.update
   && Guard.equal lbl1.guard lbl2.guard
   && Invariant.equal lbl1.invariant lbl2.invariant
   && Polynomial.equal lbl1.cost lbl2.cost
 
-let compare_same lbl1 lbl2 =
+let equal lbl1 lbl2 =
+  Int.equal lbl1.id lbl2.id
+let compare lbl1 lbl2 =
   Int.compare lbl1.id lbl2.id
 
 let compare_equivalent lbl1 lbl2 =
@@ -50,8 +49,6 @@ let compare_equivalent lbl1 lbl2 =
 
 let equivalent_update lbl1 lbl2 =
   VarMap.equal Polynomial.equal lbl1.update lbl2.update
-
-let compare = compare_same
 
 let fill_up_update_arg_vars_up_to_num n update =
   let missing_args =

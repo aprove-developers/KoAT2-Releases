@@ -38,7 +38,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let pre_transitions =
       RVG.pre rvg (t,v)
       |> Enum.map RV.transition
-      |> Enum.uniq_by Transition.same
+      |> Enum.uniq_by Transition.equal
     in
     incoming_bound pre_transitions get_sizebound lsb t v
 

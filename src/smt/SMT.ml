@@ -167,16 +167,11 @@ module Z3Solver =
                         |> Option.get (* Should be fine here *)
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
-                            expr
-                            |> Z3.Arithmetic.Integer.numeral_to_string
-                            |> OurInt.of_string
+                            Z3.Arithmetic.Integer.get_big_int expr
                           else
-                            expr
-                            |> Z3.Arithmetic.Real.get_ratio
+                            Z3.Arithmetic.Real.get_ratio expr
                             (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
                             |> Q.to_bigint
-                            |> Z.to_string
-                            |> OurInt.of_string
                         )
                       in
                       (var, value)
@@ -262,16 +257,12 @@ module Z3SolverTimeout =
                         |> Option.get (* Should be fine here *)
                         |> (fun expr ->
                           if Z3.Arithmetic.is_int expr then
-                            expr
-                            |> Z3.Arithmetic.Integer.numeral_to_string
-                            |> OurInt.of_string
+                            Z3.Arithmetic.Integer.get_big_int expr
                           else
                             expr
                             |> Z3.Arithmetic.Real.get_ratio
                             (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
                             |> Q.to_bigint
-                            |> Z.to_string
-                            |> OurInt.of_string
                         )
                       in
                       (var, value)
@@ -372,11 +363,11 @@ module IncrementalZ3Solver =
       |> Option.map extract_from_model
 
     (* Get the value of a constant Z3 expression *)
-    let get_expr_value ~val_of_intstr ~val_of_ratio expr =
+    let get_expr_value ~val_of_z3int ~val_of_ratio expr =
       if Z3.Arithmetic.is_int expr then
         expr
-        |> Z3.Arithmetic.Integer.numeral_to_string
-        |> val_of_intstr
+        |> Z3.Arithmetic.Integer.get_big_int
+        |> val_of_z3int
       else
         expr
         |> Z3.Arithmetic.Real.get_ratio
@@ -384,10 +375,10 @@ module IncrementalZ3Solver =
         |> val_of_ratio
 
     let get_int_expr_value =
-       get_expr_value ~val_of_intstr:OurInt.of_string ~val_of_ratio:(OurInt.of_string % Z.to_string % Q.to_bigint)
+       get_expr_value ~val_of_z3int:identity ~val_of_ratio:Q.to_bigint
 
     let get_real_expr_value =
-      get_expr_value ~val_of_intstr:(OurFloat.of_ourint % OurInt.of_string) ~val_of_ratio:(OurFloat.of_string % Q.to_string)
+      get_expr_value ~val_of_z3int:OurFloat.of_ourint ~val_of_ratio:identity
 
     let model t =
       extract_values t ~get_z3_value:get_int_expr_value

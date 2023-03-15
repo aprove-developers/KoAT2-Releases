@@ -6,7 +6,7 @@ module type ApproximableTransition = sig
 
   val id: t -> int
   val to_id_string: t -> string
-  val compare_same: t -> t -> int
+  val compare: t -> t -> int
   val all_from_program: program -> t Enum.t
   val ids_to_string: ?pretty:bool -> t -> string
 end
@@ -58,7 +58,7 @@ module Make(B : BoundType.Bound)
 
     let to_formatted ?(pretty=false) ?(termination_only=false) transitions (name, map) =
       transitions
-      |> List.sort T.compare_same
+      |> List.sort T.compare
       |> List.map (fun t -> t, Hashtbl.find_option map (T.id t) |? B.infinity)
       |> List.map (fun (t,b) -> FormattedString.mk_str_line @@ "  " ^ T.ids_to_string ~pretty t ^ ": " ^ B.to_string ~pretty ~termination_only b)
       |> FormattedString.mappend
