@@ -1,0 +1,8 @@
+# same as twn06 with an added guard in t0 so it should terminate
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A)
+(RULES
+  l0(A) -> l1(6) :|: T < 5
+  l1(A) -> l1(T) :|: A > 5
+)

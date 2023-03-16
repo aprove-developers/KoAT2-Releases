@@ -1,0 +1,8 @@
+# Is the same program as twn06 but update of t1 already happens at t0 
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A)
+(RULES
+  l0(A) -> l1(T) 
+  l1(A) -> l1(A) :|: A > 5
+)
