@@ -341,26 +341,29 @@ module IncrementalZ3Solver =
 
 
     let extract_values ((slv,ctx): t) ~get_z3_value =
-      let extract_from_model model =
-        model
-        |> Z3.Model.get_const_decls
-        |> List.map (fun func_decl ->
-              let var =
-                func_decl
-                |> Z3.FuncDecl.get_name
-                |> Z3.Symbol.get_string
-                |> Var.of_string
-              in
-              let value =
-                func_decl
-                |> Z3.Model.get_const_interp model
-                |> Option.get (* Should be fine here *)
-                |> get_z3_value
-              in
-              (var, value))
-      in
-      Z3.Solver.get_model slv
-      |> Option.map extract_from_model
+      if result_is Z3.Solver.SATISFIABLE (slv,ctx) then
+        let extract_from_model model =
+          model
+          |> Z3.Model.get_const_decls
+          |> List.map (fun func_decl ->
+                let var =
+                  func_decl
+                  |> Z3.FuncDecl.get_name
+                  |> Z3.Symbol.get_string
+                  |> Var.of_string
+                in
+                let value =
+                  func_decl
+                  |> Z3.Model.get_const_interp model
+                  |> Option.get (* Should be fine here *)
+                  |> get_z3_value
+                in
+                (var, value))
+        in
+        Z3.Solver.get_model slv
+        |> Option.map extract_from_model
+      else
+        None
 
     (* Get the value of a constant Z3 expression *)
     let get_expr_value ~val_of_z3int ~val_of_ratio expr =
