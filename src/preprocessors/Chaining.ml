@@ -24,11 +24,16 @@ let skip_location location graph =
   |> (flip TransitionGraph.add_transitions) graph
 
 (** Returns true if the specific location is chainable in the graph. *)
-let chainable graph location : bool =
+let chainable ?(conservative=false) graph location : bool =
   let open TransitionGraph in
-  not (mem_edge graph location location)
-  && out_degree graph location >= 1
-  && in_degree graph location >= 1
+  if conservative then
+    not (mem_edge graph location location)
+    && out_degree graph location == 1
+    && in_degree graph location == 1
+  else
+    not (mem_edge graph location location)
+    && out_degree graph location >= 1
+    && in_degree graph location >= 1
 
 (** Performs a chaining step removing the location from the graph. *)
 let chain location graph : TransitionGraph.t =
@@ -38,11 +43,11 @@ let chain location graph : TransitionGraph.t =
   |> Enum.fold TransitionGraph.remove_edge_e skipped
 
 (** Performs chaining on the TransitionGraph. *)
-let transform_graph ?(scc=None) (graph: TransitionGraph.t): TransitionGraph.t MaybeChanged.t =
+let transform_graph ?(conservative=false) ?(scc=None) (graph: TransitionGraph.t): TransitionGraph.t MaybeChanged.t =
   let try_chaining location maybe_changed_graph =
     let open MaybeChanged in
     maybe_changed_graph >>= (fun graph ->
-      if (Option.is_none scc || LocationSet.mem location (TransitionSet.locations (Option.get scc))) && chainable graph location then (
+      if (Option.is_none scc || LocationSet.mem location (TransitionSet.locations (Option.get scc))) && chainable ~conservative graph location then (
         Logger.(log logger INFO (fun () -> "chaining", ["location", Location.to_string location]));
         changed (chain location graph)
       ) else
