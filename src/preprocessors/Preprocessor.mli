@@ -9,6 +9,7 @@ type _ t =
   | CutUnsatisfiableTransitions: 'p t  (** Removes all unsatisfiable transitions. *)
   | EliminateNonContributors: 'p t
   | Chaining: Program.t t (** Adds transitions to the graph such that every predecessor of the location is correctly connected with every successor of the location, making the location obsolete. *)
+  | ChainingConservative: Program.t t (** Same as chaining but only for locations with one entry and one outgoing edge. *)
   | InvariantGeneration: 'p t  (** Adds invariants to transitions. *)
 
 (** Returns a string representing type of preprocessor. *)
