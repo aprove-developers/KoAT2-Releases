@@ -103,20 +103,31 @@ module Z3Solver =
   struct
     module Valuation = Valuation.Make(OurInt)
 
-    let mk_context = fun () -> Z3.mk_context [("model", "false"); ("proof", "false");]
+    (** Ensure that the context is only exclusively accessible since it is *not* thread-safe *)
+    module GuardedContext: sig val with_context: (Z3.context -> 'a) -> 'a end = struct
+      let ctx = Z3.mk_context [("model","false"); ("proof", "false")]
+      let ctx_mutex = Mutex.create ()
+
+      let with_context f =
+        Mutex.lock ctx_mutex;
+        let res = f ctx in
+        Mutex.unlock ctx_mutex;
+        res
+    end
+    include GuardedContext
 
     let version = Z3.Version.full_version
 
     let result_is expected_result formula =
-      let context = mk_context () in
-      let formula = from_formula context formula in
-      let optimisation_goal = Z3.Solver.mk_simple_solver context in
-      Z3.Solver.add optimisation_goal [formula];
-      let result = Z3.Solver.check optimisation_goal [] in
-      if result == Z3.Solver.UNKNOWN then
-        raise (SMTFailure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown optimisation_goal))
-      else
-        result == expected_result
+      with_context @@ fun context ->
+        let formula = from_formula context formula in
+        let optimisation_goal = Z3.Solver.mk_simple_solver context in
+        Z3.Solver.add optimisation_goal [formula];
+        let result = Z3.Solver.check optimisation_goal [] in
+        if result == Z3.Solver.UNKNOWN then
+          raise (SMTFailure ("SMT-Solver does not know a solution due to: " ^ Z3.Solver.get_reason_unknown optimisation_goal))
+        else
+          result == expected_result
 
     (** checks if there exists a satisfying assignment for a given formula
         uses Z3 optimisation methods*)
@@ -143,44 +154,44 @@ module Z3Solver =
       tautology Formula.Infix.(formula => (poly < Polynomial.zero))
 
     let get_model ?(coeffs_to_minimise=[]) formula =
-      let context = mk_context () in
-      let z3_expr = from_formula context formula in
-      let optimisation_goal = Z3.Optimize.mk_opt context in
-      Z3.Optimize.add optimisation_goal [z3_expr];
-      let status = Z3.Optimize.check optimisation_goal in
-      if status == Z3.Solver.SATISFIABLE then
-        optimisation_goal
-        |> Z3.Optimize.get_model
-        |> Option.map (fun model ->
-               model
-               |> Z3.Model.get_const_decls
-               |> List.map (fun func_decl ->
-                      let var =
-                        func_decl
-                        |> Z3.FuncDecl.get_name
-                        |> Z3.Symbol.get_string
-                        |> Var.of_string
-                      in
-                      let value =
-                        func_decl
-                        |> Z3.Model.get_const_interp model
-                        |> Option.get (* Should be fine here *)
-                        |> (fun expr ->
-                          if Z3.Arithmetic.is_int expr then
-                            Z3.Arithmetic.Integer.get_big_int expr
-                          else
-                            Z3.Arithmetic.Real.get_ratio expr
-                            (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
-                            |> Q.to_bigint
-                        )
-                      in
-                      (var, value)
-                    )
-             )
-        |? []
-        |> Valuation.from
-        |> Option.some
-      else None
+      with_context @@ fun context ->
+        let z3_expr = from_formula context formula in
+        let optimisation_goal = Z3.Optimize.mk_opt context in
+        Z3.Optimize.add optimisation_goal [z3_expr];
+        let status = Z3.Optimize.check optimisation_goal in
+        if status == Z3.Solver.SATISFIABLE then
+          optimisation_goal
+          |> Z3.Optimize.get_model
+          |> Option.map (fun model ->
+                model
+                |> Z3.Model.get_const_decls
+                |> List.map (fun func_decl ->
+                        let var =
+                          func_decl
+                          |> Z3.FuncDecl.get_name
+                          |> Z3.Symbol.get_string
+                          |> Var.of_string
+                        in
+                        let value =
+                          func_decl
+                          |> Z3.Model.get_const_interp model
+                          |> Option.get (* Should be fine here *)
+                          |> (fun expr ->
+                            if Z3.Arithmetic.is_int expr then
+                              Z3.Arithmetic.Integer.get_big_int expr
+                            else
+                              Z3.Arithmetic.Real.get_ratio expr
+                              (* TODO Round shouldnt be the solution, but do we need this anyway, since we ignore the values of helper variables? *)
+                              |> Q.to_bigint
+                          )
+                        in
+                        (var, value)
+                      )
+              )
+          |? []
+          |> Valuation.from
+          |> Option.some
+        else None
 
   end
 
