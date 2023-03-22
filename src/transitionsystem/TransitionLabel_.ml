@@ -315,6 +315,12 @@ let input_vars t =
 
 let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
 
+let has_tmp_vars_in_guard t = 
+  let guard_vars = Guard.vars t.guard in
+  let updated_guard_vars = VarSet.map_to_list (fun v -> VarMap.find_opt v t.update |> Option.map Polynomial.vars |> Option.map_default VarSet.to_list []) guard_vars in
+  let vars = VarSet.union guard_vars @@ VarSet.of_list @@ List.concat updated_guard_vars in
+  not @@ VarSet.subset vars (input_vars t)
+
 let input_size t =
   t
   |> input_vars

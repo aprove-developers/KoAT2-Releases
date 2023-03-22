@@ -76,19 +76,21 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
   let find_loops ?(relevant_vars = None) ?(transformation_type = `NoTransformation) f appr program scc (l,t,l') =
-    if not @@ TransitionLabel.has_tmp_vars t then
+    if not @@ TransitionLabel.has_tmp_vars_in_guard t then
       let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
         Location.equal l1 l2 &&
         Location.equal l1' l2' &&
         TransitionLabel.equivalent_update t t')
-        (TransitionSet.to_list scc |> List.filter (fun (_,t,_) -> not @@ TransitionLabel.has_tmp_vars t))
+        (TransitionSet.to_list scc |> List.filter (fun (_,t,_) -> not @@ TransitionLabel.has_tmp_vars_in_guard t))
         |> List.map (fun xs -> (Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs)
       in
-      let merged_t = List.find (fun (l1,ts,l1') ->
+      let merged_t = List.find_opt (fun (l1,ts,l1') ->
         List.exists (fun t1 -> TransitionLabel.equal t t1) ts
           && Location.equal l l1
           && Location.equal l' l1') merged_trans in
-      let cycles = cycles_with_t merged_trans merged_t in
+      if Option.is_none merged_t then None
+      else
+      let cycles = cycles_with_t merged_trans @@ Option.get merged_t in
       List.find_map_opt (fun cycle ->
         let chained_cycle = chain_cycle ~relevant_vars cycle program in
         if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
