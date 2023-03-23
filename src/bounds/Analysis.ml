@@ -238,7 +238,7 @@ let rec knowledge_propagation_size (scc: TransitionSet.t) program appr =
   let execute () =
     scc
     |> TransitionSet.to_list
-    |> List.cartesian_product (VarSet.to_list @@ Program.input_vars program)
+    |> List.cartesian_product (VarSet.to_list @@  Program.input_vars program)
     |> List.filter (fun (var,transition) -> Bound.is_infinity @@ Approximation.sizebound appr transition var)
     |> List.enum
     |> MaybeChanged.fold_enum (
@@ -269,7 +269,8 @@ let rec knowledge_propagation_size (scc: TransitionSet.t) program appr =
 
 let local_rank (scc: TransitionSet.t) measure program max_depth appr =
     let get_unbounded_vars transition =
-      Program.input_vars program
+      program
+      |> (if !termination then Program.vars else Program.input_vars)
       |> VarSet.filter (Bound.is_infinity % Approximation.sizebound appr transition)
     in
     let is_time_bounded = Bound.is_finite % Approximation.timebound appr in
@@ -281,7 +282,7 @@ let local_rank (scc: TransitionSet.t) measure program max_depth appr =
     let scc_overapprox_nonlinear = TransitionSet.map Transition.overapprox_nonlinear_updates scc in
     let rankfunc_computation depth =
       let compute_function =
-        MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth
+        MultiphaseRankingFunction.find_scc ~termination_only:!termination measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth
           % flip TransitionSet.find scc_overapprox_nonlinear
     in
       TransitionSet.to_array unbounded_transitions
@@ -369,7 +370,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
       (VarSet.to_list input_vars)
 
   let add_missing_lsbs program lsbs =
-    let input_vars = Program.input_vars program in
+    let input_vars = program |> if !termination then Program.vars else Program.input_vars in
     all_rvs program input_vars
     |> List.iter (fun(t,v)->
         if LSB_Table.mem lsbs (t,v) then ()
@@ -377,10 +378,9 @@ let handle_timeout_cfr method_name non_linear_transitions =
        )
 
   let compute_lsbs program =
-    let vars = if !termination then Program.vars else Program.input_vars in
-    let input_vars = vars program in
-    List.enum (all_rvs program input_vars)
-    |> Enum.map (fun(t,v) -> (t,v),LSB.compute_bound input_vars t v)
+    let vars = program |> if !termination then Program.vars else Program.input_vars in
+    List.enum (all_rvs program vars)
+    |> Enum.map (fun(t,v) -> (t,v),LSB.compute_bound vars t v)
     |> LSB_Table.of_enum
 
 
