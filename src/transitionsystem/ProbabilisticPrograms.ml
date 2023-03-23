@@ -340,9 +340,8 @@ module ProbabilisticTransitionLabel = struct
   let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
   let has_tmp_vars_in_guard t = 
     let guard_vars = Guard.vars t.guard in
-    let updated_guard_vars = VarSet.map_to_list (fun v -> update t v |> Option.map UpdateElement_.vars |> Option.map_default VarSet.to_list []) guard_vars in
-    let vars = VarSet.union guard_vars @@ VarSet.of_list @@ List.concat updated_guard_vars in
-    not @@ VarSet.subset vars (input_vars t)
+    not @@ VarSet.subset guard_vars (input_vars t)
+
   let changed_vars t =
     input_vars t
     |> VarSet.filter (fun v -> not UpdateElement_.(equal (of_var v) (update t v |? of_var v)))
@@ -398,10 +397,8 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
   let has_tmp_vars_in_guard t =
     let guard_vars = Guard.vars t.guard in
-    let updated_guard_vars = VarSet.map_to_list (fun v -> update t v |> Option.map Polynomial.vars |> Option.map_default VarSet.to_list []) guard_vars in
-    let vars = VarSet.union guard_vars @@ VarSet.of_list @@ List.concat updated_guard_vars in
-    not @@ VarSet.subset vars (input_vars t)
-    
+    not @@ VarSet.subset guard_vars (input_vars t)
+
   let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
 
   let changed_vars t =

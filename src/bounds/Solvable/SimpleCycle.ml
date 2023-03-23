@@ -58,6 +58,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let cycles_with_t trans t =
     compute_cycles trans [[t]] []
 
+  let path_is_simple input_vars path =
+    let labels = List.map (List.first % Tuple3.second) path in
+    let guard_vars = List.concat_map (VarSet.to_list % Guard.vars % TransitionLabel.guard) labels in
+    let extend_updated_vars label = List.concat_map (fun v -> VarSet.to_list @@ Option.map_default Polynomial.vars VarSet.empty @@ VarMap.find_opt v @@ TransitionLabel.update_map label) guard_vars in
+    let all_updated_vars = VarSet.of_list @@ List.fold (fun vars label -> List.append vars (extend_updated_vars label)) guard_vars labels in
+    VarSet.subset all_updated_vars input_vars
+
   let logger = Logging.(get Twn)
 
   (* We contract a (shifted to start) cycle to a loop  *)
@@ -90,7 +97,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           && Location.equal l' l1') merged_trans in
       if Option.is_none merged_t then None
       else
-      let cycles = cycles_with_t merged_trans @@ Option.get merged_t in
+      let cycles = cycles_with_t merged_trans @@ Option.get merged_t in 
       List.find_map_opt (fun cycle ->
         let chained_cycle = chain_cycle ~relevant_vars cycle program in
         if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
@@ -98,7 +105,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           (handled_transitions cycle,
           List.map (fun (entry,loop) -> (entry,Transformation.transform transformation_type loop)) chained_cycle)
         else
-          None) cycles
+          None) @@ List.filter (path_is_simple @@ TransitionLabel.input_vars t) cycles
     else
       None
 
