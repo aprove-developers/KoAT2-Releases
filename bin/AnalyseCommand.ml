@@ -103,6 +103,8 @@ type params = {
     (** Makes sure the analysis stops after the specified amount of time. Might result in empty output.*)
 
     termination : bool; [@default false]
+
+    relax_loops : bool; [@default false]
     (** If the analysis should be terminated after the first found timebound. *)
   } [@@deriving cmdliner]
 
@@ -190,6 +192,7 @@ let run (params: params) =
     print_string (program_str ^ "\n\n")
   );
   Analysis.termination_only params.termination;
+  Analysis.only_relax_loops params.relax_loops;
   ProofOutput.enable_proof params.show_proof;
   ProofOutput.proof_format params.proof_format;
   let program =
