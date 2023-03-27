@@ -47,6 +47,8 @@ let logger_cfr = Logging.(get CFR)
 
 let termination = ref false
 let termination_only t = termination := t
+let relax_loops = ref false
+let only_relax_loops t = relax_loops := t
 
 let default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration =
   { run_mprf_depth = Some 1
@@ -128,8 +130,7 @@ let bounded_mprf program (appr: Approximation.t) (rank: MultiphaseRankingFunctio
     |> TransitionSet.enum
     |> Enum.for_all (fun (l,t,l') ->
       let timebound = Approximation.timebound appr (l,t,l') in
-      let evaluate = apply (Approximation.sizebound appr (l,t,l')) in
-      let evaluated_ranking_funcs = List.map (fun r -> evaluate @@ r l') (MultiphaseRankingFunction.rank rank) in
+      let evaluated_ranking_funcs = List.map (fun r -> Bound.of_poly @@ r l') (MultiphaseRankingFunction.rank rank) in
       let depth = MultiphaseRankingFunction.depth rank in
       if depth = 1 then
         Bound.is_finite timebound || Bound.equal Bound.zero  @@ List.first evaluated_ranking_funcs
@@ -166,7 +167,7 @@ let improve_with_rank_mprf measure program appr rank =
 
 let improve_with_twn program scc transformation_type appr =
   let compute appr_ t =
-   let bound = TWN.time_bound transformation_type t scc program appr_ in
+   let bound = TWN.time_bound ~relax_loops:!relax_loops transformation_type t scc program appr_ in
    let orginal_bound = get_bound `Time appr_ t in
     if (Bound.compare_asy orginal_bound bound) = 1 then
       MaybeChanged.changed (add_bound `Time bound t appr_)
@@ -182,7 +183,7 @@ let bounded measure appr transition =
 
 let improve_termination_twn program scc transformation_type appr =
   let compute appr_ t =
-    let terminates = TWN.terminates transformation_type t scc program appr_ in
+    let terminates = TWN.terminates ~relax_loops:!relax_loops transformation_type t scc program appr_ in
     let orginal_terminates = bounded `Time appr_ t in
     if not orginal_terminates && terminates then
       MaybeChanged.changed (add_bound `Time Bound.one t appr_)
@@ -238,7 +239,7 @@ let rec knowledge_propagation_size (scc: TransitionSet.t) program appr =
   let execute () =
     scc
     |> TransitionSet.to_list
-    |> List.cartesian_product (VarSet.to_list @@  Program.input_vars program)
+    |> List.cartesian_product (VarSet.to_list @@ Program.input_vars program)
     |> List.filter (fun (var,transition) -> Bound.is_infinity @@ Approximation.sizebound appr transition var)
     |> List.enum
     |> MaybeChanged.fold_enum (

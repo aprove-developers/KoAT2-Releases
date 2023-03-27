@@ -342,6 +342,8 @@ module ProbabilisticTransitionLabel = struct
     let guard_vars = Guard.vars t.guard in
     not @@ VarSet.subset guard_vars (input_vars t)
 
+    (*TODO implement this*)
+  let relax_guard = identity
   let changed_vars t =
     input_vars t
     |> VarSet.filter (fun v -> not UpdateElement_.(equal (of_var v) (update t v |? of_var v)))
@@ -399,6 +401,8 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
     let guard_vars = Guard.vars t.guard in
     not @@ VarSet.subset guard_vars (input_vars t)
 
+  (*TODO implement this*)
+  let relax_guard = identity
   let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
 
   let changed_vars t =
