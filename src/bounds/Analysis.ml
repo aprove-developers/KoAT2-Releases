@@ -142,7 +142,7 @@ let bounded_mprf program (appr: Approximation.t) (rank: MultiphaseRankingFunctio
         (fun () -> "compute_bound", ["decreasing", Transition.to_id_string (MultiphaseRankingFunction.decreasing rank);
                                     "non_increasing", Util.enum_to_string Transition.to_id_string (TransitionSet.enum (MultiphaseRankingFunction.non_increasing rank));
                                     "rank", MultiphaseRankingFunction.only_rank_to_string rank;])
-                     ~result:(fun b -> if b then "yes" else "no") 
+                     ~result:(fun b -> if b then "yes" else "maybe") 
                      (fun () -> terminates) 
                                       
 let add_bound = function
@@ -157,7 +157,7 @@ let improve_with_rank_mprf measure program appr rank =
   let bound = compute_bound_mprf program appr rank in
   let orginal_bound = get_bound measure appr (MultiphaseRankingFunction.decreasing rank) in
   if (Bound.compare_asy orginal_bound bound) = 1 then (
-    MultiphaseRankingFunction.add_to_proof rank bound program;
+    MultiphaseRankingFunction.add_to_proof rank (Some bound) program;
     rank
     |> MultiphaseRankingFunction.decreasing
     |> (fun t -> add_bound measure bound t appr)
@@ -197,7 +197,7 @@ let improve_termination_rank_mprf measure program appr rank =
   let orginal_terminates = bounded measure appr (MultiphaseRankingFunction.decreasing rank) in
   if not orginal_terminates && terminates then (
     let dummy_bound = if terminates then Bound.one else Bound.infinity in
-    MultiphaseRankingFunction.add_to_proof ~termination_only:true rank dummy_bound program;
+    MultiphaseRankingFunction.add_to_proof rank None program;
     rank
     |> MultiphaseRankingFunction.decreasing
     |> (fun t -> add_bound measure dummy_bound t appr)
@@ -484,6 +484,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
     )
 
   let improve ~conf ~preprocess program appr =
+    (* let appr = List.fold (fun appr (v,t) -> Approximation.add_sizebound (Bound.of_var v) t v appr) appr (List.cartesian_product (Program.input_vars program |> VarSet.to_list) (Program.transitions program |> TransitionSet.to_list)) in *) (*TODO Remove and make unhacky (heuristic entry transition terminates instead of sizebounds)*)
     let lsbs = compute_lsbs program in
     let rvg = RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first)% LSB_Table.find lsbs) program in
     let program, appr =

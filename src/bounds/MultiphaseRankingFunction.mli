@@ -47,7 +47,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   val only_rank_to_string : t -> string
   (** Converts a multiphase ranking function into a string without any further information. *)
 
-  val add_to_proof : ?termination_only:bool -> t -> Bound.t -> PM.Program.t -> unit
+  val add_to_proof : t -> Bound.t option -> PM.Program.t -> unit
 end
 
 include module type of Make(ProgramModules)

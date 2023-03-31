@@ -199,7 +199,7 @@ module Make(Num : PolyTypes.OurNumber) =
 
     let show ?(pretty=false) ?(complexity=true) ?(termination_only=false) bound =
       if termination_only then 
-        if Option.is_some bound then "yes" else "no"
+        if Option.is_some bound then "yes" else "maybe"
       else
       let complexity_str =
         if complexity then " {" ^ (show_complexity % asymptotic_complexity) bound ^ "}" else ""
