@@ -121,7 +121,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let to_string {rank; decreasing; non_increasing; depth} =
     "{multirank:" ^ only_rank_to_string {rank; decreasing; non_increasing; depth} ^ ";decreasing:" ^ Transition.to_id_string decreasing ^ "}"
 
-  let add_to_proof ?(termination_only = false) {rank; decreasing; non_increasing; depth} bound program =
+  let add_to_proof {rank; decreasing; non_increasing; depth} bound program =
     let module GraphPrint = GraphPrint.Make(PM) in
     let color_map =
       TransitionSet.fold (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) non_increasing GraphPrint.TransitionMap.empty
@@ -131,7 +131,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     ProofOutput.add_to_proof_with_format @@ FormattedString.(fun format ->
       mk_header_small (mk_str ("MPRF for transition " ^ Transition.to_string_pretty decreasing ^ " of depth " ^ string_of_int depth ^ ":")) <>
       mk_paragraph (
-        if not termination_only then mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true bound)) else mk_str "" <>
+        match bound with 
+        | Some b -> mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true b)) 
+        | _      -> identity
         mk_str "MPRF:" <> mk_newline <>
           (locations |> List.map (fun l -> "• " ^ Location.to_string l ^ ": " ^ polyList_to_string ~pretty:true (rank, l)) |> List.map (mk_str_line) |> mappend |> mk_paragraph)) <>
           match format with

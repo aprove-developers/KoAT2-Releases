@@ -361,11 +361,11 @@ let rename rename_map t =
   |> tap (fun _ -> Hashtbl.clear vars_memoization)
 
 let relax_guard t = 
-  let is_simple atom = VarSet.subset (Atoms.Atom.vars atom) (input_vars t) in
+  let is_input atom = VarSet.subset (Atoms.Atom.vars atom) (input_vars t) in
   {
-    id = t.id;
+    id = unique();
     update = t.update;
-    guard = List.filter is_simple t.guard;
+    guard = List.filter is_input t.guard;
     invariant = t.invariant;
     cost = t.cost;
   }
