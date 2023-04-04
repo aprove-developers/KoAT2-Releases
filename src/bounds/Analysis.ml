@@ -338,9 +338,10 @@ let improve_scc ~conf rvg_with_sccs (scc: TransitionSet.t) program lsb_table app
   let rec step appr =
     appr
     |> knowledge_propagation scc program
-    |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc) (LSB_Table.find lsb_table)
-    |> twn_size_bounds ~conf scc program
-    |> knowledge_propagation_size scc program
+    |> (if !termination then identity else 
+        fun appr -> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc) (LSB_Table.find lsb_table) appr
+          |> twn_size_bounds ~conf scc program
+          |> knowledge_propagation_size scc program)
     |> improve_timebound ~conf scc `Time program
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
@@ -496,8 +497,9 @@ let handle_timeout_cfr method_name non_linear_transitions =
                if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                  appr
                  |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
-                 |> SizeBounds.improve program rvg ~scc:(Option.some scc) (LSB_Table.find lsbs)
-                 |> twn_size_bounds ~conf scc program
+                 |> (if !termination then identity
+                     else fun appr -> SizeBounds.improve program rvg ~scc:(Option.some scc) (LSB_Table.find lsbs) appr
+                      |> twn_size_bounds ~conf scc program)
                  |> improve_scc ~conf rvg scc program lsbs
                  (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
                  |> handle_cfr ~conf ~preprocess scc program rvg lsbs
