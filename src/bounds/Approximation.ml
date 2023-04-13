@@ -104,12 +104,13 @@ module Make(B: BoundType.Bound)
         <> mk_str_header_small "Costbounds" <> ( mk_paragraph (
             mk_str_line ("Overall costbound: " ^ B.to_string ~pretty (program_costbound appr program))
             <> TransitionApproximation.to_formatted ~pretty approximable_transitions appr.cost ) ) 
+        
+        <> mk_str_header_small "Sizebounds" <> (mk_paragraph @@ SizeApproximation.to_formatted ~pretty appr.size)
       else 
         mk_str_header_small "Termination behavior" <> ( mk_paragraph (
           mk_str_line ("Overall termination: " ^ B.to_string ~pretty ~termination_only overall_timebound)
           <> TransitionApproximation.to_formatted ~pretty ~termination_only approximable_transitions appr.time) ))
 
-    <> mk_str_header_small "Sizebounds" <> (mk_paragraph @@ SizeApproximation.to_formatted ~pretty appr.size)
 
 
   (* TODO: use to_formatted *)

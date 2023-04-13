@@ -25,6 +25,7 @@ type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
   ; twn_configuration: TWN.configuration option
   ; cfr_configuration: ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
   ; closed_form_size_bounds: ('prog, 'tset,'appr) closed_form_size_bounds
+  ; form_of_analysis: [`Complexity | `Termination]
   }
 
 type classical_program_conf_type = ( ProgramModules.Transition.t
@@ -38,8 +39,6 @@ type classical_program_conf_type = ( ProgramModules.Transition.t
 
 (** Default configuration. mprf_depth of 1, no twn, no cfr, and no closed form size bounds*)
 val default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration
-
-val termination_only: bool -> unit
 
 val only_relax_loops: bool -> unit
 
