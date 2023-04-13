@@ -83,12 +83,16 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let fresh_vars = Var.fresh_id_list Var.Int num_vars in
       let fresh_coeffs = List.map Polynomial.of_var fresh_vars in
 
+      if Option.is_some cache && Option.is_some location then (
       (* store fresh_vars *)
-      let coeff_table = cache.coeffs_table in
-      List.iter
-        (* (fun (v,v') -> CoeffTable.add coeff_table (location,v) v') *)
-        (fun (v,v') -> CoeffsTable.modify_def VarSet.empty (location,v) (VarSet.union (VarSet.singleton v')) coeff_table)
-        (List.combine vars fresh_vars);
+        let cache = Option.get cache
+        and location = Option.get location in
+        let coeff_table = cache.coeffs_table in
+        List.iter
+          (* (fun (v,v') -> CoeffTable.add coeff_table (location,v) v') *)
+          (fun (v,v') -> CoeffsTable.modify_def VarSet.empty (location,v) (VarSet.union (VarSet.singleton v')) coeff_table)
+          (List.combine vars fresh_vars)
+      );
 
       let linear_poly = ParameterPolynomial.of_coeff_list fresh_coeffs vars in
       let constant_var = Var.fresh_id Var.Int () in
@@ -171,7 +175,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     done
 
   let compute_ranking_templates cache (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
-    compute_ranking_templates_ depth vars locations (ranking_template cache) cache.template_table ParameterPolynomial.to_string
+    compute_ranking_templates_ depth vars locations (ranking_template (Option.some cache) % Option.some) cache.template_table ParameterPolynomial.to_string
 
   let apply_farkas pre concl =
     ParameterConstraint.(farkas_transform (of_constraint @@ Constraint.drop_nonlinear pre)) concl
@@ -254,11 +258,11 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     transition_constraint cache (depth, measure, `Decreasing, transition)
 
   (** A valuation is a function which maps from a finite set of variables to values *)
+  let rank_from_valuation_ valuation =
+    ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
 
   let rank_from_valuation cache depth (i: int) valuation location =
-    location
-    |> TemplateTable.find (Array.get cache.template_table i)
-    |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
+    rank_from_valuation_ valuation (TemplateTable.find (Array.get cache.template_table i) location)
 
   let make cache depth decreasing_transition non_increasing_transitions valuation  =
   {
@@ -437,6 +441,56 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       (fun () -> "find", ["measure", show_measure measure])
       ~result:(Util.enum_to_string to_string)
       execute
+
+  module Loop = Loop.Make(PM)
+
+
+  type t_loop = {
+    rank : Polynomial.t list;
+    depth : int;
+  }
+
+  (* Computes a MPRF for a loop (with cost 1). *)
+  let find_for_loop loop depth =
+    let template_table = Array.init depth (fun _ -> ranking_template None None (Loop.vars loop)) in
+    let template_i i = Tuple2.first @@ Array.get template_table (i - 1) in
+    let res = ref Formula.mk_true in
+    List.iter (fun guard ->
+      for i = 1 to (depth - 1) do
+        res := transition_constraint_i_ (`Time,`Decreasing) (Loop.update loop, guard, Polynomial.one) (template_i i) (template_i (i + 1)) (template_i (i + 1))
+              |> Formula.mk_and !res
+      done;
+      res := transition_constraint_1_ (`Time,`Decreasing) (Loop.update loop, guard, Polynomial.one) (template_i 0) (template_i 0)
+            |> Formula.mk_and !res;
+      if depth > 1 then
+        res := transition_constraint_d_ ParameterPolynomial.zero (`Time,`Decreasing) guard (template_i depth)
+            |> Formula.mk_and !res
+      else
+        res := transition_constraint_d_ ParameterPolynomial.one (`Time,`Decreasing) guard (template_i depth)
+            |> Formula.mk_and !res;
+    ) (Loop.guard loop |> Formula.constraints);
+    let model = SMT.Z3Solver.get_model !res in
+    if Option.is_some model then
+      Option.some {
+        rank = List.init depth (fun i -> rank_from_valuation_ (Option.get model) (template_i i));
+        depth = depth;
+      }
+    else
+      None
+
+  let time_bound loop max_depth =
+    let rankfuncs =
+      Enum.seq 1 ((+) 1) ((>) (max_depth + 1))
+      |> Enum.map (find_for_loop loop)
+      |> Enum.peek % Enum.filter (Option.is_some)
+      |? None in
+    if Option.is_some rankfuncs then
+      let rankfuncs = Option.get rankfuncs in
+      let bounds = rankfuncs.rank |> List.map Bound.of_poly in
+      Bound.(one + (of_int (MPRF_Coefficient.coefficient rankfuncs.depth) * Bound.sum_list bounds))
+    else
+      Bound.infinity
+
 end
 
 include Make(ProgramModules)
