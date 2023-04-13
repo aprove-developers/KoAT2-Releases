@@ -28,6 +28,7 @@ type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
   ; twn_configuration: TWN.configuration option
   ; cfr_configuration: ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
   ; closed_form_size_bounds: ('prog, 'tset,'appr) closed_form_size_bounds
+  ; form_of_analysis: [`Termination | `Complexity]
   }
 
 type classical_program_conf_type = ( Transition.t
@@ -45,8 +46,6 @@ let logger = Logging.(get Time)
 
 let logger_cfr = Logging.(get CFR)
 
-let termination = ref false
-let termination_only t = termination := t
 let relax_loops = ref false
 let only_relax_loops t = relax_loops := t
 
@@ -54,7 +53,8 @@ let default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration =
   { run_mprf_depth = Some 1
   ; twn_configuration = None
   ; cfr_configuration = NoCFR
-  ; closed_form_size_bounds = NoClosedFormSizeBounds }
+  ; closed_form_size_bounds = NoClosedFormSizeBounds 
+  ; form_of_analysis = `Complexity}
 
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
@@ -196,17 +196,16 @@ let improve_termination_rank_mprf measure program appr rank =
   let terminates = bounded_mprf program appr rank in
   let orginal_terminates = bounded measure appr (MultiphaseRankingFunction.decreasing rank) in
   if not orginal_terminates && terminates then (
-    let dummy_bound = if terminates then Bound.one else Bound.infinity in
     MultiphaseRankingFunction.add_to_proof rank None program;
     rank
     |> MultiphaseRankingFunction.decreasing
-    |> (fun t -> add_bound measure dummy_bound t appr)
+    |> (fun t -> add_bound measure Bound.one t appr)
     |> MaybeChanged.changed)
   else
     MaybeChanged.same appr
   
 
-let rec knowledge_propagation (scc: TransitionSet.t) program appr =
+let rec complexity_knowledge_propagation (scc: TransitionSet.t) program appr =
   let execute () =
     scc
     |> TransitionSet.enum
@@ -228,12 +227,44 @@ let rec knowledge_propagation (scc: TransitionSet.t) program appr =
         else
            MaybeChanged.same appr
       ) appr
-    |> MaybeChanged.if_changed (knowledge_propagation scc program)
+    |> MaybeChanged.if_changed (complexity_knowledge_propagation scc program)
     |> MaybeChanged.unpack
   in
   (Logger.with_log logger Logger.INFO
         (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc])
          execute)
+
+  let rec termination_knowledge_propagation (scc: TransitionSet.t) program appr =
+  let execute () =
+    scc
+    |> TransitionSet.enum
+    |> MaybeChanged.fold_enum (
+      fun appr transition ->
+        let terminates =
+          Program.pre_transitionset_cached program transition
+          |> TransitionSet.for_all (Bound.is_finite % Approximation.timebound appr)
+        in
+        let original_bounded = bounded `Time appr transition in
+        if not original_bounded && terminates then (
+          ProofOutput.add_str_paragraph_to_proof (fun () ->
+            "knowledge_propagation leads to time bound for transition "^Transition.to_string_pretty transition
+          );
+          add_bound `Time Bound.one transition appr
+          |> MaybeChanged.changed)
+        else
+            MaybeChanged.same appr
+      ) appr
+    |> MaybeChanged.if_changed (termination_knowledge_propagation scc program)
+    |> MaybeChanged.unpack
+  in
+  (Logger.with_log logger Logger.INFO
+        (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc])
+          execute)
+
+let knowledge_propagation ~conf = 
+  match conf.form_of_analysis with 
+  | `Termination -> termination_knowledge_propagation 
+  | `Complexity  -> complexity_knowledge_propagation    
 
 let rec knowledge_propagation_size (scc: TransitionSet.t) program appr =
   let execute () =
@@ -268,11 +299,14 @@ let rec knowledge_propagation_size (scc: TransitionSet.t) program appr =
         (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc])
          execute)
 
-let local_rank (scc: TransitionSet.t) measure program max_depth appr =
+let local_rank ~conf (scc: TransitionSet.t) measure program max_depth appr =
     let get_unbounded_vars transition =
-      program
-      |> (if !termination then Program.vars else Program.input_vars)
-      |> VarSet.filter (Bound.is_infinity % Approximation.sizebound appr transition)
+      match conf.form_of_analysis with 
+      | `Termination -> VarSet.empty
+      | `Complexity  ->
+          program
+          |> Program.input_vars
+          |> VarSet.filter (Bound.is_infinity % Approximation.sizebound appr transition)
     in
     let is_time_bounded = Bound.is_finite % Approximation.timebound appr in
     let unbounded_transitions =
@@ -283,7 +317,7 @@ let local_rank (scc: TransitionSet.t) measure program max_depth appr =
     let scc_overapprox_nonlinear = TransitionSet.map Transition.overapprox_nonlinear_updates scc in
     let rankfunc_computation depth =
       let compute_function =
-        MultiphaseRankingFunction.find_scc ~termination_only:!termination measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth
+        MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth
           % flip TransitionSet.find scc_overapprox_nonlinear
     in
       TransitionSet.to_array unbounded_transitions
@@ -299,7 +333,10 @@ let local_rank (scc: TransitionSet.t) measure program max_depth appr =
       |> Enum.map rankfunc_computation
       |> Enum.peek % Enum.filter (not % Enum.is_empty)
       |? Enum.empty ()    in
-    let improvement_function = if !termination then improve_termination_rank_mprf else improve_with_rank_mprf in
+    let improvement_function = 
+      match conf.form_of_analysis with 
+      | `Termination -> improve_termination_rank_mprf 
+      | `Complexity  -> improve_with_rank_mprf in
     rankfuncs
     |> MaybeChanged.fold_enum (fun appr -> improvement_function measure program appr) appr
 
@@ -309,15 +346,14 @@ let run_local ~conf (scc: TransitionSet.t) measure program appr =
     return appr
     >>= fun appr ->
       (match conf.run_mprf_depth with
-        | Some max_depth -> local_rank scc measure program max_depth appr
+        | Some max_depth -> local_rank ~conf scc measure program max_depth appr
         | None           -> MaybeChanged.return appr )
     >>= fun appr ->
-      (match measure, conf.twn_configuration with
-        | (`Cost,_) -> MaybeChanged.return appr
-        | (`Time,None) -> MaybeChanged.return appr
-        | (`Time,Some twn_conf) -> if !termination
-            then improve_termination_twn program scc twn_conf appr
-            else improve_with_twn program scc twn_conf appr)
+      (match measure, conf.twn_configuration, conf.form_of_analysis with
+        | (`Cost,_,_) -> MaybeChanged.return appr
+        | (`Time,None,_) -> MaybeChanged.return appr
+        | (`Time,Some twn_conf, `Termination) -> improve_termination_twn program scc twn_conf appr
+        | (`Time,Some twn_conf, `Complexity)  -> improve_with_twn program scc twn_conf appr)
   )
 
 let improve_timebound (scc: TransitionSet.t) measure program appr =
@@ -337,8 +373,10 @@ let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.
 let improve_scc ~conf rvg_with_sccs (scc: TransitionSet.t) program lsb_table appr =
   let rec step appr =
     appr
-    |> knowledge_propagation scc program
-    |> (if !termination then identity else 
+    |> knowledge_propagation ~conf scc program
+    |> (match conf.form_of_analysis with
+       | `Termination -> identity
+       | `Complexity -> 
         fun appr -> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc) (LSB_Table.find lsb_table) appr
           |> twn_size_bounds ~conf scc program
           |> knowledge_propagation_size scc program)
@@ -347,7 +385,7 @@ let improve_scc ~conf rvg_with_sccs (scc: TransitionSet.t) program lsb_table app
     |> MaybeChanged.unpack
   in
   (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
-  knowledge_propagation scc program appr
+  knowledge_propagation ~conf scc program appr
   |> MaybeChanged.unpack % improve_timebound ~conf scc `Time program
   |> step
 
@@ -372,7 +410,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
       (VarSet.to_list input_vars)
 
   let add_missing_lsbs program lsbs =
-    let input_vars = program |> if !termination then Program.vars else Program.input_vars in
+    let input_vars = program |> Program.input_vars in
     all_rvs program input_vars
     |> List.iter (fun(t,v)->
         if LSB_Table.mem lsbs (t,v) then ()
@@ -380,7 +418,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
        )
 
   let compute_lsbs program =
-    let vars = program |> if !termination then Program.vars else Program.input_vars in
+    let vars = program |> Program.input_vars in
     List.enum (all_rvs program vars)
     |> Enum.map (fun(t,v) -> (t,v),LSB.compute_bound vars t v)
     |> LSB_Table.of_enum
@@ -388,9 +426,10 @@ let handle_timeout_cfr method_name non_linear_transitions =
 
   let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: TransitionSet.t)
     program rvg lsbs appr: Program.t * Approximation.t * (RVG.t * RVG.scc list lazy_t) =
-    match conf.cfr_configuration with
-    | NoCFR -> program,appr,rvg
-    | PerformCFR cfr -> (
+    match conf.cfr_configuration, conf.form_of_analysis with
+    | NoCFR, _ -> program,appr,rvg
+    | _, `Termination -> program,appr,rvg
+    | PerformCFR cfr , `Complexity -> (
       let module Approximation = Approximation_ in
       let module SizeBounds = SizeBounds_ in
       let apply_cfr
@@ -497,8 +536,10 @@ let handle_timeout_cfr method_name non_linear_transitions =
                if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                  appr
                  |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
-                 |> (if !termination then identity
-                     else fun appr -> SizeBounds.improve program rvg ~scc:(Option.some scc) (LSB_Table.find lsbs) appr
+                 |> (match conf.form_of_analysis with
+                    | `Termination -> identity
+                    | `Complexity  -> fun appr -> 
+                      SizeBounds.improve program rvg ~scc:(Option.some scc) (LSB_Table.find lsbs) appr 
                       |> twn_size_bounds ~conf scc program)
                  |> improve_scc ~conf rvg scc program lsbs
                  (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)

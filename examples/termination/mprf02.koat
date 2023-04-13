@@ -1,3 +1,4 @@
+# inner loop from l2 to l2 does not terminate for A > 12
 (GOAL COMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS l0))
 (VAR A B)

@@ -33,7 +33,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   * The int corresponds to the maximum depth of the mprf *)
   val find : measure -> PM.Program.t -> int -> t Enum.t
 
-  val find_scc : ?termination_only:bool -> measure -> PM.Program.t ->
+  val find_scc : measure -> PM.Program.t ->
     (PM.Transition.t -> bool) ->  (* Is the transition time-bounded? *)
     (PM.Transition.t -> VarSet.t) -> (* Unbounded vars for the transition *)
     PM.TransitionSet.t ->  (* The scc*)

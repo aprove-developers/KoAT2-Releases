@@ -165,6 +165,7 @@ let run (params: params) =
           | _ -> twn_conf
       ) None params.local;
       closed_form_size_bounds = if params.closed_form_size_bounds then ComputeClosedFormSizeBounds else NoClosedFormSizeBounds;
+      form_of_analysis = if params.termination then `Termination else `Complexity;
       cfr_configuration = match params.cfr with
         | [] -> NoCFR
         | l ->  PerformCFR l;
@@ -191,7 +192,6 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
-  Analysis.termination_only params.termination;
   Analysis.only_relax_loops params.relax_loops;
   ProofOutput.enable_proof params.show_proof;
   ProofOutput.proof_format params.proof_format;

@@ -373,9 +373,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     helper (TransitionSet.singleton mprf_problem.make_decreasing)
 
 
-  let compute_scc ?(termination_only=false) cache program mprf_problem =
+  let compute_scc cache program mprf_problem =
     let locations = LocationSet.to_list @@ TransitionGraph.locations (Program.graph program) in
-    let vars = program |> if termination_only then Program.vars else Program.input_vars in
+    let vars = program |> Program.input_vars in
     compute_ranking_templates cache mprf_problem.find_depth vars locations;
 
     let solver_int = Solver.create () in
@@ -403,13 +403,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     if Option.is_none !(cache.rank_func) then
       Logger.(log logger WARN (fun () -> "no_mprf", ["measure", show_measure mprf_problem.measure; "transition", Transition.to_id_string mprf_problem.make_decreasing]))
 
-  let find_scc ?(termination_only=false) measure program is_time_bounded unbounded_vars scc depth make_decreasing =
+  let find_scc measure program is_time_bounded unbounded_vars scc depth make_decreasing =
     let cache = new_cache depth in
     let mprf_problem =
       { program; measure; make_non_increasing = TransitionSet.to_array scc; make_decreasing; unbounded_vars; find_depth = depth; is_time_bounded}
     in
     let execute () =
-      compute_scc ~termination_only cache program mprf_problem;
+      compute_scc cache program mprf_problem;
       !(cache.rank_func)
     in
     Logger.with_log logger Logger.DEBUG
