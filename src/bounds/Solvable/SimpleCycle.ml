@@ -93,7 +93,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
   let find_loops ?(relevant_vars = None) ?(transformation_type = `NoTransformation) ?(relax_loops=false) f appr program scc (l,t,l') =
-    Printf.printf "Hallo\n %s %i" (TransitionLabel.to_string t) 5;
     if relax_loops || not @@ TransitionLabel.has_tmp_vars_in_guard t then
       let updated_trans = if relax_loops then TransitionLabel.relax_guard t else t in
         let handle_scc = if relax_loops 
