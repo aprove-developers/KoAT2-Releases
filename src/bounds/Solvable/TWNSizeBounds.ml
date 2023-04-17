@@ -24,7 +24,7 @@ module VarMap = Map.Make(Var)
 
 module SizeBoundTable = Hashtbl.Make(VT)
 
-let size_bound_table: (PE.t Option.t * (Transition.t * Polynomial.t VarMap.t) list) SizeBoundTable.t = SizeBoundTable.create 10
+let size_bound_table: (Transition.t * Bound.t) list option SizeBoundTable.t = SizeBoundTable.create 10
 
 (** Internal memoization: The idea is to use this cache if we applied cfr and
   1) delete it and use the original cache if we get a timeout or
@@ -33,16 +33,20 @@ let size_bound_table: (PE.t Option.t * (Transition.t * Polynomial.t VarMap.t) li
 let reset_cfr () =
   SizeBoundTable.clear size_bound_table
 
-let lift appr t var closed_form (entry,traversal) =
-  (* Insert runtime bound. *)
-  let local_size =
-    if Option.is_some closed_form then
-      PE.overapprox (Option.get closed_form) (Approximation.timebound appr t)
-      |> Bound.substitute_f (fun var -> Bound.of_poly @@ (VarMap.find_opt var traversal |? Polynomial.of_var var))
-    else
-      Bound.infinity
-  in
-  Bound.substitute_f (Approximation.sizebound appr entry) local_size
+let lift appr = function
+  | None -> Bound.infinity
+  | Some xs -> xs
+               |> List.map (fun (entry,local_size) -> Bound.substitute_f (Approximation.sizebound appr entry) local_size)
+               |> List.enum
+               |> Bound.sum
+
+module TWN_Complexity = TWN_Complexity.Make(ProgramModules)
+let compute_time_bound loop =
+  let mprf_bound = MultiphaseRankingFunction.time_bound loop 5 in
+  if Bound.is_infinity mprf_bound && Check_TWN.check_twn loop then
+    TWN_Complexity.complexity ~termination:false [] loop
+  else
+    mprf_bound
 
 let improve_t program trans t appr =
   VarSet.fold (fun var appr ->
@@ -50,31 +54,35 @@ let improve_t program trans t appr =
       appr
     else
       if SizeBoundTable.mem size_bound_table (t,var) then
-        let closed_form,entry_traversal = SizeBoundTable.find size_bound_table (t,var) in
-        let lifted_bound = List.map (lift appr t var closed_form) entry_traversal |> List.enum |> Bound.sum in
+        let lifted_bound = lift appr (SizeBoundTable.find size_bound_table (t,var)) in
         Approximation.add_sizebound lifted_bound t var appr
       else
         if not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var then
-          let loops_opt = SimpleCycle.find_loop ~relevant_vars:(Option.some @@ VarSet.singleton var) heuristic_for_cycle appr program trans t in
+          let loops_opt = SimpleCycle.find_loop heuristic_for_cycle ~relevant_vars:(Option.some @@ VarSet.singleton var) appr program trans t in
           if Option.is_some loops_opt then
             let loop, entries_traversal = Option.get loops_opt in
             let local_bound =
+                let loop_red = Loop.eliminate_non_contributors ~relevant_vars:(Option.some @@ VarSet.singleton var) loop in
                 (* We first compute for var (with a closed form) a local size bound *)
-                let order = Check_TWN.check_triangular loop in
+                let order = Check_TWN.check_triangular loop_red in
                 if List.is_empty order then None
                 else
                   let closed_form =
                       PE.compute_closed_form @@ List.map (fun var ->
-                          (var, Loop.update_var loop var)) order
+                          (var, Loop.update_var loop_red var)) order
                       |> List.combine order
                       |> List.find (Var.equal var % Tuple2.first)
                       |> Tuple2.second
                   in
-                  Option.some closed_form
+                  let time_bound = compute_time_bound loop in (* We assume that loop terminates (since t terminates). *)
+                  List.map (fun (entry,traversal) -> entry,
+                    PE.overapprox closed_form time_bound
+                    |> Bound.substitute_f (fun var -> Bound.of_poly @@ (VarMap.find_opt var traversal |? Polynomial.of_var var))) entries_traversal
+                    |> Option.some
             in
-            SizeBoundTable.add size_bound_table (t,var) (local_bound,entries_traversal);
+            SizeBoundTable.add size_bound_table (t,var) local_bound;
               (* Lifting previously computed local size bounds and store them in appr. *)
-            let lifted_bound = List.map (lift appr t var local_bound) entries_traversal |> List.enum |> Bound.sum in
+            let lifted_bound = lift appr local_bound in
             Approximation.add_sizebound lifted_bound t var appr
         else
           appr

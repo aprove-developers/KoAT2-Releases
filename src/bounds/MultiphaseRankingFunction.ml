@@ -460,7 +460,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         res := transition_constraint_i_ (`Time,`Decreasing) (Loop.update loop, guard, Polynomial.one) (template_i i) (template_i (i + 1)) (template_i (i + 1))
               |> Formula.mk_and !res
       done;
-      res := transition_constraint_1_ (`Time,`Decreasing) (Loop.update loop, guard, Polynomial.one) (template_i 0) (template_i 0)
+      res := transition_constraint_1_ (`Time,`Decreasing) (Loop.update loop, guard, Polynomial.one) (template_i 1) (template_i 1)
             |> Formula.mk_and !res;
       if depth > 1 then
         res := transition_constraint_d_ ParameterPolynomial.zero (`Time,`Decreasing) guard (template_i depth)
@@ -472,7 +472,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let model = SMT.Z3Solver.get_model !res in
     if Option.is_some model then
       Option.some {
-        rank = List.init depth (fun i -> rank_from_valuation_ (Option.get model) (template_i i));
+        rank = List.init depth (fun i -> rank_from_valuation_ (Option.get model) (template_i (i + 1)));
         depth = depth;
       }
     else

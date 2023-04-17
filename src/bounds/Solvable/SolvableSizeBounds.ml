@@ -96,6 +96,7 @@ let improve_t program trans t appr =
         let loops_opt = SimpleCycle.find_loop ~relevant_vars:(Option.some @@ VarSet.singleton var) heuristic_for_cycle appr program trans t in
         if Option.is_some loops_opt then
           let loop, entries_traversal = Option.get loops_opt in
+          let loop = Loop.eliminate_non_contributors ~relevant_vars:(Option.some @@ VarSet.singleton var) loop in
           let local_bound =
             (* We first compute for every var (with a closed form) and every entry a local size bound *)
               let blocks = Check_Solvable.check_solvable loop in

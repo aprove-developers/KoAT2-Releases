@@ -134,8 +134,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           && Location.equal l' l1') merged_trans in
       let cycles = cycles_with_t merged_trans merged_t in
       List.find_map_opt (fun cycle ->
-        let loop = contract_cycle cycle l |> Loop.eliminate_non_contributors ~relevant_vars in
-        if f appr program loop then
+        let loop = contract_cycle cycle l in
+        let loop_red = Loop.eliminate_non_contributors ~relevant_vars loop in
+        if f appr program loop_red then
           let handled_transitions = handled_transitions cycle in
           (* Enlarge the cycle by transitions which do not have an influence on the size of the variables on the cycle. *)
           (* Entries of handled_transitions which are inside or outside of scc. *)
@@ -148,7 +149,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           let trans_in_scc = List.map TransitionSet.to_list sccs |> List.flatten |> TransitionSet.of_list in
           let relevant_entries = (
             List.map (fun sub_scc ->
-            if TransitionSet.exists (fun (_,t,_) -> not @@ VarSet.disjoint (TransitionLabel.changed_vars t) (Loop.vars loop)) sub_scc then
+            if TransitionSet.exists (fun (_,t,_) -> not @@ VarSet.disjoint (TransitionLabel.changed_vars t) (Loop.vars loop_red)) sub_scc then
               List.filter (flip TransitionSet.mem sub_scc) entries_inside
             else
               List.filter TransitionSet.(not % flip mem scc) @@ Program.entry_transitions logger program (TransitionSet.to_list sub_scc)
