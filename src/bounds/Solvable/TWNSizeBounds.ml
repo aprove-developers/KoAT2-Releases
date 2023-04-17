@@ -44,7 +44,7 @@ module TWN_Complexity = TWN_Complexity.Make(ProgramModules)
 let compute_time_bound loop =
   let mprf_bound = MultiphaseRankingFunction.time_bound loop 5 in
   if Bound.is_infinity mprf_bound && Check_TWN.check_twn loop then
-    TWN_Complexity.complexity ~termination:false [] loop
+    TWN_Complexity.complexity ~termination:false [] loop (* We assume that loop terminates (since t terminates). *)
   else
     mprf_bound
 
@@ -74,7 +74,7 @@ let improve_t program trans t appr =
                       |> List.find (Var.equal var % Tuple2.first)
                       |> Tuple2.second
                   in
-                  let time_bound = compute_time_bound loop in (* We assume that loop terminates (since t terminates). *)
+                  let time_bound = compute_time_bound loop in
                   List.map (fun (entry,traversal) -> entry,
                     PE.overapprox closed_form time_bound
                     |> Bound.substitute_f (fun var -> Bound.of_poly @@ (VarMap.find_opt var traversal |? Polynomial.of_var var))) entries_traversal
