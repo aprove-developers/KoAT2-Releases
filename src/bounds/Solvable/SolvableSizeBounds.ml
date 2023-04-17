@@ -48,7 +48,7 @@ let run_python var block update_matrix =
     |> List.enum
     |> Util.enum_to_string OurInt.to_string
     |> Str.global_replace (Str.regexp ";") "," in
-  let command = "python3 -c 'from src.bounds.Solvable.SizeBoundSolvable import size_bound; size_bound(" ^ update_str ^ "," ^ vars_str ^ ",\"" ^ Var.to_string var ^ "\")'" in
+  let command = "python3 -c 'from python.SizeBoundSolvable import size_bound; size_bound(" ^ update_str ^ "," ^ vars_str ^ ",\"" ^ Var.to_string var ^ "\")'" in
   let python_output = read_process_lines command in
   match python_output with
       | [n;a] -> Some (int_of_string n,a |> Readers.read_bound)
