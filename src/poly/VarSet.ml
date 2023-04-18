@@ -95,4 +95,3 @@ let sorted_combinations max set =
   |> Enum.map (fun c -> combinations c set)
   |> Enum.map List.enum
   |> Enum.flatten
-

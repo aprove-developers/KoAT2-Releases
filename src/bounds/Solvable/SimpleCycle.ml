@@ -66,13 +66,20 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     VarSet.subset all_updated_vars input_vars
   
   (* determines all variables that get assigned a tmp value in a loop and removes them from the guard*)
-  let update_path input_vars path = 
+  let update_path tmp_vars path = 
     let labels = List.map (List.first % Tuple3.second) path in
-    let guard_vars = List.concat_map (VarSet.to_list % Guard.vars % TransitionLabel.guard) labels in
-    let extend_updated_vars vars label = List.concat_map (fun v -> VarSet.to_list @@ Option.map_default Polynomial.vars VarSet.empty @@ VarMap.find_opt v @@ TransitionLabel.update_map label) vars in
-    let has_tmp_var_in_update var = flip VarSet.subset input_vars @@ VarSet.of_list @@ List.fold extend_updated_vars [var] labels in
-    let critical_vars = VarSet.of_list @@ List.filter has_tmp_var_in_update guard_vars in
-    List.map (fun (x,l,y) -> (x,List.map (TransitionLabel.relax_guard % TransitionLabel.remove_non_contributors critical_vars) l,y)) path
+    let guard_vars = List.fold VarSet.union VarSet.empty @@ List.map (Guard.vars % TransitionLabel.guard) labels in
+    let updates var = Util.cat_maybes @@ List.map (flip TransitionLabel.update var) labels in
+    let non_statics = 
+      let maybe_changed (non_statics, vars) = 
+        let update_is_static u = VarSet.disjoint (UpdateElement.vars u) non_statics in
+        let static_update non_statics var = List.for_all update_is_static @@ updates var in
+        let new_non_statics, new_guard = VarSet.partition (not % static_update non_statics) vars in
+        if VarSet.is_empty new_non_statics
+          then MaybeChanged.same (VarSet.union new_non_statics non_statics, new_guard) 
+          else MaybeChanged.changed (VarSet.union new_non_statics non_statics, new_guard) in
+      Tuple2.first @@ Util.find_fixpoint maybe_changed (tmp_vars, guard_vars) in
+    List.map (fun (x,l,y) -> (x,List.map (TransitionLabel.relax_guard ~non_static:non_statics) l,y)) path
     
 
   let logger = Logging.(get Twn)
@@ -109,11 +116,10 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           List.exists (fun t1 -> TransitionLabel.equal updated_trans t1) ts
             && Location.equal l l1
             && Location.equal l' l1') merged_trans in
-        if Option.is_none merged_t then None
-        else
         let cycles = cycles_with_t merged_trans @@ Option.get merged_t in
         let input_vars = TransitionLabel.input_vars updated_trans in
-        let handle_cycles = if relax_loops then List.map @@ update_path input_vars else List.filter @@ path_is_simple input_vars in
+        let tmp_vars = VarSet.diff (Program.vars program) (Program.input_vars program) in
+        let handle_cycles = if relax_loops then List.map @@ update_path tmp_vars else List.filter @@ path_is_simple input_vars in
         List.find_map_opt (fun cycle ->
           let chained_cycle = chain_cycle ~relevant_vars cycle program in
           if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
@@ -122,7 +128,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             List.map (fun (entry,loop) -> (entry,Transformation.transform transformation_type loop)) chained_cycle)
           else
             None) @@ handle_cycles cycles
-    else None
+    else None 
 
   (** Computes update_n * ... * update_i where update_n is the update of a transition (_,_,target) and resp. update_i for (start,_,_). *)
   let traverse_cycle (cycle: path) start target =

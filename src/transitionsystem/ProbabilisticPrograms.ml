@@ -342,8 +342,23 @@ module ProbabilisticTransitionLabel = struct
     let guard_vars = Guard.vars t.guard in
     not @@ VarSet.subset guard_vars (input_vars t)
 
-    (*TODO implement this*)
-  let relax_guard = identity
+
+  let relax_guard ?(non_static=VarSet.empty) t = 
+    let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
+    {
+      id = t.id;
+      gt_id = t.gt_id;
+
+      update = t.update;
+      guard = List.filter is_static t.guard;
+      invariant = t.invariant;
+      cost = t.cost;
+
+      overappr_guard = List.filter is_static t.overappr_guard;
+      overappr_nonprob_update = t.overappr_nonprob_update;
+      probability = t.probability;
+    }
+
   let changed_vars t =
     input_vars t
     |> VarSet.filter (fun v -> not UpdateElement_.(equal (of_var v) (update t v |? of_var v)))
@@ -400,9 +415,23 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let has_tmp_vars_in_guard t =
     let guard_vars = Guard.vars t.guard in
     not @@ VarSet.subset guard_vars (input_vars t)
+  
+  let relax_guard ?(non_static=VarSet.empty) t = 
+    let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
+    {
+      id = t.id;
+      gt_id = t.gt_id;
 
-  (*TODO implement this*)
-  let relax_guard = identity
+      update = t.update;
+      guard = List.filter is_static t.guard;
+      invariant = t.invariant;
+      cost = t.cost;
+
+      overappr_guard = List.filter is_static t.overappr_guard;
+      overappr_nonprob_update = t.overappr_nonprob_update;
+      probability = t.probability;
+    }
+
   let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
 
   let changed_vars t =
