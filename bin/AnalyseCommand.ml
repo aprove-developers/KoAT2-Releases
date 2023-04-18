@@ -154,16 +154,23 @@ let run (params: params) =
   (* TODO improve parser arguments to avoid the case of multiple twns *)
   let bounds_conf =
     let open Analysis in
+    let open TWN in
     let check_twn_already_set c = if Option.is_some c then
       raise (Invalid_argument "--local commands are not correct. Use 'mprf' or at most one of 'twn', 'twn-transform'")
     in
+    let transformation_type = List.fold_left (fun twn_conf -> function
+      | `TWN -> (check_twn_already_set twn_conf; Some `NoTransformation)
+      | `TWNTransform -> (check_twn_already_set twn_conf; Some `Transformation)
+      | _ -> twn_conf
+      ) None params.local in
     {
       run_mprf_depth = if List.mem `MPRF params.local then Some params.depth else None;
-      twn_configuration = List.fold_left (fun twn_conf -> function
-          | `TWN -> (check_twn_already_set twn_conf; Some TWN.NoTransformation)
-          | `TWNTransform -> (check_twn_already_set twn_conf; Some TWN.Transformation)
-          | _ -> twn_conf
-      ) None params.local;
+      twn_configuration = 
+        flip Option.map transformation_type
+        (fun t_type -> {
+          relax_loops = if params.relax_loops then `Relaxation else `NoRelaxation;
+          transformation_type = t_type;                      
+          }) ;
       closed_form_size_bounds = if params.closed_form_size_bounds then ComputeClosedFormSizeBounds else NoClosedFormSizeBounds;
       form_of_analysis = if params.termination then `Termination else `Complexity;
       cfr_configuration = match params.cfr with
@@ -192,7 +199,6 @@ let run (params: params) =
     in
     print_string (program_str ^ "\n\n")
   );
-  Analysis.only_relax_loops params.relax_loops;
   ProofOutput.enable_proof params.show_proof;
   ProofOutput.proof_format params.proof_format;
   let program =

@@ -10,7 +10,10 @@ open ProgramModules
 
 let logger = Logging.(get Twn)
 
-type configuration = NoTransformation | Transformation
+type configuration = {
+  transformation_type : [`NoTransformation | `Transformation];
+  relax_loops : [`NoRelaxation|`Relaxation]
+}
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
@@ -52,16 +55,16 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             FormattedString.mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))
 
   let heuristic_for_cycle transformation_type appr entry program loop = match transformation_type with
-    | NoTransformation -> Check_TWN.check_twn loop && Approximation.is_time_bounded appr entry
-    | Transformation -> Option.is_some @@ Check_Solvable.check_solvable loop (*  *)
+    | `NoTransformation -> Check_TWN.check_twn loop && Approximation.is_time_bounded appr entry
+    | `Transformation -> Option.is_some @@ Check_Solvable.check_solvable loop (*  *)
 
-  let time_bound ?(relax_loops=false) transformation_type (l,t,l') scc program appr =
+  let time_bound conf (l,t,l') scc program appr =
     TWN_Proofs.proof := FormattedString.Empty;
     let opt = TimeBoundTable.find_option time_bound_table (l,t,l') in
     if Option.is_none opt then (
       let bound = Timeout.timed_run 5. (fun () ->
       (* We have not yet computed a (local) runtime bound. *)
-      let loops_opt = SimpleCycle.find_loops ~relax_loops (heuristic_for_cycle transformation_type) appr program scc (l,t,l') in
+      let loops_opt = SimpleCycle.find_loops ~relax_loops:conf.relax_loops (heuristic_for_cycle conf.transformation_type) appr program scc (l,t,l') in
       if Option.is_some loops_opt then
         let cycle, loops = Option.get loops_opt in
         let upd_invariant_cand = List.map (Constraint.atom_list % TransitionLabel.invariant % Tuple3.second) cycle |> List.flatten in
@@ -84,13 +87,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       bound_with_sizebound
     )
 
-    let terminates ?(relax_loops=false) transformation_type (l,t,l') scc program appr =
+    let terminates conf (l,t,l') scc program appr =
       TWN_Proofs.proof := FormattedString.Empty;
       let opt = TimeBoundTable.find_option bounded_table (l,t,l') in
       if Option.is_none opt then (
         let bound = Timeout.timed_run 5. (fun () ->
         (* We have not yet computed a (local) runtime bound. *)
-        let loops_opt = SimpleCycle.find_loops ~relax_loops (heuristic_for_cycle transformation_type) appr program scc (l,t,l') in
+        let loops_opt = SimpleCycle.find_loops ~relax_loops:conf.relax_loops (heuristic_for_cycle conf.transformation_type) appr program scc (l,t,l') in
         if Option.is_some loops_opt then
           let cycle, loops = Option.get loops_opt in
           let upd_invariant_cand = List.map (Constraint.atom_list % TransitionLabel.invariant % Tuple3.second) cycle |> List.flatten in

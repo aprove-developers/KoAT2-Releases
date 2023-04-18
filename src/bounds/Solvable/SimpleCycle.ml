@@ -99,12 +99,14 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars) entries
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
-  let find_loops ?(relevant_vars = None) ?(transformation_type = `NoTransformation) ?(relax_loops=false) f appr program scc (l,t,l') =
-    if relax_loops || not @@ TransitionLabel.has_tmp_vars_in_guard t then
-      let updated_trans = if relax_loops then TransitionLabel.relax_guard t else t in
-        let handle_scc = if relax_loops 
-          then List.map (fun (l,t,l') -> (l,TransitionLabel.relax_guard t,l')) 
-          else List.filter (fun (l,t,l') -> not @@ TransitionLabel.has_tmp_vars_in_guard t) in 
+  let find_loops ?(relevant_vars = None) ?(relax_loops=`NoRelaxation) ?(transformation_type = `NoTransformation) f appr program scc (l,t,l') =
+    if relax_loops == `Relaxation || not @@ TransitionLabel.has_tmp_vars_in_guard t then
+      let updated_trans = match relax_loops with
+        | `Relaxation -> TransitionLabel.relax_guard t 
+        | `NoRelaxation -> t in
+        let handle_scc = match relax_loops with
+        | `Relaxation -> List.map (fun (l,t,l') -> (l,TransitionLabel.relax_guard t,l')) 
+        | `NoRelaxation -> List.filter (fun (l,t,l') -> not @@ TransitionLabel.has_tmp_vars_in_guard t) in 
         let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
           Location.equal l1 l2 &&
           Location.equal l1' l2' &&
@@ -119,7 +121,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         let cycles = cycles_with_t merged_trans @@ Option.get merged_t in
         let input_vars = TransitionLabel.input_vars updated_trans in
         let tmp_vars = VarSet.diff (Program.vars program) (Program.input_vars program) in
-        let handle_cycles = if relax_loops then List.map @@ update_path tmp_vars else List.filter @@ path_is_simple input_vars in
+        let handle_cycles = match relax_loops with
+        | `Relaxation -> List.map @@ update_path tmp_vars 
+        | `NoRelaxation -> List.filter @@ path_is_simple input_vars in
         List.find_map_opt (fun cycle ->
           let chained_cycle = chain_cycle ~relevant_vars cycle program in
           if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then

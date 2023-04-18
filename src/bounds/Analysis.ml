@@ -46,9 +46,6 @@ let logger = Logging.(get Time)
 
 let logger_cfr = Logging.(get CFR)
 
-let relax_loops = ref false
-let only_relax_loops t = relax_loops := t
-
 let default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration =
   { run_mprf_depth = Some 1
   ; twn_configuration = None
@@ -165,9 +162,9 @@ let improve_with_rank_mprf measure program appr rank =
   else
     MaybeChanged.same appr
 
-let improve_with_twn program scc transformation_type appr =
+let improve_with_twn program scc conf appr =
   let compute appr_ t =
-   let bound = TWN.time_bound ~relax_loops:!relax_loops transformation_type t scc program appr_ in
+   let bound = TWN.time_bound conf t scc program appr_ in
    let orginal_bound = get_bound `Time appr_ t in
     if (Bound.compare_asy orginal_bound bound) = 1 then
       MaybeChanged.changed (add_bound `Time bound t appr_)
@@ -181,9 +178,9 @@ let bounded measure appr transition =
   | `Time -> Approximation.is_time_bounded appr transition
   | `Cost -> Polynomial.is_const (Transition.cost transition) (* We can not compute a better bound in this case, so we consider this transition as bounded *)
 
-let improve_termination_twn program scc transformation_type appr =
+let improve_termination_twn program scc conf appr =
   let compute appr_ t =
-    let terminates = TWN.terminates ~relax_loops:!relax_loops transformation_type t scc program appr_ in
+    let terminates = TWN.terminates conf t scc program appr_ in
     let orginal_terminates = bounded `Time appr_ t in
     if not orginal_terminates && terminates then
       MaybeChanged.changed (add_bound `Time Bound.one t appr_)
