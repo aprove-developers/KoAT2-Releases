@@ -360,12 +360,12 @@ let rename rename_map t =
   }
   |> tap (fun _ -> Hashtbl.clear vars_memoization)
 
-let relax_guard t = 
-  let is_input atom = VarSet.subset (Atoms.Atom.vars atom) (input_vars t) in
+let relax_guard ?(non_static=VarSet.empty) t = 
+  let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
   {
-    id = unique();
+    id = t.id;
     update = t.update;
-    guard = List.filter is_input t.guard;
+    guard = List.filter is_static t.guard;
     invariant = t.invariant;
     cost = t.cost;
   }

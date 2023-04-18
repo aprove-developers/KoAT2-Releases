@@ -71,13 +71,12 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           <> (Formula.to_string_formatted formula |> mk_block)
           |> mk_paragraph);)
 
-  (* For Testing *)
+  (* Counterpart to TWN_Complexity.complexity *)
   let termination ?(entry = None) upd_invariant_cand ((guard,update): Loop.t) =
       let loop = (guard,update) in
       let order = Check_TWN.check_triangular loop in
       let t_ =
-        if (Check_TWN.check_weakly_negativitiy loop) then
-          (*TODO The information negative might be useless*)
+        if Check_TWN.check_weakly_negativitiy loop then
           Loop.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", Loop.to_string loop]))
         else loop in
       Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);

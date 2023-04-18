@@ -78,6 +78,15 @@ let cat_maybes l=
 let cat_maybes_enum e =
   Enum.map Option.get (Enum.filter Option.is_some e)
 
+let map_maybe f = List.map f % cat_maybes
+
+let find_fixpoint f x = 
+  let rec to_same x = 
+    match f x with 
+    | MaybeChanged.Same, value -> value
+    | MaybeChanged.Changed, value -> to_same value in
+  to_same x
+
 let measure_execution_time ?(methodname="") f =
   let t0 = Unix.gettimeofday () in
   let res = f () in

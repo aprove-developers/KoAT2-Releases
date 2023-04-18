@@ -36,6 +36,10 @@ val cat_maybes : 'a option list -> 'a list
 
 val cat_maybes_enum : 'a option Enum.t -> 'a Enum.t
 
+val map_maybe : ('a -> 'b) -> 'a option list -> 'b list
+
+val find_fixpoint : ('a -> MaybeChanged.status * 'a) -> 'a -> 'a
+
 (* Execute a function and measure its execution time. The time used by the function is then printed to stdout *)
 val measure_execution_time : ?methodname:string -> (unit -> 'a) -> 'a
 
