@@ -72,8 +72,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           |> mk_paragraph);)
 
   (* Counterpart to TWN_Complexity.complexity *)
-  let termination ?(entry = None) upd_invariant_cand ((guard,update): Loop.t) =
-      let loop = (guard,update) in
+  let termination ?(entry = None) upd_invariant_cand loop =
       let order = Check_TWN.check_triangular loop in
       let t_ =
         if Check_TWN.check_weakly_negativitiy loop then
