@@ -28,14 +28,14 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   (* Keys: transition, values: bounds of entry transitions. *)
   let time_bound_table: (Transition.t * Bound.t) list TimeBoundTable.t = TimeBoundTable.create 10
-  let bounded_table: (Transition.t * bool) list TimeBoundTable.t = TimeBoundTable.create 10
+  let termination_table: (Transition.t * bool) list TimeBoundTable.t = TimeBoundTable.create 10
   (** Internal memoization: The idea is to use this cache if we applied cfr and
     1) delete it and use the original cache if we get a timeout or
     2) if the analysis of the unrolled scc is completed successfully use this cache as the main memory.
     TODO Currently, we just reset the cache. *)
   let reset_cfr () =
     TimeBoundTable.clear time_bound_table;
-    TimeBoundTable.clear bounded_table
+    TimeBoundTable.clear termination_table
 
   let lift appr entry bound =
     let bound_with_sizebound = Bound.substitute_f (Approximation.sizebound appr entry) bound in
@@ -89,20 +89,20 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
     let terminates conf (l,t,l') scc program appr =
       TWN_Proofs.proof := FormattedString.Empty;
-      let opt = TimeBoundTable.find_option bounded_table (l,t,l') in
+      let opt = TimeBoundTable.find_option termination_table (l,t,l') in
       if Option.is_none opt then (
         let bound = Timeout.timed_run 5. (fun () ->
-        (* We have not yet computed a (local) runtime bound. *)
+        (* Local termination was not proven yet. *)
         let loops_opt = SimpleCycle.find_loops ~relax_loops:conf.relax_loops (heuristic_for_cycle conf.transformation_type) appr program scc (l,t,l') in
         if Option.is_some loops_opt then
           let cycle, loops = Option.get loops_opt in
           let upd_invariant_cand = List.map (Constraint.atom_list % TransitionLabel.invariant % Tuple3.second) cycle |> List.flatten in
           let is_bounded entry loop = TWN_Termination.termination ~entry:(Option.some entry) upd_invariant_cand loop in
           let local_bounds = List.map (fun (entry,(loop,_)) -> entry, is_bounded entry loop) loops in
-          List.iter (fun t -> TimeBoundTable.add bounded_table t local_bounds) cycle;
+          List.iter (fun t -> TimeBoundTable.add termination_table t local_bounds) cycle;
           List.for_all Tuple2.second local_bounds
         else (
-          TimeBoundTable.add bounded_table (l,t,l') [(l,t,l'),false];
+          TimeBoundTable.add termination_table (l,t,l') [(l,t,l'),false];
           false)) in
         Option.is_some bound && Tuple2.first @@ Option.get bound
       ) else 

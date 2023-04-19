@@ -367,14 +367,14 @@ let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.
     |> SolvableSizeBounds.improve program ~scc:(Option.some scc)
 
 (* TODO unify conf types with ~local! *)
-let improve_scc ~conf rvg_with_sccs (scc: TransitionSet.t) program lsb_table appr =
+let improve_scc ~conf opt_rvg_with_sccs (scc: TransitionSet.t) program opt_lsb_table appr =
   let rec step appr =
     appr
     |> knowledge_propagation ~conf scc program
     |> (match conf.form_of_analysis with
        | `Termination -> identity
        | `Complexity -> 
-        fun appr -> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc) (LSB_Table.find lsb_table) appr
+        fun appr -> SizeBounds.improve program (Option.get opt_rvg_with_sccs) ~scc:(Option.some scc) (LSB_Table.find @@ Option.get opt_lsb_table) appr
           |> twn_size_bounds ~conf scc program
           |> knowledge_propagation_size scc program)
     |> improve_timebound ~conf scc `Time program
@@ -422,13 +422,15 @@ let handle_timeout_cfr method_name non_linear_transitions =
 
 
   let handle_cfr ~(conf: conf_type) ~(preprocess: Program.t -> Program.t) (scc: TransitionSet.t)
-    program rvg lsbs appr: Program.t * Approximation.t * (RVG.t * RVG.scc list lazy_t) =
+    program opt_rvg opt_lsbs appr: Program.t * Approximation.t * ((RVG.t * RVG.scc list lazy_t) option) =
     match conf.cfr_configuration, conf.form_of_analysis with
-    | NoCFR, _ -> program,appr,rvg
-    | _, `Termination -> program,appr,rvg
+    | NoCFR, _ -> program,appr,opt_rvg
+    | _, `Termination -> program,appr,opt_rvg
     | PerformCFR cfr , `Complexity -> (
       let module Approximation = Approximation_ in
       let module SizeBounds = SizeBounds_ in
+      let lsbs = Option.get opt_lsbs in
+      let rvg = Option.get opt_rvg in
       let apply_cfr
           (method_name: string)
           (f_cfr: Program.t -> Program.t MaybeChanged.t)
@@ -469,7 +471,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
                     |> tap (const @@ Logger.log logger Logger.INFO (fun () -> method_name ^ "analysis", ["scc", TransitionSet.to_id_string scc]))
                     |> SizeBounds.improve program_cfr rvg_with_sccs_cfr ~scc:(Option.some scc) (LSB_Table.find lsbs)
                     |> twn_size_bounds ~conf scc program_cfr
-                    |> improve_scc ~conf rvg_with_sccs_cfr scc program_cfr lsbs
+                    |> improve_scc ~conf (Some rvg_with_sccs_cfr) scc program_cfr opt_lsbs
                   else appr)
                 (CFR.merge_appr program program_cfr appr) in
             let cfr_bound = Bound.sum (Enum.map
@@ -519,16 +521,21 @@ let handle_timeout_cfr method_name non_linear_transitions =
           else (program, appr, rvg))
         else (program, appr, rvg))
     )
+    |> Tuple3.map3 Option.some
 
   let improve ~conf ~preprocess program appr =
     (* let appr = List.fold (fun appr (v,t) -> Approximation.add_sizebound (Bound.of_var v) t v appr) appr (List.cartesian_product (Program.input_vars program |> VarSet.to_list) (Program.transitions program |> TransitionSet.to_list)) in *) (*TODO Remove and make unhacky (heuristic entry transition terminates instead of sizebounds)*)
-    let lsbs = compute_lsbs program in
-    let rvg = RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first)% LSB_Table.find lsbs) program in
+    let opt_lsbs = match conf.form_of_analysis with
+      |`Termination -> None
+      |`Complexity  -> Option.some @@ compute_lsbs program in
+    let opt_rvg = match conf.form_of_analysis with
+      |`Termination -> None
+      |`Complexity  -> Option.some @@ RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first)% LSB_Table.find (Option.get opt_lsbs)) program in
     let program, appr =
       program
       |> Program.sccs
       |> List.of_enum
-      |> List.fold_left (fun (program, appr, rvg) scc_orig ->
+      |> List.fold_left (fun (program, appr, opt_rvg) scc_orig ->
              let improve_scc scc =
                if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                  appr
@@ -536,24 +543,24 @@ let handle_timeout_cfr method_name non_linear_transitions =
                  |> (match conf.form_of_analysis with
                     | `Termination -> identity
                     | `Complexity  -> fun appr -> 
-                      SizeBounds.improve program rvg ~scc:(Option.some scc) (LSB_Table.find lsbs) appr 
+                      SizeBounds.improve program (Option.get opt_rvg) ~scc:(Option.some scc) (LSB_Table.find (Option.get opt_lsbs)) appr 
                       |> twn_size_bounds ~conf scc program)
-                 |> improve_scc ~conf rvg scc program lsbs
+                 |> improve_scc ~conf opt_rvg scc program opt_lsbs
                  (* Apply CFR if requested; timeout time_left_cfr * |scc| / |trans_left and scc| or inf if ex. unbound transition in scc *)
-                 |> handle_cfr ~conf ~preprocess scc program rvg lsbs
-                 |> fun (program,appr,rvg) -> (program, scc_cost_bounds ~conf program scc appr,rvg)
-               else (program, appr, rvg)
+                 |> handle_cfr ~conf ~preprocess scc program opt_rvg opt_lsbs
+                 |> fun (program,appr,opt_rvg) -> (program, scc_cost_bounds ~conf program scc appr,opt_rvg)
+               else (program, appr, opt_rvg)
              in
              (* Check if SCC still exists and keep only existing transitions (Preprocessing in cfr might otherwise cut them ) *)
              match conf.cfr_configuration with
              | NoCFR        -> improve_scc scc_orig
              | PerformCFR _ ->
                 let scc = TransitionSet.inter scc_orig (Program.transitions program) in
-                if TransitionSet.is_empty scc then (program,appr,rvg)
+                if TransitionSet.is_empty scc then (program,appr,opt_rvg)
                 else improve_scc scc
-           ) (program, appr, rvg)
+           ) (program, appr, opt_rvg)
       |> Tuple3.get12
     in
-    let appr_with_costbounds = CostBounds.infer_from_timebounds program appr in
-    program, appr_with_costbounds
+      let appr_with_costbounds = CostBounds.infer_from_timebounds program appr in
+      program, appr_with_costbounds
 end
