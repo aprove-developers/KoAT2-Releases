@@ -89,22 +89,24 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
     let terminates conf (l,t,l') scc program appr =
       TWN_Proofs.proof := FormattedString.Empty;
-      let opt = TimeBoundTable.find_option termination_table (l,t,l') in
-      if Option.is_none opt then (
+      let compute_new_bound =
         let bound = Timeout.timed_run 5. (fun () ->
-        (* Local termination was not proven yet. *)
-        let loops_opt = SimpleCycle.find_loops ~relax_loops:conf.relax_loops (heuristic_for_cycle conf.transformation_type) appr program scc (l,t,l') in
-        if Option.is_some loops_opt then
-          let cycle, loops = Option.get loops_opt in
-          let upd_invariant_cand = List.map (Constraint.atom_list % TransitionLabel.invariant % Tuple3.second) cycle |> List.flatten in
-          let is_bounded entry loop = TWN_Termination.termination ~entry:(Option.some entry) upd_invariant_cand loop in
-          let local_bounds = List.map (fun (entry,(loop,_)) -> entry, is_bounded entry loop) loops in
-          List.iter (fun t -> TimeBoundTable.add termination_table t local_bounds) cycle;
-          List.for_all Tuple2.second local_bounds
-        else (
-          TimeBoundTable.add termination_table (l,t,l') [(l,t,l'),false];
-          false)) in
-        Option.is_some bound && Tuple2.first @@ Option.get bound
-      ) else 
-        List.for_all Tuple2.second (Option.get opt)
+          (* Local termination was not proven yet. *)
+          let compute_termination (cycle, loops) =
+            let upd_invariant_cand = List.map (Constraint.atom_list % TransitionLabel.invariant % Tuple3.second) cycle |> List.flatten in
+            let is_bounded entry loop = TWN_Termination.termination ~entry:(Option.some entry) upd_invariant_cand loop in
+            let local_bounds = List.map (fun (entry,(loop,_)) -> entry, is_bounded entry loop) loops in
+            List.iter (fun t -> TimeBoundTable.add termination_table t local_bounds) cycle;
+            List.for_all Tuple2.second local_bounds in
+          let handle_missing_loops = TimeBoundTable.add termination_table (l,t,l') [(l,t,l'),false] in
+
+          SimpleCycle.find_loops ~relax_loops:conf.relax_loops (heuristic_for_cycle conf.transformation_type) appr program scc (l,t,l')
+          (*If no simple loops were found we cannot prove termination*)
+          |> Option.map_default compute_termination (handle_missing_loops; false)) in
+        (* In case no bound was computed this maps to false otherwise to the bound*)
+        Option.map_default Tuple2.first false bound 
+      in
+      TimeBoundTable.find_option termination_table (l,t,l')
+      (*If a bound was computed we check for finiteness*)
+      |> Option.map_default (List.for_all Tuple2.second) compute_new_bound
 end

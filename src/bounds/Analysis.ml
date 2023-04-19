@@ -316,7 +316,7 @@ let local_rank ~conf (scc: TransitionSet.t) measure program max_depth appr =
       let compute_function =
         MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth
           % flip TransitionSet.find scc_overapprox_nonlinear
-    in
+      in
       TransitionSet.to_array unbounded_transitions
       |> Parmap.array_parmap compute_function
       |> Array.enum
@@ -335,7 +335,7 @@ let local_rank ~conf (scc: TransitionSet.t) measure program max_depth appr =
       | `Termination -> improve_termination_rank_mprf 
       | `Complexity  -> improve_with_rank_mprf in
     rankfuncs
-    |> MaybeChanged.fold_enum (fun appr -> improvement_function measure program appr) appr
+    |> MaybeChanged.fold_enum (improvement_function measure program) appr
 
 
 let run_local ~conf (scc: TransitionSet.t) measure program appr =
@@ -368,23 +368,20 @@ let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.
 
 (* TODO unify conf types with ~local! *)
 let improve_scc ~conf opt_rvg_with_sccs (scc: TransitionSet.t) program opt_lsb_table appr =
-  let rec step appr =
-    appr
-    |> knowledge_propagation ~conf scc program
+  let improvement appr =
+    knowledge_propagation ~conf scc program appr
     |> (match conf.form_of_analysis with
        | `Termination -> identity
-       | `Complexity -> 
-        fun appr -> SizeBounds.improve program (Option.get opt_rvg_with_sccs) ~scc:(Option.some scc) (LSB_Table.find @@ Option.get opt_lsb_table) appr
+       | `Complexity -> fun appr -> 
+          SizeBounds.improve program (Option.get opt_rvg_with_sccs) ~scc:(Option.some scc) (LSB_Table.find @@ Option.get opt_lsb_table) appr
           |> twn_size_bounds ~conf scc program
           |> knowledge_propagation_size scc program)
     |> improve_timebound ~conf scc `Time program
-    |> MaybeChanged.if_changed step
-    |> MaybeChanged.unpack
   in
   (* First compute initial time bounds for the SCC and then iterate by computing size and time bounds alteratingly *)
   knowledge_propagation ~conf scc program appr
   |> MaybeChanged.unpack % improve_timebound ~conf scc `Time program
-  |> step
+  |> Util.find_fixpoint improvement
 
 let scc_cost_bounds ~conf program scc appr =
   if TransitionSet.exists (not % Polynomial.is_const % Transition.cost) scc then
@@ -561,6 +558,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
            ) (program, appr, opt_rvg)
       |> Tuple3.get12
     in
-      let appr_with_costbounds = CostBounds.infer_from_timebounds program appr in
-      program, appr_with_costbounds
+    program, match conf.form_of_analysis with 
+    | `Termination -> appr
+    | `Complexity -> CostBounds.infer_from_timebounds program appr
 end

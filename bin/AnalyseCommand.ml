@@ -16,11 +16,17 @@ let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
   print_string (Approximation.to_string program appr)
 
 (** Prints the overall timebound of the program to the shell. *)
-let print_overall_costbound termination_only (program: Program.t) (appr: Approximation.t): unit =
+let print_overall_costbound (program: Program.t) (appr: Approximation.t): unit =
   program
   |> Approximation.program_costbound appr
-  |> Bound.to_string ~termination_only
+  |> Bound.to_string
   |> print_endline
+
+let print_overall_termination  (program: Program.t) (appr: Approximation.t): unit =
+program
+|> Approximation.program_timebound appr
+|> Bound.to_string ~termination_only:true
+|> print_endline
 
 (** Prints the overall timebound of the program to the shell in the TermComp fashion. *)
 let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
@@ -72,7 +78,7 @@ type params = {
     log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.NONE]
     (** The general log level of the loggers. *)
 
-    result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_costbound false]] [@default print_overall_costbound false] [@aka ["r"]]
+    result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_costbound]] [@default print_overall_costbound] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
 
     preprocessors : Program.t Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all_classical)] [@default Preprocessor.([InvariantGeneration;  CutUnsatisfiableTransitions; CutUnreachableLocations; EliminateNonContributors])]
@@ -233,7 +239,7 @@ let run (params: params) =
                else
                  Bounds.find_bounds ~conf:bounds_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr
                )
-     |> tap (fun (program, appr) -> (if params.termination then print_overall_costbound true else params.result) program appr)
+     |> tap (fun (program, appr) -> (if params.termination then print_overall_termination else params.result) program appr)
      |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~pretty:true ~show_initial:false ~termination_only:params.termination program appr))
      |> tap (fun (program, appr) ->
             if params.print_system then
