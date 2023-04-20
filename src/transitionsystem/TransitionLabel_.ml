@@ -362,13 +362,7 @@ let rename rename_map t =
 
 let relax_guard ?(non_static=VarSet.empty) t = 
   let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
-  {
-    id = t.id;
-    update = t.update;
-    guard = List.filter is_static t.guard;
-    invariant = t.invariant;
-    cost = t.cost;
-  }
+  {t with guard = List.filter is_static t.guard}
 let remove_non_contributors non_contributors t =
   let patterns = List.filter (flip VarSet.mem (VarSet.diff (input_vars t) non_contributors)) (VarSet.to_list @@ input_vars t) in
   let assignments = Util.cat_maybes @@ List.map (flip VarMap.find_opt t.update) patterns in
