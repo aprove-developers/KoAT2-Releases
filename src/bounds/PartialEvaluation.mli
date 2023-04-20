@@ -4,7 +4,7 @@ open ProgramModules
 (** Logger CFR *)
 val logger : Batteries.Logger.log
 
-val add_to_proof : Program.t -> BoundsInst.Bound.t -> unit
+val add_to_proof : Program.t -> string -> unit
 
 val time_cfr : float Batteries.ref
 

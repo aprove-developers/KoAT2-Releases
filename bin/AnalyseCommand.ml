@@ -109,8 +109,11 @@ type params = {
     (** Makes sure the analysis stops after the specified amount of time. Might result in empty output.*)
 
     termination : bool; [@default false]
+    (** Only looks for termination behavior. *)
 
     relax_loops : bool; [@default false]
+    (** Will remove non_static variables in found cycles to make them simple. *)
+    
     (** If the analysis should be terminated after the first found timebound. *)
   } [@@deriving cmdliner]
 
