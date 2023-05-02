@@ -109,18 +109,18 @@ let minimalSCCs (nonLinearTransitions: TransitionSet.t) (program: Program.t) =
   |> (applyDijkstra nonLinearTransitions)
   |> List.map (fun scc -> parallelTransitions program scc)
 
+let rec disjoint_sccs original_sccs merged_scc =
+  let disjoint, non_disjoint = List.partition (fun scc ->
+    LocationSet.disjoint (TransitionSet.locations scc) (TransitionSet.locations merged_scc)) original_sccs in
+  if List.is_empty non_disjoint then
+    merged_scc
+  else
+    disjoint_sccs disjoint (List.fold TransitionSet.union merged_scc non_disjoint)
 
 (* Merges non-disjoint SCCS *)
 let minimalDisjointSCCs (original_sccs: TransitionSet.t list) =
   original_sccs
-  |> List.map (fun original_scc ->
-          original_scc
-          |> List.fold_right
-              (fun scc merged_scc ->
-                if (LocationSet.disjoint (TransitionSet.locations scc) (TransitionSet.locations merged_scc)) then
-                  merged_scc
-                else
-                  (TransitionSet.union scc merged_scc)) original_sccs)
+  |> List.map (disjoint_sccs original_sccs)
   |> SCCSet.of_list
   |> fun tmp -> SCCSet.filter (fun scc1 -> not (SCCSet.exists (fun scc2 -> TransitionSet.subset scc1 scc2 && not (TransitionSet.equal scc1 scc2)) tmp)) tmp
 
