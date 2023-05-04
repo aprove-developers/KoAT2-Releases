@@ -12,28 +12,42 @@ let command = "analyse"
 let description = "Proceed a full time, cost and size analysis on a given integer transition system"
 
 (** Prints the whole resulting approximation to the shell. *)
-let print_all_bounds (program: Program.t) (appr: Approximation.t): unit =
-  print_string (Approximation.to_string program appr)
+let print_all_bounds form_of_analysis (program: Program.t) (appr: Approximation.t): unit =
+  let form = form_of_analysis == `Termination in
+  Approximation.to_string ~termination_only:form program appr
+  |> print_string 
 
 (** Prints the overall timebound of the program to the shell. *)
-let print_overall_costbound (program: Program.t) (appr: Approximation.t): unit =
-  program
-  |> Approximation.program_costbound appr
-  |> Bound.to_string
-  |> print_endline
 
-let print_overall_termination  (program: Program.t) (appr: Approximation.t): unit =
-program
-|> Approximation.program_timebound appr
-|> Bound.to_string ~termination_only:true
-|> print_endline
+let print_overall_costbound form_of_analysis (program: Program.t) (appr: Approximation.t): unit =
+  let print_overall_costbound_complexity (program: Program.t) (appr: Approximation.t): unit =
+    program
+    |> Approximation.program_costbound appr
+    |> Bound.to_string
+    |> print_endline in
+  let print_overall_termination  (program: Program.t) (appr: Approximation.t): unit =
+  program
+  |> Approximation.program_timebound appr
+  |> Bound.to_string ~termination_only:true
+  |> print_endline in 
+
+  match form_of_analysis with
+  | `Termination -> print_overall_termination program appr
+  | `Complexity -> print_overall_costbound_complexity program appr
 
 (** Prints the overall timebound of the program to the shell in the TermComp fashion. *)
-let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
-  program
-  |> Approximation.program_costbound appr
-  |> Bound.asymptotic_complexity
-  |> Bound.show_complexity_termcomp
+let print_termcomp form_of_analysis (program: Program.t) (appr: Approximation.t): unit =
+  (match form_of_analysis with 
+    |`Termination -> 
+      (program
+      |>Approximation.program_timebound appr
+      |> Bound.to_string ~termination_only:true
+      |> String.uppercase)
+    |`Complexity ->
+      (program
+      |>Approximation.program_costbound appr
+      |> Bound.asymptotic_complexity
+      |> Bound.show_complexity_termcomp))
   |> print_endline
 
 (** TWN for no transformations, TWNTransform for both techniques, TWNTransformJordan to transform only with jordan normal form, TWNTransformGeneral to transform only with the general approach *)
@@ -78,7 +92,7 @@ type params = {
     log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.NONE]
     (** The general log level of the loggers. *)
 
-    result : (Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_costbound]] [@default print_overall_costbound] [@aka ["r"]]
+    result : ([`Complexity | `Termination] -> Program.t -> Approximation.t -> unit); [@enum ["termcomp", print_termcomp; "all", print_all_bounds; "overall", print_overall_costbound]] [@default print_overall_costbound] [@aka ["r"]]
     (** The kind of output which is deserved. The option "all" prints all time- and sizebounds found in the whole program, the option "overall" prints only the sum of all timebounds. The option "termcomp" prints the approximated complexity class. *)
 
     preprocessors : Program.t Preprocessor.t list; [@enum Preprocessor.(List.map (fun p -> show p, p) all_classical)] [@default Preprocessor.([InvariantGeneration;  CutUnsatisfiableTransitions; CutUnreachableLocations; EliminateNonContributors])]
@@ -152,6 +166,8 @@ let local_to_string = function
   | `MPRF -> "MPRF"
   | `TWN -> "TWN"
 
+let form_of_analysis b= if b then `Termination else `Complexity
+
 (** Runs KoAT2 on provided parameters. *)
 let run (params: params) =
   Timeout.start_time_of_koat2 := Unix.gettimeofday();
@@ -181,7 +197,7 @@ let run (params: params) =
           transformation_type = t_type;                      
           }) ;
       closed_form_size_bounds = if params.closed_form_size_bounds then ComputeClosedFormSizeBounds else NoClosedFormSizeBounds;
-      form_of_analysis = if params.termination then `Termination else `Complexity;
+      form_of_analysis = form_of_analysis params.termination;
       cfr_configuration = match params.cfr with
         | [] -> NoCFR
         | l ->  PerformCFR l;
@@ -242,7 +258,7 @@ let run (params: params) =
                else
                  Bounds.find_bounds ~conf:bounds_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr
                )
-     |> tap (fun (program, appr) -> (if params.termination then print_overall_termination else params.result) program appr)
+     |> tap (fun (program, appr) -> params.result (form_of_analysis params.termination) program appr)
      |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~pretty:true ~show_initial:false ~termination_only:params.termination program appr))
      |> tap (fun (program, appr) ->
             if params.print_system then
