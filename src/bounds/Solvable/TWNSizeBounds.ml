@@ -39,7 +39,7 @@ let lift appr t var = function
                |> List.map (fun (entry,local_size) -> Bound.substitute_f (Approximation.sizebound appr entry) local_size)
                |> List.enum
                |> Bound.sum
-               |> tap (fun b -> TWN_Proofs.proof_append FormattedString.(mk_str_header_small @@ "TWN. Size Bound - Lifting for " ^ (Transition.to_id_string_pretty t) ^ " and " ^ Var.to_string ~pretty:true var ^ ": " ^ Bound.to_string ~pretty:true b))
+               |> tap (fun b -> TWN_Proofs.proof_append FormattedString.(mk_str_header_small @@ "TWN Size Bound - Lifting for " ^ (Transition.to_id_string_pretty t) ^ " and " ^ Var.to_string ~pretty:true var ^ ": " ^ Bound.to_string ~pretty:true b))
 
 module TWN_Complexity = TWN_Complexity.Make(ProgramModules)
 let compute_time_bound loop =
