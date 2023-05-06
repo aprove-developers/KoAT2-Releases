@@ -31,31 +31,35 @@ def size_bound(matrix_as_list, vars_as_list, var):
         dim = sqrt(len(matrix_as_int_list))
         m = Matrix(dim, dim, matrix_as_int_list) # build matrix
         Jexp = Matrix.zeros(dim,dim)
-        P_inv, J = m.jordan_form()
-        eigenvalues = J.diagonal()
-        counter = Counter(eigenvalues)
-        n = Symbol('n')
-        algebraic_mult_zero = 0
+        try:
+            P_inv, J = m.jordan_form()
+            eigenvalues = J.diagonal()
+            counter = Counter(eigenvalues)
+            n = Symbol('n')
+            algebraic_mult_zero = 0
 
-        # Compute J**n
-        tmp = 0
-        while(tmp < dim):
-            if eigenvalues[tmp] == 0:
-                algebraic_mult_zero = counter[eigenvalues[tmp]]
-            else:
-                for i in range(0,counter[eigenvalues[tmp]]):
-                    for j in range(i,counter[eigenvalues[tmp]]):
-                        Jexp[i + tmp,j + tmp] = binomial(n,j-i) * 1/eigenvalues[tmp]**(j-i) * eigenvalues[tmp]**n
-            tmp = tmp + counter[eigenvalues[tmp]]
+            # Compute J**n
+            tmp = 0
+            while(tmp < dim):
+                if eigenvalues[tmp] == 0:
+                    algebraic_mult_zero = counter[eigenvalues[tmp]]
+                else:
+                    for i in range(0,counter[eigenvalues[tmp]]):
+                        for j in range(i,counter[eigenvalues[tmp]]):
+                            Jexp[i + tmp,j + tmp] = binomial(n,j-i) * 1/eigenvalues[tmp]**(j-i) * eigenvalues[tmp]**n
+                tmp = tmp + counter[eigenvalues[tmp]]
 
-        print(algebraic_mult_zero)
+            print(algebraic_mult_zero)
 
-        vars = symbols(vars_as_list)
-        clt = (P_inv * Jexp * P_inv.inv()) * Matrix(dim,1,vars) # Closed form of Jordan normal form (see https://en.wikipedia.org/wiki/Jordan_normal_form#Matrix_functions)
+            vars = symbols(vars_as_list)
+            clt = (P_inv * Jexp * P_inv.inv()) * Matrix(dim,1,vars) # Closed form of Jordan normal form (see https://en.wikipedia.org/wiki/Jordan_normal_form#Matrix_functions)
 
-        index = vars_as_list.index(var)
-        print(abs_expr(clt[index].expand()))
-        sys.stdout.flush()
+            index = vars_as_list.index(var)
+            print(abs_expr(clt[index].expand()))
+            sys.stdout.flush()
+        except IndexError:
+            print("CRUSH DUE TO SYMPY")
+            # currently sympy crushes on python3 -c 'from python.SizeBoundSolvable import size_bound; size_bound([0, 0, 0, 0, -1, 2, 2, 3, 2, 3, 0, 1, 0, 1, 1, -1, -1, -2, -2, -2, 0, -1, 0, 0, 0],["Arg_4", "Arg_3", "Arg_2", "Arg_1", "Arg_0"],"Arg_0")'
     except BrokenPipeError:
         devnull = os.open(os.devnull, os.O_WRONLY)
         os.dup2(devnull, sys.stdout.fileno())
