@@ -51,6 +51,7 @@ let run_python var block update_matrix =
   let command = "python3 -c 'from python.SizeBoundSolvable import size_bound; size_bound(" ^ update_str ^ "," ^ vars_str ^ ",\"" ^ Var.to_string var ^ "\")'" in
   let python_output = read_process_lines command in
   match python_output with
+      | [error] -> None
       | [n;a] -> Some (int_of_string n,a |> Readers.read_bound)
       | _ -> None (* Error string *)
 
@@ -110,8 +111,12 @@ let improve_t program trans t appr =
               else (
                 (* As we obtain minimal solvable blocks, we have to merge them, e.g., if we consider Y in for (X,Y) <- (2*X,X), we infer the blocks [X],[Y] and have to merge them to [X,Y] . *)
                 let block = List.flatten @@ List.filter (fun block -> List.exists (flip List.mem block) (VarSet.to_list @@ (VarSet.add var (Loop.updated_vars loop_red)))) @@ Option.get blocks in
-                let (n, b) = Option.get @@ run_python var block (matrix_of_linear_assignments loop_red block) in
-                Bound.add (Loop.compute_bound_n_iterations loop_red var n) b)
+                let opt = run_python var block (matrix_of_linear_assignments loop_red block) in
+                if Option.is_some opt then
+                  let (n, b) = Option.get opt in
+                  Bound.add (Loop.compute_bound_n_iterations loop_red var n) b
+                else
+                  Bound.infinity)
           in
           let time_bound = MultiphaseRankingFunction.time_bound loop 5 in
           TWN_Proofs.proof_append FormattedString.(mk_str_line @@ "loop: " ^ Loop.to_string loop_red <> mk_str_line @@ "overappr. closed-form: " ^ Bound.to_string ~pretty:true local_bound <> mk_str_line @@ "runtime bound: " ^ Bound.to_string ~pretty:true time_bound);
