@@ -113,6 +113,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         Loop.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", Loop.to_string loop])), true
       else loop, false in
     Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
+    TWN_Proofs.proof_append (FormattedString.mk_str_line ("  loop: " ^ Loop.to_string (guard,update)));
     TWN_Proofs.proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
     let pe = PE.compute_closed_form (List.map (fun var ->
       let update_var = Loop.update_var t_ var in
