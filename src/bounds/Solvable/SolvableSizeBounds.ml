@@ -79,20 +79,26 @@ let size_bound_table: (Transition.t * Bound.t) list option SizeBoundTable.t = Si
 let reset_cfr () =
   SizeBoundTable.clear size_bound_table
 
-let lift appr = function
+let lift appr t var = function
   | None -> Bound.infinity
   | Some xs -> xs
                |> List.map (fun (entry,local_size) -> Bound.substitute_f (Approximation.sizebound appr entry) local_size)
                |> List.enum
                |> Bound.sum
+               |> tap (fun b -> TWN_Proofs.proof_append FormattedString.(mk_str_header_small @@ "Solv. Size Bound - Lifting for " ^ (Transition.to_id_string_pretty t) ^ " and " ^ Var.to_string ~pretty:true var ^ ": " ^ Bound.to_string ~pretty:true b))
+
 
 let improve_t program trans t appr =
+  TWN_Proofs.proof_reset();
   VarSet.fold (fun var appr ->
-    if SizeBoundTable.mem size_bound_table (t, var) then
-        let lifted_bound = lift appr (SizeBoundTable.find size_bound_table (t,var)) in
+    if SizeBoundTable.mem size_bound_table (t, var) && not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var then
+        let lifted_bound = lift appr t var (SizeBoundTable.find size_bound_table (t,var)) in
+        let proof = TWN_Proofs.get_proof () in
+        ProofOutput.add_to_proof (fun () -> proof);
         Approximation.add_sizebound lifted_bound t var appr
     else
-      if not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var then
+      if not @@ Bound.is_polynomial @@ Approximation.sizebound appr t var then (
+        TWN_Proofs.proof_append @@ FormattedString.mk_str_header_big @@ "Solv. Size Bound: " ^ (Transition.to_id_string_pretty t) ^ " for " ^ Var.to_string ~pretty:true var;
         let loops_opt = SimpleCycle.find_loop ~relevant_vars:(Option.some @@ VarSet.singleton var) heuristic_for_cycle appr program trans t in
         if Option.is_some loops_opt then
           let loop, entries_traversal = Option.get loops_opt in
@@ -108,6 +114,7 @@ let improve_t program trans t appr =
                 Bound.add (Loop.compute_bound_n_iterations loop_red var n) b)
           in
           let time_bound = MultiphaseRankingFunction.time_bound loop 5 in
+          TWN_Proofs.proof_append FormattedString.(mk_str_line @@ "loop: " ^ Loop.to_string loop_red <> mk_str_line @@ "overappr. closed-form: " ^ Bound.to_string ~pretty:true local_bound <> mk_str_line @@ "runtime bound: " ^ Bound.to_string ~pretty:true time_bound);
           let res = List.map (fun (entry,traversal) -> entry,
             Bound.substitute (Var.of_string "n") ~replacement:time_bound local_bound
             |> Bound.substitute_f (fun var -> Bound.of_poly @@ (VarMap.find_opt var traversal |? Polynomial.of_var var))
@@ -115,10 +122,12 @@ let improve_t program trans t appr =
           in
           SizeBoundTable.add size_bound_table (t,var) res;
           (* Lifting previously computed local size bounds and store them in appr. *)
-          let lifted_bound = lift appr res in
+          let lifted_bound = lift appr t var res in
+          let proof = TWN_Proofs.get_proof () in
+          ProofOutput.add_to_proof (fun () -> proof);
           Approximation.add_sizebound lifted_bound t var appr
         else
-          appr
+          appr)
       else
         appr) (TransitionLabel.input_vars (Transition.label t)) appr
 

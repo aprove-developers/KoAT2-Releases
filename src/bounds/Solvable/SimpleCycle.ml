@@ -10,6 +10,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
   module Loop = Loop.Make(PM)
+  module TWN_Proofs = TWN_Proofs.Make(PM)
   module Transformation = Transformation.Make(PM)
   module Approximation = Approximation.MakeForClassicalAnalysis(PM)
 
@@ -92,8 +93,10 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       List.find_map_opt (fun cycle ->
         let chained_cycle = chain_cycle ~relevant_vars cycle program in
         if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
+          let handled_transitions = handled_transitions cycle in
+          TWN_Proofs.add_to_proof_graph program handled_transitions (Program.entry_transitions logger program handled_transitions);
           Option.some
-          (handled_transitions cycle,
+          (handled_transitions,
           List.map (fun (entry,loop) -> (entry,Transformation.transform transformation_type loop)) chained_cycle)
         else
           None) cycles
@@ -157,6 +160,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             @
             (List.filter (not % flip TransitionSet.mem trans_in_scc) entries_inside) (* Transition which are not in an SCC. *)
           in
+          TWN_Proofs.add_to_proof_graph program handled_transitions (Program.entry_transitions logger program handled_transitions);
           Option.some (loop, List.map (fun entry -> entry, traverse_cycle cycle (Transition.src entry) l) (List.unique ~eq:Transition.equal relevant_entries@entries_outside))
         else
           None) cycles
