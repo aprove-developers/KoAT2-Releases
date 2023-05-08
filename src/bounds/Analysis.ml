@@ -183,39 +183,6 @@ let rec knowledge_propagation (scc: TransitionSet.t) program appr =
         (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc])
          execute)
 
-let rec knowledge_propagation_size (scc: TransitionSet.t) program appr =
-  let execute () =
-    scc
-    |> TransitionSet.to_list
-    |> List.cartesian_product (VarSet.to_list @@ Program.input_vars program)
-    |> List.filter (fun (var,transition) -> Bound.is_infinity @@ Approximation.sizebound appr transition var)
-    |> List.enum
-    |> MaybeChanged.fold_enum (
-      fun appr (var,(l,t,l')) ->
-        let new_bound =
-          Program.pre_transitionset_cached program (l,t,l')
-          |> TransitionSet.enum
-          |> Enum.map (flip (Approximation.sizebound appr) var)
-          |> Bound.sum
-          |> Bound.substitute_f (fun var -> Bound.of_poly @@ (TransitionLabel.update t var |? Polynomial.of_var var))
-        in
-        let original_bound = Approximation.sizebound appr (l,t,l') var in
-        if Bound.compare_asy original_bound new_bound = 1 then (
-          ProofOutput.add_str_paragraph_to_proof (fun () ->
-            "knowledge_propagation leads to new size bound "^Bound.to_string ~pretty:true new_bound^" for var" ^ Var.to_string var ^ " and transition " ^ Transition.to_string_pretty (l,t,l')
-          );
-          Approximation.add_sizebound new_bound (l,t,l') var appr
-          |> MaybeChanged.changed)
-        else
-           MaybeChanged.same appr
-      ) appr
-    |> MaybeChanged.if_changed (knowledge_propagation_size scc program)
-    |> MaybeChanged.unpack
-  in
-  (Logger.with_log logger Logger.INFO
-        (fun () -> "knowledge prop. ", ["scc", TransitionSet.to_string scc])
-         execute)
-
 let local_rank (scc: TransitionSet.t) measure program max_depth appr =
     let get_unbounded_vars transition =
       Program.input_vars program
@@ -284,7 +251,6 @@ let improve_scc ~conf rvg_with_sccs (scc: TransitionSet.t) program lsb_table app
     |> knowledge_propagation scc program
     |> SizeBounds.improve program rvg_with_sccs ~scc:(Option.some scc) (LSB_Table.find lsb_table)
     |> twn_size_bounds ~conf scc program
-    |> knowledge_propagation_size scc program
     |> improve_timebound ~conf scc `Time program
     |> MaybeChanged.if_changed step
     |> MaybeChanged.unpack
