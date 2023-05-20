@@ -1,0 +1,12 @@
+# Terminates for both techniques
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A B)
+(RULES
+  l0(A,B) -> l1(A,B)
+  l1(A,B) -> l2(T,B)
+  l2(A,B) -> l3(A-1,B) :|: B > 0 
+  l3(A,B) -> l1(A,B-1) 
+  l2(A,B) -> l4(A,B)
+  l4(A,B) -> l4(A+B,B-1) :|: A > 0
+)
