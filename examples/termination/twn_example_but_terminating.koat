@@ -1,0 +1,8 @@
+# TWN can prove termination while mprf cannot 
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A B)
+(RULES
+  l0(A,B) -> l1(A,B)
+  l1(A,B) -> l1(A+3*B^2,2*B) :|: B^2 > 0 && B^2 < 10000
+)

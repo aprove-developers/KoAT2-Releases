@@ -1,4 +1,4 @@
-# Terminates but neither technique will prove termination
+# Does not terminate for B=0
 (GOAL COMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS l0))
 (VAR A B)
