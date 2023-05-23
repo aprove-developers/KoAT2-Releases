@@ -316,10 +316,6 @@ let input_vars t =
 
 let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
 
-let has_tmp_vars_in_guard t = 
-  let guard_vars = Guard.vars t.guard in
-  not @@ VarSet.subset guard_vars (input_vars t)
-
 let input_size t =
   t
   |> input_vars

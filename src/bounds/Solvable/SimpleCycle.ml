@@ -93,13 +93,13 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
   let find_loops ?(relevant_vars = None) ?(relax_loops=`NoRelaxation) ?(transformation_type = `NoTransformation) f appr program scc (l,t,l') =
-    if relax_loops == `Relaxation || not @@ TransitionLabel.has_tmp_vars_in_guard t then
+    if relax_loops == `Relaxation || not @@ TransitionLabel.has_tmp_vars t then
       let updated_trans = match relax_loops with
         | `Relaxation -> TransitionLabel.relax_guard t 
         | `NoRelaxation -> t in
         let handle_scc = match relax_loops with
         | `Relaxation -> List.map (fun (l,t,l') -> (l,TransitionLabel.relax_guard t,l')) 
-        | `NoRelaxation -> List.filter (fun (l,t,l') -> not @@ TransitionLabel.has_tmp_vars_in_guard t) in 
+        | `NoRelaxation -> List.filter (fun (l,t,l') -> not @@ TransitionLabel.has_tmp_vars t) in 
         let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
           Location.equal l1 l2 &&
           Location.equal l1' l2' &&
