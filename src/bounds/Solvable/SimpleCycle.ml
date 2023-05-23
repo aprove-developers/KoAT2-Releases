@@ -57,13 +57,6 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   (** Computes all simple cycles which use t. *)
   let cycles_with_t trans t =
     compute_cycles trans [[t]] []
-
-  let path_is_simple input_vars path =
-    let labels = List.map (List.first % Tuple3.second) path in
-    let guard_vars = List.concat_map (VarSet.to_list % Guard.vars % TransitionLabel.guard) labels in
-    let extend_updated_vars label = List.concat_map (fun v -> VarSet.to_list @@ Option.map_default Polynomial.vars VarSet.empty @@ VarMap.find_opt v @@ TransitionLabel.update_map label) guard_vars in
-    let all_updated_vars = VarSet.of_list @@ List.fold (fun vars label -> List.append vars (extend_updated_vars label)) guard_vars labels in
-    VarSet.subset all_updated_vars input_vars
   
   (* determines all variables that get assigned a tmp value in a loop and removes them from the guard*)
   let update_path tmp_vars path = 
@@ -119,11 +112,10 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             && Location.equal l l1
             && Location.equal l' l1') merged_trans in
         let cycles = cycles_with_t merged_trans @@ Option.get merged_t in
-        let input_vars = TransitionLabel.input_vars updated_trans in
         let tmp_vars = VarSet.diff (Program.vars program) (Program.input_vars program) in
         let handle_cycles = match relax_loops with
         | `Relaxation -> List.map @@ update_path tmp_vars 
-        | `NoRelaxation -> List.filter @@ path_is_simple input_vars in
+        | `NoRelaxation -> identity in
         List.find_map_opt (fun cycle ->
           let chained_cycle = chain_cycle ~relevant_vars cycle program in
           if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
