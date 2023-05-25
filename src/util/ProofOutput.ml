@@ -17,7 +17,7 @@ let get_format () = !format
 
 let add_to_proof str_computation =
   if !proof_enabled then
-    proof :=  let p = !proof in lazy(Lazy.force p<>str_computation ())
+    proof :=  let p = !proof in lazy(Lazy.force p<> Lazy.force (Lazy.from_fun str_computation))
 
 let add_to_proof_with_format str_computation =
   if !proof_enabled then

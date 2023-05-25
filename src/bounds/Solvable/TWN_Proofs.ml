@@ -1,18 +1,34 @@
 open Batteries
 open ProgramModules
+open FormattedString
 
 (* PROOF *)
 
-let proof = ref FormattedString.Empty
+let proof = ref Empty
 
-let proof_append f_str = proof := FormattedString.(!proof <> f_str)
+let get_proof () = let p = !proof in proof := Empty; p
 
-let add_to_proof_graph program cycle entries =
-  let color_map =
-  List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty
-  |> List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Red) entries in
-    proof_append FormattedString.(mk_paragraph (
-      match ProofOutput.get_format () with
-        | Html -> FormattedString.mk_raw_str (GraphPrint.print_system_pretty_html color_map program)
-        | _    -> FormattedString.Empty));
-  proof_append (FormattedString.mk_str_line ("  cycle: " ^ (Util.enum_to_string Transition.to_id_string_pretty (List.enum cycle))))
+(* let add_to_proof () =
+  ProofOutput.add_to_proof (fun () -> !proof);
+  proof := Empty *)
+
+let proof_append f_str =
+  proof :=  !proof <> f_str
+
+let proof_reset () = proof := Empty
+
+module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
+  open PM
+
+  module GraphPrint = GraphPrint.Make(PM)
+
+  let add_to_proof_graph program cycle entries =
+    let color_map =
+    List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Blue) cycle GraphPrint.TransitionMap.empty
+    |> List.fold_right (fun t -> GraphPrint.TransitionMap.add t GraphPrint.Red) entries in
+      proof_append @@ mk_paragraph (
+        match ProofOutput.get_format () with
+          | Html -> mk_raw_str (GraphPrint.print_system_pretty_html color_map program)
+          | _    -> Empty);
+    proof_append @@ mk_str_line @@ "  cycle: " ^ (Util.enum_to_string Transition.to_id_string_pretty @@ List.enum cycle)
+end
