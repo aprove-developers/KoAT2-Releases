@@ -1,5 +1,5 @@
 # KoAT2
-Reimplementation of KoAT with control-flow refinement and multiphase ranking functions.
+Reimplementation of KoAT (see [here](https://koat.verify.rwth-aachen.de/) for more information) with control-flow refinement, multiphase ranking functions, runtime bounds by twn-loops, and size bounds by closed forms.
 
 ## Build
 
@@ -19,6 +19,21 @@ Reimplementation of KoAT with control-flow refinement and multiphase ranking fun
 
 To get a statically linked binary, please execute the script `compile_static_binary.sh`. This will set up a docker container in which OCaml 4.09.1 for compiling static binaries using musl is installed with all required packages to compile KoAT2. Please note that in this case, the used libraries (see below) are linked _statically_ into the resulting binary. The code of these libraries can be found when following the given links below.
 
+## Run
+
+1. After compiling the binaries are located in `_build/install/bin`.
+2. Run `./koat2` to get the help page of koat2
+  For further information run ./koat2 commandname --help
+  The main command proceeding a full analysis is the "analyse" command.
+3. The project can be built and run by dune directly with the command `dune exec koat2 --`, or you may `export PATH=$PATH:"path-to-koat/_build/install/default/bin"` (with the substituted path) into your .bashrc file to use `koat2` directly.
+4. For Controlflow - Refinement download https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.2/irankfinder_1.3.2_linux_x86_64.zip and unzip it. Add `export PATH=$PATH:"path-to-irankfinder-folder/irankfinder/"` (with the substituted path) into your .bashrc file such that KoAT2 is able to find iRankFinder.
+5. For size bound technique based on closed forms, install [SymPy](https://www.sympy.org/en/index.html) on your system and use the flag `--closed-form-size-bounds`.`
+
+## Tests & documentation
+
+1. Documentation is build via the dune target `@doc`. Execute the command `dune build @doc`. The resultion documentation can be found in `_build/default/_doc/`
+2. Running tests is done with the command `dune runtest`
+
 ## Links
 
 - Ocaml Forum: https://discuss.ocaml.org/
@@ -30,20 +45,7 @@ To get a statically linked binary, please execute the script `compile_static_bin
 - Ocamlgraph: http://ocamlgraph.lri.fr/doc/
 - Cmdliner: http://erratique.ch/software/cmdliner/doc/Cmdliner
 - iRankFinder: https://github.com/costa-group/iRankFinder
-
-## Run
-
-1. After compiling the binaries are located in `_build/install/bin`.
-2. Run `./koat2` to get the help page of koat2
-  For further information run ./koat2 commandname --help
-  The main command proceeding a full analysis is the "analyse" command.
-3. The project can be built and run by dune directly with the command `dune exec koat2 --`, or you may `export PATH=$PATH:"path-to-koat/_build/install/default/bin"` (with the substituted path) into your .bashrc file to use `koat2` directly.
-4. For Controlflow - Refinement download https://github.com/jesusjda/pyRankFinder/releases/download/v1.3.2/irankfinder_1.3.2_linux_x86_64.zip and unzip it. Add `export PATH=$PATH:"path-to-irankfinder-folder/irankfinder/"` (with the substituted path) into your .bashrc file such that KoAT2 is able to find iRankFinder.
-
-## Tests & documentation
-
-1. Documentation is build via the dune target `@doc`. Execute the command `dune build @doc`. The resultion documentation can be found in `_build/default/_doc/`
-2. Running tests is done with the command `dune runtest`
+- SymPy: https://www.sympy.org/en/index.html
 
 ## Used Libraries
 KoAT2 makes use of the following external tools and libraries.
@@ -58,10 +60,13 @@ KoAT2 makes use of the following external tools and libraries.
 - [Parmap](<https://github.com/rdicosmo/parmap>)
 - [ppx_deriving](<https://github.com/ocaml-ppx/ppx_deriving>)
 - [ppx_deriving_cmdliner](<https://github.com/hammerlab/ppx_deriving_cmdliner>)
+- [SymPy](https://www.sympy.org/en/index.html)
 - [Z3](https://github.com/Z3Prover/z3)
 
 ## External Tools
 In its analysis, KoAT2 may use control-flow refinement via partial evaluation (see [here](https://aprove-developers.github.io/ComplexityMprfCfr/) for more details). To this end, it uses the external tool [iRankFinder](http://irankfinder.loopkiller.com:8081/). To use it, please install it on your system. However, [iRankFinder](http://irankfinder.loopkiller.com:8081/) is already included in the Docker image.
+
+KoAT uses SymPy for some linear algebra calculations. If you want to use it, please install it on your system. SymPy is already included in the Docker image.
 
 To generate an image of the graph of an integer program, KoAT2 invokes [Graphviz](https://graphviz.org/), which has to be manually installed on the system. Note that when building the Docker image, the current Ubuntu binaries of [Graphviz](https://graphviz.org/) are installed. Thus, the resulting image already contains [Graphviz](https://graphviz.org/).
 

@@ -10,6 +10,7 @@ type _ t =
   | CutUnsatisfiableTransitions: 'p t
   | EliminateNonContributors: 'p t
   | Chaining: Program.t t
+  | ChainingConservative: Program.t t
   | InvariantGeneration: 'p t
 
 let show: type p. p t -> string = function
@@ -17,6 +18,7 @@ let show: type p. p t -> string = function
   | CutUnreachableLocations -> "reachable"
   | CutUnsatisfiableTransitions -> "sat"
   | Chaining -> "chaining"
+  | ChainingConservative -> "chaining-conservative"
   | EliminateNonContributors -> "eliminate"
   | InvariantGeneration -> "invgen"
 
@@ -26,7 +28,9 @@ let affects: type p. p t -> p t list = function
   | InvariantGeneration -> [ CutUnsatisfiableTransitions ]
   | CutUnsatisfiableTransitions -> [ CutUnreachableLocations; EliminateNonContributors]
   | EliminateNonContributors -> []
-  | Chaining -> [CutUnsatisfiableTransitions; Chaining; InvariantGeneration]
+  | Chaining -> [CutUnsatisfiableTransitions; Chaining; ChainingConservative; InvariantGeneration]
+  | ChainingConservative -> [CutUnsatisfiableTransitions; Chaining; ChainingConservative; InvariantGeneration]
+
 
 (* Chaining might introduce MANY different temporary variables. To mitigate this we normalise their names*)
 let normalise_temp_vars program =
@@ -52,13 +56,14 @@ let transform (type p) (module P: ProgramTypes.ClassicalProgramModules with type
     let module CUT = CutUnsatisfiableTransitions.Make(P) in CUT.transform_program subject
   | CutZeroProbTransitions -> CutZeroProbTransitions.transform_program subject
   | Chaining -> (MaybeChanged.map normalise_temp_vars  % lift_to_program Chaining.transform_graph) subject
+  | ChainingConservative -> (MaybeChanged.map normalise_temp_vars  % lift_to_program (Chaining.transform_graph ~conservative:true)) subject
   | EliminateNonContributors ->
     let module ENC = EliminateNonContributors.Make(P) in ENC.eliminate subject
   | InvariantGeneration ->
     let module IG = InvariantGeneration.Make(P) in IG.transform_program subject
 
 let all_classical: Program.t t list =
-  [Chaining; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]
+  [Chaining; ChainingConservative; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]
 
 let all_probabilistic: ProbabilisticPrograms.ProbabilisticProgram.t t list =
   [CutZeroProbTransitions; CutUnreachableLocations; CutUnsatisfiableTransitions; EliminateNonContributors; InvariantGeneration]

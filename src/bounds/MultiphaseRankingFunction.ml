@@ -63,14 +63,15 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   let logger = Logging.(get PRF)
 
-  let decreaser measure t =
+  let decreaser measure cost =
       match measure with
-      | `Cost -> TransitionLabel.cost t
+      | `Cost -> cost
       | `Time -> Polynomial.one
 
+  module VarMap = Map.Make(Var)
   (* method transforms polynome to parapolynom*)
-  let as_parapoly label var =
-      match TransitionLabel.update label var with
+  let as_parapoly update var =
+      match VarMap.find_opt var update with
       (** Correct? In the nondeterministic case we just make it deterministic? *)
       | None -> ParameterPolynomial.of_var var
       | Some p -> ParameterPolynomial.of_polynomial p
@@ -82,12 +83,16 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       let fresh_vars = Var.fresh_id_list Var.Int num_vars in
       let fresh_coeffs = List.map Polynomial.of_var fresh_vars in
 
+      if Option.is_some cache && Option.is_some location then (
       (* store fresh_vars *)
-      let coeff_table = cache.coeffs_table in
-      List.iter
-        (* (fun (v,v') -> CoeffTable.add coeff_table (location,v) v') *)
-        (fun (v,v') -> CoeffsTable.modify_def VarSet.empty (location,v) (VarSet.union (VarSet.singleton v')) coeff_table)
-        (List.combine vars fresh_vars);
+        let cache = Option.get cache
+        and location = Option.get location in
+        let coeff_table = cache.coeffs_table in
+        List.iter
+          (* (fun (v,v') -> CoeffTable.add coeff_table (location,v) v') *)
+          (fun (v,v') -> CoeffsTable.modify_def VarSet.empty (location,v) (VarSet.union (VarSet.singleton v')) coeff_table)
+          (List.combine vars fresh_vars)
+      );
 
       let linear_poly = ParameterPolynomial.of_coeff_list fresh_coeffs vars in
       let constant_var = Var.fresh_id Var.Int () in
@@ -172,7 +177,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     done
 
   let compute_ranking_templates cache (depth: int) (vars: VarSet.t) (locations: Location.t list) : unit =
-    compute_ranking_templates_ depth vars locations (ranking_template cache) cache.template_table ParameterPolynomial.to_string
+    compute_ranking_templates_ depth vars locations (ranking_template (Option.some cache) % Option.some) cache.template_table ParameterPolynomial.to_string
 
   let apply_farkas pre concl =
     ParameterConstraint.(farkas_transform (of_constraint @@ Constraint.drop_nonlinear pre)) concl
@@ -180,38 +185,49 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   (* Methods define properties of mprf *)
 
   (* method for mprf and functions f_2 to f_d of depth i *)
-  let transition_constraint_i (template_table0, template_table1, measure, constraint_type, (l,t,l')): Formula.t =
-    let template0 = TemplateTable.find template_table0 in
-    let template1 = TemplateTable.find template_table1 in
-    let poly = ParameterPolynomial.add (template0 l) (template1 l) in
+  let transition_constraint_i_ (measure, constraint_type) (update,guard,cost) template0_l template1_l template1_l': Formula.t =
+    let poly = ParameterPolynomial.add (template0_l) (template1_l) in
     let atom =
       match constraint_type with
-      | `Non_Increasing -> ParameterAtom.Infix.(template1 l  >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
-      | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template1 l')))
+      | `Non_Increasing -> ParameterAtom.Infix.(template1_l  >= ParameterPolynomial.substitute_f (as_parapoly update) (template1_l'))
+      | `Decreasing -> ParameterAtom.Infix.(poly >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure cost) + substitute_f (as_parapoly update) (template1_l')))
     in
-    apply_farkas (TransitionLabel.guard t) atom
+    apply_farkas guard atom
     |> Formula.mk
+
+  let transition_constraint_i (template_table0, template_table1, measure, constraint_type, (l,t,l')): Formula.t =
+    let template0_l = TemplateTable.find template_table0 l
+    and template1_l = TemplateTable.find template_table1 l
+    and template1_l' = TemplateTable.find template_table1 l' in
+    transition_constraint_i_ (measure,constraint_type) (TransitionLabel.update_map t, TransitionLabel.guard t, TransitionLabel.cost t) template0_l template1_l template1_l'
 
   (* method for mprf and function f_1*)
-  let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')): Formula.t =
-    let template1 = TemplateTable.find template_table1 in
+  let transition_constraint_1_ (measure, constraint_type) (update,guard,cost) template1_l template1_l': Formula.t =
     let atom =
       match constraint_type with
-        | `Non_Increasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.substitute_f (as_parapoly t) (template1 l'))
-        | `Decreasing -> ParameterAtom.Infix.(template1 l >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure t) + substitute_f (as_parapoly t) (template1 l')))
+        | `Non_Increasing -> ParameterAtom.Infix.(template1_l >= ParameterPolynomial.substitute_f (as_parapoly update) (template1_l'))
+        | `Decreasing -> ParameterAtom.Infix.(template1_l >= ParameterPolynomial.(ParameterPolynomial.of_polynomial (decreaser measure cost) + substitute_f (as_parapoly update) (template1_l')))
     in
-    apply_farkas (TransitionLabel.guard t) atom
+    apply_farkas guard atom
     |> Formula.mk
 
+  let transition_constraint_1 (template_table1, measure, constraint_type, (l,t,l')): Formula.t =
+    let template1_l = TemplateTable.find template_table1 l
+    and template1_l' = TemplateTable.find template_table1 l' in
+    transition_constraint_1_ (measure, constraint_type) (TransitionLabel.update_map t, TransitionLabel.guard t, TransitionLabel.cost t) template1_l template1_l'
+
   (* method for mprf and function f_d*)
-  let transition_constraint_d bound (template_table1, measure, constraint_type, (l,t,l')) : Formula.t =
-    let template1 = TemplateTable.find template_table1 in
+  let transition_constraint_d_ bound (measure, constraint_type) guard template1_l: Formula.t =
       match constraint_type with
       | `Non_Increasing -> Formula.mk_true
       | `Decreasing  -> (
-        let atom = ParameterAtom.Infix.(template1 l  >= bound) in
-          apply_farkas (TransitionLabel.guard t) atom
+        let atom = ParameterAtom.Infix.(template1_l  >= bound) in
+          apply_farkas guard atom
           |> Formula.mk)
+
+  let transition_constraint_d bound (template_table1, measure, constraint_type, (l,t,l')) : Formula.t =
+    let template1_l = TemplateTable.find template_table1 l in
+    transition_constraint_d_ bound (measure, constraint_type) (TransitionLabel.guard t) template1_l
 
   (* use all three functions above combined*)
   let transition_constraint_ cache (depth, measure, constraint_type, (l,t,l')): Formula.t =
@@ -244,11 +260,11 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     transition_constraint cache (depth, measure, `Decreasing, transition)
 
   (** A valuation is a function which maps from a finite set of variables to values *)
+  let rank_from_valuation_ valuation =
+    ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
 
   let rank_from_valuation cache depth (i: int) valuation location =
-    location
-    |> TemplateTable.find (Array.get cache.template_table i)
-    |> ParameterPolynomial.eval_coefficients (fun var -> Valuation.eval_opt var valuation |? OurInt.zero)
+    rank_from_valuation_ valuation (TemplateTable.find (Array.get cache.template_table i) location)
 
   let make cache depth decreasing_transition non_increasing_transitions valuation  =
   {
@@ -427,6 +443,55 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       (fun () -> "find", ["measure", show_measure measure])
       ~result:(Util.enum_to_string to_string)
       execute
+
+  module Loop = Loop.Make(PM)
+
+
+  type t_loop = {
+    rank : Polynomial.t list;
+    depth : int;
+  }
+
+  (* Computes a MPRF for a loop (with cost 1). *)
+  let find_for_loop loop depth =
+    let template_table = Array.init depth (fun _ -> ranking_template None None (Loop.vars loop)) in
+    let template_i i = Tuple2.first @@ Array.get template_table (i - 1) in
+    let res = ref Formula.mk_true in
+    List.iter (fun guard ->
+      for i = 1 to (depth - 1) do
+        res := transition_constraint_i_ (`Time,`Decreasing) (Loop.update loop, guard, Polynomial.one) (template_i i) (template_i (i + 1)) (template_i (i + 1))
+              |> Formula.mk_and !res
+      done;
+      res := transition_constraint_1_ (`Time,`Decreasing) (Loop.update loop, guard, Polynomial.one) (template_i 1) (template_i 1)
+            |> Formula.mk_and !res;
+      if depth > 1 then
+        res := transition_constraint_d_ ParameterPolynomial.zero (`Time,`Decreasing) guard (template_i depth)
+            |> Formula.mk_and !res
+      else
+        res := transition_constraint_d_ ParameterPolynomial.one (`Time,`Decreasing) guard (template_i depth)
+            |> Formula.mk_and !res;
+    ) (Loop.guard loop |> Formula.constraints);
+    let model = SMT.Z3Solver.get_model !res in
+    if Option.is_some model then
+      Option.some {
+        rank = List.init depth (fun i -> rank_from_valuation_ (Option.get model) (template_i (i + 1)));
+        depth = depth;
+      }
+    else
+      None
+
+  let time_bound loop max_depth =
+    let rankfuncs =
+      Enum.seq 1 ((+) 1) ((>) (max_depth + 1))
+      |> Enum.map (find_for_loop loop)
+      |> Enum.peek % Enum.filter (Option.is_some)
+      |? None in
+    if Option.is_some rankfuncs then
+      let rankfuncs = Option.get rankfuncs in
+      let bounds = rankfuncs.rank |> List.map Bound.of_poly in
+      Bound.(one + (of_int (MPRF_Coefficient.coefficient rankfuncs.depth) * Bound.sum_list bounds))
+    else
+      Bound.infinity
 
 end
 
