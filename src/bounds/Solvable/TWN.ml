@@ -99,7 +99,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     bound
 
     let terminates conf (l,t,l') scc program appr =
-      TWN_Proofs.proof := FormattedString.Empty;
+      TWN_Proofs.proof_reset();
+      TWN_Proofs.proof_append @@ mk_str_header_big @@ "TWN: " ^ (Transition.to_id_string_pretty (l,t,l'));
       let compute_new_bound =
         let bound = Timeout.timed_run 5. (fun () ->
           (* Local termination was not proven yet. *)
@@ -120,4 +121,8 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       TimeBoundTable.find_option termination_table (l,t,l')
       (*If a bound was computed we check for finiteness*)
       |> Option.map_default (List.for_all Tuple2.second) compute_new_bound
+      |> tap (fun terminates -> 
+        if terminates && (Bound.is_infinity @@ Approximation.timebound appr (l,t,l')) then (
+          let proof = TWN_Proofs.get_proof () in
+          ProofOutput.add_to_proof (fun () -> proof));)
 end
