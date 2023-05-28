@@ -63,18 +63,19 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let update_path vars tmp_vars path =
     let varlist = VarSet.to_list vars in 
     let labels = List.map (List.first % Tuple3.second) path in
-    (* all updates of var in the path *)
     (* HashSet where all elements are definitely not static*)
     let static_dep_table = Hashtbl.create 10 in
     VarSet.iter (flip (Hashtbl.add static_dep_table) ()) tmp_vars;
     let non_static_vars = 
       let maybe_changed non_statics = 
         let update_is_static u = VarSet.for_all (Option.is_none % Hashtbl.find_option static_dep_table) (UpdateElement.vars u) in
+        (* all updates of var in the path *)
         let updates var = Util.cat_maybes @@ List.map (flip TransitionLabel.update var) labels in
         let static_update var = List.for_all update_is_static @@ updates var in
         let new_non_static var = not (static_update var || Hashtbl.mem static_dep_table var) in
         List.find_opt new_non_static varlist
         |> (Option.map_default  
+            (* If a var was found we add it to the table and the set*)
             (fun var -> 
               Hashtbl.add static_dep_table var ();
               MaybeChanged.changed (VarSet.add var non_statics))
