@@ -60,25 +60,27 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     compute_cycles trans [[t]] []
   
   (* determines all variables that get assigned a tmp value in a loop and removes them from the guard*)
-  let update_path tmp_vars path = 
+  let update_path vars tmp_vars path =
+    let varlist = VarSet.to_list vars in 
     let labels = List.map (List.first % Tuple3.second) path in
-    let guard_vars = List.fold VarSet.union VarSet.empty @@ List.map (Guard.vars % TransitionLabel.guard) labels in
     (* all updates of var in the path *)
-    let updates var = Util.cat_maybes @@ List.map (flip TransitionLabel.update var) labels in
-    let non_statics = 
-      let maybe_changed (non_statics, vars) = 
-        let update_is_static u = VarSet.disjoint (UpdateElement.vars u) non_statics in
+    (* HashSet where all elements are definitely not static*)
+    let static_dep_table = Hashtbl.create 10 in
+    VarSet.iter (flip (Hashtbl.add static_dep_table) ()) tmp_vars;
+    let non_static_vars = 
+      let maybe_changed non_statics = 
+        let update_is_static u = VarSet.for_all (Option.is_none % Hashtbl.find_option static_dep_table) (UpdateElement.vars u) in
+        let updates var = Util.cat_maybes @@ List.map (flip TransitionLabel.update var) labels in
         let static_update var = List.for_all update_is_static @@ updates var in
-        let remaining_statics, new_non_statics = VarSet.partition static_update vars in
-        let new_guard_vars = 
-          VarSet.map_to_list updates remaining_statics
-          |> (List.concat_map % List.concat_map) (VarSet.to_list % UpdateElement.vars)
-          |> VarSet.of_list in
-        if VarSet.is_empty new_non_statics && VarSet.is_empty new_guard_vars
-          then MaybeChanged.same (non_statics, vars) 
-          else MaybeChanged.changed (VarSet.union new_non_statics non_statics,VarSet.union remaining_statics new_guard_vars) in
-      Tuple2.first @@ Util.find_fixpoint maybe_changed (tmp_vars, guard_vars) in
-    List.map (Tuple3.map2 @@ List.map (TransitionLabel.relax_guard ~non_static:non_statics)) path
+        let new_non_static var = not (static_update var || Hashtbl.mem static_dep_table var) in
+        List.find_opt new_non_static varlist
+        |> (Option.map_default  
+            (fun var -> 
+              Hashtbl.add static_dep_table var ();
+              MaybeChanged.changed (VarSet.add var non_statics))
+            (MaybeChanged.same non_statics)) in
+      Util.find_fixpoint maybe_changed tmp_vars in
+    List.map (Tuple3.map2 @@ List.map (TransitionLabel.relax_guard ~non_static:non_static_vars)) path
     
 
   let logger = Logging.(get Twn)
@@ -120,7 +122,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
         let cycles = cycles_with_t merged_trans @@ Option.get merged_t in
         let tmp_vars = VarSet.diff (Program.vars program) (Program.input_vars program) in
         let handle_cycles = match relax_loops with
-        | `Relaxation -> List.map @@ update_path tmp_vars 
+        | `Relaxation -> List.map @@ update_path (Program.input_vars program) tmp_vars 
         | `NoRelaxation -> identity in
         List.find_map_opt (fun cycle ->
           let chained_cycle = chain_cycle ~relevant_vars cycle program in
