@@ -63,17 +63,22 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   let update_path tmp_vars path = 
     let labels = List.map (List.first % Tuple3.second) path in
     let guard_vars = List.fold VarSet.union VarSet.empty @@ List.map (Guard.vars % TransitionLabel.guard) labels in
+    (* all updates of var in the path *)
     let updates var = Util.cat_maybes @@ List.map (flip TransitionLabel.update var) labels in
     let non_statics = 
       let maybe_changed (non_statics, vars) = 
         let update_is_static u = VarSet.disjoint (UpdateElement.vars u) non_statics in
-        let static_update non_statics var = List.for_all update_is_static @@ updates var in
-        let new_non_statics, new_guard = VarSet.partition (not % static_update non_statics) vars in
-        if VarSet.is_empty new_non_statics
-          then MaybeChanged.same (VarSet.union new_non_statics non_statics, new_guard) 
-          else MaybeChanged.changed (VarSet.union new_non_statics non_statics, new_guard) in
+        let static_update var = List.for_all update_is_static @@ updates var in
+        let remaining_statics, new_non_statics = VarSet.partition static_update vars in
+        let new_guard_vars = 
+          VarSet.map_to_list updates remaining_statics
+          |> (List.concat_map % List.concat_map) (VarSet.to_list % UpdateElement.vars)
+          |> VarSet.of_list in
+        if VarSet.is_empty new_non_statics && VarSet.is_empty new_guard_vars
+          then MaybeChanged.same (non_statics, vars) 
+          else MaybeChanged.changed (VarSet.union new_non_statics non_statics,VarSet.union remaining_statics new_guard_vars) in
       Tuple2.first @@ Util.find_fixpoint maybe_changed (tmp_vars, guard_vars) in
-    List.map (fun (x,l,y) -> (x,List.map (TransitionLabel.relax_guard ~non_static:non_statics) l,y)) path
+    List.map (Tuple3.map2 @@ List.map (TransitionLabel.relax_guard ~non_static:non_statics)) path
     
 
   let logger = Logging.(get Twn)
