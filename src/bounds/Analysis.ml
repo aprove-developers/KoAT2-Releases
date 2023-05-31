@@ -272,7 +272,7 @@ let local_rank ~conf (scc: TransitionSet.t) measure program max_depth appr =
           |> Program.input_vars
           |> VarSet.filter (Bound.is_infinity % Approximation.sizebound appr transition)
     in
-    let is_time_bounded = Bound.is_finite % Approximation.timebound appr in
+    (* let is_time_bounded = Bound.is_finite % Approximation.timebound appr in *)
     let unbounded_transitions =
       scc
       |> tap (fun scc -> (Logger.log logger Logger.INFO (fun () -> "improve_timebound", ["scc", TransitionSet.to_string scc])))
@@ -281,7 +281,7 @@ let local_rank ~conf (scc: TransitionSet.t) measure program max_depth appr =
     let scc_overapprox_nonlinear = TransitionSet.map Transition.overapprox_nonlinear_updates scc in
     let rankfunc_computation depth =
       let compute_function =
-        MultiphaseRankingFunction.find_scc measure program is_time_bounded get_unbounded_vars scc_overapprox_nonlinear depth
+        MultiphaseRankingFunction.find_scc measure program (const true) get_unbounded_vars scc_overapprox_nonlinear depth
           % flip TransitionSet.find scc_overapprox_nonlinear
       in
       TransitionSet.to_array unbounded_transitions
