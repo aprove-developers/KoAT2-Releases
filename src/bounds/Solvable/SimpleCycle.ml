@@ -60,7 +60,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     compute_cycles trans [[t]] []
   
   (* determines all variables that get assigned a tmp value in a loop and removes them from the guard*)
-  let update_path vars tmp_vars path =
+  let update_path trans_table vars tmp_vars path =
     let varlist = VarSet.to_list vars in 
     let labels = List.map (List.first % Tuple3.second) path in
     (* HashSet where all elements are definitely not static*)
@@ -81,7 +81,11 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
               MaybeChanged.changed (VarSet.add var non_statics))
             (MaybeChanged.same non_statics)) in
       Util.find_fixpoint maybe_changed tmp_vars in
-    List.map (Tuple3.map2 @@ List.map (TransitionLabel.relax_guard ~non_static:non_static_vars)) path
+    let relax_trans non_static t = 
+      TransitionLabel.relax_guard ~non_static t
+      (* relaxed transition has a new id but we later on need the id *)
+      |> tap (fun new_t -> if not @@ TransitionLabel.equal new_t t then Hashtbl.add trans_table new_t t) in
+    List.map (Tuple3.map2 @@ List.map (relax_trans non_static_vars)) path
     
 
   let logger = Logging.(get Twn)
@@ -96,45 +100,49 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   (** This method computes a loop for every entry transition of the cycle.
     Notice that we do not regard costs in the chaining step.
     However, we consider them when we compute the final bound. *)
-  let chain_cycle ?(relevant_vars = None) cycle program =
-    let entries = Program.entry_transitions logger program (handled_transitions cycle) in
+  let chain_cycle ?(relevant_vars = None) trans_table cycle program =
+    let entries = 
+      Program.entry_transitions logger program (handled_transitions cycle)
+      |> List.filter (fun (_,t,_) -> not @@ Enum.exists (TransitionLabel.equal t) @@ Hashtbl.values trans_table) in
     List.map (fun entry -> entry, contract_cycle cycle (Tuple3.third entry) |> Loop.eliminate_non_contributors ~relevant_vars) entries
 
   (** This function is used to obtain a set of loops which corresponds to simple cycles for corresponding entries. Used for TWN_Complexity. *)
-  let find_loops ?(relevant_vars = None) ?(relax_loops=`NoRelaxation) ?(transformation_type = `NoTransformation) f appr program scc (l,t,l') =
+  let find_loops ?(relevant_vars = None) ?(relax_loops=`NoRelaxation) ?(transformation_type = `NoTransformation) trans_table f appr program scc (l,t,l') =
     if relax_loops == `Relaxation || not @@ TransitionLabel.has_tmp_vars t then
-      let updated_trans = match relax_loops with
-        | `Relaxation -> TransitionLabel.relax_guard t 
-        | `NoRelaxation -> t in
-        let handle_scc = match relax_loops with
-        | `Relaxation -> List.map (fun (l,t,l') -> (l,TransitionLabel.relax_guard t,l')) 
-        | `NoRelaxation -> List.filter (fun (l,t,l') -> not @@ TransitionLabel.has_tmp_vars t) in 
-        let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
-          Location.equal l1 l2 &&
-          Location.equal l1' l2' &&
-          TransitionLabel.equivalent_update t t')
-          (TransitionSet.to_list scc |> handle_scc)
-          |> List.map (fun xs -> (Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs)
-        in
-        let merged_t = List.find_opt (fun (l1,ts,l1') ->
-          List.exists (fun t1 -> TransitionLabel.equal updated_trans t1) ts
-            && Location.equal l l1
-            && Location.equal l' l1') merged_trans in
-        let cycles = cycles_with_t merged_trans @@ Option.get merged_t in
-        let tmp_vars = VarSet.diff (Program.vars program) (Program.input_vars program) in
-        let handle_cycles = match relax_loops with
-        | `Relaxation -> List.map @@ update_path (Program.input_vars program) tmp_vars 
-        | `NoRelaxation -> identity in
-        List.find_map_opt (fun cycle ->
-          let chained_cycle = chain_cycle ~relevant_vars cycle program in
-          if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
+      let relax_trans t = 
+        (* relaxed transition has a new id but we later on need the id *)
+        TransitionLabel.relax_guard t
+        |> tap (fun new_t -> if not @@ TransitionLabel.equal new_t t then Hashtbl.add trans_table new_t t) in
+      let handle_scc = match relax_loops with
+      | `Relaxation -> List.map (fun (l,t,l') -> (l,relax_trans t,l')) 
+      | `NoRelaxation -> List.filter (fun (l,t,l') -> not @@ TransitionLabel.has_tmp_vars t) in 
+      let merged_trans = Util.group (fun (l1,t,l1') (l2,t',l2') ->
+        Location.equal l1 l2 &&
+        Location.equal l1' l2' &&
+        TransitionLabel.equivalent_update t t')
+        (TransitionSet.to_list scc |> handle_scc)
+        |> List.map (fun xs -> (Tuple3.first % List.first) xs, List.map Tuple3.second xs, (Tuple3.third % List.first) xs)
+      in
+      let orig t = Hashtbl.find_default trans_table t t in
+      let merged_t = List.find_opt (fun (l1,ts,l1') ->
+        List.exists (fun t1 -> TransitionLabel.equal t (orig t1)) ts
+          && Location.equal l l1
+          && Location.equal l' l1') merged_trans in
+      let cycles = cycles_with_t merged_trans @@ Option.get merged_t in
+      let tmp_vars = VarSet.diff (Program.vars program) (Program.input_vars program) in
+      let handle_cycles = match relax_loops with
+      | `Relaxation -> List.map @@ update_path trans_table (Program.input_vars program) tmp_vars 
+      | `NoRelaxation -> identity in
+      List.find_map_opt (fun cycle ->
+        let chained_cycle = chain_cycle ~relevant_vars trans_table cycle program in
+        if List.for_all (fun (entry,loop) -> f appr entry program loop) chained_cycle then
           let handled_transitions = handled_transitions cycle in
-          TWN_Proofs.add_to_proof_graph program handled_transitions (Program.entry_transitions logger program handled_transitions);
-            Option.some
-            (handled_transitions,
-            List.map (fun (entry,loop) -> (entry,Transformation.transform transformation_type loop)) chained_cycle)
-          else
-            None) @@ handle_cycles cycles
+        TWN_Proofs.add_to_proof_graph program handled_transitions (Program.entry_transitions logger program handled_transitions);
+          Option.some
+          (handled_transitions,
+          List.map (fun (entry,loop) -> (entry,Transformation.transform transformation_type loop)) chained_cycle)
+        else
+          None) @@ handle_cycles cycles
     else None 
 
   (** Computes update_n * ... * update_i where update_n is the update of a transition (_,_,target) and resp. update_i for (start,_,_). *)
