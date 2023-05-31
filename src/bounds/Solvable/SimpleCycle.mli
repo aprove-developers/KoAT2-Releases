@@ -15,6 +15,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
     ?relevant_vars: VarSet.t option ->
     ?relax_loops: [`NoRelaxation | `Relaxation] ->
     ?transformation_type: [< `NoTransformation | `TWNTransform > `NoTransformation] ->
+    (PM.TransitionLabel.t, PM.TransitionLabel.t) Hashtbl.t ->
     (Approximation.t -> Transition.t -> Program.t ->  Formula.t * Polynomial.t VarMap.t -> bool) ->
     Approximation.t ->
     Program.t ->
