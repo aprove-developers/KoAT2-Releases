@@ -1,4 +1,3 @@
-# Terminates but has TMP var in Sizebound
 (GOAL COMPLEXITY)
 (STARTTERM (FUNCTIONSYMBOLS l0))
 (VAR A B)
