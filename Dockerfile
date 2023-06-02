@@ -12,6 +12,18 @@ ARG OCAML_VERSION=4.14.0
 # Add graphviz for tests
 RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip --no-cache
 
+RUN wget https://ftp.gnu.org/gnu/make/make-4.3.tar.gz &&\
+    tar -xf make-4.3.tar.gz
+
+RUN cd make-4.3 &&\
+    ./configure
+
+RUN cd make-4.3 && \
+    make 
+    
+RUN cd make-4.3 && \
+    sudo make install && \
+    make -j$(nproc) installcheck
 # PPL
 RUN wget https://www.bugseng.com/external/ppl/download/ftp/releases/1.2/ppl-1.2.tar.xz && \
     tar xfv ppl-1.2.tar.xz
