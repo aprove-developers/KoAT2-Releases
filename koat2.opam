@@ -14,7 +14,7 @@ depends: [
   "conf-gmp"
   "conf-mpfr"
   "conf-ppl"
-  "dune" {>= "3.3"}
+  "dune" {>= "3.3" & < "3.8.0"}
   "fpath"
   "lens"
   "menhir"
