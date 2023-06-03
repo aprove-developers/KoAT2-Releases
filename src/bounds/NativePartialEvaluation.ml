@@ -9,7 +9,10 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
     b_lists : (Location.t, Location.t list) Hashtbl.t;
   }
 
-  (** Finds all loops in a graph, using the algorithm from Donald B. Johnson (1975) *)
+  (** Finds all loops in a graph, using the algorithm from Donald B. Johnson (1975)
+  By itself this function is probably not very useful. Use transition_loops_for in 
+  order to get the loops with transitions.
+  *)
   let find_loops graph =
     let all_locations = TransitionGraph.locations graph in
 
@@ -129,5 +132,40 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
   let find_loops_scc graph scc =
     let scc_graph = TransitionSet.enum scc |> TransitionGraph.mk in
     find_loops scc_graph
-end
 
+  (** For a list of location loops, this function creates the list of all transition loops
+      containing a loop from the location loops. 
+
+      Example: 
+      The graph G contains transitions 
+      (l0, t0, l1)
+      (l1, t1, l2)
+      (l1, t2, l2)
+      (l2, t3, l1)
+
+      The loop detection `find_loops` would only find the loop [l1, l2].
+      This function expands the (location) loop [l1,l2] the the transition loops 
+      [t1,t3], [t2,t3].
+      *)
+  let transition_loops_from graph (loc_loops: Location.t list list) = 
+    let transitions_betwen_locations src target = TransitionGraph.fold_succ_e 
+      (fun t ts -> if Location.equal (Transition.target t) target then t :: ts else ts) 
+      graph src []
+    in 
+
+    let combine (transitions: Transition.t list) (suffixes: Transition.t list list): Transition.t list list = 
+      List.fold (fun results suffix -> 
+        List.fold (fun results transition -> (transition :: suffix) :: results) [] transitions
+      ) [] suffixes
+    in 
+
+    (* computes for every step in the loop the walkable transitions *)
+    let rec transition_loops (loc_loop: Location.t list) = match loc_loop with 
+      | l1 :: l2 :: ls -> combine (transitions_betwen_locations l1 l2) (transition_loops (l2::ls))
+      | l1 :: [] -> [[]]
+      | [] -> [[]]
+    in  
+
+    List.fold (fun results loc_loop -> List.append (transition_loops loc_loop) results) [] loc_loops 
+
+end
