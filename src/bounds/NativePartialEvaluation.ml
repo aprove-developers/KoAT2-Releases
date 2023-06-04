@@ -147,25 +147,143 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
       This function expands the (location) loop [l1,l2] the the transition loops 
       [t1,t3], [t2,t3].
       *)
-  let transition_loops_from graph (loc_loops: Location.t list list) = 
-    let transitions_betwen_locations src target = TransitionGraph.fold_succ_e 
-      (fun t ts -> if Location.equal (Transition.target t) target then t :: ts else ts) 
-      graph src []
-    in 
+  let transition_loops_from graph (loc_loops : Location.t list list) =
+    let transitions_betwen_locations src target =
+      TransitionGraph.fold_succ_e
+        (fun t ts ->
+          if Location.equal (Transition.target t) target then t :: ts else ts)
+        graph src []
+    in
 
-    let combine (transitions: Transition.t list) (suffixes: Transition.t list list): Transition.t list list = 
-      List.fold (fun results suffix -> 
-        List.fold (fun results transition -> (transition :: suffix) :: results) [] transitions
-      ) [] suffixes
-    in 
+    let combine (transitions : Transition.t list)
+        (suffixes : Transition.t list list) : Transition.t list list =
+      List.fold
+        (fun results suffix ->
+          List.fold
+            (fun results transition -> (transition :: suffix) :: results)
+            [] transitions)
+        [] suffixes
+    in
 
     (* computes for every step in the loop the walkable transitions *)
-    let rec transition_loops (loc_loop: Location.t list) = match loc_loop with 
-      | l1 :: l2 :: ls -> combine (transitions_betwen_locations l1 l2) (transition_loops (l2::ls))
-      | l1 :: [] -> [[]]
-      | [] -> [[]]
-    in  
+    let rec transition_loops (loc_loop : Location.t list) =
+      match loc_loop with
+      | l1 :: l2 :: ls ->
+          combine
+            (transitions_betwen_locations l1 l2)
+            (transition_loops (l2 :: ls))
+      | l1 :: [] -> [ [] ]
+      | [] -> [ [] ]
+    in
 
-    List.fold (fun results loc_loop -> List.append (transition_loops loc_loop) results) [] loc_loops 
+    List.fold
+      (fun results loc_loop -> List.append (transition_loops loc_loop) results)
+      [] loc_loops
+end
 
+module FVS (PM : ProgramTypes.ProgramModules) = struct
+  module Loops = Loops (PM)
+  (* TODO: move this module to SMT module *)
+
+  open Z3
+  open PM
+
+  exception FVSFailed
+
+  (** Compute the Feedback-vertex Set for a given graph. If loops have already
+      been computed you can give them to this function to avoid recomputation.
+      *)
+  let fvs graph ?(loops = None) =
+    let cfg =
+      [
+        ("model", "true");
+        ("proof", "false");
+        ("timeout", "2000");
+        (* timeout (unsigned) default timeout (in milliseconds) used for solvers *)
+      ]
+    in
+
+    let ctx = Z3.mk_context cfg in
+
+    let loops =
+      match loops with Some lps -> lps | None -> Loops.find_loops graph
+    in
+
+    let locations = TransitionGraph.locations graph in
+
+    (* initialize hashtables to the number of locations in the graph *)
+    let location_var_map =
+      locations |> LocationSet.enum |> Enum.hard_count |> Hashtbl.create
+    in
+
+    (* create and remember a (z3) integer variable for every location. it will
+       represent if the location is part of the FVS or Hitting Set *)
+    LocationSet.iter
+      (fun location ->
+        location |> Location.to_string
+        |> Arithmetic.Integer.mk_const_s ctx
+        |> Hashtbl.add location_var_map location)
+      locations;
+
+    (* get the integer variable representing a location *)
+    let var_for location = Hashtbl.find location_var_map location in
+
+    let zero = Arithmetic.Integer.mk_numeral_i ctx 0
+    and one = Arithmetic.Integer.mk_numeral_i ctx 1 in
+
+    (* create an optimization problem *)
+    let o = Optimize.mk_opt ctx in
+
+    (* restrict every variable to be in {0, 1} *)
+    Hashtbl.values location_var_map
+    |> Enum.fold
+         (fun constraints var ->
+           let ge0 = Z3.Arithmetic.mk_ge ctx var zero
+           and le1 = Z3.Arithmetic.mk_le ctx var one in
+           ge0 :: le1 :: constraints)
+         []
+    |> Optimize.add o;
+
+    (* require every loop to contain one marked/hit location *)
+    List.fold
+      (fun constraints loop ->
+        let loop_constraint =
+          List.fold
+            (fun expressions location -> var_for location :: expressions)
+            [] loop
+          |> Z3.Arithmetic.mk_add ctx
+          |> Z3.Arithmetic.mk_le ctx one
+        in
+        loop_constraint :: constraints)
+      [] loops
+    |> Optimize.add o;
+
+    String.println stdout (Optimize.to_string o);
+
+    (* Solve ILP, minimizing the number of marked locations *)
+    let _handle =
+      Hashtbl.values location_var_map
+      |> List.of_enum |> Z3.Arithmetic.mk_add ctx |> Optimize.minimize o
+    in
+
+    let model =
+      match Optimize.get_model o with Some m -> m | None -> raise FVSFailed
+    in
+
+    String.println stdout (Model.to_string model);
+
+    let fvs_solution =
+      Hashtbl.fold
+        (fun location var fvs_solution ->
+          match Model.get_const_interp_e model var with
+          | Some value ->
+              if Expr.equal value one then LocationSet.add location fvs_solution
+              else fvs_solution
+          | None -> raise FVSFailed)
+        location_var_map LocationSet.empty
+    in
+
+    String.println stdout (LocationSet.to_string fvs_solution);
+
+    fvs_solution
 end
