@@ -110,9 +110,10 @@ module Z3Solver =
 
       let with_context f =
         Mutex.lock ctx_mutex;
-        let res = f ctx in
-        Mutex.unlock ctx_mutex;
-        res
+        try
+          let res = f ctx in
+          Mutex.unlock ctx_mutex; res
+        with exn -> Mutex.unlock ctx_mutex; raise exn
     end
     include GuardedContext
 
