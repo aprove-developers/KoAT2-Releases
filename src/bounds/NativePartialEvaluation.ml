@@ -287,3 +287,61 @@ module FVS (PM : ProgramTypes.ProgramModules) = struct
 
     fvs_solution
 end
+
+(** An generic way of overapproximating polynomials over indeterminates is required *)
+(** TODO: Move to ProgramModules and/or Polynomials *)
+module type OverApproximation = sig 
+  type t
+  type approx = Polynomials.Polynomial.t * Guard.t
+  val overapprox_indeterminates: t -> approx
+end
+
+(** Extension of the ProgramModules with generic overapproximation *)
+(** TODO: Move to ProgramModules and/or Polynomials *)
+module type ProgramModelsWithApprox = sig 
+  include ProgramTypes.ProgramModules
+  module OverApproximation : OverApproximation with 
+    type t := UpdateElement.t
+end
+
+(** Trivial implementation of overapproxmation in classical programs *)
+(** TODO: Move to ProgramModules and/or Polynomials *)
+module ClassicProgramModulesWithApprox : ProgramModelsWithApprox = struct 
+  include ProgramModules
+
+  module OverApproximation = struct 
+    type t = UpdateElement.t
+    type approx = Polynomials.Polynomial.t * Guard.t
+
+    (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
+    let overapprox_indeterminates poly = (poly, Guard.mk_true)
+  end
+end
+
+(** Use already existing overapproximation *)
+(** TODO: Move to ProgramModules and/or Polynomials *)
+module ProbabilisticProgramModulesWithApprox : ProgramModelsWithApprox = struct 
+  include ProbabilisticProgramModules
+
+  module OverApproximation = struct 
+    type t = UpdateElement.t
+    type approx = Polynomials.Polynomial.t * Guard.t
+
+    module P = Polynomials.Polynomial
+
+    let overapprox_indeterminates = UpdateElement.fold 
+    ~const: (fun c -> (P.of_constant c, Guard.mk_true))
+    ~indeterminate: (fun i -> match i with 
+      | UpdateElement_.UpdateValue.Var v -> (P.of_var v, Guard.mk_true)
+      | UpdateElement_.UpdateValue.Dist d -> 
+          let new_var = Var.fresh_id Var.Int () in
+          let guard = ProbabilityDistribution.as_guard d new_var in
+          (P.of_var new_var, guard)
+    )
+    ~neg: (fun (p, g) -> (P.neg p, g)) 
+    ~plus: (fun (lp, lg) (rp, rg) -> (P.(lp + rp), Guard.mk_and lg rg))
+    ~times: (fun (lp, lg) (rp, rg) -> (P.(lp * rp), Guard.mk_and lg rg))
+    ~pow: (fun (p, g) exp -> ((P.pow p exp), g))
+  end 
+end
+
