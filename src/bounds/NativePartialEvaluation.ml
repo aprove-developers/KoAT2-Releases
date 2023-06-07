@@ -288,28 +288,31 @@ module FVS (PM : ProgramTypes.ProgramModules) = struct
     fvs_solution
 end
 
+(* TODO: Move to ProgramModules and/or Polynomials *)
+
 (** An generic way of overapproximating polynomials over indeterminates is required *)
-(** TODO: Move to ProgramModules and/or Polynomials *)
-module type OverApproximation = sig 
+module type OverApproximation = sig
   type t
   type approx = Polynomials.Polynomial.t * Guard.t
-  val overapprox_indeterminates: t -> approx
+
+  val overapprox_indeterminates : t -> approx
 end
+
+(* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Extension of the ProgramModules with generic overapproximation *)
-(** TODO: Move to ProgramModules and/or Polynomials *)
-module type ProgramModelsWithApprox = sig 
+module type ProgramModelsWithApprox = sig
   include ProgramTypes.ProgramModules
-  module OverApproximation : OverApproximation with 
-    type t := UpdateElement.t
+  module OverApproximation : OverApproximation with type t := UpdateElement.t
 end
 
+(* TODO: Move to ProgramModules and/or Polynomials *)
+
 (** Trivial implementation of overapproxmation in classical programs *)
-(** TODO: Move to ProgramModules and/or Polynomials *)
-module ClassicProgramModulesWithApprox : ProgramModelsWithApprox = struct 
+module ClassicProgramModulesWithApprox : ProgramModelsWithApprox = struct
   include ProgramModules
 
-  module OverApproximation = struct 
+  module OverApproximation = struct
     type t = UpdateElement.t
     type approx = Polynomials.Polynomial.t * Guard.t
 
@@ -318,30 +321,136 @@ module ClassicProgramModulesWithApprox : ProgramModelsWithApprox = struct
   end
 end
 
+(* TODO: Move to ProgramModules and/or Polynomials *)
+
 (** Use already existing overapproximation *)
-(** TODO: Move to ProgramModules and/or Polynomials *)
-module ProbabilisticProgramModulesWithApprox : ProgramModelsWithApprox = struct 
+module ProbabilisticProgramModulesWithApprox : ProgramModelsWithApprox = struct
   include ProbabilisticProgramModules
 
-  module OverApproximation = struct 
+  module OverApproximation = struct
     type t = UpdateElement.t
     type approx = Polynomials.Polynomial.t * Guard.t
 
     module P = Polynomials.Polynomial
 
-    let overapprox_indeterminates = UpdateElement.fold 
-    ~const: (fun c -> (P.of_constant c, Guard.mk_true))
-    ~indeterminate: (fun i -> match i with 
-      | UpdateElement_.UpdateValue.Var v -> (P.of_var v, Guard.mk_true)
-      | UpdateElement_.UpdateValue.Dist d -> 
-          let new_var = Var.fresh_id Var.Int () in
-          let guard = ProbabilityDistribution.as_guard d new_var in
-          (P.of_var new_var, guard)
-    )
-    ~neg: (fun (p, g) -> (P.neg p, g)) 
-    ~plus: (fun (lp, lg) (rp, rg) -> (P.(lp + rp), Guard.mk_and lg rg))
-    ~times: (fun (lp, lg) (rp, rg) -> (P.(lp * rp), Guard.mk_and lg rg))
-    ~pow: (fun (p, g) exp -> ((P.pow p exp), g))
-  end 
+    let overapprox_indeterminates =
+      UpdateElement.fold
+        ~const:(fun c -> (P.of_constant c, Guard.mk_true))
+        ~indeterminate:(fun i ->
+          match i with
+          | UpdateElement_.UpdateValue.Var v -> (P.of_var v, Guard.mk_true)
+          | UpdateElement_.UpdateValue.Dist d ->
+              let new_var = Var.fresh_id Var.Int () in
+              let guard = ProbabilityDistribution.as_guard d new_var in
+              (P.of_var new_var, guard))
+        ~neg:(fun (p, g) -> (P.neg p, g))
+        ~plus:(fun (lp, lg) (rp, rg) -> (P.(lp + rp), Guard.mk_and lg rg))
+        ~times:(fun (lp, lg) (rp, rg) -> (P.(lp * rp), Guard.mk_and lg rg))
+        ~pow:(fun (p, g) exp -> (P.pow p exp, g))
+  end
+end
+
+module Unfolding (PM : ProgramModelsWithApprox) = struct
+  open PM
+  open Apron
+  module VarMap = ProgramTypes.VarMap
+
+  type polyhedron
+  type version = Location.t * polyhedron
+  type guard = Constraints.Constraint.t
+  type update = UpdateElement.t VarMap.t
+
+  (*
+    For an abstract domain `'a` there is a manager `'a Manager.t` handling the
+    library stuff underneath. It is not important to this implementation, but
+    is required for most of the operations. We will use the Ppl abstract domain
+    for partial evaluation, but others might be used at will. 
+
+    A value in the abstract domain `'a` is an `'a Abstract.t`. It holds a reference
+    to the environment (variables). 
+  *)
+
+  (** add new dimensions to to an abstract value, ignores already existing dimenstions *)
+  let add_vars_to_polyh am vars polyh =
+    let prev_env = Abstract1.env polyh in
+    let apron_vars = ApronInterface.Koat2Apron.vars_to_apron vars in
+    (* Apron would panic if the variable is alread in the environment *)
+    let new_apron_vars =
+      Array.filter (not % Environment.mem_var prev_env) apron_vars
+    in
+    let new_env = Environment.add prev_env new_apron_vars [||] in
+
+    (* since we only add new variables projecting on the 0-plane or not doesn't matter *)
+    Abstract1.change_environment am polyh new_env true
+
+  (** project a polyhedron onto the given variable dimensions 
+  Does not add new dimensions for variables not in the polyhedron
+   *)
+  let project_polyh am vars polyh =
+    let prev_env = Abstract1.env polyh in
+    let apron_vars =
+      ApronInterface.Koat2Apron.vars_to_apron vars
+      |> Array.filter (not % Environment.mem_var prev_env)
+    in
+    let new_env = Environment.make apron_vars [||] in
+    (* Implicitly projects all removed dimensions *)
+    Abstract1.change_environment am polyh new_env false
+
+  (** Intersect a polynomial with a constraint *)
+  let meet am constr polyh =
+    let env = Abstract1.env polyh in
+    let apron_expr = ApronInterface.Koat2Apron.constraint_to_apron env constr in
+    Abstract1.meet_tcons_array am polyh apron_expr
+
+  (* TODO: move to K2A *)
+
+  (** converts an update map over polynomials to apron arrays *)
+  let update_to_apron env
+      (update : Polynomials.Polynomial.t ProgramTypes.VarMap.t) =
+    VarMap.enum update
+    |> Enum.map (fun (var, ue) ->
+           let apron_var = ApronInterface.Koat2Apron.var_to_apron var
+           and apron_expr = ApronInterface.Koat2Apron.poly_to_apron env ue in
+           (apron_var, apron_expr))
+    |> Array.of_enum |> Array.split
+
+  let vars_in_update update =
+    VarMap.fold
+      (fun var ue vars ->
+        vars |> VarSet.add var |> VarSet.union (Polynomials.Polynomial.vars ue))
+      update VarSet.empty
+
+  let update_polyh am update polyh =
+    let env = Abstract1.env polyh in
+    let vars_arr, texpr_arr = update_to_apron env update in
+    Abstract1.assign_texpr_array am polyh vars_arr texpr_arr None
+
+  let unfold am polyh program_vars guard invariant update =
+    let update_approx, update_guard =
+      VarMap.fold
+        (fun var ue (new_update, guards) ->
+          let ue_approx, guard =
+            OverApproximation.overapprox_indeterminates ue
+          in
+          (VarMap.add var ue_approx new_update, Guard.mk_and guards guard))
+        update
+        (VarMap.empty, Guard.mk_true)
+    in
+    let temp_vars =
+      [
+        Guard.vars guard;
+        Guard.vars invariant;
+        Guard.vars update_guard;
+        vars_in_update update_approx;
+      ]
+      |> List.fold VarSet.union VarSet.empty
+      |> VarSet.filter (fun v -> VarSet.mem v program_vars)
+    in
+
+    polyh
+    |> add_vars_to_polyh am temp_vars
+    |> meet am (Guard.all [ guard; invariant; update_guard ])
+    |> update_polyh am update_approx
+    |> project_polyh am program_vars
 end
 
