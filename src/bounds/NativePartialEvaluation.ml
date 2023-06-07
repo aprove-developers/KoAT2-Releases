@@ -301,7 +301,7 @@ end
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Extension of the ProgramModules with generic overapproximation *)
-module type ProgramModelsWithApprox = sig
+module type ProgramModulesWithApprox = sig
   include ProgramTypes.ProgramModules
   module OverApproximation : OverApproximation with type t := UpdateElement.t
 end
@@ -309,7 +309,7 @@ end
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Trivial implementation of overapproxmation in classical programs *)
-module ClassicProgramModulesWithApprox : ProgramModelsWithApprox = struct
+module ClassicProgramModulesWithApprox : ProgramModulesWithApprox = struct
   include ProgramModules
 
   module OverApproximation = struct
@@ -324,7 +324,7 @@ end
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Use already existing overapproximation *)
-module ProbabilisticProgramModulesWithApprox : ProgramModelsWithApprox = struct
+module ProbabilisticProgramModulesWithApprox : ProgramModulesWithApprox = struct
   include ProbabilisticProgramModules
 
   module OverApproximation = struct
@@ -350,7 +350,7 @@ module ProbabilisticProgramModulesWithApprox : ProgramModelsWithApprox = struct
   end
 end
 
-module Unfolding (PM : ProgramModelsWithApprox) = struct
+module Unfolding (PM : ProgramModulesWithApprox) = struct
   open PM
   open Apron
   module VarMap = ProgramTypes.VarMap
@@ -452,5 +452,78 @@ module Unfolding (PM : ProgramModelsWithApprox) = struct
     |> meet am (Guard.all [ guard; invariant; update_guard ])
     |> update_polyh am update_approx
     |> project_polyh am program_vars
+end
+
+(** Properties are a set of constraints. If φ is in the properties, then it's
+    negation ¬φ should not, because it is already checked as well. Adding it
+    though would just result in double checks (overhead) *)
+module Properties = struct
+  open Formulas
+  open Constraints
+  open Atoms
+
+  (* TODO: move somewhere else *)
+  module PropSet = Set.Make (Atom)
+
+  type t = PropSet.t [@@deriving eq, ord]
+  type entailed = PropSet.t [@@deriving eq, ord]
+
+  let mk props_list =
+    List.fold
+      (fun props prop ->
+        (* Add property only, if its negation is not already present *)
+        if not (PropSet.mem (Atom.neg prop) props) then PropSet.add prop props
+        else props)
+      PropSet.empty props_list
+
+  (** Identifies all properties that are entailed by the constraint *)
+  let abstract properties constr =
+    SMT.IncrementalZ3Solver.(
+      let solver = create ~model:false () in
+      let f = Formula.mk constr in
+      add solver f;
+
+      (* Fast entailment check which reuses the SMT solver *)
+      let entails_prop prop =
+        let neg_atom = Atom.neg prop |> Constraint.lift |> Formula.mk in
+        push solver;
+        add solver neg_atom;
+        let is_unsat = unsatisfiable solver in
+        (* Printf.printf "%s && %s is %s\n" (Formula.to_string constr_formula) (Formula.to_string neg_atom) (if is_unsat then "UNSAT" else "SAT"); *)
+        pop solver;
+        is_unsat
+      in
+
+      (* No need to check entailment, when constraint is already UNSAT *)
+      if unsatisfiable solver then None
+        (* Check entailment for every propery it's negation *)
+      else
+        let entailed_props =
+          PropSet.enum properties
+          |> Enum.filter_map (fun prop ->
+                 if entails_prop prop then
+                   (* Printf.printf "%s entails %s\n" *)
+                   (* (Constraint.to_string constr) *)
+                   (* (Atom.to_string prop); *)
+                   Some prop
+                 else if entails_prop (Atom.neg prop) then
+                   (* Printf.printf "%s entails %s\n" *)
+                   (* (Constraint.to_string constr) *)
+                   (* (Atom.to_string (Atom.neg prop)); *)
+                   Some (Atom.neg prop)
+                 else None)
+          |> PropSet.of_enum
+        in
+        Some entailed_props)
+end
+
+module Version = struct
+  type constr =
+    | Abstr of Properties.entailed
+    | Constr of Constraints.Constraint.t
+  [@@deriving eq, ord]
+
+  type location = Location.t
+  type t = Location.t * constr [@@deriving eq, ord]
 end
 
