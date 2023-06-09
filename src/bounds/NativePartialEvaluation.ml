@@ -356,7 +356,6 @@ module Unfolding (PM : ProgramModulesWithApprox) = struct
   module VarMap = ProgramTypes.VarMap
 
   type polyhedron
-  type version = Location.t * polyhedron
   type guard = Constraints.Constraint.t
   type update = UpdateElement.t VarMap.t
 
@@ -454,76 +453,126 @@ module Unfolding (PM : ProgramModulesWithApprox) = struct
     |> project_polyh am program_vars
 end
 
-(** Properties are a set of constraints. If φ is in the properties, then it's
-    negation ¬φ should not, because it is already checked as well. Adding it
-    though would just result in double checks (overhead) *)
-module Properties = struct
+(** Generic type for abstractions *)
+module type Abstraction = sig
+
+  (** Context of the abstraction, for example properties *)
+  type context 
+
+  (** Constraint type *)
+  type guard = Constraints.Constraint.t
+
+  type location = Location.t
+
+  (** The type to which the constraint is abstracted to *)
+  type abstracted [@@derive eq, ord]
+
+  type t =
+    | Abstr of abstracted
+    | Constr of guard
+    [@@deriving eq, ord]
+
+  (** Abstract a constraint to the abstracted type. Can return None, when the
+ constraint is not satisfiable *)
+  val abstract: context -> location -> guard -> t option
+
+  (* val to_string: t -> string *)
+
+  val to_guard: t -> guard
+end
+
+module PropertyBasedAbstraction : Abstraction = struct 
   open Formulas
   open Constraints
   open Atoms
 
-  (* TODO: move somewhere else *)
-  module PropSet = Set.Make (Atom)
+  module AtomSet = Set.Make (Atom)
+  module LocationMap = Map.Make(Location)
 
-  type t = PropSet.t [@@deriving eq, ord]
-  type entailed = PropSet.t [@@deriving eq, ord]
+  (** Contains a set of properties for every location that should be
+      abstracted, every missing location shall not be abstracted *)
+  type context = AtomSet.t LocationMap.t
 
-  let mk props_list =
+  type guard = Constraint.t
+    [@@deriving eq, ord]
+  type location = Location.t
+
+  (** The abstracted type guard type *)
+  type abstracted = AtomSet.t[@@deriving eq, ord]
+
+  (** Marks if the guard was abstracted or not *)
+  type t =
+    | Abstr of abstracted
+    | Constr of guard
+    [@@deriving eq, ord]
+
+  (** Properties are a set of constraints. If φ is in the properties, then it's
+      negation ¬φ should not, because it is already checked as well. Adding it
+      though would just result in double checks (overhead) *)
+  let mk_properties props_list =
     List.fold
       (fun props prop ->
         (* Add property only, if its negation is not already present *)
-        if not (PropSet.mem (Atom.neg prop) props) then PropSet.add prop props
+        if not (AtomSet.mem (Atom.neg prop) props) then AtomSet.add prop props
         else props)
-      PropSet.empty props_list
+      AtomSet.empty props_list
 
-  (** Identifies all properties that are entailed by the constraint *)
-  let abstract properties constr =
-    SMT.IncrementalZ3Solver.(
-      let solver = create ~model:false () in
-      let f = Formula.mk constr in
-      add solver f;
 
-      (* Fast entailment check which reuses the SMT solver *)
-      let entails_prop prop =
-        let neg_atom = Atom.neg prop |> Constraint.lift |> Formula.mk in
-        push solver;
-        add solver neg_atom;
-        let is_unsat = unsatisfiable solver in
-        (* Printf.printf "%s && %s is %s\n" (Formula.to_string constr_formula) (Formula.to_string neg_atom) (if is_unsat then "UNSAT" else "SAT"); *)
-        pop solver;
-        is_unsat
-      in
+  let abstract context location guard = 
+    (** Identifies all properties that are entailed by the constraint, implicit SAT check *)
+    let abstract_guard_ properties constr =
+      SMT.IncrementalZ3Solver.(
+        let solver = create ~model:false () in
+        let f = Formula.mk constr in
+        add solver f;
 
-      (* No need to check entailment, when constraint is already UNSAT *)
-      if unsatisfiable solver then None
-        (* Check entailment for every propery it's negation *)
-      else
-        let entailed_props =
-          PropSet.enum properties
-          |> Enum.filter_map (fun prop ->
-                 if entails_prop prop then
-                   (* Printf.printf "%s entails %s\n" *)
-                   (* (Constraint.to_string constr) *)
-                   (* (Atom.to_string prop); *)
-                   Some prop
-                 else if entails_prop (Atom.neg prop) then
-                   (* Printf.printf "%s entails %s\n" *)
-                   (* (Constraint.to_string constr) *)
-                   (* (Atom.to_string (Atom.neg prop)); *)
-                   Some (Atom.neg prop)
-                 else None)
-          |> PropSet.of_enum
+        (* Fast entailment check which reuses the SMT solver *)
+        let entails_prop prop =
+          let neg_atom = Atom.neg prop |> Constraint.lift |> Formula.mk in
+          push solver;
+          add solver neg_atom;
+          let is_unsat = unsatisfiable solver in
+          (* Printf.printf "%s && %s is %s\n" (Formula.to_string constr_formula) (Formula.to_string neg_atom) (if is_unsat then "UNSAT" else "SAT"); *)
+          pop solver;
+          is_unsat
         in
-        Some entailed_props)
+
+        (* No need to check entailment, when constraint is already UNSAT *)
+        if unsatisfiable solver then None
+          (* Check entailment for every propery it's negation *)
+        else
+          let entailed_props =
+            AtomSet.enum properties
+            |> Enum.filter_map (fun prop ->
+                   if entails_prop prop then
+                     (* Printf.printf "%s entails %s\n" *)
+                     (* (Constraint.to_string constr) *)
+                     (* (Atom.to_string prop); *)
+                     Some prop
+                   else if entails_prop (Atom.neg prop) then
+                     (* Printf.printf "%s entails %s\n" *)
+                     (* (Constraint.to_string constr) *)
+                     (* (Atom.to_string (Atom.neg prop)); *)
+                     Some (Atom.neg prop)
+                   else None)
+            |> AtomSet.of_enum
+          in
+          Some entailed_props)
+    in 
+
+    match LocationMap.find_opt location context with 
+    | Some properties -> abstract_guard_ properties guard |> Option.map (fun a -> Abstr a)
+    | None -> if Formula.mk guard |> SMT.Z3Solver.satisfiable then Some (Constr guard) else None
+
+  let to_guard a = match a with 
+  | Abstr abstracted -> AtomSet.to_list abstracted |> Constraint.mk
+  | Constr guard -> guard
 end
 
-module Version = struct
-  type constr =
-    | Abstr of Properties.entailed
-    | Constr of Constraints.Constraint.t
-  [@@deriving eq, ord]
-
+(** A version is a location with an (possibly abstracted) constraint used
+  in the partial evaluation graph *)
+module Version(A: Abstraction) = struct
   type location = Location.t
-  type t = Location.t * constr [@@deriving eq, ord]
+  type t = Location.t * A.t[@@ deriving eq, ord]
 end
 
