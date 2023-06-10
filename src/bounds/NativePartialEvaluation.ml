@@ -179,6 +179,10 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
     List.fold
       (fun results loc_loop -> List.append (transition_loops loc_loop) results)
       [] loc_loops
+
+  (** Returns the first locations of the loops *)
+  let loop_heads loops = List.fold(fun loop_heads loop -> LocationSet.add (List.hd loop) loop_heads) LocationSet.empty loops
+
 end
 
 module FVS (PM : ProgramTypes.ProgramModules) = struct
@@ -193,7 +197,7 @@ module FVS (PM : ProgramTypes.ProgramModules) = struct
   (** Compute the Feedback-vertex Set for a given graph. If loops have already
       been computed you can give them to this function to avoid recomputation.
       *)
-  let fvs graph ?(loops = None) =
+  let fvs ?(loops = None) graph =
     let cfg =
       [
         ("model", "true");
@@ -301,15 +305,17 @@ end
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Extension of the ProgramModules with generic overapproximation *)
-module type ProgramModulesWithApprox = sig
+module type AdaptedProgramModules = sig
   include ProgramTypes.ProgramModules
   module OverApproximation : OverApproximation with type t := UpdateElement.t
+  
+  val fresh_id : (int, int) Hashtbl.t -> TransitionLabel.t -> TransitionLabel.t
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Trivial implementation of overapproxmation in classical programs *)
-module ClassicProgramModulesWithApprox : ProgramModulesWithApprox = struct
+module AdaptedClassicProgramModules : AdaptedProgramModules = struct
   include ProgramModules
 
   module OverApproximation = struct
@@ -319,12 +325,15 @@ module ClassicProgramModulesWithApprox : ProgramModulesWithApprox = struct
     (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
     let overapprox_indeterminates poly = (poly, Guard.mk_true)
   end
+
+  (** Classic transitions have no general transition, trivial *)
+  let fresh_id _ t = TransitionLabel.fresh_id t
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Use already existing overapproximation *)
-module ProbabilisticProgramModulesWithApprox : ProgramModulesWithApprox = struct
+module AdaptedProbabilisticProgramModules : AdaptedProgramModules = struct
   include ProbabilisticProgramModules
 
   module OverApproximation = struct
@@ -348,9 +357,11 @@ module ProbabilisticProgramModulesWithApprox : ProgramModulesWithApprox = struct
         ~times:(fun (lp, lg) (rp, rg) -> (P.(lp * rp), Guard.mk_and lg rg))
         ~pow:(fun (p, g) exp -> (P.pow p exp, g))
   end
+
+  let fresh_id gt_ids t = TransitionLabel.fresh_ids gt_ids t
 end
 
-module Unfolding (PM : ProgramModulesWithApprox) = struct
+module Unfolding (PM : AdaptedProgramModules) = struct
   open PM
   open Apron
   module VarMap = ProgramTypes.VarMap
@@ -462,7 +473,7 @@ module type Abstraction = sig
   (** Constraint type *)
   type guard = Constraints.Constraint.t
 
-  type location = Location.t
+  type location 
 
   (** The type to which the constraint is abstracted to *)
   type abstracted [@@derive eq, ord]
@@ -476,18 +487,19 @@ module type Abstraction = sig
  constraint is not satisfiable *)
   val abstract: context -> location -> guard -> t option
 
-  (* val to_string: t -> string *)
+  val to_string: t -> string
 
   val to_guard: t -> guard
 end
 
-module PropertyBasedAbstraction : Abstraction = struct 
+module PropertyBasedAbstraction(PM: ProgramTypes.ProgramModules) : Abstraction with type location = PM.Location.t = struct 
   open Formulas
   open Constraints
   open Atoms
+  open PM
 
   module AtomSet = Set.Make (Atom)
-  module LocationMap = Map.Make(Location)
+  module LocationMap = Map.Make(PM.Location)
 
   (** Contains a set of properties for every location that should be
       abstracted, every missing location shall not be abstracted *)
@@ -564,15 +576,215 @@ module PropertyBasedAbstraction : Abstraction = struct
     | Some properties -> abstract_guard_ properties guard |> Option.map (fun a -> Abstr a)
     | None -> if Formula.mk guard |> SMT.Z3Solver.satisfiable then Some (Constr guard) else None
 
+  let abstract_to_guard a = AtomSet.to_list a |> Constraint.mk 
+
   let to_guard a = match a with 
-  | Abstr abstracted -> AtomSet.to_list abstracted |> Constraint.mk
+  | Abstr abstracted -> abstract_to_guard abstracted
   | Constr guard -> guard
+
+  let mk_context = LocationMap.empty (*TODO*)
+
+  let to_string = function 
+    | Abstr a -> Printf.sprintf "Abstracted %s" (Constraint.to_string (abstract_to_guard a))
+    | Constr c -> Printf.sprintf "Constraints %s" (Constraint.to_string c)
+
+  let hash a = Hashtbl.hash a
 end
 
 (** A version is a location with an (possibly abstracted) constraint used
   in the partial evaluation graph *)
-module Version(A: Abstraction) = struct
-  type location = Location.t
-  type t = Location.t * A.t[@@ deriving eq, ord]
+module Version(L: ProgramTypes.Location)(A: Abstraction) = struct
+  open Constraints
+
+  type location = L.t
+  type t = L.t * A.t[@@ deriving eq, ord]
+
+  let to_string (l, a) = Printf.sprintf "⟨%s, %s⟩" (L.to_string l) (A.to_string a)
+  let hash l = Hashtbl.hash l
+
+  let mk location abstracted = (location, abstracted)
+  let mk_true location = (location, A.Constr Constraint.mk_true)
+
+  let location (l, _) = l
+  let abstracted (_, a) = a
 end
 
+(* TODO: move somewhere else *)
+module GraphUtils(PM: ProgramTypes.ProgramModules) = struct
+  open PM
+  let entry_transitions graph scc = 
+    TransitionSet.locations scc
+    |> LocationSet.enum 
+    |> Enum.map (fun l -> TransitionGraph.pred_e graph l |> List.enum)
+    |> Enum.flatten
+    |> Enum.filter (fun t -> not (TransitionSet.mem t scc))
+    |> TransitionSet.of_enum
+
+  let exit_transitions graph scc = 
+    TransitionSet.locations scc
+    |> LocationSet.enum 
+    |> Enum.map (fun l -> TransitionGraph.succ_e graph l |> List.enum)
+    |> Enum.flatten
+    |> Enum.filter (fun t -> not (TransitionSet.mem t scc))
+    |> TransitionSet.of_enum
+end
+
+module PEModules(PM: AdaptedProgramModules)(A: Abstraction) = struct 
+  module Version = Version(PM.Location)(A) 
+  module VersionSet = Set.Make(Version)
+  module Transition = Transition_.TransitionOver(PM.TransitionLabel)(Version)
+  module TransitionSet = Set.Make(Transition)
+  module TransitionGraph = TransitionGraph_.Make_(Transition)(Version)(Graph.Persistent.Digraph.ConcreteBidirectionalLabeled(Version)(PM.TransitionLabel))
+
+  let remove_abstractions pe_graph = 
+    TransitionGraph.transitions pe_graph 
+    |> TransitionSet.enum
+    |> Enum.map (fun (src_version, label, target_version) -> (Version.location src_version, label, Version.location target_version))
+    |> PM.TransitionGraph.mk
+end
+
+module PartialEvaluation(PM: AdaptedProgramModules) = struct 
+  module PM = PM
+  module Abstraction = PropertyBasedAbstraction(PM)
+  module PEM = PEModules(PM)(Abstraction)
+
+  open PM
+  module Version = PEM.Version
+  module PEGraph = PEM.TransitionGraph
+
+  open Unfolding(PM)
+  open Loops(PM)
+  open GraphUtils(PM)
+  open FVS(PM)
+
+  (** Unsat transitions must be removed before the partial evaluation, hence 
+      unfolded entry transition to an scc <l, true> -> <l', v'> must always 
+      have a satisfiable version v' 
+      *)
+  exception UnsatEntryTransition
+
+  type config = {
+    fvs: bool
+  }
+
+  let conf = {
+    fvs = true;
+  }
+
+  let am = Ppl.manager_alloc_loose () 
+
+  let abstr_ctx = A.mk_context
+
+  let evaluate_scc graph scc program_vars = 
+    let entry_transitions = entry_transitions graph scc
+    and exit_transitions = exit_transitions graph scc in
+
+    let location_loops = Loops.find_loops_scc graph scc in
+    let transition_loops = Loops.transition_loops_from graph location_loops in
+
+    let loop_heads = if conf.fvs then 
+      fvs graph ~loops:(Some location_loops)
+    else Loops.loop_heads location_loops 
+    in
+
+    let result_graph_without_scc = TransitionGraph.transitions graph 
+      |> PM.TransitionSet.enum
+      |> Enum.filter (fun transition -> not (TransitionSet.mem transition scc))
+      (* Entry transitions will be readded later with the same id *)
+      |> Enum.filter (fun transition -> not (TransitionSet.mem transition entry_transitions))
+      |> Enum.map (fun (src, label, target) -> (PEM.Version.mk_true src, label, Version.mk_true target))
+      |> PEGraph.mk
+    in
+
+    (* Partial evaluation from a given location adding all transitions 
+        to the given result graph *)
+    let rec evaluate_version result_graph current_polyh current_version =
+      let rename_transitions transitions = 
+        let gt_id_map = Hashtbl.create 10 in
+        TransitionSet.enum transitions
+        |> Enum.map (fun (src, label, target) -> (src, fresh_id gt_id_map label, target))
+        |> TransitionSet.of_enum
+      in
+
+      (* add the evaluation graph to the result_graph by evaluating from the
+         given transition from the given polyhdron. The transition must be
+         renamed before calling this function, to an id not present in the graph.
+         *)
+      let evaluate_transition src_polyh src_version transition result_graph =
+        assert ((Transition.src transition) == (Version.location src_version));
+        (* Unwrap the transition *)
+        let (src_loc, label, target_loc) = transition in
+        let guard = TransitionLabel.guard label 
+        and invariant = TransitionLabel.invariant label
+        and update = TransitionLabel.update_map label in
+
+        let next_polyh = unfold am src_polyh program_vars guard invariant update  in
+        let next_guard = Apron.Abstract1.to_tcons_array am next_polyh 
+          |> ApronInterface.Apron2Koat.constraint_from_apron in
+        match Abstraction.abstract abstr_ctx target_loc next_guard with 
+          (* Implicit SAT check, returns None if UNSAT *)
+          | Some a -> 
+              if TransitionSet.mem transition exit_transitions then
+                (* Leaving the scc is an abort condition, just transition to the trivial version *)
+                let outside_version = Version.mk_true target_loc in
+                assert (PEGraph.mem_vertex result_graph outside_version);
+                PEGraph.add_edge_e result_graph (src_version, label, Version.mk_true target_loc) 
+              else
+                let target_version = Version.mk target_loc a in
+                let new_transition = (src_version, label, target_version) in
+                let version_is_new = PEGraph.mem_vertex result_graph target_version in
+                let result_graph = PEGraph.add_edge_e result_graph new_transition in
+                if version_is_new then
+                  (* Target version was already present, backtrack. *)
+                  result_graph
+                else 
+                  (* Target version is new evaluate from there. *)
+                  evaluate_version result_graph next_polyh target_version
+          | None -> 
+              (* Transition is impossible to take, backtrack without adding a new transition *)
+              result_graph
+      in
+
+      let location = Version.location current_version in
+      let outgoing_transitions = TransitionGraph.succ_e graph location 
+        |> TransitionSet.of_list
+        |> rename_transitions
+      in
+      (* Evaluate from every outgoing transition *)
+      TransitionSet.fold (evaluate_transition current_polyh current_version) outgoing_transitions result_graph
+    in
+
+    let program_vars_env = Apron.Environment.make (ApronInterface.Koat2Apron.vars_to_apron program_vars) [||] in
+    let initial_polyh = Apron.Abstract1.top am program_vars_env in
+
+    (* Start transitions must not be renamed, hence need somewhat different handling *)
+    let evaluate_entry_transition src_version entry_transition result_graph = 
+        assert ((Transition.src entry_transition) == (Version.location src_version));
+        let (src_loc, label, target_loc) = entry_transition in
+        let guard = TransitionLabel.guard label 
+        and invariant = TransitionLabel.invariant label
+        and update = TransitionLabel.update_map label in
+        let next_polyh = unfold am initial_polyh program_vars guard invariant update in
+        let next_guard = Apron.Abstract1.to_tcons_array am next_polyh 
+          |> ApronInterface.Apron2Koat.constraint_from_apron in
+        let target_version = match Abstraction.abstract abstr_ctx target_loc next_guard with
+        | Some a -> Version.mk target_loc a 
+        | None -> raise UnsatEntryTransition
+        in
+        let new_transition = (src_version, label, target_version) in
+        let version_is_new = PEGraph.mem_vertex result_graph target_version in
+        let result_graph = PEGraph.add_edge_e result_graph new_transition in
+        if version_is_new then
+          (* Target version was already present, backtrack. *)
+          result_graph
+        else 
+          (* Target version is new evaluate from there. *)
+          evaluate_version result_graph next_polyh target_version
+    in
+
+    TransitionSet.fold(fun entry_transition result_graph ->
+      let start_location = Transition.src entry_transition in
+      let start_version = Version.mk_true start_location in
+      evaluate_entry_transition start_version entry_transition result_graph
+    ) entry_transitions result_graph_without_scc
+end

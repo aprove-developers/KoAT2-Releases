@@ -344,6 +344,20 @@ module ProbabilisticTransitionLabel = struct
     |> VarSet.filter (fun v -> not UpdateElement_.(equal (of_var v) (update t v |? of_var v)))
 
   let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
+
+  (** Assigns a fresh id. Updates the gt_id from the given replacements. If
+    none is given, a new unique gt_id is generated and added to the mapping.
+    Mutates gt_ids! *)
+  let fresh_ids gt_ids t =
+    let old_gt_id = gt_id t in
+    let new_gt_id = match Hashtbl.find_option gt_ids old_gt_id with
+    | Some id -> id
+    | None ->
+        let id = unique () in
+        Hashtbl.add gt_ids old_gt_id id;
+        id
+    in 
+    {t with id = unique (); gt_id = new_gt_id}
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr = struct
