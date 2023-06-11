@@ -1,5 +1,10 @@
 open Batteries
 
+type config = {
+  abstract: [`FVS | `LoopHeads];
+  k_encounters: int;
+}
+
 module Loops (PM : ProgramTypes.ProgramModules) = struct
   open PM
 
@@ -146,6 +151,7 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
       The loop detection `find_loops` would only find the loop [l1, l2].
       This function expands the (location) loop [l1,l2] the the transition loops 
       [t1,t3], [t2,t3].
+
       *)
   let transition_loops_from graph (loc_loops : Location.t list list) =
     let transitions_betwen_locations src target =
@@ -166,19 +172,35 @@ module Loops (PM : ProgramTypes.ProgramModules) = struct
     in
 
     (* computes for every step in the loop the walkable transitions *)
-    let rec transition_loops (loc_loop : Location.t list) =
+    let rec transition_loops (lh: Location.t) (loc_loop : Location.t list) =
       match loc_loop with
       | l1 :: l2 :: ls ->
           combine
             (transitions_betwen_locations l1 l2)
-            (transition_loops (l2 :: ls))
-      | l1 :: [] -> [ [] ]
+            (transition_loops lh (l2 :: ls))
+      | l1 :: [] -> 
+            (* start loops with transitions from last location to head *)
+          combine 
+            (transitions_betwen_locations l1 lh)
+            [ [] ]
       | [] -> [ [] ]
     in
 
     List.fold
-      (fun results loc_loop -> List.append (transition_loops loc_loop) results)
+      (fun results loc_loop -> List.append (transition_loops (List.hd loc_loop) loc_loop) results)
       [] loc_loops
+  
+  (** Rotate a loop, so that its head is the first location *)
+  let rotate head loop = 
+    let rec rotate prefix suffix = match suffix with
+      | location :: suffix -> if location == head then
+          (* attach prefix at the end *)
+          List.append suffix (List.rev prefix)
+        else 
+          (* continue rotating *)
+          rotate (location :: prefix) suffix
+      | [] -> List.rev prefix
+    in rotate [] loop
 
   (** Returns the first locations of the loops *)
   let loop_heads loops = List.fold(fun loop_heads loop -> LocationSet.add (List.hd loop) loop_heads) LocationSet.empty loops
@@ -307,6 +329,8 @@ end
 (** Extension of the ProgramModules with generic overapproximation *)
 module type AdaptedProgramModules = sig
   include ProgramTypes.ProgramModules
+
+  module VarMap : module type of Map.Make(Var)
   module OverApproximation : OverApproximation with type t := UpdateElement.t
   
   val fresh_id : (int, int) Hashtbl.t -> TransitionLabel.t -> TransitionLabel.t
@@ -318,8 +342,10 @@ end
 module AdaptedClassicProgramModules : AdaptedProgramModules = struct
   include ProgramModules
 
+  module VarMap = Map.Make(Var)
+
   module OverApproximation = struct
-    type t = UpdateElement.t
+    (* type t = UpdateElement.t *)
     type approx = Polynomials.Polynomial.t * Guard.t
 
     (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
@@ -336,8 +362,10 @@ end
 module AdaptedProbabilisticProgramModules : AdaptedProgramModules = struct
   include ProbabilisticProgramModules
 
+  module VarMap = Map.Make(Var)
+
   module OverApproximation = struct
-    type t = UpdateElement.t
+    (* type t = UpdateElement.t *)
     type approx = Polynomials.Polynomial.t * Guard.t
 
     module P = Polynomials.Polynomial
@@ -361,14 +389,66 @@ module AdaptedProbabilisticProgramModules : AdaptedProgramModules = struct
   let fresh_id gt_ids t = TransitionLabel.fresh_ids gt_ids t
 end
 
-module Unfolding (PM : AdaptedProgramModules) = struct
+module ApronUtils(PM: AdaptedProgramModules) = struct 
+  open Constraints
+  open Polynomials
   open PM
-  open Apron
-  module VarMap = ProgramTypes.VarMap
 
   type polyhedron
-  type guard = Constraints.Constraint.t
+  type guard = Constraint.t
   type update = UpdateElement.t VarMap.t
+
+  (* TODO: move to ApronInterface *)
+  (** Converts an apron scalar into its koat equivalent *)
+  let scalar_from_apron (scalar : Apron.Scalar.t) : OurInt.t =
+    let open Apron in
+    match scalar with
+    | Scalar.Float float -> (OurInt.of_int % int_of_float) float
+    | Scalar.Mpqf float -> (OurInt.of_int % int_of_float % Mpqf.to_float) float
+    | Scalar.Mpfrf float ->
+        (OurInt.of_int % int_of_float % Mpfrf.to_float) float
+
+  (* TODO: move to K2A *)
+  (** Creates constraints for a variable bounded by an interval *)
+  let interval_from_apron (var : Var.t) (interval : Apron.Interval.t) :
+      Constraint.t =
+    let constr = ref [] in
+    if Apron.Scalar.is_infty interval.sup = 0 then
+      constr :=
+        Constraint.Infix.(
+          interval.sup |> scalar_from_apron |> Polynomial.of_constant
+          >= Polynomial.of_var var)
+        :: !constr;
+    if Apron.Scalar.is_infty interval.inf = 0 then
+      constr :=
+        Constraint.Infix.(
+          interval.inf |> scalar_from_apron |> Polynomial.of_constant
+          <= Polynomial.of_var var)
+        :: !constr;
+    Constraint.all !constr
+
+  (* TODO: move to ApronInterface *)
+  (** converts an update map over polynomials to apron arrays *)
+  let update_to_apron env
+      (update : Polynomials.Polynomial.t ProgramTypes.VarMap.t) =
+    VarMap.enum update
+    |> Enum.map (fun (var, ue) ->
+           let apron_var = ApronInterface.Koat2Apron.var_to_apron var
+           and apron_expr = ApronInterface.Koat2Apron.poly_to_apron env ue in
+           (apron_var, apron_expr))
+    |> Array.of_enum |> Array.split
+
+  (** Adapter for polyheron operations used directly on constraints *)
+  let guard_to_polyh am guard = 
+    let env = Apron.Environment.make (ApronInterface.Koat2Apron.vars_to_apron (Constraint.vars guard)) [||] in
+    let tcons_array = ApronInterface.Koat2Apron.constraint_to_apron env guard in
+    let polyh = Apron.Abstract1.of_tcons_array am env tcons_array in 
+    polyh
+
+  (** Adapter for polyheron operations used directly on constraints *)
+  let polyh_to_guard am polyh = polyh
+    |> Apron.Abstract1.to_tcons_array am
+    |> ApronInterface.Apron2Koat.constraint_from_apron 
 
   (*
     For an abstract domain `'a` there is a manager `'a Manager.t` handling the
@@ -382,47 +462,51 @@ module Unfolding (PM : AdaptedProgramModules) = struct
 
   (** add new dimensions to to an abstract value, ignores already existing dimenstions *)
   let add_vars_to_polyh am vars polyh =
-    let prev_env = Abstract1.env polyh in
+    let prev_env = Apron.Abstract1.env polyh in
     let apron_vars = ApronInterface.Koat2Apron.vars_to_apron vars in
     (* Apron would panic if the variable is alread in the environment *)
     let new_apron_vars =
-      Array.filter (not % Environment.mem_var prev_env) apron_vars
+      Array.filter (not % Apron.Environment.mem_var prev_env) apron_vars
     in
-    let new_env = Environment.add prev_env new_apron_vars [||] in
+    let new_env = Apron.Environment.add prev_env new_apron_vars [||] in
 
     (* since we only add new variables projecting on the 0-plane or not doesn't matter *)
-    Abstract1.change_environment am polyh new_env true
+    Apron.Abstract1.change_environment am polyh new_env true
 
   (** project a polyhedron onto the given variable dimensions 
   Does not add new dimensions for variables not in the polyhedron
    *)
   let project_polyh am vars polyh =
-    let prev_env = Abstract1.env polyh in
+    let prev_env = Apron.Abstract1.env polyh in
     let apron_vars =
       ApronInterface.Koat2Apron.vars_to_apron vars
-      |> Array.filter (not % Environment.mem_var prev_env)
+      |> Array.filter (not % Apron.Environment.mem_var prev_env)
     in
-    let new_env = Environment.make apron_vars [||] in
+    let new_env = Apron.Environment.make apron_vars [||] in
     (* Implicitly projects all removed dimensions *)
-    Abstract1.change_environment am polyh new_env false
+    Apron.Abstract1.change_environment am polyh new_env false
+
+  let project_guard am vars guard = guard_to_polyh am guard 
+    |> project_polyh am vars 
+    |> polyh_to_guard am
 
   (** Intersect a polynomial with a constraint *)
   let meet am constr polyh =
-    let env = Abstract1.env polyh in
+    let env = Apron.Abstract1.env polyh in
     let apron_expr = ApronInterface.Koat2Apron.constraint_to_apron env constr in
-    Abstract1.meet_tcons_array am polyh apron_expr
+    Apron.Abstract1.meet_tcons_array am polyh apron_expr
 
-  (* TODO: move to K2A *)
+  (** Find bounds of the form x ⋄ c for variables x and bounds c *)
+  let bound_variables_polyh am vars polyh = 
+    VarSet.enum vars
+    |> Enum.map (fun variable ->
+           ApronInterface.Koat2Apron.var_to_apron variable
+           |> Apron.Abstract1.bound_variable am polyh
+           |> interval_from_apron variable) 
+    |> Enum.fold Constraint.mk_and Constraint.mk_true
 
-  (** converts an update map over polynomials to apron arrays *)
-  let update_to_apron env
-      (update : Polynomials.Polynomial.t ProgramTypes.VarMap.t) =
-    VarMap.enum update
-    |> Enum.map (fun (var, ue) ->
-           let apron_var = ApronInterface.Koat2Apron.var_to_apron var
-           and apron_expr = ApronInterface.Koat2Apron.poly_to_apron env ue in
-           (apron_var, apron_expr))
-    |> Array.of_enum |> Array.split
+  let bound_variables_guard am vars guard = guard_to_polyh am guard 
+    |> bound_variables_polyh am vars
 
   let vars_in_update update =
     VarMap.fold
@@ -431,25 +515,38 @@ module Unfolding (PM : AdaptedProgramModules) = struct
       update VarSet.empty
 
   let update_polyh am update polyh =
-    let env = Abstract1.env polyh in
+    let env = Apron.Abstract1.env polyh in
     let vars_arr, texpr_arr = update_to_apron env update in
-    Abstract1.assign_texpr_array am polyh vars_arr texpr_arr None
+    Apron.Abstract1.assign_texpr_array am polyh vars_arr texpr_arr None
 
-  let unfold am polyh program_vars guard invariant update =
-    let update_approx, update_guard =
-      VarMap.fold
-        (fun var ue (new_update, guards) ->
-          let ue_approx, guard =
-            OverApproximation.overapprox_indeterminates ue
-          in
-          (VarMap.add var ue_approx new_update, Guard.mk_and guards guard))
-        update
-        (VarMap.empty, Guard.mk_true)
-    in
+  let update_guard am update guard = guard_to_polyh am guard
+    |> update_polyh am update
+    |> polyh_to_guard am
+end
+
+module OverApproximationUtils(PM: AdaptedProgramModules) = struct 
+  open PM
+  let overapprox_update update = VarMap.fold
+      (fun var ue (new_update, guards) ->
+        let ue_approx, guard =
+          OverApproximation.overapprox_indeterminates ue
+        in
+        (VarMap.add var ue_approx new_update, Guard.mk_and guards guard))
+      update
+      (VarMap.empty, Guard.mk_true)
+end
+  
+module Unfolding (PM : AdaptedProgramModules) = struct
+  open PM
+  open ApronUtils(PM)
+  open OverApproximationUtils(PM)
+
+  let unfold am polyh program_vars guard update =
+    let update_approx, update_guard = overapprox_update update in
     let temp_vars =
       [
         Guard.vars guard;
-        Guard.vars invariant;
+        (* Guard.vars invariant; *)
         Guard.vars update_guard;
         vars_in_update update_approx;
       ]
@@ -459,7 +556,7 @@ module Unfolding (PM : AdaptedProgramModules) = struct
 
     polyh
     |> add_vars_to_polyh am temp_vars
-    |> meet am (Guard.all [ guard; invariant; update_guard ])
+    |> meet am (Guard.all [ guard; (*invariant;*) update_guard ])
     |> update_polyh am update_approx
     |> project_polyh am program_vars
 end
@@ -492,14 +589,28 @@ module type Abstraction = sig
   val to_guard: t -> guard
 end
 
-module PropertyBasedAbstraction(PM: ProgramTypes.ProgramModules) : Abstraction with type location = PM.Location.t = struct 
+module PropertyBasedAbstraction(PM: AdaptedProgramModules) : sig 
+  include Abstraction with type location = PM.Location.t 
+
+  val mk_from_heuristic_scc : config -> PM.TransitionGraph.t -> PM.TransitionSet.t -> VarSet.t -> context
+end = struct 
+  open PM
+  open ApronUtils(PM)
+  open OverApproximationUtils(PM)
+
   open Formulas
   open Constraints
   open Atoms
-  open PM
 
-  module AtomSet = Set.Make (Atom)
+  module AtomSet = struct 
+    include Set.Make (Atom)
+
+    let to_string t = enum t |> Util.enum_to_string Atom.to_string
+  end
+
   module LocationMap = Map.Make(PM.Location)
+  module Loops = Loops(PM)
+  module FVS = FVS(PM)
 
   (** Contains a set of properties for every location that should be
       abstracted, every missing location shall not be abstracted *)
@@ -521,14 +632,106 @@ module PropertyBasedAbstraction(PM: ProgramTypes.ProgramModules) : Abstraction w
   (** Properties are a set of constraints. If φ is in the properties, then it's
       negation ¬φ should not, because it is already checked as well. Adding it
       though would just result in double checks (overhead) *)
-  let mk_properties props_list =
-    List.fold
-      (fun props prop ->
-        (* Add property only, if its negation is not already present *)
-        if not (AtomSet.mem (Atom.neg prop) props) then AtomSet.add prop props
-        else props)
-      AtomSet.empty props_list
+  (* let mk_properties props_list = *)
+  (*   List.fold *)
+  (*     (fun props prop -> *)
+  (*       (1* Add property only, if its negation is not already present *1) *)
+  (*       if not (AtomSet.mem (Atom.neg prop) props) then AtomSet.add prop props *)
+  (*       else props) *)
+  (*     AtomSet.empty props_list *)
 
+  let mk_from_heuristic_scc config graph scc program_variables = 
+    let am = Ppl.manager_alloc_loose () in
+
+    (* TODO eliminate non contributing variables *)
+    let pr_h outgoing_transition =
+      outgoing_transition |> PM.Transition.label |> PM.TransitionLabel.guard
+      |> project_guard am program_variables
+      |> AtomSet.of_list
+    in
+
+    let pr_hv outgoing_transition =
+      outgoing_transition |> PM.Transition.label |> PM.TransitionLabel.guard
+      (* TODO: optimization probably possible for less variables, since not occuring variables cannot be bound *)
+      |> bound_variables_guard am program_variables
+      |> AtomSet.of_list 
+    in 
+
+    let pr_c incoming_transition =
+      let label = PM.Transition.label incoming_transition in
+      let (update_approx, guard_approx) = PM.TransitionLabel.update_map label 
+       |> overapprox_update in
+      let guard = PM.TransitionLabel.guard label
+       |> Guard.mk_and guard_approx in
+      update_guard am update_approx guard
+      |> AtomSet.of_list
+    in
+
+    let pr_cv incoming_transition = 
+      let label = PM.Transition.label incoming_transition in
+      let (update_approx, guard_approx) = PM.TransitionLabel.update_map label 
+        |> overapprox_update in
+      let guard = PM.TransitionLabel.guard label
+        |> Guard.mk_and guard_approx in
+      guard_to_polyh am guard 
+        |> project_polyh am program_variables
+        |> bound_variables_polyh am program_variables
+        |> AtomSet.of_list
+    in
+
+    let pr_d (loop: Transition.t list) = 
+      (* Backward propagation captures the properties needed for a full loop *)
+      List.fold_right(fun transition combined -> 
+        let label = PM.Transition.label transition in
+        let (update_approx, update_guard) = PM.TransitionLabel.update_map label
+          |> overapprox_update 
+        and constr = PM.TransitionLabel.guard label in
+        Constraint.Infix.(constr && update_guard && Constraint.map_polynomial (Polynomials.Polynomial.substitute_all update_approx) combined)
+        |> project_guard am program_variables
+      ) loop Constraint.mk_true
+      |> AtomSet.of_list
+    in
+
+    let for_transitions f transitions = 
+      List.fold (fun props t -> f t) AtomSet.empty transitions 
+    in
+
+    let for_loops f loops = 
+      List.fold (fun props loop -> f loop) AtomSet.empty loops
+    in
+
+    let log_props location name props =
+      Printf.printf "%s (%s): %s \n"
+        (Location.to_string location)
+        name (AtomSet.to_string props);
+      props
+    in
+
+    let loops = Loops.find_loops_scc graph scc in 
+
+    (* The locations to abstract *)
+    let heads = match config.abstract with 
+      | `FVS -> FVS.fvs ~loops: (Some loops) graph 
+      | `LoopHeads -> Loops.loop_heads loops
+    in
+
+    LocationSet.fold (fun head properties -> 
+      let outgoing_transitions = TransitionGraph.succ_e graph head in
+      let incoming_transitions = TransitionGraph.pred_e graph head in
+      (** Find loops containing the head, and rotate *)
+      let loops_with_head = loops
+        |> List.filter(List.mem head)
+        |> List.map(Loops.rotate head)
+      in
+      let properties_for_head = AtomSet.empty
+      |> AtomSet.union (for_transitions pr_h outgoing_transitions |> log_props head "PR_h")
+      |> AtomSet.union (for_transitions pr_hv outgoing_transitions |> log_props head "PR_hv")
+      |> AtomSet.union (for_transitions pr_c incoming_transitions |> log_props head "PR_c")
+      |> AtomSet.union (for_transitions pr_cv incoming_transitions |> log_props head "PR_cv")
+      |> AtomSet.union (Loops.transition_loops_from graph loops_with_head |> for_loops pr_d |> log_props head "PR_d")
+      in
+      LocationMap.add head properties_for_head properties
+    ) heads LocationMap.empty
 
   let abstract context location guard = 
     (** Identifies all properties that are entailed by the constraint, implicit SAT check *)
@@ -582,13 +785,10 @@ module PropertyBasedAbstraction(PM: ProgramTypes.ProgramModules) : Abstraction w
   | Abstr abstracted -> abstract_to_guard abstracted
   | Constr guard -> guard
 
-  let mk_context = LocationMap.empty (*TODO*)
-
   let to_string = function 
     | Abstr a -> Printf.sprintf "Abstracted %s" (Constraint.to_string (abstract_to_guard a))
     | Constr c -> Printf.sprintf "Constraints %s" (Constraint.to_string c)
 
-  let hash a = Hashtbl.hash a
 end
 
 (** A version is a location with an (possibly abstracted) constraint used
@@ -663,30 +863,13 @@ module PartialEvaluation(PM: AdaptedProgramModules) = struct
       *)
   exception UnsatEntryTransition
 
-  type config = {
-    fvs: bool
-  }
-
-  let conf = {
-    fvs = true;
-  }
-
   let am = Ppl.manager_alloc_loose () 
 
-  let abstr_ctx = A.mk_context
-
-  let evaluate_scc graph scc program_vars = 
+  let evaluate_scc config graph scc program_vars = 
     let entry_transitions = entry_transitions graph scc
     and exit_transitions = exit_transitions graph scc in
 
-    let location_loops = Loops.find_loops_scc graph scc in
-    let transition_loops = Loops.transition_loops_from graph location_loops in
-
-    let loop_heads = if conf.fvs then 
-      fvs graph ~loops:(Some location_loops)
-    else Loops.loop_heads location_loops 
-    in
-
+    let abstr_ctx = Abstraction.mk_from_heuristic_scc config graph scc program_vars in
     let result_graph_without_scc = TransitionGraph.transitions graph 
       |> PM.TransitionSet.enum
       |> Enum.filter (fun transition -> not (TransitionSet.mem transition scc))
@@ -715,10 +898,10 @@ module PartialEvaluation(PM: AdaptedProgramModules) = struct
         (* Unwrap the transition *)
         let (src_loc, label, target_loc) = transition in
         let guard = TransitionLabel.guard label 
-        and invariant = TransitionLabel.invariant label
+        (* and invariant = TransitionLabel.invariant label *)
         and update = TransitionLabel.update_map label in
 
-        let next_polyh = unfold am src_polyh program_vars guard invariant update  in
+        let next_polyh = unfold am src_polyh program_vars guard update  in
         let next_guard = Apron.Abstract1.to_tcons_array am next_polyh 
           |> ApronInterface.Apron2Koat.constraint_from_apron in
         match Abstraction.abstract abstr_ctx target_loc next_guard with 
@@ -762,9 +945,8 @@ module PartialEvaluation(PM: AdaptedProgramModules) = struct
         assert ((Transition.src entry_transition) == (Version.location src_version));
         let (src_loc, label, target_loc) = entry_transition in
         let guard = TransitionLabel.guard label 
-        and invariant = TransitionLabel.invariant label
         and update = TransitionLabel.update_map label in
-        let next_polyh = unfold am initial_polyh program_vars guard invariant update in
+        let next_polyh = unfold am initial_polyh program_vars guard update in
         let next_guard = Apron.Abstract1.to_tcons_array am next_polyh 
           |> ApronInterface.Apron2Koat.constraint_from_apron in
         let target_version = match Abstraction.abstract abstr_ctx target_loc next_guard with
