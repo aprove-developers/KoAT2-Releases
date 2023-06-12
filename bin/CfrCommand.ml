@@ -20,8 +20,8 @@ type params = {
   show_steps: bool;
   (** Displays the steps of the control flow refinement. *)
 
-  logs : Logging.logger list; [@enum Logging.(List.map (fun l -> show_logger l, l) loggers)] [@default Logging.all] [@sep ','] [@aka ["l"]]
-  (** The loggers which should be activated. *)
+  log_level : Logger.level; [@enum Logger.([NONE; FATAL; ERROR; WARN; NOTICE; INFO; DEBUG]) |> List.map (fun level -> Logger.name_of_level level, level)] [@default Logger.INFO]
+  (** The general log level of the loggers. *)
 
   cfr_method: [`PartialEvaluationNative | `PartialEvaluationIRankFinder | `Chaining]; [@enum ["native", `PartialEvaluationNative; "irankfinder", `PartialEvaluationIRankFinder; "chaining", `Chaining]]
 
@@ -66,6 +66,8 @@ let run (params: params) =
     |> Fpath.append input_directory
     |> Fpath.to_string
   ) in
+
+  Logging.use_loggers [(Logging.CFR, params.log_level)];
 
   match params.cfr_method with
   | `PartialEvaluationNative ->
