@@ -354,6 +354,7 @@ module AdaptedClassicProgramModules : AdaptedProgramModules = struct
 
   (** Classic transitions have no general transition, trivial *)
   let fresh_id _ t = TransitionLabel.fresh_id t
+
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
@@ -964,9 +965,26 @@ module PartialEvaluation(PM: AdaptedProgramModules) = struct
           evaluate_version result_graph next_polyh target_version
     in
 
-    TransitionSet.fold(fun entry_transition result_graph ->
+    let pe_graph = TransitionSet.fold(fun entry_transition result_graph ->
       let start_location = Transition.src entry_transition in
       let start_version = Version.mk_true start_location in
       evaluate_entry_transition start_version entry_transition result_graph
-    ) entry_transitions result_graph_without_scc
+    ) entry_transitions result_graph_without_scc in 
+
+    PEM.remove_abstractions pe_graph
+
+  let evaluate_program config program = 
+    let program_vars = Program.input_vars program in
+    let pe_prog = Program.map_graph (fun graph ->
+      (* Evaluate every scc in the program *)
+      (* Note: the start location cannot be part of an SCC and hence is 
+         Also present in the result graph.
+         *)
+      Program.sccs program 
+          |> Enum.fold (fun result_graph scc -> 
+              evaluate_scc config result_graph scc program_vars
+          ) graph 
+    ) program in
+  assert (Program.input_vars program == Program.input_vars pe_prog);
+  pe_prog
 end
