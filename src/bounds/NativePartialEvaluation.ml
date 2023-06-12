@@ -316,61 +316,54 @@ end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
-(** An generic way of overapproximating polynomials over indeterminates is required *)
-module type OverApproximation = sig
-  type t
-  type approx = Polynomials.Polynomial.t * Guard.t
-
-  val overapprox_indeterminates : t -> approx
-end
-
-(* TODO: Move to ProgramModules and/or Polynomials *)
-
-(** Extension of the ProgramModules with generic overapproximation *)
-module type AdaptedProgramModules = sig
-  include ProgramTypes.ProgramModules
+(** Generic adapter for program modules with generic overapproximation *)
+module type Adapter = sig
+  type update_element
+  type transition_label 
+  type approx = (Polynomials.Polynomial.t * Guard.t)
 
   module VarMap : module type of Map.Make(Var)
-  module OverApproximation : OverApproximation with type t := UpdateElement.t
-  
-  val fresh_id : (int, int) Hashtbl.t -> TransitionLabel.t -> TransitionLabel.t
+
+  val overapprox_indeterminates : update_element -> approx
+  val fresh_id : (int, int) Hashtbl.t -> transition_label -> transition_label
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Trivial implementation of overapproxmation in classical programs *)
-module AdaptedClassicProgramModules : AdaptedProgramModules = struct
-  include ProgramModules
+module ClassicAdapter: Adapter with 
+  type update_element = ProgramModules.UpdateElement.t and
+  type transition_label = ProgramModules.TransitionLabel.t
+  = struct
+    open ProgramModules 
+    type update_element = ProgramModules.UpdateElement.t
+    type approx = (Polynomials.Polynomial.t * Guard.t)
+    type transition_label = TransitionLabel.t
 
-  module VarMap = Map.Make(Var)
-
-  module OverApproximation = struct
-    (* type t = UpdateElement.t *)
-    type approx = Polynomials.Polynomial.t * Guard.t
+    module VarMap = Map.Make(Var)
 
     (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
     let overapprox_indeterminates poly = (poly, Guard.mk_true)
-  end
 
-  (** Classic transitions have no general transition, trivial *)
-  let fresh_id _ t = TransitionLabel.fresh_id t
-
+    (** Classic transitions have no general transition, trivial *)
+    let fresh_id _ t = TransitionLabel.fresh_id t
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Use already existing overapproximation *)
-module AdaptedProbabilisticProgramModules : AdaptedProgramModules = struct
-  include ProbabilisticProgramModules
+module ProbabilisticAdapter: Adapter  with
+  type update_element = ProbabilisticProgramModules.UpdateElement.t and
+  type transition_label = ProbabilisticProgramModules.TransitionLabel.t
+  = struct
+    open ProbabilisticProgramModules
+    type update_element = UpdateElement.t
+    type approx = (Polynomials.Polynomial.t * Guard.t)
+    type transition_label = TransitionLabel.t
 
-  module VarMap = Map.Make(Var)
-
-  module OverApproximation = struct
-    (* type t = UpdateElement.t *)
-    type approx = Polynomials.Polynomial.t * Guard.t
+    module VarMap = Map.Make(Var)
 
     module P = Polynomials.Polynomial
-
     let overapprox_indeterminates =
       UpdateElement.fold
         ~const:(fun c -> (P.of_constant c, Guard.mk_true))
@@ -385,15 +378,16 @@ module AdaptedProbabilisticProgramModules : AdaptedProgramModules = struct
         ~plus:(fun (lp, lg) (rp, rg) -> (P.(lp + rp), Guard.mk_and lg rg))
         ~times:(fun (lp, lg) (rp, rg) -> (P.(lp * rp), Guard.mk_and lg rg))
         ~pow:(fun (p, g) exp -> (P.pow p exp, g))
-  end
 
-  let fresh_id gt_ids t = TransitionLabel.fresh_ids gt_ids t
+    let fresh_id gt_ids t = TransitionLabel.fresh_ids gt_ids t
 end
 
-module ApronUtils(PM: AdaptedProgramModules) = struct 
+module ApronUtils(PM: ProgramTypes.ProgramModules) = struct 
   open Constraints
   open Polynomials
   open PM
+
+  module VarMap = Map.Make(Var)
 
   type polyhedron
   type guard = Constraint.t
@@ -525,29 +519,32 @@ module ApronUtils(PM: AdaptedProgramModules) = struct
     |> polyh_to_guard am
 end
 
-module OverApproximationUtils(PM: AdaptedProgramModules) = struct 
-  open PM
+module OverApproximationUtils(A: Adapter) = struct 
+  open A
   let overapprox_update update = VarMap.fold
       (fun var ue (new_update, guards) ->
-        let ue_approx, guard =
-          OverApproximation.overapprox_indeterminates ue
-        in
+        let ue_approx, guard = overapprox_indeterminates ue in
         (VarMap.add var ue_approx new_update, Guard.mk_and guards guard))
       update
       (VarMap.empty, Guard.mk_true)
 end
   
-module Unfolding (PM : AdaptedProgramModules) = struct
+module Unfolding (PM : ProgramTypes.ProgramModules) 
+  (A: Adapter with 
+    type update_element = PM.UpdateElement.t and
+    type transition_label = PM.TransitionLabel.t
+  ) 
+= struct
   open PM
+  open A
+  open OverApproximationUtils(A)
   open ApronUtils(PM)
-  open OverApproximationUtils(PM)
 
   let unfold am polyh program_vars guard update =
     let update_approx, update_guard = overapprox_update update in
     let temp_vars =
       [
         Guard.vars guard;
-        (* Guard.vars invariant; *)
         Guard.vars update_guard;
         vars_in_update update_approx;
       ]
@@ -557,7 +554,7 @@ module Unfolding (PM : AdaptedProgramModules) = struct
 
     polyh
     |> add_vars_to_polyh am temp_vars
-    |> meet am (Guard.all [ guard; (*invariant;*) update_guard ])
+    |> meet am (Guard.all [ guard; update_guard ])
     |> update_polyh am update_approx
     |> project_polyh am program_vars
 end
@@ -590,14 +587,18 @@ module type Abstraction = sig
   val to_guard: t -> guard
 end
 
-module PropertyBasedAbstraction(PM: AdaptedProgramModules) : sig 
+module PropertyBasedAbstraction(PM: ProgramTypes.ProgramModules)
+  (Adapter: Adapter with 
+    type update_element = PM.UpdateElement.t and
+    type transition_label = PM.TransitionLabel.t
+  ) : sig 
   include Abstraction with type location = PM.Location.t 
 
   val mk_from_heuristic_scc : config -> PM.TransitionGraph.t -> PM.TransitionSet.t -> VarSet.t -> context
 end = struct 
   open PM
   open ApronUtils(PM)
-  open OverApproximationUtils(PM)
+  open OverApproximationUtils(Adapter)
 
   open Formulas
   open Constraints
@@ -830,7 +831,7 @@ module GraphUtils(PM: ProgramTypes.ProgramModules) = struct
     |> TransitionSet.of_enum
 end
 
-module PEModules(PM: AdaptedProgramModules)(A: Abstraction) = struct 
+module PEModules(PM: ProgramTypes.ProgramModules) (A: Abstraction) = struct 
   module Version = Version(PM.Location)(A) 
   module VersionSet = Set.Make(Version)
   module Transition = Transition_.TransitionOver(PM.TransitionLabel)(Version)
@@ -844,16 +845,22 @@ module PEModules(PM: AdaptedProgramModules)(A: Abstraction) = struct
     |> PM.TransitionGraph.mk
 end
 
-module PartialEvaluation(PM: AdaptedProgramModules) = struct 
+module PartialEvaluation(PM: ProgramTypes.ProgramModules)
+  (Adapter: Adapter with 
+    type update_element = PM.UpdateElement.t and
+    type transition_label = PM.TransitionLabel.t
+  ) 
+= struct 
   module PM = PM
-  module Abstraction = PropertyBasedAbstraction(PM)
+  module Abstraction = PropertyBasedAbstraction(PM)(Adapter)
   module PEM = PEModules(PM)(Abstraction)
 
   open PM
+  open Adapter
   module Version = PEM.Version
   module PEGraph = PEM.TransitionGraph
 
-  open Unfolding(PM)
+  open Unfolding(PM)(Adapter)
   open Loops(PM)
   open GraphUtils(PM)
   open FVS(PM)
@@ -988,3 +995,6 @@ module PartialEvaluation(PM: AdaptedProgramModules) = struct
   assert (Program.input_vars program == Program.input_vars pe_prog);
   pe_prog
 end
+
+module ClassicPartialEvaluation = PartialEvaluation(ProgramModules)(ClassicAdapter)
+module ProbabilisticPartialEvaluation = PartialEvaluation(ProbabilisticProgramModules)(ProbabilisticAdapter)

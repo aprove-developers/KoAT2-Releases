@@ -69,21 +69,19 @@ let run (params: params) =
 
   match params.cfr_method with
   | `PartialEvaluationNative ->
+      let cfr_config: NativePartialEvaluation.config = {
+        k_encounters = 0;
+        abstract = params.abstract;
+      } in
       if params.probabilistic then
-        let module PM = NativePartialEvaluation.AdaptedProbabilisticProgramModules in
-        let module PE = NativePartialEvaluation.PartialEvaluation(PM) in
-        let cfr_config = {
-          k_encounters = 0;
-          abstract = params.abstract
-        } in
-        Readers.read_file input 
-        |> PE.evaluate cfr_config
+        let module PE = NativePartialEvaluation.ProbabilisticPartialEvaluation in
+        Readers.read_probabilistic_program input 
+        |> PE.evaluate_program cfr_config
         |> prob_program_to_file output
       else 
-        let module PM = NativePartialEvaluation.AdaptedProbabilisticProgramModules in
-        let module PE = NativePartialEvaluation.PartialEvaluation(PM) in
-        Readers.read_probabilistic_program input
-        |> PE.evaluate cfr_config
+        let module PE = NativePartialEvaluation.ClassicPartialEvaluation in
+        Readers.read_file input
+        |> PE.evaluate_program cfr_config
         |> sane_program_to_file output
   | `PartialEvaluationIRankFinder -> 
       if params.probabilistic 
