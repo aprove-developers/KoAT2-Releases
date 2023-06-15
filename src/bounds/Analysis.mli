@@ -4,11 +4,16 @@ open BoundsInst
 open ProgramTypes
 open RVGTypes
 
+type cfr_method = 
+  | Chaining
+  | PartialEvaluationIRankFinder
+  | PartialEvaluationNative of bool * int * bool
+
 (** These types are used to limit certain analyses methods to the specified underlying types. *)
 (** Together with the GADTs they are used to prove type equalities *)
 type ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration =
   | NoCFR: ('a,'b,'c,'d,'e,'f) cfr_configuration
-  | PerformCFR: [ `Chaining | `PartialEvaluation ] list
+  | PerformCFR: cfr_method list
               -> ( ProgramModules.Program.t
                 , ProgramModules.TransitionSet.t
                 , RVGTypes.MakeRVG(ProgramModules).t, RVGTypes.MakeRVG(ProgramModules).scc

@@ -7,6 +7,7 @@ let log ?(level = Logger.INFO) method_name data = Logger.log cfr_logger level (f
 type config = {
   abstract: [`FVS | `LoopHeads];
   k_encounters: int;
+  update_invariants: bool;
 }
 
 module Loops (PM : ProgramTypes.ProgramModules) = struct
@@ -357,31 +358,27 @@ module type Adapter = sig
   module VarMap : module type of Map.Make(Var)
 
   val overapprox_indeterminates : update_element -> approx
-  val fresh_id : (int, int) Hashtbl.t -> transition_label -> transition_label
   val location_with_index : int -> location -> location
 end
 
 (* TODO: Move to ProgramModules and/or Polynomials *)
 
 (** Trivial implementation of overapproxmation in classical programs *)
-module ClassicAdapter: Adapter with 
-  type update_element = ProgramModules.UpdateElement.t and
-  type transition_label = ProgramModules.TransitionLabel.t and
-  type location = ProgramModules.Location.t
+module ClassicAdapter(PM: ProgramTypes.ClassicalProgramModules): Adapter with 
+  type update_element = PM.UpdateElement.t and
+  type transition_label = PM.TransitionLabel.t and
+  type location = PM.Location.t
   = struct
-    open ProgramModules 
-    type update_element = ProgramModules.UpdateElement.t
+    open PM 
+    type update_element = PM.UpdateElement.t
     type approx = (Polynomials.Polynomial.t * Guard.t)
-    type transition_label = TransitionLabel.t
-    type location = Location.t
+    type transition_label = PM.TransitionLabel.t
+    type location = PM.Location.t
 
     module VarMap = Map.Make(Var)
 
     (** Overapproximating of normal polynomials is not required and the polynomial is returned as is *)
     let overapprox_indeterminates poly = (poly, Guard.mk_true)
-
-    (** Classic transitions have no general transition, trivial *)
-    let fresh_id _ t = TransitionLabel.fresh_id t
 
     let location_with_index index location = 
       Printf.sprintf "%s_%i" (Location.to_string location) index
@@ -419,8 +416,6 @@ module ProbabilisticAdapter: Adapter  with
         ~plus:(fun (lp, lg) (rp, rg) -> (P.(lp + rp), Guard.mk_and lg rg))
         ~times:(fun (lp, lg) (rp, rg) -> (P.(lp * rp), Guard.mk_and lg rg))
         ~pow:(fun (p, g) exp -> (P.pow p exp, g))
-
-    let fresh_id gt_ids t = TransitionLabel.fresh_ids gt_ids t
 
     let location_with_index index location = 
       Printf.sprintf "%s_%i" (Location.to_string location) index
@@ -882,6 +877,10 @@ module Version(L: ProgramTypes.Location)(A: Abstraction) = struct
   let mk location abstracted = (location, abstracted)
   let mk_true location = (location, A.Constr Constraint.mk_true)
 
+  (* TODO: this is broken, because it doesn't parse the guard, but this isn't used anyway and only 
+     here for interface compatibility *)
+  let of_string s = mk_true (L.of_string s)
+
   let location (l, _) = l
   let abstracted (_, a) = a
 end
@@ -982,7 +981,7 @@ module PartialEvaluation(PM: ProgramTypes.ProgramModules)
   module PEM = PEModules(PM)(Adapter)(Abstraction)
 
   open PM
-  open Adapter
+  (* open Adapter *)
   module Version = PEM.Version
   module PEGraph = PEM.TransitionGraph
 
@@ -998,7 +997,7 @@ module PartialEvaluation(PM: ProgramTypes.ProgramModules)
 
   let am = Ppl.manager_alloc_loose () 
 
-  let evaluate_scc config graph scc program_vars = 
+  let evaluate_scc config scc program_vars graph = 
     let entry_transitions = entry_transitions graph scc
     and exit_transitions = exit_transitions graph scc in
 
@@ -1023,7 +1022,7 @@ module PartialEvaluation(PM: ProgramTypes.ProgramModules)
         let gt_id_map = Hashtbl.create 10 in
         List.enum transitions
         |> Enum.map (fun transition -> (transition, TransitionSet.mem transition exit_transitions))
-        |> Enum.map (fun ((src, label, target), is_exit) -> ((src, fresh_id gt_id_map label, target), is_exit))
+        |> Enum.map (fun ((src, label, target), is_exit) -> ((src, TransitionLabel.copy_rename gt_id_map label, target), is_exit))
       in
 
       (* add the evaluation graph to the result_graph by evaluating from the
@@ -1124,7 +1123,7 @@ module PartialEvaluation(PM: ProgramTypes.ProgramModules)
 
     PEM.remove_abstractions pe_graph
 
-  let evaluate_program config program = 
+  let evaluate_program config program= 
     let program_vars = Program.input_vars program 
         |> tap (fun x -> log "pe" ["PROGRAM_VARS", VarSet.to_string x])
     in
@@ -1135,12 +1134,12 @@ module PartialEvaluation(PM: ProgramTypes.ProgramModules)
          *)
       Program.sccs program 
           |> Enum.fold (fun result_graph scc -> 
-              evaluate_scc config result_graph scc program_vars
+              evaluate_scc config scc program_vars result_graph 
           ) graph 
     ) program in
   assert (VarSet.equal (Program.input_vars program) (Program.input_vars pe_prog));
   pe_prog
 end
 
-module ClassicPartialEvaluation = PartialEvaluation(ProgramModules)(ClassicAdapter)
+module ClassicPartialEvaluation(PM: ProgramTypes.ClassicalProgramModules) = PartialEvaluation(PM)(ClassicAdapter(PM))
 module ProbabilisticPartialEvaluation = PartialEvaluation(ProbabilisticProgramModules)(ProbabilisticAdapter)

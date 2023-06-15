@@ -32,7 +32,7 @@ let print_termcomp (program: Program.t) (appr: Approximation.t): unit =
 
 (** TWN for no transformations, TWNTransform for both techniques, TWNTransformJordan to transform only with jordan normal form, TWNTransformGeneral to transform only with the general approach *)
 type local = [`MPRF | `TWN | `TWNTransform]
-type cfr = [`PartialEvaluation | `Chaining]
+type cfr = [`PartialEvaluationNative | `PartialEvaluationIRankFinder | `Chaining]
 
 (** The shell arguments which can be defined in the console. *)
 type params = {
@@ -93,8 +93,14 @@ type params = {
     depth : int; [@default 1] [@aka ["d"]]
     (** The maximum depth of a Multiphase Ranking Function to bound search space.*)
 
-    cfr : cfr list; [@enum [("pe", `PartialEvaluation); ("chain", `Chaining)]] [@default []] [@sep ',']
+    cfr : cfr list; [@enum [("pe_native", `PartialEvaluationNative); ("pe", `PartialEvaluationIRankFinder); ("chain", `Chaining)]] [@default []] [@sep ',']
     (** Choose methods for local control-flow-refinement: pe (Partial Evaluation) or chain (Chaining) *)
+
+    pe_fvs: bool; [@default true]
+
+    pe_k: int; [@default 0]
+
+    pe_update_invariants: bool; [@default true]
 
     time_limit_cfr : int; [@default 20]
     (** Limits the time spend maximal on cfr. Default is 180 (seconds). Note that this is not a strict upper bound and more an approximation. We ignore the limit on unbound transitions. Use -1 to set no limit. *)
@@ -163,7 +169,11 @@ let run (params: params) =
       closed_form_size_bounds = if params.closed_form_size_bounds then ComputeClosedFormSizeBounds else NoClosedFormSizeBounds;
       cfr_configuration = match params.cfr with
         | [] -> NoCFR
-        | l ->  PerformCFR l;
+        | l -> List.enum l |> Enum.map (function 
+          | `Chaining -> Chaining
+          | `PartialEvaluationNative -> PartialEvaluationNative (params.pe_fvs, params.pe_k, params.pe_update_invariants)
+          | `PartialEvaluationIRankFinder -> PartialEvaluationIRankFinder
+              ) |> List.of_enum |> (fun l -> PerformCFR l);
     }
   in
   let input_filename =
@@ -191,7 +201,7 @@ let run (params: params) =
   ProofOutput.proof_format params.proof_format;
   let program =
     input
-    |> Readers.read_input ~rename:(List.mem `PartialEvaluation params.cfr || params.rename) params.simple_input
+    |> Readers.read_input ~rename:(List.mem `PartialEvaluationIRankFinder params.cfr || params.rename) params.simple_input
     |> tap (fun prog -> ProofOutput.add_to_proof @@ fun () ->
           FormattedString.( mk_header_big (mk_str "Initial Problem")<>mk_paragraph (Program.to_formatted_string ~pretty:true prog)
             <> program_to_formatted_string prog params.proof_format))
@@ -233,5 +243,5 @@ let run (params: params) =
           ))
     |> ignore;
     if params.show_proof then (print_string "\n\n"; ProofOutput.print_proof params.proof_format);
-    if params.log_level == NONE && not (List.mem `PartialEvaluation params.cfr) then
+    if params.log_level == NONE && not (List.mem `PartialEvaluationIRankFinder params.cfr) then
       ignore (Sys.command ("rm -f -r ./tmp_" ^ !PartialEvaluation.uid))

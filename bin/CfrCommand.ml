@@ -74,6 +74,7 @@ let run (params: params) =
       let cfr_config: NativePartialEvaluation.config = {
         k_encounters = 0;
         abstract = params.abstract;
+        update_invariants = true;
       } in
       if params.probabilistic then
         let module PE = NativePartialEvaluation.ProbabilisticPartialEvaluation in
@@ -81,7 +82,7 @@ let run (params: params) =
         |> PE.evaluate_program cfr_config
         |> prob_program_to_file output
       else 
-        let module PE = NativePartialEvaluation.ClassicPartialEvaluation in
+        let module PE = NativePartialEvaluation.ClassicPartialEvaluation(ProgramModules) in
         Readers.read_file input
         |> PE.evaluate_program cfr_config
         |> sane_program_to_file output

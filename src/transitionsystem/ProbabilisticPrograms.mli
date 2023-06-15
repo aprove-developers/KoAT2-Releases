@@ -5,11 +5,6 @@ module ProbabilisticTransitionLabel: sig
     with type update_element = UpdateElement_.t
 
   val probability: t -> OurFloat.t
-
-  (** Assigns a fresh id. Updates the gt_id from the given replacements. If
-    none is given, a new unique gt_id is generated and added to the mapping.
-    Mutates gt_ids! *)
-  val fresh_ids: (int, int) Hashtbl.t -> t -> t
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr: sig

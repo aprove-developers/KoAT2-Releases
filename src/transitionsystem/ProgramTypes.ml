@@ -19,6 +19,8 @@ module type Location = sig
 
   (** Returns a string representing a location. *)
   val to_string : t -> string
+
+  val of_string : string -> t
 end
 
 module type LocationSet = sig
@@ -160,6 +162,11 @@ module type TransitionLabel = sig
   val overapprox_nonlinear_updates : t -> t
 
   val remove_non_contributors : VarSet.t -> t -> t
+
+  (** Create an equivalent label with new id's, takes gt_id from the provided table and 
+      if not available creates and adds a new id_for the general transition to the table.
+      *) 
+  val copy_rename: (int, int) Hashtbl.t -> t -> t 
 end
 
 (** A transition connects two locations and is labeled with an updated function and a guard. *)

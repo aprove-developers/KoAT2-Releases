@@ -285,6 +285,20 @@ module ProbabilisticTransitionLabel_ = struct
       |> fun m -> Guard.all (List.of_enum @@ Enum.map Tuple2.first @@ VarMap.values m), VarMap.map Tuple2.second m
     in
     { t with update; overappr_guard; overappr_nonprob_update; }
+
+  (** Assigns a fresh id. Updates the gt_id from the given replacements. If
+    none is given, a new unique gt_id is generated and added to the mapping.
+    Mutates gt_ids! *)
+  let copy_rename gt_ids t =
+    let old_gt_id = gt_id t in
+    let new_gt_id = match Hashtbl.find_option gt_ids old_gt_id with
+    | Some id -> id
+    | None ->
+        let id = unique () in
+        Hashtbl.add gt_ids old_gt_id id;
+        id
+    in 
+    {t with id = unique (); gt_id = new_gt_id}
 end
 
 module ProbabilisticTransitionLabel = struct
@@ -345,19 +359,6 @@ module ProbabilisticTransitionLabel = struct
 
   let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
 
-  (** Assigns a fresh id. Updates the gt_id from the given replacements. If
-    none is given, a new unique gt_id is generated and added to the mapping.
-    Mutates gt_ids! *)
-  let fresh_ids gt_ids t =
-    let old_gt_id = gt_id t in
-    let new_gt_id = match Hashtbl.find_option gt_ids old_gt_id with
-    | Some id -> id
-    | None ->
-        let id = unique () in
-        Hashtbl.add gt_ids old_gt_id id;
-        id
-    in 
-    {t with id = unique (); gt_id = new_gt_id}
 end
 
 module ProbabilisticTransitionLabelNonProbOverappr = struct
