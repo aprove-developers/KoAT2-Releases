@@ -58,7 +58,7 @@ def size_bound(matrix_as_list, vars_as_list, var):
             print(abs_expr(clt[index].expand()))
             sys.stdout.flush()
         except IndexError:
-            print("CRUSH DUE TO SYMPY")
+            print("CRASH DUE TO SYMPY")
             # currently sympy crushes on python3 -c 'from python.SizeBoundSolvable import size_bound; size_bound([0, 0, 0, 0, -1, 2, 2, 3, 2, 3, 0, 1, 0, 1, 1, -1, -1, -2, -2, -2, 0, -1, 0, 0, 0],["Arg_4", "Arg_3", "Arg_2", "Arg_1", "Arg_0"],"Arg_0")'
     except BrokenPipeError:
         devnull = os.open(os.devnull, os.O_WRONLY)
