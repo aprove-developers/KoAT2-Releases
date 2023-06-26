@@ -45,6 +45,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let self_impl =
       if Option.is_some entry then
         let (_,t,_) = Option.get entry in
+        let upd_invariant_cand = List.filter (fun atom -> SMTSolver.tautology Formula.(implies (mk @@ TransitionLabel.guard t) (mk @@ Constraint.mk [atom]))) upd_invariant_cand in
         List.filter (check_update_invariant (guard,update)) (TransitionLabel.guard t)@(upd_invariant_cand)
       else
         Constraint.mk_true in
