@@ -105,7 +105,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     Bound.(add bound (of_constant (OurInt.add max_con OurInt.one)))
     |> tap (fun b -> Logger.log logger Logger.INFO (fun () -> "complexity.get_bound", ["local bound", Bound.to_string b]))
 
-  let complexity ?(entry = None) ?(termination = true) upd_invariant_cand ((guard,update): Loop.t) =
+  let complexity ?(entry = None) ?(termination = true) ((guard,update): Loop.t) =
     let loop = (guard,update) in
     let order = Check_TWN.check_triangular loop in
     let t_, was_negative =
@@ -127,11 +127,11 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     let npe = PE.normalize pe in
       Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string npe));
     let varmap = Hashtbl.of_list @@ List.combine order npe in
-    let terminating = if not termination then true else TWN_Termination.termination_ t_ ~entry:entry upd_invariant_cand varmap in
+    let terminating = if not termination then true else TWN_Termination.termination_ t_ ~entry:entry varmap in
     if not terminating then
       Bound.infinity
     else
       let f = get_bound t_ order npe varmap in if was_negative then Bound.(f + f + one) else f
 
-  let complexity_ (_,t,_) = complexity [] (Loop.mk t)
+  let complexity_ (_,t,_) = complexity (Loop.mk t)
 end

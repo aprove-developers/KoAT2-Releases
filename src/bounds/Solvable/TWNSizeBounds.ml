@@ -45,7 +45,7 @@ module TWN_Complexity = TWN_Complexity.Make(ProgramModules)
 let compute_time_bound loop =
   let mprf_bound = MultiphaseRankingFunction.time_bound loop 5 in
   if Bound.is_infinity mprf_bound && Check_TWN.check_twn loop then
-    TWN_Complexity.complexity ~termination:false [] loop (* We assume that loop terminates (since t terminates). *)
+    TWN_Complexity.complexity ~termination:false loop (* We assume that loop terminates (since t terminates). *)
   else
     mprf_bound
 
