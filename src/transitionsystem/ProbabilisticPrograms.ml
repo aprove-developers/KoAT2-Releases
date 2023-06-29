@@ -339,6 +339,11 @@ module ProbabilisticTransitionLabel = struct
   let vars_without_memoization = vars_without_memoization VarsNonOverapproximated
   let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
 
+  let relax_guard ?(non_static=VarSet.empty) t = 
+    let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
+    {t with guard = List.filter is_static t.guard;
+            overappr_guard = List.filter is_static t.overappr_guard}
+
   let changed_vars t =
     input_vars t
     |> VarSet.filter (fun v -> not UpdateElement_.(equal (of_var v) (update t v |? of_var v)))
@@ -392,6 +397,12 @@ module ProbabilisticTransitionLabelNonProbOverappr = struct
   let vars = vars VarsOverapproximated
   let vars_without_memoization = vars_without_memoization VarsOverapproximated
   let has_tmp_vars t = not @@ VarSet.is_empty @@ VarSet.diff (vars t) (input_vars t)
+
+  let relax_guard ?(non_static=VarSet.empty) t = 
+    let is_static atom = VarSet.subset (Atoms.Atom.vars atom) (VarSet.diff (input_vars t) non_static) in
+    {t with guard = List.filter is_static t.guard;
+            overappr_guard = List.filter is_static t.overappr_guard}
+
   let negative_costs t = SMT.Z3Solver.satisfiable Formula.(mk_and (mk @@ guard t) (mk_gt Polynomial.zero t.cost))
 
   let changed_vars t =

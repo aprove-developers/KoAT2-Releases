@@ -1,0 +1,9 @@
+# TWN can prove termination while mprf cannot 
+# both grow but B is quicker
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A B)
+(RULES
+  l0(A,B) -> l1(A,2)
+  l1(A,B) -> l1(2*A,3*B) :|: B < A
+)

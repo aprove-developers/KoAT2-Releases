@@ -47,7 +47,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   val only_rank_to_string : t -> string
   (** Converts a multiphase ranking function into a string without any further information. *)
 
-  val add_to_proof : t -> Bound.t -> PM.Program.t -> unit
+  val add_to_proof : t -> Bound.t option -> PM.Program.t -> unit
 
   module Loop: module type of Loop.Make(PM)
   val time_bound : Loop.t -> int -> Bound.t

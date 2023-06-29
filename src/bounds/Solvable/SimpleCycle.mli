@@ -13,6 +13,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
 
   val find_loops :
     ?relevant_vars: VarSet.t option ->
+    ?relax_loops: [`NoRelaxation | `Relaxation] ->
     ?transformation_type: [< `NoTransformation | `TWNTransform > `NoTransformation] ->
     (Approximation.t -> Transition.t -> Program.t ->  Formula.t * Polynomial.t VarMap.t -> bool) ->
     Approximation.t ->

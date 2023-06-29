@@ -56,18 +56,15 @@ module Make(B : BoundType.Bound)
     let all_bounded appr =
       Enum.for_all (fun t -> not (B.equal (get appr t) B.infinity))
 
-    let to_formatted ?(pretty=false) transitions (name, map) =
+    let to_formatted ?(pretty=false) ?(termination_only=false) transitions (name, map) =
       transitions
       |> List.sort T.compare
       |> List.map (fun t -> t, Hashtbl.find_option map (T.id t) |? B.infinity)
-      |> List.map (fun (t,b) -> if pretty then
-          FormattedString.mk_str_line @@ "  " ^ T.ids_to_string ~pretty t ^ ": " ^ B.to_string ~pretty:true b
-        else
-          FormattedString.mk_str_line @@ "  " ^ T.ids_to_string ~pretty t ^ ": " ^ B.to_string b)
+      |> List.map (fun (t,b) -> FormattedString.mk_str_line @@ "  " ^ T.ids_to_string ~pretty t ^ ": " ^ B.to_string ~pretty ~termination_only b)
       |> FormattedString.mappend
 
-    let to_string transitions (name, map) =
-      FormattedString.render_string @@ to_formatted transitions (name, map)
+    let to_string ?(termination_only=false) transitions (name, map) =
+      FormattedString.render_string @@ to_formatted ~termination_only transitions (name, map)
 
     (** Very slow equality, only for testing purposes *)
     let equivalent (name1,map1) (name2,map2) =

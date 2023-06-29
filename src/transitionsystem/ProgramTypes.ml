@@ -150,6 +150,8 @@ module type TransitionLabel = sig
 
   val has_tmp_vars : t -> bool
 
+  val relax_guard : ?non_static:VarSet.t -> t -> t
+
   (** All input variables where the update is not x' = x.*)
   val changed_vars : t -> VarSet.t
 

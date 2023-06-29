@@ -61,10 +61,13 @@ module type Bound =
     val is_finite : t -> bool
 
     (** Creates a string representing the bound by calling {b show} with complexity enabled. *)
-    val to_string : ?pretty:bool -> t -> string
+    val to_string : ?pretty:bool -> ?termination_only:bool -> t -> string
+
+    (** Creates a string that represents the finiteness of the bound*)
+    val show_finiteness : t -> string
 
     (** Generates a string from a bound and adds the asymptotic complexity if parameter {i complexity} is not assigned to false. *)
-    val show : ?pretty:bool -> ?complexity:bool -> t -> string
+    val show : ?pretty:bool -> ?complexity:bool -> ?termination_only:bool -> t -> string
 
     (** Math functions. Since we can not negate or subtract bounds, these functions form a prober subset of PolyTypes.Math *)
     (** Returns zero element. *)

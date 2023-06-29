@@ -20,10 +20,10 @@ module Make(B: BoundType.Bound)(PM: ProgramTypes.ProgramModules)
   val create : PM.Program.t -> t
 
   (**  Creates a formatted string containing time,size and cost-bounds. *)
-  val to_formatted : ?show_initial:bool -> ?pretty:bool -> PM.Program.t -> t -> FormattedString.t
+  val to_formatted : ?show_initial:bool -> ?pretty:bool -> ?termination_only:bool -> PM.Program.t -> t -> FormattedString.t
 
   (**  Creates a string containing time,size and cost-bounds. *)
-  val to_string : PM.Program.t -> t -> string
+  val to_string : ?termination_only:bool -> PM.Program.t -> t -> string
 
   (** Returns true iff. time and size-bounds are equivalent. Costs-bounds are not considered. *)
   val equivalent : t -> t -> bool

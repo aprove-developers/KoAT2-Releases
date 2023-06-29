@@ -1,0 +1,8 @@
+# Does not terminate for B=0
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A B)
+(RULES
+  l0(A,B) -> l1(A,B)
+  l1(A,B) -> l1(A+3*B^2,2*B) :|: B > -100 && B < 100
+)

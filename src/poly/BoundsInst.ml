@@ -197,13 +197,19 @@ module Make(Num : PolyTypes.OurNumber) =
         | Some b -> show_bound_inner ~pretty b
         | None -> "inf"
 
-    let show ?(pretty=false) ?(complexity=true) bound =
+    let show ?(pretty=false) ?(complexity=true) ?(termination_only=false) bound =
+      if termination_only then 
+        if Option.is_some bound then "yes" else "maybe"
+      else
       let complexity_str =
         if complexity then " {" ^ (show_complexity % asymptotic_complexity) bound ^ "}" else ""
       in
       show_bound ~pretty bound ^ complexity_str
 
-    let to_string ?(pretty=false) = show ~complexity:true ~pretty
+    let to_string ?(pretty=false) ?(termination_only=false) = show ~complexity:true ~pretty ~termination_only
+
+    let show_finiteness bound = if Option.is_none bound then "infinite" else "finite"
+
 
     let gt_bound b1 b2 =
       let execute () =
