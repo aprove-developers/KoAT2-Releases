@@ -12,6 +12,18 @@ ARG OCAML_VERSION=4.14.0
 # Add graphviz for tests
 RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip --no-cache
 
+RUN wget https://ftp.gnu.org/gnu/make/make-4.3.tar.gz &&\
+    tar -xf make-4.3.tar.gz
+
+RUN cd make-4.3 &&\
+    ./configure
+
+RUN cd make-4.3 && \
+    make
+
+RUN cd make-4.3 && \
+    sudo make install && \
+    make -j$(nproc) installcheck
 # PPL
 RUN wget https://www.bugseng.com/external/ppl/download/ftp/releases/1.2/ppl-1.2.tar.xz && \
     tar xfv ppl-1.2.tar.xz
@@ -80,14 +92,13 @@ RUN wget https://releases.llvm.org/3.4/clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13
     rm *.tar.xz && \
     mv clang+llvm-3.4-x86_64-linux-gnu-ubuntu-13.10/bin/clang .
 
-
 #-------------------------------------------
 # Final Image
 #-------------------------------------------
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 RUN apt-get -y update && \
-    apt-get install --no-install-recommends -y bash vim coreutils graphviz libgmp-dev libtinfo5 git python3-sympy
+    apt-get install --no-install-recommends -y bash vim coreutils graphviz libgmp-dev libtinfo5 glibc-source git python3-sympy
 
 RUN mkdir /koat2
 WORKDIR /koat2
@@ -103,8 +114,10 @@ COPY python/SizeBoundSolvable.py ./python/SizeBoundSolvable.py
 COPY --from=koat2_c_utils /llvm2kittel/build/llvm2kittel bin/llvm2kittel
 COPY --from=koat2_c_utils /clang bin/clang
 
+COPY docker_scripts/SMTPushdown bin/SMTPushdown
 COPY docker_scripts/wrapper_script.sh bin/wrapper_script.sh
 COPY docker_scripts/run_koat2_c.sh bin/run_koat2_c.sh
+COPY docker_scripts/run_koat2_smt2.sh bin/run_koat2_smt2.sh
 
 RUN chmod +x /koat2/irankfinder/1.3.1/irankfinder/CFRefinement
 

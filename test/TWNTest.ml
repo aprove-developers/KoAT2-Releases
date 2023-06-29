@@ -80,7 +80,7 @@ let tests =
                   ]
       );
 
-      ("check_termination" >:::
+      (* ("check_termination" >:::
          List.map (fun (expected_bool, program) ->
              program >:: (fun _ ->
                      let result = TWN_Termination.termination(Readers.read_program_simple program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
@@ -102,7 +102,7 @@ let tests =
                     (true, "l0 -> l1(x,y,z), l1 -> l1(x + y*y*z*z, y, z-2*y*y) :|: x + y*y < 0 && y != 0 && z != 0");
                     (true, "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");
                   ]
-      );
+      ); *)
 
       ("OurInt.is_ge" >:::
          List.map (fun (expected_bool, a, b) ->

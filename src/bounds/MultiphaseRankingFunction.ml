@@ -136,7 +136,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     ProofOutput.add_to_proof_with_format @@ FormattedString.(fun format ->
       mk_header_small (mk_str ("MPRF for transition " ^ Transition.to_string_pretty decreasing ^ " of depth " ^ string_of_int depth ^ ":")) <>
       mk_paragraph (
-        mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true bound)) <>
+        match bound with 
+        | Some b -> mk_str "new bound:" <> mk_newline <> mk_paragraph (mk_str (Bound.to_string ~pretty:true b)) 
+        | _      -> identity
         mk_str "MPRF:" <> mk_newline <>
           (locations |> List.map (fun l -> "• " ^ Location.to_string l ^ ": " ^ polyList_to_string ~pretty:true (rank, l)) |> List.map (mk_str_line) |> mappend |> mk_paragraph)) <>
           match format with
@@ -389,7 +391,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
 
   let compute_scc cache program mprf_problem =
     let locations = LocationSet.to_list @@ TransitionGraph.locations (Program.graph program) in
-    let vars = Program.input_vars program in
+    let vars = program |> Program.input_vars in
     compute_ranking_templates cache mprf_problem.find_depth vars locations;
 
     let solver_int = Solver.create () in
@@ -431,7 +433,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       ~result:(Util.enum_to_string to_string % Option.enum)
       execute
 
-  let find  measure program depth =
+  let find measure program depth =
     let execute () =
       Program.sccs program
       |> Enum.map (fun scc -> Enum.map (find_scc measure program (const false) (const VarSet.empty) scc depth) @@ TransitionSet.enum scc)

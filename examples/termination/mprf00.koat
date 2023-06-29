@@ -1,0 +1,8 @@
+# Would terminate if Var were not temporary
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A B)
+(RULES
+  l0(A,B) -> l1(A,B) :|: T > 0
+  l1(A,B) -> l1(10*T+B*T, B-1) :|: T > 0 && B < 0 && A > 0
+)

@@ -1,0 +1,10 @@
+# cfr, relaxloop and twn are needed for first loop while mprfs are needed for second loop
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR W X Y Z)
+(RULES
+  l0(W,X,Y,Z) -> l1(W,X,Y,Z)
+  l1(W,X,Y,Z) -> l2(W-1,X,2,Z+W) :|: Z > 0
+  l2(W,X,Y,Z) -> l1(W,T,Y,Z) :|: Y + 1 < X
+  l2(W,X,Y,Z) -> l2(W,2*X,3*Y,Z) :|: X > Y
+)

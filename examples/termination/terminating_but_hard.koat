@@ -1,0 +1,9 @@
+# Terminates but neither technique will prove termination
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A B)
+(RULES
+  l0(A,B) -> l1(T,B^2)
+  l1(A,B) -> l2(A,B-1)
+  l2(A,B) -> l1(A*B,B) :|: A > 0 
+)

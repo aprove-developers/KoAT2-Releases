@@ -1,0 +1,8 @@
+# non-static but terminates
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A)
+(RULES
+  l0(A) -> l1(A) :|:  T > 0
+  l1(A) -> l1(A-T) :|: T > 0 && A > 0
+)

@@ -1,0 +1,10 @@
+# Terminates but has TMP var in Sizebound
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR X Y Z)
+(RULES
+  l0(X,Y,Z) -> l1(X,Y,Z)
+  l1(X,Y,Z) -> l2(X,Y,Z) :|: X < 0
+  l2(X,Y,Z) -> l1(X,Y-X,Z) :|: Y < Z
+  l2(X,Y,Z) -> l1(X+1,Y,Z) :|: Y > Z + 1
+)

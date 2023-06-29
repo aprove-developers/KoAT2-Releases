@@ -70,14 +70,27 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
           <> (Formula.to_string_formatted formula |> mk_block)
           |> mk_paragraph);)
 
-  (* For Testing *)
-  let termination (_,t,_) =
-    let loop = Loop.mk t in
-    let order = Check_TWN.check_triangular loop in
-    let pe = PE.compute_closed_form (List.map (fun var ->
-        let update_var = Loop.update_var loop var in
+  (* Counterpart to TWN_Complexity.complexity *)
+  let termination ?(entry = None) loop =
+      let order = Check_TWN.check_triangular loop in
+      let t_ =
+        if Check_TWN.check_weakly_negativitiy loop then
+          Loop.chain loop |> tap (fun loop -> Logger.log logger Logger.INFO (fun () -> "negative", ["chained", Loop.to_string loop]))
+        else loop in
+      Logger.log logger Logger.INFO (fun () -> "order", ["order", Util.enum_to_string Var.to_string (List.enum order)]);
+      TWN_Proofs.proof_append (FormattedString.mk_str_line ("  order: " ^ (Util.enum_to_string (Var.to_string ~pretty:true) (List.enum order))));
+      let pe = PE.compute_closed_form (List.map (fun var ->
+        let update_var = Loop.update_var t_ var in
         var, update_var) order) in
-    let npe = PE.normalize pe in
-    let varmap = Hashtbl.of_list (List.combine order npe) in
-    termination_ loop varmap
+        Logger.log logger Logger.INFO (fun () -> "closed-form", (List.combine (List.map Var.to_string order) (List.map PE.to_string pe)));
+        TWN_Proofs.proof_append (
+          FormattedString.(mk_str "closed-form:" <> (
+          (List.combine (List.map (Var.to_string ~pretty:true) order) (List.map PE.to_string_pretty pe))
+          |> List.map (fun (a,b) -> a ^ ": " ^ b)
+          |> List.map (FormattedString.mk_str_line) |> FormattedString.mappend |> FormattedString.mk_block)));
+      let npe = PE.normalize pe in
+        Logger.log logger Logger.INFO (fun () -> "constrained-free closed-form", List.combine (List.map Var.to_string order) (List.map PE.to_string npe));
+      let varmap = Hashtbl.of_list @@ List.combine order npe in
+      termination_ t_ ~entry:entry varmap
+
 end

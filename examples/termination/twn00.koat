@@ -1,0 +1,9 @@
+# Terminates but has TMP var in Sizebound
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A)
+(RULES
+  l0(A) -> l1(6)
+  l1(A) -> l2(T)
+  l2(A) -> l2(A-1) :|: A > 0
+)

@@ -1,0 +1,8 @@
+# relax_loop is needed for termination
+(GOAL COMPLEXITY)
+(STARTTERM (FUNCTIONSYMBOLS l0))
+(VAR A)
+(RULES
+  l0(A,B) -> l1(A,B)
+  l1(A,B) -> l1(A-1,T) :|: A > 0 && B > 0
+)

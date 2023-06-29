@@ -9,5 +9,5 @@ module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   val termination_ : ?entry:(PM.Transition.t) option -> Loop.t -> (Var.t, PE.t) Hashtbl.t -> bool
 
   (** Gets a {[TransitionLabel]} in twn-form and returns true iff a twn-termination proof was successful. *)
-  val termination : PM.Transition.t -> bool
+  val termination : ?entry:(PM.Transition.t) option -> Loop.t -> bool
 end
