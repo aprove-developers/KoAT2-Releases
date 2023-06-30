@@ -25,3 +25,6 @@ __pycache__/
 src/bounds/__pycache__
 
 koat2_static
+
+/.vscode
+/docs
