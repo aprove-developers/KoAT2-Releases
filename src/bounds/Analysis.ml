@@ -28,7 +28,7 @@ type ('trans,'prog,'tset,'rvg,'rvg_scc,'twn,'appr) analysis_configuration =
   ; twn_configuration: TWN.configuration option
   ; cfr_configuration: ('prog,'tset,'rvg,'rvg_scc,'twn,'appr) cfr_configuration
   ; closed_form_size_bounds: ('prog, 'tset,'appr) closed_form_size_bounds
-  ; form_of_analysis: [`Termination | `Complexity]
+  ; analysis_type: [`Termination | `Complexity]
   }
 
 type classical_program_conf_type = ( Transition.t
@@ -51,7 +51,7 @@ let default_configuration: ('a,'b,'c,'d,'e,'f,'g) analysis_configuration =
   ; twn_configuration = None
   ; cfr_configuration = NoCFR
   ; closed_form_size_bounds = NoClosedFormSizeBounds
-  ; form_of_analysis = `Complexity}
+  ; analysis_type = `Complexity}
 
 
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
@@ -259,13 +259,13 @@ let rec complexity_knowledge_propagation (scc: TransitionSet.t) program appr =
           execute)
 
 let knowledge_propagation ~conf =
-  match conf.form_of_analysis with
+  match conf.analysis_type with
   | `Termination -> termination_knowledge_propagation
   | `Complexity  -> complexity_knowledge_propagation
 
 let local_rank ~conf (scc: TransitionSet.t) measure program max_depth appr =
     let get_unbounded_vars transition =
-      match conf.form_of_analysis with
+      match conf.analysis_type with
       | `Termination -> VarSet.empty
       | `Complexity  ->
           program
@@ -298,7 +298,7 @@ let local_rank ~conf (scc: TransitionSet.t) measure program max_depth appr =
       |> Enum.peek % Enum.filter (not % Enum.is_empty)
       |? Enum.empty ()    in
     let improvement_function =
-      match conf.form_of_analysis with
+      match conf.analysis_type with
       | `Termination -> improve_termination_rank_mprf
       | `Complexity  -> improve_with_rank_mprf in
     rankfuncs
@@ -313,7 +313,7 @@ let run_local ~conf (scc: TransitionSet.t) measure program appr =
         | Some max_depth -> local_rank ~conf scc measure program max_depth appr
         | None           -> MaybeChanged.return appr )
     >>= fun appr ->
-      (match measure, conf.twn_configuration, conf.form_of_analysis with
+      (match measure, conf.twn_configuration, conf.analysis_type with
         | (`Cost,_,_) -> MaybeChanged.return appr
         | (`Time,None,_) -> MaybeChanged.return appr
         | (`Time,Some twn_conf, `Termination) -> improve_termination_twn program scc twn_conf appr
@@ -337,7 +337,7 @@ let twn_size_bounds ~(conf: conf_type) (scc: TransitionSet.t) (program: Program.
 let improve_scc ~conf opt_rvg_with_sccs (scc: TransitionSet.t) program opt_lsb_table appr =
   let improvement appr =
     knowledge_propagation ~conf scc program appr
-    |> (match conf.form_of_analysis with
+    |> (match conf.analysis_type with
        | `Termination -> identity
        | `Complexity -> fun appr ->
           SizeBounds.improve program (Option.get opt_rvg_with_sccs) ~scc:(Option.some scc) (LSB_Table.find @@ Option.get opt_lsb_table) appr
@@ -414,17 +414,17 @@ let handle_timeout_cfr method_name non_linear_transitions =
         if not @@ MaybeChanged.has_changed mc then (program, appr, rvg_with_sccs) else (
           ProofOutput.add_to_proof (fun () -> FormattedString.mk_str_header_big "Analysing control-flow refined program");
           let program_cfr = mc |> MaybeChanged.unpack |> preprocess  in
-          if conf.form_of_analysis == `Complexity then add_missing_lsbs program_cfr lsbs;
+          if conf.analysis_type == `Complexity then add_missing_lsbs program_cfr lsbs;
           Logger.log logger_cfr Logger.DEBUG (fun () -> "apply_" ^ method_name, []);
           reset_all_caches;
-          let rvg_with_sccs_cfr = match conf.form_of_analysis with
+          let rvg_with_sccs_cfr = match conf.analysis_type with
           | `Termination -> RVG.empty, Lazy.from_fun (const [])
           | `Complexity  -> RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first) % LSB_Table.find lsbs) program_cfr in
           (* The new sccs which do not occur in the original program. *)
           let cfr_sccs = Program.sccs program_cfr
                           |> List.of_enum
                           |> List.filter (fun cfr_scc -> not (Enum.exists (fun scc_ -> TransitionSet.equal cfr_scc scc_) (Program.sccs program))) in
-          let update_appr appr scc = match conf.form_of_analysis with
+          let update_appr appr scc = match conf.analysis_type with
           | _ when not @@ TransitionSet.exists (Bound.is_infinity % Approximation.timebound appr) scc -> appr
           | `Termination ->
               Logger.log logger Logger.INFO (fun () -> method_name ^ "analysis", ["scc", TransitionSet.to_id_string scc]);
@@ -467,7 +467,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
               (f_proof program_cfr @@ Bound.to_string ~pretty:true cfr_bound;
               program_cfr, updated_appr_cfr, rvg_with_sccs_cfr)
           in
-          match conf.form_of_analysis with
+          match conf.analysis_type with
           | `Termination -> handle_cfr_termination
           | `Complexity  -> handle_cfr_complexity)
       in
@@ -501,10 +501,10 @@ let handle_timeout_cfr method_name non_linear_transitions =
 
   let improve ~conf ~preprocess program appr =
     (* let appr = List.fold (fun appr (v,t) -> Approximation.add_sizebound (Bound.of_var v) t v appr) appr (List.cartesian_product (Program.input_vars program |> VarSet.to_list) (Program.transitions program |> TransitionSet.to_list)) in *) (*TODO Remove and make unhacky (heuristic entry transition terminates instead of sizebounds)*)
-    let opt_lsbs = match conf.form_of_analysis with
+    let opt_lsbs = match conf.analysis_type with
       |`Termination -> None
       |`Complexity  -> Option.some @@ compute_lsbs program in
-    let opt_rvg = match conf.form_of_analysis with
+    let opt_rvg = match conf.analysis_type with
       |`Termination -> None
       |`Complexity  -> Option.some @@ RVG.rvg_with_sccs (Option.map (LSB.vars % Tuple2.first) % LSB_Table.find (Option.get opt_lsbs)) program in
     let program, appr =
@@ -516,7 +516,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
                if TransitionSet.exists (fun t -> Bound.is_infinity (Approximation.timebound appr t)) scc then
                  appr
                  |> tap (const @@ Logger.log logger Logger.INFO (fun () -> "continue analysis", ["scc", TransitionSet.to_id_string scc]))
-                 |> (match conf.form_of_analysis with
+                 |> (match conf.analysis_type with
                     | `Termination -> identity
                     | `Complexity  -> fun appr ->
                       SizeBounds.improve program (Option.get opt_rvg) ~scc:(Option.some scc) (LSB_Table.find (Option.get opt_lsbs)) appr
@@ -537,7 +537,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
            ) (program, appr, opt_rvg)
       |> Tuple3.get12
     in
-    program, match conf.form_of_analysis with
+    program, match conf.analysis_type with
               | `Termination -> appr
               | `Complexity -> CostBounds.infer_from_timebounds program appr
 end

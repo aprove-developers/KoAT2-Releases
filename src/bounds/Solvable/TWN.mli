@@ -1,10 +1,7 @@
 open BoundsInst
 open ProgramModules
 
-type configuration = {
-  transformation_type : [`NoTransformation | `Transformation];
-  relax_loops : [`NoRelaxation|`Relaxation]
-}
+type configuration = [`NoTransformation | `Transformation]
 module Make(PM: ProgramTypes.ClassicalProgramModules): sig
   open PM
 
