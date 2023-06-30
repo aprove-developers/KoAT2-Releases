@@ -52,14 +52,8 @@ let run (params: params) =
     let open TWN in
     List.fold_left (fun conf -> function
         | `MPRF -> { conf with Analysis.run_mprf_depth = Some params.mprf_depth; }
-        | `TWN -> { conf with twn_configuration = Some {
-            transformation_type = `NoTransformation;
-            relax_loops = `NoRelaxation;
-        }; }
-        | `TWNTransform -> { conf with twn_configuration = Some {
-          transformation_type = `Transformation;
-          relax_loops = `NoRelaxation;
-      }; } 
+        | `TWN -> { conf with twn_configuration = Some `NoTransformation}
+        | `TWNTransform -> { conf with twn_configuration = Some `Transformation}
       )
       Analysis.default_configuration params.classic_local
   in

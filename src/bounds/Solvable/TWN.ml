@@ -11,11 +11,7 @@ open ProgramModules
 
 let logger = Logging.(get Twn)
 
-type configuration = {
-  transformation_type : [`NoTransformation | `Transformation];
-  relax_loops : [`NoRelaxation|`Relaxation]
-}
-
+type configuration = [`NoTransformation | `Transformation]
 module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
   open PM
 
@@ -58,7 +54,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             mk_str_line ("Runtime-bound of t" ^ (Transition.id entry |> Util.natural_to_subscript) ^ ": " ^ (Approximation.timebound appr entry |> Bound.to_string ~pretty:true)) <>
             mk_str ("Results in: " ^ (Bound.to_string ~pretty:true b))))
 
-  let heuristic_for_cycle transformation_type appr entry program loop = match transformation_type with
+  let heuristic_for_cycle conf appr entry program loop = match conf with
     | `NoTransformation -> Check_TWN.check_twn loop && Approximation.is_time_bounded appr entry
     | `Transformation -> Option.is_some @@ Check_Solvable.check_solvable loop (*  *)
 
@@ -70,7 +66,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
       if Option.is_none opt then (
         let bound = Timeout.timed_run 5. (fun () ->
         (* We have not yet computed a (local) runtime bound. *)
-        let loops_opt = SimpleCycle.find_loops ~relax_loops:conf.relax_loops (heuristic_for_cycle conf.transformation_type) appr program scc (l,t,l') in
+        let loops_opt = SimpleCycle.find_loops (heuristic_for_cycle conf) appr program scc (l,t,l') in
         if Option.is_some loops_opt then
           let cycle, loops = Option.get loops_opt in
           let local_bounds = List.map (fun (entry,(loop,aut)) -> entry, Automorphism.apply_to_bound (TWN_Complexity.complexity ~entry:(Option.some entry) loop) aut) loops in
@@ -109,7 +105,7 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
             List.iter (fun t -> TimeBoundTable.add termination_table t local_bounds) cycle;
             List.for_all Tuple2.second local_bounds in
           let handle_missing_loops = TimeBoundTable.add termination_table (l,t,l') [(l,t,l'),false] in
-          SimpleCycle.find_loops ~relax_loops:conf.relax_loops (heuristic_for_cycle conf.transformation_type) appr program scc (l,t,l')
+          SimpleCycle.find_loops (heuristic_for_cycle conf) appr program scc (l,t,l')
           (*If no simple loops were found we cannot prove termination*)
           |> Option.map_default compute_termination (handle_missing_loops; false)) in
         (* In case no bound was computed this maps to false otherwise to the bound*)

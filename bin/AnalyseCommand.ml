@@ -12,14 +12,14 @@ let command = "analyse"
 let description = "Proceed a full time, cost and size analysis on a given integer transition system"
 
 (** Prints the whole resulting approximation to the shell. *)
-let print_all_bounds form_of_analysis (program: Program.t) (appr: Approximation.t): unit =
-  let form = form_of_analysis == `Termination in
+let print_all_bounds analysis_type (program: Program.t) (appr: Approximation.t): unit =
+  let form = analysis_type == `Termination in
   Approximation.to_string ~termination_only:form program appr
-  |> print_string 
+  |> print_string
 
 (** Prints the overall timebound of the program to the shell. *)
 
-let print_overall_costbound form_of_analysis (program: Program.t) (appr: Approximation.t): unit =
+let print_overall_costbound analysis_type (program: Program.t) (appr: Approximation.t): unit =
   let print_overall_costbound_complexity (program: Program.t) (appr: Approximation.t): unit =
     program
     |> Approximation.program_costbound appr
@@ -29,25 +29,23 @@ let print_overall_costbound form_of_analysis (program: Program.t) (appr: Approxi
   program
   |> Approximation.program_timebound appr
   |> Bound.to_string ~termination_only:true
-  |> print_endline in 
+  |> print_endline in
 
-  match form_of_analysis with
+  match analysis_type with
   | `Termination -> print_overall_termination program appr
   | `Complexity -> print_overall_costbound_complexity program appr
 
 (** Prints the overall timebound of the program to the shell in the TermComp fashion. *)
-let print_termcomp form_of_analysis (program: Program.t) (appr: Approximation.t): unit =
-  (match form_of_analysis with 
-    |`Termination -> 
-      (program
-      |>Approximation.program_timebound appr
+let print_termcomp analysis_type (program: Program.t) (appr: Approximation.t): unit =
+  (match analysis_type with
+    |`Termination -> program
+      |> Approximation.program_timebound appr
       |> Bound.to_string ~termination_only:true
-      |> String.uppercase)
-    |`Complexity ->
-      (program
-      |>Approximation.program_costbound appr
+      |> String.uppercase
+    |`Complexity -> program
+      |> Approximation.program_costbound appr
       |> Bound.asymptotic_complexity
-      |> Bound.show_complexity_termcomp))
+      |> Bound.show_complexity_termcomp)
   |> print_endline
 
 (** TWN for no transformations, TWNTransform for both techniques, TWNTransformJordan to transform only with jordan normal form, TWNTransformGeneral to transform only with the general approach *)
@@ -125,9 +123,6 @@ type params = {
     termination : bool; [@default false]
     (** Only looks for termination behavior. *)
 
-    relax_loops : bool; [@default false]
-    (** Will remove non_static variables in found cycles to make them simple. *)
-    
     (** If the analysis should be terminated after the first found timebound. *)
   } [@@deriving cmdliner]
 
@@ -166,7 +161,7 @@ let local_to_string = function
   | `MPRF -> "MPRF"
   | `TWN -> "TWN"
 
-let form_of_analysis b= if b then `Termination else `Complexity
+let analysis_type b = if b then `Termination else `Complexity
 
 (** Runs KoAT2 on provided parameters. *)
 let run (params: params) =
@@ -179,25 +174,18 @@ let run (params: params) =
   (* TODO improve parser arguments to avoid the case of multiple twns *)
   let bounds_conf =
     let open Analysis in
-    let open TWN in
     let check_twn_already_set c = if Option.is_some c then
       raise (Invalid_argument "--local commands are not correct. Use 'mprf' or at most one of 'twn', 'twn-transform'")
     in
-    let transformation_type = List.fold_left (fun twn_conf -> function
-      | `TWN -> (check_twn_already_set twn_conf; Some `NoTransformation)
-      | `TWNTransform -> (check_twn_already_set twn_conf; Some `Transformation)
-      | _ -> twn_conf
-      ) None params.local in
     {
       run_mprf_depth = if List.mem `MPRF params.local then Some params.depth else None;
-      twn_configuration = 
-        flip Option.map transformation_type
-        (fun t_type -> {
-          relax_loops = if params.relax_loops then `Relaxation else `NoRelaxation;
-          transformation_type = t_type;                      
-          }) ;
+      twn_configuration = List.fold_left (fun twn_conf -> function
+          | `TWN -> (check_twn_already_set twn_conf; Some `NoTransformation)
+          | `TWNTransform -> (check_twn_already_set twn_conf; Some `Transformation)
+          | _ -> twn_conf
+      ) None params.local;
       closed_form_size_bounds = if params.closed_form_size_bounds then ComputeClosedFormSizeBounds else NoClosedFormSizeBounds;
-      form_of_analysis = form_of_analysis params.termination;
+      analysis_type = analysis_type params.termination;
       cfr_configuration = match params.cfr with
         | [] -> NoCFR
         | l ->  PerformCFR l;
@@ -258,7 +246,7 @@ let run (params: params) =
                else
                  Bounds.find_bounds ~conf:bounds_conf ~preprocess ~time_cfr:params.time_limit_cfr program appr
                )
-     |> tap (fun (program, appr) -> params.result (form_of_analysis params.termination) program appr)
+     |> tap (fun (program, appr) -> params.result (analysis_type params.termination) program appr)
      |> tap (fun (program,appr) -> ProofOutput.add_to_proof (fun () -> Approximation.to_formatted ~pretty:true ~show_initial:false ~termination_only:params.termination program appr))
      |> tap (fun (program, appr) ->
             if params.print_system then
