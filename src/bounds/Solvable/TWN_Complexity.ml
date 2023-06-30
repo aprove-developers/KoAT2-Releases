@@ -133,5 +133,9 @@ module Make(PM: ProgramTypes.ClassicalProgramModules) = struct
     else
       let f = get_bound t_ order npe varmap in if was_negative then Bound.(f + f + one) else f
 
-  let complexity_ (_,t,_) = complexity (Loop.mk t)
+  let complexity_ t =
+    if Check_TWN.check_twn_ t then
+      complexity @@ (Loop.mk % Tuple3.second) t
+    else
+      Bound.infinity
 end
