@@ -10,6 +10,8 @@ open BoundsInst
 module Check_TWN = Check_TWN.Make(ProgramModules)
 module TWN_Complexity = TWN_Complexity.Make(ProgramModules)
 module TWN_Termination = TWN_Termination.Make(ProgramModules)
+module Loop = Loop.Make(ProgramModules)
+
 
 let tests =
   "TWN" >::: [
@@ -80,10 +82,10 @@ let tests =
                   ]
       );
 
-      (* ("check_termination" >:::
+      ("check_termination" >:::
          List.map (fun (expected_bool, program) ->
              program >:: (fun _ ->
-                     let result = TWN_Termination.termination(Readers.read_program_simple program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
+                     let result = TWN_Termination.termination(Readers.read_program_simple program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any |> Tuple3.second |> Loop.mk) in
                      assert_equal_bool expected_bool result))
                   [
                     (false, "l0 -> l1(x), l1 -> l1(x)");
@@ -102,7 +104,7 @@ let tests =
                     (true, "l0 -> l1(x,y,z), l1 -> l1(x + y*y*z*z, y, z-2*y*y) :|: x + y*y < 0 && y != 0 && z != 0");
                     (true, "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");
                   ]
-      ); *)
+      );
 
       ("OurInt.is_ge" >:::
          List.map (fun (expected_bool, a, b) ->
@@ -141,15 +143,15 @@ let tests =
                      let result = TWN_Complexity.complexity_(Readers.read_program_simple program |> Program.sccs |> List.of_enum |> List.first |> TransitionSet.any) in
                      assert_equal_string expected_string (Bound.to_string result)))
                   [
-                     (* ("8*x+13 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0"); *)
-                   (* ("2 {O(1)}", "l0 -> l1(x,y), l1 -> l1(x,x*x) :|: y < 0");
-                    ("2 {O(1)}", "l0 -> l1(x), l1 -> l1(42) :|: x <= 0");
-                    ("2 {O(1)}", "l0 -> l1(x,y), l1 -> l1(42,26) :|: x <= 42 && y + x <= 67"); *)
-                    (* ("4+4+2*x+2*x", "l0 -> l1(x,y), l1 -> l1(2*x,3*y) :|: x >= y && y >= 1"); *)
-                    (* ("inf {Infinity}", "l0 -> l1(x,y), l1 -> l1(x*x,3*y) :|: x >= y && y >= 1");
+                    ("4*Arg_0+4*Arg_1+7 {O(n)}", "l0 -> l1(x,y), l1 -> l1(x + y,y + 1) :|: x < 0");
+                    ("3 {O(1)}", "l0 -> l1(x,y), l1 -> l1(x,x*x) :|: y < 0");
+                    ("3 {O(1)}", "l0 -> l1(x), l1 -> l1(42) :|: x <= 0");
+                    ("3 {O(1)}", "l0 -> l1(x,y), l1 -> l1(42,26) :|: x <= 42 && y + x <= 67");
+                    ("2*Arg_0+8 {O(n)}", "l0 -> l1(x,y), l1 -> l1(2*x,3*y) :|: x >= y && y >= 1");
+                    ("12*Arg_1*Arg_1*Arg_1*Arg_1*Arg_1*Arg_1+12*Arg_1*Arg_1*Arg_1*Arg_1*Arg_2+6*Arg_1*Arg_1*Arg_2*Arg_2+6*Arg_1*Arg_1+6*Arg_0+12 {O(n^6)}", "l0 -> l1(x,y,z), l1 -> l1(x + y*y*z*z + 1, y, z-2*y*y) :|: x + y*y < 0");
                     ("inf {Infinity}", "l0 -> l1(x,y), l1 -> l1(x*x,3*y) :|: x >= y && y >= 1");
-                    ("inf {Infinity}", "l0 -> l1(x,y), l1 -> l1(x,3*y+x*y) :|: x >= y && y >= 1"); *)
-                    (* ("", "l0 -> l1(x,y,z), l1 -> l1(x + y*y*z*z + 1, y, z-2*y*y) :|: x + y*y < 0"); *)
+                    ("inf {Infinity}", "l0 -> l1(x,y), l1 -> l1(x*x,3*y) :|: x >= y && y >= 1");
+                    ("inf {Infinity}", "l0 -> l1(x,y), l1 -> l1(x,3*y+x*y) :|: x >= y && y >= 1");
                   ]
       );
 
