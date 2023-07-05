@@ -40,7 +40,7 @@
    ppx_deriving
    ppx_deriving_cmdliner
    zarith
-   z3
+   (z3 (= 4.12.2))
    )
  )
 
