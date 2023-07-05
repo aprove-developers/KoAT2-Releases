@@ -811,6 +811,7 @@ end = struct
     let pr_hv outgoing_transition =
       outgoing_transition |> PM.Transition.label |> PM.TransitionLabel.guard
       |> bound_variables_guard am program_variables
+      |> project_guard am program_variables
       |> AtomSet.of_list
     in
 
@@ -820,7 +821,9 @@ end = struct
         PM.TransitionLabel.update_map label |> overapprox_update
       in
       let guard = PM.TransitionLabel.guard label |> Guard.mk_and guard_approx in
-      update_guard am update_approx guard |> AtomSet.of_list
+      update_guard am update_approx guard 
+      |> project_guard am  program_variables
+      |> AtomSet.of_list
     in
 
     let pr_cv incoming_transition =
