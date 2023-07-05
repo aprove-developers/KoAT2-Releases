@@ -5,11 +5,11 @@ if [ "$1" = "its" ]; then
   KOAT_EXIT=$?
 fi
 if [ "$1" = "c" ]; then
-  run_koat2_c.sh $@
+  timeout 300s run_koat2_c.sh $@
   KOAT_EXIT=$?
 fi
 if [ "$1" = "smt2" ]; then
-  run_koat2_smt2.sh $@
+  timeout 300s run_koat2_smt2.sh $@
   KOAT_EXIT=$?
 fi
 # timeout returns 124
