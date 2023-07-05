@@ -1,7 +1,7 @@
 #-------------------------------------------
 # Build KoAT
 #-------------------------------------------
-FROM ocaml/opam:alpine as koat2_build
+FROM ocaml/opam:alpine-ocaml-4.14-flambda as koat2_build
 LABEL author="Eleanore Meyer"
 LABEL author="Marcel Hark"
 
@@ -10,7 +10,7 @@ WORKDIR /home/opam
 ARG OCAML_VERSION=4.14.0
 
 # Add graphviz for tests
-RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip --no-cache
+RUN sudo apk add m4 python3 gmp-dev perl mpfr-dev graphviz zip autoconf --no-cache
 
 RUN wget https://ftp.gnu.org/gnu/make/make-4.3.tar.gz &&\
     tar -xf make-4.3.tar.gz
