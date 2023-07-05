@@ -411,7 +411,7 @@ let handle_timeout_cfr method_name non_linear_transitions =
               update_invariants = update_invariants;
             }) in
             let opt = Timeout.timed_run time ~action:(fun () -> handle_timeout_cfr "partial_evaluation" scc)
-                (fun () -> apply_cfr "partial_evaluation_native" (CFR.lift_to_program(MaybeChanged.changed % PENative.evaluate_scc pe_config scc (Program.input_vars program))) (fun _ _ -> ()) rvg time non_linear_transitions ~preprocess program appr) in
+                (fun () -> apply_cfr "partial_evaluation_native" (MaybeChanged.changed % PENative.apply_sub_scc_cfr pe_config non_linear_transitions) (PartialEvaluation.add_to_proof) rvg time non_linear_transitions ~preprocess program appr) in
             ( match opt with 
             | Some (res, time_used) ->
                 PartialEvaluation.time_cfr := !PartialEvaluation.time_cfr -. time_used;
