@@ -553,7 +553,6 @@ module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
     (*       ("PRESENT_VARS", VarSet.to_string prev_vars); *)
     (*       ("NEW_VARS", VarSet.to_string new_vars); *)
     (*     ]); *)
-
     let new_env =
       Apron.Environment.add prev_env
         (ApronInterface.Koat2Apron.vars_to_apron new_vars)
@@ -582,16 +581,16 @@ module ApronUtils (PM : ProgramTypes.ProgramModules) = struct
     let new_env = Apron.Environment.make apron_vars [||] in
     (* Implicitly projects all removed dimensions *)
     Apron.Abstract1.change_environment am polyh new_env false
-    (* |> tap (fun projected -> *)
-    (*        log ~level:Logger.DEBUG "project" (fun () -> *)
-    (*            [ *)
-    (*              ( "POLYH", *)
-    (*                polyh_to_guard am polyh |> Guard.to_string ~pretty:true ); *)
-    (*              ("VARS", VarSet.to_string ~pretty:true vars); *)
-    (*              ( "PROJECTED", *)
-    (*                polyh_to_guard am projected |> Guard.to_string ~pretty:true *)
-    (*              ); *)
-    (*            ])) *)
+  (* |> tap (fun projected -> *)
+  (*        log ~level:Logger.DEBUG "project" (fun () -> *)
+  (*            [ *)
+  (*              ( "POLYH", *)
+  (*                polyh_to_guard am polyh |> Guard.to_string ~pretty:true ); *)
+  (*              ("VARS", VarSet.to_string ~pretty:true vars); *)
+  (*              ( "PROJECTED", *)
+  (*                polyh_to_guard am projected |> Guard.to_string ~pretty:true *)
+  (*              ); *)
+  (*            ])) *)
 
   let project_guard am vars guard =
     guard_to_polyh am guard |> project_polyh am vars
@@ -680,8 +679,7 @@ struct
     |> tap (fun p ->
            log ~level:Logger.DEBUG "unfold" (fun () ->
                [
-                 ( "INITIAL",
-                   polyh_to_guard am p |> Guard.to_string ~pretty:true );
+                 ("INITIAL", polyh_to_guard am p |> Guard.to_string ~pretty:true);
                ]))
     |> add_vars_to_polyh am temp_vars
     |> tap (fun p ->
@@ -821,8 +819,8 @@ end = struct
         PM.TransitionLabel.update_map label |> overapprox_update
       in
       let guard = PM.TransitionLabel.guard label |> Guard.mk_and guard_approx in
-      update_guard am update_approx guard 
-      |> project_guard am  program_variables
+      update_guard am update_approx guard
+      |> project_guard am program_variables
       |> AtomSet.of_list
     in
 
@@ -1035,16 +1033,18 @@ end
 module GraphUtils (PM : ProgramTypes.ProgramModules) = struct
   open PM
 
-  module TransitionGraphWeight(Value : PolyTypes.Ring) = struct
-      type t = Value.t
-      type edge = PM.TransitionGraph.E.t
-      let weight (x : edge) = Value.one
-      let compare x y = 0
-      let add x y = Value.add x y
-      let zero = Value.zero
-    end
+  module TransitionGraphWeight (Value : PolyTypes.Ring) = struct
+    type t = Value.t
+    type edge = PM.TransitionGraph.E.t
 
-  module Djikstra = Graph.Path.Dijkstra(PM.TransitionGraph)(TransitionGraphWeight(OurInt))
+    let weight (x : edge) = Value.one
+    let compare x y = 0
+    let add x y = Value.add x y
+    let zero = Value.zero
+  end
+
+  module Djikstra =
+    Graph.Path.Dijkstra (PM.TransitionGraph) (TransitionGraphWeight (OurInt))
 
   let entry_transitions graph scc =
     TransitionSet.locations scc
@@ -1129,13 +1129,19 @@ struct
       versions;
     rename_map
 
-  let remove_abstractions pe_graph =
+  let remove_abstractions update_invariants pe_graph =
     let rename_map = rename_versions (TransitionGraph.locations pe_graph) in
     TransitionGraph.transitions pe_graph
     |> TransitionSet.enum
     |> Enum.map (fun (src_version, label, target_version) ->
+           let new_label =
+             if update_invariants then
+               PM.TransitionLabel.add_invariant label
+                 (Version.abstracted src_version |> A.to_guard)
+             else label
+           in
            ( Hashtbl.find rename_map src_version,
-             label,
+             new_label,
              Hashtbl.find rename_map target_version ))
     |> PM.TransitionGraph.mk
 end
@@ -1171,7 +1177,8 @@ struct
     let entry_transitions = entry_transitions graph component
     and exit_transitions = exit_transitions graph component in
 
-    log "pe" (fun () -> [ ("EVALUATING_SCC", TransitionSet.to_string component) ]);
+    log "pe" (fun () ->
+        [ ("EVALUATING_SCC", TransitionSet.to_string component) ]);
     log "pe" (fun () ->
         [ ("ENTRY_TS:", TransitionSet.to_string entry_transitions) ]);
     log "pe" (fun () ->
@@ -1183,10 +1190,13 @@ struct
     let result_graph_without_sub =
       TransitionGraph.transitions graph
       |> PM.TransitionSet.enum
-      |> Enum.filter (fun transition -> not (TransitionSet.mem transition component))
+      |> Enum.filter (fun transition ->
+             not (TransitionSet.mem transition component))
       (* Entry transitions will be readded later with the same id *)
       |> Enum.filter (fun transition ->
              not (TransitionSet.mem transition entry_transitions))
+      |> Enum.filter (fun transition ->
+             not (TransitionSet.mem transition exit_transitions))
       |> Enum.map (fun (src, label, target) ->
              (PEM.Version.mk_true src, label, Version.mk_true target))
       |> PEGraph.mk
@@ -1225,8 +1235,11 @@ struct
       and update = TransitionLabel.update_map label in
 
       (* stop early if guard is unsat *)
-      if SMT.Z3Solver.unsatisfiable (Formulas.Formula.lift [ guard ]) then
-        result_graph
+      if
+        SMT.Z3Solver.unsatisfiable
+          (Formulas.Formula.lift
+             [ guard; Version.abstracted src_version |> Abstraction.to_guard ])
+      then result_graph
       else
         let next_polyh = unfold am src_polyh program_vars guard update in
         let next_guard =
@@ -1249,12 +1262,12 @@ struct
                 ]);
             (* checking for exti transitions must be done outside of evaluate_transition because
                the transition was renamed *)
-            if is_exit then (
+            if is_exit then
               (* Leaving the scc is an abort condition, just transition to the trivial version *)
               (* let outside_version = Version.mk_true target_loc in *)
               (* assert (PEGraph.mem_vertex result_graph outside_version); *)
               PEGraph.add_edge_e result_graph
-                (src_version, label, Version.mk_true target_loc))
+                (src_version, label, Version.mk_true target_loc)
             else
               let target_version = Version.mk target_loc a in
               let new_transition = (src_version, label, target_version) in
@@ -1304,7 +1317,7 @@ struct
         entry_transitions result_graph_without_sub
     in
 
-    PEM.remove_abstractions pe_graph
+    PEM.remove_abstractions config.update_invariants pe_graph
 
   let evaluate_program config program =
     let program_vars =
@@ -1330,35 +1343,46 @@ struct
       VarSet.equal (Program.input_vars program) (Program.input_vars pe_prog));
     pe_prog
 
-  let apply_sub_scc_cfr config (nonLinearTransitions: TransitionSet.t) program =
+  let apply_sub_scc_cfr config (nonLinearTransitions : TransitionSet.t) program
+      =
     let program_vars =
       Program.input_vars program
       |> tap (fun x ->
              log "pe" (fun () -> [ ("PROGRAM_VARS", VarSet.to_string x) ]))
     in
 
-    let pe_prog = 
-      Program.map_graph(fun graph ->
-        let find_smallest_loop transition =
-          let (src, _, target) = transition in
-          let (shortest_path, _length) = Djikstra.shortest_path graph target src in 
-          transition::shortest_path
-          |> TransitionSet.of_list
-        in
+    let pe_prog =
+      Program.map_graph
+        (fun graph ->
+          let find_smallest_loop transition =
+            let src, _, target = transition in
+            let shortest_path, _length =
+              Djikstra.shortest_path graph target src
+            in
+            transition :: shortest_path |> TransitionSet.of_list
+          in
 
-        let find_parallel_transitions transition = 
-          let (src, _, target) = transition in
-          TransitionGraph.find_all_edges graph src target 
-          |> TransitionSet.of_list
-        in
+          let find_parallel_transitions transition =
+            let src, _, target = transition in
+            TransitionGraph.find_all_edges graph src target
+            |> TransitionSet.of_list
+          in
 
-        let component = nonLinearTransitions
-         |> TransitionSet.fold (fun transition loops -> TransitionSet.union loops (find_smallest_loop transition)) TransitionSet.empty 
-         |> TransitionSet.fold (fun transition parallel -> TransitionSet.union parallel (find_parallel_transitions transition)) TransitionSet.empty 
-        in
-        evaluate_component config component program_vars graph
-      ) program
-    in 
+          let component =
+            nonLinearTransitions
+            |> TransitionSet.fold
+                 (fun transition loops ->
+                   TransitionSet.union loops (find_smallest_loop transition))
+                 TransitionSet.empty
+            |> TransitionSet.fold
+                 (fun transition parallel ->
+                   TransitionSet.union parallel
+                     (find_parallel_transitions transition))
+                 TransitionSet.empty
+          in
+          evaluate_component config component program_vars graph)
+        program
+    in
     pe_prog
 end
 
