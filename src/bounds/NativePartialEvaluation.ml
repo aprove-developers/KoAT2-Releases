@@ -665,7 +665,7 @@ struct
   open ApronUtils (PM)
 
   (** Unfolds the guard with an update, returns None if the guard was UNSAT.*)
-  let unfold am polyh program_vars guard update =
+  let unfold am constr program_vars guard update =
     let update_approx, update_guard = overapprox_update update in
     let temp_vars =
       [
@@ -674,14 +674,20 @@ struct
       |> List.fold VarSet.union VarSet.empty
       |> VarSet.filter (fun v -> not (VarSet.mem v program_vars))
     in
+    let used_program_vars = 
+      [
+        Guard.vars constr; Guard.vars guard; Guard.vars update_guard; vars_in_update update_approx;
+      ]
+      |> List.fold VarSet.union VarSet.empty
+      |> VarSet.filter (fun v -> VarSet.mem v program_vars)
+    in
 
-    polyh
+    constr
     |> tap (fun p ->
            log ~level:Logger.DEBUG "unfold" (fun () ->
-               [
-                 ("INITIAL", polyh_to_guard am p |> Guard.to_string ~pretty:true);
-               ]))
-    |> add_vars_to_polyh am temp_vars
+               [ ("INITIAL", p |> Guard.to_string ~pretty:true) ]))
+    |> guard_to_polyh am
+    |> add_vars_to_polyh am (VarSet.union used_program_vars temp_vars)
     |> tap (fun p ->
            log ~level:Logger.DEBUG "unfold" (fun () ->
                [
@@ -707,7 +713,6 @@ struct
                           Printf.sprintf "%s = %s"
                             (Var.to_string ~pretty:true x)
                             (Polynomials.Polynomial.to_string_pretty p)) );
-                 ("POLYH", polyh_to_guard am polyh |> Guard.to_string);
                  ( "WITH_UPDATE",
                    polyh_to_guard am p |> Guard.to_string ~pretty:true );
                ]))
@@ -719,6 +724,7 @@ struct
                  ( "PROJECTED",
                    polyh_to_guard am p |> Guard.to_string ~pretty:true );
                ]))
+    |> polyh_to_guard am
 end
 
 (** Generic type for abstractions *)
@@ -859,6 +865,25 @@ end = struct
       |> AtomSet.of_list
     in
 
+    let deduplicate_props props =
+      let rec dedup selected = function
+        | [] -> selected
+        | prop :: props ->
+            if
+              List.find_opt
+                (fun other_prop ->
+                  SMT.Z3Solver.equivalent
+                    (Formula.mk (Guard.mk [ prop ]))
+                    (Formula.mk (Guard.mk [ other_prop ])))
+                selected
+              |> Option.is_some
+            then dedup selected props
+            else dedup (prop :: selected) props
+      in
+
+      dedup [] (AtomSet.to_list props) |> AtomSet.of_list
+    in
+
     let for_transitions f transitions =
       List.fold
         (fun props t -> f t |> AtomSet.union props)
@@ -919,6 +944,7 @@ end = struct
           |> AtomSet.union
                (Loops.transition_loops_from graph loops_with_head
                |> for_loops pr_d |> log_props head "PR_d")
+          |> deduplicate_props
           |> tap (fun props ->
                  log "heuristic" (fun () ->
                      [
@@ -1173,6 +1199,7 @@ struct
 
   let am = Ppl.manager_alloc_loose ()
 
+  (* TODO: find a better name, component is wrong, it's just a set of transitions *)
   let evaluate_component config component program_vars graph =
     let entry_transitions = entry_transitions graph component
     and exit_transitions = exit_transitions graph component in
@@ -1192,9 +1219,7 @@ struct
       |> PM.TransitionSet.enum
       |> Enum.filter (fun transition ->
              not (TransitionSet.mem transition component))
-      (* Entry transitions will be readded later with the same id *)
-      |> Enum.filter (fun transition ->
-             not (TransitionSet.mem transition entry_transitions))
+      (* Exit transitions will be readded by the evaluation *)
       |> Enum.filter (fun transition ->
              not (TransitionSet.mem transition exit_transitions))
       |> Enum.map (fun (src, label, target) ->
@@ -1202,122 +1227,119 @@ struct
       |> PEGraph.mk
     in
 
-    let rec evaluate_transition src_polyh src_version result_graph
-        (transition, is_exit) =
-      (* Partial evaluation from a given location adding all transitions
-          to the given result graph *)
-      let evaluate_version result_graph current_polyh current_version =
-        let rename_transitions transitions =
-          let gt_id_map = Hashtbl.create 10 in
-          List.enum transitions
-          |> Enum.map (fun transition ->
-                 (transition, TransitionSet.mem transition exit_transitions))
-          |> Enum.map (fun ((src, label, target), is_exit) ->
-                 ( (src, TransitionLabel.copy_rename gt_id_map label, target),
-                   is_exit ))
+    let rec evaluate_version current_version
+        (already_unfolded_versions, result_graph) =
+      let evaluate_transition src_version
+          (already_unfolded_versions, result_graph) (transition, is_exit) =
+        assert (Transition.src transition == Version.location src_version);
+        (* Unwrap the transition *)
+        let src_loc, label, target_loc = transition in
+        let src_constr =
+          current_version |> Version.abstracted |> Abstraction.to_guard
         in
+        let guard = TransitionLabel.guard label
+        and update = TransitionLabel.update_map label in
 
+        (* stop early if guard is unsat *)
+        if
+          SMT.Z3Solver.unsatisfiable
+            (Formulas.Formula.lift [ src_constr; guard ])
+        then (already_unfolded_versions, result_graph)
+        else
+          let next_guard = unfold am src_constr program_vars guard update in
+          log ~level:DEBUG "pe.transition" (fun () ->
+              [
+                ("PREV_GUARD", Guard.to_string ~pretty:true guard);
+                ("TRANSITION", Transition.to_string_pretty transition);
+                ("NEXT_GUARD", Guard.to_string ~pretty:true next_guard);
+              ]);
+          match Abstraction.abstract abstr_ctx target_loc next_guard with
+          (* Implicit SAT check, returns None if UNSAT *)
+          | Some a ->
+              log ~level:DEBUG "pe.transition" (fun () ->
+                  [
+                    ("SAT", "true");
+                    ("ABSTRACTED", Abstraction.to_string ~pretty:true a);
+                  ]);
+              (* checking for exti transitions must be done outside of evaluate_transition because
+                 the transition was renamed *)
+              if is_exit then
+                (* Leaving the scc is an abort condition, just transition to the trivial version *)
+                (* let outside_version = Version.mk_true target_loc in *)
+                (* assert (PEGraph.mem_vertex result_graph outside_version); *)
+                ( already_unfolded_versions,
+                  PEGraph.add_edge_e result_graph
+                    (src_version, label, Version.mk_true target_loc) )
+              else
+                let target_version = Version.mk target_loc a in
+                let new_transition = (src_version, label, target_version) in
+                let result_graph =
+                  PEGraph.add_edge_e result_graph new_transition
+                in
+                evaluate_version target_version
+                  (already_unfolded_versions, result_graph)
+          | None ->
+              log ~level:DEBUG "pe.transition" (fun () ->
+                  [ ("VERSION_SAT", "false") ]);
+              (* Target version is unsat take, backtrack without adding a new transition *)
+              (already_unfolded_versions, result_graph)
+      in
+
+      let rename_transitions transitions =
+        let gt_id_map = Hashtbl.create 10 in
+        List.enum transitions
+        |> Enum.map (fun transition ->
+               (transition, TransitionSet.mem transition exit_transitions))
+        |> Enum.map (fun ((src, label, target), is_exit) ->
+               ( (src, TransitionLabel.copy_rename gt_id_map label, target),
+                 is_exit ))
+      in
+
+      if PEM.VersionSet.mem current_version already_unfolded_versions then (
+        log ~level:DEBUG "pe.version" (fun () ->
+            [
+              ("VERSION", Version.to_string_pretty current_version);
+              ("NEW", "false");
+            ]);
+        (already_unfolded_versions, result_graph))
+      else (
+        log ~level:DEBUG "pe.version" (fun () ->
+            [
+              ("VERSION", Version.to_string_pretty current_version);
+              ("NEW", "true");
+            ]);
+        let already_unfolded_versions =
+          PEM.VersionSet.add current_version already_unfolded_versions
+        in
         let location = Version.location current_version in
+
         let outgoing_transitions =
           TransitionGraph.succ_e graph location |> rename_transitions
         in
         (* Evaluate from every outgoing transition *)
         Enum.fold
-          (evaluate_transition current_polyh current_version)
-          result_graph outgoing_transitions
-      in
-
-      assert (Transition.src transition == Version.location src_version);
-      (* Unwrap the transition *)
-      let src_loc, label, target_loc = transition in
-      let guard = TransitionLabel.guard label
-      (* and invariant = TransitionLabel.invariant label *)
-      and update = TransitionLabel.update_map label in
-
-      (* stop early if guard is unsat *)
-      if
-        SMT.Z3Solver.unsatisfiable
-          (Formulas.Formula.lift
-             [ guard; Version.abstracted src_version |> Abstraction.to_guard ])
-      then result_graph
-      else
-        let next_polyh = unfold am src_polyh program_vars guard update in
-        let next_guard =
-          Apron.Abstract1.to_tcons_array am next_polyh
-          |> ApronInterface.Apron2Koat.constraint_from_apron
-        in
-        log ~level:DEBUG "pe.transition" (fun () ->
-            [
-              ("PREV_GUARD", Guard.to_string ~pretty:true guard);
-              ("TRANSITION", Transition.to_string_pretty transition);
-              ("NEXT_GUARD", Guard.to_string ~pretty:true next_guard);
-            ]);
-        match Abstraction.abstract abstr_ctx target_loc next_guard with
-        (* Implicit SAT check, returns None if UNSAT *)
-        | Some a ->
-            log ~level:DEBUG "pe.transition" (fun () ->
-                [
-                  ("SAT", "true");
-                  ("ABSTRACTED", Abstraction.to_string ~pretty:true a);
-                ]);
-            (* checking for exti transitions must be done outside of evaluate_transition because
-               the transition was renamed *)
-            if is_exit then
-              (* Leaving the scc is an abort condition, just transition to the trivial version *)
-              (* let outside_version = Version.mk_true target_loc in *)
-              (* assert (PEGraph.mem_vertex result_graph outside_version); *)
-              PEGraph.add_edge_e result_graph
-                (src_version, label, Version.mk_true target_loc)
-            else
-              let target_version = Version.mk target_loc a in
-              let new_transition = (src_version, label, target_version) in
-              let version_is_new =
-                not (PEGraph.mem_vertex result_graph target_version)
-              in
-              let result_graph =
-                PEGraph.add_edge_e result_graph new_transition
-              in
-              log "pe.transition" (fun () ->
-                  [
-                    ("NEW", string_of_bool version_is_new);
-                    ("VERSION", Version.to_string_pretty target_version);
-                  ]);
-              if version_is_new then
-                (* Target version is new evaluate from there. *)
-                evaluate_version result_graph next_polyh target_version
-              else
-                (* Target version was already present, backtrack. *)
-                result_graph
-        | None ->
-            log ~level:DEBUG "pe.transition" (fun () ->
-                [ ("VERSION_SAT", "false") ]);
-            (* Target version is unsat take, backtrack without adding a new transition *)
-            result_graph
+          (evaluate_transition current_version)
+          (already_unfolded_versions, result_graph)
+          outgoing_transitions)
     in
 
-    let program_vars_env =
-      Apron.Environment.make
-        (ApronInterface.Koat2Apron.vars_to_apron program_vars)
-        [||]
-    in
-    let initial_polyh = Apron.Abstract1.top am program_vars_env in
-
-    (* Start transitions must not be renamed, hence need somewhat different handling *)
-    let evaluate_entry_transition entry_transition result_graph =
-      let start_location = Transition.src entry_transition in
+    let evaluate_entry_transition entry_transition
+        (already_unfolded_versions, result_graph) =
+      let start_location = Transition.target entry_transition in
       let start_version = Version.mk_true start_location in
-      evaluate_transition initial_polyh start_version result_graph
-        (entry_transition, false)
+      evaluate_version start_version (already_unfolded_versions, result_graph)
     in
 
-    let pe_graph =
+    let _, pe_graph =
       TransitionSet.fold
         (fun entry_transition result_graph ->
           evaluate_entry_transition entry_transition result_graph)
-        entry_transitions result_graph_without_sub
+        entry_transitions
+        (PEM.VersionSet.empty, result_graph_without_sub)
     in
 
-    PEM.remove_abstractions config.update_invariants pe_graph
+    let pe_graph = PEM.remove_abstractions config.update_invariants pe_graph in
+    pe_graph
 
   let evaluate_program config program =
     let program_vars =
@@ -1383,6 +1405,7 @@ struct
           evaluate_component config component program_vars graph)
         program
     in
+    log ~level:INFO "pe" (fun () -> [ ("PE", Program.to_string pe_prog) ]);
     pe_prog
 end
 

@@ -96,7 +96,7 @@ type params = {
     cfr : cfr list; [@enum [("pe_native", `PartialEvaluationNative); ("pe", `PartialEvaluationIRankFinder); ("chain", `Chaining)]] [@default []] [@sep ',']
     (** Choose methods for local control-flow-refinement: pe (Partial Evaluation) or chain (Chaining) *)
 
-    pe_fvs: bool; [@default true]
+    no_pe_fvs: bool; [@default false]
 
     pe_k: int; [@default 0]
 
@@ -171,7 +171,7 @@ let run (params: params) =
         | [] -> NoCFR
         | l -> List.enum l |> Enum.map (function 
           | `Chaining -> Chaining
-          | `PartialEvaluationNative -> PartialEvaluationNative (params.pe_fvs, params.pe_k, params.pe_update_invariants)
+          | `PartialEvaluationNative -> PartialEvaluationNative (not params.no_pe_fvs, params.pe_k, params.pe_update_invariants)
           | `PartialEvaluationIRankFinder -> PartialEvaluationIRankFinder
               ) |> List.of_enum |> (fun l -> PerformCFR l);
     }
